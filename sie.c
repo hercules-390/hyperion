@@ -22,6 +22,12 @@
 
 #define _SIE_C
 
+int s370_run_sie (REGS *regs);
+int s390_run_sie (REGS *regs);
+int z900_run_sie (REGS *regs);
+static int (* run_sie[GEN_MAXARCH]) (REGS *regs) =
+                { s370_run_sie, s390_run_sie, z900_run_sie };
+
 #define GUESTREGS (regs->guestregs)
 #define STATEBK   ((SIEBK*)(GUESTREGS->siebk))
 
@@ -286,14 +292,8 @@ int     icode;                          /* Interception code         */
     if(gpv)
         ARCH_DEP(program_interrupt) (GUESTREGS, gpv);
 
-    if(GUESTREGS->arch_mode == ARCH_390)
-        icode = s390_sie_run (regs);
-    else
-#if defined(FEATURE_ESAME)
-        icode = z900_sie_run (regs);
-#else /*!defined(FEATURE_ESAME)*/
-        icode = s370_sie_run (regs);
-#endif /*!defined(FEATURE_ESAME)*/
+    /* Run SIE in guests architecture mode */
+    icode = run_sie[GUESTREGS->arch_mode] (regs);
 
     ARCH_DEP(sie_exit) (regs, icode);
 
@@ -430,7 +430,7 @@ int     n;
 
 #if defined(_FEATURE_SIE)
 /* Execute guest instructions */
-int ARCH_DEP(sie_run) (REGS *regs)
+int ARCH_DEP(run_sie) (REGS *regs)
 {
     int icode;
 

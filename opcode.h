@@ -1319,13 +1319,6 @@ void display_inst (REGS *regs, BYTE *inst);
 
 
 /* Functions in module sie.c */
-#if defined(_FEATURE_SIE)
-int  s370_sie_run (REGS *regs);
-#endif /*!defined(_FEATURE_SIE)*/
-#if defined(_FEATURE_ZSIE)
-int  s390_sie_run (REGS *regs);
-#endif /*!defined(_FEATURE_ZSIE)*/
-int  ARCH_DEP(sie_run) (REGS *regs);
 void ARCH_DEP(sie_exit) (REGS *regs, int code);
 
 
