@@ -572,9 +572,20 @@ if test x$auto_optimize = xtrue; then
           powerpc)
             OFLAGS="-O3 $OFLAGS"
             ;;
-          i586|i686)
+          i386|i486|i586|i686)
+            ac_xarch=$host_cpu
             if test "$GCC" = "yes"; then
-                OFLAGS="-O3 -march=$host_cpu $OFLAGS"
+                if ${CC-cc} -E - << __EOF | fgrep "yes" > /dev/null 2>&1
+#if __GNUC__ == 2 && __GNUC__MINOR__ == 96
+yes
+#endif
+__EOF
+                then
+                    if test $host_cpu = i686; then
+                        ac_xarch=i586
+                    fi
+                fi
+                OFLAGS="-O3 -march=$ac_xarch $OFLAGS"
                 if test x$debug != xtrue && test x$ac_cv_cygwin_gcc_alloca_bug != xyes; then
                   OFLAGS="-fomit-frame-pointer $OFLAGS"
                 elif test x$ac_cv_cygwin_gcc_alloca_bug = xyes; then

@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+07 Nov 2003 Added optimisation problem bypass for GCC 2.96 - Ivan Warren
 30 Oct 2003 Added crypto functions - Bernard van der Helm / Jan Jaeger
 24 Oct 2003 pttrace.c threads trace patch - Greg
 22 Oct 2003 shared_server tolerates unix socket problems - Greg
