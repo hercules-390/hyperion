@@ -1094,7 +1094,7 @@ int             highcyl;                /* CKD header high cyl number*/
     /* Build a compressed CKD file */
     if (comp != 0xff)
     {
-        /* Create the compressed device header */ 
+        /* Create the compressed device header */
         memset(&cdevhdr, 0, CCKDDASD_DEVHDR_SIZE);
         cdevhdr.vrm[0] = CCKD_VERSION;
         cdevhdr.vrm[1] = CCKD_RELEASE;
@@ -1263,7 +1263,7 @@ int             highcyl;                /* CKD header high cyl number*/
 
             /* Write the track to the file */
             rc = write (fd, buf, trksize);
-            if (rc < trksize)
+            if (rc != trksize)
             {
                 fprintf (stderr,
                         "%s cylinder %u head %u write error: %s\n",
@@ -1280,7 +1280,7 @@ int             highcyl;                /* CKD header high cyl number*/
     /* Complete building the compressed file */
     if (comp != 0xff)
     {
-        cdevhdr.size = cdevhdr.used = CCKD_L1TAB_POS + 
+        cdevhdr.size = cdevhdr.used = CCKD_L1TAB_POS +
                                       cdevhdr.numl1tab * CCKD_L1ENT_SIZE +
                                       CCKD_L2TAB_SIZE + trksize;
 
