@@ -1,3 +1,4 @@
+## Process this file with automake to produce Makefile.in
 #
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
@@ -17,7 +18,7 @@ LDADD = @LIBINTL@
 bin_PROGRAMS = hercules $(HERCIFC) \
 	   dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu \
 	   tapecopy tapemap tapesplt \
-	   cckdcdsk cckdcomp cckdswap \
+	   cckdcdsk cckdcomp cckddiag cckdswap \
 	   cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
 	   hetget hetinit hetmap hetupd \
 	   dmap2hrc
@@ -93,6 +94,9 @@ cckdcdsk_SOURCES = cckdcdsk.c cckdutil.c dasdtab.c hostinfo.c version.c
 
 cckdcomp_SOURCES = cckdcomp.c cckdutil.c dasdtab.c hostinfo.c version.c
 
+cckddiag_SOURCES = cckddiag.c cckddasd.c cckdutil.c ckddasd.c codepage.c \
+	dasdtab.c dasdutil.c fbadasd.c hostinfo.c version.c
+
 ckd2cckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
 	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
 
@@ -131,7 +135,7 @@ noinst_HEADERS  = fishhang.h \
     if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
     ctcadpt.h hercifc.h tuntap.h
 
-cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) \
+cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) cckddiag$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \
 	cckdswap$(EXEEXT) fba2cfba$(EXEEXT) \
 	cfba2fba$(EXEEXT) dasdcopy$(EXEEXT)
@@ -148,3 +152,4 @@ endif
 
 %.s: %.c
 	$(COMPILE) -S $<
+
