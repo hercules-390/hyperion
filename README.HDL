@@ -70,6 +70,18 @@
     Cygwin does not support back-linking and cygwin specials are listed
     in this example with #if defined(WIN32).
 
+
+    Some additional notes:
+
+    Unload will remove all references to a specific module, but as todate
+    it will not actually remove the loaded module from memory.  This as
+    there is no safe way (yet) to synchronize unloading of code at it may
+    still be in use.  This should however pose no practical limitations.
+
+    When a module lists a new dependency, that dependency will be
+    registered.  Unloading the module does not remove the dependency, this
+    is to be consistent with the previous note about unloading.
+
  */
 
 
