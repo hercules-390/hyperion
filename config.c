@@ -1400,10 +1400,12 @@ int     cpu;
        if (dev->pmcw.flag5 & PMCW5_V)
            detach_device(dev->devnum);
 
+#if !defined(OPTION_FISHIO)
     /* Terminate device threads */
     obtain_lock (&sysblk.ioqlock);
     broadcast_condition (&sysblk.ioqcond);
     release_lock (&sysblk.ioqlock);
+#endif
 
     /* Deconfigure all CPU's */
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
