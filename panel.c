@@ -120,6 +120,10 @@ char* safe_strdup (char* str);
 #define ANSI_CLEAR_EOL "\x1B[K"
 #define ANSI_CURSOR "\x1B[%d;%dH"
 
+#if defined(OPTION_CPU_UTILIZATION)
+double dCPUPCT = 0.0;   /* CPU Utilization percentage (0.0 to 1.0) */
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
+
 int NPDup = 0;          /* 1 when new panel is up */
 int NPDinit = 0;        /* 1 when new panel is initialized */
 int NPhelpup = 0;       /* 1 when displaying help panel */
@@ -179,6 +183,9 @@ int     gui_cregs = 1;                  /* 1=cregs status active     */
 int     gui_aregs = 1;                  /* 1=aregs status active     */
 int     gui_fregs = 1;                  /* 1=fregs status active     */
 int     gui_devlist = 1;                /* 1=devlist status active   */
+#if defined(OPTION_CPU_UTILIZATION)
+int     gui_cpupct = 0;                 /* 1=cpu percentage active   */
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
 DEVBLK* dev;
 BYTE*   devclass;
 char    devnam[256];
@@ -400,6 +407,14 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
     if(regs->sie_active)
         regs = regs->guestregs;
 #endif /*defined(_FEATURE_SIE)*/
+
+#if defined(OPTION_CPU_UTILIZATION)
+    fprintf(confp, ANSI_WHT_BLU);
+    fprintf(confp, ANSI_CURSOR, 1, 16);
+    fprintf(confp, "%4.4X:",regs->cpuad);
+    fprintf(confp, ANSI_CURSOR, 1, 22);
+    fprintf(confp, "%3d%%",(int)(100.0 * dCPUPCT));
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
 
     memset (curpsw, 0x00, sizeof(curpsw));
     store_psw (regs, curpsw);
@@ -2968,6 +2983,14 @@ void get_msgbuf(BYTE **_msgbuf, int *_msgslot, int *_nummsgs, int *_msg_size, in
     *_max_msgs = max_msgs;
 }
 
+/* (forward references) */
+#if defined(OPTION_CPU_UTILIZATION)
+void calc_cpupct (REGS *regs);
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
+#ifdef EXTERNALGUI
+void gui_devlist_status (FILE *confp);
+#endif
+
 void panel_display (void)
 {
 int     rc;                             /* Return code               */
@@ -3142,6 +3165,18 @@ struct  timeval tv;                     /* Select timeout structure  */
                     strerror(errno));
             break;
         }
+
+#if defined(OPTION_CPU_UTILIZATION)
+        /* Make sure we have a time range to work with... */
+        obtain_lock ( &regs->accum_wait_time_lock );
+        if (!regs->accum_wait_time_from.tv_sec)
+            gettimeofday ( &regs->accum_wait_time_from, NULL );
+        if (!regs->accum_wait_time_to.tv_sec)
+            gettimeofday ( &regs->accum_wait_time_to, NULL );
+        release_lock ( &regs->accum_wait_time_lock );
+        /* Calculate CPU Utilization percentage */
+        calc_cpupct (regs);
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
 
         /* If keyboard input has arrived then process it */
 
@@ -3476,6 +3511,13 @@ struct  timeval tv;                     /* Select timeout structure  */
                                 fprintf(stderr,"MAINSTOR=%d\n",(U32)sysblk.mainstor);
                                 fprintf(stderr,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
                             }
+#if defined(OPTION_CPU_UTILIZATION)
+                            else
+                            if (strncmp(cmdline,"]CPUPCT=",8) == 0)
+                            {
+                                gui_cpupct = atoi(cmdline+8);
+                            }
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
                         }
                         else
 #endif /*EXTERNALGUI*/
@@ -3764,12 +3806,10 @@ struct  timeval tv;                     /* Select timeout structure  */
 #ifdef EXTERNALGUI
                 if (extgui)
                 {
-                    /* (for system activity meter) */
+                    /* SYS / WAIT lights */
                     if (!(regs->cpustate == CPUSTATE_STOPPING ||
                         regs->cpustate == CPUSTATE_STOPPED))
-                    {
                         fprintf(confp,"SYS=%c\n",pswwait?'0':'1');
-                    }
 #ifdef OPTION_MIPS_COUNTING
                     /* Calculate MIPS rate */
 #ifdef FEATURE_CPU_RECONFIG
@@ -3845,38 +3885,13 @@ struct  timeval tv;                     /* Select timeout structure  */
                             regs->fpr[4],regs->fpr[5],regs->fpr[6],regs->fpr[7]);
                     }
 
+#if defined(OPTION_CPU_UTILIZATION)
+                    if (gui_cpupct)  /* CPU Utilization */
+                        fprintf(confp,"CPUPCT=%d\n",(int)(100.0 * dCPUPCT));
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
+
                     if (gui_devlist)  /* device status */
-                    {
-                        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-                        {
-                            if (!(dev->pmcw.flag5 & PMCW5_V)) continue;
-
-                            stat_online = stat_busy = stat_pend = stat_open = 0;
-
-                            (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
-
-                            devnam[255] = 0;   /* (ensure null termination) */
-
-                            if ((dev->console && dev->connected) ||
-                                (strlen(dev->filename) > 0))
-                                stat_online = 1;
-                            if (dev->busy) stat_busy = 1;
-                            if (dev->pending) stat_pend = 1;
-                            if (dev->fd > 2) stat_open = 1;
-
-                            fprintf(confp, "DEV=%4.4X %4.4X %-4.4s %d%d%d%d %s\n",
-                                dev->devnum,
-                                dev->devtype,
-                                devclass,
-                                stat_online,
-                                stat_busy,
-                                stat_pend,
-                                stat_open,
-                                devnam);
-                        }
-
-                        fprintf(confp, "DEV=X\n");    /* (indicate end of list) */
-                    }
+                        gui_devlist_status (confp);
                 }
 #endif /*EXTERNALGUI*/
             } /* end if(redraw_status) */
@@ -3887,45 +3902,18 @@ struct  timeval tv;                     /* Select timeout structure  */
                        some status info we need to send ALL the time. */
                     if (extgui)
                                 {
-                    /* (for system activity meter) */
+                    /* SYS / WAIT lights */
                     if (!(regs->cpustate == CPUSTATE_STOPPING ||
                         regs->cpustate == CPUSTATE_STOPPED))
-                    {
                         fprintf(confp,"SYS=%c\n",pswwait?'0':'1');
-                    }
+
+#if defined(OPTION_CPU_UTILIZATION)
+                    if (gui_cpupct)  /* CPU Utilization */
+                        fprintf(confp,"CPUPCT=%d\n",(int)(100.0 * dCPUPCT));
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
 
                     if (gui_devlist)  /* device status */
-                    {
-                        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-                        {
-                            if (!(dev->pmcw.flag5 & PMCW5_V)) continue;
-
-                            stat_online = stat_busy = stat_pend = stat_open = 0;
-
-                            (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
-
-                            devnam[255] = 0;   /* (ensure null terminated) */
-
-                            if ((dev->console && dev->connected) ||
-                                (strlen(dev->filename) > 0))
-                                stat_online = 1;
-                            if (dev->busy) stat_busy = 1;
-                            if (dev->pending) stat_pend = 1;
-                            if (dev->fd > 2) stat_open = 1;
-
-                            fprintf(confp, "DEV=%4.4X %4.4X %-4.4s %d%d%d%d %s\n",
-                                dev->devnum,
-                                dev->devtype,
-                                devclass,
-                                stat_online,
-                                stat_busy,
-                                stat_pend,
-                                stat_open,
-                                devnam);
-                        }
-
-                        fprintf(confp, "DEV=X\n");    /* (indicate end of list) */
-                    }
+                        gui_devlist_status (confp);
                                 }
                         }
 
@@ -3993,6 +3981,109 @@ struct  timeval tv;                     /* Select timeout structure  */
     return;
 
 } /* end function panel_display */
+
+#if defined(EXTERNALGUI)
+
+void gui_devlist_status (FILE *confp)
+{
+    DEVBLK *dev;
+
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+    {
+        if (!(dev->pmcw.flag5 & PMCW5_V)) continue;
+
+        stat_online = stat_busy = stat_pend = stat_open = 0;
+
+        (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
+
+        devnam[255] = 0;   /* (ensure null termination) */
+
+        if ((dev->console && dev->connected) ||
+            (strlen(dev->filename) > 0))
+            stat_online = 1;
+        if (dev->busy) stat_busy = 1;
+        if (dev->pending) stat_pend = 1;
+        if (dev->fd > 2) stat_open = 1;
+
+        fprintf(confp, "DEV=%4.4X %4.4X %-4.4s %d%d%d%d %s\n",
+            dev->devnum,
+            dev->devtype,
+            devclass,
+            stat_online,
+            stat_busy,
+            stat_pend,
+            stat_open,
+            devnam);
+    }
+
+    fprintf(confp, "DEV=X\n");    /* (indicate end of list) */
+}
+
+#endif /*defined(EXTERNALGUI)*/
+
+#if defined(OPTION_CPU_UTILIZATION)
+
+void calc_cpupct (REGS *regs)
+{
+    double elapsed_usec = 0.0, waiting_usec;
+    struct timeval  accum_wait_time_from;
+    struct timeval  accum_wait_time_to;
+    struct timeval  accum_wait_time_begwait;
+    struct timeval  accum_wait_time;
+    struct timeval  elapsed_time;
+
+    /* Grab copy of current time values */
+
+    obtain_lock ( &regs->accum_wait_time_lock );
+
+    memcpy ( &accum_wait_time_from,    &regs->accum_wait_time_from,    sizeof(struct timeval) );
+    memcpy ( &accum_wait_time_to,      &regs->accum_wait_time_to,      sizeof(struct timeval) );
+    memcpy ( &accum_wait_time_begwait, &regs->accum_wait_time_begwait, sizeof(struct timeval) );
+    memcpy ( &accum_wait_time,         &regs->accum_wait_time,         sizeof(struct timeval) );
+
+    release_lock ( &regs->accum_wait_time_lock );
+
+    /* Calculate elapsed time period */
+
+    VERIFY ( timeval_subtract ( &accum_wait_time_from, &accum_wait_time_to, &elapsed_time ) == 0 );
+
+    /* Check if enough time has passed yet */
+
+    if (elapsed_time.tv_sec < 1)
+    {
+        gettimeofday ( &accum_wait_time_to, NULL );
+        VERIFY ( timeval_subtract ( &accum_wait_time_from, &accum_wait_time_to, &elapsed_time ) == 0 );
+        if (elapsed_time.tv_sec < 1)
+            return;
+    }
+
+    /* Reset counters for next time period */
+
+    obtain_lock ( &regs->accum_wait_time_lock );
+
+    memset ( &regs->accum_wait_time_from, 0, sizeof(struct timeval) );
+    memset ( &regs->accum_wait_time_to,   0, sizeof(struct timeval) );
+    memset ( &regs->accum_wait_time,      0, sizeof(struct timeval) );
+
+    release_lock ( &regs->accum_wait_time_lock );
+
+    /* Calculate CPU Utilization for this time period */
+
+    if (regs->cpustate == CPUSTATE_STOPPED)
+        memcpy ( &accum_wait_time, &elapsed_time, sizeof(struct timeval) );
+
+    elapsed_usec = (( (double) elapsed_time    . tv_sec ) * 1000000.0 ) + ( (double) elapsed_time    . tv_usec );
+    waiting_usec = (( (double) accum_wait_time . tv_sec ) * 1000000.0 ) + ( (double) accum_wait_time . tv_usec );
+
+    ASSERT(elapsed_usec > 0.0 && waiting_usec >= 0.0);
+
+    if (waiting_usec > elapsed_usec)
+        waiting_usec = elapsed_usec;
+
+    dCPUPCT = (1.0 - (waiting_usec / elapsed_usec));
+}
+
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
 
 #endif /*!defined(_PANEL_C)*/
 

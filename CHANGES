@@ -1,3 +1,14 @@
+30 Jun 2002 Fix minor "inet_ntoa" bug in 'connect_client' function
+            reported by Mark Gaubatz [Mark.Gaubatz@verizon.net] - Fish
+30 Jun 2002 Fix some minor issues relating to tape device handling contributed
+            by hackules (http://www.geocities.com/hackules390/): - Fish
+            h31: Fixes a problem with HET tapes on CD.
+            h23: A minor fix to tapedev that corrects the setting of the chunk
+                 size for HET files.
+            h09: Fixes a small bug in tapedev.c where a backspace file operation
+                 could muck up position info if already positioned at the start
+                 of the file.
+30 Jun 2002 Calculate percent CPU utilization - Fish
 29 Jun 2002 Gabor Hoffer performance patch: part 3 - Fish
 27 Jun 2002 Fix validation intercept when no S/370 mode installed - Jan Jaeger
 27 Jun 2002 Fix scpinfo CHSC bit - Jan Jaeger

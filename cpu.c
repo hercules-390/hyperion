@@ -273,78 +273,78 @@ int     nointercept;                    /* True for virtual pgmint   */
 #endif /*defined(_FEATURE_SIE)*/
 
 static char *pgmintname[] = {
-        /* 01 */        "Operation exception",
-        /* 02 */        "Privileged-operation exception",
-        /* 03 */        "Execute exception",
-        /* 04 */        "Protection exception",
-        /* 05 */        "Addressing exception",
-        /* 06 */        "Specification exception",
-        /* 07 */        "Data exception",
-        /* 08 */        "Fixed-point-overflow exception",
-        /* 09 */        "Fixed-point-divide exception",
-        /* 0A */        "Decimal-overflow exception",
-        /* 0B */        "Decimal-divide exception",
-        /* 0C */        "HFP-exponent-overflow exception",
-        /* 0D */        "HFP-exponent-underflow exception",
-        /* 0E */        "HFP-significance exception",
-        /* 0F */        "HFP-floating-point-divide exception",
-        /* 10 */        "Segment-translation exception",
-        /* 11 */        "Page-translation exception",
-        /* 12 */        "Translation-specification exception",
-        /* 13 */        "Special-operation exception",
-        /* 14 */        "Pseudo-page-fault exception",
-        /* 15 */        "Operand exception",
-        /* 16 */        "Trace-table exception",
-        /* 17 */        "ASN-translation exception",
-        /* 18 */        "Page access exception",
-        /* 19 */        "Vector/Crypto operation exception",
-        /* 1A */        "Page state exception",
-        /* 1B */        "Page transition exception",
-        /* 1C */        "Space-switch event",
-        /* 1D */        "Square-root exception",
-        /* 1E */        "Unnormalized-operand exception",
-        /* 1F */        "PC-translation specification exception",
-        /* 20 */        "AFX-translation exception",
-        /* 21 */        "ASX-translation exception",
-        /* 22 */        "LX-translation exception",
-        /* 23 */        "EX-translation exception",
-        /* 24 */        "Primary-authority exception",
-        /* 25 */        "Secondary-authority exception",
-        /* 26 */        "Page-fault-assist exception",
-        /* 27 */        "Control-switch exception",
-        /* 28 */        "ALET-specification exception",
-        /* 29 */        "ALEN-translation exception",
-        /* 2A */        "ALE-sequence exception",
-        /* 2B */        "ASTE-validity exception",
-        /* 2C */        "ASTE-sequence exception",
-        /* 2D */        "Extended-authority exception",
-        /* 2E */        "Unassigned exception",
-        /* 2F */        "Unassigned exception",
-        /* 30 */        "Stack-full exception",
-        /* 31 */        "Stack-empty exception",
-        /* 32 */        "Stack-specification exception",
-        /* 33 */        "Stack-type exception",
-        /* 34 */        "Stack-operation exception",
-        /* 35 */        "Unassigned exception",
-        /* 36 */        "Unassigned exception",
-        /* 37 */        "Unassigned exception",
-        /* 38 */        "ASCE-type exception",
-        /* 39 */        "Region-first-translation exception",
-        /* 3A */        "Region-second-translation exception",
-        /* 3B */        "Region-third-translation exception",
-        /* 3C */        "Unassigned exception",
-        /* 3D */        "Unassigned exception",
-        /* 3E */        "Unassigned exception",
-        /* 3F */        "Unassigned exception",
-        /* 40 */        "Monitor event" };
+    /* 01 */        "Operation exception",
+    /* 02 */        "Privileged-operation exception",
+    /* 03 */        "Execute exception",
+    /* 04 */        "Protection exception",
+    /* 05 */        "Addressing exception",
+    /* 06 */        "Specification exception",
+    /* 07 */        "Data exception",
+    /* 08 */        "Fixed-point-overflow exception",
+    /* 09 */        "Fixed-point-divide exception",
+    /* 0A */        "Decimal-overflow exception",
+    /* 0B */        "Decimal-divide exception",
+    /* 0C */        "HFP-exponent-overflow exception",
+    /* 0D */        "HFP-exponent-underflow exception",
+    /* 0E */        "HFP-significance exception",
+    /* 0F */        "HFP-floating-point-divide exception",
+    /* 10 */        "Segment-translation exception",
+    /* 11 */        "Page-translation exception",
+    /* 12 */        "Translation-specification exception",
+    /* 13 */        "Special-operation exception",
+    /* 14 */        "Pseudo-page-fault exception",
+    /* 15 */        "Operand exception",
+    /* 16 */        "Trace-table exception",
+    /* 17 */        "ASN-translation exception",
+    /* 18 */        "Page access exception",
+    /* 19 */        "Vector/Crypto operation exception",
+    /* 1A */        "Page state exception",
+    /* 1B */        "Page transition exception",
+    /* 1C */        "Space-switch event",
+    /* 1D */        "Square-root exception",
+    /* 1E */        "Unnormalized-operand exception",
+    /* 1F */        "PC-translation specification exception",
+    /* 20 */        "AFX-translation exception",
+    /* 21 */        "ASX-translation exception",
+    /* 22 */        "LX-translation exception",
+    /* 23 */        "EX-translation exception",
+    /* 24 */        "Primary-authority exception",
+    /* 25 */        "Secondary-authority exception",
+    /* 26 */        "Page-fault-assist exception",
+    /* 27 */        "Control-switch exception",
+    /* 28 */        "ALET-specification exception",
+    /* 29 */        "ALEN-translation exception",
+    /* 2A */        "ALE-sequence exception",
+    /* 2B */        "ASTE-validity exception",
+    /* 2C */        "ASTE-sequence exception",
+    /* 2D */        "Extended-authority exception",
+    /* 2E */        "Unassigned exception",
+    /* 2F */        "Unassigned exception",
+    /* 30 */        "Stack-full exception",
+    /* 31 */        "Stack-empty exception",
+    /* 32 */        "Stack-specification exception",
+    /* 33 */        "Stack-type exception",
+    /* 34 */        "Stack-operation exception",
+    /* 35 */        "Unassigned exception",
+    /* 36 */        "Unassigned exception",
+    /* 37 */        "Unassigned exception",
+    /* 38 */        "ASCE-type exception",
+    /* 39 */        "Region-first-translation exception",
+    /* 3A */        "Region-second-translation exception",
+    /* 3B */        "Region-third-translation exception",
+    /* 3C */        "Unassigned exception",
+    /* 3D */        "Unassigned exception",
+    /* 3E */        "Unassigned exception",
+    /* 3F */        "Unassigned exception",
+    /* 40 */        "Monitor event" };
 
     /* program_interrupt() may be called with a shadow copy of the
        regs structure, realregs is the pointer to the real structure
        which must be used when loading/storing the psw, or backing up
        the instruction address in case of nullification */
 #if defined(_FEATURE_SIE)
-        realregs = regs->sie_state ? sysblk.sie_regs[regs->cpuad]
-                                   : sysblk.regs[regs->cpuad];
+    realregs = regs->sie_state ? sysblk.sie_regs[regs->cpuad]
+                               : sysblk.regs[regs->cpuad];
 #else /*!defined(_FEATURE_SIE)*/
     realregs = sysblk.regs[regs->cpuad];
 #endif /*!defined(_FEATURE_SIE)*/
@@ -447,10 +447,10 @@ static char *pgmintname[] = {
       || code == PGM_SPECIFICATION_EXCEPTION
       || code == PGM_TRANSLATION_SPECIFICATION_EXCEPTION ))
     {
-            realregs->psw.ilc = (realregs->ip[0] < 0x40) ? 2 :
-                                (realregs->ip[0] < 0xC0) ? 4 : 6;
-            realregs->psw.IA += realregs->psw.ilc;
-            realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
+        realregs->psw.ilc = (realregs->ip[0] < 0x40) ? 2 :
+                            (realregs->ip[0] < 0xC0) ? 4 : 6;
+        realregs->psw.IA += realregs->psw.ilc;
+        realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
     }
         
     /* Store the interrupt code in the PSW */
@@ -958,7 +958,7 @@ void *cpu_thread (REGS *regs)
 #endif
 
     logmsg (_("HHC630I CPU%4.4X Architecture Mode %s\n"),
-		regs->cpuad,get_arch_mode_string(regs));
+        regs->cpuad,get_arch_mode_string(regs));
 
 #ifdef FEATURE_VECTOR_FACILITY
     if (regs->vf->online)
@@ -1011,7 +1011,7 @@ void *cpu_thread (REGS *regs)
     {
         regs->arch_mode = sysblk.arch_mode;
         logmsg (_("HHC631I CPU%4.4X Architecture Mode set to %s\n"),
-			regs->cpuad,get_arch_mode_string(regs));
+            regs->cpuad,get_arch_mode_string(regs));
     }
 
     /* Execute the program in specified mode */
@@ -1039,205 +1039,273 @@ void *cpu_thread (REGS *regs)
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(process_interrupt)(REGS *regs)
 {
-            if( OPEN_IC_DEBUG(regs) )
-            {
-            U32 prevmask;
-                prevmask = regs->ints_mask;
-	        SET_IC_EXTERNAL_MASK(regs);
-	        SET_IC_IO_MASK(regs);
-	        SET_IC_MCK_MASK(regs);
-	        SET_IC_PER_MASK(regs);
-	        if(prevmask != regs->ints_mask)
-		{
-	            logmsg(_("CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n"),
-		       prevmask, regs->ints_mask);
-		       ARCH_DEP(display_inst) (regs, regs->ip);
-		}
-	    }
+    if( OPEN_IC_DEBUG(regs) )
+    {
+        U32 prevmask;
+            prevmask = regs->ints_mask;
+        SET_IC_EXTERNAL_MASK(regs);
+        SET_IC_IO_MASK(regs);
+        SET_IC_MCK_MASK(regs);
+        SET_IC_PER_MASK(regs);
+        if(prevmask != regs->ints_mask)
+        {
+            logmsg(_("CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n"),
+                prevmask, regs->ints_mask);
+            ARCH_DEP(display_inst) (regs, regs->ip);
+        }
+    }
 
-            /* Process PER program interrupts */
-            if( OPEN_IC_PERINT(regs) )
-                ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
+    /* Process PER program interrupts */
+    if( OPEN_IC_PERINT(regs) )
+        ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
 
-            /* Obtain the interrupt lock */
-            obtain_lock (&sysblk.intlock);
+    /* Obtain the interrupt lock */
+    obtain_lock (&sysblk.intlock);
 
     INVALIDATE_AIA(regs);
 
 #if MAX_CPU_ENGINES > 1
-            /* Perform broadcasted purge of ALB and TLB if requested
-               synchronize_broadcast() must be called until there are
-               no more broadcast pending because synchronize_broadcast()
-               releases and reacquires the mainlock. */
-            while (IS_IC_BROADCAST(regs))
-                ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
+    /* Perform broadcasted purge of ALB and TLB if requested
+       synchronize_broadcast() must be called until there are
+       no more broadcast pending because synchronize_broadcast()
+       releases and reacquires the mainlock. */
+    while (IS_IC_BROADCAST(regs))
+        ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
 #endif /*MAX_CPU_ENGINES > 1*/
 
-            /* Take interrupts if CPU is not stopped */
-            if (regs->cpustate == CPUSTATE_STARTED)
-            {
+    /* Take interrupts if CPU is not stopped */
+    if (regs->cpustate == CPUSTATE_STARTED)
+    {
 
-                /* If a machine check is pending and we are enabled for
-                   machine checks then take the interrupt */
-                if (OPEN_IC_MCKPENDING(regs))
-                {
-                    PERFORM_SERIALIZATION (regs);
-                    PERFORM_CHKPT_SYNC (regs);
-                    ARCH_DEP (perform_mck_interrupt) (regs);
-                }
+        /* If a machine check is pending and we are enabled for
+           machine checks then take the interrupt */
+        if (OPEN_IC_MCKPENDING(regs))
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+            ARCH_DEP (perform_mck_interrupt) (regs);
+        }
 
-                /* If enabled for external interrupts, invite the
-                   service processor to present a pending interrupt */
-                if ( OPEN_IC_EXTPENDING(regs) )
-                {
-                    PERFORM_SERIALIZATION (regs);
-                    PERFORM_CHKPT_SYNC (regs);
-                    ARCH_DEP (perform_external_interrupt) (regs);
-                }
+        /* If enabled for external interrupts, invite the
+           service processor to present a pending interrupt */
+        if ( OPEN_IC_EXTPENDING(regs) )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+            ARCH_DEP (perform_external_interrupt) (regs);
+        }
 
-                /* If an I/O interrupt is pending, and this CPU is
-                   enabled for I/O interrupts, invite the channel
-                   subsystem to present a pending interrupt */
-                if( OPEN_IC_IOPENDING(regs) )
-                {
-                    PERFORM_SERIALIZATION (regs);
-                    PERFORM_CHKPT_SYNC (regs);
-                    ARCH_DEP (perform_io_interrupt) (regs);
-                }
+        /* If an I/O interrupt is pending, and this CPU is
+           enabled for I/O interrupts, invite the channel
+           subsystem to present a pending interrupt */
+        if( OPEN_IC_IOPENDING(regs) )
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+            ARCH_DEP (perform_io_interrupt) (regs);
+        }
 #if MAX_CPU_ENGINES > 1
-                else if (IS_IC_IOPENDING)
-                    WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
+        else if (IS_IC_IOPENDING)
+            WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
 #endif
 
-            } /*if(cpustate == CPU_STARTED)*/
+    } /*if(cpustate == CPU_STARTED)*/
 
-            /* If CPU is stopping, change status to stopped */
-            if (regs->cpustate == CPUSTATE_STOPPING)
-            {
-                /* Change CPU status to stopped */
-                regs->cpustate = CPUSTATE_STOPPED;
-                sysblk.started_mask &= ~regs->cpumask;
+    /* If CPU is stopping, change status to stopped */
+    if (regs->cpustate == CPUSTATE_STOPPING)
+    {
+        /* Change CPU status to stopped */
+        regs->cpustate = CPUSTATE_STOPPED;
+        sysblk.started_mask &= ~regs->cpumask;
 
-                if (!regs->cpuonline)
-                {
-            /* Remove this CPU from the configuration */
-                    sysblk.numcpu--;
+        if (!regs->cpuonline)
+        {
+    /* Remove this CPU from the configuration */
+            sysblk.numcpu--;
 #ifdef FEATURE_VECTOR_FACILITY
-                    /* Mark Vector Facility offline */
-                    regs->vf->online = 0;
+            /* Mark Vector Facility offline */
+            regs->vf->online = 0;
 #endif /*FEATURE_VECTOR_FACILITY*/
 
-                    release_lock(&sysblk.intlock);
+            release_lock(&sysblk.intlock);
 
-                    /* Thread exit */
-                    return;
-                }
+            /* Thread exit */
+            return;
+        }
 
-                /* If initial CPU reset pending then perform reset */
-                if (regs->sigpireset)
-                {
-                    PERFORM_SERIALIZATION (regs);
-                    PERFORM_CHKPT_SYNC (regs);
-                    ARCH_DEP (initial_cpu_reset) (regs);
-                    release_lock(&sysblk.intlock);
-                    longjmp(regs->progjmp, SIE_NO_INTERCEPT);
-                }
+        /* If initial CPU reset pending then perform reset */
+        if (regs->sigpireset)
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+            ARCH_DEP (initial_cpu_reset) (regs);
+            release_lock(&sysblk.intlock);
+            longjmp(regs->progjmp, SIE_NO_INTERCEPT);
+        }
 
-                /* If a CPU reset is pending then perform the reset */
-                if (regs->sigpreset)
-                {
-                    PERFORM_SERIALIZATION (regs);
-                    PERFORM_CHKPT_SYNC (regs);
-                    ARCH_DEP(cpu_reset) (regs);
-                    release_lock(&sysblk.intlock);
-                    longjmp(regs->progjmp, SIE_NO_INTERCEPT);
-                }
+        /* If a CPU reset is pending then perform the reset */
+        if (regs->sigpreset)
+        {
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
+            ARCH_DEP(cpu_reset) (regs);
+            release_lock(&sysblk.intlock);
+            longjmp(regs->progjmp, SIE_NO_INTERCEPT);
+        }
 
-                /* Store status at absolute location 0 if requested */
-                if (IS_IC_STORSTAT(regs))
-                {
-                    OFF_IC_STORSTAT(regs);
-                    ARCH_DEP(store_status) (regs, 0);
-                    logmsg (_("HHC611I CPU%4.4X store status completed.\n"),
-                        regs->cpuad);
-                    release_lock(&sysblk.intlock);
-                    longjmp(regs->progjmp, SIE_NO_INTERCEPT);
-                }
-            } /* end if(cpustate == STOPPING) */
+        /* Store status at absolute location 0 if requested */
+        if (IS_IC_STORSTAT(regs))
+        {
+            OFF_IC_STORSTAT(regs);
+            ARCH_DEP(store_status) (regs, 0);
+            logmsg (_("HHC611I CPU%4.4X store status completed.\n"),
+                regs->cpuad);
+            release_lock(&sysblk.intlock);
+            longjmp(regs->progjmp, SIE_NO_INTERCEPT);
+        }
+    } /* end if(cpustate == STOPPING) */
 
-            /* Perform restart interrupt if pending */
-            if (IS_IC_RESTART(regs))
-            {
-                PERFORM_SERIALIZATION (regs);
-                PERFORM_CHKPT_SYNC (regs);
-                OFF_IC_RESTART(regs);
-                sysblk.started_mask |= regs->cpumask;
-                ARCH_DEP(restart_interrupt) (regs);
-            } /* end if(restart) */
+    /* Perform restart interrupt if pending */
+    if (IS_IC_RESTART(regs))
+    {
+        PERFORM_SERIALIZATION (regs);
+        PERFORM_CHKPT_SYNC (regs);
+        OFF_IC_RESTART(regs);
+        sysblk.started_mask |= regs->cpumask;
+        ARCH_DEP(restart_interrupt) (regs);
+    } /* end if(restart) */
 
-            /* This is where a stopped CPU will wait */
-            if (regs->cpustate == CPUSTATE_STOPPED)
-            {
-                /* Wait until there is work to do */
-                sysblk.waitmask |= regs->cpumask;
-                sysblk.started_mask &= ~regs->cpumask;
+    /* This is where a stopped CPU will wait */
+    if (regs->cpustate == CPUSTATE_STOPPED)
+    {
+        /* Wait until there is work to do */
+        sysblk.waitmask |= regs->cpumask;
+        sysblk.started_mask &= ~regs->cpumask;
 #ifdef EXTERNALGUI
         if (extgui && regs == sysblk.regs[sysblk.pcpu])
                     logmsg("MAN=1\n");
 #endif /*EXTERNALGUI*/
-                while (regs->cpustate == CPUSTATE_STOPPED)
-                {
+#if defined(OPTION_CPU_UTILIZATION)
+        obtain_lock ( &regs->accum_wait_time_lock );
+        memset ( &regs->accum_wait_time_from,    0, sizeof(struct timeval) );
+        memset ( &regs->accum_wait_time_to,      0, sizeof(struct timeval) );
+        memset ( &regs->accum_wait_time,         0, sizeof(struct timeval) );
+        release_lock ( &regs->accum_wait_time_lock );
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
+        while (regs->cpustate == CPUSTATE_STOPPED)
+        {
             wait_condition (&regs->intcond, &sysblk.intlock);
-                }
+        }
+#if defined(OPTION_CPU_UTILIZATION)
+        obtain_lock  ( &regs->accum_wait_time_lock );
+        gettimeofday ( &regs->accum_wait_time_from, NULL );
+        release_lock ( &regs->accum_wait_time_lock );
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
 #ifdef EXTERNALGUI
         if (extgui && regs == sysblk.regs[sysblk.pcpu])
-                    logmsg("MAN=0\n");
+            logmsg("MAN=0\n");
 #endif /*EXTERNALGUI*/
-                sysblk.started_mask |= regs->cpumask;
-                sysblk.waitmask &= ~regs->cpumask;
-                /* Purge the lookaside buffers */
-                ARCH_DEP(purge_tlb) (regs);
+        sysblk.started_mask |= regs->cpumask;
+        sysblk.waitmask &= ~regs->cpumask;
+        /* Purge the lookaside buffers */
+        ARCH_DEP(purge_tlb) (regs);
 #if defined(FEATURE_ACCESS_REGISTERS)
-                ARCH_DEP(purge_alb) (regs);
+        ARCH_DEP(purge_alb) (regs);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
-                release_lock (&sysblk.intlock);
-                /* If the architecture mode has changed we must adapt */
-                if(sysblk.arch_mode != regs->arch_mode)
-                    longjmp(regs->archjmp,SIE_NO_INTERCEPT);
-                longjmp(regs->progjmp, SIE_NO_INTERCEPT);
-            } /* end if(cpustate == STOPPED) */
+        release_lock (&sysblk.intlock);
+        /* If the architecture mode has changed we must adapt */
+        if(sysblk.arch_mode != regs->arch_mode)
+            longjmp(regs->archjmp,SIE_NO_INTERCEPT);
+        longjmp(regs->progjmp, SIE_NO_INTERCEPT);
+    } /* end if(cpustate == STOPPED) */
 
-            /* Test for wait state */
-            if (regs->psw.wait)
-            {
-
-                /* Test for disabled wait PSW and issue message */
-                if( IS_IC_DISABLED_WAIT_PSW(regs) )
-                {
-                    logmsg (_("CPU%4.4X: Disabled wait state\n"),regs->cpuad);
-                    display_psw (regs);
-                    regs->cpustate = CPUSTATE_STOPPING;
-                    ON_IC_CPU_NOT_STARTED(regs);
-                    INVALIDATE_AIA(regs);
-                    INVALIDATE_AEA_ALL(regs);
-                    release_lock (&sysblk.intlock);
-                    longjmp(regs->progjmp, SIE_NO_INTERCEPT);
-                }
-
-                INVALIDATE_AIA(regs);
-
-                INVALIDATE_AEA_ALL(regs);
-
-                /* Wait for I/O, external or restart interrupt */
-                sysblk.waitmask |= regs->cpumask;
-        wait_condition (&regs->intcond, &sysblk.intlock);
-                sysblk.waitmask &= ~regs->cpumask;
-                release_lock (&sysblk.intlock);
-                longjmp(regs->progjmp, SIE_NO_INTERCEPT);
-            } /* end if(wait) */
-
-            /* Release the interrupt lock */
+    /* Test for wait state */
+    if (regs->psw.wait)
+    {
+#if defined(OPTION_CPU_UTILIZATION)
+        int timedout = 1;
+        struct timespec wakuptime;
+        struct timeval elapsed_wait_time;
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
+        /* Test for disabled wait PSW and issue message */
+        if( IS_IC_DISABLED_WAIT_PSW(regs) )
+        {
+            logmsg (_("CPU%4.4X: Disabled wait state\n"),regs->cpuad);
+            display_psw (regs);
+            regs->cpustate = CPUSTATE_STOPPING;
+            ON_IC_CPU_NOT_STARTED(regs);
+            INVALIDATE_AIA(regs);
+            INVALIDATE_AEA_ALL(regs);
             release_lock (&sysblk.intlock);
+            longjmp(regs->progjmp, SIE_NO_INTERCEPT);
+        }
+
+        INVALIDATE_AIA(regs);
+
+        INVALIDATE_AEA_ALL(regs);
+
+        /* Wait for I/O, external or restart interrupt */
+        sysblk.waitmask |= regs->cpumask;
+#if !defined(OPTION_CPU_UTILIZATION)
+        wait_condition (&regs->intcond, &sysblk.intlock);
+#else /*defined(OPTION_CPU_UTILIZATION)*/
+        timedout = 1;
+        do
+        {
+            obtain_lock  ( &regs->accum_wait_time_lock );
+            gettimeofday ( &regs->accum_wait_time_begwait, NULL );
+            if ( !regs->accum_wait_time_from.tv_sec )
+                /* (First time waiting) */
+                memcpy ( &regs->accum_wait_time_from, &regs->accum_wait_time_begwait, sizeof(struct timeval) );
+            release_lock ( &regs->accum_wait_time_lock );
+
+            wakuptime.tv_sec  = regs->accum_wait_time_begwait.tv_sec;
+            wakuptime.tv_nsec = (regs->accum_wait_time_begwait.tv_usec + 500000) * 1000;
+
+            if (wakuptime.tv_nsec > 1000000000)
+            {
+                wakuptime.tv_sec++;
+                wakuptime.tv_nsec -= 1000000000;
+            }
+
+            timedout = timed_wait_condition (&regs->intcond, &sysblk.intlock, &wakuptime);
+
+            obtain_lock  ( &regs->accum_wait_time_lock );
+            gettimeofday ( &regs->accum_wait_time_to, NULL );
+            ASSERT ( regs->accum_wait_time_begwait.tv_sec );
+            VERIFY ( timeval_subtract ( &regs->accum_wait_time_begwait, &regs->accum_wait_time_to, &elapsed_wait_time ) == 0 );
+            if ( regs->accum_wait_time_from.tv_sec )
+                VERIFY ( timeval_add ( &elapsed_wait_time, &regs->accum_wait_time ) == 0 );
+            else
+            {
+                /* (times were reset while we were waiting) */
+                memcpy ( &regs->accum_wait_time_from, &regs->accum_wait_time_begwait, sizeof(struct timeval) );
+                memcpy ( &regs->accum_wait_time, &elapsed_wait_time, sizeof(struct timeval) );
+            }
+            release_lock ( &regs->accum_wait_time_lock );
+        }
+        while (timedout);
+#endif /*defined(!OPTION_CPU_UTILIZATION)*/
+        sysblk.waitmask &= ~regs->cpumask;
+        release_lock (&sysblk.intlock);
+        longjmp(regs->progjmp, SIE_NO_INTERCEPT);
+    } /* end if(wait) */
+#if defined(OPTION_CPU_UTILIZATION)
+    else
+    {
+        obtain_lock  ( &regs->accum_wait_time_lock );
+        gettimeofday ( &regs->accum_wait_time_to, NULL );
+        if ( !regs->accum_wait_time_from.tv_sec )
+        {
+            /* (First time running) */
+            memcpy ( &regs->accum_wait_time_from, &regs->accum_wait_time_to, sizeof(struct timeval) );
+        }
+        release_lock ( &regs->accum_wait_time_lock );
+    }
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
+
+    /* Release the interrupt lock */
+    release_lock (&sysblk.intlock);
 
 } /* end function process_interrupt */
 
@@ -1245,44 +1313,55 @@ void ARCH_DEP(process_trace)(REGS *regs)
 {
 int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
+    /* Test for breakpoint */
+    shouldbreak = sysblk.instbreak
+                    && (regs->psw.IA == sysblk.breakaddr);
 
-            /* Test for breakpoint */
-            shouldbreak = sysblk.instbreak
-                            && (regs->psw.IA == sysblk.breakaddr);
-
-            /* Display the instruction */
+    /* Display the instruction */
     if (sysblk.insttrace || sysblk.inststep || shouldbreak)
-            {
-                ARCH_DEP(display_inst) (regs, regs->ip);
+    {
+        ARCH_DEP(display_inst) (regs, regs->ip);
         if (sysblk.inststep || shouldbreak)
-                {
-                    /* Put CPU into stopped state */
-                    regs->cpustate = CPUSTATE_STOPPED;
-                    ON_IC_CPU_NOT_STARTED(regs);
-    
-                    /* Wait for start command from panel */
-                    obtain_lock (&sysblk.intlock);
-                    sysblk.waitmask |= regs->cpumask;
+        {
+            /* Put CPU into stopped state */
+            regs->cpustate = CPUSTATE_STOPPED;
+            ON_IC_CPU_NOT_STARTED(regs);
+
+            /* Wait for start command from panel */
+            obtain_lock (&sysblk.intlock);
+            sysblk.waitmask |= regs->cpumask;
 #ifdef EXTERNALGUI
             if (extgui && regs == sysblk.regs[sysblk.pcpu])
                         logmsg("MAN=1\n");
 #endif /*EXTERNALGUI*/
-                    while (regs->cpustate == CPUSTATE_STOPPED)
-                    {
+#if defined(OPTION_CPU_UTILIZATION)
+            obtain_lock ( &regs->accum_wait_time_lock );
+            memset ( &regs->accum_wait_time_from,    0, sizeof(struct timeval) );
+            memset ( &regs->accum_wait_time_to,      0, sizeof(struct timeval) );
+            memset ( &regs->accum_wait_time,         0, sizeof(struct timeval) );
+            release_lock ( &regs->accum_wait_time_lock );
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
+            while (regs->cpustate == CPUSTATE_STOPPED)
+            {
                 wait_condition (&regs->intcond, &sysblk.intlock);
-                    }
+            }
+#if defined(OPTION_CPU_UTILIZATION)
+            obtain_lock  ( &regs->accum_wait_time_lock );
+            gettimeofday ( &regs->accum_wait_time_from, NULL );
+            release_lock ( &regs->accum_wait_time_lock );
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
 #ifdef EXTERNALGUI
             if (extgui && regs == sysblk.regs[sysblk.pcpu])
-                        logmsg("MAN=0\n");
+                logmsg("MAN=0\n");
 #endif /*EXTERNALGUI*/
-                    sysblk.waitmask &= ~regs->cpumask;
-                    release_lock (&sysblk.intlock);
-                }
-            }
+            sysblk.waitmask &= ~regs->cpumask;
+            release_lock (&sysblk.intlock);
+        }
+    }
 } /* end function process_trace */
 
 #define HRR(_inst, _regs, _r1, _r2) \
-        { \
+{ \
     register U32 ib; \
     FETCHIBYTE1(ib, (_inst)) \
     (_r1) = ib >> 4; \
@@ -1290,10 +1369,10 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     (_regs).psw.IA += 2; \
     (_regs).psw.ilc = 2; \
     (_regs).psw.IA &= ADDRESS_MAXWRAP(&(_regs)); \
-        } 
+}
 
 #define HRX(_inst, _regs, _r1, _b2, _effective_addr2) \
-        { \
+{ \
     U32 temp; \
     memcpy (&temp, (_inst), 4); \
     temp = CSWAP32(temp); \
@@ -1314,7 +1393,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     (_regs).psw.IA += 4; \
     (_regs).psw.ilc = 4; \
     (_regs).psw.IA &= ADDRESS_MAXWRAP(&(_regs)); \
-        }
+}
 
 #define HSS_L(_inst, _regs, _l, \
             _b1, _effective_addr1, _b2, _effective_addr2) \
@@ -1342,7 +1421,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     (_regs).psw.IA += 6; \
     (_regs).psw.ilc = 6; \
     (_regs).psw.IA &= ADDRESS_MAXWRAP(&(_regs)); \
-    }
+}                                                                                          
 
 #define HRS(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
 {   U32 temp; \
@@ -1353,14 +1432,14 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     (_b2) = (temp >> 12) & 0xf; \
     (_effective_addr2) = temp & 0xfff; \
     if((_b2)) \
-        { \
+    { \
         (_effective_addr2) += (_regs).GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP(&(_regs)); \
     } \
     (_regs).psw.IA += 4; \
     (_regs).psw.ilc = 4; \
     (_regs).psw.IA &= ADDRESS_MAXWRAP(&(_regs)); \
-        }
+}
 
 #define HSI(_inst, _regs, _i2, _b1, _effective_addr1) \
 {   U32 temp; \
@@ -1440,7 +1519,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     RADR abs;\
     abs = HLOGICAL_TO_ABS_READ((_addr), (_arn), (_regs), (_regs).psw.pkey); \
     (_value) = sysblk.mainstor[abs]; \
-        }
+}
 
 #define HSTOREB(_value, _addr, _arn, _regs) \
 { \
@@ -1484,7 +1563,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     sysblk.mainstor[abs2] = (_value) & 0xFF; \
     } \
 }
-    
+
 #define HFETCH4(_value, _addr, _arn, _regs) \
 { \
     if (!((_addr) & 3) || ((_addr) & 0x000007FF) <= 2048 - 4) \
@@ -1494,7 +1573,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     (_value) = fetch_fw(sysblk.mainstor + abs); \
     } else \
     (_value) = ARCH_DEP(vfetch4) ( (_addr), (_arn), &(_regs)); \
-        }
+}
 
 #define HSTORE4(_value, _addr, _arn, _regs) \
 { \
@@ -1505,14 +1584,14 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
         STORE_FW(sysblk.mainstor + abs, (_value)); \
     } else \
     ARCH_DEP(vstore4) ( (_value), (_addr), (_arn), &(_regs)); \
-    }
+}
 
 /*-------------------------------------------------------------------*/
 /* This is the emulated CPU function                                 */
 /*-------------------------------------------------------------------*/
 
 void ARCH_DEP(run_cpu) (REGS *pregs)
-    {
+{
     static void *instructions[256];
     static void *instructions_a7xx[256];
     REGS        regs;
@@ -1559,14 +1638,14 @@ void ARCH_DEP(run_cpu) (REGS *pregs)
 
     /* `Intermediate' longjmp for architecture change */
     if (setjmp(regs.archjmp))
-        {
+    {
         jmp_buf tmpjmp;
         memcpy (&tmpjmp, pregs->archjmp, sizeof(tmpjmp));
         memcpy(pregs, &regs, sizeof(REGS));
         memcpy (pregs->archjmp, &tmpjmp, sizeof(tmpjmp));
         sysblk.regs[regs.cpuad] = pregs;
         longjmp (pregs->archjmp, SIE_NO_INTERCEPT);
-        }
+    }
 
     /* Establish longjmp destination for program check */
     setjmp(regs.progjmp);
@@ -1583,7 +1662,7 @@ void ARCH_DEP(run_cpu) (REGS *pregs)
 /* Instruction fetch or/and interrupt testing                        */
 /*-------------------------------------------------------------------*/
 instruction_fetch:
-        {
+{
     if( IC_INTERRUPT_CPU(&regs) )
     {
         ARCH_DEP(process_interrupt)(&regs);
@@ -1602,18 +1681,18 @@ instruction_fetch:
     regs.instvalid = 1;
     regs.pagestart = sysblk.mainstor + regs.AI;
     regs.po        = regs.psw.IA & PAGEFRAME_BYTEMASK;
-    
+
     if (IS_IC_TRACE_OR_PER(&regs))
     {
         if (IS_IC_TRACE)
             ARCH_DEP(process_trace)(&regs);
         INVALIDATE_AIA(&regs);
-        }
+    }
 
     COUNT_INST(regs.ip, &regs);
     regs.instcount ++;
     goto *instructions[regs.ip[0]];
-    }
+}
 
 #if defined(OPTION_GABOR_PERF)
 /* include only the inlined instruction implementation part */
@@ -1646,7 +1725,6 @@ non_inlined_instruction:
  #define  _GEN_ARCH _ARCHMODE3
  #include "cpu.c"
 #endif
-
 
 /*-------------------------------------------------------------------*/
 /* Store program status word                                         */
@@ -1700,7 +1778,6 @@ QWORD   qword;                            /* quadword work area      */
                 qword[12], qword[13], qword[14], qword[15]);
     }
 
-
 } /* end function display_psw */
 
 const char* arch_name[GEN_MAXARCH] =
@@ -1718,8 +1795,56 @@ const char* arch_name[GEN_MAXARCH] =
 
 const char* get_arch_mode_string(REGS* regs)
 {
-	if (!regs) return arch_name[sysblk.arch_mode];
-	else return arch_name[regs->arch_mode];
+    if (!regs) return arch_name[sysblk.arch_mode];
+    else return arch_name[regs->arch_mode];
 }
+
+#if defined(OPTION_CPU_UTILIZATION)
+
+int timeval_subtract (struct timeval *beg_timeval, struct timeval *end_timeval, struct timeval *dif_timeval)
+{
+    struct timeval begtime;
+    struct timeval endtime;
+
+    ASSERT ( beg_timeval -> tv_sec >= 0  &&  beg_timeval -> tv_usec >= 0 );
+    ASSERT ( end_timeval -> tv_sec >= 0  &&  end_timeval -> tv_usec >= 0 );
+
+    memcpy(&begtime,beg_timeval,sizeof(struct timeval));
+    memcpy(&endtime,end_timeval,sizeof(struct timeval));
+
+    dif_timeval->tv_sec = endtime.tv_sec - begtime.tv_sec;
+
+    if (endtime.tv_usec >= begtime.tv_usec)
+    {
+        dif_timeval->tv_usec = endtime.tv_usec - begtime.tv_usec;
+    }
+    else
+    {
+        dif_timeval->tv_sec--;
+        dif_timeval->tv_usec = (endtime.tv_usec + 1000000) - begtime.tv_usec;
+    }
+
+    return ((dif_timeval->tv_sec < 0 || dif_timeval->tv_usec < 0) ? -1 : 0);
+}
+
+int timeval_add (struct timeval *dif_timeval, struct timeval *accum_timeval)
+{
+    ASSERT ( dif_timeval   -> tv_sec >= 0  &&  dif_timeval   -> tv_usec >= 0 );
+    ASSERT ( accum_timeval -> tv_sec >= 0  &&  accum_timeval -> tv_usec >= 0 );
+
+    accum_timeval->tv_sec  += dif_timeval->tv_sec;
+    accum_timeval->tv_usec += dif_timeval->tv_usec;
+
+    if (accum_timeval->tv_usec > 1000000)
+    {
+        int nsec = accum_timeval->tv_usec / 1000000;
+        accum_timeval->tv_sec  += nsec;
+        accum_timeval->tv_usec -= nsec * 1000000;
+    }
+
+    return ((accum_timeval->tv_sec < 0 || accum_timeval->tv_usec < 0) ? -1 : 0);
+}
+
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
 
 #endif /*!defined(_GEN_ARCH)*/

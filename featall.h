@@ -38,6 +38,7 @@
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
 #define FEATURE_ALD_FORMAT            0
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
+#define OPTION_CPU_UTILIZATION          /* Track CPU Utilization     */
 
 /*********************************************************************/
 /* Gabor Hoffer performance option. NOTE! which individual           */
@@ -55,7 +56,6 @@
 #if defined(OPTION_900_MODE) && defined(NO_900_MODE)
  #undef OPTION_900_MODE
 #endif
-
 
 /* OPTION_FISHIO only possible with OPTION_FTHREADS */
 #if defined(OPTION_FTHREADS)
@@ -144,51 +144,51 @@
   instruction. Leave it #undef to cause the old existing
   logic to be used instead.
 */
-#undef CPU_INST_BCTR   0x06 
-#undef CPU_INST_BCR    0x07
-#undef CPU_INST_LTR    0x12
-#undef CPU_INST_CLR    0x15
-#undef CPU_INST_LR     0x18
-#undef CPU_INST_CR     0x19
-#undef CPU_INST_AR     0x1a
-#undef CPU_INST_SR     0x1b
-#undef CPU_INST_ALR    0x1e
-#undef CPU_INST_SLR    0x1f
-#undef CPU_INST_STH    0x40
-#undef CPU_INST_LA     0x41
-#undef CPU_INST_STC    0x42
-#undef CPU_INST_IC     0x43
-#undef CPU_INST_BAL    0x45
-#undef CPU_INST_BC     0x47
-#undef CPU_INST_LH     0x48
-#undef CPU_INST_CH     0x49
-#undef CPU_INST_SH     0x4b
-#undef CPU_INST_ST     0x50
-#undef CPU_INST_N      0x54
-#undef CPU_INST_CL     0x55
-#undef CPU_INST_L      0x58
-#undef CPU_INST_C      0x59
-#undef CPU_INST_A      0x5a
-#undef CPU_INST_AL     0x5e
-#undef CPU_INST_D      0x5d
-#undef CPU_INST_BXH    0x86
-#undef CPU_INST_BXLE   0x87
-#undef CPU_INST_SLA    0x8b
-#undef CPU_INST_STM    0x90
-#undef CPU_INST_TM     0x91
-#undef CPU_INST_MVI    0x92
-#undef CPU_INST_NI     0x94
-#undef CPU_INST_CLI    0x95
-#undef CPU_INST_OI     0x96
-#undef CPU_INST_LM     0x98
-#undef CPU_INST_A7XX   0xa7
-#undef CPU_INST_BRC    0x04 /* A7x4 */
-#undef CPU_INST_LHI    0x08 /* A7x8 */
-#undef CPU_INST_AHI    0x0a /* A7xA */
-#undef CPU_INST_CHI    0x0e /* A7xE */
-#undef CPU_INST_ICM    0xbf
-#undef CPU_INST_MVC    0xd2
-#undef CPU_INST_CLC    0xd5
+#define CPU_INST_BCTR   0x06 
+#define CPU_INST_BCR    0x07
+#define CPU_INST_LTR    0x12
+#define CPU_INST_CLR    0x15
+#define CPU_INST_LR     0x18
+#define CPU_INST_CR     0x19
+#define CPU_INST_AR     0x1a
+#define CPU_INST_SR     0x1b
+#define CPU_INST_ALR    0x1e
+#define CPU_INST_SLR    0x1f
+#define CPU_INST_STH    0x40
+#define CPU_INST_LA     0x41
+#define CPU_INST_STC    0x42
+#define CPU_INST_IC     0x43
+#define CPU_INST_BAL    0x45
+#define CPU_INST_BC     0x47
+#define CPU_INST_LH     0x48
+#define CPU_INST_CH     0x49
+#define CPU_INST_SH     0x4b
+#define CPU_INST_ST     0x50
+#define CPU_INST_N      0x54
+#define CPU_INST_CL     0x55
+#define CPU_INST_L      0x58
+#define CPU_INST_C      0x59
+#define CPU_INST_A      0x5a
+#define CPU_INST_AL     0x5e
+#define CPU_INST_D      0x5d
+#define CPU_INST_BXH    0x86
+#define CPU_INST_BXLE   0x87
+#define CPU_INST_SLA    0x8b
+#define CPU_INST_STM    0x90
+#define CPU_INST_TM     0x91
+#define CPU_INST_MVI    0x92
+#define CPU_INST_NI     0x94
+#define CPU_INST_CLI    0x95
+#define CPU_INST_OI     0x96
+#define CPU_INST_LM     0x98
+#define CPU_INST_A7XX   0xa7
+#define CPU_INST_BRC    0x04 /* A7x4 */
+#define CPU_INST_LHI    0x08 /* A7x8 */
+#define CPU_INST_AHI    0x0a /* A7xA */
+#define CPU_INST_CHI    0x0e /* A7xE */
+#define CPU_INST_ICM    0xbf
+#define CPU_INST_MVC    0xd2
+#define CPU_INST_CLC    0xd5
 #endif /* defined(OPTION_GABOR_PERF) */
 
 /* end of FEATALL.H */

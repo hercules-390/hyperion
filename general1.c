@@ -3061,14 +3061,14 @@ U32	*a;
 	a = (U32 *) (sysblk.mainstor + abs);
     } else
     {
-    /* Calculate the number of bytes to be loaded */
-    d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
+	/* Calculate the number of bytes to be loaded */
+	d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
 
-    /* Fetch new register contents from operand address */
-    ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
+        /* Fetch new register contents from operand address */
+	ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
 	a = (U32 *) rwork;
     }
-
+    
     a = a - r1;
     if (r1 <= r3)
 	for (i = r1; i <= r3; i ++) FETCH_FW(regs->GR_L(i), (BYTE *) (a + i));
@@ -3253,7 +3253,7 @@ GREG    len1, len2;                     /* Operand lengths           */
 GREG    n;                              /* Work area                 */
 BYTE    pad;                            /* Padding byte              */
 GREG	l1, l2, l3;
-RADR    abs1, abs2;
+RADR	abs1, abs2;
 
     RR(inst, execflag, regs, r1, r2);
 
@@ -3303,21 +3303,21 @@ RADR    abs1, abs2;
     l1 = l2 = abs1 = abs2 = 0;
 
     while (len1 > 0)
-            {
-	if (!l1)
     {
+	if (!l1)
+	{
 	    l1 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
 	    if (len1 < l1) l1 = len1;
-        abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-    }
+	    abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+	}
 
 	if (len2) /* move blocks */
-    {
+	{
 	    if (!l2)
 	    {
 		l2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
 		if (len2 < l2) l2 = len2;
-        abs2 = LOGICAL_TO_ABS (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+		abs2 = LOGICAL_TO_ABS (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
 	    }
 
 //	    logmsg ("M addr/len/l (1) %.8X/%.6X/%.4X    (2) : %.8X/%.6X/%.4X\n", 
@@ -3331,12 +3331,12 @@ RADR    abs1, abs2;
 	    addr2 += l3;
 	    abs1  += l3;
 	    abs2  += l3;
-        addr1 &= ADDRESS_MAXWRAP(regs);
+    	    addr1 &= ADDRESS_MAXWRAP(regs);
     	    addr2 &= ADDRESS_MAXWRAP(regs);
 	    l1	  -= l3;
 	    l2	  -= l3;
 	} else /* fill with padding byte */
-        {
+	{
 //	    logmsg ("P addr/len/l (1) %.8X/%.6X/%.4X\n", addr1, len1, l1);
 
 	    memset (sysblk.mainstor+abs1, pad, l1);
@@ -3345,15 +3345,15 @@ RADR    abs1, abs2;
     	    addr1 &= ADDRESS_MAXWRAP(regs);
 	    l1     = 0;
 	}
-        }
+    }
 
 //    logmsg ("MVCL END   (addr1/len1  addr2/len2) %.8X/%.6X   %.8X/%.6X \n\n",
 //			    addr1, len1, addr2, len2);
 
-        GR_A(r1, regs) = addr1;
-        GR_A(r2, regs) = addr2;
-        regs->GR_LA24(r1+1) = len1;
-        regs->GR_LA24(r2+1) = len2;
+    GR_A(r1, regs) = addr1;
+    GR_A(r2, regs) = addr2;
+    regs->GR_LA24(r1+1) = len1;
+    regs->GR_LA24(r2+1) = len2;
 
     regs->psw.cc = cc;
     return;

@@ -170,7 +170,7 @@ het_open( HETB **hetb, char *filename, int flags )
     */
     omode = "r+b";
     fd = open( filename, O_RDWR | flags, S_IRUSR | S_IWUSR | S_IRGRP );
-    if( fd == -1 && errno == EROFS )
+    if( fd == -1 && (errno == EROFS || errno == EACCES) )
     {
         /*
         || Retry open if file resides on readonly file system

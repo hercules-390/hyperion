@@ -151,7 +151,7 @@ do { \
 
 #undef SET_IC_IO_MASK
 #ifdef FEATURE_BCMODE
-  #define SET_IC_IO_MASK(_regs) \
+#define SET_IC_IO_MASK(_regs) \
 do { \
   if( ((_regs)->psw.ecmode ? ((_regs)->psw.sysmask&PSW_IOMASK) : \
                              ((_regs)->psw.sysmask&0xFE)) ) { \

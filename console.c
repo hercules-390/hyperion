@@ -1002,7 +1002,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
     rc = getpeername (csock, (struct sockaddr *)&client, &namelen);
 
     /* Log the client's IP address and hostname */
-    clientip = inet_ntoa(client.sin_addr);
+    clientip = strdup(inet_ntoa(client.sin_addr));
 
     pHE = gethostbyaddr ((unsigned char*)(&client.sin_addr),
                          sizeof(client.sin_addr), AF_INET);
@@ -1022,6 +1022,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
     if (rc != 0)
     {
         close (csock);
+        if (clientip) free(clientip);
         return NULL;
     }
 
@@ -1126,6 +1127,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
         /* Close the connection and terminate the thread */
         sleep (5);
         close (csock);
+        if (clientip) free(clientip);
         return NULL;
     }
 
@@ -1155,6 +1157,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
     /* Signal connection thread to redrive its select loop */
     signal_thread (sysblk.cnsltid, SIGUSR2);
 
+    if (clientip) free(clientip);
     return NULL;
 
 } /* end function connect_client */

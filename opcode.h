@@ -579,7 +579,7 @@ do { \
     int i; \
     for(i = 0; i < MAXAEA; i++) \
 	if ((_regs)->aearn[i] == (_arn)) \
-        (_regs)->VE(i) = 1; \
+    		(_regs)->VE(i) = 1; \
 } while(0)
 
 #define INVALIDATE_AEA_ALL(_regs) \

@@ -811,7 +811,7 @@ int             rc;                     /* Return code               */
                 rc = het_cntl (dev->hetb,
                             HETCNTL_SET | HETCNTL_LEVEL,
                             dev->tdparms.level);
-                if (rc < 0)
+                if (rc >= 0)
                 {
                     rc = het_cntl (dev->hetb,
                                 HETCNTL_SET | HETCNTL_CHUNKSIZE,
@@ -1114,6 +1114,12 @@ int             rc;                     /* Return code               */
 static int bsf_het (DEVBLK *dev, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
+
+    /* Exit if already at BOT */
+    if (dev->blockid == 0)
+    {
+        return 0;
+    }
 
     rc = het_bsf (dev->hetb);
     if (rc < 0)
@@ -1730,6 +1736,7 @@ BYTE            c;                      /* Work area for sscanf      */
         tdfrec = tdfbuf + tdfpos;
         while (tdfpos < tdfsize && tdfbuf[tdfpos]!='\r'
             && tdfbuf[tdfpos]!='\n') tdfpos++;
+        c = tdfbuf[tdfpos];
         if (tdfpos >= tdfsize) break;
         tdfbuf[tdfpos] = '\0';
 
@@ -1832,6 +1839,7 @@ BYTE            c;                      /* Work area for sscanf      */
             free (tdfbuf);
             return -1;
         }
+        tdfbuf[tdfpos] = c;
     } /* end for(filecount) */
 
     /* Save the file count and TDF array pointer in the device block */
@@ -3052,7 +3060,7 @@ long            locblock;               /* Block Id for Locate Block */
     /* Open the device file if necessary */
     if (dev->fd < 0 && !IS_CCW_SENSE(code)
         && !(code == 0x03 || code == 0x9F || code == 0xAF
-                || code == 0xB7 || code == 0xC7))
+                || code == 0xB7 || code == 0xC7 || code == 0xDB))
     {
         /* Open the device file according to device type */
         switch (dev->tapedevt)
@@ -3200,6 +3208,9 @@ long            locblock;               /* Block Id for Locate Block */
     /*---------------------------------------------------------------*/
         *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
+        if (((0x3480 == dev->devtype) || (0x3490 == dev->devtype))
+            && (strcmp(dev->filename,TAPE_UNLOADED) == 0))
+            *unitstat |= CSW_UC;
         break;
 
     case 0x07:
