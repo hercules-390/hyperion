@@ -28,7 +28,10 @@ MODENT *modent;
         {
             logmsg(" entry = %s",modent->name);
 //          logmsg(", ep = %p",modent->fep);
-            logmsg(", loadcount = %d",modent->count);
+            if(modent->fep)
+                logmsg(", loadcount = %d",modent->count);
+            else
+                logmsg(", unresolved");
             logmsg(", owner = %s\n",modent->dllent->name);
         }
     }
