@@ -918,7 +918,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #endif /*!FEATURE_CPU_RECONFIG*/
         {
             memset (sccbcpu, 0, sizeof(SCCB_CPU_INFO));
-            sccbcpu->cpa = sysblk.regs[i]->cpuad;
+            sccbcpu->cpa = sysblk.regs[i].cpuad;
             sccbcpu->tod = 0;
             sccbcpu->cpf[0] = 0
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
@@ -964,10 +964,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
 #ifdef FEATURE_VECTOR_FACILITY
 #ifndef FEATURE_CPU_RECONFIG
-            if(sysblk.regs[i]->vf->online)
+            if(sysblk.regs[i].vf->online)
 #endif /*!FEATURE_CPU_RECONFIG*/
               sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_INSTALLED;
-            if(sysblk.regs[i]->vf->online)
+            if(sysblk.regs[i].vf->online)
                 sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_CONNECTED;
 #ifdef FEATURE_CPU_RECONFIG
             else
@@ -1498,7 +1498,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         /* Add cpu to the configuration */
-        configure_cpu(sysblk.regs[i]);
+        configure_cpu(sysblk.regs + i);
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -1518,7 +1518,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         /* Take cpu out of the configuration */
-        deconfigure_cpu(sysblk.regs[i]);
+        deconfigure_cpu(sysblk.regs + i);
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -1539,11 +1539,11 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             break;
         }
 
-        if(sysblk.regs[i]->vf->online)
+        if(sysblk.regs[i].vf->online)
             logmsg(_("CPU%4.4X: Vector Facility configured offline\n"),i);
 
         /* Take the VF out of the configuration */
-        sysblk.regs[i]->vf->online = 0;
+        sysblk.regs[i].vf->online = 0;
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -1563,18 +1563,18 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         /* Return improper state if associated cpu is offline */
-        if(!sysblk.regs[i]->cpuonline)
+        if(!sysblk.regs[i].cpuonline)
         {
             sccb->reas = SCCB_REAS_IMPROPER_RSC;
             sccb->resp = SCCB_RESP_REJECT;
             break;
         }
 
-        if(!sysblk.regs[i]->vf->online)
+        if(!sysblk.regs[i].vf->online)
             logmsg(_("CPU%4.4X: Vector Facility configured online\n"),i);
 
         /* Mark the VF online to the CPU */
-        sysblk.regs[i]->vf->online = 1;
+        sysblk.regs[i].vf->online = 1;
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;

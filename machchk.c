@@ -295,9 +295,9 @@ int i;
     for (i = 0; i < sysblk.numcpu; i++)
 #endif /*!FEATURE_CPU_RECONFIG*/
     {
-        if(sysblk.regs[i]->cputid == tid)
+        if(sysblk.regs[i].cputid == tid)
         {
-            regs = sysblk.regs[i];
+            regs = sysblk.regs + i;
             break;
         }
     }
@@ -383,8 +383,8 @@ int i;
 #endif /*!FEATURE_CPU_RECONFIG*/
                     if(i != regs->cpuad)
                     {
-                        ON_IC_MALFALT(sysblk.regs[i]);
-                        sysblk.regs[i]->malfcpu[regs->cpuad] = 1;
+                        ON_IC_MALFALT(&sysblk.regs[i]);
+                        sysblk.regs[i].malfcpu[regs->cpuad] = 1;
                     }
                 release_lock(&sysblk.intlock);
             }

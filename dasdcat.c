@@ -31,7 +31,7 @@ int do_cat_cards(BYTE *buf, int len, unsigned long optflags)
 {
  if (len % 80 != 0) {
  fprintf(stderr,
- _("HHCDT002E Can't make 80 column card images from block length %d\n"), len);
+ "Can't make 80 column card images from block length %d\n", len);
  return -1;
  }
 
@@ -114,7 +114,7 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
  /* Load number of bytes in directory block */
  dirrem = (dirblk[0] << 8) | dirblk[1];
  if (dirrem < 2 || dirrem > 256) {
- fprintf(stderr, _("HHCDT003E Directory block byte count is invalid\n"));
+ fprintf(stderr, "Directory block byte count is invalid\n");
  return -1;
  }
 
@@ -216,7 +216,7 @@ int do_cat_nonpds(CIFBLK *cif, DSXTENT *extent, int noext,
  UNREFERENCED(extent);
  UNREFERENCED(noext);
  UNREFERENCED(optflags);
- fprintf(stderr, _("HHCDT004E non-PDS-members not yet supported\n"));
+ fprintf(stderr, "non-PDS-members not yet supported\n");
  return -1;
 }
 
@@ -246,7 +246,7 @@ int do_cat(CIFBLK *cif, char *file)
  else if (*p == 'c')
  optflags |= OPT_CARDS;
  else
- fprintf(stderr, _("HHCDT005E unknown dataset name option: '%c'\n"), *p);
+ fprintf(stderr, "unknown dataset name option: '%c'\n", *p);
  }
  }
 
@@ -341,7 +341,7 @@ int main(int argc, char **argv)
          }
          cif = open_ckd_image(fn, sfn, O_RDONLY, 0);
          if (!cif)
-             fprintf(stderr, _("HHCDT001E failed to open image %s\n"), *argv);
+             fprintf(stderr, "failed to open image %s\n", *argv);
      }
      else
      {

@@ -181,14 +181,14 @@ char            buf[512];               /* FBA i/o buffer            */
         fd = open (ifile, O_RDONLY|O_BINARY);
         if (fd < 0)
         {
-            fprintf (stderr, _("HHCDC001E %s: %s open error: %s\n"),
+            fprintf (stderr, _("%s: %s open error: %s\n"),
                      pgm, ifile, strerror(errno));
             return -1;
         }
         rc = read (fd, buf, 8);
         if (rc < 8)
         {
-            fprintf (stderr, _("HHCDC002E %s: %s read error: %s\n"),
+            fprintf (stderr, _("%s: %s read error: %s\n"),
                      pgm, ifile, strerror(errno));
             return -1;
         }
@@ -251,7 +251,7 @@ char            buf[512];               /* FBA i/o buffer            */
         icif = open_fba_image (ifile, sfile, O_RDONLY|O_BINARY, 0);
     if (icif == NULL)
     {
-        fprintf (stderr, _("HHCDC003E %s: %s open failed\n"), pgm, ifile);
+        fprintf (stderr, _("%s: %s open failed\n"), pgm, ifile);
         return -1;
     }
     idev = &icif->devblk;
@@ -264,8 +264,7 @@ char            buf[512];               /* FBA i/o buffer            */
         ckd = dasd_lookup (DASD_CKDDEV, NULL, idev->devtype, cyls);
         if (ckd == NULL)
         {
-            fprintf (stderr, _("HHCDC004E %s: ckd lookup failed for %4.4X "
-                     "cyls %d\n"),
+            fprintf (stderr, _("%s: ckd lookup failed for %4.4X cyls %d\n"),
                      pgm, idev->devtype, cyls);
             close_image_file (icif);
             return -1;
@@ -283,7 +282,7 @@ char            buf[512];               /* FBA i/o buffer            */
         fba = dasd_lookup (DASD_FBADEV, NULL, idev->devtype, blks);
         if (fba == NULL)
         {
-            fprintf (stderr, _("HHCDC005E %s: fba lookup failed, blks %d\n"),
+            fprintf (stderr, _("%s: fba lookup failed, blks %d\n"),
                      pgm, blks);
             close_image_file (icif);
             return -1;
@@ -302,7 +301,7 @@ char            buf[512];               /* FBA i/o buffer            */
                         blks, "", comp, lfs, 1+r);
     if (rc < 0)
     {
-        fprintf (stderr, _("HHCDC006E %s: %s create failed\n"), pgm, ofile);
+        fprintf (stderr, _("%s: %s create failed\n"), pgm, ofile);
         close_image_file (icif);
         return -1;
     }
@@ -314,7 +313,7 @@ char            buf[512];               /* FBA i/o buffer            */
         ocif = open_fba_image (ofile, NULL, O_RDWR|O_BINARY, 1);
     if (ocif == NULL)
     {
-        fprintf (stderr, _("HHCDC007E %s: %s open failed\n"), pgm, ofile);
+        fprintf (stderr, _("%s: %s open failed\n"), pgm, ofile);
         close_image_file (icif);
         return -1;
     }
@@ -342,8 +341,7 @@ char            buf[512];               /* FBA i/o buffer            */
         }
         if (rc < 0)
         {
-            fprintf (stderr, _("HHCDC008E %s: %s read error %s %d "
-                               "stat=%2.2X\n"),
+            fprintf (stderr, _("%s: %s read error %s %d stat=%2.2X\n"),
                      pgm, ifile, ckddasd ? "track" : "block", i, unitstat);
             close_image_file(icif); close_image_file(ocif);
             return -1;
@@ -362,8 +360,7 @@ char            buf[512];               /* FBA i/o buffer            */
             rc = (odev->fbawrblk)(odev, buf, fba->size, &unitstat);
         if (rc < 0)
         {
-            fprintf (stderr, _("HHCDC009E %s: %s write error %s %d "
-                               "stat=%2.2X\n"),
+            fprintf (stderr, _("%s: %s write error %s %d stat=%2.2X\n"),
                      pgm, ofile, ckddasd ? "track" : "block", i, unitstat);
             close_image_file(icif); close_image_file(ocif);
             return -1;
@@ -373,7 +370,7 @@ char            buf[512];               /* FBA i/o buffer            */
         if (!quiet) status (i+1, n);
     }
 
-    if (!quiet) printf (_("\nHHCDC010I Copy successful !!!       \n"));
+    if (!quiet) printf (_("\nCopy successful !!!       \n"));
     close_image_file(icif); close_image_file(ocif);
 
     return 0;

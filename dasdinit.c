@@ -228,8 +228,7 @@ int     lfs = 0;                        /* 1 = Build large file      */
 
     /* Display completion message */
 
-    fprintf (stderr, _("HHCDI001I DASD initialization successfully "
-                     "completed.\n"));
+    fprintf (stderr, "DASD initialization successfully completed.\n");
 
     return 0;
 

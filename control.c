@@ -3844,7 +3844,7 @@ int     cpu;
        as we simulate 1 shared TOD clock, and do not support the
        TOD clock sync check */
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-        sysblk.regs[cpu]->todoffset = sysblk.todoffset;
+        sysblk.regs[cpu].todoffset = sysblk.todoffset;
 
     /* Release the TOD clock update lock */
     release_lock (&sysblk.todlock);
@@ -4686,7 +4686,7 @@ static char *ordername[] = {    "Unassigned",
     }
 
     /* Point to the target CPU */
-    tregs = sysblk.regs[cpad];
+    tregs = sysblk.regs + cpad;
 
     /* Trace SIGP unless Sense, External Call, Emergency Signal,
        or the target CPU is configured offline */
@@ -5023,9 +5023,9 @@ static char *ordername[] = {    "Unassigned",
 #else /*!_FEATURE_CPU_RECONFIG*/
             for (cpu = 0; cpu < sysblk.numcpu; cpu++)
 #endif /*!_FEATURE_CPU_RECONFIG*/
-                if(sysblk.regs[cpu]->cpuonline
-                    && sysblk.regs[cpu]->cpustate != CPUSTATE_STOPPED
-                    && sysblk.regs[cpu]->cpuad != regs->cpuad)
+                if(sysblk.regs[cpu].cpuonline
+                    && sysblk.regs[cpu].cpustate != CPUSTATE_STOPPED
+                    && sysblk.regs[cpu].cpuad != regs->cpuad)
                     status |= SIGP_STATUS_INCORRECT_STATE;
 
             if(!status)

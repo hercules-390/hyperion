@@ -70,7 +70,7 @@ int quit_cmd(char* cmdline, int argc, char *argv[])
 
 int start_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
 
@@ -166,7 +166,7 @@ int g_cmd(char* cmdline, int argc, char *argv[])
 
 int stop_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
 
@@ -225,7 +225,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
 int startall_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
     unsigned i;
 
     UNREFERENCED(cmdline);
@@ -235,8 +235,8 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
     obtain_lock (&sysblk.intlock);
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if(sysblk.regs[i]->cpuonline && !regs->checkstop)
-            sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
+        if(sysblk.regs[i].cpuonline && !regs->checkstop)
+            sysblk.regs[i].cpustate = CPUSTATE_STARTED;
 
     WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
 
@@ -259,10 +259,10 @@ int stopall_cmd(char* cmdline, int argc, char *argv[])
     obtain_lock (&sysblk.intlock);
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if(sysblk.regs[i]->cpuonline)
+        if(sysblk.regs[i].cpuonline)
         {
-            sysblk.regs[i]->cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(sysblk.regs[i]);
+            sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
+            ON_IC_CPU_NOT_STARTED(sysblk.regs + i);
             WAKEUP_CPU(i);
         }
 
@@ -298,7 +298,7 @@ int quiet_cmd(char* cmdline, int argc, char *argv[])
 
 int clocks_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -417,7 +417,7 @@ int tt32stats_cmd(char* cmdline, int argc, char *argv[])
 
 int store_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -510,7 +510,7 @@ int sh_cmd(char* cmdline, int argc, char *argv[])
 
 int gpr_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -524,7 +524,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
 int fpr_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -538,7 +538,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
 int cr_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -552,7 +552,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
 int ar_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -566,7 +566,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
 int pr_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -583,7 +583,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
 int psw_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -597,7 +597,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
 int restart_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -631,7 +631,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
 int r_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -644,7 +644,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
 int v_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -698,7 +698,7 @@ int bdelete_cmd(char* cmdline, int argc, char *argv[])
 
 int i_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 BYTE c;                                 /* Character work area       */
 
     int      rc = 0;
@@ -809,7 +809,7 @@ BYTE c;                                 /* Character work area       */
 
 int ipl_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 BYTE c;                                 /* Character work area       */
 
     unsigned i;
@@ -822,8 +822,8 @@ BYTE c;                                 /* Character work area       */
     }
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if(sysblk.regs[i]->cpuonline
-            && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
+        if(sysblk.regs[i].cpuonline
+            && sysblk.regs[i].cpustate != CPUSTATE_STOPPED)
         {
             logmsg( _("ipl rejected: All CPU's must be stopped\n") );
             return -1;
@@ -863,7 +863,7 @@ BYTE c;                                 /* Character work area       */
 
 #ifdef _FEATURE_CPU_RECONFIG
     if(cpu < 0 || cpu > MAX_CPU_ENGINES
-       || !sysblk.regs[cpu]->cpuonline)
+       || !sysblk.regs[cpu].cpuonline)
 #else /*!_FEATURE_CPU_RECONFIG*/
     if(cpu < 0 || cpu > sysblk.numcpu)
 #endif /*!_FEATURE_CPU_RECONFIG*/
@@ -1492,7 +1492,7 @@ BYTE c;                                 /* Character work area       */
 
 int savecore_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     BYTE   *fname;                      /* -> File name (ASCIIZ)     */
     BYTE   *loadaddr;                   /* loadcore memory address   */
@@ -1587,7 +1587,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
 int loadcore_cmd(char* cmdline, int argc, char *argv[])
 {
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     BYTE   *fname;                      /* -> File name (ASCIIZ)     */
     struct stat statbuff;               /* Buffer for file status    */
@@ -1654,7 +1654,7 @@ int loadtext_cmd(char* cmdline, int argc, char *argv[])
     BYTE    buf[80];                    /* Read buffer               */
     int     len;                        /* Number of bytes read      */
     int     n;
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
 
@@ -1745,7 +1745,7 @@ int ipending_cmd(char* cmdline, int argc, char *argv[])
     unsigned i;
     char *states[] = {"?", "STOPPED", "STOPPING", "?", "STARTED",
                       "?", "?", "?", "STARTING"};
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
 
@@ -1768,7 +1768,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
 #ifdef _FEATURE_CPU_RECONFIG
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if (sysblk.regs[i]->cpuonline)
+        if (sysblk.regs[i].cpuonline)
 #else /*!_FEATURE_CPU_RECONFIG*/
     for (i = 0; i < sysblk.numcpu; i++)
 #endif /*!_FEATURE_CPU_RECONFIG*/
@@ -1779,64 +1779,64 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
             if ('+' == *cmdarg)
             {
-                ON_IC_DEBUG(sysblk.regs[i]);
+                ON_IC_DEBUG(sysblk.regs + i);
                 logmsg( _("ON\n") );
             }
             else
             {
-                OFF_IC_DEBUG(sysblk.regs[i]);
+                OFF_IC_DEBUG(sysblk.regs + i);
                 logmsg( _("OFF\n") );
             }
         }
 // /*DEBUG*/logmsg( _("CPU%4.4X: Any cpu interrupt %spending\n"),
-// /*DEBUG*/    sysblk.regs[i]->cpuad, sysblk.regs[i]->cpuint ? "" : _("not ") );
+// /*DEBUG*/    sysblk.regs[i].cpuad, sysblk.regs[i].cpuint ? "" : _("not ") );
         logmsg( _("CPU%4.4X: CPUint=%8.8X (r:%8.8X|s:%8.8X)&(Mask:%8.8X)\n"),
-            sysblk.regs[i]->cpuad, IC_INTERRUPT_CPU(sysblk.regs[i]),
-            sysblk.regs[i]->ints_state,
+            sysblk.regs[i].cpuad, IC_INTERRUPT_CPU(sysblk.regs + i),
+            sysblk.regs[i].ints_state,
             sysblk.ints_state, regs[i].ints_mask
             );
         logmsg( _("CPU%4.4X: Clock comparator %spending\n"),
-            sysblk.regs[i]->cpuad,
-            IS_IC_CLKC(sysblk.regs[i]) ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            IS_IC_CLKC(sysblk.regs + i) ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: CPU timer %spending\n"),
-            sysblk.regs[i]->cpuad,
-            IS_IC_PTIMER(sysblk.regs[i]) ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            IS_IC_PTIMER(sysblk.regs + i) ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: Interval timer %spending\n"),
-            sysblk.regs[i]->cpuad,
-            IS_IC_ITIMER(sysblk.regs[i]) ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            IS_IC_ITIMER(sysblk.regs + i) ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: External call %spending\n"),
-            sysblk.regs[i]->cpuad,
-            IS_IC_EXTCALL(sysblk.regs[i]) ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            IS_IC_EXTCALL(sysblk.regs + i) ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: Emergency signal %spending\n"),
-            sysblk.regs[i]->cpuad,
-            IS_IC_EMERSIG(sysblk.regs[i]) ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            IS_IC_EMERSIG(sysblk.regs + i) ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: CPU %swaiting for interlock\n"),
-            sysblk.regs[i]->cpuad,
-            sysblk.regs[i]->mainsync ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            sysblk.regs[i].mainsync ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: CPU interlock %sheld\n"),
-            sysblk.regs[i]->cpuad,
-            sysblk.regs[i]->mainlock ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            sysblk.regs[i].mainlock ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: CPU state is %s\n"),
-            sysblk.regs[i]->cpuad,
-            states[sysblk.regs[i]->cpustate]
+            sysblk.regs[i].cpuad,
+            states[sysblk.regs[i].cpustate]
             );
 
         if (ARCH_370 == sysblk.arch_mode)
         {
-            if (0xFFFF == sysblk.regs[i]->chanset)
+            if (0xFFFF == sysblk.regs[i].chanset)
                 logmsg( _("CPU%4.4X: No channelset connected\n"),
-                    sysblk.regs[i]->cpuad
+                    sysblk.regs[i].cpuad
                     );
             else
                 logmsg( _("CPU%4.4X: Connected to channelset %4.4X\n"),
-                    sysblk.regs[i]->cpuad,sysblk.regs[i]->chanset
+                    sysblk.regs[i].cpuad,sysblk.regs[i].chanset
                     );
         }
     }
@@ -2039,8 +2039,8 @@ int archmode_cmd(char* cmdline, int argc, char *argv[])
     }
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if (sysblk.regs[i]->cpuonline
-            && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
+        if (sysblk.regs[i].cpuonline
+            && CPUSTATE_STOPPED != sysblk.regs[i].cpustate)
         {
             logmsg( _("All CPU's must be stopped to change architecture\n") );
             return -1;
@@ -2088,7 +2088,7 @@ int OnOffCommand(char* cmdline, int argc, char *argv[])
     U32     aaddr;                      /* Absolute storage address  */
     DEVBLK* dev;
     U16     devnum;
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 BYTE c;                                 /* Character work area       */
 
     UNREFERENCED(argc);
@@ -2595,7 +2595,7 @@ void *panel_command (void *cmdline)
     BYTE  cmd[MAX_CMD_LEN];             /* Copy of panel command     */
     BYTE *pCmdLine;
     unsigned i;
-REGS *regs = sysblk.regs[sysblk.pcpu];
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     pCmdLine = (BYTE*)cmdline; ASSERT(pCmdLine);
 
@@ -2626,7 +2626,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 #endif
 
     /* Set target CPU for commands and displays */
-    regs = sysblk.regs[sysblk.pcpu];
+    regs = sysblk.regs + sysblk.pcpu;
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
     if ('.' == cmd[0] || '!' == cmd[0])

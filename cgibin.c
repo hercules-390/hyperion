@@ -55,7 +55,7 @@ void cgibin_reg_control(WEBBLK *webblk)
 {
 int i;
 
-    REGS *regs = sysblk.regs[sysblk.pcpu];
+    REGS *regs = sysblk.regs + sysblk.pcpu;
 
     html_header(webblk);
 
@@ -81,7 +81,7 @@ void cgibin_reg_general(WEBBLK *webblk)
 {
 int i;
 
-    REGS *regs = sysblk.regs[sysblk.pcpu];
+    REGS *regs = sysblk.regs + sysblk.pcpu;
 
     html_header(webblk);
 
@@ -107,7 +107,7 @@ void store_psw (REGS *regs, BYTE *addr);
 
 void cgibin_psw(WEBBLK *webblk)
 {
-    REGS *regs = sysblk.regs[sysblk.pcpu];
+    REGS *regs = sysblk.regs + sysblk.pcpu;
     QWORD   qword;                            /* quadword work area      */  
 
     char *value;
@@ -335,7 +335,7 @@ REGS *regs;
     /* Validate cpu number */
 #if defined(_FEATURE_CPU_RECONFIG)
     if(cpu < 0 || cpu > MAX_CPU_ENGINES
-       || !sysblk.regs[cpu]->cpuonline)
+       || !sysblk.regs[cpu].cpuonline)
 #else
     if(cpu < 0 || cpu > sysblk.numcpu)
 #endif
@@ -346,10 +346,10 @@ REGS *regs;
             cpu < sysblk.numcpu;
 #endif
                 cpu++)
-            if(sysblk.regs[cpu]->cpuonline)
+            if(sysblk.regs[cpu].cpuonline)
                 break;
 
-    regs = sysblk.regs[cpu];
+    regs = sysblk.regs + cpu;
 
     if((value = cgi_variable(webblk,"alter_gr")) && *value == 'A')
     {
@@ -406,7 +406,7 @@ REGS *regs;
         i < sysblk.numcpu;
 #endif
         i++)
-        if(sysblk.regs[i]->cpuonline)
+        if(sysblk.regs[i].cpuonline)
             fprintf(webblk->hsock,"<option value=%d%s>CPU%4.4X</option>\n",
               i,i==cpu?" selected":"",i);
 
@@ -654,7 +654,7 @@ U32 doipl;
 #else
             iplcpu >= sysblk.numcpu
 #endif
-      || !sysblk.regs[iplcpu]->cpuonline)
+      || !sysblk.regs[iplcpu].cpuonline)
         doipl = 0;
   
     if(!doipl)
@@ -670,9 +670,9 @@ U32 doipl;
             i < sysblk.numcpu;
 #endif
             i++)
-            if(sysblk.regs[i]->cpuonline)
+            if(sysblk.regs[i].cpuonline)
                 fprintf(webblk->hsock,"<option value=%4.4X%s>CPU%4.4X</option>\n",
-                  i, ((sysblk.regs[i]->cpuad == iplcpu) ? " selected" : ""), i);
+                  i, ((sysblk.regs[i].cpuad == iplcpu) ? " selected" : ""), i);
 
         fprintf(webblk->hsock,"</select>\n"
                               "<select type=submit name=device>\n");
@@ -701,7 +701,7 @@ U32 doipl;
     else
     {
         /* Perform IPL function */
-        if( load_ipl(ipldev, sysblk.regs[iplcpu]) )
+        if( load_ipl(ipldev, sysblk.regs + iplcpu) )
         {
             fprintf(webblk->hsock,"<h3>IPL failed, see the "
                                   "<a href=\"syslog#bottom\">system log</a> "

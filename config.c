@@ -289,10 +289,6 @@ BYTE    c;                              /* Work area for sscanf      */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
-    /* Set the regs pointers */
-    for (i = 0; i < MAX_CPU_ENGINES; i++) 
-        sysblk.regs[i] = &sysblk.mregs[i];
-
     /* Gabor Hoffer (performance option) */
     for (i = 0; i < 256; i++)
     {
@@ -984,13 +980,13 @@ BYTE    c;                              /* Work area for sscanf      */
     initialize_condition (&sysblk.broadcast_cond);
 #ifdef SMP_SERIALIZATION
     for(i = 0; i < MAX_CPU_ENGINES; i++)
-        initialize_lock (&sysblk.regs[i]->serlock);
+        initialize_lock (&sysblk.regs[i].serlock);
 #endif /*SMP_SERIALIZATION*/
 #endif /*MAX_CPU_ENGINES > 1*/
     initialize_detach_attr (&sysblk.detattr);
 #if defined(OPTION_CPU_UTILIZATION)
     for(i = 0; i < MAX_CPU_ENGINES; i++)
-        initialize_lock (&sysblk.regs[i]->accum_wait_time_lock);
+        initialize_lock (&sysblk.regs[i].accum_wait_time_lock);
 #endif /*defined(OPTION_CPU_UTILIZATION)*/
 #if defined(OPTION_W32_CTCI)
     tt32_init(sysblk.msgpipew);
@@ -1079,34 +1075,35 @@ BYTE    c;                              /* Work area for sscanf      */
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
     {
         /* Initialize the processor address register for STAP */
-        sysblk.regs[cpu]->cpuad = cpu;
+        sysblk.regs[cpu].cpuad = cpu;
 
         /* Initialize storage views (SIE compat) */
-        sysblk.regs[cpu]->mainstor = sysblk.mainstor;
-        sysblk.regs[cpu]->storkeys = sysblk.storkeys;
-        sysblk.regs[cpu]->mainlim = sysblk.mainsize - 1;
+        sysblk.regs[cpu].mainstor = sysblk.mainstor;
+        sysblk.regs[cpu].storkeys = sysblk.storkeys;
+        sysblk.regs[cpu].mainlim = sysblk.mainsize - 1;
 
         /* Initialize the TOD offset field for this CPU */
-        sysblk.regs[cpu]->todoffset = sysblk.todoffset;
+        sysblk.regs[cpu].todoffset = sysblk.todoffset;
 
         /* Perform initial CPU reset */
-        initial_cpu_reset (sysblk.regs[cpu]);
+        initial_cpu_reset (sysblk.regs + cpu);
 
 #if defined(_FEATURE_VECTOR_FACILITY)
-        sysblk.regs[cpu]->vf = &sysblk.vf[cpu];
+        sysblk.regs[cpu].vf = &sysblk.vf[cpu];
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
 
-#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
-        initialize_condition (&sysblk.regs[cpu]->intcond);
-#endif
-        sysblk.regs[cpu]->cpustate = CPUSTATE_STOPPED;
-        sysblk.regs[cpu]->cpumask = 0x80000000 >> cpu;
-
 #if defined(_FEATURE_SIE)
-        memcpy(&sysblk.sie_regs[cpu], sysblk.regs[cpu], sizeof(REGS));
-        sysblk.sie_regs[cpu].hostregs = sysblk.regs[cpu];
-        sysblk.regs[cpu]->guestregs = &sysblk.sie_regs[cpu];
+        sysblk.sie_regs[cpu] = sysblk.regs[cpu];
+        sysblk.sie_regs[cpu].hostregs = &sysblk.regs[cpu];
+        sysblk.regs[cpu].guestregs = &sysblk.sie_regs[cpu];
 #endif /*defined(_FEATURE_SIE)*/
+
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
+        initialize_condition (&sysblk.regs[cpu].intcond);
+#endif
+        sysblk.regs[cpu].cpustate = CPUSTATE_STOPPED;
+        sysblk.regs[cpu].cpumask = 0x80000000 >> cpu;
+
     } /* end for(cpu) */
 
     /* Parse the device configuration statements */
@@ -1192,12 +1189,12 @@ BYTE    c;                              /* Work area for sscanf      */
 
 #ifdef _FEATURE_VECTOR_FACILITY
     for(i = 0; i < numvec && i < numcpu; i++)
-        sysblk.regs[i]->vf->online = 1;
+        sysblk.regs[i].vf->online = 1;
 #endif /*_FEATURE_VECTOR_FACILITY*/
 
 #ifndef PROFILE_CPU
     for(i = 0; i < numcpu; i++)
-        configure_cpu(sysblk.regs[i]);
+        configure_cpu(sysblk.regs + i);
 #endif
     /* close configuration file */
     rc = fclose(fp);
@@ -1216,10 +1213,10 @@ int     cpu;
     /* Stop all CPU's */
     obtain_lock (&sysblk.intlock);
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-        if(sysblk.regs[cpu]->cpuonline)
+        if(sysblk.regs[cpu].cpuonline)
         {
-            sysblk.regs[cpu]->cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(sysblk.regs[cpu]);
+            sysblk.regs[cpu].cpustate = CPUSTATE_STOPPING;
+            ON_IC_CPU_NOT_STARTED(sysblk.regs + cpu);
         }
     release_lock (&sysblk.intlock);
 
@@ -1240,8 +1237,8 @@ int     cpu;
 
     /* Deconfigure all CPU's */
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-        if(sysblk.regs[cpu]->cpuonline)
-            deconfigure_cpu(sysblk.regs[cpu]);
+        if(sysblk.regs[cpu].cpuonline)
+            deconfigure_cpu(sysblk.regs + cpu);
 
 } /* end function release_config */
 

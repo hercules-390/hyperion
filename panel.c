@@ -384,7 +384,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
         return;
         }
     }
-    regs = sysblk.regs[sysblk.pcpu];
+    regs = sysblk.regs + sysblk.pcpu;
 
 #if defined(OPTION_MIPS_COUNTING)
     fprintf(confp, ANSI_WHT_BLU);
@@ -487,13 +487,13 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #ifdef OPTION_MIPS_COUNTING
 #ifdef _FEATURE_CPU_RECONFIG
     for(mipsrate = siosrate = i = 0; i < MAX_CPU_ENGINES; i++)
-      if(sysblk.regs[i]->cpuonline)
+      if(sysblk.regs[i].cpuonline)
 #else /*!_FEATURE_CPU_RECONFIG*/
     for(mipsrate = siosrate = i = 0; i < sysblk.numcpu; i++)
 #endif /*!_FEATURE_CPU_RECONFIG*/
     {
-        mipsrate += sysblk.regs[i]->mipsrate;
-        siosrate += sysblk.regs[i]->siosrate;
+        mipsrate += sysblk.regs[i].mipsrate;
+        siosrate += sysblk.regs[i].siosrate;
     }
     if (mipsrate > 100000) mipsrate = 0;        /* ignore wildly high rate */
     fprintf(confp, "%2.1d.%2.2d  %5d",
@@ -749,20 +749,19 @@ BYTE   *p;                              /* (work)                    */
     if (!(rcfp = fopen(rcname, "r")))
     {
         if (ENOENT != errno)
-            logmsg(_("HHCPN007E RC file %s open failed: %s\n"),
-                rcname, strerror(errno));
+            logmsg(_("HHC432E: RC file open failed: %s\n"),
+                strerror(errno));
         rc_thread_done = 1;
         return NULL;
     }
 
-    logmsg(_("HHCPN008I RC file processing thread started using file %s\n"),
-           rcname);
+    logmsg(_("HHC430I: RC file processing thread started...\n"));
 
     /* Obtain storage for the RC file buffer */
 
     if (!(rcbuf = malloc (rcbufsize)))
     {
-        logmsg(_("HHCPN009E RC file buffer malloc failed: %s\n"),
+        logmsg(_("HHC431E: RC file buffer malloc failed: %s\n"),
             strerror(errno));
         fclose(rcfp);
         rc_thread_done = 1;
@@ -800,17 +799,13 @@ BYTE   *p;                              /* (work)                    */
 
             if (rc_pause_amt < 0 || rc_pause_amt > 999)
             {
-                logmsg(_("HHCPN010W Ignoring invalid RC file pause "
-                         "statement: %s\n"),
-                         rcbuf+5);
+                logmsg(_("HHC428W Ignoring invalid .RC file pause statement\n"));
                 continue;
             }
 
-            logmsg (_("HHCPN011I Pausing RC file processing for %d "
-                      "seconds...\n"),
-                      rc_pause_amt);
+            logmsg (_("HHC426I Pausing .RC file processing for %d seconds...\n"), rc_pause_amt);
             sleep(rc_pause_amt);
-            logmsg (_("HHCPN012I Resuming RC file processing...\n"));
+            logmsg (_("HHC427I Resuming .RC file processing...\n"));
 
             continue;
         }
@@ -823,10 +818,9 @@ BYTE   *p;                              /* (work)                    */
     }
 
     if (feof(rcfp))
-        logmsg (_("HHCPN013I EOF reached on RC file. Processing complete.\n"));
+        logmsg (_("HHC429I EOF reached on .RC file.\n"));
     else
-        logmsg (_("HHCPN014E I/O error reading RC file: %s\n"),
-                 strerror(errno));
+        logmsg (_("HHC429E I/O reading .RC file: %s\n"),strerror(errno));
 
     fclose(rcfp);
 
@@ -919,14 +913,14 @@ fd_set  readset;                        /* Select file descriptors   */
 struct  timeval tv;                     /* Select timeout structure  */
 
     /* Display thread started message on control panel */
-    logmsg (_("HHCPN001I Control panel thread started: "
+    logmsg (_("HHC650I Control panel thread started: "
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
     /* Obtain storage for the keyboard buffer */
     if (!(kbbuf = malloc (kbbufsize)))
     {
-        logmsg(_("HHCPN002S Cannot obtain keyboard buffer: %s\n"),
+        logmsg(_("panel: Cannot obtain keyboard buffer: %s\n"),
                 strerror(errno));
         return;
     }
@@ -936,7 +930,7 @@ struct  timeval tv;                     /* Select timeout structure  */
     if (msgbuf == NULL)
     {
         fprintf (stderr,
-                _("HHCPN003S Cannot obtain message buffer: %s\n"),
+                "panel: Cannot obtain message buffer: %s\n",
                 strerror(errno));
         return;
     }
@@ -1004,7 +998,7 @@ struct  timeval tv;                     /* Select timeout structure  */
     while (1)
     {
         /* Set target CPU for commands and displays */
-        regs = sysblk.regs[sysblk.pcpu];
+        regs = sysblk.regs + sysblk.pcpu;
         /* If the requested CPU is offline, then take the first available CPU*/
         if(!regs->cpuonline)
           /* regs = first online CPU
@@ -1012,13 +1006,13 @@ struct  timeval tv;                     /* Select timeout structure  */
            */
           for(regs = 0, sysblk.pcpu = 0, i = 0 ;
               i < MAX_CPU_ENGINES ; ++i )
-            if (sysblk.regs[i]->cpuonline) {
+            if (sysblk.regs[i].cpuonline) {
               if (!regs)
-                regs = sysblk.regs[i];
+                regs = sysblk.regs + i;
               ++sysblk.pcpu;
             }
 
-        if (!regs) regs = sysblk.regs[0];
+        if (!regs) regs = sysblk.regs;
 
 #if defined(_FEATURE_SIE)
         /* Point to SIE copy in SIE state */
@@ -1043,7 +1037,7 @@ struct  timeval tv;                     /* Select timeout structure  */
         {
             if (errno == EINTR) continue;
             fprintf (stderr,
-                    _("HHCPN004E select: %s\n"),
+                    "panel: select: %s\n",
                     strerror(errno));
             break;
         }
@@ -1058,7 +1052,7 @@ struct  timeval tv;                     /* Select timeout structure  */
             if (kblen < 0)
             {
                 fprintf (stderr,
-                        _("HHCPN005E keyboard read: %s\n"),
+                        "panel: keyboard read: %s\n",
                         strerror(errno));
                 break;
             }
@@ -1479,7 +1473,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                 if (rc < 1)
                 {
                     fprintf (stderr,
-                            "HHCPN006E message pipe read: %s\n",
+                            "panel: message pipe read: %s\n",
                             strerror(errno));
                     break;
                 }
@@ -1683,13 +1677,13 @@ struct  timeval tv;                     /* Select timeout structure  */
                     /* Calculate MIPS rate */
 #ifdef FEATURE_CPU_RECONFIG
                     for (mipsrate = siosrate = i = 0; i < MAX_CPU_ENGINES; i++)
-                        if(sysblk.regs[i]->cpuonline)
+                        if(sysblk.regs[i].cpuonline)
 #else /*!FEATURE_CPU_RECONFIG*/
                         for(mipsrate = siosrate = i = 0; i < sysblk.numcpu; i++)
 #endif /*!FEATURE_CPU_RECONFIG*/
                         {
-                            mipsrate += sysblk.regs[i]->mipsrate;
-                            siosrate += sysblk.regs[i]->siosrate;
+                            mipsrate += sysblk.regs[i].mipsrate;
+                            siosrate += sysblk.regs[i].siosrate;
                         }
 
                     if (mipsrate > 100000) mipsrate = 0;        /* ignore wildly high rate */

@@ -396,7 +396,7 @@ typedef struct _REGS {                  /* Processor registers       */
         U32     siosrate;               /* IOs per second            */
         double  cpupct;                 /* Percent CPU busy          */
         U64     waittod;                /* Time of day last wait (us)*/
-        U64     waittime;               /* Wait time (us) in interval*/
+        U64     waittime;               /* Wait time (us) in interval*/ 
 #ifdef WIN32
         struct  timeval lasttod;        /* Last gettimeofday         */ 
 #endif
@@ -600,32 +600,32 @@ typedef struct _REGS {                  /* Processor registers       */
 
 /* Macros to signal interrupt condition to a CPU[s] */
 #if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
-#define WAKEUP_CPU(cpu) signal_condition(&sysblk.regs[(cpu)]->intcond)
+#define WAKEUP_CPU(cpu) signal_condition(&sysblk.regs[(cpu)].intcond)
 #define WAKEUP_WAITING_CPU(mask,statemask) \
  { int i; \
    for (i = 0; i < MAX_CPU_ENGINES; i++) \
-     if ((sysblk.regs[i]->cpustate & (statemask)) \
-      && (sysblk.regs[i]->cpumask  & (mask)) \
-      && (sysblk.regs[i]->cpumask  & sysblk.waitmask)) \
+     if ((sysblk.regs[i].cpustate & (statemask)) \
+      && (sysblk.regs[i].cpumask  & (mask)) \
+      && (sysblk.regs[i].cpumask  & sysblk.waitmask)) \
       { \
-        signal_condition(&sysblk.regs[i]->intcond); \
+        signal_condition(&sysblk.regs[i].intcond); \
         break; \
       } \
  }
 #define WAKEUP_WAITING_CPUS(mask,statemask) \
  { int i; \
    for (i = 0; i < MAX_CPU_ENGINES; i++) \
-     if ((sysblk.regs[i]->cpustate & (statemask)) \
-      && (sysblk.regs[i]->cpumask  & (mask)) \
-      && (sysblk.regs[i]->cpumask  & sysblk.waitmask)) \
-        signal_condition(&sysblk.regs[i]->intcond); \
+     if ((sysblk.regs[i].cpustate & (statemask)) \
+      && (sysblk.regs[i].cpumask  & (mask)) \
+      && (sysblk.regs[i].cpumask  & sysblk.waitmask)) \
+        signal_condition(&sysblk.regs[i].intcond); \
  }
-#define INTCOND(_regs)       (_regs)->intcond
+#define INTCOND       regs->intcond
 #else /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
 #define WAKEUP_CPU(cpu)               broadcast_condition(&sysblk.intcond)
 #define WAKEUP_WAITING_CPU(m,s)       WAKEUP_CPU(0)
 #define WAKEUP_WAITING_CPUS(m,s)      WAKEUP_CPU(0)
-#define INTCOND(_regs)       sysblk.intcond
+#define INTCOND       sysblk.intcond
 #endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
 
 /* Macros to queue/dequeue a device on the I/O interrupt queue */
@@ -702,8 +702,7 @@ typedef struct _SYSBLK {
         U16     ipldev;                 /* IPL device                */
         U16     iplcpu;                 /* IPL cpu                   */
         U16     numcpu;                 /* Number of CPUs installed  */
-        REGS   *regs[MAX_CPU_ENGINES];  /* -> Registers for each CPU */
-        REGS    mregs[MAX_CPU_ENGINES]; /* Registers for each CPU    */
+        REGS    regs[MAX_CPU_ENGINES];  /* Registers for each CPU    */
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
@@ -846,6 +845,7 @@ typedef struct _SYSBLK {
             + sizeof(sysblk.imaped) \
             + sizeof(sysblk.imapxx) )
 #endif
+
     } SYSBLK;
 
 /* Definitions for OS tailoring - msb eq mon event, lsb eq oper exc. */

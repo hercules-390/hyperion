@@ -267,6 +267,15 @@ do { \
 
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
 
+#if defined(OPTION_CPU_UNROLL)
+#define RETURN_INTCHECK(_regs) \
+        longjmp((_regs)->progjmp, SIE_NO_INTERCEPT)
+#else
+#define RETURN_INTCHECK(_regs) \
+        return
+#endif
+
+
 #define ODD_CHECK(_r, _regs) \
     if( (_r) & 1 ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
@@ -396,7 +405,7 @@ static inline void store_dw(void* storage, U64 value) {
 
 #define BFPINST_CHECK(_regs) \
         if( !((_regs)->CR(0) & CR0_AFP) \
-            || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
             (_regs)->dxc = DXC_BFP_INSTRUCTION; \
             ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
         }
@@ -405,7 +414,7 @@ static inline void store_dw(void* storage, U64 value) {
     /* Program check if r1 is not 0, 2, 4, or 6 */
 #define HFPREG_CHECK(_r, _regs) \
     if( !((_regs)->CR(0) & CR0_AFP) \
-            || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -415,7 +424,7 @@ static inline void store_dw(void* storage, U64 value) {
     /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
 #define HFPREG2_CHECK(_r1, _r2, _regs) \
     if( !((_regs)->CR(0) & CR0_AFP) \
-            || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -427,7 +436,7 @@ static inline void store_dw(void* storage, U64 value) {
     if( (_r) & 2 ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
-               || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+               || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -439,7 +448,7 @@ static inline void store_dw(void* storage, U64 value) {
     if( ((_r1) & 2) || ((_r2) & 2) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
-                || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+                || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -547,7 +556,7 @@ do { \
     { \
         if((_addr) & 0x01) \
             ARCH_DEP(program_interrupt)((_regs), PGM_SPECIFICATION_EXCEPTION); \
-        memcpy ((_dest), (_regs)->mainstor + (_regs)->AI + \
+        memcpy ((_dest), regs->mainstor + (_regs)->AI + \
                     ((_addr) & PAGEFRAME_BYTEMASK) , 6); \
     } \
     else \
@@ -662,64 +671,6 @@ do { \
 #define INVALIDATE_AEA_ALL(_regs)
 
 #endif /*!defined(OPTION_AEA_BUFFER)*/
-
-
-#define FAST_INSTRUCTION_FETCH(_dest, _addr, _regs, _pe, _if) \
-        { \
-            if ( (_regs).VI == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01)) \
-               && ((_addr) <= (_pe))) \
-                (_dest) =  pagestart + ((_addr) & PAGEFRAME_BYTEMASK); \
-            else goto _if; \
-}
-
-#if !defined(OPTION_FOOTPRINT_BUFFER)
-#define FAST_EXECUTE_INSTRUCTION(_inst, _execflag, _regs) \
-        { \
-        COUNT_INST ((_inst), &(_regs)); \
-        (_regs).ip = (_inst); \
-        (ARCH_DEP(opcode_table)[_inst[0]]) ((_inst), 0, &(_regs)); \
-}
-#else
-#define FAST_EXECUTE_INSTRUCTION(_inst, _execflag, _regs) \
-do { \
-    sysblk.footprregs[(_regs).cpuad][sysblk.footprptr[(_regs).cpuad]] = (_regs); \
-    memcpy(&sysblk.footprregs[(_regs).cpuad][sysblk.footprptr[(_regs).cpuad]++].inst,(_inst),6); \
-    sysblk.footprptr[(_regs).cpuad] &= OPTION_FOOTPRINT_BUFFER - 1; \
-    COUNT_INST((_inst), &(_regs)); \
-    (_regs)->ip = (_inst); \
-    opcode_table[((_inst)[0])][ARCH_MODE]((_inst), 0, &(_regs)); \
-} while(0)
-
-#endif
-
-#define FAST_IFETCH(_regs, _pe, _ip, _if, _ex) \
-    { \
-_if: \
-    (_regs).instvalid = 0; \
-    (_ip) = (_regs).inst; \
-    (_regs).ip = (_ip); \
-    ARCH_DEP(instfetch) ((_regs).inst, (_regs).psw.IA, &(_regs));  \
-    (_regs).instvalid = 1; \
-    (_pe) = ((_regs).psw.IA & ~0x7FF) + (0x800 - 6); \
-    pagestart = (_regs).mainstor + (_regs).AI; \
-    goto _ex; \
-}                                                                                          
-#define FAST_UNROLLED_EXECUTE(_regs, _pe, _ip, _if, _ex) \
-        { \
-            FAST_INSTRUCTION_FETCH((_ip), (_regs).psw.IA, (_regs), \
-                                 (_pe), _if); \
-         _ex: \
-            FAST_EXECUTE_INSTRUCTION((_ip), 0, (_regs)); \
-}                                                                                          
-
-#if defined(OPTION_CPU_UNROLL)
-#define RETURN_INTCHECK(_regs) \
-        longjmp((_regs)->progjmp, SIE_NO_INTERCEPT)
-#else
-#define RETURN_INTCHECK(_regs) \
-        return
-#endif
-
 
 #define INST_UPDATE_PSW(_regs, _len, _execflag) \
 	{ \
@@ -1333,8 +1284,8 @@ do { \
 	   serialize storage access */
 #define PERFORM_SERIALIZATION(_regs) \
 	{ \
-	    obtain_lock(&(_regs)->serlock); \
-	    release_lock(&(_regs)->serlock); \
+	    obtain_lock(&regs->serlock); \
+	    release_lock(&regs->serlock); \
 	}
 #else  /*!SERIALIZATION*/
 #define PERFORM_SERIALIZATION(_regs)
