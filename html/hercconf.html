@@ -314,8 +314,13 @@ The following system parameters may be specified:
     implementation.
 <dt><code>LDMOD <em>module list</em></code>
 <dd>specifies additional modules that are to be loaded by the hercules dynamic loader.
-The search order is the default DLL search path. Most systems also support absolute filenames (ie names starting with '/' or '.') in which case the default search path is not taken.
+The default search order is with the hercules directory in the default DLL search path. Most systems also support absolute filenames (ie names starting with '/' or '.') in which case the default search path is not taken.
 <br>Multiple LDMOD statements may be used.
+<dt><code>MODPATH <em>path</em></code>
+<dd>specifies the path where dynamic modules are loaded from.
+When a modpath statement is specified, the path on the modpath statement is searched before the default path is searched.
+When a relative path is specified is interpreted as a relative path within the default search path, if an absolute path is specified is interpreted as such.
+<br>The default MODPATH is hercules, which means modules are loaded from the directory hercules within the default LD_LIBRARY_PATH.
 </dl>
 <p>
 A comment preceded by a pound sign may be appended to any system
