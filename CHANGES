@@ -1,3 +1,4 @@
+14 Jan 2002 Improve cckd initialization time - Greg Smith
 11 Jan 2002 Gabor Hoffers performance updates
 11 Jan 2002 Fix ifetch performance so it works with PER - Juergen Dobrinski
 06 Jan 2002 CMPSC kludge for Cygwin gcc faulty linkage - Greg Smith

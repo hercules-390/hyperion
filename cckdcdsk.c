@@ -401,6 +401,7 @@ char *compression[] = {"none", "zlib", "bzip2"};
             if (rc == -1) goto cdsk_return;
             rc = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
             rc = read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
+            cdevhdr.options |= CCKD_ORDWR;
         }
         else
         {
@@ -487,6 +488,15 @@ char *compression[] = {"none", "zlib", "bzip2"};
     if (swapend) cckd_swapend_l1 (l1, cdevhdr.numl1tab);
 
 /*-------------------------------------------------------------------*/
+/* If the file has not been opened read/write since the last         */
+/* ckhdsk and minimal checking was specified, change the level       */
+/* to `very minimal checking'                                        */
+/*-------------------------------------------------------------------*/
+
+    if (level == 0 && (cdevhdr.options & (CCKD_OPENED | CCKD_ORDWR)) == 0)
+        level = -1;
+
+/*-------------------------------------------------------------------*/
 /* Set space boundaries                                              */
 /*-------------------------------------------------------------------*/
 
@@ -510,68 +520,6 @@ char *compression[] = {"none", "zlib", "bzip2"};
         cdskmsg (m, "malloc() failed for buffer, size %d: %s\n",
                 trksz, strerror(errno));
         goto cdsk_return;
-    }
-
-/*-------------------------------------------------------------------*/
-/* Check free space chain                                            */
-/*                                                                   */
-/* Things we check for :                                             */
-/*    (1) free space offset is within a valid position in the file   */
-/*    (2) free space block can be lseek()ed and read() without error */
-/*    (3) length of the free space is at least the size of a free    */
-/*        space block                                                */
-/*    (4) next free space does not precede this free space           */
-/*    (5) free space does not extend beyond the end of the file      */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-
-    memset (&cdevhdr2, 0, CCKDDASD_DEVHDR_SIZE);
-    cdevhdr2.size = hipos;
-    cdevhdr2.used = CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE +
-                    l1tabsz;
-    cdevhdr2.free = cdevhdr.free;
-
-    /* if the file wasn't closed then rebuild the free space */
-    if (cdevhdr.options & CCKD_OPENED)
-    {   fsperr = 1;
-        sprintf (msg, "file not closed");
-    }
-    else fsperr = 0;
-
-#ifdef EXTERNALGUI
-    /* Beginning next step... */
-    if (extgui) fprintf (stderr,"STEP=2\n");
-#endif /*EXTERNALGUI*/
-
-    for (fsp = cdevhdr.free; fsp && !fsperr; fsp = fb.pos)
-    {
-        fsperr = 1;		          /* turn on error indicator */
-        memset (&fb, 0, CCKD_FREEBLK_SIZE);
-        sprintf (msg, "pos=0x%lx nxt=0x%x len=%d\n", fsp, fb.pos, fb.len);
-        if (fsp < lopos || fsp > hipos - CCKD_FREEBLK_SIZE) break;
-        rc = lseek (fd, fsp, SEEK_SET);
-        if (rc == -1) break;
-        rc = read (fd, &fb, CCKD_FREEBLK_SIZE);
-        if (rc != CCKD_FREEBLK_SIZE) break;
-        if (swapend) cckd_swapend_free (&fb);
-        if (fb.len < CCKD_FREEBLK_SIZE || fsp + fb.len > hipos) break;
-        if (fb.pos && (fb.pos <= fsp + fb.len ||
-                       fb.pos > hipos - CCKD_FREEBLK_SIZE)) break;
-        sprintf (msg, "free space at end of the file");
-        if (fsp + fb.len == hipos && (fdflags & O_RDWR)) break;
-        fsperr = 0;                       /* reset error indicator   */
-        cdevhdr2.free_number++;
-        cdevhdr2.free_total += fb.len;
-        if (fb.len > cdevhdr2.free_largest)
-            cdevhdr2.free_largest = fb.len;
-    }
-
-    if (fsperr)
-    {   cdskmsg (m, "free space errors found: %s\n", msg);
-        if (level == 0)
-        {   level = 1;
-            cdskmsg (m, "forcing check level %d\n", level);
-        }
     }
 
 /*-------------------------------------------------------------------*/
@@ -599,6 +547,72 @@ char *compression[] = {"none", "zlib", "bzip2"};
     {   cdskmsg (m, "malloc() failed for gap table size %ud: %s\n",
                  (unsigned int) (n * sizeof(SPCTAB)), strerror(errno));
         goto cdsk_return;
+    }
+
+/*-------------------------------------------------------------------*/
+/* Check free space chain                                            */
+/*                                                                   */
+/* Things we check for :                                             */
+/*    (1) free space offset is within a valid position in the file   */
+/*    (2) free space block can be lseek()ed and read() without error */
+/*    (3) length of the free space is at least the size of a free    */
+/*        space block                                                */
+/*    (4) next free space does not precede this free space           */
+/*    (5) free space does not extend beyond the end of the file      */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+free_space_check:
+    if (level >= 0)
+    {
+    memset (&cdevhdr2, 0, CCKDDASD_DEVHDR_SIZE);
+    cdevhdr2.size = hipos;
+    cdevhdr2.used = CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE +
+                    l1tabsz;
+    cdevhdr2.free = cdevhdr.free;
+
+    /* if the file wasn't closed then rebuild the free space */
+    if (cdevhdr.options & CCKD_OPENED)
+    {   fsperr = 1;
+        sprintf (msg, "file not closed");
+    }
+    else fsperr = 0;
+
+    #ifdef EXTERNALGUI
+    /* Beginning next step... */
+    if (extgui) fprintf (stderr,"STEP=2\n");
+    #endif /*EXTERNALGUI*/
+
+    for (fsp = cdevhdr.free; fsp && !fsperr; fsp = fb.pos)
+    {
+        fsperr = 1;		          /* turn on error indicator */
+        memset (&fb, 0, CCKD_FREEBLK_SIZE);
+        sprintf (msg, "pos=0x%lx nxt=0x%x len=%d\n", fsp, fb.pos, fb.len);
+        if (fsp < lopos || fsp > hipos - CCKD_FREEBLK_SIZE) break;
+        rc = lseek (fd, fsp, SEEK_SET);
+        if (rc == -1) break;
+        rc = read (fd, &fb, CCKD_FREEBLK_SIZE);
+        if (rc != CCKD_FREEBLK_SIZE) break;
+        if (swapend) cckd_swapend_free (&fb);
+        if (fb.len < CCKD_FREEBLK_SIZE || fsp + fb.len > hipos) break;
+        if (fb.pos && (fb.pos <= fsp + fb.len ||
+                       fb.pos > hipos - CCKD_FREEBLK_SIZE)) break;
+        sprintf (msg, "free space at end of the file");
+        if (fsp + fb.len == hipos && (fdflags & O_RDWR)) break;
+        fsperr = 0;                       /* reset error indicator   */
+        cdevhdr2.free_number++;
+        cdevhdr2.free_total += fb.len;
+        if (fb.len > cdevhdr2.free_largest)
+            cdevhdr2.free_largest = fb.len;
+    }
+    }
+
+    if (fsperr)
+    {   cdskmsg (m, "free space errors found: %s\n", msg);
+        if (level < 1)
+        {   level = 1;
+            cdskmsg (m, "forcing check level %d\n", level);
+        }
     }
 
 /*-------------------------------------------------------------------*/
@@ -637,6 +651,8 @@ space_check:
 #endif /*EXTERNALGUI*/
 
     /* free spaces */
+    if (level >= 0)
+    {
     for (fsp = cdevhdr.free, i=0; i < cdevhdr2.free_number;
          fsp = fb.pos, i++)
     {
@@ -646,6 +662,7 @@ space_check:
         spc[s].pos = fsp;
         spc[s].len = spc[s].siz = fb.len;
         spc[s++].typ = SPCTAB_FREE;
+    }
     }
 
     l1errs = l2errs = trkerrs = 0;
@@ -658,7 +675,7 @@ space_check:
     /* level 2 lookup table and track image spaces */
     for (i = 0; i < cdevhdr.numl1tab; i++)
     {
-        int valid_l2, valid_trks, invalid_trks;
+        int valid_l2, valid_trks, invalid_trks, orig_lvl;
 
         if ((l1[i] == 0)
          || (shadow && l1[i] == 0xffffffff)) continue;
@@ -672,8 +689,10 @@ space_check:
         /* recover all tracks for the level 2 table entry */
         bad_l2:
             if (level == 0)
-            {   level = 1;
+            {   orig_lvl = level;
+                level = 1;
                 cdskmsg (m, "forcing check level %d\n", level);
+                if (orig_lvl < 0) goto free_space_check;
                 goto space_check;
             }
             cdskmsg (m, "tracks %d thru %d will be recovered\n",
@@ -989,6 +1008,13 @@ overlap:
         }
     }
 
+    /* return if we are still doing `very minimal' checking */
+    if (level < 0)
+    {
+        crc = 0;
+        goto cdsk_return;
+    }
+
     /* build the gap table */
     gaps = cdsk_build_gap (spc, &s, gap);
 
@@ -997,6 +1023,16 @@ overlap:
 
     /* if any kind of error, indicate free space error */
     if (gaps || r || l1errs || l2errs || trkerrs) fsperr = 1;
+
+/*-------------------------------------------------------------------*/
+/* return if we are still doing `very minimal' checking              */
+/*-------------------------------------------------------------------*/
+
+    if (level < 0)
+    {
+        crc = 0;
+        goto cdsk_return;
+    }
 
 #if 0
 /*-------------------------------------------------------------------*/
@@ -1568,10 +1604,11 @@ cdsk_return:
 
     /* if file is ok or has been repaired, turn off the
        opened bit if it's on */
-    if (crc >= 0 && (cdevhdr.options & CCKD_OPENED) &&
-        (fdflags & O_RDWR))
+    if (crc >= 0
+     && (cdevhdr.options & (CCKD_OPENED | CCKD_ORDWR)) != 0
+     && (fdflags & O_RDWR))
     {
-        cdevhdr.options ^= CCKD_OPENED;
+        cdevhdr.options ^= (CCKD_OPENED | CCKD_ORDWR);
         rc = lseek (fd, CKDDASD_DEVHDR_SIZE + 3, SEEK_SET);
         rc = write (fd, &cdevhdr.options, 1);
     }

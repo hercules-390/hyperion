@@ -1148,6 +1148,8 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 
 #define CCKD_NOFUDGE           1         /* [deprecated]             */
 #define CCKD_BIGENDIAN         2
+#define CCKD_ORDWR             64        /* Opened read/write since
+                                            last chkdsk              */
 #define CCKD_OPENED            128
 
 

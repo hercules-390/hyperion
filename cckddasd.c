@@ -227,6 +227,13 @@ char           *kw, *op;                /* Argument keyword/option   */
         if (rc < 0) return -1;
     }
 
+    /* Turn on the ORDWR bit if opened read-write */
+    if (cckd->open[0] == CCKD_OPEN_RW)
+    {
+        cckd->cdevhdr[0].options |= CCKD_ORDWR;
+        cckd_write_chdr (dev);
+    }
+
     /* open the shadow files */
     rc = cckd_sf_init (dev);
     if (rc < 0)
@@ -897,7 +904,7 @@ int             i;                      /* Loop index                */
     if (!(cckd->cdevhdr[cckd->sfn].options & CCKD_OPENED))
     {
         obtain_lock (&cckd->filelock);
-        cckd->cdevhdr[cckd->sfn].options |= CCKD_OPENED;
+        cckd->cdevhdr[cckd->sfn].options |= (CCKD_OPENED | CCKD_ORDWR);
         cckd_write_chdr (dev);
         if (cckd->threading)
         {
@@ -2257,6 +2264,10 @@ char            sfn[256];               /* Shadow file name          */
         if (rc < 0) return -1;
     }
 
+    /* Turn on the ORDWR bit for the last file */
+    cckd->cdevhdr[cckd->sfn].options |= CCKD_ORDWR;
+    cckd_write_chdr (dev);
+
     /* re-open previous rdwr files rdonly */
     for (i = 0; i < cckd->sfn; i++)
     {
@@ -2342,7 +2353,7 @@ int             cyls9345[]   = {1440, 2156, 0};
     cckd->cdevhdr[sfx].vrm[0] = CCKD_VERSION;
     cckd->cdevhdr[sfx].vrm[1] = CCKD_RELEASE;
     cckd->cdevhdr[sfx].vrm[2] = CCKD_MODLVL;
-    cckd->cdevhdr[sfx].options |= CCKD_NOFUDGE;
+    cckd->cdevhdr[sfx].options |= (CCKD_NOFUDGE | CCKD_ORDWR);
     if (cckd_endian()) cckd->cdevhdr[sfx].options |= CCKD_BIGENDIAN;
 
     /* Need to figure out the number of cylinders for the device;
@@ -2608,6 +2619,13 @@ long            len;                    /* Uncompressed trk length   */
         cckd->sfn++;
         release_lock (&cckd->filelock);
         return;         
+    }
+
+    /* Turn on the ORDWR bit for the last file */
+    if (cckd->cdevhdr[cckd->sfn].size)
+    {
+        cckd->cdevhdr[cckd->sfn].options |= CCKD_ORDWR;
+        cckd_write_chdr (dev);
     }
 
     /* perform backwards merge to a compressed file */
