@@ -1630,12 +1630,12 @@ typedef struct _ZPB2 {
                             bits 0-19 must be 0       */
     DWORD   msl;         /* Main Storage Limit
                             bits 0-19 must be 0       */
-#define ZPB2_MS_VALID 0x00000FFFFFFFFFFF
+#define ZPB2_MS_VALID 0x00000FFFFFFFFFFFULL
     DWORD   eso;         /* Expanded Storage Origin
                             bits 0-7 must be 0        */
     DWORD   esl;         /* Expanded Storage Limit
                             bits 0-7 must be 0        */
-#define ZPB2_ES_VALID 0x00FFFFFFFFFFFFFF
+#define ZPB2_ES_VALID 0x00FFFFFFFFFFFFFFULL
 } ZPB2;
 
 #define LKPG_GPR0_LOCKBIT       0x00000200

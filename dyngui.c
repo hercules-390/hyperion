@@ -841,8 +841,6 @@ void gui_panel_cleanup()
 
     if  (pszCommandBuff)
     free(pszCommandBuff);
-
-    logmsg(_("HHCIN007I Hercules terminated\n"));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

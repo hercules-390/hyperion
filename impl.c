@@ -191,7 +191,7 @@ TID     rctid;                          /* RC file thread identifier */
     /* Set GUI flag if specified as final argument */
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-//      extgui = 0;
+        extgui = 1; /* (so hsccmd.c 'quit_cmd' works) */
 //      daemon_mode = 0;
         hdl_load("dyngui",HDL_LOAD_NOUNLOAD);
         argc--;

@@ -297,7 +297,7 @@ VADR    effective_addr1, \
 { \
     obtain_lock(&sysblk.todlock); \
     regs->ptimer=EVM_LD(_x); \
-    if((regs->ptimer & 0x8000000000000000)) \
+    if((regs->ptimer & 0x8000000000000000ULL)) \
     { \
         ON_IC_PTIMER(regs); \
     } \
@@ -1300,7 +1300,7 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
     DW_VMTTIME=EVM_LD(vmb+VMTTIME);
     DW_VMTMINQ=EVM_LD(vmb+VMTMINQ);
     /* Check 1st 5 bytes */
-    if((DW_VMTTIME & 0xffffffffff000000) < (DW_VMTMINQ & 0xffffffffff000000))
+    if((DW_VMTTIME & 0xffffffffff000000ULL) < (DW_VMTMINQ & 0xffffffffff000000ULL))
     {
         B_VMDSTAT=EVM_IC(vmb+VMDSTAT);
         B_VMDSTAT&=~VMDSP;

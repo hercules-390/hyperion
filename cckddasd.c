@@ -1592,7 +1592,7 @@ struct stat     st;                     /* File status area          */
           len + CCKD_FREEBLK_SIZE <= cckd->cdevhdr[sfx].free_largest))
     { /* no free space big enough; add space to end of the file */
         fpos = cckd->cdevhdr[sfx].size;
-        if ((U64)(fpos + len) > 4294967295ULL)
+        if (((U64)((U64)fpos + (U64)len)) > ((U64)4294967295ULL))
         {
             logmsg("%4.4X:HHCCD102E file[%d] get space error, size exceeds 4G\n",
                    dev->devnum, sfx);

@@ -1626,8 +1626,8 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb)      /*@IWZ*/
 {
-int     rc;                             /* Return code               */
 #if !defined(OPTION_FISHIO)
+int     rc;                             /* Return code               */
 DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 #endif // !defined(OPTION_FISHIO)
 

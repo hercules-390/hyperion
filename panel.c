@@ -26,26 +26,11 @@
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
-
 #include "devtype.h"
-
 #include "opcode.h"
-
 // #include "inline.h"
 
-#if defined(OPTION_FISHIO)
-#include "w32chan.h"
-#endif /* defined(OPTION_FISHIO) */
-
-#if defined(FISH_HANG)
-extern  int   bFishHangAtExit;  // (set to true when shutting down)
-extern  void  FishHangInit(char* pszFileCreated, int nLineCreated);
-extern  void  FishHangReport();
-extern  void  FishHangAtExit();
-#endif // defined(FISH_HANG)
-
 #define  DISPLAY_INSTRUCTION_OPERANDS
-
 
 /*=NP================================================================*/
 /* Global data for new panel display                                 */
@@ -136,28 +121,6 @@ int NPdatalen;          /* Length of data */
 char NPcurprompt1[40];
 char NPcurprompt2[40];
 U32 NPaaddr;
-
-#ifdef EXTERNALGUI
-/*-------------------------------------------------------------------*/
-/* External GUI control                                              */
-/*-------------------------------------------------------------------*/
-#ifdef OPTION_MIPS_COUNTING
-U32     mipsrate = 0;
-U32     siosrate = 0;
-U32     prevmipsrate = 0;
-U32     prevsiosrate = 0;
-int     gui_cpupct = 0;                 /* 1=cpu percentage active   */
-#endif /*OPTION_MIPS_COUNTING*/
-int     gui_gregs = 1;                  /* 1=gregs status active     */
-int     gui_cregs = 1;                  /* 1=cregs status active     */
-int     gui_aregs = 1;                  /* 1=aregs status active     */
-int     gui_fregs = 1;                  /* 1=fregs status active     */
-int     gui_devlist = 1;                /* 1=devlist status active   */
-DEVBLK* dev;
-BYTE*   devclass;
-char    devnam[256];
-int     stat_online, stat_busy, stat_pend, stat_open;
-#endif /*EXTERNALGUI*/
 
 #if 1
 //
@@ -763,34 +726,6 @@ int volatile initdone = 0;           /* Initialization complete flag */
 #define NUM_LINES               22      /* Number of scrolling lines */
 #define CMD_SIZE             32767      /* Length of command line    */
 
-/* (forward references) */
-#ifdef EXTERNALGUI
-void gui_devlist_status (FILE *confp);
-#endif
-
-void panel_cleanup (void)
-{
-struct termios kbattr;                  /* Terminal I/O structure    */
-
-    /* Restore the terminal mode */
-    tcgetattr (STDIN_FILENO, &kbattr);
-    kbattr.c_lflag |= (ECHO | ICANON);
-    tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
-
-#ifdef EXTERNALGUI
-    if (!extgui)
-#endif /*EXTERNALGUI*/
-    /* Reset the cursor position */
-    fprintf (stderr,
-            ANSI_ROW24_COL79
-            ANSI_WHITE_BLACK
-            "\n");
-    fprintf (stderr,
-            "HHCIN007I Hercules terminated\n");
-
-}
-
-
 #if defined(OPTION_DYNAMIC_LOAD)
 void panel_display_r (void)
 #else
@@ -814,15 +749,9 @@ int     firstmsgn = 0;                  /* Number of first message to
 BYTE   *msgbuf;                         /* Circular message buffer   */
 int     msgslot = 0;                    /* Next available buffer slot*/
 int     nummsgs = 0;                    /* Number of msgs in buffer  */
-#ifdef EXTERNALGUI
-BYTE    redraw_msgs = 0;                /* 1=Redraw message area     */
-BYTE    redraw_cmd = 0;                 /* 1=Redraw command line     */
-BYTE    redraw_status = 0;              /* 1=Redraw status line      */
-#else /*!EXTERNALGUI*/
 BYTE    redraw_msgs;                    /* 1=Redraw message area     */
 BYTE    redraw_cmd;                     /* 1=Redraw command line     */
 BYTE    redraw_status;                  /* 1=Redraw status line      */
-#endif /*EXTERNALGUI*/
 BYTE    readbuf[MSG_SIZE];              /* Message read buffer       */
 int     readoff = 0;                    /* Number of bytes in readbuf*/
 BYTE    cmdline[CMD_SIZE+1];            /* Command line buffer       */
@@ -871,17 +800,8 @@ struct  timeval tv;                     /* Select timeout structure  */
     pipefd = compat_msgpiper;
     keybfd = STDIN_FILENO;
 
-#if defined(EXTERNALGUI)
-    if(extgui)
-        /* Use no buffering for when an external gui is in control */
-        setvbuf (confp, NULL, _IONBF, 0);
-    else
-#endif
-        /* Set screen output stream to fully buffered */
-        setvbuf (confp, NULL, _IOFBF, 0);
-
-    /* Register the panel cleanup exit routine */
-    atexit (panel_cleanup);
+    /* Set screen output stream to fully buffered */
+    setvbuf (confp, NULL, _IOFBF, 0);
 
     /* Put the terminal into cbreak mode */
     tcgetattr (keybfd, &kbattr);
@@ -890,23 +810,13 @@ struct  timeval tv;                     /* Select timeout structure  */
     kbattr.c_cc[VTIME] = 0;
     tcsetattr (keybfd, TCSANOW, &kbattr);
 
-#ifdef EXTERNALGUI
-    if (!extgui)
-#endif /*EXTERNALGUI*/
     /* Clear the screen */
     fprintf (confp,
             ANSI_WHT_BLK
             ANSI_ERASE_SCREEN);
 
-#ifdef EXTERNALGUI
-    if (!extgui)
-    {
-#endif /*EXTERNALGUI*/
     redraw_msgs = 1;
     redraw_cmd = 1;
-#ifdef EXTERNALGUI
-    }
-#endif /*EXTERNALGUI*/
     redraw_status = 1;
 
     /* Wait for system to finish coming up */
@@ -1152,9 +1062,12 @@ struct  timeval tv;                     /* Select timeout structure  */
                             strcpy(NPprompt1, "Confirm Powerdown Y or N");
                             redraw_status = 1;
                             break;
-                        case 4:                     /* IPL - 2nd part */
+                        case 4:                     /* POWER - 2nd part */
                             if (NPdevice == 'y' || NPdevice == 'Y')
+                            {
                                 panel_command("quit");
+                                while (1) sched_yield();
+                            }
                             strcpy(NPprompt1, "");
                             redraw_status = 1;
                             break;
@@ -1273,61 +1186,11 @@ struct  timeval tv;                     /* Select timeout structure  */
                     cmdline[cmdoff] = '\0';
                     /* =NP= create_thread replaced with: */
                     if (NPDup == 0) {
-#ifdef EXTERNALGUI
-                        if (extgui && (cmdline[0] == ']'))
-                        {
-                            redraw_status = 1;
-
-                            if (strncmp(cmdline,"]GREGS=",7) == 0)
-                            {
-                                gui_gregs = atoi(cmdline+7);
-                            }
-                            else
-                            if (strncmp(cmdline,"]CREGS=",7) == 0)
-                            {
-                                gui_cregs = atoi(cmdline+7);
-                            }
-                            else
-                            if (strncmp(cmdline,"]AREGS=",7) == 0)
-                            {
-                                gui_aregs = atoi(cmdline+7);
-                            }
-                            else
-                            if (strncmp(cmdline,"]FREGS=",7) == 0)
-                            {
-                                gui_fregs = atoi(cmdline+7);
-                            }
-                            else
-                            if (strncmp(cmdline,"]DEVLIST=",9) == 0)
-                            {
-                                gui_devlist = atoi(cmdline+9);
-                            }
-                            else
-                            if (strncmp(cmdline,"]MAINSTOR=",10) == 0)
-                            {
-                                fprintf(stderr,"MAINSTOR=%d\n",(U32)regs->mainstor);
-                                fprintf(stderr,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
-                            }
-#if defined(OPTION_MIPS_COUNTING)
-                            else
-                            if (strncmp(cmdline,"]CPUPCT=",8) == 0)
-                            {
-                                gui_cpupct = atoi(cmdline+8);
-                            }
-#endif /*defined(OPTION_MIPS_COUNTING)*/
-                        }
-                        else
-#endif /*EXTERNALGUI*/
-                        {
-                            if ('#' == cmdline[0] || '*' == cmdline[0])
-                            {
-                                if ('*' == cmdline[0])
-                                    logmsg("%s\n", cmdline);
-                            }
-                            else
-                            {
-                                panel_command(cmdline);
-                            }
+                        if ('#' == cmdline[0] || '*' == cmdline[0]) {
+                            if ('*' == cmdline[0])
+                                logmsg("%s\n", cmdline);
+                        } else {
+                            panel_command(cmdline);
                         }
                     } else {
                         NPdataentry = 0;
@@ -1365,10 +1228,6 @@ struct  timeval tv;                     /* Select timeout structure  */
                     }
                     /* =END= */
                     cmdoff = 0;
-#ifdef EXTERNALGUI
-                    /* Process *ALL* of the 'keyboard' (stdin) buffer data! */
-                    if (extgui) {i++; continue;}
-#endif /*EXTERNALGUI*/
                     redraw_cmd = 1;
                     break;
                 }
@@ -1392,77 +1251,84 @@ struct  timeval tv;                     /* Select timeout structure  */
         /* If a message has arrived then receive it */
         if (FD_ISSET(pipefd, &readset))
         {
-            /* Clear the message buffer */
-            memset (readbuf, SPACE, MSG_SIZE);
-
-            /* Read message bytes until newline */
-            while (1)
+            /* Read message bytes until newline... */
+            c = 0;
+            while (c != '\n' && c != '\r')
             {
-                /* Read a byte from the message pipe */
-                rc = read (pipefd, &c, 1);
-                if (rc < 1)
-                {
-                    fprintf (stderr,
-                            "HHCPN006E message pipe read: %s\n",
-                            strerror(errno));
-                    break;
+                /* Initialize the read buffer */
+                if (!readoff || readoff >= MSG_SIZE) {
+                    memset (readbuf, SPACE, MSG_SIZE);
+                    readoff = 0;
                 }
 
-
-                /* Exit if newline was read */
-                if (c == '\n') break;
-
-                /* Handle tab character */
-                if (c == '\t')
+                /* Read message bytes and copy into read buffer
+                   until we either encounter a newline character
+                   or our buffer is completely filled with data. */
+                while (c != '\n' && c != '\r')
                 {
-                    readoff += 8;
-                    readoff &= 0xFFFFFFF8;
-                    continue;
+                    /* Read a byte from the message pipe */
+                    rc = read (pipefd, &c, 1);
+                    if (rc < 1) {
+                        fprintf (stderr,
+                                "HHCPN006E message pipe read: %s\n",
+                                strerror(errno));
+                        break;
+                    }
+
+                    /* Break to process received message
+                       whenever a newline is encountered */
+                    if (c == '\n' || c == '\r') {
+                        readoff = 0;    /* (for next time) */
+                        break;
+                    }
+
+                    /* Handle tab character */
+                    if (c == '\t') {
+                        readoff += 8;
+                        readoff &= 0xFFFFFFF8;
+                        /* Messages longer than one screen line will
+                           be continued on the very next screen line */
+                        if (readoff >= MSG_SIZE)
+                            break;
+                        else continue;
+                    }
+
+                    /* Eliminate non-displayable characters */
+                    if (!isgraph(c)) c = SPACE;
+
+                    /* Stuff byte into message processing buffer */
+                    readbuf[readoff++] = c;
+
+                    /* Messages longer than one screen line will
+                       be continued on the very next screen line */
+                    if (readoff >= MSG_SIZE)
+                        break;
                 }
 
-                /* Eliminate non-printable characters */
-                if (!isprint(c)) c = SPACE;
+                /* If we have a message to be displayed (or a complete
+                   part of one), then copy it to the circular buffer. */
+                if (!readoff || readoff >= MSG_SIZE) {
+                    /* Set the display update indicator */
+                    redraw_msgs = 1;
 
-                /* Append the byte to the read buffer */
-                if (readoff < MSG_SIZE) readbuf[readoff++] = c;
+                    memcpy(msgbuf+(msgslot*MSG_SIZE),readbuf,MSG_SIZE);
 
-            } /* end while */
+                    /* Update message count and next available slot */
+                    if (nummsgs < MAX_MSGS)
+                        msgslot = ++nummsgs;
+                    else
+                        msgslot++;
+                    if (msgslot >= MAX_MSGS) msgslot = 0;
 
-            /* Exit if read was unsuccessful */
-            if (rc < 1) break;
+                    /* Calculate the first line to display */
+                    firstmsgn = nummsgs - NUM_LINES;
+                    if (firstmsgn < 0) firstmsgn = 0;
+                }
+                if (rc < 1) break; /* Exit if read was unsuccessful */
+            } /* end while read(pipefd) */
+            if (rc < 1) break; /* Exit if read was unsuccessful */
+        } /* end if (FD_ISSET(pipefd)) */
 
-            /* Copy message to circular buffer and empty read buffer */
-#if defined(EXTERNALGUI) && !defined(OPTION_HTTP_SERVER)
-            if (!extgui)
-#endif /*EXTERNALGUI*/
-            memcpy (msgbuf + (msgslot * MSG_SIZE), readbuf, MSG_SIZE);
-            readoff = 0;
-
-#if defined(EXTERNALGUI) && !defined(OPTION_HTTP_SERVER)
-            if (!extgui)
-            {
-#endif /*EXTERNALGUI*/
-            /* Update message count and next available slot number */
-            if (nummsgs < MAX_MSGS)
-                msgslot = ++nummsgs;
-            else
-                msgslot++;
-            if (msgslot == MAX_MSGS) msgslot = 0;
-
-            /* Calculate the first line to display */
-            firstmsgn = nummsgs - NUM_LINES;
-            if (firstmsgn < 0) firstmsgn = 0;
-
-            /* Set the display update indicator */
-            redraw_msgs = 1;
-#if defined(EXTERNALGUI) && !defined(OPTION_HTTP_SERVER)
-            }
-#endif /*EXTERNALGUI*/
-        }
-
-#ifdef EXTERNALGUI
-        if (!extgui)
-#endif /*EXTERNALGUI*/
         /* =NP= : Reinit traditional panel if NP is down */
         if (NPDup == 0 && NPDinit == 1) {
             NPDinit = 0;
@@ -1514,9 +1380,6 @@ struct  timeval tv;                     /* Select timeout structure  */
         /*        the NP display as an else after those ifs */
 
         if (NPDup == 0) {
-#ifdef EXTERNALGUI
-            if (!extgui)
-#endif /*EXTERNALGUI*/
             /* Rewrite the screen if display update indicators are set */
             if (redraw_msgs && !sysblk.npquiet)
             {
@@ -1550,9 +1413,6 @@ struct  timeval tv;                     /* Select timeout structure  */
                        " %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X"
                     " %c%c%c%c%c%c%c%c instcount=%llu"
                     "%s",
-#ifdef EXTERNALGUI
-                    extgui ? ("STATUS=") :
-#endif /*EXTERNALGUI*/
                     (ANSI_ROW24_COL1 ANSI_YELLOW_RED),
                     regs->cpuad,
                     curpsw[0], curpsw[1], curpsw[2], curpsw[3],
@@ -1579,130 +1439,10 @@ struct  timeval tv;                     /* Select timeout structure  */
                     regs->sie_state ?  (long long) regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
                     (long long)regs->instcount,
-#ifdef EXTERNALGUI
-                    extgui ? "\n" :
-#endif /*EXTERNALGUI*/
                     ANSI_ERASE_EOL);
 
-#ifdef EXTERNALGUI
-                if (extgui)
-                {
-                    /* SYS / WAIT lights */
-                    if (!(regs->cpustate == CPUSTATE_STOPPING ||
-                        regs->cpustate == CPUSTATE_STOPPED))
-                        fprintf(confp,"SYS=%c\n",pswwait?'0':'1');
-#ifdef OPTION_MIPS_COUNTING
-                    /* Calculate MIPS rate */
-#ifdef FEATURE_CPU_RECONFIG
-                    for (mipsrate = siosrate = i = 0; i < MAX_CPU_ENGINES; i++)
-                        if(sysblk.regs[i].cpuonline)
-#else /*!FEATURE_CPU_RECONFIG*/
-                        for(mipsrate = siosrate = i = 0; i < sysblk.numcpu; i++)
-#endif /*!FEATURE_CPU_RECONFIG*/
-                        {
-                            mipsrate += sysblk.regs[i].mipsrate;
-                            siosrate += sysblk.regs[i].siosrate;
-                        }
-#ifdef OPTION_SHARED_DEVICES
-                        siosrate += sysblk.shrdrate;
-#endif
-
-                    if (mipsrate > 100000) mipsrate = 0;        /* ignore wildly high rate */
-
-                    /* MIPS rate */
-                    if (prevmipsrate != mipsrate)
-                    {
-                        prevmipsrate = mipsrate;
-                        fprintf(confp, "MIPS=%2.1d.%2.2d\n",
-                            prevmipsrate / 1000, (prevmipsrate % 1000) / 10);
-                    }
-
-                    /* SIO rate */
-                    if (prevsiosrate != siosrate)
-                    {
-                        prevsiosrate = siosrate;
-                        fprintf(confp, "SIOS=%5d\n",prevsiosrate);
-                    }
-
-#endif /*OPTION_MIPS_COUNTING*/
-                    if (gui_gregs)  /* GP regs */
-                    {
-                        fprintf(confp,"GR0-3=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->GR_L(0),regs->GR_L(1),regs->GR_L(2),regs->GR_L(3));
-                        fprintf(confp,"GR4-7=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->GR_L(4),regs->GR_L(5),regs->GR_L(6),regs->GR_L(7));
-                        fprintf(confp,"GR8-B=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->GR_L(8),regs->GR_L(9),regs->GR_L(10),regs->GR_L(11));
-                        fprintf(confp,"GRC-F=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->GR_L(12),regs->GR_L(13),regs->GR_L(14),regs->GR_L(15));
-                    }
-
-                    if (gui_cregs)  /* CR regs */
-                    {
-                        fprintf(confp,"CR0-3=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->CR_L(0),regs->CR_L(1),regs->CR_L(2),regs->CR_L(3));
-                        fprintf(confp,"CR4-7=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->CR_L(4),regs->CR_L(5),regs->CR_L(6),regs->CR_L(7));
-                        fprintf(confp,"CR8-B=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->CR_L(8),regs->CR_L(9),regs->CR_L(10),regs->CR_L(11));
-                        fprintf(confp,"CRC-F=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->CR_L(12),regs->CR_L(13),regs->CR_L(14),regs->CR_L(15));
-                    }
-
-                    if (gui_aregs)  /* AR regs */
-                    {
-                        fprintf(confp,"AR0-3=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->AR(0),regs->AR(1),regs->AR(2),regs->AR(3));
-                        fprintf(confp,"AR4-7=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->AR(4),regs->AR(5),regs->AR(6),regs->AR(7));
-                        fprintf(confp,"AR8-B=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->AR(8),regs->AR(9),regs->AR(10),regs->AR(11));
-                        fprintf(confp,"ARC-F=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->AR(12),regs->AR(13),regs->AR(14),regs->AR(15));
-                    }
-
-                    if (gui_fregs)  /* FP regs */
-                    {
-                        fprintf(confp,"FR0-2=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->fpr[0],regs->fpr[1],regs->fpr[2],regs->fpr[3]);
-                        fprintf(confp,"FR4-6=%8.8X %8.8X %8.8X %8.8X\n",
-                            regs->fpr[4],regs->fpr[5],regs->fpr[6],regs->fpr[7]);
-                    }
-
-#if defined(OPTION_MIPS_COUNTING)
-                    if (gui_cpupct)  /* CPU Utilization */
-                        fprintf(confp,"CPUPCT=%d\n",(int)(100.0 * regs->cpupct));
-#endif /*defined(OPTION_MIPS_COUNTING)*/
-
-                    if (gui_devlist)  /* device status */
-                        gui_devlist_status (confp);
-                }
-#endif /*EXTERNALGUI*/
             } /* end if(redraw_status) */
-#ifdef EXTERNALGUI
-                        else /* !redraw_status */
-                        {
-                    /* If we're under the control of an external GUI,
-                       some status info we need to send ALL the time. */
-                    if (extgui)
-                                {
-                    /* SYS / WAIT lights */
-                    if (!(regs->cpustate == CPUSTATE_STOPPING ||
-                        regs->cpustate == CPUSTATE_STOPPED))
-                        fprintf(confp,"SYS=%c\n",pswwait?'0':'1');
 
-#if defined(OPTION_MIPS_COUNTING)
-                    if (gui_cpupct)  /* CPU Utilization */
-                        fprintf(confp,"CPUPCT=%d\n",(int)(100.0 * regs->cpupct));
-#endif /*defined(OPTION_MIPS_COUNTING)*/
-
-                    if (gui_devlist)  /* device status */
-                        gui_devlist_status (confp);
-                                }
-                        }
-
-            if (!extgui)
-#endif /*EXTERNALGUI*/
             if (redraw_cmd)
             {
                 /* Display the command line */
@@ -1724,9 +1464,6 @@ struct  timeval tv;                     /* Select timeout structure  */
             /* Flush screen buffer and reset display update indicators */
             if (redraw_msgs || redraw_cmd || redraw_status)
             {
-#ifdef EXTERNALGUI
-                if (!extgui)
-#endif /*EXTERNALGUI*/
                 fprintf (confp,
                     ANSI_POSITION_CURSOR,
                     23, 13+cmdoff);
@@ -1742,14 +1479,8 @@ struct  timeval tv;                     /* Select timeout structure  */
                    || (redraw_cmd && NPdataentry == 1)) {
                 if (NPDinit == 0) {
                     NPDinit = 1;
-#ifdef EXTERNALGUI
-                    if (!extgui)
-#endif /*EXTERNALGUI*/
                     NP_screen(confp);
                 }
-#ifdef EXTERNALGUI
-                if (!extgui)
-#endif /*EXTERNALGUI*/
                 NP_update(confp, cmdline, cmdoff);
                 fflush (confp);
                 redraw_msgs = 0;
@@ -1765,42 +1496,3 @@ struct  timeval tv;                     /* Select timeout structure  */
     return;
 
 } /* end function panel_display */
-
-#if defined(EXTERNALGUI)
-
-void gui_devlist_status (FILE *confp)
-{
-    DEVBLK *dev;
-
-    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-    {
-        if (!(dev->pmcw.flag5 & PMCW5_V)) continue;
-
-        stat_online = stat_busy = stat_pend = stat_open = 0;
-
-        (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
-
-        devnam[255] = 0;   /* (ensure null termination) */
-
-        if ((dev->console && dev->connected) ||
-            (strlen(dev->filename) > 0))
-            stat_online = 1;
-        if (dev->busy) stat_busy = 1;
-        if (dev->pending || dev->pcipending) stat_pend = 1;
-        if (dev->fd > 2) stat_open = 1;
-
-        fprintf(confp, "DEV=%4.4X %4.4X %-4.4s %d%d%d%d %s\n",
-            dev->devnum,
-            dev->devtype,
-            devclass,
-            stat_online,
-            stat_busy,
-            stat_pend,
-            stat_open,
-            devnam);
-    }
-
-    fprintf(confp, "DEV=X\n");    /* (indicate end of list) */
-}
-
-#endif /*defined(EXTERNALGUI)*/

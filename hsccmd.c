@@ -45,11 +45,26 @@ int process_script_file(char *,int);
 
 int quit_cmd(char* cmdline, int argc, char *argv[])
 {
+struct termios kbattr;                  /* Terminal I/O structure    */
     UNREFERENCED(cmdline);
 
     /* redirect the logger input to stderr such that termination 
        messages are written to the screen */
     dup2(STDERR_FILENO,STDOUT_FILENO);
+
+    /* Restore the terminal mode */
+    tcgetattr (STDIN_FILENO, &kbattr);
+    kbattr.c_lflag |= (ECHO | ICANON);
+    tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
+
+    /* Reset the cursor position */
+    if (!extgui)
+    {
+#define ANSI_RESET_WHT_BLK   "\x1B[0;37;40m"
+#define ANSI_CLEAR_SCREEN    "\x1B[2J"
+        fprintf(stderr, ANSI_RESET_WHT_BLK  ANSI_CLEAR_SCREEN );
+        fflush(stderr);
+    }
 
     sysblk.shutdown = 1;
 
@@ -62,6 +77,9 @@ int quit_cmd(char* cmdline, int argc, char *argv[])
 
     if (argc < 2 || strcasecmp("now",argv[1]))
         release_config();
+
+    fprintf(stderr, "HHCIN007I Hercules terminated\n");
+    fflush(stderr);
 
     exit(0);
 

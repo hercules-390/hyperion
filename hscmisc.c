@@ -4,13 +4,11 @@
 
 
 #include "hercules.h"
-
 #include "devtype.h"
-
 #include "opcode.h"
-
 #include "inline.h"
 
+#define  DISPLAY_INSTRUCTION_OPERANDS
 
 #if !defined(_HSCMISC_C)
 #define _HSCMISC_C
