@@ -460,7 +460,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[8];
   int crypted;
-  GCRY_CIPHER_HD hd;
+  gcry_cipher_hd_t hd;
   BYTE k[8];
 
 #ifdef OPTION_KM_DEBUG
@@ -479,7 +479,6 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
   }
 
   /* Open a cipher handle */
-//if(!(hd = gcry_cipher_open(GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
 
   /* Fetch and set the cryptographic key */
@@ -553,7 +552,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[8];
   int crypted;
-  GCRY_CIPHER_HD hd;
+  gcry_cipher_hd_t hd;
   BYTE k[24];
 
 #ifdef OPTION_KM_DEBUG
@@ -572,7 +571,6 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
   }
 
   /* Open the cipher handle */
-//if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0);
 
   /* Fetch and set the cryptographic keys */
@@ -650,7 +648,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[8];
   int crypted;
-  GCRY_CIPHER_HD hd;
+  gcry_cipher_hd_t hd;
   BYTE k[24];
 
 #ifdef OPTION_KM_DEBUG
@@ -669,7 +667,6 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
   }
 
   /* Open the cipher handle */
-//if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0);
 
   /* Fetch and set the cryptographic keys */
@@ -768,7 +765,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   BYTE buffer[8];
   int crypted;
   BYTE cv[8];
-  GCRY_CIPHER_HD hd;
+  gcry_cipher_hd_t hd;
   BYTE k[8];
 
   UNREFERENCED(r1);
@@ -789,7 +786,6 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   }
 
   /* Open a cipher handle */
-//if(!(hd = gcry_cipher_open(GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
 
   /* Test writeability output chaining value */
@@ -861,7 +857,7 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
   BYTE buffer[8];
   int crypted;
   BYTE cv[8];
-  GCRY_CIPHER_HD hd;
+  gcry_cipher_hd_t hd;
   BYTE k[24];
 
   UNREFERENCED(r1);
@@ -882,7 +878,6 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
   }
 
   /* Open a cipher handle */
-//if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
 
   /* Test writeability output chaining value */
@@ -958,7 +953,7 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
   BYTE buffer[8];
   int crypted;
   BYTE cv[8];
-  GCRY_CIPHER_HD hd;
+  gcry_cipher_hd_t hd;
   BYTE k[24];
 
   UNREFERENCED(r1);
@@ -979,7 +974,6 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
   }
 
   /* Open a cipher handle */
-//if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
 
   /* Test writeability output chaining value */
@@ -1073,7 +1067,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   BYTE buffer[8];
   int crypted;
   BYTE cv[8];
-  GCRY_CIPHER_HD hd;
+  gcry_cipher_hd_t hd;
   BYTE k[8];
 
 #ifdef OPTION_KMC_DEBUG
@@ -1092,7 +1086,6 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   }
 
   /* Open a cipher handle */
-//if(!(hd = gcry_cipher_open(GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
 
   /* Test writeability output chaining value */
@@ -1190,7 +1183,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
   BYTE buffer[8];
   int crypted;
   BYTE cv[8];
-  GCRY_CIPHER_HD hd;
+  gcry_cipher_hd_t hd;
   BYTE k[24];
 
 #ifdef OPTION_KMC_DEBUG
@@ -1209,7 +1202,6 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
   }
 
   /* Open a cipher handle */
-//if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
 
   /* Test writeability output chaining value */
@@ -1311,7 +1303,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
   BYTE buffer[8];
   int crypted;
   BYTE cv[8];
-  GCRY_CIPHER_HD hd;
+  gcry_cipher_hd_t hd;
   BYTE k[24];
 
 #ifdef OPTION_KMC_DEBUG
@@ -1330,7 +1322,6 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
   }
 
   /* Open a cipher handle */
-//if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
 
   /* Test writeability output chaining value */
