@@ -278,7 +278,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
 #if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs) 
+    if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
        || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -552,7 +552,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     INVALIDATE_AEA_ALL(regs);
 
 #if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs) 
+    if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
        || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -652,7 +652,7 @@ VADR    n = 0;                          /* Work area                 */
     {
         regs->psw.IA = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -1059,7 +1059,7 @@ BYTE    storkey;
                     /* Convert real address to absolute address */
                     rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
 
-                    /* The reference and change byte is located directly 
+                    /* The reference and change byte is located directly
                        beyond the page table and is located at offset 1 in
                        the entry. S/370 mode cannot be emulated in ESAME
                mode, so no provision is made for ESAME mode tables */
@@ -1070,7 +1070,7 @@ BYTE    storkey;
                 {
                     /* Obtain address of the RCP area from the state desc */
                     rcpa = regs->sie_rcpo &= 0x7FFFF000;
-    
+
                     /* frame index as byte offset to 4K keys in RCP area */
                     rcpa += n >> 12;
 
@@ -1204,7 +1204,7 @@ BYTE    storkey;
                  stid;
             RADR rcpa;
             BYTE rcpkey;
-    
+
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
 #if defined(_FEATURE_ZSIE)
@@ -1221,7 +1221,7 @@ BYTE    storkey;
                     /* Convert real address to absolute address */
                     rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
 
-                    /* For ESA/390 the RCP byte entry is at offset 1 in a 
+                    /* For ESA/390 the RCP byte entry is at offset 1 in a
                        four byte entry directly beyond the page table,
                for ESAME mode, this entry is eight bytes long */
                     rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
@@ -1350,7 +1350,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
     /* When running under SIE, and the guest absolute address
-       is paged out, then obtain the storage key from the 
+       is paged out, then obtain the storage key from the
        SPGTE rather then causing a host page fault. */
     if(regs->sie_state
       && !regs->sie_pref
@@ -1369,10 +1369,10 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
 
         if(sr != 0 && sr != 2)
             ARCH_DEP(program_interrupt) (regs->hostregs, xcode);
-    
+
         if(sr == 2)
         {
-            /* For ESA/390 the RCP byte entry is at offset 0 in a 
+            /* For ESA/390 the RCP byte entry is at offset 0 in a
                four byte entry directly beyond the page table,
                for ESAME mode, this entry is eight bytes long */
             n += regs->hostregs->arch_mode == ARCH_900 ? 2048 : 1024;
@@ -1795,7 +1795,7 @@ int     amode64;
     /* make psw valid for esa390 mode */
     dword[3] &= ~0x01;
     rc = s390_load_psw ( regs, dword );
-    /* Set the notesame bit to zero as it has been set, 
+    /* Set the notesame bit to zero as it has been set,
        and set the amode64 bit according to byte 3 */
     regs->psw.notesame = regs->psw.notesame ? 0 : 1;
     regs->psw.amode64 = amode64;
@@ -1842,14 +1842,26 @@ DEF_INST(load_real_address)
 int     r1;                             /* Register number           */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+
+    RX(inst, execflag, regs, r1, b2, effective_addr2);
+
+    ARCH_DEP(load_real_address_proc) (regs, r1, b2, effective_addr2);
+
+} /* end DEF_INST(load_real_address) */
+
+
+/*-------------------------------------------------------------------*/
+/* Common processing routine for the LRA and LRAY instructions       */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP(load_real_address_proc) (REGS *regs,
+                int r1, int b2, VADR effective_addr2)
+{
 U16     xcode;                          /* Exception code            */
 int     private;                        /* 1=Private address space   */
 int     protect;                        /* 1=ALE or page protection  */
 int     stid;                           /* Segment table indication  */
 int     cc;                             /* Condition code            */
 RADR    n;                              /* 32-bit operand values     */
-
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -1907,7 +1919,7 @@ RADR    n;                              /* 32-bit operand values     */
 
     regs->psw.cc = cc;
 
-} /* end DEF_INST(load_real_address) */
+} /* end ARCH_DEP(load_real_address_proc) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2794,7 +2806,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
 #if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs) 
+    if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
        || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -2809,7 +2821,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* [6.5.2.34] Set the translation exception address equal
            to the old primary ASN, with the high-order bit set if
            the old primary space-switch-event control bit is one */
-        regs->TEA = oldpasn; 
+        regs->TEA = oldpasn;
         if (oldpstd & SSEVENT_BIT)
             regs->TEA |= TEA_SSEVENT;
 
@@ -3010,7 +3022,7 @@ int     rc;                             /* return code from load_psw */
         regs->perc = newregs.perc;
     }
 
-    if( EN_IC_PER_SB(regs) 
+    if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
        || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -3252,7 +3264,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
 #if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs) 
+    if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
        || PER_RANGE_CHECK(ia,regs->CR(10),regs->CR(11)) )
@@ -3444,7 +3456,7 @@ BYTE    storkey;                        /* Storage key               */
                     /* Convert real address to absolute address */
                     rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
 
-                    /* The reference and change byte is located directly 
+                    /* The reference and change byte is located directly
                        beyond the page table and is located at offset 1 in
                        the entry. S/370 mode cannot be emulated in ESAME
                mode, so no provision is made for ESAME mode tables */
@@ -3455,7 +3467,7 @@ BYTE    storkey;                        /* Storage key               */
                 {
                     /* Obtain address of the RCP area from the state desc */
                     rcpa = regs->sie_rcpo &= 0x7FFFF000;
-    
+
                     /* frame index as byte offset to 4K keys in RCP area */
                     rcpa += n >> 12;
 
@@ -3629,7 +3641,7 @@ BYTE    storkey;                        /* Storage key               */
                     /* Convert real address to absolute address */
                     rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
 
-                    /* For ESA/390 the RCP byte entry is at offset 1 in a 
+                    /* For ESA/390 the RCP byte entry is at offset 1 in a
                        four byte entry directly beyond the page table,
                for ESAME mode, this entry is eight bytes long */
                     rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
@@ -4269,7 +4281,7 @@ RADR    n;                              /* Absolute storage addr     */
                     /* Convert real address to absolute address */
                     rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
 
-                    /* The reference and change byte is located directly 
+                    /* The reference and change byte is located directly
                        beyond the page table and is located at offset 1 in
                        the entry. S/370 mode cannot be emulated in ESAME
                mode, so no provision is made for ESAME mode tables */
@@ -4309,7 +4321,7 @@ RADR    n;                              /* Absolute storage addr     */
                 {
                     /* host real to host absolute */
                     n = APPLY_PREFIXING(n, regs->hostregs->PX);
-    
+
                     realkey =
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
                               STORAGE_KEY(n, regs)
@@ -4464,7 +4476,7 @@ RADR    n;                              /* Abs frame addr stor key   */
                     /* Convert real address to absolute address */
                     rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
 
-                    /* For ESA/390 the RCP byte entry is at offset 1 in a 
+                    /* For ESA/390 the RCP byte entry is at offset 1 in a
                        four byte entry directly beyond the page table,
                for ESAME mode, this entry is eight bytes long */
                     rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
@@ -4503,7 +4515,7 @@ RADR    n;                              /* Abs frame addr stor key   */
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
               )
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-    
+
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
         if(sr)
                     realkey = 0;
@@ -4512,7 +4524,7 @@ RADR    n;                              /* Abs frame addr stor key   */
                 {
                     /* host real to host absolute */
                     n = APPLY_PREFIXING(n, regs->hostregs->PX);
-    
+
                     realkey =
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
                               STORAGE_KEY(n, regs)
@@ -4612,7 +4624,7 @@ int     armode;
 
     S(inst, execflag, regs, b2, effective_addr2);
     /*
-     * ECPS:VM - Before checking for prob/priv 
+     * ECPS:VM - Before checking for prob/priv
      * Check CR6 to see if S-ASSIST is requested
      *
      * If we can process it, then do it
