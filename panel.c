@@ -891,7 +891,7 @@ void    device_thread();
 #ifdef WIN32
 int herc_system (char* command)
 {
-	return system(command);
+        return system(command);
 }
 #else // !WIN32
 int herc_system (char *command)
@@ -1084,7 +1084,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
         /* Restart the CPU if it is in the stopped state */
         regs->cpustate = CPUSTATE_STARTED;
-        
+
         /* Reset checkstop indicator */
         regs->checkstop = 0;
 
@@ -1295,12 +1295,12 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                           "?", "?", "?", "STARTING"};
 
         cmdarg = strtok(cmd+8," \t");
-        if (cmdarg != NULL && (memcmp(cmdarg+1,"debug",5) != 0 
-	    		    || (*cmdarg!='+' && *cmdarg!='-')))
-	{
+        if (cmdarg != NULL && (memcmp(cmdarg+1,"debug",5) != 0
+                            || (*cmdarg!='+' && *cmdarg!='-')))
+        {
             logmsg ("ipending expects {+|-}debug as operand."
-		        " %s is invalid\n", cmdarg);
-	    cmdarg=NULL;
+                        " %s is invalid\n", cmdarg);
+            cmdarg=NULL;
         }
 
 #ifdef _FEATURE_CPU_RECONFIG
@@ -1311,46 +1311,46 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 #endif /*!_FEATURE_CPU_RECONFIG*/
         {
             if(cmdarg != NULL)
-	    {
-	        logmsg("Interrupt checking debug mode set to ");
-	        if(*cmdarg=='+')
-		{
-		    ON_IC_DEBUG(sysblk.regs+i);
-		    logmsg("ON\n");
-		}
-		else
-		{
-		    OFF_IC_DEBUG(sysblk.regs+i);
-		    logmsg("OFF\n");
-		}
-	    }
+            {
+                logmsg("Interrupt checking debug mode set to ");
+                if(*cmdarg=='+')
+                {
+                    ON_IC_DEBUG(sysblk.regs+i);
+                    logmsg("ON\n");
+                }
+                else
+                {
+                    OFF_IC_DEBUG(sysblk.regs+i);
+                    logmsg("OFF\n");
+                }
+            }
 // /*DEBUG*/logmsg("CPU%4.4X: Any cpu interrupt %spending\n",
 // /*DEBUG*/    sysblk.regs[i].cpuad, sysblk.regs[i].cpuint ? "" : "not ");
             logmsg("CPU%4.4X: CPUint=%8.8X (r:%8.8X|s:%8.8X)&(Mask:%8.8X)\n",
                 sysblk.regs[i].cpuad, IC_INTERRUPT_CPU(sysblk.regs+i),
-		         sysblk.regs[i].ints_state,
-		         sysblk.ints_state, regs[i].ints_mask);
+                         sysblk.regs[i].ints_state,
+                         sysblk.ints_state, regs[i].ints_mask);
             logmsg("CPU%4.4X: Clock comparator %spending\n",
                 sysblk.regs[i].cpuad,
-		         IS_IC_CLKC(sysblk.regs+i) ? "" : "not ");
+                         IS_IC_CLKC(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: CPU timer %spending\n",
                 sysblk.regs[i].cpuad,
-		         IS_IC_PTIMER(sysblk.regs+i) ? "" : "not ");
+                         IS_IC_PTIMER(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: Interval timer %spending\n",
                 sysblk.regs[i].cpuad,
-		         IS_IC_ITIMER(sysblk.regs+i) ? "" : "not ");
+                         IS_IC_ITIMER(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: External call %spending\n",
                 sysblk.regs[i].cpuad,
-		         IS_IC_EXTCALL(sysblk.regs+i) ? "" : "not ");
+                         IS_IC_EXTCALL(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: Emergency signal %spending\n",
                 sysblk.regs[i].cpuad,
-		         IS_IC_EMERSIG(sysblk.regs+i) ? "" : "not ");
+                         IS_IC_EMERSIG(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: CPU %swaiting for interlock\n",
                 sysblk.regs[i].cpuad,
-		         sysblk.regs[i].mainsync ? "" : "not ");
+                         sysblk.regs[i].mainsync ? "" : "not ");
             logmsg("CPU%4.4X: CPU interlock %sheld\n",
                 sysblk.regs[i].cpuad,
-		         sysblk.regs[i].mainlock ? "" : "not ");
+                         sysblk.regs[i].mainlock ? "" : "not ");
             logmsg("CPU%4.4X: CPU state is %s\n",
                 sysblk.regs[i].cpuad,
                          states[sysblk.regs[i].cpustate]);
@@ -1546,7 +1546,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         if (cmd[0]=='t' && cmd[2]=='\0')
         {
             sysblk.insttrace = oneorzero;
-	    SET_IC_TRACE;
+            SET_IC_TRACE;
             logmsg ("Instruction tracing is now %s\n", onoroff);
             return NULL;
         }
@@ -1556,7 +1556,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         if (cmd[0]=='s' && cmd[2]=='\0')
         {
             sysblk.inststep = oneorzero;
-	    SET_IC_TRACE;
+            SET_IC_TRACE;
             logmsg ("Instruction stepping is now %s\n", onoroff);
             return NULL;
         }
@@ -1769,9 +1769,9 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
-	loadaddr = strtok (NULL, " \t");
+        loadaddr = strtok (NULL, " \t");
 
-	if (loadaddr == NULL || *loadaddr == '*' )
+        if (loadaddr == NULL || *loadaddr == '*' )
         {
             for(aaddr = 0; aaddr < sysblk.mainsize
               && !(STORAGE_KEY(aaddr)&STORKEY_CHANGE); aaddr += 4096) ;
@@ -1780,15 +1780,15 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             else
                 aaddr &= ~0xFFF;
         }
-	else if (sscanf(loadaddr, "%x", &aaddr) !=1)
-	{
-	    logmsg ("savecore: invalid starting address: %s \n",loadaddr);
-	    return NULL;
-	}
+        else if (sscanf(loadaddr, "%x", &aaddr) !=1)
+        {
+            logmsg ("savecore: invalid starting address: %s \n",loadaddr);
+            return NULL;
+        }
 
-	loadaddr = strtok (NULL, " \t");
+        loadaddr = strtok (NULL, " \t");
 
-	if (loadaddr == NULL || *loadaddr == '*' )
+        if (loadaddr == NULL || *loadaddr == '*' )
         {
             for(aaddr2 = sysblk.mainsize - 4096; aaddr2 > 0
               && !(STORAGE_KEY(aaddr2)&STORKEY_CHANGE); aaddr2 -= 4096) ;
@@ -1796,11 +1796,11 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 aaddr2 |= 0xFFF;
 
         }
-	else if (sscanf(loadaddr, "%x", &aaddr2) !=1)
-	{
-	    logmsg ("savecore: invalid ending address: %s \n",loadaddr);
-	    return NULL;
-	}
+        else if (sscanf(loadaddr, "%x", &aaddr2) !=1)
+        {
+            logmsg ("savecore: invalid ending address: %s \n",loadaddr);
+            return NULL;
+        }
 
         /* Command is valid only when CPU is stopped */
         if (regs->cpustate != CPUSTATE_STOPPED)
@@ -1847,16 +1847,16 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
-	loadaddr = strtok (NULL, " \t");
+        loadaddr = strtok (NULL, " \t");
 
-	if (loadaddr == NULL)
+        if (loadaddr == NULL)
             aaddr = 0;
-	else if (sscanf(loadaddr, "%x", &aaddr) !=1)
-	
-	{
-	    logmsg ("invalid address: %s \n",loadaddr);
-	    return NULL;
-	}
+        else if (sscanf(loadaddr, "%x", &aaddr) !=1)
+
+        {
+            logmsg ("invalid address: %s \n",loadaddr);
+            return NULL;
+        }
 
         /* Command is valid only when CPU is stopped */
         if (regs->cpustate != CPUSTATE_STOPPED)
@@ -1887,22 +1887,22 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
-	loadaddr = strtok (NULL, " \t");
+        loadaddr = strtok (NULL, " \t");
 
-	if (loadaddr == NULL)
+        if (loadaddr == NULL)
             aaddr = 0;
-	else if (sscanf(loadaddr, "%x", &aaddr) !=1)
-	
-	{
-	    logmsg ("invalid address: %s \n",loadaddr);
-	    return NULL;
-	}
+        else if (sscanf(loadaddr, "%x", &aaddr) !=1)
 
-	if (aaddr >= regs->mainsize)
-	{ 
-	    logmsg ("Address greater than mainstore size. \n");
-	    return NULL;
-	}
+        {
+            logmsg ("invalid address: %s \n",loadaddr);
+            return NULL;
+        }
+
+        if (aaddr >= regs->mainsize)
+        {
+            logmsg ("Address greater than mainstore size. \n");
+            return NULL;
+        }
 
         /* Command is valid only when CPU is stopped */
         if (regs->cpustate != CPUSTATE_STOPPED)
@@ -2384,7 +2384,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
-        TrimDeviceThreads();	// (enforce newly defined threshold)
+        TrimDeviceThreads();    // (enforce newly defined threshold)
 
         logmsg ("Max device threads: %d, current: %d, most: %d, "
                 "waiting: %d, max exceeded: %d\n",
@@ -2451,7 +2451,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         if (i == 0) { logmsg ("No synchronous I/O devices found\n"); }
         else
             logmsg ("TOTAL synchronous: %12lld asynchronous: %12lld  %3lld%%\n",
-                   syncios, asyncios, (syncios * 100) / (syncios + asyncios));
+                   syncios, asyncios, (syncios * 100) / (syncios + asyncios + 1));
         return NULL;
     }
 #endif
@@ -2627,8 +2627,8 @@ struct  timeval tv;                     /* Select timeout structure  */
     {
         confp = stderr;
         logfp = stdout;
-	/* Logfile should be unbuffered to be always in sync */
-	setvbuf(logfp, NULL, _IONBF, 0);
+        /* Logfile should be unbuffered to be always in sync */
+        setvbuf(logfp, NULL, _IONBF, 0);
     }
 
     /* Set screen output stream to fully buffered */
@@ -2683,16 +2683,16 @@ struct  timeval tv;                     /* Select timeout structure  */
         regs = sysblk.regs + sysblk.pcpu;
         /* If the requested CPU is offline, then take the first available CPU*/
         if(!regs->cpuonline)
-	  /* regs = first online CPU
-	   * sysblk.pcpu = number of online CPUs
-	   */
-	  for(regs = 0, sysblk.pcpu = 0, i = 0 ;
-	      i < MAX_CPU_ENGINES ; ++i )
-	    if (sysblk.regs[i].cpuonline) {
-	      if (!regs)
-		regs = &sysblk.regs[i];
-	      ++sysblk.pcpu;
-	    }
+          /* regs = first online CPU
+           * sysblk.pcpu = number of online CPUs
+           */
+          for(regs = 0, sysblk.pcpu = 0, i = 0 ;
+              i < MAX_CPU_ENGINES ; ++i )
+            if (sysblk.regs[i].cpuonline) {
+              if (!regs)
+                regs = &sysblk.regs[i];
+              ++sysblk.pcpu;
+            }
 
         if (!regs)
             /* No CPUs are online! The 'quit' or 'exit'
@@ -3377,7 +3377,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                             siosrate += sysblk.regs[i].siosrate;
                         }
 
-                    if (mipsrate > 100000) mipsrate = 0;	/* ignore wildly high rate */
+                    if (mipsrate > 100000) mipsrate = 0;        /* ignore wildly high rate */
 
                     /* MIPS rate */
                     if (prevmipsrate != mipsrate)
@@ -3475,12 +3475,12 @@ struct  timeval tv;                     /* Select timeout structure  */
 #endif /*EXTERNALGUI*/
             } /* end if(redraw_status) */
 #ifdef EXTERNALGUI
-			else /* !redraw_status */
-			{
-	            /* If we're under the control of an external GUI,
-	               some status info we need to send ALL the time. */
-	            if (extgui)
-				{
+                        else /* !redraw_status */
+                        {
+                    /* If we're under the control of an external GUI,
+                       some status info we need to send ALL the time. */
+                    if (extgui)
+                                {
                     /* (for system activity meter) */
                     if (!(regs->cpustate == CPUSTATE_STOPPING ||
                         regs->cpustate == CPUSTATE_STOPPED))
@@ -3520,8 +3520,8 @@ struct  timeval tv;                     /* Select timeout structure  */
 
                         fprintf(confp, "DEV=X\n");    /* (indicate end of list) */
                     }
-				}
-			}
+                                }
+                        }
 
             if (!extgui)
 #endif /*EXTERNALGUI*/
@@ -3919,7 +3919,7 @@ int     n;                              /* Number of bytes in buffer */
     if (ilc > 4) n += sprintf (buf+n, "%2.2X%2.2X", inst[4], inst[5]);
     logmsg ("%s %s", buf,(ilc<4) ? "        " : (ilc<6) ? "    " : "");
     DISASM_INSTRUCTION(inst);
-    
+
 
 #ifdef DISPLAY_INSTRUCTION_OPERANDS
 
