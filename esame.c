@@ -5776,6 +5776,51 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 #if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_ACCESS_REGISTERS)
+/*-------------------------------------------------------------------*/
+/* EB9A LAMY  - Load Access Multiple (Long Displacement)       [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_access_multiple_y)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+int     n, d;                           /* Integer work areas        */
+BYTE    rwork[64];                      /* Register work area        */
+
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
+
+    FW_CHECK(effective_addr2, regs);
+
+    /* Calculate the number of bytes to be loaded */
+    d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
+
+    /* Fetch new access register contents from operand address */
+    ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
+
+    /* Load access registers from work area */
+    for ( n = r1, d = 0; ; )
+    {
+        /* Load one access register from work area */
+        FETCH_FW(regs->AR(n), rwork + d); d += 4;
+
+        /* Instruction is complete when r3 register is done */
+        if ( n == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        n++; n &= 15;
+    }
+
+    if (r1 == r3)
+        INVALIDATE_AEA_AR(r1, regs);
+    else
+        INVALIDATE_AEA_ARALL(regs);
+}
+#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
 /*-------------------------------------------------------------------*/
 /* E371 LAY   - Load Address (Long Displacement)               [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5807,6 +5852,42 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Load rightmost 2 bytes of register from operand address */
     (S32)regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* EB98 LMY   - Load Multiple (Long Displacement)              [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_multiple_y)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+int     i, d;                           /* Integer work areas        */
+BYTE    rwork[64];                      /* Character work areas      */
+
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
+
+    /* Calculate the number of bytes to be loaded */
+    d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
+
+    /* Fetch new register contents from operand address */
+    ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
+
+    /* Load registers from work area */
+    for ( i = r1, d = 0; ; )
+    {
+        /* Load one register from work area */
+        FETCH_FW(regs->GR_L(i), rwork + d); d += 4;
+
+        /* Instruction is complete when r3 register is done */
+        if ( i == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        i++; i &= 15;
+    }
 }
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
@@ -5921,6 +6002,43 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 #if defined(FEATURE_LONG_DISPLACEMENT)
+#if defined(FEATURE_ACCESS_REGISTERS)
+/*-------------------------------------------------------------------*/
+/* EB9B STAMY - Store Access Multiple (Long Displacement)      [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_access_multiple_y)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+int     n, d;                           /* Integer work area         */
+BYTE    rwork[64];                      /* Register work area        */
+
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
+
+    FW_CHECK(effective_addr2, regs);
+
+    /* Copy access registers into work area */
+    for ( n = r1, d = 0; ; )
+    {
+        /* Copy contents of one access register to work area */
+        STORE_FW(rwork + d, regs->AR(n)); d += 4;
+
+        /* Instruction is complete when r3 register is done */
+        if ( n == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        n++; n &= 15;
+    }
+
+    /* Store access register contents at operand address */
+    ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
+}
+#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
 /*-------------------------------------------------------------------*/
 /* E372 STCY  - Store Character (Long Displacement)            [RXY] */
 /*-------------------------------------------------------------------*/
@@ -5952,6 +6070,39 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Store rightmost 2 bytes of R1 register at operand address */
     ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, b2, regs );
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* EB90 STMY  - Store Multiple (Long Displacement)             [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_multiple_y)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+int     n, d;                           /* Integer work area         */
+BYTE    rwork[64];                      /* Register work area        */
+
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
+
+    /* Copy register contents into work area */
+    for ( n = r1, d = 0; ; )
+    {
+        /* Copy contents of one register to work area */
+        STORE_FW(rwork + d, regs->GR_L(n)); d += 4;
+
+        /* Instruction is complete when r3 register is done */
+        if ( n == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        n++; n &= 15;
+    }
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
 }
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
@@ -6078,12 +6229,8 @@ BYTE    tbyte;                          /* Work byte                 */
  UNDEF_INST(convert_to_binary_y)
  UNDEF_INST(convert_to_decimal_y)
  UNDEF_INST(insert_characters_under_mask_y)
- UNDEF_INST(load_access_multiple_y)
- UNDEF_INST(load_multiple_y)
  UNDEF_INST(load_real_address_y)
- UNDEF_INST(store_access_multiple_y)
  UNDEF_INST(store_characters_under_mask_y)
- UNDEF_INST(store_multiple_y)
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 #if !defined(_GEN_ARCH)
