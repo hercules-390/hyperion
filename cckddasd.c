@@ -2809,8 +2809,10 @@ int             sfx,l1x,l2x;            /* Lookup table indices      */
                     dev->devnum, sfx, trk, (long long)l2.pos, strerror(errno));
             return -1;
         }
-        cckdtrc ("cckddasd: file[%d] trk %d written offset %llx len %d\n",
-                 sfx, trk, (long long)l2.pos, len);
+        cckdtrc ("cckddasd: file[%d] trk %d written offset %llx len %d"
+                 " %2.2x%2.2x%2.2x%2.2x%2.2x\n",
+                 sfx, trk, (long long)l2.pos, len,
+                 buf[0],buf[1],buf[2],buf[3],buf[4]);
         cckd->writes[sfx]++;
         cckd->totwrites++;
         cckdblk.stats_writes++;
@@ -3585,6 +3587,8 @@ cckd_sf_remove_trkerr:
         cckd_read_init (dev);
 #endif
     } /* merge */
+    else
+        cckd_purge_cache (dev);
 
     /* remove the old file */
     cckd_purge_l2 (dev);
@@ -3955,9 +3959,12 @@ BYTE            buf[65536];             /* Buffer                    */
         /* Make sure the free space chain is built */
         if (!cckd->free) cckd_read_fsp (dev);
 
-        /* Find a free space to start with */
+        /* Find a free space to start with ...
+           Here we are trying to find the pending 0 free space that
+           will combine with the most other pending 0 free spaces ...
+           This algorithm is subject to change ;-)  */
         fpos = (off_t)cckd->cdevhdr[sfx].free;
-        f = maxcombine = -1;
+        f = combine = maxcombine = -1;
         for (i = cckd->free1st; i >= 0; i = cckd->free[i].next)
         {
             if (!cckd->free[i].pending)
@@ -3965,12 +3972,16 @@ BYTE            buf[65536];             /* Buffer                    */
                 combine = 0;
                 lpos = fpos + cckd->free[i].len + size;
                 for (j = i; j >= 0; j = cckd->free[j].next)
-                    if (lpos >= (off_t)cckd->free[j].pos
-                     || cckd->free[j].pos == 0)
-                        combine++;
+                    if (lpos >= (off_t)cckd->free[j].pos ?
+                                (off_t)cckd->free[j].pos :
+                                (off_t)cckd->cdevhdr[sfx].size)
+                    {
+                        if (cckd->free[j].pending == 0)
+                            combine++;
+                    }
                     else
                         break;
-                if (combine >= maxcombine)
+                if (combine > maxcombine)
                 {
                     maxcombine = combine;
                     f = i;
