@@ -56,7 +56,7 @@
 //
 //  External routine:
 //
-//    void xxxx_diagf14_routine_name(int r3, REGS *regs);
+//    void xxxx_diagf14_routine_name(int r1, int r3, REGS *regs);
 //
 //    xxxx_diagf14_ prefix to routine_name 
 //    xxxx being either s370, s390 or z900 depending on architecture mode.
@@ -102,7 +102,7 @@ static char *prefix[] = {
     strcat(entry,name);
 
     if( (dllcall = HDL_FINDENT(entry)) )
-        dllcall(r3, regs);
+        dllcall(r1, r3, regs);
     else
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
