@@ -3704,21 +3704,12 @@ U64     dreg;                           /* Clock value               */
     /* Update the clock comparator and set epoch to zero */
     regs->clkc = dreg >> 8;
 
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
-
-    /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
-
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
-    if( (sysblk.todclk + regs->todoffset) > regs->clkc )
-        ON_IC_CLKC(regs);
-    else
-        OFF_IC_CLKC(regs);
+    update_TOD_clock();
 
-    /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
+    /* Release the TOD clock update lock */
+    release_lock (&sysblk.todlock);
 
     RETURN_INTCHECK(regs);
 }
@@ -3774,20 +3765,11 @@ U64     dreg;                           /* Timer value               */
     /* Update the CPU timer */
     regs->ptimer = dreg;
 
+    /* reset the cpu timer pending flag according to its value */
+    update_TOD_clock();
+
     /* Release the TOD clock update lock */
     release_lock (&sysblk.todlock);
-
-    /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
-
-    /* reset the cpu timer pending flag according to its value */
-    if( (S64)regs->ptimer < 0 )
-        ON_IC_PTIMER(regs);
-    else
-        OFF_IC_PTIMER(regs);
-
-    /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
 
 //  /*debug*/logmsg("Set CPU timer=%16.16llX\n", dreg);
 
@@ -5740,11 +5722,11 @@ U64     dreg;                           /* 64-bit work area          */
     /* Calculate the number of registers to be traced, minus 1 */
     i = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;
 
-    /* Update the TOD clock */
-    update_TOD_clock();
-
     /* Obtain the TOD clock update lock */
     obtain_lock (&sysblk.todlock);
+
+    /* Update the TOD clock */
+    update_TOD_clock();
 
     /* Retrieve the TOD clock value and shift out the epoch */
     dreg = sysblk.todclk << 8;

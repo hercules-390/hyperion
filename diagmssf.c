@@ -387,11 +387,11 @@ static U64        diag204tod;          /* last diag204 tod           */
 
     case 0x04:
 
-	/* Update the TOD clock */
-	update_TOD_clock();
-
         /* Obtain the TOD clock update lock */
         obtain_lock (&sysblk.todlock);
+
+        /* Update the TOD clock */
+        update_TOD_clock();
 
         /* save last diag204 tod */
         dreg = diag204tod;

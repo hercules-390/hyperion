@@ -513,7 +513,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
         else
         {
             gettimeofday (&cckd->cache[fnd].tv, NULL);
-            CCKD_ADJUST_TOD (cckd->cache[fnd].tv, cckd->lasttod);
+            ADJUST_TOD (cckd->cache[fnd].tv, dev->lasttod);
         }
         DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d cache hit buf %p\n",
                   ra, fnd, trk, cckd->cache[fnd].buf);
@@ -574,7 +574,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
             cckd->cache[lru].used = 0;
             cckd->cache[lru].writing = 1;
             gettimeofday (&cckd->cache[lru].tv, NULL);
-            CCKD_ADJUST_TOD (cckd->cache[lru].tv, cckd->lasttod);
+            ADJUST_TOD (cckd->cache[lru].tv, dev->lasttod);
 
             if (!ra)
             {   cckd->cachehits++;
@@ -627,7 +627,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
     cckd->cache[lru].reading = 1;
     cckd->cache[lru].used = 0;
     gettimeofday (&cckd->cache[lru].tv, NULL);
-    CCKD_ADJUST_TOD (cckd->cache[lru].tv, cckd->lasttod);
+    ADJUST_TOD (cckd->cache[lru].tv, dev->lasttod);
 
     /* asynchrously schedule readaheads */
     if (!ra && trk == cckd->curtrk + 1)
@@ -1686,7 +1686,7 @@ int             lru=-1;                 /* Least-Recently-Used cache
         DEVTRACE ("cckddasd: l2[%d,%d] cache[%d] hit\n", sfx, l1x, fnd);
         cckd->l2 = (CCKD_L2ENT *)cckd->l2cache[fnd].buf;
         gettimeofday (&cckd->l2cache[fnd].tv, NULL);
-        CCKD_ADJUST_TOD (cckd->l2cache[fnd].tv, cckd->lasttod);
+        ADJUST_TOD (cckd->l2cache[fnd].tv, dev->lasttod);
         return 0;
     }
 
@@ -1697,7 +1697,7 @@ int             lru=-1;                 /* Least-Recently-Used cache
     cckd->l2cache[lru].sfx = sfx;
     cckd->l2cache[lru].l1x = l1x;
     gettimeofday (&cckd->l2cache[lru].tv, NULL);
-    CCKD_ADJUST_TOD (cckd->l2cache[lru].tv, cckd->lasttod);
+    ADJUST_TOD (cckd->l2cache[lru].tv, dev->lasttod);
 
     cckd->l2 = (CCKD_L2ENT *)cckd->l2cache[lru].buf;
 

@@ -1,3 +1,4 @@
+16 Nov 2001 Reduce timer.c pthreads calls and logic isolation - Greg Smith
 16 Nov 2001 Correct storage keys after ipl from cdrom - Jan Jaeger
 16 Nov 2001 Added savecore command - Jan Jaeger
 15 Nov 2001 RCHP and SCHM fixes for PIC 15 - Paul Leisy

@@ -942,6 +942,7 @@ int             lru;                    /* LRU cache entry index     */
             {
                 dev->ckdcachehits++;
                 gettimeofday (&dev->ckdcache[i].tv, NULL);
+                ADJUST_TOD (dev->ckdcache[i].tv, dev->lasttod);
                 dev->ckdtrkbuf = dev->ckdcache[i].buf;
             }
 
@@ -988,6 +989,7 @@ int             lru;                    /* LRU cache entry index     */
                 /* update the cache entry */
                 dev->ckdcache[lru].trk = trk;
                 gettimeofday (&dev->ckdcache[lru].tv, NULL);
+                ADJUST_TOD (dev->ckdcache[lru].tv, dev->lasttod);
             } /* read track image */
 
             DEVTRACE("ckddasd: track image %d %s CCHH "

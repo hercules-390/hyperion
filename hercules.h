@@ -574,8 +574,13 @@ typedef struct _SYSBLK {
 // #ifdef OPTION_TODCLOCK_DRAG_FACTOR
         U64     todclock_init;          /* TOD clock value at start  */
 // #endif /* OPTION_TODCLOCK_DRAG_FACTOR */
+        U64     todclock_prev;          /* TOD clock previous value  */
+        U64     todclock_diff;          /* TOD clock difference      */
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
+#ifdef WIN32
+        struct timeval   lasttod;       /* Last gettimeofday         */
+#endif
         TID     wdtid;                  /* Thread-id for watchdog    */
         BYTE    loadparm[8];            /* IPL load parameter        */
         U16     numcpu;                 /* Number of CPUs installed  */
@@ -724,6 +729,26 @@ typedef struct _SYSBLK {
 #define MAX_DEVICE_THREADS 8
 #endif
 
+#ifdef WIN32
+#define ADJUST_TOD(tod,lasttod) \
+ { \
+   if ((tod).tv_sec  == (lasttod).tv_sec \
+    && (tod).tv_usec <= (lasttod).tv_usec) \
+    { \
+     (tod).tv_usec = (lasttod).tv_usec + 1; \
+     if ((tod).tv_usec > 999999) \
+     { \
+      (tod).tv_sec++; \
+      (tod).tv_usec = 0; \
+     } \
+   } \
+   (lasttod).tv_sec  = (tod).tv_sec; \
+   (lasttod).tv_usec = (tod).tv_usec; \
+ }
+#else
+#define ADJUST_TOD(tod,lasttod)
+#endif
+
 /*-------------------------------------------------------------------*/
 /* LIST_ENTRY structure     (must manually define here since         */
 /*                           <windows.h> hasn't been #included)      */
@@ -826,6 +851,9 @@ typedef struct _DEVBLK {
         BYTE    pgid[11];               /* Path Group ID             */
         BYTE    reserved2[5];           /* (pad/align/unused/avail)  */
         COND    resumecond;             /* Resume condition          */
+#ifdef WIN32
+        struct timeval   lasttod;       /* Last gettimeofday         */
+#endif
 
         /*  control flags...                                         */
 
@@ -1257,9 +1285,6 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         int              max_wt;        /* Max write wait time       */
         LOCK             termlock;      /* Termination lock          */
         COND             termcond;      /* Termination condition     */
-#ifdef WIN32
-        struct timeval   lasttod;       /* Last gettimeofday         */
-#endif
 #ifdef  CCKD_ITRACEMAX
         char            *itrace;        /* Internal trace table      */
         int              itracex;       /* Internal trace index      */
@@ -1270,19 +1295,6 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
 #define CCKD_OPEN_RO           1
 #define CCKD_OPEN_RD           2
 #define CCKD_OPEN_RW           3
-
-#ifdef WIN32
-#define CCKD_ADJUST_TOD(tod,lasttod) \
- { \
-   if ((tod).tv_sec  == (lasttod).tv_sec \
-    && (tod).tv_usec <= (lasttod).tv_usec) \
-     (tod).tv_usec = (lasttod).tv_usec + 1; \
-   (lasttod).tv_sec  = (tod).tv_sec; \
-   (lasttod).tv_usec = (tod).tv_usec; \
- }
-#else
-#define CCKD_ADJUST_TOD(tod,lasttod)
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Global data areas in module config.c                              */

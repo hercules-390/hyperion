@@ -932,12 +932,11 @@ U64     dreg;                           /* Double word work area     */
     /* Perform serialization before fetching clock */
     PERFORM_SERIALIZATION (regs);
 
+    /* Obtain the TOD clock update lock */
+    obtain_lock (&sysblk.todlock);
+
     /* Update the TOD clock value */
     update_TOD_clock();
-
-    /* Obtain the TOD clock update lock just in case the timer thread
-       grabbed it while we weren't looking */
-    obtain_lock (&sysblk.todlock);
 
     /* Retrieve the TOD clock value and shift out the epoch */
     dreg = ((sysblk.todclk + regs->todoffset) << 8) | regs->cpuad;
@@ -979,12 +978,11 @@ U64     dreg;                           /* Double word work area     */
     /* Perform serialization before fetching clock */
     PERFORM_SERIALIZATION (regs);
 
+    /* Obtain the TOD clock update lock */
+    obtain_lock (&sysblk.todlock);
+
     /* Update the TOD clock value */
     update_TOD_clock();
-
-    /* Obtain the TOD clock update lock just in case the timer thread
-       grabbed it while we weren't looking */
-    obtain_lock (&sysblk.todlock);
 
     /* Retrieve the TOD epoch, clock bits 0-51, and 4 zeroes */
     dreg = (sysblk.todclk + regs->todoffset);
