@@ -167,10 +167,11 @@ in popular distributions such as Red Hat 6.0 or later and SuSE Linux 6.1 or
 later. My development system runs Red Hat 6.1. You can also run under
 Windows NT or Windows 2000, though Hercules isn't quite as polished on that
 platform.</P>
-<P>2. An egcs C compiler, normally distributed with Linux. See the notes
-below on this compiler. If you wish to rebuild the Windows version, you will
-need the <a href="http://sources.redhat.com/cygwin">Cygwin</a> tools from
-Red Hat.</P>
+<P>2. A recent version of the GNU C compiler (GCC), normally
+distributed with Linux. See the notes below on this compiler. If you
+wish to rebuild the Windows version, you will need the <a
+href="http://sources.redhat.com/cygwin">Cygwin</a> tools from Red
+Hat.</P>
 <P>3. You will also need tn3270 client software for the virtual 3270
 console.  The tn3270 client can run on the same machine as Hercules, or
 on any Unix or Windows box with a TCP/IP connection to the Hercules
@@ -206,13 +207,14 @@ fast dual Pentium III it's now not unusual to see 5 MIPS or better.</P>
 <P>Typical I/O rates of around 50 EXCP/second are reported on average
 hardware, with rates over 500/second achievable with hardware RAID. </P>
 <H4>Which C compiler should I use to build Hercules?</H4>
-<P>You <EM>must</EM> use the egcs C compiler. I am using the version that
-came with Red Hat 6.1 and it seems to work OK. The version number reported
-by the Linux command <code>cc -v</code> is: egcs-2.91.66 19990314/Linux
-(egcs-1.1.2 release). If your compiler is version 2.9 or higher, it's
-EGCS-based, and should work fine, as EGCS version 1 is just another name for
-gcc version 2.9.</P>
-<P>The older gcc compiler is known to produce incorrect code for some 64-bit
+<P>You <EM>must</EM> use GCC 2.9x, previously known as EGCS. I am
+using the version that came with Red Hat 6.1 and it seems to work
+OK. The version number reported by the Linux command <code>cc
+-v</code> is: egcs-2.91.66 19990314/Linux (egcs-1.1.2 release). If
+your compiler is version 2.9 or higher, it's EGCS-based, and should
+work fine, as EGCS version 1 is just another name for gcc version
+2.9.</P>
+<P>Older versions of gcc are known to produce incorrect code for some 64-bit
 (unsigned long) integer operations. I have had reports that earlier versions
 of egcs produce strange results too. </P>
 <P>If you have both an old gcc and egcs compilers installed, use the CC
