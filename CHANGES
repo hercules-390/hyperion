@@ -1,3 +1,4 @@
+21 Mar 2002 Fix MVPG so it works with Expanded Storage - Paul Leisy
 20 Mar 2002 Sequential files now supported by dasdload.c - Greg Smith
 17 Mar 2002 Fix Read-Configuration-Data and Sense-ID CIW - Greg Smith
 17 Mar 2002 Common DASD tables (dasdtab.c & dasdtab.h) - Greg Smith
