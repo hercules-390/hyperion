@@ -143,6 +143,7 @@ fpr     Display floating-point registers
 cr      Display control registers
 ar      Display access registers
 pr      Display prefix register
+clocks  Display todclock, clock comparator, cpu timer, and interval timer (370 mode only)
 
 r<em>x</em>      Display 64 bytes starting at real address x
 r<em>x.n</em>    Display n bytes starting at real address x
@@ -178,6 +179,8 @@ ds<em>xxxx</em>  Display subchannel status for device number xxxx
 archmode S/370|ESA/390|ESAME  Set architecture mode
 loadparm [<em>xxxxxxxx</em>]           Display or set the IPL parameter
 loadcore <em>xxxxxxxx</em> [<em>address</em>]   Load core image from file xxxxxxxx
+savecore <em>xxxxxxxx</em> [<em>start/*</em>] [<em>end/*</em>] save core to file xxxxxxxx
+loadtext <em>xxxxxxxx</em> [<em>address</em>]   Load object deck xxxxxxxx
 ipl <em>xxxx</em>                      IPL from device number xxxx
 
 ext       Generate an external interrupt
@@ -244,6 +247,6 @@ If you have a question about Hercules, see the
 </center>
 
 <small>
-<p>Last updated 29 November 2001
+<p>Last updated 02 December 2001
 </BODY>
 </HTML>

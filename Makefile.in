@@ -404,7 +404,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 	install-exec-recursive installdirs-recursive install-recursive \
 	uninstall-recursive check-recursive installcheck-recursive
 DIST_COMMON = $(noinst_HEADERS) ./stamp-h.in INSTALL Makefile.am \
-	Makefile.in aclocal.m4 autoconf/config.guess \
+	Makefile.in aclocal.m4 autoconf/README autoconf/config.guess \
 	autoconf/config.sub autoconf/depcomp autoconf/install-sh \
 	autoconf/missing autoconf/mkinstalldirs config.h.in configure \
 	configure.ac
