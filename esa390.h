@@ -220,6 +220,7 @@ typedef struct _TLBE {
 #define CR0_SEG_SIZE    0x00380000      /* Segment size for S/370... */
 #define CR0_SEG_SZ_64K  0x00000000      /* ...64K segments           */
 #define CR0_SEG_SZ_1M   0x00100000      /* ...1M segments            */
+#define CR0_ASN_LX_REUS 0x00080000      /* ASN-and-LX-reuse control  */
 #define CR0_AFP         0x00040000      /* AFP register control      */
 #define CR0_VOP         0x00020000      /* Vector control         390*/
 #define CR0_ASF         0x00010000      /* AS function control    390*/
@@ -248,10 +249,12 @@ typedef struct _TLBE {
 /* For S/370, CR2 contains channel masks for channels 0-31 */
 
 /* Bit definitions for control register 3 */
+#define CR3_SASTEIN     0xFFFFFFFF00000000ULL /* SASN STE instance#  */
 #define CR3_KEYMASK     0xFFFF0000      /* PSW key mask              */
 #define CR3_SASN        0x0000FFFF      /* Secondary ASN             */
 
 /* Bit definitions for control register 4 */
+#define CR4_PASTEIN     0xFFFFFFFF00000000ULL /* PASN STE instance#  */
 #define CR4_AX          0xFFFF0000      /* Authorization index       */
 #define CR4_PASN        0x0000FFFF      /* Primary ASN               */
 
@@ -319,6 +322,11 @@ typedef struct _TLBE {
 #define LTD_SSLINK      0x80000000      /* Subsystem-Linkage control */
 #define LTD_LTO         0x7FFFFF80      /* Linkage-Table origin      */
 #define LTD_LTL         0x0000007F      /* Linkage-Table length      */
+
+/* Linkage first table designation bit definitions (ASN-and-LX-reuse)*/
+#define LFTD_SSLINK     0x80000000      /* Subsystem-Linkage control */
+#define LFTD_LFTO       0x7FFFFF00      /* Linkage-First-Table origin*/
+#define LFTD_LFTL       0x000000FF      /* Linkage-First-Table length*/
 
 /* Values for designation type and table type (ESAME mode) */
 #define TT_R1TABL       0xC             /* Region first table        */
@@ -460,15 +468,20 @@ typedef struct _TLBE {
 #define ASTE0_BASE      0x00000001      /* Base space of group       */
 #define ASTE1_AX        0xFFFF0000      /* Authorization index       */
 #define ASTE1_ATL       0x0000FFF0      /* Authority-table length    */
-#define ASTE1_RESV      0x0000000F      /* Reserved bits - must be 0 */
+#define ASTE1_RESV      0x0000000C      /* Reserved bits - must be 0 */
+#define ASTE1_CA        0x00000002      /* Controlled ASN            */
+#define ASTE1_RA        0x00000001      /* Reusable ASN              */
 /* ASTE word 2 is the segment table designation for ESA/390 */
 /* ASTE word 3 is the linkage-table designation for ESA/390 */
 /* ASTE words 2 and 3 are the ASCE (RTD, STD, or RSD) for ESAME */
 /* ASTE word 4 is the access-list designation */
 #define ASTE5_ASTESN    0xFFFFFFFF      /* ASTE sequence number      */
 #define ASTE6_RESV      0xFFFFFFFF      /* Must be zero for ESA/390  */
-/* ASTE word 6 is the linkage-table designation for ESAME */
-/* ASTE word 7 is unused */
+/* ASTE word 6 is the LTD or LFTD for ESAME */
+/* ASTE words 7-9 are reserved for control program use */
+/* ASTE word 10 is unused */
+#define ASTE11_ASTEIN   0xFFFFFFFF      /* ASTE instance number      */
+/* ASTE words 12-15 are unused */
 
 /* Authority table entry bit definitions */
 #define ATE_PRIMARY     0x80            /* Primary authority bit     */
@@ -542,6 +555,16 @@ typedef struct _LSED {
 #define LTE_INVALID     0x80000000      /* LX invalid                */
 #define LTE_ETO         0x7FFFFFC0      /* Entry table origin        */
 #define LTE_ETL         0x0000003F      /* Entry table length        */
+
+/* Linkage first table entry bit definitions (ASN-and-LX reuse) */
+#define LFTE_INVALID    0x80000000      /* LFX invalid               */
+#define LFTE_LSTO       0x7FFFFF00      /* Linkage second table orig */
+
+/* Linkage second table entry bit definitions (ASN-and-LX reuse) */
+#define LSTE0_INVALID   0x80000000      /* LSX invalid               */
+#define LSTE0_ETO       0x7FFFFFC0      /* Entry table origin        */
+#define LSTE0_ETL       0x0000003F      /* Entry table length        */
+#define LSTE1_LSTESN    0xFFFFFFFF      /* LSTE sequence number      */
 
 /* Entry table bit entry definitions */
 /* ETE word 0 is the left half of the EIA for ESAME if ETE4_G is set */
@@ -858,12 +881,16 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define PGM_EX_TRANSLATION_EXCEPTION                    0x0023
 #define PGM_PRIMARY_AUTHORITY_EXCEPTION                 0x0024
 #define PGM_SECONDARY_AUTHORITY_EXCEPTION               0x0025
+#define PGM_LFX_TRANSLATION_EXCEPTION                   0x0026
+#define PGM_LSX_TRANSLATION_EXCEPTION                   0x0027
 #define PGM_ALET_SPECIFICATION_EXCEPTION                0x0028
 #define PGM_ALEN_TRANSLATION_EXCEPTION                  0x0029
 #define PGM_ALE_SEQUENCE_EXCEPTION                      0x002A
 #define PGM_ASTE_VALIDITY_EXCEPTION                     0x002B
 #define PGM_ASTE_SEQUENCE_EXCEPTION                     0x002C
 #define PGM_EXTENDED_AUTHORITY_EXCEPTION                0x002D
+#define PGM_LSTE_SEQUENCE_EXCEPTION                     0x002E
+#define PGM_ASTE_INSTANCE_EXCEPTION                     0x002F
 #define PGM_STACK_FULL_EXCEPTION                        0x0030
 #define PGM_STACK_EMPTY_EXCEPTION                       0x0031
 #define PGM_STACK_SPECIFICATION_EXCEPTION               0x0032
