@@ -1761,6 +1761,7 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         LOCK             iolock;        /* I/O lock                  */
         COND             iocond;        /* I/O condition             */
         int              iowaiters;     /* Number I/O waiters        */
+        int              gcwaiting;     /* 1=gcol waiting for I/O    */
         int              wrpending;     /* Number writes pending     */
         int              ras;           /* Number readaheads active  */
         int              sfn;           /* Number active shadow files*/

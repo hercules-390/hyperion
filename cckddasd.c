@@ -363,6 +363,7 @@ int             i;                      /* Index                     */
         cckd->iowaiters--;
         cckd_flush_cache (dev);
     }
+    broadcast_condition (&cckd->iocond);
     cckd_purge_cache (dev); cckd_purge_l2 (dev);
     dev->bufcur = dev->cache = -1;
     if (cckd->newbuf) free (cckd->newbuf);
@@ -1534,7 +1535,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
         flag = cache_setflag (CACHE_DEVBUF, o, ~CCKD_CACHE_WRITING, 0);
         cache_unlock (CACHE_DEVBUF);
         cckd->wrpending--;
-        if (cckd->iowaiters && ((flag & CCKD_CACHE_IOWAIT) || !cckd->wrpending))
+        if ((cckd->iowaiters || cckd-> gcwaiting) && ((flag & CCKD_CACHE_IOWAIT) || !cckd->wrpending))
         {   cckdtrc ("cckddasd: writer[%d] cache[%2.2d] %d signalling write complete\n",
                  writer, o, trk);
             broadcast_condition (&cckd->iocond);
@@ -1633,14 +1634,14 @@ struct stat     st;                     /* File status area          */
             if (rc < 0)
             {
                 BYTE zbuf[1024];
-                unsigned int l = sz - st.st_size;
+                size_t l = sz - st.st_size;
                 off_t rcoff = lseek (cckd->fd[sfx], (off_t)st.st_size, SEEK_SET);
                 if (rcoff >= 0)
                 {
                     memset(zbuf, 0, sizeof(zbuf));
                     do {
                         rc = write (cckd->fd[sfx], zbuf, l < sizeof(zbuf) ? l : sizeof(zbuf));
-                        l -= sizeof(zbuf);
+                        l -= l < sizeof(zbuf) ? l : sizeof(zbuf);
                     } while (rc > 0 && l > 0);
                 }
             }
@@ -4234,9 +4235,9 @@ int             gctab[5]= {             /* default gcol parameters   */
             cckd_flush_cache (dev);
             while (cckd->wrpending)
             {
-                cckd->iowaiters++;
+                cckd->gcwaiting = 1;
                 wait_condition (&cckd->iocond, &cckd->iolock);
-                cckd->iowaiters--;
+                cckd->gcwaiting = 0;
             }
             release_lock (&cckd->iolock);
 
