@@ -1061,6 +1061,7 @@ typedef struct _DEVBLK {
         U16     rmtport;                /* Remote port number        */
         U16     rmtnum;                 /* Remote device number      */
         int     rmtid;                  /* Remote Id                 */
+        int     rmtrel;                 /* Remote release level      */
         DWORD   rmthdr;                 /* Remote header             */
         int     rmtcomp;                /* Remote compression parm   */
         int     rmtcomps;               /* Supported compressions    */

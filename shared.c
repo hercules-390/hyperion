@@ -1228,6 +1228,7 @@ static int clientConnect (DEVBLK *dev, int retry)
 {
 int                rc;                  /* Return code               */
 struct sockaddr   *server;              /* -> server descriptor      */
+int                flag;                /* Flags (version | release) */
 int                len;                 /* Length server descriptor  */
 struct sockaddr_in iserver;             /* inet server descriptor    */
 struct sockaddr_un userver;             /* unix server descriptor    */
@@ -1280,20 +1281,27 @@ HWORD              comp;                /* Returned compression parm */
             if (!dev->batch)
               logmsg(_("HHCSH031I %4.4X Connected to %s\n"),
                  dev->devnum, dev->filename);
-            /* Request device connection */
-            rc = clientRequest (dev, id, 2, SHRD_CONNECT, 0, NULL, NULL);
-            if (rc >= 0)
-                dev->rmtid = fetch_hw (id);
 
-            /* Negotiate compression - top 4 bits have the compression
-               algorithms we support (00010000 -> libz; 00100000 ->bzip2,
-               00110000 -> both) and the bottom 4 bits indicates the
-               libz parm we want to use when sending data back & forth.
-               If the server returns `0' back, then we won't use libz to
-               compress data to the server.  What the `compression
-               algorithms we support' means is that if the data source is
-               cckd or cfba then the server doesn't have to uncompress
-               the data for us if we support the compression algorithm */
+            /* Request device connection */
+            flag = (SHARED_VERSION << 4) | SHARED_RELEASE;
+            rc = clientRequest (dev, id, 2, SHRD_CONNECT, flag, NULL, &flag);
+            if (rc >= 0)
+            {
+                dev->rmtid = fetch_hw (id);
+                dev->rmtrel = flag & 0x0f;
+            }
+
+            /*
+             * Negotiate compression - top 4 bits have the compression
+             * algorithms we support (00010000 -> libz; 00100000 ->bzip2,
+             * 00110000 -> both) and the bottom 4 bits indicates the
+             * libz parm we want to use when sending data back & forth.
+             * If the server returns `0' back, then we won't use libz to
+             * compress data to the server.  What the `compression
+             * algorithms we support' means is that if the data source is
+             * cckd or cfba then the server doesn't have to uncompress
+             * the data for us if we support the compression algorithm.
+             */
 
             if (rc >= 0 && (dev->rmtcomp || dev->rmtcomps))
             {
@@ -1709,7 +1717,14 @@ int      off;                           /* Offset into record        */
                          "device not initialized");
             break;
         }
-        SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 2);
+        if ((flag >> 4) != SHARED_VERSION)
+        {
+            serverError (dev, ix, SHRD_ERROR_BADVERS, cmd,
+                         "shared version mismatch");
+            break;
+        }
+        dev->shrd[ix]->release = flag & 0x0f;
+        SHRD_SET_HDR (hdr, 0, (SHARED_VERSION << 4) | SHARED_RELEASE, dev->devnum, id, 2);
         store_hw (buf, id);
         serverSend (dev, ix, hdr, buf, 2);
         break;
@@ -2623,9 +2638,9 @@ TID                     tid;            /* Negotiation thread id     */
     UNREFERENCED(arg);
 
     /* Display thread started message on control panel */
-    logmsg (_("HHCSH049I Shared device listener thread started: "
+    logmsg (_("HHCSH049I Shared device %d" "." "%d thread started: "
             "tid="TIDPAT", pid=%d\n"),
-            thread_id(), getpid());
+            SHARED_VERSION, SHARED_RELEASE, thread_id(), getpid());
 
     /* Obtain a internet socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0);

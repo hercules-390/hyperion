@@ -318,6 +318,14 @@
 
 #define OPTION_SHARED_DEVICES
 
+  /*
+   * Differing version levels are not compatible
+   * Differing release levels are compatible
+   */
+
+#define SHARED_VERSION              0   /* Version level  (0 .. 15)  */
+#define SHARED_RELEASE              1   /* Release level  (0 .. 15)  */
+
 #define SHARED_MAX_SYS              8   /* Max number connections    */
 typedef char SHRD_TRACE[128];           /* Trace entry               */
 
@@ -347,13 +355,14 @@ typedef char SHRD_TRACE[128];           /* Trace entry               */
 #define SHRD_PURGE               0x08   /* Purge list provided       */
 
 #define SHRD_ERROR_INVALID       0xf0   /* Invalid request           */
-#define SHRD_ERROR_NOTINIT       0xf1   /* Device not initialized    */
-#define SHRD_ERROR_NOTCONN       0xf2   /* Not connected to device   */
-#define SHRD_ERROR_NOTAVAIL      0xf3   /* No available SHRD         */
-#define SHRD_ERROR_NOMEM         0xf4   /* Out of memory             */
-#define SHRD_ERROR_NOTACTIVE     0xf5   /* Not device owner          */
-#define SHRD_ERROR_NODEVICE      0xf6   /* No such device            */
-#define SHRD_ERROR_CONNECTED     0xf7   /* Already connected         */
+#define SHRD_ERROR_BADVERS       0xf1   /* Version mismatch          */
+#define SHRD_ERROR_NOTINIT       0xf2   /* Device not initialized    */
+#define SHRD_ERROR_NOTCONN       0xf3   /* Not connected to device   */
+#define SHRD_ERROR_NOTAVAIL      0xf4   /* No available SHRD         */
+#define SHRD_ERROR_NOMEM         0xf5   /* Out of memory             */
+#define SHRD_ERROR_NOTACTIVE     0xf6   /* Not device owner          */
+#define SHRD_ERROR_NODEVICE      0xf7   /* No such device            */
+#define SHRD_ERROR_CONNECTED     0xf8   /* Already connected         */
 
 /* Flags                                                             */
 #define SHRD_NOWAIT              0x80   /* Don't wait if busy        */
@@ -386,6 +395,7 @@ typedef struct _SHRD {
         int     id;                     /* Identifier                */
         int     fd;                     /* Socket                    */
         time_t  time;                   /* Time last request         */
+        int     release;                /* Client release level      */
         int     comp;                   /* Compression parameter     */
         int     comps;                  /* Compression supported     */
         int     pending:1,              /* 1=Request pending         */
