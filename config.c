@@ -1391,10 +1391,6 @@ int     cpu;
         signal_thread (sysblk.shrdtid, SIGUSR2);
 #endif
 
-    /* Terminate the console thread */
-    if (sysblk.cnsltid)
-        signal_thread (sysblk.cnsltid, SIGUSR2);
-
     /* Detach all devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
        if (dev->pmcw.flag5 & PMCW5_V)

@@ -1,3 +1,4 @@
+28 May 2003 Use unix sockets for localhost shared devices - Greg Smith
 26 May 2003 Yet another round for channel.c locking - Greg Smith
 26 May 2003 Fixes and performance enhancements for shared devices - Greg Smith
 23 May 2003 Locate Block logic fix - Ivan Warren, Suggested by *Anonymous*

@@ -5,6 +5,7 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "devtype.h"
+#include <sys/un.h>     /* (need "sockaddr_un") */
 
 #define FBA_BLKGRP_SIZE (120*512)
 
@@ -129,9 +130,13 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
             rmtnum = p + 1;
         }
 
-        if ( (he = gethostbyname (ipname)) == NULL )
-            return -1;
-        memcpy(&dev->rmtaddr, he->h_addr_list[0], sizeof(dev->rmtaddr));
+        if ( strcmp (ipname, "localhost") == 0)
+            dev->localhost = 1;
+        else {
+            if ( (he = gethostbyname (ipname)) == NULL )
+                return -1;
+            memcpy(&dev->rmtaddr, he->h_addr_list[0], sizeof(dev->rmtaddr));
+        }
 
         if (port && strlen(port)) {
             if (sscanf(port, "%hu%c", &dev->rmtport, &c) != 1)
@@ -1158,11 +1163,14 @@ DEVBLK         *dev = data;             /* -> device block           */
  *-------------------------------------------------------------------*/
 static int clientConnect (DEVBLK *dev, int retry)
 {
-int      rc;                            /* Return code               */
-struct   sockaddr_in server;            /* Server descriptor         */
-int      retries = 10;                  /* Number of retries         */
-HWORD    id;                            /* Returned identifier       */
-HWORD    comp;                          /* Returned compression parm */
+int                rc;                  /* Return code               */
+struct sockaddr   *server;              /* -> server descriptor      */
+int                len;                 /* Length server descriptor  */
+struct sockaddr_in iserver;             /* inet server descriptor    */
+struct sockaddr_un userver;             /* unix server descriptor    */
+int                retries = 10;        /* Number of retries         */
+HWORD              id;                  /* Returned identifier       */
+HWORD              comp;                /* Returned compression parm */
 
     do {
 
@@ -1170,19 +1178,35 @@ HWORD    comp;                          /* Returned compression parm */
         if (dev->fd >= 0) close (dev->fd);
 
         /* Get a socket */
-        dev->fd = dev->ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
-        if (dev->fd < 0) {
-            logmsg (_("HHCSH029E %4.4X socket failed: %s\n"),
-                    dev->devnum, strerror(errno));
-            return -1;
+        if (dev->localhost) {
+            dev->fd = dev->ckdfd[0] = socket (AF_UNIX, SOCK_STREAM, 0);
+            if (dev->fd < 0) {
+                logmsg (_("HHCSH029E %4.4X socket failed: %s\n"),
+                        dev->devnum, strerror(errno));
+                return -1;
+            }
+            userver.sun_family = AF_UNIX;
+            sprintf(userver.sun_path, "/tmp/hercules_shared.%d", dev->rmtport);
+            server = (struct sockaddr *)&userver;
+            len = sizeof(userver);
         }
-        server.sin_family      = AF_INET; 
-        server.sin_port        = htons(dev->rmtport); 
-        memcpy(&server.sin_addr.s_addr,&dev->rmtaddr,sizeof(struct in_addr));
-        store_hw (id, dev->rmtid);
+        else {
+            dev->fd = dev->ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
+            if (dev->fd < 0) {
+                logmsg (_("HHCSH029E %4.4X socket failed: %s\n"),
+                        dev->devnum, strerror(errno));
+                return -1;
+            }
+            iserver.sin_family      = AF_INET; 
+            iserver.sin_port        = htons(dev->rmtport); 
+            memcpy(&iserver.sin_addr.s_addr,&dev->rmtaddr,sizeof(struct in_addr));
+            server = (struct sockaddr *)&iserver;
+            len = sizeof(iserver);
+        }
 
         /* Connect to the server */
-        rc = connect (dev->fd, (struct sockaddr *)&server, sizeof(server));
+        store_hw (id, dev->rmtid);
+        rc = connect (dev->fd, server, len);
         shrdtrc("connect rc=%d errno=%d\n",rc, errno);
         if (rc >= 0) {
             if (!dev->batch)
@@ -2452,10 +2476,14 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
 void *shared_server (void *arg)
 {
 int                     rc;             /* Return code               */
-int                     lsock;          /* Socket for listening      */
+int                     hi;             /* Hi fd for select          */
+int                     lsock;          /* inet socket for listening */
+int                     usock;          /* unix socket for listening */
+int                     rsock;          /* Ready socket              */
 int                     csock;          /* Socket for conversation   */
 int                    *psock;          /* Pointer to socket         */
 struct sockaddr_in      server;         /* Server address structure  */
+struct sockaddr_un      userver;        /* Unix address structure    */
 int                     optval;         /* Argument for setsockopt   */
 fd_set                  selset;         /* Read bit map for select   */
 TID                     tid;            /* Negotiation thread id     */
@@ -2467,12 +2495,22 @@ TID                     tid;            /* Negotiation thread id     */
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
-    /* Obtain a socket */
+    /* Obtain a internet socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0);
 
     if (lsock < 0)
     {
-        logmsg(_("HHCSH061E socket: %s\n"), strerror(errno));
+        logmsg(_("HHCSH061E inet socket: %s\n"), strerror(errno));
+        return NULL;
+    }
+
+    /* Obtain a unix socket */
+    usock = socket (AF_UNIX, SOCK_STREAM, 0);
+
+    if (usock < 0)
+    {
+        logmsg(_("HHCSH061E unix socket: %s\n"), strerror(errno));
+        close(lsock);
         return NULL;
     }
 
@@ -2488,9 +2526,7 @@ TID                     tid;            /* Negotiation thread id     */
     server.sin_port = sysblk.shrdport;
     server.sin_port = htons(server.sin_port);
 
-    csock = -1;
-
-    /* Attempt to bind the socket to the port */
+    /* Attempt to bind the internet socket to the port */
     while (1) {
         rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
         if (rc == 0 || errno != EADDRINUSE) break;
@@ -2500,19 +2536,48 @@ TID                     tid;            /* Negotiation thread id     */
     } /* end while */
 
     if (rc != 0) {
-        logmsg(_("HHCSH063E bind: %s\n"), strerror(errno));
+        logmsg(_("HHCSH063E inet bind: %s\n"), strerror(errno));
+        close(lsock); close(usock);
         return NULL;
     }
 
-    /* Put the socket into listening state */
+    /* Bind the unix socket */
+    userver.sun_family = AF_UNIX;
+    sprintf(userver.sun_path, "/tmp/hercules_shared.%d", sysblk.shrdport);
+    unlink(userver.sun_path);
+    fchmod (usock, 0700);
+
+    rc = bind (usock, (struct sockaddr *)&userver, sizeof(userver));
+
+    if (rc < 0) {
+        logmsg(_("HHCSH063E unix bind: %s\n"), strerror(errno));
+        close(lsock); close(usock);
+        return NULL;
+    }
+
+    /* Put the sockets into listening state */
     rc = listen (lsock, SHARED_MAX_SYS);
 
     if (rc < 0) {
-        logmsg(_("HHCSH064E listen: %s\n"), strerror(errno));
+        logmsg(_("HHCSH064E inet listen: %s\n"), strerror(errno));
+        close(lsock); close(usock);
+        return NULL;
+    }
+
+    rc = listen (usock, SHARED_MAX_SYS);
+
+    if (rc < 0) {
+        logmsg(_("HHCSH064E unix listen: %s\n"), strerror(errno));
+        close(lsock); close(usock);
         return NULL;
     }
 
     sysblk.shrdtid = thread_id();
+    csock = -1;
+    if (lsock < usock)
+        hi = usock + 1;
+    else
+        hi = lsock + 1;
 
     logmsg(_("HHCSH065I Waiting for shared device requests on port %u\n"),
             sysblk.shrdport);
@@ -2523,9 +2588,10 @@ TID                     tid;            /* Negotiation thread id     */
         /* Initialize the select parameters */
         FD_ZERO (&selset);
         FD_SET (lsock, &selset);
+        FD_SET (usock, &selset);
 
         /* Wait for a file descriptor to become ready */
-        rc = select ( lsock+1, &selset, NULL, NULL, NULL );
+        rc = select ( hi, &selset, NULL, NULL, NULL );
 
         if (rc == 0) continue;
 
@@ -2536,10 +2602,17 @@ TID                     tid;            /* Negotiation thread id     */
         }
 
         /* If a client connection request has arrived then accept it */
-        if (FD_ISSET(lsock, &selset)) {
+        if (FD_ISSET(lsock, &selset))
+            rsock = lsock;
+        else if (FD_ISSET(usock, &selset))
+            rsock = usock;
+        else
+            rsock = -1;
+
+        if (rsock > 0) {
 
             /* Accept a connection and create conversation socket */
-            csock = accept (lsock, NULL, NULL);
+            csock = accept (rsock, NULL, NULL);
             if (csock < 0) {
                 logmsg(_("HHCSH067E accept: %s\n"), strerror(errno));
                 continue;
@@ -2562,13 +2635,14 @@ TID                     tid;            /* Negotiation thread id     */
                 close (csock);
             }
 
-        } /* end if(lsock) */
+        } /* end if(rsock) */
 
 
     } /* end while */
 
-    /* Close the listening socket */
-    close (lsock);
+    /* Close the listening sockets */
+    close (lsock); close (usock);
+    unlink(userver.sun_path);
 
     sysblk.shrdtid = 0;
 

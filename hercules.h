@@ -1018,6 +1018,7 @@ typedef struct _DEVBLK {
                 connected:1,            /* 1=Console client connected*/
                 readpending:2,          /* 1=Console read pending    */
                 connecting:1,           /* 1=Connecting to remote    */
+                localhost:1,            /* 1=Remote is local         */
                 batch:1,                /* 1=Called by dasdutil      */
                 dasdcopy:1,             /* 1=Called by dasdcopy      */
                 ccwtrace:1,             /* 1=CCW trace               */
