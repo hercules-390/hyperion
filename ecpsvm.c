@@ -617,6 +617,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
 
     vmb=regs->GR_L(11);
     DEBUG_CPASSISTX(DISP2,logmsg("DISP2 Data list=%6.6X VM=%6.6X\n",dl,vmb));
+    CHARGE_STOP(vmb);
     if(EVM_IC(XTENDLOCK) == XTENDLOCKSET)
     {
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 Exit 8 : System extending\n"));
@@ -631,7 +632,6 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         regs->psw.IA=EVM_L(el+8);
         return(0);
     }
-    CHARGE_STOP(vmb);
     svmb=EVM_L(ASYSVM);
     /* Check IOB/TRQ for dispatch */
     F_TRQB=EVM_L(dl+8);
@@ -693,6 +693,15 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
             {
                 regs->GR_L(i)=CPEXBKUP[i];
             }
+	    /* Save GPRS 12-1 (wraping) in DSPSAVE (datalist +40) */
+	    /* So that LM 12,1,DSPSAVE in DMKDSP works after call to DMKFRET */
+	    EVM_ST(dl+40,CPEXBKUP[12]);
+	    EVM_ST(dl+44,CPEXBKUP[13]);
+	    EVM_ST(dl+48,CPEXBKUP[14]);
+	    EVM_ST(dl+52,CPEXBKUP[15]);
+	    EVM_ST(dl+56,CPEXBKUP[0]);
+	    EVM_ST(dl+60,CPEXBKUP[1]);	/* Note : DMKDSP Is wrong -  SCHMASK is at +64 (not +60) */
+	    /* Upon taking this exit, GPRS 12-15 are same as entry */
             regs->psw.IA=EVM_L(el+12);
             return(0);
         }
@@ -756,7 +765,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
                     CHARGE_START(lastu);
                     /* LCSHRPG not implemented yet */
                     regs->GR_L(10)=vmb;
-                    regs->GR_L(11)=runu;
+                    regs->GR_L(11)=lastu;
                     regs->psw.IA=EVM_L(el+16);
                     return(0);
                     /* A CHARGE_STOP(runu) is due when LCSHRPG is implemented */
