@@ -486,10 +486,10 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 	install-exec-recursive installdirs-recursive install-recursive \
 	uninstall-recursive check-recursive installcheck-recursive
 DIST_COMMON = $(noinst_HEADERS) ./stamp-h.in INSTALL Makefile.am \
-	Makefile.in aclocal.m4 autoconf/README autoconf/config.guess \
-	autoconf/config.sub autoconf/depcomp autoconf/install-sh \
-	autoconf/missing autoconf/mkinstalldirs config.h.in configure \
-	configure.ac
+	Makefile.in TODO aclocal.m4 autoconf/README \
+	autoconf/config.guess autoconf/config.sub autoconf/depcomp \
+	autoconf/install-sh autoconf/missing autoconf/mkinstalldirs \
+	config.h.in configure configure.ac
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(cckd2ckd_SOURCES) $(cckdcdsk_SOURCES) $(cckdcomp_SOURCES) $(cckdswap_SOURCES) $(ckd2cckd_SOURCES) $(dasdcat_SOURCES) $(dasdinit_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) $(dasdls_SOURCES) $(dasdpdsu_SOURCES) $(dmap2hrc_SOURCES) $(hercifc_SOURCES) $(hercules_SOURCES) $(EXTRA_hercules_SOURCES) $(hetget_SOURCES) $(hetinit_SOURCES) $(hetmap_SOURCES) $(hetupd_SOURCES) $(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES)
 

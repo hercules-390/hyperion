@@ -1122,7 +1122,7 @@ BYTE    storkey;
     else /* !sie_state */
 #endif /*defined(_FEATURE_SIE)*/
         /* Insert the storage key into R1 register bits 24-31 */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if defined(_FEATURE_2K_STORAGE_KEYS)
         regs->GR_LHLCL(r1) = STORAGE_KEY(n) & 0xFE;
 #else
         regs->GR_LHLCL(r1) = (STORAGE_KEY1(n) | STORAGE_KEY2(n)) & 0xFE;
@@ -3481,7 +3481,7 @@ BYTE    storkey;                        /* Storage key               */
         storkey =  STORAGE_KEY1(n) | STORAGE_KEY2(n);
 #endif
             /* Reset the reference bit in the storage key */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if defined(_FEATURE_2K_STORAGE_KEYS)
         STORAGE_KEY(n) &= ~(STORKEY_REF);
 #else
         STORAGE_KEY1(n) &= ~(STORKEY_REF);
@@ -4310,7 +4310,7 @@ RADR    n;                              /* Absolute storage addr     */
 #endif /*defined(_FEATURE_SIE)*/
     {
         /* Update the storage key from R1 register bits 24-30 */
-#if !defined(_FEATURE_2K_STORAGE_KEYS)
+#if defined(_FEATURE_2K_STORAGE_KEYS)
         STORAGE_KEY(n) &= STORKEY_BADFRM;
         STORAGE_KEY(n) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
 #else

@@ -1,4 +1,4 @@
-/* config.h.in.  Generated from configure.ac by autoheader.  */
+/* config.h.in.  Generated automatically from configure.ac by autoheader.  */
 
 /* Define to enable bzip2 compression in emulated DASDs */
 #undef CCKD_BZIP2
