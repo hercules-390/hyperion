@@ -49,6 +49,9 @@ case "$host_os" in
                    CPPFLAGS=-traditional-cpp
                    AC_DEFINE([_BSD_SOCKLEN_T_],[int])
                    AC_DEFINE([_INTL_REDIRECT_MACROS])
+##            Do whatever is necessary to get the following symbol defined
+##               so the included libltdl will be built and used
+##                 AC_PROVIDE_AC_LIBTOOL_DLOPEN
                fi
                ;;
         linux*)

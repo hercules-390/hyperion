@@ -61,18 +61,18 @@ if test ! -e ./ABOUT-NLS; then
   echo "as we will automagically run them for you now..."
   echo ""
 
-  echo "     aclocal -I m4..."
-  aclocal -I m4        >>./autogen.log 2>&1
+  echo "     aclocal -I m4 -I autoconf..."
+  aclocal -I m4 -I autoconf  >>./autogen.log 2>&1
 
   echo "     automake m4/Makefile..."
-  automake m4/Makefile >>./autogen.log 2>&1
+  automake m4/Makefile       >>./autogen.log 2>&1
 
   echo ""
 fi
 
-aclocal -I m4 >>./autogen.log 2>&1
-autoheader    >>./autogen.log 2>&1
-automake      >>./autogen.log 2>&1
-autoconf      >>./autogen.log 2>&1
+aclocal -I m4 -I autoconf >>./autogen.log 2>&1
+autoheader                >>./autogen.log 2>&1
+automake                  >>./autogen.log 2>&1
+autoconf                  >>./autogen.log 2>&1
 
 echo "Completed successfully"
