@@ -4,6 +4,7 @@
  * Binary (IEEE) Floating Point Instructions
  * Copyright (c) 2001 Willem Konynenberg <wfk@xos.nl>
  * TCEB, TCDB and TCXB contributed by Per Jessen, 20 September 2001.
+ * THDER,THDR by Roger Bowler, 19 July 2003.
  * Licensed under the Q Public License
  * For details, see html/herclic.html
  */
@@ -724,6 +725,99 @@ static void put_sbfp(struct sbfp *op, U32 *fpr)
     fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<23) | op->fract;
     //logmsg("sput exp=%d fract=%x r=%8.8x\n", op->exp, op->fract, *fpr);
 }
+
+#if defined(FEATURE_FPS_EXTENSIONS)
+/*
+ * Convert binary floating point to hexadecimal long floating point
+ * save result into long register and return condition code
+ * Roger Bowler, 19 July 2003
+ */
+static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
+{
+    short exp;
+    U64 fract;
+    U32 r0, r1;
+    int cc;
+
+    switch (class) {
+    default:
+    case FP_NAN:
+        r0 = 0x7FFFFFFF;
+        r1 = 0xFFFFFFFF;
+        cc = 3;
+        break;
+    case FP_INFINITE:
+        r0 = op->sign ? 0xFFFFFFFF : 0x7FFFFFFF;
+        r1 = 0xFFFFFFFF;
+        cc = 3;
+        break;
+    case FP_ZERO:
+        r0 = op->sign ? 0x80000000 : 0;
+        r1 = 0;
+        cc = 0;
+        break;
+    case FP_SUBNORMAL:
+        r0 = op->sign ? 0x80000000 : 0;
+        r1 = 0;
+        cc = op->sign ? 1 : 2;
+        break;
+    case FP_NORMAL:
+        /* Insert an implied 1. in front of the 52 bit binary
+           fraction and lengthen the result to 56 bits */
+        fract = (U64)(op->fract | 0x8000000000000) << 4;
+
+        /* The binary exponent is equal to the characteristic - 1023
+           and we subtract another 1 to account for the implied 1. */
+        exp = op->exp - 1024;
+
+        /* Shift the fraction right one bit at a time until
+           the binary exponent becomes a multiple of 4 */
+        while (exp & 3)
+        {
+            exp++;
+            fract >>= 1;
+        }
+
+        /* Convert the binary exponent into a hexadecimal exponent
+           by dropping the last two bits (which are now zero) */
+        exp >>= 2;
+
+        /* If the hexadecimal exponent is less than -64 then return
+           a signed zero result with a non-zero condition code */
+        if (exp < -64) {
+            r0 = op->sign ? 0x80000000 : 0;
+            r1 = 0;
+            cc = op->sign ? 1 : 2;
+            break;
+        }
+
+        /* If the hexadecimal exponent exceeds +63 then return
+           a signed maximum result with condition code 3 */
+        if (exp > 63) {
+            r0 = op->sign ? 0xFFFFFFFF : 0x7FFFFFFF;
+            r1 = 0xFFFFFFFF;
+            cc = 3;
+            break;
+        }
+
+        /* Convert the hexadecimal exponent to a characteristic
+           by adding 64 */
+        exp += 64;
+
+        /* Pack the exponent and the fraction into the result */
+        r0 = (op->sign ? 1<<31 : 0) | (exp << 24) | (fract >> 32);
+        r1 = fract & 0xFFFFFFFF;
+        cc = op->sign ? 1 : 2;
+        break;
+    }
+    /* Store high and low halves of result into fp register array
+       and return condition code */
+    fpr[0] = r0;
+    fpr[1] = r1;
+    return cc;
+}
+#endif /*defined(FEATURE_FPS_EXTENSIONS)*/
+
 #define _IEEE_C
 #endif  /* !defined(_IEEE_C) */
 
@@ -731,9 +825,63 @@ static void put_sbfp(struct sbfp *op, U32 *fpr)
  * Chapter 9. Floating-Point Overview and Support Instructions
  */
 
+#if defined(FEATURE_FPS_EXTENSIONS)
 /*
  * B359 THDR  - CONVERT BFP TO HFP (long)                      [RRE]
+ * Roger Bowler, 19 July 2003
+ */
+DEF_INST(convert_bfp_long_to_float_long_reg)
+{
+    int r1, r2;
+    struct lbfp op2;
+
+    RRE(inst, execflag, regs, r1, r2);
+    //logmsg("THDR r1=%d r2=%d\n", r1, r2);
+    HFPREG2_CHECK(r1, r2, regs);
+
+    /* Load lbfp operand from R2 register */
+    get_lbfp(&op2, regs->fpr + FPR2I(r2));
+
+    /* Convert to hfp register and set condition code */
+    regs->psw.cc =
+        cnvt_bfp_to_hfp (&op2,
+                         sbfpclassify(&op2),
+                         regs->fpr + FPR2I(r1));
+
+}
+
+/*
  * B358 THDER - CONVERT BFP TO HFP (short to long)             [RRE]
+ * Roger Bowler, 19 July 2003
+ */
+DEF_INST(convert_bfp_short_to_float_long_reg)
+{
+    int r1, r2;
+    struct sbfp op2;
+    struct lbfp lbfp_op2;
+
+    RRE(inst, execflag, regs, r1, r2);
+    //logmsg("THDER r1=%d r2=%d\n", r1, r2);
+    HFPREG2_CHECK(r1, r2, regs);
+
+    /* Load sbfp operand from R2 register */
+    get_sbfp(&op2, regs->fpr + FPR2I(r2));
+
+    /* Lengthen sbfp operand to lbfp */
+    lbfp_op2.sign = op2.sign;
+    lbfp_op2.exp = op2.exp - 127 + 1023;
+    lbfp_op2.fract = op2.fract << (52 - 23);
+
+    /* Convert lbfp to hfp register and set condition code */
+    regs->psw.cc =
+        cnvt_bfp_to_hfp (&lbfp_op2,
+                         sbfpclassify(&op2),
+                         regs->fpr + FPR2I(r1));
+
+}
+#endif /*defined(FEATURE_FPS_EXTENSIONS)*/
+
+/*
  * B351 TBDR  - CONVERT HFP TO BFP (long)                      [RRF]
  * B350 TBEDR - CONVERT HFP TO BFP (long to short)             [RRF]
  * B365 LXR   - LOAD (extended)                                [RRE]
