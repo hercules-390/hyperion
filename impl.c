@@ -213,7 +213,14 @@ TID     rctid;                          /* RC file thread identifier */
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
 #if defined(OPTION_DYNAMIC_LOAD)
-        hdl_load("dyngui",HDL_LOAD_NOUNLOAD);
+        if (hdl_load("dyngui",HDL_LOAD_NOUNLOAD) != 0)
+        {
+            usleep(10000); /* (give logger thread time to issue
+                               preceding HHCHD007E message) */
+            fprintf (stderr,
+                _("HHCIN008S DYNGUI.DLL load failed; Hercules terminated.\n"));
+            delayed_exit(1);
+        }
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
         argc--;
     }

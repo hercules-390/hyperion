@@ -100,6 +100,22 @@ The error is described by <code><em>error</em></code>.
   <dt>Issued by
   <dd>impl.c, function main
   </dl>
+<dt><code><a name="HHCIN008S">
+HHCIN008S DYNGUI.DLL load failed; Hercules terminated.
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The external GUI interface module 'dyngui.dll' could not loaded. The
+      preceding HHCHD007E message should provide the reason for the failure.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+      If the error is Win32 error 126 ("The specified module could not be
+      found"), check your Windows PATH setting and/or your MODPATH control
+      statement to ensure one or both of them includes the directory where
+      Hercules is executing from.
+  <dt>Issued by
+  <dd>impl.c, function main
+  </dl>
 <dt><code><a name="HHCIN099I">
 HHCIN099I Hercules terminated
 </a></code>

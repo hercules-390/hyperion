@@ -1986,7 +1986,20 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     logmsg("\n");
 
     for (io = sysblk.iointq; io; io = io->next)
-        logmsg( _("          DEV%4.4X\n"), io->dev->devnum );
+        logmsg
+        (
+            _("          DEV%4.4X,%s%s%s%s, pri %d\n")
+
+            ,io->dev->devnum
+
+            ,io->pending      ? " normal" : ""
+            ,io->pcipending   ? " PCI"    : ""
+            ,io->attnpending  ? " ATTN"   : ""
+
+            ,(!(io->attnpending || io->pcipending || io->attnpending)) ? " unknown" : ""
+
+            ,io->priority
+        );
 
     return 0;
 }

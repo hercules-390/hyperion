@@ -1,5 +1,8 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+13 Oct 2003 fix 'ipending' cmd to display ALL pending interrupts - Fish
+13 Oct 2003 dequeue ALL i/o ints in device_reset - Fish
+13 Oct 2003 impl.c: terminate w/HHCIN008S if dyngui.dll load fails - Fish
 12 Oct 2003 dequeue i/o int fix in device_reset - Jan Jaeger
 11 Oct 2003 Added verbose flag to display_version, and set to FALSE on
             standalone utilities - Jay Maynard

@@ -1064,8 +1064,8 @@ void device_reset (DEVBLK *dev)
 {
     obtain_lock (&dev->lock);
     DEQUEUE_IO_INTERRUPT(&dev->ioint);
-    DEQUEUE_IO_INTERRUPT(&dev->attnioint);
     DEQUEUE_IO_INTERRUPT(&dev->pciioint);
+    DEQUEUE_IO_INTERRUPT(&dev->attnioint);
     dev->busy = dev->reserved = dev->pending = dev->pcipending =
     dev->startpending = 0;
     dev->ioactive = DEV_SYS_NONE;
