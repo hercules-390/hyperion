@@ -15,6 +15,11 @@
 #define _ext_ia32
 #endif
 
+#undef _ext_amd64
+#if defined(__amd64__)
+#define _ext_amd64
+#endif
+
 #undef _ext_ppc
 #if defined(__powerpc__) || defined(__PPC__)
 #define _ext_ppc
@@ -124,7 +129,7 @@ static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
          : "q"(new),
            "S"(old),
            "D"(ptr)
-         : "ax", "memory");
+         : "eax", "memory");
  return code;
 }
 
@@ -148,7 +153,7 @@ static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
            "c"(high),
            "S"(old),
            "D"(ptr)
-         : "ax", "dx", "memory");
+         : "eax", "edx", "memory");
  return code;
 }
 
@@ -175,7 +180,7 @@ static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
            "c"(high),
            "S"(old),
            "D"(ptr)
-         : "dx", "memory");
+         : "edx", "memory");
  return code;
 }
 
@@ -215,7 +220,7 @@ static __inline__ int cmpxchg16_i686(U64 *old1, U64 *old2, U64 new1, U64 new2, v
        : "=q"(code)
        : "S"(&u),
          "D"(ptr)
-       : "bx","cx","memory");
+       : "ebx","ecx","memory");
  if (code == 1) {
    *old1 = u.dw[0];
    *old2 = u.dw[1];
@@ -259,7 +264,7 @@ static __inline__ int cmpxchg16_i686(U64 *old1, U64 *old2, U64 new1, U64 new2, v
        : "=q"(code)
        : "S"(&u),
          "D"(ptr)
-       : "cx","memory");
+       : "ecx","memory");
  if (code == 1) {
    *old1 = u.dw[0];
    *old2 = u.dw[1];
@@ -321,6 +326,65 @@ do {                                          \
 } while (0)
 
 #endif /* defined(_ext_ia32) */
+
+/*-------------------------------------------------------------------*/
+/* AMD64                                                             */
+/*-------------------------------------------------------------------*/
+#if defined(_ext_amd64)
+
+#define cmpxchg1(x,y,z) cmpxchg1_amd64(x,y,z)
+static __inline__ BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
+/* returns zero on success otherwise returns 1 */
+ BYTE code;
+ __asm__ __volatile__ (
+         "movb    (%2),%%al\n\t"
+         "lock;   cmpxchgb %b1,(%3)\n\t"
+         "setnz   %b0\n\t"
+         "movb    %%al,(%2)"
+         : "=q"(code)
+         : "q"(new),
+           "S"(old),
+           "D"(ptr)
+         : "ax", "memory");
+ return code;
+}
+
+
+#define cmpxchg4(x,y,z) cmpxchg4_amd64(x,y,z)
+static __inline__ BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
+/* returns zero on success otherwise returns 1 */
+ BYTE code;
+ __asm__ __volatile__ (
+         "movl    (%2),%%eax\n\t"
+         "lock;   cmpxchgl %1,(%3)\n\t"
+         "setnz   %b0\n\t"
+         "movl    %%eax,(%2)"
+         : "=q"(code)
+         : "q"(new),
+           "S"(old),
+           "D"(ptr)
+         : "eax", "memory");
+ return code;
+}
+
+#define cmpxchg8(x,y,z) cmpxchg8_amd64(x,y,z)
+static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
+/* returns zero on success otherwise returns 1 */
+ BYTE code;
+ __asm__ __volatile__ (
+         "movq    (%2),%%rax\n\t"
+         "lock;   cmpxchgq %1,(%3)\n\t"
+         "setnz   %b0\n\t"
+         "movq    %%rax,(%2)"
+         : "=q"(code)
+         : "q"(new),
+           "S"(old),
+           "D"(ptr)
+         : "rax", "memory");
+ return code;
+}
+
+#endif /* defined(_ext_amd64) */
 
 /*-------------------------------------------------------------------*/
 /* PowerPC                                                           */
