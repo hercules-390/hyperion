@@ -1,4 +1,4 @@
-// ====================================================================
+
 // Hercules Channel-to-Channel Emulation Support
 // ====================================================================
 //
@@ -95,7 +95,6 @@ DEVHND vmnet_device_hndinfo =
 
 extern DEVHND ctci_device_hndinfo;
 extern DEVHND lcs_device_hndinfo;
-extern DEVENT device_handler_table[];
 
 // ====================================================================
 // Primary Module Entry Points
@@ -107,6 +106,8 @@ extern DEVENT device_handler_table[];
 
 int  CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 {
+    pDEVBLK->devtype = 0x3088;
+
     // Allow for depreciated 3088 device type
     if( strcasecmp( pDEVBLK->typname, "3088" ) == 0 )
     {
@@ -1320,13 +1321,8 @@ int             lastlen = 2;            /* block length at last pckt */
 
 void  AddDevice( DEVBLK**    ppDEVBLK,
                  U16         sDevNum,
-                 const char* szDevType,
-                 DEVHND*     pDevHnd )
+                 DEVBLK*     pDevBlk )
 {
-    DEVBLK*   pDev;                     // -> Device block
-    DEVBLK**  ppDev;                    // -> Device block address
-    DEVENT*   pDevEntry  = NULL;
-    int       fNewDEVBLK = 0;           // 1=Newly created devblk
 
     // Check whether device number has already been defined
     if( find_device_by_devnum( sDevNum ) != NULL )
@@ -1335,120 +1331,15 @@ void  AddDevice( DEVBLK**    ppDEVBLK,
         return;
     }
 
-    for( pDevEntry = device_handler_table; pDevEntry->hnd; pDevEntry++ )
-        if( !strcasecmp( pDevEntry->name, szDevType ) )
-            break;
-
-    if( !pDevEntry )
-    {
-        logmsg ( _("HHCCT035E AddDevice internal error (%s).\n" ),
-         szDevType );
-        return;
-    }
-
     if( *ppDEVBLK == NULL )
     {
-        // Attempt to reuse an existing device block
-        pDev = find_unused_device();
-
-        // If no device block is available, create a new one
-        if( pDev == NULL )
-        {
-            // Obtain a device block
-            pDev = (DEVBLK*)malloc( sizeof( DEVBLK ) );
-
-            if( pDev == NULL )
-            {
-                logmsg( _("HHCCT036E Cannot obtain device block "
-                          "for device %4.4X: %s\n"),
-                        sDevNum, strerror( errno ) );
-                return;
-            }
-
-            memset( pDev, 0, sizeof( DEVBLK ) );
-
-            // Indicate a newly allocated devblk
-            fNewDEVBLK = 1;
-
-            // Initialize the device lock and conditions
-            initialize_lock( &pDev->lock );
-            initialize_condition( &pDev->resumecond );
-
-            // Assign new subchannel number
-            pDev->subchan = sysblk.highsubchan++;
-        }
-
-        // Obtain the device lock
-        obtain_lock( &pDev->lock );
+        *ppDEVBLK = get_devblk(sDevNum);
+        (*ppDEVBLK)->hnd = pDevBlk->hnd;
+        (*ppDEVBLK)->devtype = pDevBlk->devtype;
+        (*ppDEVBLK)->typname = pDevBlk->typname;
+        // Release the just aquired devblk
+        release_lock( &(*ppDEVBLK)->lock );
     }
-    else
-        pDev = *ppDEVBLK;
-
-    // Initialize the device block
-    if( pDevHnd != NULL )
-        pDev->hnd = pDevHnd;
-    else
-        pDev->hnd = pDevEntry->hnd;
-
-    pDev->cpuprio  = sysblk.cpuprio;
-    pDev->devnum   = sDevNum;
-    pDev->chanset  = sDevNum >> 12;
-
-    if( pDev->chanset >= MAX_CPU_ENGINES )
-        pDev->chanset = MAX_CPU_ENGINES - 1;
-
-    pDev->devtype  = pDevEntry->type;
-    pDev->typname  = pDevEntry->name;
-
-    pDev->fd = -1;
-
-    // Initialize storage view
-    pDev->mainstor = sysblk.mainstor;
-    pDev->storkeys = sysblk.storkeys;
-    pDev->mainlim  = sysblk.mainsize - 1;
-
-    // Initialize the path management control word
-    pDev->pmcw.devnum[0] = pDev->devnum >> 8;
-    pDev->pmcw.devnum[1] = pDev->devnum & 0xFF;
-    pDev->pmcw.lpm       = 0x80;
-    pDev->pmcw.pim       = 0x80;
-    pDev->pmcw.pom       = 0xFF;
-    pDev->pmcw.pam       = 0x80;
-    pDev->pmcw.chpid[0]  = pDev->devnum >> 8;
-
-    // If we acquired a new device block, add it to the chain
-    if( fNewDEVBLK )
-    {
-        // Search for the last device block on the chain
-        for( ppDev   = &(sysblk.firstdev);
-             *ppDev != NULL;
-             ppDev   = &((*ppDev)->nextdev) );
-
-        // Add the new device block to the end of the chain
-        *ppDev = pDev;
-        pDev->nextdev = NULL;
-    }
-
-    // Mark device valid
-    pDev->pmcw.flag5 |= PMCW5_V;
-
-#ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    // Indicate a CRW is pending for this device
-    pDev->crwpending = 1;
-#endif // _FEATURE_CHANNEL_SUBSYSTEM
-
-    if( *ppDEVBLK == NULL )
-    {
-        // Release device lock
-        release_lock( &pDev->lock );
-    }
-
-#ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    // Signal machine check
-    machine_check_crwpend();
-#endif // _FEATURE_CHANNEL_SUBSYSTEM
-
-    *ppDEVBLK = pDev;
 
     return;
 }

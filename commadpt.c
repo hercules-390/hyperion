@@ -5,11 +5,18 @@
 /* Original Author : Ivan Warren                                     */
 /* Prime Maintainer : Ivan Warren                                    */
 /*-------------------------------------------------------------------*/
+
 #include "hercules.h"
-#include "commadpt.h"
 #include "devtype.h"
 #include "parser.h"
 #include <netdb.h>
+
+#include "commadpt.h"
+
+#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32)
+ SYSBLK *psysblk;
+ #define sysblk (*psysblk)
+#endif
 
 COMMADPT_PEND_TEXT;     /* Defined in commadpt.h                     */
                         /* Defines commadpt_pendccw_text array       */
@@ -1260,6 +1267,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
         int num;
         char text[80];
     } res;
+        dev->devtype=0x2703;
         if(dev->ccwtrace)
         {
                 logmsg(_("HHCCA300D %4.4X:Initialisation starting\n"),dev->devnum);
@@ -1559,7 +1567,12 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
 
         /* Start the async worker thread */
         dev->commadpt->curpending=COMMADPT_PEND_TINIT;
-        create_thread(&dev->commadpt->cthread,&sysblk.detattr,commadpt_thread,dev->commadpt);
+        if(create_thread(&dev->commadpt->cthread,&sysblk.detattr,commadpt_thread,dev->commadpt))
+        {
+            logmsg(D_("HHCCAxxxE create_thread: %s\n"),strerror(errno));
+            release_lock(&dev->commadpt->lock);
+            return -1;
+        }
         commadpt_wait(dev);
         if(dev->commadpt->curpending!=COMMADPT_PEND_IDLE)
         {
@@ -2396,6 +2409,9 @@ BYTE    gotdle;                 /* Write routine DLE marker */
 /* DEVICE FUNCTION POINTERS                                      */
 /*---------------------------------------------------------------*/
 
+#if defined(OPTION_DYNAMIC_LOAD)
+static
+#endif
 DEVHND comadpt_device_hndinfo = {
         &commadpt_init_handler,
         &commadpt_execute_ccw,
@@ -2403,3 +2419,31 @@ DEVHND comadpt_device_hndinfo = {
         &commadpt_query_device,
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
+
+
+#if defined(OPTION_DYNAMIC_LOAD)
+HDL_DEPENDENCY_SECTION;
+{
+     HDL_DEPENDENCY(HERCULES);
+     HDL_DEPENDENCY(DEVBLK);
+     HDL_DEPENDENCY(SYSBLK);
+}
+END_DEPENDENCY_SECTION;
+
+
+#if defined(WIN32)
+#undef sysblk
+HDL_RESOLVER_SECTION;
+{
+    HDL_RESOLVE_PTRVAR( psysblk, sysblk );
+}
+END_RESOLVER_SECTION;
+#endif
+
+
+HDL_DEVICE_SECTION;
+{
+    HDL_DEVICE(2703, comadpt_device_hndinfo );
+}
+END_DEVICE_SECTION;
+#endif

@@ -2494,7 +2494,7 @@ int lsmod_cmd(char* cmdline, int argc, char *argv[])
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    hdl_list();
+    hdl_list(HDL_LIST_DEFAULT);
 
     return 0;
 }

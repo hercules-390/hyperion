@@ -13,7 +13,7 @@ CFLAGS="-W -Wall $CFLAGS"
 
 # Programs
 AC_PROG_CC
-AC_PROG_LIBTOOL
+#AC_PROG_LIBTOOL
 
 # OS-specific settings that we can't figure out any other way (yet)
 
@@ -365,6 +365,7 @@ AC_CHECK_FUNCS(strerror_r,,[AC_DEFINE(BUILTIN_STRERROR_R)])
 AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl frexpl)
 AC_CHECK_FUNCS(strsignal getopt_long)
 AC_CHECK_FUNC(InitializeCriticalSectionAndSpinCount)
+AC_CHECK_FUNC(iconv)
 
 # If we have setresuid AND getresuid, we can do setuid stuff
 AC_CHECK_FUNCS([setresuid getresuid],

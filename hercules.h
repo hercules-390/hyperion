@@ -1634,12 +1634,14 @@ extern const char* get_arch_mode_string(REGS* regs);
 /* Function prototypes                                               */
 /*-------------------------------------------------------------------*/
 
+#include "devtype.h"
+
 /* Functions in module config.c */
 void build_config (BYTE *fname);
 void release_config ();
 DEVBLK *find_device_by_devnum (U16 devnum);
 DEVBLK *find_device_by_subchan (U16 subchan);
-DEVBLK *find_unused_device ();
+DEVBLK *get_devblk (U16 devnum);
 int  attach_device (U16 devnum, char *devtype, int addargc,
         BYTE *addargv[]);
 int  detach_device (U16 devnum);
@@ -1786,11 +1788,6 @@ void display_subchannel (DEVBLK *dev);
 void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
 void alter_display_real (BYTE *opnd, REGS *regs);
 void alter_display_virt (BYTE *opnd, REGS *regs);
-
-/* sockdev.c */
-extern void init_sockdev();
-extern int bind_device   (DEVBLK* dev, char* spec);
-extern int unbind_device (DEVBLK* dev);
 
 /* Functions in ecpsvm.c that are not *direct* instructions */
 /* but support functions either used by other instruction   */

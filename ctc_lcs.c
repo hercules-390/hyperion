@@ -45,19 +45,6 @@ static char*    ReadOAT( char* pszOATName, FILE* fp, char* pszBuff );
 static int      ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                            int argc, char** argv );
 
-// --------------------------------------------------------------------
-// Device Handler Information Block
-// --------------------------------------------------------------------
-
-DEVHND lcs_device_hndinfo =
-{
-    &LCS_Init,
-    &LCS_ExecuteCCW,
-    &LCS_Close,
-    &LCS_Query,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
-};
-
 // ====================================================================
 //
 // ====================================================================
@@ -154,7 +141,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         if( !pDev->pNext && pDev->bMode != LCSDEV_MODE_IP )
             pDev->pDEVBLK[0] = pDEVBLK;
 
-        AddDevice( &pDev->pDEVBLK[0], pDev->sAddr, "LCS", &lcs_device_hndinfo );
+        AddDevice( &pDev->pDEVBLK[0], pDev->sAddr, pDEVBLK );
 
         if( !pDev->pDEVBLK[0] )
         // FIXME! - Need to emit an error message here.
@@ -178,8 +165,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
             if( !pDev->pNext )
                 pDev->pDEVBLK[1] = pDEVBLK;
 
-            AddDevice( &pDev->pDEVBLK[1], pDev->sAddr + 1,
-               "LCS", &lcs_device_hndinfo );
+            AddDevice( &pDev->pDEVBLK[1], pDev->sAddr + 1, pDEVBLK );
 
             if( !pDev->pDEVBLK[1] )
             {
@@ -1984,4 +1970,41 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
 
     return pszBuff;
 }
+
+
+// --------------------------------------------------------------------
+// Device Handler Information Block
+// --------------------------------------------------------------------
+
+
+#if defined(OPTION_DYNAMIC_LOAD) && 0
+static
+#endif
+DEVHND lcs_device_hndinfo =
+{
+    &LCS_Init,
+    &LCS_ExecuteCCW,
+    &LCS_Close,
+    &LCS_Query,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
+
+
+#if defined(OPTION_DYNAMIC_LOAD) && 0
+HDL_DEPENDENCY_SECTION;
+{
+     HDL_DEPENDENCY(HERCULES);
+     HDL_DEPENDENCY(DEVBLK);
+}
+END_DEPENDENCY_SECTION;
+
+
+HDL_DEVICE_SECTION;
+{
+    HDL_DEVICE(LCS, lcs_device_hndinfo );
+}
+END_DEVICE_SECTION;
+#endif
+
+
 #endif /* !defined(__APPLE__) */

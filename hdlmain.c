@@ -28,6 +28,7 @@
 
 
 HDLPRE hdl_preload[] = {
+    { "hdteq",          HDL_LOAD_NOMSG },
     { "dyncrypt",       HDL_LOAD_NOMSG },
 #if 0
     { "dyn_test1",      HDL_LOAD_DEFAULT },
@@ -63,6 +64,8 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( debug_sclp_event_data,      UNRESOLVED      );
     HDL_REGISTER( debug_chsc_unknown_request, UNRESOLVED      );
 
+    HDL_REGISTER( hdl_device_type_equates,    UNRESOLVED      );
+
 #if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
     HDL_REGISTER( s390_cipher_message,                      UNRESOLVED );
     HDL_REGISTER( s390_cipher_message_with_chaining,        UNRESOLVED );
@@ -97,6 +100,8 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE( debug_sclp_event_data      );
     HDL_RESOLVE( debug_chsc_unknown_request );
 
+    HDL_RESOLVE( hdl_device_type_equates    );
+
 #if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
     HDL_RESOLVE( s390_cipher_message                      );
     HDL_RESOLVE( s390_cipher_message_with_chaining        );
@@ -126,5 +131,71 @@ END_FINAL_SECTION;
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 
-#endif /*!defined(_GEN_ARCH)*/
+HDL_DEVICE_SECTION;
+{
+#if !defined(OPTION_DYNAMIC_LOAD)
+    /* TTY consoles */
+    HDL_DEVICE(1052, constty_device_hndinfo );
+    HDL_DEVICE(3215, constty_device_hndinfo );
 
+    /* 3270 consoles */
+    HDL_DEVICE(3270, loc3270_device_hndinfo );
+    HDL_DEVICE(3278, loc3270_device_hndinfo );
+
+    /* Communication line devices */
+    HDL_DEVICE(2703, comadpt_device_hndinfo );
+
+    /* Card readers */
+    HDL_DEVICE(1442, cardrdr_device_hndinfo );
+    HDL_DEVICE(2501, cardrdr_device_hndinfo );
+    HDL_DEVICE(3505, cardrdr_device_hndinfo );
+
+    /* Card punches */
+    HDL_DEVICE(3525, cardpch_device_hndinfo );
+
+    /* Printers */
+    HDL_DEVICE(1403, printer_device_hndinfo );
+    HDL_DEVICE(3211, printer_device_hndinfo );
+
+    /* Tape drives */
+    HDL_DEVICE(3410, tapedev_device_hndinfo );
+    HDL_DEVICE(3411, tapedev_device_hndinfo );
+    HDL_DEVICE(3420, tapedev_device_hndinfo );
+    HDL_DEVICE(3480, tapedev_device_hndinfo );
+    HDL_DEVICE(3490, tapedev_device_hndinfo );
+    HDL_DEVICE(9347, tapedev_device_hndinfo );
+    HDL_DEVICE(9348, tapedev_device_hndinfo );
+    HDL_DEVICE(8809, tapedev_device_hndinfo );
+#endif /*!defined(OPTION_DYNAMIC_LOAD)*/
+
+    /* Count Key Data Direct Access Storage Devices */
+    HDL_DEVICE(2311, ckddasd_device_hndinfo );
+    HDL_DEVICE(2314, ckddasd_device_hndinfo );
+    HDL_DEVICE(3330, ckddasd_device_hndinfo );
+    HDL_DEVICE(3340, ckddasd_device_hndinfo );
+    HDL_DEVICE(3350, ckddasd_device_hndinfo );
+    HDL_DEVICE(3375, ckddasd_device_hndinfo );
+    HDL_DEVICE(3380, ckddasd_device_hndinfo );
+    HDL_DEVICE(3390, ckddasd_device_hndinfo );
+    HDL_DEVICE(9345, ckddasd_device_hndinfo );
+
+    /* Fixed Block Architecture Direct Access Storage Devices */
+    HDL_DEVICE(0671, fbadasd_device_hndinfo );
+    HDL_DEVICE(3310, fbadasd_device_hndinfo );
+    HDL_DEVICE(3370, fbadasd_device_hndinfo );
+    HDL_DEVICE(9313, fbadasd_device_hndinfo );
+    HDL_DEVICE(9332, fbadasd_device_hndinfo );
+    HDL_DEVICE(9335, fbadasd_device_hndinfo );
+    HDL_DEVICE(9336, fbadasd_device_hndinfo );
+
+    /* Communications devices */
+    HDL_DEVICE(3088, ctcadpt_device_hndinfo );
+    HDL_DEVICE(CTCI, ctcadpt_device_hndinfo );
+    HDL_DEVICE(CTCT, ctcadpt_device_hndinfo );
+    HDL_DEVICE(LCS,  ctcadpt_device_hndinfo );
+    HDL_DEVICE(VMNET,ctcadpt_device_hndinfo );
+}
+END_DEVICE_SECTION;
+
+
+#endif /*!defined(_GEN_ARCH)*/

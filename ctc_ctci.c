@@ -106,10 +106,10 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         pDevCTCBLK->pDEVBLK[1] = pDEVBLK;
 
         AddDevice( &pDevCTCBLK->pDEVBLK[0], pDEVBLK->devnum,
-                   "CTCI", &ctci_device_hndinfo );
+                   pDEVBLK );
 
         AddDevice( &pDevCTCBLK->pDEVBLK[1], pDEVBLK->devnum + 1,
-                   "CTCI", &ctci_device_hndinfo );
+                   pDEVBLK );
 
         pDevCTCBLK->pDEVBLK[0]->dev_data = pDevCTCBLK;
         pDevCTCBLK->pDEVBLK[1]->dev_data = pDevCTCBLK;

@@ -7,9 +7,9 @@ CPUMODEL  3090                          # CPU model number
 MAINSIZE  64                            # Main storage size in megabytes
 CODEPAGE  default                       # CodePage conversion table
 XPNDSIZE  0                             # Expanded storage size in megabytes
-CNSLPORT  3270                          # TCP port number to which consoles connect
+CNSLPORT  127.0.0.1:3270                          # TCP port number to which consoles connect
 HTTPPORT  8081 noauth userid password   # HTTP server port
-HTTPROOT  /usr/local/share/hercules/    # base directory for built-in web server
+HTTPROOT  ./html/                       # base directory for built-in web server
 NUMCPU    1                             # Number of CPUs
 LOADPARM  0120....                      # IPL parameter
 OSTAILOR  LINUX                         # OS tailoring
@@ -23,7 +23,8 @@ ECPSVM    NO                            # VM Assist : NO or Level (20 recommende
 # |     |       |
 # V     V       V
 #---    ----    --------------------
-000C    3505    ../share/hercules/zzsacard.bin
+FFFE    2703
+000C    3505    ./util/zzsacard.bin
 000D    3525    punch00d.txt ascii
 000E    1403    print00e.txt crlf
 001F    3270

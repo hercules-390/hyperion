@@ -6,7 +6,7 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = po util html man intl m4
+SUBDIRS = intl m4  intl m4  po util html man intl m4
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
@@ -20,15 +20,41 @@ endif
 if OPTION_DYNAMIC_LOAD
 DYNGUI=dyngui
 DYNINST=dyninst
+HDTEQ=hdteq
+HDT1403=hdt1403
+HDT2703=hdt2703
+HDT3270=hdt3270
+HDT3420=hdt3420
+HDT3505=hdt3505
+HDT3525=hdt3525
 if USE_DLLTOOL
 DYNGUI_DLL=dyngui.dll
 DYNINST_DLL=dyninst.dll
+HDTEQ_DLL=hdteq.dll
+HDT1403_DLL=hdt1403.dll
+HDT2703_DLL=hdt2703.dll
+HDT3270_DLL=hdt3270.dll
+HDT3420_DLL=hdt3420.dll
+HDT3505_DLL=hdt3505.dll
+HDT3525_DLL=hdt3525.dll
 endif
 else
 DYNGUI=
 DYNGUI_DLL=
 DYNINST=
 DYNINST_DLL=
+HDT1403=
+HDT1403_DLL=
+HDT2703=
+HDT2703_DLL=
+HDT3270=
+HDT3270_DLL=
+HDT3420=
+HDT3420_DLL=
+HDT3505=
+HDT3505_DLL=
+HDT3525=
+HDT3525_DLL=
 endif
 
 LDADD = @LIBINTL@
@@ -39,7 +65,16 @@ bin_PROGRAMS = hercules \
 	   cckdcdsk cckdcomp cckddiag cckdswap \
 	   cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
 	   hetget hetinit hetmap hetupd \
-	   dmap2hrc $(HERCIFC) $(DYNINST) $(DYNINST_DLL) $(DYNGUI) $(DYNGUI_DLL)
+	   dmap2hrc $(HERCIFC) \
+           $(DYNINST) $(DYNINST_DLL) \
+           $(DYNGUI) $(DYNGUI_DLL) \
+           $(HDTEQ) $(HDTEQ_DLL) \
+           $(HDT1403) $(HDT1403_DLL) \
+           $(HDT2703) $(HDT2703_DLL) \
+           $(HDT3270) $(HDT3270_DLL) \
+           $(HDT3420) $(HDT3420_DLL) \
+           $(HDT3505) $(HDT3505_DLL) \
+           $(HDT3525) $(HDT3525_DLL)
 
 EXTRA_PROGRAMS=hercifc
 
@@ -75,7 +110,18 @@ endif
 # even be *attempted* to be "built" if support for building dynamic modules
 # doesn't even exist on the system doing the building.
 
-dynamic_sources=dyngui.c dyninst.c 
+dynamic_sources=dyngui.c dyninst.c hdteq.c
+
+devtype_sources=commadpt.c \
+                console.c \
+                cardpch.c \
+                cardrdr.c sockdev.c \
+                printer.c \
+                tapedev.c hetlib.c
+#               ctc_lcs.c  <--- hdtlcs
+#               ctc_ctci.c <--- hdtctci
+#               ctcadpt.c  <--- hdtvmnet + hdtctct (should split ctcadpt.c)
+
 extra_dynamic_sources=dynguib.h dynguip.h dynguiv.h dyngui.rc
 
 if OPTION_DYNAMIC_LOAD
@@ -85,13 +131,29 @@ dyngui_SOURCES = dyngui.c
 dyngui_LDFLAGS = -shared
 dyninst_SOURCES = dyninst.c
 dyninst_LDFLAGS = -shared
+hdteq_SOURCES = hdteq.c
+hdteq_LDFLAGS = -shared
+hdt1403_SOURCES = printer.c
+hdt1403_LDFLAGS = -shared
+hdt2703_SOURCES = commadpt.c
+hdt2703_LDFLAGS = -shared
+hdt3270_SOURCES = console.c
+hdt3270_LDFLAGS = -shared
+hdt3420_SOURCES = tapedev.c hetlib.c
+hdt3420_LDFLAGS = -shared
+hdt3505_SOURCES = cardrdr.c sockdev.c
+hdt3505_LDFLAGS = -shared
+hdt3525_SOURCES = cardpch.c
+hdt3525_LDFLAGS = -shared
+
 EXTRA_dyngui_SOURCES=dynguib.h dynguip.h dynguiv.h dyngui.rc
 else
 DYNSRC=$(dynamic_sources)
+DYNDEV=$(devtype_sources)
 EXTRA_DYNSRC=$(extra_dynamic_sources)
 endif
 
-EXTRA_hercules_SOURCES=$(fthreads_sources) $(fishhang_sources) $(fishio_sources) $(memrchr_sources) $(DYNSRC) $(EXTRA_DYNSRC)
+EXTRA_hercules_SOURCES=$(fthreads_sources) $(fishhang_sources) $(fishio_sources) $(memrchr_sources) $(DYNDEV) $(DYNSRC) $(EXTRA_DYNSRC)
 
 if USE_BUILTIN_MEMRCHR
 MEMRCHR=memrchr.c
@@ -100,6 +162,7 @@ MEMRCHR=
 endif
 
 if OPTION_DYNAMIC_LOAD
+STADEV=
 if USE_DLLTOOL
 HERCULES_EXP=hercules.exp
 HERCULES_A=hercules.a
@@ -107,12 +170,21 @@ hercules_LDADD = $(LDADD) $(HERCULES_EXP)
 hercules_LDFLAGS = --export-dynamic
 dyngui_LDADD = $(LDADD) $(HERCULES_A) dyngui.res
 dyninst_LDADD = $(LDADD) $(HERCULES_A)
+hdteq_LDADD = $(LDADD) $(HERCULES_A)
+hdt1403_LDADD = $(LDADD) $(HERCULES_A)
+hdt2703_LDADD = $(LDADD) $(HERCULES_A)
+hdt3270_LDADD = $(LDADD) $(HERCULES_A)
+hdt3420_LDADD = $(LDADD) $(HERCULES_A)
+hdt3505_LDADD = $(LDADD) $(HERCULES_A)
+hdt3525_LDADD = $(LDADD) $(HERCULES_A)
 else
 HERCULES_EXP=
 HERCULES_A=
 hercules_LDADD = $(LDADD)
 hercules_LDFLAGS = -rdynamic
 endif
+else
+STADEV=$(DYNDEV)
 endif
 
 hercules_SOURCES = hostinfo.c w32ctca.c \
@@ -124,18 +196,18 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   decimal.c service.c opcode.c \
 	   diagnose.c diagmssf.c vm.c \
 	   channel.c ckddasd.c fbadasd.c \
-	   tapedev.c cardrdr.c cardpch.c \
-	   printer.c console.c external.c \
+	   external.c \
 	   float.c ctcadpt.c trace.c \
 	   machchk.c vector.c xstore.c \
 	   cmpsc.c sie.c qdio.c timer.c \
 	   esame.c cckddasd.c cckdutil.c dasdtab.c \
-	   parser.c hetlib.c ieee.c sockdev.c \
+	   parser.c ieee.c \
 	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
-	   httpserv.c cgibin.c devtype.c codepage.c \
+	   httpserv.c cgibin.c codepage.c \
 	   ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c \
-	   logger.c commadpt.c cache.c ecpsvm.c shared.c \
-	   $(MEMRCHR) hscutl.c logmsg.c hdl.c hdlmain.c $(HERCULES_EXP)
+	   logger.c cache.c ecpsvm.c shared.c \
+	   $(MEMRCHR) hscutl.c logmsg.c hdl.c hdlmain.c \
+           $(STADEV) $(HERCULES_EXP)
 
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
 
@@ -248,12 +320,40 @@ dyngui.dll$(EXEEXT):  dyngui$(EXEEXT)
 	rm  -f                         dyngui.dll
 	cp           dyngui$(EXEEXT)   dyngui.dll
 
+hdteq.dll$(EXEEXT): hdteq$(EXEEXT)
+	rm  -f                         hdteq.dll
+	cp           hdteq$(EXEEXT)  hdteq.dll
+
+hdt1403.dll$(EXEEXT): hdt1403$(EXEEXT)
+	rm  -f                         hdt1403.dll
+	cp           hdt1403$(EXEEXT)  hdt1403.dll
+
+hdt2703.dll$(EXEEXT): hdt2703$(EXEEXT)
+	rm  -f                         hdt2703.dll
+	cp           hdt2703$(EXEEXT)  hdt2703.dll
+
+hdt3270.dll$(EXEEXT): hdt3270$(EXEEXT)
+	rm  -f                         hdt3270.dll
+	cp           hdt3270$(EXEEXT)  hdt3270.dll
+
+hdt3420.dll$(EXEEXT): hdt3420$(EXEEXT)
+	rm  -f                         hdt3420.dll
+	cp           hdt3420$(EXEEXT)  hdt3420.dll
+
+hdt3505.dll$(EXEEXT): hdt3505$(EXEEXT)
+	rm  -f                         hdt3505.dll
+	cp           hdt3505$(EXEEXT)  hdt3505.dll
+
+hdt3525.dll$(EXEEXT): hdt3525$(EXEEXT)
+	rm  -f                         hdt3525.dll
+	cp           hdt3525$(EXEEXT)  hdt3525.dll
+
 dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
 	windres -DHAVE_CONFIG_H --include-dir=. -i $(srcdir)/dyngui.rc -o dyngui.res -O coff
 endif
 endif
 
-EXTRA_DIST = autoconf/config.rpath RELEASE.NOTES CHANGES README.COMMADPT \
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath RELEASE.NOTES CHANGES README.COMMADPT \
              README.CVS README.ECPSVM README.HDL README.NETWORKING \
              README.OSX README.TAPE hercules.cnf cckdfix.c
 
@@ -283,6 +383,7 @@ endif
 if OPTION_DYNAMIC_LOAD
 if USE_DLLTOOL
 	mv  $(DESTDIR)$(bindir)/$(DYNINST)$(EXEEXT) $(DESTDIR)$(bindir)/$(DYNINST_DLL)
+	mv  $(DESTDIR)$(bindir)/$(HDTEQ)$(EXEEXT) $(DESTDIR)$(bindir)/$(HDTEQ_DLL)
 	mv  $(DESTDIR)$(bindir)/$(DYNGUI)$(EXEEXT)  $(DESTDIR)$(bindir)/$(DYNGUI_DLL)
 endif
 endif
@@ -291,8 +392,10 @@ uninstall-local:
 if OPTION_DYNAMIC_LOAD
 if USE_DLLTOOL
 	rm -f $(DESTDIR)$(bindir)/$(DYNINST_DLL)
+	rm -f $(DESTDIR)$(bindir)/$(HDTEQ_DLL)
 	rm -f $(DESTDIR)$(bindir)/$(DYNGUI_DLL)
 	rm -f                     $(DYNINST_DLL)
+	rm -f                     $(HDTEQ_DLL)
 	rm -f                     $(DYNGUI_DLL)
 	rm -f                     $(DYNGUI).res
 	rm -f                     $(HERCULES_A)

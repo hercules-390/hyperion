@@ -70,6 +70,11 @@
 #include "parser.h"
 #include <regex.h>
 
+#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32)
+ SYSBLK *psysblk;
+ #define sysblk (*psysblk)
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
@@ -4335,6 +4340,10 @@ int             rc;
     autoload_close(dev);
     haverdc=0;
     dev->tdparms.displayfeat=0;
+
+    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
+        dev->devtype = 0x3420;
+
     switch(dev->devtype)
     {
         case 0x3480:
@@ -4421,6 +4430,7 @@ int             rc;
             break;
         case 0x3410:
         case 0x3411:
+            dev->devtype = 0x3411;  /* a 3410 is a 3411 */
             cutype = 0x3115; /* Model 115 IFA */
             cumodel = 0x01;
             devmodel = 0x01;
@@ -5396,14 +5406,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 } /* end function tapedev_execute_ccw */
 
 
-DEVHND tapedev_device_hndinfo = {
-        &tapedev_init_handler,
-        &tapedev_execute_ccw,
-        &tapedev_close_device,
-        &tapedev_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
-};
-
 /*
 typedef struct _TAPEMEDIA_HANDLER {
         int *open(DEVBLK *,BYTE *unitstat,BYTE code);
@@ -5507,3 +5509,50 @@ static TAPEMEDIA_HANDLER tmh_oma = {
         &write_READONLY, /* ERG */
         &return_true3,
         &return_false1};
+
+
+#if defined(OPTION_DYNAMIC_LOAD)
+static
+#endif
+DEVHND tapedev_device_hndinfo = {
+        &tapedev_init_handler,
+        &tapedev_execute_ccw,
+        &tapedev_close_device,
+        &tapedev_query_device,
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
+
+
+#if defined(OPTION_DYNAMIC_LOAD)
+HDL_DEPENDENCY_SECTION;
+{
+     HDL_DEPENDENCY(HERCULES);
+     HDL_DEPENDENCY(DEVBLK);
+     HDL_DEPENDENCY(SYSBLK);
+}
+END_DEPENDENCY_SECTION;
+
+
+#if defined(WIN32)
+#undef sysblk
+HDL_RESOLVER_SECTION;
+{
+    HDL_RESOLVE_PTRVAR( psysblk, sysblk );
+}
+END_RESOLVER_SECTION;
+#endif
+
+
+HDL_DEVICE_SECTION;
+{
+    HDL_DEVICE(3410, tapedev_device_hndinfo );
+    HDL_DEVICE(3411, tapedev_device_hndinfo );
+    HDL_DEVICE(3420, tapedev_device_hndinfo );
+    HDL_DEVICE(3480, tapedev_device_hndinfo );
+    HDL_DEVICE(3490, tapedev_device_hndinfo );
+    HDL_DEVICE(9347, tapedev_device_hndinfo );
+    HDL_DEVICE(9348, tapedev_device_hndinfo );
+    HDL_DEVICE(8809, tapedev_device_hndinfo );
+}
+END_DEVICE_SECTION;
+#endif

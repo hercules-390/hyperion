@@ -31,6 +31,9 @@
   You CANNOT mix versions of hercules with differing versions of dynamically
   loaded modules.
 
+  Ensure that your library path LD_LIBRARY_PATH set correctly such that it
+  includes the directory of your hercules executables
+
 - ECPS:VM: Do not use ECPS:VM (See README.ECPSVM) in an AP or MP environment 
   in VM/370. If AP=YES or MP=YES is coded in DMKSYS and the AP/MP control
   file is used to build the CP nucleus and NUMCPU is set to more than 1 in

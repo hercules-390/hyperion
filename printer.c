@@ -108,14 +108,8 @@ pid_t           pid;                    /* Child process identifier  */
 
             BYTE  cmdline[256];
 
-            snprintf(cmdline,256,"\"%s\" pid=%d dev=%4.4X extgui=%d",
-                dev->filename+1,getpid(),dev->devnum,
-#ifdef EXTERNALGUI
-                extgui
-#else /*!EXTERNALGUI*/
-                0
-#endif /*EXTERNALGUI*/
-                );
+            snprintf(cmdline,256,"\"%s\" pid=%d dev=%4.4X",
+                dev->filename+1,getpid(),dev->devnum);
 
             rc = system (cmdline);
         }
@@ -194,6 +188,9 @@ int     i;                              /* Array subscript           */
 
     /* Save the file name in the device block */
     strcpy (dev->filename, argv[0]);
+
+    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
+        dev->devtype = 0x1403;
 
     /* Initialize device dependent fields */
     dev->fd = -1;
@@ -686,6 +683,9 @@ BYTE            c;                      /* Print character           */
 } /* end function printer_execute_ccw */
 
 
+#if defined(OPTION_DYNAMIC_LOAD)
+static
+#endif
 DEVHND printer_device_hndinfo = {
         &printer_init_handler,
         &printer_execute_ccw,
@@ -693,3 +693,21 @@ DEVHND printer_device_hndinfo = {
         &printer_query_device,
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
+
+
+#if defined(OPTION_DYNAMIC_LOAD)
+HDL_DEPENDENCY_SECTION;
+{
+     HDL_DEPENDENCY(HERCULES);
+     HDL_DEPENDENCY(DEVBLK);
+}
+END_DEPENDENCY_SECTION;
+
+
+HDL_DEVICE_SECTION;
+{
+    HDL_DEVICE(1403, printer_device_hndinfo );
+    HDL_DEVICE(3211, printer_device_hndinfo );
+}
+END_DEVICE_SECTION;
+#endif

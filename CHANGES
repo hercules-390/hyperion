@@ -4,6 +4,8 @@
             all thread functions s/b "void *thread(void *arg)", not
             void thread(void *arg) or void *thread() or anything else
 08 Aug 2003 Increased 2311 Alt Cyl count from 2 to 3 - Ivan Warren
+07 Aug 2003 Codepage extensions (iconv) - Jan Jaeger
+05 Aug 2003 Dynamic loadable device support - Jan Jaeger
 01 Aug 2003 Created RELEASE.NOTES member - Fish
 01 Aug 2003 Added Hercules VERSION to dyngui - Fish
 01 Aug 2003 Various OMA tape processing fixes - Ivan Warren

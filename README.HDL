@@ -220,7 +220,7 @@ END_DEPENDENCY_SECTION;
     then it must also be listed in the resolver section.  This to ensure
     that the symbol is properly resolved when other modules are loaded.
 
-    The registration section is mandatory.
+    The registration section is optional.
 
 */
 
@@ -284,6 +284,38 @@ END_RESOLVER_SECTION;
 
 
 /*
+    The device section is to register device drivers with hercules.
+    It associates device types with device handlers
+
+    If a device handler is not registered for a specific device type
+    then and a loadable mode with the name of "hdtxxxx" (where xxxx
+    is the device type) exists then that module is loaded
+
+    Search order:
+        1) The most recently registered (ie loaded) device of the
+           requested device type.
+        2) Device driver in external loadable module, where the 
+           module name is hdtxxxx (where xxxx is the device type
+           ie module name hdtlcs for device type LCS or hdt2703 
+           for device type 2703)
+        3) If the device is listed in the alias table (hdteq.c)
+           then external module hdtyyyy will be loaded, where 
+           yyyy is the base name as listed in hdteq.c.
+        The device name is always mapped to lower case when searching
+        for loadable modules.
+
+    The device section is optional
+*/
+
+HDL_DEVICE_SECTION;
+{
+    HDL_DEVICE(1052,constty_device_hndinfo);
+    HDL_DEVICE(3215,constty_device_hndinfo);
+}
+END_DEVICE_SECTION;
+
+
+/*
     The final section is called once, when the module is unloaded
     or when hercules terminates.
 
@@ -303,22 +335,6 @@ HDL_FINAL_SECTION;
 
 }
 END_FINAL_SECTION;
-
-
-/*
-    The device section is to register device drivers with hercules.
-    This part is still under development, but may have the following
-    structure:
-
-HDL_DEVICE_SECTION;
-{
-    HDL_DEVICE(1052,constty_device_hndinfo);
-    HDL_DEVICE(3215,constty_device_hndinfo);
-}
-END_DEVICE_SECTION;
-
-*/
-
 
 
 
@@ -346,6 +362,7 @@ HDL_DEPENDENCY_SECTION;
      HDL_DEPENDENCY(REGS);
      HDL_DEPENDENCY(DEVBLK);
      HDL_DEPENDENCY(SYSBLK);
+     HDL_DEPENDENCY(WEBBLK);
 }
 END_DEPENDENCY_SECTION;
 

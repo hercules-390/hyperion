@@ -52,7 +52,15 @@
 #include "opcode.h"
 
 
-char *console_cnslport = "3270";
+#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32)
+ SYSBLK *psysblk;
+ #define sysblk (*psysblk)
+ #define config_cnslport (*config_cnslport)
+static 
+#else
+extern
+#endif
+       char *config_cnslport;
 
 
 /*-------------------------------------------------------------------*/
@@ -1273,6 +1281,11 @@ BYTE                    rejmsg[80];     /* Rejection message         */
 /*-------------------------------------------------------------------*/
 static int console_cnslcnt;
 
+static void console_shutdown(void * unused __attribute__ ((unused)) )
+{
+    console_cnslcnt = 0;
+}
+
 static void *
 console_connection_handler (void *arg)
 {
@@ -1290,6 +1303,8 @@ DEVBLK                 *dev;            /* -> Device block           */
 BYTE                    unitstat;       /* Status after receive data */
 
     UNREFERENCED(arg);
+
+    hdl_adsc(console_shutdown, NULL);
 
     /* Display thread started message on control panel */
     logmsg (_("HHCTE001I Console connection thread started: "
@@ -1314,17 +1329,17 @@ BYTE                    unitstat;       /* Status after receive data */
                 &optval, sizeof(optval));
 
     /* Prepare the sockaddr structure for the bind */
-    if(!( server = get_inet_socket(console_cnslport) ))
+    if(!( server = get_inet_socket(config_cnslport) ))
     {
         logmsg(_("HHCTE010E CNSLPORT statement invalid: %s\n"),
-            console_cnslport);
+            config_cnslport);
         return NULL;
     }
 
     /* Attempt to bind the socket to the port */
-    while (console_cnslcnt  && !sysblk.shutdown)
+    while (console_cnslcnt)
     {
-        rc = bind (lsock, server, sizeof(struct sockaddr));
+        rc = bind (lsock, (struct sockaddr *)server, sizeof(struct sockaddr_in));
 
         if (rc == 0 || errno != EADDRINUSE) break;
 
@@ -1586,6 +1601,9 @@ loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     /* Set the size of the device buffer */
     dev->bufsize = BUFLEN_3270;
 
+    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
+        dev->devtype = 0x3270;
+
     /* Initialize the device identifier bytes */
     dev->devid[0] = 0xFF;
     dev->devid[1] = 0x32; /* Control unit type is 3274-1D */
@@ -1669,6 +1687,9 @@ constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
             dev->prompt1052 = 0;
     }
     
+    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
+        dev->devtype = 0x1052;
+
     /* Initialize the device identifier bytes */
     dev->devid[0] = 0xFF;
     dev->devid[1] = dev->devtype >> 8;
@@ -2520,7 +2541,9 @@ BYTE    stat;                           /* Unit status               */
 
 } /* end function constty_execute_ccw */
 
-
+#if defined(OPTION_DYNAMIC_LOAD)
+static
+#endif
 DEVHND constty_device_hndinfo = {
         &constty_init_handler,
         &constty_execute_ccw,
@@ -2530,6 +2553,9 @@ DEVHND constty_device_hndinfo = {
 };
 
 
+#if defined(OPTION_DYNAMIC_LOAD)
+static
+#endif
 DEVHND loc3270_device_hndinfo = {
         &loc3270_init_handler,
         &loc3270_execute_ccw,
@@ -2537,3 +2563,36 @@ DEVHND loc3270_device_hndinfo = {
         &loc3270_query_device,
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
+
+
+#if defined(OPTION_DYNAMIC_LOAD)
+HDL_DEPENDENCY_SECTION;
+{
+     HDL_DEPENDENCY(HERCULES);
+     HDL_DEPENDENCY(DEVBLK);
+     HDL_DEPENDENCY(SYSBLK);
+}
+END_DEPENDENCY_SECTION;
+
+
+#if defined(WIN32)
+#undef sysblk
+#undef config_cnslport
+HDL_RESOLVER_SECTION;
+{
+    HDL_RESOLVE_PTRVAR( psysblk, sysblk );
+    HDL_RESOLVE( config_cnslport );
+}
+END_RESOLVER_SECTION;
+#endif
+
+
+HDL_DEVICE_SECTION;
+{
+    HDL_DEVICE(1052, constty_device_hndinfo );
+    HDL_DEVICE(3215, constty_device_hndinfo );
+    HDL_DEVICE(3270, loc3270_device_hndinfo );
+    HDL_DEVICE(3278, loc3270_device_hndinfo );
+}
+END_DEVICE_SECTION;
+#endif

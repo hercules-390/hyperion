@@ -3,6 +3,10 @@
 
 #include "hercules.h"
 
+#if defined(HAVE_ICONV)
+ #include <iconv.h>
+#endif /*defined(HAVE_ICONV)*/
+
 
 static unsigned char
 ascii_to_ebcdic[] = {
@@ -172,6 +176,13 @@ cp_273_to_850[] = {
     };
 
 
+typedef struct _CPCONV {
+    char *name;
+    unsigned char *h2g;
+    unsigned char *g2h;
+} CPCONV;
+
+
 static CPCONV cpconv[] = {
     { "default",  ascii_to_ebcdic, ebcdic_to_ascii },
     { "437/037",  cp_437_to_037, cp_037_to_437 },
@@ -179,7 +190,85 @@ static CPCONV cpconv[] = {
     { "850/273",  cp_850_to_273, cp_273_to_850 },
     { NULL,       ascii_to_ebcdic, ebcdic_to_ascii } };
 
-CPCONV *codepage_conv = cpconv;
+
+static CPCONV *codepage_conv = cpconv;
+
+#if defined(HAVE_ICONV)
+static iconv_t codepage_g2h = NULL;
+static iconv_t codepage_h2g = NULL;
+
+static int set_iconv_cp(char *name)
+{
+char *codepage;
+char *fcp, *tcp;
+char *strtok_str;
+
+char ibyte, obyte;
+char *ibytes ,*obytes;
+size_t nibytes, nobytes;
+
+    if(codepage_g2h)
+        iconv_close(codepage_g2h);
+    if(codepage_h2g)
+        iconv_close(codepage_h2g);
+
+    codepage_g2h = codepage_h2g = NULL;
+
+    codepage = strdup(name);
+
+    if(!(fcp = strtok_r(codepage,"/,:",&strtok_str)))
+    {
+        free(codepage);
+        return -1;
+    }
+    if(!(tcp = strtok_r(NULL,"/,:",&strtok_str)))
+    {
+        free(codepage);
+        return -1;
+    }
+
+    if((codepage_g2h = iconv_open (fcp,tcp)) == (iconv_t)(-1))
+    {
+        codepage_g2h = NULL;
+        free(codepage);
+        return -1;
+    }
+    if((codepage_h2g = iconv_open (tcp,fcp)) == (iconv_t)(-1))
+    {
+        iconv_close(codepage_g2h);
+        codepage_g2h = codepage_h2g = NULL;
+        free(codepage);
+        return -1;
+    }
+
+    free(codepage);
+
+    ibytes = &ibyte; obytes = &obyte;
+    nibytes = nobytes = 1;
+    if(iconv(codepage_g2h, &ibytes, &nibytes, &obytes, &nobytes) == (size_t)(-1) )
+    
+    {
+        iconv_close(codepage_g2h);
+        iconv_close(codepage_h2g);
+        codepage_g2h = codepage_h2g = NULL;
+        return -1;
+    }
+
+    ibytes = &ibyte; obytes = &obyte;
+    nibytes = nobytes = 1;
+    if(iconv(codepage_h2g, &ibytes, &nibytes, &obytes, &nobytes) == (size_t)(-1) )
+    
+    {
+        iconv_close(codepage_g2h);
+        iconv_close(codepage_h2g);
+        codepage_g2h = codepage_h2g = NULL;
+        return -1;
+    }
+   
+    return 0;
+}
+#endif /*defined(HAVE_ICONV)*/
+
 
 void set_codepage(char *name)
 {
@@ -192,6 +281,49 @@ void set_codepage(char *name)
         codepage_conv++);
 
     if(!codepage_conv->name)
-        logmsg(_("HHCCF051E CodePage conversion table %s is not defined\n"),
+    {
+#if defined(HAVE_ICONV)
+        if(set_iconv_cp(name))
+#endif /*defined(HAVE_ICONV)*/
+            logmsg(_("HHCCF051E CodePage conversion table %s is not defined\n"),
                  name);
+    }
+}
+
+
+unsigned char host_to_guest (unsigned char byte)
+{
+#if defined(HAVE_ICONV)
+char obyte;
+char *gbyte = &obyte;
+char *hbyte = &byte;
+size_t inbytes = 1, outbytes = 1;
+
+    if(codepage_h2g)
+    {
+        iconv(codepage_h2g, &hbyte, &inbytes, &gbyte, &outbytes);
+        return obyte;
+    }
+    else
+#endif /*defined(HAVE_ICONV)*/
+        return codepage_conv->h2g[byte];
+}
+
+
+unsigned char guest_to_host (unsigned char byte)
+{
+#if defined(HAVE_ICONV)
+char obyte;
+char *hbyte = &obyte;
+char *gbyte = &byte;
+size_t inbytes = 1, outbytes = 1;
+
+    if(codepage_g2h)
+    {
+        iconv(codepage_g2h, &gbyte, &inbytes, &hbyte, &outbytes);
+        return obyte;
+    }
+    else
+#endif /*defined(HAVE_ICONV)*/
+        return codepage_conv->g2h[byte];
 }

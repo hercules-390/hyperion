@@ -1,11 +1,15 @@
 /* SOCKDEV.C    (c) Copyright Hercules development, 2003             */
 /*              Socketdevice support                                 */
-/*                                                                   */
 
 #include "hercules.h"
 
 #include "opcode.h"
 
+
+#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32)
+extern SYSBLK *psysblk;
+ #define sysblk (*psysblk)
+#endif
 
 /*===================================================================*/
 /*              S o c k e t  D e v i c e s ...                       */
@@ -24,7 +28,7 @@
 static LIST_ENTRY  bind_head;      /* (bind_struct list anchor) */
 static LOCK        bind_lock;      /* (lock for accessing list) */
 
-void init_sockdev()
+static void init_sockdev()
 {
     InitializeListHead(&bind_head);
     initialize_lock(&bind_lock);
@@ -430,6 +434,7 @@ int rc;
 }
 
 
+static int sockdev_init_done = 0;
 /*-------------------------------------------------------------------*/
 /* bind_device   bind a device to a socket (adds entry to our list   */
 /*               of bound devices) (1=success, 0=failure)            */
@@ -437,6 +442,12 @@ int rc;
 int bind_device (DEVBLK* dev, char* spec)
 {
     bind_struct* bs;
+
+    if(!sockdev_init_done)
+    {
+        init_sockdev();
+        sockdev_init_done = 1;
+    }
 
     logdebug("bind_device (%4.4X, %s)\n", dev->devnum, spec);
 

@@ -1,9 +1,7 @@
 /* HDL.C        (c) Copyright Jan Jaeger, 2003                       */
 /*              Hercules Dynamic Loader                              */
 
-
 #include "hercules.h"
-
 
 
 #if defined(OPTION_DYNAMIC_LOAD)
@@ -22,7 +20,8 @@ static HDLDEP *hdl_depend;               /* Version codes in hdlmain */
 static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
 
 
-/* Add shutdown call */
+/* hdl_adsc - add shutdown call
+ */
 void hdl_adsc (void * shdcall, void * shdarg)
 {
 HDLSHD *newcall;
@@ -35,8 +34,9 @@ HDLSHD *newcall;
 }
 
 
-/* Remove shutdown call */
-int hdl_rmsc(void *shdcall, void *shdarg)
+/* hdl_rmsc - remove shutdown call
+ */
+int hdl_rmsc (void *shdcall, void *shdarg)
 {
 HDLSHD **tmpcall;
 
@@ -56,8 +56,9 @@ HDLSHD **tmpcall;
 }
     
 
-/* Call all shutdown call entries in LIFO order */
-void hdl_shut(void)
+/* hdl_shut - call all shutdown call entries in LIFO order
+ */
+void hdl_shut (void)
 {
 HDLSHD *shdent;
 
@@ -74,8 +75,98 @@ HDLSHD *shdent;
 #if defined(OPTION_DYNAMIC_LOAD)
 
 
-/* hdl_list - list all entry points */
-void hdl_list()
+/* hdl_dvad - register device type
+ */
+void hdl_dvad (char *devname, DEVHND *devhnd)
+{
+HDLDEV *newhnd;
+
+    newhnd = malloc(sizeof(HDLDEV));
+    newhnd->name = strdup(devname);
+    newhnd->hnd = devhnd;
+    newhnd->next = hdl_cdll->hndent;
+    hdl_cdll->hndent = newhnd;
+}
+
+
+/* hdl_fhnd - find registered device handler
+ */
+static DEVHND * hdl_fhnd (char *devname)
+{
+DLLENT *dllent;
+HDLDEV *hndent;
+
+    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+    {
+        for(hndent = dllent->hndent; hndent; hndent = hndent->next)
+        {
+            if(!strcmp(devname,hndent->name))
+            {
+                return hndent->hnd;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+
+/* hdl_bdnm - build device module name
+ */
+static char * hdl_bdnm (char *ltype)
+{
+char *dtname;
+unsigned int n;
+
+    dtname = malloc(strlen(ltype) + sizeof(HDL_HDTP_Q));
+    strcpy(dtname,HDL_HDTP_Q);
+    strcat(dtname,ltype);
+
+    for(n = 0; n < strlen(dtname); n++)
+        if(isupper(dtname[n]))
+            dtname[n] = tolower(dtname[n]);
+
+    return dtname;
+}
+
+
+/* hdl_ghnd - obtain device handler
+ */
+DEVHND * hdl_ghnd (char *devtype)
+{
+DEVHND *hnd;
+char *hdtname;
+char *ltype;
+
+    if((hnd = hdl_fhnd(devtype)))
+        return hnd;
+
+    hdtname = hdl_bdnm(devtype);
+
+    if(hdl_load(hdtname,HDL_LOAD_NOMSG) || !hdl_fhnd(devtype))
+    {
+        if(hdl_device_type_equates)
+        {
+            if((ltype = hdl_device_type_equates(devtype)))
+            {
+                free(hdtname);
+
+                hdtname = hdl_bdnm(ltype);
+
+                hdl_load(hdtname,HDL_LOAD_NOMSG);
+            }
+        }
+    }
+
+    free(hdtname);
+
+    return hdl_fhnd(devtype);
+}
+
+
+/* hdl_list - list all entry points
+ */
+void hdl_list (int flags)
 {
 DLLENT *dllent;
 MODENT *modent;
@@ -98,21 +189,33 @@ MODENT *modent;
         logmsg("\n");
 
         for(modent = dllent->modent; modent; modent = modent->modnext)
+            if((flags & HDL_LIST_ALL) 
+              || !((dllent->flags & HDL_LOAD_MAIN) && !modent->fep))
+            {
+                logmsg(" symbol = %s",modent->name);
+//              logmsg(", ep = %p",modent->fep);
+                if(modent->fep)
+                    logmsg(", loadcount = %d",modent->count);
+                else
+                    logmsg(", unresolved");
+                logmsg(", owner = %s\n",dllent->name);
+            }
+
+        if(dllent->hndent)
         {
-            logmsg(" symbol = %s",modent->name);
-//          logmsg(", ep = %p",modent->fep);
-            if(modent->fep)
-                logmsg(", loadcount = %d",modent->count);
-            else
-                logmsg(", unresolved");
-            logmsg(", owner = %s\n",modent->dllent->name);
+        HDLDEV *hndent;
+            logmsg(" devtype =");
+            for(hndent = dllent->hndent; hndent; hndent = hndent->next)
+                logmsg(" %s",hndent->name);
+            logmsg("\n");
         }
     }
 }
 
 
-/* hdl_list - list all dependencies */
-void hdl_dlst()
+/* hdl_dlst - list all dependencies
+ */
+void hdl_dlst (void)
 {
 HDLDEP *depent;
 
@@ -124,8 +227,9 @@ HDLDEP *depent;
 }
 
 
-/* hdl_dadd - add depency */
-static int hdl_dadd(char *name, char *version, int size)
+/* hdl_dadd - add depency
+ */
+static int hdl_dadd (char *name, char *version, int size)
 {
 HDLDEP **newdep;
 
@@ -143,8 +247,9 @@ HDLDEP **newdep;
 }
 
 
-/* hdl_dchk - depency check */
-static int hdl_dchk(char *name, char *version, int size)
+/* hdl_dchk - depency check
+ */
+static int hdl_dchk (char *name, char *version, int size)
 {
 HDLDEP *depent;
 
@@ -177,8 +282,9 @@ HDLDEP *depent;
 }
 
 
-/* hdl_fent - find entry point */
-void * hdl_fent(char *name)
+/* hdl_fent - find entry point
+ */
+void * hdl_fent (char *name)
 {
 DLLENT *dllent;
 MODENT *modent;
@@ -213,9 +319,6 @@ void *fep;
             modent->name = strdup(name);
             modent->count = 1;
 
-            /* Owning dll */
-            modent->dllent = dllent;
-
             /* Insert current entry as first in chain */
             modent->modnext = dllent->modent;
             dllent->modent = modent;
@@ -229,8 +332,9 @@ void *fep;
 }
 
 
-/* hdl_fnxt - find next entry point in chain */
-void * hdl_nent(void *fep)
+/* hdl_nent - find next entry point in chain
+ */
+void * hdl_nent (void *fep)
 {
 DLLENT *dllent;
 MODENT *modent = NULL;
@@ -277,8 +381,9 @@ char   *name;
 }
 
 
-/* hdl_regi - register entry point */
-static void hdl_regi(char *name, void *fep)
+/* hdl_regi - register entry point
+ */
+static void hdl_regi (char *name, void *fep)
 {
 MODENT *modent;
 
@@ -288,10 +393,6 @@ MODENT *modent;
     modent->name = strdup(name);
     modent->count = 0;
 
-    /* Owning dll */
-    modent->dllent = hdl_cdll;
-
-    /* Insert current entry as first in chain */
     modent->modnext = hdl_cdll->modent;
     hdl_cdll->modent = modent;
 
@@ -300,7 +401,7 @@ MODENT *modent;
 
 /* hdl_term - hercules termination
  */
-static void hdl_term(void *unused __attribute__ ((unused)) )
+static void hdl_term (void *unused __attribute__ ((unused)) )
 {
 DLLENT *dllent;
 
@@ -315,7 +416,7 @@ DLLENT *dllent;
 
 /* hdl_main - initialize hercules dynamic loader
  */
-void hdl_main()
+void hdl_main (void)
 {
 HDLPRE *preload;
 
@@ -348,19 +449,17 @@ HDLPRE *preload;
         exit(1);
     }
 
-    if(!(hdl_cdll->hdlinit = dlsym(hdl_cdll->dll,HDL_INIT_Q)))
-    {
-        fprintf(stderr, _("HHCHD004I No registration section in %s: %s\n"),
-          hdl_cdll->name, dlerror());
-        exit(1);
-    }
+    hdl_cdll->hdlinit = dlsym(hdl_cdll->dll,HDL_INIT_Q);
 
     hdl_cdll->hdlreso = dlsym(hdl_cdll->dll,HDL_RESO_Q);
 
+    hdl_cdll->hdlddev = dlsym(hdl_cdll->dll,HDL_DDEV_Q);
+
     hdl_cdll->hdlfini = dlsym(hdl_cdll->dll,HDL_FINI_Q);
 
-    /* No modules registered yet */
+    /* No modules or device types registered yet */
     hdl_cdll->modent = NULL;
+    hdl_cdll->hndent = NULL;
 
     /* No dll's loaded yet */
     hdl_cdll->dllnext = NULL;
@@ -376,6 +475,9 @@ HDLPRE *preload;
     if(hdl_cdll->hdlreso)
         (hdl_cdll->hdlreso)(&hdl_fent);
 
+    if(hdl_cdll->hdlddev)
+        (hdl_cdll->hdlddev)(&hdl_dvad);
+
     release_lock(&hdl_lock);
 
     /* Register termination exit */
@@ -388,7 +490,7 @@ HDLPRE *preload;
 
 /* hdl_load - load a dll
  */
-int hdl_load(char *name,int flags)
+int hdl_load (char *name,int flags)
 {
 DLLENT *dllent, *tmpdll;
 MODENT *modent;
@@ -447,25 +549,17 @@ char *modname;
     }
 
 
-    if(!(dllent->hdlinit = dlsym(dllent->dll,HDL_INIT_Q)))
-    {
-        logmsg(_("HHCHD008I No registration section in %s: %s\n"),
-          dllent->name, dlerror());
-        if(!(flags & HDL_LOAD_FORCE))
-        {
-            dlclose(dllent->dll);
-            free(dllent);
-            return -1;
-        }
-        dllent->flags |= HDL_LOAD_WAS_FORCED;
-    }
+    dllent->hdlinit = dlsym(dllent->dll,HDL_INIT_Q);
 
     dllent->hdlreso = dlsym(dllent->dll,HDL_RESO_Q);
 
+    dllent->hdlddev = dlsym(dllent->dll,HDL_DDEV_Q);
+
     dllent->hdlfini = dlsym(dllent->dll,HDL_FINI_Q);
 
-    /* No modules registered yet */
+    /* No modules or device types registered yet */
     dllent->modent = NULL;
+    dllent->hndent = NULL;
 
     obtain_lock(&hdl_lock);
 
@@ -489,7 +583,8 @@ char *modname;
     hdl_cdll = dllent;
 
     /* Call initializer */
-    (dllent->hdlinit)(&hdl_regi);
+    if(hdl_cdll->hdlinit)
+        (dllent->hdlinit)(&hdl_regi);
 
     /* Insert current entry as first in chain */
     dllent->dllnext = hdl_dll;
@@ -507,6 +602,10 @@ char *modname;
             (dllent->hdlreso)(&hdl_fent);
     }
 
+    /* register any device types */
+    if(hdl_cdll->hdlddev)
+        (hdl_cdll->hdlddev)(&hdl_dvad);
+
     hdl_cdll = NULL;
 
     release_lock(&hdl_lock);
@@ -517,10 +616,12 @@ char *modname;
 
 /* hdl_dele - unload a dll
  */
-int hdl_dele(char *name)
+int hdl_dele (char *name)
 {
 DLLENT **dllent, *tmpdll;
 MODENT *modent, *tmpmod;
+DEVBLK *dev;
+HDLDEV *hnd;
 char *modname;
 
     modname = (modname = strrchr(name,'/')) ? modname+1 : name;
@@ -534,9 +635,20 @@ char *modname;
             if((*dllent)->flags & (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD))
             {
                 logmsg(_("HHCHD015E Unloading of %s not allowed\n"),(*dllent)->name);
+                release_lock(&hdl_lock);
                 return -1;
             }
-           
+
+            for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
+                if(dev->pmcw.flag5 & PMCW5_V)
+                    for(hnd = (*dllent)->hndent; hnd; hnd = hnd->next)
+                        if(hnd->hnd == dev->hnd)
+                        {
+                            logmsg(_("HHCHD008E Device %4.4X bound to %s\n"),dev->devnum,(*dllent)->name);
+                            release_lock(&hdl_lock);
+                            return -1;
+                        }
+
             /* Call dll close routine */
             if((*dllent)->hdlfini)
             {
@@ -545,6 +657,7 @@ char *modname;
                 if((rc = ((*dllent)->hdlfini)()))
                 {
                     logmsg(_("HHCHD017E Unload of %s rejected by final section\n"),(*dllent)->name);
+                    release_lock(&hdl_lock);
                     return rc;
                 }
             }
@@ -566,6 +679,15 @@ char *modname;
 
             /* remove current entry from chain */
             *dllent = (*dllent)->dllnext;
+
+            for(hnd = tmpdll->hndent; hnd;)
+            {
+            HDLDEV *nexthnd;
+                free(hnd->name);
+                nexthnd = hnd->next;
+                free(hnd);
+                hnd = nexthnd;
+            }
 
 //          dlclose(tmpdll->dll);
 

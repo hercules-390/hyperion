@@ -222,7 +222,6 @@ TID     rctid;                          /* RC file thread identifier */
     /* Process the command line options */
     while ((c = getopt(argc, argv, "f:l:d")) != EOF)
     {
-    char *dllname, *strtok_str;
 
         switch (c) {
         case 'f':
@@ -230,10 +229,13 @@ TID     rctid;                          /* RC file thread identifier */
             break;
 #if defined(OPTION_DYNAMIC_LOAD)
         case 'l':
-            for(dllname = strtok_r(optarg,", ",&strtok_str);
-                dllname;
-                dllname = strtok_r(NULL,", ",&strtok_str))
-                hdl_load(dllname, HDL_LOAD_DEFAULT);
+            {
+            char *dllname, *strtok_str;
+                for(dllname = strtok_r(optarg,", ",&strtok_str);
+                    dllname;
+                    dllname = strtok_r(NULL,", ",&strtok_str))
+                    hdl_load(dllname, HDL_LOAD_DEFAULT);
+            }
             break;
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
         case 'd':

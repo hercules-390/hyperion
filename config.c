@@ -53,7 +53,6 @@ typedef struct _DEVARRAY
     U16 cuu2;
 } DEVARRAY;
 
-extern DEVENT device_handler_table[];
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -403,7 +402,7 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
     return(gcount);
 }
 
-extern char *console_cnslport;
+char *config_cnslport = "3270";
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
@@ -630,7 +629,7 @@ BYTE **orig_newargv;
             smodel = operand;
             smainsize = addargv[0];
             sxpndsize = addargv[1];
-            console_cnslport = strdup(addargv[2]);
+            config_cnslport = strdup(addargv[2]);
             snumcpu = addargv[3];
             sloadparm = addargv[4];
         }
@@ -666,7 +665,7 @@ BYTE **orig_newargv;
             }
             else if (strcasecmp (keyword, "cnslport") == 0)
             {
-                console_cnslport = strdup(operand);
+                config_cnslport = strdup(operand);
             }
             else if (strcasecmp (keyword, "numcpu") == 0)
             {
@@ -1414,7 +1413,6 @@ BYTE **orig_newargv;
     sysblk.devtwait = sysblk.devtnbr =
     sysblk.devthwm  = sysblk.devtunavail = 0;
 #endif // defined(OPTION_FISHIO)
-    init_sockdev();
 
     /* Set up the system TOD clock offset: compute the number of
        seconds from the designated year to 1970 for TOD clock
@@ -1748,80 +1746,48 @@ int deconfigure_cpu(REGS *regs)
 } /* end function deconfigure_cpu */
 
 
-/*-------------------------------------------------------------------*/
-/* Function to build a device configuration block                    */
-/*-------------------------------------------------------------------*/
-int attach_device (U16 devnum, char *type,
-                   int addargc, BYTE *addargv[])
+DEVBLK *get_devblk(U16 devnum)
 {
-DEVBLK *dev;                            /* -> Device block           */
-DEVBLK**dvpp;                           /* -> Device block address   */
-DEVENT *devent = device_handler_table;
-int     rc;                             /* Return code               */
-int     newdevblk = 0;                  /* 1=Newly created devblk    */
+DEVBLK *dev;
+DEVBLK**dvpp;
 
-    /* Check whether device number has already been defined */
-    if (find_device_by_devnum(devnum) != NULL)
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        if (!(dev->pmcw.flag5 & PMCW5_V)) break;
+
+    if(!dev)
     {
-        logmsg (_("HHCCF041E Device %4.4X already exists\n"), devnum);
-        return 1;
-    }
-
-    for(;devent->hnd;devent++)
-        if(!strcasecmp(devent->name, type))
-            break;
-
-    if(!devent->hnd)
-    {
-        logmsg (_("HHCCF042E Device type %s not recognized\n"),
-                type);
-        return 1;
-    }
-
-    /* Attempt to reuse an existing device block */
-    dev = find_unused_device();
-
-    /* If no device block is available, create a new one */
-    if (dev == NULL)
-    {
-        /* Obtain a device block */
-        dev = (DEVBLK*)malloc(sizeof(DEVBLK));
-        if (dev == NULL)
+        if (!(dev = (DEVBLK*)malloc(sizeof(DEVBLK))))
         {
-            logmsg (_("HHCCF043E Cannot obtain device block "
-                    "for device %4.4X: %s\n"),
-                    devnum, strerror(errno));
-            return 1;
+            logmsg (_("HHCCF043E Cannot obtain device block\n"),
+                    strerror(errno));
+            return NULL;
         }
         memset (dev, 0, sizeof(DEVBLK));
-
-        /* Indicate a newly allocated devblk */
-        newdevblk = 1;
 
         /* Initialize the device lock and conditions */
         initialize_lock (&dev->lock);
         initialize_condition (&dev->resumecond);
         initialize_condition (&dev->iocond);
 
-        /* Assign new subchannel number */
-        dev->subchan = sysblk.highsubchan++;
-        /* Note : highsubchan incremented NOW otherwise new DEVBLKS
-         * allocated by some init handlers (LCS for example) flunk */
+        /* Search for the last device block on the chain */
+        for (dvpp = &(sysblk.firstdev); *dvpp != NULL;
+            dvpp = &((*dvpp)->nextdev));
 
+        /* Add the new device block to the end of the chain */
+        *dvpp = dev;
+
+        dev->subchan = sysblk.highsubchan++;
     }
 
-    /* Obtain the device lock */
-    obtain_lock(&dev->lock);
-
     /* Initialize the device block */
-    dev->hnd = devent->hnd;
+    obtain_lock (&dev->lock);
+
     dev->cpuprio = sysblk.cpuprio;
+    dev->hnd = NULL;
     dev->devnum = devnum;
     dev->chanset = devnum >> 12;
     if( dev->chanset >= MAX_CPU_ENGINES )
         dev->chanset = MAX_CPU_ENGINES - 1;
-    dev->devtype = devent->type;
-    dev->typname = devent->name;
     dev->fd = -1;
     dev->ioint.dev = dev;
     dev->ioint.pending = 1;
@@ -1847,22 +1813,61 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     dev->shrdwait = -1;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
+    /* Mark device valid */
+    dev->pmcw.flag5 |= PMCW5_V;
+
+#ifdef _FEATURE_CHANNEL_SUBSYSTEM
+    /* Indicate a CRW is pending for this device */
+    dev->crwpending = 1;
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
+
+    return dev;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Function to build a device configuration block                    */
+/*-------------------------------------------------------------------*/
+int attach_device (U16 devnum, char *type,
+                   int addargc, BYTE *addargv[])
+{
+DEVBLK *dev;                            /* -> Device block           */
+int     rc;                             /* Return code               */
+
+    /* Check whether device number has already been defined */
+    if (find_device_by_devnum(devnum) != NULL)
+    {
+        logmsg (_("HHCCF041E Device %4.4X already exists\n"), devnum);
+        return 1;
+    }
+
+    /* obtain device block */
+    dev = get_devblk(devnum);
+
+    if(!(dev->hnd = hdl_ghnd(type)))
+    {
+        logmsg (_("HHCCF042E Device type %s not recognized\n"), type);
+        /* Mark device invalid */
+        dev->pmcw.flag5 &= ~PMCW5_V;
+        release_lock(&dev->lock);
+
+        return 1;
+    }
+
+    dev->typname = strdup(type);
+
     /* Call the device handler initialization function */
     rc = (dev->hnd->init)(dev, addargc, addargv);
+
     if (rc < 0)
     {
         logmsg (_("HHCCF044E Initialization failed for device %4.4X\n"),
                 devnum);
-        release_lock(&dev->lock);
 
-        /* Release the device block if we just acquired it */
-        if (newdevblk)
-        {
-            free(dev);
-        /* Correction to high subchannel # (needed because of LCS
-         * DEVBLK allocation strategy) */
-            sysblk.highsubchan--;
-        }
+        free(dev->typname);
+        /* Mark device invalid */
+        dev->pmcw.flag5 &= ~PMCW5_V;
+        release_lock(&dev->lock);
 
         return 1;
     }
@@ -1876,50 +1881,14 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
             logmsg (_("HHCCF045E Cannot obtain buffer "
                     "for device %4.4X: %s\n"),
                     dev->devnum, strerror(errno));
-            release_lock(&dev->lock);
 
-            /* Release the device block if we just acquired it */
-            if (newdevblk)
-            {
-                free(dev);
-            /* Correction to high subchannel # (needed because of LCS
-             * DEVBLK allocation strategy) */
-                sysblk.highsubchan--;
-            }
-            if(newdevblk)
-                free(dev);
+            /* Mark device invalid */
+            dev->pmcw.flag5 &= ~PMCW5_V;
+            release_lock(&dev->lock);
 
             return 1;
         }
     }
-
-    /* If we acquired a new device block, add it to the chain */
-    if (newdevblk)
-    {
-        /* Search for the last device block on the chain */
-        for (dvpp = &(sysblk.firstdev); *dvpp != NULL;
-                dvpp = &((*dvpp)->nextdev));
-
-        /* Add the new device block to the end of the chain */
-        *dvpp = dev;
-        dev->nextdev = NULL;
-
-        /* Increase highest subchannel number */
-        /*
-         * Commented out - highsubchan already corrected
-         * (needed because LCS device generate some DEVBLKS
-         * from within the dev init handler)
-        sysblk.highsubchan++;
-        */
-    }
-
-    /* Mark device valid */
-    dev->pmcw.flag5 |= PMCW5_V;
-
-#ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    /* Indicate a CRW is pending for this device */
-    dev->crwpending = 1;
-#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Release device lock */
     release_lock(&dev->lock);
@@ -1964,6 +1933,8 @@ DEVBLK *dev;                            /* -> Device block           */
     if ((dev->fd > 2) || dev->console)
         /* Call the device close handler */
         (dev->hnd->close)(dev);
+
+    free(dev->typname);
 
     /* Release device lock */
     release_lock(&dev->lock);
@@ -2033,21 +2004,6 @@ DEVBLK *dev;                            /* -> Device block           */
 
     return 0;
 } /* end function define_device */
-
-
-/*-------------------------------------------------------------------*/
-/* Function to find an unused device block entry                     */
-/*-------------------------------------------------------------------*/
-DEVBLK *find_unused_device ()
-{
-DEVBLK *dev;
-
-    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (!(dev->pmcw.flag5 & PMCW5_V)) break;
-
-    return dev;
-
-} /* end function find_unused_device */
 
 
 /*-------------------------------------------------------------------*/

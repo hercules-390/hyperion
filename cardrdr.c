@@ -10,6 +10,13 @@
 
 #include "devtype.h"
 
+#include "sockdev.h"
+
+#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32)
+ SYSBLK *psysblk;
+ #define sysblk (*psysblk)
+#endif
+
 /*-------------------------------------------------------------------*/
 /* ISW 2003/03/07                                                    */
 /* 3505 Byte 1 Sense Codes                                           */
@@ -54,6 +61,9 @@ int     fc;                             /* File counter              */
     dev->cardpos = 0;
     dev->cardrem = 0;
     dev->autopad = 0;
+
+    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
+        dev->devtype = 0x2501;
 
     fc = 0;
 
@@ -859,6 +869,9 @@ int     num;                            /* Number of bytes to move   */
 } /* end function cardrdr_execute_ccw */
 
 
+#if defined(OPTION_DYNAMIC_LOAD)
+static
+#endif
 DEVHND cardrdr_device_hndinfo = {
         &cardrdr_init_handler,
         &cardrdr_execute_ccw,
@@ -866,3 +879,33 @@ DEVHND cardrdr_device_hndinfo = {
         &cardrdr_query_device,
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
+
+
+#if defined(OPTION_DYNAMIC_LOAD)
+HDL_DEPENDENCY_SECTION;
+{
+     HDL_DEPENDENCY(HERCULES);
+     HDL_DEPENDENCY(DEVBLK);
+     HDL_DEPENDENCY(SYSBLK);
+}
+END_DEPENDENCY_SECTION;
+
+
+#if defined(WIN32)
+#undef sysblk
+HDL_RESOLVER_SECTION;
+{
+    HDL_RESOLVE_PTRVAR( psysblk, sysblk );
+}
+END_RESOLVER_SECTION;
+#endif
+
+
+HDL_DEVICE_SECTION;
+{
+    HDL_DEVICE(1442, cardrdr_device_hndinfo );
+    HDL_DEVICE(2501, cardrdr_device_hndinfo );
+    HDL_DEVICE(3505, cardrdr_device_hndinfo );
+}
+END_DEVICE_SECTION;
+#endif
