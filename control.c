@@ -3305,11 +3305,11 @@ int     rc;                             /* return code from load_psw */
 
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
-/* B228 PT    - Program Transfer                               [RRE] */
+/* Common processing routine for the PT and PTI instructions         */
 /*-------------------------------------------------------------------*/
-DEF_INST(program_transfer)
+void ARCH_DEP(program_transfer_proc) (REGS *regs,
+        int r1, int r2, int pti_instruction)
 {
-int     r1, r2;                         /* Values of R fields        */
 U16     pkm;                            /* New program key mask      */
 U16     pasn;                           /* New primary ASN           */
 U16     oldpasn;                        /* Old primary ASN           */
@@ -3450,6 +3450,32 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         if (xcode != 0)
             ARCH_DEP(program_interrupt) (regs, xcode);
 
+        /* For PT-ss only, generate a special operation exception 
+           if ASN-and-LX-reuse is enabled and the reusable-ASN bit 
+           in the ASTE is one */
+        if (pti_instruction == 0 && ASN_AND_LX_REUSE_ENABLED(regs)
+            && (aste[1] & ASTE1_RA) != 0)
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+        } /* end if (PT && ASN_AND_LX_REUSE_ENABLED && ASTE1_RA) */
+
+        /* For PTI-ss only, generate a special operation exception
+           if the controlled-ASN bit in the ASTE is one and the CPU
+           was in problem state at the beginning of the operation */
+        if (pti_instruction && (aste[1] & ASTE1_CA) != 0
+            && PROBSTATE(&regs->psw))
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+        } /* end if (PT && ASTE1_CA && PROBSTATE) */
+
+        /* For PTI-ss only, generate an ASTE instance exception
+           if the ASTEIN in bits 0-31 of the R1 register does
+           not equal the ASTEIN in the ASTE */
+        if (pti_instruction && aste[11] != regs->GR_H(r1)) 
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_ASTE_INSTANCE_EXCEPTION);
+        } /* end if (PT && ASTE11_ASTEIN != GR_H(r1)) */
+
         /* Perform primary address space authorization
            using current authorization index */
         ax = regs->CR_LHH(4);
@@ -3489,10 +3515,17 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->CR_L(5) = ASF_ENABLED(regs) ?
                                 pasteo : ASTE_LT_DESIGNATOR(aste);
 
-    } /* end if(PT-ss) */
+        /* For PTI-ss, and for PT-ss when ASN-and-LX-reuse is enabled,
+           load the new PASTEIN into CR4 from ASTE11_ASTEIN */
+        if (pti_instruction || ASN_AND_LX_REUSE_ENABLED(regs))
+        {
+            regs->CR_H(4) = aste[11];
+        } /* end if (pti_instruction || ASN_AND_LX_REUSE_ENABLED) */
+
+    } /* end if(PT-ss or PTI-ss) */
     else
     {
-        /* For PT-cp use current primary STD or ASCE */
+        /* For PT-cp or PTI-cp use current primary STD or ASCE */
         pstd = regs->CR(1);
     }
 
@@ -3531,6 +3564,13 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     regs->CR_LHH(3) &= pkm;
     regs->CR_LHL(3) = pasn;
 
+    /* For PTI, and also for PT when ASN-and-LX-reuse is enabled,
+       set the SASTEIN in CR3 equal to the new PASTEIN in CR4 */
+    if (pti_instruction || ASN_AND_LX_REUSE_ENABLED(regs))
+    {
+        regs->CR_H(3) = regs->CR_H(4);
+    } /* end if (pti_instruction || ASN_AND_LX_REUSE_ENABLED) */
+
     /* Set secondary STD or ASCE equal to new primary STD or ASCE */
     regs->CR(7) = pstd;
 
@@ -3556,7 +3596,21 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-}
+} /* end ARCH_DEP(program_transfer_proc) */
+
+
+/*-------------------------------------------------------------------*/
+/* B228 PT    - Program Transfer                               [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(program_transfer)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+
+    ARCH_DEP(program_transfer_proc) (regs, r1, r2, 0);
+
+} /* end DEF_INST(program_transfer) */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
@@ -3566,11 +3620,13 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 /*-------------------------------------------------------------------*/
 DEF_INST(program_transfer_with_instance)
 {
-  int r1, r2;                           /* Values of R fields        */
+int     r1, r2;                         /* Values of R fields        */
 
-  RRE(inst, regs, r1, r2);
-  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
-}
+    RRE(inst, regs, r1, r2);
+
+    ARCH_DEP(program_transfer_proc) (regs, r1, r2, 1);
+
+} /* end DEF_INST(program_transfer_with_instance) */
 #endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
 
 
