@@ -13,6 +13,8 @@
 
 #include "hercules.h"
 
+#include "devtype.h"
+
 /*-------------------------------------------------------------------*/
 /* Bit definitions for Define Extent file mask                       */
 /*-------------------------------------------------------------------*/
@@ -853,3 +855,11 @@ int     blkfactor;                      /* Number of device blocks
     *residual = 0;
 
 } /* end function fbadasd_syncblk_io */
+
+
+DEVHND fbadasd_device_hndinfo = {
+        &fbadasd_init_handler,
+        &fbadasd_execute_ccw,
+        &fbadasd_close_device,
+        &fbadasd_query_device
+};

@@ -210,6 +210,8 @@
 
 #include "hercules.h"
 
+#include "devtype.h"
+
 #ifdef linux
 #include "if_tun.h"
 #endif
@@ -3118,3 +3120,10 @@ BYTE            opcode;                 /* CCW opcode with modifier
 
 } /* end function ctcadpt_execute_ccw */
 
+
+DEVHND ctcadpt_device_hndinfo = {
+        &ctcadpt_init_handler,
+        &ctcadpt_execute_ccw,
+        &ctcadpt_close_device,
+        &ctcadpt_query_device
+};

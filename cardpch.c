@@ -8,6 +8,8 @@
 
 #include "hercules.h"
 
+#include "devtype.h"
+
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
@@ -291,3 +293,10 @@ BYTE            c;                      /* Output character          */
 
 } /* end function cardpch_execute_ccw */
 
+
+DEVHND cardpch_device_hndinfo = {
+        &cardpch_init_handler,
+        &cardpch_execute_ccw,
+        &cardpch_close_device,
+        &cardpch_query_device
+};

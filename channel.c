@@ -19,6 +19,8 @@
 
 #include "hercules.h"
 
+#include "devtype.h"
+
 #include "opcode.h"
 
 #if defined(OPTION_FISHIO)
@@ -1750,7 +1752,6 @@ BYTE    tic = 0;                        /* Previous CCW was a TIC    */
 BYTE    chain = 1;                      /* 1=Chain to next CCW       */
 BYTE    tracethis = 0;                  /* 1=Trace this CCW only     */
 BYTE    area[64];                       /* Message area              */
-DEVXF  *devexec;                        /* -> Execute CCW function   */
 int     bufpos = 0;                     /* Position in I/O buffer    */
 BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 #ifdef OPTION_SYNCIO
@@ -1773,9 +1774,6 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
         /* Page size is always 2K for format-1 IDAW */         /*@IWZ*/
         idapmask = 0x7FF;                                      /*@IWZ*/
     }                                                          /*@IWZ*/
-
-    /* Point to the device handler for this device */
-    devexec = dev->devexec;
 
     /* Turn off the start pending bit in the SCSW */
     dev->scsw.flag2 &= ~SCSW2_AC_START;
@@ -2381,7 +2379,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
 #ifdef OPTION_SYNCIO
         retry = dev->syncio_retry;
 #endif
-        (*devexec) (dev, dev->code, flags, dev->chained, count, dev->prevcode,
+        (dev->hnd->exec) (dev, dev->code, flags, dev->chained, count, dev->prevcode,
                     dev->ccwseq, iobuf, &more, &unitstat, &residual);
 #ifdef OPTION_SYNCIO
         if (retry) dev->syncio_retry = 0;

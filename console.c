@@ -46,6 +46,8 @@
 
 #include "hercules.h"
 
+#include "devtype.h"
+
 #include "opcode.h"
 
 /*-------------------------------------------------------------------*/
@@ -2285,3 +2287,19 @@ BYTE    stat;                           /* Unit status               */
     } /* end switch(code) */
 
 } /* end function constty_execute_ccw */
+
+
+DEVHND constty_device_hndinfo = {
+        &constty_init_handler,
+        &constty_execute_ccw,
+        &constty_close_device,
+        &constty_query_device
+};
+
+
+DEVHND loc3270_device_hndinfo = {
+        &loc3270_init_handler,
+        &loc3270_execute_ccw,
+        &loc3270_close_device,
+        &loc3270_query_device
+};

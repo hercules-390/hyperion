@@ -298,6 +298,7 @@ typedef void DEVXF (struct _DEVBLK *dev, BYTE code, BYTE flags,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual);
 typedef int DEVCF (struct _DEVBLK *dev);
 
+
 /*-------------------------------------------------------------------*/
 /* Structure definition for the Vector Facility                      */
 /*-------------------------------------------------------------------*/
@@ -845,6 +846,7 @@ typedef struct _bind_struct
 }
 bind_struct;
 
+struct _DEVDATA;                                /* Forward reference */
 /*-------------------------------------------------------------------*/
 /* Device configuration block                                        */
 /*-------------------------------------------------------------------*/
@@ -895,10 +897,7 @@ typedef struct _DEVBLK {
 
         /*  device handler function pointers...                      */
 
-        DEVIF  *devinit;                /* -> Init device function   */
-        DEVQF  *devqdef;                /* -> Query device function  */
-        DEVXF  *devexec;                /* -> Execute CCW function   */
-        DEVCF  *devclos;                /* -> Close device function  */
+        struct _DEVHND *hnd;            /* -> Device handlers        */
 
         /*  emulated architecture fields...   (MUST be aligned!)     */
 
@@ -1508,61 +1507,12 @@ void *timer_update_thread (void *argp);
 /* Functions in module service.c */
 void scp_command (BYTE *command, int priomsg);
 
-/* Functions in module cardrdr.c */
-DEVIF cardrdr_init_handler;
-DEVQF cardrdr_query_device;
-DEVXF cardrdr_execute_ccw;
-DEVCF cardrdr_close_device;
-
-/* Functions in module cardpch.c */
-DEVIF cardpch_init_handler;
-DEVQF cardpch_query_device;
-DEVXF cardpch_execute_ccw;
-DEVCF cardpch_close_device;
-
 /* Functions in module console.c */
 void *console_connection_handler (void *arg);
-DEVIF loc3270_init_handler;
-DEVQF loc3270_query_device;
-DEVXF loc3270_execute_ccw;
-DEVCF loc3270_close_device;
-DEVIF constty_init_handler;
-DEVQF constty_query_device;
-DEVXF constty_execute_ccw;
-DEVCF constty_close_device;
-
-/* Functions in module ctcadpt.c */
-DEVIF ctcadpt_init_handler;
-DEVQF ctcadpt_query_device;
-DEVXF ctcadpt_execute_ccw;
-DEVCF ctcadpt_close_device;
-
-/* Functions in module printer.c */
-DEVIF printer_init_handler;
-DEVQF printer_query_device;
-DEVXF printer_execute_ccw;
-DEVCF printer_close_device;
-
-/* Functions in module tapedev.c */
-DEVIF tapedev_init_handler;
-DEVQF tapedev_query_device;
-DEVXF tapedev_execute_ccw;
-DEVCF tapedev_close_device;
-
-/* Functions in module ckddasd.c */
-DEVIF   ckddasd_init_handler;
-DEVQF   ckddasd_query_device;
-DEVXF   ckddasd_execute_ccw;
-DEVCF   ckddasd_close_device;
 off_t   ckd_lseek (DEVBLK *, int, off_t, int);
 ssize_t ckd_read (DEVBLK *, int, void *, size_t);
 ssize_t ckd_write (DEVBLK *, int, const void *, size_t);
 
-/* Functions in module fbadasd.c */
-DEVIF fbadasd_init_handler;
-DEVQF fbadasd_query_device;
-DEVXF fbadasd_execute_ccw;
-DEVCF fbadasd_close_device;
 void fbadasd_syncblk_io (DEVBLK *dev, BYTE type, U32 blknum,
         U32 blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual);
 

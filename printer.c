@@ -8,6 +8,8 @@
 
 #include "hercules.h"
 
+#include "devtype.h"
+
 #include "opcode.h"
 
 /*-------------------------------------------------------------------*/
@@ -699,3 +701,11 @@ BYTE            c;                      /* Print character           */
     } /* end switch(code) */
 
 } /* end function printer_execute_ccw */
+
+
+DEVHND printer_device_hndinfo = {
+        &printer_init_handler,
+        &printer_execute_ccw,
+        &printer_close_device,
+        &printer_query_device
+};

@@ -25,6 +25,8 @@
 
 #include "hercules.h"
 
+#include "devtype.h"
+
 #include "opcode.h"
 
 #if !defined(_GEN_ARCH)
@@ -44,6 +46,8 @@
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"
 #endif // defined(OPTION_FISHIO)
+
+extern DEVENT device_handler_table[];
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -1268,10 +1272,7 @@ int attach_device (U16 devnum, U16 devtype,
 {
 DEVBLK *dev;                            /* -> Device block           */
 DEVBLK**dvpp;                           /* -> Device block address   */
-DEVIF  *devinit;                        /* -> Device init function   */
-DEVQF  *devqdef;                        /* -> Device query function  */
-DEVXF  *devexec;                        /* -> Device exec function   */
-DEVCF  *devclos;                        /* -> Device close function  */
+DEVENT *devent = device_handler_table;
 int     rc;                             /* Return code               */
 int     newdevblk = 0;                  /* 1=Newly created devblk    */
 
@@ -1282,89 +1283,12 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
         return 1;
     }
 
-    /* Determine which device handler to use for this device */
-    switch (devtype) {
+    for(;devent->hnd;devent++)
+        if(devent->type == devtype)
+            break;
 
-    case 0x1052:
-    case 0x3215:
-        devinit = &constty_init_handler;
-        devqdef = &constty_query_device;
-        devexec = &constty_execute_ccw;
-        devclos = &constty_close_device;
-        break;
-
-    case 0x1442:
-    case 0x2501:
-    case 0x3505:
-        devinit = &cardrdr_init_handler;
-        devqdef = &cardrdr_query_device;
-        devexec = &cardrdr_execute_ccw;
-        devclos = &cardrdr_close_device;
-        break;
-
-    case 0x3525:
-        devinit = &cardpch_init_handler;
-        devqdef = &cardpch_query_device;
-        devexec = &cardpch_execute_ccw;
-        devclos = &cardpch_close_device;
-        break;
-
-    case 0x1403:
-    case 0x3211:
-        devinit = &printer_init_handler;
-        devqdef = &printer_query_device;
-        devexec = &printer_execute_ccw;
-        devclos = &printer_close_device;
-        break;
-
-    case 0x3420:
-    case 0x3480:
-        devinit = &tapedev_init_handler;
-        devqdef = &tapedev_query_device;
-        devexec = &tapedev_execute_ccw;
-        devclos = &tapedev_close_device;
-        break;
-
-    case 0x2311:
-    case 0x2314:
-    case 0x3330:
-    case 0x3340:
-    case 0x3350:
-    case 0x3375:
-    case 0x3380:
-    case 0x3390:
-    case 0x9345:
-        devinit = &ckddasd_init_handler;
-        devqdef = &ckddasd_query_device;
-        devexec = &ckddasd_execute_ccw;
-        devclos = &ckddasd_close_device;
-        break;
-
-    case 0x0671:
-    case 0x3310:
-    case 0x3370:
-    case 0x9336:
-        devinit = &fbadasd_init_handler;
-        devqdef = &fbadasd_query_device;
-        devexec = &fbadasd_execute_ccw;
-        devclos = &fbadasd_close_device;
-        break;
-
-    case 0x3270:
-        devinit = &loc3270_init_handler;
-        devqdef = &loc3270_query_device;
-        devexec = &loc3270_execute_ccw;
-        devclos = &loc3270_close_device;
-        break;
-
-    case 0x3088:
-        devinit = &ctcadpt_init_handler;
-        devqdef = &ctcadpt_query_device;
-        devexec = &ctcadpt_execute_ccw;
-        devclos = &ctcadpt_close_device;
-        break;
-
-    default:
+    if(!devent->hnd)
+    {
         logmsg ("HHC036I Device type %4.4X not recognized\n",
                 devtype);
         return 1;
@@ -1403,16 +1327,13 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     obtain_lock(&dev->lock);
 
     /* Initialize the device block */
+    dev->hnd = devent->hnd;
     dev->msgpipew = sysblk.msgpipew;
     dev->devnum = devnum;
     dev->chanset = devnum >> 12;
     if( dev->chanset >= MAX_CPU_ENGINES )
         dev->chanset = MAX_CPU_ENGINES - 1;
     dev->devtype = devtype;
-    dev->devinit = devinit;
-    dev->devqdef = devqdef;
-    dev->devexec = devexec;
-    dev->devclos = devclos;
     dev->fd = -1;
 
     /* Initialize the path management control word */
@@ -1425,7 +1346,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     dev->pmcw.chpid[0] = dev->devnum >> 8;
 
     /* Call the device handler initialization function */
-    rc = (*devinit)(dev, addargc, addargv);
+    rc = (dev->hnd->init)(dev, addargc, addargv);
     if (rc < 0)
     {
         logmsg ("HHC038I Initialization failed for device %4.4X\n",
@@ -1521,7 +1442,7 @@ DEVBLK *dev;                            /* -> Device block           */
     if (dev->fd > 2)
     {
         /* Call the device close handler */
-        (*(dev->devclos))(dev);
+        (dev->hnd->close)(dev);
 
         /* Signal console thread to redrive select */
         if (dev->console)

@@ -8,6 +8,8 @@
 
 #include "hercules.h"
 
+#include "devtype.h"
+
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
@@ -795,3 +797,10 @@ int     num;                            /* Number of bytes to move   */
 
 } /* end function cardrdr_execute_ccw */
 
+
+DEVHND cardrdr_device_hndinfo = {
+        &cardrdr_init_handler,
+        &cardrdr_execute_ccw,
+        &cardrdr_close_device,
+        &cardrdr_query_device
+};

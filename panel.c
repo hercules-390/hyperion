@@ -31,6 +31,8 @@
 
 #include "hercules.h"
 
+#include "devtype.h"
+
 #include "opcode.h"
 
 #include "inline.h"
@@ -261,7 +263,7 @@ static void NP_screen(FILE *confp)
          fprintf(confp, ANSI_CURSOR, p, 40);
          c[0] = a | 0x40;
          c[1] = '\0';
-         (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
+         (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
          fprintf(confp, "%s %4.4X %4.4X %-4.4s %.24s",
                  c, dev->devnum, dev->devtype, devclass, devnam);
          strcpy(NPdevname[a - 1], devnam);
@@ -593,7 +595,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
               fprintf(confp, "%4.4X", dev->devtype);
               NPopen[a - 1] = open;
          }
-         (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
+         (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
          if (strcmp(NPdevname[a - 1], devnam) != 0) {
              fprintf(confp, ANSI_GRY_BLK);
              fprintf(confp, ANSI_CURSOR, p, 57);
@@ -1171,7 +1173,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 return NULL;
             }
 
-            (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
+            (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
 
             if (strcasecmp(devclass,"PRT") != 0)
             {
@@ -1233,7 +1235,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
-        (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
+        (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
 
         if (strcasecmp(devclass,"PRT") != 0)
         {
@@ -2185,7 +2187,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             {
                 /* Call device handler's query definition function */
 
-                (dev->devqdef)(dev, &devclass, sizeof(buf), buf);
+                (dev->hnd->query)(dev, &devclass, sizeof(buf), buf);
 
                 /* Display the device definition and status */
 
@@ -2266,13 +2268,13 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         /* Close the existing file, if any */
         if (dev->fd < 0 || dev->fd > 2)
         {
-            (*(dev->devclos))(dev);
+            (dev->hnd->close)(dev);
         }
 
         /* Call the device init routine to do the hard work */
         if (devargc > 0)
         {
-            rc = (*(dev->devinit))(dev, devargc, devargv);
+            rc = (dev->hnd->init)(dev, devargc, devargv);
             if (rc < 0)
             {
                 logmsg ("Initialization failed for device %4.4X\n",
@@ -3756,7 +3758,7 @@ BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
 
                             stat_online = stat_busy = stat_pend = stat_open = 0;
 
-                            (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
+                            (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
 
                             devnam[255] = 0;   /* (ensure null termination) */
 
@@ -3805,7 +3807,7 @@ BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
 
                             stat_online = stat_busy = stat_pend = stat_open = 0;
 
-                            (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
+                            (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
 
                             devnam[255] = 0;   /* (ensure null terminated) */
 

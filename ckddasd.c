@@ -18,6 +18,8 @@
 
 #include "hercules.h"
 
+#include "devtype.h"
+
 /*-------------------------------------------------------------------*/
 /* Bit definitions for File Mask                                     */
 /*-------------------------------------------------------------------*/
@@ -4861,3 +4863,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
 } /* end function ckddasd_execute_ccw */
 
+
+DEVHND ckddasd_device_hndinfo = {
+        &ckddasd_init_handler,
+        &ckddasd_execute_ccw,
+        &ckddasd_close_device,
+        &ckddasd_query_device
+};

@@ -60,6 +60,7 @@
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
+#include "devtype.h"
 #include "parser.h"
 
 /*-------------------------------------------------------------------*/
@@ -3970,3 +3971,10 @@ long            locblock;               /* Block Id for Locate Block */
 
 } /* end function tapedev_execute_ccw */
 
+
+DEVHND tapedev_device_hndinfo = {
+        &tapedev_init_handler,
+        &tapedev_execute_ccw,
+        &tapedev_close_device,
+        &tapedev_query_device
+};
