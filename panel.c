@@ -1922,7 +1922,7 @@ int bind_device (DEVBLK* dev, char* spec)
 
     if (dev->bs)
     {
-        logmsg (_("HHC416I Device %4.4X already bound to socket %s\n"),
+        logmsg (_("HHCSD001E Device %4.4X already bound to socket %s\n"),
             dev->devnum, dev->bs->spec);
         return 0;   /* (failure) */
     }
@@ -1933,7 +1933,7 @@ int bind_device (DEVBLK* dev, char* spec)
 
     if (!bs)
     {
-        logmsg (_("HHC415I bind_device malloc() failed for device %4.4X\n"),
+        logmsg (_("HHCSD002E bind_device malloc() failed for device %4.4X\n"),
             dev->devnum);
         return 0;   /* (failure) */
     }
@@ -1942,7 +1942,7 @@ int bind_device (DEVBLK* dev, char* spec)
 
     if (!(bs->spec = safe_strdup(spec)))
     {
-        logmsg (_("HHC415I bind_device safe_strdup() failed for device %4.4X\n"),
+        logmsg (_("HHCSD003E bind_device safe_strdup() failed for device %4.4X\n"),
             dev->devnum);
         free (bs);
         return 0;   /* (failure) */
@@ -1971,7 +1971,7 @@ int bind_device (DEVBLK* dev, char* spec)
     InsertListTail(&bind_head,&bs->bind_link);
     release_lock(&bind_lock);
 
-    logmsg (_("HHC416I Device %4.4X bound to socket %s\n"),
+    logmsg (_("HHCSD004I Device %4.4X bound to socket %s\n"),
         dev->devnum, dev->bs->spec);
 
     return 1;   /* (success) */
@@ -1991,7 +1991,7 @@ int unbind_device (DEVBLK* dev)
 
     if (!(bs = dev->bs))
     {
-        logmsg (_("HHC416I Device %4.4X not bound to any socket\n"),
+        logmsg (_("HHCSD005E Device %4.4X not bound to any socket\n"),
             dev->devnum);
         return 0;   /* (failure) */
     }
@@ -2000,7 +2000,7 @@ int unbind_device (DEVBLK* dev)
 
     if (dev->fd != -1)
     {
-        logmsg (_("HHC416I Client %s (%s) still connected to device %4.4X (%s)\n"),
+        logmsg (_("HHCSD006E Client %s (%s) still connected to device %4.4X (%s)\n"),
             dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
         return 0;   /* (failure) */
     }
@@ -2029,7 +2029,7 @@ int unbind_device (DEVBLK* dev)
 
     /* Issue message to wake up panel thread from its 'select' */
 
-    logmsg (_("HHC422I Device %4.4X unbound from socket %s\n"),
+    logmsg (_("HHCSD007I Device %4.4X unbound from socket %s\n"),
         dev->devnum, bs->spec);
 
     /* Give panel thread time to process our message
@@ -2078,7 +2078,7 @@ int unix_socket (char* path)
 
     if (strlen (path) > sizeof(addr.sun_path) - 1)
     {
-        logmsg (_("HHC411I Socket pathname \"%s\" exceeds limit of %d\n"),
+        logmsg (_("HHCSD008E Socket pathname \"%s\" exceeds limit of %d\n"),
             path, (int) sizeof(addr.sun_path) - 1);
         return -1;
     }
@@ -2089,7 +2089,7 @@ int unix_socket (char* path)
 
     if (sd == -1)
     {
-        logmsg (_("HHC412I Error creating socket for %s: %s\n"),
+        logmsg (_("HHCSD009E Error creating socket for %s: %s\n"),
             path, strerror(errno));
         return -1;
     }
@@ -2102,7 +2102,7 @@ int unix_socket (char* path)
         || listen (sd, 5) == -1
         )
     {
-        logmsg (_("HHC413I Failed to bind or listen on socket %s: %s\n"),
+        logmsg (_("HHCSD010E Failed to bind or listen on socket %s: %s\n"),
             path, strerror(errno));
         return -1;
     }
@@ -2152,7 +2152,7 @@ int inet_socket (char* spec)
 
         if (!he)
         {
-            logmsg (_("HHC414I Failed to determine IP address from %s\n"),
+            logmsg (_("HHCSD011E Failed to determine IP address from %s\n"),
                 node);
             return -1;
         }
@@ -2170,7 +2170,7 @@ int inet_socket (char* spec)
 
         if (!se)
         {
-            logmsg (_("HHC417I Failed to determine port number from %s\n"),
+            logmsg (_("HHCSD012E Failed to determine port number from %s\n"),
                 service);
             return -1;
         }
@@ -2182,7 +2182,7 @@ int inet_socket (char* spec)
 
     if (sd == -1)
     {
-        logmsg (_("HHC412I Error creating socket for %s: %s\n"),
+        logmsg (_("HHCSD013E Error creating socket for %s: %s\n"),
             spec, strerror(errno));
         return -1;
     }
@@ -2194,7 +2194,7 @@ int inet_socket (char* spec)
         || listen (sd, 5) == -1
         )
     {
-        logmsg (_("HHC413I Failed to bind or listen on socket %s: %s\n"),
+        logmsg (_("HHCSD014E Failed to bind or listen on socket %s: %s\n"),
             spec, strerror(errno));
         return -1;
     }
@@ -2301,7 +2301,7 @@ void socket_device_connection_handler (bind_struct* bs)
     if (dev->busy || dev->pending || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         release_lock (&dev->lock);
-        logmsg (_("HHC418I Connect to device %4.4X (%s) rejected; "
+        logmsg (_("HHCSD015E Connect to device %4.4X (%s) rejected; "
             "device busy or interrupt pending\n"),
             dev->devnum, bs->spec);
         return;
@@ -2312,7 +2312,7 @@ void socket_device_connection_handler (bind_struct* bs)
     if (dev->fd != -1)
     {
         release_lock (&dev->lock);
-        logmsg (_("HHC418I Connect to device %4.4X (%s) rejected; "
+        logmsg (_("HHCSD016E Connect to device %4.4X (%s) rejected; "
             "client %s (%s) still connected\n"),
             dev->devnum, bs->spec, bs->clientip, bs->clientname);
         return;
@@ -2325,7 +2325,7 @@ void socket_device_connection_handler (bind_struct* bs)
     if (csock == -1)
     {
         release_lock (&dev->lock);
-        logmsg (_("HHC418I Connect to device %4.4X (%s) failed: %s\n"),
+        logmsg (_("HHCSD017E Connect to device %4.4X (%s) failed: %s\n"),
             dev->devnum, bs->spec, strerror(errno));
         return;
     }
@@ -2351,12 +2351,12 @@ void socket_device_connection_handler (bind_struct* bs)
 
     if (clientip)
     {
-        logmsg (_("HHC420I %s (%s) connected to device %4.4X (%s)\n"),
+        logmsg (_("HHCSD018I %s (%s) connected to device %4.4X (%s)\n"),
             clientip, clientname, dev->devnum, bs->spec);
     }
     else
     {
-        logmsg (_("HHC420I <unknown> connected to device %4.4X (%s)\n"),
+        logmsg (_("HHCSD019I <unknown> connected to device %4.4X (%s)\n"),
             dev->devnum, bs->spec);
     }
 

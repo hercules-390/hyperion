@@ -1867,7 +1867,7 @@ int     rc;                             /* Return code               */
         if ( create_device_thread (&dev->tid, &sysblk.detattr,
                             ARCH_DEP(execute_ccw_chain), dev) )
         {
-            logmsg (_("HHCCCP068E %4.4X create_thread error: %s"),
+            logmsg (_("HHCCP068E %4.4X create_thread error: %s"),
                     dev->devnum, strerror(errno));
             release_lock (&dev->lock);
             return 2;
