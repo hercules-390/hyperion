@@ -4,7 +4,7 @@
 #include "hercules.h"
 
 
-unsigned char
+static unsigned char
 ascii_to_ebcdic[] = {
     "\x00\x01\x02\x03\x37\x2D\x2E\x2F\x16\x05\x25\x0B\x0C\x0D\x0E\x0F"
     "\x10\x11\x12\x13\x3C\x3D\x32\x26\x18\x19\x1A\x27\x22\x1D\x35\x1F"
@@ -25,7 +25,7 @@ ascii_to_ebcdic[] = {
 };
 
 
-unsigned char
+static unsigned char
 ebcdic_to_ascii[] = {
     "\x00\x01\x02\x03\xA6\x09\xA7\x7F\xA9\xB0\xB1\x0B\x0C\x0D\x0E\x0F"
     "\x10\x11\x12\x13\xB2\x0A\x08\xB7\x18\x19\x1A\xB8\xBA\x1D\xBB\x1F"
@@ -46,7 +46,7 @@ ebcdic_to_ascii[] = {
 };
 
 
-unsigned char
+static unsigned char
 cp_437_to_037[] = {
     "\x00\x01\x02\x03\x37\x2D\x2E\x2F\x16\x05\x15\x0B\x0C\x0D\x0E\x0F"
     "\x10\x11\x12\x13\x3C\x3D\x32\x26\x18\x19\x3F\x27\x22\x1D\x1E\x1F"
@@ -67,7 +67,7 @@ cp_437_to_037[] = {
 };
 
 
-unsigned char
+static unsigned char
 cp_037_to_437[] = {
     "\x00\x01\x02\x03\x07\x09\x07\x7F\x07\x07\x07\x0B\x0C\x0D\x0E\x0F"
     "\x10\x11\x12\x13\x07\x0A\x08\x07\x18\x19\x07\x07\x07\x07\x07\x07"
@@ -88,7 +88,7 @@ cp_037_to_437[] = {
 };
 
 
-unsigned char
+static unsigned char
 cp_437_to_500[] = {
     "\x00\x01\x02\x03\x37\x2D\x2E\x2F\x16\x05\x15\x0B\x0C\x0D\x0E\x0F"
     "\x10\x11\x12\x13\x3C\x3D\x32\x26\x18\x19\x3F\x27\x22\x1D\x1E\x1F"
@@ -109,7 +109,7 @@ cp_437_to_500[] = {
 };
 
 
-unsigned char
+static unsigned char
 cp_500_to_437[] = {
     "\x00\x01\x02\x03\x07\x09\x07\x7F\x07\x07\x07\x0B\x0C\x0D\x0E\x0F"
     "\x10\x11\x12\x13\x07\x0A\x08\x07\x18\x19\x07\x07\x07\x07\x07\x07"
@@ -130,7 +130,7 @@ cp_500_to_437[] = {
 };
 
 
-unsigned char
+static unsigned char
 cp_850_to_273[] = {
     "\x00\x01\x02\x03\x37\x2D\x2E\x2F\x16\x05\x25\x0B\x0C\x0D\x0E\x0F"
     "\x10\x11\x12\x13\x3C\x3D\x32\x26\x18\x19\x3F\x27\x1C\x1D\x1E\x1F"
@@ -151,7 +151,7 @@ cp_850_to_273[] = {
     };
 
 
-unsigned char
+static unsigned char
 cp_273_to_850[] = {
     "\x00\x01\x02\x03\xDC\x09\xC3\x7F\xCA\xB2\xD5\x0B\x0C\x0D\x0E\x0F"
     "\x10\x11\x12\x13\xDB\xDA\x08\xC1\x18\x19\xC8\xF2\x1C\x1D\x1E\x1F"
@@ -172,21 +172,26 @@ cp_273_to_850[] = {
     };
 
 
-CPCONV cpconv[] = {
+static CPCONV cpconv[] = {
     { "default",  ascii_to_ebcdic, ebcdic_to_ascii },
     { "437/037",  cp_437_to_037, cp_037_to_437 },
     { "437/500",  cp_437_to_500, cp_500_to_437 },
     { "850/273",  cp_850_to_273, cp_273_to_850 },
     { NULL,       ascii_to_ebcdic, ebcdic_to_ascii } };
 
+CPCONV *codepage_conv = cpconv;
 
 void set_codepage(char *name)
 {
-    for(sysblk.codepage = cpconv; 
-        sysblk.codepage->name && strcasecmp(sysblk.codepage->name,name);
-        sysblk.codepage++);
+    if(name == NULL)
+        if(!(name = getenv("HERCULES_CP")))
+             name = "default";
 
-    if(!sysblk.codepage->name)
+    for(codepage_conv = cpconv; 
+        codepage_conv->name && strcasecmp(codepage_conv->name,name);
+        codepage_conv++);
+
+    if(!codepage_conv->name)
         logmsg(_("HHCCF051E CodePage conversion table %s is not defined\n"),
                  name);
 }

@@ -172,6 +172,8 @@ TID     rctid;                          /* RC file thread identifier */
     atexit(hdl_shut);
 
 
+    set_codepage(NULL);
+
     logger_init();
 
     /* Display the version identifier */

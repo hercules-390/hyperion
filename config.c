@@ -432,7 +432,6 @@ BYTE   *spanrate;                       /* -> Panel refresh rate     */
 BYTE   *sdevtmax;                       /* -> Max device threads     */
 BYTE   *scpuprio;                       /* -> CPU thread priority    */
 BYTE   *spgmprdos;                      /* -> Program product OS OK  */
-BYTE   *scodepage;                      /* -> Code page              */
 #if defined(_FEATURE_ECPSVM)
 BYTE   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
 BYTE   *secpsvmlvl;                     /* -> ECPS:VM level (or 'no')*/
@@ -514,11 +513,6 @@ BYTE **orig_newargv;
     for (i = 0; i < OPTION_SELECT_KLUDGE; i++)
         dummyfd[i] = dup(fileno(stderr));
 #endif
-
-    if((scodepage = getenv("HERCULES_CP")))
-        set_codepage(scodepage);
-    else
-        set_codepage("default");
 
     /* Open the configuration file */
     fp = fopen (fname, "r");
@@ -612,7 +606,6 @@ BYTE **orig_newargv;
         scpuprio = NULL;
         sdevtmax = NULL;
         spgmprdos = NULL;
-        scodepage = NULL;
 #if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
         secpsvmlvl = NULL;
@@ -737,7 +730,7 @@ BYTE **orig_newargv;
             }
             else if (strcasecmp (keyword, "codepage") == 0)
             {
-                scodepage = operand;
+                set_codepage(operand);
             }
 #if defined(_FEATURE_ECPSVM)
             /* ECPS:VM support */
@@ -868,9 +861,6 @@ BYTE **orig_newargv;
                         fname, stmt);
             }
         }
-
-        if(scodepage)
-            set_codepage(scodepage);
 
         if (sarchmode != NULL)
         {

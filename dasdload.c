@@ -1519,15 +1519,8 @@ int     offset;                         /* Offset into text unit     */
 U16     len;                            /* Field length              */
 BYTE   *name;                           /* Text unit name            */
 BYTE    c, hex[17], chars[9];           /* Character work areas      */
-char   *scodepage;
 
-    if(!sysblk.codepage)
-    {
-        if((scodepage = getenv("HERCULES_CP")))
-            set_codepage(scodepage);
-        else
-            set_codepage("default");
-    }
+    set_codepage(NULL);
 
     /* Error if remaining length is insufficient for header */
     if (bufrem < 4)
@@ -2150,15 +2143,8 @@ int             dirrem;                 /* Number of bytes remaining */
 PDSDIR         *dirent;                 /* -> Directory entry        */
 BYTE            memname[9];             /* Member name (ASCIIZ)      */
 BYTE            c, hex[49], chars[25];  /* Character work areas      */
-char   *scodepage;
 
-    if(!sysblk.codepage)
-    {
-        if((scodepage = getenv("HERCULES_CP")))
-            set_codepage(scodepage);
-        else
-            set_codepage("default");
-    }
+    set_codepage(NULL);
 
 
     /* Check for end of directory */

@@ -10,13 +10,14 @@ typedef struct _CPCONV {
     unsigned char *g2h;
 } CPCONV;
 
+extern CPCONV *codepage_conv;
 
 void set_codepage(char *name);
 
 #define host_to_guest(_hbyte) \
-    (sysblk.codepage->h2g[(_hbyte)])
+    (codepage_conv->h2g[(_hbyte)])
 
 #define guest_to_host(_gbyte) \
-    (sysblk.codepage->g2h[(_gbyte)])
+    (codepage_conv->g2h[(_gbyte)])
 
 #endif /* _HERCULES_CODEPAGE_H */

@@ -43,8 +43,6 @@ long  curpos = 0;
 long  prevpos = 0;
 #endif /*EXTERNALGUI*/
 
-SYSBLK sysblk; /* Currently only used for codepage mapping */
-
 /*-------------------------------------------------------------------*/
 /* TAPEMAP main entry point                                          */
 /*-------------------------------------------------------------------*/
@@ -62,16 +60,8 @@ int             minblksz;               /* Minimum block size        */
 int             maxblksz;               /* Maximum block size        */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
-char   *scodepage;
 
-    if(!sysblk.codepage)
-    {
-        if((scodepage = getenv("HERCULES_CP")))
-            set_codepage(scodepage);
-        else
-            set_codepage("default");
-    }
-
+    set_codepage(NULL);
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)

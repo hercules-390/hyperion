@@ -74,15 +74,8 @@ main( int argc, char *argv[] )
     char *o_filename;
     char *o_owner;
     char *o_volser;
-    char *scodepage;
 
-    if( !sysblk.codepage )
-    {
-        if( ( scodepage = getenv( "HERCULES_CP" ) ) )
-            set_codepage( scodepage );
-        else
-            set_codepage( "default" );
-    }
+    set_codepage( NULL );
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)

@@ -29,7 +29,7 @@ static BYTE iplccw1[8]   = {0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x01};
 static BYTE iplccw2[8]   = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 static int  nextnum = 0;
 
-SYSBLK sysblk; /* Currently only used for codepage mapping */
+SYSBLK sysblk; /* Currently required for shared.c */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to convert a null-terminated string to upper case      */
@@ -60,16 +60,9 @@ int     i;                              /* Array subscript           */
 /*-------------------------------------------------------------------*/
 void convert_to_ebcdic (BYTE *dest, int len, BYTE *source)
 {
-char   *scodepage;
 int     i;                              /* Array subscript           */
 
-    if(!sysblk.codepage)
-    {
-        if((scodepage = getenv("HERCULES_CP")))
-            set_codepage(scodepage);
-        else
-            set_codepage("default");
-    }
+    set_codepage(NULL);
 
     for (i = 0; i < len && source[i] != '\0'; i++)
         dest[i] = host_to_guest(source[i]);
@@ -87,15 +80,8 @@ int     i;                              /* Array subscript           */
 int make_asciiz (BYTE *dest, int destlen, BYTE *src, int srclen)
 {
 int             len;                    /* Result length             */
-char   *scodepage;
 
-    if(!sysblk.codepage)
-    {
-        if((scodepage = getenv("HERCULES_CP")))
-            set_codepage(scodepage);
-        else
-            set_codepage("default");
-    }
+    set_codepage(NULL);
 
 
     for (len=0; len < srclen && len < destlen-1; len++)
@@ -121,16 +107,8 @@ BYTE            hex_chars[64];
 BYTE            prev_hex[64] = "";
 int             firstsame = 0;
 int             lastsame = 0;
-char   *scodepage;
 
-    if(!sysblk.codepage)
-    {
-        if((scodepage = getenv("HERCULES_CP")))
-            set_codepage(scodepage);
-        else
-            set_codepage("default");
-    }
-
+    set_codepage(NULL);
 
     pchar = (unsigned char*)addr;
 

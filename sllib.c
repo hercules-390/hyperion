@@ -12,8 +12,6 @@
 #include "hercules.h"
 #include "sllib.h"
 
-SYSBLK sysblk; /* Currently only used for codepage mapping */
-
 /*
 || Local constant data
 */

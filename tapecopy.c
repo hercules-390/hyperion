@@ -33,8 +33,6 @@ typedef struct _AWSTAPE_BLKHDR {
 #define AWSTAPE_FLAG1_TAPEMARK  0x40    /* Tape mark                 */
 #define AWSTAPE_FLAG1_ENDREC    0x20    /* End of record             */
 
-SYSBLK sysblk; /* Currently only used for codepage mapping */
-
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
@@ -145,7 +143,6 @@ struct mtget    stblk;                  /* Area for MTIOCGET ioctl   */
 long            density;                /* Tape density code         */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
-char   *scodepage;
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
@@ -153,13 +150,7 @@ char   *scodepage;
     textdomain(PACKAGE);
 #endif
 
-    if(!sysblk.codepage)
-    {
-        if((scodepage = getenv("HERCULES_CP")))
-            set_codepage(scodepage);
-        else
-            set_codepage("default");
-    }
+    set_codepage(NULL);
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)

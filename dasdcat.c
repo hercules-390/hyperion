@@ -55,16 +55,8 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
 {
  int rc, trk, len, cyl, head, rec;
  BYTE *buf;
- char   *scodepage;
 
-    if(!sysblk.codepage)
-    {
-        if((scodepage = getenv("HERCULES_CP")))
-            set_codepage(scodepage);
-        else
-            set_codepage("default");
-    }
-
+ set_codepage(NULL);
 
  trk = (ttr[0] << 8) | ttr[1];
  rec = ttr[2];
