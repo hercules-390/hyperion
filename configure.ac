@@ -273,8 +273,18 @@ fi
 # Library functions
 
 AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl)
-AC_CHECK_FUNCS([setresuid setreuid],
-               [enable_setuid=true;break])
+
+# If we have setresuid AND getresuid, we can do setuid stuff
+AC_CHECK_FUNCS([setresuid getresuid],
+               [enable_setuid=true],[enable_setuid=false;break])
+
+if test x$enable_setuid != xtrue; then
+   # Likewise if we have setreuid AND getreuid
+   AC_CHECK_FUNCS([setreuid getreuid],
+                  [enable_setuid=true],[enable_setuid=false;break])
+fi
+
+# Otherwise, not
 if test x$enable_setuid != xtrue; then
   AC_DEFINE([NO_SETUID])
 fi
