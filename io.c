@@ -237,6 +237,10 @@ BYTE    chpid;
 
     SIE_INTERCEPT(regs);
 
+    /* Program check if reg 1 bits 0-23 not zero */
+    if(regs->GR_L(1) & 0xFFFFFF00)
+        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+
     chpid = effective_addr2 & 0xFF;
 
     if( !(regs->psw.cc = chp_reset(chpid)) )
@@ -329,13 +333,13 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Reserved bits in gpr1 must be zero */
     if (regs->GR_L(1) & CHM_GPR1_RESV)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     /* Program check if M bit one and gpr2 address not on
        a 32 byte boundary or highorder bit set in ESA/390 mode */
     if ((regs->GR_L(1) & CHM_GPR1_M)
      && (regs->GR_L(2) & CHM_GPR2_RESV))
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     /* Set the measurement block origin address */
     if (regs->GR_L(1) & CHM_GPR1_M)
