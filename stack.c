@@ -1468,6 +1468,9 @@ VADR    lsep;                           /* Virtual addr of entry desc.
     else
         regs->psw.sysmask &= ~PSW_PERMODE;
 
+    /* restore PER masks which could have been wiped out by load_psw */
+    SET_IC_PER_MASK(regs);
+
     /* [5.12.4.4] Pass back the absolute address of the entry
        descriptor of the preceding linkage stack entry.  The
        next entry size field of this entry will be cleared on
