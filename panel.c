@@ -1252,9 +1252,19 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
             logmsg("CPU%4.4X: Emergency signal %spending\n",
                 sysblk.regs[i].cpuad,
 		         IS_IC_EMERSIG(sysblk.regs+i) ? "" : "not ");
+            logmsg("CPU%4.4X: CPU %swaiting for interlock\n",
+                sysblk.regs[i].cpuad,
+		         sysblk.regs[i].mainsync ? "" : "not ");
+            logmsg("CPU%4.4X: CPU interlock %sheld\n",
+                sysblk.regs[i].cpuad,
+		         sysblk.regs[i].mainlock ? "" : "not ");
         }
         logmsg("Machine check interrupt %spending\n",
                                 IS_IC_MCKPENDING ? "" : "not ");
+        logmsg("Service signal %spending\n",
+                                IS_IC_SERVSIG ? "" : "not ");
+        logmsg("Signaling facility %sbusy\n",
+                                sysblk.sigpbusy ? "" : "not ");
         logmsg("I/O interrupt %spending\n",
                                 IS_IC_IOPENDING ? "" : "not ");
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
@@ -1576,6 +1586,10 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     {
         obtain_lock(&sysblk.intlock);
         ON_IC_INTKEY;
+
+        /* Signal waiting CPUs that an interrupt is pending */
+        signal_condition (&sysblk.intcond);
+
         release_lock(&sysblk.intlock);
         logmsg ("Interrupt key depressed\n");
         return NULL;

@@ -1630,6 +1630,10 @@ RADR    pte;
     }
 #endif /*defined(FEATURE_ESAME)*/
 
+
+/* Invalidation takes place by means of broadcast if maxcpuengines > 1
+   This happens in the IPTE instruction routine, unless this is 
+   a single engine guest under SIE */
 #if MAX_CPU_ENGINES == 1 || defined(_FEATURE_SIE)
 #if MAX_CPU_ENGINES > 1
     if(regs->sie_state && !regs->sie_scao)
@@ -1644,27 +1648,7 @@ RADR    pte;
 // /*debug*/logmsg ("dat: TLB entry %d invalidated\n", i); /*debug*/
             }
         } /* end for(i) */
-#if MAX_CPU_ENGINES > 1
-    else
-#endif /*MAX_CPU_ENGINES > 1*/
 #endif /*MAX_CPU_ENGINES == 1 || defined(_FEATURE_SIE)*/
-#if MAX_CPU_ENGINES > 1
-    /* Signal each CPU to perform TLB invalidation.
-       IPTE must not complete until all CPUs have indicated
-       that they have cleared their TLB and have completed
-       any storage accesses using the invalidated entries */
-
-    /* This is a sledgehammer approach but clearing all tlb's seems
-       to be the only viable alternative at the moment, short of
-       building queues and waiting for all other cpu's to clear their
-       entries - JJ 09/05/2000 */
-#if defined(_FEATURE_SIE)
-    if(regs->sie_state)
-        synchronize_broadcast(regs->hostregs, &sysblk.brdcstptlb);
-    else
-#endif /*defined(_FEATURE_SIE)*/
-        synchronize_broadcast(regs, &sysblk.brdcstptlb);
-#endif /*MAX_CPU_ENGINES > 1*/
 
 } /* end function invalidate_pte */
 

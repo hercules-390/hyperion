@@ -159,23 +159,88 @@ int used; \
 #endif
 
 
-#if MAX_CPU_ENGINES > 1
 #define UNROLLED_EXECUTE(_regs) \
     { \
-        if( IS_IC_BRDCSTNCPU ) \
-            longjmp((_regs)->progjmp, SIE_NO_INTERCEPT); \
         (_regs)->instvalid = 0; \
         INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs)); \
         (_regs)->instvalid = 1; \
         EXECUTE_INSTRUCTION ((_regs)->inst, 0, (_regs)); \
     }
+
+
+/* Main storage access locking 
+   This routine will ensure that a given CPU 
+   has exclusive access to main storage and hence
+   will be able to perform as what appears as an
+   interlocked update to other CPU's - Jan Jaeger */
+
+/* OBTAIN_MAINLOCK() may cause a retry of the instruction */
+
+#if MAX_CPU_ENGINES == 1
+ #define OBTAIN_MAINLOCK(_regs)
+ #define RELEASE_MAINLOCK(_regs)
+ #define BROADCAST_PTLB(_regs) \
+         ARCH_DEP(purge_tlb)((_regs))
+ #define BROADCAST_PALB(_regs) \
+         ARCH_DEP(purge_alb)((_regs))
+ #define SYNCHRONIZE_BROADCAST(_regs)
 #else
+
+#if 0
+#define OBTAIN_MAINLOCK(_register_context) \
+do { \
+    if( pthread_mutex_trylock(&sysblk.mainlock) ) \
     { \
-        (_regs)->instvalid = 0; \
-        INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs)); \
-        (_regs)->instvalid = 1; \
-        EXECUTE_INSTRUCTION ((_regs)->inst, 0, (_regs)); \
-    }
+        (_register_context)->psw.IA -= (_register_context)->psw.ilc; \
+        (_register_context)->psw.IA &= ADDRESS_MAXWRAP((_register_context)); \
+        longjmp((_register_context)->progjmp,SIE_NO_INTERCEPT); \
+    } \
+    (_register_context)->mainlock = 1; \
+    ARCH_DEP(synchronize_broadcast)((_register_context)); \
+} while(0)
+
+#define RELEASE_MAINLOCK(_register_context) \
+do { \
+    (_register_context)->mainlock = 0; \
+    pthread_mutex_unlock(&sysblk.mainlock); \
+    pthread_mutex_lock(&sysblk.intlock); \
+    pthread_cond_broadcast(&sysblk.brdcstcnd2); \
+    pthread_mutex_unlock(&sysblk.intlock); \
+} while(0)
+#else
+#define OBTAIN_MAINLOCK(_register_context) \
+do { \
+    pthread_mutex_lock(&sysblk.mainlock); \
+    (_register_context)->mainlock = 1; \
+} while(0)
+
+#define RELEASE_MAINLOCK(_register_context) \
+do { \
+    (_register_context)->mainlock = 0; \
+    pthread_mutex_unlock(&sysblk.mainlock); \
+} while(0)
+#endif
+
+#define BROADCAST_PTLB(_regs) \
+do { \
+    pthread_mutex_lock(&sysblk.intlock); \
+    sysblk.brdcstptlb++; \
+    pthread_mutex_unlock(&sysblk.intlock); \
+} while(0)
+
+#define BROADCAST_PALB(_regs) \
+do { \
+    pthread_mutex_lock(&sysblk.intlock); \
+    sysblk.brdcstpalb++; \
+    pthread_mutex_unlock(&sysblk.intlock); \
+} while(0)
+
+#define SYNCHRONIZE_BROADCAST(_regs) \
+do { \
+    pthread_mutex_lock(&sysblk.intlock); \
+    ARCH_DEP(synchronize_broadcast)((_regs)); \
+    pthread_mutex_unlock(&sysblk.intlock); \
+} while(0)
 #endif
 
 
@@ -1176,9 +1241,9 @@ void ARCH_DEP(diag204_call) (int r1, int r2, REGS *regs);
 
 
 /* Functions in module external.c */
+void ARCH_DEP(synchronize_broadcast) (REGS *regs);
 void ARCH_DEP(perform_external_interrupt) (REGS *regs);
 void ARCH_DEP(store_status) (REGS *ssreg, RADR aaddr);
-void synchronize_broadcast (REGS *regs, U32 *type);
 void store_status (REGS *ssreg, U64 aaddr);
 
 
@@ -1646,6 +1711,7 @@ DEF_INST(disconnect_channel_set);
 
 /* Instructions in service.c */
 DEF_INST(service_call);
+DEF_INST(channel_subsystem_call);
 
 
 /* Instructions in xstore.c */
@@ -1940,6 +2006,5 @@ DEF_INST(subtract_bfp_long_reg);
 DEF_INST(subtract_bfp_long);
 DEF_INST(subtract_bfp_short_reg);
 DEF_INST(subtract_bfp_short);
-
 
 /* end of OPCODE.H */

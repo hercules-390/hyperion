@@ -169,6 +169,9 @@ int     r1, r2;                         /* Values of R fields        */
     /* Release mainstore interlock */
     RELEASE_MAINLOCK(regs);
 
+    /* Inform other cpu's */
+    BROADCAST_PTLB(regs);
+
     /* Perform serialization after operation */
     PERFORM_SERIALIZATION (regs);
 

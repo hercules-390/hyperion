@@ -1131,7 +1131,7 @@ U32     n;                              /* 32-bit operand value      */
        then call the hypervisor to end this timeslice,
        this to prevent this virtual CPU monopolizing
        the physical CPU on a spinlock */
-    if(regs->psw.cc && sysblk.numcpu > 1 && sysblk.brdcstncpu == 0)
+    if(regs->psw.cc && sysblk.numcpu > 1)
         usleep(1L);
 #endif MAX_CPU_ENGINES > 1
 
@@ -1197,7 +1197,7 @@ U32     n1, n2;                         /* 32-bit operand values     */
        then call the hypervisor to end this timeslice,
        this to prevent this virtual CPU monopolizing
        the physical CPU on a spinlock */
-    if(regs->psw.cc && sysblk.numcpu > 1 && sysblk.brdcstncpu == 0)
+    if(regs->psw.cc && sysblk.numcpu > 1)
         usleep(1L);
 #endif MAX_CPU_ENGINES > 1
 

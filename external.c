@@ -29,46 +29,32 @@
 
 #include "inline.h"
 
-#if !defined(_EXTERNAL_C)
-
-#define _EXTERNAL_C
 
 #if MAX_CPU_ENGINES > 1
 /*-------------------------------------------------------------------*/
 /* Synchronize broadcast request                                     */
 /* Input:                                                            */
 /*      regs    A pointer to the CPU register context                */
-/*      type    A pointer to the request counter in the sysblk for   */
-/*              the requested function (brdcstptlb or brdcstpalb),   */
-/*              or zero in case of being a target being synchronized */
 /*                                                                   */
-/* If the type is zero then the intlock MUST be held, else           */
-/* the intlock MUST NOT be held.                                     */
+/* The intlock MUST be held when calling synchronize_broadcast()     */
 /*                                                                   */
 /* Signals all other CPU's to perform a requested function           */
 /* synchronously, such as purging the ALB and TLB buffers.           */
 /* The CPU issuing the broadcast request will wait until             */
 /* all other CPU's have performed the requested action.         *JJ  */
+/*                                                                   */
+
 /*-------------------------------------------------------------------*/
-void synchronize_broadcast (REGS *regs, U32 *type)
+void ARCH_DEP(synchronize_broadcast) (REGS *regs)
 {
 int     i;                              /* Array subscript           */
-
-    /* If type is specified then obtain lock and increment counter */
-    if (type != NULL)
-    {
-        /* Obtain the intlock for CSP or IPTE */
-        obtain_lock (&sysblk.intlock);
-
-        /* Increment the counter for the specified function */
-        (*type)++;
-    }
 
     /* Initiate synchronization if this is the initiating CPU */
     if (sysblk.brdcstncpu == 0)
     {
         /* Set number of CPU's to synchronize */
         sysblk.brdcstncpu = sysblk.numcpu;
+
         ON_IC_BRDCSTNCPU;
 
         /* Redrive all stopped CPU's */
@@ -81,41 +67,55 @@ int     i;                              /* Array subscript           */
             if (sysblk.regs[i].cpustate == CPUSTATE_STOPPED)
                 sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
         signal_condition (&sysblk.intcond);
+
     }
 
-    /* If this CPU is the last to enter, then signal all
-       waiting CPU's that the synchronization is complete
-       else wait for the synchronization to compete */
+    /* If this CPU is the last to enter, then signal the
+       requesting CPU's that the synchronization is complete */
     if (--sysblk.brdcstncpu == 0)
     {
         OFF_IC_BRDCSTNCPU;
         signal_condition (&sysblk.brdcstcond);
     }
     else
+    {
+        /* Wait for all CPU's to synchronize */
+        regs->mainsync = 1;
         wait_condition (&sysblk.brdcstcond, &sysblk.intlock);
+        regs->mainsync = 0;
+    }
 
+    
+    /* When running under SIE we must address
+       the host register context for the purpose
+       of synchronisation */
+
+#if defined(FEATURE_ACCESS_REGISTERS)
     /* Purge ALB if requested */
     if (sysblk.brdcstpalb != regs->brdcstpalb)
     {
-        ARCH_DEP(purge_alb) (regs);
+        ARCH_DEP(purge_alb) (
+#if defined(_FEATURE_SIE)
+                             regs->sie_state ? regs->hostregs :
+#endif /*defined(_FEATURE_SIE)*/
+                                                                regs);
         regs->brdcstpalb = sysblk.brdcstpalb;
     }
+#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
     /* Purge TLB if requested */
     if (sysblk.brdcstptlb != regs->brdcstptlb)
     {
-        ARCH_DEP(purge_tlb) (regs);
+        ARCH_DEP(purge_tlb) (
+#if defined(_FEATURE_SIE)
+                             regs->sie_state ? regs->hostregs :
+#endif /*defined(_FEATURE_SIE)*/
+                                                                regs);
         regs->brdcstptlb = sysblk.brdcstptlb;
     }
 
-    /* release intlock */
-    if(type != NULL)
-        release_lock(&sysblk.intlock);
-
 } /* end function synchronize_broadcast */
 #endif /*MAX_CPU_ENGINES > 1*/
-
-#endif /*!defined(_EXTERNAL_C)*/
 
 
 /*-------------------------------------------------------------------*/

@@ -90,11 +90,8 @@ int     icode;                          /* Interception code         */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-    /* Absolute address of state descriptor block */
-    GUESTREGS->sie_state = effective_addr2;
-
 #if defined(SIE_DEBUG)
-    logmsg("SIE: state descriptor " F_RADR "\n",GUESTREGS->sie_state);
+    logmsg("SIE: state descriptor " F_RADR "\n",effective_addr2);
 #endif /*defined(SIE_DEBUG)*/
 
     /* Direct pointer to state descriptor block */
@@ -230,8 +227,16 @@ int     icode;                          /* Interception code         */
 
     /* If this is not the last host cpu that dispatched this state
        descriptor then clear the guest TLB entries */
-    if(regs->cpuad != lhcpu)
+    if((regs->cpuad != lhcpu)
+      || (GUESTREGS->sie_state != effective_addr2))
     {
+        /* Absolute address of state descriptor block */
+        GUESTREGS->sie_state = effective_addr2;
+
+        /* Update Last Host CPU address */
+        STORE_HW(STATEBK->lhcpu, regs->cpuad);
+
+        /* Purge guest TLB entries */
         ARCH_DEP(purge_tlb) (GUESTREGS);
         ARCH_DEP(purge_alb) (GUESTREGS);
     }
@@ -363,9 +368,6 @@ int     n;
             break;
     }
 
-    /* Update Last Host CPU address */
-    STORE_HW(STATEBK->lhcpu, regs->cpuad);
-
     /* Save CPU timer  */
     STORE_DW(STATEBK->cputimer, GUESTREGS->ptimer);
 
@@ -459,7 +461,7 @@ int ARCH_DEP(sie_run) (REGS *regs)
                        releases and reacquires the mainlock. */
 
                     while (sysblk.brdcstncpu != 0)
-                        synchronize_broadcast(regs, NULL);
+                        ARCH_DEP(synchronize_broadcast)(regs);
 #endif /*MAX_CPU_ENGINES > 1*/
 
                     if( OPEN_IC_CPUINT(GUESTREGS) )

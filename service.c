@@ -18,11 +18,14 @@
 /*      Suppress superflous HHC701I/HHC702I messages - Jan Jaeger    */
 /*      Break syscons output if too long - Jan Jaeger                */
 /*      //Sysplex support: hardware CFCC loader - Jan Jaeger         */
+/*      Added CHSC - CHannel Subsystem Call - Jan Jaeger 2001-05-30  */
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
 
 #include "opcode.h"
+
+#include "inline.h"
 
 #if !defined(_SERVICE_C)
 
@@ -455,6 +458,23 @@ typedef struct _SCCB_XST_MAP {
 //                                         expanded storage blocks   */
     } SCCB_XST_MAP;
 // #endif /*FEATURE_EXPANDED_STORAGE*/
+
+
+#if defined(FEATURE_CHSC)
+typedef struct _CHSC_REQ {
+        HWORD   length;                 /* Offset to response field  */
+        HWORD   req;                    /* Request code              */
+        FWORD   resv[3];
+    } CHSC_REQ;
+
+typedef struct _CHSC_RSP {
+        HWORD   length;                 /* Length of response field  */
+        HWORD   rsp;                    /* Reponse code              */
+#define CHSC_REQ_INVALID        0x0002  /* Invalid request           */
+        FWORD   info;
+    } CHSC_RSP;
+#endif /*defined(FEATURE_CHSC)*/
+
 
 // #ifdef FEATURE_SYSTEM_CONSOLE
 /*-------------------------------------------------------------------*/
@@ -1146,7 +1166,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 //                          | SCCB_CPF1_EXPEDITE_TIMER_PROCESSING
                             ;
             sccbcpu->cpf[2] = 0
-//                          | SCCB_CPF2_CRYPTO_FEATURE_ACCESSED
+#if defined(FEATURE_CRYPTO)
+                            | SCCB_CPF2_CRYPTO_FEATURE_ACCESSED
+#endif /*defined(FEATURE_CRYPTO)*/
 //                          | SCCB_CPF2_EXPEDITE_RUN_PROCESSING
                             ;
 
@@ -1181,7 +1203,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 //                          | SCCB_CPF5_GUEST_WAIT_STATE_ASSIST
                             ;
             sccbcpu->cpf[13] = 0
+#if defined(FEATURE_CRYPTO)
 //                          | SCCB_CPF13_CRYPTO_UNIT_ID
+#endif /*defined(FEATURE_CRYPTO)*/
                             ;
         }
 
@@ -1845,6 +1869,67 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     regs->psw.cc = 0;
 
 } /* end function service_call */
+
+
+#if defined(FEATURE_CHSC)
+/*-------------------------------------------------------------------*/
+/* B25F CHSC  - Channel Subsystem Call                         [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(channel_subsystem_call)
+{
+int     r1, r2;                                 /* register values   */
+VADR    n;                                      /* Unsigned work     */
+RADR    abs;                                    /* Unsigned work     */
+U16     length;                                 /* Length of request */
+U16     req;                                    /* Request code      */
+CHSC_REQ *chsc_req;                             /* Request structure */
+CHSC_RSP *chsc_rsp;                             /* Response structure*/
+
+    RRE(inst, execflag, regs, r1, r2);
+
+// ZZDEBUG logmsg("CHSC: "); ARCH_DEP(display_inst) (regs, regs->inst);
+
+    PRIV_CHECK(regs);
+
+    SIE_INTERCEPT(regs);
+
+    n = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+    
+    if(n & 0xFFF)
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+    abs = LOGICAL_TO_ABS(n, r1, regs, ACCTYPE_READ, regs->psw.pkey);
+    chsc_req = (CHSC_REQ*)(sysblk.mainstor + abs);
+
+    /* Fetch length of request field */
+    FETCH_HW(length, chsc_req->length);
+
+    chsc_rsp = (CHSC_RSP*)((BYTE*)chsc_req + length);
+
+    if((length < sizeof(CHSC_REQ))
+      || (length > (0x1000 - sizeof(CHSC_RSP))))
+        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+
+    FETCH_HW(req,chsc_req->req);
+    switch(req) {
+        /* process various requests here */
+
+        default:
+
+            ARCH_DEP(validate_operand) (n, r1, 0, ACCTYPE_WRITE, regs);
+            /* Set response field length */
+            STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
+            /* Store unsupported command code */
+            STORE_HW(chsc_rsp->rsp,CHSC_REQ_INVALID);
+            /* No reaon code */
+            STORE_FW(chsc_rsp->info,0);
+
+            regs->psw.cc = 0;
+    }
+
+}
+#endif /*defined(FEATURE_CHSC)*/
+
 #endif /*defined(FEATURE_SERVICE_PROCESSOR)*/
 
 

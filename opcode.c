@@ -113,9 +113,7 @@
 
 #if !defined(FEATURE_MOVE_PAGE_FACILITY_2)
  UNDEF_INST(move_page)
-#if !defined(FEATURE_EXPANDED_STORAGE)
  UNDEF_INST(invalidate_expanded_storage_block_entry)
-#endif /*!defined(FEATURE_EXPANDED_STORAGE)*/
 #endif /*!defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
 
 
@@ -512,6 +510,11 @@
 #if !defined(FEATURE_SERVICE_PROCESSOR)
  UNDEF_INST(service_call)
 #endif /*!defined(FEATURE_SERVICE_PROCESSOR)*/
+
+
+#if !defined(FEATURE_CHSC)
+ UNDEF_INST(channel_subsystem_call)
+#endif /*!defined(FEATURE_CHSC)*/
 
 
 #if !defined(FEATURE_ESAME_N3_ESA390) && !defined(FEATURE_ESAME)
@@ -1609,7 +1612,7 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B25C*/ GENx___x___x___ ,                                     /*%PGXOUT    */
  /*B25D*/ GENx___x390x900 (compare_logical_string),             /* CLST      */
  /*B25E*/ GENx___x390x900 (search_string),                      /* SRST      */
- /*B25F*/ GENx___x___x___ ,                                     /*%CHSC      */
+ /*B25F*/ GENx___x390x900 (channel_subsystem_call),             /*%CHSC      */
  /*B260*/ GENx___x390x900 (ses_opcode_B260),                    /* Sysplex   */
  /*B261*/ GENx___x390x900 (ses_opcode_B261),                    /* Sysplex   */
  /*B262*/ GENx___x390x900 (lock_page),                          /* LKPG      */

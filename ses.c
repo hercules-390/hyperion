@@ -203,10 +203,9 @@ int r1, r2;                                     /* register values   */
 /*-------------------------------------------------------------------*/
 DEF_INST(ses_opcode_B272)
 {
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
+int r1, r2;                                     /* register values   */
 
-    S(inst, execflag, regs, b2, effective_addr2);
+    RRE(inst, execflag, regs, r1, r2);
 
     SIE_ONLY_INSTRUCTION(regs);
 
@@ -222,10 +221,9 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST(ses_opcode_B27A)
 {
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
+int r1, r2;                                     /* register values   */
 
-    S(inst, execflag, regs, b2, effective_addr2);
+    RRE(inst, execflag, regs, r1, r2);
 
     SIE_ONLY_INSTRUCTION(regs);
 
@@ -241,10 +239,9 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST(ses_opcode_B27B)
 {
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
+int r1, r2;                                     /* register values   */
 
-    S(inst, execflag, regs, b2, effective_addr2);
+    RRE(inst, execflag, regs, r1, r2);
 
     SIE_ONLY_INSTRUCTION(regs);
 

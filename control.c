@@ -628,23 +628,20 @@ U32     n1, n2;                         /* 32 Bit work               */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* Perform serialization before starting operation */
-    PERFORM_SERIALIZATION (regs);
-
-    /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
-
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && regs->sie_scao)
     {
         STORAGE_KEY(regs->sie_scao) |= STORKEY_REF;
         if(sysblk.mainstor[regs->sie_scao] & 0x80)
-        {
-            RELEASE_MAINLOCK(regs);
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-        }
     }
 #endif /*defined(_FEATURE_SIE)*/
+
+    /* Perform serialization before starting operation */
+    PERFORM_SERIALIZATION (regs);
+
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
 
     /* Obtain 2nd operand address from r2 */
     n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFFCULL & ADDRESS_MAXWRAP(regs);
@@ -659,43 +656,28 @@ U32     n1, n2;                         /* 32 Bit work               */
         ARCH_DEP(vstore4) ( regs->GR_L(r1+1), n2, r2, regs );
         regs->psw.cc = 0;
 
-        /* Release main-storage access lock
-           synchronize_broadcast() must not be called
-           with the mainlock held as this can cause
-           a deadly embrace with other CPU's */
+        /* Release main-storage access lock */
         RELEASE_MAINLOCK(regs);
 
-        /* Purge the TLB if bit 31 of r2 register is set */
+        /* Perform requested funtion specified as per request code in r2 */
         if (regs->GR_L(r2) & 0x00000001)
         {
-#if MAX_CPU_ENGINES == 1
-            ARCH_DEP(purge_tlb) (regs);
-#else /*!MAX_CPU_ENGINES == 1*/
 #if defined(_FEATURE_SIE)
             if(regs->sie_state && !regs->sie_scao)
                 ARCH_DEP(purge_tlb) (regs);
             else
-                if(regs->sie_state)
-                    synchronize_broadcast(regs->hostregs, &sysblk.brdcstptlb);
-                else
 #endif /*defined(_FEATURE_SIE)*/
-                    synchronize_broadcast(regs, &sysblk.brdcstptlb);
-#endif /*!MAX_CPU_ENGINES == 1*/
+                BROADCAST_PTLB(regs);
         }
 
-        /* Purge the ALB if bit 30 of r2 register is set */
         if (regs->GR_L(r2) & 0x00000002)
         {
-#if MAX_CPU_ENGINES == 1
-            ARCH_DEP(purge_alb) (regs);
-#else /*!MAX_CPU_ENGINES == 1*/
 #if defined(_FEATURE_SIE)
-            if(regs->sie_state)
-                synchronize_broadcast(regs->hostregs, &sysblk.brdcstpalb);
+            if(regs->sie_state && !regs->sie_scao)
+                ARCH_DEP(purge_alb) (regs);
             else
 #endif /*defined(_FEATURE_SIE)*/
-                synchronize_broadcast(regs, &sysblk.brdcstpalb);
-#endif /*!MAX_CPU_ENGINES == 1*/
+                BROADCAST_PALB(regs);
         }
 
     }
@@ -708,6 +690,9 @@ U32     n1, n2;                         /* 32 Bit work               */
         /* Release main-storage access lock */
         RELEASE_MAINLOCK(regs);
     }
+
+    /* Wait for all CPU's to perform the requested action */
+    SYNCHRONIZE_BROADCAST(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -1346,12 +1331,13 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
             regs->GR_LHLCL(r1) = STORAGE_KEY(n) & 0xF8;
     }
     else
-#else /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-    SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-    /* Insert storage key bits 0-4 into R1 register bits
-       56-60 and set bits 61-63 to zeroes */
-    regs->GR_LHLCL(r1) = STORAGE_KEY(n) & 0xF8;
+    {
+        SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
+        /* Insert storage key bits 0-4 into R1 register bits
+           56-60 and set bits 61-63 to zeroes */
+        regs->GR_LHLCL(r1) = STORAGE_KEY(n) & 0xF8;
+    }
 
 } /* end DEF_INST(insert_virtual_storage_key) */
 
@@ -1375,10 +1361,11 @@ int     r1, r2;                         /* Values of R fields        */
     /* Perform serialization before operation */
     PERFORM_SERIALIZATION (regs);
 
+    OBTAIN_MAINLOCK(regs);
+
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && regs->sie_scao)
     {
-        OBTAIN_MAINLOCK(regs);
         STORAGE_KEY(regs->sie_scao) |= STORKEY_REF;
         if(sysblk.mainstor[regs->sie_scao] & 0x80)
         {
@@ -1387,7 +1374,6 @@ int     r1, r2;                         /* Values of R fields        */
         }
         sysblk.mainstor[regs->sie_scao] |= 0x80;
         STORAGE_KEY(regs->sie_scao) |= (STORKEY_REF|STORKEY_CHANGE);
-        RELEASE_MAINLOCK(regs);
     }
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -1397,12 +1383,18 @@ int     r1, r2;                         /* Values of R fields        */
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && regs->sie_scao)
     {
-        OBTAIN_MAINLOCK(regs);
         sysblk.mainstor[regs->sie_scao] &= 0x7F;
         STORAGE_KEY(regs->sie_scao) |= (STORKEY_REF|STORKEY_CHANGE);
-        RELEASE_MAINLOCK(regs);
     }
 #endif /*defined(_FEATURE_SIE)*/
+
+    RELEASE_MAINLOCK(regs);
+
+    /* Inform other CPU's */
+    BROADCAST_PTLB(regs);
+
+    /* Wait for all CPU's to perform the requested action */
+    SYNCHRONIZE_BROADCAST(regs);
 
     /* Perform serialization after operation */
     PERFORM_SERIALIZATION (regs);

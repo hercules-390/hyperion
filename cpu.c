@@ -867,7 +867,7 @@ void *cpu_thread (REGS *regs)
 
     /* Add this CPU to the configuration. Also ajust
        the number of CPU's to perform synchronisation as the
-       synchonization process relies on the number of CPU's
+       synchronization process relies on the number of CPU's
        in the configuration to accurate */
     obtain_lock(&sysblk.intlock);
     if(regs->cpustate != CPUSTATE_STARTING)
@@ -978,7 +978,7 @@ U32     prevmask;
                no more broadcast pending because synchronize_broadcast()
                releases and reacquires the mainlock. */
             while (sysblk.brdcstncpu != 0)
-                synchronize_broadcast(regs, NULL);
+                ARCH_DEP(synchronize_broadcast)(regs);
 #endif /*MAX_CPU_ENGINES > 1*/
 
             /* Take interrupts if CPU is not stopped */
@@ -1024,7 +1024,7 @@ U32     prevmask;
                 {
                     /* Remove this CPU from the configuration. Only do this
                        when no synchronization is in progress as the
-                       synchonization process relies on the number of CPU's
+                       synchronization process relies on the number of CPU's
                        in the configuration to accurate. The first thing
                        we do during interrupt processing is synchronize
                        the broadcast functions so we are safe to manipulate
@@ -1200,7 +1200,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                no more broadcast pending because synchronize_broadcast()
                releases and reacquires the mainlock. */
             while (sysblk.brdcstncpu != 0)
-                synchronize_broadcast(regs, NULL);
+                ARCH_DEP(synchronize_broadcast)(regs);
 #endif /*MAX_CPU_ENGINES > 1*/
 
             /* Take interrupts if CPU is not stopped */
@@ -1246,7 +1246,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                 {
                     /* Remove this CPU from the configuration. Only do this
                        when no synchronization is in progress as the
-                       synchonization process relies on the number of CPU's
+                       synchronization process relies on the number of CPU's
                        in the configuration to accurate. The first thing
                        we do during interrupt processing is synchronize
                        the broadcast functions so we are safe to manipulate
@@ -1394,6 +1394,18 @@ int     stepthis;                       /* Stop on this instruction  */
     /* Reset instruction trace indicators */
     tracethis = 0;
     stepthis = 0;
+
+#if 0
+    if( pthread_mutex_trylock(&sysblk.mainlock) )
+        tracethis = 1;
+    else
+        pthread_mutex_unlock(&sysblk.mainlock);
+
+    if( pthread_mutex_trylock(&sysblk.intlock) )
+        logmsg("Error: intlock held\n")
+    else
+        pthread_mutex_unlock(&sysblk.intlock);
+#endif
 
 #if 0
     SET_IC_EXTERNAL_MASK(regs);

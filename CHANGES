@@ -1,3 +1,10 @@
+31 May 2001 Correct TLB purging on SIE dispatch - Jan Jaeger
+31 May 2001 IVSK SIE fix - Paul Leisy
+30 May 2001 Added CHSC channel subsystem call instruction - Jan Jaeger
+28 May 2001 Fix logic error in CPU interlocking - Jan Jaeger
+28 May 2001 Wakeup waiting CPU when interrupt key is processed - Jan Jaeger
+27 May 2001 Correct mainstorage interlocked update/reference - Jan Jaeger
+26 May 2001 Add _REENTRANT and _THREAD_SAFE flags - Jan Jaeger
 25 May 2001 Various multi processing and SIE fixes - Jan Jaeger
 24 May 2001 Performance enhancements - Juergen Dobrinski
 24 May 2001 Added CGEBR/CGDBR - Jan Jaeger

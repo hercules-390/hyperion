@@ -11,7 +11,7 @@ VERSION  = 2.13c
 DESTDIR  = $(PREFIX)/usr/bin
 
 # For Linux use:
-CFLAGS  = -O3 -Wall -malign-double -march=pentium -fomit-frame-pointer \
+CFLAGS  = -O3 -Wall -malign-double -march=pentiumpro -fomit-frame-pointer \
 	   -DVERSION=$(VERSION)
 # For Linux use (with gprof profiling):
 #CFLAGS  = -O3 -Wall -march=pentiumpro -DPROFILE_CPU -pg \

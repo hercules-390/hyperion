@@ -9,6 +9,9 @@
 /* and function prototypes.					     */
 /*-------------------------------------------------------------------*/
 
+#define _REENTRANT    /* Ensure that reentrant code is generated *JJ */
+#define _THREAD_SAFE            /* Some systems use this instead *JJ */
+
 #include "features.h"
 
 #if !defined(_HERCULES_H)
@@ -122,21 +125,6 @@ typedef pthread_attr_t			ATTR;
 	pthread_mutex_init((plk),NULL)
 #define obtain_lock(plk) \
 	pthread_mutex_lock((plk))
-#if MAX_CPU_ENGINES == 1
- #define OBTAIN_MAINLOCK(_register_context)
- #define RELEASE_MAINLOCK(_register_context)
-#else
- #define OBTAIN_MAINLOCK(_register_context) \
-	{ \
-	    pthread_mutex_lock(&sysblk.mainlock); \
-	    (_register_context)->mainlock = 1; \
-	}
- #define RELEASE_MAINLOCK(_register_context) \
-	{ \
-	    (_register_context)->mainlock = 0; \
-	    pthread_mutex_unlock(&sysblk.mainlock); \
-	}
-#endif
 #define release_lock(plk) \
 	pthread_mutex_unlock((plk))
 #define initialize_condition(pcond) \
@@ -176,8 +164,6 @@ typedef int				ATTR;
 #define signal_thread(tid,signo)	raise(signo)
 #define thread_id()			0
 #define wait_timed_condition(pcond,plk,tm) *(pcond)=1
-#define OBTAIN_MAINLOCK(_register_context)
-#define RELEASE_MAINLOCK(_register_context)
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -351,7 +337,8 @@ typedef struct _REGS {			/* Processor registers	     */
 	U32	brdcstpalb;		/* purge_alb() pending	     */
 	U32	brdcstptlb;		/* purge_tlb() pending	     */
 	unsigned int			/* Flags		     */
-		mainlock:1;		/* MAINLOCK held indicator   */
+		mainlock:1,		/* MAINLOCK held indicator   */
+		mainsync:1;		/* MAINLOCK sync wait        */
 // #ifdef SMP_SERIALIZATION
 		/* Locking and unlocking the serialisation lock causes
 		   the processor cache to be flushed this is used to
