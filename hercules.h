@@ -1068,6 +1068,7 @@ typedef struct _DEVBLK {
 #define HDL_SIZE_DEVBLK   sizeof(DEVBLK)
         struct _DEVBLK *nextdev;        /* -> next device block      */
         LOCK    lock;                   /* Device block lock         */
+        int     allocated;              /* Device block free/in use  */
 
         /*  device identification                                    */
 
@@ -1158,9 +1159,9 @@ typedef struct _DEVBLK {
 
         void ( *halt_device)(struct _DEVBLK *);         /*      @ISW */
 
-	DEVIM   *immed;                 /* Model Specific IM codes   */
-	                                /* (overrides devhnd immed)  */
-	int	is_immed;               /* Last command is Immediate */
+        DEVIM   *immed;                 /* Model Specific IM codes   */
+                                        /* (overrides devhnd immed)  */
+        int     is_immed;               /* Last command is Immediate */
 
         /*  emulated architecture fields...   (MUST be aligned!)     */
 
@@ -2023,12 +2024,12 @@ struct mt_tape_info {
 
 /* Utility channel macro */
 #define IS_CCW_IMMEDIATE(_dev) \
-	( ( (_dev)->hnd->immed \
-			&& (_dev)->hnd->immed[(_dev)->code]) \
-		|| ( ( _dev)->immed \
-			&& (_dev)->immed[(_dev)->code]) \
-		|| IS_CCW_NOP((_dev)->code) \
-		|| IS_CCW_SET_EXTENDED((_dev)->code) \
-	) \
+        ( ( (_dev)->hnd->immed \
+                        && (_dev)->hnd->immed[(_dev)->code]) \
+                || ( ( _dev)->immed \
+                        && (_dev)->immed[(_dev)->code]) \
+                || IS_CCW_NOP((_dev)->code) \
+                || IS_CCW_SET_EXTENDED((_dev)->code) \
+        ) \
 
 #endif /*!defined(_HERCULES_H)*/

@@ -1924,7 +1924,7 @@ int     cpu;
 
     /* Detach all devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-       if (dev->pmcw.flag5 & PMCW5_V)
+       if (dev->allocated)
            detach_device(dev->devnum);
 
 #if !defined(OPTION_FISHIO)
@@ -2063,7 +2063,7 @@ DEVBLK *dev;
 DEVBLK**dvpp;
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (!(dev->pmcw.flag5 & PMCW5_V)) break;
+        if (!(dev->allocated)) break;
 
     if(!dev)
     {
@@ -2092,6 +2092,7 @@ DEVBLK**dvpp;
 
     /* Initialize the device block */
     obtain_lock (&dev->lock);
+    dev->allocated = 1;
 
     dev->cpuprio = sysblk.cpuprio;
     dev->devprio = sysblk.devprio;
@@ -2141,12 +2142,7 @@ DEVBLK**dvpp;
 
 void ret_devblk(DEVBLK *dev)
 {
-    /* Mark device invalid */
-    dev->pmcw.flag5 &= ~PMCW5_V;
-#if defined(OPTION_FAST_DEVLOOKUP)
-    DelSubchanFastLookup(dev->subchan);
-    DelDevnumFastLookup(dev->devnum);
-#endif
+    dev->allocated = 0;
     release_lock(&dev->lock);
 }
 
@@ -2242,6 +2238,12 @@ DEVBLK *dev;                            /* -> Device block           */
 
     /* Obtain the device lock */
     obtain_lock(&dev->lock);
+
+#if defined(OPTION_FAST_DEVLOOKUP)
+    DelSubchanFastLookup(dev->subchan);
+    if(dev->pmcw.flag5 & PMCW5_V)
+        DelDevnumFastLookup(dev->devnum);
+#endif
 
     /* Close file or socket */
     if ((dev->fd > 2) || dev->console)
@@ -2345,7 +2347,7 @@ int Chan;
         if(devtab!=NULL)
         {
             dev=devtab[devnum & 0xff];
-            if(dev && dev->pmcw.flag5 & PMCW5_V && dev->devnum==devnum)
+            if(dev && dev->allocated && dev->pmcw.flag5 & PMCW5_V && dev->devnum==devnum)
             {
                 return dev;
             }
@@ -2358,7 +2360,7 @@ int Chan;
 
 #endif
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (dev->devnum == devnum && dev->pmcw.flag5 & PMCW5_V) break;
+        if (dev->allocated && dev->devnum == devnum && dev->pmcw.flag5 & PMCW5_V) break;
 #if defined(OPTION_FAST_DEVLOOKUP)
     if(dev)
     {
@@ -2395,7 +2397,7 @@ DEVBLK *find_device_by_subchan (U16 subchan)
     logmsg("DEBUG : FDBS SL Looking for %d\n",subchan);
 #endif
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (dev->subchan == subchan) break;
+        if (dev->allocated && dev->subchan == subchan) break;
 
 #if defined(OPTION_FAST_DEVLOOKUP)
     if(dev)
