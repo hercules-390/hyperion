@@ -125,7 +125,7 @@ int     icode;                          /* Interception code         */
         gpv = s390_load_psw(GUESTREGS, STATEBK->psw);
     }
 
-#if defined(OPTION_REDUCE_INVAL)
+#if defined(OPTION_REDUCED_INVAL)
     INVALIDATE_AIA(GUESTREGS);
 
     INVALIDATE_AEA_ALL(GUESTREGS);
