@@ -368,7 +368,7 @@ VADR    newia;                          /* New instruction address   */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(newia,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -410,7 +410,7 @@ VADR    effective_addr2;                /* Effective address         */
     if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
+       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);
@@ -457,7 +457,7 @@ VADR    newia;                          /* New instruction address   */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(newia,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -494,7 +494,7 @@ VADR    effective_addr2;                /* Effective address         */
     if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
+       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);
@@ -726,7 +726,7 @@ VADR    effective_addr2;                /* Effective address         */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -762,7 +762,7 @@ VADR    newia;                          /* New instruction address   */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(newia,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -792,7 +792,7 @@ VADR    effective_addr2;                /* Effective address         */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -831,7 +831,7 @@ S32     i, j;                           /* Integer work areas        */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -870,7 +870,7 @@ S32     i, j;                           /* Integer work areas        */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -3352,11 +3352,10 @@ GREG    len3;
 #if defined(FEATURE_PER)
             if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
-              && ((REAL_MODE(&regs->psw) ||
-                ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
-                  && PER_RANGE_CHECK2(addr1, addr1+len3, regs->CR(10), regs->CR(11)) )
+              && ( REAL_MODE(&regs->psw) ||
+                   ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
 #endif /*defined(FEATURE_PER2)*/
-                )
+              && PER_RANGE_CHECK2(addr1, addr1+len3, regs->CR(10), regs->CR(11)) )
                 ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
 
@@ -3400,11 +3399,10 @@ GREG    len3;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
-          && ((REAL_MODE(&regs->psw) ||
-            ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
-              && PER_RANGE_CHECK2(addr1, addr1+len1, regs->CR(10), regs->CR(11)) )
+          && ( REAL_MODE(&regs->psw) ||
+               ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
 #endif /*defined(FEATURE_PER2)*/
-            )
+          && PER_RANGE_CHECK2(addr1, addr1+len1, regs->CR(10), regs->CR(11)) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
 
@@ -3431,11 +3429,10 @@ GREG    len3;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
-          && ((REAL_MODE(&regs->psw) ||
-            ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
-              && PER_RANGE_CHECK2(addr1, addr1+255, regs->CR(10), regs->CR(11)) )
+          && ( REAL_MODE(&regs->psw) ||
+               ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
 #endif /*defined(FEATURE_PER2)*/
-            )
+          && PER_RANGE_CHECK2(addr1, addr1+255, regs->CR(10), regs->CR(11)) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
 
