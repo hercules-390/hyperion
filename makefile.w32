@@ -55,7 +55,8 @@ EXEFILES = hercules \
            hetget hetinit hetmap hetupd \
            dmap2hrc
 DYNFILES = dyninst dyngui hdteq \
-           hdt1403 hdt2703 hdt3088 hdt3270 hdt3420 hdt3505 hdt3525
+           hdt1403 hdt2703 hdt3088 hdt3270 hdt3420 hdt3505 hdt3525 \
+           hdt1052c
 
 
 TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
@@ -79,6 +80,7 @@ hdt1403_OBJ  = printer.o
 hdt2703_OBJ  = commadpt.o
 hdt3088_OBJ  = ctc_lcs.o ctc_ctci.o ctcadpt.o w32ctca.o tuntap.o
 hdt3270_OBJ  = console.o
+hdt1052c_OBJ = con1052c.o
 hdt3420_OBJ  = tapedev.o hetlib.o
 hdt3505_OBJ  = cardrdr.o sockdev.o
 hdt3525_OBJ  = cardpch.o
@@ -287,6 +289,9 @@ hdt3088:  $(hdt3088_OBJ) hercules.a
 
 hdt3270:  $(hdt3270_OBJ) hercules.a
 	  $(CC) -o hdt3270.dll $(hdt3270_OBJ) $(DFLAGS)
+
+hdt1052c: $(hdt1052c_OBJ) hercules.a
+	  $(CC) -o hdt1052c.dll $(hdt1052c_OBJ) $(DFLAGS)
 
 hdt3420:  $(hdt3420_OBJ) hercules.a
 	  $(CC) -o hdt3420.dll $(hdt3420_OBJ) $(DFLAGS)
