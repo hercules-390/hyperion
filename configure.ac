@@ -25,6 +25,17 @@ case "$host_cpu" in
 esac
 CFLAGS="$OFLAGS $CFLAGS"
 
+case "$host_os" in
+	linux*)
+		build_hercifc=true
+		;;
+	*)
+		build_hercifc=false
+		;;
+esac
+
+AM_CONDITIONAL(BUILD_HERCIFC, [test "$build_hercifc" = "true"])
+
 # Libraries
 AC_CHECK_LIB(pthread, pthread_create)
 AC_CHECK_LIB(m, sqrt)

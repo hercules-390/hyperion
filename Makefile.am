@@ -6,7 +6,13 @@ AUTOMAKE_OPTIONS=foreign
 
 SUBDIRS = . util html
 
-bin_PROGRAMS = hercules hercifc \
+if BUILD_HERCIFC
+HERCIFC=hercifc
+else
+HERCIFC=
+endif
+
+bin_PROGRAMS = hercules $(HERCIFC) \
 	   dasdinit dasdisup dasdload dasdls dasdpdsu \
 	   tapecopy tapemap tapesplt \
 	   cckd2ckd cckdcdsk ckd2cckd cckdcomp \
