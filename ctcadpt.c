@@ -661,9 +661,6 @@ BYTE            c;                      /* Character work area       */
              * except Linux for S/390 where no tun driver is builtin (yet)
              */
 
-            int sockfd;
-            int tunmax = -1;
-            int i;
             struct ifreq ifr;
     
             memset(&ifr, 0, sizeof(ifr));
