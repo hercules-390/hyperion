@@ -1390,6 +1390,7 @@ int             rc;                     /* Return code               */
 
 #if !defined(__APPLE__)
 /*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
 /* Obtain and display SCSI tape status                               */
 /*-------------------------------------------------------------------*/
 static U32 status_scsitape (DEVBLK *dev)
@@ -1448,6 +1449,29 @@ BYTE            buf[100];               /* Status string (ASCIIZ)    */
 
 } /* end function status_scsitape */
 
+/*-------------------------------------------------------------------*/
+/* Determine if the tape is Ready (Tape drive door status)           */
+/*-------------------------------------------------------------------*/
+static int driveready_scsitape(DEVBLK *dev,BYTE *unitstat,BYTE code)
+{
+    U32 sst;
+
+    UNREFERENCED(unitstat);
+    UNREFERENCED(code);
+
+    if(dev->fd<0)
+    {
+        return(0);
+    }
+    sst=status_scsitape(dev);
+    if(GMT_DR_OPEN(sst))
+    {
+        close(dev->fd);
+        dev->fd=-1;
+        return(0);
+    }
+    return(1);
+}
 /*-------------------------------------------------------------------*/
 /* Open a SCSI tape device                                           */
 /*                                                                   */
@@ -4435,6 +4459,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             }
             if(!dev->tmh->tapeloaded(dev,unitstat,code))
             {
+                    build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
                     return;
             }
             dev->blockid = 0;
@@ -5185,7 +5210,7 @@ static TAPEMEDIA_HANDLER tmh_scsi = {
         &write_scsimark,
         NULL, /* DSE */
         NULL, /* ERG */
-        &return_true3, /* Tape door opened */
+        &driveready_scsitape, /* Tape door opened */
         &return_false1}; /* Passed EOT marker */
 #        endif /* !defined(__APPLE__) */
 
