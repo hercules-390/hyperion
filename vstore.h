@@ -116,7 +116,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     abs1 = LOGICAL_TO_ABS_SKP (addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
 
     /* Check if store crosses page or not */
-    if (!(addr & 1) || (addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 2))
+    if ((addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 2))
     {
         STORAGE_KEY(abs1) |= (STORKEY_REF | STORKEY_CHANGE);
         STORE_HW(sysblk.mainstor + abs1, value);
@@ -165,7 +165,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     abs = LOGICAL_TO_ABS_SKP (addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
 
     /* Check if store crosses page or not */
-    if (!(addr & 3) || (addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 4))
+    if ((addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 4))
     {
         STORAGE_KEY(abs) |= (STORKEY_REF | STORKEY_CHANGE);
         STORE_FW(sysblk.mainstor + abs, value);
@@ -226,7 +226,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     abs = LOGICAL_TO_ABS_SKP (addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     /* Check if store crosses page or not */
-    if (!(addr & 7) || (addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 8))
+    if ((addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 8))
     {
         STORAGE_KEY(abs) |= (STORKEY_REF | STORKEY_CHANGE);
         STORE_DW(sysblk.mainstor + abs, value);
@@ -356,7 +356,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Fetch 2 bytes when operand does not cross page boundary
        (Page boundary test at 800 to catch FPO crosser too) */
-    if(!(addr & 1) || (abs1 & 0x000007FF) <= (2048 - 2))
+    if((abs1 & 0x000007FF) <= (2048 - 2))
         return fetch_hw(sysblk.mainstor + abs1);
 
     /* Calculate address of second byte of operand */
@@ -399,7 +399,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Fetch 4 bytes when operand does not cross page boundary
        (Page boundary test at 800 to catch FPO crosser too) */
-    if(!(addr & 3) || (abs & 0x000007FF) <= (2048 - 4))
+    if((abs & 0x000007FF) <= (2048 - 4))
         return fetch_fw(sysblk.mainstor + abs);
 
     /* Operand is not fullword aligned and may cross a page boundary */
@@ -460,7 +460,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Fetch 8 bytes when operand does not cross page boundary
        (Page boundary test at 800 to catch FPO crosser too) */
-    if(!(addr & 7) || (abs & 0x000007FF) <= (2048 - 8))
+    if((abs & 0x000007FF) <= (2048 - 8))
         return fetch_dw(sysblk.mainstor + abs);
 
     /* Calculate page address of last byte of operand */

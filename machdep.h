@@ -31,6 +31,35 @@
         }
 #endif /*defined(OPTION_FETCHIBYTE)*/
 
+#if 1
+#define COMPARE_AND_SWAP(r1, r3, addr, arn, regs) \
+        { \
+            RADR  abs; \
+            U32   prev=0, old, new; \
+            abs = LOGICAL_TO_ABS_SKP ((addr), (arn), (regs), \
+                                ACCTYPE_WRITE_SKP, (regs)->psw.pkey); \
+            old = CSWAP32((regs)->GR_L((r1))); \
+            new = CSWAP32((regs)->GR_L((r3))); \
+            __asm__("lock; cmpxchgl %1,%2" \
+                    :"=a"(prev) \
+                    : "q"(new), \
+                      "m"(sysblk.mainstor[abs]), "0"(old) \
+                    : "memory"); \
+            prev = CSWAP32(prev); \
+            if ((regs)->GR_L((r1)) == prev) \
+            { \
+                (regs)->psw.cc = 0; \
+                STORAGE_KEY(abs) |= (STORKEY_REF | STORKEY_CHANGE); \
+            } \
+            else \
+            { \
+                (regs)->psw.cc = 1; \
+                STORAGE_KEY(abs) |= STORKEY_REF; \
+                (regs)->GR_L((r1)) = prev; \
+            } \
+        }
+#endif
+
 #endif /*defined(__i686__) | defined(__pentiumpro__)*/
 
 /*-------------------------------------------------------------------*/
@@ -55,4 +84,30 @@
 #endif /*defined(OPTION_FETCHIBYTE)*/
 
 #endif /*!defined(HERCULES_MACHINE)*/
+
+#if !defined(COMPARE_AND_SWAP) 
+#define COMPARE_AND_SWAP(r1, r3, addr, arn, regs) \
+        { \
+            RADR  abs; \
+            U32   temp; \
+            abs = LOGICAL_TO_ABS_SKP ((addr), (arn), (regs), \
+                                ACCTYPE_WRITE_SKP, (regs)->psw.pkey); \
+            memcpy (&temp, &sysblk.mainstor[abs], 4); \
+            temp = CSWAP32(temp); \
+            if (temp == regs->GR_L((r1))) \
+            { \
+                temp = regs->GR_L((r3)); \
+                temp = CSWAP32(temp); \
+                memcpy (&sysblk.mainstor[abs], &temp, 4); \
+                (regs)->psw.cc = 0; \
+                STORAGE_KEY(abs) |= (STORKEY_REF | STORKEY_CHANGE); \
+            } \
+            else \
+            { \
+                (regs)->psw.cc = 1; \
+                STORAGE_KEY(abs) |= STORKEY_REF; \
+                regs->GR_L((r1)) = temp; \
+            } \
+        }
+#endif /*!defined(COMPARE_AND_SWAP)*/
 
