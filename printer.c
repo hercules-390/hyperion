@@ -486,6 +486,7 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+        *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -497,6 +498,7 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+        *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -508,6 +510,7 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+        *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -531,6 +534,7 @@ BYTE            c;                      /* Print character           */
     /*---------------------------------------------------------------*/
     /* BLOCK DATA CHECK                                              */
     /*---------------------------------------------------------------*/
+        *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -538,6 +542,7 @@ BYTE            c;                      /* Print character           */
     /*---------------------------------------------------------------*/
     /* ALLOW DATA CHECK                                              */
     /*---------------------------------------------------------------*/
+        *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -549,6 +554,7 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+        *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -560,6 +566,7 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+        *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -571,6 +578,7 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+        *residual = 0;
         *unitstat = CSW_CE | CSW_DE;
         break;
 
