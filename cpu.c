@@ -1037,7 +1037,23 @@ void *cpu_thread (REGS *regs)
     }
 
     /* Increment number of CPUs online */
+    if(!sysblk.numcpu)
+    {
         sysblk.numcpu++;
+        /* Start the TOD clock and CPU timer thread */
+        if ( create_thread (&sysblk.todtid, &sysblk.detattr,
+             timer_update_thread, NULL) )
+        {
+            logmsg (_("HHCCP006E Cannot create timer thread: %s\n"),
+                           strerror(errno));
+            release_lock(&sysblk.intlock);
+            return NULL;
+        }
+    }
+    else
+    {
+        sysblk.numcpu++;
+    }
 
     /* Perform initial cpu reset */
     initial_cpu_reset (regs);
