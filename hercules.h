@@ -409,7 +409,7 @@ typedef void*THREAD_FUNC(void*);
 /* Pattern for displaying the thread_id */
 #define TIDPAT "%8.8lX"
 
-#if defined(__GNUC__)
+#if __GNUC__ >= 3
 #define likely(_c)   __builtin_expect((_c),1)
 #define unlikely(_c) __builtin_expect((_c),0)
 #else
