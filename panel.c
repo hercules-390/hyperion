@@ -1332,6 +1332,14 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 logmsg("DEV%4.4X: CRW pending\n",dev->devnum);
         }
 
+#ifdef OPTION_IOINTQ
+        logmsg ("I/O interrupt queue: ");
+        if (!sysblk.iointq)
+            logmsg(" (NULL)\n");
+        for (dev = sysblk.iointq; dev != NULL; dev = dev->iointq)
+            logmsg("DEV%4.4X\n",dev->devnum);
+#endif /*OPTION_IOINTQ*/
+
         return NULL;
     }
 

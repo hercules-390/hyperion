@@ -449,6 +449,43 @@ typedef struct _REGS {                  /* Processor registers       */
 #define INTCOND       sysblk.intcond
 #endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
 
+#ifdef OPTION_IOINTQ
+/* Macros to queue/dequeue a device on the I/O interrupt queue */
+#define QUEUE_IO_INTERRUPT(dev) \
+ { \
+   if (sysblk.iointq == NULL) \
+   { \
+     sysblk.iointq = (dev); \
+     (dev)->iointq = NULL; \
+   } \
+   else if (sysblk.iointq != (dev)) \
+   { \
+     DEVBLK *prev; \
+     for (prev = sysblk.iointq; prev->iointq != NULL; prev = prev->iointq) \
+       if (prev->iointq == (dev) \
+        || prev->iointq->priority < dev->priority) break; \
+     if (prev->iointq != (dev)) \
+     { \
+       (dev)->iointq = prev->iointq; \
+       prev->iointq = (dev); \
+     } \
+   } \
+ }
+#define DEQUEUE_IO_INTERRUPT(dev) \
+ { \
+   if ((dev) == sysblk.iointq) \
+     sysblk.iointq = (dev)->iointq; \
+   else { \
+     DEVBLK *prev; \
+     for (prev = sysblk.iointq; prev->iointq != (dev); prev = prev->iointq); \
+     prev->iointq = (dev)->iointq; \
+   } \
+ }
+#else
+#define QUEUE_IO_INTERRUPT(dev)
+#define DEQUEUE_IO_INTERRUPT(dev)
+#endif
+
 /*-------------------------------------------------------------------*/
 /* System configuration block                                        */
 /*-------------------------------------------------------------------*/
@@ -508,6 +545,9 @@ typedef struct _SYSBLK {
         struct _DEVBLK *ioq;            /* I/O queue                 */
         LOCK    ioqlock;                /* I/O queue lock            */
         COND    ioqcond;                /* I/O queue condition       */
+#ifdef OPTION_IOINTQ
+        struct _DEVBLK *iointq;         /* I/O interrupt queue       */
+#endif
         int     devtwait;               /* Device threads waiting    */
         int     devtnbr;                /* Number of device threads  */
         int     devtmax;                /* Max device threads        */
@@ -631,6 +671,10 @@ typedef struct _DEVBLK {
         COND    resumecond;             /* Resume condition          */
         struct _DEVBLK *nextdev;        /* -> next device block      */
         struct _DEVBLK *nextioq;        /* -> next device in I/O q   */
+#ifdef OPTION_IOINTQ
+        struct _DEVBLK *iointq;         /* -> next device in I/O
+                                           interrupt queue           */
+#endif
         int     priority;               /* Device priority           */
         unsigned int                    /* Flags                     */
                 pending:1,              /* 1=Interrupt pending       */

@@ -336,6 +336,14 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
     /* Release the device lock */
     release_lock (&dev->lock);
 
+    /* Possible I/O interrupt */
+    obtain_lock (&sysblk.intlock);
+    if (dev->pending || dev->pcipending)
+        QUEUE_IO_INTERRUPT (dev);
+    ON_IC_IOPENDING;
+    WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
+    release_lock (&sysblk.intlock);
+
     /* Return the condition code */
     return cc;
 
@@ -553,6 +561,7 @@ void clear_subchan (REGS *regs, DEVBLK *dev)
 
         /* Signal waiting CPUs that an interrupt may be pending */
         obtain_lock (&sysblk.intlock);
+        QUEUE_IO_INTERRUPT (dev);
         ON_IC_IOPENDING;
         WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
         release_lock (&sysblk.intlock);
@@ -651,6 +660,7 @@ int halt_subchan (REGS *regs, DEVBLK *dev)
 
         /* Signal waiting CPUs that an interrupt may be pending */
         obtain_lock (&sysblk.intlock);
+        QUEUE_IO_INTERRUPT (dev);
         ON_IC_IOPENDING;
         WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
         release_lock (&sysblk.intlock);
@@ -1274,6 +1284,7 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 
     /* Signal waiting CPUs that an interrupt is pending */
     obtain_lock (&sysblk.intlock);
+    QUEUE_IO_INTERRUPT (dev);
     ON_IC_IOPENDING;
     WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
     release_lock (&sysblk.intlock);
@@ -1530,6 +1541,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
         /* Signal waiting CPUs that interrupt is pending */
         obtain_lock (&sysblk.intlock);
+        QUEUE_IO_INTERRUPT (dev);
         ON_IC_IOPENDING;
         WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
         release_lock (&sysblk.intlock);
@@ -1555,6 +1567,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
+            QUEUE_IO_INTERRUPT (dev);
             ON_IC_IOPENDING;
             WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
             release_lock (&sysblk.intlock);
@@ -1616,6 +1629,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
+            QUEUE_IO_INTERRUPT (dev);
             ON_IC_IOPENDING;
             WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
             release_lock (&sysblk.intlock);
@@ -1661,6 +1675,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
+            QUEUE_IO_INTERRUPT (dev);
             ON_IC_IOPENDING;
             WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
             release_lock (&sysblk.intlock);
@@ -1799,6 +1814,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
                     /* Signal waiting CPUs that interrupt is pending */
                     obtain_lock (&sysblk.intlock);
+                    QUEUE_IO_INTERRUPT (dev);
                     ON_IC_IOPENDING;
                     WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
                     release_lock (&sysblk.intlock);
@@ -1908,6 +1924,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
             /* Signal waiting CPUs that an interrupt is pending */
             obtain_lock (&sysblk.intlock);
+            QUEUE_IO_INTERRUPT (dev);
             ON_IC_IOPENDING;
             WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
             release_lock (&sysblk.intlock);
@@ -2186,6 +2203,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
     /* Signal waiting CPUs that an interrupt is pending */
     obtain_lock (&sysblk.intlock);
+    QUEUE_IO_INTERRUPT (dev);
     ON_IC_IOPENDING;
     WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
     release_lock (&sysblk.intlock);
@@ -2264,23 +2282,23 @@ int ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
                                   U32 *ioparm, U32 *iointid, BYTE *csw)
 {
 DEVBLK *dev;                            /* -> Device control block   */
-
-    /* Turn off the I/O interrupt pending flag */
-    OFF_IC_IOPENDING;
+int     iopending = 0;                  /* 1 = I/O still pending     */
 
     /* Find a device with pending interrupt */
+#ifdef OPTION_IOINTQ
+    for (dev = sysblk.iointq; dev != NULL; dev = dev->iointq)
+#else /*!OPTION_IOINTQ*/
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+#endif /*!OPTION_IOINTQ*/
     {
         obtain_lock (&dev->lock);
         if ((dev->pending || dev->pcipending)
             && (dev->pmcw.flag5 & PMCW5_V))
         {
-            /* Turn on the I/O interrupt pending flag */
-            ON_IC_IOPENDING;
-
             /* Exit loop if enabled for interrupts from this device */
             if (ARCH_DEP(interrupt_enabled)(regs, dev))
                 break;
+            iopending = 1;
 #if MAX_CPU_ENGINES > 1
             /* See if another CPU can take this interrupt */
             WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
@@ -2292,8 +2310,21 @@ DEVBLK *dev;                            /* -> Device control block   */
     /* If no enabled interrupt pending, exit with condition code 0 */
     if (dev == NULL)
     {
+        if (!iopending)
+            OFF_IC_IOPENDING;
         return 0;
     }
+
+    /* Remove the device from the I/O interrupt queue
+       unless both `pcipending' and `pending' are set */
+    if (!(dev->pcipending == 1 && dev->pending == 1))
+        DEQUEUE_IO_INTERRUPT (dev);
+
+#ifdef OPTION_IOINTQ
+    /* Turn off IOPENDING bit if no outstanding I/O interrupts */
+    if (sysblk.iointq == NULL)
+        OFF_IC_IOPENDING;
+#endif
 
 #ifdef FEATURE_S370_CHANNEL
     /* Extract the I/O address and CSW */
@@ -2335,6 +2366,7 @@ DEVBLK *dev;                            /* -> Device control block   */
 
     /* Exit with condition code indicating interrupt cleared */
     return 1;
+
 
 } /* end function present_io_interrupt */
 
