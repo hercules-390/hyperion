@@ -1040,6 +1040,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             STSPALL_CMD
             "store=store status\n"
             "loadcore filename [address] = load core image from file\n"
+            "loadtext filename [address] = load text deck from file\n"
             "loadparm xxxxxxxx=set IPL parameter, ipl devn=IPL\n"
             "archmode xxxxxxxx=set architecture mode\n"
             "devinit devn arg [arg...] = reinitialize device\n"
@@ -1742,6 +1743,84 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 len, fname);
         return NULL;
     }
+
+    /* loadtext filename command - load a text deck file */
+    if (memcmp(cmd,"loadtext",8)==0)
+    {
+        /* Locate the operand */
+        fname = strtok (cmd + 8, " \t");
+        if (fname == NULL)
+        {
+            logmsg ("loadtext rejected: filename missing\n");
+            return NULL;
+        }
+
+	loadaddr = strtok (NULL, " \t");
+
+	if (loadaddr == NULL)
+            aaddr = 0;
+	else if (sscanf(loadaddr, "%x", &aaddr) !=1)
+	
+	{
+	    logmsg ("invalid address: %s \n",loadaddr);
+	    return NULL;
+	}
+
+	if (aaddr >= regs->mainsize)
+	{ 
+	    logmsg ("Address greater than mainstore size. \n");
+	    return NULL;
+	}
+
+        /* Command is valid only when CPU is stopped */
+        if (regs->cpustate != CPUSTATE_STOPPED)
+        {
+            logmsg ("loadtext rejected: CPU not stopped\n");
+            return NULL;
+        }
+
+        /* Open the specified file name */
+        fd = open (fname, O_RDONLY|O_BINARY);
+        if (fd < 0)
+        {
+            logmsg ("Cannot open %s: %s\n",
+                    fname, strerror(errno));
+            return NULL;
+        }
+
+        n = 0;
+        for (;;)
+        {
+            /* Read 80 bytes into buffer */
+            len = read (fd, buf, 80);
+            if (len < 0)
+            {
+                logmsg ("Cannot read %s: %s\n",
+                        fname, strerror(errno));
+                close (fd);
+                return NULL;
+            }
+
+            /* if record is "END" then break out of loop */
+            if (buf[1]==0xC5 && buf[2]==0xD5 && buf[3]==0xC4)
+                break;
+
+            /* if record is "TXT" then copy bytes to mainstore */
+            if (buf[1]==0xE3 && buf[2]==0xE7 && buf[3]==0xE3)
+            {
+                n   = buf[5]*65536 + buf[6]*256 + buf[7];
+                len = buf[11];
+                memcpy(sysblk.mainstor + aaddr + n, &buf[16], len);
+            }
+        }
+
+        /* Close file and issue status message */
+        close (fd);
+        logmsg ("Finished loading TEXT deck file\n");
+        logmsg ("Last 'TXT' record had address: %3.3X\n", n);
+        return NULL;
+    }
+
 
     /* loadparm xxxxxxxx command - set IPL parameter */
     if (memcmp(cmd,"loadparm",8)==0)
