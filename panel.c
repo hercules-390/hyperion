@@ -1715,12 +1715,6 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 	    return NULL;
 	}
 
-	if (aaddr >= regs->mainsize)
-	{ 
-	    logmsg ("Address greater than mainstore size. \n");
-	    return NULL;
-	}
-
         /* Command is valid only when CPU is stopped */
         if (regs->cpustate != CPUSTATE_STOPPED)
         {
@@ -1728,31 +1722,13 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
-        /* Open the specified file name */
-        fd = open (fname, O_RDONLY|O_BINARY);
-        if (fd < 0)
-        {
-            logmsg ("Cannot open %s: %s\n",
-                    fname, strerror(errno));
-            return NULL;
-        }
-
         /* Read the file into absolute storage */
         logmsg ("Loading %s to location %x \n", fname,aaddr);
 
-        len = read (fd, sysblk.mainstor + aaddr, regs->mainsize);
-        if (len < 0)
-        {
-            logmsg ("Cannot read %s: %s\n",
-                    fname, strerror(errno));
-            close (fd);
-            return NULL;
-        }
+        len = load_main(fname, aaddr);
 
-        /* Close file and issue status message */
-        close (fd);
-        logmsg ("%d bytes read from %s\n",
-                len, fname);
+        logmsg ("%d bytes read from %s\n", len, fname);
+
         return NULL;
     }
 
@@ -1875,7 +1851,10 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             }
         if (sscanf(cmd+3, "%hx%c", &devnum, &c) != 1)
         {
-            logmsg ("Device number %s is invalid\n", cmd+3);
+            /* If the ipl device is not a valid hex number we assume */
+            /* This is a load from the service processor             */
+            load_hmc(strtok(cmd+3," \t"), regs);
+//          logmsg ("Device number %s is invalid\n", cmd+3);
             return NULL;
         }
         load_ipl (devnum, regs);

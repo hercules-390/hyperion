@@ -1633,6 +1633,10 @@ int  ARCH_DEP(load_ipl) (U16 devnum, REGS *regs);
 void ARCH_DEP(cpu_reset) (REGS *regs);
 void initial_cpu_reset (REGS *regs);
 void ARCH_DEP(initial_cpu_reset) (REGS *regs);
+int load_main(char *fname, RADR startloc);
+int ARCH_DEP(load_main) (char *fname, RADR startloc);
+int load_hmc(char *fname, REGS *regs);
+int ARCH_DEP(load_hmc) (char *fname, REGS *regs);
 
 
 /* Functions in module machchk.c */
