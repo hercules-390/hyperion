@@ -23,7 +23,7 @@
 #undef  OPTION_INSTRUCTION_COUNTING	/* First use trace and count */
 #define OPTION_CKD_KEY_TRACING		/* Trace CKD search keys     */
 #undef	OPTION_CMPSC_DEBUGLVL	   /* 3 ** 1=Exp 2=Comp 3=Both debug */
-#define OPTION_NO_IEEE_SUPPORT          /* No/downlevel IEEE support */
+#undef  OPTION_NO_IEEE_SUPPORT          /* No/downlevel IEEE support */
 
 #ifdef WIN32
 #define OPTION_NO_IEEE_SUPPORT          /* not supported in cygwin   */
