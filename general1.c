@@ -1743,13 +1743,6 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     /* Process operands from left to right */
     for (i = 0; len1 > 0 || len2 > 0 ; i++)
     {
-        /* If equal byte count has reached substring length
-           exit with condition code zero */
-        if (equlen == sublen)
-        {
-            cc = 0;
-            break;
-        }
 
         /* If 4096 bytes have been compared, and the last bytes
            compared were unequal, exit with condition code 3 */
@@ -1826,6 +1819,13 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
                 GR_A(r2+1, regs) = len2;
             }
 
+        /* If equal byte count has reached substring length
+           exit with condition code zero */
+        if (equlen == sublen)
+        {
+            cc = 0;
+            break;
+        }
 
     } /* end for(i) */
 
