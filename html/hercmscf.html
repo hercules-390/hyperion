@@ -720,6 +720,33 @@ with the address <code><em>oldaddr</em></code> has been changed to the address
   <dt>Issued by
   <dd>config.c, function define_device
   </dl>
+<dt><code><a name="HHCCF051S">
+HHCCF051S Error in <em>filename</em> line <em>lineno</em>:
+<em>verid</em> is not a valid CPU version code
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The version code <code><em>verid</em></code> specified on the <code>CPUVERID</code>
+configuration statement at line number <code><em>lineno</em></code> of the
+file named <code><em>filename</em></code> must be exactly two digits long,
+and must be a valid hexadecimal number.
+  <dt>Action
+  <dd>Correct the model number and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF052S">
+HHCCF052S Error in <em>filename</em> line <em>lineno</em>:
+<em>option</em>: invalid argument
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The argument <em>option</em> on the DIAG8CMD is invalid.  Valid options are <code><em>enable</em></code> and <code><em>disable</em></code>.
+  <dt>Action
+  <dd>Correct the statement and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>

@@ -24,12 +24,14 @@ a real System/390.  The configuration file is an ASCII text file.
 
     CPUSERIAL 000611
     CPUMODEL  3090
+    CPUVERID  FD
     MAINSIZE  64
     XPNDSIZE  0
     CODEPAGE  default
     CNSLPORT  3270
     HTTPPORT  8081
     HTTPROOT  /usr/local/share/hercules/
+    DIAG8CMD  disable
     NUMCPU    1
     NUMVEC    1
     CPUPRIO   15
@@ -84,6 +86,11 @@ The following system parameters may be specified:
 <dt><code>CPUMODEL <em>xxxx</em></code>
 <dd>specifies the 4 hexadecimal digit CPU model number
     stored by the STIDP instruction
+<dt><code>CPUVERID <em>xx</em></code>
+<dd>specifies the 2 hexadecimal digit CPU version code
+    stored by the STIDP instruction.
+    The default version code is FD when ARCHMODE S/370 or ARCHMODE ESA/390
+    is specified.  For the ESAME architecture mode 00 is used as default.
 <dt><code>MAINSIZE <em>nnnn</em></code>
 <dd>specifies the main storage size in megabytes, where
     <code><em>nnnn</em></code> is a decimal number
@@ -117,6 +124,13 @@ The following system parameters may be specified:
     "<tt>K:\Hercules\html\</tt>", then you should specify
     "<tt>/cygdrive/k/Hercules/html/</tt>"
     on your <tt>HTTPROOT</tt> statement.
+<dt><code>DIAG8CMD <em>disable/enable</em></code>
+<dd>When set to enable, commands issued through diagnose 8 will be 
+    executed by hercules as hercules commands.  When set to disable,
+    commands issued through the diagnose 8 interface will be ignored.
+    The default is disable.  Note that when this feature is enabled, systems
+    running under hercules can even issue host commands through the hercules
+    sh command.  Enabling this feature may have security consequences.
 <dt><code>CNSLPORT <em>nnnn</em></code>
 <dd>specifies the port number (in decimal) to which tn3270 and
     telnet clients will connect

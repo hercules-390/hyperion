@@ -715,6 +715,7 @@ typedef struct _SYSBLK {
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */
         int     mbd;                    /* Device connect time mode  */
+        int     diag8cmd;               /* Allow diagnose 8 commands */
         int     toddrag;                /* TOD clock drag factor     */
         int     panrate;                /* Panel refresh rate        */
         int     npquiet;                /* New Panel quiet indicator */
@@ -851,6 +852,7 @@ typedef struct _SYSBLK {
 /* Definitions for OS tailoring - msb eq mon event, lsb eq oper exc. */
 #define OS_NONE         0x7FFFFFFFF7DE7FFFULL   /* No spec OS tail.  */
 #define OS_OS390        0x7FF673FFF7DE7FFFULL   /* OS/390            */
+/*                      0x7B7... to suppress ASCE-type and RGN-third */
 #define OS_VSE          0x7FF673FFF7DE7FFFULL   /* VSE               */
 #define OS_VM           0x7FFFFFFFF7DE7FFCULL   /* VM                */
 #if !defined(NO_IEEE_SUPPORT)

@@ -246,6 +246,7 @@ int     cpu;                            /* CPU number                */
 FILE   *fp;                             /* Configuration file pointer*/
 BYTE   *sserial;                        /* -> CPU serial string      */
 BYTE   *smodel;                         /* -> CPU model string       */
+BYTE   *sversion;                       /* -> CPU version string     */
 BYTE   *smainsize;                      /* -> Main size string       */
 BYTE   *sxpndsize;                      /* -> Expanded size string   */
 BYTE   *scnslport;                      /* -> Console port number    */
@@ -255,6 +256,7 @@ BYTE   *sarchmode;                      /* -> Architectural mode     */
 BYTE   *sloadparm;                      /* -> IPL load parameter     */
 BYTE   *ssysepoch;                      /* -> System epoch           */
 BYTE   *stzoffset;                      /* -> System timezone offset */
+BYTE   *sdiag8cmd;                      /* -> Allow diagnose 8       */
 BYTE   *stoddrag;                       /* -> TOD clock drag factor  */
 BYTE   *sostailor;                      /* -> OS to tailor system to */
 BYTE   *spanrate;                       /* -> Panel refresh rate     */
@@ -277,6 +279,7 @@ BYTE   *siodelay;                       /* -> I/O delay value        */
 BYTE   *scckd;                          /* -> CCKD parameters        */
 BYTE    loadparm[8];                    /* Load parameter (EBCDIC)   */
 BYTE    version = 0x00;                 /* CPU version code          */
+int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
 U16     model;                          /* CPU model number          */
 U16     mainsize;                       /* Main storage size (MB)    */
@@ -293,6 +296,7 @@ U16     shrdport;                       /* Shared device port number */
 int     archmode;                       /* Architectural mode        */
 S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
+int     diag8cmd;                       /* Allow diagnose 8 commands */
 int     toddrag;                        /* TOD clock drag factor     */
 U64     ostailor;                       /* OS to tailor system to    */
 int     panrate;                        /* Panel refresh rate        */
@@ -369,6 +373,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     memset (loadparm, 0x4B, 8);
     sysepoch = 1900;
     tzoffset = 0;
+    diag8cmd = 0;
     toddrag = 1;
 #if defined(_390)
     archmode = ARCH_390;
@@ -410,6 +415,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         /* Clear the operand value pointers */
         sserial = NULL;
         smodel = NULL;
+        sversion = NULL;
         smainsize = NULL;
         sxpndsize = NULL;
         scnslport = NULL;
@@ -419,6 +425,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         sloadparm = NULL;
         ssysepoch = NULL;
         stzoffset = NULL;
+        sdiag8cmd = NULL;
         stoddrag = NULL;
         sostailor = NULL;
         spanrate = NULL;
@@ -494,6 +501,10 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             {
                 stzoffset = operand;
             }
+            else if (strcasecmp (keyword, "diag8cmd") == 0)
+            {
+                sdiag8cmd = operand;
+            }
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
             else if (strcasecmp (keyword, "toddrag") == 0)
             {
@@ -513,6 +524,10 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             else if (strcasecmp (keyword, "archmode") == 0)
             {
                 sarchmode = operand;
+            }
+            else if (strcasecmp (keyword, "cpuverid") == 0)
+            {
+                sversion = operand;
             }
             else if (strcasecmp (keyword, "cpuprio") == 0)
             {
@@ -656,13 +671,27 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         sysblk.arch_z900 = sysblk.arch_mode != ARCH_390;
 #endif
 
+        /* Parse CPU version number operand */
+        if (sversion != NULL)
+        {
+            if (strlen(sversion) != 2
+                || sscanf(sversion, "%hhx%c", &version, &c) != 1)
+            {
+                fprintf(stderr, _("HHCCF012S Error in %s line %d: "
+                        "%s is not a valid CPU version code\n"),
+                        fname, stmt, sversion);
+                delayed_exit(1);
+            }
+            dfltver = 0;
+        }
+
         /* Parse CPU serial number operand */
         if (sserial != NULL)
         {
             if (strlen(sserial) != 6
                 || sscanf(sserial, "%x%c", &serial, &c) != 1)
             {
-                fprintf(stderr, _("HHCCF011S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF051S Error in %s line %d: "
                         "%s is not a valid serial number\n"),
                         fname, stmt, sserial);
                 delayed_exit(1);
@@ -817,6 +846,23 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF023S Error in %s line %d: "
                         "%s is not a valid timezone offset\n"),
                         fname, stmt, stzoffset);
+                delayed_exit(1);
+            }
+        }
+
+        /* Parse diag8cmd operand */
+        if (sdiag8cmd != NULL)
+        {
+            if (strcasecmp (sdiag8cmd, "enable") == 0)
+                diag8cmd = 1;
+            else
+            if (strcasecmp (sdiag8cmd, "disable") == 0)
+                diag8cmd = 0;
+            else
+            {
+                fprintf(stderr, _("HHCCF052S Error in %s line %d: "
+                        "%s: invalid argument\n"),
+                        fname, stmt, sdiag8cmd);
                 delayed_exit(1);
             }
         }
@@ -1081,6 +1127,16 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     sysblk.shrdport = shrdport;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
+    sysblk.diag8cmd = diag8cmd;
+
+#if defined(_370) || defined(_390)
+    if(dfltver)
+        version =
+#if defined(_900)
+                  sysblk.arch_z900 ? 0x00 :
+#endif
+                                            0xFD;
+#endif
     /* Build CPU identifier */
     sysblk.cpuid = ((U64)version << 56)
                  | ((U64)serial << 32)

@@ -776,7 +776,19 @@ BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
     for (i = 0; i < cmdlen; i++)
         buf[i] = guest_to_host(buf[i]);
     buf[i] = '\0';
-    logmsg ("HHC660I %s\n", buf);
+
+    if(buf && *buf)
+    {
+#ifdef FEATURE_HERCULES_DIAGCALLS
+        if(sysblk.diag8cmd)
+        {
+            logmsg ("HHC662I ");
+            panel_command(buf);
+        }
+        else
+#endif
+            logmsg ("HHC660I %s\n", buf);
+    }
 
     /* Store the response and set length if response requested */
     if (cmdflags & CMDFLAGS_RESPONSE)
