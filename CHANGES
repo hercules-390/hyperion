@@ -1,3 +1,4 @@
+16 Mar 2001 Fix to allow HET files to reside on read-only media - Leland Lucius
 16 Mar 2001 Fix LPSW in ESAME mode - Jan Jaeger
 15 Mar 2001 Compressed CKD utilities now tolerate VM weirdness - Greg Smith
 15 Mar 2001 Alternate tracks for compressed CKD volumes - Greg Smith
