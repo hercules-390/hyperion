@@ -5,7 +5,7 @@
 /* This module contains device handling functions for emulated       */
 /* 3420 magnetic tape devices for the Hercules ESA/390 emulator.     */
 /*                                                                   */
-/* Three emulated tape formats are supported:                        */
+/* Four emulated tape formats are supported:                         */
 /* 1. AWSTAPE   This is the format used by the P/390.                */
 /*              The entire tape is contained in a single flat file.  */
 /*              Each tape block is preceded by a 6-byte header.      */
