@@ -1,3 +1,5 @@
+09 Jul 2001 Fix CUSE and MVST on page cross rupts - Paul Leisy
+09 Jul 2001 Fix UPT so GPR5 updated after store - Paul Leisy
 07 Jul 2001 Fix sporadic access violation at shutdown - Fish
 05 Jul 2001 Restrict TODEPOCH to 1900, 1928, 1960, 1970, or 1988, and
             correct offset calculation - Michael Koehne
