@@ -712,7 +712,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #define ANSI_RESET_WHT_BLK   "\x1B[0;37;40m"
 #define ANSI_CLEAR_SCREEN    "\x1B[2J"
 
-static void panel_cleanup()
+static void panel_cleanup(void *unused __attribute__ ((unused)) )
 {
 struct termios kbattr;                  /* Terminal I/O structure    */
 
