@@ -25,6 +25,8 @@ information on the security implications of the hercifc program.
 
 Now for the gory details:
 
+---------------------------------------------------------------
+
     *** Important information about changes to the ***
     *** Hercules configuration files - PLEASE READ ***
 
@@ -37,17 +39,61 @@ there is no distinction between the CTCI and CTCI-W32 modes any
 more, in fact CTCI-W32 does not exist in this release (other
 than to maintain compatibility with previous configuration files).
 
-In previous releases of Hercules, all of the TCP/IP emulations
-required two addresses to be defined in the Hercules configuration
-file. One address is the read subchannel and the other for write.
-WITH THIS RELEASE OF HERCULES, ONLY THE FIRST ADDRESS SHOULD BE
-SPECIFIED IN THE CONFIGURATION FILE. Hercules will automatically
-create the second address. Care must be taken to not define the
-second address or a configuration error will occur.
+---------------------------------------------------------------
 
-The previous statement does NOT apply to VMNET or CTCT.
+    *** Important information about changes to the ***
+    *** Hercules configuration files - PLEASE READ ***
 
-Current emulation modes are:
+In releases prior to Hercules version 3.00, all of the TCP/IP
+emulations required two addresses to be defined in the Hercules
+configuration file: one address for the read subchannel and the
+other for write.
+
+---------------------------------------------------------------
+
+    *** Important information about changes to the ***
+    *** Hercules configuration files - PLEASE READ ***
+
+Hercules release version 3.00, however, [temporarily] changed
+the rules: With [ONLY!] version 3.00 of Hercules, only the FIRST
+address address need be specified in the configuration file.
+Hercules version 3.00 automatically creates the second address.
+Care must be taken to NOT define the second address [with Hercules
+version 3.00 ONLY!] or a configuration error will occur.
+
+---------------------------------------------------------------
+
+    *** Important information about changes to the ***
+    *** Hercules configuration files - PLEASE READ ***
+
+Starting with Hercules version 3.01 however, we've gone back to
+doing things the way we ORIGINALLY were (and the way most users
+are used to (i.e. the way most users EXPECT things to work)):
+
+With Hercules version 3.01 you need to define BOTH addresses!
+
+Both the even numbered read device AS WELL AS the odd numbered
+write device must BOTH be defined in your Hercules configuration
+file starting with Hercules version 3.01. We apologize for the
+mess, but we thought having Herc automatically define the write
+device for you (as it does in version 3.00) would be easier for
+everyone. Turns out it caused a lot of problems with a lot of
+people, so we decided to go back to the original way. Again, we
+apologize for whatever headaches this may have caused anyone.
+
+---------------------------------------------------------------
+
+    *** Important information about changes to the ***
+    *** Hercules configuration files - PLEASE READ ***
+
+Note that the VMNET and CTCT protocols have ALWAYS required BOTH
+addresses to be defined (i.e. ALL versions of Hercules, including
+version 3.00 as well, require BOTH even/odd read/write devices to
+be defined separately [in your Hercules configuration file]).
+
+---------------------------------------------------------------
+
+The currently supported emulation modes are:
 
      CTCT     - CTCA Emulation via TCP connection
      CTCI     - Point-to-point connection to the host IP stack.
@@ -296,9 +342,25 @@ Refer to http://www.kiyoinc.com/herc3088.html for more details.
 
 
 
--------------------------------
+=================================================================
 [1] The TunTap32.dll and FishPack.dll are part of Fish's CTCI-W32
 http://home.sprintmail.com/~dtrout/Hercules/ctci-w32-index.html
 package, but the required WinPCap packet driver must be installed
-separately from http://netgroup-serv.polito.it/winpcap/  See Fish's
-web page for details.
+separately from http://winpcap.polito.it  See Fish's web page for
+details.
+
+ALSO NOTE that it is HIGHLY RECOMMENDED that you stick with using
+only the current RELEASE version of WinPCap and NOT any type of
+'alpha' OR 'beta' version! Alpha and Beta versions of WinPCap are
+NOT SUPPORTED! Only official *release* version are supported!
+
+When you visit the WinPCap download web page, you need need to
+scroll down the page a bit to reach the OFFICIAL RELEASE VERSION
+of WinPcap. They usually put their Beta versions at the top of the
+page, and BETA versions ARE NOT SUPPORTED. *Please* scroll down
+the page and use and official RELEASE version. Thanks.
+
+You may, if you want, use a beta version of WinPCap, but if you do,
+then you're on your own if you have any problems with it.
+
+  -- Fish, May 2004.
