@@ -187,7 +187,9 @@ int bytes_read;
     setvbuf (stdout, NULL, _IOLBF, 0);
     
     /* call logger_term on system shutdown */
+#if defined(OPTION_DYNAMIC_LOAD)
     hdl_adsc(logger_term, NULL);
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
 
     obtain_lock(&logger_lock);
 

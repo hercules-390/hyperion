@@ -167,9 +167,11 @@ TID     rctid;                          /* RC file thread identifier */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
+#if defined(OPTION_DYNAMIC_LOAD)
     /* ensure hdl_shut is called in case of shutdown
        hdl_shut will ensure entries are only called once */
     atexit(hdl_shut);
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
 
     logger_init();
 
@@ -177,9 +179,9 @@ TID     rctid;                          /* RC file thread identifier */
     display_version (stdout, "Hercules ");
 
 #if defined(OPTION_DYNAMIC_LOAD)
-    /* Initialize the hercules dynalic loader */
+    /* Initialize the hercules dynamic loader */
     hdl_main();
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
@@ -195,7 +197,9 @@ TID     rctid;                          /* RC file thread identifier */
     /* Set GUI flag if specified as final argument */
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
+#if defined(OPTION_DYNAMIC_LOAD)
         hdl_load("dyngui",HDL_LOAD_NOUNLOAD);
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
         argc--;
     }
 #endif /*EXTERNALGUI*/
@@ -219,12 +223,14 @@ TID     rctid;                          /* RC file thread identifier */
         case 'f':
             cfgfile = optarg;
             break;
+#if defined(OPTION_DYNAMIC_LOAD)
         case 'l':
             for(dllname = strtok_r(optarg,", ",&strtok_str);
                 dllname;
                 dllname = strtok_r(NULL,", ",&strtok_str))
                 hdl_load(dllname, HDL_LOAD_DEFAULT);
             break;
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
         case 'd':
             daemon_mode = 1;
             break;
@@ -379,7 +385,7 @@ TID     rctid;                          /* RC file thread identifier */
             if(daemon_task)
                 daemon_task ();
             else
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
                 if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
                     if(isatty(STDERR_FILENO))
                         fwrite(msgbuf,msgcnt,1,stderr);
@@ -409,8 +415,9 @@ void system_shutdown (void)
     sysblk.shutdown = 1;
 
     release_config();
-
+#if defined(OPTION_DYNAMIC_LOAD)
     /* Call all termination routines in LIFO order */
     hdl_shut();
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
 
 }

@@ -476,5 +476,5 @@ AH_TEMPLATE([BUILTIN_STRERROR_R],
 AH_TEMPLATE([OPTION_CONFIG_SYMBOLS],
             [Define to enable symbolic substitutions in configuration file])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile  intl/Makefile m4/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])
 
