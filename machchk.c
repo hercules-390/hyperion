@@ -349,18 +349,18 @@ int i;
         logmsg(_("CPU%4.4X: Check-Stop due to host error: %s\n"),
           regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
           strsignal(signo));
-#else /*!defined(_FEAURE_SIE)*/
+#else /*!defined(_FEATURE_SIE)*/
         logmsg(_("CPU%4.4X: Check-Stop due to host error: %s\n"),
           regs->cpuad, strsignal(signo));
-#endif /*!defined(_FEAURE_SIE)*/
+#endif /*!defined(_FEATURE_SIE)*/
         display_inst(
 #if defined(_FEATURE_SIE)
                      regs->sie_active ? regs->guestregs :
-#endif /*defined(_FEAURE_SIE)*/
+#endif /*defined(_FEATURE_SIE)*/
                                                           regs, 
 #if defined(_FEATURE_SIE)
           regs->sie_active ? regs->guestregs->ip :
-#endif /*defined(_FEAURE_SIE)*/
+#endif /*defined(_FEATURE_SIE)*/
                                                    regs->ip);
         regs->cpustate = CPUSTATE_STOPPING;
         regs->checkstop = 1;
