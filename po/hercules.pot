@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2002-12-29 13:12-0600\n"
+"POT-Creation-Date: 2002-12-29 18:30-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -190,102 +190,6 @@ msgstr ""
 msgid "  %3d%% %7d of %d"
 msgstr ""
 
-#: channel.c:666
-#, c-format
-msgid "%4.4X: Clear subchannel\n"
-msgstr ""
-
-#: channel.c:328
-#, c-format
-msgid "%4.4X: Halt I/O\n"
-msgstr ""
-
-#: channel.c:772
-#, c-format
-msgid "%4.4X: Halt subchannel\n"
-msgstr ""
-
-#: channel.c:871
-#, c-format
-msgid "%4.4X: Halt subchannel: cc=0\n"
-msgstr ""
-
-#: channel.c:785
-#, c-format
-msgid "%4.4X: Halt subchannel: cc=1\n"
-msgstr ""
-
-#: channel.c:795
-#, c-format
-msgid "%4.4X: Halt subchannel: cc=2\n"
-msgstr ""
-
-#: channel.c:931
-#, c-format
-msgid "%4.4X: Resume subchannel: cc=0\n"
-msgstr ""
-
-#: channel.c:899
-#, c-format
-msgid "%4.4X: Resume subchannel: cc=1\n"
-msgstr ""
-
-#: channel.c:912
-#, c-format
-msgid "%4.4X: Resume subchannel: cc=2\n"
-msgstr ""
-
-#: channel.c:228
-#, c-format
-msgid "%4.4X: Test I/O\n"
-msgstr ""
-
-#: channel.c:95
-#, c-format
-msgid "%4.4X:CCW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s\n"
-msgstr ""
-
-#: channel.c:1446
-#, c-format
-msgid ""
-"%4.4X:IDAW=%16.16llX Len=%4.4hX\n"
-"%4.4X:---------------------%s\n"
-msgstr ""
-
-#: channel.c:1441
-#, c-format
-msgid "%4.4X:IDAW=%8.8X Len=%3.3hX%s\n"
-msgstr ""
-
-#: channel.c:123
-#, c-format
-msgid ""
-"%4.4X:SCSW=%2.2X%2.2X%2.2X%2.2X Stat=%2.2X%2.2X Count=%2.2X%2.2X  CCW=%2.2X%"
-"2.2X%2.2X%2.2X\n"
-msgstr ""
-
-#: channel.c:2531
-#, c-format
-msgid ""
-"%4.4X:Sense=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %"
-"2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
-msgstr ""
-
-#: channel.c:2546
-#, c-format
-msgid "%4.4X:Sense=%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n"
-msgstr ""
-
-#: channel.c:108
-#, c-format
-msgid "%4.4X:Stat=%2.2X%2.2X Count=%2.2X%2.2X  CCW=%2.2X%2.2X%2.2X\n"
-msgstr ""
-
-#: channel.c:2525
-#, c-format
-msgid "%4.4X:Stat=%2.2X%2.2X Count=%4.4X %s\n"
-msgstr ""
-
 #: hscmisc.c:626
 #, c-format
 msgid "%sInstruction fetch error\n"
@@ -463,16 +367,6 @@ msgstr ""
 #: ctcadpt.c:1337
 #, c-format
 msgid "CTC950E AddDevice internal error (%s).\n"
-msgstr ""
-
-#: channel.c:1560
-#, c-format
-msgid "DEV%4.4X: attention\n"
-msgstr ""
-
-#: channel.c:1550
-#, c-format
-msgid "DEV%4.4X: attention signalled\n"
 msgstr ""
 
 #: httpserv.c:66
@@ -964,9 +858,9 @@ msgstr ""
 msgid "HHC422I Device %4.4X unbound from socket %s\n"
 msgstr ""
 
-#: channel.c:1750 channel.c:1768
+#: channel.c:1772
 #, c-format
-msgid "HHC760I %4.4X create_thread error: %s"
+msgid "HHCCCP068E %4.4X create_thread error: %s"
 msgstr ""
 
 #: config.c:162
@@ -1217,52 +1111,52 @@ msgstr ""
 msgid "HHCCF050I Device %4.4X defined as %4.4X\n"
 msgstr ""
 
-#: cpu.c:983
+#: cpu.c:984
 #, c-format
 msgid "HHCCP001W CPU thread set priority %d failed: %s\n"
 msgstr ""
 
-#: cpu.c:990
+#: cpu.c:991
 #, c-format
 msgid "HHCCP002I CPU%4.4X thread started: tid=%8.8lX, pid=%d, priority=%d\n"
 msgstr ""
 
-#: cpu.c:996
+#: cpu.c:997
 #, c-format
 msgid "HHCCP003I CPU%4.4X architecture mode %s\n"
 msgstr ""
 
-#: cpu.c:1012
+#: cpu.c:1013
 #, c-format
 msgid "HHCCP005E CPU%4.4X thread already started\n"
 msgstr ""
 
-#: cpu.c:1025
+#: cpu.c:1026
 #, c-format
 msgid "HHCCP006E Cannot create timer thread: %s\n"
 msgstr ""
 
-#: cpu.c:1047
+#: cpu.c:1048
 #, c-format
 msgid "HHCCP007I CPU%4.4X architecture mode set to %s\n"
 msgstr ""
 
-#: cpu.c:1060
+#: cpu.c:1061
 #, c-format
 msgid "HHCCP008I CPU%4.4X thread ended: tid=%8.8lX, pid=%d\n"
 msgstr ""
 
-#: cpu.c:1086
+#: cpu.c:1087
 #, c-format
 msgid "HHCCP009E CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n"
 msgstr ""
 
-#: cpu.c:1206
+#: cpu.c:1207
 #, c-format
 msgid "HHCCP010I CPU%4.4X store status completed.\n"
 msgstr ""
 
-#: cpu.c:1273
+#: cpu.c:1274
 #, c-format
 msgid ""
 "HHCCP011I CPU%4.4X: Disabled wait state\n"
@@ -1321,7 +1215,7 @@ msgstr ""
 msgid "HHCCP021E signal USR2 received for device %4.4X\n"
 msgstr ""
 
-#: cpu.c:926
+#: cpu.c:927
 #, c-format
 msgid "HHCCP022I Machine Check code=%16.16llu\n"
 msgstr ""
@@ -1416,6 +1310,172 @@ msgstr ""
 
 #: cpu.c:255
 msgid "HHCCP043I Wait state PSW loaded: "
+msgstr ""
+
+#: cpu.c:845
+#, c-format
+msgid ""
+"HHCCP044I I/O interrupt code=%4.4X CSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%"
+"2.2X\n"
+msgstr ""
+
+#: cpu.c:867
+#, c-format
+msgid "HHCCP045I I/O interrupt code=%8.8X parm=%8.8X\n"
+msgstr ""
+
+#: cpu.c:870
+#, c-format
+msgid "HHCCP046I I/O interrupt code=%8.8X parm=%8.8X id=%8.8X\n"
+msgstr ""
+
+#: channel.c:95
+#, c-format
+msgid "HHCCP048I %4.4X:CCW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s\n"
+msgstr ""
+
+#: channel.c:109
+#, c-format
+msgid "HHCCP049I %4.4X:Stat=%2.2X%2.2X Count=%2.2X%2.2X  CCW=%2.2X%2.2X%2.2X\n"
+msgstr ""
+
+#: channel.c:124
+#, c-format
+msgid ""
+"HHCCP050I %4.4X:SCSW=%2.2X%2.2X%2.2X%2.2X Stat=%2.2X%2.2X Count=%2.2X%2.2X  "
+"CCW=%2.2X%2.2X%2.2X%2.2X\n"
+msgstr ""
+
+#: channel.c:229
+#, c-format
+msgid "HHCCP051I %4.4X: Test I/O\n"
+msgstr ""
+
+#: channel.c:288
+msgid "HHCCP052I TIO modification executed CC=1\n"
+msgstr ""
+
+#: channel.c:329
+#, c-format
+msgid "HHCCP053I %4.4X: Halt I/O\n"
+msgstr ""
+
+#: channel.c:374
+msgid "HHCCP054I HIO modification executed CC=1\n"
+msgstr ""
+
+#: channel.c:667
+#, c-format
+msgid "HHCCP055I %4.4X: Clear subchannel\n"
+msgstr ""
+
+#: channel.c:773
+#, c-format
+msgid "HHCCP056I %4.4X: Halt subchannel\n"
+msgstr ""
+
+#: channel.c:786
+#, c-format
+msgid "HHCCP057I %4.4X: Halt subchannel: cc=1\n"
+msgstr ""
+
+#: channel.c:796
+#, c-format
+msgid "HHCCP058I%4.4X: Halt subchannel: cc=2\n"
+msgstr ""
+
+#: channel.c:872
+#, c-format
+msgid "HHCCP059I %4.4X: Halt subchannel: cc=0\n"
+msgstr ""
+
+#: channel.c:900
+#, c-format
+msgid "HHCCP060I %4.4X: Resume subchannel: cc=1\n"
+msgstr ""
+
+#: channel.c:914
+#, c-format
+msgid "HHCCP061I %4.4X: Resume subchannel: cc=2\n"
+msgstr ""
+
+#: channel.c:934
+#, c-format
+msgid "HHCCP062I %4.4X: Resume subchannel: cc=0\n"
+msgstr ""
+
+#: channel.c:1444
+#, c-format
+msgid "HHCCP063I %4.4X:IDAW=%8.8X Len=%3.3hX%s\n"
+msgstr ""
+
+#: channel.c:1449
+#, c-format
+msgid ""
+"HHCCP064I %4.4X:IDAW=%16.16llX Len=%4.4hX\n"
+"%4.4X:---------------------%s\n"
+msgstr ""
+
+#: channel.c:1553
+#, c-format
+msgid "HHCCP065I DEV%4.4X: attention signalled\n"
+msgstr ""
+
+#: channel.c:1564
+#, c-format
+msgid "HHCCP066I DEV%4.4X: attention\n"
+msgstr ""
+
+#: channel.c:1754
+#, c-format
+msgid "HHCCP067E %4.4X create_thread error: %s"
+msgstr ""
+
+#: channel.c:1927
+#, c-format
+msgid "HHCCP069I Device %4.4X initial status interrupt\n"
+msgstr ""
+
+#: channel.c:1968
+#, c-format
+msgid "HHCCP070I Device %4.4X attention completed\n"
+msgstr ""
+
+#: channel.c:2032
+#, c-format
+msgid "HHCCP071I Device %4.4X clear completed\n"
+msgstr ""
+
+#: channel.c:2080
+#, c-format
+msgid "HHCCP072I Device %4.4X halt completed\n"
+msgstr ""
+
+#: channel.c:2246
+#, c-format
+msgid "HHCCP073I Device %4.4X suspended\n"
+msgstr ""
+
+#: channel.c:2265
+#, c-format
+msgid "HHCCP074I Device %4.4X resumed\n"
+msgstr ""
+
+#: channel.c:2529
+#, c-format
+msgid "HHCCP075I %4.4X:Stat=%2.2X%2.2X Count=%4.4X %s\n"
+msgstr ""
+
+#: channel.c:2535
+#, c-format
+msgid ""
+"HHCCP076I %4.4X:Sense=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%"
+"2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
+msgstr ""
+
+#: channel.c:2550
+#, c-format
+msgid "HHCCP077I %4.4X:Sense=%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n"
 msgstr ""
 
 #: ckddasd.c:231
@@ -2636,29 +2696,9 @@ msgstr ""
 msgid "HHCTE009I Client %s connected to %4.4X device %4.4X\n"
 msgstr ""
 
-#: channel.c:373
-msgid "HIO modification executed CC=1\n"
-msgstr ""
-
 #: dasdcopy.c:101
 #, c-format
 msgid "Hercules %s copy program "
-msgstr ""
-
-#: cpu.c:845
-#, c-format
-msgid ""
-"I/O interrupt code=%4.4X CSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
-msgstr ""
-
-#: cpu.c:867
-#, c-format
-msgid "I/O interrupt code=%8.8X parm=%8.8X\n"
-msgstr ""
-
-#: cpu.c:869
-#, c-format
-msgid "I/O interrupt code=%8.8X parm=%8.8X id=%8.8X\n"
 msgstr ""
 
 #: ctc_lcs.c:79
@@ -2851,12 +2891,12 @@ msgstr ""
 msgid "ON\n"
 msgstr ""
 
-#: cpu.c:1701
+#: cpu.c:1702
 #, c-format
 msgid "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: cpu.c:1708
+#: cpu.c:1709
 #, c-format
 msgid ""
 "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%"
@@ -2870,10 +2910,6 @@ msgstr ""
 
 #: cpu.c:487 hscmisc.c:596
 msgid "SIE: "
-msgstr ""
-
-#: channel.c:287
-msgid "TIO modification executed CC=1\n"
 msgstr ""
 
 #: tuntap.c:101
@@ -3004,36 +3040,6 @@ msgstr ""
 #: cckdswap.c:56
 #, c-format
 msgid "cckdswap: error opening %s: %s\n"
-msgstr ""
-
-#: channel.c:1964
-#, c-format
-msgid "channel: Device %4.4X attention completed\n"
-msgstr ""
-
-#: channel.c:2028
-#, c-format
-msgid "channel: Device %4.4X clear completed\n"
-msgstr ""
-
-#: channel.c:2076
-#, c-format
-msgid "channel: Device %4.4X halt completed\n"
-msgstr ""
-
-#: channel.c:1923
-#, c-format
-msgid "channel: Device %4.4X initial status interrupt\n"
-msgstr ""
-
-#: channel.c:2261
-#, c-format
-msgid "channel: Device %4.4X resumed\n"
-msgstr ""
-
-#: channel.c:2242
-#, c-format
-msgid "channel: Device %4.4X suspended\n"
 msgstr ""
 
 #: ckddasd.c:1325

@@ -842,7 +842,7 @@ DWORD   csw;                            /* CSW for S/370 channels    */
 
     /* Trace the I/O interrupt */
     if (sysblk.insttrace || sysblk.inststep)
-        logmsg (_("I/O interrupt code=%4.4X "
+        logmsg (_("HHCCP044I I/O interrupt code=%4.4X "
                 "CSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
                 regs->psw.intcode,
                 csw[0], csw[1], csw[2], csw[3],
@@ -864,9 +864,10 @@ DWORD   csw;                            /* CSW for S/370 channels    */
     /* Trace the I/O interrupt */
     if (sysblk.insttrace || sysblk.inststep)
 #if !defined(FEATURE_ESAME)
-        logmsg (_("I/O interrupt code=%8.8X parm=%8.8X\n"), ioid, ioparm);
+        logmsg (_("HHCCP045I I/O interrupt code=%8.8X parm=%8.8X\n"),
+                  ioid, ioparm);
 #else /*defined(FEATURE_ESAME)*/
-        logmsg (_("I/O interrupt code=%8.8X parm=%8.8X id=%8.8X\n"),
+        logmsg (_("HHCCP046I I/O interrupt code=%8.8X parm=%8.8X id=%8.8X\n"),
           ioid, ioparm, iointid);
 #endif /*defined(FEATURE_ESAME)*/
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
