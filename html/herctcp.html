@@ -195,12 +195,12 @@ file. The second device will automatically be created at the original address + 
 <p>
 <i>For Linux 2.2:</i>
 <code>
-<br>0E20 3088 CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0
+<br>0E20 3088 CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.255
 </code>
 <p>
 <i>For Linux 2.4:</i>
 <code>
-<br>0E20 3088 CTCI /dev/net/tun 1500 192.168.200.1 192.168.200.2 255.255.255.0
+<br>0E20 3088 CTCI /dev/net/tun 1500 192.168.200.1 192.168.200.2 255.255.255.255
 </code>
 <p>
 Two IP addresses must be assigned, one for the driving system's
@@ -213,7 +213,7 @@ this example) does not conflict with any existing network
 addresses used in your IP network.
 <p>
 In the above example, 1500 is the maximum transmission unit (MTU)
-size, and 255.255.255.0 is the netmask.
+size, and 255.255.255.255 is the netmask.
 
 <h2>Configuring the Hercules TCP/IP stack</h2>
 <h4>TCP/IP for VSE</h4>
