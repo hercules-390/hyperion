@@ -1055,6 +1055,8 @@ typedef struct _DEVBLK {
             U16 method:3;               /* Compression method        */
             U16 level:4;                /* Compression level         */
 	    U16 strictsize:1;           /* Strictly enforce MAXSIZE  */
+            U16 deonirq:1;              /* DE on IRQ on tape motion  */
+                                        /* MVS 3.8j workaround       */
 	    U16 logical_readonly;       /* Tape is forced READ ONLY  */
             U16 chksize;                /* Chunk size                */
             off_t maxsize;              /* Maximum allowed TAPE file

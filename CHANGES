@@ -1,4 +1,6 @@
-19 Mar 2003 Tape : Present DE on IntReq for non-data motion CCWs - Ivan Warren
+19 Mar 2003 Tape : Present DE on IntReq for non-data motion CCWs
+            Added deonirq=0|1 for 3410/3420 tapes in relation with MVS 3.8j 
+            issues - Ivan Warren
 14 Mar 2003 Increased tbuf in het_write due specs compress2 - Bernard van der Helm
 13 Mar 2003 Tape support update - see README.TAPE - Ivan Warren
 13 Mar 2003 Call build_config even if NO_SIGABEND_HANDLER is defined - Ivan Warren

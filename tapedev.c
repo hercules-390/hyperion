@@ -118,6 +118,7 @@ static PARSER ptab[] =
     { "eotmargin", "%d" },
     { "strictsize", "%d" },
     { "readonly", "%d" },
+    { "deonirq", "%d" },
     { NULL, NULL },
 };
 
@@ -135,7 +136,8 @@ enum
     TDPARM_MAXSIZEM,
     TDPARM_EOTMARGIN,
     TDPARM_STRICTSIZE,
-    TDPARM_READONLY
+    TDPARM_READONLY,
+    TDPARM_DEONIRQ
 };
 
 /*-------------------------------------------------------------------*/
@@ -3157,7 +3159,20 @@ int sns4mat;
         switch(ERCode)
         {
                 case TAPE_BSENSE_TAPEUNLOADED:
-                        *unitstat=CSW_CE|CSW_UC;
+                        switch(ccwcode)
+                        {
+                            case 0x01:
+                            case 0x02:
+                            case 0x0C:
+                            *unitstat=CSW_CE | CSW_UC;
+                            break;
+                            case 0x0f:
+                            *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+                            break;
+                            default:
+                            *unitstat=CSW_CE | CSW_UC | CSW_DE;
+                            break;
+                        }
                         dev->sense[0]=SENSE_IR;
                         dev->sense[3]=0x43; /* ERA 43 = Int Req */
                         break;
@@ -3297,7 +3312,7 @@ static void build_sense_3410_3420(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccw
                             case 0x01:
                             case 0x02:
                             case 0x0C:
-                            *unitstat=CSW_CE | CSW_UC;
+                            *unitstat=CSW_CE | CSW_UC | (dev->tdparms.deonirq?CSW_DE:0);
                             break;
                             case 0x0f:
                             *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
@@ -3654,6 +3669,10 @@ union
 
             case TDPARM_READONLY:
                 dev->tdparms.logical_readonly=(res.num ? 1 : 0 );
+            break;
+
+            case TDPARM_DEONIRQ:
+                dev->tdparms.deonirq=(res.num ? 1 : 0 );
             break;
 
             default:
@@ -4226,6 +4245,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
     if (dev->fd < 0 && (drc==1 || drc==5))
     {
+            *residual=count;
             rc=dev->tmh->open(dev,unitstat,code);
             /* Exit with unit status if open was unsuccessful */
             if (rc < 0) {
