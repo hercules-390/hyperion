@@ -40,7 +40,6 @@ int     fc;                             /* File counter              */
     dev->fd = -1;
     dev->fh = NULL;
     dev->multifile = 0;
-    dev->rdreof = 0;
     dev->ebcdic = 0;
     dev->ascii = 0;
     dev->trunc = 0;
@@ -94,6 +93,15 @@ int     fc;                             /* File counter              */
         if (strcasecmp(argv[i], "eof") == 0)
         {
             dev->rdreof = 1;
+            continue;
+        }
+
+        /* intrq means that intervention required will be returned at
+           end of file, instead of unit exception */
+
+        if (strcasecmp(argv[i], "intrq") == 0)
+        {
+            dev->rdreof = 0;
             continue;
         }
 
@@ -175,7 +183,8 @@ int     fc;                             /* File counter              */
 
     if (dev->ebcdic && dev->ascii)
     {
-        logmsg (_("HHC403I Specify 'ascii' or 'ebcdic' (or neither) but not both\n"));
+        logmsg (_("HHC403I Specify 'ascii' or 'ebcdic' (or neither) but"
+                  " not both\n"));
         return -1;
     }
 
@@ -183,26 +192,31 @@ int     fc;                             /* File counter              */
     {
         if (fc)
         {
-            logmsg (_("HHC403I Only one filename (sock_spec) allowed for socket devices\n"));
+            logmsg (_("HHC403I Only one filename (sock_spec) allowed for"
+                      " socket devices\n"));
             return -1;
         }
 
-        // If neither ascii nor ebcdic is specified, default to ascii. This is required
-        // for socket devices because the open logic, if neither is specified, attempts
-        // to determine whether the data is actually ascii or ebcdic by reading the 1st
-        // 160 bytes of data and then rewinding to the beginning of the file afterwards.
-        // Since you can't "rewind" a socket, we must therefore default to one of them.
+        // If neither ascii nor ebcdic is specified, default to ascii.
+        // This is required for socket devices because the open logic,
+        // if neither is specified, attempts to determine whether the data
+        // is actually ascii or ebcdic by reading the 1st 160 bytes of
+        // data and then rewinding to the beginning of the file afterwards.
+        //  Since you can't "rewind" a socket, we must therefore default
+        // to one of them.
 
         if (!dev->ebcdic && !dev->ascii)
         {
-            logmsg (_("HHC403I defaulting to 'ascii' for socket device %4.4X\n"),dev->devnum);
+            logmsg (_("HHC403I Defaulting to 'ascii' for socket device"
+                      " %4.4X\n"),dev->devnum);
             dev->ascii = 1;
         }
     }
 
     if (dev->multifile && !fc)
     {
-        logmsg (_("HHC403I 'multifile' option ignored\n"));
+        logmsg (_("HHC403I 'multifile' option ignored: only one file"
+                  " specified\n"));
         dev->multifile = 0;
     }
 
@@ -234,7 +248,9 @@ int     fc;                             /* File counter              */
         strcpy (dev->filename, argv[0]);
     }
     else
+    {
         dev->filename[0] = '\0';
+    }
 
     /* Set size of i/o buffer */
 
@@ -283,7 +299,7 @@ static void cardrdr_query_device (DEVBLK *dev, BYTE **class,
         (dev->ebcdic ?                " ebcdic"    : ""),
         (dev->autopad ?               " autopad"   : ""),
         ((dev->ascii && dev->trunc) ? " trunc"     : ""),
-        (dev->rdreof ?                " eof"       : ""));
+        (dev->rdreof ?                " eof"       : " intrq"));
 
 } /* end function cardrdr_query_device */
 

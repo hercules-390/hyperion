@@ -1395,7 +1395,7 @@ int devinit_cmd(char* cmdline, int argc, char *argv[])
     }
 
     /* Call the device init routine to do the hard work */
-    if (argc > 3)
+    if (argc > 2)
     {
         if ((dev->hnd->init)(dev, argc-2, (BYTE**)&argv[2]) < 0)
         {

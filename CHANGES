@@ -1,3 +1,6 @@
+29 Oct 2002 Make card reader eof/intrq parameter persistent - Jay Maynard
+29 Oct 2002 Correct devinit command to work when only one argument is given -
+            Jay Maynard
 29 Oct 2002 Ignore 7-track mode set commands for tape drives - Andy Norrie
 27 Oct 2002 Fix dasdisup to accept one argument - Jay Maynard
 13 Oct 2002 64bit cmpsc fixes - Bernard van der Helm
