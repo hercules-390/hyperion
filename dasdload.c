@@ -4368,9 +4368,11 @@ int             lfs = 0;                /* 1 = Large file            */
     {
         if (strcmp("0", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_NONE;
+#ifdef CCKD_COMPRESS_ZLIB
         else if (strcmp("z", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_ZLIB;
-#ifdef CCKD_BZIP2
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
         else if (strcmp("bz2", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_BZIP2;
 #endif

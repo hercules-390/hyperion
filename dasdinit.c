@@ -59,8 +59,10 @@ argexit ( int code )
 
 "where:\n\n"
 
+#ifdef CCKD_COMPRESS_ZLIB
 "  -z         build compressed dasd image file using zlib\n"
-#ifdef CCKD_BZIP2
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
 "  -bz2       build compressed dasd image file using bzip2\n"
 #endif
 "  -0         build compressed dasd image file with no compression\n"
@@ -124,9 +126,11 @@ int     lfs = 0;                        /* 1 = Build large file      */
     {
         if (strcmp("0", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_NONE;
+#ifdef CCKD_COMPRESS_ZLIB
         else if (strcmp("z", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_ZLIB;
-#ifdef CCKD_BZIP2
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
         else if (strcmp("bz2", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_BZIP2;
 #endif

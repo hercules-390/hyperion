@@ -19,7 +19,9 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#if defined(HAVE_LIBZ)
 #include <zlib.h>
+#endif
 #if defined( HET_BZIP2 )
 #include <bzlib.h>
 #endif /* defined( HET_BZIP2 ) */
@@ -863,6 +865,7 @@ het_read( HETB *hetb, void *sbuf )
             case 0:
             break;
 
+#if defined(HAVE_LIBZ)
             case HETHDR_FLAGS1_ZLIB:
                 slen = HETMAX_BLOCKSIZE;
     
@@ -875,6 +878,7 @@ het_read( HETB *hetb, void *sbuf )
     
                 tlen = slen;
             break;
+#endif
     
 #if defined( HET_BZIP2 )
             case HETHDR_FLAGS1_BZLIB:
@@ -1187,6 +1191,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
     {
         switch( hetb->method )
         {
+#if defined(HAVE_LIBZ)
             case HETHDR_FLAGS1_ZLIB:
                 tlen = sizeof( tbuf );
 
@@ -1204,6 +1209,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
                     flags |= HETHDR_FLAGS1_ZLIB;
                 }
             break;
+#endif
 
 #if defined( HET_BZIP2 )
             case HETHDR_FLAGS1_BZLIB:

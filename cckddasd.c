@@ -9,11 +9,6 @@
 #include "hercules.h"
 #include "devtype.h"
 
-#include <zlib.h>
-#ifdef CCKD_BZIP2
-#include <bzlib.h>
-#endif
-
 #define cckdtrc(format, a...) \
 do { \
  if (dev && (dev->ccwtrace||dev->ccwstep)) \
@@ -1066,6 +1061,7 @@ cckd_read_trk_retry:
                  ra, lru, trk);
         break;
 
+#ifdef CCKD_COMPRESS_ZLIB
     case CCKD_COMPRESS_ZLIB:
         /* Uncompress the track image using zlib */
         memcpy (buf, &buf2, CKDDASD_TRKHDR_SIZE);
@@ -1087,8 +1083,9 @@ cckd_read_trk_retry:
             }
         }
         break;
+#endif
 
-#ifdef CCKD_BZIP2
+#ifdef CCKD_COMPRESS_BZIP2
     case CCKD_COMPRESS_BZIP2:
         /* Decompress the track image using bzip2 */
         memcpy (buf, &buf2, CKDDASD_TRKHDR_SIZE);
@@ -1117,6 +1114,7 @@ cckd_read_trk_retry:
     default:
         devmsg ("cckddasd: %4.4x unknown compression for trk %d: %d\n",
                 dev->devnum, trk, buf2[0]);
+        rc = -1;
         len = cckd_null_trk (dev, buf, trk, 0);
         if (unitstat)
         {
@@ -1361,9 +1359,12 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             writer;                 /* Writer identifier         */
 int             i, o;                   /* Indexes                   */
 BYTE           *buf;                    /* Buffer                    */
+#if defined(CCKD_COMPRESS_ZLIB) || defined(CCKD_COMPRESS_BZIP2)
 BYTE            buf2[65536];            /* Compress buffer           */
+unsigned long   len2;                   /* Buffer 2 length           */
+#endif
 BYTE           *bufp;                   /* Buffer to be written      */
-unsigned long   len, len2, bufl;        /* Buffer lengths            */
+unsigned long   len, bufl;              /* Buffer lengths            */
 int             trk;                    /* Track number              */
 BYTE            compress;               /* Compression algorithm     */
 int             parm;                   /* Compression parameter     */
@@ -1454,7 +1455,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
         /* Stress adjustments */
         if (((cckdblk.cache[o].flags & CCKD_CACHE_WRITEWAIT)
           || cckdblk.cachewaiting
-          || cckdblk.writepending > cckdblk.cachenbr >> 2)
+          || cckdblk.writepending > (cckdblk.cachenbr >> 1))
          && !cckdblk.nostress)
         {
             stressed = 1;
@@ -1463,7 +1464,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
                 compress = CCKD_COMPRESS_NONE;
             else
                 compress = CCKD_STRESS_COMP;
-            if (cckdblk.writepending < cckdblk.cachenbr >> 1)
+            if (cckdblk.writepending < cckdblk.cachenbr - (cckdblk.cachenbr >> 2))
                 parm = CCKD_STRESS_PARM1;
             else
                 parm = CCKD_STRESS_PARM2;
@@ -1478,6 +1479,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
 
         switch (compress) {
 
+#ifdef CCKD_COMPRESS_ZLIB
         case CCKD_COMPRESS_ZLIB:
             memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
             buf2[0] = CCKD_COMPRESS_ZLIB;
@@ -1499,8 +1501,9 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
                 bufl = len2;
             }
             break;
+#endif
 
-#ifdef CCKD_BZIP2
+#ifdef CCKD_COMPRESS_BZIP2
         case CCKD_COMPRESS_BZIP2:
             memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
             buf2[0] = CCKD_COMPRESS_BZIP2;
@@ -1530,6 +1533,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
             buf[0] = CCKD_COMPRESS_NONE;
             bufp = buf;
             bufl = len;
+            rc = 0;
             break;
         } /* switch (compress) */
 

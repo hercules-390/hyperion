@@ -112,9 +112,11 @@ char            buf[512];               /* FBA i/o buffer            */
             quiet = 1;  
         else if (strcmp(argv[0], "-r") == 0)
             r = 1;
+#ifdef CCKD_COMPRESS_ZLIB
         else if (strcmp(argv[0], "-z") == 0)
             comp = CCKD_COMPRESS_ZLIB;
-#ifdef CCKD_BZIP2
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
         else if (strcmp(argv[0], "-bz2") == 0)
             comp = CCKD_COMPRESS_BZIP2;
 #endif
@@ -222,7 +224,12 @@ char            buf[512];               /* FBA i/o buffer            */
     }
 
     /* Set default compression if out file is to be compressed */
-    if (comp == 255 && (out & COMPMASK)) comp = CCKD_COMPRESS_ZLIB;
+    if (comp == 255 && (out & COMPMASK))
+#ifdef CCKD_COMPRESS_ZLIB
+        comp = CCKD_COMPRESS_ZLIB;
+#else
+        comp = CCKD_COMPRESS_NONE;
+#endif
 
     /* Perform sanity checks on the options */
     if ((in & CKDMASK) && !(out & CKDMASK)) return syntax(pgm);
@@ -417,13 +424,20 @@ int syntax (char *pgm)
             "     -h                display this help and quit\n"
             "     -q                quiet mode, don't display status\n"
             "     -r                replace the output file if it exists\n"
-            "     -z                compress using zlib [default]\n"
+            "%s"
             "%s"
             "     -0                don't compress track images\n"
             "     -cyls  n          size of output file\n"
             "     -a                output file will have alt cyls\n"
             ),
-#ifdef CCKD_BZIP2
+#ifdef CCKD_COMPRESS_ZLIB
+            _(
+            "     -z                compress using zlib [default]\n"
+            ),
+#else
+            "",
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
             _(
             "     -bz2              compress using bzip2\n"
             )
@@ -465,12 +479,19 @@ int syntax (char *pgm)
             "     -h                display this help and quit\n"
             "     -q                quiet mode, don't display status\n"
             "     -r                replace the output file if it exists\n"
-            "     -z                compress using zlib [default]\n"
+            "%s"
             "%s"
             "     -0                don't compress track images\n"
             "     -blks  n          size of output file\n"
             ),
-#ifdef CCKD_BZIP2
+#ifdef CCKD_COMPRESS_ZLIB
+            _(
+            "     -z                compress using zlib [default]\n"
+            ),
+#else
+            "",
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
             _(
             "     -bz2              compress using bzip2\n"
             )
@@ -512,7 +533,7 @@ int syntax (char *pgm)
             "     -h                display this help and quit\n"
             "     -q                quiet mode, don't display status\n"
             "     -r                replace the output file if it exists\n"
-            "     -z                compress output using zlib [default]\n"
+            "%s"
             "%s"
             "     -0                don't compress output\n"
             "     -blks  n          size of output fba file\n"
@@ -523,7 +544,14 @@ int syntax (char *pgm)
             "     -o     type       output file type (CKD, CCKD, FBA, CFBA)\n"
             ),
             pgm,
-#ifdef CCKD_BZIP2
+#ifdef CCKD_COMPRESS_ZLIB
+            _(
+            "     -z                compress using zlib [default]\n"
+            ),
+#else
+            "",
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
             _(
             "     -bz2              compress output using bzip2\n"
             )

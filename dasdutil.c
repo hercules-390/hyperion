@@ -1875,6 +1875,7 @@ int             x=O_EXCL;               /* Open option               */
     convert_to_ebcdic (&buf[CKDDASD_TRKHDR_SIZE+sectsz], 4, "VOL1");
     convert_to_ebcdic (&buf[CKDDASD_TRKHDR_SIZE+sectsz+4], 6, volser);
     len2 = sizeof(buf2);
+#ifdef CCKD_COMPRESS_ZLIB
     rc = compress2 (&buf2[0], &len2, &buf[CKDDASD_TRKHDR_SIZE],
                     CFBA_BLOCK_SIZE, -1);
     if (comp && rc == Z_OK)
@@ -1901,6 +1902,7 @@ int             x=O_EXCL;               /* Open option               */
                        CKDDASD_TRKHDR_SIZE + len2;
     }
     else
+#endif // defined(CCKD_COMPRESS_ZLIB)
     {
         rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE);
         if (rc < (int)(CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE))

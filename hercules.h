@@ -67,7 +67,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sched.h>
+#if defined(HAVE_LIBZ)
 #include <zlib.h>
+#endif
 #if defined(CCKD_BZIP2) || defined(HET_BZIP2)
 #include <bzlib.h>
 #endif
@@ -1264,18 +1266,27 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 #define CCKD_FREEHDR_POS       CKDDASD_DEVHDR_SIZE+12
 
 #define CCKD_COMPRESS_NONE     0
+#ifndef HAVE_LIBZ
+#define CCKD_COMPRESS_MAX      CCKD_COMPRESS_NONE
+#else
 #define CCKD_COMPRESS_ZLIB     1
 #ifndef CCKD_BZIP2
 #define CCKD_COMPRESS_MAX      CCKD_COMPRESS_ZLIB
 #else
 #define CCKD_COMPRESS_BZIP2    2
 #define CCKD_COMPRESS_MAX      CCKD_COMPRESS_BZIP2
-#endif
+#endif  // CCKD_BZIP2 defined
+#endif  // HAVE_ZLIB  defined
+
 #define CCKD_COMPRESS_MASK     0x03
 #define CCKD_NEWFMT            0x80
 
 #define CCKD_STRESS_MINLEN     4096
+#if defined(HAVE_LIBZ)
 #define CCKD_STRESS_COMP       CCKD_COMPRESS_ZLIB
+#else
+#define CCKD_STRESS_COMP       CCKD_COMPRESS_NONE
+#endif
 #define CCKD_STRESS_PARM1      4
 #define CCKD_STRESS_PARM2      2
 

@@ -2039,6 +2039,7 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
         bufl = len;
         break;
 
+#ifdef CCKD_COMPRESS_ZLIB
     case CCKD_COMPRESS_ZLIB:
         bufp = (BYTE *)&buf2;
         memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
@@ -2056,8 +2057,9 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
         }
         bufl += CKDDASD_TRKHDR_SIZE;
         break;
+#endif
 
-#ifdef CCKD_BZIP2
+#ifdef CCKD_COMPRESS_BZIP2
     case CCKD_COMPRESS_BZIP2:
         bufp = (BYTE *)&buf2;
         memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
