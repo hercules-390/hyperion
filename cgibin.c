@@ -630,14 +630,14 @@ DEVBLK *dev;
 #endif
         i++)
         if(sysblk.regs[i].cpuonline)
-            fprintf(webblk->hsock,"<option value=%d>CPU%4.4X</option>\n",i,i);
+            fprintf(webblk->hsock,"<option value=%4.4X>CPU%4.4X</option>\n",i,i);
 
     fprintf(webblk->hsock,"</select>\n"
-                          "<select type=submit name=cpu>\n");
+                          "<select type=submit name=devnum>\n");
 
     for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
         if(dev->pmcw.flag5 & PMCW5_V)
-            fprintf(webblk->hsock,"<option value=%d>DEV%4.4X</option>\n",
+            fprintf(webblk->hsock,"<option value=%4.4X>DEV%4.4X</option>\n",
               dev->devnum, dev->devnum);
 
     fprintf(webblk->hsock,"</select>\n");
@@ -683,13 +683,13 @@ BYTE   buf[80];
 
              fprintf(webblk->hsock,"<tr>"
                                    "<td><a href=\"detail?devnum=%4.4X\">%4.4X</a></td>"
-                                   "<td><a href=\"detail?schnum=%4.4X\">%4.4X</a></td>"
+                                   "<td>%4.4X</td>"
                                    "<td>%s</td>"
                                    "<td>%4.4X</td>"
                                    "<td>%s%s%s</td>"
                                    "</tr>\n",
                                    dev->devnum,dev->devnum,
-                                   dev->subchan,dev->subchan,
+                                   dev->subchan,
                                    class,
                                    dev->devtype,
                                    (dev->fd > 2 ? "open " : ""),
@@ -707,9 +707,143 @@ BYTE   buf[80];
 
 void cgibin_debug_device_detail(WEBBLK *webblk)
 {
+DEVBLK *sel, *dev = NULL;
+char *value;
+int devnum;
+
     html_header(webblk);
 
-    fprintf(webblk->hsock,"<h1>Function not yet implemented</h1>\n");
+    if((value = cgi_variable(webblk,"devnum"))
+      && sscanf(value,"%x",&devnum) == 1)
+        for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
+            if(devnum == dev->devnum)
+                break;
+
+    fprintf(webblk->hsock,"<h3>Subchannel Details</h3>\n");
+
+    fprintf(webblk->hsock,"<form method=post>\n"
+                          "<select type=submit name=devnum>\n");
+
+    for(sel = sysblk.firstdev; sel; sel = sel->nextdev)
+        if(sel->pmcw.flag5 & PMCW5_V)
+            fprintf(webblk->hsock,"<option value=%4.4X%s>Device %4.4X</option>\n",
+              sel->devnum, ((sel == dev) ? " selected" : ""), sel->devnum);
+
+    fprintf(webblk->hsock,"</select>\n"
+                          "<input type=submit value=\"Select / Refresh\">\n"
+                          "</form>\n");
+
+    if(dev)
+    {
+
+        fprintf(webblk->hsock,"<h3>Path Management Control Word for Subchannel %4.4X</h3>\n"
+                              "<table border>\n",dev->subchan);
+
+        fprintf(webblk->hsock,"<tr><th colspan=32>Interruption Parameter</th></tr>\n");
+
+        fprintf(webblk->hsock,"<tr><td colspan=32>%2.2X%2.2X%2.2X%2.2X</td></tr>\n",
+                              dev->pmcw.intparm[0], dev->pmcw.intparm[1],
+                              dev->pmcw.intparm[2], dev->pmcw.intparm[3]);
+
+        fprintf(webblk->hsock,"<tr><th colspan=2>00</th>"
+                              "<th colspan=3>ISC</th>"
+                              "<th colspan=3>000</th>"
+                              "<th>E</th>"
+                              "<th colspan=2>LM</th>"
+                              "<th colspan=2>MM</th>"
+                              "<th>D</th>"
+                              "<th>T</th>"
+                              "<th>V</th>"
+                              "<th colspan=16>DEVNUM</th></tr>\n");
+
+        fprintf(webblk->hsock,"<tr><td colspan=2></td>"
+                              "<td colspan=3>%d%d%d</td>"
+                              "<td colspan=3></td>"
+                              "<td>%d</td>"
+                              "<td colspan=2>%d%d</td>"
+                              "<td colspan=2>%d%d</td>"
+                              "<td>%d</td>"
+                              "<td>%d</td>"
+                              "<td>%d</td>"
+                              "<td colspan=16>%2.2X%2.2X</td></tr>\n",
+                              ((dev->pmcw.flag4 >> 5) & 1),
+                              ((dev->pmcw.flag4 >> 4) & 1),
+                              ((dev->pmcw.flag4 >> 3) & 1),
+                              ((dev->pmcw.flag5 >> 7) & 1),
+                              ((dev->pmcw.flag5 >> 6) & 1),
+                              ((dev->pmcw.flag5 >> 5) & 1),
+                              ((dev->pmcw.flag5 >> 4) & 1),
+                              ((dev->pmcw.flag5 >> 3) & 1),
+                              ((dev->pmcw.flag5 >> 2) & 1),
+                              ((dev->pmcw.flag5 >> 1) & 1),
+                              (dev->pmcw.flag5 & 1),
+                              dev->pmcw.devnum[0],
+                              dev->pmcw.devnum[1]);
+
+        fprintf(webblk->hsock,"<tr><th colspan=8>LPM</th>"
+                              "<th colspan=8>PNOM</th>"
+                              "<th colspan=8>LPUM</th>"
+                              "<th colspan=8>PIM</th></tr>\n");
+
+        fprintf(webblk->hsock,"<tr><td colspan=8>%2.2X</td>"
+                              "<td colspan=8>%2.2X</td>"
+                              "<td colspan=8>%2.2X</td>"
+                              "<td colspan=8>%2.2X</td></tr>\n",
+                              dev->pmcw.lpm,
+                              dev->pmcw.pnom,
+                              dev->pmcw.lpum,
+                              dev->pmcw.pim);
+
+        fprintf(webblk->hsock,"<tr><th colspan=16>MBI</th>"
+                              "<th colspan=8>POM</th>"
+                              "<th colspan=8>PAM</th></tr>\n");
+
+        fprintf(webblk->hsock,"<tr><td colspan=16>%2.2X%2.2X</td>"
+                              "<td colspan=8>%2.2X</td>"
+                              "<td colspan=8>%2.2X</td></tr>\n",
+                              dev->pmcw.mbi[0],
+                              dev->pmcw.mbi[1],
+                              dev->pmcw.pom,
+                              dev->pmcw.pam);
+
+        fprintf(webblk->hsock,"<tr><th colspan=8>CHPID=0</th>"
+                              "<th colspan=8>CHPID=1</th>"
+                              "<th colspan=8>CHPID=2</th>"
+                              "<th colspan=8>CHPID=3</th></tr>\n");
+
+        fprintf(webblk->hsock,"<tr><td colspan=8>%2.2X</td>"
+                              "<td colspan=8>%2.2X</td>"
+                              "<td colspan=8>%2.2X</td>"
+                              "<td colspan=8>%2.2X</td></tr>\n",
+                              dev->pmcw.chpid[0],
+                              dev->pmcw.chpid[1],
+                              dev->pmcw.chpid[2],
+                              dev->pmcw.chpid[3]);
+
+        fprintf(webblk->hsock,"<tr><th colspan=8>CHPID=4</th>"
+                              "<th colspan=8>CHPID=5</th>"
+                              "<th colspan=8>CHPID=6</th>"
+                              "<th colspan=8>CHPID=7</th></tr>\n");
+
+        fprintf(webblk->hsock,"<tr><td colspan=8>%2.2X</td>"
+                              "<td colspan=8>%2.2X</td>"
+                              "<td colspan=8>%2.2X</td>"
+                              "<td colspan=8>%2.2X</td></tr>\n",
+                              dev->pmcw.chpid[4],
+                              dev->pmcw.chpid[5],
+                              dev->pmcw.chpid[6],
+                              dev->pmcw.chpid[7]);
+
+        fprintf(webblk->hsock,"<tr><th colspan=31>0000000000000000000000000000000</th>"
+                              "<th>S</th></tr>\n");
+
+        fprintf(webblk->hsock,"<tr><td colspan=31></td>"
+                              "<td>%d</td></tr>\n",
+                              (dev->pmcw.flag27 & 1));
+
+        fprintf(webblk->hsock,"</table>\n");
+
+    }
 
     html_footer(webblk);
 
