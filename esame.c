@@ -5742,6 +5742,33 @@ BYTE    dec[8];                         /* Packed decimal operand    */
 
 #if defined(FEATURE_LONG_DISPLACEMENT)
 /*-------------------------------------------------------------------*/
+/* E326 CVDY  - Convert to Decimal (Long Displacement)         [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_to_decimal_y)
+{
+S64     bin;                            /* 64-bit signed binary value*/
+int     r1;                             /* Value of R1 field         */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+BYTE    dec[16];                        /* Packed decimal result     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load value of register and sign-extend to 64 bits */
+    bin = (S64)(regs->GR_L(r1));
+
+    /* Convert to 16-byte packed decimal number */
+    binary_to_packed (bin, dec);
+
+    /* Store low 8 bytes of result at operand address */
+    ARCH_DEP(vstorec) ( dec+8, 8-1, effective_addr2, b2, regs );
+
+} /* end DEF_INST(convert_to_decimal_y) */
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
 /* EB57 XIY   - Exclusive Or Immediate (Long Displacement)     [SIY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(exclusive_or_immediate_y)
@@ -6421,7 +6448,6 @@ BYTE    tbyte;                          /* Work byte                 */
         (inst,execflag,regs); }
  UNDEF_INST(compare_and_swap_y)
  UNDEF_INST(compare_double_and_swap_y)
- UNDEF_INST(convert_to_decimal_y)
  UNDEF_INST(load_real_address_y)
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
