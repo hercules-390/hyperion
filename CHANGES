@@ -1,3 +1,5 @@
+06 Apr 2001 Read-track released dfwlock too soon when track found
+            in dfw queue
 04 Apr 2001 Sense/Set Path Group ID for DASD - Jan Jaeger
 02 Apr 2001 Correction to register unstacking logic - Jan Jaeger
 04 Apr 2001 #define MAX_DEVICE_THREAD_IDLE_SECS 300
