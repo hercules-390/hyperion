@@ -211,7 +211,7 @@ else
   hercules_LDADD   = $(LDADD)
 endif
 
-
+# ISW20030826-1 Removed $HERCULES_EXP from definition below
 hercules_SOURCES = version.c   \
                    hostinfo.c  \
                    impl.c      \
@@ -273,7 +273,6 @@ hercules_SOURCES = version.c   \
                    $(FISHHANG) \
                    $(FISHIO)   \
                    $(MEMRCHR)  \
-                   $(HERCULES_EXP) \
                    $(STADEVSRC)
 
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
@@ -381,6 +380,7 @@ EXTRA_DIST =   \
              CHANGES               \
              RELEASE.NOTES
 
+# ISW20030826-1 Added sockdev.h
 noinst_HEADERS = fishhang.h \
                  hostinfo.h \
                  cpuint.h   \
@@ -427,6 +427,7 @@ noinst_HEADERS = fishhang.h \
                  hscutl.h   \
                  hdl.h      \
                  crypto.h   \
+                 sockdev.h   \
                  service.h
 
 #########################################################
