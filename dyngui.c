@@ -1008,11 +1008,11 @@ END_RESOLVER_SECTION;
 
 HDL_FINAL_SECTION;
 {
+    usleep(100000);             // (brief delay to give GUI time
+                                //  to display ALL shutdown msgs)
     if(gui_nounload)
         return gui_nounload;    // (reject unloads when activated)
 
-    usleep(100000);             // (brief delay to give GUI time
-                                //  to display ALL shutdown msgs)
     bDoneProcessing = TRUE;     // (now force main loop to exit)
 }
 END_FINAL_SECTION;
