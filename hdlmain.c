@@ -16,13 +16,13 @@
 #if defined(_ARCHMODE2)
  #define  _GEN_ARCH _ARCHMODE2
  #include "hdlmain.c"
-#endif 
+#endif
 
 #if defined(_ARCHMODE3)
  #undef   _GEN_ARCH
  #define  _GEN_ARCH _ARCHMODE3
  #include "hdlmain.c"
-#endif 
+#endif
 
 
 #if defined(OPTION_DYNAMIC_LOAD)
@@ -57,6 +57,7 @@ END_DEPENDENCY_SECTION;
 
 HDL_REGISTER_SECTION;
 {
+    HDL_REGISTER( parse_args,                 parse_args      );
     HDL_REGISTER( panel_command,              panel_command_r );
     HDL_REGISTER( panel_display,              panel_display_r );
     HDL_REGISTER( config_command,             UNRESOLVED      );

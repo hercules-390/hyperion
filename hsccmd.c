@@ -32,7 +32,7 @@ extern  void  FishHangInit(char* pszFileCreated, int nLineCreated);
 extern  void  FishHangReport();
 extern  void  FishHangAtExit();
 #endif // defined(FISH_HANG)
- 
+
 #if defined(FEATURE_ECPSVM)
 extern void ecpsvm_command(int argc,char **argv);
 #endif
@@ -84,7 +84,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
 int History(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
-    /* last stored command is for sure command 'hst' so remove it 
+    /* last stored command is for sure command 'hst' so remove it
        this is the only place where history_remove is called */
     history_remove();
     history_requested = 1;
@@ -109,7 +109,7 @@ int History(int argc, char *argv[], char *cmdline)
             history_requested = 0;
         }
         else {
-          if (x<0) { 
+          if (x<0) {
             if (history_relative_line(x) == -1)
               history_requested = 0;
           }
@@ -300,7 +300,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
 int startall_cmd(int argc, char *argv[], char *cmdline)
 {
-    int i = 0;
+    int n, i;
     U32 mask;
 
     UNREFERENCED(cmdline);
@@ -309,13 +309,14 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
 
     obtain_lock (&sysblk.intlock);
 
-    mask = sysblk.config_mask ^ sysblk.started_mask;
-    while (mask)
+    mask = (~sysblk.started_mask) & sysblk.config_mask;
+    for (i = 0; mask; i++)
     {
-        i += ffs (mask);
+        n = ffs(mask);
+        i += n;
         sysblk.regs[i]->cpustate = CPUSTATE_STARTING;
-        WAKEUP_CPU (sysblk.regs[i]);
-        mask >>= ++i;
+        signal_condition(&sysblk.regs[i]->intcond);
+        mask >>= (n+1);
     }
 
     release_lock (&sysblk.intlock);
@@ -328,7 +329,7 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
 
 int stopall_cmd(int argc, char *argv[], char *cmdline)
 {
-    int i = 0;
+    int n, i;
     U32 mask;
 
     UNREFERENCED(cmdline);
@@ -338,13 +339,14 @@ int stopall_cmd(int argc, char *argv[], char *cmdline)
     obtain_lock (&sysblk.intlock);
 
     mask = sysblk.started_mask;
-    while (mask)
+    for (i = 0; mask; i++)
     {
-        i += ffs (mask);
+        n = ffs(mask);
+        i += n;
         sysblk.regs[i]->cpustate = CPUSTATE_STOPPING;
         ON_IC_INTERRUPT(sysblk.regs[i]);
-        WAKEUP_CPU(sysblk.regs[i]);
-        mask >>= ++i;
+        signal_condition(&sysblk.regs[i]->intcond);
+        mask >>= (n+1);
     }
 
     release_lock (&sysblk.intlock);
@@ -1144,7 +1146,7 @@ BYTE c;                                 /* Character work area       */
 
     /* Update IPL parameter if operand is specified */
     if (argc > 1)
-	set_loadparm(argv[1]);
+    set_loadparm(argv[1]);
 
     /* Display IPL parameter */
     logmsg( _("HHCPN051I LOADPARM=%s\n"),str_loadparm());
@@ -3210,7 +3212,7 @@ COMMAND ( "ssd",       ssd_cmd,       "Signal Shutdown\n" )
 #ifdef OPTION_PTTRACE
 COMMAND ( "ptt",       ptt_cmd,       "display pthread trace" )
 #endif
- 
+
 COMMAND ( "i",         i_cmd,         "generate I/O attention interrupt for device" )
 COMMAND ( "ext",       ext_cmd,       "generate external interrupt" )
 COMMAND ( "restart",   restart_cmd,   "generate restart interrupt\n" )
@@ -3328,7 +3330,7 @@ int ProcessPanelCommand (const char* pszCmdLine)
 
     /* Parse the command line into its individual arguments...
        Note: original command line now sprinkled with nulls */
-    parse_args((BYTE*)pszCmdLine, MAX_ARGS, cmd_argv, &cmd_argc);
+    parse_args ((BYTE*)pszCmdLine, MAX_ARGS, cmd_argv, &cmd_argc);
 
 #if defined(OPTION_DYNAMIC_LOAD)
     if( system_command )
@@ -3459,7 +3461,7 @@ CMDHELP ( "hst",       "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"
                        "list of last ten commands entered from command line\n"
                        "hst n, where n is a positive number retrieves n-th command from list\n"
                        "hst n, where n is a negative number retrieves n-th last command\n"
-                       "hst without an argument works exactly as hst -1, it retrieves last command\n") 
+                       "hst without an argument works exactly as hst -1, it retrieves last command\n")
 
 CMDHELP ( "quit",      "Format: \"quit [NOW]\". The optional 'NOW' argument\n"
                        "causes the emulator to immediately terminate without\n"

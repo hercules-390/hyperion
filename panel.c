@@ -429,10 +429,6 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
     char ch[2];
     U32 aaddr;
     int savadr;
-#ifdef OPTION_MIPS_COUNTING
-    U32 mipsrate;
-    U32 siosrate;
-#endif
 
     if (NPhelpup == 1) {
         if (NPhelpdown == 1) {
@@ -584,19 +580,9 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
     fprintf(confp, ANSI_CURSOR, 19, 2);
     fprintf(confp, ANSI_YLW_BLK);
 #ifdef OPTION_MIPS_COUNTING
-    for(mipsrate = siosrate = i = 0; i < HI_CPU; i++)
-        if (IS_CPU_ONLINE(i))
-        {
-            mipsrate += sysblk.regs[i]->mipsrate;
-            siosrate += sysblk.regs[i]->siosrate;
-        }
-#ifdef OPTION_SHARED_DEVICES
-    siosrate += sysblk.shrdrate;
-#endif
-    if (mipsrate > 100000) mipsrate = 0;        /* ignore wildly high rate */
     fprintf(confp, "%2.1d.%2.2d  %5d",
-            mipsrate / 1000, (mipsrate % 1000) / 10,
-           siosrate);
+            sysblk.mipsrate / 1000, (sysblk.mipsrate % 1000) / 10,
+            sysblk.siosrate);
 #else
     fprintf(confp, "%12.12u",
 #if defined(_FEATURE_SIE)
@@ -966,15 +952,15 @@ struct  timeval tv;                     /* Select timeout structure  */
                         kbbuf[0] = '\0';
                         redraw_status = 1;
                     }
-		    cmdline[0] = '\0';
-		    cmdlen = 0;
-		    cmdoff = 0;
+            cmdline[0] = '\0';
+            cmdlen = 0;
+            cmdoff = 0;
                     switch(kbbuf[0]) {
                         case 0x1b:                  /* ESC */
                             NPDup = 0;
-			    cmdline[0] = '\0';
-			    cmdoff = 0;
-			    cmdlen = 0;
+                cmdline[0] = '\0';
+                cmdoff = 0;
+                cmdlen = 0;
                             break;
                         case '?':
                             NPhelpup = 1;
@@ -1283,9 +1269,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                     /* =NP= : Switch to new panel display */
                     NP_init();
                     NPDup = 1;
-		    cmdline[0] = '\0';
-		    cmdoff = 0;
-		    cmdlen = 0;
+            cmdline[0] = '\0';
+            cmdoff = 0;
+            cmdlen = 0;
                     /* =END= */
                     break;
                 }
@@ -1362,9 +1348,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                                     break;
                             }
                             redraw_status = 1;
-			    cmdline[0] = '\0';
-			    cmdlen = 0;
-			    cmdoff = 0;
+                cmdline[0] = '\0';
+                cmdlen = 0;
+                cmdoff = 0;
                         }
                         /* =END= */
                         redraw_cmd = 1;

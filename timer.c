@@ -349,6 +349,8 @@ struct  timeval tv;                     /* Structure for gettimeofday
         msecctr += (int)(diff/4096000);
         if (msecctr > 999)
         {
+            U32  mipsrate = 0;   /* (total for ALL CPUs together) */
+            U32  siosrate = 0;   /* (total for ALL CPUs together) */
             /* Get current time */
             then = now;
             gettimeofday (&tv, NULL);
@@ -359,6 +361,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
 #if defined(OPTION_SHARED_DEVICES)
             sysblk.shrdrate = sysblk.shrdcount;
             sysblk.shrdcount = 0;
+            siosrate = sysblk.shrdrate;
 #endif
 
             for (cpu = 0; cpu < HI_CPU; cpu++)
@@ -390,6 +393,10 @@ struct  timeval tv;                     /* Structure for gettimeofday
                     ((regs->instcount - regs->prevcount)*1000) / interval;
                 regs->siosrate = regs->siocount;
 
+                /* Total for ALL CPUs together */
+                mipsrate += regs->mipsrate;
+                siosrate += regs->siosrate;
+
                 /* Save the instruction counter */
                 regs->prevcount = regs->instcount;
                 regs->siocount = 0;
@@ -407,6 +414,10 @@ struct  timeval tv;                     /* Structure for gettimeofday
                 release_lock(&sysblk.cpulock[cpu]);
 
             } /* end for(cpu) */
+
+            /* Total for ALL CPUs together */
+            sysblk.mipsrate = mipsrate;
+            sysblk.siosrate = siosrate;
 
             /* Reset the millisecond counter */
             msecctr = 0;
