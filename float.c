@@ -6167,16 +6167,6 @@ int     i1;                             /* Index of R1 in fpr array  */
     regs->fpr[i1+FPREX+1] = 0;
 
 } /* end DEF_INST(load_zero_float_ext_reg) */
-
-
-/* The following instructions are not yet implemented */
-#define UNDEF_INST(_x) \
-        DEF_INST(_x) { ARCH_DEP(operation_exception) \
-        (inst,execflag,regs); }
- UNDEF_INST(convert_bfp_long_to_float_long_reg)
- UNDEF_INST(convert_bfp_short_to_float_long_reg)
- UNDEF_INST(convert_float_long_to_bfp_long_reg)
- UNDEF_INST(convert_float_long_to_bfp_short_reg)
 #endif /*defined(FEATURE_FPS_EXTENSIONS)*/
 
 
