@@ -1,3 +1,4 @@
+01 Okt 2002 Fix for SSK/ISK/RRB - Juergen Dobrinski
 19 Sep 2002 Fix cckd thrash for large fragmentations - Greg Smith
 19 Sep 2002 Fix console.c to wait for initdone to listen - Greg Smith
 30 Aug 2002 Fix MVCL to update regs prior to possible program check - Greg Smith
