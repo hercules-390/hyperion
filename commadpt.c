@@ -208,7 +208,7 @@ static int commadpt_alloc_device(DEVBLK *dev)
     dev->commadpt=malloc(sizeof(COMMADPT));
     if(dev->commadpt==NULL)
     {
-        logmsg(_("HHCCA100S %4.4X:Memory allocation failure for main control block\n"),
+        logmsg(_("HHCCA020E %4.4X:Memory allocation failure for main control block\n"),
                 dev->devnum);
         return -1;
     }
