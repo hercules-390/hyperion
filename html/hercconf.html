@@ -67,6 +67,7 @@ a real System/390.  The configuration file is an ASCII text file.
     #   <a href="#device_definitions">Device definitions</a>
     #
 
+    0009      <a href="#consysc">3215-C</a>  /
 
     000A      <a href="#1442">1442</a>    adrdmprs.rdr
     000C      <a href="#3505">3505</a>    jcl.txt     ascii  trunc
@@ -858,6 +859,11 @@ a real System/390.  The configuration file is an ASCII text file.
                 <td>Telnet client connection</td>
             </tr>
 
+            <tr><td>1052-C, 3215-C</td>
+                <td><a href="#consysc">Integrated console printer-keyboards</a></td>
+                <td>Integrated on hercules console</td>
+            </tr>
+
             <tr><td>1442, 2501, 3505</td>
                 <td><a href="#cardrdr">Card readers</a></td>
                 <td>Disk file(s) (ASCII or EBCDIC)</td>
@@ -1048,6 +1054,19 @@ a real System/390.  The configuration file is an ASCII text file.
     To summarize, the device number suffix always takes precedence over any group name
     which may also be specified, and any group name, if specified, always takes precedence
     over any ip address / subnet mask value which may also be specified.
+    <p>
+
+<a name="consysc">
+<dt><em>Integrated Console printer-keyboard devices</em>
+<dd><p>
+
+    There is one optional argument which is the command prefix 
+    for sending input to the device. The default command prefix is '/'.
+    <p>
+
+    To send a logon command to a 1052-C or 3215-C enter /logon on the hercules console.
+    <p>
+    All integrated devices must use a different command prefix. 
     <p>
 
 <a name="conprkb">
