@@ -41,7 +41,6 @@
 #define FEATURE_SIE_MAXZONES          8
 
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
-#define OPTION_ECPSVM                   /* ECPS:VM Optional feature  */
 
 
 /* Allow for compiler command line overrides */

@@ -262,9 +262,9 @@ BYTE   *sdevtmax;                       /* -> Max device threads     */
 BYTE   *scpuprio;                       /* -> CPU thread priority    */
 BYTE   *spgmprdos;                      /* -> Program product OS OK  */
 BYTE   *scodepage;                      /* -> Code page              */
-#if defined(OPTION_ECPSVM)
+#if defined(_FEATURE_ECPSVM)
 BYTE   *secpsvmlevel;                   /* -> ECPS:VM level (or 'no')*/
-#endif /*defined(OPTION_ECPSVM)*/
+#endif /*defined(_FEATURE_ECPSVM)*/
 #if defined(OPTION_HTTP_SERVER)
 BYTE   *shttpport;                      /* -> HTTP port number       */
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -296,10 +296,10 @@ BYTE   *sdevnum;                        /* -> Device number string   */
 BYTE   *sdevtype;                       /* -> Device type string     */
 U16     devnum;                         /* Device number             */
 int     devtmax;                        /* Max number device threads */
-#if defined(OPTION_ECPSVM)
+#if defined(_FEATURE_ECPSVM)
 int     ecpsvmavail;                    /* ECPS:VM Available flag    */
 int     ecpsvmlevel;                    /* ECPS:VM declared level    */
-#endif /*defined(OPTION_ECPSVM)*/
+#endif /*defined(_FEATURE_ECPSVM)*/
 #ifdef OPTION_IODELAY_KLUDGE
 int     iodelay=-1;                     /* I/O delay value           */
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -374,10 +374,10 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     cpuprio = 15;
     pgmprdos = PGM_PRD_OS_RESTRICTED;
     devtmax = MAX_DEVICE_THREADS;
-#if defined(OPTION_ECPSVM)
+#if defined(_FEATURE_ECPSVM)
     ecpsvmavail = 0;
     ecpsvmlevel = 20;
-#endif /*defined(OPTION_ECPSVM)*/
+#endif /*defined(_FEATURE_ECPSVM)*/
 #if defined(OPTION_HTTP_SERVER)
     httpport = 0;
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -417,9 +417,9 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         sdevtmax = NULL;
         spgmprdos = NULL;
         scodepage = NULL;
-#if defined(OPTION_ECPSVM)
+#if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
-#endif /*defined(OPTION_ECPSVM)*/
+#endif /*defined(_FEATURE_ECPSVM)*/
 #if defined(OPTION_HTTP_SERVER)
         shttpport = NULL;
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -518,13 +518,13 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             {
                 scodepage = operand;
             }
-#if defined(OPTION_ECPSVM)
+#if defined(_FEATURE_ECPSVM)
             /* ECPS:VM support */
             else if(strcasecmp(keyword, "ecps:vm") == 0)
             {
                 secpsvmlevel=operand;
             }
-#endif /*defined(OPTION_ECPSVM)*/
+#endif /*defined(_FEATURE_ECPSVM)*/
 #ifdef OPTION_IODELAY_KLUDGE
             else if (strcasecmp (keyword, "iodelay") == 0)
             {
@@ -918,7 +918,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             }
         }
 
-#if defined(OPTION_ECPSVM)
+#if defined(_FEATURE_ECPSVM)
         /* Parse ECPS:VM level */
         if(secpsvmlevel != NULL)
         {
@@ -940,7 +940,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         }
         sysblk.ecpsvm.available=ecpsvmavail;
         sysblk.ecpsvm.level=ecpsvmlevel;
-#endif /*defined(OPTION_ECPSVM)*/
+#endif /*defined(_FEATURE_ECPSVM)*/
 
 #if defined(OPTION_HTTP_SERVER)
         /* Parse http port number operand */

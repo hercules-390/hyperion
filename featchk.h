@@ -57,6 +57,10 @@
  #define _FEATURE_EXPANDED_STORAGE
 #endif
 
+#if defined(FEATURE_ECPSVM)
+ #define _FEATURE_ECPSVM
+#endif
+
 #if defined(_FEATURE_SIE) && defined(FEATURE_STORAGE_KEY_ASSIST)
  #define _FEATURE_STORAGE_KEY_ASSIST
 #endif

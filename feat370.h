@@ -19,9 +19,7 @@
 #define FEATURE_CHANNEL_SWITCHING
 #define FEATURE_S370E_EXTENDED_ADDRESSING
 #define FEATURE_TEST_BLOCK
-#if defined(OPTION_ECPSVM)
 #define FEATURE_ECPSVM
-#endif /* defined(OPTION_ECPSVM) */
 
 #endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */
