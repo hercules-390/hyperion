@@ -361,6 +361,10 @@
  UNDEF_INST(convert_bfp_short_to_fix32_reg)
  UNDEF_INST(convert_fix32_to_bfp_long_reg)
  UNDEF_INST(convert_fix32_to_bfp_short_reg)
+ UNDEF_INST(convert_fix64_to_bfp_long_reg);
+ UNDEF_INST(convert_fix64_to_bfp_short_reg);
+ UNDEF_INST(convert_bfp_long_to_fix64_reg);
+ UNDEF_INST(convert_bfp_short_to_fix64_reg);                    
  UNDEF_INST(divide_bfp_ext_reg)
  UNDEF_INST(divide_bfp_long)
  UNDEF_INST(divide_bfp_long_reg)
@@ -1935,12 +1939,12 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B3A1*/ GENx___x___x___ ,
  /*B3A2*/ GENx___x___x___ ,
  /*B3A3*/ GENx___x___x___ ,
- /*B3A4*/ GENx___x___x___ ,                                     /*!CEGBR     */
- /*B3A5*/ GENx___x___x___ ,                                     /*!CDGBR     */
+ /*B3A4*/ GENx___x___x900 (convert_fix64_to_bfp_short_reg),     /*!CEGBR     */
+ /*B3A5*/ GENx___x___x900 (convert_fix64_to_bfp_long_reg),      /*!CDGBR     */
  /*B3A6*/ GENx___x___x___ ,                                     /*!CXGBR     */
  /*B3A7*/ GENx___x___x___ ,
- /*B3A8*/ GENx___x___x___ ,
- /*B3A9*/ GENx___x___x___ ,
+ /*B3A8*/ GENx___x___x900 (convert_bfp_short_to_fix64_reg),     /*!CGEBR     */
+ /*B3A9*/ GENx___x___x900 (convert_bfp_long_to_fix64_reg),      /*!CGDBR     */
  /*B3AA*/ GENx___x___x___ ,
  /*B3AB*/ GENx___x___x___ ,
  /*B3AC*/ GENx___x___x___ ,
