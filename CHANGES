@@ -10,6 +10,7 @@
 11 Jul 2003 Fix "console: select: Bad file number" -- 2nd try - Fish
 10 Jul 2003 fix tape label issue in hetinit.c & slib.c - Fish
 10 Jul 2003 HFP Multiply-Add/Subtract Facility - Roger Bowler
+09 Jul 2003 UC Only in status for CTL NO-OP on tape devices - Ivan Warren
 09 Jul 2003 added check to configure.ac to ensure dynamic load support
             available if external-gui support requested on win32 - Fish
 07 Jul 2003 configure.ac now correctly sets USE_DLLTOOL to false if
@@ -104,7 +105,7 @@
             (fixes device Boxing when varied on twice) - Ivan Warren
 23 Apr 2003 Shared devices fixes - Greg Smith
 19 Apr 2003 Shared devices - Greg Smith
-18 Apr 2003 270X Poll CCW Implementation
+18 Apr 2003 270X Poll CCW Implementation - Ivan Warren
 16 Apr 2003 Rework channel.c serialization - Greg Smith
 16 Apr 2003 memrchr.[ch] added for Cygwin - Volker Bandke
 15 Apr 2003 LCTL VM Assist - Ivan Warren
