@@ -1306,6 +1306,13 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 #define CCKD_COMPRESS_MAX      CCKD_COMPRESS_BZIP2
 #endif
 
+#define CCKD_STRESS_LEVEL1     8
+#define CCKD_STRESS_LEVEL2     16
+#define CCKD_STRESS_MINLEN     4096
+#define CCKD_STRESS_COMP       CCKD_COMPRESS_ZLIB
+#define CCKD_STRESS_PARM1      4
+#define CCKD_STRESS_PARM2      2
+
 typedef struct _CCKD_L2ENT {            /* Level 2 table entry       */
         U32              pos;           /* Track offset              */
         U16              len;           /* Track length              */
@@ -1379,6 +1386,7 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
 #define CCKD_MAX_GCOL          1        /* Max garbage collectors    */
 #define CCKD_MAX_CACHE         1024     /* Max number cache entries  */
 #define CCKD_MAX_L2CACHE       1024     /* Max nbr l2 cache entries  */
+#define CCKD_MAX_TRACE         200000   /* Max nbr trace entries     */
 
 #define CCKD_MIN_READAHEADS    0        /* Min readahead trks        */
 #define CCKD_MIN_RA            0        /* Min readahead threads     */
@@ -1406,7 +1414,7 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         LOCK             cachelock;     /* Cache lock                */
         COND             cachecond;     /* Wait for cache condition  */
         U64              cacheage;      /* Cache aging value         */
-        int              cachewaiting;  /* Number waiting for cache  */
+        int              cachewaiting;  /* Threads waiting for cache */
         LOCK             gclock;        /* Garbage collector lock    */
         COND             gccond;        /* Garbage collector cond    */
         int              gcols;         /* Number garbage collectors */
@@ -1426,15 +1434,36 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         int              rafree;        /* Free readahead entry      */
         COND             writercond;    /* Writer condition          */
         int              writepending;  /* Number writes pending     */
-        int              writewaiting;  /* Number writers waiting    */
+        int              writerswaiting;/* Number writers waiting    */
         int              writers;       /* Number writer threads     */
         int              writermax;     /* Max writer threads        */
         int              writerprio;    /* Writer thread priority    */
+        int              writewaiting;  /* Threads waiting for writes*/
+        COND             writecond;     /* Write wait condition      */
         COND             termcond;      /* Termination condition     */
         int              l2cachenbr;    /* Size of level 2 cache     */
         int              cachenbr;      /* Size of cache             */
+        U64              stats_readaheads;     /* Readaheads         */
+        U64              stats_readaheadmisses;/* Readahead misses   */
+        U64              stats_switches;       /* Switches           */
+        U64              stats_readwaits;      /* Waits for read     */
+        U64              stats_writewaits;     /* Waits for write    */
+        U64              stats_cachewaits;     /* Waits for cache    */
+        U64              stats_reads;          /* Number reads       */
+        U64              stats_readbytes;      /* Bytes read         */
+        U64              stats_writes;         /* Number writes      */
+        U64              stats_writebytes;     /* Bytes written      */
+        U64              stats_stresswrites;   /* Writes under stress*/
+        U64              stats_cachehits;      /* Cache hits         */
+        U64              stats_cachemisses;    /* Cache misses       */
+        U64              stats_l2cachehits;    /* L2 cache hits      */
+        U64              stats_l2cachemisses;  /* L2 cache misses    */
+        U64              stats_l2reads;        /* L2 reads           */
+        U64              stats_gcolmoves;      /* Spaces moved       */
+        U64              stats_gcolbytes;      /* Bytes moved        */
         char            *itrace;        /* Internal trace table      */
         int              itracex;       /* Internal trace index      */
+        int              itracen;       /* Internal trace size       */
         CCKD_CACHE       cache[CCKD_MAX_CACHE];     /* CCKD cache    */
         CCKD_CACHE       l2cache[CCKD_MAX_L2CACHE]; /* CCKD l2 cache */
       } CCKDBLK;
