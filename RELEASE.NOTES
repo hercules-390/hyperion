@@ -1,9 +1,8 @@
 
-                     Version 2.18 RELEASE NOTES
+                     Version 3.00 RELEASE NOTES
 
 
-- Reminder that CTCI device handling was changed starting with version 2.17
-  as follows:
+- Reminder that CTCI device handling was changed as follows:
 
   - The CTCI-W32 protocol is deprecated. You should use the CTCI protocol
     instead.
@@ -15,7 +14,7 @@
     This is by design. See the README.NETWORKING document for further details.
 
 
-- Hercules Dynamic Loader support: starting with version 2.18, Hercules now
+- Hercules Dynamic Loader support: starting with version 3.00, Hercules now
   contains support for the dynamic loading of certain modules upon startup on
   some platforms (e.g. Linux and Windows for example). As a result of this new
   feature, "Hercules" itself now no longer consists of just the 'hercules.exe'
@@ -28,11 +27,11 @@
   dynamic module that was not specifically built for that version will cause
   loading of that dynamic module to fail.
 
-  You CANNOT mix versions of hercules with differing versions of dynamically
+  You CANNOT mix versions of Hercules with differing versions of dynamically
   loaded modules.
 
-  Ensure that your library path LD_LIBRARY_PATH set correctly such that it
-  includes the directory of your hercules executables. Especially, message
+  Ensure that your library path LD_LIBRARY_PATH is set correctly such that it
+  includes the directory of your Hercules executables. Especially, message
   HHCCF042E will indicate that system is unable to locate necessary loadable
   modules.
 
@@ -41,7 +40,7 @@
   in VM/370. If AP=YES or MP=YES is coded in DMKSYS and the AP/MP control
   file is used to build the CP nucleus and NUMCPU is set to more than 1 in
   the hercules.cnf file, any of LOK001, LOK003 or other abends will occur.
-  This occurs because the hercules ECPS:VM CP Assist implementation is not
+  This occurs because the Hercules ECPS:VM CP Assist implementation is not
   MP safe, and particularily, attemps VM dispatching without holding necessary
   AP or MP locks.
 
@@ -101,7 +100,7 @@
 
   Therefore, if you are currently using the "heap_chunk_in_mb" registry value
   setting to allow you to allocate large MAINSIZE values, then starting with
-  version 2.18 of Hercules you need to DESCREASE your "heap_chunk_in_mb" value
+  version 3.00 of Hercules you need to DESCREASE your "heap_chunk_in_mb" value
   (or remove it altogether and let it default) in order to leave enough memory
   remaining for Hercules (Cygwin actually) to be able to satisfy its 'mmap'
   request for your desired MAINSIZE amount.
