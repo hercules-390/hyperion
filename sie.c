@@ -532,12 +532,12 @@ int     icode = 0;                      /* Interception code         */
     /* If this is not the last host cpu that dispatched this state
        descriptor then clear the guest TLB entries */
          if((regs->cpuad != lhcpu)
-           || (GUESTREGS->sie_state != effective_addr2))
+           || (SIE_STATE(GUESTREGS) != effective_addr2))
     {
         SIE_PERFMON(SIE_PERF_ENTER_F);
 
         /* Absolute address of state descriptor block */
-        GUESTREGS->sie_state = effective_addr2;
+        SIE_STATE(GUESTREGS) = effective_addr2;
 
         /* Update Last Host CPU address */
         STORE_HW(STATEBK->lhcpu, regs->cpuad);
@@ -808,7 +808,7 @@ int     n;
 
 #endif /*defined(_FEATURE_PER2)*/
             /* Point to PSA fields in state descriptor */
-            psa = (void*)(regs->mainstor + GUESTREGS->sie_state + SIE_IP_PSA_OFFSET);
+            psa = (void*)(regs->mainstor + SIE_STATE(GUESTREGS) + SIE_IP_PSA_OFFSET);
             STORE_HW(psa->perint, GUESTREGS->perc);
             STORE_W(psa->peradr, GUESTREGS->peradr);
         }

@@ -917,7 +917,7 @@ U64     dreg;                           /* Double word work area     */
     S(inst, execflag, regs, b2, effective_addr2);
 
 #if defined(_FEATURE_SIE)
-    if(regs->sie_state && (regs->siebk->ic[2] & SIE_IC2_STCK))
+    if(SIE_STATE(regs) && (regs->siebk->ic[2] & SIE_IC2_STCK))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -963,7 +963,7 @@ U64     dreg;                           /* Double word work area     */
     S(inst, execflag, regs, b2, effective_addr2);
 
 #if defined(_FEATURE_SIE)
-    if(regs->sie_state && (regs->siebk->ic[2] & SIE_IC2_STCK))
+    if(SIE_STATE(regs) && (regs->siebk->ic[2] & SIE_IC2_STCK))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -1195,7 +1195,7 @@ int     new_ilc;                        /* New ilc to set            */
 #endif
 
 #if defined(_FEATURE_SIE)
-    if(regs->sie_state &&
+    if(SIE_STATE(regs) &&
       ( (regs->siebk->svc_ctl[0] & SIE_SVC0_ALL)
         || ( (regs->siebk->svc_ctl[0] & SIE_SVC0_1N) &&
               regs->siebk->svc_ctl[1] == i)
@@ -1308,7 +1308,7 @@ BYTE    old;                            /* Old value                 */
     if (regs->psw.cc == 1)
     {
 #if defined(_FEATURE_SIE)
-        if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_TS1)))
+        if((SIE_STATE(regs) && (regs->siebk->ic[0] & SIE_IC0_TS1)))
         {
             if( !OPEN_IC_PERINT(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);

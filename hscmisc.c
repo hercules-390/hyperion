@@ -323,7 +323,7 @@ REGS    gregs, hgregs;
     gregs = *regs;
     gregs.ghostregs = 1;
 
-    if(gregs.sie_state)
+    if(SIE_STATE(&gregs))
     {
         hgregs = *gregs.hostregs;
         gregs.hostregs = &hgregs;
@@ -347,21 +347,21 @@ REGS    gregs, hgregs;
                                             &xcode, &private, &protect,
                                             siptr))
                 return xcode;
-
-            /* Convert real address to absolute address */
-            aaddr = APPLY_PREFIXING (raddr, gregs.PX);
-
-            /* Program check if absolute address is outside main storage */
-            if (aaddr > gregs.mainlim)
-                return PGM_ADDRESSING_EXCEPTION;
-
-            SIE_TRANSLATE(&aaddr, ACCTYPE_SIE, &gregs);
-    
-            /* Program check if absolute address is outside main storage */
-            if (aaddr > gregs.mainlim)
-                return PGM_ADDRESSING_EXCEPTION;
-
         }
+
+        /* Convert real address to absolute address */
+        aaddr = APPLY_PREFIXING (raddr, gregs.PX);
+
+        /* Program check if absolute address is outside main storage */
+        if (aaddr > gregs.mainlim)
+            return PGM_ADDRESSING_EXCEPTION;
+
+        SIE_TRANSLATE(&aaddr, ACCTYPE_SIE, &gregs);
+    
+        /* Program check if absolute address is outside main storage */
+        if (aaddr > gregs.mainlim)
+            return PGM_ADDRESSING_EXCEPTION;
+
     }
     else
         return icode;
@@ -709,7 +709,7 @@ BYTE    buf[100];                       /* Message buffer            */
 int     n;                              /* Number of bytes in buffer */
 
   #if defined(_FEATURE_SIE)
-    if(regs->sie_state)
+    if(SIE_STATE(regs))
         logmsg(_("SIE: "));
   #endif /*defined(_FEATURE_SIE)*/
 

@@ -1848,7 +1848,7 @@ U16     xcode;                          /* Exception code            */
         goto vabs_addr_excp;
 
 #if defined(_FEATURE_SIE)
-    if(regs->sie_state  && !regs->sie_pref)
+    if(SIE_STATE(regs)  && !regs->sie_pref)
     {
     int sie_stid;
     U16 sie_xcode;

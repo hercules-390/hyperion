@@ -228,6 +228,14 @@ do { \
     release_lock(&sysblk.mainlock); \
 } while(0)
 
+
+#if defined(_FEATURE_SIE)
+  #define SIE_STATE(_register_context) ((_register_context)->sie_state)
+#else
+  #define SIE_STATE(_register_context) (0)
+#endif
+
+
 /* The footprint_buffer option saves a copy of the register context
    every time an instruction is executed.  This is for problem
    determination only, as it severely impacts performance.       *JJ */
@@ -397,7 +405,7 @@ do { \
 
 #define BFPINST_CHECK(_regs) \
         if( !((_regs)->CR(0) & CR0_AFP) \
-            || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (SIE_STATE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
             (_regs)->dxc = DXC_BFP_INSTRUCTION; \
             ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
         }
@@ -406,7 +414,7 @@ do { \
     /* Program check if r1 is not 0, 2, 4, or 6 */
 #define HFPREG_CHECK(_r, _regs) \
     if( !((_regs)->CR(0) & CR0_AFP) \
-            || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (SIE_STATE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -416,7 +424,7 @@ do { \
     /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
 #define HFPREG2_CHECK(_r1, _r2, _regs) \
     if( !((_regs)->CR(0) & CR0_AFP) \
-            || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (SIE_STATE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -428,7 +436,7 @@ do { \
     if( (_r) & 2 ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
-               || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+               || (SIE_STATE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -440,7 +448,7 @@ do { \
     if( ((_r1) & 2) || ((_r2) & 2) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
-                || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+                || (SIE_STATE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -1148,13 +1156,13 @@ do { \
 
 #define SIE_INTERCEPT(_regs) \
 do { \
-    if((_regs)->sie_state) \
+    if(SIE_STATE((_regs))) \
     longjmp((_regs)->progjmp, SIE_INTERCEPT_INST); \
 } while(0)
 
 #define SIE_TRANSLATE(_addr, _acctype, _regs) \
 do { \
-    if((_regs)->sie_state && !(_regs)->sie_pref) \
+    if(SIE_STATE((_regs)) && !(_regs)->sie_pref) \
     *(_addr) = SIE_LOGICAL_TO_ABS ((_regs)->sie_mso + *(_addr), \
       USE_PRIMARY_SPACE, (_regs)->hostregs, (_acctype), 0); \
 } while(0)
@@ -1175,10 +1183,10 @@ do { \
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
 
 #define SIE_MODE_XC_OPEX(_regs) \
-    if(((_regs)->sie_state && ((_regs)->siebk->mx & SIE_MX_XC))) \
+    if((SIE_STATE((_regs)) && ((_regs)->siebk->mx & SIE_MX_XC))) \
         ARCH_DEP(program_interrupt)((_regs), PGM_OPERATION_EXCEPTION)
 #define SIE_MODE_XC_SOPEX(_regs) \
-    if(((_regs)->sie_state && ((_regs)->siebk->mx & SIE_MX_XC))) \
+    if((SIE_STATE((_regs)) && ((_regs)->siebk->mx & SIE_MX_XC))) \
         ARCH_DEP(program_interrupt)((_regs), PGM_SPECIAL_OPERATION_EXCEPTION)
 
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/

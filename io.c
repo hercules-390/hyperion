@@ -52,7 +52,7 @@ DEVBLK *dev;                            /* -> device block           */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+    if(SIE_STATE(regs) && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
 #endif
        SIE_INTERCEPT(regs);
 
@@ -98,7 +98,7 @@ DEVBLK *dev;                            /* -> device block           */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+    if(SIE_STATE(regs) && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
 #endif
        SIE_INTERCEPT(regs);
 
@@ -311,7 +311,7 @@ DEVBLK *dev;                            /* -> device block           */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+    if(SIE_STATE(regs) && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
 #endif
        SIE_INTERCEPT(regs);
 
@@ -376,7 +376,7 @@ VADR    effective_addr2;                /* Effective address         */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+    if(SIE_STATE(regs) && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
 #endif
         SIE_INTERCEPT(regs);
 
@@ -392,7 +392,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(_FEATURE_IO_ASSIST)
     /* Virtual use of I/O Assist features must be intercepted */
-    if(regs->sie_state
+    if(SIE_STATE(regs)
       && ( (regs->GR_L(1) & CHM_GPR1_ZONE)
         || (regs->GR_L(1) & CHM_GPR1_A) ))
         SIE_INTERCEPT(regs);
@@ -420,7 +420,7 @@ VADR    effective_addr2;                /* Effective address         */
 #if defined(_FEATURE_IO_ASSIST)
     else
     {
-    int zone = regs->sie_state ? regs->siebk->zone :
+    int zone = SIE_STATE(regs) ? regs->siebk->zone :
                                ((regs->GR_L(1) & CHM_GPR1_ZONE) >> 16);
 
         /* Set the measurement block origin address */
@@ -456,7 +456,7 @@ ORB     orb;                            /* Operation request block   */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+    if(SIE_STATE(regs) && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
 #endif
         SIE_INTERCEPT(regs);
 
@@ -658,7 +658,7 @@ RADR    pfx;                            /* Prefix                    */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+    if(SIE_STATE(regs) && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
 #endif
        SIE_INTERCEPT(regs);
 
@@ -698,8 +698,8 @@ RADR    pfx;                            /* Prefix                    */
                 if(icode != SIE_NO_INTERCEPT)
                 {
                     /* Point to SIE copy of PSA in state descriptor */
-                    psa = (void*)(regs->hostregs->mainstor + regs->sie_state + SIE_II_PSA_OFFSET);
-                    STORAGE_KEY(regs->sie_state, regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
+                    psa = (void*)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_II_PSA_OFFSET);
+                    STORAGE_KEY(SIE_STATE(regs), regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
                 }
                 else
 #endif
@@ -761,7 +761,7 @@ int     cc;                             /* Condition Code            */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+    if(SIE_STATE(regs) && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
 #endif
         SIE_INTERCEPT(regs);
 
@@ -821,7 +821,7 @@ DEVBLK *dev;                            /* -> device block           */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+    if(SIE_STATE(regs) && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
 #endif
        SIE_INTERCEPT(regs);
 
@@ -1007,7 +1007,7 @@ U16     tch_ctl;
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(!regs->sie_state)
+    if(!SIE_STATE(regs))
     {
 #endif /*defined(_FEATURE_SIE)*/
         /* Test for pending interrupt and set condition code */

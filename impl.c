@@ -88,7 +88,7 @@ int i;
              && sysblk.regs[i]->cpustate == CPUSTATE_STARTED
              && (!sysblk.regs[i]->psw.wait
 #if defined(_FEATURE_WAITSTATE_ASSIST)
-             && !(sysblk.regs[i]->sie_state && sysblk.regs[i]->guestregs->psw.wait)
+             && !(SIE_STATE(sysblk.regs[i]) && sysblk.regs[i]->guestregs->psw.wait)
 #endif
                                            ))
             {

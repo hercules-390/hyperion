@@ -178,10 +178,13 @@ struct _ECPSVM_SASTATS
 
 #define BR14 regs->psw.IA=regs->GR_L(14) & ADDRESS_MAXWRAP(regs)
 
-#ifdef _FEATURE_SIE
-#define INITSIESTATE(x) (x).sie_state=0;
+#if defined(_FEATURE_SIE)
+#define INITSIESTATE(_regs)       \
+    do {                          \
+        SIE_STATE(&(_regs)) = 0;  \
+    } while(0)
 #else
-#define INITSIESTATE(x)
+#define INITSIESTATE(_regs)
 #endif
 
 #define CPASSIST_HIT(_stat) ecpsvm_cpstats._stat.hit++

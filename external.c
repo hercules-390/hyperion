@@ -60,7 +60,7 @@ REGS   *tregs;                          /* Target regs               */
 
     realregs =
 #if defined(_FEATURE_SIE)
-               regs->sie_state ? regs->hostregs :
+               SIE_STATE(regs) ? regs->hostregs :
 #endif /*defined(_FEATURE_SIE)*/
                                                   regs;
 
@@ -141,7 +141,7 @@ int     rc;
 
 #if defined(_FEATURE_SIE)
     /* Set the main storage reference and change bits */
-    if(regs->sie_state
+    if(SIE_STATE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        && !(regs->siebk->s & SIE_S_EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
@@ -151,8 +151,8 @@ int     rc;
                                                             )
     {
         /* Point to SIE copy of PSA in state descriptor */
-        psa = (void*)(regs->hostregs->mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
-        STORAGE_KEY(regs->sie_state, regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
+        psa = (void*)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_IP_PSA_OFFSET);
+        STORAGE_KEY(SIE_STATE(regs), regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
     }
     else
 #endif /*defined(_FEATURE_SIE)*/
@@ -181,7 +181,7 @@ int     rc;
         STORE_HW(psa->extint,code);
 
 #if defined(_FEATURE_SIE)
-    if(!regs->sie_state
+    if(!SIE_STATE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        || (regs->siebk->s & SIE_S_EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
@@ -207,7 +207,7 @@ int     rc;
     release_lock(&sysblk.intlock);
 
 #if defined(_FEATURE_SIE)
-    if(regs->sie_state
+    if(SIE_STATE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        && !(regs->siebk->s & SIE_S_EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
@@ -246,7 +246,7 @@ U16     cpuad;                          /* Originating CPU address   */
     /* External interrupt if console interrupt key was depressed */
     if (OPEN_IC_INTKEY(regs)
 #if defined(_FEATURE_SIE)
-        && !regs->sie_state
+        && !SIE_STATE(regs)
 #endif /*!defined(_FEATURE_SIE)*/
         )
     {
@@ -384,7 +384,7 @@ U16     cpuad;                          /* Originating CPU address   */
 #if defined(FEATURE_INTERVAL_TIMER)
     if (OPEN_IC_ITIMER(regs)
 #if defined(_FEATURE_SIE)
-        && !(regs->sie_state
+        && !(SIE_STATE(regs)
           && (regs->siebk->m & SIE_M_ITMOF))
 #endif /*defined(_FEATURE_SIE)*/
         )
@@ -428,7 +428,7 @@ U16     cpuad;                          /* Originating CPU address   */
     /* External interrupt if service signal is pending */
     if (OPEN_IC_SERVSIG(regs)
 #if defined(_FEATURE_SIE)
-        && !regs->sie_state
+        && !SIE_STATE(regs)
 #endif /*!defined(_FEATURE_SIE)*/
         )
     {

@@ -513,7 +513,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
                     regs->checkstop ? 'C' : '.',
                     regs->psw.prob ? 'P' : '.',
 #if defined(_FEATURE_SIE)
-                    regs->sie_state ? 'S' : '.',
+                    SIE_STATE(regs) ? 'S' : '.',
 #else /*!defined(_FEATURE_SIE)*/
                     '.',
 #endif /*!defined(_FEATURE_SIE)*/
@@ -599,7 +599,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #else
     fprintf(confp, "%12.12u",
 #if defined(_FEATURE_SIE)
-        regs->sie_state ? (unsigned)regs->hostregs->instcount :
+        SIE_STATE(regs) ? (unsigned)regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
         (unsigned)regs->instcount);
 #endif
@@ -1500,7 +1500,7 @@ struct  timeval tv;                     /* Select timeout structure  */
            the CPU stopped state has changed */
         if (memcmp(curpsw, prvpsw, sizeof(curpsw)) != 0 || (
 #if defined(_FEATURE_SIE)
-                  regs->sie_state ?  regs->hostregs->instcount :
+                  SIE_STATE(regs) ?  regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
                   regs->instcount) != prvicount
 #if defined(OPTION_SHARED_DEVICES)
@@ -1512,7 +1512,7 @@ struct  timeval tv;                     /* Select timeout structure  */
             memcpy (prvpsw, curpsw, sizeof(prvpsw));
             prvicount =
 #if defined(_FEATURE_SIE)
-                        regs->sie_state ? regs->hostregs->instcount :
+                        SIE_STATE(regs) ? regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
                         regs->instcount;
             prvstate = regs->cpustate;
@@ -1575,7 +1575,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                     regs->checkstop ? 'C' : '.',
                     regs->psw.prob ? 'P' : '.',
 #if defined(_FEATURE_SIE)
-                    regs->sie_state ? 'S' : '.',
+                    SIE_STATE(regs) ? 'S' : '.',
 #else /*!defined(_FEATURE_SIE)*/
                     '.',
 #endif /*!defined(_FEATURE_SIE)*/
@@ -1585,7 +1585,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                     ' ',
 #endif
 #if defined(_FEATURE_SIE)
-                    regs->sie_state ?  (long long) regs->hostregs->instcount :
+                    SIE_STATE(regs) ?  (long long) regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
                     (long long)regs->instcount,
                     ANSI_ERASE_EOL);

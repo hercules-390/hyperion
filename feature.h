@@ -137,7 +137,7 @@ s370_ ## _name
 #if defined(_FEATURE_SIE)
 #define PER_MODE(_regs) \
         ( ((_regs)->psw.ecmode && ((_regs)->psw.sysmask & PSW_PERMODE)) \
-          | ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) )
+          | (SIE_STATE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
 #else
 #define PER_MODE(_regs) \
         ((_regs)->psw.ecmode && ((_regs)->psw.sysmask & PSW_PERMODE))
@@ -229,7 +229,7 @@ s390_ ## _name
 #if defined(_FEATURE_SIE)
 #define PER_MODE(_regs) \
         ( ((_regs)->psw.sysmask & PSW_PERMODE) \
-          | ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) )
+          | (SIE_STATE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
 #else
 #define PER_MODE(_regs) \
         ((_regs)->psw.sysmask & PSW_PERMODE)
@@ -325,7 +325,7 @@ s390_ ## _name
 #if defined(_FEATURE_SIE)
 #define PER_MODE(_regs) \
         ( ((_regs)->psw.sysmask & PSW_PERMODE) \
-          | ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) )
+          | (SIE_STATE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
 #else
 #define PER_MODE(_regs) \
         ((_regs)->psw.sysmask & PSW_PERMODE)

@@ -357,7 +357,7 @@ U16     xcode;                          /* Exception code            */
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
-    if(regs->sie_state  && !regs->sie_pref)
+    if(SIE_STATE(regs)  && !regs->sie_pref)
     {
     int sie_stid;
     U16 sie_xcode;
@@ -490,7 +490,7 @@ U16     xcode;                          /* Exception code            */
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
-    if(regs->sie_state  && !regs->sie_pref)
+    if(SIE_STATE(regs)  && !regs->sie_pref)
     {
     int sie_stid;
     U16 sie_xcode;

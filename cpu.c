@@ -246,7 +246,7 @@ BYTE    pkey;
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* Bits 5 and 16 must be zero in XC mode */
-    if( regs->sie_state && (regs->siebk->mx & SIE_MX_XC)
+    if( SIE_STATE(regs) && (regs->siebk->mx & SIE_MX_XC)
       && ( (regs->psw.sysmask & PSW_DATMODE) || regs->psw.space) )
         return PGM_SPECIFICATION_EXCEPTION;
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
@@ -354,7 +354,7 @@ static char *pgmintname[] = {
        which must be used when loading/storing the psw, or backing up
        the instruction address in case of nullification */
 #if defined(_FEATURE_SIE)
-        realregs = regs->sie_state
+        realregs = SIE_STATE(regs)
                  ? sysblk.regs[regs->cpuad]->guestregs
                  : sysblk.regs[regs->cpuad];
 #else /*!defined(_FEATURE_SIE)*/
@@ -486,7 +486,7 @@ static char *pgmintname[] = {
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
         logmsg(_("HHCCP014I "));
 #if defined(_FEATURE_SIE)
-        if(realregs->sie_state)
+        if(SIE_STATE(realregs))
             logmsg(_("SIE: "));
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(SIE_DEBUG)
@@ -511,7 +511,7 @@ static char *pgmintname[] = {
     SIE_TRANSLATE(&px, ACCTYPE_WRITE, realregs);
 
 #if defined(_FEATURE_SIE)
-    if(!regs->sie_state ||
+    if(!SIE_STATE(regs) ||
       /* Interception is mandatory for the following exceptions */
       (
 #if defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)
@@ -562,9 +562,9 @@ static char *pgmintname[] = {
            rather then the PSA, except for the operation exception */
         if(code != PGM_OPERATION_EXCEPTION)
         {
-            psa = (void*)(regs->hostregs->mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
+            psa = (void*)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_IP_PSA_OFFSET);
             /* Set the main storage reference and change bits */
-            STORAGE_KEY(regs->sie_state, regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
+            STORAGE_KEY(SIE_STATE(regs), regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
         }
         else
         {
@@ -749,7 +749,7 @@ static char *pgmintname[] = {
         if ( (code = ARCH_DEP(load_psw) (realregs, psa->pgmnew)) )
         {
 #if defined(_FEATURE_SIE)
-            if(realregs->sie_state)
+            if(SIE_STATE(realregs))
             {
                 release_lock(&sysblk.intlock); 
                 longjmp(realregs->progjmp, pcode);
@@ -836,11 +836,11 @@ DWORD   csw;                            /* CSW for S/370 channels    */
     if (icode == 0) return;
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(regs->sie_state && icode != SIE_NO_INTERCEPT)
+    if(SIE_STATE(regs) && icode != SIE_NO_INTERCEPT)
     {
         /* Point to SIE copy of PSA in state descriptor */
-        psa = (void*)(regs->hostregs->mainstor + regs->sie_state + SIE_II_PSA_OFFSET);
-        STORAGE_KEY(regs->sie_state, regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
+        psa = (void*)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_II_PSA_OFFSET);
+        STORAGE_KEY(SIE_STATE(regs), regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
     }
     else
 #endif
