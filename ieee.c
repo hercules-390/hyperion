@@ -121,7 +121,7 @@ struct sbfp {
 #ifndef HAVE_FMODL
 #define fmodl(x,y) fmod(x,y)
 #endif
-#ifndef HAVE_FREXPL  
+#ifndef HAVE_FREXPL
 #define frexpl(x,y) frexp(x,y)
 #endif
 
@@ -2378,7 +2378,7 @@ DEF_INST(load_and_test_bfp_short_reg)
  * B303 LCEBR - LOAD COMPLEMENT (extended BFP)                 [RRE]
  */
 
-/* 
+/*
  * B357 FIEBR - LOAD FP INTEGER (extended BFP)                 [RRF]
  */
 DEF_INST(load_fp_int_short_reg)
@@ -2410,16 +2410,16 @@ DEF_INST(load_fp_int_short_reg)
 
         feclearexcept(FE_ALL_EXCEPT);
         sbfpston(&op);
-	    op.v = rint(op.v);
+            op.v = rint(op.v);
 
-    	if (regs->fpc & FPC_MASK_IMX) {
+        if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);
         } else {
             ieee_exception(FE_INVALID, regs);
         }
 
-	    sbfpston(&op);
-    
+            sbfpston(&op);
+
         raised = fetestexcept(FE_ALL_EXCEPT);
 
         if (raised) {
@@ -2466,16 +2466,16 @@ DEF_INST(load_fp_int_long_reg)
 
         feclearexcept(FE_ALL_EXCEPT);
         lbfpston(&op);
-	    op.v = rint(op.v);
+            op.v = rint(op.v);
 
-    	if (regs->fpc & FPC_MASK_IMX) {
+        if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);
         } else {
             ieee_exception(FE_INVALID, regs);
         }
 
-	    lbfpston(&op);
-    
+            lbfpston(&op);
+
         raised = fetestexcept(FE_ALL_EXCEPT);
 
         if (raised) {
@@ -2523,16 +2523,16 @@ DEF_INST(load_fp_int_ext_reg)
 
         feclearexcept(FE_ALL_EXCEPT);
         ebfpston(&op);
-	    op.v = rint(op.v);
+            op.v = rint(op.v);
 
-    	if (regs->fpc & FPC_MASK_IMX) {
+        if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);
         } else {
             ieee_exception(FE_INVALID, regs);
         }
 
-	    ebfpston(&op);
-    
+            ebfpston(&op);
+
         raised = fetestexcept(FE_ALL_EXCEPT);
 
         if (raised) {
@@ -3707,7 +3707,7 @@ DEF_INST(testdataclass_bfp_short)
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     switch ( sbfpclassify(&op1) )
-    { 
+    {
     case FP_ZERO:
         bit=20+op1.sign; break;
     case FP_NORMAL:
@@ -3717,8 +3717,8 @@ DEF_INST(testdataclass_bfp_short)
     case FP_INFINITE:
         bit=26+op1.sign; break;
     case FP_NAN:
-        if ( !sbfpissnan(&op1) ) bit=28+op1.sign; 
-        else                     bit=30+op1.sign; 
+        if ( !sbfpissnan(&op1) ) bit=28+op1.sign;
+        else                     bit=30+op1.sign;
         break;
     default:
         bit=0; break;
@@ -3750,7 +3750,7 @@ DEF_INST(testdataclass_bfp_long)
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     switch ( lbfpclassify(&op1) )
-    { 
+    {
     case FP_ZERO:
         bit=20+op1.sign; break;
     case FP_NORMAL:
@@ -3760,8 +3760,8 @@ DEF_INST(testdataclass_bfp_long)
     case FP_INFINITE:
         bit=26+op1.sign; break;
     case FP_NAN:
-        if ( !lbfpissnan(&op1) ) bit=28+op1.sign; 
-        else                     bit=30+op1.sign; 
+        if ( !lbfpissnan(&op1) ) bit=28+op1.sign;
+        else                     bit=30+op1.sign;
         break;
     default:
         bit=0; break;
@@ -3793,7 +3793,7 @@ DEF_INST(testdataclass_bfp_ext)
     get_ebfp(&op1, regs->fpr + FPR2I(r1));
 
     switch ( ebfpclassify(&op1) )
-    { 
+    {
     case FP_ZERO:
         bit=20+op1.sign; break;
     case FP_NORMAL:
@@ -3803,8 +3803,8 @@ DEF_INST(testdataclass_bfp_ext)
     case FP_INFINITE:
         bit=26+op1.sign; break;
     case FP_NAN:
-        if ( !ebfpissnan(&op1) ) bit=28+op1.sign; 
-        else                     bit=30+op1.sign; 
+        if ( !ebfpissnan(&op1) ) bit=28+op1.sign;
+        else                     bit=30+op1.sign;
         break;
     default:
         bit=0; break;
