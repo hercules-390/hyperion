@@ -337,10 +337,9 @@ static int tt32_init_done = 0;
 
 #endif // defined(DEBUG) || defined(_DEBUG)
 
-    logmsg("%s v%s;\n%s\n",
+    logmsg("%s version %s initiated\n",
         g_tt32_dllname,
-        g_tt32_pfn_version_string(),
-        g_tt32_pfn_copyright_string());
+        g_tt32_pfn_version_string());
 
     return TRUE;
 
