@@ -20,12 +20,13 @@ AM_MAINTAINER_MODE
 ## AC_PROG_LIBTOOL
 ##
 
-# Initialization
-CFLAGS="-W -Wall $CFLAGS"
-# ISW20030826-2 : add -I./intl as specified by gettext/info - Maintainers - Adjusting files - src/Makefile.in - Paragraph before last
-# added line below
-CPPFLAGS="-I ./intl"
+AC_CANONICAL_HOST
 
+CFLAGS="-W -Wall $CFLAGS"
+
+#
+# NOTE : The following no longer applies (ISW)
+#
 # Programs  (Note use "HC_PROG_CC" and not "AC_PROG_CC". We now
 #            have our own "hercules.m4" macro defined in the
 #            autoconf directory that fixes an undesired compiler

@@ -18,6 +18,8 @@ endif
 
 LDADD = @LTLIBINTL@ @LTLIBICONV@ @LIBS@
 
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/intl
+
 if BUILD_HERCIFC
   HERCIFC = hercifc
 else
