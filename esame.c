@@ -4952,7 +4952,8 @@ BYTE    svalue, dvalue, tvalue;
     tvalue = regs->GR_LHLCL(0);
 
     /* Preset condition code to zero in case of zero length */
-    regs->psw.cc = 0;
+    if(!len)
+        regs->psw.cc = 0;
 
     while(len)
     {
@@ -5023,7 +5024,8 @@ BYTE    dvalue, tvalue;
     tvalue = regs->GR_LHL(0);
 
     /* Preset condition code to zero in case of zero length */
-    regs->psw.cc = 0;
+    if(!len)
+        regs->psw.cc = 0;
 
     while(len)
     {
@@ -5096,7 +5098,8 @@ BYTE    dvalue, tvalue;
     tvalue = regs->GR_LHLCL(0);
 
     /* Preset condition code to zero in case of zero length */
-    regs->psw.cc = 0;
+    if(!len)
+        regs->psw.cc = 0;
 
     while(len)
     {
@@ -5168,7 +5171,8 @@ U16     svalue, dvalue, tvalue;
     tvalue = regs->GR_LHL(0);
 
     /* Preset condition code to zero in case of zero length */
-    regs->psw.cc = 0;
+    if(!len)
+        regs->psw.cc = 0;
 
     while(len)
     {
