@@ -3040,33 +3040,25 @@ DEF_INST(load_access_multiple)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     n, d;                           /* Integer work areas        */
+int     i, n;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Register work area        */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     FW_CHECK(effective_addr2, regs);
 
-    /* Calculate the number of bytes to be loaded */
-    d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
+    /* Calculate number of regs to fetch */
+    n = ((r3 - r1) & 0xF) + 1;
 
     /* Fetch new access register contents from operand address */
-    ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
+    ARCH_DEP(vfetchc) ( rwork, (n*4)-1, effective_addr2, b2, regs );
 
-    /* Load access registers from work area */
-    for ( n = r1, d = 0; ; )
+    /* Load 4 bytes at a time */
+    for (i = 0; i < n; i++)
     {
-        /* Load one access register from work area */
-        FETCH_FW(regs->AR(n), rwork + d); d += 4;
-        SET_AEA_AR(regs, n);
-
-        /* Instruction is complete when r3 register is done */
-        if ( n == r3 ) break;
-
-        /* Update register number, wrapping from 15 to 0 */
-        n++; n &= 15;
+        regs->AR((r1 + i) & 0xF) = fetch_fw(rwork + (i*4));
+        SET_AEA_AR(regs, (r1 + i) & 0xF);
     }
-
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
@@ -3209,21 +3201,21 @@ U32    *p;                              /* Mainstor pointer          */
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate number of regs to fetch */
-    n = (r1 <= r3 ? r3 - r1 : (r3 + 16) - r1) + 1;
+    n = ((r3 - r1) & 0xF) + 1;
 
     /* If a boundary is not crossed then fetch from mainstor */
     if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 4))
     {
         p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
-        for (i = 0; i < n; i++)
-            regs->GR_L((r1 + i) & 0xF) = fetch_fw (p++);
+        for (n += r1; r1 < n; r1++)
+            regs->GR_L(r1 & 0xF) = fetch_fw (p++);
     }
     /* Otherwise fetch 4 bytes at a time */
     else
     {
         ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_READ, regs);
         for (i = 0; i < n; i++)
-            regs->GR_L((r1 + i) & 0x0F) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
+            regs->GR_L((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
     }
 
 } /* end DEF_INST(load_multiple) */
