@@ -1,4 +1,4 @@
-/* IMPL.C       (c) Copyright Roger Bowler, 1999-2001                */
+/* VERSION.C    (c) Copyright Roger Bowler, 1999-2001                */
 /*              Hercules Initialization Module                       */
 
 /*-------------------------------------------------------------------*/

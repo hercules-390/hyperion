@@ -582,6 +582,7 @@ typedef struct _DEVBLK {
 					   in keyboard read buffer   */
 	/* Device dependent fields for cardrdr */
 	unsigned int			/* Flags		     */
+		multifile:1,	/* 1=auto-open next i/p file */
 		rdreof:1,		/* 1=Unit exception at EOF   */
 		ebcdic:1,		/* 1=Card deck is EBCDIC     */
 		ascii:1,		/* 1=Convert ASCII to EBCDIC */
@@ -993,6 +994,12 @@ extern BYTE	ebcdic_to_ascii[];	/* Translate table	     */
 #ifdef EXTERNALGUI
 extern int extgui;              /* external gui present */
 #endif /*EXTERNALGUI*/
+
+/*-------------------------------------------------------------------*/
+/* Global data areas and functions in module cpu.c                   */
+/*-------------------------------------------------------------------*/
+extern const char* arch_name[];
+extern const char* get_arch_mode_string(REGS* regs);
 
 /*-------------------------------------------------------------------*/
 /* Function prototypes						     */

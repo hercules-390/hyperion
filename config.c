@@ -593,10 +593,13 @@ BYTE    c;                              /* Work area for sscanf      */
         {
             if (strlen(ssysepoch) != 4
                 || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
-                || (sysepoch < 1900) || (sysepoch > 2000))
+                || ((sysepoch != 1900) && (sysepoch != 1928)
+		 && (sysepoch != 1960) && (sysepoch != 1988)
+                 && (sysepoch != 1970)
+		    ))
             {
                 logmsg( "HHC014I Error in %s line %d: "
-                        "%s is not a valid system epoch\n",
+                        "%s is not a valid system epoch\npatch the config.c to expand the table\n",
                         fname, stmt, ssysepoch);
                 exit(1);
             }
@@ -780,9 +783,30 @@ BYTE    c;                              /* Work area for sscanf      */
 
     /* Set up the system TOD clock offset: compute the number of
        seconds from the designated year to 1970 for TOD clock
-       adjustment, then add in the specified time zone offset */
-    sysepoch = 1970-sysepoch;
-    sysblk.todoffset = (sysepoch*365 + sysepoch/4) * 86400ULL;
+       adjustment, then add in the specified time zone offset
+    
+       The problem here, is that no formular can do it right, as
+       we have to do it wrong in 1928 and 1988 case !
+    */
+    switch (sysepoch) {
+	case 1988:
+	    sysblk.todoffset = (18*365 + 4) * -86400ULL;
+	    break;
+	case 1960:
+	    sysblk.todoffset = (10*365 + 3) * 86400ULL;
+	    break;
+	case 1928:
+	    sysblk.todoffset = (42*365 + 10) * 86400ULL;
+	    break;
+        case 1970:
+            sysblk.todoffset = 0;
+            break;
+	default:
+            sysepoch = 1900;
+	case 1900:
+	    sysblk.todoffset = (70*365 + 17) * 86400ULL;
+	    break;
+    }
 
     /* Compute the timezone offset in seconds and crank that in */
     tzoffset = (tzoffset/100)*3600 + (tzoffset%100)*60;

@@ -2,7 +2,7 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-VERSION  = 2.13h
+VERSION  = 2.14a
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
@@ -10,18 +10,35 @@ VERSION  = 2.13h
 #   (the directory is only used when installing).
 DESTDIR  = $(PREFIX)/usr/bin
 
+# Architecture processing:
+ifndef HOST_ARCH
+HOST_ARCH = i586
+endif
+
+ifeq ($(HOST_ARCH),i386)
+ARCH_FLAGS = -O3
+endif
+ifeq ($(HOST_ARCH),i586)
+ARCH_FLAGS = -O3 -march=pentium
+endif
+ifeq ($(HOST_ARCH),i686)
+ARCH_FLAGS = -O3 -march=pentiumpro
+endif
+ifeq ($(HOST_ARCH),alpha)
+ARCH_FLAGS = -O2 -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP -DNO_ATTR_REGPARM
+endif
+
+ifndef ARCH_FLAGS
+ARCH_FLAGS = -O3 -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP -DNO_ATTR_REGPARM
+endif
+
 # For Linux use:
-CFLAGS  = -O3 -Wall -malign-double -march=pentiumpro -fomit-frame-pointer \
-	   -DVERSION=$(VERSION)
+CFLAGS  = $(ARCH_FLAGS) -Wall -fomit-frame-pointer -DVERSION=$(VERSION)
 # For Linux use (with gprof profiling):
-#CFLAGS  = -O3 -Wall -march=pentiumpro -DPROFILE_CPU -pg \
-#	   -DVERSION=$(VERSION)
+#CFLAGS  = $(ARCH_FLAGS) -Wall -DPROFILE_CPU -pg -DVERSION=$(VERSION)
 # For older Linux versions use:
-#CFLAGS  = -O3 -march=pentiumpro -fomit-frame-pointer \
+#CFLAGS  = $(ARCH_FLAGS) -fomit-frame-pointer \
 #	  -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP \
-#	  -DNO_ATTR_REGPARM
-# For Linux/390 use:
-#CFLAGS  = -O3 -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP\
 #	  -DNO_ATTR_REGPARM
 
 LFLAGS	 = -lpthread -lm -lz
@@ -208,6 +225,7 @@ tar:	clean
 
 install:  $(EXEFILES)
 	cp $(EXEFILES) $(DESTDIR)
+	cp util/dasdlist $(DESTDIR)
 	chown root $(DESTDIR)/hercifc
 	chmod 0751 $(DESTDIR)/hercifc
 	chmod +s $(DESTDIR)/hercifc

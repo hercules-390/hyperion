@@ -102,6 +102,7 @@ int NPregdisp = 0;      /* which regs are displayed 0=gpr, 1=cr, 2=ar, 3=fpr */
 int NPaddress = 0;      /* Address switches */
 int NPdata = 0;         /* Data switches */
 int NPipl = 0;          /* IPL address switches */
+int NPquiet = 0;        /* Panel quiet flag */
 
 int NPcmd = 0;          /* 1 when command mode for NP is in effect */
 int NPdataentry = 0;    /* 1 when data entry for NP is in progress */
@@ -198,14 +199,13 @@ static void NP_screen(FILE *confp)
     int p, a;
     char c[2];
     char devnam[128];
-    static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
 
     fprintf(confp, ANSI_WHT_BLK);
     fprintf(confp, ANSI_CLEAR);
     fprintf(confp, ANSI_WHT_BLU);
     fprintf(confp, ANSI_CURSOR, 1, 1);
     fprintf(confp, " Hercules        CPU         %7.7s ",
-                                        arch_name[sysblk.arch_mode]);
+                                        get_arch_mode_string(NULL));
     fprintf(confp, ANSI_CURSOR, 1, 38);
     fprintf(confp, "|             Peripherals                  ");
     fprintf(confp, ANSI_GRY_BLK);
@@ -890,7 +890,7 @@ int pid, status;
 /*-------------------------------------------------------------------*/
 static void *panel_command (void *cmdline)
 {
-BYTE    cmd[80];                        /* Copy of panel command     */
+BYTE    cmd[32767];                     /* Copy of panel command     */
 int     cpu;                            /* CPU engine number         */
 REGS   *regs;                           /* -> CPU register context   */
 U32     aaddr;                          /* Absolute storage address  */
@@ -922,7 +922,6 @@ int     devargc;                        /* Arg count for devinit     */
 BYTE   *devargv[MAX_ARGS];              /* Arg array for devinit     */
 BYTE   *devclass;                       /* -> Device class name      */
 BYTE   *cmdarg;                         /* -> Command argument       */
-static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
 
     /* Copy panel command to work area */
     memset (cmd, 0, sizeof(cmd));
@@ -1054,13 +1053,20 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
         return NULL;
     }
 
+    /* quiet command - quiet PANEL */
+    if (strcmp(cmd,"quiet") == 0)
+    {
+        NPquiet = !NPquiet;
+        return NULL;
+    }
+
     /* Archmode command - Set architecture mode */
     if (memcmp(cmd,"archmode",8)==0)
     {
         archmode = strtok (cmd + 8, " \t");
         if(archmode == NULL)
         {
-            logmsg("Architecture mode = %s\n",arch_name[sysblk.arch_mode]);
+            logmsg("Architecture mode = %s\n",get_arch_mode_string(NULL));
             return NULL;
         }
         else
@@ -1083,6 +1089,8 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
                 logmsg("Invalid architecture mode %s\n",archmode);
                 return NULL;
             }
+
+            logmsg("Architecture successfully set to %s mode.\n",get_arch_mode_string(NULL));
 
             /* Indicate if z/Architecture is supported */
             sysblk.arch_z900 = sysblk.arch_mode != ARCH_390;
@@ -2171,11 +2179,7 @@ int     firstmsgn = 0;                  /* Number of first message to
 #define MSG_SIZE                80      /* Size of one message       */
 #define BUF_SIZE    (MAX_MSGS*MSG_SIZE) /* Total size of buffer      */
 #define NUM_LINES               22      /* Number of scrolling lines */
-#ifdef EXTERNALGUI
-#define CMD_SIZE              1024      /* Length of command line    */
-#else /*!EXTERNALGUI*/
-#define CMD_SIZE                60      /* Length of command line    */
-#endif /*EXTERNALGUI*/
+#define CMD_SIZE             32767      /* Length of command line    */
 REGS   *regs;                           /* -> CPU register context   */
 QWORD   curpsw;                         /* Current PSW               */
 QWORD   prvpsw;                         /* Previous PSW              */
@@ -2889,7 +2893,7 @@ struct  timeval tv;                     /* Select timeout structure  */
             if (!extgui)
 #endif /*EXTERNALGUI*/
             /* Rewrite the screen if display update indicators are set */
-            if (redraw_msgs)
+            if (redraw_msgs && !NPquiet)
             {
                 /* Display messages in scrolling area */
                 for (i=0; i < NUM_LINES && firstmsgn + i < nummsgs; i++)
@@ -2911,7 +2915,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                     fprintf (confp, ANSI_ROW22_COL80 "V");
             } /* end if(redraw_msgs) */
 
-            if (redraw_status)
+            if (redraw_status && !NPquiet)
             {
                 /* Display the PSW and instruction counter for CPU 0 */
                 fprintf (confp,

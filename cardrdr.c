@@ -40,6 +40,7 @@ int	fc;				/* File counter		     */
 
     /* Initialize device dependent fields */
     dev->fd = -1;
+    dev->multifile = 0;
     dev->rdreof = 0;
     dev->ebcdic = 0;
     dev->ascii = 0;
@@ -59,6 +60,14 @@ int	fc;				/* File counter		     */
     /* Process the driver arguments */
     for (i = 1; i < argc; i++)
     {
+        /* multifile means to automatically open the next
+           i/p file if multiple i/p files are defined.   */
+        if (strcasecmp(argv[i], "multifile") == 0)
+        {
+            dev->multifile = 1;
+            continue;
+        }
+
         /* eof means that unit exception will be returned at
            end of file, instead of intervention required */
         if (strcasecmp(argv[i], "eof") == 0)
@@ -154,8 +163,9 @@ void cardrdr_query_device (DEVBLK *dev, BYTE **class,
 {
 
     *class = "RDR";
-    snprintf (buffer, buflen, "%s%s%s%s%s%s",
+    snprintf (buffer, buflen, "%s%s%s%s%s%s%s",
                 dev->filename,
+                (dev->multifile ? " multifile" : ""),
                 (dev->ascii ? " ascii" : ""),
                 (dev->ebcdic ? " ebcdic" : ""),
                 (dev->autopad ? " autopad" : ""),
@@ -195,6 +205,7 @@ static void clear_cardrdr ( DEVBLK *dev )
     } else {
 
         /* Reset the device dependent flags */
+        dev->multifile = 0;
         dev->ascii = 0;
         dev->ebcdic = 0;
         dev->rdreof = 0;
@@ -313,9 +324,10 @@ int     rc;                             /* Return code               */
     /* Read 80 bytes of card image data into the device buffer */
     rc = read (dev->fd, dev->buf, CARD_SIZE);
 
-    if ((rc > 0) && (rc < CARD_SIZE) && dev->autopad) {
+    if ((rc > 0) && (rc < CARD_SIZE) && dev->autopad)
+	{
         memset(&dev->buf[rc], 0, CARD_SIZE - rc);
-	rc = CARD_SIZE;
+		rc = CARD_SIZE;
     }
 
     /* Handle end-of-file condition */
@@ -335,7 +347,7 @@ int     rc;                             /* Return code               */
         /* Close the file and clear the file name and flags */
         clear_cardrdr (dev);
 
-        return -1;
+        return -2;
     }
 
     /* Handle read error condition */
@@ -396,7 +408,7 @@ BYTE    c;                              /* Input character           */
             /* Close the file and clear the file name and flags */
             clear_cardrdr (dev);
 
-            return -1;
+            return -2;
         }
 
         /* Handle read error condition */
@@ -478,11 +490,21 @@ int     num;                            /* Number of bytes to move   */
         /* Read next card if not data-chained from previous CCW */
         if ((chained & CCW_FLAGS_CD) == 0)
         {
-            /* Read ASCII or EBCDIC card image */
-            if (dev->ascii)
-                rc = read_ascii (dev, unitstat);
-            else
-                rc = read_ebcdic (dev, unitstat);
+			for (;;)
+			{
+				/* Read ASCII or EBCDIC card image */
+				if (dev->ascii)
+					rc = read_ascii (dev, unitstat);
+				else
+					rc = read_ebcdic (dev, unitstat);
+
+				if (0
+					|| rc != -2
+					|| !dev->multifile
+					|| open_cardrdr (dev, unitstat) != 0
+					)
+				break;
+			}
 
             /* Return error status if read was unsuccessful */
             if (rc) break;

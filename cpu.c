@@ -838,8 +838,6 @@ void s390_run_cpu (REGS *regs);
 void z900_run_cpu (REGS *regs);
 static void (* run_cpu[GEN_MAXARCH]) (REGS *regs) =
                 { s370_run_cpu, s390_run_cpu, z900_run_cpu };
-static char *arch_name[GEN_MAXARCH] =
-                { "S/370", "ESA/390", "ESAME" };
 
 void *cpu_thread (REGS *regs)
 {
@@ -858,8 +856,8 @@ void *cpu_thread (REGS *regs)
             getpriority(PRIO_PROCESS,0));
 #endif
 
-    logmsg ("HHC630I CPU%4.4X Architecture Mode %s\n",regs->cpuad,
-                                arch_name[regs->arch_mode]);
+    logmsg ("HHC630I CPU%4.4X Architecture Mode %s\n",
+		regs->cpuad,get_arch_mode_string(regs));
 
 #ifdef FEATURE_VECTOR_FACILITY
     if (regs->vf->online)
@@ -900,8 +898,7 @@ void *cpu_thread (REGS *regs)
     {
         regs->arch_mode = sysblk.arch_mode;
         logmsg ("HHC631I CPU%4.4X Architecture Mode set to %s\n",
-                                    regs->cpuad,
-                                    arch_name[regs->arch_mode]);
+			regs->cpuad,get_arch_mode_string(regs));
     }
 
     /* Execute the program in specified mode */
@@ -1279,5 +1276,14 @@ QWORD   qword;                            /* quadword work area      */
 
 
 } /* end function display_psw */
+
+const char* arch_name[GEN_MAXARCH] =
+	{ "S/370", "ESA/390", "ESAME" };
+
+const char* get_arch_mode_string(REGS* regs)
+{
+	if (!regs) return arch_name[sysblk.arch_mode];
+	else return arch_name[regs->arch_mode];
+}
 
 #endif /*!defined(_GEN_ARCH)*/
