@@ -236,7 +236,7 @@ s390_ ## _name
 #endif
 
 #define ARMODE(_regs) \
-        (!REAL_MODE(&(_regs)->psw) && ACCESS_REGISTER_MODE(&(_regs)->psw))
+        ((SIE_STATB((_regs), MX, XC) || !REAL_MODE(&(_regs)->psw)) && ACCESS_REGISTER_MODE(&(_regs)->psw))
 
 #define ASF_ENABLED(_regs)  ((_regs)->CR(0) & CR0_ASF)
 
@@ -332,7 +332,7 @@ s390_ ## _name
 #endif
 
 #define ARMODE(_regs) \
-        (!REAL_MODE(&(_regs)->psw) && ACCESS_REGISTER_MODE(&(_regs)->psw))
+        ((SIE_STATB((_regs), MX, XC) || !REAL_MODE(&(_regs)->psw)) && ACCESS_REGISTER_MODE(&(_regs)->psw))
 
 #define ASF_ENABLED(_regs)  1 /* ASF is always enabled for ESAME */
 
