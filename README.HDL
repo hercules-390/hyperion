@@ -16,6 +16,9 @@
         The ldmod statement may also appear in the hercules
         configuration file.
 
+        configuration statement:
+        modpath <pathname>     - Specifies where modules are loaded from
+
 
     The loader has 2 basic functions module load and module unload.
 
