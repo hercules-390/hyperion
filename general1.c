@@ -1102,7 +1102,8 @@ U32     n;                              /* 32-bit operand value      */
     OBTAIN_MAINLOCK(regs);
 
     /* Some models always store, so validate as a store operand, if desired */
-//  n = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+//  n = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_WRITE,
+regs->psw.pkey);
 
     /* Load second operand from operand address  */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1168,7 +1169,8 @@ U32     n1, n2;                         /* 32-bit operand values     */
     OBTAIN_MAINLOCK(regs);
 
     /* Some models always store, so validate as a store operand, if desired */
-//  n1 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+//  n1 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_WRITE,
+regs->psw.pkey);
 
     /* Load second operand from operand address  */
     n1 = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1361,6 +1363,10 @@ int     i;                              /* Integer work areas        */
 
     /* Load value from register */
     n = regs->GR_L(r1);
+
+    /* if mask is zero, access rupts recognized for 1 byte */
+    if (r3 == 0)
+            sbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
     /* Compare characters in register with operand characters */
     for ( i = 0; i < 4; i++ )
@@ -1703,6 +1709,7 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     eqaddr2 = addr2;
     remlen1 = len1;
     remlen2 = len2;
+
     /* If substring length is zero, exit with condition code 0 */
     if (sublen == 0)
     {
@@ -1716,6 +1723,13 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
         regs->psw.cc = 2;
         return;
     }
+ 
+    /* If r1=r2, exit with condition code 0 or 1*/ 
+    if (r1 == r2) 
+    { 
+        regs->psw.cc = (len1 < sublen) ? 1 : 0; 
+        return; 
+    } 
 
     /* Process operands from left to right */
     for (i = 0; len1 > 0 || len2 > 0 ; i++)
@@ -1866,7 +1880,7 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
     len1 = GR_A(r1+1, regs);
     len2 = GR_A(r2+1, regs);
 
-    if (len1 == 0 && len2 > 0)
+    if (len1 == 0 && len2 > 1)
         cc = 1;
 
     /* Process operands from left to right */
