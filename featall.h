@@ -37,7 +37,6 @@
 #undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
 #define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */
 #undef  OPTION_CMPSC_DEBUGLVL      /* 3 ** 1=Exp 2=Comp 3=Both debug */
-#define OPTION_BUFFERED_RDR             /* Buffered Card Reader I/O  */
 
 /* This is set as appropriate by configure and makefile.w32; don't
    undefine it -mdz */

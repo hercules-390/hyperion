@@ -11,9 +11,6 @@
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-#if defined(OPTION_BUFFERED_RDR)
-#define RDR_BUFFER_SIZE  32000  /* (must be > CARD_SIZE) */
-#endif // defined(OPTION_BUFFERED_RDR)
 #define CARD_SIZE        80
 #define HEX40            ((BYTE)0x40)
 
@@ -39,10 +36,7 @@ int     fc;                             /* File counter              */
     /* Initialize device dependent fields */
 
     dev->fd = -1;
-#if defined(OPTION_BUFFERED_RDR)
-    dev->bufpos = NULL;
-    dev->bufrem = 0;
-#endif // defined(OPTION_BUFFERED_RDR)
+    dev->fh = NULL;
     dev->multifile = 0;
     dev->rdreof = 0;
     dev->ebcdic = 0;
@@ -169,21 +163,21 @@ int     fc;                             /* File counter              */
 
     if (sockdev)
     {
-        if (dev->ebcdic)
-        {
-            logmsg ("HHC403I 'ebcdic' option unsupported for socket devices\n");
-            return -1;
-        }
-
         if (fc)
         {
             logmsg ("HHC403I Only one filename (sock_spec) allowed for socket devices\n");
             return -1;
         }
 
-        if (!dev->ascii)
+        // If neither ascii nor ebcdic is specified, default to ascii. This is required
+        // for socket devices because the open logic, if neither is specified, attempts
+        // to determine whether the data is actually ascii or ebcdic by reading the 1st
+        // 160 bytes of data and then rewinding to the beginning of the file afterwards.
+        // Since you can't "rewind" a socket, we must therefore default to one of them.
+
+        if (!dev->ebcdic && !dev->ascii)
         {
-            logmsg ("HHC403I 'ascii' option forced for socket devices\n");
+            logmsg ("HHC403I defaulting to 'ascii' for socket device %4.4X\n",dev->devnum);
             dev->ascii = 1;
         }
     }
@@ -208,24 +202,17 @@ int     fc;                             /* File counter              */
 
         if (!sockdev)
         {
-            /* Added by VB, after suggestion by Richard Snow - Aug 26, 2001   */
-            /* Check if reader file exists, to avoid gazillion error messages */
+            /* Added by VB, after suggestion by Richard Snow - Aug 26, 2001  */
+            /* Check if reader file exists to avoid gazillion error messages */
 
-            dev->fd = open(argv[0], O_RDONLY);
-
-            if (dev->fd < 0)
+            if (access(argv[0], R_OK) != 0)
             {
                 /* file does NOT exist                              */
                 /* issue message, and insert empty filename instead */
 
-                logmsg ("HHC402I File %s does not exist\n", argv[0]);
+                logmsg ("HHC402I Unable to read file %s: %s\n",
+                    argv[0], strerror(errno));
                 strcpy(argv[0], "");
-            }
-            else
-            {
-                /* if file DID exist, we need to close it now */
-
-                close(dev->fd);
             }
             /* end of change VB/RSS Aug 2001                            */
         }
@@ -239,11 +226,7 @@ int     fc;                             /* File counter              */
 
     /* Set size of i/o buffer */
 
-#if defined(OPTION_BUFFERED_RDR)
-    dev->bufsize = RDR_BUFFER_SIZE;
-#else // !defined(OPTION_BUFFERED_RDR)
     dev->bufsize = CARD_SIZE;
-#endif // defined(OPTION_BUFFERED_RDR)
 
     /* Set number of sense bytes */
 
@@ -269,10 +252,6 @@ int     fc;                             /* File counter              */
         return -1;
     }
 
-    /* Activate I/O tracing */
-
-//  dev->ccwtrace = 1;
-
     return 0;
 } /* end function cardrdr_init_handler */
 
@@ -286,13 +265,13 @@ void cardrdr_query_device (DEVBLK *dev, BYTE **class,
 
     snprintf (buffer, buflen, "%s%s%s%s%s%s%s%s",
         dev->filename,
-        (dev->bs ? " sockdev" : ""),
-        (dev->multifile ? " multifile" : ""),
-        (dev->ascii ? " ascii" : ""),
-        (dev->ebcdic ? " ebcdic" : ""),
-        (dev->autopad ? " autopad" : ""),
-        ((dev->ascii && dev->trunc) ? " trunc" : ""),
-        (dev->rdreof ? " eof" : ""));
+        (dev->bs ?                    " sockdev"   : ""),
+        (dev->multifile ?             " multifile" : ""),
+        (dev->ascii ?                 " ascii"     : ""),
+        (dev->ebcdic ?                " ebcdic"    : ""),
+        (dev->autopad ?               " autopad"   : ""),
+        ((dev->ascii && dev->trunc) ? " trunc"     : ""),
+        (dev->rdreof ?                " eof"       : ""));
 
 } /* end function cardrdr_query_device */
 
@@ -303,7 +282,7 @@ int cardrdr_close_device ( DEVBLK *dev )
 {
     /* Close the device file */
 
-    close (dev->fd);
+    fclose (dev->fh);
 
     if (dev->bs)
     {
@@ -312,10 +291,7 @@ int cardrdr_close_device ( DEVBLK *dev )
     }
 
     dev->fd = -1;
-#if defined(OPTION_BUFFERED_RDR)
-    dev->bufpos = NULL;
-    dev->bufrem = 0;
-#endif // defined(OPTION_BUFFERED_RDR)
+    dev->fh = NULL;
 
     return 0;
 } /* end function cardrdr_close_device */
@@ -338,8 +314,9 @@ static void clear_cardrdr ( DEVBLK *dev )
     if (dev->current_file && *(dev->current_file))
     {
         strcpy(dev->filename, *(dev->current_file++));
-    } else {
-
+    }
+    else
+    {
         /* Reset the device dependent flags */
         dev->multifile = 0;
         dev->ascii = 0;
@@ -376,6 +353,11 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
             return -1;
         }
 
+        if (!dev->fh)
+            dev->fh = fdopen(dev->fd, "rb");
+
+        ASSERT(dev->fd != -1 && dev->fh);
+
         return 0;
     }
 
@@ -407,25 +389,14 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
 
     /* Save the file descriptor in the device block */
     dev->fd = rc;
-
-#if defined(OPTION_BUFFERED_RDR)
-    /* Initialize the buffer position and bytes remaining */
-
-    /* Note that the first CARD_SIZE bytes of the buffer is reserved
-       to construct a card image. The buffered read routine does i/o
-       into the portion of the i/o buffer following this area. This
-       is so the already existing logic can continue to work as-is. */
-
-    dev->bufpos = dev->buf + CARD_SIZE;
-    dev->bufrem = 0;
-#endif // defined(OPTION_BUFFERED_RDR)
+    dev->fh = fdopen(dev->fd, "rb");
 
     /* If neither EBCDIC nor ASCII was specified, attempt to
        detect the format by inspecting the first 160 bytes */
     if (dev->ebcdic == 0 && dev->ascii == 0)
     {
         /* Read first 160 bytes of file into the buffer */
-        len = read (dev->fd, buf, sizeof(buf));
+        len = fread(buf, 1, sizeof(buf), dev->fh);
         if (len < 0)
         {
             /* Handle read error condition */
@@ -433,12 +404,9 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
                     dev->filename, strerror(errno));
 
             /* Close the file */
-            close (dev->fd);
+            fclose(dev->fh);
             dev->fd = -1;
-#if defined(OPTION_BUFFERED_RDR)
-            dev->bufpos = NULL;
-            dev->bufrem = 0;
-#endif // defined(OPTION_BUFFERED_RDR)
+            dev->fh = NULL;
 
             /* Set unit check with equipment check */
             dev->sense[0] = SENSE_EC;
@@ -461,7 +429,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         } /* end for(i) */
 
         /* Rewind to start of file */
-        rc = lseek (dev->fd, 0, SEEK_SET);
+        rc = fseek (dev->fh, 0, SEEK_SET);
         if (rc < 0)
         {
             /* Handle seek error condition */
@@ -469,12 +437,9 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
                     dev->filename, strerror(errno));
 
             /* Close the file */
-            close (dev->fd);
+            fclose (dev->fh);
             dev->fd = -1;
-#if defined(OPTION_BUFFERED_RDR)
-            dev->bufpos = NULL;
-            dev->bufrem = 0;
-#endif // defined(OPTION_BUFFERED_RDR)
+            dev->fh = NULL;
 
             /* Set unit check with equipment check */
             dev->sense[0] = SENSE_EC;
@@ -484,75 +449,10 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
 
     } /* end if(auto-detect) */
 
+    ASSERT(dev->fd != -1 && dev->fh);
+
     return 0;
 } /* end function open_cardrdr */
-
-
-#if defined(OPTION_BUFFERED_RDR)
-/*-------------------------------------------------------------------*/
-/* Card Reader 'read' routine                                        */
-/*-------------------------------------------------------------------*/
-static int rdr_read (DEVBLK* dev, BYTE* buffer, int bytes)
-{
-    // replaces "rc = read (dev->fd, dev->buf, CARD_SIZE);"
-
-    int bytes_gotten       = 0;
-    int bytes_still_needed = bytes;
-
-    while (bytes_still_needed > 0)
-    {
-        if (dev->bufrem >= bytes_still_needed)
-        {
-            // There's enough data left in the buffer
-            // to satisfy the remainder of this request.
-
-            memcpy ( buffer+bytes_gotten, dev->bufpos, bytes_still_needed );
-
-            dev->bufpos  +=  bytes_still_needed;
-            dev->bufrem  -=  bytes_still_needed;
-
-            bytes_gotten       += bytes_still_needed;
-            bytes_still_needed -= bytes_still_needed;
-
-            return bytes_gotten;
-        }
-
-        // We don't have enough data left in the buffer to satisfy
-        // the remainder of the request. Grab whatever data remains
-        // before reading another buffer's worth of data.
-
-        if (dev->bufrem > 0)
-        {
-            memcpy ( buffer+bytes_gotten, dev->bufpos, dev->bufrem );
-
-            dev->bufpos  +=  dev->bufrem;
-            dev->bufrem  -=  dev->bufrem;
-
-            bytes_gotten       += dev->bufrem;
-            bytes_still_needed -= dev->bufrem;
-        }
-
-        // Read another buffer's worth of data
-
-        /* Note that the first CARD_SIZE bytes of the buffer is
-           reserved for the read_ebcdic and read_ascii routines
-           to construct a card image. We do i/o into the portion
-           of the i/o buffer following this reserved area. This
-           is so the existing logic can continue to work as-is. */
-
-        dev->bufpos = dev->buf + CARD_SIZE;
-
-        if ((dev->bufrem = read (dev->fd,
-            (dev->buf     + CARD_SIZE),
-            (dev->bufsize - CARD_SIZE))) < 0)
-            return -1;
-
-        if (!dev->bufrem) break;    /* Handle end-of-file condition */
-    }
-
-    return bytes_gotten;
-}
-#endif // defined(OPTION_BUFFERED_RDR)
 
 /*-------------------------------------------------------------------*/
 /* Read an 80-byte EBCDIC card image into the device buffer          */
@@ -562,20 +462,16 @@ static int read_ebcdic ( DEVBLK *dev, BYTE *unitstat )
 int     rc;                             /* Return code               */
 
     /* Read 80 bytes of card image data into the device buffer */
-#if defined(OPTION_BUFFERED_RDR)
-    rc = rdr_read (dev, dev->buf, CARD_SIZE);
-#else // !defined(OPTION_BUFFERED_RDR)
-    rc = read (dev->fd, dev->buf, CARD_SIZE);
-#endif // defined(OPTION_BUFFERED_RDR)
+    rc = fread(dev->buf, 1, CARD_SIZE, dev->fh);
 
     if ((rc > 0) && (rc < CARD_SIZE) && dev->autopad)
-        {
+    {
         memset(&dev->buf[rc], 0, CARD_SIZE - rc);
-                rc = CARD_SIZE;
+        rc = CARD_SIZE;
     }
 
     /* Handle end-of-file condition */
-    if (rc == 0)
+    if (feof(dev->fh))
     {
         /* Return unit exception or intervention required */
         if (dev->rdreof)
@@ -630,21 +526,11 @@ BYTE    c;                              /* Input character           */
     for (i = 0; ; )
     {
         /* Read next byte of card image */
-#if defined(OPTION_BUFFERED_RDR)
-        if (dev->bufrem)
-        {
-            c = *dev->bufpos++;
-            dev->bufrem--;
-            rc = 1;
-        }
-        else
-            rc = rdr_read (dev, &c, 1);
-#else // !defined(OPTION_BUFFERED_RDR)
-        rc = read (dev->fd, &c, 1);
-#endif // defined(OPTION_BUFFERED_RDR)
+        rc = getc(dev->fh);
+        c = (BYTE)rc;
 
         /* Handle end-of-file condition */
-        if (rc == 0 || c == '\x1A')
+        if (rc == EOF || c == '\x1A')
         {
             /* End of record if there is any data in buffer */
             if (i > 0) break;
@@ -726,7 +612,7 @@ int     rc;                             /* Return code               */
 int     num;                            /* Number of bytes to move   */
 
     /* Open the device file if necessary */
-    if (dev->fd < 0 && !IS_CCW_SENSE(code))
+    if ((dev->fd < 0 || !dev->fh) && !IS_CCW_SENSE(code))
     {
         rc = open_cardrdr (dev, unitstat);
         if (rc) return;

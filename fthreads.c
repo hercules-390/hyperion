@@ -155,7 +155,7 @@ fthread_create
 #else
 		_fthreadmsg("fthread_create: MyCreateThread failed\n");
 #endif
-        free (pCallTheirThreadParms);
+		free (pCallTheirThreadParms);
 		errno = EAGAIN;
 		return -1;
 	}
@@ -252,7 +252,7 @@ fthread_mutex_trylock
 	fthread_mutex_t*  pLock
 )
 {
-    // Note: POSIX defines 0 == success, ~0 == failure
+	// Note: POSIX defines 0 == success, ~0 == failure
 	return !MyTryEnterCriticalSection((CRITICAL_SECTION*)pLock);
 }
 
@@ -487,7 +487,7 @@ fthread_cond_timedwait
 	struct timespec*  pTimeTimeout
 )
 {
-    struct timeval  TimeNow;
+	struct timeval  TimeNow;
 	FT_W32_DWORD  dwWaitRetCode, dwWaitMilliSecs;
 
 	if (!pCond || !pLock) { errno = EINVAL; return -1; }
@@ -520,7 +520,7 @@ fthread_cond_timedwait
 
 		// Wait for signal transmission...
 
-        gettimeofday(&TimeNow, NULL);
+		gettimeofday(&TimeNow, NULL);
 
 		if (TimeNow.tv_sec > pTimeTimeout->tv_sec ||
 			(TimeNow.tv_sec == pTimeTimeout->tv_sec &&

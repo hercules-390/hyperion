@@ -62,7 +62,6 @@
 #include "version.h"
 #include "hetlib.h"
 
-
 /* definition of CLK_TCK is not part of the SUSE 7.2 definition.  Added (VB) */
 #  ifndef CLK_TCK
 #   define CLK_TCK      CLOCKS_PER_SEC
@@ -125,6 +124,26 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 #define DEVTRACE(format, a...) \
         if(dev->ccwtrace||dev->ccwstep) \
         fprintf(sysblk.msgpipew, "%4.4X:" format, dev->devnum, a)
+
+/* Debugging */
+
+#if defined(DEBUG) || defined(_DEBUG)
+    #define TRACE(a...) logmsg(a)
+    #define ASSERT(a) \
+        do \
+        { \
+            if (!(a)) \
+            { \
+                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
+            } \
+        } \
+        while(0)
+    #define VERIFY(a) ASSERT(a)
+#else
+    #define TRACE(a...)
+    #define ASSERT(a)
+    #define VERIFY(a) ((void)(a))
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Macro definitions for version number                              */
@@ -744,36 +763,50 @@ bind_struct;
 /* Device configuration block                                        */
 /*-------------------------------------------------------------------*/
 typedef struct _DEVBLK {
+        struct _DEVBLK *nextdev;        /* -> next device block      */
+        LOCK    lock;                   /* Device block lock         */
+
+        /*  device identification                                    */
+
         U16     subchan;                /* Subchannel number         */
         U16     devnum;                 /* Device number             */
         U16     devtype;                /* Device type               */
-        DEVIF  *devinit;                /* -> Init device function   */
-        DEVQF  *devqdef;                /* -> Query device function  */
-        DEVXF  *devexec;                /* -> Execute CCW function   */
-        DEVCF  *devclos;                /* -> Close device function  */
-        LOCK    lock;                   /* Device block lock         */
-        COND    resumecond;             /* Resume condition          */
-        struct _DEVBLK *nextdev;        /* -> next device block      */
+        U16     reserved0;              /* (alignment)               */
+
+#if defined(WIN32)
+        BYTE    filename[1024];         /* Windows pathname          */
+#else
+        BYTE    filename[256];          /* Unix file name            */
+#endif
+
+        /*  device i/o fields...                                     */
+
+        int     fd;                     /* File desc / socket number */
+        FILE   *fh;                     /* associated File handle    */
+        BYTE   *buf;                    /* -> Device data buffer     */
+        int     bufsize;                /* Device data buffer size   */
+        bind_struct* bs;                /* -> bind_struct if socket-
+                                           device, NULL otherwise    */
+
+        /*  device i/o scheduling fields...                          */
+
+        TID     tid;                    /* Thread-id executing CCW   */
+        int     priority;               /* I/O q scehduling priority */
         struct _DEVBLK *nextioq;        /* -> next device in I/O q   */
 #ifdef OPTION_IOINTQ
         struct _DEVBLK *iointq;         /* -> next device in I/O
                                            interrupt queue           */
 #endif
-        bind_struct* bs;                /* -> bind_struct if socket-
-                                           device, NULL otherwise    */
-        int     priority;               /* Device priority           */
-        unsigned int                    /* Flags                     */
-                pending:1,              /* 1=Interrupt pending       */
-                busy:1,                 /* 1=Device busy             */
-                console:1,              /* 1=Console device          */
-                connected:1,            /* 1=Console client connected*/
-                readpending:2,          /* 1=Console read pending    */
-                pcipending:1,           /* 1=PCI interrupt pending   */
-                ccwtrace:1,             /* 1=CCW trace               */
-                ccwstep:1,              /* 1=CCW single step         */
-                cdwmerge:1,             /* 1=Channel will merge data
-                                             chained write CCWs      */
-                crwpending:1;           /* 1=CRW pending             */
+        /*  device handler function pointers...                      */
+
+        DEVIF  *devinit;                /* -> Init device function   */
+        DEVQF  *devqdef;                /* -> Query device function  */
+        DEVXF  *devexec;                /* -> Execute CCW function   */
+        DEVCF  *devclos;                /* -> Close device function  */
+
+        /*  emulated architecture fields...   (MUST be aligned!)     */
+
+        int     reserved1;              /* ---(ensure alignment)---- */
         ORB     orb;                    /* Operation request blk @IWZ*/
         PMCW    pmcw;                   /* Path management ctl word  */
         SCSW    scsw;                   /* Subchannel status word(XA)*/
@@ -789,29 +822,46 @@ typedef struct _DEVBLK {
         int     numdevchar;             /* Number of devchar bytes   */
         BYTE    devchar[64];            /* Device characteristics    */
         BYTE    pgid[11];               /* Path Group ID             */
-        TID     tid;                    /* Thread-id executing CCW   */
-        BYTE   *buf;                    /* -> Device data buffer     */
-        int     bufsize;                /* Device data buffer size   */
-        BYTE   *bufpos;                 /* Current buffer position   */
-        int     bufrem;                 /* Bytes remaining in buffer */
-#ifdef EXTERNALGUI
-        BYTE    filename[1024];         /* Unix file name            */
-#else /*!EXTERNALGUI*/
-        BYTE    filename[256];          /* Unix file name            */
-#endif /*EXTERNALGUI*/
-        int     fd;                     /* File desc / socket number */
-        FILE   *fh;
-        /* Device dependent fields for console */
+        BYTE    reserved2[5];           /* (pad/align/unused/avail)  */
+        COND    resumecond;             /* Resume condition          */
+
+        /*  control flags...                                         */
+
+        unsigned int                    /* Flags                     */
+                pending:1,              /* 1=Interrupt pending       */
+                busy:1,                 /* 1=Device busy             */
+                console:1,              /* 1=Console device          */
+                connected:1,            /* 1=Console client connected*/
+                readpending:2,          /* 1=Console read pending    */
+                pcipending:1,           /* 1=PCI interrupt pending   */
+                ccwtrace:1,             /* 1=CCW trace               */
+                ccwstep:1,              /* 1=CCW single step         */
+                cdwmerge:1,             /* 1=Channel will merge data
+                                             chained write CCWs      */
+                crwpending:1;           /* 1=CRW pending             */
+
+        /*  Device dependent fields for console                      */
+
         struct  in_addr ipaddr;         /* Client IP address         */
         int     rlen3270;               /* Length of data in buffer  */
         int     pos3270;                /* Current screen position   */
-        BYTE    aid3270;                /* Current input AID value   */
-        BYTE    mod3270;                /* 3270 model number         */
-        unsigned int                    /* Flags                     */
-                eab3270:1;              /* 1=Extended attributes     */
         int     keybdrem;               /* Number of bytes remaining
                                            in keyboard read buffer   */
-        /* Device dependent fields for cardrdr */
+        unsigned int                    /* Flags                     */
+                eab3270:1;              /* 1=Extended attributes     */
+        BYTE    aid3270;                /* Current input AID value   */
+        BYTE    mod3270;                /* 3270 model number         */
+
+        /*  Device dependent fields for cardrdr                      */
+
+        char    **more_files;           /* for more that one file in
+                                           reader */
+        char    **current_file;         /* counts how many additional
+                                           reader files are avail    */
+        int     cardpos;                /* Offset of next byte to be
+                                           read from data buffer     */
+        int     cardrem;                /* Number of bytes remaining
+                                           in data buffer            */
         unsigned int                    /* Flags                     */
                 multifile:1,            /* 1=auto-open next i/p file */
                 rdreof:1,               /* 1=Unit exception at EOF   */
@@ -820,48 +870,36 @@ typedef struct _DEVBLK {
                 trunc:1,                /* Truncate overlength record*/
                 autopad:1;              /* 1=Pad incomplete last rec
                                            to 80 bytes if EBCDIC     */
-        int     cardpos;                /* Offset of next byte to be
-                                           read from data buffer     */
-        int     cardrem;                /* Number of bytes remaining
-                                           in data buffer            */
-        char    **more_files;           /* for more that one file in
-                                           reader */
-        char    **current_file;         /* counts how many additional
-                                           reader files are avail    */
-        /* Device dependent fields for ctcadpt */
-        unsigned int                    /* Flags                     */
-                ctcxmode:1;             /* 0=Basic mode, 1=Extended  */
-        BYTE    ctctype;                /* CTC_xxx device type       */
+
+        /*  Device dependent fields for ctcadpt                      */
+
         struct _DEVBLK *ctcpair;        /* -> Paired device block    */
         int     ctcpos;                 /* next byte offset          */
         int     ctcrem;                 /* bytes remaining in buffer */
         int     ctclastpos;             /* last packet read          */
         int     ctclastrem;             /* last packet read          */
-        BYTE    netdevname[IFNAMSIZ];   /* network device name       */
-        /* Device dependent fields for printer */
         unsigned int                    /* Flags                     */
-                crlf:1,                 /* 1=CRLF delimiters, 0=LF   */
-                diaggate:1,             /* 1=Diagnostic gate command */
-                fold:1;                 /* 1=Fold to upper case      */
+                ctcxmode:1;             /* 0=Basic mode, 1=Extended  */
+        BYTE    ctctype;                /* CTC_xxx device type       */
+        BYTE    netdevname[IFNAMSIZ];   /* network device name       */
+
+        /*  Device dependent fields for printer                      */
+
         int     printpos;               /* Number of bytes already
                                            placed in print buffer    */
         int     printrem;               /* Number of bytes remaining
                                            in print buffer           */
-        /* Device dependent fields for tapedev */
         unsigned int                    /* Flags                     */
-                readonly:1;             /* 1=Tape is write-protected */
-        struct                          /* HET device parms          */
-        {
-            U16 compress:1;             /* 1=Compression enabled     */
-            U16 method:3;               /* Compression method        */
-            U16 level:4;                /* Compression level         */
-            U16 chksize;                /* Chunk size                */
-        }       tdparms;                /* HET device parms          */
-        HETB    *hetb;                  /* HET control block         */
-        BYTE    tapedevt;               /* Tape device type          */
+                crlf:1,                 /* 1=CRLF delimiters, 0=LF   */
+                diaggate:1,             /* 1=Diagnostic gate command */
+                fold:1;                 /* 1=Fold to upper case      */
+
+        /*  Device dependent fields for tapedev                      */
+
         void   *omadesc;                /* -> OMA descriptor array   */
         U16     omafiles;               /* Number of OMA tape files  */
         U16     curfilen;               /* Current file number       */
+        long    blockid;                /* Current device block ID   */
         long    nxtblkpos;              /* Offset from start of file
                                            to next block             */
         long    prvblkpos;              /* Offset from start of file
@@ -870,15 +908,22 @@ typedef struct _DEVBLK {
                                            from current block        */
         U16     curbufoff;              /* Offset into buffer of data
                                            for next data chained CCW */
-        long    blockid;                /* Current device block ID   */
-        /* Device dependent fields for fbadasd */
+        HETB   *hetb;                   /* HET control block         */
+        struct                          /* HET device parms          */
+        {
+            U16 compress:1;             /* 1=Compression enabled     */
+            U16 method:3;               /* Compression method        */
+            U16 level:4;                /* Compression level         */
+            U16 chksize;                /* Chunk size                */
+        }       tdparms;                /* HET device parms          */
         unsigned int                    /* Flags                     */
-                fbaxtdef:1;             /* 1=Extent defined          */
-        U16     fbablksiz;              /* Physical block size       */
+                readonly:1;             /* 1=Tape is write-protected */
+        BYTE    tapedevt;               /* Tape device type          */
+
+        /*  Device dependent fields for fbadasd                      */
+
         U32     fbaorigin;              /* Device origin block number*/
         U32     fbanumblk;              /* Number of blocks in device*/
-        BYTE    fbaoper;                /* Locate operation byte     */
-        BYTE    fbamask;                /* Define extent file mask   */
         U32     fbaxblkn;               /* Offset from start of device
                                            to first block of extent  */
         U32     fbaxfirst;              /* Block number within dataset
@@ -888,7 +933,65 @@ typedef struct _DEVBLK {
         U32     fbalcblk;               /* Block number within dataset
                                            of first block for locate */
         U16     fbalcnum;               /* Block count for locate    */
-        /* Device dependent fields for ckddasd */
+        U16     fbablksiz;              /* Physical block size       */
+        unsigned int                    /* Flags                     */
+                fbaxtdef:1;             /* 1=Extent defined          */
+        BYTE    fbaoper;                /* Locate operation byte     */
+        BYTE    fbamask;                /* Define extent file mask   */
+
+        /*  Device dependent fields for ckddasd                      */
+
+        int     ckdnumfd;               /* Number of CKD image files */
+        int     ckdfd[CKD_MAXFILES];    /* CKD image file descriptors*/
+        U16     ckdlocyl[CKD_MAXFILES]; /* Lowest cylinder number
+                                           in each CKD image file    */
+        U16     ckdhicyl[CKD_MAXFILES]; /* Highest cylinder number
+                                           in each CKD image file    */
+        BYTE   *ckdtrkbuf;              /* Track image buffer        */
+        int     ckdtrkfd;               /* Track image fd            */
+        int     ckdtrkfn;               /* Track image file nbr      */
+        off_t   ckdtrkpos;              /* Track image offset        */
+        off_t   ckdcurpos;              /* Current offset            */
+        off_t   ckdlopos;               /* Write low offset          */
+        off_t   ckdhipos;               /* Write high offset         */
+        U16     ckdcyls;                /* Number of cylinders       */
+        U16     ckdtrks;                /* Number of tracks          */
+        U16     ckdheads;               /* #of heads per cylinder    */
+        U16     ckdtrksz;               /* Track size                */
+        U16     ckdmaxr0len;            /* Maximum length of R0 data */
+        U16     ckdmaxr1len;            /* Maximum length of R1 data */
+        U16     ckdcurcyl;              /* Current cylinder          */
+        U16     ckdcurhead;             /* Current head              */
+        BYTE    ckdcurrec;              /* Current record id         */
+        BYTE    ckdcurkl;               /* Current record key length */
+        BYTE    ckdorient;              /* Current orientation       */
+        BYTE    ckdcuroper;             /* Curr op: read=6, write=5  */
+        U16     ckdcurdl;               /* Current record data length*/
+        U16     ckdrem;                 /* #of bytes from current
+                                           position to end of field  */
+        U16     ckdpos;                 /* Offset into buffer of data
+                                           for next data chained CCW */
+        U16     ckdxblksz;              /* Define extent block size  */
+        U16     ckdxbcyl;               /* Define extent begin cyl   */
+        U16     ckdxbhead;              /* Define extent begin head  */
+        U16     ckdxecyl;               /* Define extent end cyl     */
+        U16     ckdxehead;              /* Define extent end head    */
+        BYTE    ckdfmask;               /* Define extent file mask   */
+        BYTE    ckdxgattr;              /* Define extent global attr */
+        U16     ckdltranlf;             /* Locate record transfer
+                                           length factor             */
+        BYTE    ckdloper;               /* Locate record operation   */
+        BYTE    ckdlaux;                /* Locate record aux byte    */
+        BYTE    ckdlcount;              /* Locate record count       */
+        BYTE    ckdsectors;             /* Number of sectors         */
+
+        struct _CKDDASD_CACHE *ckdcache;/* Cache table               */
+        int     ckdcachenbr;            /* Cache table size          */
+        int     ckdcachehits;           /* Cache hits                */
+        int     ckdcachemisses;         /* Cache misses              */
+        BYTE    ckdsfn[256];            /* Shadow file name          */
+        void   *cckd_ext;               /* -> Compressed ckddasd
+                                           extension otherwise NULL  */
         unsigned int                    /* Flags                     */
                 ckd3990:1,              /* 1=Control unit is 3990    */
                 ckdxtdef:1,             /* 1=Define Extent processed */
@@ -910,56 +1013,6 @@ typedef struct _DEVBLK {
                 ckdrdonly:1,            /* 1=Open read only          */
                 ckdfakewrt:1;           /* 1=Fake successful write
                                              for read only file      */
-        U16     ckdcyls;                /* Number of cylinders       */
-        U16     ckdtrks;                /* Number of tracks          */
-        U16     ckdheads;               /* #of heads per cylinder    */
-        U16     ckdtrksz;               /* Track size                */
-        U16     ckdmaxr0len;            /* Maximum length of R0 data */
-        U16     ckdmaxr1len;            /* Maximum length of R1 data */
-        BYTE    ckdsectors;             /* Number of sectors         */
-        BYTE    ckdfmask;               /* Define extent file mask   */
-        BYTE    ckdxgattr;              /* Define extent global attr */
-        U16     ckdxblksz;              /* Define extent block size  */
-        U16     ckdxbcyl;               /* Define extent begin cyl   */
-        U16     ckdxbhead;              /* Define extent begin head  */
-        U16     ckdxecyl;               /* Define extent end cyl     */
-        U16     ckdxehead;              /* Define extent end head    */
-        BYTE    ckdloper;               /* Locate record operation   */
-        BYTE    ckdlaux;                /* Locate record aux byte    */
-        BYTE    ckdlcount;              /* Locate record count       */
-        U16     ckdltranlf;             /* Locate record transfer
-                                           length factor             */
-        U16     ckdcurcyl;              /* Current cylinder          */
-        U16     ckdcurhead;             /* Current head              */
-        BYTE    ckdcurrec;              /* Current record id         */
-        BYTE    ckdcurkl;               /* Current record key length */
-        U16     ckdcurdl;               /* Current record data length*/
-        BYTE    ckdorient;              /* Current orientation       */
-        BYTE    ckdcuroper;             /* Curr op: read=6, write=5  */
-        U16     ckdrem;                 /* #of bytes from current
-                                           position to end of field  */
-        U16     ckdpos;                 /* Offset into buffer of data
-                                           for next data chained CCW */
-        int     ckdnumfd;               /* Number of CKD image files */
-        int     ckdfd[CKD_MAXFILES];    /* CKD image file descriptors*/
-        U16     ckdlocyl[CKD_MAXFILES]; /* Lowest cylinder number
-                                           in each CKD image file    */
-        U16     ckdhicyl[CKD_MAXFILES]; /* Highest cylinder number
-                                           in each CKD image file    */
-        BYTE   *ckdtrkbuf;              /* Track image buffer        */
-        int     ckdtrkfd;               /* Track image fd            */
-        int     ckdtrkfn;               /* Track image file nbr      */
-        off_t   ckdtrkpos;              /* Track image offset        */
-        off_t   ckdcurpos;              /* Current offset            */
-        off_t   ckdlopos;               /* Write low offset          */
-        off_t   ckdhipos;               /* Write high offset         */
-        struct _CKDDASD_CACHE *ckdcache;/* Cache table               */
-        int     ckdcachenbr;            /* Cache table size          */
-        int     ckdcachehits;           /* Cache hits                */
-        int     ckdcachemisses;         /* Cache misses              */
-        BYTE    ckdsfn[256];            /* Shadow file name          */
-        void   *cckd_ext;               /* -> Compressed ckddasd
-                                           extension otherwise NULL  */
     } DEVBLK;
 
 #define LOOPER_WAIT 0

@@ -1088,9 +1088,6 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         /* Release the interrupt lock */
         release_lock (&sysblk.intlock);
 
-#ifdef EXTERNALGUI
-        if (extgui) logmsg("MAN=0\n");
-#endif /*EXTERNALGUI*/
         return NULL;
     }
 
@@ -1099,9 +1096,6 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     {
         regs->cpustate = CPUSTATE_STOPPING;
         ON_IC_CPU_NOT_STARTED(regs);
-#ifdef EXTERNALGUI
-        if (extgui) logmsg("MAN=1\n");
-#endif /*EXTERNALGUI*/
         return NULL;
     }
 
@@ -1370,9 +1364,6 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 sysblk.regs[i].cpustate = CPUSTATE_STARTED;
         WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
         release_lock (&sysblk.intlock);
-#ifdef EXTERNALGUI
-        if (extgui) logmsg("MAN=0\n");
-#endif /*EXTERNALGUI*/
         return NULL;
     }
 
@@ -1387,9 +1378,6 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             ON_IC_CPU_NOT_STARTED(sysblk.regs + i);
         }
         release_lock (&sysblk.intlock);
-#ifdef EXTERNALGUI
-        if (extgui) logmsg("MAN=1\n");
-#endif /*EXTERNALGUI*/
         return NULL;
     }
 #endif /*MAX_CPU_ENGINES > 1*/

@@ -1102,10 +1102,18 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                 /* Wait until there is work to do */
                 sysblk.waitmask |= regs->cpumask;
                 sysblk.started_mask &= ~regs->cpumask;
+#ifdef EXTERNALGUI
+                if (extgui && regs == (sysblk.regs + sysblk.pcpu))
+                    logmsg("MAN=1\n");
+#endif /*EXTERNALGUI*/
                 while (regs->cpustate == CPUSTATE_STOPPED)
                 {
                     wait_condition (&INTCOND, &sysblk.intlock);
                 }
+#ifdef EXTERNALGUI
+                if (extgui && regs == (sysblk.regs + sysblk.pcpu))
+                    logmsg("MAN=0\n");
+#endif /*EXTERNALGUI*/
                 sysblk.started_mask |= regs->cpumask;
                 sysblk.waitmask &= ~regs->cpumask;
                 /* Purge the lookaside buffers */
@@ -1175,8 +1183,18 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
                     /* Wait for start command from panel */
                     obtain_lock (&sysblk.intlock);
                     sysblk.waitmask |= regs->cpumask;
+#ifdef EXTERNALGUI
+                    if (extgui && regs == (sysblk.regs + sysblk.pcpu))
+                        logmsg("MAN=1\n");
+#endif /*EXTERNALGUI*/
                     while (regs->cpustate == CPUSTATE_STOPPED)
+                    {
                         wait_condition (&INTCOND, &sysblk.intlock);
+                    }
+#ifdef EXTERNALGUI
+                    if (extgui && regs == (sysblk.regs + sysblk.pcpu))
+                        logmsg("MAN=0\n");
+#endif /*EXTERNALGUI*/
                     sysblk.waitmask &= ~regs->cpumask;
                     release_lock (&sysblk.intlock);
                 }

@@ -227,7 +227,7 @@ BYTE            c;                      /* Output character          */
             else
             {
                 /* Pad card image with blanks */
-                for (i = dev->cardpos; i < CARD_LENGTH; i++);
+                for (i = dev->cardpos; i < CARD_LENGTH; i++)
                     dev->buf[i] = HEX40;
             }
 

@@ -6,28 +6,78 @@
 /* date and time, and copyright notice to the indicated file.        */
 /*-------------------------------------------------------------------*/
 
-#ifdef HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H)
 #include <config.h>
 #endif
 
 #include "version.h"
 #include <stdio.h>
 
+/*--------------------------------*/
+/*   "Unusual" build options...   */
+/*--------------------------------*/
+
 static const char *build_options[] = {
-#ifdef EXTERNALGUI
-  "external GUI",
+
+#if defined(DEBUG)
+    "**DEBUG**",
 #endif
 
-#ifdef NO_IEEE_SUPPORT
-  "No IEEE support",
+#if defined(WIN32)
+    "Win32 (Windows) build",
+#else
+    #if defined(HAVE_LINUX_IF_TUN_H)
+        "Have <linux/if_tun.h>",
+    #endif
+    #if !defined(HAVE_SETRESUID) || !defined(HAVE_SETREUID) || defined(NO_SETUID)
+        "No "
+        #if !defined(HAVE_SETRESUID)
+            "SETRESUID "
+        #endif
+        #if !defined(HAVE_SETREUID)
+            "SETREUID "
+        #endif
+        #if defined(NO_SETUID)
+            "SETUID "
+        #endif
+        "support",
+    #endif
 #endif
 
-#ifdef OPTION_FTHREADS
-  "Fthreads",
+#if defined(NOTHREAD)
+    "No threading support",
+#else
+    #if defined(OPTION_FTHREADS)
+        "Using fthreads instead of pthreads",
+    #endif
 #endif
 
-#ifdef CUSTOM_BUILD_STRING
-  CUSTOM_BUILD_STRING,
+#if !defined(EXTERNALGUI)
+    "No external GUI support",
+#endif
+
+#if defined(NO_IEEE_SUPPORT)
+    "No IEEE support",
+#else
+    #if !defined(HAVE_SQRTL)
+        "No sqrtl support",
+    #endif
+#endif
+
+#if defined(NO_SIGABEND_HANDLER)
+    "No SIGABEND handler",
+#endif
+
+#if !defined(CCKD_BZIP2)
+    "No CCKD BZIP2 support",
+#endif
+
+#if !defined(HET_BZIP2)
+    "No HET BZIP2 support",
+#endif
+
+#if defined(CUSTOM_BUILD_STRING)
+    CUSTOM_BUILD_STRING,
 #endif
 
   "$Id$",

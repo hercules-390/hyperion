@@ -282,25 +282,22 @@ the device record is:
     Additional arguments may be specified after the file names:
     <p>
     <dl>
-    <dt><code>ebcdic</code>
-    <dd>specifies that the file contains fixed length 80-byte EBCDIC
-        records with no line-end delimiters.
-    <dt><code>ascii</code>
-    <dd>specifies that the file contains variable length lines of
-        ASCII characters delimited by line feeds or carriage return
-        line feed sequences at the end of each line.
-    <dt><code>trunc</code>
-    <dd>specifies, for ASCII files, that lines longer than 80
-        characters are truncated instead of producing a unit check
-        error.
-    <dt><code>autopad</code>
-    <dd>specifies, for EBCDIC files, that the file is automatically
-        padded to a multiple of 80 bytes if necessary.
+    <dt><code>sockdev</code>
+    <dd>indicates the card reader is a socket device wherein the
+        filename is actually a socket specification instead of a
+        device filename. When used, there must only be one filename
+        specified in the form: <code>host:port</code>, where
+        <code>host</code> is either an IP address or hostname
+        and <code>port</code> is the port number. The device then
+        accepts remote connections on the given <code>host:port</code>
+        combination and reads data from the socket instead of a
+        device file. This allows automatic remote submission of card
+        reader data.
     <dt><code>eof</code>
     <dd>specifies that unit exception status is presented after
-        reading the last card in the file.  If <code>eof</code> is not
-        specified, then end of file results in unit check status
-        with intervention required in the sense bytes.
+        reading the last card in the file.  If eof is not specified,
+        then end of file results in unit check status with intervention
+        required in the sense bytes.
     <dt><code>multifile</code>
     <dd>specifies, when multiple input files are entered, to
         automatically open the next input file and continue reading
@@ -308,11 +305,25 @@ the device record is:
         then reading stops once EOF is reached on a given file and
         an attention interrupt is then required to open and begin
         reading the next file.
-    </dl>
+    <dt><code>ebcdic</code>
+    <dd>specifies that the file contains fixed length 80-byte EBCDIC
+        records with no line-end delimiters.
+    <dt><code>ascii</code>
+    <dd>specifies that the file contains variable length lines of
+        ASCII characters delimited by LF (line feed) sequences or CRLF
+        (carraige return line feed) sequences at the end of each line.
     <p>
-    If neither <code>ebcdic</code> nor <code>ascii</code> is
-    specified, then the device handler attempts to detect the
-    format of the card image file when the device is first accessed.
+    If neither EBCDIC nor ASCII is specified, then the device handler
+    attempts to detect the format of the card image file when the device
+    is first accessed.
+    <dt><code>trunc</code>
+    <dd>specifies, for ASCII files, that lines longer than 80
+        characters are truncated instead of producing a unit check
+        error.
+    <dt><code>autopad</code>
+    <dd>specifies, for EBCDIC files, that the file is automatically
+        padded to a multiple of 80 bytes if necessary.
+    </dl>
 <p>
 <a name="cardpch">
 <dt><em>Card punch devices</em>

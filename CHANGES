@@ -1,3 +1,10 @@
+25 Oct 2001 updated hercconf.html with new 'sockdev' reader option - Fish
+25 Oct 2001 minor extgui tweak to better detect when cpu stopped - Fish
+25 Oct 2001 rearranged DEVBLK structure (I hope it's better) - Fish
+25 Oct 2001 sockdev no longer requires ascii only; ebcdic now ok - Fish
+25 Oct 2001 Fix cardpch bug causing padding to fail on ebcdic o/p - Fish
+25 Oct 2001 OPTION_BUFFERED_RDR rescinded/deprecated; using standard 'C'
+            fread/getc, etc. instead (Thanks Matt & Willem) - Fish
 22 Oct 2001 Fix another SQXR bug - Paul Leisy
 17 Oct 2001 Big-endian support and endian conversion - Greg Smith
 16 Oct 2001 OPTION_BUFFERED_RDR - Fish
