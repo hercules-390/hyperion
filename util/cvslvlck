@@ -26,7 +26,6 @@ my @req = qw(
 my $cvsroot = ":pserver:anonymous\@cvs.conmicro.cx:/usr/cvs/hercules";
 my $msg;
 my $instversion;
-system "clear";
 sayintro();
 for (my $i = 0; $i < @req; $i += 4) {
 	my $facility = $req[$i];
@@ -189,15 +188,15 @@ sub ckvers {
 }
 
 sub sayintro {
-	print "-----------------------------------------------------------------------------------\n";
+	print "-------------------------------------------------------------------------------\n";
 	print "The following recommendation comes from gettext-0.11.5/doc/gettext_12.html:\n";
-	print "-----------------------------------------------------------------------------------\n";
-	print "Before attempting to use gettextize you should install some other packages first.\n";
-	print "Ensure that recent versions of GNU m4, GNU Autoconf and GNU gettext are already \n";
-	print "installed at your site, and if not, proceed to do this first. If you get to install \n";
-	print "these things, beware that GNU m4 must be fully installed before GNU Autoconf is \n";
-	print "even configured.\n";
-	print "-----------------------------------------------------------------------------------\n\n";
+	print "-------------------------------------------------------------------------------\n";
+	print "Before attempting to use gettextize you should install some other packages\n";
+	print "first. Ensure that recent versions of GNU m4, GNU Autoconf and GNU gettext are\n";
+	print "already installed at your site, and if not, proceed to do this first. If you\n";
+	print "get to install these things, beware that GNU m4 must be fully installed before\n";
+	print "GNU Autoconf is even configured.\n";
+	print "-------------------------------------------------------------------------------\n\n";
 }
 
 sub present {
