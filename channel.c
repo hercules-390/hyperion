@@ -1302,7 +1302,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                 || (sysblk.mbk == 0)))
         {
             STORAGE_KEY(mbaddr) |= (STORKEY_REF | STORKEY_CHANGE);
-            mbk = (MBK*)sysblk.mainstor + mbaddr;
+            mbk = (MBK*)&sysblk.mainstor[mbaddr];
             FETCH_HW(mbcount,mbk->srcount);
             mbcount++;
             STORE_HW(mbk->srcount,mbcount);

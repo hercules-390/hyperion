@@ -3,7 +3,7 @@
 # modified to build hercules under windows (VB)
 #
 
-VERSION  = 2.12l
+VERSION  = 2.12m
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
