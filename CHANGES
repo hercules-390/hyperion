@@ -1,3 +1,5 @@
+29 Jul 2003 Fix shared device open to not set `connecting' bit on
+            until after parameter verification - Greg Smith
 26 Jul 2003 Minor change to codepage conversion logic - Jan Jaeger
 21 Jul 2003 CVD fix by Viktor Shkamerda - Jan Jaeger
 20 Jul 2003 Defer tuntap32 dll load to device alloc - Jan Jaeger

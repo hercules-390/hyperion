@@ -110,7 +110,6 @@ FWORD    cyls;                          /* Remote number cylinders   */
 BYTE    *p, buf[1024];                  /* Work buffer               */
 
     retry = dev->connecting;
-    dev->connecting = 1;
 
     /* Process the arguments */
     if (!retry)
@@ -214,6 +213,8 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
 
     /* Update the device handler vector */
     dev->hnd = &shared_ckd_device_hndinfo;
+
+    dev->connecting = 1;
 
 init_retry:
 
@@ -381,7 +382,6 @@ FWORD    blksiz;                        /* FBA block size            */
 BYTE    *p, buf[1024];                  /* Work buffer               */
 
     retry = dev->connecting;
-    dev->connecting = 1;
 
     /* Process the arguments */
     if (!retry)
@@ -461,6 +461,8 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
 
     /* Update the device handler vector */
     dev->hnd = &shared_fba_device_hndinfo;
+
+    dev->connecting = 1;
 
 init_retry:
 
