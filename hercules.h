@@ -396,6 +396,7 @@ typedef struct _REGS {                  /* Processor registers       */
         double  cpupct;                 /* Percent CPU busy          */
         U64     waittod;                /* Time of day last wait (us)*/
         U64     waittime;               /* Wait time (us) in interval*/ 
+        struct  timeval lasttod;        /* Last gettimeofday         */ 
         TLBE    tlb[256];               /* Translation lookaside buf */
         TID     cputid;                 /* CPU thread identifier     */
         DW      gr[16];                 /* General registers         */
