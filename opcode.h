@@ -403,16 +403,14 @@ do { \
 #endif /* defined(FEATURE_BINARY_FLOATING_POINT) */
 
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
- #define CSWAP16(_x) bswap_16(_x)
- #define CSWAP32(_x) bswap_32(_x)
- #define CSWAP64(_x) bswap_64(_x)
-#elif __BYTE_ORDER == __BIG_ENDIAN
+#ifdef WORDS_BIGENDIAN
  #define CSWAP16(_x) (_x)
  #define CSWAP32(_x) (_x)
  #define CSWAP64(_x) (_x)
 #else
- #error Cannot determine byte order
+ #define CSWAP16(_x) bswap_16(_x)
+ #define CSWAP32(_x) bswap_32(_x)
+ #define CSWAP64(_x) bswap_64(_x)
 #endif
 
 #define STORE_HW(_storage, _value) \

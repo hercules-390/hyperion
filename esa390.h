@@ -26,21 +26,7 @@ typedef uint32_t	U32;
 typedef int32_t 	S32;
 typedef uint64_t	U64;
 typedef int64_t 	S64;
-#if __BYTE_ORDER == __LITTLE_ENDIAN
- typedef union {
-		 U16 H;
-		 struct { BYTE L; BYTE H; } B;
-	       } HW;
- typedef union {
-		 U32 F;
-		 struct { HW L; HW H; } H;
-		 struct { U32 A:24; BYTE B; } A;
-	       } FW;
- typedef union {
-		 U64 D;
-		 struct { FW L; FW H; } F;
-	       } DW;
-#elif __BYTE_ORDER == __BIG_ENDIAN
+#ifdef WORDS_BIGENDIAN
  typedef union {
 		 U16 H;
 		 struct { BYTE H; BYTE L; } B;
@@ -55,7 +41,19 @@ typedef int64_t 	S64;
 		 struct { FW H; FW L; } F;
 	       } DW;
 #else
- #error Cannot determine byte order
+ typedef union {
+		 U16 H;
+		 struct { BYTE L; BYTE H; } B;
+	       } HW;
+ typedef union {
+		 U32 F;
+		 struct { HW L; HW H; } H;
+		 struct { U32 A:24; BYTE B; } A;
+	       } FW;
+ typedef union {
+		 U64 D;
+		 struct { FW L; FW H; } F;
+	       } DW;
 #endif
 
 typedef union {
