@@ -23,6 +23,7 @@
 /* Added the AFP-Registers-facility (additional float registers).    */
 /*                                         Peter Kuschnerus 13/12/00 */
 /* Long Displacement Facility: LDY,LEY,STDY,STEY   R.Bowler 29/06/03 */
+/* FPS Extensions Facility: LXR,LZER,LZDR,LZXR     R.Bowler 06juil03 */
 /*-------------------------------------------------------------------*/
 
 
@@ -6037,6 +6038,100 @@ int     pgm_check;
     }
 }
 #endif /* FEATURE_HFP_EXTENSIONS */
+
+
+#if defined(FEATURE_FPS_EXTENSIONS)
+/*-------------------------------------------------------------------*/
+/* B365 LXR   - Load Floating Point Extended Register          [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_float_ext_reg)
+{
+int     r1, r2;                         /* Values of R fields        */
+int     i1, i2;                         /* Index into fpr array      */
+
+    RRE(inst, execflag, regs, r1, r2);
+
+    HFPODD2_CHECK(r1, r2, regs);
+    i1 = FPR2I(r1);
+    i2 = FPR2I(r2);
+
+    /* Copy register R2 contents to register R1 */
+    regs->fpr[i1] = regs->fpr[i2];
+    regs->fpr[i1+1] = regs->fpr[i2+1];
+    regs->fpr[i1+FPREX] = regs->fpr[i2+FPREX];
+    regs->fpr[i1+FPREX+1] = regs->fpr[i2+FPREX+1];
+
+} /* end DEF_INST(load_float_ext_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B374 LZER  - Load Zero Floating Point Short Register        [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_zero_float_short_reg)
+{
+int     r1, r2;                         /* Values of R fields        */
+int     i1;                             /* Index of R1 in fpr array  */
+
+    RRE(inst, execflag, regs, r1, r2);
+    HFPREG_CHECK(r1, regs);
+    i1 = FPR2I(r1);
+
+    /* Set all bits of register R1 to zeros */
+    regs->fpr[i1] = 0;
+
+} /* end DEF_INST(load_zero_float_short_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B375 LZDR  - Load Zero Floating Point Long Register         [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_zero_float_long_reg)
+{
+int     r1, r2;                         /* Values of R fields        */
+int     i1;                             /* Index of R1 in fpr array  */
+
+    RRE(inst, execflag, regs, r1, r2);
+    HFPREG_CHECK(r1, regs);
+    i1 = FPR2I(r1);
+
+    /* Set all bits of register R1 to zeros */
+    regs->fpr[i1] = 0;
+    regs->fpr[i1+1] = 0;
+
+} /* end DEF_INST(load_zero_float_long_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B376 LZXR  - Load Zero Floating Point Extended Register     [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_zero_float_ext_reg)
+{
+int     r1, r2;                         /* Values of R fields        */
+int     i1;                             /* Index of R1 in fpr array  */
+
+    RRE(inst, execflag, regs, r1, r2);
+
+    HFPODD_CHECK(r1, regs);
+    i1 = FPR2I(r1);
+
+    /* Set all bits of register R1 to zeros */
+    regs->fpr[i1] = 0;
+    regs->fpr[i1+1] = 0;
+    regs->fpr[i1+FPREX] = 0;
+    regs->fpr[i1+FPREX+1] = 0;
+
+} /* end DEF_INST(load_zero_float_ext_reg) */
+
+
+/* The following instructions are not yet implemented */
+#define UNDEF_INST(_x) \
+        DEF_INST(_x) { ARCH_DEP(operation_exception) \
+        (inst,execflag,regs); }
+ UNDEF_INST(convert_bfp_long_to_float_long_reg)
+ UNDEF_INST(convert_bfp_short_to_float_long_reg)
+ UNDEF_INST(convert_float_long_to_bfp_long_reg)
+ UNDEF_INST(convert_float_long_to_bfp_short_reg)
+#endif /*defined(FEATURE_FPS_EXTENSIONS)*/
 
 
 #if defined(FEATURE_LONG_DISPLACEMENT)
