@@ -351,6 +351,9 @@ AC_ARG_ENABLE(optimization,
 
 if test x$auto_optimize = xtrue; then
   case "$host_cpu" in
+          powerpc)
+            OFLAGS="-O3 $OFLAGS"
+            ;;
           i586|i686)
             if test "$GCC" = "yes"; then
                 OFLAGS="-O3 -march=$host_cpu $OFLAGS"
