@@ -165,6 +165,9 @@
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
+#ifdef HAVE_LINUX_IF_TUN_H
+#include <linux/if_tun.h>
+#endif
 
 #define HERCIFC_CMD "hercifc"           /* Interface config command  */
 
@@ -649,6 +652,7 @@ BYTE            c;                      /* Character work area       */
             return -1;
         }
         dev->fd = fd;
+#ifdef HAVE_LINUX_IF_TUN_H
         if ((strncasecmp(utsbuf.sysname, "linux", 5) == 0) &&
             (strncmp(utsbuf.machine, "s390", 4) != 0) &&
             (strncmp(utsbuf.release, "2.4", 3) == 0))
@@ -662,61 +666,24 @@ BYTE            c;                      /* Character work area       */
             int i;
             struct ifreq ifr;
     
-            sockfd = socket (AF_INET, SOCK_DGRAM, 0);
-            if (sockfd < 0)
-            {
-                logmsg ("HHC852I %4.4X can not create socket: %s\n",
-                    dev->devnum, strerror(errno));
-                ctcadpt_close_device(dev);
-                return -1;
-            }
-            /*
-             * Loop over all network interfaces, finding
-             * the tun device with the higest number
-             */
-            for (i = 1; ; i++)
-            {
-                memset(&ifr, 0, sizeof(ifr));
-
-                ifr.ifr_ifindex = i;
-                if (ioctl(sockfd, SIOCGIFNAME, &ifr) == 0)
-                {
-                    if (strncmp(ifr.ifr_name, "tun", 3) == 0)
-                        if (isdigit(ifr.ifr_name[3]))
-                        {
-                            char *eptr;
-                            int ifnum;
-                            ifnum = strtol(&ifr.ifr_name[3],
-                                    &eptr, 10);
-                            if (eptr && (*eptr == '\0'))
-                                tunmax = (ifnum > tunmax) ? ifnum : tunmax;
-                        }
-                } else
-                    break;
-            }
-            close(sockfd);
-            sprintf(dev->netdevname, "tun%d", ++tunmax);
-
             memset(&ifr, 0, sizeof(ifr));
-            /* Note:
-             * Intentionally did _NOT_ used constants IFF_... and
-             * TUNSETIFF to avoid #include <linux/if_tun.h> and thus
-             * make it possible to build on systems not having linux-2.4's
-             * kernel headers installed.
-             * Drawback: If these defines change in the kernel headers,
-             *           that has to be changed here too (probably depending
-             *           on the kernel-release check above).
-             */
-            ifr.ifr_flags = 0x1001; /* IFF_TUN | IFF_NO_PI */
-            strncpy(ifr.ifr_name, dev->netdevname, IFNAMSIZ);
-            if (ioctl(fd, (('T' << 8) | 202), &ifr) != 0)
+	    /* Note: Normally it might make more sense to include a
+	       copy of the necessary kernel header for this, but
+	       unfortunately there are two incompatible sets of
+	       constants for the kernel interface, and backward
+	       compatibility was not preserved. */
+
+            ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
+            if (ioctl(fd, TUNSETIFF, &ifr) != 0)
             {
                 logmsg ("HHC853I %4.4X setting net device param failed: %s\n",
                     dev->devnum, strerror(errno));
                 ctcadpt_close_device(dev);
                 return -1;
             }
+	    strcpy(dev->netdevname, ifr.ifr_name);
         } else {
+#endif /* HAVE_LINUX_IF_TUN_H */
             /* Other OS: Simply use basename of the device */
             char *p = strrchr(dev->filename, '/');
             if (p)
@@ -727,7 +694,9 @@ BYTE            c;                      /* Character work area       */
                     dev->devnum, dev->filename);
                 return -1;
             }
+#ifdef HAVE_LINUX_IF_TUN_H
         }
+#endif /* HAVE_LINUX_IF_TUN_H */
 
         /* The TUN network interface cannot be statically configured
            because the TUN/TAP driver creates the interface only

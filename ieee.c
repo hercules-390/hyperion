@@ -95,6 +95,10 @@ struct sbfp {
 	float	v;
 };
 
+#ifndef 
+#define sqrtl(x) sqrt(x)
+#endif
+
 #endif	/* !defined(_GEN_ARCH) */
 
 /* externally defined architecture-dependent functions */

@@ -12,11 +12,10 @@
 #define _REENTRANT    /* Ensure that reentrant code is generated *JJ */
 #define _THREAD_SAFE            /* Some systems use this instead *JJ */
 
+#include "feature.h"
 #if !defined(_GNU_SOURCE)
  #define _GNU_SOURCE                   /* required by strsignal() *JJ */
 #endif
-
-#include "features.h"
 
 #if !defined(_HERCULES_H)
 #include "cpuint.h"
@@ -38,10 +37,10 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <pwd.h>
-#if defined(NO_BYTESWAP_H)
- #include "byteswap.h"
-#else
+#if defined(HAVE_BYTESWAP_H)
  #include <byteswap.h>
+#else
+ #include "hbyteswp.h"
 #endif
 #include <sys/types.h>
 #include <sys/resource.h>
