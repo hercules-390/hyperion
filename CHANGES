@@ -1,3 +1,4 @@
+28 Nov 2001 Fix unintended exit when CPU 0 is deconfigured - Matt Zimmerman
 22 Nov 2001 Cancel Subchannel (XSCH) function and instruction - Jan Jaeger
 21 Nov 2001 OPTION_SYNCIO *is* compatible with OPTION_FISHIO - Greg Smith
 18 Nov 2001 Synchronous I/O - Greg Smith
