@@ -48,7 +48,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstorec) (void *src, BYTE len,
                                         VADR addr, int arn, REGS *regs)
 {
 BYTE   *main1, *main2;                  /* Mainstor addresses        */
-BYTE   *sk1, *sk2;                      /* Storage key addresses     */
+BYTE   *sk;                             /* Storage key addresses     */
 int     len2;                           /* Length to end of page     */
 
     if ( NOCROSS2K(addr,len) )
@@ -61,14 +61,12 @@ int     len2;                           /* Length to end of page     */
         len2 = 0x800 - (addr & 0x7FF);
         main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP,
                       regs->psw.pkey);
-        sk1 = regs->dat.storkey;
+        sk = regs->dat.storkey;
         main2 = MADDR((addr + len2) & ADDRESS_MAXWRAP(regs), arn,
-                      regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-        sk2 = regs->dat.storkey;
+                      regs, ACCTYPE_WRITE, regs->psw.pkey);
+        *sk |= (STORKEY_REF | STORKEY_CHANGE);
         MEMCPY (main1, src, len2);
         MEMCPY (main2, src + len2, len + 1 - len2);
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
-        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
 
 } /* end function ARCH_DEP(vstorec) */
@@ -113,7 +111,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore2_full) (U16 value, VADR addr,
                                               int arn, REGS *regs)
 {
 BYTE   *main1, *main2;                  /* Mainstor addresses        */
-BYTE   *sk1, *sk2;                      /* Storage key addresses     */
+BYTE   *sk;                             /* Storage key addresses     */
 
     /* Check if store crosses a boundary */
     if ((addr & 0x7FF) != 0x7FF)
@@ -125,14 +123,12 @@ BYTE   *sk1, *sk2;                      /* Storage key addresses     */
     {
         main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP,
                       regs->psw.pkey);
-        sk1 = regs->dat.storkey;
+        sk = regs->dat.storkey;
         main2 = MADDR((addr + 1) & ADDRESS_MAXWRAP(regs), arn, regs,
-                      ACCTYPE_WRITE_SKP, regs->psw.pkey);
-        sk2 = regs->dat.storkey;
+                      ACCTYPE_WRITE, regs->psw.pkey);
+        *sk |= (STORKEY_REF | STORKEY_CHANGE);
         *main1 = value >> 8;
         *main2 = value & 0xFF;
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
-        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
 
 } /* end function ARCH_DEP(vstore2_full) */
@@ -169,7 +165,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore4_full) (U32 value, VADR addr,
                                               int arn, REGS *regs)
 {
 BYTE   *main1, *main2;                  /* Mainstor addresses        */
-BYTE   *sk1, *sk2;                      /* Storage key addresses     */
+BYTE   *sk;                             /* Storage key addresses     */
 int     len;                            /* Length to end of page     */
 BYTE    temp[4];                        /* Copied value              */ 
 
@@ -184,10 +180,10 @@ BYTE    temp[4];                        /* Copied value              */
         len = 0x800 - (addr & 0x7FF);
         main1 = MADDR (addr, arn, regs, ACCTYPE_WRITE_SKP,
                        regs->psw.pkey);
-        sk1 = regs->dat.storkey;
+        sk = regs->dat.storkey;
         main2 = MADDR ((addr + len) & ADDRESS_MAXWRAP(regs), arn,
-                       regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-        sk2 = regs->dat.storkey;
+                       regs, ACCTYPE_WRITE, regs->psw.pkey);
+        *sk |= (STORKEY_REF | STORKEY_CHANGE);
         STORE_FW(temp, value);
         switch (len) {
         case 1: memcpy (main1, temp,     1);
@@ -200,8 +196,6 @@ BYTE    temp[4];                        /* Copied value              */
                 memcpy (main2, temp + 3, 1);
                 break;
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
-        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
 
 } /* end function ARCH_DEP(vstore4_full) */
@@ -238,7 +232,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore8_full) (U64 value, VADR addr,
                                               int arn, REGS *regs)
 {
 BYTE   *main1, *main2;                  /* Mainstor addresses        */
-BYTE   *sk1, *sk2;                      /* Storage key addresses     */
+BYTE   *sk;                             /* Storage key addresses     */
 int     len;                            /* Length to end of page     */
 BYTE    temp[8];                        /* Copied value              */ 
 
@@ -253,10 +247,10 @@ BYTE    temp[8];                        /* Copied value              */
         len = 0x800 - (addr & 0x7FF);
         main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP,
                       regs->psw.pkey);
-        sk1 = regs->dat.storkey;
+        sk = regs->dat.storkey;
         main2 = MADDR((addr + len) & ADDRESS_MAXWRAP(regs), arn,
-                      regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-        sk2 = regs->dat.storkey;
+                      regs, ACCTYPE_WRITE, regs->psw.pkey);
+        *sk |= (STORKEY_REF | STORKEY_CHANGE);
         STORE_DW(temp, value);
         switch (len) {
         case 1: memcpy (main1, temp,     1);
@@ -281,8 +275,6 @@ BYTE    temp[8];                        /* Copied value              */
                 memcpy (main2, temp + 7, 1);
                 break;
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
-        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
 
 } /* end function ARCH_DEP(vstore8) */
@@ -869,8 +861,6 @@ int     i;                              /* Loop counter              */
                 for ( i = 0; i <= len3; i++) *dest2++ = *source2++;
             }
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
-        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
 
 #ifdef FEATURE_INTERVAL_TIMER

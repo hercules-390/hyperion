@@ -563,7 +563,7 @@ do { \
 #define STORKEY_INVALIDATE(_regs, _n) \
  do { \
    BYTE *mn; \
-   mn = (_regs)->mainstor + (_n); \
+   mn = (_regs)->mainstor + ((_n) & PAGEFRAME_PAGEMASK); \
    ARCH_DEP(invalidate_tlbe)((_regs), mn); \
    if (sysblk.cpus > 1) { \
      int i; \
