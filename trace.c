@@ -146,10 +146,10 @@ RADR    ag,                             /* Abs Guest addr of TTE     */
     STORAGE_KEY(n) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Build the Branch in Subspace Group trace entry */
-    sysblk.mainstor[n++] = 0x41;
-    sysblk.mainstor[n++] = (regs->psw.prob << 7) | ((alet & 0x7F0000) >> 16);
-    STORE_HW(sysblk.mainstor + n, alet); n += 2;
-    STORE_FW(sysblk.mainstor + n, regs->psw.IA | (regs->psw.amode << 31));
+    STORE_FW(sysblk.mainstor + n, ( 0x41000000 |
+                     ((alet & 0x01000000) >> 1) | (alet & 0x007FFFFF)));
+    n += 4;
+    STORE_FW(sysblk.mainstor + n, ia);
     n += 4;
 
 #if defined(_FEATURE_SIE)
