@@ -48,7 +48,6 @@
 #define  MAX_COMMAND_LEN          ( 1024 )
 
 SYSBLK*  my_sysblk_ptr        = NULL;   // (ptr to Herc's SYSBLK structure)
-int*     my_initdone_ptr      = NULL;   // (ptr to Herc's 'initdone' flag)
 FILE*    fInputStream         = NULL;   // (stdin stream)
 FILE*    fStatusStream        = NULL;   // (stderr stream)
 int      nInputStreamFileNum  =  -1;    // (file descriptor for stdin stream)
@@ -884,12 +883,7 @@ void*  gui_debug_cpu_state ( REGS* pREGS )
 void gui_panel_display ()
 {
     logmsg(_("HHCHGnnnI dyngui.dll initiated\n"));
-
     Initialize();               // (allocate buffers, etc)
-
-    while (!*my_initdone_ptr)   // (wait for system to
-        sched_yield();          //  finish coming up...)
-
     ProcessingLoop();           // (primary processing loop)
 }
 
@@ -964,7 +958,6 @@ HDL_RESOLVE ( panel_command );
 //                    Our pointer-     Registered entry-
 //                    variable name    point value name
 HDL_RESOLVE_PTRVAR (  my_sysblk_ptr,     sysblk         );
-HDL_RESOLVE_PTRVAR (  my_initdone_ptr,   initdone       );
 
 END_RESOLVER_SECTION;
 

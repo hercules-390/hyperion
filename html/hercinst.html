@@ -141,85 +141,81 @@ Now you can enter an ipl command from the control panel.
 <h4>Panel commands</h4>
 <p>
 <pre>
-cpu <em>n</em>   Set target CPU for subsequent commands
-psw     Display program status word
-gpr     Display general-purpose registers
-fpr     Display floating-point registers
-cr      Display control registers
-ar      Display access registers
-pr      Display prefix register
-clocks  Display todclock, clock comparator, cpu timer, and interval timer (370 mode only)
-
-r<em>x</em>      Display 64 bytes starting at real address x
-r<em>x.n</em>    Display n bytes starting at real address x
-r<em>x-y</em>    Display real storage locations x to y
-v<em>x</em>      Display 64 bytes starting at virtual address x
-v<em>x.n</em>    Display n bytes starting at virtual address x
-v<em>x-y</em>    Display virtual storage locations x to y
-f-<em>x</em>     Mark storage frame at address x unusable
-f+<em>x</em>     Mark storage frame at address x usable
-
-r<em>x</em>=<em>hexvalue</em>   Alter real storage location x
-v<em>x</em>=<em>hexvalue</em>   Alter virtual storage location x
-
-t+      Turn on CPU instruction tracing
-t-      Turn off CPU instruction tracing
-s+      Turn on CPU single-step mode
-s-      Turn off CPU single-step mode
-g       Go (turn off CPU single-step mode and start CPU)
-
-b<em>x</em>      Set breakpoint at address x
-b-      Clear breakpoint
-
-t+ckd            Turn on CKD key tracing
-t-ckd            Turn off CKD key tracing
-t+<em>xxxx</em>  Turn on CCW tracing for device number xxxx
-t-<em>xxxx</em>  Turn off CCW tracing for device number xxxx
-s+<em>xxxx</em>  Turn on CCW single-step mode for device number xxxx
-s-<em>xxxx</em>  Turn off CCW single-step mode for device number xxxx
-i<em>xxxx</em>   Generate an I/O attention interrupt for device number xxxx
-k<em>xxxx</em>   Print CCKD internal trace for device number xxxx
-ds<em>xxxx</em>  Display subchannel status for device number xxxx
-
-archmode S/370|ESA/390|ESAME  Set architecture mode
-loadparm [<em>xxxxxxxx</em>]           Display or set the IPL parameter
-loadcore <em>xxxxxxxx</em> [<em>address</em>]   Load core image from file xxxxxxxx
-savecore <em>xxxxxxxx</em> [<em>start/*</em>] [<em>end/*</em>] save core to file xxxxxxxx
-loadtext <em>xxxxxxxx</em> [<em>address</em>]   Load object deck xxxxxxxx
-ipl <em>xxxx</em>                      IPL from device number xxxx
-
-ext       Generate an external interrupt
-stop      Stop CPU
-start     Start CPU
-stopall   Stop all CPUs
-startall  Start all CPUs
-restart   Generate a restart interrupt and start CPU
-store     Store status
-ipending  Display pending interrupts
-quit|exit Terminate Hercules
-quiet     Toggles panel quiet mode
-
-devlist  Display configured devices
-attach <em>xxxx</em> <em>type</em> [ <em>args</em> ]  Create device xxxx
-detach <em>xxxx</em>  Delete device xxxx
-define <em>xxxx</em> <em>yyyy</em>  Rename device number xxxx to yyyy
-devinit <em>xxxx</em> [ <em>args</em> ]  Reinitialize device xxxx
-
-ldmod <em>module list</em>  Load a module
-rmmod <em>module list</em>  Delete a module
-lsmod              List dynamic modules
-
-.<em>text</em>   Enter an SCP command via the HMC system console
-!<em>text</em>   Enter an SCP priority message via the HMC system console
-
-toddrag [<em>n</em>]  Display or set TOD clock drag factor
-
-pgmtrace <em>n</em>   Turn on program interrupt tracing for interrupt code n
-pgmtrace -<em>n</em>  Turn off program interrupt tracing for interrupt code n
-
-panrate slow &#124 fast &#124 <em>n</em>   Set panel refresh rate to n milliseconds
+      Command      Description...
+      -------      -----------------------------------------------
+      ?            list all commands
+      help         command specific help
+      quit         terminate the emulator
+      exit         (synonym for 'quit')
+      cpu          define target cpu for panel display and commands
+      start        start CPU (or printer device if argument given)
+      stop         stop CPU (or printer device if argument given)
+      startall     start all CPU's
+      stopall      stop all CPU's
+      .reply       scp command
+      !message     scp priority messsage
+      i            generate I/O attention interrupt for device
+      ext          generate external interrupt
+      restart      generate restart interrupt
+      store        store CPU status at absolute zero
+      archmode     set architecture mode
+      loadparm     set IPL parameter
+      ipl          IPL from device xxxx
+      psw          display program status word
+      gpr          display general purpose registers
+      fpr          display floating point registers
+      cr           display control registers
+      ar           display access registers
+      pr           display prefix register
+      clocks       display tod clkc and cpu timer
+      ipending     display pending interrupts
+      ds           display subchannel
+      r            display or alter real storage
+      v            display or alter virtual storage
+      devtmax      display or set max device threads
+      k            display cckd internal trace
+      attach       configure device
+      detach       remove device
+      define       rename device
+      devinit      reinitialize device
+      devlist      list all devices
+      sh           shell command
+      cache        cache command
+      cckd         cckd command
+      shrd         shrd command
+      quiet        toggle automatic refresh of panel display data
+      b            set breakpoint
+      b-           delete breakpoint
+      g            turn off instruction stepping and start CPU
+      pgmtrace     trace program interrupts
+      savecore     save a core image to file
+      loadcore     load a core image file
+      loadtext     load a text deck file
+      ldmod        load a module
+      rmmod        delete a module
+      lsmod        list dynamic modules
+      lsdep        list module dependencies
+      iodelay      display or set I/O delay value
+      tt32stats    display CTCI-W32 statistics
+      toddrag      display or set TOD clock drag factor
+      panrate      display or set rate at which console refreshes
+      syncio       display syncio devices statistics
+      script       Run a sequence of panel commands contained in a file
+      cscript      Cancels a running script thread
+      evm          ECPS:VM Commands
+      aea          Display AEA tables
+      sf+          add shadow file
+      sf-          delete shadow file
+      sf=          rename shadow file
+      sfc          compress shadow files
+      sfd          display shadow file stats
+      t{+/-}       turn instruction tracing on/off
+      s{+/-}       turn instruction stepping on/off
+      t{+/-}dev    turn CCW tracing on/off
+      s{+/-}dev    turn CCW stepping on/off
+      t{+/-}CKD    turn CKD_KEY tracing on/off
+      f{+/-}adr    mark frames unusable/usable
 </pre>
-
 <p> 
 The <em>ipl</em> command may also be used to perform a load from cdrom or
 server.  For example if a standard SuSE S/390 Linux distribution CD is loaded
@@ -245,8 +241,117 @@ next instruction.
 There is also an alternate semi-graphical control panel.  Press Esc to
 switch between the command line format and the semi-graphical format.
 Press ? to obtain help in either control panel.
+<p><br>
+<h4>Additional Panel Command Help Information</h4>
+<p>
+<pre>
+    help        Enter "help cmd" where cmd is the command you need help
+                with. If the command has additional help text defined for it,
+                it will be displayed. Help text is usually limited to explaining
+                the format of the command and its various required or optional
+                parameters and is not meant to replace reading the documentation.
 
 
+    quit        Format: "quit [NOW]". The optional 'NOW' argument
+                causes the emulator to immediately terminate without
+                attempting to close any of the device files or perform
+                any cleanup. Only use it in extreme circumstances.
+
+
+    cpu         Format: "cpu nnnn" where 'nnnn' is the cpu address of
+                the cpu in your multiprocessor configuration which you wish
+                all panel commands to apply to. For example, entering 'cpu 1'
+                followed by "gpr" will display the general purpose registers
+                for cpu#1 in your configuration as opposed to cpu#0
+
+
+    start       Entering the 'start' command by itself simply starts a stopped
+                CPU, whereas 'start <devn>' presses the virtual start button on
+                printer device <devn>.
+
+
+    stop        Entering the 'stop' command by itself simply stops a running
+                CPU, whereas 'stop <devn>' presses the virtual stop button on
+                printer device <devn>, usually causing an INTREQ.
+
+
+    .reply      To reply to a system control program (i.e. guest operating system)
+                message that gets issued to the hercules console, prefix the reply
+                with a period.
+
+
+    !message    To enter a system control program (i.e. guest operating system)
+                priority command on the hercules console, simply prefix the command
+                with an exclamation point '!'.
+
+
+    r           Format: "r addr[.len]" or "r addr-addr" to display real
+                storage, or "r addr=value" to alter real storage, where 'value'
+                is a hex string of up to 32 pairs of digits.
+
+    v           Format: "v addr[.len]" or "v addr-addr" to display virtual
+                storage, or "v addr=value" to alter virtual storage, where 'value'
+                is a hex string of up to 32 pairs of digits.
+
+
+    attach      Format: "attach devn type [arg...]
+
+
+    define      Format: "define olddevn newdevn"
+
+
+    devinit     Format: "devinit devn arg [arg...]"
+
+
+    sh          Format: "sh command [args...]" where 'command' is any valid shell
+                command. The entered command and any arguments are passed as-is to the
+                shell for processing and the results are displayed on the console.
+
+
+    b           Format: "b addr" where 'addr' is the instruction address where you
+                wish to halt execution. Once the breakpoint is reached, instruction
+                execution is temporarily halted and the next instruction to be executed
+                is displayed. You may then examine registers and/or storage, etc. To
+                continue execution after reaching a breakpoint, enter the 'g' command.
+
+
+    b-          Format: "b-"  (removes any previously set breakpoint)
+
+
+    pgmtrace    Format: "pgmtrace [-]intcode" where 'intcode' is any valid program
+                interruption code in the range 0x01 to 0x40. Precede the interrupt code
+                with a '-' to stop tracing of that particular program interruption.
+
+
+    savecore    Format: "savecore filename [{start|*}] [{end|*}]" where 'start' and 'end'
+                define the starting and ending addresss of the range of real storage to be
+                saved to file 'filename'. '*' means address 0 if specified for start, and end
+                of available storage if specified for end. The default is '* *' (beginning
+                of storage through the end of storage; i.e. all of storage).
+
+    loadcore    Format: "loadcore filename [address]" where 'address' is the storage address
+                of where to begin loading memory. The file 'filename' is presumed to be a pure
+                binary image file previously created via the 'savecore' command. The default for
+                'address' is 0 (begining of storage).
+
+    loadtext    Format: "loadtext filename [address]". This command is essentially identical
+                to the 'loadcore' command except that it loads a text deck file with "TXT"
+                and "END" 80 byte records (i.e. an object deck).
+
+    script      Format: "script filename [...filename...]". Sequentially executes the commands contained
+                within the file -filename-. The script file may also contain "script" commands,
+                but the system ensures that no more than 10 levels of script are invoked at any
+                one time (to avoid a recursion loop)
+
+
+    cscript     Format: "cscript". This command will cancel the currently running script.
+                if no script is running, no action is taken
+
+
+    evm         Format: "evm". This command invokes ECPS:VM Subcommands.
+                Type "evm help" to see a list of available commands
+</pre>
+<p><br>
 <h4>The &nbsp;<u>hercules.rc</u> &nbsp;(run-commands)&nbsp; file:</h4>
 <p>
 Hercules also supports the ability to automatically execute panel commands
@@ -256,7 +361,7 @@ read and interpreted as a panel command exactly as if the command were
 entered from the HMC system console.
 <p>
 The default filename for the run-commands file is "hercules.rc", but may be
-overridden by setting the "<tt>HERCULES_RC</tt>" environment variable to the
+overridden by setting the "<tt><b>HERCULES_RC</b></tt>" environment variable to the
 desired filename.
 <p>
 Except for the 'pause' command (see paragraph further below), each command
