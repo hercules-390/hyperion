@@ -535,7 +535,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
         abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
 #if defined(OPTION_AIA_BUFFER)
 #if defined(FEATURE_PER2)
-        if( EN_IC_PER_IF(regs) )
+        if( !EN_IC_PER_IF(regs) )
 #endif /*defined(FEATURE_PER2)*/
         {
             regs->AI = abs & PAGEFRAME_PAGEMASK;
@@ -554,7 +554,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
 #if defined(OPTION_AIA_BUFFER)
 #if defined(FEATURE_PER2)
-    if( EN_IC_PER_IF(regs) )
+    if( !EN_IC_PER_IF(regs) )
 #endif /*defined(FEATURE_PER2)*/
     {
         regs->AI = abs & PAGEFRAME_PAGEMASK;
