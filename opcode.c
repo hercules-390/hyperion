@@ -471,6 +471,11 @@
 #endif /*!defined(FEATURE_IO_ASSIST)*/
 
 
+#if !defined(FEATURE_QUEUED_DIRECT_IO)
+ UNDEF_INST(signal_adapter)
+#endif /*!defined(FEATURE_QUEUED_DIRECT_IO)*/
+
+
 #if !defined(FEATURE_CHANNEL_SWITCHING)
  UNDEF_INST(connect_channel_set)
  UNDEF_INST(disconnect_channel_set)
@@ -1968,7 +1973,7 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B271*/ GENx___x___x___ ,                                     /*%STPCS     */
  /*B272*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B273*/ GENx___x___x___ ,
- /*B274*/ GENx___x___x___ ,                                     /*%SIGA      */
+ /*B274*/ GENx___x390x900 (signal_adapter,S,"SIGA"),
  /*B275*/ GENx___x___x___ ,
  /*B276*/ GENx___x390x900 (cancel_subchannel,S,"XSCH"),
  /*B277*/ GENx___x390x900 (resume_program,S,"RP"),

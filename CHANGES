@@ -1,3 +1,4 @@
+26 Feb 2003 Add Signal Adapter instruction - Jan Jaeger
 20 Feb 2003 FBA devtype update + script command support - Ivan Warren (by Greg)
 08 Feb 2003 Fix dasdload message verbosity test (was backwards) - Jay
             Maynard

@@ -887,9 +887,10 @@ typedef struct _PMCW {
     } PMCW;
 
 /* Bit definitions for PMCW flag byte 4 */
-#define PMCW4_ISC   0x38        /* Interruption subclass     */
-#define PMCW4_A     0x01        /* Alternate Block Control   */
-#define PMCW4_RESV  0xC6        /* Reserved bits - must be 0 */
+#define PMCW4_Q         0x80        /* QDIO available            */
+#define PMCW4_ISC       0x38        /* Interruption subclass     */
+#define PMCW4_A         0x01        /* Alternate Block Control   */
+#define PMCW4_RESV      0xC6        /* Reserved bits - must be 0 */
 
 /* Bit definitions for PMCW flag byte 5 */
 #define PMCW5_E     0x80        /* Subchannel enabled        */
@@ -1005,23 +1006,23 @@ typedef struct _SCSW {
 #define SCSW1_N     0x01        /* Path not operational      */
 
 /* Bit definitions for SCSW flag byte 2 */
-#define SCSW2_RESV  0x80        /* Reserved bit - must be 0  */
-#define SCSW2_FC    0x70        /* Function control bits...  */
+#define SCSW2_Q         0x80        /* QDIO active               */
+#define SCSW2_FC        0x70        /* Function control bits...  */
 #define SCSW2_FC_START  0x40        /* ...start function         */
 #define SCSW2_FC_HALT   0x20        /* ...halt function      */
 #define SCSW2_FC_CLEAR  0x10        /* ...clear function         */
-#define SCSW2_AC    0x0F        /* Activity control bits...  */
+#define SCSW2_AC        0x0F        /* Activity control bits...  */
 #define SCSW2_AC_RESUM  0x08        /* ...resume pending         */
 #define SCSW2_AC_START  0x04        /* ...start pending      */
 #define SCSW2_AC_HALT   0x02        /* ...halt pending       */
 #define SCSW2_AC_CLEAR  0x01        /* ...clear pending      */
 
 /* Bit definitions for SCSW flag byte 3 */
-#define SCSW3_AC    0xE0        /* Activity control bits...  */
+#define SCSW3_AC        0xE0        /* Activity control bits...  */
 #define SCSW3_AC_SCHAC  0x80        /* ...subchannel active      */
 #define SCSW3_AC_DEVAC  0x40        /* ...device active      */
 #define SCSW3_AC_SUSP   0x20        /* ...suspended          */
-#define SCSW3_SC    0x1F        /* Status control bits...    */
+#define SCSW3_SC        0x1F        /* Status control bits...    */
 #define SCSW3_SC_ALERT  0x10        /* ...alert status       */
 #define SCSW3_SC_INTER  0x08        /* ...intermediate status    */
 #define SCSW3_SC_PRI    0x04        /* ...primary status         */
@@ -1029,24 +1030,24 @@ typedef struct _SCSW {
 #define SCSW3_SC_PEND   0x01        /* ...status pending         */
 
 /* CSW unit status flags */
-#define CSW_ATTN    0x80        /* Attention             */
-#define CSW_SM      0x40        /* Status modifier       */
-#define CSW_CUE     0x20        /* Control unit end      */
-#define CSW_BUSY    0x10        /* Busy              */
-#define CSW_CE      0x08        /* Channel end           */
-#define CSW_DE      0x04        /* Device end            */
-#define CSW_UC      0x02        /* Unit check            */
-#define CSW_UX      0x01        /* Unit exception        */
+#define CSW_ATTN        0x80        /* Attention             */
+#define CSW_SM          0x40        /* Status modifier       */
+#define CSW_CUE         0x20        /* Control unit end      */
+#define CSW_BUSY        0x10        /* Busy              */
+#define CSW_CE          0x08        /* Channel end           */
+#define CSW_DE          0x04        /* Device end            */
+#define CSW_UC          0x02        /* Unit check            */
+#define CSW_UX          0x01        /* Unit exception        */
 
 /* CSW channel status flags */
-#define CSW_PCI     0x80        /* Program control interrupt */
-#define CSW_IL      0x40        /* Incorrect length      */
-#define CSW_PROGC   0x20        /* Program check         */
-#define CSW_PROTC   0x10        /* Protection check      */
-#define CSW_CDC     0x08        /* Channel data check        */
-#define CSW_CCC     0x04        /* Channel control check     */
-#define CSW_ICC     0x02        /* Interface control check   */
-#define CSW_CHC     0x01        /* Chaining check        */
+#define CSW_PCI         0x80        /* Program control interrupt */
+#define CSW_IL          0x40        /* Incorrect length      */
+#define CSW_PROGC       0x20        /* Program check         */
+#define CSW_PROTC       0x10        /* Protection check      */
+#define CSW_CDC         0x08        /* Channel data check        */
+#define CSW_CCC         0x04        /* Channel control check     */
+#define CSW_ICC         0x02        /* Interface control check   */
+#define CSW_CHC         0x01        /* Chaining check        */
 
 /* CCW flags */
 #define CCW_FLAGS_CD    0x80        /* Chain data flag       */
@@ -1635,6 +1636,12 @@ typedef struct _ZPB2 {
 
 #define STSI_GPR1_SEL2_MASK 0x0000FFFF
 #define STSI_GPR1_RESERVED  0xFFFF0000
+
+#define SIGA_FC_W           0                    /* Initiate Output  */
+#define SIGA_FC_R           1                    /* Initiate Input   */
+#define SIGA_FC_S           2                    /* Synchronize      */
+
+#define SIGA_FC_MAX         SIGA_FC_S
 
 typedef struct _SYSIB111 {  /* Basic Machine Configuration  */
     BYTE    resv1[4*8]; /* Reserved         */

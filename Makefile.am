@@ -56,7 +56,7 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   printer.c console.c external.c \
 	   float.c ctcadpt.c trace.c \
 	   machchk.c vector.c xstore.c \
-	   cmpsc.c sie.c timer.c \
+	   cmpsc.c sie.c qdio.c timer.c \
 	   esame.c cckddasd.c cckdutil.c dasdtab.c \
 	   parser.c hetlib.c ieee.c \
 	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \

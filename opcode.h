@@ -1659,6 +1659,10 @@ DEF_INST(set_zone_parameter);
 DEF_INST(test_pending_zone_interrupt);
 
 
+/* Instructions in qdio.c */
+DEF_INST(signal_adapter);
+
+
 /* Instructions in float.c */
 DEF_INST(load_positive_float_long_reg);
 DEF_INST(load_negative_float_long_reg);
