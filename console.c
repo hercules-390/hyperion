@@ -1006,7 +1006,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
 
     if (pHE != NULL && pHE->h_name != NULL
      && pHE->h_name[0] != '\0') {
-        clientname = pHE->h_name;
+        clientname = (char*) pHE->h_name;
     } else {
         clientname = "host name unknown";
     }

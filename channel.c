@@ -1319,9 +1319,11 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(startio) (DEVBLK *dev, ORB *orb)                  /*@IWZ*/
 {
+#if !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
 TID     tid;                            /* Device thread thread id   */
 DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 int     rc;                             /* Return code               */
+#endif // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
 
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
