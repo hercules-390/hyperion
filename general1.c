@@ -1442,6 +1442,16 @@ BYTE    pad;                            /* Padding byte              */
             len2--;
         }
 
+        /* Update Regs if cross half page - may get access rupt */
+        if ((addr1 & 0x7ff) == 0 || (addr2 & 0x7ff) == 0)
+        {
+            GR_A(r1, regs) = addr1;
+            GR_A(r2, regs) = addr2;
+
+            regs->GR_LA24(r1+1) = len1;
+            regs->GR_LA24(r2+1) = len2;
+        }
+
         /* The instruction can be interrupted when a CPU determined
            number of bytes have been processed.  The instruction
            address will be backed up, and the instruction will
