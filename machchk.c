@@ -283,7 +283,7 @@ int i;
         if(tid == sysblk.cnsltid || tid == sysblk.socktid)
             return;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-            if (dev->tid == tid) break;
+            if (dev->tid == tid || dev->shrdtid == tid) break;
         if( dev == NULL)
             logmsg(_("HHCCP020E signal USR2 received for undetermined "
                      "device\n"));

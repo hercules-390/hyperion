@@ -1,3 +1,5 @@
+26 May 2003 Yet another round for channel.c locking - Greg Smith
+26 May 2003 Fixes and performance enhancements for shared devices - Greg Smith
 23 May 2003 Locate Block logic fix - Ivan Warren, Suggested by *Anonymous*
 23 May 2003 Provide command response in DIAG 8 resp buffer - Ivan Warren
 22 May 2003 Add CPUVERID config statement to set version code - Jan Jaeger

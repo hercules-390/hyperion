@@ -937,8 +937,8 @@ int devlist_cmd(char* cmdline, int argc, char *argv[])
         logmsg( "%4.4X %4.4X %s %s%s%s\n",
                 dev->devnum, dev->devtype, devnam,
                 (dev->fd > 2 ? _("open ") : ""),
-                (IS_DEV_BUSY(dev) ? _("busy ") : ""),
-                (IS_DEV_PENDING_ANY(dev) ? _("pending ") : "")
+                (dev->busy ? _("busy ") : ""),
+                ((dev->pending || dev->pcipending) ? _("pending ") : "")
             );
 
         if (dev->bs)
@@ -1452,17 +1452,14 @@ BYTE c;                                 /* Character work area       */
     obtain_lock (&dev->lock);
 
     /* Reject if device is busy or interrupt pending */
-    obtain_lock (&sysblk.intlock);
-    if (IS_DEV_BUSY(dev) || IS_DEV_PENDING(dev)
-        || (dev->scsw.flag3 & SCSW3_SC_PEND))
+    if (dev->busy || dev->pending || dev->pcipending
+     || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
-        release_lock (&sysblk.intlock);
         release_lock (&dev->lock);
         logmsg( _("HHCPN096E Device %4.4X busy or interrupt pending\n"),
                   devnum );
         return -1;
     }
-    release_lock (&sysblk.intlock);
 
     /* Close the existing file, if any */
     if (dev->fd < 0 || dev->fd > 2)
@@ -1749,7 +1746,9 @@ int ipending_cmd(char* cmdline, int argc, char *argv[])
 {
     BYTE   *cmdarg;                     /* -> Command argument       */
     DEVBLK *dev;                        /* -> Device block           */
+    IOINT  *io;                         /* -> I/O interrupt entry    */
     unsigned i;
+    char    sysid[12];
     char *states[] = {"?", "STOPPED", "STOPPING", "?", "STARTED",
                       "?", "?", "?", "STARTING"};
 REGS *regs = sysblk.regs + sysblk.pcpu;
@@ -1881,9 +1880,21 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
-        if (IS_DEV_PENDING(dev) && (dev->pmcw.flag5 & PMCW5_V))
+        if (dev->ioactive == DEV_SYS_NONE)
+            strcpy (sysid, "(none)");
+        else if (dev->ioactive == DEV_SYS_LOCAL)
+            strcpy (sysid, "local");
+        else
+            sprintf (sysid, "id=%d", dev->ioactive);
+        if (dev->busy && !(dev->suspended && dev->ioactive == DEV_SYS_NONE))
+            logmsg( _("          DEV%4.4X: busy %s\n"), dev->devnum, sysid );
+        if (dev->reserved)
+            logmsg( _("          DEV%4.4X: reserved %s\n"), dev->devnum, sysid );
+        if (dev->suspended)
+            logmsg( _("          DEV%4.4X: suspended\n"), dev->devnum );
+        if (dev->pending && (dev->pmcw.flag5 & PMCW5_V))
             logmsg( _("          DEV%4.4X: I/O pending\n"), dev->devnum );
-        if (IS_DEV_PENDING_PCI(dev) && (dev->pmcw.flag5 & PMCW5_V))
+        if (dev->pcipending && (dev->pmcw.flag5 & PMCW5_V))
             logmsg( _("          DEV%4.4X: PCI pending\n"), dev->devnum );
         if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
             logmsg( _("          DEV%4.4X: CRW pending\n"), dev->devnum );
@@ -1894,10 +1905,11 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     logmsg( _("          I/O interrupt queue: ") );
 
     if (!sysblk.iointq)
-        logmsg( _("(NULL)\n") );
+        logmsg( _("(NULL)") );
+    logmsg("\n");
 
-    for (dev = sysblk.iointq; dev; dev = dev->iointq)
-        logmsg( _("          DEV%4.4X\n"), dev->devnum );
+    for (io = sysblk.iointq; io; io = io->next)
+        logmsg( _("          DEV%4.4X\n"), io->dev->devnum );
 
     return 0;
 }

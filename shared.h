@@ -379,7 +379,7 @@ typedef char SHRD_TRACE[128];           /* Trace entry               */
 #define SHARED_MAX_MSGLEN         255   /* Max message length        */
 #define SHARED_TIMEOUT            120   /* Disconnect timeout (sec)  */
 #define SHARED_FORCE_TIMEOUT      300   /* Force disconnect (sec)    */
-#define SHARED_SELECT_WAIT          2   /* Select timeout (sec)      */
+#define SHARED_SELECT_WAIT         10   /* Select timeout (sec)      */
 #define SHARED_COMPRESS_MINLEN    512   /* Min length for compression*/
 
 typedef struct _SHRD {
@@ -398,11 +398,11 @@ typedef struct _SHRD {
     } SHRD;
 
 typedef struct _SHRD_HDR {
-        BYTE    cmd;                    /* Command                   */
-        BYTE    code;                   /* Flags and Codes           */
-        U16     devnum;                 /* Device number             */
-        U16     id;                     /* Identifier                */
-        U16     len;                    /* Data length               */
+        BYTE    cmd;                    /* 0 Command                 */
+        BYTE    code;                   /* 1 Flags and Codes         */
+        U16     devnum;                 /* 2 Device number           */
+        U16     id;                     /* 4 Identifier              */
+        U16     len;                    /* 6 Data length             */
 } SHRD_HDR;
 /* Size must be 8 bytes */
 #define SHRD_HDR_SIZE sizeof(DWORD)
@@ -429,6 +429,8 @@ do { \
 
 #define shrdtrc(format, a...) \
 do { \
+ struct timeval tv; \
+ gettimeofday(&tv, NULL); \
  if (dev && (dev->ccwtrace||dev->ccwstep)) \
   logmsg("%4.4X:" format, dev->devnum, a); \
  if (sysblk.shrdtrace) { \
@@ -437,7 +439,7 @@ do { \
         p = sysblk.shrdtrace; \
         sysblk.shrdtracep = p + 1; \
     } \
-    if (p) sprintf ((char *)p, "%10u %4.4X:" format, (unsigned)time(NULL), dev ? dev->devnum : 0, a); \
+    if (p) sprintf ((char *)p, "%6.6ld" "." "%6.6ld %4.4X:" format, tv.tv_sec, tv.tv_usec, dev ? dev->devnum : 0, a); \
  } \
 } while (0)
 
@@ -449,16 +451,16 @@ int    shared_cmd(char* cmdline, int argc, char *argv[]);
 
 #ifdef _HERCULES_SHARED_C
 static int     shared_ckd_close ( DEVBLK *dev );
-static int     shared_fba_close ( DEVBLK *dev );
+static int     shared_fba_close (DEVBLK *dev);
 static void    shared_start(DEVBLK *dev);
 static void    shared_end (DEVBLK *dev);
 static int     shared_ckd_read (DEVBLK *dev, int trk, BYTE *unitstat);
 static int     shared_ckd_write (DEVBLK *dev, int trk, int off,
-                         BYTE *buf, int len, BYTE *unitstat);
+                      BYTE *buf, int len, BYTE *unitstat);
 static int     shared_ckd_trklen (DEVBLK *dev, BYTE *buf);
 static int     shared_fba_read (DEVBLK *dev, int blkgrp, BYTE *unitstat);
 static int     shared_fba_write (DEVBLK *dev, int blkgrp, int off,
-                         BYTE *buf, int len, BYTE *unitstat);
+                      BYTE *buf, int len, BYTE *unitstat);
 static int     shared_fba_blkgrp_len (DEVBLK *dev, int blkgrp);
 static int     shared_used (DEVBLK *dev);
 static void    shared_reserve (DEVBLK *dev);
@@ -471,16 +473,16 @@ static int     clientRequest (DEVBLK *dev, BYTE *buf, int len, int cmd,
                       int flags, int *code, int *status);
 static int     clientSend (DEVBLK *dev, BYTE *hdr, BYTE *buf, int buflen);
 static int     clientRecv (DEVBLK *dev, BYTE *hdr, BYTE *buf, int buflen);
-static int     recvData(int sock, BYTE *buf, int len, int flag);
-static int     flushData(int sock, int len);
-static void    serverRequest (DEVBLK *dev, int sock, BYTE *hdr);
+static int     recvData(int sock, BYTE *hdr, BYTE *buf, int buflen, int server);
+static void    serverRequest (DEVBLK *dev, int ix, BYTE *hdr, BYTE *buf);
 static int     serverLocate (DEVBLK *dev, int id, int *avail);
 static int     serverId (DEVBLK *dev);
-static int     serverError (DEVBLK *dev, int sock, int id,
-                    int code, int status, BYTE *msg);
-static int     serverSend (DEVBLK *dev, int sock, BYTE *hdr, BYTE *buf, int buflen);
-static int     serverDisconnectable (DEVBLK *dev, int id);
-static void    serverDisconnect (DEVBLK *dev, int id);
+static int     serverError (DEVBLK *dev, int ix, int code, int status,
+                      BYTE *msg);
+static int     serverSend (DEVBLK *dev, int ix, BYTE *hdr, BYTE *buf,
+                      int buflen);
+static int     serverDisconnectable (DEVBLK *dev, int ix);
+static void    serverDisconnect (DEVBLK *dev, int ix);
 static char   *clientip (int sock);
 static DEVBLK *findDevice (U16 devnum);
 static void   *serverConnect (int *psock);

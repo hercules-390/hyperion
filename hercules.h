@@ -550,94 +550,32 @@ typedef struct _REGS {                  /* Processor registers       */
  } while (0)
 
 /* Macros to queue/dequeue a device on the I/O interrupt queue */
-#define QUEUE_IO_INTERRUPT(dev) \
+#define QUEUE_IO_INTERRUPT(_io) \
  do { \
-   if (sysblk.iointq == NULL) \
-   { \
-     sysblk.iointq = (dev); \
-     (dev)->iointq = NULL; \
-   } \
-   else if (sysblk.iointq != (dev)) \
-   { \
-     if (sysblk.iointq->priority > (dev)->priority) \
-     { \
-       (dev)->iointq = sysblk.iointq; \
-       sysblk.iointq = (dev); \
-     } \
-     else \
-     { \
-       DEVBLK *prev; \
-       for (prev = sysblk.iointq; prev->iointq != NULL; prev = prev->iointq) \
-         if (prev->iointq == (dev) \
-            || prev->iointq->priority > dev->priority) break; \
-       if (prev->iointq != (dev)) \
-       { \
-         (dev)->iointq = prev->iointq; \
-         prev->iointq = (dev); \
-       } \
-     } \
+   IOINT *prev; \
+   for (prev = (IOINT *)&sysblk.iointq; prev->next != NULL; prev = prev->next) \
+     if (prev->next == (_io) || prev->next->priority > (_io)->dev->priority) \
+       break; \
+   if (prev->next != (_io)) { \
+     (_io)->next = prev->next; \
+     prev->next = (_io); \
+     (_io)->priority = (_io)->dev->priority; \
    } \
    ON_IC_IOPENDING; \
    WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED); \
  } while (0)
 
-#define DEQUEUE_IO_INTERRUPT(dev) \
+#define DEQUEUE_IO_INTERRUPT(_io) \
  do { \
-   if ((dev) == sysblk.iointq) \
-     sysblk.iointq = (dev)->iointq; \
-   else { \
-     DEVBLK *prev; \
-     for (prev = sysblk.iointq; prev && prev->iointq != (dev); prev = prev->iointq); \
-     if (prev) prev->iointq = (dev)->iointq; \
-   } \
+   IOINT *prev; \
+   for (prev = (IOINT *)&sysblk.iointq; prev->next != NULL; prev = prev->next) \
+     if (prev->next == (_io)) { \
+       prev->next = (_io)->next; \
+       break; \
+     } \
    if (sysblk.iointq == NULL) \
      OFF_IC_IOPENDING; \
  } while (0)
-
-/* Macros manipulating device state bits */
-#define IS_DEV_BUSY(_dev) \
-        (((_dev)->state & DEV_BUSY) != 0)
-#define IS_DEV_PENDING(_dev) \
-        (((_dev)->state & DEV_PENDING) != 0)
-#define IS_DEV_PENDING_PCI(_dev) \
-        (((_dev)->state & DEV_PENDING_PCI) != 0)
-#define IS_DEV_PENDING_ANY(_dev) \
-        (((_dev)->state & (DEV_PENDING|DEV_PENDING_PCI)) != 0)
-#define IS_DEV_BUSY_OR_PENDING(_dev) \
-        (((_dev)->state & (DEV_BUSY|DEV_PENDING)) != 0)
-
-#define ON_DEV_BUSY(_dev) \
-        or_bits( &(_dev)->state, DEV_BUSY)
-#define ON_DEV_PENDING(_dev) \
-        do { \
-          or_bits( &(_dev)->state, DEV_PENDING); \
-          QUEUE_IO_INTERRUPT((_dev)); \
-        } while (0)
-#define ON_DEV_PENDING_PCI(_dev) \
-        do { \
-          or_bits( &(_dev)->state, DEV_PENDING_PCI); \
-          QUEUE_IO_INTERRUPT((_dev)); \
-        } while (0)
-
-#define OFF_DEV_BUSY(_dev) \
-        and_bits( &(_dev)->state, ~DEV_BUSY)
-#define OFF_DEV_PENDING(_dev) \
-        do { \
-          and_bits( &(_dev)->state, ~DEV_PENDING); \
-          if (!(IS_DEV_PENDING_ANY((_dev)))) \
-            DEQUEUE_IO_INTERRUPT((_dev)); \
-        } while (0)
-#define OFF_DEV_PENDING_PCI(_dev) \
-        do { \
-          and_bits( &(_dev)->state, ~DEV_PENDING_PCI); \
-          if (!(IS_DEV_PENDING_ANY((_dev)))) \
-            DEQUEUE_IO_INTERRUPT((_dev)); \
-        } while (0)
-#define OFF_DEV_PENDING_ALL(_dev) \
-        do { \
-          and_bits( &(_dev)->state, ~(DEV_PENDING|DEV_PENDING_PCI)); \
-          DEQUEUE_IO_INTERRUPT((_dev)); \
-        } while (0)
 
 // #if defined(FEATURE_REGION_RELOCATE)
 /*-------------------------------------------------------------------*/
@@ -722,7 +660,7 @@ typedef struct _SYSBLK {
         struct _DEVBLK *firstdev;       /* -> First device block     */
         U16     highsubchan;            /* Highest subchannel + 1    */
         U32     chp_reset[8];           /* Channel path reset masks  */
-        struct _DEVBLK *iointq;         /* I/O interrupt queue       */
+        struct _IOINT *iointq;          /* I/O interrupt queue       */
 #if !defined(OPTION_FISHIO)
         struct _DEVBLK *ioq;            /* I/O queue                 */
         LOCK    ioqlock;                /* I/O queue lock            */
@@ -931,6 +869,18 @@ typedef struct _bind_struct
 }
 bind_struct;
 
+/*-------------------------------------------------------------------*/
+/* I/O interrupt queue entry                                         */
+/*-------------------------------------------------------------------*/
+
+typedef struct _IOINT {
+        struct _IOINT  *next;           /* -> next interrupt entry   */
+        struct _DEVBLK *dev;            /* -> Device block           */
+        int     priority;               /* Device priority           */
+        int     pending:1,              /* 1=Normal interrupt        */
+                pcipending:1;           /* 1=PCI interrupt           */
+    } IOINT;
+
 struct _DEVDATA;                                /* Forward reference */
 /*-------------------------------------------------------------------*/
 /* Device configuration block                                        */
@@ -998,8 +948,10 @@ typedef struct _DEVBLK {
         TID     tid;                    /* Thread-id executing CCW   */
         int     priority;               /* I/O q scehduling priority */
         struct _DEVBLK *nextioq;        /* -> next device in I/O q   */
-        struct _DEVBLK *iointq;         /* -> next device in I/O
-                                           interrupt queue           */
+        IOINT   ioint;                  /* Normal i/o interrupt
+                                               queue entry           */
+        IOINT   pciioint;               /* PCI i/o interrupt
+                                               queue entry           */
         int     cpuprio;                /* CPU thread priority       */
 
         /*  fields used during ccw execution...                      */
@@ -1048,7 +1000,8 @@ typedef struct _DEVBLK {
         COND    iocond;                 /* I/O active condition      */
         int     iowaiters;              /* Number of I/O waiters     */
         int     ioactive;               /* System Id active on device*/
-        int     reserved;               /* System Id reserving device*/
+#define DEV_SYS_NONE    0               /* No active system on device*/
+#define DEV_SYS_LOCAL   0xffff          /* Local system active on dev*/
 #ifdef WIN32
         struct timeval   lasttod;       /* Last gettimeofday         */
 #endif
@@ -1060,6 +1013,7 @@ typedef struct _DEVBLK {
                 ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
 #endif /*OPTION_CKD_KEY_TRACING*/
                 syncio:1,               /* 1=Synchronous I/Os allowed*/
+                shared:1,               /* 1=Device is shareable     */
                 console:1,              /* 1=Console device          */
                 connected:1,            /* 1=Console client connected*/
                 readpending:2,          /* 1=Console read pending    */
@@ -1070,11 +1024,15 @@ typedef struct _DEVBLK {
                 ccwstep:1,              /* 1=CCW single step         */
                 cdwmerge:1;             /* 1=Channel will merge data
                                              chained write CCWs      */
-        U32     state;                  /* Device state - serialized
-                                            by intlock.              */
-#define DEV_BUSY           0x80000000   /*   Device is busy          */
-#define DEV_PENDING        0x40000000   /*   Interrupt pending       */
-#define DEV_PENDING_PCI    0x20000000   /*   PCI interrupt pending   */
+
+        int                             /* Device state - serialized
+                                            by dev->lock             */
+                busy:1,                 /* 1=Device is busy          */
+                reserved:1,             /* 1=Device is reserved      */
+                suspended:1,            /* 1=Channel pgm suspended   */
+                pending:1,              /* 1=I/O interrupt pending   */
+                pcipending:1;           /* 1=PCI interrupt pending   */
+
         int     crwpending;             /* 1=CRW pending             */
         int     syncio_active;          /* 1=Synchronous I/O active  */
         int     syncio_retry;           /* 1=Retry I/O asynchronously*/
@@ -1665,9 +1623,7 @@ int  detach_device (U16 devnum);
 int  define_device (U16 olddev, U16 newdev);
 int  configure_cpu (REGS *regs);
 int  deconfigure_cpu (REGS *regs);
-#ifdef EXTERNALGUI
 int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
-#endif /*EXTERNALGUI*/
 
 /* Global data areas and functions in module panel.c */
 extern int volatile initdone;    /* Initialization complete flag */

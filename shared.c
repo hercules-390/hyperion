@@ -225,7 +225,7 @@ init_retry:
     dev->ckdcyls = fetch_fw (cyls);
 
     /* Get the device characteristics */
-    rc = clientRequest (dev, (BYTE *)&dev->devchar, sizeof(dev->devchar),
+    rc = clientRequest (dev, dev->devchar, sizeof(dev->devchar),
                         SHRD_QUERY, SHRD_DEVCHAR, NULL, NULL);
     if (rc < 0)
         goto init_retry;
@@ -253,7 +253,7 @@ init_retry:
     }
 
     /* Get the device id */
-    rc = clientRequest (dev, (BYTE *)&dev->devid, sizeof(dev->devid),
+    rc = clientRequest (dev, dev->devid, sizeof(dev->devid),
                         SHRD_QUERY, SHRD_DEVID, NULL, NULL);
     if (rc < 0)
         goto init_retry;
@@ -477,7 +477,7 @@ init_retry:
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
     /* Get the device id */
-    rc = clientRequest (dev, (BYTE *)&dev->devid, sizeof(dev->devid),
+    rc = clientRequest (dev, dev->devid, sizeof(dev->devid),
                         SHRD_QUERY, SHRD_DEVID, NULL, NULL);
     if (rc < 0)
         goto init_retry;
@@ -496,7 +496,7 @@ init_retry:
     }
 
     /* Get the device characteristics */
-    rc = clientRequest (dev, (BYTE *)&dev->devchar, sizeof(dev->devchar),
+    rc = clientRequest (dev, dev->devchar, sizeof(dev->devchar),
                         SHRD_QUERY, SHRD_DEVCHAR, NULL, NULL);
     if (rc < 0)
         goto init_retry;
@@ -744,7 +744,7 @@ read_retry:
 
     /* Read the sense data if an i/o error occurred */
     if (code & SHRD_IOERR)
-        clientRequest (dev, (BYTE *)&dev->sense, dev->numsense,
+        clientRequest (dev, dev->sense, dev->numsense,
                       SHRD_SENSE, 0, NULL, NULL);
 
     /* Read complete */
@@ -755,6 +755,7 @@ read_retry:
     dev->bufoffhi = dev->ckdtrksz;
     dev->buflen = shared_ckd_trklen (dev, dev->buf);
     dev->bufsize = cache_getlen (CACHE_DEVBUF, lru);
+    dev->buf[0] = 0;
 
     return 0;
 } /* shared_ckd_read */
@@ -950,11 +951,12 @@ read_retry:
 
     /* Read the sense data if an i/o error occurred */
     if (code & SHRD_IOERR)
-        clientRequest (dev, (BYTE *)&dev->sense, dev->numsense,
+        clientRequest (dev, dev->sense, dev->numsense,
                       SHRD_SENSE, 0, NULL, NULL);
 
     dev->cache = o;
     dev->buf = cache_getbuf(CACHE_DEVBUF, dev->cache, 0);
+    dev->buf[0] = 0;
     dev->bufcur = blkgrp;
     dev->bufoff = 0;
     dev->bufoffhi = shared_fba_blkgrp_len (dev, blkgrp);
@@ -1072,6 +1074,7 @@ BYTE        code;                       /* Response code             */
 int         status;                     /* Response status           */
 int         id;                         /* Response identifier       */
 U16         devnum;                     /* Response device number    */
+BYTE        errmsg[SHARED_MAX_MSGLEN+1];/* Error message             */
 
     /* Calculate length to write */
     len = dev->bufupdhi - dev->bufupdlo;
@@ -1100,7 +1103,7 @@ write_retry:
     }
 
     /* Get the response */
-    rc = clientRecv (dev, (BYTE *)&hdr, dev->buf, dev->ckdtrksz);
+    rc = clientRecv (dev, hdr, errmsg, sizeof(errmsg));
     SHRD_GET_HDR (hdr, code, status, devnum, id, len);
     if (rc < 0 || (code & SHRD_ERROR) || (code & SHRD_IOERR)) {
         if (rc < 0 && retries--) goto write_retry;
@@ -1226,6 +1229,10 @@ HWORD    comp;                          /* Returned compression parm */
  * No data is sent on the request, buf gets the response.
  * If an uncorrectable connection error occurs -1 is returned.
  * Otherwise *code and *status is set from the response header
+ *
+ * Since `buf' may be NULL or not very long, response data is
+ * received in a temporary buffer.  This enables us to receive
+ * an error message from the remote system.
  *-------------------------------------------------------------------*/
 static int clientRequest (DEVBLK *dev, BYTE *buf, int len, int cmd,
                           int flags, int *code, int *status)
@@ -1238,6 +1245,7 @@ U16      rdevnum;                       /* Request return devnum     */
 int      rid;                           /* Request return id         */
 int      rlen;                          /* Request return length     */
 BYTE     hdr[SHRD_HDR_SIZE];            /* Header                    */
+BYTE     temp[256];                     /* Temporary buffer          */
 
 retry :
 
@@ -1245,11 +1253,11 @@ retry :
     SHRD_SET_HDR(hdr, cmd, flags, dev->rmtnum, dev->rmtid, 0);
     shrdtrc("client_request %2.2x %2.2x %2.2x %d\n",
             cmd,flags,dev->rmtnum,dev->rmtid);
-    rc = clientSend (dev, (BYTE *)&hdr, NULL, 0);
+    rc = clientSend (dev, hdr, NULL, 0);
     if (rc < 0) return rc;
 
     /* Receive the response */
-    rc = clientRecv (dev, (BYTE *)&hdr, buf, len);
+    rc = clientRecv (dev, hdr, temp, sizeof(temp));
 
     /* Retry recv errors */
     if (rc < 0) {
@@ -1267,6 +1275,10 @@ retry :
             rcode,rstatus,rdevnum,rid,rlen);
     if (code)   *code   = rcode;
     if (status) *status = rstatus;
+
+    /* Copy the data into the caller's buffer */
+    if (buf && len > 0 && rlen > 0)
+        memcpy (buf, temp, len < rlen ? len : rlen);
 
     return rlen;
 } /* clientRequest */
@@ -1291,11 +1303,10 @@ U16      devnum;                        /* Header device nu          */
 int      len;                           /* Header length             */
 int      id;                            /* Header identifier         */
 int      hdrlen;                        /* Header length + other data*/
-#ifdef HAVE_LIBZ
-int      off;                           /* Offset to compressed data */
-unsigned long newlen;                   /* Compressed length         */
-BYTE     cbuf[65536];                   /* Compress buffer           */
-#endif
+int      off;                           /* Offset to buffer data     */
+BYTE    *sendbuf;                       /* Send buffer               */
+int      sendlen;                       /* Send length               */
+BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 
     /* Make buf, buflen consistent if no additional data to be sent  */
     if (buf == NULL) buflen = 0;
@@ -1306,6 +1317,7 @@ BYTE     cbuf[65536];                   /* Compress buffer           */
     shrdtrc("client_send %2.2x %2.2x %2.2x %d %d\n",
              cmd,flag,devnum,id,len);
     hdrlen = SHRD_HDR_SIZE + (len - buflen);
+    off = len - buflen;
 
     if (dev->fd < 0) {
         rc = clientConnect (dev, 1);
@@ -1315,36 +1327,50 @@ BYTE     cbuf[65536];                   /* Compress buffer           */
 #ifdef HAVE_LIBZ
     /* Compress the buf */
     if (dev->rmtcomp != 0
-     && flag == 0 && len - buflen <= SHRD_COMP_MAX_OFF
+     && flag == 0 && off <= SHRD_COMP_MAX_OFF
      && buflen >= SHARED_COMPRESS_MINLEN) {
-        off = len - buflen;
+        unsigned long newlen;
         newlen = 65536 - hdrlen;
         memcpy (cbuf, hdr, hdrlen);
         rc = compress2 (cbuf + hdrlen, &newlen,
                         buf, buflen, dev->rmtcomp);
         if (rc == Z_OK && (int)newlen < buflen) {
+            cmd |= SHRD_COMP;
             flag = (SHRD_LIBZ << 4) | off;
-            SHRD_SET_HDR (cbuf, cmd, flag, devnum, id, newlen + off);
-            shrdtrc("client_send %2.2x %2.2x %2.2x %d %d (compressed)\n",
-                    cmd,flag,devnum,id,(int)newlen+off);
             hdr = cbuf;
-            hdrlen += newlen; 
+            hdrlen += newlen;
             buf = NULL;
             buflen = 0;
         }
     }
 #endif
 
+    /* Combine header and data unless there's no buffer */
+    if (buflen == 0) {
+        sendbuf = hdr;
+        sendlen = hdrlen;
+    }
+    else {
+        memcpy (cbuf, hdr, hdrlen);
+        memcpy (cbuf + hdrlen, buf, buflen);
+        sendbuf = cbuf;
+        sendlen = hdrlen + buflen;
+    }
+
+    SHRD_SET_HDR(sendbuf, cmd, flag, devnum, id, sendlen - SHRD_HDR_SIZE);
+
+    if (cmd & SHRD_COMP)
+        shrdtrc("client_send %2.2x %2.2x %2.2x %d %d (compressed)\n",
+                cmd, flag, devnum, id, sendlen - SHRD_HDR_SIZE);
+
 retry:
 
-    /* Send the header and the  buffer */
-    rc = send (dev->fd, hdr, hdrlen, 0);
+    /* Send the header and data */
+    rc = send (dev->fd, sendbuf, sendlen, 0);
     if (rc < 0) {
         rc = clientConnect (dev, 0);
         if (rc >= 0) goto retry;
     }
-    if (rc >= 0 && buf != NULL)
-        rc = send (dev->fd, buf, buflen, 0);
 
     /* Process return code */
     if (rc < 0) {
@@ -1354,6 +1380,7 @@ retry:
     }
 
     return rc;
+
 } /* clientSend */
 
 /*-------------------------------------------------------------------
@@ -1365,16 +1392,11 @@ int      rc;                            /* Return code               */
 BYTE     code;                          /* Response code             */
 BYTE     status;                        /* Response status           */
 U16      devnum;                        /* Response device number    */
-int      len;                           /* Response length           */
 int      id;                            /* Response identifier       */
-char     errmsg[256];                   /* Remote error message      */
+int      len;                           /* Response length           */
 
     /* Clear the header to zeroes */
     memset (hdr, 0, SHRD_HDR_SIZE);
-
-    /* Make buf,buflen consistent if no additional data to be recv'd */
-    if (buf == NULL) buflen = 0;
-    else if (buflen == 0) buf = NULL;
 
     /* Return error if not connected */
     if (dev->fd < 0) {
@@ -1384,7 +1406,7 @@ char     errmsg[256];                   /* Remote error message      */
     }
 
     /* Receive the header */
-    rc = recvData (dev->fd, hdr, SHRD_HDR_SIZE, 0);
+    rc = recvData (dev->fd, hdr, buf, buflen, 0);
     if (rc < 0) {
         if (rc != -ENOTCONN)
             logmsg(_("HHCSH034E %4.4X recv error %d: %s\n"),
@@ -1392,41 +1414,25 @@ char     errmsg[256];                   /* Remote error message      */
         return rc;
     }
     SHRD_GET_HDR(hdr, code, status, devnum, id, len);
+
     shrdtrc("client_recv %2.2x %2.2x %2.2x %d %d\n",
              code,status,devnum,id,len);
 
     /* Handle remote logical error */
     if (code & SHRD_ERROR) {
-        memset (errmsg, 0, sizeof(errmsg));
-        recvData (dev->fd, errmsg, len < (int)sizeof(errmsg) ? len : (int)sizeof(errmsg) - 1, 0);
         logmsg(_("HHCSH035E %4.4X Remote error %2.2X-%2.2X: %s\n"),
-               dev->devnum, code, status, errmsg);
-        flushData(dev->fd, len - (sizeof(errmsg) - 1));
-        SHRD_SET_HDR (hdr, code, status, devnum, id, 0);
+               dev->devnum, code, status, buf);
         len = 0;
     }
 
-    /* Receive the data */
-//FIXME: need checking for buffer overflow
-    if (len > 0) {
-        len = recvData (dev->fd, buf, len, code == SHRD_COMP ? status : 0);
-        if (rc < 0) {
-            if (rc != -ENOTCONN)
-                logmsg(_("HHCSH036E %4.4X recv error %d: %s\n"),
-                       dev->devnum, -rc, strerror(-rc)); 
-            return rc;
-        }
-        if (code == SHRD_COMP) {
-            code = SHRD_OK;
-            status = 0;
-            shrdtrc("client_recv %2.2x %2.2x %2.2x %d %d\n",
-                     code,status,devnum,id,len);
-        }
-        SHRD_SET_HDR(hdr, code, status, devnum, id, len);
+    /* Reset code/status if response was compressed */
+    if (len > 0 && code == SHRD_COMP) {
+        code = SHRD_OK;
+        status = 0;
     }
 
-    /* Flush any additional data */
-    flushData (dev->fd, len - buflen);
+    /* Reset the header */
+    SHRD_SET_HDR(hdr, code, status, devnum, id, len);
 
     return len;
 } /* clientRecv */
@@ -1434,46 +1440,84 @@ char     errmsg[256];                   /* Remote error message      */
 /*-------------------------------------------------------------------
  * Receive data (server or client)
  *-------------------------------------------------------------------*/
-static int recvData(int sock, BYTE *buf, int len, int flag)
+static int recvData(int sock, BYTE *hdr, BYTE *buf, int buflen, int server)
 {
 int                     rc;             /* Return code               */
-int                     recvlen = 0;    /* Total length              */
+int                     rlen;           /* Data length to recv       */
+int                     recvlen;        /* Total length              */
 BYTE                   *recvbuf;        /* Receive buffer            */
-int                     comp;           /* Compression type          */
-int                     off;            /* Offset to compressed data */
+BYTE                    cmd;            /* Header command            */
+BYTE                    flag;           /* Header flags              */
+U16                     devnum;         /* Header device number      */
+int                     id;             /* Header identifier         */
+int                     len;            /* Header length             */
+int                     comp = 0;       /* Compression type          */
+int                     off = 0;        /* Offset to compressed data */
+DEVBLK                 *dev = NULL;     /* For `shrdtrc'             */
 BYTE                    cbuf[65536];    /* Compressed buffer         */
 
-    if (len <= 0) return 0;
 
-    comp = (flag & SHRD_COMP_MASK) >> 4;
-    off = flag & SHRD_COMP_OFF;
-
-    /* Set buffer depending if data is compressed or not */
-    if (comp != 0)
-        recvbuf = cbuf;
-    else
-        recvbuf = buf;
-
-    /* Receive all the data */
-    while (recvlen < len)
+    /* Receive the header */
+    for (recvlen = 0; recvlen < (int)SHRD_HDR_SIZE; recvlen += rc)
     {
-        rc = recv (sock, recvbuf + recvlen, len - recvlen, 0);
-
+        rc = recv (sock, hdr + recvlen, SHRD_HDR_SIZE - recvlen, 0);
         if (rc < 0)
             return -errno;
         else if (rc == 0)
             return -ENOTCONN;
+    }
+    SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
 
-        recvlen += rc;
+    shrdtrc("recvData    %2.2x %2.2x %2.2x %d %d\n",
+             cmd, flag, devnum, id, len);
+
+    /* Return if no data */
+    if (len == 0) return 0;
+
+    /* Check for compressed data */
+    if ((server && (cmd & SHRD_COMP))
+     || (!server && cmd == SHRD_COMP)) {
+        comp = (flag & SHRD_COMP_MASK) >> 4;
+        off = flag & SHRD_COMP_OFF;
+        cmd &= ~SHRD_COMP;
+        flag = 0;
+        recvbuf = cbuf;
+        rlen = len;
+    }
+    else {
+        recvbuf = buf;
+        rlen = buflen < len ? buflen : len;
+    }
+
+    /* Receive the data */
+    for (recvlen = 0; recvlen < rlen; recvlen += rc)
+    {
+        rc = recv (sock, recvbuf + recvlen, len - recvlen, 0);
+        if (rc < 0)
+            return -errno;
+        else if (rc == 0)
+            return -ENOTCONN;
+    }
+
+    /* Flush any remaining data */
+    for (; rlen < len; rlen += rc)
+    {
+        BYTE buf[256];
+        rc = recv (sock, buf, len - rlen < 256 ? len - rlen : 256, 0);
+        if (rc < 0)
+            return -errno;
+        else if (rc == 0)
+            return -ENOTCONN;
     }
 
     /* Check for compression */
     if (comp == SHRD_LIBZ) {
 #ifdef HAVE_LIBZ
         unsigned long newlen;
+
         if (off > 0)
             memcpy (buf, cbuf, off);
-        newlen = 65536 - off;
+        newlen = buflen - off;
         rc = uncompress(buf + off, &newlen, cbuf + off, len - off);
         if (rc == Z_OK)
             recvlen = (int)newlen + off;
@@ -1489,9 +1533,11 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
     } else if (comp == SHRD_BZIP2) {
 #ifdef CCKD_BZIP2
         unsigned int newlen;
+
         if (off > 0)
             memcpy (buf, cbuf, off);
-        newlen = 65536 - off;
+
+        newlen = buflen - off;
         rc = BZ2_bzBuffToBuffDecompress(buf + off, &newlen, cbuf + off, len - off, 0, 0);
         if (rc == BZ_OK)
             recvlen = (int)newlen + off;
@@ -1506,44 +1552,23 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
 #endif
     }
 
+    if (recvlen > 0) {
+        SHRD_SET_HDR (hdr, cmd, flag, devnum, id, recvlen);
+        if (comp)
+            shrdtrc("recvData    %2.2x %2.2x %2.2x %d %d (uncompressed)\n",
+                     cmd, flag, devnum, id, recvlen);
+    }
+
     return recvlen;
 
 } /* recvData */
 
 /*-------------------------------------------------------------------
- * Flush data (server or client)
- *-------------------------------------------------------------------*/
-static int flushData(int sock, int len)
-{
-int                     rc;             /* Return code               */
-int                     recvlen = 0;    /* Length received           */
-BYTE                    buf[256];       /* Flush buffer              */
-
-   if (len <= 0) return 0;
-
-    while (recvlen < len)
-    {
-        rc = recv (sock, buf, (int)sizeof(buf) < len ? (int)sizeof(buf) : len , 0);
-
-        if (rc < 0)
-            return -errno;
-        else if (rc == 0)
-            return -ENOTCONN;
-
-        recvlen += rc;
-    }
-
-    return recvlen;
-
-} /* flushData */
-
-/*-------------------------------------------------------------------
  * Process a request (server side)
  *-------------------------------------------------------------------*/
-static void serverRequest (DEVBLK *dev, int sock, BYTE *hdr)
+static void serverRequest (DEVBLK *dev, int ix, BYTE *hdr, BYTE *buf)
 {
 int      rc;                            /* Return code               */
-int      ix;                            /* SHRD block index          */
 int      i;                             /* Loop index                */
 BYTE     cmd;                           /* Header command            */
 BYTE     flag;                          /* Header flags              */
@@ -1553,31 +1578,12 @@ int      len;                           /* Header length             */
 int      code;                          /* Response code             */
 int      rcd;                           /* Record to read/write      */
 int      off;                           /* Offset into record        */
-BYTE     buf[65536];                    /* Data buffer               */
 
     /* Extract header information */
     SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
-    shrdtrc("server_request %2.2x %2.2x %2.2x %d %d\n",
-             cmd,flag,devnum,id,len);
 
-    /* Get the shared index for this socket */
-    ix = serverLocate (dev, id, NULL);
-
-    /* Error if index not found */
-    if (ix < 0) {
-        logmsg(_("HHCSH041E %4.4X request error: id %d not found\n"),
-               dev->devnum, id);
-        return;
-    }
-
-    /* Read the data */
-    len = recvData(sock, buf, len, flag);
-    if (len < 0) {
-        logmsg(_("HHCSH042E %s %4.4X recv error %d id=%d: %s\n"),
-                 clientip(sock), devnum, -len, id, strerror(-len));
-        dev->shrd[ix]->disconnect = 1;
-        return;
-    }
+    shrdtrc("server_request [%d] %2.2x %2.2x %2.2x %d %d\n",
+             ix, cmd, flag, devnum, id, len);
 
     dev->shrd[ix]->time = time (NULL);
 
@@ -1585,19 +1591,35 @@ BYTE     buf[65536];                    /* Data buffer               */
 
     case SHRD_CONNECT:
         if (dev->connecting) {
-            serverError (dev, sock, id, SHRD_ERROR_NOTINIT, cmd,
+            serverError (dev, ix, SHRD_ERROR_NOTINIT, cmd,
                          "device not initialized");
             break;
         }
         SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 2);
-        store_hw (hdr + SHRD_HDR_SIZE, id);
-        serverSend (dev, sock, hdr, NULL, 0);
+        store_hw (buf, id);
+        serverSend (dev, ix, hdr, buf, 2);
         break;
 
     case SHRD_DISCONNECT:
         SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 0);
-        serverSend (dev, sock, hdr, NULL, 0);
+        serverSend (dev, ix, hdr, NULL, 0);
         dev->shrd[ix]->disconnect = 1;
+    
+        obtain_lock (&dev->lock);
+
+        /* Make the device available if this system active on it */
+        if (dev->ioactive == id) {
+            if (!dev->suspended) {
+                dev->busy = 0;
+                dev->ioactive = DEV_SYS_NONE;
+            }
+            else
+                dev->ioactive = DEV_SYS_LOCAL;
+            if (dev->iowaiters)
+                signal_condition (&dev->iocond);
+        }
+
+        release_lock (&dev->lock);
         break;
 
     case SHRD_START:
@@ -1605,29 +1627,33 @@ BYTE     buf[65536];                    /* Data buffer               */
 
         obtain_lock (&dev->lock);
 
+        /* If the device is suspended locally then grab it */
+        if (dev->ioactive == DEV_SYS_LOCAL && dev->suspended && !dev->reserved)
+            dev->ioactive = id;
+
         /* Check if the device is busy */
-        if (dev->ioactive >= 0 || (dev->reserved >= 0 && dev->reserved != id)) {
+        if (dev->ioactive != id && dev->ioactive != DEV_SYS_NONE) {
             shrdtrc("server_request busy id=%d ioactive=%d reserved=%d\n",
                     id,dev->ioactive,dev->reserved);
             /* If the `nowait' bit is on then respond `busy' */
             if (flag & SHRD_NOWAIT) {
                 release_lock (&dev->lock);
                 SHRD_SET_HDR (hdr, SHRD_BUSY, 0, dev->devnum, id, 0);
-                serverSend (dev, sock, hdr, NULL, 0);
+                serverSend (dev, ix, hdr, NULL, 0);
                 break;
             }
 
             dev->shrd[ix]->waiting = 1;
 
             /* Wait while the device is busy by the local system */
-            while (dev->ioactive == 0 || dev->reserved == 0) {
+            while (dev->ioactive == DEV_SYS_LOCAL && !dev->suspended) {
                 dev->iowaiters++;
                 wait_condition (&dev->iocond, &dev->lock);
                 dev->iowaiters--;
             }
 
             /* Return with the `waiting' bit on if busy by a remote system */
-            if (dev->ioactive >= 0 || dev->reserved >= 0) {
+            if (dev->ioactive != DEV_SYS_NONE && dev->ioactive != DEV_SYS_LOCAL) {
                 release_lock (&dev->lock);
                 break;
             }
@@ -1637,14 +1663,18 @@ BYTE     buf[65536];                    /* Data buffer               */
 
         /* Make this system active on the device */
         dev->ioactive = id;
-        ON_DEV_BUSY(dev);
+        dev->busy = 1;
+        dev->syncio_active = dev->syncio_retry = 0;
         sysblk.shrdcount++;
         shrdtrc("server_request active id=%d\n", id);
 
         release_lock(&dev->lock);
 
-        /* Call the i/o start exit */
-        if (dev->hnd->start) (dev->hnd->start) (dev);
+        /* Call the i/o start or resume exit */
+        if (cmd == SHRD_START && dev->hnd->start)
+            (dev->hnd->start) (dev);
+        else if (cmd == SHRD_RESUME && dev->hnd->resume)
+            (dev->hnd->resume) (dev);
 
         /* Get the purge list */
         if (dev->shrd[ix]->purgen == 0)
@@ -1659,7 +1689,7 @@ BYTE     buf[65536];                    /* Data buffer               */
 
         /* Send the response */
         SHRD_SET_HDR (hdr, code, 0, dev->devnum, id, len);
-        rc = serverSend (dev, sock, hdr, (BYTE *)dev->shrd[ix]->purge, len);
+        rc = serverSend (dev, ix, hdr, (BYTE *)dev->shrd[ix]->purge, len);
         if (rc >= 0)
             dev->shrd[ix]->purgen = 0;
         break;
@@ -1668,7 +1698,7 @@ BYTE     buf[65536];                    /* Data buffer               */
     case SHRD_SUSPEND:
         /* Must be active on the device for this command */
         if (dev->ioactive != id) {
-            serverError (dev, sock, id, SHRD_ERROR_NOTACTIVE, cmd,
+            serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
         }
@@ -1681,36 +1711,48 @@ BYTE     buf[65536];                    /* Data buffer               */
 
         obtain_lock (&dev->lock);
 
-        /* Reset device busy indicator */
-        if (cmd == SHRD_END) OFF_DEV_BUSY(dev);
+        /* Make the device available if it's not reserved */
+        if (!dev->reserved) {
+            /* If locally suspended then return the device to local */
+            if (dev->suspended) {
+                dev->ioactive = DEV_SYS_LOCAL;
+                dev->busy = 1;
+            }
+            else {
+                dev->ioactive = DEV_SYS_NONE;
+                dev->busy = 0;
+            }
 
-        /* Reset any `waiting' bits */
-        for (i = 0; i < SHARED_MAX_SYS; i++)
-            if (dev->shrd[i])
-                dev->shrd[i]->waiting = 0;
+            /* Reset any `waiting' bits */
+            for (i = 0; i < SHARED_MAX_SYS; i++)
+                if (dev->shrd[i])
+                    dev->shrd[i]->waiting = 0;
 
-        /* Release the device and notify any waiters */
-        dev->ioactive = -1;
-        if (dev->reserved < 0 && dev->iowaiters)
-            signal_condition (&dev->iocond);
+            /* Notify any waiters */
+            if (dev->iowaiters)
+                signal_condition (&dev->iocond);
+        }
         shrdtrc("server_request inactive id=%d\n", id);
 
         release_lock (&dev->lock);
 
         /* Send response back */
         SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 0);
-        serverSend (dev, sock, hdr, NULL, 0);
+        serverSend (dev, ix, hdr, NULL, 0);
         break;
 
     case SHRD_RESERVE:
         /* Must be active on the device for this command */
         if (dev->ioactive != id) {
-            serverError (dev, sock, id, SHRD_ERROR_NOTACTIVE, cmd,
+            serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
         }
 
-        dev->reserved = id;
+        obtain_lock (&dev->lock);
+        dev->reserved = 1;
+        release_lock (&dev->lock);
+
         shrdtrc("server_request reserved id=%d\n", id);
 
         /* Call the I/O reserve exit */
@@ -1718,14 +1760,14 @@ BYTE     buf[65536];                    /* Data buffer               */
 
         /* Send response back */
         SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 0);
-        serverSend (dev, sock, hdr, NULL, 0);
+        serverSend (dev, ix, hdr, NULL, 0);
 
         break;
 
     case SHRD_RELEASE:
         /* Must be active on the device for this command */
         if (dev->ioactive != id) {
-            serverError (dev, sock, id, SHRD_ERROR_NOTACTIVE, cmd,
+            serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
         }
@@ -1733,19 +1775,22 @@ BYTE     buf[65536];                    /* Data buffer               */
         /* Call the I/O release exit */
         if (dev->hnd->release) (dev->hnd->release) (dev);
 
-        dev->reserved = -1;
+        obtain_lock (&dev->lock);
+        dev->reserved = 0;
+        release_lock (&dev->lock);
+
         shrdtrc("server_request released id=%d\n", id);
 
         /* Send response back */
         SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 0);
-        serverSend (dev, sock, hdr, NULL, 0);
+        serverSend (dev, ix, hdr, NULL, 0);
 
         break;
 
     case SHRD_READ:
         /* Must be active on the device for this command */
         if (dev->ioactive != id) {
-            serverError (dev, sock, id, SHRD_ERROR_NOTACTIVE, cmd,
+            serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
         }
@@ -1771,14 +1816,14 @@ BYTE     buf[65536];                    /* Data buffer               */
         dev->comps = dev->comp = dev->compoff = 0;
 
         SHRD_SET_HDR (hdr, code, flag, dev->devnum, id, dev->buflen);
-        serverSend (dev, sock, hdr, dev->buf, dev->buflen);
+        serverSend (dev, ix, hdr, dev->buf, dev->buflen);
 
         break;
 
     case SHRD_WRITE:
         /* Must be active on the device for this command */
         if (dev->ioactive != id) {
-            serverError (dev, sock, id, SHRD_ERROR_NOTACTIVE, cmd,
+            serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
         }
@@ -1798,21 +1843,21 @@ BYTE     buf[65536];                    /* Data buffer               */
 
         /* Send response back */
         SHRD_SET_HDR (hdr, code, flag, dev->devnum, id, 0);
-        serverSend (dev, sock, hdr, NULL, 0);
+        serverSend (dev, ix, hdr, NULL, 0);
 
         break;
 
     case SHRD_SENSE:
         /* Must be active on the device for this command */
         if (dev->ioactive != id) {
-            serverError (dev, sock, id, SHRD_ERROR_NOTACTIVE, cmd,
+            serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
         }
 
         /* Send the sense */
         SHRD_SET_HDR (hdr, 0, CSW_CE | CSW_DE, dev->devnum, id, dev->numsense);
-        serverSend (dev, sock, hdr, dev->sense, dev->numsense);
+        serverSend (dev, ix, hdr, dev->sense, dev->numsense);
         memset (dev->sense, 0, sizeof(dev->sense));
         break;
 
@@ -1826,45 +1871,45 @@ BYTE     buf[65536];                    /* Data buffer               */
                 rc = 0;
             store_fw (buf, rc);
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 4);
-            serverSend (dev, sock, hdr, buf, 4);
+            serverSend (dev, ix, hdr, buf, 4);
             break;
 
         case SHRD_DEVCHAR:
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, dev->numdevchar);
-            serverSend (dev, sock, hdr, dev->devchar, dev->numdevchar);
+            serverSend (dev, ix, hdr, dev->devchar, dev->numdevchar);
             break;
 
         case SHRD_DEVID:
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, dev->numdevid);
-            serverSend (dev, sock, hdr, dev->devid, dev->numdevid);
+            serverSend (dev, ix, hdr, dev->devid, dev->numdevid);
             break;
 
         case SHRD_CKDCYLS:
             store_fw (buf, dev->ckdcyls);
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 4);
-            serverSend (dev, sock, hdr, buf, 4);
+            serverSend (dev, ix, hdr, buf, 4);
             break;
 
         case SHRD_FBAORIGIN:
             store_fw (buf, dev->fbaorigin);
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 4);
-            serverSend (dev, sock, hdr, buf, 4);
+            serverSend (dev, ix, hdr, buf, 4);
             break;
 
         case SHRD_FBANUMBLK:
             store_fw (buf, dev->fbanumblk);
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 4);
-            serverSend (dev, sock, hdr, buf, 4);
+            serverSend (dev, ix, hdr, buf, 4);
             break;
 
         case SHRD_FBABLKSIZ:
             store_fw (buf, dev->fbablksiz);
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 4);
-            serverSend (dev, sock, hdr, buf, 4);
+            serverSend (dev, ix, hdr, buf, 4);
             break;
 
         default:
-            serverError (dev, sock, id, SHRD_ERROR_INVALID, cmd,
+            serverError (dev, ix, SHRD_ERROR_INVALID, cmd,
                          "invalid query request");
             break;
         } /* switch (flag) for SHRD_QUERY */
@@ -1879,15 +1924,15 @@ BYTE     buf[65536];                    /* Data buffer               */
 #endif
         dev->shrd[ix]->comps = (flag & 0xf0) >> 4;
         SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 2);
-        serverSend (dev, sock, hdr, buf, 2);
+        serverSend (dev, ix, hdr, buf, 2);
         break;
 
     default:
-        serverError (dev, sock, id, SHRD_ERROR_INVALID, cmd,
+        serverError (dev, ix, SHRD_ERROR_INVALID, cmd,
                      "invalid request");
         break;
     } /* switch (cmd) */
-}
+} /* serverRequest */
 
 /*-------------------------------------------------------------------
  * Locate the SHRD block for a socket (server side)
@@ -1906,7 +1951,7 @@ int      i;                             /* Loop index                */
             *avail = i;
     }
     return -1;
-}
+} /* serverLocate */
 
 /*-------------------------------------------------------------------
  * Return a new Identifier (server side)
@@ -1918,7 +1963,9 @@ int      id;                            /* Identifier                */
 
     do {
         dev->shrdid = (++dev->shrdid) & 0xffff;
-        if (dev->shrdid == 0) dev->shrdid = 1;
+        if (dev->shrdid == DEV_SYS_LOCAL
+         || dev->shrdid == DEV_SYS_NONE)
+            dev->shrdid = 1;
         id = dev->shrdid;
 
         for (i = 0; i < SHARED_MAX_SYS; i++)
@@ -1928,144 +1975,149 @@ int      id;                            /* Identifier                */
     } while (i < SHARED_MAX_SYS);
 
     return id;
-}
+} /* serverId */
 
 /*-------------------------------------------------------------------
  * Respond with an error message (server side)
  *-------------------------------------------------------------------*/
-static int serverError (DEVBLK *dev, int sock, int id, 
-                        int code, int status, BYTE *msg)
+static int serverError (DEVBLK *dev, int ix, int code, int status,
+                        BYTE *msg)
 {
 int rc;                                 /* Return code               */
 int len;                                /* Message length            */
-BYTE *m="";
-BYTE hdr[SHRD_HDR_SIZE];                /* Shared header             */
+BYTE hdr[SHRD_HDR_SIZE];                /* Header                    */
 
     /* Get message length */
-    if (msg) {
-        len = strlen(msg);
-        if (len > SHARED_MAX_MSGLEN)
-            len = SHARED_MAX_MSGLEN;
-        m = msg;
-    } else
-        len = 0;
+    len = strlen(msg) + 1;
+    if (len > SHARED_MAX_MSGLEN)
+        len = SHARED_MAX_MSGLEN;
 
-    SHRD_SET_HDR (hdr, code, status, dev->devnum, id, len);
-    shrdtrc("server_error %2.2x %2.2x: %s\n",
-            code,status,m);
+    SHRD_SET_HDR (hdr, code, status, dev ? dev->devnum : 0,
+                  ix < 0 ? 0 : dev->shrd[ix]->id, len);
 
-    rc = serverSend (dev, sock, (BYTE *)hdr, msg, len);
+    shrdtrc("server_error %2.2x %2.2x: %s\n", code, status, msg);
+
+    rc = serverSend (dev, ix, hdr, msg, len);
     return rc;
-}
+
+} /* serverError */
 
 /*-------------------------------------------------------------------
  * Send data (server side)
  *-------------------------------------------------------------------*/
-static int serverSend (DEVBLK *dev, int sock, BYTE *hdr, BYTE *buf,
+static int serverSend (DEVBLK *dev, int ix, BYTE *hdr, BYTE *buf,
                        int buflen)
 {
 int      rc;                            /* Return code               */
-int      ix;                            /* Shared block index        */
+int      sock;                          /* Socket number             */
 BYTE     code;                          /* Header code               */
 BYTE     status;                        /* Header status             */
 U16      devnum;                        /* Header device number      */
 int      id;                            /* Header identifier         */
 int      len;                           /* Header length             */
 int      hdrlen;                        /* Header length + other data*/
-#ifdef HAVE_LIBZ
-int      off;                           /* Offset to compressed data */
-unsigned long newlen;                   /* Compressed buffer length  */
-BYTE     cbuf[65536];                   /* Compressed buffer         */
-#endif
+BYTE    *sendbuf = NULL;                /* Send buffer               */
+int      sendlen;                       /* Send length               */
+BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 
     /* Make buf, buflen consistent if no additional data to be sent  */
     if (buf == NULL) buflen = 0;
     else if (buflen == 0) buf = NULL;
 
     /* Calculate length of header, may contain additional data */
-    SHRD_GET_HDR(hdr, code, status, devnum, id, len);
-    shrdtrc("server_send %2.2x %2.2x %2.2x %d %d\n",
-            code,status,devnum,id,len);
-
+    SHRD_GET_HDR(hdr, code, status, devnum, id, len); 
     hdrlen = SHRD_HDR_SIZE + (len - buflen);
-    ix = serverLocate (dev, id, NULL);
-    if (ix < 0) {
-        logmsg(_("HHCSH043E %4.4X send error id=%d not found\n"),
-               dev->devnum, id);
-        return -1;
+    sendlen = hdrlen + buflen;
+
+    /* Check if buf is adjacent to the header */
+    if (buf && hdr + hdrlen == buf) {
+        hdrlen += buflen;
+        buf = NULL;
+        buflen = 0;
     }
+
+    /* Send only the header buffer if `buf' is empty */
+    if (buflen == 0)  sendbuf = hdr;
+
+    /* Get socket number; if `ix' < 0 we don't have a device yet */
+    if (ix >= 0)
+        sock = dev->shrd[ix]->fd;
+    else {
+        sock = -ix;
+        dev = NULL;
+    }
+
+    shrdtrc("server_send %2.2x %2.2x %2.2x %d %d\n",
+            code, status, devnum, id, len);
 
 #ifdef HAVE_LIBZ
     /* Compress the buf */
-    if (dev->shrd[ix]->comp != 0
+    if (ix >= 0 && dev->shrd[ix]->comp != 0
      && code == SHRD_OK && status == 0
-     && len - buflen <= SHRD_COMP_MAX_OFF
+     && hdrlen - SHRD_HDR_SIZE <= SHRD_COMP_MAX_OFF
      && buflen >= SHARED_COMPRESS_MINLEN) {
-        off = len - buflen;
-        newlen = 65536 - hdrlen;
+        unsigned long newlen;
+        int off = hdrlen - SHRD_HDR_SIZE;
+        sendbuf = cbuf;
+        newlen = sizeof(cbuf) - hdrlen;
         memcpy (cbuf, hdr, hdrlen);
         rc = compress2 (cbuf + hdrlen, &newlen,
                         buf, buflen, dev->shrd[ix]->comp);
         if (rc == Z_OK && (int)newlen < buflen) {
             /* Setup to use the compressed buffer */
+            sendlen = hdrlen + newlen;
+            buflen = 0;
             code = SHRD_COMP;
             status = (SHRD_LIBZ << 4) | off;
             SHRD_SET_HDR (cbuf, code, status, devnum, id, newlen + off);
             shrdtrc("server_send %2.2x %2.2x %2.2x %d %d (compressed)\n",
                    code,status,devnum,id,(int)newlen+off);
-            hdr = cbuf;
-            hdrlen += newlen; 
-            buf = NULL;
-            buflen = 0;
         }
     }
 #endif
 
-    /* Send the header and the  buffer */
-    rc = send (sock, hdr, hdrlen, 0);
-    if (rc >= 0 && buf != NULL)
-        rc = send (sock, buf, buflen, 0);
+    /* Build combined (hdr + data) buffer */
+    if (buflen > 0) {
+        sendbuf = cbuf;
+        memcpy (cbuf, hdr, hdrlen);
+        memcpy (cbuf + hdrlen, buf, buflen);
+    }
+
+    /* Send the combined header and data */
+    rc = send (sock, sendbuf, sendlen, 0);
 
     /* Process return code */
     if (rc < 0) {
         logmsg(_("HHCSH044E %4.4X send error %d id=%d: %s\n"),
                dev->devnum, errno, id, strerror(errno));
         dev->shrd[ix]->disconnect = 1;
-        return -1;
     }
 
     return rc;
+
 } /* serverSend */
 
 /*-------------------------------------------------------------------
  * Determine if a client can be disconnected (server side)
  *-------------------------------------------------------------------*/
-static int serverDisconnectable (DEVBLK *dev, int id) {
-int rc;                                 /* Return code               */
-int ix;                                 /* Client index              */
-
-    ix = serverLocate (dev, id, NULL);
-    if (ix < 0) return 1;
+static int serverDisconnectable (DEVBLK *dev, int ix) {
 
     if (dev->shrd[ix]->waiting || dev->shrd[ix]->pending
-     || dev->ioactive == id    || dev->reserved == id)
-        rc = 0;
+     || dev->ioactive == dev->shrd[ix]->id)
+        return 0;
     else
-        rc = 1;
-
-    return rc;
-}
+        return 1;
+} /* serverDisconnectable */
 
 /*-------------------------------------------------------------------
  * Disconnect a client (server side)
  * dev->lock *must* be held
  *-------------------------------------------------------------------*/
-static void serverDisconnect (DEVBLK *dev, int id) {
-int ix;                                 /* Client index              */
+static void serverDisconnect (DEVBLK *dev, int ix) {
+int id;                                 /* Client identifier         */
 int i;                                  /* Loop index                */
 
-    ix = serverLocate (dev, id, NULL);
-    if (ix < 0) return;
+    id = dev->shrd[ix]->id;
 
 //FIXME: Handle a disconnected busy client better
 //       Perhaps a disconnect timeout value... this will
@@ -2073,13 +2125,13 @@ int i;                                  /* Loop index                */
 
     /* If the device is active by the client then extricate it.
        This is *not* a good situation */
-    if (dev->ioactive == id || dev->reserved == id) {
+    if (dev->ioactive == id) {
 
-        logmsg(_("HHCSH045W %4.4X busy client being removed id=%d %d %d\n"),
-               dev->devnum, id, dev->ioactive, dev->reserved);
+        logmsg(_("HHCSH045W %4.4X busy client being removed id=%d %s\n"),
+               dev->devnum, id, dev->reserved ? "reserved" : "");
 
         /* Call the I/O release exit if reserved by this client */
-        if (dev->reserved == id && dev->hnd->release)
+        if (dev->reserved && dev->hnd->release)
             (dev->hnd->release) (dev);
 
         /* Call the channel program end exit */
@@ -2091,13 +2143,19 @@ int i;                                  /* Loop index                */
             if (dev->shrd[i])
                 dev->shrd[i]->waiting = 0;
 
+        /* Make the device available */
+        if (dev->suspended) {
+            dev->ioactive = DEV_SYS_LOCAL;
+            dev->busy = 1;
+        }
+        else {
+            dev->ioactive = DEV_SYS_NONE;
+            dev->busy = 0;
+        }
+
         /* Notify any waiters */
-        dev->ioactive = -1;
         if (dev->iowaiters)
             signal_condition (&dev->iocond);
-
-        /* Make the device available */
-        dev->ioactive = dev->reserved = -1;
     }
 
     logmsg(_("HHCSH046I %s disconnected from %4.4X id=%d\n"),
@@ -2109,7 +2167,7 @@ int i;                                  /* Loop index                */
     dev->shrd[ix] = NULL;
 
     dev->shrdconn--;
-}
+} /* serverDisconnect */
 
 /*-------------------------------------------------------------------
  * Return client ip
@@ -2134,10 +2192,10 @@ static DEVBLK *findDevice (U16 devnum)
 DEVBLK      *dev;                       /* -> Device block           */
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (dev->devnum == devnum)
-            return dev;
-    return NULL;
-}
+        if (dev->devnum == devnum) break;
+    return dev;
+
+} /* findDevice */
 
 /*-------------------------------------------------------------------
  * Connect a new client
@@ -2146,7 +2204,6 @@ static void *serverConnect (int *psock)
 {
 int             csock;                  /* Connection socket         */
 int             rc;                     /* Return code               */
-BYTE            hdr[SHRD_HDR_SIZE+256]; /* Request header            */
 BYTE            cmd;                    /* Request command           */
 BYTE            flag;                   /* Request flag              */
 U16             devnum;                 /* Request device number     */
@@ -2159,20 +2216,16 @@ time_t          now;                    /* Current time              */
 fd_set          selset;                 /* Read bit map for select   */
 int             maxfd;                  /* Max fd for select         */
 struct timeval  wait;                   /* Wait time for select      */
-
-char            err1[] = "not a connect request";
-char            err2[] = "device not found";
-char            err3[] = "already connected";
-char            err4[] = "at max number of connections";
-char            err5[] = "calloc() failure";
+BYTE            hdr[SHRD_HDR_SIZE + 65536];  /* Header + buffer      */
+BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
 
     csock = *psock;
     free (psock);
 
     shrdtrc("server_connect %s sock %d\n",clientip(csock),csock);
 
-    rc = recvData(csock, hdr, SHRD_HDR_SIZE, 0);
-    if (rc < (int)SHRD_HDR_SIZE) {
+    rc = recvData(csock, hdr, buf, 65536, 1);
+    if (rc < 0) {
         logmsg(_("HHCSH047E %s connect failed\n"), clientip (csock));
         close (csock);
         return NULL;
@@ -2181,12 +2234,8 @@ char            err5[] = "calloc() failure";
 
     /* Error if not a connect request */
     if (id == 0 && cmd != SHRD_CONNECT) {
-        flushData (csock, len);
-        SHRD_SET_HDR (hdr, SHRD_ERROR_NOTCONN, cmd, devnum, id, sizeof(err1));
-        send (csock, hdr, SHRD_HDR_SIZE, 0);
-        send (csock, err1, sizeof(err1), 0);
-        logmsg(_("HHCSH048E %s connect failed to %4.4X, not connect request\n"),
-               clientip(csock), devnum);
+        serverError (NULL, -csock, SHRD_ERROR_NOTCONN, cmd,
+                     "not a connect request");
         close (csock);
         return NULL;
     }
@@ -2196,12 +2245,8 @@ char            err5[] = "calloc() failure";
 
     /* Error if device not found */
     if (dev == NULL) {
-        flushData (csock, len);
-        SHRD_SET_HDR (hdr, SHRD_ERROR_NODEVICE, cmd, devnum, id, sizeof(err2));
-        send (csock, hdr, SHRD_HDR_SIZE, 0);
-        send (csock, err2, sizeof(err2), 0);
-        logmsg(_("HHCSH049E %s connect failed to %4.4X, device not found\n"),
-               clientip(csock), devnum);
+        serverError (NULL, -csock, SHRD_ERROR_NODEVICE, cmd,
+                     "device not found");
         close (csock);
         return NULL;
     }
@@ -2215,12 +2260,8 @@ char            err5[] = "calloc() failure";
     /* Error if already connected */
     if (rc >= 0) {
         release_lock (&dev->lock);
-        flushData (csock, len);
-        SHRD_SET_HDR (hdr, SHRD_ERROR_CONNECTED, cmd, devnum, id, sizeof(err3));
-        send (csock, hdr, SHRD_HDR_SIZE, 0);
-        send (csock, err3, sizeof(err3), 0);
-        logmsg(_("HHCSH050E %s connect failed to %4.4X, already connected id=%d\n"),
-               clientip(csock), devnum, id);
+        serverError (NULL, -csock, SHRD_ERROR_NODEVICE, cmd,
+                     "already connected");
         close (csock);
         return NULL;
     }
@@ -2228,12 +2269,8 @@ char            err5[] = "calloc() failure";
     /* Error if no available slot */
     if (ix < 0) {
         release_lock (&dev->lock);
-        flushData (csock, len);
-        SHRD_SET_HDR (hdr, SHRD_ERROR_NOTAVAIL, cmd, devnum, id, sizeof(err4));
-        send (csock, hdr, SHRD_HDR_SIZE, 0);
-        send (csock, err4, sizeof(err4), 0);
-        logmsg(_("HHCSH051E %s connect failed to %4.4X, max connections\n"),
-               clientip(csock), devnum);
+        serverError (NULL, -csock, SHRD_ERROR_NOTAVAIL, cmd,
+                     "too many connections");
         close (csock);
         return NULL;
     }
@@ -2244,12 +2281,8 @@ char            err5[] = "calloc() failure";
     /* Error if not obtained */
     if (dev->shrd[ix] == NULL) {
         release_lock (&dev->lock);
-        flushData (csock, len);
-        SHRD_SET_HDR (hdr, SHRD_ERROR_NOMEM, cmd, devnum, id, sizeof(err5));
-        send (csock, hdr, SHRD_HDR_SIZE, 0);
-        send (csock, err5, sizeof(err5), 0);
-        logmsg(_("HHCSH052E %s connect failed to %4.4X, calloc failed: %s\n"),
-               clientip(csock), devnum, strerror(errno));
+        serverError (NULL, -csock, SHRD_ERROR_NOMEM, cmd,
+                     "calloc() failure");
         close (csock);
         return NULL;
     }
@@ -2305,12 +2338,12 @@ char            err5[] = "calloc() failure";
 
                 /* See if the connection can be timed out */
                 else if (now - dev->shrd[ix]->time > SHARED_TIMEOUT
-                 && serverDisconnectable(dev, dev->shrd[ix]->id))
+                 && serverDisconnectable (dev, ix))
                     dev->shrd[ix]->disconnect = 1;
 
                 /* Disconnect if the disconnect bit is set */
                 if (dev->shrd[ix]->disconnect)
-                    serverDisconnect (dev, dev->shrd[ix]->id);
+                    serverDisconnect (dev, ix);
 
                 /* Otherwise set the fd if not waiting */
                 else if (!dev->shrd[ix]->waiting) {
@@ -2330,7 +2363,7 @@ char            err5[] = "calloc() failure";
             if (maxfd < 0) continue;
 
             /* Wait for a file descriptor to become busy */
-            wait.tv_sec = SHARED_SELECT_WAIT;
+            wait.tv_sec = 10; /*SHARED_SELECT_WAIT;*/
             wait.tv_usec = 0;
             release_lock (&dev->lock);
 
@@ -2365,11 +2398,15 @@ char            err5[] = "calloc() failure";
 
         shrdtrc("select ready %d id=%d\n",dev->shrd[ix]->fd,dev->shrd[ix]->id);
 
-        /* Read the request header */
-        if (!dev->shrd[ix]->havehdr) {
-            rc = recvData (dev->shrd[ix]->fd, dev->shrd[ix]->hdr,
-                           SHRD_HDR_SIZE, 0);
-            if (rc < (int)SHRD_HDR_SIZE) {
+        if (dev->shrd[ix]->havehdr) {
+            /* Copy the saved start/resume packet */
+            memcpy (hdr, dev->shrd[ix]->hdr, SHRD_HDR_SIZE);
+            dev->shrd[ix]->havehdr = dev->shrd[ix]->waiting = 0;
+        }
+        else {
+            /* Read the request packet */
+            rc = recvData (dev->shrd[ix]->fd, hdr, buf, 65536, 1);
+            if (rc < 0) {
                 logmsg(_("HHCSH058E %4.4X %s recv error id=%d\n"),
                      dev->devnum, clientip(dev->shrd[ix]->fd), dev->shrd[ix]->id);
                 dev->shrd[ix]->disconnect = 1;
@@ -2377,25 +2414,24 @@ char            err5[] = "calloc() failure";
                 obtain_lock (&dev->lock);
                 continue;
             }
-            dev->shrd[ix]->havehdr = 1;
-//FIXME: Should probably verify `devnum' and `id'
         }
-
+            
         /* Process the request */
-        serverRequest (dev, dev->shrd[ix]->fd, dev->shrd[ix]->hdr);
+        serverRequest (dev, ix, hdr, buf);
 
         obtain_lock (&dev->lock);
 
-        /* This request could be waiting if a start/resume request
-           and the device is active or reserved on another system.
-           In this case we leave the `havehdr' bit on so we don't
-           try to read it again when the device becomes available.
-           We'll also leave the `pending' bit on */
-
-        if (!dev->shrd[ix]->waiting) {
-            dev->shrd[ix]->havehdr = 0;
-            dev->shrd[ix]->pending = 0;
+        /* If the `waiting' bit is on then the start/resume request
+           failed because the device is busy on some other remote
+           system.  We only need to save the header because the data
+           is ignored for start/resume.
+        */
+        if (dev->shrd[ix]->waiting) {
+            memcpy (dev->shrd[ix]->hdr, hdr, SHRD_HDR_SIZE);
+            dev->shrd[ix]->havehdr = 1;
         }
+        else
+            dev->shrd[ix]->pending = 0;
     }
 
     dev->shrdtid = 0;
@@ -2474,6 +2510,8 @@ TID                     tid;            /* Negotiation thread id     */
         return NULL;
     }
 
+    sysblk.shrdtid = thread_id();
+
     logmsg(_("HHCSH065I Waiting for shared device requests on port %u\n"),
             sysblk.shrdport);
 
@@ -2529,6 +2567,8 @@ TID                     tid;            /* Negotiation thread id     */
 
     /* Close the listening socket */
     close (lsock);
+
+    sysblk.shrdtid = 0;
 
     return NULL;
 

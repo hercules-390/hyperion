@@ -65,6 +65,9 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     /* Save the file name in the device block */
     strcpy (dev->filename, argv[0]);
 
+    /* Device is shareable */
+    dev->shared = 1;
+
     /* Check for possible remote device */
     if (stat(dev->filename, &statbuf) < 0)
     {
@@ -1138,7 +1141,10 @@ int     repcnt;                         /* Replication count         */
         }
 
         if (dev->hnd->release) (dev->hnd->release) (dev);
-        dev->reserved = -1;
+
+        obtain_lock (&dev->lock);
+        dev->reserved = 0;
+        release_lock (&dev->lock);
 
         /* Return sense information */
         goto sense;
@@ -1156,8 +1162,12 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Reserve device to the ID of the active channel program */
+
+        obtain_lock (&dev->lock);
+        dev->reserved = 1;
+        release_lock (&dev->lock);
+
         if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
-        dev->reserved = dev->ioactive;
 
         /* Return sense information */
         goto sense;
@@ -1175,8 +1185,12 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Reserve device to the ID of the active channel program */
+
+        obtain_lock (&dev->lock);
+        dev->reserved = 1;
+        release_lock (&dev->lock);
+
         if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
-        dev->reserved = dev->ioactive;
 
         /* Return sense information */
         goto sense;

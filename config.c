@@ -1375,11 +1375,6 @@ int     cpu;
         }
     release_lock (&sysblk.intlock);
 
-    /* Detach all devices */
-    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-       if (dev->pmcw.flag5 & PMCW5_V)
-           detach_device(dev->devnum);
-
     /* Terminate HercIFC if necessary */
     if( sysblk.ifcfd[0] != -1 || sysblk.ifcfd[1] != -1 )
     {
@@ -1389,6 +1384,26 @@ int     cpu;
 
         kill( sysblk.ifcpid, SIGINT );
     }
+
+#if defined(OPTION_SHARED_DEVICES)
+    /* Terminate the shared device listener thread */
+    if (sysblk.shrdtid)
+        signal_thread (sysblk.shrdtid, SIGUSR2);
+#endif
+
+    /* Terminate the console thread */
+    if (sysblk.cnsltid)
+        signal_thread (sysblk.cnsltid, SIGUSR2);
+
+    /* Detach all devices */
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+       if (dev->pmcw.flag5 & PMCW5_V)
+           detach_device(dev->devnum);
+
+    /* Terminate device threads */
+    obtain_lock (&sysblk.ioqlock);
+    broadcast_condition (&sysblk.ioqcond);
+    release_lock (&sysblk.ioqlock);
 
     /* Deconfigure all CPU's */
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
@@ -1525,7 +1540,10 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     dev->devtype = devent->type;
     dev->typname = devent->name;
     dev->fd = -1;
-    dev->ioactive = dev->reserved = -1;
+    dev->ioint.dev = dev;
+    dev->ioint.pending = 1;
+    dev->pciioint.dev = dev;
+    dev->pciioint.pcipending = 1;
 
     /* Initialize storage view */
     dev->mainstor = sysblk.mainstor;

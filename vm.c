@@ -173,6 +173,8 @@ BYTE            unitstat = 0;           /* Device status             */
 BYTE            chanstat = 0;           /* Subchannel status         */
 BYTE            skey1, skey2;           /* Storage keys of first and
                                            last byte of I/O buffer   */
+//FIXME: code not right for shared devices
+
     UNREFERENCED(r2);
 
     /* Register R1 contains the real address of the parameter list */
@@ -261,33 +263,33 @@ BYTE            skey1, skey2;           /* Storage keys of first and
         return 2;
     }
 
-    /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
+    /* Obtain the device lock */
+    obtain_lock (&dev->lock);
 
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* Return code 5 and condition code 1 if status pending */
     if ((dev->scsw.flag3 & SCSW3_SC_PEND)
         || (dev->pciscsw.flag3 & SCSW3_SC_PEND))
     {
-        release_lock (&sysblk.intlock);
+        release_lock (&dev->lock);
         regs->GR_L(15) = 5;
         return 1;
     }
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Return code 5 and condition code 1 if device is busy */
-    if (IS_DEV_BUSY_OR_PENDING(dev))
+    if (dev->busy || dev->pending || dev->pcipending)
     {
-        release_lock (&sysblk.intlock);
+        release_lock (&dev->lock);
         regs->GR_L(15) = 5;
         return 1;
     }
 
     /* Set the device busy indicator */
-    ON_DEV_BUSY(dev);
+    dev->busy = 1;
 
-    /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
+    /* Release the device lock */
+    release_lock (&dev->lock);
 
     /* Process each entry in the SBILIST */
     for (blkcount = 0; blkcount < sbicount; blkcount++)
@@ -368,9 +370,7 @@ BYTE            skey1, skey2;           /* Storage keys of first and
     } /* end for(blkcount) */
 
     /* Reset the device busy indicator */
-    obtain_lock (&sysblk.intlock);
-    OFF_DEV_BUSY(dev);
-    release_lock (&sysblk.intlock);
+    dev->busy = 0;
 
     /* Store the block count in the parameter list */
     ioparm.blkcount[0] = (blkcount >> 24) & 0xFF;
@@ -430,6 +430,8 @@ U32             lastccw;                /* CCW address at interrupt  */
 BYTE            accum;                  /* Work area                 */
 BYTE            unitstat = 0;           /* Device status             */
 BYTE            chanstat = 0;           /* Subchannel status         */
+
+//FIXME: code not right for shared devices
 
     UNREFERENCED(r2);
 
@@ -510,32 +512,32 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     }
 
     /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
+    obtain_lock (&dev->lock);
 
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* Return code 5 and condition code 1 if status pending */
     if ((dev->scsw.flag3 & SCSW3_SC_PEND)
         || (dev->pciscsw.flag3 & SCSW3_SC_PEND))
     {
-        release_lock (&sysblk.intlock);
+        release_lock (&dev->lock);
         regs->GR_L(15) = 5;
         return 1;
     }
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Return code 5 and condition code 1 if device is busy */
-    if (IS_DEV_BUSY_OR_PENDING(dev))
+    if (dev->busy || dev->pending || dev->pcipending)
     {
-        release_lock (&sysblk.intlock);
+        release_lock (&dev->lock);
         regs->GR_L(15) = 5;
         return 1;
     }
 
     /* Set the device busy indicator */
-    ON_DEV_BUSY(dev);
+    dev->busy = 1;
 
     /* Release the device lock */
-    release_lock (&sysblk.intlock);
+    release_lock (&dev->lock);
 
     /* Build the operation request block */                    /*@IWZ*/
     memset (&dev->orb, 0, sizeof(ORB));                        /*@IWZ*/
@@ -567,12 +569,11 @@ BYTE            chanstat = 0;           /* Subchannel status         */
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Clear the interrupt pending and device busy conditions */
-    obtain_lock (&sysblk.intlock);
-    OFF_DEV_PENDING(dev);
-    OFF_DEV_BUSY(dev);
+    obtain_lock (&dev->lock);
+    dev->busy = dev->pending = 0;
     dev->scsw.flag2 = 0;
     dev->scsw.flag3 = 0;
-    release_lock (&sysblk.intlock);
+    release_lock (&dev->lock);
 
     /* Store the last CCW address in the parameter list */
     ioparm.lastccw[0] = (lastccw >> 24) & 0xFF;

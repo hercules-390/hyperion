@@ -15,12 +15,15 @@ do { \
  if (dev && (dev->ccwtrace||dev->ccwstep)) \
   logmsg("%4.4X:" format, dev->devnum, a); \
  if (cckdblk.itrace) { \
+    struct timeval tv; \
+    gettimeofday(&tv, NULL); \
     CCKD_TRACE *p = cckdblk.itracep++; \
     if (p >= cckdblk.itracex) { \
         p = cckdblk.itrace; \
         cckdblk.itracep = p + 1; \
     } \
-    if (p) sprintf ((char *)p, "%4.4X:" format, dev ? dev->devnum : 0, a); \
+    if (p) sprintf ((char *)p, "%6.6ld" "." "%6.6ld %4.4X:" format, \
+                    tv.tv_sec, tv.tv_usec, dev ? dev->devnum : 0, a); \
  } \
 } while (0)
 
@@ -674,7 +677,7 @@ int             rc;                     /* Return code               */
     }
 
     /* Copy the data into the buffer */
-    if (buf) memcpy (dev->buf + off, buf, len);
+    if (buf && len > 0) memcpy (dev->buf + off, buf, len);
 
     cckdtrc ("cckddasd: updt  trk   %d offset %d length %d\n",
              trk, off, len);
@@ -4088,7 +4091,7 @@ int cckd_disable_syncio(DEVBLK *dev)
 {
     if (!dev->syncio) return 0;
     obtain_lock(&dev->lock);
-    while (dev->syncio_active || dev->ioactive >= 0)
+    while (dev->syncio_active)
     {
         release_lock(&dev->lock);
         usleep(1);
@@ -4526,6 +4529,9 @@ int             newlen;                   /* Uncompressed length     */
 int             comp;                     /* Compression type        */
 char           *compress[] = {"none", "zlib", "bzip2"};
 
+    cckdtrc ("cckddasd: uncompress comp %d len %d maxlen %d trk %d\n",
+             from[0] & CCKD_COMPRESS_MASK, len, maxlen, trk);
+
     /* Uncompress the track image */
     comp = (from[0] & CCKD_COMPRESS_MASK);
     switch (comp) {
@@ -4622,6 +4628,9 @@ int rc;
     }
     else
         newlen = -1;
+
+    cckdtrc ("cckddasd: uncompress zlib newlen %d rc %d\n",(int)newlen,rc);
+
     return (int)newlen;
 #else
     UNREFERENCED(dev);
@@ -4652,6 +4661,9 @@ int rc;
     }
     else
         newlen = -1;
+
+    cckdtrc ("cckddasd: uncompress bz2 newlen %d rc %d\n",newlen,rc);
+
     return (int)newlen;
 #else
     UNREFERENCED(dev);

@@ -204,6 +204,9 @@ int             cckd=0;                 /* 1 if compressed CKD       */
     /* Save the file name in the device block */
     strcpy (dev->filename, argv[0]);
 
+    /* Device is shareable */
+    dev->shared = 1;
+
     /* Check for possible remote device */
     if (stat(dev->filename, &statbuf) < 0)
     {
@@ -4306,7 +4309,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Call the release exit and mark the device not reserved */
         if (dev->hnd->release) (dev->hnd->release) (dev);
-        dev->reserved = -1;
+
+        obtain_lock (&dev->lock);
+        dev->reserved = 0;
+        release_lock (&dev->lock);
 
         /* Perform the operation of a sense command */
         goto sense;
@@ -4316,13 +4322,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* DEVICE RESERVE                                                */
     /*---------------------------------------------------------------*/
-        /* If synchronous I/O then retry asynchronously */
-        if (dev->syncio_active)
-        {
-            dev->syncio_retry = 1;
-            break;
-        }
-
         /* Command reject if within the domain of a Locate Record,
            or indeed if preceded by any command at all apart from
            Suspend Multipath Reconnection */
@@ -4337,7 +4336,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Mark the device reserved and call the reserve exit */
-        dev->reserved = dev->ioactive;
+
+        obtain_lock (&dev->lock);
+        dev->reserved = 1;
+        release_lock (&dev->lock);
+
         if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
 
         /* Perform the operation of a sense command */

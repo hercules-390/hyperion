@@ -1210,7 +1210,7 @@ static void commadpt_wait(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 static void    commadpt_halt(DEVBLK *dev)
 {
-    if(!IS_DEV_BUSY(dev))
+    if(dev->busy)
     {
         return;
     }
@@ -1612,7 +1612,7 @@ static int commadpt_close_device ( DEVBLK *dev )
     obtain_lock(&dev->commadpt->lock);
 
     /* Terminate current I/O thread if necessary */
-    if(IS_DEV_BUSY(dev))
+    if(dev->busy)
     {
         commadpt_halt(dev);
     }
