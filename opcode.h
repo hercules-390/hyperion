@@ -1548,7 +1548,7 @@ void binary_to_packed (S64 bin, BYTE *result);
 
 
 /* Functions in module diagnose.c */
-void ARCH_DEP(diagnose_call) (U32 effective_addr2, int r1, int r3,
+void ARCH_DEP(diagnose_call) (VADR effective_addr2, int b2, int r1, int r3,
     REGS *regs);
 
 

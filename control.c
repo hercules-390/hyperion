@@ -767,7 +767,7 @@ VADR    effective_addr2;                /* Effective address         */
     SIE_INTERCEPT(regs);
 
     /* Process diagnose instruction */
-    ARCH_DEP(diagnose_call) (effective_addr2, r1, r3, regs);
+    ARCH_DEP(diagnose_call) (effective_addr2, b2, r1, r3, regs);
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);

@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+25 Sep 2003 PowerOff diagnose for 4361 & 937X processors - Tomas Masek by Fish
 25 Sep 2003 Fix DASDCOPY bug copying too much to uncompressed FBA o/p - Fish
 25 Sep 2003 Fix dasdtab entry for 3310 FBA device type - Fish
 25 Sep 2003 Initial power-on reset for mainstor & expanded storage - Fish
