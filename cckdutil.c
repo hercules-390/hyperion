@@ -619,7 +619,6 @@ restart:
 
     COMPMSG (m, "file %ssuccessfully compacted, %d freed and %d moved\n",
              freed ? "" : "un", freed, moved);
-   free (buf);
    free (l1);
 
    return (freed ? freed : -1);
