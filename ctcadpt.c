@@ -611,8 +611,8 @@ static int init_xca (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 /*-------------------------------------------------------------------*/
 static int init_lcs (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 {
-    UNREFERENCED(argc);
 #if defined(WIN32)
+    UNREFERENCED(argc);
     dev->ctctype = CTC_LCS;
     *cutype = CTC_3088_60;
     logmsg ("HHC835I %4.4X %s mode not implemented\n",
