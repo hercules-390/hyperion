@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+17 Jun 2004 Tuntap duplicate MAC address fix/workaround - Fish
 15 Jun 2004 ASN-and-LX-reuse facility: PC number translation - Roger Bowler
 14 Jun 2004 ASN-and-LX-reuse facility changes for PR - Roger Bowler
 11 Jun 2004 Minor ETF3 optimalizations - Bernard van der Helm

@@ -542,7 +542,7 @@ int  LCS_Close( DEVBLK* pDEVBLK )
             if( pPort->fd >= 0 )
             {
                 TID tid = pPort->tid;
-                TUNTAP_Close( pDEVBLK->fd );
+                VERIFY( TUNTAP_Close( pDEVBLK->fd ) == 0 );
                 signal_thread( tid, SIGINT );
 
                 // Wait for thread to end
@@ -1011,28 +1011,28 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
     // Configure the TAP interface if used
     if( pPort->fUsed && pPort->fCreated && !pPort->fStarted )
     {
-        TUNTAP_SetIPAddr( pPort->szNetDevName, "0.0.0.0" );
-        TUNTAP_SetMTU( pPort->szNetDevName, "1500" );
+        VERIFY( TUNTAP_SetIPAddr( pPort->szNetDevName, "0.0.0.0" ) == 0 );
+        VERIFY( TUNTAP_SetMTU( pPort->szNetDevName, "1500" ) == 0 );
 
         if( pPort->fLocalMAC )
         {
 #if !defined(__APPLE__)
-            TUNTAP_SetMACAddr( pPort->szNetDevName,
-                               pPort->szMACAddress );
+            VERIFY( TUNTAP_SetMACAddr( pPort->szNetDevName,
+                               pPort->szMACAddress ) == 0 );
 #endif /* !defined(__APPLE__) */
         }
 
-        TUNTAP_SetFlags( pPort->szNetDevName,
-                         IFF_UP | IFF_RUNNING | IFF_BROADCAST );
+        VERIFY( TUNTAP_SetFlags( pPort->szNetDevName,
+                         IFF_UP | IFF_RUNNING | IFF_BROADCAST ) == 0 );
 
 #if !defined(__APPLE__)
         for( pRoute = pPort->pRoutes; pRoute; pRoute = pRoute->pNext )
         {
-            TUNTAP_AddRoute( pPort->szNetDevName,
+            VERIFY( TUNTAP_AddRoute( pPort->szNetDevName,
                              pRoute->pszNetAddr,
                              pRoute->pszNetMask,
                              NULL,
-                             RTF_UP );
+                             RTF_UP ) == 0 );
         }
 #endif /* !defined(__APPLE__) */
 
@@ -1059,11 +1059,11 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 #if !defined(__APPLE__)
     if( pLCSDEV->pszIPAddress )
     {
-        TUNTAP_AddRoute( pPort->szNetDevName,
+        VERIFY( TUNTAP_AddRoute( pPort->szNetDevName,
                          pLCSDEV->pszIPAddress,
                          "255.255.255.255",
                          NULL,
-                         RTF_UP | RTF_HOST );
+                         RTF_UP | RTF_HOST ) == 0 );
     }
 #endif /* !defined(__APPLE__) */
 
@@ -1092,11 +1092,11 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 #if !defined(__APPLE__)
     if( pLCSDEV->pszIPAddress )
     {
-        TUNTAP_DelRoute( pPort->szNetDevName,
+        VERIFY( TUNTAP_DelRoute( pPort->szNetDevName,
                          pLCSDEV->pszIPAddress,
                          "255.255.255.255",
                          NULL,
-                         RTF_HOST );
+                         RTF_HOST ) == 0 );
     }
 #endif /* !defined(__APPLE__) */
 

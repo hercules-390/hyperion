@@ -100,6 +100,31 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
     PCTCBLK         pWrkCTCBLK = NULL;  // Working CTCBLK
     PCTCBLK         pDevCTCBLK = NULL;  // Device  CTCBLK
     int             rc = 0;             // Return code
+    int             nIFType;            // Interface type
+    int             nIFFlags;           // Interface flags
+
+    nIFType =               // Interface type
+        0
+        | IFF_TUN           // ("TUN", not "tap")
+        | IFF_NO_PI         // (no packet info)
+        ;
+
+    // ZZ FIXME: Technically, IFF_RUNNING should NOT be set by the user.
+    //           Only the interface itself should set IFF_RUNNING when-
+    //           ever it is successfully created/initialized (i.e. is
+    //           operational). Once it's operational (running), then it
+    //           may be enabled via IFF_UP. If it's not in IFF_RUNNING
+    //           state however, then IFF_UP cannot be set because the
+    //           interface is technically "broken" (not operational),
+    //           and non-operational (non-working) interfaces cannot be
+    //           enabled.  --  Fish, June 2004.
+
+    nIFFlags =              // Interface flags
+        0
+        | IFF_UP            // (interface has been enabled)
+        | IFF_RUNNING       // (interface is operational)
+        | IFF_BROADCAST     // (interface broadcast addr is valid)
+        ;
 
     pDEVBLK->devtype = 0x3088;
 
@@ -192,28 +217,99 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
                   pDevCTCBLK->szTUNDevName);
     }
 
-    TUNTAP_SetIPAddr  ( pDevCTCBLK->szTUNDevName,
-                        pDevCTCBLK->szDriveIPAddr );
+    if( !pDevCTCBLK->szMACAddress[0] )   // (if MAC address unspecified)
+    {
+        // Build a default MAC addr based on the guest (destination) ip
+        // address so as to effectively *UNOFFICIALLY* assign ourselves
+        // the following Ethernet address block:
 
-    TUNTAP_SetDestAddr( pDevCTCBLK->szTUNDevName,
-                        pDevCTCBLK->szGuestIPAddr );
+        /* (from: http://www.iana.org/assignments/ethernet-numbers)
+           (only the first 2 and last 2 paragraphs are of interest)
+
+            IANA ETHERNET ADDRESS BLOCK - UNICAST USE
+
+            The IANA owns an Ethernet address block which may be used for
+            unicast address asignments or other special purposes.
+
+            The IANA may assign unicast global IEEE 802 MAC address from it's
+            assigned OUI (00-00-5E) for use in IETF standard track protocols.  The
+            intended usage is for dynamic mapping between IP addresses and IEEE
+            802 MAC addresses.  These IEEE 802 MAC addresses are not to be
+            permanently assigned to any hardware interface, nor is this a
+            substitute for a network equipment supplier getting its own OUI.
+
+            ... (snipped)
+
+            Using this representation, the range of Internet Unicast addresses is:
+
+                   00-00-5E-00-00-00  to  00-00-5E-FF-FF-FF  in hex, ...
+
+            ... (snipped)
+
+            The low order 24 bits of these unicast addresses are assigned as
+            follows:
+
+            Dotted Decimal          Description                     Reference
+            ----------------------- ------------------------------- ---------
+            000.000.000-000.000.255 Reserved                        [IANA]
+            000.001.000-000.001.255 Virual Router Redundancy (VRRP) [Hinden]
+            000.002.000-127.255.255 Reserved                        [IANA]
+            128.000.000-255.255.255 Hercules TUNTAP (CTCI)          [Fish]
+        */
+
+        // Here's what we're basically doing:
+
+        //    00-00-5E-00-00-00  to  00-00-5E-00-00-FF  =  'Reserved' by IANA
+        //    00-00-5E-00-01-00  to  00-00-5E-00-01-FF  =  'VRRP' by Hinden
+        //    00-00-5E-00-02-00  to  00-00-5E-7F-FF-FF  =  (unassigned)
+        //    00-00-5E-80-00-00  to  00-00-5E-FF-FF-FF  =  'Hercules' by Fish
+
+        //    00-00-5E-00-00-00   (starting value)
+        //    00-00-5E-ip-ip-ip   (move in low-order 3 bytes of destination IP address)
+        //    00-00-5E-8p-ip-ip   ('OR' on the x'80' high-order bit)
+
+        in_addr_t  wrk_guest_ip_addr;
+
+        if ((in_addr_t)-1 != (wrk_guest_ip_addr = inet_addr( pDevCTCBLK->szGuestIPAddr )))
+        {
+            *(((BYTE*)&wrk_guest_ip_addr) + sizeof(wrk_guest_ip_addr) - 3 ) |= 0x80;
+
+            snprintf
+            (
+                pDevCTCBLK->szMACAddress,  sizeof( pDevCTCBLK->szMACAddress ),
+
+                "00:00:5E:%2.2X:%2.2X:%2.2X"
+
+                ,*(((BYTE*)&wrk_guest_ip_addr) + sizeof(wrk_guest_ip_addr) - 3 )
+                ,*(((BYTE*)&wrk_guest_ip_addr) + sizeof(wrk_guest_ip_addr) - 2 )
+                ,*(((BYTE*)&wrk_guest_ip_addr) + sizeof(wrk_guest_ip_addr) - 1 )
+            );
+        }
+    }
+
+    TRACE
+    (
+        "** CTCI_Init: %4.4X (%s): IP %s  -->  default MAC %s\n"
+
+        ,pDevCTCBLK->pDEVBLK[0]->devnum
+        ,pDevCTCBLK->szTUNDevName
+        ,pDevCTCBLK->szGuestIPAddr
+        ,pDevCTCBLK->szMACAddress
+    );
+
+    VERIFY( TUNTAP_SetMACAddr ( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szMACAddress  ) == 0 );
+
+    VERIFY( TUNTAP_SetIPAddr  ( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szDriveIPAddr ) == 0 );
+
+    VERIFY( TUNTAP_SetDestAddr( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szGuestIPAddr ) == 0 );
 
 #if !defined(__APPLE__)
-    TUNTAP_SetNetMask ( pDevCTCBLK->szTUNDevName,
-                        pDevCTCBLK->szNetMask );
+    VERIFY( TUNTAP_SetNetMask ( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szNetMask     ) == 0 );
 #endif /* !defined(__APPLE__) */
 
-    TUNTAP_SetMTU     ( pDevCTCBLK->szTUNDevName,
-                        pDevCTCBLK->szMTU );
+    VERIFY( TUNTAP_SetMTU     ( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szMTU         ) == 0 );
 
-#if defined( WIN32 )
-    if( pDevCTCBLK->szMACAddress[0] != '\0' )
-        TUNTAP_SetMACAddr( pDevCTCBLK->szTUNDevName,
-                           pDevCTCBLK->szMACAddress );
-#endif
-
-    TUNTAP_SetFlags   ( pDevCTCBLK->szTUNDevName,
-                        IFF_UP | IFF_RUNNING | IFF_BROADCAST );
+    VERIFY( TUNTAP_SetFlags   ( pDevCTCBLK->szTUNDevName, nIFFlags                  ) == 0 );
 
     // Copy the fd to make panel.c happy
     pDevCTCBLK->pDEVBLK[0]->fd =
@@ -458,7 +554,7 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
     {
         pCTCBLK->fCloseInProgress = 1;
 
-        TUNTAP_Close( pCTCBLK->fd );
+        VERIFY( TUNTAP_Close( pCTCBLK->fd ) == 0 );
 
         pCTCBLK->fd = -1;
 
