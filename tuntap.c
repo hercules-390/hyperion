@@ -611,4 +611,3 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
 }
 
 #endif // !defined( WIN32 )
-
