@@ -5,10 +5,9 @@
 # modified to be useful (hopefully) for Linux AND windows (VB)
 #
 
-THEOS=$(OS)$(OSTYPE)
-ifeq ($(THEOS),linux)
-WIN=no
-else
+WIN=NO
+THEOS=$(OSTYPE)
+ifeq ($(THEOS),cygwin)
 WIN=yes
 endif
 
@@ -31,20 +30,19 @@ endif
 # Standard compiler flags used for all architectures
 CFLAGS = -Wall -fomit-frame-pointer -DVERSION=$(VERSION) -DNO_ATTR_REGPARM
 
-
-ifeq ($(WIN),yes)
-CFLAGS +=  -I/usr/Pthreads
-CFLAGS +=  -DWIN32 
-CFLAGS +=  -D__LITTLE_ENDIAN=1234 
-CFLAGS +=  -D__BYTE_ORDER="__LITTLE_ENDIAN"
-CFLAGS +=  -DNO_BYTESWAP_H  -DNO_ASM_BYTESWAP
-endif
-
 # Directory where the pthreads-win32 library was installed.
 ifeq ($(WIN),yes)
 PTHREADS_W32DIR = /usr
 CC = gcc -I$(PTHREADS_W32DIR)/Pthreads
 endif
+
+ifeq ($(WIN),yes)
+CFLAGS +=  -DWIN32
+CFLAGS +=  -D__LITTLE_ENDIAN=1234
+CFLAGS +=  -D__BYTE_ORDER="__LITTLE_ENDIAN"
+CFLAGS +=  -DNO_BYTESWAP_H  -DNO_ASM_BYTESWAP
+endif
+
 
 #set compiler flags depending on HOST_ARCH
 ifeq ($HOST_ARCH),i386)
@@ -100,13 +98,18 @@ CFLAGS += -DEXTERNALGUI
 #CFLAGS  += -DNO_CCKD
 LFLAGS	+= -lz
 
+BZIP2=NO
 # Remove (comment) these lines to disable Compressed CKD bzip2 compression
 CFLAGS	+= -DCCKD_BZIP2
-LFLAGS += -lbz2
+BZIP2=YES
 
 # Remove (comment) these lines to enable HET bzip2 compression
 CFLAGS += -DHET_BZIP2
+BZIP2=YES
+
+ifeq ($(BZIP2),YES)
 LFLAGS += -lbz2
+endif
 
 EXEFILES = hercules \
 	   dasdinit \
