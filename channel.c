@@ -1280,6 +1280,7 @@ int ARCH_DEP(startio) (DEVBLK *dev, ORB *orb)                  /*@IWZ*/
     memcpy (dev->pmcw.intparm, orb->intparm,                   /*@IWZ*/
                         sizeof(dev->pmcw.intparm));            /*@IWZ*/
 
+#if !defined(OPTION_NO_DEVICE_THREAD)
     dev->loopercmd = LOOPER_EXEC;
     if(dev->tid)
         signal_condition(&dev->loopercond);
@@ -1295,6 +1296,17 @@ int ARCH_DEP(startio) (DEVBLK *dev, ORB *orb)                  /*@IWZ*/
             return 2;
         }
     }
+#else /*defined(OPTION_NO_DEVICE_THREAD)*/
+    /* Execute the CCW chain on a separate thread */
+    if ( create_thread (&dev->tid, &sysblk.detattr,
+                                ARCH_DEP(execute_ccw_chain), dev) )
+    {
+        release_lock (&dev->lock);
+        logmsg ("HHC760I %4.4X create_thread error: %s",
+                dev->devnum, strerror(errno));
+        return 2;
+    }
+#endif /*defined(OPTION_NO_DEVICE_THREAD)*/
     release_lock (&dev->lock);
 
     /* Return with condition code zero */
