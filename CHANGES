@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+08 Jul 2004 ASN-and-LX-reuse facility: SSAR, SSAIR - Roger Bowler
 07 Jul 2004 ASN-and-LX-reuse facility: PT, PTI - Roger Bowler
 01 Jul 2004 Fix error introduced into BCTR - Juergen & Greg
 01 Jul 2004 Minor performance update macro ILC - Bernard van der Helm

@@ -3518,7 +3518,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         if (pti_instruction || ASN_AND_LX_REUSE_ENABLED(regs))
         {
             regs->CR_H(4) = aste[11];
-        } /* end if (pti_instruction || ASN_AND_LX_REUSE_ENABLED) */
+        } /* end if (PTI || ASN_AND_LX_REUSE_ENABLED) */
 
     } /* end if(PT-ss or PTI-ss) */
     else
@@ -3567,7 +3567,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if (pti_instruction || ASN_AND_LX_REUSE_ENABLED(regs))
     {
         regs->CR_H(3) = regs->CR_H(4);
-    } /* end if (pti_instruction || ASN_AND_LX_REUSE_ENABLED) */
+    } /* end if (PTI || ASN_AND_LX_REUSE_ENABLED) */
 
     /* Set secondary STD or ASCE equal to new primary STD or ASCE */
     regs->CR(7) = pstd;
@@ -3605,7 +3605,6 @@ DEF_INST(program_transfer)
 int     r1, r2;                         /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
-
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 0);
 
 } /* end DEF_INST(program_transfer) */
@@ -3621,7 +3620,6 @@ DEF_INST(program_transfer_with_instance)
 int     r1, r2;                         /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
-
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 1);
 
 } /* end DEF_INST(program_transfer_with_instance) */
@@ -4423,22 +4421,21 @@ BYTE    pkey;                           /* Original key              */
 
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
-/* B225 SSAR  - Set Secondary ASN                              [RRE] */
+/* Common processing routine for the SSAR and SSAIR instructions     */
 /*-------------------------------------------------------------------*/
-DEF_INST(set_secondary_asn)
+void ARCH_DEP(set_secondary_asn_proc) (REGS *regs,
+        int r1, int r2, int ssair_instruction)
 {
-int     r1, r2;                         /* Register numbers          */
 U16     sasn;                           /* New Secondary ASN         */
 RADR    sstd;                           /* Secondary STD             */
 U32     sasteo;                         /* Secondary ASTE origin     */
 U32     aste[16];                       /* ASN second table entry    */
+U32     sastein;                        /* New Secondary ASTEIN      */
 U16     xcode;                          /* Exception code            */
 U16     ax;                             /* Authorization index       */
 #ifdef FEATURE_TRACING
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
-
-    RRE(inst, regs, r1, r2);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -4461,15 +4458,18 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         newcr12 = ARCH_DEP(trace_ssar) (sasn, regs);
 #endif /*FEATURE_TRACING*/
 
-    /* Test for SSAR to current primary */
+    /* Test for SSAR/SSAIR to current primary */
     if ( sasn == regs->CR_LHL(4) )
     {
         /* Set new secondary STD equal to primary STD */
         sstd = regs->CR(1);
 
-    } /* end if(SSAR-cp) */
+        /* Set new secondary ASTEIN equal to primary ASTEIN */
+        sastein = regs->CR_H(4);
+
+    } /* end if(SSAR-cp or SSAIR-cp) */
     else
-    { /* SSAR with space-switch */
+    { /* SSAR/SSAIR with space-switch */
 
         /* Perform ASN translation to obtain ASTE */
         xcode = ARCH_DEP(translate_asn) (sasn, regs, &sasteo, aste);
@@ -4477,6 +4477,32 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Program check if ASN translation exception */
         if (xcode != 0)
             ARCH_DEP(program_interrupt) (regs, xcode);
+
+        /* For SSAR-ss only, generate a special operation exception 
+           if ASN-and-LX-reuse is enabled and the reusable-ASN bit 
+           in the ASTE is one */
+        if (ssair_instruction == 0 && ASN_AND_LX_REUSE_ENABLED(regs)
+            && (aste[1] & ASTE1_RA) != 0)
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+        } /* end if (SSAR && ASN_AND_LX_REUSE_ENABLED && ASTE1_RA) */
+
+        /* For SSAIR-ss only, generate a special operation exception
+           if the controlled-ASN bit in the ASTE is one and the CPU
+           is in problem state */
+        if (ssair_instruction && (aste[1] & ASTE1_CA) != 0
+            && PROBSTATE(&regs->psw))
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+        } /* end if (SSAIR && ASTE1_CA && PROBSTATE) */
+
+        /* For SSAIR-ss only, generate an ASTE instance exception
+           if the ASTEIN in bits 0-31 of the R1 register does
+           not equal the ASTEIN in the ASTE */
+        if (ssair_instruction && aste[11] != regs->GR_H(r1)) 
+        {
+            ARCH_DEP(program_interrupt) (regs, PGM_ASTE_INSTANCE_EXCEPTION);
+        } /* end if (SSAIR && ASTE11_ASTEIN != GR_H(r1)) */
 
         /* Perform ASN authorization using current AX */
         ax = regs->CR_LHH(4);
@@ -4489,12 +4515,15 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Load new secondary STD or ASCE from the ASTE */
         sstd = ASTE_AS_DESIGNATOR(aste);
 
+        /* Load new secondary ASTEIN from the ASTE */
+        sastein = aste[11];
+
 #ifdef FEATURE_SUBSPACE_GROUP
         /* Perform subspace replacement on new SSTD */
         sstd = ARCH_DEP(subspace_replace) (sstd, sasteo, NULL, regs);
 #endif /*FEATURE_SUBSPACE_GROUP*/
 
-    } /* end if(SSAR-ss) */
+    } /* end if(SSAR-ss or SSAIR-ss) */
 
 #ifdef FEATURE_TRACING
     /* Update trace table address if ASN tracing is on */
@@ -4508,11 +4537,31 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* Load the new secondary STD into control register 7 */
     regs->CR(7) = sstd;
 
+    /* For SSAIR, and for SSAR when ASN-and-LX-reuse is enabled,
+       load the new secondary ASTEIN into control register 3 */
+    if (ssair_instruction || ASN_AND_LX_REUSE_ENABLED(regs))
+    {
+        regs->CR_H(3) = sastein;
+    } /* end if (SSAIR || ASN_AND_LX_REUSE_ENABLED) */
+
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-}
+} /* end ARCH_DEP(set_secondary_asn_proc) */
+
+
+/*-------------------------------------------------------------------*/
+/* B225 SSAR  - Set Secondary ASN                              [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(set_secondary_asn)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+    ARCH_DEP(set_secondary_asn_proc) (regs, r1, r2, 0);
+
+} /* end DEF_INST(set_secondary_asn) */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
@@ -4522,11 +4571,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 /*-------------------------------------------------------------------*/
 DEF_INST(set_secondary_asn_with_instance)
 {
-  int r1, r2;                           /* Values of R fields        */
+int     r1, r2;                         /* Values of R fields        */
 
-  RRE(inst, regs, r1, r2);
-  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
-}
+    RRE(inst, regs, r1, r2);
+    ARCH_DEP(set_secondary_asn_proc) (regs, r1, r2, 1);
+
+} /* end DEF_INST(set_secondary_asn_with_instance) */
 #endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
 
 
