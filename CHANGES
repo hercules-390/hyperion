@@ -1,3 +1,4 @@
+13 Oct 2001 synchronize_broadcast fix for SMP - Greg Smith
 12 Oct 2001 Win32 fthreads (finally!) - Fish
 11 Oct 2001 Remove Cygwin warnings displaying TID - Greg Smith
 11 Oct 2001 SMP performance - phase 4 - I/O interrupt queue - Greg Smith
@@ -19,7 +20,7 @@
 17 Sep 2001 Minor corrections to CEFR, CDFR, CXFR and MVPG - Jan Jaeger
 13 Sep 2001 CXR setting wrong cc when fract=0 but char not - Paul Leisy
 13 Sep 2001 Fix TRAP so page cross rupt does not set change bit - Paul Leisy
-13 Sep 2001 MVPG missing TEA bit 29 and OP ACCESS ID on PIC 11 - Paul Leisy 
+13 Sep 2001 MVPG missing TEA bit 29 and OP ACCESS ID on PIC 11 - Paul Leisy
 13 Sep 2001 MVPG should report PIC 11 on Page Table Length violation - Paul Leisy
 13 Sep 2001 Fix BSG so ALET=1 is always treated as subspace - Paul Leisy
 06 Sep 2001 Add FPO crossing checks to all storage fetches - Paul Leisy
@@ -864,3 +865,4 @@
 18 Oct 1999 Support for virtual tapes in OMA (Optical Media Attach) format
 18 Oct 1999 SCSI tape support (read-only)
 18 Oct 1999 Minor corrections to CKD DASD support
+

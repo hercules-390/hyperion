@@ -54,14 +54,14 @@ int     i;                              /* Array subscript           */
         while (IS_IC_BROADCAST_ON)
             if (IS_IC_BROADCAST(regs))
                 ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
-    else
-    {
+            else
+            {
                 release_lock (&sysblk.intlock);
 #ifdef OPTION_CS_USLEEP
                 usleep (1);
 #endif
                 obtain_lock (&sysblk.intlock);
-    }
+            }
         ON_IC_BROADCAST;
         sysblk.broadcast_mask = sysblk.started_mask;
         sysblk.broadcast_code = code;
@@ -106,17 +106,14 @@ int     i;                              /* Array subscript           */
         {
             WAKEUP_WAITING_CPUS(ALL_CPUS, CPUSTATE_STARTED);
             wait_condition (&sysblk.broadcast_cond, &sysblk.intlock);
-    }
-        else OFF_IC_BROADCAST;
+        }
+        OFF_IC_BROADCAST;
         release_lock (&sysblk.intlock);
     }
     else
     {
         if (sysblk.broadcast_mask == 0)
-        {
-            OFF_IC_BROADCAST;
             broadcast_condition (&sysblk.broadcast_cond);
-        }
         else
             wait_condition (&sysblk.broadcast_cond, &sysblk.intlock);
     }

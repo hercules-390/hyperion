@@ -356,7 +356,7 @@ typedef struct _REGS {                  /* Processor registers       */
 #define AR(_r)  ar[(_r)]
         U32     fpr[32];                /* Floating point registers  */
 // #if defined(FEATURE_BINARY_FLOATING_POINT)
-        U32     fpc;                    /* IEEE Floating Point 
+        U32     fpc;                    /* IEEE Floating Point
                                                     Control Register */
         U32     dxc;                    /* Data exception code       */
 // #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
@@ -447,9 +447,9 @@ typedef struct _REGS {                  /* Processor registers       */
         jmp_buf archjmp;                /* longjmp destination to
                                            switch architecture mode  */
 #if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
-	COND	intcond;				/* CPU interrupt condition   */
+        COND    intcond;                /* CPU interrupt condition   */
 #endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
-	U32	cpumask;				/* CPU mask                 */
+        U32     cpumask;                /* CPU mask                  */
     } REGS;
 
 /* Definitions for CPU state */
@@ -457,13 +457,13 @@ typedef struct _REGS {                  /* Processor registers       */
 #define CPUSTATE_STOPPING       2       /* CPU is stopping           */
 #define CPUSTATE_STARTED        4       /* CPU is started            */
 #define CPUSTATE_STARTING       8       /* CPU is starting           */
-#define CPUSTATE_ALL		  255		/* All CPU states            */
+#define CPUSTATE_ALL          255       /* All CPU states            */
 
-#define	ALL_CPUS		0xffffffff
+#define ALL_CPUS                0xffffffff
 
 /* Macros to signal interrupt condition to a CPU[s] */
 #if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
-#define	WAKEUP_CPU(cpu) signal_condition(&sysblk.regs[(cpu)].intcond)
+#define WAKEUP_CPU(cpu) signal_condition(&sysblk.regs[(cpu)].intcond)
 #define WAKEUP_WAITING_CPU(mask,statemask) \
  { int i; \
    for (i = 0; i < MAX_CPU_ENGINES; i++) \

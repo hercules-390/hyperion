@@ -1,42 +1,42 @@
-/* FEATALL.H	(c) Copyright Jan Jaeger, 2000-2001		     */
-/*		Architecture-dependent macro definitions	     */
+/* FEATALL.H    (c) Copyright Jan Jaeger, 2000-2001                  */
+/*              Architecture-dependent macro definitions             */
 
 /*-------------------------------------------------------------------*/
-/* Default features						     */
-/*   All existing features MUST be #undef-ed here.		     */
+/* Default features                                                  */
+/*   All existing features MUST be #undef-ed here.                   */
 /*-------------------------------------------------------------------*/
-#define MAX_CPU_ENGINES 	      2 /* Maximum number of engines */
-#undef  SMP_SERIALIZATION		/* Serialize storage for SMP */
-#define VECTOR_SECTION_SIZE	    128 /* Vector section size	     */
+#define MAX_CPU_ENGINES               2 /* Maximum number of engines */
+#undef  SMP_SERIALIZATION               /* Serialize storage for SMP */
+#define VECTOR_SECTION_SIZE         128 /* Vector section size       */
 #define VECTOR_PARTIAL_SUM_NUMBER     1 /* Vector partial sum number */
-#define CKD_MAXFILES		      4 /* Max files per CKD volume  */
-#define OPTION_MIPS_COUNTING		/* Display MIPS on ctl panel */
-#define OPTION_TODCLOCK_DRAG_FACTOR	/* Enable toddrag feature    */
-#define PANEL_REFRESH_RATE		/* Enable panrate feature    */
-#define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate	     */
-#define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate	     */
+#define CKD_MAXFILES                  4 /* Max files per CKD volume  */
+#define OPTION_MIPS_COUNTING            /* Display MIPS on ctl panel */
+#define OPTION_TODCLOCK_DRAG_FACTOR     /* Enable toddrag feature    */
+#define PANEL_REFRESH_RATE              /* Enable panrate feature    */
+#define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate         */
+#define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate         */
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
-#define OPTION_AIA_BUFFER		/* Instruction addr cache    */
-#define OPTION_AEA_BUFFER		/* Effective addr cache      */
-#undef  OPTION_NO_INLINE_DAT		/* Performance option	     */
-#define OPTION_NO_INLINE_LOGICAL	/* Performance option	     */
-#undef  OPTION_NO_INLINE_VSTORE 	/* Performance option	     */
-#define OPTION_NO_INLINE_IFETCH 	/* Performance option	     */
-#define OPTION_CPU_UNROLL       	/* Performance option	     */
-#define OPTION_FAST_MOVECHAR    	/* Performance option	     */
-#define OPTION_FAST_MOVELONG    	/* Performance option	     */
-#define OPTION_FAST_INSTFETCH   	/* Performance option	     */
-#define OPTION_FAST_LOGICAL       	/* Performance option	     */
-#define OPTION_FAST_PREFIX       	/* Performance option	     */
-#define OPTION_REDUCED_INVAL     	/* Performance option	     */
-#define OPTION_FETCHIBYTE       	/* Performance option	     */
-#undef	OPTION_CS_USLEEP			/* Sleep if CS collision         */
-#define OPTION_FAST_INTCOND			/* Ea CPU has intcond COND       */
+#define OPTION_AIA_BUFFER               /* Instruction addr cache    */
+#define OPTION_AEA_BUFFER               /* Effective addr cache      */
+#undef  OPTION_NO_INLINE_DAT            /* Performance option        */
+#define OPTION_NO_INLINE_LOGICAL        /* Performance option        */
+#undef  OPTION_NO_INLINE_VSTORE         /* Performance option        */
+#define OPTION_NO_INLINE_IFETCH         /* Performance option        */
+#define OPTION_CPU_UNROLL               /* Performance option        */
+#define OPTION_FAST_MOVECHAR            /* Performance option        */
+#define OPTION_FAST_MOVELONG            /* Performance option        */
+#define OPTION_FAST_INSTFETCH           /* Performance option        */
+#define OPTION_FAST_LOGICAL             /* Performance option        */
+#define OPTION_FAST_PREFIX              /* Performance option        */
+#define OPTION_REDUCED_INVAL            /* Performance option        */
+#define OPTION_FETCHIBYTE               /* Performance option        */
+#undef  OPTION_CS_USLEEP                /* Sleep if CS collision     */
+#define OPTION_FAST_INTCOND             /* Ea CPU has intcond COND   */
 #define OPTION_IOINTQ                   /* I/O interrupt queue       */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
-#undef  OPTION_INSTRUCTION_COUNTING	/* First use trace and count */
-#define OPTION_CKD_KEY_TRACING		/* Trace CKD search keys     */
-#undef	OPTION_CMPSC_DEBUGLVL	   /* 3 ** 1=Exp 2=Comp 3=Both debug */
+#undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
+#define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */
+#undef  OPTION_CMPSC_DEBUGLVL      /* 3 ** 1=Exp 2=Comp 3=Both debug */
 
 /* This is set as appropriate by configure and makefile.w32; don't
    undefine it -mdz */
