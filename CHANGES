@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+05 Dec 2003 Add "filename completion" shortcut via TAB character to panel.c - Volker Bandke, original code by Marian Gasparovic
 01 Dec 2003 Signal Quiesce (shutdown) & ssd command - Jan Jaeger
 29 Nov 2003 Fix race condition in console.c recv_3270_data causing 100%
             CPU utilization, zero MIPS" Hercules hang symptom (version

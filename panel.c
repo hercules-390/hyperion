@@ -183,7 +183,7 @@ static int     nummsgs = 0;             /* Number of msgs in buffer  */
 #if 1
 //
 //
-//  THE FOLLOWING CODE IS HERE TO PROVIDE COMPATIBILIY WITH THE CURRENT 
+//  THE FOLLOWING CODE IS HERE TO PROVIDE COMPATIBILIY WITH THE CURRENT
 //  PANEL IMPLEMENTATION
 //
 //  THE PANEL DISPLAY SHOULD AT SOME POINT BE REWRITTEN TO USE LOG_LINE
@@ -218,7 +218,7 @@ static void *panel_compat_thread(void *arg)
 
     UNREFERENCED(arg);
 
-    while(!compat_shutdown) 
+    while(!compat_shutdown)
         if((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_BLOCK)))
             fwrite(lmsbuf,lmscnt,1,compat_msgpipew);
 
@@ -832,7 +832,7 @@ BYTE    readbuf[MSG_SIZE];              /* Message read buffer       */
 int     readoff = 0;                    /* Number of bytes in readbuf*/
 BYTE    cmdline[CMD_SIZE+1];            /* Command line buffer       */
 int     cmdoff = 0;                     /* Cursor position in cmdline*/
-int     cmdlen = 0;                     /* Number of bytes in cmdline*/  
+int     cmdlen = 0;                     /* Number of bytes in cmdline*/
 BYTE    c;                              /* Character work area       */
 FILE   *confp;                          /* Console file pointer      */
 struct termios kbattr;                  /* Terminal I/O structure    */
@@ -1247,7 +1247,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                     redraw_cmd = 1;
                     break;
                 }
-                
+
                 /* Process LEFT_ARROW character              */
                 if (strcmp(kbbuf+i, KBD_LEFT_ARROW) == 0
                     || strcmp(kbbuf+i, xKBD_LEFT_ARROW) == 0)
@@ -1265,7 +1265,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                     || strcmp(kbbuf+i, KBD_INSERT) == 0)
                 {
                     redraw_msgs = 1;
-                    if (cmdoff < cmdlen) 
+                    if (cmdoff < cmdlen)
                         cmdoff++;
                     break;
                 }
@@ -1278,6 +1278,17 @@ struct  timeval tv;                     /* Select timeout structure  */
                     NPDup = 1;
                     /* =END= */
                     break;
+                }
+
+                /* Process TAB character              */
+                if (kbbuf[i] == '\t' || kbbuf[i] == '\x7F')
+                {
+                   tab_pressed(cmdline, &cmdoff);
+                   cmdlen = strlen(cmdline);
+                   /* cmdoff = cmdlen;                */
+                   i++;
+                   redraw_cmd = 1;
+                   break;
                 }
 
                 /* Process the command if newline was read */
@@ -1364,7 +1375,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                             cmdline[j+1] = cmdline[j];
                         cmdline[cmdoff++] = kbbuf[i];
                     }
-                    else 
+                    else
                         cmdline[cmdoff++] = kbbuf[i];
                     cmdlen++;
                 }
