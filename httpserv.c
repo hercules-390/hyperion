@@ -556,7 +556,7 @@ int                     optval;         /* Argument for setsockopt   */
 TID                     httptid;        /* Negotiation thread id     */
 
     /* Display thread started message on control panel */
-    logmsg ("HHS019I HTTP connection thread started: "
+    logmsg ("HHS019I HTTP listener thread started: "
             "tid="TIDPAT", pid=%d\n",
             thread_id(), getpid());
 
