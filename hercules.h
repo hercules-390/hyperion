@@ -1851,6 +1851,7 @@ void *timer_update_thread (void *argp);
 /* Functions in module service.c */
 void scp_command (BYTE *command, int priomsg);
 void signal_quiesce (U16 count, BYTE unit);
+void sclp_reset();
 
 /* Functions in module ckddasd.c */
 void ckd_build_sense ( DEVBLK *, BYTE, BYTE, BYTE, BYTE, BYTE);

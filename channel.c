@@ -1197,6 +1197,9 @@ int     console = 0;                    /* 1 = console device reset  */
 // #if defined(FEATURE_CHANNEL_SWITCHING)
 int i;
 
+    /* reset sclp interface */
+    sclp_reset();
+
     /* Connect each channel set to its home cpu */
     for(i = 0; i < MAX_CPU_ENGINES; i++)
         sysblk.regs[i].chanset = i;

@@ -43,6 +43,19 @@ static  int     servc_signal_quiesce_pending = 0;  /* Signal Quiesce */
 static  U16     servc_signal_quiesce_count;
 static  BYTE    servc_signal_quiesce_unit;
 
+void sclp_reset()
+{
+    servc_cp_recv_mask = 0;
+    servc_cp_send_mask = 0;
+    servc_scpcmdstr[0] = '\0';
+    servc_scpcmdtype = 0;
+    servc_signal_quiesce_pending = 0;
+    servc_signal_quiesce_count = 0;
+    servc_signal_quiesce_unit = 0;
+
+    sysblk.servparm = 0;
+}
+
 // #ifdef FEATURE_SYSTEM_CONSOLE
 /*-------------------------------------------------------------------*/
 /* Issue SCP command                                                 */
