@@ -1424,8 +1424,6 @@ U32             flag;                   /* Cache flag                */
 char           *compress[] = {"none", "zlib", "bzip2"};
 BYTE            buf2[65536];            /* Compress buffer           */
 
-    cckd = dev->cckd_ext;
-
 #ifndef WIN32
     /* Set writer priority just below cpu priority to mimimize the
        compression effect */
