@@ -501,18 +501,18 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     regs->CR_LHL(3) = regs->CR_LHL(4);
 
     /* Reset the subspace fields in the DUCT */
-    if (dasteo == (duct0 & DUCT0_BASTEO))
-    {
-        /* When the destination ASTE is the base space,
-           reset the subspace active bit in the DUCT */
-        duct1 &= ~DUCT1_SA;
-        ARCH_DEP(store_fullword_absolute) (duct1, ducto+4, regs);
-    }
-    else if (alet == ALET_SECONDARY)
+    if (alet == ALET_SECONDARY)
     {
         /* When the destination ASTE specifies a subspace by means
            of ALET 1, set the subspace active bit in the DUCT */
         duct1 |= DUCT1_SA;
+        ARCH_DEP(store_fullword_absolute) (duct1, ducto+4, regs);
+    }
+    else if (dasteo == (duct0 & DUCT0_BASTEO))
+    {
+        /* When the destination ASTE is the base space,
+           reset the subspace active bit in the DUCT */
+        duct1 &= ~DUCT1_SA;
         ARCH_DEP(store_fullword_absolute) (duct1, ducto+4, regs);
     }
     else
