@@ -46,6 +46,10 @@
 // (handled automatically in configure.ac)
 // #define OPTION_DYNAMIC_LOAD
 
+#if !defined(MAX_CPU_ENGINES)
+#define MAX_CPU_ENGINES               2
+#endif
+
 
 /* Allow for compiler command line overrides */
 #if defined(OPTION_370_MODE) && defined(NO_370_MODE)
