@@ -2449,7 +2449,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         else
             pcnum = ((effective_addr2 & PC_LFX1) >> 1)
                     | (effective_addr2 & (PC_LFX2 | PC_LSX | PC_EX));
-    } 
+    }
 
     /* Special operation exception if DAT is off, or if
        in secondary space mode or home space mode */
@@ -2566,7 +2566,22 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 //           we apply prefixing and address wrapping for each
 //           loop iteration ??  Also, would 0x7fffffff be correct
 //           for esame ??  Can we do the code below instead ??
-
+//RESPONSE:  I think you must be right. Each ETE is 16 or 32 bytes
+//           long and starts on a 16 or 32 byte boundary. So it
+//           cannot cross a page boundary, so the absolute address
+//           only needs to be calculated once. 0x7FFFFFFF WOULD be
+//           correct, because the ET has a 31 bit address EVEN IN
+//           ESAME, but we cannot cross a page, so it is needed only
+//           when calculating the start address as above. S390 POP
+//           and z/POP figure 3-2 Address Wraparound both say that
+//           ET address wraps after 2**31-1 but it is unpredictable
+//           whether it wraps to 0 or causes an addressing exception.
+//           Either would be correct; we choose to wrap.
+//           Incidentally, the original comment above should be
+//           changed to "the entry table ENTRY cannot cross a page
+//           boundary" (the entry table as a whole could cross,
+//           but an individual entry table entry cannot).
+//Response by rbowler 14juin2004
 #if 1
     abs = APPLY_PREFIXING (eto, regs->PX);
     if (abs > regs->mainlim - (numwords * 4))
