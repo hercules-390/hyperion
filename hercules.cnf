@@ -81,12 +81,38 @@
   000D    3525    punch00d.txt ascii
   000E    1403    print00e.txt crlf
   001F    3270
+#         The following statements are examples. Some of them require 
+#         user tailoring before being used.
 # 0580    3420    ickdsf.ipl
 # 0120    3380    mvsv5r.120
 # 0121    3380    mvsv5d.121
 # 0122    3380    mvswk1.122
 # 0140    9336    dosres.140
 # 0141    9336    syswk1.141
+#
+#         The following statement defines 3 3270 devices starting
+#             at address 0200
 # 0200.3  3270
+#
+#         The following statement defines 3480 devices 
+#             at addresses 0280 to 028F
+# 0280-028F 3480
+#
+#         The following statement defines 3420 devices
+#             at addresses 02C0 & 02C2
+# 02C0,02C2 3420
 # 0300    3370    sysres.300
+#
+#         The following statements define 3380 Devices
+#             with the CUU substituted in the device file name
+#             device file names will be
+#                  400.3380, 401.3380, 402.3380 and 403.3380
+# 400-403 3380   $(CUU).3380
+#
+#         CCUU may also be used to define a 4 digit device address
+#                 in the name
+#                 device file names will be 
+#                 0480.3380, 0481.3380, 0482.3380 and 0483.3380
+# 480-483 3380   $(CCUU).3380
+#
 # 0700    3270
