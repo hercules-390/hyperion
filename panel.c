@@ -772,20 +772,6 @@ int volatile initdone = 0;           /* Initialization complete flag */
 #define BUF_SIZE    (MAX_MSGS*MSG_SIZE) /* Total size of buffer      */
 #define NUM_LINES               22      /* Number of scrolling lines */
 #define CMD_SIZE             32767      /* Length of command line    */
-BYTE   *msgbuf;                         /* Circular message buffer   */
-int     msgslot = 0;                    /* Next available buffer slot*/
-int     nummsgs = 0;                    /* Number of msgs in buffer  */
-int     msg_size = MSG_SIZE;
-int     max_msgs = MAX_MSGS;
-
-void get_msgbuf(BYTE **_msgbuf, int *_msgslot, int *_nummsgs, int *_msg_size, int *_max_msgs)
-{
-    *_msgbuf = msgbuf;
-    *_msgslot = msgslot;
-    *_nummsgs = nummsgs;
-    *_msg_size = msg_size;
-    *_max_msgs = max_msgs;
-}
 
 /* (forward references) */
 #ifdef EXTERNALGUI
@@ -805,6 +791,9 @@ BYTE    pswwait;                        /* PSW wait state bit        */
 int     firstmsgn = 0;                  /* Number of first message to
                                            be displayed relative to
                                            oldest message in buffer  */
+BYTE   *msgbuf;                         /* Circular message buffer   */
+int     msgslot = 0;                    /* Next available buffer slot*/
+int     nummsgs = 0;                    /* Number of msgs in buffer  */
 #ifdef EXTERNALGUI
 BYTE    redraw_msgs = 0;                /* 1=Redraw message area     */
 BYTE    redraw_cmd = 0;                 /* 1=Redraw command line     */

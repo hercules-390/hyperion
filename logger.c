@@ -25,35 +25,82 @@ int  logger_currmsg;
 int  logger_wrapped;
 
 
+/* Find the index for a specific line number in the log,
+   one being the most recent line                                    */
+int log_line(int linenumber)
+{
+char *msgbuf[2],*tmpbuf;
+int  msgidx[2] = { -1, -1 };
+int  msgcnt[2];
+int  i;
+
+    if(!linenumber++)
+        return logger_currmsg;
+
+    /* Find the last two blocks in the log */
+    do {
+        msgidx[0] = msgidx[1];
+        msgbuf[0] = msgbuf[1];
+        msgcnt[0] = msgcnt[1];
+    } while((msgcnt[1] = log_read(&msgbuf[1], &msgidx[1], LOG_NOBLOCK)));
+
+    for(i = 0; i < 2 && linenumber; i++)
+        if(msgidx[i] != -1)
+        {
+            for(; linenumber > 0; linenumber--)
+            {
+                if(!(tmpbuf = memrchr(msgbuf[i],'\n',msgcnt[i])))
+                    break;
+                msgcnt[i] = tmpbuf - msgbuf[i];
+            }
+            if(!linenumber)
+                break;
+        }
+    return i ? msgcnt[i] + msgidx[0] : msgcnt[i];
+}
+
+
+/* log_read - read system log                                        */
+/* parameters:                                                       */
+/*   buffer   - pointer to bufferpointer                             */
+/*              the bufferpointer will be returned                   */
+/*   msgindex - an index used on multiple read requests              */
+/*              a value of -1 ensures that reading starts at the     */
+/*              oldest entry in the log                              */
+/*   block    - LOG_NOBLOCK - non blocking request                   */
+/*              LOG_BLOCK   - blocking request                       */
+/* returns:                                                          */
+/*   number of bytes in buffer or zero                               */
 /*                                                                   */
-int log_read(char **buffer, int *msgnumber, int block)
+/*                                                                   */
+int log_read(char **buffer, int *msgindex, int block)
 {
 int bytes_returned;
 
     obtain_lock(&logger_lock);
 
-    if(*msgnumber == logger_currmsg && block)
+    if(*msgindex == logger_currmsg && block)
         wait_condition(&logger_cond, &logger_lock);
 
-    if(*msgnumber != logger_currmsg)
+    if(*msgindex != logger_currmsg)
     {
-        if(*msgnumber < 0)
-            *msgnumber = logger_wrapped ? logger_currmsg : 0;
+        if(*msgindex < 0)
+            *msgindex = logger_wrapped ? logger_currmsg : 0;
 
-        if(*msgnumber < 0 || *msgnumber >= logger_bufsize)
-            *msgnumber = 0;
+        if(*msgindex < 0 || *msgindex >= logger_bufsize)
+            *msgindex = 0;
 
-        *buffer = logger_buffer + *msgnumber;
+        *buffer = logger_buffer + *msgindex;
 
-        if(*msgnumber >= logger_currmsg)
+        if(*msgindex >= logger_currmsg)
         {
-            bytes_returned = logger_bufsize - *msgnumber;
-            *msgnumber = 0;
+            bytes_returned = logger_bufsize - *msgindex;
+            *msgindex = 0;
         }
         else
         {
-            bytes_returned = logger_currmsg - *msgnumber;
-            *msgnumber = logger_currmsg;
+            bytes_returned = logger_currmsg - *msgindex;
+            *msgindex = logger_currmsg;
         }
     }
     else

@@ -183,28 +183,13 @@ void cgibin_psw(WEBBLK *webblk)
 }
 
 
-#if 0
-void get_msgbuf(BYTE **msgbuf, int *msgslot, int *nummsgs, int *msg_size, int *max_msgs);
-#endif
-
 void cgibin_syslog(WEBBLK *webblk)
 {
-#if 0
-BYTE   *msgbuf;                         /* Circular message buffer   */
-int     msgslot;                        /* Next available buffer slot*/
-int     nummsgs;                        /* Number of msgs in buffer  */
-int     msg_size;
-int     max_msgs;
-BYTE   *pointer;
-int     currmsgn;
-#else
 int     msgcnt;
 int     msgnum = -1;
 char   *msgbuf;
-#endif
 
 char   *command;
-
 
 char   *value;
 int     autorefresh = 0;
@@ -242,27 +227,9 @@ int     msgcount = 22;
     fprintf(webblk->hsock, "<H2>Hercules System Log</H2>\n");
     fprintf(webblk->hsock, "<PRE>\n");
 
-#if 0
-    get_msgbuf(&msgbuf, &msgslot, &nummsgs, &msg_size, &max_msgs);
-
-    for(currmsgn = 0; currmsgn < nummsgs; currmsgn++) {
-        if(!msgcount || currmsgn >= (nummsgs - msgcount))
-        {
-            if(nummsgs < max_msgs)
-                pointer = msgbuf + (currmsgn * msg_size);
-            else
-                if(currmsgn + msgslot < max_msgs) 
-                    pointer = msgbuf + ((currmsgn + msgslot) * msg_size);
-                else
-                    pointer = msgbuf + ((currmsgn + msgslot - max_msgs) * msg_size);
-    
-            fprintf(webblk->hsock,"%80.80s\n",pointer);
-        }
-    }
-#else
+    msgnum = msgcount ? log_line(msgcount) : -1;
     while((msgcnt = log_read(&msgbuf, &msgnum, LOG_NOBLOCK)))
         fwrite(msgbuf,msgcnt,1,webblk->hsock);
-#endif
 
     fprintf(webblk->hsock, "</PRE>\n");
 

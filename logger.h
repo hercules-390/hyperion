@@ -17,4 +17,5 @@
 #define logmsg(_message...) printf(_message)
 
 void logger_init(void);
-int log_read(char **buffer, int *msgnumber, int block);
+int log_read(char **buffer, int *msgindex, int block);
+int log_line(int linenumber);
