@@ -7,7 +7,7 @@
 
 #if defined(BUILTIN_STRERROR_R)
 void strerror_r_init(void);
-int  strerror_r(int err,char *bfr,size_t sz);
+int  strerror_r(int, char *, size_t);
 #endif /* BUILTIN_STRERROR_R */
 
 #if defined(OPTION_CONFIG_SYMBOLS)

@@ -60,7 +60,9 @@ typedef struct _SYMBOL_TOKEN
 static SYMBOL_TOKEN **symbols=NULL;
 static int symbol_count=0;
 static int symbol_max=0;
+#if !defined(MIN)
 #define MIN(_x,_y) ( ( ( _x ) < ( _y ) ) ? ( _x ) : ( _y ) )
+#endif /* !defined(MIN) */
 
 /* This function retrieves or allocates a new SYMBOL_TOKEN */
 static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)

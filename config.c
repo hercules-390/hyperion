@@ -1423,7 +1423,9 @@ BYTE **orig_newargv;
 
     /* Obtain main storage */
     sysblk.mainsize = mainsize * 1024 * 1024;
-//  sysblk.mainstor = malloc(sysblk.mainsize);
+#if !defined(MAP_ANONYMOUS) /* the following fix isn't needed */
+    sysblk.mainstor = malloc(sysblk.mainsize);
+#else /* !defined(MAP_ANONYMOUS) */
     /*
              Windows "double memory consumption" bug fix
              (which should work on all other systems too)
@@ -1472,6 +1474,7 @@ BYTE **orig_newargv;
     */
     sysblk.mainstor = mmap(0, sysblk.mainsize,
         PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+#endif /* !defined(MAP_ANONYMOUS) */
 
     if (sysblk.mainstor == NULL)
     {
