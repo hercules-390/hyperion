@@ -149,6 +149,7 @@
 29 May 2004 Remove "fake loading of <windows.h>" in hercules.h - Fish
 28 May 2004 TUNTAP_SetDestAddr: 'ifr_addr' (NOT 'ifr_dstaddr') - Fish
 28 May 2004 ffs.pat - SMP fix for ffs macro - Greg Smith
+24 May 2004 Mac OS X CTC support - Jay Maynard
 24 May 2004 gcwait.pat, cckdfat.pat - cckd fixes - Greg Smith
 22 May 2004 Fix crypto/Makefile.am warning about CFLAGS use - Ivan Warren
 22 May 2004 Fix warning about CONTAINING_RECORD macro (linklist.h) - Fish

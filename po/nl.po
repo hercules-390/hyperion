@@ -5,14 +5,14 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-14 16:39+0200\n"
+"POT-Creation-Date: 2004-12-04 17:35-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Report-Msgid-Bugs-To: \n"
 
 #: cache.c:384
 #, fuzzy, c-format
@@ -175,7 +175,6 @@ msgid "cckdcdsk: read error: %s\n"
 msgstr ""
 
 #: cckdcdsk.c:109
-#, c-format
 msgid "cckdcdsk: OPENED bit is on, use `-f'\n"
 msgstr ""
 
@@ -195,7 +194,6 @@ msgid "size %d used %d free %d first 0x%x number %d\n"
 msgstr ""
 
 #: cckdcdsk.c:152
-#, c-format
 msgid ""
 "\n"
 "cckdcdsk [-v] [-f] [-level] [-ro] file-name\n"
@@ -224,7 +222,6 @@ msgid "cckdcomp: read error: %s\n"
 msgstr ""
 
 #: cckdcomp.c:92
-#, c-format
 msgid "cckdcomp: OPENED bit is on, use `-f'\n"
 msgstr ""
 
@@ -293,7 +290,7 @@ msgid "HHCCD001I Readahead thread %d started: tid="
 msgstr "HHCCP012I Timer thread gestart: tid=%p, pid=%d\n"
 
 #: cckddasd.c:1493 cckddasd.c:1543 cckddasd.c:1683 cckddasd.c:1793
-#: cckddasd.c:4129 console.c:1520 cpu.c:1098 httpserv.c:586 panel.c:843
+#: cckddasd.c:4129 console.c:1520 cpu.c:1122 httpserv.c:586 panel.c:843
 #: shared.c:2488 shared.c:2651 sockdev.c:389
 #, c-format
 msgid ", pid=%d\n"
@@ -571,7 +568,6 @@ msgid "cckdswap: %s is not a compressed ckd file\n"
 msgstr ""
 
 #: cckdswap.c:94
-#, c-format
 msgid "cckdswap: error during swap\n"
 msgstr ""
 
@@ -581,7 +577,6 @@ msgid "cckdswap: %s changed from %s to %s\n"
 msgstr ""
 
 #: cckdswap.c:109
-#, c-format
 msgid ""
 "usage:  cckdswap cckd-file\n"
 "\n"
@@ -1426,132 +1421,132 @@ msgid "HHCTE006A Enter input for console device %4.4X\r\n"
 msgstr ""
 "HHCRD007I standaard waarde 'ascii' aan socket apparaat %4.4X toegekend\n"
 
-#: cpu.c:230
+#: cpu.c:253
 msgid "HHCCP043I Wait state PSW loaded: "
 msgstr ""
 
-#: cpu.c:410
+#: cpu.c:433
 #, c-format
 msgid "program_int() passing to guest code=%4.4X\n"
 msgstr ""
 
-#: cpu.c:499
+#: cpu.c:523
 msgid "HHCCP014I "
 msgstr ""
 
-#: cpu.c:502 hscmisc.c:747
+#: cpu.c:526 hscmisc.c:747
 msgid "SIE: "
 msgstr ""
 
-#: cpu.c:507
+#: cpu.c:531
 #, c-format
 msgid "CPU%4.4X: %s CODE=%4.4X ILC=%d\n"
 msgstr ""
 
-#: cpu.c:611
+#: cpu.c:636
 #, c-format
 msgid "HHCCP015I CPU%4.4X PER event: code=%4.4X perc=%2.2X addr="
 msgstr ""
 
-#: cpu.c:612 ecpsvm.c:387 ecpsvm.c:1158 ecpsvm.c:1163 sie.c:249 sie.c:372
-#: stack.c:580 stack.c:603 stack.c:665 stack.c:683 stack.c:691 stack.c:715
-#: stack.c:738 stack.c:791 stack.c:869 stack.c:897 stack.c:924 stack.c:952
-#: stack.c:964 stack.c:975 stack.c:1029 stack.c:1053 stack.c:1308 stack.c:1334
-#: stack.c:1342 stack.c:1380 stack.c:1475 stack.c:1511 stack.c:1556
-#: stack.c:1591
+#: cpu.c:637 ecpsvm.c:399 ecpsvm.c:1170 ecpsvm.c:1175 sie.c:249 sie.c:372
+#: stack.c:386 stack.c:409 stack.c:471 stack.c:489 stack.c:497 stack.c:521
+#: stack.c:544 stack.c:597 stack.c:675 stack.c:703 stack.c:730 stack.c:758
+#: stack.c:770 stack.c:781 stack.c:835 stack.c:859 stack.c:1114 stack.c:1140
+#: stack.c:1148 stack.c:1186 stack.c:1281 stack.c:1317 stack.c:1362
+#: stack.c:1397
 msgid "\n"
 msgstr ""
 
-#: cpu.c:779
+#: cpu.c:804
 #, c-format
 msgid "HHCCP016I CPU%4.4X: Program interrupt loop: "
 msgstr ""
 
-#: cpu.c:887
+#: cpu.c:911
 #, c-format
 msgid ""
 "HHCCP044I I/O interrupt code=%4.4X CSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%"
 "2.2X\n"
 msgstr ""
 
-#: cpu.c:909
+#: cpu.c:933
 #, c-format
 msgid "HHCCP045I I/O interrupt code=%8.8X parm=%8.8X\n"
 msgstr ""
 
-#: cpu.c:912
+#: cpu.c:936
 #, c-format
 msgid "HHCCP046I I/O interrupt code=%8.8X parm=%8.8X id=%8.8X\n"
 msgstr ""
 
-#: cpu.c:978
+#: cpu.c:1002
 #, c-format
 msgid "HHCCP022I Machine Check code=%16.16llu\n"
 msgstr ""
 
-#: cpu.c:1039
+#: cpu.c:1063
 #, fuzzy, c-format
 msgid "HHCCP001W CPU%4.4X thread set priority %d failed: %s\n"
 msgstr "HHCCP002I CPU%4.4X thread al gestart\n"
 
-#: cpu.c:1046
+#: cpu.c:1070
 #, fuzzy, c-format
 msgid "HHCCP002I CPU%4.4X thread started: tid="
 msgstr "HHCCP002I CPU%4.4X thread al gestart\n"
 
-#: cpu.c:1046 timer.c:314
+#: cpu.c:1070 timer.c:314
 #, c-format
 msgid ", pid=%d, priority=%d\n"
 msgstr ""
 
-#: cpu.c:1069
+#: cpu.c:1093
 #, fuzzy, c-format
 msgid "HHCCP006S Cannot create timer thread: %s\n"
 msgstr "HHCPN119E Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: cpu.c:1098
+#: cpu.c:1122
 #, fuzzy, c-format
 msgid "HHCCP008I CPU%4.4X thread ended: tid="
 msgstr "HHCCP008I CPU%4.4X thread geeindigd: tid=%8.8lX, pid=%d\n"
 
-#: cpu.c:1303
+#: cpu.c:1331
 #, c-format
 msgid "HHCCP010I CPU%4.4X store status completed.\n"
 msgstr ""
 
-#: cpu.c:1364
+#: cpu.c:1392
 #, c-format
 msgid ""
 "HHCCP011I CPU%4.4X: Disabled wait state\n"
 "          "
 msgstr ""
 
-#: cpu.c:1454
+#: cpu.c:1482
 #, fuzzy, c-format
 msgid "HHCCP007I CPU%4.4X architecture mode set to %s\n"
 msgstr "HHCCP007I CPU%4.4X Architectuur Modus %s\n"
 
-#: cpu.c:1464
+#: cpu.c:1492
 #, fuzzy, c-format
 msgid "HHCCP003I CPU%4.4X architecture mode %s\n"
 msgstr "HHCCP003I CPU%4.4X Architectuur Modus %s\n"
 
-#: cpu.c:1469
+#: cpu.c:1497
 #, fuzzy, c-format
 msgid "HHCCP004I CPU%4.4X Vector Facility online\n"
 msgstr "HHCCP003I CPU%4.4X Architectuur Modus %s\n"
 
-#: cpu.c:1495
+#: cpu.c:1523
 #, fuzzy, c-format
 msgid "HHCCP080E CPU%4.4X malloc failed for archjmp regs: %s\n"
 msgstr "HHCCP003I CPU%4.4X Architectuur Modus %s\n"
 
-#: cpu.c:1608
+#: cpu.c:1638
 #, c-format
 msgid "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: cpu.c:1615
+#: cpu.c:1645
 #, c-format
 msgid ""
 "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%"
@@ -1573,181 +1568,181 @@ msgstr ""
 msgid "HHCCT073I %4.4X: TUN device %s opened\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: ctc_ctci.c:664
+#: ctc_ctci.c:666
 #, c-format
 msgid "HHCCT040I %4.4X: Halt or Clear Recognized\n"
 msgstr ""
 
-#: ctc_ctci.c:713
+#: ctc_ctci.c:715
 #, c-format
 msgid "HHCCT041I %4.4X: CTC Received Frame (%d bytes):\n"
 msgstr ""
 
-#: ctc_ctci.c:751
+#: ctc_ctci.c:753
 #, c-format
 msgid "HHCCT042E %4.4X Write CCW count %u is invalid\n"
 msgstr ""
 
-#: ctc_ctci.c:780
+#: ctc_ctci.c:782
 #, c-format
 msgid "HHCCT043I %4.4X: Interface command: %s %8.8X\n"
 msgstr ""
 
-#: ctc_ctci.c:807 ctcadpt.c:725
+#: ctc_ctci.c:809 ctcadpt.c:725
 #, c-format
 msgid "CTC101W %4.4X: Write buffer contains invalid frame offset %u\n"
 msgstr ""
 
-#: ctc_ctci.c:829
+#: ctc_ctci.c:831
 #, c-format
 msgid ""
 "HHCCT044E %4.4X: Write buffer contains incomplete segment header at offset %"
 "4.4X\n"
 msgstr ""
 
-#: ctc_ctci.c:849
+#: ctc_ctci.c:851
 #, c-format
 msgid ""
 "HHCCT045E %4.4X: Write buffer contains invalid segment length %u at offset %"
 "4.4X\n"
 msgstr ""
 
-#: ctc_ctci.c:864
+#: ctc_ctci.c:866
 #, c-format
 msgid "HHCCT046I %4.4X: Sending packet to %s:\n"
 msgstr ""
 
-#: ctc_ctci.c:874
+#: ctc_ctci.c:876
 #, c-format
 msgid "HHCCT047E %4.4X: Error writing to %s: %s\n"
 msgstr ""
 
-#: ctc_ctci.c:936
+#: ctc_ctci.c:938
 #, c-format
 msgid "HHCCT048E %4.4X: Error reading from %s: %s\n"
 msgstr ""
 
-#: ctc_ctci.c:948
+#: ctc_ctci.c:950
 #, c-format
 msgid "HHCCT049I %4.4X: Received packet from %s (%d bytes):\n"
 msgstr ""
 
-#: ctc_ctci.c:960
+#: ctc_ctci.c:962
 #, c-format
 msgid "HHCCT072W %4.4X: Packet too big; dropped.\n"
 msgstr ""
 
-#: ctc_ctci.c:1105 ctc_ctci.c:1278
+#: ctc_ctci.c:1107 ctc_ctci.c:1280
 #, c-format
 msgid "HHCCT056E %4.4X: Incorrect number of parameters\n"
 msgstr ""
 
-#: ctc_ctci.c:1180
+#: ctc_ctci.c:1182
 #, c-format
 msgid "HHCCT050E %4.4X: Invalid adapter address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1189
+#: ctc_ctci.c:1191
 #, fuzzy, c-format
 msgid "HHCCT051E %4.4X: Invalid device name %s\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: ctc_ctci.c:1202
+#: ctc_ctci.c:1204
 #, c-format
 msgid "HHCCT052E %4.4X: Invalid kernel buffer size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1216
+#: ctc_ctci.c:1218
 #, c-format
 msgid "HHCCT053E %4.4X: Invalid DLL I/O buffer size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1229
+#: ctc_ctci.c:1231
 #, c-format
 msgid "HHCCT054E %4.4X: Invalid MTU size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1240
+#: ctc_ctci.c:1242
 #, c-format
 msgid "HHCCT055E %4.4X: Invalid netmask %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1251
+#: ctc_ctci.c:1253
 #, c-format
 msgid "HHCCT056E %4.4X: Invalid MAC address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1288
+#: ctc_ctci.c:1290
 #, c-format
 msgid "HHCCT057E %4.4X: Incorrect number of parameters\n"
 msgstr ""
 
-#: ctc_ctci.c:1296
+#: ctc_ctci.c:1298
 #, c-format
 msgid "HHCCT058E %4.4X: Invalid IP address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1308
+#: ctc_ctci.c:1310
 #, c-format
 msgid "HHCCT059E %4.4X: Invalid IP address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1324
+#: ctc_ctci.c:1326
 #, fuzzy, c-format
 msgid "HHCCT060E %4.4X: Incorrect number of parameters\n"
 msgstr "HHCCA013E %4.4X:Incorrecte %s specifikatie %s\n"
 
-#: ctc_ctci.c:1333
+#: ctc_ctci.c:1335
 #, fuzzy, c-format
 msgid "HHCCT061E %4.4X invalid device name %s\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: ctc_ctci.c:1347
+#: ctc_ctci.c:1349
 #, fuzzy, c-format
 msgid "HHCCT062E %4.4X: Invalid MTU size %s\n"
 msgstr "HHCCA018E %4.4X:Bind fout: %s\n"
 
-#: ctc_ctci.c:1358
+#: ctc_ctci.c:1360
 #, fuzzy, c-format
 msgid "HHCCT063E %4.4X: Invalid IP address %s\n"
 msgstr "HHCPN130E Ongeldig frame adres %8.8X\n"
 
-#: ctc_ctci.c:1370
+#: ctc_ctci.c:1372
 #, fuzzy, c-format
 msgid "HHCCT064E %4.4X: Invalid IP address %s\n"
 msgstr "HHCPN130E Ongeldig frame adres %8.8X\n"
 
-#: ctc_ctci.c:1382
+#: ctc_ctci.c:1384
 #, fuzzy, c-format
 msgid "HHCCT065E %4.4X: Invalid netmask %s\n"
 msgstr "HHCCA018E %4.4X:Bind fout: %s\n"
 
-#: ctc_ctci.c:1393
+#: ctc_ctci.c:1395
 #, fuzzy, c-format
 msgid "HHCCT066E %4.4X: Incorrect number of parameters\n"
 msgstr "HHCCA013E %4.4X:Incorrecte %s specifikatie %s\n"
 
-#: ctc_ctci.c:1411
+#: ctc_ctci.c:1413
 #, c-format
 msgid "HHCCT067E %4.4X: Invalid IP address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1426
+#: ctc_ctci.c:1428
 #, c-format
 msgid "HHCCT068E %4.4X: Invalid MAC address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1458
+#: ctc_ctci.c:1460
 #, c-format
 msgid "HHCCT069E %4.4X: Invalid kernel buffer size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1475
+#: ctc_ctci.c:1477
 #, c-format
 msgid "HHCCT070E %4.4X: Invalid DLL I/O buffer size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1486
+#: ctc_ctci.c:1488
 #, c-format
 msgid "HHCCT071E %4.4X: Incorrect number of parameters\n"
 msgstr ""
@@ -2166,12 +2161,10 @@ msgid "HHCDT002E Can't make 80 column card images from block length %d\n"
 msgstr ""
 
 #: dasdcat.c:107
-#, c-format
 msgid "HHCDT003E Directory block byte count is invalid\n"
 msgstr ""
 
 #: dasdcat.c:209
-#, c-format
 msgid "HHCDT004E non-PDS-members not yet supported\n"
 msgstr ""
 
@@ -2241,7 +2234,6 @@ msgid "HHCDC009E %s: %s write error %s %d stat=%2.2X\n"
 msgstr ""
 
 #: dasdcopy.c:404
-#, c-format
 msgid ""
 "\n"
 "HHCDC010I Copy successful !!!       \n"
@@ -2278,7 +2270,6 @@ msgid "     -bz2              compress using bzip2\n"
 msgstr ""
 
 #: dasdcopy.c:479
-#, c-format
 msgid ""
 "usage:  cckd2ckd [-options] ifile [sf=sfile] ofile\n"
 "\n"
@@ -2319,7 +2310,6 @@ msgid ""
 msgstr ""
 
 #: dasdcopy.c:533
-#, c-format
 msgid ""
 "usage:  cfba2fba [-options] ifile [sf=sfile] ofile\n"
 "\n"
@@ -2369,12 +2359,10 @@ msgid "     -bz2              compress output using bzip2\n"
 msgstr ""
 
 #: dasdinit.c:261
-#, c-format
 msgid "HHCDI001I DASD initialization successfully completed.\n"
 msgstr ""
 
 #: dasdisup.c:246
-#, c-format
 msgid "HHCDS003E Directory block byte count is invalid\n"
 msgstr ""
 
@@ -2384,7 +2372,6 @@ msgid "HHCDS018I %s %s skipped\n"
 msgstr ""
 
 #: dasdisup.c:304
-#, c-format
 msgid "HHCDS004E Number of members exceeds MAX_MEMBERS\n"
 msgstr ""
 
@@ -2574,7 +2561,6 @@ msgid "HHCDU020I %s sectors=%d size=%d\n"
 msgstr ""
 
 #: dasdutil.c:850
-#, c-format
 msgid "HHCDU021E VOL1 record not found\n"
 msgstr ""
 
@@ -2584,7 +2570,6 @@ msgid "HHCDU022I VOLSER=%s VTOC=%4.4X%4.4X%2.2X\n"
 msgstr ""
 
 #: dasdutil.c:873
-#, c-format
 msgid "HHCDU023E F4DSCB record not found\n"
 msgstr ""
 
@@ -2604,12 +2589,10 @@ msgid "HHCDU025I DSNAME=%s F1DSCB CCHHR=%4.4X%4.4X%2.2X\n"
 msgstr ""
 
 #: dasdutil.c:914
-#, c-format
 msgid "HHCDU026E F1DSCB record not found\n"
 msgstr ""
 
 #: dasdutil.c:936
-#, c-format
 msgid "HHCDU027E F3DSCB record not found\n"
 msgstr ""
 
@@ -2875,414 +2858,414 @@ msgstr ""
 msgid "HHCDG002I dyngui.dll terminated\n"
 msgstr ""
 
-#: ecpsvm.c:220 ecpsvm.c:225 ecpsvm.c:241 ecpsvm.c:274 ecpsvm.c:275
-#: ecpsvm.c:276 ecpsvm.c:277
+#: ecpsvm.c:232 ecpsvm.c:237 ecpsvm.c:253 ecpsvm.c:286 ecpsvm.c:287
+#: ecpsvm.c:288 ecpsvm.c:289
 msgid "HHCEV300D : SASSIST "
 msgstr ""
 
-#: ecpsvm.c:220
+#: ecpsvm.c:232
 msgid " ECPS:VM Disabled in configuration\n"
 msgstr ""
 
-#: ecpsvm.c:225
+#: ecpsvm.c:237
 msgid " ECPS:VM Disabled by command\n"
 msgstr ""
 
-#: ecpsvm.c:231
+#: ecpsvm.c:243
 msgid "HHCEV300D : EVMA Disabled by guest\n"
 msgstr ""
 
-#: ecpsvm.c:241
+#: ecpsvm.c:253
 #, c-format
 msgid " Micblok @ %6.6X crosses page frame\n"
 msgstr ""
 
-#: ecpsvm.c:274
+#: ecpsvm.c:286
 #, c-format
 msgid " VPSWA= %8.8X Virtual "
 msgstr ""
 
-#: ecpsvm.c:275
+#: ecpsvm.c:287
 #, c-format
 msgid " CR6= %8.8X\n"
 msgstr ""
 
-#: ecpsvm.c:276
+#: ecpsvm.c:288
 #, c-format
 msgid " MICVTMR= %8.8X\n"
 msgstr ""
 
-#: ecpsvm.c:277
+#: ecpsvm.c:289
 msgid " Real "
 msgstr ""
 
-#: ecpsvm.c:302 ecpsvm.c:308
+#: ecpsvm.c:314 ecpsvm.c:320
 msgid "HHCEV300D : CPASSTS "
 msgstr ""
 
-#: ecpsvm.c:302
+#: ecpsvm.c:314
 msgid " ECPS:VM Disabled in configuration "
 msgstr ""
 
-#: ecpsvm.c:308
+#: ecpsvm.c:320
 msgid " Disabled by command"
 msgstr ""
 
-#: ecpsvm.c:316
+#: ecpsvm.c:328
 msgid "HHCEV300D : "
 msgstr ""
 
-#: ecpsvm.c:316
+#: ecpsvm.c:328
 msgid " called\n"
 msgstr ""
 
-#: ecpsvm.c:387
+#: ecpsvm.c:399
 msgid "HHCEV300D : LKPG coreptr = "
 msgstr ""
 
-#: ecpsvm.c:387
+#: ecpsvm.c:399
 msgid " Frame = "
 msgstr ""
 
-#: ecpsvm.c:390
+#: ecpsvm.c:402
 #, c-format
 msgid "HHCEV300D : LKPG corete = %6.6X\n"
 msgstr ""
 
-#: ecpsvm.c:404
+#: ecpsvm.c:416
 #, c-format
 msgid "HHCEV300D : LKPG Page locked. Count = %6.6X\n"
 msgstr ""
 
-#: ecpsvm.c:421
+#: ecpsvm.c:433
 #, c-format
 msgid "HHCEV300D : LKPG PAGE=%6.6X, PTRPL=%6.6X\n"
 msgstr ""
 
-#: ecpsvm.c:448
+#: ecpsvm.c:460
 #, c-format
 msgid "HHCEV300D : ULKPG PAGE=%6.6X, PTRPL=%6.6X\n"
 msgstr ""
 
-#: ecpsvm.c:454
+#: ecpsvm.c:466
 #, c-format
 msgid "HHCEV300D : ULKPG Page beyond core size of %6.6X\n"
 msgstr ""
 
-#: ecpsvm.c:466
+#: ecpsvm.c:478
 msgid "HHCEV300D : ULKPG Attempting to unlock page that is not locked\n"
 msgstr ""
 
-#: ecpsvm.c:473
+#: ecpsvm.c:485
 msgid "HHCEV300D : ULKPG now unlocked\n"
 msgstr ""
 
-#: ecpsvm.c:477
+#: ecpsvm.c:489
 #, c-format
 msgid "HHCEV300D : ULKPG Page still locked. Count = %6.6X\n"
 msgstr ""
 
-#: ecpsvm.c:513
+#: ecpsvm.c:525
 #, c-format
 msgid "HHCEV300D SCNVU Virtual Device %4.4X has no VCHAN block\n"
 msgstr ""
 
-#: ecpsvm.c:521
+#: ecpsvm.c:533
 #, c-format
 msgid "HHCEV300D SCNVU Virtual Device %4.4X has no VCU block\n"
 msgstr ""
 
-#: ecpsvm.c:529
+#: ecpsvm.c:541
 #, c-format
 msgid "HHCEV300D SCNVU Virtual Device %4.4X has no VDEV block\n"
 msgstr ""
 
-#: ecpsvm.c:533
+#: ecpsvm.c:545
 #, c-format
 msgid "HHCEV300D SCNVU %4.4X : VCH = %8.8X, VCU = %8.8X, VDEV = %8.8X\n"
 msgstr ""
 
-#: ecpsvm.c:890
+#: ecpsvm.c:902
 msgid "HHCEV004W : Abend condition detected in DISP2 instr\n"
 msgstr ""
 
-#: ecpsvm.c:1080
+#: ecpsvm.c:1092
 #, c-format
 msgid "HHCPEV300D : DISP2 - Next Instruction : %2.2X\n"
 msgstr ""
 
-#: ecpsvm.c:1143
+#: ecpsvm.c:1155
 #, c-format
 msgid "HHCEV300D : Tranbring : LRA cc = %d\n"
 msgstr ""
 
-#: ecpsvm.c:1152
+#: ecpsvm.c:1164
 #, c-format
 msgid "HHCEV300D : Page not shared - OK %d\n"
 msgstr ""
 
-#: ecpsvm.c:1158
+#: ecpsvm.c:1170
 msgid "HHCEV300D : Checking 2K Storage keys @"
 msgstr ""
 
-#: ecpsvm.c:1158
+#: ecpsvm.c:1170
 msgid " & "
 msgstr ""
 
-#: ecpsvm.c:1163
+#: ecpsvm.c:1175
 msgid "HHCEV300D : Checking 4K Storage keys @"
 msgstr ""
 
-#: ecpsvm.c:1167
+#: ecpsvm.c:1179
 msgid "HHCEV300D : Page shared and changed\n"
 msgstr ""
 
-#: ecpsvm.c:1170
+#: ecpsvm.c:1182
 msgid "HHCEV300D : Page shared but not changed\n"
 msgstr ""
 
-#: ecpsvm.c:1189
+#: ecpsvm.c:1201
 msgid "HHCEV300D : TRANBRNG\n"
 msgstr ""
 
-#: ecpsvm.c:1193
+#: ecpsvm.c:1205
 msgid "HHCEV300D : TRANBRNG - Back to CP\n"
 msgstr ""
 
-#: ecpsvm.c:1211
+#: ecpsvm.c:1223
 msgid "HHCEV300D : TRANLOCK\n"
 msgstr ""
 
-#: ecpsvm.c:1215
+#: ecpsvm.c:1227
 msgid "HHCEV300D : TRANLOCK - Back to CP\n"
 msgstr ""
 
-#: ecpsvm.c:1728
+#: ecpsvm.c:1740
 #, c-format
 msgid "HHCEV300D : ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X\n"
 msgstr ""
 
-#: ecpsvm.c:1802
+#: ecpsvm.c:1814
 #, c-format
 msgid "HHCEV300D : ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n"
 msgstr ""
 
-#: ecpsvm.c:1846
+#: ecpsvm.c:1858
 #, c-format
 msgid "HHCEV300D : ECPS:VM STORE LEVEL %d called\n"
 msgstr ""
 
-#: ecpsvm.c:1886
+#: ecpsvm.c:1898
 #, c-format
 msgid "HHCEV300D : ECPS:VM FREEX DW = %4.4X\n"
 msgstr ""
 
-#: ecpsvm.c:1891
+#: ecpsvm.c:1903
 #, c-format
 msgid "HHCEV300D : MAXSIZE ADDR = %6.6X, SUBPOOL INDEX TABLE = %6.6X\n"
 msgstr ""
 
-#: ecpsvm.c:1898
+#: ecpsvm.c:1910
 msgid "HHCEV300D : FREEX request beyond subpool capacity\n"
 msgstr ""
 
-#: ecpsvm.c:1903
+#: ecpsvm.c:1915
 #, c-format
 msgid "HHCEV300D : Subpool index = %X\n"
 msgstr ""
 
-#: ecpsvm.c:1906
+#: ecpsvm.c:1918
 #, c-format
 msgid "HHCEV300D : Value in subpool table = %6.6X\n"
 msgstr ""
 
-#: ecpsvm.c:1914
+#: ecpsvm.c:1926
 #, c-format
 msgid "HHCEV300D : New Value in subpool table = %6.6X\n"
 msgstr ""
 
-#: ecpsvm.c:1944
+#: ecpsvm.c:1956
 #, c-format
 msgid "HHCEV300D : X fretx called AREA=%6.6X, DW=%4.4X\n"
 msgstr ""
 
-#: ecpsvm.c:1947
+#: ecpsvm.c:1959
 msgid "HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = 0\n"
 msgstr ""
 
-#: ecpsvm.c:1953
+#: ecpsvm.c:1965
 #, c-format
 msgid "HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = %d > MAXDW %d\n"
 msgstr ""
 
-#: ecpsvm.c:1960
+#: ecpsvm.c:1972
 msgid "HHCEV300D : ECPS:VM Cannot FRETX : Area not in Core Free area\n"
 msgstr ""
 
-#: ecpsvm.c:1965
+#: ecpsvm.c:1977
 msgid "HHCEV300D : ECPS:VM Cannot FRETX : Area flag != 0x02\n"
 msgstr ""
 
-#: ecpsvm.c:1972
+#: ecpsvm.c:1984
 msgid ""
 "HHCEV300D : ECPS:VM Cannot FRETX : fretted block already on subpool chain\n"
 msgstr ""
 
-#: ecpsvm.c:2038
+#: ecpsvm.c:2050
 msgid "HHCEV300D : New and Old PSW have a EC/BC transition\n"
 msgstr ""
 
-#: ecpsvm.c:2046
+#: ecpsvm.c:2058
 msgid "HHCEV300D : New PSW Enables DAT or PER\n"
 msgstr ""
 
-#: ecpsvm.c:2057
+#: ecpsvm.c:2069
 msgid "HHCEV300D : New PSW Enables interrupts and MICPEND (EC)\n"
 msgstr ""
 
-#: ecpsvm.c:2065
+#: ecpsvm.c:2077
 msgid "HHCEV300D : New PSW Enables interrupts and MICPEND (BC)\n"
 msgstr ""
 
-#: ecpsvm.c:2072
+#: ecpsvm.c:2084
 msgid "HHCEV300D : New PSW is a WAIT PSW\n"
 msgstr ""
 
-#: ecpsvm.c:2079
+#: ecpsvm.c:2091
 msgid "HHCEV300D : New PSW sysmask incorrect\n"
 msgstr ""
 
-#: ecpsvm.c:2085
+#: ecpsvm.c:2097
 msgid "HHCEV300D : New PSW has ODD IA\n"
 msgstr ""
 
-#: ecpsvm.c:2605 ecpsvm.c:2622
+#: ecpsvm.c:2617 ecpsvm.c:2634
 #, c-format
 msgid "HHCEV001I | %-9s | %8d | %8d |  %3d%% |\n"
 msgstr ""
 
-#: ecpsvm.c:2632
+#: ecpsvm.c:2644
 #, c-format
 msgid "HHCEV004I * : Unsupported, - : Disabled, %% - Debug\n"
 msgstr ""
 
-#: ecpsvm.c:2636
+#: ecpsvm.c:2648
 #, c-format
 msgid "HHCEV005I %d Entr%s not shown (never invoked)\n"
 msgstr ""
 
-#: ecpsvm.c:2642
+#: ecpsvm.c:2654
 msgid "HHCEV006I 1 call was made to an unsupported function\n"
 msgstr ""
 
-#: ecpsvm.c:2646
+#: ecpsvm.c:2658
 #, c-format
 msgid "HHCEV006I %d calls where made to unsupported functions\n"
 msgstr ""
 
-#: ecpsvm.c:2661 ecpsvm.c:2670
+#: ecpsvm.c:2673 ecpsvm.c:2682
 #, c-format
 msgid "HHCEV002I | %-9s | %-8s | %-8s | %-5s |\n"
 msgstr ""
 
-#: ecpsvm.c:2688
+#: ecpsvm.c:2700
 #, c-format
 msgid "HHCEV010I : %s : %s\n"
 msgstr ""
 
-#: ecpsvm.c:2703
+#: ecpsvm.c:2715
 #, c-format
 msgid "HHCEV011E Unknown subcommand %s - valid subcommands are :\n"
 msgstr ""
 
-#: ecpsvm.c:2707
+#: ecpsvm.c:2719
 #, c-format
 msgid "HHCEV012I : %s : %s"
 msgstr ""
 
-#: ecpsvm.c:2755
+#: ecpsvm.c:2767
 #, c-format
 msgid "HHCEV015I ECPS:VM %s feature %s %s\n"
 msgstr ""
 
-#: ecpsvm.c:2760
+#: ecpsvm.c:2772
 #, c-format
 msgid "HHCEV015I ECPS:VM %s feature %s Debug %s\n"
 msgstr ""
 
-#: ecpsvm.c:2765
+#: ecpsvm.c:2777
 #, c-format
 msgid "HHCEV016I All ECPS:VM %s features %s\n"
 msgstr ""
 
-#: ecpsvm.c:2769
+#: ecpsvm.c:2781
 #, c-format
 msgid "HHCEV016I All ECPS:VM %s features Debug %s\n"
 msgstr ""
 
-#: ecpsvm.c:2797
+#: ecpsvm.c:2809
 #, c-format
 msgid "HHCEV013I ECPS:VM Global Debug %s\n"
 msgstr ""
 
-#: ecpsvm.c:2825
+#: ecpsvm.c:2837
 #, c-format
 msgid "HHCEV014I ECPS:VM %s feature %s %s\n"
 msgstr ""
 
-#: ecpsvm.c:2830
+#: ecpsvm.c:2842
 #, c-format
 msgid "HHCEV014I ECPS:VM %s feature %s Debug %s\n"
 msgstr ""
 
-#: ecpsvm.c:2835
+#: ecpsvm.c:2847
 #, c-format
 msgid "HHCEV014I Unknown ECPS:VM feature %s; Ignored\n"
 msgstr ""
 
-#: ecpsvm.c:2862 ecpsvm.c:2866
+#: ecpsvm.c:2874 ecpsvm.c:2878
 #, c-format
 msgid "HHCEV016I Current reported ECPS:VM Level is %d\n"
 msgstr ""
 
-#: ecpsvm.c:2867
+#: ecpsvm.c:2879
 msgid "HHCEV017I But ECPS:VM is currently disabled\n"
 msgstr ""
 
-#: ecpsvm.c:2872
+#: ecpsvm.c:2884
 #, c-format
 msgid "HHCEV016I Level reported to guest program is now %d\n"
 msgstr ""
 
-#: ecpsvm.c:2877
+#: ecpsvm.c:2889
 #, c-format
 msgid "HHCEV017W WARNING ! current level (%d) is not supported\n"
 msgstr ""
 
-#: ecpsvm.c:2878
+#: ecpsvm.c:2890
 msgid "HHCEV018W WARNING ! Unpredictable results may occur\n"
 msgstr ""
 
-#: ecpsvm.c:2879
+#: ecpsvm.c:2891
 msgid "HHCEV019I The microcode support level is 20\n"
 msgstr ""
 
-#: ecpsvm.c:2918
+#: ecpsvm.c:2930
 msgid "HHCEV011I ECPS:VM Command processor invoked\n"
 msgstr ""
 
-#: ecpsvm.c:2921
+#: ecpsvm.c:2933
 msgid ""
 "HHCEV008E NO EVM subcommand. Type \"evm help\" for a list of valid "
 "subcommands\n"
 msgstr ""
 
-#: ecpsvm.c:2927
+#: ecpsvm.c:2939
 #, c-format
 msgid "HHCEV008E Unknown EVM subcommand %s\n"
 msgstr ""
 
-#: ecpsvm.c:2931
+#: ecpsvm.c:2943
 msgid "HHCEV011I ECPS:VM Command processor complete\n"
 msgstr ""
 
@@ -3338,121 +3321,121 @@ msgstr "HHCDA061E Fout %2$s bij leven van bestand \"%1$s\"\n"
 msgid "HHCDA062E Unexpected end of file in %s\n"
 msgstr "HHCDA062E Onverwacht einde van bestand \"%s\"\n"
 
-#: fbadasd.c:183
+#: fbadasd.c:194
 #, c-format
 msgid "HHCDA063E parameter %d is invalid: %s\n"
 msgstr ""
 
-#: fbadasd.c:196
+#: fbadasd.c:207
 #, c-format
 msgid "HHCDA064E File %s fstat error: %s\n"
 msgstr ""
 
-#: fbadasd.c:208
+#: fbadasd.c:219
 #, fuzzy, c-format
 msgid "HHCDA082E File %s IOCTL BLKGETSIZE error: %s\n"
 msgstr "HHCDA058E Fout %2$s bij openen bestand \"%1$s\"\n"
 
-#: fbadasd.c:234
+#: fbadasd.c:245
 #, c-format
 msgid "HHCDA065E Invalid device origin block number %s\n"
 msgstr ""
 
-#: fbadasd.c:250
+#: fbadasd.c:261
 #, c-format
 msgid "HHCDA066E Invalid device block count %s\n"
 msgstr ""
 
-#: fbadasd.c:261
+#: fbadasd.c:272
 #, c-format
 msgid "HHCDA067I %s origin=%d blks=%d\n"
 msgstr ""
 
-#: fbadasd.c:271
+#: fbadasd.c:282
 #, c-format
 msgid "HHCDA068E %4.4X device type %4.4X not found in dasd table\n"
 msgstr ""
 
-#: fbadasd.c:496
+#: fbadasd.c:507
 #, c-format
 msgid "HHCDA069E error writing blkgrp %d: lseek error: %s\n"
 msgstr ""
 
-#: fbadasd.c:514
+#: fbadasd.c:525
 #, c-format
 msgid "HHCDA070E error writing blkgrp %d: write error: %s\n"
 msgstr ""
 
-#: fbadasd.c:555
+#: fbadasd.c:566
 #, c-format
 msgid "HHCDA071I read blkgrp %d cache hit, using cache[%d]\n"
 msgstr ""
 
-#: fbadasd.c:580
+#: fbadasd.c:591
 #, c-format
 msgid "HHCDA072I read blkgrp %d no available cache entry, waiting\n"
 msgstr ""
 
-#: fbadasd.c:588
+#: fbadasd.c:599
 #, c-format
 msgid "HHCDA073I read blkgrp %d cache miss, using cache[%d]\n"
 msgstr ""
 
-#: fbadasd.c:604
+#: fbadasd.c:615
 #, c-format
 msgid "HHCDA074I read blkgrp %d offset %lld len %d\n"
 msgstr ""
 
-#: fbadasd.c:612
+#: fbadasd.c:623
 #, c-format
 msgid "HHCDA075E error reading blkgrp %d: lseek error: %s\n"
 msgstr ""
 
-#: fbadasd.c:627
+#: fbadasd.c:638
 #, c-format
 msgid "HHCDA076E error reading blkgrp %d: read error: %s\n"
 msgstr ""
 
-#: fbadasd.c:1055
+#: fbadasd.c:1066
 #, c-format
 msgid "HHCDA077I Positioning to %8.8llX (%llu)\n"
 msgstr ""
 
-#: fbadasd.c:1073
+#: fbadasd.c:1084
 #, c-format
 msgid "HHCDA078E define extent data too short: %d bytes\n"
 msgstr ""
 
-#: fbadasd.c:1083
+#: fbadasd.c:1094
 msgid "HHCDA079E second define extent in chain\n"
 msgstr ""
 
-#: fbadasd.c:1094
+#: fbadasd.c:1105
 #, c-format
 msgid "HHCDA080E invalid file mask %2.2X\n"
 msgstr ""
 
-#: fbadasd.c:1135
+#: fbadasd.c:1146
 #, c-format
 msgid "HHCDA081E invalid extent: first block %d, last block %d,\n"
 msgstr ""
 
-#: fbadasd.c:1137
+#: fbadasd.c:1148
 #, c-format
 msgid "         numblks %d, device size %d\n"
 msgstr ""
 
-#: fbadasd.c:1409
+#: fbadasd.c:1420
 #, c-format
 msgid "HHCDA901E %4.4x FBA origin mismatch: %d, expected %d,\n"
 msgstr ""
 
-#: fbadasd.c:1418
+#: fbadasd.c:1429
 #, c-format
 msgid "HHCDA902E %4.4x FBA numblk mismatch: %d, expected %d,\n"
 msgstr ""
 
-#: fbadasd.c:1448
+#: fbadasd.c:1459
 #, c-format
 msgid "HHCDA903E %4.4x FBA blksiz mismatch: %d, expected %d,\n"
 msgstr ""
@@ -3581,7 +3564,6 @@ msgid "HHCPN151E specify 'quit' first\n"
 msgstr ""
 
 #: hsccmd.c:77 hscmisc.c:63
-#, c-format
 msgid "HHCIN099I Hercules terminated\n"
 msgstr ""
 
@@ -3685,7 +3667,7 @@ msgstr ""
 #: hsccmd.c:501 hsccmd.c:733 hsccmd.c:839 hsccmd.c:867 hsccmd.c:895
 #: hsccmd.c:923 hsccmd.c:951 hsccmd.c:982 hsccmd.c:1011 hsccmd.c:1048
 #: hsccmd.c:1075 hsccmd.c:1102 hsccmd.c:2069 hsccmd.c:2205 hsccmd.c:2271
-#: hsccmd.c:2970 hsccmd.c:3090 hsccmd.c:3151 hsccmd.c:3193
+#: hsccmd.c:2970 hsccmd.c:3090 hsccmd.c:3187 hsccmd.c:3229
 #, fuzzy, c-format
 msgid "HHCPN160W CPU%4.4X not configured\n"
 msgstr "HHCCP003I CPU%4.4X Architectuur Modus %s\n"
@@ -4541,135 +4523,135 @@ msgstr ""
 msgid "HHCPN138E Unrecognized +/- command.\n"
 msgstr ""
 
-#: hsccmd.c:3325
+#: hsccmd.c:3361
 #, c-format
 msgid "HHCHD100I Loading %s ...\n"
 msgstr ""
 
-#: hsccmd.c:3327
+#: hsccmd.c:3363
 #, c-format
 msgid "HHCHD101I Module %s loaded\n"
 msgstr ""
 
-#: hsccmd.c:3350
+#: hsccmd.c:3386
 #, c-format
 msgid "HHCHD102I Unloading %s ...\n"
 msgstr ""
 
-#: hsccmd.c:3352
+#: hsccmd.c:3388
 #, c-format
 msgid "HHCHD103I Module %s unloaded\n"
 msgstr ""
 
-#: hsccmd.c:3397
+#: hsccmd.c:3433
 msgid "HHCPN150W evm command is deprecated. Use \"ecpsvm\" instead\n"
 msgstr ""
 
-#: hsccmd.c:3420
+#: hsccmd.c:3456
 #, c-format
 msgid "HHCPN161I (void *) ..........%7d\n"
 msgstr ""
 
-#: hsccmd.c:3421
+#: hsccmd.c:3457
 #, c-format
 msgid "HHCPN162I (unsigned int) ....%7d\n"
 msgstr ""
 
-#: hsccmd.c:3422
+#: hsccmd.c:3458
 #, c-format
 msgid "HHCPN163I SYSBLK ............%7d\n"
 msgstr ""
 
-#: hsccmd.c:3423
+#: hsccmd.c:3459
 #, c-format
 msgid "HHCPN164I REGS ..............%7d\n"
 msgstr ""
 
-#: hsccmd.c:3424
+#: hsccmd.c:3460
 #, c-format
 msgid "HHCPN165I DEVBLK ............%7d\n"
 msgstr ""
 
-#: hsccmd.c:3425
+#: hsccmd.c:3461
 #, c-format
 msgid "HHCPN166I TLB entry .........%7d\n"
 msgstr ""
 
-#: hsccmd.c:3426
+#: hsccmd.c:3462
 #, c-format
 msgid "HHCPN167I TLB table .........%7d\n"
 msgstr ""
 
-#: hsccmd.c:3665
+#: hsccmd.c:3701
 #, c-format
 msgid "HHCPN139E Command \"%s\" not found; enter '?' for list.\n"
 msgstr ""
 
-#: hsccmd.c:3685
+#: hsccmd.c:3721
 msgid ""
 "HHCPN140I Valid panel commands are...\n"
 "\n"
 msgstr ""
 
-#: hsccmd.c:3692
+#: hsccmd.c:3728
 #, c-format
 msgid "  %-9.9s    %s \n"
 msgstr ""
 
-#: hsccmd.c:3698
+#: hsccmd.c:3734
 msgid "add shadow file"
 msgstr ""
 
-#: hsccmd.c:3699
+#: hsccmd.c:3735
 msgid "delete shadow file"
 msgstr ""
 
-#: hsccmd.c:3700
+#: hsccmd.c:3736
 msgid "rename shadow file"
 msgstr ""
 
-#: hsccmd.c:3701
+#: hsccmd.c:3737
 msgid "compress shadow files"
 msgstr ""
 
-#: hsccmd.c:3702
+#: hsccmd.c:3738
 msgid "display shadow file stats"
 msgstr ""
 
-#: hsccmd.c:3706
+#: hsccmd.c:3742
 msgid "turn instruction tracing on/off"
 msgstr ""
 
-#: hsccmd.c:3707
+#: hsccmd.c:3743
 msgid "turn instruction stepping on/off"
 msgstr ""
 
-#: hsccmd.c:3708
+#: hsccmd.c:3744
 msgid "turn CCW tracing on/off"
 msgstr ""
 
-#: hsccmd.c:3709
+#: hsccmd.c:3745
 msgid "turn CCW stepping on/off"
 msgstr ""
 
-#: hsccmd.c:3711
+#: hsccmd.c:3747
 msgid "turn CKD_KEY tracing on/off"
 msgstr ""
 
-#: hsccmd.c:3713
+#: hsccmd.c:3749
 msgid "mark frames unusable/usable"
 msgstr ""
 
-#: hsccmd.c:3904
+#: hsccmd.c:3940
 msgid "HHCPN141E Missing argument\n"
 msgstr ""
 
-#: hsccmd.c:3912
+#: hsccmd.c:3948
 #, c-format
 msgid "%s"
 msgstr ""
 
-#: hsccmd.c:3917
+#: hsccmd.c:3953
 msgid "HHCPN142I No additional help available.\n"
 msgstr ""
 
@@ -4776,32 +4758,31 @@ msgstr ""
 msgid "HHCHT010E http_request create_thread: %s\n"
 msgstr ""
 
-#: ieee.c:420
+#: ieee.c:447
 msgid "ebfpston: unexpectedly converting a NaN\n"
 msgstr ""
 
-#: ieee.c:424
+#: ieee.c:451
 msgid "ebfpston: unexpectedly converting an Infinite\n"
 msgstr ""
 
-#: ieee.c:479
+#: ieee.c:506
 msgid "lbfpston: unexpectedly converting a NaN\n"
 msgstr ""
 
-#: ieee.c:483
+#: ieee.c:510
 msgid "lbfpston: unexpectedly converting an Infinite\n"
 msgstr ""
 
-#: ieee.c:532
+#: ieee.c:559
 msgid "sbfpston: unexpectedly converting a NaN\n"
 msgstr ""
 
-#: ieee.c:536
+#: ieee.c:563
 msgid "sbfpston: unexpectedly converting an Infinite\n"
 msgstr ""
 
 #: impl.c:224
-#, c-format
 msgid "HHCIN008S DYNGUI.DLL load failed; Hercules terminated.\n"
 msgstr ""
 
@@ -4849,43 +4830,42 @@ msgstr ""
 msgid "HHCCP028E Device not connected to channelset\n"
 msgstr ""
 
-#: ipl.c:154
+#: ipl.c:155
 #, c-format
 msgid ""
 "HHCCP029E %s mode IPL failed: CSW status=%2.2X%2.2X\n"
 "           Sense="
 msgstr ""
 
-#: ipl.c:200
+#: ipl.c:201
 #, c-format
 msgid ""
 "HHCCP030E %s mode IPL failed: Invalid IPL PSW: %2.2X%2.2X%2.2X%2.2X %2.2X%"
 "2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: ipl.c:306
+#: ipl.c:307
 #, c-format
 msgid "HHCCP031E Load from %s failed: %s\n"
 msgstr ""
 
-#: ipl.c:352
+#: ipl.c:354
 #, c-format
 msgid ""
 "HHCCP032E %s mode IPL failed: Invalid IPL PSW: %2.2X%2.2X%2.2X%2.2X %2.2X%"
 "2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: ipl.c:489
+#: ipl.c:491
 #, c-format
 msgid "HHCCP033E load_main: %s: %s\n"
 msgstr ""
 
-#: ipl.c:498
+#: ipl.c:500
 msgid "HHCCP034W load_main: terminated at end of mainstor\n"
 msgstr ""
 
 #: logger.c:170
-#, c-format
 msgid "HHCLG014I logger thread terminating\n"
 msgstr ""
 
@@ -4954,7 +4934,6 @@ msgid "HHCLG014E log not active\n"
 msgstr ""
 
 #: logger.c:407 logger.c:409
-#, c-format
 msgid "HHCLG015I log closed\n"
 msgstr ""
 
@@ -5091,79 +5070,79 @@ msgstr ""
 msgid "HHCPR002E Invalid argument for printer %4.4X: %s\n"
 msgstr ""
 
-#: service.c:79
+#: service.c:78
 #, fuzzy
 msgid "HHCCP036E SCP not receiving priority messages\n"
 msgstr "HHCCP036E SCP ontvangt geen prioriteits berichten\n"
 
-#: service.c:86
+#: service.c:85
 #, fuzzy
 msgid "HHCCP037E SCP not receiving commands\n"
 msgstr "HHCCP037E SCP ontvangt geen commando's\n"
 
-#: service.c:93
+#: service.c:92
 #, fuzzy
 msgid "HHCCP038E No SCP command\n"
 msgstr "HHCCP038E Geen SCP commando\n"
 
-#: service.c:104
+#: service.c:103
 msgid "HHCCP039E Service Processor busy\n"
 msgstr ""
 
-#: service.c:142
+#: service.c:141
 #, fuzzy
 msgid "HHCCP081E SCP not receiving quiesce signals\n"
 msgstr "HHCCP037E SCP ontvangt geen commando's\n"
 
-#: service.c:153
+#: service.c:152
 msgid "HHCCP082E Service Processor busy\n"
 msgstr ""
 
-#: service.c:898
+#: service.c:897
 #, c-format
 msgid "HHCCP040I CPI: System Type: %s Name: %s Sysplex: %s\n"
 msgstr ""
 
-#: service.c:902
+#: service.c:901
 msgid "HHC770I Control Program Information:\n"
 msgstr ""
 
-#: service.c:903
+#: service.c:902
 #, c-format
 msgid "HHC771I System Type  = %s\n"
 msgstr ""
 
-#: service.c:904
+#: service.c:903
 #, c-format
 msgid "HHC772I System Name  = %s\n"
 msgstr ""
 
-#: service.c:905
+#: service.c:904
 #, c-format
 msgid "HHC773I Sysplex Name = %s\n"
 msgstr ""
 
-#: service.c:906
+#: service.c:905
 #, c-format
 msgid "HHC774I System Level = %16.16llX\n"
 msgstr ""
 
-#: service.c:1139
+#: service.c:1138
 #, fuzzy
 msgid "HHCCP041I SYSCONS interface active\n"
 msgstr "HHCCP041I SYSCONS interface actief\n"
 
-#: service.c:1141
+#: service.c:1140
 #, fuzzy
 msgid "HHCCP042I SYSCONS interface inactive\n"
 msgstr "HHCCP042I SYSCONS interface inactief\n"
 
-#: service.c:1265
+#: service.c:1264
 #, c-format
 msgid "CPU%4.4X: Vector Facility configured offline\n"
 msgstr ""
 
-#: service.c:1296
+#: service.c:1295
 #, c-format
 msgid "CPU%4.4X: Vector Facility configured online\n"
 msgstr ""
@@ -5521,7 +5500,7 @@ msgstr ""
 msgid " msl="
 msgstr ""
 
-#: sie.c:673
+#: sie.c:674
 #, c-format
 msgid "SIE: interception code %d\n"
 msgstr ""
@@ -5644,101 +5623,101 @@ msgstr "HHCSD006E %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 msgid "HHCSD007I Device %4.4X unbound from socket %s\n"
 msgstr "HHCSD007I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 
-#: stack.c:580
+#: stack.c:386
 msgid "stack: Current stack entry at "
 msgstr ""
 
-#: stack.c:581 stack.c:620 stack.c:953 stack.c:966 stack.c:1030 stack.c:1069
+#: stack.c:387 stack.c:426 stack.c:759 stack.c:772 stack.c:836 stack.c:875
 #, c-format
 msgid "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n"
 msgstr ""
 
-#: stack.c:603
+#: stack.c:409
 msgid "stack: Forward section header addr "
 msgstr ""
 
-#: stack.c:665 stack.c:952
+#: stack.c:471 stack.c:758
 msgid "stack: New stack entry at "
 msgstr ""
 
-#: stack.c:682 stack.c:690 stack.c:1333 stack.c:1341
+#: stack.c:488 stack.c:496 stack.c:1139 stack.c:1147
 #, c-format
 msgid "stack: GPR%d="
 msgstr ""
 
-#: stack.c:682 stack.c:690 stack.c:714 stack.c:923
+#: stack.c:488 stack.c:496 stack.c:520 stack.c:729
 msgid " stored at V:"
 msgstr ""
 
-#: stack.c:683 stack.c:691 stack.c:715 stack.c:738 stack.c:791 stack.c:869
-#: stack.c:897 stack.c:924 stack.c:1334 stack.c:1342 stack.c:1380 stack.c:1475
-#: stack.c:1511 stack.c:1556
+#: stack.c:489 stack.c:497 stack.c:521 stack.c:544 stack.c:597 stack.c:675
+#: stack.c:703 stack.c:730 stack.c:1140 stack.c:1148 stack.c:1186 stack.c:1281
+#: stack.c:1317 stack.c:1362
 msgid " A:"
 msgstr ""
 
-#: stack.c:714 stack.c:923 stack.c:1379
+#: stack.c:520 stack.c:729 stack.c:1185
 #, c-format
 msgid "stack: AR%d="
 msgstr ""
 
-#: stack.c:736
+#: stack.c:542
 #, c-format
 msgid ""
 "stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
 "stored at V:"
 msgstr ""
 
-#: stack.c:790
+#: stack.c:596
 #, c-format
 msgid "stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X stored at V:"
 msgstr ""
 
-#: stack.c:868
+#: stack.c:674
 #, c-format
 msgid "stack: PSW2=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X stored at V:"
 msgstr ""
 
-#: stack.c:895
+#: stack.c:701
 #, c-format
 msgid ""
 "stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"
 "stored at V:"
 msgstr ""
 
-#: stack.c:964
+#: stack.c:770
 msgid "stack: Previous stack entry updated at A:"
 msgstr ""
 
-#: stack.c:975 stack.c:1591
+#: stack.c:781 stack.c:1397
 msgid "stack: CR15="
 msgstr ""
 
-#: stack.c:1029 stack.c:1053
+#: stack.c:835 stack.c:859
 msgid "stack: Stack entry located at "
 msgstr ""
 
-#: stack.c:1308
+#: stack.c:1114
 #, c-format
 msgid "stack: Unstacking registers %d-%d from "
 msgstr ""
 
-#: stack.c:1333 stack.c:1341 stack.c:1379
+#: stack.c:1139 stack.c:1147 stack.c:1185
 msgid " loaded from V:"
 msgstr ""
 
-#: stack.c:1473
+#: stack.c:1279
 #, c-format
 msgid ""
 "stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
 "loaded from V:"
 msgstr ""
 
-#: stack.c:1510
+#: stack.c:1316
 #, c-format
 msgid "stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X loaded from V:"
 msgstr ""
 
-#: stack.c:1554
+#: stack.c:1360
 #, c-format
 msgid ""
 "stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"
@@ -5746,21 +5725,20 @@ msgid ""
 msgstr ""
 
 #: tapecopy.c:23
-#, c-format
-msgid "SCSI tape not supported with this build\n"
+msgid "HHCTC017E SCSI tape not supported with this build\n"
 msgstr ""
 
-#: tapecopy.c:130
+#: tapecopy.c:128
 #, c-format
 msgid "HHCTC015I %s status: %8.8lX"
 msgstr ""
 
-#: tapecopy.c:171
+#: tapecopy.c:169
 #, fuzzy, c-format
 msgid "HHCTC016E Error reading status of %s: rc=%d, errno=%d: %s\n"
 msgstr "HHCTC016E Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: tapecopy.c:257
+#: tapecopy.c:255
 #, c-format
 msgid ""
 "\n"
@@ -5821,118 +5799,117 @@ msgid ""
 "\n"
 msgstr ""
 
-#: tapecopy.c:335
+#: tapecopy.c:333
 #, fuzzy, c-format
 msgid "HHCTC001E Error opening %s: errno=%d: %s\n"
 msgstr "HHCTC001E Fout %2$s bij openen bestand \"%1$s\"\n"
 
-#: tapecopy.c:348
+#: tapecopy.c:346
 #, fuzzy, c-format
 msgid "HHCTC005E Error setting attributes for %s: rc=%d, errno=%d: %s\n"
 msgstr "HHCTC002E Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: tapecopy.c:361
+#: tapecopy.c:359
 #, fuzzy, c-format
 msgid "HHCTC006E Error rewinding %s: rc=%d, errno=%d: %s\n"
 msgstr "HHCTC010E Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
 
-#: tapecopy.c:378
+#: tapecopy.c:376
 #, c-format
 msgid "HHCTC003I %s device type: %s\n"
 msgstr ""
 
-#: tapecopy.c:380
+#: tapecopy.c:378
 #, c-format
 msgid "HHCTC003I %s device type: 0x%lX\n"
 msgstr ""
 
-#: tapecopy.c:389
+#: tapecopy.c:387
 #, c-format
 msgid "HHCTC004I %s tape density: %s\n"
 msgstr ""
 
-#: tapecopy.c:392
+#: tapecopy.c:390
 #, c-format
 msgid "HHCTC004I %s tape density code: 0x%lX\n"
 msgstr ""
 
-#: tapecopy.c:404
+#: tapecopy.c:402
 #, fuzzy, c-format
 msgid "HHCTC007E Error opening %s: errno=%d: %s\n"
 msgstr "HHCTC001E Fout %2$s bij openen bestand \"%1$s\"\n"
 
-#: tapecopy.c:457
-#, fuzzy, c-format
+#: tapecopy.c:455
+#, fuzzy
 msgid "HHCTC011I End of tape.\n"
 msgstr "HHCDL090I Einde van directory\n"
 
-#: tapecopy.c:463
+#: tapecopy.c:461
 #, fuzzy, c-format
 msgid "HHCTC008E Error reading %s: errno=%d: %s\n"
 msgstr "HHCTC002E Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: tapecopy.c:486
+#: tapecopy.c:484
 #, fuzzy, c-format
 msgid "HHCTC010E Error writing %s: rc=%d, errno=%d, %s\n"
 msgstr "HHCTC010E Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
 
-#: tapecopy.c:501
+#: tapecopy.c:499
 #, c-format
 msgid ""
 "HHCTC009I File %u: Blocks=%u, Bytes=%ld, Block size min=%u, max=%u, avg=%u\n"
 msgstr ""
 
-#: tapecopy.c:506
+#: tapecopy.c:504
 #, c-format
 msgid ""
 "HHCTC009I File %u: Blocks=%u, Bytes=%lld, Block size min=%u, max=%u, avg=%u\n"
 msgstr ""
 
-#: tapecopy.c:520
-#, c-format
+#: tapecopy.c:518
 msgid "(tapemark)\n"
 msgstr ""
 
-#: tapecopy.c:555
+#: tapecopy.c:553
 #, c-format
 msgid "HHCTC012I %s\n"
 msgstr ""
 
-#: tapecopy.c:564
+#: tapecopy.c:562
 #, c-format
 msgid "File %u: Block %u\r"
 msgstr ""
 
-#: tapecopy.c:586
+#: tapecopy.c:584
 #, fuzzy, c-format
 msgid "HHCTC013I Error writing %s: rc=%d, errno=%d: %s\n"
 msgstr "HHCTC013I Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: tapecopy.c:597
+#: tapecopy.c:595
 #, fuzzy, c-format
 msgid "HHCTC014I Error writing %s: rc=%d, errno=%d: %s\n"
 msgstr "HHCTC014I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
 
-#: tapecopy.c:617
+#: tapecopy.c:615
 #, c-format
 msgid ""
 "HHCTC000I Successful completion;\n"
 "          Bytes read: %ld (%3.1f MB), Blocks=%u, avg=%u\n"
 msgstr ""
 
-#: tapecopy.c:622
+#: tapecopy.c:620
 #, c-format
 msgid ""
 "HHCTC000I Successful completion;\n"
 "          Bytes read: %lld (%3.1f MB), Blocks=%u, avg=%u\n"
 msgstr ""
 
-#: tapecopy.c:638
+#: tapecopy.c:636
 #, c-format
 msgid "          Bytes written: %ld (%3.1f MB)\n"
 msgstr ""
 
-#: tapecopy.c:642
+#: tapecopy.c:640
 #, c-format
 msgid "          Bytes written: %lld (%3.1f MB)\n"
 msgstr ""
@@ -6312,62 +6289,62 @@ msgstr ""
 msgid "HHCTA998I Device %4.4X : %s is a %s\n"
 msgstr ""
 
-#: tapedev.c:4012
+#: tapedev.c:4014
 #, c-format
 msgid "XXXXXXXXX Device %4.4X : parameter: '%s'\n"
 msgstr ""
 
-#: tapedev.c:4016
+#: tapedev.c:4018
 #, c-format
 msgid "HHCTA067E Device %4.4X : %s - Unrecognized parameter: '%s'\n"
 msgstr ""
 
-#: tapedev.c:4033
+#: tapedev.c:4035
 #, c-format
 msgid "HHCTA068E Method must be within %u-%u\n"
 msgstr ""
 
-#: tapedev.c:4043
+#: tapedev.c:4045
 #, c-format
 msgid "HHCTA069E Level must be within %u-%u\n"
 msgstr ""
 
-#: tapedev.c:4053
+#: tapedev.c:4055
 #, c-format
 msgid "HHCTA070E Chunksize must be within %u-%u\n"
 msgstr ""
 
-#: tapedev.c:4089
+#: tapedev.c:4091
 #, c-format
 msgid "HHCTA071E Error in '%s' parameter\n"
 msgstr ""
 
-#: tapedev.c:4147
+#: tapedev.c:4149
 #, c-format
 msgid "TAPE Autoloader - Adding global parm %s\n"
 msgstr ""
 
-#: tapedev.c:4217
+#: tapedev.c:4219
 #, c-format
 msgid "TAPE Autoloader : Adding tape entry %s\n"
 msgstr ""
 
-#: tapedev.c:4264
+#: tapedev.c:4266
 #, c-format
 msgid "TAPE : Autoloader file request fn=%s\n"
 msgstr ""
 
-#: tapedev.c:4551
+#: tapedev.c:4553
 #, c-format
 msgid "Unsupported device type specified %4.4x\n"
 msgstr ""
 
-#: tapedev.c:4809
+#: tapedev.c:4815
 #, c-format
 msgid "HHCTA072E Data chaining not supported for CCW %2.2X\n"
 msgstr ""
 
-#: tapedev.c:5450
+#: tapedev.c:5456
 #, c-format
 msgid "HHCTA081I Locate block 0x%8.8lX on %s%s%4.4X\n"
 msgstr ""
@@ -6543,7 +6520,6 @@ msgid "Built on %s at %s\n"
 msgstr ""
 
 #: version.c:176
-#, c-format
 msgid "Build information:\n"
 msgstr ""
 
