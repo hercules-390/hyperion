@@ -1159,8 +1159,21 @@ typedef struct _MBK {
                                            this processor            */
 #define STFL_0_ESAME_ACTIVE     0x20    /* ESAME mode is active on
                                            this processor            */
+#define STFL_0_IDTE_INSTALLED   0x10    /* IDTE installed ESAME mode */
+#define STFL_0_IDTE_SC_SEGTAB   0x08    /* IDTE selective clearing
+                                           when segtab invalidated   */
+#define STFL_0_IDTE_SC_REGTAB   0x04    /* IDTE selective clearing
+                                           when regtab invalidated   */
 #define STFL_2_TRAN_FAC2        0x80    /* Extended translation
                                            facility 2 is installed   */
+#define STFL_2_MSG_SECURITY     0x40    /* Message security assist
+                                           feature 2 is installed    */
+#define STFL_2_LONG_DISPL_INST  0x20    /* Long displacement facility
+                                           is installed              */
+#define STFL_2_LONG_DISPL_HPERF 0x10    /* Long displacement facility
+                                           has high performance      */
+#define STFL_2_HFP_MULT_ADD_SUB 0x08    /* HFP multiply-add/subtract
+                                           facility is installed     */
 
 /* Bit definitions for the Vector Facility */
 #define VSR_M    0x0001000000000000ULL  /* Vector mask mode bit      */
