@@ -1,3 +1,4 @@
+04 Mar 2002 Fix load_hmc() with null filename - Jan Jaeger
 04 Mar 2002 Support composite service signals - Jan Jaeger
 03 Mar 2002 Remove ckd and cckd sysblk dependencies in prep for
             cckd dasd utility support - Greg Smith
