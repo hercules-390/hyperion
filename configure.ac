@@ -70,14 +70,15 @@ is_cygwin=false
 
 case "$host_os" in
         darwin*)
-               if test $host_vendor = apple ; then
-                   AC_DEFINE([_BSD_SOCKLEN_T_],[int])
+                if test $host_vendor = apple ; then
+##                 AC_DEFINE([_BSD_SOCKLEN_T_],[int])
                    AC_DEFINE([_INTL_REDIRECT_MACROS])
-##            Do whatever is necessary to get the following symbol defined
+##              Do whatever is necessary to get the following symbol defined
 ##               so the included libltdl will be built and used
 ##                 AC_PROVIDE_AC_LIBTOOL_DLOPEN
-               fi
-               ;;
+                build_hercifc=true
+                fi
+                ;;
         linux*)
                 build_hercifc=true
                 ;;

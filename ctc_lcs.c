@@ -1016,13 +1016,16 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
         if( pPort->fLocalMAC )
         {
+#if !defined(__APPLE__)
             TUNTAP_SetMACAddr( pPort->szNetDevName,
                                pPort->szMACAddress );
+#endif /* !defined(__APPLE__) */
         }
 
         TUNTAP_SetFlags( pPort->szNetDevName,
                          IFF_UP | IFF_RUNNING | IFF_BROADCAST );
 
+#if !defined(__APPLE__)
         for( pRoute = pPort->pRoutes; pRoute; pRoute = pRoute->pNext )
         {
             TUNTAP_AddRoute( pPort->szNetDevName,
@@ -1031,6 +1034,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
                              NULL,
                              RTF_UP );
         }
+#endif /* !defined(__APPLE__) */
 
         pPort->sIPAssistsSupported =
 //          LCS_INBOUND_CHECKSUM_SUPPORT  |
@@ -1052,6 +1056,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
     release_lock( &pPort->Lock );
 
+#if !defined(__APPLE__)
     if( pLCSDEV->pszIPAddress )
     {
         TUNTAP_AddRoute( pPort->szNetDevName,
@@ -1060,6 +1065,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
                          NULL,
                          RTF_UP | RTF_HOST );
     }
+#endif /* !defined(__APPLE__) */
 
     // Get a pointer to the next available reply frame
     pReply = (PLCSSTDFRM)LCS_FixupReplyFrame( pLCSDEV,
@@ -1083,6 +1089,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
     pPort->fStarted = 0;
 
+#if !defined(__APPLE__)
     if( pLCSDEV->pszIPAddress )
     {
         TUNTAP_DelRoute( pPort->szNetDevName,
@@ -1091,6 +1098,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
                          NULL,
                          RTF_HOST );
     }
+#endif /* !defined(__APPLE__) */
 
     // FIXME: Really need to iterate through the devices and close
     //        the TAP interface if all devices have been stopped.
@@ -2129,6 +2137,3 @@ HDL_DEVICE_SECTION;
 }
 END_DEVICE_SECTION;
 #endif
-
-
-//#endif /* !defined(__APPLE__) */

@@ -192,8 +192,10 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
     TUNTAP_SetDestAddr( pDevCTCBLK->szTUNDevName,
                         pDevCTCBLK->szGuestIPAddr );
 
+#if !defined(__APPLE__)
     TUNTAP_SetNetMask ( pDevCTCBLK->szTUNDevName,
                         pDevCTCBLK->szNetMask );
+#endif /* !defined(__APPLE__) */
 
     TUNTAP_SetMTU     ( pDevCTCBLK->szTUNDevName,
                         pDevCTCBLK->szMTU );
@@ -1370,4 +1372,3 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
     return 0;
 }
-//#endif /* !defined(__APPLE__) */

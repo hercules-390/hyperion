@@ -162,6 +162,9 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
         //        spend a lot of time on this... so it will remain.
         //        My best guess is that this will cause other functions
         //        to fail miserably but I have no way to test it.
+        // This should work on OS X with Christoph Pfisterer's TUN driver,
+        //        since it does set the device name to the basename of the
+        //        file. -- JRM
         char *p = strrchr( pszTUNDevice, '/' );
         
         if( p )
