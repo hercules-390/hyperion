@@ -530,7 +530,8 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
         regs->perc = 0;
 #endif /*!defined(FEATURE_PER2)*/
 
-        if(*regs->ip != 0x44)
+        /* For EXecute instvalid will be true */
+        if(!regs->instvalid)
             regs->peradr = addr;
     }
 
