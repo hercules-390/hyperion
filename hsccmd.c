@@ -2732,6 +2732,10 @@ int ProcessPanelCommand (const char* pszCmdLine)
         return rc;
     }
 
+    if( system_command )
+        if( (rc = system_command(cmd_argc, (char**)cmd_argv,pszSaveCmdLine) ) )
+            return rc;
+
     /* Error: unknown/unsupported command... */
     logmsg( _("HHCPN139E Command \"%s\" not found; enter '?' for list.\n"),
               cmd_argv[0] );

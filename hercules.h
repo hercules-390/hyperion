@@ -1709,7 +1709,8 @@ void (*panel_display) (void);
 
 void (*daemon_task) (void);
 
-int (*config_command) (int argc, BYTE *argv[]);
+int (*config_command) (int argc, char *argv[], char *cmdline);
+int (*system_command) (int argc, char *argv[], char *cmdline);
 
 void *(*debug_cpu_state) (REGS *);
 void *(*debug_device_state) (DEVBLK *);

@@ -158,6 +158,7 @@ int     i;                              /* Array subscript           */
 int     c;                              /* Character work area       */
 int     stmtlen;                        /* Statement length          */
 int     lstarted;                       /* Indicate if non-whitespace*/
+char   *cnfline;
                                         /* has been seen yet in line */
 
     while (1)
@@ -216,16 +217,23 @@ int     lstarted;                       /* Indicate if non-whitespace*/
         if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
            continue;
 
+        cnfline = strdup(buf);
+
         /* Parse the statement just read */
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 #if defined(OPTION_DYNAMIC_LOAD)
         if(config_command)
         {
-            if( config_command(addargc, addargv) )
-            continue;
+            if( config_command(addargc, (char**)addargv, cnfline) )
+            {
+                free(cnfline);
+                continue;
+            }
         }
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
+
+        free(cnfline);
 
         /* Move the first two arguments to separate variables */
 
