@@ -942,7 +942,7 @@ int r1,x2,b2,d2;
     r1 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
-    d2 = (inst[4] << 12) | (inst[2] & 0x0F) << 8 | inst[3];
+    d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
     logmsg("%-6.6s%d,%d(%d,%d)\n",mnemonic,r1,d2,x2,b2);
 }
 
@@ -983,7 +983,7 @@ int r1,r3,b2,d2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
-    d2 = (inst[4] << 12) | (inst[2] & 0x0F) << 8 | inst[3];
+    d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
     logmsg("%-6.6s%d,%d,%d(%d)\n",mnemonic,r1,r3,d2,b2);
 }
 
@@ -1053,7 +1053,7 @@ void disasm_SIY (BYTE inst[], BYTE mnemonic[])
 int i2,b1,d1;
     i2 = inst[1];
     b1 = inst[2] >> 4;
-    d1 = (inst[4] << 12) | (inst[2] & 0x0F) << 8 | inst[3];
+    d1 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
     logmsg("%-6.6s%d(%d),%d\n",mnemonic,d1,b1,i2);
 }
 
