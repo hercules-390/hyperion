@@ -1925,7 +1925,7 @@ int     cpu;
     /* Detach all devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
        if (dev->allocated)
-           detach_device(dev->devnum);
+           detach_subchan(dev->subchan);
 
 #if !defined(OPTION_FISHIO)
     /* Terminate device threads */
@@ -2223,19 +2223,8 @@ int     rc;                             /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Function to delete a device configuration block                   */
 /*-------------------------------------------------------------------*/
-int detach_device (U16 devnum)
+static int detach_devblk (DEVBLK *dev)
 {
-DEVBLK *dev;                            /* -> Device block           */
-
-    /* Find the device block */
-    dev = find_device_by_devnum (devnum);
-
-    if (dev == NULL)
-    {
-        logmsg (_("HHCCF046E Device %4.4X does not exist\n"), devnum);
-        return 1;
-    }
-
     /* Obtain the device lock */
     obtain_lock(&dev->lock);
 
@@ -2264,10 +2253,60 @@ DEVBLK *dev;                            /* -> Device block           */
     machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
-    logmsg (_("HHCCF047I Device %4.4X detached\n"), devnum);
-
     return 0;
 } /* end function detach_device */
+
+
+/*-------------------------------------------------------------------*/
+/* Function to delete a device configuration block by subchannel     */
+/*-------------------------------------------------------------------*/
+int detach_subchan (U16 subchan)
+{
+DEVBLK *dev;                            /* -> Device block           */
+int    rc;
+
+    /* Find the device block */
+    dev = find_device_by_subchan (subchan);
+
+    if (dev == NULL)
+    {
+        logmsg (_("HHCCF046E Subchannel %4.4X does not exist\n"), subchan);
+        return 1;
+    }
+
+    rc = detach_devblk( dev );
+
+    if(!rc)
+        logmsg (_("HHCCF047I Subchannel %4.4X detached\n"), subchan);
+
+    return rc;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Function to delete a device configuration block by device number  */
+/*-------------------------------------------------------------------*/
+int detach_device (U16 devnum)
+{
+DEVBLK *dev;                            /* -> Device block           */
+int    rc;
+
+    /* Find the device block */
+    dev = find_device_by_devnum (devnum);
+
+    if (dev == NULL)
+    {
+        logmsg (_("HHCCF046E Device %4.4X does not exist\n"), devnum);
+        return 1;
+    }
+
+    rc = detach_devblk( dev );
+
+    if(!rc)
+        logmsg (_("HHCCF047I Device %4.4X detached\n"), devnum);
+
+    return rc;
+}
 
 
 /*-------------------------------------------------------------------*/
