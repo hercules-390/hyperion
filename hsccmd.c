@@ -45,29 +45,17 @@ int process_script_file(char *,int);
 
 int quit_cmd(char* cmdline, int argc, char *argv[])
 {
-struct termios kbattr;                  /* Terminal I/O structure    */
     UNREFERENCED(cmdline);
 
-    /* redirect the logger input to stderr such that termination 
-       messages are written to the screen */
-    dup2(STDERR_FILENO,STDOUT_FILENO);
-
-    /* Restore the terminal mode */
-    tcgetattr (STDIN_FILENO, &kbattr);
-    kbattr.c_lflag |= (ECHO | ICANON);
-    tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
-
-    sysblk.shutdown = 1;
-
     if (!(argc > 1 && !strcasecmp("now",argv[1])))
+    {
+        system_shutdown();
         usleep(100000);
+    }
 
 #if defined(FISH_HANG)
     FishHangAtExit();
 #endif
-
-    if (argc < 2 || strcasecmp("now",argv[1]))
-        release_config();
 
     fprintf(stderr, "HHCIN007I Hercules terminated\n");
     fflush(stderr);

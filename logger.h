@@ -25,6 +25,8 @@
 #define logmsgb(_message...) log_write(2,_message)
 
 void logger_init(void);
+void logger_term(void);
+
 int log_read(char **buffer, int *msgindex, int block);
 int log_line(int linenumber);
 

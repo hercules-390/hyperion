@@ -712,10 +712,16 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #define ANSI_RESET_WHT_BLK   "\x1B[0;37;40m"
 #define ANSI_CLEAR_SCREEN    "\x1B[2J"
 
-static void panel_clear()
-/* Reset the cursor position */
+static void panel_cleanup()
 {
-    fprintf(stderr, ANSI_RESET_WHT_BLK  ANSI_CLEAR_SCREEN );
+struct termios kbattr;                  /* Terminal I/O structure    */
+
+    /* Restore the terminal mode */
+    tcgetattr (STDIN_FILENO, &kbattr);
+    kbattr.c_lflag |= (ECHO | ICANON);
+    tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
+
+    fprintf(stderr, ANSI_RESET_WHT_BLK  ANSI_ROW24_COL79 );
     fflush(stderr);
 }
 
@@ -810,7 +816,7 @@ struct  timeval tv;                     /* Select timeout structure  */
     pipefd = compat_msgpiper;
     keybfd = STDIN_FILENO;
 
-    atexit(panel_clear);
+    atexit(panel_cleanup);
 
     /* Set screen output stream to fully buffered */
     setvbuf (confp, NULL, _IOFBF, 0);

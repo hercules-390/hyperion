@@ -24,6 +24,7 @@ static int  logger_bufsize;
 static int  logger_currmsg;
 static int  logger_wrapped;
 
+static int  logger_active;
 
 /* Find the index for a specific line number in the log,             */
 /* one being the most recent line                                    */
@@ -97,6 +98,14 @@ int bytes_returned;
 
     obtain_lock(&logger_lock);
 
+    if(!logger_active)
+    {
+        *msgindex = 0;
+        *buffer = logger_buffer;
+        release_lock(&logger_lock);
+        return 0;
+    }
+
     if(*msgindex == logger_currmsg && block)
         wait_condition(&logger_cond, &logger_lock);
 
@@ -147,12 +156,14 @@ int bytes_read;
     
     obtain_lock(&logger_lock);
 
+    logger_active = 1;
+
     /* Signal initialization complete */
     signal_condition(&logger_cond);
 
     release_lock(&logger_lock);
 
-    while(1)
+    while(logger_active)
     {
         bytes_read = read(sysblk.syslogfd[LOG_READ],logger_buffer + logger_currmsg,
           ((logger_bufsize - logger_currmsg) > SSIZE_MAX ? SSIZE_MAX : logger_bufsize - logger_currmsg));
@@ -182,6 +193,18 @@ int bytes_read;
 
         release_lock(&logger_lock);
     }
+
+    /* Logger is now terminating */
+    obtain_lock(&logger_lock);
+
+    /* Redirect all msgs to stderr */
+    sysblk.syslog[LOG_WRITE] = stderr;
+    sysblk.syslogfd[LOG_WRITE] = STDERR_FILENO;
+
+    /* Signal any waiting tasks */
+    broadcast_condition(&logger_cond);
+
+    release_lock(&logger_lock);
 }
 
 
@@ -292,4 +315,25 @@ void logger_init(void)
 
     release_lock(&logger_lock);
 
+}
+
+
+void logger_term()
+{
+
+    obtain_lock(&logger_lock);
+
+    /* Redirect all output to stderr */
+    dup2(STDERR_FILENO, STDOUT_FILENO);
+
+    /* Mark logger inactive */
+    logger_active = 0;
+
+    /* Send the logger a message to wake it up */
+    fprintf(sysblk.syslog[LOG_WRITE], _("HHCLG014I logger thread terminating\n") );
+
+    /* Wait for the logger to terminate */
+    wait_condition(&logger_cond, &logger_lock);
+
+    release_lock(&logger_lock);
 }

@@ -385,11 +385,21 @@ TID     rctid;                          /* RC file thread identifier */
 
 
 /*-------------------------------------------------------------------*/
-/* Cleanup routine                                                   */
+/* System cleanup                                                    */
 /*-------------------------------------------------------------------*/
 void system_cleanup (void)
 {
-    /* ZZ FIXME: Closing the syslog makes the logger terminate 
-       but a more elegant shutdown procedure is required */
-    close(sysblk.syslogfd[LOG_WRITE]) ;
-} /* end function system_cleanup */
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Shutdown hercules                                                 */
+/*-------------------------------------------------------------------*/
+void system_shutdown (void)
+{
+    sysblk.shutdown = 1;
+
+    logger_term();
+
+    release_config();
+}
