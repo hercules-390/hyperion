@@ -1,0 +1,141 @@
+.TH dasdseq 1 "2003-03-10"
+.SH NAME
+\fBdasdseq\fP - Hercules DSORG=PS retrieval command
+
+.SH SYNOPSIS
+\fBdasdseq\fP [options...] \fBimage \fP[sf=shadow] \fBfilespec\fP
+.br
+\fBdasdseq \fP[-debug] [-expert] [-ascii] \fBimage \fP[sf=shadow] [attr] \fBfilespec \fP[debugopts] [ascii]
+
+.SH DESCRIPTION
+Hercules command to retrieve a DSORG=PS (sequential) dataset from
+CKD/CCKD DASD.  The dataset is presumed to be encoded in EBCDIC.
+The second form of the command is for 'expert mode' users, and allows more
+advanced access to data on the DASD image.
+
+.SH OPTIONS
+The following options are used to specify dasdseq behavior.
+Surround each option by blank(s).
+Options are divided into three categories: \fBrequired, optional,
+and expert mode operands.\fP
+
+.SH Required operands
+
+.SS image
+specifies the Hercules CKD/CCKD DASD filename (sometimes referred to as the
+DASD image file)
+.SS filespec
+dataset name of the file to retrieve.  Case insensitive, converted to upper
+case for searching VTOC on image DASD volume.
+
+.SH Optional operands
+
+.SS sf=shadow
+For CCKD images which also use shadow files, specifies the [path/]filename
+of the shadow file.  Note the sf=, which must be present for this option.
+
+.SS -ascii
+convert the output file to ASCII (from EBCDIC).  
+Additionally, trailing blanks are trimmed.
+The 'ascii' option (no leading dash) is deprecated, and may be removed in a
+future release.
+
+.SH Expert mode operands
+All expert mode operands are considered to be experimental.
+
+\fB dasdseq [-debug] [-expert] [-ascii] image [sf=shadow] [attr] filespec [debugopts]\fP
+
+.SS -debug
+Additional debug options are displayed.
+Specifying -debug will (eventually) display dataset extent information.
+
+.SS attr
+dataset attributes (only useful with -abs)
+
+\fB[-recfm fb] [-lrecl aa]\fP
+
+-recfm designates RECFM, reserved for future support
+
+fb - fixed, blocked (only RECFM currently supported)
+
+-lrecl designates dataset LRECL
+
+aa - decimal logical record length (default 80)
+
+Blocksize need not be specified; dasdseq handles whatever
+block size comes off the volume.
+
+.SS filespec
+composed of the following sub-operands, in the following order:
+\fBheads, abs, filename.\fP
+
+.SS -heads xx
+defines # tracks per cylinder on device;
+xx = decimal number of heads per cylinder on device
+
+.SS -abs cc hh tt [...] [-abs cc hh tt]
+
+-abs indicates the beginning of each extent's location in terms of
+absolute dasd image location.
+
+cc - decimal cylinder number (relative zero)
+
+hh - decimal head number (relative zero)
+
+tt - decimal number of tracks in extent
+
+When -abs is specified, each -abs group specifies one dataset extent.
+For multi-extent datasets, -abs groups may be repeated as needed,
+in the order in which the dataset's extents occur.
+A maximum of 123 extents are supported.
+With -abs, no VTOC structure is implied; a F1 DSCB will not be sought.
+Dasdseq will frequently report 'track not found in extent table'
+(along with a message from fbcopy about rc -1 from convert_tt)
+due to potentially missing EOF markers in the extent, and the
+fact that the F1 DSCB DS1LSTAR field is not valid.
+Check your output file before you panic.
+Fbcopy -abs ignores EOF, in case you are attempting to recovery PDS
+member(s) from a damaged dasd volume, preferring to wait until
+all tracks in the extent have been processed.
+Tracks containing PDS members may have more than one EOF per track.
+Expect a lot of associated manual effort with -abs.
+
+When -abs is -not- specified, filename specifies the MVS DSORG=PS dataset 
+on the volume.
+The dasd image volume containing the dataset must have a valid VTOC
+structure, and a F1 DSCB describing the dataset.
+
+.SS filename
+will be the filename of the output file in the current directory;
+output filename in the same case as the command line filename.
+
+.SS debugopts
+Produces debugging output, refer to the source code.
+
+\fBverbose [x [y [z]]]\fP
+
+verbose   debug output level (default = 0 when not specified).
+Higher numbers produce more output.
+
+x  main program (default = 1 when verbose specified)
+
+y  copyfile + showf1
+
+z  dasdutil
+
+.SH "SEE ALSO"
+.TP
+dasdpdsu for DSORG=PO datasets
+.TP
+cckd(4) for CCKD DASD 
+.TP
+http://www.conmicro.cx/hercules/cckddasd.html which describes
+the Hercules CCKD DASD facility.
+.TP
+http://www.conmicro.cx/hercules/ the Hercules emulator homepage.
+
+.SH HISTORY
+2003-03-10 originally written by James M. Morrison
+
+
+

@@ -16,7 +16,7 @@ endif
 LDADD = @LIBINTL@
 
 bin_PROGRAMS = hercules $(HERCIFC) \
-	   dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu \
+	   dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu dasdseq \
 	   tapecopy tapemap tapesplt \
 	   cckdcdsk cckdcomp cckddiag cckdswap \
 	   cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
@@ -82,6 +82,9 @@ dasdcat_SOURCES = dasdcat.c dasdutil.c codepage.c hostinfo.c version.c \
 	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
 
 dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c codepage.c hostinfo.c version.c \
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+
+dasdseq_SOURCES = dasdseq.c dasdutil.c codepage.c hostinfo.c version.c \
 	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
 
 tapecopy_SOURCES = tapecopy.c codepage.c hostinfo.c version.c
@@ -152,5 +155,4 @@ endif
 
 %.s: %.c
 	$(COMPILE) -S $<
-
 
