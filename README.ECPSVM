@@ -42,18 +42,6 @@ ASSIST ON SVC TMR
 
 ***********
 
-Caveats :
-
-Timer Assist is not implemented, and is the only feature for which CP doesn't ask for the availability and doesn't really react well to it's absence. Therefore, for any Guest application that make heavy use of the Interval Timer, the Virtual Timer Assist should be disabled with :
-
-CP SET ASSIST ON SVC NOTMR
-
-(Otherwise, for example, if attempting to run VM/370 under VM/370, it will complain in a loop that the Interval Timer is not turned on. This is is because CP is expecting the VM Assist to update the virtual interval timer when the Virtual Machine is being dispatched).
-
-Eventually, this issue will be solved.
-
-***********
-
 Have Fun,
 
 --Ivan
