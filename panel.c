@@ -745,6 +745,11 @@ char c;
 
     fprintf(stderr, ANSI_RESET_WHT_BLK ANSI_CLEAR_SCREEN );
 
+    /* Reset the first line to be displayed (i.e.
+	   "scroll down to the most current message") */
+    firstmsgn = nummsgs - NUM_LINES;
+    if (firstmsgn < 0) firstmsgn = 0;
+
     /* Display messages in scrolling area */
     for (i=0; i < NUM_LINES && firstmsgn + i < nummsgs; i++)
     {
@@ -765,7 +770,6 @@ char c;
     /* Read any remaining msgs from the system log */
     while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
         fwrite(lmsbuf,lmscnt,1,stderr);
-
 }
 
 /*-------------------------------------------------------------------*/
