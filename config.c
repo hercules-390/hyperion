@@ -129,6 +129,14 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc)
     return *pargc;
 }
 
+static void delayed_exit (int exit_code)
+{
+    /* Delay exiting is to give the system
+     * time to display the error message. */
+    usleep(100000);
+    exit(exit_code);
+}
+
 /*-------------------------------------------------------------------*/
 /* Subroutine to read a statement from the configuration file        */
 /* The statement is then parsed into keyword, operand, and           */
@@ -161,7 +169,7 @@ int     stmtlen;                        /* Statement length          */
             {
                 logmsg(_("HHCCF001S Error reading file %s line %d: %s\n"),
                     fname, stmt, strerror(errno));
-                exit(1);
+                delayed_exit(1);
             }
 
             /* Check for end of file */
@@ -180,7 +188,7 @@ int     stmtlen;                        /* Statement length          */
             {
                 logmsg(_("HHCCF002S File %s line %d is too long\n"),
                     fname, stmt);
-                exit(1);
+                delayed_exit(1);
             }
 
             /* Append character to buffer */
@@ -314,7 +322,7 @@ BYTE    c;                              /* Work area for sscanf      */
     {
         logmsg(_("HHCCF003S Cannot open file %s: %s\n"),
                 fname, strerror(errno));
-        exit(1);
+        delayed_exit(1);
     }
     
     /* Set the default system parameter values */
@@ -351,7 +359,7 @@ BYTE    c;                              /* Work area for sscanf      */
         {
             logmsg(_("HHCCF004S No device records in file %s\n"),
                     fname);
-            exit(1);
+            delayed_exit(1);
         }
 
         /* Exit loop if first device statement found */
@@ -495,7 +503,7 @@ BYTE    c;                              /* Work area for sscanf      */
                         logmsg(_("HHCCF005S Error in %s line %d: "
                         "Unrecognized argument %s\n"),
                         fname, stmt, addargv[0]);
-                        exit(1);
+                        delayed_exit(1);
                     }
                     addargc--;
                 }
@@ -509,7 +517,7 @@ BYTE    c;                              /* Work area for sscanf      */
                         logmsg(_("HHCCF006S Error in %s line %d: "
                         "Userid, but no password given %s\n"),
                         fname, stmt, addargv[1]);
-                        exit(1);
+                        delayed_exit(1);
                     }
                     addargc--;
                 }
@@ -524,7 +532,7 @@ BYTE    c;                              /* Work area for sscanf      */
                     logmsg(_("HHCCF007S Error in %s line %d: "
                     "Missing argument.\n"),
                         fname, stmt);
-                    exit(1);
+                    delayed_exit(1);
                 }
             }
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -537,7 +545,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF008S Error in %s line %d: "
                         "Unrecognized keyword %s\n"),
                         fname, stmt, keyword);
-                exit(1);
+                delayed_exit(1);
             }
 
             /* Check for one and only one operand */
@@ -546,7 +554,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF009S Error in %s line %d: "
                         "Incorrect number of operands\n"),
                         fname, stmt);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -580,7 +588,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF010S Error in %s line %d: "
                         "Unknown or unsupported ARCHMODE specification %s\n"),
                         fname, stmt, sarchmode);
-                exit(1);
+                delayed_exit(1);
             }
         }
         sysblk.arch_mode = archmode;
@@ -598,7 +606,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF011S Error in %s line %d: "
                         "%s is not a valid serial number\n"),
                         fname, stmt, sserial);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -611,7 +619,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF012S Error in %s line %d: "
                         "%s is not a valid CPU model\n"),
                         fname, stmt, smodel);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -624,7 +632,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF013S Error in %s line %d: "
                         "Invalid main storage size %s\n"),
                         fname, stmt, smainsize);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -637,7 +645,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF014S Error in %s line %d: "
                         "Invalid expanded storage size %s\n"),
                         fname, stmt, sxpndsize);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -650,7 +658,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF015S Error in %s line %d: "
                         "Invalid console port number %s\n"),
                         fname, stmt, scnslport);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -662,7 +670,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF016S Error in %s line %d: "
                         "Invalid CPU thread priority %s\n"),
                         fname, stmt, scpuprio);
-                exit(1);
+                delayed_exit(1);
             }
 
 #if !defined(NO_SETUID)
@@ -684,7 +692,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF018S Error in %s line %d: "
                         "Invalid number of CPUs %s\n"),
                         fname, stmt, snumcpu);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -698,7 +706,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF019S Error in %s line %d: "
                         "Invalid number of VFs %s\n"),
                         fname, stmt, snumvec);
-                exit(1);
+                delayed_exit(1);
             }
 #else /*!_FEATURE_VECTOR_FACILITY*/
             logmsg(_("HHCCF020W Vector Facility support not configured\n"));
@@ -713,7 +721,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF021S Error in %s line %d: "
                         "Load parameter %s exceeds 8 characters\n"),
                         fname, stmt, sloadparm);
-                exit(1);
+                delayed_exit(1);
             }
 
             /* Convert the load parameter to EBCDIC */
@@ -736,7 +744,7 @@ BYTE    c;                              /* Work area for sscanf      */
                         "%s is not a valid system epoch.\n"
                         "Patch config.c to expand the table\n"),
                         fname, stmt, ssysepoch);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -750,7 +758,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF023S Error in %s line %d: "
                         "%s is not a valid timezone offset\n"),
                         fname, stmt, stzoffset);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -764,7 +772,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF024S Error in %s line %d: "
                         "Invalid TOD clock drag factor %s\n"),
                         fname, stmt, stoddrag);
-                exit(1);
+                delayed_exit(1);
             }
         }
 #endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
@@ -788,7 +796,7 @@ BYTE    c;                              /* Work area for sscanf      */
                         logmsg(_("HHCCF025S Error in %s line %d: "
                                 "Invalid panel refresh rate %s\n"),
                                 fname, stmt, spanrate);
-                        exit(1);
+                        delayed_exit(1);
                     }
             }
         }
@@ -827,7 +835,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF026S Error in %s line %d: "
                         "Unknown OS tailor specification %s\n"),
                         fname, stmt, sostailor);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -840,7 +848,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF027S Error in %s line %d: "
                         "Invalid maximum device threads %s\n"),
                         fname, stmt, sdevtmax);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -865,7 +873,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF028S Error in %s line %d: "
                         "Invalid program product OS permission %s\n"),
                         fname, stmt, spgmprdos);
-                exit(1);
+                delayed_exit(1);
             }
         }
 
@@ -879,7 +887,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF029S Error in %s line %d: "
                         "Invalid HTTP port number %s\n"),
                         fname, stmt, shttpport);
-                exit(1);
+                delayed_exit(1);
             }
         }
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -893,7 +901,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 logmsg(_("HHCCF030S Error in %s line %d: "
                         "Invalid I/O delay value: %s\n"),
                         fname, stmt, siodelay);
-                exit(1);
+                delayed_exit(1);
             }
         }
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -901,7 +909,7 @@ BYTE    c;                              /* Work area for sscanf      */
         /* Parse cckd value value */
         if (scckd)
             if (cckd_command (scckd, 0))
-                exit(1);
+                delayed_exit(1);
 
     } /* end for(scount) */
 
@@ -913,7 +921,7 @@ BYTE    c;                              /* Work area for sscanf      */
     {
         logmsg(_("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
                 mainsize, strerror(errno));
-        exit(1);
+        delayed_exit(1);
     }
 
     /* Obtain main storage key array */
@@ -922,7 +930,7 @@ BYTE    c;                              /* Work area for sscanf      */
     {
         logmsg(_("HHCCF032S Cannot obtain storage key array: %s\n"),
                 strerror(errno));
-        exit(1);
+        delayed_exit(1);
     }
 
 #if 0   /*DEBUG-JJ-20/03/2000*/
@@ -946,7 +954,7 @@ BYTE    c;                              /* Work area for sscanf      */
             logmsg(_("HHCCF033S Cannot obtain %dMB expanded storage: "
                     "%s\n"),
                     xpndsize, strerror(errno));
-            exit(1);
+            delayed_exit(1);
         }
 #else /*!_FEATURE_EXPANDED_STORAGE*/
         logmsg(_("HHCCF034W Expanded storage support not installed\n"));
@@ -1118,7 +1126,7 @@ BYTE    c;                              /* Work area for sscanf      */
             logmsg(_("HHCCF035S Error in %s line %d: "
                     "Missing device number or device type\n"),
                     fname, stmt);
-            exit(1);
+            delayed_exit(1);
         }
 
         if (strlen(sdevnum) > 4
@@ -1127,12 +1135,12 @@ BYTE    c;                              /* Work area for sscanf      */
             logmsg(_("HHCCF036S Error in %s line %d: "
                     "%s is not a valid device number\n"),
                     fname, stmt, sdevnum);
-            exit(1);
+            delayed_exit(1);
         }
 
         /* Build the device configuration block */
         if (attach_device (devnum, sdevtype, addargc, addargv))
-            exit(1);
+            delayed_exit(1);
 
         /* Read next device record from the configuration file */
         if (read_config (fname, fp))
@@ -1146,7 +1154,7 @@ BYTE    c;                              /* Work area for sscanf      */
     {
         logmsg(_("HHCCF037S Message pipe creation failed: %s\n"),
                 strerror(errno));
-        exit(1);
+        delayed_exit(1);
     }
 
     sysblk.msgpiper = pfd[0];
@@ -1160,7 +1168,7 @@ BYTE    c;                              /* Work area for sscanf      */
         sysblk.msgpipew = stderr;
         logmsg(_("HHCCF038S Message pipe open failed: %s\n"),
                 strerror(errno));
-        exit(1);
+        delayed_exit(1);
     }
     setvbuf (sysblk.msgpipew, NULL, _IOLBF, 0);
 
