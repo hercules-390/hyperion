@@ -1773,11 +1773,12 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
 
 int ShadowFile_cmd(int argc, char *argv[], char *cmdline)
 {
-BYTE   *cmd = (BYTE*) cmdline;      /* Copy of panel command     */
-BYTE   *devascii;                   /* ASCII text device number  */
-DEVBLK *dev;                        /* -> Device block           */
-U16     devnum;                     /* Device number             */
-BYTE c;                                 /* Character work area       */
+BYTE   *cmd = (BYTE*) cmdline;          /* Copy of panel command     */
+BYTE   *devascii;                       /* ASCII text device number  */
+DEVBLK *dev;                            /* -> Device block           */
+U16     devnum;                         /* Device number             */
+BYTE    c;                              /* Character work area       */
+int     flag;                           /* Flag for sf-              */
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -1850,15 +1851,21 @@ BYTE c;                                 /* Character work area       */
                       cckd_sf_add (dev);
                       break;
 
-            case '-': if (devascii == NULL
-                       || strcmp(devascii, "merge") == 0)
-                          cckd_sf_remove (dev, 1);
+            case '-': flag = -1;
+                      if (devascii == NULL)
+                          flag = 1;
+                      else if (strcmp(devascii, "merge") == 0)
+                          flag = 1;
                       else if (strcmp(devascii, "nomerge") == 0)
-                          cckd_sf_remove (dev, 0);
+                          flag = 0;
+                      else if (strcmp(devascii, "force") == 0)
+                          flag = 2;
+                      if (flag >= 0)
+                          cckd_sf_remove (dev, flag);
                       else
                       {
                           logmsg( _("HHCPN087E Operand must be "
-                                    "'merge' or 'nomerge'\n") );
+                                    "`merge', `nomerge' or `force'\n") );
                           return -1;
                       }
                       break;

@@ -284,8 +284,18 @@ int             cckd=0;                 /* 1 if compressed CKD       */
             memcmp ("sf=", argv[i], 3) == 0)
         {
             if ('\"' == argv[i][3]) argv[i]++;
-            if (strlen(argv[i]+3) < 256)
-                strcpy (dev->dasdsfn, argv[i]+3);
+            dev->dasdsfn = strdup(argv[i]+3);
+            if (dev->dasdsfn)
+            {
+                /* Set the pointer to the suffix character */
+                dev->dasdsfx = strrchr (dev->dasdsfn, '/');
+                if (dev->dasdsfx == NULL)
+                    dev->dasdsfx = dev->dasdsfn + 1;
+                dev->dasdsfx = strchr (dev->dasdsfx, '.');
+                if (dev->dasdsfx == NULL)
+                    dev->dasdsfx = dev->dasdsfn + strlen(dev->dasdsfn);
+                dev->dasdsfx--;
+            }
             continue;
         }
         if (strlen (argv[i]) > 3

@@ -1454,7 +1454,9 @@ typedef struct _DEVBLK {
 
         /*  Device dependent fields for dasd (fba and ckd)           */
 
-        BYTE    dasdsfn[256];           /* Shadow file name          */
+        BYTE   *dasdsfn;                /* Shadow file name          */
+        BYTE   *dasdsfx;                /* Pointer to suffix char    */
+
 
         /*  Device dependent fields for fbadasd                      */
 
@@ -1685,6 +1687,7 @@ typedef char CCKD_TRACE[128];           /* Trace entry               */
 #define CCKD_L2TAB_SIZE        ((ssize_t)sizeof(CCKD_L2TAB))
 #define CCKD_FREEBLK_SIZE      8
 #define CCKD_FREEBLK_ISIZE     ((ssize_t)sizeof(CCKD_FREEBLK))
+#define CCKD_FREE_MIN_SIZE     96
 #define CCKD_CACHE_SIZE        ((ssize_t)sizeof(CCKD_CACHE))
 #define CCKD_NULLTRK_SIZE1     37       /* ha r0 r1 ffff */
 #define CCKD_NULLTRK_SIZE0     29       /* ha r0 ffff */
@@ -1714,7 +1717,7 @@ typedef char CCKD_TRACE[128];           /* Trace entry               */
 #define CCKD_DEFAULT_WRITER    2        /* Default number writers    */
 #define CCKD_DEFAULT_GCOL      1        /* Default number garbage
                                               collectors             */
-#define CCKD_DEFAULT_GCOLWAIT  5        /* Default wait (seconds)    */
+#define CCKD_DEFAULT_GCOLWAIT  10       /* Default wait (seconds)    */
 #define CCKD_DEFAULT_GCOLPARM  0        /* Default adjustment parm   */
 #define CCKD_DEFAULT_READAHEADS 2       /* Default nbr to read ahead */
 #define CCKD_DEFAULT_FREEPEND  -1       /* Default freepend cycles   */
@@ -1814,7 +1817,6 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         LOCK             iolock;        /* I/O lock                  */
         COND             iocond;        /* I/O condition             */
         int              iowaiters;     /* Number I/O waiters        */
-        int              gcwaiting;     /* 1=gcol waiting for I/O    */
         int              wrpending;     /* Number writes pending     */
         int              ras;           /* Number readaheads active  */
         int              sfn;           /* Number active shadow files*/

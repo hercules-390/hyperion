@@ -1319,15 +1319,6 @@ space_check:
             /* add track to the space table */
             valid_trks++;
             cdevhdr2.used += l2[j].len;
-            if ((l2[j].size - l2[j].len) && (fdflags & O_RDWR))
-            {
-                if (!fsperr)
-                    CDSKMSG (m, "imbedded free space will be removed%s\n","");
-                fsperr = 1;
-                l2[j].size = l2[j].len;
-                rc = lseek (fd, (off_t)l1[i], SEEK_SET);
-                rc = write (fd, &l2, CCKD_L2TAB_SIZE);
-            }
             cdevhdr2.free_imbed += l2[j].size - l2[j].len;
             cdevhdr2.free_total += l2[j].size - l2[j].len;
             spc[s].pos = l2[j].pos;
