@@ -1,3 +1,5 @@
+11 Jul 2003 Fix bogus HHCCT048E error message - Fish
+11 Jul 2003 Fix "console: select: Bad file number" -- 2nd try - Fish
 10 Jul 2003 fix tape label issue in hetinit.c & slib.c - Fish
 10 Jul 2003 HFP Multiply-Add/Subtract Facility - Roger Bowler
 09 Jul 2003 added check to configure.ac to ensure dynamic load support

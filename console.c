@@ -801,10 +801,16 @@ BYTE            buf[32];                /* tn3270 write buffer       */
     /* Close the connection if an error occurred */
     if (rc & CSW_UC)
     {
+        int locked = ((try_obtain_lock(&dev->lock) == 0) ? 1 : 0);
+
+        dev->connected = 0;
         close (dev->fd);
         dev->fd = -1;
-        dev->connected = 0;
         dev->sense[0] = SENSE_DC;
+
+        if (locked)
+            release_lock (&dev->lock);
+
         return (CSW_UC);
     }
 
@@ -1315,9 +1321,19 @@ BYTE                    unitstat;       /* Status after receive data */
         if (rc < 0 )
         {
             if (errno == EINTR) continue;
+            /*
+               Handle potential race condition: EBADF simply
+               means one (or more) of the file descriptors we
+               had in our select set is no longer open. Since
+               whoever closed it SHOULD have also reset the
+               'connected' flag, it should then not get added
+               back into our FDSET this next time around, so
+               we simply ignore this error and things SHOULD
+               magically take care of themselves.
+            */
             TNSERROR("select: %s\n", strerror(errno));
-//          break;
-            continue;   // (low occurrence; ignore for now; Fish)
+            if (EBADF == errno) continue;
+            break;      /* something is very wrong somewhere! */
         }
 
         /* If a client connection request has arrived then accept it */
@@ -1375,9 +1391,9 @@ BYTE                    unitstat;       /* Status after receive data */
                 /* Close the connection if an error occurred */
                 if (unitstat & CSW_UC)
                 {
+                    dev->connected = 0;
                     close (dev->fd);
                     dev->fd = -1;
-                    dev->connected = 0;
                 }
 
                 /* Indicate that data is available at the device */
@@ -1449,13 +1465,17 @@ console_initialise()
 static void
 console_remove(DEVBLK *dev)
 {
+    int locked = ((try_obtain_lock(&dev->lock) == 0) ? 1 : 0);
+
+    dev->connected = 0;
+    dev->console = 0;
+
     if(dev->fd > 2)
         close (dev->fd);
     dev->fd = -1;
 
-    /* Reset device dependent flags */
-    dev->connected = 0;
-    dev->console = 0;
+    if (locked)
+        release_lock (&dev->lock);
 
     if(!sysblk.cnslcnt--)
         logmsg(_("console_remove() error\n"));

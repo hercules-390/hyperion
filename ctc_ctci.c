@@ -815,7 +815,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
         // Check for error condition
         if( iLength < 0 )
         {
-            if( !pCTCBLK->fCloseInProgress )
+            if( pCTCBLK->fd != -1 && !pCTCBLK->fCloseInProgress )
             {
                 logmsg( _("HHCCT048E %4.4X: Error reading from %s: %s\n"),
                     pDEVBLK->devnum, pCTCBLK->szTUNDevName,
@@ -825,11 +825,12 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
             }
 
             // Wait for close to complete
-            while ( pCTCBLK->fCloseInProgress && pCTCBLK->fd != -1 )
+            while( pCTCBLK->fCloseInProgress )
             {
-                sched_yield();  // (give it time to complete)
+                usleep(10000);  // (give it time to complete)
             }
 
+            ASSERT( pCTCBLK->fd == -1 );    // (sanity check)
             break;
         }
 
