@@ -59,7 +59,7 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   machchk.c vector.c xstore.c \
 	   cmpsc.c sie.c qdio.c timer.c \
 	   esame.c cckddasd.c cckdutil.c dasdtab.c \
-	   parser.c hetlib.c ieee.c \
+	   parser.c hetlib.c ieee.c sockdev.c \
 	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
            httpserv.c cgibin.c devtype.c codepage.c \
            ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c
