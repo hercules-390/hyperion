@@ -65,6 +65,8 @@ typedef struct _COMMADPT
         in_textmode:1,          /* Input buffer processing : text mode      */
         in_xparmode:1,          /* Input buffer processing : transparent    */
         gotdle:1,               /* DLE Received in inbound flow             */
+        callissued:1,           /* The connect out for the DIAL/ENABLE      */
+                                /* has already been issued                  */
         readcomp:1;             /* Data in the read buffer completes a read */
 } COMMADPT;
 

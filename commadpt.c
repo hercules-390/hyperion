@@ -724,6 +724,17 @@ static void commadpt_thread(void *vca)
                 switch(ca->dialin+ca->dialout*2)
                 {
                     case 0: /* DIAL=NO */
+                        /* callissued is set here when the call */
+                        /* actually failed. But we want to time */
+                        /* a bit for program issuing ENABLES in */
+                        /* a tight loop                         */
+                        if(ca->callissued)
+                        {
+                            tv.tv_sec=3;
+                            tv.tv_usec=0;
+                            seltv=&tv;
+                            break;
+                        }
                         /* Issue a Connect out */
                         rc=commadpt_connout(ca);
                         if(rc==0)
@@ -743,6 +754,7 @@ static void commadpt_thread(void *vca)
                                 /* the call was sucessfull or not    */
                                 FD_SET(ca->sfd,&wfd);
                                 maxfd=maxfd<ca->sfd?ca->sfd:maxfd;
+                                ca->callissued=1;
                             }
                         }
                         /* Call did not succeed                                 */
@@ -752,13 +764,13 @@ static void commadpt_thread(void *vca)
                         /* was probably instantaneous)                          */
                         /* This is the equivalent of the comm equipment         */
                         /* being offline                                        */
+                        /*       INITIATE A 3 SECOND TIMEOUT                    */
+                        /* to prevent OSes from issuing a loop of ENABLES       */
                         else
                         {
-                            /* ENABLE finished */
-                            ca->curpending=COMMADPT_PEND_IDLE;
-                            signal_condition(&ca->ipc);
-                            /* The ENABLE CCW code will detect the line is not  */
-                            /* connected and will issue a UC+IR                 */
+                            tv.tv_sec=3;
+                            tv.tv_usec=0;
+                            seltv=&tv;
                         }
                         break;
                     default:
@@ -851,6 +863,9 @@ static void commadpt_thread(void *vca)
             {
                 logmsg("HHCCA300D %4.4X:cthread - Select TIME OUT\n",devnum);
             }
+            /* Reset Call issued flag */
+            ca->callissued=0;
+
             /* timeout condition */
             signal_condition(&ca->ipc);
             ca->curpending=COMMADPT_PEND_IDLE;
@@ -880,6 +895,7 @@ static void commadpt_thread(void *vca)
                         /* occurs when a new CCW is being executed */
                     break;
                 case 1: /* Halt current I/O */
+                    ca->callissued=0;
                     if(ca->curpending==COMMADPT_PEND_DIAL)
                     {
                         close(ca->sfd);
@@ -930,6 +946,12 @@ static void commadpt_thread(void *vca)
                     else
                     {
                         logmsg("HHCCA007W %4.4X:Outgoing call failed during %s command : %s\n",devnum,commadpt_pendccw_text[ca->curpending],strerror(soerr));
+                        if(ca->curpending==COMMADPT_PEND_ENABLE)
+                        {
+                            /* Ensure top of the loop doesn't restart a new call */
+                            /* but starts a 3 second timer instead               */
+                            ca->callissued=1;
+                        }
                         ca->connect=0;
                         close(ca->sfd);
                         ca->sfd=-1;
