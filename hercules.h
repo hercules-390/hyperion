@@ -1173,6 +1173,8 @@ typedef struct _DEVBLK {
             U16 method:3;               /* Compression method        */
             U16 level:4;                /* Compression level         */
 	    U16 strictsize:1;           /* Strictly enforce MAXSIZE  */
+	    U16 displayfeat:1;          /* Device has a display      */
+                                        /* feature installed         */
             U16 deonirq:1;              /* DE on IRQ on tape motion  */
                                         /* MVS 3.8j workaround       */
 	    U16 logical_readonly;       /* Tape is forced READ ONLY  */
@@ -1202,6 +1204,21 @@ typedef struct _DEVBLK {
 	char    **al_argv;               /* ARGV in autoloader       */
 	int     al_argc;                 /* ARGC in autoloader       */
 	/* end autoloader feature */
+        /* 3480/3490/3590 Message display */
+        BYTE    tapemsg1[9];            /* 1st 3480 Message          */
+        BYTE    tapemsg2[9];            /* 2nd 3480 Message          */
+        BYTE    tapedisptype;           /* Type of message display   */
+#define TAPEDISPLAY_IDLE 0              /* Display SYSTEM message    */
+#define TAPEDISPLAY_MOUNT 1             /* A Mount Message is on     */
+#define TAPEDISPLAY_UNMOUNT 2           /* An Unmount display is on  */
+#define TAPEDISPLAY_UMOUNTMOUNT 3       /* A Unmount then mount msg  */
+#define TAPEDISPLAY_WAITACT 4           /* Display until motion      */
+        BYTE    tapedispflags;          /* How the msg is displayed  */
+#define TAPEDISPFLG_ALTERNATE 0x80      /* Alternate msgs 1 & 2      */
+#define TAPEDISPFLG_BLINKING  0x40      /* Selected msg blinks       */
+#define TAPEDISPFLG_MSG2      0x20      /* Display msg 2 instead of 1*/
+#define TAPEDISPFLG_AUTOLOAD  0x10      /* Autoloader index req      */
+#define TAPEDISPFLG_REQMOUNT  0x08      /* Pass through Mount Req Rtn*/
 
        /* Device dependent fields for Comm Line                      */
         struct _COMMADPT *commadpt;     /* Single structure pointer  */

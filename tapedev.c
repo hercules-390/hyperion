@@ -3098,6 +3098,82 @@ static int rewind_omatape(DEVBLK *dev,BYTE *unitstat,BYTE code)
         return 0;
 }
 /*-------------------------------------------------------------------*/
+/* Get 3480/3490/3590 Display text in 'human' form                   */
+/*-------------------------------------------------------------------*/
+static char *GetDisplayText(DEVBLK *dev)
+{
+    static BYTE msgbfr[256];
+    if(!dev->tdparms.displayfeat)
+    {
+        return("** Has no display **");
+    }
+    msgbfr[0]=0;
+    if(dev->tapedisptype==TAPEDISPLAY_IDLE)
+    {
+        if(strcmp(dev->filename,TAPE_UNLOADED)==0)
+        {
+            return("         ");
+        }
+        if(dev->fd>=0 && !dev->tmh->tapeloaded(dev,NULL,0))
+        {
+            return(" NT RDY ");
+        }
+        strcpy(msgbfr," READY  ");
+        strcat(msgbfr,dev->readonly ? "*FP*" : "");
+        return(msgbfr);
+    }
+    if(dev->tapedispflags & TAPEDISPFLG_ALTERNATE)
+    {
+        strcpy(msgbfr,dev->tapemsg1);
+        strcat(msgbfr,"/");
+        strcat(msgbfr,dev->tapemsg2);
+    }
+    strcpy(msgbfr,((dev->tapedispflags & TAPEDISPFLG_MSG2) ? dev->tapemsg2 : dev->tapemsg1));
+    strcat(msgbfr,((dev->tapedispflags & TAPEDISPFLG_BLINKING) ? " Blinking" : ""));
+    strcat(msgbfr,((dev->tapedispflags & TAPEDISPFLG_AUTOLOAD) ? " Autoloader" : ""));
+    return(msgbfr);
+}
+/*-------------------------------------------------------------------*/
+/* Issue Automatic Mount Requests as defined by the display          */
+/*-------------------------------------------------------------------*/
+static void ReqAutoMount(DEVBLK *dev)
+{
+    char        vol[8];
+    if(dev->als)
+    {
+        /* Disabled when ACL in use */
+        return;
+    }
+    if(dev->tapedispflags & TAPEDISPFLG_REQMOUNT)
+    {
+        if(dev->tapemsg1[0]=='M')
+        {
+            if(dev->tapedispflags & TAPEDISPFLG_AUTOLOAD)
+            {
+                /* Request for SCRATCH tape */
+                logmsg("AUTOMOUNT : Scratch tape needed\n");
+            }
+            else
+            {
+                memset(vol,0,sizeof(vol));
+                memcpy(vol,&dev->tapemsg1[1],6);
+                logmsg("AUTOMOUNT : tape Volume %s requested\n",vol);
+            }
+        }
+        dev->tapedispflags &= ~TAPEDISPFLG_REQMOUNT;
+    }
+}
+/*-------------------------------------------------------------------*/
+/* Issue a message on the console indicating the display status      */
+/*-------------------------------------------------------------------*/
+static void ShowDisplayMessage(DEVBLK *dev)
+{
+    if(dev->tdparms.displayfeat)
+    {
+        logmsg(_("HHCTA100I %4.4X: Now Displays : %s\n"),dev->devnum,GetDisplayText(dev));
+    }
+}
+/*-------------------------------------------------------------------*/
 /* Issue mount message as result of load display channel command     */
 /*-------------------------------------------------------------------*/
 static void issue_mount_msg (DEVBLK *dev, BYTE *buf)
@@ -3109,36 +3185,74 @@ BYTE            fcb;                    /* Format Control Byte       */
     /* Pick up format control byte */
     fcb = *buf++;
 
-    /* Check to see if this is a 'nomessage' message */
-    if ((fcb & FCB_FS) != FCB_FS_NODISP)
+    /* Copy and translate messages */
+    memset(msg1,0,9);
+    memset(msg2,0,9);
+    for (i = 0; i < 8 && *buf!=0; i++)
+        msg1[i] = guest_to_host(*buf++);
+    msg1[8] = '\0';
+    for (i = 0; i < 8 && *buf!=0; i++)
+        msg2[i] = guest_to_host(*buf++);
+    msg2[8] = '\0';
+    switch(fcb & FCB_FS)
     {
-        /* Copy and translate messages */
-        for (i = 0; i < 8; i++)
-            msg1[i] = guest_to_host(*buf++);
-        msg1[8] = '\0';
-        for (i = 0; i < 8; i++)
-            msg2[i] = guest_to_host(*buf++);
-        msg2[8] = '\0';
-
-        /* If not both messages are to be shown
-           then zeroize appropriate message */
-        if (!(fcb & FCB_AM))
-        {
-            if (fcb & FCB_DM)
-                msg1[0] = '\0';
+        case FCB_FS_NODISP:
+        default:
+            return;
+        case FCB_FS_READYGO:
+            dev->tapedispflags=0;
+            strcpy(dev->tapemsg1,msg1);
+            strcpy(dev->tapemsg2,msg2);
+            dev->tapedisptype=TAPEDISPLAY_WAITACT;
+            break;
+        case FCB_FS_MOUNT:
+            dev->tapedispflags=0;
+            logmsg(_("HHCTA099I %4.4X:Tape Mount Request - (%s)\n"),dev->devnum,msg1);
+            /* Only load message in display if no tape loaded */
+            if(strcmp(dev->filename,TAPE_UNLOADED)==0 || !dev->tmh->tapeloaded(dev,NULL,0))
+            {
+                strcpy(dev->tapemsg1,msg1);
+                dev->tapemsg2[0]=0;
+                dev->tapedisptype=TAPEDISPLAY_MOUNT;
+                dev->tapedispflags=TAPEDISPFLG_REQMOUNT;
+            }
+            break;
+        case FCB_FS_UNMOUNT:
+            dev->tapedispflags=0;
+            logmsg(_("HHCTA099I %4.4X:Tape Presence - (%s)\n"),dev->devnum,msg1);
+            /* Only load message in display if tape loaded */
+            if(strcmp(dev->filename,TAPE_UNLOADED)!=0 && dev->tmh->tapeloaded(dev,NULL,0))
+            {
+                strcpy(dev->tapemsg1,msg1);
+                dev->tapemsg2[0]=0;
+                dev->tapedisptype=TAPEDISPLAY_UNMOUNT;
+            }
+            break;
+        case FCB_FS_UMOUNTMOUNT:
+            dev->tapedispflags=0;
+            logmsg(_("HHCTA099I %4.4X:Tape unmount/mount Request - (%s -> %s)\n"),dev->devnum,msg1,msg2);
+            /* Only load message1 in display if tape loaded */
+            if(strcmp(dev->filename,TAPE_UNLOADED)!=0 && dev->tmh->tapeloaded(dev,NULL,0))
+            {
+                strcpy(dev->tapemsg1,msg1);
+                strcpy(dev->tapemsg2,msg2);
+                dev->tapedisptype=TAPEDISPLAY_UMOUNTMOUNT;
+            }
             else
-                msg2[0] = '\0';
-        }
-
-        /* Display message on console */
-        logmsg (_("HHCTA066I Tape msg %4.4X: %c %s %s\n"),
-                dev->devnum,
-                (fcb & FCB_BM) ? '*' : ' ',   /* Indicate blinking */
-                msg1,
-                msg2);
-
-    } /* end if(FCB_FS_NODISP) */
-
+            {
+                strcpy(dev->tapemsg1,msg2);
+                dev->tapedisptype=TAPEDISPLAY_MOUNT;
+                dev->tapedispflags=TAPEDISPFLG_REQMOUNT;
+            }
+            break;
+    }
+    /* Set the flags */
+    dev->tapedispflags|=(((fcb & FCB_AM) ? TAPEDISPFLG_ALTERNATE : 0) |
+                        ((fcb & FCB_BM) ? TAPEDISPFLG_BLINKING : 0 ) |
+                        ((fcb & FCB_DM) ? TAPEDISPFLG_MSG2 : 0 ) |
+                        ((fcb & FCB_AL) ? TAPEDISPFLG_AUTOLOAD : 0 ));
+    ShowDisplayMessage(dev);
+    ReqAutoMount(dev);
 } /* end function issue_mount_message */
 /* ISW : START Of New SENSE handling */
 
@@ -3846,6 +3960,31 @@ union
             break;
         }
     }
+/*
+ * Adjust the display if necessary
+ */
+    if(dev->tdparms.displayfeat)
+    {
+        if(strcmp(dev->filename,TAPE_UNLOADED)==0)
+        {
+            if(dev->tapedisptype==TAPEDISPLAY_UMOUNTMOUNT)
+            {
+                dev->tapedisptype=TAPEDISPLAY_MOUNT;
+                dev->tapedispflags|=TAPEDISPFLG_REQMOUNT;
+                strncpy(dev->tapemsg1,dev->tapemsg2,8);
+            }
+            if(dev->tapedisptype==TAPEDISPLAY_UNMOUNT)
+            {
+                dev->tapedisptype=TAPEDISPLAY_IDLE;
+            }
+        }
+        else
+        {
+            dev->tapedisptype=TAPEDISPLAY_IDLE;
+        }
+        ShowDisplayMessage(dev);
+    }
+    ReqAutoMount(dev);
     return 0;
 }
 /* AUTOLOADER Feature */
@@ -4130,6 +4269,7 @@ int             rc;
     }
     autoload_close(dev);
     haverdc=0;
+    dev->tdparms.displayfeat=0;
     switch(dev->devtype)
     {
         case 0x3480:
@@ -4144,6 +4284,7 @@ int             rc;
             dev->numdevid = 7;
             dev->numsense = 24;
             haverdc=1;
+            dev->tdparms.displayfeat=1;
             break;
        case 0x3490:
             cutype = 0x3490;
@@ -4157,6 +4298,7 @@ int             rc;
             dev->numdevid = 7;
             dev->numsense = 32;
             haverdc=1;
+            dev->tdparms.displayfeat=1;
             break;
        case 0x3590:
             cutype = 0x3590;
@@ -4170,6 +4312,7 @@ int             rc;
             dev->numdevid = 7;
             dev->numsense = 32;
             haverdc=1;
+            dev->tdparms.displayfeat=1;
             break;
         case 0x3420:
             cutype = 0x3803;
@@ -4302,12 +4445,16 @@ static void tapedev_query_device (DEVBLK *dev, BYTE **class,
     *class = "TAPE";
 
     if (!strcmp (dev->filename, TAPE_UNLOADED))
-        snprintf (buffer, buflen, TAPE_UNLOADED);
+        snprintf (buffer, buflen, "%s %s %s",TAPE_UNLOADED,
+                dev->tdparms.displayfeat?"Display":"",
+                dev->tdparms.displayfeat?GetDisplayText(dev):"");
     else
-        snprintf (buffer, buflen, "%s%s [%d:%8.8lX]",
+        snprintf (buffer, buflen, "%s%s [%d:%8.8lX] %s %s",
                 dev->filename,
                 (dev->readonly ? " ro" : ""),
-                dev->curfilen, dev->nxtblkpos);
+                dev->curfilen, dev->nxtblkpos,
+                dev->tdparms.displayfeat?"Display":"",
+                dev->tdparms.displayfeat?GetDisplayText(dev):"");
 
 } /* end function tapedev_query_device */
 
@@ -4604,8 +4751,19 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     /* REWIND UNLOAD                                                 */
     /*---------------------------------------------------------------*/
+        if(dev->tapedisptype==TAPEDISPLAY_UMOUNTMOUNT)
+        {
+            dev->tapedisptype=TAPEDISPLAY_MOUNT;
+            dev->tapedispflags|=TAPEDISPFLG_REQMOUNT;
+            strcpy(dev->tapemsg1,dev->tapemsg2);
+        }
+        if(dev->tapedisptype==TAPEDISPLAY_UNMOUNT)
+        {
+            dev->tapedisptype=TAPEDISPLAY_IDLE;
+        }
         dev->tmh->close(dev);
         logmsg (_("HHCTA077I Tape %4.4X unloaded\n"),dev->devnum);
+        ShowDisplayMessage(dev);
 
         dev->fd = -1;
         dev->curfilen = 1;
@@ -4624,6 +4782,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             TID dummy_tid;
             create_thread(&dummy_tid,&sysblk.detattr,defered_mounttape,(dev));
         }
+        ReqAutoMount(dev);
         break;
 
     case 0x17:
