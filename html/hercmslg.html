@@ -12,15 +12,15 @@ This page describes messages related to the log funtions of the Hercules S/370,
 ESA/390, and z/Architecture emulator.
 <h3>Messages</h3>
 <dl>
-<dt><code><a name="HHCLG001E">
-HHCLG001E Error redirecting stdout: <em>error</em>
+<dt><code><a name="HHCLG001S">
+HHCLG001S Error redirecting stdout: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
   <dd>The stdout stream could not be redirected to the system logger,
 the error is described by <code><em>error</em></code>.
   <dt>Issued by
-  <dd>logger.c, function logger_thread 
+  <dd>logger.c, function InitStreams 
   </dl>
 <dt><code><a name="HHCLG002E">
 HHHCLG002E Error reading syslog pipe: <em>error</em>
@@ -33,11 +33,11 @@ The error is described by <code><em>error</em></code>.
   <dd>logger.c, function logger_thread
   </dl>
 <dt><code><a name="HHCLG003E">
-HHCLG003E Error writing hardcopy log: <em>error</em>
+HHCLG003E Error writing to hardcopy file: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The error as indicated by <code><em>error</em></code> occurred while writeing the hardcopy log.
+  <dd>The error indicated by <code><em>error</em></code> occurred while writing to the hardcopy logfile.
   <dt>Issued by
   <dd>logger.c, function logger_thread
   </dl>
@@ -110,6 +110,7 @@ The error is described by <code><em>error</em></code>.
   <dt>Issued by
   <dd>logger.c, function logger_init
   </dl>
+
 <dt><code><a name="HHCHT011S">
 HHCLG011S Syslog read message pipe open failed: <em>error</em>
 </a></code>
@@ -120,6 +121,95 @@ The error is described by <code><em>error</em></code>.
   <dt>Issued by
   <dd>logger.c, function logger_init
   </dl>
+
+<dt><code><a name="HHCLG012S">
+HHCLG012S Could not create logger_thread: %s
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to open a stream for the logger pipe failed.
+The error is described by <code><em>error</em></code>.
+  <dt>Issued by
+  <dd>logger.c, function logger_init
+  </dl>
+
+<dt><code><a name="HHCLG013I">
+HHCLG013I logger_thread started: tid=<em>threadid</em>, pid=<em>processid</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The system logger thread has been started. Its thread id
+is <code><em>threadid</em></code>, and its process id is
+<code><em>processid</em></code>.
+  <dt>Issued by
+  <dd>logger.c, function logger_thread
+  </dl>
+
+<dt><code><a name="HHCLG014I">
+HHCLG014I Hardcopy file forced closed.
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The hardcopy logfile has been closed as a result of too many consecutive i/o errors.
+  The preceding <a href=#HHCLG003E><tt>HHCLG003E</tt></a> message describes the error(s).
+  <dt>Issued by
+  <dd>logger.c, function logger_thread
+  </dl>
+
+<dt><code><a name="HHCLG015I">
+HHCLG015I logger_thread ended
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Informational
+  <dt>Issued by
+  <dd>logger.c, function logger_thread
+  </dl>
+
+<dt><code><a name="HHCLG016S">
+HHCLG016S Error creating command input stream: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The error described by <code><em>error</em></code> occurred
+  while duplicating or opening the command input stream.
+  <dt>Issued by
+  <dd>logger.c, function InitStreams
+  </dl>
+
+<dt><code><a name="HHCLG017S">
+HHCLG017S Error creating logfile hardcopy stream: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The error described by <code><em>error</em></code> occurred
+  while duplicating or opening the logfile hardcopy stream.
+  <dt>Issued by
+  <dd>logger.c, function InitStreams
+  </dl>
+
+<dt><code><a name="HHCLG018S">
+HHCLG018S Error creating physical screen stream: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The error described by <code><em>error</em></code> occurred
+  while duplicating or opening the physical screen stream.
+  <dt>Issued by
+  <dd>logger.c, function InitStreams
+  </dl>
+
+<dt><code><a name="HHCLG019S">
+HHCLG019S Error creating daemon-mode state stream: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The error described by <code><em>error</em></code> occurred
+  while duplicating or opening the daemon-mode state stream.
+  <dt>Issued by
+  <dd>logger.c, function InitStreams
+  </dl>
+
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>

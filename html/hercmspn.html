@@ -167,6 +167,7 @@ of the file is complete.
   <dt>Issued by
   <dd>panel.c, function process_rc_file
   </dl>
+
 <dt><code><a name="HHCPN014E">
 HHCPN014E I/O error reading RC file: <em>error</em>
 </a></code>
@@ -181,6 +182,34 @@ desired. Any unprocessed commands may be issued manually.
   <dt>Issued by
   <dd>panel.c, function process_rc_file
   </dl>
+
+
+<dt><code><a name="HHCPN015I">
+HHCPN015I Hercules shutdown initiated...
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The Hercules emulator is in the process of being shutdown (i.e. powered off).
+  <dt>Action
+  <dd>None. This is an informational only message. No response is possible.
+  <dt>Issued by
+  <dd>Module: <tt>panel.c</tt>, function: <tt>panel_thread</tt>.
+  </dl>
+
+
+<dt><code><a name="HHCPN016I">
+HHCPN016I Control panel thread ended
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Informational.
+  <dt>Action
+  <dd>None.
+  <dt>Issued by
+  <dd>Module: <tt>panel.c</tt>, function: <tt>panel_thread</tt>.
+  </dl>
+
+
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>

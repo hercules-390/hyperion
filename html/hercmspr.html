@@ -174,6 +174,41 @@ be started. The error is described by <code><em>error</em></code>.
   <dt>Issued by
   <dd>printer.c, function open_printer
   </dl>
+
+<dt><a name="HHCPR013E">
+<tt>HHCPR013E INTREQ printer <i>address</i> (<i>filename</i>): <i>message</i></tt>
+</a><dd><dl>
+<dt>Meaning
+<dd>The printer at <i><tt>address</tt></i> with filename <i><tt>filename</tt></i> encountered
+the error described by <i><tt>message</tt></i>. The printer's virtual 'Stop' button
+has been automatically pressed as a result of the error,
+placing the printer into a "Not Ready" state.
+<dt>Action
+<dd>Once the reason for the error has been resolved, ready the printer
+by pressing the virtual 'Start' button
+via the command: <tt>start <i>address</i></tt>.
+<dt>Issued by
+<dd><tt>printer.c</tt>, function
+<tt>write_buffer</tt>
+</dl>
+
+
+<dt><a name="HHCPR014I">
+<tt>HHCPR014I Printer <i>address</i> (<i>filename</i>) stopped.</tt>
+</a><dd><dl>
+<dt>Meaning
+<dd>The printer at <i><tt>address</tt></i> with filename <i><tt>filename</tt></i>
+has had its virtual 'Stop' button automatically pressed
+as a result of an error. The preceding <a href=#HHCPR013E><tt>HHCPR013E</tt></a> message
+describes the error.
+<dt>Action
+<dd>(see message <a href=#HHCPR013E><tt>HHCPR013E</tt></a>)
+<dt>Issued by
+<dd><tt>printer.c</tt>, function
+<tt>write_buffer</tt>
+</dl>
+
+
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>
