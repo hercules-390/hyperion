@@ -951,6 +951,12 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 
     /* Test the device and set the condition code */
     regs->psw.cc = testio (regs, dev, inst[1]);
+    /* Yield time slice so that device handler may get some time */
+    /* to possibly complete an I/O - to prevent a TIO Busy Loop  */
+    if(regs->psw.cc==2)
+    {
+	    sched_yield();
+    }
 
 }
 
