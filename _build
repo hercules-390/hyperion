@@ -1,102 +1,162 @@
 #!/bin/bash
-# +-------------------------------------------------------------------------------+
-# !                                                                               !
-# ! Name: _build                                                                  !
-# !                                                                               !
-# ! Desc: build Hercules with various options                                     !
-# !                                                                               !
-# ! Use:  build [i586 | i686] [fthreads | nofthreads]                             !
-# !                                                                               !
-# ! Defaults:  build `uname -m` fthreads                                          !
-# !                                                                               !
-# +-------------------------------------------------------------------------------+
+# +-------------------------------------------------------------------+
+# !                                                                   !
+# ! Name: _hercbuild                                                  !
+# !                                                                   !
+# ! Desc: build Hercules with various options                         !
+# !                                                                   !
+# ! Usage:                                                            !
+# !                                                                   !
+# !  >>- build -+------------------------+-+---------------------+->< !
+# !             !                        ! !                     !    !
+# !             +- -c --+- i586 -------+-+ +- -t -+-- fthread -+-+    !
+# !                     !              !          !            !      !
+# !                     +- i686 -------+          +-- f -------+      !
+# !                     !              !          !            !      !
+# !                     +- pentium ----+          +-- pthread -+      !
+# !                     !              !          !            !      !
+# !                     +- athlon -----+          +-- p -------+      !
+# !                     !              !                              !
+# !                     +- pentiumpro -+                              !
+# !                     !              !                              !
+# !                     +- p4 ---------+                              !
+# !                     !              !                              !
+# !                     +- pentium4 ---+                              !
+# !                                                                   !
+# ! Defaults:  build -c `uname -m` -t f                               !
+# !                                                                   !
+# +-------------------------------------------------------------------+
 # !
-# ! Last Change: '$Id$'
-# !
-# ! Change log: '$Log$
-# ! Change log: 'Revision 1.13  2002/07/23 05:08:05  vbandke
-# ! Change log: 'remove --disable-nls from _builf
-# ! Change log: '
-# ! Change log: 'Revision 1.12  2002/07/20 18:17:03  vbandke
-# ! Change log: 'add --disable-nls to build options
-# ! Change log: '
-# ! Change log: 'Revision 1.11  2002/02/05 17:47:51  jj
-# ! Change log: 'Fix CR/LF issues in various files
-# ! Change log: '
-# ! Change log: 'Revision 1.10  2001/12/15 21:13:07  vbandke
-# ! Change log: 'del version.o before build to keep timestamp display current
-# ! Change log: '
-# ! Change log: 'Revision 1.9  2001/10/29 07:02:23  vbandke
-# ! Change log: 'no message
-# ! Change log: '
-# ! Change log: 'Revision 1.8  2001/10/22 08:49:46  vbandke
-# ! Change log: 'Id RCS ID String etc
-# ! Change log: '
-# ! Change log: 'Revision 1.7  2001/10/22 08:44:58  vbandke
-# ! Change log: 'no message
-# !
-# +-------------------------------------------------------------------------------
-if ! test -f configure
-then
-  echo "running autogen.sh"
+# ! Change Log: '$Log$
+function lower() {
+if [ "${1}X" = "X" ] ; then
+   RESULT=""
+else
+   RESULT=`echo -E "${1}" | tr [:upper:] [:lower:]`
+fi
+}
+function pause() {
+   echo -e "Press the ENTER key to continue "
+   read dummy
+}
+. set_color_vars
+clear
+echo -e "\n\n${YELLOW}  Building Hercules Binaries from local Source\n${TURQ}"
+export PATH=/usr/bin:/usr/local/bin:${PATH}:./
+THREAD_SET=false
+CPU_SET=false
+AUTO_SET=false
+ANSI_SET=true
+CPU_TYPE=auto
+THREAD_TYPE=fthread
+while getopts :c:nt: THE_OPT ; do
+   lower ${THE_OPT}
+   THE_OPT=${RESULT}
+   case ${THE_OPT} in
+      c) CPU_TYPE=${OPTARG}
+         CPU_SET=true
+         ;;
+      n) ANSI_SET=false
+         ;;
+      t) THREAD_TYPE=${OPTARG}
+         THREAD_SET=true
+         ;;
+      :) echo -e "\a${RED}Required information is missing\n"
+         pause
+         exit
+         ;;
+     \?) echo -e "\a${RED}Invalid command switch ${WHITE}${OPTARG}${TURQ}\n"
+         echo -e "\n${TURQ}Syntax is\n"
+         echo -e "_hercbuild [-c <cputype>] [-t <threadmodel>] [-n]"
+         echo -e "             !              !                  !"
+         echo -e "             !              !                  +--- no-ansi, do not"
+         echo -e "             !              !                       use fancy colours"
+         echo -e "             !              +---------------------- thread model to use"
+         echo -e "             !                                      f or fthread (default)"
+         echo -e "             !                                      p or posix            "
+         echo -e "             +------------------------------------- target cpu type       "
+         echo -e "                                                    i586 for Pentium      "
+         echo -e "                                                    i686 for Pentium Pro  "
+         echo -e "                                                    p4   for Pentium 4    "
+         echo -e " "
+         echo -e " The default is _build -c `uname -m` -t f"
+         echo -e " "
+         pause
+         exit
+         ;;
+   esac
+done
+if ! ${CPU_SET} ; then
+   CPU_TYPE=`uname -m`
+   BUILD_OPT=
+   HOST_OPT=
+fi
+
+lower ${CPU_TYPE}
+CPU_TYPE=${RESULT}
+case ${CPU_TYPE} in
+   i586 | pentium | athlon)
+                              BUILD_OPT=--build=i586-pc-cygwin
+                              TARG_DIR=i586
+                              ;;
+   i686 | pentiumpro)
+                              BUILD_OPT=--build=i686-pc-cygwin
+                              TARG_DIR=i686
+                              ;;
+   p4   | pentium4)
+                              TARG_DIR=p4
+                              OPTOPT="-fomit-frame-pointer -O6 -march=pentium4 -mcpu=pentium4 "
+                              OPTOPT=${OPTOPT}" -mmmx -msse -msse2 -minline-all-stringops -mfpmath=sse "
+                              OPTOPT=${OPTOPT}" -maccumulate-outgoing-args"
+                              ;;
+   *) echo -e "\a${RED}Invalid CPU type ${WHITE}${CPU_TYPE}${DEFAULT}"
+      pause
+      exit
+      ;;
+esac
+
+echo -e "${TURQ}Building Hercules binaries for ${WHITE}${CPU_TYPE}${TURQ} processor"
+if ! ${THREAD_SET} ; then
+   THREAD_TYPE=fthread
+fi
+lower ${THREAD_TYPE}
+THREAD_TYPE=${RESULT}
+case ${THREAD_TYPE} in
+   f | fthread | fish )   FTHREAD=yes
+                          THREAD_TYPE="optimzed thread (Fish)"
+                          ;;
+   p | pthread | posix)   FTHREAD=no
+                          THREAD_TYPE="standard thread (posix)"
+                         ;;
+   *) echo -e "\a${RED}Invalid thread model ${WHITE}${THREAD_TYPE}${DEFAULT}"
+      pause
+      exit
+      ;;
+esac
+echo -e "${TURQ}Hercules will be using the ${THREAD_TYPE} model"
+if ! test -f ./configure -a -f ABOUT-NLS ; then
   sh autogen.sh
-  echo "autogen complete"
+  RC=$?
+  if [ ${RC} = 0 ] ; then
+     echo -e "${TURQ}autogen completed successfully"
+  else
+     echo -e "${RED}autogen processing failed"
+     pause
+     exit
+  fi
 fi
-THIS_DIR=`pwd`
-if [ $# = 0 ]
-then
-   HOST_ARCH=`uname -m`
-   FTHREAD=yes
-   BUILD_OPT=
-   HOST_OPT=
-elif [ $# = 1 ]
-then
-   HOST_ARCH=`uname -m`
-   BUILD_OPT=
-   HOST_OPT=
-   FTHREAD=no
-   if [ $1 = i586 -o $1 = i686 ]
-   then
-      HOST_ARCH=$1
-      HOST_OPT=--host=${HOST_ARCH}-pc-cygwin
-      BUILD_OPT=--build=${HOST_ARCH}-pc-cygwin
-      FTHREAD=yes
-   elif [ $1 = nofthread -o $1 = pthread ]
-   then
-      FTHREAD=no
-   elif [ $1 = fthread -o $1 = nopthread ]
-   then
-      FTHREAD=yes
-   else
-      echo "Invalid option " $1
-      exit
-   fi
-elif [ $# = 2 ]
-then
-   HOST_ARCH=$1
-   HOST_OPT=--host=${HOST_ARCH}-pc-cygwin
-   BUILD_OPT=--build=${HOST_ARCH}-pc-cygwin
-   if [ $2 = fthread -o $2 = nopthread ]
-   then
-      FTHREAD=yes
-   elif [ $2 = pthread -o $2 = nofthread ]
-   then
-      FTHREAD=no
-   else
-      echo "Invalid second parameter: $2"
-      exit
-   fi
-fi
+THIS_DIR=${PWD}
 if [ $FTHREAD = yes ]
 then
    FDIR=fthread
 else
    FDIR=pthread
 fi
-mkdir -p ${HOST_ARCH}_${FDIR}
-cd ${HOST_ARCH}_${FDIR}
-../configure --prefix=`pwd` ${HOST_OPT} ${BUILD_OPT} --enable-fthreads=${FTHREAD} --enable-custom="compiled for ${HOST_ARCH}"
-if [ $? = 0 ]
+mkdir -p ${TARG_DIR}_${FDIR}
+cd ${TARG_DIR}_${FDIR}
+../configure --prefix=`pwd` ${BUILD_OPT} --enable-fthreads=${FTHREAD} --enable-custom="compiled for ${TARG_DIR}"  --enable-optimization="${OPTOPT}"
+RC=$?
+if [ $RC = 0 ]
 then
    if test -f version.o
    then
@@ -104,6 +164,6 @@ then
    fi
    make && make install-strip
 else
-   echo "./configure script failed with RC=" $?
+   echo -e "${RED}\a./configure script failed with RC= ${RC}"
 fi
 cd ..
