@@ -16,6 +16,9 @@
 /*********************************************************************/
 
 #include "hercules.h"       // (#includes <config.> w/#define for VERSION)
+
+#if defined(OPTION_DYNAMIC_LOAD)
+
 #include "devtype.h"
 #include "opcode.h"
 #include "dynguip.h"        // (product defines)
@@ -986,3 +989,5 @@ HDL_FINAL_SECTION;
 END_FINAL_SECTION;
 
 ///////////////////////////////////////////////////////////////////////////////
+
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
