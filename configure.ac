@@ -82,7 +82,7 @@ AM_CONDITIONAL(BUILD_FTHREADS, [test x$build_fthreads = xtrue])
 
 dnl AC_MSG_NOTICE([Checking to see if -pthread is needed to compile])
 
-AC_MSG_CHECKING([wether ${CC-cc} accepts -pthread])
+AC_MSG_CHECKING([whether ${CC-cc} accepts -pthread])
 
 echo 'void f(){}' >conftest.c
 if test -z "`${CC-cc} -pthread -c conftest.c 2>&1`"; then
