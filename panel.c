@@ -1059,7 +1059,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     if (memcmp(cmd,"icount",6)==0)
     {
         iclear = strtok (cmd + 6, " \t");
-        if(iclear != NULL && !strcasecmp(icount, "clear"))
+        if(iclear != NULL && !strcasecmp(iclear, "clear"))
             memset(IMAP_FIRST,0,IMAP_SIZE);
         else
         {
