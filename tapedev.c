@@ -4106,12 +4106,12 @@ long            locblock;               /* Block Id for Locate Block */
     /* ASSIGN/UNASSIGN                                               */
     /*---------------------------------------------------------------*/
         /* Command reject if path assignment is not supported */
-//      if (dev->devtype != 0x3480)
-//      {
-//          dev->sense[0] = SENSE_CR;
-//          *unitstat = CSW_CE | CSW_DE | CSW_UC;
-//          break;
-//      }
+        if (dev->devtype != 0x3480)
+        {
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
 
         /* Calculate residual byte count */
         num = (count < 11) ? count : 11;

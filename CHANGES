@@ -1,3 +1,7 @@
+31 Jan 2003 Command reject if path assignment is not supported (non-3480
+            ASSIGN/UNASSIGN CCW opcodes 0xB7 & 0xC7 only in tapedev.c)
+            imhotepio <freige@fibertel.com.ar> [freige@fibertel.com.ar]
+            by Fish
 28 Jan 2003 Obtain intlock during all psw loads - Greg Smith
 27 Jan 2003 TS might not set byte to 0xff - Greg Smith
 24 Jan 2003 Disable syncio for fba due to problems - Greg Smith + Ivan
