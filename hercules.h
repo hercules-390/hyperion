@@ -1364,6 +1364,7 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
 #define CCKD_MAX_CACHE         1024     /* Max number cache entries  */
 #define CCKD_MAX_L2CACHE       1024     /* Max nbr l2 cache entries  */
 #define CCKD_MAX_TRACE         200000   /* Max nbr trace entries     */
+#define CCKD_MAX_FREEPEND      4        /* Max free pending cycles   */
 
 #define CCKD_MIN_READAHEADS    0        /* Min readahead trks        */
 #define CCKD_MIN_RA            0        /* Min readahead threads     */
@@ -1382,6 +1383,7 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
 #define CCKD_DEFAULT_CACHE     128      /* Default cache size        */
 #define CCKD_DEFAULT_L2CACHE   256      /* Default level 2 cache size*/
 #define CCKD_DEFAULT_READAHEADS 2       /* Default nbr to read ahead */
+#define CCKD_DEFAULT_FREEPEND  -1       /* Default freepend cycles   */
 
 #define CFBA_BLOCK_NUM         120      /* Number fba blocks / group */
 #define CFBA_BLOCK_SIZE        61440    /* Size of a block group 60k */
@@ -1417,6 +1419,7 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         int              ra1st;         /* First readahead entry     */
         int              ralast;        /* Last readahead entry      */
         int              rafree;        /* Free readahead entry      */
+        int              freepend;      /* Number freepend cycles    */
         int              nostress;      /* 1=No stress writes        */
         int              nofsync;       /* 1=No fsync()              */
         int              fsyncwa;       /* 1=fsync() prob workaround */
@@ -1480,6 +1483,7 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         CCKD_FREEBLK    *free;          /* Internal free space chain */
         int              freenbr;       /* Number free space entries */
         int              free1st;       /* Index of 1st entry        */
+        int              freelast;      /* Index of last entry       */
         int              freeavail;     /* Index of available entry  */
         int              lastsync;      /* Time of last sync         */
         int              reads[CCKD_MAX_SF+1];   /* Nbr track reads  */
