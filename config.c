@@ -719,6 +719,10 @@ BYTE    c;                              /* Work area for sscanf      */
             {
                 ostailor = 0xFFFFFFFFFFFFFFFFULL;
             }
+            else if (strcasecmp (sostailor, "QUIET") == 0)
+            {
+                ostailor = 0;
+            }
             else
             {
                 logmsg( "HHC017I Error in %s line %d: "
