@@ -275,6 +275,11 @@
  #error Expedited SIE Subset only supported with SIE
 #endif
 
+#if defined(FEATURE_ASN_AND_LX_REUSE) \
+ && !defined(FEATURE_DUAL_ADDRESS_SPACE)
+ #error ASN-and-LX-Reuse requires Dual Address-Space feature
+#endif
+ 
 #if defined(FEATURE_ESAME) \
  && defined(FEATURE_VECTOR_FACILITY)
  #error Vector Facility not supported in ESAME mode

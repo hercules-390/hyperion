@@ -817,6 +817,20 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
+#if defined(FEATURE_ASN_AND_LX_REUSE)
+/*-------------------------------------------------------------------*/
+/* B99A EPAIR - Extract Primary ASN and Instance               [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(extract_primary_asn_and_instance)
+{
+  int r1, r2;                           /* Values of R fields        */
+  
+  RRE(inst, regs, r1, r2);
+  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+}
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+
+
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
 /* B227 ESAR  - Extract Secondary ASN                          [RRE] */
@@ -844,6 +858,20 @@ int     r1, r2;                         /* Values of R fields        */
 
 }
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+
+
+#if defined(FEATURE_ASN_AND_LX_REUSE)
+/*-------------------------------------------------------------------*/
+/* B99B ESAIR - Extract Secondary ASN and Instance             [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(extract_secondary_asn_and_instance)
+{
+  int r1, r2;                           /* Values of R fields        */
+  
+  RRE(inst, regs, r1, r2);
+  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+} 
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
 
 
 #if defined(FEATURE_LINKAGE_STACK)
@@ -3334,6 +3362,20 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
+#if defined(FEATURE_ASN_AND_LX_REUSE)
+/*-------------------------------------------------------------------*/
+/* B99E PTI - Program Transfer with Instance                   [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(program_transfer_with_instance)
+{
+  int r1, r2;                           /* Values of R fields        */
+  
+  RRE(inst, regs, r1, r2);
+  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+} 
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+
+
 #if defined(FEATURE_ACCESS_REGISTERS)
 /*-------------------------------------------------------------------*/
 /* B248 PALB  - Purge ALB                                      [RRE] */
@@ -4234,6 +4276,20 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
 }
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+
+
+#if defined(FEATURE_ASN_AND_LX_REUSE)
+/*-------------------------------------------------------------------*/
+/* B99F SSAIR - Set Secondary ASN with Instance                [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(set_secondary_asn_with_instance)
+{
+  int r1, r2;                           /* Values of R fields        */
+  
+  RRE(inst, regs, r1, r2);
+  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+} 
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
 
 
 #if defined(FEATURE_BASIC_STORAGE_KEYS)

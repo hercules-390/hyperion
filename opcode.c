@@ -161,6 +161,14 @@
 #endif /*!defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
+#if !defined(FEATURE_ASN_AND_LX_REUSE)
+ UNDEF_INST(extract_primary_asn_and_instance)
+ UNDEF_INST(extract_secondary_asn_and_instance)
+ UNDEF_INST(program_transfer_with_instance)
+ UNDEF_INST(set_secondary_asn_with_instance)
+#endif /*!defined(FEATURE_ASN_AND_LX_REUSE)*/
+
+
 #if !defined(FEATURE_ACCESS_REGISTERS)
  UNDEF_INST(load_access_multiple)
  UNDEF_INST(store_access_multiple)
@@ -2697,12 +2705,12 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B997*/ GENx___x390x900 (divide_logical_register,RRE,"DLR"),
  /*B998*/ GENx___x390x900 (add_logical_carry_register,RRE,"ALCR"),
  /*B999*/ GENx___x390x900 (subtract_logical_borrow_register,RRE,"SLBR"),
- /*B99A*/ GENx___x___x___ ,
- /*B99B*/ GENx___x___x___ ,
+ /*B99A*/ GENx___x___x900 (extract_primary_asn_and_instance,RRE,"EPAIR"),
+ /*B99B*/ GENx___x___x900 (extract_secondary_asn_and_instance,RRE,"ESAIR"),
  /*B99C*/ GENx___x___x___ ,
  /*B99D*/ GENx___x___x900 (extract_and_set_extended_authority,RRE,"ESEA"),
- /*B99E*/ GENx___x___x___ ,
- /*B99F*/ GENx___x___x___ ,
+ /*B99E*/ GENx___x___x900 (program_transfer_with_instance,RRE,"PTI"),
+ /*B99F*/ GENx___x___x900 (set_secondary_asn_with_instance,RRE,"SSAIR"),
  /*B9A0*/ GENx___x___x___ ,
  /*B9A1*/ GENx___x___x___ ,
  /*B9A2*/ GENx___x___x___ ,

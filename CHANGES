@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+04 Jun 2004 Framework for ASN-and-LX-reuse facility - Roger Bowler
 04 Jun 2004 Added TRTR + skeleton extended translation facility 3 - Bernard van der Helm
 29 May 2004 dyngui.c: fix UpdateTargetCPU, new "maxrates" cmd - Fish
 29 May 2004 Fixed stopall/startall - Fish
