@@ -4,8 +4,9 @@
 /*-------------------------------------------------------------------*/
 /* This module initializes the Hercules S/370 or ESA/390 emulator.   */
 /* It builds the system configuration blocks, creates threads for    */
-/* central processors, HTTP server                                   */
-/* and activates the control panel which runs under the main thread. */
+/* central processors, HTTP server, logger task and activates the    */
+/* control panel which runs under the main thread when in foreground */
+/* mode.                                                             */
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
@@ -188,6 +189,8 @@ TID     rctid;                          /* RC file thread identifier */
     if(!(cfgfile = getenv("HERCULES_CNF")))
         cfgfile = "hercules.cnf";
 
+    /* default to background mode when both stdout and stderr
+       are redirected to a non-tty device */
     daemon_mode = !isatty(STDERR_FILENO);
 
     /* Process the command line options */
