@@ -1940,28 +1940,30 @@ U16     i2;                             /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_relative_on_condition_long)
 {
-int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* 32-bit operand values     */
+//int     r1;                             /* Register number           */
+//int     opcd;                           /* Opcode                    */
+//U32     i2;                             /* 32-bit operand values     */
 
-    RIL(inst, regs, r1, opcd, i2);
+//  RIL(inst, regs, r1, opcd, i2);
 
     /* Branch if R1 mask bit is set */
-    if ((0x08 >> regs->psw.cc) & r1)
+    if (inst[1] & (0x80 >> regs->psw.cc))
     {
         /* Calculate the relative branch address */
-        regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
-                                + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
+        regs->psw.IA = (likely(!regs->execflag) ? regs->psw.IA : regs->ET)
+                     + 2LL*(S32)fetch_fw(inst+2);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
+        if( unlikely(EN_IC_PER_SB(regs))
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
     }
+    else
+        INST_UPDATE_PSW(regs, 6);
 
 } /* end DEF_INST(branch_relative_on_condition_long) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
