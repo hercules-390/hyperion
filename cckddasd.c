@@ -213,22 +213,12 @@ char           *kw, *op;                /* Argument keyword/option   */
     if (rc < 0) return -1;
 
     /* call the chkdsk function */
-    if ((cckd->cdevhdr[0].options & CCKD_OPENED) == 0)
-        rc = cckd_chkdsk (cckd->fd[0], sysblk.msgpipew, 0);
-    else
-    {
-        logmsg("cckddasd: forcing chkdsk -1, %s not closed\n",
-               dev->filename);
-        rc = cckd_chkdsk (cckd->fd[0], sysblk.msgpipew, 1);
-    }
+    rc = cckd_chkdsk (cckd->fd[0], sysblk.msgpipew, 0);
     if (rc < 0) return -1;
 
-    /* re-read the compressed device header if file was repaired */
-    if (rc > 0)
-    {
-        rc = cckd_read_chdr (dev);
-        if (rc < 0) return -1;
-    }
+    /* re-read the compressed device header */
+    rc = cckd_read_chdr (dev);
+    if (rc < 0) return -1;
 
     /* open the shadow files */
     rc = cckd_sf_init (dev);
@@ -2266,22 +2256,12 @@ char            sfn[256];               /* Shadow file name          */
         if (rc < 0) return -1;
 
         /* call the chkdsk function */
-        if ((cckd->cdevhdr[cckd->sfn].options & CCKD_OPENED) == 0)
-            rc = cckd_chkdsk (cckd->fd[cckd->sfn], sysblk.msgpipew, 0);
-        else
-        {
-            logmsg("cckddasd: forcing chkdsk -1, %s not closed\n",
-                   dev->ckdsfn);
-            rc = cckd_chkdsk (cckd->fd[cckd->sfn], sysblk.msgpipew, 1);
-        }
+        rc = cckd_chkdsk (cckd->fd[cckd->sfn], sysblk.msgpipew, 0);
         if (rc < 0) return -1;
 
-        /* re-read the compressed header if the file was repaired */
-        if (rc > 0)
-        {
-            rc = cckd_read_chdr (dev);
-            if (rc < 0) return -1;
-        }
+        /* re-read the compressed header */
+        rc = cckd_read_chdr (dev);
+        if (rc < 0) return -1;
 
         /* read the 1 table */
         rc = cckd_read_l1 (dev);

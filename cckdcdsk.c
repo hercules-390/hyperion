@@ -488,13 +488,22 @@ char *compression[] = {"none", "zlib", "bzip2"};
     if (swapend) cckd_swapend_l1 (l1, cdevhdr.numl1tab);
 
 /*-------------------------------------------------------------------*/
-/* If the file has not been opened read/write since the last         */
-/* ckhdsk and minimal checking was specified, change the level       */
-/* to `very minimal checking'                                        */
+/* If minimal checking is specified then                             */
+/*    If the file was not closed then perform level 1 checking       */
+/*    Else if the file hasn't been written to since the last check   */
+/*       Then perform very minimal checking.                         */
 /*-------------------------------------------------------------------*/
 
-    if (level == 0 && (cdevhdr.options & (CCKD_OPENED | CCKD_ORDWR)) == 0)
-        level = -1;
+    if (level == 0)
+    {
+        if (cdevhdr.options & CCKD_OPENED)
+        {
+            cdskmsg (m, "forcing check level 1; file not closed\n");
+            level = 1;
+        }
+        else if ((cdevhdr.options & (CCKD_OPENED | CCKD_ORDWR)) == 0)
+            level = -1;
+    }
 
 /*-------------------------------------------------------------------*/
 /* Set space boundaries                                              */
