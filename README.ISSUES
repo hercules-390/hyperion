@@ -4,4 +4,10 @@
                        Unresolved Issues
                        =================
 
-Any?
+CE+DE on tape rewind-unload:
+
+    Technically, they should be presented separately to the guest o/s:
+    CE upon completion the actual rewind-unload CCW and then DE once the
+    tape actually finishes unloading, but doing so is somewhat problematic
+    especially for SCSI tapes. (Might be possible to do for AWS/HET tapes
+    but I haven't looked into it yet).
