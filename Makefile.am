@@ -80,7 +80,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c version.c
 
-EXTRA_DIST = hercules.cnf
+EXTRA_DIST = hercules.cnf CHANGES
 
 noinst_HEADERS  = cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
     feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
