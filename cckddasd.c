@@ -2445,7 +2445,8 @@ cckd_read_l2_retry:
             cckdblk.l2cache[lru].flags = 0;
             return -1;
         }
-        if (cckd->swapend[sfx]) cckd_swapend_l2 (cckd->l2);
+        if (cckd->swapend[sfx])
+            cckd_swapend_l2 ((CCKD_L2ENT *)cckdblk.l2cache[lru].buf);
         cckdtrc ("cckddasd: file[%d] cache[%d] l2[%d] read offset 0x%llx\n",
                  sfx, lru, l1x, (long long)cckd->l1[sfx][l1x]);
         cckd->l2reads[sfx]++;
@@ -2892,7 +2893,7 @@ off_t           sz;                     /* Change for ftruncate      */
     sfx = cckd->sfn;
 
     /* FIXME - workaround for fsync(), ftruncate() linux problem */
-    if (cckdblk.fsyncwa) sz = 1024 * 1024;
+    if (cckdblk.fsyncwa && !cckdblk.nofsync) sz = 1024 * 1024;
     else sz = 0;
 
     rc = fstat (cckd->fd[sfx], &st);
@@ -2909,7 +2910,7 @@ off_t           sz;                     /* Change for ftruncate      */
     if (now || (off_t)(st.st_size - cckd->cdevhdr[sfx].size) > sz)
     {
         /* FIXME - workaround for fsync(), ftruncate() linux problem */
-        if (cckdblk.fsyncwa)
+        if (cckdblk.fsyncwa && !cckdblk.nofsync)
         {
             BYTE sfn[1024];
             close (cckd->fd[sfx]);

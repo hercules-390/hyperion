@@ -1447,6 +1447,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 }
 
 #if defined(FEATURE_ACCESS_REGISTERS)
+#undef HLOGICAL_TO_ABS_READ
 #define HLOGICAL_TO_ABS_READ(_addr, _arn, _regs, _akey)           \
     (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) && \
     (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&   \
@@ -1456,6 +1457,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
         ((_regs).AE((AEIND((_addr)))) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
         ARCH_DEP(logical_to_abs) ((_addr), (_arn), &(_regs), ACCTYPE_READ, (_akey))
 
+#undef HLOGICAL_TO_ABS_WRITE
 #define HLOGICAL_TO_ABS_WRITE(_addr, _arn, _regs, _akey)           \
     (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) &&      \
     (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&          \
@@ -1465,6 +1467,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
         ((_regs).AE((AEIND((_addr)))) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
         ARCH_DEP(logical_to_abs) ((_addr), (_arn), &(_regs), ACCTYPE_WRITE, (_akey))
 #else
+#undef HLOGICAL_TO_ABS_READ
 #define HLOGICAL_TO_ABS_READ(_addr, _arn, _regs, _akey)           \
     (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) && \
     (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&   \
@@ -1473,6 +1476,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
         ((_regs).AE((AEIND((_addr)))) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
         ARCH_DEP(logical_to_abs) ((_addr), (_arn), &(_regs), ACCTYPE_READ, (_akey))
 
+#undef HLOGICAL_TO_ABS_WRITE
 #define HLOGICAL_TO_ABS_WRITE(_addr, _arn, _regs, _akey)           \
     (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) &&      \
     (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&          \
