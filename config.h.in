@@ -241,6 +241,9 @@
 /* Define if you have the `__argz_stringify' function. */
 #undef HAVE___ARGZ_STRINGIFY
 
+/* Define to cause dynamic loader use use libtool instead of dlopen */
+#undef HDL_USE_LIBTOOL
+
 /* Define to enable bzip2 compression in emulated tapes */
 #undef HET_BZIP2
 
@@ -270,6 +273,9 @@
 
 /* Define to enable symbolic substitutions in configuration file */
 #undef OPTION_CONFIG_SYMBOLS
+
+/* Define to enable Hercules Dynamic Loader feature */
+#undef OPTION_DYNAMIC_LOAD
 
 /* Define to use included threads implementation (fthreads) */
 #undef OPTION_FTHREADS
