@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+21 Feb 2004 Added system parameter lparname - Bernard van der Helm
 16 Feb 2004 clc.pat - Optimize CLC - Greg Smith
 16 Feb 2004 move_chars.pat - Optimize move_chars - Greg Smith
 16 Feb 2004 radr.pat - Make type RADR type U32 for 32 bit machines - Greg Smith
