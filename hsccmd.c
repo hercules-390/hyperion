@@ -47,6 +47,11 @@ int quit_cmd(char* cmdline, int argc, char *argv[])
 {
     UNREFERENCED(cmdline);
 
+    /* ZZ FIXME: 'now' has a few nasty side-effects, it does not
+                 flush any buffers (DASD), and it does not terminate
+                 any threads which might leave hercules in a 'hanging'
+                 state.  The 'now' option should probably be removed
+                 in a future version */
     if (!(argc > 1 && !strcasecmp("now",argv[1])))
     {
         system_shutdown();

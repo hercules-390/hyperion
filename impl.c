@@ -399,6 +399,12 @@ void system_shutdown (void)
 {
     sysblk.shutdown = 1;
 
+    /* ZZ FIXME: logger_term() should really be the last thing to do
+                 as currently not all termination messages go to 
+                 a redirected log, however the logger termination 
+                 still has a problem where msgs could be lost during
+                 termination (ie left in a buffer, not written to
+                 the hardcopy log).  */
     logger_term();
 
     release_config();
