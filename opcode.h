@@ -207,8 +207,8 @@ int used; \
 
 #endif
 
-/* Main storage access locking 
-   This routine will ensure that a given CPU 
+/* Main storage access locking
+   This routine will ensure that a given CPU
    has exclusive access to main storage and hence
    will be able to perform as what appears as an
    interlocked update to other CPU's - Jan Jaeger */
@@ -227,7 +227,7 @@ do { \
 
 /* The footprint_buffer option saves a copy of the register context
    every time an instruction is executed.  This is for problem
-   determination only, as it severely impacts performance.	 *JJ */
+   determination only, as it severely impacts performance.       *JJ */
 
 #if defined(OPTION_FOOTPRINT_BUFFER)
 #define FOOTPRINT(_regs) \
@@ -526,7 +526,7 @@ do { \
         } \
     }
 
-#endif /*!defined(_FEATURE_SIE)*/ 
+#endif /*!defined(_FEATURE_SIE)*/
 
 
     /* Convert fpr to index */
@@ -670,97 +670,97 @@ do { \
 
 
 #define INST_UPDATE_PSW(_regs, _len, _execflag) \
-	{ \
-	    if( !(_execflag) ) \
-	    { \
-		(_regs)->psw.ilc = (_len); \
-		(_regs)->psw.IA += (_len); \
-		(_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-	    } \
-	}
+        { \
+            if( !(_execflag) ) \
+            { \
+                (_regs)->psw.ilc = (_len); \
+                (_regs)->psw.IA += (_len); \
+                (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+        }
 
 /* E implied operands and extended op code */
 #undef E
 #define E(_inst, _execflag, _regs) \
-	{ \
+        { \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-	}
+        }
 
 /* RR register to register */
 #undef RR
 #if defined(FETCHIBYTE1)
 #define RR(_inst, _execflag, _regs, _r1, _r2) \
-	{ \
+        { \
             register U32 ib; \
             FETCHIBYTE1(ib, (_inst)) \
-	    (_r1) = ib >> 4; \
-	    (_r2) = ib & 0x0F; \
+            (_r1) = ib >> 4; \
+            (_r2) = ib & 0x0F; \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-	}
+        }
 #else
 #define RR(_inst, _execflag, _regs, _r1, _r2) \
-	{ \
-	    (_r1) = (_inst)[1] >> 4; \
-	    (_r2) = (_inst)[1] & 0x0F; \
+        { \
+            (_r1) = (_inst)[1] >> 4; \
+            (_r2) = (_inst)[1] & 0x0F; \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-	}
+        }
 #endif
 
 /* RR special format for SVC instruction */
 #undef RR_SVC
 #if defined(FETCHIBYTE1)
 #define RR_SVC(_inst, _execflag, _regs, _svc) \
-	{ \
+        { \
             FETCHIBYTE1((_svc), (_inst)) \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-	}
+        }
 #else
 #define RR_SVC(_inst, _execflag, _regs, _svc) \
-	{ \
-	    (_svc) = (_inst)[1]; \
+        { \
+            (_svc) = (_inst)[1]; \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-	}
+        }
 #endif
 
 /* RRE register to register with extended op code */
 #undef RRE
 #define RRE(_inst, _execflag, _regs, _r1, _r2) \
-	{   U32 temp; \
+        {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_r1) = (temp >> 4) & 0xf; \
             (_r2) = temp & 0xf; \
             INST_UPDATE_PSW((_regs), 4, (_execflag)); \
-	}
+        }
 
 /* RRF register to register with additional R3 field */
 #undef RRF_R
 #define RRF_R(_inst, _execflag, _regs, _r1, _r2, _r3) \
-	{   U32 temp; \
+        {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_r1) = (temp >> 12) & 0xf; \
             (_r3) = (temp >> 4) & 0xf; \
             (_r2) = temp & 0xf; \
             INST_UPDATE_PSW((_regs), 4, (_execflag)); \
-	}
+        }
 
 /* RRF register to register with additional M3 field */
 #undef RRF_M
 #define RRF_M(_inst, _execflag, _regs, _r1, _r2, _m3) \
-	{   U32 temp; \
+        {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_m3) = (temp >> 12) & 0xf; \
             (_r1) = (temp >> 4) & 0xf; \
             (_r2) = temp & 0xf; \
             INST_UPDATE_PSW((_regs), 4, (_execflag)); \
-	}
+        }
 
 /* RRF register to register with additional R3 and M4 fields */
 #undef RRF_RM
 #define RRF_RM(_inst, _execflag, _regs, _r1, _r2, _r3, _m4) \
-	{   U32 temp; \
+        {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_r3) = (temp >> 12) & 0xf; \
@@ -1277,14 +1277,14 @@ do { \
 
 #if !defined(NO_SETUID)
 
-/* SETMODE(INIT) 
+/* SETMODE(INIT)
  *   sets the saved uid to the effective uid, and
  *   sets the effective uid to the real uid, such
  *   that the program is running with normal user
  *   attributes, other then that it may switch to
  *   the saved uid by SETMODE(ROOT). This call is
  *   usually made upon entry to the setuid program.
- * 
+ *
  * SETMODE(ROOT)
  *   sets the saved uid to the real uid, and
  *   sets the real and effective uid to the saved uid.
@@ -1292,15 +1292,15 @@ do { \
  *   will have all the appropriate access.
  *
  * SETMODE(USER)
- *   sets the real and effective uid to the uid of the 
- *   caller.  The saved uid will be the effective uid 
+ *   sets the real and effective uid to the uid of the
+ *   caller.  The saved uid will be the effective uid
  *   upon entry to the program (as before SETMODE(INIT))
  *
  * SETMODE(TERM)
  *   sets real, effective and saved uid to the real uid
- *   upon entry to the program.  This call will revoke 
+ *   upon entry to the program.  This call will revoke
  *   any setuid access that the thread/process has.  It
- *   is important to issue this call before an exec to a 
+ *   is important to issue this call before an exec to a
  *   shell or other program that could introduce integrity
  *   exposures when running with root access.
  */
@@ -1392,7 +1392,7 @@ int  haltio (REGS *regs, DEVBLK *dev, BYTE ibyte);
 int  resume_subchan (REGS *regs, DEVBLK *dev);
 int  ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
         U32 *ioparm, U32 *iointid, BYTE *csw);
-int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm, 
+int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm,
                                               U32 *iointid, BYTE zone);
 void io_reset (void);
 int  chp_reset(BYTE chpid);
