@@ -1,3 +1,6 @@
+01 Jun 2003 Updated hercconf.html page to include ECPS:VM,
+            2703, 3410, 3490, 9347 D/T and explanation for
+            2703 parameters - Ivan Warren
 31 May 2003 Added -v command line option - Fish
 31 May 2003 Define min/max macros - Fish
 31 May 2003 Replaced all strcpy/strcat w/safe_strcpy & safe_strcat - Fish
