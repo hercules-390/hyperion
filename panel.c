@@ -475,6 +475,8 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
     curpsw[5] |= curpsw[13];
     curpsw[6] |= curpsw[14];
     curpsw[7] |= curpsw[15];
+    if(regs->psw.IA_G > 0x7FFFFFFFULL)
+        curpsw[7] |= 0x01;
     pswwait = curpsw[1] & 0x02;
     fprintf (confp, ANSI_YLW_BLK);
     fprintf (confp, ANSI_CURSOR, 3, 2);
