@@ -1478,7 +1478,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 
     if (cmd & SHRD_COMP)
         shrdtrc("client_send %2.2x %2.2x %2.2x %d %d (compressed)\n",
-                cmd, flag, devnum, id, sendlen - SHRD_HDR_SIZE);
+                cmd, flag, devnum, id, (int)(sendlen - SHRD_HDR_SIZE));
 
 retry:
 

@@ -1125,8 +1125,13 @@ BYTE c[2];                              /* Character work area       */
         return -1;
     }
 
+#if SIZEOF_LONG == 8
+    rc = sscanf(argv[1], "%lx%c%lx%c", &sysblk.breakaddr[0], &c[0],
+                                         &sysblk.breakaddr[1], &c[2]);
+#else
     rc = sscanf(argv[1], "%llx%c%llx%c", &sysblk.breakaddr[0], &c[0],
                                          &sysblk.breakaddr[1], &c[2]);
+#endif
     if (rc == 1 || (rc == 3 && c[0] == '-'))
     {
         if (rc == 1)

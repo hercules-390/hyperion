@@ -139,9 +139,15 @@ int readpos(
         exit (1);
     }
     if (debug) 
+#if SIZEOF_SIZE_T == 8
+        fprintf(stderr, 
+                "READPOS reading buf addr %p length %ld (0x%8.8lX)\n",
+                buf, len, len);
+#else
         fprintf(stderr, 
                 "READPOS reading buf addr %p length %d (0x%8.8X)\n",
                 buf, len, len);
+#endif
     if (read(fd, buf, len) < (ssize_t)len) {
         fprintf(stderr, _("cckddiag: read error: %s\n"),
                         strerror(errno));
@@ -492,8 +498,13 @@ int             imglen=0;               /* track length              */
     /*---------------------------------------------------------------*/
     readpos(fd, &devhdr, 0, sizeof(devhdr));
     if (cmd_devhdr) {
+#if SIZEOF_SIZE_T == 8
+        fprintf(stderr, "\nDEVHDR - %ld (decimal) bytes:\n", 
+                sizeof(devhdr));
+#else
         fprintf(stderr, "\nDEVHDR - %d (decimal) bytes:\n", 
                 sizeof(devhdr));
+#endif
         data_dump(&devhdr, sizeof(devhdr));
     }
 
@@ -556,8 +567,13 @@ int             imglen=0;               /* track length              */
     /*---------------------------------------------------------------*/
     readpos(fd, &cdevhdr, CKDDASD_DEVHDR_SIZE, sizeof(cdevhdr));
     if (cmd_cdevhdr) {
+#if SIZEOF_SIZE_T == 8
+        fprintf(stderr, "\nCDEVHDR - %ld (decimal) bytes:\n",
+                sizeof(cdevhdr));
+#else
         fprintf(stderr, "\nCDEVHDR - %d (decimal) bytes:\n",
                 sizeof(cdevhdr));
+#endif
         data_dump(&cdevhdr, sizeof(cdevhdr));
     }
 
@@ -579,8 +595,13 @@ int             imglen=0;               /* track length              */
     readpos(fd, l1, CCKD_L1TAB_POS, n * CCKD_L1ENT_SIZE);
     /* L1TAB itself is not adjusted for endian-ness                  */
     if (cmd_l1tab) {
+#if SIZEOF_SIZE_T == 8
+        fprintf(stderr, "\nL1TAB - %ld (0x%8.8lX) bytes:\n",
+                (n * CCKD_L1ENT_SIZE), (n * CCKD_L1ENT_SIZE));
+#else
         fprintf(stderr, "\nL1TAB - %d (0x%8.8X) bytes:\n",
                 (n * CCKD_L1ENT_SIZE), (n * CCKD_L1ENT_SIZE));
+#endif
         data_dump(l1, n * CCKD_L1ENT_SIZE);
     }
 
@@ -640,13 +661,24 @@ int             imglen=0;               /* track length              */
         readpos(fd, l2, l2taboff, 
                 cdevhdr.numl2tab * sizeof(CCKD_L2ENT));
         if (cmd_l2tab) {
+#if SIZEOF_SIZE_T == 8
+            fprintf(stderr, 
+                   "\nL2TAB - %ld (decimal) bytes\n", 
+                   (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)));
+#else
             fprintf(stderr, 
                    "\nL2TAB - %d (decimal) bytes\n", 
                    (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)));
+#endif
             data_dump(l2, (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)) );
         }
+#if SIZEOF_SIZE_T == 8
+        fprintf(stderr, "\nL2 index %d = L2TAB entry %ld bytes\n",
+               l2ndx, sizeof(CCKD_L2ENT) );
+#else
         fprintf(stderr, "\nL2 index %d = L2TAB entry %d bytes\n",
                l2ndx, sizeof(CCKD_L2ENT) );
+#endif
         data_dump(&l2[l2ndx], sizeof(CCKD_L2ENT) );
         trkhdroff = l2[l2ndx].pos;
         imglen = l2[l2ndx].len;

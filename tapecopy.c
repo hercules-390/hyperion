@@ -497,10 +497,17 @@ int64_t         file_bytes;             /* Byte count for curr file  */
             {
                 ASSERT( file_bytes ); // (sanity check)
 
+#if SIZEOF_LONG == 8
+                printf (_("HHCTC009I File %u: Blocks=%u, Bytes=%ld, Block size min=%u, "
+                        "max=%u, avg=%u\n"),
+                        fileno, blkcount, file_bytes, minblksz, maxblksz,
+                        (int)file_bytes/blkcount);
+#else
                 printf (_("HHCTC009I File %u: Blocks=%u, Bytes=%lld, Block size min=%u, "
                         "max=%u, avg=%u\n"),
                         fileno, blkcount, file_bytes, minblksz, maxblksz,
                         (int)file_bytes/blkcount);
+#endif
             }
             else
             {
@@ -606,8 +613,13 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     printf
     (
         _(
+#if SIZEOF_LONG == 8
+            "HHCTC000I Successful completion;\n"
+            "          Bytes read: %ld (%3.1f MB), Blocks=%u, avg=%u\n"
+#else
             "HHCTC000I Successful completion;\n"
             "          Bytes read: %lld (%3.1f MB), Blocks=%u, avg=%u\n"
+#endif
         )
 
         ,           bytes_read
@@ -621,7 +633,11 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     printf
     (
         _(
+#if SIZEOF_LONG == 8
+            "          Bytes written: %ld (%3.1f MB)\n"
+#else
             "          Bytes written: %lld (%3.1f MB)\n"
+#endif
         )
 
         ,           bytes_written

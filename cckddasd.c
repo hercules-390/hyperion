@@ -623,8 +623,8 @@ int             rc;                     /* Return code               */
 
     cckd = dev->cckd_ext;
 
-    cckdtrc ("file[%d] fd[%d] read, off 0x%llx len %d\n",
-             sfx, cckd->fd[sfx], (long long)off, len);
+    cckdtrc ("file[%d] fd[%d] read, off 0x%llx len %ld\n",
+             sfx, cckd->fd[sfx], (long long)off, (long)len);
     
     /* Seek to specified offset */
     if (lseek (cckd->fd[sfx], off, SEEK_SET) < 0)
@@ -664,8 +664,8 @@ int             rc = 0;                 /* Return code               */
 
     cckd = dev->cckd_ext;
 
-    cckdtrc ("file[%d] fd[%d] write, off 0x%llx len %d\n",
-             sfx, cckd->fd[sfx], (long long)off, len);
+    cckdtrc ("file[%d] fd[%d] write, off 0x%llx len %ld\n",
+             sfx, cckd->fd[sfx], (long long)off, (long)len);
     
     /* Seek to specified offset */
     if (lseek (cckd->fd[sfx], off, SEEK_SET) < 0)
@@ -727,7 +727,7 @@ void *cckd_malloc (DEVBLK *dev, BYTE *id, size_t size)
 void           *p;                      /* Pointer                   */
 
     p = malloc (size);
-    cckdtrc ("%s malloc %p len %d\n", id, p, size);
+    cckdtrc ("%s malloc %p len %ld\n", id, p, (long)size);
 
     if (p == NULL)
     {
@@ -748,7 +748,7 @@ void *cckd_calloc (DEVBLK *dev, BYTE *id, size_t n, size_t size)
 void           *p;                      /* Pointer                   */
 
     p = calloc (n, size);
-    cckdtrc ("%s calloc %p len %d\n", id, p, n*size);
+    cckdtrc ("%s calloc %p len %ld\n", id, p, n*(long)size);
 
     if (p == NULL)
     {
@@ -1572,7 +1572,7 @@ TID             tid;                    /* Writer thread id          */
             signal_condition (&cckdblk.wrcond);
         else if (cckdblk.wrs < cckdblk.wrmax)
         {
-            rc = create_thread (&tid, NULL, cckd_writer, (void *)cckdblk.wrs + 1);
+            rc = create_thread (&tid, NULL, cckd_writer, (void *)(long)cckdblk.wrs + 1);
             if (rc == 0) cckdblk.wrs++;
         }
     }
@@ -1677,7 +1677,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
 #endif
 
     obtain_lock (&cckdblk.wrlock);
-    writer = (int)arg;
+    writer = (long)arg;
 
     if (!cckdblk.batch)
     logmsg (_("HHCCD002I Writer thread %d started: tid="TIDPAT", pid=%d\n"),
@@ -1715,7 +1715,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
                 signal_condition (&cckdblk.wrcond);
             else if (cckdblk.wrs < cckdblk.wrmax)
             {
-                rc = create_thread (&tid, NULL, cckd_writer, (void *)cckdblk.wrs + 1);
+                rc = create_thread (&tid, NULL, cckd_writer, (void *)(long)cckdblk.wrs + 1);
                 if (rc == 0) cckdblk.wrs++;
             }
         }
@@ -1867,7 +1867,7 @@ off_t           fpos;
         cckdtrc("free %p nbr %d 1st %d last %d avail %d\n",
             cckd->free,cckd->freenbr,cckd->free1st,
             cckd->freelast,cckd->freeavail);
-        cckdtrc("found nbr %d total %d largest %d\n",n,total,largest);
+        cckdtrc("found nbr %d total %ld largest %ld\n",n,(long)total,(long)largest);
         fpos = cckd->cdevhdr[sfx].free;
         for (n = 0, i = cckd->free1st; i >= 0; i = cckd->free[i].next)
         {
@@ -2024,8 +2024,8 @@ size_t          size;
         l2->size = (U16)size;
     }
 
-    cckdtrc ("get_space found 0x%llx len %d size %d\n",
-             (long long)fpos, len, size);
+    cckdtrc ("get_space found 0x%llx len %ld size %ld\n",
+             (long long)fpos, (long)len, (long)size);
 
 //  cckd_chk_space(dev);
 
@@ -2303,8 +2303,13 @@ int             len;                    /* Length of level 1 table   */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
+#if SIZEOF_LONG == 8
+    cckdtrc ("file[%d] read_l1 offset 0x%lx\n",
+             sfx, (long long)CCKD_L1TAB_POS);
+#else
     cckdtrc ("file[%d] read_l1 offset 0x%llx\n",
              sfx, (long long)CCKD_L1TAB_POS);
+#endif
 
     /* Free the old level 1 table if it exists */
     if (cckd->l1[sfx] != NULL)
@@ -2340,9 +2345,14 @@ int             len;                    /* Length of level 1 table   */
     sfx = cckd->sfn;
     len = cckd->cdevhdr[sfx].numl1tab * CCKD_L1ENT_SIZE;
 
+#if SIZEOF_LONG == 8
+    cckdtrc ("file[%d] write_l1 0x%lx len %d\n",
+              sfx, (long long)CCKD_L1TAB_POS, len);
+#else
     cckdtrc ("file[%d] write_l1 0x%llx len %d\n",
               sfx, (long long)CCKD_L1TAB_POS, len);
-
+#endif
+    
     if (cckd_write (dev, sfx, CCKD_L1TAB_POS, cckd->l1[sfx], len) < 0)
         return -1;
 
@@ -4235,7 +4245,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
         /* Return if no applicable used space */
         if (ulen == 0)
         {
-            cckdtrc ("gcperc no applicable space, moved %d\n",moved);
+            cckdtrc ("gcperc no applicable space, moved %ld\n",(long)moved);
             release_lock (&cckd->filelock);
             return moved;
         }
@@ -4244,8 +4254,8 @@ BYTE            buf[256*1024];          /* Buffer                    */
         if (ulen > flen + 65536) ulen = flen + 65536;
         if (ulen > sizeof(buf))  ulen = sizeof(buf);
 
-        cckdtrc ("gcperc selected space 0x%llx len %d\n",
-                 (long long)upos, ulen);
+        cckdtrc ("gcperc selected space 0x%llx len %ld\n",
+                 (long long)upos, (long)ulen);
 
         if (cckd_read (dev, sfx, upos, buf, ulen) < 0)
             goto cckd_gc_perc_error;
@@ -4262,8 +4272,8 @@ BYTE            buf[256*1024];          /* Buffer                    */
                 /* Moving a level 2 table */
                 len = CCKD_L2TAB_SIZE;
                 if (i + len > ulen) break;
-                cckdtrc ("gcperc move l2tab[%d] at pos 0x%llx len %d\n",
-                         j, (unsigned long long)(upos + i), len);
+                cckdtrc ("gcperc move l2tab[%d] at pos 0x%llx len %ld\n",
+                         j, (unsigned long long)(upos + i), (long)len);
 
                 /* Make the level 2 table active */
                 if (cckd_read_l2 (dev, sfx, j) < 0)
@@ -4322,7 +4332,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
     } /* while (moved < size) */
 
-    cckdtrc ("gcperc moved %d 1st 0x%x nbr %d\n", moved,
+    cckdtrc ("gcperc moved %ld 1st 0x%x nbr %d\n", (long)moved,
              cckd->cdevhdr[cckd->sfn].free,cckd->cdevhdr[cckd->sfn].free_number);
     return moved;
 
@@ -4336,7 +4346,7 @@ cckd_gc_perc_space_error:
 
 cckd_gc_perc_error:
 
-    cckdtrc ("gcperc exiting due to error, moved %d\n", moved);
+    cckdtrc ("gcperc exiting due to error, moved %ld\n", (long)moved);
     release_lock (&cckd->filelock);
     return moved;
 

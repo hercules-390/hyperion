@@ -228,7 +228,7 @@ int off;
     }
 
     /* Trying to get mainstor aligned to the next 4K boundary - Greg */
-    off = (int)sysblk.mainstor & 0xFFF;
+    off = (long)sysblk.mainstor & 0xFFF;
     sysblk.mainstor += off ? 4096 - off : 0;
 
     /* Obtain main storage key array */

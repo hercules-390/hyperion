@@ -343,7 +343,11 @@ REGS *regs;
                 if(regs->arch_mode != ARCH_900)
                     sscanf(value,"%x",&(regs->GR_L(i)));
                 else
+#if SIZEOF_LONG==8
+                    sscanf(value,"%lx",&(regs->GR_G(i)));
+#else
                     sscanf(value,"%llx",&(regs->GR_G(i)));
+#endif
             }
         }
     }
@@ -359,7 +363,11 @@ REGS *regs;
                 if(regs->arch_mode != ARCH_900)
                     sscanf(value,"%x",&(regs->CR_L(i)));
                 else
+#if SIZEOF_LONG==8
+                    sscanf(value,"%lx",&(regs->CR_G(i)));
+#else
                     sscanf(value,"%llx",&(regs->CR_G(i)));
+#endif
             }
         }
     }

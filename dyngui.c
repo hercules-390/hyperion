@@ -388,7 +388,11 @@ void*  gui_panel_command (char* pszCommand)
 
     if (strncasecmp(pszCommand,"]MAINSTOR=",10) == 0)
     {
+#if SIZEOF_INT_P==4
         fprintf(fStatusStream,"MAINSTOR=%d\n",(U32)pTargetCPU_REGS->mainstor);
+#else
+        fprintf(fStatusStream,"MAINSTOR=%ld\n",(U64)pTargetCPU_REGS->mainstor);
+#endif
         fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
         return NULL;
     }

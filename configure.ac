@@ -384,6 +384,8 @@ struct sizeoftest
 __EOF
 
 AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(int *)
 AC_CHECK_FUNCS(ffs)
 

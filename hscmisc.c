@@ -251,7 +251,11 @@ BYTE   *s;                              /* Alteration value pointer  */
 BYTE    delim;                          /* Operand delimiter         */
 BYTE    c;                              /* Character work area       */
 
+#if SIZEOF_LONG == 8
+    rc = sscanf(operand, "%lx%c%lx%c", &opnd1, &delim, &opnd2, &c);
+#else
     rc = sscanf(operand, "%llx%c%llx%c", &opnd1, &delim, &opnd2, &c);
+#endif
 
     /* Process storage alteration operand */
     if (rc > 2 && delim == '=' && newval)

@@ -211,7 +211,7 @@ int result;
 
 int ptt_pthread_kill(pthread_t tid, int sig, char *file, int line)
 {
-    PTTRACE ("kill", (void *)tid, (void *)sig, file, line, PTT_MAGIC);
+    PTTRACE ("kill", (void *)tid, (void *)(long)sig, file, line, PTT_MAGIC);
     return pthread_kill(tid, sig);
 }
 #else /* OPTION_FTHREADS */
@@ -376,10 +376,17 @@ char *tbuf;
             tbuf[19] = '\0';
             sprintf(result, "%d", p[i].result);
             if (p[i].result == PTT_MAGIC) result[0] = '\0';
+#if SIZEOF_INT_P == 8
+            logmsg ("%8.8x %-12.12s %8.8x %8.8x %-12.12s %4d %s" "." "%6.6ld %s\n",
+                (U32)p[i].tid, p[i].type, (U64)p[i].data1,
+                (U64)p[i].data2, p[i].file, p[i].line,
+                tbuf + 11, p[i].tv.tv_usec, result);
+#else
             logmsg ("%8.8x %-12.12s %8.8x %8.8x %-12.12s %4d %s" "." "%6.6ld %s\n",
                 (U32)p[i].tid, p[i].type, (U32)p[i].data1,
                 (U32)p[i].data2, p[i].file, p[i].line,
                 tbuf + 11, p[i].tv.tv_usec, result);
+#endif
         }
         if (++i >= pttracen) i = 0;
     } while (i != pttracex);

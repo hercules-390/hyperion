@@ -126,8 +126,13 @@ U32               o;                    /* Level 2 table offset      */
     rc = lseek (fd, CCKD_L1TAB_POS, SEEK_SET);
     if (rc == -1)
     {
+#if SIZEOF_LONG == 8
+        ENDMSG (m, "lseek error fd %d offset %ld: %s\n",
+                fd, (long)CCKD_L1TAB_POS, strerror(errno));
+#else
         ENDMSG (m, "lseek error fd %d offset %lld: %s\n",
                 fd, (long long)CCKD_L1TAB_POS, strerror(errno));
+#endif
         free (l1);
         return -1;
     }
@@ -146,8 +151,13 @@ U32               o;                    /* Level 2 table offset      */
     rc = lseek (fd, CCKD_L1TAB_POS, SEEK_SET);
     if (rc == -1)
     {
+#if SIZEOF_LONG == 8
+        ENDMSG (m, "lseek error fd %d offset %ld: %s\n",
+                fd, (long)CCKD_L1TAB_POS, strerror(errno));
+#else
         ENDMSG (m, "lseek error fd %d offset %lld: %s\n",
                 fd, (long long)CCKD_L1TAB_POS, strerror(errno));
+#endif
         free (l1);
         return -1;
     }
