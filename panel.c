@@ -664,7 +664,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
                   (strlen(dev->filename) > 0))
                        online = 1;
          if (dev->busy) busy = 1;
-         if (dev->pending || dev->pcipending) pend = 1;
+         if (IOPENDING(dev)) pend = 1;
          if (dev->fd > 2) open = 1;
          if (online != NPonline[a - 1]) {
               fprintf(confp, ANSI_CURSOR, p, 40);

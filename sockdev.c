@@ -252,7 +252,7 @@ void socket_device_connection_handler (bind_struct* bs)
 
     /* Reject if device is busy or interrupt pending */
 
-    if (dev->busy || dev->pending || dev->pcipending
+    if (dev->busy || IOPENDING(dev)
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         release_lock (&dev->lock);

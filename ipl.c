@@ -116,7 +116,9 @@ BYTE    chanstat;                       /* IPL device channel status */
 
     /* Clear the interrupt pending and device busy conditions */
     DEQUEUE_IO_INTERRUPT(&dev->ioint);
-    dev->busy = dev->pending = dev->pcipending = 0;
+    DEQUEUE_IO_INTERRUPT(&dev->pciioint);
+    DEQUEUE_IO_INTERRUPT(&dev->attnioint);
+    dev->busy = dev->pending = dev->pcipending = dev->attnpending = 0;
     dev->scsw.flag2 = 0;
     dev->scsw.flag3 = 0;
 

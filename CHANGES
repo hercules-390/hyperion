@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+13 Nov 2003 Additional checks for pending attention interrupt - Greg Smith
 11 Nov 2003 bumped configure.ac version to 3.00a.2 just for fun - Fish
 11 Nov 2003 fix hst command history logic buffer overflow bug - Fish
 11 Nov 2003 ieee.c floating point fixes: fix bug in FP_INFINITE, FP_NAN,

@@ -772,7 +772,7 @@ void  UpdateDeviceStatus ()
 
         if (pDEVBLK->filename[0] || (pDEVBLK->console && pDEVBLK->connected)) chOnlineStat  = '1';
         if (pDEVBLK->busy)                                                    chBusyStat    = '1';
-        if (pDEVBLK->pending || pDEVBLK->pcipending)                          chPendingStat = '1';
+        if (IOPENDING(pDEVBLK))                                               chPendingStat = '1';
         if (pDEVBLK->fd > max(STDIN_FILENO,max(STDOUT_FILENO,STDERR_FILENO))) chOpenStat    = '1';
 
         // Send status message back to gui...

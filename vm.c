@@ -278,7 +278,7 @@ BYTE            skey1, skey2;           /* Storage keys of first and
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Return code 5 and condition code 1 if device is busy */
-    if (dev->busy || dev->pending || dev->pcipending)
+    if (dev->busy || IOPENDING(dev))
     {
         release_lock (&dev->lock);
         regs->GR_L(15) = 5;
@@ -526,7 +526,7 @@ BYTE            chanstat = 0;           /* Subchannel status         */
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Return code 5 and condition code 1 if device is busy */
-    if (dev->busy || dev->pending || dev->pcipending)
+    if (dev->busy || IOPENDING(dev))
     {
         release_lock (&dev->lock);
         regs->GR_L(15) = 5;

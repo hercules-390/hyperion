@@ -1170,7 +1170,8 @@ BYTE                    rejmsg[256];     /* Rejection message         */
 
             memset (&dev->scsw, 0, sizeof(SCSW));
             memset (&dev->pciscsw, 0, sizeof(SCSW));
-            dev->busy = dev->pending = dev->pcipending = 0;
+            dev->busy = dev->reserved = dev->suspended =
+            dev->pending = dev->pcipending = dev->attnpending = 0;
 
             /* Set device in old readset such that the associated 
                file descriptor will be closed after detach */
@@ -1392,8 +1393,8 @@ BYTE                    unitstat;       /* Status after receive data */
                 if (dev->fd > c_mfd) c_mfd = dev->fd;
 
                 if( (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
-                && !(dev->pending || dev->pcipending)
-                && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)
+                 && (!IOPENDING(dev))
+                 && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)
                 {
                     FD_SET (dev->fd, &readset);
                     if (dev->fd > maxfd) maxfd = dev->fd;
@@ -1467,7 +1468,7 @@ BYTE                    unitstat;       /* Status after receive data */
                 && dev->connected
                 && FD_ISSET (dev->fd, &readset)
                 && (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
-                && !(dev->pending || dev->pcipending)
+                && !IOPENDING(dev)
                 && (dev->pmcw.flag5 & PMCW5_V)
 // NOT S/370    && (dev->pmcw.flag5 & PMCW5_E)
                 && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)

@@ -1062,7 +1062,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
                 dev->devnum, dev->devtype, devnam,
                 (dev->fd > 2 ? _("open ") : ""),
                 (dev->busy ? _("busy ") : ""),
-                ((dev->pending || dev->pcipending) ? _("pending ") : "")
+                (IOPENDING(dev) ? _("pending ") : "")
             );
 
         if (dev->bs)
@@ -1576,7 +1576,7 @@ BYTE c;                                 /* Character work area       */
     obtain_lock (&dev->lock);
 
     /* Reject if device is busy or interrupt pending */
-    if (dev->busy || dev->pending || dev->pcipending
+    if (dev->busy || IOPENDING(dev)
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         release_lock (&dev->lock);
@@ -2020,6 +2020,8 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
             logmsg( _("          DEV%4.4X: I/O pending\n"), dev->devnum );
         if (dev->pcipending && (dev->pmcw.flag5 & PMCW5_V))
             logmsg( _("          DEV%4.4X: PCI pending\n"), dev->devnum );
+        if (dev->attnpending && (dev->pmcw.flag5 & PMCW5_V))
+            logmsg( _("          DEV%4.4X: Attn pending\n"), dev->devnum );
         if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
             logmsg( _("          DEV%4.4X: CRW pending\n"), dev->devnum );
         if (test_lock(&dev->lock) && (dev->pmcw.flag5 & PMCW5_V))
