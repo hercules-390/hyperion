@@ -168,7 +168,7 @@ BYTE    chanstat;                       /* IPL device channel status */
         return -1;
     }
 
-#if defined(OPTION_REDUCE_INVAL)
+#if defined(OPTION_REDUCED_INVAL)
     INVALIDATE_AIA(regs);
 
     INVALIDATE_AEA_ALL(regs);
