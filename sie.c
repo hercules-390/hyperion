@@ -621,13 +621,18 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 EXECUTE_INSTRUCTION(GUESTREGS->inst, 0, GUESTREGS);
 
 #if defined(OPTION_CPU_UNROLL)
-                UNROLLED_EXECUTE(GUESTREGS);
-                UNROLLED_EXECUTE(GUESTREGS);
-                UNROLLED_EXECUTE(GUESTREGS);
-                UNROLLED_EXECUTE(GUESTREGS);
-                UNROLLED_EXECUTE(GUESTREGS);
-                UNROLLED_EXECUTE(GUESTREGS);
-                UNROLLED_EXECUTE(GUESTREGS);
+#ifdef FEATURE_PER
+                if (!IS_IC_PER(regs))
+#endif
+                {
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                }
 #endif
             }
 
