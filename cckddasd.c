@@ -467,7 +467,7 @@ int             trk = 0;                /* Last active track         */
         {
             cache_setflag (CACHE_DEVBUF, dev->cache, ~CCKD_CACHE_WRITE, CCKD_CACHE_UPDATED);
             cckd->wrpending--;
-            if (cckd->iowaiters && !cckd->wrpending)
+            if ((cckd->iowaiters || cckd->gcwaiting) && !cckd->wrpending)
                 broadcast_condition (&cckd->iocond);
         }
     }
@@ -987,7 +987,7 @@ cckd_read_trk_retry:
         {
             cache_setflag(CACHE_DEVBUF, fnd, ~CCKD_CACHE_WRITE, CCKD_CACHE_UPDATED);
             cckd->wrpending--;
-            if (cckd->iowaiters && !cckd->wrpending)
+            if ((cckd->iowaiters || cckd->gcwaiting) && !cckd->wrpending)
                 broadcast_condition (&cckd->iocond);
         }
 

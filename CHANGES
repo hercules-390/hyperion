@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+24 Jun 2004 cckdhang.pat - Fix hang on shutdown if using cckd - Greg Smith
 19 Jun 2004 lfs.pat - Allow large files if sizeof(off_t) > 4 - Fish & Greg
 17 Jun 2004 iawrap.pat - Performance improvement for instruction address
             wrapping - Greg Smith
