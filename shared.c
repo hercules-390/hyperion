@@ -1178,7 +1178,7 @@ HWORD    comp;                          /* Returned compression parm */
         }
         server.sin_family      = AF_INET; 
         server.sin_port        = htons(dev->rmtport); 
-        server.sin_addr.s_addr = dev->rmtaddr;
+        memcpy(&server.sin_addr.s_addr,&dev->rmtaddr,sizeof(struct in_addr));
         store_hw (id, dev->rmtid);
 
         /* Connect to the server */
@@ -2304,7 +2304,9 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
     /* Return if device thread already active */
     if (dev->shrdtid) {
         if (dev->shrdwait)
+        {
             signal_thread (dev->shrdtid, SIGUSR2);
+        }
         release_lock (&dev->lock);
         return NULL;
     }

@@ -1048,7 +1048,7 @@ typedef struct _DEVBLK {
 
         /*  Fields for remote devices                                */
 
-        in_addr_t rmtaddr;              /* Remote address            */
+        struct in_addr rmtaddr;         /* Remote address            */
         U16     rmtport;                /* Remote port number        */
         U16     rmtnum;                 /* Remote device number      */
         int     rmtid;                  /* Remote Id                 */
