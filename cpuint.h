@@ -241,8 +241,8 @@
 #define OPEN_IC_CLKC(_regs) \
        (((_regs)->ints_state&CR0_XM_CLKC)&(_regs)->ints_mask)
 
-#define OPEN_IC_INTKEY(_regs) \
-       (((_regs)->ints_state&CR0_XM_INTKEY)&(_regs)->ints_mask)
+#define OPEN_IC_INTKEY(_regs)    ((sysblk.ints_state&CR0_XM_INTKEY) \
+                                            & (_regs)->ints_mask)
 
 #define OPEN_IC_SERVSIG(_regs)   ((sysblk.ints_state&CR0_XM_SERVSIG) \
                                             & (_regs)->ints_mask)
