@@ -8,6 +8,7 @@
  * LXDBR,LXDB,LXEBR,LXEB by Roger Bowler, 13 Nov 2004.
  * LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR by Roger Bowler, 15 Nov 2004.
  * MXDBR,MXDB,MDEBR,MDEB by Roger Bowler, 16 Nov 2004.
+ * MADBR,MADB,MAEBR,MAEB,MSDBR,MSDB,MSEBR,MSEB by Roger Bowler, 17 Nov 2004.
  * Licensed under the Q Public License
  * For details, see html/herclic.html
  */
@@ -4003,14 +4004,223 @@ DEF_INST(multiply_bfp_short)
 
 /*
  * B31E MADBR - MULTIPLY AND ADD (long BFP)                    [RRF]
+ */
+DEF_INST(multiply_add_bfp_long_reg)
+{
+    int r1, r2, r3;
+    struct lbfp op1, op2, op3;
+    int pgm_check;
+
+    RRF_R(inst, regs, r1, r2, r3);
+    //logmsg("MADBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
+    BFPINST_CHECK(regs);
+
+    get_lbfp(&op1, regs->fpr + FPR2I(r1));
+    get_lbfp(&op2, regs->fpr + FPR2I(r2));
+    get_lbfp(&op3, regs->fpr + FPR2I(r3));
+
+    multiply_lbfp(&op2, &op3, regs);
+    pgm_check = add_lbfp(&op1, &op2, regs);
+
+    put_lbfp(&op1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_add_bfp_long_reg) */
+
+/*
  * ED1E MADB  - MULTIPLY AND ADD (long BFP)                    [RXF]
+ */
+DEF_INST(multiply_add_bfp_long)
+{
+    int r1, r3, b2;
+    VADR effective_addr2;
+    struct lbfp op1, op2, op3;
+    int pgm_check;
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    //logmsg("MADB r1=%d r3=%d b2=%d\n", r1, r3, b2);
+    BFPINST_CHECK(regs);
+
+    get_lbfp(&op1, regs->fpr + FPR2I(r1));
+    vfetch_lbfp(&op2, effective_addr2, b2, regs);
+    get_lbfp(&op3, regs->fpr + FPR2I(r3));
+
+    multiply_lbfp(&op2, &op3, regs);
+    pgm_check = add_lbfp(&op1, &op2, regs);
+
+    put_lbfp(&op1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_add_bfp_long) */
+
+/*
  * B30E MAEBR - MULTIPLY AND ADD (short BFP)                   [RRF]
+ */
+DEF_INST(multiply_add_bfp_short_reg)
+{
+    int r1, r2, r3;
+    struct sbfp op1, op2, op3;
+    int pgm_check;
+
+    RRF_R(inst, regs, r1, r2, r3);
+    //logmsg("MAEBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
+    BFPINST_CHECK(regs);
+
+    get_sbfp(&op1, regs->fpr + FPR2I(r1));
+    get_sbfp(&op2, regs->fpr + FPR2I(r2));
+    get_sbfp(&op3, regs->fpr + FPR2I(r3));
+
+    multiply_sbfp(&op2, &op3, regs);
+    pgm_check = add_sbfp(&op1, &op2, regs);
+
+    put_sbfp(&op1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_add_bfp_short_reg) */
+
+/*
  * ED0E MAEB  - MULTIPLY AND ADD (short BFP)                   [RXF]
+ */
+DEF_INST(multiply_add_bfp_short)
+{
+    int r1, r3, b2;
+    VADR effective_addr2;
+    struct sbfp op1, op2, op3;
+    int pgm_check;
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    //logmsg("MAEB r1=%d r3=%d b2=%d\n", r1, r3, b2);
+    BFPINST_CHECK(regs);
+
+    get_sbfp(&op1, regs->fpr + FPR2I(r1));
+    vfetch_sbfp(&op2, effective_addr2, b2, regs);
+    get_sbfp(&op3, regs->fpr + FPR2I(r3));
+
+    multiply_sbfp(&op2, &op3, regs);
+    pgm_check = add_sbfp(&op1, &op2, regs);
+
+    put_sbfp(&op1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_add_bfp_short) */
+
+/*
  * B31F MSDBR - MULTIPLY AND SUBTRACT (long BFP)               [RRF]
+ */
+DEF_INST(multiply_subtract_bfp_long_reg)
+{
+    int r1, r2, r3;
+    struct lbfp op1, op2, op3;
+    int pgm_check;
+
+    RRF_R(inst, regs, r1, r2, r3);
+    //logmsg("MSDBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
+    BFPINST_CHECK(regs);
+
+    get_lbfp(&op1, regs->fpr + FPR2I(r1));
+    get_lbfp(&op2, regs->fpr + FPR2I(r2));
+    get_lbfp(&op3, regs->fpr + FPR2I(r3));
+
+    multiply_lbfp(&op2, &op3, regs);
+    pgm_check = subtract_lbfp(&op1, &op2, regs);
+
+    put_lbfp(&op1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_subtract_bfp_long_reg) */
+
+/*
  * ED1F MSDB  - MULTIPLY AND SUBTRACT (long BFP)               [RXF]
+ */
+DEF_INST(multiply_subtract_bfp_long)
+{
+    int r1, r3, b2;
+    VADR effective_addr2;
+    struct lbfp op1, op2, op3;
+    int pgm_check;
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    //logmsg("MSDB r1=%d r3=%d b2=%d\n", r1, r3, b2);
+    BFPINST_CHECK(regs);
+
+    get_lbfp(&op1, regs->fpr + FPR2I(r1));
+    vfetch_lbfp(&op2, effective_addr2, b2, regs);
+    get_lbfp(&op3, regs->fpr + FPR2I(r3));
+
+    multiply_lbfp(&op2, &op3, regs);
+    pgm_check = subtract_lbfp(&op1, &op2, regs);
+
+    put_lbfp(&op1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_subtract_bfp_long) */
+
+/*
  * B30F MSEBR - MULTIPLY AND SUBTRACT (short BFP)              [RRF]
+ */
+DEF_INST(multiply_subtract_bfp_short_reg)
+{
+    int r1, r2, r3;
+    struct sbfp op1, op2, op3;
+    int pgm_check;
+
+    RRF_R(inst, regs, r1, r2, r3);
+    //logmsg("MSEBR r1=%d r3=%d r2=%d\n", r1, r3, r2);
+    BFPINST_CHECK(regs);
+
+    get_sbfp(&op1, regs->fpr + FPR2I(r1));
+    get_sbfp(&op2, regs->fpr + FPR2I(r2));
+    get_sbfp(&op3, regs->fpr + FPR2I(r3));
+
+    multiply_sbfp(&op2, &op3, regs);
+    pgm_check = subtract_sbfp(&op1, &op2, regs);
+
+    put_sbfp(&op1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_subtract_bfp_short_reg) */
+
+/*
  * ED0F MSEB  - MULTIPLY AND SUBTRACT (short BFP)              [RXF]
  */
+DEF_INST(multiply_subtract_bfp_short)
+{
+    int r1, r3, b2;
+    VADR effective_addr2;
+    struct sbfp op1, op2, op3;
+    int pgm_check;
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    //logmsg("MSEB r1=%d r3=%d b2=%d\n", r1, r3, b2);
+    BFPINST_CHECK(regs);
+
+    get_sbfp(&op1, regs->fpr + FPR2I(r1));
+    vfetch_sbfp(&op2, effective_addr2, b2, regs);
+    get_sbfp(&op3, regs->fpr + FPR2I(r3));
+
+    multiply_sbfp(&op2, &op3, regs);
+    pgm_check = subtract_sbfp(&op1, &op2, regs);
+
+    put_sbfp(&op1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_subtract_bfp_short) */
 
 /*
  * B384 SFPC  - SET FPC                                        [RRE]
@@ -4411,7 +4621,6 @@ DEF_INST(testdataclass_bfp_short)
     bit=31-bit;
     regs->psw.cc = (effective_addr2>>bit) & 1;
 }
-
 
 /*
  * ED11 TCDB   - TEST DATA CLASS (long BFP)                   [RXE]

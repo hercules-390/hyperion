@@ -1818,10 +1818,6 @@ DEF_INST(load_float_ext_reg);
 DEF_INST(load_zero_float_short_reg);
 DEF_INST(load_zero_float_long_reg);
 DEF_INST(load_zero_float_ext_reg);
-DEF_INST(convert_bfp_long_to_float_long_reg);
-DEF_INST(convert_bfp_short_to_float_long_reg);
-DEF_INST(convert_float_long_to_bfp_long_reg);
-DEF_INST(convert_float_long_to_bfp_short_reg);
 DEF_INST(multiply_add_float_short_reg);
 DEF_INST(multiply_add_float_long_reg);
 DEF_INST(multiply_add_float_short);
@@ -2279,6 +2275,10 @@ DEF_INST(ecpsvm_prefmach_assist);
 
 
 /* Instructions in ieee.c */
+DEF_INST(convert_bfp_long_to_float_long_reg);
+DEF_INST(convert_bfp_short_to_float_long_reg);
+DEF_INST(convert_float_long_to_bfp_long_reg);
+DEF_INST(convert_float_long_to_bfp_short_reg);
 DEF_INST(add_bfp_ext_reg);
 DEF_INST(add_bfp_long_reg);
 DEF_INST(add_bfp_long);
@@ -2345,6 +2345,14 @@ DEF_INST(multiply_bfp_short_to_long_reg);
 DEF_INST(multiply_bfp_short_to_long);
 DEF_INST(multiply_bfp_short_reg);
 DEF_INST(multiply_bfp_short);
+DEF_INST(multiply_add_bfp_long_reg);
+DEF_INST(multiply_add_bfp_long);
+DEF_INST(multiply_add_bfp_short_reg);
+DEF_INST(multiply_add_bfp_short);
+DEF_INST(multiply_subtract_bfp_long_reg);
+DEF_INST(multiply_subtract_bfp_long);
+DEF_INST(multiply_subtract_bfp_short_reg);
+DEF_INST(multiply_subtract_bfp_short);
 DEF_INST(squareroot_bfp_ext_reg);
 DEF_INST(squareroot_bfp_long_reg);
 DEF_INST(squareroot_bfp_long);

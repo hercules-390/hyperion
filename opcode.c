@@ -444,6 +444,14 @@
  UNDEF_INST(multiply_bfp_short_to_long)
  UNDEF_INST(multiply_bfp_short)
  UNDEF_INST(multiply_bfp_short_reg)
+ UNDEF_INST(multiply_add_bfp_long_reg)
+ UNDEF_INST(multiply_add_bfp_long)
+ UNDEF_INST(multiply_add_bfp_short_reg)
+ UNDEF_INST(multiply_add_bfp_short)
+ UNDEF_INST(multiply_subtract_bfp_long_reg)
+ UNDEF_INST(multiply_subtract_bfp_long)
+ UNDEF_INST(multiply_subtract_bfp_short_reg)
+ UNDEF_INST(multiply_subtract_bfp_short)
  UNDEF_INST(round_bfp_long_to_short_reg)
  UNDEF_INST(round_bfp_ext_to_long_reg)
  UNDEF_INST(round_bfp_ext_to_short_reg)
@@ -2439,8 +2447,8 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B30B*/ GENx___x390x900 (subtract_bfp_short_reg,RRE,"SEBR"),
  /*B30C*/ GENx___x390x900 (multiply_bfp_short_to_long_reg,RRE,"MDEBR"),
  /*B30D*/ GENx___x390x900 (divide_bfp_short_reg,RRE,"DEBR"),
- /*B30E*/ GENx___x390x900 (dummy_instruction,RRF_R,"MAEBR"),
- /*B30F*/ GENx___x390x900 (dummy_instruction,RRF_R,"MSEBR"),
+ /*B30E*/ GENx___x390x900 (multiply_add_bfp_short_reg,RRF_R,"MAEBR"),
+ /*B30F*/ GENx___x390x900 (multiply_subtract_bfp_short_reg,RRF_R,"MSEBR"),
  /*B310*/ GENx___x390x900 (load_positive_bfp_long_reg,RRE,"LPDBR"),
  /*B311*/ GENx___x390x900 (load_negative_bfp_long_reg,RRE,"LNDBR"),
  /*B312*/ GENx___x390x900 (load_and_test_bfp_long_reg,RRE,"LTDBR"),
@@ -2455,8 +2463,8 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B31B*/ GENx___x390x900 (subtract_bfp_long_reg,RRE,"SDBR"),
  /*B31C*/ GENx___x390x900 (multiply_bfp_long_reg,RRE,"MDBR"),
  /*B31D*/ GENx___x390x900 (divide_bfp_long_reg,RRE,"DDBR"),
- /*B31E*/ GENx___x390x900 (dummy_instruction,RRF_R,"MADBR"),
- /*B31F*/ GENx___x390x900 (dummy_instruction,RRF_R,"MSDBR"),
+ /*B31E*/ GENx___x390x900 (multiply_add_bfp_long_reg,RRF_R,"MADBR"),
+ /*B31F*/ GENx___x390x900 (multiply_subtract_bfp_long_reg,RRF_R,"MSDBR"),
  /*B320*/ GENx___x___x___ ,
  /*B321*/ GENx___x___x___ ,
  /*B322*/ GENx___x___x___ ,
@@ -4290,8 +4298,8 @@ zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED0B*/ GENx___x390x900 (subtract_bfp_short,RXE,"SEB"),
  /*ED0C*/ GENx___x390x900 (multiply_bfp_short_to_long,RXE,"MDEB"),
  /*ED0D*/ GENx___x390x900 (divide_bfp_short,RXE,"DEB"),
- /*ED0E*/ GENx___x390x900 (dummy_instruction,RXF,"MAEB"),
- /*ED0F*/ GENx___x390x900 (dummy_instruction,RXF,"MSEB"),
+ /*ED0E*/ GENx___x390x900 (multiply_add_bfp_short,RXF,"MAEB"),
+ /*ED0F*/ GENx___x390x900 (multiply_subtract_bfp_short,RXF,"MSEB"),
  /*ED10*/ GENx___x390x900 (testdataclass_bfp_short,RXE,"TCEB"),
  /*ED11*/ GENx___x390x900 (testdataclass_bfp_long,RXE,"TCDB"),
  /*ED12*/ GENx___x390x900 (testdataclass_bfp_ext,RXE,"TCXB"),
@@ -4306,8 +4314,8 @@ zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED1B*/ GENx___x390x900 (subtract_bfp_long,RXE,"SDB"),
  /*ED1C*/ GENx___x390x900 (multiply_bfp_long,RXE,"MDB"),
  /*ED1D*/ GENx___x390x900 (divide_bfp_long,RXE,"DDB"),
- /*ED1E*/ GENx___x390x900 (dummy_instruction,RXF,"MADB"),
- /*ED1F*/ GENx___x390x900 (dummy_instruction,RXF,"MSDB"),
+ /*ED1E*/ GENx___x390x900 (multiply_add_bfp_long,RXF,"MADB"),
+ /*ED1F*/ GENx___x390x900 (multiply_subtract_bfp_long,RXF,"MSDB"),
  /*ED20*/ GENx___x___x___ ,
  /*ED21*/ GENx___x___x___ ,
  /*ED22*/ GENx___x___x___ ,
