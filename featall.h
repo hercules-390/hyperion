@@ -39,6 +39,7 @@
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
 #define FEATURE_ALD_FORMAT            0
 #define FEATURE_SIE_MAXZONES          8
+#define FEATURE_FAST_DEVLOOKUP        1 /* Fast devnum/subchan lookup*/
 
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
 

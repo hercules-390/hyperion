@@ -1746,6 +1746,52 @@ int deconfigure_cpu(REGS *regs)
 } /* end function deconfigure_cpu */
 
 
+#if defined(FEATURE_FAST_DEVLOOKUP)
+void AddDevnumFastLookup(DEVBLK *dev,U16 devnum)
+{
+    unsigned int Channel;
+    if(sysblk.devnum_fl==NULL)
+    {
+        sysblk.devnum_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256);
+        memset(sysblk.devnum_fl,0,sizeof(DEVBLK **)*256);
+    }
+    Channel=(devnum & 0xff00)>>8;
+    if(sysblk.devnum_fl[Channel]==NULL)
+    {
+        sysblk.devnum_fl[Channel]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
+        memset(sysblk.devnum_fl[Channel],0,sizeof(DEVBLK *)*256);
+    }
+    sysblk.devnum_fl[Channel][devnum & 0xff]=dev;
+    if(sysblk.subchan_fl==NULL)
+    {
+        sysblk.subchan_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256);
+        memset(sysblk.subchan_fl,0,sizeof(DEVBLK **)*256);
+    }
+    /* Not 'Channel', just reusing the variable to hold MSB of subchan # */
+    Channel=(dev->subchan & 0xff00)>>8;
+    if(sysblk.subchan_fl[Channel]==NULL)
+    {
+        sysblk.subchan_fl[Channel]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
+        memset(sysblk.subchan_fl[Channel],0,sizeof(DEVBLK *)*256);
+    }
+    sysblk.subchan_fl[Channel][dev->subchan & 0xff]=dev;
+}
+void DelDevnumFastLookup(U16 devnum)
+{
+    unsigned int Channel;
+    if(sysblk.devnum_fl==NULL)
+    {
+        return;
+    }
+    Channel=(devnum & 0xff00)>>8;
+    if(sysblk.devnum_fl[Channel]==NULL)
+    {
+        return;
+    }
+    sysblk.devnum_fl[Channel][devnum & 0xff]=NULL;
+}
+#endif
+
 DEVBLK *get_devblk(U16 devnum)
 {
 DEVBLK *dev;
@@ -1815,6 +1861,9 @@ DEVBLK**dvpp;
 
     /* Mark device valid */
     dev->pmcw.flag5 |= PMCW5_V;
+#if defined(FEATURE_FAST_DEVLOOKUP)
+    AddDevnumFastLookup(dev,devnum);
+#endif
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
@@ -1849,6 +1898,9 @@ int     rc;                             /* Return code               */
         logmsg (_("HHCCF042E Device type %s not recognized\n"), type);
         /* Mark device invalid */
         dev->pmcw.flag5 &= ~PMCW5_V;
+#if defined(FEATURE_FAST_DEVLOOKUP)
+        DelDevnumFastLookup(devnum);
+#endif
         release_lock(&dev->lock);
 
         return 1;
@@ -1867,6 +1919,9 @@ int     rc;                             /* Return code               */
         free(dev->typname);
         /* Mark device invalid */
         dev->pmcw.flag5 &= ~PMCW5_V;
+#if defined(FEATURE_FAST_DEVLOOKUP)
+        DelDevnumFastLookup(devnum);
+#endif
         release_lock(&dev->lock);
 
         return 1;
@@ -1884,6 +1939,9 @@ int     rc;                             /* Return code               */
 
             /* Mark device invalid */
             dev->pmcw.flag5 &= ~PMCW5_V;
+#if defined(FEATURE_FAST_DEVLOOKUP)
+            DelDevnumFastLookup(devnum);
+#endif
             release_lock(&dev->lock);
 
             return 1;
@@ -1923,6 +1981,9 @@ DEVBLK *dev;                            /* -> Device block           */
 
     /* Mark device invalid */
     dev->pmcw.flag5 &= ~(PMCW5_E | PMCW5_V);
+#if defined(FEATURE_FAST_DEVLOOKUP)
+    DelDevnumFastLookup(devnum);
+#endif
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
@@ -1985,6 +2046,10 @@ DEVBLK *dev;                            /* -> Device block           */
 
     /* Disable the device */
     dev->pmcw.flag5 &= ~PMCW5_E;
+#if defined(FEATURE_FAST_DEVLOOKUP)
+    DelDevnumFastLookup(olddevn);
+    AddDevnumFastLookup(dev,newdevn);
+#endif
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
@@ -2009,6 +2074,7 @@ DEVBLK *dev;                            /* -> Device block           */
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the device number           */
 /*-------------------------------------------------------------------*/
+#if !defined(FEATURE_FAST_DEVLOOKUP)
 DEVBLK *find_device_by_devnum (U16 devnum)
 {
 DEVBLK *dev;
@@ -2019,11 +2085,45 @@ DEVBLK *dev;
     return dev;
 
 } /* end function find_device_by_devnum */
+#else
+DEVBLK *find_device_by_devnum (U16 devnum)
+{
+DEVBLK *dev;
+DEVBLK **devtab;
+int Chan;
+
+    Chan=(devnum & 0xff00)>>8;
+    if(sysblk.devnum_fl==NULL)
+    {
+        return NULL;
+    }
+    devtab=sysblk.devnum_fl[(devnum & 0xff00)>>8];
+    if(devtab==NULL)
+    {
+        return NULL;
+    }
+    dev=devtab[devnum & 0xff];
+    return(dev);
+} /* end function find_device_by_devnum */
+#endif
 
 
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the subchannel number       */
 /*-------------------------------------------------------------------*/
+#if defined(FEATURE_FAST_DEVLOOKUP)
+DEVBLK *find_device_by_subchan (U16 subchan)
+{
+    DEVBLK *dev;
+    if(sysblk.subchan_fl[(subchan & 0xff00)<<8]==NULL)
+    {
+        return NULL;
+    }
+    dev=sysblk.subchan_fl[(subchan & 0xff00)<<8][subchan & 0xff];
+    return dev;
+} /* end function find_device_by_subchan */
+
+#else // FAST LOOKUP
 DEVBLK *find_device_by_subchan (U16 subchan)
 {
 DEVBLK *dev;
@@ -2034,6 +2134,7 @@ DEVBLK *dev;
     return dev;
 
 } /* end function find_device_by_subchan */
+#endif
 
 
 #endif /*!defined(_GEN_ARCH)*/

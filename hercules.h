@@ -687,6 +687,12 @@ typedef struct _SYSBLK {
         int     panrate;                /* Panel refresh rate        */
         int     npquiet;                /* New Panel quiet indicator */
         struct _DEVBLK *firstdev;       /* -> First device block     */
+#if defined(FEATURE_FAST_DEVLOOKUP)
+        struct _DEVBLK ***devnum_fl;    /* 1st level table for fast  */
+                                        /* devnum lookup             */
+        struct _DEVBLK ***subchan_fl;   /* Subchannel table fast     */
+                                        /* lookup table              */
+#endif  /* FAST_DEVICE_LOOKUP */
         U16     highsubchan;            /* Highest subchannel + 1    */
         U32     chp_reset[8];           /* Channel path reset masks  */
         struct _IOINT *iointq;          /* I/O interrupt queue       */

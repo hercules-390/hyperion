@@ -178,6 +178,9 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 
                 // Mark device invalid
                 pDev->pDEVBLK[0]->pmcw.flag5 &= ~PMCW5_V;
+#if defined(FEATURE_FAST_DEVLOOKUP)
+                DelDevnumFastLookup(pDev->sAddr+1);
+#endif
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
                 // Remove indication of CRW is pending for this device

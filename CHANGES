@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+14 Aug 2003 Fast Devnum & Subchannel lookup algorithm - Ivan Warren
 11 Aug 2003 Dequeued IOINT struct off of sysblk.iointq during
             TIO/TSCH to prevent incorrect PCI/Final irpt reordering.
             OS360/MVT Now IPLs correctly.
