@@ -863,14 +863,14 @@ int     carry;                          /* Carry indicator           */
     SS(inst, execflag, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
-    /* Load operands into work areas */
-    ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec1, &count1, &sign1);
-    ARCH_DEP(load_decimal) (effective_addr2, l2, b2, regs, dec2, &count2, &sign2);
-
     /* Program check if the second operand length exceeds 15 digits
        or is equal to or greater than the first operand length */
     if (l2 > 7 || l2 >= l1)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+    /* Load operands into work areas */
+    ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec1, &count1, &sign1);
+    ARCH_DEP(load_decimal) (effective_addr2, l2, b2, regs, dec2, &count2, &sign2);
 
     /* Program check if the number of bytes in the second operand
        is less than the number of bytes of high-order zeroes in the
