@@ -352,6 +352,18 @@
 #endif /*!defined(FEATURE_FPS_EXTENSIONS)*/
 
 
+#if !defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
+ UNDEF_INST(multiply_add_float_short_reg)
+ UNDEF_INST(multiply_add_float_long_reg)
+ UNDEF_INST(multiply_add_float_short)
+ UNDEF_INST(multiply_add_float_long)
+ UNDEF_INST(multiply_subtract_float_short_reg)
+ UNDEF_INST(multiply_subtract_float_long_reg)
+ UNDEF_INST(multiply_subtract_float_short)
+ UNDEF_INST(multiply_subtract_float_long)
+#endif /*!defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
+
+
 #if !defined(FEATURE_BINARY_FLOATING_POINT)
  UNDEF_INST(store_fpc)
  UNDEF_INST(load_fpc)
@@ -2268,8 +2280,8 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B30B*/ GENx___x390x900 (subtract_bfp_short_reg,RRE,"SEBR"),
  /*B30C*/ GENx___x390x900 (dummy_instruction,RRE,"MDEBR"),
  /*B30D*/ GENx___x390x900 (divide_bfp_short_reg,RRE,"DEBR"),
- /*B30E*/ GENx___x390x900 (dummy_instruction,RRE,"MAEBR"),
- /*B30F*/ GENx___x390x900 (dummy_instruction,RRE,"MSEBR"),
+ /*B30E*/ GENx___x390x900 (dummy_instruction,RRF_R,"MAEBR"),
+ /*B30F*/ GENx___x390x900 (dummy_instruction,RRF_R,"MSEBR"),
  /*B310*/ GENx___x390x900 (load_positive_bfp_long_reg,RRE,"LPDBR"),
  /*B311*/ GENx___x390x900 (load_negative_bfp_long_reg,RRE,"LNDBR"),
  /*B312*/ GENx___x390x900 (load_and_test_bfp_long_reg,RRE,"LTDBR"),
@@ -2284,8 +2296,8 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B31B*/ GENx___x390x900 (subtract_bfp_long_reg,RRE,"SDBR"),
  /*B31C*/ GENx___x390x900 (multiply_bfp_long_reg,RRE,"MDBR"),
  /*B31D*/ GENx___x390x900 (divide_bfp_long_reg,RRE,"DDBR"),
- /*B31E*/ GENx___x390x900 (dummy_instruction,RRE,"MAEBR"),
- /*B31F*/ GENx___x390x900 (dummy_instruction,RRE,"MSDBR"),
+ /*B31E*/ GENx___x390x900 (dummy_instruction,RRF_R,"MAEBR"),
+ /*B31F*/ GENx___x390x900 (dummy_instruction,RRF_R,"MSDBR"),
  /*B320*/ GENx___x___x___ ,
  /*B321*/ GENx___x___x___ ,
  /*B322*/ GENx___x___x___ ,
@@ -2300,8 +2312,8 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B32B*/ GENx___x___x___ ,
  /*B32C*/ GENx___x___x___ ,
  /*B32D*/ GENx___x___x___ ,
- /*B32E*/ GENx___x___x900 (dummy_instruction,RRF_M,"MAER"),
- /*B32F*/ GENx___x___x900 (dummy_instruction,RRF_M,"MSER"),
+ /*B32E*/ GENx___x___x900 (multiply_add_float_short_reg,RRF_R,"MAER"),
+ /*B32F*/ GENx___x___x900 (multiply_subtract_float_short_reg,RRF_R,"MSER"),
  /*B330*/ GENx___x___x___ ,
  /*B331*/ GENx___x___x___ ,
  /*B332*/ GENx___x___x___ ,
@@ -2316,8 +2328,8 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B33B*/ GENx___x___x___ ,
  /*B33C*/ GENx___x___x___ ,
  /*B33D*/ GENx___x___x___ ,
- /*B33E*/ GENx___x___x900 (dummy_instruction,RRF_M,"MADR"),
- /*B33F*/ GENx___x___x900 (dummy_instruction,RRF_M,"MSDR"),
+ /*B33E*/ GENx___x___x900 (multiply_add_float_long_reg,RRF_R,"MADR"),
+ /*B33F*/ GENx___x___x900 (multiply_subtract_float_long_reg,RRF_R,"MSDR"),
  /*B340*/ GENx___x390x900 (load_positive_bfp_ext_reg,RRE,"LPXBR"),
  /*B341*/ GENx___x390x900 (load_negative_bfp_ext_reg,RRE,"LNXBR"),
  /*B342*/ GENx___x390x900 (load_and_test_bfp_ext_reg,RRE,"LTXBR"),
@@ -4119,8 +4131,8 @@ zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED0B*/ GENx___x390x900 (subtract_bfp_short,RXE,"SEB"),
  /*ED0C*/ GENx___x390x900 (dummy_instruction,RXE,"MDEB"),
  /*ED0D*/ GENx___x390x900 (divide_bfp_short,RXE,"DEB"),
- /*ED0E*/ GENx___x390x900 (dummy_instruction,RXE,"MAEB"),
- /*ED0F*/ GENx___x390x900 (dummy_instruction,RXE,"MSDB"),
+ /*ED0E*/ GENx___x390x900 (dummy_instruction,RXF,"MAEB"),
+ /*ED0F*/ GENx___x390x900 (dummy_instruction,RXF,"MSDB"),
  /*ED10*/ GENx___x390x900 (testdataclass_bfp_short,RXE,"TCEB"),
  /*ED11*/ GENx___x390x900 (testdataclass_bfp_long,RXE,"TCDB"),
  /*ED12*/ GENx___x390x900 (testdataclass_bfp_ext,RXE,"TCXB"),
@@ -4135,8 +4147,8 @@ zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED1B*/ GENx___x390x900 (subtract_bfp_long,RXE,"SDB"),
  /*ED1C*/ GENx___x390x900 (multiply_bfp_long,RXE,"MDB"),
  /*ED1D*/ GENx___x390x900 (divide_bfp_long,RXE,"DDB"),
- /*ED1E*/ GENx___x390x900 (dummy_instruction,RXE,"MADB"),
- /*ED1F*/ GENx___x390x900 (dummy_instruction,RXE,"MSDB"),
+ /*ED1E*/ GENx___x390x900 (dummy_instruction,RXF,"MADB"),
+ /*ED1F*/ GENx___x390x900 (dummy_instruction,RXF,"MSDB"),
  /*ED20*/ GENx___x___x___ ,
  /*ED21*/ GENx___x___x___ ,
  /*ED22*/ GENx___x___x___ ,
@@ -4151,8 +4163,8 @@ zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED2B*/ GENx___x___x___ ,
  /*ED2C*/ GENx___x___x___ ,
  /*ED2D*/ GENx___x___x___ ,
- /*ED2E*/ GENx___x___x900 (dummy_instruction,RXF,"MAE"),
- /*ED2F*/ GENx___x___x900 (dummy_instruction,RXF,"MSE"),
+ /*ED2E*/ GENx___x___x900 (multiply_add_float_short,RXF,"MAE"),
+ /*ED2F*/ GENx___x___x900 (multiply_subtract_float_short,RXF,"MSE"),
  /*ED30*/ GENx___x___x___ ,
  /*ED31*/ GENx___x___x___ ,
  /*ED32*/ GENx___x___x___ ,
@@ -4167,8 +4179,8 @@ zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED3B*/ GENx___x___x___ ,
  /*ED3C*/ GENx___x___x___ ,
  /*ED3D*/ GENx___x___x___ ,
- /*ED3E*/ GENx___x___x900 (dummy_instruction,RXF,"MAD"),
- /*ED3F*/ GENx___x___x900 (dummy_instruction,RXF,"MSD"),
+ /*ED3E*/ GENx___x___x900 (multiply_add_float_long,RXF,"MAD"),
+ /*ED3F*/ GENx___x___x900 (multiply_subtract_float_long,RXF,"MSD"),
  /*ED40*/ GENx___x___x___ ,
  /*ED41*/ GENx___x___x___ ,
  /*ED42*/ GENx___x___x___ ,
