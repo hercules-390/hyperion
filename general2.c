@@ -1105,7 +1105,6 @@ U32     n;                              /* 32-bit operand values     */
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
-
 }
 
 
@@ -1133,7 +1132,6 @@ U32     n;                              /* 32-bit operand values     */
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
-
 }
 
 
@@ -1154,9 +1152,9 @@ int     r1, r2;                         /* Values of R fields        */
 }
 
 
-/*---------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
 /* 5F   SL    - Subtract Logical                                [RX] */
-/*---------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
 DEF_INST(subtract_logical)
 {
 int     r1;                             /* Value of R field          */
@@ -1498,7 +1496,7 @@ int     i;                              /* Integer work areas        */
         dbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
 
         /* Fetch function byte from second operand */
-        sbyte = ARCH_DEP(vfetchb) ( (effective_addr2 + dbyte) 
+        sbyte = ARCH_DEP(vfetchb) ( (effective_addr2 + dbyte)
                                    & ADDRESS_MAXWRAP(regs), b2, regs );
 
         /* Test for non-zero function byte */
@@ -1730,7 +1728,7 @@ int     ar1 = 4;                        /* Access register number    */
         tempword2 = ARCH_DEP(vfetch4) ( tempaddress, ar1, regs );
         tempword3 = ARCH_DEP(vfetch4) ( tempaddress + 4, ar1, regs );
 
-        
+
 
         if ( regs->GR_L(0) == tempword2 )
         {
