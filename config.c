@@ -257,6 +257,7 @@ int     i;                              /* Array subscript           */
 int     scount;                         /* Statement counter         */
 int     cpu;                            /* CPU number                */
 int     pfd[2];                         /* Message pipe handles      */
+DEVBLK *dev;                            /* -> Device block           */
 FILE   *fp;                             /* Configuration file pointer*/
 BYTE   *sserial;                        /* -> CPU serial string      */
 BYTE   *smodel;                         /* -> CPU model string       */
@@ -1089,6 +1090,9 @@ BYTE    c;                              /* Work area for sscanf      */
     }
     setvbuf (sysblk.msgpipew, NULL, _IOLBF, 0);
 
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        dev->msgpipew = sysblk.msgpipew;
+
 #if defined(OPTION_FISHIO)
     ios_msgpipew = sysblk.msgpipew;
 #endif // defined(OPTION_FISHIO)
@@ -1343,6 +1347,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     obtain_lock(&dev->lock);
 
     /* Initialize the device block */
+    dev->msgpipew = sysblk.msgpipew;
     dev->devnum = devnum;
     dev->chanset = devnum >> 12;
     if( dev->chanset >= MAX_CPU_ENGINES )

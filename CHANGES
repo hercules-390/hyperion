@@ -1,3 +1,5 @@
+03 Mar 2002 Remove ckd and cckd sysblk dependencies in prep for
+            cckd dasd utility support - Greg Smith
 02 Mar 2002 Display version info via stdout instead of stderr - Fish
 02 Mar 2002 Added #include <sched.h> to hercules.h and some #ifdefs
             in a few places to fix some compiler warnings, and fixed

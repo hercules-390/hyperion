@@ -117,17 +117,26 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
     do { \
         fprintf(sysblk.msgpipew, a); \
     } while(0)
+#define devmsg(a...) \
+    do { \
+        fprintf(dev->msgpipew, a); \
+    } while(0)
 #else
 #define logmsg(a...) \
     do { \
         fprintf(sysblk.msgpipew, a); \
         fflush(sysblk.msgpipew); \
     } while(0)
+#define devmsg(a...) \
+    do { \
+        fprintf(dev->msgpipew, a); \
+        fflush(dev->msgpipew); \
+    } while(0)
 #endif
 #define DEVTRACE(format, a...) \
     do { \
         if(dev->ccwtrace||dev->ccwstep) \
-            fprintf(sysblk.msgpipew, "%4.4X:" format, dev->devnum, a); \
+            fprintf(dev->msgpipew, "%4.4X:" format, dev->devnum, a); \
     } while(0)
 
 /* Debugging */
@@ -658,9 +667,6 @@ typedef struct _SYSBLK {
 #endif /*INTERRUPTS_FAST_CHECK*/
                 sigpbusy:1,             /* 1=Signal facility in use  */
                 sigintreq:1,            /* 1=SIGINT request pending  */
-#ifdef OPTION_CKD_KEY_TRACING
-                ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
-#endif /*OPTION_CKD_KEY_TRACING*/
                 insttrace:1,            /* 1=Instruction trace       */
                 inststep:1,             /* 1=Instruction step        */
                 instbreak:1;            /* 1=Have breakpoint         */
@@ -820,6 +826,7 @@ bind_struct;
 typedef struct _DEVBLK {
         struct _DEVBLK *nextdev;        /* -> next device block      */
         LOCK    lock;                   /* Device block lock         */
+        FILE   *msgpipew;               /* Message pipe write handle */
 
         /*  device identification                                    */
 
@@ -899,6 +906,9 @@ typedef struct _DEVBLK {
                 nosyncio:1,             /* 1=No synchronous I/Os     */
                 syncio:1,               /* 1=Synchronous I/Os allowed*/
 #endif /*OPTION_SYNCIO*/
+#ifdef OPTION_CKD_KEY_TRACING
+                ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
+#endif /*OPTION_CKD_KEY_TRACING*/
                 console:1,              /* 1=Console device          */
                 connected:1,            /* 1=Console client connected*/
                 readpending:2,          /* 1=Console read pending    */

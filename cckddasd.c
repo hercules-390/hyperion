@@ -213,7 +213,7 @@ char           *kw, *op;                /* Argument keyword/option   */
     if (rc < 0) return -1;
 
     /* call the chkdsk function */
-    rc = cckd_chkdsk (cckd->fd[0], sysblk.msgpipew, 0);
+    rc = cckd_chkdsk (cckd->fd[0], dev->msgpipew, 0);
     if (rc < 0) return -1;
 
     /* re-read the compressed device header */
@@ -223,7 +223,7 @@ char           *kw, *op;                /* Argument keyword/option   */
     /* open the shadow files */
     rc = cckd_sf_init (dev);
     if (rc < 0)
-    {   logmsg ("cckddasd: error initializing shadow files: %s\n",
+    {   devmsg ("cckddasd: error initializing shadow files: %s\n",
                 strerror (errno));
         return -1;
     }
@@ -693,7 +693,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
                  ra, lru, trk, len, rc);
 
         if (rc != Z_OK)
-        {   logmsg ("%4.4X cckddasd: rdtrk %d uncompress error: %d\n",
+        {   devmsg ("%4.4X cckddasd: rdtrk %d uncompress error: %d\n",
                         dev->devnum, trk, rc);
             cckd_null_trk (dev, buf, trk);
         }
@@ -714,7 +714,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
                  ra, lru, trk, len, rc);
 
         if (rc != BZ_OK)
-        {   logmsg ("cckddasd: decompress error for trk %d: %d\n",
+        {   devmsg ("cckddasd: decompress error for trk %d: %d\n",
                     trk, rc);
             cckd_null_trk (dev, buf, trk);
         }
@@ -722,7 +722,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
 #endif
 
     default:
-        logmsg ("cckddasd: %4.4x unknown compression for trk %d: %d\n",
+        devmsg ("cckddasd: %4.4x unknown compression for trk %d: %d\n",
                 dev->devnum, trk, buf2[0]);
         cckd_null_trk (dev, buf2, trk);
         break;
@@ -1424,7 +1424,7 @@ int             fend,mend;              /* Byte order indicators     */
     /* check the device id for shadow files */
     if (sfx && memcmp (devhdr.devid, "CKD_S370", 8))
     {
-        logmsg ("file [%d] is not a shadow file\n", cckd->sfn);
+        devmsg ("file [%d] is not a shadow file\n", cckd->sfn);
         return -1;
     }
 
@@ -1440,7 +1440,7 @@ int             fend,mend;              /* Byte order indicators     */
     {
         if (cckd->open[sfx] == CCKD_OPEN_RW)
         {
-            rc = cckd_swapend (cckd->fd[sfx], sysblk.msgpipew);
+            rc = cckd_swapend (cckd->fd[sfx], dev->msgpipew);
             rc = lseek (cckd->fd[sfx], CKDDASD_DEVHDR_SIZE, SEEK_SET);
             rc = read (cckd->fd[sfx], &cckd->cdevhdr[sfx], CCKDDASD_DEVHDR_SIZE);
         }
@@ -1949,7 +1949,7 @@ CCKD_L2ENT      l2;                     /* Level 2 entry             */
         }
         else
         {
-            logmsg ("%4.4x: cckddasd: trkimg %d beyond end of "
+            devmsg ("%4.4x: cckddasd: trkimg %d beyond end of "
                     "regular ckd file: trks %d\n",
                     dev->devnum, trk, dev->ckdtrks);
             rc = cckd_null_trk (dev, buf, trk);
@@ -2000,7 +2000,7 @@ int             sfx,l1x,l2x;            /* Lookup table indices      */
               trk, len, buf[0], buf[1], buf[2], buf[3], buf[4]);
         }
         else
-        {   logmsg ("%4.4x: cckddasd: wrtrk %d beyond end of file "
+        {   devmsg ("%4.4x: cckddasd: wrtrk %d beyond end of file "
                     "for regular ckd file: trks %d\n",
                     dev->devnum, trk, dev->ckdtrks);
             rc = 0;
@@ -2094,7 +2094,7 @@ int             size;                   /* Track size                */
     if (size > dev->ckdtrksz ||
         memcmp (&buf[size-CKDDASD_RECHDR_SIZE], &eighthexFF, 8) != 0)
     {
-        logmsg ("%4.4X:cckddasd trklen err for %2.2x%2.2x%2.2x%2.2x%2.2x\n",
+        devmsg ("%4.4X:cckddasd trklen err for %2.2x%2.2x%2.2x%2.2x%2.2x\n",
                 dev->devnum, buf[0], buf[1], buf[2], buf[3], buf[4]);
         size = dev->ckdtrksz;
     }
@@ -2160,7 +2160,7 @@ int             t;                      /* Calculated track          */
         head < dev->ckdheads && (trk == -1 || t == trk))
             return t;
 
-    logmsg ("%4.4X:cckddasd: invalid trk hdr trk %d "
+    devmsg ("%4.4X:cckddasd: invalid trk hdr trk %d "
             "buf %p %2.2x%2.2x%2.2x%2.2x%2.2x\n",
             dev->devnum, trk,
             buf, buf[0], buf[1], buf[2], buf[3], buf[4]);
@@ -2188,14 +2188,14 @@ BYTE           *sfxptr;                 /* -> Last char of file name */
     /* Error if no shadow file name specified */
     if (dev->ckdsfn[0] == '\0')
     {
-        logmsg ("cckddasd: no shadow file name specified%s\n", "");
+        devmsg ("cckddasd: no shadow file name specified%s\n", "");
         return -1;
     }
 
     /* Error if number shadow files exceeded */
     if (sfx > CCKD_MAX_SF)
     {
-        logmsg ("cckddasd: [%d] number of shadow files exceeded: %d\n",
+        devmsg ("cckddasd: [%d] number of shadow files exceeded: %d\n",
                 sfx, CCKD_MAX_SF);
         return -1;
     }
@@ -2256,7 +2256,7 @@ char            sfn[256];               /* Shadow file name          */
         if (rc < 0) return -1;
 
         /* call the chkdsk function */
-        rc = cckd_chkdsk (cckd->fd[cckd->sfn], sysblk.msgpipew, 0);
+        rc = cckd_chkdsk (cckd->fd[cckd->sfn], dev->msgpipew, 0);
         if (rc < 0) return -1;
 
         /* re-read the compressed header */
@@ -2294,7 +2294,7 @@ char            sfn[256];               /* Shadow file name          */
         cckd->fd[i] = open (sfn, O_RDONLY|O_BINARY);
         if (cckd->fd[i] < 0)
         {
-            logmsg ("cckddasd: error re-opening %s readonly\n   %s\n",
+            devmsg ("cckddasd: error re-opening %s readonly\n   %s\n",
                     sfn, strerror(errno));
             return -1;
         }
@@ -2347,7 +2347,7 @@ int             cyls9345[]   = {1440, 2156, 0};
     sfd = open (sfn, O_RDWR|O_CREAT|O_EXCL|O_BINARY,
                      S_IRUSR | S_IWUSR | S_IRGRP);
     if (sfd < 0)
-    {    logmsg ("cckddasd: shadow file open error: %s\n",
+    {    devmsg ("cckddasd: shadow file open error: %s\n",
                  strerror (errno));
          return -1;
     }
@@ -2390,7 +2390,7 @@ int             cyls9345[]   = {1440, 2156, 0};
                  break;
     case 0x9345: cyltab = cyls9345;
                  break;
-    default:     logmsg ("Unsupported device type %4.4x\n",
+    default:     devmsg ("Unsupported device type %4.4x\n",
                        dev->devtype);
                return -1;
     } /* end switch(dev->devtype) */
@@ -2398,7 +2398,7 @@ int             cyls9345[]   = {1440, 2156, 0};
         if (dev->ckdcyls <= cyltab[i]) break;
     cyls = cyltab[i];
     if (!cyls)
-    {    logmsg ("Unsupported number of cylinders (%d) for %4.4x device\n",
+    {    devmsg ("Unsupported number of cylinders (%d) for %4.4x device\n",
                  dev->ckdcyls, dev->devtype);
          return -1;
     }
@@ -2478,7 +2478,7 @@ BYTE            sfn[256];               /* Shadow file name          */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg ("%4.4X: cckddasd: device is not a shadow file\n",
+        devmsg ("%4.4X: cckddasd: device is not a shadow file\n",
                 dev->devnum);
         return;
     }
@@ -2522,7 +2522,7 @@ BYTE            sfn[256];               /* Shadow file name          */
     rc = cckd_sf_new (dev);
     if (rc < 0)
     {
-        logmsg ("cckddasd: error adding shadow file: %s\n",
+        devmsg ("cckddasd: error adding shadow file: %s\n",
                 strerror(errno));
         release_lock (&cckd->filelock);
         return;
@@ -2539,7 +2539,7 @@ BYTE            sfn[256];               /* Shadow file name          */
     }
 
     rc = cckd_sf_name (dev, cckd->sfn, (char *)&sfn);
-    logmsg ("cckddasd: shadow file [%d] %s added\n",
+    devmsg ("cckddasd: shadow file [%d] %s added\n",
             cckd->sfn, sfn);
     release_lock (&cckd->filelock);
 
@@ -2568,14 +2568,14 @@ int             add = 0;                /* Add the shadow file back  */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg ("%4.4X: cckddasd: device is not a shadow file\n",
+        devmsg ("%4.4X: cckddasd: device is not a shadow file\n",
                 dev->devnum);
         return;
     }
 
     if (!cckd->sfn)
     {
-        logmsg ("cckddasd: cannot remove base file\n");
+        devmsg ("cckddasd: cannot remove base file\n");
         return;
     }
 
@@ -2591,7 +2591,7 @@ int             add = 0;                /* Add the shadow file back  */
         cckd->fd[sfx-1] = open (sfn, O_RDONLY|O_BINARY);
         if (merge)
         {
-            logmsg ("cckddasd: cannot remove shadow file [%d], "
+            devmsg ("cckddasd: cannot remove shadow file [%d], "
                     "file [%d] cannot be opened read-write\n",
                     sfx, sfx-1);
             release_lock (&cckd->filelock);
@@ -2615,10 +2615,10 @@ int             add = 0;                /* Add the shadow file back  */
        chkdsk function.  This is especially important if the
        preceding file was created by cckddump program and made
        writable for the merge */
-    rc = cckd_chkdsk (cckd->fd[sfx-1], sysblk.msgpipew, 0);
+    rc = cckd_chkdsk (cckd->fd[sfx-1], dev->msgpipew, 0);
     if (rc < 0)
     {
-        logmsg ("cckddasd: cannot remove shadow file [%d], "
+        devmsg ("cckddasd: cannot remove shadow file [%d], "
                 "file [%d] failed chkdsk\n",
                 sfx, sfx-1);
         cckd->sfn++;
@@ -2631,7 +2631,7 @@ int             add = 0;                /* Add the shadow file back  */
     rc = cckd_read_chdr (dev);
     if (rc < 0)
     {
-        logmsg ("cckddasd: cannot remove shadow file [%d], "
+        devmsg ("cckddasd: cannot remove shadow file [%d], "
                 "file [%d] read cckd devhdr failed\n",
                 sfx, sfx-1);
         cckd->sfn++;
@@ -2725,7 +2725,7 @@ int             add = 0;                /* Add the shadow file back  */
         /* can't merge if we exceeded the regular file size */
         if (lasttrk >= trks)
         { /* backout and punt */
-             logmsg ("cckddasd: cannot merge, last used track %d exceeds "
+             devmsg ("cckddasd: cannot merge, last used track %d exceeds "
                      " ckd file size %d tracks\n", lasttrk, trks);
              cckd->sfn++;
              close (cckd->fd[sfx-1]);
@@ -2818,7 +2818,7 @@ int             add = 0;                /* Add the shadow file back  */
     /* Add the file back if necessary */
     if (add) rc = cckd_sf_new (dev) ;
 
-    logmsg ("cckddasd: shadow file [%d] successfully %s\n",
+    devmsg ("cckddasd: shadow file [%d] successfully %s\n",
             sfx, merge ? "merged" : add ? "re-added" : "removed");
 
     release_lock (&cckd->filelock);
@@ -2837,13 +2837,13 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg ("%4.4X: cckddasd: device is not a shadow file\n",
+        devmsg ("%4.4X: cckddasd: device is not a shadow file\n",
                 dev->devnum);
         return;
     }
     if (CCKD_MAX_SF == 0)
     {
-        logmsg ("%4.4X: cckddasd: file shadowing not activated\n",
+        devmsg ("%4.4X: cckddasd: file shadowing not activated\n",
                 dev->devnum);
         return;
     }
@@ -2852,14 +2852,14 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     if (cckd->sfn)
     {
-        logmsg ("%4.4X: cckddasd: shadowing is already active\n",
+        devmsg ("%4.4X: cckddasd: shadowing is already active\n",
                 dev->devnum);
         release_lock (&cckd->filelock);
         return;
     }
 
     strcpy ((char *)&dev->ckdsfn, (const char *)sfn);
-    logmsg ("cckddasd: shadow file name set to %s\n", sfn);
+    devmsg ("cckddasd: shadow file name set to %s\n", sfn);
     release_lock (&cckd->filelock);
 
 } /* end function cckd_sf_newname */
@@ -2878,7 +2878,7 @@ int             dfw_locked;             /* Flag byte                 */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg ("%4.4X: cckddasd: device is not a shadow file\n",
+        devmsg ("%4.4X: cckddasd: device is not a shadow file\n",
                 dev->devnum);
         return;
     }
@@ -2919,11 +2919,11 @@ int             dfw_locked;             /* Flag byte                 */
     cckd_harden (dev);
 
     /* call the chkdsk function */
-    rc = cckd_chkdsk (cckd->fd[cckd->sfn], sysblk.msgpipew, 0);
+    rc = cckd_chkdsk (cckd->fd[cckd->sfn], dev->msgpipew, 0);
 
     /* Call the compress function */
     if (rc >= 0)
-        rc = cckd_comp (cckd->fd[cckd->sfn], sysblk.msgpipew);
+        rc = cckd_comp (cckd->fd[cckd->sfn], dev->msgpipew);
 
     /* Read the header */
     rc = cckd_read_chdr (dev);
@@ -2961,7 +2961,7 @@ BYTE            sfn[256];               /* Shadow file name          */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg ("%4.4X: cckddasd: device is not a shadow file\n",
+        devmsg ("%4.4X: cckddasd: device is not a shadow file\n",
                 dev->devnum);
         return;
     }
@@ -2979,23 +2979,23 @@ BYTE            sfn[256];               /* Shadow file name          */
     }
 
     /* header */
-    logmsg ("cckddasd:           size free  nbr st   reads  writes l2reads    hits switches\n");
+    devmsg ("cckddasd:           size free  nbr st   reads  writes l2reads    hits switches\n");
     if (cckd->readaheads || cckd->misses)
-    logmsg ("cckddasd:                                                  readaheads   misses\n");
-    logmsg ("cckddasd: --------------------------------------------------------------------\n");
+    devmsg ("cckddasd:                                                  readaheads   misses\n");
+    devmsg ("cckddasd: --------------------------------------------------------------------\n");
 
     /* total statistics */
-    logmsg ("cckddasd: [*] %10u %3d%% %4d    %7d %7d %7d %7d  %7d\n",
+    devmsg ("cckddasd: [*] %10u %3d%% %4d    %7d %7d %7d %7d  %7d\n",
             size, (free * 100) / size, freenbr,
             cckd->totreads, cckd->totwrites, cckd->totl2reads,
             cckd->cachehits, cckd->switches);
     if (cckd->readaheads || cckd->misses)
-    logmsg ("cckddasd:                                                     %7d  %7d\n",
+    devmsg ("cckddasd:                                                     %7d  %7d\n",
             cckd->readaheads, cckd->misses);
 
     /* base file statistics */
-    logmsg ("cckddasd: %s\n", dev->filename);
-    logmsg ("cckddasd: [0] %10ld %3ld%% %4d %s %7d %7d %7d\n",
+    devmsg ("cckddasd: %s\n", dev->filename);
+    devmsg ("cckddasd: [0] %10ld %3ld%% %4d %s %7d %7d %7d\n",
             st.st_size, (cckd->cdevhdr[0].free_total * 100) / st.st_size,
             cckd->cdevhdr[0].free_number, ost[cckd->open[0]],
             cckd->reads[0], cckd->writes[0], cckd->l2reads[0]);
@@ -3003,13 +3003,13 @@ BYTE            sfn[256];               /* Shadow file name          */
     if (dev->ckdsfn[0] && CCKD_MAX_SF > 0)
     {
         cckd_sf_name ( dev, -1, (char *)&sfn);
-        logmsg ("cckddasd: %s\n", sfn);
+        devmsg ("cckddasd: %s\n", sfn);
     }
 
     /* shadow file statistics */
     for (i = 1; i <= cckd->sfn; i++)
     {
-        logmsg ("cckddasd: [%d] %10d %3d%% %4d %s %7d %7d %7d\n",
+        devmsg ("cckddasd: [%d] %10d %3d%% %4d %s %7d %7d %7d\n",
                 i, cckd->cdevhdr[i].size,
                 (cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].size,
                 cckd->cdevhdr[i].free_number, ost[cckd->open[i]],
@@ -3105,7 +3105,7 @@ char           *gc_state[]=             /* Garbage states            */
         if (gc < 2 && cckd->cdevhdr[sfx].size < 10 * 1024*1024) gc = 2;
 
         if (gc < 3)
-            logmsg ("cckddasd: %4.4x garbage collection state is %s\n",
+            devmsg ("cckddasd: %4.4x garbage collection state is %s\n",
                     dev->devnum, gc_state[gc]);
 
         /* call the garbage collector */
@@ -3416,9 +3416,9 @@ int             trk;                    /* Track number              */
     }
 
     /* unknown space */
-    logmsg ("cckddasd: %4.4x unknown space at offset 0x%lx\n",
+    devmsg ("cckddasd: %4.4x unknown space at offset 0x%lx\n",
             dev->devnum, pos + off);
-    logmsg ("cckddasd: %4.4x %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x\n",
+    devmsg ("cckddasd: %4.4x %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x\n",
             dev->devnum, buf[off], buf[off+1], buf[off+2], buf[off+3],
             buf[off+4], buf[off+5], buf[off+6], buf[off+7]);
 
@@ -3437,17 +3437,17 @@ void cckd_print_itrace(DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             start, i;               /* Start index, index        */
 
-logmsg ("%4.4X:cckddasd: print_itrace\n", dev->devnum);
+devmsg ("%4.4X:cckddasd: print_itrace\n", dev->devnum);
     cckd = dev->cckd_ext;
     i = start = cckd->itracex;
     do
     {
         if (i >= 128*CCKD_ITRACEMAX) i = 0;
         if (cckd->itrace[i] != '\0')
-            logmsg ("%s", &cckd->itrace[i]);
+            devmsg ("%s", &cckd->itrace[i]);
         i+=128;
     } while (i != start);
-    fflush (sysblk.msgpipew);
+    fflush (dev->msgpipew);
     sleep (2);
 #endif
 }
@@ -3456,48 +3456,48 @@ logmsg ("%4.4X:cckddasd: print_itrace\n", dev->devnum);
 
 int cckddasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
-    logmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
+    devmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
     return -1;
 }
 int cckddasd_close_device (DEVBLK *dev)
 {
-    logmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
+    devmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
     return -1;
 }
 off_t cckd_lseek(DEVBLK *dev, int fd, off_t offset, int pos)
 {
-    logmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
+    devmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
     return -1;
 }
 ssize_t cckd_read(DEVBLK *dev, int fd, char *buf, size_t N)
 {
-    logmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
+    devmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
     return -1;
 }
 ssize_t cckd_write(DEVBLK *dev, int fd, const void *buf, size_t N)
 {
-    logmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
+    devmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
     return -1;
 }
 void cckd_print_itrace(DEVBLK *dev)
 {
-    logmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
+    devmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
 }
 void cckd_sf_add(DEVBLK *dev)
 {
-    logmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
+    devmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
 }
 void cckd_sf_remove(DEVBLK *dev, int merge)
 {
-    logmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
+    devmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
 }
 void cckd_sf_newname(DEVBLK *dev, BYTE *sfn)
 {
-    logmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
+    devmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
 }
 void cckd_sf_stats(DEVBLK *dev)
 {
-    logmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
+    devmsg ("%4.4X cckddasd support not generated\n", dev->devnum);
 }
 
 #endif

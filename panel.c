@@ -1575,7 +1575,11 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         /* t+ckd and t-ckd commands - turn CKD_KEY tracing on/off */
         if ((cmd[0] == 't') && (memcmp(cmd+2, "ckd", 3) == 0))
         {
-            sysblk.ckdkeytrace = oneorzero;
+            for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+            {
+                if (dev->devchar[10] == 0x20)
+                    dev->ckdkeytrace = oneorzero;
+            }
             logmsg("CKD KEY trace is now %s\n",onoroff);
             return NULL;
         }
@@ -2284,7 +2288,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     /* sf commands - shadow file add/remove/set/compress/display */
     if (memcmp(cmd,"sf",2)==0 && strlen(cmd) > 3)
     {
-        int  scan = 0;
+        int  scan = 0, n = 0;
         BYTE action = cmd[2];
 
         /* Get device number or "*" */
@@ -2301,7 +2305,12 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 logmsg ("Invalid device number\n");
                 return NULL;
             }
-            dev = sysblk.firstdev;
+            for (dev=sysblk.firstdev; dev && !dev->cckd_ext; dev=dev->nextdev);
+            if (!dev)
+            {
+                logmsg ("No cckd devices found\n");
+                return NULL;
+            }
             scan = 1;
         }
         else
@@ -2328,6 +2337,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
         /* Perform the action */
         do {
+            n++;
             if (scan) logmsg("Processing device %4.4X\n", dev->devnum);
 
             switch (action) {
@@ -2386,6 +2396,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
         } while (dev);
 
+        if (scan) logmsg("%d devices processed\n", n);
 
         return NULL;
     }
