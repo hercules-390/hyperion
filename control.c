@@ -441,7 +441,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     } /* end switch(alet) */
 
     /* Update the primary STD (or ASCE) from the destination ASTE */
-    if (dasteo == (duct0 & DUCT0_BASTEO))
+    if ((dasteo == (duct0 & DUCT0_BASTEO)) && (alet != ALET_SECONDARY))
     {
         /* When the destination ASTE is the base space, replace the
            primary STD (or ASCE) by the STD (or ASCE) in the ASTE */
