@@ -1950,8 +1950,6 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         *regs->dat.storkey |= STORKEY_REF;
 
 #if 1
-if(!regs->tlb.main[ix])
-{
         /* Update accelerated lookup TLB fields
            (the id field is either 0 (real mode) or already set correctly) */
         regs->tlb.TLB_VADDR(ix) |= regs->tlbID;
@@ -1959,9 +1957,8 @@ if(!regs->tlb.main[ix])
         regs->tlb.skey[ix]       = *regs->dat.storkey & STORKEY_KEY;
         regs->tlb.acc[ix]       |= ACC_READ;
         regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, aaddr);
-}
-
 #endif
+
     }
     else
     if (acctype & ACC_WRITE)
@@ -1980,8 +1977,6 @@ if(!regs->tlb.main[ix])
             *regs->dat.storkey |= (STORKEY_REF | STORKEY_CHANGE);
 
 #if 1
-if(!regs->tlb.main[ix])
-{
         /* Update accelerated lookup TLB fields */
         regs->tlb.TLB_VADDR(ix) |= regs->tlbID;
         regs->tlb.storkey[ix]    = regs->dat.storkey;
@@ -1991,7 +1986,6 @@ if(!regs->tlb.main[ix])
         else
             regs->tlb.acc[ix]   |= ACC_READ;
         regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, aaddr);
-}
 #endif
 
 #if defined(FEATURE_PER)
