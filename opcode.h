@@ -106,12 +106,9 @@
 
 typedef void (ATTR_REGPARM(2) (*zz_func)) (BYTE inst[], REGS *regs);
 
-extern BYTE     ilc_table[];
-#if 0
-#define ILC(_b) ilc_table[(_b)]
-#else
 #define ILC(_b) ((_b) < 0x40 ? 2 : (_b) >= 0x40 && (_b) < 0xc0 ? 4 : 6)
-#endif
+#define REAL_ILC(_regs) \
+ ( !(_regs)->instvalid ? 0 : (_regs)->execflag ? 4 : ILC((_regs)->ip[0]) )
 
 /* Gabor Hoffer (performance option) */
 extern zz_func s370_opcode_table[];
@@ -588,7 +585,6 @@ do { \
      do { \
             if( likely((_len) == 4 || !(_regs)->execflag) ) \
             { \
-                (_regs)->psw.ilc = (_len); \
                 (_regs)->psw.IA += (_len); \
             } \
         } while(0)
@@ -705,7 +701,6 @@ do { \
             if((_b2)) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
             (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-            (_regs)->psw.ilc = 4; \
     }
 
 /* RXE register and indexed storage with extended op code */

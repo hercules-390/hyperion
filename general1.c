@@ -392,7 +392,7 @@ VADR    newia;                          /* New instruction address   */
     regs->GR_L(r1) =
         ( regs->psw.amode )
         ? 0x80000000 | regs->psw.IA_L
-        : (regs->psw.ilc << 29)      | (regs->psw.cc << 28)
+        : (REAL_ILC(regs) << 29)     | (regs->psw.cc << 28)
         | (regs->psw.progmask << 24) | (regs->psw.IA_L & ADDRESS_MAXWRAP(regs));
 
     /* Execute the branch unless R2 specifies register 0 */
@@ -431,8 +431,8 @@ VADR    effective_addr2;                /* Effective address         */
 #endif
     regs->GR_L(r1) =
         ( regs->psw.amode )
-          ? 0x80000000 | regs->psw.IA_L
-          : (regs->psw.ilc << 29)      | (regs->psw.cc << 28)
+          ? 0x80000000                 | regs->psw.IA_L
+          : (REAL_ILC(regs) << 29)     | (regs->psw.cc << 28)
           | (regs->psw.progmask << 24) | (regs->psw.IA_L & ADDRESS_MAXWRAP(regs));
 
     regs->psw.IA = effective_addr2;
@@ -1807,7 +1807,7 @@ BYTE    pad;                            /* Padding byte              */
            under a hypervisor such as LPAR or VM.                *JJ */
         if ((len1 + len2 > 255) && !((addr1 - len2) & 0xFFF))
         {
-            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA -= REAL_ILC(regs);
             regs->psw.IA &= ADDRESS_MAXWRAP(regs);
             break;
         }
@@ -3485,7 +3485,7 @@ BYTE    pad;                            /* Padding byte              */
         if ( len1 > 256
          && (OPEN_IC_EXTPENDING(regs) || OPEN_IC_IOPENDING(regs)) )
         {
-            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA -= REAL_ILC(regs);
             break;
         }
 

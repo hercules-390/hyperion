@@ -267,7 +267,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             || (regs->psw.amode == 0 && regs->psw.IA > 0x00FFFFFF))
       #endif /*!defined(FEATURE_ESAME)*/
         {
-            regs->psw.ilc = 0;
+            regs->instvalid = 0;
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         }
 
@@ -1856,10 +1856,6 @@ int     amode64;
         ARCH_DEP(program_interrupt) (regs, rc);
     }
 
-    /* load_psw() has set the ILC to zero.  This needs to
-       be reset to 4 for an eventual PER event */
-    regs->psw.ilc = 4;
-
 #if defined(FEATURE_ESAME)
     /* Clear the high word of the instruction address,
        as it has not been touched by s390_load_psw */
@@ -3245,8 +3241,6 @@ int     rc;                             /* return code from load_psw */
     memcpy(regs->cr, newregs.cr, CR_SIZE);
     memcpy(regs->ar, newregs.ar, sizeof(newregs.ar));
 
-    regs->psw.ilc = 2;
-
     /* Set the main storage reference and change bits */
     STORAGE_KEY(alsed, regs) |= (STORKEY_REF | STORKEY_CHANGE);
 
@@ -3295,7 +3289,7 @@ int     rc;                             /* return code from load_psw */
 
     if (rc) /* if new psw has bad format */
     {
-        regs->psw.ilc = 0;
+        regs->instvalid = 0;
         ARCH_DEP(program_interrupt) (&newregs, rc);
     }
 
@@ -5474,8 +5468,7 @@ U64     dreg;                           /* Clock value               */
            and we are enabled for such interrupts *JJ */
         if( OPEN_IC_CLKC(regs) )
         {
-            regs->psw.IA -= regs->psw.ilc;
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+            regs->psw.IA -= 4;
             release_lock (&sysblk.intlock);
             RETURN_INTCHECK(regs);
         }
@@ -5642,8 +5635,7 @@ U64     dreg;                           /* Double word workarea      */
             /* Release the interrupt lock */
             release_lock (&sysblk.intlock);
 
-            regs->psw.IA -= regs->psw.ilc;
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+            regs->psw.IA -= 4;
             RETURN_INTCHECK(regs);
         }
     }

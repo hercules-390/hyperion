@@ -266,7 +266,7 @@ U64     d;
             regs->GR_L(gr1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
-            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA -= REAL_ILC(regs);
             return;
 #endif
         }
@@ -340,7 +340,7 @@ U64     d;
             regs->GR_L(gr1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
-            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA -= REAL_ILC(regs);
             return;
 #endif
         }
@@ -415,7 +415,7 @@ U64     d;
             regs->GR_L(gr1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
-            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA -= REAL_ILC(regs);
             return;
 #endif
         }

@@ -218,7 +218,7 @@ int  i;
         ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
 
-    trap_flags = regs->psw.ilc << 16;
+    trap_flags = REAL_ILC(regs) << 16;
 
     if(regs->execflag)
         trap_flags |= TRAP0_EXECUTE;

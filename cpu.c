@@ -67,7 +67,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    )
                  );
         STORE_FW ( addr + 4,
-                   ( ( (regs->psw.ilc << 5)
+                   ( ( (REAL_ILC(regs) << 5)
                      | (regs->psw.cc << 4)
                      | regs->psw.progmask
                      ) << 24
@@ -113,7 +113,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
         SET_IC_ECMODE_MASK(regs);
 
         /* Processing for EC mode PSW */
-        regs->psw.intcode  = regs->psw.ilc = 0;
+        regs->psw.intcode  = 0;
         regs->psw.asc      = (addr[2] & 0xC0);
         regs->psw.cc       = (addr[2] & 0x30) >> 4;
         regs->psw.progmask = (addr[2] & 0x0F);
@@ -204,7 +204,6 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 
         /* Processing for S/370 BC mode PSW */
         regs->psw.intcode = fetch_hw (addr + 2);
-        regs->psw.ilc = (addr[4] >> 6) * 2;
         regs->psw.cc = (addr[4] & 0x30) >> 4;
         regs->psw.progmask = (addr[4] & 0x0F);
 
@@ -246,7 +245,9 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 REGS   *realregs;                       /* True regs structure       */
 RADR    px;                             /* host real address of pfx  */
 int     code;                           /* pcode without PER ind.    */
+int     ilc;                            /* instruction length        */
 #if defined(_FEATURE_SIE)
+int     sie_ilc;                        /* SIE instruction length    */
 int     nointercept;                    /* True for virtual pgmint   */
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(OPTION_FOOTPRINT_BUFFER)
@@ -337,9 +338,15 @@ static char *pgmintname[] = {
     realregs = sysblk.regs[regs->cpuad];
 #endif /*!defined(_FEATURE_SIE)*/
 
-
     /* Ensure real instruction address is properly wrapped */   
-    realregs->psw.IA &= ADDRESS_MAXWRAP(regs);
+    realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
+
+    /* Set instruction length (ilc) */
+    ilc = REAL_ILC(realregs);
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+    if(realregs->sie_active)
+        sie_ilc = REAL_ILC(realregs->guestregs);
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Set `execflag' to 0 in case EXecuted instruction program-checked */
     realregs->execflag = 0;
@@ -444,14 +451,14 @@ static char *pgmintname[] = {
       || code == PGM_VECTOR_OPERATION_EXCEPTION)
       && realregs->instvalid)
     {
-        realregs->psw.IA -= realregs->psw.ilc;
+        realregs->psw.IA -= ilc;
         realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
         /* When in SIE mode the guest instruction causing this
            host exception must also be nullified */
         if(realregs->sie_active && realregs->guestregs->instvalid)
         {
-            realregs->guestregs->psw.IA -= realregs->guestregs->psw.ilc;
+            realregs->guestregs->psw.IA -= sie_ilc;
             realregs->guestregs->psw.IA &= ADDRESS_MAXWRAP(realregs->guestregs);
         }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
@@ -465,9 +472,7 @@ static char *pgmintname[] = {
       || code == PGM_SPECIFICATION_EXCEPTION
       || code == PGM_TRANSLATION_SPECIFICATION_EXCEPTION ))
     {
-        realregs->psw.ilc = ILC(realregs->ip[0]);
-        realregs->psw.IA += realregs->psw.ilc;
-        realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
+        realregs->psw.IA += ilc;
     }
         
     /* Store the interrupt code in the PSW */
@@ -498,7 +503,7 @@ static char *pgmintname[] = {
         logmsg (MSTRING(_GEN_ARCH) " ");
 #endif /*defined(SIE_DEBUG)*/
         logmsg (_("CPU%4.4X: %s CODE=%4.4X ILC=%d\n"), realregs->cpuad,
-                pgmintname[ (code - 1) & 0x3F], pcode, realregs->psw.ilc);
+                pgmintname[ (code - 1) & 0x3F], pcode, ilc);
         ARCH_DEP(display_inst) (realregs, realregs->instvalid ?
                                                 realregs->ip : NULL);
     }
@@ -610,7 +615,7 @@ static char *pgmintname[] = {
             logmsg(_("HHCCP015I CPU%4.4X PER event: code=%4.4X perc=%2.2X "
                      "addr=" F_VADR "\n"),
               regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
-              (realregs->psw.IA - realregs->psw.ilc) & ADDRESS_MAXWRAP(realregs) );
+              (realregs->psw.IA - ilc) & ADDRESS_MAXWRAP(realregs) );
 
         realregs->perc |= OPEN_IC_PERINT(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
         /* Positions 14 and 15 contain zeros if a storage alteration
@@ -645,7 +650,7 @@ static char *pgmintname[] = {
     {
         /* Store the program interrupt code at PSA+X'8C' */
         psa->pgmint[0] = 0;
-        psa->pgmint[1] = realregs->psw.ilc;
+        psa->pgmint[1] = realregs->instvalid ? ilc : 0;
         STORE_HW(psa->pgmint + 2, pcode);
 
         /* Store the exception access identification at PSA+160 */

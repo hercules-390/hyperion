@@ -689,7 +689,7 @@ int     n;
         case SIE_HOST_INTERRUPT:
            /* If a host interrupt is pending
               then backup the psw and exit */
-            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA -= REAL_ILC(regs);
             regs->psw.IA &= ADDRESS_MAXWRAP(regs);
             break;
         case SIE_HOST_PGMINT:
@@ -835,7 +835,7 @@ int     n;
         if(GUESTREGS->ip[0] != 0x44)
         {
             if(GUESTREGS->instvalid)
-                memcpy(STATEBK->ipa, GUESTREGS->ip, GUESTREGS->psw.ilc);
+                memcpy(STATEBK->ipa, GUESTREGS->ip, 6);
         }
         else
         {

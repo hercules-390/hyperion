@@ -1243,7 +1243,6 @@ BYTE    i;                              /* Instruction byte 1        */
 PSA    *psa;                            /* -> prefixed storage area  */
 RADR    px;                             /* prefix                    */
 int     rc;                             /* Return code               */
-int     new_ilc;                        /* New ilc to set            */
 
     RR_SVC(inst, regs, i);
 #if defined(FEATURE_ECPSVM)
@@ -1291,21 +1290,10 @@ int     new_ilc;                        /* New ilc to set            */
 #endif /*defined(FEATURE_BCMODE)*/
     {
         psa->svcint[0] = 0;
-        psa->svcint[1] = regs->psw.ilc;
+        psa->svcint[1] = REAL_ILC(regs);
         psa->svcint[2] = 0;
         psa->svcint[3] = i;
     }
-
-    /* If there is a pending PER event and the PER addr is not
-       pointing to this SVC, then it must be EX to SVC case and
-       the new ILC needs to be set to 4 */
-
-#if defined(FEATURE_PER)
-    if (IS_IC_PER_IF(regs) && (regs->peradr != (regs->psw.IA - 2)))
-         new_ilc = 4;
-    else
-#endif /*defined(FEATURE_PER)*/
-         new_ilc = 2;
 
     /* Store current PSW at PSA+X'20' */
     ARCH_DEP(store_psw) ( regs, psa->svcold );
@@ -1313,12 +1301,6 @@ int     new_ilc;                        /* New ilc to set            */
     /* Load new PSW from PSA+X'60' */
     if ( (rc = ARCH_DEP(load_psw) ( regs, psa->svcnew ) ) )
         ARCH_DEP(program_interrupt) (regs, rc);
-
-    /* load_psw() has set the ILC to zero.  This needs to
-       be reset to 2 for an eventual PER event
-       OR set to 4 if this is EX to SVC case */
-
-    regs->psw.ilc = new_ilc;
 
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (regs);

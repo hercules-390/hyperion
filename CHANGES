@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+29 Jun 2004 noilc.pat - Calculate ILC on demand - Greg Smith
 27 Jun 2004 pr.pat - Performance tweak for PR - Greg Smith
 27 Jun 2004 cckdwrs.pat - Prevent extra writer threads from starting - Greg
 26 Jun 2004 if.pat - Minor tweaks to instfetch - Greg Smith

@@ -89,9 +89,8 @@ typedef struct  _PSW {
                                         /*                 (33 - 63) */
                                         /* or (esame)      (64 -127) */
         DW       amask;                 /* Address wraparound mask   */
-        BYTE     ilc;                   /* Instruction length code   */
-        BYTE     unused;                /* (alignment)               */
         U16      intcode;               /* Interruption code         */
+        U16      unused;                /* (unused)                  */
     } PSW;                              /* 28 bytes                  */
 
 #define IA_G     ia.D

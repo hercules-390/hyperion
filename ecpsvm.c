@@ -848,8 +848,6 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         INITSIESTATE(wregs);
     work_p=MADDR(vmb+VMPSW,0,regs,USE_REAL_ADDR,0);
         ARCH_DEP(load_psw) (&wregs,work_p);    /* Load user's Virtual PSW in work structure */
-        /* Clear ILC from Virtual PSW */
-        wregs.psw.ilc=0;
 
         /* Build REAL PSW */
         memset(&rregs,0,sizeof(rregs));
@@ -865,7 +863,6 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
                          | BIT(PSW_PROB_BIT)       /* Problem state */
                          | BIT(PSW_MACH_BIT);      /* MC Enabled */
         rregs.psw.intcode=0;    /* Clear intcode */
-        rregs.psw.ilc=0;
         rregs.psw.progmask=wregs.psw.progmask;
 
         NCR0=EVM_L(CPCREG0);    /* Assume for now */

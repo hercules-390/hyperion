@@ -433,10 +433,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*defined(FEATURE_ESAME)*/
     }
 
-    /* load_psw() has set the ILC to zero.  This needs to
-       be reset to 4 for an eventual PER event */
-    regs->psw.ilc = 4;
-
     /* Check for odd IA in psw */
     if(regs->psw.IA & 0x01)
     {
@@ -503,7 +499,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             if (regs->CR(13) & SSEVENT_BIT)
                 regs->TEA |= TEA_SSEVENT;
         }
-        regs->psw.ilc = 4;
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
     }
 
@@ -4320,10 +4315,6 @@ int     rc;
     /* Load updated PSW */
     if ( ( rc = ARCH_DEP(load_psw) ( regs, qword ) ) )
         ARCH_DEP(program_interrupt) (regs, rc);
-
-    /* load_psw() has set the ILC to zero.  This needs to
-       be reset to 4 for an eventual PER event */
-    regs->psw.ilc = 4;
 
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (regs);
