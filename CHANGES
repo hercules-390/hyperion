@@ -1,3 +1,4 @@
+21 Jul 2003 CVD fix by Viktor Shkamerda - Jan Jaeger
 20 Jul 2003 Defer tuntap32 dll load to device alloc - Jan Jaeger
 19 Jul 2003 THDER,THDR instructions - Roger Bowler
 18 Jul 2003 NLS translation updates - Jan Jaeger
