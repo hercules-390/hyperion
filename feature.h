@@ -594,6 +594,7 @@ do { \
     if (((_regs)->aea_mode & PSW_PERMODE) != 0 && EN_IC_PER_SA((_regs))) \
       ARCH_DEP(invalidate_tlb)((_regs),~(ACC_WRITE|ACC_CHECK)); \
   } \
+  (_regs)->aea_ar[USE_INST_SPACE] = \
   (_regs)->aea_crx = (_regs)->aea_mode & 0x0F ? 1 : CR_ASD_REAL; \
 } while (0)
 
