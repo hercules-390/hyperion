@@ -992,6 +992,8 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
             "attach devn type [arg...] = initialize device\n"
             "detach devn = remove device\n"
             "define olddevn newdevn = rename device\n"
+            "devtmax[=n] = report or set maximum device threads\n"
+            "              (-1=per i/o, 0=unlimited, 1-n=limit)\n"
             SYSCONS_CMD
             "sh xxx = shell command\n"
             "f-addr=mark frame unusable, f+addr=mark frame usable\n"
@@ -1988,15 +1990,26 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
         return NULL;
     }
 
-
     /* devtmax command - display or set max device threads */
+
     if (memcmp(cmd,"devtmax",7)==0)
     {
         TID tid;
         int devtmax = -2;
-        sscanf(cmd+7, "%d", &devtmax);
 
-        if (devtmax >= -1) sysblk.devtmax = devtmax;
+        if (cmd[7] == '=')
+            sscanf(cmd+8, "%d", &devtmax);
+        else
+            devtmax = sysblk.devtmax;
+
+        if (devtmax >= -1)
+            sysblk.devtmax = devtmax;
+        else
+        {
+            logmsg("Invalid max device threads value (must be -1 to n)\n");
+            return NULL;
+        }
+
         logmsg ("Max device threads %d current %d most %d "
                 "waiting %d total I/Os queued %d\n",
                 sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
@@ -2004,18 +2017,21 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
 
         /* Create a new device thread if the I/O queue is not NULL
            and more threads can be created */
+
         if ((sysblk.devtnbr < sysblk.devtmax || sysblk.devtmax == 0)
           && sysblk.ioq != NULL)
             create_thread(&tid, &sysblk.detattr, device_thread, NULL);
 
         /* Terminate threads while the number of threads exceeds
            the maximum and threads are waiting */
+
         while (sysblk.devtnbr > sysblk.devtmax && sysblk.devtmax != 0
             && sysblk.devtwait)
         {
             signal_condition(&sysblk.ioqcond);
             sleep (1);
         }
+
         return NULL;
     }
 
