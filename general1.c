@@ -2990,6 +2990,10 @@ GREG    len1, len2;                     /* Operand lengths           */
 GREG    n;                              /* Work area                 */
 BYTE    obyte;                          /* Operand byte              */
 BYTE    pad;                            /* Padding byte              */
+#ifdef OPTION_FAST_MOVELONG
+RADR    abs1, abs2;
+GREG    len3;
+#endif
 
     RR(inst, execflag, regs, r1, r2);
 
@@ -3033,6 +3037,66 @@ BYTE    pad;                            /* Padding byte              */
 
     /* Set the condition code according to the lengths */
     cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
+
+#ifdef OPTION_FAST_MOVELONG
+
+    if (!len2)
+    {
+        while (len1 > 0)
+        {
+            if (((addr1 & PAGEFRAME_PAGEMASK) !=
+                ((addr1 + len1 - 1) & PAGEFRAME_PAGEMASK)))
+                len3 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
+            else
+                len3 = len1;
+
+            abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, 
+                                   regs->psw.pkey);
+            memset(sysblk.mainstor+abs1, pad, len3);
+
+            len1 -= len3;
+            addr1 += len3;
+
+            /* Update the registers */
+            GR_A(r1, regs) = addr1;
+            regs->GR_LA24(r1+1) = len1;
+            /* The instruction can be interrupted when a CPU determined
+               number of bytes have been processed.  The instruction
+               address will be backed up, and the instruction will
+               be re-executed.  This is consistent with operation
+               under a hypervisor such as LPAR or VM.                *JJ */
+            if ((len1 > 255) && !(addr1 & 0xFFF))
+            {
+                regs->psw.IA -= regs->psw.ilc;
+                regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+                break;
+            }
+        }
+        regs->psw.cc = cc;
+        return;
+    }
+    
+    if ((len2) && (len1 == len2) && 
+                  ((addr1 & PAGEFRAME_PAGEMASK) ==
+                   ((addr1 + len1 - 1) & PAGEFRAME_PAGEMASK)) && 
+                  ((addr2 & PAGEFRAME_PAGEMASK) ==
+                   ((addr2 + len2 - 1) & PAGEFRAME_PAGEMASK)))
+    {
+        abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        abs2 = LOGICAL_TO_ABS (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+        memcpy(sysblk.mainstor+abs1, sysblk.mainstor+abs2, len1);
+
+        /* Update the registers */
+        GR_A(r1, regs) = addr1 + len1;
+        GR_A(r2, regs) = addr2 + len2;
+        regs->GR_LA24(r1+1) = 0;
+        regs->GR_LA24(r2+1) = 0;
+        regs->psw.cc = cc;
+        return;
+    }
+
+#endif
 
     /* Process operands from left to right */
     while (len1 > 0)

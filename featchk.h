@@ -70,6 +70,13 @@
  #define _VSTORE_C_STATIC
 #endif
 
+#undef _VFETCH_C_STATIC
+#if !defined(OPTION_NO_INLINE_IFETCH)
+ #define _VFETCH_C_STATIC static inline
+#else
+ #define _VFETCH_C_STATIC
+#endif
+
 #undef _DAT_C_STATIC
 #if !defined(OPTION_NO_INLINE_DAT)
  #define _DAT_C_STATIC static inline

@@ -433,6 +433,8 @@ RADR    abs;                            /* Absolute address of parm  */
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
     }
 
+    RETURN_INTCHECK(regs);
+
 } /* end DEF_INST(resume_program) */
 #endif /*defined(FEATURE_RESUME_PROGRAM)*/
 
@@ -3834,6 +3836,8 @@ BYTE    rwork[128];                     /* Register work areas       */
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
 
+    RETURN_INTCHECK(regs);
+
 } /* end DEF_INST(load_control_long) */
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -4230,6 +4234,8 @@ int     rc;
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
+
+    RETURN_INTCHECK(regs);
 
 } /* end DEF_INST(load_program_status_word_extended) */
 #endif /*defined(FEATURE_ESAME)*/

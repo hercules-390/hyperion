@@ -727,6 +727,10 @@ VADR    effective_addr2;                /* Effective address         */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
+#ifdef FEATURE_HERCULES_DIAGCALLS
+    if (effective_addr2 != 0xF08)
+#endif
+
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
@@ -737,6 +741,10 @@ VADR    effective_addr2;                /* Effective address         */
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
+
+#ifdef FEATURE_HERCULES_DIAGCALLS
+    RETURN_INTCHECK(regs);
+#endif
 }
 
 
@@ -1646,6 +1654,8 @@ BYTE    rwork[64];                      /* Register work areas       */
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
 
+    RETURN_INTCHECK(regs);
+
 } /* end DEF_INST(load_control) */
 
 
@@ -1704,6 +1714,8 @@ int     amode64;
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
+
+    RETURN_INTCHECK(regs);
 
 } /* end DEF_INST(load_program_status_word) */
 
@@ -2831,6 +2843,8 @@ U16     xcode;                          /* Exception code            */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
+    RETURN_INTCHECK(regs);
+
 }
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
 
@@ -3685,6 +3699,7 @@ U64     dreg;                           /* Clock value               */
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
 
+    RETURN_INTCHECK(regs);
 }
 
 
@@ -3755,6 +3770,7 @@ U64     dreg;                           /* Timer value               */
 
 //  /*debug*/logmsg("Set CPU timer=%16.16llX\n", dreg);
 
+    RETURN_INTCHECK(regs);
 }
 
 
@@ -4376,6 +4392,8 @@ VADR    effective_addr2;                /* Effective address         */
                             (regs->psw.sysmask & 0xB8) != 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
+    RETURN_INTCHECK(regs);
+
 }
 
 
@@ -4779,6 +4797,8 @@ static char *ordername[] = {    "Unassigned",
         longjmp(regs->archjmp, 0);
 #endif /*defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)*/
 
+    RETURN_INTCHECK(regs);
+
 }
 
 
@@ -4802,24 +4822,33 @@ U64     dreg;                           /* Clock value               */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-#if 0
-/* ZZ Take interrupt as clock comparator should never be less then
-      the value of the tod clock when enabled for clock comparator 
-      interrupts */
+    /* Obtain the TOD clock update lock */
+    obtain_lock (&sysblk.todlock);
+
+    /* Save clock comparator value */
+    dreg = regs->clkc;
+
+    /* Release the TOD clock update lock */
+    release_lock (&sysblk.todlock);
+
     /* Obtain the interrupt lock */
     obtain_lock (&sysblk.intlock);
 
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
-    if( (sysblk.todclk + regs->todoffset) > regs->clkc )
+    if( (sysblk.todclk + regs->todoffset) > dreg )
     {
         ON_IC_CLKC(regs);
+
+        /* Roll back the instruction and take the
+           timer interrupt if we have a pending CPU timer
+           and we are enabled for such interrupts *JJ */
         if( OPEN_IC_CLKC(regs) )
         {
             regs->psw.IA -= regs->psw.ilc;
             regs->psw.IA &= ADDRESS_MAXWRAP(regs);
             release_lock (&sysblk.intlock);
-            return;
+            RETURN_INTCHECK(regs);
         }
     }
     else
@@ -4827,22 +4856,16 @@ U64     dreg;                           /* Clock value               */
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
-#endif
 
-    /* Obtain the TOD clock update lock */
-    obtain_lock (&sysblk.todlock);
-
-    /* Save clock comparator value and shift out the epoch */
-    dreg = regs->clkc << 8;
-
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
+    /* Shift out the epoch */
+    dreg <<= 8;
 
     /* Store clock comparator value at operand location */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 
 //  /*debug*/logmsg("Store clock comparator=%16.16llX\n", dreg);
 
+    RETURN_INTCHECK(regs);
 }
 
 
@@ -4973,7 +4996,22 @@ U64     dreg;                           /* Double word workarea      */
 
     /* reset the cpu timer pending flag according to its value */
     if( (S64)regs->ptimer < 0 )
+    {
         ON_IC_PTIMER(regs);
+
+        /* Roll back the instruction and take the
+           timer interrupt if we have a pending CPU timer
+           and we are enabled for such interrupts *JJ */
+        if( OPEN_IC_PTIMER(regs) )
+        {
+            /* Release the interrupt lock */
+            release_lock (&sysblk.intlock);
+
+            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+            RETURN_INTCHECK(regs);
+        }
+    }
     else
         OFF_IC_PTIMER(regs);
 
@@ -4985,6 +5023,7 @@ U64     dreg;                           /* Double word workarea      */
 
 //  /*debug*/logmsg("Store CPU timer=%16.16llX\n", dreg);
 
+    RETURN_INTCHECK(regs);
 }
 
 
@@ -5199,6 +5238,8 @@ VADR    effective_addr1;                /* Effective address         */
     SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
 
+    RETURN_INTCHECK(regs);
+
 }
 
 
@@ -5249,6 +5290,8 @@ VADR    effective_addr1;                /* Effective address         */
 #endif /*defined(FEATURE_BCMODE)*/
                             (regs->psw.sysmask & 0xB8) != 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+    RETURN_INTCHECK(regs);
 
 }
 

@@ -471,6 +471,9 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
 } /* end function ARCH_DEP(vfetch8) */
 
+#endif
+
+#if !defined(OPTION_NO_INLINE_IFETCH) | defined(_VSTORE_C)
 /*-------------------------------------------------------------------*/
 /* Fetch instruction from halfword-aligned virtual storage location  */
 /*                                                                   */
@@ -488,7 +491,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 /*      is odd, or causes an addressing or translation exception,    */
 /*      and in this case the function does not return.               */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(instfetch) (BYTE *dest, VADR addr,
+_VFETCH_C_STATIC void ARCH_DEP(instfetch) (BYTE *dest, VADR addr,
                                                             REGS *regs)
 {
 RADR    abs;                            /* Absolute storage address  */
@@ -546,7 +549,9 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     memcpy (dest+4, sysblk.mainstor+abs, 2);
 
 } /* end function ARCH_DEP(instfetch) */
+#endif
 
+#if !defined(OPTION_NO_INLINE_VSTORE) | defined(_VSTORE_C)
 /*-------------------------------------------------------------------*/
 /* Move characters using specified keys and address spaces           */
 /*                                                                   */
@@ -591,6 +596,9 @@ VADR    npv1, npv2;                     /* Next page virtual addrs   */
 RADR    npa1 = 0, npa2 = 0;             /* Next page absolute addrs  */
 int     i;                              /* Loop counter              */
 BYTE    obyte;                          /* Operand byte              */
+#ifdef OPTION_FAST_MOVECHAR
+BYTE    slow = 0;
+#endif
 
     /* Translate addresses of leftmost operand bytes */
     abs1 = LOGICAL_TO_ABS (addr1, arn1, regs, ACCTYPE_WRITE, key1);
@@ -604,9 +612,19 @@ BYTE    obyte;                          /* Operand byte              */
 
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (addr1 & PAGEFRAME_PAGEMASK))
+    {
         npa1 = LOGICAL_TO_ABS (npv1, arn1, regs, ACCTYPE_WRITE, key1);
+#ifdef OPTION_FAST_MOVECHAR
+        slow = 1;
+#endif
+    }
     if (npv2 != (addr2 & PAGEFRAME_PAGEMASK))
+    {
         npa2 = LOGICAL_TO_ABS (npv2, arn2, regs, ACCTYPE_READ, key2);
+#ifdef OPTION_FAST_MOVECHAR
+        slow = 1;
+#endif
+    }
 
 #ifdef FEATURE_INTERVAL_TIMER
     /* Special case for mvc to/from interval timer */
@@ -620,6 +638,15 @@ BYTE    obyte;                          /* Operand byte              */
         release_lock( &sysblk.todlock );
     } else {
 #endif /* FEATURE_INTERVAL_TIMER */
+
+#ifdef OPTION_FAST_MOVECHAR
+    if (!slow)
+    {
+        for (i = 0; i < len + 1; i++)
+            sysblk.mainstor[abs1++] = sysblk.mainstor[abs2++];
+        return;
+    }
+#endif
 
     /* Process operands from left to right */
     for ( i = 0; i < len+1; i++ )

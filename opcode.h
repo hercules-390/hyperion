@@ -159,6 +159,15 @@ int used; \
 #endif
 
 
+#define UNROLLED_EXECUTE(_regs) \
+    { \
+        (_regs)->instvalid = 0; \
+        INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs)); \
+        (_regs)->instvalid = 1; \
+        EXECUTE_INSTRUCTION ((_regs)->inst, 0, (_regs)); \
+    }
+
+
 /* The footprint_buffer option saves a copy of the register context
    every time an instruction is executed.  This is for problem
    determination only, as it severely impacts performance.	 *JJ */
@@ -183,6 +192,14 @@ int used; \
     }
 
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
+
+#if defined(OPTION_CPU_UNROLL)
+#define RETURN_INTCHECK(_regs) \
+        longjmp((_regs)->progjmp, SIE_NO_INTERCEPT)
+#else
+#define RETURN_INTCHECK(_regs) \
+        return
+#endif
 
 
 #define ODD_CHECK(_r, _regs) \

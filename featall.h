@@ -20,6 +20,10 @@
 #define OPTION_AEA_BUFFER		/* Effective addr cache      */
 #define OPTION_NO_INLINE_DAT		/* Performance option	     */
 #undef  OPTION_NO_INLINE_VSTORE 	/* Performance option	     */
+#define OPTION_NO_INLINE_IFETCH 	/* Performance option	     */
+#define OPTION_CPU_UNROLL       	/* Performance option	     */
+#define OPTION_FAST_MOVECHAR    	/* Performance option	     */
+#define OPTION_FAST_MOVELONG    	/* Performance option	     */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING	/* First use trace and count */
 #define OPTION_CKD_KEY_TRACING		/* Trace CKD search keys     */

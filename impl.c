@@ -59,6 +59,9 @@ int main (int argc, char *argv[])
 {
 BYTE   *cfgfile;                        /* -> Configuration filename */
 int     c;                              /* Work area for getopt      */
+#ifdef PROFILE_CPU
+TID panelid;
+#endif
 
     /* Get name of configuration file or default to hercules.cnf */
     if(!(cfgfile = getenv("HERCULES_CNF")))
@@ -131,8 +134,26 @@ int     c;                              /* Work area for getopt      */
         exit(1);
     }
 
+#ifndef PROFILE_CPU
     /* Activate the control panel */
     panel_display ();
+#else
+    if(sysblk.regs[0].cpuonline)
+        return -1;
+    sysblk.regs[0].cpuonline = 1;
+    sysblk.regs[0].cpustate = CPUSTATE_STARTING;
+    sysblk.regs[0].cputid = thread_id();
+    sysblk.regs[0].arch_mode = sysblk.arch_mode;
+    if ( create_thread (&paneltid, &sysblk.detattr,
+                        panel_display, NULL) )
+    {
+        fprintf (stderr,
+                "HHC033I Cannot create panel thread: %s\n",
+                strerror(errno));
+        exit(1);
+    }
+    cpu_thread(&sysblk.regs[0]);
+#endif
 
     return 0;
 } /* end function main */

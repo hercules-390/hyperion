@@ -298,7 +298,6 @@ int     icode;                          /* Interception code         */
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
-
 } 
 
 
@@ -450,28 +449,6 @@ int ARCH_DEP(sie_run) (REGS *regs)
                && ! SIE_I_HOST(regs) )
             {
 
-                if(OPEN_IC_CPUINT(GUESTREGS))
-                {
-                    obtain_lock(&sysblk.intlock);
-                    ARCH_DEP(perform_external_interrupt) (GUESTREGS);
-                    release_lock(&sysblk.intlock);
-                }
-
-                GUESTREGS->instvalid = 0;
-
-                INSTRUCTION_FETCH(GUESTREGS->inst, GUESTREGS->psw.IA, GUESTREGS);
-
-                GUESTREGS->instvalid = 1;
-
-                regs->instcount++;
-
-#if defined(SIE_DEBUG)
-                /* Display the instruction */
-                ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->inst);
-#endif /*defined(SIE_DEBUG)*/
-
-                EXECUTE_INSTRUCTION(GUESTREGS->inst, 0, GUESTREGS);
-
 #if MAX_CPU_ENGINES > 1
                 /* Perform broadcasted purge of ALB and TLB if requested
                    synchronize_broadcast() must be called until there are
@@ -485,6 +462,40 @@ int ARCH_DEP(sie_run) (REGS *regs)
                     release_lock (&sysblk.intlock);
                 }
 #endif /*MAX_CPU_ENGINES > 1*/
+
+                if(OPEN_IC_CPUINT(GUESTREGS))
+                {
+                    obtain_lock(&sysblk.intlock);
+                    ARCH_DEP(perform_external_interrupt) (GUESTREGS);
+                    release_lock(&sysblk.intlock);
+                }
+
+                GUESTREGS->instvalid = 0;
+
+                INSTRUCTION_FETCH(GUESTREGS->inst, GUESTREGS->psw.IA, GUESTREGS);
+
+                GUESTREGS->instvalid = 1;
+
+#if defined(SIE_DEBUG)
+                /* Display the instruction */
+                ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->inst);
+#endif /*defined(SIE_DEBUG)*/
+
+                EXECUTE_INSTRUCTION(GUESTREGS->inst, 0, GUESTREGS);
+
+                regs->instcount++;
+
+#ifdef OPTION_CPU_UNROLL
+                UNROLLED_EXECUTE(GUESTREGS);
+                UNROLLED_EXECUTE(GUESTREGS);
+                UNROLLED_EXECUTE(GUESTREGS);
+                UNROLLED_EXECUTE(GUESTREGS);
+                UNROLLED_EXECUTE(GUESTREGS);
+                UNROLLED_EXECUTE(GUESTREGS);
+                UNROLLED_EXECUTE(GUESTREGS);
+
+                regs->instcount += 8;
+#endif
 
             }
 

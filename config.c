@@ -917,8 +917,10 @@ BYTE    c;                              /* Work area for sscanf      */
         sysblk.regs[i].vf->online = 1;
 #endif /*_FEATURE_VECTOR_FACILITY*/
 
+#ifndef PROFILE_CPU
     for(i = 0; i < numcpu; i++)
         configure_cpu(sysblk.regs + i);
+#endif
 
 } /* end function build_config */
 

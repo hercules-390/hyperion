@@ -2344,7 +2344,7 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E314*/ GENx___x___x900 (load_long_fullword),                 /*!LGF       */
  /*E315*/ GENx___x___x900 (load_long_halfword),                 /*!LGH       */
  /*E316*/ GENx___x___x900 (load_logical_long_fullword),         /*!LLGF      */
- /*E317*/ GENx___x___x900 (load_logical_long_thirtyone),        /*!LLGT/LCLAG*/
+ /*E317*/ GENx___x___x900 (load_logical_long_thirtyone),        /*!LLGT      */
  /*E318*/ GENx___x___x900 (add_long_fullword),                  /*!AGF       */
  /*E319*/ GENx___x___x900 (subtract_long_fullword),             /*!SGF       */
  /*E31A*/ GENx___x___x900 (add_logical_long_fullword),          /*!ALGF      */

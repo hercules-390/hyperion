@@ -4,7 +4,7 @@
 
 #include "hercules.h"
 
-#if defined(OPTION_NO_INLINE_VSTORE)
+#if defined(OPTION_NO_INLINE_VSTORE) | defined(OPTION_NO_INLINE_IFETCH)
 
 #define _VSTORE_C
 

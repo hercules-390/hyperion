@@ -11,8 +11,11 @@ VERSION  = 2.13b
 DESTDIR  = $(PREFIX)/usr/bin
 
 # For Linux use:
-CFLAGS  = -O3 -Wall -march=pentium -fomit-frame-pointer \
+CFLAGS  = -O3 -Wall -malign-double -march=pentiumpro -fomit-frame-pointer \
 	   -DVERSION=$(VERSION)
+# For Linux use (with gprof profiling):
+#CFLAGS  = -O3 -Wall -march=pentiumpro -DPROFILE_CPU -pg \
+#	   -DVERSION=$(VERSION)
 # For older Linux versions use:
 #CFLAGS  = -O3 -march=pentiumpro -fomit-frame-pointer \
 #	  -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP \
@@ -22,6 +25,8 @@ CFLAGS  = -O3 -Wall -march=pentium -fomit-frame-pointer \
 #	  -DNO_ATTR_REGPARM
 
 LFLAGS	 = -lpthread -lm -lz
+# For Linux use (with gprof profiling):
+#LFLAGS	 = -lpthread -lm -lz -pg
 
 # Uncomment the lines below to enable Compressed CKD bzip2 compression
 #CFLAGS	+= -DCCKD_BZIP2

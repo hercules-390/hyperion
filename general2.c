@@ -1236,6 +1236,8 @@ int     rc;                             /* Return code               */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
+    RETURN_INTCHECK(regs);
+
 }
 
 
