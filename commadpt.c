@@ -724,7 +724,7 @@ static void commadpt_thread(void *vca)
                     {
                         if(ca->dev->ccwtrace)
                         {
-                            logmsg(_("HHCCA300D %4.4X:Poll Command abort - Poll address >7 Bytes\n",devnum));
+                            logmsg(_("HHCCA300D %4.4X:Poll Command abort - Poll address >7 Bytes\n"),devnum);
                         }
                         ca->badpoll=1;
                         ca->curpending=COMMADPT_PEND_IDLE;
