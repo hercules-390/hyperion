@@ -408,11 +408,9 @@ void system_shutdown (void)
                  
     sysblk.shutdown = 1;
 
+    release_config();
+
     /* Call all termination routines in LIFO order */
-    /* ZZ FIXME: this should really be done after release_config()  
-                 but the logger may discard some messages still
-                 buffered */
     hdl_shut();
 
-    release_config();
 }

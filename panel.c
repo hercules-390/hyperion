@@ -79,6 +79,50 @@
 #define ANSI_CLEAR_EOL "\x1B[K"
 #define ANSI_CURSOR "\x1B[%d;%dH"
 
+/*-------------------------------------------------------------------*/
+/* Definitions for ANSI control sequences                            */
+/*-------------------------------------------------------------------*/
+#define ANSI_SAVE_CURSOR        "\x1B[s"
+#define ANSI_CURSOR_UP          "\x1B[1A"
+#define ANSI_CURSOR_DOWN        "\x1B[1B"
+#define ANSI_CURSOR_FORWARD     "\x1B[1C"
+#define ANSI_CURSOR_BACKWARD    "\x1B[1D"
+#define ANSI_POSITION_CURSOR    "\x1B[%d;%dH"
+#define ANSI_ROW1_COL1          "\x1B[1;1H"
+#define ANSI_ROW1_COL80         "\x1B[1;80H"
+#define ANSI_ROW22_COL80        "\x1B[22;80H"
+#define ANSI_ROW23_COL1         "\x1B[23;1H"
+#define ANSI_ROW24_COL1         "\x1B[24;1H"
+#define ANSI_ROW24_COL79        "\x1B[24;79H"
+#define ANSI_BLACK_GREEN        "\x1B[30;42m"
+#define ANSI_YELLOW_RED         "\x1B[33;1;41m"
+#define ANSI_WHITE_BLACK        "\x1B[0m"
+#define ANSI_HIGH_INTENSITY     "\x1B[1m"
+#define ANSI_ERASE_EOL          "\x1B[K"
+#define ANSI_ERASE_SCREEN       "\x1B[2J"
+#define ANSI_RESTORE_CURSOR     "\x1B[u"
+
+/*-------------------------------------------------------------------*/
+/* Definitions for keyboard input sequences                          */
+/*-------------------------------------------------------------------*/
+#define KBD_HOME                "\x1B[1~"
+#define KBD_INSERT              "\x1B[2~"
+#define KBD_DELETE              "\x1B[3~"
+#define KBD_END                 "\x1B[4~"
+#define KBD_PAGE_UP             "\x1B[5~"
+#define KBD_PAGE_DOWN           "\x1B[6~"
+#define KBD_UP_ARROW            "\x1B[A"
+#define KBD_DOWN_ARROW          "\x1B[B"
+#define KBD_RIGHT_ARROW         "\x1B[C"
+#define KBD_LEFT_ARROW          "\x1B[D"
+#define xKBD_UP_ARROW           "\x1BOA"
+#define xKBD_DOWN_ARROW         "\x1BOB"
+#define xKBD_RIGHT_ARROW        "\x1BOC"
+#define xKBD_LEFT_ARROW         "\x1BOD"
+
+#define ANSI_RESET_WHT_BLK   "\x1B[0;37;40m"
+#define ANSI_CLEAR_SCREEN    "\x1B[2J"
+
 int NPDup = 0;          /* 1 when new panel is up */
 int NPDinit = 0;        /* 1 when new panel is initialized */
 int NPhelpup = 0;       /* 1 when displaying help panel */
@@ -122,6 +166,19 @@ char NPcurprompt1[40];
 char NPcurprompt2[40];
 U32 NPaaddr;
 
+#define MAX_MSGS                800     /* Number of slots in buffer */
+#define MSG_SIZE                80      /* Size of one message       */
+#define BUF_SIZE    (MAX_MSGS*MSG_SIZE) /* Total size of buffer      */
+#define NUM_LINES               22      /* Number of scrolling lines */
+#define CMD_SIZE             32767      /* Length of command line    */
+
+static int     firstmsgn = 0;           /* Number of first message to
+                                           be displayed relative to
+                                           oldest message in buffer  */
+static BYTE   *msgbuf;                  /* Circular message buffer   */
+static int     msgslot = 0;             /* Next available buffer slot*/
+static int     nummsgs = 0;             /* Number of msgs in buffer  */
+
 #if 1
 //
 //
@@ -137,18 +194,20 @@ int     compat_msgpiper;                /* Message pipe read handle  */
 int     compat_shutdown;                /* Shutdown flag             */
 
 
+static char *lmsbuf;
+static int  lmsnum;
+static int  lmscnt;
 static void panel_compat_thread(void *arg)
 {
-char *msgbuf;
-int  msgnum;
-int  msgcnt;
 
     UNREFERENCED(arg);
 
     while(!compat_shutdown) 
-        if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
-            fwrite(msgbuf,msgcnt,1,compat_msgpipew);
+        if((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_BLOCK)))
+            fwrite(lmsbuf,lmscnt,1,compat_msgpipew);
 
+    fclose(compat_msgpipew);
+    
 }
 
 
@@ -671,53 +730,11 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 /* ==============   End of the main NP block of code    =============*/
 
 
-/*-------------------------------------------------------------------*/
-/* Definitions for ANSI control sequences                            */
-/*-------------------------------------------------------------------*/
-#define ANSI_SAVE_CURSOR        "\x1B[s"
-#define ANSI_CURSOR_UP          "\x1B[1A"
-#define ANSI_CURSOR_DOWN        "\x1B[1B"
-#define ANSI_CURSOR_FORWARD     "\x1B[1C"
-#define ANSI_CURSOR_BACKWARD    "\x1B[1D"
-#define ANSI_POSITION_CURSOR    "\x1B[%d;%dH"
-#define ANSI_ROW1_COL1          "\x1B[1;1H"
-#define ANSI_ROW1_COL80         "\x1B[1;80H"
-#define ANSI_ROW22_COL80        "\x1B[22;80H"
-#define ANSI_ROW23_COL1         "\x1B[23;1H"
-#define ANSI_ROW24_COL1         "\x1B[24;1H"
-#define ANSI_ROW24_COL79        "\x1B[24;79H"
-#define ANSI_BLACK_GREEN        "\x1B[30;42m"
-#define ANSI_YELLOW_RED         "\x1B[33;1;41m"
-#define ANSI_WHITE_BLACK        "\x1B[0m"
-#define ANSI_HIGH_INTENSITY     "\x1B[1m"
-#define ANSI_ERASE_EOL          "\x1B[K"
-#define ANSI_ERASE_SCREEN       "\x1B[2J"
-#define ANSI_RESTORE_CURSOR     "\x1B[u"
-
-/*-------------------------------------------------------------------*/
-/* Definitions for keyboard input sequences                          */
-/*-------------------------------------------------------------------*/
-#define KBD_HOME                "\x1B[1~"
-#define KBD_INSERT              "\x1B[2~"
-#define KBD_DELETE              "\x1B[3~"
-#define KBD_END                 "\x1B[4~"
-#define KBD_PAGE_UP             "\x1B[5~"
-#define KBD_PAGE_DOWN           "\x1B[6~"
-#define KBD_UP_ARROW            "\x1B[A"
-#define KBD_DOWN_ARROW          "\x1B[B"
-#define KBD_RIGHT_ARROW         "\x1B[C"
-#define KBD_LEFT_ARROW          "\x1B[D"
-#define xKBD_UP_ARROW           "\x1BOA"
-#define xKBD_DOWN_ARROW         "\x1BOB"
-#define xKBD_RIGHT_ARROW        "\x1BOC"
-#define xKBD_LEFT_ARROW         "\x1BOD"
-
-#define ANSI_RESET_WHT_BLK   "\x1B[0;37;40m"
-#define ANSI_CLEAR_SCREEN    "\x1B[2J"
-
 static void panel_cleanup(void *unused __attribute__ ((unused)) )
 {
 struct termios kbattr;                  /* Terminal I/O structure    */
+int i,n;
+char c;
 
     compat_shutdown = 1;
 
@@ -727,7 +744,28 @@ struct termios kbattr;                  /* Terminal I/O structure    */
     tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
 
     fprintf(stderr, ANSI_RESET_WHT_BLK ANSI_CLEAR_SCREEN );
-    fflush(stderr);
+
+    /* Display messages in scrolling area */
+    for (i=0; i < NUM_LINES && firstmsgn + i < nummsgs; i++)
+    {
+        n = (nummsgs < MAX_MSGS) ? 0 : msgslot;
+        n += firstmsgn + i;
+        if (n >= MAX_MSGS) n -= MAX_MSGS;
+        fprintf (stderr,
+                ANSI_POSITION_CURSOR
+                ANSI_WHITE_BLACK,
+                i+1, 1);
+        fwrite (msgbuf + (n * MSG_SIZE), MSG_SIZE, 1, stderr);
+    }
+
+    /* Read any remaining msgs from the msg pipe */
+    while(read (compat_msgpiper, &c, 1) > 0)
+        fputc(c,stderr);
+
+    /* Read any remaining msgs from the system log */
+    while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
+        fwrite(lmsbuf,lmscnt,1,stderr);
+
 }
 
 /*-------------------------------------------------------------------*/
@@ -740,12 +778,6 @@ struct termios kbattr;                  /* Terminal I/O structure    */
 /*-------------------------------------------------------------------*/
 
 int volatile initdone = 0;           /* Initialization complete flag */
-
-#define MAX_MSGS                800     /* Number of slots in buffer */
-#define MSG_SIZE                80      /* Size of one message       */
-#define BUF_SIZE    (MAX_MSGS*MSG_SIZE) /* Total size of buffer      */
-#define NUM_LINES               22      /* Number of scrolling lines */
-#define CMD_SIZE             32767      /* Length of command line    */
 
 #if defined(OPTION_DYNAMIC_LOAD)
 void panel_display_r (void)
@@ -764,12 +796,6 @@ U64     prvicount = 0;                  /* Previous instruction count*/
 U32     prvscount = 0;                  /* Previous shrdcount        */
 #endif
 BYTE    pswwait;                        /* PSW wait state bit        */
-int     firstmsgn = 0;                  /* Number of first message to
-                                           be displayed relative to
-                                           oldest message in buffer  */
-BYTE   *msgbuf;                         /* Circular message buffer   */
-int     msgslot = 0;                    /* Next available buffer slot*/
-int     nummsgs = 0;                    /* Number of msgs in buffer  */
 BYTE    redraw_msgs;                    /* 1=Redraw message area     */
 BYTE    redraw_cmd;                     /* 1=Redraw command line     */
 BYTE    redraw_status;                  /* 1=Redraw status line      */
