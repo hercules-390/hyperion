@@ -3001,6 +3001,7 @@ int     rc;                             /* return code from load_psw */
     memcpy(regs->ar, newregs.ar, sizeof(newregs.ar));
     memcpy(regs->cr, newregs.cr, sizeof(newregs.cr));
     memcpy(&(regs->psw), &(newregs.psw), sizeof(newregs.psw));
+    regs->armode = newregs.armode;
     INVALIDATE_AIA(regs);
     INVALIDATE_AEA_ALL(regs);
     SET_IC_EXTERNAL_MASK(regs);
