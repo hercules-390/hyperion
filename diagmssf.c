@@ -357,10 +357,8 @@ RADR              abs;                 /* abs addr of data area      */
 U64               dreg;                /* work doubleword            */
 U32               i;                   /* loop counter               */
 struct rusage     usage;               /* RMF type data              */
-#if !defined(OPTION_LPARNAME)
-static char       lparname[] = "HERCULES";
-#endif /*!defined(LPARNAME)*/
-static char       physical[] = "PHYSICAL";
+static BYTE       physical[8] =
+              {0xD7,0xC8,0xE8,0xE2,0xC9,0xC3,0xC1,0xD3}; /* PHYSICAL */
 static U64        diag204tod;          /* last diag204 tod           */
 
     /* Test DIAG204 command word */
@@ -411,12 +409,7 @@ static U64        diag204tod;          /* last diag204 tod           */
         memset(partinfo, 0, sizeof(DIAG204_PART));
         partinfo->partnum = 1;
         partinfo->virtcpu = sysblk.cpus;
-        for(i = 0; i < sizeof(partinfo->partname); i++)
-#if defined(OPTION_LPARNAME)
-            partinfo->partname[i] = host_to_guest((int)sysblk.lparname[i]);
-#else
-            partinfo->partname[i] = host_to_guest((int)lparname[i]);
-#endif /*defined(OPTION_LPARNAME)*/
+        get_lparname(partinfo->partname);
 
         /* hercules cpu's */
         getrusage(RUSAGE_SELF,&usage);
@@ -444,8 +437,7 @@ static U64        diag204tod;          /* last diag204 tod           */
         memset(partinfo, 0, sizeof(DIAG204_PART));
         partinfo->partnum = 0;
         partinfo->virtcpu = 1;
-        for(i = 0; i < sizeof(partinfo->partname); i++)
-            partinfo->partname[i] = host_to_guest((int)physical[i]);
+        memcpy(partinfo->partname,physical,sizeof(physical));
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
         memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
 //      STORE_HW(cpuinfo->cpaddr,0);

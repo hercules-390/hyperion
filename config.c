@@ -1610,27 +1610,8 @@ BYTE **orig_newargv;
             cckd_command (scckd, 0);
 
 #if defined(OPTION_LPARNAME)
-        /* Parse lparname value */
-        if (lparname != NULL)
-        {
-            for (i = 0; i < 8 && lparname[i]; i++)
-            {
-                if (!(lparname[i] == '@' || lparname[i] == '#' || lparname[i] == '$'))
-                {
-                    if (i == 0 && !isalpha(lparname[i]) || !isalnum(lparname[i]))
-                    {
-                        logmsg("HHCCF???W Warning in %s line %d: Invalid lparname, default 'HERCULES' used.\n", fname, stmt);
-                        memcpy(sysblk.lparname, "HERCULES", 8);
-                        i = 8;
-                    }
-                }
-                sysblk.lparname[i] = toupper(lparname[i]);
-            }
-            while (i < 8)
-                sysblk.lparname[i++] = ' ';
-        }
-        else
-            memcpy(sysblk.lparname, "HERCULES", 8);
+	if(lparname)
+	    set_lparname(lparname);
 #endif /*defined(OPTION_LPARNAME)*/
 
     } /* end for(scount) */
