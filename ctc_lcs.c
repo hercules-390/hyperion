@@ -2006,7 +2006,9 @@ HDL_REGISTER_SECTION;       // ("Register" our entry-points)
 //             entry-point       entry-point
 //             name              value
 
+#if defined( WIN32 )
 HDL_REGISTER ( debug_tt32_stats, display_tt32_stats );
+#endif
 
 END_REGISTER_SECTION;
 

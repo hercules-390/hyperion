@@ -1312,8 +1312,11 @@ void  AddDevice( DEVBLK**    ppDEVBLK,
         release_lock( &(*ppDEVBLK)->lock );
     }
     else
+    {
+        release_lock( &(*ppDEVBLK)->lock );
         if((*ppDEVBLK)->devnum != sDevNum)
             define_device((*ppDEVBLK)->devnum, sDevNum);
+    }
 
     return;
 }

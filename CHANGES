@@ -1,5 +1,8 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+19 Aug 2003 Removed W32 only symbol from linux build in ctcadpt - Ivan Warren
+19 Aug 2003 Fixed nested lock issue in LCS freezing on Linux - Ivan Warren
+19 Aug 2003 Fixed herc crash when "attach" CTCI with no parm - Jim Pierson
 19 Aug 2003 Allow Write Record 0 after Write Home Address on CKDs
             problem initially reported by Jay Jaeger(cube1us) - Ivan Warren
 18 Aug 2003 Re-instated fast dev lookup as a cache facility

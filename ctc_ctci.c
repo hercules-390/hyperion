@@ -960,7 +960,13 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // Initialize getopt's counter. This is necessary in the case
     // that getopt was used previously for another device.
     optind      = 0;
-
+    // Check for correct number of arguments
+    if( argc < 2 )
+    {
+        logmsg( _("HHCCT056E %4.4X: Incorrect number of parameters\n"),
+               pDEVBLK->devnum );
+        return -1;
+    }
     // Compatability with old format configuration files needs to be
     // maintained. Old format statements have the tun character device
     // name as the second argument on Linux, or CTCI-W32 as the first
