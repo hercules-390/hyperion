@@ -672,10 +672,10 @@ BYTE            c;                      /* Character work area       */
 
             /* First try the value from the header that we ship (2.4.8) */
 
-            if (ioctl(fd, TUNSETIFF, &ifr) != 0)
-
-              /* If it failed with EBADF, try with the pre-2.4.5 value */
-              if (errno != EBADF || ioctl(fd, ('T' << 8) | 202, &ifr) != 0)
+            if (ioctl(fd, TUNSETIFF, &ifr) != 0
+                &&
+                /* If it failed with EINVAL, try with the pre-2.4.5 value */
+                (errno != EINVAL || ioctl(fd, ('T' << 8) | 202, &ifr) != 0) )
                 {
                   logmsg ("HHC853I %4.4X setting net device param failed: %s\n",
                           dev->devnum, strerror(errno));
