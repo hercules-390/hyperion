@@ -1099,7 +1099,7 @@ BYTE    storkey = 0;
             rcpa = regs->sie_rcpo &= 0x7FFFF000;
 
             /* frame index as byte offset */
-            rcpa += n >> STORAGE_KEY_PAGESHIFT;
+            rcpa += n >> 12;
 
             /* guest absolute to host real */
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
