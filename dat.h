@@ -1266,6 +1266,11 @@ U16     sx, px;                         /* Segment and page index,
 
         /* Perform ESAME segment translation */
 
+        /* Add the segment index (with three low-order zeroes)
+           to the segment table origin, giving the address of
+           the segment table entry */
+        sto += sx;
+
         /* Segment translation exception if table offset is
            greater than high-order 2 bits of segment index */
         if (tf > (sx >> 12))
@@ -1275,11 +1280,6 @@ U16     sx, px;                         /* Segment and page index,
            less than high-order 2 bits of segment index */
         if (tl < (sx >> 12))
             goto seg_tran_length;
-
-        /* Add the segment index (with three low-order zeroes)
-           to the segment table origin, giving the address of
-           the segment table entry */
-        sto += sx;
 
         /* Addressing exception if outside real storage */
         if (sto >= regs->mainsize)
@@ -1428,6 +1428,8 @@ page_tran_length:
 #endif /*!defined(FEATURE_ESAME)*/
 
 seg_tran_length:
+//  logmsg("dat.c: segment translation exception due to segment length\n");
+//  logmsg("       cr0=" F_RADR " sto=" F_RADR "\n",regs->CR(0),sto);
     *xcode = PGM_SEGMENT_TRANSLATION_EXCEPTION;
     *raddr = sto;
     cc = 3;

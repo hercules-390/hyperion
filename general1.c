@@ -2360,7 +2360,7 @@ BYTE    l;                              /* Length byte               */
 int     b1, b2;                         /* Base register numbers     */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
-VADR    abs1, abs2;                     /* Absolute addresses        */
+RADR    abs1, abs2;                     /* Absolute addresses        */
 VADR    npv1, npv2;                     /* Next page virtual addrs   */
 RADR    npa1 = 0, npa2 = 0;             /* Next page absolute addrs  */
 int     i;                              /* Loop counter              */
@@ -3166,7 +3166,7 @@ VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 RADR    abs1, abs2;                     /* Absolute addresses        */
 VADR    npv1, npv2;                     /* Next page virtual addrs   */
-VADR    npa1 = 0, npa2 = 0;             /* Next page absolute addrs  */
+RADR    npa1 = 0, npa2 = 0;             /* Next page absolute addrs  */
 int     i;                              /* Loop counter              */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
@@ -3361,7 +3361,7 @@ VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 RADR    abs1, abs2;                     /* Absolute addresses        */
 VADR    npv1, npv2;                     /* Next page virtual addrs   */
-VADR    npa1 = 0, npa2 = 0;             /* Next page absolute addrs  */
+RADR    npa1 = 0, npa2 = 0;             /* Next page absolute addrs  */
 int     i;                              /* Loop counter              */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */

@@ -5076,7 +5076,7 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 #if defined(FEATURE_TRACING)
-VADR    n1,                             /* Addr of trace table entry */
+RADR    n1,                             /* Addr of trace table entry */
         n2;                             /* Operand                   */
 #if defined(_FEATURE_SIE)
 RADR    ag,                             /* Abs Guest addr of TTE     */

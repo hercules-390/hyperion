@@ -1326,7 +1326,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                             logmsg ("%s\n", message);
 #if 0
    if(!memcmp(message," IEA190I",8)) { regs->cpustate = CPUSTATE_STOPPING;
-                                       memset(sysblk.imap01,0,27008);
                                        ON_IC_CPU_NOT_STARTED(regs); }
 #endif
                     }
