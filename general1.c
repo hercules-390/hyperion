@@ -715,11 +715,12 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    r1 = inst[1] >> 4;
 
     /* Branch to operand address if r1 mask bit is set */
     if ((0x08 >> regs->psw.cc) & r1)
     {
+        RX(inst, execflag, regs, r1, b2, effective_addr2);
         regs->psw.IA = effective_addr2;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -730,8 +731,13 @@ VADR    effective_addr2;                /* Effective address         */
             )
             ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
-    }
-
+    } else
+        if (!(execflag))
+        {
+            regs->psw.ilc = 4;
+            regs->psw.IA += 4;
+            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+        }
 }
 
 
@@ -744,15 +750,14 @@ int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
     RR(inst, execflag, regs, r1, r2);
-
-    /* Compute the branch address from the R2 operand */
-    newia = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    newia = regs->GR(r2);
 
     /* Subtract 1 from the R1 operand and branch if result
            is non-zero and R2 operand is not register zero */
     if ( --(regs->GR_L(r1)) && r2 != 0 )
     {
-        regs->psw.IA = newia;
+        /* Compute the branch address from the R2 operand */
+        regs->psw.IA = newia & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
