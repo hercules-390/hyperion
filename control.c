@@ -5439,15 +5439,6 @@ RADR    n;                              /* Unsigned work             */
 
     PRIV_CHECK(regs);
 
-#if defined(FEATURE_PER2)
-    /* Storage alteration must be enabled for STURA to be recognised */
-    if( EN_IC_PER_SA(regs) && EN_IC_PER_STURA(regs) )
-    {
-        ON_IC_PER_SA(regs) ;
-        ON_IC_PER_STURA(regs) ;
-    }
-#endif /*defined(FEATURE_PER2)*/
-
     /* R2 register contains operand real storage address */
     n = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
@@ -5456,6 +5447,15 @@ RADR    n;                              /* Unsigned work             */
 
     /* Store R1 register at second operand location */
     ARCH_DEP(vstore4) (regs->GR_L(r1), n, USE_REAL_ADDR, regs );
+
+#if defined(FEATURE_PER2)
+    /* Storage alteration must be enabled for STURA to be recognised */
+    if( EN_IC_PER_SA(regs) && EN_IC_PER_STURA(regs) )
+    {
+        ON_IC_PER_SA(regs) ;
+        ON_IC_PER_STURA(regs) ;
+    }
+#endif /*defined(FEATURE_PER2)*/
 
 }
 

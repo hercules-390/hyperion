@@ -4016,15 +4016,6 @@ RADR    n;                              /* Unsigned work             */
 
     PRIV_CHECK(regs);
 
-#if defined(FEATURE_PER2)
-    /* Storage alteration must be enabled for STURA to be recognised */
-    if( EN_IC_PER_SA(regs) && EN_IC_PER_STURA(regs) )
-    {
-        ON_IC_PER_SA(regs) ;
-        ON_IC_PER_STURA(regs) ;
-    }
-#endif /*defined(FEATURE_PER2)*/
-
     /* R2 register contains operand real storage address */
     n = regs->GR_G(r2) & ADDRESS_MAXWRAP(regs);
 
@@ -4033,6 +4024,15 @@ RADR    n;                              /* Unsigned work             */
 
     /* Store R1 register at second operand location */
     ARCH_DEP(vstore8) (regs->GR_G(r1), n, USE_REAL_ADDR, regs );
+
+#if defined(FEATURE_PER2)
+    /* Storage alteration must be enabled for STURA to be recognised */
+    if( EN_IC_PER_SA(regs) && EN_IC_PER_STURA(regs) )
+    {
+        ON_IC_PER_SA(regs) ;
+        ON_IC_PER_STURA(regs) ;
+    }
+#endif /*defined(FEATURE_PER2)*/
 
 } /* end DEF_INST(store_using_real_address_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -4062,12 +4062,9 @@ DEF_INST(test_addressing_mode)
 /*-------------------------------------------------------------------*/
 DEF_INST(set_addressing_mode_24)
 {
-VADR    ia;                             /* Unupdated instruction addr*/
+VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
 
     E(inst, execflag, regs);
-
-    /* Calculate the unupdated instruction address */
-    ia = (regs->psw.IA - regs->psw.ilc) & ADDRESS_MAXWRAP(regs);
 
     /* Program check if instruction is located above 16MB */
     if (ia > 0xFFFFFFULL)
@@ -4095,12 +4092,9 @@ VADR    ia;                             /* Unupdated instruction addr*/
 /*-------------------------------------------------------------------*/
 DEF_INST(set_addressing_mode_31)
 {
-VADR    ia;                             /* Unupdated instruction addr*/
+VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
 
     E(inst, execflag, regs);
-
-    /* Calculate the unupdated instruction address */
-    ia = (regs->psw.IA - regs->psw.ilc) & ADDRESS_MAXWRAP(regs);
 
     /* Program check if instruction is located above 2GB */
     if (ia > 0x7FFFFFFFULL)

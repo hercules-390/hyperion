@@ -517,8 +517,8 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
 #if defined(FEATURE_PER2)
     if( EN_IC_PER_IF(regs)
-      && regs->CR(10) >= addr
-      && regs->CR(11) <= addr)
+      && addr >= regs->CR(10)
+      && addr <= regs->CR(11) )
         ON_IC_PER_IF(regs);
 #endif /*defined(FEATURE_PER2)*/
 

@@ -363,6 +363,10 @@ static char *pgmintname[] = {
        The PER indication will be stored in the PER handling
        code */
     code = pcode & ~PGM_PER_EVENT;
+    /* If this is a concurrent PER event then we must add the PER
+       bit to the interrupts code */
+    if( IS_IC_PER(regs) )
+        pcode |= PGM_PER_EVENT;
 
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (realregs);
