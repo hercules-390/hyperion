@@ -373,20 +373,20 @@ static char       lparname[] = "HERCULES";
 static char       physical[] = "PHYSICAL";
 static U64        diag204tod;          /* last diag204 tod           */
 
-    abs = APPLY_PREFIXING (regs->GR_L(r1), regs->PX);
-
-    /* Program check if RMF data is not on a page boundary */
-    if ( (abs & PAGEFRAME_BYTEMASK) != 0x000)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-
-    /* Program check if RMF data area is outside main storage */
-    if ( abs > regs->mainlim )
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-
     /* Test DIAG204 command word */
     switch (regs->GR_L(r2)) {
 
     case 0x04:
+
+        abs = APPLY_PREFIXING (regs->GR_L(r1), regs->PX);
+
+        /* Program check if RMF data is not on a page boundary */
+        if ( (abs & PAGEFRAME_BYTEMASK) != 0x000)
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+        /* Program check if RMF data area is outside main storage */
+        if ( abs > regs->mainlim )
+            ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
         /* Obtain the TOD clock update lock */
         obtain_lock (&sysblk.todlock);
