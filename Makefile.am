@@ -220,7 +220,7 @@ dyngui.dll$(EXEEXT):  dyngui$(EXEEXT)
 	cp           dyngui$(EXEEXT)   dyngui.dll
 
 dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
-	windres -DHAVE_CONFIG_H --include-dir=. -i dyngui.rc -o dyngui.res -O coff
+	windres -DHAVE_CONFIG_H --include-dir=. -i $(srcdir)/dyngui.rc -o dyngui.res -O coff
 endif
 
 EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  CHANGES README.COMMADPT README.CVS README.ECPSVM \
@@ -253,6 +253,17 @@ if USE_DLLTOOL
 #  USE_DLLTOOL implies Cygwin which implies external gui
 	cp $(DYNINST_DLL) $(DESTDIR)$(bindir)/
 	cp $(DYNGUI_DLL) $(DESTDIR)$(bindir)/
+endif
+
+uninstall-local:
+if USE_DLLTOOL
+#  USE_DLLTOOL implies Cygwin which implies external gui
+	rm -f dyngui.dll
+	rm -f dyngui.res
+	rm -f dyninst.dll
+	rm -f hercules.a
+	rm -f hercules.def
+	rm -f hercules.exp
 endif
 
 %.s: %.c

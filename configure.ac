@@ -4,6 +4,7 @@ AC_CONFIG_AUX_DIR(autoconf)
 AM_INIT_AUTOMAKE(hercules,2.17)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
+AM_GNU_GETTEXT()
 
 AC_CANONICAL_HOST
 
@@ -17,6 +18,7 @@ AC_PROG_CC
 
 build_hercifc=false
 use_dlltool=false
+is_cygwin=false
 
 case "$host_os" in
         darwin*)    
@@ -30,6 +32,7 @@ case "$host_os" in
                 build_hercifc=true
                 ;;
         *cygwin*)
+                is_cygwin=true
                 build_hercifc=false
                 use_dlltool=true
                 AC_DEFINE([WIN32])
@@ -70,21 +73,62 @@ AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 # possible and USE_DLLTOOL shouldn't be set either. (Each test
 # done twice; first time to cause default autoconf behavior,
 # the second time to set our flag)
+
 AC_CHECK_LIB(dl,dlopen)
 AC_CHECK_LIB(dl,dlopen, have_dlopen=true, have_dlopen=false )
 AC_CHECK_LIB(ltdl,lt_dlopen)
 AC_CHECK_LIB(ltdl,lt_dlopen, have_lt_dlopen=true, have_lt_dlopen=false )
-if test $have_dlopen = true || test $have_lt_dlopen = true; then
-  AC_DEFINE([OPTION_DYNAMIC_LOAD])
-  if test $have_dlopen != true; then
-    AC_DEFINE([HDL_USE_LIBTOOL])
+
+opt_dynamic_load=true
+
+AC_ARG_ENABLE(dynamic-load,
+              AC_HELP_STRING([--disable-dynamic-load],
+                             [disable/enable dynamic loader option]),
+              [case "${enableval}" in
+                yes) opt_dynamic_load=true ;;
+                no) opt_dynamic_load=false ;;
+                *) opt_dynamic_load=true;;
+               esac],[opt_dynamic_load=true])
+
+if test $opt_dynamic_load = true; then
+  if test $have_dlopen = true || test $have_lt_dlopen = true; then
+    AC_DEFINE([OPTION_DYNAMIC_LOAD])
+    if test $have_dlopen != true; then
+      AC_DEFINE([HDL_USE_LIBTOOL])
+    fi
+  else
+    use_dlltool=false
   fi
 else
   use_dlltool=false
 fi
+
 AM_CONDITIONAL(USE_DLLTOOL, [test "x$use_dlltool" = "xtrue"])
 
-AM_GNU_GETTEXT()
+AC_ARG_ENABLE(external-gui,
+              AC_HELP_STRING([--disable-external-gui],
+                             [disable interface to external Windows GUI]),
+              [case "${enableval}" in
+                 yes) build_external_gui=true ;;
+                 no) build_external_gui=false ;;
+                 *) AC_MSG_ERROR(bad value ${enableval} for --enable-external-gui) ;;
+               esac],
+              [case "$host_os" in
+                 *cygwin*) build_external_gui=true ;;
+                 *) build_external_gui=false ;;
+               esac])
+
+if test x$build_external_gui = xtrue; then
+  if test $is_cygwin = true && test $opt_dynamic_load != true; then
+    AC_MSG_ERROR([dynamic loader option required for external gui support on win32])
+  else
+    if test $is_cygwin = true && test $use_dlltool != true; then
+      AC_MSG_ERROR([internal error: external gui specified for win32 but use_dlltool not set])
+    else
+      AC_DEFINE([EXTERNALGUI])
+    fi
+  fi
+fi
 
 AC_ARG_ENABLE(fthreads,
               AC_HELP_STRING([--enable-fthreads],
@@ -129,13 +173,13 @@ AC_ARG_ENABLE(fishhang,
                esac],
               [fishhang=false])
 
-AM_CONDITIONAL(BUILD_FISHHANG, [test x$fishhang = xtrue])
-
 if test x$fishhang = xtrue; then
   if test x$build_fthreads != xtrue; then
     AC_MSG_ERROR(fishhang requested but fthreads not specified)
   fi
 fi
+
+AM_CONDITIONAL(BUILD_FISHHANG, [test x$fishhang = xtrue])
 
 dnl AC_MSG_NOTICE([Checking to see if -pthread is needed to compile])
 
@@ -410,22 +454,6 @@ else
   CFLAGS="$OFLAGS $CFLAGS"
 fi
 
-AC_ARG_ENABLE(external-gui,
-              AC_HELP_STRING([--disable-external-gui],
-                             [disable interface to external Windows GUI]),
-              [case "${enableval}" in
-                 yes) build_external_gui=true ;;
-                 no) build_external_gui=false ;;
-                 *) AC_MSG_ERROR(bad value ${enableval} for --enable-external-gui) ;;
-               esac],
-              [case "$host_os" in
-                 *cygwin*) build_external_gui=true ;;
-                 *) build_external_gui=false ;;
-               esac])
-
-if test x$build_external_gui = xtrue; then
-  AC_DEFINE([EXTERNALGUI])
-fi
 
 AC_ARG_ENABLE(custom,
               AC_HELP_STRING([--enable-custom=STRING],

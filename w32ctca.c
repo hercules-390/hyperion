@@ -31,6 +31,7 @@ int w32ctca_dummy = 0;
 #define IFNAMSIZ 16
 #endif
 
+#include "htypes.h"     // (tt32api.h needs uint32_t)
 #include "tt32api.h"    // (exported TunTap32.dll functions)
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -1,3 +1,5 @@
+09 Jul 2003 added check to configure.ac to ensure dynamic load support
+            available if external-gui support requested on win32 - Fish
 07 Jul 2003 configure.ac now correctly sets USE_DLLTOOL to false if
             OPTION_DYNAMIC_LOAD not possible (so dyninst/dyngui don't
             get built), and OPTION_DYNAMIC_LOAD and HDL_USE_LIBTOOL
