@@ -1,3 +1,8 @@
+10 Jul 2001 switch PIC 07 and PIC 06 priority on MP - Paul Leisy
+10 Jul 2001 EREG missing INVALIDATE_AEA - Paul Leisy
+10 Jul 2001 PIC 04(ALE) and PIC 05(STE/PTE) wrong priority - Paul Leisy
+10 Jul 2001 TRAP miss page cross and false PIC 04 - Paul Leisy
+10 Jul 2001 CLCL missing gpr update on page cross rupt - Paul Leisy
 10 Jul 2001 Make Assist ops use PRI addr in AR mode - Paul Leisy
 10 Jul 2001 Load/Store psw use bits 24-31 - Paul Leisy
 10 Jul 2001 Report PIC 06 on PR at end of inst - Paul Leisy
