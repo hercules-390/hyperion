@@ -471,7 +471,34 @@ U16     xcode;                          /* Exception code            */
     if (aaddr >= regs->mainsize)
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-    SIE_TRANSLATE(&aaddr, acctype, regs);
+#if defined(_FEATURE_SIE)
+    if(regs->sie_state  && !regs->sie_pref)
+    {
+    U32 sie_stid;
+    U16 sie_xcode;
+    int sie_private;
+
+        if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
+                USE_PRIMARY_SPACE,
+                regs->hostregs, ACCTYPE_SIE, &aaddr, &sie_xcode,
+                &sie_private, &protect, &sie_stid))
+            (regs->sie_hostpi) (regs->hostregs, sie_xcode);
+
+        /* Convert host real address to host absolute address */
+        aaddr = APPLY_PREFIXING (aaddr, regs->hostregs->PX);
+    }
+
+    /* Check for HOST Page protection */
+    if (acctype == ACCTYPE_WRITE && protect)
+    {
+#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
+        regs->TEA = (vaddr & STORAGE_KEY_PAGEMASK)
+                        | TEA_PROT_AP | TEA_ST_HOME;
+        regs->excarid = 0;
+#endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
+        ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
+    }
+#endif /*defined(_FEATURE_SIE)*/
 
     /* Set the reference and change bits in the storage key */
     STORAGE_KEY(aaddr) |= STORKEY_REF;
