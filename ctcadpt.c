@@ -952,9 +952,9 @@ static void*  CTCT_ListenThread( void* argp )
 
         if( strcmp( str, parm.dev->filename ) != 0 )
         {
-            logmsg( _("HHCCT023E %4.4X: Incorrect client or config error\n"),
-                    parm.dev->devnum );
-            logmsg( _("                 Config=%s, connecting client=%s\n"),
+            logmsg( _("HHCCT023E %4.4X: Incorrect client or config error\n"
+                      "                 Config=%s, connecting client=%s\n"),
+                    parm.dev->devnum,
                     parm.dev->filename, str);
             close( connfd );
         }
