@@ -55,8 +55,8 @@ if test ! -e ./ABOUT-NLS; then
 
   sed -i -e "s| intl/Makefile||g" configure.ac
   sed -i -e "s| m4/Makefile||g" configure.ac
-  sed -i -e "s| intl m4"||g" Makefile.am
-  sed -i -e "s| autoconf/config.rpath"||g" Makefile.am
+  sed -i -e "s| intl m4||g" Makefile.am
+  sed -i -e "s| autoconf/config.rpath||g" Makefile.am
 
   echo -e "gettextizing..."
   gettextize --copy --force --intl --no-changelog >> ./autogen.log 2>&1
