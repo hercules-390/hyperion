@@ -41,44 +41,43 @@ RPM
 <li><a href="hercules-2.16-1.src.rpm">hercules-2.16-1.src.rpm</a>: Source
 RPM (if you want to build RPMs yourself)
 </ul>
+
+<p><center><hr width=15% noshade></center>
+<h3>
+The CVS version
+</h3>
 <p>
-
-<blockquote>
-
 The complete source code for the current <i>development</i> version of
-Hercules is also available via anonymous access from our cvs source code
-repository. The cvs root is
+Hercules is also available via anonymous access from our CVS source code
+repository. The CVS root is
 <b>CVSROOT=:pserver:anonymous@cvs.conmicro.cx:/usr/cvs/hercules</b>. Doing a
 checkout on module "hercules" will get you the source for all of Hercules,
-and checking out "wingui" will get you the complete source for the <a
-href="http://home.sprintmail.com/~dtrout/Hercules/index.html"> Windows
-GUI</a> front end (HercGUI).
+and checking out "wingui" will get you the complete source for the
+<a href="http://home.sprintmail.com/~dtrout/Hercules/index.html">Windows GUI</a>
+front end (HercGUI).
 
 <p>
-
 No password is required; just press enter when asked:
 
-<blockquote><blockquote><p><tt>
-	cvs login<br>
-	(Logging in to anonymous@conmicro.cx...)<br>
-	CVS password:<br>
-	cvs -z9 co hercules<br>
-	cvs server: Updating hercules<br>
-</tt></blockquote></blockquote>
+<p><tt>
+cvs login<br>
+(Logging in to anonymous@conmicro.cx...)<br>
+CVS password:<br>
+cvs -z9 co hercules<br>
+cvs server: Updating hercules<br>
+</tt>
 
+<p>
 Please note that this will get you the current
-<i><u>development</u></i> version of Hercules, which is <i>not</i>
+<i>development</i> version of Hercules, which is <i>not</i>
 release quality and thus might not even work (since it's still under
 development). If you want the current, stable, <i>release</i> version
 of Hercules (i.e. one that is known to work properly), then use the
 previously mentioned links instead.
 
 <p>
-
 Read the file <tt>README.CVS</tt> for additional and updated
-	    instructions for building the development version.
-
-</blockquote>
+instructions for building the development version.
 
 <p><center><hr width=15% noshade></center>
 <h3>
@@ -86,7 +85,7 @@ What people are saying about Hercules
 </h3>
 <p>
 <em>&#147;
-Never in my wildest dreams did I expect to see OS
+Never in my wildest dreams did I expect to see MVS
 running on a machine that I personally own.
 Hercules is a marvelous tool.  My thanks to you all for a job
 very well done.
@@ -103,6 +102,51 @@ console messages again was a wonderful bit of nostalgia!
 Bob Brown
 <p>
 <em>&#147;
+I have installed your absolutely fantastic /390 emulator.
+You won't believe what I felt when I saw the prompt.
+Congratulations, this is a terrific software.
+I really have not had such a fascinating and interesting
+time on my PC lately.
+&#148;</em>
+<br>&#151;
+IBM Large Systems Specialist
+<p>
+<em>&#147;
+An apparently excellent emulator that allows those open source
+developers with an "itch to scratch", to come to the S/390 table
+and contribute.
+&#148;</em>
+<br>&#151;
+Mike MacIsaac, IBM
+<p>
+<em>&#147;
+BTW grab a copy of Hercules and you can test it at home.
+It's a very good S/390 and zSeries (S/390 64bit) emulator..
+&#148;</em>
+<br>&#151;
+Alan Cox
+<p>
+<em>&#147;
+It works even better than I imagined.
+Hercules is a fine piece of software!
+&#148;</em>
+<br>&#151;
+Dave Sienkiewicz
+<p>
+<em>&#147;
+Hercules is a systems programmer's dream come true.
+&#148;</em>
+<br>&#151;
+Ren&eacute; Vincent Jansen
+<p>
+<em>&#147;
+Aside from the electric trains my parents got
+me in 1953, this is the best toy I've ever been given,
+bar none.&#148;</em>
+<br>&#151;
+Jeffrey Broido
+<p>
+<em>&#147;
 Congratulations to you and your team on a fine piece of work!
 &#148;</em>
 <br>&#151;
@@ -113,23 +157,6 @@ Congratulations on a magnificent achievement!
 &#148;</em>
 <br>&#151;
 Mike Ross
-<p>
-<em>&#147;
-It works even better than I imagined.
-Hercules is a fine piece of software!
-&#148;</em>
-<br>&#151;
-Dave Sienkiewicz
-<p>
-<em>&#147;
-I have installed your absolutely fantastic /390 emulator.
-You won't believe what I felt when I saw the prompt.
-Congratulations, this is a terrific software.
-I really have not had such a fascinating and interesting
-time on my PC lately.
-&#148;</em>
-<br>&#151;
-Senior Systems Engineer
 
 <p>
 Read Moshe Bar's BYTE.com article about Hercules at
@@ -137,10 +164,17 @@ Read Moshe Bar's BYTE.com article about Hercules at
 http://www.byte.com/documents/s=429/byt20000801s0002/</a>
 
 <p>
-Read Richard Higson's chapter about Hercules in the IBM Redbook
+For eighteen months, the IBM Redbook
 <em>SG24-4987 Linux for S/390</em> at
 <a href="http://www.redbooks.ibm.com/abstracts/sg244987.html">
 http://www.redbooks.ibm.com/abstracts/sg244987.html</a>
+contained a chapter written by Richard Higson
+describing how to run Linux/390 under Hercules.
+Then suddenly, all mention of Hercules was mysteriously
+removed from the online edition of the book!
+Read the story of the disappearing Redbook chapter at
+<a href="http://www.trustsec.de/deb390/print.php?sid=26">
+http://www.trustsec.de/deb390/print.php?sid=26</a>
 
 <p>
 View the foils from Jay Maynard's presentation given at
@@ -148,6 +182,34 @@ View the foils from Jay Maynard's presentation given at
 SHARE Session 2880</a>
 in Minneapolis
 on Wednesday, 25 July 2001.
+
+<p><center><hr width=15% noshade></center>
+<h3>
+Other Hercules-related sites
+</h3>
+<ul>
+<li><a href="http://www.bsp-gmbh.com/hercules">http://www.bsp-gmbh.com/hercules</a>
+    <br>Volker Bandke's Hercules site.  This is <i>the</i> site for
+    users of Hercules on Windows, and here you can also obtain Volker's
+    MVS 3.8J turnkey system.
+<li><a href="http://www.geocities.com/hackules390">http://www.geocities.com/hackules390</a>
+    <br>A whole host of unofficial Hercules add-ons and patches by an anonymous
+    Hercules enthusiast
+<li><a href="http://ensose.com/mvs38j.html">http://ensose.com/mvs38j.html</a>
+    <br>Jim Morrison's downloads (includes 3380 support for MVS 3.8!)
+<li><a href="http://www.jaymoseley.com/hercules">http://www.jaymoseley.com/hercules</a>
+    <br>Jay Moseley's Hercules site - lots of Hercules and MVS information
+<li><a href="http://www.tommysprinkle.com/mvs">http://www.tommysprinkle.com/mvs</a>
+    <br>Tommy Sprinkle's MVS 3.8 documentation
+<li><a href="http://hansen-family.com/mvs">http://hansen-family.com/mvs</a>
+    <br>Bob Hansen's MVS 3.8 documentation
+<li><a href="http://www.schaefernet.de/hercules">http://www.schaefernet.de/hercules</a>
+    <br>Wolfgang Sch&auml;fer's Hercules site - MVT/MVS tutorials and add-ons
+<li><a href="http://www.kiyoinc.com/herc390.html">http://www.kiyoinc.com/herc390.html</a>
+    <br>Cory Hamasaki's New Users Documentation Effort
+<li><a href="http://www.kiyoinc.com/herc3088.html">http://www.kiyoinc.com/herc3088.html</a>
+    <br>Axel Schwarzer's 3088 howto documentation
+</ul>
 
 <p>
 <img src="gifs/note.gif">
@@ -165,6 +227,6 @@ IBM, System/370, ESA/390, and z/Architecture are trademarks or
 registered trademarks of IBM Corporation.
 Other product names mentioned here are trademarks of other companies.
 <small>
-<p>Last updated 19 April 2002
+<p>Last updated 31 July 2002
 </BODY>
 </HTML>
