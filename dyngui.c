@@ -52,8 +52,10 @@
 #define  STATUS_STREAM_FILE_PTR   ( stderr )
 #define  MAX_COMMAND_LEN          ( 1024 )
 
-#if 0
-SYSBLK*  my_sysblk_ptr        = &sysblk; // (ptr to Herc's SYSBLK structure)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
+SYSBLK   *psysblk;                      // (ptr to Herc's SYSBLK structure)
+#define sysblk (*psysblk)
+void *(*panel_command) (void *);
 #endif
 FILE*    fInputStream         = NULL;   // (stdin stream)
 FILE*    fStatusStream        = NULL;   // (stderr stream)
@@ -966,7 +968,8 @@ HDL_REGISTER ( panel_command,   gui_panel_command   );
 
 END_REGISTER_SECTION;
 
-#if 0
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
+#undef sysblk
 ///////////////////////////////////////////////////////////////////////////////
 //                        HDL_RESOLVER_SECTION
 // The following section "resolves" entry-points that this module needs. The
@@ -985,7 +988,7 @@ HDL_RESOLVE ( panel_command );
 
 //                    Our pointer-     Registered entry-
 //                    variable name    point value name
-HDL_RESOLVE_PTRVAR (  my_sysblk_ptr,     sysblk         );
+HDL_RESOLVE_PTRVAR (  psysblk,           sysblk         );
 
 END_RESOLVER_SECTION;
 #endif
