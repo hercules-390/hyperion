@@ -167,6 +167,10 @@ TID     rctid;                          /* RC file thread identifier */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
+    /* ensure hdl_shut is called in case of shutdown
+       hdl_shut will ensure entries are only called once */
+    atexit(hdl_shut);
+
     logger_init();
 
     /* Display the version identifier */
@@ -409,8 +413,12 @@ void system_shutdown (void)
                  a redirected log, however the logger termination 
                  still has a problem where msgs could be lost during
                  termination (ie left in a buffer, not written to
-                 the hardcopy log).  */
+                 the hardcopy log).
+                 hdl_adsc(logger_term, NULL) should be added to the 
+                 logger init routine */
     logger_term();
+
+    hdl_shut();
 
     release_config();
 }

@@ -721,7 +721,7 @@ struct termios kbattr;                  /* Terminal I/O structure    */
     kbattr.c_lflag |= (ECHO | ICANON);
     tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
 
-    fprintf(stderr, ANSI_RESET_WHT_BLK ANSI_ROW24_COL79 );
+    fprintf(stderr, ANSI_RESET_WHT_BLK ANSI_CLEAR_SCREEN );
     fflush(stderr);
 }
 
@@ -816,7 +816,7 @@ struct  timeval tv;                     /* Select timeout structure  */
     pipefd = compat_msgpiper;
     keybfd = STDIN_FILENO;
 
-    atexit(panel_cleanup);
+    hdl_adsc(panel_cleanup, NULL);
 
     /* Set screen output stream to fully buffered */
     setvbuf (confp, NULL, _IOFBF, 0);

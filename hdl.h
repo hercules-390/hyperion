@@ -34,6 +34,10 @@ void hdl_dlst();                        /* list all dependencies     */
 
 void hdl_main();                        /* Main initialization rtn   */
 
+void hdl_adsc (void *, void *);         /* Add shutdown routine      */
+int hdl_rmsc(void *, void *);           /* Remove shutdown routine   */
+void hdl_shut(void);                    /* Call all shutdown routines*/
+
 void * hdl_fent(char *);                /* Find entry name           */
 void * hdl_nent(char *, void*);         /* Find next in chain        */
 
@@ -116,6 +120,7 @@ return 0; }
 struct _HDLDEP;
 struct _MODENT; 
 struct _DLLENT;
+struct _HDLSHD;
 
 
 typedef struct _HDLDEP {                /* Dependency entry          */
@@ -152,6 +157,14 @@ typedef struct _DLLENT {                /* DLL entry                 */
     struct _MODENT *modent;             /* First symbol entry        */
     struct _DLLENT *dllnext;            /* Next entry in chain       */
 } DLLENT;
+
+
+typedef struct _HDLSHD {
+    struct _HDLSHD *next;
+    void (*shdcall) (void *);           /* Entry to be called        */
+    void *shdarg;                       /* Optional argument         */
+} HDLSHD;
+
 
 /*-------------------------------------------------------------------*/
 

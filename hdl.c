@@ -15,6 +15,8 @@ static DLLENT *hdl_cdll;                 /* current dll (hdl_lock)   */
 
 static HDLDEP *hdl_depend;               /* Version codes in hdlmain */
 
+static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
+
 /* hdl_list - list all entry points */
 void hdl_list()
 {
@@ -246,7 +248,7 @@ MODENT *modent;
 
 /* hdl_term - hercules termination
  */
-static void hdl_term(void)
+static void hdl_term(void *unused __attribute__ ((unused)) )
 {
 DLLENT *dllent;
 
@@ -255,6 +257,54 @@ DLLENT *dllent;
     {
         if(dllent->hdlfini)
             (dllent->hdlfini)();
+    }
+}
+
+
+/* Add shutdown call */
+void hdl_adsc (void * shdcall, void * shdarg)
+{
+HDLSHD *newcall;
+
+    newcall = malloc(sizeof(HDLSHD));
+    newcall->shdcall = shdcall;
+    newcall->shdarg = shdarg;
+    newcall->next = hdl_shdlist;
+    hdl_shdlist = newcall;
+}
+
+/* Remove shutdown call */
+int hdl_rmsc(void *shdcall, void *shdarg)
+{
+HDLSHD **tmpcall;
+
+    for(tmpcall = &(hdl_shdlist); *tmpcall; tmpcall = &((*tmpcall)->next) )
+    {
+        if( (*tmpcall)->shdcall == shdcall
+          && (*tmpcall)->shdarg == shdarg )
+        {
+        HDLSHD *frecall;
+            frecall = *tmpcall;
+            *tmpcall = (*tmpcall)->next;
+            free(frecall);
+            return 0;
+        }
+    }
+    return -1;
+}
+    
+
+/* Call all shutdown call entries in LIFO order */
+void hdl_shut(void)
+{
+HDLSHD *shdent;
+
+    for(shdent = hdl_shdlist; shdent; shdent = hdl_shdlist)
+    {
+        (shdent->shdcall) (shdent->shdarg);
+        /* Remove shutdown call entry to ensure it is called once */
+        hdl_shdlist = shdent->next;
+        free(shdent);
     }
 }
 
@@ -336,7 +386,7 @@ HDLPRE *preload;
         hdl_load(preload->name, preload->flag);
 
     /* Register termination exit */
-    atexit(hdl_term);
+    hdl_adsc(hdl_term, NULL);
 }
 
 
