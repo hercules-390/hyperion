@@ -12,7 +12,7 @@
 /* filename     is the name of the disk image file to be created     */
 /*              (this program will not overwrite an existing file)   */
 /* devtype      is the emulated device type.                         */
-/*              CKD: 2311, 2314, 3330, 3350, 3380, 3390              */
+/*              CKD: 2311, 2314, 3330, 3350, 3380, 3390, 9345        */
 /*              FBA: 3310, 3370                                      */
 /* volser       is the volume serial number (1-6 characters)         */
 /* size         is the size of the device (in cylinders for CKD      */
@@ -46,7 +46,7 @@ argexit ( int code )
             "Syntax:\tdasdinit filename devtype volser size\n"
             "where:\tfilename = name of file to be created\n"
             "\tdevtype  = 2311, 2314, 3330, 3340, 3350, 3375, 3380, "
-            "3390 (CKD)\n"
+            "3390, 9345(CKD)\n"
             "\t           3310, 3370 (FBA)\n"
             "\tvolser   = volume serial number (1-6 characters)\n"
             "\tsize     = volume size in cylinders (CKD devices)\n"
@@ -608,6 +608,12 @@ BYTE    c;                              /* Character work area       */
         type = 'C';
         heads = 15;
         maxdlen = 56664;
+        break;
+
+    case 0x9345:
+        type = 'C';
+        heads = 15;
+        maxdlen = 46456;
         break;
 
     case 0x3310:

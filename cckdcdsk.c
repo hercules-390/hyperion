@@ -212,6 +212,7 @@ int  cyls3350[]   = {555, 0};
 int  cyls3375[]   = {959, 0};
 int  cyls3380[]   = {885, 1770, 2655, 0};
 int  cyls3390[]   = {1113, 2226, 3339, 10017, 0};
+int  cyls9345[]   = {1440, 2156, 0};
 char *space[]     = {"none", "devhdr", "cdevhdr", "l1tab", "l2tab",
                      "trkimg", "free_blk", "file_end"};
 char *compression[] = {"none", "zlib", "bzip2"};
@@ -297,6 +298,12 @@ char *compression[] = {"none", "zlib", "bzip2"};
         heads = 12;
         maxdlen = 8368;
         cyltab = cyls3340;
+        break;
+
+    case 0x45:
+        heads = 15;
+        maxdlen = 46456;
+        cyltab = cyls9345;
         break;
 
     case 0x50:

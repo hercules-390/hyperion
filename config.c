@@ -1075,6 +1075,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     case 0x3375:
     case 0x3380:
     case 0x3390:
+    case 0x9345:
         devinit = &ckddasd_init_handler;
         devqdef = &ckddasd_query_device;
         devexec = &ckddasd_execute_ccw;

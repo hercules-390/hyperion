@@ -855,8 +855,8 @@ int             b2;                     /* Bytes used by new record
                                            when not last on track    */
 int             nrecs;                  /* Number of record/track    */
 int             c, d1, d2, x;           /* 23xx/3330/3350 factors    */
-int             f1, f2, f3, f4, f5, f6; /* 3380/3390 factors         */
-int             fl1, fl2, int1, int2;   /* 3380/3390 calculations    */
+int             f1, f2, f3, f4, f5, f6; /* 3380/3390/9345 factors    */
+int             fl1, fl2, int1, int2;   /* 3380/3390/9345 calculation*/
 
     switch (devtype)
     {
@@ -999,6 +999,23 @@ int             fl1, fl2, int1, int2;   /* 3380/3390 calculations    */
         trklen = 58786;
         maxlen = 56664;
         f1 = 34; f2 = 19; f3 = 9; f4 = 6; f5 = 116; f6 = 6;
+        int1 = ((datalen + f6) + (f5*2-1)) / (f5*2);
+        int2 = ((keylen + f6) + (f5*2-1)) / (f5*2);
+        fl1 = (f1 * f2) + datalen + f6 + f4*int1;
+        fl2 = (keylen == 0 ? 0 : (f1 * f3) + keylen + f6 + f4*int2);
+        fl1 = ((fl1 + f1 - 1) / f1) * f1;
+        fl2 = ((fl2 + f1 - 1) / f1) * f1;
+        b1 = b2 = fl1 + fl2;
+        nrecs = trklen / b2;
+        devi = 0; devl = 0; devk = 0; devtl = 0; devfg = 0x30;
+        break;
+
+    case 0x9345:
+        heads = 15;
+        cyls = 1440;
+        trklen = 48280;
+        maxlen = 46456;
+        f1 = 34; f2 = 18; f3 = 7; f4 = 6; f5 = 116; f6 = 6;
         int1 = ((datalen + f6) + (f5*2-1)) / (f5*2);
         int2 = ((keylen + f6) + (f5*2-1)) / (f5*2);
         fl1 = (f1 * f2) + datalen + f6 + f4*int1;

@@ -327,6 +327,10 @@ int             z=-1;                   /* Compression value         */
         case 0x11:
             cyls = 200;
             break;
+        case 0x45:
+            if (ckdcyls > 1440) cyls = 2156;
+            else cyls = 1440;
+            break;
         default:
             fprintf (stderr,
                     "ckd2cckd %s unsupported CKD device: 33%2x\n",

@@ -2260,6 +2260,7 @@ int             cyls3350[]   = {555, 0};
 int             cyls3375[]   = {959, 0};
 int             cyls3380[]   = {885, 1770, 2655, 0};
 int             cyls3390[]   = {1113, 2226, 3339, 10017, 0};
+int             cyls9345[]   = {1440, 2156, 0};
 
     cckd = dev->cckd_ext;
 
@@ -2314,6 +2315,8 @@ int             cyls3390[]   = {1113, 2226, 3339, 10017, 0};
     case 0x3380: cyltab = cyls3380;
                  break;
     case 0x3390: cyltab = cyls3390;
+                 break;
+    case 0x9345: cyltab = cyls9345;
                  break;
     default:     logmsg ("Unsupported device type %4.4x\n",
                        dev->devtype);
