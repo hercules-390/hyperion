@@ -176,7 +176,7 @@ dasdcopy_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.
 	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
-cckdswap_SOURCES = cckdswap.c cckdutil.c dasdtab.c hostinfo.c version.c \ 
+cckdswap_SOURCES = cckdswap.c cckdutil.c dasdtab.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
 hetget_SOURCES = hetget.c hetlib.c sllib.c hostinfo.c version.c \
