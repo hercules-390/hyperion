@@ -11,11 +11,11 @@
 
 /* Everyone should always use the 'logmsg' macro to issue messages   */
 
-#define logmsg(  _message ... )  log_write ( 0, _message )
-#define logmsgp( _message ... )  log_write ( 1, _message )
-#define logmsgb( _message ... )  log_write ( 2, _message )
-#define scrnout( _scrnfmt ... )  fprintf ( fscreen, _scrnfmt )
-#define statmsg( _statmsg ... )  do{if(fstate)fprintf(fstate,_statmsg);}while(0)
+#define logmsg(  _message... )  log_write ( 0, _message )
+#define logmsgp( _message... )  log_write ( 1, _message )
+#define logmsgb( _message... )  log_write ( 2, _message )
+#define scrnout( _scrnfmt... )  fprintf ( fscreen, _scrnfmt )
+#define statmsg( _statmsg... )  do{if(fstate)fprintf(fstate,_statmsg);}while(0)
 
 /* Functions for logmsg capture/routing...   (see logmsg.c)          */
 
