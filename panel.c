@@ -881,7 +881,7 @@ struct  timeval tv;                     /* Select timeout structure  */
         setvbuf (confp, NULL, _IOFBF, 0);
 
 #if !defined(OPTION_DYNAMIC_LOAD)
-    /* Register the system cleanup exit routine */
+    /* Register the panel cleanup exit routine */
     atexit (panel_cleanup);
 #endif
 
