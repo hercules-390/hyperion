@@ -1,3 +1,4 @@
+18 Jul 2003 Fix race conditions in console detach/close - Jan Jaeger
 17 Jul 2003 Allow address:port on CNSLPORT statement - Jan Jaeger
 17 Jul 2003 make console threads high priority, remove trylock - Fish
 17 Jul 2003 logger_init: 1) consistent stdxxx dup'ing,

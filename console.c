@@ -277,7 +277,7 @@ struct sockaddr_in *sin;
 
         if(!hostent)
         {
-            logmsg("HHCxx001I Unable to determine IP address from %s\n",
+            logmsg("HHCGI001I Unable to determine IP address from %s\n",
                 host);
             free(sin);
             return NULL;
@@ -298,7 +298,7 @@ struct sockaddr_in *sin;
 
             if(!servent)
             {
-                logmsg("HHCxx002I Unable to determine port number from %s\n",
+                logmsg("HHCGI002I Unable to determine port number from %s\n",
                     host);
                 free(sin);
                 return NULL;
@@ -312,7 +312,7 @@ struct sockaddr_in *sin;
     }
     else
     {
-        logmsg("HHCxx003E Invalid parameter: %s\n",
+        logmsg("HHCGI003E Invalid parameter: %s\n",
             host_serv);
         free(sin);
         return NULL;
@@ -881,7 +881,6 @@ BYTE            buf[32];                /* tn3270 write buffer       */
     if (rc & CSW_UC)
     {
         dev->connected = 0;
-        close (dev->fd);
         dev->fd = -1;
         dev->sense[0] = SENSE_DC;
 
@@ -1057,6 +1056,12 @@ BYTE    c;                              /* Character work area       */
 
 } /* end function recv_1052_data */
 
+ 
+/* o_rset identifies the filedescriptors of all known connections    */
+
+static fd_set o_rset;
+static int    o_mfd;
+
 
 /*-------------------------------------------------------------------*/
 /* NEW CLIENT CONNECTION THREAD                                      */
@@ -1117,41 +1122,28 @@ BYTE                    rejmsg[80];     /* Rejection message         */
     /* Look for an available console device */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
-        /* Obtain the device lock */
-        obtain_lock (&dev->lock);
-
         /* Loop if the device is invalid */
         if(!(dev->pmcw.flag5 & PMCW5_V))
-        {
-            release_lock (&dev->lock);
             continue;
-        }
 
         /* Loop if non-matching device type */
         if (class == 'D' && dev->devtype != 0x3270)
-        {
-            release_lock (&dev->lock);
             continue;
-        }
+
         if (class == 'P' && dev->devtype != 0x3287)
-        {
-            release_lock (&dev->lock);
             continue;
-        }
+
         if (class == 'K' && dev->devtype != 0x1052
             && dev->devtype != 0x3215)
-        {
-            release_lock (&dev->lock);
             continue;
-        }
 
         /* Loop if a specific device number was requested and
            this device is not the requested device number */
         if (devnum != 0xFFFF && dev->devnum != devnum)
-        {
-            release_lock (&dev->lock);
             continue;
-        }
+
+        /* Obtain the device lock */
+        obtain_lock (&dev->lock);
 
         /* Test for available device */
         if (dev->connected == 0)
@@ -1171,6 +1163,11 @@ BYTE                    rejmsg[80];     /* Rejection message         */
             memset (&dev->scsw, 0, sizeof(SCSW));
             memset (&dev->pciscsw, 0, sizeof(SCSW));
             dev->busy = dev->pending = dev->pcipending = 0;
+
+            /* Set device in old readset such that the associated 
+               file descriptor will be closed after detach */
+            FD_SET (dev->fd, &o_rset);
+            if (dev->fd > o_mfd) o_mfd = dev->fd;
 
             release_lock (&dev->lock);
 
@@ -1282,7 +1279,9 @@ int                     lsock;          /* Socket for listening      */
 int                     csock;          /* Socket for conversation   */
 struct sockaddr_in     *server;         /* Server address structure  */
 fd_set                  readset;        /* Read bit map for select   */
+fd_set                  c_rset;         /* Currently valid dev->fd's */
 int                     maxfd;          /* Highest fd for select     */
+int                     fd, c_mfd = 0;
 int                     optval;         /* Argument for setsockopt   */
 TID                     tidneg;         /* Negotiation thread id     */
 DEVBLK                 *dev;            /* -> Device block           */
@@ -1315,7 +1314,7 @@ BYTE                    unitstat;       /* Status after receive data */
     /* Prepare the sockaddr structure for the bind */
     if(!( server = get_inet_socket(console_cnslport) ))
     {
-        logmsg("HHCxxnnnE CNSLPORT statement invalid: %s\n",
+        logmsg("HHCTE010E CNSLPORT statement invalid: %s\n",
             console_cnslport);
         return NULL;
     }
@@ -1350,6 +1349,9 @@ BYTE                    unitstat;       /* Status after receive data */
     logmsg (_("HHCTE003I Waiting for console connection on port %u\n"),
             ntohs(server->sin_port));
 
+    FD_ZERO(&o_rset);
+    o_mfd = 0;
+
     /* Handle connection requests and attention interrupts */
     while (sysblk.cnslcnt) {
 
@@ -1358,28 +1360,42 @@ BYTE                    unitstat;       /* Status after receive data */
         FD_ZERO (&readset);
         FD_SET (lsock, &readset);
 
+        FD_ZERO(&c_rset);
+        c_mfd = 0;
+
         /* Include the socket for each connected console */
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
-            /* Obtain the device lock */
-            obtain_lock (&dev->lock);
-
             if (dev->console
                 && dev->connected
-                && (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
-                && !(dev->pending || dev->pcipending)
-                && (dev->pmcw.flag5 & PMCW5_V)
-// NOT S/370    && (dev->pmcw.flag5 & PMCW5_E)
-                && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)
+// NOT S/370    && (dev->pmcw.flag5 & PMCW5_E) 
+                && (dev->pmcw.flag5 & PMCW5_V) )
             {
-                FD_SET (dev->fd, &readset);
-                if (dev->fd > maxfd) maxfd = dev->fd;
+                FD_SET (dev->fd, &c_rset);
+                if (dev->fd > c_mfd) c_mfd = dev->fd;
+
+                if( (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
+                && !(dev->pending || dev->pcipending)
+                && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)
+                {
+                    FD_SET (dev->fd, &readset);
+                    if (dev->fd > maxfd) maxfd = dev->fd;
+                }
             }
-
-            /* Release the device lock */
-            release_lock (&dev->lock);
-
         } /* end for(dev) */
+
+
+        /* Close any no longer existing connections */
+        for(fd = 1; fd <= (c_mfd < o_mfd ? c_mfd : o_mfd); fd++)
+            if(FD_ISSET(fd, &o_rset) && !FD_ISSET(fd, &c_rset))
+                close(fd);
+        if(o_mfd > c_mfd)
+            for(; fd <= o_mfd; fd++)
+                if(FD_ISSET(fd, &o_rset))
+                    close(fd);
+        memcpy(&o_rset, &c_rset, sizeof(o_rset));
+        o_mfd = c_mfd;
+
 
         /* Wait for a file descriptor to become ready */
 #ifdef WIN32
@@ -1396,19 +1412,8 @@ BYTE                    unitstat;       /* Status after receive data */
         if (rc < 0 )
         {
             if (errno == EINTR) continue;
-            /*
-               Handle potential race condition: EBADF simply
-               means one (or more) of the file descriptors we
-               had in our select set is no longer open. Since
-               whoever closed it SHOULD have also reset the
-               'connected' flag, it should then not get added
-               back into our FDSET this next time around, so
-               we simply ignore this error and things SHOULD
-               magically take care of themselves.
-            */
             TNSERROR("select: %s\n", strerror(errno));
-            if (EBADF == errno) continue;
-            break;      /* something is very wrong somewhere! */
+            break;
         }
 
         /* If a client connection request has arrived then accept it */
@@ -1424,8 +1429,8 @@ BYTE                    unitstat;       /* Status after receive data */
             }
 
             /* Create a thread to complete the client connection */
-            if ( create_device_thread (&tidneg, &sysblk.detattr,
-                                       connect_client, &csock) )
+            if ( create_thread (&tidneg, &sysblk.detattr,
+                                connect_client, &csock) )
             {
                 TNSERROR("connect_client create_thread: %s\n",
                         strerror(errno));
@@ -1466,9 +1471,10 @@ BYTE                    unitstat;       /* Status after receive data */
                 /* Close the connection if an error occurred */
                 if (unitstat & CSW_UC)
                 {
-                    dev->connected = 0;
                     close (dev->fd);
                     dev->fd = -1;
+                    dev->connected = 0;
+                    FD_CLR(fd, &o_rset);
                 }
 
                 /* Indicate that data is available at the device */
@@ -1510,6 +1516,10 @@ BYTE                    unitstat;       /* Status after receive data */
 
     } /* end while */
 
+    for(fd = 1; fd <= c_mfd; fd++)
+        if(FD_ISSET(fd, &c_rset))
+            close(fd);
+
     /* Close the listening socket */
     close (lsock);
 
@@ -1525,8 +1535,8 @@ console_initialise()
 {
     if(!(sysblk.cnslcnt++))
     {
-        if ( create_device_thread (&sysblk.cnsltid, &sysblk.detattr,
-                                   console_connection_handler, NULL) )
+        if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
+                            console_connection_handler, NULL) )
         {
             logmsg (_("HHCTE005E Cannot create console thread: %s\n"),
                     strerror(errno));
@@ -1543,8 +1553,6 @@ console_remove(DEVBLK *dev)
     dev->connected = 0;
     dev->console = 0;
 
-    if(dev->fd > 2)
-        close (dev->fd);
     dev->fd = -1;
 
     if(!sysblk.cnslcnt--)
@@ -1634,6 +1642,7 @@ loc3270_close_device ( DEVBLK *dev )
 static int
 constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
+
     /* Indicate that this is a console device */
     dev->console = 1;
 
