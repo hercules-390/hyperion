@@ -66,6 +66,7 @@
 #include <sys/utsname.h>
 #include <sys/wait.h>
 #include <sys/uio.h>
+#include <sys/mman.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

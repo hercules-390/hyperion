@@ -22,7 +22,6 @@
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2003      */
 /*-------------------------------------------------------------------*/
 
-
 #include "hercules.h"
 
 #include "devtype.h"
@@ -1321,7 +1320,56 @@ BYTE **orig_newargv;
 
     /* Obtain main storage */
     sysblk.mainsize = mainsize * 1024 * 1024;
-    sysblk.mainstor = malloc(sysblk.mainsize);
+//  sysblk.mainstor = malloc(sysblk.mainsize);
+    /*
+             Windows "double memory consumption" bug fix
+             (which should work on all other systems too)
+
+        =============================================================
+        From: golden_dog98 [golden_dog98@yahoo.com]
+        Sent: Monday, July 07, 2003 1:08 AM
+        To: hercules-390@yahoogroups.com
+        Subject: [hercules-390] To "Fish" (was: "Re: How can I use all my
+        physical memory")
+
+        This problem is caused by how CYGWIN allocates memory under Windows 
+        2000.  In malloc.cc, malloc() calls sYSMALLOc() to allocate chunks of 
+        memory.  sYSMALLOc calls mmap() with flags MAP_PRIVATE and 
+        MAP_ANONYMOUS.  mmap() calls mmap64() with the same flags.  Around 
+        line 540 of mmap.cc, mmap64() checks to see if MAP_PRIVATE is set and 
+        if has_working_copy_on_write() is true (which it is for Win2000) and 
+        sets access to FILE_MAP_COPY.  mmap64() then calls 
+        fhandler_disk_file::mmap() in mmap.cc.  Because access is set to 
+        FILE_MAP_COPY, protect is set to PAGE_WRITECOPY when CreateFileMapping
+        () is called.  Then MapViewOfFileEx() is called with access set to 
+        FILE_MAP_COPY.  This allocates the storage with "copy on write 
+        acess", which essentially doubles the storage usage.  See 
+        http://msdn.microsoft.com/library/default.asp?url=/library/en-
+        us/fileio/base/mapviewoffileex.asp.
+
+        I changed line 1299 of Hercules' config.c to fix the problem:
+
+            sysblk.mainstor = mmap(0, sysblk.mainsize, PROT_READ | 
+        PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+
+        I also had to include at the top of config.c:
+
+        #include <sys/mmap.h>
+
+        I tested this with a 512MB system and all went well....
+
+        Mark D.
+        =============================================================
+
+        Note we can't use the "HAVE_MMAP" test here because of a "Unix-ism"
+        bug in autoconf that causes mmap tests to always fail on Windows
+        systems as explained in the following Cygwin mailing list post:
+
+        http://www.cygwin.com/ml/cygwin/2002-04/msg00412.html
+    */
+    sysblk.mainstor = mmap(0, sysblk.mainsize,
+        PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+
     if (sysblk.mainstor == NULL)
     {
         fprintf(stderr, _("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
