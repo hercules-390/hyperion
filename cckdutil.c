@@ -854,7 +854,8 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
             goto cdsk_return;
         }
 
-        if (cdevhdr.numl1tab != ((hdrcyls * heads) + 255) / 256)
+        if (cdevhdr.numl1tab < ((hdrcyls * heads) + 255) / 256
+         || cdevhdr.numl1tab > ((hdrcyls * heads) + 255) / 256 + 1)
         {
             CDSKMSG (m, "Invalid number of l1 table entries in header: "
                      "%d, expecting %d\n",
@@ -866,19 +867,18 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
     }
     else
     {
-        int numl1;
         trks = ((U32)(cdevhdr.cyls[3]) << 24)
              | ((U32)(cdevhdr.cyls[2]) << 16)
              | ((U32)(cdevhdr.cyls[1]) << 8)
              | (U32)(cdevhdr.cyls[0]);
         trks = (trks / CFBA_BLOCK_NUM) + 1;
-        numl1 = (trks + 255) / 256;
         trksz = CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
         cyls = heads = -1;
-        if (cdevhdr.numl1tab != numl1)
+        if (cdevhdr.numl1tab < (trks + 255) / 256
+         || cdevhdr.numl1tab > (trks + 255) / 256 + 1)
         {
             CDSKMSG (m, "Invalid number of l1 table entries in header: "
-                     "%d, expecting %d\n", cdevhdr.numl1tab, numl1);
+                     "%d, expecting %d\n", cdevhdr.numl1tab, (trks + 255) / 256);
             goto cdsk_return;
         }
     }
