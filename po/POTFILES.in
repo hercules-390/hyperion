@@ -27,7 +27,6 @@ stack.c
 tapedev.c
 timer.c
 version.c
-cckd2ckd.c
 cckdcdsk.c
 cckdswap.c
-ckd2cckd.c
+dasdutil.c
