@@ -1790,6 +1790,128 @@ int     ar1 = 4;                        /* Access register number    */
     regs->psw.cc = cc;
 }
 
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
+/*-------------------------------------------------------------------*/
+/* B9B1 CU24 - Convert UTF-16 to UTF-32                        [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_utf16_to_utf32)
+{
+  int r1, r2;                           /* Values of R fields        */
+  
+  RRE(inst, regs, r1, r2);
+  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+}
+
+/*-------------------------------------------------------------------*/
+/* B9B1 CU42 - Convert UTF-32 to UTF-16                        [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_utf32_to_utf16)
+{
+  int r1, r2;                           /* Values of R fields        */
+  
+  RRE(inst, regs, r1, r2);
+  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+}
+
+/*-------------------------------------------------------------------*/
+/* B9B1 CU41 - Convert UTF-32 to UTF-8                         [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_utf32_to_utf8)
+{
+  int r1, r2;                           /* Values of R fields        */
+  
+  RRE(inst, regs, r1, r2);
+  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+}
+
+/*-------------------------------------------------------------------*/
+/* B9B1 CU14 - Convert UTF-8 to UTF-32                         [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_utf8_to_utf32)
+{
+  int r1, r2;                           /* Values of R fields        */
+  
+  RRE(inst, regs, r1, r2);
+  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+}
+
+/*-------------------------------------------------------------------*/
+/* B9B1 STSTU - Search String Unicode                          [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(search_string_unicode)
+{
+  int len;                              /* Lengths to copy           */
+  int b1, b2;                           /* Base register numbers     */
+  VADR addr1, addr2;                    /* Virtual addresses         */
+
+  SS_L(inst, regs, len, b1, addr1, b2, addr2);
+
+  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+}
+
+/*-------------------------------------------------------------------*/
+/* D0 TRTR - Translate and Test Reversed                        [SS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(translate_and_test_reversed)
+{
+int     l;                              /* Lenght byte               */
+int     b1, b2;                         /* Values of base field      */
+VADR    effective_addr1,
+        effective_addr2;                /* Effective addresses       */
+int     cc = 0;                         /* Condition code            */
+BYTE    sbyte;                          /* Byte work areas           */
+BYTE    dbyte;                          /* Byte work areas           */
+int     i;                              /* Integer work areas        */
+
+    SS_L(inst, regs, l, b1, effective_addr1,
+                                  b2, effective_addr2);
+
+    /* Process first operand from left to right */
+    for ( i = 0; i <= l; i++ )
+    {
+        /* Fetch argument byte from first operand */
+        dbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+
+        /* Fetch function byte from second operand */
+        sbyte = ARCH_DEP(vfetchb) ( (effective_addr2 + dbyte)
+                                   & ADDRESS_MAXWRAP(regs), b2, regs );
+
+        /* Test for non-zero function byte */
+        if (sbyte != 0) {
+
+            /* Store address of argument byte in register 1 */
+#if defined(FEATURE_ESAME)
+            if(regs->psw.amode64)
+                regs->GR_G(1) = effective_addr1;
+            else
+#endif
+            if ( regs->psw.amode )
+                regs->GR_L(1) = effective_addr1;
+            else
+                regs->GR_LA24(1) = effective_addr1;
+
+            /* Store function byte in low-order byte of reg.2 */
+            regs->GR_LHLCL(2) = sbyte;
+
+            /* Set condition code 2 if argument byte was last byte
+               of first operand, otherwise set condition code 1 */
+            cc = (i == l) ? 2 : 1;
+
+            /* Terminate the operation at this point */
+            break;
+
+        } /* end if(sbyte) */
+
+        /* Decrement first operand address */
+        effective_addr1--;  /* The only difference with TRT ;-) */
+        effective_addr1 &= ADDRESS_MAXWRAP(regs);
+
+    } /* end for(i) */
+
+    /* Update the condition code */
+    regs->psw.cc = cc;
+}
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
 
 #if !defined(_GEN_ARCH)
 

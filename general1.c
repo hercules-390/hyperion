@@ -2189,9 +2189,9 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
 
 #ifdef FEATURE_EXTENDED_TRANSLATION
 /*-------------------------------------------------------------------*/
-/* B2A6 CUUTF - Convert Unicode to UTF-8                       [RRE] */
+/* B2A6 CU21 (CUUTF) - Convert Unicode to UTF-8                [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_unicode_to_utf8)
+DEF_INST(convert_utf16_to_utf8)
 {
 int     r1, r2;                         /* Register numbers          */
 int     i;                              /* Loop counter              */
@@ -2315,13 +2315,13 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
 
     regs->psw.cc = cc;
 
-} /* end convert_unicode_to_utf8 */
+} /* end convert_utf16_to_utf8 */
 
 
 /*-------------------------------------------------------------------*/
-/* B2A7 CUTFU - Convert UTF-8 to Unicode                       [RRE] */
+/* B2A7 CU12 (CUTFU) - Convert UTF-8 to Unicode                [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_utf8_to_unicode)
+DEF_INST(convert_utf8_to_utf16)
 {
 int     r1, r2;                         /* Register numbers          */
 int     i;                              /* Loop counter              */
@@ -2476,7 +2476,7 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
 
     regs->psw.cc = cc;
 
-} /* end convert_utf8_to_unicode */
+} /* end convert_utf8_to_utf16 */
 #endif /*FEATURE_EXTENDED_TRANSLATION*/
 
 

@@ -496,8 +496,8 @@
 
 #if !defined(FEATURE_EXTENDED_TRANSLATION)
  UNDEF_INST(translate_extended)
- UNDEF_INST(convert_unicode_to_utf8)
- UNDEF_INST(convert_utf8_to_unicode)
+ UNDEF_INST(convert_utf16_to_utf8)
+ UNDEF_INST(convert_utf8_to_utf16)
 #endif /*!defined(FEATURE_EXTENDED_TRANSLATION)*/
 
 
@@ -514,6 +514,16 @@
  UNDEF_INST(unpack_ascii)
  UNDEF_INST(unpack_unicode)
 #endif /*!defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+
+
+#if !defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
+ UNDEF_INST(convert_utf16_to_utf32)
+ UNDEF_INST(convert_utf32_to_utf16)
+ UNDEF_INST(convert_utf32_to_utf8)
+ UNDEF_INST(convert_utf8_to_utf32)
+ UNDEF_INST(search_string_unicode)
+ UNDEF_INST(translate_and_test_reversed)
+#endif /*!defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
 
 
 #if !defined(FEATURE_LOAD_REVERSED) && !defined(FEATURE_ESAME_N3_ESA390)
@@ -1397,7 +1407,7 @@ zz_func opcode_table[256][GEN_MAXARCH] = {
  /*CD*/   GENx___x___x___ ,
  /*CE*/   GENx___x___x___ ,
  /*CF*/   GENx___x___x___ ,
- /*D0*/   GENx___x___x___ ,
+ /*D0*/   GENx___x___x900 (translate_and_test_reversed,SS_L,"TRTR"),
  /*D1*/   GENx370x390x900 (move_numerics,SS_L,"MVN"),
  /*D2*/   GENx370x390x900 (move_character,SS_L,"MVC"),
  /*D3*/   GENx370x390x900 (move_zones,SS_L,"MVZ"),
@@ -2176,8 +2186,8 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2A3*/ GENx___x___x___ ,
  /*B2A4*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B2A5*/ GENx___x390x900 (translate_extended,RRE,"TRE"),
- /*B2A6*/ GENx___x390x900 (convert_unicode_to_utf8,RRE,"CUUTF"),
- /*B2A7*/ GENx___x390x900 (convert_utf8_to_unicode,RRE,"CUTFU"),
+ /*B2A6*/ GENx___x390x900 (convert_utf16_to_utf8,RRE,"CU21 (CUUTF)"),
+ /*B2A7*/ GENx___x390x900 (convert_utf8_to_utf16,RRE,"CU12 (CUTFU)"),
  /*B2A8*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B2A9*/ GENx___x___x___ ,
  /*B2AA*/ GENx___x___x___ ,
@@ -2709,10 +2719,10 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9AD*/ GENx___x___x___ ,
  /*B9AE*/ GENx___x___x___ ,
  /*B9AF*/ GENx___x___x___ ,
- /*B9B0*/ GENx___x___x___ ,
- /*B9B1*/ GENx___x___x___ ,
- /*B9B2*/ GENx___x___x___ ,
- /*B9B3*/ GENx___x___x___ ,
+ /*B9B0*/ GENx___x___x900 (convert_utf8_to_utf32,RRE,"CU14"),
+ /*B9B1*/ GENx___x___x900 (convert_utf16_to_utf32,RRE,"CU24"),
+ /*B9B2*/ GENx___x___x900 (convert_utf32_to_utf8,RRE,"CU41"),
+ /*B9B3*/ GENx___x___x900 (convert_utf32_to_utf16,RRE,"CU42"),
  /*B9B4*/ GENx___x___x___ ,
  /*B9B5*/ GENx___x___x___ ,
  /*B9B6*/ GENx___x___x___ ,
@@ -2723,7 +2733,7 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9BB*/ GENx___x___x___ ,
  /*B9BC*/ GENx___x___x___ ,
  /*B9BD*/ GENx___x___x___ ,
- /*B9BE*/ GENx___x___x___ ,
+ /*B9BE*/ GENx___x___x900 (search_string_unicode,SS_L,"SRSTU"),
  /*B9BF*/ GENx___x___x___ ,
  /*B9C0*/ GENx___x___x___ ,
  /*B9C1*/ GENx___x___x___ ,
