@@ -7,7 +7,7 @@ include_sources = include/header.htmlpart include/footer.htmlpart
 
 include_pkgdatadir = $(pkgdatadir)/include
 
-include_pkgdata_DATA = $(include_sources)
+dist_include_pkgdata_DATA = $(include_sources)
 
 images_sources = images/hercules.jpg \
         images/dial1.gif       images/loadu.gif       images/startd.gif  \
@@ -21,4 +21,4 @@ images_sources = images/hercules.jpg \
 
 images_pkgdatadir = $(pkgdatadir)/images
 
-images_pkgdata_DATA = $(images_sources)
+dist_images_pkgdata_DATA = $(images_sources)
