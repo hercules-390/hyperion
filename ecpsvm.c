@@ -1579,7 +1579,7 @@ DEF_INST(ecpsvm_dispatch_main)
     /* DMKDSP - CKWAIT */
     /* Clear Wait / Idle bits in VMRSTAT */
     B_VMRSTAT=EVM_IC(vmb+VMRSTAT);
-    B_VMRSTAT &= (VMPSWAIT | VMIDLE);
+    B_VMRSTAT &= ~(VMPSWAIT | VMIDLE);
     EVM_STC(B_VMRSTAT,vmb+VMRSTAT);
     if(F_VMPSWHI & 0x00020000)
     {
