@@ -37,7 +37,7 @@
 
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"
-#endif // defined(OPTION_FISHIO)
+#endif /* defined(OPTION_FISHIO) */
 
 #define  DISPLAY_INSTRUCTION_OPERANDS
 
@@ -46,7 +46,7 @@
 /*-------------------------------------------------------------------*/
 static void alter_display_real (BYTE *opnd, REGS *regs);
 static void alter_display_virt (BYTE *opnd, REGS *regs);
-// (Socket Devices...)
+/* (Socket Devices...) */
 int bind_device (DEVBLK* dev, char* spec);
 int unbind_device (DEVBLK* dev);
 int unix_socket (char* path);
@@ -886,14 +886,14 @@ static void display_subchannel (DEVBLK *dev)
 
 #if !defined(OPTION_FISHIO)
 void    device_thread();
-#endif // !defined(OPTION_FISHIO)
+#endif /* !defined(OPTION_FISHIO) */
 
 #ifdef WIN32
 int herc_system (char* command)
 {
         return system(command);
 }
-#else // !WIN32
+#else /* !WIN32 */
 int herc_system (char *command)
 {
 extern char **environ;
@@ -933,7 +933,7 @@ int pid, status;
             return status;
     } while(1);
 }
-#endif // WIN32
+#endif /* WIN32 */
 
 
 /*-------------------------------------------------------------------*/
@@ -1160,7 +1160,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
 #if defined(OPTION_FISHIO)
             ios_arch_mode = sysblk.arch_mode;
-#endif // defined(OPTION_FISHIO)
+#endif /* defined(OPTION_FISHIO) */
 
             logmsg("Architecture successfully set to %s mode.\n",get_arch_mode_string(NULL));
 
@@ -2035,10 +2035,10 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         sysblk.msgpipew = stderr;
 #if defined(OPTION_FISHIO)
         ios_msgpipew = sysblk.msgpipew;
-#endif // defined(OPTION_FISHIO)
+#endif /* defined(OPTION_FISHIO) */
 #if defined(OPTION_W32_CTCI)
         g_tt32_msgpipew = sysblk.msgpipew;
-#endif // defined(OPTION_W32_CTCI)
+#endif /* defined(OPTION_W32_CTCI) */
         devascii = strtok(cmd+5," \t");
         if (devascii == NULL || strcmp("now",devascii))
             release_config();
@@ -2083,9 +2083,9 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                     }
                 }
             }
-            // end if(PMCW5_V)
+            /* end if(PMCW5_V) */
         }
-        // end for(dev)
+        /* end for(dev) */
 
         return NULL;
     }
@@ -2368,9 +2368,11 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         int devtmax = -2;
 #if defined(OPTION_FISHIO)
 
-        // Note: no need to lock scheduler vars since WE are the only one
-        // that updates "ios_devtmax" (the scheduler just references it)
-        // and we only display (but not update) all the other variables.
+        /* Note: no need to lock scheduler vars since WE are
+         * the only one that updates "ios_devtmax" (the scheduler
+         * just references it) and we only display (but not update)
+         * all the other variables.
+         */
 
         if (cmd[7] == '=')
             sscanf(cmd+8, "%d", &devtmax);
@@ -2385,14 +2387,14 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
-        TrimDeviceThreads();    // (enforce newly defined threshold)
+        TrimDeviceThreads();    /* (enforce newly defined threshold) */
 
         logmsg ("Max device threads: %d, current: %d, most: %d, "
                 "waiting: %d, max exceeded: %d\n",
                 ios_devtmax, ios_devtnbr, ios_devthwm,
                 (int)ios_devtwait, ios_devtunavail);
 
-#else // !defined(OPTION_FISHIO)
+#else /* !defined(OPTION_FISHIO) */
         TID tid;
 
         if (cmd[7] == '=')
@@ -2430,7 +2432,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
                 sysblk.devtwait, sysblk.devtunavail);
 
-#endif // defined(OPTION_FISHIO)
+#endif /* defined(OPTION_FISHIO) */
         return NULL;
     }
 
@@ -2484,7 +2486,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             logmsg("(error)\n");
         return NULL;
     }
-#endif // defined(OPTION_W32_CTCI)
+#endif /* defined(OPTION_W32_CTCI) */
 
 /*********************************************************************/
     /* Ignore just enter */
@@ -3479,7 +3481,7 @@ struct  timeval tv;                     /* Select timeout structure  */
 
                             (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
 
-                            devnam[255] = 0;   // (ensure string is null terminated)
+                            devnam[255] = 0;   /* (ensure null termination) */
 
                             if ((dev->console && dev->connected) ||
                                 (strlen(dev->filename) > 0))
@@ -3528,7 +3530,7 @@ struct  timeval tv;                     /* Select timeout structure  */
 
                             (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
 
-                            devnam[255] = 0;   // (ensure string is null terminated)
+                            devnam[255] = 0;   /* (ensure null terminated) */
 
                             if ((dev->console && dev->connected) ||
                                 (strlen(dev->filename) > 0))
@@ -4160,12 +4162,12 @@ void display_inst(REGS *regs, BYTE *inst)
     #define logdebug(args...) logmsg(## args)
 #else
     #define logdebug(args...) do {} while (0)
-#endif // DEBUG_SOCKDEV
+#endif /* DEBUG_SOCKDEV */
 
 /* Linked list of bind structures for bound socket devices */
 
-LIST_ENTRY  bind_head;      // (bind_struct list anchor)
-LOCK        bind_lock;      // (lock for accessing list)
+LIST_ENTRY  bind_head;      /* (bind_struct list anchor) */
+LOCK        bind_lock;      /* (lock for accessing list) */
 
 /*-------------------------------------------------------------------*/
 /* bind_device   bind a device to a socket (adds entry to our list   */
@@ -4177,16 +4179,16 @@ int bind_device (DEVBLK* dev, char* spec)
 
     logdebug("bind_device (%4.4X, %s)\n", dev->devnum, spec);
 
-    // Error if device already bound
+    /* Error if device already bound */
 
     if (dev->bs)
     {
         logmsg ("HHC416I Device %4.4X already bound to socket %s\n",
             dev->devnum, dev->bs->spec);
-        return 0;   // (failure)
+        return 0;   /* (failure) */
     }
 
-    // Create a new bind_struct entry
+    /* Create a new bind_struct entry */
 
     bs = malloc(sizeof(bind_struct));
 
@@ -4194,7 +4196,7 @@ int bind_device (DEVBLK* dev, char* spec)
     {
         logmsg ("HHC415I bind_device malloc() failed for device %4.4X\n",
             dev->devnum);
-        return 0;   // (failure)
+        return 0;   /* (failure) */
     }
 
     memset(bs,0,sizeof(bind_struct));
@@ -4204,27 +4206,27 @@ int bind_device (DEVBLK* dev, char* spec)
         logmsg ("HHC415I bind_device safe_strdup() failed for device %4.4X\n",
             dev->devnum);
         free (bs);
-        return 0;   // (failure)
+        return 0;   /* (failure) */
     }
 
-    // Create a listening socket
+    /* Create a listening socket */
 
     if (bs->spec[0] == '/') bs->sd = unix_socket (bs->spec);
     else                    bs->sd = inet_socket (bs->spec);
 
     if (bs->sd == -1)
     {
-        // (error message already issued)
+        /* (error message already issued) */
         free (bs);
-        return 0; // (failure)
+        return 0; /* (failure) */
     }
 
-    // Chain device and socket to each other
+    /* Chain device and socket to each other */
 
     dev->bs = bs;
     bs->dev = dev;
 
-    // Add the new entry to our list of bound devices
+    /* Add the new entry to our list of bound devices */
 
     obtain_lock(&bind_lock);
     InsertListTail(&bind_head,&bs->bind_link);
@@ -4233,7 +4235,7 @@ int bind_device (DEVBLK* dev, char* spec)
     logmsg ("HHC416I Device %4.4X bound to socket %s\n",
         dev->devnum, dev->bs->spec);
 
-    return 1;   // (success)
+    return 1;   /* (success) */
 }
 
 /*-------------------------------------------------------------------*/
@@ -4246,36 +4248,36 @@ int unbind_device (DEVBLK* dev)
 
     logdebug("unbind_device(%4.4X)\n", dev->devnum);
 
-    // Error if device not bound
+    /* Error if device not bound */
 
     if (!(bs = dev->bs))
     {
         logmsg ("HHC416I Device %4.4X not bound to any socket\n",
             dev->devnum);
-        return 0;   // (failure)
+        return 0;   /* (failure) */
     }
 
-    // Error if someone still connected
+    /* Error if someone still connected */
 
     if (dev->fd != -1)
     {
         logmsg ("HHC416I Client %s (%s) still connected to device %4.4X (%s)\n",
             dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
-        return 0;   // (failure)
+        return 0;   /* (failure) */
     }
 
-    // Remove the entry from our list
+    /* Remove the entry from our list */
 
     obtain_lock(&bind_lock);
     RemoveListEntry(&bs->bind_link);
     release_lock(&bind_lock);
 
-    // Unchain device and socket from each another
+    /* Unchain device and socket from each another */
 
     dev->bs = NULL;
     bs->dev = NULL;
 
-    // Close the listening socket
+    /* Close the listening socket */
 
     if (bs->sd != -1)
         close (bs->sd);
@@ -4283,19 +4285,27 @@ int unbind_device (DEVBLK* dev)
     logmsg ("HHC422I Device %4.4X unbound from socket %s\n",
         dev->devnum, bs->spec);
 
-    // Discard the entry
+    /* Discard the entry */
+
+    if (bs->clientname)
+        free(bs->clientname);
+    bs->clientname = NULL;
+
+    if (bs->clientip)
+        free(bs->clientip);
+    bs->clientip = NULL;
 
     free (bs->spec);
     free (bs);
 
-    return 1;   // (success)
+    return 1;   /* (success) */
 }
 
 /*-------------------------------------------------------------------*/
 /* unix_socket   create and bind a Unix domain socket                */
 /*-------------------------------------------------------------------*/
 
-#include <sys/un.h>     // (need "sockaddr_un")
+#include <sys/un.h>     /* (need "sockaddr_un") */
 
 int unix_socket (char* path)
 {
@@ -4312,7 +4322,7 @@ int unix_socket (char* path)
     }
 
     addr.sun_family = AF_UNIX;
-    strcpy (addr.sun_path, path); // guaranteed room by above check
+    strcpy (addr.sun_path, path); /* guaranteed room by above check */
     sd = socket (PF_UNIX, SOCK_STREAM, 0);
 
     if (sd == -1)
@@ -4343,7 +4353,7 @@ int unix_socket (char* path)
 /*-------------------------------------------------------------------*/
 int inet_socket (char* spec)
 {
-    // We need a copy of the path to overwrite a ':' with '\0'
+    /* We need a copy of the path to overwrite a ':' with '\0' */
 
     char buf[sizeof(((DEVBLK*)0)->filename)];
     char* colon;
@@ -4448,13 +4458,13 @@ int add_socket_devices_to_fd_set (fd_set* readset, int maxfd)
     {
         bs = CONTAINING_RECORD(pListEntry,bind_struct,bind_link);
 
-        if (bs->sd != -1)           // if listening for connections
+        if (bs->sd != -1)           /* if listening for connections, */
         {
             dev = bs->dev;
 
-            if (dev->fd == -1)      // and not already connected
+            if (dev->fd == -1)      /* and not already connected, */
             {
-                FD_SET(bs->sd, readset);    // then add file to set
+                FD_SET(bs->sd, readset);    /* then add file to set */
 
                 if (bs->sd > maxfd)
                     maxfd = bs->sd;
@@ -4487,6 +4497,10 @@ void check_socket_devices_for_connections (fd_set* readset)
 
         if (bs->sd != -1 && FD_ISSET(bs->sd, readset))
         {
+            /* Note: there may be other connection requests
+             * waiting to be serviced, but we'll catch them
+             * the next time the panel thread calls us. */
+
             release_lock(&bind_lock);
             socket_device_connection_handler(bs);
             return;
@@ -4516,11 +4530,11 @@ void socket_device_connection_handler (bind_struct* bs)
     logdebug("socket_device_connection_handler(dev=%4.4X)\n",
         dev->devnum);
 
-    // Obtain the device lock
+    /* Obtain the device lock */
 
     obtain_lock (&dev->lock);
 
-    // Reject if device is busy or interrupt pending
+    /* Reject if device is busy or interrupt pending */
 
     if (dev->busy || dev->pending || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
@@ -4531,7 +4545,7 @@ void socket_device_connection_handler (bind_struct* bs)
         return;
     }
 
-    // Reject if previous connection not closed (should not occur)
+    /* Reject if previous connection not closed (should not occur) */
 
     if (dev->fd != -1)
     {
@@ -4542,7 +4556,7 @@ void socket_device_connection_handler (bind_struct* bs)
         return;
     }
 
-    // Accept the connection...
+    /* Accept the connection... */
 
     csock = accept(bs->sd, 0, 0);
 
@@ -4554,7 +4568,7 @@ void socket_device_connection_handler (bind_struct* bs)
         return;
     }
 
-    // Determine the connected client's IP address and hostname
+    /* Determine the connected client's IP address and hostname */
 
     namelen = sizeof(client);
     clientip = NULL;
@@ -4571,7 +4585,7 @@ void socket_device_connection_handler (bind_struct* bs)
         clientname = (char*) pHE->h_name;
     }
 
-    // Log the connection
+    /* Log the connection */
 
     if (clientip)
     {
@@ -4584,7 +4598,7 @@ void socket_device_connection_handler (bind_struct* bs)
             dev->devnum, bs->spec);
     }
 
-    // Save the connected client information in the bind_struct
+    /* Save the connected client information in the bind_struct */
 
     if (bs->clientip)   free(bs->clientip);
     if (bs->clientname) free(bs->clientname);
@@ -4592,16 +4606,17 @@ void socket_device_connection_handler (bind_struct* bs)
     bs->clientip   = safe_strdup(clientip);
     bs->clientname = safe_strdup(clientname);
 
-    // Indicate that a client is now connected to device (prevents
-    // listening for new connections until THIS client disconnects).
+    /* Indicate that a client is now connected to device (prevents
+     * listening for new connections until THIS client disconnects).
+     */
 
-    dev->fd = csock;        // (indicate client connected to device)
+    dev->fd = csock;        /* (indicate client connected to device) */
 
-    // Release the device lock
+    /* Release the device lock */
 
     release_lock (&dev->lock);
 
-    // Raise unsolicited device end interrupt for the device
+    /* Raise unsolicited device end interrupt for the device */
 
     device_attention (dev, CSW_DE);
 }
@@ -4617,8 +4632,8 @@ void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname)
 
     obtain_lock (&dev->lock);
 
-    if (dev->bs             // if device is a socket device
-        && dev->fd != -1)   // and a client is connected to it
+    if (dev->bs             /* if device is a socket device,   */
+        && dev->fd != -1)   /* and a client is connected to it */
     {
         *pclientip   = safe_strdup(dev->bs->clientip);
         *pclientname = safe_strdup(dev->bs->clientname);
@@ -4636,7 +4651,7 @@ char* safe_strdup (char* str)
     if (!str) return NULL;
     newstr = malloc (strlen (str) + 1);
     if (!newstr) return NULL;
-    strcpy (newstr, str);   // (guaranteed room)
+    strcpy (newstr, str);   /* (guaranteed room) */
     return newstr;
 }
 
