@@ -1,7 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
-29 Dec 2004 3480 Modeset is an immediate command - Ivan Warren
+29 Dec 2004 3480 Modeset (X'DB') has 1 byte of data - Ivan Warren
 28 Dec 2004 Set reserved VOL1 fields to blanks - Greg Smith
 26 Dec 2004 Initialize guestsregs->ints_state in SIE - Greg Smith
 25 Dev 2004 Allow use of 'symbols' for panel commands - Ivan Warren

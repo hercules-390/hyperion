@@ -227,7 +227,7 @@ static BYTE TapeImmedCommands[256]=
     0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,  /* A0 */
     0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,  /* B0 */
     0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,  /* C0 */
-    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,  /* D0 */
+    0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1,  /* D0 */
     0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,  /* E0 */
     0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1}; /* F0 */
 
@@ -335,7 +335,7 @@ static BYTE TapeCommands3480[256]=
     0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,2,  /* A0 */
     0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0,  /* B0 */
     0,0,0,2,0,0,0,2,0,0,0,3,0,0,0,0,  /* C0 */
-    0,0,0,3,0,0,0,0,0,0,0,4,0,0,0,0,  /* D0 */
+    0,0,0,3,0,0,0,0,0,0,0,1,0,0,0,0,  /* D0 */
     0,0,0,2,2,0,0,0,0,0,0,3,0,0,0,0,  /* E0 */
     0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0}; /* F0 */
 
@@ -5544,7 +5544,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0xCB: /* 9-track 800 bpi */
     case 0xC3: /* 9-track 1600 bpi */
     case 0xD3: /* 9-track 6250 bpi */
-    case 0xDB: /* 3480 mode set */
         /* Patch to no-op modeset 1 (7-track) commands -             */
         /*   causes VM problems                                      */
         /*                                                           */
@@ -5567,6 +5566,21 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     /* MODE SET                                                      */
     /*---------------------------------------------------------------*/
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* MODE SET (3480/3490/3590)                                     */
+    /*---------------------------------------------------------------*/
+    case 0xDB: /* 3480 mode set */
+        /* Check for count field at least 1 */
+        if (count < 1)
+        {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+        }
+        *residual = count - 1;
+        /* FIXME : Handle Supervisor Inhibit and IDRC bits */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
