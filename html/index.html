@@ -27,7 +27,7 @@ Follow these links to find out more:
 <li><a href="herclic.html">The Q Public Licence</a>
 </ul>
 <p>
-Download the current version, 2.13:
+Download the current release version, 2.13:
 <ul>
 <li><a href="hercules-2.13.tar.gz">hercules-2.13.tar.gz</a>: Source tarball
 <li><a href="hercules-2.13-1.i686.rpm">hercules-2.13-1.i686.rpm</a>: Intel
@@ -41,6 +41,38 @@ RPM
 <li><a href="hercules-2.13-1.src.rpm">hercules-2.13-1.src.rpm</a>: Source
 RPM (if you want to build RPMs yourself)
 </ul>
+<p>
+
+<blockquote>
+
+The complete source code for the current <i>development</i> version of Hercules
+is also available via anonymous access from our cvs source code repository. The cvs
+root is <b>CVSROOT=:pserver:anonymous@cvs.conmicro.cx:/usr/cvs/hercules</b>. Doing
+a checkout on module "hercules" will get you the source for all of Hercules, and
+checking out "wingui" will get you the complete source for the
+<a href="http://home.sprintmail.com/~dtrout/Hercules/index.html">
+Windows GUI</a> front end (HercGUI).
+
+<p>
+
+No password is required; just press enter when asked:
+
+<blockquote><blockquote><p><tt>
+	cvs login<br>
+	(Logging in to anonymous@conmicro.cx...)<br>
+	CVS password:<br>
+	cvs -z9 co hercules<br>
+	cvs server: Updating hercules<br>
+</tt></blockquote></blockquote>
+
+Please note that this will get you the current <i><u>development</u></i> version of
+Hercules, which is <i>not</i> release quality and thus might not even work (since
+it's still under development). If you want the current, stable, <i>release</i> version
+of Hercules (i.e. one that is known to work properly), then use the previously mentioned
+links instead.
+
+</blockquote>
+
 <p><center><hr width=15% noshade></center>
 <h3>
 What people are saying about Hercules
@@ -127,6 +159,6 @@ IBM, System/370, ESA/390, and z/Architecture are trademarks or
 registered trademarks of IBM Corporation.
 Other product names mentioned here are trademarks of other companies.
 <small>
-<p>Last updated 5 July 2001
+<p>Last updated 7 October 2001
 </BODY>
 </HTML>
