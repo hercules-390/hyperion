@@ -190,20 +190,17 @@ is to add an appropriate routing entry to your default gateway router.
 
 <h2>Defining the link in Hercules</h2>
 <p>
-You must define a pair of CTC devices in the Hercules configuration
-file.  The devices must be defined using an adjacent pair of even/odd
-device numbers such as 0E20 and 0E21, as in this example:
+You must define a single CTC device in the Hercules configuration
+file. The second device will automatically be created at the original address + 1. The device number must be even.
 <p>
 <i>For Linux 2.2:</i>
 <code>
 <br>0E20 3088 CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0
-<br>0E21 3088 CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0
 </code>
 <p>
 <i>For Linux 2.4:</i>
 <code>
 <br>0E20 3088 CTCI /dev/net/tun 1500 192.168.200.1 192.168.200.2 255.255.255.0
-<br>0E21 3088 CTCI /dev/net/tun 1500 192.168.200.1 192.168.200.2 255.255.255.0
 </code>
 <p>
 Two IP addresses must be assigned, one for the driving system's
@@ -347,6 +344,7 @@ Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
 </center>
 
 <small>
-<p>Last updated 15 January 2002 by Roger Bowler
+<p>updated 15 January 2002 by Roger Bowler
+<p>updated 17 July 2003 by Ivan Warren
 </BODY>
 </HTML>

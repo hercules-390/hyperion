@@ -61,7 +61,6 @@ a real System/390.  The configuration file is an ASCII text file.
     0200.4  3270
     0300    3370    sysres.300
     0400    3088    CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0    
-    0401    3088    CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0    
     0410    3088    CTCT 30880 192.168.100.2 30880 2048
     0411    3088    CTCT 30881 192.168.100.2 30881 2048
     0580    3420    ickdsf.ipl
@@ -358,7 +357,7 @@ The format of the device record is:
     </tr>
     <tr><td>3088</td>
         <td><a href="#ctca">Channel-to-channel adapters</a></td>
-        <td>TCP socket</td>
+        <td>TCP socket, TUN/TAP Driver</td>
     </tr>
     <tr><td>3310, 3370, 9336<br>0671</td>
         <td><a href="#fbadasd">FBA direct access storage devices</a></td>
@@ -659,6 +658,140 @@ The format of the device record is:
                 for IP traffic, this parameter should be more than the MTU
                 of the interface definition in the OS.
         </dl>
+        Note : CTCT currently only supports IP traffic, so it cannot be used to
+        transport NJE, SNA, PVM, etc.. payload. This may change in the future.
+    <P><dt><b>LCS</b> &nbsp; &nbsp; (LAN Channel Station Emulation)<p>
+    <dd>An emulated Lan Channel Station Adapter.
+    This emulation mode appears to the operating system running in
+    the Hercules machine as an IBM 8232 LCS device, an IBM 2216
+    router, a 3172 running ICP (Interconnect Communications Program),
+    the LCS3172 driver of a P/390, or an IBM Open Systems Adapter.
+        <br>
+    Rather than a point-to-point link, this emulation creates a
+    virtual ethernet adapter through which the guest operating system
+    running in the Hercules machine can communicate. As such, this
+    mode is not limited to TCP/IP traffic, but in fact will handle
+    any ethernet frame.
+    <p>
+    A single device should be declared for all LCS device numbers. The LCS
+    emulator will create all the additional devices necessary for LCS operations.
+    Also, the 1st declared device should be an even numbered device.
+    The configuration statement for LCS is as follows:
+    <p>
+    NOTE :<br>
+    There are no required parameters for the LCS emulation, however
+    there are several options that can be specified on the config
+    statement:
+    <p>
+    NOTE :<br>
+    On the MAC OS X Platform, the long option format (--xxx) is not supported. Only the short option format (-x : One dash, one letter) should be used.
+    <p>
+        <dl>
+            <dt><code><em>guestip</em></code>
+            <dd>
+            is an optional IP address of the Hercules
+            (guest OS) side. Note: This is only used to
+            establish a point-to-point routing table entry
+            on driving system. If you use the --oat option,
+            do not specify an address here.
+            <dt><code><em> -n devname or --dev devname</em></code>
+            <dd>
+            where <em>devname</em> is:
+            <p /><dl>
+                  [*nix] the name of the TUN/TAP special character device,
+                   normally /dev/net/tun.
+               </dl>
+               <p /><dl>
+
+                  [Windows] is either the IP or MAC address of the driving
+                  systems network card. TunTap32 will automatically select
+                  the first network card it finds if this option is
+                  omitted, this may not be desirable for some users.
+              </dl>
+              <dt><code><em>-o filename or --oat filename</em></code>
+              <dd>
+                  where <em>filename</em> specifies the filename of the Address
+             Translation file. If this option is specified, the optional
+             <em>guestip</em> and --mac entries are ignored in preference to
+             statements in the OAT. (See <a href=#OAT>below</a> for the format of the OAT)
+                <dt><code><em>-m MAC Address or --mac MAC address</em></code>
+                <dd>
+                    where <em>MAC Address</em> is the optional hardware address of
+                    the interface in the format: xx:xx:xx:xx:xx:xx
+
+        <p />
+        If no Address Translation file is specified, the emulation module
+        will create the following:
+        <p>
+        <dl>
+             An ethernet adapter (port 0) for TCP/IP traffic only.
+         </dl>
+         <dl>
+             Two device addresses will be defined (devnum and devnum + 1).
+         </dl>
+         <p>
+         <a name="OAT" />
+             <dt>OAT File<p />
+     <dd>
+             The syntax for the Address Translation file is as follows:
+             <pre><code>
+*********************************************************
+* Dev Mode Port Entry specific information              *
+*********************************************************
+0400  IP   00  PRI 172.021.003.032
+0402  IP   00  SEC 172.021.003.033
+0404  IP   00  NO  172.021.003.038
+0406  IP   01  NO  172.021.002.016
+040E  SNA  00
+
+HWADD 00 02:00:FE:DF:00:42
+HWADD 01 02:00:FE:DF:00:43
+ROUTE 00 172.021.003.032 255.255.255.224
+</code></pre>
+<dt>
+where:
+<p />
+<dt><code><em>Dev</em></code><dd>   is the base device address
+<dt><code><em>Mode</em></code><dd>  is the operation mode - IP or SNA
+<dt><code><em>Port</em></code><dd>  is the virtual (relative) adapter number.
+<p />
+<dt>
+For IP modes, the entry specific information is as follows:
+<dd>
+<dt><code><em>PRI|SEC|NO</em></code><dd> specifies where a packet with an unknown IP
+address is forwarded to. PRI is the primary
+default entry, SEC specifies the entry to use
+when the primary is not available, and NO
+     specifies that this is not a default entry.
+     <dt><code><em>nnn.nnn.nnn.nnn</code></em><dd>specifies the home IP address
+
+     <dt>When the operation mode is IP, specify only the even (read)
+     device number <em>dev</em>. The odd (write) address will be create automatically.
+     <p>
+
+     Note: SNA is currently <em>NOT</em> implemented.
+          <p>
+
+          Additionally, two other statements can be included in the
+          address translation file. The HWADD and ROUTE statements.
+          <p>
+
+          Use the HWADD to specify a hardware (MAC) address for a
+          virtual adapter. The first parameter after HWADD specifies
+          with relative adapter for which the address is applied.
+          <p>
+
+          The ROUTE statement is included for convenience. This allows the
+          hercifc program to create a network route for this specified
+          virtual adapter. Please note that it is not necessary to include
+          point-to-point routes for each IP address in the table. This is
+          done automatically by the emulation module.
+          <p>
+
+          Up to 4 virtual (relative) adapters 00-03 are currently supported.
+
+        </dl>
+
     </dl>
     <p>If the first parameter is not one of the recognized CTC emulation
     types, then the driver will operate as in Hercules Version 1, using
