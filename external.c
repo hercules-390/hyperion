@@ -462,13 +462,11 @@ PSA     *sspsa;                         /* -> Store status area      */
         STORAGE_KEY(aaddr + 4096, ssreg) |= (STORKEY_REF | STORKEY_CHANGE);
 #endif /*defined(FEATURE_ESAME)*/
 
+#if defined(FEATURE_ESAME)
     /* For store status at address, we must ajust the PSA offset */
     if(aaddr)
-        aaddr -= 512
-#if defined(FEATURE_ESAME)
-                     + 4096
+        aaddr -= 512 + 4096 ;
 #endif 
-                           ;
 
     aaddr &= 0x7FFFFE00;
 
