@@ -4986,12 +4986,18 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         if (count < 12) *more = 1;
 
         /* Byte 0 is the path group state byte */
+        /*
         iobuf[0] = SPG_PATHSTAT_RESET
                 | SPG_PARTSTAT_IENABLED
                 | SPG_PATHMODE_SINGLE;
+                */
+        iobuf[0]=dev->pgstat;
 
         /* Bytes 1-11 contain the path group identifier */
-        memcpy (iobuf+1, dev->pgid, 11);
+        if(num>1)
+        {
+                memcpy (iobuf+1, dev->pgid, num-1);
+        }
 
         /* Return unit status */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
@@ -5024,8 +5030,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Byte 0 is the path group state byte */
-        if ((iobuf[0] & SPG_SET_COMMAND) == SPG_SET_ESTABLISH)
+        switch((iobuf[0] & SPG_SET_COMMAND))
         {
+            case SPG_SET_ESTABLISH:
             /* Only accept the new pathgroup id when
                1) it has not yet been set (ie contains zeros) or
                2) It is set, but we are setting the same value */
@@ -5036,14 +5043,22 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
                 break;
             }
-
-            /* Bytes 1-11 contain the path group identifier */
             /* Bytes 1-11 contain the path group identifier */
             memcpy (dev->pgid, iobuf+1, 11);
+            dev->pgstat=SPG_PATHSTAT_GROUPED|SPG_PARTSTAT_IENABLED;
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+            break;
+            case SPG_SET_RESIGN:
+            default:
+            dev->pgstat=0;
+            memset(dev->pgid,0,11);
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+            break;
+            case SPG_SET_DISBAND:
+            dev->pgstat=0;
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+            break;
         }
-
-        /* Return unit status */
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
     case 0x64:
@@ -5086,9 +5101,38 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
 
     case 0xB7:
+    /*---------------------------------------------------------------*/
+    /* ASSIGN                                                        */
+    /*---------------------------------------------------------------*/
+
+        /* Calculate residual byte count */
+        num = (count < 11) ? count : 11;
+        *residual = count - num;
+
+        /* Control information length must be at least 11 bytes */
+        if (count < 11)
+        {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+        }
+        if((memcmp(iobuf,"\00\00\00\00\00\00\00\00\00\00",11)==0)
+                || (memcmp(iobuf,dev->pgid,11)==0))
+        {
+            dev->pgstat|=SPG_PARTSTAT_XENABLED; /* Set Explicit Partition Enabled */
+        }
+        else
+        {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+        }
+
+        /* Return unit status */
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
     case 0xC7:
     /*---------------------------------------------------------------*/
-    /* ASSIGN/UNASSIGN                                               */
+    /* UNASSIGN                                                      */
     /*---------------------------------------------------------------*/
 
         /* Calculate residual byte count */
@@ -5102,6 +5146,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             break;
         }
 
+        dev->pgstat=0;          /* Reset to All Implicitly enabled */
+        memset(dev->pgid,0,11); /* Reset Path group ID password */
         /* Return unit status */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;

@@ -1027,8 +1027,9 @@ typedef struct _DEVBLK {
         BYTE    devid[256];             /* Device identifier bytes   */
         U32     numdevchar;             /* Number of devchar bytes   */
         BYTE    devchar[64];            /* Device characteristics    */
+        BYTE    pgstat;                 /* Path Group Status         */
         BYTE    pgid[11];               /* Path Group ID             */
-        BYTE    reserved2[5];           /* (pad/align/unused/avail)  */
+        BYTE    reserved2[4];           /* (pad/align/unused/avail)  */
         COND    resumecond;             /* Resume condition          */
         COND    iocond;                 /* I/O active condition      */
         int     iowaiters;              /* Number of I/O waiters     */
