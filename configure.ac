@@ -98,13 +98,16 @@ if test $opt_dynamic_load = true; then
       AC_DEFINE([HDL_USE_LIBTOOL])
     fi
   else
+    opt_dynamic_load=false
     use_dlltool=false
   fi
 else
+  opt_dynamic_load=false
   use_dlltool=false
 fi
 
-AM_CONDITIONAL(USE_DLLTOOL, [test "x$use_dlltool" = "xtrue"])
+AM_CONDITIONAL(OPTION_DYNAMIC_LOAD, [test "x$opt_dynamic_load" = "xtrue"])
+AM_CONDITIONAL(USE_DLLTOOL,         [test "x$use_dlltool"      = "xtrue"])
 
 AC_ARG_ENABLE(external-gui,
               AC_HELP_STRING([--disable-external-gui],

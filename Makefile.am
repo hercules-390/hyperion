@@ -14,17 +14,19 @@ else
 HERCIFC=
 endif
 
-if USE_DLLTOOL
-#  USE_DLLTOOL implies Cygwin which implies external gui
-DYNINST=dyninst
-DYNINST_DLL=dyninst.dll
+# The following causes the dyanmic modules to not even get built
+# unless support for building dynamic modules exists on the build system
+
+if OPTION_DYNAMIC_LOAD
 DYNGUI=dyngui
 DYNGUI_DLL=dyngui.dll
-else
 DYNINST=dyninst
-DYNINST_DLL=
+DYNINST_DLL=dyninst.dll
+else
 DYNGUI=
 DYNGUI_DLL=
+DYNINST=
+DYNINST_DLL=
 endif
 
 LDADD = @LIBINTL@
@@ -44,8 +46,6 @@ fishhang_sources=fishhang.c
 fishio_sources=w32chan.c
 memrchr_sources=memrchr.c
 
-EXTRA_hercules_SOURCES=$(fthreads_sources) $(fishhang_sources) $(fishio_sources) $(memrchr_sources)
-
 if BUILD_FTHREADS
 FTHREADS=$(fthreads_sources)
 if BUILD_FISHHANG
@@ -60,24 +60,57 @@ FISHHANG=
 FISHIO=
 endif
 
+# We need to still include the source for the dynamic modules
+# in with the distribution regardless of whether or not the dyanmic
+# modules themselves are to be built so if dynamic load not possible,
+# then we need to include the source on the EXTRA_hercules_SOURCES
+# statement so even though they won't/don't actually get built, they
+# still nonetheless get included into distribution tarball. This is
+# *similar* to (bit not identical to) the way the fthreads sources
+# are handled. With the fthreads sources though, they can at least always
+# be built (even though they may not always generate any actual code
+# whenever they do) whereas the dynamic module source CANNOT (MUST not)
+# even be *attempted* to be "built" if support for building dynamic modules
+# doesn't even exist on the system doing the building.
+
+dynamic_sources=dyngui.c dyninst.c 
+extra_dynamic_sources=dynguib.h dynguip.h dynguiv.h dyngui.rc
+
+if OPTION_DYNAMIC_LOAD
+DYNSRC=
+EXTRA_DYNSRC=
+dyngui_SOURCES = dyngui.c
+dyngui_LDFLAGS = -shared
+dyninst_SOURCES = dyninst.c
+dyninst_LDFLAGS = -shared
+EXTRA_dyngui_SOURCES=dynguib.h dynguip.h dynguiv.h dyngui.rc
+else
+DYNSRC=$(dynamic_sources)
+EXTRA_DYNSRC=$(extra_dynamic_sources)
+endif
+
+EXTRA_hercules_SOURCES=$(fthreads_sources) $(fishhang_sources) $(fishio_sources) $(memrchr_sources) $(DYNSRC) $(EXTRA_DYNSRC)
+
 if USE_BUILTIN_MEMRCHR
 MEMRCHR=memrchr.c
 else
 MEMRCHR=
 endif
 
+if OPTION_DYNAMIC_LOAD
 if USE_DLLTOOL
 HERCULES_EXP=hercules.exp
 HERCULES_A=hercules.a
 hercules_LDADD = $(LDADD) $(HERCULES_EXP)
-dyninst_LDADD = $(LDADD) $(HERCULES_A)
-dyngui_LDADD = $(LDADD) $(HERCULES_A) dyngui.res
 hercules_LDFLAGS = --export-dynamic
+dyngui_LDADD = $(LDADD) $(HERCULES_A) dyngui.res
+dyninst_LDADD = $(LDADD) $(HERCULES_A)
 else
 HERCULES_EXP=
 HERCULES_A=
-hercules_LDFLAGS = -rdynamic
 hercules_LDADD = $(LDADD)
+hercules_LDFLAGS = -rdynamic
+endif
 endif
 
 hercules_SOURCES = hostinfo.c w32ctca.c \
@@ -194,13 +227,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c \
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
-dyninst_SOURCES = dyninst.c
-dyninst_LDFLAGS = -shared
-
-dyngui_SOURCES = dyngui.c
-dyngui_LDFLAGS = -shared
-EXTRA_dyngui_SOURCES=dynguib.h dynguip.h dynguiv.h dyngui.rc
-
+if OPTION_DYNAMIC_LOAD
 if USE_DLLTOOL
 hercules.def: $(am_hercules_OBJECTS) dyngui.res
 	dlltool --export-all-symbols --output-def hercules.def $(am_hercules_OBJECTS)
@@ -221,6 +248,7 @@ dyngui.dll$(EXEEXT):  dyngui$(EXEEXT)
 
 dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
 	windres -DHAVE_CONFIG_H --include-dir=. -i $(srcdir)/dyngui.rc -o dyngui.res -O coff
+endif
 endif
 
 EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  CHANGES README.COMMADPT README.CVS README.ECPSVM \
@@ -249,15 +277,16 @@ if SETUID_HERCIFC
 	chmod +s $(DESTDIR)$(bindir)/hercifc
 	rm hercifc
 endif
+if OPTION_DYNAMIC_LOAD
 if USE_DLLTOOL
-#  USE_DLLTOOL implies Cygwin which implies external gui
 	mv  $(DESTDIR)$(bindir)/$(DYNINST)$(EXEEXT) $(DESTDIR)$(bindir)/$(DYNINST_DLL)
 	mv  $(DESTDIR)$(bindir)/$(DYNGUI)$(EXEEXT)  $(DESTDIR)$(bindir)/$(DYNGUI_DLL)
 endif
+endif
 
 uninstall-local:
+if OPTION_DYNAMIC_LOAD
 if USE_DLLTOOL
-#  USE_DLLTOOL implies Cygwin which implies external gui
 	rm -f $(DESTDIR)$(bindir)/$(DYNINST_DLL)
 	rm -f $(DESTDIR)$(bindir)/$(DYNGUI_DLL)
 	rm -f                     $(DYNINST_DLL)
@@ -266,6 +295,7 @@ if USE_DLLTOOL
 	rm -f                     $(HERCULES_A)
 	rm -f                     $(HERCULES_EXP)
 	rm -f                     hercules.def
+endif
 endif
 
 %.s: %.c
