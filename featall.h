@@ -35,7 +35,9 @@
 #define OPTION_CKD_KEY_TRACING		/* Trace CKD search keys     */
 #undef	OPTION_CMPSC_DEBUGLVL	   /* 3 ** 1=Exp 2=Comp 3=Both debug */
 
-#undef NO_SIGABEND_HANDLER
+/* This is set as appropriate by configure and makefile.w32; don't
+   undefine it -mdz */
+/* #undef NO_SIGABEND_HANDLER */
 
 #define FEATURE_ALD_FORMAT            0
 
