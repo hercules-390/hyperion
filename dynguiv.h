@@ -12,19 +12,19 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-#define VERMAJOR_NUM   1    // MAJOR Release (program radically changed)
-#define VERMAJOR_STR  "1"
+#define DYNGUI_VERMAJOR_NUM   1    // MAJOR Release (program radically changed)
+#define DYNGUI_VERMAJOR_STR  "1"
 
-#define VERINTER_NUM   0    // Minor Enhancements (new features, etc)
-#define VERINTER_STR  "0"
+#define DYNGUI_VERINTER_NUM   0    // Minor Enhancements (new features, etc)
+#define DYNGUI_VERINTER_STR  "0"
 
-#define VERMINOR_NUM   0    // Bug Fix
-#define VERMINOR_STR  "0"
+#define DYNGUI_VERMINOR_NUM   0    // Bug Fix
+#define DYNGUI_VERMINOR_STR  "0"
 
 #if defined(DEBUG) || defined(_DEBUG)
-#define VERSION  VERMAJOR_STR "." VERINTER_STR "." VERMINOR_STR "." BUILDCOUNT_STR "-D"
+#define DYNGUI_VERSION  DYNGUI_VERMAJOR_STR "." DYNGUI_VERINTER_STR "." DYNGUI_VERMINOR_STR "." BUILDCOUNT_STR "-D"
 #else
-#define VERSION  VERMAJOR_STR "." VERINTER_STR "." VERMINOR_STR "." BUILDCOUNT_STR
+#define DYNGUI_VERSION  DYNGUI_VERMAJOR_STR "." DYNGUI_VERINTER_STR "." DYNGUI_VERMINOR_STR "." BUILDCOUNT_STR
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////

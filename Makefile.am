@@ -210,11 +210,11 @@ hercules.a: hercules.def
 
 dyninst.dll$(EXEEXT): dyninst$(EXEEXT)
 	rm  -f                         dyninst.dll
-	mv           dyninst$(EXEEXT)  dyninst.dll
+	cp           dyninst$(EXEEXT)  dyninst.dll
 
 dyngui.dll$(EXEEXT):  dyngui$(EXEEXT)
 	rm  -f                         dyngui.dll
-	mv           dyngui$(EXEEXT)   dyngui.dll
+	cp           dyngui$(EXEEXT)   dyngui.dll
 
 dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
 	windres -DHAVE_CONFIG_H --include-dir=. -i dyngui.rc -o dyngui.res -O coff
@@ -245,6 +245,11 @@ if SETUID_HERCIFC
 	chmod 0751 $(DESTDIR)$(bindir)/hercifc
 	chmod +s $(DESTDIR)$(bindir)/hercifc
 	rm hercifc
+endif
+if USE_DLLTOOL
+#  USE_DLLTOOL implies Cygwin which implies external gui
+	cp $(DYNINST_DLL) $(DESTDIR)$(bindir)/
+	cp $(DYNGUI_DLL) $(DESTDIR)$(bindir)/
 endif
 
 %.s: %.c

@@ -80,8 +80,8 @@ typedef struct _tagTT32STATS
 {
     uint32_t  dwStructSize;         // size of this structure
     uint32_t  dwKernelBuffSize;     // size of kernel capture buffer
-    uint32_t  dwReadBuffSize;		// size of dll I/O buffer
-    uint32_t  dwMaxBytesReceived;	// max dll I/O bytes received
+    uint32_t  dwReadBuffSize;       // size of dll I/O buffer
+    uint32_t  dwMaxBytesReceived;   // max dll I/O bytes received
 
     int64_t  n64WriteCalls;         // total #of write requests
     int64_t  n64WriteIOs;           // total #of write I/Os

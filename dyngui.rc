@@ -13,8 +13,8 @@
 
 1 VERSIONINFO
 
-FILEVERSION    VERMAJOR_NUM, VERINTER_NUM, VERMINOR_NUM, BUILDCOUNT_NUM
-PRODUCTVERSION VERMAJOR_NUM, VERINTER_NUM, VERMINOR_NUM, BUILDCOUNT_NUM
+FILEVERSION    DYNGUI_VERMAJOR_NUM, DYNGUI_VERINTER_NUM, DYNGUI_VERMINOR_NUM, BUILDCOUNT_NUM
+PRODUCTVERSION DYNGUI_VERMAJOR_NUM, DYNGUI_VERINTER_NUM, DYNGUI_VERMINOR_NUM, BUILDCOUNT_NUM
 
 FILEFLAGSMASK  0x3f
 FILEOS         0x4
@@ -28,23 +28,23 @@ BEGIN
 
 // Standard/Required Attributes...
 
-      VALUE "FileDescription", PRODUCT                "\0"
-      VALUE "FileVersion",     VERSION                "\0"
-      VALUE "ProductName",     PRODUCT                "\0"
-      VALUE "ProductVersion",  VERSION                "\0"
-      VALUE "CompanyName",     COMPANY                "\0"
-      VALUE "LegalCopyright",  COPYRIGHT " " COMPANY  "\0"
-      VALUE "Comments",        "(none)"               "\0"
+      VALUE "FileDescription", DYNGUI_PRODUCT                       "\0"
+      VALUE "FileVersion",     DYNGUI_VERSION                       "\0"
+      VALUE "ProductName",     DYNGUI_PRODUCT                       "\0"
+      VALUE "ProductVersion",  DYNGUI_VERSION                       "\0"
+      VALUE "CompanyName",     DYNGUI_COMPANY                       "\0"
+      VALUE "LegalCopyright",  DYNGUI_COPYRIGHT " " DYNGUI_COMPANY  "\0"
+      VALUE "Comments",        "(none)"                             "\0"
 
 // Custom Attributes...
 
-      VALUE "Product URL",     PRODUCT_URL            "\0"
-      VALUE "Product Email",   PRODUCT_EMAIL          "\0"
-      VALUE "Hercules URL",    HERCULES_URL           "\0"
-      VALUE "Hercules Email",  HERCULES_EMAIL         "\0"
+      VALUE "Product URL",     DYNGUI_PRODUCT_URL        "\0"
+      VALUE "Product Email",   DYNGUI_PRODUCT_EMAIL      "\0"
+      VALUE "Hercules URL",    HERCULES_PRODUCT_URL      "\0"
+      VALUE "Hercules Email",  HERCULES_PRODUCT_EMAIL    "\0"
 
 #if defined(DEBUG) || defined(_DEBUG)
-      VALUE "SpecialBuild",    "DEBUG version"        "\0"
+      VALUE "SpecialBuild",    "DEBUG version"           "\0"
 #endif
 
     END

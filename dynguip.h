@@ -8,13 +8,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-#define PRODUCT         "Hercules External GUI Interface DLL"
-#define COPYRIGHT       "Copyright (c) 2003"
-#define COMPANY         "Software Development Laboratories"
-#define PRODUCT_URL     "http://home.sprintmail.com/~dtrout/Hercules/index.html"
-#define PRODUCT_EMAIL   "fish@infidels.org"
-#define HERCULES_URL    "http://www.conmicro.cx/hercules/"
-#define HERCULES_EMAIL  "hercules-390@yahoogroups.com"
+#define DYNGUI_PRODUCT          "Hercules External GUI Interface DLL"
+#define DYNGUI_COPYRIGHT        "Copyright (c) 2003"
+#define DYNGUI_COMPANY          "Software Development Laboratories (aka 'Fish' (David B. Trout))"
+#define DYNGUI_PRODUCT_URL      "http://home.sprintmail.com/~dtrout/Hercules/index.html"
+#define DYNGUI_PRODUCT_EMAIL    "fish@infidels.org"
+#define HERCULES_PRODUCT_URL    "http://www.conmicro.cx/hercules/"
+#define HERCULES_PRODUCT_EMAIL  "hercules-390@yahoogroups.com"
 
 ///////////////////////////////////////////////////////////////////////////////////////
 

@@ -15,9 +15,11 @@
 /*                                                                   */
 /*********************************************************************/
 
-#include "hercules.h"
+#include "hercules.h"       // (#includes <config.> w/#define for VERSION)
 #include "devtype.h"
 #include "opcode.h"
+#include "dynguip.h"        // (product defines)
+#include "dynguiv.h"        // (version defines)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Some handy macros...       (feel free to add these to hercules.h)
@@ -791,7 +793,45 @@ void  UpdateDeviceStatus ()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Our Hercules "debug_cpu_state" override...
+
+// The following function fixes an unintentional problem caused by the new
+// logger mechanism (wherein stdout and stderr now point to the same stream)
+// due to a oversight (bug) on my part wherein the 'LOAD' and 'MAN' messages
+// are being [mistakenly] written to stdout instead of stderr (where they
+// normally should be). The current version of the gui expects both messages
+// to come in on the stdout stream, but due to the recent logger changes, they
+// now come in on the stderr stream instead (because stdout was duped to stderr
+// by the new logger logic) thus causing the gui to miss seeing them without
+// the below fix. The below fix simply corrects for this by simply writing the
+// two messages to the stdout stream where the current gui expects to see them.
+
+void*  gui_debug_cpu_state ( REGS* pREGS )
+{
+    static BOOL bLoading = FALSE;
+    static BOOL bStopped = FALSE;
+
+    if (pTargetCPU_REGS && pREGS != pTargetCPU_REGS)
+        return NULL;
+
+    if (bLoading != (pREGS->loadstate ? TRUE : FALSE))
+    {
+        bLoading  = (pREGS->loadstate ? TRUE : FALSE);
+        fprintf(stdout,"LOAD=%c\n", bLoading ? '1' : '0');
+    }
+
+    if (bStopped != ((CPUSTATE_STOPPED == pREGS->cpustate) ? TRUE : FALSE))
+    {
+        bStopped  = ((CPUSTATE_STOPPED == pREGS->cpustate) ? TRUE : FALSE);
+        fprintf(stdout,"MAN=%c\n", bStopped ? '1' : '0');
+    }
+
+    return NULL;    // (I have no idea why this is a void* func)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Acquire any resources we need in order to operate...
+// (called by 'gui_panel_display' before main loop initiates...)
 
 void  Initialize ()
 {
@@ -830,6 +870,7 @@ void  Initialize ()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Release any resources we acquired in order to operate...
 // (called by 'gui_panel_display' when main loop terminates...)
 
 void Cleanup()
@@ -842,51 +883,15 @@ void Cleanup()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Our Hercules "debug_cpu_state" override...
-
-// The following function fixes an unintentional problem caused by the new
-// logger mechanism (wherein stdout and stderr now point to the same stream)
-// due to a oversight (bug) on my part wherein the 'LOAD' and 'MAN' messages
-// are being [mistakenly] written to stdout instead of stderr (where they
-// normally should be). The current version of the gui expects both messages
-// to come in on the stdout stream, but due to the recent logger changes, they
-// now come in on the stderr stream instead (because stdout was duped to stderr
-// by the new logger logic) thus causing the gui to miss seeing them without
-// the below fix. The below fix simply corrects for this by simply writing the
-// two messages to the stdout stream where the current gui expects to see them.
-
-void*  gui_debug_cpu_state ( REGS* pREGS )
-{
-    static BOOL bLoading = FALSE;
-    static BOOL bStopped = FALSE;
-
-    if (pTargetCPU_REGS && pREGS != pTargetCPU_REGS)
-        return NULL;
-
-    if (bLoading != (pREGS->loadstate ? TRUE : FALSE))
-    {
-        bLoading  = (pREGS->loadstate ? TRUE : FALSE);
-        fprintf(stdout,"LOAD=%c\n", bLoading ? '1' : '0');
-    }
-
-    if (bStopped != ((CPUSTATE_STOPPED == pREGS->cpustate) ? TRUE : FALSE))
-    {
-        bStopped  = ((CPUSTATE_STOPPED == pREGS->cpustate) ? TRUE : FALSE);
-        fprintf(stdout,"MAN=%c\n", bStopped ? '1' : '0');
-    }
-
-    return NULL;    // (I have no idea why this is a void* func)
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Our Hercules "panel_display" AND/OR "daemon_task" override...
 
 void gui_panel_display ()
 {
-    logmsg(_("HHCDG001I dyngui.dll initiated\n"));
+    logmsg("HHCDG001I dyngui.dll - " DYNGUI_PRODUCT " - version " DYNGUI_VERSION " initiated\n");
+    logmsg(DYNGUI_COPYRIGHT ", " DYNGUI_COMPANY "\n");
     Initialize();               // (allocate buffers, etc)
     ProcessingLoop();           // (primary processing loop)
-    logmsg(_("HHCDG002I dyngui.dll terminated\n"));
+    logmsg("HHCDG002I dyngui.dll terminated\n");
     Cleanup();                  // (de-allocate resources)
 }
 
@@ -974,7 +979,9 @@ END_RESOLVER_SECTION;
 
 HDL_FINAL_SECTION;
 {
-    bDoneProcessing = TRUE;     // (force main loop to exit)
+    usleep(100000);             // (brief delay to give GUI time
+                                //  to display ALL shutdown msgs)
+    bDoneProcessing = TRUE;     // (now force main loop to exit)
 }
 END_FINAL_SECTION;
 

@@ -157,7 +157,7 @@ dist_pkgdata_DATA = cckddasd.html hercinst.html hercnew.html \
 	hercfaq.html  hercload.html index.html    hercules.css \
         hercules.html tasks.html    fishgui.html  hercmsg.html \
         hercmscf.html hercmscp.html hercmsct.html hercmsda.html \
-        hercmsdc.html hercmsdi.html hercmsdl.html hercmsds.html \
+        hercmsdc.html hercmsdg.html hercmsdi.html hercmsdl.html hercmsds.html \
         hercmsdt.html hercmsdu.html hercmshe.html hercmshg.html \
         hercmshm.html hercmsht.html hercmshu.html hercmsif.html \
         hercmsin.html hercmslc.html hercmspn.html hercmspr.html \

@@ -1568,11 +1568,11 @@ uninstall-info: uninstall-info-recursive
 
 @USE_DLLTOOL_TRUE@dyninst.dll$(EXEEXT): dyninst$(EXEEXT)
 @USE_DLLTOOL_TRUE@	rm  -f                         dyninst.dll
-@USE_DLLTOOL_TRUE@	mv           dyninst$(EXEEXT)  dyninst.dll
+@USE_DLLTOOL_TRUE@	cp           dyninst$(EXEEXT)  dyninst.dll
 
 @USE_DLLTOOL_TRUE@dyngui.dll$(EXEEXT):  dyngui$(EXEEXT)
 @USE_DLLTOOL_TRUE@	rm  -f                         dyngui.dll
-@USE_DLLTOOL_TRUE@	mv           dyngui$(EXEEXT)   dyngui.dll
+@USE_DLLTOOL_TRUE@	cp           dyngui$(EXEEXT)   dyngui.dll
 
 @USE_DLLTOOL_TRUE@dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
 @USE_DLLTOOL_TRUE@	windres -DHAVE_CONFIG_H --include-dir=. -i dyngui.rc -o dyngui.res -O coff
@@ -1589,6 +1589,9 @@ install-exec-local:
 @SETUID_HERCIFC_TRUE@	chmod 0751 $(DESTDIR)$(bindir)/hercifc
 @SETUID_HERCIFC_TRUE@	chmod +s $(DESTDIR)$(bindir)/hercifc
 @SETUID_HERCIFC_TRUE@	rm hercifc
+#  USE_DLLTOOL implies Cygwin which implies external gui
+@USE_DLLTOOL_TRUE@	cp $(DYNINST_DLL) $(DESTDIR)$(bindir)/
+@USE_DLLTOOL_TRUE@	cp $(DYNGUI_DLL) $(DESTDIR)$(bindir)/
 
 %.s: %.c
 	$(COMPILE) -S $<
