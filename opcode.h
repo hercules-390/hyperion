@@ -1505,10 +1505,10 @@ int  ARCH_DEP(program_return_unstack) (REGS *regs, RADR *lsedap, int *rc);
 /* Functions in module trace.c */
 CREG  ARCH_DEP(trace_br) (int amode, VADR ia, REGS *regs);
 CREG  ARCH_DEP(trace_bsg) (U32 alet, VADR ia, REGS *regs);
-CREG  ARCH_DEP(trace_ssar) (U16 sasn, REGS *regs);
-CREG  ARCH_DEP(trace_pc) (U32 pcnum, REGS *regs);
+CREG  ARCH_DEP(trace_ssar) (int ssair, U16 sasn, REGS *regs);
+CREG  ARCH_DEP(trace_pc) (U32 pcea, REGS *regs);
 CREG  ARCH_DEP(trace_pr) (REGS *newregs, REGS *regs);
-CREG  ARCH_DEP(trace_pt) (U16 pasn, GREG gpr2, REGS *regs);
+CREG  ARCH_DEP(trace_pt) (int pti, U16 pasn, GREG gpr2, REGS *regs);
 CREG  ARCH_DEP(trace_tr) (int r1, int r3, U32 op, REGS *regs);
 CREG  ARCH_DEP(trace_tg) (int r1, int r3, U32 op, REGS *regs);
 CREG  ARCH_DEP(trace_ms) (int br_ind, VADR ia, REGS *regs);

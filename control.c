@@ -2436,9 +2436,15 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if (REAL_MODE(&(regs->psw)) || SPACE_BIT(&regs->psw))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-    /* save CR4 and CR1 incase of space switch */
+    /* Save CR4 and CR1 in case of space switch */
     oldpasn = regs->CR(4) & CR4_PASN;
     oldpstd = regs->CR(1);
+
+#ifdef FEATURE_TRACING
+    /* Form trace entry if ASN tracing is active */
+    if (regs->CR(12) & CR12_ASNTRACE)
+        newcr12 = ARCH_DEP(trace_pc) (pctea, regs);
+#endif /*FEATURE_TRACING*/
 
     /* [5.5.3.1] Load the linkage table designation */
     if (!ASF_ENABLED(regs))
@@ -2446,6 +2452,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Special operation exception if in AR mode */
         if (ACCESS_REGISTER_MODE(&(regs->psw)))
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+
         /* Obtain the LTD from control register 5 */
         ltdesig = regs->CR_L(5);
     }
@@ -2475,12 +2482,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Note: When ASN-and-LX-reuse is installed and enabled 
        by CR0, ltdesig is an LFTD, otherwise it is an LTD */
-
-#ifdef FEATURE_TRACING
-    /* Form trace entry if ASN tracing is active */
-    if (regs->CR(12) & CR12_ASNTRACE)
-        newcr12 = ARCH_DEP(trace_pc) (pcnum, regs);
-#endif /*FEATURE_TRACING*/
 
     /* Special operation exception if subsystem linkage
        control bit in linkage table designation is zero */

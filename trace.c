@@ -146,7 +146,7 @@ DWORD   r2;
 typedef struct _TRACE_F1_SSAR {
 BYTE    format;
 #define TRACE_F1_SSAR_FMT 0x10
-BYTE    zero;
+BYTE    extfmt;
 HWORD   newsasn;
 } TRACE_F1_SSAR;
 
@@ -544,9 +544,10 @@ int  size;
 
 
 /*-------------------------------------------------------------------*/
-/* Form implicit SSAR trace entry                                    */
+/* Form implicit SSAR/SSAIR trace entry                              */
 /*                                                                   */
 /* Input:                                                            */
+/*      ssair   1=SSAIR instruction, 0=SSAR instruction              */
 /*      sasn    Secondary address space number                       */
 /*      regs    Pointer to the CPU register context                  */
 /* Return value:                                                     */
@@ -554,11 +555,12 @@ int  size;
 /*                                                                   */
 /*      This function does not return if a program check occurs.     */
 /*-------------------------------------------------------------------*/
-CREG ARCH_DEP(trace_ssar) (U16 sasn, REGS *regs)
+CREG ARCH_DEP(trace_ssar) (int ssair, U16 sasn, REGS *regs)
 {
 RADR raddr;
 RADR ag;
 int  size;
+BYTE nbit = (ssair ? 1 : 0);
 
     {
         TRACE_F1_SSAR *tte;
@@ -566,7 +568,7 @@ int  size;
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
         tte = (void*)regs->mainstor + raddr;
         tte->format = TRACE_F1_SSAR_FMT;
-        tte->zero = 0;
+        tte->extfmt = 0 | nbit;
         STORE_HW(tte->newsasn,sasn);
     }
 
@@ -579,14 +581,14 @@ int  size;
 /* Form implicit PC trace entry                                      */
 /*                                                                   */
 /* Input:                                                            */
-/*      pcnum   Low order 32 bits of PC instruction operand          */
+/*      pcea    PC instruction effective address (20 or 32 bits)     */
 /*      regs    Pointer to the CPU register context                  */
 /* Return value:                                                     */
 /*      Updated value for CR12 after adding new trace entry          */
 /*                                                                   */
 /*      This function does not return if a program check occurs.     */
 /*-------------------------------------------------------------------*/
-CREG ARCH_DEP(trace_pc) (U32 pcnum, REGS *regs)
+CREG ARCH_DEP(trace_pc) (U32 pcea, REGS *regs)
 {
 RADR raddr;
 RADR ag;
@@ -599,7 +601,7 @@ int  eamode;
 #if defined(FEATURE_ESAME)
     if (ASN_AND_LX_REUSE_ENABLED(regs))
     {
-        if ((pcnum & PC_BIT44) && regs->psw.amode64 && regs->psw.IA_H)
+        if ((pcea & PC_BIT44) && regs->psw.amode64 && regs->psw.IA_H)
         {
             /* In 64-bit mode, regardless of resulting mode, when
                ASN-and-LX-reuse is enabled, 32-bit PC number is used,
@@ -612,10 +614,10 @@ int  eamode;
             tte->pswkey = regs->psw.pkey | TRACE_F7_PC_FM2 | eamode;
             STORE_HW(tte->resv, 0x0000);
             STORE_DW(tte->retna, regs->psw.IA_G | PROBSTATE(&regs->psw));
-            STORE_FW(tte->pcnum, pcnum);
+            STORE_FW(tte->pcnum, pcea);
         }
         else
-        if ((pcnum & PC_BIT44) && regs->psw.amode64)
+        if ((pcea & PC_BIT44) && regs->psw.amode64)
         {
             /* In 64-bit mode, regardless of resulting mode, when
                ASN-and-LX-reuse is enabled, 32-bit PC number is used,
@@ -628,10 +630,10 @@ int  eamode;
             tte->pswkey = regs->psw.pkey | TRACE_F6_PC_FM2 | eamode;
             STORE_HW(tte->resv, 0x0000);
             STORE_FW(tte->retna, regs->psw.IA_L | PROBSTATE(&regs->psw));
-            STORE_FW(tte->pcnum, pcnum);
+            STORE_FW(tte->pcnum, pcea);
         }
         else
-        if ((pcnum & PC_BIT44))
+        if ((pcea & PC_BIT44))
         {
             /* In 24-bit or 31-bit mode, regardless of resulting mode, when
                ASN-and-LX-reuse is enabled and 32-bit PC number is used */
@@ -643,7 +645,7 @@ int  eamode;
             tte->pswkey = regs->psw.pkey | TRACE_F5_PC_FM2 | eamode;
             STORE_HW(tte->resv, 0x0000);
             STORE_FW(tte->retna, (regs->psw.amode << 31) | regs->psw.IA_L | PROBSTATE(&regs->psw));
-            STORE_FW(tte->pcnum, pcnum);
+            STORE_FW(tte->pcnum, pcea);
         }
         else
         if(regs->psw.amode64)
@@ -655,8 +657,8 @@ int  eamode;
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
             tte = (void*)regs->mainstor + raddr;
             tte->format = TRACE_F4_PC_FMT;
-            tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcnum & 0xF0000) >> 16);
-            STORE_HW(tte->pcnum_lo, pcnum & 0x0FFFF);
+            tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcea & 0xF0000) >> 16);
+            STORE_HW(tte->pcnum_lo, pcea & 0x0FFFF);
             STORE_DW(tte->retna, regs->psw.IA_G | PROBSTATE(&regs->psw));
         }
         else
@@ -668,8 +670,8 @@ int  eamode;
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
             tte = (void*)regs->mainstor + raddr;
             tte->format = TRACE_F3_PC_FMT;
-            tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcnum & 0xF0000) >> 16);
-            STORE_HW(tte->pcnum_lo, pcnum & 0x0FFFF);
+            tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcea & 0xF0000) >> 16);
+            STORE_HW(tte->pcnum_lo, pcea & 0x0FFFF);
             STORE_FW(tte->retna, (regs->psw.amode << 31) | regs->psw.IA_L | PROBSTATE(&regs->psw));
         }
     } /* end ASN_AND_LX_REUSE_ENABLED */
@@ -683,8 +685,8 @@ int  eamode;
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
         tte = (void*)regs->mainstor + raddr;
         tte->format = TRACE_F2_PC_FMT;
-        tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcnum & 0xF0000) >> 16);
-        STORE_HW(tte->pcnum_lo, pcnum & 0x0FFFF);
+        tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcea & 0xF0000) >> 16);
+        STORE_HW(tte->pcnum_lo, pcea & 0x0FFFF);
         STORE_DW(tte->retna, regs->psw.IA_G | PROBSTATE(&regs->psw)); 
     }
     else
@@ -697,8 +699,8 @@ int  eamode;
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
         tte = (void*)regs->mainstor + raddr;
         tte->format = TRACE_F1_PC_FMT;
-        tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcnum & 0xF0000) >> 16);
-        STORE_HW(tte->pcnum_lo, pcnum & 0x0FFFF);
+        tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcea & 0xF0000) >> 16);
+        STORE_HW(tte->pcnum_lo, pcea & 0x0FFFF);
         STORE_FW(tte->retna, (regs->psw.amode << 31) | regs->psw.IA_L | PROBSTATE(&regs->psw)); 
     }
 
@@ -862,9 +864,10 @@ int  size;
 
 
 /*-------------------------------------------------------------------*/
-/* Form implicit PT trace entry                                      */
+/* Form implicit PT/PTI trace entry                                  */
 /*                                                                   */
 /* Input:                                                            */
+/*      pti     1=PTI instruction, 0=PT instruction                  */
 /*      pasn    Primary address space number                         */
 /*      gpr2    Contents of PT second operand register               */
 /*      regs    Pointer to the CPU register context                  */
@@ -873,11 +876,12 @@ int  size;
 /*                                                                   */
 /*      This function does not return if a program check occurs.     */
 /*-------------------------------------------------------------------*/
-CREG ARCH_DEP(trace_pt) (U16 pasn, GREG gpr2, REGS *regs)
+CREG ARCH_DEP(trace_pt) (int pti, U16 pasn, GREG gpr2, REGS *regs)
 {
 RADR raddr;
 RADR ag;
 int  size;
+BYTE nbit = (pti ? 1 : 0);
 
 #if defined(FEATURE_ESAME)
     if(regs->psw.amode64 && gpr2 > 0xFFFFFFFFULL)
@@ -887,7 +891,7 @@ int  size;
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
         tte = (void*)regs->mainstor + raddr;
         tte->format = TRACE_F3_PT_FMT;
-        tte->pswkey = regs->psw.pkey | TRACE_F3_PT_FM2;
+        tte->pswkey = regs->psw.pkey | TRACE_F3_PT_FM2 | nbit;
         STORE_HW(tte->newpasn, pasn);
         STORE_DW(tte->r2, gpr2);
     }
@@ -899,7 +903,7 @@ int  size;
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
         tte = (void*)regs->mainstor + raddr;
         tte->format = TRACE_F2_PT_FMT;
-        tte->pswkey = regs->psw.pkey | TRACE_F2_PT_FM2;
+        tte->pswkey = regs->psw.pkey | TRACE_F2_PT_FM2 | nbit;
         STORE_HW(tte->newpasn, pasn);
         STORE_FW(tte->r2, gpr2 & 0xFFFFFFFF);
     }
@@ -911,7 +915,7 @@ int  size;
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
         tte = (void*)regs->mainstor + raddr;
         tte->format = TRACE_F1_PT_FMT;
-        tte->pswkey = regs->psw.pkey | TRACE_F1_PT_FM2;
+        tte->pswkey = regs->psw.pkey | TRACE_F1_PT_FM2 | nbit;
         STORE_HW(tte->newpasn, pasn);
         STORE_FW(tte->r2, gpr2 & 0xFFFFFFFF);
     }
