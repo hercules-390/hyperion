@@ -308,6 +308,11 @@ void*  gui_panel_command (char* pszCommand)
 {
     void* (*next_panel_command_handler)(char* pszCommand);
 
+    // Ignore any null "commands" that may be erroneously passed to us
+
+    if (!pszCommand)    // (do we have a command to work with?)
+        return NULL;    // (nope. ignore)
+
     // Special GUI commands start with ']'. At the moment, all these special
     // gui commands tell us is what status information it's interested in...
 
