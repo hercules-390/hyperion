@@ -354,6 +354,7 @@ static char *pgmintname[] = {
 #endif /*defined(SIE_DEBUG)*/
         realregs->guestregs->TEA = realregs->TEA;
         realregs->guestregs->excarid = realregs->excarid;
+        realregs->guestregs->opndrid = realregs->opndrid;
         (realregs->guestregs->sie_guestpi) (realregs->guestregs, code);
     }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
@@ -542,6 +543,7 @@ static char *pgmintname[] = {
 #endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
            )
             psa->excarid = regs->excarid;
+            psa->opndrid = regs->opndrid;
 
 #if defined(FEATURE_ESAME)
         /* Store the translation exception address at PSA+168 */
