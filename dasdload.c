@@ -764,13 +764,13 @@ BYTE            buf[4096];              /* Buffer for data block     */
     if (rc < 0) return -1;
 
     /* Build the VOL1 record */
-    memset (buf, 0, sizeof(buf));
+    memset (buf, 0x40, sizeof(buf));
     datablk = (DATABLK*)buf;
     convert_to_ebcdic (datablk->kdarea, 4, "VOL1");
     convert_to_ebcdic (datablk->kdarea+4, 4, "VOL1");
     convert_to_ebcdic (datablk->kdarea+8, 6, volser);
-    datablk->kdarea[14] = 0x40;
-    convert_to_ebcdic (datablk->kdarea+41, 14, "HERCULES");
+    memset(datablk->kdarea+15, 0, 5);
+    convert_to_ebcdic (datablk->kdarea+45, 8, "HERCULES");
     keylen = VOL1_KEYLEN;
     datalen = VOL1_DATALEN;
 
