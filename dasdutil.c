@@ -1368,15 +1368,15 @@ CKDDEV         *ckdtab;                 /* -> CKD table entry        */
                     convert_to_ebcdic (pos, keylen, "VOL1");
                     pos += keylen;
 
-                    convert_to_ebcdic (pos, 4, "VOL1");           //VOL1
-                    convert_to_ebcdic (pos+4, 6, volser);         //volser
-                    pos[10] = 0xc0;                               //security
-                    store_hw(pos+11,0);                           //vtoc CC
-                    store_hw(pos+13,1);                           //vtoc HH
-                    pos[15] = 0x01;                               //vtoc R
-                    memset(pos+16, 0x40, 21);                     //reserved
-                    convert_to_ebcdic (pos+37, 14, "HERCULES");   //ownerid
-                    memset(pos+51, 0x40, 29);                     //reserved
+                    convert_to_ebcdic (pos, 4, "VOL1");             //VOL1
+                    convert_to_ebcdic (pos+4, 6, volser);           //volser
+                    pos[10] = 0xF0;                                 //security
+                    store_hw(pos+11,0);                             //vtoc CC
+                    store_hw(pos+13,1);                             //vtoc HH
+                    pos[15] = 0x01;                                 //vtoc R
+                    memset(pos+16, 0x40, 21);                       //reserved
+                    convert_to_ebcdic (pos+37, 14, "    HERCULES"); //ownerid
+                    memset(pos+51, 0x40, 29);                       //reserved
                     pos += vol1len;
 
                     /* 9 4096 data blocks for linux volume */
