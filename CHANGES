@@ -1,3 +1,6 @@
+06 Dec 2003 Pre-init residual to zero in tapedev execute_ccw -
+            freige@fibertel.com.ar by Fish
+            thread's select list before closing it. - Fish
 06 Dec 2003 Fix to 'unbind_device' to remove listening socket from panel
             thread's select list before closing it. - Fish
 04 Dec 2003 CTCI_Init (ctc_ctci.c): malloc working CTCBLK to work around

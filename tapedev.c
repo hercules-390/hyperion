@@ -3038,6 +3038,8 @@ long            locblock;               /* Block Id for Locate Block */
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
 
+    *residual = 0;     /* (pre-initialize residual in case of error) */
+
     /* If this is a data-chained READ, then return any data remaining
        in the buffer which was not used by the previous CCW */
     if (chained & CCW_FLAGS_CD)
