@@ -2048,7 +2048,7 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
         break;
 #endif
 
-#ifdef CCKD_COMPRESS_BZIP2
+#ifdef CCKD_BZIP2
     case CCKD_COMPRESS_BZIP2:
         bufp = (BYTE *)&buf2;
         memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
