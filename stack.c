@@ -1186,6 +1186,7 @@ int     i;                              /* Array subscript           */
 /* Output:                                                           */
 /*      lsedap  The absolute address of the entry descriptor of      */
 /*              the new current entry on the linkage stack.          */
+/*      rc      Return code from load_psw, checked later for PIC 06  */
 /* Return value:                                                     */
 /*      The type of entry unstacked: LSED_UET_BAKR or LSED_UET_PC    */
 /*                                                                   */
@@ -1202,14 +1203,13 @@ int     i;                              /* Array subscript           */
 /*      In the event of any stack error, this function generates     */
 /*      a program check and does not return.                         */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(program_return_unstack) (REGS *regs, RADR *lsedap)
+int ARCH_DEP(program_return_unstack) (REGS *regs, RADR *lsedap, int *rc)
 {
 QWORD   newpsw;                         /* New PSW                   */
 LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
 RADR    abs;                            /* Absolute address          */
 int     permode;                        /* 1=PER mode is set in PSW  */
-int     rc;                             /* Return code               */
 U16     pkm;                            /* PSW key mask              */
 U16     sasn;                           /* Secondary ASN             */
 U16     eax;                            /* Extended AX               */
@@ -1319,9 +1319,8 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 #endif /*defined(FEATURE_ESAME)*/
 
     /* Load new PSW using the bytes extracted from the stack entry */
-    rc = ARCH_DEP(load_psw) (regs, newpsw);
-    if (rc)
-        ARCH_DEP(program_interrupt) (regs, rc);
+    /* The rc will be checked by calling routine for PIC 06        */
+    *rc = ARCH_DEP(load_psw) (regs, newpsw);
 
     /* Restore the PER mode bit from the current PSW */
     if (permode)
