@@ -363,20 +363,26 @@ int     rc;                             /* Return code               */
 /*-------------------------------------------------------------------*/
 static int detach_devblk (DEVBLK *dev)
 {
+
     // detach all devices in group
     if(dev->group)
     {
     int i;
-        for(i = 0; i < dev->group->acount; i++)
+    DEVGRP *group;
+
+        group = dev->group;
+	dev->group = NULL;
+
+        for(i = 0; i < group->acount; i++)
         {
-            if(dev->group->memdev[i] != dev)
+            if(group->memdev[i] != NULL
+              && group->memdev[i] != dev)
             {
-                dev->group->memdev[i]->group = NULL;
-                detach_devblk(dev->group->memdev[i]);
+                group->memdev[i]->group = NULL;
+                detach_devblk(group->memdev[i]);
             }
         }
-        free(dev->group);
-        dev->group = NULL;
+        free(group);
     }
 
     /* Obtain the device lock */
@@ -546,16 +552,16 @@ DEVBLK *tmp;
         dev->member = dev->group->acount++;
         dev->group->memdev[dev->member] = dev;
     }
-    else
+    else if(members)
     {
-        // Allocate a new Group
+        // Allocate a new Group when requested
         dev->group = malloc(sizeof(DEVGRP) + members * sizeof(DEVBLK *));
         dev->group->members = members;
         dev->group->acount = 1;
         dev->group->memdev[0] = dev;
     }
 
-    return (dev->group->members == dev->group->acount);
+    return (dev->group && (dev->group->members == dev->group->acount));
 }
 
 
