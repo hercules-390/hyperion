@@ -1119,16 +1119,21 @@ void device_reset (DEVBLK *dev)
 void channelset_reset(REGS *regs)
 {
 DEVBLK *dev;                            /* -> Device control block   */
+int     console = 0;                    /* 1 = console device reset  */
 
     /* Reset each device in the configuration */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
         if( regs->chanset == dev->chanset)
+        {
+            if (dev->console) console = 1;
             device_reset(dev);
+        }
     }
 
     /* Signal console thread to redrive select */
-    signal_thread (sysblk.cnsltid, SIGUSR2);
+    if (console)
+        signal_thread (sysblk.cnsltid, SIGUSR2);
 
 } /* end function channelset_reset */
 
@@ -1143,6 +1148,7 @@ int chp_reset(BYTE chpid)
 DEVBLK *dev;                            /* -> Device control block   */
 int i;
 int operational = 3;
+int console = 0;
 
     obtain_lock (&sysblk.intlock);
 
@@ -1155,13 +1161,15 @@ int operational = 3;
               && (dev->pmcw.pim & dev->pmcw.pam & dev->pmcw.pom & (0x80 >> i)) )
             {
                 operational = 0;
+                if (dev->console) console = 1;
                 device_reset(dev);
             }
         }
     }
 
     /* Signal console thread to redrive select */
-    signal_thread (sysblk.cnsltid, SIGUSR2);
+    if (console)
+        signal_thread (sysblk.cnsltid, SIGUSR2);
 
     release_lock (&sysblk.intlock);
 
@@ -1180,6 +1188,7 @@ void
 io_reset (void)
 {
 DEVBLK *dev;                            /* -> Device control block   */
+int     console = 0;                    /* 1 = console device reset  */
 // #if defined(FEATURE_CHANNEL_SWITCHING)
 int i;
 
@@ -1192,7 +1201,10 @@ int i;
 
     /* Reset each device in the configuration */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+    {
+        if (dev->console) console = 1;
         device_reset(dev);
+    }
 
     /* No crws pending anymore */
     OFF_IC_CHANRPT;
@@ -1200,7 +1212,8 @@ int i;
     release_lock (&sysblk.intlock);
 
     /* Signal console thread to redrive select */
-    signal_thread (sysblk.cnsltid, SIGUSR2);
+    if (console)
+        signal_thread (sysblk.cnsltid, SIGUSR2);
 
 } /* end function io_reset */
 

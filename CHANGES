@@ -1,5 +1,7 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+01 Oct 2003 Fix segmentation fault using NPTL threads and no console
+            device is specified - Greg Smith
 29 Sep 2003 Backout STUPID (dangerous) 16 Aug 2003 het changes now that
             configure.ac detects the bug that was causing it - Fish
             (I can't believe I did that; I must have been tired)
