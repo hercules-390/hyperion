@@ -1,25 +1,724 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
-Hercules Version 2: System Messages: TE - 1052/3270 Terminal Emulation</TITLE>
+Hercules Version 2: System Messages: CF - Configuration Processing</TITLE>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
 </HEAD>
 <BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
       VLINK="#008040" ALINK="#000000">
-<h1>Hercules Version 2: System Messages: TE - 1052/3270 Terminal Emulation</h1>
+<h1>Hercules Version 2: System Messages: CF: Configuration Processing</h1>
 <p>
 This page describes the terminal emulation messages for the Hercules S/370,
 ESA/390, and z/Architecture emulator.
 <h3>Messages</h3>
 <dl>
-<dt><code><a name="HHCTE001I">
-HHCTE001I text
+<dt><code><a name="HHCCF001S">
+HHCCF001S Error reading file <em>filename</em> line <em>lineno</em>:
+<em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered reading the configuration
+file named <code><em>filename</em></code> at line number
+<code><em>lineno</em></code>. The error is described
+by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
   <dt>Issued by
-  <dd>console.c
+  <dd>config.c, function read_config
+  </dl>
+<dt><code><a name="HHCCF002S">
+HHCCF002S File <em>filename</em> line <em>lineno</em> is too long
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The line at line number <code><em>lineno</em></code>
+in the configuration file <code><em>filename</em></code> is too long and
+cannot be processed.
+  <dt>Action
+  <dd>Correct the line and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function read_config
+  </dl>
+<dt><code><a name="HHCCF003S">
+HHCCF003S Cannot open file <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The configuration file named <code><em>filename</em></code> could not be opened. The
+error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF004S">
+HHCCF004S No device records in file <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The configuration file named <code><em>filename</em></code> does not contain any
+device definition records. Without them, Hercules cannot do any meaningful
+work.
+  <dt>Action
+  <dd>Specify one or more device definitions in the configuration file and
+restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF005S">
+HHCCF005S Error in <em>filename</em> line <em>lineno</em>:
+Unrecognized argument <em>argument</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An invalid argument, <code><em>argument</em></code>, was specified on the
+<code>HTTPPORT</code> configuration statement in the file named
+<code><em>filename</em></code> at line number <code><em>lineno</em></code>. Only the arguments
+<code>auth</code> and <code>noauth</code> are valid.
+  <dt>Action
+  <dd>Correct the invalid argument and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF006S">
+HHCCF006S Error in <em>filename</em> line <em>lineno</em>:
+Userid, but no password given <em>userid</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A userid, <code><em>userid</em></code>, was specified
+on the <code>HTTPPORT</code> configuration statement in the file named
+<code><em>filename</em></code> at line number <code><em>lineno</em></code>, but no
+password was provided. A password is required if a userid is present.
+  <dt>Action
+  <dd>Either remove the userid, or specify a password, and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF007S">
+HHCCF007S Error in <em>filename</em> line <em>lineno</em>:
+Missing argument
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The <code>HTTPROOT</code> configuration statement was specified
+in the file named <code><em>filename</em></code> at line number <code><em>lineno</em></code>, but no
+directory was specified. A directory is required.
+  <dt>Action
+  <dd>Specify the directory where the Hercules web server will find its
+HTML files, and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF008S">
+HHCCF008S Error in <em>filename</em> line <em>lineno</em>:
+Unrecognized keyword <em>keyword</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An invalid configuration statement was specified in the file named
+<code><em>filename</em></code> at line
+number <code><em>lineno</em></code>. The invalid keyword was <code><em>keyword</em></code>.
+  <dt>Action
+  <dd>Correct the invalid statement and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF009S">
+HHCCF009S Error in <em>filename</em> line <em>lineno</em>:
+Incorrect number of operands
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The configuration statement at line <code><em>lineno</em></code> of the file named
+<code><em>filename</em></code> had an invalid number
+of operands. For all but the <code>HTTPPORT</code>
+statement, exactly one operand is required.
+  <dt>Action
+  <dd>Correct the invalid statement and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF010S">
+HHCCF010S Error in <em>filename</em> line <em>lineno</em>:
+Unknown or unsupported ARCHMODE specification <em>mode</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The <code>ARCHMODE</code> configuration statement at line
+<code><em>lineno</em></code> of the file named <code><em>filename</em></code> specified an invalid
+architecture. Only <code>S/370</code>, <code>ESA/390</code>,
+or <code>ESAME</code> are valid. If one of these was specified,
+then support for that architecture was excluded when the copy of Hercules
+in use was compiled.
+  <dt>Action
+  <dd>Correct the specified value and restart Hercules. If the message was
+issued because support for the desired architecture was excluded, then
+recompile Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF011S">
+HHCCF011S Error in <em>filename</em> line <em>lineno</em>:
+<em>serialno</em> is not a valid serial number
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The serial number <code><em>serialno</em></code> specified on the <code>CPUSERIAL</code>
+configuration statement at line number <code><em>lineno</em></code> of the
+file named <code><em>filename</em></code> must be exactly six digits long,
+and must be a valid hexadecimal number.
+  <dt>Action
+  <dd>Correct the serial number and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF012S">
+HHCCF012S Error in <em>filename</em> line <em>lineno</em>:
+<em>modelno</em> is not a valid CPU model
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The model number <code><em>modelno</em></code> specified on the <code>CPUMODEL</code>
+configuration statement at line number <code><em>lineno</em></code> of the
+file named <code><em>filename</em></code> must be exactly four digits long,
+and must be a valid hexadecimal number.
+  <dt>Action
+  <dd>Correct the model number and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF013S">
+HHCCF013S Error in <em>filename</em> line <em>lineno</em>:
+Invalid main storage size <em>size</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The main storage size <code><em>size</em></code> specified on the <code>MAINSIZE</code>
+configuration statement at line number <code><em>lineno</em></code> of the
+file named <code><em>filename</em></code> must be a valid decimal number between 2 and 1024.
+  <dt>Action
+  <dd>Correct the main storage size and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF014S">
+HHCCF014S Error in <em>filename</em> line <em>lineno</em>:
+Invalid expanded storage size <em>size</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The expanded storage size <code><em>size</em></code> specified on the <code>XPNDSIZE</code>
+configuration statement at line number <code><em>lineno</em></code> of the
+file named <code><em>filename</em></code> must be a valid decimal number between 0 and 1024.
+  <dt>Action
+  <dd>Correct the expanded storage size and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF015S">
+HHCCF015S Error in <em>filename</em> line <em>lineno</em>:
+Invalid console port number <em>port</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The console port number <code><em>port</em></code> specified on the
+<code>CNSLPORT</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be a valid nonzero decimal number.
+  <dt>Action
+  <dd>Correct the console port number and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF016S">
+HHCCF016S Error in <em>filename</em> line <em>lineno</em>:
+Invalid CPU thread priority <em>priority</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The CPU thread priority <code><em>priority</em></code> specified on the
+<code>CPUPRIO</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be a valid decimal number.
+  <dt>Action
+  <dd>Correct the CPU thread priority and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF017W">
+HHCCF017W Hercules is not running as setuid root, cannot raise CPU priority
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A negative value for the CPU thread priority parameter
+<code>CPUPRIO</code> was specified, but Hercules is not running as the
+root user (either directly or via the setuid mechanism).
+This parameter value would cause the priority of the CPU execution thread
+to be raised above the normal level if Hercules were running
+as root. Since it is not, however, the parameter will have no effect.
+  <dt>Action
+  <dd>Either specify a positive value to lower the CPU thread priority,
+zero to not alter the priority, or omit the statement entirely
+to use the Hercules default CPU thread priority of 15.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF018S">
+HHCCF018S Error in <em>filename</em> line <em>lineno</em>:
+Invalid number of CPUs <em>number</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The number of emulated CPUs <code><em>number</em></code> specified on the
+<code>NUMCPU</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be a valid decimal number between 1 and
+the maximum number defined when Hercules was built (usually 2; this number
+is never more than 2 for S/370 mode, or 16 for ESA/390 or ESAME mode).
+  <dt>Action
+  <dd>Correct the number of emulated CPUs and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF019S">
+HHCCF019S Error in <em>filename</em> line <em>lineno</em>:
+Invalid number of VFs <em>number</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The number of emulated Vector Facility engines <code><em>number</em></code> specified on the
+<code>NUMVEC</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be a valid decimal number between 1 and
+the maximum number defined when Hercules was built (usually 2).
+  <dt>Action
+  <dd>Correct the number of emulated Vector Facility engines and restart
+Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF020W">
+HHCCF020W Vector Facility support not configured
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A request for Vector Facility support was made
+by the <code>NUMVEC</code> configuration statement, but Hercules was built
+without the Vector Facility code. The request has been ignored.
+  <dt>Action
+  <dd>If Vector Facility support is desired, recompile Hercules. If not,
+remove the <code>NUMVEC</code> configuration statement.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF021S">
+HHCCF021S Error in <em>filename</em> line <em>lineno</em>:
+Load parameter <em>loadparm</em> exceeds 8 characters
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The IPL parameter <code><em>loadparm</em></code> specified on the
+<code>LOADPARM</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be no more than 8 characters long.
+  <dt>Action
+  <dd>Correct the IPL parameter and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF022S">
+HHCCF022S Error in <em>filename</em> line <em>lineno</em>:
+<em>epoch</em> is not a valid system epoch<br>
+Patch config.c to expand the table.
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The system epoch <code><em>epoch</em></code> specified on the
+<code>SYSEPOCH</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be one of the
+following: <code>1900</code>, <code>1928</code>,
+<code>1960</code>, <code>1988</code>, or <code>1970</code>.
+  <dt>Action
+  <dd>Correct the system epoch and restart Hercules.
+If a different epoch is desired, a change must be made to the Hercules
+source file config.c and Hercules rebuilt.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF023S">
+HHCCF023S Error in <em>filename</em> line <em>lineno</em>:
+<em>offset</em> is not a valid timezone offset
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The system timezone offset <code><em>offset</em></code> specified on the
+<code>TZOFFSET</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be five
+characters long, and a valid decimal number of the
+form (<code>+</code>|<code>-</code>)<code>number</code>, where
+<code>number</code> must be between zero and 2359 (representing 23 hours,
+59 minutes).
+  <dt>Action
+  <dd>Correct the time zone offset and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF024S">
+HHCCF024S Error in <em>filename</em> line <em>lineno</em>:
+Invalid TOD clock drag factor <em>drag</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The TOD clock drag factor <code><em>drag</em></code> specified on the
+<code>TODDRAG</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be a valid decimal number between 1 and
+10000.
+  <dt>Action
+  <dd>Correct the TOD clock drag factor and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF025S">
+HHCCF025S Error in <em>filename</em> line <em>lineno</em>:
+Invalid panel refresh rate <em>rate</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The control panel refresh rate <code><em>rate</em></code> specified on the
+<code>PANRATE</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be either <code>F</code>, <code>S</code>,
+or a valid decimal number between 1 and 5000.
+  <dt>Action
+  <dd>Correct the control panel refresh rate and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF026S">
+HHCCF026S Error in <em>filename</em> line <em>lineno</em>:
+Unknown OS tailor specification <em>tailor</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The OS tailoring value <code><em>tailor</em></code> specified on the
+<code>OSTAILOR</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be either
+<code>OS/390</code>, <code>VSE</code>,
+<code>VM</code>, <code>LINUX</code>, <code>NULL</code>, or
+<code>QUIET</code>.
+  <dt>Action
+  <dd>Correct the OS tailoring value and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF027S">
+HHCCF027S Error in <em>filename</em> line <em>lineno</em>:
+Invalid maximum device threads <em>threads</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The maximum device threads <code><em>threads</em></code> specified on the
+<code>DEVTMAX</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be a valid decimal number greater
+than -1.
+  <dt>Action
+  <dd>Correct the maximum device threads and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF028S">
+HHCCF028S Error in <em>filename</em> line <em>lineno</em>:
+Invalid program product OS permission <em>permission</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The program product OS permission <code><em>permission</em></code> specified on the
+<code>PGMPRDOS</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be either <code>LICENSED</code> (or
+<code>LICENCED</code>, for those who spell as the British do)
+or <code>RESTRICTED</code>.
+  <dt>Action
+  <dd>Correct the program product OS permission and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF029S">
+HHCCF029S Error in <em>filename</em> line <em>lineno</em>:
+Invalid HTTP port number <em>port</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The HTTP server port number <code><em>port</em></code> specified on the
+<code>HTTPPORT</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be either 80, or a valid decimal number
+greater than 1024.
+  <dt>Action
+  <dd>Correct the HTTP server port number and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF030S">
+HHCCF030S Error in <em>filename</em> line <em>lineno</em>:
+Invalid I/O delay value <em>delay</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The I/O delay value <code><em>delay</em></code> specified on the
+<code>IODELAY</code> configuration statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> must be a valid decimal number.
+  <dt>Action
+  <dd>Correct the I/O delay value and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF031S">
+HHCCF031S Cannot obtain <em>size</em>MB main storage: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to obtain the amount of main storage specified by
+<code>MAINSTOR</code> failed for the reason described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF032S">
+HHCCF032S Cannot obtain storage key array: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to obtain storage for the array of storage keys
+failed for the reason described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF033S">
+HHCCF033S Cannot obtain <em>size</em>MB expanded storage: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to obtain the amount of expanded storage specified by
+<code>XPNDSTOR</code> failed for the reason described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF034W">
+HHCCF034W Expanded storage support not installed
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A request was made for expanded storage by the <code>XPNDSTOR</code>
+configuration parameter, but Hercules was built without expanded storage
+support. The request was ignored.
+  <dt>Action
+  <dd>Either remove the XPNDSTOR configuration parameter, or recompile
+Hercules with expanded storage support included.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF035S">
+HHCCF035S Error in <em>filename</em> line <em>lineno</em>:
+Missing device number or device type
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The I/O device definition statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> did not contain a device number or a
+device type.
+  <dt>Action
+  <dd>Supply the missing value and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF036S">
+HHCCF035S Error in <em>filename</em> line <em>lineno</em>:
+<em>number</em> is not a valid device number
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The I/O device definition statement at line number <code><em>lineno</em></code> of
+the file named <code><em>filename</em></code> specified an invalid device number
+<code><em>number</em></code>. The device number must be one to four hexadecimal digits.
+  <dt>Action
+  <dd>Correct the device number and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF037S">
+HHCCF037S Message pipe creation failed: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to create a pipe for communication with the control panel
+failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF038S">
+HHCCF038S Message pipe open failed: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to open the pipe for communication with the control panel
+failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF039W">
+HHCCF039W PGMPRDOS LICENSED specified.<br>
+          Licensed program product operating systems are enabled.<br>
+          You are responsible for meeting all conditions of your<br>
+          software license.
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The configuration parameter <code>PGMPRDOS LICENSED</code> was
+specified. This message is issued to remind you that compliance with the
+terms of the license for your system's software is your responsibility.
+  <dt>Action
+  <dd>Be sure you know what you're doing.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF040E">
+HHCCF040E Cannot create CPU <em>number</em> thread: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to create a new thread for execution of CPU
+<code><em>number</em></code> failed. The error is described by
+<code><em>error</em></code>. The CPU has not been added to the configuration.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>config.c, function configure_cpu
+  </dl>
+<dt><code><a name="HHCCF041E">
+HHCCF041E Device <em>address</em> already exists
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt was made to define a device at address
+<code><em>address</em></code>. There is already a device at that address.
+  <dt>Action
+  <dd>Either choose another device address, or use the <code>detach</code>
+command to remove the existing device.
+  <dt>Issued by
+  <dd>config.c, function attach_device
+  </dl>
+<dt><code><a name="HHCCF042E">
+HHCCF042E Device type <em>type</em> not recognized
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt was made to define a device of type <code><em>type</em></code>. This
+device type is not supported by Hercules.
+  <dt>Action
+  <dd>Specify a supported device type.
+  <dt>Issued by
+  <dd>config.c, function attach_device
+  </dl>
+<dt><code><a name="HHCCF043E">
+HHCCF043E Cannot obtain device block for
+device <em>address</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to allocate memory for the control block describing the
+device with address <code><em>address</em></code> failed. The error is described
+by <code><em>error</em></code>. The device has not been defined.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>config.c, function attach_device
+  </dl>
+<dt><code><a name="HHCCF044E">
+HHCCF044E Initialization failed for device <em>address</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The device at address <code><em>address</em></code> could not be
+initialized. The device initialization routine has
+issued a message describing the problem in further detail; refer to that
+message for more information.
+  <dt>Issued by
+  <dd>config.c, function attach_device
+  </dl>
+<dt><code><a name="HHCCF045E">
+HHCCF045E Cannot obtain buffer for device <em>address</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to allocate memory for the data buffer for the
+device with address <code><em>address</em></code> failed. The error is described
+by <code><em>error</em></code>. The device has not been defined.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>config.c, function attach_device
+  </dl>
+<dt><code><a name="HHCCF046E">
+HHCCF046E Device <em>address</em> does not exist
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt was made to remove a device at address
+<code><em>address</em></code>. There is no device at that address.
+  <dt>Action
+  <dd>Choose another device address to remove, if desired.
+  <dt>Issued by
+  <dd>config.c, function detach_device
+  </dl>
+<dt><code><a name="HHCCF047I">
+HHCCF047I Device <em>address</em> detached
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The device at address <code><em>address</em></code> has been successfully removed
+from the system.
+  <dt>Issued by
+  <dd>config.c, function detach_device
+  </dl>
+<dt><code><a name="HHCCF048E">
+HHCCF048E Device <em>address</em> does not exist
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt was made to rename a device at address
+<code><em>address</em></code>. There is no device at that address.
+  <dt>Action
+  <dd>Choose another device address to rename, if desired.
+  <dt>Issued by
+  <dd>config.c, function define_device
+  </dl>
+<dt><code><a name="HHCCF049E">
+HHCCF049E Device <em>address</em> already exists
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt was made to rename a device to address
+<code><em>address</em></code>. There is already a device at that address.
+  <dt>Action
+  <dd>Either choose another device address, or use the <code>detach</code>
+command to remove the existing device.
+  <dt>Issued by
+  <dd>config.c, function define_device
+  </dl>
+<dt><code><a name="HHCCF050I">
+HHCCF050I Device <em>oldaddr</em> defined as <em>newaddr</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The device which was previously defined
+with the address <code><em>oldaddr</em></code> has been changed to the address
+<code><em>newaddr</em></code>.
+  <dt>Issued by
+  <dd>config.c, function define_device
   </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
@@ -27,9 +726,9 @@ HHCTE001I text
 If you have a question about Hercules, see the
 <a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
 <p><center><hr width=15% noshade>
-<a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+<a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 15 December 2002
+<p>Last updated 16 December 2002
 </BODY>
 </HTML>

@@ -159,7 +159,7 @@ int     stmtlen;                        /* Statement length          */
             /* Check for I/O error */
             if (ferror(fp))
             {
-                logmsg(_("HHC001I Error reading file %s line %d: %s\n"),
+                logmsg(_("HHCCF001S Error reading file %s line %d: %s\n"),
                     fname, stmt, strerror(errno));
                 exit(1);
             }
@@ -178,7 +178,7 @@ int     stmtlen;                        /* Statement length          */
             /* Check that statement does not overflow buffer */
             if (stmtlen >= (int)(sizeof(buf) - 1))
             {
-                logmsg(_("HHC002I File %s line %d is too long\n"),
+                logmsg(_("HHCCF002S File %s line %d is too long\n"),
                     fname, stmt);
                 exit(1);
             }
@@ -312,7 +312,7 @@ BYTE    c;                              /* Work area for sscanf      */
     fp = fopen (fname, "r");
     if (fp == NULL)
     {
-        logmsg(_("HHC003I Cannot open file %s: %s\n"),
+        logmsg(_("HHCCF003S Cannot open file %s: %s\n"),
                 fname, strerror(errno));
         exit(1);
     }
@@ -349,7 +349,7 @@ BYTE    c;                              /* Work area for sscanf      */
         /* Read next record from the configuration file */
         if ( read_config (fname, fp) )
         {
-            logmsg(_("HHC004I No device records in file %s\n"),
+            logmsg(_("HHCCF004S No device records in file %s\n"),
                     fname);
             exit(1);
         }
@@ -492,7 +492,7 @@ BYTE    c;                              /* Work area for sscanf      */
                         sysblk.httpauth = 1;
                     else if(strcasecmp(addargv[0],"noauth"))
                     {
-                        logmsg(_("HHS009E Error in %s line %d: "
+                        logmsg(_("HHCCF005S Error in %s line %d: "
                         "Unrecognized argument %s\n"),
                         fname, stmt, addargv[0]);
                         exit(1);
@@ -506,7 +506,7 @@ BYTE    c;                              /* Work area for sscanf      */
                         sysblk.httppass = strdup(addargv[2]);
                     else
                     {
-                        logmsg(_("HHS008E Error in %s line %d: "
+                        logmsg(_("HHCCF006S Error in %s line %d: "
                         "Userid, but no password given %s\n"),
                         fname, stmt, addargv[1]);
                         exit(1);
@@ -521,7 +521,8 @@ BYTE    c;                              /* Work area for sscanf      */
                     sysblk.httproot = strdup(operand);
                 else
                 {
-                    logmsg(_("HHS003E Error in %s line %d: Missing argument.\n"),
+                    logmsg(_("HHCCF007S Error in %s line %d: "
+                    "Missing argument.\n"),
                         fname, stmt);
                     exit(1);
                 }
@@ -533,7 +534,7 @@ BYTE    c;                              /* Work area for sscanf      */
             }
             else
             {
-                logmsg(_("HHC006I Error in %s line %d: "
+                logmsg(_("HHCCF008S Error in %s line %d: "
                         "Unrecognized keyword %s\n"),
                         fname, stmt, keyword);
                 exit(1);
@@ -542,7 +543,7 @@ BYTE    c;                              /* Work area for sscanf      */
             /* Check for one and only one operand */
             if (operand == NULL || addargc != 0)
             {
-                logmsg(_("HHC005I Error in %s line %d: "
+                logmsg(_("HHCCF009S Error in %s line %d: "
                         "Incorrect number of operands\n"),
                         fname, stmt);
                 exit(1);
@@ -576,7 +577,7 @@ BYTE    c;                              /* Work area for sscanf      */
             else
 #endif
             {
-                logmsg(_("HHC017I Error in %s line %d: "
+                logmsg(_("HHCCF010S Error in %s line %d: "
                         "Unknown or unsupported ARCHMODE specification %s\n"),
                         fname, stmt, sarchmode);
                 exit(1);
@@ -594,7 +595,7 @@ BYTE    c;                              /* Work area for sscanf      */
             if (strlen(sserial) != 6
                 || sscanf(sserial, "%x%c", &serial, &c) != 1)
             {
-                logmsg(_("HHC007I Error in %s line %d: "
+                logmsg(_("HHCCF011S Error in %s line %d: "
                         "%s is not a valid serial number\n"),
                         fname, stmt, sserial);
                 exit(1);
@@ -607,7 +608,7 @@ BYTE    c;                              /* Work area for sscanf      */
             if (strlen(smodel) != 4
                 || sscanf(smodel, "%hx%c", &model, &c) != 1)
             {
-                logmsg(_("HHC008I Error in %s line %d: "
+                logmsg(_("HHCCF012S Error in %s line %d: "
                         "%s is not a valid CPU model\n"),
                         fname, stmt, smodel);
                 exit(1);
@@ -620,7 +621,7 @@ BYTE    c;                              /* Work area for sscanf      */
             if (sscanf(smainsize, "%hu%c", &mainsize, &c) != 1
                 || mainsize < 2 || mainsize > 1024)
             {
-                logmsg(_("HHC009I Error in %s line %d: "
+                logmsg(_("HHCCF013S Error in %s line %d: "
                         "Invalid main storage size %s\n"),
                         fname, stmt, smainsize);
                 exit(1);
@@ -633,7 +634,7 @@ BYTE    c;                              /* Work area for sscanf      */
             if (sscanf(sxpndsize, "%hu%c", &xpndsize, &c) != 1
                 || xpndsize > 1024)
             {
-                logmsg(_("HHC010I Error in %s line %d: "
+                logmsg(_("HHCCF014S Error in %s line %d: "
                         "Invalid expanded storage size %s\n"),
                         fname, stmt, sxpndsize);
                 exit(1);
@@ -646,7 +647,7 @@ BYTE    c;                              /* Work area for sscanf      */
             if (sscanf(scnslport, "%hu%c", &cnslport, &c) != 1
                 || cnslport == 0)
             {
-                logmsg(_("HHC011I Error in %s line %d: "
+                logmsg(_("HHCCF015S Error in %s line %d: "
                         "Invalid console port number %s\n"),
                         fname, stmt, scnslport);
                 exit(1);
@@ -658,7 +659,7 @@ BYTE    c;                              /* Work area for sscanf      */
         {
             if (sscanf(scpuprio, "%d%c", &cpuprio, &c) != 1)
             {
-                logmsg(_("HHC012I Error in %s line %d: "
+                logmsg(_("HHCCF016S Error in %s line %d: "
                         "Invalid CPU thread priority %s\n"),
                         fname, stmt, scpuprio);
                 exit(1);
@@ -666,7 +667,8 @@ BYTE    c;                              /* Work area for sscanf      */
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && cpuprio < 0)
-            logmsg(_("SETPRIO: Hercules not running as setuid root\n"));
+            logmsg(_("HHCCF017W Hercules is not running as setuid root, "
+                    "cannot raise CPU priority\n"));
 #endif /*!defined(NO_SETUID)*/
 
         }
@@ -679,7 +681,7 @@ BYTE    c;                              /* Work area for sscanf      */
             if (sscanf(snumcpu, "%hu%c", &numcpu, &c) != 1
                 || numcpu < 1 || numcpu > MAX_CPU_ENGINES)
             {
-                logmsg(_("HHC012I Error in %s line %d: "
+                logmsg(_("HHCCF018S Error in %s line %d: "
                         "Invalid number of CPUs %s\n"),
                         fname, stmt, snumcpu);
                 exit(1);
@@ -693,13 +695,13 @@ BYTE    c;                              /* Work area for sscanf      */
             if (sscanf(snumvec, "%hu%c", &numvec, &c) != 1
                 || numvec > MAX_CPU_ENGINES)
             {
-                logmsg(_("HHC018I Error in %s line %d: "
+                logmsg(_("HHCCF019S Error in %s line %d: "
                         "Invalid number of VFs %s\n"),
                         fname, stmt, snumvec);
                 exit(1);
             }
 #else /*!_FEATURE_VECTOR_FACILITY*/
-            logmsg(_("HHC019I Vector Facility Support not configured\n"));
+            logmsg(_("HHCCF020W Vector Facility support not configured\n"));
 #endif /*!_FEATURE_VECTOR_FACILITY*/
         }
 
@@ -708,7 +710,7 @@ BYTE    c;                              /* Work area for sscanf      */
         {
             if (strlen(sloadparm) > 8)
             {
-                logmsg(_("HHC013I Error in %s line %d: "
+                logmsg(_("HHCCF021S Error in %s line %d: "
                         "Load parameter %s exceeds 8 characters\n"),
                         fname, stmt, sloadparm);
                 exit(1);
@@ -730,8 +732,9 @@ BYTE    c;                              /* Work area for sscanf      */
                  && (sysepoch != 1970)
                     ))
             {
-                logmsg(_("HHC014I Error in %s line %d: "
-                        "%s is not a valid system epoch\npatch config.c to expand the table\n"),
+                logmsg(_("HHCCF022S Error in %s line %d: "
+                        "%s is not a valid system epoch.\n"
+                        "Patch config.c to expand the table\n"),
                         fname, stmt, ssysepoch);
                 exit(1);
             }
@@ -744,7 +747,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 || sscanf(stzoffset, "%d%c", &tzoffset, &c) != 1
                 || (tzoffset < -2359) || (tzoffset > 2359))
             {
-                logmsg(_("HHC015I Error in %s line %d: "
+                logmsg(_("HHCCF023S Error in %s line %d: "
                         "%s is not a valid timezone offset\n"),
                         fname, stmt, stzoffset);
                 exit(1);
@@ -758,7 +761,7 @@ BYTE    c;                              /* Work area for sscanf      */
             if (sscanf(stoddrag, "%u%c", &toddrag, &c) != 1
                 || toddrag < 1 || toddrag > 10000)
             {
-                logmsg(_("HHC016I Error in %s line %d: "
+                logmsg(_("HHCCF024S Error in %s line %d: "
                         "Invalid TOD clock drag factor %s\n"),
                         fname, stmt, stoddrag);
                 exit(1);
@@ -782,7 +785,7 @@ BYTE    c;                              /* Work area for sscanf      */
                     if (sscanf(spanrate, "%u%c", &panrate, &c) != 1
                         || panrate < (1000/CLK_TCK) || panrate > 5000)
                     {
-                        logmsg(_("HHC045I Error in %s line %d: "
+                        logmsg(_("HHCCF025S Error in %s line %d: "
                                 "Invalid panel refresh rate %s\n"),
                                 fname, stmt, spanrate);
                         exit(1);
@@ -821,7 +824,7 @@ BYTE    c;                              /* Work area for sscanf      */
             }
             else
             {
-                logmsg(_("HHC017I Error in %s line %d: "
+                logmsg(_("HHCCF026S Error in %s line %d: "
                         "Unknown OS tailor specification %s\n"),
                         fname, stmt, sostailor);
                 exit(1);
@@ -834,8 +837,8 @@ BYTE    c;                              /* Work area for sscanf      */
             if (sscanf(sdevtmax, "%d%c", &devtmax, &c) != 1
                 || devtmax < -1)
             {
-                logmsg(_("HHC016I Error in %s line %d: "
-                        "Invalid Max device threads %s\n"),
+                logmsg(_("HHCCF027S Error in %s line %d: "
+                        "Invalid maximum device threads %s\n"),
                         fname, stmt, sdevtmax);
                 exit(1);
             }
@@ -859,7 +862,7 @@ BYTE    c;                              /* Work area for sscanf      */
             }
             else
             {
-                logmsg(_("HHC047I Error in %s line %d: "
+                logmsg(_("HHCCF028S Error in %s line %d: "
                         "Invalid program product OS permission %s\n"),
                         fname, stmt, spgmprdos);
                 exit(1);
@@ -873,7 +876,7 @@ BYTE    c;                              /* Work area for sscanf      */
             if (sscanf(shttpport, "%hu%c", &httpport, &c) != 1
                 || httpport == 0 || (httpport < 1024 && httpport != 80) )
             {
-                logmsg(_("HHS002E Error in %s line %d: "
+                logmsg(_("HHCCF029S Error in %s line %d: "
                         "Invalid HTTP port number %s\n"),
                         fname, stmt, shttpport);
                 exit(1);
@@ -887,7 +890,7 @@ BYTE    c;                              /* Work area for sscanf      */
         {
             if (sscanf(siodelay, "%d%c", &iodelay, &c) != 1)
             {
-                logmsg(_("HHC012I Error in %s line %d: "
+                logmsg(_("HHCCF030S Error in %s line %d: "
                         "Invalid I/O delay value: %s\n"),
                         fname, stmt, siodelay);
                 exit(1);
@@ -908,7 +911,7 @@ BYTE    c;                              /* Work area for sscanf      */
     sysblk.mainstor = malloc(sysblk.mainsize);
     if (sysblk.mainstor == NULL)
     {
-        logmsg(_("HHC020I Cannot obtain %dMB main storage: %s\n"),
+        logmsg(_("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
                 mainsize, strerror(errno));
         exit(1);
     }
@@ -917,7 +920,7 @@ BYTE    c;                              /* Work area for sscanf      */
     sysblk.storkeys = malloc(sysblk.mainsize / STORAGE_KEY_UNITSIZE);
     if (sysblk.storkeys == NULL)
     {
-        logmsg(_("HHC021I Cannot obtain storage key array: %s\n"),
+        logmsg(_("HHCCF032S Cannot obtain storage key array: %s\n"),
                 strerror(errno));
         exit(1);
     }
@@ -940,13 +943,13 @@ BYTE    c;                              /* Work area for sscanf      */
         sysblk.xpndstor = malloc(sysblk.xpndsize * XSTORE_PAGESIZE);
         if (sysblk.xpndstor == NULL)
         {
-            logmsg(_("HHC022I Cannot obtain %dMB expanded storage: "
+            logmsg(_("HHCCF033S Cannot obtain %dMB expanded storage: "
                     "%s\n"),
                     xpndsize, strerror(errno));
             exit(1);
         }
 #else /*!_FEATURE_EXPANDED_STORAGE*/
-        logmsg(_("HHC024I Expanded storage support not installed\n"));
+        logmsg(_("HHCCF034W Expanded storage support not installed\n"));
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
 
@@ -1112,7 +1115,7 @@ BYTE    c;                              /* Work area for sscanf      */
 
         if (sdevnum == NULL || sdevtype == NULL)
         {
-            logmsg(_("HHC030I Error in %s line %d: "
+            logmsg(_("HHCCF035S Error in %s line %d: "
                     "Missing device number or device type\n"),
                     fname, stmt);
             exit(1);
@@ -1121,7 +1124,7 @@ BYTE    c;                              /* Work area for sscanf      */
         if (strlen(sdevnum) > 4
             || sscanf(sdevnum, "%hx%c", &devnum, &c) != 1)
         {
-            logmsg(_("HHC031I Error in %s line %d: "
+            logmsg(_("HHCCF036S Error in %s line %d: "
                     "%s is not a valid device number\n"),
                     fname, stmt, sdevnum);
             exit(1);
@@ -1141,7 +1144,7 @@ BYTE    c;                              /* Work area for sscanf      */
     rc = pipe (pfd);
     if (rc < 0)
     {
-        logmsg(_("HHC033I Message pipe creation failed: %s\n"),
+        logmsg(_("HHCCF037S Message pipe creation failed: %s\n"),
                 strerror(errno));
         exit(1);
     }
@@ -1155,7 +1158,7 @@ BYTE    c;                              /* Work area for sscanf      */
     if (sysblk.msgpipew == NULL)
     {
         sysblk.msgpipew = stderr;
-        logmsg(_("HHC034I Message pipe open failed: %s\n"),
+        logmsg(_("HHCCF038S Message pipe open failed: %s\n"),
                 strerror(errno));
         exit(1);
     }
@@ -1176,10 +1179,11 @@ BYTE    c;                              /* Work area for sscanf      */
     display_version (sysblk.msgpipew, "Hercules ");
     if (sysblk.pgmprdos == PGM_PRD_OS_LICENSED)
     {
-        logmsg(_("HHC046W PGMPRDOS LICENSED specified.\n"
-                "        Licensed program product operating systems are "
-                "enabled.\n        You are "
-                "responsible for meeting all conditions of your software "
+        logmsg(_("HHCCF039W PGMPRDOS LICENSED specified.\n"
+                "           Licensed program product operating systems are "
+                "enabled.\n           You are "
+                "responsible for meeting all conditions of your\n"
+                "           software "
                 "license.\n\n"));
     }
 
@@ -1256,7 +1260,7 @@ int configure_cpu(REGS *regs)
 #ifdef _FEATURE_VECTOR_FACILITY
         regs->vf->online = 0;
 #endif /*_FEATURE_VECTOR_FACILITY*/
-        logmsg(_("HHC034I Cannot create CPU%4.4X thread: %s\n"),
+        logmsg(_("HHCCF040E Cannot create CPU%4.4X thread: %s\n"),
                 regs->cpuad, strerror(errno));
         return -1;
     }
@@ -1301,7 +1305,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     /* Check whether device number has already been defined */
     if (find_device_by_devnum(devnum) != NULL)
     {
-        logmsg (_("HHC035I device %4.4X already exists\n"), devnum);
+        logmsg (_("HHCCF041E Device %4.4X already exists\n"), devnum);
         return 1;
     }
 
@@ -1311,7 +1315,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
 
     if(!devent->hnd)
     {
-        logmsg (_("HHC036I Device type %s not recognized\n"),
+        logmsg (_("HHCCF042E Device type %s not recognized\n"),
                 type);
         return 1;
     }
@@ -1326,7 +1330,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
         dev = (DEVBLK*)malloc(sizeof(DEVBLK));
         if (dev == NULL)
         {
-            logmsg (_("HHC037I Cannot obtain device block "
+            logmsg (_("HHCCF043E Cannot obtain device block "
                     "for device %4.4X: %s\n"),
                     devnum, strerror(errno));
             return 1;
@@ -1378,7 +1382,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     rc = (dev->hnd->init)(dev, addargc, addargv);
     if (rc < 0)
     {
-        logmsg (_("HHC038I Initialization failed for device %4.4X\n"),
+        logmsg (_("HHCCF044E Initialization failed for device %4.4X\n"),
                 devnum);
         release_lock(&dev->lock);
 
@@ -1395,7 +1399,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
         dev->buf = malloc (dev->bufsize);
         if (dev->buf == NULL)
         {
-            logmsg (_("HHC039I Cannot obtain buffer "
+            logmsg (_("HHCCF045E Cannot obtain buffer "
                     "for device %4.4X: %s\n"),
                     dev->devnum, strerror(errno));
             release_lock(&dev->lock);
@@ -1452,7 +1456,7 @@ DEVBLK *dev;                            /* -> Device block           */
 
     if (dev == NULL)
     {
-        logmsg (_("HHC040I device %4.4X does not exist\n"), devnum);
+        logmsg (_("HHCCF046E Device %4.4X does not exist\n"), devnum);
         return 1;
     }
 
@@ -1480,7 +1484,7 @@ DEVBLK *dev;                            /* -> Device block           */
     machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
-    logmsg (_("HHC041I device %4.4X detached\n"), devnum);
+    logmsg (_("HHCCF047I Device %4.4X detached\n"), devnum);
 
     return 0;
 } /* end function detach_device */
@@ -1498,14 +1502,14 @@ DEVBLK *dev;                            /* -> Device block           */
 
     if (dev == NULL)
     {
-        logmsg (_("HHC042I device %4.4X does not exist\n"), olddevn);
+        logmsg (_("HHCCF048E Device %4.4X does not exist\n"), olddevn);
         return 1;
     }
 
     /* Check that new device number does not already exist */
     if (find_device_by_devnum(newdevn) != NULL)
     {
-        logmsg (_("HHC043I device %4.4X already exists\n"), newdevn);
+        logmsg (_("HHCCF049E Device %4.4X already exists\n"), newdevn);
         return 1;
     }
 
@@ -1535,7 +1539,7 @@ DEVBLK *dev;                            /* -> Device block           */
     machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
-    logmsg (_("HHC044I device %4.4X defined as %4.4X\n"),
+    logmsg (_("HHCCF050I Device %4.4X defined as %4.4X\n"),
             olddevn, newdevn);
 
     return 0;
