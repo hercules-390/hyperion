@@ -1536,13 +1536,10 @@ int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 U64     dreg;
-
-/* ASN and LX Reuse Specifics */
-U32     sastein_d;                      /* Designated SASTEIN        */
-U32     pastein_d;                      /* Designated PASTEIN        */
-U32     sastein_new;                    /* New SASTEIN               */
-U32     pastein_new;                    /* New PASTEIN               */
-
+U32     sastein_d = 0;                  /* Designated SASTEIN        */
+U32     pastein_d = 0;                  /* Designated PASTEIN        */
+U32     sastein_new = 0;                /* New SASTEIN               */
+U32     pastein_new = 0;                /* New PASTEIN               */
 U16     pkm_d;                          /* Designated PKM            */
 U16     sasn_d;                         /* Designated SASN           */
 U16     ax_d;                           /* Designated AX             */
@@ -1584,10 +1581,6 @@ CREG    inst_cr;                        /* Instruction CR            */
        may be multiple-access references) */
     if (ASN_AND_LX_REUSE_ENABLED(regs))
     {
-        sastein_d=0;
-        pastein_d=0;
-        sastein_new=0;
-        pastein_new=0;
         /* When ASN-and-LX-reuse is installed and enabled by CR0,
            the first operand consists of two doublewords */
 
