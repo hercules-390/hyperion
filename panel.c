@@ -1354,6 +1354,15 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             logmsg("CPU%4.4X: CPU state is %s\n",
                 sysblk.regs[i].cpuad,
                          states[sysblk.regs[i].cpustate]);
+            if(sysblk.arch_mode == ARCH_370)
+            {
+                if(sysblk.regs[i].chanset == 0xFFFF)
+                    logmsg("CPU%4.4X: No channelset connected\n",
+                      sysblk.regs[i].cpuad);
+                else
+                    logmsg("CPU%4.4X: Connected to channelset %4.4X\n",
+                      sysblk.regs[i].cpuad,sysblk.regs[i].chanset);
+            }
         }
         logmsg("Started mask %8.8X waiting mask %8.8X\n",
                                 sysblk.started_mask, sysblk.waitmask);
