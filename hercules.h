@@ -194,6 +194,13 @@ typedef int                             ATTR;
 #define thread_id()                     0
 #endif
 
+/* Pattern for displaying the thread_id */
+#define TIDPAT "%8.8lX"
+#ifdef  WIN32
+#undef  TIDPAT
+#define TIDPAT "%p"
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Prototype definitions for device handler functions                */
 /*-------------------------------------------------------------------*/

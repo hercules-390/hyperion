@@ -2291,7 +2291,7 @@ struct  timeval tv;                     /* Select timeout structure  */
 
     /* Display thread started message on control panel */
     logmsg ("HHC650I Control panel thread started: "
-            "tid=%8.8lX, pid=%d\n",
+            "tid="TIDPAT", pid=%d\n",
             thread_id(), getpid());
 
     /* Obtain storage for the circular message buffer */

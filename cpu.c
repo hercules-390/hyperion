@@ -882,7 +882,7 @@ void *cpu_thread (REGS *regs)
     SETMODE(USER);
     
     /* Display thread started message on control panel */
-    logmsg ("HHC620I CPU%4.4X thread started: tid=%8.8lX, pid=%d, "
+    logmsg ("HHC620I CPU%4.4X thread started: tid="TIDPAT", pid=%d, "
             "priority=%d\n",
             regs->cpuad, thread_id(), getpid(),
             getpriority(PRIO_PROCESS,0));
@@ -938,7 +938,7 @@ void *cpu_thread (REGS *regs)
     initial_cpu_reset (regs);
 
     /* Display thread ended message on control panel */
-    logmsg ("HHC624I CPU%4.4X thread ended: tid=%8.8lX, pid=%d\n",
+    logmsg ("HHC624I CPU%4.4X thread ended: tid="TIDPAT", pid=%d\n",
             regs->cpuad, thread_id(), getpid());
 
     /* Thread exit */

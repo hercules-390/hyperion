@@ -136,7 +136,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
                                            and select function calls */
 
     /* Display thread started message on control panel */
-    logmsg ("HHC610I Timer thread started: tid=%8.8lX, pid=%d\n",
+    logmsg ("HHC610I Timer thread started: tid="TIDPAT", pid=%d\n",
             thread_id(), getpid());
     
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR

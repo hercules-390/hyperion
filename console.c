@@ -1176,7 +1176,7 @@ BYTE                    unitstat;       /* Status after receive data */
 
     /* Display thread started message on control panel */
     logmsg ("HHC600I Console connection thread started: "
-            "tid=%8.8lX, pid=%d\n",
+            "tid="TIDPAT", pid=%d\n",
             thread_id(), getpid());
 
     /* Get information about this system */
