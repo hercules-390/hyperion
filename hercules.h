@@ -73,6 +73,12 @@
 #include <bzlib.h>
 #endif
 
+/* Include LOCALE.H - Otherwise impl.c will not compile when
+ * CFLAGS does not contain -O[x] (libtinl.h only includes locale.h
+ * when __OPTIMIZE__ is defined) and impl.c uses LC_xxx macros 
+ */
+#include <locale.h>
+
 #ifndef _POSIX_SYNCHRONIZED_IO
 /* If fdatasync is not necessarily available, fsync will do fine */
 #define fdatasync(fd) fsync(fd)
