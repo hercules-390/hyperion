@@ -1232,6 +1232,7 @@ int     current_priority;               /* Current thread priority   */
     UNREFERENCED(arg);
 
     adjust_thread_priority(&sysblk.devprio);
+    current_priority = getpriority(PRIO_PROCESS, 0);
 
     obtain_lock(&sysblk.ioqlock);
 
@@ -1848,7 +1849,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
         release_lock (&dev->lock);
 
 #if defined(OPTION_FISHIO)
-    return ScheduleIORequest(dev,dev->devnum);
+    return  ScheduleIORequest( dev, dev->devnum, &dev->devprio );
 #else // !defined(OPTION_FISHIO)
     if (sysblk.devtmax >= 0)
     {

@@ -144,6 +144,7 @@ typedef struct _DevIORequest
 {
     LIST_ENTRY      IORequestListLinkingListEntry;  // (just a link in the chain)
     void*           pDevBlk;                        // (ptr to device block)
+    int*            pnDevPrio;                      // (ptr to device i/o priority)
     unsigned short  wDevNum;                        // (device number for debugging)
 }
 DEVIOREQUEST;
@@ -163,7 +164,7 @@ void   RemoveThisThreadFromOurList(DEVTHREADPARMS* pThreadParms);
 // Schedule a DeviceThread for this i/o request... (called by the 'startio'
 // function whenever the startio or start subchannel instruction is executed)
 
-int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum)
+int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum, int* pnDevPrio)
 {
     /////////////////////////////////////////////////////////////////
     // PROGRAMMING NOTE: The various errors that can occur in this
@@ -192,6 +193,7 @@ int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum)
     InitializeListLink(&pIORequest->IORequestListLinkingListEntry);
     pIORequest->pDevBlk = pDevBlk;
     pIORequest->wDevNum = wDevNum;
+    pIORequest->pnDevPrio = pnDevPrio;
 
     // Schedule a device_thread to process this i/o request
 
@@ -408,7 +410,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
 void AdjustThreadPriority(int* pCurPrio, int* pNewPrio)
 {
-    if ((*pCurPrio != *pNewPrio))
+    if (*pCurPrio != *pNewPrio)
     {
         setpriority(PRIO_PROCESS, 0, *pNewPrio);
         *pCurPrio = *pNewPrio;
@@ -427,6 +429,7 @@ void*  DeviceThread (void* pArg)
     LIST_ENTRY*      pListEntry;        // (work)
     DEVIOREQUEST*    pIORequest;        // ptr to i/o request
     void*            pDevBlk;           // ptr to device block
+    int*             pnDevPrio;         // ptr to device i/o priority
     int              nCurPrio;          // current thread priority
 
     pThreadParms = (DEVTHREADPARMS*) pArg;
@@ -473,16 +476,15 @@ void*  DeviceThread (void* pArg)
         UnlockThreadParms(pThreadParms);    // (done with thread parms for now)
 
         pIORequest = CONTAINING_RECORD(pListEntry,DEVIOREQUEST,IORequestListLinkingListEntry);
-        pDevBlk = pIORequest->pDevBlk;      // (this is all we need)
+        pDevBlk   = pIORequest->pDevBlk;    // (need ptr to devblk)
+        pnDevPrio = pIORequest->pnDevPrio;  // (need ptr to devprio)
         free(pIORequest);                   // (not needed anymore)
 
         // Process the i/o request by calling the proper 'execute_ccw_chain'
         // function (based on architectural mode) in source module channel.c
 
         // Set thread priority to requested device level
-        /* Commented out as DEVBLK is not defined as hercules.h is not included
-        AdjustThreadPriority(&nCurPrio,*pDevBlk->devprio);
-        -- */
+        AdjustThreadPriority(&nCurPrio,pnDevPrio);
 
         call_execute_ccw_chain(ios_arch_mode, pDevBlk); // (process i/o request)
 

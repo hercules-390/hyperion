@@ -23,7 +23,7 @@ extern void  InitIOScheduler    // initialize i/o scheduler vars
     long   devt_max         // (maximum #of device threads allowed)
 );
 
-extern int   ScheduleIORequest(void* pDevBlk, unsigned short wDevNum);
+extern int   ScheduleIORequest(void* pDevBlk, unsigned short wDevNum, int* pnDevPrio);
 extern void  TrimDeviceThreads();
 extern void  KillAllDeviceThreads();
 
