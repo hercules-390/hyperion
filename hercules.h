@@ -152,15 +152,15 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 
 #ifdef WIN32
 #define socklen_t int
-#if !defined(OPTION_FTHREADS)
-/* fake loading of <windows.h> and <winsock.h> so we can use         */
-/* pthreads-win32 instead of the native cygwin pthreads support,     */
-/* which doesn't include pthread_cond bits                           */
-#define _WINDOWS_
-#define _WINSOCKAPI_
-#define _WINDOWS_H
-#define _WINSOCK_H
-#endif // !defined(OPTION_FTHREADS)
+//   #if !defined(OPTION_FTHREADS)
+//   /* fake loading of <windows.h> and <winsock.h> so we can use         */
+//   /* pthreads-win32 instead of the native cygwin pthreads support,     */
+//   /* which doesn't include pthread_cond bits                           */
+//   #define _WINDOWS_
+//   #define _WINSOCKAPI_
+//   #define _WINDOWS_H
+//   #define _WINSOCK_H
+//   #endif // !defined(OPTION_FTHREADS)
 #define HANDLE int
 #define DWORD int       /* will be undefined later */
 #endif

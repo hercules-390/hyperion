@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+29 May 2004 Remove "fake loading of <windows.h>" in hercules.h - Fish
 28 May 2004 TUNTAP_SetDestAddr: 'ifr_addr' (NOT 'ifr_dstaddr') - Fish
 28 May 2004 ffs.pat - SMP fix for ffs macro - Greg Smith
 24 May 2004 gcwait.pat, cckdfat.pat - cckd fixes - Greg Smith
