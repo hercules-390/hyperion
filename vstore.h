@@ -644,7 +644,7 @@ int     len = 0;                        /* Lengths for page crossing */
         int off;
         regs->AIV = addr & TLB_PAGEMASK;
         regs->AIE = (addr & TLB_PAGEMASK)
-                  | (addr < PSA_SIZE ? 0x7FA : (TLB_BYTEMASK -  5));
+                  | (addr < PSA_SIZE ? 0x7FB : (TLB_BYTEMASK -  4));
         off = addr & TLB_BYTEMASK;
         regs->aim = NEW_INSTADDR(regs, addr-off, ia-off);
     }

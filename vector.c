@@ -267,6 +267,7 @@ U64     d;
 #if 0
             /* This is where the instruction may be interrupted */
             regs->psw.IA -= REAL_ILC(regs);
+            VALIDATE_AIA(regs);
             return;
 #endif
         }
@@ -341,6 +342,7 @@ U64     d;
 #if 0
             /* This is where the instruction may be interrupted */
             regs->psw.IA -= REAL_ILC(regs);
+            VALIDATE_AIA(regs);
             return;
 #endif
         }
@@ -416,6 +418,7 @@ U64     d;
 #if 0
             /* This is where the instruction may be interrupted */
             regs->psw.IA -= REAL_ILC(regs);
+            VALIDATE_AIA(regs);
             return;
 #endif
         }

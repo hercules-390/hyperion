@@ -271,10 +271,30 @@ do { \
 #define FOOTPRINT(_regs)
 #endif
 
+/* Accelerator for instruction addresses */
+
+#define VALID_AIA(_regs, _addr) \
+((_addr) < (_regs)->AIE && (_regs)->AIV == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01)))
+
+#define VALIDATE_AIA(_regs) \
+do { \
+  if ((_regs)->AIV != ((_regs)->psw.IA & (PAGEFRAME_PAGEMASK | 0x01))) \
+    INVALIDATE_AIA((_regs)); \
+} while (0)
+
+#define INVALIDATE_AIA(_regs) \
+    (_regs)->AIE = 0
+
+#define INVALIDATE_AIA_MAIN(_regs, _main) \
+do { \
+  if ((_main) == MAINADDR((_regs)->aim, (_regs)->AIV)) \
+    INVALIDATE_AIA(_regs); \
+} while (0)
+
 /* Instruction fetching */
 
 #define INSTRUCTION_FETCH(_dest, _addr, _regs, _valid) \
-  likely((_addr) <= (_regs)->AIE && (_regs)->AIV == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01))) \
+  likely(VALID_AIA((_regs),(_addr))) \
   ? (_regs)->instvalid = 1, MAINADDR((_regs)->aim, (_addr)) \
   : ((_regs)->instvalid = (_valid), \
      ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)) \
@@ -289,10 +309,9 @@ do { \
 } while(0)
 
 #define UNROLLED_EXECUTE(_regs) \
-do { \
-    (_regs)->ip = INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs), 0); \
-    EXECUTE_INSTRUCTION((_regs)->ip, (_regs)); \
-} while(0)
+ if ((_regs)->psw.IA >= (_regs)->AIE) break; \
+ (_regs)->ip = MAINADDR((_regs)->aim, (_regs)->psw.IA); \
+ EXECUTE_INSTRUCTION((_regs)->ip, (_regs))
 
 #define RETURN_INTCHECK(_regs) \
         longjmp((_regs)->progjmp, SIE_NO_INTERCEPT)
@@ -514,15 +533,6 @@ do { \
 #define FPREX 2
 
 #endif /*!defined(FEATURE_BASIC_FP_EXTENSIONS)*/
-
-#define INVALIDATE_AIA(_regs) \
-    (_regs)->AIV = 1
-
-#define INVALIDATE_AIA_MAIN(_regs, _main) \
-do { \
-  if ((_main) == MAINADDR((_regs)->aim, (_regs)->AIV)) \
-    INVALIDATE_AIA(_regs); \
-} while (0)
 
 #define TLBIX(_addr) (((_addr) >> TLB_PAGESHIFT) & TLB_MASK)
 

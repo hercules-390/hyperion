@@ -728,6 +728,7 @@ int     n;
               then backup the psw and exit */
             regs->psw.IA -= REAL_ILC(regs);
             regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+            VALIDATE_AIA(regs);
             break;
         case SIE_HOST_PGMINT:
             break;

@@ -288,6 +288,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
 
+    VALIDATE_AIA(regs);
+
 } /* end DEF_INST(branch_and_set_authority) */
 #endif /*defined(FEATURE_BRANCH_AND_SET_AUTHORITY)*/
 
@@ -564,6 +566,8 @@ CREG    inst_cr;                        /* Instruction CR            */
     SET_AEA_COMMON(regs);
     if (inst_cr != regs->CR(regs->aea_ar[USE_INST_SPACE]))
         INVALIDATE_AIA(regs);
+    else
+        VALIDATE_AIA(regs);
 
 #if defined(FEATURE_PER)
     if( EN_IC_PER_SB(regs)
@@ -675,6 +679,8 @@ VADR    n = 0;                          /* Work area                 */
             ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
     }
+
+    VALIDATE_AIA(regs);
 
 } /* end DEF_INST(branch_and_stack) */
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
@@ -5652,6 +5658,7 @@ U64     dreg;                           /* Clock value               */
         {
             regs->psw.IA -= 4;
             release_lock (&sysblk.intlock);
+            VALIDATE_AIA(regs);
             RETURN_INTCHECK(regs);
         }
     }
@@ -5825,6 +5832,7 @@ U64     dreg;                           /* Double word workarea      */
             release_lock (&sysblk.intlock);
 
             regs->psw.IA -= 4;
+            VALIDATE_AIA(regs);
             RETURN_INTCHECK(regs);
         }
     }

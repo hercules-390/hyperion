@@ -399,6 +399,7 @@ VADR    newia;                          /* New instruction address   */
     if ( r2 != 0 )
     {
         regs->psw.IA = newia;
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -436,6 +437,7 @@ VADR    effective_addr2;                /* Effective address         */
           | (regs->psw.progmask << 24) | (regs->psw.IA_L & ADDRESS_MAXWRAP(regs));
 
     regs->psw.IA = effective_addr2;
+    VALIDATE_AIA(regs);
 
 #if defined(FEATURE_PER)
     if( EN_IC_PER_SB(regs)
@@ -484,6 +486,7 @@ VADR    newia;                          /* New instruction address   */
     if ( r2 != 0 )
     {
         regs->psw.IA = newia;
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -520,6 +523,7 @@ VADR    effective_addr2;                /* Effective address         */
         regs->GR_L(r1) = regs->psw.IA_LA24;
 
     regs->psw.IA = effective_addr2;
+    VALIDATE_AIA(regs);
 
 #if defined(FEATURE_PER)
     if( EN_IC_PER_SB(regs)
@@ -602,6 +606,7 @@ VADR    newia;                          /* New instruction address   */
             regs->psw.AMASK = AMASK24;
             regs->psw.IA = newia & 0x00FFFFFF;
         }
+        VALIDATE_AIA(regs);
 
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -686,6 +691,7 @@ VADR    newia;                          /* New instruction address   */
             regs->psw.AMASK = AMASK24;
             regs->psw.IA = newia & 0x00FFFFFF;
         }
+        VALIDATE_AIA(regs);
 
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -715,6 +721,7 @@ DEF_INST(branch_on_condition_register)
     if ((inst[1] & (0x80 >> regs->psw.cc)) && (inst[1] & 0x0F) != 0)
     {
         regs->psw.IA = regs->GR(inst[1] & 0x0F) & ADDRESS_MAXWRAP(regs);
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( unlikely(EN_IC_PER_SB(regs))
 #if defined(FEATURE_PER2)
@@ -752,6 +759,7 @@ VADR    effective_addr2;                /* Effective address         */
     {
         RX_BC(inst, regs, b2, effective_addr2);
         regs->psw.IA = effective_addr2;
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -783,6 +791,7 @@ int     r1, r2;                         /* Values of R fields        */
         regs->psw.IA = regs->GR(r2);
         if (unlikely(r1 == r2)) regs->psw.IA++;
         regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -812,7 +821,7 @@ VADR    effective_addr2;                /* Effective address         */
     if ( --(regs->GR_L(r1)) )
     {
         regs->psw.IA = effective_addr2;
-
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -852,6 +861,7 @@ S32     i, j;                           /* Integer work areas        */
     if ( (S32)regs->GR_L(r1) > j )
     {
         regs->psw.IA = effective_addr2;
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -891,6 +901,7 @@ S32     i, j;                           /* Integer work areas        */
     if ( (S32)regs->GR_L(r1) <= j )
     {
         regs->psw.IA = effective_addr2;
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -923,6 +934,7 @@ DEF_INST(branch_relative_on_condition)
         /* Calculate the relative branch address */
         regs->psw.IA = (likely(!regs->execflag) ? regs->psw.IA: regs->ET)
                      + 2*(S16)(fetch_fw(inst) & 0xFFFF);
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( unlikely(EN_IC_PER_SB(regs))
 #if defined(FEATURE_PER2)
@@ -965,6 +977,7 @@ U16     i2;                             /* 16-bit operand values     */
     /* Calculate the relative branch address */
     regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
+    VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -995,6 +1008,7 @@ U16     i2;                             /* 16-bit operand values     */
     {
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -1035,6 +1049,7 @@ S32     i,j;                            /* Integer workareas         */
     {
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -1076,6 +1091,7 @@ S32     i,j;                            /* Integer workareas         */
     {
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
+        VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -1815,6 +1831,7 @@ BYTE    pad;                            /* Padding byte              */
         {
             regs->psw.IA -= REAL_ILC(regs);
             regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+            VALIDATE_AIA(regs);
             break;
         }
 
@@ -3530,6 +3547,7 @@ BYTE    pad;                            /* Padding byte              */
          && (OPEN_IC_EXTPENDING(regs) || OPEN_IC_IOPENDING(regs)) )
         {
             regs->psw.IA -= REAL_ILC(regs);
+            VALIDATE_AIA(regs);
             break;
         }
 

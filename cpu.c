@@ -478,6 +478,7 @@ static char *pgmintname[] = {
     {
         realregs->psw.IA -= ilc;
         realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
+        VALIDATE_AIA(realregs);
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
         /* When in SIE mode the guest instruction causing this
            host exception must also be nullified */
@@ -485,6 +486,7 @@ static char *pgmintname[] = {
         {
             realregs->guestregs->psw.IA -= sie_ilc;
             realregs->guestregs->psw.IA &= ADDRESS_MAXWRAP(realregs->guestregs);
+            VALIDATE_AIA(realregs->guestregs);
         }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
     }
@@ -1545,17 +1547,24 @@ REGS    regs;
                 return cpu_uninit(cpu, &regs);
         }
 
-        UNROLLED_EXECUTE(&regs);
-        UNROLLED_EXECUTE(&regs);
-        UNROLLED_EXECUTE(&regs);
+        regs.ip = INSTRUCTION_FETCH(regs.inst, regs.psw.IA, &regs, 0);
+        regs.instcount++;
+        EXECUTE_INSTRUCTION(regs.ip, &regs);
 
-        regs.instcount += 8;
+        do {
+            UNROLLED_EXECUTE(&regs);
+            UNROLLED_EXECUTE(&regs);
+            UNROLLED_EXECUTE(&regs);
 
-        UNROLLED_EXECUTE(&regs);
-        UNROLLED_EXECUTE(&regs);
-        UNROLLED_EXECUTE(&regs);
-        UNROLLED_EXECUTE(&regs);
-        UNROLLED_EXECUTE(&regs);
+            regs.instcount += 8;
+
+            UNROLLED_EXECUTE(&regs);
+            UNROLLED_EXECUTE(&regs);
+            UNROLLED_EXECUTE(&regs);
+            UNROLLED_EXECUTE(&regs);
+            UNROLLED_EXECUTE(&regs);
+        } while (IC_INTERRUPT_CPU_NO_PER(&regs));
+        regs.instvalid = 0;
     }
 
 slowloop:

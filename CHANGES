@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+13 Jan 2005 Optmization to instruction fetch for unrolled execute - Greg Smith
 13 Jan 2005 AMD64 assembler assists - Bob Deblier by Greg
 05 Jan 2005 Fix dasdcopy bug for output ckd file - Greg Smith
 02 Jan 2005 Bug fix 14dec05 fixed - Bernard van der Helm

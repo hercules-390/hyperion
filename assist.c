@@ -170,6 +170,7 @@ int     acc_mode = 0;                   /* access mode to use        */
 
         /* Update the PSW instruction address */
         regs->psw.IA = newia & ADDRESS_MAXWRAP(regs);
+        VALIDATE_AIA(regs);
     }
 
     /* Release main-storage access lock */
@@ -266,6 +267,7 @@ int     acc_mode = 0;                   /* access mode to use        */
 
         /* Update the PSW instruction address */
         regs->psw.IA = newia & ADDRESS_MAXWRAP(regs);
+        VALIDATE_AIA(regs);
     }
 
     /* Release main-storage access lock */
@@ -357,6 +359,7 @@ int     acc_mode = 0;                   /* access mode to use        */
 
         /* Update the PSW instruction address */
         regs->psw.IA = newia & ADDRESS_MAXWRAP(regs);
+        VALIDATE_AIA(regs);
     }
 
     /* Release main-storage access lock */
@@ -451,6 +454,7 @@ int     acc_mode = 0;                   /* access mode to use        */
 
         /* Update the PSW instruction address */
         regs->psw.IA = newia & ADDRESS_MAXWRAP(regs);
+        VALIDATE_AIA(regs);
     }
 
     /* Release main-storage access lock */
