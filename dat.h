@@ -1784,6 +1784,7 @@ RADR    aaddr;                          /* Absolute address          */
         goto vabs_addr_excp;
 
 #if defined(_FEATURE_SIE)
+    if(SIE_MODE(regs)) regs->hostregs->dat.protect = 0;
     if(SIE_MODE(regs)  && !regs->sie_pref)
     {
 
