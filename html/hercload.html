@@ -221,7 +221,11 @@ To run IBCDASDI, place the above statements in a file called
 <b><i>init3330.txt</i></b> and start Hercules in S/370 mode with
 a configuration file containing these statements:
 <pre><code>
-001234 3145 02 0 1052 1 ........
+CPUSERIAL 001234
+CPUMODEL 3145
+MAINSIZE 2
+CNSLPORT 1052
+ARCHMODE S/370
 0009   1052
 000A   1442    ibcdasdi.rdr
 000C   1442    init3330.txt
@@ -563,6 +567,6 @@ If you have a question about Hercules, see the
 </center>
 
 <small>
-<p>Last updated 2 April 2002
+<p>Last updated 30 May 2003
 </BODY>
 </HTML>
