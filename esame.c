@@ -611,6 +611,7 @@ U64     oreg = 0;                       /* 64 bit overflow work reg  */
 
         /* Increment operand address */
         effective_addr2++;
+        effective_addr2 &= ADDRESS_MAXWRAP(regs);              
 
     } /* end for(i) */
 
@@ -1908,6 +1909,10 @@ int     i;                              /* Integer work areas        */
     /* Load value from register */
     n = regs->GR_H(r1);
 
+    /* if mask is zero, access rupts recognized for 1 byte */
+    if (r3 == 0)
+            sbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+                                                                                
     /* Compare characters in register with operand characters */
     for ( i = 0; i < 4; i++ )
     {
