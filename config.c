@@ -191,9 +191,9 @@ int     lstarted;                       /* Indicate if non-whitespace*/
             /* Ignore nulls and carriage returns */
             if (c == '\0' || c == '\r') continue;
 
-	    /* Check if it is a white space and no other character yet */
-	    if(!lstarted && isspace(c)) continue;
-	    lstarted=1;
+        /* Check if it is a white space and no other character yet */
+        if(!lstarted && isspace(c)) continue;
+        lstarted=1;
 
             /* Check that statement does not overflow buffer */
             if (stmtlen >= (int)(sizeof(buf) - 1))
@@ -497,6 +497,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 #endif
 #if defined(OPTION_CONFIG_SYMBOLS)
 BYTE **newargv;
+BYTE **orig_newargv;
 #endif
 
     SET_IC_INITIAL_STATE;
@@ -1577,6 +1578,7 @@ BYTE **newargv;
         }
 #if defined(OPTION_CONFIG_SYMBOLS)
         newargv=malloc(addargc*sizeof(char *));
+        orig_newargv=malloc(addargc*sizeof(char *));
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
         for(baddev=0,i=0;i<(int)devncount;i++)
         {
@@ -1594,13 +1596,13 @@ BYTE **newargv;
                set_symbol("CCUU",wrkbfr);
                for(j=0;j<addargc;j++)
                {
-                   newargv[j]=resolve_symbol_string(addargv[j]);
+                   orig_newargv[j]=newargv[j]=resolve_symbol_string(addargv[j]);
                }
                 /* Build the device configuration block */
                rc=attach_device(devnum, sdevtype, addargc, newargv);
                for(j=0;j<addargc;j++)
                {
-                   free(newargv[j]);
+                   free(orig_newargv[j]);
                }
 #else /* #if defined(OPTION_CONFIG_SYMBOLS) */
                 /* Build the device configuration block (no syms) */
@@ -1619,6 +1621,7 @@ BYTE **newargv;
         }
 #if defined(OPTION_CONFIG_SYMBOLS)
         free(newargv);
+        free(orig_newargv);
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
         free(devnarray);
 
