@@ -64,7 +64,7 @@ int html_include(WEBBLK *webblk, char *filename)
           fullname,strerror(errno));
         fprintf(webblk->hsock,"ERROR: Cannot open %s: %s\n",
           filename,strerror(errno));
-        return 0;
+        return FALSE;
     }
 
     while (!feof(inclfile))
@@ -75,7 +75,7 @@ int html_include(WEBBLK *webblk, char *filename)
     }
 
     fclose(inclfile);
-    return 1;
+    return TRUE;
 }
 
 
@@ -148,7 +148,7 @@ static void http_decode_base64(char *s)
     unsigned char *d = (unsigned char *)s;
     char *p;
 
-    n=i=0;
+    n = i = 0;
 
     while (*s && (p = strchr(b64, *s)))
     {
@@ -295,7 +295,7 @@ static void http_verify_path(WEBBLK *webblk, char *path)
     realpath(HTTP_ROOT,resolved_base); strcat(resolved_base,"/");
     realpath(path,resolved_path);
 
-    for (i=0;path[i];i++)
+    for (i = 0; path[i]; i++)
         if (!isalnum((int)path[i]) && !strchr("/.-_", path[i]))
             http_error(webblk, "404 File Not Found","",
                                "Illegal character in filename");
@@ -410,12 +410,13 @@ static void http_download(WEBBLK *webblk, char *filename)
 static void *http_request(FILE *hsock)
 {
     WEBBLK *webblk;
-    int authok = FALSE;
+    int authok = !sysblk.httpauth;
     char line[1024];
     char *url = NULL;
     char *pointer;
     char *strtok_str;
     CGITAB *cgient;
+    int content_length = 0;
 
     if(!(webblk = malloc(sizeof(WEBBLK))))
         http_exit(webblk);
@@ -464,20 +465,20 @@ static void *http_request(FILE *hsock)
             if(!strcasecmp(pointer,"Content-Length:"))
             {
                 if((pointer = strtok_r(NULL," \t\r\n",&strtok_str)))
-                    webblk->content_length = atoi(pointer);
+                    content_length = atoi(pointer);
             }
         }
     }
     webblk->request = url;
 
     if(webblk->request_type == REQTYPE_POST
-      && webblk->content_length != 0)
+      && content_length != 0)
     {
     char *post_arg;
-        if((pointer = post_arg = malloc(webblk->content_length + 1)))
+        if((pointer = post_arg = malloc(content_length + 1)))
         {
         int i;
-            for(i = 0; i < webblk->content_length; i++)
+            for(i = 0; i < content_length; i++)
             {
                 *pointer = fgetc(webblk->hsock);
                 if(*pointer != '\n' && *pointer != '\r')
@@ -489,7 +490,7 @@ static void *http_request(FILE *hsock)
         }
     }
 
-    if (sysblk.httpauth && !authok)
+    if (!authok)
         http_error(webblk, "401 Authorization Required", 
                            "WWW-Authenticate: Basic realm=\"HERCULES\"\n",
                            "You must be authenticated to use this service");

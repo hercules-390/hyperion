@@ -29,19 +29,15 @@ typedef struct _CONTYP {
 
 typedef struct _WEBBLK {
     FILE *hsock;
-    int content_length;
     int request_type;
 #define REQTYPE_NONE   0
 #define REQTYPE_GET    1
 #define REQTYPE_POST   2
 #define REQTYPE_PUT    3
-    char *get_arg;
-    char *post_arg;
-    CGIVAR *cgivar;
-    char *baseurl;
     char *request;
+    char *baseurl;
     char *user;
-    int got_request;
+    CGIVAR *cgivar;
 } WEBBLK;
 
 
