@@ -24,7 +24,11 @@ typedef struct _ECPSVM_MICBLOK
     U32 MICWORK;
     U32 MICVTMR;
     U32 MICACF;
-#define MICEVMA MICACF
+    U32 RESERVED1;
+    U32 RESERVED2;
+    U32 MICCREG0;
+    U32 RESERVED3;
+    /* Bits defined in MICEVMA */
 #define MICLPSW 0x80    /* LPSW SIM */
 #define MICPTLB 0x40    /* PTLB SIM */
 #define MICSCSP 0x20    /* SCKC, SPT SIM */
@@ -33,6 +37,25 @@ typedef struct _ECPSVM_MICBLOK
 #define MICSTPT 0x04    /* STPT SIM */
 #define MICTCH  0x02    /* TCH SIM */
 #define MICDIAG 0x01    /* DIAG SIM */
+    /* Hint : The following bits may be irrelevant for ECPS:VM Level 20 */
+    /* Bits defined in MICEVMA2 */
+    /* V=R Shadow Table Bypass assists */
+#define MICSTBVR 0x80   /* V=R STBYPASS Assist active */
+#define MICPTLB2 0x40   /* VRSTBYPASS PTLB Simulation */
+#define MICIPTP2 0x20   /* VRSTBYPASS IPTE/TPRT Simulation */
+#define MICVPFR2 0x10   /* Virtual Page Fault reflection Assists */
+#define MICLRA2  0x08   /* VRSTBYPASS LRA Simulation */
+#define MICSTSM2 0x02   /* VRSTBYPASS SSM/STxSM Sim */
+#define MICLCTL2 0x01   /* VRSTBYPASS LCTL Sim */
+    /* Bits define in MICEVMA3 */
+#define MICSKYMD 0x20   /* Unknown */
+#define MICISKE  0x10   /* PTLB Sim */ 
+#define MICRRBE  0x08   /* IPTE/TPRT Sim */
+#define MICSSKE  0x04   /* V Page Fault Sim */
+    /* Bits defined in MICEVMA4 */
+#define MICSVC4  0x40   /* SVC/LPSW/LCTL Assists Extentions */
+#define MICSPT4  0x20   /* SPT Assist Extension */
+#define MICIUCV  0x10   /* IUCV ASSIST */
 } ECPSVM_MICBLOK;
 
 /* PSA + X'3D4' - ASSISTS STUFF */

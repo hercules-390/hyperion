@@ -3,7 +3,7 @@
 /* (c) 2003 Ivan Warren                                    */
 /*                                                         */
 /* General guidelines about E6XX instruction class         */
-/* this is an implementation of ECPS:VM Level 20, 21 or 22 */
+/* this is an implementation of ECPS:VM Level 20           */
 /*                                                         */
 /* General rule is : Only do what is safe to do. In doubt, */
 /*                   give control to CP back (and act as   */
@@ -11,16 +11,6 @@
 /*                   behaviour, therefore allowing only    */
 /*                   partial implementation, or bypassing  */
 /*                   tricky cases                          */
-/*                                                         */
-/* NOTE : VM/370 Rel 6 seems to have a slight bug in       */
-/*        handling CP ASSIST. Although it does report      */
-/*        CPASSIST is ON (CP QUERY CPASSIST : CPASSIST ON) */
-/*        CR 6, Bit 7 is not set after IPL. However,       */
-/*        doing a CP SET CPASSIST ON after IPL does set    */
-/*        CR6, Bit 7, thus activating CP ASSIST instrs     */
-/*        Therefore, on VM/370 Rel 6, an additional        */
-/*        CP¨SET CPASSIST ON (Class A command) should be   */
-/*        issued to activate the support                   */
 /*                                                         */
 /* NOTE : ECPS:VM is only available for S/370 architecture */
 /*                                                         */
@@ -35,10 +25,21 @@
 /* +-----+-------+----------------------------------------+*/
 /* |E602 | LCKPG | Lock Page in core table                |*/
 /* |E603 | ULKPG | Unlock page in core table              |*/
+/* |E608 | TRBRG | LRA + Basic checks on VPAGE            |*/
+/* |E609 | TRLOK | Same as TRBRG + Lock page in core      |*/
 /* |E60E | SCNRU | Scan Real Unit control blocks          |*/
 /* |E612 | STLVL | Store ECPS:VM Level                    |*/
 /* |E614 | FREEX | Allocate CP FREE Storage from subpool  |*/
 /* |E615 | FRETX | Release CP FREE Storage to subpool     |*/
+/* +-----+-------+----------------------------------------+*/
+/*                                                         */
+/* Currently supported VM ASSIST instructions :            */
+/* +-----+-------+----------------------------------------+*/
+/* |opc  | Mnemo | Function                               |*/
+/* +-----+-------+----------------------------------------+*/
+/* |0A   | SVC   | Virtual SVC Assist                     |*/
+/* |80   | SSM   | Virtual SSM Assist                     |*/
+/* |82   | LPSW  | Virtual LPSW Assist                    |*/
 /* +-----+-------+----------------------------------------+*/
 /*                                                         */
 /***********************************************************/
@@ -188,6 +189,13 @@ struct _ECPSVM_SASTATS
     U32   CR6; \
     ECPSVM_MICBLOK micblok; \
     BYTE micevma; \
+    BYTE micevma2; \
+    BYTE micevma3; \
+    BYTE micevma4; \
+    if(!regs->psw.prob) \
+    { \
+          return(1); \
+    } \
     if(!sysblk.ecpsvm.available) \
     { \
           DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" ECPS:VM Disabled in configuration\n")); \
@@ -198,35 +206,36 @@ struct _ECPSVM_SASTATS
           DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" ECPS:VM Disabled by command\n")); \
           return(1); \
     } \
-    if(!regs->psw.prob) \
-    { \
-          return(1); \
-    } \
     CR6=regs->CR_L(6); \
     if(!(CR6 & ECPSVM_CR6_VMASSIST)) \
     { \
         DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : EVMA Disabled by guest\n")); \
         return(1); \
     } \
+    /* Increment call now (don't count early misses) */ \
+    ecpsvm_sastats._instname.call++; \
     amicblok=CR6 & ECPSVM_CR6_MICBLOK; \
-    /* Ensure MICBLOK resides on a single page */ \
+    /* Ensure MICBLOK resides on a single 2K page */ \
     /* Then set ref bit by calling LOG_TO_ABS */ \
     if((amicblok & 0x007ff) > 0x7e0) \
     { \
         DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" Micblok @ %6.6X crosses page frame\n",amicblok)); \
         return(1); \
     } \
-    /* Increment call now (don't count early misses) */ \
-    ecpsvm_sastats._instname.call++; \
     amicblok=LOGICAL_TO_ABS(amicblok,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
     /* Load the micblok copy */ \
     FETCH_FW(micblok.MICRSEG,regs->mainstor+amicblok); \
     FETCH_FW(micblok.MICCREG,regs->mainstor+amicblok+4); \
     FETCH_FW(micblok.MICVPSW,regs->mainstor+amicblok+8); \
-    FETCH_FW(micblok.MICACF,regs->mainstor+amicblok+12); \
+    FETCH_FW(micblok.MICWORK,regs->mainstor+amicblok+12); \
+    FETCH_FW(micblok.MICVTMR,regs->mainstor+amicblok+16); \
+    FETCH_FW(micblok.MICACF,regs->mainstor+amicblok+20); \
     micpend=(micblok.MICVPSW >> 24); \
     vpswa=micblok.MICVPSW & ADDRESS_MAXWRAP(regs); \
     micevma=(micblok.MICACF >> 24); \
+    micevma2=((micblok.MICACF & 0x00ff0000) >> 16); \
+    micevma3=((micblok.MICACF & 0x0000ff00) >> 8); \
+    micevma4=(micblok.MICACF  & 0x000000ff); \
     /* Set ref bit on page where Virtual PSW is stored */ \
     vpswa=LOGICAL_TO_ABS(vpswa,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
     /* Load the Virtual PSW in a temporary REGS structure */ \
@@ -247,12 +256,12 @@ VADR    effective_addr1, \
           DEBUG_CPASSISTX(_inst,logmsg("HHCEV300D : CPASSTS "#_inst" ECPS:VM Disabled in configuration ")); \
           ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION); \
      } \
+     PRIV_CHECK(regs); /* No problem state please */ \
      if(!ecpsvm_cpstats._inst.enabled) \
      { \
           DEBUG_CPASSISTX(_inst,logmsg("HHCEV300D : CPASSTS "#_inst" Disabled by command")); \
           return; \
      } \
-     PRIV_CHECK(regs); \
      if(!(regs->CR_L(6) & 0x02000000)) \
      { \
         return; \
@@ -262,15 +271,22 @@ VADR    effective_addr1, \
 
 #ifdef FEATURE_ECPSVM
 
+/* CPASSIST FREE (Basic) Not supported */
+/* This is part of ECPS:VM Level 18 and 19 */
+/* ECPS:VM Level 20 use FREEX */
 DEF_INST(ecpsvm_basic_freex)
 {
     ECPSVM_PROLOG(FREE);
 }
+/* CPASSIST FRET (Basic) Not supported */
+/* This is part of ECPS:VM Level 18 and 19 */
+/* ECPS:VM Level 20 use FRETX */
 DEF_INST(ecpsvm_basic_fretx)
 {
     ECPSVM_PROLOG(FRET);
 }
 
+/* Lockpage common code (LCKPG/TRLOK) */
 static void ecpsvm_lockpage1(REGS *regs,RADR cortab,RADR pg)
 {
     BYTE corcode;
@@ -298,6 +314,10 @@ static void ecpsvm_lockpage1(REGS *regs,RADR cortab,RADR pg)
     DEBUG_CPASSISTX(LCKPG,logmsg("HHCEV300D : LKPG Page locked. Count = %6.6X\n",lockcount));
     return;
 }
+/* E602 LCKPG Instruction */
+/* LCKPG D1(R1,B1),D2(R2,B2) */
+/* 1st operand : PTR_PL -> Address of coretable */
+/* 2nd Operand : Page address to be locked */
 DEF_INST(ecpsvm_lock_page)
 {
     VADR ptr_pl;
@@ -316,6 +336,10 @@ DEF_INST(ecpsvm_lock_page)
     CPASSIST_HIT(LCKPG);
     return;
 }
+/* E603 ULKPG Instruction */
+/* ULKPG D1(R1,B1),D2(R2,B2) */
+/* 1st operand : PTR_PL -> +0 - Maxsize, +4 Coretable */
+/* 2nd Operand : Page address to be unlocked */
 DEF_INST(ecpsvm_unlock_page)
 {
     VADR ptr_pl;
@@ -367,22 +391,27 @@ DEF_INST(ecpsvm_unlock_page)
     BR14;
     return;
 }
+/* DNCCW : Not supported */
 DEF_INST(ecpsvm_decode_next_ccw)
 {
     ECPSVM_PROLOG(DNCCW);
 }
+/* FCCWS : Not supported */
 DEF_INST(ecpsvm_free_ccwstor)
 {
     ECPSVM_PROLOG(FCCWS);
 }
+/* SCNVU : Not supported */
 DEF_INST(ecpsvm_locate_vblock)
 {
     ECPSVM_PROLOG(SCNVU);
 }
+/* DISP1 : Not supported */
 DEF_INST(ecpsvm_disp1)
 {
     ECPSVM_PROLOG(DISP1);
 }
+/* TRANBRNG/TRANLOCK Common code */
 static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
 {
     int cc;
@@ -429,6 +458,17 @@ static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
     DEBUG_CPASSISTX(TRBRG,logmsg("HHCEV300D : Page shared but not changed\n"));
     return(0);  /* All done */
 }
+/* TRBRG : Translate a page address */
+/* TRBRG D1(R1,B1),D2(R2,B2) */
+/* 1st operand : Coretable address */
+/* 2nd operand : Virtual address */
+/* Note : CR1 Contains the relevant segment table */
+/*        pointers                                */
+/* The REAL address is resolved. If the page is flagged */
+/* as shared in the core table, the page is checked for */
+/* the change bit                                       */
+/* If no unusual condition is detected, control is returned */
+/* to the address in GPR 14. Otherwise, TRBRG is a no-op */
 DEF_INST(ecpsvm_tpage)
 {
     int rc;
@@ -447,6 +487,10 @@ DEF_INST(ecpsvm_tpage)
     CPASSIST_HIT(TRBRG);
     return;
 }
+/* TRLOK : Translate a page address and lock */
+/* TRLOK D1(R1,B1),D2(R2,B2) */
+/* See TRBRG. */
+/* If sucessfull, the page is also locked in the core table */
 DEF_INST(ecpsvm_tpage_lock)
 {
     int rc;
@@ -469,18 +513,22 @@ DEF_INST(ecpsvm_tpage_lock)
     CPASSIST_HIT(TRLOK);
     return;
 }
+/* VIST : Not supported */
 DEF_INST(ecpsvm_inval_segtab)
 {
     ECPSVM_PROLOG(VIST);
 }
+/* VIPT : Not supported */
 DEF_INST(ecpsvm_inval_ptable)
 {
     ECPSVM_PROLOG(VIPT);
 }
+/* DFCCW : Not Supported */
 DEF_INST(ecpsvm_decode_first_ccw)
 {
     ECPSVM_PROLOG(DFCCW);
 }
+/* DISP0 : Not supported */
 DEF_INST(ecpsvm_dispatch_main)
 {
     ECPSVM_PROLOG(DISP0);
@@ -490,7 +538,7 @@ DEF_INST(ecpsvm_dispatch_main)
 /* SCNRU Instruction : Scan Real Unit                 */
 /* Invoked by DMKSCN                                  */
 /* E60D                                               */
-/* SCNRU D1(B1,I1),D2(B2,I2)                          */
+/* SCNRU D1(R1,B1),D2(R2,B2)                          */
 /*                                                    */
 /* Operations                                         */
 /* The Device Address specified in operand 1 is       */
@@ -661,18 +709,25 @@ DEF_INST(ecpsvm_locate_rblock)
     BR14;
     CPASSIST_HIT(SCNRU);
 }
+/* CCWGN : Not supported */
 DEF_INST(ecpsvm_comm_ccwproc)
 {
     ECPSVM_PROLOG(CCWGN);
 }
+/* UXCCW : Not supported */
 DEF_INST(ecpsvm_unxlate_ccw)
 {
     ECPSVM_PROLOG(UXCCW);
 }
+/* DISP2 : Not supported */
 DEF_INST(ecpsvm_disp2)
 {
     ECPSVM_PROLOG(DISP2);
 }
+/* STEVL : Store ECPS:VM support level */
+/* STEVL D1(R1,B1),D2(R2,B2) */
+/* 1st operand : Fullword address in which to store ECPS:VM Support level */
+/* 2nd operand : ignored */
 DEF_INST(ecpsvm_store_level)
 {
     ECPSVM_PROLOG(STEVL);
@@ -680,10 +735,30 @@ DEF_INST(ecpsvm_store_level)
     DEBUG_CPASSISTX(STEVL,logmsg("HHCEV300D : ECPS:VM STORE LEVEL %d called\n",sysblk.ecpsvm.level));
     CPASSIST_HIT(STEVL);
 }
+/* LCSPG : Locate Changed Shared Page */
+/* LCSPG : Not supported */
 DEF_INST(ecpsvm_loc_chgshrpg)
 {
     ECPSVM_PROLOG(LCSPG);
 }
+/*************************************************************/
+/* FREEX : Allocate CP Storage Extended                      */
+/* FREEX B1(R1,B1),D2(R2,B2)                                 */
+/* 1st operand : Address of FREEX Parameter list             */
+/*               +0 : Maxsize = Max number of DW allocatable */
+/*                              with FREEX                   */
+/*               +4- : Subpool index table                   */
+/* 2nd operand : Subpool table (indexed)                     */ 
+/* GPR 0 : Number of DWs to allocate                         */
+/*                                                           */
+/* Each allocatable block is forward chained                 */
+/* if the subpool is empty, return to caller                 */
+/* if the subpool has an entry, allocate from the subpool    */
+/* and save the next block address as the subpool chain head */
+/* return allocated block in GPR1. return at address in GPR14*/
+/* if allocation succeeded                                   */
+/* if allocate fails, return at next sequential instruction  */
+/*************************************************************/
 DEF_INST(ecpsvm_extended_freex)
 {
     U32 maxdw;
@@ -732,6 +807,22 @@ DEF_INST(ecpsvm_extended_freex)
     CPASSIST_HIT(FREEX);
     return;
 }
+/*************************************************************/
+/* FRETX : Return CP Free storage                            */
+/* FRETX D1(R1,B1),R2(D2,B2)                                 */
+/* 1st operand : Max DW for subpool free/fret                */
+/* 2nd Operand : FRET PLIST                                  */
+/*               +0 Coretable address                        */
+/*               +4 CL4'FREE'                                */
+/*               +8 Maxsize (same as operand 1)              */
+/*               +12 Subpool Table Index                     */
+/* The block is checked VS the core table to check if it     */
+/* is eligible to be returned to the subpool chains          */
+/* If it is, then it is returned. Control is returned at     */
+/* the address in GPR 14. Otherwise, if anything cannot      */
+/* be resolved, control is returned at the next sequential   */
+/* Instruction                                               */
+/*************************************************************/
 DEF_INST(ecpsvm_extended_fretx)
 {
     U32 fretl;
@@ -789,13 +880,6 @@ DEF_INST(ecpsvm_prefmach_assist)
 {
     ECPSVM_PROLOG(PMASS);
 }
-
-#undef DEBUG_ASSIST
-#if defined(DEBUG_SASSIST)
-#define DEBUG_ASSIST(x) DODEBUG_ASSIST(1,x)
-#else
-#define DEBUG_ASSIST(x)
-#endif
 
 /**********************************/
 /* VM ASSISTS                     */
@@ -899,6 +983,13 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
         DEBUG_SASSISTX(SSM,logmsg("HHCEV300D : SASSIST SSM reject : V PB State\n"));
         return(1);
     }
+    /*
+    if(!(micevma & MICSTSM))
+    {
+        DEBUG_SASSISTX(SSM,logmsg("HHCEV300D : SASSIST SSM reject : SSM Disabled in MICEVMA; EVMA=%2.2X\n",micevma));
+        return(1);
+    }
+    */
     /* Get CR0 - set ref bit on  fetched CR0 (already done in prolog for MICBLOK) */
     cregs=LOGICAL_TO_ABS(micblok.MICCREG,USE_REAL_ADDR,regs,ACCTYPE_READ,0);
     FETCH_FW(creg0,&regs->mainstor[cregs]);
@@ -1024,6 +1115,12 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
     if(CR6 & ECPSVM_CR6_VIRTPROB)
     {
         DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST LPSW reject : V PB State\n"));
+        return(1);
+    }
+    /* Reject if MICEVMA says not to do LPSW sim */
+    if(!(micevma & MICLPSW))
+    {
+        DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST LPSW reject : LPSW disabled in MICEVMA\n"));
         return(1);
     }
     if(e2&0x03)
@@ -1323,11 +1420,6 @@ void ecpsvm_enable_disable(int ac,char **av,int onoff,int debug)
     {
         ecpsvm_enadisaall("VM ASSIST",sal,sacount,onoff,debug);
         ecpsvm_enadisaall("CP ASSIST",cpl,cpcount,onoff,debug);
-        if(onoff>=0)
-        {
-            sysblk.ecpsvm.available=onoff;
-            logmsg("HHCEV013I ECPS:VM Globaly %s\n",enadisa);
-        }
         if(debug>=0)
         {
             sysblk.ecpsvm.debug=debug;
