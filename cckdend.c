@@ -66,6 +66,7 @@ U32               o;                    /* Level 2 table offset      */
         return -1;
     }
 
+    cdevhdr.options |= CCKD_ORDWR;
     rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
     if (rc != CCKDDASD_DEVHDR_SIZE)
     {

@@ -675,7 +675,7 @@ space_check:
     /* level 2 lookup table and track image spaces */
     for (i = 0; i < cdevhdr.numl1tab; i++)
     {
-        int valid_l2, valid_trks, invalid_trks, orig_lvl;
+        int valid_l2, valid_trks, invalid_trks;
 
         if ((l1[i] == 0)
          || (shadow && l1[i] == 0xffffffff)) continue;
@@ -688,8 +688,8 @@ space_check:
 
         /* recover all tracks for the level 2 table entry */
         bad_l2:
-            if (level == 0)
-            {   orig_lvl = level;
+            if (level <= 0)
+            {   int orig_lvl = level;
                 level = 1;
                 cdskmsg (m, "forcing check level %d\n", level);
                 if (orig_lvl < 0) goto free_space_check;
@@ -709,6 +709,10 @@ space_check:
             }
             continue;
         }
+
+        /* continue if very minimal checking */
+        if (level < 0)
+            continue;
 
         /* read the level 2 table */
         rc = lseek (fd, l1[i], SEEK_SET);
@@ -1023,16 +1027,6 @@ overlap:
 
     /* if any kind of error, indicate free space error */
     if (gaps || r || l1errs || l2errs || trkerrs) fsperr = 1;
-
-/*-------------------------------------------------------------------*/
-/* return if we are still doing `very minimal' checking              */
-/*-------------------------------------------------------------------*/
-
-    if (level < 0)
-    {
-        crc = 0;
-        goto cdsk_return;
-    }
 
 #if 0
 /*-------------------------------------------------------------------*/
@@ -1608,7 +1602,7 @@ cdsk_return:
      && (cdevhdr.options & (CCKD_OPENED | CCKD_ORDWR)) != 0
      && (fdflags & O_RDWR))
     {
-        cdevhdr.options ^= (CCKD_OPENED | CCKD_ORDWR);
+        cdevhdr.options &= ~(CCKD_OPENED | CCKD_ORDWR);
         rc = lseek (fd, CKDDASD_DEVHDR_SIZE + 3, SEEK_SET);
         rc = write (fd, &cdevhdr.options, 1);
     }

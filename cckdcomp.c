@@ -147,6 +147,7 @@ int             moved=0;                /* Total space moved         */
     rc = lseek (fd, 0, SEEK_SET);
     rc = read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
     rc = read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
+    cdevhdr.options |= CCKD_ORDWR;
 
     /* Check the endianess of the file */
     if (((cdevhdr.options & CCKD_BIGENDIAN) != 0 && cckd_endian() == 0) ||
