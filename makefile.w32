@@ -2,6 +2,7 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 # modified to build hercules under windows (VB)
 # modified to build external GUI compatible version under Windows (Fish)
+# modified to be useful (hopefully) for Linux AND windows (VB)
 #
 
 THEOS=$(OS)$(OSTYPE)
