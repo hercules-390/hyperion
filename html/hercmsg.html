@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 2: System Message Overview</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 2: System Message Overview</h1>
+<p>
+This page describes the system messages for the Hercules S/370,
+ESA/390, and z/Architecture emulator.
+<h3>Message format</h3>
+<p>All Hercules-issued messages are of the form:
+<code>HHC<em>mmnnns text</em></code>
+where:
+<dl>
+<dt><code>HHC</code>
+<dd>is the message prefix for Hercules. All Hercules messages will have
+this prefix.
+<dt><code><em>mm</em></code>
+<dd>specifies the function that issued the message, from the following list:
+  <dl>
+  <dt><code><a href="hercmscf.html">CF</a></code>
+  <dd>Configuration file processing
+  <dt><code><a href="hercmscp.html">CP</a></code>
+  <dd>CPU emulation
+  <dt><code><a href="hercmsct.html">CT</a></code>
+  <dd>Channel-to-channel adapter emulation
+  <dt><code><a href="hercmsda.html">DA</a></code>
+  <dd>DASD emulation (both CKD and FBA)
+  <dt><code><a href="hercmsdc.html">DC</a></code>
+  <dd><code>dasdcopy</code>
+  <dt><code><a href="hercmsdi.html">DI</a></code>
+  <dd><code>dasdinit</code>
+  <dt><code><a href="hercmsdl.html">DL</a></code>
+  <dd><code>dasdload</code>
+  <dt><code><a href="hercmsds.html">DS</a></code>
+  <dd><code>dasdisup</code>
+  <dt><code><a href="hercmscf.html">DT</a></code>
+  <dd><code>dasdcat</code>
+  <dt><code><a href="hercmshe.html">HE</a></code>
+  <dd><code>hetinit</code>
+  <dt><code><a href="hercmshg.html">HG</a></code>
+  <dd><code>hetget</code>
+  <dt><code><a href="hercmshm.html">HM</a></code>
+  <dd><code>hetmap</code>
+  <dt><code><a href="hercmsht.html">HT</a></code>
+  <dd>HTTP server
+  <dt><code><a href="hercmshu.html">HU</a></code>
+  <dd><code>hetupd</code>
+  <dt><code><a href="hercmsif.html">IF</a></code>
+  <dd><code>hercifc</code> (Network interface configuration handler)
+  <dt><code><a href="hercmslc.html">LC</a></code>
+  <dd>LCS emulation
+  <dt><code><a href="hercmspn.html">PN</a></code>
+  <dd>Hercules control panel command messages
+  <dt><code><a href="hercmspr.html">PR</a></code>
+  <dd>Printer emulation
+  <dt><code><a href="hercmspu.html">PU</a></code>
+  <dd>Card punch emulation
+  <dt><code><a href="hercmsrd.html">RD</a></code>
+  <dd>Card reader emulation
+  <dt><code><a href="hercmsta.html">TA</a></code>
+  <dd>Tape device emulation
+  <dt><code><a href="hercmstc.html">TC</a></code>
+  <dd><code>tapecopy</code>
+  <dt><code><a href="hercmste.html">TE</a></code>
+  <dd>1052 and 3270 terminal emulation
+  <dt><code><a href="hercmstm.html">TM</a></code>
+  <dd><code>tapemap</code>
+  <dt><code><a href="hercmsts.html">TS</a></code>
+  <dd><code>tapesplt</code>
+  <dt><code><a href="hercmstu.html">TU</a></code>
+  <dd>TUN/TAP driver support
+  </dl>
+<dt><code><em>nnn</em></code>
+<dd>Specific message number, assigned more or less sequentially.
+<dt><code><em>s</em></code>
+<dd>Message severity:
+  <dl>
+  <dt><code>S</code>
+  <dd>Severe error. Causes immediate termination of Hercules.
+  <dt><code>E</code>
+  <dd>Error. The function being requested did not execute correctly, but
+  Hercules should continue running.
+  <dt><code>W</code>
+  <dd>Warning. Not necessarily an error, but something to take note of and
+  possibly correct.
+  <dt><code>I</code>
+  <dd>Information. General messages that do not require any further action.
+  <dt><code>A</code>
+  <dd>Action. You need to do something.
+  </dl>
+<dt><code><em>text</em></code>
+<dd>Message text.
+</dl>
+<p>You may look up any message by following the link from the function
+identifier in the above list.
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<p><center><hr width=15% noshade>
+<a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+<small>
+<p>Last updated 15 December 2002
+</BODY>
+</HTML>
