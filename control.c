@@ -1799,6 +1799,9 @@ int     amode64;
        and set the amode64 bit according to byte 3 */
     regs->psw.notesame = regs->psw.notesame ? 0 : 1;
     regs->psw.amode64 = amode64;
+    /* s390_load_psw will not have set the AMASK correctly for amode64 */
+    if(amode64)
+        regs->psw.AMASK = AMASK64;
 #else /*!defined(FEATURE_ESAME)*/
     rc = ARCH_DEP(load_psw) ( regs, dword );
 #endif /*!defined(FEATURE_ESAME)*/

@@ -1,3 +1,4 @@
+18 May 2003 Fix incorrect amask in LPSW in 64 bit mode - Jan Jaeger
 15 May 2003 Fixed cygwin regparm bug check bug in configure.ac:
             __attribute__ ((regparm(3))) in wrong place - Fish
 15 May 2003 Created "destroy_lock" and "destroy_condition" macros;
