@@ -297,6 +297,8 @@ HEADERS  = feat370.h \
 
 all:  $(EXEFILES)
 
+hercules:  $(HRC_OBJS)
+	$(CC) -o hercules $(HRC_OBJS) $(LFLAGS)
 
 $(HRC_OBJS): %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ -c $<
