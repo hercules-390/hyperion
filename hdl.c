@@ -332,7 +332,7 @@ HDLPRE *preload;
  */
 int hdl_load(char *name,int flags)
 {
-DLLENT *dllent;
+DLLENT *dllent, *tmpdll;
 MODENT *modent;
 char *modname;
 
@@ -377,9 +377,23 @@ char *modname;
     {
         logmsg("HHCHD013E No depency section in %s: %s\n",
           dllent->name, dlerror());
+        dlclose(dllent->dll);
         free(dllent);
         return -1;
     }
+
+    for(tmpdll = hdl_dll; tmpdll; tmpdll = tmpdll->dllnext)
+    {
+        if(tmpdll->hdldepc == dllent->hdldepc)
+        {
+            logmsg("HHCHD015E DLL %s is duplicate of %s\n",
+              dllent->name, tmpdll->name);
+            dlclose(dllent->dll);
+            free(dllent);
+            return -1;
+        }
+    }
+
 
     if(!(dllent->hdlinit = dlsym(dllent->dll,HDL_INIT_Q)))
     {
@@ -387,6 +401,7 @@ char *modname;
           dllent->name, dlerror());
         if(!(flags & HDL_LOAD_FORCE))
         {
+            dlclose(dllent->dll);
             free(dllent);
             return -1;
         }
@@ -409,6 +424,7 @@ char *modname;
               dllent->name);
             if(!(flags & HDL_LOAD_FORCE))
             {
+                dlclose(dllent->dll);
                 free(dllent);
                 release_lock(&hdl_lock);
                 return -1;

@@ -1,3 +1,4 @@
+26 Jun 2003 Check for physical shared object when loading dll - Jan Jaeger
 26 Jun 2003 Fix Win32 hdl case-sensitivity bug - Fish
 26 Jun 2003 TT32 CTCI fixes: 1) fix ACCESS_VIOLATION caused by NULL ptr
             being returned by 'tt32_get_default_iface', 2) 'tt32stats_cmd'

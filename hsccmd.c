@@ -2451,7 +2451,7 @@ int ldmod_cmd(char* cmdline, int argc, char *argv[])
     for(i = 1; i < argc; i++)
     {
         logmsg("HHCHD100I Loading %s ...\n",argv[i]);
-        if (hdl_load(argv[i], 0) == 0)
+        if(!hdl_load(argv[i], 0))
             logmsg("HHCHD101I Module %s loaded\n",argv[i]);
     }
 
@@ -2476,7 +2476,7 @@ int rmmod_cmd(char* cmdline, int argc, char *argv[])
     for(i = 1; i < argc; i++)
     {
         logmsg("HHCHD102I Unloading %s ...\n",argv[i]);
-        if (hdl_dele(argv[i]) == 0)
+        if(!hdl_dele(argv[i]))
             logmsg("HHCHD103I Module %s unloaded\n",argv[i]);
     }
 
