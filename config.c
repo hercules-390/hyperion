@@ -318,9 +318,15 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     /* Gabor Hoffer (performance option) */
     for (i = 0; i < 256; i++)
     {
-        s370_opcode_table [i] = opcode_table [i][0];
-        s390_opcode_table [i] = opcode_table [i][1];
-        z900_opcode_table [i] = opcode_table [i][2];
+#if defined(_370)
+        s370_opcode_table [i] = opcode_table [i][ARCH_370];
+#endif
+#if defined(_390)
+        s390_opcode_table [i] = opcode_table [i][ARCH_390];
+#endif
+#if defined(_900)
+        z900_opcode_table [i] = opcode_table [i][ARCH_900];
+#endif
     }
 
     /* Initialize SETMODE and set user authority */
