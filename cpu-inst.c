@@ -9,11 +9,13 @@
 /* compiled directly, but rather #included by the cpu.c module.      */
 /*-------------------------------------------------------------------*/
 
+#if 0
 #if defined(HAVE_CONFIG_H)
 #include <config.h>
 #endif
 
 #include "featall.h"
+#endif
 
 #if !defined(OPTION_GABOR_PERF)
 int cpu_inst_dummy = 0;
@@ -1437,14 +1439,6 @@ U16     i2;                             /* 16-bit operand            */
 
 #if defined(GABOR_PERF_IMPLEMENT_TABLE_BUILD_PART)
 #undef GABOR_PERF_IMPLEMENT_TABLE_BUILD_PART
-
-    {
-        int i;
-        for (i = 0; i < 256; i++)
-            instructions      [i] = &&non_inlined_instruction;
-        for (i = 0; i < 16;  i++)
-            instructions_a7xx [i] = &&non_inlined_instruction;
-    }
 
 #if defined(CPU_INST_BCTR)
     instructions [CPU_INST_BCTR] = &&branch_on_count_register;

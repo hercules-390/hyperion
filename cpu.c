@@ -1584,6 +1584,14 @@ void ARCH_DEP(run_cpu) (REGS *pregs)
 #endif
 #endif /* defined(OPTION_GABOR_PERF) */
 
+    {
+        int i;
+        for (i = 0; i < 256; i++)
+            instructions      [i] = &&non_inlined_instruction;
+        for (i = 0; i < 16;  i++)
+            instructions_a7xx [i] = &&non_inlined_instruction;
+    }
+
     obtain_lock (&sysblk.intlock);
         
     /* Copy current register context into a (static) area */
@@ -1678,8 +1686,8 @@ instruction_fetch:
 /* instruction as desired. This lets us to test Gabor's performance  */
 /* option individually for each instruction.                         */
 /*-------------------------------------------------------------------*/
-non_inlined_instruction:
 #endif /* defined(OPTION_GABOR_PERF) */
+non_inlined_instruction:
     (ARCH_DEP(opcode_table)[regs.ip[0]]) (regs.ip, 0, &regs);
     NEXT_INSTRUCTION;
 }
