@@ -129,14 +129,13 @@ MODENT *modent = NULL;
             modent = dllent->modent;
     }
 
-    /* Find entry point and increase loadcount */
+    /* Find entry point */
     for(; dllent; dllent = dllent->dllnext, modent = dllent->modent)
     {
         for(; modent; modent = modent->modnext)
         {
             if(!strcmp(name,modent->name))
             {
-                modent->count++;
                 return modent->fep;
             }
         }
