@@ -72,7 +72,7 @@ AC_ARG_ENABLE(fthreads,
 AM_CONDITIONAL(BUILD_FTHREADS, [test x$build_fthreads = xtrue])
 
 # Headers
-AC_CHECK_HEADERS(byteswap.h linux/if_tun.h)
+AC_CHECK_HEADERS(byteswap.h)
 AC_CHECK_HEADER(fenv.h,,[AC_DEFINE([NO_IEEE_SUPPORT])])
 
 if test x$build_fthreads != xtrue; then
