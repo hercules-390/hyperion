@@ -1,3 +1,4 @@
+15 Nov 2001 RCHP and SCHM fixes for PIC 15 - Paul Leisy
 13 Nov 2001 Fix MVPG so it gets PIC 04 when FPO on - Paul Leisy
 13 Nov 2001 Fix CUSE when last byte is part of equality - Paul Leisy
 13 Nov 2001 Fix halt and clear subchannel on CTC type devices - Jan Jaeger
