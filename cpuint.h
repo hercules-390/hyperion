@@ -44,14 +44,14 @@
  ||||
  |||+-------------------------------------> '1' : CHANRPT
  ||+--------------------------------------> '1' : IOPENDING
- |+---------------------------------------> '1' : CPUSTATE!=STARTED
- +----------------------------------------> '1' : DEBUG or TRACE
+ |+---------------------------------------> '1' : DEBUG or TRACE
+ +----------------------------------------> '1' : INTERRUPT possible
 **********************************************************************/
 
 /* Initial values */
 #define IC_INITIAL_STATE   IC_PSW_WAIT
-#define IC_INITIAL_MASK  ( IC_DEBUG_BIT \
-                         | IC_CPU_NOT_STARTED \
+#define IC_INITIAL_MASK  ( IC_INTERRUPT \
+                         | IC_DEBUG_BIT \
                          | IC_RESTART \
                          | IC_BROADCAST \
                          | IC_STORSTAT )
@@ -60,8 +60,8 @@
 #define SET_IC_INITIAL_STATE         sysblk.ints_state = IC_INITIAL_STATE
 
 /* Hercules related or nonmaskable interrupts */
-#define IC_DEBUG_BIT       0x80000000
-#define IC_CPU_NOT_STARTED 0x40000000
+#define IC_INTERRUPT       0x80000000
+#define IC_DEBUG_BIT       0x40000000
 #define IC_IOPENDING       0x20000000
 #define IC_STORSTAT        0x00000008
 #define IC_BROADCAST       0x00000004
@@ -181,22 +181,75 @@ do { \
 #define RESET_IC_CPUINT(_regs)
 
 /* Set state bit to '1' */
-#define ON_IC_CPU_NOT_STARTED(_regs) \
-                                or_bits( &(_regs)->ints_state, IC_CPU_NOT_STARTED)
-#define ON_IC_RESTART(_regs)    or_bits( &(_regs)->ints_state, IC_RESTART)
-#define ON_IC_BROADCAST(_regs)  or_bits( &(_regs)->ints_state, IC_BROADCAST)
-#define ON_IC_STORSTAT(_regs)   or_bits( &(_regs)->ints_state, IC_STORSTAT)
-#define ON_IC_IOPENDING         or_bits(   &sysblk.ints_state, IC_IOPENDING)
-#define ON_IC_CHANRPT           or_bits(   &sysblk.ints_state, CR14_CHANRPT)
-#define ON_IC_INTKEY            or_bits(   &sysblk.ints_state, CR0_XM_INTKEY)
-#define ON_IC_SERVSIG           or_bits(   &sysblk.ints_state, CR0_XM_SERVSIG)
-#define ON_IC_ITIMER(_regs)     or_bits( &(_regs)->ints_state, CR0_XM_ITIMER)
-#define ON_IC_PTIMER(_regs)     or_bits( &(_regs)->ints_state, CR0_XM_PTIMER)
-#define ON_IC_CLKC(_regs)       or_bits( &(_regs)->ints_state, CR0_XM_CLKC)
-#define ON_IC_EXTCALL(_regs)    or_bits( &(_regs)->ints_state, CR0_XM_EXTCALL)
-#define ON_IC_MALFALT(_regs)    or_bits( &(_regs)->ints_state, CR0_XM_MALFALT)
-#define ON_IC_EMERSIG(_regs)    or_bits( &(_regs)->ints_state, CR0_XM_EMERSIG)
-#define ON_IC_TRACE             or_bits(   &sysblk.ints_state, IC_DEBUG_BIT)
+#define ON_IC_INTERRUPT(_regs)  or_bits( &(_regs)->ints_state, IC_INTERRUPT)
+#define ON_IC_RESTART(_regs)    or_bits( &(_regs)->ints_state, IC_RESTART|IC_INTERRUPT)
+#define ON_IC_BROADCAST(_regs)  or_bits( &(_regs)->ints_state, IC_BROADCAST|IC_INTERRUPT)
+#define ON_IC_STORSTAT(_regs)   or_bits( &(_regs)->ints_state, IC_STORSTAT|IC_INTERRUPT)
+#define ON_IC_IOPENDING         do { \
+                                 int i; \
+                                 or_bits(   &sysblk.ints_state, IC_IOPENDING); \
+                                 for (i = 0; i < MAX_CPU_ENGINES; i++) \
+                                  if (sysblk.regs[i].ints_mask & IC_IOPENDING) \
+                                   or_bits(  &sysblk.regs[i].ints_state, IC_INTERRUPT); \
+                                } while (0)
+#define ON_IC_CHANRPT           do { \
+                                 int i; \
+                                 or_bits(   &sysblk.ints_state, CR14_CHANRPT); \
+                                 for (i = 0; i < MAX_CPU_ENGINES; i++) \
+                                  if (sysblk.regs[i].ints_mask & CR14_CHANRPT) \
+                                   or_bits(  &sysblk.regs[i].ints_state, IC_INTERRUPT); \
+                                } while (0)
+#define ON_IC_INTKEY            do { \
+                                 int i; \
+                                 or_bits(   &sysblk.ints_state, CR0_XM_INTKEY); \
+                                 for (i = 0; i < MAX_CPU_ENGINES; i++) \
+                                  if (sysblk.regs[i].ints_mask & CR0_XM_INTKEY) \
+                                   or_bits(  &sysblk.regs[i].ints_state, IC_INTERRUPT); \
+                                } while (0)
+#define ON_IC_SERVSIG           do { \
+                                 int i; \
+                                 or_bits(   &sysblk.ints_state, CR0_XM_SERVSIG); \
+                                 for (i = 0; i < MAX_CPU_ENGINES; i++) \
+                                  if (sysblk.regs[i].ints_mask & CR0_XM_SERVSIG) \
+                                   or_bits(  &sysblk.regs[i].ints_state, IC_INTERRUPT); \
+                                } while (0)
+#define ON_IC_ITIMER(_regs)     do { \
+                                  U32 state = CR0_XM_ITIMER; \
+                                  if ((_regs)->ints_mask & CR0_XM_ITIMER) \
+                                    state |= IC_INTERRUPT; \
+                                  or_bits( &(_regs)->ints_state, state); \
+                                } while (0)
+#define ON_IC_PTIMER(_regs)     do { \
+                                  U32 state = CR0_XM_PTIMER; \
+                                  if ((_regs)->ints_mask & CR0_XM_PTIMER) \
+                                    state |= IC_INTERRUPT; \
+                                  or_bits( &(_regs)->ints_state, state); \
+                                } while (0)
+#define ON_IC_CLKC(_regs)       do { \
+                                  U32 state = CR0_XM_CLKC; \
+                                  if ((_regs)->ints_mask & CR0_XM_CLKC) \
+                                    state |= IC_INTERRUPT; \
+                                  or_bits( &(_regs)->ints_state, state); \
+                                } while (0)
+#define ON_IC_EXTCALL(_regs)    do { \
+                                  U32 state = CR0_XM_EXTCALL; \
+                                  if ((_regs)->ints_mask & CR0_XM_EXTCALL) \
+                                    state |= IC_INTERRUPT; \
+                                  or_bits( &(_regs)->ints_state, state); \
+                                } while (0)
+#define ON_IC_MALFALT(_regs)    do { \
+                                  U32 state = CR0_XM_MALFALT; \
+                                  if ((_regs)->ints_mask & CR0_XM_MALFALT) \
+                                    state |= IC_INTERRUPT; \
+                                  or_bits( &(_regs)->ints_state, state); \
+                                } while (0)
+#define ON_IC_EMERSIG(_regs)    do { \
+                                  U32 state = CR0_XM_EMERSIG; \
+                                  if ((_regs)->ints_mask & CR0_XM_EMERSIG) \
+                                    state |= IC_INTERRUPT; \
+                                  or_bits( &(_regs)->ints_state, state); \
+                                } while (0)
+#define ON_IC_TRACE             or_bits(   &sysblk.ints_state, IC_DEBUG_BIT|IC_INTERRUPT)
 #define ON_IC_DEBUG(_regs)      or_bits( &(_regs)->ints_state, IC_DEBUG_BIT)
 #define ON_IC_PER_SB(_regs)     or_bits( &(_regs)->ints_state, IC_PER_SB&(_regs)->ints_mask)
 #define ON_IC_PER_IF(_regs)     or_bits( &(_regs)->ints_state, IC_PER_IF&(_regs)->ints_mask)
@@ -205,8 +258,7 @@ do { \
 #define ON_IC_PER_STURA(_regs)  or_bits( &(_regs)->ints_state, IC_PER_STURA&(_regs)->ints_mask)
 
 /* Set state bit to '0' */
-#define OFF_IC_CPU_NOT_STARTED(_regs) \
-                                and_bits(&(_regs)->ints_state,~IC_CPU_NOT_STARTED)
+#define OFF_IC_INTERRUPT(_regs) and_bits(&(_regs)->ints_state,~IC_INTERRUPT)
 #define OFF_IC_RESTART(_regs)   and_bits(&(_regs)->ints_state,~IC_RESTART)
 #define OFF_IC_BROADCAST(_regs) and_bits(&(_regs)->ints_state,~IC_BROADCAST)
 #define OFF_IC_STORSTAT(_regs)  and_bits(&(_regs)->ints_state,~IC_STORSTAT)
@@ -230,6 +282,7 @@ do { \
 #define OFF_IC_PER_STURA(_regs) and_bits(&(_regs)->ints_state,~IC_PER_STURA)
 
 /* Check Interrupt State */
+#define IS_IC_INTERRUPT(_regs)  ((_regs)->ints_state&IC_INTERRUPT)
 #define IS_IC_DISABLED_WAIT_PSW(_regs) \
              ( ((_regs)->ints_mask & IC_OPEN_MASK) == 0 )
 #define IS_IC_RESTART(_regs)    ((_regs)->ints_state&IC_RESTART)
@@ -312,6 +365,9 @@ do { \
 
 #define IC_INTERRUPT_CPU(_regs) \
    (((_regs)->ints_state|sysblk.ints_state) & ((_regs)->ints_mask|IC_PER_MASK))
+
+#define IC_INTERRUPT_CPU_NO_PER(_regs) \
+   (((_regs)->ints_state|sysblk.ints_state) & (_regs)->ints_mask)
 
 #define SIE_IC_INTERRUPT_CPU(_regs) \
    (((_regs)->ints_state|(sysblk.ints_state&IC_SIE_INT)) & ((_regs)->ints_mask|IC_PER_MASK))

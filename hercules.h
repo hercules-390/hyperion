@@ -474,10 +474,13 @@ typedef struct _REGS {                  /* Processor registers       */
         DW      mc;                     /* Monitor Code              */
         DW      ea;                     /* Exception address         */
         DW      et;                     /* Execute Target address    */
+        BYTE   *mi;                     /* Mainstor instruction addr */
         DW      ai;                     /* Absolute instruction addr */
         DW      vi;                     /* Virtual instruction addr  */
+        DW      vie;                    /* Virt instr page end addr  */
         DW      ae[256];                /* Absolute effective addr   */
         DW      ve[256];                /* Virtual effective addr    */
+        DW      me[256];                /* Mangled effective addr    */
         BYTE    aekey[256];             /* Storage Key               */
         int     aeacc[256];             /* Access type               */
         int     aearn[256];             /* Access register used      */
@@ -516,10 +519,14 @@ typedef struct _REGS {                  /* Processor registers       */
 #define AI_L    ai.F.L.F
 #define VI_G    vi.D
 #define VI_L    vi.F.L.F
+#define VIE_G   vie.D
+#define VIE_L   vie.F.L.F
 #define AE_G(_r)    ae[(_r)].D
 #define AE_L(_r)    ae[(_r)].F.L.F
 #define VE_G(_r)    ve[(_r)].D
 #define VE_L(_r)    ve[(_r)].F.L.F
+#define ME_G(_r)    me[(_r)].D
+#define ME_L(_r)    me[(_r)].F.L.F
         U32     ar[16];                 /* Access registers          */
 #define AR(_r)  ar[(_r)]
         U32     fpr[32];                /* Floating point registers  */
@@ -535,8 +542,7 @@ typedef struct _REGS {                  /* Processor registers       */
         PSW     psw;                    /* Program status word       */
         BYTE    excarid;                /* Exception access register */
         BYTE    opndrid;                /* Operand access register   */
-        DWORD   exinst;                 /* Target of Execute (EX)    */
-
+        BYTE    exinst[6];              /* Target of Execute (EX)    */
         BYTE   *mainstor;               /* -> Main storage           */
         BYTE   *storkeys;               /* -> Main storage key array */
         RADR    mainlim;                /* Central Storage limit or  */

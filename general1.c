@@ -2644,6 +2644,7 @@ DEF_INST(execute)
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+BYTE   *ip;                             /* -> executed instruction   */
 
     RX(inst, execflag, regs, r1, b2, effective_addr2);
 
@@ -2657,8 +2658,9 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(_FEATURE_SIE)*/
 
     /* Fetch target instruction from operand address */
-    INSTRUCTION_FETCH(regs->exinst, effective_addr2, regs);
-    INVALIDATE_AIA(regs);
+    ip = INSTRUCTION_FETCH(regs->exinst, effective_addr2, regs, 1);
+    if (ip != regs->exinst)
+        memcpy (regs->exinst, ip, 6);
 
     /* Program check if recursive execute */
     if ( regs->exinst[0] == 0x44 )
@@ -2673,7 +2675,7 @@ VADR    effective_addr2;                /* Effective address         */
         regs->exinst[1] |= regs->GR_LHLCL(r1);
 
     /* Execute the target instruction */
-    EXECUTE_INSTRUCTION (regs->exinst, 1, regs);
+    EXECUTE_INSTRUCTION (regs->exinst, 1, regs, ARCH_DEP(opcode_table));
 
 }
 

@@ -154,8 +154,6 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
         /* Reset checkstop indicator */
         regs->checkstop = 0;
 
-        OFF_IC_CPU_NOT_STARTED(regs);
-
         /* Signal the stopped CPU to retest its stopped indicator */
         WAKEUP_CPU (regs->cpuad);
 
@@ -251,7 +249,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
         obtain_lock (&sysblk.intlock);
 
         regs->cpustate = CPUSTATE_STOPPING;
-        ON_IC_CPU_NOT_STARTED(regs);
+        ON_IC_INTERRUPT(regs);
         WAKEUP_CPU (regs->cpuad);
 
         release_lock (&sysblk.intlock);
@@ -337,7 +335,7 @@ int stopall_cmd(int argc, char *argv[], char *cmdline)
         if(sysblk.regs[i].cpuonline)
         {
             sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(sysblk.regs + i);
+            ON_IC_INTERRUPT(sysblk.regs + i);
             WAKEUP_CPU(i);
         }
 

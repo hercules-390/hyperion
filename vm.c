@@ -769,7 +769,7 @@ int     j,k;
     if (cmdlen == 0)
     {
         regs->cpustate = CPUSTATE_STOPPED;
-        ON_IC_CPU_NOT_STARTED(regs);
+        ON_IC_INTERRUPT(regs);
         return 0;
     }
 

@@ -376,7 +376,7 @@ int i;
                                                    regs->ip);
         regs->cpustate = CPUSTATE_STOPPING;
         regs->checkstop = 1;
-        ON_IC_CPU_NOT_STARTED(regs);
+        ON_IC_INTERRUPT(regs);
 
         /* Notify other CPU's by means of a malfuction alert if possible */
         if (!try_obtain_lock(&sysblk.sigplock))

@@ -81,11 +81,17 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 {
+int     permode;
 int     realmode;
 int     space;
+int     homemode;
+BYTE    pkey;
 
+    permode = PER_MODE(regs);
     realmode = REAL_MODE(&regs->psw);
     space = (regs->psw.space == 1);
+    homemode = HOME_SPACE_MODE(&regs->psw);
+    pkey = regs->psw.pkey;
 
     regs->psw.sysmask = addr[0];
     regs->psw.pkey = addr[1] & 0xF0;
@@ -121,7 +127,6 @@ int     space;
         regs->psw.amode = (addr[4] & 0x80) >> 7;
         regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
 
-        INVALIDATE_AIA(regs);
         if ((realmode  != REAL_MODE(&regs->psw)) ||
             (space     != (regs->psw.space == 1))
 #if defined (FEATURE_PER)
@@ -223,7 +228,6 @@ int     space;
         regs->psw.amode = 0;
         regs->psw.AMASK = AMASK24;
 
-        INVALIDATE_AIA(regs);
         if ((realmode  != REAL_MODE(&regs->psw)) ||
             (space     != (regs->psw.space == 1)))
             INVALIDATE_AEA_ALL(regs);
@@ -233,6 +237,12 @@ int     space;
         regs->psw.IA &= 0x00FFFFFF;
     }
 #endif /*defined(FEATURE_BCMODE)*/
+
+    if (realmode != REAL_MODE(&regs->psw)
+     || permode  != PER_MODE(regs)
+     || homemode != HOME_SPACE_MODE(&regs->psw)
+     ||(pkey     != regs->psw.pkey && regs->psw.pkey != 0))
+        INVALIDATE_AIA(regs);
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* Bits 5 and 16 must be zero in XC mode */
@@ -449,8 +459,7 @@ static char *pgmintname[] = {
       || code == PGM_SPECIFICATION_EXCEPTION
       || code == PGM_TRANSLATION_SPECIFICATION_EXCEPTION ))
     {
-        realregs->psw.ilc = (realregs->ip[0] < 0x40) ? 2 :
-                            (realregs->ip[0] < 0xC0) ? 4 : 6;
+        realregs->psw.ilc = ILC(realregs->ip[0]);
         realregs->psw.IA += realregs->psw.ilc;
         realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
     }
@@ -751,7 +760,7 @@ static char *pgmintname[] = {
                           realregs->cpuad);
                 display_psw (realregs);
                 realregs->cpustate = CPUSTATE_STOPPING;
-                ON_IC_CPU_NOT_STARTED(realregs);
+                ON_IC_INTERRUPT(realregs);
             }
         }
 
@@ -793,7 +802,6 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     if ( rc == 0)
     {
         regs->cpustate = CPUSTATE_STARTED;
-        OFF_IC_CPU_NOT_STARTED(regs);
     }
 
     release_lock(&sysblk.intlock);
@@ -1126,6 +1134,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     /* Obtain the interrupt lock */
     obtain_lock (&sysblk.intlock);
 
+    OFF_IC_INTERRUPT(regs);
+
     /* Perform broadcasted purge of ALB and TLB if requested
        synchronize_broadcast() must be called until there are
        no more broadcast pending because synchronize_broadcast()
@@ -1277,6 +1287,9 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     /* Test for wait state */
     if (regs->psw.wait)
     {
+        INVALIDATE_AIA(regs);
+        INVALIDATE_AEA_ALL(regs);
+
         /* Test for disabled wait PSW and issue message */
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
         {
@@ -1285,15 +1298,10 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                     regs->cpuad);
             display_psw (regs);
             regs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(regs);
-            INVALIDATE_AIA(regs);
-            INVALIDATE_AEA_ALL(regs);
+            ON_IC_INTERRUPT(regs);
             release_lock (&sysblk.intlock);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
-
-        INVALIDATE_AIA(regs);
-        INVALIDATE_AEA_ALL(regs);
 
         /* Wait for I/O, external or restart interrupt */
         sysblk.waitmask |= regs->cpumask;
@@ -1326,7 +1334,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
         {
             /* Put CPU into stopped state */
             regs->cpustate = CPUSTATE_STOPPED;
-            ON_IC_CPU_NOT_STARTED(regs);
+            ON_IC_INTERRUPT(regs);
     
             /* Wait for start command from panel */
             obtain_lock (&sysblk.intlock);
@@ -1353,8 +1361,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(run_cpu) (REGS *regs)
 {
-VADR    pageend;
-BYTE    *ip, *pagestart = NULL;
+zz_func opcode_table[256];
 
     /* Set started bit on and wait bit off for this CPU */
     obtain_lock (&sysblk.intlock);
@@ -1362,15 +1369,14 @@ BYTE    *ip, *pagestart = NULL;
     sysblk.waitmask &= ~regs->cpumask;
     release_lock (&sysblk.intlock);
 
+    /* Invalidate AIA */
+    INVALIDATE_AIA(regs);
+
+    /* Copy the opcode table */
+    MEMCPY(opcode_table, ARCH_DEP(opcode_table), sizeof(opcode_table));
+
     /* Establish longjmp destination for program check */
     setjmp(regs->progjmp);
-
-    /* Reset instruction trace indicators */
-    pageend = 0;
-    ip = regs->inst;
-    regs->ip = ip;
-
-    pagestart = regs->mainstor + regs->AI; 
 
     if (IS_IC_TRACE
 #ifdef FEATURE_PER
@@ -1382,40 +1388,28 @@ BYTE    *ip, *pagestart = NULL;
     while (1)
     {
         /* Test for interrupts if it appears that one may be pending */
-        if( IC_INTERRUPT_CPU(regs) )
+        if( IC_INTERRUPT_CPU_NO_PER(regs) )
         {
-            if (IS_IC_TRACE) goto slowloop;
             ARCH_DEP(process_interrupt)(regs);
             if (!regs->cpuonline)
                  return;
+            if (IS_IC_TRACE) goto slowloop;
         }
 
-        /* Fetch the next sequential instruction */
-        FAST_INSTRUCTION_FETCH(ip, regs->psw.IA, regs, pageend,
-                            ifetch0);
-exec0:
+        do {
+            UNROLLED_EXECUTE(regs, opcode_table);
+            UNROLLED_EXECUTE(regs, opcode_table);
+            UNROLLED_EXECUTE(regs, opcode_table);
 
-        /* Execute the instruction */
-        regs->instcount += 8;
-        FAST_EXECUTE_INSTRUCTION (ip, 0, regs);
+            regs->instcount += 8;
 
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, ifetch1, exec1);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, ifetch2, exec2);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, ifetch3, exec3);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, ifetch4, exec4);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, ifetch5, exec5);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, ifetch6, exec6);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, ifetch7, exec7);
-}
-
-FAST_IFETCH(regs, pageend, ip, ifetch0, exec0);
-FAST_IFETCH(regs, pageend, ip, ifetch1, exec1);
-FAST_IFETCH(regs, pageend, ip, ifetch2, exec2);
-FAST_IFETCH(regs, pageend, ip, ifetch3, exec3);
-FAST_IFETCH(regs, pageend, ip, ifetch4, exec4);
-FAST_IFETCH(regs, pageend, ip, ifetch5, exec5);
-FAST_IFETCH(regs, pageend, ip, ifetch6, exec6);
-FAST_IFETCH(regs, pageend, ip, ifetch7, exec7);
+            UNROLLED_EXECUTE(regs, opcode_table);
+            UNROLLED_EXECUTE(regs, opcode_table);
+            UNROLLED_EXECUTE(regs, opcode_table);
+            UNROLLED_EXECUTE(regs, opcode_table);
+            UNROLLED_EXECUTE(regs, opcode_table);
+        } while (!IS_IC_INTERRUPT(regs));
+    }
 
 slowloop:
     while (1)
@@ -1428,25 +1422,15 @@ slowloop:
                  return;
         }
 
-        /* Clear the instruction validity flag in case an access
-           error occurs while attempting to fetch next instruction */
-        regs->instvalid = 0;
-
         /* Fetch the next sequential instruction */
-        INSTRUCTION_FETCH(regs->inst, regs->psw.IA, regs);
-
-        /* Set the instruction validity flag */
-        regs->instvalid = 1;
+        regs->ip = INSTRUCTION_FETCH(regs->inst, regs->psw.IA, regs, 0);
 
         if( IS_IC_TRACE )
-        {
-            regs->ip = ip;
             ARCH_DEP(process_trace)(regs);
-        }
 
         /* Execute the instruction */
         regs->instcount++;
-        EXECUTE_INSTRUCTION (regs->ip, 0, regs);
+        EXECUTE_INSTRUCTION(regs->ip, 0, regs, opcode_table);
     }
 
 } /* end function cpu_thread */

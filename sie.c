@@ -828,8 +828,7 @@ int     n;
         {
         int exilc;
             STATEBK->f |= SIE_F_EX;
-            exilc = (GUESTREGS->exinst[0] < 0x40) ? 2 :
-                    (GUESTREGS->exinst[0] < 0xC0) ? 4 : 6;
+            exilc = ILC(GUESTREGS->exinst[0]);
             memcpy(STATEBK->ipa, GUESTREGS->exinst, exilc);
         }
     }
@@ -842,9 +841,11 @@ int     n;
 /* Execute guest instructions */
 int ARCH_DEP(run_sie) (REGS *regs)
 {
-    int icode;
+    int   icode;
 
     SIE_PERFMON(SIE_PERF_RUNSIE);
+
+    INVALIDATE_AIA(GUESTREGS);
 
     SET_IC_EXTERNAL_MASK(GUESTREGS);
     SET_IC_MCK_MASK(GUESTREGS);
@@ -955,21 +956,16 @@ int ARCH_DEP(run_sie) (REGS *regs)
                                           )
                     break;
 
-
-                GUESTREGS->instvalid = 0;
-
-                INSTRUCTION_FETCH(GUESTREGS->inst, GUESTREGS->psw.IA, GUESTREGS);
-
-                GUESTREGS->instvalid = 1;
+                GUESTREGS->ip = INSTRUCTION_FETCH(GUESTREGS->inst, GUESTREGS->psw.IA, GUESTREGS, 0);
 
 #if defined(SIE_DEBUG)
                 /* Display the instruction */
-                ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->inst);
+                ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->ip);
 #endif /*defined(SIE_DEBUG)*/
 
                 SIE_PERFMON(SIE_PERF_EXEC);
                 regs->instcount++;
-                EXECUTE_INSTRUCTION(GUESTREGS->inst, 0, GUESTREGS);
+                EXECUTE_INSTRUCTION(GUESTREGS->ip, 0, GUESTREGS, ARCH_DEP(opcode_table));
 
 #ifdef FEATURE_PER
                 if (!PER_MODE(GUESTREGS))
@@ -977,13 +973,13 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 {
                     SIE_PERFMON(SIE_PERF_EXEC_U);
                     regs->instcount += 7;
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
-                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
                 }
             } while( !SIE_I_HOST(regs) );
 

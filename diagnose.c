@@ -115,7 +115,7 @@ U32   code;
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
         regs->cpustate = CPUSTATE_STOPPING;
-        ON_IC_CPU_NOT_STARTED(regs);
+        ON_IC_INTERRUPT(regs);
 
         /* Release the configuration */
         release_config();
@@ -346,7 +346,7 @@ U32   code;
     /* Diagnose F10: Hercules CPU stop                               */
     /*---------------------------------------------------------------*/
         regs->cpustate = CPUSTATE_STOPPING;
-        ON_IC_CPU_NOT_STARTED(regs);
+        ON_IC_INTERRUPT(regs);
         break;
 
 #if defined(OPTION_DYNAMIC_LOAD)
@@ -432,7 +432,7 @@ U32   code;
         if (0x0000FFFF == ARCH_DEP(vfetch4)(effective_addr2, b2, regs))
         {
             regs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(regs);
+            ON_IC_INTERRUPT(regs);
 
             /* Release the configuration */
             release_config();

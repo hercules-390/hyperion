@@ -106,6 +106,9 @@
 
 typedef void (ATTR_REGPARM(3) (*zz_func)) (BYTE inst[], int execflag, REGS *regs);
 
+extern BYTE     ilc_table[];
+#define ILC(_b) ilc_table[(_b)]
+
 /* Gabor Hoffer (performance option) */
 extern zz_func s370_opcode_table[];
 extern zz_func s390_opcode_table[];
@@ -243,71 +246,38 @@ do { \
 #endif
 
 /* Instruction fetching */
-#define INSTRUCTION_FETCH(_dest, _addr, _regs) \
-do { \
-    if( (_regs)->VI == ((_addr) & PAGEFRAME_PAGEMASK) \
-      && ((_addr) & 0x7FF) <= (0x800 - 6)) \
-    { \
-        if((_addr) & 0x01) \
-            ARCH_DEP(program_interrupt)((_regs), PGM_SPECIFICATION_EXCEPTION); \
-        memcpy ((_dest), (_regs)->mainstor + (_regs)->AI + \
-                    ((_addr) & PAGEFRAME_BYTEMASK) , 6); \
-    } \
-    else \
-        ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)); \
-} while(0)
 
-#define FAST_INSTRUCTION_FETCH(_dest, _addr, _regs, _pe, _if) \
-do { \
-    if ( (_regs)->VI == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01)) \
-      && (_addr) <= (_pe)) \
-      (_dest) =  pagestart + ((_addr) & PAGEFRAME_BYTEMASK); \
-    else goto _if; \
-} while(0)
+#define IADDR(_regs, _addr) \
+ (sizeof(BYTE *) == sizeof(unsigned int)) \
+ ?  (BYTE *)((unsigned int)(_regs)->mi ^ (unsigned int)(_addr)) \
+ :  ((_regs)->mi + ((_addr) & PAGEFRAME_BYTEMASK))
 
-#define FAST_IFETCH(_regs, _pe, _ip, _if, _ex) \
-do { \
-_if: \
-    (_regs)->instvalid = 0; \
-    (_ip) = (_regs)->inst; \
-    (_regs)->ip = (_ip); \
-    ARCH_DEP(instfetch) ((_regs)->inst, (_regs)->psw.IA, (_regs));  \
-    (_regs)->instvalid = 1; \
-    (_pe) = ((_regs)->psw.IA & ~0x7FF) + (0x800 - 6); \
-    pagestart = (_regs)->mainstor + (_regs)->AI; \
-    goto _ex; \
-} while(0)
+#define NEW_IADDR(_regs, _addr, _ia) \
+ (sizeof(BYTE *) == sizeof(unsigned int)) \
+ ?  (BYTE *)((unsigned int)(_ia) ^ (unsigned int)((_addr) & PAGEFRAME_PAGEMASK)) \
+ :  (_ia)
+
+#define AIA_LIKELY(c) __builtin_expect((c),1)
+
+#define INSTRUCTION_FETCH(_dest, _addr, _regs, _valid) \
+  AIA_LIKELY((_addr) <= (_regs)->VIE && (_regs)->VI == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01))) \
+  ? IADDR((_regs), (_addr)) \
+  : ((_regs)->instvalid = (_valid), \
+     ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)) \
+    )
 
 /* Instruction execution */
-#define EXECUTE_INSTRUCTION(_instruction, _execflag, _regs) \
-do { \
-    FOOTPRINT((_regs)); \
-    COUNT_INST((_instruction), (_regs)); \
-    opcode_table[((_instruction)[0])][ARCH_MODE]((_instruction), (_execflag), (_regs)); \
-} while(0)
-
-#define FAST_EXECUTE_INSTRUCTION(_inst, _execflag, _regs) \
+#define EXECUTE_INSTRUCTION(_inst, _execflag, _regs, _tab) \
 do { \
     FOOTPRINT ((_regs)); \
     COUNT_INST ((_inst), (_regs)); \
-    (_regs)->ip = (_inst); \
-    (ARCH_DEP(opcode_table)[_inst[0]]) ((_inst), 0, (_regs)); \
+    ((_tab)[_inst[0]]) ((_inst), (_execflag), (_regs)); \
 } while(0)
 
-/* Unrolled execution */
-#define UNROLLED_EXECUTE(_regs) \
+#define UNROLLED_EXECUTE(_regs, _tab) \
 do { \
-    (_regs)->instvalid = 0; \
-    INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs)); \
-    (_regs)->instvalid = 1; \
-    EXECUTE_INSTRUCTION ((_regs)->inst, 0, (_regs)); \
-} while(0)
-
-#define FAST_UNROLLED_EXECUTE(_regs, _pe, _ip, _if, _ex) \
-do { \
-    FAST_INSTRUCTION_FETCH((_ip), (_regs)->psw.IA, (_regs), (_pe), _if); \
-_ex: \
-    FAST_EXECUTE_INSTRUCTION((_ip), 0, (_regs)); \
+    (_regs)->ip = INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs), 0); \
+    EXECUTE_INSTRUCTION((_regs)->ip, 0, (_regs), (_tab)); \
 } while(0)
 
 #define RETURN_INTCHECK(_regs) \
@@ -576,11 +546,12 @@ do { \
     (_regs)->VI = 1; \
 } while (0)
 
+#define AEA_LIKELY(c) __builtin_expect((c),1)
 #define AEIND(_addr) (((_addr) >> PAGEFRAME_PAGESHIFT) & 0xff)
 #define MAXAEA 256
 
 #define LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
-      (_arn) >= 0 \
+  AEA_LIKELY (  (_arn) >= 0 \
   &&  (((_addr) & AEA_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
   &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
   &&  ( ( (_regs)->aenoarn && (_regs)->aearn[AEIND(_addr)] == 0 ) \
@@ -590,18 +561,18 @@ do { \
          ) \
         ) \
       ) \
-  &&  (_regs)->aeacc[AEIND(_addr)] >= (_acctype) \
+  &&  (_regs)->aeacc[AEIND(_addr)] >= (_acctype) ) \
   ?   (_acctype) == ACCTYPE_READ \
       ? ( STORAGE_KEY((_regs)->AE(AEIND(_addr)), (_regs)) |= STORKEY_REF, \
-          (_regs)->AE(AEIND(_addr)) | ((_addr) & PAGEFRAME_BYTEMASK) \
+          (_regs)->ME(AEIND(_addr)) ^ (_addr) \
         ) \
       : ( STORAGE_KEY((_regs)->AE(AEIND(_addr)), (_regs)) |= (STORKEY_REF|STORKEY_CHANGE), \
-          (_regs)->AE(AEIND(_addr)) | ((_addr) & PAGEFRAME_BYTEMASK) \
+          (_regs)->ME(AEIND(_addr)) ^ (_addr) \
         ) \
   :   ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
 
 #define LOGICAL_TO_ABS_SKP(_addr, _arn, _regs, _acctype, _akey) \
-      (_arn) >= 0 \
+  AEA_LIKELY ( (_arn) >= 0 \
   &&  (((_addr) & AEA_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
   &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
   &&  ( ( (_regs)->aenoarn && (_regs)->aearn[AEIND(_addr)] == 0 ) \
@@ -611,9 +582,9 @@ do { \
          ) \
         ) \
       ) \
-  &&  (_regs)->aeacc[AEIND(_addr)] >= (_acctype) \
+  &&  (_regs)->aeacc[AEIND(_addr)] >= (_acctype) ) \
   ?   ( \
-        (_regs)->AE(AEIND(_addr)) | ((_addr) & PAGEFRAME_BYTEMASK) \
+        (_regs)->ME(AEIND(_addr)) ^ (_addr) \
       ) \
   :   ( \
         ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \

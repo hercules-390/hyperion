@@ -1720,6 +1720,9 @@ RADR    pfra;
     ARCH_DEP(synchronize_broadcast)(regs, BROADCAST_PTLBE, pfra);
     release_lock (&sysblk.intlock);
 
+    /* Re-obtain mainlock */
+    OBTAIN_MAINLOCK(regs);
+
 } /* end function invalidate_pte */
 
 #endif /*!defined(OPTION_NO_INLINE_DAT) || defined(_DAT_C) */
@@ -1951,6 +1954,7 @@ int     aeind;
 #endif
         aeind = AEIND(addr);
         regs->AE(aeind) = aaddr & PAGEFRAME_PAGEMASK;
+        regs->ME(aeind) = (aaddr ^ addr) & PAGEFRAME_PAGEMASK;
         regs->VE(aeind) = (addr & AEA_PAGEMASK) | regs->aeID;
         regs->aekey[aeind] = akey;
         regs->aeacc[aeind] = acctype;

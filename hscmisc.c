@@ -583,7 +583,7 @@ char    type;
         }
 
         opcode = regs->mainstor[aaddr];
-        ilc = (opcode < 0x40) ? 2 : (opcode < 0xC0) ? 4 : 6;
+        ilc = ILC(opcode);
 
         if (aaddr + ilc > regs->mainlim)
         {
@@ -801,7 +801,7 @@ int     n;                              /* Number of bytes in buffer */
 
     /* Extract the opcode and determine the instruction length */
     opcode = inst[0];
-    ilc = (opcode < 0x40) ? 2 : (opcode < 0xC0) ? 4 : 6;
+    ilc = ILC(opcode);
 
     /* Display the instruction */
     n += sprintf (buf+n, "INST=%2.2X%2.2X", inst[0], inst[1]);

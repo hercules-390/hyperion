@@ -148,6 +148,8 @@ void delayed_exit (int exit_code)
 /* storage configuration routine. To be moved *JJ */
 static void config_storage(int mainsize, int xpndsize)
 {
+int off;
+
     /* Obtain main storage */
     sysblk.mainsize = mainsize * 1024 * 1024;
 
@@ -221,6 +223,10 @@ static void config_storage(int mainsize, int xpndsize)
                 mainsize, strerror(errno));
         delayed_exit(1);
     }
+    
+    /* Trying to get mainstor aligned to the next 4K boundary - Greg */
+    off = (int)sysblk.mainstor & 0xFFF;
+    sysblk.mainstor += off ? 4096 - off : 0;
 
     /* Obtain main storage key array */
     sysblk.storkeys = malloc(sysblk.mainsize / STORAGE_KEY_UNITSIZE);
@@ -1917,7 +1923,7 @@ int     cpu;
         if(sysblk.regs[cpu].cpuonline)
         {
             sysblk.regs[cpu].cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(sysblk.regs + cpu);
+            ON_IC_INTERRUPT(sysblk.regs + cpu);
         }
     release_lock (&sysblk.intlock);
 
@@ -1959,7 +1965,7 @@ int configure_cpu(REGS *regs)
         return -1;
     regs->cpuonline = 1;
     regs->cpustate = CPUSTATE_STARTING;
-    ON_IC_CPU_NOT_STARTED(regs);
+    ON_IC_INTERRUPT(regs);
     regs->arch_mode = sysblk.arch_mode;
     if ( create_thread (&(regs->cputid), &sysblk.detattr, cpu_thread, regs) )
     {
@@ -1989,7 +1995,7 @@ int deconfigure_cpu(REGS *regs)
     {
         regs->cpuonline = 0;
         regs->cpustate = CPUSTATE_STOPPING;
-        ON_IC_CPU_NOT_STARTED(regs);
+        ON_IC_INTERRUPT(regs);
 
         /* Wake up CPU as it may be waiting */
         WAKEUP_CPU (regs->cpuad);

@@ -546,12 +546,14 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 /*      is odd, or causes an addressing or translation exception,    */
 /*      and in this case the function does not return.               */
 /*-------------------------------------------------------------------*/
-_VFETCH_C_STATIC void ARCH_DEP(instfetch) (BYTE *dest, VADR addr,
+_VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (BYTE *dest, VADR addr,
                                                             REGS *regs)
 {
 RADR    abs;                            /* Absolute storage address  */
 BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
-
+BYTE   *ia;                             /* Instruction address       */
+int     ilc, len = 0;                   /* Lengths for page crossing */
+VADR    mask;                           /* Mask for page crossing    */
 
     /* Program check if instruction address is odd */
     if (addr & 0x01)
@@ -587,65 +589,39 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Obtain current access key from PSW */
     akey = regs->psw.pkey;
 
-
-
-    /* Fetch six bytes if instruction cannot cross a page boundary */
-    if ((addr & 0x7FF) <= (0x800 - 6))
-    {
-        abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
-#if defined(FEATURE_PER)
-        if( !EN_IC_PER(regs) )
-#endif /*defined(FEATURE_PER)*/
-        {
-            regs->AI = abs & PAGEFRAME_PAGEMASK;
-            regs->VI = addr & PAGEFRAME_PAGEMASK;
-        }
-#if defined(FEATURE_PER)
-        else
-            INVALIDATE_AIA(regs);
-#endif /*defined(FEATURE_PER)*/
-        memcpy (dest, regs->mainstor+abs, 6);
-        return;
-    }
-
-    /* Fetch first two bytes of instruction */
+    /* Get instruction address */
     abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
-#if defined(FEATURE_PER)
-    if( !EN_IC_PER(regs) )
-#endif /*defined(FEATURE_PER)*/
+    ia = abs + regs->mainstor;
+
+    /* If page is crossed then copy instruction to the destination */
+    ilc = ILC(ia[0]);
+    mask = addr < PSA_SIZE ? 0x7FF : PAGEFRAME_BYTEMASK;
+    if (addr + ilc > (addr | mask) + 1)
     {
-        regs->AI = abs & PAGEFRAME_PAGEMASK;
-        regs->VI = addr & PAGEFRAME_PAGEMASK;
+        len = ((addr + 6) & ~mask) - addr;
+        memcpy (dest, ia, len);
+        addr += len;
+        abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
+        ia = abs + regs->mainstor;
+        memcpy(dest + len, ia, ilc - len);
     }
+
+    /* Update the AIA */
+    if (!regs->instvalid
 #if defined(FEATURE_PER)
-        else
-            INVALIDATE_AIA(regs);
+      && !EN_IC_PER(regs)
 #endif /*defined(FEATURE_PER)*/
-    memcpy (dest, regs->mainstor+abs, 2);
-
-    /* Return if two-byte instruction */
-    if (dest[0] < 0x40) return;
-
-    /* Fetch next two bytes of instruction */
-    abs += 2;
-    addr += 2;
-    addr &= ADDRESS_MAXWRAP(regs);
-    if ((addr & 0x7FF) == 0x000) {
-        abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
+       )
+    {
+        regs->VI = addr & PAGEFRAME_PAGEMASK;
+        regs->VIE = (addr | mask) - 5;
+        abs &= PAGEFRAME_PAGEMASK;
+        regs->AI = abs;
+        regs->mi = NEW_IADDR(regs, addr, abs + regs->mainstor);
     }
-    memcpy (dest+2, regs->mainstor+abs, 2);
 
-    /* Return if four-byte instruction */
-    if (dest[0] < 0xC0) return;
-
-    /* Fetch next two bytes of instruction */
-    abs += 2;
-    addr += 2;
-    addr &= ADDRESS_MAXWRAP(regs);
-    if ((addr & 0x7FF) == 0x000) {
-        abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
-    }
-    memcpy (dest+4, regs->mainstor+abs, 2);
+    regs->instvalid = 1;
+    return len ? dest : ia;
 
 } /* end function ARCH_DEP(instfetch) */
 #endif

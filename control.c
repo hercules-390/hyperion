@@ -1414,9 +1414,6 @@ int     r1, r2;                         /* Values of R fields        */
 
     PRIV_CHECK(regs);
 
-    INVALIDATE_AIA(regs);
-    INVALIDATE_AEA_ALL(regs);
-
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_IPTECSP))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -1434,6 +1431,8 @@ int     r1, r2;                         /* Values of R fields        */
         if(regs->mainstor[regs->sie_scao] & 0x80)
         {
             RELEASE_MAINLOCK(regs);
+            INVALIDATE_AIA(regs);
+            INVALIDATE_AEA_ALL(regs);
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
         }
         regs->mainstor[regs->sie_scao] |= 0x80;
@@ -1452,8 +1451,7 @@ int     r1, r2;                         /* Values of R fields        */
     }
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* Mainlock now released by `invalidate_pte' */
-//  RELEASE_MAINLOCK(regs);
+    RELEASE_MAINLOCK(regs);
 }
 
 
@@ -3824,7 +3822,8 @@ int     ssevent = 0;                    /* 1=space switch event      */
     {
         if ( (mode & 1) || (oldmode & 1) )
         {
-            INVALIDATE_AIA(regs);
+            if ((mode == 3 && oldmode != 3) || (mode != 3 && oldmode == 3))
+                INVALIDATE_AIA(regs);
             INVALIDATE_AEA_ALL(regs);
         }
         else
@@ -4088,8 +4087,11 @@ DEF_INST(set_psw_key_from_address)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     n;                              /* Storage key workarea      */
+BYTE    pkey;                           /* Original key              */
 
     S(inst, execflag, regs, b2, effective_addr2);
+
+    pkey = regs->psw.pkey;
 
     /* Isolate the key from bits 24-27 of effective address */
     n = effective_addr2 & 0x000000F0;
@@ -4100,10 +4102,12 @@ int     n;                              /* Storage key workarea      */
         && ((regs->CR(3) << (n >> 4)) & 0x80000000) == 0 )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
-    INVALIDATE_AIA(regs);
-
     /* Set PSW key */
     regs->psw.pkey = n;
+
+    /* Invalidate AIA on key change and key is not zero */
+    if (pkey != regs->psw.pkey && regs->psw.pkey != 0)
+        INVALIDATE_AIA(regs);
 
 }
 
@@ -4227,10 +4231,6 @@ RADR    n;                              /* Absolute storage addr     */
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 #endif
 
-    INVALIDATE_AIA(regs);
-
-    INVALIDATE_AEA_ALL(regs);
-
     /* Program check if R2 bits 28-31 are not zeroes */
     if ( regs->GR_L(r2) & 0x0000000F )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -4256,7 +4256,7 @@ RADR    n;                              /* Absolute storage addr     */
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
-    {
+        {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
             if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
               && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
@@ -4268,7 +4268,7 @@ RADR    n;                              /* Absolute storage addr     */
             int  private,
                  protect,
                  stid,
-         sr;
+                 sr;
             BYTE realkey,
                  rcpkey;
             RADR rcpa;
@@ -4288,7 +4288,7 @@ RADR    n;                              /* Absolute storage addr     */
                     /* The reference and change byte is located directly
                        beyond the page table and is located at offset 1 in
                        the entry. S/370 mode cannot be emulated in ESAME
-               mode, so no provision is made for ESAME mode tables */
+                       mode, so no provision is made for ESAME mode tables */
                     rcpa += 1025;
                 }
                 else
@@ -4301,7 +4301,7 @@ RADR    n;                              /* Absolute storage addr     */
                     rcpa += n >> 12;
 
                     /* host primary to host absolute */
-            rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+                    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
                                        regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
@@ -4310,17 +4310,17 @@ RADR    n;                              /* Absolute storage addr     */
                      regs->hostregs, ACCTYPE_SIE, &n, &xcode, &private,
                      &protect, &stid);
 
-                if(sr
+                if (sr
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                  && !(regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                 && !(regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-              )
+                   )
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-        if(sr)
+                if (sr)
                     realkey = 0;
-        else
+                else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
                     /* host real to host absolute */
@@ -4333,7 +4333,7 @@ RADR    n;                              /* Absolute storage addr     */
                               (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs))
 #endif
                               & (STORKEY_REF | STORKEY_CHANGE);
-        }
+                }
 
                 /* fetch the RCP key */
                 rcpkey = regs->mainstor[rcpa];
@@ -4444,15 +4444,15 @@ RADR    n;                              /* Abs frame addr stor key   */
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
-    {
+        {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-            if(((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+            if (((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
 #if defined(_FEATURE_ZSIE)
               || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
               ) && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
                 { SIE_TRANSLATE(&n, ACCTYPE_SIE, regs); }
-        else
+            else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
             {
             U16  xcode;
@@ -4482,7 +4482,7 @@ RADR    n;                              /* Abs frame addr stor key   */
 
                     /* For ESA/390 the RCP byte entry is at offset 1 in a
                        four byte entry directly beyond the page table,
-               for ESAME mode, this entry is eight bytes long */
+                       for ESAME mode, this entry is eight bytes long */
                     rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
                 }
                 else
@@ -4500,7 +4500,7 @@ RADR    n;                              /* Abs frame addr stor key   */
                     rcpa += n >> 12;
 
                     /* host primary to host absolute */
-            rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+                    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
                                        regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
@@ -4509,7 +4509,7 @@ RADR    n;                              /* Abs frame addr stor key   */
                      regs->hostregs, ACCTYPE_SIE, &n, &xcode, &private,
                      &protect, &stid);
 
-                if(sr
+                if (sr
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                   && !((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
 #if defined(_FEATURE_ZSIE)
@@ -4517,13 +4517,13 @@ RADR    n;                              /* Abs frame addr stor key   */
 #endif /*defined(_FEATURE_ZSIE)*/
                                                               )
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-              )
+                   )
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-        if(sr)
+                if(sr)
                     realkey = 0;
-        else
+                else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
                     /* host real to host absolute */
@@ -4622,9 +4622,8 @@ DEF_INST(set_system_mask)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+int     permode;
 int     realmode;
-int     space;
-int     armode;
 
     S(inst, execflag, regs, b2, effective_addr2);
     /*
@@ -4642,9 +4641,8 @@ int     armode;
 
     PRIV_CHECK(regs);
 
+    permode = PER_MODE(regs);
     realmode = REAL_MODE(&regs->psw);
-    armode = (regs->psw.armode == 1);
-    space = (regs->psw.space == 1);
 
     /* Special operation exception if SSM-suppression is active */
     if ( (regs->CR(0) & CR0_SSM_SUPP)
@@ -4672,28 +4670,27 @@ int     armode;
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
     /* For ECMODE, bits 0 and 2-4 of system mask must be zero */
-    if (
+    if ((regs->psw.sysmask & 0xB8) != 0
 #if defined(FEATURE_BCMODE)
-        regs->psw.ecmode &&
+     && regs->psw.ecmode
 #endif /*defined(FEATURE_BCMODE)*/
-                            (regs->psw.sysmask & 0xB8) != 0)
+       )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     SET_IC_EXTERNAL_MASK(regs);
-    SET_IC_MCK_MASK(regs);
+//  SET_IC_MCK_MASK(regs);   machine check is bit 13
     SET_IC_IO_MASK(regs);
     SET_IC_PER_MASK(regs);
 
-    INVALIDATE_AIA(regs);
-    if ((realmode  != REAL_MODE(&regs->psw)) ||
-        (armode    != (regs->psw.armode == 1)) ||
-        (space     != (regs->psw.space == 1))
+    if (realmode != REAL_MODE(&regs->psw)
 #if defined(FEATURE_PER)
-       || PER_MODE(regs)
+     || permode  != PER_MODE(regs)
 #endif /*defined(FEATURE_PER)*/
-         )
+       )
+    {
+        INVALIDATE_AIA(regs);
         INVALIDATE_AEA_ALL(regs);
-
+    }
     RETURN_INTCHECK(regs);
 
 }
@@ -4901,7 +4898,6 @@ static char *ordername[] = {    "Unassigned",
 
             /* Restart the target CPU if it is in the stopped state */
             tregs->cpustate = CPUSTATE_STARTED;
-            OFF_IC_CPU_NOT_STARTED(tregs);
 
             break;
 
@@ -4915,7 +4911,7 @@ static char *ordername[] = {    "Unassigned",
 
             /* Put the the target CPU into the stopping state */
             tregs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(tregs);
+            ON_IC_INTERRUPT(tregs);
 
             break;
 
@@ -4949,7 +4945,7 @@ static char *ordername[] = {    "Unassigned",
 
             /* Put the the target CPU into the stopping state */
             tregs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(tregs);
+            ON_IC_INTERRUPT(tregs);
 
             break;
 
@@ -4965,7 +4961,7 @@ static char *ordername[] = {    "Unassigned",
                 /* Signal initial CPU reset function */
                 tregs->sigpireset = 1;
                 tregs->cpustate = CPUSTATE_STOPPING;
-                ON_IC_CPU_NOT_STARTED(tregs);
+                ON_IC_INTERRUPT(tregs);
             }
             else
                 configure_cpu(tregs);
@@ -4981,7 +4977,7 @@ static char *ordername[] = {    "Unassigned",
             /* Signal CPU reset function */
             tregs->sigpreset = 1;
             tregs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(tregs);
+            ON_IC_INTERRUPT(tregs);
 
             break;
 

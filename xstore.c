@@ -171,8 +171,7 @@ int     r1, r2;                         /* Values of R fields        */
     /* Invalidate page table entry */
     ARCH_DEP(invalidate_pte) (inst[1], r1, r2, regs);
 
-    /* Mainlock now released by `invalidate_pte' */
-//  RELEASE_MAINLOCK(regs);
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after operation */
     PERFORM_SERIALIZATION (regs);

@@ -201,7 +201,6 @@ BYTE    chanstat;                       /* IPL device channel status */
 
     /* Set the CPU into the started state */
     regs->cpustate = CPUSTATE_STARTED;
-    OFF_IC_CPU_NOT_STARTED(regs);
 
     /* reset load state */
     regs->loadstate = 0;
@@ -355,7 +354,6 @@ U32     fileaddr;
 
     /* Set the CPU into the started state */
     regs->cpustate = CPUSTATE_STARTED;
-    OFF_IC_CPU_NOT_STARTED(regs);
 
     /* reset load state */
     regs->loadstate = 0;
@@ -416,7 +414,7 @@ int             i;                      /* Array subscript           */
     {
         /* Put the CPU into the stopped state */
         regs->cpustate = CPUSTATE_STOPPED;
-        ON_IC_CPU_NOT_STARTED(regs);
+        ON_IC_INTERRUPT(regs);
     }
 
 #if defined(_FEATURE_SIE)
@@ -425,7 +423,6 @@ int             i;                      /* Array subscript           */
         ARCH_DEP(cpu_reset)(regs->guestregs);
         /* CPU state of SIE copy cannot be controlled */
         regs->guestregs->cpustate = CPUSTATE_STARTED;
-        OFF_IC_CPU_NOT_STARTED(regs->guestregs);
    }
 #endif /*defined(_FEATURE_SIE)*/
 
