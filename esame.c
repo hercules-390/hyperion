@@ -271,12 +271,18 @@ U32     ar;                             /* Copy of new AR            */
 U16     grd_offset;                     /* Offset of disjoint GR_H   */
 BYTE    psw[16];                        /* Copy of new PSW           */
 U64     gr;                             /* Copy of new GR            */
+U64     ia;                             /* ia for trace              */
 #else /*!defined(FEATURE_ESAME)*/
 BYTE    psw[8];                         /* Copy of new PSW           */
 U32     gr;                             /* Copy of new GR            */
+U32     ia;                             /* ia for trace              */
 #endif /*!defined(FEATURE_ESAME)*/
+BYTE    amode;                          /* amode for trace           */
 PSW     save_psw;                       /* Saved copy of current PSW */
 RADR    abs;                            /* Absolute address of parm  */
+#ifdef FEATURE_TRACING
+CREG    newcr12 = 0;                    /* CR12 upon completion      */
+#endif /*FEATURE_TRACING*/
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -343,6 +349,20 @@ RADR    abs;                            /* Absolute address of parm  */
     else
 #endif /*defined(FEATURE_ESAME)*/
         gr = ARCH_DEP(vfetch4) (effective_addr2 + gr_offset, b2, regs);
+
+#if defined(FEATURE_TRACING)
+#if defined(FEATURE_ESAME)
+    FETCH_DW(ia, psw + 8);
+    amode = psw[3] & 0x01;
+#else /*!defined(FEATURE_ESAME)*/
+    FETCH_FW(ia, psw + 4);
+    ia &= 0x7FFFFFFF;
+    amode = psw[4] & 0x80;
+#endif /*!defined(FEATURE_ESAME)*/
+
+    if (regs->CR(12) & CR12_BRTRACE)
+        newcr12 = ARCH_DEP(trace_br) (amode, ia, regs);
+#endif /*defined(FEATURE_TRACING)*/
 
 
     /* Save current PSW */
@@ -432,6 +452,12 @@ RADR    abs;                            /* Absolute address of parm  */
 
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
     }
+
+#ifdef FEATURE_TRACING
+    /* Update trace table address if branch tracing is on */
+    if (regs->CR(12) & CR12_BRTRACE)
+        regs->CR(12) = newcr12;
+#endif /*FEATURE_TRACING*/
 
     RETURN_INTCHECK(regs);
 
