@@ -14,8 +14,8 @@ In order to build Hercules from the CVS sources, you must have installed:
 
      Package   Version  (or greater!)
     ----------------------------------
-     autoconf    2.50   (or greater!)
-     automake    1.5    (or greater!)
+     autoconf    2.54   (or greater!)
+     automake    1.7    (or greater!)
      flex        2.5    (or greater!)
      gawk        3.0    (or greater!)
      gcc         2.95   (or greater!)
@@ -42,14 +42,6 @@ The resulting configure script (created by the above 'autogen' command) is
 then what you use to build Hercules with. (It will probably create a bunch
 of other directories and files too, but we're mostly concerned about the
 configure script).
-
-Note: even though the CVS sources already come with a configure script, it
-may or may not be current/correct, so you should always run autogen at least
-one time after checking out the current source from CVS. Once you've run
-autogen once though, then you shouldn't need to ever run it again (unless
-another developer changes something, but they should let you know if they
-do).
-
 
 
 BUILDING HERCULES
