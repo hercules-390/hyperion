@@ -859,6 +859,16 @@ int r1,x2,b2,d2;
     logmsg("%-6.6s%d,%d(%d,%d)\n",mnemonic,r1,d2,x2,b2);
 }
 
+void disasm_RXY (BYTE inst[], BYTE mnemonic[])
+{
+int r1,x2,b2,d2;
+    r1 = inst[1] >> 4;
+    x2 = inst[1] & 0x0F;
+    b2 = inst[2] >> 4;
+    d2 = (inst[4] << 12) | (inst[2] & 0x0F) << 8 | inst[3];
+    logmsg("%-6.6s%d,%d(%d,%d)\n",mnemonic,r1,d2,x2,b2);
+}
+
 void disasm_RXF (BYTE inst[], BYTE mnemonic[])
 {
 int r1,r3,x2,b2,d2;
@@ -869,9 +879,6 @@ int r1,r3,x2,b2,d2;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     logmsg("%-6.6s%d,%d,%d(%d,%d)\n",mnemonic,r1,r3,d2,x2,b2);
 }
-
-/* ZZ FIXME */
-#define disasm_RXY disasm_RXE
 
 void disasm_RS (BYTE inst[], BYTE mnemonic[])
 {
@@ -892,6 +899,15 @@ int r1,r3,b2,d2;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     logmsg("%-6.6s%d,%d,%d(%d)\n",mnemonic,r1,r3,d2,b2);
 }
+void disasm_RSY (BYTE inst[], BYTE mnemonic[])
+{
+int r1,r3,b2,d2;
+    r1 = inst[1] >> 4;
+    r3 = inst[1] & 0x0F;
+    b2 = inst[2] >> 4;
+    d2 = (inst[4] << 12) | (inst[2] & 0x0F) << 8 | inst[3];
+    logmsg("%-6.6s%d,%d,%d(%d)\n",mnemonic,r1,r3,d2,b2);
+}
 
 void disasm_RSL (BYTE inst[], BYTE mnemonic[])
 {
@@ -910,9 +926,6 @@ int r1,r3,i2;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     logmsg("%-6.6s%d,%d,%d\n",mnemonic,r1,r3,i2*2);
 }
-
-/* ZZ FIXME */
-#define disasm_RSY disasm_RSE
 
 void disasm_RI (BYTE inst[], BYTE mnemonic[])
 {
@@ -948,9 +961,6 @@ int r1,i2;
     logmsg("%-6.6s%d,%lld\n",mnemonic,r1,i2*2LL);
 }
 
-/* ZZ FIXME */
-#define disasm_RIY disasm_RI
-
 void disasm_SI (BYTE inst[], BYTE mnemonic[])
 {
 int i2,b1,d1;
@@ -960,8 +970,14 @@ int i2,b1,d1;
     logmsg("%-6.6s%d(%d),%d\n",mnemonic,d1,b1,i2);
 }
 
-/* ZZ FIXME */
-#define disasm_SIY disasm_SI
+void disasm_SIY (BYTE inst[], BYTE mnemonic[])
+{
+int i2,b1,d1;
+    i2 = inst[1];
+    b1 = inst[2] >> 4;
+    d1 = (inst[4] << 12) | (inst[2] & 0x0F) << 8 | inst[3];
+    logmsg("%-6.6s%d(%d),%d\n",mnemonic,d1,b1,i2);
+}
 
 void disasm_S (BYTE inst[], BYTE mnemonic[])
 {
@@ -3568,13 +3584,13 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB4E*/ GENx___x___x___ ,
  /*EB4F*/ GENx___x___x___ ,
  /*EB50*/ GENx___x___x___ ,
- /*EB51*/ GENx___x___x900 (dummy_instruction,RIY,"TMY"),
- /*EB52*/ GENx___x___x900 (dummy_instruction,RIY,"MVIY"),
+ /*EB51*/ GENx___x___x900 (dummy_instruction,SIY,"TMY"),
+ /*EB52*/ GENx___x___x900 (dummy_instruction,SIY,"MVIY"),
  /*EB53*/ GENx___x___x___ ,
- /*EB54*/ GENx___x___x900 (dummy_instruction,RIY,"NIY"),
- /*EB55*/ GENx___x___x900 (dummy_instruction,RIY,"CLIY"),
- /*EB56*/ GENx___x___x900 (dummy_instruction,RIY,"OIY"),
- /*EB57*/ GENx___x___x900 (dummy_instruction,RIY,"XIY"),
+ /*EB54*/ GENx___x___x900 (dummy_instruction,SIY,"NIY"),
+ /*EB55*/ GENx___x___x900 (dummy_instruction,SIY,"CLIY"),
+ /*EB56*/ GENx___x___x900 (dummy_instruction,SIY,"OIY"),
+ /*EB57*/ GENx___x___x900 (dummy_instruction,SIY,"XIY"),
  /*EB58*/ GENx___x___x___ ,
  /*EB59*/ GENx___x___x___ ,
  /*EB5A*/ GENx___x___x___ ,
