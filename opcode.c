@@ -604,7 +604,6 @@
  UNDEF_INST(insert_character_y)
  UNDEF_INST(insert_characters_under_mask_y)
  UNDEF_INST(load_y)
- UNDEF_INST(load_access_multiple_y)
  UNDEF_INST(load_address_y)
  UNDEF_INST(load_byte)
  UNDEF_INST(load_byte_long)
@@ -616,7 +615,6 @@
  UNDEF_INST(or_immediate_y)
  UNDEF_INST(or_y)
  UNDEF_INST(store_y)
- UNDEF_INST(store_access_multiple_y)
  UNDEF_INST(store_character_y)
  UNDEF_INST(store_characters_under_mask_y)
  UNDEF_INST(store_halfword_y)
@@ -628,14 +626,22 @@
 #endif /*!defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
-#if !defined(FEATURE_HEXADECIMAL_FLOATING_POINT) \
- || !defined(FEATURE_LONG_DISPLACEMENT)
+#if !defined(FEATURE_LONG_DISPLACEMENT) \
+ || !defined(FEATURE_ACCESS_REGISTERS)
+ UNDEF_INST(load_access_multiple_y)
+ UNDEF_INST(store_access_multiple_y)
+#endif /*!defined(FEATURE_LONG_DISPLACEMENT)
+ || !defined(FEATURE_ACCESS_REGISTERS)*/
+
+
+#if !defined(FEATURE_LONG_DISPLACEMENT) \
+ || !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
  UNDEF_INST(load_float_long_y)
  UNDEF_INST(load_float_short_y)
  UNDEF_INST(store_float_long_y)
  UNDEF_INST(store_float_short_y)
-#endif /*!defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
- || !defined(FEATURE_LONG_DISPLACEMENT) */
+#endif /*!defined(FEATURE_LONG_DISPLACEMENT)
+ || !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)*/
 
 
 #if !defined(FEATURE_MESSAGE_SECURITY_ASSIST)
