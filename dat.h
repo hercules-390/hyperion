@@ -632,12 +632,6 @@ U16     xcode;                          /* ALET tran.exception code  */
             /* [5.8.4.9] Obtain the STD or ASCE from the ASTE */
             *pstid = TEA_ST_ARMODE;
             *pasd = ASTE_AS_DESIGNATOR(aste);
-
-#if defined(FEATURE_PER2)
-            if( EN_IC_PER_SA(regs) )
-                regs->peraid = arn > 0 ? arn : 0;
-#endif /*defined(FEATURE_PER2)*/
-
         } /* end switch(alet) */
 
     } /* end if(ACCESS_REGISTER_MODE) */
@@ -1686,6 +1680,7 @@ int protect = 0;
 
     if((std & SAEVENT_BIT) || !(regs->CR(9) & CR9_SAC))
     {
+        regs->peraid = arn > 0 ? arn : 0;
         regs->perc |= stid;
         return 1;
     }
