@@ -1450,7 +1450,9 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
         initialize_condition (&dev->iocond);
 
         /* Assign new subchannel number */
-        dev->subchan = sysblk.highsubchan;
+        dev->subchan = sysblk.highsubchan++;
+        /* Note : highsubchan incremented NOW otherwise new DEVBLKS
+         * allocated by some init handlers (LCS for example) flunk */
 
     }
 
@@ -1498,7 +1500,12 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
 
         /* Release the device block if we just acquired it */
         if (newdevblk)
+        {
             free(dev);
+        /* Correction to high subchannel # (needed because of LCS
+         * DEVBLK allocation strategy) */
+            sysblk.highsubchan--;
+        }
 
         return 1;
     }
@@ -1515,6 +1522,13 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
             release_lock(&dev->lock);
 
             /* Release the device block if we just acquired it */
+            if (newdevblk)
+            {
+                free(dev);
+            /* Correction to high subchannel # (needed because of LCS
+             * DEVBLK allocation strategy) */
+                sysblk.highsubchan--;
+            }
             if(newdevblk)
                 free(dev);
 
@@ -1534,7 +1548,12 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
         dev->nextdev = NULL;
 
         /* Increase highest subchannel number */
+        /*
+         * Commented out - highsubchan already corrected
+         * (needed because LCS device generate some DEVBLKS
+         * from within the dev init handler)
         sysblk.highsubchan++;
+        */
     }
 
     /* Mark device valid */
