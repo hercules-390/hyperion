@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+29 Sep 2004 Fix load/store multiple change (21 Sep 2004) to actually
+            improve performance - Greg Smith
 28 Sep 2004 Fix directive inside macro problem in tapecopy.c - Greg Smith
 28 Sep 2004 Fix resume-suspend logic in channel.c - Greg Smith
 28 Sep 2004 Added iplc (IPL Clear), sysreset (System reset) and

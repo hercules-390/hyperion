@@ -3883,19 +3883,20 @@ int     b2, b4;                         /* Base register numbers     */
 VADR    effective_addr2;                /* Operand2 address          */
 VADR    effective_addr4;                /* Operand4 address          */
 int     i, n;                           /* Integer work areas        */
+U32     rwork1[16], rwork2[16];         /* Intermediate work areas   */
 
     SS(inst, regs, r1, r3, b2, effective_addr2, b4, effective_addr4);
 
-    /* Calculate number of regs to load */
     n = ((r3 - r1) & 0xF) + 1;
 
+    ARCH_DEP(vfetchc) (rwork1, (n * 4) - 1, effective_addr2, b2, regs);
+    ARCH_DEP(vfetchc) (rwork2, (n * 4) - 1, effective_addr4, b4, regs);
+
     /* Load a register at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_READ, regs);
-    ARCH_DEP(validate_operand)(effective_addr4, b4, (n*4) - 1, ACCTYPE_READ, regs);
     for (i = 0; i < n; i++)
     {
-        regs->GR_H((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
-        regs->GR_L((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr4 + (i*4), b4, regs);
+        regs->GR_H((r1 + i) & 0xF) = fetch_fw(&rwork1[i]);
+        regs->GR_L((r1 + i) & 0xF) = fetch_fw(&rwork2[i]);
     }
 
 } /* end DEF_INST(load_multiple_disjoint) */
@@ -3911,17 +3912,43 @@ DEF_INST(load_multiple_high)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work areas        */
+int     i, m, n;                        /* Integer work areas        */
+U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
+U32     rwork[16];                      /* Intermediate work area    */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate number of regs to load */
     n = ((r3 - r1) & 0xF) + 1;
 
-    /* Load 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_READ, regs);
-    for (i = 0; i < n; i++)
-        regs->GR_H((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
+    /* Calculate number of words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+
+    if (unlikely((effective_addr2 & 3) && m < n))
+    {
+        ARCH_DEP(vfetchc) (rwork, (n * 4) - 1, effective_addr2, b2, regs);
+        m = n;
+        p1 = rwork;
+    }
+    else
+    {
+        /* Address of operand beginning */
+        p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+        /* Get address of next page if boundary crossed */
+        if (unlikely (m < n))
+            p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        else
+            m = n;
+    }
+
+    /* Load from first page */
+    for (i = 0; i < m; i++)
+        regs->GR_H((r1 + i) & 0xF) = fetch_fw (p1++);
+
+    /* Load from next page */
+    for ( ; i < n; i++)
+        regs->GR_H((r1 + i) & 0xF) = fetch_fw (p2++);
 
 } /* end DEF_INST(load_multiple_high) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3936,28 +3963,43 @@ DEF_INST(load_multiple_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     i, n;                           /* Integer work areas        */
-U64    *p;                              /* Mainstor pointer          */
+int     i, m, n;                        /* Integer work areas        */
+U64    *p1, *p2 = NULL;                 /* Mainstor pointers         */
+U64     rwork[16];                      /* Intermediate work area    */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate number of regs to load */
     n = ((r3 - r1) & 0xF) + 1;
 
-    /* If a boundary is not crossed then load from mainstor */
-    if (NOCROSS2KL(effective_addr2,n*8))
+    /* Calculate number of double words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 3;
+
+    if (unlikely((effective_addr2 & 7) && m < n))
     {
-        p = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
-        for (n += r1; r1 < n; r1++)
-            regs->GR_G(r1 & 0xF) = fetch_dw(p++);
+        ARCH_DEP(vfetchc) (rwork, (n * 8) - 1, effective_addr2, b2, regs);
+        m = n;
+        p1 = rwork;
     }
-    /* Otherwise load 8 bytes at a time */
     else
     {
-        ARCH_DEP(validate_operand)(effective_addr2, b2, (n*8) - 1, ACCTYPE_READ, regs);
-        for (i = 0; i < n; i++)
-            regs->GR_G((r1 + i) & 0xF) = ARCH_DEP(vfetch8)(effective_addr2 + (i*8), b2, regs);
+        /* Address of operand beginning */
+        p1 = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+        /* Get address of next page if boundary crossed */
+        if (unlikely (m < n))
+            p2 = (U64*)MADDR(effective_addr2 + (m*8), b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        else
+            m = n;
     }
+
+    /* Load from first page */
+    for (i = 0; i < m; i++)
+        regs->GR_G((r1 + i) & 0xF) = fetch_dw (p1++);
+
+    /* Load from next page */
+    for ( ; i < n; i++)
+        regs->GR_G((r1 + i) & 0xF) = fetch_dw (p2++);
 
 } /* end DEF_INST(load_multiple_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3972,7 +4014,8 @@ DEF_INST(store_control_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     i, n;                           /* Integer work areas        */
+int     i, m, n;                        /* Integer work areas        */
+U64    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -3988,10 +4031,25 @@ int     i, n;                           /* Integer work areas        */
     /* Calculate number of regs to store */
     n = ((r3 - r1) & 0xF) + 1;
 
-    /* Store 8 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*8) - 1, ACCTYPE_WRITE, regs);
-    for (i = 0; i < n; i++)
-        ARCH_DEP(vstore8)(regs->CR_G((r1 + i) & 0xF), effective_addr2 + (i*8), b2, regs);
+    /* Calculate number of double words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 3;
+
+    /* Address of operand beginning */
+    p1 = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+    /* Get address of next page if boundary crossed */
+    if (unlikely (m < n))
+        p2 = (U64*)MADDR(effective_addr2 + (m*8), b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    else
+        m = n;
+
+    /* Store to first page */
+    for (i = 0; i < m; i++)
+        store_dw(p1++, regs->CR_G((r1 + i) & 0xF));
+
+    /* Store to next page */
+    for ( ; i < n; i++)
+        store_dw(p2++, regs->CR_G((r1 + i) & 0xF));
 
 } /* end DEF_INST(store_control_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -4006,7 +4064,8 @@ DEF_INST(load_control_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     i, n;                           /* Integer work areas        */
+int     i, m, n;                        /* Integer work areas        */
+U64    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 U16     updated = 0;                    /* Updated control regs      */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
@@ -4027,11 +4086,29 @@ U16     updated = 0;                    /* Updated control regs      */
     }
 #endif
 
-    /* Load 8 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*8) - 1, ACCTYPE_READ, regs);
-    for (i = 0; i < n; i++)
+    /* Calculate number of double words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 3;
+
+    /* Address of operand beginning */
+    p1 = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+    /* Get address of next page if boundary crossed */
+    if (unlikely (m < n))
+        p2 = (U64*)MADDR(effective_addr2 + (m*8), b2, regs, ACCTYPE_READ, regs->psw.pkey);
+    else
+        m = n;
+
+    /* Load from first page */
+    for (i = 0; i < m; i++)
     {
-        regs->CR_G((r1 + i) & 0xF) = ARCH_DEP(vfetch8)(effective_addr2 + (i*8), b2, regs);
+        regs->CR_G((r1 + i) & 0xF) = fetch_dw(p1++);
+        set_bit(2, (r1 + i) & 0xF, &updated);
+    }
+
+    /* Load from next page */
+    for ( ; i < n; i++)
+    {
+        regs->CR_G((r1 + i) & 0xF) = fetch_dw(p2++);
         set_bit(2, (r1 + i) & 0xF, &updated);
     }
 
@@ -4059,28 +4136,46 @@ DEF_INST(store_multiple_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     i, n;                           /* Integer work areas        */
-U64    *p;                              /* Mainstor pointer          */
+int     i, m, n, w = 0;                 /* Integer work areas        */
+U64    *p1, *p2 = NULL;                 /* Mainstor pointers         */
+U64     rwork[16];                      /* Intermediate work area    */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate number of regs to store */
     n = ((r3 - r1) & 0xF) + 1;
 
-    /* If a boundary is not crossed then store into mainstor */
-    if (NOCROSS2KL(effective_addr2,n*8))
+    /* Calculate number of words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 3;
+
+    if (unlikely((effective_addr2 & 7) && m < n))
     {
-        p = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        for (n += r1; r1 < n; r1++)
-            store_dw(p++, regs->GR_G(r1 & 0xF));
+        m = n;
+        p1 = rwork;
+        w = 1;
     }
-    /* Otherwise store 8 bytes at a time */
     else
     {
-        ARCH_DEP(validate_operand)(effective_addr2, b2, (n*8) - 1, ACCTYPE_WRITE, regs);
-        for (i = 0; i < n; i++)
-            ARCH_DEP(vstore8)(regs->GR_G((r1 + i) & 0xF), effective_addr2 + (i*8), b2, regs);
+        /* Address of operand beginning */
+        p1 = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+        /* Get address of next page if boundary crossed */
+        if (unlikely(m < n))
+            p2 = (U64*)MADDR(effective_addr2 + (m*8), b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        else
+            m = n;
     }
+
+    /* Store at operand beginning */
+    for (i = 0; i < m; i++)
+        store_dw (p1++, regs->GR_G((r1 + i) & 0xF));
+
+    /* Store on next page */
+    for ( ; i < n; i++)
+        store_dw (p2++, regs->GR_G((r1 + i) & 0xF));
+
+    if (unlikely(w))
+        ARCH_DEP(vstorec) (rwork, (n*8) - 1, effective_addr2, b2, regs);
 
 } /* end DEF_INST(store_multiple_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -4095,17 +4190,46 @@ DEF_INST(store_multiple_high)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work area         */
+int     i, m, n, w = 0;                 /* Integer work area         */
+U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
+U32     rwork[16];                      /* Intermediate work area    */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate number of regs to store */
     n = ((r3 - r1) & 0xF) + 1;
 
-    /* Store 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_WRITE, regs);
-    for (i = 0; i < n; i++)
-        ARCH_DEP(vstore4)(regs->GR_H((r1 + i) & 0xF), effective_addr2 + (i*4), b2, regs);
+    /* Calculate number of words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+
+    if (unlikely((effective_addr2 & 3) && m < n))
+    {
+        m = n;
+        p1 = rwork;
+        w = 1;
+    }
+    else
+    {
+        /* Address of operand beginning */
+        p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+        /* Get address of next page if boundary crossed */
+        if (unlikely(m < n))
+            p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        else
+            m = n;
+    }
+
+    /* Store at operand beginning */
+    for (i = 0; i < m; i++)
+        store_fw (p1++, regs->GR_H((r1 + i) & 0xF));
+
+    /* Store on next page */
+    for ( ; i < n; i++)
+        store_fw (p2++, regs->GR_H((r1 + i) & 0xF));
+
+    if (unlikely(w))
+        ARCH_DEP(vstorec) (rwork, (n * 4) - 1, effective_addr2, b2, regs);
 
 } /* end DEF_INST(store_multiple_high) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -6064,8 +6188,8 @@ DEF_INST(load_access_multiple_y)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work areas        */
-BYTE    rwork[64];                      /* Register work area        */
+int     i, m, n;                        /* Integer work areas        */
+U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -6074,13 +6198,29 @@ BYTE    rwork[64];                      /* Register work area        */
     /* Calculate number of regs to load */
     n = ((r3 - r1) & 0xF) + 1;
 
-    /* Fetch new access register contents from operand address */
-    ARCH_DEP(vfetchc) ( rwork, (n*4)-1, effective_addr2, b2, regs );
+    /* Calculate number of words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
 
-    /* Load 4 bytes at a time */
-    for (i = 0; i < n; i++)
+    /* Address of operand beginning */
+    p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+    /* Get address of next page if boundary crossed */
+    if (unlikely (m < n))
+        p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_READ, regs->psw.pkey);
+    else
+        m = n;
+
+    /* Load from first page */
+    for (i = 0; i < m; i++)
     {
-        regs->AR((r1 + i) & 0xF) = fetch_fw(rwork + (i*4));
+        regs->AR((r1 + i) & 0xF) = fetch_fw (p1++);
+        SET_AEA_AR(regs, (r1 + i) & 0xF);
+    }
+
+    /* Load from next page */
+    for ( ; i < n; i++)
+    {
+        regs->AR((r1 + i) & 0xF) = fetch_fw (p2++);
         SET_AEA_AR(regs, (r1 + i) & 0xF);
     }
 
@@ -6136,17 +6276,43 @@ DEF_INST(load_multiple_y)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work areas        */
+int     i, m, n;                        /* Integer work areas        */
+U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
+U32     rwork[16];                      /* Intermediate work area    */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate number of regs to load */
     n = ((r3 - r1) & 0xF) + 1;
 
-    /* Load 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_READ, regs);
-    for (i = 0; i < n; i++)
-        regs->GR_L((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
+    /* Calculate number of words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+
+    if (unlikely((effective_addr2 & 3) && m < n))
+    {
+        ARCH_DEP(vfetchc) (rwork, (n * 4) - 1, effective_addr2, b2, regs);
+        m = n;
+        p1 = rwork;
+    }
+    else
+    {
+        /* Address of operand beginning */
+        p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+        /* Get address of next page if boundary crossed */
+        if (unlikely (m < n))
+            p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        else
+            m = n;
+    }
+
+    /* Load from first */
+    for (i = 0; i < m; i++)
+        regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1++);
+
+    /* Load from next page */
+    for ( ; i < n; i++)
+        regs->GR_L((r1 + i) & 0xF) = fetch_fw (p2++);
 
 } /* end DEF_INST(load_multiple_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6293,7 +6459,8 @@ DEF_INST(store_access_multiple_y)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work area         */
+int     i, m, n;                        /* Integer work area         */
+U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -6306,6 +6473,28 @@ int     i, n;                           /* Integer work area         */
     ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_WRITE, regs);
     for (i = 0; i < n; i++)
         ARCH_DEP(vstore4)(regs->AR((r1 + i) & 0xF), effective_addr2 + (i*4), b2, regs);
+
+
+    /* Calculate number of words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+
+    /* Address of operand beginning */
+    p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+    /* Get address of next page if boundary crossed */
+    if (unlikely(m < n))
+        p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    else
+        m = n;
+
+    /* Store at operand beginning */
+    for (i = 0; i < m; i++)
+        store_fw (p1++, regs->AR((r1 + i) & 0xF));
+
+    /* Store on next page */
+    for ( ; i < n; i++)
+        store_fw (p2++, regs->AR((r1 + i) & 0xF));
+
 
 } /* end DEF_INST(store_access_multiple_y) */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -6406,17 +6595,46 @@ DEF_INST(store_multiple_y)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work area         */
+int     i, m, n, w = 0;                 /* Integer work area         */
+U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
+U32    rwork[16];                       /* Intermediate work area    */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate number of regs to store */
     n = ((r3 - r1) & 0xF) + 1;
 
-    /* Store 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_WRITE, regs);
-    for (i = 0; i < n; i++)
-        ARCH_DEP(vstore4)(regs->GR_L((r1 + i) & 0xF), effective_addr2 + (i*4), b2, regs);
+    /* Calculate number of words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+
+    if (unlikely((effective_addr2 & 3) && m < n))
+    {
+        m = n;
+        p1 = rwork;
+        w = 1;
+    }
+    else
+    {
+        /* Address of operand beginning */
+        p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+        /* Get address of next page if boundary crossed */
+        if (unlikely(m < n))
+            p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        else
+            m = n;
+    }
+
+    /* Store to first page */
+    for (i = 0; i < m; i++)
+        store_fw (p1++, regs->GR_L((r1 + i) & 0xF));
+
+    /* Store to next page */
+    for ( ; i < n; i++)
+        store_fw (p2++, regs->GR_L((r1 + i) & 0xF));
+
+    if (unlikely(w))
+        ARCH_DEP(vstorec) (rwork, (n * 4) - 1, effective_addr2, b2, regs);
 
 } /* end DEF_INST(store_multiple_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/

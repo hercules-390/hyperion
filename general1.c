@@ -3040,8 +3040,8 @@ DEF_INST(load_access_multiple)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work areas        */
-BYTE    rwork[64];                      /* Register work area        */
+int     i, m, n;                        /* Integer work areas        */
+U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -3050,15 +3050,32 @@ BYTE    rwork[64];                      /* Register work area        */
     /* Calculate number of regs to fetch */
     n = ((r3 - r1) & 0xF) + 1;
 
-    /* Fetch new access register contents from operand address */
-    ARCH_DEP(vfetchc) ( rwork, (n*4)-1, effective_addr2, b2, regs );
+    /* Calculate number of words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
 
-    /* Load 4 bytes at a time */
-    for (i = 0; i < n; i++)
+    /* Address of operand beginning */
+    p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+    /* Get address of next page if boundary crossed */
+    if (unlikely (m < n))
+        p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_READ, regs->psw.pkey);
+    else
+        m = n;
+
+    /* Copy from operand beginning */
+    for (i = 0; i < m; i++)
     {
-        regs->AR((r1 + i) & 0xF) = fetch_fw(rwork + (i*4));
-        SET_AEA_AR(regs, (r1 + i) & 0xF);
+        regs->AR((r1 + i) & 0xF) = fetch_fw (p1++);
+        SET_AEA_AR (regs, (r1 + i) & 0xF);
     }
+
+    /* Copy from next page */
+    for ( ; i < n; i++)
+    {
+        regs->AR((r1 + i) & 0xF) = fetch_fw (p2++);
+        SET_AEA_AR (regs, (r1 + i) & 0xF);
+    }
+
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
@@ -3195,28 +3212,43 @@ DEF_INST(load_multiple)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work areas        */
-U32    *p;                              /* Mainstor pointer          */
+int     i, m, n;                        /* Integer work areas        */
+U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
+U32     rwork[16];                      /* Intermediate work area    */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate number of regs to fetch */
     n = ((r3 - r1) & 0xF) + 1;
 
-    /* If a boundary is not crossed then fetch from mainstor */
-    if (NOCROSS2KL(effective_addr2,(n*4)))
+    /* Calculate number of words to next boundary */
+    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+
+    if (unlikely((effective_addr2 & 3) && m < n))
     {
-        p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
-        for (n += r1; r1 < n; r1++)
-            regs->GR_L(r1 & 0xF) = fetch_fw (p++);
+        ARCH_DEP(vfetchc) (rwork, (n * 4) - 1, effective_addr2, b2, regs);
+        m = n;
+        p1 = rwork;
     }
-    /* Otherwise fetch 4 bytes at a time */
     else
     {
-        ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_READ, regs);
-        for (i = 0; i < n; i++)
-            regs->GR_L((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
+        /* Address of operand beginning */
+        p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+        /* Get address of next page if boundary crossed */
+        if (unlikely (m < n))
+            p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        else
+            m = n;
     }
+
+    /* Load from first page */
+    for (i = 0; i < m; i++)
+        regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1++);
+
+    /* Load from next page */
+    for ( ; i < n; i++)
+        regs->GR_L((r1 + i) & 0xF) = fetch_fw (p2++);
 
 } /* end DEF_INST(load_multiple) */
 
