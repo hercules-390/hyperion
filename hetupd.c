@@ -53,7 +53,7 @@ static long prevpos = 0;
 || Local constant data
 */
 static const char help[] =
-    "%s - Print a map of an HET tape file\n\n"
+    "%s - Updates the compression of a Hercules Emulated Tape file.\n\n"
     "Usage: %s [options] source [dest]\n\n"
     "Options:\n"
     "  -1   compress fast\n"
