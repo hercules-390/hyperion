@@ -180,7 +180,7 @@ TID paneltid;
     if ( signal (SIGINT, sigint_handler) == SIG_ERR )
     {
         fprintf (stderr,
-                "HHC131I Cannot register SIGINT handler: %s\n",
+                "HHCIN001S Cannot register SIGINT handler: %s\n",
                 strerror(errno));
         exit(1);
     }
@@ -190,7 +190,7 @@ TID paneltid;
     if ( signal (SIGPIPE, SIG_IGN) == SIG_ERR )
     {
         fprintf (stderr,
-                "HHC132I Cannot suppress SIGPIPE signal: %s\n",
+                "HHCIN002E Cannot suppress SIGPIPE signal: %s\n",
                 strerror(errno));
     }
 
@@ -212,7 +212,8 @@ TID paneltid;
          || sigaction(SIGUSR2, &sa, NULL) )
         {
             fprintf (stderr,
-                    "HHC133I Cannot register SIGILL/FPE/SEGV/BUS/USR handler: %s\n",
+                    "HHCIN003S Cannot register SIGILL/FPE/SEGV/BUS/USR "
+                    "handler: %s\n",
                     strerror(errno));
             exit(1);
         }
@@ -223,7 +224,7 @@ TID paneltid;
                         watchdog_thread, NULL) )
     {
         fprintf (stderr,
-                "HHC134I Cannot create watchdog thread: %s\n",
+                "HHCIN004S Cannot create watchdog thread: %s\n",
                 strerror(errno));
         exit(1);
     }
@@ -255,7 +256,7 @@ TID paneltid;
                             http_server, NULL) )
         {
             fprintf (stderr,
-                    "HHS001E Cannot create http_server thread: %s\n",
+                    "HHCIN005S Cannot create http_server thread: %s\n",
                     strerror(errno));
             exit(1);
         }
@@ -276,7 +277,7 @@ TID paneltid;
                         panel_display, NULL) )
     {
         fprintf (stderr,
-                "HHC137I Cannot create panel thread: %s\n",
+                "HHCIN006S Cannot create panel thread: %s\n",
                 strerror(errno));
         exit(1);
     }

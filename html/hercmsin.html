@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 2: System Messages: IN - Hercules Initialization</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 2: System Messages: IN - Hercules Initialization</h1>
+<p>
+This page describes the system initialization messages for the Hercules S/370,
+ESA/390, and z/Architecture emulator.
+<h3>Messages</h3>
+<dl>
+<dt><code><a name="HHCIN001S">
+HHCIN001S Cannot register SIGINT handler: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to register a handler for the SIGINT signal failed. The
+error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>impl.c, function main
+  </dl>
+<dt><code><a name="HHCIN002E">
+HHCIN002E Cannot suppress SIGPIPE signal: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to ignore the SIGPIPE signal failed. The
+error is described by <code><em>error</em></code>. This will cause Hercules to terminate
+abnormally if a printer device is defined to a pipe, and that pipe is
+closed while data is being written to it.
+  <dt>Action
+  <dd>Correct the error and restart Hercules. Do not print to a pipe until
+you have corrected the error.
+  <dt>Issued by
+  <dd>impl.c, function main
+  </dl>
+<dt><code><a name="HHCIN003S">
+HHCIN003S Cannot register SIGILL/FPE/SEGV/BUS/USR handler: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to register a handler for one of the listed signals
+failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>impl.c, function main
+  </dl>
+<dt><code><a name="HHCIN004S">
+HHCIN004S Cannot create watchdog thread: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to create the watchdog thread to monitor Hercules execution
+failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>impl.c, function main
+  </dl>
+<dt><code><a name="HHCIN005S">
+HHCIN005S Cannot create http_server thread: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to create the HTTP server thread
+failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>impl.c, function main
+  </dl>
+<dt><code><a name="HHCIN006S">
+HHCIN006S Cannot create panel thread: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to create the operator control panel thread
+failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>impl.c, function main
+  </dl>
+</dl>
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<p><center><hr width=15% noshade>
+<a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+<small>
+<p>Last updated 16 December 2002
+</BODY>
+</HTML>
