@@ -739,7 +739,7 @@ RADR    sto = 0;                        /* Segment table origin      */
 RADR    pto = 0;                        /* Page table origin         */
 int     private = 0;                    /* 1=Private address space   */
 int     protect = 0;                    /* 1=Page prot, 2=ALE prot   */
-int     stid;                           /* Address space indication  */
+int     stid = 0;                       /* Address space indication  */
 int     cc;                             /* Condition code            */
 
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
@@ -1071,10 +1071,6 @@ U16     sx, px;                         /* Segment and page index,
 
         if(acctype == ACCTYPE_PTE)
             goto tran_spec_excp;
-
-        /* Addressing exception if outside main storage */
-        if (vaddr >= regs->mainsize)
-            goto address_excp;
 
         *raddr = vaddr;
     }
@@ -1441,6 +1437,7 @@ tran_excp_addr:
 
     /* Set the address space indication in the exception address */
 #if defined(FEATURE_ESAME)
+#if 0
     if ((asce & ASCE_TO) == (regs->CR(1) & ASCE_TO))
         regs->TEA |= TEA_ST_PRIMARY;
     else if ((asce & ASCE_TO) == (regs->CR(7) & ASCE_TO))
@@ -1449,6 +1446,9 @@ tran_excp_addr:
         regs->TEA |= TEA_ST_HOME;
     else
         regs->TEA |= TEA_ST_ARMODE;
+#else
+    regs->TEA |= stid;
+#endif
 #else /*!defined(FEATURE_ESAME)*/
     if ((std & STD_STO) != (regs->CR(1) & STD_STO))
     {
@@ -1473,7 +1473,11 @@ tran_excp_addr:
 #endif /*!defined(FEATURE_ESAME)*/
 
     /* Set the exception access identification */
+#if defined(FEATURE_ESAME)
+    if ((stid | TEA_ST_ARMODE)
+#else
     if (ACCESS_REGISTER_MODE(&regs->psw)
+#endif
 #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       || (regs->sie_active
         && (regs->guestregs->siebk->mx & SIE_MX_XC)

@@ -325,7 +325,7 @@ int     n;
            /* If a host interrupt is pending
               then backup the psw and exit */
             regs->psw.IA -= regs->psw.ilc;
-            regs->psw.IA &= 0x7FFFFFFF;
+            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
             break;
         case SIE_HOST_PGMINT:
             break;

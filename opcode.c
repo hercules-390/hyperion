@@ -459,6 +459,17 @@
 #endif /*!defined(FEATURE_STRUCTURED_EXTERNAL_STORAGE)*/
 
 
+#if !defined(FEATURE_CRYPTO)
+ UNDEF_INST(crypto_opcode_B269)
+ UNDEF_INST(crypto_opcode_B26A)
+ UNDEF_INST(crypto_opcode_B26B)
+ UNDEF_INST(crypto_opcode_B26C)
+ UNDEF_INST(crypto_opcode_B26D)
+ UNDEF_INST(crypto_opcode_B26E)
+ UNDEF_INST(crypto_opcode_B26F)
+#endif /*!defined(FEATURE_CRYPTO)*/
+
+
 #if !defined(FEATURE_EXTENDED_TRANSLATION)
  UNDEF_INST(translate_extended)
  UNDEF_INST(convert_unicode_to_utf8)
@@ -571,7 +582,7 @@ DEF_INST(execute_e5xx)
 }
 
 
-#if defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)
+#if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
 DEF_INST(execute_a5xx)
 {
     opcode_a5xx[inst[1] & 0x0F][ARCH_MODE](inst, execflag, regs);
@@ -647,12 +658,14 @@ DEF_INST(operation_exception)
         regs->psw.IA &= ADDRESS_MAXWRAP(regs);
     }
 
+#if defined(MODEL_DEPENDENT)
 #if defined(_FEATURE_SIE)
     /* The B2XX extended opcodes which are not defined are always
        intercepted by SIE when issued in supervisor state */
     if(!regs->psw.prob && inst[0] == 0xB2)
         SIE_INTERCEPT(regs);
 #endif /*defined(_FEATURE_SIE)*/
+#endif /*defined(MODEL_DEPENDENT)*/
 
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 }
@@ -840,9 +853,9 @@ zz_func opcode_table[256][GEN_MAXARCH] = {
  /*A1*/   GENx___x___x___ ,
  /*A2*/   GENx___x___x___ ,
  /*A3*/   GENx___x___x___ ,
- /*A4*/   GENx___x390x___ (execute_a4xx),                       /* Vector    */
- /*A5*/   GENx___x390x900 (execute_a5xx),                   /* Vector/!ESAME */
- /*A6*/   GENx___x390x___ (execute_a6xx),                       /* Vector    */
+ /*A4*/   GENx370x390x___ (execute_a4xx),                       /* Vector    */
+ /*A5*/   GENx370x390x900 (execute_a5xx),                   /* Vector/!ESAME */
+ /*A6*/   GENx370x390x___ (execute_a6xx),                       /* Vector    */
  /*A7*/   GENx___x390x900 (execute_a7xx),
  /*A8*/   GENx___x390x900 (move_long_extended),                 /* MVCLE     */
  /*A9*/   GENx___x390x900 (compare_logical_long_extended),      /* CLCLE     */
@@ -861,14 +874,14 @@ zz_func opcode_table[256][GEN_MAXARCH] = {
  /*B6*/   GENx370x390x900 (store_control),                      /* STCTL     */
  /*B7*/   GENx370x390x900 (load_control),                       /* LCTL      */
  /*B8*/   GENx___x___x___ ,
- /*B9*/   GENx___x___x900 (execute_b9xx),                       /*!ESAME     */
+ /*B9*/   GENx___x390x900 (execute_b9xx),                       /*!ESAME/N3  */
  /*BA*/   GENx370x390x900 (compare_and_swap),                   /* CS        */
  /*BB*/   GENx370x390x900 (compare_double_and_swap),            /* CDS       */
  /*BC*/   GENx___x___x___ ,
  /*BD*/   GENx370x390x900 (compare_logical_characters_under_mask), /* CLM    */
  /*BE*/   GENx370x390x900 (store_characters_under_mask),        /* STCM      */
  /*BF*/   GENx370x390x900 (insert_characters_under_mask),       /* ICM       */
- /*C0*/   GENx___x___x900 (execute_c0xx),                       /*!ESAME     */
+ /*C0*/   GENx___x390x900 (execute_c0xx),                       /*!ESAME/N3  */
  /*C1*/   GENx___x___x___ ,
  /*C2*/   GENx___x___x___ ,
  /*C3*/   GENx___x___x___ ,
@@ -903,16 +916,16 @@ zz_func opcode_table[256][GEN_MAXARCH] = {
  /*E0*/   GENx___x___x___ ,
  /*E1*/   GENx___x___x900 (pack_unicode),                       /*!PKU       */
  /*E2*/   GENx___x___x900 (unpack_unicode),                     /*!UNPKU     */
- /*E3*/   GENx___x___x900 (execute_e3xx),                       /*!ESAME     */
- /*E4*/   GENx___x390x___ (execute_e4xx),                       /* Vector    */
+ /*E3*/   GENx___x390x900 (execute_e3xx),                       /*!ESAME/N3  */
+ /*E4*/   GENx370x390x___ (execute_e4xx),                       /* Vector    */
  /*E5*/   GENx370x390x900 (execute_e5xx),
  /*E6*/   GENx___x___x___ ,
  /*E7*/   GENx___x___x___ ,
  /*E8*/   GENx370x390x900 (move_inverse),                       /* MVCIN     */
  /*E9*/   GENx___x___x900 (pack_ascii),                         /*!PKA       */
  /*EA*/   GENx___x___x900 (unpack_ascii),                       /*!UNPKA     */
- /*EB*/   GENx___x___x900 (execute_ebxx),                       /*!ESAME     */
- /*EC*/   GENx___x___x900 (execute_ecxx),                       /*!ESAME     */
+ /*EB*/   GENx___x390x900 (execute_ebxx),                       /*!ESAME/N3  */
+ /*EC*/   GENx___x390x900 (execute_ecxx),                       /*!ESAME/N3  */
  /*ED*/   GENx___x390x900 (execute_edxx),                       /* Ext float */
  /*EE*/   GENx___x390x900 (perform_locked_operation),           /* PLO       */
  /*EF*/   GENx___x___x900 (load_multiple_disjoint),             /*!LMD       */
@@ -1602,13 +1615,13 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B266*/ GENx___x390x900 (ses_opcode_B266),                    /* Sysplex   */
  /*B267*/ GENx___x390x900 (ses_opcode_B267),                    /* Sysplex   */
  /*B268*/ GENx___x390x900 (ses_opcode_B268),                    /* Sysplex   */
- /*B269*/ GENx___x___x___ ,                                     /*%Crypto    */
- /*B26A*/ GENx___x___x___ ,                                     /*%Crypto    */
- /*B26B*/ GENx___x___x___ ,                                     /*%Crypto    */
- /*B26C*/ GENx___x___x___ ,                                     /*%Crypto    */
- /*B26D*/ GENx___x___x___ ,                                     /*%Crypto    */
- /*B26E*/ GENx___x___x___ ,                                     /*%Crypto    */
- /*B26F*/ GENx___x___x___ ,                                     /*%Crypto    */
+ /*B269*/ GENx___x390x900 (crypto_opcode_B269),                 /* Crypto    */
+ /*B26A*/ GENx___x390x900 (crypto_opcode_B26A),                 /* Crypto    */
+ /*B26B*/ GENx___x390x900 (crypto_opcode_B26B),                 /* Crypto    */
+ /*B26C*/ GENx___x390x900 (crypto_opcode_B26C),                 /* Crypto    */
+ /*B26D*/ GENx___x390x900 (crypto_opcode_B26D),                 /* Crypto    */
+ /*B26E*/ GENx___x390x900 (crypto_opcode_B26E),                 /* Crypto    */
+ /*B26F*/ GENx___x390x900 (crypto_opcode_B26F),                 /* Crypto    */
  /*B270*/ GENx___x___x___ ,                                     /*%SPCS      */
  /*B271*/ GENx___x___x___ ,                                     /*%STPCS     */
  /*B272*/ GENx___x390x900 (ses_opcode_B272),                    /* Sysplex   */
@@ -4200,17 +4213,17 @@ zz_func v_opcode_a6xx[256][GEN_MAXARCH] = {
  /*A63D*/ GENx___x___x___ ,
  /*A63E*/ GENx___x___x___ ,
  /*A63F*/ GENx___x___x___ ,
- /*A640*/ GENx___x390x___ (v_test_vmr),                         /* VTVM      */
- /*A641*/ GENx___x390x___ (v_complement_vmr),                   /* VCVM      */
- /*A642*/ GENx___x390x___ (v_count_left_zeros_in_vmr),          /* VCZVM     */
- /*A643*/ GENx___x390x___ (v_count_ones_in_vmr),                /* VCOVM     */
- /*A644*/ GENx___x390x___ (v_extract_vct),                      /* VXVC      */
+ /*A640*/ GENx370x390x___ (v_test_vmr),                         /* VTVM      */
+ /*A641*/ GENx370x390x___ (v_complement_vmr),                   /* VCVM      */
+ /*A642*/ GENx370x390x___ (v_count_left_zeros_in_vmr),          /* VCZVM     */
+ /*A643*/ GENx370x390x___ (v_count_ones_in_vmr),                /* VCOVM     */
+ /*A644*/ GENx370x390x___ (v_extract_vct),                      /* VXVC      */
  /*A645*/ GENx___x___x___ ,
- /*A646*/ GENx___x390x___ (v_extract_vector_modes),             /* VXVMM     */
+ /*A646*/ GENx370x390x___ (v_extract_vector_modes),             /* VXVMM     */
  /*A647*/ GENx___x___x___ ,
- /*A648*/ GENx___x390x___ (v_restore_vr),                       /* VRRS      */
- /*A649*/ GENx___x390x___ (v_save_changed_vr),                  /* VRSVC     */
- /*A64A*/ GENx___x390x___ (v_save_vr),                          /* VRSV      */
+ /*A648*/ GENx370x390x___ (v_restore_vr),                       /* VRRS      */
+ /*A649*/ GENx370x390x___ (v_save_changed_vr),                  /* VRSVC     */
+ /*A64A*/ GENx370x390x___ (v_save_vr),                          /* VRSV      */
  /*A64B*/ GENx___x___x___ ,
  /*A64C*/ GENx___x___x___ ,
  /*A64D*/ GENx___x___x___ ,
@@ -4264,13 +4277,13 @@ zz_func v_opcode_a6xx[256][GEN_MAXARCH] = {
  /*A67D*/ GENx___x___x___ ,
  /*A67E*/ GENx___x___x___ ,
  /*A67F*/ GENx___x___x___ ,
- /*A680*/ GENx___x390x___ (v_load_vmr),                         /* VLVM      */
- /*A681*/ GENx___x390x___ (v_load_vmr_complement),              /* VLCVM     */
- /*A682*/ GENx___x390x___ (v_store_vmr),                        /* VSTVM     */
+ /*A680*/ GENx370x390x___ (v_load_vmr),                         /* VLVM      */
+ /*A681*/ GENx370x390x___ (v_load_vmr_complement),              /* VLCVM     */
+ /*A682*/ GENx370x390x___ (v_store_vmr),                        /* VSTVM     */
  /*A683*/ GENx___x___x___ ,
- /*A684*/ GENx___x390x___ (v_and_to_vmr),                       /* VNVM      */
- /*A685*/ GENx___x390x___ (v_or_to_vmr),                        /* VOVM      */
- /*A686*/ GENx___x390x___ (v_exclusive_or_to_vmr),              /* VXVM      */
+ /*A684*/ GENx370x390x___ (v_and_to_vmr),                       /* VNVM      */
+ /*A685*/ GENx370x390x___ (v_or_to_vmr),                        /* VOVM      */
+ /*A686*/ GENx370x390x___ (v_exclusive_or_to_vmr),              /* VXVM      */
  /*A687*/ GENx___x___x___ ,
  /*A688*/ GENx___x___x___ ,
  /*A689*/ GENx___x___x___ ,
@@ -4328,18 +4341,18 @@ zz_func v_opcode_a6xx[256][GEN_MAXARCH] = {
  /*A6BD*/ GENx___x___x___ ,
  /*A6BE*/ GENx___x___x___ ,
  /*A6BF*/ GENx___x___x___ ,
- /*A6C0*/ GENx___x390x___ (v_save_vsr),                         /* VSRSV     */
- /*A6C1*/ GENx___x390x___ (v_save_vmr),                         /* VMRSV     */
- /*A6C2*/ GENx___x390x___ (v_restore_vsr),                      /* VSRRS     */
- /*A6C3*/ GENx___x390x___ (v_restore_vmr),                      /* VMRRS     */
- /*A6C4*/ GENx___x390x___ (v_load_vct_from_address),            /* VLVCA     */
- /*A6C5*/ GENx___x390x___ (v_clear_vr),                         /* VRCL      */
- /*A6C6*/ GENx___x390x___ (v_set_vector_mask_mode),             /* VSVMM     */
- /*A6C7*/ GENx___x390x___ (v_load_vix_from_address),            /* VLVXA     */
- /*A6C8*/ GENx___x390x___ (v_store_vector_parameters),          /* VSTVP     */
+ /*A6C0*/ GENx370x390x___ (v_save_vsr),                         /* VSRSV     */
+ /*A6C1*/ GENx370x390x___ (v_save_vmr),                         /* VMRSV     */
+ /*A6C2*/ GENx370x390x___ (v_restore_vsr),                      /* VSRRS     */
+ /*A6C3*/ GENx370x390x___ (v_restore_vmr),                      /* VMRRS     */
+ /*A6C4*/ GENx370x390x___ (v_load_vct_from_address),            /* VLVCA     */
+ /*A6C5*/ GENx370x390x___ (v_clear_vr),                         /* VRCL      */
+ /*A6C6*/ GENx370x390x___ (v_set_vector_mask_mode),             /* VSVMM     */
+ /*A6C7*/ GENx370x390x___ (v_load_vix_from_address),            /* VLVXA     */
+ /*A6C8*/ GENx370x390x___ (v_store_vector_parameters),          /* VSTVP     */
  /*A6C9*/ GENx___x___x___ ,
- /*A6CA*/ GENx___x390x___ (v_save_vac),                         /* VACSV     */
- /*A6CB*/ GENx___x390x___ (v_restore_vac),                      /* VACRS     */
+ /*A6CA*/ GENx370x390x___ (v_save_vac),                         /* VACSV     */
+ /*A6CB*/ GENx370x390x___ (v_restore_vac),                      /* VACRS     */
  /*A6CC*/ GENx___x___x___ ,
  /*A6CD*/ GENx___x___x___ ,
  /*A6CE*/ GENx___x___x___ ,

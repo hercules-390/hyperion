@@ -1,3 +1,18 @@
+21 May 2001 Correct availability of N3 instructions in S/390 mode - Jan Jaeger
+19 May 2001 Compression corrections - Bernard van der Helm
+19 May 2001 Include basic crypto support - Jan Jaeger
+19 May 2001 Correct RCP host address when nozero MSO - Paul Leisy
+18 May 2001 Correct CEFBR/CFEBR register use - Jan Jaeger
+18 May 2001 Correct STOSM/STNSM interception - Paul Leisy
+18 May 2001 Correct operation exception interception - Paul Leisy
+17 May 2001 Correct address wrap when SIE is interrupted - Jan Jaeger
+17 May 2001 Correct specification exception interception - Jan Jaeger
+16 May 2001 Correct CPU addr in PSA during external interrupts - Paul Leisy
+15 May 2001 Correct STFL installed facility bit settings - Jan Jaeger
+15 May 2001 Correct PR register update - Jan Jaeger
+15 May 2001 Correct prefix storage key update in TPI - Jan Jaeger
+15 May 2001 Correct TEA on STURA/LURA protection exception - Paul Leisy
+09 May 2001 Correct TRT address wrap - Paul Leisy
 08 May 2001 Fixes for RP instruction - Paul Leisy
 08 May 2001 Fix gr15 in TRAP instruction - Paul Leisy
 07 May 2001 CMPSC fix - Bernard van der Helm

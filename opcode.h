@@ -916,6 +916,22 @@ int used; \
 
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
+
+#if defined(FEATURE_CRYPTO)
+
+#if !defined(_CRDEFS)
+
+#define _CRDEFS
+
+#define COP_CHECK(_regs) \
+	if(!((_regs)->CR(0) & CR0_CRYPTO) ) \
+	    ARCH_DEP(program_interrupt)((_regs), PGM_CRYPTO_OPERATION_EXCEPTION)
+
+#endif /*!defined(_CRDEFS)*/
+
+#endif /*defined(FEATURE_CRYPTO)*/
+
+
 #if defined(FEATURE_VECTOR_FACILITY)
 
 #if !defined(_VFDEFS)
@@ -1662,6 +1678,16 @@ DEF_INST(ses_opcode_B2A4);
 DEF_INST(ses_opcode_B2A8);
 DEF_INST(ses_opcode_B2F1);
 DEF_INST(ses_opcode_B2F6);
+
+
+/* Instructions in crypto.c */
+DEF_INST(crypto_opcode_B269);
+DEF_INST(crypto_opcode_B26A);
+DEF_INST(crypto_opcode_B26B);
+DEF_INST(crypto_opcode_B26C);
+DEF_INST(crypto_opcode_B26D);
+DEF_INST(crypto_opcode_B26E);
+DEF_INST(crypto_opcode_B26F);
 
 
 /* Instructions in esame.c */

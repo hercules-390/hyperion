@@ -269,7 +269,7 @@ static char *pgmintname[] = {
         /* 16 */        "Trace-table exception",
         /* 17 */        "ASN-translation exception",
         /* 18 */        "Page access exception",
-        /* 19 */        "Vector operation exception",
+        /* 19 */        "Vector/Crypto operation exception",
         /* 1A */        "Page state exception",
         /* 1B */        "Page transition exception",
         /* 1C */        "Space-switch event",
@@ -457,6 +457,8 @@ static char *pgmintname[] = {
       /* Interception is mandatory for the following exceptions */
       (  code != PGM_PROTECTION_EXCEPTION
       && code != PGM_ADDRESSING_EXCEPTION
+      && code != PGM_SPECIFICATION_EXCEPTION
+      && code != PGM_SPECIAL_OPERATION_EXCEPTION
 #ifdef FEATURE_VECTOR_FACILITY
       && code != PGM_VECTOR_OPERATION_EXCEPTION
 #endif /*FEATURE_VECTOR_FACILITY*/
@@ -485,13 +487,24 @@ static char *pgmintname[] = {
     }
     else
     {
-        /* Set the main storage reference and change bits */
-        STORAGE_KEY(regs->sie_state) |= (STORKEY_REF | STORKEY_CHANGE);
-
         /* This is a guest interruption interception so point to
            the interruption parm area in the state descriptor
-           rather then the PSA */
-        psa = (void*)(sysblk.mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
+           rather then the PSA, except for the operation exception */
+        if(code != PGM_OPERATION_EXCEPTION)
+        {
+            psa = (void*)(sysblk.mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
+            /* Set the main storage reference and change bits */
+            STORAGE_KEY(regs->sie_state) |= (STORKEY_REF | STORKEY_CHANGE);
+        }
+        else
+        {
+            /* Point to PSA in main storage */
+            psa = (void*)(sysblk.mainstor + px);
+
+            /* Set the main storage reference and change bits */
+            STORAGE_KEY(px) |= (STORKEY_REF | STORKEY_CHANGE);
+        }
+
         nointercept = 0;
     }
 #endif /*defined(_FEATURE_SIE)*/
@@ -606,11 +619,11 @@ static char *pgmintname[] = {
         ARCH_DEP(store_psw) (realregs, psa->pgmold);
 
         /* Load new PSW from PSA+X'68' or PSA+X'1D0' for ESAME */
-        if ( ARCH_DEP(load_psw) (realregs, psa->pgmnew) )
+        if ( (code = ARCH_DEP(load_psw) (realregs, psa->pgmnew)) )
         {
 #if defined(_FEATURE_SIE)
             if(realregs->sie_state)
-                longjmp(realregs->progjmp, SIE_INTERCEPT_VALIDITY);
+                longjmp(realregs->progjmp, code);
             else
 #endif /*defined(_FEATURE_SIE)*/
             {
@@ -877,8 +890,7 @@ void *cpu_thread (REGS *regs)
     release_lock(&sysblk.intlock);
 
     /* Establish longjmp destination to switch architecture mode */
-    if( setjmp(regs->archjmp) < SIE_NO_INTERCEPT)
-        logmsg("Interception error\n");
+    setjmp(regs->archjmp);
 
     /* Switch from architecture mode if appropriate */
     if(sysblk.arch_mode != regs->arch_mode)
@@ -1122,6 +1134,7 @@ U32     prevmask;
         /* Count instruction usage */
         regs->instcount++;
 
+// if(regs->psw.IA > 0x05148000 && regs->psw.IA < 0x5149060) { tracethis = 1; ON_IC_TRACE; }
         if( IS_IC_TRACE )
             {
 

@@ -20,7 +20,7 @@
 #define OPTION_AEA_BUFFER		/* Effective addr cache      */
 #define OPTION_NO_INLINE_DAT		/* Performance option	     */
 #undef  OPTION_NO_INLINE_VSTORE 	/* Performance option	     */
-#undef  OPTION_FOOTPRINT_BUFFER  /* 256 ** Size must be a power of 2 */
+#undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING	/* First use trace and count */
 #define OPTION_CKD_KEY_TRACING		/* Trace CKD search keys     */
 #undef	OPTION_CMPSC_DEBUGLVL	   /* 3 ** 1=Exp 2=Comp 3=Both debug */
@@ -53,6 +53,7 @@
 #undef FEATURE_COMPARE_AND_MOVE_EXTENDED
 #undef FEATURE_COMPRESSION
 #undef FEATURE_CPU_RECONFIG
+#undef FEATURE_CRYPTO
 #undef FEATURE_DUAL_ADDRESS_SPACE
 #undef FEATURE_EMULATE_VM
 #undef FEATURE_ESAME

@@ -580,6 +580,7 @@ U32     iointid;                        /* I/O interruption ident    */
 #if defined(FEATURE_ESAME)
                 STORE_FW(psa->iointid,iointid);
 #endif /*defined(FEATURE_ESAME)*/
+                STORAGE_KEY(regs->PX) |= (STORKEY_REF|STORKEY_CHANGE);
             }
             else
             {

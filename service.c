@@ -951,14 +951,14 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         sccbscp->realbszk = 4;
         STORE_HW(sccbscp->realiint, 1);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)
         /* SIE supports the full address range */
         sccbscp->maxvm = 0;  
         /* realiszm is valid */
         STORE_FW(sccbscp->grzm, 0);
         /* Number of storage increments installed in esame mode */
         STORE_DW(sccbscp->grnmx, realmb);
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)*/
 
 #ifdef FEATURE_EXPANDED_STORAGE
         /* Set expanded storage size in SCCB */
@@ -1139,7 +1139,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 //                          | SCCB_CPF1_IO_INTERPRETATION_LEVEL_2
 //                          | SCCB_CPF1_GUEST_PER_ENHANCED
 //                          | SCCB_CPF1_SIGP_INTERPRETATION_ASSIST
-//                          | SCCB_CPF1_RCP_BYPASS_FACILITY
+#if defined(FEATURE_STORAGE_KEY_ASSIST)
+                            | SCCB_CPF1_RCP_BYPASS_FACILITY
+#endif /*defined(FEATURE_STORAGE_KEY_ASSIST)*/
 //                          | SCCB_CPF1_REGION_RELOCATE_FACILITY
 //                          | SCCB_CPF1_EXPEDITE_TIMER_PROCESSING
                             ;

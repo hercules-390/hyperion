@@ -421,7 +421,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
            is the base space of a different subspace group */
         if (dasteo != (duct0 & DUCT0_BASTEO)
                 && ((ASTE_AS_DESIGNATOR(daste) & SSGROUP_BIT) == 0
-                    || (daste[0] & ASTE0_BASE) == 0))
+                    || (daste[0] & ASTE0_BASE) ))
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     } /* end switch(alet) */
@@ -1028,8 +1028,9 @@ BYTE    storkey;
                     /* frame index as byte offset to 4K keys in RCP area */
                     rcpa += n >> 12;
 
-                    /* host primary to host real */
-                    SIE_TRANSLATE(&rcpa, ACCTYPE_SIE, regs);
+                    /* host primary to host absolute */
+		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+                                       regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
                 /* fetch the RCP key */
@@ -1187,8 +1188,9 @@ BYTE    storkey;
                     /* frame index as byte offset to 4K keys in RCP area */
                     rcpa += n >> 12;
 
-                    /* host primary to host real */
-                    SIE_TRANSLATE(&rcpa, ACCTYPE_SIE, regs);
+                    /* host primary to host absolute */
+		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+                                       regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
                 /* fetch the RCP key */
@@ -1607,9 +1609,9 @@ BYTE    rwork[64];                      /* Register work areas       */
     if(regs->sie_state)
     {
     U32 n;
-        for(i = r1, n = 0x80008000 >> r1; ; )
+        for(i = r1, n = 0x8000 >> r1; ; )
         {
-            if(regs->siebk->lctl_ctl[i < 8 ? 0 : 1] & (i < 8) ? n >> 8 : n)
+            if(regs->siebk->lctl_ctl[i < 8 ? 0 : 1] & ((i < 8) ? n >> 8 : n))
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
             if ( i == r3 ) break;
@@ -1676,7 +1678,7 @@ int     amode64;
     PERFORM_CHKPT_SYNC (regs);
 
     /* Fetch new PSW from operand address */
-    ARCH_DEP(vfetchc) ( dword, 7, effective_addr2, b2, regs );
+    ARCH_DEP(vfetchc) ( dword, 8-1, effective_addr2, b2, regs );
 
     /* Load updated PSW (ESA/390 Format in ESAME mode) */
 #if defined(FEATURE_ESAME)
@@ -2745,7 +2747,7 @@ U16     xcode;                          /* Exception code            */
             /* Obtain new PSTD (or PASCE) and AX from the ASTE */
             newregs.CR(1) = ASTE_AS_DESIGNATOR(aste);
             newregs.CR_LHH(4) = 0;
-            newregs.CR(4) |= aste[1] & ASTE1_AX;
+            newregs.CR_L(4) |= aste[1] & ASTE1_AX;
 
             /* Load CR5 with the primary ASTE origin address */
             newregs.CR_L(5) = pasteo;
@@ -2802,10 +2804,10 @@ U16     xcode;                          /* Exception code            */
     } /* end if(LSED_UET_PC) */
 
     /* Update the updated CPU registers from the working copy */
-    memcpy(regs->gr, &newregs.gr, sizeof(newregs.gr));
-    memcpy(regs->ar, &newregs.ar, sizeof(newregs.ar));
-    memcpy(regs->cr, &newregs.cr, sizeof(newregs.cr));
-    memcpy(&regs->psw, &newregs.psw, sizeof(newregs.psw));
+    memcpy(regs->gr, newregs.gr, sizeof(newregs.gr));
+    memcpy(regs->ar, newregs.ar, sizeof(newregs.ar));
+    memcpy(regs->cr, newregs.cr, sizeof(newregs.cr));
+    memcpy(&(regs->psw), &(newregs.psw), sizeof(newregs.psw));
     INVALIDATE_AIA(regs);
     INVALIDATE_AEA_ALL(regs);
     SET_IC_EXTERNAL_MASK(regs);
@@ -2849,7 +2851,7 @@ RADR    abs;                            /* Absolute address          */
 U32     ltd;                            /* Linkage table designation */
 U32     pasteo;                         /* Primary ASTE origin       */
 U32     aste[16];                       /* ASN second table entry    */
-RADR    pstd;                           /* Primary STD               */
+CREG    pstd;                           /* Primary STD               */
 U16     ax;                             /* Authorization index       */
 U16     xcode;                          /* Exception code            */
 int     ssevent = 0;                    /* 1=space switch event      */
@@ -3207,8 +3209,9 @@ BYTE    storkey;                        /* Storage key               */
                     /* frame index as byte offset to 4K keys in RCP area */
                     rcpa += n >> 12;
 
-                    /* host primary to host real */
-                    SIE_TRANSLATE(&rcpa, ACCTYPE_SIE, regs);
+                    /* host primary to host absolute */
+		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+                                       regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
                 /* fetch the RCP key */
@@ -3378,8 +3381,9 @@ BYTE    storkey;                        /* Storage key               */
                     /* frame index as byte offset to 4K keys in RCP area */
                     rcpa += n >> 12;
 
-                    /* host primary to host real */
-                    SIE_TRANSLATE(&rcpa, ACCTYPE_SIE, regs);
+                    /* host primary to host absolute */
+		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+                                       regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
                 /* fetch the RCP key */
@@ -4017,8 +4021,9 @@ RADR    n;                              /* Absolute storage addr     */
                     /* frame index as byte offset to 4K keys in RCP area */
                     rcpa += n >> 12;
 
-                    /* host primary to host real */
-                    SIE_TRANSLATE(&rcpa, ACCTYPE_SIE, regs);
+                    /* host primary to host absolute */
+		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+                                       regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
                 /* guest absolute to host real */
@@ -4205,8 +4210,9 @@ RADR    n;                              /* Abs frame addr stor key   */
                     /* frame index as byte offset to 4K keys in RCP area */
                     rcpa += n >> 12;
 
-                    /* host primary to host real */
-                    SIE_TRANSLATE(&rcpa, ACCTYPE_SIE, regs);
+                    /* host primary to host absolute */
+		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+                                       regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
                 /* guest absolute to host real */
@@ -4795,6 +4801,33 @@ U64     dreg;                           /* Clock value               */
     if(regs->sie_state && (regs->siebk->ic[3] & SIE_IC3_SCKC))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
+
+#if 0
+/* ZZ Take interrupt as clock comparator should never be less then
+      the value of the tod clock when enabled for clock comparator 
+      interrupts */
+    /* Obtain the interrupt lock */
+    obtain_lock (&sysblk.intlock);
+
+    /* reset the clock comparator pending flag according to
+       the setting of the tod clock */
+    if( (sysblk.todclk + regs->todoffset) > regs->clkc )
+    {
+        ON_IC_CLKC(regs);
+        if( OPEN_IC_CLKC(regs) )
+        {
+            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+            release_lock (&sysblk.intlock);
+            return;
+        }
+    }
+    else
+        OFF_IC_CLKC(regs);
+
+    /* Release the interrupt lock */
+    release_lock (&sysblk.intlock);
+#endif
 
     /* Obtain the TOD clock update lock */
     obtain_lock (&sysblk.todlock);

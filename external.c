@@ -150,6 +150,10 @@ int     rc;
     /* Store the interrupt code in the PSW */
     regs->psw.intcode = code;
 
+    /* Zero extcpuad field unless extcall or ems signal */
+    if(code != EXT_EXTERNAL_CALL_INTERRUPT
+    && code != EXT_EMERGENCY_SIGNAL_INTERRUPT)
+        STORE_HW(psa->extcpad,0);
 
 #if defined(FEATURE_BCMODE)
     /* For ECMODE, store external interrupt code at PSA+X'86' */

@@ -45,7 +45,7 @@ HRC_OBJS = impl.o config.o panel.o version.o \
 	   ipl.o assist.o dat.o \
 	   stack.o cpu.o vstore.o \
 	   general1.o general2.o plo.o \
-           control.o io.o \
+           control.o io.o crypto.o \
 	   decimal.o service.o opcode.o \
 	   diagnose.o diagmssf.o vm.o \
 	   channel.o ckddasd.o fbadasd.o \

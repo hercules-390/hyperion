@@ -55,13 +55,6 @@
  #define _FEATURE_EXPANDED_STORAGE
 #endif
 
-/* When ESAME is installed then all instructions
-   marked N3 in the reference are also available
-   in ESA/390 mode */
-#if defined(FEATURE_ESAME_INSTALLED)
- #define FEATURE_ESAME_N3_ESA390
-#endif /*defined(FEATURE_ESAME_INSTALLED)*/
-
 #if defined(_FEATURE_SIE) && defined(FEATURE_STORAGE_KEY_ASSIST)
  #define _FEATURE_STORAGE_KEY_ASSIST
 #endif
@@ -85,6 +78,13 @@
 #endif
 
 #else /*!defined(FEATCHK_CHECK_ALL)*/
+
+/* When ESAME is installed then all instructions
+   marked N3 in the reference are also available
+   in ESA/390 mode */
+#if defined(FEATURE_ESAME_INSTALLED)
+ #define FEATURE_ESAME_N3_ESA390
+#endif /*defined(FEATURE_ESAME_INSTALLED)*/
 
 #if !defined(FEATURE_2K_STORAGE_KEYS) \
  && !defined(FEATURE_4K_STORAGE_KEYS)

@@ -1448,7 +1448,8 @@ int     i;                              /* Integer work areas        */
         dbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
 
         /* Fetch function byte from second operand */
-        sbyte = ARCH_DEP(vfetchb) ( effective_addr2 + dbyte, b2, regs );
+        sbyte = ARCH_DEP(vfetchb) ( (effective_addr2 + dbyte) 
+                                   & ADDRESS_MAXWRAP(regs), b2, regs );
 
         /* Test for non-zero function byte */
         if (sbyte != 0) {

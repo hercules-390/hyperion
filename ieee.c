@@ -1297,13 +1297,13 @@ DEF_INST(convert_fix32_to_bfp_long_reg)
 {
 	int r1, r2;
 	struct lbfp op1;
-	S64 op2;
+	S32 op2;
 
 	RRE(inst, execflag, regs, r1, r2);
 	//logmsg("CDFBR r1=%d r2=%d\n", r1, r2);
 	BFPINST_CHECK(regs);
 
-	op2 = regs->GR_G(r2);
+	op2 = regs->GR_L(r2);
 
 	if (op2) {
 		op1.v = (double)op2;
@@ -1353,7 +1353,7 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
 DEF_INST(convert_bfp_long_to_fix32_reg)
 {
 	int r1, r2, m3, raised;
-	S64 op1;
+	S32 op1;
 	struct lbfp op2;
 	int pgm_check;
 
@@ -1367,7 +1367,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
 	case FP_NAN:
 		pgm_check = ieee_exception(FE_INVALID, regs);
 		regs->psw.cc = 3;
-		regs->GR_G(r1) = 0x8000000000000000L;
+		regs->GR_L(r1) = 0x80000000L;
 		if (regs->fpc & FPC_MASK_IMX) {
 			pgm_check = ieee_exception(FE_INEXACT, regs);
 			if (pgm_check) {
@@ -1377,14 +1377,14 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
 		}
 	case FP_ZERO:
 		regs->psw.cc = 0;
-		regs->GR_G(r1) = 0;
+		regs->GR_L(r1) = 0;
 	case FP_INFINITE:
 		pgm_check = ieee_exception(FE_INVALID, regs);
 		regs->psw.cc = 3;
 		if (op2.sign) {
-			regs->GR_G(r1) = 0x8000000000000000L;
+			regs->GR_L(r1) = 0x80000000L;
 		} else {
-			regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFL;
+			regs->GR_L(r1) = 0x7FFFFFFFL;
 		}
 		if (regs->fpc & FPC_MASK_IMX) {
 			pgm_check = ieee_exception(FE_INEXACT, regs);
@@ -1395,7 +1395,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
 	default:
 		feclearexcept(FE_ALL_EXCEPT);
 		lbfpston(&op2);
-		op1 = (S64)op2.v;
+		op1 = (S32)op2.v;
 		raised = fetestexcept(FE_ALL_EXCEPT);
 		if (raised) {
 			pgm_check = ieee_exception(raised, regs);
@@ -1403,7 +1403,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
 				program_interrupt(regs, pgm_check);
 			}
 		}
-		regs->GR_G(r1) = op1;
+		regs->GR_L(r1) = op1;
 		regs->psw.cc = op1 > 0 ? 2 : 1;
 	}
 }

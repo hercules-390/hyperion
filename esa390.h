@@ -207,8 +207,11 @@ typedef struct _TLBE {
 #define CR9_GRMASK	0x0000FFFF	/* GR mask bits 	     */
 
 /* Bit definitions for control register 12 */
-#define CR12_BRTRACE	0x80000000	/* Branch trace control      */
-#define CR12_TRACEEA	0x7FFFFFFC	/* Trace entry address	     */
+#define S_CR12_BRTRACE	0x80000000	/* Branch trace control      */
+#define Z_CR12_BRTRACE	0x8000000000000000ULL /* Branch trace control*/
+#define CR12_MTRACE 	0x4000000000000000ULL /* Mode trace control  */
+#define S_CR12_TRACEEA	0x7FFFFFFC	/* Trace entry address	     */
+#define Z_CR12_TRACEEA	0x3FFFFFFFFFFFFFFCULL /* Trace entry address */
 #define CR12_ASNTRACE	0x00000002	/* ASN trace control	     */
 #define CR12_EXTRACE	0x00000001	/* Explicit trace control    */
 
@@ -1121,6 +1124,17 @@ typedef struct _MBK {
 #define PLO_CSTSTGR		22	/* C/S/TS              ESAME */
 #define PLO_CSTSTX 		23	/* C/S/TS              ESAME */
 
+/* Bit definitions for Store Facilities List instruction */
+#define STFL_0_N3		0x80	/* Instructions marked N3 in
+					   the reference summary are
+					   available in ESA/390 mode */
+#define STFL_0_ESAME_INSTALLED	0x40	/* ESAME mode is available on
+					   this processor	     */
+#define STFL_0_ESAME_ACTIVE	0x20	/* ESAME mode is active on 
+					   this processor            */
+#define STFL_2_TRAN_FAC2	0x80	/* Extended translation 
+					   facility 2 is installed   */
+
 /* Bit definitions for the Vector Facility */
 #define VSR_M	 0x0001000000000000ULL	/* Vector mask mode bit      */
 #define VSR_VCT  0x0000FFFF00000000ULL	/* Vector count 	     */
@@ -1203,8 +1217,8 @@ typedef struct _SIE1BK { 		/* SIE State Descriptor      */
 #define SIE_IC1_SSM	0x10		/* Intercept SSM	     */
 #define SIE_IC1_BSA	0x08		/* Intercept BSA	     */
 #define SIE_IC1_STCTL	0x04		/* Intercept STCTL	     */
-#define SIE_IC1_STOSM	0x02		/* Intercept STOSM	     */
-#define SIE_IC1_STNSM	0x01		/* Intercept STNSM	     */
+#define SIE_IC1_STNSM	0x02		/* Intercept STNSM	     */
+#define SIE_IC1_STOSM	0x01		/* Intercept STOSM	     */
 #define SIE_IC2_STCK	0x80		/* Intercept STCK	     */
 #define SIE_IC2_ISKE	0x40		/* Intercept ISK/ISKE	     */
 #define SIE_IC2_SSKE	0x20		/* Intercept SSK/SSKE	     */
@@ -1332,8 +1346,8 @@ typedef struct _SIE2BK { 		/* SIE State Descriptor      */
 #define SIE_IC1_SSM	0x10		/* Intercept SSM	     */
 #define SIE_IC1_BSA	0x08		/* Intercept BSA	     */
 #define SIE_IC1_STCTL	0x04		/* Intercept STCTL	     */
-#define SIE_IC1_STOSM	0x02		/* Intercept STOSM	     */
-#define SIE_IC1_STNSM	0x01		/* Intercept STNSM	     */
+#define SIE_IC1_STNSM	0x02		/* Intercept STNSM	     */
+#define SIE_IC1_STOSM	0x01		/* Intercept STOSM	     */
 #define SIE_IC2_STCK	0x80		/* Intercept STCK	     */
 #define SIE_IC2_ISKE	0x40		/* Intercept ISK/ISKE	     */
 #define SIE_IC2_SSKE	0x20		/* Intercept SSK/SSKE	     */

@@ -70,10 +70,12 @@ static inline int div_logical_long
     if (high >= d) return 1;
     for (i = 0; i < 64; i++)
     {
+    int ovf;
+        ovf = high >> 63;
         high = (high << 1) | (lo >> 63);
-        lo = (lo << 1);
+        lo <<= 1;
         *quot <<= 1;
-        if (high >= d)
+        if (high >= d || ovf)
         {
             *quot += 1;
             high -= d;
@@ -89,18 +91,22 @@ static inline int mult_logical_long
 {
     int i;
 
-    *high = ((md & 1) ? mr : 0);
+    *high = 0; *lo = 0;
     for (i = 0; i < 64; i++)
     {
-        *lo = (*lo >> 1) | (*high << 63);
-        *high >>= 1;
-        md >>= 1;
+    U64 ovf;
+        ovf = *high;
         if (md & 1)
             *high += mr;
+        md >>= 1;
+        *lo = (*lo >> 1) | (*high << 63);
+        if(ovf > *high)
+            *high = (*high >> 1) | 0x8000000000000000ULL;
+        else
+            *high >>= 1;
     }
     return 0;
 } /* end mult_logical_long() */
-
 #endif /*!defined(_LONG_MATH)*/
 
 
@@ -1870,12 +1876,12 @@ BYTE    cwork[4];                       /* Character work areas      */
 
     } /* end for(i) */
 
-    /* If the mask is all zero, we nevertheless access one byte
-       from the storage operand, because POP states that an
-       access exception may be recognized on the first byte */
     if (j == 0)
     {
 #if defined(MODEL_DEPENDENT)
+        /* If the mask is all zero, we nevertheless access one byte
+           from the storage operand, because POP states that an
+           access exception may be recognized on the first byte */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 0, ACCTYPE_WRITE, regs);
 #endif /*defined(MODEL_DEPENDENT)*/
         return;
@@ -3791,9 +3797,9 @@ BYTE    rwork[128];                     /* Register work areas       */
     if(regs->sie_state)
     {
     U32 n;
-        for(i = r1, n = 0x80008000 >> r1; ; )
+        for(i = r1, n = 0x8000 >> r1; ; )
         {
-            if(regs->siebk->lctl_ctl[i < 8 ? 0 : 1] & (i < 8) ? n >> 8 : n)
+            if(regs->siebk->lctl_ctl[i < 8 ? 0 : 1] & ((i < 8) ? n >> 8 : n))
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
             if ( i == r3 ) break;
@@ -4308,23 +4314,22 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     psa = (void*)(sysblk.mainstor + regs->PX);
 
     psa->stfl[0] = 0
-#if defined(FEATURE_ESAME_N3_ESA390)
-                 | 0x80
-#endif /*defined(FEATURE_ESAME_N3_ESA390)*/
+#if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
+                 | STFL_0_N3
+#endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
 #if defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)
-                 | (
-#if defined(_FEATURE_ZSIE)
-                   (regs->sie_state 
-                     && (regs->hostregs->arch_mode != ARCH_900) ) ? 0 :
-#endif /*defined(_FEATURE_ZSIE)*/
-                   (sysblk.arch_z900 ? 0x40 : 0) )
+                 | (sysblk.arch_z900 ? STFL_0_ESAME_INSTALLED : 0)
 #endif /*defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)*/
 #if defined(FEATURE_ESAME)
-                 | 0x20
+                 | STFL_0_ESAME_ACTIVE
 #endif /*defined(FEATURE_ESAME)*/
                  ;
     psa->stfl[1] = 0;
-    psa->stfl[2] = 0;
+    psa->stfl[2] = 0
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+                 | STFL_2_TRAN_FAC2
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+                 ;
     psa->stfl[3] = 0;
 
 } /* end DEF_INST(store_facilities_list) */
