@@ -152,7 +152,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Load new PSW key and PSW key mask from R1 register */
         regs->psw.pkey = key;
-        regs->CR_LHH(3) = regs->GR_LHH(r1);
+        regs->CR_LHH(3) &= regs->GR_LHH(r1);
 
         /* Set the problem state bit in the current PSW */
         regs->psw.prob = 1;
@@ -183,7 +183,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             regs->psw.AMASK = AMASK24;
             regs->psw.IA = regs->GR_L(r2) & AMASK24;
         }
-
 
     } /* end if(BSA-ba) */
     else
@@ -265,6 +264,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         }
 
     } /* end if(BSA-ra) */
+
+    INVALIDATE_AIA(regs);
+    INVALIDATE_AEA_ALL(regs);
 
 #ifdef FEATURE_TRACING
     /* Update trace table address if branch tracing is on */
