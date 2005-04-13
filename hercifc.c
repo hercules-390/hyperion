@@ -160,7 +160,7 @@ int main( int argc, char **argv )
             exit( 0 );
 
         default:
-            sprintf( szMsgBuffer,
+            snprintf( szMsgBuffer, sizeof(szMsgBuffer),
                      _("HHCIF004W %s: Unknown request: %8.8lX.\n"),
                      pszProgName, ctlreq.iCtlOp );
             
@@ -169,7 +169,7 @@ int main( int argc, char **argv )
             continue;
         }
             
-        sprintf( szMsgBuffer,
+        snprintf( szMsgBuffer, sizeof(szMsgBuffer),
                  _("HHCIF006I %s: Doing %s on %s\n"),
                  pszProgName, pOp, pIF);
 
