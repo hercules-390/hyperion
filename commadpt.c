@@ -1006,6 +1006,10 @@ static void *commadpt_thread(void *vca)
         if(rc==-1)
         {
             logmsg(_("HHCCA006T %4.4X:Select failed : %s\n"),devnum,strerror(errno));
+            if(errno==EINTR)
+            {
+                continue;
+            }
             break;
         }
 
