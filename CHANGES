@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+20 May 2005 Fix wrong null format track - Reported by Gerald - Greg Smith
 23 Mar 2005 gcc-2.95/gcc-3.0 fixes - Ivan Warren
 09 Mar 2005 Fix get/setpriority to use 'id_t' type - Fish
 06 Mar 2005 w32ctca.c: always search the defined modules dir first
