@@ -96,7 +96,7 @@
  */
 #include <locale.h>
 
-#ifndef _POSIX_SYNCHRONIZED_IO
+#if !(defined(_POSIX_SYNCHRONIZED_IO)) || (_POSIX_SYNCHRONIZED_IO < 0)
 /* If fdatasync is not necessarily available, fsync will do fine */
 #define fdatasync(fd) fsync(fd)
 #endif

@@ -594,20 +594,16 @@ logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
           request_name,ifc_fd[0],ifc_fd[1]);
 #endif /* 0 -- debugging */
 
+#if !defined(__APPLE__)
     if( iRequest == SIOCADDRT ||
         iRequest == SIOCDELRT )
     {
-#if !defined(__APPLE__)
       strcpy( ctlreq.szIFName, ((struct rtentry*)argp)->rt_dev );
       memcpy( &ctlreq.iru.rtentry, argp, sizeof( struct rtentry ) );
       ((struct rtentry*)argp)->rt_dev = NULL;
-#else /* !defined(__APPLE__) */
-      logmsg(_("HHCTU028E Unsupported call to %s a network route on OS X\n"),
-                ((iRequest==SIOCADDRT) ? "add" : "delete"));
-      return -1;
-#endif /* !defined(__APPLE__) */
     }
     else
+#endif /* !defined(__APPLE__) */
     {
       memcpy( &ctlreq.iru.ifreq, argp, sizeof( struct ifreq ) );
     }

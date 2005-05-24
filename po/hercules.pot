@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2004-12-04 17:35-0600\n"
+"POT-Creation-Date: 2004-12-11 13:38-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -278,255 +278,256 @@ msgstr ""
 msgid "HHCCD130E %4.4X calloc error, size %d: %s\n"
 msgstr ""
 
-#: cckddasd.c:1493
+#: cckddasd.c:1496
 #, c-format
 msgid "HHCCD001I Readahead thread %d started: tid="
 msgstr ""
 
-#: cckddasd.c:1493 cckddasd.c:1543 cckddasd.c:1683 cckddasd.c:1793
-#: cckddasd.c:4129 console.c:1520 cpu.c:1122 httpserv.c:586 panel.c:843
+#: cckddasd.c:1496 cckddasd.c:1546 cckddasd.c:1686 cckddasd.c:1819
+#: cckddasd.c:4210 console.c:1520 cpu.c:1122 httpserv.c:586 panel.c:843
 #: shared.c:2488 shared.c:2651 sockdev.c:389
 #, c-format
 msgid ", pid=%d\n"
 msgstr ""
 
-#: cckddasd.c:1543
+#: cckddasd.c:1546
 #, c-format
 msgid "HHCCD011I Readahead thread %d stopping: tid="
 msgstr ""
 
-#: cckddasd.c:1683
+#: cckddasd.c:1686
 #, c-format
 msgid "HHCCD002I Writer thread %d started: tid="
 msgstr ""
 
-#: cckddasd.c:1793
+#: cckddasd.c:1819
 #, c-format
 msgid "HHCCD012I Writer thread %d stopping: tid="
 msgstr ""
 
-#: cckddasd.c:1930
+#: cckddasd.c:1947
 #, c-format
 msgid "HHCCD102E %4.4X file[%d] get space error, size exceeds 4G\n"
 msgstr ""
 
-#: cckddasd.c:2420
+#: cckddasd.c:2447
 #, c-format
 msgid "HHCCD110E %4.4X file[%d] devhdr id error\n"
 msgstr ""
 
-#: cckddasd.c:2993
+#: cckddasd.c:3035
 #, c-format
 msgid "HHCCD121E %4.4X file[%d] trklen err for %2.2x%2.2x%2.2x%2.2x%2.2x\n"
 msgstr ""
 
-#: cckddasd.c:3088
+#: cckddasd.c:3169
 #, c-format
 msgid ""
 "HHCCD122E %4.4X file[%d] invalid byte 0 trk %d: buf %2.2x%2.2x%2.2x%2.2x%"
 "2.2x\n"
 msgstr ""
 
-#: cckddasd.c:3110
+#: cckddasd.c:3191
 #, c-format
 msgid ""
 "HHCCD123E %4.4X file[%d] invalid byte 0 blkgrp %d: buf %2.2x%2.2x%2.2x%2.2x%"
 "2.2x\n"
 msgstr ""
 
-#: cckddasd.c:3125
+#: cckddasd.c:3206
 #, c-format
 msgid ""
 "HHCCD124E %4.4X file[%d] invalid %s hdr %s %d: %s compression unsupported\n"
 msgstr ""
 
-#: cckddasd.c:3133
+#: cckddasd.c:3214
 #, c-format
 msgid ""
-"HHCCD125E %4.4X file[%d] invalid %s hdr %s %d buf %2.2x%2.2x%2.2x%2.2x%2.2x\n"
+"HHCCD125E %4.4X file[%d] invalid %s hdr %s %d buf %p:%2.2x%2.2x%2.2x%2.2x%"
+"2.2x\n"
 msgstr ""
 
-#: cckddasd.c:3285
+#: cckddasd.c:3366
 #, c-format
 msgid ""
 "HHCCD142E %4.4X file[%d] shadow file name %s\n"
 "      collides with %4.4X file[%d] name %s\n"
 msgstr ""
 
-#: cckddasd.c:3329
+#: cckddasd.c:3410
 #, c-format
 msgid ""
 "HHCCD151E %4.4X file[%d] error re-opening %s readonly\n"
 "  %s\n"
 msgstr ""
 
-#: cckddasd.c:3357
+#: cckddasd.c:3438
 #, c-format
 msgid "HHCCD161E %4.4X file[%d] no shadow file name\n"
 msgstr ""
 
-#: cckddasd.c:3365
+#: cckddasd.c:3446
 #, c-format
 msgid "HHCCD161E %4.4X file[%d] max shadow files exceeded\n"
 msgstr ""
 
-#: cckddasd.c:3439
+#: cckddasd.c:3520
 #, c-format
 msgid "HHCCD160E %4.4X not a cckd device\n"
 msgstr ""
 
-#: cckddasd.c:3469
+#: cckddasd.c:3550
 #, c-format
 msgid "HHCCD161E %4.4X file[%d] error adding shadow file\n"
 msgstr ""
 
-#: cckddasd.c:3478
+#: cckddasd.c:3559
 #, c-format
 msgid "HHCCD162I %4.4X file[%d] %s added\n"
 msgstr ""
 
-#: cckddasd.c:3520
+#: cckddasd.c:3601
 #, c-format
 msgid "HHCCD170E %4.4X not a cckd device\n"
 msgstr ""
 
-#: cckddasd.c:3526
+#: cckddasd.c:3607
 #, c-format
 msgid "HHCCD171E %4.4X file[%d] cannot remove base file\n"
 msgstr ""
 
-#: cckddasd.c:3569
+#: cckddasd.c:3650
 #, c-format
 msgid ""
 "HHCCD172E %4.4X file[%d] not merged, file[%d] cannot be opened read-write%s\n"
 msgstr ""
 
-#: cckddasd.c:3583
+#: cckddasd.c:3664
 #, c-format
 msgid "HHCCD173E %4.4X file[%d] not merged, file[%d] check failed\n"
 msgstr ""
 
-#: cckddasd.c:3596
+#: cckddasd.c:3677
 #, c-format
 msgid "HHCCD174E %4.4X file[%d] not merged, file not hardened\n"
 msgstr ""
 
-#: cckddasd.c:3747
+#: cckddasd.c:3828
 #, c-format
 msgid "HHCCD181I %4.4X shadow file [%d] successfully %s%s\n"
 msgstr ""
 
-#: cckddasd.c:3776
+#: cckddasd.c:3857
 #, c-format
 msgid "HHCCD201W %4.4X device is not a shadow file\n"
 msgstr ""
 
-#: cckddasd.c:3781
+#: cckddasd.c:3862
 #, c-format
 msgid "HHCCD202W %4.4X file shadowing not activated\n"
 msgstr ""
 
-#: cckddasd.c:3789
+#: cckddasd.c:3870
 #, c-format
 msgid "HHCCD203W %4.4X shadowing is already active\n"
 msgstr ""
 
-#: cckddasd.c:3798
+#: cckddasd.c:3879
 #, c-format
 msgid "HHCCD204I %4.4X shadow file name set to %s\n"
 msgstr ""
 
-#: cckddasd.c:3816
+#: cckddasd.c:3897
 #, c-format
 msgid "HHCCD205W %4.4X device is not a shadow file\n"
 msgstr ""
 
-#: cckddasd.c:3881
+#: cckddasd.c:3962
 #, c-format
 msgid "HHCCD206W %4.4X device is not a shadow file\n"
 msgstr ""
 
-#: cckddasd.c:3898
+#: cckddasd.c:3979
 msgid ""
 "HHCCD210I           size free  nbr st   reads  writes l2reads    hits "
 "switches\n"
 msgstr ""
 
-#: cckddasd.c:3900
+#: cckddasd.c:3981
 msgid ""
 "HHCCD211I                                                  readaheads   "
 "misses\n"
 msgstr ""
 
-#: cckddasd.c:3901
+#: cckddasd.c:3982
 msgid ""
 "HHCCD212I "
 "--------------------------------------------------------------------\n"
 msgstr ""
 
-#: cckddasd.c:3904
+#: cckddasd.c:3985
 #, c-format
 msgid "HHCCD213I [*] %10lld %3lld%% %4d    %7d %7d %7d %7d  %7d\n"
 msgstr ""
 
-#: cckddasd.c:3909
+#: cckddasd.c:3990
 #, c-format
 msgid ""
 "HHCCD214I                                                     %7d  %7d\n"
 msgstr ""
 
-#: cckddasd.c:3913
+#: cckddasd.c:3994
 #, c-format
 msgid "HHCCD215I %s\n"
 msgstr ""
 
-#: cckddasd.c:3914
+#: cckddasd.c:3995
 #, c-format
 msgid "HHCCD216I [0] %10lld %3lld%% %4d %s %7d %7d %7d\n"
 msgstr ""
 
-#: cckddasd.c:3921
+#: cckddasd.c:4002
 #, c-format
 msgid "HHCCD217I %s\n"
 msgstr ""
 
-#: cckddasd.c:3926
+#: cckddasd.c:4007
 #, c-format
 msgid "HHCCD218I [%d] %10lld %3lld%% %4d %s %7d %7d %7d\n"
 msgstr ""
 
-#: cckddasd.c:4023
+#: cckddasd.c:4104
 msgid "HHCCD003I Garbage collector thread started: tid="
 msgstr ""
 
-#: cckddasd.c:4023
+#: cckddasd.c:4104
 #, c-format
 msgid ", pid=%d \n"
 msgstr ""
 
-#: cckddasd.c:4129
+#: cckddasd.c:4210
 msgid "HHCCD013I Garbage collector thread stopping: tid="
 msgstr ""
 
-#: cckddasd.c:4349
+#: cckddasd.c:4430
 #, c-format
 msgid ""
 "HHCCD190E %4.4X file[%d] offset 0x%llx unknown space: %2.2x%2.2x%2.2x%2.2x%"
 "2.2x\n"
 msgstr ""
 
-#: cckddasd.c:4482
+#: cckddasd.c:4563
 #, c-format
 msgid ""
 "HHCCD193E %4.4X file[%d] uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x\n"
 msgstr ""
 
-#: cckddasd.c:4485
+#: cckddasd.c:4566
 #, c-format
 msgid "HHCCD194E %4.4X file[%d] %s compression not supported\n"
 msgstr ""
 
-#: cckddasd.c:4981
+#: cckddasd.c:5062
 msgid "HHCCD900I print_itrace\n"
 msgstr ""
 
@@ -1265,52 +1266,52 @@ msgstr ""
 msgid "HHCCF043E Cannot obtain device block\n"
 msgstr ""
 
-#: config.c:301
+#: config.c:302
 #, c-format
 msgid "HHCCF041E Device %4.4X already exists\n"
 msgstr ""
 
-#: config.c:310
+#: config.c:311
 #, c-format
 msgid "HHCCF042E Device type %s not recognized\n"
 msgstr ""
 
-#: config.c:338
+#: config.c:339
 #, c-format
 msgid "HHCCF044E Initialization failed for device %4.4X\n"
 msgstr ""
 
-#: config.c:360
+#: config.c:361
 #, c-format
 msgid "HHCCF045E Cannot obtain buffer for device %4.4X: %s\n"
 msgstr ""
 
-#: config.c:473
+#: config.c:474
 #, c-format
 msgid "HHCCF046E Subchannel %4.4X does not exist\n"
 msgstr ""
 
-#: config.c:480
+#: config.c:481
 #, c-format
 msgid "HHCCF047I Subchannel %4.4X detached\n"
 msgstr ""
 
-#: config.c:499
+#: config.c:500
 #, c-format
 msgid "HHCCF046E Device %4.4X does not exist\n"
 msgstr ""
 
-#: config.c:506
+#: config.c:507
 #, c-format
 msgid "HHCCF047I Device %4.4X detached\n"
 msgstr ""
 
-#: config.c:524
+#: config.c:525
 #, c-format
 msgid "HHCCF048E Device %4.4X does not exist\n"
 msgstr ""
 
-#: config.c:531
+#: config.c:532
 #, c-format
 msgid "HHCCF049E Device %4.4X already exists\n"
 msgstr ""
@@ -1495,44 +1496,44 @@ msgstr ""
 msgid "HHCCP008I CPU%4.4X thread ended: tid="
 msgstr ""
 
-#: cpu.c:1331
+#: cpu.c:1330
 #, c-format
 msgid "HHCCP010I CPU%4.4X store status completed.\n"
 msgstr ""
 
-#: cpu.c:1392
+#: cpu.c:1391
 #, c-format
 msgid ""
 "HHCCP011I CPU%4.4X: Disabled wait state\n"
 "          "
 msgstr ""
 
-#: cpu.c:1482
+#: cpu.c:1481
 #, c-format
 msgid "HHCCP007I CPU%4.4X architecture mode set to %s\n"
 msgstr ""
 
-#: cpu.c:1492
+#: cpu.c:1491
 #, c-format
 msgid "HHCCP003I CPU%4.4X architecture mode %s\n"
 msgstr ""
 
-#: cpu.c:1497
+#: cpu.c:1496
 #, c-format
 msgid "HHCCP004I CPU%4.4X Vector Facility online\n"
 msgstr ""
 
-#: cpu.c:1523
+#: cpu.c:1522
 #, c-format
 msgid "HHCCP080E CPU%4.4X malloc failed for archjmp regs: %s\n"
 msgstr ""
 
-#: cpu.c:1638
+#: cpu.c:1637
 #, c-format
 msgid "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: cpu.c:1645
+#: cpu.c:1644
 #, c-format
 msgid ""
 "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%"
@@ -2164,68 +2165,68 @@ msgstr ""
 msgid "HHCDT001E failed to open image %s\n"
 msgstr ""
 
-#: dasdcopy.c:108
+#: dasdcopy.c:111
 #, c-format
 msgid "Hercules %s copy program "
 msgstr ""
 
-#: dasdcopy.c:192
+#: dasdcopy.c:195
 #, c-format
 msgid "HHCDC001E %s: %s open error: %s\n"
 msgstr ""
 
-#: dasdcopy.c:199
+#: dasdcopy.c:202
 #, c-format
 msgid "HHCDC002E %s: %s read error: %s\n"
 msgstr ""
 
-#: dasdcopy.c:262
+#: dasdcopy.c:265
 #, c-format
 msgid "HHCDC003E %s: %s open failed\n"
 msgstr ""
 
-#: dasdcopy.c:275
+#: dasdcopy.c:279
 #, c-format
 msgid "HHCDC004E %s: ckd lookup failed for %4.4X cyls %d\n"
 msgstr ""
 
-#: dasdcopy.c:295
+#: dasdcopy.c:299
 #, c-format
 msgid "HHCDC005E %s: fba lookup failed, blks %d\n"
 msgstr ""
 
-#: dasdcopy.c:316
+#: dasdcopy.c:320
 #, c-format
 msgid "HHCDC006E %s: %s create failed\n"
 msgstr ""
 
-#: dasdcopy.c:328
+#: dasdcopy.c:332
 #, c-format
 msgid "HHCDC007E %s: %s open failed\n"
 msgstr ""
 
-#: dasdcopy.c:341
+#: dasdcopy.c:345
 #, c-format
 msgid "  %3d%% %7d of %d"
 msgstr ""
 
-#: dasdcopy.c:361
+#: dasdcopy.c:369
 #, c-format
 msgid "HHCDC008E %s: %s read error %s %d stat=%2.2X\n"
 msgstr ""
 
-#: dasdcopy.c:392
+#: dasdcopy.c:400
 #, c-format
 msgid "HHCDC009E %s: %s write error %s %d stat=%2.2X\n"
 msgstr ""
 
-#: dasdcopy.c:404
+#: dasdcopy.c:412
 msgid ""
 "\n"
 "HHCDC010I Copy successful !!!       \n"
 msgstr ""
 
-#: dasdcopy.c:444
+#: dasdcopy.c:500
 #, c-format
 msgid ""
 "usage:  ckd2cckd [-options] ifile ofile\n"
@@ -2245,15 +2246,15 @@ msgid ""
 "     -a                output file will have alt cyls\n"
 msgstr ""
 
-#: dasdcopy.c:464 dasdcopy.c:518 dasdcopy.c:578
+#: dasdcopy.c:520 dasdcopy.c:574 dasdcopy.c:634
 msgid "     -z                compress using zlib [default]\n"
 msgstr ""
 
-#: dasdcopy.c:471 dasdcopy.c:525
+#: dasdcopy.c:527 dasdcopy.c:581
 msgid "     -bz2              compress using bzip2\n"
 msgstr ""
 
-#: dasdcopy.c:479
+#: dasdcopy.c:535
 msgid ""
 "usage:  cckd2ckd [-options] ifile [sf=sfile] ofile\n"
 "\n"
@@ -2274,7 +2275,7 @@ msgid ""
 "     -a                output file will have alt cyls\n"
 msgstr ""
 
-#: dasdcopy.c:499
+#: dasdcopy.c:555
 #, c-format
 msgid ""
 "usage:  fba2cfba [-options] ifile ofile\n"
@@ -2293,7 +2294,7 @@ msgid ""
 "     -blks  n          size of output file\n"
 msgstr ""
 
-#: dasdcopy.c:533
+#: dasdcopy.c:589
 msgid ""
 "usage:  cfba2fba [-options] ifile [sf=sfile] ofile\n"
 "\n"
@@ -2313,7 +2314,7 @@ msgid ""
 "     -blks  n          size of output file\n"
 msgstr ""
 
-#: dasdcopy.c:552
+#: dasdcopy.c:608
 #, c-format
 msgid ""
 "usage:  %s [-options] ifile [sf=sfile] ofile\n"
@@ -2338,11 +2339,11 @@ msgid ""
 "     -o     type       output file type (CKD, CCKD, FBA, CFBA)\n"
 msgstr ""
 
-#: dasdcopy.c:585
+#: dasdcopy.c:641
 msgid "     -bz2              compress output using bzip2\n"
 msgstr ""
 
-#: dasdinit.c:261
+#: dasdinit.c:274
 msgid "HHCDI001I DASD initialization successfully completed.\n"
 msgstr ""
 
@@ -2444,345 +2445,340 @@ msgstr ""
 msgid "HHCDS002I End of directory: %d members selected\n"
 msgstr ""
 
-#: dasdutil.c:205
+#: dasdutil.c:206
 #, c-format
 msgid "HHCDU001I Updating cyl %d head %d\n"
 msgstr ""
 
-#: dasdutil.c:211
+#: dasdutil.c:212
 #, c-format
 msgid "HHCDU002E %s write track error: stat=%2.2X\n"
 msgstr ""
 
-#: dasdutil.c:218
+#: dasdutil.c:219
 #, c-format
 msgid "HHCDU003I Reading cyl %d head %d\n"
 msgstr ""
 
-#: dasdutil.c:224
+#: dasdutil.c:225
 #, c-format
 msgid "HHCDU004E %s read track error: stat=%2.2X\n"
 msgstr ""
 
-#: dasdutil.c:345
+#: dasdutil.c:346
 #, c-format
 msgid "HHCDU005I Searching extent %d begin (%d,%d) end (%d,%d)\n"
 msgstr ""
 
-#: dasdutil.c:417
+#: dasdutil.c:418
 #, c-format
 msgid "HHCDU006I Searching extent %d begin (%d,%d) end (%d,%d)\n"
 msgstr ""
 
-#: dasdutil.c:478
+#: dasdutil.c:479
 #, c-format
 msgid "HHCDU007E Track %d not found in extent table\n"
 msgstr ""
 
-#: dasdutil.c:516
+#: dasdutil.c:517
 #, c-format
 msgid "HHCDU008E Cannot obtain storage for device descriptor buffer: %s\n"
 msgstr ""
 
-#: dasdutil.c:575
+#: dasdutil.c:576
 #, c-format
 msgid "HHCDU009E Cannot open %s: %s\n"
 msgstr ""
 
-#: dasdutil.c:590
+#: dasdutil.c:591
 #, c-format
 msgid "HHCDU010E %s read error: %s\n"
 msgstr ""
 
-#: dasdutil.c:601
+#: dasdutil.c:602
 #, c-format
 msgid "HHCDU011E %s CKD header invalid\n"
 msgstr ""
 
-#: dasdutil.c:610
+#: dasdutil.c:611
 #, c-format
 msgid "HHCDU012E DASD table entry not found for devtype 0x%2.2X\n"
 msgstr ""
 
-#: dasdutil.c:640
+#: dasdutil.c:641
 #, c-format
 msgid "HHCDU013E CKD initialization failed for %s\n"
 msgstr ""
 
-#: dasdutil.c:662
+#: dasdutil.c:663
 #, c-format
 msgid "HHCDU014I %s heads=%d trklen=%d\n"
 msgstr ""
 
-#: dasdutil.c:696
+#: dasdutil.c:697
 #, c-format
 msgid "HHCDU015I Updating cyl %d head %d\n"
 msgstr ""
 
-#: dasdutil.c:702
+#: dasdutil.c:703
 #, c-format
 msgid "HHCDU016E %s write track error: stat=%2.2X\n"
 msgstr ""
 
-#: dasdutil.c:745
+#: dasdutil.c:746
 #, c-format
 msgid "HHCDU017E Cannot obtain storage for device descriptor buffer: %s\n"
 msgstr ""
 
-#: dasdutil.c:761
+#: dasdutil.c:762
 #, c-format
 msgid "HHCDU018E DASD table entry not found for devtype 0x%2.2X\n"
 msgstr ""
 
-#: dasdutil.c:788
+#: dasdutil.c:789
 #, c-format
 msgid "HHCDU019E FBA initialization failed for %s\n"
 msgstr ""
 
-#: dasdutil.c:804
+#: dasdutil.c:805
 #, c-format
 msgid "HHCDU020I %s sectors=%d size=%d\n"
 msgstr ""
 
-#: dasdutil.c:850
+#: dasdutil.c:851
 msgid "HHCDU021E VOL1 record not found\n"
 msgstr ""
 
-#: dasdutil.c:863
+#: dasdutil.c:864
 #, c-format
 msgid "HHCDU022I VOLSER=%s VTOC=%4.4X%4.4X%2.2X\n"
 msgstr ""
 
-#: dasdutil.c:873
+#: dasdutil.c:874
 msgid "HHCDU023E F4DSCB record not found\n"
 msgstr ""
 
-#: dasdutil.c:880
+#: dasdutil.c:881
 #, c-format
 msgid "HHCDU023I VTOC start %2.2X%2.2X%2.2X%2.2X end %2.2X%2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: dasdutil.c:896
+#: dasdutil.c:897
 #, c-format
 msgid "HHCDU024E Dataset %s not found in VTOC\n"
 msgstr ""
 
-#: dasdutil.c:904
+#: dasdutil.c:905
 #, c-format
 msgid "HHCDU025I DSNAME=%s F1DSCB CCHHR=%4.4X%4.4X%2.2X\n"
 msgstr ""
 
-#: dasdutil.c:914
+#: dasdutil.c:915
 msgid "HHCDU026E F1DSCB record not found\n"
 msgstr ""
 
-#: dasdutil.c:936
+#: dasdutil.c:937
 msgid "HHCDU027E F3DSCB record not found\n"
 msgstr ""
 
-#: dasdutil.c:1159
+#: dasdutil.c:1166
 #, c-format
 msgid "HHCDU028E %s open error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1187
+#: dasdutil.c:1194
 #, c-format
 msgid "HHCDU029E %s device header write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1215
+#: dasdutil.c:1223
 #, c-format
 msgid "HHCDU030E %s compressed device header write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1225
+#: dasdutil.c:1233
 #, c-format
 msgid "HHCDU031E Cannot obtain l1tab buffer: %s\n"
 msgstr ""
 
-#: dasdutil.c:1235
+#: dasdutil.c:1243
 #, c-format
 msgid "HHCDU032E %s primary lookup table write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1250
+#: dasdutil.c:1256
 #, c-format
 msgid "HHCDU033E %s secondary lookup table write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1264
-#, c-format
-msgid "HHCDU034E %s dasdcopy ftruncate error: %s\n"
-msgstr ""
-
-#: dasdutil.c:1380
+#: dasdutil.c:1456
 #, c-format
 msgid "HHCDU035E %s cylinder %u head %u write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1404
+#: dasdutil.c:1486
 #, c-format
 msgid "HHCDU036E %s compressed device header lseek error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1412
+#: dasdutil.c:1494
 #, c-format
 msgid "HHCDU037E %s compressed device header write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1424
+#: dasdutil.c:1504
 #, c-format
 msgid "HHCDU038E %s secondary lookup table lseek error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1432
+#: dasdutil.c:1512
 #, c-format
 msgid "HHCDU039E %s secondary lookup table write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1447
+#: dasdutil.c:1527
 #, c-format
 msgid "HHCDU040E %s close error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1454
+#: dasdutil.c:1534
 #, c-format
 msgid "HHCDU041I %u cylinders successfully written to file %s\n"
 msgstr ""
 
-#: dasdutil.c:1521
+#: dasdutil.c:1602
 #, c-format
 msgid "HHCDU042E Cylinder count %u is outside range %u-%u\n"
 msgstr ""
 
-#: dasdutil.c:1530
+#: dasdutil.c:1611
 #, c-format
 msgid "HHCDU043E Cannot obtain track buffer: %s\n"
 msgstr ""
 
-#: dasdutil.c:1537
+#: dasdutil.c:1618
 #, c-format
 msgid ""
 "HHCDU044I Creating %4.4X volume %s: %u cyls, %u trks/cyl, %u bytes/track\n"
 msgstr ""
 
-#: dasdutil.c:1642
+#: dasdutil.c:1723
 #, c-format
 msgid "HHCDU045E Sector count %u is outside range %u-%u\n"
 msgstr ""
 
-#: dasdutil.c:1651
+#: dasdutil.c:1732
 #, c-format
 msgid "HHCDU046E Cannot obtain sector buffer: %s\n"
 msgstr ""
 
-#: dasdutil.c:1658
+#: dasdutil.c:1739
 #, c-format
 msgid "HHCDU047I Creating %4.4X volume %s: %u sectors, %u bytes/sector\n"
 msgstr ""
 
-#: dasdutil.c:1670
+#: dasdutil.c:1751
 #, c-format
 msgid "HHCDU048I %s open error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1682
+#: dasdutil.c:1763
 #, c-format
 msgid "HHCDU049E %s dasdcopy ftruncate error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1717
+#: dasdutil.c:1798
 #, c-format
 msgid "HHCDU050E %s sector %u write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1729
+#: dasdutil.c:1810
 #, c-format
 msgid "HHCDU051E %s close error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1739
+#: dasdutil.c:1820
 #, c-format
 msgid "HHCDU052I %u sectors successfully written to file %s\n"
 msgstr ""
 
-#: dasdutil.c:1781
+#: dasdutil.c:1862
 #, c-format
 msgid "HHCDU053E File size too large: %lld [%d]\n"
 msgstr ""
 
-#: dasdutil.c:1794
+#: dasdutil.c:1875
 #, c-format
 msgid "HHCDU054E %s open error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1801
+#: dasdutil.c:1882
 #, c-format
 msgid ""
 "HHCDU055I Creating %4.4X compressed volume %s: %u sectors, %u bytes/sector\n"
 msgstr ""
 
-#: dasdutil.c:1811
+#: dasdutil.c:1892
 #, c-format
 msgid "HHCDU056E %s devhdr write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1834
+#: dasdutil.c:1915
 #, c-format
 msgid "HHCDU057E %s cdevhdr write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1846
+#: dasdutil.c:1927
 #, c-format
 msgid "HHCDU058E %s l1tab write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1858
+#: dasdutil.c:1939
 #, c-format
 msgid "HHCDU059E %s l2tab write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1877
+#: dasdutil.c:1958
 #, c-format
 msgid "HHCDU060E %s block header write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1884
+#: dasdutil.c:1965
 #, c-format
 msgid "HHCDU061E %s block write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1899
+#: dasdutil.c:1980
 #, c-format
 msgid "HHCDU062E %s block write error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1913
+#: dasdutil.c:1994
 #, c-format
 msgid "HHCDU063E %s cdevhdr lseek error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1920
+#: dasdutil.c:2001
 #, c-format
 msgid "HHCDU064E %s cdevhdr rewrite error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1929
+#: dasdutil.c:2010
 #, c-format
 msgid "HHCDU065E %s l2tab lseek error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1936
+#: dasdutil.c:2017
 #, c-format
 msgid "HHCDU066E %s l2tab rewrite error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1945
+#: dasdutil.c:2026
 #, c-format
 msgid "HHCDU067E %s close error: %s\n"
 msgstr ""
 
-#: dasdutil.c:1952
+#: dasdutil.c:2033
 #, c-format
 msgid "HHCDU068I %u sectors successfully written to file %s\n"
 msgstr ""
@@ -3647,7 +3643,7 @@ msgstr ""
 #: hsccmd.c:501 hsccmd.c:733 hsccmd.c:839 hsccmd.c:867 hsccmd.c:895
 #: hsccmd.c:923 hsccmd.c:951 hsccmd.c:982 hsccmd.c:1011 hsccmd.c:1048
 #: hsccmd.c:1075 hsccmd.c:1102 hsccmd.c:2069 hsccmd.c:2205 hsccmd.c:2271
-#: hsccmd.c:2970 hsccmd.c:3090 hsccmd.c:3187 hsccmd.c:3229
+#: hsccmd.c:2970 hsccmd.c:3098 hsccmd.c:3191 hsccmd.c:3233
 #, c-format
 msgid "HHCPN160W CPU%4.4X not configured\n"
 msgstr ""
@@ -4491,135 +4487,135 @@ msgstr ""
 msgid "HHCPN138E Unrecognized +/- command.\n"
 msgstr ""
 
-#: hsccmd.c:3361
+#: hsccmd.c:3365
 #, c-format
 msgid "HHCHD100I Loading %s ...\n"
 msgstr ""
 
-#: hsccmd.c:3363
+#: hsccmd.c:3367
 #, c-format
 msgid "HHCHD101I Module %s loaded\n"
 msgstr ""
 
-#: hsccmd.c:3386
+#: hsccmd.c:3390
 #, c-format
 msgid "HHCHD102I Unloading %s ...\n"
 msgstr ""
 
-#: hsccmd.c:3388
+#: hsccmd.c:3392
 #, c-format
 msgid "HHCHD103I Module %s unloaded\n"
 msgstr ""
 
-#: hsccmd.c:3433
+#: hsccmd.c:3437
 msgid "HHCPN150W evm command is deprecated. Use \"ecpsvm\" instead\n"
-msgstr ""
-
-#: hsccmd.c:3456
-#, c-format
-msgid "HHCPN161I (void *) ..........%7d\n"
-msgstr ""
-
-#: hsccmd.c:3457
-#, c-format
-msgid "HHCPN162I (unsigned int) ....%7d\n"
-msgstr ""
-
-#: hsccmd.c:3458
-#, c-format
-msgid "HHCPN163I SYSBLK ............%7d\n"
-msgstr ""
-
-#: hsccmd.c:3459
-#, c-format
-msgid "HHCPN164I REGS ..............%7d\n"
 msgstr ""
 
 #: hsccmd.c:3460
 #, c-format
-msgid "HHCPN165I DEVBLK ............%7d\n"
+msgid "HHCPN161I (void *) ..........%7d\n"
 msgstr ""
 
 #: hsccmd.c:3461
 #, c-format
-msgid "HHCPN166I TLB entry .........%7d\n"
+msgid "HHCPN162I (unsigned int) ....%7d\n"
 msgstr ""
 
 #: hsccmd.c:3462
 #, c-format
+msgid "HHCPN163I SYSBLK ............%7d\n"
+msgstr ""
+
+#: hsccmd.c:3463
+#, c-format
+msgid "HHCPN164I REGS ..............%7d\n"
+msgstr ""
+
+#: hsccmd.c:3464
+#, c-format
+msgid "HHCPN165I DEVBLK ............%7d\n"
+msgstr ""
+
+#: hsccmd.c:3465
+#, c-format
+msgid "HHCPN166I TLB entry .........%7d\n"
+msgstr ""
+
+#: hsccmd.c:3466
+#, c-format
 msgid "HHCPN167I TLB table .........%7d\n"
 msgstr ""
 
-#: hsccmd.c:3701
+#: hsccmd.c:3705
 #, c-format
 msgid "HHCPN139E Command \"%s\" not found; enter '?' for list.\n"
 msgstr ""
 
-#: hsccmd.c:3721
+#: hsccmd.c:3725
 msgid ""
 "HHCPN140I Valid panel commands are...\n"
 "\n"
 msgstr ""
 
-#: hsccmd.c:3728
+#: hsccmd.c:3732
 #, c-format
 msgid "  %-9.9s    %s \n"
 msgstr ""
 
-#: hsccmd.c:3734
+#: hsccmd.c:3738
 msgid "add shadow file"
 msgstr ""
 
-#: hsccmd.c:3735
+#: hsccmd.c:3739
 msgid "delete shadow file"
 msgstr ""
 
-#: hsccmd.c:3736
+#: hsccmd.c:3740
 msgid "rename shadow file"
 msgstr ""
 
-#: hsccmd.c:3737
+#: hsccmd.c:3741
 msgid "compress shadow files"
 msgstr ""
 
-#: hsccmd.c:3738
+#: hsccmd.c:3742
 msgid "display shadow file stats"
 msgstr ""
 
-#: hsccmd.c:3742
+#: hsccmd.c:3746
 msgid "turn instruction tracing on/off"
 msgstr ""
 
-#: hsccmd.c:3743
+#: hsccmd.c:3747
 msgid "turn instruction stepping on/off"
 msgstr ""
 
-#: hsccmd.c:3744
+#: hsccmd.c:3748
 msgid "turn CCW tracing on/off"
 msgstr ""
 
-#: hsccmd.c:3745
+#: hsccmd.c:3749
 msgid "turn CCW stepping on/off"
 msgstr ""
 
-#: hsccmd.c:3747
+#: hsccmd.c:3751
 msgid "turn CKD_KEY tracing on/off"
 msgstr ""
 
-#: hsccmd.c:3749
+#: hsccmd.c:3753
 msgid "mark frames unusable/usable"
 msgstr ""
 
-#: hsccmd.c:3940
+#: hsccmd.c:3944
 msgid "HHCPN141E Missing argument\n"
 msgstr ""
 
-#: hsccmd.c:3948
+#: hsccmd.c:3952
 #, c-format
 msgid "%s"
 msgstr ""
 
-#: hsccmd.c:3953
+#: hsccmd.c:3957
 msgid "HHCPN142I No additional help available.\n"
 msgstr ""
 
@@ -6499,33 +6495,35 @@ msgstr ""
 
 #: w32chan.c:189
 #, c-format
-msgid "HHC762I malloc(DEVIOREQUEST) failed; device=%4.4X, strerror=\"%s\"\n"
+msgid "HHCCP084E malloc(DEVIOREQUEST) failed; device=%4.4X, strerror=\"%s\"\n"
 msgstr ""
 
 #: w32chan.c:252
-msgid "HHC765I *WARNING* max device threads exceeded.\n"
+msgid "HHCCP085W *WARNING* max device threads exceeded.\n"
 msgstr ""
 
 #: w32chan.c:349
 #, c-format
-msgid "HHC761I malloc(DEVTHREADPARMS) failed; device=%4.4X, strerror=\"%s\"\n"
+msgid ""
+"HHCCP086E malloc(DEVTHREADPARMS) failed; device=%4.4X, strerror=\"%s\"\n"
 msgstr ""
 
 #: w32chan.c:358
 #, c-format
 msgid ""
-"HHC763I CreateEvent(hShutdownEvent) failed; device=%4.4X, strerror=\"%s\"\n"
+"HHCCP087E CreateEvent(hShutdownEvent) failed; device=%4.4X, strerror=\"%s\"\n"
 msgstr ""
 
 #: w32chan.c:368
 #, c-format
 msgid ""
-"HHC764I CreateEvent(hRequestQueuedEvent) failed; device=%4.4X, strerror=\"%s"
-"\"\n"
+"HHCCP088E CreateEvent(hRequestQueuedEvent) failed; device=%4.4X, strerror=\"%"
+"s\"\n"
 msgstr ""
 
 #: w32chan.c:389
 #, c-format
 msgid ""
-"HHC760I fthread_create(DeviceThread) failed; device=%4.4X, strerror=\"%s\"\n"
+"HHCCP089E fthread_create(DeviceThread) failed; device=%4.4X, strerror=\"%s"
+"\"\n"
 msgstr ""

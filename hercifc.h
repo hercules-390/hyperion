@@ -50,7 +50,9 @@ typedef struct _CTLREQ
     union 
     {
         struct ifreq     ifreq;
+#if !defined(__APPLE__)
         struct rtentry   rtentry;
+#endif
     } iru;
 }   CTLREQ, *PCTLREQ;
 

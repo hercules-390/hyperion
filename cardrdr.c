@@ -752,6 +752,10 @@ int     num;                            /* Number of bytes to move   */
     /* Turn all read/feed commands into read, feed, select stacker 1 */
     if ((code & 0x17) == 0x02) code = 0x02;
 
+    /* Turn all feed-only commands into NOP. This is ugly, and should
+        really be thought out more. --JRM */
+    if ((code & 0x37) == 0x23) code = 0x03;
+
     /* Process depending on CCW opcode */
     switch (code) {
 

@@ -623,9 +623,9 @@ BYTE            c;                      /* Print character           */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
-    case 0xE3:
+    case 0xE3: case 0xDB:
     /*---------------------------------------------------------------*/
-    /* SKIP TO CHANNEL 12 IMMEDIATE                                  */
+    /* SKIP TO CHANNEL 12 IMMEDIATE (or 11)                          */
     /*---------------------------------------------------------------*/
         eor = dev->crlf ? "\r\n" : "\n";
         write_buffer (dev, eor, strlen(eor), unitstat);
