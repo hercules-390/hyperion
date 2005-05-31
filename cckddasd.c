@@ -155,7 +155,7 @@ void    cckd_print_itrace();
 /*-------------------------------------------------------------------*/
 /* Data areas                                                        */
 /*-------------------------------------------------------------------*/
-static  CCKD_L2ENT empty_l2[CKDDASD_NULLTRK_FMTMAX][256];
+static  CCKD_L2ENT empty_l2[CKDDASD_NULLTRK_FMTMAX+1][256];
 static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 DEVHND  cckddasd_device_hndinfo;
 DEVHND  cfbadasd_device_hndinfo;

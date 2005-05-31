@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+31 May 2005 Fix to fix for wrong null format track - Greg Smith
 30 May 2005 Add ability to copy AWSTAPE to SCSI tape to tapecopy = Jay
             Maynard
 20 May 2005 Fix wrong null format track - Reported by Gerald - Greg Smith
