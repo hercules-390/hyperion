@@ -2137,15 +2137,20 @@ U32             ppos, pos;              /* Free space offsets        */
 
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
-    if (cckd->cdevhdr[sfx].free_number == 0) return;
 
-    cckdtrc ("rel_flush_space nbr %d\n",cckd->cdevhdr[sfx].free_number);
+    cckdtrc ("flush_space nbr %d\n",cckd->cdevhdr[sfx].free_number);
 
     /* Make sure the free space chain is built */
     if (!cckd->free) cckd_read_fsp (dev);
 
 //  cckd_chk_space(dev);
- 
+
+    if (cckd->cdevhdr[sfx].free_number == 0 || cckd->cdevhdr[sfx].free == 0)
+    {
+        cckd->cdevhdr[sfx].free_number = cckd->cdevhdr[sfx].free = 0;
+        cckd->free1st = cckd->freelast = cckd->freeavail = -1;
+    }
+
     pos = cckd->cdevhdr[sfx].free;
     ppos = p = -1;
     cckd->cdevhdr[sfx].free_number = cckd->cdevhdr[sfx].free_largest = 0;
@@ -2513,13 +2518,17 @@ int             i;                      /* Index                     */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    if (!cckd->free) return 0;
+    cckdtrc ("file[%d] write_fsp number %d\n",
+              sfx, cckd->cdevhdr[sfx].free_number);
 
     for (i = 0; i < CCKD_MAX_FREEPEND; i++)
         cckd_flush_space(dev);
 
-    cckdtrc ("file[%d] write_fsp number %d\n",
-              sfx, cckd->cdevhdr[sfx].free_number);
+    if (cckd->cdevhdr[sfx].free_number == 0 || cckd->cdevhdr[sfx].free == 0)
+    {
+        cckd->cdevhdr[sfx].free_number = cckd->cdevhdr[sfx].free = 0;
+        cckd->free1st = cckd->freelast = cckd->freeavail = -1;
+    }
 
     fpos = (off_t)cckd->cdevhdr[sfx].free;
     for (i = cckd->free1st; i >= 0; i = cckd->free[i].next)
@@ -2979,32 +2988,37 @@ int             size;                   /* Size of new track         */
 int cckd_harden(DEVBLK *dev)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-int             rc, hrc=0;              /* Return codes              */
+int             rc=0;                   /* Return code               */
 
     cckd = dev->cckd_ext;
-    if (dev->ckdrdonly && cckd->sfn == 0) return 0;
+
+    if ((dev->ckdrdonly && cckd->sfn == 0)
+     || cckd->open[cckd->sfn] != CCKD_OPEN_RW)
+        return 0;
+
+    cckdtrc ("file[%d] harden\n", cckd->sfn);
 
     /* Write the compressed device header */
-    rc = cckd_write_chdr (dev);
-    if (rc < hrc) hrc = rc;
+    if (cckd_write_chdr (dev) < 0)
+        rc = -1;
 
     /* Write the level 1 table */
-    rc = cckd_write_l1 (dev);
-    if (rc < hrc) hrc = rc;
+    if (cckd_write_l1 (dev) < 0)
+        rc = -1;
 
     /* Write the free space chain */
-    rc = cckd_write_fsp (dev);
-    if (rc < hrc) hrc = rc;
+    if (cckd_write_fsp (dev) < 0)
+        rc = -1;
 
     /* Re-write the compressed device header */
     cckd->cdevhdr[cckd->sfn].options &= ~CCKD_OPENED;
-    rc = cckd_write_chdr (dev);
-    if (rc < hrc) hrc = rc;
+    if (cckd_write_chdr (dev) < 0)
+        rc = -1;
 
     if (cckdblk.fsync)
-        rc = fdatasync (cckd->fd[cckd->sfn]);
+        fdatasync (cckd->fd[cckd->sfn]);
 
-    return hrc;
+    return rc;
 } /* cckd_harden */
 
 /*-------------------------------------------------------------------*/
@@ -3489,6 +3503,9 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
         return -1;
     }
 
+    /* Harden the current file */
+    cckd_harden (dev);
+
     /* Open the new shadow file */
     if (cckd_open(dev, cckd->sfn+1, O_RDWR|O_CREAT|O_EXCL|O_BINARY,
                                       S_IRUSR | S_IWUSR | S_IRGRP) < 0)
@@ -3524,7 +3541,7 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
     /* Make the new file active */
     cckd->sfn++;
 
-    /* Harden the file */
+    /* Harden the new file */
     if (cckd_harden (dev) < 0)
     {
         cckd->sfn--;
@@ -3862,11 +3879,21 @@ BYTE            buf[65536];             /* Buffer                    */
 
     } /* if merge */
     else
+    {
+        /* Release the free space chain */
+        if (cckd->free) cckd_free (dev, "free", cckd->free);
+        cckd->free = NULL;
+        cckd->freenbr = 0;
+        cckd->free1st = cckd->freelast = cckd->freeavail = -1;
+
         cckd->sfn = to_sfx;
- 
+    }
+
     /* Remove the old file */
 //FIXME: unlink doesn't free space ??
-    cckd_ftruncate(dev, from_sfx, 0);
+//  actually space is freed, it just takes time
+//  ftruncate is commented out so we don't have to wait
+//  cckd_ftruncate(dev, from_sfx, 0);
     cckd_close (dev, from_sfx);
     cckd_free (dev, "l1", cckd->l1[from_sfx]);
     cckd->l1[from_sfx] = NULL;
