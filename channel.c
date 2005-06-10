@@ -1261,14 +1261,11 @@ int     current_priority;               /* Current thread priority   */
             /* Set priority to requested device priority */
             if (dev->devprio != current_priority)
                 adjust_thread_priority(&dev->devprio);
+            current_priority = dev->devprio;
 
             release_lock (&sysblk.ioqlock);
 
             call_execute_ccw_chain(sysblk.arch_mode, dev);
-
-            /* Reset priority to default priority */
-            if (current_priority > sysblk.devprio)
-                adjust_thread_priority(&sysblk.devprio);
 
             obtain_lock(&sysblk.ioqlock);
             dev->tid = 0;

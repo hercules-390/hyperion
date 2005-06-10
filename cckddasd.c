@@ -814,6 +814,7 @@ int             syncio;                 /* Syncio indicator          */
         if ((dev->buf[0] & CCKD_COMPRESS_MASK) != 0
          && (dev->buf[0] & dev->comps) == 0)
         {
+#if 0
             /* Return if synchronous i/o */
             if (dev->syncio_active)
             {
@@ -822,6 +823,7 @@ int             syncio;                 /* Syncio indicator          */
                 dev->syncio_retry = 1;
                 return -1;
             }
+#endif
             len = cache_getval(CACHE_DEVBUF, dev->cache);
             newbuf = cckd_uncompress (dev, dev->buf, len, dev->ckdtrksz, trk);
             if (newbuf == NULL) {
@@ -1007,6 +1009,7 @@ int             maxlen;                 /* Size for cache entry      */
         if ((cbuf[0] & CCKD_COMPRESS_MASK) != 0
          && (cbuf[0] & dev->comps) == 0)
         {
+#if 0
             /* Return if synchronous i/o */
             if (dev->syncio_active)
             {
@@ -1016,6 +1019,7 @@ int             maxlen;                 /* Size for cache entry      */
                 dev->syncio_retry = 1;
                 return -1;
             }
+#endif
             len = cache_getval(CACHE_DEVBUF, dev->cache) + CKDDASD_TRKHDR_SIZE;
             newbuf = cckd_uncompress (dev, cbuf, len, maxlen, blkgrp);
             if (newbuf == NULL) {
