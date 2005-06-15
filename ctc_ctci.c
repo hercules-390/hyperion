@@ -925,6 +925,9 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 
     pCTCBLK->pid = getpid();
 
+    // Try to avoid race condition at startup with hercifc
+    SLEEP(10);
+
     do
     {
         // Read frame from the TUN/TAP interface
