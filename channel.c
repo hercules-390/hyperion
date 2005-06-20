@@ -276,7 +276,7 @@ IOINT *ioint=NULL;
             /* Signal console thread to redrive select */
             if (dev->console)
             {
-                signal_thread (sysblk.cnsltid, SIGUSR2);
+                SIGNAL_CONSOLE_THREAD();
             }
 
             if (dev->ccwtrace || dev->ccwstep)
@@ -404,7 +404,7 @@ int      pending = 0;                   /* New interrupt pending     */
     /* Signal console thread to redrive select */
     if (dev->console)
     {
-        signal_thread (sysblk.cnsltid, SIGUSR2);
+        SIGNAL_CONSOLE_THREAD();
     }
 
     release_lock (&dev->lock);
@@ -711,7 +711,7 @@ int     cc;                             /* Condition code            */
             /* ISW20030812 - END */
             if (dev->console)
             {
-                signal_thread (sysblk.cnsltid, SIGUSR2);
+                SIGNAL_CONSOLE_THREAD();
             }
             return 0;
         }
@@ -734,7 +734,7 @@ int     cc;                             /* Condition code            */
     /* Signal console thread to redrive select */
     if (dev->console)
     {
-        signal_thread (sysblk.cnsltid, SIGUSR2);
+        SIGNAL_CONSOLE_THREAD();
     }
 
     /* Return the condition code */
@@ -823,7 +823,7 @@ int pending = 0;
         /* Signal console thread to redrive select */
         if (dev->console)
         {
-            signal_thread (sysblk.cnsltid, SIGUSR2);
+            SIGNAL_CONSOLE_THREAD();
         }
     }
 
@@ -945,7 +945,7 @@ int pending = 0;
         /* Signal console thread to redrive select */
         if (dev->console)
         {
-            signal_thread (sysblk.cnsltid, SIGUSR2);
+            SIGNAL_CONSOLE_THREAD();
         }
     }
 
@@ -1025,7 +1025,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
     /* Signal console thread to redrive select */
     if (dev->console)
     {
-        signal_thread (sysblk.cnsltid, SIGUSR2);
+        SIGNAL_CONSOLE_THREAD();
     }
 
     /* Set the resume pending flag and signal the subchannel */
@@ -1129,7 +1129,7 @@ int     console = 0;                    /* 1 = console device reset  */
 
     /* Signal console thread to redrive select */
     if (console)
-        signal_thread (sysblk.cnsltid, SIGUSR2);
+        SIGNAL_CONSOLE_THREAD();
 
 } /* end function channelset_reset */
 
@@ -1165,7 +1165,7 @@ int console = 0;
 
     /* Signal console thread to redrive select */
     if (console)
-        signal_thread (sysblk.cnsltid, SIGUSR2);
+        SIGNAL_CONSOLE_THREAD();
 
     release_lock (&sysblk.intlock);
 
@@ -1209,7 +1209,7 @@ int i;
 
     /* Signal console thread to redrive select */
     if (console)
-        signal_thread (sysblk.cnsltid, SIGUSR2);
+        SIGNAL_CONSOLE_THREAD();
 
 } /* end function io_reset */
 
@@ -1840,7 +1840,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     /* Signal console thread to redrive select */
     if (dev->console)
     {
-        signal_thread (sysblk.cnsltid, SIGUSR2);
+        SIGNAL_CONSOLE_THREAD();
     }
 
     /* Store the start I/O parameters in the device block */
@@ -2208,7 +2208,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             /* Signal console thread to redrive select */
             if (dev->console)
             {
-                signal_thread (sysblk.cnsltid, SIGUSR2);
+                SIGNAL_CONSOLE_THREAD();
             }
 
             release_lock (&dev->lock);
@@ -2263,7 +2263,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             /* Signal console thread to redrive select */
             if (dev->console)
             {
-                signal_thread (sysblk.cnsltid, SIGUSR2);
+                SIGNAL_CONSOLE_THREAD();
             }
 
             release_lock (&dev->lock);
@@ -2425,7 +2425,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                 /* Signal console thread to redrive select */
                 if (dev->console)
                 {
-                    signal_thread (sysblk.cnsltid, SIGUSR2);
+                    SIGNAL_CONSOLE_THREAD();
                 }
 
                 /* Turn on the `suspended' bit.  This enables remote
@@ -2857,7 +2857,7 @@ resume_suspend:
     /* Signal console thread to redrive select */
     if (dev->console)
     {
-        signal_thread (sysblk.cnsltid, SIGUSR2);
+        SIGNAL_CONSOLE_THREAD();
     }
 
     dev->busy = 0;
@@ -3156,7 +3156,7 @@ retry:
 
         /* Signal console thread to redrive select */
         if (dev->console)
-            signal_thread (sysblk.cnsltid, SIGUSR2);
+            SIGNAL_CONSOLE_THREAD();
     }
 
     release_lock (&dev->lock);
@@ -3250,7 +3250,10 @@ int device_attention (DEVBLK *dev, BYTE unitstat)
 {
     switch(sysblk.arch_mode) {
 #if defined(_370)
-        case ARCH_370: return s370_device_attention(dev, unitstat);
+        case ARCH_370:
+            /* Do NOT raise if initial power-on state */
+            if (dev->crwpending) return 3;
+            return s370_device_attention(dev, unitstat);
 #endif
 #if defined(_390)
         case ARCH_390: return s390_device_attention(dev, unitstat);

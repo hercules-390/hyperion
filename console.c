@@ -1187,10 +1187,19 @@ BYTE    c;                              /* Character work area       */
 } /* end function recv_1052_data */
 
 
-/* o_rset identifies the filedescriptors of all known connections    */
+/* 'o_rset' identifies the file descriptors of all known connections.
+   The console_lock controls access to 'o_rset'. It may be obtained
+   with or without the device lock (dev->lock) already held, but once
+   obtained, you must NOT then try to obtain the device lock AFTER-
+   WARDS or else a deadlock will occur! That is to say, it can only
+   be obtained by itself or AFTER *FIRST* obtaining the device lock.
+*/
+static LOCK    console_lock;            /* lock for accessing o_rset */
+static int     did_init = 0;            /* console_lock initialized  */
+static int     o_minfd  = INT_MAX;      /* access must be serialized */
+static int     o_maxfd  = INT_MIN;      /* access must be serialized */
+static fd_set  o_rset;                  /* access must be serialized */
 
-static fd_set o_rset;
-static int    o_mfd;
 
 /*-------------------------------------------------------------------*/
 /* NEW CLIENT CONNECTION THREAD                                      */
@@ -1204,9 +1213,7 @@ size_t                  len;            /* Data length               */
 int                     csock;          /* Socket for conversation   */
 struct sockaddr_in      client;         /* Client address structure  */
 socklen_t               namelen;        /* Length of client structure*/
-struct hostent         *pHE;            /* Addr of hostent structure */
 char                   *clientip;       /* Addr of client ip address */
-char                   *clientname;     /* Addr of client hostname   */
 U16                     devnum;         /* Requested device number   */
 BYTE                    class;          /* D=3270, P=3287, K=3215/1052 */
 BYTE                    model;          /* 3270 model (2,3,4,5,X)    */
@@ -1228,6 +1235,13 @@ char                    group[16];      /* Console group             */
     /* Log the client's IP address and hostname */
     clientip = strdup(inet_ntoa(client.sin_addr));
 
+#if 0
+    // The following isn't really needed and hangs under unusual
+    // network configuration settings and thus has been removed.
+    {
+        struct hostent*  pHE;           /* Addr of hostent structure */
+        char*            clientname;    /* Addr of client hostname   */
+
     pHE = gethostbyaddr ((unsigned char*)(&client.sin_addr),
                          sizeof(client.sin_addr), AF_INET);
 
@@ -1240,6 +1254,11 @@ char                    group[16];      /* Console group             */
 
     TNSDEBUG1("DBG018: Received connection from %s (%s)\n",
             clientip, clientname);
+    }
+#else
+    TNSDEBUG1("DBG018: Received connection from %s\n",
+        clientip);
+#endif
 
     /* Negotiate telnet parameters */
     rc = negotiate (csock, &class, &model, &extended, &devnum, group);
@@ -1254,7 +1273,7 @@ char                    group[16];      /* Console group             */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
         /* Loop if the device is invalid */
-        if(!(dev->pmcw.flag5 & PMCW5_V))
+        if ( !dev->allocated )
             continue;
 
         /* Loop if non-matching device type */
@@ -1292,14 +1311,14 @@ char                    group[16];      /* Console group             */
         /* Test for available device */
         if (dev->connected == 0)
         {
-            /* Check if client allowed on this device */
+            /* Check ipaddr mask to see if client allowed on this device */
             if ( (client.sin_addr.s_addr & dev->acc_ipmask) != dev->acc_ipaddr )
             {
                 release_lock (&dev->lock);
-                if ( 0xFFFF == devnum )
-                    continue;
-                dev = NULL;
-                break;
+                if ( 0xFFFF == devnum )  /* If they did NOT request a spe- */
+                    continue;            /* cifc devnum, then keep looking */
+                dev = NULL;              /* Otherwise they did,            */
+                break;                   /* but it's not available         */
             }
 
             /* Claim this device for the client */
@@ -1319,10 +1338,16 @@ char                    group[16];      /* Console group             */
             dev->busy = dev->reserved = dev->suspended =
             dev->pending = dev->pcipending = dev->attnpending = 0;
 
-            /* Set device in old readset such that the associated
-               file descriptor will be closed after detach */
+            /* Add device to the 'old' set such that the
+               console_connection_handler thread can then
+               auto-close it whenever they disconnect */
+            obtain_lock( &console_lock );
+            {
             FD_SET (dev->fd, &o_rset);
-            if (dev->fd > o_mfd) o_mfd = dev->fd;
+                if (dev->fd > o_maxfd) o_maxfd = dev->fd;
+                if (dev->fd < o_minfd) o_minfd = dev->fd;
+            }
+            release_lock( &console_lock );
 
             release_lock (&dev->lock);
 
@@ -1463,15 +1488,16 @@ char                    group[16];      /* Console group             */
         rc = send_packet (csock, (BYTE *)buf, len, "CONNECTION RESPONSE");
     }
 
-    /* Raise attention interrupt for the device */
-    if (class != 'P')  /* do not raise attention for  3287 */
-    {
-        /* rc = device_attention (dev, CSW_ATTN); ISW3274DR - Removed */
-        rc = device_attention (dev, CSW_DE);   /* ISW3274DR - Added   */
-    }
+    /* Raise attention interrupt for the device,
+       IF...
+         (1) this is NOT a 3287 printer device, -AND-
+         (2) this is NOT the System-370 mode initial power-on state
+    */
+    if ( class != 'P' && !INITIAL_POWERON_370() )
+        device_attention (dev, CSW_DE);
 
     /* Signal connection thread to redrive its select loop */
-    signal_thread (sysblk.cnsltid, SIGUSR2);
+    SIGNAL_CONSOLE_THREAD();
 
     if (clientip) free(clientip);
     return NULL;
@@ -1482,11 +1508,16 @@ char                    group[16];      /* Console group             */
 /*-------------------------------------------------------------------*/
 /* CONSOLE CONNECTION AND ATTENTION HANDLER THREAD                   */
 /*-------------------------------------------------------------------*/
-static int console_cnslcnt;
+static int console_cnslcnt = 0;
 
 static void console_shutdown(void * unused __attribute__ ((unused)) )
 {
+    obtain_lock( &console_lock );
+    {
     console_cnslcnt = 0;
+        SIGNAL_CONSOLE_THREAD();
+    }
+    release_lock( &console_lock );
 }
 
 static void *
@@ -1498,8 +1529,9 @@ int                     csock;          /* Socket for conversation   */
 struct sockaddr_in     *server;         /* Server address structure  */
 fd_set                  readset;        /* Read bit map for select   */
 fd_set                  c_rset;         /* Currently valid dev->fd's */
-int                     maxfd;          /* Highest fd for select     */
-int                     fd, c_mfd = 0;
+int                    c_minfd=INT_MAX; /* To detect closed consoles */
+int                    c_maxfd=INT_MIN; /* To detect closed consoles */
+int                    maxfd=INT_MIN;   /* Highest fd for select     */
 int                     optval;         /* Argument for setsockopt   */
 TID                     tidneg;         /* Negotiation thread id     */
 DEVBLK                 *dev;            /* -> Device block           */
@@ -1540,7 +1572,7 @@ BYTE                    unitstat;       /* Status after receive data */
     }
 
     /* Attempt to bind the socket to the port */
-    while (console_cnslcnt)
+    do
     {
         rc = bind (lsock, (struct sockaddr *)server, sizeof(struct sockaddr_in));
 
@@ -1549,7 +1581,8 @@ BYTE                    unitstat;       /* Status after receive data */
         logmsg (_("HHCTE002W Waiting for port %u to become free\n"),
                 ntohs(server->sin_port));
         SLEEP(10);
-    } /* end while */
+    }
+    while (console_cnslcnt);
 
     if (rc != 0)
     {
@@ -1558,9 +1591,7 @@ BYTE                    unitstat;       /* Status after receive data */
     }
 
     /* Put the socket into listening state */
-    rc = listen (lsock, 10);
-
-    if (rc < 0)
+    if ((rc = listen (lsock, 10)) < 0)
     {
         TNSERROR("DBG027: listen: %s\n", strerror(errno));
         return NULL;
@@ -1569,76 +1600,91 @@ BYTE                    unitstat;       /* Status after receive data */
     logmsg (_("HHCTE003I Waiting for console connection on port %u\n"),
             ntohs(server->sin_port));
 
-    FD_ZERO(&o_rset);
-    o_mfd = 0;
+    /* Initialize 'old' set to empty */
+    FD_ZERO(&o_rset); o_minfd=INT_MAX; o_maxfd=INT_MIN;
 
     /* Handle connection requests and attention interrupts */
-    while (console_cnslcnt) {
+    for (;;)
+    {
+        /* Check if time to exit */
+        int time_to_exit;
+        obtain_lock( &console_lock );
+        time_to_exit = console_cnslcnt <= 0 ? 1 : 0;
+        release_lock( &console_lock );
+        if (time_to_exit) break;
 
         /* Initialize the select parameters */
+        FD_ZERO ( &readset ); maxfd=INT_MIN;
+        FD_SET  ( lsock, &readset ); maxfd = lsock;
+        SUPPORT_WAKEUP_CONSOLE_SELECT_VIA_PIPE( maxfd, &readset );
 
-        FD_ZERO ( &readset );
-        FD_SET  ( lsock, &readset );
-#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
-        FD_SET  ( sysblk.cnslrpipe, &readset );
-        maxfd = lsock > sysblk.cnslrpipe ? lsock : sysblk.cnslrpipe;
-#else
-        maxfd = lsock;
-#endif
-
-        FD_ZERO ( &c_rset );
-        c_mfd = 0;
-
-        /* Include the socket for each connected console */
+        /* Include the socket for each valid connected console */
+        FD_ZERO(&c_rset); c_minfd=INT_MAX; c_maxfd=INT_MIN;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
-            if (dev->console
-                && dev->connected
-// NOT S/370    && (dev->pmcw.flag5 & PMCW5_E)
-                && (dev->pmcw.flag5 & PMCW5_V) )
+            obtain_lock( &dev->lock );
             {
+                if ( dev->allocated && dev->console && dev->connected )
+            {
+                    /* Add it to our 'current' set to
+                       detect if or when it's closed */
                 FD_SET (dev->fd, &c_rset);
-                if (dev->fd > c_mfd) c_mfd = dev->fd;
+                    if (dev->fd > c_maxfd) c_maxfd = dev->fd;
+                    if (dev->fd < c_minfd) c_minfd = dev->fd;
 
-                if( (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
-                 && (!IOPENDING(dev))
-                 && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)
+                    /* Add it to our read set only if it's
+                       not busy nor interrupt pending */
+                    if (1
+                        && (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
+                        && !IOPENDING(dev)
+                        && !(dev->scsw.flag3 & SCSW3_SC_PEND)
+                    )
                 {
                     FD_SET (dev->fd, &readset);
                     if (dev->fd > maxfd) maxfd = dev->fd;
                 }
             }
+            }
+            release_lock( &dev->lock );
         } /* end for(dev) */
 
-
-        /* Close any no longer existing connections */
-        for(fd = 1; fd <= (c_mfd < o_mfd ? c_mfd : o_mfd); fd++)
-            if(FD_ISSET(fd, &o_rset) && !FD_ISSET(fd, &c_rset))
-                close(fd);
-        if(o_mfd > c_mfd)
-            for(; fd <= o_mfd; fd++)
-                if(FD_ISSET(fd, &o_rset))
+        /* Auto-close any no longer existing connections */
+        obtain_lock( &console_lock );
+        {
+            /* TECHNIQUE: scan our 'old' set from o_minfd to o_maxfd,
+               and for each member of the set, if it's not also in our
+              'current' set, then it's no longer connected so close it */
+            int fd;
+            for ( fd = o_minfd; fd <= o_maxfd; fd++ )
+            {
+                /* (if it's a member of the old set
+                    but not a member of the current set) */
+                if ( FD_ISSET(fd, &o_rset) &&
+                    ( fd < c_minfd || fd > c_maxfd || !FD_ISSET(fd, &c_rset) )
+                )
                     close(fd);
-        memcpy(&o_rset, &c_rset, sizeof(o_rset));
-        o_mfd = c_mfd;
+            }
 
+            /* Move 'current' to 'old' for next time */
+            memcpy(&o_rset, &c_rset, sizeof(o_rset));
+            o_minfd = c_minfd;
+            o_maxfd = c_maxfd;
+        }
+        release_lock( &console_lock );
 
         /* Wait for a file descriptor to become ready */
         rc = select ( maxfd+1, &readset, NULL, NULL, NULL );
+
+        /* Clear the pipe signal if necessary */
+        RECV_CONSOLE_THREAD_PIPE_SIGNAL();
+
+        /* Log select errors */
         if (rc < 0 )
         {
-            if ( EINTR == errno ) continue;
+            if ( EINTR != errno )
             TNSERROR("DBG028: select: %s\n", strerror(errno));
-            break;
-        }
-#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
-        if ( FD_ISSET( sysblk.cnslrpipe, &readset ) )
-        {
-            BYTE c;
-            VERIFY( read( sysblk.cnslrpipe, &c, 1 ) == 1 );
             continue;
         }
-#endif
 
         /* If a client connection request has arrived then accept it */
         if (FD_ISSET(lsock, &readset))
@@ -1661,23 +1707,24 @@ BYTE                    unitstat;       /* Status after receive data */
                 close (csock);
             }
 
-        } /* end if(lsock) */
+        } /* end if(FD_ISSET(lsock, &readset)) */
 
         /* Check if any connected client has data ready to send */
+
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
             /* Obtain the device lock */
             obtain_lock (&dev->lock);
 
-            /* Test for connected console with data available */
-            if (dev->console
+            /* Test for valid connected console with data available */
+            if (1
+                && dev->allocated
+                && dev->console
                 && dev->connected
-                && FD_ISSET (dev->fd, &readset)
                 && (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
-                && !IOPENDING(dev)
-                && (dev->pmcw.flag5 & PMCW5_V)
-// NOT S/370    && (dev->pmcw.flag5 & PMCW5_E)
-                && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)
+                && !( IOPENDING(dev) || (dev->scsw.flag3 & SCSW3_SC_PEND) )
+                && FD_ISSET (dev->fd, &readset)
+            )
             {
                 /* Receive console input data from the client */
                 if ((dev->devtype == 0x3270) || (dev->devtype == 0x3287))
@@ -1695,10 +1742,17 @@ BYTE                    unitstat;       /* Status after receive data */
                 /* Close the connection if an error occurred */
                 if (unitstat & CSW_UC)
                 {
+                    int fd = dev->fd; /* (save original value!) */
                     close (dev->fd);
                     dev->fd = -1;
                     dev->connected = 0;
+
+                    /* Remove it from our set */
+                    obtain_lock( &console_lock );
+                    {
                     FD_CLR(fd, &o_rset);
+                }
+                    release_lock( &console_lock );
                 }
 
                 /* Indicate that data is available at the device */
@@ -1710,7 +1764,7 @@ BYTE                    unitstat;       /* Status after receive data */
 
                 /* Raise attention interrupt for the device */
 
-                /* Do not raise attention interrupt for 3287  */
+                /* Do NOT raise attention interrupt for 3287  */
                 /* Otherwise zVM loops after ENABLE ccuu     */
                 /* Following 5 lines are repeated on Hercules console: */
                 /* console: sending 3270 data */
@@ -1719,19 +1773,26 @@ BYTE                    unitstat;       /* Status after receive data */
                 /*   +0000   016CD902 00FFEF */
                 /*           I do not know what is this */
                 /*   console: CCUU attention requests raised */
-                if (dev->devtype != 0x3287)
+
+                /* Do NOT raise attention interrupt if this is */
+                /* the System-370 mode initial power-on state */
+
+                if (1
+                    && dev->connected
+                    && dev->devtype != 0x3287
+                    && !INITIAL_POWERON_370()
+                )
                 {
-                    if(dev->connected)  /* *ISW3274DR* - Added */
-                    { /* *ISW3274DR - Added */
                         rc = device_attention (dev, unitstat);
-                    } /* *ISW3274DR - Added */
 
                     /* Trace the attention request */
                     TNSDEBUG2("DBG020: %4.4X attention request %s; rc=%d\n",
                             dev->devnum,
                             (rc == 0 ? "raised" : "rejected"), rc);
                 }
-                continue;
+
+                continue; /* (note: dev->lock already released) */
+
             } /* end if(data available) */
 
             /* Release the device lock */
@@ -1739,11 +1800,15 @@ BYTE                    unitstat;       /* Status after receive data */
 
         } /* end for(dev) */
 
-    } /* end while */
+    } /* end for */
 
-    for(fd = 1; fd <= c_mfd; fd++)
+    /* Close all connected terminals */
+    {
+        int fd;
+        for ( fd = c_minfd; fd <= c_maxfd; fd++ )
         if(FD_ISSET(fd, &c_rset))
             close(fd);
+    }
 
     /* Close the listening socket */
     close (lsock);
@@ -1759,32 +1824,50 @@ BYTE                    unitstat;       /* Status after receive data */
 static int
 console_initialise()
 {
-    if(!(console_cnslcnt++) && !sysblk.cnsltid)
+    int rc = 0;
+
+    if (!did_init)
+    {
+        did_init = 1;
+        initialize_lock( &console_lock );
+    }
+
+    obtain_lock( &console_lock );
+    {
+        console_cnslcnt++;
+
+        if (!sysblk.cnsltid)
     {
         if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
                             console_connection_handler, NULL) )
         {
             logmsg (_("HHCTE005E Cannot create console thread: %s\n"),
                     strerror(errno));
-            return 1;
+                rc = 1;
         }
     }
-    return 0;
+    }
+    release_lock( &console_lock );
+
+    return rc;
 }
 
 
 static void
 console_remove(DEVBLK *dev)
 {
+    obtain_lock( &console_lock );
+    {
     dev->connected = 0;
     dev->console = 0;
-
     dev->fd = -1;
 
     if(!console_cnslcnt--)
         logmsg(_("console_remove() error\n"));
 
-    signal_thread (sysblk.cnsltid, SIGUSR2);
+        SIGNAL_CONSOLE_THREAD();
+    }
+    release_lock( &console_lock );
 }
 
 
@@ -2713,7 +2796,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         release_lock (&dev->lock);
 
         /* Signal connection thread to redrive its select loop */
-        signal_thread (sysblk.cnsltid, SIGUSR2);
+        SIGNAL_CONSOLE_THREAD();
 
         break;
 
@@ -2804,7 +2887,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         release_lock (&dev->lock);
 
         /* Signal connection thread to redrive its select loop */
-        signal_thread (sysblk.cnsltid, SIGUSR2);
+        SIGNAL_CONSOLE_THREAD();
 
         break;
 

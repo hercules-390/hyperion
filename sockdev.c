@@ -195,7 +195,7 @@ int inet_socket (char* spec)
 /* add_socket_devices_to_fd_set   add all bound socket devices'      */
 /*                                listening sockets to the FD_SET    */
 /*-------------------------------------------------------------------*/
-int add_socket_devices_to_fd_set (fd_set* readset, int maxfd)
+int add_socket_devices_to_fd_set (int maxfd, fd_set* readset)
 {
     DEVBLK* dev;
     bind_struct* bs;
@@ -397,35 +397,22 @@ void* socket_thread( void* arg )
 
         /* Set the file descriptors for select */
         FD_ZERO ( &sockset );
-#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
-        FD_SET  ( sysblk.sockrpipe, &sockset );
-        maxfd  =  sysblk.sockrpipe;
-#endif
-        maxfd  =  add_socket_devices_to_fd_set ( &sockset, maxfd );
+        maxfd  = add_socket_devices_to_fd_set (   0,   &sockset );
+        SUPPORT_WAKEUP_SOCKDEV_SELECT_VIA_PIPE( maxfd, &sockset );
 
         rc = select ( maxfd+1, &sockset, NULL, NULL, NULL );
 
+        /* Clear the pipe signal if necessary */
+        RECV_SOCKDEV_THREAD_PIPE_SIGNAL();
+
         if ( rc < 0 )
         {
-            if ( EINTR == errno )
-            {
-                obtain_lock( &bind_lock );
-                continue;
-            }
+            if ( EINTR != errno )
             logmsg( _( "HHCSD021E select failed; errno=%d: %s\n"),
                 errno, strerror( errno ) );
-            break;
-        }
-
-#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
-        if ( FD_ISSET( sysblk.sockrpipe, &sockset ) )
-        {
-            BYTE c;
-            VERIFY( read( sysblk.sockrpipe, &c, 1 ) == 1 );
             obtain_lock( &bind_lock );
             continue;
         }
-#endif
 
         /* Check if any sockets have received new connections */
         check_socket_devices_for_connections( &sockset );
@@ -535,7 +522,7 @@ int bind_device (DEVBLK* dev, char* spec)
 
     release_lock( &bind_lock );
 
-    signal_thread( sysblk.socktid, SIGUSR2 );
+    SIGNAL_SOCKDEV_THREAD();
 
     logmsg (_("HHCSD004I Device %4.4X bound to socket %s\n"),
         dev->devnum, dev->bs->spec);
@@ -579,7 +566,7 @@ int unbind_device (DEVBLK* dev)
         sysblk.socktid = 0;
     release_lock( &bind_lock );
 
-    signal_thread( sysblk.socktid, SIGUSR2 );
+    SIGNAL_SOCKDEV_THREAD();
 
     logmsg (_("HHCSD007I Device %4.4X unbound from socket %s\n"),
         dev->devnum, bs->spec);

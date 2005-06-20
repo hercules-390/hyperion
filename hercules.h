@@ -301,7 +301,7 @@ typedef fthread_attr_t    ATTR;
                                                fthread_attr_setdetachstate((pat),FTHREAD_CREATE_JOINABLE)
 #define join_thread(tid,pcode)                 fthread_join((tid),(pcode))
 #define detach_thread(tid)                     fthread_detach((tid))
-#define signal_thread(tid,signo)               herc_kill((tid),(signo))
+#define signal_thread(tid,signo)               fthread_kill((tid),(signo))
 #define thread_id()                            fthread_self()
 #define exit_thread(exitvar_ptr)               fthread_exit((exitvar_ptr))
 #define equal_threads(tid1,tid2)               fthread_equal((tid1),(tid2))
@@ -352,7 +352,7 @@ typedef void*THREAD_FUNC(void*);
 #define exit_thread(_code) \
         pthread_exit((_code))
 #define signal_thread(tid,signo) \
-        herc_kill(tid,signo)
+        pthread_kill((tid),(signo))
 #define thread_id() \
         pthread_self()
 #define equal_threads(tid1,tid2) \
@@ -401,11 +401,69 @@ typedef void*THREAD_FUNC(void*);
         ptt_pthread_detach((tid),__FILE__,__LINE__)
 #undef  signal_thread
 #define signal_thread(tid,signo) \
-        herc_kill(tid,signo,__FILE__,__LINE__)
+        ptt_pthread_kill((tid),(signo),__FILE__,__LINE__)
 #endif /* OPTION_PTTRACE */
 
 /* Pattern for displaying the thread_id */
 #define TIDPAT "%8.8lX"
+
+/*-------------------------------------------------------------------*/
+/* Pipe signaling support...                                         */
+/*-------------------------------------------------------------------*/
+
+#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
+
+  #define RECV_PIPE_SIGNAL( rfd, lock, flag ) \
+    do { \
+      int f; int saved_errno=errno; BYTE c=0; \
+      obtain_lock(&(lock)); \
+      if ((f=(flag))>=1) (flag)=0; \
+      release_lock(&(lock)); \
+      if (f>=1) \
+        VERIFY(read((rfd),&c,1)==1); \
+      errno=saved_errno; \
+    } while (0)
+
+  #define SEND_PIPE_SIGNAL( wfd, lock, flag ) \
+    do { \
+      int f; int saved_errno=errno; BYTE c=0; \
+      obtain_lock(&(lock)); \
+      if ((f=(flag))<=0) (flag)=1; \
+      release_lock(&(lock)); \
+      if (f<=0) \
+        VERIFY(write((wfd),&c,1)==1); \
+      errno=saved_errno; \
+    } while (0)
+
+  #define SUPPORT_WAKEUP_SELECT_VIA_PIPE( pipe_rfd, maxfd, prset ) \
+    FD_SET((pipe_rfd),(prset)); \
+    (maxfd)=(maxfd)>(pipe_rfd)?(maxfd):(pipe_rfd)
+
+  #define SUPPORT_WAKEUP_CONSOLE_SELECT_VIA_PIPE( maxfd, prset )  SUPPORT_WAKEUP_SELECT_VIA_PIPE( sysblk.cnslrpipe, (maxfd), (prset) )
+  #define SUPPORT_WAKEUP_SOCKDEV_SELECT_VIA_PIPE( maxfd, prset )  SUPPORT_WAKEUP_SELECT_VIA_PIPE( sysblk.sockrpipe, (maxfd), (prset) )
+
+  #define RECV_CONSOLE_THREAD_PIPE_SIGNAL()  RECV_PIPE_SIGNAL( sysblk.cnslrpipe, sysblk.cnslpipe_lock, sysblk.cnslpipe_flag )
+  #define RECV_SOCKDEV_THREAD_PIPE_SIGNAL()  RECV_PIPE_SIGNAL( sysblk.sockrpipe, sysblk.sockpipe_lock, sysblk.sockpipe_flag )
+  #define SIGNAL_CONSOLE_THREAD()            SEND_PIPE_SIGNAL( sysblk.cnslwpipe, sysblk.cnslpipe_lock, sysblk.cnslpipe_flag )
+  #define SIGNAL_SOCKDEV_THREAD()            SEND_PIPE_SIGNAL( sysblk.sockwpipe, sysblk.sockpipe_lock, sysblk.sockpipe_flag )
+
+#else // !defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
+
+  #define RECV_PIPE_SIGNAL( rfd, lock, flag )
+  #define SEND_PIPE_SIGNAL( wfd, lock, flag )
+
+  #define SUPPORT_WAKEUP_SELECT_VIA_PIPE( pipe_rfd, maxfd, prset )
+
+  #define SUPPORT_WAKEUP_CONSOLE_SELECT_VIA_PIPE( maxfd, prset )
+  #define SUPPORT_WAKEUP_SOCKDEV_SELECT_VIA_PIPE( maxfd, prset )
+
+  #define RECV_CONSOLE_THREAD_PIPE_SIGNAL()
+  #define RECV_SOCKDEV_THREAD_PIPE_SIGNAL()
+
+  #define SIGNAL_CONSOLE_THREAD()     signal_thread( sysblk.cnsltid, SIGUSR2 )
+  #define SIGNAL_SOCKDEV_THREAD()     signal_thread( sysblk.socktid, SIGUSR2 )
+
+#endif // defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
 
 /*-------------------------------------------------------------------*/
 /* sleep for as long as we like                                      */
@@ -849,11 +907,15 @@ typedef struct _SYSBLK {
         TID     cnsltid;                /* Thread-id for console     */
         TID     socktid;                /* Thread-id for sockdev     */
 #if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
-        int     cnslwpipe;              /* Console signaling pipe Wr */
-        int     cnslrpipe;              /* Console signaling pipe Rd */
+        LOCK    cnslpipe_lock;          /* signaled flag access lock */
+        int     cnslpipe_flag;          /* 1 == already signaled     */
+        int     cnslwpipe;              /* fd for sending signal */
+        int     cnslrpipe;              /* fd for receiving signal */
+        LOCK    sockpipe_lock;          /* signaled flag access lock */
+        int     sockpipe_flag;          /* 1 == already signaled     */
         int     sockwpipe;              /* Sockdev signaling pipe Wr */
         int     sockrpipe;              /* Sockdev signaling pipe Rd */
-#endif
+#endif // defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
         RADR    mbo;                    /* Measurement block origin  */
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */
@@ -1309,6 +1371,8 @@ typedef struct _DEVBLK {
                 startpending:1,         /* 1=startio pending         */
                 resumesuspended:1;      /* 1=Hresuming suspended dev */
 #define IOPENDING(_dev) ((_dev)->pending || (_dev)->pcipending || (_dev)->attnpending)
+#define INITIAL_POWERON_370() \
+    ( dev->crwpending && ARCH_370 == sysblk.arch_mode )
         int     crwpending;             /* 1=CRW pending             */
         int     syncio_active;          /* 1=Synchronous I/O active  */
         int     syncio_retry;           /* 1=Retry I/O asynchronously*/

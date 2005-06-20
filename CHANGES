@@ -1,6 +1,10 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+18 Jun 2005 Fix "console: select: Bad file number" (FINAL?) - Fish
+            "Generic"-ize OPTION_WAKEUP_SELECT_VIA_PIPE handling - Fish
+15 Jun 2005 Fix ASN-and-LX-reuse facility incorrect linkage second table
+            entry indexing bug in 'PC' (Program Call) instruction - Fish
 10 Jun 2005 Fix panel not updating problem - Greg Smith
 01 Jun 2005 Fix sf-xxx nomerge bug - Greg Smith
 31 May 2005 Fix to fix for wrong null format track - Greg Smith

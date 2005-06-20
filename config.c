@@ -281,7 +281,7 @@ DEVBLK**dvpp;
 void ret_devblk(DEVBLK *dev)
 {
     dev->allocated = 0;
-    dev->pmcw.flag5 &= ~PMCW5_V; // compat ZZ depricated
+    dev->pmcw.flag5 &= ~PMCW5_V; // compat ZZ deprecated
     release_lock(&dev->lock);
 }
 

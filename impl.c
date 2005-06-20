@@ -302,6 +302,10 @@ TID     rctid;                          /* RC file thread identifier */
 #if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
     {
         int fds[2];
+        initialize_lock(&sysblk.cnslpipe_lock);
+        initialize_lock(&sysblk.sockpipe_lock);
+        sysblk.cnslpipe_flag=0;
+        sysblk.sockpipe_flag=0;
         pipe(fds);
         sysblk.cnslwpipe=fds[1];
         sysblk.cnslrpipe=fds[0];
@@ -309,7 +313,7 @@ TID     rctid;                          /* RC file thread identifier */
         sysblk.sockwpipe=fds[1];
         sysblk.sockrpipe=fds[0];
     }
-#endif
+#endif // defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
 
 #if !defined(NO_SIGABEND_HANDLER)
     {
