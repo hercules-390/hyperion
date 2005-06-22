@@ -2608,7 +2608,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         }
 
         /* Calculate the address of the linkage table entry */
-        lto += (pcnum & PC_LX) >> 5;
+        lto += (pcnum & PC_LX) >> 6;
         lto &= 0x7FFFFFFF;
 
         /* Program check if linkage table entry outside real storage */
