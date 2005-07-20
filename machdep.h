@@ -10,8 +10,18 @@
 
 #include "esa390.h"
 
+#undef ASSIST_CMPXCHG1
+#undef ASSIST_CMPXCHG4
+#undef ASSIST_CMPXCHG8
+#undef ASSIST_CMPXCHG16
+#undef ASSIST_FETCH_DW
+#undef ASSIST_STORE_DW
+
 #undef _ext_ia32
 #if defined(__i686__) || defined(__pentiumpro__) || defined(__pentium4__)
+#define _ext_ia32
+#endif
+#if defined(__athlon__) || defined(__athlon)
 #define _ext_ia32
 #endif
 
@@ -99,6 +109,7 @@ static __inline__ void and_bits_i686(int len, int bits, volatile void * addr)
     }
 }
 
+#define ASSIST_CMPXCHG1
 #define cmpxchg1(x,y,z) cmpxchg1_i686(x,y,z)
 static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -116,6 +127,7 @@ static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
  return code;
 }
 
+#define ASSIST_CMPXCHG4
 #define cmpxchg4(x,y,z) cmpxchg4_i686(x,y,z)
 static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -135,6 +147,7 @@ static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
 
 #if !defined(PIC)
 
+#define ASSIST_CMPXCHG8
 #define cmpxchg8(x,y,z) cmpxchg8_i686(x,y,z)
 static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -159,6 +172,7 @@ static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
 
 #else /* defined(PIC) */
 
+#define ASSIST_CMPXCHG8
 #define cmpxchg8(x,y,z) cmpxchg8_i686(x,y,z)
 static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -188,6 +202,7 @@ static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
 
 #if !defined(PIC)
 
+#define ASSIST_CMPXCHG16
 #define cmpxchg16(x1,x2,y1,y2,z) cmpxchg16_i686(x1,x2,y1,y2,z)
 static __inline__ int cmpxchg16_i686(U64 *old1, U64 *old2, U64 new1, U64 new2, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -230,6 +245,7 @@ static __inline__ int cmpxchg16_i686(U64 *old1, U64 *old2, U64 new1, U64 new2, v
 
 #else /* defined(PIC) */
 
+#define ASSIST_CMPXCHG16
 #define cmpxchg16(x1,x2,y1,y2,z) cmpxchg16_i686(x1,x2,y1,y2,z)
 static __inline__ int cmpxchg16_i686(U64 *old1, U64 *old2, U64 new1, U64 new2, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -274,6 +290,7 @@ static __inline__ int cmpxchg16_i686(U64 *old1, U64 *old2, U64 new1, U64 new2, v
 
 #endif /* defined(PIC) */
 
+#define ASSIST_FETCH_DW
 #define fetch_dw(x) fetch_dw_i686(x)
 static __inline__ U64 fetch_dw_i686(void *ptr)
 {
@@ -282,6 +299,7 @@ static __inline__ U64 fetch_dw_i686(void *ptr)
  return CSWAP64 (value);
 }
 
+#define ASSIST_STORE_DW
 #define store_dw(x,y) store_dw_i686(x,y)
 static __inline__ void store_dw_i686(void *ptr, U64 value)
 {
@@ -332,6 +350,7 @@ do {                                          \
 /*-------------------------------------------------------------------*/
 #if defined(_ext_amd64)
 
+#define ASSIST_CMPXCHG1
 #define cmpxchg1(x,y,z) cmpxchg1_amd64(x,y,z)
 static __inline__ BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -349,7 +368,7 @@ static __inline__ BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
  return code;
 }
 
-
+#define ASSIST_CMPXCHG4
 #define cmpxchg4(x,y,z) cmpxchg4_amd64(x,y,z)
 static __inline__ BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -367,6 +386,7 @@ static __inline__ BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
  return code;
 }
 
+#define ASSIST_CMPXCHG8
 #define cmpxchg8(x,y,z) cmpxchg8_amd64(x,y,z)
 static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -414,6 +434,7 @@ __cmpxchg_u32(volatile int *p, int old, int new)
     return prev;
 }
 
+#define ASSIST_CMPXCHG4
 #define cmpxchg4(x,y,z) cmpxchg4_ppc(x,y,z)
 static __inline__ BYTE cmpxchg4_ppc(U32 *old, U32 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -421,6 +442,7 @@ U32 prev = *old;
 return (prev != (*old = __cmpxchg_u32((int *)ptr, (int)prev, (int)new)));
 }
 
+#define ASSIST_CMPXCHG1
 #define cmpxchg1(x,y,z) cmpxchg1_ppc(x,y,z)
 static __inline__ BYTE cmpxchg1_ppc(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -645,5 +667,64 @@ static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volati
 #ifndef MEMSET
 #define MEMSET(_to, _c, _n) memset((_to), (_c), (_n))
 #endif
+
+static __inline__ void concpy(void *dest, void *src, size_t n)
+{
+ size_t n2;
+
+    /* Special processing for short lengths or overlap */
+    if (n < 8
+     || ((dest <= src && dest + 4 >= src)
+      || (src <= dest && src + 4 >= dest)))
+    {
+        for ( ; n; n--) *(BYTE *)dest++ = *(BYTE *)src++;
+        return;
+    }
+
+    /* copy to dest double-word boundary */
+    n2 = 8 - ((int)dest & 7);
+    if (n2 < 8)
+    {
+        n -= n2;
+        for ( ; n2; n2--) *(BYTE *)dest++ = *(BYTE *)src++;
+    }
+
+    /* copy double words */
+    if (n >= 8)
+    {
+#if defined(ASSIST_FETCH_DW) && defined(ASSIST_STORE_DW)
+        /* copy unaligned double-words */
+        if ((int)src & 7)
+            do {
+                U64 temp;
+                memcpy(&temp, src, 8);
+                *(U64 *)dest = temp;
+                dest += 8;
+                src += 8;
+                n -= 8;
+            } while (n >= 8);
+        /* copy aligned double-words */
+        else
+            do {
+                store_dw(dest, fetch_dw(src));
+                dest += 8;
+                src += 8;
+                n -= 8;
+            } while (n >= 8);
+#else
+        do {
+            U64 temp;
+            memcpy(&temp, src, 8);
+            *(U64 *)dest = temp;
+            dest += 8;
+            src += 8;
+            n -= 8;
+        } while (n >= 8);
+#endif
+    }
+
+    /* copy the left-overs */
+    for ( ; n; n--) *(BYTE *)dest++ = *(BYTE *)src++;
+}
 
 #endif /* _HERCULES_MACHDEP_H */

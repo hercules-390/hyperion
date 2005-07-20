@@ -699,7 +699,6 @@ BYTE   *dest1, *dest2;                  /* Destination addresses     */
 BYTE   *source1, *source2;              /* Source addresses          */
 BYTE   *sk1, *sk2;                      /* Storage key addresses     */
 int     len2, len3;                     /* Lengths to copy           */
-int     i;                              /* Loop counter              */
 
     /* Quick out if copying just 1 byte */
     if (unlikely(len == 0))
@@ -710,23 +709,19 @@ int     i;                              /* Loop counter              */
         return;
     }
 
+    /* Translate addresses of leftmost operand bytes */
+    source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
+    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE, key1);
+
     /* There are several scenarios (in optimal order):
      * (1) dest boundary and source boundary not crossed
-     *     (a) no operand overlap
-     *     (b) operand overlap
      * (2) dest boundary not crossed and source boundary crossed
      * (3) dest boundary crossed and source boundary not crossed
      * (4) dest boundary and source boundary are crossed
      *     (a) dest and source boundary cross at the same time
      *     (b) dest boundary crossed first
      *     (c) source boundary crossed first
-     * NOTE: for scenarios (2), (3) and (4) we don't check for overlap
-     *     but just perform the copy we would for overlap.  Testing
-     *     shows that less than 4% of the move_chars calls uses one of
-     *     these scenarios.  Over 95% of the calls are scenario (1a).
      */
-
-    /* Translate addresses of leftmost operand bytes */
 
 #ifdef FEATURE_INTERVAL_TIMER
     if (unlikely(addr2 == 80))
@@ -743,72 +738,19 @@ int     i;                              /* Loop counter              */
 
     if ( NOCROSS2K(addr1,len) )
     {
-    source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
-    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE, key1);
         if ( NOCROSS2K(addr2,len) )
         {
-             /* (1) - No boundaries are crossed */
-             if ( (dest1 < source1 && dest1 + len < source1)
-               || (source1 < dest1 && source1 + len < dest1) )
-             {
-                 /* (1a) - No overlap */
-         /* Single out memcpys that can be translated */
-         /* into 1 or 2 GCC insns                     */
-         switch(len+1)
-         {
-            case 2: /* MOVHI (2) */
-                 memcpy(dest1,source1,2);
-                 break;
-            case 3: /* MOVHI + MOVQI (2+1) */
-                 memcpy(dest1,source1,3);
-                 break;
-            case 4: /* MOVSI (4) */
-                 memcpy(dest1,source1,4);
-                 break;
-            case 5: /* MOVSI +MOVQI (4+1) */
-                 memcpy(dest1,source1,5);
-                 break;
-            case 6: /* MOVSI + MOVHI (4+2) */
-                 memcpy(dest1,source1,6);
-                 break;
-                /* 7 : Would be MOVSI+MOVHI+MOVQI (4+2+1) */
-            case 8: /* MOVDI 8) */
-                 memcpy(dest1,source1,8);
-                 break;
-            case 9: /* MOVDI+MOVQI (8+1) */
-                 memcpy(dest1,source1,9);
-                 break;
-            case 10: /* MOVDI+MOVHI (8+2) */
-                 memcpy(dest1,source1,10);
-                 break;
-                /* 11 : Would be MOVDI+MOVHI+MOVQI (8+2+1) */
-            case 12: /* MOVDI+MOVSI (8+4) */
-                 memcpy(dest1,source1,12);
-                 break;
-                /* 13, 14, 15 are 3 insns */
-            case 16: /* MOVDI+MOVDI (8+8) */
-                 memcpy(dest1,source1,16);
-                 break;
-            default:
-                        MEMCPY (dest1, source1, len + 1);
-                break;
-         }
-             }
-             else
-             {
-                 /* (1b) - Overlap */
-                 for ( i = 0; i <= len; i++) *dest1++ = *source1++;
-             }
+            /* (1) - No boundaries are crossed */
+            concpy (dest1, source1, len + 1);
         }
         else
         {
-             /* (2) - Second operand crosses a boundary */
-             len2 = 0x800 - (addr2 & 0x7FF);
-             source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
+            /* (2) - Second operand crosses a boundary */
+            len2 = 0x800 - (addr2 & 0x7FF);
+            source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
                               arn2, regs, ACCTYPE_READ, key2);
-             for ( i = 0; i < len2; i++) *dest1++ = *source1++;
-             len2 = len - len2;
-             for ( i = 0; i <= len2; i++) *dest1++ = *source2++;
+            concpy (dest1, source1, len2);
+            concpy (dest1 + len2, source2, len - len2 + 1);
         }
     }
     else
@@ -816,6 +758,7 @@ int     i;                              /* Loop counter              */
         dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, key1);
         sk1 = regs->dat.storkey;
         source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
+
         /* First operand crosses a boundary */
         len2 = 0x800 - (addr1 & 0x7FF);
         dest2 = MADDR ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
@@ -825,9 +768,8 @@ int     i;                              /* Loop counter              */
         if ( NOCROSS2K(addr2,len) )
         {
              /* (3) - First operand crosses a boundary */
-             for ( i = 0; i < len2; i++) *dest1++ = *source1++;
-             len2 = len - len2;
-             for ( i = 0; i <= len2; i++) *dest2++ = *source1++;
+             concpy (dest1, source1, len2);
+             concpy (dest2, source1 + len2, len - len2 + 1);
         }
         else
         {
@@ -838,27 +780,22 @@ int     i;                              /* Loop counter              */
             if (len2 == len3)
             {
                 /* (4a) - Both operands cross at the same time */
-                for ( i = 0; i < len2; i++) *dest1++ = *source1++;
-                len2 = len - len2;
-                for ( i = 0; i <= len2; i++) *dest2++ = *source2++;
+                concpy (dest1, source1, len2);
+                concpy (dest2, source2, len - len2 + 1);
             }
             else if (len2 < len3)
             {
                 /* (4b) - First operand crosses first */
-                for ( i = 0; i < len2; i++) *dest1++ = *source1++;
-                len2 = len3 - len2;
-                for ( i = 0; i < len2; i++) *dest2++ = *source1++;
-                len2 = len - len3;
-                for ( i = 0; i <= len2; i++) *dest2++ = *source2++;
+                concpy (dest1, source1, len2);
+                concpy (dest2, source1 + len2, len3 - len2);
+                concpy (dest2 + len3 - len2, source2, len - len3 + 1);
             }
             else
             {
                 /* (4c) - Second operand crosses first */
-                for ( i = 0; i < len3; i++) *dest1++ = *source1++;
-                len3 = len2 - len3;
-                for ( i = 0; i < len3; i++) *dest1++ = *source2++;
-                len3 = len - len2;
-                for ( i = 0; i <= len3; i++) *dest2++ = *source2++;
+                concpy (dest1, source1, len3);
+                concpy (dest1 + len3, source2, len2 - len3);
+                concpy (dest2, source2 + len2 - len3, len - len2 + 1);
             }
         }
     }
