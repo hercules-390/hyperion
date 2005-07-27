@@ -803,7 +803,6 @@ void panel_display (void)
 {
 int     rc;                             /* Return code               */
 int     i, n;                           /* Array subscripts          */
-int     cpuad;                          /* CPU number                */
 REGS   *regs;                           /* -> CPU register context   */
 QWORD   curpsw;                         /* Current PSW               */
 QWORD   prvpsw;                         /* Previous PSW              */
@@ -888,13 +887,18 @@ struct  timeval tv;                     /* Select timeout structure  */
     redraw_cmd = 1;
     redraw_status = 1;
 
-    cpuad = 0;
-    obtain_lock(&sysblk.cpulock[cpuad]);
-
     /* Process messages and commands */
     while (1)
     {
-        release_lock(&sysblk.cpulock[cpuad]);
+        /* Set target CPU for commands and displays */
+        regs = sysblk.regs[sysblk.pcpu];
+        if (!regs) regs = &sysblk.dummyregs;
+
+#if defined(_FEATURE_SIE)
+        /* Point to SIE copy in SIE state */
+        if(regs->sie_active)
+            regs = regs->guestregs;
+#endif /*defined(_FEATURE_SIE)*/
 
         /* Set the file descriptors for select */
         FD_ZERO (&readset);
@@ -916,18 +920,6 @@ struct  timeval tv;                     /* Select timeout structure  */
                     strerror(errno));
             break;
         }
-
-        /* Set target CPU for commands and displays */
-        cpuad = sysblk.pcpu;
-        obtain_lock(&sysblk.cpulock[cpuad]);
-        regs = sysblk.regs[cpuad];
-        if (!regs) regs = &sysblk.dummyregs;
-
-#if defined(_FEATURE_SIE)
-        /* Point to SIE copy in SIE state */
-        if(regs->sie_active)
-            regs = regs->guestregs;
-#endif /*defined(_FEATURE_SIE)*/
 
         /* If keyboard input has arrived then process it */
 
