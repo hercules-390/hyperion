@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+27 Jul 2005 pcpu.pat - fix segfault in panel_display after archmode switch -
+            Greg Smith 
 20 Jul 2005 concpy.pat - concurrent copy phase 1 - Greg Smith
 18 Jun 2005 Fix "console: select: Bad file number" (FINAL?) - Fish
             "Generic"-ize OPTION_WAKEUP_SELECT_VIA_PIPE handling - Fish
