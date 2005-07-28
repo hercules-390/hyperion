@@ -890,16 +890,6 @@ struct  timeval tv;                     /* Select timeout structure  */
     /* Process messages and commands */
     while (1)
     {
-        /* Set target CPU for commands and displays */
-        regs = sysblk.regs[sysblk.pcpu];
-        if (!regs) regs = &sysblk.dummyregs;
-
-#if defined(_FEATURE_SIE)
-        /* Point to SIE copy in SIE state */
-        if(regs->sie_active)
-            regs = regs->guestregs;
-#endif /*defined(_FEATURE_SIE)*/
-
         /* Set the file descriptors for select */
         FD_ZERO (&readset);
         FD_SET (keybfd, &readset);
@@ -986,9 +976,17 @@ struct  timeval tv;                     /* Select timeout structure  */
                             break;
                         case 'O':                   /* Store */
                         case 'o':
+                            obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
+                            regs = sysblk.regs[sysblk.pcpu];
+                            if (!regs) regs = &sysblk.dummyregs;
+#if defined(_FEATURE_SIE)
+                            else if(regs->sie_active) regs = regs->guestregs;
+#endif
                             NPaaddr = APPLY_PREFIXING ((U32)NPaddress, regs->PX);
-                            if (NPaaddr > regs->mainlim)
+                            if (NPaaddr > regs->mainlim) {
+                                release_lock(&sysblk.cpulock[sysblk.pcpu]);
                                 break;
+                            }
                             regs->mainstor[NPaaddr] = 0;
                             regs->mainstor[NPaaddr++] |= ((NPdata >> 24) & 0xFF);
                             regs->mainstor[NPaaddr] = 0;
@@ -998,6 +996,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                             regs->mainstor[NPaaddr] = 0;
                             regs->mainstor[NPaaddr++] |= ((NPdata) & 0xFF);
                             redraw_status = 1;
+                            release_lock(&sysblk.cpulock[sysblk.pcpu]);
                             break;
                         case 'I':                   /* Display */
                         case 'i':
@@ -1476,6 +1475,14 @@ struct  timeval tv;                     /* Select timeout structure  */
         }
         /* =END= */
 
+        /* Get REGS pointer */
+        obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
+        regs = sysblk.regs[sysblk.pcpu];
+        if (!regs) regs = &sysblk.dummyregs;
+#if defined(_FEATURE_SIE)
+        else if(regs->sie_active) regs = regs->guestregs;
+#endif
+
         /* Obtain the PSW for target CPU */
         memset (curpsw, 0x00, sizeof(curpsw));
         copy_psw (regs, curpsw);
@@ -1630,6 +1637,8 @@ struct  timeval tv;                     /* Select timeout structure  */
                 redraw_status = 0;
             }
         }
+
+        release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     /* =END= */
 
