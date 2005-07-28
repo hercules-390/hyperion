@@ -803,6 +803,7 @@ void panel_display (void)
 {
 int     rc;                             /* Return code               */
 int     i, n;                           /* Array subscripts          */
+int     pcpu;                           /* Panel CPU number          */
 REGS   *regs;                           /* -> CPU register context   */
 QWORD   curpsw;                         /* Current PSW               */
 QWORD   prvpsw;                         /* Previous PSW              */
@@ -976,8 +977,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                             break;
                         case 'O':                   /* Store */
                         case 'o':
-                            obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
-                            regs = sysblk.regs[sysblk.pcpu];
+                            pcpu = sysblk.pcpu;
+                            obtain_lock(&sysblk.cpulock[pcpu]);
+                            regs = sysblk.regs[pcpu];
                             if (!regs) regs = &sysblk.dummyregs;
 #if defined(_FEATURE_SIE)
                             else if(regs->sie_active) regs = regs->guestregs;
@@ -996,7 +998,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                             regs->mainstor[NPaaddr] = 0;
                             regs->mainstor[NPaaddr++] |= ((NPdata) & 0xFF);
                             redraw_status = 1;
-                            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+                            release_lock(&sysblk.cpulock[pcpu]);
                             break;
                         case 'I':                   /* Display */
                         case 'i':
@@ -1476,8 +1478,9 @@ struct  timeval tv;                     /* Select timeout structure  */
         /* =END= */
 
         /* Get REGS pointer */
-        obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
-        regs = sysblk.regs[sysblk.pcpu];
+        pcpu = sysblk.pcpu;
+        obtain_lock(&sysblk.cpulock[pcpu]);
+        regs = sysblk.regs[pcpu];
         if (!regs) regs = &sysblk.dummyregs;
 #if defined(_FEATURE_SIE)
         else if(regs->sie_active) regs = regs->guestregs;
@@ -1638,7 +1641,7 @@ struct  timeval tv;                     /* Select timeout structure  */
             }
         }
 
-        release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        release_lock(&sysblk.cpulock[pcpu]);
 
     /* =END= */
 
