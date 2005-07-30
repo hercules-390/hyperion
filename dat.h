@@ -1750,7 +1750,7 @@ int i;
 
 #endif /*defined(_FEATURE_SIE)*/
 
-} /* end function purge_tlbe */
+} /* end function invalidate_tlbe */
 
 
 /*-------------------------------------------------------------------*/
