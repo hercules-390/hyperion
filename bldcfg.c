@@ -309,9 +309,11 @@ int     i;                              /* Array subscript           */
 int     c;                              /* Character work area       */
 int     stmtlen;                        /* Statement length          */
 int     lstarted;                       /* Indicate if non-whitespace*/
-char   *cnfline;
-char    *buf1;
                                         /* has been seen yet in line */
+char   *cnfline;                        /* Pointer to copy of buffer */
+#if defined(OPTION_CONFIG_SYMBOLS)
+char   *buf1;                           /* Pointer to resolved buffer*/
+#endif /*defined(OPTION_CONFIG_SYMBOLS)*/
 
     while (1)
     {
@@ -391,7 +393,7 @@ char    *buf1;
         }
         strcpy(buf,buf1);
     }
-#endif
+#endif /*defined(OPTION_CONFIG_SYMBOLS)*/
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 #if defined(OPTION_DYNAMIC_LOAD)
@@ -2032,6 +2034,20 @@ char **orig_newargv;
 #else
     sysblk.maxcpu = numcpu;
 #endif /*_FEATURE_CPU_RECONFIG*/
+
+    /* Log some significant some RUN OPTIONS */
+
+    logmsg
+    (
+        "HHCCF069I Run-options enabled for this run:\n"
+        "\t   NUMCPU:           %d\n"
+        "\t   ASN-and-LX-reuse: %sabled\n"
+        "\t   DIAG8CMD:         %sabled\n"
+
+        ,sysblk.numcpu
+        ,( sysblk.asnandlxreuse ) ? "EN" : "DIS"
+        ,( sysblk.diag8cmd      ) ? "EN" : "DIS"
+    );
 
     /* Start the CPUs */
     obtain_lock (&sysblk.intlock);
