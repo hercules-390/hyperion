@@ -39,7 +39,7 @@
 void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 {
 
-    /* Ensure real instruction address is properly wrapped */   
+    /* Ensure real instruction address is properly wrapped */
     if(likely(!regs->psw.zeroilc))
         regs->psw.IA &= ADDRESS_MAXWRAP(regs);
 
@@ -94,7 +94,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
         STORE_FW ( addr,
                    ( (regs->psw.sysmask << 24)
                    | ((regs->psw.pkey | regs->psw.states) << 16)
-                   | ( ( (regs->psw.asc) 
+                   | ( ( (regs->psw.asc)
                        | (regs->psw.cc << 4)
                        | (regs->psw.progmask)
                        ) << 8
@@ -317,16 +317,16 @@ static char *pgmintname[] = {
         /* 23 */        "EX-translation exception",
         /* 24 */        "Primary-authority exception",
         /* 25 */        "Secondary-authority exception",
-        /* 26 */        "Page-fault-assist exception",
-        /* 27 */        "Control-switch exception",
+        /* 26 */        "LFX-translation exception",            /*@ALR*/
+        /* 27 */        "LSX-translation exception",            /*@ALR*/
         /* 28 */        "ALET-specification exception",
         /* 29 */        "ALEN-translation exception",
         /* 2A */        "ALE-sequence exception",
         /* 2B */        "ASTE-validity exception",
         /* 2C */        "ASTE-sequence exception",
         /* 2D */        "Extended-authority exception",
-        /* 2E */        "Unassigned exception",
-        /* 2F */        "Unassigned exception",
+        /* 2E */        "LSTE-sequence exception",              /*@ALR*/
+        /* 2F */        "ASTE-instance exception",              /*@ALR*/
         /* 30 */        "Stack-full exception",
         /* 31 */        "Stack-empty exception",
         /* 32 */        "Stack-specification exception",
@@ -344,6 +344,9 @@ static char *pgmintname[] = {
         /* 3E */        "Unassigned exception",
         /* 3F */        "Unassigned exception",
         /* 40 */        "Monitor event" };
+
+        /* 26 */ /* was "Page-fault-assist exception", */
+        /* 27 */ /* was "Control-switch exception", */
 
     /* If called with ghost registers (ie from hercules command
        then ignore all interrupt handling and report the error
@@ -491,7 +494,7 @@ static char *pgmintname[] = {
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
     }
 
-    /* The OLD PSW must be incremented on the following 
+    /* The OLD PSW must be incremented on the following
        exceptions during instfetch */
     if(!realregs->instvalid &&
       (  code == PGM_PROTECTION_EXCEPTION
@@ -502,7 +505,7 @@ static char *pgmintname[] = {
         realregs->psw.IA += ilc;
         realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
     }
-        
+
     /* Store the interrupt code in the PSW */
     realregs->psw.intcode = pcode;
 
@@ -697,7 +700,7 @@ static char *pgmintname[] = {
            )
         {
             psa->excarid = regs->excarid;
-            if(regs->TEA | TEA_MVPG)    
+            if(regs->TEA | TEA_MVPG)
                 psa->opndrid = regs->opndrid;
             realregs->opndrid = 0;
         }
@@ -797,7 +800,7 @@ static char *pgmintname[] = {
 #if defined(_FEATURE_SIE)
             if(SIE_MODE(realregs))
             {
-                release_lock(&sysblk.intlock); 
+                release_lock(&sysblk.intlock);
                 longjmp(realregs->progjmp, pcode);
             }
             else
@@ -956,7 +959,7 @@ DWORD   csw;                            /* CSW for S/370 channels    */
             ARCH_DEP(program_interrupt) (regs, rc);
         }
     }
-    
+
     release_lock(&sysblk.intlock);
 
     longjmp(regs->progjmp, icode);
@@ -1059,7 +1062,7 @@ int   cpu  = *ptr;
 
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
-    
+
     /* Set CPU thread priority */
     if (setpriority(PRIO_PROCESS, 0, sysblk.cpuprio))
         logmsg (_("HHCCP001W CPU%4.4X thread set priority %d failed: %s\n"),
@@ -1067,7 +1070,7 @@ int   cpu  = *ptr;
 
     /* Back to user mode */
     SETMODE(USER);
-    
+
     /* Display thread started message on control panel */
     logmsg (_("HHCCP002I CPU%4.4X thread started: tid="TIDPAT", pid=%d, "
             "priority=%d\n"),
@@ -1377,7 +1380,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
         release_lock (&sysblk.intlock);
- 
+
         /* If the architecture mode has changed we must adapt */
         if(sysblk.arch_mode != regs->arch_mode)
             longjmp(regs->archjmp,SIE_NO_INTERCEPT);
