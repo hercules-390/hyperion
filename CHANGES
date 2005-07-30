@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+29 Jul 2005 misc/9: Cap reported mips/sios rates - Fish
 29 Jul 2005 Add missing support for 'try_obtain_lock' to PTT tracing - Fish
 29 Jul 2005 ASN-and-LX-reuse Facility (ALRF) fix - Fish
             'PC' (Program Call)                          (fixed)
@@ -26,7 +27,7 @@
             in ASTE for ASTE-instance exceptions
 28 Jul 2005 Fix MVCL clobber if ESAME but not amode64 - Greg Smith
 27 Jul 2005 pcpu.pat - fix segfault in panel_display after archmode switch -
-            Greg Smith 
+            Greg Smith
 20 Jul 2005 concpy.pat - concurrent copy phase 1 - Greg Smith
 18 Jun 2005 Fix "console: select: Bad file number" (FINAL?) - Fish
             "Generic"-ize OPTION_WAKEUP_SELECT_VIA_PIPE handling - Fish

@@ -780,6 +780,9 @@ typedef struct _REGS {                  /* Processor registers       */
 
 #define HI_CPU sysblk.hicpu
 
+#define MAX_REPORTED_MIPSRATE  (250000) /* instructions/millisecond  */
+#define MAX_REPORTED_SIOSRATE  (2500)   /* SIOs per second           */
+
 /* Macros to signal interrupt condition to a CPU[s] */
 #define WAKEUP_CPU(_regs) \
  do { \

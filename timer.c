@@ -357,6 +357,8 @@ struct  timeval tv;                     /* Structure for gettimeofday
             now = (U64)tv.tv_sec;
             now = now * 1000000 + tv.tv_usec;
             interval = (int)(now - then);
+            if (interval < 1)
+                interval = 1;
 
 #if defined(OPTION_SHARED_DEVICES)
             sysblk.shrdrate = sysblk.shrdcount;
@@ -393,6 +395,12 @@ struct  timeval tv;                     /* Structure for gettimeofday
                     ((regs->instcount - regs->prevcount)*1000) / interval;
                 regs->siosrate = regs->siocount;
 
+                /* Ignore wildly high rates probably in error */
+                if (regs->mipsrate > MAX_REPORTED_MIPSRATE)
+                    regs->mipsrate = 0;
+                if (regs->siosrate > MAX_REPORTED_SIOSRATE)
+                    regs->siosrate = 0;
+
                 /* Total for ALL CPUs together */
                 mipsrate += regs->mipsrate;
                 siosrate += regs->siosrate;
@@ -406,7 +414,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
                 waittime = regs->waittime;
                 if ( test_bit (4, regs->cpuad, &sysblk.waiting_mask) )
                     waittime += now - regs->waittod;
-                regs->cpupct = ((interval - waittime)*1.0) / (interval*1.0);
+                regs->cpupct = ((double)(interval - waittime)) / ((double)interval);
 
                 /* Reset the wait values */
                 regs->waittime = 0;
