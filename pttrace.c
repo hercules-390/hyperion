@@ -125,6 +125,16 @@ int result;
     return result;
 }
 
+int ptt_pthread_mutex_trylock(LOCK *mutex, char *file, int line)
+{
+int result;
+
+    PTTRACE ("try before", mutex, NULL, file, line, PTT_MAGIC);
+    result = pthread_mutex_trylock(mutex);
+    PTTRACE ("try after", mutex, NULL, file, line, result);
+    return result;
+}
+
 int ptt_pthread_mutex_unlock(LOCK *mutex, char *file, int line)
 {
 int result;
@@ -228,6 +238,16 @@ int result;
     PTTRACE ("lock before", mutex, NULL, file, line, PTT_MAGIC);
     result = fthread_mutex_lock(mutex);
     PTTRACE ("lock after", mutex, NULL, file, line, result);
+    return result;
+}
+
+int ptt_pthread_mutex_trylock(LOCK *mutex, char *file, int line)
+{
+int result;
+
+    PTTRACE ("try before", mutex, NULL, file, line, PTT_MAGIC);
+    result = fthread_mutex_trylock(mutex);
+    PTTRACE ("try after", mutex, NULL, file, line, result);
     return result;
 }
 

@@ -367,6 +367,13 @@ typedef void*THREAD_FUNC(void*);
 #undef  obtain_lock
 #define obtain_lock(plk) \
         ptt_pthread_mutex_lock((plk),__FILE__,__LINE__)
+#undef  try_obtain_lock
+#define try_obtain_lock(plk) \
+        ptt_pthread_mutex_trylock((plk),__FILE__,__LINE__)
+#undef  test_lock
+#define test_lock(plk) \
+        (ptt_pthread_mutex_trylock ((plk),__FILE__,__LINE__) ? 1 : \
+         ptt_pthread_mutex_unlock  ((plk),__FILE__,__LINE__))
 #undef  release_lock
 #define release_lock(plk) \
         ptt_pthread_mutex_unlock((plk),__FILE__,__LINE__)

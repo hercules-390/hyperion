@@ -16,6 +16,7 @@
  } while (0)
 int ptt_pthread_mutex_init(LOCK *, void *, char *, int);
 int ptt_pthread_mutex_lock(LOCK *, char *, int);
+int ptt_pthread_mutex_trylock(LOCK *, char *, int);
 int ptt_pthread_mutex_unlock(LOCK *, char *, int);
 int ptt_pthread_cond_init(COND *, void *, char *, int);
 int ptt_pthread_cond_signal(COND *, char *, int);
@@ -37,6 +38,7 @@ int ptt_pthread_kill(TID, int, char *, int);
  } while (0)
 int ptt_pthread_mutex_init(LOCK *, pthread_mutexattr_t *, char *, int);
 int ptt_pthread_mutex_lock(LOCK *, char *, int);
+int ptt_pthread_mutex_trylock(LOCK *, char *, int);
 int ptt_pthread_mutex_unlock(LOCK *, char *, int);
 int ptt_pthread_cond_init(COND *, pthread_condattr_t *, char *, int);
 int ptt_pthread_cond_signal(COND *, char *, int);
