@@ -7,8 +7,10 @@
 20 Jul 2005 concpy.pat - concurrent copy phase 1 - Greg Smith
 18 Jun 2005 Fix "console: select: Bad file number" (FINAL?) - Fish
             "Generic"-ize OPTION_WAKEUP_SELECT_VIA_PIPE handling - Fish
-15 Jun 2005 Fix ASN-and-LX-reuse facility incorrect linkage second table
-            entry indexing bug in 'PC' (Program Call) instruction - Fish
+15 Jun 2005 ASN-and-LX-reuse Facility (ALRF) fix - Fish
+            'PC' (Program Call)
+            SA22-7832-03: Page 5-37, 5-34:
+            incorrect indexing into Linkage-Second-Table
 10 Jun 2005 Fix panel not updating problem - Greg Smith
 01 Jun 2005 Fix sf-xxx nomerge bug - Greg Smith
 31 May 2005 Fix to fix for wrong null format track - Greg Smith
