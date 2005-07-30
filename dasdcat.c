@@ -329,7 +329,7 @@ int main(int argc, char **argv)
              close_ckd_image(cif);
              cif = 0;
          }
-         cif = open_ckd_image(fn, sfn, O_RDONLY, 0);
+         cif = open_ckd_image(fn, sfn, O_RDONLY | O_BINARY, 0);
          if (!cif)
              fprintf(stderr, _("HHCDT001E failed to open image %s\n"), *argv);
      }
