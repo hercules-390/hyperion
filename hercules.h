@@ -595,7 +595,6 @@ typedef struct _REGS {                  /* Processor registers       */
 #define CR_LHH(_r) cr[(_r)].F.L.H.H.H    /* Halfword bits 32-47      */
 #define CR_LHHCH(_r) cr[(_r)].F.L.H.H.B.H   /* Character, bits 32-39 */
 #define CR_LHL(_r) cr[(_r)].F.L.H.L.H    /* Halfword low, bits 48-63 */
-#define CR_SIZE (sizeof(DW)*16)
 #define MC_G      mc.D
 #define MC_L      mc.F.L.F
 #define EA_G      ea.D

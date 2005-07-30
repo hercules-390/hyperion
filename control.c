@@ -846,7 +846,7 @@ DEF_INST(extract_primary_asn_and_instance)
       ARCH_DEP(operation_exception)(inst,regs);
   }
 
-  RRE(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -913,7 +913,7 @@ DEF_INST(extract_secondary_asn_and_instance)
       ARCH_DEP(operation_exception)(inst,regs);
   }
 
-  RRE(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -975,9 +975,7 @@ LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
 int     max_esta_code;
 
-
     RRE(inst, regs, r1, r2);
-
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -2646,8 +2644,11 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
            that the first 4 bits of the LFX1 (originally bits 32-35
            of the operand address) must always be 0. The LFX1 was
            loaded from bits 32-43 of the operand address if bit 44
-           of the operand address was 1, otherwise LFX1 is zero. */
-        if (lftl < (pcnum >> 19))
+           of the operand address was 1, otherwise LFX1 is zero.
+           When bit 44 of the effective address is zero however,
+           the LFTL (Linkage-First-Table Length) is ignored.
+        */
+        if ((effective_addr2 & PC_BIT44) && lftl < (pcnum >> 19))
         {
             regs->TEA = pctea;
             ARCH_DEP(program_interrupt) (regs, PGM_LFX_TRANSLATION_EXCEPTION);
@@ -3040,7 +3041,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Set flag if either the current or new PSTD indicates
            a space switch event */
         if ((regs->CR(1) & SSEVENT_BIT)
-            || (ASTE_AS_DESIGNATOR(aste) & SSEVENT_BIT) )
+            || (pstd & SSEVENT_BIT) )
         {
             /* Indicate space-switch event required */
             ssevent = 1;
@@ -3209,7 +3210,7 @@ int     rc;                             /* return code from load_psw */
                of CR4 must equal the ASTEIN in word 11 of the ASTE */
             if (ASN_AND_LX_REUSE_ENABLED(regs))
             {
-                if (regs->CR_H(4) != aste[11])
+                if (newregs.CR_H(4) != aste[11])
                 {
                     /* Set bit 2 of the exception access identification
                        to indicate that the program check occurred
@@ -3218,20 +3219,6 @@ int     rc;                             /* return code from load_psw */
                     ARCH_DEP(program_interrupt) (&newregs, PGM_ASTE_INSTANCE_EXCEPTION);
                 }
             } /* end if(ASN_AND_LX_REUSE_ENABLED) */
-
-            /* Space switch if either current PSTD or new PSTD
-               space-switch-event control bit is set to 1 */
-            if ((regs->CR(1) & SSEVENT_BIT)
-                || (ASTE_AS_DESIGNATOR(aste) & SSEVENT_BIT))
-            {
-                /* Indicate space-switch event required */
-                ssevent = 1;
-            }
-            else
-            {
-                /* space-switch event maybe - if PER event */
-                ssevent = 2;
-            }
 
             /* Obtain new PSTD (or PASCE) and AX from the ASTE */
             newregs.CR(1) = ASTE_AS_DESIGNATOR(aste);
@@ -3246,6 +3233,20 @@ int     rc;                             /* return code from load_psw */
             newregs.CR(1) = ARCH_DEP(subspace_replace) (newregs.CR(1),
                                             pasteo, NULL, &newregs);
 #endif /*FEATURE_SUBSPACE_GROUP*/
+
+            /* Space switch if either current PSTD or new PSTD
+               space-switch-event control bit is set to 1 */
+            if ((regs->CR(1) & SSEVENT_BIT)
+                || (newregs.CR(1) & SSEVENT_BIT))
+            {
+                /* Indicate space-switch event required */
+                ssevent = 1;
+            }
+            else
+            {
+                /* space-switch event maybe - if PER event */
+                ssevent = 2;
+            }
 
         } /* end if(pasn!=oldpasn) */
 
@@ -3279,7 +3280,7 @@ int     rc;                             /* return code from load_psw */
                of CR3 must equal the ASTEIN in word 11 of the ASTE */
             if (ASN_AND_LX_REUSE_ENABLED(regs))
             {
-                if (regs->CR_H(3) != aste[11])
+                if (newregs.CR_H(3) != aste[11])
                 {
                     /* Set bit 3 of the exception access identification
                        to indicate that the program check occurred
@@ -3313,7 +3314,7 @@ int     rc;                             /* return code from load_psw */
     /* Update the updated CPU registers from the working copy */
     memcpy(&(regs->psw), &(newregs.psw), sizeof(newregs.psw));
     memcpy(regs->gr, newregs.gr, sizeof(newregs.gr));
-    memcpy(regs->cr, newregs.cr, CR_SIZE);
+    memcpy(regs->cr, newregs.cr, sizeof(newregs.cr));
     memcpy(regs->ar, newregs.ar, sizeof(newregs.ar));
 
     /* Set the main storage reference and change bits */
@@ -3355,16 +3356,16 @@ int     rc;                             /* return code from load_psw */
         /* [6.5.2.34] Set translation exception address equal
            to old primary ASN, and set high-order bit if old
            primary space-switch-event control bit is one */
-        newregs.TEA = oldpasn;
+        regs->TEA = oldpasn;
         if (oldpstd & SSEVENT_BIT)
-            newregs.TEA |= TEA_SSEVENT;
+            regs->TEA |= TEA_SSEVENT;
 
-         ARCH_DEP(program_interrupt) (&newregs, PGM_SPACE_SWITCH_EVENT);
+         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
     }
 
     if (rc) /* if new psw has bad format */
     {
-        ARCH_DEP(program_interrupt) (&newregs, rc);
+        ARCH_DEP(program_interrupt) (regs, rc);
     }
 
     /* Perform serialization and checkpoint-synchronization */
@@ -3545,6 +3546,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
            not equal the ASTEIN in the ASTE*/
         if (pti_instruction && aste[11] != regs->GR_H(r1)) 
         {
+            /* Set bit 2 of the exception access identification
+               to indicate that the program check occurred
+               during PASN translation in a PTI instruction */
+            regs->excarid = 0x20;
             ARCH_DEP(program_interrupt) (regs, PGM_ASTE_INSTANCE_EXCEPTION);
         } /* end if (PT && ASTE11_ASTEIN != GR_H(r1)) */
 
@@ -4325,7 +4330,6 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Clock value               */
 
-
     S(inst, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
@@ -4580,6 +4584,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
            not equal the ASTEIN in the ASTE */
         if (ssair_instruction && aste[11] != regs->GR_H(r1)) 
         {
+            /* Set bit 3 of the exception access identification
+               to indicate that the program check occurred
+               during SASN translation in a SSAIR instruction */
+            regs->excarid = 0x10;
             ARCH_DEP(program_interrupt) (regs, PGM_ASTE_INSTANCE_EXCEPTION);
         } /* end if (SSAIR && ASTE11_ASTEIN != GR_H(r1)) */
 

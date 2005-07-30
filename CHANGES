@@ -1,6 +1,28 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+29 Jul 2005 ASN-and-LX-reuse Facility (ALRF) fix - Fish
+            'PC' (Program Call)                          (fixed)
+            'PR' (Program Return)                        (fixed)
+            'PT/PTI' (Program Transfer (with Instance))  (was OK)
+            SA22-7832-03: Page 6-30,31:
+            premature/incorrect space-switch event tests
+29 Jul 2005 ASN-and-LX-reuse Facility (ALRF) fix - Fish
+            'PC' (Program Call)
+            SA22-7832-03: Page 5-33:
+            LFTL (Linkage-First-Table Length) not being properly
+            ignored when bit 44 of the effective address is zero.
+29 Jul 2005 ASN-and-LX-reuse Facility (ALRF) fix - Fish
+            'PT/PTI' (Program Transfer (with Instance))
+            'SSAR/SSAIR' (Set Secondary ASN (with Instance))
+            SA22-7832-03: Page 6-19:
+            Exception Access Identification (TEA = regs->excarid)
+            not being set for ASTE-instance exceptions
+29 Jul 2005 ASN-and-LX-reuse Facility (ALRF) fix - Fish
+            'PR' (Program Return)
+            SA22-7832-03: Page 10-77,78:
+            wrong PASTEIN/SASTEIN value checked against ASTEIN
+            in ASTE for ASTE-instance exceptions
 28 Jul 2005 Fix MVCL clobber if ESAME but not amode64 - Greg Smith
 27 Jul 2005 pcpu.pat - fix segfault in panel_display after archmode switch -
             Greg Smith 

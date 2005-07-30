@@ -443,7 +443,7 @@ void ARCH_DEP(initial_cpu_reset) (REGS *regs)
 
     /* Clear the registers */
     memset (&regs->psw, 0, sizeof(PSW));
-    memset (regs->cr, 0, CR_SIZE);
+    memset (regs->cr, 0, sizeof(regs->cr));
     regs->PX = 0;
     regs->todpr = 0;
     regs->ptimer = 0;
