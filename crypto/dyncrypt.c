@@ -14,6 +14,7 @@
 #include "opcode.h"
 #include "inline.h"
 #include "sha1.h"
+#include "sha256.h"
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST
 
@@ -46,7 +47,9 @@
 //#define OPTION_KM_DEBUG
 //#define OPTION_KMC_DEBUG
 //#define OPTION_KIMD_DEBUG
+//#define OPTION_KIMD256_DEBUG
 //#define OPTION_KLMD_DEBUG
+//#define OPTION_KLMD256_DEBUG
 //#define OPTION_KMAC_DEBUG
 
 /*----------------------------------------------------------------------------*/
@@ -64,7 +67,15 @@
 #define KIMD_QUERY      0
 #define KIMD_SHA_1      1
 #define KIMD_MAX_FC     1
-#define KIMD_BITS               { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#define KIMD_BITS       { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+/*----------------------------------------------------------------------------*/
+/* Function codes for compute intermediate message digest sha256              */
+/*----------------------------------------------------------------------------*/
+#define KIMD256_QUERY      0
+#define KIMD256_SHA_1      1
+#define KIMD256_MAX_FC     1
+#define KIMD256_BITS       { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for compute last message digest                             */
@@ -72,7 +83,15 @@
 #define KLMD_QUERY      0
 #define KLMD_SHA_1      1
 #define KLMD_MAX_FC     1
-#define KLMD_BITS               { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#define KLMD_BITS       { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+/*----------------------------------------------------------------------------*/
+/* Function codes for compute last message digest sha256                      */
+/*----------------------------------------------------------------------------*/
+#define KLMD256_QUERY      0
+#define KLMD256_SHA_1      1
+#define KLMD256_MAX_FC     1
+#define KLMD256_BITS       { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for cipher message                                          */
@@ -107,7 +126,7 @@
 /*----------------------------------------------------------------------------*/
 /* Handy macro's                                                              */
 /*----------------------------------------------------------------------------*/
-#define MD2CTX(ctx, md)         \
+#define SHA1M2C(ctx, md) \
 { \
   (ctx)->Intermediate_Hash[0] = ((md)[0] << 24) + ((md)[1] << 16) + ((md)[2] << 8) + (md)[3]; \
   (ctx)->Intermediate_Hash[1] = ((md)[4] << 24) + ((md)[5] << 16) + ((md)[6] << 8) + (md)[7]; \
@@ -115,30 +134,76 @@
   (ctx)->Intermediate_Hash[3] = ((md)[12] << 24) + ((md)[13] << 16) + ((md)[14] << 8) + (md)[15]; \
   (ctx)->Intermediate_Hash[4] = ((md)[16] << 24) + ((md)[17] << 16) + ((md)[18] << 8) + (md)[19]; \
 }
-#define CTX2MD(md, ctx)         \
+#define SHA256M2C(ctx, md) \
 { \
-    (md)[0] = ((ctx)->Intermediate_Hash[0] & 0xff000000) >> 24; \
-    (md)[1] = ((ctx)->Intermediate_Hash[0] & 0x00ff0000) >> 16; \
-    (md)[2] = ((ctx)->Intermediate_Hash[0] & 0x0000ff00) >> 8; \
-    (md)[3] = ((ctx)->Intermediate_Hash[0] & 0x000000ff); \
-    (md)[4] = ((ctx)->Intermediate_Hash[1] & 0xff000000) >> 24; \
-    (md)[5] = ((ctx)->Intermediate_Hash[1] & 0x00ff0000) >> 16; \
-    (md)[6] = ((ctx)->Intermediate_Hash[1] & 0x0000ff00) >> 8; \
-    (md)[7] = ((ctx)->Intermediate_Hash[1] & 0x000000ff); \
-    (md)[8] = ((ctx)->Intermediate_Hash[2] & 0xff000000) >> 24; \
-    (md)[9] = ((ctx)->Intermediate_Hash[2] & 0x00ff0000) >> 16; \
-    (md)[10] = ((ctx)->Intermediate_Hash[2] & 0x0000ff00) >> 8; \
-    (md)[11] = ((ctx)->Intermediate_Hash[2] & 0x000000ff); \
-    (md)[12] = ((ctx)->Intermediate_Hash[3] & 0xff000000) >> 24; \
-    (md)[13] = ((ctx)->Intermediate_Hash[3] & 0x00ff0000) >> 16; \
-    (md)[14] = ((ctx)->Intermediate_Hash[3] & 0x0000ff00) >> 8; \
-    (md)[15] = ((ctx)->Intermediate_Hash[3] & 0x000000ff); \
-    (md)[16] = ((ctx)->Intermediate_Hash[4] & 0xff000000) >> 24; \
-    (md)[17] = ((ctx)->Intermediate_Hash[4] & 0x00ff0000) >> 16; \
-    (md)[18] = ((ctx)->Intermediate_Hash[4] & 0x0000ff00) >> 8; \
-    (md)[19] = ((ctx)->Intermediate_Hash[4] & 0x000000ff); \
+  (ctx)->state[0] = ((md)[0] << 24) + ((md)[1] << 16) + ((md)[2] << 8) + (md)[3]; \
+  (ctx)->state[1] = ((md)[4] << 24) + ((md)[5] << 16) + ((md)[6] << 8) + (md)[7]; \
+  (ctx)->state[2] = ((md)[8] << 24) + ((md)[9] << 16) + ((md)[10] << 8) + (md)[11]; \
+  (ctx)->state[3] = ((md)[12] << 24) + ((md)[13] << 16) + ((md)[14] << 8) + (md)[15]; \
+  (ctx)->state[4] = ((md)[16] << 24) + ((md)[17] << 16) + ((md)[18] << 8) + (md)[19]; \
+  (ctx)->state[5] = ((md)[20] << 24) + ((md)[21] << 16) + ((md)[22] << 8) + (md)[23]; \
+  (ctx)->state[6] = ((md)[24] << 24) + ((md)[25] << 16) + ((md)[26] << 8) + (md)[27]; \
+  (ctx)->state[7] = ((md)[28] << 24) + ((md)[29] << 16) + ((md)[30] << 8) + (md)[31]; \
 }
-#define LOGBYTE(s, v, x)    \
+#define SHA1C2M(md, ctx) \
+{ \
+  (md)[0] = ((ctx)->Intermediate_Hash[0] & 0xff000000) >> 24; \
+  (md)[1] = ((ctx)->Intermediate_Hash[0] & 0x00ff0000) >> 16; \
+  (md)[2] = ((ctx)->Intermediate_Hash[0] & 0x0000ff00) >> 8; \
+  (md)[3] = ((ctx)->Intermediate_Hash[0] & 0x000000ff); \
+  (md)[4] = ((ctx)->Intermediate_Hash[1] & 0xff000000) >> 24; \
+  (md)[5] = ((ctx)->Intermediate_Hash[1] & 0x00ff0000) >> 16; \
+  (md)[6] = ((ctx)->Intermediate_Hash[1] & 0x0000ff00) >> 8; \
+  (md)[7] = ((ctx)->Intermediate_Hash[1] & 0x000000ff); \
+  (md)[8] = ((ctx)->Intermediate_Hash[2] & 0xff000000) >> 24; \
+  (md)[9] = ((ctx)->Intermediate_Hash[2] & 0x00ff0000) >> 16; \
+  (md)[10] = ((ctx)->Intermediate_Hash[2] & 0x0000ff00) >> 8; \
+  (md)[11] = ((ctx)->Intermediate_Hash[2] & 0x000000ff); \
+  (md)[12] = ((ctx)->Intermediate_Hash[3] & 0xff000000) >> 24; \
+  (md)[13] = ((ctx)->Intermediate_Hash[3] & 0x00ff0000) >> 16; \
+  (md)[14] = ((ctx)->Intermediate_Hash[3] & 0x0000ff00) >> 8; \
+  (md)[15] = ((ctx)->Intermediate_Hash[3] & 0x000000ff); \
+  (md)[16] = ((ctx)->Intermediate_Hash[4] & 0xff000000) >> 24; \
+  (md)[17] = ((ctx)->Intermediate_Hash[4] & 0x00ff0000) >> 16; \
+  (md)[18] = ((ctx)->Intermediate_Hash[4] & 0x0000ff00) >> 8; \
+  (md)[19] = ((ctx)->Intermediate_Hash[4] & 0x000000ff); \
+}
+#define SHA256C2M(md, ctx) \
+{ \
+  (md)[0] = ((ctx)->state[0] & 0xff000000) >> 24; \
+  (md)[1] = ((ctx)->state[0] & 0x00ff0000) >> 16; \
+  (md)[2] = ((ctx)->state[0] & 0x0000ff00) >> 8; \
+  (md)[3] = ((ctx)->state[0] & 0x000000ff); \
+  (md)[4] = ((ctx)->state[1] & 0xff000000) >> 24; \
+  (md)[5] = ((ctx)->state[1] & 0x00ff0000) >> 16; \
+  (md)[6] = ((ctx)->state[1] & 0x0000ff00) >> 8; \
+  (md)[7] = ((ctx)->state[1] & 0x000000ff); \
+  (md)[8] = ((ctx)->state[2] & 0xff000000) >> 24; \
+  (md)[9] = ((ctx)->state[2] & 0x00ff0000) >> 16; \
+  (md)[10] = ((ctx)->state[2] & 0x0000ff00) >> 8; \
+  (md)[11] = ((ctx)->state[2] & 0x000000ff); \
+  (md)[12] = ((ctx)->state[3] & 0xff000000) >> 24; \
+  (md)[13] = ((ctx)->state[3] & 0x00ff0000) >> 16; \
+  (md)[14] = ((ctx)->state[3] & 0x0000ff00) >> 8; \
+  (md)[15] = ((ctx)->state[3] & 0x000000ff); \
+  (md)[16] = ((ctx)->state[4] & 0xff000000) >> 24; \
+  (md)[17] = ((ctx)->state[4] & 0x00ff0000) >> 16; \
+  (md)[18] = ((ctx)->state[4] & 0x0000ff00) >> 8; \
+  (md)[19] = ((ctx)->state[4] & 0x000000ff); \
+  (md)[20] = ((ctx)->state[5] & 0xff000000) >> 24; \
+  (md)[21] = ((ctx)->state[5] & 0x00ff0000) >> 16; \
+  (md)[22] = ((ctx)->state[5] & 0x0000ff00) >> 8; \
+  (md)[23] = ((ctx)->state[5] & 0x000000ff); \
+  (md)[24] = ((ctx)->state[6] & 0xff000000) >> 24; \
+  (md)[25] = ((ctx)->state[6] & 0x00ff0000) >> 16; \
+  (md)[26] = ((ctx)->state[6] & 0x0000ff00) >> 8; \
+  (md)[27] = ((ctx)->state[6] & 0x000000ff); \
+  (md)[28] = ((ctx)->state[7] & 0xff000000) >> 24; \
+  (md)[29] = ((ctx)->state[7] & 0x00ff0000) >> 16; \
+  (md)[30] = ((ctx)->state[7] & 0x0000ff00) >> 8; \
+  (md)[31] = ((ctx)->state[7] & 0x000000ff); \
+}
+#define LOGBYTE(s, v, x) \
 { \
   int i; \
   \
@@ -169,7 +234,9 @@
 #ifndef CONST
 #define CONST
 BYTE kimd_bits[] = KIMD_BITS;
+BYTE kimd256_bits[] = KIMD256_BITS;
 BYTE klmd_bits[] = KLMD_BITS;
+BYTE klmd256_bits[] = KLMD256_BITS;
 BYTE km_bits[] = KM_BITS;
 BYTE kmac_bits[] = KMAC_BITS;
 BYTE kmc_bits[] = KMC_BITS;
@@ -230,7 +297,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 19, GR_A(1, regs), 1, regs);
   SHA1Reset(&context);
-  MD2CTX(&context, cv);
+  SHA1M2C(&context, cv);
 
 #ifdef OPTION_KIMD_DEBUG
   LOGBYTE("icv   :", cv, 20);
@@ -250,7 +317,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
     SHA1Input(&context, buffer, 64);
 
     /* Store the output chaining value */
-    CTX2MD(cv, &context);
+    SHA1C2M(cv, &context);
     ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
@@ -262,6 +329,108 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
     SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 64);
 
 #ifdef OPTION_KIMD_DEBUG
+    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
+    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+#endif
+
+    /* check for end of data */
+    if(!GR_A(r2 + 1, regs))
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+  }
+  /* CPU-determined amount of data processed */
+  regs->psw.cc = 3;
+}
+
+/*----------------------------------------------------------------------------*/
+/* ???? Compute intermediate message digest (KIMD256) FC 0                    */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kimd256_query)(int r1, int r2, REGS *regs)
+{
+  UNREFERENCED(r1);
+
+#ifdef OPTION_KIMD256_DEBUG
+  logmsg("  KIMD256: function 0: query\n");
+#endif
+
+  /* Check special conditions */
+  if(!r2 || r2 & 0x01 || GR0_m(regs))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Store the parameter block */
+  ARCH_DEP(vstorec)(kimd256_bits, 15, GR_A(1, regs), 1, regs);
+
+  /* Set condition code 0 */
+  regs->psw.cc = 0;
+}
+
+/*----------------------------------------------------------------------------*/
+/* ???? Compute intermediate message digest (KIMD256) FC 1                    */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
+{
+  BYTE buffer[64];
+  int crypted;
+  BYTE cv[32];
+  sha256_context context;
+
+  UNREFERENCED(r1);
+
+#ifdef OPTION_KIMD256_DEBUG
+  logmsg("  KIMD256: function 1: sha-256\n");
+#endif
+
+  /* Check special conditions */
+  if(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 64 || GR0_m(regs))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Return with cc 0 on zero length */
+  if(!GR_A(r2 + 1, regs))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
+
+  /* Test writeability output chaining value */
+  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 31, ACCTYPE_WRITE, regs);
+
+  /* Fetch and set initial chaining value */
+  ARCH_DEP(vfetchc)(cv, 31, GR_A(1, regs), 1, regs);
+  sha256_starts(&context);
+  SHA256M2C(&context, cv);
+
+#ifdef OPTION_KIMD256_DEBUG
+  LOGBYTE("icv   :", cv, 32);
+#endif
+
+  /* Try to process the CPU-determined amount of data */
+  crypted = 0;
+  while(crypted += 64 < PROCESS_MAX)
+  {
+    /* Fetch and process a block of data */
+    ARCH_DEP(vfetchc)(buffer, 63, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KIMD256_DEBUG
+    LOGBYTE2("  input :", buffer, 16, 4);
+#endif
+
+    sha256_update(&context, buffer, 64);
+
+    /* Store the output chaining value */
+    SHA256C2M(cv, &context);
+    ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KIMD256_DEBUG
+  LOGBYTE("ocv   :", cv, 32);
+#endif
+
+    /* Update the registers */
+    SET_GR_A(r2, regs,GR_A(r2,regs) + 64);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 64);
+
+#ifdef OPTION_KIMD256_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
     logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
 #endif
@@ -331,7 +500,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
   SHA1Reset(&context);
-  MD2CTX(&context, cv);
+  SHA1M2C(&context, cv);
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
@@ -351,7 +520,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
     SHA1Input(&context, buffer, 64);
 
     /* Store the output chaining value */
-    CTX2MD(cv, &context);
+    SHA1C2M(cv, &context);
     ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -413,7 +582,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 
   /* Calculate and store the message digest */
   SHA1Input(&context, buffer, 64);
-  CTX2MD(cv, &context);
+  SHA1C2M(cv, &context);
   ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -425,6 +594,162 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
   SET_GR_A(r2 + 1, regs, 0);
 
 #ifdef OPTION_KLMD_DEBUG
+  logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
+  logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+#endif
+
+  /* Set condition code */
+  regs->psw.cc = 0;
+}
+
+/*----------------------------------------------------------------------------*/
+/* ???? Compute last message digest (KLMD256) FC 0                            */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(klmd256_query)(int r1, int r2, REGS *regs)
+{
+  UNREFERENCED(r1);
+
+#ifdef OPTION_KLMD_DEBUG
+  logmsg("  KLMD256: function 0: query\n");
+#endif
+
+  /* Check special conditions */
+  if(!r2 || r2 & 0x01 || GR0_m(regs))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Store the parameter block */
+  ARCH_DEP(vstorec)(klmd256_bits, 15, GR_A(1, regs), 1, regs);
+
+  /* Set condition code 0 */
+  regs->psw.cc = 0;
+}
+
+/*----------------------------------------------------------------------------*/
+/* ???? Compute last message digest (KLMD256) FC 1                            */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
+{
+  BYTE buffer[64];
+  int crypted;
+  BYTE cv[32];
+  sha256_context context;
+  int i;
+
+  UNREFERENCED(r1);
+
+#ifdef OPTION_KLMD256_DEBUG
+  logmsg("  KLMD256: function 1: sha-256\n");
+#endif
+
+  /* Check special conditions */
+  if(!r2 || r2 & 0x01 || GR0_m(regs))
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Test writeability output chaining value */
+  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 31, ACCTYPE_WRITE, regs);
+
+  /* Fetch and set initial chaining value */
+  ARCH_DEP(vfetchc)(cv, 31, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KLMD256_DEBUG
+  LOGBYTE("icv   :", cv, 32);
+#endif
+
+  sha256_starts(&context);
+  SHA256M2C(&context, cv);
+
+  /* Try to process the CPU-determined amount of data */
+  crypted = 0;
+  while(crypted += 64 < PROCESS_MAX)
+  {
+    /* Check for last block */
+    if(GR_A(r2 + 1, regs) < 64)
+      break;
+
+    /* Fetch and process a block of data */
+    ARCH_DEP(vfetchc)(buffer, 63, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KLMD256_DEBUG
+    LOGBYTE2("input :", buffer, 16, 4);
+#endif
+
+    sha256_update(&context, buffer, 64);
+
+    /* Store the output chaining value */
+    SHA256C2M(cv, &context);
+    ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KLMD256_DEBUG
+  LOGBYTE("ocv   :", cv, 32);
+#endif
+
+    /* Update the registers */
+    SET_GR_A(r2, regs,GR_A(r2,regs) + 64);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 64);
+
+#ifdef OPTION_KLMD256_DEBUG
+    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
+    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+#endif
+
+  }
+
+  /* Check if cpu determined amount of data is processed */
+  if(GR_A(r2 + 1, regs) >= 64)
+  {
+    regs->psw.cc = 3;
+    return;
+  }
+
+  /* Fetch and process possible last block of data */
+  if(GR_A(r2 + 1, regs))
+  {
+    ARCH_DEP(vfetchc)(buffer, GR_A(r2 + 1, regs) - 1, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KLMD256_DEBUG
+    LOGBYTE("input :", buffer, GR_A(r2 + 1, regs));
+#endif
+  }
+
+  /* Do the padding */
+  i = GR_A(r2 + 1, regs);
+  if(i > 55)
+  {
+    buffer[i++] = 0x80;
+    while(i < 64)
+     buffer[i++] = 0x00;
+    sha256_update(&context, buffer, 64);
+    for(i = 0; i < 56; i++)
+      buffer[i] = 0;
+  }
+  else
+  {
+    buffer[i++] = 0x80;
+    while(i < 56)
+      buffer[i++] = 0x00;
+  }
+
+  /* Fetch and set the message bit length */
+  ARCH_DEP(vfetchc)(&buffer[56], 7, GR_A(1, regs) + 32, 1, regs);
+
+#ifdef OPTION_KLMD256_DEBUG
+  LOGBYTE("mbl   :", &buffer[56], 8);
+#endif
+
+  /* Calculate and store the message digest */
+  sha256_update(&context, buffer, 64);
+  SHA256C2M(cv, &context);
+  ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KLMD256_DEBUG
+  LOGBYTE("md    :", cv, 32);
+#endif
+
+  /* Update registers */
+  SET_GR_A(r2, regs, GR_A(r2,regs) + GR_A(r2 + 1, regs));
+  SET_GR_A(r2 + 1, regs, 0);
+
+#ifdef OPTION_KLMD256_DEBUG
   logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
   logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
 #endif
