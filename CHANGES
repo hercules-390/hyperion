@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+
+07 Aug 2005 sha256 sources added, waiting for POP - Bernard van der Helm
 30 Jul 2005 dasdcat/hetlib: add O_BINARY to open - Fish
 29 Jul 2005 misc/9: Cap reported mips/sios rates - Fish
 29 Jul 2005 Add missing support for 'try_obtain_lock' to PTT tracing - Fish
