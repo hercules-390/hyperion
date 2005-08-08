@@ -13,33 +13,11 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
+#include "des.h"
 #include "sha1.h"
 #include "sha256.h"
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST
-
-#include <gcrypt.h>
-
-#if defined(GCRYPT_OPENFORMAT) && ( GCRYPT_OPENFORMAT == 4 )
- #define GCRY_CIPHER_OPEN(_hd, _p1, _p2, _p3) \
-  { \
-    gcry_error_t __err; \
-    __err=gcry_cipher_open (&(_hd),(_p1),(_p2),(_p3)); \
-    if(__err) \
-    { \
-      logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(__err)); \
-      return; \
-    } \
-  }
-#else
- #define GCRY_CIPHER_OPEN(_hd, _p1, _p2, _p3) \
-  (_hd) = gcry_cipher_open ((_p1),(_p2),(_p3)); \
-  if(!(_hd)) \
-  { \
-    logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(-1)); \
-    return; \
-  }
-#endif
 
 /*----------------------------------------------------------------------------*/
 /* Debugging options                                                          */
@@ -47,9 +25,7 @@
 //#define OPTION_KM_DEBUG
 //#define OPTION_KMC_DEBUG
 //#define OPTION_KIMD_DEBUG
-//#define OPTION_KIMD256_DEBUG
 //#define OPTION_KLMD_DEBUG
-//#define OPTION_KLMD256_DEBUG
 //#define OPTION_KMAC_DEBUG
 
 /*----------------------------------------------------------------------------*/
@@ -58,7 +34,7 @@
 /* fc   : Function code                                                       */
 /* m    : Modifier bit                                                        */
 /*----------------------------------------------------------------------------*/
-#define GR0_fc(regs)        ((regs)->GR_L(0) & 0x0000007F)
+#define GR0_fc(regs)    ((regs)->GR_L(0) & 0x0000007F)
 #define GR0_m(regs)     (((regs)->GR_L(0) & 0x00000080) ? TRUE : FALSE)
 
 /*----------------------------------------------------------------------------*/
@@ -66,32 +42,18 @@
 /*----------------------------------------------------------------------------*/
 #define KIMD_QUERY      0
 #define KIMD_SHA_1      1
-#define KIMD_MAX_FC     1
-#define KIMD_BITS       { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-/*----------------------------------------------------------------------------*/
-/* Function codes for compute intermediate message digest sha256              */
-/*----------------------------------------------------------------------------*/
-#define KIMD256_QUERY      0
-#define KIMD256_SHA_1      1
-#define KIMD256_MAX_FC     1
-#define KIMD256_BITS       { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#define KIMD_SHA_256    2
+#define KIMD_MAX_FC     2
+#define KIMD_BITS       { 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for compute last message digest                             */
 /*----------------------------------------------------------------------------*/
 #define KLMD_QUERY      0
 #define KLMD_SHA_1      1
-#define KLMD_MAX_FC     1
-#define KLMD_BITS       { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-/*----------------------------------------------------------------------------*/
-/* Function codes for compute last message digest sha256                      */
-/*----------------------------------------------------------------------------*/
-#define KLMD256_QUERY      0
-#define KLMD256_SHA_1      1
-#define KLMD256_MAX_FC     1
-#define KLMD256_BITS       { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#define KLMD_SHA_256    2
+#define KLMD_MAX_FC     2
+#define KLMD_BITS       { 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for cipher message                                          */
@@ -101,38 +63,38 @@
 #define KM_TDEA_128     2
 #define KM_TDEA_192     3
 #define KM_MAX_FC       3
-#define KM_BITS                 { 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#define KM_BITS         { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for compute message authentication code                     */
 /*----------------------------------------------------------------------------*/
 #define KMAC_QUERY      0
 #define KMAC_DEA        1
-#define KMAC_TDEA_128       2
-#define KMAC_TDEA_192       3
+#define KMAC_TDEA_128   2
+#define KMAC_TDEA_192   3
 #define KMAC_MAX_FC     3
-#define KMAC_BITS               { 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#define KMAC_BITS       { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for cipher message with chaining                            */
 /*----------------------------------------------------------------------------*/
 #define KMC_QUERY       0
 #define KMC_DEA         1
-#define KMC_TDEA_128        2
-#define KMC_TDEA_192        3
+#define KMC_TDEA_128    2
+#define KMC_TDEA_192    3
 #define KMC_MAX_FC      3
-#define KMC_BITS                { 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#define KMC_BITS        { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Handy macro's                                                              */
 /*----------------------------------------------------------------------------*/
 #define SHA1M2C(ctx, md) \
 { \
-  (ctx)->Intermediate_Hash[0] = ((md)[0] << 24) + ((md)[1] << 16) + ((md)[2] << 8) + (md)[3]; \
-  (ctx)->Intermediate_Hash[1] = ((md)[4] << 24) + ((md)[5] << 16) + ((md)[6] << 8) + (md)[7]; \
-  (ctx)->Intermediate_Hash[2] = ((md)[8] << 24) + ((md)[9] << 16) + ((md)[10] << 8) + (md)[11]; \
-  (ctx)->Intermediate_Hash[3] = ((md)[12] << 24) + ((md)[13] << 16) + ((md)[14] << 8) + (md)[15]; \
-  (ctx)->Intermediate_Hash[4] = ((md)[16] << 24) + ((md)[17] << 16) + ((md)[18] << 8) + (md)[19]; \
+  (ctx)->state[0] = ((md)[0] << 24) + ((md)[1] << 16) + ((md)[2] << 8) + (md)[3]; \
+  (ctx)->state[1] = ((md)[4] << 24) + ((md)[5] << 16) + ((md)[6] << 8) + (md)[7]; \
+  (ctx)->state[2] = ((md)[8] << 24) + ((md)[9] << 16) + ((md)[10] << 8) + (md)[11]; \
+  (ctx)->state[3] = ((md)[12] << 24) + ((md)[13] << 16) + ((md)[14] << 8) + (md)[15]; \
+  (ctx)->state[4] = ((md)[16] << 24) + ((md)[17] << 16) + ((md)[18] << 8) + (md)[19]; \
 }
 #define SHA256M2C(ctx, md) \
 { \
@@ -147,26 +109,26 @@
 }
 #define SHA1C2M(md, ctx) \
 { \
-  (md)[0] = ((ctx)->Intermediate_Hash[0] & 0xff000000) >> 24; \
-  (md)[1] = ((ctx)->Intermediate_Hash[0] & 0x00ff0000) >> 16; \
-  (md)[2] = ((ctx)->Intermediate_Hash[0] & 0x0000ff00) >> 8; \
-  (md)[3] = ((ctx)->Intermediate_Hash[0] & 0x000000ff); \
-  (md)[4] = ((ctx)->Intermediate_Hash[1] & 0xff000000) >> 24; \
-  (md)[5] = ((ctx)->Intermediate_Hash[1] & 0x00ff0000) >> 16; \
-  (md)[6] = ((ctx)->Intermediate_Hash[1] & 0x0000ff00) >> 8; \
-  (md)[7] = ((ctx)->Intermediate_Hash[1] & 0x000000ff); \
-  (md)[8] = ((ctx)->Intermediate_Hash[2] & 0xff000000) >> 24; \
-  (md)[9] = ((ctx)->Intermediate_Hash[2] & 0x00ff0000) >> 16; \
-  (md)[10] = ((ctx)->Intermediate_Hash[2] & 0x0000ff00) >> 8; \
-  (md)[11] = ((ctx)->Intermediate_Hash[2] & 0x000000ff); \
-  (md)[12] = ((ctx)->Intermediate_Hash[3] & 0xff000000) >> 24; \
-  (md)[13] = ((ctx)->Intermediate_Hash[3] & 0x00ff0000) >> 16; \
-  (md)[14] = ((ctx)->Intermediate_Hash[3] & 0x0000ff00) >> 8; \
-  (md)[15] = ((ctx)->Intermediate_Hash[3] & 0x000000ff); \
-  (md)[16] = ((ctx)->Intermediate_Hash[4] & 0xff000000) >> 24; \
-  (md)[17] = ((ctx)->Intermediate_Hash[4] & 0x00ff0000) >> 16; \
-  (md)[18] = ((ctx)->Intermediate_Hash[4] & 0x0000ff00) >> 8; \
-  (md)[19] = ((ctx)->Intermediate_Hash[4] & 0x000000ff); \
+  (md)[0] = ((ctx)->state[0] & 0xff000000) >> 24; \
+  (md)[1] = ((ctx)->state[0] & 0x00ff0000) >> 16; \
+  (md)[2] = ((ctx)->state[0] & 0x0000ff00) >> 8; \
+  (md)[3] = ((ctx)->state[0] & 0x000000ff); \
+  (md)[4] = ((ctx)->state[1] & 0xff000000) >> 24; \
+  (md)[5] = ((ctx)->state[1] & 0x00ff0000) >> 16; \
+  (md)[6] = ((ctx)->state[1] & 0x0000ff00) >> 8; \
+  (md)[7] = ((ctx)->state[1] & 0x000000ff); \
+  (md)[8] = ((ctx)->state[2] & 0xff000000) >> 24; \
+  (md)[9] = ((ctx)->state[2] & 0x00ff0000) >> 16; \
+  (md)[10] = ((ctx)->state[2] & 0x0000ff00) >> 8; \
+  (md)[11] = ((ctx)->state[2] & 0x000000ff); \
+  (md)[12] = ((ctx)->state[3] & 0xff000000) >> 24; \
+  (md)[13] = ((ctx)->state[3] & 0x00ff0000) >> 16; \
+  (md)[14] = ((ctx)->state[3] & 0x0000ff00) >> 8; \
+  (md)[15] = ((ctx)->state[3] & 0x000000ff); \
+  (md)[16] = ((ctx)->state[4] & 0xff000000) >> 24; \
+  (md)[17] = ((ctx)->state[4] & 0x00ff0000) >> 16; \
+  (md)[18] = ((ctx)->state[4] & 0x0000ff00) >> 8; \
+  (md)[19] = ((ctx)->state[4] & 0x000000ff); \
 }
 #define SHA256C2M(md, ctx) \
 { \
@@ -234,9 +196,7 @@
 #ifndef CONST
 #define CONST
 BYTE kimd_bits[] = KIMD_BITS;
-BYTE kimd256_bits[] = KIMD256_BITS;
 BYTE klmd_bits[] = KLMD_BITS;
-BYTE klmd256_bits[] = KLMD256_BITS;
 BYTE km_bits[] = KM_BITS;
 BYTE kmac_bits[] = KMAC_BITS;
 BYTE kmc_bits[] = KMC_BITS;
@@ -272,7 +232,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
   BYTE buffer[64];
   int crypted;
   BYTE cv[20];
-  SHA1Context context;
+  sha1_context context;
 
   UNREFERENCED(r1);
 
@@ -296,7 +256,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
 
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 19, GR_A(1, regs), 1, regs);
-  SHA1Reset(&context);
+  sha1_starts(&context);
   SHA1M2C(&context, cv);
 
 #ifdef OPTION_KIMD_DEBUG
@@ -314,7 +274,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
     LOGBYTE2("  input :", buffer, 16, 4);
 #endif
 
-    SHA1Input(&context, buffer, 64);
+    sha1_update(&context, buffer, 64);
 
     /* Store the output chaining value */
     SHA1C2M(cv, &context);
@@ -345,29 +305,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* ???? Compute intermediate message digest (KIMD256) FC 0                    */
-/*----------------------------------------------------------------------------*/
-static void ARCH_DEP(kimd256_query)(int r1, int r2, REGS *regs)
-{
-  UNREFERENCED(r1);
-
-#ifdef OPTION_KIMD256_DEBUG
-  logmsg("  KIMD256: function 0: query\n");
-#endif
-
-  /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR0_m(regs))
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-
-  /* Store the parameter block */
-  ARCH_DEP(vstorec)(kimd256_bits, 15, GR_A(1, regs), 1, regs);
-
-  /* Set condition code 0 */
-  regs->psw.cc = 0;
-}
-
-/*----------------------------------------------------------------------------*/
-/* ???? Compute intermediate message digest (KIMD256) FC 1                    */
+/* B93E Compute intermediate message digest (KIMD) FC 2                       */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
 {
@@ -378,8 +316,8 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
 
   UNREFERENCED(r1);
 
-#ifdef OPTION_KIMD256_DEBUG
-  logmsg("  KIMD256: function 1: sha-256\n");
+#ifdef OPTION_KIMD_DEBUG
+  logmsg("  KIMD: function 2: sha-256\n");
 #endif
 
   /* Check special conditions */
@@ -401,7 +339,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
   sha256_starts(&context);
   SHA256M2C(&context, cv);
 
-#ifdef OPTION_KIMD256_DEBUG
+#ifdef OPTION_KIMD_DEBUG
   LOGBYTE("icv   :", cv, 32);
 #endif
 
@@ -412,7 +350,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
     /* Fetch and process a block of data */
     ARCH_DEP(vfetchc)(buffer, 63, GR_A(r2, regs), r2, regs);
 
-#ifdef OPTION_KIMD256_DEBUG
+#ifdef OPTION_KIMD_DEBUG
     LOGBYTE2("  input :", buffer, 16, 4);
 #endif
 
@@ -422,7 +360,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
     SHA256C2M(cv, &context);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
-#ifdef OPTION_KIMD256_DEBUG
+#ifdef OPTION_KIMD_DEBUG
   LOGBYTE("ocv   :", cv, 32);
 #endif
 
@@ -430,7 +368,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
     SET_GR_A(r2, regs,GR_A(r2,regs) + 64);
     SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 64);
 
-#ifdef OPTION_KIMD256_DEBUG
+#ifdef OPTION_KIMD_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
     logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
 #endif
@@ -476,7 +414,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
   BYTE buffer[64];
   int crypted;
   BYTE cv[20];
-  SHA1Context context;
+  sha1_context context;
   int i;
 
   UNREFERENCED(r1);
@@ -499,7 +437,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
   LOGBYTE("icv   :", cv, 20);
 #endif
 
-  SHA1Reset(&context);
+  sha1_starts(&context);
   SHA1M2C(&context, cv);
 
   /* Try to process the CPU-determined amount of data */
@@ -517,7 +455,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
     LOGBYTE2("input :", buffer, 16, 4);
 #endif
 
-    SHA1Input(&context, buffer, 64);
+    sha1_update(&context, buffer, 64);
 
     /* Store the output chaining value */
     SHA1C2M(cv, &context);
@@ -562,7 +500,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
     buffer[i++] = 0x80;
     while(i < 64)
      buffer[i++] = 0x00;
-    SHA1Input(&context, buffer, 64);
+    sha1_update(&context, buffer, 64);
     for(i = 0; i < 56; i++)
       buffer[i] = 0;
   }
@@ -581,7 +519,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
   /* Calculate and store the message digest */
-  SHA1Input(&context, buffer, 64);
+  sha1_update(&context, buffer, 64);
   SHA1C2M(cv, &context);
   ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
@@ -603,29 +541,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
-/* ???? Compute last message digest (KLMD256) FC 0                            */
-/*----------------------------------------------------------------------------*/
-static void ARCH_DEP(klmd256_query)(int r1, int r2, REGS *regs)
-{
-  UNREFERENCED(r1);
-
-#ifdef OPTION_KLMD_DEBUG
-  logmsg("  KLMD256: function 0: query\n");
-#endif
-
-  /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR0_m(regs))
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-
-  /* Store the parameter block */
-  ARCH_DEP(vstorec)(klmd256_bits, 15, GR_A(1, regs), 1, regs);
-
-  /* Set condition code 0 */
-  regs->psw.cc = 0;
-}
-
-/*----------------------------------------------------------------------------*/
-/* ???? Compute last message digest (KLMD256) FC 1                            */
+/* B93F Compute last message digest (KLMD) FC 2                               */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 {
@@ -637,8 +553,8 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 
   UNREFERENCED(r1);
 
-#ifdef OPTION_KLMD256_DEBUG
-  logmsg("  KLMD256: function 1: sha-256\n");
+#ifdef OPTION_KLMD_DEBUG
+  logmsg("  KLMD: function 2: sha-256\n");
 #endif
 
   /* Check special conditions */
@@ -651,7 +567,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 31, GR_A(1, regs), 1, regs);
 
-#ifdef OPTION_KLMD256_DEBUG
+#ifdef OPTION_KLMD_DEBUG
   LOGBYTE("icv   :", cv, 32);
 #endif
 
@@ -669,7 +585,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
     /* Fetch and process a block of data */
     ARCH_DEP(vfetchc)(buffer, 63, GR_A(r2, regs), r2, regs);
 
-#ifdef OPTION_KLMD256_DEBUG
+#ifdef OPTION_KLMD_DEBUG
     LOGBYTE2("input :", buffer, 16, 4);
 #endif
 
@@ -679,7 +595,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
     SHA256C2M(cv, &context);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
-#ifdef OPTION_KLMD256_DEBUG
+#ifdef OPTION_KLMD_DEBUG
   LOGBYTE("ocv   :", cv, 32);
 #endif
 
@@ -687,7 +603,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
     SET_GR_A(r2, regs,GR_A(r2,regs) + 64);
     SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 64);
 
-#ifdef OPTION_KLMD256_DEBUG
+#ifdef OPTION_KLMD_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
     logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
 #endif
@@ -706,7 +622,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   {
     ARCH_DEP(vfetchc)(buffer, GR_A(r2 + 1, regs) - 1, GR_A(r2, regs), r2, regs);
 
-#ifdef OPTION_KLMD256_DEBUG
+#ifdef OPTION_KLMD_DEBUG
     LOGBYTE("input :", buffer, GR_A(r2 + 1, regs));
 #endif
   }
@@ -732,7 +648,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   /* Fetch and set the message bit length */
   ARCH_DEP(vfetchc)(&buffer[56], 7, GR_A(1, regs) + 32, 1, regs);
 
-#ifdef OPTION_KLMD256_DEBUG
+#ifdef OPTION_KLMD_DEBUG
   LOGBYTE("mbl   :", &buffer[56], 8);
 #endif
 
@@ -741,7 +657,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   SHA256C2M(cv, &context);
   ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
-#ifdef OPTION_KLMD256_DEBUG
+#ifdef OPTION_KLMD_DEBUG
   LOGBYTE("md    :", cv, 32);
 #endif
 
@@ -749,7 +665,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   SET_GR_A(r2, regs, GR_A(r2,regs) + GR_A(r2 + 1, regs));
   SET_GR_A(r2 + 1, regs, 0);
 
-#ifdef OPTION_KLMD256_DEBUG
+#ifdef OPTION_KLMD_DEBUG
   logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
   logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
 #endif
@@ -785,7 +701,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[8];
   int crypted;
-  gcry_cipher_hd_t hd;
+  des_context context;
   BYTE k[8];
 
 #ifdef OPTION_KM_DEBUG
@@ -803,13 +719,9 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
     return;
   }
 
-  /* Open a cipher handle */
-  GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
-
   /* Fetch and set the cryptographic key */
   ARCH_DEP(vfetchc)(k, 7, GR_A(1, regs), 1, regs);
-  if(gcry_cipher_setkey(hd, k, 8))
-    logmsg("  %s(%d): gcry_cipher_setkey(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+  des_set_key(&context, k);
 
 #ifdef OPTION_KM_DEBUG
   LOGBYTE("k     :", k, 8);
@@ -828,15 +740,9 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 
     /* Do the job */
     if(GR0_m(regs))
-    {
-      if(gcry_cipher_decrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_decrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    }
+      des_decrypt(&context, buffer, buffer); 
     else
-    {
-      if(gcry_cipher_encrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_encrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    }
+      des_encrypt(&context, buffer, buffer);
 
     /* Store the output */
     ARCH_DEP(vstorec)(buffer, 7, GR_A(r1, regs), r1, regs);
@@ -861,13 +767,11 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
     if(!GR_A(r2 + 1, regs))
     {
       regs->psw.cc = 0;
-      gcry_cipher_close(hd);
       return;
     }
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
-  gcry_cipher_close(hd);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -877,8 +781,8 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[8];
   int crypted;
-  gcry_cipher_hd_t hd;
-  BYTE k[24];
+  des3_context context;
+  BYTE k[16];
 
 #ifdef OPTION_KM_DEBUG
   logmsg("  KM: function 2: tdea-128\n");
@@ -895,16 +799,9 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
     return;
   }
 
-  /* Open the cipher handle */
-  GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0);
-
   /* Fetch and set the cryptographic keys */
   ARCH_DEP(vfetchc)(k, 15, GR_A(1, regs), 1, regs);
-
-  /* Set k3 to k1 which transforms TDEA-192 to TDEA-128 */
-  memcpy(&k[16], &k[0], 8);
-  if(gcry_cipher_setkey(hd, k, 24))
-    logmsg("  %s(%d): gcry_cipher_setkey(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+  des3_set_2keys(&context, &k[0], &k[8]);
 
 #ifdef OPTION_KM_DEBUG
   LOGBYTE("k1    :", &k[0], 8);
@@ -924,15 +821,9 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
 
     /* Do the job */
     if(GR0_m(regs))
-    {
-      if(gcry_cipher_decrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_decrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    }
+      des3_decrypt(&context, buffer, buffer);
     else
-    {
-      if(gcry_cipher_encrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_encrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    }
+      des3_encrypt(&context, buffer, buffer);
 
     /* Store the output */
     ARCH_DEP(vstorec)(buffer, 7, GR_A(r1, regs), r1, regs);
@@ -957,13 +848,11 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
     if(!GR_A(r2 + 1, regs))
     {
       regs->psw.cc = 0;
-      gcry_cipher_close(hd);
       return;
     }
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
-  gcry_cipher_close(hd);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -973,7 +862,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[8];
   int crypted;
-  gcry_cipher_hd_t hd;
+  des3_context context;
   BYTE k[24];
 
 #ifdef OPTION_KM_DEBUG
@@ -991,13 +880,9 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
     return;
   }
 
-  /* Open the cipher handle */
-  GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0);
-
   /* Fetch and set the cryptographic keys */
   ARCH_DEP(vfetchc)(k, 23, GR_A(1, regs), 1, regs);
-  if(gcry_cipher_setkey(hd, k, 24))
-    logmsg("  %s(%d): gcry_cipher_setkey(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+  des3_set_3keys(&context, &k[0], &k[8], &k[16]);
 
 #ifdef OPTION_KM_DEBUG
   LOGBYTE("k1    :", &k[0], 8);
@@ -1018,15 +903,9 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
 
     /* Do the job */
     if(GR0_m(regs))
-    {
-      if(gcry_cipher_decrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_decrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    }
+      des3_decrypt(&context, buffer, buffer);
     else
-    {
-      if(gcry_cipher_encrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_encrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    }
+      des3_encrypt(&context, buffer, buffer);
 
     /* Store the output */
     ARCH_DEP(vstorec)(buffer, 7, GR_A(r1, regs), r1, regs);
@@ -1051,13 +930,11 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
     if(!GR_A(r2 + 1, regs))
     {
       regs->psw.cc = 0;
-      gcry_cipher_close(hd);
       return;
     }
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
-  gcry_cipher_close(hd);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1090,7 +967,8 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   BYTE buffer[8];
   int crypted;
   BYTE cv[8];
-  gcry_cipher_hd_t hd;
+  int i;
+  des_context context;
   BYTE k[8];
 
   UNREFERENCED(r1);
@@ -1110,21 +988,15 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
     return;
   }
 
-  /* Open a cipher handle */
-  GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
-
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
 
-  /* Fetch and set the initial chaining value */
+  /* Fetch the initial chaining value */
   ARCH_DEP(vfetchc)(cv, 7, GR_A(1, regs), 1, regs);
-  if(gcry_cipher_setiv(hd, cv, 8))
-    logmsg("  %s(%d): gcry_cipher_setiv(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
 
   /* Fetch and set the cryptographic key */
   ARCH_DEP(vfetchc)(k, 7, GR_A(1, regs) + 8, 1, regs);
-  if(gcry_cipher_setkey(hd, k, 8))
-    logmsg("  %s(%d): gcry_cipher_setkey(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+  des_set_key(&context, k);
 
 #ifdef OPTION_KMAC_DEBUG
   LOGBYTE("icv   :", cv, 8);
@@ -1142,14 +1014,18 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
     LOGBYTE("input :", buffer, 8);
 #endif
 
-    if(gcry_cipher_encrypt(hd, buffer, 8, NULL, 0))
-      logmsg("  %s(%d): gcry_cipher_encrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+    /* XOR the message with chaining value */
+    for(i = 0; i < 8; i++)
+      buffer[i] ^= cv[i];
 
+    /* Calculate the output chaining value */
+    des_encrypt(&context, buffer, cv);
+    
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(buffer, 7, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(cv, 7, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMAC_DEBUG
-    LOGBYTE("ocv   :", buffer, 8);
+    LOGBYTE("ocv   :", cv, 8);
 #endif
 
     /* Update the registers */
@@ -1165,13 +1041,11 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
     if(!GR_A(r2 + 1, regs))
     {
       regs->psw.cc = 0;
-      gcry_cipher_close(hd);
       return;
     }
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
-  gcry_cipher_close(hd);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1182,8 +1056,10 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
   BYTE buffer[8];
   int crypted;
   BYTE cv[8];
-  gcry_cipher_hd_t hd;
-  BYTE k[24];
+  des_context context1;
+  des_context context2;
+  int i;
+  BYTE k[16];
 
   UNREFERENCED(r1);
 
@@ -1202,24 +1078,16 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
     return;
   }
 
-  /* Open a cipher handle */
-  GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
-
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
 
-  /* Fetch and set the initial chaining value */
+  /* Fetch the initial chaining value */
   ARCH_DEP(vfetchc)(cv, 7, GR_A(1, regs), 1, regs);
-  if(gcry_cipher_setiv(hd, cv, 8))
-    logmsg("  %s(%d): gcry_cipher_setiv(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
 
-  /* Fetch the cryptographic keys */
+  /* Fetch and set the cryptographic keys */
   ARCH_DEP(vfetchc)(k, 15, GR_A(1, regs) + 8, 1, regs);
-
-  /* Set k3 to k1 which transforms TDEA-192 to TDEA-128 */
-  memcpy(&k[16], &k[0], 8);
-  if(gcry_cipher_setkey(hd, k, 24))
-    logmsg("  %s(%d): gcry_cipher_setkey(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+  des_set_key(&context1, &k[0]);
+  des_set_key(&context2, &k[8]);
 
 #ifdef OPTION_KMAC_DEBUG
   LOGBYTE("icv   :", cv, 8);
@@ -1238,14 +1106,20 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
     LOGBYTE("input :", buffer, 8);
 #endif
 
-    if(gcry_cipher_encrypt(hd, buffer, 8, NULL, 0))
-      logmsg("  %s(%d): gcry_cipher_encrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+    /* XOR the message with chaining value */
+    for(i = 0; i < 8; i++)
+      buffer[i] ^= cv[i];  
+
+    /* Calculate the output chaining value */
+    des_encrypt(&context1, buffer, cv);
+    des_decrypt(&context2, cv, cv);
+    des_encrypt(&context1, cv, cv);
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(buffer, 7, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(cv, 7, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMAC_DEBUG
-    LOGBYTE("ocv   :", buffer, 8);
+    LOGBYTE("ocv   :", cv, 8);
 #endif
 
     /* Update the registers */
@@ -1261,13 +1135,11 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
     if(!GR_A(r2 + 1, regs))
     {
       regs->psw.cc = 0;
-      gcry_cipher_close(hd);
       return;
     }
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
-  gcry_cipher_close(hd);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1278,7 +1150,10 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
   BYTE buffer[8];
   int crypted;
   BYTE cv[8];
-  gcry_cipher_hd_t hd;
+  des_context context1;
+  des_context context2;
+  des_context context3;
+  int i;
   BYTE k[24];
 
   UNREFERENCED(r1);
@@ -1298,21 +1173,17 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
     return;
   }
 
-  /* Open a cipher handle */
-  GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
-
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
 
-  /* Fetch and set the initial chaining value */
+  /* Fetch the initial chaining value */
   ARCH_DEP(vfetchc)(cv, 7, GR_A(1, regs), 1, regs);
-  if(gcry_cipher_setiv(hd, cv, 8))
-    logmsg("  %s(%d): gcry_cipher_setiv(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
 
   /* Fetch and set the cryptographic keys */
   ARCH_DEP(vfetchc)(k, 23, GR_A(1, regs) + 8, 1, regs);
-  if(gcry_cipher_setkey(hd, k, 24))
-    logmsg("  %s(%d): gcry_cipher_setkey(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+  des_set_key(&context1, &k[0]);
+  des_set_key(&context2, &k[8]);
+  des_set_key(&context3, &k[16]);
 
 #ifdef OPTION_KMAC_DEBUG
   LOGBYTE("icv   :", cv, 8);
@@ -1332,14 +1203,20 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
     LOGBYTE("input :", buffer, 8);
 #endif
 
-    if(gcry_cipher_encrypt(hd, buffer, 8, NULL, 0))
-      logmsg("  %s(%d): gcry_cipher_encrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+    /* XOR the message with chaining value */
+    for(i = 0; i < 8; i++)
+      buffer[i] ^= cv[i];
+
+    /* Calculate the output chaining value */
+    des_encrypt(&context1, buffer, cv);
+    des_decrypt(&context2, cv, cv);
+    des_encrypt(&context3, cv, cv);
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(buffer, 7, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(cv, 7, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMAC_DEBUG
-    LOGBYTE("ocv   :", buffer, 8);
+    LOGBYTE("ocv   :", cv, 8);
 #endif
 
     /* Update the registers */
@@ -1355,13 +1232,11 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
     if(!GR_A(r2 + 1, regs))
     {
       regs->psw.cc = 0;
-      gcry_cipher_close(hd);
       return;
     }
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
-  gcry_cipher_close(hd);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1392,7 +1267,9 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   BYTE buffer[8];
   int crypted;
   BYTE cv[8];
-  gcry_cipher_hd_t hd;
+  BYTE ocv[8];
+  des_context context;
+  int i;
   BYTE k[8];
 
 #ifdef OPTION_KMC_DEBUG
@@ -1410,21 +1287,15 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     return;
   }
 
-  /* Open a cipher handle */
-  GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
-
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
 
-  /* Fetch and set the initial chaining value */
+  /* Fetch the initial chaining value */
   ARCH_DEP(vfetchc)(cv, 7, GR_A(1, regs), 1, regs);
-  if(gcry_cipher_setiv(hd, cv, 8))
-    logmsg("  %s(%d): gcry_cipher_setiv(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
 
   /* Fetch and set the cryptographic key */
   ARCH_DEP(vfetchc)(k, 7, GR_A(1, regs) + 8, 1, regs);
-  if(gcry_cipher_setkey(hd, k, 8))
-    logmsg("  %s(%d): gcry_cipher_setkey(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+  des_set_key(&context, k);
 
 #ifdef OPTION_KMC_DEBUG
   LOGBYTE("icv   :", cv, 8);
@@ -1447,18 +1318,22 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     {
 
       /* Save the ovc */
-      memcpy(cv, buffer, 8);
+      memcpy(ocv, buffer, 8);
 
-      if(gcry_cipher_decrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_decrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+      /* Decrypt and XOR */
+      des_decrypt(&context, buffer, buffer);
+      for(i = 0; i < 8; i++)
+        buffer[i] ^= cv[i];
     }
     else
     {
-      if(gcry_cipher_encrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_encrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+      /* XOR and encrypt */
+      for(i = 0; i < 8; i++)
+        buffer[i] ^= cv[i];
+      des_encrypt(&context, buffer, buffer);
 
       /* Save the ovc */
-      memcpy(cv, buffer, 8);
+      memcpy(ocv, buffer, 8);
     }
 
     /* Store the output */
@@ -1469,10 +1344,10 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(cv, 7, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(ocv, 7, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
-    LOGBYTE("ocv   :", cv, 8);
+    LOGBYTE("ocv   :", ocv, 8);
 #endif
 
     /* Update the registers */
@@ -1491,13 +1366,11 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     if(!GR_A(r2 + 1, regs))
     {
       regs->psw.cc = 0;
-      gcry_cipher_close(hd);
       return;
     }
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
-  gcry_cipher_close(hd);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1507,9 +1380,12 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[8];
   int crypted;
+  int i;
   BYTE cv[8];
-  gcry_cipher_hd_t hd;
-  BYTE k[24];
+  BYTE ocv[8];
+  des_context context1;
+  des_context context2;
+  BYTE k[16];
 
 #ifdef OPTION_KMC_DEBUG
   logmsg("  KMC: function 2: tdea-128\n");
@@ -1526,24 +1402,16 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
     return;
   }
 
-  /* Open a cipher handle */
-  GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
-
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
 
-  /* Fetch and set the initial chaining value */
+  /* Fetch the initial chaining value */
   ARCH_DEP(vfetchc)(cv, 7, GR_A(1, regs), 1, regs);
-  if(gcry_cipher_setiv(hd, cv, 8))
-    logmsg("  %s(%d): gcry_cipher_setiv(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
 
-  /* Fetch the cryptographic keys */
+  /* Fetch and set the cryptographic keys */
   ARCH_DEP(vfetchc)(k, 15, GR_A(1, regs) + 8, 1, regs);
-
-  /* Set k3 to k1 which transforms TDEA-192 to TDEA-128 */
-  memcpy(&k[16], &k[0], 8);
-  if(gcry_cipher_setkey(hd, k, 24))
-    logmsg("  %s(%d): gcry_cipher_setkey(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+  des_set_key(&context1, &k[0]);
+  des_set_key(&context2, &k[8]);
 
 #ifdef OPTION_KMC_DEBUG
   LOGBYTE("icv   :", cv, 8);
@@ -1567,18 +1435,26 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
     {
 
       /* Save the ovc */
-      memcpy(cv, buffer, 8);
+      memcpy(ocv, buffer, 8);
 
-      if(gcry_cipher_decrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_decrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+      /* Decrypt and XOR */
+      des_decrypt(&context1, buffer, buffer);
+      des_encrypt(&context2, buffer, buffer);
+      des_decrypt(&context1, buffer, buffer);
+      for(i = 0; i < 8; i++)
+        buffer[i] ^= cv[i];
     }
     else
     {
-      if(gcry_cipher_encrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_encrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+      /* XOR and encrypt */
+      for(i = 0 ; i < 8; i++)
+        buffer[i] ^= cv[i];
+      des_encrypt(&context1, buffer, buffer);
+      des_decrypt(&context2, buffer, buffer);
+      des_encrypt(&context1, buffer, buffer);
 
       /* Save the ovc */
-      memcpy(cv, buffer, 8);
+      memcpy(ocv, buffer, 8);
     }
 
     /* Store the output */
@@ -1589,10 +1465,10 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(cv, 7, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(ocv, 7, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
-    LOGBYTE("ocv   :", cv, 8);
+    LOGBYTE("ocv   :", ocv, 8);
 #endif
 
     /* Update the registers */
@@ -1611,13 +1487,11 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
     if(!GR_A(r2 + 1, regs))
     {
       regs->psw.cc = 0;
-      gcry_cipher_close(hd);
       return;
     }
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
-  gcry_cipher_close(hd);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1627,8 +1501,12 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[8];
   int crypted;
+  int i;
   BYTE cv[8];
-  gcry_cipher_hd_t hd;
+  BYTE ocv[8];
+  des_context context1;
+  des_context context2;
+  des_context context3;
   BYTE k[24];
 
 #ifdef OPTION_KMC_DEBUG
@@ -1646,21 +1524,17 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
     return;
   }
 
-  /* Open a cipher handle */
-  GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
-
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
 
-  /* Fetch and set the initial chaining value */
+  /* Fetch the initial chaining value */
   ARCH_DEP(vfetchc)(cv, 7, GR_A(1, regs), 1, regs);
-  if(gcry_cipher_setiv(hd, cv, 8))
-    logmsg("  %s(%d): gcry_cipher_setiv(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
 
   /* Fetch and set the cryptographic keys */
   ARCH_DEP(vfetchc)(k, 23, GR_A(1, regs) + 8, 1, regs);
-  if(gcry_cipher_setkey(hd, k, 24))
-    logmsg("  %s(%d): gcry_cipher_setkey(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+  des_set_key(&context1, &k[0]);
+  des_set_key(&context2, &k[8]);
+  des_set_key(&context3, &k[16]);
 
 #ifdef OPTION_KMC_DEBUG
   LOGBYTE("icv   :", cv, 8);
@@ -1685,18 +1559,26 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
     {
 
       /* Save the ovc */
-      memcpy(cv, buffer, 8);
+      memcpy(ocv, buffer, 8);
 
-      if(gcry_cipher_decrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_decrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+      /* Decrypt and XOR */
+      des_decrypt(&context3, buffer, buffer);
+      des_encrypt(&context2, buffer, buffer);
+      des_decrypt(&context1, buffer, buffer);
+      for(i = 0; i < 8; i++)
+        buffer[i] ^= cv[i];
     }
     else
     {
-      if(gcry_cipher_encrypt(hd, buffer, 8, NULL, 0))
-        logmsg("  %s(%d): gcry_cipher_encrypt(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
+      /* XOR and encrypt */
+      for(i = 0; i < 8; i++)
+        buffer[i] ^= cv[i];
+      des_encrypt(&context1, buffer, buffer);
+      des_decrypt(&context2, buffer, buffer);
+      des_encrypt(&context3, buffer, buffer);
 
       /* Save the ovc */
-      memcpy(cv, buffer, 8);
+      memcpy(ocv, buffer, 8);
     }
 
     /* Store the output */
@@ -1707,10 +1589,10 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
     /* Store the output chaining value */
-    ARCH_DEP(vstorec)(cv, 7, GR_A(1, regs), 1, regs);
+    ARCH_DEP(vstorec)(ocv, 7, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
-    LOGBYTE("ocv   :", cv, 8);
+    LOGBYTE("ocv   :", ocv, 8);
 #endif
 
     /* Update the registers */
@@ -1729,13 +1611,11 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
     if(!GR_A(r2 + 1, regs))
     {
       regs->psw.cc = 0;
-      gcry_cipher_close(hd);
       return;
     }
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
-  gcry_cipher_close(hd);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1744,13 +1624,15 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 static void (*ARCH_DEP(kimd)[KIMD_MAX_FC + 1])(int r1, int r2, REGS *regs) =
 {
   ARCH_DEP(kimd_query),
-  ARCH_DEP(kimd_sha_1)
+  ARCH_DEP(kimd_sha_1),
+  ARCH_DEP(kimd_sha_256)
 };
 
 static void (*ARCH_DEP(klmd)[KLMD_MAX_FC + 1])(int r1, int r2, REGS *regs) =
 {
   ARCH_DEP(klmd_query),
-  ARCH_DEP(klmd_sha_1)
+  ARCH_DEP(klmd_sha_1),
+  ARCH_DEP(klmd_sha_256)
 };
 
 static void (*ARCH_DEP(km)[KM_MAX_FC + 1])(int r1, int r2, REGS *regs) =
@@ -1957,9 +1839,6 @@ END_DEPENDENCY_SECTION;
 
 HDL_REGISTER_SECTION;
 {
-  /* Initialize the pthread support */
-  gcry_check_version(GCRYPT_VERSION);
-
 #if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
   HDL_REGISTER(s390_cipher_message, s390_cipher_message_d);
   HDL_REGISTER(s390_cipher_message_with_chaining, s390_cipher_message_with_chaining_d);

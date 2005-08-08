@@ -1,7 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
-
+08 aug 2005 gcrypt independent crypto implemented - Bernard van der Helm
 07 aug 2005 sha256 implemented, waiting for opcode ;-) Bernard van der Helm
 07 Aug 2005 sha256 sources added, waiting for POP - Bernard van der Helm
 30 Jul 2005 dasdcat/hetlib: add O_BINARY to open - Fish
