@@ -22,3 +22,4 @@ void sha1_update( sha1_context *ctx, uint8 *input, uint32 length );
 void sha1_finish( sha1_context *ctx, uint8 digest[20] );
 
 #endif /* sha1.h */
+
