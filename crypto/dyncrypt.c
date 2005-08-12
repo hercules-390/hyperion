@@ -6,7 +6,7 @@
 /* z/Architecture emulator. This file may only be used with and within the    */
 /* Hercules emulator for non-commercial use!                                  */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2003-2005 */
+/*                              (c) Copyright Bernard van der Helm, 2003-2004 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*----------------------------------------------------------------------------*/
 
@@ -88,83 +88,28 @@
 /*----------------------------------------------------------------------------*/
 /* Handy macro's                                                              */
 /*----------------------------------------------------------------------------*/
-#define SHA1M2C(ctx, md) \
+#define SHAMD2CTX(ctx, md, size) \
 { \
-  (ctx)->state[0] = ((md)[0] << 24) + ((md)[1] << 16) + ((md)[2] << 8) + (md)[3]; \
-  (ctx)->state[1] = ((md)[4] << 24) + ((md)[5] << 16) + ((md)[6] << 8) + (md)[7]; \
-  (ctx)->state[2] = ((md)[8] << 24) + ((md)[9] << 16) + ((md)[10] << 8) + (md)[11]; \
-  (ctx)->state[3] = ((md)[12] << 24) + ((md)[13] << 16) + ((md)[14] << 8) + (md)[15]; \
-  (ctx)->state[4] = ((md)[16] << 24) + ((md)[17] << 16) + ((md)[18] << 8) + (md)[19]; \
+  int i; \
+  \
+  for(i = 0; i < (size); i++) \
+    (ctx)->state[i] = ((md)[i * 4] << 24) | ((md)[i * 4 + 1] << 16) | ((md)[i * 4 + 2] << 8) | (md)[i * 4 + 3]; \
 }
-#define SHA256M2C(ctx, md) \
+
+#define SHACTX2MD(md, ctx, size) \
 { \
-  (ctx)->state[0] = ((md)[0] << 24) + ((md)[1] << 16) + ((md)[2] << 8) + (md)[3]; \
-  (ctx)->state[1] = ((md)[4] << 24) + ((md)[5] << 16) + ((md)[6] << 8) + (md)[7]; \
-  (ctx)->state[2] = ((md)[8] << 24) + ((md)[9] << 16) + ((md)[10] << 8) + (md)[11]; \
-  (ctx)->state[3] = ((md)[12] << 24) + ((md)[13] << 16) + ((md)[14] << 8) + (md)[15]; \
-  (ctx)->state[4] = ((md)[16] << 24) + ((md)[17] << 16) + ((md)[18] << 8) + (md)[19]; \
-  (ctx)->state[5] = ((md)[20] << 24) + ((md)[21] << 16) + ((md)[22] << 8) + (md)[23]; \
-  (ctx)->state[6] = ((md)[24] << 24) + ((md)[25] << 16) + ((md)[26] << 8) + (md)[27]; \
-  (ctx)->state[7] = ((md)[28] << 24) + ((md)[29] << 16) + ((md)[30] << 8) + (md)[31]; \
+  int i, j; \
+  \
+  j = 0; \
+  for(i = 0; i < (size); i++) \
+  { \
+    (md)[i * 4] = ((ctx)->state[i] & 0xff000000) >> 24; \
+    (md)[i * 4 + 1] = ((ctx)->state[i] & 0x00ff0000) >> 16; \
+    (md)[i * 4 + 2] = ((ctx)->state[i] & 0x0000ff00) >> 8; \
+    (md)[i * 4 + 3] = ((ctx)->state[i] & 0x000000ff); \
+  } \
 }
-#define SHA1C2M(md, ctx) \
-{ \
-  (md)[0] = ((ctx)->state[0] & 0xff000000) >> 24; \
-  (md)[1] = ((ctx)->state[0] & 0x00ff0000) >> 16; \
-  (md)[2] = ((ctx)->state[0] & 0x0000ff00) >> 8; \
-  (md)[3] = ((ctx)->state[0] & 0x000000ff); \
-  (md)[4] = ((ctx)->state[1] & 0xff000000) >> 24; \
-  (md)[5] = ((ctx)->state[1] & 0x00ff0000) >> 16; \
-  (md)[6] = ((ctx)->state[1] & 0x0000ff00) >> 8; \
-  (md)[7] = ((ctx)->state[1] & 0x000000ff); \
-  (md)[8] = ((ctx)->state[2] & 0xff000000) >> 24; \
-  (md)[9] = ((ctx)->state[2] & 0x00ff0000) >> 16; \
-  (md)[10] = ((ctx)->state[2] & 0x0000ff00) >> 8; \
-  (md)[11] = ((ctx)->state[2] & 0x000000ff); \
-  (md)[12] = ((ctx)->state[3] & 0xff000000) >> 24; \
-  (md)[13] = ((ctx)->state[3] & 0x00ff0000) >> 16; \
-  (md)[14] = ((ctx)->state[3] & 0x0000ff00) >> 8; \
-  (md)[15] = ((ctx)->state[3] & 0x000000ff); \
-  (md)[16] = ((ctx)->state[4] & 0xff000000) >> 24; \
-  (md)[17] = ((ctx)->state[4] & 0x00ff0000) >> 16; \
-  (md)[18] = ((ctx)->state[4] & 0x0000ff00) >> 8; \
-  (md)[19] = ((ctx)->state[4] & 0x000000ff); \
-}
-#define SHA256C2M(md, ctx) \
-{ \
-  (md)[0] = ((ctx)->state[0] & 0xff000000) >> 24; \
-  (md)[1] = ((ctx)->state[0] & 0x00ff0000) >> 16; \
-  (md)[2] = ((ctx)->state[0] & 0x0000ff00) >> 8; \
-  (md)[3] = ((ctx)->state[0] & 0x000000ff); \
-  (md)[4] = ((ctx)->state[1] & 0xff000000) >> 24; \
-  (md)[5] = ((ctx)->state[1] & 0x00ff0000) >> 16; \
-  (md)[6] = ((ctx)->state[1] & 0x0000ff00) >> 8; \
-  (md)[7] = ((ctx)->state[1] & 0x000000ff); \
-  (md)[8] = ((ctx)->state[2] & 0xff000000) >> 24; \
-  (md)[9] = ((ctx)->state[2] & 0x00ff0000) >> 16; \
-  (md)[10] = ((ctx)->state[2] & 0x0000ff00) >> 8; \
-  (md)[11] = ((ctx)->state[2] & 0x000000ff); \
-  (md)[12] = ((ctx)->state[3] & 0xff000000) >> 24; \
-  (md)[13] = ((ctx)->state[3] & 0x00ff0000) >> 16; \
-  (md)[14] = ((ctx)->state[3] & 0x0000ff00) >> 8; \
-  (md)[15] = ((ctx)->state[3] & 0x000000ff); \
-  (md)[16] = ((ctx)->state[4] & 0xff000000) >> 24; \
-  (md)[17] = ((ctx)->state[4] & 0x00ff0000) >> 16; \
-  (md)[18] = ((ctx)->state[4] & 0x0000ff00) >> 8; \
-  (md)[19] = ((ctx)->state[4] & 0x000000ff); \
-  (md)[20] = ((ctx)->state[5] & 0xff000000) >> 24; \
-  (md)[21] = ((ctx)->state[5] & 0x00ff0000) >> 16; \
-  (md)[22] = ((ctx)->state[5] & 0x0000ff00) >> 8; \
-  (md)[23] = ((ctx)->state[5] & 0x000000ff); \
-  (md)[24] = ((ctx)->state[6] & 0xff000000) >> 24; \
-  (md)[25] = ((ctx)->state[6] & 0x00ff0000) >> 16; \
-  (md)[26] = ((ctx)->state[6] & 0x0000ff00) >> 8; \
-  (md)[27] = ((ctx)->state[6] & 0x000000ff); \
-  (md)[28] = ((ctx)->state[7] & 0xff000000) >> 24; \
-  (md)[29] = ((ctx)->state[7] & 0x00ff0000) >> 16; \
-  (md)[30] = ((ctx)->state[7] & 0x0000ff00) >> 8; \
-  (md)[31] = ((ctx)->state[7] & 0x000000ff); \
-}
+
 #define LOGBYTE(s, v, x) \
 { \
   int i; \
@@ -174,6 +119,7 @@
     logmsg("%02X", (v)[i]); \
   logmsg("\n"); \
 }
+
 #define LOGBYTE2(s, v, x, y)    \
 {  \
   int i; \
@@ -188,6 +134,7 @@
     logmsg("\n"); \
   } \
 }
+
 #define PROCESS_MAX     4096
 #define TRUEFALSE(boolean)  ((boolean) ? "True" : "False")
 /*----------------------------------------------------------------------------*/
@@ -257,7 +204,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 19, GR_A(1, regs), 1, regs);
   sha1_starts(&context);
-  SHA1M2C(&context, cv);
+  SHAMD2CTX(&context, cv, 5);
 
 #ifdef OPTION_KIMD_DEBUG
   LOGBYTE("icv   :", cv, 20);
@@ -277,7 +224,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
     sha1_update(&context, buffer, 64);
 
     /* Store the output chaining value */
-    SHA1C2M(cv, &context);
+    SHACTX2MD(cv, &context, 5);
     ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
@@ -337,7 +284,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 31, GR_A(1, regs), 1, regs);
   sha256_starts(&context);
-  SHA256M2C(&context, cv);
+  SHAMD2CTX(&context, cv, 8);
 
 #ifdef OPTION_KIMD_DEBUG
   LOGBYTE("icv   :", cv, 32);
@@ -357,7 +304,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
     sha256_update(&context, buffer, 64);
 
     /* Store the output chaining value */
-    SHA256C2M(cv, &context);
+    SHACTX2MD(cv, &context, 8);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
@@ -438,7 +385,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
   sha1_starts(&context);
-  SHA1M2C(&context, cv);
+  SHAMD2CTX(&context, cv, 5);
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
@@ -458,7 +405,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
     sha1_update(&context, buffer, 64);
 
     /* Store the output chaining value */
-    SHA1C2M(cv, &context);
+    SHACTX2MD(cv, &context, 5);
     ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -520,7 +467,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 
   /* Calculate and store the message digest */
   sha1_update(&context, buffer, 64);
-  SHA1C2M(cv, &context);
+  SHACTX2MD(cv, &context, 5);
   ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -572,7 +519,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 #endif
 
   sha256_starts(&context);
-  SHA256M2C(&context, cv);
+  SHAMD2CTX(&context, cv, 8);
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
@@ -592,7 +539,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
     sha256_update(&context, buffer, 64);
 
     /* Store the output chaining value */
-    SHA256C2M(cv, &context);
+    SHACTX2MD(cv, &context, 8);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -654,7 +601,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 
   /* Calculate and store the message digest */
   sha256_update(&context, buffer, 64);
-  SHA256C2M(cv, &context);
+  SHACTX2MD(cv, &context, 8);
   ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
