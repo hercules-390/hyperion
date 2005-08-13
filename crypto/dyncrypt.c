@@ -502,7 +502,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
   {
     buffer[i++] = 0x80;
     while(i < 64)
-     buffer[i++] = 0x00;
+      buffer[i++] = 0x00;
     sha1_process(&context, buffer);
     for(i = 0; i < 56; i++)
       buffer[i] = 0;
@@ -634,7 +634,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   {
     buffer[i++] = 0x80;
     while(i < 64)
-     buffer[i++] = 0x00;
+      buffer[i++] = 0x00;
     sha256_process(&context, buffer);
     for(i = 0; i < 56; i++)
       buffer[i] = 0;
