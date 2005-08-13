@@ -6,7 +6,7 @@
 /* z/Architecture emulator. This file may only be used with and within the    */
 /* Hercules emulator for non-commercial use!                                  */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2003-2004 */
+/*                              (c) Copyright Bernard van der Helm, 2003-2005 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*----------------------------------------------------------------------------*/
 
