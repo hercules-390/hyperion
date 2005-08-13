@@ -16,7 +16,8 @@ AM_CPPFLAGS = -I$(top_srcdir)/intl -I$(top_srcdir) $(LIBGCRYPT_CFLAGS)
 dyncrypt_SRC     = dyncrypt.c \
                    sha1.c \
 		   sha256.c \
-		   des.c
+		   des.c \
+		   aes.c
 
 if BUILD_SHARED
    XSTATIC =
@@ -56,11 +57,11 @@ if OPTION_DYNAMIC_LOAD
   modexec_LTLIBRARIES = $(HERCMODS)
 endif
 
-  dyncrypt_la_SOURCES  = dyncrypt.c sha1.c sha256.c des.c
+  dyncrypt_la_SOURCES  = dyncrypt.c sha1.c sha256.c des.c aes.c
   dyncrypt_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
   dyncrypt_la_LIBADD   = $(DYNMOD_LD_ADD)
 
-noinst_HEADERS = sha1.h sha256.h des.h
+noinst_HEADERS = sha1.h sha256.h des.h aes.h
 
 %.s: %.c
 	$(COMPILE) -S $<

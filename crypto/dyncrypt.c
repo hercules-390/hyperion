@@ -13,6 +13,7 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
+#include "aes.h"
 #include "des.h"
 #include "sha1.h"
 #include "sha256.h"
@@ -62,8 +63,10 @@
 #define KM_DEA          1
 #define KM_TDEA_128     2
 #define KM_TDEA_192     3
-#define KM_MAX_FC       3
-#define KM_BITS         { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#define KM_AES_128      4
+#define KM_AES_192      5
+#define KM_MAX_FC       5
+#define KM_BITS         { 0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for compute message authentication code                     */
@@ -918,8 +921,168 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
     /* Update the registers */
     SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
     if(r1 != r2)
-      SET_GR_A(r2, regs,GR_A(r2,regs)+8);
+      SET_GR_A(r2, regs,GR_A(r2,regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 8);
+
+#ifdef OPTION_KM_DEBUG
+    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
+    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
+    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+#endif
+
+    /* check for end of data */
+    if(!GR_A(r2 + 1, regs))
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+  }
+  /* CPU-determined amount of data processed */
+  regs->psw.cc = 3;
+}
+
+/*----------------------------------------------------------------------------*/
+/* B92E Cipher message (KM) FC 4                                              */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
+{
+  BYTE buffer[16];
+  int crypted;
+  aes_context context;
+  BYTE k[16];
+
+#ifdef OPTION_KM_DEBUG
+  logmsg("  KM: function 4: aes-128\n");
+#endif
+
+  /* Check special conditions */
+  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 16)
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Return with cc 0 on zero length */
+  if(!GR_A(r2 + 1, regs))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
+
+  /* Fetch and set the cryptographic keys */
+  ARCH_DEP(vfetchc)(k, 15, GR_A(1, regs), 1, regs);
+  aes_set_key(&context, k, 128);
+
+#ifdef OPTION_KM_DEBUG
+  LOGBYTE("k     :", &k[0], 16);
+#endif
+
+  /* Try to process the CPU-determined amount of data */
+  crypted = 0;
+  while(crypted += 16 < PROCESS_MAX)
+  {
+    /* Fetch a block of data */
+    ARCH_DEP(vfetchc)(buffer, 15, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KM_DEBUG
+    LOGBYTE("input :", buffer, 16);
+#endif
+
+    /* Do the job */
+    if(GR0_m(regs))
+      aes_decrypt(&context, buffer, buffer);
+    else
+      aes_encrypt(&context, buffer, buffer);
+
+    /* Store the output */
+    ARCH_DEP(vstorec)(buffer, 15, GR_A(r1, regs), r1, regs);
+
+#ifdef OPTION_KM_DEBUG
+    LOGBYTE("output:", buffer, 16);
+#endif
+
+    /* Update the registers */
+    SET_GR_A(r1, regs,GR_A(r1,regs) + 16);
+    if(r1 != r2)
+      SET_GR_A(r2, regs,GR_A(r2,regs) + 16);
+    SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 16);
+
+#ifdef OPTION_KM_DEBUG
+    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
+    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
+    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+#endif
+
+    /* check for end of data */
+    if(!GR_A(r2 + 1, regs))
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+  }
+  /* CPU-determined amount of data processed */
+  regs->psw.cc = 3;
+}
+
+/*----------------------------------------------------------------------------*/
+/* B92E Cipher message (KM) FC 5                                              */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(km_aes_192)(int r1, int r2, REGS *regs)
+{
+  BYTE buffer[16];
+  int crypted;
+  aes_context context;
+  BYTE k[24];
+
+#ifdef OPTION_KM_DEBUG
+  logmsg("  KM: function 5: aes-192\n");
+#endif
+
+  /* Check special conditions */
+  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 16)
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Return with cc 0 on zero length */
+  if(!GR_A(r2 + 1, regs))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
+
+  /* Fetch and set the cryptographic keys */
+  ARCH_DEP(vfetchc)(k, 23, GR_A(1, regs), 1, regs);
+  aes_set_key(&context, k, 192);
+
+#ifdef OPTION_KM_DEBUG
+  LOGBYTE("k     :", &k[0], 16);
+#endif
+
+  /* Try to process the CPU-determined amount of data */
+  crypted = 0;
+  while(crypted += 16 < PROCESS_MAX)
+  {
+    /* Fetch a block of data */
+    ARCH_DEP(vfetchc)(buffer, 15, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KM_DEBUG
+    LOGBYTE("input :", buffer, 16);
+#endif
+
+    /* Do the job */
+    if(GR0_m(regs))
+      aes_decrypt(&context, buffer, buffer);
+    else
+      aes_encrypt(&context, buffer, buffer);
+
+    /* Store the output */
+    ARCH_DEP(vstorec)(buffer, 15, GR_A(r1, regs), r1, regs);
+
+#ifdef OPTION_KM_DEBUG
+    LOGBYTE("output:", buffer, 16);
+#endif
+
+    /* Update the registers */
+    SET_GR_A(r1, regs,GR_A(r1,regs) + 16);
+    if(r1 != r2)
+      SET_GR_A(r2, regs,GR_A(r2,regs) + 16);
+    SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 16);
 
 #ifdef OPTION_KM_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
@@ -1124,7 +1287,7 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    SET_GR_A(r2, regs,GR_A(r2,regs)+8);
+    SET_GR_A(r2, regs,GR_A(r2,regs) + 8);
     SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs)-8);
 
 #ifdef OPTION_KMAC_DEBUG
@@ -1221,7 +1384,7 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    SET_GR_A(r2, regs,GR_A(r2,regs)+8);
+    SET_GR_A(r2, regs,GR_A(r2,regs) + 8);
     SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs)-8);
 
 #ifdef OPTION_KMAC_DEBUG
@@ -1354,7 +1517,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     /* Update the registers */
     SET_GR_A(r1, regs,GR_A(r1,regs)+ 8);
     if(r1 != r2)
-      SET_GR_A(r2, regs, GR_A(r2,regs)+8);
+      SET_GR_A(r2, regs, GR_A(r2,regs) + 8);
     SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs)-8);
 
 #ifdef OPTION_KMC_DEBUG
@@ -1473,9 +1636,9 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    SET_GR_A(r1, regs,GR_A(r1,regs)+8);
+    SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
     if(r1 != r2)
-      SET_GR_A(r2, regs, GR_A(r2, regs)+8);
+      SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 8);
 
 #ifdef OPTION_KMC_DEBUG
@@ -1597,9 +1760,9 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    SET_GR_A(r1, regs,GR_A(r1,regs)+8);
+    SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
     if(r1 != r2)
-      SET_GR_A(r2, regs, GR_A(r2, regs)+8);
+      SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 8);
 
 #ifdef OPTION_KMC_DEBUG
@@ -1641,7 +1804,9 @@ static void (*ARCH_DEP(km)[KM_MAX_FC + 1])(int r1, int r2, REGS *regs) =
   ARCH_DEP(km_query),
   ARCH_DEP(km_dea),
   ARCH_DEP(km_tdea_128),
-  ARCH_DEP(km_tdea_192)
+  ARCH_DEP(km_tdea_192),
+  ARCH_DEP(km_aes_128),
+  ARCH_DEP(km_aes_192)
 };
 
 static void (*ARCH_DEP(kmac)[KMAC_MAX_FC + 1])(int r1, int r2, REGS *regs) =
