@@ -88,28 +88,6 @@
 /*----------------------------------------------------------------------------*/
 /* Handy macro's                                                              */
 /*----------------------------------------------------------------------------*/
-#define SHAMD2CTX(ctx, md, size) \
-{ \
-  int i; \
-  \
-  for(i = 0; i < (size); i++) \
-    (ctx)->state[i] = ((md)[i * 4] << 24) | ((md)[i * 4 + 1] << 16) | ((md)[i * 4 + 2] << 8) | (md)[i * 4 + 3]; \
-}
-
-#define SHACTX2MD(md, ctx, size) \
-{ \
-  int i, j; \
-  \
-  j = 0; \
-  for(i = 0; i < (size); i++) \
-  { \
-    (md)[i * 4] = ((ctx)->state[i] & 0xff000000) >> 24; \
-    (md)[i * 4 + 1] = ((ctx)->state[i] & 0x00ff0000) >> 16; \
-    (md)[i * 4 + 2] = ((ctx)->state[i] & 0x0000ff00) >> 8; \
-    (md)[i * 4 + 3] = ((ctx)->state[i] & 0x000000ff); \
-  } \
-}
-
 #define LOGBYTE(s, v, x) \
 { \
   int i; \
@@ -140,14 +118,71 @@
 /*----------------------------------------------------------------------------*/
 /* constants                                                                  */
 /*----------------------------------------------------------------------------*/
-#ifndef CONST
-#define CONST
+#ifndef __DYNCRYPT_COMPILE_ONCE
+#define __DYNCRYPT_COMPILE_ONCE
 BYTE kimd_bits[] = KIMD_BITS;
 BYTE klmd_bits[] = KLMD_BITS;
 BYTE km_bits[] = KM_BITS;
 BYTE kmac_bits[] = KMAC_BITS;
 BYTE kmc_bits[] = KMC_BITS;
-#endif
+
+void sha1_geticv(sha1_context *ctx, uint8 icv[20])
+{
+  int i, j;
+ 
+  for(i = 0, j = 0; i < 5; i++)
+  { 
+    icv[j++] = ctx->state[i] & 0xff000000 >> 24;
+    icv[j++] = ctx->state[i] & 0x00ff0000 >> 16;
+    icv[j++] = ctx->state[i] & 0x0000ff00 >> 8;
+    icv[j++] = ctx->state[i] & 0x000000ff;
+  }
+}
+
+void sha1_seticv(sha1_context *ctx, uint8 icv[20])
+{
+  int i, j;
+
+  for(i = 0, j = 0; i < 5; i++)
+  {
+    ctx->state[i] = icv[j++] << 24;
+    ctx->state[i] |= icv[j++] << 16;
+    ctx->state[i] |= icv[j++] << 8;
+    ctx->state[i] |= icv[j++];
+  }
+}
+
+void sha256_geticv(sha256_context *ctx, uint8 icv[32])
+{
+  int i, j;
+ 
+  for(i = 0, j = 0; i < 8; i++)
+  {
+    icv[j++] = ctx->state[i] & 0xff000000 >> 24;
+    icv[j++] = ctx->state[i] & 0x00ff0000 >> 16;
+    icv[j++] = ctx->state[i] & 0x0000ff00 >> 8;
+    icv[j++] = ctx->state[i] & 0x000000ff;
+  }
+}
+
+void sha256_seticv(sha256_context *ctx, uint8 icv[32])
+{
+  int i, j;
+
+  for(i = 0, j = 0; i < 8; i++)
+  {
+    ctx->state[i] = icv[j++] << 24;
+    ctx->state[i] |= icv[j++] << 16;
+    ctx->state[i] |= icv[j++] << 8;
+    ctx->state[i] |= icv[j++];
+  }
+}
+
+/* Needed functions defined in sha1.c sha256.c */
+void sha1_process(sha1_context *ctx, uint8 data[64]);
+void sha256_process(sha256_context *ctx, uint8 data[64]);
+
+#endif /* define __DYNCRYPT_COMPILE_ONCE */
 
 /*----------------------------------------------------------------------------*/
 /* B93E Compute intermediate message digest (KIMD) FC 0                       */
@@ -203,8 +238,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
 
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 19, GR_A(1, regs), 1, regs);
-  sha1_starts(&context);
-  SHAMD2CTX(&context, cv, 5);
+  sha1_seticv(&context, cv);
 
 #ifdef OPTION_KIMD_DEBUG
   LOGBYTE("icv   :", cv, 20);
@@ -221,10 +255,10 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
     LOGBYTE2("  input :", buffer, 16, 4);
 #endif
 
-    sha1_update(&context, buffer, 64);
+    sha1_process(&context, buffer);
 
     /* Store the output chaining value */
-    SHACTX2MD(cv, &context, 5);
+    sha1_geticv(&context, cv);
     ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
@@ -283,8 +317,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
 
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 31, GR_A(1, regs), 1, regs);
-  sha256_starts(&context);
-  SHAMD2CTX(&context, cv, 8);
+  sha256_seticv(&context, cv);
 
 #ifdef OPTION_KIMD_DEBUG
   LOGBYTE("icv   :", cv, 32);
@@ -301,10 +334,10 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
     LOGBYTE2("  input :", buffer, 16, 4);
 #endif
 
-    sha256_update(&context, buffer, 64);
+    sha256_process(&context, buffer);
 
     /* Store the output chaining value */
-    SHACTX2MD(cv, &context, 8);
+    sha256_geticv(&context, cv);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
@@ -379,13 +412,11 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 19, GR_A(1, regs), 1, regs);
+  sha1_seticv(&context, cv);
 
 #ifdef OPTION_KLMD_DEBUG
   LOGBYTE("icv   :", cv, 20);
 #endif
-
-  sha1_starts(&context);
-  SHAMD2CTX(&context, cv, 5);
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
@@ -402,10 +433,10 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
     LOGBYTE2("input :", buffer, 16, 4);
 #endif
 
-    sha1_update(&context, buffer, 64);
+    sha1_process(&context, buffer);
 
     /* Store the output chaining value */
-    SHACTX2MD(cv, &context, 5);
+    sha1_geticv(&context, cv);
     ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -447,7 +478,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
     buffer[i++] = 0x80;
     while(i < 64)
      buffer[i++] = 0x00;
-    sha1_update(&context, buffer, 64);
+    sha1_process(&context, buffer);
     for(i = 0; i < 56; i++)
       buffer[i] = 0;
   }
@@ -466,8 +497,8 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
   /* Calculate and store the message digest */
-  sha1_update(&context, buffer, 64);
-  SHACTX2MD(cv, &context, 5);
+  sha1_process(&context, buffer);
+  sha1_geticv(&context, cv);
   ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -513,13 +544,11 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 31, GR_A(1, regs), 1, regs);
+  sha256_seticv(&context, cv);
 
 #ifdef OPTION_KLMD_DEBUG
   LOGBYTE("icv   :", cv, 32);
 #endif
-
-  sha256_starts(&context);
-  SHAMD2CTX(&context, cv, 8);
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
@@ -536,10 +565,10 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
     LOGBYTE2("input :", buffer, 16, 4);
 #endif
 
-    sha256_update(&context, buffer, 64);
+    sha256_process(&context, buffer);
 
     /* Store the output chaining value */
-    SHACTX2MD(cv, &context, 8);
+    sha256_geticv(&context, cv);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -581,7 +610,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
     buffer[i++] = 0x80;
     while(i < 64)
      buffer[i++] = 0x00;
-    sha256_update(&context, buffer, 64);
+    sha256_process(&context, buffer);
     for(i = 0; i < 56; i++)
       buffer[i] = 0;
   }
@@ -600,8 +629,8 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 #endif
 
   /* Calculate and store the message digest */
-  sha256_update(&context, buffer, 64);
-  SHACTX2MD(cv, &context, 8);
+  sha256_process(&context, buffer);
+  sha256_geticv(&context, cv);
   ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
