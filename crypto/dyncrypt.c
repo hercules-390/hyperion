@@ -86,7 +86,7 @@
 #define KMC_BITS        { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
-/* Handy macro's                                                              */
+/* Write bytes on one line                                                    */
 /*----------------------------------------------------------------------------*/
 #define LOGBYTE(s, v, x) \
 { \
@@ -98,6 +98,9 @@
   logmsg("\n"); \
 }
 
+/*----------------------------------------------------------------------------*/
+/* Write bytes on multiple lines                                              */
+/*----------------------------------------------------------------------------*/
 #define LOGBYTE2(s, v, x, y)    \
 {  \
   int i; \
@@ -113,20 +116,31 @@
   } \
 }
 
+/*----------------------------------------------------------------------------*/
+/* CPU determined amount of data (processed in one go)                        */
+/*----------------------------------------------------------------------------*/
 #define PROCESS_MAX     4096
+
+/*----------------------------------------------------------------------------*/
+/* Used for printing debugging info                                           */
+/*----------------------------------------------------------------------------*/
 #define TRUEFALSE(boolean)  ((boolean) ? "True" : "False")
-/*----------------------------------------------------------------------------*/
-/* constants                                                                  */
-/*----------------------------------------------------------------------------*/
+
 #ifndef __DYNCRYPT_COMPILE_ONCE
 #define __DYNCRYPT_COMPILE_ONCE
+/*----------------------------------------------------------------------------*/
+/* Bitstrings returned with query instructions                                */
+/*----------------------------------------------------------------------------*/
 BYTE kimd_bits[] = KIMD_BITS;
 BYTE klmd_bits[] = KLMD_BITS;
 BYTE km_bits[] = KM_BITS;
 BYTE kmac_bits[] = KMAC_BITS;
 BYTE kmc_bits[] = KMC_BITS;
 
-void sha1_geticv(sha1_context *ctx, uint8 icv[20])
+/*----------------------------------------------------------------------------*/
+/* Get the chaining vector for output processing                              */
+/*----------------------------------------------------------------------------*/
+void sha1_getcv(sha1_context *ctx, uint8 icv[20])
 {
   int i, j;
  
@@ -139,6 +153,9 @@ void sha1_geticv(sha1_context *ctx, uint8 icv[20])
   }
 }
 
+/*----------------------------------------------------------------------------*/
+/* Set the initial chaining value                                             */
+/*----------------------------------------------------------------------------*/
 void sha1_seticv(sha1_context *ctx, uint8 icv[20])
 {
   int i, j;
@@ -152,7 +169,10 @@ void sha1_seticv(sha1_context *ctx, uint8 icv[20])
   }
 }
 
-void sha256_geticv(sha256_context *ctx, uint8 icv[32])
+/*----------------------------------------------------------------------------*/
+/* Get the chaining vector for output processing                              */
+/*----------------------------------------------------------------------------*/
+void sha256_getcv(sha256_context *ctx, uint8 icv[32])
 {
   int i, j;
  
@@ -165,6 +185,9 @@ void sha256_geticv(sha256_context *ctx, uint8 icv[32])
   }
 }
 
+/*----------------------------------------------------------------------------*/
+/* Set the initial chaining value                                             */
+/*----------------------------------------------------------------------------*/
 void sha256_seticv(sha256_context *ctx, uint8 icv[32])
 {
   int i, j;
@@ -178,10 +201,12 @@ void sha256_seticv(sha256_context *ctx, uint8 icv[32])
   }
 }
 
-/* Needed functions defined in sha1.c sha256.c */
+/*----------------------------------------------------------------------------*/
+/* Needed functions from sha1.c and sha256.c.                                 */
+/* We do our own counting and padding, we only need the hashing.              */
+/*----------------------------------------------------------------------------*/
 void sha1_process(sha1_context *ctx, uint8 data[64]);
 void sha256_process(sha256_context *ctx, uint8 data[64]);
-
 #endif /* define __DYNCRYPT_COMPILE_ONCE */
 
 /*----------------------------------------------------------------------------*/
@@ -258,7 +283,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
     sha1_process(&context, buffer);
 
     /* Store the output chaining value */
-    sha1_geticv(&context, cv);
+    sha1_getcv(&context, cv);
     ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
@@ -337,7 +362,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
     sha256_process(&context, buffer);
 
     /* Store the output chaining value */
-    sha256_geticv(&context, cv);
+    sha256_getcv(&context, cv);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
@@ -436,7 +461,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
     sha1_process(&context, buffer);
 
     /* Store the output chaining value */
-    sha1_geticv(&context, cv);
+    sha1_getcv(&context, cv);
     ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -498,7 +523,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 
   /* Calculate and store the message digest */
   sha1_process(&context, buffer);
-  sha1_geticv(&context, cv);
+  sha1_getcv(&context, cv);
   ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -568,7 +593,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
     sha256_process(&context, buffer);
 
     /* Store the output chaining value */
-    sha256_geticv(&context, cv);
+    sha256_getcv(&context, cv);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -630,7 +655,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 
   /* Calculate and store the message digest */
   sha256_process(&context, buffer);
-  sha256_geticv(&context, cv);
+  sha256_getcv(&context, cv);
   ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
