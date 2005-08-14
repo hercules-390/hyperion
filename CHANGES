@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+14 aug 2005 aes with and without chaining implemented - Bernard van der Helm
 10 aug 2005 sha1.c sha1.h changes - Bernard van der Helm
 08 aug 2005 gcrypt independent crypto implemented - Bernard van der Helm
 07 aug 2005 sha256 implemented, waiting for opcode ;-) Bernard van der Helm

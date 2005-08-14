@@ -85,8 +85,10 @@
 #define KMC_DEA         1
 #define KMC_TDEA_128    2
 #define KMC_TDEA_192    3
-#define KMC_MAX_FC      3
-#define KMC_BITS        { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#define KMC_AES_128     4
+#define KMC_AES_192     5
+#define KMC_MAX_FC      5
+#define KMC_BITS        { 0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Write bytes on one line                                                    */
@@ -1288,7 +1290,7 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r2, regs,GR_A(r2,regs) + 8);
-    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs)-8);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 8);
 
 #ifdef OPTION_KMAC_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
@@ -1385,7 +1387,7 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r2, regs,GR_A(r2,regs) + 8);
-    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs)-8);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 8);
 
 #ifdef OPTION_KMAC_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
@@ -1515,10 +1517,10 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    SET_GR_A(r1, regs,GR_A(r1,regs)+ 8);
+    SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
     if(r1 != r2)
       SET_GR_A(r2, regs, GR_A(r2,regs) + 8);
-    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs)-8);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 8);
 
 #ifdef OPTION_KMC_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
@@ -1783,6 +1785,234 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 }
 
 /*----------------------------------------------------------------------------*/
+/* B92F Cipher message with chaining (KMC) FC 4                               */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
+{
+  BYTE buffer[16];
+  int crypted;
+  BYTE cv[16];
+  BYTE ocv[16];
+  aes_context context;
+  int i;
+  BYTE k[16];
+
+#ifdef OPTION_KMC_DEBUG
+  logmsg("  KMC: function 4: aes-128\n");
+#endif
+
+  /* Check special conditions */
+  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 16)
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Return with cc 0 on zero length */
+  if(!GR_A(r2 + 1, regs))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
+
+  /* Test writeability output chaining value */
+  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 15, ACCTYPE_WRITE, regs);
+
+  /* Fetch the initial chaining value */
+  ARCH_DEP(vfetchc)(cv, 15, GR_A(1, regs), 1, regs);
+
+  /* Fetch and set the cryptographic key */
+  ARCH_DEP(vfetchc)(k, 15, GR_A(1, regs) + 16, 1, regs);
+  aes_set_key(&context, k, 128);
+
+#ifdef OPTION_KMC_DEBUG
+  LOGBYTE("icv   :", cv, 16);
+  LOGBYTE("k     :", k, 16);
+#endif
+
+  /* Try to process the CPU-determined amount of data */
+  crypted = 0;
+  while(crypted += 16 < PROCESS_MAX)
+  {
+    /* Fetch a block of data */
+    ARCH_DEP(vfetchc)(buffer, 15, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KMC_DEBUG
+    LOGBYTE("input :", buffer, 16);
+#endif
+
+    /* Do the job */
+    if(GR0_m(regs))
+    {
+
+      /* Save the ovc */
+      memcpy(ocv, buffer, 16);
+
+      /* Decrypt and XOR */
+      aes_decrypt(&context, buffer, buffer);
+      for(i = 0; i < 16; i++)
+        buffer[i] ^= cv[i];
+    }
+    else
+    {
+      /* XOR and encrypt */
+      for(i = 0; i < 16; i++)
+        buffer[i] ^= cv[i];
+      aes_encrypt(&context, buffer, buffer);
+
+      /* Save the ovc */
+      memcpy(ocv, buffer, 16);
+    }
+
+    /* Store the output */
+    ARCH_DEP(vstorec)(buffer, 15, GR_A(r1, regs), r1, regs);
+
+#ifdef OPTION_KMC_DEBUG
+    LOGBYTE("output:", buffer, 15);
+#endif
+
+    /* Store the output chaining value */
+    ARCH_DEP(vstorec)(ocv, 15, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KMC_DEBUG
+    LOGBYTE("ocv   :", ocv, 15);
+#endif
+
+    /* Update the registers */
+    SET_GR_A(r1, regs,GR_A(r1,regs) + 16);
+    if(r1 != r2)
+      SET_GR_A(r2, regs, GR_A(r2,regs) + 16);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 16);
+
+#ifdef OPTION_KMC_DEBUG
+    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
+    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
+    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+#endif
+
+    /* check for end of data */
+    if(!GR_A(r2 + 1, regs))
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+  }
+  /* CPU-determined amount of data processed */
+  regs->psw.cc = 3;
+}
+
+/*----------------------------------------------------------------------------*/
+/* B92F Cipher message with chaining (KMC) FC 5                               */
+/*----------------------------------------------------------------------------*/
+static void ARCH_DEP(kmc_aes_192)(int r1, int r2, REGS *regs)
+{
+  BYTE buffer[16];
+  int crypted;
+  BYTE cv[16];
+  BYTE ocv[16];
+  aes_context context;
+  int i;
+  BYTE k[24];
+
+#ifdef OPTION_KMC_DEBUG
+  logmsg("  KMC: function 5: aes-192\n");
+#endif
+
+  /* Check special conditions */
+  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 16)
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Return with cc 0 on zero length */
+  if(!GR_A(r2 + 1, regs))
+  {
+    regs->psw.cc = 0;
+    return;
+  }
+
+  /* Test writeability output chaining value */
+  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 15, ACCTYPE_WRITE, regs);
+
+  /* Fetch the initial chaining value */
+  ARCH_DEP(vfetchc)(cv, 15, GR_A(1, regs), 1, regs);
+
+  /* Fetch and set the cryptographic key */
+  ARCH_DEP(vfetchc)(k, 15, GR_A(1, regs) + 16, 1, regs);
+  aes_set_key(&context, k, 192);
+
+#ifdef OPTION_KMC_DEBUG
+  LOGBYTE("icv   :", cv, 16);
+  LOGBYTE("k     :", k, 24);
+#endif
+
+  /* Try to process the CPU-determined amount of data */
+  crypted = 0;
+  while(crypted += 16 < PROCESS_MAX)
+  {
+    /* Fetch a block of data */
+    ARCH_DEP(vfetchc)(buffer, 15, GR_A(r2, regs), r2, regs);
+
+#ifdef OPTION_KMC_DEBUG
+    LOGBYTE("input :", buffer, 16);
+#endif
+
+    /* Do the job */
+    if(GR0_m(regs))
+    {
+
+      /* Save the ovc */
+      memcpy(ocv, buffer, 16);
+
+      /* Decrypt and XOR */
+      aes_decrypt(&context, buffer, buffer);
+      for(i = 0; i < 16; i++)
+        buffer[i] ^= cv[i];
+    }
+    else
+    {
+      /* XOR and encrypt */
+      for(i = 0; i < 16; i++)
+        buffer[i] ^= cv[i];
+      aes_encrypt(&context, buffer, buffer);
+
+      /* Save the ovc */
+      memcpy(ocv, buffer, 16);
+    }
+
+    /* Store the output */
+    ARCH_DEP(vstorec)(buffer, 15, GR_A(r1, regs), r1, regs);
+
+#ifdef OPTION_KMC_DEBUG
+    LOGBYTE("output:", buffer, 15);
+#endif
+
+    /* Store the output chaining value */
+    ARCH_DEP(vstorec)(ocv, 15, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KMC_DEBUG
+    LOGBYTE("ocv   :", ocv, 15);
+#endif
+
+    /* Update the registers */
+    SET_GR_A(r1, regs,GR_A(r1,regs) + 16);
+    if(r1 != r2)
+      SET_GR_A(r2, regs, GR_A(r2,regs) + 16);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 16);
+
+#ifdef OPTION_KMC_DEBUG
+    logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
+    logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
+    logmsg("  GR%02d  : " F_GREG "\n", r2 + 1, (regs)->GR(r2 + 1));
+#endif
+
+    /* check for end of data */
+    if(!GR_A(r2 + 1, regs))
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+  }
+  /* CPU-determined amount of data processed */
+  regs->psw.cc = 3;
+}
+
+/*----------------------------------------------------------------------------*/
 /* Function arrays                                                            */
 /*----------------------------------------------------------------------------*/
 static void (*ARCH_DEP(kimd)[KIMD_MAX_FC + 1])(int r1, int r2, REGS *regs) =
@@ -1822,7 +2052,9 @@ static void (*ARCH_DEP(kmc)[KMC_MAX_FC + 1])(int r1, int r2, REGS *regs) =
   ARCH_DEP(kmc_query),
   ARCH_DEP(kmc_dea),
   ARCH_DEP(kmc_tdea_128),
-  ARCH_DEP(kmc_tdea_192)
+  ARCH_DEP(kmc_tdea_192),
+  ARCH_DEP(kmc_aes_128),
+  ARCH_DEP(kmc_aes_192)
 };
 
 /*----------------------------------------------------------------------------*/
