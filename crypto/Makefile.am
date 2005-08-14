@@ -7,17 +7,9 @@ lns=@LN_S@
 
 LDADD = @LTLIBINTL@ @LTLIBICONV@ @LIBS@ ../libhercs.la ../libherc.la
 
-LDADD += $(LIBGCRYPT_LIBS)
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)\intl
 
-# AM_CFLAGS = $(LIBGCRYPT_CFLAGS)
-
-AM_CPPFLAGS = -I$(top_srcdir)/intl -I$(top_srcdir) $(LIBGCRYPT_CFLAGS)
-
-dyncrypt_SRC     = dyncrypt.c \
-                   sha1.c \
-		   sha256.c \
-		   des.c \
-		   aes.c
+dyndev_SRC = dyncrypt.c sha1.c sha256.c des.c aes.c
 
 if BUILD_SHARED
    XSTATIC =
@@ -27,7 +19,7 @@ endif
 
 if OPTION_DYNAMIC_LOAD
   DYNSRC         =
-  LTDL           = ltdl.c
+  LTDL           = ../ltdl.c
 
   DYNMOD_LD_FLAGS = -module         \
                    -no-undefined   \

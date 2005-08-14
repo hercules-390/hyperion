@@ -23,11 +23,11 @@
 /*----------------------------------------------------------------------------*/
 /* Debugging options                                                          */
 /*----------------------------------------------------------------------------*/
-//#define OPTION_KM_DEBUG
-//#define OPTION_KMC_DEBUG
-//#define OPTION_KIMD_DEBUG
-//#define OPTION_KLMD_DEBUG
-//#define OPTION_KMAC_DEBUG
+#define OPTION_KM_DEBUG
+#define OPTION_KMC_DEBUG
+#define OPTION_KIMD_DEBUG
+#define OPTION_KLMD_DEBUG
+#define OPTION_KMAC_DEBUG
 
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
@@ -225,10 +225,6 @@ static void ARCH_DEP(kimd_query)(int r1, int r2, REGS *regs)
   logmsg("  KIMD: function 0: query\n");
 #endif
 
-  /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR0_m(regs))
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-
   /* Store the parameter block */
   ARCH_DEP(vstorec)(kimd_bits, 15, GR_A(1, regs), 1, regs);
 
@@ -405,10 +401,6 @@ static void ARCH_DEP(klmd_query)(int r1, int r2, REGS *regs)
   logmsg("  KLMD: function 0: query\n");
 #endif
 
-  /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR0_m(regs))
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-
   /* Store the parameter block */
   ARCH_DEP(vstorec)(klmd_bits, 15, GR_A(1, regs), 1, regs);
 
@@ -497,7 +489,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
     ARCH_DEP(vfetchc)(buffer, GR_A(r2 + 1, regs) - 1, GR_A(r2, regs), r2, regs);
 
 #ifdef OPTION_KLMD_DEBUG
-    LOGBYTE("input :", buffer, GR_A(r2 + 1, regs));
+    LOGBYTE("input :", buffer, (int) GR_A(r2 + 1, regs));
 #endif
   }
 
@@ -629,7 +621,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
     ARCH_DEP(vfetchc)(buffer, GR_A(r2 + 1, regs) - 1, GR_A(r2, regs), r2, regs);
 
 #ifdef OPTION_KLMD_DEBUG
-    LOGBYTE("input :", buffer, GR_A(r2 + 1, regs));
+    LOGBYTE("input :", buffer, (int) GR_A(r2 + 1, regs));
 #endif
   }
 
@@ -688,10 +680,6 @@ static void ARCH_DEP(km_query)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KM_DEBUG
   logmsg("  KM: function 0: query\n");
 #endif
-
-  /* Check special conditions */
-  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01)
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Store the parameter block */
   ARCH_DEP(vstorec)(km_bits, 15, GR_A(1, regs), 1, regs);
@@ -1114,10 +1102,6 @@ static void ARCH_DEP(kmac_query)(int r1, int r2, REGS *regs)
   logmsg("  KMAC: function 0: query\n");
 #endif
 
-  /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR0_m(regs))
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-
   /* Store the parameter block */
   ARCH_DEP(vstorec)(kmac_bits, 15, GR_A(1, regs), 1, regs);
 
@@ -1413,10 +1397,6 @@ static void ARCH_DEP(kmc_query)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KMC_DEBUG
   logmsg("  KMC: function 0: query\n");
 #endif
-
-  /* Check special conditions */
-  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01)
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Store the parameter block */
   ARCH_DEP(vstorec)(kmc_bits, 15, GR_A(1, regs), 1, regs);
@@ -2252,6 +2232,8 @@ HDL_REGISTER_SECTION;
   HDL_REGISTER(z900_compute_last_message_digest, z900_compute_last_message_digest_d);
   HDL_REGISTER(z900_compute_message_authentication_code, z900_compute_message_authentication_code_d);
 #endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
+
+  logmsg("Crypto module loaded\n");
 
 }
 END_REGISTER_SECTION;
