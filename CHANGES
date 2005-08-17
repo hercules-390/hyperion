@@ -1,6 +1,11 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+16 Aug 2005 Added code to try and fix the old "console: DBG028: select:
+            Bad file number" problem that still occassionally occurs,
+            and added some code to try and detect what I believe to be
+            the conditional that might be causing it (will this problem
+            never end?!) - Fish
 14 aug 2005 crypto query instructions changed. Query functions
             can not have a specification exception - Bernard van der Helm
 14 aug 2005 aes with and without chaining implemented - Bernard van der Helm
