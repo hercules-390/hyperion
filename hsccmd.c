@@ -45,6 +45,92 @@ int process_script_file(char *,int);
 #define MAX_DEVLIST_DEVICES  1024
 
 ///////////////////////////////////////////////////////////////////////
+/* cause_crash command - purposely crash Herc for debugging purposes */
+
+char* fish_msgs[8] =
+{
+	"0000000000000000000000000\n",
+	"11111111111111111111111111\n",
+	"222222222222222222222222222\n",
+	"3333333333333333333333333333\n",
+	"44444444444444444444444444444\n",
+	"555555555555555555555555555555\n",
+	"6666666666666666666666666666666\n",
+	"77777777777777777777777777777777\n",
+};
+
+COND fish_cond;
+LOCK fish_lock;
+
+void*  fish_thread ( void* arg )
+{
+    int i, thread_num = (int) arg;
+
+	srand( time( NULL ) );
+
+	logmsg( "\n** thread %d waiting\n", thread_num );
+
+	obtain_lock    (             &fish_lock );
+	wait_condition ( &fish_cond, &fish_lock );
+	release_lock   (             &fish_lock );
+
+	logmsg( "\n** thread %d starting\n", thread_num );
+
+    for (i=0; i < 50*1000; i++)
+		logmsg( fish_msgs[ rand() % 8 ] );
+
+	sleep(5);
+
+	logmsg( "\n** thread %d done\n", thread_num );
+
+    return NULL;
+}
+
+int crash_cmd(int argc, char *argv[],char *cmdline)
+{
+    TID tid;
+	int num_threads;
+	static int didthis = 0;
+
+	if (!didthis)
+	{
+		didthis = 1;
+		initialize_condition ( &fish_cond );
+		initialize_lock      ( &fish_lock );
+	}
+
+    if (argc != 2)
+	{
+		logmsg("invalid arg; 1-8\n");
+		return 0;
+	}
+
+	num_threads = atoi(argv[1]);
+
+	if (num_threads < 0 || num_threads > 8)
+	{
+		logmsg("invalid arg; 1-8\n");
+		return 0;
+	}
+
+	while (num_threads--)
+	    create_thread( &tid, &sysblk.detattr, fish_thread, (void*) num_threads );
+
+	sleep( 1 );
+
+    broadcast_condition ( &fish_cond );
+
+    return 0;
+    /*
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+    cause_crash();      // (should not return)
+    return 0;           // (make compiler happy)
+    */
+}
+
+///////////////////////////////////////////////////////////////////////
 /* comment command - do absolutely nothing */
 int comment_cmd(int argc, char *argv[],char *cmdline)
 {
@@ -785,6 +871,9 @@ REGS *regs;
     store_status (regs, 0);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
+
+    logmsg (_("HHCCP010I CPU%4.4X store status completed.\n"),
+            regs->cpuad);
 
     return 0;
 }
@@ -3750,6 +3839,9 @@ COMMAND ( "sizeof",    sizeof_cmd,    "Display size of structures\n" )
 COMMAND ( "suspend",    suspend_cmd,  "Suspend hercules" )
 COMMAND ( "resume",     resume_cmd,   "Resume hercules\n" )
 
+#define CRASH_CMD   "c_crash"       // (hidden internal command)
+COMMAND ( CRASH_CMD,   crash_cmd,     "(hidden internal command)" )
+
 COMMAND ( NULL, NULL, NULL )         /* (end of table) */
 };
 
@@ -3864,7 +3956,11 @@ int ListAllCommands(int argc, char *argv[], char *cmdline)
     /* List standard formatted commands from our routing table... */
 
     for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
+    {
+        // (don't display hidden internal commands)
+        if ( strcasecmp( pCmdTab->pszCommand, CRASH_CMD ) != 0 )
         logmsg( _("  %-9.9s    %s \n"), pCmdTab->pszCommand, pCmdTab->pszCmdDesc );
+    }
 
     // List non-standard formatted commands...
 
