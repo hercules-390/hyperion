@@ -1264,7 +1264,7 @@ char                    group[16];      /* Console group             */
     rc = negotiate (csock, &class, &model, &extended, &devnum, group);
     if (rc != 0)
     {
-        close (csock);
+        close (csock); csock = -1;
         if (clientip) free(clientip);
         return NULL;
     }
@@ -1443,7 +1443,7 @@ char                    group[16];      /* Console group             */
 
         /* Close the connection and terminate the thread */
         SLEEP (5);
-        close (csock);
+        close (csock); csock = -1;
         if (clientip) free(clientip);
         return NULL;
     }
@@ -1506,7 +1506,7 @@ char                    group[16];      /* Console group             */
 
 
 /*-------------------------------------------------------------------*/
-/* CONSOLE CONNECTION AND ATTENTION HANDLER THREAD                   */
+/* Console connection thread shutdown function                       */
 /*-------------------------------------------------------------------*/
 static int console_cnslcnt = 0;
 
@@ -1514,12 +1514,50 @@ static void console_shutdown(void * unused __attribute__ ((unused)) )
 {
     obtain_lock( &console_lock );
     {
-    console_cnslcnt = 0;
+        console_cnslcnt = 0;
         SIGNAL_CONSOLE_THREAD();
     }
     release_lock( &console_lock );
 }
 
+
+/*-------------------------------------------------------------------*/
+/* Utility function to locate a specific console DEVBLK entry...     */
+/*                                                                   */
+/*                     ***   NOTE  ***                               */
+/*                                                                   */
+/* The device lock (&dev->lock) will be HELD if the entry is found!  */
+/* It's the CALLER'S responsibility to release it when thru with it! */
+/*-------------------------------------------------------------------*/
+static DEVBLK*  find_console_DEVBLK( int fd )
+{
+    DEVBLK* dev;
+
+    if (fd > 0)
+    {
+        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        {
+            if (dev->allocated)
+			{
+				obtain_lock( &dev->lock );
+				{
+					if (dev->console)
+					{
+						if (fd == dev->fd)
+							return dev;
+					}
+				}
+				release_lock( &dev->lock );
+			}
+        }
+    }
+    return NULL;  // (not found)
+}
+
+
+/*-------------------------------------------------------------------*/
+/* CONSOLE CONNECTION AND ATTENTION HANDLER THREAD                   */
+/*-------------------------------------------------------------------*/
 static void *
 console_connection_handler (void *arg)
 {
@@ -1622,28 +1660,58 @@ BYTE                    unitstat;       /* Status after receive data */
         FD_ZERO(&c_rset); c_minfd=INT_MAX; c_maxfd=INT_MIN;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
+            if ( !dev->allocated ) continue;
+
             obtain_lock( &dev->lock );
             {
-                if ( dev->allocated && dev->console && dev->connected )
-            {
-                    /* Add it to our 'current' set to
-                       detect if or when it's closed */
-                FD_SET (dev->fd, &c_rset);
-                    if (dev->fd > c_maxfd) c_maxfd = dev->fd;
-                    if (dev->fd < c_minfd) c_minfd = dev->fd;
-
-                    /* Add it to our read set only if it's
-                       not busy nor interrupt pending */
-                    if (1
-                        && (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
-                        && !IOPENDING(dev)
-                        && !(dev->scsw.flag3 & SCSW3_SC_PEND)
-                    )
+                if ( dev->console && dev->connected )
                 {
-                    FD_SET (dev->fd, &readset);
-                    if (dev->fd > maxfd) maxfd = dev->fd;
-                }
-            }
+                    /* VERIFY that the file descriptor is valid.
+                       If it's NOT, then IGNORE this console device
+                       since it's thus obvious that SOMETHING has
+                       gone wrong SOMEWHERE at some point! (some
+                       sort of race condition SOMEWHERE, obviously)
+                    */
+                    if (dev->fd < 0)
+                    {
+                        // Ah-HA! We may have FINALLY found (or at
+                        // least have gotten a little bit closer to
+                        // finding) the ROOT CAUSE of our problematic
+                        // "DBG028 select: Bad FIle Number" problem!
+                        logmsg
+                        (
+                            "\n"
+                            "*********** DBG028 CONSOLE BUG ***********\n"
+                            "device %4.4X: 'connected', but dev->fd = -1\n"
+                            "\n"
+
+                            ,dev->devnum
+                        );
+                        dev->connected = 0;  // (since it's not connected!)
+                    }
+                    else
+                    {
+                        /* Add it to our 'current' set to
+                           detect if or when it's closed */
+                        FD_SET (dev->fd, &c_rset);
+                        if (dev->fd > c_maxfd) c_maxfd = dev->fd;
+                        if (dev->fd < c_minfd) c_minfd = dev->fd;
+
+                        /* Add it to our read set only if it's
+                           not busy nor interrupt pending */
+                        if (1
+                            && (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
+                            && !IOPENDING(dev)
+                            && !(dev->scsw.flag3 & SCSW3_SC_PEND)
+                        )
+                        {
+                            FD_SET (dev->fd, &readset);
+                            if (dev->fd > maxfd) maxfd = dev->fd;
+                        }
+
+                    }/* if (dev->fd < 0) */
+
+                }/* if ( dev->console && dev->connected ) */
             }
             release_lock( &dev->lock );
         } /* end for(dev) */
@@ -1662,7 +1730,18 @@ BYTE                    unitstat;       /* Status after receive data */
                 if ( FD_ISSET(fd, &o_rset) &&
                     ( fd < c_minfd || fd > c_maxfd || !FD_ISSET(fd, &c_rset) )
                 )
-                    close(fd);
+                {
+                    dev = find_console_DEVBLK( fd );
+                    if (dev)
+                    {
+                        close(fd);
+                        dev->fd = -1;
+                        dev->connected = 0;
+                        release_lock( &dev->lock );
+                    }
+                    else
+                        close(fd);
+                }
             }
 
             /* Move 'current' to 'old' for next time */
@@ -1681,8 +1760,39 @@ BYTE                    unitstat;       /* Status after receive data */
         /* Log select errors */
         if (rc < 0 )
         {
-            if ( EINTR != errno )
-            TNSERROR("DBG028: select: %s\n", strerror(errno));
+            int select_errno = errno;     // (preserve orig errno)
+            static int issue_errmsg = 1;  // (prevents msgs flood)
+
+            if (EBADF == select_errno)
+            {
+                // Don't issue message more frequently
+                // than once every second or so, just in
+                // case the condition that's causing it
+                // keeps reoccurring over and over...
+
+                struct timeval  prev = {0,0};
+                struct timeval  curr;
+                struct timeval  diff;
+
+                gettimeofday( &curr, NULL );
+                timeval_subtract( &prev, &curr, &diff );
+
+                // Has it been longer than one second
+                // since we last issued this message?
+
+                if (diff.tv_sec >= 1)
+                {
+                    issue_errmsg = 1;
+                    prev.tv_sec  = curr.tv_sec;
+                    prev.tv_usec = curr.tv_usec;
+                }
+                else
+                    issue_errmsg = 0;   // (prevents msgs flood)
+            }
+            else
+                issue_errmsg = 1;
+            if ( issue_errmsg && EINTR != select_errno )
+                TNSERROR("DBG028: select: %s\n", strerror(select_errno));
             continue;
         }
 
@@ -1704,7 +1814,7 @@ BYTE                    unitstat;       /* Status after receive data */
             {
                 TNSERROR("DBG030: connect_client create_thread: %s\n",
                         strerror(errno));
-                close (csock);
+                close (csock); csock = -1;
             }
 
         } /* end if(FD_ISSET(lsock, &readset)) */
@@ -1750,8 +1860,8 @@ BYTE                    unitstat;       /* Status after receive data */
                     /* Remove it from our set */
                     obtain_lock( &console_lock );
                     {
-                    FD_CLR(fd, &o_rset);
-                }
+                        FD_CLR(fd, &o_rset);
+                    }
                     release_lock( &console_lock );
                 }
 
@@ -1806,12 +1916,23 @@ BYTE                    unitstat;       /* Status after receive data */
     {
         int fd;
         for ( fd = c_minfd; fd <= c_maxfd; fd++ )
-        if(FD_ISSET(fd, &c_rset))
-            close(fd);
+            if (FD_ISSET(fd, &c_rset))
+            {
+                dev = find_console_DEVBLK( fd );
+                if (dev)
+                {
+                    close(fd);
+                    dev->fd = -1;
+                    dev->connected = 0;
+                    release_lock( &dev->lock );
+                }
+                else
+                    close(fd);
+            }
     }
 
     /* Close the listening socket */
-    close (lsock);
+    close (lsock); lsock = -1;
     free(server);
 
     logmsg (_("HHCTE004I Console connection thread terminated\n"));
