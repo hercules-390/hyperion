@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+17 Aug 2005 3390-54/3390-JJ support (65520 cyls) - beta - Greg Smith
 16 Aug 2005 Added code to try and fix the old "console: DBG028: select:
             Bad file number" problem that still occassionally occurs,
             and added some code to try and detect what I believe to be
