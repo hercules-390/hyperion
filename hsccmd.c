@@ -92,6 +92,10 @@ int crash_cmd(int argc, char *argv[],char *cmdline)
 	int num_threads;
 	static int didthis = 0;
 
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
 	if (!didthis)
 	{
 		didthis = 1;
@@ -120,14 +124,9 @@ int crash_cmd(int argc, char *argv[],char *cmdline)
 
     broadcast_condition ( &fish_cond );
 
-    return 0;
-    /*
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-    cause_crash();      // (should not return)
+//    cause_crash();      // (should not return)
+
     return 0;           // (make compiler happy)
-    */
 }
 
 ///////////////////////////////////////////////////////////////////////
