@@ -1770,9 +1770,9 @@ BYTE                    unitstat;       /* Status after receive data */
                 // case the condition that's causing it
                 // keeps reoccurring over and over...
 
-                struct timeval  prev = {0,0};
-                struct timeval  curr;
-                struct timeval  diff;
+                static struct timeval  prev = {0,0};
+                       struct timeval  curr;
+                       struct timeval  diff;
 
                 gettimeofday( &curr, NULL );
                 timeval_subtract( &prev, &curr, &diff );
@@ -1792,7 +1792,10 @@ BYTE                    unitstat;       /* Status after receive data */
             else
                 issue_errmsg = 1;
             if ( issue_errmsg && EINTR != select_errno )
+            {
                 TNSERROR("DBG028: select: %s\n", strerror(select_errno));
+                usleep(50000); // (wait a bit; maybe it'll fix itself??)
+            }
             continue;
         }
 
