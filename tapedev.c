@@ -1279,6 +1279,7 @@ int             rc;                     /* Return code               */
     }
 
     /* Return normal status */
+    dev->blockid++;
     return 0;
 
 } /* end function write_hetmark */
@@ -5454,7 +5455,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Block to seek */
         ASSERT( count >= sizeof(locblock) );
-        memcpy( (BYTE*)&locblock, iobuf, sizeof(locblock) );
+
+//      memcpy( (BYTE*)&locblock, iobuf, sizeof(locblock) );
+        FETCH_FW(locblock, iobuf);
 
         /* Check for invalid/reserved Format Mode bits */
         if (0x00C00000 == (locblock & 0x00C00000))
