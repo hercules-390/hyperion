@@ -220,6 +220,7 @@ void sha256_process(sha256_context *ctx, uint8 data[64]);
 static void ARCH_DEP(kimd_query)(int r1, int r2, REGS *regs)
 {
   UNREFERENCED(r1);
+  UNREFERENCED(r2);
 
 #ifdef OPTION_KIMD_DEBUG
   logmsg("  KIMD: function 0: query\n");
@@ -396,6 +397,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
 static void ARCH_DEP(klmd_query)(int r1, int r2, REGS *regs)
 {
   UNREFERENCED(r1);
+  UNREFERENCED(r2);
 
 #ifdef OPTION_KLMD_DEBUG
   logmsg("  KLMD: function 0: query\n");
@@ -677,6 +679,9 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(km_query)(int r1, int r2, REGS *regs)
 {
+  UNREFERENCED(r1);
+  UNREFERENCED(r2);
+  
 #ifdef OPTION_KM_DEBUG
   logmsg("  KM: function 0: query\n");
 #endif
@@ -1097,6 +1102,7 @@ static void ARCH_DEP(km_aes_192)(int r1, int r2, REGS *regs)
 static void ARCH_DEP(kmac_query)(int r1, int r2, REGS *regs)
 {
   UNREFERENCED(r1);
+  UNREFERENCED(r2);
 
 #ifdef OPTION_KMAC_DEBUG
   logmsg("  KMAC: function 0: query\n");
@@ -1394,6 +1400,9 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(kmc_query)(int r1, int r2, REGS *regs)
 {
+  UNREFERENCED(r1);
+  UNREFERENCED(r2);
+
 #ifdef OPTION_KMC_DEBUG
   logmsg("  KMC: function 0: query\n");
 #endif
