@@ -23,11 +23,11 @@
 /*----------------------------------------------------------------------------*/
 /* Debugging options                                                          */
 /*----------------------------------------------------------------------------*/
-//#define OPTION_KM_DEBUG
-//#define OPTION_KMC_DEBUG
-//#define OPTION_KIMD_DEBUG
-//#define OPTION_KLMD_DEBUG
-//#define OPTION_KMAC_DEBUG
+#define OPTION_KM_DEBUG
+#define OPTION_KMC_DEBUG
+#define OPTION_KIMD_DEBUG
+#define OPTION_KLMD_DEBUG
+#define OPTION_KMAC_DEBUG
 
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
@@ -106,8 +106,8 @@
 /*----------------------------------------------------------------------------*/
 /* Write bytes on multiple lines                                              */
 /*----------------------------------------------------------------------------*/
-#define LOGBYTE2(s, v, x, y)    \
-{  \
+#define LOGBYTE2(s, v, x, y) \
+{ \
   int i; \
   int j; \
   \
@@ -116,7 +116,7 @@
   { \
     logmsg("      "); \
     for(j = 0; j < (x); j++) \
-      logmsg("%02X", (v)[i * (y) + j]); \
+      logmsg("%02X", (v)[i * (x) + j]); \
     logmsg("\n"); \
   } \
 }
@@ -151,10 +151,10 @@ void sha1_getcv(sha1_context *ctx, uint8 icv[20])
  
   for(i = 0, j = 0; i < 5; i++)
   { 
-    icv[j++] = ctx->state[i] & 0xff000000 >> 24;
-    icv[j++] = ctx->state[i] & 0x00ff0000 >> 16;
-    icv[j++] = ctx->state[i] & 0x0000ff00 >> 8;
-    icv[j++] = ctx->state[i] & 0x000000ff;
+    icv[j++] = (ctx->state[i] & 0xff000000) >> 24;
+    icv[j++] = (ctx->state[i] & 0x00ff0000) >> 16;
+    icv[j++] = (ctx->state[i] & 0x0000ff00) >> 8;
+    icv[j++] = (ctx->state[i] & 0x000000ff);
   }
 }
 
@@ -1472,7 +1472,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     if(GR0_m(regs))
     {
 
-      /* Save the ovc */
+      /* Save the ocv */
       memcpy(ocv, buffer, 8);
 
       /* Decrypt and XOR */
@@ -1487,7 +1487,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
         buffer[i] ^= cv[i];
       des_encrypt(&context, buffer, buffer);
 
-      /* Save the ovc */
+      /* Save the ocv */
       memcpy(ocv, buffer, 8);
     }
 
@@ -1523,6 +1523,9 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
       regs->psw.cc = 0;
       return;
     }
+
+    /* Set cv for next 8 bytes */
+    memcpy(cv, ocv, 8);
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
@@ -1589,7 +1592,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
     if(GR0_m(regs))
     {
 
-      /* Save the ovc */
+      /* Save the ocv */
       memcpy(ocv, buffer, 8);
 
       /* Decrypt and XOR */
@@ -1608,7 +1611,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
       des_decrypt(&context2, buffer, buffer);
       des_encrypt(&context1, buffer, buffer);
 
-      /* Save the ovc */
+      /* Save the ocv */
       memcpy(ocv, buffer, 8);
     }
 
@@ -1644,6 +1647,9 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
       regs->psw.cc = 0;
       return;
     }
+
+    /* Set cv for next 8 bytes */
+    memcpy(cv, ocv, 8);
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
@@ -1713,7 +1719,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
     if(GR0_m(regs))
     {
 
-      /* Save the ovc */
+      /* Save the ocv */
       memcpy(ocv, buffer, 8);
 
       /* Decrypt and XOR */
@@ -1732,7 +1738,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
       des_decrypt(&context2, buffer, buffer);
       des_encrypt(&context3, buffer, buffer);
 
-      /* Save the ovc */
+      /* Save the ocv */
       memcpy(ocv, buffer, 8);
     }
 
@@ -1768,6 +1774,9 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
       regs->psw.cc = 0;
       return;
     }
+    
+    /* Set cv for next 8 bytes */
+    memcpy(cv, ocv, 8);
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
@@ -1882,6 +1891,9 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
       regs->psw.cc = 0;
       return;
     }
+
+    /* Set cv for next 8 bytes */
+    memcpy(cv, ocv, 8);
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
@@ -1996,6 +2008,9 @@ static void ARCH_DEP(kmc_aes_192)(int r1, int r2, REGS *regs)
       regs->psw.cc = 0;
       return;
     }
+
+    /* Set cv for next 8 bytes */
+    memcpy(cv, ocv, 8);
   }
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
@@ -2242,7 +2257,7 @@ HDL_REGISTER_SECTION;
   HDL_REGISTER(z900_compute_message_authentication_code, z900_compute_message_authentication_code_d);
 #endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
-  logmsg("Crypto module loaded\n");
+  logmsg("Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2005\n");
 
 }
 END_REGISTER_SECTION;

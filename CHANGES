@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+24 Aug 2005 Some crypto errors - Bernard van der Helm
 17 Aug 2005 tapedev.c: fix locblock endianess issue in LOCATE BLOCK logic,
             add missing blockid increment in write_hetmark - Andy Styles
             [andy@styles.homeip.net] and John Decker [jdecker@oaksg.com]
