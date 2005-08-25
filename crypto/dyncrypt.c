@@ -23,11 +23,11 @@
 /*----------------------------------------------------------------------------*/
 /* Debugging options                                                          */
 /*----------------------------------------------------------------------------*/
-#define OPTION_KM_DEBUG
-#define OPTION_KMC_DEBUG
-#define OPTION_KIMD_DEBUG
-#define OPTION_KLMD_DEBUG
-#define OPTION_KMAC_DEBUG
+//#define OPTION_KM_DEBUG
+//#define OPTION_KMC_DEBUG
+//#define OPTION_KIMD_DEBUG
+//#define OPTION_KLMD_DEBUG
+//#define OPTION_KMAC_DEBUG
 
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
