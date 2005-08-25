@@ -43,7 +43,7 @@
 /*----------------------------------------------------------------------------*/
 #define KIMD_QUERY      0
 #define KIMD_SHA_1      1
-#define KIMD_SHA_256    2
+#define KIMD_SHA_2      2
 #define KIMD_MAX_FC     2
 #define KIMD_BITS       { 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
@@ -52,7 +52,7 @@
 /*----------------------------------------------------------------------------*/
 #define KLMD_QUERY      0
 #define KLMD_SHA_1      1
-#define KLMD_SHA_256    2
+#define KLMD_SHA_2      2
 #define KLMD_MAX_FC     2
 #define KLMD_BITS       { 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
@@ -177,23 +177,23 @@ void sha1_seticv(sha1_context *ctx, uint8 icv[20])
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
-void sha256_getcv(sha256_context *ctx, uint8 icv[32])
+void sha2_getcv(sha256_context *ctx, uint8 icv[32])
 {
   int i, j;
  
   for(i = 0, j = 0; i < 8; i++)
   {
-    icv[j++] = ctx->state[i] & 0xff000000 >> 24;
-    icv[j++] = ctx->state[i] & 0x00ff0000 >> 16;
-    icv[j++] = ctx->state[i] & 0x0000ff00 >> 8;
-    icv[j++] = ctx->state[i] & 0x000000ff;
+    icv[j++] = (ctx->state[i] & 0xff000000) >> 24;
+    icv[j++] = (ctx->state[i] & 0x00ff0000) >> 16;
+    icv[j++] = (ctx->state[i] & 0x0000ff00) >> 8;
+    icv[j++] = (ctx->state[i] & 0x000000ff);
   }
 }
 
 /*----------------------------------------------------------------------------*/
 /* Set the initial chaining value                                             */
 /*----------------------------------------------------------------------------*/
-void sha256_seticv(sha256_context *ctx, uint8 icv[32])
+void sha2_seticv(sha256_context *ctx, uint8 icv[32])
 {
   int i, j;
 
@@ -315,7 +315,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 /* B93E Compute intermediate message digest (KIMD) FC 2                       */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
+static void ARCH_DEP(kimd_sha_2)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[64];
   int crypted;
@@ -325,7 +325,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
   UNREFERENCED(r1);
 
 #ifdef OPTION_KIMD_DEBUG
-  logmsg("  KIMD: function 2: sha-256\n");
+  logmsg("  KIMD: function 2: sha-2\n");
 #endif
 
   /* Check special conditions */
@@ -344,7 +344,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
 
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 31, GR_A(1, regs), 1, regs);
-  sha256_seticv(&context, cv);
+  sha2_seticv(&context, cv);
 
 #ifdef OPTION_KIMD_DEBUG
   LOGBYTE("icv   :", cv, 32);
@@ -364,7 +364,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
     sha256_process(&context, buffer);
 
     /* Store the output chaining value */
-    sha256_getcv(&context, cv);
+    sha2_getcv(&context, cv);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
@@ -545,7 +545,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 /* B93F Compute last message digest (KLMD) FC 2                               */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
+static void ARCH_DEP(klmd_sha_2)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[64];
   int crypted;
@@ -556,7 +556,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   UNREFERENCED(r1);
 
 #ifdef OPTION_KLMD_DEBUG
-  logmsg("  KLMD: function 2: sha-256\n");
+  logmsg("  KLMD: function 2: sha-2\n");
 #endif
 
   /* Check special conditions */
@@ -568,7 +568,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 31, GR_A(1, regs), 1, regs);
-  sha256_seticv(&context, cv);
+  sha2_seticv(&context, cv);
 
 #ifdef OPTION_KLMD_DEBUG
   LOGBYTE("icv   :", cv, 32);
@@ -592,7 +592,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
     sha256_process(&context, buffer);
 
     /* Store the output chaining value */
-    sha256_getcv(&context, cv);
+    sha2_getcv(&context, cv);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -654,7 +654,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 
   /* Calculate and store the message digest */
   sha256_process(&context, buffer);
-  sha256_getcv(&context, cv);
+  sha2_getcv(&context, cv);
   ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
@@ -2023,14 +2023,14 @@ static void (*ARCH_DEP(kimd)[KIMD_MAX_FC + 1])(int r1, int r2, REGS *regs) =
 {
   ARCH_DEP(kimd_query),
   ARCH_DEP(kimd_sha_1),
-  ARCH_DEP(kimd_sha_256)
+  ARCH_DEP(kimd_sha_2)
 };
 
 static void (*ARCH_DEP(klmd)[KLMD_MAX_FC + 1])(int r1, int r2, REGS *regs) =
 {
   ARCH_DEP(klmd_query),
   ARCH_DEP(klmd_sha_1),
-  ARCH_DEP(klmd_sha_256)
+  ARCH_DEP(klmd_sha_2)
 };
 
 static void (*ARCH_DEP(km)[KM_MAX_FC + 1])(int r1, int r2, REGS *regs) =
