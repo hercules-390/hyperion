@@ -43,7 +43,7 @@
 /*----------------------------------------------------------------------------*/
 #define KIMD_QUERY      0
 #define KIMD_SHA_1      1
-#define KIMD_SHA_2      2
+#define KIMD_SHA_256    2
 #define KIMD_MAX_FC     2
 #define KIMD_BITS       { 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
@@ -52,7 +52,7 @@
 /*----------------------------------------------------------------------------*/
 #define KLMD_QUERY      0
 #define KLMD_SHA_1      1
-#define KLMD_SHA_2      2
+#define KLMD_SHA_256    2
 #define KLMD_MAX_FC     2
 #define KLMD_BITS       { 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
@@ -289,7 +289,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
     ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
-  LOGBYTE("ocv   :", cv, 20);
+    LOGBYTE("ocv   :", cv, 20);
 #endif
 
     /* Update the registers */
@@ -315,7 +315,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 /* B93E Compute intermediate message digest (KIMD) FC 2                       */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(kimd_sha_2)(int r1, int r2, REGS *regs)
+static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[64];
   int crypted;
@@ -325,7 +325,7 @@ static void ARCH_DEP(kimd_sha_2)(int r1, int r2, REGS *regs)
   UNREFERENCED(r1);
 
 #ifdef OPTION_KIMD_DEBUG
-  logmsg("  KIMD: function 2: sha-2\n");
+  logmsg("  KIMD: function 2: sha-256\n");
 #endif
 
   /* Check special conditions */
@@ -368,7 +368,7 @@ static void ARCH_DEP(kimd_sha_2)(int r1, int r2, REGS *regs)
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
-  LOGBYTE("ocv   :", cv, 32);
+    LOGBYTE("ocv   :", cv, 32);
 #endif
 
     /* Update the registers */
@@ -464,7 +464,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
     ARCH_DEP(vstorec)(cv, 19, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
-  LOGBYTE("ocv   :", cv, 20);
+    LOGBYTE("ocv   :", cv, 20);
 #endif
 
     /* Update the registers */
@@ -545,7 +545,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 /*----------------------------------------------------------------------------*/
 /* B93F Compute last message digest (KLMD) FC 2                               */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(klmd_sha_2)(int r1, int r2, REGS *regs)
+static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 {
   BYTE buffer[64];
   int crypted;
@@ -2023,14 +2023,14 @@ static void (*ARCH_DEP(kimd)[KIMD_MAX_FC + 1])(int r1, int r2, REGS *regs) =
 {
   ARCH_DEP(kimd_query),
   ARCH_DEP(kimd_sha_1),
-  ARCH_DEP(kimd_sha_2)
+  ARCH_DEP(kimd_sha_256)
 };
 
 static void (*ARCH_DEP(klmd)[KLMD_MAX_FC + 1])(int r1, int r2, REGS *regs) =
 {
   ARCH_DEP(klmd_query),
   ARCH_DEP(klmd_sha_1),
-  ARCH_DEP(klmd_sha_2)
+  ARCH_DEP(klmd_sha_256)
 };
 
 static void (*ARCH_DEP(km)[KM_MAX_FC + 1])(int r1, int r2, REGS *regs) =
