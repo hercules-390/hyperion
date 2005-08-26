@@ -177,7 +177,7 @@ void sha1_seticv(sha1_context *ctx, uint8 icv[20])
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
-void sha2_getcv(sha256_context *ctx, uint8 icv[32])
+void sha256_getcv(sha256_context *ctx, uint8 icv[32])
 {
   int i, j;
  
@@ -193,7 +193,7 @@ void sha2_getcv(sha256_context *ctx, uint8 icv[32])
 /*----------------------------------------------------------------------------*/
 /* Set the initial chaining value                                             */
 /*----------------------------------------------------------------------------*/
-void sha2_seticv(sha256_context *ctx, uint8 icv[32])
+void sha256_seticv(sha256_context *ctx, uint8 icv[32])
 {
   int i, j;
 
@@ -344,7 +344,7 @@ static void ARCH_DEP(kimd_sha_2)(int r1, int r2, REGS *regs)
 
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 31, GR_A(1, regs), 1, regs);
-  sha2_seticv(&context, cv);
+  sha256_seticv(&context, cv);
 
 #ifdef OPTION_KIMD_DEBUG
   LOGBYTE("icv   :", cv, 32);
@@ -364,7 +364,7 @@ static void ARCH_DEP(kimd_sha_2)(int r1, int r2, REGS *regs)
     sha256_process(&context, buffer);
 
     /* Store the output chaining value */
-    sha2_getcv(&context, cv);
+    sha256_getcv(&context, cv);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KIMD_DEBUG
@@ -568,7 +568,7 @@ static void ARCH_DEP(klmd_sha_2)(int r1, int r2, REGS *regs)
 
   /* Fetch and set initial chaining value */
   ARCH_DEP(vfetchc)(cv, 31, GR_A(1, regs), 1, regs);
-  sha2_seticv(&context, cv);
+  sha256_seticv(&context, cv);
 
 #ifdef OPTION_KLMD_DEBUG
   LOGBYTE("icv   :", cv, 32);
@@ -592,11 +592,11 @@ static void ARCH_DEP(klmd_sha_2)(int r1, int r2, REGS *regs)
     sha256_process(&context, buffer);
 
     /* Store the output chaining value */
-    sha2_getcv(&context, cv);
+    sha256_getcv(&context, cv);
     ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
-  LOGBYTE("ocv   :", cv, 32);
+    LOGBYTE("ocv   :", cv, 32);
 #endif
 
     /* Update the registers */
@@ -654,7 +654,7 @@ static void ARCH_DEP(klmd_sha_2)(int r1, int r2, REGS *regs)
 
   /* Calculate and store the message digest */
   sha256_process(&context, buffer);
-  sha2_getcv(&context, cv);
+  sha256_getcv(&context, cv);
   ARCH_DEP(vstorec)(cv, 31, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KLMD_DEBUG
