@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+30 Aug 2005 dasdtab entries for 3990 model 3 and 6 - Roger Bowler
 26 Aug 2005 Sha256 fixes and passed FIPS 180-2 tests - Bernard van der Helm
 25 Aug 2005 Crypto module is build during compile - Bernard van der Helm
 24 Aug 2005 Some crypto errors - Bernard van der Helm
