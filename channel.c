@@ -1809,7 +1809,8 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Return condition code 2 if device is busy */
-    if (dev->busy && dev->ioactive == DEV_SYS_LOCAL)
+    if ((dev->busy && dev->ioactive == DEV_SYS_LOCAL)
+     || dev->startpending)
     {
         release_lock (&dev->lock);
         return 2;
