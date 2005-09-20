@@ -1326,7 +1326,7 @@ U64     n;                              /* 64-bit operand values     */
 
     if(n == 0
       || ((S64)n == -1LL &&
-          regs->GR_G(r1) == 0x8000000000000000ULL))
+          regs->GR_G(r1 + 1) == 0x8000000000000000ULL))
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
     regs->GR_G(r1) = (S64)regs->GR_G(r1 + 1) % (S64)n;
@@ -1356,7 +1356,7 @@ U32     n;                              /* 64-bit operand values     */
 
     if(n == 0
       || ((S32)n == -1 &&
-          regs->GR_G(r1) == 0x8000000000000000ULL))
+          regs->GR_G(r1 + 1) == 0x8000000000000000ULL))
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
     regs->GR_G(r1) = (S64)regs->GR_G(r1 + 1) % (S32)n;
@@ -1381,7 +1381,7 @@ U64     n;
 
     if(regs->GR_G(r2) == 0
       || ((S64)regs->GR_G(r2) == -1LL &&
-          regs->GR_G(r1) == 0x8000000000000000ULL))
+          regs->GR_G(r1 + 1) == 0x8000000000000000ULL))
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
     n = regs->GR_G(r2);
@@ -1409,7 +1409,7 @@ U32     n;
 
     if(regs->GR_L(r2) == 0
       || ((S32)regs->GR_L(r2) == -1 &&
-          regs->GR_G(r1) == 0x8000000000000000ULL))
+          regs->GR_G(r1 + 1) == 0x8000000000000000ULL))
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
     n = regs->GR_L(r2);

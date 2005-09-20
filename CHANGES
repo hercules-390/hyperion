@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+20 Sep 2005 Fix divide_single fixed-point-divide-exception check - Greg
 16 Sep 2005 startio should return cc 2 if startpending is on - Greg
 30 Aug 2005 dasdtab entries for 3990 model 3 and 6 - Roger Bowler
 26 Aug 2005 Sha256 fixes and passed FIPS 180-2 tests - Bernard van der Helm
