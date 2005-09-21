@@ -8,7 +8,8 @@
 #ifndef _HERCULES_MACHDEP_H
 #define _HERCULES_MACHDEP_H 1
 
-#include "esa390.h"
+#include "opcode.h"         // (need CSWAP32, et.al macros, etc)
+#include "htypes.h"         // (need Hercules fixed-size data types)
 
 #undef ASSIST_CMPXCHG1
 #undef ASSIST_CMPXCHG4
@@ -668,16 +669,55 @@ static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volati
 #define MEMSET(_to, _c, _n) memset((_to), (_c), (_n))
 #endif
 
-static __inline__ void concpy(void *dest, void *src, size_t n)
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*                    PROGRAMMING NOTE                               */
+/*                                                                   */
+/*  The Principles of Operation manual (SA22-7832-03) describes,     */
+/*  on page 5-99, "Block-Concurrent References" as follows:          */
+/*                                                                   */
+/*                                                                   */
+/*              "Block-Concurrent References"                        */
+/*                                                                   */
+/*      "For some references, the accesses to all bytes              */
+/*       within a halfword, word, doubleword, or quadword            */
+/*       are specified to appear to be block concurrent as           */
+/*       observed by other CPUs. These accesses do not               */
+/*       necessarily appear to channel programs to include           */
+/*       more than a byte at a time. The halfword, word,             */
+/*       doubleword, or quadword is referred to in this              */
+/*       section as a block."                                        */
+/*                                                                   */
+/*      "When a fetch-type reference is specified to appear          */
+/*       to be concurrent within a block, no store access to         */
+/*       the block by another CPU is permitted during the time       */
+/*       that bytes contained in the block are being fetched.        */
+/*       Accesses to the bytes within the block by channel           */
+/*       programs may occur between the fetches."                    */
+/*                                                                   */
+/*      "When a storetype reference is specified to appear to        */
+/*       be concurrent within a block, no access to the block,       */
+/*       either fetch or store, is permitted by another CPU          */
+/*       during the time that the bytes within the block are         */
+/*       being stored. Accesses to the bytes in the block by         */
+/*       channel programs may occur between the stores."             */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+static __inline__ void concpy ( void *_dest, void *_src, size_t n )
 {
  size_t n2;
+ BYTE *dest,*src;
+
+    dest = (BYTE*) _dest;
+    src  = (BYTE*) _src;
 
     /* Special processing for short lengths or overlap */
     if (n < 8
      || ((dest <= src && dest + 4 >= src)
       || (src <= dest && src + 4 >= dest)))
     {
-        for ( ; n; n--) *(BYTE *)dest++ = *(BYTE *)src++;
+        for ( ; n; n--) *(dest++) = *(src++);
         return;
     }
 
@@ -686,13 +726,13 @@ static __inline__ void concpy(void *dest, void *src, size_t n)
     if (n2 < 8)
     {
         n -= n2;
-        for ( ; n2; n2--) *(BYTE *)dest++ = *(BYTE *)src++;
+        for ( ; n2; n2--) *(dest++) = *(src++);
     }
 
     /* copy double words */
     if (n >= 8)
     {
-#if defined(ASSIST_FETCH_DW) && defined(ASSIST_STORE_DW)
+#if defined(ASSIST_CMPXCHG8)
         /* copy unaligned double-words */
         if ((int)src & 7)
             do {
@@ -705,12 +745,25 @@ static __inline__ void concpy(void *dest, void *src, size_t n)
             } while (n >= 8);
         /* copy aligned double-words */
         else
+        {
             do {
-                store_dw(dest, fetch_dw(src));
+                U64 new_src_dw;
+                U64 old_dest_dw;
+
+                /* fetch src value */
+                new_src_dw = *(U64*)src;
+                while ( cmpxchg8( &new_src_dw, new_src_dw, (U64*)src ) );
+
+                /* store into dest */
+                old_dest_dw = *(U64*)dest;
+                while ( cmpxchg8( &old_dest_dw, new_src_dw, (U64*)dest ) );
+
+                /* Adjust ptrs & counters */
                 dest += 8;
                 src += 8;
                 n -= 8;
             } while (n >= 8);
+        }
 #else
         do {
             U64 temp;
@@ -724,7 +777,7 @@ static __inline__ void concpy(void *dest, void *src, size_t n)
     }
 
     /* copy the left-overs */
-    for ( ; n; n--) *(BYTE *)dest++ = *(BYTE *)src++;
+    for ( ; n; n--) *(dest++) = *(src++);
 }
 
 #endif /* _HERCULES_MACHDEP_H */

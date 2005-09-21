@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+21 Sep 2005 tweak concpy to avoid double byteswap - Fish
 20 Sep 2005 Fix divide_single fixed-point-divide-exception check - Greg
 16 Sep 2005 startio should return cc 2 if startpending is on - Greg
 30 Aug 2005 dasdtab entries for 3990 model 3 and 6 - Roger Bowler
