@@ -296,7 +296,8 @@ int             fdflags;                /* File flags                */
 
     /* Initialize some variables */
     obtain_lock (&cckd->filelock);
-    cckd->l1x = cckd->sfx = dev->cache = cckd->free1st = -1;
+    cckd->l1x = cckd->sfx = cckd->l2active = -1;
+    dev->cache = cckd->free1st = -1;
     cckd->fd[0] = dev->fd;
     fdflags = fcntl (dev->fd, F_GETFL);
     cckd->open[0] = (fdflags & O_RDWR) ? CCKD_OPEN_RW : CCKD_OPEN_RO;
