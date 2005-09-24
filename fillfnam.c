@@ -1,9 +1,4 @@
-#include <dirent.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include "hstdinc.h"
 #include "hercules.h"
 #include "fillfnam.h"
 
@@ -34,6 +29,7 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   char *buff;
   char *filename, *path, *tmp;
   char result[1024];
+  BYTE pathname[MAX_PATH];
 
   /* part3 goes from cursor position to the end of line */
   part3 = cmdlinefull + cmdoff;
@@ -73,7 +69,7 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   n = scandir(path, &namelist, filter, alphasort);
   if (n > 0) {
     for (i=0; i<n; i++) {
-      struct stat buf;
+      struct STAT buf;
       char fullfilename[256];
       /* namelist[i]->d_name contains filtered filenames, check if they are
          directories with stat(), before that create whole path */
@@ -82,7 +78,8 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
       else
          sprintf(fullfilename, "%s", namelist[i]->d_name);
       /* if it is a directory, add '/' to the end so it can be seen on screen*/
-      if (stat(fullfilename,&buf) == 0)
+      hostpath(pathname, fullfilename, sizeof(pathname));
+      if (STAT(pathname,&buf) == 0)
          if (buf.st_mode & S_IFDIR) {
             strcat(namelist[i]->d_name,"/");
          }

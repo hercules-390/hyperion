@@ -5,55 +5,15 @@
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
+#include "hstdinc.h"
 
-// Programming Note for myself for future maintenance: this logic could probably be
-// made MUCH more  efficient by simply 'malloc'ing one large block of memory at the
-// start and carving it up into several "free" chains and then just grabbing entries
-// from there (i.e. RemoveListHead from the "free" list and InsertListHead to needed
-// list) rather than constantly 'malloc'ing and 'free'ing brand new structures each
-// time like I am now. I've just never "gotten a round tuit" yet, that's all.
+#define _FISHHANG_C_
+#define _HUTIL_DLL_
 
+#include "hercules.h"
+#include "fishhang.h"       // (prototypes for this module)
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>     // (needed to set FISH_HANG flag!)
-#endif
-
-#if !defined(FISH_HANG)
-int dummy = 0;
-#else // defined(FISH_HANG)
-
-#include <windows.h>    // (standard WIN32)
-#include <unistd.h>     // (need STDOUT_FILENO)
-#include <stdio.h>      // (need "fprintf")
-#include <malloc.h>     // (need "malloc")
-#include "linklist.h"   // (linked list macros)
-#include "fishhang.h"   // (prototypes for this module)
-
-////////////////////////////////////////////////////////////////////////////////////
-
-#define logmsg(a...) fprintf(fh_stdout_stream,a)
-
-////////////////////////////////////////////////////////////////////////////////////
-
-//#define DEBUG_FISHHANG
-
-#ifdef DEBUG_FISHHANG
-    #define TRACE(a...) logmsg(a)
-    #define ASSERT(a) \
-        do \
-        { \
-            if (!(a)) \
-            { \
-                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
-            } \
-        } \
-        while(0)
-    #define VERIFY(a) ASSERT((a))
-#else
-    #define TRACE(a...)
-    #define ASSERT(a)
-    #define VERIFY(a) ((void)(a))
-#endif
+#if defined(FISH_HANG)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Global variables...
@@ -68,7 +28,27 @@ CRITICAL_SECTION                                ListsLock;
 #define LockFishHang()   (EnterCriticalSection(&ListsLock))
 #define UnlockFishHang() (LeaveCriticalSection(&ListsLock))
 
-BOOL  bFishHangAtExit = FALSE;  // (set before exiting to disable some error checking)
+// bFishHangAtExit is set before exiting to disable some error checking...
+
+DLL_EXPORT
+BOOL  bFishHangAtExit = FALSE;
+
+//////////////////////////////////////////////////////////////////////////////////
+// We need to use our own private report o/p stream since
+// the logger thread uses fthreads and thus fishhang too!
+
+FILE*  fh_report_stream = NULL;
+
+#define  logmsg  FishHang_Printf
+
+DLL_EXPORT
+void FishHang_Printf( const char* pszFormat, ... )
+{
+    va_list   vl;
+    va_start( vl, pszFormat );
+    vfprintf( fh_report_stream, pszFormat, vl );
+    fflush( fh_report_stream );
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 // Thread information...   (locks it owns, which lock/event it's waiting on, etc)
@@ -77,7 +57,7 @@ typedef struct _tagFishThread
 {
     DWORD       dwCreatingThreadID;     // threadid that created it
     SYSTEMTIME  timeCreated;            // time created
-    char*       pszFileCreated;         // source file that created it
+    const char* pszFileCreated;         // source file that created it
     int         nLineCreated;           // line number of source file
 
     //////////////////////////////////////////////////////////////////
@@ -95,7 +75,7 @@ typedef struct _tagFishThread
     void*       pWhatWaiting;           // ptr to FISH_LOCK last attempted to be signalled
                                         // -or- to FISH_EVENT last waited to be posted
                                         // (NOTE: must manually cast to whichever type)
-    char*       pszFileWaiting;         // source file where attempt/wait occured
+    const char* pszFileWaiting;         // source file where attempt/wait occured
     int         nLineWaiting;           // line number of source file
     SYSTEMTIME  timeWaiting;            // time when attempt/wait occured
 }
@@ -108,7 +88,7 @@ typedef struct _tagFishLock
 {
     DWORD       dwCreatingThreadID;     // threadid that created it
     SYSTEMTIME  timeCreated;            // time created
-    char*       pszFileCreated;         // source file that created it
+    const char* pszFileCreated;         // source file that created it
     int         nLineCreated;           // line number of source file
 
     //////////////////////////////////////////////////////////////////
@@ -130,7 +110,7 @@ typedef struct _tagFishEvent
 {
     DWORD       dwCreatingThreadID;     // threadid that created it
     SYSTEMTIME  timeCreated;            // time created
-    char*       pszFileCreated;         // source file that created it
+    const char* pszFileCreated;         // source file that created it
     int         nLineCreated;           // line number of source file
 
     //////////////////////////////////////////////////////////////////
@@ -140,32 +120,46 @@ typedef struct _tagFishEvent
 
     FISH_THREAD*  pWhoSet;              // ptr to FISH_THREAD that set it
     SYSTEMTIME    timeSet;              // time set
-    char*         pszFileSet;           // source file that set it
+    const char*   pszFileSet;           // source file that set it
     int           nLineSet;             // line number of source file
 
     FISH_THREAD*  pWhoReset;            // ptr to FISH_THREAD that reset it
     SYSTEMTIME    timeReset;            // time reset
-    char*         pszFileReset;         // source file that reset it
+    const char*   pszFileReset;         // source file that reset it
     int           nLineReset;           // line number of source file
 }
 FISH_EVENT;
 
 /////////////////////////////////////////////////////////////////////////////
+// Macro to remove Microsoft's stupid fullpath from __FILE__ name...
+
+#define FIXFILENAME( filename )           \
+    do { if ( filename ) {                \
+    char* p = strrchr( filename, '\\' );  \
+    if (!p) p = strrchr( filename, '/' ); \
+    if (p) filename = p+1; } } while (0)
+
+
+/////////////////////////////////////////////////////////////////////////////
 // (forward references...)
 
-FISH_THREAD* CreateFISH_THREAD(char* pszFileCreated,int nLineCreated);
+FISH_THREAD* CreateFISH_THREAD( const char* pszFileCreated, const int nLineCreated );
 
 /////////////////////////////////////////////////////////////////////////////
 // Initialize global variables...
 
-FILE*  fh_stdout_stream = NULL;  // (because logger thread screws me up)
-
-void FishHangInit(char* pszFileCreated, int nLineCreated)
+DLL_EXPORT
+void FishHangInit( const char* pszFileCreated, const int nLineCreated )
 {
     FISH_THREAD*  pFISH_THREAD;
 
-    // (Need private stdout stream because of new logger facility)
-    setvbuf((fh_stdout_stream = fdopen(dup(STDOUT_FILENO),"w")), NULL, _IONBF, 0);
+    FIXFILENAME(pszFileCreated);
+
+    if ( !( fh_report_stream = fopen( "FishHangReport.txt", "w" ) ) )
+    {
+        perror( "FishHang report o/p file open failure" );
+        abort();
+    }
 
     InitializeListHead(&ThreadsListHead);
     InitializeListHead(&LocksListHead);
@@ -174,7 +168,7 @@ void FishHangInit(char* pszFileCreated, int nLineCreated)
 
     if (!(pFISH_THREAD = CreateFISH_THREAD(pszFileCreated,nLineCreated)))
     {
-        fprintf(fh_stdout_stream,"** FishHangInit: CreateFISH_THREAD failed\n");
+        logmsg("** FishHangInit: CreateFISH_THREAD failed\n");
         exit(-1);
     }
 
@@ -185,6 +179,7 @@ void FishHangInit(char* pszFileCreated, int nLineCreated)
 /////////////////////////////////////////////////////////////////////////////
 // Indicate we're about to exit...  (disables some error checking)
 
+DLL_EXPORT
 void FishHangAtExit()
 {
     bFishHangAtExit = TRUE;
@@ -206,8 +201,8 @@ void FishHangAtExit()
 
 FISH_THREAD*  CreateFISH_THREAD
 (
-    char*  pszFileCreated,  // source file that created it;
-    int    nLineCreated     // line number of source file;
+    const char*  pszFileCreated,  // source file that created it;
+    const int    nLineCreated     // line number of source file;
 )
 {
     FISH_THREAD*  pFISH_THREAD = malloc(sizeof(FISH_THREAD));
@@ -215,6 +210,8 @@ FISH_THREAD*  CreateFISH_THREAD
     if (!pFISH_THREAD) return NULL;
 
     GetSystemTime(&pFISH_THREAD->timeCreated);
+
+    FIXFILENAME(pszFileCreated);
 
     pFISH_THREAD->dwCreatingThreadID = GetCurrentThreadId();
     pFISH_THREAD->pszFileCreated     = pszFileCreated;
@@ -240,8 +237,8 @@ FISH_THREAD*  CreateFISH_THREAD
 
 FISH_LOCK*  CreateFISH_LOCK
 (
-    char*  pszFileCreated,  // source file that created it;
-    int    nLineCreated     // line number of source file;
+    const char*  pszFileCreated,  // source file that created it;
+    const int    nLineCreated     // line number of source file;
 )
 {
     FISH_LOCK*  pFISH_LOCK = malloc(sizeof(FISH_LOCK));
@@ -249,6 +246,8 @@ FISH_LOCK*  CreateFISH_LOCK
     if (!pFISH_LOCK) return NULL;
 
     GetSystemTime(&pFISH_LOCK->timeCreated);
+
+    FIXFILENAME(pszFileCreated);
 
     pFISH_LOCK->dwCreatingThreadID = GetCurrentThreadId();
     pFISH_LOCK->pszFileCreated     = pszFileCreated;
@@ -268,8 +267,8 @@ FISH_LOCK*  CreateFISH_LOCK
 
 FISH_EVENT*  CreateFISH_EVENT
 (
-    char*   pszFileCreated,     // source file that created it;
-    int     nLineCreated        // line number of source file;
+    const char*   pszFileCreated,     // source file that created it;
+    const int     nLineCreated        // line number of source file;
 )
 {
     FISH_EVENT*  pFISH_EVENT = malloc(sizeof(FISH_EVENT));
@@ -277,6 +276,8 @@ FISH_EVENT*  CreateFISH_EVENT
     if (!pFISH_EVENT) return NULL;
 
     GetSystemTime(&pFISH_EVENT->timeCreated);
+
+    FIXFILENAME(pszFileCreated);
 
     pFISH_EVENT->dwCreatingThreadID = GetCurrentThreadId();
     pFISH_EVENT->pszFileCreated     = pszFileCreated;
@@ -407,7 +408,7 @@ char*  PrintFISH_THREAD
         ThreadLockListLink = NULL;
     }
 
-    sprintf(PrintFISH_THREADBuffer,
+    snprintf(PrintFISH_THREADBuffer,sizeof(PrintFISH_THREADBuffer),
         "THREAD @ %8.8X\n"
         "         bWaitingForLock    = %s\n"
         "         bTryingForLock     = %s\n"
@@ -445,6 +446,8 @@ char*  PrintFISH_THREAD
             (int)pFISH_THREAD->nLineCreated,
             (int)ThreadListLink
         );
+
+    PrintFISH_THREADBuffer[ sizeof(PrintFISH_THREADBuffer) - 1 ] = 0;
 
     return PrintFISH_THREADBuffer;
 }
@@ -500,7 +503,7 @@ char*  PrintFISH_LOCK
         }
     }
 
-    sprintf(PrintFISH_LOCKBuffer,
+    snprintf(PrintFISH_LOCKBuffer,sizeof(PrintFISH_LOCKBuffer),
         "LOCK @ %8.8X\n"
         "       pOwningThread      = %8.8X\n"
         "       nLockedDepth       = %d\n"
@@ -525,6 +528,8 @@ char*  PrintFISH_LOCK
             (int)pFISH_LOCK->pLock,
             (int)LockListLink
         );
+
+    PrintFISH_LOCKBuffer[ sizeof(PrintFISH_LOCKBuffer) - 1 ] = 0;
 
     return PrintFISH_LOCKBuffer;
 }
@@ -551,7 +556,7 @@ char*  PrintFISH_EVENT
     }
     else EventsListLink = (FISH_EVENT*) &EventsListHead;
 
-    sprintf(PrintFISH_EVENTBuffer,
+    snprintf(PrintFISH_EVENTBuffer,sizeof(PrintFISH_EVENTBuffer),
         "EVENT @ %8.8X\n"
         "        timeSet            = %2.2d:%2.2d:%2.2d.%3.3d\n"
         "        pszFileSet         = %s\n"
@@ -592,6 +597,8 @@ char*  PrintFISH_EVENT
             (int)pFISH_EVENT->hEvent,
             (int)EventsListLink
         );
+
+    PrintFISH_EVENTBuffer[ sizeof(PrintFISH_EVENTBuffer) - 1 ] = 0;
 
     return PrintFISH_EVENTBuffer;
 }
@@ -679,10 +686,11 @@ void  PrintAllFISH_EVENTs()
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 HANDLE FishHang_CreateThread
 (
-    char*  pszFileCreated,  // source file that created it
-    int    nLineCreated,    // line number of source file
+    const char*  pszFileCreated,  // source file that created it
+    const int    nLineCreated,    // line number of source file
 
     LPSECURITY_ATTRIBUTES   lpThreadAttributes, // pointer to security attributes
     DWORD                   dwStackSize,        // initial thread stack size
@@ -694,6 +702,8 @@ HANDLE FishHang_CreateThread
 {
     FISH_THREAD*  pFISH_THREAD;
     HANDLE        hThread;
+
+    FIXFILENAME(pszFileCreated);
 
     if (!(pFISH_THREAD = CreateFISH_THREAD(pszFileCreated,nLineCreated))) return NULL;
 
@@ -725,15 +735,18 @@ HANDLE FishHang_CreateThread
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 void FishHang_InitializeCriticalSection
 (
-    char*  pszFileCreated,  // source file that created it
-    int    nLineCreated,    // line number of source file
+    const char*  pszFileCreated,  // source file that created it
+    const int    nLineCreated,    // line number of source file
 
     LPCRITICAL_SECTION lpCriticalSection   // address of critical section object
 )
 {
     FISH_LOCK*  pFISH_LOCK;
+
+    FIXFILENAME(pszFileCreated);
 
     LockFishHang();
 
@@ -836,14 +849,16 @@ BOOL GetThreadAndEventPtrs
 BOOL  PrintDeadlock
 (
     FISH_THREAD*  pForThisFISH_THREAD,  // thread to check
-    char*         pszFile,              // source file (may be NULL)
-    int           nLine                 // line number of source file
+    const char*         pszFile,        // source file (may be NULL)
+    const int           nLine           // line number of source file
 )
 {
     LIST_ENTRY*   pListEntry;
     FISH_THREAD*  pFISH_THREAD;
     FISH_LOCK*    pWhatWaiting;
     FISH_THREAD*  pOwningThread;
+
+    FIXFILENAME(pszFile);
 
     // Technique: for each thread that is waiting for a lock, chase the lock owner
     // chain to see if it leads back to the thread we started with...
@@ -952,16 +967,19 @@ BOOL  PrintDeadlock
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 void FishHang_EnterCriticalSection
 (
-    char*  pszFileWaiting,  // source file that attempted it
-    int    nLineWaiting,    // line number of source file
+    const char*  pszFileWaiting,  // source file that attempted it
+    const int    nLineWaiting,    // line number of source file
 
     LPCRITICAL_SECTION lpCriticalSection   // address of critical section object
 )
 {
     FISH_THREAD*  pFISH_THREAD;
     FISH_LOCK*    pFISH_LOCK;
+
+    FIXFILENAME(pszFileWaiting);
 
     LockFishHang();
 
@@ -1004,10 +1022,11 @@ void FishHang_EnterCriticalSection
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 BOOL FishHang_TryEnterCriticalSection
 (
-    char*  pszFileWaiting,  // source file that attempted it
-    int    nLineWaiting,    // line number of source file
+    const char*  pszFileWaiting,  // source file that attempted it
+    const int    nLineWaiting,    // line number of source file
 
     LPCRITICAL_SECTION lpCriticalSection   // address of critical section object
 )
@@ -1015,6 +1034,8 @@ BOOL FishHang_TryEnterCriticalSection
     FISH_THREAD*  pFISH_THREAD;
     FISH_LOCK*    pFISH_LOCK;
     BOOL          bSuccess;
+
+    FIXFILENAME(pszFileWaiting);
 
     LockFishHang();
 
@@ -1063,16 +1084,19 @@ BOOL FishHang_TryEnterCriticalSection
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 void FishHang_LeaveCriticalSection
 (
-    char*  pszFileReleasing,    // source file that attempted it
-    int    nLineReleasing,      // line number of source file
+    const char*  pszFileReleasing,    // source file that attempted it
+    const int    nLineReleasing,      // line number of source file
 
     LPCRITICAL_SECTION lpCriticalSection   // address of critical section object
 )
 {
     FISH_THREAD*  pFISH_THREAD;
     FISH_LOCK*    pFISH_LOCK;
+
+    FIXFILENAME(pszFileReleasing);
 
     LockFishHang();
 
@@ -1147,10 +1171,11 @@ void FishHang_LeaveCriticalSection
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 HANDLE FishHang_CreateEvent
 (
-    char*  pszFileCreated,  // source file that created it
-    int    nLineCreated,    // line number of source file
+    const char*  pszFileCreated,  // source file that created it
+    const int    nLineCreated,    // line number of source file
 
     LPSECURITY_ATTRIBUTES  lpEventAttributes,   // pointer to security attributes
     BOOL                   bManualReset,        // flag for manual-reset event
@@ -1160,6 +1185,8 @@ HANDLE FishHang_CreateEvent
 {
     FISH_EVENT*  pFISH_EVENT;
     HANDLE       hEvent;
+
+    FIXFILENAME(pszFileCreated);
 
     if (!(pFISH_EVENT = CreateFISH_EVENT(pszFileCreated,nLineCreated)))
     {
@@ -1185,16 +1212,19 @@ HANDLE FishHang_CreateEvent
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 BOOL FishHang_SetEvent
 (
-    char*  pszFileSet,      // source file that set it
-    int    nLineSet,        // line number of source file
+    const char*  pszFileSet,      // source file that set it
+    const int    nLineSet,        // line number of source file
 
     HANDLE  hEvent          // handle to event object
 )
 {
     FISH_THREAD*  pFISH_THREAD;
     FISH_EVENT*   pFISH_EVENT;
+
+    FIXFILENAME(pszFileSet);
 
     LockFishHang();
 
@@ -1214,16 +1244,19 @@ BOOL FishHang_SetEvent
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 BOOL FishHang_ResetEvent
 (
-    char*  pszFileReset,    // source file that reset it
-    int    nLineReset,      // line number of source file
+    const char*  pszFileReset,    // source file that reset it
+    const int    nLineReset,      // line number of source file
 
     HANDLE  hEvent          // handle to event object
 )
 {
     FISH_THREAD*  pFISH_THREAD;
     FISH_EVENT*   pFISH_EVENT;
+
+    FIXFILENAME(pszFileReset);
 
     LockFishHang();
 
@@ -1243,16 +1276,19 @@ BOOL FishHang_ResetEvent
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 BOOL FishHang_PulseEvent
 (
-    char*  pszFilePosted,   // source file that signalled it
-    int    nLinePosted,     // line number of source file
+    const char*  pszFilePosted,   // source file that signalled it
+    const int    nLinePosted,     // line number of source file
 
     HANDLE  hEvent          // handle to event object
 )
 {
     FISH_THREAD*  pFISH_THREAD;
     FISH_EVENT*   pFISH_EVENT;
+
+    FIXFILENAME(pszFilePosted);
 
     LockFishHang();
 
@@ -1276,10 +1312,11 @@ BOOL FishHang_PulseEvent
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 BOOL FishHang_CloseHandle   // ** NOTE: only events for right now **
 (
-    char*  pszFileClosed,   // source file that closed it
-    int    nLineClosed,     // line number of source file
+    const char*  pszFileClosed,   // source file that closed it
+    const int    nLineClosed,     // line number of source file
 
     HANDLE  hEvent          // handle to event object
 )
@@ -1288,6 +1325,8 @@ BOOL FishHang_CloseHandle   // ** NOTE: only events for right now **
     FISH_EVENT*   pFISH_EVENT;
     LIST_ENTRY*   pListEntry;
     FISH_THREAD*  pWaitingFISH_THREAD;
+
+    FIXFILENAME(pszFileClosed);
 
     LockFishHang();
 
@@ -1332,10 +1371,11 @@ BOOL FishHang_CloseHandle   // ** NOTE: only events for right now **
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 DWORD FishHang_WaitForSingleObject  // ** NOTE: only events for right now **
 (
-    char*  pszFileWaiting,  // source file that attempted it
-    int    nLineWaiting,    // line number of source file
+    const char*  pszFileWaiting,  // source file that attempted it
+    const int    nLineWaiting,    // line number of source file
 
     HANDLE  hEvent,         // handle to event to wait for
     DWORD   dwMilliseconds  // time-out interval in milliseconds
@@ -1344,6 +1384,8 @@ DWORD FishHang_WaitForSingleObject  // ** NOTE: only events for right now **
     FISH_THREAD*  pFISH_THREAD;
     FISH_EVENT*   pFISH_EVENT;
     DWORD         dwWaitRetCode;
+
+    FIXFILENAME(pszFileWaiting);
 
     LockFishHang();
 
@@ -1370,6 +1412,7 @@ DWORD FishHang_WaitForSingleObject  // ** NOTE: only events for right now **
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 void  FishHangReport()
 {
     LockFishHang();
@@ -1389,16 +1432,19 @@ void  FishHangReport()
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 void FishHang_DeleteCriticalSection
 (
-    char*  pszFileDeleting, // source file that's deleting it
-    int    nLineDeleting,   // line number of source file
+    const char*  pszFileDeleting, // source file that's deleting it
+    const int    nLineDeleting,   // line number of source file
 
     LPCRITICAL_SECTION lpCriticalSection   // address of critical section object
 )
 {
     FISH_THREAD*  pFISH_THREAD;
     FISH_LOCK*    pFISH_LOCK;
+
+    FIXFILENAME(pszFileDeleting);
 
     LockFishHang();
 
@@ -1443,6 +1489,7 @@ void FishHang_DeleteCriticalSection
 
 /////////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT
 void FishHang_ExitThread
 (
     DWORD dwExitCode    // exit code for this thread

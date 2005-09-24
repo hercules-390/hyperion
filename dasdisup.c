@@ -11,6 +11,8 @@
 /* where: ckdfile is the name of the CKD image file                  */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 #include "dasdblks.h"
 
@@ -74,14 +76,6 @@ static char *secondload[] = {
 
 static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
-#ifdef EXTERNALGUI
-#if 0
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif
-#endif /*EXTERNALGUI*/
-
 #if 0
 /*-------------------------------------------------------------------*/
 /* Subroutine to process a member                                    */
@@ -109,6 +103,7 @@ FILE           *ofp;                    /* Output file pointer       */
 BYTE            ofname[256];            /* Output file name          */
 int             offset;                 /* Offset of record in buffer*/
 BYTE            card[81];               /* Logical record (ASCIIZ)   */
+BYTE            pathname[MAX_PATH];     /* ofname in host path format*/
 
     /* Build the output file name */
     memset (ofname, 0, sizeof(ofname));
@@ -117,7 +112,8 @@ BYTE            card[81];               /* Logical record (ASCIIZ)   */
     strcat (ofname, ".mac");
 
     /* Open the output file */
-    ofp = fopen (ofname, "w");
+    hostpath(pathname, ofname, sizeof(pathname));
+    ofp = fopen (pathname, "w");
     if (ofp == NULL)
     {
         fprintf (stderr,
@@ -619,7 +615,7 @@ int             nmem = 0;               /* Number of array entries   */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, LOCALEDIR);
+    bindtextdomain(PACKAGE, HERC_LOCALEDIR);
     textdomain(PACKAGE);
 #endif
 
@@ -628,6 +624,8 @@ int             nmem = 0;               /* Number of array entries   */
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 

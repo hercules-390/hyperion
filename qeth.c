@@ -8,14 +8,16 @@
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "devtype.h"
 
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
- SYSBLK *psysblk;
- #define sysblk (*psysblk)
+#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  SYSBLK *psysblk;
+  #define sysblk (*psysblk)
 #endif
 
 
@@ -99,7 +101,7 @@ static void qeth_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
 {
-int     rc;                             /* Return code               */
+int     rc = 0;                         /* Return code               */
 int     num;                            /* Number of bytes to move   */
 int     blocksize = 1024;
 #define CONFIG_DATA_SIZE 1024
@@ -324,13 +326,13 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-#undef sysblk
-HDL_RESOLVER_SECTION;
-{
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  #undef sysblk
+  HDL_RESOLVER_SECTION;
+  {
     HDL_RESOLVE_PTRVAR( psysblk, sysblk );
-}
-END_RESOLVER_SECTION;
+  }
+  END_RESOLVER_SECTION;
 #endif
 
 

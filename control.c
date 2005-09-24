@@ -27,6 +27,7 @@
 /*      ASN-and-LX-reuse facility - Roger Bowler            June 2004*/
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
 #include "hercules.h"
 
 #include "opcode.h"
@@ -846,7 +847,7 @@ DEF_INST(extract_primary_asn_and_instance)
       ARCH_DEP(operation_exception)(inst,regs);
   }
 
-    RRE(inst, regs, r1, r2);
+  RRE(inst, regs, r1, r2);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -913,7 +914,7 @@ DEF_INST(extract_secondary_asn_and_instance)
       ARCH_DEP(operation_exception)(inst,regs);
   }
 
-    RRE(inst, regs, r1, r2);
+  RRE(inst, regs, r1, r2);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -975,7 +976,9 @@ LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
 int     max_esta_code;
 
+
     RRE(inst, regs, r1, r2);
+
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -1526,7 +1529,7 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(_FEATURE_SIE)*/
 
     RELEASE_MAINLOCK(regs);
- 
+
 } /* DEF_INST(invalidate_page_table_entry) */
 
 
@@ -1605,7 +1608,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         pasn_d = dreg & 0xFFFF;
     }
     else /* !ASN_AND_LX_REUSE_ENABLED */
-    {  
+    {
         /* When ASN-and-LX-reuse is not installed or not enabled,
            the first operand is one doubleword containing the
            PKM-d, SASN-d, AX-d, and PASN-d (16 bits each) */
@@ -1646,7 +1649,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         ltd = ASTE_LT_DESIGNATOR(aste);
         ax = (aste[1] & ASTE1_AX) >> 16;
 
-        /* When ASN-and-LX-reuse is installed and enabled by CR0, 
+        /* When ASN-and-LX-reuse is installed and enabled by CR0,
            set the new PASTEIN equal to the PASTEIN-d */
         if (ASN_AND_LX_REUSE_ENABLED(regs))
             pastein_new = pastein_d;
@@ -1681,7 +1684,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         pasteo = regs->CR_L(5);
         ax = (regs->CR(4) & CR4_AX) >> 16;
 
-        /* When ASN-and-LX-reuse is installed and enabled by CR0, 
+        /* When ASN-and-LX-reuse is installed and enabled by CR0,
            load the current PASTEIN */
         if (ASN_AND_LX_REUSE_ENABLED(regs))
             pastein_new = regs->CR_H(4);
@@ -1857,14 +1860,14 @@ U16     updated = 0;                    /* Updated control regs      */
     for (i = 0; i < m; i++)
     {
         regs->CR_L((r1 + i) & 0xF) = fetch_fw (p1++);
-        set_bit(2, (r1 + i) & 0xF, &updated);
+        updated |= BIT((r1 + i) & 0xF);
     }
 
     /* Copy from next page */
     for ( ; i < n; i++)
     {
         regs->CR_L((r1 + i) & 0xF) = fetch_fw (p2++);
-        set_bit(2, (r1 + i) & 0xF, &updated);
+        updated |= BIT((r1 + i) & 0xF);
     }
 
     /* Actions based on updated control regs */
@@ -1878,10 +1881,10 @@ U16     updated = 0;                    /* Updated control regs      */
 #else
     if (updated & (BIT(1) | BIT(7) | BIT(13)))
         SET_AEA_COMMON(regs);
-    if (test_bit(2, regs->aea_ar[USE_INST_SPACE], &updated))
+    if (updated & BIT(regs->aea_ar[USE_INST_SPACE]))
         INVALIDATE_AIA(regs);
 #endif
-    if (test_bit(2, 9, &updated) && EN_IC_PER_SA(regs))
+    if ((updated & BIT(9)) && EN_IC_PER_SA(regs))
         ARCH_DEP(invalidate_tlb)(regs,~(ACC_WRITE|ACC_CHECK));
 
     RETURN_INTCHECK(regs);
@@ -1896,7 +1899,7 @@ DEF_INST(load_program_status_word)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-DWORD   dword;
+DBLWRD  dword;
 int     rc;
 #if defined(FEATURE_ESAME)
 int     amode64;
@@ -2504,7 +2507,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if (!ASN_AND_LX_REUSE_ENABLED(regs))
     {
         /* When ASN-and-LX-reuse is not installed or not enabled, the
-           PC number is the low-order 20 bits of the operand address 
+           PC number is the low-order 20 bits of the operand address
            and the translation exception identification is the 20-bit
            PC number with 12 high order zeroes appended to the left */
         pcnum = effective_addr2 & (PC_LX | PC_EX);
@@ -2583,7 +2586,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ltdesig = ASTE_LT_DESIGNATOR(aste);
     }
 
-    /* Note: When ASN-and-LX-reuse is installed and enabled 
+    /* Note: When ASN-and-LX-reuse is installed and enabled
        by CR0, ltdesig is an LFTD, otherwise it is an LTD */
 
     /* Special operation exception if subsystem linkage
@@ -2628,7 +2631,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Extract the entry table origin and length from the LTE */
         eto = lte & LTE_ETO;
         etl = lte & LTE_ETL;
-         
+
     }
     else /* ASN_AND_LX_REUSE_ENABLED */
     {
@@ -2645,9 +2648,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
            of the operand address) must always be 0. The LFX1 was
            loaded from bits 32-43 of the operand address if bit 44
            of the operand address was 1, otherwise LFX1 is zero.
-           When bit 44 of the effective address is zero however,
-           the LFTL (Linkage-First-Table Length) is ignored.
-        */
+           However, when bit 44 of the effective address is zero,
+           the LFTL (Linkage-First-Table Length) is ignored. */
         if ((effective_addr2 & PC_BIT44) && lftl < (pcnum >> 19))
         {
             regs->TEA = pctea;
@@ -2726,7 +2728,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_EX_TRANSLATION_EXCEPTION);
     }
 
-    /* Calculate the starting address of the entry table entry 
+    /* Calculate the starting address of the entry table entry
        (it is always a 31-bit address even in ESAME) */
     eto += (pcnum & PC_EX) << (ASF_ENABLED(regs) ? 5 : 4);
     eto &= 0x7FFFFFFF;
@@ -3150,17 +3152,42 @@ int     rc;                             /* return code from load_psw */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-    /* Create a working copy of the CPU registers */
-#if defined(PTRININTOK)
-     if((unsigned long)regs + sizeof(REGS) == (unsigned long)(&regs->tlb) + sizeof(TLB)) {
-        memcpy(&newregs, regs, sizeof(REGS)-sizeof(TLB));
-        memset(&newregs.tlb.vaddr, 0, TLBN * sizeof(DW));
+    /* Create a working copy of the CPU registers... */
+
+    /*
+       PROGRAMMING NOTE: The following code is designed to make a copy
+       of everything in the REGS structure *except* the TLB (since it
+       is so large, and besides, we're going to invalidate the entire
+       thing anyway, so why even bother to copy it in the first place?)
+
+       When it was originally written, the TLB was the VERY LAST field
+       defined in the REGS structure. The below code is simply checking
+       to make sure no new fields have been added to the REGS structure
+       *following* the TLB field (since it's designed to only copy the
+       REGS structure *up to* the TLB, but *not* anything else that may
+       be *following* the TLB).
+       
+       If new fields have been added to the REGS structure *following*
+       the TLB however, then the test fails and we simply make a copy
+       of the entire REGS structure (which, as explained, is undesirable
+       since it's a waste of time to copy data you're not going to use
+       anyway). Thus the below test is simply a performance enhancement
+       and nothing more (i.e. it doesn't matter WHICH way we do it, as
+       long as it gets done).
+    */
+    if ((uintptr_t)regs + sizeof(REGS) == (uintptr_t)&regs->tlb + sizeof(TLB))
+    {
+        // Make a working copy of everything *EXCEPT* the TLB...
+        memcpy( &newregs, regs, sizeof(REGS) - sizeof(TLB) );
     }
     else
+    {
+        // Make a COMPLETE copy of the *entire* REGS structure...
         newregs = *regs;
-#else
-    newregs=*regs;
-#endif
+    }
+
+    /* Now INVALIDATE ALL TLB ENTRIES in our working copy.. */
+    memset( &newregs.tlb.vaddr, 0, TLBN * sizeof(DW) );
 
     /* Save the primary ASN (CR4) and primary STD (CR1) */
     oldpasn = regs->CR_LHL(4);
@@ -3523,8 +3550,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         if (xcode != 0)
             ARCH_DEP(program_interrupt) (regs, xcode);
 
-        /* For PT-ss only, generate a special operation exception 
-           if ASN-and-LX-reuse is enabled and the reusable-ASN bit 
+        /* For PT-ss only, generate a special operation exception
+           if ASN-and-LX-reuse is enabled and the reusable-ASN bit
            in the ASTE is one */
         if (pti_instruction == 0 && ASN_AND_LX_REUSE_ENABLED(regs)
             && (aste[1] & ASTE1_RA) != 0)
@@ -3544,7 +3571,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* For PTI-ss only, generate an ASTE instance exception
            if the ASTEIN in bits 0-31 of the R1 register does
            not equal the ASTEIN in the ASTE*/
-        if (pti_instruction && aste[11] != regs->GR_H(r1)) 
+        if (pti_instruction && aste[11] != regs->GR_H(r1))
         {
             /* Set bit 2 of the exception access identification
                to indicate that the program check occurred
@@ -4330,6 +4357,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Clock value               */
 
+
     S(inst, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
@@ -4561,8 +4589,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         if (xcode != 0)
             ARCH_DEP(program_interrupt) (regs, xcode);
 
-        /* For SSAR-ss only, generate a special operation exception 
-           if ASN-and-LX-reuse is enabled and the reusable-ASN bit 
+        /* For SSAR-ss only, generate a special operation exception
+           if ASN-and-LX-reuse is enabled and the reusable-ASN bit
            in the ASTE is one */
         if (ssair_instruction == 0 && ASN_AND_LX_REUSE_ENABLED(regs)
             && (aste[1] & ASTE1_RA) != 0)
@@ -4582,7 +4610,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* For SSAIR-ss only, generate an ASTE instance exception
            if the ASTEIN in bits 0-31 of the R1 register does
            not equal the ASTEIN in the ASTE */
-        if (ssair_instruction && aste[11] != regs->GR_H(r1)) 
+        if (ssair_instruction && aste[11] != regs->GR_H(r1))
         {
             /* Set bit 3 of the exception access identification
                to indicate that the program check occurred

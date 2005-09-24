@@ -11,6 +11,7 @@
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
 #include "hercules.h"
 
 #include "opcode.h"
@@ -147,7 +148,7 @@ typedef struct _DIAG204_HDR {
                                            0x0005 under VM           */
         HWORD   physcpu;                /* Number of phys CP's       */
         HWORD   offown;                 /* Offset to own partition   */
-        DWORD   diagstck;               /* TOD of last diag204       */
+        DBLWRD  diagstck;               /* TOD of last diag204       */
     } DIAG204_HDR;
 
 typedef struct _DIAG204_PART {
@@ -162,8 +163,8 @@ typedef struct _DIAG204_PART_CPU {
         HWORD   cpaddr;                 /* CP address                */
         HWORD   resv2[2];
         HWORD   relshare;               /* Relative share            */
-        DWORD   totdispatch;            /* Total dispatch time       */
-        DWORD   effdispatch;            /* Effective dispatch time   */
+        DBLWRD  totdispatch;            /* Total dispatch time       */
+        DBLWRD  effdispatch;            /* Effective dispatch time   */
     } DIAG204_PART_CPU;
 
 

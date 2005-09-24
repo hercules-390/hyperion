@@ -7,17 +7,45 @@
 /* It also contains function prototypes for the DASD utilities.      */
 /*-------------------------------------------------------------------*/
 
+#include "hercules.h"
+
+#ifndef _DASDUTIL_C_
+#ifndef _HDASD_DLL_
+#define DUT_DLL_IMPORT DLL_IMPORT
+#else   /* _HDASD_DLL_ */
+#define DUT_DLL_IMPORT extern
+#endif  /* _HDASD_DLL_ */
+#else
+#define DUT_DLL_IMPORT DLL_EXPORT
+#endif
+//  Forward references...
+
+typedef  struct  FORMAT1_DSCB   FORMAT1_DSCB;   // DSCB1: Dataset descriptor
+typedef  struct  FORMAT3_DSCB   FORMAT3_DSCB;   // DSCB3: Additional extents
+typedef  struct  FORMAT4_DSCB   FORMAT4_DSCB;   // DSCB4: VTOC descriptor
+typedef  struct  FORMAT5_DSCB   FORMAT5_DSCB;   // DSCB5: Free space map
+
+typedef  struct  F5AVEXT        F5AVEXT;        // Available extent in DSCB5
+typedef  struct  DSXTENT        DSXTENT;        // Dataset extent descriptor
+
+typedef  struct  PDSDIR         PDSDIR;         // PDS directory entry
+typedef  struct  CIFBLK         CIFBLK;         // CKD image file descriptor
+
+typedef  struct  COPYR1         COPYR1;         // IEBCOPY header record 1
+typedef  struct  COPYR2         COPYR2;         // IEBCOPY header record 2
+typedef  struct  DATABLK        DATABLK;        // IEBCOPY unload data rec
+
 /*-------------------------------------------------------------------*/
 /* Definition of DSCB records in VTOC                                */
 /*-------------------------------------------------------------------*/
-typedef struct _DSXTENT {               /* Dataset extent descriptor */
+struct DSXTENT {                        /* Dataset extent descriptor */
         BYTE    xttype;                 /* Extent type               */
         BYTE    xtseqn;                 /* Extent sequence number    */
         HWORD   xtbcyl;                 /* Extent begin cylinder     */
         HWORD   xtbtrk;                 /* Extent begin track        */
         HWORD   xtecyl;                 /* Extent end cylinder       */
         HWORD   xtetrk;                 /* Extent end track          */
-    } DSXTENT;
+};
 
 /* Bit definitions for extent type */
 #define XTTYPE_UNUSED           0x00    /* Unused extent descriptor  */
@@ -28,7 +56,7 @@ typedef struct _DSXTENT {               /* Dataset extent descriptor */
 #define XTTYPE_SHARCYL          0x80    /* Shared cylinders          */
 #define XTTYPE_CYLBOUND         0x81    /* Extent on cyl boundary    */
 
-typedef struct _FORMAT1_DSCB {          /* DSCB1: Dataset descriptor */
+struct FORMAT1_DSCB {                   /* DSCB1: Dataset descriptor */
         BYTE    ds1dsnam[44];           /* Key (44 byte dataset name)*/
         BYTE    ds1fmtid;               /* Format identifier (0xF1)  */
         BYTE    ds1dssn[6];             /* Volume serial number      */
@@ -60,7 +88,7 @@ typedef struct _FORMAT1_DSCB {          /* DSCB1: Dataset descriptor */
         DSXTENT ds1ext2;                /* Second extent descriptor  */
         DSXTENT ds1ext3;                /* Third extent descriptor   */
         BYTE    ds1ptrds[5];            /* CCHHR of F2 or F3 DSCB    */
-    } FORMAT1_DSCB;
+};
 
 /* Bit definitions for ds1dsind */
 #define DS1DSIND_LASTVOL        0x80    /* Last volume of dataset    */
@@ -86,15 +114,15 @@ typedef struct _FORMAT1_DSCB {          /* DSCB1: Dataset descriptor */
 #define DS1SCALO_ALX            0x02    /* Up to 5 largest extents   */
 #define DS1SCALO_ROUND          0x01    /* Round to cylinders        */
 
-typedef struct _FORMAT3_DSCB {          /* DSCB3: Additional extents */
+struct FORMAT3_DSCB {                   /* DSCB3: Additional extents */
         BYTE    ds3keyid[4];            /* Key (4 bytes of 0x03)     */
         DSXTENT ds3extnt[4];            /* Four extent descriptors   */
         BYTE    ds3fmtid;               /* Format identifier (0xF3)  */
         DSXTENT ds3adext[9];            /* Nine extent descriptors   */
         BYTE    ds3ptrds[5];            /* CCHHR of next F3 DSCB     */
-    } FORMAT3_DSCB;
+};
 
-typedef struct _FORMAT4_DSCB {          /* DSCB4: VTOC descriptor    */
+struct FORMAT4_DSCB {                   /* DSCB4: VTOC descriptor    */
         BYTE    ds4keyid[44];           /* Key (44 bytes of 0x04)    */
         BYTE    ds4fmtid;               /* Format identifier (0xF4)  */
         BYTE    ds4hpchr[5];            /* CCHHR of highest F1 DSCB  */
@@ -113,15 +141,15 @@ typedef struct _FORMAT4_DSCB {          /* DSCB4: VTOC descriptor    */
         HWORD   ds4devtl;               /* Device tolerance          */
         BYTE    ds4devdt;               /* Number of DSCBs per track */
         BYTE    ds4devdb;               /* Number of dirblks/track   */
-        DWORD   ds4amtim;               /* VSAM timestamp            */
+        DBLWRD  ds4amtim;               /* VSAM timestamp            */
         BYTE    ds4vsind;               /* VSAM indicators           */
         HWORD   ds4vscra;               /* CRA track location        */
-        DWORD   ds4r2tim;               /* VSAM vol/cat timestamp    */
+        DBLWRD  ds4r2tim;               /* VSAM vol/cat timestamp    */
         BYTE    resv2[5];               /* Reserved                  */
         BYTE    ds4f6ptr[5];            /* CCHHR of first F6 DSCB    */
         DSXTENT ds4vtoce;               /* VTOC extent descriptor    */
         BYTE    resv3[25];              /* Reserved                  */
-    } FORMAT4_DSCB;
+};
 
 /* Bit definitions for ds4vtoci */
 #define DS4VTOCI_DOS            0x80    /* Format 5 DSCBs not valid  */
@@ -134,19 +162,19 @@ typedef struct _FORMAT4_DSCB {          /* DSCB4: VTOC descriptor    */
 #define DS4DEVFG_TOL            0x01    /* Tolerance factor applies to
                                            all but last block of trk */
 
-typedef struct _F5AVEXT {               /* Available extent in DSCB5 */
+struct F5AVEXT {                       /* Available extent in DSCB5 */
         HWORD   btrk;                   /* Extent begin track address*/
         HWORD   ncyl;                   /* Number of full cylinders  */
         BYTE    ntrk;                   /* Number of odd tracks      */
-    } F5AVEXT;
+};
 
-typedef struct _FORMAT5_DSCB {          /* DSCB5: Free space map     */
+struct FORMAT5_DSCB {                   /* DSCB5: Free space map     */
         BYTE    ds5keyid[4];            /* Key (4 bytes of 0x05)     */
         F5AVEXT ds5avext[8];            /* First 8 available extents */
         BYTE    ds5fmtid;               /* Format identifier (0xF5)  */
         F5AVEXT ds5mavet[18];           /* 18 more available extents */
         BYTE    ds5ptrds[5];            /* CCHHR of next F5 DSCB     */
-    } FORMAT5_DSCB;
+};
 
 /*-------------------------------------------------------------------*/
 /* Definitions of DSORG and RECFM fields                             */
@@ -176,12 +204,12 @@ typedef struct _FORMAT5_DSCB {          /* DSCB5: Free space map     */
 /*-------------------------------------------------------------------*/
 /* Definition of PDS directory entry                                 */
 /*-------------------------------------------------------------------*/
-typedef struct _PDSDIR {
+struct PDSDIR {                         /* PDS directory entry       */
         BYTE    pds2name[8];            /* Member name               */
         BYTE    pds2ttrp[3];            /* TTR of first block        */
         BYTE    pds2indc;               /* Indicator byte            */
         BYTE    pds2usrd[62];           /* User data (0-31 halfwords)*/
-    } PDSDIR;
+};
 
 /* Bit definitions for PDS directory indicator byte */
 #define PDS2INDC_ALIAS          0x80    /* Bit 0: Name is an alias   */
@@ -226,7 +254,7 @@ typedef struct _PDSDIR {
 /*-------------------------------------------------------------------*/
 /* Definitions of IEBCOPY header records                             */
 /*-------------------------------------------------------------------*/
-typedef struct _COPYR1 {                /* IEBCOPY header record 1   */
+struct COPYR1 {                         /* IEBCOPY header record 1   */
         BYTE    uldfmt;                 /* Unload format             */
         BYTE    hdrid[3];               /* Header identifier         */
         HWORD   ds1dsorg;               /* Dataset organization      */
@@ -257,7 +285,7 @@ typedef struct _COPYR1 {                /* IEBCOPY header record 1   */
         BYTE    ds1lstar[3];            /* Last track used TTR       */
         HWORD   ds1trbal;               /* Last track balance        */
         HWORD   resv2;                  /* Reserved                  */
-    } COPYR1;
+};
 
 /* Bit settings for unload format byte */
 #define COPYR1_ULD_FORMAT       0xC0    /* Bits 0-1=unload format... */
@@ -271,18 +299,18 @@ typedef struct _COPYR1 {                /* IEBCOPY header record 1   */
 /* Bit settings for header identifier */
 #define COPYR1_HDRID    "\xCA\x6D\x0F"  /* Constant value for hdrid  */
 
-typedef struct _COPYR2 {                /* IEBCOPY header record 2   */
+struct COPYR2 {                         /* IEBCOPY header record 2   */
         BYTE    debbasic[16];           /* Last 16 bytes of basic
                                            section of original DEB   */
         BYTE    debxtent[16][16];       /* First 16 extent descriptors
                                            from original DEB         */
         FWORD   resv;                   /* Reserved                  */
-    } COPYR2;
+};
 
 /*-------------------------------------------------------------------*/
 /* Definition of data record block in IEBCOPY unload file            */
 /*-------------------------------------------------------------------*/
-typedef struct _DATABLK {
+struct DATABLK {                        /* IEBCOPY unload data rec   */
         FWORD   header;                 /* Reserved                  */
         HWORD   cyl;                    /* Cylinder number           */
         HWORD   head;                   /* Head number               */
@@ -290,12 +318,12 @@ typedef struct _DATABLK {
         BYTE    klen;                   /* Key length                */
         HWORD   dlen;                   /* Data length               */
         BYTE    kdarea[32760];          /* Key and data area         */
-    } DATABLK;
+};
 
 /*-------------------------------------------------------------------*/
 /* Internal structures used by DASD utility functions                */
 /*-------------------------------------------------------------------*/
-typedef struct _CIFBLK {                /* CKD image file descriptor */
+struct CIFBLK {                         /* CKD image file descriptor */
         char   *fname;                  /* -> CKD image file name    */
         int     fd;                     /* CKD image file descriptor */
         int     trksz;                  /* CKD image track size      */
@@ -307,7 +335,7 @@ typedef struct _CIFBLK {                /* CKD image file descriptor */
         int     trkmodif;               /* 1=Track has been modified */
         int     heads;                  /* Tracks per cylinder       */
         DEVBLK  devblk;                 /* Device Block              */
-    } CIFBLK;
+};
 
 /*-------------------------------------------------------------------*/
 /* Macro definitions                                                 */
@@ -319,39 +347,40 @@ typedef struct _CIFBLK {                /* CKD image file descriptor */
 /*-------------------------------------------------------------------*/
 
 /* Functions in module dasdutil.c */
-void string_to_upper (char *source);
-void string_to_lower (char *source);
-void convert_to_ebcdic (BYTE *dest, int len, char *source);
-int  make_asciiz (char *dest, int destlen, BYTE *src, int srclen);
-void data_dump (void *addr, int len);
-int  read_track (CIFBLK *cif, int cyl, int head);
+DUT_DLL_IMPORT void string_to_upper (char *source);
+DUT_DLL_IMPORT void string_to_lower (char *source);
+DUT_DLL_IMPORT void convert_to_ebcdic (BYTE *dest, int len, char *source);
+DUT_DLL_IMPORT int  make_asciiz (char *dest, int destlen, BYTE *src, int srclen);
+DUT_DLL_IMPORT void data_dump (void *addr, int len);
+DUT_DLL_IMPORT int  read_track (CIFBLK *cif, int cyl, int head);
 int  rewrite_track (CIFBLK *cif);
-int  read_block (CIFBLK *cif, int cyl, int head, int rec,
+DUT_DLL_IMPORT int  read_block (CIFBLK *cif, int cyl, int head, int rec,
         BYTE **keyptr, int *keylen, BYTE **dataptr, int *datalen);
-int  search_key_equal (CIFBLK *cif, BYTE *key, int keylen, int noext,
+DUT_DLL_IMPORT int  search_key_equal (CIFBLK *cif, BYTE *key, int keylen, int noext,
         DSXTENT extent[], int *cyl, int *head, int *rec);
-int  convert_tt (int tt, int noext, DSXTENT extent[], int heads,
+DUT_DLL_IMPORT int  convert_tt (int tt, int noext, DSXTENT extent[], int heads,
         int *cyl, int *head);
-CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
+DUT_DLL_IMPORT CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
         int dasdcopy);
-CIFBLK* open_fba_image (char *fname, char *sfname, int omode,
+DUT_DLL_IMPORT CIFBLK* open_fba_image (char *fname, char *sfname, int omode,
         int dasdcopy);
-int  close_ckd_image (CIFBLK *cif);
+DUT_DLL_IMPORT int  close_ckd_image (CIFBLK *cif);
 #define close_image_file(cif) close_ckd_image((cif))
-int  build_extent_array (CIFBLK *cif, char *dsnama, DSXTENT extent[],
+DUT_DLL_IMPORT int  build_extent_array (CIFBLK *cif, char *dsnama, DSXTENT extent[],
         int *noext);
-int  capacity_calc (CIFBLK *cif, int used, int keylen, int datalen,
+DUT_DLL_IMPORT int  capacity_calc (CIFBLK *cif, int used, int keylen, int datalen,
         int *newused, int *trkbaln, int *physlen, int *kbconst,
         int *lbconst, int *nkconst, BYTE*devflag, int *tolfact,
         int *maxdlen, int *numrecs, int *numhead, int *numcyls);
-int create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
+DUT_DLL_IMPORT int create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
         U32 volcyls, char *volser, BYTE comp, int lfs, int dasdcopy,
         int nullfmt);
-int create_fba (char *fname, U16 devtype, U32 sectsz, U32 sectors,
+DUT_DLL_IMPORT int create_fba (char *fname, U16 devtype, U32 sectsz, U32 sectors,
         char *volser, BYTE comp, int lfs, int dasdcopy);
 int create_compressed_fba (char *fname, U16 devtype, U32 sectsz,
         U32 sectors, char *volser, BYTE comp, int lfs, int dasdcopy);
 int get_verbose_util(void);
-void set_verbose_util(int v);
+DUT_DLL_IMPORT void set_verbose_util(int v);
+
 
 #define DEFAULT_FBA_TYPE 0x3370

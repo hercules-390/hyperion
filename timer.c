@@ -2,6 +2,8 @@
 
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"
@@ -276,7 +278,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
 /* TOD clock and timer thread                                        */
 /*                                                                   */
 /* This function runs as a separate thread.  It wakes up every       */
-/* x milliseconds, updates the TOD clock, and decrements the         */
+/* 1 microsecond, updates the TOD clock, and decrements the          */
 /* CPU timer for each CPU.  If any CPU timer goes negative, or       */
 /* if the TOD clock exceeds the clock comparator for any CPU,        */
 /* it signals any waiting CPUs to wake up and process interrupts.    */
@@ -284,7 +286,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
 void *timer_update_thread (void *argp)
 {
 #ifdef OPTION_MIPS_COUNTING
-int     msecctr = 0;                    /* Millisecond counter       */
+int     usecctr = 0;                    /* Microsecond counter       */
 int     cpu;                            /* CPU counter               */
 REGS   *regs;                           /* -> CPU register context   */
 U64     prev = 0;                       /* Previous TOD clock value  */
@@ -346,11 +348,12 @@ struct  timeval tv;                     /* Structure for gettimeofday
         /* Shift the epoch out of the difference for the CPU timer */
         diff <<= 8;
 
-        msecctr += (int)(diff/4096000);
-        if (msecctr > 999)
+        usecctr += (int)(diff/4096);
+        if (usecctr > 999999)
         {
             U32  mipsrate = 0;   /* (total for ALL CPUs together) */
             U32  siosrate = 0;   /* (total for ALL CPUs together) */
+// logmsg("+++ BLIP +++\n"); // (should appear once per second)
             /* Get current time */
             then = now;
             gettimeofday (&tv, NULL);
@@ -368,8 +371,6 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
             for (cpu = 0; cpu < HI_CPU; cpu++)
             {
-                if (!IS_CPU_ONLINE(cpu))
-                    continue;
 
                 obtain_lock (&sysblk.cpulock[cpu]);
 
@@ -390,9 +391,8 @@ struct  timeval tv;                     /* Structure for gettimeofday
                     continue;
                 }
 
-                /* Calculate instructions/millisecond for this CPU */
-                regs->mipsrate =
-                    ((regs->instcount - regs->prevcount)*1000) / interval;
+                /* Calculate instructions per second for this CPU */
+                regs->mipsrate = (regs->instcount - regs->prevcount);
                 regs->siosrate = regs->siocount;
 
                 /* Ignore wildly high rates probably in error */
@@ -412,7 +412,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
                 /* Calculate CPU busy percentage */
                 waittime = regs->waittime;
-                if ( test_bit (4, regs->cpuad, &sysblk.waiting_mask) )
+                if ( sysblk.waiting_mask & BIT(regs->cpuad) )
                     waittime += now - regs->waittod;
                 regs->cpupct = ((double)(interval - waittime)) / ((double)interval);
 
@@ -428,10 +428,10 @@ struct  timeval tv;                     /* Structure for gettimeofday
             sysblk.mipsrate = mipsrate;
             sysblk.siosrate = siosrate;
 
-            /* Reset the millisecond counter */
-            msecctr = 0;
+            /* Reset the microsecond counter */
+            usecctr = 0;
 
-        } /* end if(msecctr) */
+        } /* end if(usecctr) */
 #endif /*OPTION_MIPS_COUNTING*/
 
         /* Release the TOD lock */

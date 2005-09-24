@@ -50,6 +50,7 @@
 /* WinNT version of telnet works. -- Greg Price (implemted by Fish)  */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
 #include "hercules.h"
 
 #include "devtype.h"
@@ -58,15 +59,19 @@
 
 #include "sr.h"
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
- SYSBLK *psysblk;
- #define sysblk (*psysblk)
- #define config_cnslport (*config_cnslport)
-static
+#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  SYSBLK *psysblk;
+  #define sysblk (*psysblk)
+  #define config_cnslport (*config_cnslport)
+  static
 #else
-extern
+ #if defined(OPTION_DYNAMIC_LOAD) && defined(_MSVC_)
+  DLL_IMPORT
+ #else
+  extern
+ #endif
 #endif
-       char *config_cnslport;
+char *config_cnslport;
 
 /*-------------------------------------------------------------------*/
 /* Ivan Warren 20040227                                              */
@@ -224,38 +229,36 @@ static BYTE sba_code[] = { "\x40\xC1\xC2\xC3\xC4\xC5\xC6\xC7"
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-#define DEBUG_LVL       0               /* 1 = status
-                                           2 = headers
-                                           3 = buffers               */
+
+/* DEBUG_LVL: 0 = none
+              1 = status
+              2 = headers
+              3 = buffers
+*/
+#define DEBUG_LVL        0
+
 #if DEBUG_LVL == 0
- #define TNSDEBUG1(_format, _args...)
- #define TNSDEBUG2(_format, _args...)
- #define TNSDEBUG3(_format, _args...)
+  #define TNSDEBUG1      1 ? ((void)0) : logmsg
+  #define TNSDEBUG2      1 ? ((void)0) : logmsg
+  #define TNSDEBUG3      1 ? ((void)0) : logmsg
 #endif
 #if DEBUG_LVL == 1
-#define TNSDEBUG1(_format, _args...) \
-        logmsg("console: " _format, ## _args)
-#define TNSDEBUG2(_format, _args...)
-#define TNSDEBUG3(_format, _args...)
+  #define TNSDEBUG1      logmsg
+  #define TNSDEBUG2      1 ? ((void)0) : logmsg
+  #define TNSDEBUG3      1 ? ((void)0) : logmsg
 #endif
 #if DEBUG_LVL == 2
-#define TNSDEBUG1(_format, _args...) \
-        logmsg("console: " _format, ## _args)
-#define TNSDEBUG2(_format, _args...) \
-        logmsg("console: " _format, ## _args)
-#define TNSDEBUG3(_format, _args...)
+  #define TNSDEBUG1      logmsg
+  #define TNSDEBUG2      logmsg
+  #define TNSDEBUG3      1 ? ((void)0) : logmsg
 #endif
 #if DEBUG_LVL == 3
-#define TNSDEBUG1(_format, _args...) \
-        logmsg("console: " _format, ## _args)
-#define TNSDEBUG2(_format, _args...) \
-        logmsg("console: " _format, ## _args)
-#define TNSDEBUG3(_format, _args...) \
-        logmsg("console: " _format, ## _args)
+  #define TNSDEBUG1      logmsg
+  #define TNSDEBUG2      logmsg
+  #define TNSDEBUG3      logmsg
 #endif
 
-#define TNSERROR(_format,_args...) \
-        logmsg("console: " _format, ## _args)
+#define TNSERROR        logmsg
 
 #define BUFLEN_3270     65536           /* 3270 Send/Receive buffer  */
 #define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
@@ -266,7 +269,7 @@ static BYTE sba_code[] = { "\x40\xC1\xC2\xC3\xC4\xC5\xC6\xC7"
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
-static struct utsname hostinfo;         /* Host info for this system */
+static  HOST_INFO  cons_hostinfo;       /* Host info for this system */
 
 
 /*-------------------------------------------------------------------*/
@@ -276,9 +279,9 @@ static struct utsname hostinfo;         /* Host info for this system */
 static void
 packet_trace(BYTE *addr, int len)
 {
-unsigned int  i, offset;
-unsigned char c;
-unsigned char print_chars[17];
+int  i, offset;
+BYTE c;
+BYTE print_chars[17];
 
     for (offset=0; offset < len; )
     {
@@ -432,7 +435,8 @@ int     m, n, c;
     } /* end for */
 
     if (n < m) {
-        TNSDEBUG3("DBG001: %d IAC bytes removed, newlen=%d\n", m-n, n);
+        TNSDEBUG3("console: DBG001: %d IAC bytes removed, newlen=%d\n",
+                m-n, n);
         packet_trace (buf, n);
     }
 
@@ -459,7 +463,8 @@ int     m, n, x, newlen;
 
     /* Insert extra IAC bytes backwards from the end of the buffer */
     newlen = len + x;
-    TNSDEBUG3("DBG002: %d IAC bytes added, newlen=%d\n", x, newlen);
+    TNSDEBUG3("console: DBG002: %d IAC bytes added, newlen=%d\n",
+            x, newlen);
     for (n=newlen, m=len; n > m; ) {
         buf[--n] = buf[--m];
         if (buf[n] == IAC) buf[--n] = IAC;
@@ -498,14 +503,14 @@ send_packet (int csock, BYTE *buf, int len, char *caption)
 int     rc;                             /* Return code               */
 
     if (caption != NULL) {
-        TNSDEBUG2("DBG003: Sending %s\n", caption);
+        TNSDEBUG2("console: DBG003: Sending %s\n", caption);
         packet_trace (buf, len);
     }
 
     rc = send (csock, buf, len, 0);
 
     if (rc < 0) {
-        TNSERROR("DBG021: send: %s\n", strerror(errno));
+        TNSERROR("console: DBG021: send: %s\n", strerror(HSO_errno));
         return -1;
     } /* end if(rc) */
 
@@ -542,12 +547,12 @@ int     rcvlen=0;                       /* Length of data received   */
         rc = recv (csock, buf + rcvlen, reqlen - rcvlen, 0);
 
         if (rc < 0) {
-            TNSERROR("DBG022: recv: %s\n", strerror(errno));
+            TNSERROR("console: DBG022: recv: %s\n", strerror(HSO_errno));
             return -1;
         }
 
         if (rc == 0) {
-            TNSDEBUG1("DBG004: Connection closed by client\n");
+            TNSDEBUG1("console: DBG004: Connection closed by client\n");
             return -1;
         }
 
@@ -558,7 +563,7 @@ int     rcvlen=0;                       /* Length of data received   */
             break;
     }
 
-    TNSDEBUG2("DBG005: Packet received length=%d\n", rcvlen);
+    TNSDEBUG2("console: DBG005: Packet received length=%d\n", rcvlen);
     packet_trace (buf, rcvlen);
 
     return rcvlen;
@@ -596,10 +601,10 @@ static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
     if (memcmp(buf, expected, len) != 0)
 #endif
     {
-        TNSDEBUG2("DBG006: Expected %s\n", caption);
+        TNSDEBUG2("console: DBG006: Expected %s\n", caption);
         return -1;
     }
-    TNSDEBUG2("DBG007: Received %s\n", caption);
+    TNSDEBUG2("console: DBG007: Received %s\n", caption);
 
     return 0;
 
@@ -692,12 +697,12 @@ static BYTE will_naws[] = { IAC, WILL, NAWS };
     if (rc < (int)(sizeof(type_is) + 2)
         || memcmp(buf, type_is, sizeof(type_is)) != 0
         || buf[rc-2] != IAC || buf[rc-1] != SE) {
-        TNSDEBUG2("DBG008: Expected IAC SB TERMINAL_TYPE IS\n");
+        TNSDEBUG2("console: DBG008: Expected IAC SB TERMINAL_TYPE IS\n");
         return -1;
     }
     buf[rc-2] = '\0';
     termtype = (char *)(buf + sizeof(type_is));
-    TNSDEBUG2("DBG009: Received IAC SB TERMINAL_TYPE IS %s IAC SE\n",
+    TNSDEBUG2("console: DBG009: Received IAC SB TERMINAL_TYPE IS %s IAC SE\n",
             termtype);
 
     /* Check terminal type string for device name suffix */
@@ -851,7 +856,7 @@ int     eor = 0;                        /* 1=End of record received  */
         The following chunk of code was added to try and catch
         a race condition that may or may no longer still exist.
     */
-    TNSDEBUG1("DBG031: verifying data is available...\n");
+    TNSDEBUG1("console: DBG031: verifying data is available...\n");
     {
         fd_set readset;
         struct timeval tv = {0,0};      /* (non-blocking poll) */
@@ -860,12 +865,12 @@ int     eor = 0;                        /* 1=End of record received  */
         FD_SET( dev->fd, &readset );
 
         while ( (rc = select ( dev->fd+1, &readset, NULL, NULL, &tv )) < 0
-            && EINTR == errno )
+            && HSO_EINTR == HSO_errno )
             ;   /* NOP (keep retrying if EINTR) */
 
         if (rc < 0)
         {
-            TNSERROR("DBG032: select failed: %s\n", strerror(errno));
+            TNSERROR("console: DBG032: select failed: %s\n", strerror(HSO_errno));
             return 0;
         }
 
@@ -874,24 +879,24 @@ int     eor = 0;                        /* 1=End of record received  */
         if (!FD_ISSET(dev->fd, &readset))
         {
             ASSERT(rc == 0);
-            TNSDEBUG1("DBG033: no data available; returning 0...\n");
+            TNSDEBUG1("console: DBG033: no data available; returning 0...\n");
             return 0;
         }
 
         ASSERT(rc == 1);
     }
-    TNSDEBUG1("DBG034: data IS available; attempting recv...\n");
+    TNSDEBUG1("console: DBG034: data IS available; attempting recv...\n");
 
     /* Receive bytes from client */
     rc = recv (dev->fd, dev->buf + dev->rlen3270,
                BUFLEN_3270 - dev->rlen3270, 0);
 
     if (rc < 0) {
-        if ( ECONNRESET == errno )
-            logmsg( _( "HHCTE014E: %4.4X device %4.4X disconnected.\n" ),
+        if ( HSO_ECONNRESET == HSO_errno )
+            logmsg( _( "HHCTE014I %4.4X device %4.4X disconnected.\n" ),
                 dev->devtype, dev->devnum );
         else
-            TNSERROR("DBG023: recv: %s\n", strerror(errno));
+            TNSERROR("console: DBG023: recv: %s\n", strerror(HSO_errno));
         dev->sense[0] = SENSE_EC;
         return (CSW_ATTN | CSW_UC);
     }
@@ -928,7 +933,7 @@ int     eor = 0;                        /* 1=End of record received  */
     /* If record is incomplete, test for buffer full */
     if (eor == 0 && dev->rlen3270 >= BUFLEN_3270)
     {
-        TNSDEBUG1("DBG010: 3270 buffer overflow\n");
+        TNSDEBUG1("console: DBG010: 3270 buffer overflow\n");
         dev->sense[0] = SENSE_DC;
         return (CSW_ATTN | CSW_UC);
     }
@@ -938,7 +943,8 @@ int     eor = 0;                        /* 1=End of record received  */
         return 0;
 
     /* Trace the complete 3270 data packet */
-    TNSDEBUG2("DBG011: Packet received length=%d\n", dev->rlen3270);
+    TNSDEBUG2("console: DBG011: Packet received length=%d\n",
+            dev->rlen3270);
     packet_trace (dev->buf, dev->rlen3270);
 
     /* Strip off the telnet EOR marker */
@@ -1003,7 +1009,7 @@ BYTE            buf[32];                /* tn3270 write buffer       */
     do {
         len = dev->rlen3270;
         rc = recv_3270_data (dev);
-        TNSDEBUG2("DBG012: read buffer: %d bytes received\n",
+        TNSDEBUG2("console: DBG012: read buffer: %d bytes received\n",
                 dev->rlen3270 - len);
     } while(rc == 0);
 
@@ -1055,7 +1061,7 @@ BYTE    c;                              /* Character work area       */
 
     /* Return unit check if error on receive */
     if (num < 0) {
-        TNSERROR("DBG024: recv: %s\n", strerror(errno));
+        TNSERROR("console: DBG024: recv: %s\n", strerror(HSO_errno));
         dev->sense[0] = SENSE_EC;
         return (CSW_ATTN | CSW_UC);
     }
@@ -1069,7 +1075,7 @@ BYTE    c;                              /* Character work area       */
     }
 
     /* Trace the bytes received */
-    TNSDEBUG2("DBG013: Bytes received length=%d\n", num);
+    TNSDEBUG2("console: DBG013: Bytes received length=%d\n", num);
     packet_trace (buf, num);
 
     /* Copy received bytes to keyboard buffer */
@@ -1092,7 +1098,7 @@ BYTE    c;                              /* Character work area       */
         /* Return unit check if buffer is full */
         if (dev->keybdrem >= BUFLEN_1052)
         {
-            TNSDEBUG1("DBG014: Console keyboard buffer overflow\n");
+            TNSDEBUG1("console: DBG014: Console keyboard buffer overflow\n");
             dev->keybdrem = 0;
             dev->sense[0] = SENSE_EC;
             return (CSW_ATTN | CSW_UC);
@@ -1149,7 +1155,7 @@ BYTE    c;                              /* Character work area       */
             && dev->buf[dev->keybdrem - 1] == '\n'
             && i < num - 1)
         {
-            TNSDEBUG1("DBG015: Console keyboard buffer overrun\n");
+            TNSDEBUG1("console: DBG015: Console keyboard buffer overrun\n");
             dev->keybdrem = 0;
             dev->sense[0] = SENSE_OR;
             return (CSW_ATTN | CSW_UC);
@@ -1164,7 +1170,8 @@ BYTE    c;                              /* Character work area       */
         return 0;
 
     /* Trace the complete keyboard data packet */
-    TNSDEBUG2("DBG016: Packet received length=%d\n", dev->keybdrem);
+    TNSDEBUG2("console: DBG016: Packet received length=%d\n",
+            dev->keybdrem);
     packet_trace (dev->buf, dev->keybdrem);
 
     /* Strip off the CRLF sequence */
@@ -1178,27 +1185,14 @@ BYTE    c;                              /* Character work area       */
     } /* end for(i) */
 
     /* Trace the EBCDIC input data */
-    TNSDEBUG2("DBG017: Input data line length=%d\n", dev->keybdrem);
+    TNSDEBUG2("console: DBG017: Input data line length=%d\n",
+            dev->keybdrem);
     packet_trace (dev->buf, dev->keybdrem);
 
     /* Return attention status */
     return (CSW_ATTN);
 
 } /* end function recv_1052_data */
-
-
-/* 'o_rset' identifies the file descriptors of all known connections.
-   The console_lock controls access to 'o_rset'. It may be obtained
-   with or without the device lock (dev->lock) already held, but once
-   obtained, you must NOT then try to obtain the device lock AFTER-
-   WARDS or else a deadlock will occur! That is to say, it can only
-   be obtained by itself or AFTER *FIRST* obtaining the device lock.
-*/
-static LOCK    console_lock;            /* lock for accessing o_rset */
-static int     did_init = 0;            /* console_lock initialized  */
-static int     o_minfd  = INT_MAX;      /* access must be serialized */
-static int     o_maxfd  = INT_MIN;      /* access must be serialized */
-static fd_set  o_rset;                  /* access must be serialized */
 
 
 /*-------------------------------------------------------------------*/
@@ -1222,6 +1216,7 @@ char                    buf[256];       /* Message buffer            */
 char                    conmsg[256];    /* Connection message        */
 char                    devmsg[16];     /* Device message            */
 char                    hostmsg[256];   /* Host ID message           */
+char                    num_procs[16];  /* #of processors string     */
 char                    rejmsg[256];    /* Rejection message         */
 char                    group[16];      /* Console group             */
 
@@ -1242,29 +1237,29 @@ char                    group[16];      /* Console group             */
         struct hostent*  pHE;           /* Addr of hostent structure */
         char*            clientname;    /* Addr of client hostname   */
 
-    pHE = gethostbyaddr ((unsigned char*)(&client.sin_addr),
-                         sizeof(client.sin_addr), AF_INET);
+        pHE = gethostbyaddr ((unsigned char*)(&client.sin_addr),
+                            sizeof(client.sin_addr), AF_INET);
 
-    if (pHE != NULL && pHE->h_name != NULL
-     && pHE->h_name[0] != '\0') {
-        clientname = (char*) pHE->h_name;
-    } else {
-        clientname = "host name unknown";
-    }
+        if (pHE != NULL && pHE->h_name != NULL
+        && pHE->h_name[0] != '\0') {
+            clientname = (char*) pHE->h_name;
+        } else {
+            clientname = "host name unknown";
+        }
 
-    TNSDEBUG1("DBG018: Received connection from %s (%s)\n",
-            clientip, clientname);
+        TNSDEBUG1("console: DBG018: Received connection from %s (%s)\n",
+                clientip, clientname);
     }
 #else
-    TNSDEBUG1("DBG018: Received connection from %s\n",
-        clientip);
+    TNSDEBUG1("console: DBG018: Received connection from %s\n",
+            clientip );
 #endif
 
     /* Negotiate telnet parameters */
     rc = negotiate (csock, &class, &model, &extended, &devnum, group);
     if (rc != 0)
     {
-        close (csock); csock = -1;
+        close_socket (csock);
         if (clientip) free(clientip);
         return NULL;
     }
@@ -1305,6 +1300,7 @@ char                    group[16];      /* Console group             */
                continue;
            }
         }
+
         /* Obtain the device lock */
         obtain_lock (&dev->lock);
 
@@ -1338,17 +1334,6 @@ char                    group[16];      /* Console group             */
             dev->busy = dev->reserved = dev->suspended =
             dev->pending = dev->pcipending = dev->attnpending = 0;
 
-            /* Add device to the 'old' set such that the
-               console_connection_handler thread can then
-               auto-close it whenever they disconnect */
-            obtain_lock( &console_lock );
-            {
-            FD_SET (dev->fd, &o_rset);
-                if (dev->fd > o_maxfd) o_maxfd = dev->fd;
-                if (dev->fd < o_minfd) o_minfd = dev->fd;
-            }
-            release_lock( &console_lock );
-
             release_lock (&dev->lock);
 
             break;
@@ -1360,12 +1345,27 @@ char                    group[16];      /* Console group             */
     } /* end for(dev) */
 
     /* Build connection message for client */
-    snprintf (hostmsg, sizeof(hostmsg),
-                "running on %s (%s %s)",
-                hostinfo.nodename, hostinfo.sysname,
-                hostinfo.release);
+
+    if ( cons_hostinfo.num_procs > 1 )
+        snprintf( num_procs, sizeof(num_procs), "MP=%d", cons_hostinfo.num_procs );
+    else
+        strlcpy( num_procs, "UP", sizeof(num_procs) );
+
+    snprintf
+    (
+        hostmsg, sizeof(hostmsg),
+
+        "running on %s (%s-%s.%s %s %s)"
+
+        ,cons_hostinfo.nodename
+        ,cons_hostinfo.sysname
+        ,cons_hostinfo.release
+        ,cons_hostinfo.version
+        ,cons_hostinfo.machine
+        ,num_procs
+    );
     snprintf (conmsg, sizeof(conmsg),
-                "Hercules version %s built at %s %s",
+                "Hercules version %s built on %s %s",
                 VERSION, __DATE__, __TIME__);
 
     if (dev)
@@ -1443,7 +1443,7 @@ char                    group[16];      /* Console group             */
 
         /* Close the connection and terminate the thread */
         SLEEP (5);
-        close (csock); csock = -1;
+        close_socket (csock);
         if (clientip) free(clientip);
         return NULL;
     }
@@ -1506,12 +1506,17 @@ char                    group[16];      /* Console group             */
 
 
 /*-------------------------------------------------------------------*/
-/* Console connection thread shutdown function                       */
+/* CONSOLE CONNECTION AND ATTENTION HANDLER THREAD                   */
 /*-------------------------------------------------------------------*/
-static int console_cnslcnt = 0;
 
-static void console_shutdown(void * unused __attribute__ ((unused)) )
+static int     console_cnslcnt  = 0;    /* count of connected terms  */
+static LOCK    console_lock;            /* console_cnslcnt lock      */
+static int     did_init         = 0;    /* console_lock initialized  */
+
+static void console_shutdown(void * unused)
 {
+    UNREFERENCED(unused);
+
     obtain_lock( &console_lock );
     {
         console_cnslcnt = 0;
@@ -1520,64 +1525,23 @@ static void console_shutdown(void * unused __attribute__ ((unused)) )
     release_lock( &console_lock );
 }
 
-
-/*-------------------------------------------------------------------*/
-/* Utility function to locate a specific console DEVBLK entry...     */
-/*                                                                   */
-/*                     ***   NOTE  ***                               */
-/*                                                                   */
-/* The device lock (&dev->lock) will be HELD if the entry is found!  */
-/* It's the CALLER'S responsibility to release it when thru with it! */
-/*-------------------------------------------------------------------*/
-static DEVBLK*  find_console_DEVBLK( int fd )
-{
-    DEVBLK* dev;
-
-    if (fd > 0)
-    {
-        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        {
-            if (dev->allocated)
-			{
-				obtain_lock( &dev->lock );
-				{
-					if (dev->console)
-					{
-						if (fd == dev->fd)
-							return dev;
-					}
-				}
-				release_lock( &dev->lock );
-			}
-        }
-    }
-    return NULL;  // (not found)
-}
-
-
-/*-------------------------------------------------------------------*/
-/* CONSOLE CONNECTION AND ATTENTION HANDLER THREAD                   */
-/*-------------------------------------------------------------------*/
 static void *
 console_connection_handler (void *arg)
 {
-int                     rc = 0;         /* Return code               */
-int                     lsock;          /* Socket for listening      */
-int                     csock;          /* Socket for conversation   */
-struct sockaddr_in     *server;         /* Server address structure  */
-fd_set                  readset;        /* Read bit map for select   */
-fd_set                  c_rset;         /* Currently valid dev->fd's */
-int                    c_minfd=INT_MAX; /* To detect closed consoles */
-int                    c_maxfd=INT_MIN; /* To detect closed consoles */
-int                    maxfd=INT_MIN;   /* Highest fd for select     */
-int                     optval;         /* Argument for setsockopt   */
-TID                     tidneg;         /* Negotiation thread id     */
-DEVBLK                 *dev;            /* -> Device block           */
-BYTE                    unitstat;       /* Status after receive data */
+int                    rc = 0;          /* Return code               */
+int                    lsock;           /* Socket for listening      */
+int                    csock;           /* Socket for conversation   */
+struct sockaddr_in    *server;          /* Server address structure  */
+fd_set                 readset;         /* Read bit map for select   */
+int                    maxfd;           /* Highest fd for select     */
+int                    optval;          /* Argument for setsockopt   */
+TID                    tidneg;          /* Negotiation thread id     */
+DEVBLK                *dev;             /* -> Device block           */
+BYTE                   unitstat;        /* Status after receive data */
 
     UNREFERENCED(arg);
 
-    hdl_adsc(console_shutdown, NULL);
+    hdl_adsc("console_shutdown",console_shutdown, NULL);
 
     /* Display thread started message on control panel */
     logmsg (_("HHCTE001I Console connection thread started: "
@@ -1585,21 +1549,21 @@ BYTE                    unitstat;       /* Status after receive data */
             thread_id(), getpid());
 
     /* Get information about this system */
-    uname (&hostinfo);
+    init_hostinfo( &cons_hostinfo );
 
     /* Obtain a socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0);
 
     if (lsock < 0)
     {
-        TNSERROR("DBG025: socket: %s\n", strerror(errno));
+        TNSERROR("console: DBG025: socket: %s\n", strerror(HSO_errno));
         return NULL;
     }
 
     /* Allow previous instance of socket to be reused */
     optval = 1;
     setsockopt (lsock, SOL_SOCKET, SO_REUSEADDR,
-                &optval, sizeof(optval));
+                (GETSET_SOCKOPT_T*)&optval, sizeof(optval));
 
     /* Prepare the sockaddr structure for the bind */
     if(!( server = get_inet_socket(config_cnslport) ))
@@ -1614,7 +1578,7 @@ BYTE                    unitstat;       /* Status after receive data */
     {
         rc = bind (lsock, (struct sockaddr *)server, sizeof(struct sockaddr_in));
 
-        if (rc == 0 || errno != EADDRINUSE) break;
+        if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
 
         logmsg (_("HHCTE002W Waiting for port %u to become free\n"),
                 ntohs(server->sin_port));
@@ -1624,22 +1588,19 @@ BYTE                    unitstat;       /* Status after receive data */
 
     if (rc != 0)
     {
-        TNSERROR("DBG026: bind: %s\n", strerror(errno));
+        TNSERROR("console: DBG026: bind: %s\n", strerror(HSO_errno));
         return NULL;
     }
 
     /* Put the socket into listening state */
     if ((rc = listen (lsock, 10)) < 0)
     {
-        TNSERROR("DBG027: listen: %s\n", strerror(errno));
+        TNSERROR("console: DBG027: listen: %s\n", strerror(HSO_errno));
         return NULL;
     }
 
     logmsg (_("HHCTE003I Waiting for console connection on port %u\n"),
             ntohs(server->sin_port));
-
-    /* Initialize 'old' set to empty */
-    FD_ZERO(&o_rset); o_minfd=INT_MAX; o_maxfd=INT_MIN;
 
     /* Handle connection requests and attention interrupts */
     for (;;)
@@ -1652,104 +1613,75 @@ BYTE                    unitstat;       /* Status after receive data */
         if (time_to_exit) break;
 
         /* Initialize the select parameters */
+
         FD_ZERO ( &readset ); maxfd=INT_MIN;
         FD_SET  ( lsock, &readset ); maxfd = lsock;
         SUPPORT_WAKEUP_CONSOLE_SELECT_VIA_PIPE( maxfd, &readset );
 
         /* Include the socket for each valid connected console */
-        FD_ZERO(&c_rset); c_minfd=INT_MAX; c_maxfd=INT_MIN;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
-            if ( !dev->allocated ) continue;
+            if ( !dev->allocated) continue;
 
             obtain_lock( &dev->lock );
             {
-                if ( dev->console && dev->connected )
+                if ( dev->console )
                 {
-                    /* VERIFY that the file descriptor is valid.
-                       If it's NOT, then IGNORE this console device
-                       since it's thus obvious that SOMETHING has
-                       gone wrong SOMEWHERE at some point! (some
-                       sort of race condition SOMEWHERE, obviously)
-                    */
-                    if (dev->fd < 0)
+                    if ( dev->connected )
                     {
-                        // Ah-HA! We may have FINALLY found (or at
-                        // least have gotten a little bit closer to
-                        // finding) the ROOT CAUSE of our problematic
-                        // "DBG028 select: Bad FIle Number" problem!
-                        logmsg
-                        (
-                            "\n"
-                            "*********** DBG028 CONSOLE BUG ***********\n"
-                            "device %4.4X: 'connected', but dev->fd = -1\n"
-                            "\n"
-
-                            ,dev->devnum
-                        );
-                        dev->connected = 0;  // (since it's not connected!)
-                    }
-                    else
-                    {
-                        /* Add it to our 'current' set to
-                           detect if or when it's closed */
-                        FD_SET (dev->fd, &c_rset);
-                        if (dev->fd > c_maxfd) c_maxfd = dev->fd;
-                        if (dev->fd < c_minfd) c_minfd = dev->fd;
-
-                        /* Add it to our read set only if it's
-                           not busy nor interrupt pending */
-                        if (1
-                            && (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
-                            && !IOPENDING(dev)
-                            && !(dev->scsw.flag3 & SCSW3_SC_PEND)
-                        )
+                        /* VERIFY that the file descriptor is valid.
+                           If it's NOT, then IGNORE this console device
+                           since it's thus obvious that SOMETHING has
+                           gone wrong SOMEWHERE at some point! (some
+                           sort of race condition SOMEWHERE, obviously)
+                        */
+                        if (dev->fd < 0)
                         {
-                            FD_SET (dev->fd, &readset);
-                            if (dev->fd > maxfd) maxfd = dev->fd;
+                            // Ah-HA! We may have FINALLY found (or at
+                            // least have gotten a little bit closer to
+                            // finding) the ROOT CAUSE of our problematic
+                            // "DBG028 select: Bad FIle Number" problem!
+                            logmsg
+                            (
+                                "\n"
+                                "*********** DBG028 CONSOLE BUG ***********\n"
+                                "device %4.4X: 'connected', but dev->fd = -1\n"
+                                "\n"
+
+                                ,dev->devnum
+                            );
+                            dev->connected = 0;  // (since it's not connected!)
+                        }
+                        else
+                        {
+                            /* Add it to our read set only if it's
+                            not busy nor interrupt pending */
+                            if (1
+                                && (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
+                                && !IOPENDING(dev)
+                                && !(dev->scsw.flag3 & SCSW3_SC_PEND)
+                            )
+                            {
+                                FD_SET (dev->fd, &readset);
+                                if (dev->fd > maxfd) maxfd = dev->fd;
+                            }
+                        }
+                    }
+                    else // ( !dev->connected )
+                    {
+                        if ( dev->fd >= 0 )
+                        {
+                            close_socket ( dev->fd );
+                            dev->fd = -1;
                         }
 
-                    }/* if (dev->fd < 0) */
+                    } /* if (dev->connected) */
 
-                }/* if ( dev->console && dev->connected ) */
+                } /* if (dev->console) */
             }
             release_lock( &dev->lock );
+
         } /* end for(dev) */
-
-        /* Auto-close any no longer existing connections */
-        obtain_lock( &console_lock );
-        {
-            /* TECHNIQUE: scan our 'old' set from o_minfd to o_maxfd,
-               and for each member of the set, if it's not also in our
-              'current' set, then it's no longer connected so close it */
-            int fd;
-            for ( fd = o_minfd; fd <= o_maxfd; fd++ )
-            {
-                /* (if it's a member of the old set
-                    but not a member of the current set) */
-                if ( FD_ISSET(fd, &o_rset) &&
-                    ( fd < c_minfd || fd > c_maxfd || !FD_ISSET(fd, &c_rset) )
-                )
-                {
-                    dev = find_console_DEVBLK( fd );
-                    if (dev)
-                    {
-                        close(fd);
-                        dev->fd = -1;
-                        dev->connected = 0;
-                        release_lock( &dev->lock );
-                    }
-                    else
-                        close(fd);
-                }
-            }
-
-            /* Move 'current' to 'old' for next time */
-            memcpy(&o_rset, &c_rset, sizeof(o_rset));
-            o_minfd = c_minfd;
-            o_maxfd = c_maxfd;
-        }
-        release_lock( &console_lock );
 
         /* Wait for a file descriptor to become ready */
         rc = select ( maxfd+1, &readset, NULL, NULL, NULL );
@@ -1760,7 +1692,7 @@ BYTE                    unitstat;       /* Status after receive data */
         /* Log select errors */
         if (rc < 0 )
         {
-            int select_errno = errno;     // (preserve orig errno)
+            int select_errno = HSO_errno; // (preserve orig errno)
             static int issue_errmsg = 1;  // (prevents msgs flood)
 
             if (EBADF == select_errno)
@@ -1793,7 +1725,7 @@ BYTE                    unitstat;       /* Status after receive data */
                 issue_errmsg = 1;
             if ( issue_errmsg && EINTR != select_errno )
             {
-                TNSERROR("DBG028: select: %s\n", strerror(select_errno));
+                TNSERROR("console: DBG028: select: %s\n", strerror(select_errno));
                 usleep(50000); // (wait a bit; maybe it'll fix itself??)
             }
             continue;
@@ -1807,7 +1739,7 @@ BYTE                    unitstat;       /* Status after receive data */
 
             if (csock < 0)
             {
-                TNSERROR("DBG029: accept: %s\n", strerror(errno));
+                TNSERROR("console: DBG029: accept: %s\n", strerror(HSO_errno));
                 continue;
             }
 
@@ -1815,15 +1747,14 @@ BYTE                    unitstat;       /* Status after receive data */
             if ( create_thread (&tidneg, &sysblk.detattr,
                                 connect_client, &csock) )
             {
-                TNSERROR("DBG030: connect_client create_thread: %s\n",
+                TNSERROR("console: DBG030: connect_client create_thread: %s\n",
                         strerror(errno));
-                close (csock); csock = -1;
+                close_socket (csock);
             }
 
         } /* end if(FD_ISSET(lsock, &readset)) */
 
         /* Check if any connected client has data ready to send */
-
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
             /* Obtain the device lock */
@@ -1855,17 +1786,9 @@ BYTE                    unitstat;       /* Status after receive data */
                 /* Close the connection if an error occurred */
                 if (unitstat & CSW_UC)
                 {
-                    int fd = dev->fd; /* (save original value!) */
-                    close (dev->fd);
+                    close_socket (dev->fd);
                     dev->fd = -1;
                     dev->connected = 0;
-
-                    /* Remove it from our set */
-                    obtain_lock( &console_lock );
-                    {
-                        FD_CLR(fd, &o_rset);
-                    }
-                    release_lock( &console_lock );
                 }
 
                 /* Indicate that data is available at the device */
@@ -1896,10 +1819,11 @@ BYTE                    unitstat;       /* Status after receive data */
                     && !INITIAL_POWERON_370()
                 )
                 {
-                        rc = device_attention (dev, unitstat);
+                    rc = device_attention (dev, unitstat);
 
                     /* Trace the attention request */
-                    TNSDEBUG2("DBG020: %4.4X attention request %s; rc=%d\n",
+                    TNSDEBUG2("console: DBG020: "
+                            "%4.4X attention request %s; rc=%d\n",
                             dev->devnum,
                             (rc == 0 ? "raised" : "rejected"), rc);
                 }
@@ -1916,30 +1840,29 @@ BYTE                    unitstat;       /* Status after receive data */
     } /* end for */
 
     /* Close all connected terminals */
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
-        int fd;
-        for ( fd = c_minfd; fd <= c_maxfd; fd++ )
-            if (FD_ISSET(fd, &c_rset))
-            {
-                dev = find_console_DEVBLK( fd );
-                if (dev)
-                {
-                    close(fd);
-                    dev->fd = -1;
-                    dev->connected = 0;
-                    release_lock( &dev->lock );
-                }
-                else
-                    close(fd);
-            }
+        /* Obtain the device lock */
+        obtain_lock (&dev->lock);
+
+        /* Test for connected console with data available */
+        if (dev->console
+            && dev->fd>=0)
+        {
+            close_socket(dev->fd);
+            dev->connected=0;
+            dev->fd=-1;
+        }
+        release_lock (&dev->lock);
     }
 
     /* Close the listening socket */
-    close (lsock); lsock = -1;
+    close_socket (lsock);
     free(server);
 
     logmsg (_("HHCTE004I Console connection thread terminated\n"));
     sysblk.cnsltid = 0;
+
     return NULL;
 
 } /* end function console_connection_handler */
@@ -1961,15 +1884,15 @@ console_initialise()
         console_cnslcnt++;
 
         if (!sysblk.cnsltid)
-    {
-        if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
-                            console_connection_handler, NULL) )
         {
-            logmsg (_("HHCTE005E Cannot create console thread: %s\n"),
-                    strerror(errno));
+            if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
+                                console_connection_handler, NULL) )
+            {
+                logmsg (_("HHCTE005E Cannot create console thread: %s\n"),
+                        strerror(errno));
                 rc = 1;
+            }
         }
-    }
     }
     release_lock( &console_lock );
 
@@ -1982,12 +1905,14 @@ console_remove(DEVBLK *dev)
 {
     obtain_lock( &console_lock );
     {
-    dev->connected = 0;
-    dev->console = 0;
-    dev->fd = -1;
+        dev->connected = 0;
+        dev->console = 0;
+        dev->fd = -1;
 
-    if(!console_cnslcnt--)
-        logmsg(_("console_remove() error\n"));
+        if (console_cnslcnt <= 0)
+            logmsg(_("** BUG! console_remove() error! **\n"));
+        else
+            console_cnslcnt--;
 
         SIGNAL_CONSOLE_THREAD();
     }
@@ -3353,15 +3278,15 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-#undef sysblk
-#undef config_cnslport
-HDL_RESOLVER_SECTION;
-{
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  #undef sysblk
+  #undef config_cnslport
+  HDL_RESOLVER_SECTION;
+  {
     HDL_RESOLVE_PTRVAR( psysblk, sysblk );
     HDL_RESOLVE( config_cnslport );
-}
-END_RESOLVER_SECTION;
+  }
+  END_RESOLVER_SECTION;
 #endif
 
 

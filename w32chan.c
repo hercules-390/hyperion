@@ -5,85 +5,29 @@
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>     // (needed 1st to set OPTION_FTHREADS flag appropriately)
-#endif
+#include "hstdinc.h"
 
-#include "featall.h"    // (needed 2nd to set OPTION_FISHIO flag appropriately)
+#define _W32CHAN_C_
+#define _HENGINE_DLL_
 
-#if !defined(OPTION_FISHIO)
-int dummy = 0;
-#else // defined(OPTION_FISHIO)
+#include "hercules.h"
+#include "w32chan.h"
 
-#include <windows.h>    // (standard WIN32)
-#include <errno.h>      // (need "errno")
-#include <stdarg.h>     // (need "va_list", etc)
-#include <stdio.h>      // (need "FILE", "vfprintf", etc)
-#include <malloc.h>     // (need "malloc", etc)
-#include <sys/time.h>   // (need "struct timeval" for hscutl.h)
-#include "logger.h"     // (need "logmsg" macro and functions)
-#include "fthreads.h"   // (need "fthread_create")
-#include "w32chan.h"    // (function prototypes for this module)
-#include "linklist.h"   // (linked list macros)
-#include "hercnls.h"    // (need NLS support)
-#include "hscutl.h"     // (need setpriority)
+#if defined(OPTION_FISHIO)
 
 /////////////////////////////////////////////////////////////////////////////
-// (helper macros...)
+// Internal scheduler helper macros...
 
 #if defined(FISH_HANG)
-
-    #include "fishhang.h"
-
-    #define MyInitializeCriticalSection(lock)       (FishHang_InitializeCriticalSection(__FILE__,__LINE__,(lock)))
-    #define MyDeleteCriticalSection(lock)           (FishHang_DeleteCriticalSection(__FILE__,__LINE__,(lock)))
-    #define MyCreateEvent(sec,man,set,name)         (FishHang_CreateEvent(__FILE__,__LINE__,(sec),(man),(set),(name)))
-    #define MySetEvent(handle)                      (FishHang_SetEvent(__FILE__,__LINE__,(handle)))
-    #define MyResetEvent(handle)                    (FishHang_ResetEvent(__FILE__,__LINE__,(handle)))
-    #define MyWaitForSingleObject(handle,millisecs) (FishHang_WaitForSingleObject(__FILE__,__LINE__,(handle),(millisecs)))
-    #define MyCloseHandle(handle)                   (FishHang_CloseHandle(__FILE__,__LINE__,(handle)))
     #define LockScheduler()                         (FishHang_EnterCriticalSection(__FILE__,__LINE__,&IOSchedulerLock))
     #define LockThreadParms(pThreadParms)           (FishHang_EnterCriticalSection(__FILE__,__LINE__,&pThreadParms->IORequestListLock))
     #define UnlockScheduler()                       (FishHang_LeaveCriticalSection(__FILE__,__LINE__,&IOSchedulerLock))
     #define UnlockThreadParms(pThreadParms)         (FishHang_LeaveCriticalSection(__FILE__,__LINE__,&pThreadParms->IORequestListLock))
-
-#else // !defined(FISH_HANG)
-
-    #define MyInitializeCriticalSection(lock)       (InitializeCriticalSection((lock)))
-    #define MyDeleteCriticalSection(lock)           (DeleteCriticalSection((lock)))
-    #define MyCreateEvent(sec,man,set,name)         (CreateEvent((sec),(man),(set),(name)))
-    #define MySetEvent(handle)                      (SetEvent((handle)))
-    #define MyResetEvent(handle)                    (ResetEvent((handle)))
-    #define MyWaitForSingleObject(handle,millisecs) (WaitForSingleObject((handle),(millisecs)))
-    #define MyCloseHandle(handle)                   (CloseHandle((handle)))
+#else
     #define LockScheduler()                         (EnterCriticalSection(&IOSchedulerLock))
     #define LockThreadParms(pThreadParms)           (EnterCriticalSection(&pThreadParms->IORequestListLock))
     #define UnlockScheduler()                       (LeaveCriticalSection(&IOSchedulerLock))
     #define UnlockThreadParms(pThreadParms)         (LeaveCriticalSection(&pThreadParms->IORequestListLock))
-
-#endif // defined(FISH_HANG)
-
-#define IsEventSet(hEventHandle) (WaitForSingleObject(hEventHandle,0) == WAIT_OBJECT_0)
-
-/////////////////////////////////////////////////////////////////////////////
-// Debugging
-
-#if defined(DEBUG) || defined(_DEBUG)
-    #define TRACE(a...) logmsg(a)
-    #define ASSERT(a) \
-        do \
-        { \
-            if (!(a)) \
-            { \
-                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
-            } \
-        } \
-        while(0)
-    #define VERIFY(a) ASSERT((a))
-#else
-    #define TRACE(a...)
-    #define ASSERT(a)
-    #define VERIFY(a) ((void)(a))
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -724,7 +668,7 @@ char*  PrintDEVIOREQUEST(DEVIOREQUEST* pIORequest, DEVTHREADPARMS* pDEVTHREADPAR
     }
     else pNextDEVIOREQUEST = (DEVIOREQUEST*) &pDEVTHREADPARMS->IORequestListHeadListEntry;
 
-    sprintf(PrintDEVIOREQUESTBuffer,
+    snprintf(PrintDEVIOREQUESTBuffer,sizeof(PrintDEVIOREQUESTBuffer),
         "DEVIOREQUEST @ %8.8X\n"
         "               pDevBlk                       = %8.8X\n"
         "               wDevNum                       = %4.4X\n"
@@ -734,6 +678,8 @@ char*  PrintDEVIOREQUEST(DEVIOREQUEST* pIORequest, DEVTHREADPARMS* pDEVTHREADPAR
             pIORequest->wDevNum,
             (int)pNextDEVIOREQUEST
         );
+
+    PrintDEVIOREQUESTBuffer[ sizeof(PrintDEVIOREQUESTBuffer) - 1 ] = 0;
 
     return PrintDEVIOREQUESTBuffer;
 }
@@ -751,7 +697,7 @@ void  PrintAllDEVIOREQUESTs(DEVTHREADPARMS* pDEVTHREADPARMS)
     {
         pDEVIOREQUEST = CONTAINING_RECORD(pListEntry,DEVIOREQUEST,IORequestListLinkingListEntry);
         pListEntry = pListEntry->Flink;
-        fprintf(stdout,"%s\n",PrintDEVIOREQUEST(pDEVIOREQUEST,pDEVTHREADPARMS));
+        FishHang_Printf("%s\n",PrintDEVIOREQUEST(pDEVIOREQUEST,pDEVTHREADPARMS));
     }
 }
 
@@ -781,7 +727,7 @@ char*  PrintDEVTHREADPARMS(DEVTHREADPARMS* pDEVTHREADPARMS)
     }
     else pNextDEVTHREADPARMS = (DEVTHREADPARMS*) &ThreadListHeadListEntry;
 
-    sprintf(PrintDEVTHREADPARMSBuffer,
+    snprintf(PrintDEVTHREADPARMSBuffer,sizeof(PrintDEVTHREADPARMSBuffer),
 
         "DEVTHREADPARMS @ %8.8X\n"
         "                 dwThreadID                 = %8.8X\n"
@@ -801,6 +747,8 @@ char*  PrintDEVTHREADPARMS(DEVTHREADPARMS* pDEVTHREADPARMS)
             ,(int)pDEVIOREQUEST
             ,(int)pNextDEVTHREADPARMS
         );
+
+    PrintDEVTHREADPARMSBuffer[ sizeof(PrintDEVTHREADPARMSBuffer) - 1 ] = 0;
 
     return PrintDEVTHREADPARMSBuffer;
 }
@@ -823,7 +771,7 @@ void  PrintAllDEVTHREADPARMSs()
     }
     else pDEVTHREADPARMS = (DEVTHREADPARMS*) &ThreadListHeadListEntry;
 
-    fprintf(stdout,"\nDEVTHREADPARMS LIST ANCHOR @ %8.8X --> %8.8X\n\n",
+    FishHang_Printf("\nDEVTHREADPARMS LIST ANCHOR @ %8.8X --> %8.8X\n\n",
         (int)&ThreadListHeadListEntry,(int)pDEVTHREADPARMS);
 
     while (pListEntry != &ThreadListHeadListEntry)
@@ -832,7 +780,7 @@ void  PrintAllDEVTHREADPARMSs()
 
         LockThreadParms(pDEVTHREADPARMS);
 
-        fprintf(stdout,"%s\n",PrintDEVTHREADPARMS(pDEVTHREADPARMS));
+        FishHang_Printf("%s\n",PrintDEVTHREADPARMS(pDEVTHREADPARMS));
         PrintAllDEVIOREQUESTs(pDEVTHREADPARMS);
 
         UnlockThreadParms(pDEVTHREADPARMS);

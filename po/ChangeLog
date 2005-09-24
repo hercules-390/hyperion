@@ -1,3 +1,8 @@
+2005-05-12  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* Makefile.in.in: Upgrade to gettext-0.14.4.
+	* Rules-quot: Upgrade to gettext-0.14.4.
+
 2003-08-26  gettextize  <bug-gnu-gettext@gnu.org>
 
 	* boldquot.sed: New file, from gettext-0.11.5.

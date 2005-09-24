@@ -9,6 +9,11 @@
 || ----------------------------------------------------------------------------
 */
 
+#include "hstdinc.h"
+
+#define _SLLIB_C_
+#define _HTAPE_DLL_
+
 #include "hercules.h"
 #include "sllib.h"
 
@@ -209,6 +214,7 @@ valfm[] =
 
 ==DOC==*/
 
+DLL_EXPORT
 char *
 sl_atoe( void *dbuf, void *sbuf, int slen )
 {
@@ -300,6 +306,7 @@ sl_atoe( void *dbuf, void *sbuf, int slen )
 
 ==DOC==*/
 
+DLL_EXPORT
 char *
 sl_etoa( void *dbuf, void *sbuf, int slen )
 {
@@ -377,6 +384,7 @@ sl_etoa( void *dbuf, void *sbuf, int slen )
 
 ==DOC==*/
 
+DLL_EXPORT
 int
 sl_islabel( SLLABEL *lab, void *buf, int len )
 {
@@ -483,6 +491,7 @@ sl_islabel( SLLABEL *lab, void *buf, int len )
 
 ==DOC==*/
 
+DLL_EXPORT
 int
 sl_istype( void *buf, int type, int num )
 {
@@ -569,6 +578,7 @@ sl_istype( void *buf, int type, int num )
 
 ==DOC==*/
 
+DLL_EXPORT
 char *
 sl_fmtdate( char *dest, char *src, int fromto )
 {
@@ -740,7 +750,7 @@ sl_fmtdate( char *dest, char *src, int fromto )
             fmt->key[ i1 ] = k4; \
             fmt->val[ i1 ] = fmt->f2; \
             memcpy( fmt->f2, lab->f2, l3 );
-
+DLL_EXPORT
 void
 sl_fmtlab( SLFMT *fmt, SLLABEL *lab )
 {
@@ -892,6 +902,7 @@ sl_fmtlab( SLFMT *fmt, SLLABEL *lab )
 
 ==DOC==*/
 
+DLL_EXPORT
 int
 sl_vol( SLLABEL *lab,
         char *volser,
@@ -1038,6 +1049,7 @@ sl_vol( SLLABEL *lab,
 
 ==DOC==*/
 
+DLL_EXPORT
 int
 sl_ds1( SLLABEL *lab,
         int type,
@@ -1290,6 +1302,7 @@ sl_ds1( SLLABEL *lab,
 
 ==DOC==*/
 
+DLL_EXPORT
 int
 sl_ds2( SLLABEL *lab,
         int type,
@@ -1582,6 +1595,7 @@ sl_ds2( SLLABEL *lab,
 
 ==DOC==*/
 
+DLL_EXPORT
 int
 sl_usr( SLLABEL *lab,
         int type,
@@ -1673,6 +1687,7 @@ sl_usr( SLLABEL *lab,
 
 ==DOC==*/
 
+DLL_EXPORT
 const char *
 sl_error( int rc )
 {

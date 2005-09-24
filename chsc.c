@@ -9,6 +9,7 @@
 /* for the Hercules ESA/390 emulator.                                */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
 #include "hercules.h"
 
 #include "opcode.h"
@@ -188,7 +189,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 #endif
         default:
 
-            if( HDC(debug_chsc_unknown_request, chsc_rsp, chsc_req, regs) )
+            if( HDC3(debug_chsc_unknown_request, chsc_rsp, chsc_req, regs) )
                 break;
 
             /* Set response field length */

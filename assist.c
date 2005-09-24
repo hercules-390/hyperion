@@ -13,6 +13,7 @@
 /*                  suggested by Brandon Hill                        */
 
 
+#include "hstdinc.h"
 #include "hercules.h"
 
 #include "opcode.h"

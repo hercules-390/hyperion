@@ -12,6 +12,8 @@
 /*      IEBCOPY native dataset support by Ronen Tzur                 */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 #include "dasdblks.h"
 
@@ -28,18 +30,10 @@
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
 #define CASERET(s)      case s: return (#s)
-#define XMINF(lvl,format) \
-        do { \
-        if(infolvl>=lvl) fprintf(stdout, _(format)); \
-        } while(0)
-#define XMINFF(lvl,format,a...) \
-        do { \
-        if(infolvl>=lvl) fprintf(stdout, _(format), ## a); \
-        } while(0)
-#define XMERR(format) \
-        fprintf(stdout, _(format))
-#define XMERRF(format,a...) \
-        fprintf(stdout, _(format), ## a)
+#define XMINF           info_msg
+#define XMINFF          info_msg
+#define XMERR           printf
+#define XMERRF          printf
 
 #define R0_DATALEN      8
 #define IPL1_KEYLEN     4
@@ -127,14 +121,6 @@ BYTE noiplccw2[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
    3=Member information, 4=Text units, record headers, 5=Dump data */
 int  infolvl = 1;
 
-#ifdef EXTERNALGUI
-#if 0
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif
-#endif /*EXTERNALGUI*/
-
 /*-------------------------------------------------------------------*/
 /* Subroutine to display command syntax and exit                     */
 /*-------------------------------------------------------------------*/
@@ -158,12 +144,27 @@ argexit ( int code )
             "\t-bz2: compress using bzip2\n"
 #endif
             );
-    if (sizeof(off_t) > 4)
+    if (sizeof(OFF_T) > 4)
         fprintf (stderr,
             "\t-lfs: create single large output file\n"
             );
     exit(code);
 } /* end function argexit */
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to display an informational message                    */
+/*-------------------------------------------------------------------*/
+static void
+info_msg (int lvl, char *msg, ...)
+{
+va_list vl;
+ 
+    if (infolvl >= lvl)
+    {
+        va_start(vl, msg);
+        vprintf (msg, vl); 
+    }
+} /* end function info_msg */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to load a S/390 integer value from a buffer            */
@@ -368,9 +369,11 @@ int             txtlen;                 /* Byte count from TXT card  */
 int             txtadr;                 /* Address from TXT card     */
 int             tfd;                    /* Object file descriptor    */
 BYTE            objrec[80];             /* Object card image         */
+BYTE            pathname[MAX_PATH];     /* iplfnm in host path format*/
 
     /* Open the object file */
-    tfd = open (iplfnm, O_RDONLY|O_BINARY);
+    hostpath(pathname, iplfnm, sizeof(pathname));
+    tfd = open (pathname, O_RDONLY|O_BINARY);
     if (tfd < 0)
     {
         XMERRF ("HHCDL034E Cannot open %s: %s\n",
@@ -2674,9 +2677,11 @@ int             outrec = 0;             /* Output record number      */
 TTRCONV        *ttrtab;                 /* -> TTR conversion table   */
 int             numttr = 0;             /* TTR table array index     */
 COPYR1         *copyr1;                 /* -> header record 1        */
+BYTE            pathname[MAX_PATH];     /* xfname in host path format*/
 
     /* Open the input file */
-    xfd = open (xfname, O_RDONLY|O_BINARY);
+    hostpath(pathname, xfname, sizeof(pathname));
+    xfd = open (pathname, O_RDONLY|O_BINARY);
     if (xfd < 0)
     {
         XMERRF ("HHCDL106E Cannot open %s: %s\n",
@@ -3454,8 +3459,9 @@ int             outtrkbr = 0;           /* Output bytes remaining on
                                            track of real device      */
 int             outtrk = 0;             /* Output relative track     */
 int             outrec = 0;             /* Output record number      */
-struct stat     st;                     /* Data area for fstat()     */
+struct STAT     st;                     /* Data area for fstat()     */
 DATABLK         datablk;                /* Data block                */
+BYTE            pathname[MAX_PATH];     /* sfname in host path format*/
 
     /* Perform some checks */
     if (!(dsorg & DSORG_PS) && !(dsorg & DSORG_DA))
@@ -3484,7 +3490,8 @@ DATABLK         datablk;                /* Data block                */
     }
 
     /* Open the input file */
-    sfd = open (sfname, O_RDONLY|O_BINARY);
+    hostpath(pathname, sfname, sizeof(pathname));
+    sfd = open (pathname, O_RDONLY|O_BINARY);
     if (sfd < 0)
     {
         XMERRF ("HHCDL125E Cannot open %s: %s\n",
@@ -3493,7 +3500,7 @@ DATABLK         datablk;                /* Data block                */
     }
 
     /* Get input file status */
-    rc = fstat(sfd, &st);
+    rc = FSTAT(sfd, &st);
     if (rc < 0)
     {
         XMERRF ("HHCDL126E Cannot stat %s: %s\n",
@@ -3712,7 +3719,7 @@ static int      stmtno = 0;             /* Statement number          */
 
 #ifdef EXTERNALGUI
         /* Indicate input file progess */
-        if (extgui) fprintf (stderr, "IPOS=%ld\n", ftell(cfp));
+        if (extgui) fprintf (stderr, "IPOS=%lld\n", (U64)FTELL(cfp));
 #endif /*EXTERNALGUI*/
 
         /* Check for DOS end of file character */
@@ -4271,10 +4278,6 @@ int             fsflag = 0;             /* 1=Free space message sent */
         /* Issue free space information message */
         if (fsflag == 0)
         {
-#ifdef EXTERNALGUI
-            if (extgui) fprintf (stderr, "REQCYLS=%d\n", reqcyls);
-            else
-#endif /*EXTERNALGUI*/
             XMINFF (1, "HHCDL014I Free space starts at cyl %d head %d\n",
                     outcyl, outhead);
             fsflag = 1;
@@ -4370,12 +4373,15 @@ int             stmtno;                 /* Statement number          */
 BYTE            comp = 0xff;            /* Compression algoritm      */
 int             altcylflag = 0;         /* Alternate cylinders flag  */
 int             lfs = 0;                /* 1 = Large file            */
+BYTE            pathname[MAX_PATH];     /* cfname in host path format*/
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 
@@ -4398,7 +4404,7 @@ int             lfs = 0;                /* 1 = Large file            */
 #endif
         else if (strcmp("a", &argv[1][1]) == 0)
             altcylflag = 1;
-        else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(off_t) > 4)
+        else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(OFF_T) > 4)
             lfs = 1;
         else argexit(0);
     }
@@ -4426,7 +4432,8 @@ int             lfs = 0;                /* 1 = Large file            */
     }
 
     /* Open the control file */
-    cfp = fopen (cfname, "r");
+    hostpath(pathname, cfname, sizeof(pathname));
+    cfp = fopen (pathname, "r");
     if (cfp == NULL)
     {
         XMERRF ("HHCDL001E Cannot open %s: %s\n",
@@ -4508,6 +4515,9 @@ int             lfs = 0;                /* 1 = Large file            */
             devtype, volser, outheads, outtrklv);
 
     /* Create the output file */
+#ifdef EXTERNALGUI
+    if (extgui) fprintf (stderr, "REQCYLS=%d\n", reqcyls);
+#endif /*EXTERNALGUI*/
     rc = create_ckd (ofname, devtype, outheads, outmaxdl, reqcyls,
                      volser, comp, lfs, 0, 0);
     if (rc < 0)

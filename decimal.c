@@ -21,6 +21,7 @@
 /* packed_to_binary subroutine - Roger Bowler               29/06/03 */
 /* binary_to_packed subroutine - Roger Bowler              02jul2003 */
 /*-------------------------------------------------------------------*/
+#include "hstdinc.h"
 
 #include "hercules.h"
 

@@ -27,6 +27,7 @@
 /*      ASN-and-LX-reuse facility - Roger Bowler, June 2004      @ALR*/
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
 #include "hercules.h"
 
 #include "opcode.h"
@@ -108,10 +109,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    | regs->psw.zeroword
                    )
                  );
-        if(unlikely(regs->psw.zeroilc))
-            STORE_DW ( addr + 8, regs->psw.IA );
-        else
-            STORE_DW ( addr + 8, (regs->psw.IA & ADDRESS_MAXWRAP(regs)) );
+        STORE_DW ( addr + 8, regs->psw.IA_G );
 #endif /*defined(FEATURE_ESAME)*/
 } /* end function ARCH_DEP(store_psw) */
 
@@ -510,7 +508,7 @@ static char *pgmintname[] = {
     realregs->psw.intcode = pcode;
 
     /* Call debugger if active */
-    HDC(debug_program_interrupt, regs, pcode);
+    HDC2(debug_program_interrupt, regs, pcode);
 
     /* Trace program checks other then PER event */
     if(code && (sysblk.insttrace || sysblk.inststep
@@ -876,7 +874,7 @@ U32     ioparm;                         /* I/O interruption parameter*/
 U32     ioid;                           /* I/O interruption address  */
 U32     iointid;                        /* I/O interruption ident    */
 RADR    pfx;                            /* Prefix                    */
-DWORD   csw;                            /* CSW for S/370 channels    */
+DBLWRD  csw;                            /* CSW for S/370 channels    */
 
     /* Test and clear pending I/O interrupt */
     icode = ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm, &iointid, csw);
@@ -1173,8 +1171,8 @@ int i;
         regs->cpustate = CPUSTATE_STOPPING;
         ON_IC_INTERRUPT(regs);
         sysblk.regs[cpu] = regs;
-        set_bit(4, cpu, &sysblk.config_mask);
-        set_bit(4, cpu, &sysblk.started_mask);
+        sysblk.config_mask |= BIT(cpu);
+        sysblk.started_mask |= BIT(cpu);
     }
 
     /* Initialize accelerated lookup fields */
@@ -1218,9 +1216,9 @@ void *cpu_uninit (int cpu, REGS *regs)
     if (!regs->hostregs)
     {
         /* Remove CPU from all CPU bit masks */
-        clear_bit (4, cpu, &sysblk.config_mask);
-        clear_bit (4, cpu, &sysblk.started_mask);
-        clear_bit (4, cpu, &sysblk.waiting_mask);
+        sysblk.config_mask &= ~BIT(cpu);
+        sysblk.started_mask &= ~BIT(cpu);
+        sysblk.waiting_mask &= ~BIT(cpu);
 
         sysblk.regs[cpu] = NULL;
         release_lock (&sysblk.cpulock[cpu]);
@@ -1360,18 +1358,18 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 #endif
 
         /* Wait until there is work to do */
-        HDC(debug_cpu_state, regs);
+        HDC1(debug_cpu_state, regs);
 
         regs->ints_state = IC_INITIAL_STATE;
-        clear_bit (4, regs->cpuad, &sysblk.started_mask);
+        sysblk.started_mask &= ~BIT(regs->cpuad);
         while (regs->cpustate == CPUSTATE_STOPPED)
         {
             wait_condition (&regs->intcond, &sysblk.intlock);
         }
-        set_bit (4, regs->cpuad, &sysblk.started_mask);
+        sysblk.started_mask |= BIT(regs->cpuad);
         regs->ints_state |= sysblk.ints_state;
 
-        HDC(debug_cpu_state, regs);
+        HDC1(debug_cpu_state, regs);
 
         /* Purge the lookaside buffers */
         ARCH_DEP(purge_tlb) (regs);
@@ -1403,9 +1401,9 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         }
 
         /* Wait for I/O, external or restart interrupt */
-        set_bit (4, regs->cpuad, &sysblk.waiting_mask);
+        sysblk.waiting_mask |= BIT(regs->cpuad);
         wait_condition (&regs->intcond, &sysblk.intlock);
-        clear_bit (4, regs->cpuad, &sysblk.waiting_mask);
+        sysblk.waiting_mask &= ~BIT(regs->cpuad);
 
         release_lock (&sysblk.intlock);
 
@@ -1453,16 +1451,16 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
             /* Wait for start command from panel */
             obtain_lock (&sysblk.intlock);
 
-            HDC(debug_cpu_state, regs);
+            HDC1(debug_cpu_state, regs);
 
-            set_bit (4, regs->cpuad, &sysblk.waiting_mask);
+            sysblk.waiting_mask |= BIT(regs->cpuad);
             while (regs->cpustate == CPUSTATE_STOPPED)
             {
                 wait_condition (&regs->intcond, &sysblk.intlock);
             }
-            clear_bit (4, regs->cpuad, &sysblk.waiting_mask);
+            sysblk.waiting_mask &= ~BIT(regs->cpuad);
 
-            HDC(debug_cpu_state, regs);
+            HDC1(debug_cpu_state, regs);
 
             release_lock (&sysblk.intlock);
         }
@@ -1611,7 +1609,7 @@ slowloop:
 /*-------------------------------------------------------------------*/
 /* Copy program status word                                          */
 /*-------------------------------------------------------------------*/
-void copy_psw (REGS *regs, BYTE *addr)
+DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr)
 {
 REGS cregs = *regs;
 

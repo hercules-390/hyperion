@@ -1,7 +1,27 @@
+/* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2005      */
+/*                                                                   */
+/* This module contains tape related structures and defines          */
+/* for the Hercules ESA/390 emulator.                                */
+
 #ifndef __TAPEDEV_H__
 #define __TAPEDEV_H__
 
-#include "hercules.h"
+#include "scsitape.h"       /* SCSI Tape handling functions          */
+#include "htypes.h"         /* Hercules struct typedefs              */
+#include "opcode.h"         /* device_attention, SETMODE, etc.       */
+#include "parser.h"         /* generic parameter string parser       */
+
+/*-------------------------------------------------------------------*/
+/* Construct device-type appropriate sense information...            */
+/*-------------------------------------------------------------------*/
+
+extern void build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code);
+
+/*-------------------------------------------------------------------*/
+/* Internal macro definitions                                        */
+/*-------------------------------------------------------------------*/
+#define MAX_BLKLEN              65535   /* Maximum I/O buffer size   */
+#define TAPE_UNLOADED           "*"     /* Name for unloaded drive   */
 
 /*-------------------------------------------------------------------*/
 /* Definitions for 3420/3480 sense bytes                             */
@@ -118,6 +138,7 @@
 /*-------------------------------------------------------------------*/
 /* Fish - macros for checking SCSI tape device-independent status    */
 /*-------------------------------------------------------------------*/
+#if defined(OPTION_SCSI_TAPE)
 #define STS_TAPEMARK(dev)       GMT_SM      ( (dev)->sstat )
 #define STS_EOF(dev)            GMT_EOF     ( (dev)->sstat )
 #define STS_BOT(dev)            GMT_BOT     ( (dev)->sstat )
@@ -126,6 +147,7 @@
 #define STS_WR_PROT(dev)        GMT_WR_PROT ( (dev)->sstat )
 #define STS_ONLINE(dev)         GMT_ONLINE  ( (dev)->sstat )
 #define STS_NOT_MOUNTED(dev)    GMT_DR_OPEN ( (dev)->sstat )
+#endif
 
 #define  AUTOLOAD_WAIT_FOR_TAPEMOUNT_INTERVAL_SECS  (5) /* (default) */
 
@@ -197,7 +219,7 @@ OMATAPE_DESC;
 /*-------------------------------------------------------------------*/
 /* Tape media I/O function vector table layout                       */
 /*-------------------------------------------------------------------*/
-typedef struct _TAPEMEDIA_HANDLER
+struct TAPEMEDIA_HANDLER
 {
     int  (*open)       (DEVBLK*,                        BYTE *unitstat, BYTE code);
     void (*close)      (DEVBLK*);
@@ -213,18 +235,16 @@ typedef struct _TAPEMEDIA_HANDLER
     int  (*erg)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
     int  (*tapeloaded) (DEVBLK*,                        BYTE *unitstat, BYTE code);
     int  (*passedeot)  (DEVBLK*);
-}
-TAPEMEDIA_HANDLER;
+};
 
 /*-------------------------------------------------------------------*/
 /* Tape Auto-Loader table entry                                      */
 /*-------------------------------------------------------------------*/
-typedef struct _TAPEAUTOLOADENTRY
+struct TAPEAUTOLOADENTRY
 {
     char  *filename;
     int    argc;
     char **argv;
-}
-TAPEAUTOLOADENTRY;
+};
 
 #endif // __TAPEDEV_H__

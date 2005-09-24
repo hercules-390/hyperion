@@ -20,18 +20,9 @@
 //
 
 #include "hercules.h"
-#include "hercifc.h"
 
-/* ISW 02/20/2003 - Proposed patch ISW20032002-2
-   define dummy 'extgui' so that hercules can be defined on
-   a build with --enable-external-gui
-   extgui is set to 0 regardless of the environment
-   (i.e. there is no EXTERNALGUI argument to hercifc
-*/
-#ifdef EXTERNALGUI
-int   extgui=0;
-#endif
-/* End of ISW20032002-2 */
+#if defined(BUILD_HERCIFC)
+#include "hercifc.h"
 
 // --------------------------------------------------------------------
 // HERCIFC program entry point
@@ -46,6 +37,7 @@ int main( int argc, char **argv )
     CTLREQ      ctlreq;                 // Request Buffer
     int         sockfd;                 // Socket descriptor
     int         rc;                     // Return code
+    pid_t       ppid;                   // Parent's PID
     char        szMsgBuffer[255];
 
     UNREFERENCED( argc );
@@ -72,6 +64,8 @@ int main( int argc, char **argv )
         exit( 2 );
     }
 
+    ppid = getppid();
+
     // Process ioctl messages from Hercules
     while( 1 )
     {
@@ -85,6 +79,15 @@ int main( int argc, char **argv )
                      _("HHCIF003E %s: I/O error on read: %s.\n"),
                      pszProgName, strerror( errno ) );
             exit( 3 );
+        }
+
+        if( ppid != getppid() )
+        {
+            sleep( 1 ); // Let other messages go first
+            fprintf( stderr,
+                     _("HHCIF007E %s: Hercules disappeared!! .. exiting\n"),
+                     pszProgName);
+            exit( 4 );
         }
 
         switch( ctlreq.iCtlOp )
@@ -125,34 +128,34 @@ int main( int argc, char **argv )
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
 
-#if !defined(__APPLE__)
+#ifdef OPTION_TUNTAP_SETNETMASK
         case SIOCSIFNETMASK:
             pOp  = "SIOCSIFNETMASK";
             pArg = &ctlreq.iru.ifreq;
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
-
+#endif
+#ifdef OPTION_TUNTAP_SETMACADDR
         case SIOCSIFHWADDR:
             pOp  = "SIOCSIFHWADDR";
             pArg = &ctlreq.iru.ifreq;
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
-
+#endif
+#ifdef OPTION_TUNTAP_DELADD_ROUTES
         case SIOCADDRT:
             pOp  = "SIOCADDRT";
             pArg = &ctlreq.iru.rtentry;
             pIF  = ctlreq.szIFName;
             ctlreq.iru.rtentry.rt_dev = ctlreq.szIFName;
             break;
-
         case SIOCDELRT:
             pOp  = "SIOCDELRT";
             pArg = &ctlreq.iru.rtentry;
             pIF  = ctlreq.szIFName;
             ctlreq.iru.rtentry.rt_dev = ctlreq.szIFName;
             break;
-#endif /* !defined(__APPLE__) */
-
+#endif
         case CTLREQ_OP_DONE:
             close( STDIN_FILENO  );
             close( STDOUT_FILENO );
@@ -160,7 +163,7 @@ int main( int argc, char **argv )
             exit( 0 );
 
         default:
-            snprintf( szMsgBuffer, sizeof(szMsgBuffer),
+            snprintf( szMsgBuffer,sizeof(szMsgBuffer),
                      _("HHCIF004W %s: Unknown request: %8.8lX.\n"),
                      pszProgName, ctlreq.iCtlOp );
             
@@ -169,7 +172,7 @@ int main( int argc, char **argv )
             continue;
         }
             
-        snprintf( szMsgBuffer, sizeof(szMsgBuffer),
+        snprintf( szMsgBuffer,sizeof(szMsgBuffer),
                  _("HHCIF006I %s: Doing %s on %s\n"),
                  pszProgName, pOp, pIF);
 
@@ -179,7 +182,7 @@ int main( int argc, char **argv )
 
         if( rc < 0 )
         {
-            sprintf( szMsgBuffer,
+            snprintf( szMsgBuffer,sizeof(szMsgBuffer),
                      _("HHCIF005E %s: ioctl error doing %s on %s: %s\n"),
                      pszProgName, pOp, pIF, strerror( errno ) );
             
@@ -191,5 +194,4 @@ int main( int argc, char **argv )
     return 0;
 }
 
-
-
+#endif // defined(BUILD_HERCIFC)

@@ -6,15 +6,17 @@
 AUTOMAKE_OPTIONS = foreign 1.5
 ACLOCAL_AMFLAGS  = -I m4
 
-# (gettextize/libtoolize adds intl & m4 subdirectories)
-
 lns=@LN_S@
 
-SUBDIRS = intl m4 po util html man . crypto
+if HAVE_GCRYPT
+SUBDIRS = m4 po util html man . crypto
+else
+SUBDIRS = m4 po util html man
+endif
 
-LDADD = @LTLIBINTL@ @LTLIBICONV@ @LIBS@
+LDADD = @LTLIBINTL@ @LIBS@
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/intl
+AM_CPPFLAGS = -I$(top_srcdir)
 
 if BUILD_HERCIFC
   HERCIFC = hercifc
@@ -22,12 +24,15 @@ else
   HERCIFC=
 endif
 
-
+if BUILD_SHARED
+  HERCLIN=herclin
+else
+  HERCLIN=
+endif
 
 fthreads_SRC  = fthreads.c
 fishio_SRC    = w32chan.c
 fishhang_SRC  = fishhang.c
-memrchr_SRC   = memrchr.c
 
 if BUILD_FTHREADS
   FTHREADS    = $(fthreads_SRC)
@@ -49,12 +54,6 @@ else
   HOSTINFO    = hostinfo.c
 endif
 
-if USE_BUILTIN_MEMRCHR
-  MEMRCHR = memrchr.c
-else
-  MEMRCHR =
-endif
-
 # We need to still include the source for the dynamic modules
 # in with the distribution regardless of whether or not the dyanmic
 # modules themselves are to be built so if dynamic load not possible,
@@ -68,30 +67,26 @@ endif
 # even be *attempted* to be "built" if support for building dynamic modules
 # doesn't even exist on the system doing the building.
 
-dynamic_SRC        = dyngui.c  \
-                     dyninst.c \
+dynamic_SRC        = dyngui.c   \
+                     dyninst.c  \
                      hdteq.c
 
-extra_dynamic_SRC  = dynguib.h \
-                     dynguip.h \
-                     dynguiv.h \
-                     dyngui.rc
-
-dyndev_SRC         = commadpt.c \
-                     console.c  \
-                     cardpch.c  \
-                     cardrdr.c  \
-                     sockdev.c  \
-                     printer.c  \
-                     tapedev.c  \
-                     hetlib.c   \
-                     ctc_lcs.c  \
-                     ctc_ctci.c \
-                     ctcadpt.c  \
-                     w32ctca.c  \
-                     hchan.c  \
-                     tuntap.c   \
-                     qeth.c \
+dyndev_SRC         = commadpt.c  \
+                     console.c   \
+                     cardpch.c   \
+                     cardrdr.c   \
+                     sockdev.c   \
+                     printer.c   \
+                     tapedev.c   \
+                     scsitape.c  \
+                     hetlib.c    \
+                     ctc_lcs.c   \
+                     ctc_ctci.c  \
+                     ctcadpt.c   \
+                     w32ctca.c   \
+                     hchan.c     \
+                     tuntap.c    \
+                     qeth.c      \
                      con1052c.c
 
 
@@ -115,24 +110,24 @@ if OPTION_DYNAMIC_LOAD
   LTDL           = ltdl.c
 
   DYNMOD_LD_FLAGS = -module         \
-                   -no-undefined   \
-                   $(XSTATIC)      \
-                   -export-dynamic \
+                   -no-undefined    \
+                   $(XSTATIC)       \
+                   -export-dynamic  \
                    -avoid-version
 
-#  DYNMOD_LD_ADD   = libherc.la  \
+#  DYNMOD_LD_ADD   = libherc.la    \
 #                   libhercs.la    \
 #                   libhercu.la    \
 #                   $(LDADD)       \
 #                   $(LIBFTHREADS)
 
   DYNMOD_LD_ADD   = libherc.la  \
-                   libhercs.la \
+                   libhercs.la  \
                    $(LDADD)
 
   LIB_LD_FLAGS    = -export-dynamic  \
-                   $(XSTATIC)       \
-                   -no-undefined    \
+                   $(XSTATIC)        \
+                   -no-undefined     \
                    -avoid-version
 else
   DYNSRC         = $(dyndev_SRC)
@@ -140,7 +135,7 @@ else
   DYNMOD_LD_FLAGS =
   DYNMOD_LD_ADD =
   LIB_LD_FLAGS    = $(XSTATIC)    \
-                   -no-undefined \
+                   -no-undefined  \
                    -avoid-version
 endif
 
@@ -148,26 +143,26 @@ endif
 # List of Libtool shared libraries & loadable modules
 #
 
-  HERCLIBS = $(LIBFTHREADS) \
-             libhercu.la    \
-             libherct.la    \
+  HERCLIBS = $(LIBFTHREADS)  \
+             libhercu.la     \
+             libherct.la     \
              libhercd.la
 
-  HERCLIBS2 = libhercs.la \
+  HERCLIBS2 = libhercs.la  \
               libherc.la
 
-  HERCMODS = dyngui.la  \
-             dyninst.la \
-             hdteq.la   \
-             hdt1403.la \
-             hdt2703.la \
-             hdt3088.la \
-             hdt3270.la \
-             hdt3420.la \
-             hdt3505.la \
-             hdt2880.la \
-             hdt3525.la \
-             hdtqeth.la \
+  HERCMODS = dyngui.la   \
+             dyninst.la  \
+             hdteq.la    \
+             hdt1403.la  \
+             hdt2703.la  \
+             hdt3088.la  \
+             hdt3270.la  \
+             hdt3420.la  \
+             hdt3505.la  \
+             hdt2880.la  \
+             hdt3525.la  \
+             hdtqeth.la  \
              hdt1052c.la
 
 if OPTION_DYNAMIC_LOAD
@@ -187,7 +182,8 @@ bin_PROGRAMS = hercules \
                dasdcopy \
                hetget hetinit hetmap hetupd \
                dmap2hrc \
-               $(HERCIFC)
+               $(HERCIFC) \
+			   $(HERCLIN)
 
 EXTRA_PROGRAMS = hercifc
 
@@ -233,7 +229,7 @@ if OPTION_DYNAMIC_LOAD
   hdt3270_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3270_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-  hdt3420_la_SOURCES = tapedev.c
+  hdt3420_la_SOURCES = tapedev.c scsitape.c
   hdt3420_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3420_la_LIBADD  = $(DYNMOD_LD_ADD) libherct.la
 
@@ -256,8 +252,8 @@ if OPTION_DYNAMIC_LOAD
 endif
 
 if BUILD_FTHREADS
-  libfthreads_la_SOURCES = $(FTHREADS) \
-                           $(FISHHANG) \
+  libfthreads_la_SOURCES = $(FTHREADS)  \
+                           $(FISHHANG)  \
                            $(FHOSTINFO)
 
   libfthreads_la_LDFLAGS = $(LIB_LD_FLAGS)
@@ -280,7 +276,7 @@ endif
 # Tape utility subroutines (shared) library
 #
 
-  libherct_la_SOURCES = sllib.c \
+  libherct_la_SOURCES = sllib.c  \
                         hetlib.c
 
   libherct_la_LDFLAGS = $(LIB_LD_FLAGS)
@@ -308,16 +304,16 @@ endif
 #
 ## Pure Utility functions
 #
-  libhercu_la_SOURCES = version.c   \
-                        hscutl.c    \
-                        hscutl2.c   \
-                        codepage.c  \
-                        logger.c    \
-                        logmsg.c    \
-                        hdl.c       \
-                        $(HOSTINFO) \
-                        $(MEMRCHR)  \
-                        parser.c    \
+  libhercu_la_SOURCES = version.c    \
+                        hscutl.c     \
+                        hscutl2.c    \
+                        codepage.c   \
+                        logger.c     \
+                        logmsg.c     \
+                        hdl.c        \
+                        $(HOSTINFO)  \
+                        memrchr.c    \
+                        parser.c     \
                         $(LTDL)
 
   libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
@@ -328,71 +324,74 @@ endif
 # Core Hercules (shared) library
 #
 
-  libherc_la_SOURCES = impl.c      \
-                       config.c    \
-                       bldcfg.c    \
-                       panel.c     \
-                       history.c   \
-                       fillfnam.c  \
-                       ipl.c       \
-                       assist.c    \
-                       dat.c       \
-                       stack.c     \
-                       cpu.c       \
-                       vstore.c    \
-                       general1.c  \
-                       general2.c  \
-                       plo.c       \
-                       control.c   \
-                       crypto.c    \
-                       io.c        \
-                       decimal.c   \
-                       service.c   \
-                       chsc.c      \
-                       opcode.c    \
-                       diagnose.c  \
-                       diagmssf.c  \
-                       vm.c        \
-                       channel.c   \
-                       external.c  \
-                       float.c     \
-                       trace.c     \
-                       machchk.c   \
-                       vector.c    \
-                       xstore.c    \
-                       cmpsc.c     \
-                       sie.c       \
-                       qdio.c      \
-                       timer.c     \
-                       esame.c     \
-                       ieee.c      \
-                       machdep.h   \
-                       httpserv.c  \
-                       cgibin.c    \
-                       loadparm.c    \
-                       hsccmd.c    \
-                       hscmisc.c   \
-                       sr.c        \
-                       $(FISHIO)   \
-                       $(DYNSRC)   \
+  libherc_la_SOURCES = hconsole.c   \
+                       w32util.c    \
+                       strsignal.c  \
+                       impl.c       \
+                       config.c     \
+                       bldcfg.c     \
+                       panel.c      \
+                       history.c    \
+                       fillfnam.c   \
+                       ipl.c        \
+                       assist.c     \
+                       dat.c        \
+                       stack.c      \
+                       cpu.c        \
+                       vstore.c     \
+                       general1.c   \
+                       general2.c   \
+                       plo.c        \
+                       control.c    \
+                       crypto.c     \
+                       io.c         \
+                       decimal.c    \
+                       service.c    \
+                       chsc.c       \
+                       opcode.c     \
+                       diagnose.c   \
+                       diagmssf.c   \
+                       vm.c         \
+                       channel.c    \
+                       external.c   \
+                       float.c      \
+                       trace.c      \
+                       machchk.c    \
+                       vector.c     \
+                       xstore.c     \
+                       cmpsc.c      \
+                       sie.c        \
+                       qdio.c       \
+                       timer.c      \
+                       esame.c      \
+                       ieee.c       \
+                       machdep.h    \
+                       httpserv.c   \
+                       cgibin.c     \
+                       loadparm.c   \
+                       hsccmd.c     \
+                       hscmisc.c    \
+                       sr.c         \
+                       $(FISHIO)    \
+                       $(DYNSRC)    \
                        ecpsvm.c
 
-  EXTRA_libherc_la_SOURCES = $(fthreads_SRC) \
-                             $(fishhang_SRC) \
-                             $(fishio_SRC)   \
-                             $(memrchr_SRC)  \
-                             $(dynamic_SRC)  \
-                             $(extra_SRC)    \
-                             $(dyndev_SRC)   \
+  EXTRA_libherc_la_SOURCES = $(fthreads_SRC)  \
+                             $(fishhang_SRC)  \
+                             $(fishio_SRC)    \
+                             memrchr.c        \
+                             $(dynamic_SRC)   \
+                             $(extra_SRC)     \
+                             $(dyndev_SRC)    \
                              ltdl.c
 
   libherc_la_LDFLAGS = $(LIB_LD_FLAGS)
 
-  libherc_la_LIBADD = libhercs.la    \
-                      libhercu.la    \
-                      libherct.la    \
-                      libhercd.la    \
-                      $(LIBFTHREADS) \
+  libherc_la_LIBADD = libhercs.la     \
+                      libhercu.la     \
+                      libherct.la     \
+                      libhercd.la     \
+                      $(LIBFTHREADS)  \
                       $(LDADD)
 
 #
@@ -408,34 +407,34 @@ if BUILD_SHARED
   HDEPS =
 
 else
-  HLDFLAGS = -dlopen self       \
-             -dlopen dyngui.la  \
-             -dlopen dyninst.la \
-             -dlopen hdteq.la   \
-             -dlopen hdt1403.la \
-             -dlopen hdt3420.la \
-             -dlopen hdt2703.la \
-             -dlopen hdt3088.la \
-             -dlopen hdt3270.la \
-             -dlopen hdt3505.la \
-             -dlopen hdt3525.la \
-             -dlopen hdtqeth.la \
+  HLDFLAGS = -dlopen self         \
+             -dlopen dyngui.la    \
+             -dlopen dyninst.la   \
+             -dlopen hdteq.la     \
+             -dlopen hdt1403.la   \
+             -dlopen hdt3420.la   \
+             -dlopen hdt2703.la   \
+             -dlopen hdt3088.la   \
+             -dlopen hdt3270.la   \
+             -dlopen hdt3505.la   \
+             -dlopen hdt3525.la   \
+             -dlopen hdtqeth.la   \
              -dlopen hdt1052c.la
 
-  HDEPS    = dyngui.la   \
-             dyninst.la  \
-             hdteq.la    \
-             hdt1403.la  \
-             hdt3420.la  \
-             hdt2703.la  \
-             hdt3088.la  \
-             hdt3270.la  \
-             hdt3505.la  \
-             hdt3525.la  \
-             hdtqeth.la  \
-             hdt1052c.la \
-             libherc.la  \
-             libherct.la \
+  HDEPS    = dyngui.la    \
+             dyninst.la   \
+             hdteq.la     \
+             hdt1403.la   \
+             hdt3420.la   \
+             hdt2703.la   \
+             hdt3088.la   \
+             hdt3270.la   \
+             hdt3505.la   \
+             hdt3525.la   \
+             hdtqeth.la   \
+             hdt1052c.la  \
+             libherc.la   \
+             libherct.la  \
              libhercd.la
 endif
 
@@ -444,7 +443,8 @@ else
   HDEPS    =
 
 endif
-  hercules_SOURCES      = bootstrap.c \
+
+  hercules_SOURCES      = bootstrap.c  \
                           hdlmain.c
 
   hercules_LDADD        = libherc.la libhercs.la $(LDADD)
@@ -452,6 +452,13 @@ endif
   hercules_LDFLAGS      = $(HLDFLAGS)
 
   hercules_DEPENDENCIES = libherc.la libhercs.la $(HDEPS)
+
+if BUILD_SHARED
+herclin_SOURCES       = herclin.c hdlmain.c
+herclin_LDADD        = libherc.la libhercs.la $(LDADD)
+herclin_LDFLAGS      = $(HLDFLAGS)
+herclin_DEPENDENCIES = libherc.la libhercs.la $(HDEPS)
+endif
 
 #
 # side binaries
@@ -465,6 +472,7 @@ hercifc_SOURCES       = hercifc.c
 hercifc_LDADD         = $(LDADD)
 hercifc_LDFLAGS       = $(tools_LD_FLAGS)
 endif
+
 
 dasdinit_SOURCES      = dasdinit.c
 dasdinit_LDADD        = $(tools_ADDLIBS)
@@ -553,8 +561,12 @@ dmap2hrc_LDFLAGS      = $(tools_LD_FLAGS)
 #
 # files that are not 'built' per-se
 #
+#
+# Also contains some WIN32 only source files
+#
 
-EXTRA_DIST =   \
+EXTRA_DIST = autoconf/config.rpath \
+             autoconf/mkinstalldirs \
              hercules.cnf          \
              cckdfix.c             \
              README.COMMADPT       \
@@ -565,68 +577,92 @@ EXTRA_DIST =   \
              README.OSX            \
              README.TAPE           \
              CHANGES               \
-             RELEASE.NOTES
+             RELEASE.NOTES         \
+             README.MSVC           \
+             makefile.msvc         \
+             makefile-dll.msvc     \
+             makefile-dllmod.msvc  \
+             hercver.rc            \
+             build_pch.c           \
+             getopt.c              \
+             w32stape.c
+
 
 #
 # Source Header files. No 'build' for those
 #
-noinst_HEADERS = fishhang.h \
-                 hostinfo.h \
-                 cpuint.h   \
-                 feat370.h  \
-                 feat390.h  \
-                 feat900.h  \
-                 featall.h  \
-                 featchk.h  \
-                 feature.h  \
-                 esa390.h   \
-                 opcode.h   \
-                 hercules.h \
-                 inline.h   \
-                 dat.h      \
-                 vstore.h   \
-                 hbyteswp.h \
-                 dasdblks.h \
-                 hetlib.h   \
-                 version.h  \
-                 parser.h   \
-                 dasdtab.h  \
-                 sllib.h    \
-                 htypes.h   \
-                 fthreads.h \
-                 w32chan.h  \
-                 w32ctca.h  \
-                 tt32api.h  \
-                 linklist.h \
-                 ieee-w32.h \
-                 httpmisc.h \
-                 devtype.h  \
-                 codepage.h \
-                 hercnls.h  \
-                 ctcadpt.h  \
-                 hercifc.h  \
-                 tuntap.h   \
-                 tapedev.h  \
-                 scsitape.h \
-                 logger.h   \
-                 commadpt.h \
-                 cache.h    \
-                 ecpsvm.h   \
-                 memrchr.h  \
-                 shared.h   \
-                 hscutl.h   \
-                 hdl.h      \
-                 crypto.h   \
-                 sockdev.h  \
-                 ltdl.h     \
-                 herc_getopt.h \
-                 service.h  \
-                 chsc.h     \
-                 pttrace.h  \
-                 history.h  \
-                 sr.h       \
-                 hchan.h    \
-                 fillfnam.h \
+noinst_HEADERS = fishhang.h     \
+                 hostinfo.h     \
+                 cpuint.h       \
+                 feat370.h      \
+                 feat390.h      \
+                 feat900.h      \
+                 featall.h      \
+                 featchk.h      \
+                 feature.h      \
+                 esa390.h       \
+                 opcode.h       \
+                 hercules.h     \
+                 inline.h       \
+                 dat.h          \
+                 vstore.h       \
+                 hbyteswp.h     \
+                 dasdblks.h     \
+                 hetlib.h       \
+                 version.h      \
+                 parser.h       \
+                 dasdtab.h      \
+                 sllib.h        \
+                 htypes.h       \
+                 fthreads.h     \
+                 w32chan.h      \
+                 w32ctca.h      \
+                 tt32api.h      \
+                 linklist.h     \
+                 ieee-w32.h     \
+                 httpmisc.h     \
+                 devtype.h      \
+                 codepage.h     \
+                 ctcadpt.h      \
+                 hercifc.h      \
+                 tuntap.h       \
+                 tapedev.h      \
+                 scsitape.h     \
+                 logger.h       \
+                 commadpt.h     \
+                 cache.h        \
+                 ecpsvm.h       \
+                 memrchr.h      \
+                 shared.h       \
+                 hscutl.h       \
+                 hdl.h          \
+                 crypto.h       \
+                 sockdev.h      \
+                 ltdl.h         \
+                 herc_getopt.h  \
+                 service.h      \
+                 chsc.h         \
+                 pttrace.h      \
+                 history.h      \
+                 sr.h           \
+                 hchan.h        \
+                 fillfnam.h     \
+                 hthreads.h     \
+                 hostopts.h     \
+                 w32util.h      \
+                 hconsts.h      \
+                 hmacros.h      \
+                 hstructs.h     \
+                 hexterns.h     \
+                 hconsole.h     \
+                 hextapi.h      \
+                 hstdinc.h      \
+                 hsocket.h      \
+                 w32stape.h     \
+                 w32dl.h        \
+                 hercwind.h     \
+                 getopt.h       \
+                 w32mtio.h      \
                  $(extra_dynamic_SRC)
 
 #########################################################
@@ -634,11 +670,11 @@ noinst_HEADERS = fishhang.h \
 #########################################################
 
 
-cckd: cckd2ckd$(EXEEXT) \
-      cckdcdsk$(EXEEXT) \
-      cckddiag$(EXEEXT) \
-      cckdcomp$(EXEEXT) \
-      cckdswap$(EXEEXT) \
+cckd: cckd2ckd$(EXEEXT)  \
+      cckdcdsk$(EXEEXT)  \
+      cckddiag$(EXEEXT)  \
+      cckdcomp$(EXEEXT)  \
+      cckdswap$(EXEEXT)  \
       dasdcopy$(EXEEXT)
 
 tar: dist

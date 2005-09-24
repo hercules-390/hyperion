@@ -43,6 +43,7 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 
+#include "hstdinc.h"
 #include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"
@@ -194,19 +195,22 @@ void cgibin_psw(WEBBLK *webblk)
 
 void cgibin_syslog(WEBBLK *webblk)
 {
-int     msgcnt;
-int     msgnum;
-char   *msgbuf;
-
+int     num_bytes;
+int     logbuf_idx;
+char   *logbuf_ptr;
 char   *command;
-
 char   *value;
 int     autorefresh = 0;
 int     refresh_interval = 5;
 int     msgcount = 22;
 
     if ((command = cgi_variable(webblk,"command")))
+    {
         panel_command(command);
+        // Wait a bit before proceeding in case
+        // the command issues a lot of messages
+        usleep(50000);
+    }
 
     if((value = cgi_variable(webblk,"msgcount")))
         msgcount = atoi(value);
@@ -236,9 +240,60 @@ int     msgcount = 22;
     fprintf(webblk->hsock, "<H2>Hercules System Log</H2>\n");
     fprintf(webblk->hsock, "<PRE>\n");
 
-    msgnum = msgcount ? log_line(msgcount) : -1;
-    while((msgcnt = log_read(&msgbuf, &msgnum, LOG_NOBLOCK)))
-        fwrite(msgbuf,msgcnt,1,webblk->hsock);
+    // Get the index to our desired starting message...
+
+    logbuf_idx = msgcount ? log_line( msgcount ) : -1;
+
+    // Now read the logfile starting at that index. The return
+    // value is the total #of bytes of messages data there is.
+
+    if ( (num_bytes = log_read( &logbuf_ptr, &logbuf_idx, LOG_NOBLOCK )) > 0 )
+    {
+        // Copy the message data to a work buffer for processing.
+        // This is to allow for the possibility, however remote,
+        // that the logfile buffer actually wraps around and over-
+        // lays the message data we were going to display (which
+        // could happen if there's a sudden flood of messages)
+
+        int   sav_bytes  =         num_bytes;
+        char *wrk_bufptr = malloc( num_bytes );
+
+        if ( wrk_bufptr ) strncpy( wrk_bufptr,  logbuf_ptr, num_bytes );
+        else                       wrk_bufptr = logbuf_ptr;
+
+        // We need to convert certain characters that might
+        // possibly be erroneously interpretted as HTML code
+
+#define  AMP_LT    "&lt;"       // (HTML code for '<')
+#define  AMP_GT    "&gt;"       // (HTML code for '>')
+#define  AMP_AMP   "&amp;"      // (HTML code for '&')
+
+        while ( num_bytes-- )
+        {
+            switch ( *wrk_bufptr )
+            {
+            case '<':
+                fwrite( AMP_LT,     1, sizeof(AMP_LT),  webblk->hsock );
+                break;
+            case '>':
+                fwrite( AMP_GT,     1, sizeof(AMP_GT),  webblk->hsock );
+                break;
+            case '&':
+                fwrite( AMP_AMP,    1, sizeof(AMP_AMP), webblk->hsock );
+                break;
+            default:
+                fwrite( wrk_bufptr, 1,        1,        webblk->hsock );
+                break;
+            }
+
+            wrk_bufptr++;
+        }
+
+        // (free our work buffer if it's really ours)
+
+        if ( ( wrk_bufptr -= sav_bytes ) != logbuf_ptr )
+            free( wrk_bufptr );
+    }
 
     fprintf(webblk->hsock, "</PRE>\n");
 
@@ -341,13 +396,9 @@ REGS *regs;
             if((value = cgi_variable(webblk,regname)))
             {
                 if(regs->arch_mode != ARCH_900)
-                    sscanf(value,"%x",&(regs->GR_L(i)));
+                    sscanf(value,"%"I32_FMT"x",&(regs->GR_L(i)));
                 else
-#if SIZEOF_LONG==8
-                    sscanf(value,"%lx",&(regs->GR_G(i)));
-#else
-                    sscanf(value,"%llx",&(regs->GR_G(i)));
-#endif
+                    sscanf(value,"%"I64_FMT"x",&(regs->GR_G(i)));
             }
         }
     }
@@ -361,13 +412,9 @@ REGS *regs;
             if((value = cgi_variable(webblk,regname)))
             {
                 if(regs->arch_mode != ARCH_900)
-                    sscanf(value,"%x",&(regs->CR_L(i)));
+                    sscanf(value,"%"I32_FMT"x",&(regs->CR_L(i)));
                 else
-#if SIZEOF_LONG==8
-                    sscanf(value,"%lx",&(regs->CR_G(i)));
-#else
-                    sscanf(value,"%llx",&(regs->CR_G(i)));
-#endif
+                    sscanf(value,"%"I64_FMT"x",&(regs->CR_G(i)));
             }
         }
     }

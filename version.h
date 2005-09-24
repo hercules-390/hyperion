@@ -8,19 +8,37 @@
 /* number, it's in configure.ac, near the top.                       */
 /*-------------------------------------------------------------------*/
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#ifndef _HERCULES_H_
+#define _HERCULES_H_
+
+#include "hercules.h"
+
+#ifndef _VERSION_C_
+#ifndef _HUTIL_DLL_
+#define VER_DLL_IMPORT DLL_IMPORT
+#else   /* _HUTIL_DLL_ */
+#define VER_DLL_IMPORT extern
+#endif  /* _HUTIL_DLL_ */
+#else   /* _LOGGER_C_ */
+#define VER_DLL_IMPORT DLL_EXPORT
+#endif /* _LOGGER_C_ */
 
 #if !defined(VERSION)
-#warning No version specified
-#define VERSION Unknown                 /* Unknown version number     */
+  #ifndef _MSVC_
+    #warning No version specified
+  #else
+    #pragma message( MSVC_MESSAGE_LINENUM "warning: No version specified" )
+  #endif
+  #define VERSION              "(unknown!)"
+  #define CUSTOM_BUILD_STRING  "('VERSION' was not defined!)"
 #endif
 
 #define HDL_VERS_HERCULES VERSION
 #define HDL_SIZE_HERCULES sizeof(VERSION)
 
-void display_version(FILE *f, char *prog, const char verbose);
+VER_DLL_IMPORT void display_version(FILE *f, char *prog, const char verbose);
+VER_DLL_IMPORT int get_buildinfo_strings(const char*** pppszBldInfoStr);
 
 #define HERCULES_COPYRIGHT \
        "(c)Copyright 1999-2005 by Roger Bowler, Jan Jaeger, and others"
+#endif // _HERCULES_H_

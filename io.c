@@ -30,6 +30,8 @@
 /*      64-bit IDAW support - Roger Bowler v209                  @IWZ*/
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"

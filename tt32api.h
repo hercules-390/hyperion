@@ -9,36 +9,29 @@
  *
  **********************************************************************************
 
-  Copyright (c) 2002-2005,
-  Software Development Laboratories (aka "Fish" (David B. Trout)).
+  Copyright (c) Software Development Laboratories, aka "Fish" (David B. Trout)
 
-  All rights reserved.
+  Licensed under terms of the ZLIB/LIBPNG Open Source Software License
+  http://www.opensource.org/licenses/zlib-license.php
 
-  Redistribution and use in source and binary forms, with or without modification,
-  are permitted provided that the following conditions are met:
+  THIS SOFTWARE IS PROVIDED 'AS-IS', WITHOUT ANY EXPRESS OR IMPLIED WARRANTY.
+  IN NO EVENT WILL THE AUTHOR(S) BE HELD LIABLE FOR ANY DAMAGES ARISING FROM
+  THE USE OF THIS SOFTWARE.
 
-   o  Redistributions of source code must retain the above copyright notice, this
-      list of conditions and the following disclaimer.
+  Permission is granted to anyone to use this software for any purpose, including
+  commercial applications, and to alter it and redistribute it freely, subject to
+  the following restrictions:
 
-   o  Redistributions in binary form must reproduce the above copyright notice,
-      this list of conditions and the following disclaimer in the documentation
-      and/or other materials provided with the distribution.
+   1. The origin of this software must not be misrepresented; you must not claim
+      that you wrote the original software. If you use this software in a product,
+      an acknowledgment in the product documentation would be appreciated but is
+      not required.
 
-   o  Neither the name of Software Development Laboratories nor the name "Fish"
-      nor the name David B. Trout nor the names of any of its contributors may be
-      used to endorse or promote products derived from this software without
-      specific prior written permission.
+   2. Altered source versions must be plainly marked as such, and must not be
+      misrepresented as being the original software.
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
-  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-  OF THE POSSIBILITY OF SUCH DAMAGE.
+   3. This notice nor the above Copyright information may not be removed or altered
+      from any source distribution.
 
  **********************************************************************************
  *
@@ -48,8 +41,9 @@
  *  --------  ---------    -------------------------------------------------------
  *
  *  12/22/01    1.0.0       Created.
- *  07/20/02    2.0.0       (JAP) LCS modifications/enhancements.
- *  07/02/03    2.0.2       (Fish) use std 'uint32_t' type instead of Win32 DWORD
+ *  07/20/02    2.0.0       JAP: LCS modifications/enhancements.
+ *  07/02/03    2.0.2       Fish: use std 'uint32_t' type instead of Win32 DWORD
+ *  09/04/05    2.1.0       Fish: 'open_ex': errno clobber workaround
  *
 \**********************************************************************************/
 
@@ -124,6 +118,8 @@ TT32STATS, *PTT32STATS;
 
 typedef void (__cdecl *ptr_to_print_debug_string_func)(const char* debug_string);
 
+extern int         WINAPI EXPORT tuntap32_open_ex /*EXPERIMENTAL*/ (char* gatewaydev, int flags, int* errnum);
+
 extern const char* WINAPI EXPORT tuntap32_copyright_string  ();
 extern const char* WINAPI EXPORT tuntap32_version_string    ();
 extern void        WINAPI EXPORT tuntap32_version_numbers   (int* major, int* inter, int* minor, int* build);
@@ -146,6 +142,8 @@ extern int         WINAPI EXPORT tuntap32_close_ip_tuntap   (int fd);
 extern int         WINAPI EXPORT tuntap32_get_ip_stats      (int fd, TT32STATS* stats);
 
 /* (in case they want to use LoadLibrary and GetProcAddress instead) */
+
+typedef int         (WINAPI *ptuntap32_open_ex) /*EXPERIMENTAL*/ (char*,int,int*);
 
 typedef const char* (WINAPI *ptuntap32_copyright_string) ();
 typedef const char* (WINAPI *ptuntap32_version_string)   ();

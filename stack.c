@@ -22,6 +22,8 @@
 /* ASN-and-LX-reuse facility                  June 2004 Roger Bowler */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 // #define  STACK_DEBUG
 
 #include "hercules.h"

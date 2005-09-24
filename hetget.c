@@ -9,17 +9,11 @@
 || ----------------------------------------------------------------------------
 */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "hstdinc.h"
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stdlib.h>
+#include "hercules.h"
 #include "hetlib.h"
 #include "sllib.h"
-#include "hercules.h"
 #include "herc_getopt.h"
 
 /*
@@ -121,16 +115,9 @@ int reclen = 0;
 
 #ifdef EXTERNALGUI
 /*
-|| Special flag to indicate whether or not we're being
-|| run under the control of the external GUI facility.
-*/
-#if 0
-int extgui = 0;
-#endif
-/*
 || Previously reported file position
 */
-static long prevpos = 0;
+static OFF_T prevpos = 0;
 /*
 || Report progress every this many bytes
 */
@@ -518,11 +505,11 @@ getfile( HETB *hetb, FILE *outf )
             if( extgui )
             {
                 /* Report progress every nnnK */
-                long curpos = ftell( hetb->fd );
+                OFF_T curpos = FTELL( hetb->fd );
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
-                    fprintf( stderr, "IPOS=%ld\n", curpos );
+                    fprintf( stderr, "IPOS=%lld\n", (U64)curpos );
                 }
             }
 #endif /*EXTERNALGUI*/
@@ -584,11 +571,11 @@ getfile( HETB *hetb, FILE *outf )
             if( extgui )
             {
                 /* Report progress every nnnK */
-                long curpos = ftell( hetb->fd );
+                OFF_T curpos = FTELL( hetb->fd );
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
-                    fprintf( stderr, "IPOS=%ld\n", curpos );
+                    fprintf( stderr, "IPOS=%lld\n", (U64)curpos );
                 }
             }
 #endif /*EXTERNALGUI*/
@@ -627,6 +614,8 @@ main( int argc, char *argv[] )
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 
@@ -787,7 +776,9 @@ main( int argc, char *argv[] )
             /*
             || Open the output file
             */
-            outf = fopen( opts.ofile, "wb" );
+            BYTE pathname[MAX_PATH];
+            hostpath(pathname, opts.ofile, sizeof(pathname));
+            outf = fopen( pathname, "wb" );
             if( outf != NULL )
             {
                 /*

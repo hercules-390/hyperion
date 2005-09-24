@@ -19,6 +19,8 @@
 // user specifies on the command line.  Prior versions always
 // used upper case, which seems unnecessarily loud.
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 typedef struct _DASD_VOL_LABEL {        
@@ -56,12 +58,6 @@ typedef struct _DADSM {
 //----------------------------------------------------------------------------------
 //  Globals
 //----------------------------------------------------------------------------------
-// ISW - Added extgui for EXTERNALGUI to allow for Windows build
-#ifdef EXTERNALGUI
-#if 0
-        int     extgui;                 // extgui flag for GUI support
-#endif
-#endif
         int     local_verbose = 0;      // verbose setting
         int     copy_verbose = 0;       // verbose setting for copyfile
         char    *din;                   // dasd image filename
@@ -968,7 +964,7 @@ int getF3dscb(
     }
     memcpy((void *) &f3dscb->ds3keyid, 
                 f3key, f3kl);           // copy F3 key to buffer
-    memcpy((void *)f3dscb + f3kl, 
+    memcpy((void *) ((BYTE*)f3dscb + f3kl), 
                 f3data, f3dl);          // copy F3 data to buffer
     if (verbose > 1) {
             fprintf(stderr, "getF3dscb F3 DSCB\n");
@@ -1091,10 +1087,11 @@ int dadsm_setup(
 
 int main(int argc, char **argv) {
 
-        DADSM           dadsm;                  // DADSM workarea
-        FILE            *fout = NULL;           // output file
-        CIFBLK          *cif;
-        int             dsn_recs_written = 0, bail, dsorg, rc;
+    DADSM    dadsm;                  // DADSM workarea
+    FILE    *fout = NULL;           // output file
+    CIFBLK  *cif;
+    int      dsn_recs_written = 0, bail, dsorg, rc;
+    BYTE     pathname[MAX_PATH];
 
     fprintf(stderr, "dasdseq %s Copyright 1999-2005 Roger Bowler\n"
         "Portions Copyright 2001-2005 James M. Morrison\n", VERSION);
@@ -1149,7 +1146,9 @@ int main(int argc, char **argv) {
 
 //  Open output dataset (EBCDIC requires binary open)
 
-    fout = fopen(argdsn, (tran_ascii) ? "wb" : "w");
+    hostpath(pathname, argdsn, sizeof(pathname));
+
+    fout = fopen(pathname, (tran_ascii) ? "wb" : "w");
     if (fout == NULL) {
         fprintf(stderr, "dasdseq unable to open output file %s, %s\n",
                 argdsn, strerror(errno));

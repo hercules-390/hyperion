@@ -1,7 +1,9 @@
-/* HSCMISC.C    (c) Copyright Roger Bowler, 1999-2005                */
+/* HSCMISC.C    Misc. system command routines                        */
+/*                                                                   */
+/*              (c) Copyright Roger Bowler, 1999-2005                */
 /*              (c) Copyright Jan Jaeger, 1999-2005                  */
-/*              Misc. system command routines                        */
 
+#include "hstdinc.h"
 
 #include "hercules.h"
 #include "devtype.h"
@@ -13,6 +15,16 @@
 #if !defined(_HSCMISC_C)
 #define _HSCMISC_C
 
+/*-------------------------------------------------------------------*/
+/*                System Shutdown Processing                         */
+/*-------------------------------------------------------------------*/
+
+/* The following 'sigq' functions are responsible for ensuring all of
+   the CPUs are stopped ("quiesced") before continuing with Hercules
+   shutdown processing, and should NEVER be called directly. Instead,
+   they are called by the main 'do_shutdown' (or 'do_shutdown_wait')
+   function(s) (defined further below) as needed and/or appropriate.
+*/
 static int wait_sigq_pending = 0;
 
 static int is_wait_sigq_pending()
@@ -38,7 +50,7 @@ int pending, i;
         if (IS_CPU_ONLINE(i)
           && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
             wait_sigq_pending = 1;
-    pending = wait_sigq_pending;
+        pending = wait_sigq_pending;
         release_lock(&sysblk.intlock);
 
         if(pending)
@@ -54,17 +66,117 @@ static void cancel_wait_sigq()
     release_lock(&sysblk.intlock);
 }
 
+/*                       do_shutdown_now
+
+   This is the main shutdown processing function. It is NEVER called
+   directly, but is instead ONLY called by either the 'do_shutdown'
+   or 'do_shutdown_wait' functions after all CPUs have been stopped.
+
+   It is responsible for releasing the device configuration and then
+   calling the Hercules Dynamic Loader "hdl_shut" function to invoke
+   all registered "Hercules at-exit/termination functions" (similar
+   to 'atexit' but unique to Hercules) (to perform any other needed
+   miscellaneous shutdown related processing).
+
+   Only after the above three tasks have been completed (stopping the
+   CPUs, releasing the device configuration, calling registered term-
+   ination routines/functions) can Hercules then be safely terminated.
+
+   Note too that, *technically*, this function *should* wait for *all*
+   other threads to finish terminating first before either exiting or
+   returning back to the caller, but we don't currently enforce that
+   (since that's *really* what hdl_adsc + hdl_shut is designed for!).
+
+   At the moment, as long as the three previously mentioned three most
+   important shutdown tasks have been completed (stop cpus, release
+   device config, call term funcs), then we consider the brunt of our
+   shutdown processing to be completed and thus exit (or return back
+   to the caller to let them exit instead). If there happen to be any
+   threads still running when that happens, they will be automatically
+   terminated by the operating sytem as normal when a process exits.
+
+   SO... If there are any threads that must be terminated completely
+   and cleanly before Hercules can safely terminate, then you better
+   add code to this function to ENSURE that your thread is terminated
+   properly! (and/or add a call to 'hdl_adsc' at the appropriate place
+   in the startup sequence). For this purpose, the use of "join_thread"
+   is *strongly* encouraged as it *ensures* that your thread will not
+   continue until the thread in question has completely exited first.
+*/
 static void do_shutdown_now()
 {
-    system_shutdown();
+    logmsg("HHCIN900I Begin Hercules shutdown\n");
+
+    ASSERT( !sysblk.shutfini );  // (sanity check)
+
+    sysblk.shutfini = 0;  // (shutdown NOT finished yet)
+    sysblk.shutdown = 1;  // (system shutdown initiated)
+
+    logmsg("HHCIN901I Releasing configuration\n");
+    {
+        release_config();
+    }
+    logmsg("HHCIN902I Configuration release complete\n");
+
+    logmsg("HHCIN903I Calling termination routines\n");
+    {
+        hdl_shut();
+    }
+    logmsg("HHCIN904I All termination routines complete\n");
+
+    /*
+    logmsg("HHCIN905I Terminating threads\n");
+    {
+        // (none we really care about at the moment...)
+    }
+    logmsg("HHCIN906I Threads terminations complete\n");
+    */
+
+    logmsg("HHCIN909I Hercules shutdown complete\n");
+    sysblk.shutfini = 1;    // (shutdown is now complete)
+
+    //                     PROGRAMMING NOTE
+
+    // If we're NOT in "daemon_mode" (i.e. panel_display in control),
+    // -OR- if a daemon_task DOES exist, then THEY are in control of
+    // shutdown; THEY are responsible for exiting the system whenever
+    // THEY feel it's proper to do so (by simply returning back to the
+    // caller thereby allowing 'main' to return back to the operating
+    // system).
+
+    // OTHEWRWISE we ARE in "daemon_mode", but a daemon_task does NOT
+    // exist, which means the main thread (tail end of 'impl.c') is
+    // stuck in a loop reading log messages and writing them to the
+    // logfile, so we need to do the exiting here since it obviously
+    // cannot.
+
+    if ( sysblk.daemon_mode
+#if defined(OPTION_DYNAMIC_LOAD)
+         && !daemon_task
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+       )
+    {
 #if defined(FISH_HANG)
-    FishHangAtExit();
+        FishHangAtExit();
 #endif
-    fprintf(stderr, _("HHCIN099I Hercules terminated\n"));
-    fflush(stderr);
-    exit(0);
+#ifdef _MSVC_
+        socket_deinit();
+#endif
+#ifdef DEBUG
+        fprintf(stdout, _("DO_SHUTDOWN_NOW EXIT\n"));
+#endif
+        fprintf(stdout, _("HHCIN099I Hercules terminated\n"));
+        fflush(stdout);
+        exit(0);
+    }
 }
 
+/*                     do_shutdown_wait
+
+   This function simply waits for the CPUs to stop and then calls
+   the above do_shutdown_now function to perform the actual shutdown
+   (which releases the device configuration, etc)
+*/
 static void do_shutdown_wait()
 {
     logmsg(_("HHCIN098I Shutdown initiated\n"));
@@ -72,6 +184,12 @@ static void do_shutdown_wait()
     do_shutdown_now();
 }
 
+/*                 *****  do_shutdown  *****
+
+   This is the main system shutdown function, and the ONLY function
+   that should EVER be called to shut the system down. It calls one
+   or more of the above static helper functions as needed.
+*/
 void do_shutdown()
 {
 TID tid;
@@ -93,11 +211,11 @@ int     i;
 
     if(regs->arch_mode != ARCH_900)
         for (i = 0; i < 16; i++)
-            logmsg ("GR%2.2d=%8.8X%s", i, regs->GR_L(i),
+            logmsg ("GR%2.2d=%8.8"I32_FMT"X%s", i, regs->GR_L(i),
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
     else
         for (i = 0; i < 16; i++)
-            logmsg ("R%1.1X=%16.16llX%s", i, (long long)regs->GR_G(i),
+            logmsg ("R%1.1X=%16.16"I64_FMT"X%s", i, regs->GR_G(i),
                 ((i & 0x03) == 0x03) ? "\n" : " ");
 
 } /* end function display_regs */
@@ -112,11 +230,11 @@ int     i;
 
     if(regs->arch_mode != ARCH_900)
         for (i = 0; i < 16; i++)
-            logmsg ("CR%2.2d=%8.8X%s", i, regs->CR_L(i),
+            logmsg ("CR%2.2d=%8.8"I32_FMT"X%s", i, regs->CR_L(i),
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
     else
         for (i = 0; i < 16; i++)
-            logmsg ("C%1.1X=%16.16llX%s", i, (long long)regs->CR_G(i),
+            logmsg ("C%1.1X=%16.16"I64_FMT"X%s", i, regs->CR_G(i),
                 ((i & 0x03) == 0x03) ? "\n" : " ");
 
 } /* end function display_cregs */
@@ -130,7 +248,7 @@ void display_aregs (REGS *regs)
 int     i;
 
     for (i = 0; i < 16; i++)
-        logmsg ("AR%2.2d=%8.8X%s", i, regs->AR(i),
+        logmsg ("AR%2.2d=%8.8"I32_FMT"X%s", i, regs->AR(i),
             ((i & 0x03) == 0x03) ? "\n" : "\t");
 
 } /* end function display_aregs */
@@ -251,11 +369,8 @@ char    *s;                             /* Alteration value pointer  */
 BYTE    delim;                          /* Operand delimiter         */
 BYTE    c;                              /* Character work area       */
 
-#if SIZEOF_LONG == 8
-    rc = sscanf(operand, "%lx%c%lx%c", &opnd1, &delim, &opnd2, &c);
-#else
-    rc = sscanf(operand, "%llx%c%llx%c", &opnd1, &delim, &opnd2, &c);
-#endif
+    rc = sscanf(operand, "%"I64_FMT"x%c%"I64_FMT"x%c",
+                &opnd1, &delim, &opnd2, &c);
 
     /* Process storage alteration operand */
     if (rc > 2 && delim == '=' && newval)
@@ -375,7 +490,9 @@ RADR    raddr;
 int     icode;
 REGS    gregs, hgregs;
 
-// FIXME: cygwin emits bad code here so we have the next stmt:
+    // ZZFIXME:  Win32 builds emits bad code here
+    //           so we have the next stmt:
+    //           (is that still true??)
     if (!regs) return 0;
 
     gregs = *regs;
@@ -424,11 +541,7 @@ BYTE    c;                              /* Character work area       */
 
     if (draflag)
     {
-      #if defined(FEATURE_ESAME)
-        n = sprintf (buf, "R:%16.16llX:", (long long)raddr);
-      #else /*!defined(FEATURE_ESAME)*/
-        n = sprintf (buf, "R:%8.8X:", (U32)raddr);
-      #endif /*!defined(FEATURE_ESAME)*/
+        n = sprintf (buf, "R:"F_RADR":", raddr);
     }
 
     aaddr = APPLY_PREFIXING (raddr, regs->PX);
@@ -472,13 +585,8 @@ int     n;                              /* Number of bytes in buffer */
 int     stid;                           /* Segment table indication  */
 U16     xcode;                          /* Exception code            */
 
-  #if defined(FEATURE_ESAME)
-    n = sprintf (buf, "%c:%16.16llX:", ar == USE_REAL_ADDR ? 'R' : 'V',
-                               (long long)vaddr);
-  #else /*!defined(FEATURE_ESAME)*/
-    n = sprintf (buf, "%c:%8.8X:", ar == USE_REAL_ADDR ? 'R' : 'V',
+    n = sprintf (buf, "%c:"F_VADR":", ar == USE_REAL_ADDR ? 'R' : 'V',
                              vaddr);
-  #endif /*!defined(FEATURE_ESAME)*/
     xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid,
                                     vaddr, ar, regs, acctype);
     if (xcode == 0)
@@ -698,11 +806,7 @@ char    buf[100];                       /* Message buffer            */
         {
             xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid, vaddr, arn,
                                             regs, ACCTYPE_LRA);
-          #if defined(FEATURE_ESAME)
-            n = sprintf (buf, "V:%16.16llX ", (long long)vaddr);
-          #else /*!defined(FEATURE_ESAME)*/
-            n = sprintf (buf, "V:%8.8X ", vaddr);
-          #endif /*!defined(FEATURE_ESAME)*/
+            n = sprintf (buf, "V:"F_VADR" ", vaddr);
             if (stid == TEA_ST_PRIMARY)
                 n += sprintf (buf+n, "(primary)");
             else if (stid == TEA_ST_SECNDRY)
@@ -712,11 +816,7 @@ char    buf[100];                       /* Message buffer            */
             else
                 n += sprintf (buf+n, "(AR%2.2d)", arn);
             if (xcode == 0)
-          #if defined(FEATURE_ESAME)
-                n += sprintf (buf+n, " R:%16.16llX", (long long)raddr);
-          #else /*!defined(FEATURE_ESAME)*/
-                n += sprintf (buf+n, " R:%8.8X", (U32)raddr);
-          #endif /*!defined(FEATURE_ESAME)*/
+                n += sprintf (buf+n, " R:"F_RADR, raddr);
             logmsg ("%s\n", buf);
         }
         ARCH_DEP(display_virt) (regs, vaddr, buf, arn, ACCTYPE_LRA);
@@ -1022,9 +1122,13 @@ void disasm_stor(REGS *regs, char *opnd)
 /*-------------------------------------------------------------------*/
 int herc_system (char* command)
 {
-#if defined(WIN32) || defined(__APPLE__)
+
+#if HOW_TO_IMPLEMENT_SH_COMMAND == USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
+
     return system(command);
-#else /* !WIN32 && !APPLE */
+
+#elif HOW_TO_IMPLEMENT_SH_COMMAND == USE_FORK_API_FOR_SH_COMMAND
+
 extern char **environ;
 int pid, status;
 
@@ -1064,7 +1168,9 @@ int pid, status;
         } else
             return status;
     } while(1);
-#endif /* !WIN32 */
+#else
+  #error 'HOW_TO_IMPLEMENT_SH_COMMAND' not #defined correctly
+#endif
 } /* end function herc_system */
 
 #endif /*!defined(_GEN_ARCH)*/

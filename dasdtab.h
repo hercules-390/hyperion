@@ -10,6 +10,18 @@
 #if !defined(_DASDTAB_H)
 #define _DASDTAB_H
 
+#include "hercules.h"
+
+#ifndef _DASDTAB_C_
+#ifndef _HDASD_DLL_
+#define DTB_DLL_IMPORT DLL_IMPORT
+#else   /* _HDASD_DLL_ */
+#define DTB_DLL_IMPORT extern
+#endif  /* _HDASD_DLL_ */
+#else
+#define DTB_DLL_IMPORT DLL_EXPORT
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Definition of a CKD DASD device entry                             */
 /*-------------------------------------------------------------------*/
@@ -68,7 +80,7 @@ typedef struct _FBADEV {                /* FBA Device entry          */
         U32     size;                   /* Block size                */
         U32     blks;                   /* Number of blocks          */
         U16     cu;                     /* Default control unit type */
-      } FBADEV; 
+      } FBADEV;
 #define FBADEV_SIZE sizeof(FBADEV)
 
 /*-------------------------------------------------------------------*/
@@ -81,7 +93,7 @@ typedef struct _FBADEV {                /* FBA Device entry          */
 /*-------------------------------------------------------------------*/
 /* Dasd table function prototypes                                    */
 /*-------------------------------------------------------------------*/
-void   *dasd_lookup (int, char *, U32   , U32   );
+DTB_DLL_IMPORT void   *dasd_lookup (int, char *, U32   , U32   );
 int     dasd_build_ckd_devid (CKDDEV *, CKDCU *, BYTE *);
 int     dasd_build_ckd_devchar (CKDDEV *, CKDCU *, BYTE *, int);
 int     dasd_build_fba_devid (FBADEV *, BYTE *);

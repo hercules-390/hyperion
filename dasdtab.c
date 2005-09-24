@@ -12,6 +12,11 @@
 /* (used with permission)                                            */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
+#define _DASDTAB_C_
+#define _HDASD_DLL_
+
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
@@ -143,7 +148,7 @@ static FBADEV fbatab[] = {
 /*-------------------------------------------------------------------*/
 /* Lookup a table entry either by name or type                       */
 /*-------------------------------------------------------------------*/
-void *dasd_lookup (int dtype, char *name, U32 devt, U32 size)
+DLL_EXPORT void *dasd_lookup (int dtype, char *name, U32 devt, U32 size)
 {
 U32 i;                                  /* Loop Index                */
 
@@ -284,20 +289,20 @@ int altcyls;                            /* Number alternate cyls     */
     devchar[13] = (cyls - altcyls) & 0xff;
     devchar[14] = (ckd->heads >> 8) & 0xff;
     devchar[15] = ckd->heads & 0xff;
-    devchar[16] = ckd->sectors;
-    devchar[17] = (ckd->len >> 16) & 0xff;
+    devchar[16] = (BYTE)(ckd->sectors);
+    devchar[17] = 0; // (ckd->len >> 16) & 0xff;
     devchar[18] = (ckd->len >> 8) & 0xff;
     devchar[19] = ckd->len & 0xff;
     devchar[20] = (ckd->har0 >> 8) & 0xff;
     devchar[21] = ckd->har0 & 0xff;
     if (ckd->formula > 0)
     {
-        devchar[22] = ckd->formula;
-        devchar[23] = ckd->f1;
-        devchar[24] = ckd->f2;
-        devchar[25] = ckd->f3;
-        devchar[26] = ckd->f4;
-        devchar[27] = ckd->f5;
+        devchar[22] = (BYTE)(ckd->formula);
+        devchar[23] = (BYTE)(ckd->f1);
+        devchar[24] = (BYTE)(ckd->f2);
+        devchar[25] = (BYTE)(ckd->f3);
+        devchar[26] = (BYTE)(ckd->f4);
+        devchar[27] = (BYTE)(ckd->f5);
     }
     else
     {
@@ -338,7 +343,7 @@ int altcyls;                            /* Number alternate cyls     */
     devchar[45] = ckd->r0 & 0xff;
     devchar[46] = 0;
     devchar[47] = 0;
-    devchar[48] = ckd->f6;
+    devchar[48] = (BYTE)(ckd->f6);
     devchar[49] = (ckd->rpscalc >> 8) & 0xff;
     devchar[50] = ckd->rpscalc & 0xff;
     devchar[56] = 0xff;         // real CU type code

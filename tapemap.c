@@ -6,6 +6,8 @@
 /* a map of the tape, printing any standard label records it finds.  */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
@@ -33,9 +35,6 @@ static BYTE eovlbl[] = "\xC5\xD6\xE5";  /* EBCDIC characters "EOV"   */
 static BYTE buf[65536];
 
 #ifdef EXTERNALGUI
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
 /* Report progress every this many bytes */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
 /* How many bytes we've read so far. */
@@ -60,6 +59,7 @@ int             minblksz;               /* Minimum block size        */
 int             maxblksz;               /* Maximum block size        */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     set_codepage(NULL);
 
@@ -68,6 +68,8 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 
@@ -86,7 +88,8 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
     }
 
     /* Open the tape device */
-    infd = open (filename, O_RDONLY | O_BINARY);
+    hostpath(pathname, filename, sizeof(pathname));
+    infd = open (pathname, O_RDONLY | O_BINARY);
     if (infd < 0)
     {
         printf ("tapemap: Error opening %s: %s\n",

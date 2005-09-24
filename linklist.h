@@ -3,18 +3,6 @@
 //          linklist.h          linked-list macros
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
-//
-//  Change History:
-//
-//  05/31/01    2.13.0  Fish    Module created. (Copied from Microsoft Platform SDK)
-//  05/21/04    3.01.0  Fish    Conditionally #define CONTAINING_RECORD macro depending
-//                              on whether <windows.h> #included. (CONTAINING_RECORD macro
-//                              now #defined in Cygwin's "/usr/include/w32api/winnt.h"
-//                              member whenever window.h is #included). This is to fix
-//                              a benign compile-time warning in sockdev.c (which uses
-//                              the CONTAINING_RECORD macro).
-//
-//////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef _LLIST_
 #define _LLIST_
@@ -91,24 +79,17 @@
 */
 //////////////////////////////////////////////////////////////////////////////////////////
 
-
-#if !defined(_WINNT_)
-
-
-/*        (already #defined in Cygwin's version of "winnt.h")
-
+#if !defined( WIN32  ) || \
+   ( defined( _MSVC_ ) && !defined(_WINNT_) && !defined(_WINNT_H) )
 
 typedef struct _LIST_ENTRY
 {
-    struct  _LIST_ENTRY*  Flink;    // forward link; ptr to next link in chain
-    struct  _LIST_ENTRY*  Blink;    // backward link; ptr to previous link in chain
+    struct  _LIST_ENTRY*  Flink;    // ptr to next link in chain
+    struct  _LIST_ENTRY*  Blink;    // ptr to previous link in chain
 }
 LIST_ENTRY, *PLIST_ENTRY;
 
-
-*/
-
-
+#endif  // !defined(_WINNT_)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -163,33 +144,11 @@ For Example:
         pMyRecord = CONTAINING_RECORD(pListEntry,MYRECORD,gamma);
 --*/
 
-//  The CONTAINING_RECORD macro is now #defined in Cygwin's
-//  "/usr/include/w32api/winnt.h" member, so we no longer
-//  need to #define it here -- UNLESS <windows.h> hasn't
-//  been #included, in which case we DO need to #define it
-//  here... (<windows.h> eventually causes 'winnt.h" to get
-//  #included (which is where the CONTAINING_RECORD macro is
-//  #defined), so as long as <windows.h> gets #included, we
-//  don't need to #define the CONTAINING_RECORD macro here,
-//  but if <windows.h> is NOT #included, then we DO need to
-//  #define the CONTAINING_RECORD macro here. (Otherwise it
-//  ends up being undefined, causing an error in sockdev.c
-//  which uses it).  -- Fish, 21 May 2004.
-
-#if !defined( _WINDOWS_H )
-
-  #define  CONTAINING_RECORD( address, type, field )                 \
-                                                                     \
-      ( (type*) ((char*)(address) - (char*)(&((type*)0)->field)) )
-
-
+#ifndef  CONTAINING_RECORD
+#define  CONTAINING_RECORD( address, type, field )                 \
+                                                                   \
+    ( (type*) ((char*)(address) - (char*)(&((type*)0)->field)) )
 #endif
-
-
-//////////////////////////////////////////////////////////////////////////////////////////
-
-
-#endif  // !defined(_WINNT_)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -457,7 +416,6 @@ Return Value:
     _EX_Blink->Flink = _EX_Flink; \
     _EX_Flink->Blink = _EX_Blink; \
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 

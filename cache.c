@@ -3,7 +3,11 @@
 
 //FIXME ?? Dynamic resizing is disabled
 
-#define _HERCULES_CACHE_C
+#include "hstdinc.h"
+
+#define _CACHE_C_
+#define _HDASD_DLL_
+
 #include "hercules.h"
 
 static CACHEBLK cacheblk[CACHE_MAX_INDEX];
@@ -71,7 +75,7 @@ int cache_hit_percent (int ix)
     if (cache_check_ix(ix)) return -1;
     total = cacheblk[ix].hits + cacheblk[ix].misses;
     if (total == 0) return -1;
-    return (cacheblk[ix].hits * 100) / total;
+    return (int)((cacheblk[ix].hits * 100) / total);
 }
 
 int cache_lookup (int ix, U64 key, int *o)
@@ -80,14 +84,14 @@ int cache_lookup (int ix, U64 key, int *o)
     if (o) *o = -1;
     if (cache_check_ix(ix)) return -1;
     /* `p' is the preferred index */
-    p = key % cacheblk[ix].nbr;
+    p = (int)(key % cacheblk[ix].nbr);
     if (cacheblk[ix].cache[p].key == key) {
         i = p;
         cacheblk[ix].fasthits++;
     }
     else {
         if (cache_isbusy(ix, p) || cacheblk[ix].age - cacheblk[ix].cache[p].age < 20)
-            p = -2; 
+            p = -2;
         for (i = 0; i < cacheblk[ix].nbr; i++) {
             if (cacheblk[ix].cache[i].key == key) break;
             if (o && !cache_isbusy(ix, i)
@@ -305,7 +309,7 @@ int cache_release(int ix, int i, int flag)
 
     if ((flag & CACHE_FREEBUF) && buf != NULL) {
         free (buf);
-        cacheblk[ix].size -= len; 
+        cacheblk[ix].size -= len;
         buf = NULL;
         len = 0;
     }
@@ -322,7 +326,7 @@ int cache_release(int ix, int i, int flag)
     return 0;
 }
 
-int cache_cmd(int argc, char *argv[], char *cmdline)
+DLL_EXPORT int cache_cmd(int argc, char *argv[], char *cmdline)
 {
     int ix, i;
 
@@ -520,7 +524,7 @@ static int cache_resize (int ix, int n)
             if (cache_isbusy(ix, i)) break;
             else cache_release(ix, i, CACHE_FREEBUF);
         n = cacheblk[ix].nbr - i + 1;
-        if (n == 0) return 0; 
+        if (n == 0) return 0;
         cache = realloc (cacheblk[ix].cache, (cacheblk[ix].nbr - n) * sizeof(CACHE));
         if (cache == NULL) {
             logmsg (_("HHCCH003W realloc decrease failed cache[%d] size %d: %s\n"),

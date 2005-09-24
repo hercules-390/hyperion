@@ -6,6 +6,7 @@
 /* System/370 card punch devices.                                    */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
 #include "hercules.h"
 
 #include "devtype.h"
@@ -153,6 +154,7 @@ int             rc;                     /* Return code               */
 int             i;                      /* Loop counter              */
 int             num;                    /* Number of bytes to move   */
 BYTE            c;                      /* Output character          */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
@@ -160,7 +162,8 @@ BYTE            c;                      /* Output character          */
     /* Open the device file if necessary */
     if (dev->fd < 0 && !IS_CCW_SENSE(code))
     {
-        rc = open (dev->filename,
+        hostpath(pathname, dev->filename, sizeof(pathname));
+        rc = open (pathname,
                     O_WRONLY | O_CREAT | O_TRUNC /* | O_SYNC */ |  O_BINARY,
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (rc < 0)

@@ -4,18 +4,10 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2005      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 
-#if !defined(_OPCODE_H)
-
+#ifndef _OPCODE_H
 #define _OPCODE_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#undef PTRININTOK
-#if defined(SIZEOF_INT) && defined(SIZEOF_INT_P) && SIZEOF_INT == SIZEOF_INT_P
-#define PTRININTOK
-#endif
+#include "hercules.h"
 
 #if defined(_370)
  #define _GEN370(_name) &s370_ ## _name,
@@ -109,7 +101,7 @@
     }
 
 
-typedef void (ATTR_REGPARM(2) (*zz_func)) (BYTE inst[], REGS *regs);
+typedef void (ATTR_REGPARM(2) *zz_func) (BYTE inst[], REGS *regs);
 
 #define ILC(_b) ((_b) < 0x40 ? 2 : (_b) < 0xc0 ? 4 : 6)
 #define REAL_ILC(_regs) \
@@ -131,6 +123,7 @@ extern zz_func opcode_b2xx[][GEN_MAXARCH];
 extern zz_func opcode_b3xx[][GEN_MAXARCH];
 extern zz_func opcode_b9xx[][GEN_MAXARCH];
 extern zz_func opcode_c0xx[][GEN_MAXARCH];
+extern zz_func opcode_c2xx[][GEN_MAXARCH];                      /*@Z9*/
 extern zz_func opcode_e3xx[][GEN_MAXARCH];
 extern zz_func opcode_e4xx[][GEN_MAXARCH];
 extern zz_func v_opcode_e4xx[][GEN_MAXARCH];
@@ -182,6 +175,9 @@ int used; \
     case 0xC0: \
         used = sysblk.imapc0[(_inst)[1] & 0x0F]++; \
         break; \
+    case 0xC2:                                     /*@Z9*/ \
+        used = sysblk.imapc2[(_inst)[1] & 0x0F]++; /*@Z9*/ \
+        break;                                     /*@Z9*/ \
     case 0xE3: \
         used = sysblk.imape3[(_inst)[5]]++; \
         break; \
@@ -536,31 +532,16 @@ do { \
 
 #define TLBIX(_addr) (((_addr) >> TLB_PAGESHIFT) & TLB_MASK)
 
-#if defined(PTRININTOK)
 #define MAINADDR(_main, _addr) \
-   (BYTE *)((unsigned int)(_main) ^ (unsigned int)(_addr))
-#else
-#define MAINADDR(_main, _addr) \
-   (_main) + ((_addr) & TLB_BYTEMASK)
-#endif
+   (BYTE*)((uintptr_t)(_main) ^ (uintptr_t)(_addr))
 
-#if defined(PTRININTOK)
 #define NEW_INSTADDR(_regs, _addr, _ia) \
-   (BYTE *)((unsigned int)(_ia) ^ (unsigned int)(_addr))
-#else
-#define NEW_INSTADDR(_regs, _addr, _ia) \
-   (_ia)
-#endif
+   (BYTE*)((uintptr_t)(_ia) ^ (uintptr_t)(_addr))
 
-#if defined(PTRININTOK)
 #define NEW_MAINADDR(_regs, _addr, _aaddr) \
-   (BYTE *)((unsigned int)((_regs)->mainstor \
-            + ((_aaddr) & PAGEFRAME_PAGEMASK)) \
-            ^ (unsigned int)((_addr) & TLB_PAGEMASK))
-#else
-#define NEW_MAINADDR(_regs, _addr, _aaddr) \
-   (_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK)
-#endif
+   (BYTE*)((uintptr_t)((_regs)->mainstor \
+         + (uintptr_t)((_aaddr) & PAGEFRAME_PAGEMASK)) \
+         ^ (uintptr_t)((_addr) & TLB_PAGEMASK))
 
 /* Perform invalidation after storage key update.
  * If the REF or CHANGE bit is turned off for an absolute
@@ -580,7 +561,7 @@ do { \
      obtain_lock (&sysblk.intlock); \
      for (i = 0; i < HI_CPU; i++) { \
        if (IS_CPU_ONLINE(i) && i != (_regs)->cpuad) { \
-         if (test_bit(4, i, &sysblk.waiting_mask)) \
+         if ( sysblk.waiting_mask & BIT(i) ) \
            ARCH_DEP(invalidate_tlbe)(sysblk.regs[i], mn); \
          else { \
            ON_IC_INTERRUPT(sysblk.regs[i]); \
@@ -1287,7 +1268,6 @@ do { \
 #define PERFORM_SERIALIZATION(_regs)
 #define PERFORM_CHKPT_SYNC(_regs)
 
-
 #if !defined(NO_SETUID)
 
 /* SETMODE(INIT)
@@ -1410,8 +1390,8 @@ int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm,
 void io_reset (void);
 int  chp_reset(BYTE chpid);
 void channelset_reset(REGS *regs);
-int  device_attention (DEVBLK *dev, BYTE unitstat);
-int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
+DLL_EXPORT int  device_attention (DEVBLK *dev, BYTE unitstat);
+DLL_EXPORT int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
 
 
 /* Functions in module cpu.c */
@@ -1440,7 +1420,7 @@ void s390_program_interrupt (REGS *regs, int code);
 #endif /*!defined(_FEATURE_ZSIE)*/
 void ARCH_DEP(program_interrupt) (REGS *regs, int code);
 void *cpu_thread (int *cpu);
-void copy_psw (REGS *regs, BYTE *addr);
+DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
 void display_psw (REGS *regs);
 
 
@@ -1834,6 +1814,18 @@ DEF_INST(multiply_subtract_float_short_reg);
 DEF_INST(multiply_subtract_float_long_reg);
 DEF_INST(multiply_subtract_float_short);
 DEF_INST(multiply_subtract_float_long);
+DEF_INST(multiply_unnormal_float_long_to_ext_reg);              /*@Z9*/
+DEF_INST(multiply_unnormal_float_long_to_ext_low_reg);          /*@Z9*/
+DEF_INST(multiply_unnormal_float_long_to_ext_high_reg);         /*@Z9*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext_reg);          /*@Z9*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext_low_reg);      /*@Z9*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext_high_reg);     /*@Z9*/
+DEF_INST(multiply_unnormal_float_long_to_ext);                  /*@Z9*/
+DEF_INST(multiply_unnormal_float_long_to_ext_low);              /*@Z9*/
+DEF_INST(multiply_unnormal_float_long_to_ext_high);             /*@Z9*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext);              /*@Z9*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext_low);          /*@Z9*/
+DEF_INST(multiply_add_unnormal_float_long_to_ext_high);         /*@Z9*/
 DEF_INST(load_float_long_y);
 DEF_INST(load_float_short_y);
 DEF_INST(store_float_long_y);
@@ -1957,6 +1949,7 @@ DEF_INST(store_character);
 DEF_INST(store_characters_under_mask);
 DEF_INST(store_clock);
 DEF_INST(store_clock_extended);
+DEF_INST(store_clock_fast);                                     /*@Z9*/
 DEF_INST(store_halfword);
 DEF_INST(store_multiple);
 DEF_INST(subtract_register);
@@ -2077,15 +2070,16 @@ DEF_INST(divide_single_long);
 DEF_INST(divide_single_long_fullword);
 DEF_INST(divide_single_long_register);
 DEF_INST(divide_single_long_fullword_register);
-DEF_INST(load_logical_character);
-DEF_INST(load_logical_halfword);
+DEF_INST(load_logical_long_character);
+DEF_INST(load_logical_long_halfword);
 DEF_INST(store_pair_to_quadword);
 DEF_INST(load_pair_from_quadword);
 DEF_INST(extract_stacked_registers_long);
 DEF_INST(extract_psw);
 DEF_INST(extract_and_set_extended_authority);
 DEF_INST(load_address_relative_long);
-DEF_INST(store_facilities_list);
+DEF_INST(store_facility_list);
+DEF_INST(store_facility_list_extended);                         /*@Z9*/
 DEF_INST(load_long_halfword_immediate);
 DEF_INST(add_long_halfword_immediate);
 DEF_INST(multiply_long_halfword_immediate);
@@ -2256,7 +2250,41 @@ DEF_INST(subtract_logical_y);
 DEF_INST(test_under_mask_y);
 DEF_INST(compare_and_swap_and_purge_long);
 DEF_INST(invalidate_dat_table_entry);
-
+DEF_INST(load_page_table_entry_address);                        /*@Z9*/
+DEF_INST(add_fullword_immediate);                               /*@Z9*/
+DEF_INST(add_long_fullword_immediate);                          /*@Z9*/
+DEF_INST(add_logical_fullword_immediate);                       /*@Z9*/
+DEF_INST(add_logical_long_fullword_immediate);                  /*@Z9*/
+DEF_INST(and_immediate_high_fullword);                          /*@Z9*/
+DEF_INST(and_immediate_low_fullword);                           /*@Z9*/
+DEF_INST(compare_fullword_immediate);                           /*@Z9*/
+DEF_INST(compare_long_fullword_immediate);                      /*@Z9*/
+DEF_INST(compare_logical_fullword_immediate);                   /*@Z9*/
+DEF_INST(compare_logical_long_fullword_immediate);              /*@Z9*/
+DEF_INST(exclusive_or_immediate_high_fullword);                 /*@Z9*/
+DEF_INST(exclusive_or_immediate_low_fullword);                  /*@Z9*/
+DEF_INST(insert_immediate_high_fullword);                       /*@Z9*/
+DEF_INST(insert_immediate_low_fullword);                        /*@Z9*/
+DEF_INST(load_long_fullword_immediate);                         /*@Z9*/
+DEF_INST(load_logical_immediate_high_fullword);                 /*@Z9*/
+DEF_INST(load_logical_immediate_low_fullword);                  /*@Z9*/
+DEF_INST(or_immediate_high_fullword);                           /*@Z9*/
+DEF_INST(or_immediate_low_fullword);                            /*@Z9*/
+DEF_INST(subtract_logical_fullword_immediate);                  /*@Z9*/
+DEF_INST(subtract_logical_long_fullword_immediate);             /*@Z9*/
+DEF_INST(load_and_test);                                        /*@Z9*/
+DEF_INST(load_and_test_long);                                   /*@Z9*/
+DEF_INST(load_byte_register);                                   /*@Z9*/
+DEF_INST(load_long_byte_register);                              /*@Z9*/
+DEF_INST(load_halfword_register);                               /*@Z9*/
+DEF_INST(load_long_halfword_register);                          /*@Z9*/
+DEF_INST(load_logical_character);                               /*@Z9*/
+DEF_INST(load_logical_character_register);                      /*@Z9*/
+DEF_INST(load_logical_long_character_register);                 /*@Z9*/
+DEF_INST(load_logical_halfword);                                /*@Z9*/
+DEF_INST(load_logical_halfword_register);                       /*@Z9*/
+DEF_INST(load_logical_long_halfword_register);                  /*@Z9*/
+DEF_INST(find_leftmost_one_long_register);                      /*@Z9*/
 
 
 /* Instructions in ecpsvm.c */

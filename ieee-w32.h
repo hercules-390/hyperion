@@ -1,20 +1,17 @@
-#if !defined(_IEEE_W32_H)
-#define _IEEE_W32_H 1
+#ifndef _IEEE_W32_H
+#define _IEEE_W32_H
 
-/* FIXME - Cygwin is messing this code up */
-#ifdef FP_NAN
+#if defined(_MSVC_) && (LDBL_MANT_DIG == DBL_MANT_DIG)
+ #define LONG_DOUBLE_IS_SAME_AS_DOUBLE
+#endif
+
 #undef FP_NAN
 #undef FP_INFINITE
 #undef FP_ZERO
 #undef FP_SUBNORMAL
 #undef FP_NORMAL
-#endif
-#ifdef fpclassify
 #undef fpclassify
-#endif
-#ifdef signbit
 #undef signbit
-#endif
 
 /* All floating-point numbers can be put in one of these categories.  */
 enum
@@ -71,15 +68,21 @@ enum
 #define FE_ALL_EXCEPT \
     (FE_INEXACT | FE_DIVBYZERO | FE_UNDERFLOW | FE_OVERFLOW | FE_INVALID)
 
-#define fpclassify(x) \
+#if defined(LONG_DOUBLE_IS_SAME_AS_DOUBLE)
+ #define fpclassify(x) \
+     (sizeof (x) == sizeof (float)  ? __fpclassifyf (x) \
+    : __fpclassify (x))
+#else
+ #define fpclassify(x) \
      (sizeof (x) == sizeof (float)  ? __fpclassifyf (x) \
     : sizeof (x) == sizeof (double) ? __fpclassify (x) \
     : __fpclassifyl (x))
+#endif
 
 typedef union
 {
   float value;
-  u_int32_t word;
+  uint32_t word;
 } ieee_float_shape_type;
 
 #define GET_FLOAT_WORD(i,d)      \
@@ -95,8 +98,8 @@ typedef union
   double value;
   struct
   {
-    u_int32_t lsw;
-    u_int32_t msw;
+    uint32_t lsw;
+    uint32_t msw;
   } parts;
 } ieee_double_shape_type;
 
@@ -108,13 +111,14 @@ do {                              \
   (ix1) = ew_u.parts.lsw;         \
 } while (0)
 
+#if !defined(LONG_DOUBLE_IS_SAME_AS_DOUBLE)
 typedef union
 {
   long double value;
   struct
   {
-    u_int32_t lsw;
-    u_int32_t msw;
+    uint32_t lsw;
+    uint32_t msw;
     int sign_exponent:16;
     unsigned int empty:16;
   } parts;
@@ -130,6 +134,7 @@ do {                                     \
   (ix0) = ew_u.parts.msw;                \
   (ix1) = ew_u.parts.lsw;                \
 } while (0)
+#endif /*!defined(LONG_DOUBLE_IS_SAME_AS_DOUBLE)*/
 
 int
 fegetenv(fenv_t *f)
@@ -148,7 +153,7 @@ feholdexcept(fenv_t *f)
 int
 __fpclassifyf (float x)
 {
-  u_int32_t wx;
+  uint32_t wx;
   int retval = FP_NORMAL;
 
   GET_FLOAT_WORD (wx, x);
@@ -166,7 +171,7 @@ __fpclassifyf (float x)
 int
 __fpclassify (double x)
 {
-  u_int32_t hx, lx;
+  uint32_t hx, lx;
   int retval = FP_NORMAL;
 
   EXTRACT_WORDS (hx, lx, x);
@@ -182,10 +187,11 @@ __fpclassify (double x)
   return retval;
 }
 
+#if !defined(LONG_DOUBLE_IS_SAME_AS_DOUBLE)
 int
 __fpclassifyl (long double x)
 {
-  u_int32_t ex, hx, lx;
+  uint32_t ex, hx, lx;
   int retval = FP_NORMAL;
 
   GET_LDOUBLE_WORDS (ex, hx, lx, x);
@@ -199,6 +205,7 @@ __fpclassifyl (long double x)
 
   return retval;
 }
+#endif // !defined(LONG_DOUBLE_IS_SAME_AS_DOUBLE)
 
 int
 fetestexcept (int excepts)
@@ -206,7 +213,11 @@ fetestexcept (int excepts)
   int temp;
 
   /* Get current exceptions.  */
+  #if defined(_MSVC_)
+  __asm fnstsw temp
+  #else
   __asm__ ("fnstsw %0" : "=a" (temp));
+  #endif
 
   return temp & excepts & FE_ALL_EXCEPT;
 }
@@ -221,13 +232,21 @@ feclearexcept (int excepts)
 
   /* Bah, we have to clear selected exceptions.  Since there is no
      `fldsw' instruction we have to do it the hard way.  */
+  #if defined(_MSVC_)
+  __asm fnstenv temp
+  #else
   __asm__ ("fnstenv %0" : "=m" (*&temp));
+  #endif
 
   /* Clear the relevant bits.  */
   temp.__status_word &= excepts ^ FE_ALL_EXCEPT;
 
   /* Put the new data in effect.  */
+  #if defined(_MSVC_)
+  __asm fldenv temp
+  #else
   __asm__ ("fldenv %0" : : "m" (*&temp));
+  #endif
 
   /* Success.  */
   return 0;
@@ -249,6 +268,8 @@ signbit (double x)
   return hx & 0x80000000;
 }
 
+#if !defined(HAVE_FREXPL)
+
 #define GET_LDOUBLE_EXP(exp,d)       \
 do {                                 \
   ieee_long_double_shape_type ge_u;  \
@@ -266,8 +287,8 @@ do {                                 \
 
 long double frexpl(long double x, int *eptr)
 {
- u_int32_t se, hx, ix, lx;
- u_int64_t two64 = 0x43f0000000000000ULL;
+ uint32_t se, hx, ix, lx;
+ uint64_t two64 = 0x43f0000000000000ULL;
  GET_LDOUBLE_WORDS(se,hx,lx,x);
  ix = 0x7fff&se;
  *eptr = 0;
@@ -284,4 +305,6 @@ long double frexpl(long double x, int *eptr)
  return x;
 }
 
-#endif
+#endif /*!defined(HAVE_FREXPL)*/
+
+#endif // _IEEE_W32_H

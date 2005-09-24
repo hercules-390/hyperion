@@ -7,12 +7,15 @@
 //
 // TUN/TAP implementations differ among platforms. Linux and FreeBSD
 // offer much the same functionality but with differing semantics.
-// Windows does not have TUN/TAP but thanks to "Fish" (David B. Trout) 
-// we have a way of emulating the TUN/TAP interface through a set of  
+// Windows does not have TUN/TAP but thanks to "Fish" (David B. Trout)
+// we have a way of emulating the TUN/TAP interface through a set of
 // custom DLLs he has provided us.
 //
 // This abstraction layer is an attempt to create a common API set
 // that works on all platforms with (hopefully) equal results.
+//
+
+#include "hstdinc.h"
 
 #include "hercules.h"
 #include "tuntap.h"
@@ -20,7 +23,7 @@
 #include "ctcadpt.h"
 #include "hercifc.h"
 
-#if defined( WIN32 )
+#if defined( OPTION_W32_CTCI )
 #include "w32ctca.h"
 #endif
 
@@ -28,10 +31,9 @@
 // Declarations
 // ====================================================================
 
-#if !defined( WIN32 )
+#ifndef OPTION_W32_CTCI
 
 static int IFC_IOCtl( int fd, unsigned long int iRequest, char* argp );
-
 static int ifc_fd[2] = { -1, -1 };
 static pid_t ifc_pid = 0;
 
@@ -42,31 +44,31 @@ static void tuntap_term(void)
     ifc_fd[0] = ifc_fd[1] = -1;
     kill(ifc_pid, SIGINT);
 }
-#endif /* !defined( WIN32 ) */
 
+#endif
 
 // ====================================================================
 // Primary Module Entry Points
 // ====================================================================
 
-// 
+//
 // TUNTAP_CreateInterface
-// 
+//
 //
 // Creates a new network interface using TUN/TAP. Reading from or
 // writing to the file descriptor returned from this call will pass
 // network packets to/from the virtual network interface.
 //
-// A TUN interface is a Point-To-Point connection from the driving 
+// A TUN interface is a Point-To-Point connection from the driving
 // system's IP stack to the guest OS running within Hercules.
 //
 // A TAP interface in a virtual network adapter that "tap's" off the
-// driving system's network stack. 
+// driving system's network stack.
 //
-// On *nix boxen, this is accomplished by opening the special TUN/TAP 
-// character device (usually /dev/net/tun). Once the character device 
-// is opened, an ioctl call is done to set they type of interface to be 
-// created, IFF_TUN or IFF_TAP. Once the interface is created, the 
+// On *nix boxen, this is accomplished by opening the special TUN/TAP
+// character device (usually /dev/net/tun). Once the character device
+// is opened, an ioctl call is done to set they type of interface to be
+// created, IFF_TUN or IFF_TAP. Once the interface is created, the
 // interface name is returned in pszNetDevName.
 //
 // Input:
@@ -81,15 +83,15 @@ static void tuntap_term(void)
 // however:
 //
 // Input:
-//      pszTUNDevice  Pointer to a string that describes the physical 
+//      pszTUNDevice  Pointer to a string that describes the physical
 //                    adapter to attach the TUN/TAP interface to.
 //                    This string can contain any of the following:
-//                      1) IP address (in a.b.c.d notation) 
+//                      1) IP address (in a.b.c.d notation)
 //                      2) MAC address (in xx-xx-xx-xx-xx-xx or
 //                                         xx:xx:xx:xx:xx:xx notation).
-//                      3) Name of the adapter as displayed on your 
+//                      3) Name of the adapter as displayed on your
 //                         Network and Dial-ip Connections window
-//                         (Windows 2000) only (future implementation).
+//                         (Windows 2000 only future implementation)
 //      iFlags        Flags for the new interface:
 //                       IFF_TAP   - Create a TAP interface or
 //                       IFF_TUN   - Create a TUN interface
@@ -99,65 +101,69 @@ static void tuntap_term(void)
 //      pfd           Pointer to receive the file descriptor if the
 //                       TUN/TAP interface.
 //      pszNetDevName Pointer to receive the name if the interface.
-// 
+//
 
-int             TUNTAP_CreateInterface( char* pszTUNDevice, 
+int             TUNTAP_CreateInterface( char* pszTUNDevice,
                                         int   iFlags,
-                                        int*  pfd, 
+                                        int*  pfd,
                                         char* pszNetDevName )
 {
     int            fd;                  // File descriptor
+#if !defined( OPTION_W32_CTCI )
     struct utsname utsbuf;
 
     if( uname( &utsbuf ) != 0 )
     {
-        logmsg( _("HHCTU001E Can not determine operating system: %s\n"),
+        logmsg( _("HHCTU001E Unable to determine operating system type: %s\n"),
                 strerror( errno ) );
-        
+
         return -1;
     }
-    
+#endif
+
     // Open TUN device
     fd = TUNTAP_Open( pszTUNDevice, O_RDWR );
-    
+
     if( fd < 0 )
     {
         logmsg( _("HHCTU002E Error opening TUN/TAP device: %s: %s\n"),
                 pszTUNDevice, strerror( errno ) );
-        
+
         return -1;
     }
-    
+
     *pfd = fd;
-    
-    if( ( strncasecmp( utsbuf.sysname, "CYGWIN", 6 ) == 0 ) ||
-        ( strncasecmp( utsbuf.sysname, "linux",  5 ) == 0 ) )
+
+#if !defined( OPTION_W32_CTCI )
+    if ( strncasecmp( utsbuf.sysname, "linux",  5 ) == 0 )
+#endif
     {
-        // Linux kernel (builtin tun device) or CygWin
+        // Linux kernel (builtin tun device) or Windows
         struct ifreq ifr;
-        
+
         memset( &ifr, 0, sizeof( ifr ) );
-        
+
         ifr.ifr_flags = iFlags;
-        
+
         // First try the value from the header that we ship (2.4.8)
         // If this fails with EINVAL, try with the pre-2.4.5 value
         if( TUNTAP_IOCtl( fd, TUNSETIFF, (char*)&ifr ) != 0 &&
-            ( errno != EINVAL || 
+            ( errno != EINVAL ||
               TUNTAP_IOCtl( fd, ('T' << 8) | 202, (char*)&ifr ) != 0 )  )
         {
             logmsg( _("HHCTU003E Error setting TUN/TAP mode: %s: %s\n"),
                     pszTUNDevice, strerror( errno ) );
             return -1;
         }
-        
+
         strcpy( pszNetDevName, ifr.ifr_name );
-    } 
+    }
+#if !defined( OPTION_W32_CTCI )
     else
     {
         // Other OS: Simply use basename of the device
-        // Notes: (JAP) This is problematic at best. Until we have a 
-        //        clean FreeBSD compile from the base tree I can't 
+        // Notes: (JAP) This is problematic at best. Until we have a
+        //        clean FreeBSD compile from the base tree I can't
         //        spend a lot of time on this... so it will remain.
         //        My best guess is that this will cause other functions
         //        to fail miserably but I have no way to test it.
@@ -165,33 +171,34 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
         //        since it does set the device name to the basename of the
         //        file. -- JRM
         char *p = strrchr( pszTUNDevice, '/' );
-        
+
         if( p )
             strncpy( pszNetDevName, ++p, IFNAMSIZ );
-        else 
+        else
         {
             logmsg( _("HHCTU004E Invalid TUN/TAP device name: %s\n"),
                     pszTUNDevice );
             return -1;
         }
     }
+#endif
 
     return 0;
 }
 
 //
-// Redefine TUNTAP_IOCtl for the remainder of the functions.
-// This forces the ioctl call to go to hercifc.
+// Redefine 'TUNTAP_IOCtl' for the remainder of the functions.
+// This forces all 'ioctl' calls to go to 'hercifc'.
 //
 
-#if !defined( WIN32 )
-#undef  TUNTAP_IOCtl
-#define TUNTAP_IOCtl    IFC_IOCtl
+#if !defined( OPTION_W32_CTCI )
+  #undef  TUNTAP_IOCtl
+  #define TUNTAP_IOCtl    IFC_IOCtl
 #endif
 
-// 
+//
 // TUNTAP_SetIPAddr
-// 
+//
 
 int             TUNTAP_SetIPAddr( char*   pszNetDevName,
                                   char*   pszIPAddr )
@@ -214,7 +221,7 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
 
     strcpy( ifreq.ifr_name, pszNetDevName );
 
-    if( !pszIPAddr  || 
+    if( !pszIPAddr  ||
         !inet_aton( pszIPAddr, &sin->sin_addr ) )
     {
         logmsg( _("HHCTU006E %s: Invalid IP address: %s.\n"),
@@ -225,9 +232,9 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
     return TUNTAP_IOCtl( 0, SIOCSIFADDR, (char*)&ifreq );
 }
 
-// 
+//
 // TUNTAP_SetDestAddr
-// 
+//
 
 int             TUNTAP_SetDestAddr( char*   pszNetDevName,
                                     char*   pszDestAddr )
@@ -250,7 +257,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
 
     strcpy( ifreq.ifr_name, pszNetDevName );
 
-    if( !pszDestAddr  || 
+    if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
         logmsg( _("HHCTU008E %s: Invalid destination address: %s.\n"),
@@ -261,12 +268,12 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
     return TUNTAP_IOCtl( 0, SIOCSIFDSTADDR, (char*)&ifreq );
 }
 
-// 
+//
 // TUNTAP_SetNetMask
-// 
-#if !defined(__APPLE__)
-int             TUNTAP_SetNetMask( char*   pszNetDevName,
-                                   char*   pszNetMask )
+//
+#ifdef OPTION_TUNTAP_SETNETMASK
+int           TUNTAP_SetNetMask( char*   pszNetDevName,
+                                 char*   pszNetMask )
 {
     struct ifreq        ifreq;
     struct sockaddr_in* sin;
@@ -286,7 +293,7 @@ int             TUNTAP_SetNetMask( char*   pszNetDevName,
 
     strcpy( ifreq.ifr_name, pszNetDevName );
 
-    if( !pszNetMask  || 
+    if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
         logmsg( _("HHCTU010E %s: Invalid net mask: %s.\n"),
@@ -296,12 +303,11 @@ int             TUNTAP_SetNetMask( char*   pszNetDevName,
 
     return TUNTAP_IOCtl( 0, SIOCSIFNETMASK, (char*)&ifreq );
 }
-#endif /* !defined(__APPLE__) */
+#endif // OPTION_TUNTAP_SETNETMASK
 
-// 
+//
 // TUNTAP_SetMTU
-// 
-
+//
 int             TUNTAP_SetMTU( char*   pszNetDevName,
                                char*   pszMTU )
 {
@@ -345,12 +351,12 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
     return TUNTAP_IOCtl( 0, SIOCSIFMTU, (char*)&ifreq );
 }
 
-// 
+//
 // TUNTAP_SetMACAddr
-// 
-#if !defined(__APPLE__)
-int             TUNTAP_SetMACAddr( char*   pszNetDevName,
-                                   char*   pszMACAddr )
+//
+#ifdef OPTION_TUNTAP_SETMACADDR
+int           TUNTAP_SetMACAddr( char*   pszNetDevName,
+                                 char*   pszMACAddr )
 {
     struct ifreq        ifreq;
     struct sockaddr*    addr;
@@ -359,7 +365,7 @@ int             TUNTAP_SetMACAddr( char*   pszNetDevName,
     memset( &ifreq, 0, sizeof( struct ifreq ) );
 
     addr = (struct sockaddr*)&ifreq.ifr_hwaddr;
-    
+
     addr->sa_family = AF_UNIX;
 
     if( !pszNetDevName || !*pszNetDevName )
@@ -382,11 +388,11 @@ int             TUNTAP_SetMACAddr( char*   pszNetDevName,
 
     return TUNTAP_IOCtl( 0, SIOCSIFHWADDR, (char*)&ifreq );
 }
-#endif /* !defined(__APPLE__) */
+#endif // OPTION_TUNTAP_SETMACADDR
 
-// 
+//
 // TUNTAP_SetFlags
-// 
+//
 
 int             TUNTAP_SetFlags ( char*   pszNetDevName,
                                   int     iFlags )
@@ -414,21 +420,21 @@ int             TUNTAP_SetFlags ( char*   pszNetDevName,
     return TUNTAP_IOCtl( 0, SIOCSIFFLAGS, (char*)&ifreq );
 }
 
-// 
+//
 // TUNTAP_AddRoute
-// 
-#if !defined(__APPLE__)
-int             TUNTAP_AddRoute( char*   pszNetDevName,
-                                 char*   pszDestAddr,
-                                 char*   pszNetMask,
-                                 char*   pszGWAddr,
-                                 int     iFlags )
+//
+#ifdef OPTION_TUNTAP_DELADD_ROUTES
+int           TUNTAP_AddRoute( char*   pszNetDevName,
+                               char*   pszDestAddr,
+                               char*   pszNetMask,
+                               char*   pszGWAddr,
+                               int     iFlags )
 {
     struct rtentry     rtentry;
     struct sockaddr_in* sin;
 
     memset( &rtentry, 0, sizeof( struct rtentry ) );
-    
+
     if( !pszNetDevName || !*pszNetDevName )
     {
         logmsg( _("HHCTU017E Invalid net device name specified: %s\n"),
@@ -441,7 +447,7 @@ int             TUNTAP_AddRoute( char*   pszNetDevName,
     sin = (struct sockaddr_in*)&rtentry.rt_dst;
     sin->sin_family = AF_INET;
 
-    if( !pszDestAddr  || 
+    if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
         logmsg( _("HHCTU018E %s: Invalid destiniation address: %s.\n"),
@@ -452,7 +458,7 @@ int             TUNTAP_AddRoute( char*   pszNetDevName,
     sin = (struct sockaddr_in*)&rtentry.rt_genmask;
     sin->sin_family = AF_INET;
 
-    if( !pszNetMask  || 
+    if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
         logmsg( _("HHCTU019E %s: Invalid net mask: %s.\n"),
@@ -477,23 +483,23 @@ int             TUNTAP_AddRoute( char*   pszNetDevName,
 
     return TUNTAP_IOCtl( 0, SIOCADDRT, (char*)&rtentry );
 }
-#endif /* !defined(__APPLE__) */
+#endif // OPTION_TUNTAP_DELADD_ROUTES
 
-// 
+//
 // TUNTAP_DelRoute
-// 
-#if !defined(__APPLE__)
-int             TUNTAP_DelRoute( char*   pszNetDevName,
-                                 char*   pszDestAddr,
-                                 char*   pszNetMask,
-                                 char*   pszGWAddr,
-                                 int     iFlags )
+//
+#ifdef OPTION_TUNTAP_DELADD_ROUTES
+int           TUNTAP_DelRoute( char*   pszNetDevName,
+                               char*   pszDestAddr,
+                               char*   pszNetMask,
+                               char*   pszGWAddr,
+                               int     iFlags )
 {
     struct rtentry     rtentry;
     struct sockaddr_in* sin;
 
     memset( &rtentry, 0, sizeof( struct rtentry ) );
-    
+
     if( !pszNetDevName || !*pszNetDevName )
     {
         logmsg( _("HHCTU021E Invalid net device name specified: %s\n"),
@@ -506,7 +512,7 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
     sin = (struct sockaddr_in*)&rtentry.rt_dst;
     sin->sin_family = AF_INET;
 
-    if( !pszDestAddr  || 
+    if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
         logmsg( _("HHCTU022E %s: Invalid destiniation address: %s.\n"),
@@ -517,7 +523,7 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
     sin = (struct sockaddr_in*)&rtentry.rt_genmask;
     sin->sin_family = AF_INET;
 
-    if( !pszNetMask  || 
+    if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
         logmsg( _("HHCTU023E %s: Invalid net mask: %s.\n"),
@@ -528,7 +534,7 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
     sin = (struct sockaddr_in*)&rtentry.rt_gateway;
     sin->sin_family = AF_INET;
 
-    if( !pszGWAddr  || 
+    if( !pszGWAddr  ||
         !inet_aton( pszGWAddr, &sin->sin_addr ) )
     {
         logmsg( _("HHCTU024E %s: Invalid gateway address: %s.\n"),
@@ -540,16 +546,16 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
 
     return TUNTAP_IOCtl( 0, SIOCDELRT, (char*)&rtentry );
 }
-#endif /* !defined(__APPLE__) */
+#endif // OPTION_TUNTAP_DELADD_ROUTES
 
-#if !defined( WIN32 )
+#if !defined( OPTION_W32_CTCI )
 // ====================================================================
 // HercIFC Helper Functions
 // ====================================================================
 
-// 
+//
 // IFC_IOCtl
-// 
+//
 
 static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 {
@@ -565,7 +571,8 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 
     ctlreq.iCtlOp = iRequest;
 
-#if 0 /* debugging print */
+#if 0 /* ++++++++++++++++++++++ debugging print ++++++++++++++++++++++ */
+
     // Select string to represent ioctl request for debugging.
     switch (iRequest) {
     case SIOCSIFADDR:
@@ -576,41 +583,50 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         request_name="SIOCSIFMTU"; break;
     case SIOCSIFFLAGS:
         request_name="SIOCSIFFLAGS"; break;
+#ifdef OPTION_TUNTAP_SETNETMASK
     case SIOCSIFNETMASK:
         request_name="SIOCSIFNETMASK"; break;
-#if !defined(__APPLE__)
+#endif
+#ifdef OPTION_TUNTAP_SETMACADDR
     case SIOCSIFHWADDR:
         request_name="SIOCSIFHWADDR"; break;
-#endif /* !defined(__APPLE__) */
+#endif
+//#ifdef OPTION_TUNTAP_DELADD_ROUTES
     case SIOCADDRT:
         request_name="SIOCADDRT"; break;
     case SIOCDELRT:
         request_name="SIOCDELRT"; break;
+//#endif
     default:
         sprintf(unknown_request,"Unknown (0x%x)",iRequest);
         request_name=unknown_request;
     }
 logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
           request_name,ifc_fd[0],ifc_fd[1]);
-#endif /* 0 -- debugging */
 
-#if !defined(__APPLE__)
+#endif /* ++++++++++++++++++++++ debugging print ++++++++++++++++++++++ */
+
     if( iRequest == SIOCADDRT ||
         iRequest == SIOCDELRT )
     {
+#ifdef OPTION_TUNTAP_DELADD_ROUTES
       strcpy( ctlreq.szIFName, ((struct rtentry*)argp)->rt_dev );
       memcpy( &ctlreq.iru.rtentry, argp, sizeof( struct rtentry ) );
       ((struct rtentry*)argp)->rt_dev = NULL;
+#else
+      logmsg(_("HHCTU028E Unsupported call to %s a network route\n"),
+                ((iRequest==SIOCADDRT) ? "ADD" : "DELETE"));
+      return -1;
+#endif
     }
     else
-#endif /* !defined(__APPLE__) */
     {
       memcpy( &ctlreq.iru.ifreq, argp, sizeof( struct ifreq ) );
     }
 
     if( ifc_fd[0] == -1 && ifc_fd[1] == -1 )
     {
-        if( socketpair( AF_UNIX, SOCK_STREAM, 0, ifc_fd ) < 0 ) 
+        if( socketpair( AF_UNIX, SOCK_STREAM, 0, ifc_fd ) < 0 )
         {
             logmsg( _("HHCTU025E Call to socketpair failed: %s\n"),
                     strerror( errno ) );
@@ -636,7 +652,7 @@ logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
         // The child process executes the configuration command
         if( ifc_pid == 0 )
         {
-            /* @ISW@ Close all file descriptors 
+            /* @ISW@ Close all file descriptors
              * (except ifc_fd[1] and STDOUT FILENO)
              * (otherwise some devices are never closed)
              * (ex: SCSI tape devices can never be re-opened)
@@ -663,27 +679,27 @@ logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
             /* @ISW@ Close spurious FDs END */
             dup2( ifc_fd[1], STDIN_FILENO  );
             dup2( STDOUT_FILENO, STDERR_FILENO );
-            
+
             // Execute the interface configuration command
             rc = execlp( pszCfgCmd, pszCfgCmd, NULL );
-            
+
             // The exec function returns only if unsuccessful
             logmsg( _("HHCTU027E execl error on %s: %s.\n"),
                     pszCfgCmd, strerror( errno ) );
-            
+
             exit( 127 );
         }
 
         /* Terminate TunTap on shutdown */
-        hdl_adsc(tuntap_term, NULL);
+        hdl_adsc("tuntap_term", tuntap_term, NULL);
     }
 
     // Populate some common fields
     ctlreq.iType = 1;
-        
+
     write( ifc_fd[0], &ctlreq, CTLREQ_SIZE );
 
     return 0;
 }
 
-#endif // !defined( WIN32 )
+#endif // !defined( OPTION_W32_CTCI )

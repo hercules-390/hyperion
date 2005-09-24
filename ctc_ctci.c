@@ -9,21 +9,12 @@
 // linux 2.4 modifications (c) Copyright Fritz Elfert, 2001-2005
 //
 
-//#if !defined(__APPLE__)
-
+#include "hstdinc.h"
 #include "hercules.h"
-#include "devtype.h"
 #include "ctcadpt.h"
 #include "tuntap.h"
-
 #include "hercifc.h"
-
 #include "opcode.h"
-
-#if defined(HAVE_GETOPT_LONG)
-#include <getopt.h>
-#endif /* defined(HAVE_GETOPT_LONG) */
-
 /* getopt dynamic linking kludge */
 #include "herc_getopt.h"
 
@@ -160,6 +151,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     if( ParseArgs( pDEVBLK, pWrkCTCBLK, argc, (char**)argv ) != 0 )
     {
         free( pWrkCTCBLK );
+        pWrkCTCBLK = NULL;
         return -1;
     }
 
@@ -172,6 +164,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         logmsg( _("HHCCT038E %4.4X: Unable to allocate CTCBLK\n"),
                 pDEVBLK->devnum );
         free( pWrkCTCBLK );
+        pWrkCTCBLK = NULL;
         return -1;
     }
 
@@ -220,6 +213,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     if( rc < 0 )
     {
         free( pWrkCTCBLK );
+        pWrkCTCBLK = NULL;
         return -1;
     }
     else
@@ -229,7 +223,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                   pDevCTCBLK->szTUNDevName);
     }
 
-#if !defined(__APPLE__)
+#ifdef OPTION_TUNTAP_SETMACADDR
+
     if( !pDevCTCBLK->szMACAddress[0] )   // (if MAC address unspecified)
     {
         // Build a default MAC addr based on the guest (destination) ip
@@ -311,15 +306,15 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     );
 
     VERIFY( TUNTAP_SetMACAddr ( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szMACAddress  ) == 0 );
-#endif /*!defined(__APPLE__) */
+#endif
 
     VERIFY( TUNTAP_SetIPAddr  ( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szDriveIPAddr ) == 0 );
 
     VERIFY( TUNTAP_SetDestAddr( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szGuestIPAddr ) == 0 );
 
-#if !defined(__APPLE__)
+#ifdef OPTION_TUNTAP_SETNETMASK
     VERIFY( TUNTAP_SetNetMask ( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szNetMask     ) == 0 );
-#endif /* !defined(__APPLE__) */
+#endif
 
     VERIFY( TUNTAP_SetMTU     ( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szMTU         ) == 0 );
 
@@ -332,6 +327,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     create_thread( &pDevCTCBLK->tid, NULL, CTCI_ReadThread, pDevCTCBLK );
 
     free( pWrkCTCBLK );
+    pWrkCTCBLK = NULL;
 
     return 0;
 }
@@ -566,17 +562,41 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
     // Close the device file (if not already closed)
     if( pCTCBLK->fd >= 0 )
     {
-        pCTCBLK->fCloseInProgress = 1;
+        // PROGRAMMING NOTE: there's currently no way to interrupt
+        // the "CTCI_ReadThread"s TUNTAP_Read of the adapter. Thus
+        // we must simply wait for CTCI_ReadThread to eventually
+        // notice that we're doing a close (via our setting of the
+        // fCloseInProgress flag). Its TUNTAP_Read will eventually
+        // timeout after a few seconds (currently 5, which is dif-
+        // ferent than the CTC_READ_TIMEOUT_SECS timeout value the
+        // CTCI_Read function uses) and will then do the close of
+        // the adapter for us (TUNTAP_Close) so we don't have to.
+        // All we need to do is ask it to exit (via our setting of
+        // the fCloseInProgress flag) and then wait for it to exit
+        // (which, as stated, could take up to a max of 5 seconds).
 
-        VERIFY( TUNTAP_Close( pCTCBLK->fd ) == 0 );
+        // All of this is simply because it's poor form to close a
+        // device from one thread while another thread is reading
+        // from it. Attempting to do so could trip a race condition
+        // wherein the internal i/o buffers used to process the
+        // read request could have been freed (by the close call)
+        // by the time the read request eventually gets serviced.
 
-        pCTCBLK->fd = -1;
+        // I'll eventually get around to addressing this issue in
+        // the next release of TunTap32, but for now, the threads
+        // doing the i/o must be the ones that do the closing.
 
-        pCTCBLK->fCloseInProgress = 0;
+        TID tid = pCTCBLK->tid;
+        pCTCBLK->fCloseInProgress = 1;  // (ask read thread to exit)
+        signal_thread( tid, SIGINT );   // (for non-Win32 platforms)
+//FIXME signal_thread not working for non-MSVC platforms
+#if defined(_MSVC_)
+        join_thread( tid, NULL );       // (wait for thread to end)
+#endif
+        detach_thread( tid );           // (wait for thread to end)
     }
 
     pDEVBLK->fd = -1;           // indicate we're now closed
-
 
     return 0;
 }
@@ -750,7 +770,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
     // Check that CCW count is sufficient to contain block header
     if( sCount < sizeof( CTCIHDR ) )
     {
-        logmsg( _("HHCCT042E %4.4X Write CCW count %u is invalid\n"),
+        logmsg( _("HHCCT042E %4.4X: Write CCW count %u is invalid\n"),
                 pDEVBLK->devnum, sCount );
 
         pDEVBLK->sense[0] = SENSE_DC;
@@ -923,10 +943,10 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
     int      iLength;
     BYTE     szBuff[2048];
 
-    pCTCBLK->pid = getpid();
-
-    // Try to avoid race condition at startup with hercifc
+    // ZZ FIXME: Try to avoid race condition at startup with hercifc
     SLEEP(10);
+
+    pCTCBLK->pid = getpid();
 
     do
     {
@@ -977,14 +997,10 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
     }
     while( pCTCBLK->fd != -1 && !pCTCBLK->fCloseInProgress );
 
-    // Wait for close to complete...
-    while( pCTCBLK->fd != -1 )
-    {
-        // Don't use sched_yield() here; use an actual non-dispatchable
-        // delay instead so as to allow the other [possibly lower priority]
-        // thread to finish its closing of our device...
-        usleep( CTC_DELAY_USECS );  // (give it time to complete...)
-    }
+    // We must do the close since we were the one doing the i/o...
+
+    VERIFY( TUNTAP_Close( pCTCBLK->fd ) == 0 );
+    pCTCBLK->fd = -1;
 
     return NULL;
 }
@@ -1080,8 +1096,10 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     int             iMTU;
     int             i;
     MAC             mac;                // Work area for MAC address
+#if defined(WIN32)
     int             iKernBuff;
     int             iIOBuff;
+#endif
 
     // Housekeeping
     memset( &addr, 0, sizeof( struct in_addr ) );
@@ -1096,8 +1114,10 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     strcpy( pCTCBLK->szTUNCharName,  "/dev/net/tun" );
 #endif
 
+#if defined( WIN32 )
     pCTCBLK->iKernBuff     = DEF_TT32DRV_BUFFSIZE_K * 1024;
     pCTCBLK->iIOBuff       = DEF_TT32DRV_BUFFSIZE_K * 1024;
+#endif
 
     // Initialize getopt's counter. This is necessary in the case
     // that getopt was used previously for another device.
@@ -1174,7 +1194,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         switch( c )
         {
         case 'n':     // Network Device
-#if defined( WIN32 )
+#if defined( OPTION_W32_CTCI )
             // This could be the IP or MAC address of the
             // host ethernet adapter.
             if( inet_aton( optarg, &addr ) == 0 )
@@ -1187,7 +1207,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     return -1;
                 }
             }
-#endif // defined( WIN32 )
+#endif // defined( OPTION_W32_CTCI )
             // This is the file name of the special TUN/TAP character device
             if( strlen( optarg ) > sizeof( pCTCBLK->szTUNCharName ) - 1 )
             {
@@ -1199,6 +1219,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             break;
 
         case 'k':     // Kernel Buffer Size (ignored if not Windows)
+#if defined( WIN32 )
             iKernBuff = atoi( optarg );
 
             if( iKernBuff < MIN_TT32DLL_BUFFSIZE_K    ||
@@ -1210,9 +1231,11 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             }
 
             pCTCBLK->iKernBuff = iKernBuff * 1024;
+#endif
             break;
 
         case 'i':     // I/O Buffer Size (ignored if not Windows)
+#if defined( WIN32 )
             iIOBuff = atoi( optarg );
 
             if( iIOBuff < MIN_TT32DLL_BUFFSIZE_K    ||
@@ -1224,6 +1247,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             }
 
             pCTCBLK->iIOBuff = iIOBuff * 1024;
+#endif
             break;
 
         case 't':     // MTU of point-to-point link (ignored if Windows)
@@ -1321,7 +1345,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     }
     else // if( pCTCBLK->fOldFormat )
     {
-#if !defined( WIN32 )
+#if !defined( OPTION_W32_CTCI )
         // All arguments are non-optional in linux old-format
         // Old format has 5 and only 5 arguments
         if( argc != 5 )
@@ -1335,7 +1359,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         if( **argv != '/' ||
             strlen( *argv ) > sizeof( pCTCBLK->szTUNCharName ) - 1 )
         {
-            logmsg( _("HHCCT061E %4.4X invalid device name %s\n"),
+            logmsg( _("HHCCT061E %4.4X: invalid device name %s\n"),
                 pDEVBLK->devnum, *argv );
             return -1;
         }
@@ -1399,7 +1423,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 pDEVBLK->devnum );
             return -1;
         }
-#else // defined( WIN32 )
+#else // defined( OPTION_W32_CTCI )
         // There are 2 non-optional arguments in the Windows old-format:
         //   Guest IP address and Gateway address.
         // There are also 2 additional optional arguments:
@@ -1493,7 +1517,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
         }
-#endif // !defined( WIN32 )
+#endif // !defined( OPTION_W32_CTCI )
     }
 
     return 0;

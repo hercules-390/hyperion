@@ -1,34 +1,22 @@
 /* VERSION.C    (c) Copyright Roger Bowler, 1999-2005                */
-/*              Hercules Initialization Module                       */
+/*              Hercules Version Display Module                      */
 
 /*-------------------------------------------------------------------*/
 /* This module displays the Hercules program name, version, build    */
 /* date and time, and copyright notice to the indicated file.        */
 /*-------------------------------------------------------------------*/
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>
-#endif
+#include "hstdinc.h"
 
-#define _IMPORT
-#if defined(WIN32)
-#if defined(HDL_BUILD_SHARED)
-#undef _IMPORT
-#define _IMPORT __declspec(dllimport)
-#endif
-#endif
+#define _VERSION_C_
+#define _HUTIL_DLL_
 
-#include "hercnls.h"
-#include "feature.h"
-#include "hostinfo.h"
-#include "version.h"
-#if defined(EXTERNALGUI)
-extern _IMPORT int extgui;
-#endif
+#include "hercules.h"
+#include "machdep.h"
 
-/*--------------------------------*/
-/*   "Unusual" build options...   */
-/*--------------------------------*/
+/*--------------------------------------------------*/
+/*   "Unusual" (i.e. noteworthy) build options...   */
+/*--------------------------------------------------*/
 
 static const char *build_info[] = {
 
@@ -36,8 +24,12 @@ static const char *build_info[] = {
     CUSTOM_BUILD_STRING,
 #endif
 
-#if defined(DEBUG)
-    "**DEBUG**",
+#if defined(_MSVC_)
+    "Win32 (MSVC) "
+  #if defined(DEBUG)
+    "** DEBUG ** "
+  #endif
+    "build",
 #endif
 
 #if !defined(_ARCHMODE2)
@@ -56,22 +48,22 @@ static const char *build_info[] = {
 #endif
     ,
 
-#if defined(WIN32)
-    "Win32 (Windows) build",
-#else
-    #if defined(NO_SETUID)
-        "No setuid support",
+    "Max CPU Engines: " MSTRING(MAX_CPU_ENGINES),
+
+#if !defined(_MSVC_)
+  #if defined(NO_SETUID)
+    "No setuid support",
+  #else
+    "Using "
+    #if defined(HAVE_SETRESUID)
+      "setresuid()"
+    #elif defined(HAVE_SETREUID)
+      "setreuid()"
     #else
-      "Using "
-      #if defined(HAVE_SETRESUID)
-          "setresuid()"
-      #elif defined(HAVE_SETREUID)
-          "setreuid()"
-      #else
-          "(UNKNOWN)"
-      #endif
-      " for setting privileges",
+      "(UNKNOWN)"
     #endif
+    " for setting privileges",
+  #endif
 #endif
 
 #if defined(OPTION_FTHREADS)
@@ -126,22 +118,56 @@ static const char *build_info[] = {
     "National Language Support",
 #endif
 
-  " "
+    "Machine dependent assists:"
+#if !defined( ASSIST_CMPXCHG1  ) \
+ && !defined( ASSIST_CMPXCHG4  ) \
+ && !defined( ASSIST_CMPXCHG8  ) \
+ && !defined( ASSIST_CMPXCHG16 ) \
+ && !defined( ASSIST_FETCH_DW  ) \
+ && !defined( ASSIST_STORE_DW  )
+    " (none)",
+#else
+  #if defined( ASSIST_CMPXCHG1 )
+                    " cmpxchg1"
+  #endif
+  #if defined( ASSIST_CMPXCHG4 )
+                    " cmpxchg4"
+  #endif
+  #if defined( ASSIST_CMPXCHG8 )
+                    " cmpxchg8"
+  #endif
+  #if defined( ASSIST_CMPXCHG16 )
+                    " cmpxchg16"
+  #endif
+  #if defined( ASSIST_FETCH_DW )
+                    " fetch_dw"
+  #endif
+  #if defined( ASSIST_STORE_DW )
+                    " store_dw"
+  #endif
+    ,
+#endif
 
 };
 
-#if defined(EXTERNALGUI)
-#if 0
-extern int extgui;              /* external gui present */
-#endif
-#endif /*EXTERNALGUI*/
+/*-------------------------------------------------------------------*/
+/* Retrieve ptr to build information strings array...                */
+/*         (returns #of entries in array)                            */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int  get_buildinfo_strings(const char*** pppszBldInfoStr)
+{
+    if (!pppszBldInfoStr) return 0;
+    *pppszBldInfoStr = build_info;
+    return ( sizeof(build_info) / sizeof(build_info[0]) );
+}
 
 /*-------------------------------------------------------------------*/
 /* Display version and copyright                                     */
 /*-------------------------------------------------------------------*/
-void display_version (FILE *f, char *prog, const char verbose)
+DLL_EXPORT void display_version (FILE *f, char *prog, const char verbose)
 {
     unsigned int i;
+    const char** ppszBldInfoStr = NULL;
 
 #if defined(EXTERNALGUI)
     /* If external gui being used, set stdout & stderr streams
@@ -157,31 +183,54 @@ void display_version (FILE *f, char *prog, const char verbose)
 
         /* Log version */
 
-    fprintf (f, _("%sVersion %s\n"), prog, VERSION);
+    if ( f != stdout )
+        fprintf (f, _("%sVersion %s\n"), prog, VERSION);
+    else
+        logmsg  (   _("%sVersion %s\n"), prog, VERSION);
 
-        /* Log Copyright */
+    /* Log Copyright */
 
-    fprintf(f, "%s\n", HERCULES_COPYRIGHT);
+    if ( f != stdout )
+        fprintf (f, "%s\n", HERCULES_COPYRIGHT);
+    else
+        logmsg  (   "%s\n", HERCULES_COPYRIGHT);
 
-        /* If we're being verbose, display the rest of the info */
+    /* If we're being verbose, display the rest of the info */
     if (verbose)
     {
-    
-            /* Log build date/time */
+        /* Log build date/time */
 
-        fprintf (f, _("Built on %s at %s\n"), __DATE__, __TIME__);
-
-            /* Log "unusual" build options */
-
-        fprintf (f, _("Build information:\n"));
-
-        if (sizeof(build_info) == 0)
-          fprintf(f, "  (none)\n");
+        if ( f != stdout )
+            fprintf (f, _("Built on %s at %s\n"), __DATE__, __TIME__);
         else
-        for( i = 0 ; i < sizeof(build_info) / sizeof(build_info[0]) ; ++i )
-          fprintf(f, "  %s\n", build_info[i]);
+            logmsg  (   _("Built on %s at %s\n"), __DATE__, __TIME__);
 
-        display_hostinfo(f);
-    }    
+        /* Log "unusual" build options */
+
+        if ( f != stdout )
+            fprintf (f, _("Build information:\n"));
+        else
+            logmsg  (   _("Build information:\n"));
+
+        if (!(i = get_buildinfo_strings( &ppszBldInfoStr )))
+        {
+            if ( f != stdout )
+                fprintf (f, "  (none)\n");
+            else
+                logmsg  (   "  (none)\n");
+        }
+        else
+        {
+            for(; i; i--, ppszBldInfoStr++ )
+            {
+                if ( f != stdout )
+                    fprintf (f, "  %s\n", *ppszBldInfoStr);
+                else
+                    logmsg  (   "  %s\n", *ppszBldInfoStr);
+            }
+        }
+
+        display_hostinfo( &hostinfo, f );
+    }
 
 } /* end function display_version */

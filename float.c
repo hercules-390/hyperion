@@ -27,6 +27,7 @@
 /* HFP Multiply and Add/Subtract Facility          R.Bowler 10juil03 */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
 
 #include "hercules.h"
 #include "opcode.h"

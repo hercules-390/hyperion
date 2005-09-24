@@ -8,163 +8,86 @@
 /* functions to set/query host system information                    */
 /*-------------------------------------------------------------------*/
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "hstdinc.h"
 
-#include "hercnls.h"
+#define _HOSTINFO_C_
+#define _HUTIL_DLL_
 
-#if defined(WIN32)
-#define _WIN32_WINNT 0x0403
-#include <windows.h>
-#include <sys/cygwin.h>
-#endif /*defined(WIN32)*/
+#include "hercules.h"
 
-#include <sys/utsname.h>
-
-#include "hostinfo.h"
-
-HOST_INFO  hostinfo;                /* Host system information       */
+DLL_EXPORT HOST_INFO  hostinfo;     /* Host system information       */
 
 /*-------------------------------------------------------------------*/
-/* initialize host system information                                */
+/* Initialize host system information                                */
 /*-------------------------------------------------------------------*/
-void init_hostinfo ()
+DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
 {
-    static int bDidThisOnceAlready = 0;
-    if (bDidThisOnceAlready) return;
-    bDidThisOnceAlready = 1;
-#if defined(WIN32)
-    {
-        CRITICAL_SECTION cs;
-        InitializeCriticalSection(&cs);
-        if (!TryEnterCriticalSection(&cs))
-            hostinfo.trycritsec_avail = 0;
-        else
-        {
-            hostinfo.trycritsec_avail = 1;
-            LeaveCriticalSection(&cs);
-        }
-        DeleteCriticalSection(&cs);
-    }
-    {
-        SYSTEM_INFO   si;
-        GetSystemInfo(&si);
-        hostinfo.multi_proc = (si.dwNumberOfProcessors > 1);
-    }
-#endif /*defined(WIN32)*/
-}
-
-/*-------------------------------------------------------------------*/
-/* Display host system information                                   */
-/*-------------------------------------------------------------------*/
-void display_hostinfo (FILE *f)
-{
+    if ( !pHostInfo ) pHostInfo = &hostinfo;
+#if defined(_MSVC_)
+    w32_init_hostinfo( pHostInfo );
+#elif defined( HAVE_SYS_UTSNAME_H )
     struct utsname uname_info;
+    uname(        &uname_info );
+    strlcpy( pHostInfo->sysname,  uname_info.sysname,  sizeof(pHostInfo->sysname)  );
+    strlcpy( pHostInfo->nodename, uname_info.nodename, sizeof(pHostInfo->nodename) );
+    strlcpy( pHostInfo->release,  uname_info.release,  sizeof(pHostInfo->release)  );
+    strlcpy( pHostInfo->version,  uname_info.version,  sizeof(pHostInfo->version)  );
+    strlcpy( pHostInfo->machine,  uname_info.machine,  sizeof(pHostInfo->machine)  );
+    pHostInfo->trycritsec_avail = 0;
+    pHostInfo->num_procs = 0;   // (unknown)
+#else
+    strlcpy( pHostInfo->sysname,  "(unknown)", sizeof(pHostInfo->sysname)  );
+    strlcpy( pHostInfo->nodename, "(unknown)", sizeof(pHostInfo->nodename) );
+    strlcpy( pHostInfo->release,  "(unknown)", sizeof(pHostInfo->release)  );
+    strlcpy( pHostInfo->version,  "(unknown)", sizeof(pHostInfo->version)  );
+    strlcpy( pHostInfo->machine,  "(unknown)", sizeof(pHostInfo->machine)  );
+    pHostInfo->trycritsec_avail = 0;
+    pHostInfo->num_procs = 0;   // (unknown)
+#endif
+}
 
-    init_hostinfo();    /* (ensure hostinfo is initialized first!) */
+/*-------------------------------------------------------------------*/
+/* Build a host system information string for displaying purposes    */
+/*      (the returned string does NOT end with a newline)            */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
+                                    char*       pszHostInfoStrBuff,
+                                    size_t      nHostInfoStrBuffSiz )
+{
+    if ( pszHostInfoStrBuff && nHostInfoStrBuffSiz )
+    {
+        char num_procs[16];
+        if ( !pHostInfo ) pHostInfo = &hostinfo;
+        if ( pHostInfo->num_procs > 1 )
+            snprintf( num_procs, sizeof(num_procs),
+                " MP=%d", pHostInfo->num_procs );
+        else if ( pHostInfo->num_procs == 1 )
+            strlcpy( num_procs, " UP", sizeof(num_procs) );
+        else
+            strlcpy( num_procs,   "",  sizeof(num_procs) );
 
-    uname(&uname_info);
-
-    fprintf(f,_("Running on %s %s%s %s %s\n"),
-        uname_info.sysname,
-        uname_info.machine,
-#if defined(WIN32)
-        hostinfo.multi_proc ? " MP" :
-#endif /*defined(WIN32)*/
-        "",
-        uname_info.release,
-        uname_info.version
+        snprintf( pszHostInfoStrBuff, nHostInfoStrBuffSiz,
+            _("Running on %s %s-%s.%s %s%s"),
+            pHostInfo->nodename,
+            pHostInfo->sysname,
+            pHostInfo->release,
+            pHostInfo->version,
+            pHostInfo->machine,
+            num_procs
         );
+        *(pszHostInfoStrBuff + nHostInfoStrBuffSiz - 1) = 0;
+    }
+    return pszHostInfoStrBuff;
 }
 
-#if defined(WIN32)     /* (we assume win32 == cygwin) */
-
-/* ===================================================================================
-
-                           "CYGWIN API REFERENCE" Notes:
-
---------------------------------------------------------------------------------------
-extern "C" void cygwin32_conv_to_full_posix_path(const char *path, char *posix_path);
-
-Converts a Win32 path to a POSIX path. If path is already a POSIX path, leaves it alone.
-If path is relative, then posix_path will be converted to an absolute path. Note that
-posix_path must point to a buffer of sufficient size; use MAX_PATH if needed.
-
---------------------------------------------------------------------------------------
-extern "C" void cygwin32_conv_to_full_win32_path(const char *path, char *win32_path);
-
-Converts a POSIX path to a Win32 path. If path is already a Win32 path, leaves it alone.
-If path is relative, then win32_path will be converted to an absolute path. Note that
-win32_path must point to a buffer of sufficient size; use MAX_PATH if needed.
-
---------------------------------------------------------------------------------------
-extern "C" void cygwin32_conv_to_posix_path(const char *path, char *posix_path);
-
-Converts a Win32 path to a POSIX path. If path is already a POSIX path, leaves it alone.
-If path is relative, then posix_path will also be relative. Note that posix_path must
-point to a buffer of sufficient size; use MAX_PATH if needed.
-
---------------------------------------------------------------------------------------
-extern "C" void cygwin32_conv_to_win32_path(const char *path, char *win32_path);
-
-Converts a POSIX path to a Win32 path. If path is already a Win32 path, leaves it alone.
-If path is relative, then win32_path will also be relative. Note that win32_path must
-point to a buffer of sufficient size; use MAX_PATH if needed.
-
---------------------------------------------------------------------------------------
-extern "C" int cygwin32_posix_path_list_p(const char *path);
-
-This function tells you if the supplied path is a POSIX-style path (i.e. posix names,
-forward slashes, colon delimiters) or a Win32-style path (drive letters, reverse slashes,
-semicolon delimiters. The return value is true if the path is a POSIX path. Note that
-"_p" means "predicate", a lisp term meaning that the function tells you something about
-the parameter.
-
-Rather than use a mode to say what the "proper" path list format is, we allow any, and
-give apps the tools they need to convert between the two. If a ';' is present in the
-path list it's a Win32 path list. Otherwise, if the first path begins with [letter]:
-(in which case it can be the only element since if it wasn't a ';' would be present)
-it's a Win32 path list. Otherwise, it's a POSIX path list.
-
-========================================================================================= */
-
 /*-------------------------------------------------------------------*/
-/* Determine if directory is a Win32 directory or a Posix directory  */
+/* Display host system information on the indicated stream           */
 /*-------------------------------------------------------------------*/
-int is_win32_directory(char* dir)
+DLL_EXPORT void display_hostinfo ( HOST_INFO* pHostInfo, FILE *f )
 {
-    /* (returns: !0 (TRUE) == is Win32 direcory,
-                 0 (FALSE) == is Poxix direcory) */
-    return !cygwin32_posix_path_list_p(dir);
+    char host_info_str[256]; init_hostinfo( pHostInfo );
+    get_hostinfo_str(pHostInfo, host_info_str, sizeof(host_info_str));
+    if (!f) f = stdout; if (f != stdout)
+         fprintf(f, "%s\n", host_info_str);
+    else logmsg(    "%s\n", host_info_str);
 }
-
-/*-------------------------------------------------------------------*/
-/* Convert a Win32 directory to a Posix directory                    */
-/*-------------------------------------------------------------------*/
-void convert_win32_directory_to_posix_directory(const char *win32_dir, char *posix_dir)
-{
-    cygwin32_conv_to_full_posix_path(win32_dir, posix_dir);
-}
-
-/*-------------------------------------------------------------------*/
-/* Retrieve directory where process was loaded from                  */
-/*-------------------------------------------------------------------*/
-int get_process_directory(char* dirbuf, size_t bufsiz)
-{
-    /* (returns >0 == success, 0 == failure) */
-    char win32_dirbuf[MAX_PATH];
-    char posix_dirbuf[MAX_PATH];
-    char* p;
-    DWORD dwDirBytes =
-        GetModuleFileName(GetModuleHandle(NULL),win32_dirbuf,MAX_PATH);
-    if (!dwDirBytes || dwDirBytes >= MAX_PATH)
-        return 0;
-    p = strrchr(win32_dirbuf,'\\'); if (p) *(p+1) = 0;
-    cygwin_conv_to_full_posix_path(win32_dirbuf, posix_dirbuf);
-    if (strlen(posix_dirbuf) >= bufsiz)
-        return 0;
-    strncpy(dirbuf,posix_dirbuf,bufsiz);
-    return strlen(dirbuf);
-}
-#endif /*defined(WIN32)*/

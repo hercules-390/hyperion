@@ -95,6 +95,14 @@ extern void     packet_trace( BYTE *addr, int len );
 
 typedef uint8_t MAC[IFHWADDRLEN];       // Data Type for MAC Addresses
 
+#if defined(_MSVC_)
+ #pragma pack(push)
+ #pragma pack(1)
+ #define ATTRIBUTE_PACKED
+#else
+ #define ATTRIBUTE_PACKED __attribute__((packed))
+#endif
+
 // ---------------------------------------------------------------------
 // Ethernet Frame Header
 // ---------------------------------------------------------------------
@@ -105,7 +113,7 @@ struct _ETHFRM
     MAC         bSrcMAC;                 // 0x06
     HWORD       hwEthernetType;          // 0x0C
     BYTE        bData[0];                // 0x0E
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 typedef struct _ETHFRM ETHFRM, *PETHFRM;
 
@@ -129,7 +137,7 @@ struct  _IP4FRM
     U32         lSrcIP;                  // 0x0C
     U32         lDstIP;                  // 0x10
     BYTE        bData[0];                // 0x14
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 typedef struct _IP4FRM IP4FRM, *PIP4FRM;
 
@@ -148,7 +156,7 @@ struct  _ARPFRM
     U32         lSendIPAddr;             // 0x12
     MAC         bTargEthAddr;            // 0x16
     U32         lTargIPAddr;             // 0x1C
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 typedef struct _ARPFRM ARPFRM, *PARPFRM;
 
@@ -242,7 +250,7 @@ struct _CTCIHDR                         // CTCI Block Header
 {
     HWORD   hwOffset;                   // Offset of next block
     BYTE    bData[0];                   // Beginning of data
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 struct _CTCISEG                         // CTCI Segment Header
 {
@@ -251,7 +259,7 @@ struct _CTCISEG                         // CTCI Segment Header
     HWORD   hwType;                     // Ethernet packet type
     HWORD   _reserved;                  // Unused, set to zeroes
     BYTE    bData[0];                   // Beginning of data
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 // ====================================================================
 // LCS Definitions
@@ -416,7 +424,7 @@ struct _LCSHDR
 
     BYTE        bLanType;
     BYTE        bRelAdapterNo;
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 #define LCS_FRAME_TYPE_CNTL  0x00          // LCS command mode
 #define LCS_FRAME_TYPE_ENET  0x01
@@ -466,7 +474,7 @@ struct _LCSSTDFRM
     BYTE        bOperatorFlags[3];
     BYTE        _reserved[3];
     BYTE        bData[0];
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 // ---------------------------------------------------------------------
 // LCS Startup Command Frame
@@ -488,7 +496,7 @@ struct _LCSSTRTFRM
 
     HWORD       hwBufferSize;
     BYTE        _unused2[6];
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 // ---------------------------------------------------------------------
 // LCS Query IP Assists Frame
@@ -512,7 +520,7 @@ struct  _LCSQIPFRM
     HWORD       hwIPAssistsSupported;
     HWORD       hwIPAssistsEnabled;
     HWORD       hwIPVersion;
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 #define LCS_ARP_PROCESSING            0x0001
 #define LCS_INBOUND_CHECKSUM_SUPPORT  0x0002
@@ -551,7 +559,7 @@ struct  _LCSLSTFRM
     FWORD       fwRX_Errors;
     FWORD       fwRX_DiscardedNoBuffs;
     U32         fwRX_DiscardedTooLarge;
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 // ---------------------------------------------------------------------
 // LCS IPM Command Frame
@@ -562,7 +570,7 @@ struct  _LCSIPMPAIR
     U32         IP_Addr;
     MAC         MAC_Address;
     BYTE        _reserved[2];
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 #define MAX_IP_MAC_PAIRS      32
 
@@ -586,7 +594,7 @@ struct  _LCSIPMFRM
     U16         hwIPVersion;
     LCSIPMPAIR  IP_MAC_Pair[MAX_IP_MAC_PAIRS];
     U32         fwResponseData;
-} __attribute__ ((packed));
+} ATTRIBUTE_PACKED;
 
 // ---------------------------------------------------------------------
 // LCS Ethernet Passthru Frame
@@ -597,11 +605,15 @@ struct  _LCSETHFRM
     HWORD       hwOffset;
     BYTE        bType;
     BYTE        bSlot;
-    BYTE        bData[0];
-    MAC         bDestMAC;
-    MAC         bSrcMAC;
-    HWORD       hwEthernetType;
-} __attribute__ ((packed));
+    BYTE        bData[14];
+//  MAC         bDestMAC;
+//  MAC         bSrcMAC;
+//  HWORD       hwEthernetType;
+} ATTRIBUTE_PACKED;
+
+#if defined(_MSVC_)
+ #pragma pack(pop)
+#endif
 
 // ====================================================================
 // Inlines

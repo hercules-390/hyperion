@@ -1,51 +1,124 @@
+/*********************************************************************/
+/* HSCUTL.H   --   Implementation of functions used in hercules that */
+/* may be missing on some platform ports, or other convenient mis-   */
+/* laneous global utility functions.                                 */
+/*********************************************************************/
+
 #ifndef __HSCUTL_H__
 #define __HSCUTL_H__
 
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
+#include "hercules.h"
+
+#ifndef _HSCUTL_C_
+#ifndef _HUTIL_DLL_
+#define HUT_DLL_IMPORT DLL_IMPORT
+#else   /* _HUTIL_DLL_ */
+#define HUT_DLL_IMPORT extern
+#endif  /* _HUTIL_DLL_ */
+#else
+#define HUT_DLL_IMPORT DLL_EXPORT
 #endif
 
-#if defined(BUILTIN_STRERROR_R)
-void strerror_r_init(void);
-int  strerror_r(int, char *, size_t);
-#endif /* BUILTIN_STRERROR_R */
+#ifndef _HSCUTL2_C_
+#ifndef _HUTIL_DLL_
+#define HU2_DLL_IMPORT DLL_IMPORT
+#else   /* _HUTIL_DLL_ */
+#define HU2_DLL_IMPORT extern
+#endif  /* _HUTIL_DLL_ */
+#else
+#define HU2_DLL_IMPORT DLL_EXPORT
+#endif
+
+/*********************************************************************
+  The following couple of Hercules 'utility' functions may be defined
+  elsewhere depending on which host platform we're being built for...
+  For Windows builds (e.g. MingW32), the functionality for the below
+  functions is defined in 'w32util.c'. For other host build platforms
+  (e.g. Linux, Apple, etc), the functionality for the below functions
+  is defined right here in 'hscutil.c'...
+ *********************************************************************/
+
+#if defined(_MSVC_)
+
+  /* The w32util.c module will provide the below functionality... */
+
+#else
+
+  /* THIS module (hscutil.c) is to provide the below functionality.. */
+
+  /*
+    Returns outpath as a host filesystem compatible filename path.
+    This is a Cygwin-to-MSVC transitional period helper function.
+    On non-Windows platforms it simply copies inpath to outpath.
+    On Windows it converts inpath of the form "/cygdrive/x/foo.bar"
+    to outpath in the form "x:/foo.bar" for Windows compatibility.
+  */
+  BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize );
+
+  /* Poor man's  "fcntl( fd, F_GETFL )"... */
+  /* (only returns access-mode flags and not any others) */
+  int get_file_accmode_flags( int fd );
+
+  /* Initialize/Deinitialize sockets package... */
+  int socket_init( void );
+  int socket_deinit( void );
+
+  /* Set socket to blocking or non-blocking mode... */
+  int socket_set_blocking_mode( int sfd, int blocking_mode );
+
+  /* Determine whether a file descriptor is a socket or not... */
+  /* (returns 1==true if it's a socket, 0==false otherwise)    */
+  int socket_is_socket( int sfd );
+
+#endif // !defined(_MSVC_)
+
+/*********************************************************************/
+
+#if !defined(_MSVC_) && !defined(HAVE_STRERROR_R)
+  HUT_DLL_IMPORT void strerror_r_init(void);
+  HUT_DLL_IMPORT int  strerror_r(int, char *, size_t);
+#endif
 
 #if defined(OPTION_CONFIG_SYMBOLS)
-void set_symbol(const char *,const char *);
-const char *get_symbol(const char *);
-char *resolve_symbol_string(const char *);
-void kill_all_symbols(void);
+  HUT_DLL_IMPORT void set_symbol(const char *,const char *);
+  HUT_DLL_IMPORT const char *get_symbol(const char *);
+  HUT_DLL_IMPORT char *resolve_symbol_string(const char *);
+  HUT_DLL_IMPORT void kill_all_symbols(void);
 #endif
 
+#ifdef _MSVC_
 
-#if defined(__CYGWIN__)
+  #ifndef HAVE_ID_T
+  #define HAVE_ID_T
+    typedef unsigned long id_t;
+  #endif
 
-// Cygwin w32api/winbase.h updates
-//      REALTIME_PRIORITY_CLASS       256      //   -20
-//      HIGH_PRIORITY_CLASS           128      //   -15
-#ifndef ABOVE_NORMAL_PRIORITY_CLASS
-#define ABOVE_NORMAL_PRIORITY_CLASS 32768      //    -8
-#endif
-//      NORMAL_PRIORITY_CLASS          32      //     0
-#ifndef BELOW_NORMAL_PRIORITY_CLASS
-#define BELOW_NORMAL_PRIORITY_CLASS 16384      //     8
-#endif
-//      IDLE_PRIORITY_CLASS            64      //    15
+  HU2_DLL_IMPORT int getpriority(int, id_t);
+  HU2_DLL_IMPORT int setpriority(int, id_t, int);
 
-// Cygwin sys/resource.h updates
-#define PRIO_PROCESS 0
-#define PRIO_PGRP    1
-#define PRIO_USER    2
+  #ifndef HAVE_SYS_RESOURCE_H
+    #define  PRIO_PROCESS  0
+    #define  PRIO_PGRP     1
+    #define  PRIO_USER     2
+  #endif
 
-#ifndef HAVE_ID_T
-#define HAVE_ID_T
-  typedef unsigned long id_t;
-#endif
+  // Win32 'winbase.h' updates
 
-int getpriority(int, id_t);
-int setpriority(int, id_t, int);
+  //        REALTIME_PRIORITY_CLASS        256      //   -20
+  //        HIGH_PRIORITY_CLASS            128      //   -15
 
-#endif /*defined(__CYGWIN__)*/
+  #ifndef   ABOVE_NORMAL_PRIORITY_CLASS
+    #define ABOVE_NORMAL_PRIORITY_CLASS  32768      //    -8
+  #endif
+
+  //        NORMAL_PRIORITY_CLASS           32      //     0
+
+  #ifndef   BELOW_NORMAL_PRIORITY_CLASS
+    #define BELOW_NORMAL_PRIORITY_CLASS  16384      //     8
+  #endif
+  //        IDLE_PRIORITY_CLASS             64      //    15
+
+#endif // _MSVC_
 
 #if !defined(HAVE_STRLCPY)
 /* $OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $ */
@@ -62,7 +135,7 @@ int setpriority(int, id_t, int);
  * Returns strlen(src); if retval >= siz, truncation occurred.
  */
 /*  ** NOTE **  returns 'size_t' and NOT 'char*' like strncpy! */
-size_t
+HUT_DLL_IMPORT size_t
 strlcpy(char *dst, const char *src, size_t siz);
 #endif
 
@@ -83,13 +156,16 @@ strlcpy(char *dst, const char *src, size_t siz);
  * If retval >= siz, truncation occurred.
  */
 /*  ** NOTE **  returns 'size_t' and NOT 'char*' like strncat! */
-size_t
+HUT_DLL_IMPORT size_t
 strlcat(char *dst, const char *src, size_t siz);
 #endif
 
 /* Subtract/add gettimeofday struct timeval */
 //#include <sys/time.h> // (you'll need this too)
-int timeval_subtract (struct timeval *beg_timeval, struct timeval *end_timeval, struct timeval *dif_timeval);
-int timeval_add      (struct timeval *dif_timeval, struct timeval *accum_timeval);
+HUT_DLL_IMPORT int timeval_subtract (struct timeval *beg_timeval, struct timeval *end_timeval, struct timeval *dif_timeval);
+HUT_DLL_IMPORT int timeval_add      (struct timeval *dif_timeval, struct timeval *accum_timeval);
+
+// TEST
+HUT_DLL_IMPORT void cause_crash();
 
 #endif /* __HSCUTL_H__ */

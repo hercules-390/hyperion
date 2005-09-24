@@ -1,6 +1,8 @@
 /* LOADPARM.C   (c) Copyright Jan Jaeger, 2004-2005                  */
 /*              SCLP / MSSF loadparm                                 */
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 

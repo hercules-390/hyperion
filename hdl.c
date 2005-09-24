@@ -1,6 +1,11 @@
 /* HDL.C        (c) Copyright Jan Jaeger, 2003-2005                  */
 /*              Hercules Dynamic Loader                              */
 
+#include "hstdinc.h"
+
+#define _HDL_C_
+#define _HUTIL_DLL_
+
 #include "hercules.h"
 
 /*
@@ -44,15 +49,16 @@ static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
 
 /* Global hdl_device_type_equates */
 
-char *(*hdl_device_type_equates)(char *);
+DLL_EXPORT char *(*hdl_device_type_equates)(char *);
 
 /* hdl_adsc - add shutdown call
  */
-void hdl_adsc (void * shdcall, void * shdarg)
+DLL_EXPORT void hdl_adsc (char* shdname, void * shdcall, void * shdarg)
 {
 HDLSHD *newcall;
 
     newcall = malloc(sizeof(HDLSHD));
+    newcall->shdname = shdname;
     newcall->shdcall = shdcall;
     newcall->shdarg = shdarg;
     newcall->next = hdl_shdlist;
@@ -62,7 +68,7 @@ HDLSHD *newcall;
 
 /* hdl_rmsc - remove shutdown call
  */
-int hdl_rmsc (void *shdcall, void *shdarg)
+DLL_EXPORT int hdl_rmsc (void *shdcall, void *shdarg)
 {
 HDLSHD **tmpcall;
 
@@ -84,19 +90,30 @@ HDLSHD **tmpcall;
 
 /* hdl_shut - call all shutdown call entries in LIFO order
  */
-void hdl_shut (void)
+DLL_EXPORT void hdl_shut (void)
 {
 HDLSHD *shdent;
 
+    logmsg("HHCHD900I Begin shutdown sequence\n");
+
     obtain_lock (&hdl_sdlock);
+
     for(shdent = hdl_shdlist; shdent; shdent = hdl_shdlist)
     {
-        (shdent->shdcall) (shdent->shdarg);
+        logmsg("HHCHD901I Calling %s\n",shdent->shdname);
+        {
+            (shdent->shdcall) (shdent->shdarg);
+        }
+        logmsg("HHCHD902I %s complete\n",shdent->shdname);
+
         /* Remove shutdown call entry to ensure it is called once */
         hdl_shdlist = shdent->next;
         free(shdent);
     }
+
     release_lock (&hdl_sdlock);
+
+    logmsg("HHCHD909I Shutdown sequence complete\n");
 }
 
 
@@ -105,13 +122,13 @@ HDLSHD *shdent;
 
 /* hdl_setpath - set path for module load 
  */
-void hdl_setpath(char *path)
+DLL_EXPORT void hdl_setpath(char *path)
 {
     hdl_modpath = path;
 }
 
 
-static void * hdl_dlopen(char *filename, int flag __attribute__ ((unused)))
+static void * hdl_dlopen(char *filename, int flag _HDL_UNUSED)
 {
 char *fullname;
 void *ret;
@@ -196,7 +213,7 @@ int fulllen = 0;
 
 /* hdl_dvad - register device type
  */
-void hdl_dvad (char *devname, DEVHND *devhnd)
+DLL_EXPORT void hdl_dvad (char *devname, DEVHND *devhnd)
 {
 HDLDEV *newhnd;
 
@@ -251,7 +268,7 @@ unsigned int n;
 
 /* hdl_ghnd - obtain device handler
  */
-DEVHND * hdl_ghnd (char *devtype)
+DLL_EXPORT DEVHND * hdl_ghnd (char *devtype)
 {
 DEVHND *hnd;
 char *hdtname;
@@ -285,7 +302,7 @@ char *ltype;
 
 /* hdl_list - list all entry points
  */
-void hdl_list (int flags)
+DLL_EXPORT void hdl_list (int flags)
 {
 DLLENT *dllent;
 MODENT *modent;
@@ -334,7 +351,7 @@ MODENT *modent;
 
 /* hdl_dlst - list all dependencies
  */
-void hdl_dlst (void)
+DLL_EXPORT void hdl_dlst (void)
 {
 HDLDEP *depent;
 
@@ -403,7 +420,7 @@ HDLDEP *depent;
 
 /* hdl_fent - find entry point
  */
-void * hdl_fent (char *name)
+DLL_EXPORT void * hdl_fent (char *name)
 {
 DLLENT *dllent;
 MODENT *modent;
@@ -453,7 +470,7 @@ void *fep;
 
 /* hdl_nent - find next entry point in chain
  */
-void * hdl_nent (void *fep)
+DLL_EXPORT void * hdl_nent (void *fep)
 {
 DLLENT *dllent;
 MODENT *modent = NULL;
@@ -518,24 +535,122 @@ MODENT *modent;
 }
 
 
-/* hdl_term - hercules termination
+/* hdl_term - process all "HDL_FINAL_SECTION"s
  */
-static void hdl_term (void *unused __attribute__ ((unused)) )
+static void hdl_term (void *unused _HDL_UNUSED)
 {
 DLLENT *dllent;
+
+    logmsg("HHCHD950I Begin HDL termination sequence\n");
 
     /* Call all final routines, in reverse load order */
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
         if(dllent->hdlfini)
-            (dllent->hdlfini)();
+        {
+            logmsg("HHCHD951I Calling module %s cleanup routine\n",dllent->name);
+            {
+                (dllent->hdlfini)();
+            }
+            logmsg("HHCHD952I Module %s cleanup complete\n",dllent->name);
+        }
     }
+
+    logmsg("HHCHD959I HDL Termination sequence complete\n");
 }
+
+
+#if defined(_MSVC_)
+/* hdl_lexe - load exe
+ */
+static int hdl_lexe ()
+{
+DLLENT *dllent;
+MODENT *modent;
+
+    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext);
+
+    dllent->name = strdup("*Main");
+
+    if(!(dllent->dll = (void*)GetModuleHandle( NULL ) ));
+    {
+        logmsg(_("HHCHD007E unable to open DLL %s: %s\n"),
+          dllent->name,dlerror());
+        free(dllent);
+        return -1;
+    }
+
+    dllent->flags = HDL_LOAD_MAIN;
+
+    if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
+    {
+        logmsg(_("HHCHD013E No dependency section in %s: %s\n"),
+          dllent->name, dlerror());
+        free(dllent);
+        return -1;
+    }
+
+    dllent->hdlinit = dlsym(dllent->dll,HDL_INIT_Q);
+
+    dllent->hdlreso = dlsym(dllent->dll,HDL_RESO_Q);
+
+    dllent->hdlddev = dlsym(dllent->dll,HDL_DDEV_Q);
+
+    dllent->hdlfini = dlsym(dllent->dll,HDL_FINI_Q);
+
+    /* No modules or device types registered yet */
+    dllent->modent = NULL;
+    dllent->hndent = NULL;
+
+    obtain_lock(&hdl_lock);
+
+    if(dllent->hdldepc)
+    {
+        if((dllent->hdldepc)(&hdl_dchk))
+        {
+            logmsg(_("HHCHD014E Dependency check failed for module %s\n"),
+              dllent->name);
+        }
+    }
+
+    hdl_cdll = dllent;
+
+    /* Call initializer */
+    if(hdl_cdll->hdlinit)
+        (dllent->hdlinit)(&hdl_regi);
+
+    /* Insert current entry as first in chain */
+    dllent->dllnext = hdl_dll;
+    hdl_dll = dllent;
+
+    /* Reset the loadcounts */
+    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+        for(modent = dllent->modent; modent; modent = modent->modnext)
+            modent->count = 0;
+
+    /* Call all resolvers */
+    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+    {
+        if(dllent->hdlreso)
+            (dllent->hdlreso)(&hdl_fent);
+    }
+
+    /* register any device types */
+    if(hdl_cdll->hdlddev)
+        (hdl_cdll->hdlddev)(&hdl_dvad);
+
+    hdl_cdll = NULL;
+
+    release_lock(&hdl_lock);
+
+    return 0;
+}
+#endif
 
 
 /* hdl_main - initialize hercules dynamic loader
  */
-void hdl_main (void)
+DLL_EXPORT void hdl_main (void)
 {
 HDLPRE *preload;
 
@@ -620,16 +735,20 @@ HDLPRE *preload;
     release_lock(&hdl_lock);
 
     /* Register termination exit */
-    hdl_adsc(hdl_term, NULL);
+    hdl_adsc( "hdl_term", hdl_term, NULL);
 
     for(preload = hdl_preload; preload->name; preload++)
         hdl_load(preload->name, preload->flag);
+
+#if defined(_MSVC_) && 0
+    hdl_lexe();
+#endif
 }
 
 
 /* hdl_load - load a dll
  */
-int hdl_load (char *name,int flags)
+DLL_EXPORT int hdl_load (char *name,int flags)
 {
 DLLENT *dllent, *tmpdll;
 MODENT *modent;
@@ -755,7 +874,7 @@ char *modname;
 
 /* hdl_dele - unload a dll
  */
-int hdl_dele (char *name)
+DLL_EXPORT int hdl_dele (char *name)
 {
 DLLENT **dllent, *tmpdll;
 MODENT *modent, *tmpmod;

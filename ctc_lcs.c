@@ -3,22 +3,13 @@
 // ====================================================================
 //
 // Copyright (C) 2002-2005 by James A. Pierson
-//
 
-//#if !defined(__APPLE__)
-
+#include "hstdinc.h"
 #include "hercules.h"
-#include "devtype.h"
 #include "ctcadpt.h"
 #include "tuntap.h"
-
 #include "hercifc.h"
-//#include "css_sdc.h"
 #include "opcode.h"
-
-#if defined(HAVE_GETOPT_LONG)
-#include <getopt.h>
-#endif /* defined(HAVE_GETOPT_LONG) */
 #include "herc_getopt.h"
 
 /* CCW Codes 0x03 & 0xC3 are immediate commands */
@@ -66,7 +57,7 @@ static int      ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                            int argc, char** argv );
 
 // ====================================================================
-//
+//              find_group_device
 // ====================================================================
 
 static DEVBLK * find_group_device(DEVGRP *group, U16 devnum)
@@ -111,27 +102,28 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             return -1;
         }
         memset( pLCSBLK, 0, sizeof( LCSBLK ) );
-    
+
         for( i = 0; i < LCS_MAX_PORTS; i++ )
         {
             memset( &pLCSBLK->Port[i], 0, sizeof ( LCSPORT ) );
 
             pLCSBLK->Port[i].bPort   = i;
             pLCSBLK->Port[i].pLCSBLK = pLCSBLK;
-    
+
             // Initialize locking and event mechanisms
             initialize_lock( &pLCSBLK->Port[i].Lock );
             initialize_lock( &pLCSBLK->Port[i].EventLock );
             initialize_condition( &pLCSBLK->Port[i].Event );
         }
-    
+
         // Parse configuration file statement
         if( ParseArgs( pDEVBLK, pLCSBLK, argc, (char**)argv ) != 0 )
         {
             free( pLCSBLK );
+            pLCSBLK = NULL;
             return -1;
         }
-    
+
         if( pLCSBLK->pszOATFilename )
         {
             // If an OAT file was specified, Parse it and build the
@@ -139,6 +131,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             if( BuildOAT( pLCSBLK->pszOATFilename, pLCSBLK ) != 0 )
             {
                 free( pLCSBLK );
+                pLCSBLK = NULL;
                 return -1;
             }
         }
@@ -147,12 +140,12 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             // Otherwise, build an OAT based on the address specified
             // in the config file with an assumption of IP mode.
             pLCSBLK->pDevices = malloc( sizeof( LCSDEV ) );
-    
+
             memset( pLCSBLK->pDevices, 0, sizeof( LCSDEV ) );
-    
+
             if( pLCSBLK->pszIPAddress )
                 inet_aton( pLCSBLK->pszIPAddress, &addr );
-    
+
             pLCSBLK->pDevices->sAddr        = pDEVBLK->devnum;
             pLCSBLK->pDevices->bMode        = LCSDEV_MODE_IP;
             pLCSBLK->pDevices->bPort        = 0;
@@ -536,26 +529,43 @@ int  LCS_Close( DEVBLK* pDEVBLK )
     // Is this the last device on the port?
     if( !pPort->icDevices )
     {
-        pPort->fCloseInProgress = 1;
+        // PROGRAMMING NOTE: there's currently no way to interrupt
+        // the "LCS_PortThread"s TUNTAP_Read of the adapter. Thus
+        // we must simply wait for LCS_PortThread to eventually
+        // notice that we're doing a close (via our setting of the
+        // fCloseInProgress flag). Its TUNTAP_Read will eventually
+        // timeout after a few seconds (currently 5, which is dif-
+        // ferent than the CTC_READ_TIMEOUT_SECS timeout value the
+        // CTCI_Read function uses) and will then do the close of
+        // the adapter for us (TUNTAP_Close) so we don't have to.
+        // All we need to do is ask it to exit (via our setting of
+        // the fCloseInProgress flag) and then wait for it to exit
+        // (which, as stated, could take up to a max of 5 seconds).
+
+        // All of this is simply because it's poor form to close a
+        // device from one thread while another thread is reading
+        // from it. Attempting to do so could trip a race condition
+        // wherein the internal i/o buffers used to process the
+        // read request could have been freed (by the close call)
+        // by the time the read request eventually gets serviced.
+
+        // I'll eventually get around to addressing this issue in
+        // the next release of TunTap32, but for now, the threads
+        // doing the i/o must be the ones that do the closing.
+
+        if( pPort->fd >= 0 )
         {
-            // Close the port
-            if( pPort->fd >= 0 )
-            {
-                TID tid = pPort->tid;
-                VERIFY( TUNTAP_Close( pDEVBLK->fd ) == 0 );
-                signal_thread( tid, SIGINT );
-
-                // Wait for thread to end
-                join_thread( tid, NULL );
-                detach_thread( tid );
-            }
-
-            if( pLCSDEV->pDEVBLK[0] && pLCSDEV->pDEVBLK[0]->fd >= 0 )
-                pLCSDEV->pDEVBLK[0]->fd = -1;
-            if( pLCSDEV->pDEVBLK[1] && pLCSDEV->pDEVBLK[1]->fd >= 0 )
-                pLCSDEV->pDEVBLK[1]->fd = -1;
+            TID tid = pPort->tid;
+            pPort->fCloseInProgress = 1;
+            signal_thread( tid, SIGINT );
+            join_thread( tid, NULL );
+            detach_thread( tid );
         }
-        pPort->fCloseInProgress = 0;
+
+        if( pLCSDEV->pDEVBLK[0] && pLCSDEV->pDEVBLK[0]->fd >= 0 )
+            pLCSDEV->pDEVBLK[0]->fd = -1;
+        if( pLCSDEV->pDEVBLK[1] && pLCSDEV->pDEVBLK[1]->fd >= 0 )
+            pLCSDEV->pDEVBLK[1]->fd = -1;
     }
 
     // Housekeeping
@@ -577,9 +587,13 @@ int  LCS_Close( DEVBLK* pDEVBLK )
                 *ppPrev = pDev->pNext;
 
                 if( pDev->pszIPAddress )
+                {
                     free( pDev->pszIPAddress );
+                    pDev->pszIPAddress = NULL;
+                }
 
                 free( pLCSDEV );
+                pLCSDEV = NULL;
 
                 break;
             }
@@ -590,16 +604,22 @@ int  LCS_Close( DEVBLK* pDEVBLK )
 
     if( !pLCSBLK->pDevices )
     {
-        if( pLCSBLK->pszTUNDevice   )
-            free( pLCSBLK->pszTUNDevice   );
+        if( pLCSBLK->pszTUNDevice   ) { free( pLCSBLK->pszTUNDevice   ); pLCSBLK->pszTUNDevice   = NULL; }
+        if( pLCSBLK->pszOATFilename ) { free( pLCSBLK->pszOATFilename ); pLCSBLK->pszOATFilename = NULL; }
+//      if( pLCSBLK->pszIPAddress   ) { free( pLCSBLK->pszIPAddress   ); pLCSBLK->pszIPAddress   = NULL; }
+        if( pLCSBLK->pszMACAddress  ) { free( pLCSBLK->pszMACAddress  ); pLCSBLK->pszMACAddress  = NULL; }
+
         if( pLCSBLK->pszOATFilename )
-            free( pLCSBLK->pszOATFilename );
-        if( pLCSBLK->pszIPAddress   )
-            free( pLCSBLK->pszIPAddress   );
-        if( pLCSBLK->pszMACAddress  )
-            free( pLCSBLK->pszMACAddress  );
+        {
+            if( pLCSBLK->pszIPAddress )
+            {
+                free( pLCSBLK->pszIPAddress );
+                pLCSBLK->pszIPAddress = NULL;
+            }
+        }
 
         free( pLCSBLK );
+        pLCSBLK = NULL;
     }
 
     return 0;
@@ -939,13 +959,8 @@ void  LCS_SDC( DEVBLK* pDEVBLK,   BYTE   bOpCode,
 #endif
 
 // ====================================================================
-//
+//           LCS_Startup
 // ====================================================================
-
-//
-// LCS_Startup
-//
-//
 
 static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 {
@@ -1016,16 +1031,16 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
         if( pPort->fLocalMAC )
         {
-#if !defined(__APPLE__)
+#ifdef OPTION_TUNTAP_SETMACADDR
             VERIFY( TUNTAP_SetMACAddr( pPort->szNetDevName,
                                pPort->szMACAddress ) == 0 );
-#endif /* !defined(__APPLE__) */
+#endif
         }
 
         VERIFY( TUNTAP_SetFlags( pPort->szNetDevName,
                          IFF_UP | IFF_RUNNING | IFF_BROADCAST ) == 0 );
 
-#if !defined(__APPLE__)
+#ifdef OPTION_TUNTAP_DELADD_ROUTES
         for( pRoute = pPort->pRoutes; pRoute; pRoute = pRoute->pNext )
         {
             VERIFY( TUNTAP_AddRoute( pPort->szNetDevName,
@@ -1034,7 +1049,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
                              NULL,
                              RTF_UP ) == 0 );
         }
-#endif /* !defined(__APPLE__) */
+#endif
 
         pPort->sIPAssistsSupported =
 //          LCS_INBOUND_CHECKSUM_SUPPORT  |
@@ -1056,7 +1071,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
     release_lock( &pPort->Lock );
 
-#if !defined(__APPLE__)
+#ifdef OPTION_TUNTAP_DELADD_ROUTES
     if( pLCSDEV->pszIPAddress )
     {
         VERIFY( TUNTAP_AddRoute( pPort->szNetDevName,
@@ -1065,7 +1080,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
                          NULL,
                          RTF_UP | RTF_HOST ) == 0 );
     }
-#endif /* !defined(__APPLE__) */
+#endif
 
     // Get a pointer to the next available reply frame
     pReply = (PLCSSTDFRM)LCS_FixupReplyFrame( pLCSDEV,
@@ -1089,7 +1104,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
     pPort->fStarted = 0;
 
-#if !defined(__APPLE__)
+#ifdef OPTION_TUNTAP_DELADD_ROUTES
     if( pLCSDEV->pszIPAddress )
     {
         VERIFY( TUNTAP_DelRoute( pPort->szNetDevName,
@@ -1098,7 +1113,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
                          NULL,
                          RTF_HOST ) == 0 );
     }
-#endif /* !defined(__APPLE__) */
+#endif
 
     // FIXME: Really need to iterate through the devices and close
     //        the TAP interface if all devices have been stopped.
@@ -1160,7 +1175,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSHDR pHeader )
     if( fd == -1 )
     {
         logmsg( _("HHCLC007E Error in call to socket: %s.\n"),
-                strerror( errno ) );
+                strerror( HSO_errno ) );
         return;
     }
 
@@ -1205,13 +1220,8 @@ static void  LCS_DefaultCmdProc( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 }
 
 //-------------------------------------------------------------------
-//
+//            LCS_PortThread
 //-------------------------------------------------------------------
-
-//
-// LCS_PortThread
-//
-//
 
 static void*  LCS_PortThread( PLCSPORT pPort )
 {
@@ -1414,6 +1424,10 @@ static void*  LCS_PortThread( PLCSPORT pPort )
     }
     while( pPort->fd != -1 && !pPort->fCloseInProgress );
 
+    // We must do the close since we were the one doing the i/o...
+
+    VERIFY( TUNTAP_Close( pPort->fd ) == 0 );
+
     // Housekeeping - Cleanup Port Block
 
     memset( pPort->MAC_Address,  0, sizeof( MAC ) );
@@ -1424,6 +1438,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
     {
         pPort->pRoutes = pRoute->pNext;
         free( pRoute );
+        pRoute = NULL;
     }
 
     pPort->sIPAssistsSupported = 0;
@@ -1435,7 +1450,6 @@ static void*  LCS_PortThread( PLCSPORT pPort )
     pPort->fStarted    = 0;
     pPort->fRouteAdded = 0;
     pPort->fd          = -1;
-    pPort->tid         = 0;
 
     return NULL;
 }
@@ -1549,12 +1563,8 @@ static void*  LCS_FixupReplyFrame( PLCSDEV pLCSDEV,
 }
 
 // ====================================================================
-//
+//   ParseArgs
 // ====================================================================
-
-//
-// ParseArgs
-//
 
 int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                 int argc, char** argv )
@@ -1687,6 +1697,12 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             return -1;
         }
 
+        if ( pLCSBLK->pszIPAddress )
+        {
+            free( pLCSBLK->pszIPAddress );
+            pLCSBLK->pszIPAddress = NULL;
+        }
+
         pLCSBLK->pszIPAddress = strdup( *argv );
     }
 
@@ -1694,7 +1710,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 }
 
 /*-------------------------------------------------------------------*/
-/*                                                                   */
+/*          BuildOAT                                                 */
 /*-------------------------------------------------------------------*/
 
 static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
@@ -1724,9 +1740,11 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     char*       pszNetMask   = NULL;
 
     struct in_addr  addr;               // Work area for addresses
+    BYTE        pathname[MAX_PATH];     // pszOATName in host path format
 
     // Open the configuration file
-    fp = fopen( pszOATName, "r" );
+    hostpath(pathname, pszOATName, sizeof(pathname));
+    fp = fopen( pathname, "r" );
     if( !fp )
     {
         logmsg( _("HHCLC039E Cannot open file %s: %s\n"),
@@ -1743,7 +1761,10 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         }
 
         if( pszStatement )
+        {
             free( pszStatement );
+            pszStatement = NULL;
+        }
 
         pszStatement = strdup( szBuff );
 
@@ -1996,7 +2017,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 }
 
 /*-------------------------------------------------------------------*/
-/*                                                                   */
+/*            ReadOAT                                                */
 /*-------------------------------------------------------------------*/
 
 static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
@@ -2075,11 +2096,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
 // Device Handler Information Block
 // --------------------------------------------------------------------
 
-
 /* NOTE : lcs_device_hndinfo is NEVER static as it is referenced by the CTC meta driver */
-// #if defined(OPTION_DYNAMIC_LOAD)
-// static
-// #endif
 DEVHND lcs_device_hndinfo =
 {
         &LCS_Init,                    /* Device Initialisation      */
@@ -2129,7 +2146,7 @@ HDL_REGISTER_SECTION;       // ("Register" our entry-points)
 //             name              value
 
 #if defined( WIN32 )
-HDL_REGISTER ( debug_tt32_stats, display_tt32_stats );
+  HDL_REGISTER ( debug_tt32_stats, display_tt32_stats );
 #endif
 
 END_REGISTER_SECTION;
@@ -2143,11 +2160,11 @@ HDL_DEVICE_SECTION;
 // ZZ their own loadable modules
     HDL_DEVICE(3088, ctcadpt_device_hndinfo );
     HDL_DEVICE(CTCI, ctci_device_hndinfo    );
-#if defined( WIN32 )
-    HDL_DEVICE(CTCI-W32, ctci_device_hndinfo);
-#endif
     HDL_DEVICE(CTCT, ctct_device_hndinfo    );
     HDL_DEVICE(VMNET,vmnet_device_hndinfo   );
+#if defined(WIN32)
+    HDL_DEVICE(CTCI-W32,ctci_device_hndinfo );
+#endif
 }
 END_DEVICE_SECTION;
 #endif

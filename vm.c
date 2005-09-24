@@ -11,6 +11,8 @@
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"
@@ -619,14 +621,16 @@ BYTE            chanstat = 0;           /* Subchannel status         */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(extid_call) (int r1, int r2, REGS *regs)
 {
-int             i;                      /* Array subscript           */
-int             ver, rel;               /* Version and release number*/
-U32             idaddr;                 /* Address of storage operand*/
-U32             idlen;                  /* Length of storage operand */
-BYTE            buf[40];                /* Extended identification   */
-struct passwd  *ppwd;                   /* Pointer to passwd entry   */
-char           *puser;                  /* Pointer to user name      */
-BYTE            c;                      /* Character work area       */
+int        i;                           /* Array subscript           */
+int        ver, rel;                    /* Version and release number*/
+U32        idaddr;                      /* Address of storage operand*/
+U32        idlen;                       /* Length of storage operand */
+BYTE       buf[40];                     /* Extended identification   */
+#if defined( HAVE_GETLOGIN_R )
+char       unam[LOGIN_NAME_MAX+1];      /* User name                 */
+#endif
+char      *puser;                       /* Pointer to user name      */
+BYTE       c;                           /* Character work area       */
 
     /* Load storage operand address from R1 register */
     idaddr = regs->GR_L(r1);
@@ -671,8 +675,13 @@ BYTE            c;                      /* Character work area       */
     buf[15] = regs->cpuad & 0xFF;
 
     /* Bytes 16-23 contain the userid in EBCDIC */
-    ppwd = getpwuid(getuid());
-    puser = (ppwd != NULL ? ppwd->pw_name : "");
+#if defined( HAVE_GETLOGIN_R )
+    memset( unam, 0, sizeof(unam) );
+    VERIFY( getlogin_r ( unam, sizeof(unam) ) == 0 );
+    puser = unam;
+#else
+    puser = "";
+#endif
     for (i = 0; i < 8; i++)
     {
         c = (*puser == '\0' ? SPACE : *(puser++));

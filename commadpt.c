@@ -6,16 +6,15 @@
 /* Prime Maintainer : Ivan Warren                                    */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
 #include "hercules.h"
 #include "devtype.h"
 #include "parser.h"
-#include <netdb.h>
-
 #include "commadpt.h"
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
- SYSBLK *psysblk;
- #define sysblk (*psysblk)
+#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  SYSBLK *psysblk;
+  #define sysblk (*psysblk)
 #endif
 
  /*-------------------------------------------------------------------*/
@@ -289,7 +288,7 @@ static int commadpt_getport(char *txt)
 /*-------------------------------------------------------------------*/
 /* commadpt_getaddr : set an in_addr_t if ok, else return -1         */
 /*-------------------------------------------------------------------*/
-static int commadpt_getaddr(INADDR_T *ia,char *txt)
+static int commadpt_getaddr(in_addr_t *ia,char *txt)
 {
     struct hostent *he;
     he=gethostbyname(txt);
@@ -314,32 +313,31 @@ static int commadpt_connout(COMMADPT *ca)
     sin.sin_family=AF_INET;
     sin.sin_addr.s_addr=ca->rhost;
     sin.sin_port=htons(ca->rport);
-    if(ca->sfd>=0)
+    if(socket_is_socket(ca->sfd))
     {
-        close(ca->sfd);
+        close_socket(ca->sfd);
         ca->connect=0;
     }
     ca->sfd=socket(AF_INET,SOCK_STREAM,0);
-    rc=fcntl(ca->sfd,F_GETFL);
-    rc|=O_NONBLOCK;
-    fcntl(ca->sfd,F_SETFL,rc);
+    /* set socket to NON-blocking mode */
+    socket_set_blocking_mode(ca->sfd,0);
     rc=connect(ca->sfd,(struct sockaddr *)&sin,sizeof(sin));
     if(rc<0)
     {
-        if(errno==EINPROGRESS)
+        if(HSO_errno==HSO_EINPROGRESS)
         {
             return(0);
         }
         else
         {
-            strerror_r(errno,wbfr,256);
+            strerror_r(HSO_errno,wbfr,256);
             intmp.s_addr=ca->rhost;
             logmsg(_("HHCCA001I %4.4X:Connect out to %s:%d failed during initial status : %s\n"),
                     ca->devnum,
                     inet_ntoa(intmp),
                     ca->rport,
-                    strerror(errno));
-            close(ca->sfd);
+                    wbfr);
+            close_socket(ca->sfd);
             ca->connect=0;
             return(-1);
         }
@@ -357,7 +355,7 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
     int dotcount;       /* Number of seps (the 4th is the port separator) */
     int i;              /* work                                           */
     int cur;            /* Current section                                */
-    INADDR_T    destip; /* Destination IP address                         */
+    in_addr_t   destip; /* Destination IP address                         */
     U16 destport;       /* Destination TCP port                           */
     int incdata;        /* Incorrect dial data found                      */
     int goteon;         /* EON presence flag                              */
@@ -469,7 +467,7 @@ static int commadpt_read_poll(COMMADPT *ca)
 {
     BYTE b;
     int rc;
-    while((rc=read(ca->sfd,&b,1))>0)
+    while((rc=read_socket(ca->sfd,&b,1))>0)
     {
         if(b==0x32)
         {
@@ -499,7 +497,7 @@ static void commadpt_read(COMMADPT *ca)
     int gotdata;
     int rc;
     gotdata=0;
-    while((rc=read(ca->sfd,bfr,256))>0)
+    while((rc=read_socket(ca->sfd,bfr,256))>0)
     {
         logdump("RECV",ca->dev,bfr,rc);
         commadpt_ring_pushbfr(&ca->inbfr,bfr,(size_t)rc);
@@ -510,7 +508,7 @@ static void commadpt_read(COMMADPT *ca)
         if(ca->connect)
         {
             ca->connect=0;
-            close(ca->sfd);
+            close_socket(ca->sfd);
             ca->sfd=-1;
             if(ca->curpending!=COMMADPT_PEND_IDLE)
             {
@@ -566,6 +564,8 @@ static void *commadpt_thread(void *vca)
     int init_signaled;          /* Thread initialisation signaled    */
     int pollact;                /* A Poll Command is in progress     */
     int i;                      /* Ye Old Loop Counter               */
+    int eintrcount=0;           /* Number of times EINTR occured in  */
+                                /* a row.. Over 100 : Bail out !     */
 
     /*---------------------END OF DECLARES---------------------------*/
 
@@ -582,7 +582,7 @@ static void *commadpt_thread(void *vca)
     ca_shutdown=0;
 
     init_signaled=0;
-    
+
     logmsg(_("HHCCA002I %4.4X:Line Communication thread "TIDPAT" started\n"),devnum,thread_id());
 
     pollact=0;  /* Initialise Poll activity flag */
@@ -593,22 +593,21 @@ static void *commadpt_thread(void *vca)
     {
         /* Create the socket for a listen */
         ca->lfd=socket(AF_INET,SOCK_STREAM,0);
-        if(ca->lfd<0)
+        if(!socket_is_socket(ca->lfd))
         {
-            logmsg(_("HHCCA003E %4.4X:Cannot obtain socket for incoming calls : %s\n"),devnum,strerror(errno));
+            logmsg(_("HHCCA003E %4.4X:Cannot obtain socket for incoming calls : %s\n"),devnum,strerror(HSO_errno));
             ca->have_cthread=0;
             release_lock(&ca->lock);
             return NULL;
         }
         /* Turn blocking I/O off */
-        rc=fcntl(ca->lfd,F_GETFL);
-        rc|=O_NONBLOCK;
-        fcntl(ca->lfd,F_SETFL,rc);
+        /* set socket to NON-blocking mode */
+        socket_set_blocking_mode(ca->lfd,0);
 
         /* Reuse the address regardless of any */
         /* spurious connection on that port    */
         sockopt=1;
-        setsockopt(ca->lfd,SOL_SOCKET,SO_REUSEADDR,&sockopt,sizeof(sockopt));
+        setsockopt(ca->lfd,SOL_SOCKET,SO_REUSEADDR,(GETSET_SOCKOPT_T*)&sockopt,sizeof(sockopt));
 
         /* Bind the socket */
         sin.sin_family=AF_INET;
@@ -619,7 +618,7 @@ static void *commadpt_thread(void *vca)
             rc=bind(ca->lfd,(struct sockaddr *)&sin,sizeof(sin));
             if(rc<0)
             {
-                if(errno==EADDRINUSE)
+                if(HSO_errno==HSO_EADDRINUSE)
                 {
                     logmsg(_("HHCCA004W %4.4X:Waiting 5 seconds for port %d to become available\n"),devnum,ca->lport);
                     /*
@@ -665,14 +664,14 @@ static void *commadpt_thread(void *vca)
                     if(rc!=0)
                     {
                         /* Ignore any other command at this stage */
-                        read(ca->pipe[1],&b,1);
+                        read_pipe(ca->pipe[1],&b,1);
                         ca->curpending=COMMADPT_PEND_IDLE;
                         signal_condition(&ca->ipc);
                     }
                 }
                 else
                 {
-                    logmsg(_("HHCCA018E %4.4X:Bind failed : %s\n"),devnum,strerror(errno));
+                    logmsg(_("HHCCA018E %4.4X:Bind failed : %s\n"),devnum,strerror(HSO_errno));
                     ca_shutdown=1;
                     break;
                 }
@@ -702,7 +701,7 @@ static void *commadpt_thread(void *vca)
     /* The MAIN select loop */
     /* It will listen on the following sockets : */
     /* ca->lfd : The listen socket */
-    /* ca->sfd : 
+    /* ca->sfd :
      *         read : When a read, prepare or DIAL command is in effect
      *        write : When a write contention occurs
      * ca->pipe[0] : Always
@@ -819,10 +818,15 @@ static void *commadpt_thread(void *vca)
                         {
                                 logmsg(_("HHCCA300D %4.4X:Writing 1 byte in socket : %2.2X\n"),ca->devnum,b);
                         }
-                        rc=write(ca->sfd,&b,1);
+                        rc=write_socket(ca->sfd,&b,1);
                         if(rc!=1)
                         {
-                            if(errno==EAGAIN)
+                            if(0
+#ifndef WIN32
+                                || EAGAIN == errno
+#endif
+                                || HSO_EWOULDBLOCK == HSO_errno
+                            )
                             {
                                 /* Contending for write */
                                 writecont=1;
@@ -832,7 +836,7 @@ static void *commadpt_thread(void *vca)
                             }
                             else
                             {
-                                close(ca->sfd);
+                                close_socket(ca->sfd);
                                 ca->sfd=-1;
                                 ca->connect=0;
                                 ca->curpending=COMMADPT_PEND_IDLE;
@@ -945,7 +949,7 @@ static void *commadpt_thread(void *vca)
             case COMMADPT_PEND_DISABLE:
                 if(ca->connect)
                 {
-                    close(ca->sfd);
+                    close_socket(ca->sfd);
                     ca->sfd=-1;
                     ca->connect=0;
                 }
@@ -1005,13 +1009,19 @@ static void *commadpt_thread(void *vca)
 
         if(rc==-1)
         {
-            logmsg(_("HHCCA006T %4.4X:Select failed : %s\n"),devnum,strerror(errno));
             if(errno==EINTR)
             {
+                eintrcount++;
+                if(eintrcount>100)
+                {
+                    break;
+                }
                 continue;
             }
+            logmsg(_("HHCCA006T %4.4X:Select failed : %s\n"),devnum,strerror(HSO_errno));
             break;
         }
+        eintrcount=0;
 
         /* Select timed out */
         if(rc==0)
@@ -1032,7 +1042,7 @@ static void *commadpt_thread(void *vca)
 
         if(FD_ISSET(ca->pipe[0],&rfd))
         {
-            rc=read(ca->pipe[0],&pipecom,1);
+            rc=read_pipe(ca->pipe[0],&pipecom,1);
             if(rc==0)
             {
                 if(ca->dev->ccwtrace)
@@ -1045,7 +1055,7 @@ static void *commadpt_thread(void *vca)
             }
             if(ca->dev->ccwtrace)
             {
-                logmsg(_("HHCCA300D %4.4X:cthread - IPC Pipe Data ; code = %d\n"),devnum,pipecom); 
+                logmsg(_("HHCCA300D %4.4X:cthread - IPC Pipe Data ; code = %d\n"),devnum,pipecom);
             }
             switch(pipecom)
             {
@@ -1056,7 +1066,7 @@ static void *commadpt_thread(void *vca)
                     ca->callissued=0;
                     if(ca->curpending==COMMADPT_PEND_DIAL)
                     {
-                        close(ca->sfd);
+                        close_socket(ca->sfd);
                         ca->sfd=-1;
                     }
                     ca->curpending=COMMADPT_PEND_IDLE;
@@ -1119,14 +1129,14 @@ static void *commadpt_thread(void *vca)
             {
                 if(ca->dev->ccwtrace)
                 {
-                        logmsg(_("HHCCA300D %4.4X:cthread - socket write available\n"),devnum); 
+                        logmsg(_("HHCCA300D %4.4X:cthread - socket write available\n"),devnum);
                 }
                 switch(ca->curpending)
                 {
                     case COMMADPT_PEND_DIAL:
                     case COMMADPT_PEND_ENABLE:  /* Leased line enable call case */
                     soerrsz=sizeof(soerr);
-                    getsockopt(ca->sfd,SOL_SOCKET,SO_ERROR,&soerr,&soerrsz);
+                    getsockopt(ca->sfd,SOL_SOCKET,SO_ERROR,(GETSET_SOCKOPT_T*)&soerr,&soerrsz);
                     if(soerr==0)
                     {
                         ca->connect=1;
@@ -1141,7 +1151,7 @@ static void *commadpt_thread(void *vca)
                             ca->callissued=1;
                         }
                         ca->connect=0;
-                        close(ca->sfd);
+                        close_socket(ca->sfd);
                         ca->sfd=-1;
                     }
                     signal_condition(&ca->ipc);
@@ -1173,13 +1183,12 @@ static void *commadpt_thread(void *vca)
                 /* this call                                    */
                 if(ca->connect)
                 {
-                    close(tempfd);
+                    close_socket(tempfd);
                     continue;
                 }
                 /* Turn non-blocking I/O on */
-                rc=fcntl(tempfd,F_GETFL);
-                rc|=O_NONBLOCK;
-                fcntl(tempfd,F_SETFL,rc);
+                /* set socket to NON-blocking mode */
+                socket_set_blocking_mode(tempfd,0);
 
                 /* Check the line type & current operation */
 
@@ -1207,7 +1216,7 @@ static void *commadpt_thread(void *vca)
                     }
                 }
                 /* All other cases : just reject the call */
-                close(tempfd);
+                close_socket(tempfd);
             }
         }
     }
@@ -1235,7 +1244,7 @@ static void *commadpt_thread(void *vca)
 /*-------------------------------------------------------------------*/
 static void commadpt_wakeup(COMMADPT *ca,BYTE code)
 {
-    write(ca->pipe[1],&code,1);
+    write_pipe(ca->pipe[1],&code,1);
 }
 /*-------------------------------------------------------------------*/
 /* Wait for a copndition from the thread                             */
@@ -1582,7 +1591,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         initialize_condition(&dev->commadpt->ipc_halt);
 
         /* Allocate I/O -> Thread signaling pipe */
-        pipe(dev->commadpt->pipe);
+        create_pipe(dev->commadpt->pipe);
 
         /* Point to the halt routine for HDV/HIO/HSCH handling */
         dev->halt_device=commadpt_halt;
@@ -1623,7 +1632,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         release_lock(&dev->commadpt->lock);
         /* Indicate succesfull completion */
         return 0;
-} 
+}
 
 static char *commadpt_lnctl_names[]={
     "NONE",
@@ -1780,13 +1789,13 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                 {
                     *unitstat=CSW_CE|CSW_DE|CSW_UC;
                     dev->sense[0]=SENSE_IR;
-                    dev->sense[1]=0x2e; 
+                    dev->sense[1]=0x2e;
                 }
                 else
                 {
                     *unitstat=CSW_CE|CSW_DE|CSW_UC;
                     dev->sense[0]=SENSE_IR;
-                    dev->sense[1]=0x21; 
+                    dev->sense[1]=0x21;
                 }
                 break;
 
@@ -2269,7 +2278,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                 }
 
                 /* read 1 byte to check for pending input */
-                i=read(dev->commadpt->sfd,&b,1);
+                i=read_socket(dev->commadpt->sfd,&b,1);
                 if(i>0)
                 {
                     /* Push it in the communication input buffer ring */
@@ -2283,7 +2292,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                     break;
                 }
                 /*
-                 * Fill in the Write Buffer 
+                 * Fill in the Write Buffer
                  */
 
                 /* To start : not transparent mode, no DLE received yet */
@@ -2353,7 +2362,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
 
                 /* Wake-up the worker thread */
                 commadpt_wakeup(dev->commadpt,0);
-                
+
                 /* Wait for operation completion */
                 commadpt_wait(dev);
 
@@ -2500,13 +2509,13 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-#undef sysblk
-HDL_RESOLVER_SECTION;
-{
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  #undef sysblk
+  HDL_RESOLVER_SECTION;
+  {
     HDL_RESOLVE_PTRVAR( psysblk, sysblk );
-}
-END_RESOLVER_SECTION;
+  }
+  END_RESOLVER_SECTION;
 #endif
 
 

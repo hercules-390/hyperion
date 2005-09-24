@@ -2,6 +2,7 @@
 
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 
+#include "hstdinc.h"
 #include "hercules.h"
 
 #if defined(OPTION_NO_INLINE_DAT) || defined(OPTION_NO_INLINE_LOGICAL)

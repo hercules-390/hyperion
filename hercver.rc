@@ -1,0 +1,93 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+// HercVer.rc  --  defines the Windows resources to be linked into the product
+//                 (c) Copyright "Fish" (David B. Trout), 2005
+//                 Released under the Q Public License as modifications to Hercules.
+//                 (http://www.conmicro.cx/hercules/herclic.html)
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef APSTUDIO_INVOKED
+  #error This file is not editable by Microsoft Visual C++
+#endif
+
+#include <winver.h>
+
+#ifndef NONE
+#define NONE 0x0L
+#endif
+
+#define HERCULES_PRODUCT          "The Hercules System/370, ESA/390, and z/Architecture Emulator"
+#define HERCULES_COPYRIGHT        "(c)Copyright 1999-2005"
+#define HERCULES_COMPANY          "by Roger Bowler, Jan Jaeger, and others"
+#define HERCULES_PRODUCT_URL      "http://www.conmicro.cx/hercules/"
+#define HERCULES_PRODUCT_EMAIL    "hercules-390@yahoogroups.com"
+
+#if defined(PRERELEASE)
+#define ISPRERELEASE VS_FF_PRERELEASE
+#else
+#define ISPRERELEASE NONE
+#endif
+
+#if !defined(VERSION) || !defined(V1) || !defined(V2) || !defined(V3) || !defined(V4)
+  #error VERSION not defined properly
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+1 VERSIONINFO
+
+FILEVERSION     V1, V2, V3, V4
+PRODUCTVERSION  V1, V2, V3, V4
+
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_UNKNOWN
+#if defined(DEBUG) || defined(_DEBUG)
+FILEFLAGS       ISPRERELEASE | VS_FF_DEBUG
+#else
+FILEFLAGS       ISPRERELEASE
+#endif
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+
+{
+  BLOCK "StringFileInfo"
+  {
+    BLOCK "040904B0"    // 0x0409 (1033) == U.S. English, 0x04B0 (1200) == UNICODE
+    {
+
+      // Standard/Required Attributes...
+
+      VALUE "ProductName",      HERCULES_PRODUCT        "\0"
+      VALUE "ProductVersion",   VERSION                 "\0"
+      VALUE "FileDescription",  HERCULES_PRODUCT        "\0"
+      VALUE "FileVersion",      VERSION                 "\0"
+      VALUE "CompanyName",      HERCULES_COMPANY        "\0"
+      VALUE "LegalCopyright",   HERCULES_COPYRIGHT " " HERCULES_COMPANY "\0"
+
+      // Custom Attributes...
+
+      VALUE "Hercules URL",     HERCULES_PRODUCT_URL    "\0"
+      VALUE "Hercules Email",   HERCULES_PRODUCT_EMAIL  "\0"
+      VALUE "Hercules Version", VERSION                 "\0"
+
+#if defined(DEBUG) || defined(_DEBUG)
+#if defined(PRERELEASE)
+      VALUE "SpecialBuild",    "PRERELEASE DEBUG version" "\0"
+#else
+      VALUE "SpecialBuild",    "DEBUG version"          "\0"
+#endif
+#else
+#if defined(PRERELEASE)
+      VALUE "SpecialBuild",    "PRERELEASE Version"     "\0"
+#else
+      VALUE "SpecialBuild",    "Release version"        "\0"
+#endif
+#endif
+
+    }
+  }
+  BLOCK "VarFileInfo"
+  {
+    VALUE "Translation", 0x409, 1200    // 0x409 (1033) == U.S. English, 1200 (0x4B0) == UNICODE
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////

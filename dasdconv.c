@@ -7,15 +7,19 @@
 /*                                                                   */
 /* The program is invoked from the shell prompt using the command:   */
 /*                                                                   */
-/*      dasdconv infile outfile                                      */
+/*      dasdconv [options] infile outfile                            */
 /*                                                                   */
-/* infile       is the name of the HDR-30 format CKD image file      */
-/*              ("-" means that the CKD image is read from stdin)    */
+/* options      -r means overwrite existing outfile                  */
+/* infile       is the name of the HDR-30 format CKD image file.     */
+/*              A compressed (.gz) image is also acceptable if       */
+/*              this module was compiled with HAVE_LIBZ option.      */
 /* outfile      is the name of the AWSCKD image file to be created.  */
 /*              If the image exceeds 2GB then multiple files will    */
 /*              be created, with names suffixed _1, _2, etc.         */
 /*              This program will not overwrite an existing file.    */
 /*-------------------------------------------------------------------*/
+
+#include "hstdinc.h"
 
 #include "hercules.h"
 #include "dasdblks.h"
@@ -51,11 +55,30 @@ BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 BYTE twelvehex00[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 BYTE ebcdicvol1[] = {0xE5, 0xD6, 0xD3, 0xF1};
 
-#ifdef EXTERNALGUI
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif /*EXTERNALGUI*/
+/*-------------------------------------------------------------------*/
+/* Definition of file descriptor for gzip and non-gzip builds        */
+/*-------------------------------------------------------------------*/
+#if defined(HAVE_LIBZ)
+  #define IFD           gzFile
+  #define IFREAD        gzread
+  #define IFCLOS        gzclose
+#else /*!defined(HAVE_LIBZ)*/
+  #define IFD           int
+  #define IFREAD        read
+  #define IFCLOS        close
+#endif /*!defined(HAVE_LIBZ)*/
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to exit the program                                    */
+/*-------------------------------------------------------------------*/
+void delayed_exit (int exit_code)
+{
+    /* Delay exiting is to give the system
+     * time to display the error message. */
+    usleep(100000);
+    exit(exit_code);
+}
+#define  EXIT(rc)   delayed_exit(rc)   /* (use this macro to exit)   */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to display command syntax and exit                     */
@@ -64,11 +87,17 @@ static void
 argexit ( int code )
 {
     fprintf (stderr,
-            "Syntax:\tdasdconv infile outfile\n"
-            "where:\tinfile   = name of input HDR-30 CKD image file"
-                                " (\"-\" means stdin)\n"
-            "\toutfile  = name of AWSCKD image file to be created\n");
-    exit(code);
+            "Syntax:\tdasdconv [options] infile outfile\n"
+            "where:\n\tinfile   = name of input HDR-30 CKD image file\n"
+          #if defined(HAVE_LIBZ)
+            "\t\t   or name of compressed (.gz) image file\n"
+          #endif /*defined(HAVE_LIBZ)*/
+            "\toutfile  = name of AWSCKD image file to be created\n"  
+            "options:\n\t-r       = replace existing output file\n");
+    if (sizeof(OFF_T) > 4) fprintf(stderr,
+            "\t-lfs     = build one large output file (if supported)\n"
+);
+    EXIT(code);
 } /* end function argexit */
 
 /*-------------------------------------------------------------------*/
@@ -81,7 +110,7 @@ argexit ( int code )
 /*      offset  Current offset in file (for error message only)      */
 /*-------------------------------------------------------------------*/
 static void
-read_input_data (int ifd, BYTE *ifname, BYTE *buf, int reqlen,
+read_input_data (IFD ifd, BYTE *ifname, BYTE *buf, int reqlen,
                 U32 offset)
 {
 int     rc;                             /* Return code               */
@@ -89,14 +118,14 @@ int     len = 0;                        /* Number of bytes read      */
 
     while (len < reqlen)
     {
-        rc = read (ifd, buf + len, reqlen - len);
+        rc = IFREAD (ifd, buf + len, reqlen - len);
         if (rc == 0) break;
         if (rc < 0)
         {
             fprintf (stderr,
                     "%s read error: %s\n",
                     ifname, strerror(errno));
-            exit(3);
+            EXIT(3);
         }
         len += rc;
     } /* end while */
@@ -108,7 +137,7 @@ int     len = 0;                        /* Number of bytes read      */
                 "Expected %d bytes at offset %8.8X,"
                 " found %d bytes\n",
                 ifname, reqlen, offset, len);
-        exit(3);
+        EXIT(3);
     }
 
 } /* end function read_input_data */
@@ -221,13 +250,13 @@ int             n;                      /* Integer work area         */
 /* Return value:                                                     */
 /*      Input file descriptor                                        */
 /*-------------------------------------------------------------------*/
-static int 
+static IFD 
 open_input_image (BYTE *ifname, U16 *devt, U32 *vcyls,
                 U32 *itrkl, BYTE **itrkb, BYTE *volser)
 {
 int             rc;                     /* Return code               */
 H30CKD_TRKHDR   h30trkhdr;              /* Input track header        */
-int             ifd;                    /* Input file descriptor     */
+IFD             ifd;                    /* Input file descriptor     */
 int             len;                    /* Length of input           */
 U16             code;                   /* Device type code          */
 U16             dt;                     /* Device type               */
@@ -243,22 +272,31 @@ BYTE           *dptr;                   /* -> Data in input buffer   */
 U32             cyl;                    /* Cylinder number           */
 U32             head;                   /* Head number               */
 BYTE            rec;                    /* Record number             */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
+
+    hostpath(pathname, ifname, sizeof(pathname));
 
     /* Open the HDR-30 CKD image file */
-    if (strcmp(ifname, "-") == 0)
-        ifd = STDIN_FILENO;
-    else
+  #if defined(HAVE_LIBZ)
+    ifd = gzopen (pathname, "rb");
+    if (ifd == NULL)
     {
-        ifd = open (ifname, O_RDONLY | O_BINARY);
-
-        if (ifd < 0)
-        {
-            fprintf (stderr,
-                    "Cannot open %s: %s\n",
-                    ifname, strerror(errno));
-            exit(3);
-        }
+        fprintf (stderr,
+                "Cannot open %s: %s\n",
+                ifname,
+                errno == 0 ? "gzopen error" : strerror(errno));
+        EXIT(3);
     }
+  #else /*!defined(HAVE_LIBZ)*/
+    ifd = open (pathname, O_RDONLY | O_BINARY);
+    if (ifd < 0)
+    {
+        fprintf (stderr,
+                "Cannot open %s: %s\n",
+                ifname, strerror(errno));
+        EXIT(3);
+    }
+  #endif /*!defined(HAVE_LIBZ)*/
 
     /* Read the first track header */
     read_input_data (ifd, ifname, (BYTE*)&h30trkhdr,
@@ -290,7 +328,7 @@ BYTE            rec;                    /* Record number             */
                 "Unknown device code %4.4X" \
                 " at offset 00000000 in input file %s\n",
                 code, ifname);
-        exit(3);
+        EXIT(3);
     } /* end switch(code) */
 
     /* Use the device type to determine the input image track size */
@@ -305,7 +343,7 @@ BYTE            rec;                    /* Record number             */
     case 0x9345: itrklen = 0xBC00; break;
     default:
         fprintf (stderr, "Unknown device type: %4.4X\n", dt);
-        exit(3);
+        EXIT(3);
     } /* end switch(dt) */
 
     /* Obtain the input track buffer */
@@ -315,7 +353,7 @@ BYTE            rec;                    /* Record number             */
         fprintf (stderr,
                 "Cannot obtain storage for input track buffer: %s\n",
                 strerror(errno));
-        exit(3);
+        EXIT(3);
     }
 
     /* Copy the first track header to the input track buffer */
@@ -370,6 +408,7 @@ BYTE            rec;                    /* Record number             */
 /*      ifname  Input file name                                      */
 /*      itrklen Length of input track buffer                         */
 /*      itrkbuf Address of input track buffer                        */
+/*      repl    1=replace existing file, 0=do not replace            */
 /*      ofname  Output AWSCKD file name                              */
 /*      fseqn   Sequence number of this file (1=first)               */
 /*      devtype Device type                                          */
@@ -382,7 +421,8 @@ BYTE            rec;                    /* Record number             */
 /*      volser  Volume serial number                                 */
 /*-------------------------------------------------------------------*/
 static void
-convert_ckd_file (int ifd, BYTE *ifname, int itrklen, BYTE *itrkbuf,
+convert_ckd_file (IFD ifd, BYTE *ifname, int itrklen, BYTE *itrkbuf,
+                int repl,
                 BYTE *ofname, int fseqn, U16 devtype, U32 heads,
                 U32 trksize, BYTE *obuf, U32 start, U32 end,
                 U32 volcyls, BYTE *volser)
@@ -407,6 +447,7 @@ int             ilen;                   /* Bytes left in input buffer*/
 H30CKD_TRKHDR  *ith;                    /* -> Input track header     */
 U32             ihc, ihh;               /* Input trk header cyl,head */
 U32             offset;                 /* Current input file offset */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     UNREFERENCED(volser);
 
@@ -423,13 +464,16 @@ U32             offset;                 /* Current input file offset */
         highcyl = end;
 
     /* Create the AWSCKD image file */
-    ofd = open (ofname, O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
+    hostpath(pathname, ofname, sizeof(pathname));
+    ofd = open (pathname,
+                O_WRONLY | O_CREAT | O_BINARY | (repl ? 0 : O_EXCL),
                 S_IRUSR | S_IWUSR | S_IRGRP);
+
     if (ofd < 0)
     {
         fprintf (stderr, "%s open error: %s\n",
                 ofname, strerror(errno));
-        exit(8);
+        EXIT(8);
     }
 
     /* Create the device header */
@@ -454,7 +498,7 @@ U32             offset;                 /* Current input file offset */
     {
         fprintf (stderr, "%s device header write error: %s\n",
                 ofname, errno ? strerror(errno) : "incomplete");
-        exit(1);
+        EXIT(1);
     }
 
     /* Write each cylinder */
@@ -462,14 +506,14 @@ U32             offset;                 /* Current input file offset */
     {
         /* Display progress message every 10 cylinders */
         if ((cyl % 10) == 0)
-#ifdef EXTERNALGUI
         {
-            if (extgui) fprintf (stderr, "CYL=%u\n", cyl);
-            else fprintf (stderr, "Writing cylinder %u\r", cyl);
-        }
-#else /*!EXTERNALGUI*/
-            fprintf (stderr, "Writing cylinder %u\r", cyl);
+#ifdef EXTERNALGUI
+            if (extgui)
+                fprintf (stderr, "CYL=%u\n", cyl);
+            else
 #endif /*EXTERNALGUI*/
+                fprintf (stderr, "Writing cylinder %u\r", cyl);
+        }
 
         for (head = 0; head < heads; head++)
         {
@@ -498,7 +542,7 @@ U32             offset;                 /* Current input file offset */
                         "   Found cyl=%4.4X head=%4.4X\n",
                         offset, ifname,
                         cyl, head, ihc, ihh);
-                exit(8);
+                EXIT(8);
             }
              
             /* Clear the output track image to zeroes */
@@ -534,7 +578,7 @@ U32             offset;                 /* Current input file offset */
                             "at offset %8.8X in input file %s\n",
                             rc, iptr-itrkbuf, cyl, head,
                             offset, ifname);
-                    exit(9);
+                    EXIT(9);
                 }
 
                 /* Build AWSCKD record header in output buffer */
@@ -571,7 +615,7 @@ U32             offset;                 /* Current input file offset */
                         "%s cylinder %u head %u write error: %s\n",
                         ofname, cyl, head,
                         errno ? strerror(errno) : "incomplete");
-                exit(1);
+                EXIT(1);
             }
 
         } /* end for(head) */
@@ -584,7 +628,7 @@ U32             offset;                 /* Current input file offset */
     {
         fprintf (stderr, "%s close error: %s\n",
                 ofname, strerror(errno));
-        exit(10);
+        EXIT(10);
     }
 
     /* Display completion message */
@@ -597,10 +641,12 @@ U32             offset;                 /* Current input file offset */
 /*-------------------------------------------------------------------*/
 /* Subroutine to create an AWSCKD DASD image                         */
 /* Input:                                                            */
+/*      lfs     Build one large output file                          */
 /*      ifd     Input HDR-30 image file descriptor                   */
 /*      ifname  Input file name                                      */
 /*      itrklen Length of input track buffer                         */
 /*      itrkbuf Address of input track buffer                        */
+/*      repl    1=replace existing file, 0=do not replace            */
 /*      ofname  Output AWSCKD image file name                        */
 /*      devtype Device type                                          */
 /*      heads   Number of heads per cylinder                         */
@@ -614,7 +660,8 @@ U32             offset;                 /* Current input file offset */
 /* Otherwise a single file is created without a suffix.              */
 /*-------------------------------------------------------------------*/
 static void
-convert_ckd (int ifd, BYTE *ifname, int itrklen, BYTE *itrkbuf,
+convert_ckd (int lfs, IFD ifd, BYTE *ifname, int itrklen,
+            BYTE *itrkbuf, int repl,
             BYTE *ofname, U16 devtype, U32 heads,
             U32 maxdlen, U32 volcyls, BYTE *volser)
 {
@@ -644,8 +691,15 @@ U32             trksize;                /* AWSCKD image track length */
     /* Compute minimum and maximum number of cylinders */
     cylsize = trksize * heads;
     mincyls = 1;
-    maxcpif = 0x80000000 / cylsize;
-    maxcyls = maxcpif * CKD_MAXFILES;
+
+    if (!lfs)
+    {
+        maxcpif = 0x80000000 / cylsize;
+        maxcyls = maxcpif * CKD_MAXFILES;
+    }
+    else
+        maxcpif = maxcyls = volcyls;
+
     if (maxcyls > 65536) maxcyls = 65536;
 
     /* Check for valid number of cylinders */
@@ -654,7 +708,7 @@ U32             trksize;                /* AWSCKD image track length */
         fprintf (stderr,
                 "Cylinder count %u is outside range %u-%u\n",
                 volcyls, mincyls, maxcyls);
-        exit(4);
+        EXIT(4);
     }
 
     /* Obtain track data buffer */
@@ -663,7 +717,7 @@ U32             trksize;                /* AWSCKD image track length */
     {
         fprintf (stderr, "Cannot obtain track buffer: %s\n",
                 strerror(errno));
-        exit(6);
+        EXIT(6);
     }
 
     /* Display progress message */
@@ -671,6 +725,10 @@ U32             trksize;                /* AWSCKD image track length */
             "Converting %4.4X volume %s: %u cyls, "
             "%u trks/cyl, %u bytes/track\n",
             devtype, volser, volcyls, heads, trksize);
+#ifdef EXTERNALGUI
+    if (extgui)
+        fprintf (stderr, "CYLS=%u\n", volcyls);
+#endif /*EXTERNALGUI*/
 
     /* Copy the unsuffixed AWSCKD image file name */
     strcpy (sfname, ofname);
@@ -714,7 +772,7 @@ U32             trksize;                /* AWSCKD image track length */
             endcyl = volcyls - 1;
 
         /* Create an AWSCKD image file */
-        convert_ckd_file (ifd, ifname, itrklen, itrkbuf,
+        convert_ckd_file (ifd, ifname, itrklen, itrkbuf, repl,
                         sfname, fileseq, devtype, heads, trksize,
                         obuf, cyl, endcyl, volcyls, volser);
     }
@@ -729,7 +787,8 @@ U32             trksize;                /* AWSCKD image track length */
 /*-------------------------------------------------------------------*/
 int main ( int argc, char *argv[] )
 {
-int             ifd;                    /* Input file descriptor     */
+IFD             ifd;                    /* Input file descriptor     */
+int             repl = 0;               /* 1=replace existing file   */
 BYTE           *itrkbuf;                /* -> Input track buffer     */
 U32             itrklen;                /* Input track length        */
 U32             volcyls;                /* Total cylinders on volume */
@@ -739,11 +798,7 @@ U16             devtype;                /* Device type               */
 BYTE            ifname[256];            /* Input file name           */
 BYTE            ofname[256];            /* Output file name          */
 BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
-
-    /* Display the program identification message */
-    display_version (stderr,
-                     "Hercules DASD CKD image conversion program\n",
-                     FALSE);
+int             lfs = 0;                /* 1 = Build large file      */
 
     /* Check the number of arguments */
 #ifdef EXTERNALGUI
@@ -751,8 +806,28 @@ BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
+
+    /* Display the program identification message */
+    display_version (stderr,
+                     "Hercules DASD CKD image conversion program\n",
+                     FALSE);
+
+    /* Process the options in the argument list */
+    for (; argc > 1; argc--, argv++)
+    {
+        if (argv[1][0] != '-') break;
+        if (strcmp(argv[1], "-r") == 0)
+            repl = 1;
+        else
+        if (sizeof(OFF_T) > 4 && strcmp(argv[1], "-lfs") == 0)
+            lfs = 1;
+        else
+            argexit(5);
+    }
     if (argc != 3)
         argexit(5);
 
@@ -785,16 +860,16 @@ BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
     case 0x9345: heads = 15; maxdlen = 46456; break;
     default:
         fprintf (stderr, "Unknown device type: %4.4X\n", devtype);
-        exit(3);
+        EXIT(3);
     } /* end switch(devtype) */
 
     /* Create the device */
-    convert_ckd (ifd, ifname, itrklen, itrkbuf,
+    convert_ckd (lfs, ifd, ifname, itrklen, itrkbuf, repl,
                 ofname, devtype, heads, maxdlen, volcyls, volser);
 
     /* Release the input buffer and close the input file */
     free (itrkbuf);
-    close (ifd);
+    IFCLOS (ifd);
      
     /* Display completion message */
     fprintf (stderr, "DASD conversion successfully completed.\n");

@@ -14,6 +14,11 @@
 /* near the end of this module.                                      */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
+#define _HSCCMD_C_
+#define _HENGINE_DLL_
+
 #include "hercules.h"
 
 #include "devtype.h"
@@ -28,35 +33,29 @@
 
 #include "tapedev.h"
 
-#if defined(FISH_HANG)
-extern  int   bFishHangAtExit;  // (set to true when shutting down)
-extern  void  FishHangInit(char* pszFileCreated, int nLineCreated);
-extern  void  FishHangReport();
-extern  void  FishHangAtExit();
-#endif // defined(FISH_HANG)
+///////////////////////////////////////////////////////////////////////
+// (forward references, etc)
+
+#define MAX_DEVLIST_DEVICES  1024
 
 #if defined(FEATURE_ECPSVM)
 extern void ecpsvm_command(int argc,char **argv);
 #endif
-
-/* Added forward declaration to process_script_file ISW20030220-3 */
 int process_script_file(char *,int);
-
-#define MAX_DEVLIST_DEVICES  1024
 
 ///////////////////////////////////////////////////////////////////////
 /* cause_crash command - purposely crash Herc for debugging purposes */
 
 char* fish_msgs[8] =
 {
-	"0000000000000000000000000\n",
-	"11111111111111111111111111\n",
-	"222222222222222222222222222\n",
-	"3333333333333333333333333333\n",
-	"44444444444444444444444444444\n",
-	"555555555555555555555555555555\n",
-	"6666666666666666666666666666666\n",
-	"77777777777777777777777777777777\n",
+    "0000000000000000000000000\n",
+    "11111111111111111111111111\n",
+    "222222222222222222222222222\n",
+    "3333333333333333333333333333\n",
+    "44444444444444444444444444444\n",
+    "555555555555555555555555555555\n",
+    "6666666666666666666666666666666\n",
+    "77777777777777777777777777777777\n",
 };
 
 COND fish_cond;
@@ -66,71 +65,169 @@ void*  fish_thread ( void* arg )
 {
     int i, thread_num = (int) arg;
 
-	srand( time( NULL ) );
+    srand( time( NULL ) );
 
-	logmsg( "\n** thread %d waiting\n", thread_num );
+    logmsg( "\n** thread %d waiting\n", thread_num );
 
-	obtain_lock    (             &fish_lock );
-	wait_condition ( &fish_cond, &fish_lock );
-	release_lock   (             &fish_lock );
+    obtain_lock    (             &fish_lock );
+    wait_condition ( &fish_cond, &fish_lock );
+    release_lock   (             &fish_lock );
 
-	logmsg( "\n** thread %d starting\n", thread_num );
+    logmsg( "\n** thread %d starting\n", thread_num );
 
     for (i=0; i < 50*1000; i++)
-		logmsg( fish_msgs[ rand() % 8 ] );
+        logmsg( fish_msgs[ rand() % 8 ] );
 
-	sleep(5);
+    sleep(5);
 
-	logmsg( "\n** thread %d done\n", thread_num );
+    logmsg( "\n** thread %d done\n", thread_num );
 
     return NULL;
 }
 
 int crash_cmd(int argc, char *argv[],char *cmdline)
 {
+#if 1
     TID tid;
-	int num_threads;
-	static int didthis = 0;
+    int num_threads;
+    static int didthis = 0;
 
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
-	if (!didthis)
-	{
-		didthis = 1;
-		initialize_condition ( &fish_cond );
-		initialize_lock      ( &fish_lock );
-	}
+    if (!didthis)
+    {
+        didthis = 1;
+        initialize_condition ( &fish_cond );
+        initialize_lock      ( &fish_lock );
+    }
 
     if (argc != 2)
-	{
-		logmsg("invalid arg; 1-8\n");
-		return 0;
-	}
+    {
+        logmsg("invalid arg; 1-8\n");
+        return 0;
+    }
 
-	num_threads = atoi(argv[1]);
+    num_threads = atoi(argv[1]);
 
-	if (num_threads < 0 || num_threads > 8)
-	{
-		logmsg("invalid arg; 1-8\n");
-		return 0;
-	}
+    if (num_threads < 0 || num_threads > 8)
+    {
+        logmsg("invalid arg; 1-8\n");
+        return 0;
+    }
 
-	while (num_threads--)
-	    create_thread( &tid, &sysblk.detattr, fish_thread, (void*) num_threads );
+    while (num_threads--)
+        create_thread( &tid, &sysblk.detattr, fish_thread, (void*) num_threads );
 
-	sleep( 1 );
+    sleep( 1 );
 
     broadcast_condition ( &fish_cond );
 
-//    cause_crash();      // (should not return)
-
+    return 0;
+#else
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+    cause_crash();      // (should not return)
     return 0;           // (make compiler happy)
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////
+/* maxrates command - report maximum seen mips/sios rates */
+
+#ifdef OPTION_MIPS_COUNTING
+
+int maxrates_cmd(int argc, char *argv[],char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if (argc > 1)
+    {
+        int bError = FALSE;
+        if (argc > 2)
+        {
+            logmsg( _("Improper command format") );
+            bError = TRUE;
+        }
+        else
+        {
+            int   interval = 0;
+            BYTE  c;
+            if ( sscanf( argv[1], "%d%c", &interval, &c ) != 1 || interval < 1 )
+            {
+                logmsg( _("\"%s\": invalid maxrates interval"), argv[1] );
+                bError = TRUE;
+            }
+            else
+            {
+                maxrates_rpt_intvl = interval;
+                logmsg( _("Maxrates interval set to %d minutes.\n"), maxrates_rpt_intvl );
+            }
+        }
+        if (bError)
+            logmsg( _("; enter \"help maxrates\" for help.\n") );
+    }
+    else
+    {
+        char*   pszPrevIntervalStartDateTime;
+        char*   pszCurrIntervalStartDateTime;
+        char*   pszCurrentDateTime;
+        time_t  current_time;
+
+        current_time = time( NULL );
+
+        pszPrevIntervalStartDateTime = strdup( ctime( &prev_int_start_time ) );
+        pszCurrIntervalStartDateTime = strdup( ctime( &curr_int_start_time ) );
+        pszCurrentDateTime           = strdup( ctime(    &current_time     ) );
+
+        logmsg
+        (
+            "Highest observed MIPS/SIOS rates:\n\n"
+
+            "  From: %s"
+            "  To:   %s\n"
+
+            "        MIPS: %2.1d.%2.2d\n"
+            "        SIOS: %d\n\n"
+
+            "  From: %s"
+            "  To:   %s\n"
+
+            "        MIPS: %2.1d.%2.2d\n"
+            "        SIOS: %d\n\n"
+
+            "Current interval = %d minutes.\n"
+
+            ,pszPrevIntervalStartDateTime
+            ,pszCurrIntervalStartDateTime
+
+            ,prev_high_mips_rate / 1000000
+            ,prev_high_mips_rate % 1000000
+            ,prev_high_sios_rate
+
+            ,pszCurrIntervalStartDateTime
+            ,pszCurrentDateTime
+
+            ,curr_high_mips_rate / 1000000
+            ,curr_high_mips_rate % 1000000
+            ,curr_high_sios_rate
+
+            ,maxrates_rpt_intvl
+        );
+
+        free( pszPrevIntervalStartDateTime );
+        free( pszCurrIntervalStartDateTime );
+        free( pszCurrentDateTime           );
+    }
+
+    return 0;   // (make compiler happy)
+}
+
+#endif // OPTION_MIPS_COUNTING
+
+///////////////////////////////////////////////////////////////////////
 /* comment command - do absolutely nothing */
+
 int comment_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(argc);
@@ -139,43 +236,16 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
     // Do nothing; command has already been echo'ed to console...
     return 0;   // (make compiler happy)
 }
+
 ///////////////////////////////////////////////////////////////////////
 /* quit or exit command - terminate the emulator */
 
 int quit_cmd(int argc, char *argv[],char *cmdline)
 {
-    /*
-    TID tid;
-    */
-
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
     UNREFERENCED(cmdline);
-
-    /* ZZ FIXME: 'now' has a few nasty side-effects, it does not
-                 flush any buffers (DASD), and it does not terminate
-                 any threads which might leave hercules in a 'hanging'
-                 state.  The 'now' option should probably be removed
-                 in a future version */
-    /*           'quit now' now requires 'quit' to be specified first.
-                 If hercules hangs during shutdown (probably due to
-                 some bug) then 'quit now' can be specified. Greg */
-
-    if ((argc > 1 && !strcasecmp("now",argv[1])))
-    {
-        if (!sysblk.shutdown)
-        {
-            logmsg(_("HHCPN151E specify 'quit' first\n"));
-            return -1;
-        }
-#if defined(FISH_HANG)
-        FishHangAtExit();
-#endif
-        fprintf(stderr, _("HHCIN099I Hercules terminated\n"));
-        fflush(stderr);
-        exit(0);
-    }
-
     do_shutdown();
-
     return 0;   /* (make compiler happy) */
 }
 
@@ -440,7 +510,7 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
 ///////////////////////////////////////////////////////////////////////
 /* stopall command - stop all CPU's */
 
-int stopall_cmd(int argc, char *argv[], char *cmdline)
+DLL_EXPORT int stopall_cmd(int argc, char *argv[], char *cmdline)
 {
     int i;
     U32 mask;
@@ -737,7 +807,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         }
         else // ( TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype )
         {
-            if (dev->tapedispflags & TAPEDISPFLG_MESSAGE2)
+            if ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
             {
                 mountreq = TRUE;
                 tapemsg = dev->tapemsg2;
@@ -1254,13 +1324,15 @@ BYTE c[2];                              /* Character work area       */
         return -1;
     }
 
-    rc = sscanf(argv[1], "%llx%c%llx%c", &sysblk.breakaddr[0], &c[0],
-                                         &sysblk.breakaddr[1], &c[1]);
+    rc = sscanf(argv[1], "%"I64_FMT"x%c%"I64_FMT"x%c",
+                        &sysblk.breakaddr[0], &c[0],
+                        &sysblk.breakaddr[1], &c[1]);
+
     if (rc == 1 || (rc == 3 && c[0] == '-'))
     {
         if (rc == 1)
             sysblk.breakaddr[1] = sysblk.breakaddr[0];
-        logmsg( _("HHCPN040I Setting breakpoint at %16.16llX-%16.16llx\n"),
+        logmsg( _("HHCPN040I Setting breakpoint at %16.16"I64_FMT"X-%16.16"I64_FMT"X\n"),
             sysblk.breakaddr[0],sysblk.breakaddr[1]);
         sysblk.instbreak = 1;
         SET_IC_TRACE;
@@ -1501,10 +1573,10 @@ BYTE c;                                 /* Character work area       */
     return 0;
 }
 
-#if defined(FISH_HANG)
-
 ///////////////////////////////////////////////////////////////////////
 /* FishHangReport - verify/debug proper Hercules LOCK handling...    */
+
+#if defined(FISH_HANG)
 
 int FishHangReport_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -1514,7 +1586,7 @@ int FishHangReport_cmd(int argc, char *argv[], char *cmdline)
     FishHangReport();
 #if defined(OPTION_FISHIO)
     PrintAllDEVTHREADPARMSs();
-#endif /* defined(OPTION_FISHIO) */
+#endif
     return 0;
 }
 
@@ -1742,8 +1814,31 @@ BYTE    c;                              /* Character work area       */
 
     if (argc < 2)
     {
+#if 0
         logmsg( _("HHCPN065E Missing argument(s)\n") );
         return -1;
+#else // fishtest
+        if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL)
+            logmsg("pgmtrace == all\n");
+        else if (sysblk.pgminttr == 0)
+            logmsg("pgmtrace == none\n");
+        else
+        {
+            char flags[64+1]; int i;
+            for (i=0; i < 64; i++)
+                flags[i] = (sysblk.pgminttr & (1ULL << i)) ? ' ' : '*';
+            flags[64] = 0;
+            logmsg
+            (
+                " * = Tracing suppressed; otherwise tracing enabled\n"
+                " 0000000000000001111111111111111222222222222222233333333333333334\n"
+                " 123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0\n"
+                " %s\n"
+                ,flags
+            );
+        }
+        return 0;
+#endif
     }
 
     if (sscanf(argv[1], "%x%c", &rupt_num, &c) != 1)
@@ -1768,6 +1863,60 @@ BYTE    c;                              /* Character work area       */
         sysblk.pgminttr |=  ((U64)1 << (abs_rupt_num - 1));
 
     return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* ostailor command - trace program interrupts */
+
+int ostailor_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if (argc < 2)
+    {
+        char* sostailor = "(custom)";
+        if (sysblk.pgminttr == OS_OS390 ) sostailor = "OS/390";
+        if (sysblk.pgminttr == OS_VSE   ) sostailor = "VSE";
+        if (sysblk.pgminttr == OS_VM    ) sostailor = "VM";
+        if (sysblk.pgminttr == OS_LINUX ) sostailor = "LINUX";
+        if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL) sostailor = "NULL";
+        if (sysblk.pgminttr == 0                    ) sostailor = "QUIET";
+        logmsg( _("OSTAILOR %s\n"),sostailor);
+        return 0;
+    }
+    if (strcasecmp (argv[1], "OS/390") == 0)
+    {
+        sysblk.pgminttr = OS_OS390;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "VSE") == 0)
+    {
+        sysblk.pgminttr = OS_VSE;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "VM") == 0)
+    {
+        sysblk.pgminttr = OS_VM;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "LINUX") == 0)
+    {
+        sysblk.pgminttr = OS_LINUX;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "NULL") == 0)
+    {
+        sysblk.pgminttr = 0xFFFFFFFFFFFFFFFFULL;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "QUIET") == 0)
+    {
+        sysblk.pgminttr = 0;
+        return 0;
+    }
+    logmsg( _("Unknown OS tailor specification %s\n"),
+                argv[1] );
+    return -1;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -2171,6 +2320,8 @@ REGS *regs;
     U32     aaddr2;                     /* Absolute storage address  */
     int     fd;                         /* File descriptor           */
     int     len;                        /* Number of bytes read      */
+    BYTE    c;                          /* (dummy sscanf work area)  */
+    BYTE    pathname[MAX_PATH];         /* fname in host path format */
 
     UNREFERENCED(cmdline);
 
@@ -2205,7 +2356,8 @@ REGS *regs;
         else
             aaddr &= ~0xFFF;
     }
-    else if (sscanf(loadaddr, "%x", &aaddr) !=1)
+    else if (sscanf(loadaddr, "%x%c", &aaddr, &c) !=1 ||
+                                       aaddr >= sysblk.mainsize )
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN100E savecore: invalid starting address: %s \n"),
@@ -2223,9 +2375,15 @@ REGS *regs;
 
         if ( STORAGE_KEY(aaddr2, regs) & STORKEY_CHANGE )
             aaddr2 |= 0xFFF;
-
+        else
+        {
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            logmsg( _("HHCPN148E savecore: no modified storage found\n") );
+            return -1;
+        }
     }
-    else if (sscanf(loadaddr, "%x", &aaddr2) !=1)
+    else if (sscanf(loadaddr, "%x%c", &aaddr2, &c) !=1 ||
+                                       aaddr2 >= sysblk.mainsize )
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN101E savecore: invalid ending address: %s \n"),
@@ -2241,7 +2399,7 @@ REGS *regs;
         return -1;
     }
 
-    if (aaddr >= aaddr2)
+    if (aaddr > aaddr2)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN103E invalid range: %8.8X-%8.8X\n"), aaddr, aaddr2 );
@@ -2252,11 +2410,14 @@ REGS *regs;
     logmsg( _("HHCPN104I Saving locations %8.8X-%8.8X to %s\n"),
               aaddr, aaddr2, fname );
 
-    if ((fd = open(fname, O_CREAT|O_WRONLY|O_EXCL|O_BINARY, S_IREAD|S_IWRITE|S_IRGRP)) < 0)
+    hostpath(pathname, fname, sizeof(pathname));
+
+    if ((fd = open(pathname, O_CREAT|O_WRONLY|O_EXCL|O_BINARY, S_IREAD|S_IWRITE|S_IRGRP)) < 0)
     {
+        int saved_errno = errno;
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN105E savecore error creating %s: %s\n"),
-                  fname, strerror(errno) );
+                  fname, strerror(saved_errno) );
         return -1;
     }
 
@@ -2265,12 +2426,13 @@ REGS *regs;
                   fname, strerror(errno) );
     else if((U32)len < (aaddr2 - aaddr) + 1)
         logmsg( _("HHCPN107E savecore: unable to save %d bytes\n"),
-            ((aaddr2 - aaddr) + 1) - len
-            );
+            ((aaddr2 - aaddr) + 1) - len );
 
     close(fd);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
+
+    logmsg( _("HHCPN170I savecore command complete.\n"));
 
     return 0;
 }
@@ -2283,10 +2445,11 @@ int loadcore_cmd(int argc, char *argv[], char *cmdline)
 REGS *regs;
 
     char   *fname;                      /* -> File name (ASCIIZ)     */
-    struct stat statbuff;               /* Buffer for file status    */
+    struct STAT statbuff;               /* Buffer for file status    */
     char   *loadaddr;                   /* loadcore memory address   */
     U32     aaddr;                      /* Absolute storage address  */
     int     len;                        /* Number of bytes read      */
+    BYTE    pathname[MAX_PATH];         /* file in host path format  */
 
     UNREFERENCED(cmdline);
 
@@ -2297,12 +2460,12 @@ REGS *regs;
     }
 
     fname = argv[1];
+    hostpath(pathname, fname, sizeof(pathname));
 
-    if (stat(fname, &statbuff) < 0)
+    if (STAT(pathname, &statbuff) < 0)
     {
         logmsg( _("HHCPN109E Cannot open %s: %s\n"),
-            fname, strerror(errno)
-            );
+            fname, strerror(errno));
         return -1;
     }
 
@@ -2360,7 +2523,8 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     BYTE    buf[80];                    /* Read buffer               */
     int     len;                        /* Number of bytes read      */
     int     n;
-REGS *regs;
+    REGS   *regs;
+    BYTE    pathname[MAX_PATH];
 
     UNREFERENCED(cmdline);
 
@@ -2410,12 +2574,12 @@ REGS *regs;
     }
 
     /* Open the specified file name */
-    if ((fd = open (fname, O_RDONLY | O_BINARY)) < 0)
+    hostpath(pathname, fname, sizeof(pathname));
+    if ((fd = open (pathname, O_RDONLY | O_BINARY)) < 0)
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
         logmsg( _("HHCPN118E Cannot open %s: %s\n"),
-            fname, strerror(errno)
-            );
+            fname, strerror(errno));
         return -1;
     }
 
@@ -2426,8 +2590,7 @@ REGS *regs;
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
             logmsg( _("HHCPN119E Cannot read %s: %s\n"),
-                    fname, strerror(errno)
-                );
+                    fname, strerror(errno));
             close (fd);
             return -1;
         }
@@ -2704,11 +2867,10 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
             ,io->dev->devnum
 
-            ,io->pending      ? " normal" : ""
-            ,io->pcipending   ? " PCI"    : ""
-            ,io->attnpending  ? " ATTN"   : ""
-
-            ,(!(io->attnpending || io->pcipending || io->attnpending)) ? " unknown" : ""
+            ,io->pending      ? " normal"  : ""
+            ,io->pcipending   ? " PCI"     : ""
+            ,io->attnpending  ? " ATTN"    : ""
+            ,!IOPENDING(io)   ? " unknown" : ""
 
             ,io->priority
         );
@@ -2793,6 +2955,12 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                         logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imapc0[i2]);
                 break;
+            case 0xC2:                                                      /*@Z9*/
+                for(i2 = 0; i2 < 16; i2++)                                  /*@Z9*/
+                    if(sysblk.imapc2[i2])                                   /*@Z9*/
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%llu\n",  /*@Z9*/
+                            i1, i2, sysblk.imapc2[i2]);                     /*@Z9*/
+                break;                                                      /*@Z9*/
             case 0xE3:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape3[i2])
@@ -2903,13 +3071,13 @@ void script_test_userabort()
 
 int process_script_file(char *script_name,int isrcfile)
 {
-FILE   *scrfp;                           /* RC file pointer           */
-size_t  scrbufsize = 1024;               /* Size of RC file  buffer   */
-char   *scrbuf = NULL;                   /* RC file input buffer      */
-int     scrlen;                          /* length of RC file record  */
-int     scr_pause_amt = 0;               /* seconds to pause RC file  */
+FILE   *scrfp;                          /* RC file pointer           */
+size_t  scrbufsize = 1024;              /* Size of RC file  buffer   */
+char   *scrbuf = NULL;                  /* RC file input buffer      */
+int     scrlen;                         /* length of RC file record  */
+int     scr_pause_amt = 0;              /* seconds to pause RC file  */
 char   *p;                              /* (work)                    */
-
+BYTE    pathname[MAX_PATH];             /* (work)                    */
 
     /* Check the recursion level - if it exceeds a certain amount
        abort the script stack
@@ -2922,8 +3090,8 @@ char   *p;                              /* (work)                    */
     }
     /* Open RC file. If it doesn't exist, then issue error message
        only if this is NOT the RuntimeConfiguration (rc) file */
-
-    if (!(scrfp = fopen(script_name, "r")))
+    hostpath(pathname, script_name, sizeof(pathname));
+    if (!(scrfp = fopen(pathname, "r")))
     {
         if (ENOENT != errno && !isrcfile)
             logmsg(_("HHCPN007E Script file %s open failed: %s\n"),
@@ -3027,7 +3195,8 @@ char   *p;                              /* (work)                    */
         }
         else
         {
-           logmsg (_("HHCPN999I Script %s aborted due to previous conditions\n"),script_name);
+           logmsg (_("HHCPN999I Script %s aborted due to previous conditions\n"),
+               script_name);
            scr_uaborted=1;
         }
     }
@@ -3375,7 +3544,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
 ///////////////////////////////////////////////////////////////////////
 /* aia - display aia values */
 
-int aia_cmd(int argc, char *argv[], char *cmdline)
+DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
 {
     /* int     i; */                         /* Index                     */
     REGS   *regs;
@@ -3677,6 +3846,23 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
 }
 
 ///////////////////////////////////////////////////////////////////////
+// Handle externally defined commands...
+
+// (for use in CMDTAB COMMAND entry further below)
+#define      EXT_CMD(xxx_cmd)  call_ ## xxx_cmd
+
+// (for defining routing function immediately below)
+#define CALL_EXT_CMD(xxx_cmd)  \
+int call_ ## xxx_cmd ( int argc, char *argv[], char *cmdline )  { \
+    return   xxx_cmd (     argc,       argv,         cmdline ); }
+
+// Externally defined commands routing functions...
+
+CALL_EXT_CMD ( ptt_cmd    );
+CALL_EXT_CMD ( cache_cmd  );
+CALL_EXT_CMD ( shared_cmd );
+
+///////////////////////////////////////////////////////////////////////
 // Layout of command routing table...
 
 typedef int CMDFUNC(int argc, char *argv[], char *cmdline);
@@ -3706,6 +3892,7 @@ CMDTAB Commands[] =
 */
 COMMAND ( "?",         ListAllCommands, "list all commands" )
 COMMAND ( "help",      HelpCommand,   "command specific help\n" )
+
 COMMAND ( "*",         comment_cmd,   "(log comment to syslog)\n" )
 
 COMMAND ( "hst",       History,       "history of commands" )
@@ -3735,20 +3922,20 @@ COMMAND ( "ssd",       ssd_cmd,       "Signal Shutdown\n" )
 #endif
 
 #ifdef OPTION_PTTRACE
-COMMAND ( "ptt",       ptt_cmd,       "display pthread trace\n" )
+COMMAND ( "ptt",  EXT_CMD(ptt_cmd),   "display pthread trace\n" )
 #endif
 
 COMMAND ( "i",         i_cmd,         "generate I/O attention interrupt for device" )
 COMMAND ( "ext",       ext_cmd,       "generate external interrupt" )
-COMMAND ( "restart",   restart_cmd,   "generate restart interrupt\n" )
-
-COMMAND ( "store",     store_cmd,     "store CPU status at absolute zero" )
+COMMAND ( "restart",   restart_cmd,   "generate restart interrupt" )
 COMMAND ( "archmode",  archmode_cmd,  "set architecture mode" )
-COMMAND ( "loadparm",  loadparm_cmd,  "set IPL parameter" )
+COMMAND ( "loadparm",  loadparm_cmd,  "set IPL parameter\n" )
+
 COMMAND ( "ipl",       ipl_cmd,       "IPL Normal from device xxxx" )
 COMMAND ( "iplc",      iplc_cmd,      "IPL Clear from device xxxx" )
 COMMAND ( "sysreset",  sysr_cmd,      "Issue SYSTEM Reset manual operation" )
-COMMAND ( "sysclear",  sysc_cmd,      "Issue SYSTEM Clear Reset manual operation\n" )
+COMMAND ( "sysclear",  sysc_cmd,      "Issue SYSTEM Clear Reset manual operation" )
+COMMAND ( "store",     store_cmd,     "store CPU status at absolute zero\n" )
 
 COMMAND ( "psw",       psw_cmd,       "display program status word" )
 COMMAND ( "gpr",       gpr_cmd,       "display general purpose registers" )
@@ -3775,16 +3962,17 @@ COMMAND ( "devlist",   devlist_cmd,   "list all devices\n" )
 COMMAND ( "scsimount", scsimount_cmd, "automatic SCSI tape mounts\n" )
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
-COMMAND ( "sh",        sh_cmd,        "shell command" )
-COMMAND ( "cache",     cache_cmd,     "cache command" )
-COMMAND ( "cckd",      cckd_cmd,      "cckd command" )
-COMMAND ( "shrd",      shared_cmd,    "shrd command" )
-COMMAND ( "quiet",     quiet_cmd,     "toggle automatic refresh of panel display data\n" )
+COMMAND ( "sh",        sh_cmd,          "shell command" )
+COMMAND ( "cache", EXT_CMD(cache_cmd),  "cache command" )
+COMMAND ( "cckd",      cckd_cmd,        "cckd command" )
+COMMAND ( "shrd",  EXT_CMD(shared_cmd), "shrd command" )
+COMMAND ( "quiet",     quiet_cmd,       "toggle automatic refresh of panel display data\n" )
 
 COMMAND ( "b",         bset_cmd,      "set breakpoint" )
 COMMAND ( "b-",        bdelete_cmd,   "delete breakpoint" )
 COMMAND ( "g",         g_cmd,         "turn off instruction stepping and start CPU\n" )
 
+COMMAND ( "ostailor",  ostailor_cmd,  "trace program interrupts" )
 COMMAND ( "pgmtrace",  pgmtrace_cmd,  "trace program interrupts" )
 COMMAND ( "savecore",  savecore_cmd,  "save a core image to file" )
 COMMAND ( "loadcore",  loadcore_cmd,  "load a core image file" )
@@ -3811,16 +3999,20 @@ COMMAND ( "panrate",   panrate_cmd,   "display or set rate at which console refr
 #endif
 COMMAND ( "syncio",    syncio_cmd,    "display syncio devices statistics" )
 #if defined(OPTION_INSTRUCTION_COUNTING)
-COMMAND ( "icount",    icount_cmd,    "display individual instruction counts\n" )
+COMMAND ( "icount",    icount_cmd,    "display individual instruction counts" )
 #endif
+#ifdef OPTION_MIPS_COUNTING
+COMMAND ( "maxrates",  maxrates_cmd,  "display maximum observed MIPS/SIOS rate for the\n               defined interval or define a new reporting interval\n" )
+#endif // OPTION_MIPS_COUNTING
+
 #if defined(FISH_HANG)
 COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/event objects\n" )
 #endif
 COMMAND ( "script",    script_cmd,    "Run a sequence of panel commands contained in a file" )
 COMMAND ( "cscript",   cscript_cmd,   "Cancels a running script thread\n" )
 #if defined(FEATURE_ECPSVM)
-COMMAND ( "evm",   evm_cmd_1,   "ECPS:VM Commands (Deprecated)" )
-COMMAND ( "ecpsvm",   evm_cmd,   "ECPS:VM Commands\n" )
+COMMAND ( "evm",       evm_cmd_1,     "ECPS:VM Commands (Deprecated)" )
+COMMAND ( "ecpsvm",    evm_cmd,       "ECPS:VM Commands\n" )
 #endif
 
 COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
@@ -3835,8 +4027,8 @@ COMMAND ( "count",     count_cmd,     "Display/clear overall instruction count\n
 #endif
 COMMAND ( "sizeof",    sizeof_cmd,    "Display size of structures\n" )
 
-COMMAND ( "suspend",    suspend_cmd,  "Suspend hercules" )
-COMMAND ( "resume",     resume_cmd,   "Resume hercules\n" )
+COMMAND ( "suspend",   suspend_cmd,   "Suspend hercules" )
+COMMAND ( "resume",    resume_cmd,    "Resume hercules\n" )
 
 #define CRASH_CMD   "c_crash"       // (hidden internal command)
 COMMAND ( CRASH_CMD,   crash_cmd,     "(hidden internal command)" )
@@ -3852,26 +4044,25 @@ char*  cmd_argv[MAX_ARGS];
 
 int ProcessPanelCommand (char* pszCmdLine)
 {
-    int      rc = -1;
-    CMDTAB*  pCmdTab;
-    char*    pszSaveCmdLine;
-    char*    cl;
+    CMDTAB*  pCmdTab         = NULL;
+    char*    pszSaveCmdLine  = NULL;
+    char*    cl              = NULL;
+    int      rc              = -1;
 
     if (!pszCmdLine || !*pszCmdLine)
     {
-        /* (enter) - start CPU (ignore if not instruction stepping) */
+        /* [enter key] by itself: start the CPU
+           (ignore if not instruction stepping) */
         if (sysblk.inststep)
             rc = start_cmd(0,NULL,NULL);
-        return rc;
+        goto ProcessPanelCommandExit;
     }
-
 
 #if defined(OPTION_CONFIG_SYMBOLS)
     cl=resolve_symbol_string(pszCmdLine);
 #else
     cl=pszCmdLine;
 #endif
-    
 
     /* Save unmodified copy of the command line in case
        its format is unusual and needs customized parsing. */
@@ -3881,25 +4072,29 @@ int ProcessPanelCommand (char* pszCmdLine)
        Note: original command line now sprinkled with nulls */
     parse_args (cl, MAX_ARGS, cmd_argv, &cmd_argc);
 
+    /* If no command was entered (i.e. they entered just a comment
+       (e.g. "# comment")) then ignore their input */
+    if ( !cmd_argv[0] )
+        goto ProcessPanelCommandExit;
+
 #if defined(OPTION_DYNAMIC_LOAD)
-    if( system_command )
-        if( (rc = system_command(cmd_argc, (char**)cmd_argv,pszSaveCmdLine) ) )
-            return rc;
+    if(system_command)
+        if((rc = system_command(cmd_argc, (char**)cmd_argv, pszSaveCmdLine)))
+            goto ProcessPanelCommandExit;
 #endif
 
     /* Route standard formatted commands from our routing table... */
     if (cmd_argc)
         for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
         {
-            if (!strcasecmp(cmd_argv[0],pCmdTab->pszCommand))
+            if (!strcasecmp(cmd_argv[0], pCmdTab->pszCommand))
             {
-                rc = pCmdTab->pfnCommand(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
-                free(pszSaveCmdLine);
-                return rc;
+                rc = pCmdTab->pfnCommand(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
+                goto ProcessPanelCommandExit;
             }
         }
 
-    // Route non-standard formatted commands...
+    /* Route non-standard formatted commands... */
 
     /* sf commands - shadow file add/remove/set/compress/display */
     if (0
@@ -3911,30 +4106,32 @@ int ProcessPanelCommand (char* pszCmdLine)
     )
     {
         rc = ShadowFile_cmd(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
-        free(pszSaveCmdLine);
-        return rc;
+        goto ProcessPanelCommandExit;
     }
 
     /* x+ and x- commands - turn switches on or off */
     if ('+' == pszSaveCmdLine[1] || '-' == pszSaveCmdLine[1])
     {
         rc = OnOffCommand(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
-        free(pszSaveCmdLine);
-        return rc;
+        goto ProcessPanelCommandExit;
     }
 
     /* Error: unknown/unsupported command... */
+    ASSERT( cmd_argv[0] );
     logmsg( _("HHCPN139E Command \"%s\" not found; enter '?' for list.\n"),
               cmd_argv[0] );
+
+ProcessPanelCommandExit:
 
     /* Free our saved copy */
     free(pszSaveCmdLine);
 
 #if defined(OPTION_CONFIG_SYMBOLS)
-    free(cl);
+    if (cl != pszCmdLine)
+        free(cl);
 #endif
 
-    return -1;
+    return rc;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -3958,7 +4155,7 @@ int ListAllCommands(int argc, char *argv[], char *cmdline)
     {
         // (don't display hidden internal commands)
         if ( strcasecmp( pCmdTab->pszCommand, CRASH_CMD ) != 0 )
-        logmsg( _("  %-9.9s    %s \n"), pCmdTab->pszCommand, pCmdTab->pszCmdDesc );
+            logmsg( _("  %-9.9s    %s \n"), pCmdTab->pszCommand, pCmdTab->pszCmdDesc );
     }
 
     // List non-standard formatted commands...
@@ -3970,6 +4167,8 @@ int ListAllCommands(int argc, char *argv[], char *cmdline)
     logmsg( "  %-9.9s    %s \n", "sf=", _("rename shadow file") );
     logmsg( "  %-9.9s    %s \n", "sfc", _("compress shadow files") );
     logmsg( "  %-9.9s    %s \n", "sfd", _("display shadow file stats") );
+
+    logmsg("\n");
 
     /* x+ and x- commands - turn switches on or off */
 
@@ -4012,6 +4211,7 @@ CMDHELP ( "*",         "The '*' comment command simply provides a convenient mea
                        "doing anything. It is not processed in any way other than to\n"
                        "simply echo it to the console.\n"
                        )
+
 CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need help\n"
                        "with. If the command has additional help text defined for it,\n"
                        "it will be displayed. Help text is usually limited to explaining\n"
@@ -4041,12 +4241,6 @@ CMDHELP ( "hst",       "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"
                        "hst n, where n is a positive number retrieves n-th command from list\n"
                        "hst n, where n is a negative number retrieves n-th last command\n"
                        "hst without an argument works exactly as hst -1, it retrieves last command\n")
-
-CMDHELP ( "quit",      "Format: \"quit [NOW]\". The optional 'NOW' argument\n"
-                       "causes the emulator to immediately terminate without\n"
-                       "attempting to close any of the device files or perform\n"
-                       "any cleanup. Only use it in extreme circumstances.\n"
-                       )
 
 CMDHELP ( "cpu",       "Format: \"cpu nnnn\" where 'nnnn' is the cpu address of\n"
                        "the cpu in your multiprocessor configuration which you wish\n"
@@ -4116,11 +4310,21 @@ CMDHELP ( "pgmtrace",  "Format: \"pgmtrace [-]intcode\" where 'intcode' is any v
                        "with a '-' to stop tracing of that particular program interruption.\n"
                        )
 
+CMDHELP ( "ostailor",  "Format: \"ostailor quiet | os/390 | vm | vse | linux | null\". Specifies\n"
+                       "the intended operating system. The effect is to reduce control panel message\n"
+                       "traffic by selectively suppressing program check trace messages which are\n"
+                       "considered normal in the specified environment. 'quiet' suppresses all\n"
+                       "exception messages, whereas 'null' suppresses none of them. The other options\n"
+                       "suppress some messages and not others depending on the specified o/s.\n"
+                       "SEE ALSO the 'pgmtrace' command which allows you to further fine tune\n"
+                       "the tracing of program interrupt exceptions.\n"
+                       )
+
 CMDHELP ( "savecore",  "Format: \"savecore filename [{start|*}] [{end|*}]\" where 'start' and 'end'\n"
                        "define the starting and ending addresss of the range of real storage to be\n"
-                       "saved to file 'filename'. '*' means address 0 if specified for start, and end\n"
-                       "of available storage if specified for end. The default is '* *' (beginning\n"
-                       "of storage through the end of storage; i.e. all of storage).\n"
+                       "saved to file 'filename'.  '*' for either the start address or end address\n"
+                       "(the default) means: \"the first/last byte of the first/last modified page\n"
+                       "as determined by the storage-key 'changed' bit\".\n"
                        )
 CMDHELP ( "loadcore",  "Format: \"loadcore filename [address]\" where 'address' is the storage address\n"
                        "of where to begin loading memory. The file 'filename' is presumed to be a pure\n"
@@ -4162,6 +4366,14 @@ CMDHELP ( "FishHangReport", "When built with --enable-fthreads --enable-fishhang
                        )
 #endif
 
+#ifdef OPTION_MIPS_COUNTING
+CMDHELP ( "maxrates",  "Format: \"maxrates [nnnn]\" where 'nnnn' is the desired reporting\n"
+                       " interval in minutes. Acceptable values are from 1 to 1440. The default\n"
+                       " is 1440 minutes (one day). Entering \"maxrates\" by itself displays\n"
+                       " the current highest rates observed during the defined intervals.\n"
+                       )
+#endif // OPTION_MIPS_COUNTING
+
 CMDHELP ( NULL, NULL )         /* (end of table) */
 };
 
@@ -4196,7 +4408,7 @@ int HelpCommand(int argc, char *argv[], char *cmdline)
 ///////////////////////////////////////////////////////////////////////
 
 #if defined(OPTION_DYNAMIC_LOAD)
-void *panel_command_r (void *cmdline)
+DLL_EXPORT void *panel_command_r (void *cmdline)
 #else
 void *panel_command (void *cmdline)
 #endif

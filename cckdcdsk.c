@@ -6,18 +6,11 @@
 /* Perform check function on a compressed ckd file                   */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 int syntax ();
-
-/*-------------------------------------------------------------------*/
-/* Global data areas                                                 */
-/*-------------------------------------------------------------------*/
-#ifdef EXTERNALGUI
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Main function for stand-alone chkdsk                              */
@@ -31,10 +24,11 @@ int             level=1;                /* Chkdsk level checking     */
 int             ro=0;                   /* 1=Open readonly           */
 int             force=0;                /* 1=Check if OPENED bit on  */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, LOCALEDIR);
+    bindtextdomain(PACKAGE, HERC_LOCALEDIR);
     textdomain(PACKAGE);
 #endif
 
@@ -43,6 +37,8 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 
@@ -73,14 +69,17 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
             default:   return syntax ();
         }
     }
+
     if (argc != 1) return syntax ();
+
     fn = argv[0];
 
     /* open the file */
+    hostpath(pathname, fn, sizeof(pathname));
     if (ro)
-        fd = open (fn, O_RDONLY|O_BINARY);
+        fd = open (pathname, O_RDONLY|O_BINARY);
     else
-    fd = open (fn, O_RDWR|O_BINARY);
+        fd = open (pathname, O_RDWR|O_BINARY);
     if (fd < 0)
     {
         fprintf (stderr,
@@ -92,7 +91,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     /* Check CCKD_OPENED bit if -f not specified */
     if (!force)
     {
-        if (lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
+        if (LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
         {
             fprintf (stderr, _("cckdcdsk: lseek error: %s\n"),strerror(errno));
             close (fd);
@@ -116,7 +115,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     cckd_chkdsk_rc = cckd_chkdsk (fd, stderr, level);
 
     /* print some statistics */
-    if (lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
+    if (LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
     {
         fprintf (stderr, _("lseek error: %s\n"),strerror(errno));
         if (!cckd_chkdsk_rc) cckd_chkdsk_rc = 1;

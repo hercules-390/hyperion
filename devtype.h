@@ -5,7 +5,28 @@
 
 #define _DEVICES_H
 
-typedef struct _DEVHND {
+#ifndef _FBADASD_C_
+#ifndef _HDASD_DLL_
+#define FBA_DLL_IMPORT DLL_IMPORT
+#else   /* _HDASD_DLL_ */
+#define FBA_DLL_IMPORT extern
+#endif  /* _HDASD_DLL_ */
+#else
+#define FBA_DLL_IMPORT DLL_EXPORT
+#endif
+
+#ifndef _CKDDASD_C_
+#ifndef _HDASD_DLL_
+#define CKD_DLL_IMPORT DLL_IMPORT
+#else   /* _HDASD_DLL_ */
+#define CKD_DLL_IMPORT extern
+#endif  /* _HDASD_DLL_ */
+#else
+#define CKD_DLL_IMPORT DLL_EXPORT
+#endif
+
+
+struct DEVHND {
         DEVIF *init;                   /* Device Initialisation      */
         DEVXF *exec;                   /* Device CCW execute         */
         DEVCF *close;                  /* Device Close               */
@@ -19,12 +40,12 @@ typedef struct _DEVHND {
         DEVUF *used;                   /* Device Query used          */
         DEVRR *reserve;                /* Device Reserve             */
         DEVRR *release;                /* Device Release             */
-    DEVIM immed;                   /* Immediate CCW Codes        */
-    DEVSA *siga_r;                 /* Signal Adapter Input       */
-    DEVSA *siga_w;                 /* Signal Adapter Output      */
+        DEVIM immed;                   /* Immediate CCW Codes        */
+        DEVSA *siga_r;                 /* Signal Adapter Input       */
+        DEVSA *siga_w;                 /* Signal Adapter Output      */
         DEVSR *hsuspend;               /* Hercules suspend           */
         DEVSR *hresume;                /* Hercules resume            */
-} DEVHND;
+};
 
 
 #if !defined(OPTION_DYNAMIC_LOAD)
@@ -36,8 +57,8 @@ extern DEVHND cardpch_device_hndinfo;
 extern DEVHND printer_device_hndinfo;
 extern DEVHND tapedev_device_hndinfo;
 #endif /*!defined(OPTION_DYNAMIC_LOAD)*/
-extern DEVHND ckddasd_device_hndinfo;
-extern DEVHND fbadasd_device_hndinfo;
+CKD_DLL_IMPORT DEVHND ckddasd_device_hndinfo;
+FBA_DLL_IMPORT DEVHND fbadasd_device_hndinfo;
 extern DEVHND ctcadpt_device_hndinfo;
 extern DEVHND ctci_device_hndinfo;
 extern DEVHND ctct_device_hndinfo;

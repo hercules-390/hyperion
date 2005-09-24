@@ -1,0 +1,415 @@
+# ***************************************************************************
+# MAKEFILE.MSVC (c) Copyright Roger Bowler, 2005
+# Build Hercules for Win32 using MSVC and nmake (static link version)
+#
+# This file and the executable program(s) generated from it are
+# subject to the terms of the Hercules Public Licence Version 2
+#
+# dd/mm/yy Created by - R.Bowler
+# dd/mm/yy Place debug/retail builds into separate directories - Fish
+# 08/03/05 Added /QIfist to cflags - JJ
+# 08/03/05 Modified to do "batch build" for faster builds - Fish
+# 08/03/05 Fixed optimization flags - Fish
+# 08/03/05 Added support for DEBUG builds - Fish
+# 08/03/05 Use XCOPY instead of COPY - Fish
+# 10/03/05 Fixed creation of directories - R.Bowler
+# 11/03/05 Use ZLIB_DIR environment variable - Ivan Warren
+# 13/03/05 Place MAP files in separate directory - R.Bowler
+# 06/05/05 Add scsitape, w32stape, user32.lib and remove w32ftol2 - R.Bowler
+# 06/05/05 Can we agree on these o/p directory names?? - Fish
+# ***************************************************************************
+
+VERSION  = \"3.03msvc\"
+
+APPVER   = 4.0
+TARGETOS = BOTH
+
+# ---------------------------------------------------------------------
+# To enable ZLIB compression, first make sure you have the ZLIB dll
+# installed on your system (downloadable from http://www.zlib.net),
+# and then define an environment variable called "ZLIB_DIR" that
+# specifies the full path to the directory where it is installed.
+# (via the "Advanced" tab of the Control Panel 'System' applet).
+#
+# Note that the directory you specify should: a) hold the zlib1.dll
+# itself, b) contain two sub-directories called 'include' and 'lib'
+# where the 'zlib.h', zconf.h' and 'zdll.lib', etc, files reside.
+#
+# Note: if the path contains blanks, do NOT surround it with quotes!
+# The makefile will do that if it needs to. Just define the variable
+# with the path as-is. E.g.:
+#
+# ZLIB_DIR = E:\MyProjects\zlib and bzip2 dlls\zlib latest\zlib122-dll
+# ZLIB_DIR = C:\winbuild\zlib\win32_32
+# ---------------------------------------------------------------------
+
+# ISW 20050311
+# If winbuild\zlib\win32_32 exists (relative to current dir)
+#    then use it for ZLIB_DIR *UNLESS* ZLIB_DIR is already
+#    set.
+#
+# If ZLIB_DIR is improperly set, issue a message and exit *UNLESS*
+# it is set to the word "NONE"
+#
+# DBT 20050312
+# Minor changes to support paths with blanks in them.
+
+!IFNDEF ZLIB_DIR
+
+!IF EXIST(winbuild\zlib\win32_32\include\zlib.h)
+ZLIB_DIR = winbuild\zlib\win32_32
+!MESSAGE ZLIB_DIR not set. "$(ZLIB_DIR)" implied and checked
+!ENDIF
+
+!ELSE
+
+!IF "$(ZLIB_DIR)" == "NONE"
+!UNDEF ZLIB_DIR
+!ELSE
+!IF !EXIST("$(ZLIB_DIR)\include\zlib.h")
+!ERROR ZLIB_DIR "$(ZLIB_DIR)\include\zlib.h" does not exist. Check ZLIB_DIR
+!ENDIF
+!ENDIF
+
+!ENDIF
+
+# -------------------------------------------------
+# NOTE! must set the 'NODEBUG' variable properly
+#       BEFORE calling win32.mak since it uses it.
+# -------------------------------------------------
+
+!IFNDEF CFG
+NODEBUG = 1
+!ELSEIF  "$(CFG)" == "DEBUG"
+!UNDEF NODEBUG
+!ELSEIF  "$(CFG)" == "RETAIL"
+NODEBUG = 1
+!ELSE
+!ERROR Invalid build configuration!
+!ENDIF
+
+!include <win32.mak>
+
+# -------------------------------------------------
+# NOTE! must set our prefered 'cdebug' value(s)
+#       AFTER calling win32.mak since it sets it.
+# -------------------------------------------------
+
+!IFDEF NODEBUG
+cdebug  = -Oi -Op -Ot -Oy -DNDEBUG
+EXEDIR  = msvc.bin
+OBJDIR  = msvc.obj
+MAPDIR  = msvc.map
+MAPFILE = /map:$(MAPDIR)\$(@B).map /mapinfo:lines
+!ELSE
+cdebug  = -Zi -Od -DDEBUG
+EXEDIR  = msvc.debug.bin
+OBJDIR  = msvc.debug.obj
+MAPDIR  = msvc.debug.map
+MAPFILE = /map:$(MAPDIR)\$(@B).map
+!ENDIF
+
+# ***************************************************************************
+
+X = $(EXEDIR)\$(NULL)
+O = $(OBJDIR)\$(NULL)
+
+EXECUTABLES = \
+    $(X)hercules.exe \
+    $(X)dasdinit.exe \
+    $(X)dasdisup.exe \
+    $(X)dasdload.exe \
+    $(X)dasdconv.exe \
+    $(X)dasdcopy.exe \
+    $(X)dasdls.exe \
+    $(X)dasdcat.exe \
+    $(X)dasdpdsu.exe \
+    $(X)dasdseq.exe \
+    $(X)tapecopy.exe \
+    $(X)tapemap.exe \
+    $(X)tapesplt.exe \
+    $(X)cckdcdsk.exe \
+    $(X)cckdcomp.exe \
+    $(X)cckddiag.exe \
+    $(X)cckdswap.exe \
+    $(X)hetget.exe \
+    $(X)hetinit.exe \
+    $(X)hetmap.exe \
+    $(X)hetupd.exe \
+    $(X)dmap2hrc.exe
+
+all: $(OBJDIR) $(EXEDIR) $(MAPDIR) $(EXECUTABLES)
+
+clean:
+    del /f /q $(EXEDIR)\*.*
+    del /f /q $(OBJDIR)\*.*
+    del /f /q $(MAPDIR)\*.*
+
+$(OBJDIR):
+    if not exist "$(OBJDIR)\$(NULL)" mkdir $(OBJDIR)
+
+$(EXEDIR):
+    if not exist "$(EXEDIR)\$(NULL)" mkdir $(EXEDIR)
+
+$(MAPDIR):
+    if not exist "$(MAPDIR)\$(NULL)" mkdir $(MAPDIR)
+
+cflags = $(cflags) /QIfist /DVERSION=$(VERSION) /D_MSVC_
+
+# The following line suppresses the warning:
+# C4244: conversion from 'type' to 'type', possible loss of data
+cflags = $(cflags) /wd4244
+
+# The following line makes all warnings into errors
+cflags = $(cflags) /WX
+
+# user32.lib for the MessageBeep and MessageBox functions
+LIBS = user32.lib
+
+!IFDEF ZLIB_DIR
+ZLIB_DLL = $(ZLIB_DIR)\zlib1.dll
+ZLIB_LIB = $(ZLIB_DIR)/lib/zdll.lib
+ZLIB_INC = $(ZLIB_DIR)/include
+LIBS     = $(LIBS) "$(ZLIB_LIB)"
+cflags   = $(cflags) /DHAVE_LIBZ /DHAVE_ZLIB_H /I"$(ZLIB_INC)"
+!ENDIF
+
+linkexe = $(link) -nologo $(ldebug) $(conlflags) $** $(LIBS) -out:$@ $(MAPFILE) $(conlibsmt)
+
+.c{$(OBJDIR)}.obj::
+    $(cc) $(cdebug) $(cflags) $(cvarsmt) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
+
+{$(OBJDIR)}.obj{$(EXEDIR)}.exe:
+    $(linkexe)
+
+dasdutil_OBJ = \
+    $(O)dasdutil.obj \
+    $(O)codepage.obj \
+    $(O)hostinfo.obj \
+    $(O)version.obj \
+    $(O)logmsg2.obj \
+    $(O)dasdtab.obj \
+    $(O)fbadasd.obj \
+    $(O)ckddasd.obj \
+    $(O)cckddasd.obj \
+    $(O)cckdutil.obj \
+    $(O)cache.obj \
+    $(O)shared.obj \
+    $(O)pttrace.obj \
+    $(O)fthreads.obj \
+    $(O)hsys.obj \
+    $(O)hscutl.obj \
+    $(O)w32util.obj
+
+$(X)dasdinit.exe: $(O)$(@B).obj $(dasdutil_OBJ)
+
+$(X)dasdisup.exe: $(O)$(@B).obj $(dasdutil_OBJ)
+
+$(X)dasdload.exe: $(O)$(@B).obj $(dasdutil_OBJ)
+
+$(X)dasdconv.exe: $(O)$(@B).obj $(dasdutil_OBJ)
+
+$(X)dasdcopy.exe: $(O)$(@B).obj $(dasdutil_OBJ)
+
+$(X)dasdls.exe:   $(O)$(@B).obj $(dasdutil_OBJ)
+
+$(X)dasdcat.exe:  $(O)$(@B).obj $(dasdutil_OBJ)
+
+$(X)dasdpdsu.exe: $(O)$(@B).obj $(dasdutil_OBJ)
+
+$(X)dasdseq.exe:  $(O)$(@B).obj $(dasdutil_OBJ)
+
+tapeutil_OBJ = \
+    $(O)codepage.obj \
+    $(O)hostinfo.obj \
+    $(O)version.obj \
+    $(O)logmsg2.obj \
+    $(O)pttrace.obj \
+    $(O)fthreads.obj \
+    $(O)hsys.obj \
+    $(O)hscutl.obj \
+    $(O)w32stape.obj \
+    $(O)w32util.obj
+
+$(X)tapecopy.exe: $(O)$(@B).obj $(tapeutil_OBJ)
+
+$(X)tapemap.exe:  $(O)$(@B).obj $(tapeutil_OBJ)
+
+$(X)tapesplt.exe: $(O)$(@B).obj $(tapeutil_OBJ)
+
+cckdutil_OBJ = \
+    $(O)cckdutil.obj \
+    $(O)dasdtab.obj \
+    $(O)hostinfo.obj \
+    $(O)version.obj \
+    $(O)logmsg2.obj \
+    $(O)pttrace.obj \
+    $(O)fthreads.obj \
+    $(O)hsys.obj \
+    $(O)hscutl.obj \
+    $(O)w32util.obj
+
+$(X)cckdcdsk.exe: $(O)$(@B).obj $(cckdutil_OBJ)
+
+$(X)cckdcomp.exe: $(O)$(@B).obj $(cckdutil_OBJ)
+
+$(X)cckddiag.exe: $(O)$(@B).obj $(dasdutil_OBJ)
+
+$(X)cckdswap.exe: $(O)$(@B).obj $(cckdutil_OBJ)
+
+hetlib_OBJ = \
+    $(O)hetlib.obj \
+    $(O)sllib.obj \
+    $(O)getopt.obj \
+    $(O)hostinfo.obj \
+    $(O)version.obj \
+    $(O)logmsg2.obj \
+    $(O)codepage.obj \
+    $(O)pttrace.obj \
+    $(O)fthreads.obj \
+    $(O)hsys.obj \
+    $(O)hscutl.obj \
+    $(O)w32util.obj
+
+$(X)hetget.exe:   $(O)$(@B).obj $(hetlib_OBJ)
+
+$(X)hetinit.exe:  $(O)$(@B).obj $(hetlib_OBJ)
+
+$(X)hetmap.exe:   $(O)$(@B).obj $(hetlib_OBJ)
+
+$(X)hetupd.exe:   $(O)$(@B).obj $(hetlib_OBJ)
+
+hostinfo_OBJ = \
+    $(O)hostinfo.obj \
+    $(O)version.obj \
+    $(O)logmsg2.obj \
+    $(O)pttrace.obj \
+    $(O)fthreads.obj \
+    $(O)hsys.obj \
+    $(O)hscutl.obj \
+    $(O)w32util.obj
+
+$(X)dmap2hrc.exe: $(O)$(@B).obj $(hostinfo_OBJ)
+
+hercules_OBJ = \
+    $(O)version.obj \
+    $(O)hostinfo.obj \
+    $(O)config.obj \
+    $(O)bldcfg.obj \
+    $(O)sr.obj \
+    $(O)impl.obj \
+    $(O)panel.obj \
+    $(O)history.obj \
+    $(O)machchk.obj \
+    $(O)timer.obj \
+    $(O)cpu.obj \
+    $(O)ipl.obj \
+    $(O)loadparm.obj \
+    $(O)opcode.obj \
+    $(O)general1.obj \
+    $(O)general2.obj \
+    $(O)control.obj \
+    $(O)esame.obj \
+    $(O)decimal.obj \
+    $(O)trace.obj \
+    $(O)external.obj \
+    $(O)crypto.obj \
+    $(O)vector.obj \
+    $(O)xstore.obj \
+    $(O)sie.obj \
+    $(O)cmpsc.obj \
+    $(O)qdio.obj \
+    $(O)assist.obj \
+    $(O)vm.obj \
+    $(O)diagnose.obj \
+    $(O)diagmssf.obj \
+    $(O)service.obj \
+    $(O)float.obj \
+    $(O)ieee.obj \
+    $(O)ecpsvm.obj \
+    $(O)chsc.obj \
+    $(O)dat.obj \
+    $(O)stack.obj \
+    $(O)vstore.obj \
+    $(O)plo.obj \
+    $(O)channel.obj \
+    $(O)io.obj \
+    $(O)parser.obj \
+    $(O)httpserv.obj \
+    $(O)cgibin.obj \
+    $(O)codepage.obj \
+    $(O)fillfnam.obj \
+    $(O)hsccmd.obj \
+    $(O)hscmisc.obj \
+    $(O)logmsg.obj \
+    $(O)logger.obj \
+    $(O)hdl.obj \
+    $(O)hdlmain.obj \
+    $(O)bootstrap.obj \
+    $(O)pttrace.obj \
+    $(O)fthreads.obj \
+    $(O)strsignal.obj \
+    $(O)hconsole.obj \
+    $(O)getopt.obj \
+    $(O)memrchr.obj \
+    $(O)hsys.obj \
+    $(O)hscutl.obj \
+    $(O)hscutl2.obj \
+    $(O)w32util.obj  
+
+devhandl_OBJ = \
+    $(O)cardrdr.obj \
+    $(O)cardpch.obj \
+    $(O)console.obj \
+    $(O)printer.obj \
+    $(O)tapedev.obj \
+    $(O)hetlib.obj \
+    $(O)scsitape.obj \
+    $(O)w32stape.obj \
+    $(O)sockdev.obj \
+    $(O)cache.obj \
+    $(O)shared.obj \
+    $(O)ckddasd.obj \
+    $(O)fbadasd.obj \
+    $(O)cckddasd.obj \
+    $(O)cckdutil.obj \
+    $(O)dasdtab.obj \
+    $(O)commadpt.obj \
+    $(O)ctcadpt.obj \
+    $(O)ctc_ctci.obj \
+    $(O)ctc_lcs.obj \
+    $(O)tuntap.obj \
+    $(O)w32chan.obj \
+    $(O)w32ctca.obj
+
+$(O)build_pch.pch: build_pch.c
+    $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yc"hstdinc.h" /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" build_pch.c
+
+.c{$(OBJDIR)}.obj::
+    $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
+
+#
+# No precompiled headers for these ones.. Sorry!
+#
+$(O)getopt.obj: getopt.c
+    $(cc) $(cdebug) $(cflags) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" getopt.c
+
+$(O)hdlmain.obj: hdlmain.c
+    $(cc) $(cdebug) $(cflags) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" hdlmain.c
+
+$(hercules_OBJ): $(O)build_pch.pch
+
+!IFDEF ZLIB_DIR
+
+$(X)hercules.exe: $(hercules_OBJ) $(devhandl_OBJ) 
+    $(linkexe)
+
+$(X)zlib1.dll:
+    XCOPY "$(ZLIB_DLL)" $(X) /V /C /F /H /R /K /O /X /Y
+
+!ELSE
+
+$(X)hercules.exe: $(hercules_OBJ) $(devhandl_OBJ)
+    $(linkexe)
+
+!ENDIF

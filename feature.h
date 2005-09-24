@@ -1,27 +1,24 @@
-/* FEATURES.H   (c) Copyright Jan Jaeger, 2000-2005          */
-/*      Architecture-dependent macro definitions         */
+/* FEATURES.H   (c) Copyright Jan Jaeger, 2000-2005                  */
+/*      Architecture-dependent macro definitions                     */
+/*-------------------------------------------------------------------*/
+/* S/370, ESA/390 and ESAME features implemented                     */
+/*-------------------------------------------------------------------*/
+
+//        This header file #included by 'hercules.h'
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+  #include <config.h> // Hercules build configuration options/settings
 #endif
 
-#include <ctype.h>
-#if defined(WIN32) && !defined(__WORDSIZE)
-#define __WORDSIZE 32
-#endif
-
-/*-------------------------------------------------------------------*/
-/* S/370, ESA/390 and ESAME features implemented             */
-/*-------------------------------------------------------------------*/
 #if !defined(FEATCHK_CHECK_DONE)
-#include  "featall.h"
-#include  "feat370.h"
-#include  "feat390.h"
-#include  "feat900.h"
-#define   FEATCHK_CHECK_ALL
-#include  "featchk.h"
-#undef    FEATCHK_CHECK_ALL
-#define   FEATCHK_CHECK_DONE
+  #include  "featall.h"
+  #include  "feat370.h"
+  #include  "feat390.h"
+  #include  "feat900.h"
+  #define   FEATCHK_CHECK_ALL
+  #include  "featchk.h"
+  #undef    FEATCHK_CHECK_ALL
+  #define   FEATCHK_CHECK_DONE
 #endif /*!defined(FEATCHK_CHECK_DONE)*/
 
 #undef __GEN_ARCH
@@ -32,6 +29,7 @@
 #endif
 
 #include  "featall.h"
+
 #if   __GEN_ARCH == 370
  #include "feat370.h"
 #elif     __GEN_ARCH == 390
@@ -42,9 +40,7 @@
  #error Unable to determine Architecture Mode
 #endif
 
-
 #include  "featchk.h"
-
 
 #undef ARCH_MODE
 #undef APPLY_PREFIXING
@@ -113,12 +109,6 @@
 #undef ASD_PRIVATE
 #undef BROADCAST_PFRA
 
-#if !defined(NO_ATTR_REGPARM)
-#define ATTR_REGPARM(n) __attribute__ ((regparm(n)))
-#else
-#define ATTR_REGPARM(n) /* nothing */
-#endif
-
 #if __GEN_ARCH == 370
 
 #define ARCH_MODE   ARCH_370
@@ -184,22 +174,21 @@ s370_ ## _name
 #define PX_MASK 0x7FFFF000
 #define RSTOLD  iplccw1
 #define RSTNEW  iplpsw
-//#if !defined(_FEATURE_ZSIE) || __WORDSIZE == 32
 #if !defined(_FEATURE_ZSIE)
 #define RADR    U32
-#define F_RADR  "%8.8X"
+#define F_RADR  "%8.8"I32_FMT"X"
 #else
 #define RADR    U64
-#define F_RADR  "%8.8llX"
+#define F_RADR  "%8.8"I64_FMT"X"
 #endif
 #define VADR    U32
-#define F_VADR  "%8.8X"
+#define F_VADR  "%8.8"I32_FMT"X"
 #define GREG    U32
-#define F_GREG  "%8.8X"
+#define F_GREG  "%8.8"I32_FMT"X"
 #define CREG    U32
-#define F_CREG  "%8.8X"
+#define F_CREG  "%8.8"I32_FMT"X"
 #define AREG    U32
-#define F_AREG  "%8.8X"
+#define F_AREG  "%8.8"I32_FMT"X"
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
 #define AIV     AIV_L
@@ -292,22 +281,21 @@ s390_ ## _name
 #define PX_MASK 0x7FFFF000
 #define RSTNEW  iplpsw
 #define RSTOLD  iplccw1
-//#if !defined(_FEATURE_ZSIE) ||  __WORDSIZE == 32
 #if !defined(_FEATURE_ZSIE)
 #define RADR    U32
-#define F_RADR  "%8.8X"
+#define F_RADR  "%8.8"I32_FMT"X"
 #else
 #define RADR    U64
-#define F_RADR  "%8.8llX"
+#define F_RADR  "%8.8"I64_FMT"X"
 #endif
 #define VADR    U32
-#define F_VADR  "%8.8X"
+#define F_VADR  "%8.8"I32_FMT"X"
 #define GREG    U32
-#define F_GREG  "%8.8X"
+#define F_GREG  "%8.8"I32_FMT"X"
 #define CREG    U32
-#define F_CREG  "%8.8X"
+#define F_CREG  "%8.8"I32_FMT"X"
 #define AREG    U32
-#define F_AREG  "%8.8X"
+#define F_AREG  "%8.8"I32_FMT"X"
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
 #define AIV     AIV_L
@@ -415,21 +403,20 @@ z900_ ## _name
 #define PX_MASK 0x7FFFE000
 #define RSTOLD  rstold
 #define RSTNEW  rstnew
-//#if  __WORDSIZE == 32
 #if 0
 #define RADR    U32
 #else
 #define RADR    U64
 #endif
-#define F_RADR  "%16.16llX"
+#define F_RADR  "%16.16"I64_FMT"X"
 #define VADR    U64
-#define F_VADR  "%16.16llX"
+#define F_VADR  "%16.16"I64_FMT"X"
 #define GREG    U64
-#define F_GREG  "%16.16llX"
+#define F_GREG  "%16.16"I64_FMT"X"
 #define CREG    U64
-#define F_CREG  "%16.16llX"
+#define F_CREG  "%16.16"I64_FMT"X"
 #define AREG    U32
-#define F_AREG  "%8.8X"
+#define F_AREG  "%8.8"I32_FMT"X"
 #define STORE_W STORE_DW
 #define FETCH_W FETCH_DW
 #define AIV     AIV_G
@@ -563,7 +550,6 @@ z900_ ## _name
 /*-------------------------------------------------------------------*/
 /* Macros use by Update Tree (CFC (0102)) instruction                */
 /*-------------------------------------------------------------------*/
-
 #undef   UPT_ALIGN_MASK
 #undef   UPT_SHIFT_MASK
 #undef   UPT_HIGH_BIT
@@ -596,27 +582,25 @@ z900_ ## _name
 #undef SET_AEA_AR
 #undef MADDR
 
-
 #if defined(FEATURE_DUAL_ADDRESS_SPACE) && defined(FEATURE_LINKAGE_STACK)
-  #define SET_AEA_COMMON(_regs) \
-  do { \
-    (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
-    (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
+#define SET_AEA_COMMON(_regs) \
+do { \
+  (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
+  (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
     (_regs)->aea_common[13] = ((_regs)->CR(13) & ASD_PRIVATE) == 0; \
-  } while (0)
+} while (0)
 #elif defined(FEATURE_DUAL_ADDRESS_SPACE)
   #define SET_AEA_COMMON(_regs) \
-  do { \
+do { \
     (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
     (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
-  } while (0)
+} while (0)
 #else
   #define SET_AEA_COMMON(_regs) \
-  do { \
+do { \
     (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
-  } while (0)
+} while (0)
 #endif
-
 
 #if defined(FEATURE_DUAL_ADDRESS_SPACE) || defined(FEATURE_LINKAGE_STACK)
   #define SPACE_BIT(p) \
@@ -634,7 +618,7 @@ z900_ ## _name
   #define AEA_MODE(_regs) \
     ( ( REAL_MODE(&(_regs)->psw) ? 0 : (((_regs)->psw.asc >> 6) + 1) ) \
     | ( PER_MODE((_regs)) ? 0x40 : 0 ) \
-    )
+ )
 #else
   #define SPACE_BIT(p) (0)
   #define AR_BIT(p) (0)
@@ -647,10 +631,10 @@ z900_ ## _name
 #endif
 
 #if defined(FEATURE_ACCESS_REGISTERS)
-  /*
+ /*
    * Update the aea_ar vector whenever an access register
    * is changed and in armode
-   */
+  */
   #define SET_AEA_AR(_regs, _arn) \
   do \
   { \

@@ -17,6 +17,8 @@
 /* external interrupt as defined in the architecture. - 6/8/01 *JJ   */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"
@@ -261,14 +263,6 @@ RADR    fsta = 0;
  #include "machchk.c"
 #endif
 
-
-#if !defined(HAVE_STRSIGNAL)
-    char * strsignal( int sig ) {
-        return sys_siglist[sig];
-    }
-#endif
-
-
 #if !defined(NO_SIGABEND_HANDLER)
 void sigabend_handler (int signo)
 {
@@ -362,18 +356,18 @@ int i;
         logmsg(_("HHCCP018I CPU%4.4X: Check-Stop due to host error: %s\n"),
           regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
           strsignal(signo));
-#else /*!defined(_FEAURE_SIE)*/
+#else /*!defined(_FEATURE_SIE)*/
         logmsg(_("HHCCP018I CPU%4.4X: Check-Stop due to host error: %s\n"),
           regs->cpuad, strsignal(signo));
-#endif /*!defined(_FEAURE_SIE)*/
+#endif /*!defined(_FEATURE_SIE)*/
         display_inst(
 #if defined(_FEATURE_SIE)
                      regs->sie_active ? regs->guestregs :
-#endif /*defined(_FEAURE_SIE)*/
+#endif /*defined(_FEATURE_SIE)*/
                                                           regs,
 #if defined(_FEATURE_SIE)
           regs->sie_active ? regs->guestregs->ip :
-#endif /*defined(_FEAURE_SIE)*/
+#endif /*defined(_FEATURE_SIE)*/
                                                    regs->ip);
         regs->cpustate = CPUSTATE_STOPPING;
         regs->checkstop = 1;

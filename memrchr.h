@@ -11,15 +11,28 @@
 #ifndef MEMRCHR_H
 #define MEMRCHR_H
 
-#include <string.h>
+#include "hercules.h"
+#ifndef _MEMRCHR_C_
+#ifndef _HUTIL_DLL_
+#define MEM_DLL_IMPORT DLL_IMPORT
+#else   /* _HUTIL_DLL_ */
+#define MEM_DLL_IMPORT extern
+#endif  /* _HUTIL_DLL_ */
+#else
+#define MEM_DLL_IMPORT DLL_EXPORT
+#endif
+
+#if !defined(HAVE_MEMRCHR)  // (only if we need it)
 
 #ifdef __cplusplus
 extern "C" {
 #endif /*__cplusplus*/
-void *memrchr(const void *buf, int c, size_t num);
+MEM_DLL_IMPORT void *memrchr(const void *buf, int c, size_t num);
 
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
 
-#endif /*MEMRCHR_H*/
+#endif // !defined(HAVE_MEMRCHR)
+
+#endif // MEMRCHR_H

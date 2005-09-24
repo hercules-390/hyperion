@@ -40,83 +40,29 @@
 // #define SIE_DEBUG_PERFMON            /* SIE performance monitor   */
 #define OPTION_LPARNAME                 /* DIAG 204 lparname         */
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
-#define OPTION_PTTRACE                  /* Pthreads tracing          */
 #define OPTION_WAKEUP_SELECT_VIA_PIPE   /* Use communication pipes to
                                            interrupt selects instead
                                            of inter-thread signaling */
-
-// ZZ FIXME: We should really move the setting of OPTION_SCSI_TAPE
-//           to configure.ac rather than have it hard-coded here,
-
-#define OPTION_SCSI_TAPE                /* SCSI tape support         */
-#if defined(__APPLE__)                  /* (Apple-only options)      */
-#undef OPTION_SCSI_TAPE                 /* No SCSI tape support      */
+#define OPTION_TIMESTAMP_LOGFILE        /* Hardcopy logfile HH:MM:SS */
+#ifndef FISH_HANG
+#define OPTION_PTTRACE                  /* Pthreads tracing          */
 #endif
 
-#if defined(OPTION_SCSI_TAPE)           /* SCSI Tape options         */
+/*********************************************************************\
+ *********************************************************************
+ **                                                                 **
+ **                    ***   NOTE!   ***                            **
+ **                                                                 **
+ **    All HOST-operating-system-specific FEATUREs and OPTIONs      **
+ **    should be #defined in the below header (and ONLY in the      **
+ **    below header!) Please read the comments there!               **
+ **                                                                 **
+ *********************************************************************
+\*********************************************************************/
 
-    // ZZ FIXME:
+#include "hostopts.h"     // (HOST-specific options/feature settings)
 
-    // NOTE: The following SHOULD in reality be some sort of test
-    // within configure.ac, but until we can devise some sort of
-    // simple configure test, we must hard-code them for now.
-
-    /* According to the only docs I could find:
-
-        MTERASE   Erase the media from current position. If the
-                  field mt_count is nonzero, a full erase is done
-                  (from current position to end of media). If
-                  mt_count is zero, only an erase gap is written.
-                  It is hard to say which drives support only one
-                  but not the other option
-    */
-
-    // HOWEVER, since it's hard to say which drivers support short
-    // erase-gaps and which support erase-tape (and HOW they support
-    // them if they do! For example, Cygwin is currently coded to
-    // perform whichever type of erase the drive happens to support;
-    // e.g. if you try to do an erase-gap but the drive doesn't support
-    // short erases, it will end up doing a LONG erase [of the entire
-    // tape]!! (and vice-versa: doing a long erase-tape on a drive
-    // that doesn't support it will cause [Cygwin] to do an erase-
-    // gap instead)).
-
-    // THUS, the SAFEST thing to do is to simply treat all "erases",
-    // whether short or long, as 'nop's for now (in order to prevent
-    // the accidental erasure of an entire tape!) Once we happen to
-    // know for DAMN SURE that a particular host o/s ALWAYS does what
-    // we want it to should we then change the below #defines. (and
-    // like I said, they really SHOULD be in some type of configure
-    // test/setting and not here).
-
-  #if defined(WIN32)
-    #undef  OPTION_SCSI_ERASE_TAPE      // (NOT supported)
-    #undef  OPTION_SCSI_ERASE_GAP       // (NOT supported)
-  #else
-    #undef  OPTION_SCSI_ERASE_TAPE      // (NOT supported)
-    #undef  OPTION_SCSI_ERASE_GAP       // (NOT supported)
-  #endif
-
-#endif // defined(OPTION_SCSI_TAPE)
-
-/* (dynamic load option & max cpu engines handled in configure.ac)   */
-// #define OPTION_DYNAMIC_LOAD          /* Hercules Dynamic Loader   */
-// #define MAX_CPU_ENGINES            2 /* Maximum number of CPUs    */
-
-#ifdef WIN32                            /* (Windows-only options)    */
-  /* (Note: OPTION_FISHIO only possible with OPTION_FTHREADS)        */
-  #if defined(OPTION_FTHREADS)
-    #define OPTION_FISHIO               /* Use Fish's I/O scheduler  */
-  #else
-    #undef  OPTION_FISHIO               /* Use Herc's I/O scheduler  */
-  #endif
-  #define OPTION_W32_CTCI               /* Fish's TunTap for CTCA's  */
-  #define OPTION_SELECT_KLUDGE       10 /* fd's to reserve for select*/
-  #undef  OPTION_FISH_STUPID_GUI_PRTSPLR_EXPERIMENT  /* (Don't ask!) */
-
-#endif
-
-/* Allow for compiler command line overrides...                      */
+// (allow for compiler command-line overrides...)
 #if defined(OPTION_370_MODE) && defined(NO_370_MODE)
   #undef    OPTION_370_MODE
 #endif
@@ -138,6 +84,7 @@
 #undef FEATURE_BIMODAL_ADDRESSING
 #undef FEATURE_BINARY_FLOATING_POINT
 #undef FEATURE_BRANCH_AND_SET_AUTHORITY
+#undef FEATURE_BRANCH_DETECTION                                 /*@Z9*/
 #undef FEATURE_BROADCASTED_PURGING
 #undef FEATURE_CALLED_SPACE_IDENTIFICATION
 #undef FEATURE_CANCEL_IO_FACILITY
@@ -146,14 +93,18 @@
 #undef FEATURE_CHECKSUM_INSTRUCTION
 #undef FEATURE_COMPARE_AND_MOVE_EXTENDED
 #undef FEATURE_COMPRESSION
+#undef FEATURE_CPACF_ENHANCEMENTS                               /*@Z9*/
 #undef FEATURE_CPU_RECONFIG
 #undef FEATURE_DAT_ENHANCEMENT
 #undef FEATURE_DUAL_ADDRESS_SPACE
 #undef FEATURE_EMULATE_VM
 #undef FEATURE_ESAME
 #undef FEATURE_ESAME_N3_ESA390
+#undef FEATURE_ETF2_ENHANCEMENT                                 /*@Z9*/
+#undef FEATURE_ETF3_ENHANCEMENT                                 /*@Z9*/
 #undef FEATURE_EXPANDED_STORAGE
 #undef FEATURE_EXPEDITED_SIE_SUBSET
+#undef FEATURE_EXTENDED_IMMEDIATE                               /*@Z9*/
 #undef FEATURE_EXTENDED_STORAGE_KEYS
 #undef FEATURE_EXTENDED_TOD_CLOCK
 #undef FEATURE_EXTENDED_TRANSLATION
@@ -166,6 +117,7 @@
 #undef FEATURE_HEXADECIMAL_FLOATING_POINT
 #undef FEATURE_HFP_EXTENSIONS
 #undef FEATURE_HFP_MULTIPLY_ADD_SUBTRACT
+#undef FEATURE_HFP_UNNORMALIZED_EXTENSION                       /*@Z9*/
 #undef FEATURE_HYPERVISOR
 #undef FEATURE_IMMEDIATE_AND_RELATIVE
 #undef FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
@@ -173,10 +125,13 @@
 #undef FEATURE_INTERVAL_TIMER
 #undef FEATURE_IO_ASSIST
 #undef FEATURE_LINKAGE_STACK
+#undef FEATURE_LOAD_ADDITIONAL                                  /*@Z9*/
+#undef FEATURE_LOAD_PAGE_TABLE_ENTRY_ADDRESS                    /*@Z9*/
 #undef FEATURE_LOAD_REVERSED
 #undef FEATURE_LOCK_PAGE
 #undef FEATURE_LONG_DISPLACEMENT
 #undef FEATURE_MESSAGE_SECURITY_ASSIST
+#undef FEATURE_MIDAW                                            /*@Z9*/
 #undef FEATURE_MOVE_PAGE_FACILITY_2
 #undef FEATURE_MSSF_CALL
 #undef FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
@@ -186,6 +141,7 @@
 #undef FEATURE_PER
 #undef FEATURE_PER2
 #undef FEATURE_PRIVATE_SPACE
+#undef FEATURE_PROGRAM_DIRECTED_REIPL                           /*@Z9*/
 #undef FEATURE_PROTECTION_INTERCEPTION_CONTROL
 #undef FEATURE_QUEUED_DIRECT_IO
 #undef FEATURE_REGION_RELOCATE
@@ -200,6 +156,8 @@
 #undef FEATURE_SQUARE_ROOT
 #undef FEATURE_STORAGE_KEY_ASSIST
 #undef FEATURE_STORAGE_PROTECTION_OVERRIDE
+#undef FEATURE_STORE_CLOCK_FAST                                 /*@Z9*/
+#undef FEATURE_STORE_FACILITY_LIST_EXTENDED                     /*@Z9*/
 #undef FEATURE_STORE_SYSTEM_INFORMATION
 #undef FEATURE_SUBSPACE_GROUP
 #undef FEATURE_SUPPRESSION_ON_PROTECTION

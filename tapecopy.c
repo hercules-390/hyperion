@@ -1,8 +1,8 @@
 /* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2005                */
 /*              Convert SCSI tape into AWSTAPE format                */
 
-/*              Read from AWSTAPE and write to SCSI tape mods        */	
-/*              Copyright 2005 James R. Maynard III                  */	
+/*              Read from AWSTAPE and write to SCSI tape mods        */
+/*              Copyright 2005 James R. Maynard III                  */
 
 /*-------------------------------------------------------------------*/
 /* This program reads a SCSI tape and produces a disk file with      */
@@ -11,18 +11,21 @@
 /* prints a summary of the tape files and blocksizes.                */
 /*-------------------------------------------------------------------*/
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>   /* (need 1st to set build flags appropriately) */
-#endif
+#include "hstdinc.h"
+
 #include "hercules.h"
-#include "featall.h"  /* (need 2nd to set OPTION_SCSI_TAPE correctly)*/
+#include "tapedev.h"
+#include "scsitape.h"
 
 /*-------------------------------------------------------------------*/
 /* (if no SCSI tape support generated, do nothing)                   */
 /*-------------------------------------------------------------------*/
 #if !defined(OPTION_SCSI_TAPE)
-int main ()
+// SYSBLK sysblk;
+int main (int argc, char *argv[])
 {
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
     printf( _("HHCTC017E SCSI tape not supported with this build\n") );
     return 0;
 }
@@ -32,9 +35,6 @@ int main ()
 /* External GUI flag...                                              */
 /*-------------------------------------------------------------------*/
 #if defined(EXTERNALGUI)
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
 time_t curr_progress_time = 0;
 time_t prev_progress_time = 0;
 #define PROGRESS_INTERVAL_SECS  (   3   )     /* (just what it says) */
@@ -62,24 +62,6 @@ struct mtget mtget;                     /* Area for MTIOCGET ioctl   */
 #define  RC_ERROR_WRITING_TAPEMARK                 (11)
 #define  RC_ERROR_WRITING_OUTPUT_AWS_HEADER_BLOCK  (12)
 #define  RC_ERROR_WRITING_DATA                     (13)
-
-/*-------------------------------------------------------------------*/
-/* Structure definition for AWSTAPE block header                     */
-/*-------------------------------------------------------------------*/
-typedef struct _AWSTAPE_BLKHDR
-{
-        HWORD   curblkl;                /* Length of this block      */
-        HWORD   prvblkl;                /* Length of previous block  */
-        BYTE    flags1;                 /* Flags byte 1              */
-        BYTE    flags2;                 /* Flags byte 2              */
-}
-AWSTAPE_BLKHDR;
-
-/* Definitions for AWSTAPE_BLKHDR flags byte 1 */
-
-#define AWSTAPE_FLAG1_NEWREC    0x80    /* Start of new record       */
-#define AWSTAPE_FLAG1_TAPEMARK  0x40    /* Tape mark                 */
-#define AWSTAPE_FLAG1_ENDREC    0x20    /* End of record             */
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
@@ -141,6 +123,9 @@ char           *filenameout;            /* -> Output AWS file name   */
 /*-------------------------------------------------------------------*/
 void delayed_exit (int exit_code)
 {
+    if (RC_SUCCESS != exit_code)
+        printf( _( "HHCTC000I Abnormal termination\n" ) );
+
     /* Delay exiting is to give the system
      * time to display the error message. */
     usleep(100000);
@@ -251,7 +236,7 @@ static void print_usage (void)
 } /* end function print_usage */
 
 /*-------------------------------------------------------------------*/
-/* Subroutine to obtain and print tape status...                     */
+/* Subroutine to obtain SCSI tape status...                          */
 /*                                                                   */
 /* Return value:     0  ==  normal                                   */
 /*                  +1  ==  end-of-tape                              */
@@ -261,7 +246,7 @@ static int obtain_status (char *devname, int devfd)
 {
 int rc;                                 /* Return code               */
 
-    rc = ioctl (devfd, MTIOCGET, (char*)&mtget);
+    rc = ioctl_tape (devfd, MTIOCGET, (char*)&mtget);
     if (rc < 0)
     {
         if (1
@@ -288,12 +273,12 @@ int rc;                                 /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Read a block from SCSI tape                                       */
 /*-------------------------------------------------------------------*/
-int read_tape (int devfd, void *buf, size_t bufsize)
+int read_scsi_tape (int devfd, void *buf, size_t bufsize)
 {
     int rc;
     int save_errno;
 
-    len = read (devfd, buf, bufsize);
+    len = read_tape (devfd, buf, bufsize);
     if (len < 0)
     {
         /* Determine whether end-of-tape has been read */
@@ -301,7 +286,12 @@ int read_tape (int devfd, void *buf, size_t bufsize)
         if (devnamein)
         {
             rc = obtain_status (devnamein, devfd);
-            if (rc == +1)
+            if (0
+#ifdef _MSVC_
+                || save_errno == ERROR_NO_DATA_DETECTED
+#endif
+                || rc == +1
+            )
             {
                 printf (_("HHCTC011I End of tape.\n"));
                 return(-1);
@@ -313,21 +303,21 @@ int read_tape (int devfd, void *buf, size_t bufsize)
                 devnamein, errno, strerror(errno));
         EXIT( RC_ERROR_READING_DATA );
     }
-    
+
     return(len);
-} /* end function read_tape */
+} /* end function read_scsi_tape */
 
 /*-------------------------------------------------------------------*/
 /* Read a block from AWSTAPE disk file                               */
 /*-------------------------------------------------------------------*/
-int read_aws (int diskfd, void *buf, size_t bufsize)
+int read_aws_disk (int diskfd, void *buf, size_t bufsize)
 {
     AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
     int             rc;
     unsigned int    count_read = 0;
     unsigned int    blksize;
     int             end_block;
-    void           *bufptr = buf; 
+    BYTE           *bufptr = buf;
 
     while (1)
     {
@@ -369,25 +359,25 @@ int read_aws (int diskfd, void *buf, size_t bufsize)
                    filenamein, rc, errno, strerror(errno));
             EXIT( RC_ERROR_READING_DATA );
         } /* end if(rc) */
-    
+
         bufptr += blksize;
         count_read += blksize;
         if (end_block)
             break;
     }
-    
+
     return(count_read);
 
-} /* end function read_aws */
+} /* end function read_aws_disk */
 
 /*-------------------------------------------------------------------*/
 /* Write a block to SCSI tape                                        */
 /*-------------------------------------------------------------------*/
-int write_tape (int devfd, void *buf, size_t len)
+int write_scsi_tape (int devfd, void *buf, size_t len)
 {
     int                 rc;
-    
-    rc = write (devfd, buf, len);
+
+    rc = write_tape (devfd, buf, len);
     if (rc < (int)len)
     {
         printf (_("HHCTC022E Error writing data block to %s: rc=%d, errno=%d: %s\n"),
@@ -399,12 +389,12 @@ int write_tape (int devfd, void *buf, size_t len)
 
     return(rc);
 
-} /* end function write_tape */
+} /* end function write_scsi_tape */
 
 /*-------------------------------------------------------------------*/
 /* Write a block to AWSTAPE disk file                                */
 /*-------------------------------------------------------------------*/
-int write_aws (int diskfd, void *buf, size_t len)
+int write_aws_disk (int diskfd, void *buf, size_t len)
 {
     AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
     int             rc;
@@ -441,21 +431,21 @@ int write_aws (int diskfd, void *buf, size_t len)
     } /* end if(rc) */
 
     bytes_written += rc;
-    
+
     return(rc);
-} /* end function write_aws */
+} /* end function write_aws_disk */
 
 /*-------------------------------------------------------------------*/
 /* Write a tapemark to SCSI tape                                     */
 /*-------------------------------------------------------------------*/
-int write_tapemark_tape (int devfd)
+int write_tapemark_scsi_tape (int devfd)
 {
     struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
     int             rc;
 
     opblk.mt_op = MTWEOF;
     opblk.mt_count = 1;
-    rc = ioctl (devfd, MTIOCTOP, (char*)&opblk);
+    rc = ioctl_tape (devfd, MTIOCTOP, (char*)&opblk);
     if (rc < 0)
     {
         printf (_("HHCTC023E Error writing tapemark on %s: rc=%d, errno=%d: %s\n"),
@@ -463,13 +453,13 @@ int write_tapemark_tape (int devfd)
         EXIT( RC_ERROR_WRITING_TAPEMARK );
     }
     return(rc);
-    
-} /* end function write_tapemark_tape */
+
+} /* end function write_tapemark_scsi_tape */
 
 /*-------------------------------------------------------------------*/
 /* Write a tapemark to AWSTAPE disk file                             */
 /*-------------------------------------------------------------------*/
-int write_tapemark_aws (int diskfd)
+int write_tapemark_aws_disk (int diskfd)
 {
     AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
     int             rc;
@@ -493,7 +483,7 @@ int write_tapemark_aws (int diskfd)
 
     bytes_written += rc;
     return(rc);
-} /* end function write_tapemark_aws */
+} /* end function write_tapemark_aws_disk */
 
 /*-------------------------------------------------------------------*/
 /* TAPECOPY main entry point                                         */
@@ -514,10 +504,11 @@ long            density;                /* Tape density code         */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 int64_t         bytes_read;             /* Bytes read from i/p file  */
 int64_t         file_bytes;             /* Byte count for curr file  */
+BYTE            pathname[MAX_PATH];     /* file name in host format  */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, LOCALEDIR);
+    bindtextdomain(PACKAGE, HERC_LOCALEDIR);
     textdomain(PACKAGE);
 #endif
 
@@ -536,15 +527,17 @@ int64_t         file_bytes;             /* Byte count for curr file  */
    /* Display the program identification message */
     display_version (stderr, "Hercules tape copy program ", FALSE);
 
-    /* The first argument is the tape device name */
+    /* The first argument is the input file name
+       (either AWS disk file or SCSI tape device)
+    */
     if ((argc < 2) || (argv[1] == NULL))
     {
         print_usage();
         EXIT( RC_ERROR_BAD_ARGUMENTS );
         return(0); /* Make gcc -Wall happy */
     }
-    
-    if (strlen( argv[1]             ) >  5
+
+    if (strlen(    argv[1]      ) >  5
         && memcmp( argv[1], "/dev/", 5 ) == 0
     )
     {
@@ -557,10 +550,12 @@ int64_t         file_bytes;             /* Byte count for curr file  */
         devnamein = NULL;
     }
 
-    /* The second argument is the output file name */
+    /* The second argument is the output file name
+       (either AWS disk file or SCSI tape device)
+    */
     if (argc > 2 && argv[2] )
     {
-        if (strlen( argv[2]             ) >  5
+        if (strlen(   argv[2]       ) >  5
             && memcmp( argv[2], "/dev/", 5 ) == 0
         )
         {
@@ -586,11 +581,17 @@ int64_t         file_bytes;             /* Byte count for curr file  */
         EXIT( RC_ERROR_BAD_ARGUMENTS );
     }
 
-    /* Open the tape device */
+    /* Open the SCSI tape device */
     if (devnamein)
-        devfd = open (devnamein, O_RDONLY|O_BINARY);
+    {
+        hostpath( pathname, devnamein, sizeof(pathname) );
+        devfd = open_tape (pathname, O_RDONLY|O_BINARY);
+    }
     else
-        devfd = open (devnameout, O_WRONLY|O_BINARY);
+    {
+        hostpath( pathname, devnameout, sizeof(pathname) );
+        devfd = open_tape (pathname, O_RDWR|O_BINARY);
+    }
     if (devfd < 0)
     {
         printf (_("HHCTC001E Error opening %s: errno=%d: %s\n"),
@@ -603,7 +604,7 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     /* Set the tape device to process variable length blocks */
     opblk.mt_op = MTSETBLK;
     opblk.mt_count = 0;
-    rc = ioctl (devfd, MTIOCTOP, (char*)&opblk);
+    rc = ioctl_tape (devfd, MTIOCTOP, (char*)&opblk);
     if (rc < 0)
     {
         printf (_("HHCTC005E Error setting attributes for %s: rc=%d, errno=%d: %s\n"),
@@ -616,7 +617,7 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     /* Rewind the tape to the beginning */
     opblk.mt_op = MTREW;
     opblk.mt_count = 1;
-    rc = ioctl (devfd, MTIOCTOP, (char*)&opblk);
+    rc = ioctl_tape (devfd, MTIOCTOP, (char*)&opblk);
     if (rc < 0)
     {
         printf (_("HHCTC006E Error rewinding %s: rc=%d, errno=%d: %s\n"),
@@ -636,11 +637,11 @@ int64_t         file_bytes;             /* Byte count for curr file  */
                 && tapeinfo[i].t_type != mtget.mt_type; i++);
 
     if (tapeinfo[i].t_name)
-        printf (_("HHCTC003I %s device type: %s\n"), 
-        	(devnamein ? devnamein : devnameout), tapeinfo[i].t_name);
+        printf (_("HHCTC003I %s device type: %s\n"),
+            (devnamein ? devnamein : devnameout), tapeinfo[i].t_name);
     else
-        printf (_("HHCTC003I %s device type: 0x%lX\n"), 
-        	(devnamein ? devnamein : devnameout), mtget.mt_type);
+        printf (_("HHCTC003I %s device type: 0x%lX\n"),
+            (devnamein ? devnamein : devnameout), mtget.mt_type);
 
     density = (mtget.mt_dsreg & MT_ST_DENSITY_MASK)
                 >> MT_ST_DENSITY_SHIFT;
@@ -652,18 +653,24 @@ int64_t         file_bytes;             /* Byte count for curr file  */
         printf (_("HHCTC004I %s tape density: %s\n"),
                 (devnamein ? devnamein : devnameout), densinfo[i].t_name);
     else
-        printf (_("HHCTC004I %s tape density code: 0x%lX\n"), 
-        	(devnamein ? devnamein : devnameout), density);
+        printf (_("HHCTC004I %s tape density code: 0x%lX\n"),
+            (devnamein ? devnamein : devnameout), density);
 
     if (mtget.mt_gstat != 0)
         print_status ((devnamein ? devnamein : devnameout), mtget.mt_gstat);
 
     /* Open the disk file */
     if (filenamein)
-        diskfd = open (filenamein, O_RDONLY | O_BINARY);
+    {
+        hostpath( pathname, filenamein, sizeof(pathname) );
+        diskfd = open (pathname, O_RDONLY | O_BINARY);
+    }
     else
-        diskfd = open (filenameout, O_WRONLY | O_CREAT | O_BINARY,
+    {
+        hostpath( pathname, filenameout, sizeof(pathname) );
+        diskfd = open (pathname, O_WRONLY | O_CREAT | O_BINARY,
                         S_IRUSR | S_IWUSR | S_IRGRP);
+    }
     if (diskfd < 0)
     {
         printf (_("HHCTC007E Error opening %s: errno=%d: %s\n"),
@@ -711,9 +718,9 @@ int64_t         file_bytes;             /* Byte count for curr file  */
 
         /* Read a block */
         if (devnamein)
-            len = read_tape(devfd, buf, sizeof(buf));
+            len = read_scsi_tape(devfd, buf, sizeof(buf));
         else
-            len = read_aws(diskfd, buf, sizeof(buf));
+            len = read_aws_disk(diskfd, buf, sizeof(buf));
 
         /* If returned with -1, end of tape; errors are handled by the
             read functions themselves */
@@ -725,26 +732,19 @@ int64_t         file_bytes;             /* Byte count for curr file  */
         {
             /* Write tape mark to output file */
             if (filenameout)
-                write_tapemark_aws(diskfd);
+                write_tapemark_aws_disk(diskfd);
             else
-                write_tapemark_tape(devfd);
+                write_tapemark_scsi_tape(devfd);
 
             /* Print summary of current file */
             if (blkcount)
             {
                 ASSERT( file_bytes ); // (sanity check)
 
-#if SIZEOF_LONG == 8
-                printf (_("HHCTC009I File %u: Blocks=%u, Bytes=%ld, Block size min=%u, "
+                printf (_("HHCTC009I File %u: Blocks=%u, Bytes=%"I64_FMT"d, Block size min=%u, "
                         "max=%u, avg=%u\n"),
                         fileno, blkcount, file_bytes, minblksz, maxblksz,
                         (int)file_bytes/blkcount);
-#else
-                printf (_("HHCTC009I File %u: Blocks=%u, Bytes=%lld, Block size min=%u, "
-                        "max=%u, avg=%u\n"),
-                        fileno, blkcount, file_bytes, minblksz, maxblksz,
-                        (int)file_bytes/blkcount);
-#endif
             }
             else
             {
@@ -804,9 +804,9 @@ int64_t         file_bytes;             /* Byte count for curr file  */
 
         /* Write block to output file */
         if (filenameout)
-            write_aws(diskfd, buf, len);
+            write_aws_disk(diskfd, buf, len);
         else
-            write_tape(devfd, buf, len);
+            write_scsi_tape(devfd, buf, len);
 
     } /* end while */
 
@@ -817,17 +817,10 @@ int64_t         file_bytes;             /* Byte count for curr file  */
 
     printf
     (
-#if SIZEOF_LONG == 8
         _(
             "HHCTC000I Successful completion;\n"
-            "          Bytes read: %ld (%3.1f MB), Blocks=%u, avg=%u\n"
+            "          Bytes read: %"I64_FMT"d (%3.1f MB), Blocks=%u, avg=%u\n"
          )
-#else
-        _(
-            "HHCTC000I Successful completion;\n"
-            "          Bytes read: %lld (%3.1f MB), Blocks=%u, avg=%u\n"
-        )
-#endif
         ,           bytes_read
         ,(double) ( bytes_read    + HALF_MEGABYTE ) / (double) ONE_MEGABYTE
         ,totalblks
@@ -836,21 +829,15 @@ int64_t         file_bytes;             /* Byte count for curr file  */
 
     printf
     (
-#if SIZEOF_LONG == 8
         _(
-            "          Bytes written: %ld (%3.1f MB)\n"
+            "          Bytes written: %"I64_FMT"d (%3.1f MB)\n"
          )
-#else
-        _(
-            "          Bytes written: %lld (%3.1f MB)\n"
-         )
-#endif
         ,           bytes_written
         ,(double) ( bytes_written + HALF_MEGABYTE ) / (double) ONE_MEGABYTE
     );
     close (diskfd);
 
-    close (devfd);
+    close_tape (devfd);
 
     EXIT( RC_SUCCESS );
     return(0);  /* Make -Wall happy */

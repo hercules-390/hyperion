@@ -6,11 +6,10 @@
 /* Diagnostic tool to display various CCKD data                      */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 /* TODO: add FBA support or write cfbadiag                           */
 
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
 #include "hercules.h"
 #include "dasdblks.h"                   /* data_dump                 */
 
@@ -38,14 +37,6 @@ static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
         int     debug = 0;              // disable debug code
 #endif
         int     pausesnap = 0;          // 1 = pause after snap (getc)
-
-#ifdef EXTERNALGUI
-#if 0
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif
-#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* print syntax                                                      */
@@ -126,13 +117,13 @@ void *makbuf(int len, char *label) {
 int readpos(
             int fd,               /* opened CCKD image file          */
             void *buf,            /* buffer of size len              */
-            off_t offset,         /* offset into CCKD image to read  */
+            OFF_T offset,         /* offset into CCKD image to read  */
             size_t len            /* length of data to read          */
             ) {
     if (debug) 
         fprintf(stdout, "\nREADPOS seeking %d (0x%8.8X)\n", 
                         (int)offset, (unsigned int)offset);
-    if (lseek(fd, offset, SEEK_SET) < 0) {
+    if (LSEEK(fd, offset, SEEK_SET) < 0) {
         fprintf(stdout, _("lseek to pos 0x%8.8x error: %s\n"),
                         (unsigned int) offset, strerror(errno));
         clean();
@@ -174,9 +165,17 @@ int decomptrk(
 /* This code based on decompression logic in cdsk_valid_trk.         */
 /* Returns length of decompressed data or -1 on error.               */
 {
+#if defined( HAVE_LIBZ ) || defined( CCKD_BZIP2 )
 int             rc;                     /* Return code               */
 BYTE           *bufp;                   /* Buffer pointer            */
+#endif
 size_t          bufl;                   /* Buffer length             */
+
+#if !defined( HAVE_LIBZ ) && !defined( CCKD_BZIP2 )
+    UNREFERENCED(heads);
+    UNREFERENCED(trk);
+    UNREFERENCED(msg);
+#endif
 
     memset(obuf, 0x00, obuflen);  /* clear output buffer             */
 
@@ -332,19 +331,19 @@ int             len;
 }
 
 /*-------------------------------------------------------------------*/
-/* offtify - given decimal or hex input string, return off_t         */
+/* offtify - given decimal or hex input string, return OFF_T         */
 /* Locale independent, does not check for overflow                   */
 /* References <ctype.h> and <string.h>                               */
 /*-------------------------------------------------------------------*/
 /* Based on code in P. J. Plauger's "The Standard C Library"         */
 /* See page 34, in Chapter 2 (ctype.h)                               */
-off_t offtify(char *s) {
+OFF_T offtify(char *s) {
 
 static const char  xd[] = {"0123456789abcdefABCDEF"};
 static const char  xv[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
                            10, 11, 12, 13, 14, 15, 
                            10, 11, 12, 13, 14, 15};
-off_t              v;
+OFF_T              v;
 char               *p;
 
         p = s;
@@ -354,15 +353,15 @@ char               *p;
                 v = (v << 4) + xv[strchr(xd, *s) - xd];
             if (debug) 
                 fprintf(stdout, 
-                        "OFFTIFY string %s hex %8.8X decimal %d\n",
-                        p, (unsigned int)v, (int)v);
+                        "OFFTIFY string %s hex %8.8llX decimal %lld\n",
+                        p, (U64)v, (U64)v);
             return v;
         } else {                                 /* decimal input */
-            v = (off_t) atoi(s);
+            v = (OFF_T) atoll(s);
             if (debug) 
                 fprintf(stdout, 
                         "OFFTIFY string %s decimal %8.8X %d\n", 
-                        p, (unsigned int)v, (int)v);
+                        p, (U64)v, (U64)v);
             return v;
         }
 }
@@ -401,16 +400,17 @@ int             op_tt = 0;              /* relative track #          */
 int             swapend;                /* 1 = New endianess doesn't
                                              match machine endianess */
 int             n, trk=0, l1ndx=0, l2ndx=0;
-off_t           l2taboff=0;             /* offset to assoc. L2 table */
+OFF_T           l2taboff=0;             /* offset to assoc. L2 table */
 int             ckddasd;                /* 1=CKD dasd  0=FBA dasd    */
 int             heads=0;                /* Heads per cylinder        */
 int             blks;                   /* Number fba blocks         */
-off_t           trkhdroff=0;            /* offset to assoc. trk hdr  */
+OFF_T           trkhdroff=0;            /* offset to assoc. trk hdr  */
 int             imglen=0;               /* track length              */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, LOCALEDIR);
+    bindtextdomain(PACKAGE, HERC_LOCALEDIR);
     textdomain(PACKAGE);
 #endif
 
@@ -419,6 +419,8 @@ int             imglen=0;               /* track length              */
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 
@@ -485,7 +487,8 @@ int             imglen=0;               /* track length              */
     fn = argv[0];
 
     /* open the file */
-    fd = open(fn, O_RDONLY | O_BINARY);
+    hostpath(pathname, fn, sizeof(pathname));
+    fd = open(pathname, O_RDONLY | O_BINARY);
     if (fd < 0) {
         fprintf(stdout,
                 _("cckddiag: error opening file %s: %s\n"),
@@ -556,10 +559,13 @@ int             imglen=0;               /* track length              */
                 "\n%s device has %d heads/cylinder\n", 
                 ckd->name, heads);
     } else {
+        blks  = 0;
+      #if 0 /* cdevhdr is uninitialised and blks is never referenced... */
         blks  = ((U32)(cdevhdr.cyls[0]) << 24)
               | ((U32)(cdevhdr.cyls[2]) << 16)
               | ((U32)(cdevhdr.cyls[1]) << 8)
               | (U32)(cdevhdr.cyls[0]);
+      #endif
     }
 
     /*---------------------------------------------------------------*/

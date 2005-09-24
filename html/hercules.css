@@ -1,20 +1,78 @@
 <style type="text/css">
+
 <!--
-body {margin-left:20; margin-right:20; color:black; font-family:Arial}
-h1, h2, h3, h4 {font-family:Arial;
-                font-weight:bold; font-style:rounded}
-h1 {color:blue}
-h2 {color:red; font-style:italic}
-p {color:black; font-family:Arial}
-pre, code {font-family:Courier}
-blockquote.box
+
+body
 {
-    padding:          12px;
-    margin-left:      4%;
-    border-style:     solid;
-    border-width:     1px;
-    font-style:       italic;
-    margin-right:     10%;
+    font-family:  Arial;
+    color:        black;
+    background:   #FFFFCC;
+    margin-left:  50;
+    margin-right: 75;
 }
+
+h1, h2, h3, h4
+{
+    font-family: Arial;
+    font-weight: bold;
+    font-style:  rounded;
+}
+
+h1 {color: blue;}
+h2 {color: red; font-style: italic;}
+
+p  {color: black; font-family: Arial;}
+
+p.box
+{
+    background-color: #FFFFAA;
+    padding:          20px;
+    border-width:     1px;
+    border-style:     solid;
+}
+
+pre, code {font-family: Courier;}
+
+pre.jcl
+{
+    margin-right:     4%;
+    margin-left:      4%;
+    background-color: #FFFFAA;
+    font-family:      LetterGothic, Monospace;
+    color:            black;
+    font-weight:      normal;
+    padding:          10px;
+    border-width:     1px;
+    border-style:     solid;
+}
+
+pre.report
+{
+    margin-right:     4%;
+    margin-left:      4%;
+    background-color: #CCFFFF;
+    font-family:      LetterGothic, Monospace;
+    color:            black;
+    font-weight:      normal;
+    padding:          10px;
+    border-width:     1px;
+    border-style:     solid;
+}
+
+pre.screen80
+{
+    margin-right:     4%;
+    margin-left:      4%;
+    background-color: #000000;
+    font-family:      Terminal, Monospace;
+    color:            silver;
+    font-weight:      normal;
+    padding:          10px;
+    border-width:     6px;
+    border-style:     ridge;
+    border-color:     light-gray;
+}
+
 -->
+
 </style>

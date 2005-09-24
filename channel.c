@@ -15,7 +15,12 @@
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 /*      64-bit IDAW support - Roger Bowler v209                  @IWZ*/
 /*      Incorrect-length-indication-suppression - Jan Jaeger         */
+/*      Read backward support contributed by Hackules   13jun2002    */
+/*      Read backward fixes contributed by Jay Jaeger   16sep2003    */
+/*      MIDAW support - Roger Bowler                    03aug2005 @MW*/
 /*-------------------------------------------------------------------*/
+
+#include "hstdinc.h"
 
 #include "hercules.h"
 
@@ -1294,6 +1299,72 @@ int     current_priority;               /* Current thread priority   */
 #endif /*!defined(_CHANNEL_C)*/
 
 /*-------------------------------------------------------------------*/
+/* RAISE A PCI INTERRUPT                                             */
+/* This function is called during execution of a channel program     */
+/* whenever a CCW is fetched which has the CCW_FLAGS_PCI flag set    */
+/* or when a MIDAW is fetched which has the MIDAW_PCI flag set    @MW*/
+/*-------------------------------------------------------------------*/
+/* Input                                                             */
+/*      dev     -> Device control block                              */
+/*      ccwkey  =  Key in which channel program is executing         */
+/*      ccwfmt  =  CCW format (0 or 1)                               */
+/*      ccwaddr =  Address of next CCW                               */
+/* Output                                                            */
+/*      The PCI CSW or SCSW is saved in the device block, and the    */
+/*      pcipending flag is set, and an I/O interrupt is scheduled.   */
+/*-------------------------------------------------------------------*/
+static void ARCH_DEP(raise_pci) (
+                        DEVBLK *dev,    /* -> Device block           */
+                        BYTE ccwkey,    /* Bits 0-3=key, 4-7=zeroes  */
+                        BYTE ccwfmt,    /* CCW format (0 or 1)       */
+                        U32 ccwaddr)    /* Main storage addr of CCW  */
+{
+#if !defined(FEATURE_CHANNEL_SUBSYSTEM)
+    UNREFERENCED(ccwfmt);
+#endif
+
+    IODELAY(dev);
+
+    obtain_lock (&dev->lock);
+
+#ifdef FEATURE_S370_CHANNEL
+    /* Save the PCI CSW replacing any previous pending PCI */
+    dev->pcicsw[0] = ccwkey;
+    dev->pcicsw[1] = (ccwaddr & 0xFF0000) >> 16;
+    dev->pcicsw[2] = (ccwaddr & 0xFF00) >> 8;
+    dev->pcicsw[3] = ccwaddr & 0xFF;
+    dev->pcicsw[4] = 0;
+    dev->pcicsw[5] = CSW_PCI;
+    dev->pcicsw[6] = 0;
+    dev->pcicsw[7] = 0;
+#endif /*FEATURE_S370_CHANNEL*/
+
+#ifdef FEATURE_CHANNEL_SUBSYSTEM
+    dev->pciscsw.flag0 = ccwkey & SCSW0_KEY;
+    dev->pciscsw.flag1 = (ccwfmt == 1 ? SCSW1_F : 0);
+    dev->pciscsw.flag2 = SCSW2_FC_START;
+    dev->pciscsw.flag3 = SCSW3_AC_SCHAC | SCSW3_AC_DEVAC
+                       | SCSW3_SC_INTER | SCSW3_SC_PEND;
+    STORE_FW(dev->pciscsw.ccwaddr,ccwaddr);
+    dev->pciscsw.unitstat = 0;
+    dev->pciscsw.chanstat = CSW_PCI;
+    store_hw (dev->pciscsw.count, 0);
+#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
+
+    /* Turn on the pci pending bit */
+    dev->pcipending = 1;
+
+    release_lock (&dev->lock);
+
+    /* Queue the pci pending interrupt */
+    obtain_lock (&sysblk.intlock);
+    QUEUE_IO_INTERRUPT (&dev->pciioint);
+    release_lock (&sysblk.intlock);
+
+} /* end function raise_pci */
+
+
+/*-------------------------------------------------------------------*/
 /* FETCH A CHANNEL COMMAND WORD FROM MAIN STORAGE                    */
 /*-------------------------------------------------------------------*/
 static void ARCH_DEP(fetch_ccw) (
@@ -1382,9 +1453,9 @@ U16     idalen;                         /* #of bytes until next page */
 BYTE    storkey;                        /* Storage key               */
 
     UNREFERENCED_370(dev);
-
     *addr = 0;
     *len = 0;
+
     /* Channel program check if IDAW is not on correct           @IWZ
        boundary or is outside limit of main storage */
     if ((idawaddr & ((idawfmt == 2) ? 0x07 : 0x03))            /*@IWZ*/
@@ -1410,7 +1481,7 @@ BYTE    storkey;                        /* Storage key               */
     if (idawfmt == 2)                                          /*@IWZ*/
     {                                                          /*@IWZ*/
         /* Fetch format-2 IDAW */                              /*@IWZ*/
-        FETCH_DW(idaw2, dev->mainstor + idawaddr);           /*@IWZ*/
+        FETCH_DW(idaw2, dev->mainstor + idawaddr);             /*@IWZ*/
 
        #ifndef FEATURE_ESAME                                   /*@IWZ*/
         /* Channel program check in ESA/390 mode
@@ -1428,7 +1499,7 @@ BYTE    storkey;                        /* Storage key               */
     else                                                       /*@IWZ*/
     {                                                          /*@IWZ*/
         /* Fetch format-1 IDAW */                              /*@IWZ*/
-        FETCH_FW(idaw1, dev->mainstor + idawaddr);           /*@IWZ*/
+        FETCH_FW(idaw1, dev->mainstor + idawaddr);             /*@IWZ*/
 
         /* Channel program check if bit 0 of
            the format-1 IDAW is not zero */                    /*@IWZ*/
@@ -1452,7 +1523,6 @@ BYTE    storkey;                        /* Storage key               */
 
     /* Channel program check if IDAW data location is not
        on a page boundary, except for the first IDAW */        /*@IWZ*/
-
     if (IS_CCW_RDBACK (code))
     {
         if (idaseq > 0 && ((idaw+1) & idapmask) != 0)
@@ -1471,22 +1541,110 @@ BYTE    storkey;                        /* Storage key               */
     }
     else
     {
-    if (idaseq > 0 && (idaw & idapmask) != 0)                  /*@IWZ*/
+        if (idaseq > 0 && (idaw & idapmask) != 0)              /*@IWZ*/
+        {
+            *chanstat = CSW_PROGC;
+            return;
+        }
+
+        /* Calculate address of next page boundary */          /*@IWZ*/
+        idapage = (idaw + idapmask + 1) & ~idapmask;           /*@IWZ*/
+        idalen = idapage - idaw;
+
+        /* Return the address and length for this IDAW */
+        *addr = idaw;
+        *len = idalen;
+    }
+
+} /* end function fetch_idaw */
+
+#if defined(FEATURE_MIDAW)                                      /*@MW*/
+/*-------------------------------------------------------------------*/
+/* FETCH A MODIFIED INDIRECT DATA ADDRESS WORD FROM MAIN STORAGE  @MW*/
+/*-------------------------------------------------------------------*/
+static void ARCH_DEP(fetch_midaw) (                             /*@MW*/
+                        DEVBLK *dev,    /* -> Device block           */
+                        BYTE code,      /* CCW operation code        */
+                        BYTE ccwkey,    /* Bits 0-3=key, 4-7=zeroes  */
+                        U32 midawadr,   /* Main storage addr of MIDAW*/
+                        RADR *addr,     /* Returned MIDAW content    */
+                        U16 *len,       /* Returned MIDAW data length*/
+                        BYTE *flags,    /* Returned MIDAW flags      */
+                        BYTE *chanstat) /* Returned channel status   */
+{
+U64     mword1, mword2;                 /* MIDAW high and low words  */
+RADR    mdaddr;                         /* Data address from MIDAW   */
+U16     mcount;                         /* Count field from MIDAW    */
+BYTE    mflags;                         /* Flags byte from MIDAW     */
+BYTE    storkey;                        /* Storage key               */
+U16     maxlen;                         /* Maximum allowable length  */
+
+    UNREFERENCED_370(dev);
+
+    /* Channel program check if MIDAW is not on quadword
+       boundary or is outside limit of main storage */
+    if ((midawadr & 0x0F)
+        || CHADDRCHK(midawadr, dev) )
     {
         *chanstat = CSW_PROGC;
         return;
     }
 
-    /* Calculate address of next page boundary */              /*@IWZ*/
-    idapage = (idaw + idapmask + 1) & ~idapmask;               /*@IWZ*/
-    idalen = idapage - idaw;
-
-    /* Return the address and length for this IDAW */
-    *addr = idaw;
-    *len = idalen;
+    /* Channel protection check if MIDAW is fetch protected */
+    storkey = STORAGE_KEY(midawadr, dev);
+    if (ccwkey != 0 && (storkey & STORKEY_FETCH)
+        && (storkey & STORKEY_KEY) != ccwkey)
+    {
+        *chanstat = CSW_PROTC;
+        return;
     }
 
-} /* end function fetch_idaw */
+    /* Set the main storage reference bit for the MIDAW location */
+    STORAGE_KEY(midawadr, dev) |= STORKEY_REF;
+
+    /* Fetch MIDAW from main storage (MIDAW is quadword
+       aligned and so cannot cross a page boundary */
+    FETCH_DW(mword1, dev->mainstor + midawadr);        
+    FETCH_DW(mword2, dev->mainstor + midawadr + 8);        
+
+    /* Channel program check in reserved bits are non-zero */
+    if (mword1 & 0xFFFFFFFFFF000000ULL) 
+    {   
+        *chanstat = CSW_PROGC;     
+        return;                    
+    }   
+
+    /* Extract fields from MIDAW */                  
+    mflags = mword1 >> 16;
+    mcount = mword1 & 0xFFFF;
+    mdaddr = (RADR)mword2;                                  
+
+    /* Channel program check if MIDAW data
+       location is outside main storage */
+    if ( CHADDRCHK(mdaddr, dev) )
+    {
+        *chanstat = CSW_PROGC;
+        return;
+    }
+
+    /* Channel program check if MIDAW data area crosses page boundary */
+    maxlen = (IS_CCW_RDBACK(code)) ?
+                mdaddr - (mdaddr & PAGEFRAME_PAGEMASK) + 1 :
+                (mdaddr | PAGEFRAME_BYTEMASK) - mdaddr + 1 ;
+
+    if (mcount > maxlen)
+    {
+        *chanstat = CSW_PROGC;
+        return;
+    }
+
+    /* Return the data address, length, flags for this MIDAW */
+    *addr = mdaddr;
+    *len = mcount;
+    *flags = mflags;
+
+} /* end function fetch_midaw */                                /*@MW*/
+#endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
 
 /*-------------------------------------------------------------------*/
 /* COPY DATA BETWEEN CHANNEL I/O BUFFER AND MAIN STORAGE             */
@@ -1512,6 +1670,13 @@ BYTE    storkey;                        /* Storage key               */
 RADR    page,startpage,endpage;         /* Storage key pages         */
 BYTE    readcmd;                        /* 1=READ, SENSE, or RDBACK  */
 BYTE    area[64];                       /* Data display area         */
+#if defined(FEATURE_MIDAW)                                      /*@MW*/
+U32     midawptr;                       /* Real addr of MIDAW     @MW*/
+U16     midawrem;                       /* CCW bytes remaining    @MW*/
+U16     midawlen;                       /* MIDAW data length      @MW*/
+RADR    midawdat;                       /* MIDAW data area addr   @MW*/
+BYTE    midawflg;                       /* MIDAW flags            @MW*/
+#endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
 
     /* Exit if no bytes are to be copied */
     if (count == 0)
@@ -1522,6 +1687,92 @@ BYTE    area[64];                       /* Data display area         */
               || IS_CCW_SENSE(code)
               || IS_CCW_RDBACK(code);
 
+#if defined(FEATURE_MIDAW)                                      /*@MW*/
+    /* Move data when modified indirect data addressing is used */
+    if (flags & CCW_FLAGS_MIDAW)        
+    {                                   
+        midawptr = addr;                
+        midawrem = count;               
+        midawflg = 0;                   
+
+        while (midawrem > 0 && (midawflg & MIDAW_LAST) == 0)  
+        {                                                       
+            /* Fetch MIDAW and set data address, length, flags */
+            ARCH_DEP(fetch_midaw) (dev, code, ccwkey, midawptr, 
+                    &midawdat, &midawlen, &midawflg, chanstat); 
+
+            /* Exit if fetch_midaw detected channel program check */
+            if (*chanstat != 0) return;
+
+            /* Reduce length if it exceeds remaining CCW count */
+            if (midawlen > midawrem) midawlen = midawrem;
+
+            /* Perform data movement unless SKIP flag is set in MIDAW */
+            if ((midawflg & MIDAW_SKIP) ==0)
+            {
+                /* Note: MIDAW data area cannot cross a page boundary */
+
+                /* Channel protection check if MIDAW data location is
+                   fetch protected, or if location is store protected
+                   and command is READ, READ BACKWARD, or SENSE */
+                storkey = STORAGE_KEY(midawdat, dev);
+                if (ccwkey != 0 && (storkey & STORKEY_KEY) != ccwkey
+                    && ((storkey & STORKEY_FETCH) || readcmd))
+                {
+                    *chanstat = CSW_PROTC;
+                    return;
+                }
+
+                /* Set the main storage reference and change bits */
+                STORAGE_KEY(midawdat, dev) |= (readcmd ? 
+                        (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF);
+
+                /* Copy data between main storage and channel buffer */
+                if (IS_CCW_RDBACK(code))
+                {
+                    midawdat = (midawdat - midawlen) + 1;
+                    memcpy (dev->mainstor + midawdat,
+                            iobuf + dev->curblkrem + midawrem - midawlen,
+                            midawlen);
+
+                    /* Decrement buffer pointer */
+                    iobuf -= midawlen;
+                }
+                else
+                {
+                    if (readcmd)
+                        memcpy (dev->mainstor + midawdat, iobuf, midawlen);
+                    else
+                        memcpy (iobuf, dev->mainstor + midawdat, midawlen);
+
+                    /* Increment buffer pointer */
+                    iobuf += midawlen;
+                }
+
+            } /* end if(!MIDAW_FLAG_SKIP) */
+
+            /* Display the MIDAW if CCW tracing is on */
+            if (dev->ccwtrace || dev->ccwstep)
+            {
+                format_iobuf_data (midawdat, area, dev);
+                logmsg ( _("HHCCP078I "         
+                    "%4.4X:MIDAW=%2.2X %4.4"I16_FMT"X %16.16"I64_FMT"X\n"  
+                    "%4.4X:------------- %s\n"),    
+                    dev->devnum, midawflg, midawlen, (U64)midawdat, 
+                    dev->devnum, area);                  
+            }
+
+            /* Decrement remaining count, increment buffer pointer */
+            midawrem -= midawlen;
+
+            /* Increment to next MIDAW address */
+            midawptr += 16;
+
+        } /* end while) */
+
+    } // end if(CCW_FLAGS_MIDAW)                                /*@MW*/
+    else                                                        /*@MW*/
+#endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
     /* Move data when indirect data addressing is used */
     if (flags & CCW_FLAGS_IDA)
     {
@@ -1578,6 +1829,12 @@ BYTE    area[64];                       /* Data display area         */
                     Finally, since iobuf is not used for anything after
                     this (in IDA mode), it probably doesn't hurt anything.
                 */
+                /*  rbowler:
+                    I disagree with the above comment. Here we are in a
+                    loop processing a list of IDAWs and it is necessary
+                    to update the iobuf pointer so that it is correctly
+                    positioned ready for the data to be read or written
+                    by the subsequent IDAW */
 
                 /* Increment buffer pointer */
                 iobuf += idalen;
@@ -1590,14 +1847,14 @@ BYTE    area[64];                       /* Data display area         */
                 if (idawfmt == 1)                              /*@IWZ*/
                 {                                              /*@IWZ*/
                     logmsg ( _("HHCCP063I "                    /*@IWZ*/
-                        "%4.4X:IDAW=%8.8X Len=%3.3hX%s\n"),    /*@IWZ*/
+                        "%4.4X:IDAW=%8.8"I32_FMT"X Len=%3.3"I16_FMT"X%s\n"),  
                         dev->devnum, (U32)idadata, idalen,     /*@IWZ*/
                         area);                                 /*@IWZ*/
                 } else {                                       /*@IWZ*/
                     logmsg ( _("HHCCP064I "                    /*@IWZ*/
-                        "%4.4X:IDAW=%16.16llX Len=%4.4hX\n"    /*@IWZ*/
+                        "%4.4X:IDAW=%16.16"I64_FMT"X Len=%4.4"I16_FMT"X\n"   
                         "%4.4X:---------------------%s\n"),    /*@IWZ*/
-                        dev->devnum, (long long)idadata, idalen, /*@IWZ*/
+                        dev->devnum, (U64)idadata, idalen,
                         dev->devnum, area);                    /*@IWZ*/
                 }
             }
@@ -1653,7 +1910,6 @@ BYTE    area[64];                       /* Data display area         */
         } /* end for(page) */
 
         /* Copy data between main storage and channel buffer */
-
         if (readcmd)
         {
             if (IS_CCW_RDBACK(code))
@@ -1682,7 +1938,7 @@ BYTE    area[64];                       /* Data display area         */
 /* Return value is 0 if successful, 1 if device is busy or pending   */
 /* or 3 if subchannel is not valid or not enabled                    */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
+DLL_EXPORT int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 {
     obtain_lock (&dev->lock);
 
@@ -1937,6 +2193,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 #endif // defined(OPTION_FISHIO)
 } /* end function startio */
 
+
 /*-------------------------------------------------------------------*/
 /* EXECUTE A CHANNEL PROGRAM                                         */
 /*-------------------------------------------------------------------*/
@@ -1993,7 +2250,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* For hercules `resume' resume suspended state */
-    if (dev->resumesuspended) 
+    if (dev->resumesuspended)
     {
         dev->resumesuspended=0;
         goto resume_suspend;
@@ -2038,7 +2295,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         dev->prevcode = 0;
         dev->chained &= ~CCW_FLAGS_CD;
         dev->prev_chained = 0;
-        DEVTRACE ("asynchronous I/O ccw addr %8.8x\n", ccwaddr);
+        logdevtr (dev, "asynchronous I/O ccw addr %8.8x\n", ccwaddr);
     }
     else
     {
@@ -2050,7 +2307,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
     if (dev->syncio_active)
     {
         dev->syncios++;
-        DEVTRACE ("synchronous  I/O ccw addr %8.8x\n", ccwaddr);
+        logdevtr (dev, "synchronous  I/O ccw addr %8.8x\n", ccwaddr);
     }
 
 #if defined(_FEATURE_IO_ASSIST)
@@ -2349,12 +2606,24 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             dev->code = opcode;
         }
 
-        /* Channel program check if invalid flags */
-        if (flags & CCW_FLAGS_RESV)
+#if !defined(FEATURE_MIDAW)                                     /*@MW*/
+        /* Channel program check if MIDAW not installed */      /*@MW*/
+        if (flags & CCW_FLAGS_MIDAW)                            /*@MW*/
         {
             chanstat = CSW_PROGC;
             break;
         }
+#endif /*!defined(FEATURE_MIDAW)*/                              /*@MW*/
+
+#if defined(FEATURE_MIDAW)                                      /*@MW*/
+        /* Channel program check if MIDAW with CD,SKIP,IDA */   /*@MW*/
+        if ((flags & CCW_FLAGS_MIDAW) && (flags &               /*@MW*/
+            (CCW_FLAGS_CD | CCW_FLAGS_SKIP | CCW_FLAGS_IDA)))   /*@MW*/
+        {                                                       /*@MW*/
+            chanstat = CSW_PROGC;                               /*@MW*/
+            break;                                              /*@MW*/
+        }                                                       /*@MW*/
+#endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
 
 #ifdef FEATURE_S370_CHANNEL
         /* For S/370, channel program check if suspend flag is set */
@@ -2453,7 +2722,6 @@ resume_suspend:
                 ccwkey = dev->ccwkey;
 
                 /* Suspend the device until resume instruction */
-
                 while (dev->suspended && (dev->scsw.flag2 & SCSW2_AC_RESUM) == 0)
                 {
                     wait_condition (&dev->resumecond, &dev->lock);
@@ -2530,45 +2798,8 @@ resume_suspend:
         /* Signal I/O interrupt if PCI flag is set */
         if ((flags & CCW_FLAGS_PCI) && !dev->syncio_retry)
         {
-            IODELAY(dev);
-
-            obtain_lock (&dev->lock);
-
-#ifdef FEATURE_S370_CHANNEL
-            /* Save the PCI CSW replacing any previous pending PCI */
-            dev->pcicsw[0] = ccwkey;
-            dev->pcicsw[1] = (ccwaddr & 0xFF0000) >> 16;
-            dev->pcicsw[2] = (ccwaddr & 0xFF00) >> 8;
-            dev->pcicsw[3] = ccwaddr & 0xFF;
-            dev->pcicsw[4] = 0;
-            dev->pcicsw[5] = CSW_PCI;
-            dev->pcicsw[6] = 0;
-            dev->pcicsw[7] = 0;
-#endif /*FEATURE_S370_CHANNEL*/
-
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
-            dev->pciscsw.flag0 = ccwkey & SCSW0_KEY;
-            dev->pciscsw.flag1 = (ccwfmt == 1 ? SCSW1_F : 0);
-            dev->pciscsw.flag2 = SCSW2_FC_START;
-            dev->pciscsw.flag3 = SCSW3_AC_SCHAC | SCSW3_AC_DEVAC
-                               | SCSW3_SC_INTER | SCSW3_SC_PEND;
-            STORE_FW(dev->pciscsw.ccwaddr,ccwaddr);
-            dev->pciscsw.unitstat = 0;
-            dev->pciscsw.chanstat = CSW_PCI;
-            store_hw (dev->pciscsw.count, 0);
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
-
-            /* Turn on the pci pending bit */
-            dev->pcipending = 1;
-
-            release_lock (&dev->lock);
-
-            /* Queue the pci pending interrupt */
-            obtain_lock (&sysblk.intlock);
-            QUEUE_IO_INTERRUPT (&dev->pciioint);
-            release_lock (&sysblk.intlock);
-
-        } /* end if(CCW_FLAGS_PCI) */
+            ARCH_DEP(raise_pci) (dev, ccwkey, ccwfmt, ccwaddr); /*@MW*/
+        } 
 
         /* Channel program check if invalid count */
         if (count == 0 && (ccwfmt == 0 ||
@@ -2578,19 +2809,13 @@ resume_suspend:
             break;
         }
 
-    dev->is_immed=IS_CCW_IMMEDIATE(dev);
-        /* For WRITE and CONTROL operations, copy data
-           from main storage into channel buffer */
-    /*
-        if (IS_CCW_WRITE(dev->code)
-            ||
-            (
-                IS_CCW_CONTROL(dev->code)
-                &&
-                !(IS_CCW_NOP(dev->code) || IS_CCW_SET_EXTENDED(dev->code))
-            ))
-        */
-        if ( IS_CCW_WRITE(dev->code) 
+        /* Allow the device handler to determine whether this is
+           an immediate CCW (i.e. CONTROL with no data transfer) */
+        dev->is_immed = IS_CCW_IMMEDIATE(dev);
+
+        /* For WRITE and non-immediate CONTROL operations,
+           copy data from main storage into channel buffer */
+        if ( IS_CCW_WRITE(dev->code)
         || ( IS_CCW_CONTROL(dev->code)
         && (!dev->is_immed)))
         {
@@ -2713,15 +2938,15 @@ resume_suspend:
         {
             /* Trace the CCW if not already done */
             if (!(dev->ccwtrace || dev->ccwstep || tracethis)
-              && (sysblk.insttrace || sysblk.inststep || sysblk.pgminttr 
+              && (sysblk.insttrace || sysblk.inststep || sysblk.pgminttr
                 || dev->ccwtrace || dev->ccwstep) )
                 display_ccw (dev, ccw, addr);
 
-            /* Activate tracing for this CCW chain only 
+            /* Activate tracing for this CCW chain only
                if any trace is already active */
             if(sysblk.insttrace || sysblk.inststep || sysblk.pgminttr
               || dev->ccwtrace || dev->ccwstep)
-                tracethis = 1;
+            tracethis = 1;
         }
 
         /* Trace the results of CCW execution */

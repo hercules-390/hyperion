@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+﻿<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
 Hercules Version 3: Configuration File</TITLE>
@@ -20,7 +20,8 @@ a real System/390.  The configuration file is an ASCII text file.
 <pre><code>
 
     ####################################################
-    #     Hercules emulator configuration file         #
+    #     HERCULES EMULATOR CONFIGURATION FILE         #
+    #     (Note: not all parameters are shown)         #
     ####################################################
 
 
@@ -386,6 +387,9 @@ a real System/390.  The configuration file is an ASCII text file.
     value causes an error because OS/360 regards 2000 as an invalid
     date.  For OS/360, <code>SYSEPOCH 1988</code> is recommended.
     This makes the year 2000 appear to be 1972.
+    <p>
+    The only supported values for SYSEPOCH are currently 1900, 1928,
+    1960, 1988 and 1970. Specifying any other value causes an error.
     <p>
 
 <a name="TZOFFSET">
@@ -2151,7 +2155,7 @@ If you have a question about Hercules, see the
     <a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
     <p>
 
-    <small>Last updated 05 June 2004
+    <small>Last updated 18 August 2005
     <p>
 
 </center>

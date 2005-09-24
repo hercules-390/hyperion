@@ -6,15 +6,11 @@
 /* Remove all free space on a compressed ckd file                    */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 int syntax ();
-
-#ifdef EXTERNALGUI
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Main function for stand-alone compress                            */
@@ -28,12 +24,15 @@ int             fd;                     /* File descriptor           */
 int             level=-1;               /* Level for chkdsk          */
 int             force=0;                /* 1=Compress if OPENED set  */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 
@@ -63,7 +62,8 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     fn = argv[0];
 
     /* open the file */
-    fd = open (fn, O_RDWR|O_BINARY);
+    hostpath(pathname, fn, sizeof(pathname));
+    fd = open (pathname, O_RDWR|O_BINARY);
     if (fd < 0)
     {
         fprintf (stderr,
@@ -75,7 +75,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     /* Check CCKD_OPENED bit if -f not specified */
     if (!force)
     {
-        if (lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
+        if (LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
         {
             fprintf (stderr, _("cckdcomp: lseek error: %s\n"),strerror(errno));
             close (fd);

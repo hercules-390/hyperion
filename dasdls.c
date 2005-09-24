@@ -4,18 +4,13 @@
  * Copyright 2000-2005 by Malcolm Beattie
  * Based on code copyright by Roger Bowler, 1999-2005
  */
+
+#include "hstdinc.h"
+
 #include "hercules.h"
 #include "dasdblks.h"
 
 static int needsep = 0;         /* Write newline separator next time */
-
-#ifdef EXTERNALGUI
-#if 0
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif
-#endif /*EXTERNALGUI*/
 
 int end_of_track(BYTE *p)
 {
@@ -126,6 +121,8 @@ int main(int argc, char **argv)
     {
         extgui = 1;
         argv[--argc] = 0;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 

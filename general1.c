@@ -29,10 +29,10 @@
 /*      Clear TEA on data exception - Peter Kuschnerus           v209*/
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
 
 
@@ -2801,7 +2801,7 @@ int     cc = 0;                         /* Condition code            */
             if (dest1 == source1)
             {
                /* (1a) - Dest and source are the same */
-               MEMSET(dest1, 0, len + 1);
+               memset(dest1, 0, len + 1);
             }
             else
             {

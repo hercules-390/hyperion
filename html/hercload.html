@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+﻿<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
 Hercules Version 3: Creating DASD</TITLE>
@@ -12,6 +12,25 @@ Hercules Version 3: Creating DASD</TITLE>
 This page describes various ways of creating and loading DASD
 volumes for use with Hercules.
 
+<p><hr>
+
+<h2>Contents</h2>
+<blockquote>
+	<p>
+		<a href="#prebuilt">Using pre-built DASD images</a>
+	</p>
+	<p>
+		<a href="#loading">Creating, formatting, and loading DASD volumes</a>
+	</p>
+	<p>
+		<a href="#PDS">Building a DASD volume from unloaded PDS files</a>
+	</p>
+	<p>
+		<a href="#utilities">Other DASD utilities</a>
+	</p>
+</blockquote>
+
+<p><hr><a name="prebuilt"></a>
 <h2>Using pre-built DASD images</h2>
 <p>
 IBM distributes pre-built OS/390 and z/OS systems on two
@@ -37,7 +56,7 @@ See
 http://etpgw02.dfw.ibm.com/adcd.html</a>.
 If you want Hercules to be an approved machine so that you can
 use the ADCD, then I suggest you lobby IBM Developer Relations
-<!---(fyolton&nbsp;&#064;&nbsp;us.ibm.com)--->
+<!-- ===(fyolton&nbsp;&#064;&nbsp;us.ibm.com)=== -->
 at the address given on their web page.
 <p>
 Different rules apply to the OS/390 and z/OS
@@ -45,6 +64,7 @@ DemoPkg CD which is available only to IBM employees and business
 partners.  If you fall into this category then you probably know
 what the rules are -- I don't :-(
 
+<p><hr><a name="loading"></a>
 <h2>Creating, formatting, and loading DASD volumes</h2>
 
 <h4>Creating an empty DASD volume</h4>
@@ -134,6 +154,8 @@ The current list of device types and models supported is:
         3390-2        2226    1
         3390-3        3339    1
         3390-9       10017    3
+        3390-27      32760    3
+        3390-54      65520    3
 
         9345           [*]
         9345-1        1440    0
@@ -153,6 +175,9 @@ The current list of device types and models supported is:
         3370-A2        712752
         3370-B2        712752
 
+        9313              [*]
+        9313-1         246240
+
         9332              [*]
         9332-200       360036
         9332-400       360036
@@ -165,12 +190,16 @@ The current list of device types and models supported is:
         9336-10        920115
         9336-20       1672881
         9336-25       1672881
+
+        0671-08        513072
+        0671           574560
+        0671-04        624456
 </pre>
 <br>
 [<b>*</b>] size may be specified else size defaults to the
            first listed model.
 <p>
-<h5>Volumes exceeding 2GB</h5>
+<h4>Volumes exceeding 2GB</h4>
 <p>
 For CKD volumes which exceed 2GB, such as the 3390-3, and the
 <b>-lfs</b> parameter is not specified, the DASDINIT
@@ -276,6 +305,7 @@ A standalone program can now be IPLed into Hercules to restore the
 volume image from the virtual tape onto the formatted virtual DASD
 volume.
 
+<p><hr><a name="PDS"></a>
 <h2>Building a DASD volume from unloaded PDS files</h2>
 <p>
 The dasdload program can be run from the Unix shell prompt to
@@ -476,6 +506,7 @@ where
 <em>Note: do not use this procedure except on OS/360 IPL volumes;
 other operating systems do not have XCTL tables.</em>
 
+<p><hr><a name="utilities"></a>
 <h2>Other DASD utilities</h2>
 <p>
 These programs can be used to extract data from CKD DASD images
@@ -596,6 +627,6 @@ If you have a question about Hercules, see the
 </center>
 
 <small>
-<p>Last updated 4 January 2004
+<p>Last updated 18 August 2005
 </BODY>
 </HTML>

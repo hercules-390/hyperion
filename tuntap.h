@@ -9,6 +9,8 @@
 #ifndef __TUNTAP_H_
 #define __TUNTAP_H_
 
+#include "hercules.h"
+
 // ====================================================================
 // Declarations
 // ====================================================================
@@ -17,9 +19,9 @@
 // Create TUN/TAP Interface
 //
 
-extern int      TUNTAP_CreateInterface  ( char*   pszTUNDevice, 
+extern int      TUNTAP_CreateInterface  ( char*   pszTUNDevice,
                                           int     iFlags,
-                                          int*    pfd, 
+                                          int*    pfd,
                                           char*   pszNetDevName );
 
 //
@@ -30,15 +32,23 @@ extern int      TUNTAP_SetIPAddr        ( char*   pszNetDevName,
                                           char*   pszIPAddr );
 extern int      TUNTAP_SetDestAddr      ( char*   pszNetDevName,
                                           char*   pszDestAddr );
+
+#ifdef OPTION_TUNTAP_SETNETMASK
 extern int      TUNTAP_SetNetMask       ( char*   pszNetDevName,
                                           char*   pszNetMask );
+#endif
+
 extern int      TUNTAP_SetMTU           ( char*   pszNetDevName,
                                           char*   pszMTU );
+#ifdef OPTION_TUNTAP_SETMACADDR
 extern int      TUNTAP_SetMACAddr       ( char*   pszNetDevName,
                                           char*   pszMACAddr );
+#endif
+
 extern int      TUNTAP_SetFlags         ( char*   pszNetDevName,
                                           int     iFlags );
 
+#ifdef OPTION_TUNTAP_DELADD_ROUTES
 extern int      TUNTAP_AddRoute         ( char*   pszNetDevName,
                                           char*   pszDestAddr,
                                           char*   pszNetMask,
@@ -49,32 +59,30 @@ extern int      TUNTAP_DelRoute         ( char*   pszNetDevName,
                                           char*   pszNetMask,
                                           char*   pszGWAddr,
                                           int     iFlags );
+#endif
 
 //
 // Helper Macros
 //
 
 #if defined( WIN32 )
-#define TUNTAP_Open     tt32_open
-#define TUNTAP_Close    tt32_close
-#define TUNTAP_Read     tt32_read
-#define TUNTAP_Write    tt32_write
-#define TUNTAP_IOCtl    tt32_ioctl
+  #define TUNTAP_Open     tt32_open
+  #define TUNTAP_Close    tt32_close
+  #define TUNTAP_Read     tt32_read
+  #define TUNTAP_Write    tt32_write
+  #define TUNTAP_IOCtl    tt32_ioctl
 #else
-#define TUNTAP_Open     open
-#define TUNTAP_Close    close
-#define TUNTAP_Read     read
-#define TUNTAP_Write    write
-#define TUNTAP_IOCtl    ioctl
+  #define TUNTAP_Open     open
+  #define TUNTAP_Close    close
+  #define TUNTAP_Read     read
+  #define TUNTAP_Write    write
+  #define TUNTAP_IOCtl    ioctl
 #endif // defined( WIN32 )
 
 #if defined( WIN32 )
-//
-// Good ole CygWin does not supply struct rtentry and it's
-// associated defines. In addition to this, it only defines
-// a handfull of the ioctl requests. This is BAD but CygWin
-// is NOT *nix... no matter how you slice it.
-//
+
+// Win32 (MinGW/Cygwin/MSVC) does not have these
+// so we need to define them ourselves...
 
 struct rtentry
 {
@@ -166,21 +174,21 @@ struct rtentry
 
 #define RTMSG_AR_FAILED         0x51    /* Address Resolution failed.  */
 
-//
-// CygWin headers define some of these...
-//
-
-#undef SIOCGIFCONF
-#undef SIOCGIFFLAGS
-#undef SIOCGIFADDR
-#undef SIOCGIFBRDADDR
-#undef SIOCGIFNETMASK
-#undef SIOCGIFMETRIC
-#undef SIOCGIFMTU
-#undef SIOCGIFHWADDR
-
 /* Use the definitions from the kernel header files.  */
 //#include <asm/ioctls.h>
+
+// PROGRAMMING NOTE: Cygwin's headers define some (but not all)
+// of the below values, but we unfortunately MUST use the below
+// defined values since they're what TunTap32 expects...
+
+#undef SIOCGIFCONF      // (discard Cygwin's value to use below instead)
+#undef SIOCGIFFLAGS     // (discard Cygwin's value to use below instead)
+#undef SIOCGIFADDR      // (discard Cygwin's value to use below instead)
+#undef SIOCGIFBRDADDR   // (discard Cygwin's value to use below instead)
+#undef SIOCGIFNETMASK   // (discard Cygwin's value to use below instead)
+#undef SIOCGIFMETRIC    // (discard Cygwin's value to use below instead)
+#undef SIOCGIFMTU       // (discard Cygwin's value to use below instead)
+#undef SIOCGIFHWADDR    // (discard Cygwin's value to use below instead)
 
 /* Routing table calls.  */
 #define SIOCADDRT       0x890B          /* add routing table entry      */
@@ -267,7 +275,6 @@ struct rtentry
 #define SIOCPROTOPRIVATE 0x89E0 /* to 89EF */
 
 #endif // defined( WIN32 )
-
 
 #endif // __TUNTAP_H_
 

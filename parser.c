@@ -1,7 +1,16 @@
 /* PARSER.C     (c) Copyright Nobody, 1999-2001                      */
 /*              Simple parameter parser                              */
 
-#include <stdio.h>
+#include "hstdinc.h"
+
+#define _PARSER_C_
+#define _HUTIL_DLL_
+#include "hercules.h"
+#include "parser.h"
+
+#if !defined( NULL )
+#define NULL 0
+#endif
 
 /*
 
@@ -96,14 +105,7 @@
 
 */
 
-#include "parser.h"
-#include <string.h>
-
-#if !defined( NULL )
-#define NULL 0
-#endif
-
-int
+DLL_EXPORT int
 parser( PARSER *pp, char *str, void *res )
 {
     int ndx;

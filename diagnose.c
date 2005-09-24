@@ -11,6 +11,7 @@
 /*      Set/reset bad frame indicator call by Jan Jaeger.            */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 /*-------------------------------------------------------------------*/
+#include "hstdinc.h"
 
 #include "hercules.h"
 
@@ -410,7 +411,7 @@ U32   code;
     /* Diagnose xxx: Invalid function code                           */
     /*---------------------------------------------------------------*/
 
-        if( HDC(debug_diagnose, code, r1, r2, regs) )
+        if( HDC4(debug_diagnose, code, r1, r2, regs) )
             return;
 
     /*  Power Off diagnose on 4361, 9371, 9373, 9375, 9377, 9221:    */

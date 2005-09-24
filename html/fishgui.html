@@ -1,14 +1,11 @@
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <head>
-   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.76 [en] (X11; U; Linux 2.2.18 i686) [Netscape]">
 </head>
 <script language="Javascript">
 <!--
 function confirm_quit() {
-  if(confirm('Are you sure you want to Power Off\n'
-     + 'This will terminate Hercules'))
+  if(confirm('Are you sure you want to Power Off?\n'
+     + 'This will terminate Hercules!!'))
     return true
   else
     return false
@@ -16,79 +13,100 @@ function confirm_quit() {
 //-->
 </script>
 <body>
+
 <center>
-<!table border=0 cellspacing=0 bgcolor="#000000">
+
 <table bgcolor="#000000">
-<tr>
-<td>
-<table border=0 cellspacing=0>
-<tr valign=bottom>
-<td>
-<table border=0 cellspacing=0>
-<tr>
-<form method=post action="/cgi-bin/tasks/syslog#bottom?command=store" target="main"><td><input type=image src="images/storeu.gif" border=0 alt="[store status]" name="[store status]"></td></form>
-<form method=post action="/cgi-bin/tasks/syslog#bottom?command=restart" target="main"><td><input type=image src="images/restartu.gif" border=0 alt="[restart]" name="[restart]"></td></form>
-</tr>
+    <tr>
+    <td>
+    <table border=0 cellspacing=0>
+    <tr valign=bottom>
+    <td>
+        <table border=0 cellspacing=0>
 
-<tr>
-<form method=post action="/cgi-bin/tasks/syslog#bottom?command=startall" target="main"><td><input type=image src="images/startu.gif" border=0 alt="[start]" name="[start]"></td></form>
+            <tr>
+                <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
+                    <input type=image src="images/storeu.gif" alt="Store Status" title="Store Status"></td>
+                    <input type=hidden name=command value=store>
+                </form>
+                <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
+                    <input type=image src="images/restartu.gif" alt="Restart" title="Restart"></td>
+                    <input type=hidden name=command value=restart>
+                </form>
+            </tr>
 
-<form method=post action="/cgi-bin/tasks/syslog#bottom?command=stopall" target="main"><td><input type=image src="images/stopu.gif" border=0 alt="[stop]" name="[stop]"></td></form>
-</tr>
+            <tr>
+                <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
+                    <input type=image src="images/startu.gif" alt="Start" title="Start"></td>
+                    <input type=hidden name=command value=startall>
+                </form>
+
+                <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
+                    <input type=image src="images/stopu.gif" alt="Stop" title="Stop"></td>
+                    <input type=hidden name=command value=stopall>
+                </form>
+            </tr>
+            
+        </table>
+    </td>
+
+    <td></td>
+
+    <td>
+        <table border=0 cellspacing=0>
+            <tr>
+                <td><img src="images/dial1.gif" alt="Dial 1" title="Dial 1"></td>
+                <td><img src="images/dial1.gif" alt="Dial 2" title="Dial 2"></td>
+                <td><img src="images/dial1.gif" alt="Dial 3" title="Dial 3"></td>
+                <td><img src="images/dial1.gif" alt="Dial 4" title="Dial 4"></td>
+            </tr>
+        </table>
+    </td>
+
+    <td>
+        <table border=0 cellspacing=0>
+            <tr>
+                <td><img src="images/sysonu.gif"  alt="Sys"  title="Sys"></td>
+                <td><img src="images/manonu.gif"  alt="Man"  title="Man"></td>
+                <td><img src="images/waitonu.gif" alt="Wait" title="Wait"></td>
+                <td><img src="images/loadonu.gif" alt="Load" title="Load"></td>
+            </tr>
+        </table>
+    </td>
+
+    <td>
+    <table border=0 cellspacing=0>
+    <tr>
+        <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
+            <input type=image src="images/powerononu.gif" alt="Power On" title="Power On"></td>
+            <input type=hidden name=command value="* * * Already Powered On! * * *">
+        </form>
+        <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main" onSubmit="return confirm_quit()"><td>
+            <input type=image src="images/poweroffu.gif" alt="Power Off" title="Power Off"></td>
+            <input type=hidden name=command value=quit>
+        </form>
+    </tr>
+
+    <tr>
+        <form method=post action="/cgi-bin/tasks/syslog#bottom" target="main"><td>
+            <input type=image src="images/interruptu.gif" alt="Interrupt" title="Interrupt"></td>
+            <input type=hidden name=command value=ext>
+        </form>
+        <form method=get action="/cgi-bin/tasks/ipl" target="main"><td>
+            <input type=image src="images/loadu.gif" alt="Load" title="Load"></td>
+            <input type=hidden name=command value=ipl>
+        </form>
+    </tr>
+
+    </table>
+    </td>
+    </tr>
+    </table>
+    </td>
+    </tr>
 </table>
-</td>
 
-<td></td>
-
-<td>
-<table border=0 cellspacing=0>
-<tr>
-<td><img src="images/dial1.gif" alt="[dial1]"></td>
-
-<td><img src="images/dial2.gif" alt="[dial2]"></td>
-
-<td><img src="images/dial3.gif" alt="[dial3]"></td>
-
-<td><img src="images/dial4.gif" alt="[dial4]"></td>
-</tr>
-</table>
-</td>
-
-<td>
-<table border=0 cellspacing=0>
-<tr>
-<td><img src="images/sysonu.gif" alt="[sys]"></td>
-
-<td><img src="images/manonu.gif" alt="[man]"></td>
-
-<td><img src="images/waitonu.gif" alt="[wait]"></td>
-
-<td><img src="images/loadonu.gif" alt="[load]"></td>
-</tr>
-</table>
-</td>
-
-<td>
-<table border=0 cellspacing=0>
-<tr>
-<td><img src="images/powerononu.gif" alt="[power on]"></td>
-
-<form method=post action="/cgi-bin/tasks/syslog#bottom?command=quit" target="main" onSubmit="return confirm_quit()"><td><input type=image src="images/poweroffu.gif" border=0 alt="[poweroff]" name="[power off]"></td></form>
-</tr>
-
-<tr>
-<form method=post action="/cgi-bin/tasks/syslog#bottom?command=ext" target="main" onSubmit=""><td><input type=image src="images/interruptu.gif" border=0 alt="[interrupt]" name="[interrupt]"></td></form>
-
-<form method=get action="/cgi-bin/tasks/ipl" target="main"><td><input type=image src="images/loadu.gif" border=0 alt="[load]" name="[load]"></td></form>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-</form>
 </center>
+
 </body>
 </html>

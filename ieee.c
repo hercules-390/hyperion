@@ -27,7 +27,7 @@
 
 /*
  * WARNING
- * For rapid implementation, this module was written to perform its   
+ * For rapid implementation, this module was written to perform its
  * floating point arithmetic using the floating point operations of
  * the native C compiler. This method is a short-cut which may under
  * some circumstances produce results different from those required
@@ -58,7 +58,11 @@
  * long double format will cause loss of precision and range.
  */
 
+#include "hstdinc.h"
+
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1
+#endif
 
 /* COMMENT OUT THE FOLLOWING DEFINE    */
 /* (_ISW_PREVENT_COMPWARN)             */
@@ -66,6 +70,12 @@
 /* INCOHERENT RESULTS IN RESPECT TO    */
 /* INFINITY.                           */
 #define _ISW_PREVENT_COMPWARN
+
+/* For Microsoft Visual C++, inhibit   */
+/* warning C4723: potential divide by 0*/
+#if defined(_MSVC_)
+ #pragma warning(disable:4723)
+#endif
 
 /* ABOUT THE MACRO BELOW :             */
 /* ISW 2004/09/15                      */
@@ -92,18 +102,14 @@ do { \
 } while(0)
 #endif
 
-
 #include "hercules.h"
-#include "opcode.h"
-#include "inline.h"
 
 #if defined(FEATURE_BINARY_FLOATING_POINT) && !defined(NO_IEEE_SUPPORT)
 
-#include <math.h>
-#ifndef WIN32
-#include <fenv.h>
-#else
-#include "ieee-w32.h"
+#include "opcode.h"
+#include "inline.h"
+#if defined(WIN32) && !defined(HAVE_FENV_H)
+  #include "ieee-w32.h"
 #endif
 
 /* Definitions of BFP rounding methods */
@@ -163,6 +169,18 @@ struct sbfp {
 #endif
 #ifndef HAVE_FREXPL
 #define frexpl(x,y) frexp(x,y)
+#endif
+#ifndef HAVE_LDEXPF
+#define ldexpf(x,y) ((float)ldexp((double)(x),(y)))
+#endif
+#ifndef HAVE_FREXPF
+#define frexpf(x,y) ((float)frexp((double)(x),(y)))
+#endif
+#ifndef HAVE_FABSF
+#define fabsf(x) ((float)fabs((double)(x)))
+#endif
+#ifndef HAVE_RINT
+#define rint(i) (((i)-floor(i)<0.5)?floor(i):ceil(i))
 #endif
 
 #endif  /* !defined(_IEEE_C) */
@@ -769,7 +787,7 @@ static void put_sbfp(struct sbfp *op, U32 *fpr)
     fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<23) | op->fract;
     //logmsg("sput exp=%d fract=%x r=%8.8x\n", op->exp, op->fract, *fpr);
 }
- 
+
 /*
  * Convert binary float to longer format
  */
@@ -941,7 +959,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
 } /* end function cnvt_bfp_to_hfp */
 
 /*
- * Convert hexadecimal long floating point register to 
+ * Convert hexadecimal long floating point register to
  * binary floating point and return condition code
  * Roger Bowler, 28 Nov 2004
  */
@@ -954,6 +972,7 @@ static int cnvt_hfp_to_bfp (U32 *fpr, int rounding,
     U64 fract;
     int roundup = 0;
     int cc;
+    U64 b;
 
     /* Break the source operand into sign, characteristic, fraction */
     sign = fpr[0] >> 31;
@@ -1027,23 +1046,24 @@ static int cnvt_hfp_to_bfp (U32 *fpr, int rounding,
             fract = 0;
         } else { /* Nmax */
             expo = (bfp_emax+bfp_ebias);
-            fract = 0x007FFFFFFFFFFFFFULL - ((1<<(1+(55-bfp_fractbits)))-1);
+            fract = 0x007FFFFFFFFFFFFFULL - (((U64)1<<(1+(55-bfp_fractbits)))-1);
         } /* Nmax */
     } /* end Nmax < |a| */
-     
+
     /* Set the result sign and exponent */
     *result_sign = sign;
     *result_exp = expo;
 
     /* Apply rounding before truncating to final fraction length */
-    if (roundup && (fract & (1<<(55-bfp_fractbits))))
+    b = ( (U64)1 ) << ( 55 - bfp_fractbits);
+    if (roundup && (fract & b))
     {
-        fract += (1<<(55-bfp_fractbits));
+        fract += b;
     }
 
     /* Convert 55-bit fraction to result fraction length */
     *result_fract = fract >> (55-bfp_fractbits);
-     
+
     return cc;
 } /* end function cnvt_hfp_to_bfp */
 
@@ -1117,8 +1137,8 @@ DEF_INST(convert_float_long_to_bfp_long_reg)
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
 
-    regs->psw.cc = 
-        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r1), m3, 
+    regs->psw.cc =
+        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r1), m3,
             /*fractbits*/52, /*emax*/1023, /*ebias*/1023,
             &(op1.sign), &(op1.exp), &(op1.fract));
 
@@ -1140,8 +1160,8 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
 
-    regs->psw.cc = 
-        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r1), m3, 
+    regs->psw.cc =
+        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r1), m3,
             /*fractbits*/23, /*emax*/127, /*ebias*/127,
             &(op1.sign), &(op1.exp), &fract);
     op1.fract = (U32)fract;
@@ -4430,7 +4450,7 @@ DEF_INST(multiply_subtract_bfp_short)
  * B384 SFPC  - SET FPC                                        [RRE]
  * This instruction is in module esame.c
  */
-  
+
 /*
  * B299 SRNM  - SET ROUNDING MODE                                [S]
  * This instruction is in module esame.c
@@ -4918,7 +4938,7 @@ static int divint_lbfp(struct lbfp *op1, struct lbfp *op2,
                         struct lbfp *op3, int mode, REGS *regs)
 {
     int r;
-     
+
     *op3 = *op1;
     r = divide_lbfp(op3, op2, regs);
     if (r) return r;
@@ -4928,16 +4948,16 @@ static int divint_lbfp(struct lbfp *op1, struct lbfp *op2,
 
     r = multiply_lbfp(op2, op3, regs);
     if (r) return r;
-     
+
     op2->sign = !(op2->sign);
     r = add_lbfp(op1, op2, regs);
     op2->sign = !(op2->sign);
     if (r) return r;
-     
+
     regs->psw.cc = 0;
     return 0;
 } /* end function divint_lbfp */
- 
+
 /*
  * B35B DIDBR - DIVIDE TO INTEGER (long BFP)                   [RRF]
  */
@@ -4985,12 +5005,12 @@ static int divint_sbfp(struct sbfp *op1, struct sbfp *op2,
 
     r = multiply_sbfp(op2, op3, regs);
     if (r) return r;
-     
+
     op2->sign = !(op2->sign);
     r = add_sbfp(op1, op2, regs);
     op2->sign = !(op2->sign);
     if (r) return r;
-     
+
     regs->psw.cc = 0;
     return 0;
 } /* end function divint_sbfp */

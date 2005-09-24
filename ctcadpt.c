@@ -7,7 +7,6 @@
 // vmnet     (C) Copyright Willem Konynenberg, 2000-2005
 // CTCT      (C) Copyright Vic Cross, 2001-2005
 //
-
 // Notes:
 //   This module contains the remaining CTC emulation modes that
 //   have not been moved to seperate modules. There is also logic
@@ -16,7 +15,10 @@
 //
 //   Please read README.NETWORKING for more info.
 //
-//#if !defined(__APPLE__)
+#include "hstdinc.h"
+
+#define _CTCADPT_C_
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 #include "devtype.h"
@@ -162,6 +164,8 @@ int  CTCX_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         pDEVBLK->typname = strdup(argv[0]);
         return (pDEVBLK->hnd->init)( pDEVBLK, --argc, ++argv );
     }
+    logmsg (_("HHCCT034E %s: Unrecognized/unsupported CTC emulation type\n"),
+        argv[0]);
     return -1;
 }
 
@@ -544,7 +548,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
     if( parm.listenfd < 0 )
     {
         logmsg( _("HHCCT007E %4.4X: Error creating socket: %s\n"),
-                dev->devnum, strerror( errno ) );
+                dev->devnum, strerror( HSO_errno ) );
         CTCX_Close( dev );
         return -1;
     }
@@ -564,7 +568,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
     if( rc < 0 )
     {
         logmsg( _("HHCCT008E %4.4X: Error binding to socket: %s\n"),
-                dev->devnum, strerror( errno ) );
+                dev->devnum, strerror( HSO_errno ) );
         CTCX_Close( dev );
         return -1;
     }
@@ -595,7 +599,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         if( parm.listenfd < 0 )
         {
             logmsg( _("HHCCT010E %4.4X: Error creating socket: %s\n"),
-                    dev->devnum, strerror( errno ) );
+                    dev->devnum, strerror( HSO_errno ) );
             CTCX_Close( dev );
             return -1;
         }
@@ -612,7 +616,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
                   sizeof( parm.addr ) ) < 0 )
         {
             logmsg( _("HHCCT011E %4.4X: Error binding to socket: %s\n"),
-                    dev->devnum, strerror( errno ) );
+                    dev->devnum, strerror( HSO_errno ) );
             CTCX_Close( dev );
             return -1;
         }
@@ -620,7 +624,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         if( listen( parm.listenfd, 1 ) < 0 )
         {
             logmsg( _("HHCCT012E %4.4X: Error on call to listen: %s\n"),
-                    dev->devnum, strerror( errno ) );
+                    dev->devnum, strerror( HSO_errno ) );
             CTCX_Close( dev );
             return -1;
         }
@@ -667,7 +671,7 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
     // Check that CCW count is sufficient to contain block header
     if( sCount < sizeof( CTCIHDR ) )
     {
-        logmsg( _("HHCCT014E %4.4X Write CCW count %u is invalid\n"),
+        logmsg( _("HHCCT014E %4.4X: Write CCW count %u is invalid\n"),
                 pDEVBLK->devnum, sCount );
 
         pDEVBLK->sense[0] = SENSE_DC;
@@ -785,13 +789,13 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
         }
 
         // Write the IP packet
-        rc = write( pDEVBLK->fd, pSegment->bData, sDataLen );
+        rc = write_socket( pDEVBLK->fd, pSegment->bData, sDataLen );
 
         if( rc < 0 )
         {
             logmsg( _("HHCCT019E %4.4X: Error writing to %s: %s\n"),
                     pDEVBLK->devnum, pDEVBLK->filename,
-                    strerror( errno ) );
+                    strerror( HSO_errno ) );
 
             pDEVBLK->sense[0] = SENSE_EC;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
@@ -849,11 +853,11 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
         return;
 
     case -1:
-        if( errno == EINTR )
+        if( HSO_errno == HSO_EINTR )
             return;
 
         logmsg( _("HHCCT020E %4.4X: Error reading from %s: %s\n"),
-                pDEVBLK->devnum, pDEVBLK->filename, strerror( errno ) );
+                pDEVBLK->devnum, pDEVBLK->filename, strerror( HSO_errno ) );
 
         pDEVBLK->sense[0] = SENSE_EC;
         *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
@@ -864,13 +868,13 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     }
 
     // Read an IP packet from the TUN device
-    iLength = read( pDEVBLK->fd, pDEVBLK->buf, pDEVBLK->bufsize );
+    iLength = read_socket( pDEVBLK->fd, pDEVBLK->buf, pDEVBLK->bufsize );
 
     // Check for other error condition
     if( iLength < 0 )
     {
         logmsg( _("HHCCT021E %4.4X: Error reading from %s: %s\n"),
-                pDEVBLK->devnum, pDEVBLK->filename, strerror( errno ) );
+                pDEVBLK->devnum, pDEVBLK->filename, strerror( HSO_errno ) );
         pDEVBLK->sense[0] = SENSE_EC;
         *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
         return;
@@ -965,7 +969,7 @@ static void*  CTCT_ListenThread( void* argp )
                       "                 Config=%s, connecting client=%s\n"),
                     parm.dev->devnum,
                     parm.dev->filename, str);
-            close( connfd );
+            close_socket( connfd );
         }
         else
         {
@@ -984,7 +988,7 @@ static void*  CTCT_ListenThread( void* argp )
 }
 
 // ====================================================================
-// VMNET Support
+// VMNET Support -- written by Willem Konynenberg
 // ====================================================================
 
 /*-------------------------------------------------------------------*/
@@ -1038,7 +1042,7 @@ char *ipaddress;
         }
 
         /* the ugly cast is to silence a compiler warning due to const */
-        execv (argv[0], (char *const *)argv);
+        execv (argv[0], (EXECV_ARG2_ARGV_T)argv);
 
         exit (1);
     }
@@ -1308,7 +1312,7 @@ int             lastlen = 2;            /* block length at last pckt */
     }
 }
 /*-------------------------------------------------------------------*/
-/* End of vmnet functions written by Willem Konynenberg              */
+/* End of VMNET functions written by Willem Konynenberg              */
 /*-------------------------------------------------------------------*/
 
 // ====================================================================
@@ -1426,4 +1430,3 @@ void  packet_trace( BYTE* pAddr, int iLen )
         logmsg( " %s\n", print_chars );
     }
 }
-//#endif /* !defined(__APPLE__) */

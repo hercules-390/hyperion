@@ -9,16 +9,10 @@
 || ----------------------------------------------------------------------------
 */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "hstdinc.h"
 
-#include "hetlib.h"
-#include "sllib.h"
 #include "hercules.h"
-#include <fcntl.h>
-#include <unistd.h>
-#include <time.h>
+#include "hetlib.h"
 #include "sllib.h"
 #include "herc_getopt.h"
 
@@ -33,14 +27,6 @@ static const char help[] =
     "  -h  display usage summary\n"
     "  -i  create an IEHINITT formatted tape (default: on)\n"
     "  -n  create an NL tape\n";
-
-#ifdef EXTERNALGUI
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-#if 0
-int extgui = 0;
-#endif
-#endif /*EXTERNALGUI*/
 
 /*
 || Prints usage information
@@ -85,6 +71,8 @@ main( int argc, char *argv[] )
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 

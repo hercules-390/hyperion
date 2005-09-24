@@ -1,6 +1,7 @@
 /* CON1052.C    (c)Copyright Jan Jaeger, 2004-2005                   */
 /*              Emulated 1052 on hercules console                    */
 
+#include "hstdinc.h"
 
 #include "hercules.h"
 
@@ -10,13 +11,15 @@
 
 #include "sr.h"
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
+#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
  SYSBLK *psysblk;
  #define sysblk (*psysblk)
 void* (*panel_command) (void*);
 #endif
 
+#if defined(OPTION_DYNAMIC_LOAD)
 static void* con1052_panel_command  (char *cmd);
+#endif
 
 #define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
 
@@ -336,6 +339,7 @@ DEVHND con1052_device_hndinfo = {
 };
 
 
+#if defined(OPTION_DYNAMIC_LOAD)
 static void*
 con1052_panel_command (char *cmd)
 {
@@ -378,7 +382,7 @@ int  i;
 
     return  next_panel_command_handler(cmd);
 }
-
+#endif
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
@@ -401,7 +405,7 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
 #undef sysblk
 HDL_RESOLVER_SECTION;
 {

@@ -16,6 +16,8 @@
 /* the members are unloaded as fixed length binary files.            */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 #include "dasdblks.h"
 
@@ -24,14 +26,6 @@
 /*-------------------------------------------------------------------*/
 static BYTE asciiflag = 0;              /* 1=Translate to ASCII      */
 static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-
-#ifdef EXTERNALGUI
-#if 0
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif
-#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to process a member                                    */
@@ -59,6 +53,7 @@ FILE           *ofp;                    /* Output file pointer       */
 char            ofname[256];            /* Output file name          */
 int             offset;                 /* Offset of record in buffer*/
 char            card[81];               /* Logical record (ASCIIZ)   */
+BYTE            pathname[MAX_PATH];     /* ofname in host format     */
 
     /* Build the output file name */
     memset (ofname, 0, sizeof(ofname));
@@ -67,7 +62,8 @@ char            card[81];               /* Logical record (ASCIIZ)   */
     strcat (ofname, ".mac");
 
     /* Open the output file */
-    ofp = fopen (ofname, "w");
+    hostpath(pathname, ofname, sizeof(pathname));
+    ofp = fopen (pathname, (asciiflag? "w" : "wb"));
     if (ofp == NULL)
     {
         fprintf (stderr,
@@ -242,6 +238,8 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 

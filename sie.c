@@ -10,6 +10,8 @@
 
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 
+#include "hstdinc.h"
+
 // #define SIE_DEBUG
 
 #include "hercules.h"
@@ -265,19 +267,21 @@ int     icode = 0;                      /* Interception code         */
         release_lock(&sysblk.intlock);
     }
 
-    /* Initialize guestregs if first time */
-    if (GUESTREGS == NULL)
-    {
+     /* Initialize guestregs if first time */
+     if (GUESTREGS == NULL)
+     {
         GUESTREGS = calloc (sizeof(REGS), 1);
         if (GUESTREGS == NULL)
-        {
-            logmsg (_("HHCCP079E CPU%4.4X: calloc failed for sie regs: %s\n"),
-                    regs->cpuad, strerror(errno));
-            signal_thread(sysblk.cputid[regs->cpuad], SIGUSR1);
-            return;
-        }
+         {
+             logmsg (_("HHCCP079E CPU%4.4X: calloc failed for sie regs: %s\n"),
+                     regs->cpuad, strerror(errno));
+#if !defined(NO_SIGABEND_HANDLER)
+             signal_thread(sysblk.cputid[regs->cpuad], SIGUSR1);
+#endif
+             return;
+         }
         cpu_init (regs->cpuad, GUESTREGS, regs);
-    }
+     }
 
     /* Direct pointer to state descriptor block */
     GUESTREGS->siebk = (void*)(regs->mainstor + effective_addr2);
@@ -344,7 +348,7 @@ int     icode = 0;                      /* Interception code         */
     if(STATEBK->mx & SIE_MX_RRF)
     {
     RADR mso, msl, eso = 0, esl = 0;
-    
+
         if(STATEBK->zone >= FEATURE_SIE_MAXZONES)
         {
             /* Validity intercept for invalid zone */
@@ -353,7 +357,7 @@ int     icode = 0;                      /* Interception code         */
             STATEBK->c = SIE_C_VALIDITY;
             return;
         }
-       
+
         mso = sysblk.zpb[STATEBK->zone].mso << 20;
         msl = (sysblk.zpb[STATEBK->zone].msl << 20) | 0xFFFFF;
         eso = sysblk.zpb[STATEBK->zone].eso << 20;
@@ -367,7 +371,7 @@ int     icode = 0;                      /* Interception code         */
             STATEBK->c = SIE_C_VALIDITY;
             return;
         }
-       
+
         /* Ensure addressing exceptions on incorrect zone defs */
         if(mso > regs->mainlim || msl > regs->mainlim)
             mso = msl = 0;
@@ -427,7 +431,7 @@ int     icode = 0;                      /* Interception code         */
         /* Load main storage origin */
         FETCH_HW(GUESTREGS->sie_mso,STATEBK->mso);
         GUESTREGS->sie_mso <<= 16;
-    
+
         /* Load main storage extend */
         FETCH_HW(GUESTREGS->mainlim,STATEBK->mse);
         GUESTREGS->mainlim = ((GUESTREGS->mainlim + 1) << 16) - 1;
@@ -438,7 +442,7 @@ int     icode = 0;                      /* Interception code         */
                            | STATEBK->xso[1] << 8
                            | STATEBK->xso[2];
         GUESTREGS->sie_xso *= (XSTORE_INCREMENT_SIZE >> XSTORE_PAGESHIFT);
-    
+
         /* Load expanded storage limit */
         GUESTREGS->sie_xsl = STATEBK->xsl[0] << 16
                            | STATEBK->xsl[1] << 8
@@ -472,8 +476,8 @@ int     icode = 0;                      /* Interception code         */
         if (GUESTREGS->sie_pref)
         {
             SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
-                       SIE_VI_WHY_MSONZ, GUESTREGS);
-            STATEBK->c = SIE_C_VALIDITY; 
+              SIE_VI_WHY_MSONZ, GUESTREGS);
+            STATEBK->c = SIE_C_VALIDITY;
             return;
         }
 
@@ -514,9 +518,9 @@ int     icode = 0;                      /* Interception code         */
     FETCH_HW(GUESTREGS->todpr, STATEBK->todpf);
 
     /* Load the guest registers */
-    memcpy(GUESTREGS->gr, regs->gr, 14 * sizeof(U64));
-    memcpy(GUESTREGS->ar, regs->ar, 16 * sizeof(U32));
-    memcpy(GUESTREGS->fpr, regs->fpr, 32 * sizeof(U32));
+    memcpy(GUESTREGS->gr, regs->gr, 14 * sizeof(regs->gr[0]));
+    memcpy(GUESTREGS->ar, regs->ar, 16 * sizeof(regs->ar[0]));
+    memcpy(GUESTREGS->fpr, regs->fpr, 32 * sizeof(regs->fpr[0]));
 #if defined(FEATURE_BINARY_FLOATING_POINT)
     GUESTREGS->fpc =  regs->fpc;
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
@@ -640,8 +644,8 @@ int     icode = 0;                      /* Interception code         */
         /* Interval timer if S/370 and timer is enabled */
         if((STATEBK->m & SIE_M_370) && !(STATEBK->m & SIE_M_ITMOF))
         {
-         S32 itimer, olditimer;
-         U32 residue;
+            S32 itimer, olditimer;
+            U32 residue;
 
             /* Set the interval timer pending according to the T bit
                in the state control */
@@ -822,9 +826,9 @@ int     n;
         STORE_W(STATEBK->cr[n], GUESTREGS->CR(n));
 
     /* Update the approprate host registers */
-    memcpy(regs->gr, GUESTREGS->gr, 14 * sizeof(U64));
-    memcpy(regs->ar, GUESTREGS->ar, 16 * sizeof(U32));
-    memcpy(regs->fpr, GUESTREGS->fpr, 32 * sizeof(U32));
+    memcpy(regs->gr, GUESTREGS->gr, 14 * sizeof(regs->gr[0]));
+    memcpy(regs->ar, GUESTREGS->ar, 16 * sizeof(regs->ar[0]));
+    memcpy(regs->fpr, GUESTREGS->fpr, 32 * sizeof(regs->fpr[0]));
 #if defined(FEATURE_BINARY_FLOATING_POINT)
     regs->fpc =  GUESTREGS->fpc;
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
@@ -847,7 +851,7 @@ int     n;
           && ECMODE(&GUESTREGS->psw)
           && (GUESTREGS->psw.sysmask & PSW_PERMODE) )
         {
-        PSA *psa;   
+        PSA *psa;
 #if defined(_FEATURE_PER2)
             GUESTREGS->perc |= OPEN_IC_PERINT(GUESTREGS) >> ((32 - IC_CR9_SHIFT) - 16);
             /* Positions 14 and 15 contain zeros if a storage alteration
@@ -991,10 +995,10 @@ int ARCH_DEP(run_sie) (REGS *regs)
                             waittime.tv_sec = now.tv_sec;
                             waittime.tv_nsec = ((now.tv_usec + 3333) * 1000);
 
-                            set_bit (4, regs->cpuad, &sysblk.waiting_mask);
+                            sysblk.waiting_mask |= BIT(regs->cpuad);
                             timed_wait_condition
                                  (&regs->intcond, &sysblk.intlock, &waittime);
-                            clear_bit (4, regs->cpuad, &sysblk.waiting_mask);
+                            sysblk.waiting_mask &= ~BIT(regs->cpuad);
                         }
 
                         release_lock (&sysblk.intlock);

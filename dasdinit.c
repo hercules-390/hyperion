@@ -35,17 +35,10 @@
 /*              Shouldn't be specified if model is specified.        */ 
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+#include "hstdinc.h"
 
 #include "hercules.h"
 #include "dasdblks.h"
-
-#ifdef EXTERNALGUI
-#if 0
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif
-#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to display command syntax and exit                     */
@@ -103,7 +96,7 @@ argexit ( int code, char *m )
 #endif
 "  -0         build compressed dasd image file with no compression\n"
 );
-        if (sizeof(off_t) > 4) fprintf(stderr,
+        if (sizeof(OFF_T) > 4) fprintf(stderr,
 "  -lfs       build a large (uncompressed) dasd file (if supported)\n"
 );
         fprintf(stderr,
@@ -150,7 +143,7 @@ char    volser[7];                      /* Volume serial number      */
 BYTE    c;                              /* Character work area       */
 CKDDEV *ckd;                            /* -> CKD device table entry */
 FBADEV *fba;                            /* -> FBA device table entry */
-int     lfs = 0;                        /* 1=Build large file        */
+int     lfs = 0;                        /* 1 = Build large file      */
 int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
 
 #ifdef EXTERNALGUI
@@ -158,6 +151,8 @@ int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 
@@ -180,7 +175,7 @@ int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
 #endif
         else if (strcmp("a", &argv[1][1]) == 0)
             altcylflag = 1;
-        else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(off_t) > 4)
+        else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(OFF_T) > 4)
             lfs = 1;
         else if (strcmp("linux", &argv[1][1]) == 0)
             nullfmt = CKDDASD_NULLTRK_FMT2;

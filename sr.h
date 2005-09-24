@@ -466,7 +466,7 @@
 #define SR_WRITE(_ptr, _size, _nmemb, _stream) \
  fwrite((_ptr), (_size), (_nmemb), (_stream))
 #define SR_SEEK(_stream, _offset, _whence) \
- fseek((_stream), (_offset), (_whence))
+ FSEEK((_stream), (_offset), (_whence))
 #define SR_CLOSE(_stream) \
  fclose((_stream))
 #endif
@@ -486,7 +486,7 @@ do { \
   size_t _rc; \
   if (strlen((_s)) + 1 > SR_MAX_STRING_LENGTH) SR_STRING_ERROR; \
   SR_WRITE_HDR((_file), (_key), strlen((_s)) + 1); \
-  _rc = SR_WRITE((_s), strlen((_s)) + 1, 1, (_file)); \
+  _rc = SR_WRITE((_s), 1, strlen((_s)) + 1, (_file)); \
   if (_rc != strlen((_s)) + 1) SR_WRITE_ERROR; \
 } while (0);
 
@@ -495,7 +495,7 @@ do { \
   size_t _rc; \
   if ((_len)) { \
     SR_WRITE_HDR((_file), (_key), (_len)); \
-    _rc = SR_WRITE((_buf), (_len), 1, (_file)); \
+    _rc = SR_WRITE((_buf), 1, (_len), (_file)); \
     if (_rc != (_len)) SR_WRITE_ERROR; \
   } else \
     SR_WRITE_HDR((_file), (_key), 0); \
@@ -514,7 +514,7 @@ do { \
     case 4: store_fw(_buf, (_val)); break; \
     case 8: store_dw(_buf, (_val)); break; \
   } \
-  _rc = SR_WRITE(_buf, (_len), 1, (_file)); \
+  _rc = SR_WRITE(_buf, 1, (_len), (_file)); \
   if (_rc != (_len)) SR_WRITE_ERROR; \
 } while (0)
 
@@ -537,7 +537,7 @@ do { \
   BYTE _buf[256]; \
   _l = (_len); \
   while (_l) { \
-    _rc = SR_READ(_buf, _l < 256 ? _l : 256, 1, (_file)); \
+    _rc = SR_READ(_buf, 1, _l < 256 ? _l : 256, (_file)); \
     if (_rc == (size_t)-1) SR_READ_ERROR; \
     _l -= _l < 256 ? _l : 256; \
   } \
@@ -547,14 +547,14 @@ do { \
 do { \
   size_t _rc; \
   if ((_len) > SR_MAX_STRING_LENGTH) SR_STRING_ERROR; \
-  _rc = SR_READ((_p), (_len), 1, (_file)); \
+  _rc = SR_READ((_p), 1, (_len), (_file)); \
   if (_rc != (_len)) SR_READ_ERROR; \
 } while (0)
 
 #define SR_READ_BUF(_file, _p, _len) \
 do { \
   size_t _rc; \
-  _rc = SR_READ((_p), (_len), 1, (_file)); \
+  _rc = SR_READ((_p), 1, (_len), (_file)); \
   if (_rc != (_len)) SR_READ_ERROR; \
 } while (0)
 
@@ -565,7 +565,7 @@ do { \
   U64 _value; \
   if ((_len1) != 1 && (_len1) != 2 && (_len1) != 4 && (_len1) != 8) \
     SR_VALUE_ERROR; \
-  _rc = SR_READ(_buf, (_len1), 1, (_file)); \
+  _rc = SR_READ(_buf, 1, (_len1), (_file)); \
   if (_rc != (_len1)) SR_READ_ERROR; \
   switch ((_len1)) { \
     case 1: _value = _buf[0]; break; \

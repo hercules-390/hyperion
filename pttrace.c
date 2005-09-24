@@ -5,6 +5,11 @@
 /* Trace threading calls                                             */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
+#define _PTTRACE_C_
+#define _HUTIL_DLL_
+
 #include "hercules.h"
 
 #ifdef OPTION_PTTRACE
@@ -17,7 +22,7 @@ int        pttimer;                     /* 1=trace timer events      */
 int        pttnothreads;                /* 1=no threads events       */
 int        pttnolock;                   /* 1=no PTT locking          */
 
-void ptt_trace_init (int n, int init)
+DLL_EXPORT void ptt_trace_init (int n, int init)
 {
     if (n > 0)
         pttrace = calloc (n, PTT_TRACE_SIZE);
@@ -44,7 +49,7 @@ void ptt_trace_init (int n, int init)
     }
 }
 
-int ptt_cmd(int argc, char *argv[], char* cmdline)
+DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
 {
     int  n;
     char c;
@@ -109,13 +114,13 @@ int ptt_cmd(int argc, char *argv[], char* cmdline)
 }
 
 #ifndef OPTION_FTHREADS
-int ptt_pthread_mutex_init(LOCK *mutex, pthread_mutexattr_t *attr, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, pthread_mutexattr_t *attr, char *file, int line)
 {
     PTTRACE ("lock init", mutex, attr, file, line, PTT_MAGIC);
     return pthread_mutex_init(mutex, attr);
 }
 
-int ptt_pthread_mutex_lock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, char *file, int line)
 {
 int result;
 
@@ -125,7 +130,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_mutex_trylock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, char *file, int line)
 {
 int result;
 
@@ -135,7 +140,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_mutex_unlock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, char *file, int line)
 {
 int result;
 
@@ -144,13 +149,13 @@ int result;
     return result;
 }
 
-int ptt_pthread_cond_init(COND *cond, pthread_condattr_t *attr, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_init(COND *cond, pthread_condattr_t *attr, char *file, int line)
 {
     PTTRACE ("cond init", NULL, cond, file, line, PTT_MAGIC);
     return pthread_cond_init(cond, attr);
 }
 
-int ptt_pthread_cond_signal(COND *cond, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_signal(COND *cond, char *file, int line)
 {
 int result;
 
@@ -159,7 +164,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_cond_broadcast(COND *cond, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_broadcast(COND *cond, char *file, int line)
 {
 int result;
 
@@ -168,7 +173,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *file, int line)
 {
 int result;
 
@@ -178,7 +183,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_cond_timedwait(COND *cond, LOCK *mutex,
+DLL_EXPORT int ptt_pthread_cond_timedwait(COND *cond, LOCK *mutex,
                           const struct timespec *time, char *file, int line)
 {
 int result;
@@ -189,7 +194,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_create(pthread_t *tid, ATTR *attr,
+DLL_EXPORT int ptt_pthread_create(pthread_t *tid, ATTR *attr,
                        void *(*start)(), void *arg, char *file, int line)
 {
 int result;
@@ -199,7 +204,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_join(pthread_t tid, void **value, char *file, int line)
+DLL_EXPORT int ptt_pthread_join(pthread_t tid, void **value, char *file, int line)
 {
 int result;
 
@@ -209,7 +214,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_detach(pthread_t tid, char *file, int line)
+DLL_EXPORT int ptt_pthread_detach(pthread_t tid, char *file, int line)
 {
 int result;
 
@@ -219,19 +224,19 @@ int result;
     return result;
 }
 
-int ptt_pthread_kill(pthread_t tid, int sig, char *file, int line)
+DLL_EXPORT int ptt_pthread_kill(pthread_t tid, int sig, char *file, int line)
 {
     PTTRACE ("kill", (void *)tid, (void *)(long)sig, file, line, PTT_MAGIC);
     return pthread_kill(tid, sig);
 }
 #else /* OPTION_FTHREADS */
-int ptt_pthread_mutex_init(LOCK *mutex, void *attr, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_init(LOCK *mutex, void *attr, char *file, int line)
 {
     PTTRACE ("lock init", mutex, attr, file, line, PTT_MAGIC);
     return fthread_mutex_init(mutex,attr);
 }
 
-int ptt_pthread_mutex_lock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_lock(LOCK *mutex, char *file, int line)
 {
 int result;
 
@@ -241,7 +246,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_mutex_trylock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_trylock(LOCK *mutex, char *file, int line)
 {
 int result;
 
@@ -251,7 +256,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_mutex_unlock(LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_mutex_unlock(LOCK *mutex, char *file, int line)
 {
 int result;
 
@@ -260,14 +265,14 @@ int result;
     return result;
 }
 
-int ptt_pthread_cond_init(COND *cond, void *attr, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_init(COND *cond, void *attr, char *file, int line)
 {
     UNREFERENCED(attr);
     PTTRACE ("cond init", NULL, cond, file, line, PTT_MAGIC);
     return fthread_cond_init(cond);
 }
 
-int ptt_pthread_cond_signal(COND *cond, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_signal(COND *cond, char *file, int line)
 {
 int result;
 
@@ -276,7 +281,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_cond_broadcast(COND *cond, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_broadcast(COND *cond, char *file, int line)
 {
 int result;
 
@@ -285,7 +290,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *file, int line)
+DLL_EXPORT int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *file, int line)
 {
 int result;
 
@@ -295,7 +300,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_cond_timedwait(COND *cond, LOCK *mutex,
+DLL_EXPORT int ptt_pthread_cond_timedwait(COND *cond, LOCK *mutex,
                                 struct timespec *time, char *file, int line)
 {
 int result;
@@ -306,7 +311,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_create(fthread_t *tid, ATTR *attr,
+DLL_EXPORT int ptt_pthread_create(fthread_t *tid, ATTR *attr,
                        PFT_THREAD_FUNC start, void *arg, char *file, int line)
 {
 int result;
@@ -316,7 +321,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_join(fthread_t tid, void **value, char *file, int line)
+DLL_EXPORT int ptt_pthread_join(fthread_t tid, void **value, char *file, int line)
 {
 int result;
 
@@ -326,7 +331,7 @@ int result;
     return result;
 }
 
-int ptt_pthread_detach(fthread_t tid, char *file, int line)
+DLL_EXPORT int ptt_pthread_detach(fthread_t tid, char *file, int line)
 {
 int result;
 
@@ -336,26 +341,47 @@ int result;
     return result;
 }
 
-int ptt_pthread_kill(fthread_t tid, int sig, char *file, int line)
+DLL_EXPORT int ptt_pthread_kill(fthread_t tid, int sig, char *file, int line)
 {
     PTTRACE ("kill", (void *)tid, (void *)sig, file, line, PTT_MAGIC);
     return fthread_kill(tid, sig);
 }
 #endif
 
-void ptt_pthread_trace (char * type, void *data1, void *data2,
+DLL_EXPORT void ptt_pthread_trace (char * type, void *data1, void *data2,
                         char *file, int line, int result)
 {
 int i;
 
     if (pttrace == NULL) return;
 
+    /*
+    ** Fish debug: it appears MSVC sometimes sets the __FILE__ macro
+    ** to a full path filename (rather than just the filename only)
+    ** under certain circumstances. (I think maybe it's only for .h
+    ** files since vstore.h is the one that's messing up). Therefore
+    ** for MSVC we need to convert it to just the filename. ((sigh))
+    */
+#if defined( _MSVC_ )   // fish debug; appears to be vstore.h
+                        // maybe all *.h files are this way??
+    {
+        char* p = strrchr( file, '\\' );
+        if (!p) p = strrchr( file, '/' );
+        if (p)
+            file = p+1;
+#if 1
+        if ( strcasecmp( file, "logger.c" ) == 0 )
+            return; // fish debug: I'm not interested in these
+#endif
+    }
+#endif
+
 /* Timer thread can produce hundreds of entries per second
- * (by obtaining intlock and todlock each HZ).  
+ * (by obtaining intlock and todlock each HZ).
  * Command `ptt timer' will trace timer entries, `ptt notimer'
  * (default) will ignore timer entries.
  */
-    if (pttimer == 0 && strcmp(file, "timer.c") == 0) return;
+    if (pttimer == 0 && strcasecmp(file, "timer.c") == 0) return;
 
     OBTAIN_PTTLOCK;
     if (pttrace == NULL)
@@ -376,12 +402,13 @@ int i;
     pttrace[i].result = result;
 }
 
-void ptt_pthread_print ()
+DLL_EXPORT void ptt_pthread_print ()
 {
 PTT_TRACE *p;
 int   i;
 char  result[32]; // (result is 'int'; if 64-bits, 19 digits or more!)
 char *tbuf;
+time_t tt;
 
     if (pttrace == NULL) return;
     OBTAIN_PTTLOCK;
@@ -393,21 +420,15 @@ char *tbuf;
     {
         if (p[i].tid)
         {
-            tbuf = ctime((time_t *)&p[i].tv.tv_sec);
+            tt = p[i].tv.tv_sec;
+            tbuf = ctime(&tt);
             tbuf[19] = '\0';
             sprintf(result, "%d", p[i].result);
             if (p[i].result == PTT_MAGIC) result[0] = '\0';
-#if SIZEOF_INT_P == 8
-            logmsg ("%8.8x %-12.12s %16.16llx %16.16llx %-12.12s %4d %s" "." "%6.6ld %s\n",
-                (U32)p[i].tid, p[i].type, (U64)p[i].data1,
-                (U64)p[i].data2, p[i].file, p[i].line,
+            logmsg ("%8.8x %-12.12s "PTR_FMTx" "PTR_FMTx" %-12.12s %4d %s" "." "%6.6ld %s\n",
+                (U32)p[i].tid, p[i].type, (uintptr_t)p[i].data1,
+                (uintptr_t)p[i].data2, p[i].file, p[i].line,
                 tbuf + 11, p[i].tv.tv_usec, result);
-#else
-            logmsg ("%8.8x %-12.12s %8.8x %8.8x %-12.12s %4d %s" "." "%6.6ld %s\n",
-                (U32)p[i].tid, p[i].type, (U32)p[i].data1,
-                (U32)p[i].data2, p[i].file, p[i].line,
-                tbuf + 11, p[i].tv.tv_usec, result);
-#endif
         }
         if (++i >= pttracen) i = 0;
     } while (i != pttracex);

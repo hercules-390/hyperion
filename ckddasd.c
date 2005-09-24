@@ -16,6 +16,11 @@
 /*        Pogonchenko and Volker Bandke             V1.71 16/01/2001 */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
+#define _CKDDASD_C_
+#define _HDASD_DLL_
+
 #include "hercules.h"
 #include "devtype.h"
 #include "sr.h"
@@ -179,7 +184,7 @@ static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 int ckddasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int             rc;                     /* Return code               */
-struct stat     statbuf;                /* File information          */
+struct STAT     statbuf;                /* File information          */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 int             i;                      /* Loop index                */
@@ -194,6 +199,7 @@ int             highcyl;                /* Highest cyl# in CKD file  */
 char           *cu = NULL;              /* Specified control unit    */
 char           *kw;                     /* Argument keyword          */
 int             cckd=0;                 /* 1 if compressed CKD       */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3380;
@@ -212,7 +218,8 @@ int             cckd=0;                 /* 1 if compressed CKD       */
     dev->shared = 1;
 
     /* Check for possible remote device */
-    if (stat(dev->filename, &statbuf) < 0)
+    hostpath(pathname, dev->filename, sizeof(pathname));
+    if (STAT(pathname, &statbuf) < 0)
     {
         rc = shared_ckd_init ( dev, argc, argv);
         if (rc < 0)
@@ -334,12 +341,13 @@ int             cckd=0;                 /* 1 if compressed CKD       */
     for (fileseq = 1;;)
     {
         /* Open the CKD image file */
-        dev->fd = open (dev->filename, dev->ckdrdonly ?
+        hostpath(pathname, dev->filename, sizeof(pathname));
+        dev->fd = open (pathname, dev->ckdrdonly ?
                         O_RDONLY|O_BINARY : O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {   /* Try read-only if shadow file present */
             if (!dev->ckdrdonly && dev->dasdsfn != NULL)
-                dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
+                dev->fd = open (pathname, O_RDONLY|O_BINARY);
             if (dev->fd < 0)
             {
                 logmsg (_("HHCDA005E %s open error: %s\n"),
@@ -357,7 +365,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         }
 
         /* Determine the device size */
-        rc = fstat (dev->fd, &statbuf);
+        rc = FSTAT (dev->fd, &statbuf);
         if (rc < 0)
         {
             logmsg (_("HHCDA007E %s fstat error: %s\n"),
@@ -452,7 +460,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
                     devhdr.fileseq = fileseq == 1 ? 0 : fileseq;
                     highcyl = 0;
                     devhdr.highcyl[0] = devhdr.highcyl[1] = 0;
-                    rc = lseek (dev->fd, 0, SEEK_SET);
+                    LSEEK (dev->fd, 0, SEEK_SET);
                     rc = write (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE);
                 }
             }
@@ -500,7 +508,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
 
         /* Consistency check device header */
         if (cckd == 0 && dev->dasdcopy == 0 && (cyls * heads != trks
-            || ((off_t)trks * trksize) + CKDDASD_DEVHDR_SIZE
+            || ((OFF_T)trks * trksize) + CKDDASD_DEVHDR_SIZE
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
         {
@@ -739,12 +747,12 @@ int ckddasd_read_track (DEVBLK *dev, int trk, BYTE *unitstat)
 int             rc;                     /* Return code               */
 int             cyl;                    /* Cylinder                  */
 int             head;                   /* Head                      */
-off_t           offset;                 /* File offsets              */
+OFF_T           offset;                 /* File offsets              */
 int             i,o,f;                  /* Indexes                   */
 int             active;                 /* 1=Synchronous I/O active  */
 CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
-    DEVTRACE (_("HHCDA024I read trk %d cur trk %d\n"), trk, dev->bufcur);
+    logdevtr (dev, _("HHCDA024I read trk %d cur trk %d\n"), trk, dev->bufcur);
 
     /* Calculate cylinder and head */
     cyl = trk / dev->ckdheads;
@@ -773,14 +781,14 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
             return -1;
         }
 
-        DEVTRACE (_("HHCDA025I read track: updating track %d\n"),
+        logdevtr (dev, _("HHCDA025I read track: updating track %d\n"),
                   dev->bufcur);
 
         dev->bufupd = 0;
 
         /* Seek to the old track image offset */
-        offset = (off_t)(dev->ckdtrkoff + dev->bufupdlo);
-        offset = lseek (dev->fd, offset, SEEK_SET);
+        offset = (OFF_T)(dev->ckdtrkoff + dev->bufupdlo);
+        offset = LSEEK (dev->fd, offset, SEEK_SET);
         if (offset < 0)
         {
             /* Handle seek error condition */
@@ -845,7 +853,7 @@ ckd_read_track_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        DEVTRACE (_("HHCDA028I read trk %d cache hit, using cache[%d]\n"),
+        logdevtr (dev, _("HHCDA028I read trk %d cache hit, using cache[%d]\n"),
                   trk, i);
 
         dev->cachehits++;
@@ -864,7 +872,7 @@ ckd_read_track_retry:
 
         /* Calculate the track offset */
         dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
-             (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
+             (OFF_T)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
 
         dev->syncio_active = active;
 
@@ -882,7 +890,7 @@ ckd_read_track_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        DEVTRACE (_("HHCDA029I read trk %d no available cache entry, waiting\n"),
+        logdevtr (dev, _("HHCDA029I read trk %d no available cache entry, waiting\n"),
                   trk);
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
@@ -890,7 +898,7 @@ ckd_read_track_retry:
     }
 
     /* Cache miss */
-    DEVTRACE (_("HHCDA030I read trk %d cache miss, using cache[%d]\n"),
+    logdevtr (dev, _("HHCDA030I read trk %d cache miss, using cache[%d]\n"),
               trk, o);
 
     dev->cachemisses++;
@@ -909,16 +917,16 @@ ckd_read_track_retry:
 
     /* Calculate the track offset */
     dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
-         (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
+         (OFF_T)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
 
     dev->syncio_active = active;
 
-    DEVTRACE (_("HHCDA031I read trk %d reading file %d offset %lld len %d\n"),
+    logdevtr (dev, _("HHCDA031I read trk %d reading file %d offset %lld len %d\n"),
               trk, f+1, (long long)dev->ckdtrkoff, dev->ckdtrksz);
 
     /* Seek to the track image offset */
-    offset = (off_t)dev->ckdtrkoff;
-    offset = lseek (dev->fd, offset, SEEK_SET);
+    offset = (OFF_T)dev->ckdtrkoff;
+    offset = LSEEK (dev->fd, offset, SEEK_SET);
     if (offset < 0)
     {
         /* Handle seek error condition */
@@ -963,14 +971,14 @@ ckd_read_track_retry:
     }
 
     /* Validate the track header */
-    DEVTRACE (_("HHCDA034I read trk %d trkhdr %2.2x %2.2x%2.2x %2.2x%2.2x\n"),
+    logdevtr (dev, _("HHCDA034I read trk %d trkhdr %2.2x %2.2x%2.2x %2.2x%2.2x\n"),
        trk, dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4]);
     trkhdr = (CKDDASD_TRKHDR *)dev->buf;
     if (trkhdr->bin != 0
-     || trkhdr->cyl[0] != (cyl >> 8)
-     || trkhdr->cyl[1] != (cyl & 0xFF)
-     || trkhdr->head[0] != (head >> 8)
-     || trkhdr->head[1] != (head & 0xFF))
+      || trkhdr->cyl[0] != (cyl >> 8)
+      || trkhdr->cyl[1] != (cyl & 0xFF)
+      || trkhdr->head[0] != (head >> 8)
+      || trkhdr->head[1] != (head & 0xFF))
     {
         logmsg (_("HHCDA035E %4.4X invalid track header for cyl %d head %d "
                 " %2.2x%2.2x%2.2x%2.2x%2.2x\n"), dev->devnum, cyl, head,
@@ -1480,7 +1488,7 @@ static int ckd_seek ( DEVBLK *dev, int cyl, int head,
 {
 int             rc;                     /* Return code               */
 
-    DEVTRACE(_("HHCDA038I seeking to cyl %d head %d\n"), cyl, head);
+    logdevtr (dev, _("HHCDA038I seeking to cyl %d head %d\n"), cyl, head);
 
     /* Read the track image */
     rc = ckd_read_cchh (dev, cyl, head, unitstat);
@@ -1519,7 +1527,7 @@ int             head;                   /* Next head for multitrack  */
     if (dev->ckdlcount == 0 &&
         (dev->ckdfmask & CKDMASK_SKCTL) == CKDMASK_SKCTL_INHSMT)
     {
-        DEVTRACE(_("HHCDA039E MT advance error: "
+        logdevtr (dev, _("HHCDA039E MT advance error: "
                  "locate record %d file mask %2.2X\n"),
                  dev->ckdlcount, dev->ckdfmask);
        if (dev->ckdtrkof)
@@ -1551,7 +1559,7 @@ int             head;                   /* Next head for multitrack  */
         head = 0;
         cyl++;
     }
-    DEVTRACE(_("HHCDA040I MT advance to cyl %d head %d\n"), cyl, head);
+    logdevtr (dev, _("HHCDA040I MT advance to cyl %d head %d\n"), cyl, head);
 
     /* File protect error if next track is outside the
        limits of the device or outside the defined extent */
@@ -1603,7 +1611,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         && code != 0x9D)
         skipr0 = 1;
 
-    DEVTRACE (_("HHCDA041I read count orientation is %s\n"),
+    logdevtr (dev, _("HHCDA041I read count orientation is %s\n"),
               orient[dev->ckdorient]);
 
     /* If orientation is at End-Of_Track then a multi-track advance
@@ -1649,7 +1657,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         dev->ckdcurdl = (rechdr->dlen[0] << 8) + rechdr->dlen[1];
         dev->ckdtrkof = (rechdr->cyl[0] == 0xFF) ? 0 : rechdr->cyl[0] >> 7;
 
-        DEVTRACE(_("HHCDA043I cyl %d head %d record %d kl %d dl %d of %d\n"),
+        logdevtr (dev, _("HHCDA043I cyl %d head %d record %d kl %d dl %d of %d\n"),
                 dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
                 dev->ckdcurkl, dev->ckdcurdl, dev->ckdtrkof);
 
@@ -1737,7 +1745,7 @@ CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
         if (rc < 0) return rc;
     }
 
-    DEVTRACE(_("HHCDA044I read key %d bytes\n"), dev->ckdcurkl);
+    logdevtr (dev, _("HHCDA044I read key %d bytes\n"), dev->ckdcurkl);
 
     /* Read key field */
     if (dev->ckdcurkl > 0)
@@ -1787,7 +1795,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
     if (dev->ckdorient == CKDORIENT_COUNT)
         dev->bufoff += dev->ckdcurkl;
 
-    DEVTRACE(_("HHCDA045I read data %d bytes\n"), dev->ckdcurdl);
+    logdevtr (dev, _("HHCDA045I read data %d bytes\n"), dev->ckdcurdl);
 
     /* Read data field */
     if (dev->ckdcurdl > 0)
@@ -1913,13 +1921,13 @@ int             ckdlen;                 /* Count+key+data length     */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < ckdlen) buf[len++] = '\0';
 
-    DEVTRACE(_("HHCDA047I writing cyl %d head %d record %d kl %d dl %d\n"),
+    logdevtr (dev, _("HHCDA047I writing cyl %d head %d record %d kl %d dl %d\n"),
             dev->ckdcurcyl, dev->ckdcurhead, recnum, keylen, datalen);
 
     /* Set track overflow flag if called for */
     if (trk_ovfl)
     {
-        DEVTRACE(_("HHCDA048I setting track overflow flag for "
+        logdevtr (dev, _("HHCDA048I setting track overflow flag for "
                  "cyl %d head %d record %d\n"),
                  dev->ckdcurcyl, dev->ckdcurhead, recnum);
         buf[0] |= 0x80;
@@ -1977,7 +1985,7 @@ int             kdlen;                  /* Key+data length           */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < kdlen) buf[len++] = '\0';
 
-    DEVTRACE(_("HHCDA050I updating cyl %d head %d record %d kl %d dl %d\n"),
+    logdevtr (dev, _("HHCDA050I updating cyl %d head %d record %d kl %d dl %d\n"),
             dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
             dev->ckdcurkl, dev->ckdcurdl);
 
@@ -2020,7 +2028,7 @@ int             rc;                     /* Return code               */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < dev->ckdcurdl) buf[len++] = '\0';
 
-    DEVTRACE(_("HHCDA052I updating cyl %d head %d record %d dl %d\n"),
+    logdevtr (dev, _("HHCDA052I updating cyl %d head %d record %d dl %d\n"),
             dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
             dev->ckdcurdl);
 
@@ -2050,7 +2058,7 @@ CKDDASD_TRKHDR  trkhdr;                 /* CKD track header (HA)     */
 CKDDASD_RECHDR  rechdr;                 /* CKD record header (count) */
 int             size;                   /* Number of bytes available */
 int             num;                    /* Number of bytes to move   */
-int     offset;                 /* Offset into buf for I/O   */
+int             offset;                 /* Offset into buf for I/O   */
 int             bin;                    /* Bin number                */
 int             cyl;                    /* Cylinder number           */
 int             head;                   /* Head number               */
@@ -2058,6 +2066,8 @@ BYTE            cchhr[5];               /* Search argument           */
 BYTE            sector;                 /* Sector number             */
 BYTE            key[256];               /* Key for search operations */
 BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
+#define myssid (dev->devnum & 0xffe0)   /* Storage subsystem identifier
+                                           32 devices per subsystem  */
 
     /* If this is a data-chained READ, then return any data remaining
        in the buffer which was not used by the previous CCW */
@@ -2108,6 +2118,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdtrkof = 0;
         /* ISW20030819-1 : Clear Write HA flag */
         dev->ckdwrha = 0;
+        dev->ckdssdlen = 0;
     }
     dev->syncio_retry = 0;
 
@@ -2131,6 +2142,17 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* Note current operation for track overflow sense byte 3 */
     dev->ckdcuroper = (IS_CCW_READ(code)) ? 6 :
         ((IS_CCW_WRITE(code)) ? 5 : 0);
+
+    /* If subsystem data has been prepared in the channel buffer by
+       a previous Perform Subsystem Function command, generate a
+       command reject if next command is not Read Subsystem Data */
+    if (dev->ckdssdlen > 0 && code != 0x3E)
+    {
+        ckd_build_sense (dev, SENSE_CR, 0, 0,
+                        FORMAT_0, MESSAGE_2);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
+    }
 
     /* Process depending on CCW opcode */
     switch (code) {
@@ -2284,38 +2306,38 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         rc = ckd_read_data (dev, code, iobuf, unitstat);
         if (rc < 0) break;
 
-    /* If track overflow, keep reading */
-    while (dev->ckdtrkof)
-    {
-        /* Advance to next track */
-        rc = mt_advance (dev, unitstat);
-        if (rc < 0) break;
+        /* If track overflow, keep reading */
+        while (dev->ckdtrkof)
+        {
+            /* Advance to next track */
+            rc = mt_advance (dev, unitstat);
+            if (rc < 0) break;
 
-        /* Read the first count field */
-        rc = ckd_read_count (dev, code, &rechdr, unitstat);
-        if (rc < 0) break;
+            /* Read the first count field */
+            rc = ckd_read_count (dev, code, &rechdr, unitstat);
+            if (rc < 0) break;
 
-        /* Skip the key field if present */
-        if (dev->ckdcurkl > 0)
+            /* Skip the key field if present */
+            if (dev->ckdcurkl > 0)
                 dev->bufoff += dev->ckdcurkl;
 
-        /* Set offset into buffer for this read */
-        offset += num;
+            /* Set offset into buffer for this read */
+            offset += num;
 
-        /* Account for size of this overflow record */
-        size = dev->ckdcurdl;
-        num = (*residual < size) ? *residual : size;
-        if (*residual < size) *more = 1;
-        else *more = 0;
-        *residual -= num;
+            /* Account for size of this overflow record */
+            size = dev->ckdcurdl;
+            num = (*residual < size) ? *residual : size;
+            if (*residual < size) *more = 1;
+            else *more = 0;
+            *residual -= num;
 
-        /* Read the next data field */
-        rc = ckd_read_data (dev, code, iobuf+offset, unitstat);
+            /* Read the next data field */
+            rc = ckd_read_data (dev, code, iobuf+offset, unitstat);
+            if (rc < 0) break;
+        }
+
+        /* Bail out if track overflow produced I/O error */
         if (rc < 0) break;
-    }
-
-    /* Bail out if track overflow produced I/O error */
-    if (rc < 0) break;
 
         /* Save size and offset of data not used by this CCW */
         dev->ckdrem = size - num;
@@ -2383,38 +2405,38 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         rc = ckd_read_data (dev, code, iobuf+dev->ckdcurkl, unitstat);
         if (rc < 0) break;
 
-    /* If track overflow, keep reading */
-    while (dev->ckdtrkof)
-    {
-        /* Advance to next track */
-        rc = mt_advance (dev, unitstat);
-        if (rc < 0) break;
+        /* If track overflow, keep reading */
+        while (dev->ckdtrkof)
+        {
+            /* Advance to next track */
+            rc = mt_advance (dev, unitstat);
+            if (rc < 0) break;
 
-        /* Read the first count field */
-        rc = ckd_read_count (dev, code, &rechdr, unitstat);
-        if (rc < 0) break;
+            /* Read the first count field */
+            rc = ckd_read_count (dev, code, &rechdr, unitstat);
+            if (rc < 0) break;
 
-        /* Skip the key field if present */
-        if (dev->ckdcurkl > 0)
+            /* Skip the key field if present */
+            if (dev->ckdcurkl > 0)
                 dev->bufoff += dev->ckdcurkl;
 
-        /* Set offset into buffer for this read */
-        offset += num;
+            /* Set offset into buffer for this read */
+            offset += num;
 
-        /* Account for size of this overflow record */
-        size = dev->ckdcurdl;
-        num = (*residual < size) ? *residual : size;
-        if (*residual < size) *more = 1;
-        else *more = 0;
-        *residual -= num;
+            /* Account for size of this overflow record */
+            size = dev->ckdcurdl;
+            num = (*residual < size) ? *residual : size;
+            if (*residual < size) *more = 1;
+            else *more = 0;
+            *residual -= num;
 
-        /* Read the next data field */
-        rc = ckd_read_data (dev, code, iobuf+offset, unitstat);
+            /* Read the next data field */
+            rc = ckd_read_data (dev, code, iobuf+offset, unitstat);
+            if (rc < 0) break;
+        }
+
+        /* Bail out if track overflow produced I/O error */
         if (rc < 0) break;
-    }
-
-    /* Bail out if track overflow produced I/O error */
-    if (rc < 0) break;
 
         /* Save size and offset of data not used by this CCW */
         dev->ckdrem = size - num;
@@ -2476,8 +2498,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Copy count field to I/O buffer */
         memcpy (iobuf, &rechdr, CKDDASD_RECHDR_SIZE);
 
-    /* Turn off track overflow flag in read record header */
-    *iobuf &= 0x7F;
+        /* Turn off track overflow flag in read record header */
+        *iobuf &= 0x7F;
 
         /* Save size and offset of data not used by this CCW */
         dev->ckdrem = size - num;
@@ -2548,8 +2570,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Copy count field to I/O buffer */
         memcpy (iobuf, &rechdr, CKDDASD_RECHDR_SIZE);
 
-    /* Turn off track overflow flag in read record header */
-    *iobuf &= 0x7F;
+        /* Turn off track overflow flag in read record header */
+        *iobuf &= 0x7F;
 
         /* Read key field */
         rc = ckd_read_key (dev, code,
@@ -2757,38 +2779,38 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                             unitstat);
         if (rc < 0) break;
 
-    /* If track overflow, keep reading */
-    while (dev->ckdtrkof)
-    {
-        /* Advance to next track */
-        rc = mt_advance (dev, unitstat);
-        if (rc < 0) break;
+        /* If track overflow, keep reading */
+        while (dev->ckdtrkof)
+        {
+            /* Advance to next track */
+            rc = mt_advance (dev, unitstat);
+            if (rc < 0) break;
 
-        /* Read the first count field */
-        rc = ckd_read_count (dev, code, &rechdr, unitstat);
-        if (rc < 0) break;
+            /* Read the first count field */
+            rc = ckd_read_count (dev, code, &rechdr, unitstat);
+            if (rc < 0) break;
 
-        /* Skip the key field if present */
-        if (dev->ckdcurkl > 0)
+            /* Skip the key field if present */
+            if (dev->ckdcurkl > 0)
                 dev->bufoff += dev->ckdcurkl;
 
-        /* Set offset into buffer for this read */
-        offset += num;
+            /* Set offset into buffer for this read */
+            offset += num;
 
-        /* Account for size of this overflow record */
-        size = dev->ckdcurdl;
-        num = (*residual < size) ? *residual : size;
-        if (*residual < size) *more = 1;
-        else *more = 0;
-        *residual -= num;
+            /* Account for size of this overflow record */
+            size = dev->ckdcurdl;
+            num = (*residual < size) ? *residual : size;
+            if (*residual < size) *more = 1;
+            else *more = 0;
+            *residual -= num;
 
-        /* Read the next data field */
-        rc = ckd_read_data (dev, code, iobuf+offset, unitstat);
+            /* Read the next data field */
+            rc = ckd_read_data (dev, code, iobuf+offset, unitstat);
+            if (rc < 0) break;
+        }
+
+        /* Bail out if track overflow produced I/O error */
         if (rc < 0) break;
-    }
-
-    /* Bail out if track overflow produced I/O error */
-    if (rc < 0) break;
 
         /* Save size and offset of data not used by this CCW */
         dev->ckdrem = size - num;
@@ -2949,37 +2971,114 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         break;
 
-    case 0x27: /* SEEK AND SET SECTOR (Itel 7330 controller only) */
-/*  case 0x27:    Perform Subsystem Function (3990)               */
-    case 0x07: /* SEEK */
-    case 0x0B: /* SEEK CYLINDER */
-    case 0x1B: /* SEEK HEAD */
+    case 0x27: 
     /*---------------------------------------------------------------*/
-    /* SEEK                                                          */
     /* PERFORM SUBSYSTEM FUNCTION                                    */
     /*---------------------------------------------------------------*/
+        /* If the control unit is not a 3990 then CCW code 0x27 is
+           treated as a SEEK AND SET SECTOR (Itel 7330 controller) */
+        if (dev->ckd3990 == 0)
+            goto seek_0x27;
 
-        /* Process Perform Subsystem Function - Set Special Intercept */
-        if(code == 0x27 && dev->ckd3990)
+        /* Command reject if within the domain of a Locate Record */
+        if (dev->ckdlcount > 0)
         {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_2);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Use the order code to determine the required count */
+        num = (count < 2) ? 2 :
+              (iobuf[0] == 0x10) ? 14 :
+              (iobuf[0] == 0x11 || iobuf[0] == 0x18) ? 12 :
+              (iobuf[0] == 0x12) ? 5 :
+              (iobuf[0] == 0x13 || iobuf[0] == 0x14) ? 4 :
+              (iobuf[0] == 0x16 || iobuf[0] == 0xB0) ? 4 :
+              2;
+
+        /* Command reject if count is less than required */
+        if (count < num)
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_3);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Set residual count */
+        *residual = count - num;
+
 #if 0
-            /* Command reject if SSI active */
-            if(dev->ckdssi)
+        /* Command reject if SSI active */
+        if(dev->ckdssi)
+        {
+            /* Reset SSI condition */
+            dev->ckdssi = 0;
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_F);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+#endif
+
+        /* Process depending on order code in byte 0 of data */
+        switch (iobuf[0]) {
+
+        case 0x18: /* Prepare for Read Subsystem Data */
+
+            /* Command reject if bytes 1-5 not zero */
+            if (memcmp(&iobuf[1], "\x00\x00\x00\x00\x00", 5) != 0)
             {
-                /* Reset SSI condition */
-                dev->ckdssi = 0;
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
-                                FORMAT_0, MESSAGE_F);
+                                FORMAT_0, MESSAGE_4);
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
                 break;
             }
-#endif
 
-            /* Command reject if within the domain of a Locate Record,
+            /* Process suborder code in byte 6 of data */
+            switch (iobuf[6]) {
+
+            case 0x00: /* Storage path status */
+                /* Prepare storage path status record */
+                memset (iobuf, 0x00, 16);
+                iobuf[0] = 0xC0; /* Storage path valid and attached */
+                iobuf[1] = 0x80; /* Logical paths configured bitmap */
+                iobuf[2] = 0x00; /* Channels enabled bitmap */
+                iobuf[3] = 0x00; /* Channels fenced bitmap */
+                iobuf[16] = 1;   /* #logical paths thru cluster 0 */
+
+                /* Indicate the length of subsystem data prepared */
+                dev->ckdssdlen = (dev->ckdcu->code==0x15) ? 24 : 16;
+                break;
+
+            case 0x01: /* Subsystem statistics */
+                /* Prepare subsystem statistics record */
+                memset (iobuf, 0x00, 192);
+                iobuf[1] = dev->devnum & 0xFF;
+                iobuf[94] = (myssid >> 8) & 0xff;
+                iobuf[95] = myssid & 0xff;
+
+                /* Indicate the length of subsystem data prepared */
+                dev->ckdssdlen = (iobuf[8]==0x00) ? 96 : 192;
+                break;
+
+            default: /* Unknown suborder code */
+                ckd_build_sense (dev, SENSE_CR, 0, 0,
+                                FORMAT_0, MESSAGE_4);
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+            } /* end switch(iobuf[6]) */
+
+            break;
+
+        case 0x1B: /* Set Special Intercept Condition */
+
+            /* Command reject if not the first command in the chain
                or indeed if preceded by any command at all apart from
                Suspend Multipath Reconnection */
-            if (dev->ckdlcount > 0
-                || ccwseq > 1
+            if (ccwseq > 1
                 || (chained && prevcode != 0x5B))
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
@@ -2988,9 +3087,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 break;
             }
 
-            /* Command reject if not Set Special Intercept order,
-               with zero flag byte */
-            if (iobuf[0] != 0x1B || iobuf[1] != 0x00)
+            /* Command reject if flag byte is not zero */
+            if (iobuf[1] != 0x00)
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_4);
@@ -3007,31 +3105,76 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 break;
             }
 
-            /* Command reject if count is less than 2 */
-            if (count < 2)
+            /* Mark Set Special Intercept inactive */
+            dev->ckdssi = 1;
+
+            break;
+
+        case 0xB0: /* Set Interface Identifier */
+
+            /* Command reject if flag byte bits 0-6 are not zero */
+            if ((iobuf[1] & 0xFE) != 0x00)
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
-                                FORMAT_0, MESSAGE_3);
+                                FORMAT_0, MESSAGE_4);
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
                 break;
             }
 
-            /* Mark Set Special Intercept inactive */
-            dev->ckdssi = 1;
+            /* Prepare subsystem data (node descriptor record) */
+            memset (iobuf, 0x00, 96);
 
-            /* Set residual count */
-            num = (count < 2) ? count : 2;
-            *residual = count - num;
+            /* Bytes 0-31 contain node descriptor data */
+            iobuf[0] = 0x00;
+            memcpy (&iobuf[1], "010", 3);
+            sprintf (&iobuf[4], "00%4.4X   HRCZZ000000000001",
+                                dev->ckdcu->devt);
+            for (i = 1; i < 30; i++)
+                iobuf[i] = host_to_guest(iobuf[i]);
 
-            /* No further processing required */
+            /* Bytes 32-63 contain node qualifier data */
+            iobuf[32] = 0x00; /* Flags */
+            iobuf[40] = 0x81; /* 81=Parallel range, 82=ESCON range */
+            iobuf[41] = 0x01; /* 00=N/A, 01=LED, 02=Laser */
+            iobuf[42] = 0x00; iobuf[43] = 0x00; /* Start of range */
+            memcpy (&iobuf[44], &iobuf[40], 4);
+            iobuf[46] = 0x00; iobuf[47] = 0x01; /* End of range */
+            memcpy (&iobuf[48], &iobuf[40], 8);
+            iobuf[50] = 0x00; iobuf[51] = 0x10; /* Start of range */
+            iobuf[54] = 0x00; iobuf[55] = 0x11; /* End of range */
 
-            /* Return normal status */
-            *unitstat = CSW_CE | CSW_DE;
+            /* Bytes 64-95 contain second node qualifier data */
+            iobuf[64] = 0x00;
+
+            /* Indicate the length of subsystem data prepared */
+            dev->ckdssdlen = (iobuf[1] & 0x03) ? 32 : 96;
 
             break;
-        }
 
+        default: /* Unknown order code */
 
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_4);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+
+        } /* end switch(iobuf[0]) */
+
+        /* Exit if unit check has already been set */
+        if (*unitstat & CSW_UC)
+            break;
+
+        /* Return normal status */
+        *unitstat = CSW_CE | CSW_DE;
+
+        break;
+
+    seek_0x27: /* SEEK AND SET SECTOR (Itel 7330 controller only) */
+    case 0x07: /* SEEK */
+    case 0x0B: /* SEEK CYLINDER */
+    case 0x1B: /* SEEK HEAD */
+    /*---------------------------------------------------------------*/
+    /* SEEK                                                          */
+    /*---------------------------------------------------------------*/
         /* Command reject if within the domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
@@ -3202,7 +3345,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Extract the file mask from the I/O buffer */
         dev->ckdfmask = iobuf[0];
-        DEVTRACE(_("HHCDA054I set file mask %2.2X\n"), dev->ckdfmask);
+        logdevtr (dev, _("HHCDA054I set file mask %2.2X\n"), dev->ckdfmask);
 
         /* Command reject if file mask is invalid */
         if ((dev->ckdfmask & CKDMASK_RESV) != 0)
@@ -3418,8 +3561,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         num = (count < 5) ? count : 5;
         *residual = count - num;
 
-    /* Turn off track overflow flag in record header if present */
-    rechdr.cyl[0] &= 0x7F;
+        /* Turn off track overflow flag in record header if present */
+        rechdr.cyl[0] &= 0x7F;
 
         /* Compare count with search argument */
         rc = memcmp(&rechdr, iobuf, num);
@@ -3588,33 +3731,33 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         rc = ckd_write_data (dev, iobuf, num, unitstat);
         if (rc < 0) break;
 
-    /* If track overflow, keep writing */
+        /* If track overflow, keep writing */
         offset = 0;
-    while (dev->ckdtrkof)
-    {
-        /* Advance to next track */
-        rc = mt_advance (dev, unitstat);
-        if (rc < 0) break;
+        while (dev->ckdtrkof)
+        {
+            /* Advance to next track */
+            rc = mt_advance (dev, unitstat);
+            if (rc < 0) break;
 
-        /* Read the first count field */
-        rc = ckd_read_count (dev, code, &rechdr, unitstat);
-        if (rc < 0) break;
+            /* Read the first count field */
+            rc = ckd_read_count (dev, code, &rechdr, unitstat);
+            if (rc < 0) break;
 
             /* Set offset into buffer for this write */
             offset += size;
 
-        /* Account for size of this overflow record */
-        size = dev->ckdcurdl;
-        num = (*residual < size) ? *residual : size;
-        *residual -= num;
+            /* Account for size of this overflow record */
+            size = dev->ckdcurdl;
+            num = (*residual < size) ? *residual : size;
+            *residual -= num;
 
-        /* Write the next data field */
+            /* Write the next data field */
             rc = ckd_write_data (dev, iobuf+offset, num, unitstat);
-        if (rc < 0) break;
-    }
+            if (rc < 0) break;
+        }
 
-    /* Bail out if track overflow produced I/O error */
-    if (rc < 0) break;
+        /* Bail out if track overflow produced I/O error */
+        if (rc < 0) break;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3674,33 +3817,33 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         rc = ckd_write_data (dev, iobuf, num, unitstat);
         if (rc < 0) break;
 
-    /* If track overflow, keep writing */
+        /* If track overflow, keep writing */
         offset = 0;
-    while (dev->ckdtrkof)
-    {
-        /* Advance to next track */
-        rc = mt_advance (dev, unitstat);
-        if (rc < 0) break;
+        while (dev->ckdtrkof)
+        {
+            /* Advance to next track */
+            rc = mt_advance (dev, unitstat);
+            if (rc < 0) break;
 
-        /* Read the first count field */
-        rc = ckd_read_count (dev, code, &rechdr, unitstat);
-        if (rc < 0) break;
+            /* Read the first count field */
+            rc = ckd_read_count (dev, code, &rechdr, unitstat);
+            if (rc < 0) break;
 
             /* Set offset into buffer for this write */
             offset += size;
 
-        /* Account for size of this overflow record */
-        size = dev->ckdcurdl;
-        num = (*residual < size) ? *residual : size;
-        *residual -= num;
+            /* Account for size of this overflow record */
+            size = dev->ckdcurdl;
+            num = (*residual < size) ? *residual : size;
+            *residual -= num;
 
-        /* Write the next data field */
+            /* Write the next data field */
             rc = ckd_write_data (dev, iobuf+offset, num, unitstat);
-        if (rc < 0) break;
-    }
+            if (rc < 0) break;
+        }
 
-    /* Bail out if track overflow produced I/O error */
-    if (rc < 0) break;
+        /* Bail out if track overflow produced I/O error */
+        if (rc < 0) break;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3785,33 +3928,33 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         rc = ckd_write_kd (dev, iobuf, num, unitstat);
         if (rc < 0) break;
 
-    /* If track overflow, keep writing */
+        /* If track overflow, keep writing */
         offset = dev->ckdcurkl;
-    while (dev->ckdtrkof)
-    {
-        /* Advance to next track */
-        rc = mt_advance (dev, unitstat);
-        if (rc < 0) break;
+        while (dev->ckdtrkof)
+        {
+            /* Advance to next track */
+            rc = mt_advance (dev, unitstat);
+            if (rc < 0) break;
 
-        /* Read the first count field */
-        rc = ckd_read_count (dev, code, &rechdr, unitstat);
-        if (rc < 0) break;
+            /* Read the first count field */
+            rc = ckd_read_count (dev, code, &rechdr, unitstat);
+            if (rc < 0) break;
 
             /* Set offset into buffer for this write */
             offset += size;
 
-        /* Account for size of this overflow record */
-        size = dev->ckdcurdl;
-        num = (*residual < size) ? *residual : size;
-        *residual -= num;
+            /* Account for size of this overflow record */
+            size = dev->ckdcurdl;
+            num = (*residual < size) ? *residual : size;
+            *residual -= num;
 
-        /* Write the next data field */
+            /* Write the next data field */
             rc = ckd_write_data (dev, iobuf+offset, num, unitstat);
-        if (rc < 0) break;
-    }
+            if (rc < 0) break;
+        }
 
-    /* Bail out if track overflow produced I/O error */
-    if (rc < 0) break;
+        /* Bail out if track overflow produced I/O error */
+        if (rc < 0) break;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -3871,33 +4014,33 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         rc = ckd_write_kd (dev, iobuf, num, unitstat);
         if (rc < 0) break;
 
-    /* If track overflow, keep writing */
+        /* If track overflow, keep writing */
         offset = dev->ckdcurkl;
-    while (dev->ckdtrkof)
-    {
-        /* Advance to next track */
-        rc = mt_advance (dev, unitstat);
-        if (rc < 0) break;
+        while (dev->ckdtrkof)
+        {
+            /* Advance to next track */
+            rc = mt_advance (dev, unitstat);
+            if (rc < 0) break;
 
-        /* Read the first count field */
-        rc = ckd_read_count (dev, code, &rechdr, unitstat);
-        if (rc < 0) break;
+            /* Read the first count field */
+            rc = ckd_read_count (dev, code, &rechdr, unitstat);
+            if (rc < 0) break;
 
             /* Set offset into buffer for this write */
             offset += size;
 
-        /* Account for size of this overflow record */
-        size = dev->ckdcurdl;
-        num = (*residual < size) ? *residual : size;
-        *residual -= num;
+            /* Account for size of this overflow record */
+            size = dev->ckdcurdl;
+            num = (*residual < size) ? *residual : size;
+            *residual -= num;
 
-        /* Write the next data field */
+            /* Write the next data field */
             rc = ckd_write_data (dev, iobuf+offset, num, unitstat);
-        if (rc < 0) break;
-    }
+            if (rc < 0) break;
+        }
 
-    /* Bail out if track overflow produced I/O error */
-    if (rc < 0) break;
+        /* Bail out if track overflow produced I/O error */
+        if (rc < 0) break;
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -4589,6 +4732,31 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
+    case 0x3E:
+    /*---------------------------------------------------------------*/
+    /* READ SUBSYSTEM DATA                                           */
+    /*---------------------------------------------------------------*/
+        /* Command reject if within the domain of a Locate Record,  
+           or if subsystem data has not been prepared in the channel
+           buffer by a previous Perform Subsystem Function command */
+        if (dev->ckdlcount > 0 || dev->ckdssdlen == 0)
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_2);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Calculate residual byte count */
+        num = (count < dev->ckdssdlen) ? count : dev->ckdssdlen;
+        *residual = count - num;
+        if (count < dev->ckdssdlen) *more = 1;
+
+        /* Subsystem data is already in the channel buffer, so
+           just return channel end and device end */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
     case 0x5B:
     /*---------------------------------------------------------------*/
     /* SUSPEND MULTIPATH RECONNECTION                                */
@@ -4872,14 +5040,25 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             break;
         }
 
-        /* Calculate residual byte count */
-        num = (count < 40) ? count : 40;
-        *residual = count - num;
-        if (count < 40) *more = 1;
-
-        /* Build the subsystem status data in the I/O area */
+        /* Build the basic subsystem status data in the I/O area */
         memset (iobuf, 0x00, 40);
         iobuf[1] = dev->devnum & 0xFF;
+        iobuf[38] = (myssid >> 8) & 0xff;
+        iobuf[39] = myssid & 0xff;
+        num = 40;
+
+        /* Build an additional 4 bytes of data for the 3990-6 */
+        if (dev->ckdcu->code == 0x15) 
+        {
+            iobuf[0] = 0x01;            /* Set 3990-6 enhanced flag */
+            memset (iobuf+40, 0x00, 4);
+            num = 44;                   
+        } /* end if(3990-6) */
+
+        /* Calculate residual byte count */
+        num = (count < num) ? count : num;
+        *residual = count - num;
+        if (count < 40) *more = 1;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -4942,7 +5121,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         iobuf[0] = 0xCC;
         iobuf[1] = 0x01;
         iobuf[2] = 0x01;
-        memcpy (&iobuf[4],"  0000000HRC01000000000001", 26);
+        sprintf (&iobuf[4], "00%4.4X0%2.2XHRCZZ000000000001",
+                            dev->ckdtab->devt, dev->ckdtab->model);
         for (i = 4; i < 30; i++)
             iobuf[i] = host_to_guest(iobuf[i]);
         iobuf[31] = 0x30;
@@ -4953,38 +5133,34 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         iobuf[34] = 0x00;
 
         /* Bytes 64-95 contain node element descriptor 3 (CU) data */
-        memcpy (&iobuf[64], &iobuf[0], 32);
         iobuf[64] = 0xD4;
         iobuf[65] = 0x02;
-        iobuf[66] = 0x00;
+        sprintf (&iobuf[68], "00%4.4X0%2.2XHRCZZ000000000001",
+                            dev->ckdcu->devt, dev->ckdcu->model);
+        for (i = 68; i < 94; i++)
+            iobuf[i] = host_to_guest(iobuf[i]);
         iobuf[95] = 0x91;
 
        /* Bytes 96-127 contain node element desc 4 (subsystem) data */
-        memcpy (&iobuf[96], &iobuf[0], 32);
+        memcpy (&iobuf[96], &iobuf[64], 32);
         iobuf[96] = 0xF0;
         iobuf[97] = 0x00;
         iobuf[98] = 0x00;
         iobuf[99] = 0x01;
-        memcpy (&iobuf[102], "0000   ", 7);
-        iobuf[102] += ((dev->ckdcu->devt >> 12) & 0x0f);
-        iobuf[103] += ((dev->ckdcu->devt >>  8) & 0x0f);
-        iobuf[104] += ((dev->ckdcu->devt >>  4) & 0x0f);
-        iobuf[105] += ((dev->ckdcu->devt >>  0) & 0x0f);
-        for (i = 102; i < 109; i++)
-            iobuf[i] = host_to_guest(iobuf[i]);
 
         /* Bytes 128-223 contain zeroes */
 
         /* Bytes 224-255 contain node element qualifier data */
         iobuf[224] = 0x80;
         iobuf[230] = 0x3c;
-        iobuf[233] = (dev->devtype >> 8) & 0xff;
+        iobuf[232] = (myssid >> 8) & 0xff;
+        iobuf[233] = myssid & 0xff;
         iobuf[234] = 0x80;
-        iobuf[235] = dev->devtype & 0xff;
-        iobuf[236] = dev->devtype & 0xff;
-        iobuf[237] = dev->devtype & 0xff;
-        iobuf[241] = 0x80;
-        iobuf[243] = dev->devtype & 0xff;
+        iobuf[235] = dev->devnum & 0xff;
+        iobuf[236] = dev->devnum & 0xff;
+        iobuf[237] = dev->devnum & 0xff;
+        iobuf[241] = 0x80; /* Channel: 80=Parallel,40=ESCON,10=Fiber */
+        iobuf[243] = dev->devnum & 0xff;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -5048,7 +5224,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
 } /* end function ckddasd_execute_ccw */
 
-DEVHND ckddasd_device_hndinfo = {
+DLL_EXPORT DEVHND ckddasd_device_hndinfo = {
         &ckddasd_init_handler,          /* Device Initialisation      */
         &ckddasd_execute_ccw,           /* Device CCW execute         */
         &ckddasd_close_device,          /* Device Close               */

@@ -1,11 +1,13 @@
-/* FEATCHK.H    (c) Copyright Jan Jaeger, 2000-2005          */
-/*      Feature definition consistency checks            */
-
+/* FEATCHK.H    (c) Copyright Jan Jaeger, 2000-2005                  */
 /*-------------------------------------------------------------------*/
-/* Perform various checks on feature combinations, and set       */
-/* additional flags to percolate certain features such as        */
-/* SIE down to lower architecture levels such that these         */
-/* can include emulation support                     */
+/*                                                                   */
+/*           Feature definition consistency checks                   */
+/*                                                                   */
+/*  Perform various checks on feature combinations, and set          */
+/*  additional flags to percolate certain features such as           */
+/*  SIE down to lower architecture levels such that these            */
+/*  can include emulation support                                    */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
 #if defined(FEATCHK_CHECK_ALL)
@@ -279,7 +281,7 @@
  #error Expedited SIE Subset only supported with SIE
 #endif
 
-#if defined(FEATURE_ASN_AND_LX_REUSE) 
+#if defined(FEATURE_ASN_AND_LX_REUSE)
  #if !defined(FEATURE_DUAL_ADDRESS_SPACE)
   #error ASN-and-LX-Reuse requires Dual Address-Space feature
  #endif
@@ -287,7 +289,7 @@
   #error ASN-and-LX-Reuse is only supported with ESAME
  #endif
 #endif
- 
+
 #if defined(FEATURE_ESAME) \
  && defined(FEATURE_VECTOR_FACILITY)
  #error Vector Facility not supported in ESAME mode
@@ -319,6 +321,11 @@
 #if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT) \
  && !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
  #error HFP multiply add/subtract requires hexadecimal floating point
+#endif
+
+#if defined(FEATURE_HFP_UNNORMALIZED_EXTENSION) \
+ && !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
+ #error HFP unnormalized extension requires hexadecimal floating point
 #endif
 
 #if defined(FEATURE_PER2) && !defined(FEATURE_PER)

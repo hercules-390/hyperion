@@ -8,35 +8,40 @@
 /* Header file contains host system information                      */
 /*-------------------------------------------------------------------*/
 
-#if !defined(_HOSTINFO_H_)
-
+#ifndef _HOSTINFO_H_
 #define _HOSTINFO_H_
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>                     /* (need WIN32 flag defined) */
-#endif /*defined(HAVE_CONFIG_H)*/
+#include "hercules.h"
 
-#include <stdio.h>                      /* (need FILE type defined)  */
+#ifndef _HOSTINFO_C_
+#ifndef _HUTIL_DLL_
+#define HI_DLL_IMPORT DLL_IMPORT
+#else   /* _HUTIL_DLL_ */
+#define HI_DLL_IMPORT extern
+#endif  /* _HUTIL_DLL_ */
+#else
+#define HI_DLL_IMPORT DLL_EXPORT
+#endif
 
-typedef struct _HOST_INFO               /* Host system info          */
+typedef struct HOST_INFO
 {
-#if defined(WIN32)
-    int     trycritsec_avail;           /* 1=TryEnterCriticalSection */
-    int     multi_proc;                 /* 1=multi-CPU               */
-#else /*!defined(WIN32)*/
-    int     dummy;                      /* (not defined yet)         */
-#endif /*defined(WIN32)*/
-}
-HOST_INFO;
+    char  sysname[20];
+    char  nodename[20];
+    char  release[20];
+    char  version[20];
+    char  machine[20];
+    int   trycritsec_avail;             /* 1=TryEnterCriticalSection */
+    int   num_procs;                    /* #of processors            */
+} HOST_INFO;
 
-extern  HOST_INFO  hostinfo;
-extern  void  init_hostinfo ();
-extern  void  display_hostinfo (FILE *f);
+HI_DLL_IMPORT HOST_INFO     hostinfo;
+HI_DLL_IMPORT void     init_hostinfo ( HOST_INFO* pHostInfo );
+HI_DLL_IMPORT void  display_hostinfo ( HOST_INFO* pHostInfo, FILE *f );
+HI_DLL_IMPORT char* get_hostinfo_str ( HOST_INFO* pHostInfo,
+                                       char*      pszHostInfoStrBuff,
+                                       size_t     nHostInfoStrBuffSiz );
 
-#if defined(WIN32)
-extern  int   get_process_directory(char* dirbuf, size_t bufsiz);
-extern  int is_win32_directory(char* dir);
-extern void convert_win32_directory_to_posix_directory(const char *win32_dir, char *posix_dir);
-#endif /*defined(WIN32)*/
+/* Hercules Host Information structure  (similar to utsname struct)  */
 
-#endif /*!defined(_HOSTINFO_H_)*/
+
+#endif // _HOSTINFO_H_

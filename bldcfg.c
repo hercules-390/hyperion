@@ -23,15 +23,16 @@
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
 #include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"
 #include "httpmisc.h"
 #include "hostinfo.h"
 
-#if defined(OPTION_LPARNAME)
-#include <ctype.h>
-#endif /*defined(OPTION_LPARNAME)*/
+#if defined(OPTION_FISHIO)
+#include "w32chan.h"
+#endif // defined(OPTION_FISHIO)
 
 #if !defined(_GEN_ARCH)
 
@@ -47,34 +48,12 @@
  #undef   _GEN_ARCH
 #endif
 
-#if defined(OPTION_FISHIO)
-#include "w32chan.h"
-#endif // defined(OPTION_FISHIO)
 
 typedef struct _DEVARRAY
 {
     U16 cuu1;
     U16 cuu2;
 } DEVARRAY;
-
-
-/*-------------------------------------------------------------------*/
-/* Internal macro definitions                                        */
-/*-------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------*/
-/* Global data areas                                                 */
-/*-------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------*/
-/* External GUI control                                              */
-/*-------------------------------------------------------------------*/
-/* Now defined in hsys.c */
-#if 0
- #ifdef EXTERNALGUI
- int extgui = 0;             /* 1=external gui active                */
- #endif /*EXTERNALGUI*/
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
@@ -109,7 +88,7 @@ static char *addargv[MAX_ARGS];         /* Additional argument array */
 /* pargc        Pointer to number of arguments integer result.       */
 /* Returns number of arguments found. (same value as at *pargc)      */
 /*-------------------------------------------------------------------*/
-int parse_args (char* p, int maxargc, char** pargv, int* pargc)
+DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
 {
     for (*pargc = 0; *pargc < MAX_ARGS; ++*pargc) addargv[*pargc] = NULL;
 
@@ -144,6 +123,8 @@ void delayed_exit (int exit_code)
     /* Delay exiting is to give the system
      * time to display the error message. */
     usleep(100000);
+    hdl_shut();
+    usleep(100000);
     exit(exit_code);
 }
 
@@ -156,7 +137,6 @@ int off;
     /* Obtain main storage */
     sysblk.mainsize = mainsize * 1024 * 1024;
 
-#if defined(NO_CYGWIN_MALLOC_BUG) || !defined(WIN32)
     sysblk.mainstor = calloc((size_t)(sysblk.mainsize + 8192), 1);
 
     if (sysblk.mainstor != NULL)
@@ -165,72 +145,6 @@ int off;
         sysblk.mainstor = malloc((size_t)(sysblk.mainsize + 8192));
 
     if (sysblk.mainstor == NULL)
-#else
-    /*     Windows "double memory consumption" bug fix
-           (which should work on all other systems too)
-
-    =============================================================
-    From: golden_dog98 [golden_dog98@yahoo.com]
-    Sent: Monday, July 07, 2003 1:08 AM
-    To: hercules-390@yahoogroups.com
-    Subject: [hercules-390] To "Fish" (was: "Re: How can I use all my
-    physical memory")
-
-    This problem is caused by how CYGWIN allocates memory under Windows
-    2000.  In malloc.cc, malloc() calls sYSMALLOc() to allocate chunks of
-    memory.  sYSMALLOc calls mmap() with flags MAP_PRIVATE and
-    MAP_ANONYMOUS.  mmap() calls mmap64() with the same flags.  Around
-    line 540 of mmap.cc, mmap64() checks to see if MAP_PRIVATE is set and
-    if has_working_copy_on_write() is true (which it is for Win2000) and
-    sets access to FILE_MAP_COPY.  mmap64() then calls
-    fhandler_disk_file::mmap() in mmap.cc.  Because access is set to
-    FILE_MAP_COPY, protect is set to PAGE_WRITECOPY when CreateFileMapping
-    () is called.  Then MapViewOfFileEx() is called with access set to
-    FILE_MAP_COPY.  This allocates the storage with "copy on write
-    acess", which essentially doubles the storage usage.  See
-    http://msdn.microsoft.com/library/default.asp?url=/library/en-
-    us/fileio/base/mapviewoffileex.asp.
-
-    I changed line 1299 of Hercules' config.c to fix the problem:
-
-        sysblk.mainstor = mmap(0, sysblk.mainsize + 8192, PROT_READ |
-    PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
-
-    I also had to include at the top of config.c:
-
-    #include <sys/mmap.h>
-
-    I tested this with a 512MB system and all went well....
-
-    Mark D.
-    =============================================================
-    */
-#if !defined(MAP_ANONYMOUS)    /* (see NOTE just below) */
-    /*
-     ***   NOTE: we can't use the "HAVE_MMAP" test above    ***
-     ***   because of a "Unix-ism" bug in autoconf that     ***
-     ***   causes mmap tests to always fail on Windows      ***
-     ***   systems as explained in the below Cygwin post    ***
-     ***   mailing list post:
-
-        http://www.cygwin.com/ml/cygwin/2002-04/msg00412.html
-    */
-    sysblk.mainstor = calloc((size_t)(sysblk.mainsize + 8192), 1);
-
-    if (sysblk.mainstor != NULL)
-        sysblk.main_clear = 1;
-    else
-        sysblk.mainstor = malloc((size_t)(sysblk.mainsize + 8192));
-
-/* ISW20030828-1 : Check for MALLOC result */
-    if (sysblk.mainstor == NULL)
-#else /* !defined(MAP_ANONYMOUS) */
-    sysblk.mainstor = mmap(0, sysblk.mainsize + 8192,
-        PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
-/* ISW20030828-1 : Check for MMAP result */
-    if (sysblk.mainstor == ((void *)-1))
-#endif /* !defined(MAP_ANONYMOUS) */
-#endif /* NO_CYGWIN_MALLOC_BUG */
     {
         fprintf(stderr, _("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
                 mainsize, strerror(errno));
@@ -384,7 +298,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
     buf1=resolve_symbol_string(buf);
     if(buf1!=NULL)
     {
-        if(strlen(buf1)>sizeof(buf))
+        if(strlen(buf1)>=sizeof(buf))
         {
             fprintf(stderr, _("HHCCF002S File %s line %d is too long\n"),
                 fname, stmt);
@@ -584,7 +498,7 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
     return(gcount);
 }
 
-char *config_cnslport = "3270";
+DLL_EXPORT char *config_cnslport = "3270";
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
@@ -637,7 +551,10 @@ char   *scckd;                          /* -> CCKD parameters        */
 #if defined( OPTION_SCSI_TAPE )
 char   *sauto_scsi_mount;               /* Auto SCSI tape mounts     */
 #endif /* defined( OPTION_SCSI_TAPE ) */
-BYTE    version = 0x00;                 /* CPU version code          */
+#if defined( HTTP_SERVER_CONNECT_KLUDGE )
+char   *shttp_server_kludge_msecs;
+#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
+int     version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
 U16     model;                          /* CPU model number          */
@@ -697,6 +614,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 char **newargv;
 char **orig_newargv;
 #endif
+BYTE    pathname[MAX_PATH];             /* file path in host format  */
 
 #if !defined(OPTION_CONFIG_SYMBOLS)
     UNREFERENCED(j);
@@ -712,7 +630,8 @@ char **orig_newargv;
 #endif
 
     /* Open the configuration file */
-    fp = fopen (fname, "r");
+    hostpath(pathname, fname, sizeof(pathname));
+    fp = fopen (pathname, "r");
     if (fp == NULL)
     {
         fprintf(stderr, _("HHCCF003S Cannot open file %s: %s\n"),
@@ -851,6 +770,9 @@ char **orig_newargv;
 #if defined( OPTION_SCSI_TAPE )
         sauto_scsi_mount = NULL;
 #endif /* defined( OPTION_SCSI_TAPE ) */
+#if defined( HTTP_SERVER_CONNECT_KLUDGE )
+        shttp_server_kludge_msecs = NULL;
+#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
@@ -1141,6 +1063,13 @@ char **orig_newargv;
             }
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
+#if defined( HTTP_SERVER_CONNECT_KLUDGE )
+            else if (strcasecmp (keyword, "HTTP_SERVER_CONNECT_KLUDGE") == 0)
+            {
+               shttp_server_kludge_msecs = operand;
+            }
+#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
+
             else
             {
                 logmsg( _("HHCCF008E Error in %s line %d: "
@@ -1199,7 +1128,8 @@ char **orig_newargv;
         if (sversion != NULL)
         {
             if (strlen(sversion) != 2
-                || sscanf(sversion, "%hhx%c", &version, &c) != 1)
+                || sscanf(sversion, "%hhx%c", &version, &c) != 1
+                || version>255)
             {
                 fprintf(stderr, _("HHCCF012S Error in %s line %d: "
                         "%s is not a valid CPU version code\n"),
@@ -1741,8 +1671,37 @@ char **orig_newargv;
             sauto_scsi_mount = NULL;
         }
 #endif /* defined( OPTION_SCSI_TAPE ) */
+
+#if defined( HTTP_SERVER_CONNECT_KLUDGE )
+        if ( shttp_server_kludge_msecs )
+        {
+            int http_server_kludge_msecs;
+            if ( sscanf( shttp_server_kludge_msecs, "%d%c", &http_server_kludge_msecs, &c ) != 1
+                || http_server_kludge_msecs <= 0 || http_server_kludge_msecs > 50 )
+            {
+                fprintf
+                (
+                    stderr,
+
+                    _( "HHCCFnnnS Error in %s line %d: Invalid HTTP_SERVER_CONNECT_KLUDGE value: %s\n" )
+
+                    ,fname
+                    ,stmt
+                    ,shttp_server_kludge_msecs
+                );
+                delayed_exit(1);
+            }
+            sysblk.http_server_kludge_msecs = http_server_kludge_msecs;
+            shttp_server_kludge_msecs = NULL;
+        }
+#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
+
     } /* end for(scount) */
 
+#if defined( HTTP_SERVER_CONNECT_KLUDGE )
+    if (!sysblk.http_server_kludge_msecs)
+        sysblk.http_server_kludge_msecs = 10;
+#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
@@ -1824,7 +1783,7 @@ char **orig_newargv;
     */
     switch (sysepoch) {
         case 1988:
-            sysblk.todoffset = (18*365 + 4) * -86400ULL;
+            sysblk.todoffset = (18*365 + 4) * -86400LL;
             break;
         case 1960:
             sysblk.todoffset = (10*365 + 3) * 86400ULL;
@@ -2040,9 +1999,9 @@ char **orig_newargv;
     logmsg
     (
         "HHCCF069I Run-options enabled for this run:\n"
-        "\t   NUMCPU:           %d\n"
-        "\t   ASN-and-LX-reuse: %sabled\n"
-        "\t   DIAG8CMD:         %sabled\n"
+        "          NUMCPU:           %d\n"
+        "          ASN-and-LX-reuse: %sabled\n"
+        "          DIAG8CMD:         %sabled\n"
 
         ,sysblk.numcpu
         ,( sysblk.asnandlxreuse ) ? "EN" : "DIS"

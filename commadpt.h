@@ -1,14 +1,7 @@
 #ifndef __COMMADPT_H__
 #define __COMMADPT_H__
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-
-#ifdef WIN32
-#define INADDR_T unsigned int
-#else
-#define INADDR_T in_addr_t
-#endif
+#include "hercules.h"
 
 typedef struct _COMMADPT_RING
 {
@@ -20,7 +13,7 @@ typedef struct _COMMADPT_RING
         overflow:1;
 } COMMADPT_RING;
 
-typedef struct _COMMADPT
+struct COMMADPT
 {
     DEVBLK *dev;                /* the devblk to which this CA is attched   */
     BYTE lnctl;                 /* Line control used                        */
@@ -30,9 +23,9 @@ typedef struct _COMMADPT
     TID  cthread;               /* Thread used to control the socket        */
     BYTE curpending;            /* Current pending operation                */
     U16  lport;                 /* Local listening port                     */
-    INADDR_T lhost;             /* Local listening address                  */
+    in_addr_t lhost;            /* Local listening address                  */
     U16 rport;                  /* Remote TCP Port                          */
-    INADDR_T rhost;             /* Remote connection IP address             */
+    in_addr_t rhost;            /* Remote connection IP address             */
     int sfd;                    /* Communication socket FD                  */
     int lfd;                    /* Listen socket for DIAL=IN, INOUT & NO    */
     COND ipc;                   /* I/O <-> thread IPC condition EVB         */
@@ -77,7 +70,7 @@ typedef struct _COMMADPT
                                 /* has already been issued                  */
         readcomp:1,             /* Data in the read buffer completes a read */
         datalostcond:1;         /* Data Lost Condition Raised               */
-} COMMADPT;
+};
 
 enum {
     COMMADPT_LNCTL_BSC=1,       /* BSC Line Control                         */

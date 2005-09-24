@@ -585,7 +585,7 @@ U16     eax;                            /* Authorization index       */
             break;
 
         default:
-            
+
     #if defined(FEATURE_DUAL_ADDRESS_SPACE)
         if (acctype == ACCTYPE_INSTFETCH)
       #if defined(FEATURE_LINKAGE_STACK)
@@ -630,22 +630,22 @@ U16     eax;                            /* Authorization index       */
             (regs->sie_active) ? 0 :
         #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
                 regs->AR(arn);
-    
+
             /* Use the ALET to determine the segment table origin */
             switch (alet) {
-    
+
             case ALET_PRIMARY:
                 /* [5.8.4.2] Obtain primary segment table designation */
                 regs->dat.stid = TEA_ST_PRIMARY;
                 regs->dat.asd = regs->CR(1);
                 break;
-    
+
             case ALET_SECONDARY:
                 /* [5.8.4.2] Obtain secondary segment table designation */
                 regs->dat.stid = TEA_ST_SECNDRY;
                 regs->dat.asd = regs->CR(7);
                 break;
-    
+
             default:
                 /* ALB Lookup */
                 if(regs->aea_ar[arn] >= CR_ALB_OFFSET)
@@ -658,13 +658,13 @@ U16     eax;                            /* Authorization index       */
                 {
                     /* Extract the extended AX from CR8 bits 0-15 (32-47) */
                     eax = regs->CR_LHH(8);
-    
+
                     /* [5.8.4.3] Perform ALET translation to obtain ASTE */
                     if (ARCH_DEP(translate_alet) (alet, eax, acctype,
                                                   regs, &asteo, aste))
                         /* Exit if ALET translation error */
                         return regs->dat.xcode;
-    
+
                     /* [5.8.4.9] Obtain the STD or ASCE from the ASTE */
                     regs->dat.asd = ASTE_AS_DESIGNATOR(aste);
                     regs->dat.stid = TEA_ST_ARMODE;
@@ -678,17 +678,17 @@ U16     eax;                            /* Authorization index       */
                        regs->dat.asd |= STD_PRIVATE;
     #endif
                    }
-    
+
                     /* Update ALB */
                     regs->CR(CR_ALB_OFFSET + arn) = regs->dat.asd;
                     regs->aea_ar[arn] = CR_ALB_OFFSET + arn;
                     regs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
                     regs->aea_aleprot[arn] = regs->dat.protect & 2;
-    
+
                 }
-    
+
             } /* end switch(alet) */
-    
+
         } /* end if(ACCESS_REGISTER_MODE) */
       #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
         else if (PRIMARY_SPACE_MODE(&regs->psw))
@@ -711,7 +711,7 @@ U16     eax;                            /* Authorization index       */
             regs->dat.asd = regs->CR(7);
         }
     #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
-    
+
     } /* switch(arn) */
     return 0;
 } /* end function load_address_space_designator */

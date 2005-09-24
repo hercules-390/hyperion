@@ -5,16 +5,14 @@
 /* The original configuration builder is now called bldcfg.c         */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
+#define _CONFIG_C_
+#define _HENGINE_DLL_
 
 #include "hercules.h"
-#include "devtype.h"
 #include "opcode.h"
 #include "httpmisc.h"
-#include "hostinfo.h"
-
-#if defined(OPTION_LPARNAME)
-#include <ctype.h>
-#endif /*defined(OPTION_LPARNAME)*/
 
 #if !defined(_GEN_ARCH)
 
@@ -114,6 +112,7 @@ int deconfigure_cpu(int cpu)
     wait_condition (&sysblk.cpucond, &sysblk.intlock);
 
     join_thread (sysblk.cputid[cpu], NULL);
+    detach_thread( sysblk.cputid[cpu] );
     sysblk.cputid[cpu] = 0;
 
     return 0;
@@ -226,7 +225,6 @@ DEVBLK**dvpp;
 
     /* Initialize the device block */
     obtain_lock (&dev->lock);
-    dev->allocated = 1;
 
     dev->group = NULL;
     dev->member = 0;
@@ -266,13 +264,25 @@ DEVBLK**dvpp;
     dev->shrdwait = -1;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
-    /* Mark device valid */
-    dev->pmcw.flag5 |= PMCW5_V;
-
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
     dev->crwpending = 1;
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
+
+#ifdef EXTERNALGUI
+    if ( !dev->pGUIStat )
+    {
+         dev->pGUIStat = malloc( sizeof(GUISTAT) );
+         dev->pGUIStat->pszOldStatStr = dev->pGUIStat->szStatStrBuff1;
+         dev->pGUIStat->pszNewStatStr = dev->pGUIStat->szStatStrBuff2;
+        *dev->pGUIStat->pszOldStatStr = 0;
+        *dev->pGUIStat->pszNewStatStr = 0;
+    }
+#endif /*EXTERNALGUI*/
+
+    /* Mark device valid */
+    dev->pmcw.flag5 |= PMCW5_V;
+    dev->allocated = 1;
 
     return dev;
 }
@@ -280,6 +290,7 @@ DEVBLK**dvpp;
 
 void ret_devblk(DEVBLK *dev)
 {
+    /* Mark device invalid */
     dev->allocated = 0;
     dev->pmcw.flag5 &= ~PMCW5_V; // compat ZZ deprecated
     release_lock(&dev->lock);
@@ -435,7 +446,7 @@ int     i;                              /* Loop index                */
 
             for(i = 0; i < dev->group->acount; i++)
             {
-                if(dev->group->memdev[i])
+                if(dev->group->memdev[i] && dev->group->memdev[i]->allocated)
                 {
                     detach_devblk(dev->group->memdev[i]);
                 }
@@ -444,7 +455,7 @@ int     i;                              /* Loop index                */
             free(dev->group);
         }
 
-    dev->group = NULL;
+        dev->group = NULL;
     }
 
     ret_devblk(dev);
@@ -642,7 +653,7 @@ DEVBLK *dev;                            /* -> Device block           */
 /*                                                                   */
 /*                                           Jan Jaeger, 23 Apr 2004 */
 /*-------------------------------------------------------------------*/
-int group_device(DEVBLK *dev, int members)
+DLL_EXPORT int group_device(DEVBLK *dev, int members)
 {
 DEVBLK *tmp;
 
@@ -669,7 +680,7 @@ DEVBLK *tmp;
         dev->group->members = members;
         dev->group->acount = 1;
         dev->group->memdev[0] = dev;
-    dev->member = 0;
+        dev->member = 0;
     }
 
     return (dev->group && (dev->group->members == dev->group->acount));
@@ -679,7 +690,7 @@ DEVBLK *tmp;
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the device number           */
 /*-------------------------------------------------------------------*/
-DEVBLK *find_device_by_devnum (U16 devnum)
+DLL_EXPORT DEVBLK *find_device_by_devnum (U16 devnum)
 {
 DEVBLK *dev;
 #if defined(OPTION_FAST_DEVLOOKUP)

@@ -1,14 +1,16 @@
 /* SOCKDEV.C    (c) Copyright Hercules development, 2003-2005        */
 /*              Socketdevice support                                 */
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"
 
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-extern SYSBLK *psysblk;
- #define sysblk (*psysblk)
+#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  extern SYSBLK *psysblk;
+  #define sysblk (*psysblk)
 #endif
 
 
@@ -19,45 +21,57 @@ extern SYSBLK *psysblk;
 // #define DEBUG_SOCKDEV
 
 #ifdef DEBUG_SOCKDEV
-    #define logdebug(args...) logmsg(## args)
+    #define logdebug    logmsg
 #else
-    #define logdebug(args...) do {} while (0)
-#endif /* DEBUG_SOCKDEV */
+    #define logdebug    1 ? ((void)0) : logmsg
+#endif
 
-/* Linked list of bind structures for bound socket devices */
+/*-------------------------------------------------------------------*/
+/* Working storage                                                   */
+/*-------------------------------------------------------------------*/
+
+static int init_done = FALSE;
 
 static LIST_ENTRY  bind_head;      /* (bind_struct list anchor) */
 static LOCK        bind_lock;      /* (lock for accessing list) */
 
-static void init_sockdev()
+/*-------------------------------------------------------------------*/
+/* Initialization / termination functions...                         */
+/*-------------------------------------------------------------------*/
+
+static void init_sockdev ( void  );
+static void term_sockdev ( void* );
+
+static void init_sockdev ( void )
 {
-    InitializeListHead(&bind_head);
-    initialize_lock(&bind_lock);
+    if (init_done) return;
+    InitializeListHead( &bind_head );
+    initialize_lock( &bind_lock );
+    hdl_adsc( "term_sockdev", term_sockdev, NULL );
+    init_done = TRUE;
 }
 
-
-/*-------------------------------------------------------------------*/
-/* safe_strdup   make copy of string and return a pointer to it      */
-/*-------------------------------------------------------------------*/
-char* safe_strdup (char* str)
+static void term_sockdev ( void* arg )
 {
-    char* newstr;
-    if (!str) return NULL;
-    newstr = malloc (strlen (str) + 1);
-    if (!newstr) return NULL;
-    strcpy (newstr, str);   /* (guaranteed room) */
-    return newstr;
+    UNREFERENCED( arg );
+    if (!init_done) init_sockdev();
+    SIGNAL_SOCKDEV_THREAD();
+    join_thread   ( sysblk.socktid, NULL );
+    detach_thread ( sysblk.socktid );
 }
-
 
 /*-------------------------------------------------------------------*/
 /* unix_socket   create and bind a Unix domain socket                */
 /*-------------------------------------------------------------------*/
 
-#include <sys/un.h>     /* (need "sockaddr_un") */
-
 int unix_socket (char* path)
 {
+#if !defined( HAVE_SYS_UN_H )
+    UNREFERENCED(path);
+    logmsg (_("HHCSD024E This build does not support Unix domain sockets.\n") );
+    return -1;
+#else // defined( HAVE_SYS_UN_H )
+
     struct sockaddr_un addr;
     int sd;
 
@@ -77,7 +91,7 @@ int unix_socket (char* path)
     if (sd == -1)
     {
         logmsg (_("HHCSD009E Error creating socket for %s: %s\n"),
-            path, strerror(errno));
+            path, strerror(HSO_errno));
         return -1;
     }
 
@@ -90,11 +104,13 @@ int unix_socket (char* path)
         )
     {
         logmsg (_("HHCSD010E Failed to bind or listen on socket %s: %s\n"),
-            path, strerror(errno));
+            path, strerror(HSO_errno));
         return -1;
     }
 
     return sd;
+
+#endif // !defined( HAVE_SYS_UN_H )
 }
 
 
@@ -171,11 +187,11 @@ int inet_socket (char* spec)
     if (sd == -1)
     {
         logmsg (_("HHCSD013E Error creating socket for %s: %s\n"),
-            spec, strerror(errno));
+            spec, strerror(HSO_errno));
         return -1;
     }
 
-    setsockopt (sd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+    setsockopt (sd, SOL_SOCKET, SO_REUSEADDR, (GETSET_SOCKOPT_T*)&one, sizeof(one));
 
     if (0
         || bind (sd, (struct sockaddr*) &sin, sizeof(sin)) == -1
@@ -183,7 +199,7 @@ int inet_socket (char* spec)
         )
     {
         logmsg (_("HHCSD014E Failed to bind or listen on socket %s: %s\n"),
-            spec, strerror(errno));
+            spec, strerror(HSO_errno));
         return -1;
     }
 
@@ -270,7 +286,7 @@ void socket_device_connection_handler (bind_struct* bs)
         logmsg (_("HHCSD016E Connect to device %4.4X (%s) rejected; "
             "client %s (%s) still connected\n"),
             dev->devnum, bs->spec, bs->clientip, bs->clientname);
-        close(accept(bs->sd, 0, 0));  /* Should reject */
+        close_socket(accept(bs->sd, 0, 0));  /* Should reject */
         return;
     }
 
@@ -282,7 +298,7 @@ void socket_device_connection_handler (bind_struct* bs)
     {
         release_lock (&dev->lock);
         logmsg (_("HHCSD017E Connect to device %4.4X (%s) failed: %s\n"),
-            dev->devnum, bs->spec, strerror(errno));
+            dev->devnum, bs->spec, strerror(HSO_errno));
         return;
     }
 
@@ -321,8 +337,8 @@ void socket_device_connection_handler (bind_struct* bs)
     if (bs->clientip)   free(bs->clientip);
     if (bs->clientname) free(bs->clientname);
 
-    bs->clientip   = safe_strdup(clientip);
-    bs->clientname = safe_strdup(clientname);
+    bs->clientip   = strdup(clientip);
+    bs->clientname = strdup(clientname);
 
     /* Indicate that a client is now connected to device (prevents
      * listening for new connections until THIS client disconnects).
@@ -381,6 +397,8 @@ void* socket_thread( void* arg )
     int     rc;
     fd_set  sockset;
     int     maxfd = 0;
+    int     select_errno;
+    int     exit_now;
 
     UNREFERENCED( arg );
 
@@ -389,41 +407,38 @@ void* socket_thread( void* arg )
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
-    obtain_lock( &bind_lock );
-
-    while ( sysblk.socktid )
+    for (;;)
     {
-        release_lock( &bind_lock );
-
         /* Set the file descriptors for select */
         FD_ZERO ( &sockset );
         maxfd  = add_socket_devices_to_fd_set (   0,   &sockset );
         SUPPORT_WAKEUP_SOCKDEV_SELECT_VIA_PIPE( maxfd, &sockset );
 
+        /* Do the select and save results */
         rc = select ( maxfd+1, &sockset, NULL, NULL, NULL );
+        select_errno = HSO_errno;
 
         /* Clear the pipe signal if necessary */
         RECV_SOCKDEV_THREAD_PIPE_SIGNAL();
 
+        /* Check if it's time to exit yet */
+        obtain_lock( &bind_lock );
+        exit_now = ( sysblk.shutdown || IsListEmpty( &bind_head ) );
+        release_lock( &bind_lock );
+        if ( exit_now ) break;
+
+        /* Log select errors */
         if ( rc < 0 )
         {
-            if ( EINTR != errno )
-            logmsg( _( "HHCSD021E select failed; errno=%d: %s\n"),
-                errno, strerror( errno ) );
-            obtain_lock( &bind_lock );
+            if ( HSO_EINTR != select_errno )
+                logmsg( _( "HHCSD021E select failed; errno=%d: %s\n"),
+                    select_errno, strerror( select_errno ) );
             continue;
         }
 
         /* Check if any sockets have received new connections */
         check_socket_devices_for_connections( &sockset );
-
-        obtain_lock( &bind_lock );
-
-    } /* end while */
-
-    sysblk.socktid = 0;
-
-    release_lock( &bind_lock );
+    }
 
     logmsg( _( "HHCSD022I Socketdevice listener thread terminated\n" ) );
 
@@ -432,7 +447,6 @@ void* socket_thread( void* arg )
 /* (end socket_thread) */
 
 
-static int sockdev_init_done = 0;
 /*-------------------------------------------------------------------*/
 /* bind_device   bind a device to a socket (adds entry to our list   */
 /*               of bound devices) (1=success, 0=failure)            */
@@ -440,17 +454,15 @@ static int sockdev_init_done = 0;
 int bind_device (DEVBLK* dev, char* spec)
 {
     bind_struct* bs;
+    int was_list_empty;
 
-    if(!sockdev_init_done)
-    {
-        init_sockdev();
-        sockdev_init_done = 1;
-    }
+    if (!init_done) init_sockdev();
+
+    if (sysblk.shutdown) return 0;
 
     logdebug("bind_device (%4.4X, %s)\n", dev->devnum, spec);
 
     /* Error if device already bound */
-
     if (dev->bs)
     {
         logmsg (_("HHCSD001E Device %4.4X already bound to socket %s\n"),
@@ -459,31 +471,26 @@ int bind_device (DEVBLK* dev, char* spec)
     }
 
     /* Create a new bind_struct entry */
-
     bs = malloc(sizeof(bind_struct));
-
     if (!bs)
     {
         logmsg (_("HHCSD002E bind_device malloc() failed for device %4.4X\n"),
             dev->devnum);
         return 0;   /* (failure) */
     }
-
     memset(bs,0,sizeof(bind_struct));
 
-    if (!(bs->spec = safe_strdup(spec)))
+    if (!(bs->spec = strdup(spec)))
     {
-        logmsg (_("HHCSD003E bind_device safe_strdup() failed for device %4.4X\n"),
+        logmsg (_("HHCSD003E bind_device strdup() failed for device %4.4X\n"),
             dev->devnum);
         free (bs);
         return 0;   /* (failure) */
     }
 
     /* Create a listening socket */
-
     if (bs->spec[0] == '/') bs->sd = unix_socket (bs->spec);
     else                    bs->sd = inet_socket (bs->spec);
-
     if (bs->sd == -1)
     {
         /* (error message already issued) */
@@ -493,7 +500,6 @@ int bind_device (DEVBLK* dev, char* spec)
     }
 
     /* Chain device and socket to each other */
-
     dev->bs = bs;
     bs->dev = dev;
 
@@ -503,16 +509,21 @@ int bind_device (DEVBLK* dev, char* spec)
 
     obtain_lock( &bind_lock );
 
+    was_list_empty = IsListEmpty( &bind_head );
+
     InsertListTail( &bind_head, &bs->bind_link );
 
-    if ( !sysblk.socktid )
+    if ( was_list_empty )
     {
-        if ( create_thread( &sysblk.socktid, &sysblk.detattr,
+        ATTR joinable_attr;
+        initialize_join_attr( &joinable_attr );
+        if ( create_thread( &sysblk.socktid, &joinable_attr,
                                     socket_thread, NULL ) )
             {
                 logmsg( _( "HHCSD023E Cannot create socketdevice thread: errno=%d: %s\n" ),
                         errno, strerror( errno ) );
                 RemoveListEntry( &bs->bind_link );
+                close_socket(bs->sd);
                 free( bs->spec );
                 free( bs );
                 release_lock( &bind_lock );
@@ -520,9 +531,9 @@ int bind_device (DEVBLK* dev, char* spec)
             }
     }
 
-    release_lock( &bind_lock );
-
     SIGNAL_SOCKDEV_THREAD();
+
+    release_lock( &bind_lock );
 
     logmsg (_("HHCSD004I Device %4.4X bound to socket %s\n"),
         dev->devnum, dev->bs->spec);
@@ -542,7 +553,6 @@ int unbind_device (DEVBLK* dev)
     logdebug("unbind_device(%4.4X)\n", dev->devnum);
 
     /* Error if device not bound */
-
     if (!(bs = dev->bs))
     {
         logmsg (_("HHCSD005E Device %4.4X not bound to any socket\n"),
@@ -551,7 +561,6 @@ int unbind_device (DEVBLK* dev)
     }
 
     /* Error if someone still connected */
-
     if (dev->fd != -1)
     {
         logmsg (_("HHCSD006E Client %s (%s) still connected to device %4.4X (%s)\n"),
@@ -560,19 +569,17 @@ int unbind_device (DEVBLK* dev)
     }
 
     /* Remove the entry from our list */
+
     obtain_lock( &bind_lock );
     RemoveListEntry( &bs->bind_link );
-    if ( IsListEmpty( &bind_head ) )
-        sysblk.socktid = 0;
-    release_lock( &bind_lock );
-
     SIGNAL_SOCKDEV_THREAD();
+    release_lock( &bind_lock );
 
     logmsg (_("HHCSD007I Device %4.4X unbound from socket %s\n"),
         dev->devnum, bs->spec);
 
     if (bs->sd != -1)
-        close (bs->sd);
+        close_socket (bs->sd);
 
     /* Unchain device and socket from each another */
 
@@ -581,16 +588,14 @@ int unbind_device (DEVBLK* dev)
 
     /* Discard the entry */
 
-    if (bs->clientname)
-        free(bs->clientname);
+    if ( bs->clientname ) free( bs->clientname );
+    if ( bs->clientip   ) free( bs->clientip   );
+
     bs->clientname = NULL;
+    bs->clientip   = NULL;
 
-    if (bs->clientip)
-        free(bs->clientip);
-    bs->clientip = NULL;
-
-    free (bs->spec);
-    free (bs);
+    free ( bs->spec );
+    free ( bs );
 
     return 1;   /* (success) */
 }

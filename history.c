@@ -1,3 +1,6 @@
+
+#include "hstdinc.h"
+
 #include "hercules.h"
 #include "history.h"
 

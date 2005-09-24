@@ -5,8 +5,11 @@ int             fd;
 CKDDASD_DEVHDR  devhdr;
 CCKDDASD_DEVHDR cdevhdr;
 int             heads, cyls, devt;
+BYTE            pathname[MAX_PATH];
 
-        fd = open (argv[1], O_RDWR|O_BINARY);
+        hostpath(pathname, argv[1], sizeof(pathname));
+
+        fd = open (pathname, O_RDWR|O_BINARY);
         if (fd < 0) return 1;
 
         read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
@@ -101,7 +104,7 @@ int             heads, cyls, devt;
 
 //      memset (&cdevhdr.resv2, 0, 464);
 
-        lseek (fd, 0, SEEK_SET);
+        LSEEK (fd, 0, SEEK_SET);
         write (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
         write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
 

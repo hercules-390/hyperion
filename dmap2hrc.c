@@ -7,6 +7,8 @@
 /* the format Hercules uses for its .cnf file.                       */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
@@ -46,12 +48,6 @@ typedef struct _DEVMAP_DEV {
     } parms;
     } DEVMAP_DEV;
 
-#if defined(EXTERNALGUI)
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif /*defined(EXTERNALGUI)*/
-
 /*-------------------------------------------------------------------*/
 /* DEVMAP2CNF main entry point                                       */
 /*-------------------------------------------------------------------*/
@@ -62,16 +58,19 @@ int             len;                    /* Length of actual read     */
 char           *filename;               /* -> Input file name        */
 int             infd = -1;              /* Input file descriptor     */
 DEVMAP_CTLR     controller;             /* Controller record         */
-DEVMAP_DEV      device;         /* Device record             */
-char        output_type[5];     /* Device type to print      */
-char           *output_filename;    /* -> filename to print      */
-int     more_devices;       /* More devices this ctlr?   */
+DEVMAP_DEV      device;                 /* Device record             */
+char            output_type[5];         /* Device type to print      */
+char           *output_filename;        /* -> filename to print      */
+int             more_devices;           /* More devices this ctlr?   */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 
@@ -91,7 +90,8 @@ int     more_devices;       /* More devices this ctlr?   */
     }
 
     /* Open the devmap file */
-    infd = open (filename, O_RDONLY | O_BINARY);
+    hostpath(pathname, filename, sizeof(pathname));
+    infd = open (pathname, O_RDONLY | O_BINARY);
     if (infd < 0)
     {
         fprintf (stderr,"dmap2hrc: Error opening %s: %s\n",

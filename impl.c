@@ -9,6 +9,11 @@
 /* mode.                                                             */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
+#define _IMPL_C_
+#define _HENGINE_DLL_
+
 #include "hercules.h"
 #include "opcode.h"
 #include "devtype.h"
@@ -17,18 +22,21 @@
 #include "hostinfo.h"
 #include "history.h"
 
-#if defined(FISH_HANG)
-extern  int   bFishHangAtExit;  // (set to true when shutting down)
-extern  void  FishHangInit(char* pszFileCreated, int nLineCreated);
-extern  void  FishHangReport();
-extern  void  FishHangAtExit();
-#endif // defined(FISH_HANG)
-
 /* (delayed_exit function defined in config.c) */
 extern void delayed_exit (int exit_code);
 
 /* forward define process_script_file (ISW20030220-3) */
 int process_script_file(char *,int);
+
+static LOGCALLBACK  log_callback=NULL;
+
+/*-------------------------------------------------------------------*/
+/* Register a LOG callback                                           */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void registerLogCallback(LOGCALLBACK lcb)
+{
+    log_callback=lcb;
+}
 
 /*-------------------------------------------------------------------*/
 /* Signal handler for SIGINT signal                                  */
@@ -71,13 +79,11 @@ int i;
 
     UNREFERENCED(arg);
 
-#ifndef WIN32
     /* Set watchdog priority just below cpu priority
        such that it will not invalidly detect an
        inoperable cpu */
     if(sysblk.cpuprio >= 0)
         setpriority(PRIO_PROCESS, 0, sysblk.cpuprio+1);
-#endif
 
     for (i = 0; i < MAX_CPU_ENGINES; i ++) savecount[i] = -1;
 
@@ -97,7 +103,7 @@ int i;
                 /* If the cpu is running but not executing
                    instructions then it must be malfunctioning */
                 if((sysblk.regs[i]->instcount == (U64)savecount[i])
-                  && !HDC(debug_watchdog_signal, sysblk.regs[i]) )
+                  && !HDC1(debug_watchdog_signal, sysblk.regs[i]) )
                 {
                     /* Send signal to looping CPU */
                     signal_thread(sysblk.cputid[i], SIGUSR1);
@@ -120,6 +126,25 @@ int i;
 }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
+void *log_do_callback(void *dummy)
+{
+    char *msgbuf;
+    int msgcnt = -1,msgnum;
+    UNREFERENCED(dummy);
+    while(msgcnt)
+    {
+        if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
+        {
+            log_callback(msgbuf,msgcnt);
+        }
+    }
+    return(NULL);
+}
+
+DLL_EXPORT  COMMANDHANDLER getCommandHandler(void)
+{
+    return(panel_command);
+}
 
 /*-------------------------------------------------------------------*/
 /* Process .RC file thread                                           */
@@ -147,8 +172,7 @@ char   *rcname;                         /* hercules.rc name pointer  */
 /*-------------------------------------------------------------------*/
 /* IMPL main entry point                                             */
 /*-------------------------------------------------------------------*/
-static int daemon_mode = 0;
-int impl(int argc, char *argv[])
+DLL_EXPORT int impl(int argc, char *argv[])
 {
 char   *cfgfile;                        /* -> Configuration filename */
 int     c;                              /* Work area for getopt      */
@@ -157,22 +181,27 @@ char   *msgbuf;                         /*                           */
 int     msgnum;                         /*                           */
 int     msgcnt;                         /*                           */
 TID     rctid;                          /* RC file thread identifier */
+TID     logcbtid;                       /* RC file thread identifier */
 
 #if defined(FISH_HANG)
     /* "FishHang" debugs lock/cond/threading logic. Thus it must
-     * be initialized BEFORE any lock/cond/threads are created.
-     */
+     * be initialized BEFORE any lock/cond/threads are created. */
     FishHangInit(__FILE__,__LINE__);
-#endif // defined(FISH_HANG)
+#endif
 
     /* Initialize 'hostinfo' BEFORE display_version is called */
-    init_hostinfo();
+    init_hostinfo( &hostinfo );
 
     if(isatty(STDERR_FILENO))
         display_version (stderr, "Hercules ", TRUE);
     else
         if(isatty(STDOUT_FILENO))
             display_version (stdout, "Hercules ", TRUE);
+
+#ifdef _MSVC_
+    /* Initialize sockets package */
+    VERIFY( socket_init() == 0 );
+#endif
 
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
@@ -203,13 +232,13 @@ TID     rctid;                          /* RC file thread identifier */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, LOCALEDIR);
+    bindtextdomain(PACKAGE, HERC_LOCALEDIR);
     textdomain(PACKAGE);
 #endif
 
     /* default to background mode when both stdout and stderr
        are redirected to a non-tty device */
-    daemon_mode = !isatty(STDERR_FILENO);
+    sysblk.daemon_mode = !isatty(STDERR_FILENO);
 
 #ifdef EXTERNALGUI
     /* Set GUI flag if specified as final argument */
@@ -229,9 +258,9 @@ TID     rctid;                          /* RC file thread identifier */
     }
 #endif /*EXTERNALGUI*/
 
-#if defined(BUILTIN_STRERROR_R)
+#if !defined(WIN32) && !defined(HAVE_STRERROR_R)
     strerror_r_init();
-#endif /* defined(BUILTIN_STRERROR_R) */
+#endif
 
     /* Get name of configuration file or default to hercules.cnf */
     if(!(cfgfile = getenv("HERCULES_CNF")))
@@ -261,7 +290,7 @@ TID     rctid;                          /* RC file thread identifier */
             break;
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
         case 'd':
-            daemon_mode = 1;
+            sysblk.daemon_mode = 1;
             break;
         default:
             arg_error = 1;
@@ -290,6 +319,7 @@ TID     rctid;                          /* RC file thread identifier */
         delayed_exit(1);
     }
 
+#if defined(HAVE_DECL_SIGPIPE) && HAVE_DECL_SIGPIPE
     /* Ignore the SIGPIPE signal, otherwise Hercules may terminate with
        Broken Pipe error if the printer driver writes to a closed pipe */
     if ( signal (SIGPIPE, SIG_IGN) == SIG_ERR )
@@ -298,6 +328,7 @@ TID     rctid;                          /* RC file thread identifier */
                 _("HHCIN002E Cannot suppress SIGPIPE signal: %s\n"),
                 strerror(errno));
     }
+#endif
 
 #if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
     {
@@ -306,10 +337,10 @@ TID     rctid;                          /* RC file thread identifier */
         initialize_lock(&sysblk.sockpipe_lock);
         sysblk.cnslpipe_flag=0;
         sysblk.sockpipe_flag=0;
-        pipe(fds);
+        VERIFY( create_pipe(fds) >= 0 );
         sysblk.cnslwpipe=fds[1];
         sysblk.cnslrpipe=fds[0];
-        pipe(fds);
+        VERIFY( create_pipe(fds) >= 0 );
         sysblk.sockwpipe=fds[1];
         sysblk.sockrpipe=fds[0];
     }
@@ -322,7 +353,7 @@ TID     rctid;                          /* RC file thread identifier */
 #ifdef SA_NODEFER
         sa.sa_flags = SA_NODEFER;
 #else
-    sa.sa_flags = 0;
+        sa.sa_flags = 0;
 #endif
 
         if( sigaction(SIGILL, &sa, NULL)
@@ -343,6 +374,12 @@ TID     rctid;                          /* RC file thread identifier */
 
     /* Build system configuration */
     build_config (cfgfile);
+
+#ifdef OPTION_MIPS_COUNTING
+    /* Initialize "maxrates" command reporting intervals */
+    curr_int_start_time = time( NULL );
+    prev_int_start_time = curr_int_start_time;
+#endif
 
 #if !defined(NO_SIGABEND_HANDLER)
     /* Start the watchdog */
@@ -403,24 +440,50 @@ TID     rctid;                          /* RC file thread identifier */
     /* Start up the RC file processing thread */
     create_thread(&rctid,&sysblk.detattr,process_rc_file,NULL);
 
-    history_init();
+    if(log_callback)
+    {
+        // 'herclin' called us. IT'S in charge. Create its requested
+        // logmsg intercept callback function and return back to it.
+        create_thread(&logcbtid,&sysblk.detattr,log_do_callback,NULL);
+        return(0);
+    }
+
+    //---------------------------------------------------------------
+    // The below functions will not return until Hercules is shutdown
+    //---------------------------------------------------------------
 
     /* Activate the control panel */
-    if(!daemon_mode)
-    {
+    if(!sysblk.daemon_mode)
         panel_display ();
-    }
     else
-        while(1)
 #if defined(OPTION_DYNAMIC_LOAD)
-            if(daemon_task)
-                daemon_task ();
-            else
+        if(daemon_task)
+            daemon_task ();
+        else
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
+            while (1)
                 if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
                     if(isatty(STDERR_FILENO))
                         fwrite(msgbuf,msgcnt,1,stderr);
 
+    //  -----------------------------------------------------
+    //      *** Hercules has been shutdown (PAST tense) ***
+    //  -----------------------------------------------------
+
+    ASSERT( sysblk.shutdown );  // (why else would we be here?!)
+
+#if defined(FISH_HANG)
+    FishHangAtExit();
+#endif
+#ifdef _MSVC_
+    socket_deinit();
+#endif
+#ifdef DEBUG
+    fprintf(stdout, _("IMPL EXIT\n"));
+#endif
+    fprintf(stdout, _("HHCIN099I Hercules terminated\n"));
+    fflush(stdout);
+    usleep(10000);
     return 0;
 } /* end function main */
 
@@ -428,26 +491,17 @@ TID     rctid;                          /* RC file thread identifier */
 /*-------------------------------------------------------------------*/
 /* System cleanup                                                    */
 /*-------------------------------------------------------------------*/
-void system_cleanup (void)
+DLL_EXPORT void system_cleanup (void)
 {
-}
+//  logmsg("HHCIN950I Begin system cleanup\n");
+    /*
+        Currently only called by hdlmain,c's HDL_FINAL_SECTION
+        after the main 'hercules' module has been unloaded, but
+        that could change at some time in the future.
 
-
-/*-------------------------------------------------------------------*/
-/* Shutdown hercules                                                 */
-/*-------------------------------------------------------------------*/
-void system_shutdown (void)
-{
-    /* ZZ FIXME: Using the shutdown flag does not serialize shutdown
-                 it would be better to call a synchronous termination
-                 routine, which only returns when the shutdown of
-                 the function in question has been completed */
-
-    sysblk.shutdown = 1;
-    release_config();
-    usleep(50000);
-
-    /* Call all termination routines in LIFO order */
-    hdl_shut();
-
+        The above and below logmsg's are commented out since this
+        function currently doesn't do anything yet. Once it DOES
+        something, they should be uncommented.
+    */
+//  logmsg("HHCIN959I System cleanup complete\n");
 }

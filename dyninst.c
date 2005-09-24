@@ -9,14 +9,15 @@
 /* instruction 2 3 or 4 digits.                                      */
 
 
+#include "hstdinc.h"
 #include "hercules.h"
 
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-/* We need to do some special tricks for cygwin here, since cygwin   */
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+/* We need to do some special tricks for windows here, since windows */
 /* does not support backlink and we need to resolve symbols during   */
 /* dll initialisation (REGISTER/RESOLVER). Opcode tables are renamed */
 /* such that no naming conflicts occur.                              */
@@ -30,6 +31,7 @@
  #define opcode_b3xx  opcode_b3xx_r
  #define opcode_b9xx  opcode_b9xx_r
  #define opcode_c0xx  opcode_c0xx_r
+ #define opcode_c2xx  opcode_c2xx_r
  #define opcode_e3xx  opcode_e3xx_r
  #define opcode_e5xx  opcode_e5xx_r
  #define opcode_e6xx  opcode_e6xx_r
@@ -40,7 +42,7 @@
 
 #include "opcode.h"
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
  #undef copy_opcode_tables
  #undef opcode_table
  #undef opcode_01xx
@@ -51,6 +53,7 @@
  #undef opcode_b3xx
  #undef opcode_b9xx
  #undef opcode_c0xx
+ #undef opcode_c2xx
  #undef opcode_e3xx
  #undef opcode_e5xx
  #undef opcode_e6xx
@@ -87,6 +90,7 @@ static zz_func save_b2xx[256][GEN_MAXARCH];
 static zz_func save_b3xx[256][GEN_MAXARCH];
 static zz_func save_b9xx[256][GEN_MAXARCH];
 static zz_func save_c0xx[16][GEN_MAXARCH];
+static zz_func save_c2xx[16][GEN_MAXARCH];                      /*@Z9*/
 static zz_func save_e3xx[256][GEN_MAXARCH];
 static zz_func save_e5xx[256][GEN_MAXARCH];
 static zz_func save_e6xx[256][GEN_MAXARCH];
@@ -94,26 +98,27 @@ static zz_func save_ebxx[256][GEN_MAXARCH];
 static zz_func save_ecxx[256][GEN_MAXARCH];
 static zz_func save_edxx[256][GEN_MAXARCH];
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-static int opcodes_saved;
-static void copy_opcode_tables ();
-static void * opcode_table;
-static void * opcode_01xx;
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  static int opcodes_saved;
+  static void copy_opcode_tables ();
+  static void * opcode_table;
+  static void * opcode_01xx;
 #if defined (FEATURE_VECTOR_FACILITY)
-static void * opcode_a4xx;
+  static void * opcode_a4xx;
 #endif
-static void * opcode_a5xx;
-static void * opcode_a7xx;
-static void * opcode_b2xx;
-static void * opcode_b3xx;
-static void * opcode_b9xx;
-static void * opcode_c0xx;
-static void * opcode_e3xx;
-static void * opcode_e5xx;
-static void * opcode_e6xx;
-static void * opcode_ebxx;
-static void * opcode_ecxx;
-static void * opcode_edxx;
+  static void * opcode_a5xx;
+  static void * opcode_a7xx;
+  static void * opcode_b2xx;
+  static void * opcode_b3xx;
+  static void * opcode_b9xx;
+  static void * opcode_c0xx;
+  static void * opcode_c2xx;                                    /*@Z9*/
+  static void * opcode_e3xx;
+  static void * opcode_e5xx;
+  static void * opcode_e6xx;
+  static void * opcode_ebxx;
+  static void * opcode_ecxx;
+  static void * opcode_edxx;
 #endif
 
 static char *prefix[] = {
@@ -142,6 +147,7 @@ static void opcode_save()
     memcpy(save_b3xx,opcode_b3xx,sizeof(save_b3xx));
     memcpy(save_b9xx,opcode_b9xx,sizeof(save_b9xx));
     memcpy(save_c0xx,opcode_c0xx,sizeof(save_c0xx));
+    memcpy(save_c2xx,opcode_c2xx,sizeof(save_c2xx));            /*@Z9*/
     memcpy(save_e3xx,opcode_e3xx,sizeof(save_e3xx));
     memcpy(save_e5xx,opcode_e5xx,sizeof(save_e5xx));
     memcpy(save_e6xx,opcode_e6xx,sizeof(save_e6xx));
@@ -164,6 +170,7 @@ static void opcode_restore()
     memcpy(opcode_b3xx,save_b3xx,sizeof(save_b3xx));
     memcpy(opcode_b9xx,save_b9xx,sizeof(save_b9xx));
     memcpy(opcode_c0xx,save_c0xx,sizeof(save_c0xx));
+    memcpy(opcode_c2xx,save_c2xx,sizeof(save_c2xx));            /*@Z9*/
     memcpy(opcode_e3xx,save_e3xx,sizeof(save_e3xx));
     memcpy(opcode_e5xx,save_e5xx,sizeof(save_e5xx));
     memcpy(opcode_e6xx,save_e6xx,sizeof(save_e6xx));
@@ -270,14 +277,13 @@ HDL_DEPENDENCY_SECTION;
 
 HDL_REGISTER_SECTION;
 {
-
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
     opcodes_saved = 0;
 #else
     opcode_save();
 #endif
-
-} END_REGISTER_SECTION;
+}
+END_REGISTER_SECTION;
 
 
 HDL_RESOLVER_SECTION;
@@ -285,7 +291,7 @@ HDL_RESOLVER_SECTION;
 int opcode, extop;
 
 #if 0
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
     if(!opcodes_saved)
     {
         HDL_RESOLVE(copy_opcode_tables);
@@ -300,6 +306,7 @@ int opcode, extop;
         HDL_RESOLVE(opcode_b3xx);
         HDL_RESOLVE(opcode_b9xx);
         HDL_RESOLVE(opcode_c0xx);
+        HDL_RESOLVE(opcode_c2xx);                               /*@Z9*/
         HDL_RESOLVE(opcode_e3xx);
         HDL_RESOLVE(opcode_e5xx);
         HDL_RESOLVE(opcode_e6xx);
@@ -359,6 +366,11 @@ int opcode, extop;
                 for(extop = 0; extop < 16; extop++)
                     assign_extop1(opcode, extop, opcode_c0xx, save_c0xx);
                 break;
+
+            case 0xC2:                                                     /*@Z9*/
+                for(extop = 0; extop < 16; extop++)                        /*@Z9*/
+                    assign_extop1(opcode, extop, opcode_c2xx, save_c2xx);  /*@Z9*/
+                break;                                                     /*@Z9*/
 
             case 0xE3:
                 for(extop = 0; extop < 256; extop++)

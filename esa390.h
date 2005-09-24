@@ -1,33 +1,22 @@
+/*-------------------------------------------------------------------*/
+/* Header file containing ESA/390 structure definitions              */
+/*-------------------------------------------------------------------*/
+
 /* ESA390.H     (c) Copyright Roger Bowler, 1994-2005                */
 /*              ESA/390 Data Areas                                   */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2005      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 
-#if !defined(_ESA390_H)
-
+#ifndef _ESA390_H
 #define _ESA390_H
 
-#include "htypes.h"
-
-/*-------------------------------------------------------------------*/
-/* Header file containing ESA/390 structure definitions              */
-/*-------------------------------------------------------------------*/
-
 /* Platform-independent storage operand definitions */
-typedef uint8_t         BYTE;
-typedef uint8_t         HWORD[2];
-typedef uint8_t         FWORD[4];
-typedef uint8_t         DWORD[8];
-typedef uint8_t         QWORD[16];
-typedef int8_t          S8;
-typedef uint16_t        U16;
-typedef int16_t         S16;
-typedef uint32_t        U32;
-typedef int32_t         S32;
-typedef uint64_t        U64;
-typedef int64_t         S64;
-#ifdef WORDS_BIGENDIAN
+
+#include "htypes.h"         // (need Hercules fixed-size data types)
+
+#if defined(WORDS_BIGENDIAN)
+
  typedef union {
                  U16 H;
                  struct { BYTE H; BYTE L; } B;
@@ -41,7 +30,9 @@ typedef int64_t         S64;
                  U64 D;
                  struct { FW H; FW L; } F;
                } DW;
-#else
+
+#else // !defined(WORDS_BIGENDIAN)
+
  typedef union {
                  U16 H;
                  struct { BYTE L; BYTE H; } B;
@@ -49,13 +40,14 @@ typedef int64_t         S64;
  typedef union {
                  U32 F;
                  struct { HW L; HW H; } H;
-                 struct { U32 A:24; BYTE B; } A;
+                 struct { U32 A:24, B:8; } A;
                } FW;
  typedef union {
                  U64 D;
                  struct { FW L; FW H; } F;
                } DW;
-#endif
+
+#endif // defined(WORDS_BIGENDIAN)
 
 typedef union {
                  HWORD H;
@@ -66,7 +58,7 @@ typedef union {
                  struct { HWORD_U H; HWORD_U L; } H;
                } FWORD_U;
 typedef union {
-                 DWORD D;
+                 DBLWRD D;
                  struct { FWORD_U H; FWORD_U L; } F;
                } DWORD_U;
 
@@ -121,7 +113,7 @@ typedef struct  _PSW {
 #define PSW_PROB_BIT       0    /* 0x01    Problem state             */
 #define PSW_NOTESAME_BIT   PSW_EC_BIT
 
-/* Address space control      (16 - 17) */                                  
+/* Address space control      (16 - 17) */
 #define PSW_ASCMASK     0xC0            /* Address space control mask*/
 #define PSW_SPACE_BIT      7    /* 0x80    Space mode bit            */
 #define PSW_AR_BIT         6    /* 0x40    Access register mode bit  */
@@ -152,10 +144,10 @@ typedef struct  _PSW {
 #define PROBSTATE(p) (((p)->states & BIT(PSW_PROB_BIT))     != 0)
 
 /* Macros for testing program mask */
-#define FOMASK(p)             (test_bit (1, PSW_FOBIT, &(p)->progmask))
-#define DOMASK(p)             (test_bit (1, PSW_DOBIT, &(p)->progmask))
-#define EUMASK(p)             (test_bit (1, PSW_EUBIT, &(p)->progmask))
-#define SGMASK(p)             (test_bit (1, PSW_SGBIT, &(p)->progmask))
+#define FOMASK(p)             ( (p)->progmask & BIT(PSW_FOBIT) )
+#define DOMASK(p)             ( (p)->progmask & BIT(PSW_DOBIT) )
+#define EUMASK(p)             ( (p)->progmask & BIT(PSW_EUBIT) )
+#define SGMASK(p)             ( (p)->progmask & BIT(PSW_SGBIT) )
 
 /* Structure definition for translation-lookaside buffer entry */
 #define TLBN            1024            /* Number TLB entries        */
@@ -195,9 +187,9 @@ typedef struct _DAT {
                                         /*   STD or ASCE             */
         int     stid;                   /* Address space indicator   */
         BYTE   *storkey;                /* ->Storage key             */
-        U16     xcode;                  /* Translation exception code*/ 
+        U16     xcode;                  /* Translation exception code*/
         BYTE    private:1,              /* 1=Private address space   */
-                protect:2;              /* 1=Page prot, 2=ALE prot   */ 
+                protect:2;              /* 1=Page prot, 2=ALE prot   */
         BYTE    reserved[1];            /* [alignment]               */
       } DAT;
 
@@ -634,134 +626,134 @@ typedef struct _LSED {
 
 /* Prefixed storage area structure definition */
 typedef struct _PSA_3XX {               /* Prefixed storage area     */
-/*000*/ DWORD iplpsw;                   /* IPL PSW, Restart new PSW  */
-/*008*/ DWORD iplccw1;                  /* IPL CCW1, Restart old PSW */
-/*010*/ DWORD iplccw2;                  /* IPL CCW2                  */
-/*018*/ DWORD extold;                   /* External old PSW          */
-/*020*/ DWORD svcold;                   /* SVC old PSW               */
-/*028*/ DWORD pgmold;                   /* Program check old PSW     */
-/*030*/ DWORD mckold;                   /* Machine check old PSW     */
-/*038*/ DWORD iopold;                   /* I/O old PSW               */
-/*040*/ DWORD csw;                      /* Channel status word (S370)*/
-/*048*/ FWORD caw;                      /* Channel address word(S370)*/
-/*04C*/ FWORD resv04C;                  /* Reserved                  */
-/*050*/ FWORD inttimer;                 /* Interval timer            */
-/*054*/ FWORD resv054;                  /* Reserved                  */
-/*058*/ DWORD extnew;                   /* External new PSW          */
-/*060*/ DWORD svcnew;                   /* SVC new PSW               */
-/*068*/ DWORD pgmnew;                   /* Program check new PSW     */
-/*070*/ DWORD mcknew;                   /* Machine check new PSW     */
-/*078*/ DWORD iopnew;                   /* I/O new PSW               */
-/*080*/ FWORD extparm;                  /* External interrupt param  */
-/*084*/ HWORD extcpad;                  /* External interrupt CPU#   */
-/*086*/ HWORD extint;                   /* External interrupt code   */
-/*088*/ FWORD svcint;                   /* SVC interrupt code        */
-/*08C*/ FWORD pgmint;                   /* Program interrupt code    */
-/*090*/ FWORD tea;                      /* Translation exception addr*/
-/*094*/ HWORD monclass;                 /* Monitor class             */
-/*096*/ HWORD perint;                   /* PER interrupt code        */
-/*098*/ FWORD peradr;                   /* PER address               */
-/*09C*/ FWORD moncode;                  /* Monitor code              */
-/*0A0*/ BYTE  excarid;                  /* Exception access id       */
-/*0A1*/ BYTE  perarid;                  /* PER access id             */
-/*0A2*/ BYTE  opndrid;                  /* Operand access id         */
-/*0A3*/ BYTE  arch;                     /* Architecture mode ID      */
-/*0A4*/ FWORD resv0A4;                  /* Reserved                  */
-/*0A8*/ FWORD chanid;                   /* Channel id (S370)         */
-/*0AC*/ FWORD ioelptr;                  /* I/O extended logout (S370)*/
-/*0B0*/ FWORD lcl;                      /* Limited chan logout (S370)*/
-/*0B4*/ FWORD resv0B0;                  /* Reserved                  */
-/*0B8*/ FWORD ioid;                     /* I/O interrupt device id   */
-/*0BC*/ FWORD ioparm;                   /* I/O interrupt parameter   */
-/*0C0*/ FWORD iointid;                  /* I/O interrupt ID          */
-/*0C4*/ FWORD resv0C4;                  /* Reserved                  */
-/*0C8*/ FWORD stfl;                     /* Facilities list (STFL)    */
-/*0CC*/ FWORD resv0CC;                  /* Reserved                  */
-/*0D0*/ DWORD resv0D0;                  /* Reserved                  */
-/*0D8*/ DWORD storeptmr;                /* CPU timer save area       */
-/*0E0*/ DWORD storeclkc;                /* Clock comparator save area*/
-/*0E8*/ DWORD mckint;                   /* Machine check int code    */
-/*0F0*/ FWORD resv0F0;                  /* Reserved                  */
-/*0F4*/ FWORD xdmgcode;                 /* External damage code      */
-/*0F8*/ FWORD mcstorad;                 /* Failing storage address   */
-/*0FC*/ FWORD resv0FC;                  /* Reserved                  */
-/*100*/ DWORD storepsw;                 /* Store status PSW save area*/
-/*108*/ FWORD storepfx;                 /* Prefix register save area */
-/*10C*/ FWORD resv10C;                  /* Reserved                  */
-/*110*/ DWORD resv110;                  /* Reserved                  */
-/*118*/ DWORD resv118;                  /* Reserved                  */
-/*120*/ FWORD storear[16];              /* Access register save area */
-/*160*/ FWORD storefpr[8];              /* FP register save area     */
-/*180*/ FWORD storegpr[16];             /* General register save area*/
-/*1C0*/ FWORD storecr[16];              /* Control register save area*/
+/*000*/ DBLWRD iplpsw;                  /* IPL PSW, Restart new PSW  */
+/*008*/ DBLWRD iplccw1;                 /* IPL CCW1, Restart old PSW */
+/*010*/ DBLWRD iplccw2;                 /* IPL CCW2                  */
+/*018*/ DBLWRD extold;                  /* External old PSW          */
+/*020*/ DBLWRD svcold;                  /* SVC old PSW               */
+/*028*/ DBLWRD pgmold;                  /* Program check old PSW     */
+/*030*/ DBLWRD mckold;                  /* Machine check old PSW     */
+/*038*/ DBLWRD iopold;                  /* I/O old PSW               */
+/*040*/ DBLWRD csw;                     /* Channel status word (S370)*/
+/*048*/ FWORD  caw;                     /* Channel address word(S370)*/
+/*04C*/ FWORD  resv04C;                 /* Reserved                  */
+/*050*/ FWORD  inttimer;                /* Interval timer            */
+/*054*/ FWORD  resv054;                 /* Reserved                  */
+/*058*/ DBLWRD extnew;                  /* External new PSW          */
+/*060*/ DBLWRD svcnew;                  /* SVC new PSW               */
+/*068*/ DBLWRD pgmnew;                  /* Program check new PSW     */
+/*070*/ DBLWRD mcknew;                  /* Machine check new PSW     */
+/*078*/ DBLWRD iopnew;                  /* I/O new PSW               */
+/*080*/ FWORD  extparm;                 /* External interrupt param  */
+/*084*/ HWORD  extcpad;                 /* External interrupt CPU#   */
+/*086*/ HWORD  extint;                  /* External interrupt code   */
+/*088*/ FWORD  svcint;                  /* SVC interrupt code        */
+/*08C*/ FWORD  pgmint;                  /* Program interrupt code    */
+/*090*/ FWORD  tea;                     /* Translation exception addr*/
+/*094*/ HWORD  monclass;                /* Monitor class             */
+/*096*/ HWORD  perint;                  /* PER interrupt code        */
+/*098*/ FWORD  peradr;                  /* PER address               */
+/*09C*/ FWORD  moncode;                 /* Monitor code              */
+/*0A0*/ BYTE   excarid;                 /* Exception access id       */
+/*0A1*/ BYTE   perarid;                 /* PER access id             */
+/*0A2*/ BYTE   opndrid;                 /* Operand access id         */
+/*0A3*/ BYTE   arch;                    /* Architecture mode ID      */
+/*0A4*/ FWORD  resv0A4;                 /* Reserved                  */
+/*0A8*/ FWORD  chanid;                  /* Channel id (S370)         */
+/*0AC*/ FWORD  ioelptr;                 /* I/O extended logout (S370)*/
+/*0B0*/ FWORD  lcl;                     /* Limited chan logout (S370)*/
+/*0B4*/ FWORD  resv0B0;                 /* Reserved                  */
+/*0B8*/ FWORD  ioid;                    /* I/O interrupt device id   */
+/*0BC*/ FWORD  ioparm;                  /* I/O interrupt parameter   */
+/*0C0*/ FWORD  iointid;                 /* I/O interrupt ID          */
+/*0C4*/ FWORD  resv0C4;                 /* Reserved                  */
+/*0C8*/ FWORD  stfl;                    /* Facilities list (STFL)    */
+/*0CC*/ FWORD  resv0CC;                 /* Reserved                  */
+/*0D0*/ DBLWRD resv0D0;                 /* Reserved                  */
+/*0D8*/ DBLWRD storeptmr;               /* CPU timer save area       */
+/*0E0*/ DBLWRD storeclkc;               /* Clock comparator save area*/
+/*0E8*/ DBLWRD mckint;                  /* Machine check int code    */
+/*0F0*/ FWORD  resv0F0;                 /* Reserved                  */
+/*0F4*/ FWORD  xdmgcode;                /* External damage code      */
+/*0F8*/ FWORD  mcstorad;                /* Failing storage address   */
+/*0FC*/ FWORD  resv0FC;                 /* Reserved                  */
+/*100*/ DBLWRD storepsw;                /* Store status PSW save area*/
+/*108*/ FWORD  storepfx;                /* Prefix register save area */
+/*10C*/ FWORD  resv10C;                 /* Reserved                  */
+/*110*/ DBLWRD resv110;                 /* Reserved                  */
+/*118*/ DBLWRD resv118;                 /* Reserved                  */
+/*120*/ FWORD  storear[16];             /* Access register save area */
+/*160*/ FWORD  storefpr[8];             /* FP register save area     */
+/*180*/ FWORD  storegpr[16];            /* General register save area*/
+/*1C0*/ FWORD  storecr[16];             /* Control register save area*/
 } PSA_3XX;
 
 /* ESAME Prefixed storage area structure definition */
 typedef struct _PSA_900 {               /* Prefixed storage area     */
-/*0000*/ DWORD iplpsw;                  /* IPL PSW                   */
-/*0008*/ DWORD iplccw1;                 /* IPL CCW1                  */
-/*0010*/ DWORD iplccw2;                 /* IPL CCW2                  */
-/*0018*/ BYTE  resv0018[104];           /* Reserved                  */
-/*0080*/ FWORD extparm;                 /* External interrupt param  */
-/*0084*/ HWORD extcpad;                 /* External interrupt CPU#   */
-/*0086*/ HWORD extint;                  /* External interrupt code   */
-/*0088*/ FWORD svcint;                  /* SVC interrupt code        */
-/*008C*/ FWORD pgmint;                  /* Program interrupt code    */
-/*0090*/ FWORD dataexc;                 /* Data exception code       */
-/*0094*/ HWORD monclass;                /* Monitor class             */
-/*0096*/ HWORD perint;                  /* PER interrupt code        */
-/*0098*/ DWORD peradr;                  /* PER address               */
-/*00A0*/ BYTE  excarid;                 /* Exception access id       */
-/*00A1*/ BYTE  perarid;                 /* PER access id             */
-/*00A2*/ BYTE  opndrid;                 /* Operand access id         */
-/*00A3*/ BYTE  arch;                    /* Architecture mode ID      */
-/*00A4*/ FWORD mpladdr;                 /* MPL addr                  */
+/*0000*/ DBLWRD iplpsw;                 /* IPL PSW                   */
+/*0008*/ DBLWRD iplccw1;                /* IPL CCW1                  */
+/*0010*/ DBLWRD iplccw2;                /* IPL CCW2                  */
+/*0018*/ BYTE   resv0018[104];          /* Reserved                  */
+/*0080*/ FWORD  extparm;                /* External interrupt param  */
+/*0084*/ HWORD  extcpad;                /* External interrupt CPU#   */
+/*0086*/ HWORD  extint;                 /* External interrupt code   */
+/*0088*/ FWORD  svcint;                 /* SVC interrupt code        */
+/*008C*/ FWORD  pgmint;                 /* Program interrupt code    */
+/*0090*/ FWORD  dataexc;                /* Data exception code       */
+/*0094*/ HWORD  monclass;               /* Monitor class             */
+/*0096*/ HWORD  perint;                 /* PER interrupt code        */
+/*0098*/ DBLWRD peradr;                 /* PER address               */
+/*00A0*/ BYTE   excarid;                /* Exception access id       */
+/*00A1*/ BYTE   perarid;                /* PER access id             */
+/*00A2*/ BYTE   opndrid;                /* Operand access id         */
+/*00A3*/ BYTE   arch;                   /* Architecture mode ID      */
+/*00A4*/ FWORD  mpladdr;                /* MPL addr                  */
 /*00A8*/ DWORD_U tea;                   /* Translation exception addr*/
 #define TEA_G tea.D
 #define TEA_L tea.F.L.F
 #define TEA_H tea.F.H.F
-/*00B0*/ DWORD moncode;                 /* Monitor code              */
-/*00B8*/ FWORD ioid;                    /* I/O interrupt subsys id   */
-/*00BC*/ FWORD ioparm;                  /* I/O interrupt parameter   */
-/*00C0*/ FWORD iointid;                 /* I/O interrupt ID          */
-/*00C4*/ FWORD resv00C0;                /* Reserved                  */
-/*00C8*/ FWORD stfl;                    /* Facilities list (STFL)    */
-/*00CC*/ FWORD resv00CC;                /* Reserved                  */
-/*00D0*/ DWORD resv00D0;                /* Reserved                  */
-/*00D8*/ DWORD resv00D8;                /* Reserved                  */
-/*00E0*/ DWORD resv00E0;                /* Reserved                  */
-/*00E8*/ DWORD mckint;                  /* Machine check int code    */
-/*00F0*/ FWORD mckext;                  /* Machine check int code ext*/
-/*00F4*/ FWORD xdmgcode;                /* External damage code      */
-/*00F8*/ DWORD mcstorad;                /* Failing storage address   */
-/*0100*/ BYTE  resv0100[32];            /* Reserved                  */
-/*0120*/ QWORD rstold;                  /* Restart old PSW           */
-/*0130*/ QWORD extold;                  /* External old PSW          */
-/*0140*/ QWORD svcold;                  /* SVC old PSW               */
-/*0150*/ QWORD pgmold;                  /* Program check old PSW     */
-/*0160*/ QWORD mckold;                  /* Machine check old PSW     */
-/*0170*/ QWORD iopold;                  /* I/O old PSW               */
-/*0180*/ BYTE  resv0180[32];            /* Reserved                  */
-/*01A0*/ QWORD rstnew;                  /* Restart new PSW           */
-/*01B0*/ QWORD extnew;                  /* External new PSW          */
-/*01C0*/ QWORD svcnew;                  /* SVC new PSW               */
-/*01D0*/ QWORD pgmnew;                  /* Program check new PSW     */
-/*01E0*/ QWORD mcknew;                  /* Machine check new PSW     */
-/*01F0*/ QWORD iopnew;                  /* I/O new PSW               */
-/*0200*/ BYTE  resv0200[4096];          /* Reserved                  */
-/*1200*/ FWORD storefpr[32];            /* FP register save area     */
-/*1280*/ DWORD storegpr[16];            /* General register save area*/
-/*1300*/ QWORD storepsw;                /* Store status PSW save area*/
-/*1310*/ DWORD resv1310;                /* Reserved                  */
-/*1318*/ FWORD storepfx;                /* Prefix register save area */
-/*131C*/ FWORD storefpc;                /* FP control save area      */
-/*1320*/ FWORD resv1320;                /* Reserved                  */
-/*1324*/ FWORD storetpr;                /* TOD prog reg save area    */
-/*1328*/ DWORD storeptmr;               /* CPU timer save area       */
-/*1330*/ DWORD storeclkc;               /* Clock comparator save area*/
-/*1338*/ DWORD resv1338;                /* Reserved                  */
-/*1340*/ FWORD storear[16];             /* Access register save area */
-/*1380*/ DWORD storecr[16];             /* Control register save area*/
+/*00B0*/ DBLWRD moncode;                /* Monitor code              */
+/*00B8*/ FWORD  ioid;                   /* I/O interrupt subsys id   */
+/*00BC*/ FWORD  ioparm;                 /* I/O interrupt parameter   */
+/*00C0*/ FWORD  iointid;                /* I/O interrupt ID          */
+/*00C4*/ FWORD  resv00C0;               /* Reserved                  */
+/*00C8*/ FWORD  stfl;                   /* Facilities list (STFL)    */
+/*00CC*/ FWORD  stfle;                  /* Facilities 4-7 (STFLE) @Z9*/
+/*00D0*/ DBLWRD resv00D0;               /* Reserved                  */
+/*00D8*/ DBLWRD resv00D8;               /* Reserved                  */
+/*00E0*/ DBLWRD resv00E0;               /* Reserved                  */
+/*00E8*/ DBLWRD mckint;                 /* Machine check int code    */
+/*00F0*/ FWORD  mckext;                 /* Machine check int code ext*/
+/*00F4*/ FWORD  xdmgcode;               /* External damage code      */
+/*00F8*/ DBLWRD mcstorad;               /* Failing storage address   */
+/*0100*/ BYTE   resv0100[32];           /* Reserved                  */
+/*0120*/ QWORD  rstold;                 /* Restart old PSW           */
+/*0130*/ QWORD  extold;                 /* External old PSW          */
+/*0140*/ QWORD  svcold;                 /* SVC old PSW               */
+/*0150*/ QWORD  pgmold;                 /* Program check old PSW     */
+/*0160*/ QWORD  mckold;                 /* Machine check old PSW     */
+/*0170*/ QWORD  iopold;                 /* I/O old PSW               */
+/*0180*/ BYTE   resv0180[32];           /* Reserved                  */
+/*01A0*/ QWORD  rstnew;                 /* Restart new PSW           */
+/*01B0*/ QWORD  extnew;                 /* External new PSW          */
+/*01C0*/ QWORD  svcnew;                 /* SVC new PSW               */
+/*01D0*/ QWORD  pgmnew;                 /* Program check new PSW     */
+/*01E0*/ QWORD  mcknew;                 /* Machine check new PSW     */
+/*01F0*/ QWORD  iopnew;                 /* I/O new PSW               */
+/*0200*/ BYTE   resv0200[4096];         /* Reserved                  */
+/*1200*/ FWORD  storefpr[32];           /* FP register save area     */
+/*1280*/ DBLWRD storegpr[16];           /* General register save area*/
+/*1300*/ QWORD  storepsw;               /* Store status PSW save area*/
+/*1310*/ DBLWRD resv1310;               /* Reserved                  */
+/*1318*/ FWORD  storepfx;               /* Prefix register save area */
+/*131C*/ FWORD  storefpc;               /* FP control save area      */
+/*1320*/ FWORD  resv1320;               /* Reserved                  */
+/*1324*/ FWORD  storetpr;               /* TOD prog reg save area    */
+/*1328*/ DBLWRD storeptmr;              /* CPU timer save area       */
+/*1330*/ DBLWRD storeclkc;              /* Clock comparator save area*/
+/*1338*/ DBLWRD resv1338;               /* Reserved                  */
+/*1340*/ FWORD  storear[16];            /* Access register save area */
+/*1380*/ DBLWRD storecr[16];            /* Control register save area*/
 } PSA_900;
 
 /* Bit settings for translation exception address */
@@ -1162,7 +1154,14 @@ typedef struct _SCSW {
                                            interrupt flag            */
 #define CCW_FLAGS_IDA   0x04            /* Indirect data address flag*/
 #define CCW_FLAGS_SUSP  0x02            /* Suspend flag              */
-#define CCW_FLAGS_RESV  0x01            /* Reserved bit - must be 0  */
+#define CCW_FLAGS_MIDAW 0x01            /* Modified IDAW flag     @MW*/
+
+/* MIDAW flags (bits 40-47)                                       @MW*/
+#define MIDAW_LAST      0x80            /* Last MIDAW flag        @MW*/
+#define MIDAW_SKIP      0x40            /* Skip flag              @MW*/
+#define MIDAW_PCI       0x20            /* Program controlled     @MW
+                                           interrupt flag         @MW*/
+#define MIDAW_RESV      0x1F            /* Reserved bits          @MW*/
 
 /* Device independent bit settings for sense byte 0 */
 #define SENSE_CR        0x80            /* Command reject            */
@@ -1269,15 +1268,25 @@ typedef struct _MBK {
 #define STFL_2_TRAN_FAC2        0x80    /* Extended translation
                                            facility 2 is installed   */
 #define STFL_2_MSG_SECURITY     0x40    /* Message security assist
-                                           feature 2 is installed    */
+                                           feature is installed      */
 #define STFL_2_LONG_DISPL_INST  0x20    /* Long displacement facility
                                            is installed              */
 #define STFL_2_LONG_DISPL_HPERF 0x10    /* Long displacement facility
                                            has high performance      */
 #define STFL_2_HFP_MULT_ADD_SUB 0x08    /* HFP multiply-add/subtract
                                            facility is installed     */
+#define STFL_2_EXTENDED_IMMED   0x04    /* Extended immediate     @Z9
+                                           facility is installed  @Z9*/
 #define STFL_2_TRAN_FAC3        0x02    /* Extended translation
                                            facility 3 is installed   */
+#define STFL_2_HFP_UNNORM_EXT   0x01    /* HFP unnormalized extension
+                                           facility is installed  @Z9*/
+#define STFL_3_ETF2_ENHANCEMENT 0x80    /* Extended translation   @Z9
+                                           facility 2 enhancement @Z9*/
+#define STFL_3_STORE_CLOCK_FAST 0x40    /* Store clock fast       @Z9
+                                           enhancement installed  @Z9*/
+#define STFL_3_ETF3_ENHANCEMENT 0x02    /* Extended translation   @Z9
+                                           facility 3 enhancement @Z9*/
 
 /* Bit definitions for the Vector Facility */
 #define VSR_M    0x0001000000000000ULL  /* Vector mask mode bit      */
@@ -1318,19 +1327,19 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_M_VR        0x08            /* V=R mode guest            */
 #define SIE_M_ITMOF     0x04            /* Guest ival timer disabled */
 #define SIE_M_GPE       0x01            /* Guest per enhancement     */
-/*004*/ FWORD prefix;                   /* Guest prefix register     */
-/*008*/ HWORD mso;                      /* Main Storage Origin       */
-/*00A*/ HWORD mse;                      /* Main Storage Extent       */
-/*00C*/ FWORD resv0cf;
-/*010*/ FWORD gr14;                     /* Guest gr 14               */
-/*014*/ FWORD gr15;                     /* Guest gr 15               */
-/*018*/ DWORD psw;                      /* Guest PSW                 */
-/*020*/ FWORD resv20f;
-/*024*/ FWORD residue;                  /* Residue counter           */
-/*028*/ DWORD cputimer;                 /* CPU timer                 */
-/*030*/ DWORD clockcomp;                /* Clock comparator          */
-/*038*/ DWORD epoch;                    /* Guest/Host epoch diff.    */
-/*040*/ FWORD svc_ctl;                  /* SVC Controls              */
+/*004*/ FWORD  prefix;                  /* Guest prefix register     */
+/*008*/ HWORD  mso;                     /* Main Storage Origin       */
+/*00A*/ HWORD  mse;                     /* Main Storage Extent       */
+/*00C*/ FWORD  resv0cf;
+/*010*/ FWORD  gr14;                    /* Guest gr 14               */
+/*014*/ FWORD  gr15;                    /* Guest gr 15               */
+/*018*/ DBLWRD psw;                     /* Guest PSW                 */
+/*020*/ FWORD  resv20f;
+/*024*/ FWORD  residue;                 /* Residue counter           */
+/*028*/ DBLWRD cputimer;                /* CPU timer                 */
+/*030*/ DBLWRD clockcomp;               /* Clock comparator          */
+/*038*/ DBLWRD epoch;                   /* Guest/Host epoch diff.    */
+/*040*/ FWORD  svc_ctl;                 /* SVC Controls              */
 #define SIE_SVC0        svc_ctl[0]
 #define SIE_SVC0_ALL    0x80            /* Intercept all SVCs        */
 #define SIE_SVC0_1N     0x40            /* Intercept SVC 1n          */
@@ -1490,16 +1499,16 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_M_VR        0x08            /* V=R mode guest            */
 #define SIE_M_ITMOF     0x04            /* Guest ival timer disabled */
 #define SIE_M_GPE       0x01            /* Guest per enhancement     */
-/*004*/ FWORD prefix;                   /* Guest prefix register     */
-/*008*/ FWORD resv008f;
-/*00C*/ FWORD resv00cf;
-/*010*/ DWORD resv010d;
-/*018*/ DWORD resv018d;
-/*020*/ DWORD resv020d;
-/*028*/ DWORD cputimer;                 /* CPU timer                 */
-/*030*/ DWORD clockcomp;                /* Clock comparator          */
-/*038*/ DWORD epoch;                    /* Guest/Host epoch diff.    */
-/*040*/ FWORD svc_ctl;                  /* SVC Controls              */
+/*004*/ FWORD  prefix;                  /* Guest prefix register     */
+/*008*/ FWORD  resv008f;
+/*00C*/ FWORD  resv00cf;
+/*010*/ DBLWRD resv010d;
+/*018*/ DBLWRD resv018d;
+/*020*/ DBLWRD resv020d;
+/*028*/ DBLWRD cputimer;                /* CPU timer                 */
+/*030*/ DBLWRD clockcomp;               /* Clock comparator          */
+/*038*/ DBLWRD epoch;                   /* Guest/Host epoch diff.    */
+/*040*/ FWORD  svc_ctl;                 /* SVC Controls              */
 #define SIE_SVC0        svc_ctl[0]
 #define SIE_SVC0_ALL    0x80            /* Intercept all SVCs        */
 #define SIE_SVC0_1N     0x40            /* Intercept SVC 1n          */
@@ -1589,7 +1598,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_C_EXP_RUN     68            /* Expedited Run Intercept   */
 #define SIE_C_EXP_TIMER   72            /* Expedited Timer Intercept */
 /*051*/ BYTE  f;                        /* Interception Status       */
-#define SIE_F           f          
+#define SIE_F           f
 #define SIE_F_IN        0x80            /* Intercept format 2        */
 #define SIE_F_IF        0x02            /* Instruction fetch PER     */
 #define SIE_F_EX        0x01            /* Icept for target of EX    */
@@ -1603,45 +1612,45 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*058*/ FWORD ipb;                      /* Instruction parameter B   */
 /*05C*/ FWORD ipc;                      /* Instruction parameter C   */
 /*060*/ FWORD rcpo;                     /* RCP area origin           */
-#define SIE_RCPO0       rcpo[0]    
+#define SIE_RCPO0       rcpo[0]
 #define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
 #define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
-#define SIE_RCPO2       rcpo[2]    
+#define SIE_RCPO2       rcpo[2]
 #define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
-/*064*/ FWORD scao;                     /* SCA area origin           */
-/*068*/ FWORD resv068f;
-/*06C*/ HWORD todpfh;                   /* TOD pf high half          */
-/*06E*/ HWORD todpf;                    /* TOD programmable field    */
-/*070*/ FWORD resv070f;
-/*074*/ BYTE  zone;                     /* Zone Number               */
-/*075*/ BYTE  resv075;
-/*076*/ BYTE  tschds;                   /* TSCH device status        */
-/*077*/ BYTE  tschsc;                   /* TSCH subchannel status    */
-/*078*/ FWORD resv078f;
-/*07C*/ FWORD resv07cf;
-/*080*/ DWORD mso;                      /* Main Storage Origin       */
-/*088*/ DWORD mse;                      /* Main Storage Extend
+/*064*/ FWORD  scao;                    /* SCA area origin           */
+/*068*/ FWORD  resv068f;
+/*06C*/ HWORD  todpfh;                  /* TOD pf high half          */
+/*06E*/ HWORD  todpf;                   /* TOD programmable field    */
+/*070*/ FWORD  resv070f;
+/*074*/ BYTE   zone;                    /* Zone Number               */
+/*075*/ BYTE   resv075;
+/*076*/ BYTE   tschds;                  /* TSCH device status        */
+/*077*/ BYTE   tschsc;                  /* TSCH subchannel status    */
+/*078*/ FWORD  resv078f;
+/*07C*/ FWORD  resv07cf;
+/*080*/ DBLWRD mso;                     /* Main Storage Origin       */
+/*088*/ DBLWRD mse;                     /* Main Storage Extend
                                            The actual guest machine
                                            size is (mse+1)-mso       */
 #define SIE2_MS_MASK    0xFFFFFFFFFFF00000ULL
-/*090*/ QWORD psw;                      /* Guest PSW                 */
-/*0A0*/ DWORD gr14;                     /* Guest gr 14               */
-/*0A8*/ DWORD gr15;                     /* Guest gr 15               */
-/*0B0*/ DWORD recv0b0d;
-/*0B8*/ HWORD recv0b8d;
-/*0BA*/ BYTE  xso[3];                   /* Expanded storage origin   */
-/*0BD*/ BYTE  xsl[3];                   /* Expanded storage limit    */
-/*0C0*/ BYTE  ip[52];                   /* Interruption parameters   */
+/*090*/ QWORD  psw;                     /* Guest PSW                 */
+/*0A0*/ DBLWRD gr14;                    /* Guest gr 14               */
+/*0A8*/ DBLWRD gr15;                    /* Guest gr 15               */
+/*0B0*/ DBLWRD recv0b0d;
+/*0B8*/ HWORD  recv0b8d;
+/*0BA*/ BYTE   xso[3];                  /* Expanded storage origin   */
+/*0BD*/ BYTE   xsl[3];                  /* Expanded storage limit    */
+/*0C0*/ BYTE   ip[52];                  /* Interruption parameters   */
 #define SIE_IP_PSA_OFFSET       0x40    /* Offset of the IP field
                                            relative to the ipfields
                                            in the PSA for ESAME guest*/
 #define SIE_II_PSA_OFFSET       0x30    /* Offset of the IP field
                                            relative to the I/O fields
                                            in the PSA for ESAME guest*/
-/*0F4*/ BYTE  resv0f4b[6];
-/*0FA*/ HWORD ief;                      /* Migration Emulation cnlt  */
-/*0FC*/ FWORD resv0fcf;
-/*100*/ DWORD cr[16];                   /* Control registers         */
+/*0F4*/ BYTE   resv0f4b[6];
+/*0FA*/ HWORD  ief;                     /* Migration Emulation cnlt  */
+/*0FC*/ FWORD  resv0fcf;
+/*100*/ DBLWRD cr[16];                  /* Control registers         */
 /*180*/ BYTE  resv180b[128];
 } SIE2BK;
 
@@ -1766,14 +1775,14 @@ typedef struct _ZPB1 {
 } ZPB1;
 
 typedef struct _ZPB2 {
-    DWORD   mso;         /* Main Storage Origin
+    DBLWRD   mso;        /* Main Storage Origin
                             bits 0-19 must be 0       */
-    DWORD   msl;         /* Main Storage Limit
+    DBLWRD   msl;        /* Main Storage Limit
                             bits 0-19 must be 0       */
 #define ZPB2_MS_VALID 0x00000FFFFFFFFFFFULL
-    DWORD   eso;         /* Expanded Storage Origin
+    DBLWRD   eso;        /* Expanded Storage Origin
                             bits 0-7 must be 0        */
-    DWORD   esl;         /* Expanded Storage Limit
+    DBLWRD   esl;        /* Expanded Storage Limit
                             bits 0-7 must be 0        */
 #define ZPB2_ES_VALID 0x00FFFFFFFFFFFFFFULL
 } ZPB2;
@@ -1908,4 +1917,4 @@ typedef struct _SYSIBVMDB {             /* Virtual Machine Desc Block*/
 #define DXC_IEEE_DIV_ZERO       0x40    /* IEEE division by zero     */
 #define DXC_IEEE_INVALID_OP     0x80    /* IEEE invalid operation    */
 
-#endif /*!defined(_ESA390_H)*/
+#endif // _ESA390_H

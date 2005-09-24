@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+﻿<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
 Hercules Version 3: Installation and Operation</TITLE>
@@ -9,6 +9,28 @@ Hercules Version 3: Installation and Operation</TITLE>
 
 <h1>Hercules Version 3: Installation and Operation</h1>
 
+<p><hr>
+
+<h2>Contents</h2>
+<blockquote>
+    <p>
+        <a href="#install">Installation Procedure</a>
+    </p>
+    <p>
+        <a href="#config">Configuration Procedure</a>
+    </p>
+    <p>
+        <a href="#dasd">Creating DASD volumes</a>
+    </p>
+    <p>
+        <a href="#operating">Operating Procedure</a>
+    </p>
+    <p>
+        <a href="#support">Technical Support</a>
+    </p>
+</blockquote>
+
+<p><hr><a name="install"></a>
 <h2>Installation Procedure</h2>
 <h3>Building from source</h3>
 <p>These instructions apply to the Linux or Mac OS X versions. Volker Bandke has
@@ -133,6 +155,7 @@ to install the package into the defult directories unless you really know
 what you're doing.
 </ol>
 
+<p><hr><a name="config"></a>
 <h2>Configuration Procedure</h2>
 <p>
 You will need to amend the configuration file
@@ -141,6 +164,7 @@ mode of operation (S/370, ESA/390, or z/Architecture).
 See the <a href="hercconf.html">Hercules Configuration File</a> page for
 a complete description.
 
+<p><hr><a name="dasd"></a>
 <h2>Creating DASD volumes</h2>
 <p>
 The <a href="hercload.html">Creating Hercules DASD</a> page
@@ -148,13 +172,22 @@ describes various methods of creating and loading virtual DASD
 volumes. The compressed CKD DASD support is described in <a
 href="cckddasd.html">this page</a>.
 
+<p><hr><a name="operating"></a>
 <h2>Operating Procedure</h2>
 <p>
-<em>Note: If you intend to run any licensed software on your PC
-using Hercules, it is your responsibility to ensure that you do not
-violate the software vendor's licensing terms.</em>
 
 <h4>Loading a standalone program or operating system</h4>
+<p>
+<blockquote>
+<em>
+    <dl compact>
+        <dt><u>Note:</u>
+        <dd>If you intend to run any licensed software on your PC
+        using Hercules, it is <u>your</u> responsibility to ensure that you do not
+        violate the software vendor's licensing terms.
+    </dl>
+</em>
+</blockquote>
 <p>
 To start Hercules enter this command at the Unix shell prompt:
 <pre><code>hercules [-f <em>filename</em>] [&gt; <em>logfile</em>]</code></pre>
@@ -178,83 +211,128 @@ Now you can enter an ipl command from the control panel.
 <h4>Panel commands</h4>
 <p>
 <pre>
-      Command      Description...
-      -------      -----------------------------------------------
-      ?            list all commands
-      help         command specific help
-      quit         terminate the emulator
-      exit         (synonym for 'quit')
-      cpu          define target cpu for panel display and commands
-      start        start CPU (or printer device if argument given)
-      stop         stop CPU (or printer device if argument given)
-      startall     start all CPU's
-      stopall      stop all CPU's
-      .reply       scp command
-      !message     scp priority messsage
-      i            generate I/O attention interrupt for device
-      ext          generate external interrupt
-      restart      generate restart interrupt
-      store        store CPU status at absolute zero
-      archmode     set architecture mode
-      loadparm     set IPL parameter
-      ipl          IPL from device xxxx
-      iplc         IPL CLEAR from device xxxx
-      sysreset     SYSTEM Reset Manual operation
-      sysclear     SYSTEM Reset-clear Manual operation
-      psw          display program status word
-      gpr          display general purpose registers
-      fpr          display floating point registers
-      cr           display control registers
-      ar           display access registers
-      pr           display prefix register
-      clocks       display tod clkc and cpu timer
-      ipending     display pending interrupts
-      ds           display subchannel
-      r            display or alter real storage
-      v            display or alter virtual storage
-      devtmax      display or set max device threads
-      k            display cckd internal trace
-      attach       configure device
-      detach       remove device
-      define       rename device
-      devinit      reinitialize device
-      devlist      list all devices
-      sh           shell command
-      cache        cache command
-      cckd         cckd command
-      shrd         shrd command
-      quiet        toggle automatic refresh of panel display data
-      b            set breakpoint
-      b-           delete breakpoint
-      g            turn off instruction stepping and start CPU
-      pgmtrace     trace program interrupts
-      savecore     save a core image to file
-      loadcore     load a core image file
-      loadtext     load a text deck file
-      ldmod        load a module
-      rmmod        delete a module
-      lsmod        list dynamic modules
-      lsdep        list module dependencies
-      iodelay      display or set I/O delay value
-      tt32stats    display CTCI-W32 statistics
-      toddrag      display or set TOD clock drag factor
-      panrate      display or set rate at which console refreshes
-      syncio       display syncio devices statistics
-      script       Run a sequence of panel commands contained in a file
-      cscript      Cancels a running script thread
-      evm          ECPS:VM Commands
-      aea          Display AEA tables
-      sf+          add shadow file
-      sf-          delete shadow file
-      sf=          rename shadow file
-      sfc          compress shadow files
-      sfd          display shadow file stats
-      t{+/-}       turn instruction tracing on/off
-      s{+/-}       turn instruction stepping on/off
-      t{+/-}dev    turn CCW tracing on/off
-      s{+/-}dev    turn CCW stepping on/off
-      t{+/-}CKD    turn CKD_KEY tracing on/off
-      f{+/-}adr    mark frames unusable/usable
+    Command      Description...
+    -------      -----------------------------------------------
+    ?            list all commands
+    help         command specific help
+
+    *            (log comment to syslog)
+
+    hst          history of commands
+    log          direct log output
+    version      display version information
+
+    quit         terminate the emulator
+    exit         (synonym for 'quit')
+
+    cpu          define target cpu for panel display and commands
+
+    start        start CPU (or printer device if argument given)
+    stop         stop CPU (or printer device if argument given)
+
+    startall     start all CPU's
+    stopall      stop all CPU's
+
+    cf           configure CPU online or offline
+    cfall        configure all CPU's online or offline
+
+    .reply       scp command
+    !message     scp priority messsage
+    ssd          Signal Shutdown
+
+    ptt          display pthread trace
+
+    i            generate I/O attention interrupt for device
+    ext          generate external interrupt
+    restart      generate restart interrupt
+    store        store CPU status at absolute zero
+    archmode     set architecture mode
+    loadparm     set IPL parameter
+
+    ipl          IPL Normal from device xxxx
+    iplc         IPL Clear from device xxxx
+    sysreset     Issue SYSTEM Reset manual operation
+    sysclear     Issue SYSTEM Clear Reset manual operation
+
+    psw          display program status word
+    gpr          display general purpose registers
+    fpr          display floating point registers
+    cr           display control registers
+    ar           display access registers
+    pr           display prefix register
+    clocks       display tod clkc and cpu timer
+    ipending     display pending interrupts
+    ds           display subchannel
+    r            display or alter real storage
+    v            display or alter virtual storage
+    u            disassemble storage
+    devtmax      display or set max device threads
+    k            display cckd internal trace
+
+    attach       configure device
+    detach       remove device
+    define       rename device
+    devinit      reinitialize device
+    devlist      list all devices
+
+    scsimount    automatic SCSI tape mounts
+
+    sh           shell command
+    cache        cache command
+    cckd         cckd command
+    shrd         shrd command
+    quiet        toggle automatic refresh of panel display data
+
+    b            set breakpoint
+    b-           delete breakpoint
+    g            turn off instruction stepping and start CPU
+
+    ostailor     trace program interrupts
+    pgmtrace     trace program interrupts
+    savecore     save a core image to file
+    loadcore     load a core image file
+    loadtext     load a text deck file
+
+    ldmod        load a module
+    rmmod        delete a module
+    lsmod        list dynamic modules
+    lsdep        list module dependencies
+
+    iodelay      display or set I/O delay value
+    tt32stats    display CTCI-W32 statistics
+    toddrag      display or set TOD clock drag factor
+    panrate      display or set rate at which console refreshes
+    syncio       display syncio devices statistics
+    maxrates     display maximum observed MIPS/SIOS rate for the
+                 defined interval or define a new reporting interval
+
+    script       Run a sequence of panel commands contained in a file
+    cscript      Cancels a running script thread
+
+    evm          ECPS:VM Commands (Deprecated)
+    ecpsvm       ECPS:VM Commands
+
+    aea          Display AEA tables
+    aia          Display AIA fields
+    tlb          Display TLB tables
+
+    sizeof       Display size of structures
+
+    suspend      Suspend hercules
+    resume       Resume hercules
+
+    sf+          add shadow file
+    sf-          delete shadow file
+    sf=          rename shadow file
+    sfc          compress shadow files
+    sfd          display shadow file stats
+
+    t{+/-}       turn instruction tracing on/off
+    s{+/-}       turn instruction stepping on/off
+    t{+/-}dev    turn CCW tracing on/off
+    s{+/-}dev    turn CCW stepping on/off
+    t{+/-}CKD    turn CKD_KEY tracing on/off
+    f{+/-}adr    mark frames unusable/usable
 </pre>
 <p> 
 The <em>ipl</em> command may also be used to perform a load from cdrom or
@@ -281,117 +359,12 @@ next instruction.
 There is also an alternate semi-graphical control panel.  Press Esc to
 switch between the command line format and the semi-graphical format.
 Press ? to obtain help in either control panel.
-<p><br>
-<h4>Additional Panel Command Help Information</h4>
 <p>
-<pre>
-    help        Enter "help cmd" where cmd is the command you need help
-                with. If the command has additional help text defined for it,
-                it will be displayed. Help text is usually limited to explaining
-                the format of the command and its various required or optional
-                parameters and is not meant to replace reading the documentation.
+Some commands also offer additional help information regarding their syntax,
+etc. Enter&nbsp; "<tt>help <i>&lt;command name&gt;</i></tt>" &nbsp; to display
+this additional help information. (Note: not every command supports help)
+<p>
 
-
-    quit        Format: "quit [NOW]". The optional 'NOW' argument
-                causes the emulator to immediately terminate without
-                attempting to close any of the device files or perform
-                any cleanup. Only use it in extreme circumstances.
-
-
-    cpu         Format: "cpu nnnn" where 'nnnn' is the cpu address of
-                the cpu in your multiprocessor configuration which you wish
-                all panel commands to apply to. For example, entering 'cpu 1'
-                followed by "gpr" will display the general purpose registers
-                for cpu#1 in your configuration as opposed to cpu#0
-
-
-    start       Entering the 'start' command by itself simply starts a stopped
-                CPU, whereas 'start &lt;devn&gt;' presses the virtual start button on
-                printer device &lt;devn&gt;.
-
-
-    stop        Entering the 'stop' command by itself simply stops a running
-                CPU, whereas 'stop &lt;devn&gt;' presses the virtual stop button on
-                printer device &lt;devn&gt;, usually causing an INTREQ.
-
-
-    .reply      To reply to a system control program (i.e. guest operating system)
-                message that gets issued to the hercules console, prefix the reply
-                with a period.
-
-
-    !message    To enter a system control program (i.e. guest operating system)
-                priority command on the hercules console, simply prefix the command
-                with an exclamation point '!'.
-
-
-    r           Format: "r addr[.len]" or "r addr-addr" to display real
-                storage, or "r addr=value" to alter real storage, where 'value'
-                is a hex string of up to 32 pairs of digits.
-
-    v           Format: "v addr[.len]" or "v addr-addr" to display virtual
-                storage, or "v addr=value" to alter virtual storage, where 'value'
-                is a hex string of up to 32 pairs of digits.
-
-
-    attach      Format: "attach devn type [arg...]
-
-
-    define      Format: "define olddevn newdevn"
-
-
-    devinit     Format: "devinit devn arg [arg...]"
-
-
-    sh          Format: "sh command [args...]" where 'command' is any valid shell
-                command. The entered command and any arguments are passed as-is to the
-                shell for processing and the results are displayed on the console.
-
-
-    b           Format: "b addr" where 'addr' is the instruction address where you
-                wish to halt execution. Once the breakpoint is reached, instruction
-                execution is temporarily halted and the next instruction to be executed
-                is displayed. You may then examine registers and/or storage, etc. To
-                continue execution after reaching a breakpoint, enter the 'g' command.
-
-
-    b-          Format: "b-"  (removes any previously set breakpoint)
-
-
-    pgmtrace    Format: "pgmtrace [-]intcode" where 'intcode' is any valid program
-                interruption code in the range 0x01 to 0x40. Precede the interrupt code
-                with a '-' to stop tracing of that particular program interruption.
-
-
-    savecore    Format: "savecore filename [{start|*}] [{end|*}]" where 'start' and 'end'
-                define the starting and ending addresss of the range of real storage to be
-                saved to file 'filename'. '*' means address 0 if specified for start, and end
-                of available storage if specified for end. The default is '* *' (beginning
-                of storage through the end of storage; i.e. all of storage).
-
-    loadcore    Format: "loadcore filename [address]" where 'address' is the storage address
-                of where to begin loading memory. The file 'filename' is presumed to be a pure
-                binary image file previously created via the 'savecore' command. The default for
-                'address' is 0 (begining of storage).
-
-    loadtext    Format: "loadtext filename [address]". This command is essentially identical
-                to the 'loadcore' command except that it loads a text deck file with "TXT"
-                and "END" 80 byte records (i.e. an object deck).
-
-    script      Format: "script filename [...filename...]". Sequentially executes the commands contained
-                within the file -filename-. The script file may also contain "script" commands,
-                but the system ensures that no more than 10 levels of script are invoked at any
-                one time (to avoid a recursion loop)
-
-
-    cscript     Format: "cscript". This command will cancel the currently running script.
-                if no script is running, no action is taken
-
-
-    evm         Format: "evm". This command invokes ECPS:VM Subcommands.
-                Type "evm help" to see a list of available commands
-</pre>
-<p><br>
 <h4>The &nbsp;<u>hercules.rc</u> &nbsp;(run-commands)&nbsp; file:</h4>
 <p>
 Hercules also supports the ability to automatically execute panel commands
@@ -420,28 +393,28 @@ a brief delay before reading and processing the next line in the file. The
 value <tt><i>nnn</i></tt> can be any number from 1 to 999 and specifies the
 number of seconds to delay before reading the next line. Creative use of the
 run-commands file can completely automate Hercules startup.
-
-<p><center><hr width=15% noshade></center>
 <p>
+    
+<p><hr><a name="support"></a>
 <h2>Technical Support</h2>
 If you have a question about Hercules, please refer to the
 <a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page first.
 If your question and/or concern is not addressed in the FAQ, please feel
 free to post your question to the
-Hercules-390 forum:
+Hercules-390 forum:<br>
 <blockquote><pre>
-<b>Community email addresses:</b>
+<b>Community email addresses:</b><br>
   Post message: <a href="mailto:hercules-390@yahoogroups.com?subject=Hercules Question">hercules-390@yahoogroups.com</a>
   Subscribe:    <a href="mailto:hercules-390-subscribe@yahoogroups.com?subject=Subscribe">hercules-390-subscribe@yahoogroups.com</a>
   Unsubscribe:  <a href="mailto:hercules-390-unsubscribe@yahoogroups.com?subject=Unsubscribe">hercules-390-unsubscribe@yahoogroups.com</a>
   List owner:   <a href="mailto:hercules-390-owner@yahoogroups.com?subject=Hercules">hercules-390-owner@yahoogroups.com</a>
 
-<b>Files and archives at:</b>
+<b>Files and archives at:</b><br>
   <a href="http://groups.yahoo.com/group/hercules-390">http://groups.yahoo.com/group/hercules-390</a>
 </pre></blockquote><p>
 The <b><u>Hercules-390 forum</u></b> is in fact your <u>primary source for Hercules support</u>,
 and you are strongly encouraged to subscribe. We have a vibrant, active
-community of over 3350 members, many of which are very knowledgeable in
+community of over 4800 members, many of which are very knowledgeable in
 many different areas of mainframe technology, both from a hardware point of
 view as well as from an operating system and software point of view.
 <p>
@@ -449,13 +422,11 @@ In addition to the main Hercules-390 forum, other more specialized Hercules foru
 also exist to provide more focused support for a variety of popular IBM mainframe
 operating systems, such as DOS/VS, VM (VM/370, VM/SP, and VM/ESA), and MVS.
 <p>
-<small><i>Note! the use of Yahoo! as host for the Hercules-390 and related forums
-should in no way be interpreted as an endorsement of the Yahoo! service.</i><small>
+<small><i>Note: the use of Yahoo! as host for the Hercules-390 and related forums
+should in no way be interpreted as an endorsement of the Yahoo! service.</i>
 <p><center><hr width=15% noshade>
 <a href="index.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
-
-<small>
-<p>Last updated 4 December 2004
+<p>Last updated 18 August 2005
 </BODY>
 </HTML>

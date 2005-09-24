@@ -47,6 +47,8 @@
 /*                                                         */
 /***********************************************************/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"
@@ -347,6 +349,7 @@ VADR    effective_addr1, \
 { \
     obtain_lock(&sysblk.todlock); \
     regs->ptimer=EVM_LD(_x); \
+    obtain_lock(&sysblk.intlock); \
     if((regs->ptimer & 0x8000000000000000ULL)) \
     { \
         ON_IC_PTIMER(regs); \
@@ -355,6 +358,7 @@ VADR    effective_addr1, \
     { \
         OFF_IC_PTIMER(regs); \
     } \
+    release_lock(&sysblk.intlock); \
     release_lock(&sysblk.todlock); \
 }
 
@@ -1052,7 +1056,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         /* Update REAL CR0/CR1 */
         regs->CR_L(0)=NCR0;
         regs->CR_L(1)=NCR1;
-        
+
         /* Indicate RUNNING a user */
         EVM_STC(CPRUN,CPSTATUS);
 
@@ -1307,7 +1311,7 @@ static int ecpsvm_disp_incprobt(REGS *regs,VADR vmb)
 }
 
 /* DMKDSP
-RUNTIME 
+RUNTIME
 */
 
 static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
@@ -1907,7 +1911,7 @@ DEF_INST(ecpsvm_loc_chgshrpg)
 /*               +0 : Maxsize = Max number of DW allocatable */
 /*                              with FREEX                   */
 /*               +4- : Subpool index table                   */
-/* 2nd operand : Subpool table (indexed)                     */ 
+/* 2nd operand : Subpool table (indexed)                     */
 /* GPR 0 : Number of DWs to allocate                         */
 /*                                                           */
 /* Each allocatable block is forward chained                 */
@@ -2257,7 +2261,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
         /* and ILC                     */
         STORE_FW((BYTE *)&psa->svcint,0x00020000 | svccode);
     }
-    /* 
+    /*
      * Now, update some stuff in the REAL PSW
      */
     SASSIST_LPSW(newr);
@@ -2548,7 +2552,7 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
                 DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : MC CR8 Update\n"));
                 return(1);
             case 9: /* PER Control Regs */
-            case 10: 
+            case 10:
             case 11:
                 DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : PER CR%d Update\n",j));
                 return(1);

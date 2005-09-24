@@ -1,14 +1,45 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+22 Sep 2005 tape/27: *proper* VC7 Large File Support - Fish 
 21 Sep 2005 Init cckd->l2active to -1 instead of 0 - Greg
 21 Sep 2005 tweak concpy to avoid double byteswap - Fish
+21 Sep 2005 Add inline assembler assists to startup buildinfo display - Fish
+21 Sep 2005 sysblk.mipsrate now per second instead of millisecond, fix
+            bug in timer_update_thread when elapsed < 1 millisec - Fish
 20 Sep 2005 Fix divide_single fixed-point-divide-exception check - Greg
+16 Sep 2005 hercgui/22: issue dasdload REQCYL= progress msg sooner - Fish
+16 Sep 2005 tape/27: discard bug-ridden VC7 Large File Support - Fish
 16 Sep 2005 startio should return cc 2 if startpending is on - Greg
+16 Sep 2005 Changes to allow building via Cygwin if desired - Fish
+16 Sep 2005 Bring MSVC branch up-to-date with head branch - Fish
+05 Sep 2005 Correct SSID in Sense Subsystem Status and Read Device Characteristics - Roger Bowler
+05 Sep 2005 Sense Subsystem Status for 3990 model 6 - Roger Bowler
+04 Sep 2005 tt32_open: 'errno' clobber workaround - Fish
+04 Sep 2005 tt32_get_default_iface: never return NULL to prevent crash - Fish
+04 Sep 2005 Read Subsystem Data: Storage Paths, Subsystem Statistics - Roger Bowler
+03 Sep 2005 Don't report #of host processors if not known - Fish
+03 Sep 2005 w32ctca.c: LoadLibrary doesn't like forward slashes - Fish
+03 Sep 2005 dasdconv: 1. HercGUI compatibility changes, 2. add -lfs option
+            to create one very large output file - Fish
+02 Sep 2005 Perform Subsystem Function CCW: Set Interface Id order - Roger Bowler
+02 Sep 2005 ckddasd Read Subsystem Data CCW - Roger Bowler
+31 Aug 2005 Fix some bugs in w32stape.c - Fish
+            1. w32_read_tape: was returning an error when a tapemark
+               was read instead of simply returning 0 bytes read.
+            2. w32_internal_mtop: MTWEOF: changed to retry WriteTapemark
+               with generic TAPE_FILEMARKS if TAPE_LONG_FILEMARKS fails.
+31 Aug 2005 tape/31: Merge Jay's tapecopy changes (that added support
+            for copying from AWS i/p to SCSI o/p) from cvs head into
+            the MSVC 'mingw_port' branch - Fish
 30 Aug 2005 dasdtab entries for 3990 model 3 and 6 - Roger Bowler
-26 Aug 2005 Sha256 fixes and passed FIPS 180-2 tests - Bernard van der Helm
-25 Aug 2005 Crypto module is build during compile - Bernard van der Helm
-24 Aug 2005 Some crypto errors - Bernard van der Helm
+30 Aug 2005 Add back support for 'CTCI-W32' format device statements,
+            remove 28 Aug messages that say it's not supported - Fish
+29 Aug 2005 misc/12: support for Cygwin paths (e.g./cygdrive/x/) - Fish
+28 Aug 2005 Tell about unsupported CTC emulations - Fish
+28 Aug 2005 Tell where crash dump is going - Fish
+18 Aug 2005 ostailor panel command; add display to pgmtrace command - Fish
+17 Aug 2005 eliminate dupe "high water mark" code in panel/dyngui - Fish
 17 Aug 2005 tapedev.c: fix locblock endianess issue in LOCATE BLOCK logic,
             add missing blockid increment in write_hetmark - Andy Styles
             [andy@styles.homeip.net] and John Decker [jdecker@oaksg.com]
@@ -19,76 +50,131 @@
             and added some code to try and detect what I believe to be
             the conditional that might be causing it (will this problem
             never end?!) - Fish
-14 aug 2005 crypto query instructions changed. Query functions
-            can not have a specification exception - Bernard van der Helm
-14 aug 2005 aes with and without chaining implemented - Bernard van der Helm
-10 aug 2005 sha1.c sha1.h changes - Bernard van der Helm
-08 aug 2005 gcrypt independent crypto implemented - Bernard van der Helm
-07 aug 2005 sha256 implemented, waiting for opcode ;-) Bernard van der Helm
-07 Aug 2005 sha256 sources added, waiting for POP - Bernard van der Helm
+11 Aug 2005 STFL bits for ETF2/ETF3/STCKF-enhancement features - Roger Bowler
+03 Aug 2005 ALS5: MIDAW facility - Roger Bowler
+02 Aug 2005 Fix httproot ending slash issue - Fish
+31 Jul 2005 ALS5: LT,LTG,LLC,LLH,LBR,LGBR,LHR,LGHR,LLCR,LLGCR,LLHR,LLGHR,FLOGR - Roger Bowler
+31 Jul 2005 ALS5: NIHF,NILF,XIHF,XILF,IIHF,IILF,LLIHF,LLILF,OIHF,OILF - Roger Bowler
+30 Jul 2005 ALS5: AFI,AGFI,ALFI,ALGFI,CFI,CGFI,CLFI,CLGFI,LGFI,SLFI,SLGFI - Roger Bowler
+30 Jul 2005 ALS5 framework: LPTEA,STCKF,STFLE - Roger Bowler
 30 Jul 2005 dasdcat/hetlib: add O_BINARY to open - Fish
 29 Jul 2005 misc/9: Cap reported mips/sios rates - Fish
 29 Jul 2005 Add missing support for 'try_obtain_lock' to PTT tracing - Fish
-29 Jul 2005 ASN-and-LX-reuse Facility (ALRF) fix - Fish
-            'PC' (Program Call)                          (fixed)
-            'PR' (Program Return)                        (fixed)
-            'PT/PTI' (Program Transfer (with Instance))  (was OK)
-            SA22-7832-03: Page 6-30,31:
-            premature/incorrect space-switch event tests
-29 Jul 2005 ASN-and-LX-reuse Facility (ALRF) fix - Fish
-            'PC' (Program Call)
-            SA22-7832-03: Page 5-33:
-            LFTL (Linkage-First-Table Length) not being properly
-            ignored when bit 44 of the effective address is zero.
-29 Jul 2005 ASN-and-LX-reuse Facility (ALRF) fix - Fish
-            'PT/PTI' (Program Transfer (with Instance))
-            'SSAR/SSAIR' (Set Secondary ASN (with Instance))
-            SA22-7832-03: Page 6-19:
-            Exception Access Identification (TEA = regs->excarid)
-            not being set for ASTE-instance exceptions
-29 Jul 2005 ASN-and-LX-reuse Facility (ALRF) fix - Fish
-            'PR' (Program Return)
-            SA22-7832-03: Page 10-77,78:
-            wrong PASTEIN/SASTEIN value checked against ASTEIN
-            in ASTE for ASTE-instance exceptions
+29 Jul 2005 Reapply Ivan's 16 Mar 2005 console close logic update errone-
+            ously negated trying to keep MSVC sync'ed with cvs head - Fish
 28 Jul 2005 Fix MVCL clobber if ESAME but not amode64 - Greg Smith
-27 Jul 2005 pcpu.pat - fix segfault in panel_display after archmode switch -
-            Greg Smith
-20 Jul 2005 concpy.pat - concurrent copy phase 1 - Greg Smith
+28 Jul 2005 ALS5 framework: FEATURE_EXTENDED_IMMEDIATE - Roger Bowler
+27 Jul 2005 ALS5 framework: FEATURE_HFP_UNNORMALIZED_EXTENSION - Roger Bowler
+19 Jul 2005 concpy.pat - concurrent copy phase 1 - Greg Smith
+05 Jul 2005 pttrace.c(ptt_pthread_print): remove erroneous assumption
+            regarding size of timeval tv.tv_sec and time(time_t). Added
+            "_USE_32BIT_TIME_T" to makefile-dllmod.msvc as VS8 workaround - Fish
+05 Jul 2005 bootstrap.c: added addt'l verbage to "Oops!" message - Fish
+05 Jul 2005 ASN-and-LX-reuse facility fixes to PC/PR/PT et al. instructions - Fish
+04 Jul 2005 emul/4: MSVC port puts garbage in bits 64-95 of ESAME PSW - Roger Bowler
+03 Jul 2005 hstruct.h: CR_SIZE obsoleted - Fish
+03 Jul 2005 bldcfg.c: Log run options - Fish
+03 Jul 2005 Move DISABLE_CRT_INVALID_PARAMETER_HANDLER logic
+            from console.c into w32util.c where it belongs - Fish
+03 Jul 2005 w32util.c: Fix bug in w32_fseeki64 - Fish
+03 Jul 2005 makefile-dllmod.msvc: VS8 support: _CRT_NONSTDC_NO_DEPRECATE,
+            add pre-compiled header object file build_pch.obj to links - Fish
+27 Jun 2005 Simplify machdep.h [7 patches] - Greg Smith
+26 Jun 2005 Use "%"I64_FMT"X" instead of "%llX" for 64 bit values - Roger Bowler
+24 Jun 2005 Fix autodetect failure in cardrdr - Roger Bowler
+23 Jun 2005 Fix annoying dasdcat link error - Greg
 18 Jun 2005 Fix "console: select: Bad file number" (FINAL?) - Fish
             "Generic"-ize OPTION_WAKEUP_SELECT_VIA_PIPE handling - Fish
-15 Jun 2005 ASN-and-LX-reuse Facility (ALRF) fix - Fish
-            'PC' (Program Call)
-            SA22-7832-03: Page 5-37, 5-34:
-            incorrect indexing into Linkage-Second-Table
+15 Jun 2005 Fix ASN-and-LX-reuse facility incorrect linkage second table
+            entry indexing bug in 'PC' (Program Call) instruction - Fish
 10 Jun 2005 Fix panel not updating problem - Greg Smith
 01 Jun 2005 Fix sf-xxx nomerge bug - Greg Smith
 31 May 2005 Fix to fix for wrong null format track - Greg Smith
-30 May 2005 Add ability to copy AWSTAPE to SCSI tape to tapecopy = Jay
-            Maynard
+24 May 2005 Fix optimization typo in configure.ac - Fish
+24 May 2005 _POSIX_SYNCHRONIZED_IO test for fdatasync in hmacros.h - Fish
+23 May 2005 Fix detach_devblk crash if group member not allocated - Fish
+23 May 2005 bootstrap: skip exception handler if being debugged - Fish
+23 May 2005 Fix device trace (logdevtr) - Fish
+23 May 2005 console tweaks; is Linux console still readable? - Fish
+23 May 2005 Fix wrong null format track fix! - Fish
+20 May 2005 Fix suspend if no zlib - Greg Smith
+20 May 2005 Fix annoying hercifc loop when Hercules crashes - Greg Smith
 20 May 2005 Fix wrong null format track - Reported by Gerald - Greg Smith
-23 Mar 2005 gcc-2.95/gcc-3.0 fixes - Ivan Warren
+19 May 2005 savecore: fix help info and start/end range bug - Fish
+19 May 2005 fix typo in 'set_console_cursor_shape', make minor
+            Win32 tweak to tapedev.c filename handling. - Fish
+18 May 2005 fix crash in panel.c when regs ptr changes after resume - Fish
+17 May 2005 fix non-Win32 (e.g. Linux) console color issue (sorry!) - Fish
+17 May 2005 ctci_close.pat - Let hercules terminate if CTCI device
+            opened for non MSVC system - Greg
+17 May 2005 color.pat - at least linux screen is now readable - Greg
+14 May 2005 sysblk.shutfini, HTTP_SERVER_CONNECT_KLUDGE,
+            fix my http server cgi var null termination bug. - Fish
+12 May 2005 Removed ./intl directory (we no longer build libintl)
+            gettextize to version 0.14.4
+            Added several missing files to Makefile.am in order
+              to allow the source distribution to build with MSVC
+            Move 'cause_crash' to hscutl (from w32utl) - Ivan Warren
+11 May 2005 fix many serious bugs in the http server logic. - Fish
+10 May 2005 dasdconv direct from .gz input file - Roger Bowler
+09 May 2005 printer.c: add O_BINARY to open so crlf option works - Fish
+09 May 2005 shared.c: skip error msg inapplicable to Win32 builds - Fish
+09 May 2005 w32util.c: skip WSACleanup to prevent hang @ shutdown. - Fish
+09 May 2005 w32util.c: allow multiple sets in w32_select - Fish
+09 May 2005 machdep.h: remove bit functions, add fetch_dw/store_dw - Fish
+07 May 2005 last minute fixes: bootstrap.c: don't #define ARRAYSIZE
+            (not needed), tweak 'makefile.bat' so it works with our official
+            build instructions (soon to be published). - Fish
+06 May 2005 1. MSVC compiler optimization hints, 2. remove ftol2 from w32util,
+            3. create minidump in same directory as Hercules executable, 4.
+            makefiles (all): finalize(?) build o/p dir names - Fish
+06 May 2005 Comment out MemoryCallback type minidump callback - Ivan Warren
+03 May 2005 1. makefile-dllmod.msvc: create .PDB files instead of /maps
+               for 'Release' builds for crash dump analysis purposes,
+            2. bootstrap.c: crash-dump support for debugging - Fish
+01 May 2005 1. lame 1st attempt @ msvc assists in machdep.h & hbyteswp.h
+            2. move MAX_CPU_ENGINES out of hercwind.h into makefile
+            3. change %3'rd arg of makefile.bat ==> MAX_CPU_ENGINES
+30 Apr 2005 http server now works - Fish
+25 Apr 2005 panel/gui tweaks, move maxrates to herc, fix logmsg - Fish
+21 Apr 2005 SCSI Tape support - Fish
+16 Apr 2005 Large File Support - Fish
+15 Apr 2005 BZIP2 support - Fish
+15 Apr 2005 Fix CTC heap block freeing @ shutdown issues - Fish
+14 Apr 2005 Fix hangs at shutdown - Fish
+10 Apr 2005 Get FISH_HANG working again (though I'm not sure why) - Fish
+09 Apr 2005 panel.c: honor sysblk.panrate - Fish
+08 Apr 2005 cardrdr.c: get socket reader working - Fish
+08 Apr 2005 logger.c: don't timestamp logfile if daemon mode - Fish
+08 Apr 2005 sockdev.c/hscmisc.c: fix crash at shutdown - Fish
+05 Apr 2005 (various): change "LL_FMT" back to just %ll - Fish
+05 Apr 2005 (various): use HSO_errno, close_socket, etc - Fish
+04 Apr 2005 ecpsvm.c: obtain/release sysblk.intlock in SPT macro - Fish
+04 Apr 2005 makefile-dllmod.msvc: VS8 support - Fish
+04 Apr 2005 Fix '>>' issues in dasdtab.c and ieee.c - Fish
+04 Apr 2005 configure.ac: defer error reporting until very end - Fish
+04 Apr 2005 featall.h/logger.c: OPTION_TIMESTAMP_LOGFILE - Fish
+30 Mar 2005 Remove bogus IFNAMSIZ definition from hercwind.h - Ivan Warren
+24 Mar 2005 Do not assume sizeof(DW) always equals sizeof(U64) - Ivan Warren
+16 Mar 2005 Update console close logic - Ivan Warren
+13 Mar 2005 Split DLLs and HDL Ok - Ivan Warren
+12 Mar 2005 dyngui (and thus HercGUI) now works w/OPTION_DYNAMIC_LOAD - Fish
+11 Mar 2005 autodiscover zlib in winbuild\zlib\win32_32 - Ivan Warren
 09 Mar 2005 Fix get/setpriority to use 'id_t' type - Fish
+09 Mar 2005 Fixed optimization flags, added "batch build", debug builds
+            now work, use XCOPY instead of COPY - Fish
+07 Mar 2005 Precompiled headers - Ivan Warren
 06 Mar 2005 w32ctca.c: always search the defined modules dir first
             (/usr/local/lib/hercules) when loading TunTap32.dll - Fish
 06 Mar 2005 Fix a bug in my 64-bit changes to the CFC instruction - Fish
+05 Mar 2005 DLL Build for MSVC - Ivan Warren
+03 Mar 2005 VS .NET Build for DLL Build - Ivan Warren
 25 Feb 2005 Another 3480-X'DB' Fix. Tape does not need to be ready
             for a X'DB' to work. Hinted by John Decker - Ivan Warren
 25 Feb 2005 Fix het block count bug introduced by my earlier SCSI changes;
             John Decker (and Andy Styles) by Fish (thanks guys!)
-25 Feb 2005 Remove C99 Struct init from ecpsvm for MSVC support - Ivan Warren
-23 Feb 2005 Hopefully fixed last cmpsc bugs ;-) - Bernard van der Helm
-22 Feb 2005 suspend fix for resume loop - Greg Smith
-22 Feb 2005 Fix for "invalid command in 3270 data stream" - John Decker
-19 Feb 2005 ECPS:VM Fix : Another CPA/SCNRU Fix - Ivan Warren
-16 Feb 2005 ECPS:VM Fix : Revalidate AIA after changing IA - Ivan Warren
-16 Feb 2005 ECPS:VM Fix : Bug in CPA/SCNRU - Ivan Warren
-14 Jan 2005 Added '*' comment command as official do-nothing command - Fish
-14 Feb 2005 Add zArch (64-bit mode) support to UPT (Update Tree)
-            and CFC (Compare and Form Codeword) instructions - Fish
-07 Feb 2005 Make logmsg/p/b functions not macros - Roger Bowler
-05 Feb 2005 CMPSC 64bit fix + typo - Bernard van der Helm
-05 Feb 2005 Begin MSVC compiler support - Roger Bowler
+03 Feb 2005 MinGW port finally works! (static only; no HercGUI (yet)) - Fish
+22 Jan 2005 Added '*' comment command as official do-nothing command - Fish
 13 Jan 2005 Optmization to instruction fetch for unrolled execute - Greg Smith
 13 Jan 2005 AMD64 assembler assists - Bob Deblier by Greg
 05 Jan 2005 Fix dasdcopy bug for output ckd file - Greg Smith
@@ -114,6 +200,7 @@
 08 Dec 2004 dasdinit -linux option support - Greg Smith
 06 Dec 2004 Keep crx in sync with INST_SPACE - Jan Jaeger
 04 Dec 2004 Make chkdsk faster if disk is readonly - Greg Smith
+03 Dec 2004 Begin work on MinGW port - Fish
 03 Dec 2004 Optimize clearing memory - Greg Smith
 02 Dec 2004 Fix ref & change recording in relation to SSKE/RRBE - Jan Jaeger
 02 Dec 2004 Fix SIE guest timer interrupt handling - Jan Jaeger
@@ -133,7 +220,8 @@
 18 Nov 2004 DIEBR,DIDBR instructions - Roger Bowler
 18 Nov 2004 VPATH Build enablement - Ivan Warren
 17 Nov 2004 Fix instruction operand trace display - Jan Jaeger
-17 Nov 2004 MADBR,MADB,MAEBR,MAEB,MSDBR,MSDB,MSEBR,MSEB instructions - Roger Bowler
+17 Nov 2004 MADBR,MADB,MAEBR,MAEB,MSDBR,MSDB,MSEBR,MSEB instructions - Roger Bow
+ler
 16 Nov 2004 MXDBR,MXDB,MDEBR,MDEB instructions - Roger Bowler
 15 Nov 2004 LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR instructions - Roger Bowler
 14 Nov 2004 Fix AR-mode translation when alet is 2 - Greg Smith
@@ -255,7 +343,8 @@
 05 Jun 2004 Added CU14, CU24 - Bernard van der Helm
 04 Jun 2004 Fix startall bug (thanks Greg) - Fish
 04 Jun 2004 Framework for ASN-and-LX-reuse facility,EPAIR,ESAIR - Roger Bowler
-04 Jun 2004 Added TRTR + skeleton extended translation facility 3 - Bernard van der Helm
+04 Jun 2004 Added TRTR + skeleton extended translation facility 3 - Bernard van
+der Helm
 29 May 2004 dyngui.c: fix UpdateTargetCPU, new "maxrates" cmd - Fish
 29 May 2004 Fixed stopall/startall - Fish
 29 May 2004 Remove "fake loading of <windows.h>" in hercules.h - Fish
@@ -384,7 +473,8 @@
             fix int divide by zero crash preceded by msg "lbfpston:
             unexpectedly converting an Infinite" - Willem & Fish
 10 Nov 2003 Clear attention interrupt pending during device reset - Greg Smith
-08 Nov 2003 Added command history to panel.c - Volker Bandke, code by Marian Gasparovic
+08 Nov 2003 Added command history to panel.c - Volker Bandke, code by Marian Gas
+parovic
 07 Nov 2003 Added optimization problem bypass for GCC 2.96 - Ivan Warren
 30 Oct 2003 Added crypto functions - Bernard van der Helm / Jan Jaeger
 24 Oct 2003 pttrace.c threads trace patch - Greg
@@ -542,7 +632,8 @@
             bug in TunTap32.dll, 3) add some code to try and resolve bogus
             "HHCCT048E" message being issued at close/shutdown.
 25 Jun 2003 shared device version/release checking - Greg Smith
-25 Jun 2003 micro performance update in branch on condition - Bernard van der Helm
+25 Jun 2003 micro performance update in branch on condition - Bernard van der He
+lm
 25 Jun 2003 Fix unlikely but serious fthreads bug in wait_condition - Fish
 25 Jun 2003 Move external gui logic from panel_display to dyngui.c, and
             modify build process (makefile.am) to automatically build
@@ -589,7 +680,8 @@
             suggestions by John McKown & Davud Booher
 05 May 2003 Allow arbitrary number cckd cylinders - Greg Smith, suggested by
             Romain Capron
-05 May 2003 Remove cckd zlib dependencies - Greg Smith, suggested by John Summerfield
+05 May 2003 Remove cckd zlib dependencies - Greg Smith, suggested by John Summer
+field
 28 Apr 2003 Changed 3270 Disconnect/Reconnect status presentation
             logic (should allow terminal disc/recon on MVS) - Ivan Warren
 24 Apr 2003 Set PGID/Sense PGID/Assign/Unassign Corr to Tape Devices
@@ -620,9 +712,11 @@
 19 Mar 2003 Tape : Present DE on IntReq for non-data motion CCWs
             Added deonirq=0|1 for 3410/3420 tapes in relation with MVS 3.8j
             issues - Ivan Warren
-14 Mar 2003 Increased tbuf in het_write due specs compress2 - Bernard van der Helm
+14 Mar 2003 Increased tbuf in het_write due specs compress2 - Bernard van der He
+lm
 13 Mar 2003 Tape support update - see README.TAPE - Ivan Warren
-13 Mar 2003 Call build_config even if NO_SIGABEND_HANDLER is defined - Ivan Warren
+13 Mar 2003 Call build_config even if NO_SIGABEND_HANDLER is defined - Ivan Warr
+en
 13 Mar 2003 Define extgui in dasdseq for Windows build - Ivan Warren
 13 Mar 2003 AEA invalidation reduction - Greg Smith
 13 Mar 2003 Gabor performance patch - optimize AEA invalidation - Greg Smith
@@ -669,7 +763,8 @@
 28 Jan 2003 Obtain intlock during all psw loads - Greg Smith
 27 Jan 2003 TS might not set byte to 0xff - Greg Smith
 24 Jan 2003 Disable syncio for fba due to problems - Greg Smith + Ivan
-22 Jan 2003 Flush updated active cache entry if no active i/o - Greg Smith + Ivan
+22 Jan 2003 Flush updated active cache entry if no active i/o - Greg Smith + Iva
+n
 22 Jan 2003 SMP updates - Greg Smith
 22 Jan 2003 Fix for regparm attribute problem - Greg Smith
 14 Jan 2003 relax stress write and readahead criteria - Greg Smith
@@ -707,7 +802,8 @@
 27 Dec 2002 Fixed tt32stats command to work with new LCS CTC logic - Fish
 27 Dec 2002 Un-tabbed ctc source modules - Fish
 15 Dec 2002 Renumbered messages in printer.c and console.c - Jay Maynard
-15 Dec 2002 Streamlining Windows build processing, add P4 support - Volker Bandke
+15 Dec 2002 Streamlining Windows build processing, add P4 support - Volker Bandk
+e
 12 Dec 2002 Main storage addressing cleanup - Jan Jaeger
 09 Dec 2002 Fix windows comiple errors in hsccmd.c - Jim Pierson
 05 Dec 2002 Various fixes and roll back of 30/6 performance mods - Jan Jaeger
@@ -795,11 +891,15 @@
 15 Jun 2002 cfba chkdsk fix - Greg Smith
 15 Jun 2002 ckd internal trace support - Greg Smith
 14 Jun 2002 Remove cfba debugs - Greg Smith
-14 Jun 2002 Set `more' if residual data after fba write - Tomas Masek by Greg Smith
-13 Jun 2002 Another cfba fix (segmentation fault after detach while trace active) - Greg Smith
-13 Jun 2002 READ BACKWARD support for tapes added - Volker Bandke (Original patch: Hax 28 by Hackules)
+14 Jun 2002 Set `more' if residual data after fba write - Tomas Masek by Greg Sm
+ith
+13 Jun 2002 Another cfba fix (segmentation fault after detach while trace active
+) - Greg Smith
+13 Jun 2002 READ BACKWARD support for tapes added - Volker Bandke (Original patc
+h: Hax 28 by Hackules)
 12 Jun 2002 cfba/cckd/ckd fixes - Greg Smith
-05 Jun 2002 Increase 3270 buffer to 64K as adding IAC bytes may cause overflow - Jan Jaeger
+05 Jun 2002 Increase 3270 buffer to 64K as adding IAC bytes may cause overflow -
+ Jan Jaeger
 02 Jun 2002 Created "hercnls.h" module and fixed some typos/warnings - Fish
 30 May 2002 Preliminary cfba (compressed fba) support - Greg Smith
 30 May 2002 Various dasd fixes - Greg Smith
@@ -858,7 +958,8 @@
 17 Mar 2002 Common DASD tables (dasdtab.c & dasdtab.h) - Greg Smith
 17 Mar 2002 DASD utilities cckd support - Greg Smith
 16 Mar 2002 Fixed benign warnings in ctcadpt.c & un-tabbed file - Fish
-15 Mar 2002 Fixed automagic for building standalone dasd utilities - Volker Bandke
+15 Mar 2002 Fixed automagic for building standalone dasd utilities - Volker Band
+ke
 09 Mar 2002 Lan Channel Station (LCS) support
 09 Mar 2002 Initial cckd dasd utilities support - Greg Smith
 07 Mar 2002 More service signal updates for AO support - Jan Jaeger
@@ -1035,17 +1136,22 @@
 13 Sep 2001 CXR setting wrong cc when fract=0 but char not - Paul Leisy
 13 Sep 2001 Fix TRAP so page cross rupt does not set change bit - Paul Leisy
 13 Sep 2001 MVPG missing TEA bit 29 and OP ACCESS ID on PIC 11 - Paul Leisy
-13 Sep 2001 MVPG should report PIC 11 on Page Table Length violation - Paul Leisy
+13 Sep 2001 MVPG should report PIC 11 on Page Table Length violation - Paul Leis
+y
 13 Sep 2001 Fix BSG so ALET=1 is always treated as subspace - Paul Leisy
 06 Sep 2001 Add FPO crossing checks to all storage fetches - Paul Leisy
 06 Sep 2001 Fix RP so trace entry finished on PIC 1C - Paul Leisy
 30 Aug 2001 Fix Change Bit in Key so on page crossers with rupt it's not set.
             Done by using new acctype ACCTYPE_WRITE_SKP - Paul Leisy
-28 Aug 2001 Change FPR display so if BASIC FP EXTENSIONS all displayed - Paul Leisy
+28 Aug 2001 Change FPR display so if BASIC FP EXTENSIONS all displayed - Paul Le
+isy
 28 Aug 2001 Change MVCLE cpu-determined length - Paul Leisy
-26 Aug 2001 Added test for file-existance in cardrdr.c (code suggested by Richard Snow) - Volker Bandke
-24 Aug 2001 Add optional address parm to loadcore panel command - Michael Ackerson
-23 Aug 2001 Fix general1.c so commented statements don't wrap to 2 lines - Paul Leisy
+26 Aug 2001 Added test for file-existance in cardrdr.c (code suggested by Richar
+d Snow) - Volker Bandke
+24 Aug 2001 Add optional address parm to loadcore panel command - Michael Ackers
+on
+23 Aug 2001 Fix general1.c so commented statements don't wrap to 2 lines - Paul
+Leisy
 23 Aug 2001 LXD missing PIC 06 when R1 not valid - Paul Leisy
 23 Aug 2001 CFXR needs to test overflow after rounding - Paul Leisy
 23 Aug 2001 BSG failed to set subspace active in DUCT - Paul Leisy

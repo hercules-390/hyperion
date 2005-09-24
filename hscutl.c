@@ -1,29 +1,42 @@
-/* HSCUTL.C */
-/* Implementation of functions used in hercules that */
-/* may be missing on some platform ports, or other   */
-/* convenient miscellaneous global utility functions */
-/* (c) 2003-2005 Ivan Warren & Others                */
-/* Released under the Q Public License               */
-/* This file is portion of the HERCULES S/370, S/390 */
-/*                           z/Architecture emulator */
+/*********************************************************************/
+/* HSCUTL.C   --   Implementation of functions used in hercules that */
+/* may be missing on some platform ports, or other convenient mis-   */
+/* laneous global utility functions.                                 */
+/*********************************************************************/
+/* (c) 2003-2005 Ivan Warren & Others -- Released under the Q Public */
+/* License -- This file is portion of the HERCULES S/370, S/390 and  */
+/* z/Architecture emulator                                           */
+/*********************************************************************/
+
+#include "hstdinc.h"
+
+#define _HSCUTL_C_
+#define _HUTIL_DLL_
+
 #include "hercules.h"
 
-
 #if defined(NEED_GETOPT_WRAPPER)
-/* getopt dynamic linking kludge */
-/* for some odd reason, on some platforms */
-/* (namely cygwin & possibly Darwin) */
-/* dynamically linking to the libc */
-/* imports STATIC versions of getopt */
-/* and getopt_long into the linkedited */
-/* shared library. If any program then */
-/* link edits against BOTH the shared library */
-/* and libc, the linker complains about */
-/* getopt and/or getopt_long being defined */
-/* multiple times. In an effort to overcome this, */
-/* I am defining a stub version of getopt & getop_long */
-/* that can be called by loadable modules */
-/* --Ivan */
+/*
+                  GETOPT DYNAMIC LINKING KLUDGE...
+
+  For some odd reason, on some platforms (namely windows & possibly
+  Darwin) dynamically linking to the libc imports STATIC versions
+  of 'getopt' and 'getopt_long' into the link-edited shared library.
+  If any program then link edits against BOTH the shared library AND
+  libc, then the linker complains about 'getopt' and/or 'getopt_long'
+  being defined multiple times. In an effort to overcome this, I am
+  defining a stub version of 'getopt' and 'getop_long' that can be
+  called by loadable modules instead.
+
+  -- Ivan
+
+
+  ** ZZ FIXME: the above needs to be re-verified to see whether it is
+  ** still true or not. I suspect it may no longer be true due to the
+  ** subtle bug fixed in the "_HC_CHECK_NEED_GETOPT_WRAPPER" m4 macro
+  ** in the "./autoconf/hercules.m4" member. -- Fish, Feb 2005
+
+*/
 
 int herc_opterr=0;
 char *herc_optarg=NULL;
@@ -33,9 +46,28 @@ int herc_optind=1;
 int herc_optreset=0;
 #endif
 
+DLL_EXPORT int herc_getopt(int ac,char * const av[],const char *opt)
+{
+    int rc;
+#if defined(NEED_GETOPT_OPTRESET)
+    optreset=herc_optreset;
+#endif
+    rc=getopt(ac,av,opt);
+#if defined(NEED_GETOPT_OPTRESET)
+    herc_optreset=optreset;
+#endif
+    herc_optarg=optarg;
+    herc_optind=optind;
+    herc_optopt=optind;
+    herc_opterr=optind;
+    return(rc);
+}
+
 #if defined(HAVE_GETOPT_LONG)
-#include <getopt.h>
-int herc_getopt_long(int ac,
+struct option; // (fwd ref)
+int getopt_long (int, char *const *, const char *, const struct option *, int *);
+struct option; // (fwd ref)
+DLL_EXPORT int herc_getopt_long(int ac,
                      char * const av[],
                      const char *opt,
                      const struct option *lo,
@@ -56,33 +88,17 @@ int herc_getopt_long(int ac,
     herc_opterr=optind;
     return(rc);
 }
-#endif
-int herc_getopt(int ac,char * const av[],const char *opt)
-{
-    int rc;
-#if defined(NEED_GETOPT_OPTRESET)
-    optreset=herc_optreset;
-#endif
-    rc=getopt(ac,av,opt);
-#if defined(NEED_GETOPT_OPTRESET)
-    herc_optreset=optreset;
-#endif
-    herc_optarg=optarg;
-    herc_optind=optind;
-    herc_optopt=optind;
-    herc_opterr=optind;
-    return(rc);
-}
+#endif /* HAVE_GETOPT_LONG */
+
 #endif /* NEED_GETOPT_WRAPPER */
 
-#if defined(BUILTIN_STRERROR_R)
+#if !defined(WIN32) && !defined(HAVE_STRERROR_R)
 static LOCK strerror_lock;
-void strerror_r_init(void)
+DLL_EXPORT void strerror_r_init(void)
 {
     initialize_lock(&strerror_lock);
 }
-
-int strerror_r(int err,char *bfr,size_t sz)
+DLL_EXPORT int strerror_r(int err,char *bfr,size_t sz)
 {
     char *wbfr;
     obtain_lock(&strerror_lock);
@@ -102,8 +118,7 @@ int strerror_r(int err,char *bfr,size_t sz)
     release_lock(&strerror_lock);
     return(0);
 }
-
-#endif /* defined(BUILTIN_STRERROR_R) */
+#endif // !defined(HAVE_STRERROR_R)
 
 #if !defined(HAVE_STRLCPY)
 /* $OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $ */
@@ -129,9 +144,6 @@ int strerror_r(int err,char *bfr,size_t sz)
 static char *rcsid = "$OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $";
 #endif /* LIBC_SCCS and not lint */
 
-#include <sys/types.h>
-#include <string.h>
-
 /*
  * Copy src to string dst of size siz.  At most siz-1 characters
  * will be copied.  Always NUL terminates (unless siz == 0).
@@ -140,7 +152,7 @@ static char *rcsid = "$OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp 
 
 /*  ** NOTE **  returns 'size_t' and NOT 'char*' like strncpy! */
 
-size_t
+DLL_EXPORT size_t
 strlcpy(char *dst, const char *src, size_t siz)
 {
  register char *d = dst;
@@ -191,9 +203,6 @@ strlcpy(char *dst, const char *src, size_t siz)
 static char *rcsid = "$OpenBSD: strlcat.c,v 1.11 2003/06/17 21:56:24 millert Exp $";
 #endif /* LIBC_SCCS and not lint */
 
-#include <sys/types.h>
-#include <string.h>
-
 /*
  * Appends src to string dst of size siz (unlike strncat, siz is the
  * full size of dst, not space left).  At most siz-1 characters
@@ -204,7 +213,7 @@ static char *rcsid = "$OpenBSD: strlcat.c,v 1.11 2003/06/17 21:56:24 millert Exp
 
 /*  ** NOTE **  returns 'size_t' and NOT 'char*' like strncat! */
 
-size_t
+DLL_EXPORT size_t
 strlcat(char *dst, const char *src, size_t siz)
 {
  register char *d = dst;
@@ -322,7 +331,7 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
     return(tok);
 }
 
-void set_symbol(const char *sym,const char *value)
+DLL_EXPORT void set_symbol(const char *sym,const char *value)
 {
     SYMBOL_TOKEN        *tok;
     tok=get_symbol_token(sym,1);
@@ -343,7 +352,7 @@ void set_symbol(const char *sym,const char *value)
     return;
 }
 
-const char *get_symbol(const char *sym)
+DLL_EXPORT const char *get_symbol(const char *sym)
 {
     char *val;
     SYMBOL_TOKEN        *tok;
@@ -405,7 +414,7 @@ static void append_symbol(char **bfr,char *sym,int *ix_p,int *max_p)
     return;
 }
 
-char *resolve_symbol_string(const char *text)
+DLL_EXPORT char *resolve_symbol_string(const char *text)
 {
     char *resstr;
     int curix,maxix;
@@ -468,7 +477,7 @@ char *resolve_symbol_string(const char *text)
     return(resstr);
 }
 
-void kill_all_symbols(void)
+DLL_EXPORT void kill_all_symbols(void)
 {
     SYMBOL_TOKEN        *tok;
     int i;
@@ -498,7 +507,7 @@ void kill_all_symbols(void)
 /* Subtract 'beg_timeval' from 'end_timeval' yielding 'dif_timeval' */
 /* Return code: success == 0, error == -1 (difference was negative) */
 
-int timeval_subtract
+DLL_EXPORT int timeval_subtract
 (
     struct timeval *beg_timeval,
     struct timeval *end_timeval,
@@ -531,7 +540,7 @@ int timeval_subtract
 /* Add 'dif_timeval' to 'accum_timeval' (use to accumulate elapsed times) */
 /* Return code: success == 0, error == -1 (accum_timeval result negative) */
 
-int timeval_add
+DLL_EXPORT int timeval_add
 (
     struct timeval *dif_timeval,
     struct timeval *accum_timeval
@@ -552,3 +561,77 @@ int timeval_add
 
     return ((accum_timeval->tv_sec < 0 || accum_timeval->tv_usec < 0) ? -1 : 0);
 }
+
+/*********************************************************************
+  The following couple of Hercules 'utility' functions may be defined
+  elsewhere depending on which host platform we're being built for...
+  For Windows builds (e.g. MingW32), the functionality for the below
+  functions is defined in 'w32util.c'. For other host build platforms
+  (e.g. Linux, Apple, etc), the functionality for the below functions
+  is defined right here in 'hscutil.c'...
+ *********************************************************************/
+
+#if !defined(_MSVC_)
+
+/* THIS module (hscutil.c) is to provide the below functionality.. */
+
+/*
+  Returns outpath as a host filesystem compatible filename path.
+  This is a Cygwin-to-MSVC transitional period helper function.
+  On non-Windows platforms it simply copies inpath to outpath.
+  On Windows it converts inpath of the form "/cygdrive/x/foo.bar"
+  to outpath in the form "x:/foo.bar" for Windows compatibility.
+*/
+DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
+{
+    if (inpath && outpath && buffsize > 1)
+        strlcpy( outpath, inpath, buffsize );
+    else if (outpath && buffsize)
+        *outpath = 0;
+    return outpath;
+}
+
+/* Poor man's  "fcntl( fd, F_GETFL )"... */
+/* (only returns access-mode flags and not any others) */
+DLL_EXPORT int get_file_accmode_flags( int fd )
+{
+    int flags = fcntl( fd, F_GETFL );
+    return ( flags & O_ACCMODE );
+}
+
+/* Set socket to blocking or non-blocking mode... */
+DLL_EXPORT int socket_set_blocking_mode( int sfd, int blocking_mode )
+{
+    int flags = fcntl( sfd, F_GETFL );
+
+    if ( blocking_mode )
+        flags &= ~O_NONBLOCK;
+    else
+        flags |=  O_NONBLOCK;
+
+    return fcntl( sfd, F_SETFL, flags );
+}
+
+/* Initialize/Deinitialize sockets package... */
+int  socket_init   ( void ) { return 0; }
+DLL_EXPORT int  socket_deinit ( void ) { return 0; }
+
+/* Determine whether a file descriptor is a socket or not... */
+/* (returns 1==true if it's a socket, 0==false otherwise)    */
+DLL_EXPORT int socket_is_socket( int sfd )
+{
+    struct STAT st;
+    return ( FSTAT( sfd, &st ) == 0 && S_ISSOCK( st.st_mode ) );
+}
+
+#endif // !defined(WIN32)
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// (testing)
+
+DLL_EXPORT void cause_crash()
+{
+    static int x = 0; x = x / x - x;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////

@@ -2,7 +2,6 @@
 
 /*-------------------------------------------------------------------*/
 /* Header file containing machine specific macros                    */
-/*                                                                   */
 /*-------------------------------------------------------------------*/
 
 #ifndef _HERCULES_MACHDEP_H
@@ -18,23 +17,187 @@
 #undef ASSIST_FETCH_DW
 #undef ASSIST_STORE_DW
 
-#undef _ext_ia32
-#if defined(__i686__) || defined(__pentiumpro__) || defined(__pentium4__)
-#define _ext_ia32
-#endif
-#if defined(__athlon__) || defined(__athlon)
-#define _ext_ia32
-#endif
+/*-------------------------------------------------------------------*/
+/* Determine which optimizations we can and should do...             */
+/*-------------------------------------------------------------------*/
+#if defined( _MSVC_ )
 
-#undef _ext_amd64
-#if defined(__amd64__)
-#define _ext_amd64
-#endif
+  // Optimizations normally only apply for release builds,
+  // but we support enabling them for debug builds as well,
+  // as well as purposely DISABLING them for troubleshooting.
 
-#undef _ext_ppc
-#if defined(__powerpc__) || defined(__PPC__)
-#define _ext_ppc
-#endif
+//  #define OPTION_DISABLE_MSVC_OPTIMIZATIONS
+//  #define OPTION_ENABLE_MSVC_OPTIMIZATIONS_FOR_DEBUG_BUILDS_TOO
+
+  #undef X86_64BIT
+  #undef X86_ARCH
+
+  // PROGRAMMING NOTE: our "optimizations" (using compiler intrinsics)
+  // only works on version 14.00 or greater of Microsoft's compiler...
+
+  #if ( defined( _MSC_VER ) && _MSC_VER >= 1400 ) && \
+        !defined( OPTION_DISABLE_MSVC_OPTIMIZATIONS ) && \
+    ( ( !defined( DEBUG ) && !defined( _DEBUG ) ) || \
+         defined( OPTION_ENABLE_MSVC_OPTIMIZATIONS_FOR_DEBUG_BUILDS_TOO ) )
+
+    #if defined(_M_IX86) && _M_IX86 >= 600
+      #define X86_32BIT
+    #endif
+
+    #if defined(_M_IA64) || defined(_M_AMD64)
+      #define X86_64BIT
+    #endif
+
+    #if defined(X86_32BIT) || defined(X86_64BIT)
+      #define X86_ARCH
+    #endif
+
+  #endif
+
+  #ifdef X86_ARCH
+
+    #pragma intrinsic ( _InterlockedCompareExchange )
+    #pragma intrinsic ( _InterlockedCompareExchange64 )
+
+    #if defined(_M_IA64)   // 64-bit Intel Itanium only
+      #pragma intrinsic ( _AcquireSpinLock )
+      #pragma intrinsic ( _ReadWriteBarrier )
+      #pragma intrinsic ( _ReleaseSpinLock )
+    #endif
+
+  #endif // X86_ARCH
+
+/*-------------------------------------------------------------------*/
+/* GNU C?  (or other compiler!)     (i.e. NON-Microsoft C/C++)       */
+/*-------------------------------------------------------------------*/
+#else // !defined( _MSVC_ )
+
+  #undef _ext_ia32
+  #undef _ext_amd64
+  #undef _ext_ppc
+
+  #if defined(__i686__) || defined(__pentiumpro__) || defined(__pentium4__)
+    #define _ext_ia32
+  #endif
+  #if defined(__athlon__) || defined(__athlon)
+    #define _ext_ia32
+  #endif
+
+  #if defined(__amd64__)
+    #define _ext_amd64
+  #endif
+
+  #if defined(__powerpc__) || defined(__PPC__)
+    #define _ext_ppc
+  #endif
+
+#endif // defined( _MSVC_ )
+
+/*-------------------------------------------------------------------*/
+/* Microsoft Visual C/C++...                                         */
+/*-------------------------------------------------------------------*/
+#if defined( _MSVC_ )
+
+/*-------------------------------------------------------------------*/
+/* Microsoft VC++: any X86 Architecture... (32-bit -OR- 64-bit)      */
+/*-------------------------------------------------------------------*/
+#ifdef X86_ARCH
+
+#define ASSIST_CMPXCHG4
+#define cmpxchg4(x,y,z) cmpxchg4_x86(x,y,z)
+static __inline  BYTE   cmpxchg4_x86(U32 *old, U32 new, void *ptr)
+{
+    // returns 0 == success, 1 otherwise
+    U32 tmp = *old;
+    *old = _InterlockedCompareExchange( ptr, new, *old );
+    return ((tmp == *old) ? 0 : 1);
+}
+
+// (must follow cmpxchg4 since it uses it)
+#define ASSIST_CMPXCHG1
+#define cmpxchg1(x,y,z) cmpxchg1_x86(x,y,z)
+static __inline  BYTE   cmpxchg1_x86(BYTE *old, BYTE new, void *ptr)
+{
+    // returns 0 == success, 1 otherwise
+    long  off, shift;
+    BYTE  cc;
+    U32  *ptr4, val4, old4, new4;
+
+    off = (long)ptr & 3;
+    shift = (3 - off) * 8;
+    ptr4 = (U32*)(((BYTE*)ptr) - off);
+    val4 = CSWAP32(*ptr4);
+    old4 = CSWAP32((val4 & ~(0xff << shift)) | (*old << shift));
+    new4 = CSWAP32((val4 & ~(0xff << shift)) | ( new << shift));
+    cc = cmpxchg4(&old4, new4, ptr4);
+    *old = (CSWAP32(old4) >> shift) & 0xff;
+    return cc;
+}
+
+#define ASSIST_CMPXCHG8
+#define cmpxchg8(x,y,z) cmpxchg8_x86(x,y,z)
+static __inline  BYTE   cmpxchg8_x86(U64 *old, U64 new, void *ptr)
+{
+    // returns 0 == success, 1 otherwise
+    U64 tmp = *old;
+    *old = _InterlockedCompareExchange64( ptr, new, *old );
+    return ((tmp == *old) ? 0 : 1);
+}
+
+// (must follow cmpxchg8 since it uses it)
+#define ASSIST_FETCH_DW
+#define fetch_dw(x) fetch_dw_x86(x)
+static __inline U64 fetch_dw_x86(void *ptr)
+{
+ U64 value = *(U64 *)ptr;
+ while ( cmpxchg8 (&value, value, (U64 *)ptr) );
+ return CSWAP64 (value);
+}
+
+// (must follow cmpxchg8 since it uses it)
+#define ASSIST_STORE_DW
+#define store_dw(x,y) store_dw_x86(x,y)
+static __inline void  store_dw_x86(void *ptr, U64 value)
+{
+ U64 orig = *(U64 *)ptr;
+ while ( cmpxchg8 (&orig, CSWAP64(value), (U64 *)ptr) );
+}
+
+#if defined(_M_IA64)   // 64-bit Intel Itanium only
+#define ASSIST_CMPXCHG16
+#define cmpxchg16(x1,x2,y1,y2,z) cmpxchg16_x86(x1,x2,y1,y2,z)
+static __inline   int            cmpxchg16_x86(U64 *old1, U64 *old2,
+                                               U64  new1, U64  new2,
+                                               volatile void *ptr)
+{
+    // returns 0 == success, 1 otherwise
+    static unsigned __int64 lock = 0;
+    int code;
+    _AcquireSpinLock( &lock );
+    _ReadWriteBarrier();
+    if (*old1 == *(U64*)ptr && *old2 == *((U64*)ptr + 1))
+    {
+        *(U64*)ptr = new1;
+        *((U64*)ptr + 1) = new2;
+        code = 0;
+    }
+    else
+    {
+        *old1 = *((U64*)ptr);
+        *old2 = *((U64*)ptr + 1);
+        code = 1;
+    }
+    _ReleaseSpinLock( &lock );
+    return code;
+}
+#endif // defined(_M_IA64)
+
+#endif // X86_ARCH
+
+#else // !defined( _MSVC_ )
+/*-------------------------------------------------------------------*/
+/* GNU C or other compiler...   (i.e. NON-Microsoft C/C++)           */
+/*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
 /* Intel pentiumpro/i686                                             */
@@ -46,69 +209,6 @@
 #else
 #define LOCK_PREFIX ""
 #endif
-
-#define ADDR (*(volatile long *) addr)
-
-#define set_bit(x,y,z) set_bit_i686((y),(z))
-static __inline__ void set_bit_i686(int nr, volatile void * addr)
-{
-    __asm__ __volatile__( LOCK_PREFIX
-        "btsl %1,%0"
-        :"=m" (ADDR)
-        :"Ir" (nr));
-}
-
-#define clear_bit(x,y,z) clear_bit_i686((y),(z))
-static __inline__ void clear_bit_i686(int nr, volatile void * addr)
-{
-    __asm__ __volatile__( LOCK_PREFIX
-        "btrl %1,%0"
-        :"=m" (ADDR)
-        :"Ir" (nr));
-}
-
-#define test_bit(x,y,z) test_bit_i686((x),(y),(z))
-static __inline__ int test_bit_i686(int len, int nr, volatile void *addr)
-{
-    if (__builtin_constant_p(nr) && len == 4)
-        return ((*(const volatile unsigned int *)addr) & (1 << nr));
-    else
-    {
-        int oldbit;
-        __asm__ __volatile__(
-            "btl  %2,%1\n\t"
-            "sbbl %0,%0"
-            :"=r" (oldbit)
-            :"m" (ADDR),"Ir" (nr));
-        return oldbit;
-    }
-}
-
-#define or_bits(x,y,z) or_bits_i686((x),(y),(z))
-static __inline__ void or_bits_i686(int len, int bits, volatile void * addr)
-{
-    switch (len) {
-    case 4:
-    __asm__ __volatile__( LOCK_PREFIX
-        "orl %1,%0"
-        :"=m" (ADDR)
-        :"Ir" (bits));
-        break;
-    }
-}
-
-#define and_bits(x,y,z) and_bits_i686((x),(y),(z))
-static __inline__ void and_bits_i686(int len, int bits, volatile void * addr)
-{
-    switch (len) {
-    case 4:
-    __asm__ __volatile__( LOCK_PREFIX
-        "andl %1,%0"
-        :"=m" (ADDR)
-        :"Ir" (bits));
-        break;
-    }
-}
 
 #define ASSIST_CMPXCHG1
 #define cmpxchg1(x,y,z) cmpxchg1_i686(x,y,z)
@@ -308,42 +408,6 @@ static __inline__ void store_dw_i686(void *ptr, U64 value)
  while ( cmpxchg8 (&orig, CSWAP64(value), (U64 *)ptr) );
 }
 
-#define MEMCPY(_to, _from, _n)                \
- do {                                         \
-  void *to, *from; int n;                     \
-  int d0, d1;                                 \
-  to = (_to); from = (_from); n = (_n);       \
-  __asm__ __volatile__ (                      \
-         "cld\n\t"                            \
-         "movl    %0,%%edx\n\t"               \
-         "shrl    $2,%0\n\t"                  \
-         "rep     movsl\n\t"                  \
-         "movl    %%edx,%0\n\t"               \
-         "andl    $3,%0\n\t"                  \
-         "rep     movsb"                      \
-         : "=&c"(n), "=&D" (d0), "=&S" (d1)   \
-         : "1"(to), "2"(from), "0"(n)         \
-         : "edx", "memory");                  \
-} while (0)
-
-#define MEMSET(_to, _c, _n)                   \
-do {                                          \
-  void *to; int c, n;                         \
-  int d0;                                     \
-  to = (_to); c = (_c); n = (_n);             \
-  __asm__ __volatile__ (                      \
-         "cld\n\t"                            \
-         "movl    %0,%%edx\n\t"               \
-         "shrl    $2,%%ecx\n\t"               \
-         "rep     stosl\n\t"                  \
-         "movl    %%edx,%0\n\t"               \
-         "andl    $3,%0\n\t"                  \
-         "rep     stosb\n\t"                  \
-         : "=&c"(n), "=&D" (d0)               \
-         : "1"(to), "ax"(c), "0"(n)           \
-         : "edx", "memory");                  \
-} while (0)
-
 #endif /* defined(_ext_ia32) */
 
 /*-------------------------------------------------------------------*/
@@ -425,7 +489,7 @@ __cmpxchg_u32(volatile int *p, int old, int new)
     stwcx.  %4,0,%2 \n\
     bne-    1b\n"
 #ifdef OPTION_SMP
-"   sync\n"
+"    sync\n"
 #endif /* OPTION_SMP */
 "2:"
     : "=&r" (prev), "=m" (*p)
@@ -464,8 +528,10 @@ U32  *ptr4, val4, old4, new4;
 
 #endif /* defined(_ext_ppc) */
 
+#endif // defined( _MSVC_ )
+
 /*-------------------------------------------------------------------*/
-/* Defaults                                                          */
+/* Defaults...    (REGARDLESS of host and/or build platform)         */
 /*-------------------------------------------------------------------*/
 
 #ifndef fetch_hw
@@ -515,77 +581,6 @@ static __inline__ void store_dw(volatile void *ptr, U64 value) {
 
 #ifndef BIT
 #define BIT(nr) (1<<(nr))
-#endif
-
-#ifndef set_bit
-static __inline__ void set_bit(int len, int nr, volatile void * addr)
-{
-    switch (len) {
-    case 1:
-        *(BYTE *)addr |= (BYTE)(BIT(nr));
-        break;
-    case 2:
-        *(U16 *)addr |= (U16)(BIT(nr));
-        break;
-    case 4:
-        *(U32 *)addr |= (U32)(BIT(nr));
-        break;
-    }
-}
-#endif
-
-#ifndef clear_bit
-static __inline__ void clear_bit(int len, int nr, volatile void * addr)
-{
-    switch (len) {
-    case 1:
-        *(BYTE *)addr &= ~((BYTE)(BIT(nr)));
-        break;
-    case 4:
-        *(U32 *)addr &= ~((U32)(BIT(nr)));
-        break;
-    }
-}
-#endif
-
-#ifndef test_bit
-static __inline__ int test_bit(int len, int nr, volatile void * addr)
-{
-    switch (len) {
-    case 1:
-        return ((*(BYTE *)addr & (BYTE)(BIT(nr))) != 0);
-        break;
-    case 2:
-        return ((*(U16 *)addr & (U16)(BIT(nr))) != 0);
-        break;
-    case 4:
-        return ((*(U32 *)addr & (U32)(BIT(nr))) != 0);
-        break;
-    }
-    return 0;
-}
-#endif
-
-#ifndef or_bits
-static __inline__ void or_bits(int len, int bits, volatile void * addr)
-{
-    switch (len) {
-    case 4:
-        *(U32 *)addr |= (U32)bits;
-        break;
-    }
-}
-#endif
-
-#ifndef and_bits
-static __inline__ void and_bits(int len, int bits, volatile void * addr)
-{
-    switch (len) {
-    case 4:
-        *(U32 *)addr &= (U32)bits;
-        break;
-    }
-}
 #endif
 
 #ifndef cmpxchg1
@@ -659,14 +654,6 @@ static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volati
  }
  return code;
 }
-#endif
-
-#ifndef MEMCPY
-#define MEMCPY(_to, _from, _n) memcpy((_to), (_from), (_n))
-#endif
-
-#ifndef MEMSET
-#define MEMSET(_to, _c, _n) memset((_to), (_c), (_n))
 #endif
 
 /*-------------------------------------------------------------------*/

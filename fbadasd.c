@@ -11,19 +11,14 @@
 /*      0671 device support by Jay Maynard                           */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
+#define _FBADASD_C_
+#define _HDASD_DLL_
+
 #include "hercules.h"
-
 #include "dasdblks.h"  // (need #define DEFAULT_FBA_TYPE)
-#include "devtype.h"
 #include "sr.h"
-
-#if !defined(WIN32) && !defined(__APPLE__)
-/* Note : "man sd" says to include 'linux/fs.h' - But including kernel
- * headers in 'user space' is really a no-no.. Hopefully, it's
- * duplicated somewhere else.
- */
-#include <sys/mount.h>
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for Define Extent file mask                       */
@@ -56,7 +51,7 @@
 int fbadasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int     rc;                             /* Return code               */
-struct  stat statbuf;                   /* File information          */
+struct  STAT statbuf;                   /* File information          */
 int     startblk;                       /* Device origin block number*/
 int     numblks;                        /* Device block count        */
 BYTE    c;                              /* Character work area       */
@@ -64,6 +59,7 @@ int     cfba = 0;                       /* 1 = Compressed fba        */
 int     i;                              /* Loop index                */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
+BYTE    pathname[MAX_PATH];             /* file path in host format  */
 
     if (!dev->typname || !sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = DEFAULT_FBA_TYPE;
@@ -82,7 +78,8 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     dev->shared = 1;
 
     /* Check for possible remote device */
-    if (stat(dev->filename, &statbuf) < 0)
+    hostpath(pathname, dev->filename, sizeof(pathname));
+    if (STAT(pathname, &statbuf) < 0)
     {
         rc = shared_fba_init ( dev, argc, argv);
         if (rc < 0)
@@ -96,10 +93,11 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     }
 
     /* Open the device file */
-    dev->fd = open (dev->filename, O_RDWR|O_BINARY);
+    hostpath(pathname, dev->filename, sizeof(pathname));
+    dev->fd = open (pathname, O_RDWR|O_BINARY);
     if (dev->fd < 0)
     {
-        dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
+        dev->fd = open (pathname, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
         {
             logmsg (_("HHCDA058E File %s open error: %s\n"),
@@ -201,7 +199,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     else
     {
         /* Determine the device size */
-        rc = fstat (dev->fd, &statbuf);
+        rc = FSTAT (dev->fd, &statbuf);
         if (rc < 0)
         {
             logmsg (_("HHCDA064E File %s fstat error: %s\n"),
@@ -210,7 +208,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             dev->fd = -1;
             return -1;
         }
-#if !defined(WIN32) && !defined(__APPLE__) && defined(BLKGETSIZE)
+#if defined(OPTION_FBA_BLKDEVICE) && defined(BLKGETSIZE)
         if(S_ISBLK(statbuf.st_mode))
         {
             rc=ioctl(dev->fd,BLKGETSIZE,&statbuf.st_size);
@@ -228,7 +226,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             logmsg("REAL FBA Opened\n");
         }
         else
-#endif
+#endif // defined(OPTION_FBA_BLKDEVICE) && defined(BLKGETSIZE)
         {
             /* Set block size, device origin, and device size in blocks */
             dev->fbablksiz = 512;
@@ -325,7 +323,7 @@ void fbadasd_query_device (DEVBLK *dev, char **class,
 /*-------------------------------------------------------------------*/
 static int fba_blkgrp_len (DEVBLK *dev, int blkgrp)
 {
-off_t   offset;                         /* Offset of block group     */
+OFF_T   offset;                         /* Offset of block group     */
 
     offset = blkgrp * FBA_BLKGRP_SIZE;
     if (dev->fbaend - offset < FBA_BLKGRP_SIZE)
@@ -480,7 +478,7 @@ int fbadasd_read_blkgrp (DEVBLK *dev, int blkgrp, BYTE *unitstat)
 int             rc;                     /* Return code               */
 int             i, o;                   /* Cache indexes             */
 int             len;                    /* Length to read            */
-off_t           offset;                 /* File offsets              */
+OFF_T           offset;                 /* File offsets              */
 
     /* Return if reading the same block group */
     if (blkgrp >= 0 && blkgrp == dev->bufcur)
@@ -499,8 +497,8 @@ off_t           offset;                 /* File offsets              */
         dev->bufupd = 0;
 
         /* Seek to the old block group offset */
-        offset = (off_t)((dev->bufcur * FBA_BLKGRP_SIZE) + dev->bufupdlo);
-        offset = lseek (dev->fd, offset, SEEK_SET);
+        offset = (OFF_T)((dev->bufcur * FBA_BLKGRP_SIZE) + dev->bufupdlo);
+        offset = LSEEK (dev->fd, offset, SEEK_SET);
         if (offset < 0)
         {
             /* Handle seek error condition */
@@ -563,7 +561,7 @@ fba_read_blkgrp_retry:
         cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
-        DEVTRACE (_("HHCDA071I read blkgrp %d cache hit, using cache[%d]\n"),
+        logdevtr (dev, _("HHCDA071I read blkgrp %d cache hit, using cache[%d]\n"),
                   blkgrp, i);
 
         dev->cachehits++;
@@ -588,15 +586,15 @@ fba_read_blkgrp_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        DEVTRACE (_("HHCDA072I read blkgrp %d no available cache entry, waiting\n"),
-                  blkgrp); 
+        logdevtr (dev, _("HHCDA072I read blkgrp %d no available cache entry, waiting\n"),
+                  blkgrp);
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto fba_read_blkgrp_retry;
     }
 
     /* Cache miss */
-    DEVTRACE (_("HHCDA073I read blkgrp %d cache miss, using cache[%d]\n"),
+    logdevtr (dev, _("HHCDA073I read blkgrp %d cache miss, using cache[%d]\n"),
               blkgrp, o);
 
     dev->cachemisses++;
@@ -609,14 +607,14 @@ fba_read_blkgrp_retry:
     cache_unlock (CACHE_DEVBUF);
 
     /* Get offset and length */
-    offset = (off_t)(blkgrp * FBA_BLKGRP_SIZE);
+    offset = (OFF_T)(blkgrp * FBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
-    DEVTRACE (_("HHCDA074I read blkgrp %d offset %lld len %d\n"),
-              blkgrp, (long long)offset, fba_blkgrp_len(dev, blkgrp));  
+    logdevtr (dev, _("HHCDA074I read blkgrp %d offset %lld len %d\n"),
+              blkgrp, (long long)offset, fba_blkgrp_len(dev, blkgrp));
 
     /* Seek to the block group offset */
-    offset = lseek (dev->fd, offset, SEEK_SET);
+    offset = LSEEK (dev->fd, offset, SEEK_SET);
     if (offset < 0)
     {
         /* Handle seek error condition */
@@ -1063,7 +1061,7 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbaorigin
                      + dev->fbaxblkn) * dev->fbablksiz;
 
-        DEVTRACE(_("HHCDA077I Positioning to %8.8llX (%llu)\n"),
+        logdevtr (dev, _("HHCDA077I Positioning to %8.8llX (%llu)\n"),
                  (long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba);
 
         /* Return normal status */
@@ -1306,7 +1304,7 @@ int     repcnt;                         /* Replication count         */
 /*-------------------------------------------------------------------*/
 /* Synchronous Fixed Block I/O (used by Diagnose instruction)        */
 /*-------------------------------------------------------------------*/
-void fbadasd_syncblk_io ( DEVBLK *dev, BYTE type, int blknum,
+DLL_EXPORT void fbadasd_syncblk_io ( DEVBLK *dev, BYTE type, int blknum,
         int blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual )
 {
 int     rc;                             /* Return code               */
@@ -1479,7 +1477,7 @@ BYTE byte;
     return 0;
 }
 
-DEVHND fbadasd_device_hndinfo = {
+DLL_EXPORT DEVHND fbadasd_device_hndinfo = {
         &fbadasd_init_handler,          /* Device Initialisation      */
         &fbadasd_execute_ccw,           /* Device CCW execute         */
         &fbadasd_close_device,          /* Device Close               */

@@ -63,70 +63,30 @@
 /* SC53-1201 S/370 and S/390 Optical Media Attach/2 Technical Ref    */
 /*-------------------------------------------------------------------*/
 
-#include "tapedev.h"   /* This module's header file                  */
+#include "hstdinc.h"
+
 #include "hercules.h"  /* need Hercules control blocks               */
-#include "opcode.h"    /* need 'device_attention' function           */
-#include "devtype.h"   /* DEVHND device handler vector table         */
-#include "parser.h"    /* generic parameter string parser            */
-#include <regex.h>     /* POSIX(?) regular expressions               */
+#include "tapedev.h"   /* This module's header file                  */
 
-#define  ENABLE_TRACING_STMTS   0   // (debugging: 1/0 enable/disable)
+//#define  ENABLE_TRACING_STMTS     // (Fish: DEBUGGING)
 
-#if ENABLE_TRACING_STMTS
+#ifdef ENABLE_TRACING_STMTS
   #if !defined(DEBUG)
-    #warning DEBUG required (i.e. --enable-debug) for ENABLE_TRACING_STMTS
+    #warning DEBUG required for ENABLE_TRACING_STMTS
   #endif
 #else
   #undef  TRACE
   #undef  ASSERT
   #undef  VERIFY
-  #define TRACE(a...)
+  #define TRACE       1 ? ((void)0) : logmsg
   #define ASSERT(a)
-  #define VERIFY(a) ((void)(a))
+  #define VERIFY(a)   ((void)(a))
 #endif
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
- SYSBLK *psysblk;
- #define sysblk (*psysblk)
+#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  SYSBLK *psysblk;
+  #define sysblk (*psysblk)
 #endif
-
-/*-------------------------------------------------------------------*/
-/* Internal macro definitions                                        */
-/*-------------------------------------------------------------------*/
-#define MAX_BLKLEN              65535   /* Maximum I/O buffer size   */
-#define TAPE_UNLOADED           "*"     /* Name for unloaded drive   */
-/*-------------------------------------------------------------------*/
-/* Static data areas                                                 */
-/*-------------------------------------------------------------------*/
-/* static struct mt_tape_info tapeinfo[] = MT_TAPE_INFO; */
- /*
-static struct mt_tape_info densinfo[] = {
-    {0x01, "NRZI (800 bpi)"},
-    {0x02, "PE (1600 bpi)"},
-    {0x03, "GCR (6250 bpi)"},
-    {0x05, "QIC-45/60 (GCR, 8000 bpi)"},
-    {0x06, "PE (3200 bpi)"},
-    {0x07, "IMFM (6400 bpi)"},
-    {0x08, "GCR (8000 bpi)"},
-    {0x09, "GCR /37871 bpi)"},
-    {0x0A, "MFM (6667 bpi)"},
-    {0x0B, "PE (1600 bpi)"},
-    {0x0C, "GCR (12960 bpi)"},
-    {0x0D, "GCR (25380 bpi)"},
-    {0x0F, "QIC-120 (GCR 10000 bpi)"},
-    {0x10, "QIC-150/250 (GCR 10000 bpi)"},
-    {0x11, "QIC-320/525 (GCR 16000 bpi)"},
-    {0x12, "QIC-1350 (RLL 51667 bpi)"},
-    {0x13, "DDS (61000 bpi)"},
-    {0x14, "EXB-8200 (RLL 43245 bpi)"},
-    {0x15, "EXB-8500 (RLL 45434 bpi)"},
-    {0x16, "MFM 10000 bpi"},
-    {0x17, "MFM 42500 bpi"},
-    {0x24, "DDS-2"},
-    {0x8C, "EXB-8505 compressed"},
-    {0x90, "EXB-8205 compressed"},
-    {0, NULL}};
-    */
 
 /*---------------------------------------*/
 /* The following table goes hand-in-hand */
@@ -149,6 +109,7 @@ static PARSER ptab[] =
     { "deonirq", "%d" },
     { NULL, NULL },
 };
+
 /*---------------------------------------*/
 /* The following table goes hand-in-hand */
 /* with PARSER table immediately above   */
@@ -182,22 +143,29 @@ enum
 /*    (especially for a need for a tape to be loaded or not)         */
 /*-------------------------------------------------------------------*/
 
-/* Forward definitions of functions used in these tables */
+// Generic tape sense function type used by below routing table...
 
 typedef void TapeDeviceDepSenseFunction (int,DEVBLK *,BYTE *,BYTE);
 
-static TapeDeviceDepSenseFunction build_sense_3410;
-static TapeDeviceDepSenseFunction build_sense_3420;
-static TapeDeviceDepSenseFunction build_sense_3480;
-static TapeDeviceDepSenseFunction build_sense_Streaming;        /* 9347, 9348, 8809 */
-/*
-void build_sense_3422(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode);
-void build_sense_3430(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode);
-*/
-#define build_sense_3422 build_sense_3420
-#define build_sense_3430 build_sense_3420
+// Forward declarations needed by below routing table...
 
-static TapeDeviceDepSenseFunction build_senseX;
+static  TapeDeviceDepSenseFunction  build_sense_3410;
+static  TapeDeviceDepSenseFunction  build_sense_3420;
+#define                             build_sense_3422   build_sense_3420
+#define                             build_sense_3430   build_sense_3420
+static  TapeDeviceDepSenseFunction  build_sense_3480;
+static  TapeDeviceDepSenseFunction  build_sense_Streaming; /* 9347, 9348, 8809 */
+
+// Routing table used by generic tape sense function "build_senseX"...
+
+static  TapeDeviceDepSenseFunction *TapeSenseTable[]={
+    build_sense_3410,
+    build_sense_3420,
+    build_sense_3422,
+    build_sense_3430,
+    build_sense_3480,
+    build_sense_Streaming,
+    NULL};
 
 /*-------------------------------------------------------------------*/
 /* Ivan Warren 20040227                                              */
@@ -394,15 +362,6 @@ static int TapeDevtypeList[]={0x3410,0,1,0,0,
                               0x8809,5,0,0,5,
                               0x0000,0,0,0,0}; /* End Marker */
 
-static TapeDeviceDepSenseFunction *TapeSenseTable[]={
-    build_sense_3410,
-    build_sense_3420,
-    build_sense_3422,
-    build_sense_3430,
-    build_sense_3480,
-    build_sense_Streaming,
-    NULL};
-
 /**************************************/
 /* START OF ORIGINAL AWS FUNCTIONS    */
 /* ISW Additions                      */
@@ -430,9 +389,9 @@ static void close_awstape (DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 static int rewind_awstape (DEVBLK *dev,BYTE *unitstat,BYTE code)
 {
-    int rc;
-    rc=lseek(dev->fd,0,SEEK_SET);
-    if(rc<0)
+    OFF_T rcoff;
+    rcoff=LSEEK(dev->fd,0,SEEK_SET);
+    if(rcoff<0)
     {
         build_senseX(TAPE_BSENSE_REWINDFAILED,dev,unitstat,code);
         return -1;
@@ -475,6 +434,7 @@ static int passedeot_awstape (DEVBLK *dev)
 static int open_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Check for no tape in drive */
     if (!strcmp (dev->filename, TAPE_UNLOADED))
@@ -484,13 +444,14 @@ int             rc;                     /* Return code               */
     }
 
     /* Open the AWSTAPE file */
-    rc = open (dev->filename, O_RDWR | O_BINARY);
+    hostpath(pathname, dev->filename, sizeof(pathname));
+    rc = open (pathname, O_RDWR | O_BINARY);
 
     /* If file is read-only, attempt to open again */
     if (rc < 0 && (EROFS == errno || EACCES == errno))
     {
         dev->readonly = 1;
-        rc = open (dev->filename, O_RDONLY | O_BINARY);
+        rc = open (pathname, O_RDONLY | O_BINARY);
     }
 
     /* Check for successful open */
@@ -521,10 +482,11 @@ static int readhdr_awstape (DEVBLK *dev, long blkpos,
                         AWSTAPE_BLKHDR *buf, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
+OFF_T           rcoff;                  /* Return code from lseek()  */
 
     /* Reposition file to the requested block header */
-    rc = lseek (dev->fd, blkpos, SEEK_SET);
-    if (rc < 0)
+    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    if (rcoff < 0)
     {
         /* Handle seek error condition */
         logmsg (_("HHCTA002E Error seeking to offset %8.8lX "
@@ -661,6 +623,7 @@ static int write_awstape (DEVBLK *dev, BYTE *buf, U16 blklen,
                         BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
+OFF_T           rcoff;                  /* Return code from lseek()  */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 long            blkpos;                 /* Offset of block header    */
 U16             prvblkl;                /* Length of previous block  */
@@ -685,8 +648,8 @@ U16             prvblkl;                /* Length of previous block  */
     }
 
     /* Reposition file to the new block header */
-    rc = lseek (dev->fd, blkpos, SEEK_SET);
-    if (rc < 0)
+    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    if (rcoff < 0)
     {
         /* Handle seek error condition */
         logmsg (_("HHCTA002E Error seeking to offset %8.8lX "
@@ -782,6 +745,7 @@ U16             prvblkl;                /* Length of previous block  */
 static int write_awsmark (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
+OFF_T           rcoff;                  /* Return code from lseek()  */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 long            blkpos;                 /* Offset of block header    */
 U16             prvblkl;                /* Length of previous block  */
@@ -806,8 +770,8 @@ U16             prvblkl;                /* Length of previous block  */
     }
 
     /* Reposition file to the new block header */
-    rc = lseek (dev->fd, blkpos, SEEK_SET);
-    if (rc < 0)
+    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    if (rcoff < 0)
     {
         /* Handle seek error condition */
         logmsg (_("HHCTA011E Error seeking to offset %8.8lX "
@@ -1199,13 +1163,13 @@ static int write_het (DEVBLK *dev, BYTE *buf, U16 blklen,
                       BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
-size_t          cursize;                /* Current size for size chk */
+OFF_T           cursize;                /* Current size for size chk */
 
     /* Check if we have already violated the size limit */
     if(dev->tdparms.maxsize>0)
     {
-        cursize=ftell(dev->hetb->fd); /* WARNING ! Should go in hetlib */
-        if(cursize>=dev->tdparms.maxsize)
+        cursize=het_tell(dev->hetb);
+        if(cursize>=(OFF_T)dev->tdparms.maxsize)
         {
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
             return -1;
@@ -1229,16 +1193,16 @@ size_t          cursize;                /* Current size for size chk */
     /* Also check if we are passed EOT marker */
     if(dev->tdparms.maxsize>0)
     {
-        cursize=ftell(dev->hetb->fd); /* WARNING ! Should go in hetlib */
-        if(cursize>dev->tdparms.maxsize)
+        cursize=het_tell(dev->hetb);
+        if(cursize>(OFF_T)dev->tdparms.maxsize)
         {
             logmsg(_("TAPE EOT Handling : max capacity exceeded\n"));
             if(dev->tdparms.strictsize)
             {
                 logmsg(_("TAPE EOT Handling : max capacity enforced\n"));
                 het_bsb(dev->hetb);
-                cursize=ftell(dev->hetb->fd); /* WARNING ! Should go in hetlib */
-                ftruncate( fileno(dev->hetb->fd),cursize);
+                cursize=het_tell(dev->hetb);
+                FTRUNCATE( fileno(dev->hetb->fd),cursize);
                 dev->hetb->truncated=TRUE; /* SHOULD BE IN HETLIB */
             }
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
@@ -1425,13 +1389,13 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 static int passedeot_het (DEVBLK *dev)
 {
-long cursize;
+OFF_T cursize;
     if(dev->fd>0)
     {
         if(dev->tdparms.maxsize>0)
         {
-            cursize=ftell(dev->hetb->fd); /* WARNING ! Should go in hetlib */
-            if(cursize+dev->tdparms.eotmargin>dev->tdparms.maxsize)
+            cursize=het_tell(dev->hetb);
+            if(cursize+dev->tdparms.eotmargin>(OFF_T)dev->tdparms.maxsize)
             {
                 return 1;
             }
@@ -1479,10 +1443,6 @@ int             rc;                     /* Return code               */
 
 } /* end function bsf_het */
 
-#if defined(OPTION_SCSI_TAPE)
-#include "scsitape.h"   // (SCSI tape handling logic)
-#endif /* defined(OPTION_SCSI_TAPE) */
-
 /*-------------------------------------------------------------------*/
 /* Read the OMA tape descriptor file                                 */
 /*-------------------------------------------------------------------*/
@@ -1495,7 +1455,7 @@ int             tdfsize;                /* Size of TDF file in bytes */
 int             filecount;              /* Number of files           */
 int             stmt;                   /* TDF file statement number */
 int             fd;                     /* TDF file descriptor       */
-struct stat     statbuf;                /* TDF file information      */
+struct STAT     statbuf;                /* TDF file information      */
 U32             blklen;                 /* Fixed block length        */
 int             tdfpos;                 /* Position in TDF buffer    */
 char           *tdfbuf;                 /* -> TDF file buffer        */
@@ -1506,6 +1466,7 @@ char           *tdfreckwd;              /* -> Keyword in TDF record  */
 char           *tdfblklen;              /* -> Length in TDF record   */
 OMATAPE_DESC   *tdftab;                 /* -> Tape descriptor array  */
 BYTE            c;                      /* Work area for sscanf      */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Isolate the base path name of the TDF file */
     for (pathlen = strlen(dev->filename); pathlen > 0; )
@@ -1514,7 +1475,7 @@ BYTE            c;                      /* Work area for sscanf      */
         if ('/' == dev->filename[pathlen-1]) break;
     }
 #if 0
-    JCS thinks this is bad
+    // JCS thinks this is bad
     if (pathlen < 7
         || strncasecmp(dev->filename+pathlen-7, "/tapes/", 7) != 0)
     {
@@ -1527,7 +1488,8 @@ BYTE            c;                      /* Work area for sscanf      */
 #endif
 
     /* Open the tape descriptor file */
-    fd = open (dev->filename, O_RDONLY | O_BINARY);
+    hostpath(pathname, dev->filename, sizeof(pathname));
+    fd = open (pathname, O_RDONLY | O_BINARY);
     if (fd < 0)
     {
         logmsg (_("HHCTA039E Error opening TDF file %s: %s\n"),
@@ -1536,7 +1498,7 @@ BYTE            c;                      /* Work area for sscanf      */
     }
 
     /* Determine the size of the tape descriptor file */
-    rc = fstat (fd, &statbuf);
+    rc = FSTAT (fd, &statbuf);
     if (rc < 0)
     {
         logmsg (_("HHCTA040E %s fstat error: %s\n"),
@@ -1682,7 +1644,7 @@ BYTE            c;                      /* Work area for sscanf      */
 */
         tdftab[filecount].filename[0] = 0;
 
-        if (tdffilenm[0] != '/')
+        if ((tdffilenm[0] != '/') && (tdffilenm[1] != ':'))
         {
             strncpy (tdftab[filecount].filename, dev->filename, pathlen);
             strlcat (tdftab[filecount].filename, "/", sizeof(tdftab[filecount].filename) );
@@ -1765,6 +1727,7 @@ static int open_omatape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Read the OMA descriptor file if necessary */
     if (!dev->omadesc)
@@ -1814,11 +1777,13 @@ OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
     }
 
     /* Open the OMATAPE file */
-    rc = open (omadesc->filename, O_RDONLY | O_BINARY);
+    hostpath(pathname, omadesc->filename, sizeof(pathname));
+    rc = open (pathname, O_RDONLY | O_BINARY);
 
     /* Check for successful open */
-    if (rc < 0)
+    if (rc < 0 || LSEEK (rc, 0, SEEK_END) > LONG_MAX)
     {
+        if ( rc >= 0 ) /* LSEEK overflow */ errno = EOVERFLOW;
         logmsg (_("HHCTA051E Error opening %s: %s\n"),
                 omadesc->filename, strerror(errno));
 
@@ -1847,6 +1812,7 @@ static int readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
                         S32 *pnxthdro, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
+OFF_T           rcoff;                  /* Return code from lseek()  */
 int             padding;                /* Number of padding bytes   */
 OMATAPE_BLKHDR  omahdr;                 /* OMATAPE block header      */
 S32             curblkl;                /* Length of current block   */
@@ -1854,8 +1820,8 @@ S32             prvhdro;                /* Offset of previous header */
 S32             nxthdro;                /* Offset of next header     */
 
     /* Seek to start of block header */
-    rc = lseek (dev->fd, blkpos, SEEK_SET);
-    if (rc < 0)
+    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    if (rcoff < 0)
     {
         /* Handle seek error condition */
         logmsg (_("HHCTA052E Error seeking to offset %8.8lX "
@@ -2015,7 +1981,7 @@ S32             nxthdro;                /* Offset of next header     */
 static int read_omafixed (DEVBLK *dev, OMATAPE_DESC *omadesc,
                         BYTE *buf, BYTE *unitstat,BYTE code)
 {
-int             rc;                     /* Return code               */
+OFF_T           rcoff;                  /* Return code from lseek()  */
 int             blklen;                 /* Block length              */
 long            blkpos;                 /* Offset of block in file   */
 
@@ -2023,8 +1989,8 @@ long            blkpos;                 /* Offset of block in file   */
     blkpos = dev->nxtblkpos;
 
     /* Seek to new current block position */
-    rc = lseek (dev->fd, blkpos, SEEK_SET);
-    if (rc < 0)
+    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    if (rcoff < 0)
     {
         /* Handle seek error condition */
         logmsg (_("HHCTA058E Error seeking to offset %8.8lX "
@@ -2087,6 +2053,7 @@ static int read_omatext (DEVBLK *dev, OMATAPE_DESC *omadesc,
                         BYTE *buf, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
+OFF_T           rcoff;                  /* Return code from lseek()  */
 int             num;                    /* Number of characters read */
 int             pos;                    /* Position in I/O buffer    */
 long            blkpos;                 /* Offset of block in file   */
@@ -2096,8 +2063,8 @@ BYTE            c;                      /* Character work area       */
     blkpos = dev->nxtblkpos;
 
     /* Seek to new current block position */
-    rc = lseek (dev->fd, blkpos, SEEK_SET);
-    if (rc < 0)
+    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    if (rcoff < 0)
     {
         /* Handle seek error condition */
         logmsg (_("HHCTA060E Error seeking to offset %8.8lX "
@@ -2339,18 +2306,19 @@ S32             nxthdro;                /* Offset of next header     */
 static int fsb_omafixed (DEVBLK *dev, OMATAPE_DESC *omadesc,
                         BYTE *unitstat,BYTE code)
 {
-long            eofpos;                 /* Offset of end of file     */
-long            blkpos;                 /* Offset of current block   */
-S32             curblkl;                /* Length of current block   */
+OFF_T           eofpos;                 /* Offset of end of file     */
+OFF_T           blkpos;                 /* Offset of current block   */
+int             curblkl;                /* Length of current block   */
 
     /* Initialize current block position */
     blkpos = dev->nxtblkpos;
 
     /* Seek to end of file to determine file size */
-    eofpos = lseek (dev->fd, 0, SEEK_END);
-    if (eofpos < 0)
+    eofpos = LSEEK (dev->fd, 0, SEEK_END);
+    if (eofpos < 0 || eofpos >= LONG_MAX)
     {
         /* Handle seek error condition */
+        if ( eofpos >= LONG_MAX) errno = EOVERFLOW;
         logmsg (_("HHCTA064E Error seeking to end of file %s: %s\n"),
                 omadesc->filename, strerror(errno));
 
@@ -2376,13 +2344,13 @@ S32             curblkl;                /* Length of current block   */
     }
 
     /* Calculate current block length */
-    curblkl = eofpos - blkpos;
+    curblkl = (int)(eofpos - blkpos);
     if (curblkl > omadesc->blklen)
         curblkl = omadesc->blklen;
 
     /* Update the offsets of the next and previous blocks */
-    dev->nxtblkpos = blkpos + curblkl;
-    dev->prvblkpos = blkpos;
+    dev->nxtblkpos = (long)(blkpos + curblkl);
+    dev->prvblkpos = (long)(blkpos);
 
     /* Return block length */
     return curblkl;
@@ -2439,7 +2407,7 @@ OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
 static int bsf_omatape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
-long            pos;                    /* File position             */
+OFF_T           pos;                    /* File position             */
 OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
 S32             curblkl;                /* Length of current block   */
 S32             prvhdro;                /* Offset of previous header */
@@ -2471,9 +2439,11 @@ S32             nxthdro;                /* Offset of next header     */
 
     /* Reposition before tapemark header at end of file, or
        to end of file for fixed block or ASCII text files */
-    pos = (omadesc->format == 'H' ? -(sizeof(OMATAPE_BLKHDR)) : 0);
+    pos = 0;
+    if ( 'H' == omadesc->format )
+        pos -= sizeof(OMATAPE_BLKHDR);
 
-    pos = lseek (dev->fd, pos, SEEK_END);
+    pos = LSEEK (dev->fd, pos, SEEK_END);
     if (pos < 0)
     {
         /* Handle seek error condition */
@@ -2695,8 +2665,8 @@ static void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
             strlcat ( msgbfr, msg1,              lenbfr );
             strlcat ( msgbfr, "\" / \"",         lenbfr );
             strlcat ( msgbfr, msg2,              lenbfr );
-            strlcat ( msgbfr, "\"",              lenbfr );
-            strlcat ( msgbfr, " (alternating)",  lenbfr );
+            strlcat ( msgbfr, "\"",             lenbfr );
+            strlcat ( msgbfr, " (alternating)", lenbfr );
         }
         else
         {
@@ -2954,13 +2924,6 @@ static void ReqAutoMount( DEVBLK *dev )
                  )
            )
     )
-#if 0 // (I'll remove these eventually (Fish))
-    &&
-    (0
-        || scratch
-        || 'M' == tapemsg[0]
-    )
-#endif
     ? TRUE : FALSE;
     TRACE( "** ReqAutoMount: mountreq = %s\n", mountreq ? "TRUE" : "FALSE" );
     unmountreq =
@@ -2971,14 +2934,6 @@ static void ReqAutoMount( DEVBLK *dev )
             &&  !( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
            )
     )
-#if 0 // (I'll remove these eventually (Fish))
-    &&
-    (0
-        || scratch
-        || 'R' == tapemsg[0]
-        || 'K' == tapemsg[0]
-    )
-#endif
     ? TRUE : FALSE;
     TRACE( "** ReqAutoMount: unmountreq = %s\n", unmountreq ? "TRUE" : "FALSE" );
 
@@ -3838,9 +3793,6 @@ static void build_sense_3410(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode)
 
 /*-------------------------------------------------------------------*/
 
-#define build_sense_3422 build_sense_3420
-#define build_sense_3430 build_sense_3420
-
 static void build_sense_3420(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode)
 {
     build_sense_3410_3420(ERCode,dev,unitstat,ccwcode);
@@ -3860,8 +3812,7 @@ static void build_sense_3420(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode)
 /* note : name changed because semantic changed                      */
 /* ERCode is the internal Error Recovery code                        */
 /*-------------------------------------------------------------------*/
-static void
-build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code)
+void build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code)
 {
 int i;
 BYTE usr;
@@ -3946,10 +3897,12 @@ static struct tape_format_entry fmttab[]={
 /*  .. TO DO ..                             */
 static int mountnewtape(DEVBLK *dev,int argc,char **argv)
 {
-int        i;                           /* Loop control              */
+#ifdef HAVE_REGEX_H
 regex_t    regwrk;                      /* REGEXP work area          */
 regmatch_t regwrk2;                     /* REGEXP match area         */
 char       errbfr[1024];                /* Working storage           */
+#endif
+int        i;                           /* Loop control              */
 int        rc;                          /* various rtns return codes */
 union
 {
@@ -3979,6 +3932,7 @@ union
         {
             break;
         }
+#ifdef HAVE_REGEX_H
         rc=regcomp(&regwrk,fmttab[i].fmtreg,REG_ICASE);
         if(rc<0)
         {
@@ -4001,6 +3955,36 @@ union
         logmsg (_("HHCTA999E Device %4.4X : Unable to determine tape format type for %s : Internal error : Regexec error %s on index %d\n"),dev->devnum,dev->filename,errbfr,i);
         regfree(&regwrk);
         return -1;
+#else
+        switch ( dev->tapedevt )
+        {
+        case TAPEDEVT_OMATAPE: // filename ends with ".tdf"
+            if ( (rc = strlen(dev->filename)) <= 4 )
+                rc = -1;
+            else
+                rc = strcasecmp( &dev->filename[rc-4], ".tdf" );
+            break;
+#if defined(OPTION_SCSI_TAPE)
+        case TAPEDEVT_SCSITAPE: // filename starts with "/dev/"
+            if ( (rc = strlen(dev->filename)) <= 5 )
+                rc = -1;
+            else
+                rc = strncasecmp( dev->filename, "/dev/", 5 );
+            break;
+#endif
+        case TAPEDEVT_HET:      // filename ends with ".het"
+            if ( (rc = strlen(dev->filename)) <= 4 )
+                rc = -1;
+            else
+                rc = strcasecmp( &dev->filename[rc-4], ".het" );
+            break;
+        default:                // (should not occur)
+            ASSERT(0);
+            logmsg (_("HHCTA999E Device %4.4X : Unable to determine tape format type for %s\n"),dev->devnum,dev->filename);
+            return -1;
+        }
+        if (!rc) break;
+#endif
     }
     if (strcmp (dev->filename, TAPE_UNLOADED)!=0)
     {
@@ -4011,7 +3995,7 @@ union
     dev->fd                = -1;
 #if defined(OPTION_SCSI_TAPE)
     dev->sstat             = GMT_DR_OPEN( -1 );
-#endif /* defined(OPTION_SCSI_TAPE) */
+#endif
     dev->omadesc           = NULL;
     dev->omafiles          = 0;
     dev->curfilen          = 1;
@@ -4238,7 +4222,7 @@ static void autoload_tape_entry(DEVBLK *dev,char *fn,char **strtokw)
     TAPEAUTOLOADENTRY tae;
     logmsg(_("TAPE Autoloader : Adding tape entry %s\n"),fn);
     memset(&tae,0,sizeof(tae));
-    tae.filename=malloc(strlen(fn)+sizeof(char));
+    tae.filename=malloc(strlen(fn)+sizeof(char)+1);
     strcpy(tae.filename,fn);
     while((p=strtok_r(NULL," \t",strtokw)))
     {
@@ -4246,7 +4230,7 @@ static void autoload_tape_entry(DEVBLK *dev,char *fn,char **strtokw)
         {
             tae.argv=malloc(sizeof(char *)*256);
         }
-        tae.argv[tae.argc]=malloc(strlen(p)+sizeof(char));
+        tae.argv[tae.argc]=malloc(strlen(p)+sizeof(char)+1);
         strcpy(tae.argv[tae.argc],p);
         tae.argc++;
     }
@@ -4274,6 +4258,8 @@ static void autoload_init(DEVBLK *dev,int ac,char **av)
     char    *verb;
     int        i;
     char    *strtokw;
+    BYTE     pathname[MAX_PATH];
+
     autoload_close(dev);
     if(ac<1)
     {
@@ -4284,7 +4270,8 @@ static void autoload_init(DEVBLK *dev,int ac,char **av)
         return;
     }
     logmsg(_("TAPE : Autoloader file request fn=%s\n"),&av[0][1]);
-    if(!(aldf=fopen(&av[0][1],"r")))
+    hostpath(pathname, &av[0][1], sizeof(pathname));
+    if(!(aldf=fopen(pathname,"r")))
     {
         return;
     }
@@ -4693,8 +4680,8 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
 
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt
 #if defined(OPTION_SCSI_TAPE)
-        || !STS_NOT_MOUNTED(dev)
-#endif /* defined(OPTION_SCSI_TAPE) */
+            || !STS_NOT_MOUNTED(dev)
+#endif
         )
         {
             // Not a SCSI tape,  -or-  mounted SCSI tape...
@@ -5248,7 +5235,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 // selves here (in order to retrieve BOTH of those values
                 // for ourselves (since MTIOCPOS only returns one value
                 // and not the other))...
-                || ioctl( dev->fd, MTIOCPOS, (char*) &mtpos ) < 0 )
+                || ioctl_tape( dev->fd, MTIOCPOS, (char*) &mtpos ) < 0 )
             {
 #endif
                 // Either this is not a scsi tape, or else the MTIOCPOS
@@ -5455,7 +5442,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Block to seek */
         ASSERT( count >= sizeof(locblock) );
-
 //      memcpy( (BYTE*)&locblock, iobuf, sizeof(locblock) );
         FETCH_FW(locblock, iobuf);
 
@@ -5473,7 +5459,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         num = (count < len) ? count : len;
         *residual = count - num;
 
-        /* Start of block locate code */
+        /* Informative message if tracing */
         if ( dev->ccwtrace || dev->ccwstep )
             logmsg(_("HHCTA081I Locate block 0x%8.8lX on %s%s%4.4X\n")
                 ,locblock
@@ -5482,6 +5468,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 ,dev->devnum
                 );
 
+        /* Update display if needed */
         if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
              TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
@@ -5489,6 +5476,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             UpdateDisplay( dev );
         }
 
+        /* Start of block locate code */
         {
 #if defined(OPTION_SCSI_TAPE)
             struct  mtop   mtop;
@@ -5496,8 +5484,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             mtop.mt_op    = MTSEEK;
             mtop.mt_count = locblock;
 
+            /* Let the hardware do the locate if this is a SCSI drive;
+               Else do it the hard way if it's not (or an error occurs) */
             if (TAPEDEVT_SCSITAPE != dev->tapedevt
-                || (rc = ioctl( dev->fd, MTIOCTOP, (char*) &mtop )) < 0 )
+                || (rc = ioctl_tape( dev->fd, MTIOCTOP, (char*) &mtop )) < 0 )
 #endif
             {
                 rc=dev->tmh->rewind(dev,unitstat,code);
@@ -5517,6 +5507,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                     dev->blockid = 0;
                     dev->poserror = 0;
 
+                    /* Do it the hard way */
                     while(dev->blockid < locblock && ( rc >= 0 ))
                     {
                         rc=dev->tmh->fsb(dev,unitstat,code);
@@ -5525,6 +5516,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             }
         }
 
+        /* Update display if needed */
         if ( TAPEDISPTYP_LOCATING == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
@@ -5550,6 +5542,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
         break;
 
+    /*---------------------------------------------------------------*/
+    /* MODE SET (7-track and 9-track)                                */
+    /*---------------------------------------------------------------*/
     case 0xCB: /* 9-track 800 bpi */
     case 0xC3: /* 9-track 1600 bpi */
     case 0xD3: /* 9-track 6250 bpi */
@@ -5572,9 +5567,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0xA3:
     case 0xAB:
     case 0xEB: /* invalid mode set issued by DOS/VS */
-    /*---------------------------------------------------------------*/
-    /* MODE SET                                                      */
-    /*---------------------------------------------------------------*/
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -5872,29 +5864,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 } /* end function tapedev_execute_ccw */
 
 /*-------------------------------------------------------------------*/
-/*
-typedef struct _TAPEMEDIA_HANDLER {
-        int *open(DEVBLK *,BYTE *unitstat,BYTE code);
-        int *close(DEVBLK *,BYTE *unitstat,BYTE code);
-        int *read(DEVBLK *,BYTE *buf,BYTE *unitstat,BYTE code);
-        int *write(DEVBLK *,BYTE *buf,U16 blklen,BYTE *unitstat,BYTE code);
-        int *rewind(DEVBLK *,BYTE *unitstat,BYTE code);
-        int *bsb(DEVBLK *,BYTE *unitstat,BYTE code);
-        int *fsb(DEVBLK *,BYTE *unitstat,BYTE code);
-        int *bsf(DEVBLK *,BYTE *unitstat,BYTE code);
-        int *fsf(DEVBLK *,BYTE *unitstat,BYTE code);
-        int *wtm(DEVBLK *,BYTE *unitstat,BYTE code);
-} TAPEMEDIA_HANDLER;
-*/
-/*
-static int return_true3(DEVBLK *dev,BYTE *unitstat,BYTE code)
-{
-    UNREFERENCED(dev);
-    UNREFERENCED(unitstat);
-    UNREFERENCED(code);
-    return 1;
-}
-*/
+
 static int is_tapeloaded_filename(DEVBLK *dev,BYTE *unitstat,BYTE code)
 {
     UNREFERENCED(unitstat);
@@ -5921,6 +5891,8 @@ static int write_READONLY5(DEVBLK *dev,BYTE *bfr,U16 blklen,BYTE *unitstat,BYTE 
 }
 
 /*-------------------------------------------------------------------*/
+/*  (see 'tapedev.h' for layout of TAPEMEDIA_HANDLER structure)      */
+/*-------------------------------------------------------------------*/
 
 static TAPEMEDIA_HANDLER tmh_aws = {
     &open_awstape,
@@ -5935,9 +5907,9 @@ static TAPEMEDIA_HANDLER tmh_aws = {
     &write_awsmark,
     NULL, /* DSE */
     NULL, /* ERG */
-//  &return_true3,
     &is_tapeloaded_filename,
-    passedeot_awstape};
+    passedeot_awstape
+};
 
 static TAPEMEDIA_HANDLER tmh_het = {
     &open_het,
@@ -5952,11 +5924,12 @@ static TAPEMEDIA_HANDLER tmh_het = {
     &write_hetmark,
     NULL, /* DSE */
     NULL, /* ERG */
-//  &return_true3,
     &is_tapeloaded_filename,
-    passedeot_het};
+    passedeot_het
+};
 
 #if defined(OPTION_SCSI_TAPE)
+
 static TAPEMEDIA_HANDLER tmh_scsi = {
     &open_scsitape,
     &close_scsitape,
@@ -5971,7 +5944,8 @@ static TAPEMEDIA_HANDLER tmh_scsi = {
     &dse_scsitape,
     &erg_scsitape,
     &driveready_scsitape,
-    &return_false1};
+    &return_false1    /* passedeot */
+};
 #endif /* defined(OPTION_SCSI_TAPE) */
 
 static TAPEMEDIA_HANDLER tmh_oma = {
@@ -5984,13 +5958,12 @@ static TAPEMEDIA_HANDLER tmh_oma = {
     &fsb_omatape,
     &bsf_omatape,
     &fsf_omatape,
-    &write_READONLY, /* WTM */
-    &write_READONLY, /* DSE */
-    &write_READONLY, /* ERG */
-//  &return_true3,
+    &write_READONLY,  /* WTM */
+    &write_READONLY,  /* DSE */
+    &write_READONLY,  /* ERG */
     &is_tapeloaded_filename,
-    &return_false1};
-
+    &return_false1    /* passedeot */
+};
 /*-------------------------------------------------------------------*/
 
 #if defined(OPTION_DYNAMIC_LOAD)
@@ -6037,14 +6010,14 @@ HDL_DEPENDENCY_SECTION;
 }
 END_DEPENDENCY_SECTION;
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-#undef sysblk
-HDL_RESOLVER_SECTION;
-{
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  #undef sysblk
+  HDL_RESOLVER_SECTION;
+  {
     HDL_RESOLVE_PTRVAR( psysblk, sysblk );
-}
-END_RESOLVER_SECTION;
-#endif // defined(WIN32) && !defined(HDL_USE_LIBTOOL)
+  }
+  END_RESOLVER_SECTION;
+#endif
 
 HDL_DEVICE_SECTION;
 {

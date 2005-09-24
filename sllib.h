@@ -1,6 +1,18 @@
 #if !defined( _SLLIB_H_ )
 #define _SLLIB_H_
 
+#include "hercules.h"
+
+#ifndef _SLLIB_C_
+#ifndef _HTAPE_DLL_
+#define SLL_DLL_IMPORT DLL_IMPORT
+#else   /* _HUTIL_DLL_ */
+#define SLL_DLL_IMPORT extern
+#endif  /* _HUTIL_DLL_ */
+#else
+#define SLL_DLL_IMPORT DLL_EXPORT
+#endif
+
 /*
 || ----------------------------------------------------------------------------
 ||
@@ -256,16 +268,16 @@ typedef struct _slfmt
 /*
 || Public functions/data
 */
-char *sl_atoe( void *, void *, int );
-char *sl_etoa( void *, void *, int );
-char *sl_fmtdate( char *, char *, int );
-void sl_fmtlab( SLFMT *, SLLABEL * );
-int sl_islabel( SLLABEL *, void *, int );
-int sl_istype( void *, int type, int num );
-int sl_vol( SLLABEL *, char *, char * );
-int sl_ds1( SLLABEL *, int type, char *, char *, int, int, char *, int );
-int sl_ds2( SLLABEL *, int type, char *, int, int, char *, char *, char * );
-int sl_usr( SLLABEL *, int type, int num, char * );
-const char *sl_error( int rc );
+SLL_DLL_IMPORT char *sl_atoe( void *, void *, int );
+SLL_DLL_IMPORT char *sl_etoa( void *, void *, int );
+SLL_DLL_IMPORT char *sl_fmtdate( char *, char *, int );
+SLL_DLL_IMPORT void sl_fmtlab( SLFMT *, SLLABEL * );
+SLL_DLL_IMPORT int sl_islabel( SLLABEL *, void *, int );
+SLL_DLL_IMPORT int sl_istype( void *, int type, int num );
+SLL_DLL_IMPORT int sl_vol( SLLABEL *, char *, char * );
+SLL_DLL_IMPORT int sl_ds1( SLLABEL *, int type, char *, char *, int, int, char *, int );
+SLL_DLL_IMPORT int sl_ds2( SLLABEL *, int type, char *, int, int, char *, char *, char * );
+SLL_DLL_IMPORT int sl_usr( SLLABEL *, int type, int num, char * );
+SLL_DLL_IMPORT const char *sl_error( int rc );
 
 #endif /* defined( _SLLIB_H_ ) */

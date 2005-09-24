@@ -12,12 +12,18 @@
 || ----------------------------------------------------------------------------
 */
 
-#include <sys/types.h>
-#include <stdio.h>
-#include <string.h>
+#include "hercules.h"
 
-#include "htypes.h"
-#include "version.h"
+#ifndef _HETLIB_C_
+#ifndef _HTAPE_DLL_
+#define HET_DLL_IMPORT DLL_IMPORT
+#else   /* _HUTIL_DLL_ */
+#define HET_DLL_IMPORT extern
+#endif  /* _HUTIL_DLL_ */
+#else
+#define HET_DLL_IMPORT DLL_EXPORT
+#endif
+
 
 #if !defined( TRUE )
 #define TRUE                    (1L)
@@ -95,7 +101,7 @@ typedef struct _hetb
 #define HETMIN_METHOD           1       /* Minimum compression method       */
 #if defined( HET_BZIP2 )
 #define HETMAX_METHOD           2       /* Maximum compression method       */
-#else 
+#else
 #define HETMAX_METHOD           1       /* Maximum compression method       */
 #endif /* defined( HET_BZIP2 ) */
 #define HETMIN_LEVEL            1       /* Minimum compression level        */
@@ -156,21 +162,21 @@ typedef struct _hetb
 /*
 || Public functions
 */
-int het_open( HETB **hetb, char *filename, int flags );
-int het_close( HETB **hetb );
-int het_read_header( HETB *hetb );
-int het_read( HETB *hetb, void *sbuf );
-int het_write_header( HETB *hetb, int len, int flags1, int flags2 );
-int het_write( HETB *hetb, void *sbuf, int slen );
-int het_tapemark( HETB *hetb );
-int het_cntl( HETB *hetb, int func, unsigned long val );
-int het_locate( HETB *hetb, int block );
-int het_bsb( HETB *hetb );
-int het_fsb( HETB *hetb );
-int het_bsf( HETB *hetb );
-int het_fsf( HETB *hetb );
-int het_rewind( HETB *hetb );
-const char *het_error( int rc );
-long het_tell ( HETB *hetb );
+HET_DLL_IMPORT int het_open( HETB **hetb, char *filename, int flags );
+HET_DLL_IMPORT int het_close( HETB **hetb );
+HET_DLL_IMPORT int het_read_header( HETB *hetb );
+HET_DLL_IMPORT int het_read( HETB *hetb, void *sbuf );
+HET_DLL_IMPORT int het_write_header( HETB *hetb, int len, int flags1, int flags2 );
+HET_DLL_IMPORT int het_write( HETB *hetb, void *sbuf, int slen );
+HET_DLL_IMPORT int het_tapemark( HETB *hetb );
+HET_DLL_IMPORT int het_cntl( HETB *hetb, int func, unsigned long val );
+HET_DLL_IMPORT int het_locate( HETB *hetb, int block );
+HET_DLL_IMPORT int het_bsb( HETB *hetb );
+HET_DLL_IMPORT int het_fsb( HETB *hetb );
+HET_DLL_IMPORT int het_bsf( HETB *hetb );
+HET_DLL_IMPORT int het_fsf( HETB *hetb );
+HET_DLL_IMPORT int het_rewind( HETB *hetb );
+HET_DLL_IMPORT const char *het_error( int rc );
+HET_DLL_IMPORT OFF_T het_tell ( HETB *hetb );
 
 #endif /* defined( _HETLIB_H_ ) */

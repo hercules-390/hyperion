@@ -4,22 +4,20 @@
  * Vast swathes copied from dasdpdsu.c (c) Copyright Roger Bowler, 1999-2005
  * Changes and additions Copyright 2000-2005 by Malcolm Beattie
  */
+
+#include "hstdinc.h"
+
 #include "hercules.h"
 #include "dasdblks.h"
+#ifdef WIN32
+#include <io.h> // (setmode)
+#endif
 
 /* Option flags */
 #define OPT_ASCIIFY 0x1
 #define OPT_CARDS 0x2
 #define OPT_PDS_WILDCARD 0x4
 #define OPT_PDS_LISTONLY 0x8
-
-#ifdef EXTERNALGUI
-#if 0
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif
-#endif /*EXTERNALGUI*/
 
 int end_of_track(BYTE *p)
 {
@@ -86,6 +84,9 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
  for (p = buf; len--; p++)
  putchar(guest_to_host(*p));
  } else {
+#if O_BINARY != 0
+ setmode(fileno(stdout),O_BINARY);
+#endif
  fwrite(buf, len, 1, stdout);
  }
 
@@ -294,6 +295,8 @@ int main(int argc, char **argv)
  argv[argc-1] = NULL;
  extgui = 1;
  argc--;
+ setvbuf(stderr, NULL, _IONBF, 0);
+ setvbuf(stdout, NULL, _IONBF, 0);
  }
 #endif /*EXTERNALGUI*/
 

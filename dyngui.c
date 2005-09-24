@@ -20,17 +20,25 @@
 /* 06/09/04  Minor fix to UpdateDeviceStatus for terminal devices.   */
 /* 07/28/04  Minor fix to UpdateDeviceStatus for non-terminal devices*/
 /* 10/04/04  Change default maxrates interval to 1440 mins (1 day).  */
+/* 03/12/05  Win32 port...                                           */
+/* 04/22/05  Win32 port continued...                                 */
+/* 04/24/05  Move "maxrates" command and variables to panel.c        */
+/* 05/05/05  Fix streams collision issue via locking (gui_fprintf)   */
+/* 05/13/05  Fix crash @ shutdown when initiated externally.         */
+/* 08/17/05  Moved "high water mark" code to panel.c.                */
+/* 09/20/05  sysblk.mipsrate now per second instead of millisecond   */
 /*                                                                   */
 /*********************************************************************/
 
-#include "hercules.h"       // (#includes <config.> w/#define for VERSION)
+#include "hstdinc.h"
+#include "hercules.h"       // (#includes "config." w/#define for VERSION)
+
+#ifdef EXTERNALGUI
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
 #include "devtype.h"
 #include "opcode.h"
-#include "dynguip.h"        // (product defines)
-#include "dynguiv.h"        // (version defines)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Some handy macros...       (feel free to add these to hercules.h)
@@ -62,17 +70,18 @@
 #define  MAX_COMMAND_LEN          (  1024  )
 #define  DEF_MAXRATES_RPT_INTVL   (  1440  )
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-SYSBLK            *psysblk;                    // (ptr to Herc's SYSBLK structure)
-#define  sysblk  (*psysblk)
-void* (*panel_command) (void*);
+#if defined( WIN32 ) && !defined( HDL_USE_LIBTOOL )
+#if !defined( _MSVC_ )
+  SYSBLK            *psysblk;                  // (ptr to Herc's SYSBLK structure)
+  #define  sysblk  (*psysblk)
 #endif
-static FILE*    fInputStream         = NULL;   // (stdin stream)
+#endif
+
+
 static FILE*    fOutputStream        = NULL;   // (stdout stream)
 static FILE*    fStatusStream        = NULL;   // (stderr stream)
 static int      nInputStreamFileNum  =  -1;    // (file descriptor for stdin stream)
-
-static int      gui_nounload = 0;              // (nounload indicator)
+static int      gui_nounload         =   1;    // (nounload indicator)
 
 // The device query buffer SHOULD be the maximum device filename length
 // plus the maximum descriptive length of any/all options for the device,
@@ -95,6 +104,9 @@ void  UpdateStatus       ();
 void  UpdateCPUStatus    ();
 void  UpdateRegisters    ();
 void  UpdateDeviceStatus ();
+void  NewUpdateDevStats  ();
+
+void  gui_fprintf( FILE* stream, const char* pszFormat, ... );
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our main processing loop...
@@ -135,6 +147,8 @@ REGS*   pTargetCPU_REGS  = NULL;    // target CPU for commands and displays
 
 void  UpdateTargetCPU ()
 {
+    if (sysblk.shutdown) return;
+
     // Use the requested CPU for our status information
     // unless it's no longer online (enabled), in which case
     // we'll default to the first one we find that's online
@@ -196,14 +210,17 @@ int    nInputLen       = 0;                     // amount of data it's holding
 
 void ReadInputData ( size_t  nTimeoutMillsecs )
 {
-    fd_set          input_fd_set;
-    struct timeval  wait_interval_timeval;
-    size_t          nMaxBytesToRead;
-    int             nBytesRead;
-    char*           pReadBuffer;
-    int             rc;
+    size_t  nMaxBytesToRead;
+    int     nBytesRead;
+    char*   pReadBuffer;
 
     // Wait for keyboard input data to arrive...
+
+#if !defined( _MSVC_ )
+
+    fd_set          input_fd_set;
+    struct timeval  wait_interval_timeval;
+    int             rc;
 
     FD_ZERO ( &input_fd_set );
     FD_SET  ( nInputStreamFileNum, &input_fd_set );
@@ -213,7 +230,7 @@ void ReadInputData ( size_t  nTimeoutMillsecs )
 
     if ((rc = select( nInputStreamFileNum+1, &input_fd_set, NULL, NULL, &wait_interval_timeval )) < 0)
     {
-        if (EINTR == errno)
+        if (HSO_EINTR == HSO_errno)
             return;             // (we were interrupted by a signal)
 
         // A bona fide error occurred; abort...
@@ -222,7 +239,7 @@ void ReadInputData ( size_t  nTimeoutMillsecs )
         (
             _("HHCDG003S select failed on input stream: %s\n")
 
-            ,strerror(errno)
+            ,strerror(HSO_errno)
         );
 
         bDoneProcessing = TRUE;     // (force main loop to exit)
@@ -234,6 +251,8 @@ void ReadInputData ( size_t  nTimeoutMillsecs )
     if (!FD_ISSET( nInputStreamFileNum, &input_fd_set ))
         return;     // (nothing for us to do...)
 
+#endif // !defined( _MSVC_ )
+
     // Ensure our buffer never overflows... (-2 because
     // we need room for at least 1 byte + NULL terminator)
 
@@ -244,6 +263,8 @@ void ReadInputData ( size_t  nTimeoutMillsecs )
 
     pReadBuffer     = (pszInputBuff   + nInputLen);
     nMaxBytesToRead = (nInputBuffSize - nInputLen) - 1;
+
+#if !defined( _MSVC_ )
 
     if ((nBytesRead = read( nInputStreamFileNum, pReadBuffer, nMaxBytesToRead )) < 0)
     {
@@ -262,6 +283,13 @@ void ReadInputData ( size_t  nTimeoutMillsecs )
         bDoneProcessing = TRUE;     // (force main loop to exit)
         return;
     }
+
+#else // defined( _MSVC_ )
+
+    if ( ( nBytesRead = w32_get_stdin_char( pReadBuffer, nTimeoutMillsecs ) ) <= 0 )
+        return;
+
+#endif // !defined( _MSVC_ )
 
     // Update amount of input data we have and
     // ensure that it's always NULL terminated...
@@ -322,30 +350,19 @@ void  ProcessInputData ()
 ///////////////////////////////////////////////////////////////////////////////
 // (These are actually boolean flags..)
 
-BYTE   gui_wants_gregs     = 1;
-BYTE   gui_wants_cregs     = 1;
-BYTE   gui_wants_aregs     = 1;
-BYTE   gui_wants_fregs     = 1;
-BYTE   gui_wants_devlist   = 1;
+BYTE   gui_wants_gregs       = 1;
+BYTE   gui_wants_cregs       = 1;
+BYTE   gui_wants_aregs       = 1;
+BYTE   gui_wants_fregs       = 1;
+BYTE   gui_wants_devlist     = 1;
+BYTE   gui_wants_new_devlist = 0;
 #if defined(OPTION_MIPS_COUNTING)
-BYTE   gui_wants_cpupct    = 0;
+BYTE   gui_wants_cpupct      = 0;
 #endif
 
 #ifdef OPTION_MIPS_COUNTING
-
-U32    prev_mips_rate = 0;
-U32    prev_sios_rate = 0;
-
-U32    curr_high_mips_rate = 0;   // (high water mark for current interval)
-U32    curr_high_sios_rate = 0;   // (high water mark for current interval)
-
-U32    prev_high_mips_rate = 0;   // (saved high water mark for previous interval)
-U32    prev_high_sios_rate = 0;   // (saved high water mark for previous interval)
-
-time_t int_start_time      = 0;   // (start time of current interval)
-time_t prev_int_start_time = 0;   // (start time of previous interval)
-U32    rpt_interval        = DEF_MAXRATES_RPT_INTVL;
-
+U32    prev_mips_rate  = 0;
+U32    prev_sios_rate  = 0;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -358,156 +375,79 @@ void*  gui_panel_command (char* pszCommand)
     // Special GUI commands start with ']'. At the moment, all these special
     // gui commands tell us is what status information it's interested in...
 
-    if (strncasecmp(pszCommand,"]GREGS=",7) == 0)
+    if ( ']' != *pszCommand )
+        goto NotSpecialGUICommand;
+
+    if (strncasecmp(pszCommand+1,"GREGS=",6) == 0)
     {
-        gui_wants_gregs = atoi(pszCommand+7);
+        gui_wants_gregs = atoi(pszCommand+1+6);
         return NULL;
     }
 
-    if (strncasecmp(pszCommand,"]CREGS=",7) == 0)
+    if (strncasecmp(pszCommand+1,"CREGS=",6) == 0)
     {
-        gui_wants_cregs = atoi(pszCommand+7);
+        gui_wants_cregs = atoi(pszCommand+1+6);
         return NULL;
     }
 
-    if (strncasecmp(pszCommand,"]AREGS=",7) == 0)
+    if (strncasecmp(pszCommand+1,"AREGS=",6) == 0)
     {
-        gui_wants_aregs = atoi(pszCommand+7);
+        gui_wants_aregs = atoi(pszCommand+1+6);
         return NULL;
     }
 
-    if (strncasecmp(pszCommand,"]FREGS=",7) == 0)
+    if (strncasecmp(pszCommand+1,"FREGS=",6) == 0)
     {
-        gui_wants_fregs = atoi(pszCommand+7);
+        gui_wants_fregs = atoi(pszCommand+1+6);
         return NULL;
     }
 
-    if (strncasecmp(pszCommand,"]DEVLIST=",9) == 0)
+    if (strncasecmp(pszCommand+1,"DEVLIST=",8) == 0)
     {
-        gui_wants_devlist = atoi(pszCommand+9);
+        gui_wants_devlist = atoi(pszCommand+1+8);
+        if ( gui_wants_devlist )
+            gui_wants_new_devlist = 0;
         return NULL;
     }
 
-    if (strncasecmp(pszCommand,"]MAINSTOR=",10) == 0)
+    if (strncasecmp(pszCommand+1,"NEWDEVLIST=",11) == 0)
     {
-#if SIZEOF_INT_P==4
-        fprintf(fStatusStream,"MAINSTOR=%d\n",(U32)pTargetCPU_REGS->mainstor);
-#else
-        fprintf(fStatusStream,"MAINSTOR=%ld\n",(U64)pTargetCPU_REGS->mainstor);
-#endif
-        fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
+        gui_wants_new_devlist = atoi(pszCommand+1+11);
+        if ( gui_wants_new_devlist )
+            gui_wants_devlist = 0;
+        return NULL;
+    }
+
+    if (strncasecmp(pszCommand+1,"MAINSTOR=",9) == 0)
+    {
+        gui_fprintf(fStatusStream,"MAINSTOR=%"UINT_PTR_FMT"d\n",(uintptr_t)pTargetCPU_REGS->mainstor);
+
+        // Here's a trick! Hercules reports its version number to the GUI
+        // by means of the MAINSIZE value! Later releases of HercGUI know
+        // to interpret mainsizes less than 1000 as Hercule's version number.
+        // Earlier versions of HercGUI will simply try to interpret it as
+        // the actual mainsize, but no real harm is done since we immediately
+        // send it the CORRECT mainsize immediately afterwards. This allows
+        // future versions of HercGUI to know whether the version of Hercules
+        // that it's talking to supports a given feature or not. Slick, eh? :)
+        gui_fprintf(fStatusStream,"MAINSIZE=%s\n",VERSION);
+        gui_fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
         return NULL;
     }
 
 #if defined(OPTION_MIPS_COUNTING)
-    if (strncasecmp(pszCommand,"]CPUPCT=",8) == 0)
+    if (strncasecmp(pszCommand+1,"CPUPCT=",7) == 0)
     {
-        gui_wants_cpupct = atoi(pszCommand+8);
+        gui_wants_cpupct = atoi(pszCommand+1+7);
         return NULL;
     }
 #endif
 
-    // Process any other special commands we happen to support...
+    // Silently ignore any unrecognized special GUI commands...
 
-    {
-        // Programming note: must use 'pszCommandWork' because
-        // "parse_args" modifies the original command line (by
-        // inserting embedded NULLS as argument delimiters)
+    return NULL;        // (silently ignore it)
 
-        char*  pszCommandWork;
-        int    nArgs;
-        char*  pszArgPtrArray[MAX_ARGS];
-
-        pszCommandWork = strdup( pszCommand );
-        parse_args( pszCommandWork, MAX_ARGS, pszArgPtrArray, &nArgs );
-
-#ifdef OPTION_MIPS_COUNTING
-        if ( nArgs && strcasecmp( pszArgPtrArray[0], "maxrates" ) == 0 )
-        {
-            logmsg( "%s\n", pszCommand );     // (echo command to console)
-
-            if (nArgs > 1)
-            {
-                if (nArgs > 2)
-                {
-                    logmsg( _("ERROR: Improper command format. Format: \"maxrates [minutes]\"\n") );
-                }
-                else
-                {
-                    int   interval = 0;
-                    BYTE  c;                      /* Character work area       */
-
-                    if ( sscanf( pszArgPtrArray[1], "%d%c", &interval, &c ) != 1 || interval < 1 )
-                        logmsg( _("ERROR: \"%s\" is an invalid maxrates interval.\n"), pszArgPtrArray[1] );
-                    else
-                    {
-                        rpt_interval = interval;
-                        logmsg( _("Maxrates interval = %d minutes.\n"), rpt_interval );
-                    }
-                }
-            }
-            else
-            {
-                char*   pszPrevIntervalStartDateTime;
-                char*   pszCurrIntervalStartDateTime;
-                char*   pszCurrentDateTime;
-                time_t  current_time;
-
-                current_time = time( NULL );
-
-                pszPrevIntervalStartDateTime = strdup( ctime( &prev_int_start_time ) );
-                pszCurrIntervalStartDateTime = strdup( ctime(   &int_start_time    ) );
-                pszCurrentDateTime           = strdup( ctime(    &current_time     ) );
-
-                fprintf
-                (
-                    fOutputStream,
-
-                    "Highest observed MIPS/SIOS rates:\n\n"
-
-                    "  From: %s"
-                    "  To:   %s\n"
-
-                    "        MIPS: %2.1d.%2.2d\n"
-                    "        SIOS: %d\n\n"
-
-                    "  From: %s"
-                    "  To:   %s\n"
-
-                    "        MIPS: %2.1d.%2.2d\n"
-                    "        SIOS: %d\n\n"
-
-                    "Maxrates interval = %d minutes.\n"
-
-                    ,pszPrevIntervalStartDateTime
-                    ,pszCurrIntervalStartDateTime
-
-                    ,prev_high_mips_rate / 1000
-                    ,prev_high_mips_rate % 1000
-                    ,prev_high_sios_rate
-
-                    ,pszCurrIntervalStartDateTime
-                    ,pszCurrentDateTime
-
-                    ,curr_high_mips_rate / 1000
-                    ,curr_high_mips_rate % 1000
-                    ,curr_high_sios_rate
-
-                    ,rpt_interval
-                );
-
-                free( pszPrevIntervalStartDateTime );
-                free( pszCurrIntervalStartDateTime );
-                free( pszCurrentDateTime           );
-            }
-
-            free( pszCommandWork );
-            return NULL;
-        }
-#endif // OPTION_MIPS_COUNTING
-
-        free( pszCommandWork );
-    }
+NotSpecialGUICommand:
 
     // Ignore "commands" that are actually just comments (start with '*' or '#')
 
@@ -545,6 +485,8 @@ void  UpdateStatus ()
 {
     BOOL  bStatusChanged = FALSE;   // (whether or not anything has changed)
 
+    if (sysblk.shutdown) return;
+
     copy_psw(pTargetCPU_REGS, psw);
     wait_bit = (psw[1] & 0x02);
 
@@ -556,7 +498,7 @@ void  UpdateStatus ()
         || CPUSTATE_STOPPED  == pTargetCPU_REGS->cpustate
     ))
     {
-        fprintf(fStatusStream,
+        gui_fprintf(fStatusStream,
 
             "SYS=%c\n"
 
@@ -577,7 +519,7 @@ void  UpdateStatus ()
 
         if (isdigit(cpupct[0]))
         {
-            fprintf(fStatusStream,
+            gui_fprintf(fStatusStream,
 
                 "CPUPCT=%s\n"
 
@@ -625,14 +567,36 @@ void  UpdateStatus ()
         UpdateRegisters();      // (update the registers display...)
     }
 
-    // We always continuously send device status information so that the GUI
-    // can detect devices being added or removed from the configuration or if
-    // the filename/etc has changed, etc, and besides, the channel subsystem
-    // operates completely independently from the CPU so the GUI needs to know
-    // if a given device is busy or interrupt pending, etc, anyway...
+    // PROGRAMMING NOTE: my original [rather poorly designed I admit] logic
+    // sent device status messages to the GUI *continuously* (i.e. all the
+    // time), even when both Herc and the channel subsystem was idle. This
+    // proved to be terribly inefficient, causing the GUI to consume *FAR*
+    // too much valuable CPU cycles parsing all of those messages.
+
+    // Thus, starting with this version of dyngui, we now only send device
+    // status messages to the GUI only whenever the device's status actually
+    // changes, but only if it (the GUI) specifically requests such notifi-
+    // cations of course (via the new "]NEWDEVLIST=" special message).
+
+    // The new(er) version of HercGUI understands (and thus requests) these
+    // newer format device status messages, but older versions of HercGUI
+    // of course do not. Thus in order to remain compatible with the current
+    // (older) version of the GUI, we still need to support the inefficient
+    // technique of constantly sending a constant stream of device status
+    // messages.
+
+    // Eventually at some point this existing original inefficient technique
+    // logic will be removed (once everyone has had time to upgrade to the
+    // newer version of HercGUI), but for now, at least for the next couple
+    // of HercGUI release cycles, we need to keep it.
 
     if (gui_wants_devlist)      // (if the device list is visible)
         UpdateDeviceStatus();   // (update the list of devices...)
+
+    else // (the two options are mutually exclusive from one another)
+
+    if (gui_wants_new_devlist)  // (if the device list is visible)
+        NewUpdateDevStats();    // (update the list of devices...)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -640,11 +604,11 @@ void  UpdateStatus ()
 
 void  UpdateCPUStatus ()
 {
-    /* size_t  i; */
+    if (sysblk.shutdown) return;
 
     // CPU status line...  (PSW, status indicators, and instruction count)
 
-    fprintf(fStatusStream, "STATUS="
+    gui_fprintf(fStatusStream, "STATUS="
 
         "CPU%4.4X "
 
@@ -695,12 +659,12 @@ void  UpdateCPUStatus ()
 
     if (sysblk.mipsrate != prev_mips_rate)
     {
-        fprintf(fStatusStream,
+        gui_fprintf(fStatusStream,
 
             "MIPS=%2.1d.%2.2d\n"
 
-            , sysblk.mipsrate / 1000
-            ,(sysblk.mipsrate % 1000) / 10
+            , sysblk.mipsrate / 1000000
+            ,(sysblk.mipsrate % 1000000) / 10000
         );
 
         prev_mips_rate = sysblk.mipsrate;
@@ -710,7 +674,7 @@ void  UpdateCPUStatus ()
 
     if (sysblk.siosrate != prev_sios_rate)
     {
-        fprintf(fStatusStream,
+        gui_fprintf(fStatusStream,
 
             "SIOS=%5d\n"
 
@@ -720,34 +684,7 @@ void  UpdateCPUStatus ()
         prev_sios_rate = sysblk.siosrate;
     }
 
-    // Save high water marks for current interval...
-
-    if (curr_high_mips_rate < sysblk.mipsrate)
-        curr_high_mips_rate = sysblk.mipsrate;
-
-    if (curr_high_sios_rate < sysblk.siosrate)
-        curr_high_sios_rate = sysblk.siosrate;
-
-    {
-        time_t  current_time = 0;
-        U32     elapsed_secs = 0;
-
-        time( &current_time );
-
-        elapsed_secs = current_time - int_start_time;
-
-        if ( elapsed_secs >= ( rpt_interval * 60 ) )
-        {
-            prev_high_mips_rate = curr_high_mips_rate;
-            prev_high_sios_rate = curr_high_sios_rate;
-
-            curr_high_mips_rate = 0;
-            curr_high_sios_rate = 0;
-
-            prev_int_start_time = int_start_time;
-            int_start_time = current_time;
-        }
-    }
+    update_maxrates_hwm(); // (update high-water-mark values)
 
 #endif // defined(OPTION_MIPS_COUNTING)
 }
@@ -757,9 +694,11 @@ void  UpdateCPUStatus ()
 
 void  UpdateRegisters ()
 {
+    if (sysblk.shutdown) return;
+
     if (gui_wants_gregs)
     {
-        fprintf(fStatusStream,
+        gui_fprintf(fStatusStream,
 
             "GR0-3=%8.8X %8.8X %8.8X %8.8X\n"
             "GR4-7=%8.8X %8.8X %8.8X %8.8X\n"
@@ -787,7 +726,7 @@ void  UpdateRegisters ()
 
     if (gui_wants_cregs)
     {
-        fprintf(fStatusStream,
+        gui_fprintf(fStatusStream,
 
             "CR0-3=%8.8X %8.8X %8.8X %8.8X\n"
             "CR4-7=%8.8X %8.8X %8.8X %8.8X\n"
@@ -815,7 +754,7 @@ void  UpdateRegisters ()
 
     if (gui_wants_aregs)
     {
-        fprintf(fStatusStream,
+        gui_fprintf(fStatusStream,
 
             "AR0-3=%8.8X %8.8X %8.8X %8.8X\n"
             "AR4-7=%8.8X %8.8X %8.8X %8.8X\n"
@@ -843,7 +782,7 @@ void  UpdateRegisters ()
 
     if (gui_wants_fregs)
     {
-        fprintf(fStatusStream,
+        gui_fprintf(fStatusStream,
 
             "FR0-2=%8.8X %8.8X %8.8X %8.8X\n"
             "FR4-6=%8.8X %8.8X %8.8X %8.8X\n"
@@ -865,7 +804,7 @@ void  UpdateRegisters ()
 char  szQueryDeviceBuff[ MAX_DEVICEQUERY_LEN + 1 ]; // (always +1 for safety!)
 
 ///////////////////////////////////////////////////////////////////////////////
-// Send status information messages back to the gui...
+// Send status information messages back to the gui...  (VERY inefficient!)
 
 void  UpdateDeviceStatus ()
 {
@@ -873,13 +812,15 @@ void  UpdateDeviceStatus ()
     char*   pDEVClass;
     BYTE    chOnlineStat, chBusyStat, chPendingStat, chOpenStat;
 
+    if (sysblk.shutdown) return;
+
     // Process ALL the devices in the entire configuration each time...
 
     for (pDEVBLK = sysblk.firstdev; pDEVBLK != NULL; pDEVBLK = pDEVBLK->nextdev)
     {
         // Does this device actually exist in the configuration?
 
-        if (!(pDEVBLK->pmcw.flag5 & PMCW5_V))
+        if (!pDEVBLK->allocated || !(pDEVBLK->pmcw.flag5 & PMCW5_V))
             continue;   // (no, skip)
 
         // Retrieve this device's filename and optional settings parameter values...
@@ -915,7 +856,7 @@ void  UpdateDeviceStatus ()
 
         // Send status message back to gui...
 
-        fprintf(fStatusStream,
+        gui_fprintf(fStatusStream,
 
             "DEV=%4.4X %4.4X %-4.4s %c%c%c%c %s\n"
 
@@ -936,8 +877,130 @@ void  UpdateDeviceStatus ()
     // and/or removed at any time, the GUI needs to know "That's all the
     // devices there are" so that it can detect when devices are removed...
 
-    fprintf(fStatusStream, "DEV=X\n");    // (indicates end of list)
+    gui_fprintf(fStatusStream, "DEV=X\n");    // (indicates end of list)
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Send device status msgs to the gui IF NEEDED...  (slightly more efficient)
+
+#ifdef EXTERNALGUI
+void  NewUpdateDevStats ()
+{
+    DEVBLK*   pDEVBLK;
+    GUISTAT*  pGUIStat;
+    char*     pDEVClass;
+    BYTE      chOnlineStat, chBusyStat, chPendingStat, chOpenStat;
+    BOOL      bUpdatesSent = FALSE;
+
+    if (sysblk.shutdown) return;
+
+    // Process ALL the devices in the entire configuration each time...
+
+    // (But only send device status messages to the GUI only when the
+    // device's status actually changes and not continuously like before)
+
+    for (pDEVBLK = sysblk.firstdev; pDEVBLK != NULL; pDEVBLK = pDEVBLK->nextdev)
+    {
+        pGUIStat = pDEVBLK->pGUIStat;
+
+        // Does this device exist in the configuration?
+
+        if (!pDEVBLK->allocated || !(pDEVBLK->pmcw.flag5 & PMCW5_V))
+        {
+            // This device no longer exists in the configuration...
+            // If we haven't yet notified the GUI about this device
+            // being deleted from the configuration, then do so at
+            // this time...
+
+            if (*pGUIStat->pszNewStatStr)
+            {
+                // Send "device deleted" message...
+
+                gui_fprintf ( fStatusStream, "DEVD=%4.4X\n", pDEVBLK->devnum );
+                bUpdatesSent = TRUE;
+
+                *pGUIStat->pszNewStatStr = 0;   // (prevent re-reporting it)
+                *pGUIStat->pszOldStatStr = 0;   // (prevent re-reporting it)
+            }
+
+            continue;   // (go on to next device)
+        }
+
+        // Retrieve this device's filename and optional settings parameter values...
+
+        szQueryDeviceBuff[MAX_DEVICEQUERY_LEN] = 0; // (buffer allows room for 1 extra)
+
+        (pDEVBLK->hnd->query)(pDEVBLK, &pDEVClass, MAX_DEVICEQUERY_LEN, szQueryDeviceBuff);
+
+        if (0 != szQueryDeviceBuff[MAX_DEVICEQUERY_LEN])    // (buffer overflow?)
+        {
+            logmsg
+            (
+                _("HHCDG005E Device query buffer overflow! (device=%4.4X)\n")
+
+                ,pDEVBLK->devnum
+
+            );
+        }
+
+        szQueryDeviceBuff[MAX_DEVICEQUERY_LEN] = 0;   // (enforce NULL termination)
+
+        // Device status flags...
+                                                                              chOnlineStat  =
+                                                                              chBusyStat    =
+                                                                              chPendingStat =
+                                                                              chOpenStat    = '0';
+
+        if ((!pDEVBLK->console && pDEVBLK->fd >= 0) ||
+            ( pDEVBLK->console && pDEVBLK->connected))                        chOnlineStat  = '1';
+        if (pDEVBLK->busy)                                                    chBusyStat    = '1';
+        if (IOPENDING(pDEVBLK))                                               chPendingStat = '1';
+        if (pDEVBLK->fd > max(STDIN_FILENO,max(STDOUT_FILENO,STDERR_FILENO))) chOpenStat    = '1';
+
+        // Build a new "device added" or "device changed"
+        // status string for this device...
+
+        snprintf( pGUIStat->pszNewStatStr, GUI_STATSTR_BUFSIZ,
+
+            "DEV%c=%4.4X %4.4X %-4.4s %c%c%c%c %s"
+
+            ,*pGUIStat->pszOldStatStr ? 'C' : 'A'
+            ,pDEVBLK->devnum
+            ,pDEVBLK->devtype
+            ,pDEVClass
+
+            ,chOnlineStat
+            ,chBusyStat
+            ,chPendingStat
+            ,chOpenStat
+
+            ,szQueryDeviceBuff
+        );
+
+        *(pGUIStat->pszNewStatStr + GUI_STATSTR_BUFSIZ - 1) = 0;
+
+        // If the new status string is different from the old one,
+        // then send the new one to the GUI and swap buffer ptrs
+        // for next time. In this way we only send device status
+        // msgs to the GUI only when the status actually changes...
+
+        if ( strcmp( pGUIStat->pszNewStatStr, pGUIStat->pszOldStatStr ) )
+        {
+            gui_fprintf ( fStatusStream, "%s\n", pGUIStat->pszNewStatStr );
+            bUpdatesSent = TRUE;
+            {
+                register char*
+                          pszSavStatStr = pGUIStat->pszNewStatStr;
+                pGUIStat->pszNewStatStr = pGUIStat->pszOldStatStr;
+                pGUIStat->pszOldStatStr =           pszSavStatStr;
+            }
+        }
+    }
+
+    if ( bUpdatesSent )
+        gui_fprintf(fStatusStream, "DEVX=\n");  // (send end-of-batch indicator)
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our Hercules "debug_cpu_state" override...
@@ -960,19 +1023,21 @@ void *(*next_debug_call)(REGS *);
     static BOOL bLoading = FALSE;
     static BOOL bStopped = FALSE;
 
+    if (sysblk.shutdown) return NULL;
+
     if (pTargetCPU_REGS && pREGS != pTargetCPU_REGS)
         return NULL;
 
     if (bLoading != (pREGS->loadstate ? TRUE : FALSE))
     {
         bLoading  = (pREGS->loadstate ? TRUE : FALSE);
-        fprintf(stdout,"LOAD=%c\n", bLoading ? '1' : '0');
+        gui_fprintf(stdout,"LOAD=%c\n", bLoading ? '1' : '0');
     }
 
     if (bStopped != ((CPUSTATE_STOPPED == pREGS->cpustate) ? TRUE : FALSE))
     {
         bStopped  = ((CPUSTATE_STOPPED == pREGS->cpustate) ? TRUE : FALSE);
-        fprintf(stdout,"MAN=%c\n", bStopped ? '1' : '0');
+        gui_fprintf(stdout,"MAN=%c\n", bStopped ? '1' : '0');
     }
 
     if((next_debug_call = HDL_FINDNXT( gui_debug_cpu_state )))
@@ -982,26 +1047,38 @@ void *(*next_debug_call)(REGS *);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Streams 'fprintf' function to prevent interleaving collision problem...
+
+LOCK gui_fprintf_lock;
+
+void gui_fprintf( FILE* stream, const char* pszFormat, ... )
+{
+    va_list vl;
+    va_start( vl, pszFormat );
+    obtain_lock ( &gui_fprintf_lock );
+    vfprintf( stream, pszFormat, vl ); 
+    fflush( stream );  
+    release_lock( &gui_fprintf_lock );
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Acquire any resources we need in order to operate...
 // (called by 'gui_panel_display' before main loop initiates...)
 
 void  Initialize ()
 {
-#ifdef OPTION_MIPS_COUNTING
-    int_start_time      = time( NULL );
-    prev_int_start_time = int_start_time;
-#endif
+    initialize_lock( &gui_fprintf_lock );
 
     // reject any unload attempt
+
     gui_nounload = 1;
 
     // Initialize streams...
 
-    fInputStream  = INPUT_STREAM_FILE_PTR;
     fOutputStream = OUTPUT_STREAM_FILE_PTR;
     fStatusStream = STATUS_STREAM_FILE_PTR;
 
-    nInputStreamFileNum = fileno(fInputStream);
+    nInputStreamFileNum = fileno( INPUT_STREAM_FILE_PTR );
 
     // Allocate input stream buffer...
 
@@ -1044,15 +1121,18 @@ void Cleanup()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Our Hercules "panel_display" AND/OR "daemon_task" override...
+// Hercules  "daemon_task"  -or-  "panel_display"  override...
 
 void gui_panel_display ()
 {
-    logmsg(_("HHCDG001I dyngui.dll version " DYNGUI_VERSION "-" VERSION " initiated\n"));
-    Initialize();               // (allocate buffers, etc)
-    ProcessingLoop();           // (primary processing loop)
-    logmsg(_("HHCDG002I dyngui.dll terminated\n"));
-    Cleanup();                  // (de-allocate resources)
+    if ( !bDoneProcessing )
+    {
+        logmsg(_("HHCDG001I dyngui.dll initiated\n"));
+        Initialize();               // (allocate buffers, etc)
+        ProcessingLoop();           // (primary processing loop)
+        logmsg(_("HHCDG002I dyngui.dll terminated\n"));
+        Cleanup();                  // (de-allocate resources)
+    }
 }
 
 /*****************************************************************************\
@@ -1117,29 +1197,33 @@ HDL_REGISTER ( panel_command,   gui_panel_command   );
 
 END_REGISTER_SECTION;
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-#undef sysblk
-///////////////////////////////////////////////////////////////////////////////
-//                        HDL_RESOLVER_SECTION
-// The following section "resolves" entry-points that this module needs. The
-// below HDL_RESOLVE entries define the names of Hercules's registered entry-
-// points that we need "imported" to us (so that we may call those functions
-// directly ourselves). The HDL_RESOLVE_PTRVAR entries set the named pointer
-// variable value (i.e. the name of OUR pointer variable) to the registered
-// entry-point value that was registered by Hercules or some other DLL.
+#if defined( WIN32 ) && !defined( HDL_USE_LIBTOOL )
+#if !defined( _MSVC_ )
+  #undef sysblk
+#endif
+  ///////////////////////////////////////////////////////////////////////////////
+  //                        HDL_RESOLVER_SECTION
+  // The following section "resolves" entry-points that this module needs. The
+  // below HDL_RESOLVE entries define the names of Hercules's registered entry-
+  // points that we need "imported" to us (so that we may call those functions
+  // directly ourselves). The HDL_RESOLVE_PTRVAR entries set the named pointer
+  // variable value (i.e. the name of OUR pointer variable) to the registered
+  // entry-point value that was registered by Hercules or some other DLL.
 
-HDL_RESOLVER_SECTION;       // ("Resolve" needed entry-points)
+  HDL_RESOLVER_SECTION;       // ("Resolve" needed entry-points)
 
-//            Registered
-//            entry-points
-//            that we call
-HDL_RESOLVE ( panel_command );
+  //            Registered
+  //            entry-points
+  //            that we call
+  HDL_RESOLVE ( panel_command );
 
-//                    Our pointer-     Registered entry-
-//                    variable name    point value name
-HDL_RESOLVE_PTRVAR (  psysblk,           sysblk         );
+#if !defined( _MSVC_ )
+  //                    Our pointer-     Registered entry-
+  //                    variable name    point value name
+  HDL_RESOLVE_PTRVAR (  psysblk,           sysblk         );
+#endif
 
-END_RESOLVER_SECTION;
+  END_RESOLVER_SECTION;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1152,15 +1236,16 @@ END_RESOLVER_SECTION;
 
 HDL_FINAL_SECTION;
 {
+    bDoneProcessing = TRUE;     // (tell main loop to stop processing)
+
     usleep(100000);             // (brief delay to give GUI time
                                 //  to display ALL shutdown msgs)
-    if(gui_nounload)
-        return gui_nounload;    // (reject unloads when activated)
-
-    bDoneProcessing = TRUE;     // (now force main loop to exit)
+    return gui_nounload;        // (reject unloads when activated)
 }
 END_FINAL_SECTION;
 
 ///////////////////////////////////////////////////////////////////////////////
 
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
+
+#endif // EXTERNALGUI

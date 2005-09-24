@@ -155,6 +155,16 @@ HHCTE013E Device <i>devn</i>: Extraneous argument(s): <i>xxx</i>...
   <dt>Issued by
   <dd>console.c, function loc3270_init_handler or constty_init_handler.
   </dl>
+<dt><code><a name="HHCTE014I">
+HHCTE014I <em>type</em> device <em>devn</em> disconnected.
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The client connected to device <code><em>devn</em></code> has
+      abruptly terminated the connection (ECONNRESET).
+  <dt>Issued by
+  <dd>console.c, function recv_3270_data
+  </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>
@@ -164,6 +174,6 @@ If you have a question about Hercules, see the
 <a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 6 June 2004
+<p>Last updated 1 March 2005
 </BODY>
 </HTML>

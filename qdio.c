@@ -3,6 +3,8 @@
 
 /*      This module contains the Signal Adapter instruction          */
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"

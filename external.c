@@ -23,6 +23,8 @@
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"
@@ -72,7 +74,7 @@ REGS   *tregs;                          /* Target regs               */
                 if (IS_CPU_ONLINE(i))
                 {
                     tregs = sysblk.regs[i];
-                    if ( test_bit(4, tregs->cpuad, &sysblk.started_mask) )
+                    if ( sysblk.started_mask & BIT(tregs->cpuad) )
                     {
                         ON_IC_BROADCAST(tregs);
                         sysblk.broadcast_count++;
@@ -467,7 +469,7 @@ PSA     *sspsa;                         /* -> Store status area      */
     /* ZZ THIS TEST IS NOT CONCLUSIVE */
     if(aaddr != 0 && aaddr != ssreg->PX)
         aaddr -= 512 + 4096 ;
-#endif 
+#endif
 
     aaddr &= 0x7FFFFE00;
 

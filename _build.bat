@@ -8,6 +8,12 @@ REM !                                                                           
 REM +-------------------------------------------------------------------------------+
 REM !
 REM ! Change Log: '$Log$
+REM ! Change Log: 'Revision 1.8.4.1  2005/03/01 11:22:05  fish
+REM ! Change Log: 'fixing the last(?) of my CRLF screwups
+REM ! Change Log: '
+REM ! Change Log: 'Revision 1.8  2004/03/28 15:11:58  vbandke
+REM ! Change Log: 'no message
+REM ! Change Log: '
 REM !
 REM +-------------------------------------------------------------------------------
 echo off

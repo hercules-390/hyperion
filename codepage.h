@@ -4,8 +4,21 @@
 #ifndef _HERCULES_CODEPAGE_H
 #define _HERCULES_CODEPAGE_H
 
-extern void set_codepage(char *name);
-extern unsigned char host_to_guest (unsigned char byte);
-extern unsigned char guest_to_host (unsigned char byte);
+#include "hercules.h"
+
+#ifndef _CODEPAGE_C_
+#ifndef _HUTIL_DLL_
+#define COD_DLL_IMPORT DLL_IMPORT
+#else   /* _HUTIL_DLL_ */
+#define COD_DLL_IMPORT extern
+#endif  /* _HUTIL_DLL_ */
+#else   /* _LOGGER_C_ */
+#define COD_DLL_IMPORT DLL_EXPORT
+#endif /* _LOGGER_C_ */
+
+
+COD_DLL_IMPORT void set_codepage(char *name);
+COD_DLL_IMPORT unsigned char host_to_guest (unsigned char byte);
+COD_DLL_IMPORT unsigned char guest_to_host (unsigned char byte);
 
 #endif /* _HERCULES_CODEPAGE_H */

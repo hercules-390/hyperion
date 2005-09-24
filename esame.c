@@ -14,7 +14,13 @@
 /*      Divide logical instructions - Vic Cross                      */
 /*      Long displacement facility - Roger Bowler            June2003*/
 /*      DAT enhancement facility - Roger Bowler              July2004*/
+/*      Extended immediate facility - Roger Bowler            Aug2005*/
 /*-------------------------------------------------------------------*/
+
+#include "hstdinc.h"
+
+#define _ESAME_C_
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 
@@ -1424,9 +1430,9 @@ U32     n;
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E390 LLGC  - Load Logical Character                         [RXY] */
+/* E390 LLGC  - Load Logical Long Character                    [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_logical_character)
+DEF_INST(load_logical_long_character)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1436,15 +1442,15 @@ VADR    effective_addr2;                /* Effective address         */
 
     regs->GR_G(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
-} /* end DEF_INST(load_logical_character) */
+} /* end DEF_INST(load_logical_long_character) */
 #endif /*defined(FEATURE_ESAME)*/
 
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E391 LLGH  - Load Logical Halfword                          [RXY] */
+/* E391 LLGH  - Load Logical Long Halfword                     [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_logical_halfword)
+DEF_INST(load_logical_long_halfword)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -1454,7 +1460,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     regs->GR_G(r1) = ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
-} /* end DEF_INST(load_logical_halfword) */
+} /* end DEF_INST(load_logical_long_halfword) */
 #endif /*defined(FEATURE_ESAME)*/
 
 
@@ -4113,23 +4119,23 @@ U16     updated = 0;                    /* Updated control regs      */
     for (i = 0; i < m; i++)
     {
         regs->CR_G((r1 + i) & 0xF) = fetch_dw(p1++);
-        set_bit(2, (r1 + i) & 0xF, &updated);
+        updated |= BIT((r1 + i) & 0xF);
     }
 
     /* Load from next page */
     for ( ; i < n; i++)
     {
         regs->CR_G((r1 + i) & 0xF) = fetch_dw(p2++);
-        set_bit(2, (r1 + i) & 0xF, &updated);
+        updated |= BIT((r1 + i) & 0xF);
     }
 
     /* Actions based on updated control regs */
     SET_IC_MASK(regs);
     if (updated & (BIT(1) | BIT(7) | BIT(13)))
         SET_AEA_COMMON(regs);
-    if (test_bit(2, regs->aea_ar[USE_INST_SPACE], &updated))
+    if (updated & BIT(regs->aea_ar[USE_INST_SPACE]))
         INVALIDATE_AIA(regs);
-    if (test_bit(2, 9, &updated) && EN_IC_PER_SA(regs))
+    if ((updated & BIT(9)) && EN_IC_PER_SA(regs))
         ARCH_DEP(invalidate_tlb)(regs,~(ACC_WRITE|ACC_CHECK));
 
     RETURN_INTCHECK(regs);
@@ -4686,16 +4692,32 @@ BYTE ARCH_DEP(stfl_data)[4] = {
 #if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
                  | STFL_2_HFP_MULT_ADD_SUB
 #endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
+#if defined(FEATURE_EXTENDED_IMMEDIATE)
+                 | STFL_2_EXTENDED_IMMED  
+#endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
                  | STFL_2_TRAN_FAC3
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
+#if defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)
+                 | STFL_2_HFP_UNNORM_EXT
+#endif /*defined(FEATURE_HFP_UNNORMALIZED_EXTENSION)*/
                  ,
-                 0 };
+                 0
+#if defined(FEATURE_ETF2_ENHANCEMENT)
+                 | STFL_3_ETF2_ENHANCEMENT
+#endif /*defined(FEATURE_ETF2_ENHANCEMENT)*/
+#if defined(FEATURE_STORE_CLOCK_FAST)
+                 | STFL_3_STORE_CLOCK_FAST
+#endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
+#if defined(FEATURE_ETF3_ENHANCEMENT)
+                 | STFL_3_ETF3_ENHANCEMENT
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+                 };
 
 /*-------------------------------------------------------------------*/
-/* B2B1 STFL  - Store Facilities List                            [S] */
+/* B2B1 STFL  - Store Facility List                              [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_facilities_list)
+DEF_INST(store_facility_list)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -4731,7 +4753,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     }
 #endif
 
-} /* end DEF_INST(store_facilities_list) */
+} /* end DEF_INST(store_facility_list) */
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/
 
 
@@ -6764,6 +6786,638 @@ BYTE    tbyte;                          /* Work byte                 */
 
 } /* end DEF_INST(test_under_mask_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_EXTENDED_IMMEDIATE)                         /*@Z9*/
+/*-------------------------------------------------------------------*/
+/* C2x9 AFI   - Add Fullword Immediate                         [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_fullword_immediate)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc = add_signed (&(regs->GR_L(r1)),
+                                regs->GR_L(r1),
+                                (S32)i2);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(add_fullword_immediate) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C2x8 AGFI  - Add Long Fullword Immediate                    [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_long_fullword_immediate)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc = add_signed_long (&(regs->GR_G(r1)),
+                                    regs->GR_G(r1),
+                                    (S32)i2);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(add_long_fullword_immediate) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C2xB ALFI  - Add Logical Fullword Immediate                 [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_fullword_immediate)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc = add_logical (&(regs->GR_L(r1)),
+                                regs->GR_L(r1),
+                                i2);
+
+} /* end DEF_INST(add_logical_fullword_immediate) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C2xA ALGFI - Add Logical Long Fullword Immediate            [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_long_fullword_immediate)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Add unsigned operands and set condition code */
+    regs->psw.cc = add_logical_long(&(regs->GR_G(r1)),
+                                    regs->GR_G(r1),
+                                    i2);
+
+} /* end DEF_INST(add_logical_long_fullword_immediate) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C0xA NIHF  - And Immediate High Fullword                    [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_immediate_high_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* And fullword operand with high 32 bits of register */
+    regs->GR_H(r1) &= i2;
+
+    /* Set condition code according to result */
+    regs->psw.cc = regs->GR_H(r1) ? 1 : 0;
+
+} /* end DEF_INST(and_immediate_high_fullword) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C0xB NILF  - And Immediate Low Fullword                     [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_immediate_low_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* And fullword operand with low 32 bits of register */
+    regs->GR_L(r1) &= i2;
+
+    /* Set condition code according to result */
+    regs->psw.cc = regs->GR_L(r1) ? 1 : 0;
+
+} /* end DEF_INST(and_immediate_low_fullword) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C2xD CFI   - Compare Fullword Immediate                     [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_fullword_immediate)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc = (S32)regs->GR_L(r1) < (S32)i2 ? 1 :
+                   (S32)regs->GR_L(r1) > (S32)i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_fullword_immediate) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C2xC CGFI  - Compare Long Fullword Immediate                [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_long_fullword_immediate)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc = (S64)regs->GR_G(r1) < (S32)i2 ? 1 :
+                   (S64)regs->GR_G(r1) > (S32)i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_long_fullword_immediate) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C2xF CLFI  - Compare Logical Fullword Immediate             [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_fullword_immediate)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(r1) < i2 ? 1 :
+                   regs->GR_L(r1) > i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_fullword_immediate) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C2xE CLGFI - Compare Logical Long Fullword Immediate        [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_long_fullword_immediate)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_G(r1) < i2 ? 1 :
+                   regs->GR_G(r1) > i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_long_fullword_immediate) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C0x6 XIHF  - Exclusive Or Immediate High Fullword           [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(exclusive_or_immediate_high_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* XOR fullword operand with high 32 bits of register */
+    regs->GR_H(r1) ^= i2;
+
+    /* Set condition code according to result */
+    regs->psw.cc = regs->GR_H(r1) ? 1 : 0;
+
+} /* end DEF_INST(exclusive_or_immediate_high_fullword) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C0x7 XILF  - Exclusive Or Immediate Low Fullword            [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(exclusive_or_immediate_low_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* XOR fullword operand with low 32 bits of register */
+    regs->GR_L(r1) ^= i2;
+
+    /* Set condition code according to result */
+    regs->psw.cc = regs->GR_L(r1) ? 1 : 0;
+
+} /* end DEF_INST(exclusive_or_immediate_low_fullword) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C0x8 IIHF  - Insert Immediate High Fullword                 [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_immediate_high_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Insert fullword operand into high 32 bits of register */
+    regs->GR_H(r1) = i2;
+
+} /* end DEF_INST(insert_immediate_high_fullword) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C0x9 IILF  - Insert Immediate Low Fullword                  [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_immediate_low_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Insert fullword operand into low 32 bits of register */
+    regs->GR_L(r1) = i2;
+
+} /* end DEF_INST(insert_immediate_low_fullword) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C0xE LLIHF - Load Logical Immediate High Fullword           [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_immediate_high_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Load fullword operand into high 32 bits of register 
+       and set remaining bits to zero */
+    regs->GR_H(r1) = i2;
+    regs->GR_L(r1) = 0;
+
+} /* end DEF_INST(load_logical_immediate_high_fullword) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C0xF LLILF - Load Logical Immediate Low Fullword            [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_immediate_low_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Load fullword operand into low 32 bits of register 
+       and set remaining bits to zero */
+    regs->GR_G(r1) = i2;
+
+} /* end DEF_INST(load_logical_immediate_low_fullword) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C0x1 LGFI  - Load Long Fullword Immediate                   [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_long_fullword_immediate)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Load operand into register */
+    regs->GR_G(r1) = (S32)i2;
+
+} /* end DEF_INST(load_long_fullword_immediate) */
+
+
+/*-------------------------------------------------------------------*/
+/* C0xC OIHF  - Or Immediate High Fullword                     [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(or_immediate_high_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Or fullword operand with high 32 bits of register */
+    regs->GR_H(r1) |= i2;
+
+    /* Set condition code according to result */
+    regs->psw.cc = regs->GR_H(r1) ? 1 : 0;
+
+} /* end DEF_INST(or_immediate_high_fullword) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C0xD OILF  - Or Immediate Low Fullword                      [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(or_immediate_low_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Or fullword operand with low 32 bits of register */
+    regs->GR_L(r1) |= i2;
+
+    /* Set condition code according to result */
+    regs->psw.cc = regs->GR_L(r1) ? 1 : 0;
+
+} /* end DEF_INST(or_immediate_low_fullword) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C2x5 SLFI  - Subtract Logical Fullword Immediate            [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_logical_fullword_immediate)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Subtract unsigned operands and set condition code */
+    regs->psw.cc = sub_logical (&(regs->GR_L(r1)),
+                                regs->GR_L(r1),
+                                i2);
+
+} /* end DEF_INST(subtract_logical_fullword_immediate) */
+
+ 
+/*-------------------------------------------------------------------*/
+/* C2x4 SLGFI - Subtract Logical Long Fullword Immediate       [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_logical_long_fullword_immediate)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Subtract unsigned operands and set condition code */
+    regs->psw.cc = sub_logical_long(&(regs->GR_G(r1)),
+                                      regs->GR_G(r1),
+                                      i2);
+
+} /* end DEF_INST(subtract_logical_long_fullword_immediate) */
+#endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/                  /*@Z9*/
+
+ 
+#if defined(FEATURE_LOAD_ADDITIONAL)                            /*@Z9*/
+/*-------------------------------------------------------------------*/
+/* E312 LT    - Load and Test                                  [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_test)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load R1 register from second operand */
+    regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Set condition code according to value loaded */
+    regs->psw.cc = (S32)regs->GR_L(r1) < 0 ? 1 :
+                   (S32)regs->GR_L(r1) > 0 ? 2 : 0;
+
+} /* end DEF_INST(load_and_test) */
+                    
+                    
+/*-------------------------------------------------------------------*/
+/* E302 LTG   - Load and Test Long                             [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_test_long)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load R1 register from second operand */
+    regs->GR_G(r1) = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
+
+    /* Set condition code according to value loaded */
+    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
+                   (S64)regs->GR_G(r1) > 0 ? 2 : 0;
+                    
+} /* end DEF_INST(load_and_test_long) */
+                    
+                    
+/*-------------------------------------------------------------------*/
+/* B926 LBR   - Load Byte Register                             [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_byte_register)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+
+    /* Load sign-extended byte from second register */
+    regs->GR_L(r1) = (S32)(S8)(regs->GR_LHLCL(r2));
+
+} /* end DEF_INST(load_byte_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B906 LGBR  - Load Long Byte Register                        [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_long_byte_register)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+
+    /* Load sign-extended byte from second register */
+    regs->GR_G(r1) = (S64)(S8)(regs->GR_LHLCL(r2));
+
+} /* end DEF_INST(load_long_byte_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B927 LHR   - Load Halfword Register                         [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_register)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+
+    /* Load sign-extended halfword from second register */
+    regs->GR_L(r1) = (S32)(S16)(regs->GR_LHL(r2));
+
+} /* end DEF_INST(load_halfword_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B907 LGHR  - Load Long Halfword Register                    [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_long_halfword_register)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+
+    /* Load sign-extended halfword from second register */
+    regs->GR_G(r1) = (S64)(S16)(regs->GR_LHL(r2));
+
+} /* end DEF_INST(load_long_halfword_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* E394 LLC   - Load Logical Character                         [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_character)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    regs->GR_L(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+
+} /* end DEF_INST(load_logical_character) */
+
+
+/*-------------------------------------------------------------------*/
+/* B994 LLCR  - Load Logical Character Register                [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_character_register)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+
+    /* Load bits 56-63 from second register and clear bits 32-55 */
+    regs->GR_L(r1) = regs->GR_LHLCL(r2);
+
+} /* end DEF_INST(load_logical_character_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B984 LLGCR - Load Logical Long Character Register           [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_long_character_register)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+
+    /* Load bits 56-63 from second register and clear bits 0-55 */
+    regs->GR_G(r1) = regs->GR_LHLCL(r2);
+
+} /* end DEF_INST(load_logical_long_character_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* E395 LLH   - Load Logical Halfword                          [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_halfword)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    regs->GR_L(r1) = ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+
+} /* end DEF_INST(load_logical_halfword) */
+
+
+/*-------------------------------------------------------------------*/
+/* B995 LLHR  - Load Logical Halfword Register                 [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_halfword_register)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+
+    /* Load bits 48-63 from second register and clear bits 32-47 */
+    regs->GR_L(r1) = regs->GR_LHL(r2);
+
+} /* end DEF_INST(load_logical_halfword_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B985 LLGHR - Load Logical Long Halfword Register            [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_long_halfword_register)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RRE(inst, regs, r1, r2);
+
+    /* Load bits 48-63 from second register and clear bits 0-47 */
+    regs->GR_G(r1) = regs->GR_LHL(r2);
+
+} /* end DEF_INST(load_logical_long_halfword_register) */
+
+
+/*-------------------------------------------------------------------*/
+/* B983 FLOGR - Find Leftmost One Long Register                [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(find_leftmost_one_long_register)
+{
+int     r1, r2;                         /* Values of R fields        */
+U64     op;                             /* R2 contents               */
+U32     n;                              /* Position of leftmost one  */
+
+    RRE(inst, regs, r1, r2);
+
+    /* Load contents of second register */
+    op = regs->GR_G(r2);
+
+    /* If R2 contents is all zero, return cc=0 */
+    if (op == 0)
+    {
+        regs->psw.cc = 0;
+    }
+    else
+    {
+        /* Find leftmost one */
+        for (n=0; n < 32 && (S64)op >= 0; n++, op <<= 1);
+
+        /* Load leftmost one position into R1 register and set cc=1 */
+        regs->GR_G(r1) = n;
+        regs->psw.cc = 1;
+    }
+
+} /* end DEF_INST(find_leftmost_one_long_register) */
+#endif /*defined(FEATURE_LOAD_ADDITIONAL)*/                     /*@Z9*/
 
 
 #if !defined(_GEN_ARCH)

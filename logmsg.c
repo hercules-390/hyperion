@@ -1,7 +1,12 @@
 /* LOGMSG.C : ISW 2003 */
 /* logmsg frontend routing */
 
-#include "hercules.h" 
+#include "hstdinc.h"
+
+#define _HUTIL_DLL_
+#define _LOGMSG_C_
+
+#include "hercules.h"
 
 static LOCK log_route_lock;
 
@@ -57,7 +62,7 @@ static int log_route_search(TID t)
 /* Open a log redirection Driver route on a per-thread basis         */
 /* Up to 16 concurent threads may have an alternate logging route    */
 /* opened                                                            */
-int log_open(LOG_WRITER *lw,LOG_CLOSER *lc,void *uw)
+DLL_EXPORT int log_open(LOG_WRITER *lw,LOG_CLOSER *lc,void *uw)
 {
     int slot;
     log_route_init();
@@ -76,7 +81,7 @@ int log_open(LOG_WRITER *lw,LOG_CLOSER *lc,void *uw)
     return(0);
 }
 
-void log_close(void)
+DLL_EXPORT void log_close(void)
 {
     int slot;
     log_route_init();
@@ -96,46 +101,105 @@ void log_close(void)
     return;
 }
 
-void logmsg(char *msg,...)
+/*-------------------------------------------------------------------*/
+/* Log message: Normal routing (panel or buffer, as appropriate)     */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void logmsg(char *msg,...)
 {
     va_list vl;
     va_start(vl,msg);
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush(stdout);  
+  #endif
     log_write(0,msg,vl); 
-  #if defined(WIN32) && !defined(NO_CYGWIN_SETVBUF_BUG) && !defined(_MSVC_)
+  #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
 }
 
-void logmsgp(char *msg,...)
+/*-------------------------------------------------------------------*/
+/* Log message: Normal routing with vararg pointer                   */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void vlogmsg(char *msg, va_list vl)
+{
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush(stdout);
+  #endif
+    log_write(0,msg,vl); 
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush(stdout);
+  #endif
+}
+
+/*-------------------------------------------------------------------*/
+/* Log message: Panel only (no logmsg routing)                       */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void logmsgp(char *msg,...)
 {
     va_list vl;
     va_start(vl,msg);
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush(stdout);  
+  #endif
     log_write(1,msg,vl); 
-  #if defined(WIN32) && !defined(NO_CYGWIN_SETVBUF_BUG) && !defined(_MSVC_)
+  #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
 }
  
-void logmsgb(char *msg,...)
+/*-------------------------------------------------------------------*/
+/* Log message: Both panel and logmsg routing                        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void logmsgb(char *msg,...)
 {
     va_list vl;
     va_start(vl,msg);
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush(stdout);  
+  #endif
     log_write(2,msg,vl); 
-  #if defined(WIN32) && !defined(NO_CYGWIN_SETVBUF_BUG) && !defined(_MSVC_)
+  #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
 }
 
+/*-------------------------------------------------------------------*/
+/* Log message: Device trace                                         */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
+{
+    va_list vl;
+    if(dev->ccwtrace||dev->ccwstep) 
+    { 
+        logmsg("%4.4X:",dev->devnum); 
+        va_start(vl,msg);
+        vlogmsg(msg,vl);
+    } 
+} /* end function logdevtr */ 
+
 /* panel : 0 - No, 1 - Only, 2 - Also */
-void log_write(int panel,char *msg,va_list vl)
+DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
 {
     char *bfr;
-    int rc;
+    int siz=256;
+    int rc=0;
     int slot;
     log_route_init();
     if(panel==1)
     {
-        vprintf(msg,vl);
+        bfr=malloc(siz);
+        if(bfr)
+            rc=vsnprintf(bfr,siz,msg,vl);
+        while(bfr&&(rc<0||rc>=siz))
+        {
+            free(bfr);
+            bfr=malloc(siz+=256);
+            if(bfr)
+                rc=vsnprintf(bfr,siz,msg,vl);
+        }
+        if(bfr&&rc>0)
+            write_pipe( logger_syslogfd[LOG_WRITE], bfr, rc );
+        free(bfr);
         return;
     }
     obtain_lock(&log_route_lock);
@@ -143,21 +207,36 @@ void log_write(int panel,char *msg,va_list vl)
     release_lock(&log_route_lock);
     if(slot<0 || panel>0)
     {
-        vprintf(msg,vl);
+        bfr=malloc(siz);
+        if(bfr)
+            rc=vsnprintf(bfr,siz,msg,vl);
+        while(bfr&&(rc<0||rc>=siz))
+        {
+            free(bfr);
+            bfr=malloc(siz+=256);
+            if(bfr)
+                rc=vsnprintf(bfr,siz,msg,vl);
+        }
+        if(bfr&&rc>0)
+            write_pipe( logger_syslogfd[LOG_WRITE], bfr, rc );
+        free(bfr);
         if(slot<0)
         {
             return;
         }
     }
-    bfr=malloc(256);
-    rc=vsnprintf(bfr,256,msg,vl);
-    if(rc>=256)
+    bfr=malloc(siz);
+    if(bfr)
+        rc=vsnprintf(bfr,siz,msg,vl);
+    while(bfr&&(rc<0||rc>=siz))
     {
         free(bfr);
-        bfr=malloc(rc+1);
-        vsnprintf(bfr,rc,msg,vl);
+        bfr=malloc(siz+=256);
+        if(bfr)
+            rc=vsnprintf(bfr,siz,msg,vl);
     }
-    log_routes[slot].w(log_routes[slot].u,bfr);
+    if(bfr&&rc>0)
+        log_routes[slot].w(log_routes[slot].u,bfr);
     free(bfr);
     return;
 }
@@ -174,9 +253,10 @@ struct log_capture_data
     size_t sz;
 };
 
-void log_capture_writer(void *vcd,char *msg)
+DLL_EXPORT void log_capture_writer(void *vcd,char *msg)
 {
     struct log_capture_data *cd;
+    if(!vcd||!msg)return;
     cd=(struct log_capture_data *)vcd;
     if(cd->sz==0)
     {
@@ -192,19 +272,19 @@ void log_capture_writer(void *vcd,char *msg)
     strcat(cd->obfr,msg);
     return;
 }
-void log_capture_closer(void *vcd)
+DLL_EXPORT void log_capture_closer(void *vcd)
 {
     UNREFERENCED(vcd);
     return;
 }
 
-char *log_capture(void *(*fun)(void *),void *p)
+DLL_EXPORT char *log_capture(void *(*func)(void *),void *arg)
 {
     struct log_capture_data cd;
     cd.obfr=NULL;
     cd.sz=0;
     log_open(log_capture_writer,log_capture_closer,&cd);
-    fun(p);
+    func(arg);
     log_close();
     return(cd.obfr);
 }

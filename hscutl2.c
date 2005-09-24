@@ -1,52 +1,47 @@
 /**********************************************************************/
 /*                                                                    */
-/* HSCUTL2.C                                                          */
+/*  HSCUTL2.C                                                         */
 /*                                                                    */
-/* (c) 2003-2005 Mark L. Gaubatz and others                           */
+/*  (c) 2003-2005 Mark L. Gaubatz and others                          */
 /*                                                                    */
-/* Implementation of functions used in Hercules that may be missing   */
-/* on some platform ports.                                            */
+/*  Implementation of functions used in Hercules that may be missing  */
+/*  on some platform ports.                                           */
 /*                                                                    */
-/* HSCUTL2.C differs from HSCUTL.C in that the only Hercules header   */
-/* files permitted are config.h and hscutl.h.  This is necessary to   */
-/* include some header files that conflict with definitions in some   */
-/* Hercules header files.                                             */
+/*  HSCUTL2.C differs from HSCUTL.C in that the only Hercules header  */
+/*  files permitted are config.h and hscutl.h.  This is necessary to  */
+/*  include some header files that conflict with definitions in some  */
+/*  Hercules header files.                                            */
 /*                                                                    */
-/* Released under the Q Public License                                */
-/* (http://www.conmicro.cx/hercules/herclic.html)                     */
-/* as modifications to Hercules.                                      */
+/*  Released under the Q Public License                               */
+/*  (http://www.conmicro.cx/hercules/herclic.html)                    */
+/*  as modifications to Hercules.                                     */
 /*                                                                    */
-/* This file is portion of the HERCULES S/370, S/390 and              */
-/* z/Architecture emulator.                                           */
+/*  This file is portion of the HERCULES S/370, S/390 and             */
+/*  z/Architecture emulator.                                          */
 /*                                                                    */
 /**********************************************************************/
 
-#include <stdlib.h>           /* Needed for size_t declaration        */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-#include <sys/time.h>         /* Need "struct timeval" for hscutl.h   */
-#include "hscutl.h"           /* Hercules Utilities                   */
+#include "hstdinc.h"
 
+#define _HSCUTL2_C_
+#define _HUTIL_DLL_
+
+#include "hercules.h"
+
+#if defined(WIN32)
 
 /**********************************************************************/
 /*                                                                    */
-/*      CYGWIN Patches                                                */
+/*      Win32 Patches                                                 */
 /*                                                                    */
-/*      The following functional equivalents are provided for the     */
-/*      CYGWIN environment:                                           */
+/*      The following functional equivalents are provided             */
+/*      for the Win32 environment:                                    */
 /*                                                                    */
 /*      int getpriority(int which, id_t who);                         */
 /*      int setpriority(int which, id_t who, int prio);               */
 /*                                                                    */
 /*                                                                    */
 /**********************************************************************/
-
-#if defined(__CYGWIN__)
-
-#include <windows.h>
-#include <errno.h>
-
 
 //                                   Windows       Unix
 //      THREAD_PRIORITY_TIME_CRITICAL  15           -20
@@ -71,7 +66,7 @@
 /*                                                                    */
 /**********************************************************************/
 
-inline int
+static inline int
 getpriority_process(id_t who)
 {
 
@@ -95,7 +90,7 @@ getpriority_process(id_t who)
 }
 
 
-inline int
+static inline int
 getpriority_thread(id_t who)
 {
 
@@ -120,7 +115,7 @@ getpriority_thread(id_t who)
 }
 
 
-inline int
+static inline int
 getpriority_user(id_t who)
 {
     if (who)
@@ -129,7 +124,7 @@ getpriority_user(id_t who)
 }
 
 
-int
+DLL_EXPORT int
 getpriority(int which , id_t who )
 {
     switch (which) {
@@ -157,7 +152,7 @@ getpriority(int which , id_t who )
 /*                                                                    */
 /**********************************************************************/
 
-inline int
+DLL_EXPORT inline int
 setpriority_process(id_t who , int prio )
 {
 
@@ -182,7 +177,7 @@ setpriority_process(id_t who , int prio )
 }
 
 
-inline int
+static inline int
 setpriority_thread(id_t who , int prio )
 {
 
@@ -208,7 +203,7 @@ setpriority_thread(id_t who , int prio )
 }
 
 
-inline int
+static inline int
 setpriority_user(id_t who , int prio )
 {
     if (who)
@@ -218,7 +213,7 @@ setpriority_user(id_t who , int prio )
 }
 
 
-int
+DLL_EXPORT int
 setpriority(int which , id_t who , int prio )
 {
     switch (which) {
@@ -232,4 +227,4 @@ setpriority(int which , id_t who , int prio )
     return EINVAL;
 }
 
-#endif /*defined(__CYGWIN__)*/
+#endif // defined(WIN32)

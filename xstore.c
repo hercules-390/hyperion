@@ -5,6 +5,8 @@
 
 /* MVPG moved from cpu.c to xstore.c   05/07/00 Jan Jaeger */
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"
@@ -169,6 +171,10 @@ int     r1, r2;                         /* Values of R fields        */
 }
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
+#if defined(_MSVC_)
+  /* Workaround for "fatal error C1001: INTERNAL COMPILER ERROR" in MSVC */
+  #pragma optimize("",off)
+#endif /*defined(_MSVC_)*/
 
 #if defined(FEATURE_MOVE_PAGE_FACILITY_2)
 /*-------------------------------------------------------------------*/
@@ -588,6 +594,10 @@ mvpg_progck:
 
 #endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
 
+#if defined(_MSVC_)
+  /* Workaround for "fatal error C1001: INTERNAL COMPILER ERROR" in MSVC */
+  #pragma optimize("",on)
+#endif /*defined(_MSVC_)*/
 
 #if !defined(_GEN_ARCH)
 

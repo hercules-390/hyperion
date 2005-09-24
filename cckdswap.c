@@ -5,13 +5,9 @@
 /* This module changes the `endianess' of a compressed CKD file.     */
 /*-------------------------------------------------------------------*/
 
-#include "hercules.h"
+#include "hstdinc.h"
 
-#ifdef EXTERNALGUI
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif /*EXTERNALGUI*/
+#include "hercules.h"
 
 /*-------------------------------------------------------------------*/
 /* Swap the `endianess' of  cckd file                                */
@@ -27,10 +23,11 @@ int             rc;                     /* Return code               */
 char           *fn;                     /* File name                 */
 int             fd;                     /* File descriptor           */
 int             bigend;                 /* 1 = big-endian file       */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, LOCALEDIR);
+    bindtextdomain(PACKAGE, HERC_LOCALEDIR);
     textdomain(PACKAGE);
 #endif
 
@@ -39,6 +36,8 @@ int             bigend;                 /* 1 = big-endian file       */
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 
@@ -49,7 +48,8 @@ int             bigend;                 /* 1 = big-endian file       */
     fn = argv[1];
 
     /* open the input file */
-    fd = open (fn, O_RDWR|O_BINARY);
+    hostpath(pathname, fn, sizeof(pathname));
+    fd = open (pathname, O_RDWR|O_BINARY);
     if (fd < 0)
     {
         fprintf (stderr,

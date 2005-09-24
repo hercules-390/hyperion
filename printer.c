@@ -6,6 +6,8 @@
 /* System/370 line printer devices.                                  */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "devtype.h"
@@ -66,15 +68,17 @@ static BYTE printer_immed_commands[256]=
 static int
 open_printer (DEVBLK *dev)
 {
-int             fd;                     /* File descriptor           */
-int             rc;                     /* Return code               */
 int             pipefd[2];              /* Pipe descriptors          */
 pid_t           pid;                    /* Child process identifier  */
+int             rc;                     /* Return code               */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Regular open if 1st char of filename is not vertical bar */
     if (dev->filename[0] != '|')
     {
-        fd = open (dev->filename,
+        int fd;
+        hostpath(pathname, dev->filename, sizeof(pathname));
+        fd = open (pathname, O_BINARY |
                     O_WRONLY | O_CREAT | O_TRUNC /* | O_SYNC */,
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (fd < 0)
@@ -86,13 +90,16 @@ pid_t           pid;                    /* Child process identifier  */
 
         /* Save file descriptor in device block and return */
         dev->fd = fd;
+        dev->ispiped = 0;
         return 0;
     }
 
     /* Filename is in format |xxx, set up pipe to program xxx */
 
+    dev->ispiped = 1;
+
     /* Create a pipe */
-    rc = pipe (pipefd);
+    rc = create_pipe (pipefd);
     if (rc < 0)
     {
         logmsg (_("HHCPR005E %4.4X device initialization error: pipe: %s\n"),
@@ -106,6 +113,8 @@ pid_t           pid;                    /* Child process identifier  */
     {
         logmsg (_("HHCPR006E %4.4X device initialization error: fork: %s\n"),
                 dev->devnum, strerror(errno));
+        close_pipe ( pipefd[0] );
+        close_pipe ( pipefd[1] );
         return -1;
     }
 
@@ -117,7 +126,7 @@ pid_t           pid;                    /* Child process identifier  */
                 getpid(), dev->devnum);
 
         /* Close the write end of the pipe */
-        close (pipefd[1]);
+        close_pipe ( pipefd[1] );
 
         /* Duplicate the read end of the pipe onto STDIN */
         if (pipefd[0] != STDIN_FILENO)
@@ -127,13 +136,13 @@ pid_t           pid;                    /* Child process identifier  */
             {
                 logmsg (_("HHCPR008E %4.4X dup2 error: %s\n"),
                         dev->devnum, strerror(errno));
-                close (pipefd[0]);
+                close_pipe ( pipefd[0] );
                 _exit(127);
             }
         } /* end if(pipefd[0] != STDIN_FILENO) */
 
         /* Close the original descriptor now duplicated to STDIN */
-        close (pipefd[0]);
+        close_pipe ( pipefd[0] );
 
         /* Redirect stderr (screen) to hercules log task */
         dup2(STDOUT_FILENO, STDERR_FILENO);
@@ -177,7 +186,7 @@ pid_t           pid;                    /* Child process identifier  */
     /* The parent process continues as the pipe sender */
 
     /* Close the read end of the pipe */
-    close (pipefd[0]);
+    close_pipe ( pipefd[0] );
 
     /* Save pipe write descriptor in the device block */
     dev->fd = pipefd[1];
@@ -296,7 +305,10 @@ static void printer_query_device (DEVBLK *dev, char **class,
 static int printer_close_device ( DEVBLK *dev )
 {
     /* Close the device file */
-    close (dev->fd);
+    if ( dev->ispiped )
+        close_pipe ( dev->fd );
+    else
+        close (dev->fd);
     dev->fd = -1;
     dev->stopprt = 0;
 

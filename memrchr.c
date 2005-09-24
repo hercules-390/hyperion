@@ -1,17 +1,21 @@
 /************************************************************************/
 /*                                                                      */
-/*      memrchr -- Right to Left memory scan                            */
-/*                                                                      */
-/*      This function seems to be missing in Cygwin.  If, at some later */
-/*      time, it gets added to Cygwin, memrchr.[ch] can be removed from */
-/*      the CVS repository                                              */
+/*       memrchr          Right to Left memory scan                     */
 /*                                                                      */
 /************************************************************************/
 
-#include "memrchr.h"
-#include <string.h>
+#include "hstdinc.h"
 
-void *memrchr(const void *buf, int c, size_t num)
+#define _MEMRCHR_C_
+#define _HUTIL_DLL_
+
+#include "hercules.h"
+
+#if !defined( HAVE_MEMRCHR )
+
+#include "memrchr.h"
+
+DLL_EXPORT void *memrchr(const void *buf, int c, size_t num)
 {
    unsigned char *pMem;
    if (num == 0)
@@ -28,3 +32,5 @@ void *memrchr(const void *buf, int c, size_t num)
    }
    return NULL;
 }
+
+#endif // !defined(HAVE_MEMRCHR)

@@ -5,126 +5,15 @@
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>             // (needed to set OPTION_FTHREADS flag appropriately)
-#endif
+#include "hstdinc.h"
 
-#if !defined(OPTION_FTHREADS)
-int dummy = 0;                  // (just to have something to compile)
-#else // defined(OPTION_FTHREADS)
+#define _FTHREADS_C_
+#define _HUTIL_DLL_
 
-#define _WIN32_WINNT  0x0403    // (so "InitializeCriticalSectionAndSpinCount" gets defined)
-#include <windows.h>            // (defines "InitializeCriticalSectionAndSpinCount")
-
-#include <stdio.h>
-#include <errno.h>
-#include <malloc.h>
-#include <sys/time.h>
-#include <setjmp.h>
-
+#include "hercules.h"
 #include "fthreads.h"
-#include "hostinfo.h"
-#include "logger.h"
-#include "linklist.h"
 
-////////////////////////////////////////////////////////////////////////////////////
-// Debugging via ptt (pttrace)...
-
-#if (defined(DEBUG) || defined(_DEBUG)) && !defined(FISH_HANG)
-    #define FT_ENABLE_DEBUG_VIA_PTTRACE
-#endif
-
-#ifdef FT_ENABLE_DEBUG_VIA_PTTRACE
-    #ifdef FISH_HANG
-    #error Option FT_ENABLE_DEBUG_VIA_PTTRACE incompatible with (mutually exclusive to) FISH_HANG option
-    #endif
-    #define  PTTRACE(a...)  ptt_pthread_trace(a)
-    //#include "pttrace.h"
-    extern void ptt_pthread_trace (const char* pszType, void *data1, void *data2,
-                                   const char* pszFile, int line, int *result);
-#else
-    #define  PTTRACE(a...)
-#endif
-
-////////////////////////////////////////////////////////////////////////////////////
-// Normal fthreads message issuance...
-
-#define  ft_logmsg(a...)  logmsg(a)
-
-////////////////////////////////////////////////////////////////////////////////////
-// Debug logging...
-
-#if defined(DEBUG) || defined(_DEBUG)
-    #define  TRACE(a...)  ft_logmsg(a)
-    #define  ASSERT(a) \
-        do \
-        { \
-            if (!(a)) \
-            { \
-                ft_logmsg ( "** Assertion Failed: %s(%d)\n", __FILE__, __LINE__ ); \
-            } \
-        } \
-        while(0)
-    #define  VERIFY(a)  ASSERT((a))
-#else
-    #define  TRACE(a...)
-    #define  ASSERT(a)
-    #define  VERIFY(a)  ((void)(a))
-#endif
-
-////////////////////////////////////////////////////////////////////////////////////
-
-#define UNREFERENCED( x )  ((x)=(x))
-
-#if defined(FISH_HANG)
-
-    #ifdef FT_ENABLE_DEBUG_VIA_PTTRACE
-    #error Option FISH_HANG incompatible with (mutually exclusive to) FT_ENABLE_DEBUG_VIA_PTTRACE option
-    #endif
-
-    #include "fishhang.h"   // (function definitions)
-
-    #define MyInitializeCriticalSection(pCS)                (FishHang_InitializeCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(pCS)))
-    #define MyEnterCriticalSection(pCS)                     (FishHang_EnterCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(pCS)))
-    #define MyTryEnterCriticalSection(pCS)                  (FishHang_TryEnterCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(pCS)))
-    #define MyLeaveCriticalSection(pCS)                     (FishHang_LeaveCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(pCS)))
-    #define MyDeleteCriticalSection(pCS)                    (FishHang_DeleteCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(pCS)))
-
-    #define MyCreateThread(sec,stack,start,parm,flags,tid)  (FishHang_CreateThread(pszFile,nLine,(sec),(stack),(start),(parm),(flags),(tid)))
-    #define MyExitThread(code)                              (FishHang_ExitThread((code)))
-
-    #define MyCreateEvent(sec,man,set,name)                 (FishHang_CreateEvent(pszFile,nLine,(sec),(man),(set),(name)))
-    #define MySetEvent(h)                                   (FishHang_SetEvent(pszFile,nLine,(h)))
-    #define MyResetEvent(h)                                 (FishHang_ResetEvent(pszFile,nLine,(h)))
-    #define MyDeleteEvent(h)                                (FishHang_CloseHandle(pszFile,nLine,(h)))
-
-    #define MyWaitForSingleObject(h,millsecs)               (FishHang_WaitForSingleObject(pszFile,nLine,(h),(millsecs)))
-
-#else // !defined(FISH_HANG)
-
-    #define MyInitializeCriticalSection(pCS)                (InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)(pCS),3000))
-    #define MyEnterCriticalSection(pCS)                     (EnterCriticalSection((CRITICAL_SECTION*)(pCS)))
-    #define MyTryEnterCriticalSection(pCS)                  (TryEnterCriticalSection((CRITICAL_SECTION*)(pCS)))
-    #define MyLeaveCriticalSection(pCS)                     (LeaveCriticalSection((CRITICAL_SECTION*)(pCS)))
-    #define MyDeleteCriticalSection(pCS)                    (DeleteCriticalSection((CRITICAL_SECTION*)(pCS)))
-
-    #define MyCreateThread(sec,stack,start,parm,flags,tid)  (CreateThread((sec),(stack),(start),(parm),(flags),(tid)))
-    #define MyExitThread(code)                              (ExitThread((code)))
-
-    #define MyCreateEvent(sec,man,set,name)                 (CreateEvent((sec),(man),(set),(name)))
-    #define MySetEvent(h)                                   (SetEvent((h)))
-    #define MyResetEvent(h)                                 (ResetEvent((h)))
-    #define MyDeleteEvent(h)                                (CloseHandle((h)))
-
-    #define MyWaitForSingleObject(h,millisecs)              (WaitForSingleObject((h),(millisecs)))
-
-#endif // defined(FISH_HANG)
-
-////////////////////////////////////////////////////////////////////////////////////
-// Just some handy macros to have around...
-
-#define  IsEventSet(h)  (WaitForSingleObject(h,0) == WAIT_OBJECT_0)
-#define  RC(rc)         (errno = rc)
+#if defined(OPTION_FTHREADS)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Private internal fthreads structures...
@@ -164,7 +53,7 @@ FT_COND_VAR, *PFT_COND_VAR;
 ////////////////////////////////////////////////////////////////////////////////////
 // Private internal fthreads functions...
 
-BOOL  IsValidMutexType ( DWORD dwMutexType )
+static BOOL  IsValidMutexType ( DWORD dwMutexType )
 {
     return (0
 //      || FTHREAD_MUTEX_DEFAULT    == dwMutexType  // (FTHREAD_MUTEX_RECURSIVE)
@@ -176,7 +65,7 @@ BOOL  IsValidMutexType ( DWORD dwMutexType )
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-FT_MUTEX*  MallocFT_MUTEX ( )
+static FT_MUTEX*  MallocFT_MUTEX ( )
 {
     FT_MUTEX*  pFT_MUTEX = (FT_MUTEX*) malloc ( sizeof ( FT_MUTEX ) );
     if ( !pFT_MUTEX ) return NULL;
@@ -186,7 +75,7 @@ FT_MUTEX*  MallocFT_MUTEX ( )
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-BOOL  InitializeFT_MUTEX
+static BOOL  InitializeFT_MUTEX
 (
 #ifdef FISH_HANG
     const char*   pszFile,
@@ -216,7 +105,7 @@ BOOL  InitializeFT_MUTEX
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-BOOL  UninitializeFT_MUTEX
+static BOOL  UninitializeFT_MUTEX
 (
 #ifdef FISH_HANG
     const char*  pszFile,
@@ -240,7 +129,7 @@ BOOL  UninitializeFT_MUTEX
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-FT_COND_VAR*  MallocFT_COND_VAR ( )
+static FT_COND_VAR*  MallocFT_COND_VAR ( )
 {
     FT_COND_VAR*  pFT_COND_VAR = (FT_COND_VAR*) malloc ( sizeof ( FT_COND_VAR ) );
     if ( !pFT_COND_VAR ) return NULL;
@@ -250,7 +139,7 @@ FT_COND_VAR*  MallocFT_COND_VAR ( )
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-BOOL  InitializeFT_COND_VAR
+static BOOL  InitializeFT_COND_VAR
 (
 #ifdef FISH_HANG
     const char*   pszFile,
@@ -284,7 +173,7 @@ BOOL  InitializeFT_COND_VAR
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-BOOL  UninitializeFT_COND_VAR
+static BOOL  UninitializeFT_COND_VAR
 (
 #ifdef FISH_HANG
     const char*   pszFile,
@@ -312,7 +201,7 @@ BOOL  UninitializeFT_COND_VAR
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-BOOL  TryEnterFT_MUTEX
+static BOOL  TryEnterFT_MUTEX
 (
 #ifdef FISH_HANG
     const char*  pszFile,
@@ -359,7 +248,7 @@ BOOL  TryEnterFT_MUTEX
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-void  EnterFT_MUTEX
+static void  EnterFT_MUTEX
 (
 #ifdef FISH_HANG
     const char*  pszFile,
@@ -398,7 +287,7 @@ void  EnterFT_MUTEX
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-void  LeaveFT_MUTEX
+static void  LeaveFT_MUTEX
 (
 #ifdef FISH_HANG
     const char*  pszFile,
@@ -444,7 +333,7 @@ void  LeaveFT_MUTEX
 // manage to register the wait request since no signals can ever be sent while the
 // condition variable is locked.
 
-int  BeginWait
+static int  BeginWait
 (
 #ifdef FISH_HANG
     const char*       pszFile,
@@ -565,10 +454,10 @@ int  BeginWait
         // need to back out what we previously did just above).
 
 #ifdef FISH_HANG
-        ft_logmsg("fthreads: BeginWait: fthread_mutex_unlock failed at %s(%d)! rc=%d\n"
+        logmsg("fthreads: BeginWait: fthread_mutex_unlock failed at %s(%d)! rc=%d\n"
             ,pszFile ,nLine ,rc );
 #else
-        ft_logmsg("fthreads: BeginWait: fthread_mutex_unlock failed! rc=%d\n"
+        logmsg("fthreads: BeginWait: fthread_mutex_unlock failed! rc=%d\n"
             ,rc );
 #endif
         pFT_COND_VAR->nNumWaiting--;    // (de-register wait request)
@@ -591,7 +480,7 @@ int  BeginWait
 ////////////////////////////////////////////////////////////////////////////////////
 // Wait for the condition variable in question to receive a transmission...
 
-int  WaitForTransmission
+static int  WaitForTransmission
 (
 #ifdef FISH_HANG
     const char*       pszFile,
@@ -704,10 +593,10 @@ int  WaitForTransmission
     // would in all likelihood!)...
 
 #ifdef FISH_HANG
-    ft_logmsg ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed at %s(%d)! dwWaitRetCode=%d (0x%8.8X)\n"
+    logmsg ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed at %s(%d)! dwWaitRetCode=%d (0x%8.8X)\n"
         ,pszFile ,nLine ,dwWaitRetCode ,dwWaitRetCode );
 #else
-    ft_logmsg ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed! dwWaitRetCode=%d (0x%8.8X)\n"
+    logmsg ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed! dwWaitRetCode=%d (0x%8.8X)\n"
         ,dwWaitRetCode ,dwWaitRetCode );
 #endif
 
@@ -717,7 +606,7 @@ int  WaitForTransmission
 ////////////////////////////////////////////////////////////////////////////////////
 // Send a "signal" or "broadcast" to a condition variable...
 
-int  QueueTransmission
+static int  QueueTransmission
 (
 #ifdef FISH_HANG
     const char*   pszFile,
@@ -776,7 +665,14 @@ int  QueueTransmission
 ////////////////////////////////////////////////////////////////////////////////////
 // A thread has been released as a result of someone's signal or broadcast...
 
-void  ReceiveXmission ( FT_COND_VAR*  pFT_COND_VAR )
+static void  ReceiveXmission
+(
+#ifdef FISH_HANG
+    const char*   pszFile,
+    const int     nLine,
+#endif
+    FT_COND_VAR*  pFT_COND_VAR
+)
 {
     // If we were the only ones supposed to receive the transmission, (or
     // if no one remains to receive any transmissions), then turn off the
@@ -820,7 +716,7 @@ void  ReceiveXmission ( FT_COND_VAR*  pFT_COND_VAR )
 // wait) before releasing their mutex. Thus, we MUST therefore release our condition
 // variable lock FIRST and THEN try reacquiring their original mutex before returning.
 
-int  ReturnFromWait
+static int  ReturnFromWait
 (
 #ifdef FISH_HANG
     const char*       pszFile,
@@ -874,10 +770,10 @@ int  ReturnFromWait
         // Just log the fact that something went wrong and return. <shrug>
 
 #ifdef FISH_HANG
-        ft_logmsg("fthreads: ReturnFromWait: fthread_mutex_lock failed at %s(%d)! rc=%d\n"
+        logmsg("fthreads: ReturnFromWait: fthread_mutex_lock failed at %s(%d)! rc=%d\n"
             ,pszFile ,nLine ,rc );
 #else
-        ft_logmsg("fthreads: ReturnFromWait: fthread_mutex_lock failed! rc=%d\n"
+        logmsg("fthreads: ReturnFromWait: fthread_mutex_lock failed! rc=%d\n"
             ,rc );
 #endif
 
@@ -921,7 +817,7 @@ FTHREAD, *PFTHREAD;
 ////////////////////////////////////////////////////////////////////////////////////
 // (Note: returns with thread list lock still held if found; not held if not found)
 
-FTHREAD*  FindFTHREAD ( DWORD dwThreadID )
+static FTHREAD*  FindFTHREAD ( DWORD dwThreadID )
 {
     FTHREAD*     pFTHREAD;
     LIST_ENTRY*  pListEntry;
@@ -959,7 +855,7 @@ FT_CALL_THREAD_PARMS;
 
 //----------------------------------------------------------------------------------
 
-DWORD  __stdcall  FTWin32ThreadFunc
+static DWORD  __stdcall  FTWin32ThreadFunc
 (
     void*  pMyArgs
 )
@@ -1014,6 +910,7 @@ DWORD  __stdcall  FTWin32ThreadFunc
 ////////////////////////////////////////////////////////////////////////////////////
 // Create a new thread...
 
+DLL_EXPORT
 int  fthread_create
 (
 #ifdef FISH_HANG
@@ -1069,9 +966,9 @@ int  fthread_create
     if ( !pCallTheirThreadParms )
     {
 #ifdef FISH_HANG
-        ft_logmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed; %s(%d)\n",pszFile,nLine);
+        logmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed; %s(%d)\n",pszFile,nLine);
 #else
-        ft_logmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed\n");
+        logmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed\n");
 #endif
         return RC(ENOMEM);      // (out of memory)
     }
@@ -1082,9 +979,9 @@ int  fthread_create
     if ( !pFTHREAD )
     {
 #ifdef FISH_HANG
-        ft_logmsg("fthread_create: malloc(FTHREAD) failed; %s(%d)\n",pszFile,nLine);
+        logmsg("fthread_create: malloc(FTHREAD) failed; %s(%d)\n",pszFile,nLine);
 #else
-        ft_logmsg("fthread_create: malloc(FTHREAD) failed\n");
+        logmsg("fthread_create: malloc(FTHREAD) failed\n");
 #endif
         free ( pCallTheirThreadParms );
         return RC(ENOMEM);      // (out of memory)
@@ -1111,9 +1008,9 @@ int  fthread_create
     {
         UnlockThreadsList();
 #ifdef FISH_HANG
-        ft_logmsg("fthread_create: MyCreateThread failed; %s(%d)\n",pszFile,nLine);
+        logmsg("fthread_create: MyCreateThread failed; %s(%d)\n",pszFile,nLine);
 #else
-        ft_logmsg("fthread_create: MyCreateThread failed\n");
+        logmsg("fthread_create: MyCreateThread failed\n");
 #endif
         free ( pCallTheirThreadParms );
         free ( pFTHREAD );
@@ -1134,6 +1031,7 @@ int  fthread_create
 ////////////////////////////////////////////////////////////////////////////////////
 // Exit from a thread...
 
+DLL_EXPORT
 void  fthread_exit
 (
     void*  ExitVal
@@ -1141,18 +1039,23 @@ void  fthread_exit
 {
     FTHREAD* pFTHREAD;
     VERIFY ( pFTHREAD = FindFTHREAD ( GetCurrentThreadId() ) );
-    UnlockThreadsList();
     pFTHREAD->ExitVal = ExitVal;
+    UnlockThreadsList();
     longjmp ( pFTHREAD->JumpBuf, 1 );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Join a thread (i.e. wait for a thread's termination)...
 
+DLL_EXPORT
 int  fthread_join
 (
-    fthread_t  dwThreadID,
-    void**     pExitVal
+#ifdef FISH_HANG
+    const char*     pszFile,
+    const int       nLine,
+#endif
+    fthread_t       dwThreadID,
+    void**          pExitVal
 )
 {
     HANDLE    hThread;
@@ -1179,7 +1082,10 @@ int  fthread_join
 
     UnlockThreadsList();
 
-    MyWaitForSingleObject ( hThread, INFINITE ); // (wait for thread exit)
+    // FishHang doesn't support waiting on thread objects,
+    // only event objects. Thus we do a normal Win32 call here...
+
+    WaitForSingleObject ( hThread, INFINITE ); // (wait for thread exit)
 
     LockThreadsList();
 
@@ -1221,6 +1127,7 @@ int  fthread_join
 ////////////////////////////////////////////////////////////////////////////////////
 // Detach a thread (i.e. ignore a thread's termination)...
 
+DLL_EXPORT
 int  fthread_detach
 (
     fthread_t  dwThreadID
@@ -1280,6 +1187,7 @@ int  fthread_detach
 ////////////////////////////////////////////////////////////////////////////////////
 // Initialize a "thread attribute"...
 
+DLL_EXPORT
 int  fthread_attr_init
 (
     fthread_attr_t*  pThreadAttr
@@ -1301,6 +1209,7 @@ int  fthread_attr_init
 ////////////////////////////////////////////////////////////////////////////////////
 // Destroy a "thread attribute"...
 
+DLL_EXPORT
 int  fthread_attr_destroy
 (
     fthread_attr_t*  pThreadAttr
@@ -1322,6 +1231,7 @@ int  fthread_attr_destroy
 ////////////////////////////////////////////////////////////////////////////////////
 // Set a thread's "detachstate" attribute...
 
+DLL_EXPORT
 int  fthread_attr_setdetachstate
 (
     fthread_attr_t*  pThreadAttr,
@@ -1346,6 +1256,7 @@ int  fthread_attr_setdetachstate
 ////////////////////////////////////////////////////////////////////////////////////
 // Retrieve a thread's "detachstate" attribute...
 
+DLL_EXPORT
 int  fthread_attr_getdetachstate
 (
     const fthread_attr_t*  pThreadAttr,
@@ -1370,6 +1281,7 @@ int  fthread_attr_getdetachstate
 ////////////////////////////////////////////////////////////////////////////////////
 // Set a thread's initial stack size...
 
+DLL_EXPORT
 int  fthread_attr_setstacksize
 (
     fthread_attr_t*  pThreadAttr,
@@ -1390,6 +1302,7 @@ int  fthread_attr_setstacksize
 ////////////////////////////////////////////////////////////////////////////////////
 // Retrieve a thread's initial stack size...
 
+DLL_EXPORT
 int  fthread_attr_getstacksize
 (
     const fthread_attr_t*  pThreadAttr,
@@ -1410,6 +1323,7 @@ int  fthread_attr_getstacksize
 ////////////////////////////////////////////////////////////////////////////////////
 // (thread signalling not [currently] supported (yet); always returns ENOTSUP...)
 
+DLL_EXPORT
 int  fthread_kill       // FIXME: TODO:
 (
     int  dummy1,
@@ -1424,6 +1338,7 @@ int  fthread_kill       // FIXME: TODO:
 ////////////////////////////////////////////////////////////////////////////////////
 // Return thread-id...
 
+DLL_EXPORT
 fthread_t  fthread_self ()
 {
     return GetCurrentThreadId();
@@ -1432,6 +1347,7 @@ fthread_t  fthread_self ()
 ////////////////////////////////////////////////////////////////////////////////////
 // Compare thread-ids...
 
+DLL_EXPORT
 int  fthread_equal
 (
     fthread_t  pdwThreadID_1,
@@ -1446,6 +1362,7 @@ int  fthread_equal
 ////////////////////////////////////////////////////////////////////////////////////
 // Initialize a lock...
 
+DLL_EXPORT
 int  fthread_mutex_init
 (
 #ifdef FISH_HANG
@@ -1496,6 +1413,7 @@ int  fthread_mutex_init
 ////////////////////////////////////////////////////////////////////////////////////
 // Destroy a lock...
 
+DLL_EXPORT
 int  fthread_mutex_destroy
 (
 #ifdef FISH_HANG
@@ -1532,6 +1450,7 @@ int  fthread_mutex_destroy
 ////////////////////////////////////////////////////////////////////////////////////
 // Try to lock a "mutex"...
 
+DLL_EXPORT
 int  fthread_mutex_trylock
 (
 #ifdef FISH_HANG
@@ -1597,6 +1516,7 @@ int  fthread_mutex_trylock
 ////////////////////////////////////////////////////////////////////////////////////
 // Lock a "mutex"...
 
+DLL_EXPORT
 int  fthread_mutex_lock
 (
 #ifdef FISH_HANG
@@ -1675,6 +1595,7 @@ int  fthread_mutex_lock
 ////////////////////////////////////////////////////////////////////////////////////
 // Unlock a "mutex"...
 
+DLL_EXPORT
 int  fthread_mutex_unlock
 (
 #ifdef FISH_HANG
@@ -1714,6 +1635,7 @@ int  fthread_mutex_unlock
 ////////////////////////////////////////////////////////////////////////////////////
 // Initialize a "condition"...
 
+DLL_EXPORT
 int  fthread_cond_init
 (
 #ifdef FISH_HANG
@@ -1757,6 +1679,7 @@ int  fthread_cond_init
 ////////////////////////////////////////////////////////////////////////////////////
 // Destroy a "condition"...
 
+DLL_EXPORT
 int  fthread_cond_destroy
 (
 #ifdef FISH_HANG
@@ -1793,6 +1716,7 @@ int  fthread_cond_destroy
 ////////////////////////////////////////////////////////////////////////////////////
 // 'Signal' a "condition"...     (causes ONE waiting thread to be released)
 
+DLL_EXPORT
 int  fthread_cond_signal
 (
 #ifdef FISH_HANG
@@ -1822,6 +1746,7 @@ int  fthread_cond_signal
 ////////////////////////////////////////////////////////////////////////////////////
 // 'Broadcast' a "condition"...  (causes ALL waiting threads to be released)
 
+DLL_EXPORT
 int  fthread_cond_broadcast
 (
 #ifdef FISH_HANG
@@ -1851,6 +1776,7 @@ int  fthread_cond_broadcast
 ////////////////////////////////////////////////////////////////////////////////////
 // Wait for a "condition" to occur...
 
+DLL_EXPORT
 int  fthread_cond_wait
 (
 #ifdef FISH_HANG
@@ -1932,7 +1858,14 @@ int  fthread_cond_wait
 
     // (Note that the below call also de-registers our wait too)
 
-    ReceiveXmission ( pFT_COND_VAR->hCondVar ); // (reset transmitter)
+    ReceiveXmission         // (reset transmitter)
+    (
+#ifdef FISH_HANG
+        pszFile,
+        nLine,
+#endif
+        pFT_COND_VAR->hCondVar
+    );
 
     // Release the condition var lock (since we're done with it) and then
     // reacquire the caller's original mutex (if possible) and then return
@@ -1962,6 +1895,7 @@ int  fthread_cond_wait
 // only wait for a limited amount of time. Other than that they're exactly identical
 // so there's no sense in repeating myself here...
 
+DLL_EXPORT
 int  fthread_cond_timedwait
 (
 #ifdef FISH_HANG
@@ -2011,7 +1945,14 @@ int  fthread_cond_timedwait
         pTimeTimeout
     );
 
-    ReceiveXmission ( pFT_COND_VAR->hCondVar );
+    ReceiveXmission
+    (
+#ifdef FISH_HANG
+        pszFile,
+        nLine,
+#endif
+        pFT_COND_VAR->hCondVar
+    );
 
     return ReturnFromWait
     (
@@ -2030,6 +1971,7 @@ int  fthread_cond_timedwait
 ////////////////////////////////////////////////////////////////////////////////////
 // Initialize a "mutex" attribute...
 
+DLL_EXPORT
 int  fthread_mutexattr_init ( fthread_mutexattr_t*  pFT_MUTEX_ATTR )
 {
     if ( !pFT_MUTEX_ATTR )
@@ -2041,6 +1983,7 @@ int  fthread_mutexattr_init ( fthread_mutexattr_t*  pFT_MUTEX_ATTR )
 ////////////////////////////////////////////////////////////////////////////////////
 // Destroy a "mutex" attribute...
 
+DLL_EXPORT
 int  fthread_mutexattr_destroy ( fthread_mutexattr_t*  pFT_MUTEX_ATTR )
 {
     if ( !pFT_MUTEX_ATTR )
@@ -2052,6 +1995,7 @@ int  fthread_mutexattr_destroy ( fthread_mutexattr_t*  pFT_MUTEX_ATTR )
 ////////////////////////////////////////////////////////////////////////////////////
 // Retrieve "mutex" attribute type...
 
+DLL_EXPORT
 int fthread_mutexattr_gettype
 (
     const fthread_mutexattr_t*  pFT_MUTEX_ATTR,
@@ -2068,6 +2012,7 @@ int fthread_mutexattr_gettype
 ////////////////////////////////////////////////////////////////////////////////////
 // Set "mutex" attribute type...
 
+DLL_EXPORT
 int fthread_mutexattr_settype
 (
     fthread_mutexattr_t*  pFT_MUTEX_ATTR,
@@ -2083,7 +2028,5 @@ int fthread_mutexattr_settype
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
-
-#undef IsEventSet
 
 #endif // !defined(OPTION_FTHREADS)

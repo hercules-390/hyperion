@@ -1,6 +1,10 @@
 /* HDLMAIN.C    (c) Copyright Jan Jaeger, 2003-2005                  */
 /*              Hercules Dynamic Loader                              */
 
+#include "hstdinc.h"
+
+#define _HDLMAIN_C_
+#define _HERCULES_EXE_
 
 #include "hercules.h"
 
@@ -185,17 +189,15 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(3422, tapedev_device_hndinfo );
     HDL_DEVICE(3430, tapedev_device_hndinfo );
 
-//#if !defined(__APPLE__)
     /* Communications devices */
     HDL_DEVICE(3088, ctcadpt_device_hndinfo );
     HDL_DEVICE(CTCI, ctci_device_hndinfo    );
-#if defined(WIN32)
-    HDL_DEVICE(CTCI-W32, ctci_device_hndinfo);
-#endif /*defined(WIN32)*/
     HDL_DEVICE(CTCT, ctct_device_hndinfo    );
     HDL_DEVICE(LCS,  lcs_device_hndinfo     );
     HDL_DEVICE(VMNET,vmnet_device_hndinfo   );
-//#endif /* !defined(__APPLE__) */
+#if defined(WIN32)
+    HDL_DEVICE(CTCI-W32, ctci_device_hndinfo);
+#endif /*defined(WIN32)*/
 
 #endif /*!defined(OPTION_DYNAMIC_LOAD)*/
 

@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+﻿<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD>
 <TITLE>
@@ -20,7 +20,7 @@
 <TR><TD><A HREF="#1.03">1.03</A></TD><TD>Is it functional enough to run production work?</TD></TR>
 <TR><TD><A HREF="#1.04">1.04</A></TD><TD>What are the licensing restrictions for Hercules?</TD></TR>
 <TR><TD>&nbsp;</TD></TR>
-<TR><TD><A HREF="#2.01">2.01</A></TD><TD>Can it run OS/390, VM/ESA, VSE/ESA?</TD></TR>
+<TR><TD><A HREF="#2.01">2.01</A></TD><TD>Can it run z/OS, z/VM, z/VSE?</TD></TR>
 <TR><TD><A HREF="#2.02">2.02</A></TD><TD>What operating systems can I run legally?</TD></TR>
 <TR><TD><A HREF="#2.03">2.03</A></TD><TD>What other programs will run under Hercules?</TD></TR>
 <TR><TD><A HREF="#2.04">2.04</A></TD><TD>Where can I obtain OS/360 ?</TD></TR>
@@ -31,11 +31,11 @@
 <TR><TD><A HREF="#2.09">2.09</A></TD><TD>Where can I find documentation?</TD></TR>
 <TR><TD>&nbsp;</TD></TR>
 <TR><TD><A HREF="#3.01">3.01</A></TD><TD>What PC hardware do I need to run Hercules?</TD></TR>
-<TR><TD><A HREF="#3.02">3.02</A></TD><TD>What PC software do I need to run Hercules?</TD></TR>
-<TR><TD><A HREF="#3.03">3.03</A></TD><TD>What sort of MIPS rate can I expect?</TD></TR>
+<TR><TD><A HREF="#3.02">3.02</A></TD><TD>What sort of MIPS rate can I expect?</TD></TR>
+<TR><TD><A HREF="#3.03">3.03</A></TD><TD>What PC software do I need to run Hercules?</TD></TR>
 <TR><TD><A HREF="#3.04">3.04</A></TD><TD>Which C compiler should I use to build Hercules?</TD></TR>
 <TR><TD><A HREF="#3.05">3.05</A></TD><TD>Why do I get an unexpected fixed-point divide exception (program check 0009 or abend 0C9) on a CVB instruction?</TD></TR>
-<TR><TD><A HREF="#3.06">3.06</A></TD><TD>Do you plan to port Hercules to other platforms?</TD></TR>
+<TR><TD><A HREF="#3.06">3.06</A></TD><TD>Can Hercules be ported to run on other platforms?</TD></TR>
 <TR><TD>&nbsp;</TD></TR>
 <TR><TD><A HREF="#4.01">4.01</A></TD><TD>How can I create a virtual DASD volume?</TD></TR>
 <TR><TD><A HREF="#4.02">4.02</A></TD><TD>Can I read a tape which was created on a mainframe?</TD></TR>
@@ -57,17 +57,18 @@
 </H4>
 <P>
     Hercules is a software implementation of the System/370, ESA/390 and
-    z/Architecture hardware which runs under Linux on several hardware
-    platforms including the Intel Pentium PC, and under Windows NT and
-    Windows 2000.
+    z/Architecture mainframe architectures. Hercules runs under Windows
+    and Linux, as well as under various other Unix or Unix-like systems
+    on Intel Pentium and other hardware platforms including Alpha,
+    Sparc, and Mac.
 </P>
 <H4><A NAME="1.02">1.02</A>
     So what exactly does that mean?
 </H4>
 <P>
     It means that your PC can emulate an IBM mainframe processor. The
-    mainframe can range from a 360 to a z900 - running in "System/370" mode,
-    "ESA/390" mode, or "z/Architecture" mode.
+    mainframe can range from a System/360 to a z990 - running in "S/370"
+    mode, "ESA/390" mode, or "z/Architecture" mode.
 </P>
 <P>
     Hercules executes S/370, ESA/390, and z/Architecture instructions
@@ -93,8 +94,11 @@
     Is it functional enough to run production work?
 </H4>
 <P>
-    No. At the moment it's a system programmer's toy, though it's rapidly
-    becoming good enough to run a wide range of software without problems.
+    Hercules has never claimed to be a production-capable system. 
+    It was always meant to be a system programmer's toy. Having said
+    that, it's now become good enough to run a wide range of software
+    without problems, and there are reports that it has been used to
+    run production work in some parts of the world.
 </P>
 <H4><A NAME="1.04">1.04</A>
     What are the licensing restrictions for Hercules?
@@ -124,12 +128,19 @@
 <HR>
 </P>
 <H4><A NAME="2.01">2.01</A>
-    Can it run OS/390, VM/ESA, VSE/ESA?
+    Can it run z/OS, z/VM, z/VSE? 
 </H4>
 <P>
-    Yes. Hercules is a software implementation of ESA/390, and so it is
-    capable of running OS/390, VSE/ESA, and VM/ESA, as well as older
-    versions of these OS's.
+    Yes. Hercules is a software implementation of z/Architecture, and so
+    it is capable of running z/OS, z/VM, and z/VSE.  Hercules also
+    implements ESA/390 (including SIE) and so it can run OS/390, VM/ESA,
+    and VSE/ESA, as well as older versions of these operating systems
+    such as MVS/ESA, MVS/XA, VM/SP, VSE/SP, etc.
+    <p>
+    <b>But</b> (and this is a big but), these operating systems are all
+    IBM Licensed Program Products, whose conditions of use generally
+    restrict their usage to specific IBM machine serial numbers. So you
+    cannot just copy these systems from work and run them on your PC.
 </P>
 <H4><A NAME="2.02">2.02</A>
     What operating systems can I run legally?
@@ -346,46 +357,76 @@
     What PC hardware do I need to run Hercules?
 </H4>
 <P>
-    It depends how fast you want it to run. A Pentium 200 with 32Mb RAM is
-    probably the minimum practical requirement; 500+ MHz with 128Mb RAM would
-    be much better. Hercules doesn't use any fancy graphics, but it does
-    need a fast processor to achieve a reasonable MIPS rate.
+    Classic IBM operating systems (OS/360, MVS 3.8, VM/370) are very light by
+    today's standards and will run satisfactorily on a 300Mhz Pentium with as
+    little as 32MB RAM.
 </P>
 <P>
+    Anything more up-to-date, such as Linux/390 or OS/390, requires much more
+    processing power. Hercules is CPU intensive, so you will want to use the
+    fastest processor you can get. A 2GHz Pentium, preferably with hyperthreading,
+    will probably provide acceptable performance for a light workload.
     If you can afford a multiprocessor system, so much the better. Hercules
-    makes extensive use of multi-threading to overlap I/O with CPU activity, so
-    you should find that a dual or quad Pentium 200 system will outperform a
-    uniprocessor Pentium 450. My development system is a Compaq ProLiant 6000
-    with four Pentium Pro 200s, and response time is quite satisfactory.
+    makes extensive use of multi-threading to overlap I/O with CPU activity, 
+    and to dispatch multiple emulated CPU's in parallel.
+</P>
+<P>
+    For the latest 64-bit operating systems such as zLinux and z/OS, be aware
+    that there is a performance penalty when Hercules emulates z/Architecture
+    on a 32-bit processor such as the Pentium. If you are serious about running
+    64-bit then you will probably want to build Hercules for a 64-bit processor
+    such as Alpha, PPC, or IA64. Pasi Pirhonen is the expert in this area.
 </P>
 <P>
     Hercules does not depend on the Pentium architecture. I've built and run
     it successfully on a 500 MHz Alpha 21164, and others have run it on SPARC
-    and S/390 (!) Linux systems. (One guy has even run OS/360 under Hercules
-    under Linux/390 under Hercules under Linux/390 under VM/ESA!) The only
-    weirdness about building the package on an Alpha is that you'll get
-    compiler warnings about "unsigned long value, unsigned long long format".
-    You can ignore these.
+    and S/390 (!) Linux systems. One guy has even run OS/360 under Hercules
+    under Linux/390 under Hercules under Linux/390 under VM/ESA!
+    The prize for the world's smallest mainframe probably goes to Ivan Warren,
+    who claims to have run VM/370 under Hercules on an iPAQ 5450 handheld PDA.
 </P>
 <P>
-    You will need enough Linux swap space to accommodate your S/390 real
-    storage (main storage plus expanded storage). For maximum throughput, you
+    You should provide enough RAM to accommodate your S/390 real storage
+    (main storage plus expanded storage) in addition to the normal
+    requirements of your PC's operating system.  For maximum throughput, you
     should set your main and expanded storage sizes high enough to eliminate
-    S/390 paging. S/390 storage is allocated out of Linux virtual storage,
-    so if you can provide enough RAM to eliminate Linux paging as well,
-    then so much the better.
+    S/390 paging. S/390 storage is allocated out of your PC's virtual storage.
 </P>
 <P>
     You also need enough hard disk space to accommodate the emulated DASD. A
     virtual "3330 model 1" disk drive will need about 100 megabytes of space
     for emulation (a 3330-11 will need about 200 megabytes). A 3380 "single
-    density" model will need about 650MB, and a 3390 model 2 needs about 2GB.
+    density" model will need about 650MB, a 3390 model 2 needs about 2GB, and
+    a 3390 model 3 needs about 3GB.
     If you use the
 <a href="cckddasd.html">compressed CKD DASD feature</a>,
     these sizes will shrink dramatically, usually to about 20 to 30 percent
     of the original size.
 </P>
 <H4><A NAME="3.02">3.02</A>
+    What sort of MIPS rate can I expect?
+</H4>
+<P>
+    Thanks to the cumulative work of many individuals, including
+    Valery Pogonchenko, Juergen Dobrinski, Albert Louw,
+    Gabor Hoffer, Jan Jaeger, Paul Leisy, Clem Clarke,
+    and Greg Smith,
+    the performance of Hercules today is vastly better than it was
+    5 years ago.
+</P>
+<P>
+    Even on a Celeron 300 you should see an execution speed of 1 to 2 MIPS,
+    which is enough to run OS/360 (MFT or MVT) or MVS 3.8 with a response
+    time better than that of a 3033 from the 1970's. It's also fast enough to
+    run VSE/ESA with an acceptable response time. On a more recent system with
+    a 2GHz Pentium processor, you may see the system peak at around 20 MIPS
+    which is enough to run Linux/390 or z/OS with a light workload.
+</P>
+<P>
+    Typical I/O rates of around 50 EXCP/second are reported on average
+    hardware, with rates over 500/second achievable with hardware RAID.
+</P>
+<H4><A NAME="3.03">3.03</A>
     What PC software do I need to run Hercules?
 </H4>
 <P>
@@ -436,23 +477,6 @@
     be aware that some tn3270 clients have bugs which make them unusable
     as OS/360 or MVS consoles.
 </P>
-<H4><A NAME="3.03">3.03</A>
-    What sort of MIPS rate can I expect?
-</H4>
-<P>
-    With the performance enhancements which began around release 1.60,
-    thanks to work by Juergen Dobrinski, Valery Pogonchenko, and Jan Jaeger,
-    you should now see an execution speed of around 0.8 to 1 MIPS, even on a
-    Pentium 200.  That's enough to run OS/360 (MFT or MVT) with a response
-    time similar to that of a 3033 from the 1970's. It's also fast enough to
-    run VSE/ESA with an acceptable response time. If you want to run OS/390
-    instead of OS/360, you'd better get a gigahertz or so Pentium III.  On a
-    fast dual Pentium III it's now not unusual to see 5 MIPS or better.
-</P>
-<P>
-    Typical I/O rates of around 50 EXCP/second are reported on average
-    hardware, with rates over 500/second achievable with hardware RAID.
-</P>
 <H4><A NAME="3.04">3.04</A>
     Which C compiler should I use to build Hercules?
 </H4>
@@ -495,20 +519,16 @@
     compiler instead. See previous question for the required compiler level.
 </P>
 <H4><A NAME="3.06">3.06</A>
-    Do you plan to port Hercules to other platforms?
+    Can Hercules be ported to run on other platforms?
 </H4>
 <P>
-    Not really, no. We simply do not have the resources to support more than
-    one operating system.
-</P>
-<P>
-    It should be noted however that we do make efforts to ensure Hercules
+    With the introduction of autotools, we do make efforts to ensure Hercules
     builds and run on several different operating system platforms (mostly
     just Linux, Windows and Apple right now), but we of course simply cannot
     guarantee that it will run on every operating system platform out there.
 </P>
 <P>
-    If you want to make Hercules run on FreeBSD, Solaris, Linux 2.0.x, or
+    If you want to make Hercules run on FreeBSD, Solaris, OS/2, or
     whatever, then by all means go ahead. I welcome reports of any bugs or
     problems you find, but I probably won't fix problems if it means introducing
     platform-specific code, and I will not be able to test new releases against
@@ -518,7 +538,7 @@
 <P>
     The Hercules code is not intended to be specific to Intel hardware, so if
     you find any issues or faults related to running on other hardware (SPARC,
-    Alpha, PPC, ...) under Linux 2.2, then I'm likely to be receptive to fixing
+    Alpha, PPC, ...) under Linux, then I'm likely to be receptive to fixing
     that sort of problem. Issues related to Unix variants are less likely
     to be fixed however.
 </P>
@@ -776,6 +796,7 @@ maintainer)
 <li>Reed H. Petty
 <li>Jim Pierson
 <li>Valery Pogonchenko
+<li><A HREF="http://upi.iki.fi/">Pasi Pirhonen</A>
 <li>Emerson Santos
 <li>Axel Schwarzer
 <li>Paul Scott
@@ -825,21 +846,20 @@ lists, please let me (Jay Maynard) know.</P>
   post your question to the Hercules-390 forum:
 </P>
 <blockquote><pre>
-<b>Files and archives at:</b>
-  <a href="http://groups.yahoo.com/group/hercules-390">http://groups.yahoo.com/group/hercules-390</a>
-
-<b>Community email addresses:</b>
+<b>Community email addresses:</b><br>
   Post message: <a href="mailto:hercules-390@yahoogroups.com?subject=Hercules Question">hercules-390@yahoogroups.com</a>
   Subscribe:    <a href="mailto:hercules-390-subscribe@yahoogroups.com?subject=Subscribe">hercules-390-subscribe@yahoogroups.com</a>
   Unsubscribe:  <a href="mailto:hercules-390-unsubscribe@yahoogroups.com?subject=Unsubscribe">hercules-390-unsubscribe@yahoogroups.com</a>
   List owner:   <a href="mailto:hercules-390-owner@yahoogroups.com?subject=Hercules">hercules-390-owner@yahoogroups.com</a>
+<b>Files and archives at:</b><br>
+  <a href="http://groups.yahoo.com/group/hercules-390">http://groups.yahoo.com/group/hercules-390</a>
 </pre></blockquote>
 <P>
-  The Hercules-390 forum is in fact your primary source for Hercules support,
+  The <b><u>Hercules-390 forum</u></b> is in fact your <u>primary source for Hercules support</u>,
   and you are strongly encouraged to subscribe. We have a vibrant, active
-  community of over 3200+ members, many of which are very knowledgeable in
-  many different areas of mainframe technology, both from a hardware point
-  of view as well as from an operating system and software point of view.
+  community of over 4800 members, many of which are very knowledgeable in
+  many different areas of mainframe technology, both from a hardware point of
+  view as well as from an operating system and software point of view.
 </P>
 <P>
   In addition to the main Hercules-390 forum, other more specialized Hercules
@@ -849,7 +869,7 @@ lists, please let me (Jay Maynard) know.</P>
 <P>
 <SMALL>
   <I>
-  * Note! the use of Yahoo! as host for the Hercules-390 and related forums
+  Note: the use of Yahoo! as host for the Hercules-390 and related forums
   should in no way be interpreted as an endorsement of the Yahoo! service.
   </I>
 </SMALL>
@@ -871,7 +891,7 @@ lists, please let me (Jay Maynard) know.</P>
 </P>
 <P>
 <small>
-Last updated 28 Nov 2004
+Last updated 18 Aug 2005
 </small>
 </P>
 </BODY>

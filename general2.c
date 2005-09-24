@@ -29,10 +29,10 @@
 /*      Clear TEA on data exception - Peter Kuschnerus           v209*/
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
-
 #include "opcode.h"
-
 #include "inline.h"
 
 

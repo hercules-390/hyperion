@@ -4,9 +4,30 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
+#ifndef _LOGMSG_C_
+#ifndef _HUTIL_DLL_
+#define LOG_DLL_IMPORT DLL_IMPORT
+#else   /* _HUTIL_DLL_ */
+#define LOG_DLL_IMPORT extern
+#endif  /* _HUTIL_DLL_ */
+#else   /* _LOGGER_C_ */
+#define LOG_DLL_IMPORT DLL_EXPORT
+#endif /* _LOGGER_C_ */
+
+#ifndef _LOGGER_C_
+#ifndef _HUTIL_DLL_
+#define LOGR_DLL_IMPORT DLL_IMPORT
+#else
+#define LOGR_DLL_IMPORT extern
+#endif
+#else
+#define LOGR_DLL_IMPORT DLL_EXPORT
+#endif
 
 #define LOG_READ  0
 #define LOG_WRITE 1
+
+extern int logger_syslogfd[2];
 
 #define LOG_NOBLOCK 0
 #define LOG_BLOCK   1
@@ -18,27 +39,29 @@
 #endif
 
 /* Logging functions in logmsg.c */
-void logmsg(char *,...);
-void logmsgp(char *,...);
-void logmsgb(char *,...);
+LOG_DLL_IMPORT void logmsg(char *,...);
+LOG_DLL_IMPORT void vlogmsg(char *,va_list vl);
+LOG_DLL_IMPORT void logmsgp(char *,...);
+LOG_DLL_IMPORT void logmsgb(char *,...);
+LOG_DLL_IMPORT void logdevtr(DEVBLK *dev, char *, ...);
 
-void logger_init(void);
+LOGR_DLL_IMPORT void logger_init(void);
 
-int log_read(char **buffer, int *msgindex, int block);
-int log_line(int linenumber);
-void log_sethrdcpy(char *filename);
-void log_wakeup(void *arg);
+LOGR_DLL_IMPORT int log_read(char **buffer, int *msgindex, int block);
+LOGR_DLL_IMPORT int log_line(int linenumber);
+LOGR_DLL_IMPORT void log_sethrdcpy(char *filename);
+LOGR_DLL_IMPORT void log_wakeup(void *arg);
 
 /* Log routing section */
 typedef void LOG_WRITER(void *,char *);
 typedef void LOG_CLOSER(void *);
 
-int log_open(LOG_WRITER*,LOG_CLOSER*,void *);
-void log_close(void);
-void log_write(int,char *,va_list);
+LOG_DLL_IMPORT int log_open(LOG_WRITER*,LOG_CLOSER*,void *);
+LOG_DLL_IMPORT void log_close(void);
+LOG_DLL_IMPORT void log_write(int,char *,va_list);
 /* End of log routing section */
 
 /* Log routing utility */
-char *log_capture(void *(*)(void *),void *);
+LOG_DLL_IMPORT char *log_capture(void *(*)(void *),void *);
 
 #endif

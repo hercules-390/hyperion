@@ -53,7 +53,7 @@ int     len2;                           /* Length to end of page     */
 
     if ( NOCROSS2K(addr,len) )
     {
-        MEMCPY(MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey),
+        memcpy(MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey),
                src, len + 1);
     }
     else
@@ -65,8 +65,8 @@ int     len2;                           /* Length to end of page     */
         main2 = MADDR((addr + len2) & ADDRESS_MAXWRAP(regs), arn,
                       regs, ACCTYPE_WRITE, regs->psw.pkey);
         *sk |= (STORKEY_REF | STORKEY_CHANGE);
-        MEMCPY (main1, src, len2);
-        MEMCPY (main2, src + len2, len + 1 - len2);
+        memcpy (main1, src, len2);
+        memcpy (main2, (BYTE*)src + len2, len + 1 - len2);
     }
 
 } /* end function ARCH_DEP(vstorec) */
@@ -325,7 +325,7 @@ int     len2;                           /* Length to copy on page    */
         }
 #endif /*FEATURE_INTERVAL_TIMER*/
 
-        MEMCPY (dest, main1, len + 1);
+        memcpy (dest, main1, len + 1);
 
 #ifdef FEATURE_INTERVAL_TIMER
         if (unlikely(addr == 80))
@@ -337,8 +337,8 @@ int     len2;                           /* Length to copy on page    */
         len2 = 0x800 - (addr & 0x7FF);
         main2 = MADDR ((addr + len2) & ADDRESS_MAXWRAP(regs),
                        arn, regs, ACCTYPE_READ, regs->psw.pkey);
-        MEMCPY (dest, main1, len2);
-        MEMCPY (dest + len2, main2, len + 1 - len2);
+        memcpy (dest, main1, len2);
+        memcpy ((BYTE*)dest + len2, main2, len + 1 - len2);
     }
 
 } /* end function ARCH_DEP(vfetchc) */

@@ -11,11 +11,15 @@
 /* SA22-7201-04 ESA/390 Principles of Operation                      */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"
 
 #include "inline.h"
+#include <assert.h>
+
 
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"
@@ -35,7 +39,7 @@ REGS   *regs;                           /* -> Regs                   */
 
     regs = sysblk.regs[cpu];
 
-    HDC(debug_cpu_state, regs);
+    HDC1(debug_cpu_state, regs);
 
     /* Reset external interrupts */
     OFF_IC_SERVSIG;
@@ -88,7 +92,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     {
         logmsg (_("HHCCP027E Device %4.4X not in configuration\n"),
                 devnum);
-        HDC(debug_cpu_state, regs);
+        HDC1(debug_cpu_state, regs);
         return -1;
     }
 
@@ -96,7 +100,7 @@ BYTE    chanstat;                       /* IPL device channel status */
       && dev->chanset != regs->chanset)
     {
         logmsg(_("HHCCP028E Device not connected to channelset\n"));
-        HDC(debug_cpu_state, regs);
+        HDC1(debug_cpu_state, regs);
         return -1;
     }
     /* Point to the PSA in main storage */
@@ -161,7 +165,7 @@ BYTE    chanstat;                       /* IPL device channel status */
             if ((i & 3) == 3) logmsg(" ");
         }
         logmsg ("\n");
-        HDC(debug_cpu_state, regs);
+        HDC1(debug_cpu_state, regs);
         return -1;
     }
 
@@ -204,7 +208,7 @@ BYTE    chanstat;                       /* IPL device channel status */
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
-        HDC(debug_cpu_state, regs);
+        HDC1(debug_cpu_state, regs);
         return -1;
     }
 
@@ -221,7 +225,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     /* Signal the CPU to retest stopped indicator */
     WAKEUP_CPU (regs);
 
-    HDC(debug_cpu_state, regs);
+    HDC1(debug_cpu_state, regs);
     return 0;
 } /* end function load_ipl */
 
@@ -231,7 +235,7 @@ BYTE    chanstat;                       /* IPL device channel status */
 /*   following format:                                              */
 /*                                                                  */
 /*   '*' in col 1 is comment                                        */
-/*   core image file followed be address where is should be loaded  */
+/*   core image file followed by address where it should be loaded  */
 /*                                                                  */
 /* For example:                                                     */
 /*                                                                  */
@@ -250,11 +254,11 @@ int     rc;                             /* Return code               */
 int     rx;                             /* Return code               */
 PSA    *psa;                            /* -> Prefixed storage area  */
 FILE   *fp;
-char    inputline[256];
-char    dirname[256];                   /* dirname of ins file       */
+char    inputline[1024];
+char    dirname[1024];                  /* dirname of ins file       */
 char   *dirbase;
-char    filename[256];                  /* filename of image file    */
-char    pathname[256];                  /* pathname of image file    */
+char    filename[1024];                 /* filename of image file    */
+char    pathname[1024];                 /* pathname of image file    */
 U32     fileaddr;
 
     if(fname == NULL)                   /* Default ipl from DASD     */
@@ -269,7 +273,7 @@ U32     fileaddr;
     }
 
     regs = sysblk.regs[cpu];
-    HDC(debug_cpu_state, regs);
+    HDC1(debug_cpu_state, regs);
 
     /* Reset external interrupts */
     OFF_IC_SERVSIG;
@@ -297,11 +301,12 @@ U32     fileaddr;
     }
 
     /* remove filename from pathname */
-    strcpy(dirname,fname);
-    dirbase = rindex(dirname,'/');
+    hostpath(pathname, fname, sizeof(filename));
+    strlcpy(dirname,pathname,sizeof(dirname));
+    dirbase = strrchr(dirname,'/');
     if(dirbase) *(++dirbase) = '\0';
-    
-    fp = fopen(fname, "r");
+
+    fp = fopen(pathname, "r");
     if(fp == NULL)
     {
         logmsg(_("HHCCP031E Load from %s failed: %s\n"),fname,strerror(errno));
@@ -311,7 +316,9 @@ U32     fileaddr;
     do
     {
         rc = fgets(inputline,sizeof(inputline),fp) != NULL;
-        rx = sscanf(inputline,"%s %i",filename,&fileaddr);
+        assert(sizeof(pathname) == 1024);
+        rx = sscanf(inputline,"%1024s %i",pathname,&fileaddr);
+        hostpath(filename, pathname, sizeof(filename));
 
         /* If no load address was found load to location zero */
         if(rc && rx < 2)
@@ -321,18 +328,24 @@ U32     fileaddr;
         {
             /* Prepend the directory name if one was found
                and if no full pathname was specified */
-            if(dirbase && *filename != '/')
+            if(dirbase &&
+#ifndef WIN32
+                filename[0] != '/'
+#else // WIN32
+                filename[1] != ':'
+#endif // !WIN32
+            )
             {
-                strcpy(pathname,dirname);
-                strcat(pathname,filename);
+                strlcpy(pathname,dirname,sizeof(pathname));
+                strlcat(pathname,filename,sizeof(pathname));
             }
             else
-                strcpy(pathname,filename);
+                strlcpy(pathname,filename,sizeof(pathname));
 
             if( ARCH_DEP(load_main) (pathname, fileaddr) < 0 )
             {
                 fclose(fp);
-                HDC(debug_cpu_state, regs);
+                HDC1(debug_cpu_state, regs);
                 return -1;
             }
             sysblk.main_clear = sysblk.xpnd_clear = 0;
@@ -357,7 +370,7 @@ U32     fileaddr;
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
-        HDC(debug_cpu_state, regs);
+        HDC1(debug_cpu_state, regs);
         return -1;
     }
 
@@ -370,7 +383,7 @@ U32     fileaddr;
     /* Signal the CPU to retest stopped indicator */
     WAKEUP_CPU (regs);
 
-    HDC(debug_cpu_state, regs);
+    HDC1(debug_cpu_state, regs);
     return 0;
 } /* end function load_hmc */
 /*-------------------------------------------------------------------*/
@@ -484,8 +497,11 @@ int rl;
 int br = 0;
 RADR pageaddr;
 U32  pagesize;
+BYTE pathname[MAX_PATH];
 
-    fd = open (fname, O_RDONLY|O_BINARY);
+    hostpath(pathname, fname, sizeof(pathname));
+
+    fd = open (pathname, O_RDONLY|O_BINARY);
     if(fd < 0)
     {
         logmsg(_("HHCCP033E load_main: %s: %s\n"), fname, strerror(errno));

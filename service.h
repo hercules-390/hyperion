@@ -137,7 +137,7 @@ typedef struct _SCCB_SCP_INFO {
         FWORD   grzm;                   /* Addess increment size in
                                            units of 1M, valid only
                                            if realiszm is zero       */
-        DWORD   grnmx;                  /* Maximum increment number
+        DBLWRD  grnmx;                  /* Maximum increment number
                                            when it is larger then
                                            64K or when ESAME is on   */
         BYTE    resv8[16];              /* Reserved                  */
@@ -396,11 +396,11 @@ typedef struct _SCCB_CPI_BK {
         BYTE    id_fmt;
         BYTE    resv0;
         BYTE    system_type[8];
-        DWORD   resv1;
+        DBLWRD  resv1;
         BYTE    system_name[8];
-        DWORD   resv2;
-        DWORD   system_level;
-        DWORD   resv3;
+        DBLWRD  resv2;
+        DBLWRD  system_level;
+        DBLWRD  resv3;
         BYTE    sysplex_name[8];
         BYTE    resv4[16];
     } SCCB_CPI_BK;

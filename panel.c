@@ -25,12 +25,18 @@
 /*      actual implementation by "Fish" (David B. Trout).            */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
+#define _PANEL_C_
+#define _HENGINE_DLL_
+
 #include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"
 #include "history.h"
 // #include "inline.h"
 #include "fillfnam.h"
+#include "hconsole.h"
 
 #define  DISPLAY_INSTRUCTION_OPERANDS
 
@@ -39,91 +45,14 @@
 /*   (Note: all NPD mods are identified by the string =NP=           */
 /*===================================================================*/
 
-#define BLK        30
-#define DGRY       1;30
-#define BLU        34
-#define LBLU       1;34
-#define GRN        32
-#define LGRN       1;32
-#define CYN        36
-#define LCYN       1;36
-#define RED        31
-#define LRED       1;31
-#define PUR        35
-#define LPUR       1;35
-#define YLW        33
-#define LYLW       1;33
-#define LGRY       37
-#define WHT        1;37
-#define BBLK       40
-#define BBLU       44
-#define BGRN       42
-#define BCYN       46
-#define BRED       41
-#define BPUR       45
-#define BBRN       43
-#define BLGRY      47
-#define ANSI_CYN_BLK "\x1B[0;36;40m"
-#define ANSI_WHT_BLU "\x1B[1;37;44m"
-#define ANSI_WHT_BLK "\x1B[1;37;40m"
-#define ANSI_GRN_BLK "\x1B[0;32;40m"
-#define ANSI_RED_BLK "\x1B[1;31;40m"
-#define ANSI_YLW_BLK "\x1B[1;33;40m"
-#define ANSI_GRY_BLU "\x1B[1;30;44m"
-#define ANSI_WHT_BLU "\x1B[1;37;44m"
-#define ANSI_WHT_GRN "\x1B[1;37;42m"
-#define ANSI_GRY_GRN "\x1B[1;30;42m"
-#define ANSI_WHT_RED "\x1B[1;37;41m"
-#define ANSI_GRY_RED "\x1B[1;30;41m"
-#define ANSI_GRY_BLK "\x1B[0m"
-#define ANSI_LGRN_BLK "\x1B[1;32;40m"
-#define ANSI_CLEAR "\x1B[2J"
-#define ANSI_CLEAR_EOL "\x1B[K"
-#define ANSI_CURSOR "\x1B[%d;%dH"
-
-/*-------------------------------------------------------------------*/
-/* Definitions for ANSI control sequences                            */
-/*-------------------------------------------------------------------*/
-#define ANSI_SAVE_CURSOR        "\x1B[s"
-#define ANSI_CURSOR_UP          "\x1B[1A"
-#define ANSI_CURSOR_DOWN        "\x1B[1B"
-#define ANSI_CURSOR_FORWARD     "\x1B[1C"
-#define ANSI_CURSOR_BACKWARD    "\x1B[1D"
-#define ANSI_POSITION_CURSOR    "\x1B[%d;%dH"
-#define ANSI_ROW1_COL1          "\x1B[1;1H"
-#define ANSI_ROW1_COL80         "\x1B[1;80H"
-#define ANSI_ROW22_COL80        "\x1B[22;80H"
-#define ANSI_ROW23_COL1         "\x1B[23;1H"
-#define ANSI_ROW24_COL1         "\x1B[24;1H"
-#define ANSI_ROW24_COL79        "\x1B[24;79H"
-#define ANSI_BLACK_GREEN        "\x1B[30;42m"
-#define ANSI_YELLOW_RED         "\x1B[33;1;41m"
-#define ANSI_WHITE_BLACK        "\x1B[0m"
-#define ANSI_HIGH_INTENSITY     "\x1B[1m"
-#define ANSI_ERASE_EOL          "\x1B[K"
-#define ANSI_ERASE_SCREEN       "\x1B[2J"
-#define ANSI_RESTORE_CURSOR     "\x1B[u"
-
 /*-------------------------------------------------------------------*/
 /* Definitions for keyboard input sequences                          */
 /*-------------------------------------------------------------------*/
-#define KBD_HOME                "\x1B[1~"
-#define KBD_INSERT              "\x1B[2~"
-#define KBD_DELETE              "\x1B[3~"
-#define KBD_END                 "\x1B[4~"
-#define KBD_PAGE_UP             "\x1B[5~"
-#define KBD_PAGE_DOWN           "\x1B[6~"
-#define KBD_UP_ARROW            "\x1B[A"
-#define KBD_DOWN_ARROW          "\x1B[B"
-#define KBD_RIGHT_ARROW         "\x1B[C"
-#define KBD_LEFT_ARROW          "\x1B[D"
+
 #define xKBD_UP_ARROW           "\x1BOA"
 #define xKBD_DOWN_ARROW         "\x1BOB"
 #define xKBD_RIGHT_ARROW        "\x1BOC"
 #define xKBD_LEFT_ARROW         "\x1BOD"
-
-#define ANSI_RESET_WHT_BLK   "\x1B[0;37;40m"
-#define ANSI_CLEAR_SCREEN    "\x1B[2J"
 
 int  NPDup = 0;         /* 1 when new panel is up */
 int  NPDinit = 0;       /* 1 when new panel is initialized */
@@ -162,111 +91,77 @@ int  NPcurdata;         /* current data switches */
 int  NPcurrg;           /* current register set displayed */
 int  NPcuripl;          /* current IPL switches */
 int  NPcurpos[2];       /* Cursor position (row, col) */
-char NPcolor[24];       /* color string */
+
+int   NPcolorSwitch;
+short NPcolorFore;
+short NPcolorBack;
+
 int  NPdatalen;         /* Length of data */
 char NPcurprompt1[40];
 char NPcurprompt2[40];
 U32  NPaaddr;
 
-#define MAX_MSGS                800     /* Number of slots in buffer */
-#define MSG_SIZE                80      /* Size of one message       */
+#define MSG_SIZE     80                 /* Size of one message       */
+#define MAX_MSGS     800                /* Number of slots in buffer */
 #define BUF_SIZE    (MAX_MSGS*MSG_SIZE) /* Total size of buffer      */
-#define NUM_LINES               22      /* Number of scrolling lines */
-#define CMD_SIZE             32767      /* Length of command line    */
+#define NUM_LINES    22                 /* Number of scrolling lines */
+#define CMD_SIZE     256                /* cmdline buffer size       */
 
-static int     firstmsgn = 0;           /* Number of first message to
+///////////////////////////////////////////////////////////////////////
+// Note: we only support 80x24 at the moment, but that could change.
+
+static int   cons_rows = 0;             /* console height in lines   */
+static int   cons_cols = 0;             /* console width in chars    */
+
+static char  cmdins  = 1;               /* 1==insert mode, 0==overlay*/
+static char  cmdline[CMD_SIZE+1];       /* Command line buffer       */
+static int   cmdlen  = 0;               /* cmdline data len in bytes */
+static int   cmdoff  = 0;               /* cmdline buffer cursor pos */
+static int   cmdcols = 0;               /* visible cmdline width cols*/
+static int   cmdcol  = 0;               /* cols cmdline scrolled right*/
+static FILE *confp   = NULL;            /* Console file pointer      */
+
+#define CMD_PREFIX_STR   "Command ==> "
+#define LEN_CMD_PREFIX   strlen(CMD_PREFIX_STR)
+
+#define ADJ_CMDCOL() /* (called after modifying cmdoff) */ \
+    do { \
+        if (cmdoff-cmdcol > cmdcols) { /* past right edge of screen */ \
+            cmdcol = cmdoff-cmdcols; \
+        } else if (cmdoff < cmdcol) { /* past left edge of screen */ \
+            cmdcol = cmdoff; \
+        } \
+    } while (0)
+
+#define PUTC_CMDLINE(confp) \
+    do { \
+        ASSERT(cmdcol <= cmdlen); \
+        for (i=0; cmdcol+i < cmdlen && i < cmdcols; i++) \
+            putc (cmdline[cmdcol+i], confp); \
+    } while (0)
+
+///////////////////////////////////////////////////////////////////////
+
+static int   firstmsgn = 0;             /* Number of first message to
                                            be displayed relative to
                                            oldest message in buffer  */
-static BYTE   *msgbuf;                  /* Circular message buffer   */
-static int     msgslot = 0;             /* Next available buffer slot*/
-static int     nummsgs = 0;             /* Number of msgs in buffer  */
+static BYTE *msgbuf;                    /* Circular message buffer   */
+static int   msgslot = 0;               /* Next available buffer slot*/
+static int   nummsgs = 0;               /* Number of msgs in buffer  */
 
-#if 1
-//
-//
-//  THE FOLLOWING CODE IS HERE TO PROVIDE COMPATIBILIY WITH THE CURRENT
-//  PANEL IMPLEMENTATION
-//
-//  THE PANEL DISPLAY SHOULD AT SOME POINT BE REWRITTEN TO USE LOG_LINE
-//  AND LOG_READ RATHER THEN THE MESSAGE PIPE PROVIDED HERE
-//
-//
-FILE   *compat_msgpipew;                /* Message pipe write handle */
-int     compat_msgpiper;                /* Message pipe read handle  */
-int     compat_shutdown;                /* Shutdown flag             */
-TID     compat_tid = 0;
-
-#if defined(OPTION_DYNAMIC_LOAD)
-void *(*panel_command) (void *);
-void  (*panel_display) (void);
-void  (*daemon_task) (void);
-int   (*config_command) (int argc, char *argv[], char *cmdline);
-int   (*system_command) (int argc, char *argv[], char *cmdline);
-void *(*debug_cpu_state) (REGS *);
-void *(*debug_device_state) (DEVBLK *);
-void *(*debug_program_interrupt) (REGS *, int);
-void *(*debug_diagnose) (U32, int, int, REGS *);
-void *(*debug_sclp_unknown_command) (U32, void *, REGS *);
-void *(*debug_sclp_unknown_event) (void *, void *, REGS *);
-void *(*debug_sclp_event_data) (void *, void *, REGS *);
-void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
-void *(*debug_watchdog_signal) (REGS *);
-#endif
-
-static char *lmsbuf;
-static int   lmsnum;
-static int   lmscnt;
-static void *panel_compat_thread(void *arg)
-{
-
-    UNREFERENCED(arg);
-
-    while(!compat_shutdown)
-        if((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_BLOCK)))
-            fwrite(lmsbuf,lmscnt,1,compat_msgpipew);
-
-    fclose(compat_msgpipew);
-
-    return NULL;
-}
-
-
-static void panel_compat_init()
-{
-ATTR compat_attr;
-int rc, pfd[2];
-
-    rc = pipe (pfd);
-    if (rc < 0)
-    {
-        logmsg(_("HHCLG013S Message pipe creation failed: %s\n"),
-                strerror(errno));
-        exit(1);
-    }
-
-    compat_shutdown = 0;
-    compat_msgpiper = pfd[0];
-    compat_msgpipew = fdopen (pfd[1], "w");
-    if (compat_msgpipew == NULL)
-    {
-        compat_msgpipew = stderr;
-        logmsg(_("HHCLG014S Message pipe open failed: %s\n"),
-                strerror(errno));
-        exit(1);
-    }
-    setvbuf (compat_msgpipew, NULL, _IOLBF, 0);
-
-    initialize_detach_attr (&compat_attr);
-
-    create_thread(&compat_tid, &compat_attr, panel_compat_thread, NULL);
-}
-#endif
+static char *lmsbuf = NULL;
+static int   lmsndx = 0;
+static int   lmsnum = -1;
+static int   lmscnt = -1;
+static int   lmsmax = LOG_DEFSIZE/2;
+static int   keybfd = -1;               /* Keyboard file descriptor  */
 
 /*=NP================================================================*/
 /*  Initialize the NP data                                           */
 /*===================================================================*/
 
-static void NP_init()
+static
+void NP_init()
 {
     int i;
 
@@ -283,7 +178,7 @@ static void NP_init()
     NPcuripl = -1;
     NPcurpos[0] = 1;
     NPcurpos[1] = 1;
-    strcpy(NPcolor, "");
+    NPcolorSwitch = 0;
     strcpy(NPprompt1, "");
     strcpy(NPprompt2, "");
     strcpy(NPcurprompt1, "");
@@ -294,7 +189,8 @@ static void NP_init()
 /*  This draws the initial screen template                           */
 /*===================================================================*/
 
-static void NP_screen(FILE *confp)
+static
+void NP_screen()
 {
 
     DEVBLK *dev;
@@ -303,40 +199,33 @@ static void NP_screen(FILE *confp)
     char c[2];
     char devnam[128];
 
-    fprintf(confp, ANSI_WHT_BLK);
-    fprintf(confp, ANSI_CLEAR);
-    fprintf(confp, ANSI_WHT_BLU);
-    fprintf(confp, ANSI_CURSOR, 1, 1);
-    fprintf(confp, " Hercules   CPU              %7.7s ",
-                                        get_arch_mode_string(NULL));
-    fprintf(confp, ANSI_CURSOR, 1, 38);
-    fprintf(confp, "|             Peripherals                  ");
-    fprintf(confp, ANSI_GRY_BLK);
-    fprintf(confp, ANSI_CURSOR, 2, 39);
-    fprintf(confp, " # Addr Modl Type Assignment            ");
-    fprintf(confp, ANSI_CURSOR, 4, 9);
-    fprintf(confp, "PSW");
-    fprintf(confp, ANSI_CURSOR, 7, 9);
-    fprintf(confp, "0        1        2        3");
-    fprintf(confp, ANSI_CURSOR, 9, 9);
-    fprintf(confp, "4        5        6        7");
-    fprintf(confp, ANSI_CURSOR, 11, 9);
-    fprintf(confp, "8        9       10       11");
-    fprintf(confp, ANSI_CURSOR, 13, 8);
-    fprintf(confp, "12       13       14       15");
-    fprintf(confp, ANSI_CURSOR, 14, 6);
-    fprintf(confp, "GPR     CR      AR      FPR");
-    fprintf(confp, ANSI_CURSOR, 16, 2);
-    fprintf(confp, "ADDRESS:");
-    fprintf(confp, ANSI_CURSOR, 16, 22);
-    fprintf(confp, "DATA:");
-    fprintf(confp, ANSI_CURSOR, 20, 2);
-#ifdef OPTION_MIPS_COUNTING
-    fprintf(confp, " MIPS  SIO/s");
-#else
-    fprintf(confp, "instructions");
-#endif
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+    clear_screen( confp );
 
+    set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
+
+    set_screen_pos( confp,  1,  1 ); fprintf( confp, " Hercules   CPU              %7.7s ", get_arch_mode_string(NULL));
+    set_screen_pos( confp,  1, 38 ); fprintf( confp, "|             Peripherals                  ");
+
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+
+    set_screen_pos( confp,  2, 39 ); fprintf( confp, " # Addr Modl Type Assignment            " );
+    set_screen_pos( confp,  4,  9 ); fprintf( confp, "PSW"                                      );
+    set_screen_pos( confp,  7,  9 ); fprintf( confp, "0        1        2        3"             );
+    set_screen_pos( confp,  9,  9 ); fprintf( confp, "4        5        6        7"             );
+    set_screen_pos( confp, 11,  9 ); fprintf( confp, "8        9       10       11"             );
+    set_screen_pos( confp, 13,  8 ); fprintf( confp, "12       13       14       15"            );
+    set_screen_pos( confp, 14,  6 ); fprintf( confp, "GPR     CR      AR      FPR"              );
+    set_screen_pos( confp, 16,  2 ); fprintf( confp, "ADDRESS:"                                 );
+    set_screen_pos( confp, 16, 22 ); fprintf( confp, "DATA:"                                    );
+
+    set_screen_pos( confp, 20, 2 );
+
+#ifdef OPTION_MIPS_COUNTING
+    fprintf( confp, " MIPS  SIO/s" );
+#else
+    fprintf( confp, "instructions" );
+#endif
 
     p = 3;
     a = 1;
@@ -344,7 +233,7 @@ static void NP_screen(FILE *confp)
     {
       if(dev->pmcw.flag5 & PMCW5_V)
       {
-         fprintf(confp, ANSI_CURSOR, p, 40);
+         set_screen_pos( confp, p, 40 );
          c[0] = a | 0x40;
          c[1] = '\0';
          (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
@@ -359,61 +248,65 @@ static void NP_screen(FILE *confp)
          if (p > 23) break;
       }
     }
+
     NPlastdev = a;
-    fprintf(confp, ANSI_WHT_BLK);
+
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+
     for (p = 2; p < 25; p++) {
-        fprintf(confp, ANSI_CURSOR, p, 38);
+        set_screen_pos( confp, p, 38 );
         fprintf(confp, "|");
     }
-    fprintf(confp, ANSI_CURSOR, 18, 1);
-    fprintf(confp, "-------------------------------------");
-    fprintf(confp, ANSI_CURSOR, 24, 1);
-    fprintf(confp, "-------------------------------------");
-    fprintf(confp, ANSI_CURSOR, 24, 39);
-    fprintf(confp, "------------------------------------------");
-    fprintf(confp, ANSI_GRY_BLU);
-    fprintf(confp, ANSI_CURSOR " STO ", 19, 16);
-    fprintf(confp, ANSI_GRY_BLU);
-    fprintf(confp, ANSI_CURSOR " DIS ", 19, 24);
-    fprintf(confp, ANSI_GRY_BLU);
-    fprintf(confp, ANSI_CURSOR " EXT ", 22, 16);
-    fprintf(confp, ANSI_GRY_BLU);
-    fprintf(confp, ANSI_CURSOR " IPL ", 22, 24);
-    fprintf(confp, ANSI_GRY_GRN);
-    fprintf(confp, ANSI_CURSOR " STR ", 22,  2);
-    fprintf(confp, ANSI_GRY_RED);
-    fprintf(confp, ANSI_CURSOR " STP ", 22,  9);
-    fprintf(confp, ANSI_GRY_BLU);
-    fprintf(confp, ANSI_CURSOR " RST ", 19, 32);
-    fprintf(confp, ANSI_GRY_RED);
-    fprintf(confp, ANSI_CURSOR " PWR ", 22, 32);
-    fprintf(confp, ANSI_WHT_BLK);
-    fprintf(confp, ANSI_CURSOR "G", 14, 6);
-    fprintf(confp, ANSI_CURSOR "C", 14, 14);
-    fprintf(confp, ANSI_CURSOR "A", 14, 22);
-    fprintf(confp, ANSI_CURSOR "F", 14, 30);
-    fprintf(confp, ANSI_CURSOR "U", 2, 40);
-    fprintf(confp, ANSI_CURSOR "n", 2, 62);
-    fprintf(confp, ANSI_CURSOR "R", 16, 5);
-    fprintf(confp, ANSI_CURSOR "D", 16, 22);
-    fprintf(confp, ANSI_WHT_BLU);
-    fprintf(confp, ANSI_CURSOR "O", 19, 19);
-    fprintf(confp, ANSI_CURSOR "I", 19, 26);
-    fprintf(confp, ANSI_CURSOR "E", 22, 17);
-    fprintf(confp, ANSI_CURSOR "L", 22, 27);
-    fprintf(confp, ANSI_CURSOR "T", 19, 35);
-    fprintf(confp, ANSI_WHT_GRN);
-    fprintf(confp, ANSI_CURSOR "S", 22, 3);
-    fprintf(confp, ANSI_WHT_RED);
-    fprintf(confp, ANSI_CURSOR "P", 22, 12);
-    fprintf(confp, ANSI_CURSOR "W", 22, 34);
+
+    set_screen_pos( confp, 18,  1 ); fprintf( confp, "-------------------------------------"      );
+    set_screen_pos( confp, 24,  1 ); fprintf( confp, "-------------------------------------"      );
+    set_screen_pos( confp, 24, 39 ); fprintf( confp, "------------------------------------------" );
+
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLUE  ); set_screen_pos( confp, 19, 16 ); fprintf( confp, " STO " );
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLUE  ); set_screen_pos( confp, 19, 24 ); fprintf( confp, " DIS " );
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLUE  ); set_screen_pos( confp, 22, 16 ); fprintf( confp, " EXT " );
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLUE  ); set_screen_pos( confp, 22, 24 ); fprintf( confp, " IPL " );
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_GREEN ); set_screen_pos( confp, 22,  2 ); fprintf( confp, " STR " );
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_RED   ); set_screen_pos( confp, 22,  9 ); fprintf( confp, " STP " );
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLUE  ); set_screen_pos( confp, 19, 32 ); fprintf( confp, " RST " );
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_RED   ); set_screen_pos( confp, 22, 32 ); fprintf( confp, " PWR " );
+
+    set_screen_color( confp, COLOR_WHITE, COLOR_BLACK );
+
+    set_screen_pos( confp, 14,  6 ); fprintf( confp, "G" );
+    set_screen_pos( confp, 14, 14 ); fprintf( confp, "C" );
+    set_screen_pos( confp, 14, 22 ); fprintf( confp, "A" );
+    set_screen_pos( confp, 14, 30 ); fprintf( confp, "F" );
+    set_screen_pos( confp,  2, 40 ); fprintf( confp, "U" );
+    set_screen_pos( confp,  2, 62 ); fprintf( confp, "n" );
+    set_screen_pos( confp, 16,  5 ); fprintf( confp, "R" );
+    set_screen_pos( confp, 16, 22 ); fprintf( confp, "D" );
+
+    set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
+
+    set_screen_pos( confp, 19, 19 ); fprintf( confp, "O" );
+    set_screen_pos( confp, 19, 26 ); fprintf( confp, "I" );
+    set_screen_pos( confp, 22, 17 ); fprintf( confp, "E" );
+    set_screen_pos( confp, 22, 27 ); fprintf( confp, "L" );
+    set_screen_pos( confp, 19, 35 ); fprintf( confp, "T" );
+
+    set_screen_color( confp, COLOR_WHITE, COLOR_GREEN );
+
+    set_screen_pos( confp, 22, 3 ); fprintf( confp, "S" );
+
+    set_screen_color( confp, COLOR_WHITE, COLOR_RED );
+
+    set_screen_pos( confp, 22, 12 ); fprintf( confp, "P" );
+    set_screen_pos( confp, 22, 34 ); fprintf( confp, "W" );
+
 }
 
 /*=NP================================================================*/
 /*  This refreshes the screen with new data every cycle              */
 /*===================================================================*/
 
-static void NP_update(FILE *confp, char *cmdline, int cmdoff)
+static
+void NP_update()
 {
     int s, i, r, c;
     int online, busy, pend, open;
@@ -434,13 +327,13 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
     if (NPhelpup == 1) {
         if (NPhelpdown == 1) {
              NP_init();
-             NP_screen(confp);
+             NP_screen();
              NPhelpup = 0;
              NPhelpdown = 0;
         } else {
-        fprintf(confp, ANSI_GRY_BLK);
-        fprintf(confp, ANSI_CLEAR);
-        fprintf(confp, ANSI_CURSOR, 1, 1);
+        set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+        clear_screen( confp );
+        set_screen_pos( confp, 1, 1 );
         fprintf(confp, "All commands consist of one character keypresses.  The various commands are\n");
         fprintf(confp, "highlighted onscreen by bright white versus the gray of other lettering. \n");
         fprintf(confp, "\n");
@@ -463,7 +356,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
         fprintf(confp, "a lighted device address means the device is busy, and a green model number\n");
         fprintf(confp, "means the attached UNIX file is open to the device.\n");
         fprintf(confp, "\n");
-        fprintf(confp, ANSI_CURSOR, 24, 16);
+        set_screen_pos( confp, 24, 16 );
         fprintf(confp, "Press Escape to return to control panel operations");
         return;
         }
@@ -473,10 +366,10 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
     if (!regs) regs = &sysblk.dummyregs;
 
 #if defined(OPTION_MIPS_COUNTING)
-    fprintf(confp, ANSI_WHT_BLU);
-    fprintf(confp, ANSI_CURSOR, 1, 16);
+    set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
+    set_screen_pos( confp, 1, 16 );
     fprintf(confp, "%4.4X:",regs->cpuad);
-    fprintf(confp, ANSI_CURSOR, 1, 22);
+    set_screen_pos( confp, 1, 22 );
     fprintf(confp, "%3d%%",(int)(100.0 * regs->cpupct));
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 
@@ -498,8 +391,8 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
             curpsw[7] |= 0x01;
     }
     pswwait = curpsw[1] & 0x02;
-    fprintf (confp, ANSI_YLW_BLK);
-    fprintf (confp, ANSI_CURSOR, 3, 2);
+    set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
+    set_screen_pos( confp, 3, 2 );
     fprintf (confp, "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X",
                     curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                     curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
@@ -522,9 +415,9 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #endif
     s = 20 + ((17 - strlen(state)) / 2);
     if (strcmp(state, NPstate) != 0) {
-        fprintf (confp, ANSI_CURSOR, 3, 20);
+        set_screen_pos( confp, 3, 20 );
         fprintf (confp, "                 ");
-        fprintf (confp, ANSI_CURSOR, 3, s);
+        set_screen_pos( confp, 3, s );
         fprintf (confp, "%s", state);
         strcpy(NPstate, state);
     }
@@ -568,7 +461,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
     c = 2;
     for (i = 0; i < 16; i++) {
         if (curreg[i] != NPregs[i]) {
-            fprintf(confp, ANSI_CURSOR, r, c);
+            set_screen_pos( confp, r, c );
             fprintf(confp, "%8.8X", curreg[i]);
             NPregs[i] = curreg[i];
         }
@@ -578,11 +471,11 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
             r += 2;
         }
     }
-    fprintf(confp, ANSI_CURSOR, 19, 2);
-    fprintf(confp, ANSI_YLW_BLK);
+    set_screen_pos( confp, 19, 2 );
+    set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
 #ifdef OPTION_MIPS_COUNTING
     fprintf(confp, "%2.1d.%2.2d  %5d",
-            sysblk.mipsrate / 1000, (sysblk.mipsrate % 1000) / 10,
+            sysblk.mipsrate / 1000000, (sysblk.mipsrate % 1000000) / 10000,
             sysblk.siosrate);
 #else
     fprintf(confp, "%12.12u",
@@ -592,52 +485,34 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
         (unsigned)regs->instcount);
 #endif
     if (NPaddress != NPcuraddr) {
-        fprintf(confp, ANSI_YLW_BLK);
-        fprintf(confp, ANSI_CURSOR, 16, 11);
+        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
+        set_screen_pos( confp, 16, 11 );
         fprintf(confp, "%8.8X", NPaddress);
         NPcuraddr = NPaddress;
     }
     if (NPdata != NPcurdata) {
-        fprintf(confp, ANSI_YLW_BLK);
-        fprintf(confp, ANSI_CURSOR, 16, 29);
+        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
+        set_screen_pos( confp, 16, 29 );
         fprintf(confp, "%8.8X", NPdata);
         NPcurdata = NPdata;
     }
     if (NPregdisp != NPcurrg) {
-        fprintf(confp, ANSI_WHT_BLK);
+        set_screen_color( confp, COLOR_WHITE, COLOR_BLACK );
         switch (NPcurrg) {
-            case 0:
-                fprintf(confp, ANSI_CURSOR "G" , 14, 6);
-                break;
-            case 1:
-                fprintf(confp, ANSI_CURSOR "C" , 14, 14);
-                break;
-            case 2:
-                fprintf(confp, ANSI_CURSOR "A" , 14, 22);
-                break;
-            case 3:
-                fprintf(confp, ANSI_CURSOR "F" , 14, 30);
-                break;
-            default:
-                break;
+            case 0: set_screen_pos( confp, 14,  6 ); fprintf(confp, "G" ); break;
+            case 1: set_screen_pos( confp, 14, 14 ); fprintf(confp, "C" ); break;
+            case 2: set_screen_pos( confp, 14, 22 ); fprintf(confp, "A" ); break;
+            case 3: set_screen_pos( confp, 14, 30 ); fprintf(confp, "F" ); break;
+            default: break;
         }
         NPcurrg = NPregdisp;
-        fprintf(confp, ANSI_YLW_BLK);
+        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
         switch (NPregdisp) {
-            case 0:
-                fprintf(confp, ANSI_CURSOR "G" , 14, 6);
-                break;
-            case 1:
-                fprintf(confp, ANSI_CURSOR "C" , 14, 14);
-                break;
-            case 2:
-                fprintf(confp, ANSI_CURSOR "A" , 14, 22);
-                break;
-            case 3:
-                fprintf(confp, ANSI_CURSOR "F" , 14, 30);
-                break;
-            default:
-                break;
+            case 0: set_screen_pos( confp, 14,  6 ); fprintf(confp, "G" ); break;
+            case 1: set_screen_pos( confp, 14, 14 ); fprintf(confp, "C" ); break;
+            case 2: set_screen_pos( confp, 14, 22 ); fprintf(confp, "A" ); break;
+            case 3: set_screen_pos( confp, 14, 30 ); fprintf(confp, "F" ); break;
+            default: break;
         }
     }
     p = 3;
@@ -653,43 +528,44 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
          if (IOPENDING(dev)) pend = 1;
          if (dev->fd > 2) open = 1;
          if (online != NPonline[a - 1]) {
-              fprintf(confp, ANSI_CURSOR, p, 40);
+              set_screen_pos( confp, p, 40 );
               ch[0] = a | 0x40;
               ch[1] = '\0';
               if (online) {
-                  fprintf(confp, ANSI_LGRN_BLK);
+                  set_screen_color( confp, COLOR_LIGHT_GREEN, COLOR_BLACK );
               } else {
-                  fprintf(confp, ANSI_GRY_BLK);
+                  set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
               }
               fprintf(confp, "%s", ch);
               NPonline[a - 1] = online;
          }
          if (busy != NPbusy[a - 1] || pend != NPpend[a - 1]) {
-              fprintf(confp, ANSI_CURSOR, p, 42);
+              set_screen_pos( confp, p, 42 );
               if (busy | pend) {
-                  fprintf(confp, ANSI_YLW_BLK);
+                  set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
               } else {
-                  fprintf(confp, ANSI_GRY_BLK);
+                  set_screen_color( confp, COLOR_LIGHT_GREY,   COLOR_BLACK );
               }
               fprintf(confp, "%4.4X", dev->devnum);
               NPbusy[a - 1] = busy;
               NPpend[a - 1] = pend;
          }
          if (open != NPopen[a - 1]) {
-              fprintf(confp, ANSI_CURSOR, p, 47);
+              set_screen_pos( confp, p, 47 );
               if (open) {
-                  fprintf(confp, ANSI_LGRN_BLK);
+                  set_screen_color( confp, COLOR_LIGHT_GREEN, COLOR_BLACK );
               } else {
-                  fprintf(confp, ANSI_GRY_BLK);
+                  set_screen_color( confp, COLOR_LIGHT_GREY,  COLOR_BLACK );
               }
               fprintf(confp, "%4.4X", dev->devtype);
               NPopen[a - 1] = open;
          }
          (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
          if (strcmp(NPdevname[a - 1], devnam) != 0) {
-             fprintf(confp, ANSI_GRY_BLK);
-             fprintf(confp, ANSI_CURSOR, p, 57);
-             fprintf(confp, "%.24s" ANSI_CLEAR_EOL, devnam);
+             set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+             set_screen_pos( confp, p, 57 );
+             fprintf(confp, "%.24s", devnam);
+             erase_to_eol( confp );
              strcpy(NPdevname[a - 1], devnam);
          }
          p++;
@@ -700,12 +576,12 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
         strcpy(NPcurprompt1, NPprompt1);
         if (strlen(NPprompt1) > 0) {
             s = 2 + ((38 - strlen(NPprompt1)) / 2);
-            fprintf(confp, ANSI_CURSOR, 24, s);
-            fprintf(confp, ANSI_WHT_BLU);
+            set_screen_pos( confp, 24, s );
+            set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
             fprintf(confp, NPprompt1);
         } else {
-            fprintf(confp, ANSI_WHT_BLK);
-            fprintf(confp, ANSI_CURSOR, 24, 1);
+            set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+            set_screen_pos( confp, 24, 1 );
             fprintf(confp, "-------------------------------------");
         }
     }
@@ -713,28 +589,28 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
         strcpy(NPcurprompt2, NPprompt2);
         if (strlen(NPprompt2) > 0) {
             s = 42 + ((38 - strlen(NPprompt2)) / 2);
-            fprintf(confp, ANSI_CURSOR, 24, s);
-            fprintf(confp, ANSI_WHT_BLU);
+            set_screen_pos( confp, 24, s );
+            set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
             fprintf(confp, NPprompt2);
         } else {
-            fprintf(confp, ANSI_WHT_BLK);
-            fprintf(confp, ANSI_CURSOR, 24, 39);
+            set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+            set_screen_pos( confp, 24, 39 );
             fprintf(confp, "------------------------------------------");
         }
     }
     if (NPdataentry) {
-        fprintf(confp, ANSI_CURSOR, NPcurpos[0], NPcurpos[1]);
-        if (strlen(NPcolor) > 0) {
-            fprintf(confp, NPcolor);
+        set_screen_pos( confp, NPcurpos[0], NPcurpos[1] );
+        if (NPcolorSwitch) {
+            set_screen_color( confp, NPcolorFore, NPcolorBack );
         }
         strcpy(dclear, "");
         for (i = 0; i < NPdatalen; i++) dclear[i] = ' ';
         dclear[i] = '\0';
         fprintf(confp, dclear);
-        fprintf(confp, ANSI_CURSOR, NPcurpos[0], NPcurpos[1]);
-        for (i = 0; i < cmdoff; i++) putc (cmdline[i], confp);
+        set_screen_pos( confp, NPcurpos[0], NPcurpos[1] );
+        PUTC_CMDLINE(confp);
     } else {
-            fprintf(confp, ANSI_CURSOR, 24, 80);
+            set_screen_pos( confp, 24, 80 );
             NPcurpos[0] = 24;
             NPcurpos[1] = 80;
    }
@@ -742,48 +618,69 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 
 /* ==============   End of the main NP block of code    =============*/
 
+static void panel_cleanup(void *unused);    // (forward reference)
 
-static void panel_cleanup(void *unused __attribute__ ((unused)) )
+#ifdef OPTION_MIPS_COUNTING
+
+///////////////////////////////////////////////////////////////////////
+// "maxrates" command support...
+
+#define  DEF_MAXRATES_RPT_INTVL   (  1440  )
+
+DLL_EXPORT U32    curr_high_mips_rate = 0;  // (high water mark for current interval)
+DLL_EXPORT U32    curr_high_sios_rate = 0;  // (high water mark for current interval)
+
+DLL_EXPORT U32    prev_high_mips_rate = 0;  // (saved high water mark for previous interval)
+DLL_EXPORT U32    prev_high_sios_rate = 0;  // (saved high water mark for previous interval)
+
+DLL_EXPORT time_t curr_int_start_time = 0;  // (start time of current interval)
+DLL_EXPORT time_t prev_int_start_time = 0;  // (start time of previous interval)
+
+DLL_EXPORT U32    maxrates_rpt_intvl  = DEF_MAXRATES_RPT_INTVL;
+
+DLL_EXPORT void update_maxrates_hwm()       // (update high-water-mark values)
 {
-struct termios kbattr;                  /* Terminal I/O structure    */
-int i,n;
-char c;
+    time_t  current_time = 0;
+    U32     elapsed_secs = 0;
 
-    compat_shutdown = 1;
-    log_wakeup(NULL);
+    if (curr_high_mips_rate < sysblk.mipsrate)
+        curr_high_mips_rate = sysblk.mipsrate;
 
-    /* Restore the terminal mode */
-    tcgetattr (STDIN_FILENO, &kbattr);
-    kbattr.c_lflag |= (ECHO | ICANON);
-    tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
+    if (curr_high_sios_rate < sysblk.siosrate)
+        curr_high_sios_rate = sysblk.siosrate;
 
-    fprintf(stderr, ANSI_RESET_WHT_BLK ANSI_CLEAR_SCREEN );
+    // Save high water marks for current interval...
 
-    /* Reset the first line to be displayed (i.e.
-       "scroll down to the most current message") */
-    firstmsgn = nummsgs - NUM_LINES;
-    if (firstmsgn < 0) firstmsgn = 0;
+    time( &current_time );
 
-    /* Display messages in scrolling area */
-    for (i=0; i < NUM_LINES && firstmsgn + i < nummsgs; i++)
+    elapsed_secs = current_time - curr_int_start_time;
+
+    if ( elapsed_secs >= ( maxrates_rpt_intvl * 60 ) )
     {
-        n = (nummsgs < MAX_MSGS) ? 0 : msgslot;
-        n += firstmsgn + i;
-        if (n >= MAX_MSGS) n -= MAX_MSGS;
-        fprintf (stderr,
-                ANSI_POSITION_CURSOR
-                ANSI_WHITE_BLACK,
-                i+1, 1);
-        fwrite (msgbuf + (n * MSG_SIZE), MSG_SIZE, 1, stderr);
+        prev_high_mips_rate = curr_high_mips_rate;
+        prev_high_sios_rate = curr_high_sios_rate;
+
+        curr_high_mips_rate = 0;
+        curr_high_sios_rate = 0;
+
+        prev_int_start_time = curr_int_start_time;
+        curr_int_start_time = current_time;
     }
+}
+#endif // OPTION_MIPS_COUNTING
+///////////////////////////////////////////////////////////////////////
 
-    /* Read any remaining msgs from the msg pipe */
-    while(read (compat_msgpiper, &c, 1) > 0)
-        fputc(c,stderr);
+static void set_target_cpu( REGS** pRegsPtr )
+{
+    /* Set target CPU for commands and displays */
+    *pRegsPtr = sysblk.regs[sysblk.pcpu];
+    if (!*pRegsPtr) *pRegsPtr = &sysblk.dummyregs;
 
-    /* Read any remaining msgs from the system log */
-    while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
-        fwrite(lmsbuf,lmscnt,1,stderr);
+#if defined(_FEATURE_SIE)
+    /* Point to SIE copy in SIE state */
+    if((*pRegsPtr)->sie_active)
+        *pRegsPtr = (*pRegsPtr)->guestregs;
+#endif /*defined(_FEATURE_SIE)*/
 }
 
 /*-------------------------------------------------------------------*/
@@ -801,9 +698,13 @@ void panel_display_r (void)
 void panel_display (void)
 #endif
 {
-int     rc;                             /* Return code               */
+#ifndef _MSVC_
+  int     rc;                           /* Return code               */
+  int     maxfd;                        /* Highest file descriptor   */
+  fd_set  readset;                      /* Select file descriptors   */
+  struct  timeval tv;                   /* Select timeout structure  */
+#endif
 int     i, n;                           /* Array subscripts          */
-int     pcpu;                           /* Panel CPU number          */
 REGS   *regs;                           /* -> CPU register context   */
 QWORD   curpsw;                         /* Current PSW               */
 QWORD   prvpsw;                         /* Previous PSW              */
@@ -818,31 +719,35 @@ BYTE    redraw_cmd;                     /* 1=Redraw command line     */
 BYTE    redraw_status;                  /* 1=Redraw status line      */
 char    readbuf[MSG_SIZE];              /* Message read buffer       */
 int     readoff = 0;                    /* Number of bytes in readbuf*/
-char    cmdline[CMD_SIZE+1];            /* Command line buffer       */
-int     cmdoff = 0;                     /* Cursor position in cmdline*/
-int     cmdlen = 0;                     /* Number of bytes in cmdline*/
 BYTE    c;                              /* Character work area       */
-FILE   *confp;                          /* Console file pointer      */
-struct termios kbattr;                  /* Terminal I/O structure    */
 size_t  kbbufsize = CMD_SIZE;           /* Size of keyboard buffer   */
 char   *kbbuf = NULL;                   /* Keyboard input buffer     */
 int     kblen;                          /* Number of chars in kbbuf  */
-int     pipefd;                         /* Pipe file descriptor      */
-int     keybfd;                         /* Keyboard file descriptor  */
-int     maxfd;                          /* Highest file descriptor   */
-fd_set  readset;                        /* Select file descriptors   */
-struct  timeval tv;                     /* Select timeout structure  */
-
-#if 1
-    panel_compat_init();
-    for (i=0; i < CMD_SIZE+1; i++)
-      cmdline[i] = 0;
-#endif
 
     /* Display thread started message on control panel */
     logmsg (_("HHCPN001I Control panel thread started: "
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
+
+    hdl_adsc("panel_cleanup",panel_cleanup, NULL);
+    history_init();
+
+    /* Set up the input file descriptors */
+    confp = stderr;
+    keybfd = STDIN_FILENO;
+
+    /* Retrieve the dimensions of the console screen */
+    VERIFY( get_console_dim( confp, &cons_rows, &cons_cols ) == 0 );
+    TRACE("*** Console: ROWS=%d, COLS=%d\n", cons_rows, cons_cols);
+
+    /* Calculate the width of the cmdline input area (i.e. the maximum
+       #of chars of cmdline data that can fit into the visible portion
+       of the cmdline input area) */
+    cmdcols = cons_cols - (LEN_CMD_PREFIX + 1);
+
+    /* Clear the command-line buffer */
+    for (i=0; i < CMD_SIZE+1; i++)
+      cmdline[i] = 0;
 
     /* Obtain storage for the keyboard buffer */
     if (!(kbbuf = malloc (kbbufsize)))
@@ -862,41 +767,51 @@ struct  timeval tv;                     /* Select timeout structure  */
         return;
     }
 
-    /* Set up the input file descriptors */
-    confp = stderr;
-    pipefd = compat_msgpiper;
-    keybfd = STDIN_FILENO;
-
-    hdl_adsc(panel_cleanup, NULL);
-
-    /* Set screen output stream to fully buffered */
-    setvbuf (confp, NULL, _IOFBF, 0);
+    /* Set screen output stream to NON-buffered */
+    setvbuf (confp, NULL, _IONBF, 0);
 
     /* Put the terminal into cbreak mode */
-    tcgetattr (keybfd, &kbattr);
-    kbattr.c_lflag &= ~(ECHO | ICANON);
-    kbattr.c_cc[VMIN] = 0;
-    kbattr.c_cc[VTIME] = 0;
-    tcsetattr (keybfd, TCSANOW, &kbattr);
+    set_or_reset_console_mode( keybfd, 1 );
 
     /* Clear the screen */
-    fprintf (confp,
-            ANSI_WHT_BLK
-            ANSI_ERASE_SCREEN);
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+    clear_screen( confp );
 
     redraw_msgs = 1;
     redraw_cmd = 1;
     redraw_status = 1;
 
     /* Process messages and commands */
-    while (1)
+    while ( 1 )
     {
+        /* Set target CPU for commands and displays */
+        set_target_cpu( &regs );
+
+#if defined( _MSVC_ )
+
+#if defined(OPTION_MIPS_COUNTING)
+    update_maxrates_hwm(); // (update high-water-mark values)
+#endif // defined(OPTION_MIPS_COUNTING)
+
+        /* Wait for keyboard input */
+#define WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS  (20)
+        for (i=sysblk.panrate/WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS; i && !kbhit(); i--)
+            Sleep(WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS);
+
+        /* If keyboard input has [finally] arrived, then process it */
+        if ( kbhit() )
+        {
+            /* Read character(s) from the keyboard */
+            kbbuf[0] = getch();
+            kbbuf[kblen=1] = '\0';
+            translate_keystroke( kbbuf, &kblen );
+
+#else // !defined( _MSVC_ )
+
         /* Set the file descriptors for select */
         FD_ZERO (&readset);
         FD_SET (keybfd, &readset);
-        FD_SET (pipefd, &readset);
         maxfd = keybfd;
-        if (pipefd > maxfd) maxfd = pipefd;
 
         /* Wait for a message to arrive, a key to be pressed,
            or the inactivity interval to expire */
@@ -913,7 +828,6 @@ struct  timeval tv;                     /* Select timeout structure  */
         }
 
         /* If keyboard input has arrived then process it */
-
         if (FD_ISSET(keybfd, &readset))
         {
             /* Read character(s) from the keyboard */
@@ -928,6 +842,8 @@ struct  timeval tv;                     /* Select timeout structure  */
             }
 
             kbbuf[kblen] = '\0';
+
+#endif // defined( _MSVC_ )
 
             /* =NP= : Intercept NP commands & process */
 
@@ -944,15 +860,17 @@ struct  timeval tv;                     /* Select timeout structure  */
                         kbbuf[0] = '\0';
                         redraw_status = 1;
                     }
-            cmdline[0] = '\0';
-            cmdlen = 0;
-            cmdoff = 0;
+                    cmdline[0] = '\0';
+                    cmdlen = 0;
+                    cmdoff = 0;
+                    ADJ_CMDCOL();
                     switch(kbbuf[0]) {
                         case 0x1b:                  /* ESC */
                             NPDup = 0;
-                cmdline[0] = '\0';
-                cmdoff = 0;
-                cmdlen = 0;
+                            cmdline[0] = '\0';
+                            cmdoff = 0;
+                            cmdlen = 0;
+                            ADJ_CMDCOL();
                             break;
                         case '?':
                             NPhelpup = 1;
@@ -977,18 +895,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                             break;
                         case 'O':                   /* Store */
                         case 'o':
-                            pcpu = sysblk.pcpu;
-                            obtain_lock(&sysblk.cpulock[pcpu]);
-                            regs = sysblk.regs[pcpu];
-                            if (!regs) regs = &sysblk.dummyregs;
-#if defined(_FEATURE_SIE)
-                            else if(regs->sie_active) regs = regs->guestregs;
-#endif
                             NPaaddr = APPLY_PREFIXING ((U32)NPaddress, regs->PX);
-                            if (NPaaddr > regs->mainlim) {
-                                release_lock(&sysblk.cpulock[sysblk.pcpu]);
+                            if (NPaaddr > regs->mainlim)
                                 break;
-                            }
                             regs->mainstor[NPaaddr] = 0;
                             regs->mainstor[NPaaddr++] |= ((NPdata >> 24) & 0xFF);
                             regs->mainstor[NPaaddr] = 0;
@@ -998,7 +907,6 @@ struct  timeval tv;                     /* Select timeout structure  */
                             regs->mainstor[NPaaddr] = 0;
                             regs->mainstor[NPaaddr++] |= ((NPdata) & 0xFF);
                             redraw_status = 1;
-                            release_lock(&sysblk.cpulock[pcpu]);
                             break;
                         case 'I':                   /* Display */
                         case 'i':
@@ -1032,7 +940,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                             NPcurpos[0] = 16;
                             NPcurpos[1] = 11;
                             NPdatalen = 8;
-                            strcpy(NPcolor, ANSI_WHT_BLU);
+                            NPcolorSwitch = 1;
+                            NPcolorFore = COLOR_WHITE;
+                            NPcolorBack = COLOR_BLUE;
                             strcpy(NPentered, "");
                             strcpy(NPprompt1, "Enter Address Switches");
                             redraw_status = 1;
@@ -1044,7 +954,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                             NPcurpos[0] = 16;
                             NPcurpos[1] = 29;
                             NPdatalen = 8;
-                            strcpy(NPcolor, ANSI_WHT_BLU);
+                            NPcolorSwitch = 1;
+                            NPcolorFore = COLOR_WHITE;
+                            NPcolorBack = COLOR_BLUE;
                             strcpy(NPentered, "");
                             strcpy(NPprompt1, "Enter Data Switches");
                             redraw_status = 1;
@@ -1110,7 +1022,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                             NPcurpos[0] = 3 + i;
                             NPcurpos[1] = 57;
                             NPdatalen = 24;
-                            strcpy(NPcolor, ANSI_WHT_BLU);
+                            NPcolorSwitch = 1;
+                            NPcolorFore = COLOR_WHITE;
+                            NPcolorBack = COLOR_BLUE;
                             strcpy(NPentered, "");
                             strcpy(NPprompt2, "New Name, or [enter] to Reload");
                             redraw_status = 1;
@@ -1126,7 +1040,6 @@ struct  timeval tv;                     /* Select timeout structure  */
                             if (NPdevice == 'y' || NPdevice == 'Y')
                             {
                                 panel_command("quit");
-                                while (1) sched_yield();
                             }
                             strcpy(NPprompt1, "");
                             redraw_status = 1;
@@ -1148,31 +1061,41 @@ struct  timeval tv;                     /* Select timeout structure  */
             for (i = 0; i < kblen; )
             {
                 /* Test for home command */
-                if (strcmp(kbbuf+i, KBD_HOME) == 0)
-                {
-                    if (firstmsgn == 0) break;
-                    firstmsgn = 0;
-                    redraw_msgs = 1;
+                if (strcmp(kbbuf+i, KBD_HOME) == 0) {
+                    if (cmdlen) {
+                        cmdoff = 0;
+                        ADJ_CMDCOL();
+                        redraw_cmd = 1;
+                    } else {
+                        if (firstmsgn == 0) break;
+                        firstmsgn = 0;
+                        redraw_msgs = 1;
+                    }
                     break;
                 }
 
                 /* Test for end command */
-                if (strcmp(kbbuf+i, KBD_END) == 0)
-                {
-                    if (firstmsgn + NUM_LINES >= nummsgs) break;
-                    firstmsgn = nummsgs - NUM_LINES;
-                    redraw_msgs = 1;
+                if (strcmp(kbbuf+i, KBD_END) == 0) {
+                    if (cmdlen) {
+                        cmdoff = cmdlen;
+                        ADJ_CMDCOL();
+                        redraw_cmd = 1;
+                    } else {
+                        if (firstmsgn + NUM_LINES >= nummsgs) break;
+                        firstmsgn = nummsgs - NUM_LINES;
+                        redraw_msgs = 1;
+                    }
                     break;
                 }
 
                 /* Test for line up command */
-                if (strcmp(kbbuf+i, KBD_UP_ARROW) == 0
-                    || strcmp(kbbuf+i, xKBD_UP_ARROW) == 0)
-                {
+                if (strcmp(kbbuf+i,  KBD_UP_ARROW) == 0 ||
+                    strcmp(kbbuf+i, xKBD_UP_ARROW) == 0) {
                     if (history_prev() != -1) {
                         strcpy(cmdline, historyCmdLine);
-                        cmdoff = strlen(cmdline);
-                        cmdlen = cmdoff;
+                        cmdlen = strlen(cmdline);
+                        cmdoff = cmdlen < cmdcols ? cmdlen : 0;
+                        ADJ_CMDCOL();
                         NPDup = 0;
                         NPDinit = 1;
                         redraw_cmd = 1;
@@ -1181,13 +1104,13 @@ struct  timeval tv;                     /* Select timeout structure  */
                 }
 
                 /* Test for line down command */
-                if (strcmp(kbbuf+i, KBD_DOWN_ARROW) == 0
-                    || strcmp(kbbuf+i, xKBD_DOWN_ARROW) == 0)
-                {
+                if (strcmp(kbbuf+i,  KBD_DOWN_ARROW) == 0 ||
+                    strcmp(kbbuf+i, xKBD_DOWN_ARROW) == 0) {
                     if (history_next() != -1) {
                         strcpy(cmdline, historyCmdLine);
-                        cmdoff = strlen(cmdline);
-                        cmdlen = cmdoff;
+                        cmdlen = strlen(cmdline);
+                        cmdoff = cmdlen < cmdcols ? cmdlen : 0;
+                        ADJ_CMDCOL();
                         NPDup = 0;
                         NPDinit = 1;
                         redraw_cmd = 1;
@@ -1196,8 +1119,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                 }
 
                 /* Test for page up command */
-                if (strcmp(kbbuf+i, KBD_PAGE_UP) == 0)
-                {
+                if (strcmp(kbbuf+i, KBD_PAGE_UP) == 0) {
                     if (firstmsgn == 0) break;
                     firstmsgn -= NUM_LINES;
                     if (firstmsgn < 0) firstmsgn = 0;
@@ -1206,8 +1128,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                 }
 
                 /* Test for page down command */
-                if (strcmp(kbbuf+i, KBD_PAGE_DOWN) == 0)
-                {
+                if (strcmp(kbbuf+i, KBD_PAGE_DOWN) == 0) {
                     if (firstmsgn + NUM_LINES >= nummsgs) break;
                     firstmsgn += NUM_LINES;
                     if (firstmsgn > nummsgs - NUM_LINES)
@@ -1217,20 +1138,21 @@ struct  timeval tv;                     /* Select timeout structure  */
                 }
 
                 /* Process backspace character  */
-                if (kbbuf[i] == '\b' || kbbuf[i] == '\x7F')
-                {
+                if (kbbuf[i] == '\b' || kbbuf[i] == '\x7F') {
                     if (cmdoff > 0) {
                         int j;
                         for (j = cmdoff-1; j<cmdlen; j++)
                             cmdline[j] = cmdline[j+1];
                         cmdoff--;
                         cmdlen--;
+                        ADJ_CMDCOL();
                     }
                     i++;
                     redraw_cmd = 1;
                     break;
                 }
-                /* Process DEL character              */
+
+                /* Process DEL character */
                 if (strcmp(kbbuf+i, KBD_DELETE) == 0) {
                     if (cmdoff < cmdlen) {
                         int j;
@@ -1243,85 +1165,108 @@ struct  timeval tv;                     /* Select timeout structure  */
                     break;
                 }
 
-                /* Process LEFT_ARROW character              */
-                if (strcmp(kbbuf+i, KBD_LEFT_ARROW) == 0
-                    || strcmp(kbbuf+i, xKBD_LEFT_ARROW) == 0)
-                {
+                /* Process LEFT_ARROW character */
+                if (strcmp(kbbuf+i,  KBD_LEFT_ARROW) == 0 ||
+                    strcmp(kbbuf+i, xKBD_LEFT_ARROW) == 0) {
                     if (cmdoff > 0) cmdoff--;
+                    ADJ_CMDCOL();
                     i++;
                     redraw_cmd = 1;
                     break;
                 }
 
-                /* Test for other KBD_* strings           */
-                /* Just ignore them, no function assigned */
-                if (strcmp(kbbuf+i, KBD_RIGHT_ARROW) == 0
-                    || strcmp(kbbuf+i, xKBD_RIGHT_ARROW) == 0
-                    || strcmp(kbbuf+i, KBD_INSERT) == 0)
-                {
-                    redraw_msgs = 1;
-                    if (cmdoff < cmdlen)
-                        cmdoff++;
+                /* Process RIGHT_ARROW character */
+                if (strcmp(kbbuf+i,  KBD_RIGHT_ARROW) == 0 ||
+                    strcmp(kbbuf+i, xKBD_RIGHT_ARROW) == 0) {
+                    if (cmdoff < cmdlen) cmdoff++;
+                    ADJ_CMDCOL();
+                    i++;
+                    redraw_cmd = 1;
+                    break;
+                }
+
+                /* Process INSERT character */
+                if (strcmp(kbbuf+i, KBD_INSERT) == 0 ) {
+                    cmdins = !cmdins;
+                    set_console_cursor_shape( confp, cmdins );
+                    i++;
                     break;
                 }
 
                 /* Process escape key */
-                if (kbbuf[i] == '\x1B')
-                {
-                    /* =NP= : Switch to new panel display */
-                    NP_init();
-                    NPDup = 1;
-            cmdline[0] = '\0';
-            cmdoff = 0;
-            cmdlen = 0;
-                    /* =END= */
+                if (kbbuf[i] == '\x1B') {
+                    if (cmdlen) {
+                        cmdline[0] = '\0';
+                        cmdlen = 0;
+                        cmdoff = 0;
+                        ADJ_CMDCOL();
+                        redraw_cmd = 1;
+                    } else {
+                        /* =NP= : Switch to new panel display */
+                        NP_init();
+                        NPDup = 1;
+                        cmdline[0] = '\0';
+                        cmdlen = 0;
+                        cmdoff = 0;
+                        ADJ_CMDCOL();
+                        /* =END= */
+                    }
                     break;
                 }
 
-                /* Process TAB character              */
-                if (kbbuf[i] == '\t' || kbbuf[i] == '\x7F')
-                {
-                   tab_pressed(cmdline, &cmdoff);
-                   cmdlen = strlen(cmdline);
-                   /* cmdoff = cmdlen;                */
-                   i++;
-                   redraw_cmd = 1;
-                   break;
+                /* Process TAB character */
+                if (kbbuf[i] == '\t' || kbbuf[i] == '\x7F') {
+                    tab_pressed(cmdline, &cmdoff);
+                    cmdlen = strlen(cmdline);
+                    ADJ_CMDCOL();
+                    i++;
+                    redraw_cmd = 1;
+                    break;
                 }
 
                 /* Process the command if newline was read */
-                if (kbbuf[i] == '\n')
-                {
-                    if (cmdlen == 0 && NPDup == 0) {
+                if (kbbuf[i] == '\n') {
+                    if (cmdlen == 0 && NPDup == 0 && !sysblk.inststep) {
                         history_show();
                     } else {
                         cmdline[cmdlen] = '\0';
                         /* =NP= create_thread replaced with: */
                         if (NPDup == 0) {
                             if ('#' == cmdline[0] || '*' == cmdline[0]) {
-                                if ('*' == cmdline[0])
-                                    logmsg("%s\n", cmdline);
-                            } else {
-                                history_requested = 0;
-                                panel_command(cmdline);
-                                cmdoff = 0;
+                                logmsg("%s\n", cmdline);
                                 for (;cmdlen >=0; cmdlen--)
                                     cmdline[cmdlen] = '\0';
                                 cmdlen = 0;
+                                cmdoff = 0;
+                                ADJ_CMDCOL();
+                            } else {
+                                history_requested = 0;
+                                panel_command(cmdline);
+                                /* PROGRAMMING NOTE: regs COULD have changed
+                                   if this was a resume command for example! */
+                                set_target_cpu( &regs );
+                                redraw_msgs = 1;
+                                redraw_cmd = 1;
+                                redraw_status = 1;
+                                for (;cmdlen >=0; cmdlen--)
+                                    cmdline[cmdlen] = '\0';
+                                cmdlen = 0;
+                                cmdoff = 0;
+                                ADJ_CMDCOL();
                                 if (history_requested == 1) {
                                     strcpy(cmdline, historyCmdLine);
-                                    cmdoff = strlen(cmdline);
-                                    cmdlen = cmdoff;
+                                    cmdlen = strlen(cmdline);
+                                    cmdoff = cmdlen;
+                                    ADJ_CMDCOL();
                                     NPDup = 0;
                                     NPDinit = 1;
-                                    redraw_cmd = 1;
                                 }
                             }
                         } else {
                             NPdataentry = 0;
                             NPcurpos[0] = 24;
                             NPcurpos[1] = 80;
-                            strcpy(NPcolor, "");
+                            NPcolorSwitch = 0;
                             switch (NPpending) {
                                 case 'r':
                                     sscanf(cmdline, "%x", &NPaddress);
@@ -1350,9 +1295,10 @@ struct  timeval tv;                     /* Select timeout structure  */
                                     break;
                             }
                             redraw_status = 1;
-                cmdline[0] = '\0';
-                cmdlen = 0;
-                cmdoff = 0;
+                            cmdline[0] = '\0';
+                            cmdlen = 0;
+                            cmdoff = 0;
+                            ADJ_CMDCOL();
                         }
                         /* =END= */
                         redraw_cmd = 1;
@@ -1361,110 +1307,167 @@ struct  timeval tv;                     /* Select timeout structure  */
                 }
 
                 /* Ignore non-printable characters */
-                if (!isprint(kbbuf[i]))
-                {
+                if (!isprint(kbbuf[i])) {
+#if 0 /* do we REALLY need to be doing this?! */
                     logmsg ("%2.2X\n", kbbuf[i]);
+#endif
+                    console_beep( confp );
                     i++;
                     continue;
                 }
 
                 /* Append the character to the command buffer */
-                if (cmdoff < CMD_SIZE-1) {
-                    if (cmdoff < cmdlen) {
-                        int j;
-                        for (j=cmdlen-1; j>=cmdoff; j--)
-                            cmdline[j+1] = cmdline[j];
+                ASSERT(cmdlen <= CMD_SIZE-1 && cmdoff <= cmdlen);
+                if (0
+                    || (cmdoff >= CMD_SIZE-1)
+                    || (cmdins && cmdlen >= CMD_SIZE-1)
+                )
+                {
+                    /* (no more room!) */
+                    console_beep( confp );
+                }
+                else /* (there's still room) */
+                {
+                    ASSERT(cmdlen < CMD_SIZE-1 || (!cmdins && cmdoff < cmdlen));
+                    if (cmdoff >= cmdlen)
+                    {
+                        /* Append to end of buffer */
+                        ASSERT(!(cmdoff > cmdlen)); // (sanity check)
                         cmdline[cmdoff++] = kbbuf[i];
+                        cmdline[cmdoff] = '\0';
+                        cmdlen++;
                     }
                     else
-                        cmdline[cmdoff++] = kbbuf[i];
-                    cmdlen++;
+                    {
+                        ASSERT(cmdoff < cmdlen);
+                        if (cmdins)
+                        {
+                            /* Insert: make room by sliding all
+                               following chars right one position */
+                            int j;
+                            for (j=cmdlen-1; j>=cmdoff; j--)
+                                cmdline[j+1] = cmdline[j];
+                            cmdline[cmdoff++] = kbbuf[i];
+                            cmdlen++;
+                        }
+                        else
+                        {
+                            /* Overlay: replace current position */
+                            cmdline[cmdoff++] = kbbuf[i];
+                        }
+                    }
+                    ADJ_CMDCOL();
+                    redraw_cmd = 1;
                 }
                 i++;
-                redraw_cmd = 1;
             } /* end for(i) */
         }
 
-        /* If a message has arrived then receive it */
-        if (FD_ISSET(pipefd, &readset))
+FinishShutdown:
+
+        // If we finished processing all of the message data
+        // the last time we were here, then get some more...
+
+        if ( lmsndx >= lmscnt )  // (all previous data processed?)
         {
-            /* Read message bytes until newline... */
-            c = 0;
-            while (c != '\n' && c != '\r')
+            lmscnt = log_read( &lmsbuf, &lmsnum, LOG_NOBLOCK );
+            lmsndx = 0;
+        }
+        else if ( lmsndx >= lmsmax )
+        {
+            lmsbuf += lmsndx;   // pick up where we left off at...
+            lmscnt -= lmsndx;   // pick up where we left off at...
+            lmsndx = 0;
+        }
+
+        // Process all message data or until limit reached...
+
+        // (limiting the amount of data we process a console message flood
+        // from preventing keyboard from being read since we need to break
+        // out of the below message data processing loop to loop back up
+        // to read the keyboard again...)
+
+        /* Read message bytes until newline... */
+        while ( lmsndx < lmscnt && lmsndx < lmsmax )
+        {
+            /* Initialize the read buffer */
+            if (!readoff || readoff >= MSG_SIZE) {
+                memset (readbuf, SPACE, MSG_SIZE);
+                readoff = 0;
+            }
+
+            /* Read message bytes and copy into read buffer
+               until we either encounter a newline character
+               or our buffer is completely filled with data. */
+            while ( lmsndx < lmscnt && lmsndx < lmsmax )
             {
-                /* Initialize the read buffer */
-                if (!readoff || readoff >= MSG_SIZE) {
-                    memset (readbuf, SPACE, MSG_SIZE);
-                    readoff = 0;
+                /* Read a byte from the message pipe */
+                c = *(lmsbuf + lmsndx); lmsndx++;
+
+                /* Break to process received message
+                   whenever a newline is encountered */
+                if (c == '\n' || c == '\r') {
+                    readoff = 0;    /* (for next time) */
+                    break;
                 }
 
-                /* Read message bytes and copy into read buffer
-                   until we either encounter a newline character
-                   or our buffer is completely filled with data. */
-                while (c != '\n' && c != '\r')
-                {
-                    /* Read a byte from the message pipe */
-                    rc = read (pipefd, &c, 1);
-                    if (rc < 1) {
-                        fprintf (stderr,
-                                _("HHCPN006E message pipe read: %s\n"),
-                                strerror(errno));
-                        break;
-                    }
-
-                    /* Break to process received message
-                       whenever a newline is encountered */
-                    if (c == '\n' || c == '\r') {
-                        readoff = 0;    /* (for next time) */
-                        break;
-                    }
-
-                    /* Handle tab character */
-                    if (c == '\t') {
-                        readoff += 8;
-                        readoff &= 0xFFFFFFF8;
-                        /* Messages longer than one screen line will
-                           be continued on the very next screen line */
-                        if (readoff >= MSG_SIZE)
-                            break;
-                        else continue;
-                    }
-
-                    /* Eliminate non-displayable characters */
-                    if (!isgraph(c)) c = SPACE;
-
-                    /* Stuff byte into message processing buffer */
-                    readbuf[readoff++] = c;
-
+                /* Handle tab character */
+                if (c == '\t') {
+                    readoff += 8;
+                    readoff &= 0xFFFFFFF8;
                     /* Messages longer than one screen line will
                        be continued on the very next screen line */
                     if (readoff >= MSG_SIZE)
                         break;
+                    else continue;
                 }
 
-                /* If we have a message to be displayed (or a complete
-                   part of one), then copy it to the circular buffer. */
-                if (!readoff || readoff >= MSG_SIZE) {
-                    /* Set the display update indicator */
-                    redraw_msgs = 1;
+                /* Eliminate non-displayable characters */
+                if (!isgraph(c)) c = SPACE;
 
-                    memcpy(msgbuf+(msgslot*MSG_SIZE),readbuf,MSG_SIZE);
+                /* Stuff byte into message processing buffer */
+                readbuf[readoff++] = c;
 
-                    /* Update message count and next available slot */
-                    if (nummsgs < MAX_MSGS)
-                        msgslot = ++nummsgs;
-                    else
-                        msgslot++;
-                    if (msgslot >= MAX_MSGS) msgslot = 0;
+                /* Messages longer than one screen line will
+                   be continued on the very next screen line */
+                if (readoff >= MSG_SIZE)
+                    break;
 
-                    /* Calculate the first line to display */
-                    firstmsgn = nummsgs - NUM_LINES;
-                    if (firstmsgn < 0) firstmsgn = 0;
-                }
-                if (rc < 1) break; /* Exit if read was unsuccessful */
-            } /* end while read(pipefd) */
-            if (rc < 1) break; /* Exit if read was unsuccessful */
-        } /* end if (FD_ISSET(pipefd)) */
+            } // end while ( lmsndx < lmscnt && lmsndx < lmsmax )
+
+            /* If we have a message to be displayed (or a complete
+               part of one), then copy it to the circular buffer. */
+            if (!readoff || readoff >= MSG_SIZE) {
+                /* Set the display update indicator */
+                redraw_msgs = 1;
+
+                memcpy(msgbuf+(msgslot*MSG_SIZE),readbuf,MSG_SIZE);
+
+                /* Update message count and next available slot */
+                if (nummsgs < MAX_MSGS)
+                    msgslot = ++nummsgs;
+                else
+                    msgslot++;
+                if (msgslot >= MAX_MSGS) msgslot = 0;
+
+                /* Calculate the first line to display */
+                firstmsgn = nummsgs - NUM_LINES;
+                if (firstmsgn < 0) firstmsgn = 0;
+            }
+
+        } // end while ( lmsndx < lmscnt && lmsndx < lmsmax )
+
+        /* Don't read or otherwise process any input
+           once system shutdown has been initiated
+        */
+        if ( sysblk.shutdown )
+        {
+            if ( sysblk.shutfini ) break;
+            /* wait for system to finish shutting down */
+            usleep(10000);
+            lmsmax = INT_MAX;
+            goto FinishShutdown;
+        }
 
         /* =NP= : Reinit traditional panel if NP is down */
         if (NPDup == 0 && NPDinit == 1) {
@@ -1472,21 +1475,13 @@ struct  timeval tv;                     /* Select timeout structure  */
             redraw_msgs = 1;
             redraw_status = 1;
             redraw_cmd = 1;
-            fprintf(confp, ANSI_WHT_BLK);
-            fprintf(confp, ANSI_ERASE_SCREEN);
+            set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+            clear_screen( confp );
         }
         /* =END= */
 
-        /* Get REGS pointer */
-        pcpu = sysblk.pcpu;
-        obtain_lock(&sysblk.cpulock[pcpu]);
-        regs = sysblk.regs[pcpu];
-        if (!regs) regs = &sysblk.dummyregs;
-#if defined(_FEATURE_SIE)
-        else if(regs->sie_active) regs = regs->guestregs;
-#endif
-
         /* Obtain the PSW for target CPU */
+        set_target_cpu( &regs ); /* (never hurts!) */
         memset (curpsw, 0x00, sizeof(curpsw));
         copy_psw (regs, curpsw);
 
@@ -1535,32 +1530,35 @@ struct  timeval tv;                     /* Select timeout structure  */
                     n = (nummsgs < MAX_MSGS) ? 0 : msgslot;
                     n += firstmsgn + i;
                     if (n >= MAX_MSGS) n -= MAX_MSGS;
-                    fprintf (confp,
-                            ANSI_POSITION_CURSOR
-                            ANSI_WHITE_BLACK,
-                            i+1, 1);
+                    set_screen_pos( confp, i+1, 1 );
+                    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
                     fwrite (msgbuf + (n * MSG_SIZE), MSG_SIZE, 1, confp);
                 }
 
                 /* Display the scroll indicators */
                 if (firstmsgn > 0)
-                    fprintf (confp, ANSI_ROW1_COL80 "+");
+                {
+                    set_screen_pos( confp, 1, 80 );
+                    fprintf (confp, "+" );
+                }
                 if (firstmsgn + i < nummsgs)
-                    fprintf (confp, ANSI_ROW22_COL80 "V");
+                {
+                    set_screen_pos( confp, 22, 80 );
+                    fprintf (confp, "V" );
+                }
             } /* end if(redraw_msgs) */
 
             if (redraw_status && !sysblk.npquiet)
             {
+                set_screen_pos( confp, 24, 1 );
+                set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_RED );
                 if(IS_CPU_ONLINE(sysblk.pcpu))
                 /* Display the PSW and instruction counter for CPU 0 */
                 fprintf (confp,
-                    "%s"
                     "CPU%4.4X "
                     "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
                        " %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X"
-                    " %c%c%c%c%c%c%c%c instcount=%llu"
-                    "%s",
-                    (ANSI_ROW24_COL1 ANSI_YELLOW_RED),
+                    " %c%c%c%c%c%c%c%c instcount=%llu",
                     regs->cpuad,
                     curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                     curpsw[4], curpsw[5], curpsw[6], curpsw[7],
@@ -1585,40 +1583,31 @@ struct  timeval tv;                     /* Select timeout structure  */
 #if defined(_FEATURE_SIE)
                     SIE_MODE(regs) ?  (long long) regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
-                    (long long)regs->instcount,
-                    ANSI_ERASE_EOL);
+                    (long long)regs->instcount);
                 else
                 fprintf (confp,
-                    ANSI_ROW24_COL1 ANSI_YELLOW_RED
-                    "CPU%4.4X Offline"
-                    ANSI_ERASE_EOL,
+                    "CPU%4.4X Offline",
                     regs->cpuad);
+                erase_to_eol( confp );
             } /* end if(redraw_status) */
 
             if (redraw_cmd)
             {
                 /* Display the command line */
-                fprintf (confp,
-                    ANSI_ROW23_COL1
-                    ANSI_WHITE_BLACK
-                    ANSI_HIGH_INTENSITY
-                    "Command ==> "
-                    ANSI_WHITE_BLACK);
-
-                for (i = 0; i < cmdlen; i++)
-                    putc (cmdline[i], confp);
-
-                fprintf (confp,
-                    ANSI_ERASE_EOL);
-
+                set_screen_pos( confp, 23, 1 );
+                set_screen_color( confp, COLOR_WHITE, COLOR_BLACK );
+                fprintf ( confp, CMD_PREFIX_STR );
+                set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+                set_screen_pos( confp, 23, LEN_CMD_PREFIX+1 );
+                PUTC_CMDLINE( confp );
+                set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+                erase_to_eol( confp );
             } /* end if(redraw_cmd) */
 
             /* Flush screen buffer and reset display update indicators */
             if (redraw_msgs || redraw_cmd || redraw_status)
             {
-                fprintf (confp,
-                    ANSI_POSITION_CURSOR,
-                    23, 13+cmdoff);
+                set_screen_pos( confp, 23, LEN_CMD_PREFIX+1+cmdoff-cmdcol );
                 fflush (confp);
                 redraw_msgs = 0;
                 redraw_cmd = 0;
@@ -1631,9 +1620,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                    || (redraw_cmd && NPdataentry == 1)) {
                 if (NPDinit == 0) {
                     NPDinit = 1;
-                    NP_screen(confp);
+                    NP_screen();
                 }
-                NP_update(confp, cmdline, cmdlen);
+                NP_update();
                 fflush (confp);
                 redraw_msgs = 0;
                 redraw_cmd = 0;
@@ -1641,12 +1630,51 @@ struct  timeval tv;                     /* Select timeout structure  */
             }
         }
 
-        release_lock(&sysblk.cpulock[pcpu]);
-
     /* =END= */
 
     } /* end while */
 
-    return;
+    ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 
 } /* end function panel_display */
+
+static
+void panel_cleanup(void *unused)
+{
+int i,n;
+
+    UNREFERENCED(unused);
+
+    log_wakeup(NULL);
+
+    set_screen_color( stderr, COLOR_LIGHT_GREY, COLOR_BLACK );
+    clear_screen( stderr );
+
+    /* Reset the first line to be displayed (i.e.
+       "scroll down to the most current message") */
+    firstmsgn = nummsgs - NUM_LINES;
+    if (firstmsgn < 0) firstmsgn = 0;
+
+    /* Display messages in scrolling area */
+    for (i=0; i < NUM_LINES && firstmsgn + i < nummsgs; i++)
+    {
+        n = (nummsgs < MAX_MSGS) ? 0 : msgslot;
+        n += firstmsgn + i;
+        if (n >= MAX_MSGS) n -= MAX_MSGS;
+        set_screen_pos( stderr, i+1, 1 );
+        set_screen_color( stderr, COLOR_LIGHT_GREY, COLOR_BLACK );
+        fwrite (msgbuf + (n * MSG_SIZE), MSG_SIZE, 1, stderr);
+    }
+
+    /* Restore the terminal mode */
+    set_or_reset_console_mode( keybfd, 0 );
+
+    if (nummsgs)
+        fwrite("\n",1,1,stderr);
+
+    /* Read any remaining msgs from the system log */
+    while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
+        fwrite(lmsbuf,lmscnt,1,stderr);
+
+    fflush(stderr);
+}

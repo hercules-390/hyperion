@@ -5,6 +5,11 @@
 /* This module contains common subroutines used by DASD utilities    */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
+#define _DASDUTIL_C_
+#define _HDASD_DLL_
+
 #include "hercules.h"
 #include "dasdblks.h"
 #include "devtype.h"
@@ -36,7 +41,7 @@ SYSBLK sysblk; /* Currently required for shared.c */
 /*-------------------------------------------------------------------*/
 /* Subroutine to convert a null-terminated string to upper case      */
 /*-------------------------------------------------------------------*/
-void string_to_upper (char *source)
+DLL_EXPORT void string_to_upper (char *source)
 {
 int     i;                              /* Array subscript           */
 
@@ -48,7 +53,7 @@ int     i;                              /* Array subscript           */
 /*-------------------------------------------------------------------*/
 /* Subroutine to convert a null-terminated string to lower case      */
 /*-------------------------------------------------------------------*/
-void string_to_lower (char *source)
+DLL_EXPORT void string_to_lower (char *source)
 {
 int     i;                              /* Array subscript           */
 
@@ -60,7 +65,7 @@ int     i;                              /* Array subscript           */
 /*-------------------------------------------------------------------*/
 /* Subroutine to convert a string to EBCDIC and pad with blanks      */
 /*-------------------------------------------------------------------*/
-void convert_to_ebcdic (BYTE *dest, int len, char *source)
+DLL_EXPORT void convert_to_ebcdic (BYTE *dest, int len, char *source)
 {
 int     i;                              /* Array subscript           */
 
@@ -79,7 +84,7 @@ int     i;                              /* Array subscript           */
 /* Removes trailing blanks and adds a terminating null.              */
 /* Returns the length of the ASCII string excluding terminating null */
 /*-------------------------------------------------------------------*/
-int make_asciiz (char *dest, int destlen, BYTE *src, int srclen)
+DLL_EXPORT int make_asciiz (char *dest, int destlen, BYTE *src, int srclen)
 {
 int             len;                    /* Result length             */
 
@@ -98,7 +103,7 @@ int             len;                    /* Result length             */
 /*-------------------------------------------------------------------*/
 /* Subroutine to print a data block in hex and character format.     */
 /*-------------------------------------------------------------------*/
-void data_dump ( void *addr, int len )
+DLL_EXPORT void data_dump ( void *addr, int len )
 {
 unsigned int    maxlen = 2048;
 unsigned int    i, xi, offset, startoff = 0;
@@ -186,7 +191,7 @@ int             lastsame = 0;
 /*                                                                   */
 /* Return value is 0 if successful, -1 if error                      */
 /*-------------------------------------------------------------------*/
-int read_track (CIFBLK *cif, int cyl, int head)
+DLL_EXPORT int read_track (CIFBLK *cif, int cyl, int head)
 {
 int             rc;                     /* Return code               */
 int             trk;                    /* Track number              */
@@ -250,7 +255,7 @@ BYTE            unitstat;               /* Unit status               */
 /*                                                                   */
 /* Return value is 0 if successful, +1 if end of track, -1 if error  */
 /*-------------------------------------------------------------------*/
-int read_block (CIFBLK *cif, int cyl, int head, int rec, BYTE **keyptr,
+DLL_EXPORT int read_block (CIFBLK *cif, int cyl, int head, int rec, BYTE **keyptr,
                 int *keylen, BYTE **dataptr, int *datalen)
 {
 int             rc;                     /* Return code               */
@@ -319,7 +324,7 @@ int             dl;                     /* Data length               */
 /*                                                                   */
 /* Return value is 0 if successful, +1 if key not found, -1 if error */
 /*-------------------------------------------------------------------*/
-int search_key_equal (CIFBLK *cif, BYTE *key, int keylen, int noext,
+DLL_EXPORT int search_key_equal (CIFBLK *cif, BYTE *key, int keylen, int noext,
                     DSXTENT extent[], int *cyl, int *head, int *rec)
 {
 int             rc;                     /* Return code               */
@@ -439,7 +444,7 @@ int             dl;                     /* Data length               */
 /*                                                                   */
 /* Return value is 0 if successful, or -1 if error                   */
 /*-------------------------------------------------------------------*/
-int convert_tt (int tt, int noext, DSXTENT extent[], int heads,
+DLL_EXPORT int convert_tt (int tt, int noext, DSXTENT extent[], int heads,
                 int *cyl, int *head)
 {
 int             i;                      /* Extent sequence number    */
@@ -493,7 +498,7 @@ int             extsize;                /* Extent size in tracks     */
 /* Return value is a pointer to the CKD image file descriptor        */
 /* structure if successful, or NULL if unsuccessful.                 */
 /*-------------------------------------------------------------------*/
-CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
+DLL_EXPORT CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
                        int dasdcopy)
 {
 int             fd;                     /* File descriptor           */
@@ -508,6 +513,7 @@ char           *argv[2];                /* Arguments to              */
 int             argc=0;                 /*                           */
 char            sfxname[1024];          /* Suffixed file name        */
 char            typname[64];
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Obtain storage for the file descriptor structure */
     cif = (CIFBLK*) calloc (sizeof(CIFBLK), 1);
@@ -531,7 +537,8 @@ char            typname[64];
 
     /* Read the device header so we can determine the device type */
     strcpy (sfxname, fname);
-    fd = open (sfxname, omode);
+    hostpath(pathname, sfxname, sizeof(pathname));
+    fd = open (pathname, omode);
     if (fd < 0)
     {
         /* If no shadow file name was specified, then try opening the
@@ -569,7 +576,8 @@ char            typname[64];
                 suffix = sfxname + strlen(sfxname) - 1;
             }
             *suffix = '1';
-            fd = open (sfxname, omode);
+            hostpath(pathname, sfxname, sizeof(pathname));
+            fd = open (pathname, omode);
         }
         if (fd < 0 && rmtdev == NULL)
         {
@@ -681,7 +689,7 @@ char            typname[64];
 /* is closed, and the file descriptor structure is released.         */
 /* Return value is 0 if successful, -1 if error                      */
 /*-------------------------------------------------------------------*/
-int close_ckd_image (CIFBLK *cif)
+DLL_EXPORT int close_ckd_image (CIFBLK *cif)
 {
 int             rc;                     /* Return code               */
 int             trk;                    /* Track number              */
@@ -728,7 +736,7 @@ BYTE            unitstat;               /* Unit status               */
 /* Return value is a pointer to the FBA image file descriptor        */
 /* structure if successful, or NULL if unsuccessful.                 */
 /*-------------------------------------------------------------------*/
-CIFBLK* open_fba_image (char *fname, char *sfname, int omode,
+DLL_EXPORT CIFBLK* open_fba_image (char *fname, char *sfname, int omode,
                         int dasdcopy)
 {
 int             rc;                     /* Return code               */
@@ -825,7 +833,7 @@ int             argc=0;                 /*  device open              */
 /*                                                                   */
 /* Return value is 0 if successful, or -1 if error                   */
 /*-------------------------------------------------------------------*/
-int build_extent_array (CIFBLK *cif, char *dsnama, DSXTENT extent[],
+DLL_EXPORT int build_extent_array (CIFBLK *cif, char *dsnama, DSXTENT extent[],
                         int *noext)
 {
 int             rc;                     /* Return code               */
@@ -988,7 +996,7 @@ char            volser[7];              /* Volume serial (ASCIIZ)    */
 /*      account the gaps that would exist on a real device, so that  */
 /*      the track capacities of the real device are not exceeded.    */
 /*-------------------------------------------------------------------*/
-int capacity_calc (CIFBLK *cif, int used, int keylen, int datalen,
+DLL_EXPORT int capacity_calc (CIFBLK *cif, int used, int keylen, int datalen,
                 int *newused, int *trkbaln, int *physlen, int *kbconst,
                 int *lbconst, int *nkconst, BYTE*devflag, int *tolfact,
                 int *maxdlen, int *numrecs, int *numhead, int *numcyls)
@@ -1118,6 +1126,7 @@ create_ckd_file (char *fname, int fseqn, U16 devtype, U32 heads,
                 int nullfmt)
 {
 int             rc;                     /* Return code               */
+OFF_T           rcoff;                  /* Return value from lseek() */
 int             fd;                     /* File descriptor           */
 int             i;                      /* Loop counter              */
 int             n;                      /* Loop delimiter            */
@@ -1144,6 +1153,7 @@ int             fileseq;                /* CKD header sequence number*/
 int             highcyl;                /* CKD header high cyl number*/
 int             x=O_EXCL;               /* Open option               */
 CKDDEV         *ckdtab;                 /* -> CKD table entry        */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Locate the CKD dasd table entry */
     ckdtab = dasd_lookup (DASD_CKDDEV, NULL, devtype, volcyls);
@@ -1181,7 +1191,8 @@ CKDDEV         *ckdtab;                 /* -> CKD table entry        */
     if (dasdcopy > 1) x = 0;
 
     /* Create the DASD image file */
-    fd = open (fname, O_WRONLY | O_CREAT | x | O_BINARY,
+    hostpath(pathname, fname, sizeof(pathname));
+    fd = open (pathname, O_WRONLY | O_CREAT | x | O_BINARY,
                 S_IRUSR | S_IWUSR | S_IRGRP);
     if (fd < 0)
     {
@@ -1594,8 +1605,8 @@ CKDDEV         *ckdtab;                 /* -> CKD table entry        */
         cdevhdr.size = cdevhdr.used = cpos;
 
         /* Rewrite the compressed device header */
-        rc = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
-        if (rc == -1)
+        rcoff = LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
+        if (rcoff == -1)
         {
             fprintf (stderr, _("HHCDU036E %s compressed device header "
                              "lseek error: %s\n"),
@@ -1612,8 +1623,8 @@ CKDDEV         *ckdtab;                 /* -> CKD table entry        */
         }
 
         /* Rewrite the secondary lookup table */
-        rc = lseek (fd, (off_t)l1[0], SEEK_SET);
-        if (rc == -1)
+        rcoff = LSEEK (fd, (OFF_T)l1[0], SEEK_SET);
+        if (rcoff == -1)
         {
             fprintf (stderr, _("HHCDU038E %s secondary lookup table "
                              "lseek error: %s\n"),
@@ -1628,7 +1639,7 @@ CKDDEV         *ckdtab;                 /* -> CKD table entry        */
                     fname, errno ? strerror(errno) : "incomplete");
             return -1;
         }
-        rc = ftruncate(fd, (off_t)cdevhdr.size);
+        rc = FTRUNCATE(fd, (OFF_T)cdevhdr.size);
 
         free (l1);
         cyl = volcyls;
@@ -1668,7 +1679,7 @@ CKDDEV         *ckdtab;                 /* -> CKD table entry        */
 /* suffix _1, _2, etc suffixed to the specified file name.           */
 /* Otherwise a single file is created without a suffix.              */
 /*-------------------------------------------------------------------*/
-int
+DLL_EXPORT int
 create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
            U32 volcyls, char *volser, BYTE comp, int lfs, int dasdcopy,
            int nullfmt)
@@ -1806,7 +1817,7 @@ U32             trksize;                /* DASD image track length   */
 /*      comp    Compression algorithm for a compressed device.       */
 /*              Will be 0xff if device is not to be compressed.      */
 /*-------------------------------------------------------------------*/
-int
+DLL_EXPORT int
 create_fba (char *fname, U16 devtype, U32 sectsz, U32 sectors,
             char *volser, BYTE comp, int lfs, int dasdcopy)
 {
@@ -1817,6 +1828,7 @@ BYTE           *buf;                    /* -> Sector data buffer     */
 U32             minsect;                /* Minimum sector count      */
 U32             maxsect;                /* Maximum sector count      */
 int             x=O_EXCL;               /* Open option               */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Special processing for compressed fba */
     if (comp != 0xff)
@@ -1858,7 +1870,8 @@ int             x=O_EXCL;               /* Open option               */
     if (dasdcopy > 1) x = 0;
 
     /* Create the DASD image file */
-    fd = open (fname, O_WRONLY | O_CREAT | x | O_BINARY,
+    hostpath(pathname, fname, sizeof(pathname));
+    fd = open (pathname, O_WRONLY | O_CREAT | x | O_BINARY,
                 S_IRUSR | S_IWUSR | S_IRGRP);
     if (fd < 0)
     {
@@ -1870,8 +1883,8 @@ int             x=O_EXCL;               /* Open option               */
     /* If the `dasdcopy' bit is on then simply allocate the space */
     if (dasdcopy)
     {
-        off_t sz = sectors * sectsz;
-        rc = ftruncate (fd, sz);
+        OFF_T sz = sectors * sectsz;
+        rc = FTRUNCATE (fd, sz);
         if (rc < 0)
         {
             fprintf (stderr, _("HHCDU049E %s dasdcopy ftruncate error: %s\n"),
@@ -1952,7 +1965,7 @@ create_compressed_fba (char *fname, U16 devtype, U32 sectsz,
            U32 sectors, char *volser, BYTE comp, int lfs, int dasdcopy)
 {
 int             rc;                     /* Return code               */
-off_t           rcoff;                  /* Return value from lseek() */
+OFF_T           rcoff;                  /* Return value from lseek() */
 int             fd;                     /* File descriptor           */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
@@ -1964,6 +1977,7 @@ unsigned long   len2;                   /* Compressed buffer length  */
 BYTE            buf2[256];              /* Compressed buffer         */
 BYTE            buf[65536];             /* Buffer                    */
 int             x=O_EXCL;               /* Open option               */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     UNREFERENCED(lfs);
 
@@ -1982,7 +1996,8 @@ int             x=O_EXCL;               /* Open option               */
     if (dasdcopy > 1) x = 0;
 
     /* Create the DASD image file */
-    fd = open (fname, O_WRONLY | O_CREAT | x | O_BINARY,
+    hostpath(pathname, fname, sizeof(pathname));
+    fd = open (pathname, O_WRONLY | O_CREAT | x | O_BINARY,
                 S_IRUSR | S_IWUSR | S_IRGRP);
     if (fd < 0)
     {
@@ -2102,7 +2117,7 @@ int             x=O_EXCL;               /* Open option               */
     }
 
     /* Re-write the compressed device header */
-    rcoff = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
+    rcoff = LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
     if (rcoff < 0)
     {
         fprintf (stderr, _("HHCDU063E %s cdevhdr lseek error: %s\n"),
@@ -2118,7 +2133,7 @@ int             x=O_EXCL;               /* Open option               */
     }
 
     /* Re-write the 1st level 2 table */
-    rcoff = lseek (fd, CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz, SEEK_SET);
+    rcoff = LSEEK (fd, CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz, SEEK_SET);
     if (rcoff < 0)
     {
         fprintf (stderr, _("HHCDU065E %s l2tab lseek error: %s\n"),
@@ -2156,7 +2171,7 @@ int get_verbose_util(void)
     return verbose;
 }
 
-void set_verbose_util(int v)
+DLL_EXPORT void set_verbose_util(int v)
 {
     verbose = v;
 }

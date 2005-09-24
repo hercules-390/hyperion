@@ -1,841 +1,1692 @@
-AC_INIT(hercules.h)
-AC_CONFIG_AUX_DIR(autoconf)
+###############################################################################
+# CONFIGURE.AC: Process this file with AutoConf to produce a configure script.
+###############################################################################
 
-AM_INIT_AUTOMAKE(hercules,3.03-cvs)
-AM_CONFIG_HEADER(config.h)
-AM_MAINTAINER_MODE
+#    AC is AutoConfigure, AM is AutoMake, and AH is AutoHeader. The
+#    'HC_XXXX..' macros are custom Hercules autoconf macros defined
+#    in the 'hercules.m4' file in the 'autoconf' subdirectory.
 
-##------------------------------------------------------------
-## Begin JAP unwanted "-g -O2" optimization flags fix...
-##
-## AM_GNU_GETTEXT()
-##
-## AC_CANONICAL_HOST
-##
-## # Initialization
-## CFLAGS="-W -Wall $CFLAGS"
-##
-## # Programs
-## AC_PROG_CC
-## AC_PROG_LIBTOOL
-##
+AC_INIT(hercules.h)                     # (package, version, bugreport email, etc)
+AC_REVISION($Revision$)           # (the version of this configure.ac)
+AC_CONFIG_AUX_DIR(autoconf)             # (directory containing auxillary build tools)
+AM_INIT_AUTOMAKE(hercules,3.02-cvs)     # (the version of our software package)
+AM_CONFIG_HEADER(config.h)              # (the file the resulting configure script will produce)
+AM_MAINTAINER_MODE()
+AC_CANONICAL_HOST()                     # (sets $host_cpu, $host_vendor, and $host_os)
 
-AC_CANONICAL_HOST
+###############################################################################
+#   Programs section...
+###############################################################################
 
-CFLAGS="-W -Wall $CFLAGS"
-
+#HC_PROG_CC()                           #    ((( DEPRECATED )))
 #
-# NOTE : The following no longer applies (ISW)
+# CFLAGS *MUST* BE SET 1ST - BEFORE CALL AC_PROG_CC OTHERWISE AUTOCONF TRIES TO IMPOSE
+#        ITS OWN CHOICES...
+# FIXME :
+#        Unfortunatelly, these are gcc flags.. so going to have
+#        to find something better...
 #
-# Programs  (Note use "HC_PROG_CC" and not "AC_PROG_CC". We now
-#            have our own "hercules.m4" macro defined in the
-#            autoconf directory that fixes an undesired compiler
-#            optimization flags issue)
+CFLAGS="$CFLAGS -W -Wall"
 
-AC_PROG_CC
+AC_PROG_CC()                            # (back to using this again)
 
-##
-## End JAP unwanted "-g -O2" optimization flags fix...
-##------------------------------------------------------------
-
-AC_DISABLE_STATIC
+# -----------------------------------------------------------------------------
+#  PROGRAMMING NOTE: The below 'AC_SUBST' macro causes AC_OUTPUT to replace
+#  all instances of "@xxxxxx@" in input files with the value that the shell
+#  variable "xxxxxx" has when AC_OUTPUT is called. Thus, the variable name
+#  used ("modexecdir" in our case) *is* significant and cannot be changed
+#  unless you change the "@modexecdir@" strings in all of the input files.
+# -----------------------------------------------------------------------------
 
 modexecdir=${libdir}/${PACKAGE}
 AC_SUBST(modexecdir)
 
-# ISW20030827-1 : Enable use of embedded libltdl 1 Line added
-AC_LIBTOOL_DLOPEN
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
-# ISW20030827-1 : Enable use of embedded libltdl 1 Line added
-AC_LIB_LTDL
-AC_SUBST([LIBTOOL_DEPS])
 
-AM_GNU_GETTEXT(use-libtool)
+# -----------------------------------------------------------------------------
+#
+#  AC_LIBTOOL_DLOPEN
+#
+#       Enable checking for dlopen support. This macro should be used if the
+#       package makes use of the '-dlopen' and '-dlpreopen' flags, otherwise
+#       libtool will assume that the system does not support dlopening. The
+#       macro must be called before AC_PROG_LIBTOOL.
+#
+# -----------------------------------------------------------------------------
 
-
-
-##
-## ISW - Add flag to warn about duplicates (if necessary)
-##
-HC_LD_DISALLOWDUPS()
-
-HC_LD_DUPSHAREGETOPT()
-HC_HAVE_OPTERR()
-
-# OS-specific settings that we can't figure out any other way (yet)
-
-build_hercifc=false
-use_dlltool=false
-is_cygwin=false
-
-case "$host_os" in
-        darwin*)
-                if test $host_vendor = apple ; then
-##                 AC_DEFINE([_BSD_SOCKLEN_T_],[int])
-                   AC_DEFINE([_INTL_REDIRECT_MACROS])
-##              Do whatever is necessary to get the following symbol defined
-##               so the included libltdl will be built and used
-##                 AC_PROVIDE_AC_LIBTOOL_DLOPEN
-                build_hercifc=true
-                fi
-                ;;
-        linux*)
-                build_hercifc=true
-                ;;
-        *cygwin*)
-                is_cygwin=true
-                build_hercifc=false
-                use_dlltool=true
-                CFLAGS="$CFLAGS -Wno-format"
-                AC_DEFINE([WIN32])
-##              AC_DEFINE([NO_SIGABEND_HANDLER])
-                ;;
-        *)
-                build_hercifc=false
-                ;;
-esac
-
-AM_CONDITIONAL(BUILD_HERCIFC, [test "x$build_hercifc" = "xtrue"])
-
-# Arch-specific settings that we can't figure out any other way (yet)
-
-case "$host_cpu-$GCC" in
-        hppa*-yes)
-                CFLAGS="$CFLAGS -ffunction-sections"
-        ;;
-        x86_64-yes|s390x-yes)
-                CFLAGS="$CFLAGS -m64"
-        ;;
-esac
+AC_LIBTOOL_DLOPEN()                     # (we need libtool's dlopen support)
 
 
-# System Services
-AC_SYS_LARGEFILE
+# -----------------------------------------------------------------------------
+#
+#  AC_LIBTOOL_WIN32_DLL
+#
+#       This macro should be used if the package has been ported to build
+#       clean dlls on win32 platforms. Usually this means that any library
+#       data items are exported with __declspec(dllexport) and imported with
+#       __declspec(dllimport). If this macro is not used, libtool will assume
+#       that the package libraries are not dll clean and will build only static
+#       libraries on win32 hosts.
+#
+#       This macro must be called before AC_PROG_LIBTOOL, and provision must
+#       be made to pass '-no-undefined' to libtool in link mode from the package
+#       Makefile. Naturally, if you pass '-no-undefined', you must ensure that
+#       all the library symbols really are defined at link time!
+#
+# -----------------------------------------------------------------------------
 
-AC_CHECK_TYPES(id_t)
+AC_LIBTOOL_WIN32_DLL()                  # (we need Win32 support in libtool)
 
-# Libraries
-AC_CHECK_LIB(m, sqrt)
-AC_CHECK_LIB(socket, connect)
-AC_CHECK_LIB(nsl, gethostbyname)
-AC_CHECK_LIB(resolv, inet_aton)
-dnl This will only work for zlib >= 1.0.2
-dnl AC_CHECK_LIB(z, zlibVersion)
-AC_CHECK_LIB(z, main)
-AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
-[have_libbz2=yes],[have_libbz2=no])
 
-# OPTION_DYNAMIC_LOAD requires availability of either dlopen
-# or libtool. If neither available OPTION_DYNAMIC_LOAD is not
-# possible and USE_DLLTOOL shouldn't be set either. (Each test
-# done twice; first time to cause default autoconf behavior,
-# the second time to set our flag)
+# -----------------------------------------------------------------------------
+#  See: 'AC_PROG_LIBTOOL' below.
+# -----------------------------------------------------------------------------
 
-# Leave this one so ltdl doesn't get to think dlopen is not available
-AC_CHECK_LIB(dl,dlopen)
-# ISW : Following lines commented out - UNCONDITIONALLY use libtool
-# AC_CHECK_LIB(dl,dlopen, have_dlopen=true, have_dlopen=false )
-# ISW20030827-1 : 1 lines added, 2 lines commented out
-have_lt_dlopen=true
-# ISW : Following lines - UNCONDITIONALLY use libtool
-have_dlopen=false
-# AC_CHECK_LIB(ltdl,lt_dlopen)
-# AC_CHECK_LIB(ltdl,lt_dlopen, have_lt_dlopen=true, have_lt_dlopen=false )
+AC_DISABLE_STATIC()                     # (forces libtool to build shared
 
-# AC_CHECK_LIB(gcrypt,gcry_cipher_open, have_gcrypt=true, have_gcrypt=false )
+                                        #  libraries instead of static ones)
+# -----------------------------------------------------------------------------
+#  AC_PROG_LIBTOOL
+#
+#       Add support for the '--enable-shared' and '--disable-shared'
+#       configure flags. By default, this macro turns on shared libraries
+#       if they are available, and also enables static libraries if they
+#       don't conflict with the shared libraries. You can modify these
+#       defaults by calling either the AC_DISABLE_SHARED or AC_DISABLE_STATIC
+#       macros.
+#
+#       Hercules REQUIRES shared libraries (i.e. DLLs), so we do indeed use
+#       the AC_DISABLE_STATIC macro above.
+#
+# -----------------------------------------------------------------------------
 
-# ISW20041011 :
-# Was :
-# AM_PATH_LIBGCRYPT("0.4.4",[have_gcrypt=true],[have_gcrypt=false])
-AM_PATH_LIBGCRYPT("1.1.90",[have_gcrypt=true],[have_gcrypt=false])
+AC_PROG_LIBTOOL()                       # (we build libtool for ourselves)
 
-AM_CONDITIONAL(HAVE_GCRYPT, [test "x$have_gcrypt" = "xtrue"])
 
-if test "x$have_gcrypt" = "xtrue" ; then
-    OCFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $GCRYPT_CFLAGS"
-    AC_MSG_CHECKING([whether gcry_cipher_open takes 3 or 4 args])
-    AC_COMPILE_IFELSE([
-#include <gcrypt.h>
-int main()
-{
-  GCRY_CIPHER_HD hd;
-  hd = gcry_cipher_open(0,0,0);
-  return 0;
-}
-],[gcrypt_form=3],
-    AC_COMPILE_IFELSE(
-[
-#include <gcrypt.h>
-int main()
-{
-  gcry_cipher_hd_t hd;
-  gcry_cipher_open(&hd,0,0,0);
-  return 0;
-}
-],[gcrypt_form=4],[gcrypt_form=0]))
-    case $gcrypt_form in
-        3)
-        AC_MSG_RESULT([3])
-        ;;
-        4)
-        AC_MSG_RESULT([4])
-        ;;
-        *)
-        AC_MSG_RESULT([unknown])
-        ;;
-    esac
-    CFLAGS="$OCFLAGS"
-    AC_DEFINE_UNQUOTED(GCRYPT_OPENFORMAT,${gcrypt_form})
+# -----------------------------------------------------------------------------
+#
+#  AC_LIB_LTDL
+#
+#       Even though libltdl is installed together with libtool, you may wish
+#       to include libltdl in the distribution of your package, for the convenience
+#       of users of your package that don't have libtool or libltdl installed.
+#
+#       The most simplistic way to add libltdl to your package is to copy the
+#       source files, 'ltdl.c' and 'ltdl.h', to a source directory withing your
+#       package and to build and link them along with the rest of your sources.
+#
+#       To do this, you must add a call to the 'AC_LIB_LTDL' macro to your package's
+#       'configure.in' to perform the required configure time checks in order that
+#       'ltdl.o' is built correctly.
+#
+#       This method does have its problems though: if you try to link the package
+#       binaries with an installed libltdl, or a library which depends on libltdl,
+#       you may have problems with duplicate symbol definitions.
+#
+#       In order to enable this flavor of libltdl, you should add the line
+#       'AC_LIBLTDL_CONVENIENCE' to your `configure.in', before 'AC_PROG_LIBTOOL'.
+#
+#       In order to select the installable version of libltdl, you should add a
+#       call of the macro 'AC_LIBLTDL_INSTALLABLE' to your 'configure.in' before
+#       'AC_PROG_LIBTOOL'. This macro will check whether libltdl is already
+#       installed and, if not, request the libltdl embedded in your package to be
+#       built and installed.
+#
+#       Whatever macro you use, it is up to you to ensure that your 'configure.in'
+#       will configure libltdl, using 'AC_CONFIG_SUBDIRS', and that your 'Makefile's
+#       will start sub-makes within libltdl's directory, using automake's SUBDIRS,
+#       for example. Both macros define the shell variables LIBLTDL, to the link flag
+#       that you should use to link with libltdl, and LTDLINCL, to the preprocessor
+#       flag that you should use to compile with programs that include 'ltdl.h'. It
+#       is up to you to use 'AC_SUBST' to ensure that this variable will be available
+#       in 'Makefile's, or add them to variables that are 'AC_SUBST'ed by default,
+#       such as LIBS and CPPFLAGS.
+#
+#       So, when you want to link a program with libltdl, be it a convenience,
+#       installed or installable library, just compile with '$(LTDLINCL)' and link
+#       it with '$(LIBLTDL)', using libtool.
+#
+#       You should probably also add 'AC_LIBTOOL_DLOPEN' to your 'configure.in' before
+#       'AC_PROG_LIBTOOL', otherwise libtool will assume no dlopening mechanism is
+#       supported, and revert to dlpreopening, which is probably not what you want.
+#
+#       The following example shows you how to embed the convenience libltdl
+#       in your package. In order to use the installable variant just replace
+#       'AC_LIBLTDL_CONVENIENCE' with 'AC_LIBLTDL_INSTALLABLE'. We assume that libltdl
+#       was embedded using 'libtoolize --ltdl':
+#
+#           configure.in:
+#
+#               ...
+#               dnl Enable building of the convenience library
+#               dnl and set LIBLTDL accordingly
+#               AC_LIBLTDL_CONVENIENCE
+#               dnl Substitute LTDLINCL and LIBLTDL in the Makefiles
+#               AC_SUBST(LTDLINCL)
+#               AC_SUBST(LIBLTDL)
+#               dnl Check for dlopen support
+#               AC_LIBTOOL_DLOPEN
+#               dnl Configure libtool
+#               AC_PROG_LIBTOOL
+#               dnl Configure libltdl
+#               AC_CONFIG_SUBDIRS(libltdl)
+#               ...
+#
+#           Makefile.am:
+#
+#               ...
+#               SUBDIRS = libltdl
+#
+#               INCLUDES = $(LTDLINCL)
+#
+#               myprog_LDFLAGS = -export-dynamic
+#               # The quotes around -dlopen below fool automake <= 1.4 into accepting it
+#               myprog_LDADD = $(LIBLTDL) "-dlopen" self "-dlopen" foo1.la
+#               myprog_DEPENDENCIES = $(LIBLTDL) foo1.la
+#               ...
+#
+# -----------------------------------------------------------------------------
 
-fi
+AC_LIB_LTDL()                           # (we need the ltdl libtool library)
+AC_SUBST([LIBTOOL_DEPS])                # (see PROGRAMMING NOTE above)
 
-opt_dynamic_load=true
 
-AC_ARG_ENABLE(dynamic-load,
-              AC_HELP_STRING([--disable-dynamic-load],
-                             [disable/enable dynamic loader option]),
-              [case "${enableval}" in
-                yes) opt_dynamic_load=true ;;
-                no) opt_dynamic_load=false ;;
-                *) opt_dynamic_load=true ;;
-               esac],[opt_dynamic_load=true])
+# -----------------------------------------------------------------------------
+# (See comments in the 'AC_CHECK_LIB' Libraries section further below)
+# -----------------------------------------------------------------------------
+AC_MSG_NOTICE( [(use of lt_dlopen forced by Hercules Dynamic Loader requirement)] )
+hc_cv_have_lt_dlopen=yes
 
-if test $opt_dynamic_load = true; then
-  if test $have_dlopen = true || test $have_lt_dlopen = true; then
-    AC_DEFINE([OPTION_DYNAMIC_LOAD])
-    if test $have_dlopen != true; then
-      AC_DEFINE([HDL_USE_LIBTOOL])
-    fi
-  else
-    opt_dynamic_load=false
-    use_dlltool=false
-  fi
-else
-  opt_dynamic_load=false
-  use_dlltool=false
-fi
 
-AM_CONDITIONAL(OPTION_DYNAMIC_LOAD, [test "x$opt_dynamic_load" = "xtrue"])
-AM_CONDITIONAL(USE_DLLTOOL,         [test "x$use_dlltool"      = "xtrue"])
-AM_CONDITIONAL(BUILD_SHARED,        [test "x$enable_shared"    = "xyes"])
 
-if test x$enable_shared = xyes; then
-    AC_DEFINE(HDL_BUILD_SHARED)
-fi
+AM_GNU_GETTEXT([external])              #
 
-AC_ARG_ENABLE(external-gui,
-              AC_HELP_STRING([--disable-external-gui],
-                             [disable interface to external Windows GUI]),
-              [case "${enableval}" in
-                 yes) build_external_gui=true ;;
-                 no) build_external_gui=false ;;
-                 *) AC_MSG_ERROR(bad value ${enableval} for --enable-external-gui) ;;
-               esac],
-              [case "$host_os" in
-                 *cygwin*) build_external_gui=true ;;
-                 *) build_external_gui=false ;;
-               esac])
+HC_LD_DISALLOWDUPS()                    # (add duplicate symbols option to LDFLAGS)
 
-if test x$build_external_gui = xtrue; then
-  if test $is_cygwin = true && test $opt_dynamic_load != true; then
-    AC_MSG_ERROR([dynamic loader option required for external gui support on win32])
-  else
-    if test $is_cygwin = true && test $use_dlltool != true; then
-      AC_MSG_ERROR([internal error: external gui specified for win32 but use_dlltool not set])
-    else
-      AC_DEFINE([EXTERNALGUI])
-    fi
-  fi
-fi
+# -----------------------------------------------------------------------------
+#  The following is a "global error" flag used to defer aborting configure
+#  until after ALL errors have been detected/reported.
+# -----------------------------------------------------------------------------
 
-max_num_cpus=8
-default_num_cpus=2
-num_cpus_error=no
+hc_error=no
 
-AC_ARG_ENABLE(multi-cpu,
-              AC_HELP_STRING([--enable-multi-cpu=NUMBER|no],
-                             [enable/disable multi-cpu support (valid range is 1-8, default is 2)]),
-              [case "${enableval}" in
-                no)              num_cpu_engines=1 ;;
-                yes)             num_cpu_engines=${default_num_cpus} ;;
-                0|9)             num_cpus_error=yes ;;
-                1|2|3|4|5|6|7|8) num_cpu_engines=${enableval} ;;
-                *)               num_cpus_error=yes ;;
-               esac],
-              [num_cpu_engines=${default_num_cpus}])
+###############################################################################
+#   Autoheader templates
+###############################################################################
 
-if test $num_cpus_error = no; then
-  AC_DEFINE_UNQUOTED(MAX_CPU_ENGINES,${num_cpu_engines})
-else
-  AC_MSG_ERROR(bad value "${enableval}" for --enable-multi-cpu)
-fi
+#  All AC_DEFINE() macros used within autoconf (to define pre-processor vars
+#  used during the actual build process) must have corresponding AH_TEMPLATE
+#  statements coded somewhere. We place them all here simply for convenience.
+#  The order in which they appear below is the very same order that they will
+#  appear in the resulting config.h file. (Not important, but handy to know)
 
-AC_ARG_ENABLE(fthreads,
-              AC_HELP_STRING([--enable-fthreads],
-                             [use included fthreads instead of libpthread]),
-              [case "${host_os},${enableval}" in
-                 *cygwin*,yes)
-                   build_fthreads=true
-                   AC_DEFINE([OPTION_FTHREADS])
-                   ;;
-                 *,yes)
-                   AC_MSG_ERROR([fthreads are only for win32])
-                   ;;
-                 *)
-                   ;;
-               esac],
-              [AC_CHECK_LIB(pthread, pthread_create,
-               [],
-               [case "$host_os" in
-                  *cygwin*)
-                    # Alternate pthreads location for older cygwin
-                    AC_MSG_NOTICE([Looking for pthreadw32 in /usr/DLL])
-                    LDFLAGS_SAVE="$LDFLAGS"
-                    LDFLAGS="$LDFLAGS -L/usr/DLL"
-                    AC_CHECK_LIB(pthreadw32, pthread_create,
-                                 [],
-                                 [LDFLAGS="$LDFLAGS_SAVE"])
-                    ;;
-                esac]) ])
+AH_TEMPLATE( [CUSTOM_BUILD_STRING],     [Define to provide additional information about this build] )
+AH_TEMPLATE( [MAX_CPU_ENGINES],         [Defines the maximum number of emulated CPU engines] )
+AH_TEMPLATE( [PKGDATADIR],              [Directory where the HTTP server will find documents] )
+AH_TEMPLATE( [HERC_LOCALEDIR],          [Directory where to find NLS data] )
+AH_TEMPLATE( [MODULESDIR],              [Directory where HERCULES modules are installed] )
+AH_TEMPLATE( [DEBUG],                   [Define to enable extra debugging code (TRACE/VERIFY/ASSERT macros)] )
 
-AM_CONDITIONAL(BUILD_FTHREADS, [test x$build_fthreads = xtrue])
+AH_TEMPLATE( [HAVE_ATTR_REGPARM],       [Define if your gcc properly supports __attribute__((regparm(n)))] )
+AH_TEMPLATE( [NO_ASM_BYTESWAP],         [Define to disable assembler routines for byte swapping] )
+AH_TEMPLATE( [NO_IEEE_SUPPORT],         [Define to disable IEEE floating point support] )
+AH_TEMPLATE( [NO_SETUID],               [Define to disable setuid operation] )
+AH_TEMPLATE( [NO_SIGABEND_HANDLER],     [Define to disable sigabend_handler (please describe this better)] )
+AH_TEMPLATE( [NON_UNIQUE_GETTIMEOFDAY], [Define if 'gettimeofday' returns non-unique values] )
 
-AC_ARG_ENABLE(fishhang,
-              AC_HELP_STRING([--enable-fishhang], [debug correct lock handling (fthreads only)]),
-              [case "${enableval}" in
-                yes)
-                  fishhang=true
-                  CFLAGS="-DFISH_HANG $CFLAGS"
-                  AC_DEFINE([FISH_HANG])
-                  ;;
-                no) fishhang=false ;;
-                *) AC_MSG_ERROR([bad value ${enableval} for --enable-fishhang]) ;;
-               esac],
-              [fishhang=false])
+AH_TEMPLATE( [NEED_GETOPT_WRAPPER],     [Define to indicate a wrapper for getopt is needed] )
+AH_TEMPLATE( [NEED_GETOPT_OPTRESET],    [Define to indicate optreset exists] )
 
-if test x$fishhang = xtrue; then
-  if test x$build_fthreads != xtrue; then
-    AC_MSG_ERROR(fishhang requested but fthreads not specified)
-  fi
-fi
+AH_TEMPLATE( [HAVE_INTTYPES_H],         [Define if inttypes.h header file is present on your system] )
+AH_TEMPLATE( [HAVE_U_INT],              [Define if your system uses u_int8_t, etc, instead of uint8_t] )
 
-AM_CONDITIONAL(BUILD_FISHHANG, [test x$fishhang = xtrue])
+AH_TEMPLATE( [OPTION_CONFIG_SYMBOLS],   [Define to enable symbolic substitutions in configuration file] )
+AH_TEMPLATE( [OPTION_DYNAMIC_LOAD],     [Define to enable Hercules Dynamic Loader feature] )
+AH_TEMPLATE( [HDL_BUILD_SHARED],        [Define to indicate shared libraries are being used] )
+AH_TEMPLATE( [HDL_USE_LIBTOOL],         [Define to cause dynamic loader to use libtool instead of dlopen] )
 
-dnl AC_MSG_NOTICE([Checking to see if -pthread is needed to compile])
+AH_TEMPLATE( [BUILD_HERCIFC],           [Define if hercifc program is to be built] )
 
-AC_MSG_CHECKING([whether ${CC-cc} accepts -pthread])
+AH_TEMPLATE( [WIN32],                   [Define when building under Win32 (MinGW or Cygwin)] )
+AH_TEMPLATE( [EXTERNALGUI],             [Define to build interface to external Windows GUI] )
+AH_TEMPLATE( [OPTION_FTHREADS],         [Define to use included threads implementation (fthreads)] )
+AH_TEMPLATE( [FISH_HANG],               [Define to debug correct fthreads LOCK handling (requires fthreads)] )
 
-echo 'void f(){}' >conftest.c
-if test -z "`${CC-cc} -pthread -c conftest.c 2>&1`"; then
-        LIBS="-pthread $LIBS"
-        AC_MSG_RESULT([yes])
-else
-        AC_MSG_RESULT([no])
-fi
-rm -f conftest*
+AH_TEMPLATE( [TIMESPEC_IN_TIME_H],      [Define if 'struct timespec' defined in <time.h>] )
+AH_TEMPLATE( [TIMESPEC_IN_SYS_TYPES_H], [Define if 'struct timespec' defined in <sys/types.h>] )
 
-# Headers
-AC_CHECK_HEADERS(byteswap.h)
-case "$host_os" in
-        *cygwin*)
-                ;;
-        *)
-                AC_CHECK_HEADER(fenv.h,,[AC_DEFINE([NO_IEEE_SUPPORT])])
-                ;;
-esac
+AH_TEMPLATE( [_BSD_SOCKLEN_T_],         [Define missing macro on apple darwin (osx) platform] )
+AH_TEMPLATE( [_INTL_REDIRECT_MACROS],   [Define to 1 if non-Intel architecture (gettext)] )
 
-if test x$build_fthreads != xtrue; then
-  AC_CHECK_HEADER(pthread.h,
-                  [],
-                  [case "$host_os" in
-                     *cygwin*)
-                       # Alternate pthreads location for older cygwin
-                       AC_MSG_NOTICE([Looking for pthread.h in /usr/Pthreads])
-                       CFLAGS="$CFLAGS -I/usr/Pthreads"
-                       AC_CHECK_HEADER(pthread.h,
-                                       [],
-                                       [AC_MSG_ERROR([Unable to find pthread.h]) ])
-                       ;;
-                     *)
-                       AC_MSG_ERROR([Unable to find pthread.h])
-                       ;;
-                   esac])
-fi
+AH_TEMPLATE( [CCKD_BZIP2],              [Define to enable bzip2 compression in emulated DASDs] )
+AH_TEMPLATE( [HET_BZIP2],               [Define to enable bzip2 compression in emulated tapes] )
 
-dnl AC_MSG_NOTICE([Checking how to get fixed-size data types])
-AC_CHECK_HEADER(inttypes.h,
-                [AC_DEFINE([HAVE_INTTYPES_H])],
-                [AC_CHECK_TYPE(u_int8_t,
-                               [AC_DEFINE([HAVE_U_INT])],
-                               [AC_MSG_ERROR([Unable to find fixed-size data types])] )] )
+AH_TEMPLATE( [GCRYPT_OPENFORMAT],       [Semantic to use for gcry_cipher_open function] )
 
-AC_CHECK_HEADERS(linux/if_tun.h)
-
-# Compiler characteristics
-
-AC_C_BIGENDIAN
-
+###############################################################################
+#   OS-specific settings that we can't figure out any other way (yet)
+###############################################################################
 
 #
-# TEST FOR STRUCTURE ALIGNEMENT
+#  Determine what type of host we're building on...
 #
-cat > conftest.h << __EOF
-#include <stdio.h>
-struct sizeoftest
-{
-    unsigned char a;
-};
-__EOF
+
+case "$host_os" in
+
+    linux*)
+
+        hc_cv_is_nix=yes
+        hc_cv_is_windows=no
+        hc_cv_is_mingw32=no
+        hc_cv_is_apple=no
+        ;;
+
+    mingw*)
+
+        hc_cv_is_nix=no
+        hc_cv_is_windows=yes
+        hc_cv_is_mingw32=yes
+        hc_cv_is_apple=no
+        ;;
+
+    cygwin*)
+
+        hc_cv_is_nix=no
+        hc_cv_is_windows=yes
+        hc_cv_is_mingw32=no
+        hc_cv_is_apple=no
+        ;;
+
+    darwin*)
+
+        if test $host_vendor = apple; then
+
+            hc_cv_is_nix=no
+            hc_cv_is_windows=no
+            hc_cv_is_mingw32=no
+            hc_cv_is_apple=yes
+
+        else
+
+            hc_cv_is_nix=no
+            hc_cv_is_windows=no
+            hc_cv_is_mingw32=no
+            hc_cv_is_apple=no
+
+        fi
+        ;;
+
+    *)
+        hc_cv_is_nix=no
+        hc_cv_is_windows=no
+        hc_cv_is_mingw32=no
+        hc_cv_is_apple=no
+        ;;
+esac
+
+#------------------------------------------------------#
+#  Hard-coded host-operating-system-specific settings  #
+#  that we have no other/easy way to figure out...     #
+#------------------------------------------------------#
+
+if test "$hc_cv_is_nix"        = "yes"; then
+
+    hc_cv_build_hercifc=yes
+    hc_cv_non_unique_gettimeofday=no
+
+elif test "$hc_cv_is_windows"  = "yes"; then
+
+    hc_cv_build_hercifc=no
+    hc_cv_non_unique_gettimeofday=yes
+
+elif test "$hc_cv_is_apple"    = "yes"; then
+
+    hc_cv_build_hercifc=yes
+    hc_cv_non_unique_gettimeofday=no
+
+else
+    hc_cv_build_hercifc=no
+    hc_cv_non_unique_gettimeofday=no
+fi
+
+###############################################################################
+#   Checks for REQUIRED (non-optional) header files...
+###############################################################################
+
+#  PROGRAMMING NOTE: We use 'AC_CHECK_HEADER' here (singular) since we don't
+#  care whether 'HAVE_XXX' gets #defined or not since, because these are re-
+#  quired headers, if any of them are not found, we abort and thus we don't
+#  need to have any 'HAVE_XXX' pre-processor #defined entered into config.h
+#  (because we can't build Herc at all if any of them don't happen to exist)
+
+AC_CHECK_HEADER( ctype.h,      [], [ AC_MSG_RESULT( [ERROR: Required header 'ctype.h' not found]      ); hc_error=yes ] )
+AC_CHECK_HEADER( errno.h,      [], [ AC_MSG_RESULT( [ERROR: Required header 'errno.h' not found]      ); hc_error=yes ] )
+AC_CHECK_HEADER( fcntl.h,      [], [ AC_MSG_RESULT( [ERROR: Required header 'fcntl.h' not found]      ); hc_error=yes ] )
+AC_CHECK_HEADER( limits.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'limits.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( setjmp.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'setjmp.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( stdarg.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'stdarg.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( stdio.h,      [], [ AC_MSG_RESULT( [ERROR: Required header 'stdio.h' not found]      ); hc_error=yes ] )
+AC_CHECK_HEADER( stdlib.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'stdlib.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( string.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'string.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( time.h,       [], [ AC_MSG_RESULT( [ERROR: Required header 'time.h' not found]       ); hc_error=yes ] )
+AC_CHECK_HEADER( unistd.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'unistd.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( sys/stat.h,   [], [ AC_MSG_RESULT( [ERROR: Required header 'sys/stat.h' not found]   ); hc_error=yes ] )
+AC_CHECK_HEADER( sys/time.h,   [], [ AC_MSG_RESULT( [ERROR: Required header 'sys/time.h' not found]   ); hc_error=yes ] )
+AC_CHECK_HEADER( sys/types.h,  [], [ AC_MSG_RESULT( [ERROR: Required header 'sys/types.h' not found]  ); hc_error=yes ] )
+
+#  PROGRAMMING NOTE: the pthread.h header only required if this is not
+#  an fthreads build. Thus we delay aborting until later once we know
+#  (if this is a windows build; otherwise we abort right away)
+
+AC_CHECK_HEADER( pthread.h, [hc_cv_have_pthread_h=yes],
+    [
+        if test "$hc_cv_is_windows" = "yes"; then
+
+            hc_cv_alt_pthread_location=/usr/Pthreads
+
+            AC_MSG_NOTICE( [looking for pthread.h in ${hc_cv_alt_pthread_location}] )
+
+            hc_temp=$CFLAGS
+            CFLAGS="$CFLAGS -I${hc_cv_alt_pthread_location}"
+
+            AC_CHECK_HEADER( pthread.h,
+                [hc_cv_have_pthread_h=yes],
+                [hc_cv_have_pthread_h=no]
+            )
+
+            CFLAGS=$hc_temp
+
+        else
+            AC_MSG_RESULT( [ERROR: Required header 'pthread.h' not found] )
+            hc_error=yes
+        fi
+    ]
+)
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   Checks for optional (non-required) header files...
+###############################################################################
+
+#  PROGRAMMING NOTE: We use 'AC_CHECK_HEADERS' here (plural) to cause autoconf
+#  to automatically add a #define/#undef 'HAVE_XXX' statement into config.h to
+#  let us know whether the header exists on this system or not (since, because
+#  these are optional headers, we are still able to successfully build Herc if
+#  they don't happen to exist). The 'hc_cv_have_xxx' variables are only defined
+#  in case other parts of configure.ac need to  know whether the header exists
+#  or not without having to do their own AC_CHECK_HEADERS (since we've already
+#  done it).
+
+AC_CHECK_HEADERS( arpa/inet.h,    [hc_cv_have_arpa_inet_h=yes],    [hc_cv_have_arpa_inet_h=no]    )
+AC_CHECK_HEADERS( linux/if_tun.h, [hc_cv_have_linux_if_tun_h=yes], [hc_cv_have_linux_if_tun_h=no] )
+AC_CHECK_HEADERS( net/if.h,       [hc_cv_have_net_if_h=yes],       [hc_cv_have_net_if_h=no]       )
+AC_CHECK_HEADERS( net/route.h,    [hc_cv_have_net_route_h=yes],    [hc_cv_have_net_route_h=no]    )
+AC_CHECK_HEADERS( netinet/in.h,   [hc_cv_have_netinet_in_h=yes],   [hc_cv_have_netinet_in_h=no]   )
+AC_CHECK_HEADERS( sys/ioctl.h,    [hc_cv_have_sys_ioctl_h=yes],    [hc_cv_have_sys_ioctl_h=no]    )
+AC_CHECK_HEADERS( sys/mman.h,     [hc_cv_have_sys_mman_h=yes],     [hc_cv_have_sys_mman_h=no]     )
+AC_CHECK_HEADERS( sys/mount.h,    [hc_cv_have_sys_mount_h=yes],    [hc_cv_have_sys_mount_h=no]    )
+AC_CHECK_HEADERS( sys/mtio.h,     [hc_cv_have_sys_mtio_h=yes],     [hc_cv_have_sys_mtio_h=no]     )
+AC_CHECK_HEADERS( sys/resource.h, [hc_cv_have_sys_resource_h=yes], [hc_cv_have_sys_resource_h=no] )
+AC_CHECK_HEADERS( sys/socket.h,   [hc_cv_have_sys_socket_h=yes],   [hc_cv_have_sys_socket_h=no]   )
+AC_CHECK_HEADERS( sys/uio.h,      [hc_cv_have_sys_uio_h=yes],      [hc_cv_have_sys_uio_h=no]      )
+AC_CHECK_HEADERS( sys/utsname.h,  [hc_cv_have_sys_utsname_h=yes],  [hc_cv_have_sys_utsname_h=no]  )
+AC_CHECK_HEADERS( sys/wait.h,     [hc_cv_have_sys_wait_h=yes],     [hc_cv_have_sys_wait_h=no]     )
+AC_CHECK_HEADERS( sys/un.h,       [hc_cv_have_sys_un_h=yes],       [hc_cv_have_sys_un_h=no]       )
+AC_CHECK_HEADERS( bzlib.h,        [hc_cv_have_bzlib_h=yes],        [hc_cv_have_bzlib_h=no]        )
+AC_CHECK_HEADERS( dlfcn.h,        [hc_cv_have_dlfcn_h=yes],        [hc_cv_have_dlfcn_h=no]        )
+AC_CHECK_HEADERS( fenv.h,         [hc_cv_have_fenv_h=yes],         [hc_cv_have_fenv_h=no]         )
+AC_CHECK_HEADERS( inttypes.h,     [hc_cv_have_inttypes_h=yes],     [hc_cv_have_inttypes_h=no]     )
+AC_CHECK_HEADERS( iconv.h,        [hc_cv_have_iconv_h=yes],        [hc_cv_have_iconv_h=no]        )
+AC_CHECK_HEADERS( libintl.h,      [hc_cv_have_libintl_h=yes],      [hc_cv_have_libintl_h=no]      )
+AC_CHECK_HEADERS( locale.h,       [hc_cv_have_locale_h=yes],       [hc_cv_have_locale_h=no]       )
+AC_CHECK_HEADERS( ltdl.h,         [hc_cv_have_ltdl_h=yes],         [hc_cv_have_ltdl_h=no]         )
+AC_CHECK_HEADERS( malloc.h,       [hc_cv_have_malloc_h=yes],       [hc_cv_have_malloc_h=no]       )
+AC_CHECK_HEADERS( math.h,         [hc_cv_have_math_h=yes],         [hc_cv_have_math_h=no]         )
+AC_CHECK_HEADERS( netdb.h,        [hc_cv_have_netdb_h=yes],        [hc_cv_have_netdb_h=no]        )
+AC_CHECK_HEADERS( pwd.h,          [hc_cv_have_pwd_h=yes],          [hc_cv_have_pwd_h=no]          )
+AC_CHECK_HEADERS( regex.h,        [hc_cv_have_regex_h=yes],        [hc_cv_have_regex_h=no]        )
+AC_CHECK_HEADERS( sched.h,        [hc_cv_have_sched_h=yes],        [hc_cv_have_sched_h=no]        )
+AC_CHECK_HEADERS( signal.h,       [hc_cv_have_signal_h=yes],       [hc_cv_have_signal_h=no]       )
+AC_CHECK_HEADERS( termios.h,      [hc_cv_have_termios_h=yes],      [hc_cv_have_termios_h=no]      )
+AC_CHECK_HEADERS( time.h,         [hc_cv_have_time_h=yes],         [hc_cv_have_time_h=no]         )
+AC_CHECK_HEADERS( zlib.h,         [hc_cv_have_zlib_h=yes],         [hc_cv_have_zlib_h=no]         )
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   Checks for declarations...
+###############################################################################
+
+#  PROGRAMMING NOTE: For declaration checks, you need to be careful to use the
+#  following test in your program:
+#
+#      #if defined(HAVE_DECL_XXXX) && !HAVE_DECL_XXXXX
+#      ...code to handle not declared case...
+#      #endif
+#
+#  This is because UNLIKE other 'AC_CHECK' macros, when a SYMBOL isn't DECLared,
+#  "HAVE_DECL_XXXX" is #defined to '0' instead of leaving "HAVE_DECL_XXXX" #undefined.
+#  (e.g. #defined to 1 if you have the declaration and #defined to 0 if you don't)
+
+AC_CHECK_DECLS( SIGUSR1,        [hc_cv_have_sigusr1=yes],        [hc_cv_have_sigusr1=no],        [#include <signal.h>] )
+AC_CHECK_DECLS( SIGUSR2,        [hc_cv_have_sigusr2=yes],        [hc_cv_have_sigusr2=no],        [#include <signal.h>] )
+AC_CHECK_DECLS( SIGPIPE,        [hc_cv_have_sigpipe=yes],        [hc_cv_have_sigpipe=no],        [#include <signal.h>] )
+AC_CHECK_DECLS( SIGBUS,         [hc_cv_have_sigbus=yes],         [hc_cv_have_sigbus=no],         [#include <signal.h>] )
+AC_CHECK_DECLS( IFNAMSIZ,       [hc_cv_have_ifnamsiz=yes],       [hc_cv_have_ifnamsiz=no],       [#include <sys/socket.h>] )
+AC_CHECK_DECLS( LOGIN_NAME_MAX, [hc_cv_have_login_name_max=yes], [hc_cv_have_login_name_max=no], [#include <limits.h>] )
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   Checks for types...
+###############################################################################
+
+AC_CHECK_TYPES( u_int8_t,   [hc_cv_have_u_int8_t=yes],   [hc_cv_have_u_int8_t=no]                              )
+AC_CHECK_TYPES( useconds_t, [hc_cv_have_useconds_t=yes], [hc_cv_have_useconds_t=no]                            )
+AC_CHECK_TYPES( id_t,       [hc_cv_have_id_t=yes],       [hc_cv_have_id_t=no]                                  )
+AC_CHECK_TYPES( u_char,     [hc_cv_have_u_char=yes],     [hc_cv_have_u_char=no],     [#include <sys/socket.h>] )
+AC_CHECK_TYPES( u_short,    [hc_cv_have_u_short=yes],    [hc_cv_have_u_short=no],    [#include <sys/socket.h>] )
+AC_CHECK_TYPES( u_int,      [hc_cv_have_u_int=yes],      [hc_cv_have_u_int=no],      [#include <sys/socket.h>] )
+AC_CHECK_TYPES( u_long,     [hc_cv_have_u_long=yes],     [hc_cv_have_u_long=no],     [#include <sys/socket.h>] )
+AC_CHECK_TYPES( in_addr_t,  [hc_cv_have_in_addr_t=yes],  [hc_cv_have_in_addr_t=no],  [#include <netinet/in.h>] )
+AC_CHECK_TYPES( socklen_t,  [hc_cv_have_socklen_t=yes],  [hc_cv_have_socklen_t=no],  [#include <sys/socket.h>] )
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   Checks for libraries...
+###############################################################################
+
+#  PROGRAMMING NOTE: we require libtool (or, optionally, dlltool (a less power-
+#  ful (flexible) libtool-like tool for Windows platforms) in order to support
+#  OPTION_DYNAMIC_LOAD. This is a relatively safe requirement since we provide
+#  a version of libtool with Hercules (and build it as part of the preliminary
+#  autoconf processing; see the 'Programs' section above). However, we need to
+#  keep the below check for 'dlopen' anyway since we prefer that libtool use it
+#  instead of its own equivalent (lt_dlopen) if it's available.
+
+AC_CHECK_LIB( msvcrt, _pipe          )
+AC_CHECK_LIB( dl,     dlopen         )
+AC_CHECK_LIB( m,      sqrt           )
+AC_CHECK_LIB( socket, connect        )
+AC_CHECK_LIB( nsl,    gethostbyname  )
+AC_CHECK_LIB( resolv, inet_aton      )
+AC_CHECK_LIB( z,      uncompress     )
+AC_CHECK_LIB( bz2,    BZ2_bzBuffToBuffDecompress,
+            [ hc_cv_have_libbz2=yes ],
+            [ hc_cv_have_libbz2=no  ] )
+
+AM_PATH_LIBGCRYPT( "1.1.90", [hc_cv_have_gcrypt=yes], [hc_cv_have_gcrypt=no] )
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   Checks for library functions...
+###############################################################################
+#   PROGRAMMING NOTE: AC_CHECK_LIB should be called first for the below
+#   library function checks to ensure the library where the function is
+#   defined gets added to the LIBS library search variable...
+###############################################################################
+
+AC_CHECK_FUNCS( iconv )
+AC_CHECK_FUNCS( memrchr )
+AC_CHECK_FUNCS( getopt_long )
+AC_CHECK_FUNCS( sqrtl ldexpl fabsl fmodl frexpl )
+AC_CHECK_FUNCS( ldexpf frexpf fabsf rint )
+AC_CHECK_FUNCS( strlcpy strlcat )
+AC_CHECK_FUNCS( strerror_r )
+AC_CHECK_FUNCS( strsignal, [hc_cv_have_strsignal=yes], [hc_cv_have_strsignal=no] )
+AC_CHECK_FUNCS( sys_siglist )
+AC_CHECK_FUNCS( InitializeCriticalSectionAndSpinCount )
+AC_CHECK_FUNCS( sleep usleep )
+AC_CHECK_FUNCS( sched_yield )
+AC_CHECK_FUNCS( strtok_r )
+AC_CHECK_FUNCS( pipe )
+AC_CHECK_FUNCS( gettimeofday )
+AC_CHECK_FUNCS( getpgrp )
+AC_CHECK_FUNCS( scandir alphasort )
+AC_CHECK_FUNCS( getlogin getlogin_r )
+AC_CHECK_FUNCS( realpath )
+AC_CHECK_FUNCS( fdatasync fsync ftruncate )
+AC_CHECK_FUNCS( inet_aton )
+AC_CHECK_FUNCS( fork socketpair )
+
+AC_CHECK_FUNCS( vsscanf,
+               [hc_cv_have_vsscanf=yes],
+               [hc_cv_have_vsscanf=no]
+)
+
+AC_CHECK_FUNCS( setresuid getresuid,
+               [hc_cv_have_getset_uid=yes],
+               [hc_cv_have_getset_uid=no; break]
+)
+
+if test "$hc_cv_have_getset_uid" != "yes"; then
+    AC_CHECK_FUNCS( setreuid getreuid,
+                    [hc_cv_have_getset_uid=yes],
+                    [hc_cv_have_getset_uid=no; break]
+    )
+fi
+
+
+#  FIXME: Disabled because some builtin ffs seem to be causing a problem.
+#         (gcc 3.4 barfs on certain 'march=' settings?)
+#AC_CHECK_FUNCS( ffs )
+
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   Checks for structures and structure members...
+###############################################################################
+
+AC_CHECK_MEMBERS( [struct in_addr.s_addr],
+                  [hc_cv_have_in_addr_s_addr=yes  ],
+                  [hc_cv_have_in_addr_s_addr=no   ],
+                  [#include <netinet/in.h>        ] )
+
+AC_CHECK_MEMBERS( [struct sigaction.sa_sigaction],
+                  [hc_cv_have_sa_sigaction=yes  ],
+                  [hc_cv_have_sa_sigaction=no   ],
+                  [#include <signal.h>          ] )
+
+AC_CHECK_MEMBERS( [struct timespec.tv_nsec],
+    [
+        hc_cv_timespec_in_sys_types_h=yes
+        hc_cv_timespec_in_time_h=no
+    ],
+    [
+        AC_CHECK_MEMBERS( [struct timespec.tv_nsec],
+            [
+                hc_cv_timespec_in_sys_types_h=no
+                hc_cv_timespec_in_time_h=yes
+            ],
+            [
+                hc_cv_timespec_in_sys_types_h=no
+                hc_cv_timespec_in_time_h=no
+            ],
+            [#include <time.h>]
+        )
+    ],
+    [#include <sys/types.h>]
+)
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   Checks for compiler characteristics...
+###############################################################################
+
+AC_C_BIGENDIAN()
+
+#  PROGRAMMING NOTE: Okay, this is stupid. If there are any trailing spaces
+#  following the type we're checking the size of, then they're converted to
+#  underscores in the 'SIZEOF_XXXX' that gets #defined! For example, doing a
+#  AC_CHECK_SIZEOF( int    ) yields: #define SIZEOF_INT____ 4  !!!!!!!!!!!!!
+#  So... the below AC_CHECK_SIZEOF macros must NOT have any spaces in them!!
 
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(int *)
-# FIXME: Disabled - because some builtin ffs seem to be causing problem
-#        however, gcc 3.4 will barf on certain march= 
-# AC_CHECK_FUNCS(ffs)
+AC_CHECK_SIZEOF(off_t)
 
-AC_CHECK_SIZEOF(struct sizeoftest,,[#include "conftest.h"])
+#----------------------------------#
+#  Structure alignment/size test   #
+#----------------------------------#
 
-AC_MSG_CHECKING([whether ${CC-cc} can/needs a byte structure alignement flag])
-hc_cv_sizeok=1
-hc_cv_needflag=no
-if test "x$ac_cv_sizeof_struct_sizeoftest" != "x1"; then
+AC_MSG_NOTICE( [begin check: whether byte structs are aligned/rounded by default...] )
+
+cat > conftest.h << __EOF
+#include <stdio.h>
+struct bytestruct
+{
+    unsigned char a;
+};
+__EOF
+
+AC_CHECK_SIZEOF( struct bytestruct, [], [#include "conftest.h"] )
+
+if test "$ac_cv_sizeof_struct_bytestruct" = "1"; then
+
+    hc_cv_byte_structs_aligned_and_rounded_by_default=no
+    hc_cv_byte_structs_always_aligned_and_rounded=no
+
+else
+
+    #  The sizeof our test structure is not '1'.
+    #  The compiler is rounding the size of the
+    #  structure upward to some predefined value.
+
+    hc_cv_byte_structs_aligned_and_rounded_by_default=yes
+
+    #  If there's no way to request the compiler
+    #  to not do that, then we can't build Herc.
+
     case "$host_cpu-$GCC" in
+
         arm*-yes|xscale*-yes|sh*-yes|pxa*-yes)
-               CFLAGS="$CFLAGS -mstructure-size-boundary=8"
-                hc_cv_needflag=yes
-               ;;
+
+            hc_cv_byte_structs_always_aligned_and_rounded=no
+            ;;
+
         *)
-                hc_cv_sizeok=0
-                ;;
+            hc_cv_byte_structs_always_aligned_and_rounded=yes
+            ;;
     esac
 fi
-if test "x$hc_cv_sizeok" = "x0"; then
-    AC_MSG_ERROR([Size of structures are aligned/rounded and we don't know how to tell the compiler otherwise])
+
+AC_MSG_NOTICE( [results: byte structs are aligned/rounded by default... ${hc_cv_byte_structs_aligned_and_rounded_by_default}] )
+
+if test "$hc_cv_byte_structs_always_aligned_and_rounded" = "yes"; then
+
+    AC_MSG_RESULT( [ERROR: Size of structures are aligned/rounded and we don't know how to tell the compiler otherwise] )
+    hc_error=yes
 fi
-AC_MSG_RESULT([$hc_cv_needflag])
 
+#------------------------------#
+#  Check if this is GCC 2.96   #
+#------------------------------#
 
-# GCC only seems to support regparm on i386 right now, but that could
-# change in the future.
-AC_CACHE_CHECK([whether gcc supports __attribute__((regparm(n)))],
-               [ac_cv_attr_regparm],
-               [if test x$GCC != xyes; then
-                  # __attribute__ is a GNU C extension
-                  ac_cv_attr_regparm=no
-                else
-                  SAVE_CFLAGS="$CFLAGS"
-                  CFLAGS="-Wall -Werror"
-                  AC_COMPILE_IFELSE([void conftest () __attribute__ ((regparm(1)));],
-                                    [ac_cv_attr_regparm=yes],
-                                    [ac_cv_attr_regparm=no])
-                  CFLAGS="$SAVE_CFLAGS"
-                fi])
+AC_CACHE_CHECK( [if this is the broken 2.96 version of GCC],
 
-if test "$GCC" = "yes" && test x$ac_cv_attr_regparm = xyes; then
-   case "$host_os" in
-        *cygwin*)
-                AC_CACHE_CHECK([for cygwin __attribute__ ((regparm(3))) bug],
-                               [ac_cv_cygwin_gcc_attr_regparm_bug],
-                               [AC_TRY_RUN([
-/* from Fish */
+    [hc_cv_is_gcc_2_96],
+    [
+        if test "$GCC" = "yes"; then
 
-typedef struct _REGS
-{
-        int a, b, c, d;
-        char e[5000];
-}
-REGS;
+            AC_COMPILE_IFELSE(
+                [
+                    #if __GNUC__ == 2 && __GNUC_MINOR__ == 96
+                      yes;
+                    #else
+                      int no;
+                    #endif
+                ],
+                [hc_cv_is_gcc_2_96=no],
+                [hc_cv_is_gcc_2_96=yes]
+            )
 
-int func1 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)));
-int func2 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)));
+        else
+            hc_cv_is_gcc_2_96=no
+        fi
+    ]
+)
 
-int main ( int argc, char *argv[] )
-{
-        REGS* regs = 0;
-        exit(func1 (1, 2, 3, regs));
-}
+#--------------------------------------------------------#
+#  Check if GCC supports '__attribute__ ((regparm(n)))'  #
+#--------------------------------------------------------#
 
-int func1 (int a, int b, int c, REGS *regs)
-{
-        REGS iregs;
-        return func2 (a, b, c, &iregs);
-}
+#  Note: even though at the moment GCC only supports regparm
+#  on i386 or greater machines, that could change at any time
+#  in the future so we don't bother checking for it.
 
-int func2 (int a, int b, int c, REGS *regs)
-{
-        return ((a == 1 && b == 2 && c == 3) ? 0 : 1);
-}
-],
-        ac_cv_cygwin_gcc_attr_regparm_bug=no,
-        ac_cv_cygwin_gcc_attr_regparm_bug=yes,
-        ac_cv_cygwin_gcc_attr_regparm_bug=yes)])
+if test "$GCC" = "yes"; then
+
+    AC_CACHE_CHECK( [whether '__attribute__ ((regparm(n)))' is supported],
+
+        [hc_cv_regparm_attr_supported],
+        [
+            hc_temp="$CFLAGS"
+            CFLAGS="-Wall -Werror"
+
+            AC_COMPILE_IFELSE(
+                [
+                    void conftest() __attribute__ ((regparm(1)));
+                ],
+                [hc_cv_regparm_attr_supported=yes],
+                [hc_cv_regparm_attr_supported=no]
+            )
+
+            CFLAGS="$hc_temp"
+        ]
+    )
+else
+    hc_cv_regparm_attr_supported=no
+fi
+
+#---------------------------------------------------#
+#  Test for GCC '__attribute__ ((regparm(3)))' bug  #
+#---------------------------------------------------#
+
+if test "$GCC"                          = "yes"  &&
+   test "$hc_cv_regparm_attr_supported" = "yes"; then
+
+    AC_CACHE_CHECK( [whether '__attribute__ ((regparm(3)))' is broken],
+
+        [hc_cv_regparm_attr_broke],
+        [
+            hc_temp="$CFLAGS"
+            CFLAGS="-O3 -fomit-frame-pointer"
+
+            AC_TRY_RUN(
+                [
+                    /*
+                        Fish: Test for reparms bug caused by alloca bug# 8750
+                        Ref: <http://gcc.gnu.org/bugzilla/show_bug.cgi?id=8750>
+                    */
+                    struct REGS
+                    {
+                        int a, b, c, d;
+                        char e[50000];
+                    };
+                    typedef struct REGS REGS;
+
+                    #define ATTR_REGPARM __attribute__ (( regparm(3) ))
+
+                    int func1 ( int a, int b, int c, REGS *regs ) ATTR_REGPARM;
+                    int func2 ( int a, int b, int c, REGS *regs ) ATTR_REGPARM;
+
+                    REGS global_regs;
+
+                    int main()
+                    {
+                        return func1( 1, 2, 3, &global_regs );
+                    }
+
+                    int ATTR_REGPARM func1 ( int a, int b, int c, REGS *regs )
+                    {
+                        REGS stack_regs;
+                        regs=regs; /* (quiet compiler warning) */
+                        if ( func2( a, b, c, &stack_regs ) == 0 ) return 0; /* pass */
+                        return 1; /* fail */
+                    }
+
+                    int ATTR_REGPARM func2 ( int a, int b, int c, REGS *regs )
+                    {
+                        regs=regs; /* (quiet compiler warning) */
+                        if ( 1==a && 2==b && 3==c ) return 0; /* pass */
+                        return 1; /* fail */
+                    }
+                ],
+                [hc_cv_regparm_attr_broke=no],
+                [hc_cv_regparm_attr_broke=yes],
+                [hc_cv_regparm_attr_broke=yes]
+            )
+
+            CFLAGS="$hc_temp"
+        ]
+    )
+else
+    hc_cv_regparm_attr_broke=no
+fi
+
+#------------------------------------------------------#
+#  Test for GCC builtin alloca bug# 8750               #
+#  <http://gcc.gnu.org/bugzilla/show_bug.cgi?id=8750>  #
+#------------------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    AC_CACHE_CHECK( [whether '__builtin_alloca' is broken],
+
+        [hc_cv_builtin_alloca_broke],
+        [
+            hc_temp=$CFLAGS
+            CFLAGS="-g -O2 -fomit-frame-pointer"
+
+            AC_TRY_RUN(
+                [
+                    /*
+                        Fish: Test for gcc builtin alloca bug# 8750
+                        <http://gcc.gnu.org/bugzilla/show_bug.cgi?id=8750>
+
+                        Required(?!) (not sure) compiler options:
+
+                            -g -O2 -fomit-frame-pointer
+                    */
+
+                    int foo ()
+                    {
+                        char a[50000+16];
+                        memset(a,0xCD,50000);
+                        a[50000]=0;
+                        return strlen(a);
+                    }
+
+                    int main()
+                    {
+                        return ( foo() != 50000 );
+                    }
+                ],
+                [hc_cv_builtin_alloca_broke=no],
+                [hc_cv_builtin_alloca_broke=yes],
+                [hc_cv_builtin_alloca_broke=yes]
+            )
+
+            CFLAGS=$hc_temp
+        ]
+    )
+else
+    hc_cv_builtin_alloca_broke=no
+fi
+
+#-----------------------------------------------------#
+#  Check whether gcry_cipher_open takes 3 or 4 args   #
+#-----------------------------------------------------#
+
+hc_cv_num_gcrypt_args=0
+
+if test "$hc_cv_have_gcrypt" = "yes" ; then
+
+    AC_MSG_CHECKING( [whether gcry_cipher_open takes 3 or 4 args] )
+
+    hc_temp="$CFLAGS"
+    CFLAGS="$CFLAGS $GCRYPT_CFLAGS"
+
+    AC_COMPILE_IFELSE(
+        [
+            #include <gcrypt.h>
+            int main()
+            {
+              GCRY_CIPHER_HD hd;
+              hd = gcry_cipher_open(0,0,0);
+              return 0;
+            }
+        ],
+        [
+            hc_cv_num_gcrypt_args=3
+        ],
+        AC_COMPILE_IFELSE(
+            [
+                #include <gcrypt.h>
+                int main()
+                {
+                  gcry_cipher_hd_t hd;
+                  gcry_cipher_open(&hd,0,0,0);
+                  return 0;
+                }
+            ],
+            [
+                hc_cv_num_gcrypt_args=4
+            ]
+        )
+    )
+
+    CFLAGS="$hc_temp"
+
+    case "$hc_cv_num_gcrypt_args" in
+
+        3|4)
+            AC_MSG_RESULT( [$hc_cv_num_gcrypt_args] )
+            ;;
+        *)
+            AC_MSG_RESULT( [unknown] )
+            ;;
+    esac
+fi
+
+#------------------------------------------------------------#
+#  Check for OS X gcc preprocessor macro argument count bug  #
+#------------------------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    AC_CACHE_CHECK( [whether preprocessor macro argument counting broken],
+
+        [hc_cv_pp_macro_arg_counting_broke],
+        [
+            hc_temp="$CFLAGS"
+            CFLAGS="-Wall -Werror"
+
+            AC_COMPILE_IFELSE(
+                [
+                    #include <stdio.h>
+                    #define MACRO(_x,_args...) printf(_x, ## _args)
+                    int  main( int argc, char **argv, char **arge )
+                    {
+                        MACRO( "bare printf\n" );
+                        return 0;
+                    }
+                ],
+                [hc_cv_pp_macro_arg_counting_broke=yes],
+                [hc_cv_pp_macro_arg_counting_broke=no]
+            )
+
+            CFLAGS="$hc_temp"
+        ]
+    )
+else
+    hc_cv_pp_macro_arg_counting_broke=no
+fi
+
+#-----------------------------------------------------------#
+#  Check whether byte-swapping can be done using assembler  #
+#-----------------------------------------------------------#
+
+AC_MSG_CHECKING( [whether byte-swapping can be done using assembler] )
+
+# (byteswap assembler routines are i486+ only)
+
+case "$host_cpu" in
+
+    i486|i586|i686|i786)
+
+        hc_cv_asm_byteswap=yes
         ;;
-   esac
+    *)
+        hc_cv_asm_byteswap=no
+        ;;
+esac
 
-   if test x$ac_cv_cygwin_gcc_attr_regparm_bug = xyes; then
-      ac_cv_attr_regparm=no
+AC_MSG_RESULT( [$hc_cv_asm_byteswap] )
+
+#----------------------------------------------#
+#  Check whether -pthread needed for pthreads  #
+#----------------------------------------------#
+
+AC_MSG_CHECKING( [whether ${CC-cc} accepts -pthread] )
+
+echo 'void f(){}' >conftest.c
+if test -z "`${CC-cc} -pthread -c conftest.c 2>&1`"; then
+    hc_cv_dash_pthread_needed=yes
+else
+    hc_cv_dash_pthread_needed=no
+fi
+
+AC_MSG_RESULT( [$hc_cv_dash_pthread_needed] )
+
+#------------------------------------------------------------------
+#  The logic to test whether optreset is needed for getopt use is
+#  defined in the 'HC_CHECK_NEED_GETOPT_OPTRESET' macro in the
+#  'hercules.m4' file in the autoconf directory, and issues the
+#  AC_DEFINE for 'NEED_GETOPT_OPTRESET' if it's needed (and also
+#  sets the '$hc_cv_need_getopt_optreset' variable appropriately).
+#------------------------------------------------------------------
+
+HC_CHECK_NEED_GETOPT_OPTRESET()
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   Checks for system services...
+###############################################################################
+
+AC_SYS_LARGEFILE()
+AC_TYPE_OFF_T()
+AC_FUNC_FSEEKO()
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   AC_CONFIG_FILES( [file...] )...
+###############################################################################
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   Set flags according to user-specified --enable-xxxxx build options
+###############################################################################
+
+#  PROGRAMMING NOTE: some of these values default to previously determined
+#  values (e.g. cckd-bzip2 for example defaults to whether libbz2 exists),
+#  so this section MUST [unfortunately] come AFTER the above sections. This
+#  does have the unfortunate side effect of not detecting invalid options
+#  right away like one would normally expect/want. The only way around that
+#  would be to perform two checks (one at the beginning and then one again
+#  later on), but that approach was rejected since it would tend to make our
+#  configure.ac script less clean (simple and straightforward).
+
+AC_ARG_ENABLE( dynamic-load,
+
+    AC_HELP_STRING([--disable-dynamic-load],
+
+        [disable dynamic loader option]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_dynamic_load=yes                      ;;
+        no)  hc_cv_opt_dynamic_load=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'dynamic-load' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_dynamic_load=yes]
+)
+
+AC_ARG_ENABLE( cckd-bzip2,
+
+    AC_HELP_STRING( [--enable-cckd-bzip2],
+
+        [enable bzip2 compression for emulated dasd]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_cckd_bzip2=yes                      ;;
+        no)  hc_cv_opt_cckd_bzip2=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'cckd-bzip2' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_cckd_bzip2=$hc_cv_have_libbz2]
+)
+
+AC_ARG_ENABLE( het-bzip2,
+
+    AC_HELP_STRING( [--enable-het-bzip2],
+
+        [enable bzip2 compression for emulated tapes]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_het_bzip2=yes                      ;;
+        no)  hc_cv_opt_het_bzip2=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'het-bzip2' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_het_bzip2=$hc_cv_have_libbz2]
+)
+
+AC_ARG_ENABLE( debug,
+
+    AC_HELP_STRING( [--enable-debug],
+
+        [enable debugging (TRACE/VERIFY/ASSERT macros)]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_debug=yes                      ;;
+        no)  hc_cv_opt_debug=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'debug' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_debug=no]
+)
+
+AC_ARG_ENABLE( optimization,
+
+    AC_HELP_STRING( [--enable-optimization=yes|no|FLAGS],
+
+        [enable automatic optimization, or specify flags]
+    ),
+    [
+        hc_cv_opt_optimization=${enableval}
+    ],
+    [hc_cv_opt_optimization=yes]
+)
+
+AC_ARG_ENABLE( configsymbols,
+
+    AC_HELP_STRING( [--disable-configsymbols],
+
+        [disable symbolic substitutions in configuration file]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_configsymbols=yes                      ;;
+        no)  hc_cv_opt_configsymbols=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'configsymbols' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_configsymbols=yes]
+)
+
+AC_ARG_ENABLE( external-gui,
+
+    AC_HELP_STRING( [--disable-external-gui],
+
+        [disable external Windows GUI interface]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_external_gui=yes                      ;;
+        no)  hc_cv_opt_external_gui=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'external-gui' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_external_gui=$hc_cv_is_windows]
+)
+
+AC_ARG_ENABLE( fthreads,
+
+    AC_HELP_STRING( [--disable-fthreads],
+
+        [disable use of fish threads instead of posix threads]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_fthreads=yes                      ;;
+        no)  hc_cv_opt_fthreads=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'fthreads' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_fthreads=$hc_cv_is_windows]
+)
+
+AC_ARG_ENABLE( fishhang,
+
+    AC_HELP_STRING( [--enable-fishhang],
+
+        [debug correct lock handling (fthreads only)]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_fishhang=yes                      ;;
+        no)  hc_cv_opt_fishhang=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'fishhang' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_fishhang=no]
+)
+
+AC_ARG_ENABLE( multi-cpu,
+
+    AC_HELP_STRING( [--enable-multi-cpu=yes|no|NUMBER],
+
+        [enable/disable multi-cpu support (1-8, default 2)]
+    ),
+    [
+        case "${enableval}" in
+        yes)             hc_cv_opt_num_cpu_engines=2                  ;;
+        no)              hc_cv_opt_num_cpu_engines=1                  ;;
+        1|2|3|4|5|6|7|8) hc_cv_opt_num_cpu_engines=${enableval}       ;;
+        *)               AC_MSG_RESULT( [ERROR: invalid 'multi-cpu' option] )
+                         hc_error=yes
+                         ;;
+        esac
+    ],
+    [hc_cv_opt_num_cpu_engines=2]
+)
+
+AC_ARG_ENABLE( custom,
+
+    AC_HELP_STRING( [--enable-custom=STRING],
+
+        [provide a custom description for this build]
+    ),
+    [
+        hc_cv_opt_custom_build_str=${enableval}
+    ]
+)
+
+if test "hc_cv_build_hercifc" = "yes"; then
+
+    AC_ARG_ENABLE( setuid-hercifc,
+
+        AC_HELP_STRING( [--enable-setuid-hercifc],
+
+            [install hercifc setuid root]
+        ),
+        [
+            case "${enableval}" in
+            yes) hc_cv_opt_setuid_hercifc=yes                      ;;
+            no)  hc_cv_opt_setuid_hercifc=no                       ;;
+            *)   AC_MSG_RESULT( [ERROR: invalid 'setuid-hercifc' option] )
+                 hc_error=yes
+                 ;;
+            esac
+        ],
+        [hc_cv_opt_setuid_hercifc=no]
+    )
+
+    hc_cv_setuid_hercifc=$hc_cv_opt_setuid_hercifc
+
+else
+    hc_cv_setuid_hercifc=no
+fi
+
+#-----------------------------------------------------------------
+#  The handling of AC_ARG_ENABLE for "--enable-getoptwrapper"
+#  is defined within the 'HC_ARG_ENABLE_GETOPTWRAPPER' macro
+#  coded in the 'hercules.m4' file in the autoconf directory
+#  and issues the AC_DEFINE for NEED_GETOPT_WRAPPER if needed
+#  (and sets the '$hc_cv_need_getopt_wrapper' variable too).
+#-----------------------------------------------------------------
+
+HC_ARG_ENABLE_GETOPTWRAPPER()
+
+#----------------------------------------------------------------
+#  Note: '$enable_shared' is automatically set by LIBTOOL,
+#        unless the user overrides it via --disable-shared.
+#----------------------------------------------------------------
+hc_cv_hdl_build_shared=$enable_shared
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   Final default settings, final sanity / error checks...
+###############################################################################
+
+if test "$hc_cv_build_hercifc" = "yes"; then
+
+   if test "$hc_cv_have_linux_if_tun_h" != "yes"; then
+
+      AC_MSG_RESULT( [ERROR: Required header 'linux/if_tun.h' not found] )
+      hc_error=yes
+   fi
+
+   if test "$hc_cv_have_net_route_h" != "yes"; then
+
+      AC_MSG_RESULT( [ERROR: Required header 'net/route_h' not found] )
+      hc_error=yes
    fi
 fi
 
-if test x$ac_cv_attr_regparm != xyes; then
-  AC_DEFINE(NO_ATTR_REGPARM)
+#------------------------------------------------------------------------------
+#  signal.h is only required if strsignal function isn't available since if
+#  the strsignal function isn't available, we use our builtin which needs it.
+#  The presumption that if the strsignal function is found, then the signal.h
+#  header will also be found seems to be a fairly safe assumption to make IMO.
+
+if test "$hc_cv_have_strsignal" != "yes"  &&
+   test "$hc_cv_have_signal_h"  != "yes"; then
+
+   AC_MSG_RESULT( [ERROR: Required header 'signal.h' not found] )
+   hc_error=yes
 fi
 
+#------------------------------------------------------------------------------
 
-if test "$GCC" = "yes"; then
-case "$host_os" in
-      *cygwin*)
-          AC_CACHE_CHECK([for cygwin gcc __builtin_alloca bug],
-                         [ac_cv_cygwin_gcc_alloca_bug],
-                         [SAVE_CFLAGS="$CFLAGS"
-                          CFLAGS="-O2 -fomit-frame-pointer"
-                          AC_TRY_RUN([
-/*
- * Test for presence of gcc 3.2 compiler bug.
- *
- *  Required compiler options:
- *
- *      -O2 -fomit-frame-pointer
- *
- *  Note: using any other -O option other than
- *  -O2 DOES NOT cause the bug to occur!, nor
- *  does using -fno-omit-frame-pointer! In fact,
- *  using "-fno-omit-frame-pointer" is the sug-
- *  gested workaround for this particular bug.
- */
+if test "$hc_cv_have_vsscanf" != "yes"; then
 
-int foo ()
-{
-    char a[5000+16];
-    memset(a,0xCD,5000);
-    a[5000]=0;
-    return strlen(a);
-}
-
-int main ( int argc, char* argv[] )
-{
-    return (foo() != 5000);
-}
-],
-          ac_cv_cygwin_gcc_alloca_bug=no,
-          ac_cv_cygwin_gcc_alloca_bug=yes,
-          ac_cv_cygwin_gcc_alloca_bug=yes)
-          CFLAGS="$SAVE_CFLAGS"])
-          ;;
-      *)
-          AC_CACHE_VAL(ac_cv_cygwin_gcc_alloca_bug, ac_cv_cygwin_gcc_alloca_bug=no)
-          ;;
-esac
+    AC_MSG_RESULT( [ERROR: Required function 'vsscanf' not found] )
+    hc_error=yes
 fi
 
-if test "$GCC" = "yes"; then
-case "$host_os" in
-      darwin*)
-          AC_CACHE_CHECK([for OS X gcc preprocessor macro argument count bug],
-                         [ac_cv_darwin_gcc_cpp_bug],
-                         [AC_COMPILE_IFELSE([
-#include <stdio.h>
-#define MACRO(_x,_args...)  printf(_x, ## _args)
-int  main( int argc, char **argv, char **arge )
-{
-        MACRO( "bare printf\n" );
-        return 0;
-}
-                         ],
-                         [ac_cv_darwin_gcc_cpp_bug=no],
-                         [ac_cv_darwin_gcc_cpp_bug=yes])])
-          ;;
-      *)
-          ac_cv_darwin_gcc_cpp_bug=no
-          ;;
-esac
+#------------------------------------------------------------------------------
 
-if test x$ac_cv_darwin_gcc_cpp_bug != xno; then
-  CPPFLAGS="${CPPFLAGS} -traditional-cpp"
-fi
+if test "$hc_cv_have_inttypes_h" != "yes"  &&
+   test "$hc_cv_have_u_int8_t"   != "yes"; then
+
+   AC_MSG_RESULT( [ERROR: unable to find fixed-size data types] )
+   hc_error=yes
 fi
 
-case "$host_cpu" in
-          i486|i586|i686) ;;
-          *)
-            # byteswap assembler routines are i486+-only
-            AC_DEFINE(NO_ASM_BYTESWAP)
-            ;;
-esac
+#------------------------------------------------------------------------------
 
-AC_ARG_ENABLE(cckd-bzip2,
-              AC_HELP_STRING([--enable-cckd-bzip2],
-                             [enable bzip2 compression for emulated DASD]),
-              [case "${enableval}" in
-                 yes) cckd_bzip2=yes ;;
-                 no) cckd_bzip2=no ;;
-                 *) AC_MSG_ERROR(bad value ${enableval} for --enable-cckd-bzip2) ;;
-               esac],
-              [cckd_bzip2=$have_libbz2])
+if test "$hc_cv_opt_cckd_bzip2" = "yes"  ||
+   test "$hc_cv_opt_het_bzip2"  = "yes"; then
 
-AC_ARG_ENABLE(het-bzip2,
-              AC_HELP_STRING([--enable-het-bzip2],
-                             [enable bzip2 compression for emulated tapes]),
-              [case "${enableval}" in
-                 yes) het_bzip2=yes ;;
-                 no) het_bzip2=no ;;
-                 *) AC_MSG_ERROR(bad value ${enableval} for --enable-het-bzip2) ;;
-               esac],
-              [het_bzip2=$have_libbz2])
+   if test "$hc_cv_have_libbz2" != "yes"; then
 
-if test $cckd_bzip2 = yes || test $het_bzip2 = yes; then
-  if test $have_libbz2 != yes; then
-    AC_MSG_ERROR(bzip2 compression requested but libbz2 not found)
-  else
-    LIBS="-lbz2 $LIBS"
-  fi
+      AC_MSG_RESULT( [ERROR: bzip2 compression requested but libbz2 library not found] )
+      hc_error=yes
+   fi
+
+   if test "$hc_cv_have_bzlib_h" != "yes"; then
+
+      AC_MSG_RESULT( [ERROR: bzip2 compression requested but 'bzlib.h' header not found] )
+      hc_error=yes
+   fi
 fi
 
-if test $cckd_bzip2 = yes; then
-  AC_DEFINE(CCKD_BZIP2)
+#------------------------------------------------------------------------------
+
+if test "$hc_cv_opt_dynamic_load" = "yes"; then
+
+   if test "$hc_cv_have_lt_dlopen" != "yes"  &&
+      test "$hc_cv_have_dlopen"    != "yes"; then
+
+      AC_MSG_RESULT( [ERROR: dynamic-load requires libtool or dlltool] )
+      hc_error=yes
+   fi
 fi
 
-if test $het_bzip2 = yes; then
-  AC_DEFINE(HET_BZIP2)
+#------------------------------------------------------------------------------
+
+if test "$hc_cv_opt_external_gui" = "yes"  &&
+   test "$hc_cv_is_windows"      != "yes"; then
+
+   AC_MSG_RESULT( [ERROR: external-gui currently only supported on Windows platforms] )
+   hc_error=yes
 fi
 
+if test "$hc_cv_opt_external_gui"  = "yes"  &&
+   test "$hc_cv_opt_dynamic_load" != "yes"; then
 
-# Library functions
-
-# Check for presence of memrchr in system
-AC_CHECK_FUNCS(memrchr,[have_memrchr=yes],[have_memrchr=no])
-if test $have_memrchr = no; then
-    AC_DEFINE(BUILTIN_MEMRCHR)
-fi
-AM_CONDITIONAL(USE_BUILTIN_MEMRCHR, [test x$have_memrchr = xno])
-
-AC_CHECK_FUNCS(strerror_r,,[AC_DEFINE(BUILTIN_STRERROR_R)])
-
-AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl frexpl)
-AC_CHECK_FUNCS(strsignal getopt_long)
-AC_CHECK_FUNCS(InitializeCriticalSectionAndSpinCount)
-AC_CHECK_FUNCS(iconv)
-AC_CHECK_FUNCS(strlcpy strlcat)
-
-# If we have setresuid AND getresuid, we can do setuid stuff
-AC_CHECK_FUNCS([setresuid getresuid],
-               [enable_setuid=true],[enable_setuid=false;break])
-
-if test x$enable_setuid != xtrue; then
-   # Likewise if we have setreuid AND getreuid
-   AC_CHECK_FUNCS([setreuid getreuid],
-                  [enable_setuid=true],[enable_setuid=false;break])
+   AC_MSG_RESULT( [ERROR: external-gui requires dynamic-load] )
+   hc_error=yes
 fi
 
-# Otherwise, not
-if test x$enable_setuid != xtrue; then
-  AC_DEFINE([NO_SETUID])
+#------------------------------------------------------------------------------
+
+if test "$hc_cv_opt_fthreads" = "yes"  &&
+   test "$hc_cv_is_windows"  != "yes"; then
+
+   AC_MSG_RESULT( [ERROR: fthreads is only for Windows platforms] )
+   hc_error=yes
 fi
 
-# User-definable settings
+if test "$hc_cv_have_pthread_h" != "yes"  &&
+   test "$hc_cv_opt_fthreads"   != "yes"; then
 
-AC_ARG_ENABLE(debug,
-              AC_HELP_STRING([--enable-debug], [enable debugging (TRACE/VERIFY/ASSERT macros)]),
-              [case "${enableval}" in
-                yes)
-                  debug=true
-                  CFLAGS="-g $CFLAGS"
-                  AC_DEFINE([DEBUG])
-                  ;;
-                no) debug=false ;;
-                *) AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
-               esac],
-              [debug=false])
-
-AC_ARG_ENABLE(setuid-hercifc,
-              AC_HELP_STRING([--enable-setuid-hercifc],
-                             [install hercifc setuid root]),
-              [case "${enableval}" in
-                yes) setuid_hercifc=yes ;;
-                no)  setuid_hercifc=no ;;
-                *) AC_MSG_ERROR(bad value ${enableval} for --enable-setuid-hercifc) ;;
-               esac],
-              [setuid_hercifc=no])
-AM_CONDITIONAL(SETUID_HERCIFC, test x$setuid_hercifc = xyes)
-
-AC_MSG_CHECKING([for optimization flags to use])
-
-AC_ARG_ENABLE(optimization,
-              AC_HELP_STRING([--enable-optimization=FLAGS],
-                             [enable/disable automatic optimization, or specify flags]),
-              [case "${enableval}" in
-                yes) auto_optimize=true ;;
-                no) auto_optimize=false ;;
-                *) auto_optimize=false; OFLAGS="${enableval}" ;;
-               esac],
-              [test x$debug != xtrue && auto_optimize=true])
-
-AC_ARG_ENABLE(configsymbols,
-              AC_HELP_STRING([--disable-configsymbols],
-                             [enable/disable symbolic substitutions in configuration file]),
-              [case "${enableval}" in
-                yes) opt_configsymbols=true ;;
-                no) opt_configsymbols=false ;;
-                *) opt_configsymbols=true;;
-               esac],[opt_configsymbols=true])
-if test x$opt_configsymbols = xtrue; then
-    AC_DEFINE([OPTION_CONFIG_SYMBOLS])
+   AC_MSG_RESULT( [ERROR: unable to find pthread.h] )
+   hc_error=yes
 fi
 
-if test x$auto_optimize = xtrue; then
-  case "$host_cpu-$GCC" in
-          arm-yes)
-            OFLAGS="-O3 -frename-registers"
-            ;;
-          xscale-yes|arm*-yes)
-            OFLAGS="-O3 -frename-registers -mcpu=$host_cpu -mtune=$host_cpu"
-            ;;
-          x86_64-yes)
-                OFLAGS="-O3 -march=k8 -fomit-frame-pointer"
-           ;;
-          i386-yes|i486-yes|i586-yes|i686-yes|i786-yes)
-            if test $host_cpu = "i786" ; then
-                ac_xarch=pentium4
+#------------------------------------------------------------------------------
+
+if test "$hc_cv_opt_fishhang"  = "yes"  &&
+   test "$hc_cv_opt_fthreads" != "yes"; then
+
+   AC_MSG_RESULT( [ERROR: fishhang requires fthreads] )
+   hc_error=yes
+fi
+
+#------------------------------------------------------------------------------
+# If any errors have been detected, then abort the configure at this time
+#------------------------------------------------------------------------------
+
+if test "$hc_error" != "no"; then
+    AC_MSG_ERROR( [ERROR: Please correct the previous error(s) and try again] )
+fi
+
+AC_CACHE_SAVE()
+
+###############################################################################
+#   Act on the results of all of the above...
+###############################################################################
+
+#        AUTOMATIC DETERMINATION OF OPTIMIZATION FLAGS
+#
+#  If they specified 'no' then don't optimize.
+#  If they specified 'yes' then determine what flags we should use.
+#  If they didn't specify, then optimize only if this is NOT a debug build.
+#  Otherwise use whatever flags they specified as-is.
+
+AC_MSG_CHECKING( [for what optimization flags to use] )
+
+case "$hc_cv_opt_optimization" in
+
+    no)
+
+        hc_cv_auto_optimize=no
+        ;;
+
+    yes)
+
+        hc_cv_auto_optimize=yes
+        ;;
+
+    *)
+        if test "x$hc_cv_opt_optimization" = "x"; then
+
+            if test "$hc_cv_opt_debug" = "yes"; then
+
+                hc_cv_auto_optimize=no
             else
-                ac_xarch=$host_cpu
+                hc_cv_auto_optimize=yes
             fi
-            if test "$GCC" = "yes"; then
-                if ${CC-cc} -E - << __EOF | fgrep "yes" > /dev/null 2>&1
-#if __GNUC__ == 2 && __GNUC_MINOR__ == 96
-yes
-#endif
-__EOF
-                then
-                    if test $host_cpu = i686; then
-                        ac_xarch=i586
-                    fi
-                fi
-                OFLAGS="-O3 -march=$ac_xarch $OFLAGS"
-                if test x$debug != xtrue && test x$ac_cv_cygwin_gcc_alloca_bug != xyes; then
-                  OFLAGS="-fomit-frame-pointer $OFLAGS"
-                elif test x$ac_cv_cygwin_gcc_alloca_bug = xyes; then
-                  OFLAGS="-fno-omit-frame-pointer $OFLAGS"
-                fi
+
+        else
+
+            hc_cv_auto_optimize=no
+            hc_cv_optimization_flags="$hc_cv_opt_optimization"
+        fi
+        ;;
+esac
+
+if test "$hc_cv_auto_optimize" = "yes"; then
+
+    if test "$hc_cv_builtin_alloca_broke" != "yes"  &&
+       test "$hc_cv_opt_debug"            != "yes"; then
+
+        hc_cv_optimization_flags="-O3"
+    fi
+
+    hc_cv_is_intel_x86_arch=no
+
+    case "$host_cpu-$GCC" in
+
+        x86_64-yes)
+
+            hc_cv_is_intel_x86_arch=yes
+            hc_cv_intel_cpu_type=k8
+            ;;
+
+        i386-yes|i486-yes|i586-yes|i686-yes|i786-yes)
+
+            hc_cv_is_intel_x86_arch=yes
+
+            if test $host_cpu = i786; then
+
+                hc_cv_intel_cpu_type=pentium4
             else
-                OFLAGS="$OFLAGS"
+                if test $host_cpu           = i686   &&
+                   test "hc_cv_is_gcc_2_96" = "yes"; then
+
+                    hc_cv_intel_cpu_type=i586
+                else
+                    hc_cv_intel_cpu_type=$host_cpu
+                fi
             fi
             ;;
-          *)
-            OFLAGS="-O3 $OFLAGS"
+
+        arm-yes)
+
+            hc_cv_is_intel_x86_arch=no
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -frename-registers"
             ;;
-  esac
-elif test x$ac_cv_cygwin_gcc_alloca_bug = xyes; then
-  OFLAGS="-fno-omit-frame-pointer $OFLAGS"
+
+        xscale-yes|arm*-yes)
+
+            hc_cv_is_intel_x86_arch=no
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -mcpu=$host_cpu -mtune=$host_cpu -frename-registers"
+            ;;
+    esac
+
+    if test "$hc_cv_is_intel_x86_arch" = "yes"; then
+
+        hc_cv_optimization_flags="$hc_cv_optimization_flags -march=$hc_cv_intel_cpu_type"
+
+        if test "$hc_cv_builtin_alloca_broke" != "yes"  &&
+           test "$hc_cv_opt_debug"            != "yes"; then
+
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -fomit-frame-pointer"
+        else
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -fno-omit-frame-pointer"
+        fi
+    fi
 fi
 
-if test "x$OFLAGS" = x; then
-  AC_MSG_RESULT([(none)])
+if test "x$hc_cv_optimization_flags" = "x"; then
+    AC_MSG_RESULT( [(none)] )
 else
-  AC_MSG_RESULT([$OFLAGS])
-  CFLAGS="$OFLAGS $CFLAGS"
+    AC_MSG_RESULT( [$hc_cv_optimization_flags] )
 fi
 
+AC_CACHE_SAVE()
 
-AC_ARG_ENABLE(custom,
-              AC_HELP_STRING([--enable-custom=STRING],
-                             [provide a custom description for this build]),
-              [AC_DEFINE_UNQUOTED([CUSTOM_BUILD_STRING], "${enableval}") ])
+###############################################################################
+#   DONE! -- Define our OUTPUT values and then exit...
+###############################################################################
 
-dnl This is ugly. The object is to get the value of PKGDATADIR into
-dnl config.h, but this is the only way I've found to do so. All of this
-dnl rigamarole is needed because ${datadir} doesn't expand to the
-dnl desired data directory. If there's a better way to get there, PLEASE
-dnl replace this. --JRM
-
-dnl If DESTPREFIX is set, we're doing an RPM build, and we want to use that
-dnl value. If it's not set, and prefix is set and not equal to NONE, then
-dnl we'll use that. If prefix is NONE, then default to /usr/local.
-dnl Note: This prefix has /share/locale, /share/$PACKAGE, or /lib/$PACKAGE
-dnl appended in the next step, so it must NOT have those components included
-dnl in $DESTPREFIX itself.
+#  This is ugly...  Someone PLEASE fix this (if possible)...
+#
+#  The object is to get the value of PKGDATADIR into config.h,
+#  but this is the only way I've found to do so. All of this
+#  rigamarole is needed because ${datadir} doesn't expand to the
+#  desired data directory. If there's a better way to get there,
+#  PLEASE replace this. -- JRM
+#
+#  If DESTPREFIX is set, we're doing an RPM build, and we want to
+#  use that value. If it's not set, and prefix is set and not equal
+#  to NONE, then we'll use that. If prefix is NONE, then default to
+#  /usr/local. Note: This prefix has /share/locale, /share/$PACKAGE,
+#  or /lib/$PACKAGE appended in the next step, so it must NOT have
+#  those components included in $DESTPREFIX itself.
 
 if test "x${DESTPREFIX}" = "x"; then
-  if test "x$prefix" = "xNONE"; then
-    DESTPREFIX="/usr/local"
-  else
-    DESTPREFIX="${prefix}"
-  fi
+    if test "x$prefix" = "xNONE"; then
+        DESTPREFIX="/usr/local"
+    else
+        DESTPREFIX="${prefix}"
+    fi
 fi
 
-PKGDATADIR="${DESTPREFIX}/share/${PACKAGE}"
-AC_DEFINE_UNQUOTED([PKGDATADIR], "${PKGDATADIR}")
-LOCALEDIR="${DESTPREFIX}/share/locale"
-AC_DEFINE_UNQUOTED([LOCALEDIR], "${LOCALEDIR}")
 MODULESDIR="${DESTPREFIX}/lib/${PACKAGE}"
-AC_DEFINE_UNQUOTED([MODULESDIR], "${MODULESDIR}")
-AC_MSG_NOTICE([Package destination directory prefixes:])
-AC_MSG_NOTICE([Data:      ${PKGDATADIR}])
-AC_MSG_NOTICE([Locale:    ${LOCALEDIR}])
-AC_MSG_NOTICE([Libraries: ${MODULESDIR}])
+PKGDATADIR="${DESTPREFIX}/share/${PACKAGE}"
+HERC_LOCALEDIR="${DESTPREFIX}/share/locale"
 
-AH_TEMPLATE([NO_ATTR_REGPARM],
-            [Define if your gcc does not support __attribute__((regparm(n)))])
-AH_TEMPLATE([NO_ASM_BYTESWAP],
-            [Define to disable assembler routines for byte swapping])
-AH_TEMPLATE([NO_IEEE_SUPPORT],
-            [Define to disable IEEE floating point support])
-AH_TEMPLATE([CCKD_BZIP2],
-            [Define to enable bzip2 compression in emulated DASDs])
-AH_TEMPLATE([HET_BZIP2],
-            [Define to enable bzip2 compression in emulated tapes])
-AH_TEMPLATE([EXTERNALGUI],
-            [Define to build interface to external Windows GUI])
-AH_TEMPLATE([HAVE_U_INT],
-            [Define if your system uses u_int8_t, etc. instead of uint8_t])
-AH_TEMPLATE([NO_SETUID],
-            [Define to disable setuid operation])
-AH_TEMPLATE([NO_SIGABEND_HANDLER],
-            [Define to disable sigabend_handler (please describe this better)])
-AH_TEMPLATE([WIN32],
-            [Define when building under Win32 (cygwin)])
-AH_TEMPLATE([NOTHREAD],
-            [Define to disable use of threads])
-AH_TEMPLATE([OPTION_FTHREADS],
-            [Define to use included threads implementation (fthreads)])
-AH_TEMPLATE([CUSTOM_BUILD_STRING],
-            [Define to provide additional information about this build])
-AH_TEMPLATE([DEBUG],
-            [Define to enable extra debugging code (TRACE/VERIFY/ASSERT macros)])
-AH_TEMPLATE([FISH_HANG],
-            [Define to debug correct fthreads LOCK handling (requires fthreads)])
-AH_TEMPLATE([PKGDATADIR],
-            [Directory where the HTTP server will find documents])
-AH_TEMPLATE([LOCALEDIR],
-            [Directory where to find NLS data])
-AH_TEMPLATE([_BSD_SOCKLEN_T_],
-            [Define missing macro on apple darwin (osx) platform])
-AH_TEMPLATE([_INTL_REDIRECT_MACROS],
-            [Define to 1 if non-Intel architecture (gettext)])
-AH_TEMPLATE([BUILTIN_MEMRCHR],
-            [Define to use built-in memrchr implementation])
-AH_TEMPLATE([BUILTIN_STRERROR_R],
-            [Define to use built-in strerror_r implementation])
-AH_TEMPLATE([OPTION_CONFIG_SYMBOLS],
-            [Define to enable symbolic substitutions in configuration file])
-AH_TEMPLATE([OPTION_DYNAMIC_LOAD],
-            [Define to enable Hercules Dynamic Loader feature])
-AH_TEMPLATE([HDL_USE_LIBTOOL],
-            [Define to cause dynamic loader to use libtool instead of dlopen])
-AH_TEMPLATE([MAX_CPU_ENGINES],
-            [Defines the maximum number of emulated CPU engines])
-AH_TEMPLATE([HDL_BUILD_SHARED],
-            [Define to to indicate shared libraries are being used])
-AH_TEMPLATE([NEED_GETOPT_WRAPPER],
-            [Define to indicate a wrapper for getopt is needed])
-AH_TEMPLATE([NEED_GETOPT_OPTRESET],
-            [Define to indicate optreset exists])
-AH_TEMPLATE([MODULESDIR],
-            [Directory where HERCULES modules are installed])
-AH_TEMPLATE([GCRYPT_OPENFORMAT],
-            [Semantic to use for gcry_cipher_open function])
+#--------------------------------------------------------------#
+# (place only AC_DEFINE_UNQUOTED here; place AC_DEFINE below)  #
+#--------------------------------------------------------------#
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile crypto/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])
+if test "x$hc_cv_opt_custom_build_str" != "x"; then
+    AC_DEFINE_UNQUOTED( [CUSTOM_BUILD_STRING], "${hc_cv_opt_custom_build_str}" )
+fi
+
+AC_DEFINE_UNQUOTED( [MODULESDIR],        "${MODULESDIR}"                )
+AC_DEFINE_UNQUOTED( [PKGDATADIR],        "${PKGDATADIR}"                )
+AC_DEFINE_UNQUOTED( [HERC_LOCALEDIR],    "${HERC_LOCALEDIR}"            )
+AC_DEFINE_UNQUOTED( [MAX_CPU_ENGINES],    ${hc_cv_opt_num_cpu_engines}  )
+AC_DEFINE_UNQUOTED( [GCRYPT_OPENFORMAT],  ${hc_cv_num_gcrypt_args}      )
+
+AC_CACHE_SAVE()
+
+AC_MSG_NOTICE( [                                         ] )
+AC_MSG_NOTICE( [ Package destination directory prefixes: ] )
+AC_MSG_NOTICE( [                                         ] )
+AC_MSG_NOTICE( [    Libraries:  ${MODULESDIR}            ] )
+AC_MSG_NOTICE( [    Data:       ${PKGDATADIR}            ] )
+AC_MSG_NOTICE( [    Locale:     ${HERC_LOCALEDIR}        ] )
+AC_MSG_NOTICE( [                                         ] )
+
+#---------------------------------------------------------------#
+#  (place only AC_DEFINE here; place AC_DEFINE_UNQUOTED above)  #
+#---------------------------------------------------------------#
+
+test "$hc_cv_opt_debug"                = "yes"  &&  AC_DEFINE(DEBUG)
+test "$hc_cv_have_inttypes_h"          = "yes"  &&  AC_DEFINE(HAVE_INTTYPES_H)
+test "$hc_cv_have_u_int8_t"            = "yes"  &&  AC_DEFINE(HAVE_U_INT)
+test "$hc_cv_opt_configsymbols"        = "yes"  &&  AC_DEFINE(OPTION_CONFIG_SYMBOLS)
+test "$hc_cv_opt_dynamic_load"         = "yes"  &&  AC_DEFINE(OPTION_DYNAMIC_LOAD)
+test "$hc_cv_opt_fthreads"             = "yes"  &&  AC_DEFINE(OPTION_FTHREADS)
+test "$hc_cv_opt_fishhang"             = "yes"  &&  AC_DEFINE(FISH_HANG)
+test "$hc_cv_hdl_build_shared"         = "yes"  &&  AC_DEFINE(HDL_BUILD_SHARED)
+test "$hc_cv_have_lt_dlopen"           = "yes"  &&  AC_DEFINE(HDL_USE_LIBTOOL)
+test "$hc_cv_is_windows"               = "yes"  &&  AC_DEFINE(WIN32)
+test "$hc_cv_opt_external_gui"         = "yes"  &&  AC_DEFINE(EXTERNALGUI)
+test "$hc_cv_opt_cckd_bzip2"           = "yes"  &&  AC_DEFINE(CCKD_BZIP2)
+test "$hc_cv_opt_het_bzip2"            = "yes"  &&  AC_DEFINE(HET_BZIP2)
+test "$hc_cv_timespec_in_sys_types_h"  = "yes"  &&  AC_DEFINE(TIMESPEC_IN_SYS_TYPES_H)
+test "$hc_cv_timespec_in_time_h"       = "yes"  &&  AC_DEFINE(TIMESPEC_IN_TIME_H)
+test "$hc_cv_have_getset_uid"         != "yes"  &&  AC_DEFINE(NO_SETUID)
+test "$hc_cv_asm_byteswap"            != "yes"  &&  AC_DEFINE(NO_ASM_BYTESWAP)
+test "$hc_cv_non_unique_gettimeofday"  = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETTIMEOFDAY)
+test "$hc_cv_build_hercifc"            = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
+
+if test $hc_cv_have_sa_sigaction != yes ||
+   test $hc_cv_have_sigusr1      != yes ||
+   test $hc_cv_have_sigusr2      != yes ||
+   test $hc_cv_have_sigpipe      != yes ||
+   test $hc_cv_have_sigbus       != yes; then
+
+    AC_DEFINE(NO_SIGABEND_HANDLER)
+
+fi
+
+if test "$hc_cv_regparm_attr_supported" = "yes"  &&
+   test "$hc_cv_regparm_attr_broke"    != "yes"; then
+
+    AC_DEFINE(HAVE_ATTR_REGPARM)
+fi
+
+if test "$hc_cv_is_windows"  != "yes"  &&
+   test "$hc_cv_have_fenv_h" != "yes"; then
+
+    AC_DEFINE(NO_IEEE_SUPPORT)
+fi
+
+if test "$hc_cv_is_apple" = "yes"; then
+
+    AC_DEFINE(_INTL_REDIRECT_MACROS)
+
+    #
+    #  TODO??
+    #
+    #  Do whatever is necessary to get the following symbol defined
+    #  so the included libltdl will be built and used...
+    #
+
+##  AC_PROVIDE_AC_LIBTOOL_DLOPEN()
+
+fi
+
+#--------------------------------------------------#
+#  CPPFLAGS  (pre-processor flags)                 #
+#--------------------------------------------------#
+
+if test "$hc_cv_is_apple"                    = "yes"  &&
+   test "$hc_cv_pp_macro_arg_counting_broke" = "yes"; then
+
+   CPPFLAGS="${CPPFLAGS} -traditional-cpp -Wno-endif-labels"
+fi
+
+#--------------------------------------------------#
+#  CFLAGS  (compiler flags)                        #
+#--------------------------------------------------#
+
+
+if test "$hc_cv_is_windows"             = "yes"; then
+
+    if test "$hc_cv_have_pthread_h"         = "yes" &&
+       test "x$hc_cv_alt_pthread_location" != "x";  then
+
+        CFLAGS="$CFLAGS -I${hc_cv_alt_pthread_location}"
+    fi
+
+    CFLAGS="$CFLAGS -Wno-format"
+fi
+
+if test "$hc_cv_byte_structs_aligned_and_rounded_by_default" = "yes"; then
+
+    #===============================================================
+    # the following requests 8-bit (byte) struct boundary alignment
+    #===============================================================
+
+    CFLAGS="$CFLAGS -mstructure-size-boundary=8"
+fi
+
+test "x$hc_cv_optimization_flags" !=  "x" &&  CFLAGS="$CFLAGS $hc_cv_optimization_flags"
+
+#--------------------------------------------------#
+#  LIBS  (linker flags)                            #
+#--------------------------------------------------#
+
+test  "$hc_cv_dash_pthread_needed" =  "yes"  &&  LIBS="$LIBS -pthread"
+test  "$hc_cv_have_libbz2"         =  "yes"  &&  LIBS="$LIBS -lbz2"
+
+#      ---------------------- MINGW32 ----------------------
+
+test  "$hc_cv_is_mingw32" =  "yes"  &&  LIBS="$LIBS -lmsvcrt"
+test  "$hc_cv_is_mingw32" =  "yes"  &&  LIBS="$LIBS -lws2_32"
+
+AC_CACHE_SAVE()
+
+#--------------------------------------------------------------------------------#
+#  Pass certain values/settings as makefile variables to automake (makefile.am)  #
+#--------------------------------------------------------------------------------#
+
+AM_CONDITIONAL( OPTION_DYNAMIC_LOAD, [ test "$hc_cv_opt_dynamic_load" = "yes" ] )
+AM_CONDITIONAL( BUILD_FTHREADS,      [ test "$hc_cv_opt_fthreads"     = "yes" ] )
+AM_CONDITIONAL( BUILD_FISHHANG,      [ test "$hc_cv_opt_fishhang"     = "yes" ] )
+AM_CONDITIONAL( BUILD_HERCIFC,       [ test "$hc_cv_build_hercifc"    = "yes" ] )
+AM_CONDITIONAL( SETUID_HERCIFC,      [ test "$hc_cv_setuid_hercifc"   = "yes" ] )
+AM_CONDITIONAL( HAVE_GCRYPT,         [ test "$hc_cv_have_gcrypt"      = "yes" ] )
+
+#  Building of shared libraries is forced, and we force use of libtool too.
+
+AM_CONDITIONAL( BUILD_SHARED,        [ test "$hc_cv_hdl_build_shared" = "yes" ] )
+AM_CONDITIONAL( USE_DLLTOOL,         [ test "$hc_cv_is_windows"       = "yes" ] )
+
+AC_CACHE_SAVE()
+
+AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile po/Makefile.in po/Makefile man/Makefile m4/Makefile ] )
+
+###############################################################################
+#   (end-of-file)
+###############################################################################

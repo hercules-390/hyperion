@@ -5,7 +5,7 @@
 /* when the http_server thread is started it will listen on          */
 /* the HTTP port specified on the HTTPPORT config statement.         */
 /*                                                                   */
-/* When a request comes in a http_request thread is started,         */
+/* When a request comes in a http_request_thread is started,         */
 /* which will handle the request.                                    */
 /*                                                                   */
 /* When authentification is required (auth parm on the HTTPPORT      */
@@ -27,6 +27,8 @@
 /*                                                                   */
 /*                                           Jan Jaeger - 28/03/2002 */
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 #include "httpmisc.h"
 #include "hostinfo.h"
@@ -38,16 +40,23 @@
 extern CGITAB cgidir[];
 
 
-static CONTYP mime_types[] = {
-    { NULL,    NULL },                            /* No suffix entry */
-    { "txt",   "text/plain" },
-    { "jcl",   "text/plain" },
-    { "gif",   "image/gif"  },
-    { "jpg",   "image/jpeg" },
-    { "css",   "text/css"   },
-    { "html",  "text/html"  },
-    { "htm",   "text/html"  },
-    { NULL,    NULL } };                     /* Default suffix entry */
+static MIMETAB mime_types[] = {
+  {  NULL,   NULL        },     /* No suffix entry */
+  { "txt",  "text/plain" },
+  { "jcl",  "text/plain" },
+  { "gif",  "image/gif"  },
+  { "jpg",  "image/jpeg" },
+  { "css",  "text/css"   },
+  { "html", "text/html"  },
+  { "htm",  "text/html"  },
+  {  NULL,   NULL        }};    /* Default suffix entry */
+
+
+static void http_server_error( int sd, const char* msg )
+{
+    ASSERT( sd && msg );
+    write_socket( sd, msg, strlen(msg) );
+}
 
 
 int html_include(WEBBLK *webblk, char *filename)
@@ -55,12 +64,15 @@ int html_include(WEBBLK *webblk, char *filename)
     FILE *inclfile;
     char fullname[HTTP_PATH_LENGTH];
     char buffer[HTTP_PATH_LENGTH];
-    int ret;
+    BYTE pathname[HTTP_PATH_LENGTH];
+    int ret, rc;
+
+    hostpath(pathname, filename, sizeof(pathname));
 
     strlcpy( fullname, sysblk.httproot, sizeof(fullname) );
-    strlcat( fullname, filename,        sizeof(fullname) );
+    strlcat( fullname, pathname,        sizeof(fullname) );
 
-    inclfile = fopen(fullname,"r");
+    inclfile = fopen(fullname,"rb");
 
     if (!inclfile)
     {
@@ -74,72 +86,91 @@ int html_include(WEBBLK *webblk, char *filename)
     while (!feof(inclfile))
     {
         ret = fread(buffer, 1, sizeof(buffer), inclfile);
-        if (ret <= 0) break;
-        fwrite(buffer, 1, ret, webblk->hsock);
+        if (!ret) break;
+        if (ret < 0)
+        {
+            logmsg(_("HHCHT06xE html_include: Error reading file %s: %s\n"),
+                fullname,strerror(errno));
+            break;
+        }
+        rc = fwrite(buffer, 1, ret, webblk->hsock);
+        if ( rc != ret )
+        {
+            logmsg(_("HHCHT06xE html_include: Error writing file %s to socket: %s\n"),
+                fullname,strerror(errno));
+        }
     }
 
-    fclose(inclfile);
+    if ( fclose(inclfile) != 0 )
+    {
+        logmsg(_("HHCHT06xE html_include: Error closing file %s: %s\n"),
+            fullname,strerror(errno));
+    }
     return TRUE;
 }
 
 
 void html_header(WEBBLK *webblk)
 {
+    /*
     if (webblk->request_type != REQTYPE_POST)
-        fprintf(webblk->hsock,"Expires: 0\n");
+        if ( fprintf(webblk->hsock,"Expires: 0\n") < 0 )
+            logmsg(_("HHCHT06xE html_header: Error fprintf'ing Expires: %s\n"),
+                strerror(errno));
+    */
 
-    fprintf(webblk->hsock,"Content-type: text/html;\n\n");
+    if ( fprintf(webblk->hsock,"Content-type: text/html\n\n") < 0 )
+        logmsg(_("HHCHT06xE html_header: Error fprintf'ing Content-type: %s\n"),
+            strerror(errno));
 
     if (!html_include(webblk,HTML_HEADER))
-        fprintf(webblk->hsock,"<HTML>\n<HEAD>\n<TITLE>Hercules</TITLE>\n</HEAD>\n<BODY>\n\n");
+        if ( fprintf(webblk->hsock,"<HTML>\n<HEAD>\n<TITLE>Hercules</TITLE>\n</HEAD>\n<BODY>\n\n") < 0 )
+            logmsg(_("HHCHT06xE html_header: Error fprintf'ing default html header: %s\n"),
+                strerror(errno));
 }
 
 
 void html_footer(WEBBLK *webblk)
 {
     if (!html_include(webblk,HTML_FOOTER))
-        fprintf(webblk->hsock,"\n</BODY>\n</HTML>\n");
+        if ( fprintf(webblk->hsock,"\n</BODY>\n</HTML>\n") < 0 )
+            logmsg(_("HHCHT06xE html_footer: Error fprintf'ing default html footer: %s\n"),
+                strerror(errno));
 }
 
 
-static void http_exit(WEBBLK *webblk)
+// PROGRAMMING NOTE: we don't currently support
+// an exit-code, but we COULD if we wanted to...
+
+static void http_exit( WEBBLK *webblk /*, int exit_code */ )
 {
-CGIVAR *cgivar;
-    if(webblk)
-    {
-        fclose(webblk->hsock);
-        if(webblk->user) free(webblk->user);
-        if(webblk->request) free(webblk->request);
-        cgivar = webblk->cgivar;
-        while(cgivar)
-        {
-            CGIVAR *tmpvar = cgivar->next;
-            free(cgivar->name);
-            free(cgivar->value);
-            free(cgivar);
-            cgivar = tmpvar;
-        }
-        free(webblk);
-    }
-    exit_thread(NULL);
+    ASSERT(  webblk ); // (next stmt will not return)
+    longjmp( webblk->quick_exit, /* exit_code */ 0 );
 }
 
 
 static void http_error(WEBBLK *webblk, char *err, char *header, char *info)
 {
-    fprintf(webblk->hsock,"HTTP/1.0 %s\n%sConnection: close\n"
+    logmsg(_("HHCHT06xE http_error: %s (%s)\n"), err, info );
+
+    if ( fprintf(webblk->hsock,"HTTP/1.0 %s\n%sConnection: close\n"
                           "Content-Type: text/html\n\n"
                           "<HTML><HEAD><TITLE>%s</TITLE></HEAD>"
                           "<BODY><H1>%s</H1><P>%s</BODY></HTML>\n\n",
-                          err, header, err, err, info);
+                          err, header, err, err, info) < 0 )
+    {
+        logmsg(_("HHCHT06xE http_error: Error fprintf'ing error document: %s\n"),
+            strerror(errno));
+    }
+
     http_exit(webblk);
 }
 
 
 static char *http_timestring(char *time_buff,int buff_size, time_t t)
 {
-    struct tm *tm = localtime(&t);
-    strftime(time_buff, buff_size, "%a, %d %b %Y %H:%M:%S %Z", tm);
+    struct tm *tm = gmtime(&t);
+    strftime(time_buff, buff_size, "%a, %d %b %Y %H:%M:%S GMT", tm);
     return time_buff;
 }
 
@@ -281,12 +312,7 @@ char *http_variable(WEBBLK *webblk, char *name, int type)
 static void http_verify_path(WEBBLK *webblk, char *path)
 {
     char resolved_path[HTTP_PATH_LENGTH];
-    int i;
-
-    for (i = 0; path[i]; i++)
-        if (!isalnum((int)path[i]) && !strchr("/.-_", path[i]))
-            http_error(webblk, "404 File Not Found","",
-                               "Illegal character in filename");
+    int k;
 
     if (!realpath( path, resolved_path ))
     {
@@ -294,13 +320,29 @@ static void http_verify_path(WEBBLK *webblk, char *path)
                            "Invalid pathname");
     }
 
+#if defined(WIN32)
+    /* Change all '\' (backward slashes) to '/' (forward slashes) */
+    {
+        int i; k = strlen(resolved_path);
+        for (i=0; i < k; i++)
+            if (resolved_path[i] == '\\')
+                resolved_path[i] = '/';
+    }
+#endif
+
     // The following verifies the specified file does not lie
     // outside the specified httproot (Note: sysblk.httproot
-    // was previously resolved to an absolute path by config.c)
+    // was previously resolved to an absolute path by the
+    // http_server() thread function. ALSO NOTE that we MUST
+    // do a 'strfilenamecmp' (and NOT a normal 'strncmp')
+    // due to potential host filesystem case sensitivities.
 
-    if (strncmp( sysblk.httproot, resolved_path, strlen(sysblk.httproot)))
-        http_error(webblk, "404 File Not Found","",
-                           "Invalid pathname");
+    k = strlen(sysblk.httproot);
+    if (k < (int)sizeof(resolved_path))
+        resolved_path[k] = '\0';
+    if (k >= (int)sizeof(resolved_path) ||
+        strfilenamecmp( sysblk.httproot, resolved_path))
+        http_error(webblk, "404 File Not Found","", "Invalid pathname");
 }
 
 
@@ -331,7 +373,7 @@ static int http_authenticate(WEBBLK *webblk, char *type, char *userpass)
                         return TRUE;
                     }
                 }
-#if !defined(WIN32)
+#if !defined(NO_SETUID)
                 else
                 {
                     struct passwd *pass = NULL;
@@ -350,7 +392,7 @@ static int http_authenticate(WEBBLK *webblk, char *type, char *userpass)
                         return TRUE;
                     }
                 }
-#endif /*!defined(WIN32)*/
+#endif
             }
         }
     }
@@ -364,19 +406,28 @@ static int http_authenticate(WEBBLK *webblk, char *type, char *userpass)
 static void http_download(WEBBLK *webblk, char *filename)
 {
     char buffer[HTTP_PATH_LENGTH];
-    char tbuf[80];
-    int fd, length;
+//  char tbuf[80];
+    int fd, length, rc;
     char *filetype;
     char fullname[HTTP_PATH_LENGTH];
-    struct stat st;
-    CONTYP *mime_type = mime_types;
+    BYTE pathname[HTTP_PATH_LENGTH];
+    struct STAT st;
+    MIMETAB *mime_type = mime_types;
+    int length_written = 0;
+
+    hostpath(pathname, filename, sizeof(pathname));
+
+    if ((filetype = strrchr(pathname,'.')))
+        for(mime_type++;mime_type->suffix
+          && strcasecmp(mime_type->suffix,filetype + 1);
+          mime_type++);
 
     strlcpy( fullname, sysblk.httproot, sizeof(fullname) );
-    strlcat( fullname, filename,        sizeof(fullname) );
+    strlcat( fullname, pathname,        sizeof(fullname) );
 
     http_verify_path(webblk,fullname);
 
-    if(stat(fullname,&st))
+    if(STAT(fullname,&st))
         http_error(webblk, "404 File Not Found","",
                            strerror(errno));
 
@@ -384,49 +435,113 @@ static void http_download(WEBBLK *webblk, char *filename)
         http_error(webblk, "404 File Not Found","",
                            "The requested file is not a regular file");
 
-    fd = open(fullname,O_RDONLY,0);
+    fd = open(fullname,O_RDONLY|O_BINARY);
+
     if (fd == -1)
         http_error(webblk, "404 File Not Found","",
                            strerror(errno));
 
-    fprintf(webblk->hsock,"HTTP/1.0 200 OK\n");
-    if ((filetype = strrchr(filename,'.')))
-        for(mime_type++;mime_type->suffix
-          && strcasecmp(mime_type->suffix,filetype + 1);
-          mime_type++);
+    if ( fprintf(webblk->hsock,"HTTP/1.0 200 OK\nConnection: close\n") < 0 )
+        logmsg(_("HHCHT06xE http_download: Error fprintf'ing 200 OK for file %s: %s\n"),
+            fullname,strerror(errno));
+
     if(mime_type->type)
-        fprintf(webblk->hsock,"Content-Type: %s\n", mime_type->type);
+        if ( fprintf(webblk->hsock,"Content-Type: %s\n", mime_type->type) < 0 )
+            logmsg(_("HHCHT06xE http_download: Error fprintf'ing Content-Type for file %s: %s\n"),
+                fullname,strerror(errno));
 
-    fprintf(webblk->hsock,"Expires: %s\n",
-      http_timestring(tbuf,sizeof(tbuf),time(NULL)+HTML_STATIC_EXPIRY_TIME));
+    /*
+    if ( fprintf(webblk->hsock,"Expires: %s\n",http_timestring(tbuf,sizeof(tbuf),time(NULL)+HTML_STATIC_EXPIRY_TIME)) < 0 )
+        logmsg(_("HHCHT06xE http_download: Error fprintf'ing Expires for file %s: %s\n"),
+            fullname,strerror(errno));
+    */
 
-    fprintf(webblk->hsock,"Content-Length: %d\n\n", (int)st.st_size);
+    if ( fprintf(webblk->hsock,"Content-Length: %lld\n\n",(U64)st.st_size) < 0 )
+        logmsg(_("HHCHT06xE http_download: Error fprintf'ing Content-Length for file %s: %s\n"),
+            fullname,strerror(errno));
+
     while ((length = read(fd, buffer, sizeof(buffer))) > 0)
-            fwrite(buffer, 1, length, webblk->hsock);
-    close(fd);
+    {
+        if ( ( rc = fwrite(buffer, 1, length, webblk->hsock) ) >= 0 )
+            length_written += rc;
+        if ( rc < length )
+        {
+            logmsg(_("HHCHT06xE http_download: Error fwrite'ing file %s to socket stream: %s\n"),
+                fullname,strerror(errno));
+        }
+    }
+
+    if ( length < 0 )
+    {
+        logmsg(_("HHCHT06xE http_download: Error reading file %s: %s\n"),
+            fullname,strerror(errno));
+    }
+
+    if ( (U64)length_written != (U64)st.st_size )
+    {
+        logmsg(_("HHCHT06xE http_download: Only %lld of %lld bytes of file %s was written!\n"),
+            (U64)length_written, (U64)st.st_size, fullname);
+    }
+
+    if ( close(fd) != 0 )
+    {
+        logmsg(_("HHCHT06xE http_download: Error closing file %s: %s\n"),
+            fullname,strerror(errno));
+    }
+
     http_exit(webblk);
 }
 
 
-static void *http_request(FILE *hsock)
+static void *http_request_thread(FILE *hsock)
 {
-    WEBBLK *webblk;
-    int authok = !sysblk.httpauth;
-    char line[HTTP_PATH_LENGTH];
-    char *url = NULL;
-    char *pointer;
-    char *strtok_str;
-    CGITAB *cgient;
-    int content_length = 0;
+    char       line[HTTP_PATH_LENGTH];
+    char       tbuf[80];
+
+    WEBBLK     *webblk          = NULL;
+    CGITAB     *cgient          = NULL;
+    CGIVAR     *cgivar          = NULL;
+    CGIVAR     *tmpvar          = NULL;
+    zz_cgibin  *dyncgi          = NULL;
+
+    char       *pointer         = NULL;
+    char       *strtok_str      = NULL;
+    char       *post_arg        = NULL;
+    char       *url             = NULL;
+
+    int         exit_code       = 0;
+    int         i               = 0;
+    int         content_length  = 0;
+    int         sd              = -1;
+    int         authok          = !sysblk.httpauth;
 
     if(!(webblk = malloc(sizeof(WEBBLK))))
-        http_exit(webblk);
+    {
+        logmsg(_("HHCHT06xE http_request_thread: Out of memory!\n"));
+        goto request_thread_exit;
+    }
 
     memset(webblk,0,sizeof(WEBBLK));
     webblk->hsock = hsock;
 
-    while (fgets(line, sizeof(line), webblk->hsock))
+    if ( ( exit_code = setjmp( webblk->quick_exit ) ) != 0 )
+        goto request_thread_exit;
+
+    for (;;)
     {
+#ifndef _MSVC_
+        if (!fgets(line, sizeof(line), webblk->hsock))
+            break;
+#else
+        {
+            i = 0;
+            do
+                if ( read_socket( _get_osfhandle(fileno(webblk->hsock)), &line[i], 1 ) != 1 )
+                    break;
+            while ( i < sizeof(line) - 1 && line[i++] != '\n' );
+            line[i] = 0;
+        }
+#endif
         if (*line == '\r' || *line == '\n')
             break;
 
@@ -478,20 +593,30 @@ static void *http_request(FILE *hsock)
     }
     webblk->request = url;
 
-    if(webblk->request_type == REQTYPE_POST
-      && content_length != 0)
+    if(webblk->request_type == REQTYPE_POST && content_length != 0)
     {
-    char *post_arg;
         if((pointer = post_arg = malloc(content_length + 1)))
         {
-        int i;
+            sd = fileno(webblk->hsock);
+
+            // Read a maximum of 'content_length' bytes from the
+            // input stream or until NL (whichever comes first)...
             for(i = 0; i < content_length; i++)
             {
-                *pointer = fgetc(webblk->hsock);
-                if(*pointer != '\n' && *pointer != '\r')
+#ifndef _MSVC_
+                read_socket(                 sd,   pointer, 1 );
+#else
+                read_socket( _get_osfhandle( sd ), pointer, 1 );
+#endif
+                // If it's a NL, then we have all our data...
+                if ('\n' == *pointer)
+                    break;
+                // If it's NOT a CR, then keep it
+                // Else overlay it with next char
+                if ('\r' != *pointer)
                     pointer++;
             }
-            *pointer = '\0';
+            *pointer = 0;
             http_interpret_variable_string(webblk, post_arg, VARTYPE_POST);
             free(post_arg);
         }
@@ -536,10 +661,14 @@ static void *http_request(FILE *hsock)
     {
         if(!strcmp(cgient->path, url))
         {
-        char tbuf[80];
-            fprintf(webblk->hsock,"HTTP/1.0 200 OK\nConnection: close\n");
-            fprintf(webblk->hsock,"Date: %s\n",
-              http_timestring(tbuf,sizeof(tbuf),time(NULL)));
+            if ( fprintf(webblk->hsock,"HTTP/1.0 200 OK\nConnection: close\n") < 0 )
+                logmsg(_("HHCHT06xE http_request_thread: Error fprintf'ing 200 OK, etc, for cgi url %s: %s\n"),
+                    url,strerror(errno));
+
+            if ( fprintf(webblk->hsock,"Date: %s\n",
+              http_timestring(tbuf,sizeof(tbuf),time(NULL))) < 0 )
+                logmsg(_("HHCHT06xE http_request_thread: Error fprintf'ing Date for cgi url %s: %s\n"),
+                    url,strerror(errno));
             (cgient->cgibin) (webblk);
             http_exit(webblk);
         }
@@ -547,14 +676,11 @@ static void *http_request(FILE *hsock)
 
 #if defined(OPTION_DYNAMIC_LOAD)
     {
-    zz_cgibin dyncgi;
-
         if( (dyncgi = HDL_FINDSYM(webblk->baseurl)) )
         {
-        char tbuf[80];
             fprintf(webblk->hsock,"HTTP/1.0 200 OK\nConnection: close\n");
             fprintf(webblk->hsock,"Date: %s\n",
-              http_timestring(tbuf,sizeof(tbuf),time(NULL)));
+                http_timestring(tbuf,sizeof(tbuf),time(NULL)));
             dyncgi(webblk);
             http_exit(webblk);
         }
@@ -564,8 +690,119 @@ static void *http_request(FILE *hsock)
     http_error(webblk, "404 File Not Found","",
                        "The requested file was not found");
 
+    ASSERT( FALSE );    // (above should not return)
+
+request_thread_exit:
+
+    if ( webblk )
+    {
+        // Discard any remaining i/p data that may still
+        // be waiting to be read (there shouldn't be any
+        // except maybe a byte or two, but best be safe)
+        // This SHOULD allow for a more graceful closing
+        // of the connection...
+
+        if ( webblk->hsock )
+        {
+            fd_set          read_set;
+            struct timeval  time_out;
+            int             max = 10;
+
+            // (100 millisecs s/b PLENTY long enough!)
+
+            time_out.tv_sec  = 0;
+            time_out.tv_usec = 100000;
+
+            // Keep reading/discarding data until there
+            // isn't any more (indicated by timeout) or
+            // until we get tired of reading it...
+
+            sd = fileno( webblk->hsock );
+
+            while ( max-- ) // (in case they keep sending more)
+            {
+                FD_ZERO (     &read_set );
+                FD_SET  ( sd, &read_set );
+
+                if (!select( sd+1, &read_set, NULL, NULL, &time_out))
+                    break;  // timeout == no more data
+                else if ( FD_ISSET( sd, &read_set ) )
+                {
+                    // Read one byte and discard it...
+#ifndef _MSVC_
+                    read_socket(                 sd,   tbuf, 1 );
+#else
+                    read_socket( _get_osfhandle( sd ), tbuf, 1 );
+#endif
+                }
+                else if (EINTR != errno)
+                {
+                    logmsg(_("HHCHT06xE http_request_thread: select failed: %s\n"),
+                        strerror(errno));
+                }
+            }
+
+            // Close the socket and free our resources...
+
+            if ( fclose( webblk->hsock ) != 0 )
+            {
+                logmsg(_("HHCHT06xE http_request_thread: Error closing socket stream: %s\n"),
+                    strerror(errno));
+            }
+            webblk->hsock = NULL;
+        }
+
+        if ( webblk->user    ) free( webblk->user    ), webblk->user    = NULL;
+        if ( webblk->request ) free( webblk->request ), webblk->request = NULL;
+
+        cgivar = webblk->cgivar;
+
+        while ( cgivar )
+        {
+            tmpvar = cgivar->next;
+
+            free( cgivar->name  ); cgivar->name  = NULL;
+            free( cgivar->value ); cgivar->value = NULL;
+            free( cgivar );
+
+            cgivar = tmpvar;
+        }
+        webblk->cgivar = NULL;
+        free( webblk );
+    }
+
     return NULL;
 }
+
+
+static const char http_server_create_thread_error_resp[] =
+
+    "HTTP/1.0 503 Service Unavailable\n"
+    "Content-Type: text/html\n"
+    "Connection: close\n"
+    "\n"
+    "<HTML><HEAD><TITLE>"
+    "503 Service Unavailable"  "</TITLE></HEAD><BODY><H1>"
+    "503 Service Unavailable"  "</H1><P>"
+    "create_thread() failed"
+    "</P></BODY></HTML>\n"
+    "\n"
+    ;
+
+
+static const char http_server_other_error_resp[] =
+
+    "HTTP/1.0 500 Internal Server Error\n"
+    "Content-Type: text/html\n"
+    "Connection: close\n"
+    "\n"
+    "<HTML><HEAD><TITLE>"
+    "500 Internal Server Error"  "</TITLE></HEAD><BODY><H1>"
+    "500 Internal Server Error"  "</H1><P>"
+    "fdopen() failed"
+    "</P></BODY></HTML>\n"
+    "\n"
+    ;
 
 
 void *http_server (void *arg)
@@ -586,34 +823,35 @@ TID                     httptid;        /* Negotiation thread id     */
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
-
     /* If the HTTP root directory is not specified,
        use a reasonable default */
     if (!sysblk.httproot)
-        {
-#if defined(WIN32)
+    {
+#if defined(_MSVC_)
         char process_dir[HTTP_PATH_LENGTH];
-        if (get_process_directory(process_dir,HTTP_PATH_LENGTH) > 0)
+        if (get_process_directory(process_dir,sizeof(process_dir)) > 0)
             sysblk.httproot = strdup(process_dir);
         else
-#endif /*defined(WIN32)*/
+        {
+            char expanded_dir[HTTP_PATH_LENGTH];
+            if (expand_environ_vars(HTTP_ROOT,expanded_dir,sizeof(expanded_dir)) == 0)
+                sysblk.httproot = strdup(expanded_dir);
+            else
+                sysblk.httproot = strdup(HTTP_ROOT);
+        }
+#else
         sysblk.httproot = strdup(HTTP_ROOT);
+#endif
     }
-#if defined(WIN32)
-    if (is_win32_directory(sysblk.httproot))
-    {
-        char  posix_dir[HTTP_PATH_LENGTH];
-        convert_win32_directory_to_posix_directory(sysblk.httproot,posix_dir);
-        free(sysblk.httproot); sysblk.httproot = strdup(posix_dir);
-    }
-#endif /*defined(WIN32)*/
     /* Convert the specified HTTPROOT value to an absolute path
        ending with a '/' and save in sysblk.httproot. */
     {
         char absolute_httproot_path[HTTP_PATH_LENGTH];
         char save_working_directory[HTTP_PATH_LENGTH];
         int  rc;
-        if (!realpath(sysblk.httproot,absolute_httproot_path))
+        // (convert sysblk.httproot to host format first and use that)
+        hostpath(save_working_directory, sysblk.httproot, sizeof(save_working_directory));
+        if (!realpath(save_working_directory,absolute_httproot_path))
         {
             logmsg( _("HHCCF066E Invalid HTTPROOT: %s\n"),
                    strerror(errno));
@@ -629,38 +867,51 @@ TID                     httptid;        /* Negotiation thread id     */
             return NULL;
         }
         strlcat(absolute_httproot_path,"/",sizeof(absolute_httproot_path));
+#if defined(WIN32)
+        /* Change all '\' (backward slashes) to '/' (forward slashes) */
+        {
+            int i, k = strlen(absolute_httproot_path);
+            for (i=0; i < k; i++)
+                if (absolute_httproot_path[i] == '\\')
+                    absolute_httproot_path[i] = '/';
+        }
+#endif
+        /* (make SURE there's only ONE ending slash!) */
+        rc = strlen(absolute_httproot_path);
+        if (rc >= 2 &&
+            absolute_httproot_path[rc-2] == '/' &&
+            absolute_httproot_path[rc-1] == '/')
+            absolute_httproot_path[rc-1] = 0; // (remove extra trailing slash)
         free(sysblk.httproot); sysblk.httproot = strdup(absolute_httproot_path);
-        TRACE("HTTPROOT = %s\n",sysblk.httproot);// (debug display)
+        logmsg("HHCHT014I HTTPROOT=%s\n",sysblk.httproot);
     }
 
-
     /* Obtain a socket */
-    lsock = socket (AF_INET, SOCK_STREAM, 0);
+    lsock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
     if (lsock < 0)
     {
-        logmsg(_("HHCHT002E socket: %s\n"), strerror(errno));
+        logmsg(_("HHCHT002E socket: %s\n"), strerror(HSO_errno));
         return NULL;
     }
 
     /* Allow previous instance of socket to be reused */
     optval = 1;
     setsockopt (lsock, SOL_SOCKET, SO_REUSEADDR,
-                &optval, sizeof(optval));
+                (void*)&optval, sizeof(optval));
 
     /* Prepare the sockaddr structure for the bind */
     memset (&server, 0, sizeof(server));
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = sysblk.httpport;
-    server.sin_port = htons(server.sin_port);
+    server.sin_port = htons( sysblk.httpport );
 
     /* Attempt to bind the socket to the port */
     while (1)
     {
         rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
 
-        if (rc == 0 || errno != EADDRINUSE) break;
+        if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
 
         logmsg (_("HHCHT003W Waiting for port %u to become free\n"),
                 sysblk.httpport);
@@ -669,7 +920,7 @@ TID                     httptid;        /* Negotiation thread id     */
 
     if (rc != 0)
     {
-        logmsg(_("HHCHT004E bind: %s\n"), strerror(errno));
+        logmsg(_("HHCHT004E bind: %s\n"), strerror(HSO_errno));
         return NULL;
     }
 
@@ -678,7 +929,7 @@ TID                     httptid;        /* Negotiation thread id     */
 
     if (rc < 0)
     {
-        logmsg(_("HHCHT005E listen: %s\n"), strerror(errno));
+        logmsg(_("HHCHT005E listen: %s\n"), strerror(HSO_errno));
         return NULL;
     }
 
@@ -687,6 +938,13 @@ TID                     httptid;        /* Negotiation thread id     */
 
     /* Handle http requests */
     while (TRUE) {
+
+#if defined( HTTP_SERVER_CONNECT_KLUDGE )
+        /* An admitted kludge to workaround certain buggy firewalls
+           (like the one Fish has) wherein it crashes if connections
+           come in too fast for it to handle... */
+        usleep( sysblk.http_server_kludge_msecs * 1000 );
+#endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 
         /* Initialize the select parameters */
         FD_ZERO (&selset);
@@ -699,8 +957,8 @@ TID                     httptid;        /* Negotiation thread id     */
 
         if (rc < 0 )
         {
-            if (errno == EINTR) continue;
-            logmsg(_("HHCHT007E select: %s\n"), strerror(errno));
+            if (HSO_errno == HSO_EINTR) continue;
+            logmsg(_("HHCHT007E select: %s\n"), strerror(HSO_errno));
             break;
         }
 
@@ -712,25 +970,29 @@ TID                     httptid;        /* Negotiation thread id     */
 
             if (csock < 0)
             {
-                logmsg(_("HHCHT008E accept: %s\n"), strerror(errno));
+                logmsg(_("HHCHT008E accept: %s\n"), strerror(HSO_errno));
                 continue;
             }
 
-            if(!(hsock = fdopen(csock,"r+")))
+            if(!(hsock = fdopen(csock,"r+b")))
             {
                 logmsg(_("HHCHT009E fdopen: %s\n"),strerror(errno));
-                close(csock);
+                http_server_error( csock,
+                    http_server_other_error_resp );
+                close_socket (csock);
                 continue;
             }
 
             /* Create a thread to execute the http request */
             if ( create_thread (&httptid, &sysblk.detattr,
-                                http_request, hsock) )
+                                http_request_thread, hsock) )
             {
-                logmsg(_("HHCHT010E http_request create_thread: %s\n"),
+                logmsg(_("HHCHT010E http_request_thread create_thread: %s\n"),
                         strerror(errno));
+                http_server_error( csock,
+                    http_server_create_thread_error_resp );
+                close_socket (csock);
                 fclose (hsock);
-                close (csock);
             }
 
         } /* end if(lsock) */
@@ -738,7 +1000,7 @@ TID                     httptid;        /* Negotiation thread id     */
     } /* end while */
 
     /* Close the listening socket */
-    close (lsock);
+    close_socket (lsock);
 
     return NULL;
 

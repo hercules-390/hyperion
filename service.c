@@ -20,6 +20,8 @@
 /*      Added CPI - Control Program Information ev. - JJ 2001-11-19  */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"
@@ -918,7 +920,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         default:
 
-            if( HDC(debug_sclp_unknown_event, evd_hdr, sccb, regs) )
+            if( HDC3(debug_sclp_unknown_event, evd_hdr, sccb, regs) )
                 break;
 
             /* Set response code X'73F0' in SCCB header */
@@ -956,60 +958,60 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Point to SCCB data area following SCCB header */
         evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
 
-        if( HDC(debug_sclp_event_data, evd_hdr, sccb, regs) )
+        if( HDC3(debug_sclp_event_data, evd_hdr, sccb, regs) )
             break;
 
         /* Set response code X'60F0' if no outstanding events */
         event_msglen = strlen(servc_scpcmdstr);
         if (event_msglen == 0)
         {
-        if(servc_signal_quiesce_pending)
-        {
-            sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
-            evd_len = sizeof(SCCB_EVD_HDR) + sizeof(SCCB_SGQ_BK);
+            if(servc_signal_quiesce_pending)
+            {
+                sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
+                evd_len = sizeof(SCCB_EVD_HDR) + sizeof(SCCB_SGQ_BK);
 
-                    /* Set response code X'75F0' if SCCB length exceeded */
-                    if ((evd_len + sizeof(SCCB_HEADER)) > sccblen)
-                    {
-                        sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
-                        sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
-                        break;
-                    }
-
-                    /* Zero all fields */
-                    memset (evd_hdr, 0, evd_len);
-
-                    /* Update SCCB length field if variable request */
-                    if (sccb->type & SCCB_TYPE_VARIABLE)
-                    {
-                        /* Set new SCCB length */
-                        sccblen = evd_len + sizeof(SCCB_HEADER);
-                        STORE_HW(sccb->length, sccblen);
-                        sccb->type &= ~SCCB_TYPE_VARIABLE;
-                    }
-
-                    /* Set length in event header */
-                    STORE_HW(evd_hdr->totlen, evd_len);
-
-                    /* Set type in event header */
-                    evd_hdr->type = SCCB_EVD_TYPE_SIGQ;
-
-            STORE_HW(sgq_bk->count, servc_signal_quiesce_count);
-            sgq_bk->unit = servc_signal_quiesce_unit;
-
-            servc_signal_quiesce_pending = 0;
-
-                    /* Set response code X'0020' in SCCB header */
-                    sccb->reas = SCCB_REAS_NONE;
-                    sccb->resp = SCCB_RESP_COMPLETE;
-
+                /* Set response code X'75F0' if SCCB length exceeded */
+                if ((evd_len + sizeof(SCCB_HEADER)) > sccblen)
+                {
+                    sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
+                    sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
                     break;
+                }
+
+                /* Zero all fields */
+                memset (evd_hdr, 0, evd_len);
+
+                /* Update SCCB length field if variable request */
+                if (sccb->type & SCCB_TYPE_VARIABLE)
+                {
+                    /* Set new SCCB length */
+                    sccblen = evd_len + sizeof(SCCB_HEADER);
+                    STORE_HW(sccb->length, sccblen);
+                    sccb->type &= ~SCCB_TYPE_VARIABLE;
+                }
+
+                /* Set length in event header */
+                STORE_HW(evd_hdr->totlen, evd_len);
+
+                /* Set type in event header */
+                evd_hdr->type = SCCB_EVD_TYPE_SIGQ;
+
+                STORE_HW(sgq_bk->count, servc_signal_quiesce_count);
+                sgq_bk->unit = servc_signal_quiesce_unit;
+
+                servc_signal_quiesce_pending = 0;
+
+                /* Set response code X'0020' in SCCB header */
+                sccb->reas = SCCB_REAS_NONE;
+                sccb->resp = SCCB_RESP_COMPLETE;
+
+                break;
             }
-        else
+            else
             {
                 sccb->reas = SCCB_REAS_NO_EVENTS;
                 sccb->resp = SCCB_RESP_NO_EVENTS;
-        }
+            }
             break;
         }
 
@@ -1308,7 +1310,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
     default:
 
-        if( HDC(debug_sclp_unknown_command, sclp_command, sccb, regs) )
+        if( HDC3(debug_sclp_unknown_command, sclp_command, sccb, regs) )
             break;
 
         /* Set response code X'01F0' for invalid SCLP command */

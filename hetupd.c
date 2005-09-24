@@ -11,19 +11,11 @@
 || ----------------------------------------------------------------------------
 */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "hstdinc.h"
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stdlib.h>
-#include <limits.h>
-
+#include "hercules.h"
 #include "hetlib.h"
 #include "sllib.h"
-#include "hercules.h"
 #include "herc_getopt.h"
 
 /*
@@ -41,13 +33,8 @@ static int dorename     = FALSE;
 static HETB *s_hetb     = NULL;
 static HETB *d_hetb     = NULL;
 #ifdef EXTERNALGUI
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-#if 0
-int extgui = 0;
-#endif
 /* Previous reported file position */
-static long prevpos = 0;
+static OFF_T prevpos = 0;
 /* Report progress every this many bytes */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
 #endif /*EXTERNALGUI*/
@@ -135,11 +122,11 @@ copytape( void )
         if( extgui )
         {
             /* Report progress every nnnK */
-            long curpos = ftell( s_hetb->fd );
+            OFF_T curpos = FTELL( s_hetb->fd );
             if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
             {
                 prevpos = curpos;
-                fprintf( stderr, "IPOS=%ld\n", curpos );
+                fprintf( stderr, "IPOS=%lld\n", (U64)curpos );
             }
         }
 #endif /*EXTERNALGUI*/
@@ -272,6 +259,8 @@ main( int argc, char *argv[] )
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 

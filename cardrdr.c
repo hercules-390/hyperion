@@ -6,6 +6,7 @@
 /* card reader devices.                                              */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
 #include "hercules.h"
 
 #include "devtype.h"
@@ -13,7 +14,7 @@
 #include "sockdev.h"
 
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
+#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
  SYSBLK *psysblk;
  #define sysblk (*psysblk)
 #endif
@@ -337,7 +338,10 @@ static int cardrdr_close_device ( DEVBLK *dev )
 {
     /* Close the device file */
 
-    if (dev->fh && fclose(dev->fh) != 0)
+    if (0
+        || (  dev->bs && close_socket( dev->fd ) < 0 )
+        || ( !dev->bs && dev->fh && fclose(dev->fh) != 0 )
+    )
     {
         logmsg (_("HHCRD011E Close error on file \"%s\": %s\n"),
             dev->filename, strerror(errno));
@@ -383,7 +387,7 @@ static int clear_cardrdr ( DEVBLK *dev )
         dev->multifile = 0;
         dev->ascii = 0;
         dev->ebcdic = 0;
-//        dev->rdreof = 0;
+//      dev->rdreof = 0;
         dev->trunc = 0;
         dev->autopad = 0;
     }
@@ -401,6 +405,7 @@ int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
 int     len;                            /* Length of data            */
 BYTE    buf[160];                       /* Auto-detection buffer     */
+BYTE    pathname[MAX_PATH];             /* file path in host format  */
 
     *unitstat = 0;
 
@@ -423,50 +428,6 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
             return -1;
         }
 
-        if (!dev->fh)
-        {
-            /*  GNU 'C' Library documentation for "fdopen":
-
-                  "The opentype argument is interpreted in the same
-                   way as for the fopen function (see section Opening
-                   Streams), except that the 'b' option is not permitted;
-                   this is because GNU makes no distinction between text
-                   and binary files. [...] You must make sure that the
-                   opentype argument matches the actual mode of the open
-                   file descriptor."
-
-                GNU 'C' Library documentation for "fopen":
-
-                  "The character 'b' in opentype has a standard meaning;
-                   it requests a binary stream rather than a text stream.
-                   But this makes no difference in POSIX systems (including
-                   the GNU system). If both `+' and 'b' are specified,
-                   they can appear in either order. See section Text and
-                   Binary Streams."
-
-                GNU 'C' Library documentation for "Text and Binary Streams":
-
-                  "When you open a stream, you can specify either a text
-                   stream or a binary stream. You indicate that you want
-                   a binary stream by specifying the 'b' modifier in the
-                   opentype argument to fopen; see section Opening Streams.
-                   Without this option, fopen opens the file as a text stream."
-
-                Note that even though it clearly states (for fdopen) that the
-                'b' option "is NOT permitted", we are assuming such is not true
-                since it accepts it (but simply ignores it) for fopen. Further-
-                more, since Windows (Cygwin?) DOES make a distinction between
-                binary and text files, we should specify the 'b' option in our
-                call to fdopen. (It has already been verified that this is safe
-                to do on Linux systems, so to play it safe (i.e. to prevent any
-                potential problems on Windows systems), we always specify 'b'.)
-            */
-
-            dev->fh = fdopen(dev->fd, "rb");
-        }
-
-        ASSERT(dev->fd != -1 && dev->fh);
-
         return 0;
     }
 
@@ -485,7 +446,8 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     }
 
     /* Open the device file */
-    rc = open (dev->filename, O_RDONLY | O_BINARY);
+    hostpath(pathname, dev->filename, sizeof(pathname));
+    rc = open (pathname, O_RDONLY | O_BINARY);
     if (rc < 0)
     {
         /* Handle open failure */
@@ -500,9 +462,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
 
     /* Save the file descriptor in the device block */
     dev->fd = rc;
-    dev->fh = fdopen(dev->fd, "rb");    /* NOTE: see comments in
-                                           function "open_cardrdr"
-                                           regarding fdopen. */
+    dev->fh = fdopen(dev->fd, "rb");
 
     /* If neither EBCDIC nor ASCII was specified, attempt to
        detect the format by inspecting the first 160 bytes */
@@ -575,39 +535,44 @@ static int read_ebcdic ( DEVBLK *dev, BYTE *unitstat )
 int     rc;                             /* Return code               */
 
     /* Read 80 bytes of card image data into the device buffer */
-    rc = fread(dev->buf, 1, CARD_SIZE, dev->fh);
+    if (dev->bs)
+        rc = read_socket( dev->fd, dev->buf, CARD_SIZE );
+    else
+        rc = fread(dev->buf, 1, CARD_SIZE, dev->fh);
 
     if ((rc > 0) && (rc < CARD_SIZE) && dev->autopad)
     {
         memset(&dev->buf[rc], 0, CARD_SIZE - rc);
         rc = CARD_SIZE;
     }
-    else if (feof(dev->fh)) /* End of file */
+    else if /* Check for End of file */
+    (0
+        || ( dev->bs && rc <= 0)
+        || (!dev->bs && feof(dev->fh))
+    )
     {
-
-      /* Return unit exception or intervention required */
-      if (dev->rdreof)
+        /* Return unit exception or intervention required */
+        if (dev->rdreof)
         {
-          *unitstat = CSW_CE | CSW_DE | CSW_UX;
+            *unitstat = CSW_CE | CSW_DE | CSW_UX;
         }
-      else
+        else
         {
-          dev->sense[0] = SENSE_IR;
-          dev->sense[1] = SENSE1_RDR_RAIC; /* Retry when IntReq Cleared */
-          *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        }
-
-      /* Close the file and clear the file name and flags */
-
-      if (clear_cardrdr(dev) != 0)
-        {
-          /* Set unit check with equipment check */
-          dev->sense[0] = SENSE_EC;
-          *unitstat = CSW_CE | CSW_DE | CSW_UC;
-          return -1;
+            dev->sense[0] = SENSE_IR;
+            dev->sense[1] = SENSE1_RDR_RAIC; /* Retry when IntReq Cleared */
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
         }
 
-      return -2;
+        /* Close the file and clear the file name and flags */
+        if (clear_cardrdr(dev) != 0)
+        {
+            /* Set unit check with equipment check */
+            dev->sense[0] = SENSE_EC;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return -1;
+        }
+
+        return -2;
     }
 
     /* Handle read error condition */
@@ -637,7 +602,7 @@ static int read_ascii ( DEVBLK *dev, BYTE *unitstat )
 {
 int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
-BYTE    c;                              /* Input character           */
+BYTE    c = 0;                          /* Input character           */
 
     /* Prefill the card image with EBCDIC blanks */
     memset (dev->buf, HEX40, CARD_SIZE);
@@ -646,8 +611,16 @@ BYTE    c;                              /* Input character           */
     for (i = 0; ; )
     {
         /* Read next byte of card image */
-        rc = getc(dev->fh);
-        c = (BYTE)rc;
+        if (dev->bs)
+        {
+            BYTE b; rc = read_socket( dev->fd, &b, 1 );
+            if (rc <= 0) rc = EOF; else c = b;
+        }
+        else
+        {
+            rc = getc(dev->fh);
+            c = (BYTE)rc;
+        }
 
         /* Handle end-of-file condition */
         if (rc == EOF || c == '\x1A')
@@ -743,7 +716,8 @@ int     num;                            /* Number of bytes to move   */
     UNREFERENCED(ccwseq);
 
     /* Open the device file if necessary */
-    if ((dev->fd < 0 || !dev->fh) && !IS_CCW_SENSE(code))
+    if ( !IS_CCW_SENSE(code) &&
+        (dev->fd < 0 || (!dev->bs && !dev->fh)))
     {
         rc = open_cardrdr (dev, unitstat);
         if (rc) return;
@@ -920,13 +894,13 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 
 
-#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
-#undef sysblk
-HDL_RESOLVER_SECTION;
-{
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  #undef sysblk
+  HDL_RESOLVER_SECTION;
+  {
     HDL_RESOLVE_PTRVAR( psysblk, sysblk );
-}
-END_RESOLVER_SECTION;
+  }
+  END_RESOLVER_SECTION;
 #endif
 
 

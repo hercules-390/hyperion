@@ -16,6 +16,8 @@
 /*      ASN-and-LX-reuse facility - Roger Bowler            July 2004*/
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 
 #include "opcode.h"
@@ -44,7 +46,7 @@ BYTE    format;                         /* B'01010010'               */
 BYTE    fmt2;                           /* B'1100' B'0000'           */
 #define TRACE_F3_BR_FM2 0xC0
 HWORD   resv;
-DWORD   newia64;
+DBLWRD  newia64;
 } TRACE_F3_BR;
 
 typedef struct _TRACE_F1_BSG {
@@ -58,7 +60,7 @@ typedef struct _TRACE_F2_BSG {
 BYTE    format;                         /* B'01000010'               */
 #define TRACE_F2_BSG_FMT 0x42
 BYTE    alet[3];
-DWORD   newia;
+DBLWRD  newia;
 } TRACE_F2_BSG;
 
 typedef struct _TRACE_F1_MS {
@@ -85,7 +87,7 @@ BYTE    format;
 BYTE    fmt2;
 #define TRACE_F3_MS_FM2 0x60
 HWORD   resv;
-DWORD   newia;
+DBLWRD  newia;
 } TRACE_F3_MS;
 
 
@@ -113,7 +115,7 @@ BYTE    format;
 BYTE    fmt2;
 #define TRACE_F3_MSB_FM2 0xF0
 HWORD   resv;
-DWORD   newia;
+DBLWRD  newia;
 } TRACE_F3_MSB;
 
 typedef struct _TRACE_F1_PT {
@@ -140,7 +142,7 @@ BYTE    format;
 BYTE    pswkey;
 #define TRACE_F3_PT_FM2 0x0C
 HWORD   newpasn;
-DWORD   r2;
+DBLWRD  r2;
 } TRACE_F3_PT;
 
 typedef struct _TRACE_F1_SSAR {
@@ -163,9 +165,9 @@ typedef struct _TRACE_F2_TRACE {
 BYTE    format;
 BYTE    extfmt;
 HWORD   tod1631;
-DWORD   tod3279;
+DBLWRD  tod3279;
 FWORD   operand;
-DWORD   regs[16];
+DBLWRD  regs[16];
 } TRACE_F2_TRACE;
 
 typedef struct _TRACE_F1_PR {
@@ -195,7 +197,7 @@ BYTE    pswkey;
 #define TRACE_F3_PR_FM2 0x03
 HWORD   newpasn;
 FWORD   retna;
-DWORD   newia;
+DBLWRD  newia;
 } TRACE_F3_PR;
 
 typedef struct _TRACE_F4_PR {
@@ -225,7 +227,7 @@ BYTE    pswkey;
 #define TRACE_F6_PR_FM2 0x0B
 HWORD   newpasn;
 FWORD   retna;
-DWORD   newia;
+DBLWRD  newia;
 } TRACE_F6_PR;
 
 typedef struct _TRACE_F7_PR {
@@ -234,7 +236,7 @@ BYTE    format;
 BYTE    pswkey;
 #define TRACE_F7_PR_FM2 0x0C
 HWORD   newpasn;
-DWORD   retna;
+DBLWRD  retna;
 FWORD   newia;
 } TRACE_F7_PR;
 
@@ -244,7 +246,7 @@ BYTE    format;
 BYTE    pswkey;
 #define TRACE_F8_PR_FM2 0x0E
 HWORD   newpasn;
-DWORD   retna;
+DBLWRD  retna;
 FWORD   newia;
 } TRACE_F8_PR;
 
@@ -254,7 +256,7 @@ BYTE    format;
 BYTE    pswkey;
 #define TRACE_F9_PR_FM2 0x0F
 HWORD   newpasn;
-DWORD   retna;
+DBLWRD  retna;
 FWORD   newia;
 } TRACE_F9_PR;
 
@@ -271,7 +273,7 @@ BYTE    format;
 #define TRACE_F2_PC_FMT 0x22
 BYTE    pswkey_pcnum_hi;
 HWORD   pcnum_lo;
-DWORD   retna;
+DBLWRD  retna;
 } TRACE_F2_PC;
 
 typedef struct _TRACE_F3_PC {
@@ -287,7 +289,7 @@ BYTE    format;
 #define TRACE_F4_PC_FMT 0x22
 BYTE    pswkey_pcnum_hi;
 HWORD   pcnum_lo;
-DWORD   retna;
+DBLWRD  retna;
 } TRACE_F4_PC;
 
 typedef struct _TRACE_F5_PC {
@@ -316,7 +318,7 @@ BYTE    format;
 BYTE    pswkey;
 #define TRACE_F7_PC_FM2 0x0E 
 HWORD   resv;
-DWORD   retna;
+DBLWRD  retna;
 FWORD   pcnum;
 } TRACE_F7_PC;
 
@@ -341,7 +343,7 @@ HWORD   clk0;
 FWORD   clk16;
 FWORD   clk48;
 FWORD   operand;
-DWORD   reg[16];
+DBLWRD  reg[16];
 } TRACE_F2_TR;
 
 #endif /*!defined(_TRACE_H)*/
@@ -459,7 +461,7 @@ int  size;
         TRACE_F3_BR *tte;
         size = sizeof(TRACE_F3_BR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F3_BR_FMT;
         tte->fmt2 = TRACE_F3_BR_FM2;
         STORE_HW(tte->resv,0);
@@ -472,7 +474,7 @@ int  size;
         TRACE_F2_BR *tte;
         size = sizeof(TRACE_F2_BR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         STORE_FW(tte->newia31,ia | 0x80000000);
     }
     else
@@ -480,7 +482,7 @@ int  size;
         TRACE_F1_BR *tte;
         size = sizeof(TRACE_F1_BR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         STORE_FW(tte->newia24,ia & 0x00FFFFFF);
     }
     
@@ -514,7 +516,7 @@ int  size;
         TRACE_F2_BSG *tte;
         size = sizeof(TRACE_F2_BSG);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F2_BSG_FMT;
         tte->alet[0] = (alet >> 16) & 0xFF; 
         tte->alet[1] = (alet >> 8) & 0xFF; 
@@ -527,7 +529,7 @@ int  size;
         TRACE_F1_BSG *tte;
         size = sizeof(TRACE_F1_BSG);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F1_BSG_FMT;
         tte->alet[0] = ((alet >> 17) & 0x80) | ((alet >> 16) & 0x7F); 
         tte->alet[1] = (alet >> 8) & 0xFF; 
@@ -566,7 +568,7 @@ BYTE nbit = (ssair ? 1 : 0);
         TRACE_F1_SSAR *tte;
         size = sizeof(TRACE_F1_SSAR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F1_SSAR_FMT;
         tte->extfmt = 0 | nbit;
         STORE_HW(tte->newsasn,sasn);
@@ -609,7 +611,7 @@ int  eamode;
             TRACE_F7_PC *tte;
             size = sizeof(TRACE_F7_PC);
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-            tte = (void*)regs->mainstor + raddr;
+            tte = (void*)(regs->mainstor + raddr);
             tte->format = TRACE_F7_PC_FMT;
             tte->pswkey = regs->psw.pkey | TRACE_F7_PC_FM2 | eamode;
             STORE_HW(tte->resv, 0x0000);
@@ -625,7 +627,7 @@ int  eamode;
             TRACE_F6_PC *tte;
             size = sizeof(TRACE_F6_PC);
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-            tte = (void*)regs->mainstor + raddr;
+            tte = (void*)(regs->mainstor + raddr);
             tte->format = TRACE_F6_PC_FMT;
             tte->pswkey = regs->psw.pkey | TRACE_F6_PC_FM2 | eamode;
             STORE_HW(tte->resv, 0x0000);
@@ -640,7 +642,7 @@ int  eamode;
             TRACE_F5_PC *tte;
             size = sizeof(TRACE_F5_PC);
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-            tte = (void*)regs->mainstor + raddr;
+            tte = (void*)(regs->mainstor + raddr);
             tte->format = TRACE_F5_PC_FMT;
             tte->pswkey = regs->psw.pkey | TRACE_F5_PC_FM2 | eamode;
             STORE_HW(tte->resv, 0x0000);
@@ -655,7 +657,7 @@ int  eamode;
             TRACE_F4_PC *tte;
             size = sizeof(TRACE_F4_PC);
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-            tte = (void*)regs->mainstor + raddr;
+            tte = (void*)(regs->mainstor + raddr);
             tte->format = TRACE_F4_PC_FMT;
             tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcea & 0xF0000) >> 16);
             STORE_HW(tte->pcnum_lo, pcea & 0x0FFFF);
@@ -668,7 +670,7 @@ int  eamode;
             TRACE_F3_PC *tte;
             size = sizeof(TRACE_F3_PC);
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-            tte = (void*)regs->mainstor + raddr;
+            tte = (void*)(regs->mainstor + raddr);
             tte->format = TRACE_F3_PC_FMT;
             tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcea & 0xF0000) >> 16);
             STORE_HW(tte->pcnum_lo, pcea & 0x0FFFF);
@@ -683,7 +685,7 @@ int  eamode;
         TRACE_F2_PC *tte;
         size = sizeof(TRACE_F2_PC);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F2_PC_FMT;
         tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcea & 0xF0000) >> 16);
         STORE_HW(tte->pcnum_lo, pcea & 0x0FFFF);
@@ -697,7 +699,7 @@ int  eamode;
         TRACE_F1_PC *tte;
         size = sizeof(TRACE_F1_PC);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F1_PC_FMT;
         tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcea & 0xF0000) >> 16);
         STORE_HW(tte->pcnum_lo, pcea & 0x0FFFF);
@@ -708,6 +710,10 @@ int  eamode;
     
 } /* end function ARCH_DEP(trace_pc) */
 
+#if defined(_MSVC_)
+  /* Workaround for "fatal error C1001: INTERNAL COMPILER ERROR" in MSVC */
+  #pragma optimize("",off)
+#endif /*defined(_MSVC_)*/
 
 #if defined(FEATURE_LINKAGE_STACK)
 /*-------------------------------------------------------------------*/
@@ -736,7 +742,7 @@ int  size;
         TRACE_F1_PR *tte;
         size = sizeof(TRACE_F1_PR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F1_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F1_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
@@ -752,7 +758,7 @@ int  size;
         TRACE_F2_PR *tte;
         size = sizeof(TRACE_F2_PR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F2_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F2_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
@@ -767,7 +773,7 @@ int  size;
         TRACE_F3_PR *tte;
         size = sizeof(TRACE_F3_PR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F3_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F3_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
@@ -781,7 +787,7 @@ int  size;
         TRACE_F4_PR *tte;
         size = sizeof(TRACE_F4_PR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F4_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F4_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
@@ -795,7 +801,7 @@ int  size;
         TRACE_F5_PR *tte;
         size = sizeof(TRACE_F5_PR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F5_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F5_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
@@ -808,7 +814,7 @@ int  size;
         TRACE_F6_PR *tte;
         size = sizeof(TRACE_F6_PR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F6_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F6_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
@@ -821,7 +827,7 @@ int  size;
         TRACE_F7_PR *tte;
         size = sizeof(TRACE_F7_PR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F7_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F7_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
@@ -835,7 +841,7 @@ int  size;
         TRACE_F8_PR *tte;
         size = sizeof(TRACE_F8_PR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F8_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F8_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
@@ -848,7 +854,7 @@ int  size;
         TRACE_F9_PR *tte;
         size = sizeof(TRACE_F9_PR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F9_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F9_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
@@ -862,6 +868,10 @@ int  size;
 } /* end function ARCH_DEP(trace_pr) */
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
 
+#if defined(_MSVC_)
+  /* Workaround for "fatal error C1001: INTERNAL COMPILER ERROR" in MSVC */
+  #pragma optimize("",on)
+#endif /*defined(_MSVC_)*/
 
 /*-------------------------------------------------------------------*/
 /* Form implicit PT/PTI trace entry                                  */
@@ -889,7 +899,7 @@ BYTE nbit = (pti ? 1 : 0);
         TRACE_F3_PT *tte;
         size = sizeof(TRACE_F3_PT);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F3_PT_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F3_PT_FM2 | nbit;
         STORE_HW(tte->newpasn, pasn);
@@ -901,7 +911,7 @@ BYTE nbit = (pti ? 1 : 0);
         TRACE_F2_PT *tte;
         size = sizeof(TRACE_F2_PT);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F2_PT_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F2_PT_FM2 | nbit;
         STORE_HW(tte->newpasn, pasn);
@@ -913,7 +923,7 @@ BYTE nbit = (pti ? 1 : 0);
         TRACE_F1_PT *tte;
         size = sizeof(TRACE_F1_PT);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
         tte->format = TRACE_F1_PT_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F1_PT_FM2 | nbit;
         STORE_HW(tte->newpasn, pasn);
@@ -953,7 +963,7 @@ int  size;
             TRACE_F1_MS *tte;
             size = sizeof(TRACE_F1_MS);
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-            tte = (void*)regs->mainstor + raddr;
+            tte = (void*)(regs->mainstor + raddr);
             tte->format = TRACE_F1_MS_FMT;
             tte->fmt2 = TRACE_F1_MS_FM2;
             STORE_HW(tte->resv, 0);
@@ -965,7 +975,7 @@ int  size;
             TRACE_F2_MS *tte;
             size = sizeof(TRACE_F2_MS);
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-            tte = (void*)regs->mainstor + raddr;
+            tte = (void*)(regs->mainstor + raddr);
             tte->format = TRACE_F2_MS_FMT;
             tte->fmt2 = TRACE_F2_MS_FM2;
             STORE_HW(tte->resv, 0);
@@ -976,7 +986,7 @@ int  size;
             TRACE_F3_MS *tte;
             size = sizeof(TRACE_F3_MS);
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-            tte = (void*)regs->mainstor + raddr;
+            tte = (void*)(regs->mainstor + raddr);
             tte->format = TRACE_F3_MS_FMT;
             tte->fmt2 = TRACE_F3_MS_FM2;
             STORE_HW(tte->resv, 0);
@@ -990,7 +1000,7 @@ int  size;
             TRACE_F1_MSB *tte;
             size = sizeof(TRACE_F1_MSB);
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-            tte = (void*)regs->mainstor + raddr;
+            tte = (void*)(regs->mainstor + raddr);
             tte->format = TRACE_F1_MSB_FMT;
             tte->fmt2 = TRACE_F1_MSB_FM2;
             STORE_HW(tte->resv, 0);
@@ -1002,7 +1012,7 @@ int  size;
             TRACE_F2_MSB *tte;
             size = sizeof(TRACE_F2_MSB);
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-            tte = (void*)regs->mainstor + raddr;
+            tte = (void*)(regs->mainstor + raddr);
             tte->format = TRACE_F2_MSB_FMT;
             tte->fmt2 = TRACE_F2_MSB_FM2;
             STORE_HW(tte->resv, 0);
@@ -1013,7 +1023,7 @@ int  size;
             TRACE_F3_MSB *tte;
             size = sizeof(TRACE_F3_MSB);
             raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-            tte = (void*)regs->mainstor + raddr;
+            tte = (void*)(regs->mainstor + raddr);
             tte->format = TRACE_F3_MSB_FMT;
             tte->fmt2 = TRACE_F3_MSB_FM2;
             STORE_HW(tte->resv, 0);
@@ -1051,7 +1061,7 @@ U64  dreg;
         TRACE_F1_TR *tte;
         size = sizeof(TRACE_F1_TR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
 
         /* Calculate the number of registers to be traced, minus 1 */
         n = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;
@@ -1118,7 +1128,7 @@ U64  dreg;
         TRACE_F2_TR *tte;
         size = sizeof(TRACE_F2_TR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
-        tte = (void*)regs->mainstor + raddr;
+        tte = (void*)(regs->mainstor + raddr);
 
         /* Calculate the number of registers to be traced, minus 1 */
         n = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;

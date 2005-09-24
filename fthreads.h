@@ -8,7 +8,36 @@
 #ifndef _FTHREADS_H_
 #define _FTHREADS_H_
 
-#include <sys/types.h>      // (need struct timespec for fthread_cond_timedwait)
+#include "hercules.h"
+#include "fishhang.h"
+
+#ifndef _FTHREADS_C_
+#ifndef _HUTIL_DLL_
+#define FT_DLL_IMPORT DLL_IMPORT
+#else   /* _HUTIL_DLL_ */
+#define FT_DLL_IMPORT extern
+#endif  /* _HUTIL_DLL_ */
+#else
+#define FT_DLL_IMPORT DLL_EXPORT
+#endif
+
+////////////////////////////////////////////////////////////////////////////////////
+// Just some handy macros to have around...
+
+#define  IsEventSet(h)  (WaitForSingleObject(h,0) == WAIT_OBJECT_0)
+#define  RC(rc)         (errno = rc)
+
+////////////////////////////////////////////////////////////////////////////////////
+// (need struct timespec for fthread_cond_timedwait)
+
+#if !defined(TIMESPEC_IN_SYS_TYPES_H) && !defined(TIMESPEC_IN_TIME_H)
+  // (need to define it ourselves)
+  struct timespec
+  {
+      time_t  tv_sec;     // (seconds)
+      long    tv_nsec;    // (nanoseconds)
+  };
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////
 // fthread typedefs...
@@ -54,6 +83,7 @@ fthread_attr_t;
 ////////////////////////////////////////////////////////////////////////////////////
 // Initialize a "thread attribute"...
 
+FT_DLL_IMPORT
 int  fthread_attr_init
 (
     fthread_attr_t*  pThreadAttr
@@ -62,6 +92,7 @@ int  fthread_attr_init
 ////////////////////////////////////////////////////////////////////////////////////
 // Destroy a "thread attribute"...
 
+FT_DLL_IMPORT
 int  fthread_attr_destroy
 (
     fthread_attr_t*  pThreadAttr
@@ -70,6 +101,7 @@ int  fthread_attr_destroy
 ////////////////////////////////////////////////////////////////////////////////////
 // Set a thread's "detachstate" attribute...
 
+FT_DLL_IMPORT
 int  fthread_attr_setdetachstate
 (
     fthread_attr_t*  pThreadAttr,
@@ -79,6 +111,7 @@ int  fthread_attr_setdetachstate
 ////////////////////////////////////////////////////////////////////////////////////
 // Retrieve a thread's "detachstate" attribute...
 
+FT_DLL_IMPORT
 int  fthread_attr_getdetachstate
 (
     const fthread_attr_t*  pThreadAttr,
@@ -88,6 +121,7 @@ int  fthread_attr_getdetachstate
 ////////////////////////////////////////////////////////////////////////////////////
 // Set a thread's initial stack size...
 
+FT_DLL_IMPORT
 int  fthread_attr_setstacksize
 (
     fthread_attr_t*  pThreadAttr,
@@ -97,6 +131,7 @@ int  fthread_attr_setstacksize
 ////////////////////////////////////////////////////////////////////////////////////
 // Retrieve a thread's initial stack size...
 
+FT_DLL_IMPORT
 int  fthread_attr_getstacksize
 (
     const fthread_attr_t*  pThreadAttr,
@@ -106,15 +141,21 @@ int  fthread_attr_getstacksize
 ////////////////////////////////////////////////////////////////////////////////////
 // Join a thread (i.e. wait for a thread's termination)...
 
+FT_DLL_IMPORT
 int  fthread_join
 (
-    fthread_t  dwThreadID,
-    void**     pExitVal
+#ifdef FISH_HANG
+    const char*     pszFile,
+    const int       nLine,
+#endif
+    fthread_t       dwThreadID,
+    void**          pExitVal
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Detach a thread (i.e. ignore a thread's termination)...
 
+FT_DLL_IMPORT
 int  fthread_detach
 (
     fthread_t  dwThreadID
@@ -123,6 +164,7 @@ int  fthread_detach
 ////////////////////////////////////////////////////////////////////////////////////
 // Create a new thread...
 
+FT_DLL_IMPORT
 int  fthread_create
 (
 #ifdef FISH_HANG
@@ -138,6 +180,7 @@ int  fthread_create
 ////////////////////////////////////////////////////////////////////////////////////
 // Exit from a thread...
 
+FT_DLL_IMPORT
 void  fthread_exit
 (
     void*  ExitVal
@@ -146,6 +189,7 @@ void  fthread_exit
 ////////////////////////////////////////////////////////////////////////////////////
 // Return thread-id...
 
+FT_DLL_IMPORT
 fthread_t  fthread_self
 (
 );
@@ -153,6 +197,7 @@ fthread_t  fthread_self
 ////////////////////////////////////////////////////////////////////////////////////
 // Compare thread-ids...
 
+FT_DLL_IMPORT
 int  fthread_equal
 (
     fthread_t  pdwThreadID_1,
@@ -162,6 +207,7 @@ int  fthread_equal
 ////////////////////////////////////////////////////////////////////////////////////
 // (thread signalling not [currently] supported (yet); always returns ENOTSUP...)
 
+FT_DLL_IMPORT
 int  fthread_kill   // FIXME: TODO:
 (
     int  dummy1,
@@ -171,6 +217,7 @@ int  fthread_kill   // FIXME: TODO:
 ////////////////////////////////////////////////////////////////////////////////////
 // Initialize a "mutex"...
 
+FT_DLL_IMPORT
 int  fthread_mutex_init
 (
 #ifdef FISH_HANG
@@ -184,6 +231,7 @@ int  fthread_mutex_init
 ////////////////////////////////////////////////////////////////////////////////////
 // Destroy a "mutex"...
 
+FT_DLL_IMPORT
 int  fthread_mutex_destroy
 (
 #ifdef FISH_HANG
@@ -196,6 +244,7 @@ int  fthread_mutex_destroy
 ////////////////////////////////////////////////////////////////////////////////////
 // Lock a "mutex"...
 
+FT_DLL_IMPORT
 int  fthread_mutex_lock
 (
 #ifdef FISH_HANG
@@ -208,6 +257,7 @@ int  fthread_mutex_lock
 ////////////////////////////////////////////////////////////////////////////////////
 // Try to lock a "mutex"...
 
+FT_DLL_IMPORT
 int  fthread_mutex_trylock
 (
 #ifdef FISH_HANG
@@ -220,6 +270,7 @@ int  fthread_mutex_trylock
 ////////////////////////////////////////////////////////////////////////////////////
 // Unlock a "mutex"...
 
+FT_DLL_IMPORT
 int  fthread_mutex_unlock
 (
 #ifdef FISH_HANG
@@ -232,6 +283,7 @@ int  fthread_mutex_unlock
 ////////////////////////////////////////////////////////////////////////////////////
 // Initialize a "condition"...
 
+FT_DLL_IMPORT
 int  fthread_cond_init
 (
 #ifdef FISH_HANG
@@ -244,6 +296,7 @@ int  fthread_cond_init
 ////////////////////////////////////////////////////////////////////////////////////
 // Destroy a "condition"...
 
+FT_DLL_IMPORT
 int  fthread_cond_destroy
 (
 #ifdef FISH_HANG
@@ -256,6 +309,7 @@ int  fthread_cond_destroy
 ////////////////////////////////////////////////////////////////////////////////////
 // 'Signal' a "condition"...   (causes ONE waiting thread to be released)
 
+FT_DLL_IMPORT
 int  fthread_cond_signal
 (
 #ifdef FISH_HANG
@@ -268,6 +322,7 @@ int  fthread_cond_signal
 ////////////////////////////////////////////////////////////////////////////////////
 // 'Broadcast' a "condition"...  (causes ALL waiting threads to be released)
 
+FT_DLL_IMPORT
 int  fthread_cond_broadcast
 (
 #ifdef FISH_HANG
@@ -280,6 +335,7 @@ int  fthread_cond_broadcast
 ////////////////////////////////////////////////////////////////////////////////////
 // Wait for a "condition" to occur...
 
+FT_DLL_IMPORT
 int  fthread_cond_wait
 (
 #ifdef FISH_HANG
@@ -293,6 +349,7 @@ int  fthread_cond_wait
 ////////////////////////////////////////////////////////////////////////////////////
 // Wait (but not forever) for a "condition" to occur...
 
+FT_DLL_IMPORT
 int  fthread_cond_timedwait
 (
 #ifdef FISH_HANG
@@ -348,6 +405,7 @@ int  fthread_cond_timedwait
 ////////////////////////////////////////////////////////////////////////////////////
 // Initialize a "mutex" attribute...
 
+FT_DLL_IMPORT
 int  fthread_mutexattr_init
 (
     fthread_mutexattr_t*  pFT_MUTEX_ATTR
@@ -356,6 +414,7 @@ int  fthread_mutexattr_init
 ////////////////////////////////////////////////////////////////////////////////////
 // Destroy a "mutex" attribute...
 
+FT_DLL_IMPORT
 int  fthread_mutexattr_destroy
 (
     fthread_mutexattr_t*  pFT_MUTEX_ATTR
@@ -364,6 +423,7 @@ int  fthread_mutexattr_destroy
 ////////////////////////////////////////////////////////////////////////////////////
 // Retrieve "mutex" attribute type...
 
+FT_DLL_IMPORT
 int fthread_mutexattr_gettype
 (
     const fthread_mutexattr_t*  pFT_MUTEX_ATTR,
@@ -373,6 +433,7 @@ int fthread_mutexattr_gettype
 ////////////////////////////////////////////////////////////////////////////////////
 // Set "mutex" attribute type...
 
+FT_DLL_IMPORT
 int fthread_mutexattr_settype
 (
     fthread_mutexattr_t*  pFT_MUTEX_ATTR,

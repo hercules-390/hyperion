@@ -5,6 +5,8 @@
 /*       file types (ckd/cckd or fba/cfba) may not be mixed.         */
 /*-------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 #include "dasdblks.h"
 #include "devtype.h"
@@ -16,14 +18,6 @@
 int syntax (char *);
 void status (int, int);
 int nulltrk(BYTE *, int, int, int);
-
-#ifdef EXTERNALGUI
-#if 0
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif
-#endif /*EXTERNALGUI*/
 
 #define CKD      0x01
 #define CCKD     0x02
@@ -61,10 +55,11 @@ BYTE            unitstat;               /* Device unit status        */
 char            msgbuf[512];            /* Message buffer            */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
+BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, LOCALEDIR);
+    bindtextdomain(PACKAGE, HERC_LOCALEDIR);
     textdomain(PACKAGE);
 #endif
 
@@ -73,11 +68,14 @@ int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 
     /* Figure out processing based on the program name */
-    pgm = strrchr (argv[0], '/');
+    hostpath(pathname, argv[0], sizeof(pathname));
+    pgm = strrchr (pathname, '/');
     if (pgm) pgm++;
     else pgm = argv[0];
     strtok (pgm, ".");
@@ -189,7 +187,8 @@ int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
     if (in == 0)
     {
         BYTE buf[8];
-        fd = open (ifile, O_RDONLY|O_BINARY);
+        hostpath(pathname, ifile, sizeof(pathname));
+        fd = open (pathname, O_RDONLY|O_BINARY);
         if (fd < 0)
         {
             fprintf (stderr, _("HHCDC001E %s: %s open error: %s\n"),
@@ -342,7 +341,7 @@ int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
         fprintf (stderr, "TRKS=%d\n", n);
     else
 #endif /*EXTERNALGUI*/
-    if (!quiet) printf (_("  %3d%% %7d of %d"), 0, 0, n);
+    if (!quiet) printf ("  %3d%% %7d of %d", 0, 0, n);
     for (i = 0; i < n; i++)
     {
         /* Read a track or block */
@@ -433,7 +432,7 @@ U32             cyl;                    /* Cylinder number           */
 U32             head;                   /* Head number               */
 BYTE            r;                      /* Record number             */
 BYTE           *pos;                    /* -> Next position in buffer*/
-static BYTE     eighthexFF[]={0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+    static BYTE eighthexFF[]={0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
     /* cylinder and head calculations */
     cyl = trk / heads;
@@ -554,10 +553,12 @@ int syntax (char *pgm)
             "     -h                display this help and quit\n"
             "     -q                quiet mode, don't display status\n"
             "     -r                replace the output file if it exists\n"
-            "     -lfs              create single large output file\n"
+            "%s"
             "     -cyls  n          size of output file\n"
             "     -a                output file will have alt cyls\n"
-            ));
+            ),
+            (sizeof(OFF_T) > 4) ? _( "     -lfs              create single large output file\n" ) : ( "" )
+            );
     else if (strcmp(pgm, "fba2cfba") == 0)
         snprintf(usage,8192,_(
             "usage:  fba2cfba [-options] ifile ofile\n"
@@ -608,9 +609,11 @@ int syntax (char *pgm)
             "     -h                display this help and quit\n"
             "     -q                quiet mode, don't display status\n"
             "     -r                replace the output file if it exists\n"
-            "     -lfs              create single large output file\n"
+            "%s"
             "     -blks  n          size of output file\n"
-            ));
+            ),
+            (sizeof(OFF_T) > 4) ? _( "     -lfs              create single large output file\n" ) : ( "" )
+            );
     else
         snprintf(usage,8192,_(
             "usage:  %s [-options] ifile [sf=sfile] ofile\n"
@@ -632,7 +635,7 @@ int syntax (char *pgm)
             "     -blks  n          size of output fba file\n"
             "     -cyls  n          size of output ckd file\n"
             "     -a                output ckd file will have alt cyls\n"
-            "     -lfs              output ckd file will be a single file\n"
+            "%s"
             "                       even if it exceeds 2G in size\n"
             "     -o     type       output file type (CKD, CCKD, FBA, CFBA)\n"
             ),
@@ -651,6 +654,7 @@ int syntax (char *pgm)
 #else
             ""
 #endif
+            ,(sizeof(OFF_T) > 4) ? _( "     -lfs              output ckd file will be a single file\n" ) : ( "" )
             );
     printf (usage);
     return -1;
