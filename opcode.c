@@ -757,7 +757,7 @@
 #endif /*!defined(FEATURE_EXTENDED_IMMEDIATE)*/                 /*@Z9*/
 
 
-#if !defined(FEATURE_LOAD_ADDITIONAL)                           /*@Z9*/
+#if !defined(FEATURE_EXTENDED_IMMEDIATE)                        /*@Z9*/
  UNDEF_INST(load_and_test)                                      /*@Z9*/
  UNDEF_INST(load_and_test_long)                                 /*@Z9*/
  UNDEF_INST(load_byte_register)                                 /*@Z9*/
@@ -771,7 +771,7 @@
  UNDEF_INST(load_logical_halfword_register)                     /*@Z9*/
  UNDEF_INST(load_logical_long_halfword_register)                /*@Z9*/
  UNDEF_INST(find_leftmost_one_long_register)                    /*@Z9*/
-#endif /*!defined(FEATURE_LOAD_ADDITIONAL)*/                    /*@Z9*/
+#endif /*!defined(FEATURE_EXTENDED_IMMEDIATE)*/                 /*@Z9*/
 
 
 #if !defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)                /*@Z9*/

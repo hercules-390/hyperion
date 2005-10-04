@@ -7192,7 +7192,7 @@ U32     i2;                             /* 32-bit operand value      */
 #endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/                  /*@Z9*/
 
  
-#if defined(FEATURE_LOAD_ADDITIONAL)                            /*@Z9*/
+#if defined(FEATURE_EXTENDED_IMMEDIATE)                         /*@Z9*/
 /*-------------------------------------------------------------------*/
 /* E312 LT    - Load and Test                                  [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7417,7 +7417,7 @@ U32     n;                              /* Position of leftmost one  */
     }
 
 } /* end DEF_INST(find_leftmost_one_long_register) */
-#endif /*defined(FEATURE_LOAD_ADDITIONAL)*/                     /*@Z9*/
+#endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/                  /*@Z9*/
 
 
 #if !defined(_GEN_ARCH)
