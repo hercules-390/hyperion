@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+04 Oct 2005 rename FEATURE_CPACF_ENHANCEMENTS as FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 - Roger Bowler
 22 Sep 2005 tape/27: *proper* VC7 Large File Support - Fish 
 21 Sep 2005 Init cckd->l2active to -1 instead of 0 - Greg
 21 Sep 2005 tweak concpy to avoid double byteswap - Fish
