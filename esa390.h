@@ -953,7 +953,8 @@ typedef struct _ORB {
 
 /* Bit definitions for ORB flag byte 7 */
 #define ORB7_L          0x80            /* Suppress incorrect length */
-#define ORB7_RESV       0x7E            /* Reserved bits - must be 0 */
+#define ORB7_D          0x40            /* MIDAW control          @MW*/
+#define ORB7_RESV       0x3E            /* Reserved - must be 0   @MW*/
 #define ORB7_X          0x01            /* ORB extension control     */
 
 /* Path management control word structure definition */

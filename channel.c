@@ -1768,9 +1768,9 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
             /* Increment to next MIDAW address */
             midawptr += 16;
 
-        } /* end while) */
+        } /* end while */
 
-    } // end if(CCW_FLAGS_MIDAW)                                /*@MW*/
+    } /* end if(CCW_FLAGS_MIDAW) */                             /*@MW*/
     else                                                        /*@MW*/
 #endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
     /* Move data when indirect data addressing is used */
@@ -2616,9 +2616,17 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 #endif /*!defined(FEATURE_MIDAW)*/                              /*@MW*/
 
 #if defined(FEATURE_MIDAW)                                      /*@MW*/
-        /* Channel program check if MIDAW with CD,SKIP,IDA */   /*@MW*/
-        if ((flags & CCW_FLAGS_MIDAW) && (flags &               /*@MW*/
-            (CCW_FLAGS_CD | CCW_FLAGS_SKIP | CCW_FLAGS_IDA)))   /*@MW*/
+        /* Channel program check if MIDAW not enabled in ORB */ /*@MW*/
+        if ((flags & CCW_FLAGS_MIDAW) &&                        /*@MW*/
+            (dev->orb.flag7 & ORB7_D) == 0)                     /*@MW*/
+        {                                                       /*@MW*/
+            chanstat = CSW_PROGC;                               /*@MW*/
+            break;                                              /*@MW*/
+        }                                                       /*@MW*/
+
+        /* Channel program check if MIDAW with SKIP or IDA */   /*@MW*/
+        if ((flags & CCW_FLAGS_MIDAW) &&                        /*@MW*/
+            (flags & (CCW_FLAGS_SKIP | CCW_FLAGS_IDA)))         /*@MW*/
         {                                                       /*@MW*/
             chanstat = CSW_PROGC;                               /*@MW*/
             break;                                              /*@MW*/

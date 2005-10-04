@@ -480,6 +480,12 @@ ORB     orb;                            /* Operation request block   */
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 #endif /*!defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)*/
 
+#if !defined(FEATURE_MIDAW)                                     /*@MW*/
+    /* Program check if modified indirect data addressing requested */
+    if (orb.flag7 & ORB7_D)                                     
+        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+#endif /*!defined(FEATURE_MIDAW)*/                              /*@MW*/
+
     /* Program check if reg 1 bits 0-15 not X'0001' */
     if ( regs->GR_LHH(1) != 0x0001 )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
