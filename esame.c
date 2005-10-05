@@ -7394,26 +7394,38 @@ DEF_INST(find_leftmost_one_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 U64     op;                             /* R2 contents               */
-U32     n;                              /* Position of leftmost one  */
+U64     mask;                           /* Bit mask for leftmost one */
+int     n;                              /* Position of leftmost one  */
 
     RRE(inst, regs, r1, r2);
+
+    ODD_CHECK(r1, regs);
 
     /* Load contents of second register */
     op = regs->GR_G(r2);
 
-    /* If R2 contents is all zero, return cc=0 */
+    /* If R2 contents is all zero, set R1 register to 64,
+       set R1+1 register to zero, and return cond code 0 */                                                                                                                                                                                                   
     if (op == 0)
     {
+        regs->GR_G(r1) = 64;
+        regs->GR_G(r1+1) = 0;
         regs->psw.cc = 0;
     }
     else
     {
         /* Find leftmost one */
-        for (n=0; n < 32 && (S64)op >= 0; n++, op <<= 1);
+        for (mask = 0x8000000000000000ULL, n=0;
+            n < 64 && (op & mask) == 0; n++, mask >>= 1);
 
-        /* Load leftmost one position into R1 register and set cc=1 */
+        /* Load leftmost one position into R1 register */
         regs->GR_G(r1) = n;
-        regs->psw.cc = 1;
+
+        /* Copy original R2 to R1+1 and clear leftmost one */
+        regs->GR_G(r1+1) = op & (~mask);
+
+        /* Return with condition code 2 */
+        regs->psw.cc = 2;
     }
 
 } /* end DEF_INST(find_leftmost_one_long_register) */
