@@ -1,7 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
-04 Oct 2005 MIDAW corrections - Roger Bowler
+05 Oct 2005 MIDAW corrections - Roger Bowler
 04 Oct 2005 merge FEATURE_LOAD_ADDITIONAL into FEATURE_EXTENDED_IMMEDIATE - Roger Bowler
 04 Oct 2005 rename FEATURE_LOAD_PAGE_TABLE_ENTRY_ADDRESS as FEATURE_DAT_ENHANCEMENT_FACILITY_2 - Roger Bowler
 04 Oct 2005 rename FEATURE_BRANCH_DETECTION as FEATURE_PER3 - Roger Bowler

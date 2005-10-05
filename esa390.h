@@ -1160,8 +1160,7 @@ typedef struct _SCSW {
 /* MIDAW flags (bits 40-47)                                       @MW*/
 #define MIDAW_LAST      0x80            /* Last MIDAW flag        @MW*/
 #define MIDAW_SKIP      0x40            /* Skip flag              @MW*/
-#define MIDAW_PCI       0x20            /* Program controlled     @MW
-                                           interrupt flag         @MW*/
+#define MIDAW_DTI       0x20            /* Data transfer interrupt@MW*/
 #define MIDAW_RESV      0x1F            /* Reserved bits          @MW*/
 
 /* Device independent bit settings for sense byte 0 */

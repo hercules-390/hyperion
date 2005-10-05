@@ -1302,7 +1302,6 @@ int     current_priority;               /* Current thread priority   */
 /* RAISE A PCI INTERRUPT                                             */
 /* This function is called during execution of a channel program     */
 /* whenever a CCW is fetched which has the CCW_FLAGS_PCI flag set    */
-/* or when a MIDAW is fetched which has the MIDAW_PCI flag set    @MW*/
 /*-------------------------------------------------------------------*/
 /* Input                                                             */
 /*      dev     -> Device control block                              */
@@ -1603,7 +1602,7 @@ U16     maxlen;                         /* Maximum allowable length  */
     STORAGE_KEY(midawadr, dev) |= STORKEY_REF;
 
     /* Fetch MIDAW from main storage (MIDAW is quadword
-       aligned and so cannot cross a page boundary */
+       aligned and so cannot cross a page boundary) */
     FETCH_DW(mword1, dev->mainstor + midawadr);        
     FETCH_DW(mword2, dev->mainstor + midawadr + 8);        
 
@@ -1619,6 +1618,20 @@ U16     maxlen;                         /* Maximum allowable length  */
     mcount = mword1 & 0xFFFF;
     mdaddr = (RADR)mword2;                                  
 
+    /* Channel program check if data transfer interrupt flag is set */
+    if (mflags & MIDAW_DTI)
+    {
+        *chanstat = CSW_PROGC;
+        return;
+    }
+
+    /* Channel program check if MIDAW count is zero */
+    if (mcount == 0)
+    {
+        *chanstat = CSW_PROGC;
+        return;
+    }
+
     /* Channel program check if MIDAW data
        location is outside main storage */
     if ( CHADDRCHK(mdaddr, dev) )
@@ -1627,12 +1640,13 @@ U16     maxlen;                         /* Maximum allowable length  */
         return;
     }
 
-    /* Channel program check if MIDAW data area crosses page boundary */
+    /* Channel program check if skipping not in effect
+       and the MIDAW data area crosses a page boundary */
     maxlen = (IS_CCW_RDBACK(code)) ?
                 mdaddr - (mdaddr & PAGEFRAME_PAGEMASK) + 1 :
                 (mdaddr | PAGEFRAME_BYTEMASK) - mdaddr + 1 ;
 
-    if (mcount > maxlen)
+    if ((mflags & MIDAW_SKIP) == 0 && mcount > maxlen)
     {
         *chanstat = CSW_PROGC;
         return;
@@ -1704,13 +1718,19 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
             /* Exit if fetch_midaw detected channel program check */
             if (*chanstat != 0) return;
 
-            /* Reduce length if it exceeds remaining CCW count */
-            if (midawlen > midawrem) midawlen = midawrem;
+            /* Channel program check if MIDAW length 
+               exceeds the remaining CCW count */
+            if (midawlen > midawrem) 
+            {
+                *chanstat = CSW_PROGC;
+                return;
+            }
 
             /* Perform data movement unless SKIP flag is set in MIDAW */
             if ((midawflg & MIDAW_SKIP) ==0)
             {
-                /* Note: MIDAW data area cannot cross a page boundary */
+                /* Note: MIDAW data area cannot cross a page boundary
+                   The fetch_midaw function enforces this restriction */
 
                 /* Channel protection check if MIDAW data location is
                    fetch protected, or if location is store protected
@@ -1762,13 +1782,21 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
                     dev->devnum, area);                  
             }
 
-            /* Decrement remaining count, increment buffer pointer */
+            /* Decrement remaining count */
             midawrem -= midawlen;
 
             /* Increment to next MIDAW address */
             midawptr += 16;
 
         } /* end while */
+
+        /* Channel program check if sum of MIDAW lengths
+           did not exhaust the CCW count */
+        if (midawrem > 0)
+        {
+            *chanstat = CSW_PROGC;
+            return;
+        }
 
     } /* end if(CCW_FLAGS_MIDAW) */                             /*@MW*/
     else                                                        /*@MW*/
