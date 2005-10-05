@@ -8,11 +8,7 @@ ACLOCAL_AMFLAGS  = -I m4
 
 lns=@LN_S@
 
-if HAVE_GCRYPT
 SUBDIRS = m4 po util html man . crypto
-else
-SUBDIRS = m4 po util html man
-endif
 
 LDADD = @LTLIBINTL@ @LIBS@
 

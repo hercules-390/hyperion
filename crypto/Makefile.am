@@ -5,7 +5,7 @@
 
 lns=@LN_S@
 
-LDADD = @LTLIBINTL@ @LTLIBICONV@ @LIBS@ ../libhercs.la ../libherc.la
+LDADD = @LTLIBINTL@ @LIBS@ ../libhercs.la ../libherc.la
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)\intl
 
