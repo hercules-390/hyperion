@@ -2956,7 +2956,7 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9A7*/ GENx___x___x___ ,
  /*B9A8*/ GENx___x___x___ ,
  /*B9A9*/ GENx___x___x___ ,
- /*B9AA*/ GENx___x___x900 (load_page_table_entry_address,RRE,"LPTEA"),             /*@Z9*/
+ /*B9AA*/ GENx___x___x900 (load_page_table_entry_address,RRF_RM,"LPTEA"),          /*@Z9*/
  /*B9AB*/ GENx___x___x___ ,
  /*B9AC*/ GENx___x___x___ ,
  /*B9AD*/ GENx___x___x___ ,
