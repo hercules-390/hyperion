@@ -29,7 +29,7 @@
 //#define FEATURE_ETF3_ENHANCEMENT                                 /*@Z9*/
 #define FEATURE_EXPANDED_STORAGE
 #define FEATURE_EXPEDITED_SIE_SUBSET
-//#define FEATURE_EXTENDED_IMMEDIATE                               /*@Z9*/
+#define FEATURE_EXTENDED_IMMEDIATE                               /*@Z9*/
 #define FEATURE_EXTENDED_STORAGE_KEYS
 #define FEATURE_EXTENDED_TOD_CLOCK
 #define FEATURE_EXTENDED_TRANSLATION
