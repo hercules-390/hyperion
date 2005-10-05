@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+05 Oct 2005 Fix segfault in HSCH if device is startpending - Greg
 05 Oct 2005 Activate FEATURE_EXTENDED_IMMEDIATE - Roger Bowler
 05 Oct 2005 Corrections to FLOGR instruction - Roger Bowler
 05 Oct 2005 MIDAW corrections - Roger Bowler

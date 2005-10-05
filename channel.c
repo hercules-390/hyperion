@@ -916,6 +916,26 @@ int pending = 0;
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
             signal_condition (&dev->resumecond);
         }
+
+#if !defined(OPTION_FISHIO)
+        /* Remove the device from the ioq if startpending */
+        obtain_lock(&sysblk.ioqlock);
+        if(dev->startpending)
+        {
+            if(sysblk.ioq == dev)
+                sysblk.ioq = dev->nextioq;
+            else
+            {
+             DEVBLK *tmp;
+                for(tmp = sysblk.ioq; tmp->nextioq != NULL && tmp->nextioq != dev; tmp = tmp->nextioq);
+                if(tmp->nextioq == dev)
+                    tmp->nextioq = tmp->nextioq->nextioq;
+            }
+        }
+        dev->startpending = 0;
+        release_lock(&sysblk.ioqlock);
+#endif /*!defined(OPTION_FISHIO)*/
+
         /* Invoke the provided halt_device routine @ISW */
         /* if it has been provided by the handler  @ISW */
         /* code at init                            @ISW */
@@ -926,7 +946,7 @@ int pending = 0;
 #if !defined(NO_SIGABEND_HANDLER)
         else
         {
-            if( dev->ctctype )
+            if( dev->ctctype && dev->tid)
                 signal_thread(dev->tid, SIGUSR2);
         }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
