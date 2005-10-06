@@ -2,7 +2,7 @@
 /* file: dyncrypt.c                                                           */
 /*                                                                            */
 /* Implementation of the z/Architecture crypto instructions described in      */
-/* SA22-7832-02: z/Architecture Principles of Operation within the Hercules   */
+/* SA22-7832-04: z/Architecture Principles of Operation within the Hercules   */
 /* z/Architecture emulator. This file may only be used with and within the    */
 /* Hercules emulator for non-commercial use!                                  */
 /*                                                                            */
@@ -23,11 +23,11 @@
 /*----------------------------------------------------------------------------*/
 /* Debugging options                                                          */
 /*----------------------------------------------------------------------------*/
-//#define OPTION_KM_DEBUG
-//#define OPTION_KMC_DEBUG
 //#define OPTION_KIMD_DEBUG
 //#define OPTION_KLMD_DEBUG
+//#define OPTION_KM_DEBUG
 //#define OPTION_KMAC_DEBUG
+//#define OPTION_KMC_DEBUG
 
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
@@ -96,7 +96,7 @@
 static void sha1_getcv(sha1_context *ctx, uint8 icv[20])
 {
   int i, j;
- 
+
   for(i = 0, j = 0; i < 5; i++)
   { 
     icv[j++] = (ctx->state[i] & 0xff000000) >> 24;
@@ -128,7 +128,7 @@ static void sha1_seticv(sha1_context *ctx, uint8 icv[20])
 static void sha256_getcv(sha256_context *ctx, uint8 icv[32])
 {
   int i, j;
- 
+
   for(i = 0, j = 0; i < 8; i++)
   {
     icv[j++] = (ctx->state[i] & 0xff000000) >> 24;
@@ -258,6 +258,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
       return;
     }
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -337,6 +338,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
       return;
     }
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -445,6 +447,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KLMD_DEBUG
     LOGBYTE("input :", buffer, (int) GR_A(r2 + 1, regs));
 #endif
+
   }
 
   /* Do the padding */
@@ -508,7 +511,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   UNREFERENCED(r1);
 
 #ifdef OPTION_KLMD_DEBUG
-  logmsg("  KLMD: function 2: sha-2\n");
+  logmsg("  KLMD: function 2: sha-256\n");
 #endif
 
   /* Check special conditions */
@@ -577,6 +580,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KLMD_DEBUG
     LOGBYTE("input :", buffer, (int) GR_A(r2 + 1, regs));
 #endif
+
   }
 
   /* Do the padding */
@@ -635,7 +639,7 @@ static void ARCH_DEP(km_query)(int r1, int r2, REGS *regs)
 
   UNREFERENCED(r1);
   UNREFERENCED(r2);
-  
+
 #ifdef OPTION_KM_DEBUG
   logmsg("  KM: function 0: query\n");
 #endif
@@ -723,6 +727,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
       return;
     }
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -804,6 +809,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
       return;
     }
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -886,6 +892,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
       return;
     }
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -966,6 +973,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
       return;
     }
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -1052,7 +1060,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
 
     /* Calculate the output chaining value */
     des_encrypt(&context, buffer, cv);
-    
+
     /* Store the output chaining value */
     ARCH_DEP(vstorec)(cv, 7, GR_A(1, regs), 1, regs);
 
@@ -1076,6 +1084,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
       return;
     }
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -1170,6 +1179,7 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
       return;
     }
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -1267,6 +1277,7 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
       return;
     }
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -1405,6 +1416,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     /* Set cv for next 8 bytes */
     memcpy(cv, ocv, 8);
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -1529,6 +1541,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
     /* Set cv for next 8 bytes */
     memcpy(cv, ocv, 8);
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -1652,10 +1665,11 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
       regs->psw.cc = 0;
       return;
     }
-    
+
     /* Set cv for next 8 bytes */
     memcpy(cv, ocv, 8);
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -1773,6 +1787,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
     /* Set cv for next 8 bytes */
     memcpy(cv, ocv, 8);
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
@@ -1901,159 +1916,9 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
     /* Set cv for next 8 bytes */
     memcpy(cv, ocv, 8);
   }
+
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
-}
-
-/*----------------------------------------------------------------------------*/
-/* B91E Compute message authentication code (KMAC)                            */
-/*----------------------------------------------------------------------------*/
-DEF_INST(compute_message_authentication_code_d)
-{
-  int r1;
-  int r2;
-
-  RRE(inst, regs, r1, r2);
-
-#ifdef OPTION_KMAC_DEBUG
-  logmsg("KMAC: compute message authentication code\n");
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    bit 56  : %s\n", TRUEFALSE(GR0_m(regs)));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
-#endif
-
-  switch(GR0_fc(regs))
-  {
-    case 0:
-      ARCH_DEP(kmac_query)(r1, r2, regs);
-      break;
- 
-    case 1:
-      ARCH_DEP(kmac_dea)(r1, r2, regs);
-      break;
-
-    case 2:
-      ARCH_DEP(kmac_tdea_128)(r1, r2, regs);
-      break;
-
-    case 3:
-      ARCH_DEP(kmac_tdea_192)(r1, r2, regs);
-      break;
-
-    default:
-      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-      break;
-  }
-}
-
-/*----------------------------------------------------------------------------*/
-/* B92E Cipher message (KM)                                                   */
-/*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_d)
-{
-  int r1;
-  int r2;
-
-  RRE(inst, regs, r1, r2);
-
-#ifdef OPTION_KM_DEBUG
-  logmsg("KM: cipher message\n");
-  logmsg("  r1        : GR%02d\n", r1);
-  logmsg("    address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    m       : %s\n", TRUEFALSE(GR0_m(regs)));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
-#endif
-
-  switch(GR0_fc(regs))
-  {
-    case 0:
-      ARCH_DEP(km_query)(r1, r2, regs);
-      break;
-    
-    case 1:
-      ARCH_DEP(km_dea)(r1, r2, regs);
-      break;
-
-    case 2:
-      ARCH_DEP(km_tdea_128)(r1, r2, regs);
-      break;
-
-    case 3:
-      ARCH_DEP(km_tdea_192)(r1, r2, regs);
-      break;
- 
-    case 18:
-      ARCH_DEP(km_aes_128)(r1, r2, regs);
-      break;
-
-    default:
-      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-      break;
-  }
-}
-
-/*----------------------------------------------------------------------------*/
-/* B92F Cipher message with chaining (KMC)                                    */
-/*----------------------------------------------------------------------------*/
-DEF_INST(cipher_message_with_chaining_d)
-{
-  int r1;
-  int r2;
-
-  RRE(inst, regs, r1, r2);
-
-#ifdef OPTION_KMC_DEBUG
-  logmsg("KMC: cipher message with chaining\n");
-  logmsg("  r1        : GR%02d\n", r1);
-  logmsg("    address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  r2        : GR%02d\n", r2);
-  logmsg("    address : " F_VADR "\n", regs->GR(r2));
-  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
-  logmsg("    m       : %s\n", TRUEFALSE(GR0_m(regs)));
-  logmsg("    fc      : %d\n", GR0_fc(regs));
-  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
-#endif
-
-  switch(GR0_fc(regs))
-  {
-    case 0:
-      ARCH_DEP(kmc_query)(r1, r2, regs);
-      break;
-
-    case 1:
-      ARCH_DEP(kmc_dea)(r1, r2, regs);
-      break;
- 
-    case 2:
-      ARCH_DEP(kmc_tdea_128)(r1, r2, regs);
-      break;
-
-    case 3:
-      ARCH_DEP(kmc_tdea_192)(r1, r2, regs);
-      break;
-
-    case 18:
-      ARCH_DEP(kmc_aes_128)(r1, r2, regs);
-      break;
-
-    case 67:
-      ARCH_DEP(kmc_prng)(r1, r2, regs);
-      break;
-
-    default:
-      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-      break;
-  }
 }
 
 /*----------------------------------------------------------------------------*/
@@ -2131,9 +1996,160 @@ DEF_INST(compute_last_message_digest_d)
     case 1:
       ARCH_DEP(klmd_sha_1)(r1, r2, regs);
       break;
- 
+
     case 2:
       ARCH_DEP(klmd_sha_256)(r1, r2, regs);
+      break;
+
+    default:
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+  }
+}
+
+/*----------------------------------------------------------------------------*/
+/* B92E Cipher message (KM)                                                   */
+/*----------------------------------------------------------------------------*/
+DEF_INST(cipher_message_d)
+{
+  int r1;
+  int r2;
+
+  RRE(inst, regs, r1, r2);
+
+#ifdef OPTION_KM_DEBUG
+  logmsg("KM: cipher message\n");
+  logmsg("  r1        : GR%02d\n", r1);
+  logmsg("    address : " F_VADR "\n", regs->GR(r1));
+  logmsg("  r2        : GR%02d\n", r2);
+  logmsg("    address : " F_VADR "\n", regs->GR(r2));
+  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
+  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
+  logmsg("    m       : %s\n", TRUEFALSE(GR0_m(regs)));
+  logmsg("    fc      : %d\n", GR0_fc(regs));
+  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+#endif
+
+  switch(GR0_fc(regs))
+  {
+    case 0:
+      ARCH_DEP(km_query)(r1, r2, regs);
+      break;
+
+    case 1:
+      ARCH_DEP(km_dea)(r1, r2, regs);
+      break;
+
+    case 2:
+      ARCH_DEP(km_tdea_128)(r1, r2, regs);
+      break;
+
+    case 3:
+      ARCH_DEP(km_tdea_192)(r1, r2, regs);
+      break;
+
+    case 18:
+      ARCH_DEP(km_aes_128)(r1, r2, regs);
+      break;
+
+    default:
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+  }
+}
+
+/*----------------------------------------------------------------------------*/
+/* B91E Compute message authentication code (KMAC)                            */
+/*----------------------------------------------------------------------------*/
+DEF_INST(compute_message_authentication_code_d)
+{
+  int r1;
+  int r2;
+
+  RRE(inst, regs, r1, r2);
+
+#ifdef OPTION_KMAC_DEBUG
+  logmsg("KMAC: compute message authentication code\n");
+  logmsg("  r2        : GR%02d\n", r2);
+  logmsg("    address : " F_VADR "\n", regs->GR(r2));
+  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
+  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
+  logmsg("    bit 56  : %s\n", TRUEFALSE(GR0_m(regs)));
+  logmsg("    fc      : %d\n", GR0_fc(regs));
+  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+#endif
+
+  switch(GR0_fc(regs))
+  {
+    case 0:
+      ARCH_DEP(kmac_query)(r1, r2, regs);
+      break;
+
+    case 1:
+      ARCH_DEP(kmac_dea)(r1, r2, regs);
+      break;
+
+    case 2:
+      ARCH_DEP(kmac_tdea_128)(r1, r2, regs);
+      break;
+
+    case 3:
+      ARCH_DEP(kmac_tdea_192)(r1, r2, regs);
+      break;
+
+    default:
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+      break;
+  }
+}
+
+/*----------------------------------------------------------------------------*/
+/* B92F Cipher message with chaining (KMC)                                    */
+/*----------------------------------------------------------------------------*/
+DEF_INST(cipher_message_with_chaining_d)
+{
+  int r1;
+  int r2;
+
+  RRE(inst, regs, r1, r2);
+
+#ifdef OPTION_KMC_DEBUG
+  logmsg("KMC: cipher message with chaining\n");
+  logmsg("  r1        : GR%02d\n", r1);
+  logmsg("    address : " F_VADR "\n", regs->GR(r1));
+  logmsg("  r2        : GR%02d\n", r2);
+  logmsg("    address : " F_VADR "\n", regs->GR(r2));
+  logmsg("    length  : " F_GREG "\n", regs->GR(r2 + 1));
+  logmsg("  GR00      : " F_GREG "\n", regs->GR(0));
+  logmsg("    m       : %s\n", TRUEFALSE(GR0_m(regs)));
+  logmsg("    fc      : %d\n", GR0_fc(regs));
+  logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
+#endif
+
+  switch(GR0_fc(regs))
+  {
+    case 0:
+      ARCH_DEP(kmc_query)(r1, r2, regs);
+      break;
+
+    case 1:
+      ARCH_DEP(kmc_dea)(r1, r2, regs);
+      break;
+
+    case 2:
+      ARCH_DEP(kmc_tdea_128)(r1, r2, regs);
+      break;
+
+    case 3:
+      ARCH_DEP(kmc_tdea_192)(r1, r2, regs);
+      break;
+
+    case 18:
+      ARCH_DEP(kmc_aes_128)(r1, r2, regs);
+      break;
+
+    case 67:
+      ARCH_DEP(kmc_prng)(r1, r2, regs);
       break;
 
     default:
