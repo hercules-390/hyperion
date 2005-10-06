@@ -88,8 +88,8 @@
 /*----------------------------------------------------------------------------*/
 #define TRUEFALSE(boolean)  ((boolean) ? "True" : "False")
 
-#ifndef __DYNCRYPT__
-#define __DYNCRYPT__
+#ifndef __SHA1_COMPILE__
+#define __SHA1_COMPILE__
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
@@ -121,7 +121,11 @@ static void sha1_seticv(sha1_context *ctx, uint8 icv[20])
     ctx->state[i] |= icv[j++];
   }
 }
+#endif /* __SHA1_COMPILE__ */
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
+#ifndef __SHA256_COMPILE__
+#define __SHA256_COMPILE__
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
@@ -153,14 +157,18 @@ static void sha256_seticv(sha256_context *ctx, uint8 icv[32])
     ctx->state[i] |= icv[j++];
   }
 }
-#endif /* __DYNCRYPT__ */
+#endif /* __SHA256_COMPILE__ */
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
 /*----------------------------------------------------------------------------*/
 /* Needed functions from sha1.c and sha256.c.                                 */
 /* We do our own counting and padding, we only need the hashing.              */
 /*----------------------------------------------------------------------------*/
 void sha1_process(sha1_context *ctx, uint8 data[64]);
+
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
 void sha256_process(sha256_context *ctx, uint8 data[64]);
+#endif
 
 /*----------------------------------------------------------------------------*/
 /* B93E Compute intermediate message digest (KIMD) FC 0                       */
@@ -263,6 +271,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
   regs->psw.cc = 3;
 }
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
 /*----------------------------------------------------------------------------*/
 /* B93E Compute intermediate message digest (KIMD) FC 2                       */
 /*----------------------------------------------------------------------------*/
@@ -342,6 +351,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
 /*----------------------------------------------------------------------------*/
 /* B93F Compute last message digest (KLMD) FC 0                               */
@@ -497,6 +507,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
   regs->psw.cc = 0;
 }
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
 /*----------------------------------------------------------------------------*/
 /* B93F Compute last message digest (KLMD) FC 2                               */
 /*----------------------------------------------------------------------------*/
@@ -629,6 +640,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   /* Set condition code */
   regs->psw.cc = 0;
 }
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
 /*----------------------------------------------------------------------------*/
 /* B92E Cipher message (KM) FC 0                                              */
@@ -897,6 +909,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
   regs->psw.cc = 3;
 }
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
 /*----------------------------------------------------------------------------*/
 /* B92E Cipher message (KM) FC 18                                             */
 /*----------------------------------------------------------------------------*/
@@ -977,6 +990,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
 /*----------------------------------------------------------------------------*/
 /* B91E Compute message authentication code (KMAC) FC 0                       */
@@ -1674,6 +1688,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
   regs->psw.cc = 3;
 }
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
 /*----------------------------------------------------------------------------*/
 /* B92F Cipher message with chaining (KMC) FC 18                              */
 /*----------------------------------------------------------------------------*/
@@ -1920,6 +1935,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
 /*----------------------------------------------------------------------------*/
 /* B93E Compute intermediate message digest (KIMD)                            */
@@ -1954,9 +1970,11 @@ DEF_INST(compute_intermediate_message_digest_d)
       ARCH_DEP(kimd_sha_1)(r1, r2, regs);
       break;
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2:
       ARCH_DEP(kimd_sha_256)(r1, r2, regs);
       break;
+#endif
 
     default:
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -1997,9 +2015,11 @@ DEF_INST(compute_last_message_digest_d)
       ARCH_DEP(klmd_sha_1)(r1, r2, regs);
       break;
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 2:
       ARCH_DEP(klmd_sha_256)(r1, r2, regs);
       break;
+#endif
 
     default:
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -2048,9 +2068,11 @@ DEF_INST(cipher_message_d)
       ARCH_DEP(km_tdea_192)(r1, r2, regs);
       break;
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 18:
       ARCH_DEP(km_aes_128)(r1, r2, regs);
       break;
+#endif
 
     default:
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -2144,6 +2166,7 @@ DEF_INST(cipher_message_with_chaining_d)
       ARCH_DEP(kmc_tdea_192)(r1, r2, regs);
       break;
 
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
     case 18:
       ARCH_DEP(kmc_aes_128)(r1, r2, regs);
       break;
@@ -2151,6 +2174,7 @@ DEF_INST(cipher_message_with_chaining_d)
     case 67:
       ARCH_DEP(kmc_prng)(r1, r2, regs);
       break;
+#endif
 
     default:
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
