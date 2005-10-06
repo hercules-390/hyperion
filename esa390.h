@@ -718,7 +718,7 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 /*00C0*/ FWORD  iointid;                /* I/O interrupt ID          */
 /*00C4*/ FWORD  resv00C0;               /* Reserved                  */
 /*00C8*/ FWORD  stfl;                   /* Facilities list (STFL)    */
-/*00CC*/ FWORD  stfle;                  /* Facilities 4-7 (STFLE) @Z9*/
+/*00CC*/ FWORD  resv00CC;               /* Reserved                  */
 /*00D0*/ DBLWRD resv00D0;               /* Reserved                  */
 /*00D8*/ DBLWRD resv00D8;               /* Reserved                  */
 /*00E0*/ DBLWRD resv00E0;               /* Reserved                  */
@@ -1265,6 +1265,10 @@ typedef struct _MBK {
                                            when regtab invalidated   */
 #define STFL_0_ASN_LX_REUSE     0x02    /* ASN-and-LX-reuse facility
                                            is installed              */
+#define STFL_0_STFL_EXTENDED    0x01    /* Store facility list    @Z9
+                                           extended is installed  @Z9*/
+#define STFL_1_SENSE_RUN_STATUS 0x40    /* Sense running status   @Z9
+                                           facility is installed  @Z9*/
 #define STFL_2_TRAN_FAC2        0x80    /* Extended translation
                                            facility 2 is installed   */
 #define STFL_2_MSG_SECURITY     0x40    /* Message security assist
@@ -1285,6 +1289,8 @@ typedef struct _MBK {
                                            facility 2 enhancement @Z9*/
 #define STFL_3_STORE_CLOCK_FAST 0x40    /* Store clock fast       @Z9
                                            enhancement installed  @Z9*/
+#define STFL_3_TOD_CLOCK_STEER  0x08    /* TOD clock steering     @Z9
+                                           facility is installed  @Z9*/
 #define STFL_3_ETF3_ENHANCEMENT 0x02    /* Extended translation   @Z9
                                            facility 3 enhancement @Z9*/
 
