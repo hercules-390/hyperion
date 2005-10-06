@@ -5136,7 +5136,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
         /* Test-Character-Comparison Control */
-        if(tccc)
+        if(!tccc)
         {
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
@@ -5219,7 +5219,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
         /* Test-Character-Comparison Control */
-        if(tccc)
+        if(!tccc)
         {
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
@@ -5304,7 +5304,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
         /* Test-Character-Comparison Control */
-        if(tccc)
+        if(!tccc)
         {
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
@@ -5388,7 +5388,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
         /* Test-Character-Comparison Control */
-        if(tccc)
+        if(!tccc)
         {
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
