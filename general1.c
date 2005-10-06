@@ -2263,7 +2263,7 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
 
 #ifdef FEATURE_EXTENDED_TRANSLATION
 /*-------------------------------------------------------------------*/
-/* B2A6 CU21 (CUUTF) - Convert Unicode to UTF-8                [RRE] */
+/* B2A6 CU21 (CUUTF) - Convert Unicode to UTF-8                [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf16_to_utf8)
 {
@@ -2355,6 +2355,7 @@ int     wfc;                            /* Well-Formedness-Checking  */
             naddr2 &= ADDRESS_MAXWRAP(regs);
             nlen2 -= 2;
 
+#if defined(FEATURE_ETF3_ENHANCEMENT)
             /* WellFormdnessChecking */
             if(wfc)
             {
@@ -2364,6 +2365,7 @@ int     wfc;                            /* Well-Formedness-Checking  */
                 return;
               }
             }
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
             /* Convert Unicode surrogate pair to four UTF-8 bytes */
             uvwxy = ((unicode1 & 0x03C0) >> 6) + 1;
@@ -2410,7 +2412,7 @@ int     wfc;                            /* Well-Formedness-Checking  */
 
 
 /*-------------------------------------------------------------------*/
-/* B2A7 CU12 (CUTFU) - Convert UTF-8 to Unicode                [RRE] */
+/* B2A7 CU12 (CUTFU) - Convert UTF-8 to Unicode                [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf8_to_utf16)
 {
@@ -2471,6 +2473,7 @@ int     wfc;                            /* WellFormednessChecking    */
         }
         else if ((utf[0] & 0xE0) == 0xC0)
         {
+#if defined(FEATURE_ETF3_ENHANCEMENT)
             /* WellFormdnessChecking */
             if(wfc)
             {
@@ -2480,6 +2483,7 @@ int     wfc;                            /* WellFormednessChecking    */
                 return;
               }
             }
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
             
             /* Exit if fewer than 2 bytes remain in source operand */
             n = 1;
@@ -2488,6 +2492,7 @@ int     wfc;                            /* WellFormednessChecking    */
             /* Fetch two UTF-8 bytes from source operand */
             ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
 
+#if defined(FEATURE_ETF3_ENHANCEMENT)
             /* WellFormednessChecking */
             if(wfc)
             {
@@ -2497,6 +2502,7 @@ int     wfc;                            /* WellFormednessChecking    */
                 return;
               }
             }
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
             /* Convert C0xx-DFxx to Unicode */
             unicode1 = ((U16)(utf[0] & 0x1F) << 6)
@@ -2512,6 +2518,7 @@ int     wfc;                            /* WellFormednessChecking    */
             /* Fetch three UTF-8 bytes from source operand */
             ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
 
+#if defined(FEATURE_ETF3_ENHANCEMENT)
             /* WellFormdnessChecking */
             if(wfc)
             {
@@ -2540,6 +2547,7 @@ int     wfc;                            /* WellFormednessChecking    */
                 }
               }
             }
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
             /* Convert E0xxxx-EFxxxx to Unicode */
             unicode1 = ((U16)(utf[0]) << 12)
@@ -2556,6 +2564,7 @@ int     wfc;                            /* WellFormednessChecking    */
             /* Fetch four UTF-8 bytes from source operand */
             ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
 
+#if defined(FEATURE_ETF3_ENHANCEMENT)
             /* WellFormdnessChecking */
             if(wfc)
             {
@@ -2584,6 +2593,7 @@ int     wfc;                            /* WellFormednessChecking    */
                 }
               }
             }
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
             /* Convert F0xxxxxx-F7xxxxxx to Unicode surrogate pair */
             uvwxy = ((((U16)(utf[0] & 0x07) << 2)

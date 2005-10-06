@@ -1898,7 +1898,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
 
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
 /*-------------------------------------------------------------------*/
-/* B9B0 CU14 - Convert UTF-8 to UTF-32                         [RRE] */
+/* B9B0 CU14  - Convert UTF-8 to UTF-32                        [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf8_to_utf32)
 {
@@ -1959,6 +1959,7 @@ DEF_INST(convert_utf8_to_utf32)
     }
     else if(utf8[0] >= 0xc0 && utf8[0] <= 0xdf)
     {
+#if defined(FEATURE_ETF3_ENHANCEMENT)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -1968,6 +1969,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
       /* Check end of source */
       if(srcelen < 2)
@@ -1979,6 +1981,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next byte */
       utf8[1] = ARCH_DEP(vfetchb)(srce + 1, r2, regs);
 
+#if defined(FEATURE_ETF3_ENHANCEMENT)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -1988,6 +1991,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
       /* xlate range c000-dfff */
       /* 110fghij 10klmnop -> 00000000 00000000 00000fgh ijklmnop */
@@ -2008,6 +2012,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next 2 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 1, srce + 1, r2, regs);
 
+#if defined(FEATURE_ETF3_ENHANCEMENT)
       /* WellformednessChecking */
       if(wfc)
       {
@@ -2036,6 +2041,7 @@ DEF_INST(convert_utf8_to_utf32)
           }
         }
       }
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
       /* xlate range e00000-efffff */
       /* 1110abcd 10efghij 10klmnop -> 00000000 00000000 abcdefgh ijklmnop */
@@ -2046,6 +2052,7 @@ DEF_INST(convert_utf8_to_utf32)
     }
     else if(utf8[0] >= 0xf0 && utf8[0] <= 0xf7)
     {
+#if defined(FEATURE_ETF3_ENHANCEMENT)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2055,6 +2062,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
       /* Check end of source */
       if(srcelen < 4)
@@ -2066,6 +2074,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next 3 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 2, srce + 1, r2, regs);
 
+#if defined(FEATURE_ETF3_ENHANCEMENT)
       /* WellFormdnessChecking */
       if(wfc)
       {
@@ -2094,6 +2103,7 @@ DEF_INST(convert_utf8_to_utf32)
           }
         }
       }
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
       /* xlate range f0000000-f7000000 */
       /* 1110uvw 10xyefgh 10ijklmn 10opqrst -> 00000000 000uvwxy efghijkl mnopqrst */
@@ -2123,7 +2133,7 @@ DEF_INST(convert_utf8_to_utf32)
 }
 
 /*-------------------------------------------------------------------*/
-/* B9B1 CU24 - Convert UTF-16 to UTF-32                        [RRE] */
+/* B9B1 CU24  - Convert UTF-16 to UTF-32                       [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf16_to_utf32)
 {
@@ -2195,6 +2205,7 @@ DEF_INST(convert_utf16_to_utf32)
       /* Fetch another 2 bytes */
       ARCH_DEP(vfetchc)(&utf16[2], 1, srce, r2, regs);
 
+#if defined(FEATURE_ETF3_ENHANCEMENT)
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2204,6 +2215,7 @@ DEF_INST(convert_utf16_to_utf32)
           return;
         }
       }
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
       /* xlate range d800-dbff */
       /* 110110ab cdefghij 110111kl mnopqrst -> 00000000 000uvwxy efghijkl mnopqrst */
@@ -2230,7 +2242,7 @@ DEF_INST(convert_utf16_to_utf32)
 }
 
 /*-------------------------------------------------------------------*/
-/* B9B2 CU41 - Convert UTF-32 to UTF-8                         [RRE] */
+/* B9B2 CU41  - Convert UTF-32 to UTF-8                        [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf32_to_utf8)
 {
@@ -2366,7 +2378,7 @@ DEF_INST(convert_utf32_to_utf8)
 }
 
 /*-------------------------------------------------------------------*/
-/* B9B3 CU42 - Convert UTF-32 to UTF-16                        [RRE] */
+/* B9B3 CU42  - Convert UTF-32 to UTF-16                       [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf32_to_utf16)
 {
@@ -2523,7 +2535,7 @@ DEF_INST(search_string_unicode)
 }
 
 /*-------------------------------------------------------------------*/
-/* D0 TRTR - Translate and Test Reverse                         [SS] */
+/* D0   TRTR  - Translate and Test Reverse                      [SS] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_and_test_reverse)
 {

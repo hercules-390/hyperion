@@ -27,7 +27,7 @@
 #define FEATURE_EMULATE_VM
 #define FEATURE_ESAME
 //#define FEATURE_ETF2_ENHANCEMENT                                 /*@Z9*/
-//#define FEATURE_ETF3_ENHANCEMENT                                 /*@Z9*/
+#define FEATURE_ETF3_ENHANCEMENT                                 /*@Z9*/
 #define FEATURE_EXPANDED_STORAGE
 #define FEATURE_EXPEDITED_SIE_SUBSET
 #define FEATURE_EXTENDED_IMMEDIATE                               /*@Z9*/
