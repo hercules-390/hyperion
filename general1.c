@@ -2279,10 +2279,17 @@ U16     unicode1;                       /* Unicode character         */
 U16     unicode2;                       /* Unicode low surrogate     */
 GREG    n;                              /* Number of UTF-8 bytes - 1 */
 BYTE    utf[4];                         /* UTF-8 bytes               */
+int     wfc;                            /* Well-Formedness-Checking  */
 
     RRE(inst, regs, r1, r2);
 
     ODD2_CHECK(r1, r2, regs);
+
+    /* Set WellFormednessChecking */
+    if(inst[1] & 0x10)
+      wfc = 1;
+    else
+      wfc = 0;
 
     /* Determine the destination and source addresses */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
@@ -2348,6 +2355,16 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
             naddr2 &= ADDRESS_MAXWRAP(regs);
             nlen2 -= 2;
 
+            /* WellFormdnessChecking */
+            if(wfc)
+            {
+              if(unicode2 < 0xdc00 || unicode2 > 0xdf00)
+              {
+                regs->psw.cc = 2;
+                return;
+              }
+            }
+
             /* Convert Unicode surrogate pair to four UTF-8 bytes */
             uvwxy = ((unicode1 & 0x03C0) >> 6) + 1;
             utf[0] = (BYTE)0xF0 | (BYTE)(uvwxy >> 2);
@@ -2408,10 +2425,17 @@ U16     unicode1;                       /* Unicode character         */
 U16     unicode2 = 0;                   /* Unicode low surrogate     */
 GREG    n;                              /* Number of UTF-8 bytes - 1 */
 BYTE    utf[4];                         /* UTF-8 bytes               */
+int     wfc;                            /* WellFormednessChecking    */
 
     RRE(inst, regs, r1, r2);
 
     ODD2_CHECK(r1, r2, regs);
+
+    /* Set WellFormednessChecking */
+    if(inst[1] & 0x10)
+      wfc = 1;
+    else
+      wfc = 0;
 
     /* Determine the destination and source addresses */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
@@ -2447,12 +2471,32 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
         }
         else if ((utf[0] & 0xE0) == 0xC0)
         {
+            /* WellFormdnessChecking */
+            if(wfc)
+            {
+              if(utf[0] <= 0xc1)
+              {
+                regs->psw.cc = 2;
+                return;
+              }
+            }
+            
             /* Exit if fewer than 2 bytes remain in source operand */
             n = 1;
             if (len2 <= n) break;
 
             /* Fetch two UTF-8 bytes from source operand */
             ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
+
+            /* WellFormednessChecking */
+            if(wfc)
+            {
+              if(utf[1] < 0x80 || utf[1] > 0xbf)
+              {
+                regs->psw.cc = 2;
+                return;
+              }
+            }
 
             /* Convert C0xx-DFxx to Unicode */
             unicode1 = ((U16)(utf[0] & 0x1F) << 6)
@@ -2468,6 +2512,35 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
             /* Fetch three UTF-8 bytes from source operand */
             ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
 
+            /* WellFormdnessChecking */
+            if(wfc)
+            {
+              if(utf[0] == 0xe0)
+              {
+                if(utf[1] < 0xa0 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf)
+                {
+                  regs->psw.cc = 2;
+                  return;
+                }
+              }
+              if((utf[0] >= 0xe1 && utf[0] <= 0xec) || (utf[0] >= 0xee && utf[0] < 0xef))
+              {
+                if(utf8[1] < 0x80 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf)
+                {
+                  regs->psw.cc = 2;
+                  return;
+                }
+              }
+              if(utf[0] == 0xed)
+              {
+                if(utf[1] < 0x80 || utf[1] > 0x9f || utf[2] < 0x80 || utf[2] > 0xbf)
+                {
+                  regs->psw.cc = 2;
+                  return;
+                }
+              }
+            }
+
             /* Convert E0xxxx-EFxxxx to Unicode */
             unicode1 = ((U16)(utf[0]) << 12)
                         | ((U16)(utf[1] & 0x3F) << 6)
@@ -2482,6 +2555,35 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
 
             /* Fetch four UTF-8 bytes from source operand */
             ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
+
+            /* WellFormdnessChecking */
+            if(wfc)
+            {
+              if(utf[0] == 0xf0)
+              {
+                if(utf[1] < 0x90 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
+                {
+                  regs->psw.cc = 2;
+                  return;
+                }
+              }
+              if(utf[0] >= 0xf1 && utf[0] <= 0xf3)
+              {
+                if(utf[1] < 0x80 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
+                {
+                  regs->psw.cc = 2;
+                  return;
+                }
+              }
+              if(utf[0] == 0xf4)
+              {
+                if(utf[1] < 0x80 || utf[1] > 0x8f || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
+                {
+                  regs->psw.cc = 2;
+                  return;
+                }
+              }
+            }
 
             /* Convert F0xxxxxx-F7xxxxxx to Unicode surrogate pair */
             uvwxy = ((((U16)(utf[0] & 0x07) << 2)
