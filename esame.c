@@ -5183,17 +5183,21 @@ int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue, dvalue, tvalue;
+#ifdef FEATURE_ETF2_ENHANCEMENT
 int     tccc;                   /* Test-Character-Comparison Control */
+#endif
 
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
+#ifdef FEATURE_ETF2_ENHANCEMENT
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
     else
       tccc = 0;
+#endif
 
     /* Determine length */
     len = GR_A(r1 + 1,regs);
@@ -5218,16 +5222,20 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetchb) (((trtab + svalue)
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
+#ifdef FEATURE_ETF2_ENHANCEMENT
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
+#endif
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
           {
             regs->psw.cc = 1;
             break;
           }
+#ifdef FEATURE_ETF2_ENHANCEMENT
         }
+#endif
 
         /* Store destination value */
         ARCH_DEP(vstoreb) (dvalue, addr1, r1, regs);
@@ -5266,17 +5274,21 @@ VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue;
 U16     dvalue, tvalue;
+#ifdef FEATURE_ETF2_ENHANCEMENT
 int     tccc;                   /* Test-Character-Comparison Control */
+#endif
 
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
+#ifdef FEATURE_ETF2_ENHANCEMENT
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
     else
       tccc = 0;
+#endif
 
     /* Determine length */
     len = GR_A(r1 + 1,regs);
@@ -5301,16 +5313,20 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetch2) (((trtab + (svalue << 1))
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
+#ifdef FEATURE_ETF2_ENHANCEMENT
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
+#endif
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
           {
             regs->psw.cc = 1;
             break;
           }
+#ifdef FEATURE_ETF2_ENHANCEMENT
         }
+#endif
 
         /* Store destination value */
         ARCH_DEP(vstore2) (dvalue, addr1, r1, regs);
@@ -5349,17 +5365,21 @@ VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 U16     svalue;
 BYTE    dvalue, tvalue;
+#ifdef FEATURE_ETF2_ENHANCEMENT
 int     tccc;                   /* Test-Character-Comparison Control */
+#endif
 
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
+#ifdef FEATURE_ETF2_ENHANCEMENT
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
     else
       tccc = 0;
+#endif
 
     /* Determine length */
     len = GR_A(r1 + 1,regs);
@@ -5369,7 +5389,11 @@ int     tccc;                   /* Test-Character-Comparison Control */
     /* Determine destination, source and translate table address */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+#ifdef FEATURE_ETF2_ENHANCEMENT
+    trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~7;
+#else
     trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~0xfff;
+#endif
 
     /* Determine test value */
     tvalue = regs->GR_LHLCL(0);
@@ -5386,16 +5410,20 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetchb) (((trtab + svalue)
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
+#ifdef FEATURE_ETF2_ENHANCEMENT
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
+#endif
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
           {
             regs->psw.cc = 1;
             break;
           }
+#ifdef FEATURE_ETF2_ENHANCEMENT
         }
+#endif
 
         /* Store destination value */
         ARCH_DEP(vstoreb) (dvalue, addr1, r1, regs);
@@ -5433,17 +5461,21 @@ int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 U16     svalue, dvalue, tvalue;
+#ifdef FEATURE_ETF2_ENHANCEMENT
 int     tccc;                   /* Test-Character-Comparison Control */
+#endif
 
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
+#ifdef FEATURE_ETF2_ENHANCEMENT
     /* Set Test-Character-Comparison Control */
     if(inst[2] & 0x10)
       tccc = 1;
     else
       tccc = 0;
+#endif
 
     /* Determine length */
     len = GR_A(r1 + 1,regs);
@@ -5453,7 +5485,11 @@ int     tccc;                   /* Test-Character-Comparison Control */
     /* Determine destination, source and translate table address */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+#ifdef FEATURE_ETF2_ENHANCEMENT
+    trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~7;
+#else
     trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~0xfff;
+#endif
 
     /* Determine test value */
     tvalue = regs->GR_LHL(0);
@@ -5470,16 +5506,20 @@ int     tccc;                   /* Test-Character-Comparison Control */
         dvalue = ARCH_DEP(vfetch2) (((trtab + (svalue << 1))
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
+#ifdef FEATURE_ETF2_ENHANCEMENT
         /* Test-Character-Comparison Control */
         if(!tccc)
         {
+#endif
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
           {
             regs->psw.cc = 1;
             break;
           }
+#ifdef FEATURE_ETF2_ENHANCEMENT
         }
+#endif
 
         /* Store destination value */
         ARCH_DEP(vstore2) (dvalue, addr1, r1, regs);
