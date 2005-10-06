@@ -5175,7 +5175,7 @@ int     cc;                             /* Condition code            */
 
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
 /*-------------------------------------------------------------------*/
-/* B993 TROO  - Translate One to One                           [RRE] */
+/* B993 TROO  - Translate One to One                           [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_one_to_one)
 {
@@ -5265,7 +5265,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
 /*-------------------------------------------------------------------*/
-/* B992 TROT  - Translate One to Two                           [RRE] */
+/* B992 TROT  - Translate One to Two                           [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_one_to_two)
 {
@@ -5356,7 +5356,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
 /*-------------------------------------------------------------------*/
-/* B991 TRTO  - Translate Two to One                           [RRE] */
+/* B991 TRTO  - Translate Two to One                           [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_two_to_one)
 {
@@ -5453,7 +5453,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
 /*-------------------------------------------------------------------*/
-/* B990 TRTT  - Translate Two to Two                           [RRE] */
+/* B990 TRTT  - Translate Two to Two                           [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_two_to_two)
 {

@@ -1033,6 +1033,15 @@ int m3,r1,r2;
     logmsg("%-6.6s%d,%d,%d\n",mnemonic,r1,m3,r2);
 }
 
+void disasm_RRF_M3 (BYTE inst[], BYTE mnemonic[])
+{
+int m3,r1,r2;
+    m3 = inst[2] >> 4;
+    r1 = inst[3] >> 4;
+    r2 = inst[3] & 0x0F;
+    logmsg("%-6.6s%d,%d,%d\n",mnemonic,r1,r2,m3);
+}
+
 void disasm_RRF_RM (BYTE inst[], BYTE mnemonic[])
 {
 int r3,m4,r1,r2;
@@ -2429,8 +2438,8 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2A3*/ GENx___x___x___ ,
  /*B2A4*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B2A5*/ GENx___x390x900 (translate_extended,RRE,"TRE"),
- /*B2A6*/ GENx___x390x900 (convert_utf16_to_utf8,RRE,"CU21 (CUUTF)"),
- /*B2A7*/ GENx___x390x900 (convert_utf8_to_utf16,RRE,"CU12 (CUTFU)"),
+ /*B2A6*/ GENx___x390x900 (convert_utf16_to_utf8,RRF_M3,"CU21 (CUUTF)"),
+ /*B2A7*/ GENx___x390x900 (convert_utf8_to_utf16,RRF_M3,"CU12 (CUTFU)"),
  /*B2A8*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B2A9*/ GENx___x___x___ ,
  /*B2AA*/ GENx___x___x___ ,
@@ -2930,10 +2939,10 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B98D*/ GENx___x390x900 (extract_psw,RRE,"EPSW"),
  /*B98E*/ GENx___x___x900 (invalidate_dat_table_entry,RRF_M,"IDTE"),
  /*B98F*/ GENx___x___x___ ,
- /*B990*/ GENx___x390x900 (translate_two_to_two,RRE,"TRTT"),
- /*B991*/ GENx___x390x900 (translate_two_to_one,RRE,"TRTO"),
- /*B992*/ GENx___x390x900 (translate_one_to_two,RRE,"TROT"),
- /*B993*/ GENx___x390x900 (translate_one_to_one,RRE,"TROO"),
+ /*B990*/ GENx___x390x900 (translate_two_to_two,RRF_M3,"TRTT"),
+ /*B991*/ GENx___x390x900 (translate_two_to_one,RRF_M3,"TRTO"),
+ /*B992*/ GENx___x390x900 (translate_one_to_two,RRF_M3,"TROT"),
+ /*B993*/ GENx___x390x900 (translate_one_to_one,RRF_M3,"TROO"),
  /*B994*/ GENx___x390x900 (load_logical_character_register,RRE,"LLCR"),            /*@Z9*/
  /*B995*/ GENx___x390x900 (load_logical_halfword_register,RRE,"LLHR"),             /*@Z9*/
  /*B996*/ GENx___x390x900 (multiply_logical_register,RRE,"MLR"),
@@ -2962,8 +2971,8 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9AD*/ GENx___x___x___ ,
  /*B9AE*/ GENx___x___x___ ,
  /*B9AF*/ GENx___x___x___ ,
- /*B9B0*/ GENx___x___x900 (convert_utf8_to_utf32,RRE,"CU14"),
- /*B9B1*/ GENx___x___x900 (convert_utf16_to_utf32,RRE,"CU24"),
+ /*B9B0*/ GENx___x___x900 (convert_utf8_to_utf32,RRF_M3,"CU14"),
+ /*B9B1*/ GENx___x___x900 (convert_utf16_to_utf32,RRF_M3,"CU24"),
  /*B9B2*/ GENx___x___x900 (convert_utf32_to_utf8,RRE,"CU41"),
  /*B9B3*/ GENx___x___x900 (convert_utf32_to_utf16,RRE,"CU42"),
  /*B9B4*/ GENx___x___x___ ,
