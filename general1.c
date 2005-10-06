@@ -2525,7 +2525,7 @@ int     wfc;                            /* WellFormednessChecking    */
               }
               if((utf[0] >= 0xe1 && utf[0] <= 0xec) || (utf[0] >= 0xee && utf[0] < 0xef))
               {
-                if(utf8[1] < 0x80 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf)
+                if(utf[1] < 0x80 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf)
                 {
                   regs->psw.cc = 2;
                   return;
