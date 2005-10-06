@@ -2286,7 +2286,7 @@ int     wfc;                            /* Well-Formedness-Checking  */
     ODD2_CHECK(r1, r2, regs);
 
     /* Set WellFormednessChecking */
-    if(inst[1] & 0x10)
+    if(inst[2] & 0x10)
       wfc = 1;
     else
       wfc = 0;
@@ -2432,7 +2432,7 @@ int     wfc;                            /* WellFormednessChecking    */
     ODD2_CHECK(r1, r2, regs);
 
     /* Set WellFormednessChecking */
-    if(inst[1] & 0x10)
+    if(inst[2] & 0x10)
       wfc = 1;
     else
       wfc = 0;

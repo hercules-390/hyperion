@@ -1922,7 +1922,7 @@ DEF_INST(convert_utf8_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-  if(inst[1] & 0x10)
+  if(inst[2] & 0x10)
     wfc = 1;
   else
     wfc = 0;
@@ -2148,7 +2148,7 @@ DEF_INST(convert_utf16_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-  if(inst[1] & 0x10)
+  if(inst[2] & 0x10)
     wfc = 1;
   else
     wfc = 0;

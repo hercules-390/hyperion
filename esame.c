@@ -5100,10 +5100,17 @@ int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue, dvalue, tvalue;
+int     tccc;                   /* Test-Character-Comparison Control */
 
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
+
+    /* Set Test-Character-Comparison Control */
+    if(inst[2] & 0x10)
+      tccc = 1;
+    else
+      tccc = 0;
 
     /* Determine length */
     len = GR_A(r1 + 1,regs);
@@ -5128,11 +5135,15 @@ BYTE    svalue, dvalue, tvalue;
         dvalue = ARCH_DEP(vfetchb) (((trtab + svalue)
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-        /* If the testvalue was found then exit with cc1 */
-        if(dvalue == tvalue)
+        /* Test-Character-Comparison Control */
+        if(tccc)
         {
+          /* If the testvalue was found then exit with cc1 */
+          if(dvalue == tvalue)
+          {
             regs->psw.cc = 1;
             break;
+          }
         }
 
         /* Store destination value */
@@ -5172,10 +5183,17 @@ VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue;
 U16     dvalue, tvalue;
+int     tccc;                   /* Test-Character-Comparison Control */
 
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
+
+    /* Set Test-Character-Comparison Control */
+    if(inst[2] & 0x10)
+      tccc = 1;
+    else
+      tccc = 0;
 
     /* Determine length */
     len = GR_A(r1 + 1,regs);
@@ -5200,11 +5218,15 @@ U16     dvalue, tvalue;
         dvalue = ARCH_DEP(vfetch2) (((trtab + (svalue << 1))
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-        /* If the testvalue was found then exit with cc1 */
-        if(dvalue == tvalue)
+        /* Test-Character-Comparison Control */
+        if(tccc)
         {
+          /* If the testvalue was found then exit with cc1 */
+          if(dvalue == tvalue)
+          {
             regs->psw.cc = 1;
             break;
+          }
         }
 
         /* Store destination value */
@@ -5244,10 +5266,17 @@ VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 U16     svalue;
 BYTE    dvalue, tvalue;
+int     tccc;                   /* Test-Character-Comparison Control */
 
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
+
+    /* Set Test-Character-Comparison Control */
+    if(inst[2] & 0x10)
+      tccc = 1;
+    else
+      tccc = 0;
 
     /* Determine length */
     len = GR_A(r1 + 1,regs);
@@ -5274,11 +5303,15 @@ BYTE    dvalue, tvalue;
         dvalue = ARCH_DEP(vfetchb) (((trtab + svalue)
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-        /* If the testvalue was found then exit with cc1 */
-        if(dvalue == tvalue)
+        /* Test-Character-Comparison Control */
+        if(tccc)
         {
+          /* If the testvalue was found then exit with cc1 */
+          if(dvalue == tvalue)
+          {
             regs->psw.cc = 1;
             break;
+          }
         }
 
         /* Store destination value */
@@ -5317,10 +5350,17 @@ int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 U16     svalue, dvalue, tvalue;
+int     tccc;                   /* Test-Character-Comparison Control */
 
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
+
+    /* Set Test-Character-Comparison Control */
+    if(inst[2] & 0x10)
+      tccc = 1;
+    else
+      tccc = 0;
 
     /* Determine length */
     len = GR_A(r1 + 1,regs);
@@ -5347,11 +5387,15 @@ U16     svalue, dvalue, tvalue;
         dvalue = ARCH_DEP(vfetch2) (((trtab + (svalue << 1))
                                    & ADDRESS_MAXWRAP(regs) ), 1, regs);
 
-        /* If the testvalue was found then exit with cc1 */
-        if(dvalue == tvalue)
+        /* Test-Character-Comparison Control */
+        if(tccc)
         {
+          /* If the testvalue was found then exit with cc1 */
+          if(dvalue == tvalue)
+          {
             regs->psw.cc = 1;
             break;
+          }
         }
 
         /* Store destination value */
