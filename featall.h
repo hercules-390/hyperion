@@ -140,7 +140,6 @@
 #undef FEATURE_PER2
 #undef FEATURE_PER3                                             /*@Z9*/
 #undef FEATURE_PRIVATE_SPACE
-#undef FEATURE_PROGRAM_DIRECTED_REIPL                           /*@Z9*/
 #undef FEATURE_PROTECTION_INTERCEPTION_CONTROL
 #undef FEATURE_QUEUED_DIRECT_IO
 #undef FEATURE_REGION_RELOCATE

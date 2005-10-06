@@ -63,7 +63,6 @@
 #define FEATURE_PER2
 //#define FEATURE_PER3                                             /*@Z9*/
 #define FEATURE_PRIVATE_SPACE
-//#define FEATURE_PROGRAM_DIRECTED_REIPL                           /*@Z9*/
 #define FEATURE_PROTECTION_INTERCEPTION_CONTROL
 #define FEATURE_QUEUED_DIRECT_IO
 #define FEATURE_RESUME_PROGRAM
