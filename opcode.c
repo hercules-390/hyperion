@@ -573,7 +573,7 @@
  UNDEF_INST(convert_utf32_to_utf8)
  UNDEF_INST(convert_utf8_to_utf32)
  UNDEF_INST(search_string_unicode)
- UNDEF_INST(translate_and_test_reversed)
+ UNDEF_INST(translate_and_test_reverse)
 #endif /*!defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
 
 
@@ -1650,7 +1650,7 @@ zz_func opcode_table[256][GEN_MAXARCH] = {
  /*CD*/   GENx___x___x___ ,
  /*CE*/   GENx___x___x___ ,
  /*CF*/   GENx___x___x___ ,
- /*D0*/   GENx___x___x900 (translate_and_test_reversed,SS_L,"TRTR"),
+ /*D0*/   GENx___x___x900 (translate_and_test_reverse,SS_L,"TRTR"),
  /*D1*/   GENx370x390x900 (move_numerics,SS_L,"MVN"),
  /*D2*/   GENx370x390x900 (move_character,SS_L,"MVC"),
  /*D3*/   GENx370x390x900 (move_zones,SS_L,"MVZ"),

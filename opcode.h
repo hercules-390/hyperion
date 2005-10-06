@@ -1964,7 +1964,7 @@ DEF_INST(test_under_mask_high);
 DEF_INST(test_under_mask_low);
 DEF_INST(translate);
 DEF_INST(translate_and_test);
-DEF_INST(translate_and_test_reversed);
+DEF_INST(translate_and_test_reverse);
 DEF_INST(translate_extended);
 DEF_INST(unpack);
 DEF_INST(update_tree);

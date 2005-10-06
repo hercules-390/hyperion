@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+06 Oct 2005 Implemented ETF3 and crypto while having the flu - Bernard van der Helm
 05 Oct 2005 Fix segfault in HSCH if device is startpending - Greg
 05 Oct 2005 Activate FEATURE_EXTENDED_IMMEDIATE - Roger Bowler
 05 Oct 2005 Corrections to FLOGR instruction - Roger Bowler

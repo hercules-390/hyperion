@@ -1911,6 +1911,7 @@ DEF_INST(convert_utf8_to_utf32)
   GREG srcelen;                    /* Source length                  */
   BYTE utf32[4];                   /* utf32 character(s)             */
   BYTE utf8[4];                    /* utf8 character(s)              */
+  int wfc;                         /* Well-Formedness-Checking (W)   */
   int xlated;                      /* characters translated          */
 
   RRE(inst, regs, r1, r2);
@@ -1921,6 +1922,10 @@ DEF_INST(convert_utf8_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
+  if(inst[1] & 0x10)
+    wfc = 1;
+  else
+    wfc = 0;
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
@@ -1954,6 +1959,16 @@ DEF_INST(convert_utf8_to_utf32)
     }
     else if(utf8[0] >= 0xc0 && utf8[0] <= 0xdf)
     {
+      /* WellFormednessChecking */
+      if(wfc)
+      {
+        if(utf8[0] <= 0xc1)
+        {
+          regs->psw.cc = 2;
+          return;
+        }
+      }
+
       /* Check end of source */
       if(srcelen < 2)
       {
@@ -1963,6 +1978,16 @@ DEF_INST(convert_utf8_to_utf32)
 
       /* Get the next byte */
       utf8[1] = ARCH_DEP(vfetchb)(srce + 1, r2, regs);
+
+      /* WellFormednessChecking */
+      if(wfc)
+      {
+        if(utf8[1] < 0x80 || utf8[1] > 0xbf)
+        {
+          regs->psw.cc = 2;
+          return;
+        }
+      }
 
       /* xlate range c000-dfff */
       /* 110fghij 10klmnop -> 00000000 00000000 00000fgh ijklmnop */
@@ -1983,6 +2008,35 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next 2 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 1, srce + 1, r2, regs);
 
+      /* WellformednessChecking */
+      if(wfc)
+      {
+        if(utf8[0] == 0xe0)
+        {
+          if(utf8[1] < 0xa0 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf)
+          {
+            regs->psw.cc = 2;
+            return;
+          }
+        }
+        if((utf8[0] >= 0xe1 && utf8[0] <= 0xec) || (utf8[0] >= 0xee && utf8[0] < 0xef))
+        {
+          if(utf8[1] < 0x80 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf)
+          {
+            regs->psw.cc = 2;
+            return;
+          }
+        }
+        if(utf8[0] == 0xed)
+        {
+          if(utf8[1] < 0x80 || utf8[1] > 0x9f || utf8[2] < 0x80 || utf8[2] > 0xbf)
+          {
+            regs->psw.cc = 2;
+            return;
+          }
+        }
+      }
+
       /* xlate range e00000-efffff */
       /* 1110abcd 10efghij 10klmnop -> 00000000 00000000 abcdefgh ijklmnop */
       utf32[1] = 0x00;
@@ -1992,6 +2046,16 @@ DEF_INST(convert_utf8_to_utf32)
     }
     else if(utf8[0] >= 0xf0 && utf8[0] <= 0xf7)
     {
+      /* WellFormednessChecking */
+      if(wfc)
+      {
+        if(utf8[0] > 0xf4)
+        {
+          regs->psw.cc = 2;
+          return;
+        }
+      }
+
       /* Check end of source */
       if(srcelen < 4)
       {
@@ -2001,6 +2065,35 @@ DEF_INST(convert_utf8_to_utf32)
 
       /* Get the next 3 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 2, srce + 1, r2, regs);
+
+      /* WellFormdnessChecking */
+      if(wfc)
+      {
+        if(utf8[0] == 0xf0)
+        {
+          if(utf8[1] < 0x90 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf || utf8[3] < 0x80 || utf8[3] > 0xbf)
+          {
+            regs->psw.cc = 2;
+            return;
+          }
+        }
+        if(utf8[0] >= 0xf1 && utf8[0] <= 0xf3)
+        {
+          if(utf8[1] < 0x80 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf || utf8[3] < 0x80 || utf8[3] > 0xbf)
+          {
+            regs->psw.cc = 2;
+            return;
+          }
+        }
+        if(utf8[0] == 0xf4)
+        {
+          if(utf8[1] < 0x80 || utf8[1] > 0x8f || utf8[2] < 0x80 || utf8[2] > 0xbf || utf8[3] < 0x80 || utf8[3] > 0xbf)
+          {
+            regs->psw.cc = 2;
+            return;
+          }
+        }
+      }
 
       /* xlate range f0000000-f7000000 */
       /* 1110uvw 10xyefgh 10ijklmn 10opqrst -> 00000000 000uvwxy efghijkl mnopqrst */
@@ -2044,6 +2137,7 @@ DEF_INST(convert_utf16_to_utf32)
   BYTE utf16[4];                   /* utf16 character(s)             */
   BYTE utf32[4];                   /* utf328 character(s)            */
   BYTE uvwxy;                      /* Work value                     */
+  int wfc;                         /* Well-Formedness-Checking (W)   */
   int xlated;                      /* characters translated          */
 
   RRE(inst, regs, r1, r2);
@@ -2054,6 +2148,10 @@ DEF_INST(convert_utf16_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
+  if(inst[1] & 0x10)
+    wfc = 1;
+  else
+    wfc = 0;
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
@@ -2097,6 +2195,16 @@ DEF_INST(convert_utf16_to_utf32)
       /* Fetch another 2 bytes */
       ARCH_DEP(vfetchc)(&utf16[2], 1, srce, r2, regs);
 
+      /* WellFormednessChecking */
+      if(wfc)
+      {
+        if(utf16[2] < 0xdc && utf16[2] > 0xdf)
+        {
+          regs->psw.cc = 2;
+          return;
+        }
+      }
+
       /* xlate range d800-dbff */
       /* 110110ab cdefghij 110111kl mnopqrst -> 00000000 000uvwxy efghijkl mnopqrst */
       /* 000uvwxy = 0000abcde + 1 */
@@ -2134,7 +2242,6 @@ DEF_INST(convert_utf32_to_utf8)
   GREG srcelen;                    /* Source length                  */
   BYTE utf32[4];                   /* utf32 character(s)             */
   BYTE utf8[4];                    /* utf8 character(s)              */
-  /*BYTE uvwxy;*/                  /* Work value                     */
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
 
@@ -2177,12 +2284,12 @@ DEF_INST(convert_utf32_to_utf8)
       if(utf32[2] == 0x00)
       {
         if(utf32[3] <= 0x7f)
-    {
-      /* xlate range 00000000-0000007f */
-      /* 00000000 00000000 00000000 0jklmnop -> 0jklmnop */
-      utf8[0] = utf32[3];
-      write = 1;
-    }
+        {
+          /* xlate range 00000000-0000007f */
+          /* 00000000 00000000 00000000 0jklmnop -> 0jklmnop */
+          utf8[0] = utf32[3];
+          write = 1;
+        }
       }
       else if(utf32[2] <= 0x07)
       {
@@ -2193,11 +2300,11 @@ DEF_INST(convert_utf32_to_utf8)
           return;
         }
 
-    /* xlate range 00000080-000007ff */
+        /* xlate range 00000080-000007ff */
         /* 00000000 00000000 00000fgh ijklmnop -> 110fghij 10klmnop */
-    utf8[0] = 0xc0 | (utf32[2] << 2) | (utf32[2] >> 6);
-    utf8[1] = 0x80 | (utf32[2] & 0x3f);
-    write = 2;
+        utf8[0] = 0xc0 | (utf32[2] << 2) | (utf32[2] >> 6);
+        utf8[1] = 0x80 | (utf32[2] & 0x3f);
+        write = 2;
       }
       else if(utf32[2] <= 0xd7 || utf32[2] > 0xdc)
       {
@@ -2208,12 +2315,12 @@ DEF_INST(convert_utf32_to_utf8)
           return;
         }
 
-    /* xlate range 00000800-0000d7ff and 0000dc00-0000ffff */
-    /* 00000000 00000000 abcdefgh ijklnmop -> 1110abcd 10efghij 10klmnop */
+        /* xlate range 00000800-0000d7ff and 0000dc00-0000ffff */
+        /* 00000000 00000000 abcdefgh ijklnmop -> 1110abcd 10efghij 10klmnop */
         utf8[0] = 0xe0 | (utf32[2] >> 4);
-    utf8[1] = 0x80 | ((utf32[2] & 0x0f) << 2) | (utf32[3] >> 6);
-    utf8[2] = 0x80 | (utf32[3] & 0x3f);
-    write = 3;
+        utf8[1] = 0x80 | ((utf32[2] & 0x0f) << 2) | (utf32[3] >> 6);
+        utf8[2] = 0x80 | (utf32[3] & 0x3f);
+        write = 3;
       }
       else
       {
@@ -2271,7 +2378,6 @@ DEF_INST(convert_utf32_to_utf16)
   GREG srcelen;                    /* Source length                  */
   BYTE utf16[4];                   /* utf16 character(s)             */
   BYTE utf32[4];                   /* utf32 character(s)             */
-  /*BYTE uvwxy;*/                  /* work value                     */
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
   BYTE zabcd;                      /* Work value                     */
@@ -2417,9 +2523,9 @@ DEF_INST(search_string_unicode)
 }
 
 /*-------------------------------------------------------------------*/
-/* D0 TRTR - Translate and Test Reversed                        [SS] */
+/* D0 TRTR - Translate and Test Reverse                         [SS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(translate_and_test_reversed)
+DEF_INST(translate_and_test_reverse)
 {
   int b1, b2;                           /* Values of base field      */
   int cc = 0;                           /* Condition code            */
