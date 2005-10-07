@@ -5220,17 +5220,14 @@ static char *ordername[] = {    "Unassigned",
        normal) to ANY cpu, -or- ANY SIGP at all sent to a CPU
        that is configured offline (which is indeed unusual!)) */
     if (order > LOG_SIGPORDER || !IS_CPU_ONLINE(cpad))
-#if !defined(FEATURE_ESAME)
-        logmsg ("CPU%4.4X: SIGP CPU%4.4X %s PARM %8.8X\n",
+    {
+        logmsg ("CPU%4.4X: SIGP CPU%4.4X %s (%2.2X) PARM "F_GREG"\n",
                 regs->cpuad, cpad,
-                order > MAX_SIGPORDER ? ordername[0] : ordername[order],
+                order >= sizeof(ordername) / sizeof(ordername[0]) ?
+                        "Unassigned" : ordername[order],
+                order,
                 parm);
-#else /*defined(FEATURE_ESAME)*/
-        logmsg ("CPU%4.4X: SIGP CPU%4.4X %s PARM %16.16llX\n",
-                regs->cpuad, cpad,
-                order > MAX_SIGPORDER ? ordername[0] : ordername[order],
-                (long long)parm);
-#endif /*defined(FEATURE_ESAME)*/
+    }
 
     /* [4.9.2.1] Claim the use of the CPU signaling and response
        facility, and return condition code 2 if the facility is
