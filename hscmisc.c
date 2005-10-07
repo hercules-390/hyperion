@@ -666,7 +666,7 @@ char    type;
         aaddr = APPLY_PREFIXING (raddr, regs->PX);
         if (aaddr > regs->mainlim)
         {
-            logmsg(_("Adressing exception\n"));
+            logmsg(_("Addressing exception\n"));
             return;
         }
 
@@ -675,7 +675,7 @@ char    type;
 
         if (aaddr + ilc > regs->mainlim)
         {
-            logmsg(_("Adressing exception\n"));
+            logmsg(_("Addressing exception\n"));
             return;
         }
 
