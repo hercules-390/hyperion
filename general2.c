@@ -1911,7 +1911,9 @@ DEF_INST(convert_utf8_to_utf32)
   GREG srcelen;                    /* Source length                  */
   BYTE utf32[4];                   /* utf32 character(s)             */
   BYTE utf8[4];                    /* utf8 character(s)              */
+#if defined(FEATURE_ETF3_ENHANCEMENT)
   int wfc;                         /* Well-Formedness-Checking (W)   */
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
   int xlated;                      /* characters translated          */
 
   RRE(inst, regs, r1, r2);
@@ -1922,10 +1924,12 @@ DEF_INST(convert_utf8_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
+#if defined(FEATURE_ETF3_ENHANCEMENT)
   if(inst[2] & 0x10)
     wfc = 1;
   else
     wfc = 0;
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
@@ -2147,7 +2151,9 @@ DEF_INST(convert_utf16_to_utf32)
   BYTE utf16[4];                   /* utf16 character(s)             */
   BYTE utf32[4];                   /* utf328 character(s)            */
   BYTE uvwxy;                      /* Work value                     */
+#if defined(FEATURE_ETF3_ENHANCEMENT)
   int wfc;                         /* Well-Formedness-Checking (W)   */
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
   int xlated;                      /* characters translated          */
 
   RRE(inst, regs, r1, r2);
@@ -2158,10 +2164,12 @@ DEF_INST(convert_utf16_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
+#if defined(FEATURE_ETF3_ENHANCEMENT)
   if(inst[2] & 0x10)
     wfc = 1;
   else
     wfc = 0;
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
