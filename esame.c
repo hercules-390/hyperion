@@ -1129,6 +1129,69 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
 #endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
 
 
+#if defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)
+/*-------------------------------------------------------------------*/
+/* B9AA LPTEA - Load Page-Table-Entry Address                  [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_page_table_entry_address)
+{
+VADR    vaddr;                          /* Virtual address           */
+int     r1, r2, r3;                     /* Register numbers          */
+int     m4;                             /* Mask field                */
+int     n;                              /* Address space indication  */
+int     cc;                             /* Condition code            */
+
+    RRF_RM(inst, regs, r1, r2, r3, m4);
+
+    SIE_MODE_XC_OPEX(regs);
+
+    PRIV_CHECK(regs);
+
+    /* The m4 field determines which address space to use */
+    switch (m4) {
+    case 0: /* Use ASCE in control register 1 */
+        n = USE_PRIMARY_SPACE;
+        break;
+    case 1: /* Use ALET in access register r2 */
+        n = r2;
+        break;
+    case 2: /* Use ASCE in control register 7 */
+        n = USE_SECONDARY_SPACE;
+        break;
+    case 3: /* Use ASCE in control register 13 */
+        n = USE_HOME_SPACE;
+        break;
+    case 4: /* Use current addressing mode (PSW bits 16-17) */
+        n = 0;
+        break;
+    } /* end switch(m4) */
+
+    /* Load the virtual address from the r2 register */
+    vaddr = regs->GR(r2);
+
+    /* Find the page table address */
+    cc = ARCH_DEP(translate_addr) (vaddr, n, regs, ACCTYPE_PTE);
+
+    /* If ALET exception or ASCE-type or region translation exception,
+       set exception code in R1 bits 48-63, and set cc 3 */
+    if (cc >= 3)
+    {
+        regs->GR_G(r1) = regs->dat.xcode;
+        cc = 3;
+    }
+    else
+    {
+        /* Set R1 and condition code as returned by translate_addr */
+        regs->GR_G(r1) = regs->dat.raddr;
+    }
+
+    /* Set condition code */
+    regs->psw.cc = cc;
+
+} /* end DEF_INST(load_page_table_entry_address) */
+#endif /*defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)*/
+
+
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
 /* E388 ALCG  - Add Logical with Carry Long                    [RXY] */
