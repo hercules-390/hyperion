@@ -1,22 +1,27 @@
 /* VSTORE.H     (c) Copyright Roger Bowler, 1999-2005                */
-/*              ESA/390 Dynamic Address Translation                  */
+/*              ESA/390 Virtual Storage Functions                    */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2005      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 
 /*-------------------------------------------------------------------*/
-/* This module implements the DAT, ALET, and ASN translation         */
-/* functions of the ESA/390 architecture, described in the manual    */
-/* SA22-7201-04 ESA/390 Principles of Operation.  The numbers in     */
-/* square brackets in the comments refer to sections in the manual.  */
-/*-------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------*/
-/* Additional credits:                                               */
-/*      S/370 DAT support by Jay Maynard (as described in            */
-/*      GA22-7000 System/370 Principles of Operation)                */
-/*      Clear remainder of ASTE when ASF=0 - Jan Jaeger              */
-/*      S/370 DAT support when running under SIE - Jan Jaeger        */
+/* This module contains various functions which store, fetch, and    */
+/* copy values to, from, or between virtual storage locations.       */
+/*                                                                   */
+/* Functions provided in this module are:                            */
+/* vstorec      Store 1 to 256 characters into virtual storage       */
+/* vstoreb      Store a single byte into virtual storage             */
+/* vstore2      Store a two-byte integer into virtual storage        */
+/* vstore4      Store a four-byte integer into virtual storage       */
+/* vstore8      Store an eight-byte integer into virtual storage     */
+/* vfetchc      Fetch 1 to 256 characters from virtual storage       */
+/* vfetchb      Fetch a single byte from virtual storage             */
+/* vfetch2      Fetch a two-byte integer from virtual storage        */
+/* vfetch4      Fetch a four-byte integer from virtual storage       */
+/* vfetch8      Fetch an eight-byte integer from virtual storage     */
+/* instfetch    Fetch instruction from virtual storage               */
+/* move_chars   Move characters using specified keys and addrspaces  */
+/* validate_operand   Validate addressing, protection, translation   */
 /*-------------------------------------------------------------------*/
 
 #define NOCROSS2K(_addr,_len) likely( ( (int)((_addr) & 0x7FF)) <= ( 0x7FF - (_len) ) )
@@ -812,7 +817,7 @@ int     len2, len3;                     /* Lengths to copy           */
 
 
 /*-------------------------------------------------------------------*/
-/* Validate operand                                                  */
+/* Validate operand for addressing, protection, translation          */
 /*                                                                   */
 /* Input:                                                            */
 /*      addr    Effective address of operand                         */
