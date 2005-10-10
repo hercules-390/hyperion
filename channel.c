@@ -1585,6 +1585,7 @@ static void ARCH_DEP(fetch_midaw) (                             /*@MW*/
                         DEVBLK *dev,    /* -> Device block           */
                         BYTE code,      /* CCW operation code        */
                         BYTE ccwkey,    /* Bits 0-3=key, 4-7=zeroes  */
+                        int midawseq,   /* 0=1st MIDAW               */
                         U32 midawadr,   /* Main storage addr of MIDAW*/
                         RADR *addr,     /* Returned MIDAW content    */
                         U16 *len,       /* Returned MIDAW data length*/
@@ -1604,6 +1605,13 @@ U16     maxlen;                         /* Maximum allowable length  */
        boundary or is outside limit of main storage */
     if ((midawadr & 0x0F)
         || CHADDRCHK(midawadr, dev) )
+    {
+        *chanstat = CSW_PROGC;
+        return;
+    }
+
+    /* Channel program check if MIDAW list crosses a page boundary */
+    if (midawseq > 0 && (midawadr & PAGEFRAME_BYTEMASK) == 0)
     {
         *chanstat = CSW_PROGC;
         return;
@@ -1705,6 +1713,7 @@ RADR    page,startpage,endpage;         /* Storage key pages         */
 BYTE    readcmd;                        /* 1=READ, SENSE, or RDBACK  */
 BYTE    area[64];                       /* Data display area         */
 #if defined(FEATURE_MIDAW)                                      /*@MW*/
+int     midawseq;                       /* MIDAW counter (0=1st)  @MW*/
 U32     midawptr;                       /* Real addr of MIDAW     @MW*/
 U16     midawrem;                       /* CCW bytes remaining    @MW*/
 U16     midawlen;                       /* MIDAW data length      @MW*/
@@ -1729,11 +1738,14 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
         midawrem = count;               
         midawflg = 0;                   
 
-        while (midawrem > 0 && (midawflg & MIDAW_LAST) == 0)  
+        for (midawseq = 0;
+             midawrem > 0 && (midawflg & MIDAW_LAST) == 0;
+             midawseq++)
         {                                                       
             /* Fetch MIDAW and set data address, length, flags */
-            ARCH_DEP(fetch_midaw) (dev, code, ccwkey, midawptr, 
-                    &midawdat, &midawlen, &midawflg, chanstat); 
+            ARCH_DEP(fetch_midaw) (dev, code, ccwkey,
+                    midawseq, midawptr,
+                    &midawdat, &midawlen, &midawflg, chanstat);
 
             /* Exit if fetch_midaw detected channel program check */
             if (*chanstat != 0) return;
@@ -1808,7 +1820,7 @@ BYTE    midawflg;                       /* MIDAW flags            @MW*/
             /* Increment to next MIDAW address */
             midawptr += 16;
 
-        } /* end while */
+        } /* end for(midawseq) */
 
         /* Channel program check if sum of MIDAW lengths
            did not exhaust the CCW count */

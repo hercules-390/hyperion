@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+10 Oct 2005 MIDAW list must not cross a page boundary - Roger Bowler
 10 Oct 2005 IDTE instruction is RRF_RM format with unused M4 operand - Roger Bowler
 07 Oct 2005 Display SIGP order number in addition to description - Roger Bowler
 06 Oct 2005 Store Facility List Extended (STFLE) - Roger Bowler
