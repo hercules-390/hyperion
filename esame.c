@@ -1015,6 +1015,7 @@ U64     old;                            /* Old value                 */
 DEF_INST(invalidate_dat_table_entry)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
+int     m4;                             /* Unused mask field         */
 U64     asceto;                         /* ASCE table origin         */
 int     ascedt;                         /* ASCE designation type     */
 int     count;                          /* Invalidation counter      */
@@ -1022,7 +1023,7 @@ int     eiindx;                         /* Eff. invalidation index   */
 U64     asce;                           /* Contents of ASCE          */
 BYTE   *mn;                             /* Mainstor address of ASCE  */
 
-    RRF_M(inst, regs, r1, r2, r3);
+    RRF_RM(inst, regs, r1, r2, r3, m4);
 
     PRIV_CHECK(regs);
 

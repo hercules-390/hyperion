@@ -2937,7 +2937,7 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B98B*/ GENx___x___x___ ,
  /*B98C*/ GENx___x___x___ ,
  /*B98D*/ GENx___x390x900 (extract_psw,RRE,"EPSW"),
- /*B98E*/ GENx___x___x900 (invalidate_dat_table_entry,RRF_M,"IDTE"),
+ /*B98E*/ GENx___x___x900 (invalidate_dat_table_entry,RRF_RM,"IDTE"),
  /*B98F*/ GENx___x___x___ ,
  /*B990*/ GENx___x390x900 (translate_two_to_two,RRF_M3,"TRTT"),
  /*B991*/ GENx___x390x900 (translate_two_to_one,RRF_M3,"TRTO"),
