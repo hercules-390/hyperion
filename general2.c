@@ -2028,7 +2028,7 @@ DEF_INST(convert_utf8_to_utf32)
             return;
           }
         }
-        if((utf8[0] >= 0xe1 && utf8[0] <= 0xec) || (utf8[0] >= 0xee && utf8[0] < 0xef))
+        if((utf8[0] >= 0xe1 && utf8[0] <= 0xec) || (utf8[0] >= 0xee && utf8[0] <= 0xef))
         {
           if(utf8[1] < 0x80 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf)
           {
