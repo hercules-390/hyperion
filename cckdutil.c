@@ -641,7 +641,7 @@ comp_restart:
         pos += spc[i].len;
     }
     cdevhdr.size = cdevhdr.used = pos;
-    ftruncate (fd, (off_t)pos);
+    FTRUNCATE (fd, (off_t)pos);
     freed = spc[n-1].pos + spc[n-1].len - pos;
 
 /*-------------------------------------------------------------------
