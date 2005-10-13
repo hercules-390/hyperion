@@ -477,7 +477,7 @@ comp_restart:
                      i, strerror(errno));
             goto comp_err_exit;
         }
-        rc_off = lseek (fd, (off_t)l1[i], SEEK_SET);
+        rc_off = lseek (fd, (OFF_T)l1[i], SEEK_SET);
         if (rc_off < 0)
         {
             COMPMSG (m, "l2[%d] lseek error offset %8.8x: %s\n",
@@ -510,7 +510,7 @@ comp_restart:
             n++;
             if (l2[i][j].pos >= pos)
                 continue;
-            rc_off = lseek (fd, (off_t)l2[i][j].pos, SEEK_SET);
+            rc_off = lseek (fd, (OFF_T)l2[i][j].pos, SEEK_SET);
             if (rc_off < 0)
             {
                 COMPMSG (m, "%s %d lseek error offset %8.8x: %s\n",
@@ -525,7 +525,7 @@ comp_restart:
                          i, rc, rc < 0 ? strerror(errno) : "incomplete");
                 goto comp_err_exit;
             }
-            rc_off = lseek (fd, (off_t)cdevhdr.size, SEEK_SET);
+            rc_off = lseek (fd, (OFF_T)cdevhdr.size, SEEK_SET);
             if (rc_off < 0)
             {
                 COMPMSG (m, "%s %d lseek error offset %8.8x: %s\n",
@@ -585,7 +585,7 @@ comp_restart:
     {
         if (spc[i].pos != pos)
         {
-            rc_off = lseek (fd, (off_t)spc[i].pos, SEEK_SET);
+            rc_off = lseek (fd, (OFF_T)spc[i].pos, SEEK_SET);
             if (rc_off < 0)
             {
                 COMPMSG (m, "%s %d lseek error offset %8.8x: %s\n",
@@ -609,7 +609,7 @@ comp_restart:
                 errs++;
                 continue;
             }
-            rc_off = lseek (fd, (off_t)pos, SEEK_SET);
+            rc_off = lseek (fd, (OFF_T)pos, SEEK_SET);
             if (rc_off < 0)
             {
                 COMPMSG (m, "%s %d lseek error offset %8.8x: %s\n",
@@ -641,7 +641,7 @@ comp_restart:
         pos += spc[i].len;
     }
     cdevhdr.size = cdevhdr.used = pos;
-    FTRUNCATE (fd, (off_t)pos);
+    FTRUNCATE (fd, (OFF_T)pos);
     freed = spc[n-1].pos + spc[n-1].len - pos;
 
 /*-------------------------------------------------------------------
@@ -650,7 +650,7 @@ comp_restart:
     cdevhdr.free = cdevhdr.free_total = cdevhdr.free_largest =
     cdevhdr.free_number = cdevhdr.free_imbed = 0;
 
-    rc_off = lseek (fd, (off_t)CKDDASD_DEVHDR_SIZE, SEEK_SET);
+    rc_off = lseek (fd, (OFF_T)CKDDASD_DEVHDR_SIZE, SEEK_SET);
     if (rc_off < 0)
     {
         COMPMSG (m, "cdevhdr lseek error offset %8.8x: %s\n",
