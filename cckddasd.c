@@ -92,6 +92,7 @@ void    cckd_lock_devchain(int flag);
 void    cckd_unlock_devchain();
 void    cckd_gcol();
 int     cckd_gc_percolate(DEVBLK *dev, unsigned int size);
+int     cckd_gc_l2(DEVBLK *dev, BYTE *buf);
 DEVBLK *cckd_find_device_by_devnum (U16 devnum);
 BYTE   *cckd_uncompress(DEVBLK *dev, BYTE *from, int len, int maxlen, int trk);
 int     cckd_uncompress_zlib(DEVBLK *dev, BYTE *to, BYTE *from, int len, int maxlen);
@@ -1917,8 +1918,14 @@ int             len;                    /* Requested length          */
 
     len = *size;
 
-    cckd_trace (dev, "get_space len %d largest %d\n",
-                len, cckd->cdevhdr[sfx].free_largest);
+    if (flags & CCKD_L2SPACE)
+    {
+        flags |= CCKD_SIZE_EXACT;
+        len = *size = CCKD_L2TAB_SIZE;
+    }
+
+    cckd_trace (dev, "get_space len %d largest %d flags 0x%2.2x\n",
+                len, cckd->cdevhdr[sfx].free_largest, flags);
 
     if (len <= CKDDASD_NULLTRK_FMTMAX)
         return 0;
@@ -1932,6 +1939,9 @@ int             len;                    /* Requested length          */
     if (len2 > (int)cckd->cdevhdr[sfx].free_largest
      && len != (int)cckd->cdevhdr[sfx].free_largest)
     {
+
+cckd_get_space_atend:
+
         fpos = (OFF_T)cckd->cdevhdr[sfx].size;
         if ((U64)(fpos + len) > (U64)4294967295ULL)
         {
@@ -1948,16 +1958,22 @@ int             len;                    /* Requested length          */
     }
 
     /* Scan free space chain */
+    fpos = (OFF_T)cckd->cdevhdr[sfx].free;
     for (i = cckd->free1st; i >= 0; i = cckd->free[i].next)
-        if (!cckd->free[i].pending
-         && (len2 <= (int)cckd->free[i].len || len == (int)cckd->free[i].len))
+    {
+        if (cckd->free[i].pending == 0
+         && (len2 <= (int)cckd->free[i].len || len == (int)cckd->free[i].len)
+         && ((flags & CCKD_L2SPACE) || fpos >= cckd->l2bounds))
             break;
+        fpos = (OFF_T)cckd->free[i].pos;
+    }
+
+    /* This can happen if largest comes before l2bounds */
+    if (i < 0) goto cckd_get_space_atend; 
+
+    flen = cckd->free[i].len;
     p = cckd->free[i].prev;
     n = cckd->free[i].next;
-
-    /* Found a free space, obtain its file position and length */
-    fpos = p >= 0 ? (OFF_T)cckd->free[p].pos : (OFF_T)cckd->cdevhdr[sfx].free;
-    flen = cckd->free[i].len;
 
     /*
      * If `CCKD_SIZE_ANY' bit is set and the left over space is small
@@ -2316,6 +2332,7 @@ int cckd_read_l1 (DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             sfx;                    /* File index                */
 int             len;                    /* Length of level 1 table   */
+int             i;                      /* Work integer              */
 
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
@@ -2339,6 +2356,19 @@ int             len;                    /* Length of level 1 table   */
     /* Fix endianess */
     if (cckd->swapend[sfx])
         cckd_swapend_l1 (cckd->l1[sfx], cckd->cdevhdr[sfx].numl1tab);
+
+    /* Determine bounds */
+    cckd->l2bounds = CCKD_L1TAB_POS + len;
+    for (i = 0; i < cckd->cdevhdr[sfx].numl1tab; i++)
+        if (cckd->l1[sfx][i] != 0 && cckd->l1[sfx][i] != 0xffffffff)
+            cckd->l2bounds += CCKD_L2TAB_SIZE;
+
+    /* Check if all l2 tables are within bounds */
+    cckd->l2ok = 1;
+    for (i = 0; i < cckd->cdevhdr[sfx].numl1tab && cckd->l2ok; i++)
+        if (cckd->l1[sfx][i] != 0 && cckd->l1[sfx][i] != 0xffffffff)
+            if (cckd->l1[sfx][i] > cckd->l2bounds - CCKD_L2TAB_SIZE)
+                cckd->l2ok = 0;
 
     return 0;
 
@@ -2721,6 +2751,7 @@ int             fix;                    /* Null format type          */
     sfx = cckd->sfn;
     l1x = cckd->l1x;
     fix = cckd->cdevhdr[sfx].nullfmt;
+    cckd->l2ok = 0;
 
     cckd_trace (dev, "file[%d] write_l2 %d\n", sfx, l1x);
 
@@ -2728,16 +2759,22 @@ int             fix;                    /* Null format type          */
 
     old_off = (OFF_T)cckd->l1[sfx][l1x];
 
+    if (cckd->l1[sfx][l1x] == 0 || cckd->l1[sfx][l1x] == 0xffffffff)
+        cckd->l2bounds += CCKD_L2TAB_SIZE;
+
     /* Write the L2 table if it's not empty */
     if (memcmp(cckd->l2, &empty_l2[fix], CCKD_L2TAB_SIZE))
     {
-        if ((off = cckd_get_space (dev, &size, CCKD_SIZE_EXACT)) < 0)
+        if ((off = cckd_get_space (dev, &size, CCKD_L2SPACE)) < 0)
             return -1;
         if (cckd_write (dev, sfx, off, cckd->l2, CCKD_L2TAB_SIZE) < 0)
             return -1;
     }
     else
+    {
         off = 0;
+        cckd->l2bounds -= CCKD_L2TAB_SIZE;
+    }
 
     /* Free the old L2 space */
     cckd_rel_space (dev, old_off, CCKD_L2TAB_SIZE, CCKD_L2TAB_SIZE);
@@ -3539,6 +3576,9 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
         goto sf_new_error;
     }
 
+    /* Re-read the l1 to set l2bounds, l2ok */
+    cckd_read_l1 (dev);
+
     return 0;
 
 sf_new_error:
@@ -3550,6 +3590,9 @@ sf_new_error:
     cckd_close (dev, cckd->sfn+1);
     cckd->open[cckd->sfn+1] = CCKD_OPEN_NONE;
     unlink (cckd_sf_name (dev, cckd->sfn+1));
+
+    /* Re-read the l1 to set l2bounds, l2ok */
+    cckd_read_l1 (dev);
 
     return -1;
 
@@ -3609,6 +3652,9 @@ int             syncio;                 /* Saved syncio bit          */
             dev->devnum, cckd->sfn, cckd_sf_name (dev, cckd->sfn));
 
 cckd_sf_add_exit:
+
+    /* Re-read the l1 to set l2bounds, l2ok */
+    cckd_read_l1 (dev);
 
     release_lock (&cckd->filelock);
 
@@ -3711,7 +3757,7 @@ BYTE            buf[65536];             /* Buffer                    */
     }
     else
     {
-        if (cckd_chkdsk (cckd->fd[to_sfx], stdout, 1) < 0)
+        if (cckd_chkdsk (cckd->fd[to_sfx], stdout, 0) < 0)
         {
             logmsg (_("HHCCD173E %4.4X file[%d] not merged, "
                     "file[%d] check failed\n"),
@@ -3798,7 +3844,7 @@ BYTE            buf[65536];             /* Buffer                    */
 
                     /* Get space for the `to' track/blkgrp image */
                     size = len;
-                    if ((pos = cckd_get_space (dev, &size, CCKD_SIZE_ANY)) < 0)
+                    if ((pos = cckd_get_space (dev, &size, CCKD_SIZE_EXACT)) < 0)
                     {
                         err = 1;
                         continue;
@@ -3846,7 +3892,7 @@ BYTE            buf[65536];             /* Buffer                    */
                 {
                     size = CCKD_L2TAB_SIZE;
                     if (pos == 0 || pos == (OFF_T)0xffffffff)
-                        pos = cckd_get_space (dev, &size, CCKD_SIZE_EXACT);
+                        pos = cckd_get_space (dev, &size, CCKD_L2SPACE);
                     if (cckd_write(dev, to_sfx, pos, &to_l2, CCKD_L2TAB_SIZE) < 0)
                     {
                         err = 1;
@@ -3882,10 +3928,6 @@ BYTE            buf[65536];             /* Buffer                    */
     }
 
     /* Remove the old file */
-//FIXME: unlink doesn't free space ??
-//  actually space is freed, it just takes time
-//  ftruncate is commented out so we don't have to wait
-//  cckd_ftruncate(dev, from_sfx, 0);
     cckd_close (dev, from_sfx);
     cckd_free (dev, "l1", cckd->l1[from_sfx]);
     cckd->l1[from_sfx] = NULL;
@@ -3900,6 +3942,9 @@ BYTE            buf[65536];             /* Buffer                    */
             err ? " with errors" : "");
 
 sf_remove_exit:
+
+    /* Re-read the l1 to set l2bounds, l2ok */
+    cckd_read_l1 (dev);
 
     release_lock (&cckd->filelock);
 
@@ -4327,6 +4372,9 @@ BYTE            buf[256*1024];          /* Buffer                    */
         }
     }
 
+    if (!cckd->l2ok)
+        cckd_gc_l2(dev, buf);
+
     while (moved < size && after < 4)
     {
         obtain_lock (&cckd->filelock);
@@ -4392,7 +4440,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
         /* Calculate the offset/length of the used space.
          * If only imbedded free space is left, then start
-         * with the first used space.
+         * with the first used space that is not an l2 table.
          */
         if (i >= 0)
         {
@@ -4402,6 +4450,15 @@ BYTE            buf[256*1024];          /* Buffer                    */
         else if (!cckd->cdevhdr[sfx].free_number && cckd->cdevhdr[sfx].free_imbed)
         {
             upos = (OFF_T)(CCKD_L1TAB_POS + cckd->cdevhdr[sfx].numl1tab * CCKD_L1ENT_SIZE);
+            while (1)
+            {
+                for (i = 0; i < cckd->cdevhdr[sfx].numl1tab; i++)
+                    if (cckd->l1[sfx][i] == (U32)upos)
+                       break;
+                if (i >= cckd->cdevhdr[sfx].numl1tab)
+                    break;
+                upos += CCKD_L2TAB_SIZE;
+            }
             ulen = cckd->cdevhdr[sfx].size - upos;
         }
 
@@ -4504,6 +4561,138 @@ cckd_gc_perc_error:
     return moved;
 
 } /* end function cckd_gc_percolate */
+
+/*-------------------------------------------------------------------*/
+/* Garbage Collection -- Reposition level 2 tables                   */
+/*                                                                   */
+/* General idea is to relocate all level 2 tables as close to the    */
+/* beginning of the file as possible.  This can help speed up, for   */
+/* example, chkdsk processing.                                       */
+/*                                                                   */
+/* If any level 2 tables reside outside of the bounds (that is, if   */
+/* any level 2 table could be moved closer to the beginning of the   */
+/* file) then first we relocate all track images within the bounds.  */
+/* Note that cckd_get_space will not allocate space within the       */
+/* the bounds for track images.  Next we try to relocate all level 2 */
+/* tables outside the bounds.  This may take a few iterations for    */
+/* the freed space within the bounds to become non-pending.          */
+/*                                                                   */
+/* The bounds can change as level 2 tables are added or removed.     */
+/* cckd_read_l1 sets the bounds and they are adjusted by             */
+/* cckd_write_l2.                                                    */
+/*-------------------------------------------------------------------*/
+int cckd_gc_l2(DEVBLK *dev, BYTE *buf)
+{
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+int             sfx;                    /* Shadow file index         */
+int             i, j;                   /* Work variables            */
+int             trk;                    /* Track number              */
+int             len;                    /* Track length              */
+OFF_T           pos, fpos;              /* File offsets              */
+
+    cckd = dev->cckd_ext;
+
+    obtain_lock (&cckd->filelock);
+    sfx = cckd->sfn;
+
+    if (cckd->l2ok)
+        goto cckd_gc_l2_exit;
+
+    /* Find any level 2 table out of bounds */
+    for (i = 0; i < cckd->cdevhdr[sfx].numl1tab; i++)
+        if (cckd->l1[sfx][i] != 0 && cckd->l1[sfx][i] != 0xffffffff
+         && cckd->l2bounds - CCKD_L2TAB_SIZE < (OFF_T)cckd->l1[sfx][i])
+            break;
+
+    /* Return OK if no l2 tables out of bounds */
+    if (i >= cckd->cdevhdr[sfx].numl1tab)
+        goto cckd_gc_l2_exit_ok;
+
+    /* Relocate all track images within the bounds */
+    pos = CCKD_L1TAB_POS + (cckd->cdevhdr[sfx].numl1tab * CCKD_L1ENT_SIZE);
+    i = cckd->free1st;
+    fpos = (OFF_T)cckd->cdevhdr[sfx].free;
+    while (pos < cckd->l2bounds)
+    {
+        if (i >= 0 && pos == fpos)
+        {
+            pos += cckd->free[i].len;
+            fpos = (OFF_T)cckd->free[i].pos;
+            i = cckd->free[i].next;
+            j = 0;
+        }
+        else
+        {
+            for (j = 0; j < cckd->cdevhdr[sfx].numl1tab; j++)
+                if (pos == (OFF_T)cckd->l1[sfx][j])
+                {
+                    pos += CCKD_L2TAB_SIZE;
+                    break;
+                }
+        }
+        if (j >= cckd->cdevhdr[sfx].numl1tab)
+        {
+            /* Found a track to relocate */
+            if (cckd_read (dev, sfx, pos, buf, CKDDASD_TRKHDR_SIZE) < 0)
+                goto cckd_gc_l2_exit;
+            if ((trk = cckd_cchh (dev, buf, -1)) < 0)
+                goto cckd_gc_l2_exit;
+            cckd_trace (dev, "gc_l2 relocate trk[%d] offset 0x%x\n", trk, pos);
+            if ((len = cckd_read_trkimg (dev, buf, trk, NULL)) < 0)
+               goto cckd_gc_l2_exit;
+            if (cckd_write_trkimg (dev, buf, len, trk, CCKD_SIZE_EXACT) < 0)
+               goto cckd_gc_l2_exit;
+            /* Start over */
+            pos = CCKD_L1TAB_POS + (cckd->cdevhdr[sfx].numl1tab * CCKD_L1ENT_SIZE);
+            i = cckd->free1st;
+            fpos = (OFF_T)cckd->cdevhdr[sfx].free;
+        }
+    }
+
+    do {
+        /* Find a level 2 table to relocate */
+        i = cckd->free1st;
+        fpos = (OFF_T)cckd->cdevhdr[sfx].free;
+        cckd_trace (dev, "gc_l2 first free[%d] pos 0x%x len %d pending %d\n",
+                    i, fpos, i >= 0 ? (int)cckd->free[i].len : -1,
+                    i >= 0 ? cckd->free[i].pending : -1);
+        if (i < 0 || fpos >= cckd->l2bounds || cckd->free[i].pending)
+            goto cckd_gc_l2_exit;
+
+        if (cckd->free[i].len < CCKD_L2TAB_SIZE)
+        {
+            for (i = 0; i < cckd->cdevhdr[sfx].numl1tab; i++)
+                if (fpos + cckd->free[i].len == (OFF_T)cckd->l1[sfx][i])
+                    break;
+        }
+        else
+        {
+            for (i = 0; i < cckd->cdevhdr[sfx].numl1tab; i++)
+                if (cckd->l2bounds - CCKD_L2TAB_SIZE < (OFF_T)cckd->l1[sfx][i]
+                 && cckd->l1[sfx][i] != 0xffffffff)
+                    break;
+        }
+
+        if (i < cckd->cdevhdr[sfx].numl1tab)
+        {
+            cckd_trace (dev, "gc_l2 relocate l2[%d] pos 0x%x\n",
+                        i, cckd->l1[sfx][i]);
+            if (cckd_read_l2 (dev, sfx, i) < 0)
+                goto cckd_gc_l2_exit;
+            if (cckd_write_l2 (dev) < 0)
+                goto cckd_gc_l2_exit;
+        }
+    } while (i < cckd->cdevhdr[sfx].numl1tab);
+
+cckd_gc_l2_exit:
+    release_lock (&cckd->filelock);
+    return 0;
+
+cckd_gc_l2_exit_ok:
+    cckd_trace (dev, "gc_l2 ok%s\n", "");
+    cckd->l2ok = 1;
+    goto cckd_gc_l2_exit;
+}
 
 /*-------------------------------------------------------------------*/
 /* Find device by devnum                                             */
