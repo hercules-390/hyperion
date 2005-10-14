@@ -1116,6 +1116,7 @@ typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
 /* Flag bits */
 #define CCKD_SIZE_EXACT         0x01    /* Space obtained is exact   */
 #define CCKD_SIZE_ANY           0x02    /* Space can be any size     */
+#define CCKD_L2SPACE            0x04    /* Space for a l2 table      */
 
 /* adjustable values */
 
