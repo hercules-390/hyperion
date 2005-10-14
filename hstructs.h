@@ -1240,7 +1240,8 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
                          updated:1,     /* 1=Update occurred         */
                          merging:1,     /* 1=File merge in progress  */
                          stopping:1,    /* 1=Device is closing       */
-                         notnull:1;     /* 1=Device has track images */
+                         notnull:1,     /* 1=Device has track images */
+                         l2ok:1;        /* 1=All l2s below bounds    */
         LOCK             filelock;      /* File lock                 */
         LOCK             iolock;        /* I/O lock                  */
         COND             iocond;        /* I/O condition             */
@@ -1252,6 +1253,7 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
         int              l1x;           /* Active level 2 table index*/
         CCKD_L2ENT      *l2;            /* Active level 2 table      */
         int              l2active;      /* Active level 2 cache entry*/
+        OFF_T            l2bounds;      /* L2 tables boundary        */
         int              active;        /* Active cache entry        */
         BYTE            *newbuf;        /* Uncompressed buffer       */
         unsigned int     freemin;       /* Minimum free space size   */
