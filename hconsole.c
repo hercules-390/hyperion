@@ -104,6 +104,10 @@ static WORD W32_COLOR( short herc_color )
         case COLOR_LIGHT_YELLOW:  return W32_COLOR_LIGHT_YELLOW;
         case COLOR_WHITE:         return W32_COLOR_WHITE;
 
+        case COLOR_DEFAULT_BG:    return W32_COLOR_BLACK;
+        case COLOR_DEFAULT_FG:    return W32_COLOR_LIGHT_GREY;
+        case COLOR_DEFAULT_LIGHT: return W32_COLOR_WHITE;
+
         default:                  return W32_COLOR_LIGHT_GREY;
     }
 }
@@ -600,6 +604,7 @@ SGR (Select Graphic Rendition):
 #define  ISO_COLOR_MAGENTA   ( 35 )
 #define  ISO_COLOR_CYAN      ( 36 )
 #define  ISO_COLOR_WHITE     ( 37 )
+#define  ISO_COLOR_DEFAULT   ( 39 )
 
 #define  ISO_NORMAL( iso_color )    ( ( 0x0000 ) | ( (uint16_t)( iso_color ) ) )
 #define  ISO_BRIGHT( iso_color )    ( ( 0x0100 ) | ( (uint16_t)( iso_color ) ) )
@@ -633,7 +638,11 @@ static uint16_t ISO_COLOR( short herc_color )
         case COLOR_LIGHT_YELLOW:  return ISO_BRIGHT( ISO_COLOR_YELLOW  );
         case COLOR_WHITE:         return ISO_BRIGHT( ISO_COLOR_WHITE   );
 
-        default:                  return ISO_NORMAL( ISO_COLOR_WHITE   );
+        case COLOR_DEFAULT_FG:    return ISO_NORMAL( ISO_COLOR_DEFAULT );
+        case COLOR_DEFAULT_BG:    return ISO_NORMAL( ISO_COLOR_DEFAULT );
+        case COLOR_DEFAULT_LIGHT: return ISO_BRIGHT( ISO_COLOR_DEFAULT );
+
+        default:                  return ISO_NORMAL( ISO_COLOR_DEFAULT );
     }
 }
 
@@ -701,8 +710,11 @@ int console_beep( FILE* confp )
 int  get_console_dim( FILE* confp, int* rows, int* cols )
 {
     char* env;
-
+#if defined(TIOCGWINSZ)
+    struct winsize winsize;
+#else
     UNREFERENCED( confp );
+#endif
 
     if ( !rows || !cols )
     {
@@ -710,13 +722,20 @@ int  get_console_dim( FILE* confp, int* rows, int* cols )
         return -1;
     }
 
-    /* ZZFIXME: Should probably be using some other type
-       of OS interface to determine the screen size here. */
-
-    if (!(env = getenv( "LINES"   ))) *rows = 24;
-    else                              *rows = atoi(env);
-    if (!(env = getenv( "COLUMNS" ))) *cols = 80;
-    else                              *cols = atoi(env);
+#if defined(TIOCGWINSZ)
+    if (ioctl(fileno(confp), TIOCGWINSZ, &winsize) >= 0)
+    {
+        *rows = winsize.ws_row;
+        *cols = winsize.ws_col;
+    }
+    else
+#endif
+    {
+        if (!(env = getenv( "LINES"   ))) *rows = 24;
+        else                              *rows = atoi(env);
+        if (!(env = getenv( "COLUMNS" ))) *cols = 80;
+        else                              *cols = atoi(env);
+    }
 
     if (!*rows || !*cols)
     {

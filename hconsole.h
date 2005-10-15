@@ -37,6 +37,9 @@
 #define  COLOR_LIGHT_MAGENTA   13
 #define  COLOR_LIGHT_YELLOW    14
 #define  COLOR_WHITE           15
+#define  COLOR_DEFAULT_FG      16
+#define  COLOR_DEFAULT_BG      17
+#define  COLOR_DEFAULT_LIGHT   18
 
 extern  int   set_screen_color ( FILE* confp, short herc_fore,  short herc_back  );
 

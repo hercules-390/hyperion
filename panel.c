@@ -774,7 +774,7 @@ int     kblen;                          /* Number of chars in kbbuf  */
     set_or_reset_console_mode( keybfd, 1 );
 
     /* Clear the screen */
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+    set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
     clear_screen( confp );
 
     redraw_msgs = 1;
@@ -1475,7 +1475,7 @@ FinishShutdown:
             redraw_msgs = 1;
             redraw_status = 1;
             redraw_cmd = 1;
-            set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+            set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
             clear_screen( confp );
         }
         /* =END= */
@@ -1531,7 +1531,7 @@ FinishShutdown:
                     n += firstmsgn + i;
                     if (n >= MAX_MSGS) n -= MAX_MSGS;
                     set_screen_pos( confp, i+1, 1 );
-                    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+                    set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
                     fwrite (msgbuf + (n * MSG_SIZE), MSG_SIZE, 1, confp);
                 }
 
@@ -1595,12 +1595,12 @@ FinishShutdown:
             {
                 /* Display the command line */
                 set_screen_pos( confp, 23, 1 );
-                set_screen_color( confp, COLOR_WHITE, COLOR_BLACK );
+                set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG );
                 fprintf ( confp, CMD_PREFIX_STR );
-                set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+                set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
                 set_screen_pos( confp, 23, LEN_CMD_PREFIX+1 );
                 PUTC_CMDLINE( confp );
-                set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+                set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
                 erase_to_eol( confp );
             } /* end if(redraw_cmd) */
 
@@ -1647,7 +1647,7 @@ int i,n;
 
     log_wakeup(NULL);
 
-    set_screen_color( stderr, COLOR_LIGHT_GREY, COLOR_BLACK );
+    set_screen_color( stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
     clear_screen( stderr );
 
     /* Reset the first line to be displayed (i.e.
@@ -1662,7 +1662,7 @@ int i,n;
         n += firstmsgn + i;
         if (n >= MAX_MSGS) n -= MAX_MSGS;
         set_screen_pos( stderr, i+1, 1 );
-        set_screen_color( stderr, COLOR_LIGHT_GREY, COLOR_BLACK );
+        set_screen_color( stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
         fwrite (msgbuf + (n * MSG_SIZE), MSG_SIZE, 1, stderr);
     }
 

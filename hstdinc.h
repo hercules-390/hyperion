@@ -58,6 +58,7 @@
 #include <sys/stat.h>
 #if !defined(_MSVC_)
   #include <sys/time.h>
+  #include <sys/ioctl.h>
 #endif
 #include <sys/types.h>
 
