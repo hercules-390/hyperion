@@ -672,7 +672,7 @@ int set_screen_color( FILE* confp, short herc_fore, short herc_back )
         ANSI_SET_COLOR
 
         ,ISO_NORMAL_OR_BRIGHT( iso_fore )
-        ,ISO_BACKGROUND_COLOR( iso_fore )
+        ,ISO_FOREGROUND_COLOR( iso_fore )
     );
 
     if ( rc < 0 ) return -1;
