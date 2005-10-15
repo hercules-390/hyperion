@@ -237,8 +237,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         }
 
         /* Restore the PSW key mask from the DUCT */
-        regs->CR(3) &= 0x0000FFFF;
-        regs->CR(3) |= duct_pkrp & DUCT_PKM;
+        regs->CR_L(3) &= 0x0000FFFF;
+        regs->CR_L(3) |= duct_pkrp & DUCT_PKM;
 
         /* Restore the PSW key from the DUCT */
         regs->psw.pkey = duct_pkrp & DUCT_KEY;
@@ -841,13 +841,14 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 DEF_INST(extract_primary_asn_and_instance)
 {
-  int r1, r2;                           /* Values of R fields        */
-  if(!sysblk.asnandlxreuse)
-  {
-      ARCH_DEP(operation_exception)(inst,regs);
-  }
+    int r1, r2;                         /* Values of R fields        */
 
-  RRE(inst, regs, r1, r2);
+    if(!sysblk.asnandlxreuse)
+    {
+        ARCH_DEP(operation_exception)(inst,regs);
+    }
+
+    RRE(inst, regs, r1, r2);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -1680,8 +1681,8 @@ CREG    inst_cr;                        /* Instruction CR            */
     {
         /* Load current PSTD and LTD or PASTEO */
         pstd = regs->CR(1);
-        ltd = regs->CR_L(5);
-        pasteo = regs->CR_L(5);
+        ltd = regs->CR_L(5);     /* ZZZ1 NOT SURE ABOUT THE MEANING OF THIS CODE: REFER TO ZZZ2 */
+        pasteo = regs->CR_L(5);  /* ZZZ1 NOT SURE ABOUT THE MEANING OF THIS CODE: REFER TO ZZZ2 */
         ax = (regs->CR(4) & CR4_AX) >> 16;
 
         /* When ASN-and-LX-reuse is installed and enabled by CR0,
@@ -1787,7 +1788,7 @@ CREG    inst_cr;                        /* Instruction CR            */
     regs->CR_LHL(3) = sasn_d;
     regs->CR_LHH(4) = ax;
     regs->CR_LHL(4) = pasn_d;
-    regs->CR_L(5) = ASF_ENABLED(regs) ? pasteo : ltd;
+    regs->CR_L(5) = ASF_ENABLED(regs) ? pasteo : ltd;  /* ZZZ2 NOT SURE ABOUT THE MEANING OF THIS CODE: REFER TO ZZZ1 */
     regs->CR(7) = sstd;
     if (ASN_AND_LX_REUSE_ENABLED(regs))
     {
@@ -3032,6 +3033,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Set SSTD equal to PSTD */
         regs->CR(7) = regs->CR(1);
 
+        /* Set sastein to pastein */
+        if (ASN_AND_LX_REUSE_ENABLED(regs))
+            regs->CR_H(3) = regs->CR_H(4);
+
     } /* end if(PC-cp) */
     else
     { /* Program call with space switching */
@@ -3039,6 +3044,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Set SASN and SSTD equal to current PASN and PSTD */
         regs->CR_LHL(3) = regs->CR_LHL(4);
         regs->CR(7) = regs->CR(1);
+        if (ASN_AND_LX_REUSE_ENABLED(regs))
+            regs->CR_H(3) = regs->CR_H(4);
 
         /* Set flag if either the current or new PSTD indicates
            a space switch event */
@@ -3051,6 +3058,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Obtain new AX from the ASTE and new PASN from the ET */
         regs->CR_L(4) = (aste[1] & ASTE1_AX) | pasn;
+        if (ASN_AND_LX_REUSE_ENABLED(regs))
+            regs->CR_H(4) = aste[11];
 
         /* Load the new primary STD or ASCE */
         regs->CR(1) = pstd;
@@ -3066,6 +3075,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         {
             regs->CR_LHL(3) = regs->CR_LHL(4);
             regs->CR(7) = regs->CR(1);
+            if (ASN_AND_LX_REUSE_ENABLED(regs))
+                regs->CR_H(3) = regs->CR_H(4);
         }
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
 

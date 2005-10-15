@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+15 Oct 2005 Fix ASTE instance number handling in PC - Jan Jaeger
 12 Oct 2005 cckd: gcol moves l2 tables to the front - Greg Smith
 12 Oct 2005 cckd_comp improvements - Greg Smith
 11 Oct 2005 Minor change in CU14, thanks Roger - Bernard van der Helm
