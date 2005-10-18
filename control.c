@@ -841,8 +841,9 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 DEF_INST(extract_primary_asn_and_instance)
 {
-    int r1, r2;                         /* Values of R fields        */
+int r1, r2;                             /* Values of R fields        */
 
+    /* Operation exception if ASN-and-LX-reuse is not enabled */
     if(!sysblk.asnandlxreuse)
     {
         ARCH_DEP(operation_exception)(inst,regs);
@@ -909,13 +910,16 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 DEF_INST(extract_secondary_asn_and_instance)
 {
-  int r1, r2;                           /* Values of R fields        */
-  if(!sysblk.asnandlxreuse)
-  {
-      ARCH_DEP(operation_exception)(inst,regs);
-  }
+int r1, r2;                             /* Values of R fields        */
 
-  RRE(inst, regs, r1, r2);
+
+    /* Operation exception if ASN-and-LX-reuse is not enabled */
+    if(!sysblk.asnandlxreuse)
+    {
+        ARCH_DEP(operation_exception)(inst,regs);
+    }
+
+    RRE(inst, regs, r1, r2);
 
     SIE_MODE_XC_OPEX(regs);
 
