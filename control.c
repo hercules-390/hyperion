@@ -2474,7 +2474,6 @@ RADR    lfto;                           /* Linkage first table origin*/
 U32     lftl;                           /* Linkage first table length*/
 U32     lfte;                           /* Linkage first table entry */
 RADR    lsto;                           /* Linkage second table orig */
-/* U32     lstl; */                     /* Linkage second table leng */
 U32     lste[2];                        /* Linkage second table entry*/
 RADR    eto;                            /* Entry table origin        */
 U32     etl;                            /* Entry table length        */
@@ -3257,7 +3256,7 @@ int     rc;                             /* return code from load_psw */
                     /* Set bit 2 of the exception access identification
                        to indicate that the program check occurred
                        during PASN translation in a PR instruction */
-                    regs->excarid = 0x20;
+                    newregs.excarid = 0x20;
                     ARCH_DEP(program_interrupt) (&newregs, PGM_ASTE_INSTANCE_EXCEPTION);
                 }
             } /* end if(ASN_AND_LX_REUSE_ENABLED) */
@@ -3327,7 +3326,7 @@ int     rc;                             /* return code from load_psw */
                     /* Set bit 3 of the exception access identification
                        to indicate that the program check occurred
                        during SASN translation in a PR instruction */
-                    regs->excarid = 0x10;
+                    newregs.excarid = 0x10;
                     ARCH_DEP(program_interrupt) (&newregs, PGM_ASTE_INSTANCE_EXCEPTION);
                 }
             } /* end if(ASN_AND_LX_REUSE_ENABLED) */
