@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+19 Oct 2005 Add OSTAILOR z/OS - Roger Bowler
 19 Oct 2005 Don't allow windows paths to confuse shared_ckd_init - Fish
 18 Oct 2005 Setting of excarid for ASTE-instance exception (Fish) - Roger Bowler
 15 Oct 2005 Fix panel color - Jay & Greg Smith

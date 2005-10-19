@@ -416,14 +416,17 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="OSTAILOR">
-<dt><code>OSTAILOR OS/390 &#124; VM &#124; VSE &#124; LINUX &#124; QUIET</code>
+<dt><code>OSTAILOR OS/390 &#124; z/OS &#124; 
+    VM &#124; VSE &#124; LINUX &#124; QUIET &#124; NULL</code>
 <dd><p>
     specifies the intended operating system.  The effect of this
     parameter is to reduce control panel message traffic by
     selectively suppressing trace messages for program checks
-    which are considered normal in the specified environment. <code>
-    QUIET</code> discards all exception messages. If this statement
-    is ommited, all exception messages are logged.
+    which are considered normal in the specified environment.
+    <code>QUIET</code> discards all exception messages.
+    <code>NULL</code> allows all exception messages to be logged.
+    If this statement is omitted, exception messages for program
+    checks 10, 11, 16, and 1C are suppressed.
     <p>
 
 <a name="PANRATE">
@@ -2155,7 +2158,7 @@ If you have a question about Hercules, see the
     <a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
     <p>
 
-    <small>Last updated 18 August 2005
+    <small>Last updated 19 October 2005
     <p>
 
 </center>

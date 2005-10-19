@@ -204,7 +204,7 @@
 /* Definitions for OS tailoring - msb eq mon event, lsb eq oper exc. */
 #define OS_NONE         0x7FFFFFFFF7DE7FFFULL   /* No spec OS tail.  */
 #define OS_OS390        0x7FF673FFF7DE7FFFULL   /* OS/390            */
-/*                      0x7B7... to suppress ASCE-type and RGN-third */
+#define OS_ZOS          0x7B7673FFF7DE7FB7ULL   /* z/OS              */
 #define OS_VSE          0x7FF673FFF7DE7FFFULL   /* VSE               */
 #define OS_VM           0x7FFFFFFFF7DE7FFCULL   /* VM                */
 #if !defined(NO_IEEE_SUPPORT)

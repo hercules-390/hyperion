@@ -1433,6 +1433,10 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
             {
                 ostailor = OS_OS390;
             }
+            else if (strcasecmp (sostailor, "Z/OS") == 0)
+            {
+                ostailor = OS_ZOS;
+            }
             else if (strcasecmp (sostailor, "VSE") == 0)
             {
                 ostailor = OS_VSE;

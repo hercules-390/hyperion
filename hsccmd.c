@@ -1876,6 +1876,7 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
     {
         char* sostailor = "(custom)";
         if (sysblk.pgminttr == OS_OS390 ) sostailor = "OS/390";
+        if (sysblk.pgminttr == OS_ZOS   ) sostailor = "z/OS";
         if (sysblk.pgminttr == OS_VSE   ) sostailor = "VSE";
         if (sysblk.pgminttr == OS_VM    ) sostailor = "VM";
         if (sysblk.pgminttr == OS_LINUX ) sostailor = "LINUX";
@@ -1887,6 +1888,11 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
     if (strcasecmp (argv[1], "OS/390") == 0)
     {
         sysblk.pgminttr = OS_OS390;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "Z/OS") == 0)
+    {
+        sysblk.pgminttr = OS_ZOS;
         return 0;
     }
     if (strcasecmp (argv[1], "VSE") == 0)
@@ -4310,7 +4316,7 @@ CMDHELP ( "pgmtrace",  "Format: \"pgmtrace [-]intcode\" where 'intcode' is any v
                        "with a '-' to stop tracing of that particular program interruption.\n"
                        )
 
-CMDHELP ( "ostailor",  "Format: \"ostailor quiet | os/390 | vm | vse | linux | null\". Specifies\n"
+CMDHELP ( "ostailor",  "Format: \"ostailor quiet | os/390 | z/os | vm | vse | linux | null\". Specifies\n"
                        "the intended operating system. The effect is to reduce control panel message\n"
                        "traffic by selectively suppressing program check trace messages which are\n"
                        "considered normal in the specified environment. 'quiet' suppresses all\n"
