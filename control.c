@@ -3036,7 +3036,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Set SSTD equal to PSTD */
         regs->CR(7) = regs->CR(1);
 
-        /* Set sastein to pastein */
+        /* When ASN-and-LX-reuse is installed and enabled,
+           set the SASTEIN equal to the PASTEIN */
         if (ASN_AND_LX_REUSE_ENABLED(regs))
             regs->CR_H(3) = regs->CR_H(4);
 
@@ -3047,6 +3048,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Set SASN and SSTD equal to current PASN and PSTD */
         regs->CR_LHL(3) = regs->CR_LHL(4);
         regs->CR(7) = regs->CR(1);
+
+        /* When ASN-and-LX-reuse is installed and enabled,
+           set the SASTEIN equal to the current PASTEIN */
         if (ASN_AND_LX_REUSE_ENABLED(regs))
             regs->CR_H(3) = regs->CR_H(4);
 
@@ -3061,6 +3065,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Obtain new AX from the ASTE and new PASN from the ET */
         regs->CR_L(4) = (aste[1] & ASTE1_AX) | pasn;
+
+        /* When ASN-and-LX-reuse is installed and enabled,
+           obtain the new PASTEIN from the new primary ASTE */
         if (ASN_AND_LX_REUSE_ENABLED(regs))
             regs->CR_H(4) = aste[11];
 
@@ -3078,6 +3085,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         {
             regs->CR_LHL(3) = regs->CR_LHL(4);
             regs->CR(7) = regs->CR(1);
+
+            /* When ASN-and-LX-reuse is installed and enabled,
+               also set the SASTEIN equal to the new PASTEIN */
             if (ASN_AND_LX_REUSE_ENABLED(regs))
                 regs->CR_H(3) = regs->CR_H(4);
         }
