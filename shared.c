@@ -126,6 +126,8 @@ char    *p, buf[1024];                  /* Work buffer               */
 
         /* First argument is `ipname:port:devnum' */
         ipname = buf;
+        if (strchr(ipname,'/') || strchr(ipname,'\\'))
+            return -1;
         p = strchr (buf, ':');
         if (p)
         {
