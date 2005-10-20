@@ -1,12 +1,13 @@
-/* INLINE.H (c) Copyright Jan Jaeger, 2000-2005          */
-/*      Inline function definitions              */
+/* INLINE.H     (c) Copyright Jan Jaeger, 2000-2005                  */
+/*              Inline function definitions                          */
 
+/* Original author Roger Bowler, 1999                                */
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2005      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 
-/* Storage protection override fix       Jan Jaeger 31/08/00 */
-/* ESAME low-address protection      v208d Roger Bowler 20/01/01 */
-/* ESAME subspace replacement        v208e Roger Bowler 27/01/01 */
+/* Storage protection override fix         Jan Jaeger 31/08/00       */
+/* ESAME low-address protection      v208d Roger Bowler 20/01/01     */
+/* ESAME subspace replacement        v208e Roger Bowler 27/01/01     */
 
 // #define INLINE_STORE_FETCH_ADDR_CHECK
 
@@ -89,45 +90,58 @@ _VFETCH_C_STATIC BYTE * s390_instfetch (BYTE *dest, U32 addr, REGS *regs);
 #define _INLINE_H
 
 
+/*-------------------------------------------------------------------*/
+/* Add two unsigned fullwords giving an unsigned fullword result     */
+/* and return the condition code for the AL or ALR instruction       */
+/*-------------------------------------------------------------------*/
 static inline int add_logical(U32 *result, U32 op1, U32 op2)
 {
     *result = op1 + op2;
-
     return (*result == 0 ? 0 : 1) | (op1 > *result ? 2 : 0);
-}
-        
+} /* end function add_logical */
 
+
+/*-------------------------------------------------------------------*/
+/* Subtract two unsigned fullwords giving unsigned fullword result   */
+/* and return the condition code for the SL or SLR instruction       */
+/*-------------------------------------------------------------------*/
 static inline int sub_logical(U32 *result, U32 op1, U32 op2)
 {
     *result = op1 - op2;
-
     return (*result == 0 ? 0 : 1) | (op1 < *result ? 0 : 2);
-}
-        
+} /* end function sub_logical */
 
+
+/*-------------------------------------------------------------------*/
+/* Add two signed fullwords giving a signed fullword result          */
+/* and return the condition code for the A or AR instruction         */
+/*-------------------------------------------------------------------*/
 static inline int add_signed(U32 *result, U32 op1, U32 op2)
 {
     *result = (S32)op1 + (S32)op2;
-
 
     return  ((S32)*result >  0) ?
             ((S32)op1 <  0 && (S32)op2 <  0) ? 3 : 2 :
         ((S32)*result <  0) ?
             ((S32)op1 >= 0 && (S32)op2 >= 0) ? 3 : 1 :
             ((S32)op1 <  0 && (S32)op2 <  0) ? 3 : 0;
-            
+
 /*    return (((S32)op1 < 0 && (S32)op2 < 0 && (S32)*result >= 0)
       || ((S32)op1 >= 0 && (S32)op2 >= 0 && (S32)*result < 0)) ? 3 :
                                               (S32)*result < 0 ? 1 :
                                               (S32)*result > 0 ? 2 : 0; */
-}
-        
+} /* end function add_signed */
 
+
+/*-------------------------------------------------------------------*/
+/* Subtract two signed fullwords giving a signed fullword result     */
+/* and return the condition code for the S or SR instruction         */
+/*-------------------------------------------------------------------*/
 static inline int sub_signed(U32 *result, U32 op1, U32 op2)
 {
     *result = (S32)op1 - (S32)op2;
 
-    return  ((S32)*result >  0) ? 
+    return  ((S32)*result >  0) ?
             ((S32)op1 <  0 && (S32)op2 >= 0) ? 3 : 2 :
         ((S32)*result <  0) ?
                 ((S32)op1 >= 0 && (S32)op2 <  0) ? 3 : 1 :
@@ -137,7 +151,7 @@ static inline int sub_signed(U32 *result, U32 op1, U32 op2)
       || ((S32)op1 >= 0 && (S32)op2 < 0 && (S32)*result < 0)) ? 3 :
                                              (S32)*result < 0 ? 1 :
                                              (S32)*result > 0 ? 2 : 0; */
-}
+} /* end function sub_signed */
 
 
 /*-------------------------------------------------------------------*/
@@ -156,7 +170,7 @@ S64 r;
 /*-------------------------------------------------------------------*/
 /* Divide a signed doubleword dividend by a signed fullword divisor  */
 /* giving a signed fullword remainder and a signed fullword quotient.*/
-/* Returns 0 if successful, 1 if divide overflow.            */
+/* Returns 0 if successful, 1 if divide overflow.                    */
 /*-------------------------------------------------------------------*/
 static inline int div_signed ( U32 *remainder, U32 *quotient,
               U32 dividendhi, U32 dividendlo, U32 divisor )
@@ -390,9 +404,9 @@ static inline U32 ARCH_DEP(fetch_fullword_absolute) (RADR addr,
 
 
 /*-------------------------------------------------------------------*/
-/* Fetch a halfword from absolute storage.               */
+/* Fetch a halfword from absolute storage.                           */
 /* The caller is assumed to have already checked that the absolute   */
-/* address is within the limit of main storage.              */
+/* address is within the limit of main storage.                      */
 /* All bytes of the halfword are fetched concurrently as observed by */
 /* other CPUs.  The halfword is first fetched as an integer, then    */
 /* the bytes are reversed into host byte order if necessary.         */
@@ -405,7 +419,7 @@ static inline U16 ARCH_DEP(fetch_halfword_absolute) (RADR addr,
 
 
 /*-------------------------------------------------------------------*/
-/* Store doubleword into absolute storage.               */
+/* Store doubleword into absolute storage.                           */
 /* All bytes of the word are stored concurrently as observed by      */
 /* other CPUs.  The bytes of the word are reversed if necessary      */
 /* and the word is then stored as an integer in absolute storage.    */
@@ -430,7 +444,7 @@ static inline void ARCH_DEP(store_doubleword_absolute) (U64 value,
 
 
 /*-------------------------------------------------------------------*/
-/* Store a fullword into absolute storage.               */
+/* Store a fullword into absolute storage.                           */
 /* All bytes of the word are stored concurrently as observed by      */
 /* other CPUs.  The bytes of the word are reversed if necessary      */
 /* and the word is then stored as an integer in absolute storage.    */
@@ -455,29 +469,24 @@ static inline void ARCH_DEP(store_fullword_absolute) (U32 value,
 
 
 /*-------------------------------------------------------------------*/
-/*                                                                   */
-/*               Perform subspace replacement                        */
+/* Perform subspace replacement                                      */
 /*                                                                   */
 /* Input:                                                            */
-/*                                                                   */
 /*  std     Original segment table designation (STD) or ASCE         */
 /*  asteo   ASTE origin obtained by ASN translation                  */
 /*  xcode   Pointer to field to receive exception code, or NULL      */
 /*  regs    Pointer to the CPU register context                      */
 /*                                                                   */
 /* Output:                                                           */
-/*                                                                   */
 /*  xcode   Exception code or zero (if xcode is not NULL)            */
 /*                                                                   */
 /* Return value:                                                     */
-/*                                                                   */
 /*  On successful completion, the exception code field (if not       */
 /*  NULL) is set to zero, and the function return value is the       */
 /*  STD resulting from subspace replacement, or is the original      */
 /*  STD if subspace replacement is not applicable.                   */
 /*                                                                   */
 /* Operation:                                                        */
-/*                                                                   */
 /*  If the ASF control is enabled, and the STD or ASCE is a          */
 /*  member of a subspace-group (bit 22 is one), and the              */
 /*  dispatchable unit is subspace active (DUCT word 1 bit 0 is       */
@@ -489,7 +498,6 @@ static inline void ARCH_DEP(store_fullword_absolute) (U32 value,
 /*  ASCE remains unchanged.                                          */
 /*                                                                   */
 /* Error conditions:                                                 */
-/*                                                                   */
 /*  If an ASTE validity exception or ASTE sequence exception         */
 /*  occurs, and the xcode parameter is a non-NULL pointer,           */
 /*  then the exception code is returned in the xcode field           */
