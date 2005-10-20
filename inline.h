@@ -186,8 +186,8 @@ S64 quot, rem;
 /*  skey    Storage key with fetch, reference, and change bits       */
 /*      and one low-order zero appended                              */
 /*  akey    Access key with 4 low-order zeroes appended              */
-/*  private 1=Location is in a private address space                 */
 /*  regs    Pointer to the CPU register context                      */
+/*  regs->dat.private  1=Location is in a private address space      */
 /* Return value:                                                     */
 /*  1=Fetch protected, 0=Not fetch protected                         */
 /*-------------------------------------------------------------------*/
@@ -234,8 +234,8 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
 /*                                                                   */
 /* Input:                                                            */
 /*  addr    Logical address of storage location                      */
-/*  private 1=Location is in a private address space                 */
 /*  regs    Pointer to the CPU register context                      */
+/*  regs->dat.private  1=Location is in a private address space      */
 /* Return value:                                                     */
 /*  1=Low-address protected, 0=Not low-address protected             */
 /*-------------------------------------------------------------------*/
@@ -283,9 +283,9 @@ static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
 /*  skey    Storage key with fetch, reference, and change bits       */
 /*      and one low-order zero appended                              */
 /*  akey    Access key with 4 low-order zeroes appended              */
-/*  private 1=Location is in a private address space                 */
-/*  protect 1=Access list protection or page protection applies      */
 /*  regs    Pointer to the CPU register context                      */
+/*  regs->dat.private  1=Location is in a private address space      */
+/*  regs->dat.protect  1=Access list protected or page protected     */
 /* Return value:                                                     */
 /*  1=Store protected, 0=Not store protected                         */
 /*-------------------------------------------------------------------*/
