@@ -316,8 +316,11 @@ static void http_verify_path(WEBBLK *webblk, char *path)
 
     if (!realpath( path, resolved_path ))
     {
-        http_error(webblk, "404 File Not Found","",
-                           "Invalid pathname");
+        char notfound[2*MAX_PATH];
+        strlcpy( notfound, "Invalid pathname: \"", sizeof(notfound) );
+        strlcat( notfound, resolved_path,          sizeof(notfound) );
+        strlcat( notfound,                   "\"", sizeof(notfound) );
+        http_error(webblk, "404 File Not Found","",notfound);
     }
 
 #if defined(WIN32)
@@ -342,7 +345,13 @@ static void http_verify_path(WEBBLK *webblk, char *path)
         resolved_path[k] = '\0';
     if (k >= (int)sizeof(resolved_path) ||
         strfilenamecmp( sysblk.httproot, resolved_path))
-        http_error(webblk, "404 File Not Found","", "Invalid pathname");
+    {
+        char notfound[2*MAX_PATH];
+        strlcpy( notfound, "Invalid pathname: \"", sizeof(notfound) );
+        strlcat( notfound, resolved_path,          sizeof(notfound) );
+        strlcat( notfound,                   "\"", sizeof(notfound) );
+        http_error(webblk, "404 File Not Found","", notfound);
+    }
 }
 
 
@@ -408,7 +417,7 @@ static void http_download(WEBBLK *webblk, char *filename)
     char buffer[HTTP_PATH_LENGTH];
 //  char tbuf[80];
     int fd, length, rc;
-    char *filetype;
+    char *p; // (work)
     char fullname[HTTP_PATH_LENGTH];
     BYTE pathname[HTTP_PATH_LENGTH];
     struct STAT st;
@@ -417,29 +426,54 @@ static void http_download(WEBBLK *webblk, char *filename)
 
     hostpath(pathname, filename, sizeof(pathname));
 
-    if ((filetype = strrchr(pathname,'.')))
-        for(mime_type++;mime_type->suffix
-          && strcasecmp(mime_type->suffix,filetype + 1);
-          mime_type++);
+    if ((p = strrchr(pathname,'.')))
+        for ( mime_type++; mime_type->suffix
+          && strcasecmp(   mime_type->suffix, p+1 );
+          mime_type++ );
+
+    // Note: the passed filename (now in pathname) could
+    // start with a slash and thus we need to skip past it
+    // since httproot is known to always end with a slash.
+
+    if (*(p = pathname) == '/') p++;
 
     strlcpy( fullname, sysblk.httproot, sizeof(fullname) );
-    strlcat( fullname, pathname,        sizeof(fullname) );
+    strlcat( fullname, p,               sizeof(fullname) );
 
     http_verify_path(webblk,fullname);
 
     if(STAT(fullname,&st))
-        http_error(webblk, "404 File Not Found","",
-                           strerror(errno));
+    {
+        char errmsg[2*MAX_PATH];
+        int save_errno = errno;
+        strlcpy( errmsg, "\"",                 sizeof(errmsg) );
+        strlcat( errmsg, fullname,             sizeof(errmsg) );
+        strlcat( errmsg, "\": ",               sizeof(errmsg) );
+        strlcat( errmsg, strerror(save_errno), sizeof(errmsg) );
+        http_error(webblk, "404 File Not Found","",errmsg);
+    }
 
     if(!S_ISREG(st.st_mode))
-        http_error(webblk, "404 File Not Found","",
-                           "The requested file is not a regular file");
+    {
+        char badfile[2*MAX_PATH];
+        strlcpy( badfile, "The requested file is not a regular file: \"", sizeof(badfile) );
+        strlcat( badfile, fullname,                                       sizeof(badfile) );
+        strlcat( badfile, "\"",                                           sizeof(badfile) );
+        http_error(webblk, "404 File Not Found","",badfile);
+    }
 
     fd = open(fullname,O_RDONLY|O_BINARY);
 
     if (fd == -1)
-        http_error(webblk, "404 File Not Found","",
-                           strerror(errno));
+    {
+        char errmsg[2*MAX_PATH];
+        int save_errno = errno;
+        strlcpy( errmsg, "\"",                 sizeof(errmsg) );
+        strlcat( errmsg, fullname,             sizeof(errmsg) );
+        strlcat( errmsg, "\": ",               sizeof(errmsg) );
+        strlcat( errmsg, strerror(save_errno), sizeof(errmsg) );
+        http_error(webblk, "404 File Not Found","",errmsg);
+    }
 
     if ( fprintf(webblk->hsock,"HTTP/1.0 200 OK\nConnection: close\n") < 0 )
         logmsg(_("HHCHT06xE http_download: Error fprintf'ing 200 OK for file %s: %s\n"),
@@ -687,8 +721,13 @@ static void *http_request_thread(FILE *hsock)
     }
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
-    http_error(webblk, "404 File Not Found","",
-                       "The requested file was not found");
+    {
+        char badurl[2*MAX_PATH];
+        strlcpy( badurl, "The requested file was not found: \"", sizeof(badurl) );
+        strlcat( badurl, url,                                    sizeof(badurl) );
+        strlcat( badurl, "\"",                                   sizeof(badurl) );
+        http_error(webblk, "404 File Not Found","",badurl);
+    }
 
     ASSERT( FALSE );    // (above should not return)
 
@@ -719,7 +758,8 @@ request_thread_exit:
 
             sd = fileno( webblk->hsock );
 
-            while ( max-- ) // (in case they keep sending more)
+//          while ( max-- )         // (in case they keep sending more)
+            while ( 0 && max-- )    // (** disabled for now **  (Fish))
             {
                 FD_ZERO (     &read_set );
                 FD_SET  ( sd, &read_set );
