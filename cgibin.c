@@ -1027,6 +1027,22 @@ void cgibin_debug_version_info(WEBBLK *webblk)
 
 }
 
+/* contributed by Tim Pinkawa [timpinkawa@gmail.com] */
+
+void cgibin_xml_rates_info(WEBBLK *webblk)
+{
+    fprintf(webblk->hsock,"Expires: 0\n");
+    fprintf(webblk->hsock,"Content-type: text/xml;\n\n");   /* XML document */
+
+    fprintf(webblk->hsock,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    fprintf(webblk->hsock,"<hercules>\n");
+    fprintf(webblk->hsock,"\t<arch>%d</arch>\n", sysblk.arch_mode);
+    fprintf(webblk->hsock,"\t<mips>%.1d.%.2d</mips>\n",
+        sysblk.mipsrate / 1000, (sysblk.mipsrate % 1000) / 10);
+    fprintf(webblk->hsock,"\t<siosrate>%d</siosrate>\n", sysblk.siosrate);
+    fprintf(webblk->hsock,"</hercules>\n");
+}
+
 
 /* The following table is the cgi-bin directory, which               */
 /* associates directory filenames with cgibin routines               */
@@ -1034,6 +1050,7 @@ void cgibin_debug_version_info(WEBBLK *webblk)
 CGITAB cgidir[] = {
     { "tasks/syslog", &cgibin_syslog },
     { "tasks/ipl", &cgibin_ipl },
+    { "tasks/xmlrates", &cgibin_xml_rates_info },
     { "debug/registers", &cgibin_debug_registers },
     { "debug/storage", &cgibin_debug_storage },
     { "debug/misc", &cgibin_debug_misc },
