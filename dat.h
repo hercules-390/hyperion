@@ -278,19 +278,19 @@ auth_addr_excp:
 /*      asteo   Pointer to word to receive ASTE origin address       */
 /*      aste    Pointer to 16-word area to receive a copy of the     */
 /*              ASN second table entry associated with the ALET      */
-/*      prot    Pointer to field to receive protection indicator     */
 /*                                                                   */
 /* Output:                                                           */
 /*      If successful, the ASTE is copied into the 16-word area,     */
 /*      the real address of the ASTE is stored into the word pointed */
 /*      word pointed to by asteop, and the return value is zero;     */
-/*      the protection indicator is set to 2 if the fetch-only bit   */
-/*      in the ALE is set, otherwise it remains unchanged.           */
+/*      regs->dat.protect is set to 2 if the fetch-only bit          */
+/*      in the ALE is set, otherwise it is set to zero.              */
 /*                                                                   */
 /*      If unsuccessful, the return value is a non-zero exception    */
 /*      code in the range X'0028' through X'002D' (this is to allow  */
 /*      the TAR, LRA, and TPROT instructions to handle these         */
 /*      exceptions by setting the condition code).                   */
+/*      regs->dat.xcode is also set to the exception code.           */
 /*                                                                   */
 /*      A program check may be generated for addressing and ASN      */
 /*      translation specification exceptions, in which case the      */
@@ -517,19 +517,21 @@ int i;
 /*      regs    Pointer to the CPU register context                  */
 /*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
 /*              LRA, IVSK, TPROT, or STACK                           */
-/*      pasd    Pointer to field to receive ASCE or STD              */
-/*      pstid   Pointer to field to receive indication of which      */
-/*              address space was used to select the ASCE or STD     */
-/*      pprot   Pointer to field to receive protection indicator     */
 /*                                                                   */
 /* Output:                                                           */
+/*      regs->dat.asd = the selected ASCE or STD                     */
+/*      regs->dat.stid = TEA_ST_PRIMARY, TEA_ST_SECNDRY,             */
+/*              TEA_ST_HOME, or TEA_ST_ARMODE indicates which        */
+/*              address space was used to select the ASCE or STD.    */
+/*      regs->dat.protect = 2 if in AR mode and access-list          */
+/*              controlled protection is indicated by the ALE        */
+/*              fetch-only bit; otherwise it remains unchanged.      */
+/*                                                                   */
 /*      If an ALET translation error occurs, the return value        */
 /*      is the exception code; otherwise the return value is zero,   */
-/*      the pasd field contains the ASCE or STD, and the pstid field */
-/*      is set to TEA_ST_PRIMARY, TEA_ST_SECNDRY, TEA_ST_HOME, or    */
-/*      TEA_ST_ARMODE.  The pprot field is set to 2 if in AR mode    */
-/*      and access-list controlled protection is indicated by the    */
-/*      ALE fetch-only bit; otherwise it remains unchanged.          */
+/*      regs->dat.asd field contains the ASCE or STD, and            */
+/*      regs->dat.stid is set to TEA_ST_PRIMARY, TEA_ST_SECNDRY,     */
+/*      TEA_ST_HOME, or TEA_ST_ARMODE.                               */
 /*-------------------------------------------------------------------*/
 _DAT_C_STATIC U16 ARCH_DEP(load_address_space_designator) (int arn,
            REGS *regs, int acctype)
@@ -728,12 +730,6 @@ U16     eax;                            /* Authorization index       */
 /*      regs    Pointer to the CPU register context                  */
 /*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
 /*              LRA, IVSK, TPROT, or STACK                           */
-/*      raddr   Pointer to field to receive real address             */
-/*      xcode   Pointer to field to receive exception code           */
-/*      priv    Pointer to field to receive private indicator        */
-/*      prot    Pointer to field to receive protection indicator     */
-/*      pstid   Pointer to field to receive indication of which      */
-/*              address space was used for the translation           */
 /*                                                                   */
 /* Output:                                                           */
 /*      The return value is set to facilitate the setting of the     */
@@ -757,18 +753,27 @@ U16     eax;                            /* Authorization index       */
 /*          is not set; exception code is X'0038' through X'003B'.   */
 /*          The LRA instruction converts this to condition code 3.   */
 /*                                                                   */
-/*      The private indicator is set to 1 if translation was         */
-/*      successful and the STD indicates a private address space;    */
-/*      otherwise it remains unchanged.                              */
+/*      regs->dat.raddr is set to the real address if translation    */
+/*      was unsuccessful; otherwise it may contain the address of    */
+/*      a page or segment table entry as described above.            */
+/*      For ACCTYPE_PTE it contains the address of                   */
+/*      the page table entry if translation was successful.          */
 /*                                                                   */
-/*      The protection indicator is set to 1 if translation was      */
+/*      regs->dat.xcode is set to the exception code if translation  */
+/*      was unsuccessful; otherwise it is set to zero.               */
+/*                                                                   */
+/*      regs->dat.private is set to 1 if translation was             */
+/*      successful and the STD indicates a private address space;    */
+/*      otherwise it is set to zero.                                 */
+/*                                                                   */
+/*      regs->dat.protect is set to 1 if translation was             */
 /*      successful and page protection, segment protection, or       */
 /*      segment controlled page protection is in effect; it is       */
 /*      set to 2 if translation was successful and ALE controlled    */
 /*      protection (but not page protection) is in effect;           */
-/*      otherwise it remains unchanged.                              */
+/*      otherwise it is set to zero.                                 */
 /*                                                                   */
-/*      The address space indication field is set to one of the      */
+/*      regs->dat.stid is set to one of the following                */
 /*      values TEA_ST_PRIMARY, TEA_ST_SECNDRY, TEA_ST_HOME, or       */
 /*      TEA_ST_ARMODE if the translation was successful.  This       */
 /*      indication is used to set bits 30-31 of the translation      */
