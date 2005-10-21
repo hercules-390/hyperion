@@ -5,26 +5,26 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2005      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 
-/* Storage protection override fix         Jan Jaeger 31/08/00       */
-/* ESAME low-address protection      v208d Roger Bowler 20/01/01     */
-/* ESAME subspace replacement        v208e Roger Bowler 27/01/01     */
-/* Multiply/Divide Logical instructions    Vic Cross 13/02/2001      */
+/* Storage protection override fix               Jan Jaeger 31/08/00 */
+/* ESAME low-address protection          v208d Roger Bowler 20/01/01 */
+/* ESAME subspace replacement            v208e Roger Bowler 27/01/01 */
+/* Multiply/Divide Logical instructions         Vic Cross 13/02/2001 */
 
 // #define INLINE_STORE_FETCH_ADDR_CHECK
 
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 _DAT_C_STATIC U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
-                           U32 *asteo, U32 aste[]);
+        U32 *asteo, U32 aste[]);
 _DAT_C_STATIC int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
-                          int atemask, REGS *regs);
+        int atemask, REGS *regs);
 #endif
 #if defined(FEATURE_ACCESS_REGISTERS)
 _DAT_C_STATIC U16 ARCH_DEP(translate_alet) (U32 alet, U16 eax,
-       int acctype, REGS *regs, U32 *asteo, U32 aste[]);
+        int acctype, REGS *regs, U32 *asteo, U32 aste[]);
 _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs);
 #endif
 _DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
-                                            REGS *regs, int acctype);
+        REGS *regs, int acctype);
 _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs);
 _DAT_C_STATIC void ARCH_DEP(purge_tlbe) (REGS *regs, RADR pfra);
 _DAT_C_STATIC void ARCH_DEP(invalidate_tlb) (REGS *regs, BYTE mask);
@@ -33,50 +33,50 @@ _DAT_C_STATIC void z900_invalidate_tlb (REGS *regs, BYTE mask);
 #endif
 _DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main);
 _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
-                           int r2, REGS *regs);
+        int r2, REGS *regs);
 _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
-                   REGS *regs, int acctype, BYTE akey);
+        REGS *regs, int acctype, BYTE akey);
 
 #if defined(_FEATURE_SIE) && ARCH_MODE != ARCH_900
 _LOGICAL_C_STATIC BYTE *s390_logical_to_main (U32 addr, int arn, REGS *regs,
-                           int acctype, BYTE akey);
+        int acctype, BYTE akey);
 _DAT_C_STATIC int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
-                           int acctype);
+        int acctype);
 #endif /*defined(_FEATURE_SIE)*/
 
 #if defined(_FEATURE_ZSIE)
 _LOGICAL_C_STATIC BYTE *z900_logical_to_main (U64 addr, int arn, REGS *regs,
-                           int acctype, BYTE akey);
+        int acctype, BYTE akey);
 _DAT_C_STATIC int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
-                           int acctype);
+        int acctype);
 #endif /*defined(_FEATURE_ZSIE)*/
 
 _VSTORE_C_STATIC void ARCH_DEP(vstorec) (void *src, BYTE len,
-                       VADR addr, int arn, REGS *regs);
+        VADR addr, int arn, REGS *regs);
 _VSTORE_C_STATIC void ARCH_DEP(vstoreb) (BYTE value, VADR addr,
-                          int arn, REGS *regs);
+        int arn, REGS *regs);
 _VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
-                               REGS *regs);
+        REGS *regs);
 _VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
-                               REGS *regs);
+        REGS *regs);
 _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
-                               REGS *regs);
+        REGS *regs);
 _VSTORE_C_STATIC void ARCH_DEP(vfetchc) (void *dest, BYTE len,
-                       VADR addr, int arn, REGS *regs);
+        VADR addr, int arn, REGS *regs);
 _VSTORE_C_STATIC BYTE ARCH_DEP(vfetchb) (VADR addr, int arn,
-                               REGS *regs);
+        REGS *regs);
 _VSTORE_C_STATIC U16 ARCH_DEP(vfetch2) (VADR addr, int arn,
-                               REGS *regs);
+        REGS *regs);
 _VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn,
-                               REGS *regs);
+        REGS *regs);
 _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn,
-                               REGS *regs);
+        REGS *regs);
 _VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (BYTE *dest, VADR addr,
-                               REGS *regs);
+        REGS *regs);
 _VSTORE_C_STATIC void ARCH_DEP(move_chars) (VADR addr1, int arn1,
       BYTE key1, VADR addr2, int arn2, BYTE key2, int len, REGS *regs);
 _VSTORE_C_STATIC void ARCH_DEP(validate_operand) (VADR addr, int arn,
-                     int len, int acctype, REGS *regs);
+        int len, int acctype, REGS *regs);
 
 #if defined(_FEATURE_SIE) && defined(_370)
 _VFETCH_C_STATIC BYTE * s370_instfetch (BYTE *dest, U32 addr, REGS *regs);
@@ -122,10 +122,10 @@ static inline int add_signed(U32 *result, U32 op1, U32 op2)
     *result = (S32)op1 + (S32)op2;
 
     return  ((S32)*result >  0) ?
-            ((S32)op1 <  0 && (S32)op2 <  0) ? 3 : 2 :
-        ((S32)*result <  0) ?
-            ((S32)op1 >= 0 && (S32)op2 >= 0) ? 3 : 1 :
-            ((S32)op1 <  0 && (S32)op2 <  0) ? 3 : 0;
+                ((S32)op1 <  0 && (S32)op2 <  0) ? 3 : 2 :
+            ((S32)*result <  0) ?
+                ((S32)op1 >= 0 && (S32)op2 >= 0) ? 3 : 1 :
+                ((S32)op1 <  0 && (S32)op2 <  0) ? 3 : 0;
 
 /*    return (((S32)op1 < 0 && (S32)op2 < 0 && (S32)*result >= 0)
       || ((S32)op1 >= 0 && (S32)op2 >= 0 && (S32)*result < 0)) ? 3 :
@@ -143,8 +143,8 @@ static inline int sub_signed(U32 *result, U32 op1, U32 op2)
     *result = (S32)op1 - (S32)op2;
 
     return  ((S32)*result >  0) ?
-            ((S32)op1 <  0 && (S32)op2 >= 0) ? 3 : 2 :
-        ((S32)*result <  0) ?
+                ((S32)op1 <  0 && (S32)op2 >= 0) ? 3 : 2 :
+            ((S32)*result <  0) ?
                 ((S32)op1 >= 0 && (S32)op2 <  0) ? 3 : 1 :
             ((S32)op1 <  0 && (S32)op2 >= 0) ? 3 : 0;
 
@@ -309,14 +309,14 @@ static inline int mult_logical_long
 /* Test for fetch protected storage location.                        */
 /*                                                                   */
 /* Input:                                                            */
-/*  addr    Logical address of storage location                      */
-/*  skey    Storage key with fetch, reference, and change bits       */
-/*      and one low-order zero appended                              */
-/*  akey    Access key with 4 low-order zeroes appended              */
-/*  regs    Pointer to the CPU register context                      */
-/*  regs->dat.private  1=Location is in a private address space      */
+/*      addr    Logical address of storage location                  */
+/*      skey    Storage key with fetch, reference, and change bits   */
+/*              and one low-order zero appended                      */
+/*      akey    Access key with 4 low-order zeroes appended          */
+/*      regs    Pointer to the CPU register context                  */
+/*      regs->dat.private  1=Location is in a private address space  */
 /* Return value:                                                     */
-/*  1=Fetch protected, 0=Not fetch protected                         */
+/*      1=Fetch protected, 0=Not fetch protected                     */
 /*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
                     BYTE akey, REGS *regs)
@@ -360,11 +360,11 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
 /* Test for low-address protection.                                  */
 /*                                                                   */
 /* Input:                                                            */
-/*  addr    Logical address of storage location                      */
-/*  regs    Pointer to the CPU register context                      */
-/*  regs->dat.private  1=Location is in a private address space      */
+/*      addr    Logical address of storage location                  */
+/*      regs    Pointer to the CPU register context                  */
+/*      regs->dat.private  1=Location is in a private address space  */
 /* Return value:                                                     */
-/*  1=Low-address protected, 0=Not low-address protected             */
+/*      1=Low-address protected, 0=Not low-address protected         */
 /*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
                                               REGS *regs)
@@ -378,24 +378,24 @@ static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
        to locations 0-511 only */
     if (addr > 511)
 #endif /*!defined(FEATURE_ESAME)*/
-    return 0;
+        return 0;
 
     /* Low-address protection applies only if the low-address
        protection control bit in control register 0 is set */
     if ((regs->CR(0) & CR0_LOW_PROT) == 0)
-    return 0;
+        return 0;
 
 #if defined(_FEATURE_SIE)
     /* Host low-address protection is not applied to guest
        references to guest storage */
     if (regs->sie_active)
-    return 0;
+        return 0;
 #endif /*defined(_FEATURE_SIE)*/
 
     /* Low-address protection does not apply to private address
        spaces */
     if (regs->dat.private)
-    return 0;
+        return 0;
 
     /* Return one if location is low-address protected */
     return 1;
@@ -406,15 +406,15 @@ static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
 /* Test for store protected storage location.                        */
 /*                                                                   */
 /* Input:                                                            */
-/*  addr    Logical address of storage location                      */
-/*  skey    Storage key with fetch, reference, and change bits       */
-/*      and one low-order zero appended                              */
-/*  akey    Access key with 4 low-order zeroes appended              */
-/*  regs    Pointer to the CPU register context                      */
-/*  regs->dat.private  1=Location is in a private address space      */
-/*  regs->dat.protect  1=Access list protected or page protected     */
+/*      addr    Logical address of storage location                  */
+/*      skey    Storage key with fetch, reference, and change bits   */
+/*              and one low-order zero appended                      */
+/*      akey    Access key with 4 low-order zeroes appended          */
+/*      regs    Pointer to the CPU register context                  */
+/*      regs->dat.private  1=Location is in a private address space  */
+/*      regs->dat.protect  1=Access list protected or page protected */
 /* Return value:                                                     */
-/*  1=Store protected, 0=Not store protected                         */
+/*      1=Store protected, 0=Not store protected                         */
 /*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
                BYTE akey, REGS *regs)
@@ -424,32 +424,32 @@ static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
        address spaces, if the low-address control bit in CR0 is set,
        regardless of the access key and storage key */
     if (ARCH_DEP(is_low_address_protected) (addr, regs))
-    return 1;
+        return 1;
 
     /* Access-list controlled protection prohibits all stores into
        the address space, and page protection prohibits all stores
        into the page, regardless of the access key and storage key */
     if (regs->dat.protect)
-    return 1;
+        return 1;
 
     /* [3.4.1] Store is allowed if access key is zero, regardless
        of the storage key */
     if (akey == 0)
-    return 0;
+        return 0;
 
 #ifdef FEATURE_STORAGE_PROTECTION_OVERRIDE
     /* [3.4.1.1] Storage protection override allows access to
        locations with storage key 9, regardless of the access key,
        provided that CR0 bit 7 is set */
     if ((skey & STORKEY_KEY) == 0x90
-    && (regs->CR(0) & CR0_STORE_OVRD))
-    return 0;
+        && (regs->CR(0) & CR0_STORE_OVRD))
+        return 0;
 #endif /*FEATURE_STORAGE_PROTECTION_OVERRIDE*/
 
     /* [3.4.1] Store protection prohibits stores if the access
        key does not match the storage key */
     if (akey != (skey & STORKEY_KEY))
-    return 1;
+        return 1;
 
     /* Return zero if location is not store protected */
     return 0;
@@ -472,7 +472,7 @@ static inline BYTE *ARCH_DEP(fetch_main_absolute) (RADR addr,
 {
 #if defined(INLINE_STORE_FETCH_ADDR_CHECK)
     if(addr > regs->mainlim - len)
-    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 #endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
 
     SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
@@ -542,7 +542,7 @@ static inline void ARCH_DEP(store_doubleword_absolute) (U64 value,
 {
 #if defined(INLINE_STORE_FETCH_ADDR_CHECK)
     if(addr > regs->mainlim - 8)
-    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 #endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
 
     SIE_TRANSLATE(&addr, ACCTYPE_WRITE, regs);
@@ -567,7 +567,7 @@ static inline void ARCH_DEP(store_fullword_absolute) (U32 value,
 {
 #if defined(INLINE_STORE_FETCH_ADDR_CHECK)
     if(addr > regs->mainlim - 4)
-    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 #endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
 
     SIE_TRANSLATE(&addr, ACCTYPE_WRITE, regs);
@@ -585,50 +585,50 @@ static inline void ARCH_DEP(store_fullword_absolute) (U32 value,
 /* Perform subspace replacement                                      */
 /*                                                                   */
 /* Input:                                                            */
-/*  std     Original segment table designation (STD) or ASCE         */
-/*  asteo   ASTE origin obtained by ASN translation                  */
-/*  xcode   Pointer to field to receive exception code, or NULL      */
-/*  regs    Pointer to the CPU register context                      */
+/*      std     Original segment table designation (STD) or ASCE     */
+/*      asteo   ASTE origin obtained by ASN translation              */
+/*      xcode   Pointer to field to receive exception code, or NULL  */
+/*      regs    Pointer to the CPU register context                  */
 /*                                                                   */
 /* Output:                                                           */
-/*  xcode   Exception code or zero (if xcode is not NULL)            */
+/*      xcode   Exception code or zero (if xcode is not NULL)        */
 /*                                                                   */
 /* Return value:                                                     */
-/*  On successful completion, the exception code field (if not       */
-/*  NULL) is set to zero, and the function return value is the       */
-/*  STD resulting from subspace replacement, or is the original      */
-/*  STD if subspace replacement is not applicable.                   */
+/*      On successful completion, the exception code field (if not   */
+/*      NULL) is set to zero, and the function return value is the   */
+/*      STD resulting from subspace replacement, or is the original  */
+/*      STD if subspace replacement is not applicable.               */
 /*                                                                   */
 /* Operation:                                                        */
-/*  If the ASF control is enabled, and the STD or ASCE is a          */
-/*  member of a subspace-group (bit 22 is one), and the              */
-/*  dispatchable unit is subspace active (DUCT word 1 bit 0 is       */
-/*  one), and the ASTE obtained by ASN translation is the ASTE       */
-/*  for the base space of the dispatchable unit, then the STD        */
-/*  or ASCE is replaced (except for the event control bits) by       */
-/*  the STD or ASCE from the ASTE for the subspace in which the      */
-/*  dispatchable unit last had control; otherwise the STD or         */
-/*  ASCE remains unchanged.                                          */
+/*      If the ASF control is enabled, and the STD or ASCE is a      */
+/*      member of a subspace-group (bit 22 is one), and the          */
+/*      dispatchable unit is subspace active (DUCT word 1 bit 0 is   */
+/*      one), and the ASTE obtained by ASN translation is the ASTE   */
+/*      for the base space of the dispatchable unit, then the STD    */
+/*      or ASCE is replaced (except for the event control bits) by   */
+/*      the STD or ASCE from the ASTE for the subspace in which the  */
+/*      dispatchable unit last had control; otherwise the STD or     */
+/*      ASCE remains unchanged.                                      */
 /*                                                                   */
 /* Error conditions:                                                 */
-/*  If an ASTE validity exception or ASTE sequence exception         */
-/*  occurs, and the xcode parameter is a non-NULL pointer,           */
-/*  then the exception code is returned in the xcode field           */
-/*  and the function return value is zero.                           */
-/*  For all other error conditions a program check is generated      */
-/*  and the function does not return.                                */
+/*      If an ASTE validity exception or ASTE sequence exception     */
+/*      occurs, and the xcode parameter is a non-NULL pointer,       */
+/*      then the exception code is returned in the xcode field       */
+/*      and the function return value is zero.                       */
+/*      For all other error conditions a program check is generated  */
+/*      and the function does not return.                            */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 static inline RADR ARCH_DEP(subspace_replace) (RADR std, U32 asteo,
                         U16 *xcode, REGS *regs)
 {
-U32 ducto;              /* DUCT origin           */
-U32 duct0;              /* DUCT word 0           */
-U32 duct1;              /* DUCT word 1           */
-U32 duct3;              /* DUCT word 3           */
-U32 ssasteo;            /* Subspace ASTE origin  */
-U32 ssaste[16];         /* Subspace ASTE         */
-BYTE *p;                /* Mainstor pointer      */
+U32     ducto;                          /* DUCT origin               */
+U32     duct0;                          /* DUCT word 0               */
+U32     duct1;                          /* DUCT word 1               */
+U32     duct3;                          /* DUCT word 3               */
+U32     ssasteo;                        /* Subspace ASTE origin      */
+U32     ssaste[16];                     /* Subspace ASTE             */
+BYTE    *p;                             /* Mainstor pointer          */
 
     /* Clear the exception code field, if provided */
     if (xcode != NULL) *xcode = 0;
@@ -637,8 +637,8 @@ BYTE *p;                /* Mainstor pointer      */
        control (CR0 bit 15) is zero, or if the subspace-group control
        (bit 22 of the STD) is zero */
     if (!ASF_ENABLED(regs)
-    || (std & SSGROUP_BIT) == 0)
-    return std;
+        || (std & SSGROUP_BIT) == 0)
+        return std;
 
     /* Load the DUCT origin address */
     ducto = regs->CR(2) & CR2_DUCTO;
@@ -646,7 +646,7 @@ BYTE *p;                /* Mainstor pointer      */
 
     /* Program check if DUCT origin address is invalid */
     if (ducto > regs->mainlim)
-    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Fetch DUCT words 0, 1, and 3 from absolute storage
        (note: the DUCT cannot cross a page boundary) */
@@ -659,8 +659,8 @@ BYTE *p;                /* Mainstor pointer      */
        not subspace active or if the ASTE obtained by ASN translation
        is not the same as the base ASTE for the dispatchable unit */
     if ((duct1 & DUCT1_SA) == 0
-    || asteo != (duct0 & DUCT0_BASTEO))
-    return std;
+        || asteo != (duct0 & DUCT0_BASTEO))
+        return std;
 
     /* Load the subspace ASTE origin from the DUCT */
     ssasteo = duct1 & DUCT1_SSASTEO;
@@ -668,7 +668,7 @@ BYTE *p;                /* Mainstor pointer      */
 
     /* Program check if ASTE origin address is invalid */
     if (ssasteo > regs->mainlim)
-    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Fetch subspace ASTE words 0, 2, 3, and 5 from absolute
        storage (note: the ASTE cannot cross a page boundary) */
@@ -684,11 +684,11 @@ BYTE *p;                /* Mainstor pointer      */
     if (ssaste[0] & ASTE0_INVALID)
     {
         regs->excarid = 0;
-    if (xcode == NULL)
-        ARCH_DEP(program_interrupt) (regs, PGM_ASTE_VALIDITY_EXCEPTION);
-    else
-        *xcode = PGM_ASTE_VALIDITY_EXCEPTION;
-    return 0;
+        if (xcode == NULL)
+            ARCH_DEP(program_interrupt) (regs, PGM_ASTE_VALIDITY_EXCEPTION);
+        else
+            *xcode = PGM_ASTE_VALIDITY_EXCEPTION;
+        return 0;
     }
 
     /* ASTE sequence exception if the subspace ASTE sequence
@@ -696,11 +696,11 @@ BYTE *p;                /* Mainstor pointer      */
     if ((ssaste[5] & ASTE5_ASTESN) != (duct3 & DUCT3_SSASTESN))
     {
         regs->excarid = 0;
-    if (xcode == NULL)
-        ARCH_DEP(program_interrupt) (regs, PGM_ASTE_SEQUENCE_EXCEPTION);
-    else
-        *xcode = PGM_ASTE_SEQUENCE_EXCEPTION;
-    return 0;
+        if (xcode == NULL)
+            ARCH_DEP(program_interrupt) (regs, PGM_ASTE_SEQUENCE_EXCEPTION);
+        else
+            *xcode = PGM_ASTE_SEQUENCE_EXCEPTION;
+        return 0;
     }
 
     /* Replace the STD or ASCE with the subspace ASTE STD or ASCE,
@@ -708,7 +708,7 @@ BYTE *p;                /* Mainstor pointer      */
        alteration event bit, which remain unchanged */
     std &= (SSEVENT_BIT | SAEVENT_BIT);
     std |= (ASTE_AS_DESIGNATOR(ssaste)
-        & ~((RADR)(SSEVENT_BIT | SAEVENT_BIT)));
+                & ~((RADR)(SSEVENT_BIT | SAEVENT_BIT)));
 
     /* Return the STD resulting from subspace replacement */
     return std;
