@@ -8,6 +8,7 @@
 /* Storage protection override fix         Jan Jaeger 31/08/00       */
 /* ESAME low-address protection      v208d Roger Bowler 20/01/01     */
 /* ESAME subspace replacement        v208e Roger Bowler 27/01/01     */
+/* Multiply/Divide Logical instructions    Vic Cross 13/02/2001      */
 
 // #define INLINE_STORE_FETCH_ADDR_CHECK
 
@@ -167,6 +168,7 @@ S64 r;
     *resultlo = (U32)((U64)r & 0xFFFFFFFF);
 } /* end function mul_signed */
 
+
 /*-------------------------------------------------------------------*/
 /* Divide a signed doubleword dividend by a signed fullword divisor  */
 /* giving a signed fullword remainder and a signed fullword quotient.*/
@@ -187,6 +189,117 @@ S64 quot, rem;
     *remainder = (U32)rem;
     return 0;
 } /* end function div_signed */
+
+/*
+ * The following routines were moved from esame.c rev 1.139 21oct2005
+ */
+
+/*-------------------------------------------------------------------*/
+/* Add two unsigned doublewords giving an unsigned doubleword result */
+/* and return the condition code for the ALG or ALGR instruction     */
+/*-------------------------------------------------------------------*/
+static inline int add_logical_long(U64 *result, U64 op1, U64 op2)
+{
+    *result = op1 + op2;
+    return (*result == 0 ? 0 : 1) | (op1 > *result ? 2 : 0);
+} /* end function add_logical_long */
+
+
+/*-------------------------------------------------------------------*/
+/* Subtract unsigned doublewords giving unsigned doubleword result   */
+/* and return the condition code for the SLG or SLGR instruction     */
+/*-------------------------------------------------------------------*/
+static inline int sub_logical_long(U64 *result, U64 op1, U64 op2)
+{
+    *result = op1 - op2;
+    return (*result == 0 ? 0 : 1) | (op1 < *result ? 0 : 2);
+} /* end function sub_logical_long */
+
+
+/*-------------------------------------------------------------------*/
+/* Add two signed doublewords giving a signed doubleword result      */
+/* and return the condition code for the AG or AGR instruction       */
+/*-------------------------------------------------------------------*/
+static inline int add_signed_long(U64 *result, U64 op1, U64 op2)
+{
+    *result = (S64)op1 + (S64)op2;
+
+    return (((S64)op1 < 0 && (S64)op2 < 0 && (S64)*result >= 0)
+      || ((S64)op1 >= 0 && (S64)op2 >= 0 && (S64)*result < 0)) ? 3 :
+                                              (S64)*result < 0 ? 1 :
+                                              (S64)*result > 0 ? 2 : 0;
+} /* end function add_signed_long */
+
+
+/*-------------------------------------------------------------------*/
+/* Subtract two signed doublewords giving signed doubleword result   */
+/* and return the condition code for the SG or SGR instruction       */
+/*-------------------------------------------------------------------*/
+static inline int sub_signed_long(U64 *result, U64 op1, U64 op2)
+{
+    *result = (S64)op1 - (S64)op2;
+
+    return (((S64)op1 < 0 && (S64)op2 >= 0 && (S64)*result >= 0)
+      || ((S64)op1 >= 0 && (S64)op2 < 0 && (S64)*result < 0)) ? 3 :
+                                             (S64)*result < 0 ? 1 :
+                                             (S64)*result > 0 ? 2 : 0;
+} /* end function sub_signed_long */
+
+
+/*-------------------------------------------------------------------*/
+/* Divide an unsigned 128-bit dividend by an unsigned 64-bit divisor */
+/* giving unsigned 64-bit remainder and unsigned 64-bit quotient.    */
+/* Returns 0 if successful, 1 if divide overflow.                    */
+/*-------------------------------------------------------------------*/
+static inline int div_logical_long
+                  (U64 *rem, U64 *quot, U64 high, U64 lo, U64 d)
+{
+    int i;
+
+    *quot = 0;
+    if (high >= d) return 1;
+    for (i = 0; i < 64; i++)
+    {
+    int ovf;
+        ovf = high >> 63;
+        high = (high << 1) | (lo >> 63);
+        lo <<= 1;
+        *quot <<= 1;
+        if (high >= d || ovf)
+        {
+            *quot += 1;
+            high -= d;
+        }
+    }
+    *rem = high;
+    return 0;
+} /* end function div_logical_long */
+
+
+/*-------------------------------------------------------------------*/
+/* Multiply two unsigned doublewords giving unsigned 128-bit result  */
+/*-------------------------------------------------------------------*/
+static inline int mult_logical_long
+                  (U64 *high, U64 *lo, U64 md, U64 mr)
+{
+    int i;
+
+    *high = 0; *lo = 0;
+    for (i = 0; i < 64; i++)
+    {
+    U64 ovf;
+        ovf = *high;
+        if (md & 1)
+            *high += mr;
+        md >>= 1;
+        *lo = (*lo >> 1) | (*high << 63);
+        if(ovf > *high)
+            *high = (*high >> 1) | 0x8000000000000000ULL;
+        else
+            *high >>= 1;
+    }
+    return 0;
+} /* end function mult_logical_long */
 
 
 #endif /*!defined(_INLINE_H)*/

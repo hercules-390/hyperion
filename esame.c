@@ -11,7 +11,7 @@
 /* Additional credits:                                               */
 /*      EPSW/EREGG/LMD instructions - Roger Bowler                   */
 /*      PKA/PKU/UNPKA/UNPKU instructions - Roger Bowler              */
-/*      Divide logical instructions - Vic Cross                      */
+/*      Multiply/Divide Logical instructions - Vic Cross      Feb2001*/
 /*      Long displacement facility - Roger Bowler            June2003*/
 /*      DAT enhancement facility - Roger Bowler              July2004*/
 /*      Extended immediate facility - Roger Bowler            Aug2005*/
@@ -30,95 +30,6 @@
 
 #define CRYPTO_EXTERN extern
 #include "crypto.h"
-
-#if !defined(_LONG_MATH)
-#define _LONG_MATH
-/* These routines need to go into inline.h *JJ */
-static inline int add_logical_long(U64 *result, U64 op1, U64 op2)
-{
-    *result = op1 + op2;
-
-    return (*result == 0 ? 0 : 1) | (op1 > *result ? 2 : 0);
-} /* end add_logical_long() */
-
-
-static inline int sub_logical_long(U64 *result, U64 op1, U64 op2)
-{
-    *result = op1 - op2;
-
-    return (*result == 0 ? 0 : 1) | (op1 < *result ? 0 : 2);
-} /* end sub_logical_long() */
-
-
-static inline int add_signed_long(U64 *result, U64 op1, U64 op2)
-{
-    *result = (S64)op1 + (S64)op2;
-
-    return (((S64)op1 < 0 && (S64)op2 < 0 && (S64)*result >= 0)
-      || ((S64)op1 >= 0 && (S64)op2 >= 0 && (S64)*result < 0)) ? 3 :
-                                              (S64)*result < 0 ? 1 :
-                                              (S64)*result > 0 ? 2 : 0;
-} /* end add_signed_long() */
-
-
-static inline int sub_signed_long(U64 *result, U64 op1, U64 op2)
-{
-    *result = (S64)op1 - (S64)op2;
-
-    return (((S64)op1 < 0 && (S64)op2 >= 0 && (S64)*result >= 0)
-      || ((S64)op1 >= 0 && (S64)op2 < 0 && (S64)*result < 0)) ? 3 :
-                                             (S64)*result < 0 ? 1 :
-                                             (S64)*result > 0 ? 2 : 0;
-} /* end sub_signed_long() */
-
-
-static inline int div_logical_long
-                  (U64 *rem, U64 *quot, U64 high, U64 lo, U64 d)
-{
-    int i;
-
-    *quot = 0;
-    if (high >= d) return 1;
-    for (i = 0; i < 64; i++)
-    {
-    int ovf;
-        ovf = high >> 63;
-        high = (high << 1) | (lo >> 63);
-        lo <<= 1;
-        *quot <<= 1;
-        if (high >= d || ovf)
-        {
-            *quot += 1;
-            high -= d;
-        }
-    }
-    *rem = high;
-    return 0;
-} /* end div_logical_long() */
-
-
-static inline int mult_logical_long
-                  (U64 *high, U64 *lo, U64 md, U64 mr)
-{
-    int i;
-
-    *high = 0; *lo = 0;
-    for (i = 0; i < 64; i++)
-    {
-    U64 ovf;
-        ovf = *high;
-        if (md & 1)
-            *high += mr;
-        md >>= 1;
-        *lo = (*lo >> 1) | (*high << 63);
-        if(ovf > *high)
-            *high = (*high >> 1) | 0x8000000000000000ULL;
-        else
-            *high >>= 1;
-    }
-    return 0;
-} /* end mult_logical_long() */
-#endif /*!defined(_LONG_MATH)*/
 
 
 #if defined(FEATURE_BINARY_FLOATING_POINT)
