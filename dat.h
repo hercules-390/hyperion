@@ -511,9 +511,20 @@ int i;
 /* which was used to determine the source of the ASCE or STD.        */
 /*                                                                   */
 /* Input:                                                            */
-/*      arn     Access register number containing ALET (AR0 is       */
-/*              treated as containing ALET value 0), or special      */
-/*              value USE_PRIMARY_SPACE or USE_SECONDARY_SPACE       */
+/*      arn     Access register number (0-15) to be used if the      */
+/*              address-space control (PSW bits 16-17) indicates     */
+/*              that ARMODE is the current translation mode.         */
+/*              An access register number ORed with the special      */
+/*              value USE_ARMODE forces this routine to use ARMODE   */
+/*              regardless of the PSW address-space control setting. */
+/*              Access register 0 is treated as if it contained 0    */
+/*              and its actual contents are not examined.            */
+/*              Alternatively the arn parameter may contain one      */
+/*              of these special values (defined in hconsts.h):      */
+/*              USE_PRIMARY_SPACE, USE_SECONDARY_SPACE,              */
+/*              USE_HOME_SPACE, USE_REAL_ADDR to force the use of    */
+/*              a specific translation mode instead of the mode      */
+/*              indicated by the address-space control in the PSW.   */
 /*      regs    Pointer to the CPU register context                  */
 /*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
 /*              LRA, IVSK, TPROT, or STACK                           */
@@ -618,8 +629,11 @@ U16     eax;                            /* Authorization index       */
             && (regs->guestregs->siebk->mx & SIE_MX_XC)
             && AR_BIT(&regs->guestregs->psw))
         #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+          || (arn & USE_ARMODE)
             )
         {
+            /* Remove the USE_ARMODE flag from the arn if present */
+            arn &= 15;
             /* [5.8.4.1] Select the access-list-entry token */
             alet = (arn == 0) ? 0 :
         #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
@@ -724,9 +738,9 @@ U16     eax;                            /* Authorization index       */
 /*                                                                   */
 /* Input:                                                            */
 /*      vaddr   31-bit virtual address to be translated              */
-/*      arn     Access register number containing ALET (AR0 is       */
-/*              treated as containing ALET value 0), or special      */
-/*              value USE_PRIMARY_SPACE or USE_SECONDARY_SPACE       */
+/*      arn     Access register number or special value (see         */
+/*              load_address_space_designator function for a         */
+/*              complete description of this parameter)              */
 /*      regs    Pointer to the CPU register context                  */
 /*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
 /*              LRA, IVSK, TPROT, or STACK                           */
@@ -1121,7 +1135,8 @@ U16     sx, px;                         /* Segment and page index,
 
     /* Only a single entry in the TLB will be looked up, namely the
        entry indexed by bits 12-19 of the virtual address */
-    if (acctype != ACCTYPE_LRA && acctype != ACCTYPE_PTE)
+    if (acctype != ACCTYPE_LRA && acctype != ACCTYPE_PTE 
+        && acctype != ACCTYPE_LPTEA) 
         tlbix = TLBIX(vaddr);
 
     if (tlbix >= 0
@@ -1141,9 +1156,15 @@ U16     sx, px;                         /* Segment and page index,
         {
 //      logmsg("asce type = real\n");
 
+            /* Translation specification exception if LKPG for a real-space */
             if(acctype == ACCTYPE_PTE)
                 goto tran_spec_excp;
 
+            /* Special operation exception if LPTEA for a real-space */
+            if(acctype == ACCTYPE_LPTEA)
+                goto spec_oper_excp;
+
+            /* Construct a fake page table entry for real = virtual */
             pte = vaddr & 0xFFFFFFFFFFFFF000ULL;
         }
         else
@@ -1370,6 +1391,14 @@ U16     sx, px;                         /* Segment and page index,
                page table origin, giving address of page table entry */
             pto += px;
 
+            /* For LPTEA instruction, return the address of the PTE */
+            if (acctype == ACCTYPE_LPTEA)
+            {
+                regs->dat.raddr = pto;
+                regs->dat.xcode = 0;
+                return 0;
+            } /* end if(ACCTYPE_LPTEA) */
+
             /* Addressing exception if outside real storage */
             if (pto > regs->mainlim)
                 goto address_excp;
@@ -1442,6 +1471,12 @@ tran_spec_excp:
 #endif
     regs->dat.xcode = PGM_TRANSLATION_SPECIFICATION_EXCEPTION;
     goto tran_prog_check;
+
+#if defined(FEATURE_ESAME)
+spec_oper_excp:
+    regs->dat.xcode = PGM_SPECIAL_OPERATION_EXCEPTION;
+    goto tran_prog_check;
+#endif /*defined(FEATURE_ESAME)*/
 
 tran_prog_check:
     ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);

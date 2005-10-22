@@ -243,6 +243,7 @@
 #define ACCTYPE_SIE       (0xC0|ACC_SIE)   /* SIE host translation   */
 #define ACCTYPE_SIE_WRITE (0xD0|ACC_SIE)   /* SIE host write         */
 #define ACCTYPE_STRAG      0xE0            /* STRAG instruction      */
+#define ACCTYPE_LPTEA      0xF0            /* LPTEA instruction      */
 
 /* Special value for arn parameter for translate functions in dat.c */
 #define USE_INST_SPACE          (-1)    /* Instruction space virtual */
@@ -250,6 +251,7 @@
 #define USE_PRIMARY_SPACE       (-3)    /* Primary space virtual     */
 #define USE_SECONDARY_SPACE     (-4)    /* Secondary space virtual   */
 #define USE_HOME_SPACE          (-5)    /* Home space virtual        */
+#define USE_ARMODE              0x80    /* OR with arn forces ARMODE */
 
 /* Interception codes used by longjmp/SIE */
 #define SIE_NO_INTERCEPT        (-1)    /* Continue (after pgmint)   */

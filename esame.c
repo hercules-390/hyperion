@@ -1065,7 +1065,7 @@ int     cc;                             /* Condition code            */
         n = USE_PRIMARY_SPACE;
         break;
     case 1: /* Use ALET in access register r2 */
-        n = r2;
+        n = USE_ARMODE | r2;
         break;
     case 2: /* Use ASCE in control register 7 */
         n = USE_SECONDARY_SPACE;
@@ -1074,15 +1074,17 @@ int     cc;                             /* Condition code            */
         n = USE_HOME_SPACE;
         break;
     case 4: /* Use current addressing mode (PSW bits 16-17) */
-        n = 0;
+        n = r2; /* r2 is the access register number if ARMODE */
         break;
+    default: /* Specification exception if invalid value for m4 */
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
     } /* end switch(m4) */
 
     /* Load the virtual address from the r2 register */
-    vaddr = regs->GR(r2);
+    vaddr = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
     /* Find the page table address */
-    cc = ARCH_DEP(translate_addr) (vaddr, n, regs, ACCTYPE_PTE);
+    cc = ARCH_DEP(translate_addr) (vaddr, n, regs, ACCTYPE_LPTEA);
 
     /* If ALET exception or ASCE-type or region translation exception,
        set exception code in R1 bits 48-63, and set cc 3 */
