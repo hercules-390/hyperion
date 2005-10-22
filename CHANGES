@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+22 Oct 2005 Fish's (x-n) bit-shifts (ALRF readability enhancement) - Roger Bowler
 21 Oct 2005 Move inline functions from esame.c to inline.h - Roger Bowler
 20 Oct 2005 Fix extra path separator issue in http_download - Fish
 20 Oct 2005 "tasks/xmlrates" == 'cgibin_xml_rates_info()' contributed

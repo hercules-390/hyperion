@@ -2662,7 +2662,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Calculate the address of the linkage first table entry
            (it is always a 31-bit address even in ESAME) */
-        lfto += (pcnum & ((PC_LFX1>>1)|PC_LFX2)) >> 11;
+        lfto += (pcnum & ((PC_LFX1>>1)|PC_LFX2)) >> (13-2);
         lfto &= 0x7FFFFFFF;
 
         /* Program check if the LFTE address is outside real storage */
@@ -2686,7 +2686,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Calculate the address of the linkage second table entry
            (it is always a 31-bit address even in ESAME) */
-        lsto += (pcnum & PC_LSX) >> 5;
+        lsto += (pcnum & PC_LSX) >> (8-3);
         lsto &= 0x7FFFFFFF;
 
         /* Program check if the LSTE address is outside real storage */
@@ -2726,7 +2726,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* [5.5.3.3] Entry table lookup */
 
     /* Program check if entry index is outside the entry table */
-    if (etl < ((pcnum & PC_EX) >> 2))
+    if (etl < ((pcnum & PC_EX) >> (8-6)))
     {
         regs->TEA = pctea;
         ARCH_DEP(program_interrupt) (regs, PGM_EX_TRANSLATION_EXCEPTION);
