@@ -340,9 +340,11 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         obtain_lock (&sysblk.intlock);
         if (IS_CPU_ONLINE(sysblk.pcpu))
         {
-            sysblk.regs[sysblk.pcpu]->cpustate = CPUSTATE_STARTED;
-            sysblk.regs[sysblk.pcpu]->checkstop = 0;
-            WAKEUP_CPU(sysblk.regs[sysblk.pcpu]);
+            REGS *regs = sysblk.regs[sysblk.pcpu];
+            regs->opinterv = 0;
+            regs->cpustate = CPUSTATE_STARTED;
+            regs->checkstop = 0;
+            WAKEUP_CPU(regs);
         }
         release_lock (&sysblk.intlock);
     }
@@ -433,9 +435,11 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
         obtain_lock (&sysblk.intlock);
         if (IS_CPU_ONLINE(sysblk.pcpu))
         {
-            sysblk.regs[sysblk.pcpu]->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(sysblk.regs[sysblk.pcpu]);
-            WAKEUP_CPU (sysblk.regs[sysblk.pcpu]);
+            REGS *regs = sysblk.regs[sysblk.pcpu];
+            regs->opinterv = 1;
+            regs->cpustate = CPUSTATE_STOPPING;
+            ON_IC_INTERRUPT(regs);
+            WAKEUP_CPU (regs);
         }
         release_lock (&sysblk.intlock);
     }
@@ -496,8 +500,10 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
     {
         if (mask & 1)
         {
-            sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
-            signal_condition(&sysblk.regs[i]->intcond);
+            REGS *regs = sysblk.regs[i];
+            regs->opinterv = 0;
+            regs->cpustate = CPUSTATE_STARTED;
+            signal_condition(&regs->intcond);
         }
         mask >>= 1;
     }
@@ -526,9 +532,11 @@ DLL_EXPORT int stopall_cmd(int argc, char *argv[], char *cmdline)
     {
         if (mask & 1)
         {
-            sysblk.regs[i]->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(sysblk.regs[i]);
-            signal_condition(&sysblk.regs[i]->intcond);
+            REGS *regs = sysblk.regs[i];
+            regs->opinterv = 1;
+            regs->cpustate = CPUSTATE_STOPPING;
+            ON_IC_INTERRUPT(regs);
+            signal_condition(&regs->intcond);
         }
         mask >>= 1;
     }

@@ -207,16 +207,32 @@ TID tid;
 /*-------------------------------------------------------------------*/
 void display_regs (REGS *regs)
 {
-int     i;
-
     if(regs->arch_mode != ARCH_900)
-        for (i = 0; i < 16; i++)
-            logmsg ("GR%2.2d=%8.8"I32_FMT"X%s", i, regs->GR_L(i),
-                ((i & 0x03) == 0x03) ? "\n" : "\t");
+        logmsg
+        (
+            "CPU%4.4X:  GR00=%8.8"I32_FMT"X   GR01=%8.8"I32_FMT"X   GR02=%8.8"I32_FMT"X   GR03=%8.8"I32_FMT"X\n"
+            "CPU%4.4X:  GR04=%8.8"I32_FMT"X   GR05=%8.8"I32_FMT"X   GR06=%8.8"I32_FMT"X   GR07=%8.8"I32_FMT"X\n"
+            "CPU%4.4X:  GR08=%8.8"I32_FMT"X   GR09=%8.8"I32_FMT"X   GR10=%8.8"I32_FMT"X   GR11=%8.8"I32_FMT"X\n"
+            "CPU%4.4X:  GR12=%8.8"I32_FMT"X   GR13=%8.8"I32_FMT"X   GR14=%8.8"I32_FMT"X   GR15=%8.8"I32_FMT"X\n"
+
+            ,regs->cpuad ,regs->GR_L(0) ,regs->GR_L(1) ,regs->GR_L(2) ,regs->GR_L(3)
+            ,regs->cpuad ,regs->GR_L(4) ,regs->GR_L(5) ,regs->GR_L(6) ,regs->GR_L(7)
+            ,regs->cpuad ,regs->GR_L(8) ,regs->GR_L(8) ,regs->GR_L(10),regs->GR_L(11)
+            ,regs->cpuad ,regs->GR_L(12),regs->GR_L(13),regs->GR_L(14),regs->GR_L(15)
+        );
     else
-        for (i = 0; i < 16; i++)
-            logmsg ("R%1.1X=%16.16"I64_FMT"X%s", i, regs->GR_G(i),
-                ((i & 0x03) == 0x03) ? "\n" : " ");
+        logmsg
+        (
+            "CPU%4.4X:  R0=%16.16"I64_FMT"X R1=%16.16"I64_FMT"X R2=%16.16"I64_FMT"X R3=%16.16"I64_FMT"X\n"
+            "CPU%4.4X:  R4=%16.16"I64_FMT"X R5=%16.16"I64_FMT"X R6=%16.16"I64_FMT"X R7=%16.16"I64_FMT"X\n"
+            "CPU%4.4X:  R8=%16.16"I64_FMT"X R9=%16.16"I64_FMT"X RA=%16.16"I64_FMT"X RB=%16.16"I64_FMT"X\n"
+            "CPU%4.4X:  RC=%16.16"I64_FMT"X RD=%16.16"I64_FMT"X RE=%16.16"I64_FMT"X RF=%16.16"I64_FMT"X\n"
+
+            ,regs->cpuad ,regs->GR_G(0) ,regs->GR_G(1) ,regs->GR_G(2) ,regs->GR_G(3)
+            ,regs->cpuad ,regs->GR_G(4) ,regs->GR_G(5) ,regs->GR_G(6) ,regs->GR_G(7)
+            ,regs->cpuad ,regs->GR_G(8) ,regs->GR_G(8) ,regs->GR_G(10),regs->GR_G(11)
+            ,regs->cpuad ,regs->GR_G(12),regs->GR_G(13),regs->GR_G(14),regs->GR_G(15)
+        );
 
 } /* end function display_regs */
 
@@ -226,16 +242,32 @@ int     i;
 /*-------------------------------------------------------------------*/
 void display_cregs (REGS *regs)
 {
-int     i;
-
     if(regs->arch_mode != ARCH_900)
-        for (i = 0; i < 16; i++)
-            logmsg ("CR%2.2d=%8.8"I32_FMT"X%s", i, regs->CR_L(i),
-                ((i & 0x03) == 0x03) ? "\n" : "\t");
+        logmsg
+        (
+            "CPU%4.4X:  CR00=%8.8"I32_FMT"X   CR01=%8.8"I32_FMT"X   CR02=%8.8"I32_FMT"X   CR03=%8.8"I32_FMT"X\n"
+            "CPU%4.4X:  CR04=%8.8"I32_FMT"X   CR05=%8.8"I32_FMT"X   CR06=%8.8"I32_FMT"X   CR07=%8.8"I32_FMT"X\n"
+            "CPU%4.4X:  CR08=%8.8"I32_FMT"X   CR09=%8.8"I32_FMT"X   CR10=%8.8"I32_FMT"X   CR11=%8.8"I32_FMT"X\n"
+            "CPU%4.4X:  CR12=%8.8"I32_FMT"X   CR13=%8.8"I32_FMT"X   CR14=%8.8"I32_FMT"X   CR15=%8.8"I32_FMT"X\n"
+
+            ,regs->cpuad ,regs->CR_L(0) ,regs->CR_L(1) ,regs->CR_L(2) ,regs->CR_L(3)
+            ,regs->cpuad ,regs->CR_L(4) ,regs->CR_L(5) ,regs->CR_L(6) ,regs->CR_L(7)
+            ,regs->cpuad ,regs->CR_L(8) ,regs->CR_L(8) ,regs->CR_L(10),regs->CR_L(11)
+            ,regs->cpuad ,regs->CR_L(12),regs->CR_L(13),regs->CR_L(14),regs->CR_L(15)
+        );
     else
-        for (i = 0; i < 16; i++)
-            logmsg ("C%1.1X=%16.16"I64_FMT"X%s", i, regs->CR_G(i),
-                ((i & 0x03) == 0x03) ? "\n" : " ");
+        logmsg
+        (
+            "CPU%4.4X:  C0=%16.16"I64_FMT"X C1=%16.16"I64_FMT"X C2=%16.16"I64_FMT"X C3=%16.16"I64_FMT"X\n"
+            "CPU%4.4X:  C4=%16.16"I64_FMT"X C5=%16.16"I64_FMT"X C6=%16.16"I64_FMT"X C7=%16.16"I64_FMT"X\n"
+            "CPU%4.4X:  C8=%16.16"I64_FMT"X C9=%16.16"I64_FMT"X CA=%16.16"I64_FMT"X CB=%16.16"I64_FMT"X\n"
+            "CPU%4.4X:  CC=%16.16"I64_FMT"X CD=%16.16"I64_FMT"X CE=%16.16"I64_FMT"X CF=%16.16"I64_FMT"X\n"
+
+            ,regs->cpuad ,regs->CR_G(0) ,regs->CR_G(1) ,regs->CR_G(2) ,regs->CR_G(3)
+            ,regs->cpuad ,regs->CR_G(4) ,regs->CR_G(5) ,regs->CR_G(6) ,regs->CR_G(7)
+            ,regs->cpuad ,regs->CR_G(8) ,regs->CR_G(8) ,regs->CR_G(10),regs->CR_G(11)
+            ,regs->cpuad ,regs->CR_G(12),regs->CR_G(13),regs->CR_G(14),regs->CR_G(15)
+        );
 
 } /* end function display_cregs */
 
@@ -245,11 +277,18 @@ int     i;
 /*-------------------------------------------------------------------*/
 void display_aregs (REGS *regs)
 {
-int     i;
+    logmsg
+    (
+        "CPU%4.4X:  AR00=%8.8"I32_FMT"X   AR01=%8.8"I32_FMT"X   AR02=%8.8"I32_FMT"X   AR03=%8.8"I32_FMT"X\n"
+        "CPU%4.4X:  AR04=%8.8"I32_FMT"X   AR05=%8.8"I32_FMT"X   AR06=%8.8"I32_FMT"X   AR07=%8.8"I32_FMT"X\n"
+        "CPU%4.4X:  AR08=%8.8"I32_FMT"X   AR09=%8.8"I32_FMT"X   AR10=%8.8"I32_FMT"X   AR11=%8.8"I32_FMT"X\n"
+        "CPU%4.4X:  AR12=%8.8"I32_FMT"X   AR13=%8.8"I32_FMT"X   AR14=%8.8"I32_FMT"X   AR15=%8.8"I32_FMT"X\n"
 
-    for (i = 0; i < 16; i++)
-        logmsg ("AR%2.2d=%8.8"I32_FMT"X%s", i, regs->AR(i),
-            ((i & 0x03) == 0x03) ? "\n" : "\t");
+        ,regs->cpuad ,regs->AR(0) ,regs->AR(1) ,regs->AR(2) ,regs->AR(3)
+        ,regs->cpuad ,regs->AR(4) ,regs->AR(5) ,regs->AR(6) ,regs->AR(7)
+        ,regs->cpuad ,regs->AR(8) ,regs->AR(8) ,regs->AR(10),regs->AR(11)
+        ,regs->cpuad ,regs->AR(12),regs->AR(13),regs->AR(14),regs->AR(15)
+    );
 
 } /* end function display_aregs */
 
@@ -261,29 +300,34 @@ void display_fregs (REGS *regs)
 {
 
     if(regs->CR(0) & CR0_AFP)
+        logmsg
+        (
+            "CPU%4.4X:  FPR0=%8.8X %8.8X   FPR1=%8.8X %8.8X\n"
+            "CPU%4.4X:  FPR2=%8.8X %8.8X   FPR3=%8.8X %8.8X\n"
+            "CPU%4.4X:  FPR4=%8.8X %8.8X   FPR5=%8.8X %8.8X\n"
+            "CPU%4.4X:  FPR6=%8.8X %8.8X   FPR7=%8.8X %8.8X\n"
+            "CPU%4.4X:  FPR8=%8.8X %8.8X   FPR9=%8.8X %8.8X\n"
+            "CPU%4.4X:  FPRa=%8.8X %8.8X   FPRb=%8.8X %8.8X\n"
+            "CPU%4.4X:  FPRc=%8.8X %8.8X   FPRd=%8.8X %8.8X\n"
+            "CPU%4.4X:  FPRe=%8.8X %8.8X   FPRf=%8.8X %8.8X\n"
 
-    logmsg ("FPR0=%8.8X %8.8X\t\tFPR1=%8.8X %8.8X\n"
-            "FPR2=%8.8X %8.8X\t\tFPR3=%8.8X %8.8X\n"
-            "FPR4=%8.8X %8.8X\t\tFPR5=%8.8X %8.8X\n"
-            "FPR6=%8.8X %8.8X\t\tFPR7=%8.8X %8.8X\n"
-            "FPR8=%8.8X %8.8X\t\tFPR9=%8.8X %8.8X\n"
-            "FPRa=%8.8X %8.8X\t\tFPRb=%8.8X %8.8X\n"
-            "FPRc=%8.8X %8.8X\t\tFPRd=%8.8X %8.8X\n"
-            "FPRe=%8.8X %8.8X\t\tFPRf=%8.8X %8.8X\n",
-            regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3],
-            regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7],
-            regs->fpr[8], regs->fpr[9], regs->fpr[10], regs->fpr[11],
-            regs->fpr[12], regs->fpr[13], regs->fpr[14], regs->fpr[15],
-            regs->fpr[16], regs->fpr[17], regs->fpr[18], regs->fpr[19],
-            regs->fpr[20], regs->fpr[21], regs->fpr[22], regs->fpr[23],
-            regs->fpr[24], regs->fpr[25], regs->fpr[26], regs->fpr[27],
-            regs->fpr[28], regs->fpr[29], regs->fpr[30], regs->fpr[31]);
+            ,regs->cpuad, regs->fpr[0],  regs->fpr[1],  regs->fpr[2],  regs->fpr[3]
+            ,regs->cpuad, regs->fpr[4],  regs->fpr[5],  regs->fpr[6],  regs->fpr[7]
+            ,regs->cpuad, regs->fpr[8],  regs->fpr[9],  regs->fpr[10], regs->fpr[11]
+            ,regs->cpuad, regs->fpr[12], regs->fpr[13], regs->fpr[14], regs->fpr[15]
+            ,regs->cpuad, regs->fpr[16], regs->fpr[17], regs->fpr[18], regs->fpr[19]
+            ,regs->cpuad, regs->fpr[20], regs->fpr[21], regs->fpr[22], regs->fpr[23]
+            ,regs->cpuad, regs->fpr[24], regs->fpr[25], regs->fpr[26], regs->fpr[27]
+            ,regs->cpuad, regs->fpr[28], regs->fpr[29], regs->fpr[30], regs->fpr[31]
+        );
     else
-
-    logmsg ("FPR0=%8.8X %8.8X\t\tFPR2=%8.8X %8.8X\n"
-            "FPR4=%8.8X %8.8X\t\tFPR6=%8.8X %8.8X\n",
-            regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3],
-            regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7]);
+        logmsg
+        (
+            "CPU%4.4X:  FPR0=%8.8X %8.8X   FPR2=%8.8X %8.8X\n"
+            "CPU%4.4X:  FPR4=%8.8X %8.8X   FPR6=%8.8X %8.8X\n"
+            ,regs->cpuad, regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3]
+            ,regs->cpuad, regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7]
+        );
 
 } /* end function display_fregs */
 
@@ -839,7 +883,7 @@ int     ilc;                            /* Instruction length        */
 int     b1=-1, b2=-1, x1;               /* Register numbers          */
 VADR    addr1 = 0, addr2 = 0;           /* Operand addresses         */
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
-char    buf[100];                       /* Message buffer            */
+char    buf[256];                       /* Message buffer            */
 int     n;                              /* Number of bytes in buffer */
 
   #if defined(_FEATURE_SIE)
@@ -861,7 +905,8 @@ int     n;                              /* Number of bytes in buffer */
     memset (qword, 0x00, sizeof(qword));
     copy_psw (regs, qword);
     n = sprintf (buf,
-                "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X ",
+                "CPU%4.4X:  PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X ",
+                regs->cpuad,
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
   #if defined(FEATURE_ESAME)
@@ -977,7 +1022,7 @@ int     n;                              /* Number of bytes in buffer */
                                 (opcode == 0x44 ? ACCTYPE_INSTFETCH :
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ));
-        logmsg ("%s\n", buf);
+        logmsg ("CPU%4.4X:  %s\n", regs->cpuad, buf);
     }
 
     /* Display storage at second storage operand location */
@@ -995,7 +1040,7 @@ int     n;                              /* Number of bytes in buffer */
             n = ARCH_DEP(display_virt) (regs, addr2, buf, b2,
                                         ACCTYPE_READ);
 
-        logmsg ("%s\n", buf);
+        logmsg ("CPU%4.4X:  %s\n", regs->cpuad, buf);
     }
 
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
@@ -1010,6 +1055,8 @@ int     n;                              /* Number of bytes in buffer */
     /* Display access registers if appropriate */
     if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         display_aregs (regs);
+
+    // display_fregs (regs)
 
 } /* end function display_inst */
 
