@@ -5867,7 +5867,7 @@ static char *ordername[] = {
 
 #endif /*defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)*/
 
-#if defined(_900) || defined(FEATURE_ESAME)
+#if defined(FEATURE_SENSE_RUNNING_STATUS)
 
         case SIGP_SENSE_RUNNING_STATE:
 
@@ -5876,7 +5876,7 @@ static char *ordername[] = {
 
             break;
 
-#endif // defined(_900) || defined(FEATURE_ESAME)
+#endif /*defined(FEATURE_SENSE_RUNNING_STATUS)*/
 
         default:
             status |= SIGP_STATUS_INVALID_ORDER;
