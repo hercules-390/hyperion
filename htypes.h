@@ -42,13 +42,13 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
 /*-------------------------------------------------------------------*/
 
 #if defined(_MSVC_)
-  #if   _INTEGRAL_MAX_BITS == 32
-    #define   SIZEOF_LONG      4
-  #elif _INTEGRAL_MAX_BITS == 64
+
+  #if defined( _WIN64 )
     #define   SIZEOF_LONG      8
-  #else
-    #error _INTEGRAL_MAX_BITS not 32 or 64
+  #else // !defined( _WIN64 )
+    #define   SIZEOF_LONG      4
   #endif
+
   #define  I16_FMT                  "h"
   #define  I32_FMT                 "I32"
   #define  I64_FMT                 "I64"

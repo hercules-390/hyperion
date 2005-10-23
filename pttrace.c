@@ -409,6 +409,7 @@ int   i;
 char  result[32]; // (result is 'int'; if 64-bits, 19 digits or more!)
 char *tbuf;
 time_t tt;
+const char dot = '.';
 
     if (pttrace == NULL) return;
     OBTAIN_PTTLOCK;
@@ -420,15 +421,35 @@ time_t tt;
     {
         if (p[i].tid)
         {
-            tt = p[i].tv.tv_sec;
-            tbuf = ctime(&tt);
-            tbuf[19] = '\0';
-            sprintf(result, "%d", p[i].result);
-            if (p[i].result == PTT_MAGIC) result[0] = '\0';
-            logmsg ("%8.8x %-12.12s "PTR_FMTx" "PTR_FMTx" %-12.12s %4d %s" "." "%6.6ld %s\n",
-                (U32)p[i].tid, p[i].type, (uintptr_t)p[i].data1,
-                (uintptr_t)p[i].data2, p[i].file, p[i].line,
-                tbuf + 11, p[i].tv.tv_usec, result);
+            tt = p[i].tv.tv_sec; tbuf = ctime(&tt); tbuf[19] = '\0';
+
+            if (p[i].result == PTT_MAGIC)
+                result[0] = '\0';
+            else
+                sprintf(result, "%d", p[i].result);
+
+            logmsg
+            (
+                "%8.8x "                // Thead id
+                "%-12.12s "             // Trace type (string; 12 chars)
+                PTR_FMTx" "             // Data value 1
+                PTR_FMTx" "             // Data value 2
+                "%-12.12s "             // File name
+                "%4d "                  // Line number
+                "%s%c%6.6ld "           // Time of day (HH:MM:SS.usecs)
+                "%s\n"                  // Numeric result (or empty string)
+
+                ,(U32)p[i].tid          // Thead id
+                ,p[i].type              // Trace type (string; 12 chars)
+                ,(uintptr_t)p[i].data1  // Data value 1
+                ,(uintptr_t)p[i].data2  // Data value 2
+                ,p[i].file              // File name
+                ,p[i].line              // Line number
+                ,tbuf + 11              // Time of day (HH:MM:SS)
+                ,dot                    // Time of day (decimal point)
+                ,p[i].tv.tv_usec        // Time of day (microseconds)
+                ,result                 // Numeric result (or empty string)
+            );
         }
         if (++i >= pttracen) i = 0;
     } while (i != pttracex);
