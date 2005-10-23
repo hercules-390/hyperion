@@ -1,6 +1,12 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+23 Oct 2005 SIGP/IPL enhancements: add support for new Conditional Emergency
+            and Sense Running State orders, add support for Set Architecture
+            order parm code 2 and other associated fixes to SIGP processing
+            (minor fixes to clear reset logic, "operator intervening" status;
+            restructure ipl.c & add support for captured z/Arch PSW, add CPU#
+            to registers display in hscmisc.c) - Fish
 22 Oct 2005 ACCTYPE_LPTEA in translate_addr - Roger Bowler
 22 Oct 2005 Fish's (x-n) bit-shifts (ALRF readability enhancement) - Roger Bowler
 21 Oct 2005 Move inline functions from esame.c to inline.h - Roger Bowler

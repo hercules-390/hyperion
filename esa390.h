@@ -586,27 +586,31 @@ typedef struct _LSED {
 /* ETE words 6 and 7 are the entry parameter for ESAME */
 
 /* SIGP order codes */
-#define SIGP_SENSE      0x01            /* Sense                     */
-#define SIGP_EXTCALL    0x02            /* External call             */
-#define SIGP_EMERGENCY  0x03            /* Emergency signal          */
-#define LOG_SIGPORDER   0x03
-#define SIGP_START      0x04            /* Start                     */
-#define SIGP_STOP       0x05            /* Stop                      */
-#define SIGP_RESTART    0x06            /* Restart                   */
-#define SIGP_IPR        0x07            /* Initial program reset 370 */
-#define SIGP_PR         0x08            /* Program reset         370 */
-#define SIGP_STOPSTORE  0x09            /* Stop and store status     */
-#define SIGP_IMPL       0x0A            /* Initial uprogram load 370 */
-#define SIGP_INITRESET  0x0B            /* Initial CPU reset         */
-#define SIGP_RESET      0x0C            /* CPU reset                 */
-#define SIGP_SETPREFIX  0x0D            /* Set prefix                */
-#define SIGP_STORE      0x0E            /* Store status at address   */
-#define SIGP_STOREX     0x11            /* Store ext status at addr  */
-#define SIGP_SETARCH    0x12            /* Set architecture mode     */
-#define MAX_SIGPORDER   0x12
+#define SIGP_SENSE               0x01   /* Sense                     */
+#define SIGP_EXTCALL             0x02   /* External call             */
+#define SIGP_EMERGENCY           0x03   /* Emergency signal          */
+#define SIGP_START               0x04   /* Start                     */
+#define SIGP_STOP                0x05   /* Stop                      */
+#define SIGP_RESTART             0x06   /* Restart                   */
+#define SIGP_IPR                 0x07   /* Initial program reset     */   /* 370 only */
+#define SIGP_PR                  0x08   /* Program reset             */   /* 370 only */
+#define SIGP_STOPSTORE           0x09   /* Stop and store status     */
+#define SIGP_IMPL                0x0A   /* Initial uprogram load     */   /* 370 only */
+#define SIGP_INITRESET           0x0B   /* Initial CPU reset         */
+#define SIGP_RESET               0x0C   /* CPU reset                 */
+#define SIGP_SETPREFIX           0x0D   /* Set prefix                */
+#define SIGP_STORE               0x0E   /* Store status at address   */
+#define SIGP_STOREX              0x11   /* Store ext status at addr  */   /* 390 only */
+#define SIGP_SETARCH             0x12   /* Set architecture mode     */
+#define SIGP_COND_EMERGENCY      0x13   /* Conditional Emergency     */
+#define SIGP_SENSE_RUNNING_STATE 0x15   /* Sense Running State       */
+
+#define MAX_SIGPORDER            0x15   /* Maximum SIGP order value  */
+#define LOG_SIGPORDER            0x03   /* Log any SIGP > this value */
 
 /* SIGP status codes */
 #define SIGP_STATUS_EQUIPMENT_CHECK             0x80000000
+#define SIGP_STATUS_NOT_RUNNING                 0x00000400
 #define SIGP_STATUS_INCORRECT_STATE             0x00000200
 #define SIGP_STATUS_INVALID_PARAMETER           0x00000100
 #define SIGP_STATUS_EXTERNAL_CALL_PENDING       0x00000080

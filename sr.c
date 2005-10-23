@@ -1273,6 +1273,7 @@ char     zeros[16];
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         if (IS_CPU_ONLINE(i) && (started_mask & BIT(i)))
         {
+            sysblk.regs[i]->opinterv = 0;
             sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
             sysblk.regs[i]->checkstop = 0;
             WAKEUP_CPU(sysblk.regs[i]);

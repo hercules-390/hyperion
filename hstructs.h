@@ -15,13 +15,14 @@
 /* Structure definition for CPU register context                     */
 /*-------------------------------------------------------------------*/
 struct REGS {                           /* Processor registers       */
-#define HDL_VERS_REGS   "2.17"          /* Internal Version Number   */
+#define HDL_VERS_REGS   "3.03"          /* Internal Version Number   */
 #define HDL_SIZE_REGS   sizeof(REGS)
 
         int     arch_mode;              /* Architectural mode        */
 
         DW      px;                     /* Prefix register           */
         PSW     psw;                    /* Program status word       */
+        PSW     captured_zpsw;          /* Captured-z/Arch PSW reg   */
         DW      gr[16];                 /* General registers         */
 
         DW      cr_special[1];          /* Negative Index into cr    */
@@ -144,6 +145,7 @@ struct REGS {                           /* Processor registers       */
 
         BYTE    cpustate;               /* CPU stopped/started state */
         unsigned int                    /* Flags (cpu thread only)   */
+                opinterv:1,             /* 1=Operator intervening    */
                 mainlock:1,             /* 1=Mainlock held           */
                 todlock:1,              /* 1=TODlock held            */
                 checkstop:1,            /* 1=CPU is checkstop-ed     */

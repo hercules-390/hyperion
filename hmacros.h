@@ -265,10 +265,9 @@ typedef void (*SIEFN)();
 /*-------------------------------------------------------------------*/
 
 /* Definitions for CPU state */
-#define CPUSTATE_STOPPED        1       /* CPU is stopped            */
+#define CPUSTATE_STARTED        1       /* CPU is started            */
 #define CPUSTATE_STOPPING       2       /* CPU is stopping           */
-#define CPUSTATE_STARTED        4       /* CPU is started            */
-#define CPUSTATE_STARTING       8       /* CPU is starting           */
+#define CPUSTATE_STOPPED        3       /* CPU is stopped            */
 
 #define IS_CPU_ONLINE(_cpu) \
   (sysblk.regs[(_cpu)] != NULL)

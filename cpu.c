@@ -849,6 +849,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 
     if ( rc == 0)
     {
+        regs->opinterv = 0;
         regs->cpustate = CPUSTATE_STARTED;
     }
 
@@ -1154,7 +1155,6 @@ int i;
     regs->vf = &sysblk.vf[cpu];
     regs->vf->online = (cpu < sysblk.numvec);
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
-
     initial_cpu_reset(regs);
 
 #if defined(_FEATURE_SIE)
@@ -1163,6 +1163,7 @@ int i;
         hostregs->guestregs = regs;
         regs->hostregs = hostregs;
         regs->sie_mode = 1;
+        regs->opinterv = 0;
         regs->cpustate = CPUSTATE_STARTED;
     }
     else
@@ -1292,6 +1293,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     if (regs->cpustate == CPUSTATE_STOPPING)
     {
         /* Change CPU status to stopped */
+        regs->opinterv = 0;
         regs->cpustate = CPUSTATE_STOPPED;
 
         if (!regs->configured)
@@ -1446,6 +1448,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
         if (sysblk.inststep || shouldbreak)
         {
             /* Put CPU into stopped state */
+            regs->opinterv = 0;
             regs->cpustate = CPUSTATE_STOPPED;
 
             /* Wait for start command from panel */

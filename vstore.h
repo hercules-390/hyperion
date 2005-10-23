@@ -24,13 +24,28 @@
 /* validate_operand   Validate addressing, protection, translation   */
 /*-------------------------------------------------------------------*/
 
-#define NOCROSS2K(_addr,_len) likely( ( (int)((_addr) & 0x7FF)) <= ( 0x7FF - (_len) ) )
+/*-------------------------------------------------------------------*/
+/*              Operand Length Checking Macros                       */
+/*                                                                   */
+/* The following macros are used to determine whether an operand     */
+/* storage access will cross a 2K page boundary or not.              */
+/*                                                                   */
+/* The first 'plain' pair of macros (without the 'L') are used for   */
+/* 0-based lengths wherein zero = 1 byte is being referenced and 255 */
+/* means 256 bytes are being referenced. They are obviously designed */
+/* for maximum length values of 0-255 as used w/MVC instructions.    */
+/*                                                                   */
+/* The second pair of 'L' macros are using for 1-based lengths where */
+/* 0 = no bytes are being referenced, 1 = one byte, etc. They are    */
+/* designed for 'Large' maximum length values such as occur with the */
+/* MVCL instruction for example (where the length can be up to 16MB) */
+/*-------------------------------------------------------------------*/
 
-#define CROSS2K(_addr,_len) unlikely( ( (int)((_addr) & 0x7FF)) > ( 0x7FF - (_len) ) )
+#define NOCROSS2K(_addr,_len)     likely( (uintptr_t)(_len) <= 0x7FF && (uintptr_t)((_addr) & 0x7FF) <= ((uintptr_t)0x7FF - (_len)) )
+#define   CROSS2K(_addr,_len)   unlikely( (uintptr_t)(_len) >  0x7FF || (uintptr_t)((_addr) & 0x7FF) >  ((uintptr_t)0x7FF - (_len)) )
 
-#define NOCROSS2KL(_addr,_len) likely( ( (int)((_addr) & 0x7FF)) <= ( 0x800 - (_len) ) )
-
-#define CROSS2KL(_addr,_len) unlikely( ( (int)((_addr) & 0x7FF)) > ( 0x800 - (_len) ) )
+#define NOCROSS2KL(_addr,_len)    likely( (uintptr_t)(_len) <= 0x800 && (uintptr_t)((_addr) & 0x7FF) <= ((uintptr_t)0x800 - (_len)) )
+#define   CROSS2KL(_addr,_len)  unlikely( (uintptr_t)(_len) >  0x800 || (uintptr_t)((_addr) & 0x7FF) >  ((uintptr_t)0x800 - (_len)) )
 
 #if !defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C)
 

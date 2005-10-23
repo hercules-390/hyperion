@@ -1918,7 +1918,6 @@ int     amode64;
     }
 #endif
 
-
     PRIV_CHECK(regs);
 
     DW_CHECK(effective_addr2, regs);
@@ -1936,41 +1935,59 @@ int     amode64;
     STORE_DW ( dword, ARCH_DEP(vfetch8) ( effective_addr2, b2, regs ) );
 
     /* Load updated PSW (ESA/390 Format in ESAME mode) */
-#if defined(FEATURE_ESAME)
-    /* save amode64 flag */
+#if !defined(FEATURE_ESAME)
+    if ((rc = ARCH_DEP(load_psw) ( regs, dword )))
+        ARCH_DEP(program_interrupt) (regs, rc);
+#else /*defined(FEATURE_ESAME)*/
+
+    /* Make the PSW valid for ESA/390 mode
+       after first saving our amode64 flag */
     amode64 = dword[3] & 0x01;
-    /* make psw valid for esa390 mode */
     dword[3] &= ~0x01;
+
+    /* Now call 's390_load_psw' to load our ESA/390 PSW for us */
     rc = s390_load_psw ( regs, dword );
-    /* Set the notesame bit to zero as it has been set,
-       and set the amode64 bit according to byte 3 */
-//FIXME: line below is replaced by the 2nd line below; is this right ??
-//  regs->psw.notesame = regs->psw.notesame ? 0 : 1;
-    regs->psw.states ^= BIT(PSW_NOTESAME_BIT);
-    regs->psw.amode64 = amode64;
-    /* s390_load_psw will not have set the AMASK correctly for amode64 */
-    if(amode64)
+
+    /* PROGRAMMING NOTE: z/Arch (ESAME) only supports the loading
+       of ESA/390 mode (Extended Control mode (i.e. EC mode)) PSWs
+       via the LPSW instruction. Thus the above 's390_load_psw' call
+       has already checked to  make sure bit 12 -- the EC mode bit
+       (otherwise also known as the 'NOTESAME' bit) -- was set when
+       the PSW was loaded (otherwise it would not have even returned
+       and instead would have thrown a PGM_SPECIFICATION_EXCEPTION).
+
+       Since we're actually executing in z/Arch (ESAME) mode though
+       we now need to turn that bit off (since it's not supposed to
+       be on for z/Arch (ESAME) mode) as explained in the Principles
+       of Operations manual for the LPSW instruction.
+    */
+    regs->psw.states &= ~BIT(PSW_NOTESAME_BIT);
+
+    /* Restore the amode64 flag setting and set the actual correct
+       AMASK value according to it (if we need to) since we had to
+       force non-amode64 further above to get the 's390_load_psw'
+       function to work right without erroneously program-checking.
+    */
+    if((regs->psw.amode64 = amode64))
     {
         regs->psw.AMASK = AMASK64;
+
         /* amode31 bit must be set when amode64 is set */
         if(!regs->psw.amode)
         {
             regs->psw.zeroilc = 1;
-            rc = PGM_SPECIFICATION_EXCEPTION;
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         }
     }
-#else /*!defined(FEATURE_ESAME)*/
-    rc = ARCH_DEP(load_psw) ( regs, dword );
-#endif /*!defined(FEATURE_ESAME)*/
-    if (rc)
-    {
-        ARCH_DEP(program_interrupt) (regs, rc);
-    }
 
-#if defined(FEATURE_ESAME)
-    /* Clear the high word of the instruction address,
-       as it has not been touched by s390_load_psw */
+    /* Check for Load PSW success/failure */
+    if (rc)
+        ARCH_DEP(program_interrupt) (regs, rc);
+
+    /* Clear the high word of the instruction address since
+       the 's390_load_psw' function didn't do that for us */
     regs->psw.IA_H = 0;
+
 #endif /*defined(FEATURE_ESAME)*/
 
     /* Perform serialization and checkpoint synchronization */
@@ -5194,25 +5211,31 @@ BYTE    order;                          /* SIGP order code           */
 int     cpu;                            /* cpu number                */
 int     set_arch = 0;                   /* Need to switch mode       */
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/
-static char *ordername[] = {    "Unassigned",
-        /* SIGP_SENSE     */    "Sense",
-        /* SIGP_EXTCALL   */    "External call",
-        /* SIGP_EMERGENCY */    "Emergency signal",
-        /* SIGP_START     */    "Start",
-        /* SIGP_STOP      */    "Stop",
-        /* SIGP_RESTART   */    "Restart",
-        /* SIGP_IPR       */    "Initial program reset",
-        /* SIGP_PR        */    "Program reset",
-        /* SIGP_STOPSTORE */    "Stop and store status",
-        /* SIGP_IMPL      */    "Initial microprogram load",
-        /* SIGP_INITRESET */    "Initial CPU reset",
-        /* SIGP_RESET     */    "CPU reset",
-        /* SIGP_SETPREFIX */    "Set prefix",
-        /* SIGP_STORE     */    "Store status",
-        /* 0x0F           */    "Unassigned",
-        /* 0x10           */    "Unassigned",
-        /* SIGP_STOREX    */    "Store extended status at address",
-        /* SIGP_SETARCH   */    "Set Architecture Mode" };
+int     log_sigp = 0;                   /* Log SIGP instruction flag */
+static char *ordername[] = {
+    /* 0x00                          */  "Unassigned",
+    /* 0x01 SIGP_SENSE               */  "Sense",
+    /* 0x02 SIGP_EXTCALL             */  "External call",
+    /* 0x03 SIGP_EMERGENCY           */  "Emergency signal",
+    /* 0x04 SIGP_START               */  "Start",
+    /* 0x05 SIGP_STOP                */  "Stop",
+    /* 0x06 SIGP_RESTART             */  "Restart",
+    /* 0x07 SIGP_IPR                 */  "Initial program reset",
+    /* 0x08 SIGP_PR                  */  "Program reset",
+    /* 0x09 SIGP_STOPSTORE           */  "Stop and store status",
+    /* 0x0A SIGP_IMPL                */  "Initial microprogram load",
+    /* 0x0B SIGP_INITRESET           */  "Initial CPU reset",
+    /* 0x0C SIGP_RESET               */  "CPU reset",
+    /* 0x0D SIGP_SETPREFIX           */  "Set prefix",
+    /* 0x0E SIGP_STORE               */  "Store status",
+    /* 0x0F                          */  "Unassigned",
+    /* 0x10                          */  "Unassigned",
+    /* 0x11 SIGP_STOREX              */  "Store extended status at address",
+    /* 0x12 SIGP_SETARCH             */  "Set architecture mode",
+    /* 0x13 SIGP_COND_EMERGENCY      */  "Conditional emergency",
+    /* 0x14                          */  "Unassigned",
+    /* 0x15 SIGP_SENSE_RUNNING_STATE */  "Sense running state"
+};
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -5232,25 +5255,30 @@ static char *ordername[] = {    "Unassigned",
     /* Load the parameter from R1 (if R1 odd), or R1+1 (if even) */
     parm = (r1 & 1) ? regs->GR_L(r1) : regs->GR_L(r1+1);
 
+    /* Trace all "non-normal" SIGPs to ANY cpu (anything OTHER
+       THAN Sense, External Call and Emergency Signal (which are
+       considered normal) , -or- ANY SIGP AT ALL sent to a CPU
+       that is configured offline (which is indeed unusual!)
+    */
+    if (order > LOG_SIGPORDER || cpad >= MAX_CPU || !IS_CPU_ONLINE(cpad))
+    {
+        log_sigp = 1;
+        logmsg ("CPU%4.4X: SIGP %s (%2.2X) CPU%4.4X, PARM "F_GREG,
+                regs->cpuad,
+                order >= sizeof(ordername) / sizeof(ordername[0]) ?
+                        "Unassigned" : ordername[order],
+                order,
+                cpad,
+                parm);
+    }
+
     /* Return condition code 3 if target CPU does not exist */
     if (cpad >= MAX_CPU)
     {
         regs->psw.cc = 3;
+        if (log_sigp)
+            logmsg (": CC 3\n");
         return;
-    }
-
-    /* Trace all "unusual" SIGPs... (anything OTHER THAN Sense,
-       External Call and Emergency Signal (which are considered
-       normal) to ANY cpu, -or- ANY SIGP at all sent to a CPU
-       that is configured offline (which is indeed unusual!)) */
-    if (order > LOG_SIGPORDER || !IS_CPU_ONLINE(cpad))
-    {
-        logmsg ("CPU%4.4X: SIGP CPU%4.4X %s (%2.2X) PARM "F_GREG"\n",
-                regs->cpuad, cpad,
-                order >= sizeof(ordername) / sizeof(ordername[0]) ?
-                        "Unassigned" : ordername[order],
-                order,
-                parm);
     }
 
     /* [4.9.2.1] Claim the use of the CPU signaling and response
@@ -5260,16 +5288,18 @@ static char *ordername[] = {    "Unassigned",
     if(try_obtain_lock (&sysblk.sigplock))
     {
         regs->psw.cc = 2;
+        if (log_sigp)
+            logmsg (": CC 2\n");
         return;
     }
 
     /* Obtain the interrupt lock */
     obtain_lock(&sysblk.intlock);
 
-    /* If the cpu is not part of the configuration then return cc3
-       Initial CPU reset may IML a processor that is currently not
-       part of the configuration, ie configure the cpu implicitly
-       online */
+    /* If the CPU is not part of the configuration then return cc3.
+       Note that Initial CPU reset *may* IML a processor that isn't
+       currently online! (part of the configuration) -- i.e. it may
+       explicitly configure any cpu online as long as it exists. */
     if (order != SIGP_INITRESET
 #if defined(FEATURE_S370_CHANNEL)
        && order != SIGP_IMPL
@@ -5279,6 +5309,8 @@ static char *ordername[] = {    "Unassigned",
         release_lock(&sysblk.intlock);
         release_lock(&sysblk.sigplock);
         regs->psw.cc = 3;
+        if (log_sigp)
+            logmsg (": CC 3\n");
         return;
     }
 
@@ -5300,19 +5332,32 @@ static char *ordername[] = {    "Unassigned",
         release_lock(&sysblk.intlock);
         release_lock(&sysblk.sigplock);
         regs->psw.cc = 2;
+        if (log_sigp)
+            logmsg (": CC 2\n");
         return;
     }
 
-    /* If the CPU thread is still starting, ie CPU is still performing
-       the IML process then reflect an operator intervening status
-       to the caller */
-    if (IS_CPU_ONLINE(cpad) && tregs->cpustate == CPUSTATE_STARTING)
+    /* The operator-intervening condition, when present, can be indicated
+       in response to all orders, and is indicated in response to sense if
+       it precludes the acceptance of any of the installed orders (which
+       is always true in our case), but cannot arise as a result of a SIGP
+       instruction executed by a CPU addressing itself.
+    */
+    if (1
+        &&  order != SIGP_SENSE     // if this isn't a sense,
+        &&  cpad != regs->cpuad     // and we're not addressing ourselves,
+        &&  tregs->opinterv         // and operator intervening condition...
+    )
+    {
+        // ...then we cannot proceed
         status |= SIGP_STATUS_OPERATOR_INTERVENING;
-    else
-        /* Process signal according to order code */
-        switch (order)
+    }
+    else // (order == SIGP_SENSE || cpad == regs->cpuad || !tregs->opinterv)
+
+        switch (order)  /* Process signal according to order code */
         {
         case SIGP_SENSE:
+
             /* Set status bit 24 if external call interrupt pending */
             if (IS_IC_EXTCALL(tregs))
                 status |= SIGP_STATUS_EXTERNAL_CALL_PENDING;
@@ -5325,114 +5370,177 @@ static char *ordername[] = {    "Unassigned",
             if(tregs->checkstop)
                 status |= SIGP_STATUS_CHECK_STOP;
 
+            /* Test for operator intervening state */
+            if(cpad != regs->cpuad && tregs->opinterv)
+                status |= SIGP_STATUS_OPERATOR_INTERVENING;
+
             break;
 
         case SIGP_EXTCALL:
+
             /* Test for checkstop state */
-            if(tregs->checkstop)
-            {
+            if (tregs->checkstop)
                 status |= SIGP_STATUS_CHECK_STOP;
-                break;
-            }
 
-            /* Exit with status bit 24 set if a previous external
-               call interrupt is still pending in the target CPU */
+            /* Check if external call interrupt
+               still pending in the targeted CPU */
             if (IS_IC_EXTCALL(tregs))
-            {
                 status |= SIGP_STATUS_EXTERNAL_CALL_PENDING;
-                break;
-            }
 
-            /* Raise an external call interrupt pending condition */
-            ON_IC_EXTCALL(tregs);
-            tregs->extccpu = regs->cpuad;
+            /* Only proceed if no conditions exist to preclude
+               the acceptance of this signal-processor order */
+            if (!status)
+            {
+                /* Raise an external call interrupt pending condition */
+                tregs->extccpu = regs->cpuad;
+                ON_IC_EXTCALL(tregs);
+            }
 
             break;
 
-        case SIGP_EMERGENCY:
+#if defined(_900) || defined(FEATURE_ESAME)
+
+        case SIGP_COND_EMERGENCY:
+
             /* Test for checkstop state */
             if(tregs->checkstop)
-            {
                 status |= SIGP_STATUS_CHECK_STOP;
-                break;
+            else
+            {
+                U16 check_asn = (parm & 0xFFFF);
+
+                if (0
+
+                    // PSW disabled for external interruptions,
+                    // I/O interruptions, or both
+                    || (!(tregs->psw.sysmask & PSW_EXTMASK) ||
+                        !(tregs->psw.sysmask & PSW_IOMASK))
+
+                    // CPU in wait state and the PSW instruction
+                    // address not zero
+                    || ( WAITSTATE( &tregs->psw ) && tregs->psw.IA )
+
+                    // CPU not in wait state and check_asn value
+                    // equals an ASN of the CPU (primary, secondary
+                    // or both) -- regardless of the setting of PSW
+                    // bits 16-17
+                    || (1
+                        && !WAITSTATE( &tregs->psw )
+                        && (check_asn == tregs->CR_LHL(3) ||
+                            check_asn == tregs->CR_LHL(4))
+                    )
+                )
+                {
+                    /* Raise an emergency signal interrupt pending condition */
+                    tregs->emercpu[regs->cpuad] = 1;
+                    ON_IC_EMERSIG(tregs);
+                }
+                else
+                    status |= SIGP_STATUS_INCORRECT_STATE;
             }
+            break;
 
-            /* Raise an emergency signal interrupt pending condition */
-            ON_IC_EMERSIG(tregs);
-            tregs->emercpu[regs->cpuad] = 1;
+#endif // defined(_900) || defined(FEATURE_ESAME)
 
+        case SIGP_EMERGENCY:
+
+            /* Test for checkstop state */
+            if(tregs->checkstop)
+                status |= SIGP_STATUS_CHECK_STOP;
+
+            /* Only proceed if no conditions exist to preclude
+               the acceptance of this signal-processor order */
+            if (!status)
+            {
+                /* Raise an emergency signal interrupt pending condition */
+                tregs->emercpu[regs->cpuad] = 1;
+                ON_IC_EMERSIG(tregs);
+            }
             break;
 
         case SIGP_START:
+
             /* Test for checkstop state */
             if(tregs->checkstop)
-            {
                 status |= SIGP_STATUS_CHECK_STOP;
-                break;
+
+            /* Only proceed if no conditions exist to preclude
+               the acceptance of this signal-processor order */
+            if (!status)
+            {
+                /* Restart the target CPU if it is in the stopped state */
+                tregs->opinterv = 0;
+                tregs->cpustate = CPUSTATE_STARTED;
             }
-
-            /* Restart the target CPU if it is in the stopped state */
-            tregs->cpustate = CPUSTATE_STARTED;
-
             break;
 
         case SIGP_STOP:
+
             /* Test for checkstop state */
             if(tregs->checkstop)
-            {
                 status |= SIGP_STATUS_CHECK_STOP;
-                break;
+
+            /* Only proceed if no conditions exist to preclude
+               the acceptance of this signal-processor order */
+            if (!status)
+            {
+                /* Put the the target CPU into the stopping state */
+                tregs->cpustate = CPUSTATE_STOPPING;
+                ON_IC_INTERRUPT(tregs);
             }
-
-            /* Put the the target CPU into the stopping state */
-            tregs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(tregs);
-
             break;
 
         case SIGP_RESTART:
+
             /* Test for checkstop state */
             if(tregs->checkstop)
-            {
                 status |= SIGP_STATUS_CHECK_STOP;
-                break;
+
+            /* Only proceed if no conditions exist to preclude
+               the acceptance of this signal-processor order */
+            if (!status)
+            {
+                /* Set cpustate to stopping. If the restart is successful,
+                then the cpustate will be set to started in cpu.c */
+                if(tregs->cpustate == CPUSTATE_STOPPED)
+                    tregs->cpustate = CPUSTATE_STOPPING;
+
+                /* Make restart interrupt pending in the target CPU */
+                ON_IC_RESTART(tregs);
             }
-
-            /* Make restart interrupt pending in the target CPU */
-            ON_IC_RESTART(tregs);
-            /* Set cpustate to stopping. If the restart is successful,
-               then the cpustate will be set to started in cpu.c */
-            if(tregs->cpustate == CPUSTATE_STOPPED)
-                tregs->cpustate = CPUSTATE_STOPPING;
-
             break;
 
         case SIGP_STOPSTORE:
+
             /* Test for checkstop state */
             if(tregs->checkstop)
-            {
                 status |= SIGP_STATUS_CHECK_STOP;
-                break;
+
+            /* Only proceed if no conditions exist to preclude
+               the acceptance of this signal-processor order */
+            if (!status)
+            {
+                /* Indicate store status is required when stopped */
+                ON_IC_STORSTAT(tregs);
+
+                /* Put the the target CPU into the stopping state */
+                tregs->cpustate = CPUSTATE_STOPPING;
+                ON_IC_INTERRUPT(tregs);
             }
-
-            /* Indicate store status is required when stopped */
-            ON_IC_STORSTAT(tregs);
-
-            /* Put the the target CPU into the stopping state */
-            tregs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(tregs);
-
             break;
 
 #if defined(FEATURE_S370_CHANNEL)
+
         case SIGP_IMPL:
         case SIGP_IPR:
+
 #endif /* defined(FEATURE_S370_CHANNEL) */
+
         case SIGP_INITRESET:
+
             if (!IS_CPU_ONLINE(cpad))
             {
-                configure_cpu(cpad);
-                if (!IS_CPU_ONLINE(cpad))
+                if (configure_cpu(cpad) != 0 || !IS_CPU_ONLINE(cpad))
                 {
                     status |= SIGP_STATUS_OPERATOR_INTERVENING;
                     break;
@@ -5453,11 +5561,16 @@ static char *ordername[] = {    "Unassigned",
             break;
 
 #if defined(FEATURE_S370_CHANNEL)
+
         case SIGP_PR:
+
             channelset_reset(tregs);
             /* fallthrough*/
+
 #endif /* defined(FEATURE_S370_CHANNEL) */
+
         case SIGP_RESET:
+
             /* Signal CPU reset function */
             tregs->sigpreset = 1;
             tregs->cpustate = CPUSTATE_STOPPING;
@@ -5466,175 +5579,309 @@ static char *ordername[] = {    "Unassigned",
             break;
 
         case SIGP_SETPREFIX:
+
             /* Test for checkstop state */
             if(tregs->checkstop)
-            {
                 status |= SIGP_STATUS_CHECK_STOP;
-                break;
-            }
 
-            /* Exit with operator intervening if the status is
-               stopping, such that a retry can be attempted */
-            if(tregs->cpustate == CPUSTATE_STOPPING)
-            {
-                status |= SIGP_STATUS_OPERATOR_INTERVENING;
-                break;
-            }
-
-            /* Exit with status bit 22 set if CPU is not stopped */
+            /* Check if CPU is not stopped */
             if (tregs->cpustate != CPUSTATE_STOPPED)
-            {
                 status |= SIGP_STATUS_INCORRECT_STATE;
-                break;
-            }
 
-            /* Obtain new prefix from parameter register bits 1-19
-               or bits 1-18 in ESAME mode */
-            abs = parm & PX_MASK;
-
-            /* Exit with status bit 23 set if new prefix is invalid */
-            if (abs > regs->mainlim)
+            /* Only proceed if no conditions exist to preclude
+               the acceptance of this signal-processor order */
+            if (!status)
             {
-                status |= SIGP_STATUS_INVALID_PARAMETER;
-                break;
-            }
+                /* Obtain new prefix from parameter register bits 1-19
+                or bits 1-18 in ESAME mode */
+                abs = parm & PX_MASK;
 
-            /* Load new value into prefix register of target CPU */
-            tregs->PX = abs;
+                /* Exit with status bit 23 set if new prefix is invalid */
+                if (abs > regs->mainlim)
+                    status |= SIGP_STATUS_INVALID_PARAMETER;
+                else
+                {
+                    /* Load new value into prefix register of target CPU */
+                    tregs->PX = abs;
 
-            /* Invalidate the ALB and TLB of the target CPU */
-            ARCH_DEP(purge_tlb) (tregs);
+                    /* Invalidate the ALB and TLB of the target CPU */
+                    ARCH_DEP(purge_tlb) (tregs);
 #if defined(FEATURE_ACCESS_REGISTERS)
-            ARCH_DEP(purge_alb) (tregs);
+                    ARCH_DEP(purge_alb) (tregs);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
-            /* Perform serialization and checkpoint-sync on target CPU */
-//          perform_serialization (tregs);
-//          perform_chkpt_sync (tregs);
-
+                    /* Perform serialization and checkpoint-sync on target CPU */
+//                  perform_serialization (tregs);
+//                  perform_chkpt_sync (tregs);
+                }
+            }
             break;
 
         case SIGP_STORE:
+
             /* Test for checkstop state */
             if(tregs->checkstop)
-            {
                 status |= SIGP_STATUS_CHECK_STOP;
-                break;
-            }
 
-            /* Exit with operator intervening if the status is
-               stopping, such that a retry can be attempted */
-            if(tregs->cpustate == CPUSTATE_STOPPING)
-            {
-                status |= SIGP_STATUS_OPERATOR_INTERVENING;
-                break;
-            }
-
-            /* Exit with status bit 22 set if CPU is not stopped */
+            /* Check if CPU is not stopped */
             if (tregs->cpustate != CPUSTATE_STOPPED)
-            {
                 status |= SIGP_STATUS_INCORRECT_STATE;
-                break;
-            }
 
-            /* Obtain status address from parameter register bits 1-22 */
-            abs = parm & 0x7FFFFE00;
-
-            /* Exit with status bit 23 set if status address invalid */
-            if (abs > regs->mainlim)
+            /* Only proceed if no conditions exist to preclude
+               the acceptance of this signal-processor order */
+            if (!status)
             {
-                status |= SIGP_STATUS_INVALID_PARAMETER;
-                break;
+                /* Obtain status address from parameter register bits 1-22 */
+                abs = parm & 0x7FFFFE00;
+
+                /* Exit with status bit 23 set if status address invalid */
+                if (abs > regs->mainlim)
+                    status |= SIGP_STATUS_INVALID_PARAMETER;
+                else
+                {
+                    /* Store status at specified main storage address */
+                    ARCH_DEP(store_status) (tregs, abs);
+
+                    /* Perform serialization and checkpoint-sync on target CPU */
+//                  perform_serialization (tregs);
+//                  perform_chkpt_sync (tregs);
+                }
             }
-
-            /* Store status at specified main storage address */
-            ARCH_DEP(store_status) (tregs, abs);
-
-            /* Perform serialization and checkpoint-sync on target CPU */
-//          perform_serialization (tregs);
-
-//          perform_chkpt_sync (tregs);
-
             break;
 
+#if defined(_390)
         case SIGP_STOREX:
+        {
+#if !defined(FEATURE_BASIC_FP_EXTENSIONS)
+            status |= SIGP_STATUS_INVALID_ORDER;
+#else // defined(FEATURE_BASIC_FP_EXTENSIONS)
+            RADR  absx;     // abs addr of extended save area
+
             /* Test for checkstop state */
             if(tregs->checkstop)
-            {
                 status |= SIGP_STATUS_CHECK_STOP;
-                break;
+
+            /* Check if CPU is not stopped */
+            if (tregs->cpustate != CPUSTATE_STOPPED)
+                status |= SIGP_STATUS_INCORRECT_STATE;
+
+            /* Only proceed if no conditions exist to preclude
+               the acceptance of this signal-processor order */
+            if (!status)
+            {
+                /* Obtain status address from parameter register bits 1-22 */
+                abs = parm & 0x7FFFFE00;
+
+                /* Exit with status bit 23 set if status address invalid */
+                if (abs > regs->mainlim)
+                    status |= SIGP_STATUS_INVALID_PARAMETER;
+                else
+                {
+                    /* Fetch the address of the extended save area */
+                    absx = ARCH_DEP(fetch_fullword_absolute) (abs+212, tregs);
+                    absx &= 0x7FFFF000;
+
+                    /* Invalid parameter if extended save area address invalid */
+                    if (absx > regs->mainlim)
+                        status |= SIGP_STATUS_INVALID_PARAMETER;
+                    else
+                    {   int i;  // (work)
+
+                        /* Store status at specified main storage address */
+                        ARCH_DEP(store_status) (tregs, abs );
+
+                        /* Store extended status at specified main storage address */
+                        for (i = 0; i < 32; i++)
+                            STORE_FW( tregs->mainstor + absx + (i*4), tregs->fpr[i] );
+                        STORE_FW( tregs->mainstor + absx + 128, tregs->fpc );
+                        STORE_FW( tregs->mainstor + absx + 132, 0 );
+                        STORE_FW( tregs->mainstor + absx + 136, 0 );
+                        STORE_FW( tregs->mainstor + absx + 140, 0 );
+
+                        /* Perform serialization and checkpoint-sync on target CPU */
+//                      perform_serialization (tregs);
+//                      perform_chkpt_sync (tregs);
+                    }
+                }
             }
 
-            /*INCOMPLETE*/
-
-            break;
+#endif // defined(FEATURE_BASIC_FP_EXTENSIONS)
+        }
+        break;
+#endif // defined(_390)
 
 #if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)
+
         case SIGP_SETARCH:
 
             /* CPU must have ESAME support */
             if(!sysblk.arch_z900)
-                status = SIGP_STATUS_INVALID_ORDER;
+            {
+                status |= SIGP_STATUS_INVALID_ORDER;
+                break;
+            }
 
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
 
+            // All CPUs (except for the one executing the SIGP
+            // instruction itself) must be in the stopped state
             for (cpu = 0; cpu < MAX_CPU; cpu++)
-                if (IS_CPU_ONLINE(cpu)
-                 && sysblk.regs[cpu]->cpustate != CPUSTATE_STOPPED
-                 && sysblk.regs[cpu]->cpuad != regs->cpuad)
+            {
+                if (1
+                    && IS_CPU_ONLINE(cpu)
+                    && sysblk.regs[cpu]->cpuad != regs->cpuad
+                    && sysblk.regs[cpu]->cpustate != CPUSTATE_STOPPED
+                )
+                {
                     status |= SIGP_STATUS_INCORRECT_STATE;
-
-            if(!status)
-                switch(parm & 0xFF) {
-                    case 0:
-                        if(sysblk.arch_mode == ARCH_390)
-                            status = SIGP_STATUS_INVALID_ORDER;
-                        sysblk.arch_mode = ARCH_390;
-                        regs->psw.states |= BIT(PSW_NOTESAME_BIT);
-                        regs->PX_L &= 0x7FFFE000;
-                        set_arch = 1;
-                        break;
-                    case 1:
-                        if(sysblk.arch_mode == ARCH_900)
-                            status = SIGP_STATUS_INVALID_ORDER;
-                        sysblk.arch_mode = ARCH_900;
-                        regs->psw.states &= ~BIT(PSW_NOTESAME_BIT);
-                        regs->psw.IA_H = 0;
-                        regs->PX_G &= 0x7FFFE000;
-                        set_arch = 1;
-                        break;
-#if defined(FEATURE_HERCULES_DIAGCALLS)
-                    case 37:
-                        if(sysblk.arch_mode == ARCH_370)
-                            status = SIGP_STATUS_INVALID_ORDER;
-                        sysblk.arch_mode = ARCH_370;
-                        set_arch = 1;
-                        break;
-#endif /*defined(FEATURE_HERCULES_DIAGCALLS)*/
-                    default:
-                        status |= SIGP_STATUS_INVALID_PARAMETER;
+                    break;
                 }
+            }
 
-            sysblk.dummyregs.arch_mode = sysblk.arch_mode;
+            if(!status) {
+                switch(parm & 0xFF) {
+
+#if defined(_900) || defined(FEATURE_ESAME)
+
+                    case 0:  // from: --  z/Arch   --to-->   390
+
+                        if(sysblk.arch_mode == ARCH_390)
+                            status = SIGP_STATUS_INVALID_PARAMETER;
+                        else
+                        {
+                            sysblk.arch_mode = ARCH_390;
+                            set_arch = 1;
+
+                            regs->captured_zpsw = regs->psw;
+                            regs->psw.states |= BIT(PSW_NOTESAME_BIT);
+                            regs->PX_L &= 0x7FFFE000;
+
+                            for (cpu = 0; cpu < MAX_CPU; cpu++)
+                            {
+                                if (IS_CPU_ONLINE(cpu) &&
+                                    sysblk.regs[cpu]->cpuad != regs->cpuad)
+                                {
+                                    sysblk.regs[cpu]->captured_zpsw = sysblk.regs[cpu]->psw;
+                                    sysblk.regs[cpu]->psw.states |= BIT(PSW_NOTESAME_BIT);
+                                    sysblk.regs[cpu]->PX_L &= 0x7FFFE000;
+                                }
+                            }
+                        }
+                        break;
+
+                    case 1:   // from: --  390   --to-->   z/Arch
+
+                        if(sysblk.arch_mode == ARCH_900)
+                            status = SIGP_STATUS_INVALID_PARAMETER;
+                        else
+                        {
+                            sysblk.arch_mode = ARCH_900;
+                            set_arch = 1;
+
+                            regs->psw.states &= ~BIT(PSW_NOTESAME_BIT);
+                            regs->psw.IA_H = 0;
+                            regs->PX_G &= 0x7FFFE000;
+
+                            for (cpu = 0; cpu < MAX_CPU; cpu++)
+                            {
+                                if (IS_CPU_ONLINE(cpu) &&
+                                    sysblk.regs[cpu]->cpuad != regs->cpuad)
+                                {
+                                    sysblk.regs[cpu]->psw.states &= ~BIT(PSW_NOTESAME_BIT);
+                                    sysblk.regs[cpu]->psw.IA_H = 0;
+                                    sysblk.regs[cpu]->PX_G &= 0x7FFFE000;
+                                }
+                            }
+                        }
+                        break;
+
+                    case 2:    //  restore CAPTURED z/Arch PSW...
+
+                        if(sysblk.arch_mode == ARCH_900)
+                            status = SIGP_STATUS_INVALID_PARAMETER;
+                        else
+                        {
+                            sysblk.arch_mode = ARCH_900;
+                            set_arch = 1;
+
+                            regs->psw.states &= ~BIT(PSW_NOTESAME_BIT);
+                            regs->psw.IA_H = 0;
+                            regs->PX_G &= 0x7FFFE000;
+
+                            for (cpu = 0; cpu < MAX_CPU; cpu++)
+                            {
+                                if (IS_CPU_ONLINE(cpu) &&
+                                    sysblk.regs[cpu]->cpuad != regs->cpuad)
+                                {
+                                    sysblk.regs[cpu]->psw = sysblk.regs[cpu]->captured_zpsw;
+                                    sysblk.regs[cpu]->PX_G &= 0x7FFFE000;
+                                }
+                            }
+                        }
+                        break;
+
+#endif // defined(_900) || defined(FEATURE_ESAME)
+
+#if defined(FEATURE_HERCULES_DIAGCALLS)
+
+                    case 37:
+
+                        if(sysblk.arch_mode == ARCH_370)
+                            status = SIGP_STATUS_INVALID_PARAMETER;
+                        else
+                        {
+                            sysblk.arch_mode = ARCH_370;
+                            set_arch = 1;
+                        }
+                        break;
+
+#endif /*defined(FEATURE_HERCULES_DIAGCALLS)*/
+
+                    default:
+                        status = SIGP_STATUS_INVALID_PARAMETER;
+                        break;
+
+                } /* end switch(parm & 0xFF) */
+
+            } /* end if(!status) */
+
+            if (set_arch)
+            {
+                sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 #if defined(OPTION_FISHIO)
-            ios_arch_mode = sysblk.arch_mode;
+                ios_arch_mode = sysblk.arch_mode;
 #endif // defined(OPTION_FISHIO)
 
-            /* Invalidate the ALB and TLB */
-            ARCH_DEP(purge_tlb) (regs);
+                /* Invalidate the ALB and TLB */
+                ARCH_DEP(purge_tlb) (regs);
 #if defined(FEATURE_ACCESS_REGISTERS)
-            ARCH_DEP(purge_alb) (tregs);
+                ARCH_DEP(purge_alb) (tregs);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+            }
 
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
 
             break;
-#endif /*defined(_900) || defined(FEATURE_ESAME)*/
+
+#endif /*defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)*/
+
+#if defined(_900) || defined(FEATURE_ESAME)
+
+        case SIGP_SENSE_RUNNING_STATE:
+
+            if (tregs->cpustate != CPUSTATE_STARTED)
+                status = SIGP_STATUS_NOT_RUNNING;
+
+            break;
+
+#endif // defined(_900) || defined(FEATURE_ESAME)
 
         default:
-            status = SIGP_STATUS_INVALID_ORDER;
+            status |= SIGP_STATUS_INVALID_ORDER;
+            break;
+
         } /* end switch(order) */
 
     /* Release the use of the signalling and response facility */
@@ -5656,6 +5903,15 @@ static char *ordername[] = {    "Unassigned",
     }
     else
         regs->psw.cc = 0;
+
+    /* Log the results if we're interested in this particular SIGP */
+    if (log_sigp)
+    {
+        if (regs->psw.cc == 0)
+            logmsg (": CC 0\n");
+        else
+            logmsg (": CC 1 STATUS %8.8X\n", (U32)status);
+    }
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);

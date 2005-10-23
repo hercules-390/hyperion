@@ -776,6 +776,7 @@ int     j,k;
     /* Put machine into stopped state if command length is zero */
     if (cmdlen == 0)
     {
+        regs->opinterv = 0;
         regs->cpustate = CPUSTATE_STOPPED;
         ON_IC_INTERRUPT(regs);
         return 0;
