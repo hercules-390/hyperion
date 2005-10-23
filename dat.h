@@ -557,47 +557,48 @@ U16     eax;                            /* Authorization index       */
     UNREFERENCED_370(arn);
     UNREFERENCED_370(acctype);
 
-    switch(arn)
-    {
-        case USE_PRIMARY_SPACE:
+    switch(arn) {
+
+    case USE_PRIMARY_SPACE:
+        regs->dat.stid = TEA_ST_PRIMARY;
+        regs->dat.asd = regs->CR(1);
+        break;
+
+    case USE_SECONDARY_SPACE:
+        regs->dat.stid = TEA_ST_SECNDRY;
+        regs->dat.asd = regs->CR(7);
+        break;
+
+    case USE_HOME_SPACE:
+        regs->dat.stid = TEA_ST_HOME;
+        regs->dat.asd = regs->CR(13);
+        break;
+
+    case USE_REAL_ADDR:
+        regs->dat.stid = 0;
+        regs->dat.asd = TLB_REAL_ASD;
+        break;
+
+    case USE_INST_SPACE:
+        switch(regs->aea_ar[USE_INST_SPACE]) {
+
+        case 1:
             regs->dat.stid = TEA_ST_PRIMARY;
-            regs->dat.asd = regs->CR(1);
             break;
-
-        case USE_SECONDARY_SPACE:
+        case 7:
             regs->dat.stid = TEA_ST_SECNDRY;
-            regs->dat.asd = regs->CR(7);
             break;
-
-        case USE_HOME_SPACE:
+        case 13:
             regs->dat.stid = TEA_ST_HOME;
-            regs->dat.asd = regs->CR(13);
             break;
-
-        case USE_REAL_ADDR:
-            regs->dat.stid = 0;
-            regs->dat.asd = TLB_REAL_ASD;
-            break;
-
-        case USE_INST_SPACE:
-            switch(regs->aea_ar[USE_INST_SPACE])
-            {
-                case 1:
-                    regs->dat.stid = TEA_ST_PRIMARY;
-                    break;
-                case 7:
-                    regs->dat.stid = TEA_ST_SECNDRY;
-                    break;
-                case 13:
-                    regs->dat.stid = TEA_ST_HOME;
-                    break;
-                default:
-                    regs->dat.stid = 0;
-            }
-            regs->dat.asd = regs->CR(regs->aea_ar[USE_INST_SPACE]);
-            break;
-
         default:
+            regs->dat.stid = 0;
+        } /* end switch(regs->aea_ar[USE_INST_SPACE]) */
+
+        regs->dat.asd = regs->CR(regs->aea_ar[USE_INST_SPACE]);
+        break;
+
+    default:
 
     #if defined(FEATURE_DUAL_ADDRESS_SPACE)
         if (acctype == ACCTYPE_INSTFETCH)
@@ -1935,7 +1936,12 @@ RADR    pfra;
 
 #endif /*!defined(OPTION_NO_INLINE_DAT) || defined(_DAT_C) */
 
+
 #if defined(FEATURE_PER2)
+/*-------------------------------------------------------------------*/
+/* Check for a storage alteration PER2 event                         */
+/* Returns 1 if true, 0 if false                                     */
+/*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype, REGS *regs)
 {
     UNREFERENCED(acctype);
@@ -1946,8 +1952,9 @@ static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype, REGS *regs)
         return 1;
     }
     return 0;
-}
+} /* end function check_sa_per2 */
 #endif /*defined(FEATURE_PER2)*/
+
 
 #if !defined(OPTION_NO_INLINE_LOGICAL) || defined(_DAT_C)
 /*-------------------------------------------------------------------*/
