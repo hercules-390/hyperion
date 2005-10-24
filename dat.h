@@ -527,7 +527,7 @@ int i;
 /*              indicated by the address-space control in the PSW.   */
 /*      regs    Pointer to the CPU register context                  */
 /*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
-/*              LRA, IVSK, TPROT, or STACK                           */
+/*              LRA, IVSK, TPROT, STACK, PTE, LPTEA                  */
 /*                                                                   */
 /* Output:                                                           */
 /*      regs->dat.asd = the selected ASCE or STD                     */
@@ -634,7 +634,7 @@ U16     eax;                            /* Authorization index       */
             )
         {
             /* Remove the USE_ARMODE flag from the arn if present */
-            arn &= 15;
+            arn &= ARN_MASK;
             /* [5.8.4.1] Select the access-list-entry token */
             alet = (arn == 0) ? 0 :
         #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
@@ -744,7 +744,7 @@ U16     eax;                            /* Authorization index       */
 /*              complete description of this parameter)              */
 /*      regs    Pointer to the CPU register context                  */
 /*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
-/*              LRA, IVSK, TPROT, or STACK                           */
+/*              LRA, IVSK, TPROT, STACK, PTE, LPTEA                  */
 /*                                                                   */
 /* Output:                                                           */
 /*      The return value is set to facilitate the setting of the     */
@@ -768,10 +768,32 @@ U16     eax;                            /* Authorization index       */
 /*          is not set; exception code is X'0038' through X'003B'.   */
 /*          The LRA instruction converts this to condition code 3.   */
 /*                                                                   */
+/*      For ACCTYPE_LPTEA, the return value is set to facilitate     */
+/*      setting the condition code by the LPTEA instruction:         */
+/*      0 = Page table entry found, and page protection bit in the   */
+/*          segment table entry is zero; the real address field      */
+/*          contains the real address of the page table entry;       */
+/*          exception code is set to zero.                           */
+/*      1 = Page table entry found, and page protection bit in the   */
+/*          segment table entry is one; the real address field       */
+/*          contains the real address of the page table entry;       */
+/*          exception code is set to zero.                           */
+/*      2 = Region table or segment table entry invalid bit is set;  */
+/*          the real address field contains the real address of the  */
+/*          region table entry or segment table entry, with the      */
+/*          entry type in the low-order two bits of the address.     */
+/*      3 = Region table or segment table length exceeded; real      */
+/*          address field is not set; exception code is set to       */
+/*          X'0010' or X'0039' through X'003B'.                      */
+/*          ALET translation error: real address field is not        */
+/*          set; exception code is set to X'0028' through X'002D'.   */
+/*          ASCE-type error: real address is not set; exception      */
+/*          exception code is X'0038'.                               */
+/*                                                                   */
 /*      regs->dat.raddr is set to the real address if translation    */
 /*      was unsuccessful; otherwise it may contain the address of    */
 /*      a page or segment table entry as described above.            */
-/*      For ACCTYPE_PTE it contains the address of                   */
+/*      For ACCTYPE_PTE or ACCTYPE_LPTEA it contains the address of  */
 /*      the page table entry if translation was successful.          */
 /*                                                                   */
 /*      regs->dat.xcode is set to the exception code if translation  */
@@ -1231,7 +1253,7 @@ U16     sx, px;                         /* Segment and page index,
                 /* Region-first translation exception if the bit 58 of
                    the region-first table entry is set (region invalid) */
                 if (rte & REGTAB_I)
-                    goto reg_first_excp;
+                    goto reg_first_invalid;
 
                 /* Translation specification exception if bits 60-61 of
                    the region-first table entry do not indicate the
@@ -1278,7 +1300,7 @@ U16     sx, px;                         /* Segment and page index,
                 /* Region-second translation exception if the bit 58 of
                    the region-second table entry is set (region invalid) */
                 if (rte & REGTAB_I)
-                    goto reg_second_excp;
+                    goto reg_second_invalid;
 
                 /* Translation specification exception if bits 60-61 of
                    the region-second table entry do not indicate the
@@ -1325,7 +1347,7 @@ U16     sx, px;                         /* Segment and page index,
                 /* Region-third translation exception if the bit 58 of
                    the region-third table entry is set (region invalid) */
                 if (rte & REGTAB_I)
-                    goto reg_third_excp;
+                    goto reg_third_invalid;
 
                 /* Translation specification exception if bits 60-61 of
                    the region-third table entry do not indicate the
@@ -1397,7 +1419,8 @@ U16     sx, px;                         /* Segment and page index,
             {
                 regs->dat.raddr = pto;
                 regs->dat.xcode = 0;
-                return 0;
+                cc = (ste & ZSEGTAB_P) ? 1 : 0;
+                return cc;
             } /* end if(ACCTYPE_LPTEA) */
 
             /* Addressing exception if outside real storage */
@@ -1484,6 +1507,15 @@ tran_prog_check:
 
 /* Conditions which the caller may or may not program check */
 seg_tran_invalid:
+    /* For LPTEA, return segment table entry address with cc 2 */
+    if (acctype == ACCTYPE_LPTEA)
+    {
+        regs->dat.raddr = sto;
+        cc = 2;
+        return cc;
+    } /* end if(ACCTYPE_LPTEA) */
+
+    /* Otherwise set translation exception code */
     regs->dat.xcode = PGM_SEGMENT_TRANSLATION_EXCEPTION;
     regs->dat.raddr = sto;
     cc = 1;
@@ -1513,10 +1545,47 @@ seg_tran_length:
     goto tran_excp_addr;
 
 tran_alet_excp:
-    regs->excarid = arn;
-    return 4;
+    regs->excarid = arn & ARN_MASK;
+    cc = (acctype == ACCTYPE_LPTEA) ? 3 : 4;
+    return cc;
 
 #if defined(FEATURE_ESAME)
+reg_first_invalid:
+    /* For LPTEA, return region table entry address with cc 2 */
+    if (acctype == ACCTYPE_LPTEA)
+    {
+        regs->dat.raddr = rto | (TT_R1TABL >> 2);
+        cc = 2;
+        return cc;
+    } /* end if(ACCTYPE_LPTEA) */
+
+    /* Otherwise set translation exception code */
+    goto reg_first_excp;
+
+reg_second_invalid:
+    /* For LPTEA, return region table entry address with cc 2 */
+    if (acctype == ACCTYPE_LPTEA)
+    {
+        regs->dat.raddr = rto | (TT_R2TABL >> 2);
+        cc = 2;
+        return cc;
+    } /* end if(ACCTYPE_LPTEA) */
+     
+    /* Otherwise set translation exception code */
+    goto reg_second_excp;
+
+reg_third_invalid:
+    /* For LPTEA, return region table entry address with cc 2 */
+    if (acctype == ACCTYPE_LPTEA)
+    {
+        regs->dat.raddr = rto | (TT_R3TABL >> 2);
+        cc = 2;
+        return cc;
+    } /* end if(ACCTYPE_LPTEA) */
+     
+    /* Otherwise set translation exception code */
+    goto reg_second_excp;
+
 asce_type_excp:
 //  logmsg("rfx = %4.4X, rsx %4.4X, rtx = %4.4X, tt = %1.1X\n",
 //      rfx, rsx, rtx, tt);
@@ -1541,6 +1610,10 @@ reg_third_excp:
 #endif /*defined(FEATURE_ESAME)*/
 
 tran_excp_addr:
+    /* For LPTEA instruction, return xcode with cc = 3 */
+    if (acctype == ACCTYPE_LPTEA) 
+        return 3;
+
     /* Set the translation exception address */
     regs->TEA = vaddr & PAGEFRAME_PAGEMASK;
 
@@ -1588,7 +1661,7 @@ tran_excp_addr:
         && AR_BIT(&regs->guestregs->psw))
 #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
        )
-       regs->excarid = (arn < 0 ? 0 : arn);
+       regs->excarid = (arn < 0 ? 0 : arn & ARN_MASK);
 
     /* Return condition code */
     return cc;

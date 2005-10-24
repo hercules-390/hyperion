@@ -1083,21 +1083,11 @@ int     cc;                             /* Condition code            */
     /* Load the virtual address from the r2 register */
     vaddr = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
-    /* Find the page table address */
+    /* Find the page table address and condition code */
     cc = ARCH_DEP(translate_addr) (vaddr, n, regs, ACCTYPE_LPTEA);
 
-    /* If ALET exception or ASCE-type or region translation exception,
-       set exception code in R1 bits 48-63, and set cc 3 */
-    if (cc >= 3)
-    {
-        regs->GR_G(r1) = regs->dat.xcode;
-        cc = 3;
-    }
-    else
-    {
-        /* Set R1 and condition code as returned by translate_addr */
-        regs->GR_G(r1) = regs->dat.raddr;
-    }
+    /* Set R1 to real address or exception code depending on cc */
+    regs->GR_G(r1) = (cc < 3) ? regs->dat.raddr : regs->dat.xcode;
 
     /* Set condition code */
     regs->psw.cc = cc;

@@ -252,6 +252,7 @@
 #define USE_SECONDARY_SPACE     (-4)    /* Secondary space virtual   */
 #define USE_HOME_SPACE          (-5)    /* Home space virtual        */
 #define USE_ARMODE              0x80    /* OR with arn forces ARMODE */
+#define ARN_MASK                0x0F    /* AND mask to isolate arn   */
 
 /* Interception codes used by longjmp/SIE */
 #define SIE_NO_INTERCEPT        (-1)    /* Continue (after pgmint)   */
