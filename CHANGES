@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+24 Oct 2005 Activate FEATURE_DAT_ENHANCEMENT_FACILITY_2 (LPTEA) - Roger Bowler
 24 Oct 2005 LPTEA condition code setting - Roger Bowler
 23 Oct 2005 SIGP/IPL enhancements: add support for new Conditional Emergency
             and Sense Running State orders, add support for Set Architecture
