@@ -33,9 +33,18 @@ Hercules Version 3: Installation and Operation</TITLE>
 <p><hr><a name="install"></a>
 <h2>Installation Procedure</h2>
 <h3>Building from source</h3>
-<p>These instructions apply to the Linux or Mac OS X versions. Volker Bandke has
-instructions on how to build the Win32 version at <a
-href="http://www.bsp-gmbh.com/hercules/nude_w32.html">http://www.bsp-gmbh.com/hercules/nude_w32.html</a>.
+<p>The following instructions apply to the Linux or Mac OS X versions.
+<p>
+For building the Cygwin version of Hercules on Windows, Volker Bandke
+has instructions on his "<b>Building Hercules for Windows</b>" web page at
+<a href="http://www.bsp-gmbh.com/hercules/herc_w32_2.html">http://www.bsp-gmbh.com/hercules/herc_w32_2.html</a>.
+<p>
+For building the MSVC version of Hercules on Windows (a version of
+Hercules that does <i>not</i> require Cygwin), Fish has instructions on his
+"<b>MSVC Hercules Build Instructions</b>" web page at
+<a href="http://www.softdevlabs.com/Hercules/hercules-msvc-build.html">http://www.softdevlabs.com/Hercules/hercules-msvc-build.html</a>.
+</p>
+
 <ol>
 <li>Download the distribution file
 <a href="hercules-3.02.tar.gz">hercules-3.02.tar.gz</a>
@@ -53,7 +62,13 @@ href="http://www.bsp-gmbh.com/hercules/nude_w32.html">http://www.bsp-gmbh.com/he
 <li>Use these commands to unzip the distribution file:
 <pre>tar xvzf ../hercules-3.02.tar.gz
 cd hercules-3.02</pre>
-<li>Configure Hercules for your system:
+
+<li>Verify you have all of the correct versions of all of the
+required packages installed:
+
+<p><code>./util/cvslvlck</code>
+
+<p><li>Configure Hercules for your system:
 
 <p><code>./configure</code>
 
@@ -64,17 +79,17 @@ cd hercules-3.02</pre>
       configure, or specify your own optimization flags with
       <code>--enable-optimization=FLAGS</code>
 
-<p>For additional configuration options, run <code>./configure
+<p>For additional configuration options, run: <code>./configure
           --help</code>
 
-<li>Build the executables: <p><code>make</code>
+<p><li>Build the executables: <p><code>make</code>
 
-<li>Install the programs: as root: <p><code>make install</code>
+<p><li>Install the programs: as root: <p><code>make install</code>
 </ol>
 
 <em>Important:</em>
 You must use the egcs compiler and the glibc2 library.
-Refer to the <a href="hercfaq.html#software">
+Refer to the <a href="hercfaq.html#3.04">
 Hercules Frequently-Asked Questions</a> page for required
 compiler and other software levels.
 
@@ -122,16 +137,20 @@ to install the supplied Tunnel driver.
 </ol>
 
 <h3>Installing on Windows:</h3>
-
 <ol>
 <li>You must first install the Cygwin package.
-Download the setup program from <a href="http://www.cygwin.com">the Cygwin
-site</a>, and run it. If it's not preselected for you,
+Download the 'setup.exe' program from <a href="http://www.cygwin.com">the Cygwin
+site</a>, and run it. (Right-click on the
+<img src="http://www.cygwin.com/cygwin-icon.gif" border=0 alt="Cygwin!"> icon
+labeled "<a href="http://www.cygwin.com/setup.exe">Install or update now!
+(using setup.exe)</a>" and select "Save Target As..." and then run it after
+it's been downloaded) If it's not preselected for you,
 select the libintl-2 package when you're presented with a list of packages
-to install. Hercules version 3.02 was built with version 1.5.5 
+to install. (NOTE: Hercules version 3.02 was built with version 1.5.5 
 of Cygwin, and may not work with other versions, as the
 Cygwin library tends to have subtle incompatibilities from version
-to version that Herucles seems to stress.
+to version that Herucles seems to stress.)
+
 <li>Download the self-extracting Windows archive: 
 <ul>
 <li><a href="hercules302-i786f.exe">hercules302-i786f.exe</a>: Pentium 4,
@@ -149,10 +168,10 @@ standard POSIX threads version
 </ul>
 The Fish threads versions are recommended unless you encounter strange
 problems.
-<li>Run the self-extracting archive to install on your system. Note that
-Hercules has several file paths compiled into the code, and so it is best
-to install the package into the defult directories unless you really know
-what you're doing.
+<li>Run one of the above self-extracting archives to install the Hercules
+executables on your system. Also please note that Hercules has several file
+paths compiled into the code, and so it is best to install the package
+into the default directories unless you really know what you're doing.
 </ol>
 
 <p><hr><a name="config"></a>
@@ -397,36 +416,23 @@ run-commands file can completely automate Hercules startup.
     
 <p><hr><a name="support"></a>
 <h2>Technical Support</h2>
-If you have a question about Hercules, please refer to the
-<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page first.
-If your question and/or concern is not addressed in the FAQ, please feel
-free to post your question to the
-Hercules-390 forum:<br>
-<blockquote><pre>
-<b>Community email addresses:</b><br>
-  Post message: <a href="mailto:hercules-390@yahoogroups.com?subject=Hercules Question">hercules-390@yahoogroups.com</a>
-  Subscribe:    <a href="mailto:hercules-390-subscribe@yahoogroups.com?subject=Subscribe">hercules-390-subscribe@yahoogroups.com</a>
-  Unsubscribe:  <a href="mailto:hercules-390-unsubscribe@yahoogroups.com?subject=Unsubscribe">hercules-390-unsubscribe@yahoogroups.com</a>
-  List owner:   <a href="mailto:hercules-390-owner@yahoogroups.com?subject=Hercules">hercules-390-owner@yahoogroups.com</a>
 
-<b>Files and archives at:</b><br>
-  <a href="http://groups.yahoo.com/group/hercules-390">http://groups.yahoo.com/group/hercules-390</a>
-</pre></blockquote><p>
-The <b><u>Hercules-390 forum</u></b> is in fact your <u>primary source for Hercules support</u>,
-and you are strongly encouraged to subscribe. We have a vibrant, active
-community of over 4800 members, many of which are very knowledgeable in
-many different areas of mainframe technology, both from a hardware point of
-view as well as from an operating system and software point of view.
-<p>
-In addition to the main Hercules-390 forum, other more specialized Hercules forums
-also exist to provide more focused support for a variety of popular IBM mainframe
-operating systems, such as DOS/VS, VM (VM/370, VM/SP, and VM/ESA), and MVS.
-<p>
-<small><i>Note: the use of Yahoo! as host for the Hercules-390 and related forums
-should in no way be interpreted as an endorsement of the Yahoo! service.</i>
-<p><center><hr width=15% noshade>
-<a href="index.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+<P>
+Please see our <a href="hercsupp.html">Technical Support</a> web page.
+</P>
+
+<P ALIGN="CENTER">
+<hr width="15%" noshade>
+<center>
+<a href="index.html"><img src="gifs/back.gif" border=0 alt="back">
+</A>
+<small>
+<P>
+Last updated 24 Oct 2005
+</P>
+</small>
 </center>
-<p>Last updated 18 August 2005
+</P>
+
 </BODY>
 </HTML>
