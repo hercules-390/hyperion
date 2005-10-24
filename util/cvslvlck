@@ -1,37 +1,51 @@
 #!/usr/bin/perl -w
 
+#****************************************************************************
+#
+#                         C V S L V L C K
+#
 #  This perl script checks the user's system for the required levels of
-#  software required to build Hercules from the CVS repository
+#  software required to properly build Hercules from the CVS repository.
+#
+#****************************************************************************
+#
+#                       ---- CHANGE LOG ----
+# DD/MM/YY Description...
+# 21/09/03 Removed libintl & libtool. Although "gettextize" is no longer
+#          run, pkg "gettext" is still needed to run the msgfmt/msgmerge
+#          utilities. libintl is now self-contained. libtool is now self-
+#          contained. (ISW)
+# 24/10/05 Added history section in preparation for possible changes. (Fish)
+# 24/10/05 According to jj, automake 1.6 is insufficient. He says 1.9 works
+#          though, but doesn't know about 1.7 or 1.8 yet. (Fish)
+#****************************************************************************
 
 use strict;
 
 #    Facility, required level, special flag, download URL
 
-# ISW : Removed libintl & libtool
-#       Although "gettextize" is no longer run, Pkg "gettext" is still
-#       needed to run the msgfmt/msgmerge utilities
-#       libintl is now self contained
-#       libtool is now self contained
-#
 my @req = qw(
      cvs         0      1  http://www.cvshome.org
-     autoconf    2.5	0  http://www.gnu.org/directory/autoconf.html
-     automake    1.6	0  http://www.gnu.org/directory/automake.html
-     flex        2.5	0  http://www.gnu.org/directory/flex.html
-     gawk        3.0	0  http://www.gnu.org/directory/gawk.html
-     gcc         2.95	0  http://www.gnu.org/directory/gcc.html
-     gettext     0.11	0  http://www.gnu.org/directory/gettext.html
-     grep        0	0  http://www.gnu.org/directory/grep.html
-     libiconv    1.8	1  http://www.gnu.org/directory/libiconv.html
-     m4          0.0	1  http://www.gnu.org/directory/GNU/gnum4.html
-     make        3.79	0  http://www.gnu.org/directory/make.html
-     perl        5.6	1  http://www.gnu.org/directory/perl/html
-     sed         3.02	0  http://www.gnu.org/directory/sed.html
+     autoconf    2.5    0  http://www.gnu.org/directory/autoconf.html
+     automake    1.9    0  http://www.gnu.org/directory/automake.html
+     flex        2.5    0  http://www.gnu.org/directory/flex.html
+     gawk        3.0    0  http://www.gnu.org/directory/gawk.html
+     gcc         2.95   0  http://www.gnu.org/directory/gcc.html
+     gettext     0.11   0  http://www.gnu.org/directory/gettext.html
+     grep        0      0  http://www.gnu.org/directory/grep.html
+     libiconv    1.8    1  http://www.gnu.org/directory/libiconv.html
+     m4          0.0    1  http://www.gnu.org/directory/GNU/gnum4.html
+     make        3.79   0  http://www.gnu.org/directory/make.html
+     perl        5.6    1  http://www.gnu.org/directory/perl/html
+     sed         3.02   0  http://www.gnu.org/directory/sed.html
 );
+
 my $cvsroot = ":pserver:anonymous\@cvs.conmicro.cx:/usr/cvs/hercules";
 my $msg;
 my $instversion;
+
 sayintro();
+
 for (my $i = 0; $i < @req; $i += 4) {
 	my $facility = $req[$i];
 	my $level = $req[$i+1];
@@ -51,12 +65,15 @@ for (my $i = 0; $i < @req; $i += 4) {
 	}
 	print "\n";
 }
+
 print "Do you wish to set CVSROOT for this userid? (y, n, default y)\n";
 print "New CVS users are recommended to reply y to this prompt.\n";
+
 my $ans = <STDIN>;
 chomp $ans;
 $ans = substr($ans, 0, 1);
 $ans = lc $ans;
+
 if ($ans eq 'y' || $ans eq '') {
 	die "HOME environment variable not set" if ! exists $ENV{'HOME'};
 	my $home = $ENV{'HOME'};		# root nonsense, ~ doesn't work right
@@ -70,6 +87,7 @@ if ($ans eq 'y' || $ans eq '') {
 } else {
 	print "Hercules CVSROOT=$cvsroot\n";
 }
+
 exit 0;
 
 sub weird {
@@ -205,8 +223,6 @@ sub ckvers {
 }
 
 sub sayintro {
-    # Intro text changed by ISW. "gettextize" is no longer run by build system
-    #       but only by maintainers. Same goes foe libtoolize
     print "This utility will check the level of various utilities needed to build\n";
     print "hercules. Checking is done against versions that are KNOWN to work.\n";
     print "This doesn't mean a build will NOT succeed with older versions\n";
@@ -223,5 +239,3 @@ sub present {
 	}
 	return scalar @present;
 }
-
-
