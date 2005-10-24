@@ -19,10 +19,11 @@ In order to build Hercules from the CVS sources, you must have installed:
      flex        2.5    (or greater!)
      gawk        3.0    (or greater!)
      gcc         2.95   (or greater!)
-     gettext     0.11   (or greater!)
+     gettext     0.11   (or greater!)  (--enable-nls only)
      grep        2.5    (or greater!)
      libiconv    1.8    (or greater!)
      libintl     0.10   (or greater!)
+     libtool     ?.??   (or greater!)
      m4          0.0    (or greater!)
      make        3.79   (or greater!)
      perl        5.6    (or greater!)
@@ -40,6 +41,21 @@ The following package(s) is(are) optional
 All of these tools can be found at www.gnu.org in source code form, and
 are also widely available in packaged form (RPM, DEB, Solaris packages,
 etc.).
+
+    +------------------------------------------------------------+
+    |                                                            |
+    |                      ** NOTE **                            |
+    |                                                            |
+    |  There is a handy utility (script) found in the 'util'     |
+    |  subdirectory that will check for the required version     |
+    |  of all of the above mentioned packages. Simply 'cd' to    |
+    |  that subdirectory (in the hercules source code tree) and  |
+    |  enter the command 'cvslvlck'. It will then simply check   |
+    |  and report for you whether or not you have all of the     |
+    |  required version(s) of all the packages needed to build   |
+    |  Hercules from CVS source.                                 |
+    |                                                            |
+    +------------------------------------------------------------+
 
 Once you have these tools installed, simply enter the command:
 
@@ -60,6 +76,17 @@ Now that a 'configure' script has been built for us, let's use it! :)
 (Note: if you're simply trying to build Hercules from the distributed
 source files (i.e. NOT from the CVS sources), then just use the 'configure'
 script that should have been included with the source distribution tarball.)
+
+    +------------------------------------------------------------+
+    |                                                            |
+    |                      ** NOTE **                            |
+    |                                                            |
+    |  See also the boxed Note in the BUILD PREPARATION section  |
+    |  further above regarding the 'cvslvlck' script which can   |
+    |  be used to check to see if you have all of the required   |
+    |  packages installed or not to build Hercules from source.  |
+    |                                                            |
+    +------------------------------------------------------------+
 
 Before you trying using the configure script, you may wish to review
 the information in the INSTALL file. It contains generic installation
