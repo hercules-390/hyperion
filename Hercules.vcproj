@@ -6,7 +6,6 @@
 	ProjectGUID="{F17348EA-9067-49DC-9497-5D4BF1E6635B}"
 	RootNamespace="Hercules"
 	Keyword="MakeFileProj"
-	SignManifests="true"
 	>
 	<Platforms>
 		<Platform
@@ -1056,6 +1055,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\html\hercsupp.html"
+				>
+			</File>
+			<File
 				RelativePath=".\html\herctcp.html"
 				>
 			</File>
@@ -1085,6 +1088,10 @@
 			</File>
 			<File
 				RelativePath=".\configure.ac"
+				>
+			</File>
+			<File
+				RelativePath=".\util\cvslvlck"
 				>
 			</File>
 			<File
