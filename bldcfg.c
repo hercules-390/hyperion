@@ -1828,8 +1828,6 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
     /* Set I/O delay value */
     if (iodelay >= 0)
         sysblk.iodelay = iodelay;
-    else if (ostailor == OS_LINUX)
-        sysblk.iodelay = DEFAULT_LINUX_IODELAY;
 #endif /*OPTION_IODELAY_KLUDGE*/
 
     /* Set the panel refresh rate */
