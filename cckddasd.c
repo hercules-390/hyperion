@@ -2051,6 +2051,7 @@ int             sfx;                    /* Shadow file index         */
 OFF_T           ppos, npos;             /* Prev/next free offsets    */
 int             i, p, n;                /* Free space indexes        */
 int             pending;                /* Calculated pending value  */
+int             fsize = size;           /* Free space size           */
 
     if (len <= CKDDASD_NULLTRK_FMTMAX || pos == 0 || pos == 0xffffffff)
         return;
@@ -2081,7 +2082,10 @@ int             pending;                /* Calculated pending value  */
 
     /* If possible use previous adjacent free space otherwise get an available one */
     if (p >= 0 && ppos + cckd->free[p].len == pos && cckd->free[p].pending == pending)
+    {
         cckd->free[p].len += size;
+        fsize = cckd->free[p].len;
+    }
     else
     {
         /* Increase the size of the free space array if necessary */
@@ -2132,6 +2136,8 @@ int             pending;                /* Calculated pending value  */
     cckd->cdevhdr[sfx].used -= len;
     cckd->cdevhdr[sfx].free_total += len;
     cckd->cdevhdr[sfx].free_imbed -= size - len;
+    if (!pending && (U32)fsize > cckd->cdevhdr[sfx].free_largest)
+        cckd->cdevhdr[sfx].free_largest = (U32)fsize;
 
 //  cckd_chk_space(dev);
 
@@ -4595,7 +4601,7 @@ OFF_T           pos, fpos;              /* File offsets              */
     obtain_lock (&cckd->filelock);
     sfx = cckd->sfn;
 
-    if (cckd->l2ok)
+    if (cckd->l2ok || cckd->cdevhdr[cckd->sfn].free_total == 0)
         goto cckd_gc_l2_exit;
 
     /* Find any level 2 table out of bounds */
@@ -4654,7 +4660,7 @@ OFF_T           pos, fpos;              /* File offsets              */
         i = cckd->free1st;
         fpos = (OFF_T)cckd->cdevhdr[sfx].free;
         cckd_trace (dev, "gc_l2 first free[%d] pos 0x%x len %d pending %d\n",
-                    i, fpos, i >= 0 ? (int)cckd->free[i].len : -1,
+                    i, (int)fpos, i >= 0 ? (int)cckd->free[i].len : -1,
                     i >= 0 ? cckd->free[i].pending : -1);
         if (i < 0 || fpos >= cckd->l2bounds || cckd->free[i].pending)
             goto cckd_gc_l2_exit;
