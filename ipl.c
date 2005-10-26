@@ -29,7 +29,7 @@
 int ARCH_DEP(system_reset) (int cpu, int clear)
 {
     int    rc     =  0;
-    REGS  *regs   =  sysblk.regs[cpu];
+    REGS  *regs;
 
     /* Configure the cpu if it is not online */
     if (!IS_CPU_ONLINE(cpu))
@@ -42,6 +42,7 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
         }
         ASSERT(IS_CPU_ONLINE(cpu));
     }
+    regs = sysblk.regs[cpu];
 
     HDC1(debug_cpu_state, regs);
 
@@ -108,10 +109,18 @@ PSW     captured_zpsw;                  /* Captured z/Arch PSW       */
 /*-------------------------------------------------------------------*/
 static int ARCH_DEP(common_load_begin) (int cpu, int clear)
 {
-    REGS* regs = sysblk.regs[cpu];  /* Point to IPL CPU's registers */
+    REGS *regs;
 
     /* Save the original architecture mode for later */
-    orig_arch_mode = sysblk.arch_mode;
+    orig_arch_mode = sysblk.dummyregs.arch_mode = sysblk.arch_mode;
+#if defined(OPTION_FISHIO)
+    ios_arch_mode = sysblk.arch_mode;
+#endif // defined(OPTION_FISHIO)
+
+    /* Perform system-reset-normal or system-reset-clear function */
+    if (ARCH_DEP(system_reset(cpu,clear)) != 0)
+        return -1;
+    regs = sysblk.regs[cpu];
 
     if (sysblk.arch_mode == ARCH_900)
     {
@@ -121,14 +130,6 @@ static int ARCH_DEP(common_load_begin) (int cpu, int clear)
         if (!clear)
             captured_zpsw = regs->psw;
     }
-    sysblk.dummyregs.arch_mode = sysblk.arch_mode;
-#if defined(OPTION_FISHIO)
-    ios_arch_mode = sysblk.arch_mode;
-#endif // defined(OPTION_FISHIO)
-
-    /* Perform system-reset-normal or system-reset-clear function */
-    if (ARCH_DEP(system_reset(cpu,clear)) != 0)
-        return -1;
 
     /* Load-clear does a clear-reset (which does an initial-cpu-reset)
        on all cpus in the configuration, but Load-normal does an initial-
@@ -321,13 +322,13 @@ char    pathname[1024];                 /* pathname of image file    */
 U32     fileaddr;
 int     rc, rx;                         /* Return codes (work)       */
 
-    regs = sysblk.regs[cpu];    /* Point to IPL CPU's registers */
-
     /* Get started */
     if (ARCH_DEP(common_load_begin) (cpu, clear) != 0)
         return -1;
 
     /* The actual IPL proper starts here... */
+
+    regs = sysblk.regs[cpu];    /* Point to IPL CPU's registers */
 
     if(fname == NULL)                   /* Default ipl from DASD     */
         fname = "hercules.ins";         /*   from hercules.ins       */
