@@ -332,6 +332,10 @@
  #error FEATURE_PER must be defined when using FEATURE_PER2
 #endif
 
+#if defined(FEATURE_PER3) && !defined(FEATURE_PER)
+ #error FEATURE_PER must be defined when using FEATURE_PER3
+#endif
+
 
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
  #if defined(_370)

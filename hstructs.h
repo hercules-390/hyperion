@@ -143,6 +143,10 @@ struct REGS {                           /* Processor registers       */
         BYTE    peraid;                 /* PER access id             */
 // #endif /*defined(FEATURE_PER)*/
 
+// #if defined(FEATURE_PER3)
+        VADR    bear;                   /* Breaking event address reg*/
+// #endif /*defined(FEATURE_PER3)*/
+
         BYTE    cpustate;               /* CPU stopped/started state */
         unsigned int                    /* Flags (cpu thread only)   */
                 opinterv:1,             /* 1=Operator intervening    */

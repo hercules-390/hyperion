@@ -730,7 +730,10 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 /*00F0*/ FWORD  mckext;                 /* Machine check int code ext*/
 /*00F4*/ FWORD  xdmgcode;               /* External damage code      */
 /*00F8*/ DBLWRD mcstorad;               /* Failing storage address   */
-/*0100*/ BYTE   resv0100[32];           /* Reserved                  */
+/*0100*/ DBLWRD resv0100;               /* Reserved                  */
+/*0108*/ DBLWRD resv0108;               /* Reserved                  */
+/*0110*/ DBLWRD bea;                    /* Breaking event address @Z9*/
+/*0118*/ DBLWRD resv0118;               /* Reserved                  */
 /*0120*/ QWORD  rstold;                 /* Restart old PSW           */
 /*0130*/ QWORD  extold;                 /* External old PSW          */
 /*0140*/ QWORD  svcold;                 /* SVC old PSW               */

@@ -523,6 +523,19 @@ z900_ ## _name
 #endif
 
 /*-------------------------------------------------------------------*/
+/* Macros used for Breaking Event Address Recording (PER3)           */
+/*-------------------------------------------------------------------*/
+
+/* The UPDATE_BEAR macro copies the current instruction address
+   into the Breaking Event Address Register, if PER3 is installed */
+#undef UPDATE_BEAR
+#if defined(FEATURE_PER3)
+ #define UPDATE_BEAR(regs) (regs->bear = regs->peradr)
+#else /*!defined(FEATURE_PER3)*/
+ #define UPDATE_BEAR(regs)
+#endif /*!defined(FEATURE_PER3)*/
+
+/*-------------------------------------------------------------------*/
 /* Macros use by Compare and Form Codeword (CFC (B21A)) instruction  */
 /*-------------------------------------------------------------------*/
 
