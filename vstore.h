@@ -41,11 +41,11 @@
 /* MVCL instruction for example (where the length can be up to 16MB) */
 /*-------------------------------------------------------------------*/
 
-#define NOCROSS2K(_addr,_len)     likely( (uintptr_t)(_len) <= 0x7FF && (uintptr_t)((_addr) & 0x7FF) <= ((uintptr_t)0x7FF - (_len)) )
-#define   CROSS2K(_addr,_len)   unlikely( (uintptr_t)(_len) >  0x7FF || (uintptr_t)((_addr) & 0x7FF) >  ((uintptr_t)0x7FF - (_len)) )
+#define NOCROSS2K(_addr,_len) likely( ( (int)((_addr) & 0x7FF)) <= ( 0x7FF - (_len) ) )
+#define CROSS2K(_addr,_len) unlikely( ( (int)((_addr) & 0x7FF)) > ( 0x7FF - (_len) ) )
 
-#define NOCROSS2KL(_addr,_len)    likely( (uintptr_t)(_len) <= 0x800 && (uintptr_t)((_addr) & 0x7FF) <= ((uintptr_t)0x800 - (_len)) )
-#define   CROSS2KL(_addr,_len)  unlikely( (uintptr_t)(_len) >  0x800 || (uintptr_t)((_addr) & 0x7FF) >  ((uintptr_t)0x800 - (_len)) )
+#define NOCROSS2KL(_addr,_len) likely( ( (int)((_addr) & 0x7FF)) <= ( 0x800 - (_len) ) )
+#define CROSS2KL(_addr,_len) unlikely( ( (int)((_addr) & 0x7FF)) > ( 0x800 - (_len) ) )
 
 #if !defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C)
 
