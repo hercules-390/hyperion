@@ -2279,17 +2279,21 @@ U16     unicode1;                       /* Unicode character         */
 U16     unicode2;                       /* Unicode low surrogate     */
 GREG    n;                              /* Number of UTF-8 bytes - 1 */
 BYTE    utf[4];                         /* UTF-8 bytes               */
+#if defined(FEATURE_ETF3_ENHANCEMENT)
 int     wfc;                            /* Well-Formedness-Checking  */
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
     RRE(inst, regs, r1, r2);
 
     ODD2_CHECK(r1, r2, regs);
 
+#if defined(FEATURE_ETF3_ENHANCEMENT)
     /* Set WellFormednessChecking */
     if(inst[2] & 0x10)
       wfc = 1;
     else
       wfc = 0;
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
     /* Determine the destination and source addresses */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
@@ -2427,17 +2431,21 @@ U16     unicode1;                       /* Unicode character         */
 U16     unicode2 = 0;                   /* Unicode low surrogate     */
 GREG    n;                              /* Number of UTF-8 bytes - 1 */
 BYTE    utf[4];                         /* UTF-8 bytes               */
+#if defined(FEATURE_ETF3_ENHANCEMENT)
 int     wfc;                            /* WellFormednessChecking    */
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
     RRE(inst, regs, r1, r2);
 
     ODD2_CHECK(r1, r2, regs);
 
+#if defined(FEATURE_ETF3_ENHANCEMENT)
     /* Set WellFormednessChecking */
     if(inst[2] & 0x10)
       wfc = 1;
     else
       wfc = 0;
+#endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
     /* Determine the destination and source addresses */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
@@ -2484,7 +2492,7 @@ int     wfc;                            /* WellFormednessChecking    */
               }
             }
 #endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
-            
+
             /* Exit if fewer than 2 bytes remain in source operand */
             n = 1;
             if (len2 <= n) break;
