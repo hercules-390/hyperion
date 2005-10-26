@@ -776,7 +776,13 @@ static char *pgmintname[] = {
             /* Store the monitor code at PSA+156 */
             STORE_W(psa->moncode, regs->MONCODE);
         }
-    }
+
+#if defined(FEATURE_PER3)
+        /* Store the breaking event address register in the PSA */
+        STORE_W(psa->bea, regs->bear);
+#endif /*defined(FEATURE_PER3)*/
+
+    } /* end if(ECMODE) */
 
 #if defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)
     realregs->hostint = 0;
