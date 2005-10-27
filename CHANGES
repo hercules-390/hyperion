@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+27 Oct 2005 Fix segfault in SIGP against offline cpu - Jan Jaeger
 26 Oct 2005 PER3 Breaking Event Address Recording (BEAR) framework - Roger Bowler
 25 Oct 2005 Fix `size exceeds 4G' cckd error during dasdcopy - Greg Smith
 25 Oct 2005 Reinstate SIGP code regressed by enhancements of 23 Oct - Roger Bowler

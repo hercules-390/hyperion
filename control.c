@@ -5350,7 +5350,7 @@ static char *ordername[] = {
        && order != SIGP_IPR
 #endif /*defined(FEATURE_S370_CHANNEL)*/
        && order != SIGP_INITRESET)
-       && (tregs->cpustate == CPUSTATE_STOPPING
+       && (tregs) && (tregs->cpustate == CPUSTATE_STOPPING
         || IS_IC_RESTART(tregs)))
     {
         release_lock(&sysblk.intlock);
@@ -5370,13 +5370,13 @@ static char *ordername[] = {
     if (1
         &&  order != SIGP_SENSE     // if this isn't a sense,
         &&  cpad != regs->cpuad     // and we're not addressing ourselves,
-        &&  tregs->opinterv         // and operator intervening condition...
+        &&  (tregs) && tregs->opinterv         // and operator intervening condition...
     )
     {
         // ...then we cannot proceed
         status |= SIGP_STATUS_OPERATOR_INTERVENING;
     }
-    else /* (order == SIGP_SENSE || cpad == regs->cpuad || !tregs->opinterv) */
+    else /* (order == SIGP_SENSE || cpad == regs->cpuad || ((tregs) && !tregs->opinterv)) */
         /* Process signal according to order code */
         switch (order)
         {
