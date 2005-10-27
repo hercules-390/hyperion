@@ -530,7 +530,7 @@ z900_ ## _name
    into the Breaking Event Address Register, if PER3 is installed */
 #undef UPDATE_BEAR
 #if defined(FEATURE_PER3)
- #define UPDATE_BEAR(regs) (regs->bear = regs->peradr)
+ #define UPDATE_BEAR(regs) (regs->bear = regs->beia)
 #else /*!defined(FEATURE_PER3)*/
  #define UPDATE_BEAR(regs)
 #endif /*!defined(FEATURE_PER3)*/

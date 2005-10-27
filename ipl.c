@@ -509,6 +509,9 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     regs->ptimer = 0;
     regs->clkc   = 0;
 
+    /* The breaking event address register is initialised to 1 */
+    regs->bear = 1;
+
     /* Initialize external interrupt masks in control register 0 */
     regs->CR(0) = CR0_XM_ITIMER | CR0_XM_INTKEY | CR0_XM_EXTSIG;
 
