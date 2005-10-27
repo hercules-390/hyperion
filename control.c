@@ -191,6 +191,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             regs->psw.IA = regs->GR_L(r2) & AMASK24;
         }
 
+        /* Update the breaking event address register */
+        UPDATE_BEAR(regs);
+
     } /* end if(BSA-ba) */
     else
     { /* BSA-ra */
@@ -237,6 +240,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
         }
 
+        /* Update the breaking event address register */
+        UPDATE_BEAR(regs);
+         
         /* Restore the PSW key mask from the DUCT */
         regs->CR_L(3) &= 0x0000FFFF;
         regs->CR_L(3) |= duct_pkrp & DUCT_PKM;
@@ -517,6 +523,9 @@ CREG    inst_cr;                        /* Instruction CR            */
         regs->psw.IA = newia & AMASK24;
     }
 
+    /* Update the breaking event address register */
+    UPDATE_BEAR(regs);
+
     /* Set the SSTD (or SASCE) equal to PSTD (or PASCE) */
     regs->CR(7) = regs->CR(1);
 
@@ -671,6 +680,8 @@ VADR    n = 0;                          /* Work area                 */
     if ( r2 != 0 )
     {
         regs->psw.IA = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+        UPDATE_BEAR(regs);
+
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -1935,6 +1946,9 @@ int     amode64;
     /* Fetch new PSW from operand address */
     STORE_DW ( dword, ARCH_DEP(vfetch8) ( effective_addr2, b2, regs ) );
 
+    /* Update the breaking event address register */
+    UPDATE_BEAR(regs);
+
     /* Load updated PSW (ESA/390 Format in ESAME mode) */
 #if !defined(FEATURE_ESAME)
     if ((rc = ARCH_DEP(load_psw) ( regs, dword )))
@@ -2936,6 +2950,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->GR_L(4) = ete[2];
       #endif /*!defined(FEATURE_ESAME)*/
 
+        /* Update the breaking event address register */
+        UPDATE_BEAR(regs);
+
     } /* end if(basic PC) */
     else
 #if defined(FEATURE_LINKAGE_STACK)
@@ -3039,6 +3056,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
       #else /*!defined(FEATURE_ESAME)*/
         regs->GR_L(4) = ete[2];
       #endif /*!defined(FEATURE_ESAME)*/
+
+        /* Update the breaking event address register */
+        UPDATE_BEAR(regs);
 
     } /* end if(stacking PC) */
 #else /*!defined(FEATURE_LINKAGE_STACK)*/
@@ -3413,6 +3433,9 @@ int     rc;                             /* return code from load_psw */
         ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
 
+    /* Update the breaking event address register */
+    UPDATE_BEAR(regs);
+
     /* Update cpu states */
     SET_IC_MASK(regs);
     SET_AEA_MODE(regs);               // psw has been updated
@@ -3704,6 +3727,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->psw.amode64 ? AMASK64 :
 #endif /*defined(FEATURE_ESAME)*/
         regs->psw.amode ? AMASK31 : AMASK24;
+
+    /* Update the breaking event address register */
+    UPDATE_BEAR(regs);
 
     /* AND control register 3 bits 0-15 with the supplied PKM value
        and replace the SASN in CR3 bits 16-31 with new PASN */

@@ -328,6 +328,7 @@ int  i;
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
     regs->psw.IA = trap_ia;
+    UPDATE_BEAR(regs);
     VALIDATE_AIA(regs);
     /* set PSW to primary space */
     regs->psw.asc = 0;
