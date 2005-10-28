@@ -54,6 +54,8 @@ BYTE    key;                            /* New PSW key               */
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     RRE(inst, regs, r1, r2);
     regs->psw.IA &= ADDRESS_MAXWRAP(regs);
 
@@ -324,6 +326,8 @@ U16     xcode;                          /* Exception code            */
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 CREG    inst_cr;                        /* Instruction CR            */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RRE(inst, regs, r1, r2);
 
@@ -605,6 +609,8 @@ VADR    n1, n2;                         /* Operand values            */
 #ifdef FEATURE_TRACING
 VADR    n = 0;                          /* Work area                 */
 #endif /*FEATURE_TRACING*/
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RRE(inst, regs, r1, r2);
 
@@ -1922,6 +1928,8 @@ int     rc;
 int     amode64;
 #endif /*defined(FEATURE_ESAME)*/
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     S(inst, regs, b2, effective_addr2);
 #if defined(FEATURE_ECPSVM)
     if(ecpsvm_dolpsw(regs,b2,effective_addr2)==0)
@@ -2525,6 +2533,8 @@ VADR    retn;                           /* Return address and amode  */
 #ifdef FEATURE_TRACING
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     S(inst, regs, b2, effective_addr2);
 
@@ -3199,6 +3209,8 @@ U16     ax;                             /* Authorization index       */
 U16     xcode;                          /* Exception code            */
 int     rc;                             /* return code from load_psw */
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     E(inst, regs);
 
     UNREFERENCED(inst);
@@ -3778,6 +3790,8 @@ DEF_INST(program_transfer)
 {
 int     r1, r2;                         /* Values of R fields        */
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     RRE(inst, regs, r1, r2);
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 0);
 
@@ -3797,6 +3811,9 @@ int     r1, r2;                         /* Values of R fields        */
     {
         ARCH_DEP(operation_exception)(inst,regs);
     }
+
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     RRE(inst, regs, r1, r2);
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 1);
 

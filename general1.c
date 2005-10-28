@@ -371,6 +371,8 @@ DEF_INST(branch_and_link_register)
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     RR(inst, regs, r1, r2);
 
     /* Compute the branch address from the R2 operand */
@@ -424,6 +426,8 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Save the link information in the R1 operand */
@@ -461,6 +465,8 @@ DEF_INST(branch_and_save_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RR(inst, regs, r1, r2);
 
@@ -514,6 +520,8 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Save the link information in the R1 register */
@@ -552,6 +560,8 @@ DEF_INST(branch_and_save_and_set_mode)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RR(inst, regs, r1, r2);
 
@@ -639,6 +649,8 @@ DEF_INST(branch_and_set_mode)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RR(inst, regs, r1, r2);
 
@@ -728,8 +740,8 @@ DEF_INST(branch_on_condition_register)
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & (0x80 >> regs->psw.cc)) && (inst[1] & 0x0F) != 0)
     {
+        UPDATE_BEAR_FROM_PSWIA(regs);
         regs->psw.IA = regs->GR(inst[1] & 0x0F) & ADDRESS_MAXWRAP(regs);
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( unlikely(EN_IC_PER_SB(regs))
@@ -767,9 +779,9 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
     {
+        UPDATE_BEAR_FROM_PSWIA(regs);
         RX_BC(inst, regs, b2, effective_addr2);
         regs->psw.IA = effective_addr2;
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -791,6 +803,8 @@ VADR    effective_addr2;                /* Effective address         */
 DEF_INST(branch_on_count_register)
 {
 int     r1, r2;                         /* Values of R fields        */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RR(inst, regs, r1, r2);
 
@@ -827,6 +841,8 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
@@ -858,6 +874,8 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S32     i, j;                           /* Integer work areas        */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -899,6 +917,8 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S32     i, j;                           /* Integer work areas        */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -946,10 +966,10 @@ DEF_INST(branch_relative_on_condition)
     /* Branch if R1 mask bit is set */
     if (inst[1] & (0x80 >> regs->psw.cc))
     {
+        UPDATE_BEAR_FROM_PSWIA(regs);
         /* Calculate the relative branch address */
         regs->psw.IA = (likely(!regs->execflag) ? regs->psw.IA: regs->ET)
                      + 2*(S16)(fetch_fw(inst) & 0xFFFF);
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( unlikely(EN_IC_PER_SB(regs))
@@ -977,6 +997,8 @@ DEF_INST(branch_relative_and_save)
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RI(inst, regs, r1, opcd, i2);
 
@@ -1020,6 +1042,8 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     RI(inst, regs, r1, opcd, i2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
@@ -1053,6 +1077,8 @@ DEF_INST(branch_relative_on_index_high)
 int     r1, r3;                         /* Register numbers          */
 U16     i2;                             /* 16-bit operand            */
 S32     i,j;                            /* Integer workareas         */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RI(inst, regs, r1, r3, i2);
 
@@ -1096,6 +1122,8 @@ DEF_INST(branch_relative_on_index_low_or_equal)
 int     r1, r3;                         /* Register numbers          */
 U16     i2;                             /* 16-bit operand            */
 S32     i,j;                            /* Integer workareas         */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RI(inst, regs, r1, r3, i2);
 

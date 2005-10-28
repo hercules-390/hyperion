@@ -146,6 +146,8 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST(trap2)
 {
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     E(inst, regs);
 
     UNREFERENCED(inst);
@@ -166,6 +168,8 @@ DEF_INST(trap4)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     S(inst, regs, b2, effective_addr2);
 
@@ -207,6 +211,8 @@ BYTE   *mn;                             /* Mainstor address of parm  */
 #ifdef FEATURE_TRACING
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     S(inst, regs, b2, effective_addr2);
 
@@ -1919,6 +1925,8 @@ DEF_INST(branch_relative_on_condition_long)
 //int     opcd;                           /* Opcode                    */
 //U32     i2;                             /* 32-bit operand values     */
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
 //  RIL(inst, regs, r1, opcd, i2);
 
     /* Branch if R1 mask bit is set */
@@ -1955,6 +1963,8 @@ DEF_INST(branch_relative_and_save_long)
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand values     */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RIL(inst, regs, r1, opcd, i2);
 
@@ -2146,6 +2156,8 @@ int     r1, r3;                         /* Register numbers          */
 S16     i2;                             /* 16-bit immediate offset   */
 S64     i,j;                            /* Integer workareas         */
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     RIE(inst, regs, r1, r3, i2);
 
     /* Load the increment value from the R3 register */
@@ -2188,6 +2200,8 @@ DEF_INST(branch_relative_on_index_low_or_equal_long)
 int     r1, r3;                         /* Register numbers          */
 S16     i2;                             /* 16-bit immediate offset   */
 S64     i,j;                            /* Integer workareas         */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RIE(inst, regs, r1, r3, i2);
 
@@ -2233,6 +2247,8 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S64     i, j;                           /* Integer work areas        */
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Load the increment value from the R3 register */
@@ -2275,6 +2291,8 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S64     i, j;                           /* Integer work areas        */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -2440,6 +2458,8 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    SAVE_PSWIA_FOR_BEAR(regs);
+
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
@@ -2471,6 +2491,8 @@ DEF_INST(branch_on_count_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RRE(inst, regs, r1, r2);
 
@@ -3155,6 +3177,8 @@ DEF_INST(branch_relative_on_count_long)
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     RI(inst, regs, r1, opcd, i2);
 
@@ -4551,6 +4575,8 @@ int     b2;                             /* Base of effective addr    */
 U64     effective_addr2;                /* Effective address         */
 QWORD   qword;
 int     rc;
+
+    SAVE_PSWIA_FOR_BEAR(regs);
 
     S(inst, regs, b2, effective_addr2);
 

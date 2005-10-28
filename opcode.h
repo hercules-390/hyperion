@@ -1269,6 +1269,31 @@ do { \
 
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
 
+/* Macros for PER3 Breaking Event Address Recording */
+#undef SAVE_PSWIA_FOR_BEAR
+#undef UPDATE_BEAR
+#undef UPDATE_BEAR_FROM_PSWIA
+#if defined(FEATURE_PER3)
+ /* SAVE_PSWIA_FOR_BEAR is coded at the start of any instruction that
+    can initiate a breaking event (branch, load PSW). It saves the 
+    current PSW instruction address for later use by UPDATE_BEAR */
+ #define SAVE_PSWIA_FOR_BEAR(_regs) {_regs->beia = _regs->psw.IA;}
+ /* UPDATE_BEAR copies the address saved by SAVE_PSWIA_FOR_BEAR
+    into the Breaking Event Address Register */
+ #define UPDATE_BEAR(_regs) {_regs->bear = _regs->beia;}
+ /* UPDATE_BEAR_FROM_PSWIA copies the address PSW instruction address
+    directly into the Breaking Event Address Register. It is used in
+    place of SAVE_PSWIA_FOR_BEAR and UPDATE_BEAR in certain branch 
+    branch instructions which have been optimised to not increment
+    the PSW IA unless the branch is determined to be unsuccessful */ 
+ #define UPDATE_BEAR_FROM_PSWIA(_regs) {_regs->bear = _regs->psw.IA;}
+#else /*!defined(FEATURE_PER3)*/
+ /* These macros do nothing if the PER3 facility is not installed. */
+ #define SAVE_PSWIA_FOR_BEAR(_regs)
+ #define UPDATE_BEAR(_regs)
+ #define UPDATE_BEAR_FROM_PSWIA(_regs)
+#endif /*!defined(FEATURE_PER3)*/
+
 #define PERFORM_SERIALIZATION(_regs)
 #define PERFORM_CHKPT_SYNC(_regs)
 
