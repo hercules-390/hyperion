@@ -228,6 +228,14 @@ int bytes_read;
     /* Back to user mode */
     SETMODE(USER);
 
+    /* Redirect stdout to the logger */
+    if(dup2(logger_syslogfd[LOG_WRITE],STDOUT_FILENO) == -1)
+    {
+        if(logger_hrdcpy)
+            fprintf(logger_hrdcpy, _("HHCLG001E Error redirecting stdout: %s\n"), strerror(errno));
+        exit(1);
+    }
+
     setvbuf (stdout, NULL, _IONBF, 0);
 
     /* call logger_term on system shutdown */
