@@ -228,6 +228,7 @@ int bytes_read;
     /* Back to user mode */
     SETMODE(USER);
 
+#if !defined( _MSVC_ )
     /* Redirect stdout to the logger */
     if(dup2(logger_syslogfd[LOG_WRITE],STDOUT_FILENO) == -1)
     {
@@ -235,6 +236,7 @@ int bytes_read;
             fprintf(logger_hrdcpy, _("HHCLG001E Error redirecting stdout: %s\n"), strerror(errno));
         exit(1);
     }
+#endif /* !defined( _MSVC_ ) */
 
     setvbuf (stdout, NULL, _IONBF, 0);
 
