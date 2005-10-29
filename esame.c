@@ -4806,6 +4806,8 @@ int     cc;                             /* Condition code            */
 
     S(inst, regs, b2, effective_addr2);
 
+    SIE_INTERCEPT(regs);
+
     /* Note: STFLE is NOT a privileged instruction (unlike STFL) */
 
     DW_CHECK(effective_addr2, regs);

@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+29 Oct 2005 Fix STFLE SIE intercept - Jan Jaeger
 29 Oct 2005 Fix stdout redirection - Jan Jaeger
 27 Oct 2005 Fix segfault in SIGP against offline CPU - Jan Jaeger
 26 Oct 2005 PER3 Breaking Event Address Recording (BEAR) framework - Roger Bowler
