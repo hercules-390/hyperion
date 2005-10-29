@@ -8,6 +8,8 @@
 #ifndef _HCONSOLE_H
 #define _HCONSOLE_H
 
+#define ANSI_RESET_ALL_ATTRIBUTES  "\x1B[0m"
+
 #define KBD_HOME                "\x1B[1~"
 #define KBD_INSERT              "\x1B[2~"
 #define KBD_DELETE              "\x1B[3~"

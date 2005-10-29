@@ -189,6 +189,24 @@ void NP_init()
 /*  This draws the initial screen template                           */
 /*===================================================================*/
 
+static void PaintButton
+(
+    FILE* confp,
+    short rowY1,
+    short colX1,
+    short colorBG,
+    char* lowBefore,
+    char* highMid,
+    char* lowAfter
+)
+{
+    set_screen_pos( confp, rowY1, colX1 );
+
+    set_screen_color( confp, COLOR_DEFAULT_FG,    colorBG ); fprintf( confp, lowBefore );
+    set_screen_color( confp, COLOR_DEFAULT_LIGHT, colorBG ); fprintf( confp, highMid   );
+    set_screen_color( confp, COLOR_DEFAULT_FG,    colorBG ); fprintf( confp, lowAfter  );
+}
+
 static
 void NP_screen()
 {
@@ -199,15 +217,15 @@ void NP_screen()
     char c[2];
     char devnam[128];
 
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+    set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
     clear_screen( confp );
 
-    set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
+    set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_BLUE );
 
     set_screen_pos( confp,  1,  1 ); fprintf( confp, " Hercules   CPU              %7.7s ", get_arch_mode_string(NULL));
     set_screen_pos( confp,  1, 38 ); fprintf( confp, "|             Peripherals                  ");
 
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+    set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
 
     set_screen_pos( confp,  2, 39 ); fprintf( confp, " # Addr Modl Type Assignment            " );
     set_screen_pos( confp,  4,  9 ); fprintf( confp, "PSW"                                      );
@@ -251,7 +269,7 @@ void NP_screen()
 
     NPlastdev = a;
 
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+    set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
 
     for (p = 2; p < 25; p++) {
         set_screen_pos( confp, p, 38 );
@@ -262,16 +280,7 @@ void NP_screen()
     set_screen_pos( confp, 24,  1 ); fprintf( confp, "-------------------------------------"      );
     set_screen_pos( confp, 24, 39 ); fprintf( confp, "------------------------------------------" );
 
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLUE  ); set_screen_pos( confp, 19, 16 ); fprintf( confp, " STO " );
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLUE  ); set_screen_pos( confp, 19, 24 ); fprintf( confp, " DIS " );
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLUE  ); set_screen_pos( confp, 22, 16 ); fprintf( confp, " EXT " );
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLUE  ); set_screen_pos( confp, 22, 24 ); fprintf( confp, " IPL " );
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_GREEN ); set_screen_pos( confp, 22,  2 ); fprintf( confp, " STR " );
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_RED   ); set_screen_pos( confp, 22,  9 ); fprintf( confp, " STP " );
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLUE  ); set_screen_pos( confp, 19, 32 ); fprintf( confp, " RST " );
-    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_RED   ); set_screen_pos( confp, 22, 32 ); fprintf( confp, " PWR " );
-
-    set_screen_color( confp, COLOR_WHITE, COLOR_BLACK );
+    set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG );
 
     set_screen_pos( confp, 14,  6 ); fprintf( confp, "G" );
     set_screen_pos( confp, 14, 14 ); fprintf( confp, "C" );
@@ -282,22 +291,29 @@ void NP_screen()
     set_screen_pos( confp, 16,  5 ); fprintf( confp, "R" );
     set_screen_pos( confp, 16, 22 ); fprintf( confp, "D" );
 
-    set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
+    // STO  (Store Data)
+    PaintButton( confp, 19, 16, COLOR_BLUE,  " ST", "O", " "   );
 
-    set_screen_pos( confp, 19, 19 ); fprintf( confp, "O" );
-    set_screen_pos( confp, 19, 26 ); fprintf( confp, "I" );
-    set_screen_pos( confp, 22, 17 ); fprintf( confp, "E" );
-    set_screen_pos( confp, 22, 27 ); fprintf( confp, "L" );
-    set_screen_pos( confp, 19, 35 ); fprintf( confp, "T" );
+    // DIS  (Display Data)
+    PaintButton( confp, 19, 24, COLOR_BLUE,  " D",  "I", "S "  );
 
-    set_screen_color( confp, COLOR_WHITE, COLOR_GREEN );
+    // RST  (Restart Interrupt)
+    PaintButton( confp, 19, 32, COLOR_BLUE,  " RS", "T", " "   );
 
-    set_screen_pos( confp, 22, 3 ); fprintf( confp, "S" );
+    // STR  (Start)
+    PaintButton( confp, 22,  2, COLOR_GREEN, " ",   "S", "TR " );
 
-    set_screen_color( confp, COLOR_WHITE, COLOR_RED );
+    // STP  (Stop)
+    PaintButton( confp, 22,  9, COLOR_RED,   " ST", "P", " "   );
 
-    set_screen_pos( confp, 22, 12 ); fprintf( confp, "P" );
-    set_screen_pos( confp, 22, 34 ); fprintf( confp, "W" );
+    // EXT  (External Interrupt)
+    PaintButton( confp, 22, 16, COLOR_BLUE,  " ",   "E", "XT " );
+
+    // IPL  (IPL)
+    PaintButton( confp, 22, 24, COLOR_BLUE,  " IP", "L", " "   );
+
+    // PWR  (PowerOff)
+    PaintButton( confp, 22, 32, COLOR_RED,   " P",  "W", "R "  );
 
 }
 
@@ -331,7 +347,7 @@ void NP_update()
              NPhelpup = 0;
              NPhelpdown = 0;
         } else {
-        set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+        set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
         clear_screen( confp );
         set_screen_pos( confp, 1, 1 );
         fprintf(confp, "All commands consist of one character keypresses.  The various commands are\n");
@@ -366,7 +382,7 @@ void NP_update()
     if (!regs) regs = &sysblk.dummyregs;
 
 #if defined(OPTION_MIPS_COUNTING)
-    set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
+    set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_BLUE );
     set_screen_pos( confp, 1, 16 );
     fprintf(confp, "%4.4X:",regs->cpuad);
     set_screen_pos( confp, 1, 22 );
@@ -391,7 +407,7 @@ void NP_update()
             curpsw[7] |= 0x01;
     }
     pswwait = curpsw[1] & 0x02;
-    set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
+    set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
     set_screen_pos( confp, 3, 2 );
     fprintf (confp, "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X",
                     curpsw[0], curpsw[1], curpsw[2], curpsw[3],
@@ -472,7 +488,7 @@ void NP_update()
         }
     }
     set_screen_pos( confp, 19, 2 );
-    set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
+    set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
 #ifdef OPTION_MIPS_COUNTING
     fprintf(confp, "%2.1d.%2.2d  %5d",
             sysblk.mipsrate / 1000000, (sysblk.mipsrate % 1000000) / 10000,
@@ -485,19 +501,19 @@ void NP_update()
         (unsigned)regs->instcount);
 #endif
     if (NPaddress != NPcuraddr) {
-        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
+        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
         set_screen_pos( confp, 16, 11 );
         fprintf(confp, "%8.8X", NPaddress);
         NPcuraddr = NPaddress;
     }
     if (NPdata != NPcurdata) {
-        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
+        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
         set_screen_pos( confp, 16, 29 );
         fprintf(confp, "%8.8X", NPdata);
         NPcurdata = NPdata;
     }
     if (NPregdisp != NPcurrg) {
-        set_screen_color( confp, COLOR_WHITE, COLOR_BLACK );
+        set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG );
         switch (NPcurrg) {
             case 0: set_screen_pos( confp, 14,  6 ); fprintf(confp, "G" ); break;
             case 1: set_screen_pos( confp, 14, 14 ); fprintf(confp, "C" ); break;
@@ -506,7 +522,7 @@ void NP_update()
             default: break;
         }
         NPcurrg = NPregdisp;
-        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
+        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
         switch (NPregdisp) {
             case 0: set_screen_pos( confp, 14,  6 ); fprintf(confp, "G" ); break;
             case 1: set_screen_pos( confp, 14, 14 ); fprintf(confp, "C" ); break;
@@ -532,9 +548,9 @@ void NP_update()
               ch[0] = a | 0x40;
               ch[1] = '\0';
               if (online) {
-                  set_screen_color( confp, COLOR_LIGHT_GREEN, COLOR_BLACK );
+                  set_screen_color( confp, COLOR_LIGHT_GREEN, COLOR_DEFAULT_BG );
               } else {
-                  set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+                  set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
               }
               fprintf(confp, "%s", ch);
               NPonline[a - 1] = online;
@@ -542,9 +558,9 @@ void NP_update()
          if (busy != NPbusy[a - 1] || pend != NPpend[a - 1]) {
               set_screen_pos( confp, p, 42 );
               if (busy | pend) {
-                  set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
+                  set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
               } else {
-                  set_screen_color( confp, COLOR_LIGHT_GREY,   COLOR_BLACK );
+                  set_screen_color( confp, COLOR_DEFAULT_FG,   COLOR_DEFAULT_BG );
               }
               fprintf(confp, "%4.4X", dev->devnum);
               NPbusy[a - 1] = busy;
@@ -553,16 +569,16 @@ void NP_update()
          if (open != NPopen[a - 1]) {
               set_screen_pos( confp, p, 47 );
               if (open) {
-                  set_screen_color( confp, COLOR_LIGHT_GREEN, COLOR_BLACK );
+                  set_screen_color( confp, COLOR_LIGHT_GREEN, COLOR_DEFAULT_BG );
               } else {
-                  set_screen_color( confp, COLOR_LIGHT_GREY,  COLOR_BLACK );
+                  set_screen_color( confp, COLOR_DEFAULT_FG,  COLOR_DEFAULT_BG );
               }
               fprintf(confp, "%4.4X", dev->devtype);
               NPopen[a - 1] = open;
          }
          (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
          if (strcmp(NPdevname[a - 1], devnam) != 0) {
-             set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+             set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
              set_screen_pos( confp, p, 57 );
              fprintf(confp, "%.24s", devnam);
              erase_to_eol( confp );
@@ -577,10 +593,10 @@ void NP_update()
         if (strlen(NPprompt1) > 0) {
             s = 2 + ((38 - strlen(NPprompt1)) / 2);
             set_screen_pos( confp, 24, s );
-            set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
+            set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_BLUE );
             fprintf(confp, NPprompt1);
         } else {
-            set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+            set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
             set_screen_pos( confp, 24, 1 );
             fprintf(confp, "-------------------------------------");
         }
@@ -590,10 +606,10 @@ void NP_update()
         if (strlen(NPprompt2) > 0) {
             s = 42 + ((38 - strlen(NPprompt2)) / 2);
             set_screen_pos( confp, 24, s );
-            set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
+            set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_BLUE );
             fprintf(confp, NPprompt2);
         } else {
-            set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
+            set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
             set_screen_pos( confp, 24, 39 );
             fprintf(confp, "------------------------------------------");
         }
@@ -941,7 +957,7 @@ int     kblen;                          /* Number of chars in kbbuf  */
                             NPcurpos[1] = 11;
                             NPdatalen = 8;
                             NPcolorSwitch = 1;
-                            NPcolorFore = COLOR_WHITE;
+                            NPcolorFore = COLOR_DEFAULT_LIGHT;
                             NPcolorBack = COLOR_BLUE;
                             strcpy(NPentered, "");
                             strcpy(NPprompt1, "Enter Address Switches");
@@ -955,7 +971,7 @@ int     kblen;                          /* Number of chars in kbbuf  */
                             NPcurpos[1] = 29;
                             NPdatalen = 8;
                             NPcolorSwitch = 1;
-                            NPcolorFore = COLOR_WHITE;
+                            NPcolorFore = COLOR_DEFAULT_LIGHT;
                             NPcolorBack = COLOR_BLUE;
                             strcpy(NPentered, "");
                             strcpy(NPprompt1, "Enter Data Switches");
@@ -1023,7 +1039,7 @@ int     kblen;                          /* Number of chars in kbbuf  */
                             NPcurpos[1] = 57;
                             NPdatalen = 24;
                             NPcolorSwitch = 1;
-                            NPcolorFore = COLOR_WHITE;
+                            NPcolorFore = COLOR_DEFAULT_LIGHT;
                             NPcolorBack = COLOR_BLUE;
                             strcpy(NPentered, "");
                             strcpy(NPprompt2, "New Name, or [enter] to Reload");
@@ -1539,11 +1555,13 @@ FinishShutdown:
                 if (firstmsgn > 0)
                 {
                     set_screen_pos( confp, 1, 80 );
+                    set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG );
                     fprintf (confp, "+" );
                 }
                 if (firstmsgn + i < nummsgs)
                 {
                     set_screen_pos( confp, 22, 80 );
+                    set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG );
                     fprintf (confp, "V" );
                 }
             } /* end if(redraw_msgs) */

@@ -22,6 +22,9 @@
 static DWORD g_dwConsoleMode  = 0;   // (saved value so we can later restore it)
 static WORD  g_wDefaultAttrib = 0;   // (saved value so we can later restore it)
 
+static WORD default_FG_color() { return  g_wDefaultAttrib       & 0x0F; }
+static WORD default_BG_color() { return (g_wDefaultAttrib >> 4) & 0x0F; }
+
 int set_or_reset_console_mode( int keybrd_fd, short save_and_set )
 {
     CONSOLE_SCREEN_BUFFER_INFO  csbi;
@@ -104,11 +107,11 @@ static WORD W32_COLOR( short herc_color )
         case COLOR_LIGHT_YELLOW:  return W32_COLOR_LIGHT_YELLOW;
         case COLOR_WHITE:         return W32_COLOR_WHITE;
 
-        case COLOR_DEFAULT_BG:    return W32_COLOR_BLACK;
-        case COLOR_DEFAULT_FG:    return W32_COLOR_LIGHT_GREY;
-        case COLOR_DEFAULT_LIGHT: return W32_COLOR_WHITE;
+        case COLOR_DEFAULT_BG:    return default_BG_color();
+        case COLOR_DEFAULT_FG:    return default_FG_color();
+        case COLOR_DEFAULT_LIGHT: return default_FG_color() | FOREGROUND_INTENSITY;
 
-        default:                  return W32_COLOR_LIGHT_GREY;
+        default:                  return default_FG_color();
     }
 }
 
@@ -545,10 +548,10 @@ SGR (Select Graphic Rendition):
     "\033[0m"   Reset
     "\033[1m"   Bold
 
-    "\033[2m"	Faint  <------<<<   Fish: non-standard, but apparently anyway
+    "\033[2m"   Faint  <------<<<   Fish: non-standard, but apparently anyway
                                           (based on other documents I've seen)
 
-    "\033[3m"	Italic
+    "\033[3m"   Italic
     "\033[4m"   Underline
     "\033[7m"   Inverse
     "\033[9m"   Crossed out
@@ -611,7 +614,19 @@ SGR (Select Graphic Rendition):
 
 #define  ISO_IS_ISO_BRIGHT( iso_color )       ( ( ( iso_color ) >> 8 ) & 0x01 )
 
-#define  ISO_NORMAL_OR_BRIGHT( iso_color )    ISO_IS_ISO_BRIGHT( iso_color ) ? 1 : 22
+// PROGRAMMING NOTE: the '2' (faint/dim) and '22' (bold-off)
+// attribute codes are UNRELIABLE. They are apparently rarely
+// implemented properly on many platforms (Cygwin included).
+// Thus we prefer to use the more reliable (but programmatically
+// bothersome) '0' (reset) attribute instead [whenever we wish
+// to paint a 'dim/faint' (non-bold) color]. As a result however,
+// we need to be careful to paint the foregoround/background
+// colors in the proper sequence/order and in the proper manner.
+// See the below 'set_screen_color' function for details. (Fish)
+
+//#define  ISO_NORMAL_OR_BRIGHT( iso_color )    ISO_IS_ISO_BRIGHT( iso_color ) ? 1 : 22
+//#define  ISO_NORMAL_OR_BRIGHT( iso_color )    ISO_IS_ISO_BRIGHT( iso_color ) ? 1 : 2
+#define  ISO_NORMAL_OR_BRIGHT( iso_color )    ISO_IS_ISO_BRIGHT( iso_color ) ? 1 : 0
 
 #define  ISO_FOREGROUND_COLOR( iso_color )    ( ( ( iso_color ) & 0x00FF )      )
 #define  ISO_BACKGROUND_COLOR( iso_color )    ( ( ( iso_color ) & 0x00FF ) + 10 )
@@ -652,41 +667,81 @@ static uint16_t ISO_COLOR( short herc_color )
 int set_screen_color( FILE* confp, short herc_fore, short herc_back )
 {
     uint16_t iso_fore, iso_back;
+    uint16_t  iso_bold_color, iso_dim_color;
     int rc;
+
+    // Translate Herc color to ANSI (ISO) color...
 
     iso_fore = ISO_COLOR( herc_fore );
     iso_back = ISO_COLOR( herc_back );
 
-    // Set background first, THEN foreground
-    // (hopefully that works better?)
+    // PROGRAMMING NOTE: Because the only means we have to RELIABLY
+    // set non-bold (faint/dim) color attributes across ALL platforms
+    // is to use the '0' (reset) escape code (which of course has the
+    // unfortunate(?) side-effect of resetting BOTH the background
+    // AND foreground colors to dim/faint instead of just one or the
+    // other), we need to be careful to always set the dim (NON-bold)
+    // color attribute FIRST (which will of course reset both the fore-
+    // ground AND the backgound colors to non-bold/faint/dim as well),
+    // and then to, AFTERWARDS, set the BOLD color attribute. This is
+    // the ONLY way I've been able to discover (empirically via trial
+    // and error) how to RELIABLY set bold/faint foreground/background
+    // color attributes across all(?) supported platforms. (Fish)
 
-#define ANSI_SET_COLOR    "\x1B[%d;%dm"
+    if ( ISO_IS_ISO_BRIGHT(iso_fore) == ISO_IS_ISO_BRIGHT(iso_back) )
+    {
+        // BOTH the foreground color AND the background colors
+        // are either BOTH bold or BOTH dim/faint (normal)...
 
-    rc = fprintf
-    (
-        confp,
+        rc = fprintf
+        (
+            confp,
 
-        ANSI_SET_COLOR
+            // Set the bold/dim attribute FIRST and then
+            // BOTH foreground/background colors afterwards...
 
-        ,ISO_NORMAL_OR_BRIGHT( iso_back )
-        ,ISO_BACKGROUND_COLOR( iso_back )
-    );
+            "\x1B[%d;%d;%dm"
 
-    if ( rc < 0 ) return -1;
+            ,ISO_NORMAL_OR_BRIGHT( iso_back )
+            ,ISO_BACKGROUND_COLOR( iso_back )
+            ,ISO_FOREGROUND_COLOR( iso_fore )
+        );
+    }
+    else // ( ISO_IS_ISO_BRIGHT(iso_fore) != ISO_IS_ISO_BRIGHT(iso_back) )
+    {
+        // ONE of either the foreground OR background colors
+        // is bold, but the OTHER one is dim/faint (normal)...
 
-    rc = fprintf
-    (
-        confp,
+        if ( ISO_IS_ISO_BRIGHT(iso_fore) )
+        {
+            // The foregound color is the bright/bold one...
 
-        ANSI_SET_COLOR
+            iso_bold_color = ISO_FOREGROUND_COLOR( iso_fore );
+            iso_dim_color  = ISO_BACKGROUND_COLOR( iso_back );
+        }
+        else // ( !ISO_IS_ISO_BRIGHT(iso_fore) )
+        {
+            // The background color is the bright/bold one...
 
-        ,ISO_NORMAL_OR_BRIGHT( iso_fore )
-        ,ISO_FOREGROUND_COLOR( iso_fore )
-    );
+            iso_bold_color = ISO_BACKGROUND_COLOR( iso_back );
+            iso_dim_color  = ISO_FOREGROUND_COLOR( iso_fore );
+        }
 
-    if ( rc < 0 ) return -1;
+        // Set whichever is the DIM color attribute FIRST
+        // and then AFTERWARDS whichever one is the BOLD...
 
-    return 0;
+        rc = fprintf
+        (
+            confp,
+
+            "\x1B[0;%d;1;%dm" // (reset, dim-color, bold, bold-color)
+
+            ,iso_dim_color
+            ,iso_bold_color
+        );
+    }
+
+    return rc < 0 ? -1 : 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
