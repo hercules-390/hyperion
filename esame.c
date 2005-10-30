@@ -1084,6 +1084,7 @@ int     cc;                             /* Condition code            */
         n = r2; /* r2 is the access register number if ARMODE */
         break;
     default: /* Specification exception if invalid value for m4 */
+        n = -1; /* makes compiler happy */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
     } /* end switch(m4) */
 
@@ -4740,7 +4741,7 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 /*-------------------------------------------------------------------*/
 /* Adjust the facility list to account for runtime options           */
 /*-------------------------------------------------------------------*/
-ARCH_DEP(adjust_stfl_data) ()
+void ARCH_DEP(adjust_stfl_data) ()
 {
 #if defined(_900) || defined(FEATURE_ESAME)
     /* ESAME might be installed but not active */
