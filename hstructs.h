@@ -144,7 +144,6 @@ struct REGS {                           /* Processor registers       */
 // #endif /*defined(FEATURE_PER)*/
 
 // #if defined(FEATURE_PER3)
-        U64     beia;                   /* Breaking event inst addr  */
         U64     bear;                   /* Breaking event address reg*/
 // #endif /*defined(FEATURE_PER3)*/
 

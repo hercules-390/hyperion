@@ -54,8 +54,6 @@ BYTE    key;                            /* New PSW key               */
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RRE(inst, regs, r1, r2);
     regs->psw.IA &= ADDRESS_MAXWRAP(regs);
 
@@ -166,6 +164,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Set the problem state bit in the current PSW */
         regs->psw.states |= BIT(PSW_PROB_BIT);
 
+        /* Update the breaking event address register */
+        UPDATE_BEAR_A(regs);
+
         /* Set PSW instruction address and amode from R2 register */
       #if defined(FEATURE_ESAME)
         if (regs->psw.amode64)
@@ -193,9 +194,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             regs->psw.IA = regs->GR_L(r2) & AMASK24;
         }
 
-        /* Update the breaking event address register */
-        UPDATE_BEAR(regs);
-
     } /* end if(BSA-ba) */
     else
     { /* BSA-ra */
@@ -211,6 +209,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
                                         duct_reta &DUCT_IA31, regs);
       #endif /*FEATURE_TRACING*/
 
+        /* Update the breaking event address register */
+        UPDATE_BEAR_A(regs);
+         
         /* If R1 is non-zero, save the current PSW addressing mode
            and instruction address in the R1 register */
         if (r1 != 0)
@@ -242,9 +243,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
         }
 
-        /* Update the breaking event address register */
-        UPDATE_BEAR(regs);
-         
         /* Restore the PSW key mask from the DUCT */
         regs->CR_L(3) &= 0x0000FFFF;
         regs->CR_L(3) |= duct_pkrp & DUCT_PKM;
@@ -326,8 +324,6 @@ U16     xcode;                          /* Exception code            */
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 CREG    inst_cr;                        /* Instruction CR            */
-
-    SAVE_PSWIA_FOR_BEAR(regs);
 
     RRE(inst, regs, r1, r2);
 
@@ -507,6 +503,9 @@ CREG    inst_cr;                        /* Instruction CR            */
                                 (regs->psw.amode ? 0x80000000 : 0);
     }
 
+    /* Update the breaking event address register */
+    UPDATE_BEAR_A(regs);
+
     /* Set mode and branch to address specified by R2 operand */
     regs->psw.IA = newia;
 
@@ -526,9 +525,6 @@ CREG    inst_cr;                        /* Instruction CR            */
         regs->psw.AMASK = AMASK24;
         regs->psw.IA = newia & AMASK24;
     }
-
-    /* Update the breaking event address register */
-    UPDATE_BEAR(regs);
 
     /* Set the SSTD (or SASCE) equal to PSTD (or PASCE) */
     regs->CR(7) = regs->CR(1);
@@ -610,8 +606,6 @@ VADR    n1, n2;                         /* Operand values            */
 VADR    n = 0;                          /* Work area                 */
 #endif /*FEATURE_TRACING*/
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RRE(inst, regs, r1, r2);
 
     SIE_MODE_XC_OPEX(regs);
@@ -685,8 +679,8 @@ VADR    n = 0;                          /* Work area                 */
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
     {
+        UPDATE_BEAR_A(regs);
         regs->psw.IA = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-        UPDATE_BEAR(regs);
 
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -1928,8 +1922,6 @@ int     rc;
 int     amode64;
 #endif /*defined(FEATURE_ESAME)*/
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     S(inst, regs, b2, effective_addr2);
 #if defined(FEATURE_ECPSVM)
     if(ecpsvm_dolpsw(regs,b2,effective_addr2)==0)
@@ -1955,7 +1947,7 @@ int     amode64;
     STORE_DW ( dword, ARCH_DEP(vfetch8) ( effective_addr2, b2, regs ) );
 
     /* Update the breaking event address register */
-    UPDATE_BEAR(regs);
+    UPDATE_BEAR_A(regs);
 
     /* Load updated PSW (ESA/390 Format in ESAME mode) */
 #if !defined(FEATURE_ESAME)
@@ -2534,8 +2526,6 @@ VADR    retn;                           /* Return address and amode  */
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     S(inst, regs, b2, effective_addr2);
 
     SIE_MODE_XC_OPEX(regs);
@@ -2923,6 +2913,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
                         | (regs->psw.IA & ADDRESS_MAXWRAP(regs)) | PROBSTATE(&regs->psw);
       #endif /*!defined(FEATURE_ESAME)*/
 
+        /* Update the breaking event address register */
+        UPDATE_BEAR_A(regs);
+
         /* Update the PSW from the entry table */
       #if defined(FEATURE_ESAME)
         if (regs->psw.amode64)
@@ -2959,9 +2952,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
       #else /*!defined(FEATURE_ESAME)*/
         regs->GR_L(4) = ete[2];
       #endif /*!defined(FEATURE_ESAME)*/
-
-        /* Update the breaking event address register */
-        UPDATE_BEAR(regs);
 
     } /* end if(basic PC) */
     else
@@ -3006,6 +2996,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Perform the stacking process */
         ARCH_DEP(form_stack_entry) (LSED_UET_PC, retn, 0, csi,
                                         pcnum, regs);
+
+        /* Update the breaking event address register */
+        UPDATE_BEAR_A(regs);
 
         /* Update the PSW from the entry table */
       #if defined(FEATURE_ESAME)
@@ -3066,9 +3059,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
       #else /*!defined(FEATURE_ESAME)*/
         regs->GR_L(4) = ete[2];
       #endif /*!defined(FEATURE_ESAME)*/
-
-        /* Update the breaking event address register */
-        UPDATE_BEAR(regs);
 
     } /* end if(stacking PC) */
 #else /*!defined(FEATURE_LINKAGE_STACK)*/
@@ -3209,8 +3199,6 @@ U16     ax;                             /* Authorization index       */
 U16     xcode;                          /* Exception code            */
 int     rc;                             /* return code from load_psw */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     E(inst, regs);
 
     UNREFERENCED(inst);
@@ -3262,6 +3250,9 @@ int     rc;                             /* return code from load_psw */
 
     /* Now INVALIDATE ALL TLB ENTRIES in our working copy.. */
     memset( &newregs.tlb.vaddr, 0, TLBN * sizeof(DW) );
+
+    /* Update the copy of the breaking event address register */
+    UPDATE_BEAR_A(&newregs);
 
     /* Save the primary ASN (CR4) and primary STD (CR1) */
     oldpasn = regs->CR_LHL(4);
@@ -3417,6 +3408,7 @@ int     rc;                             /* return code from load_psw */
     memcpy(regs->gr, newregs.gr, sizeof(newregs.gr));
     memcpy(regs->cr, newregs.cr, sizeof(newregs.cr));
     memcpy(regs->ar, newregs.ar, sizeof(newregs.ar));
+    regs->bear = newregs.bear;
 
     /* Set the main storage reference and change bits */
     STORAGE_KEY(alsed, regs) |= (STORKEY_REF | STORKEY_CHANGE);
@@ -3444,9 +3436,6 @@ int     rc;                             /* return code from load_psw */
         )
         ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
-
-    /* Update the breaking event address register */
-    UPDATE_BEAR(regs);
 
     /* Update cpu states */
     SET_IC_MASK(regs);
@@ -3726,6 +3715,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
 
+    /* Update the breaking event address register */
+    UPDATE_BEAR_A(regs);
+
     /* Replace PSW amode, instruction address, and problem state bit */
     regs->psw.amode = amode;
     regs->psw.IA = ia;
@@ -3739,9 +3731,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->psw.amode64 ? AMASK64 :
 #endif /*defined(FEATURE_ESAME)*/
         regs->psw.amode ? AMASK31 : AMASK24;
-
-    /* Update the breaking event address register */
-    UPDATE_BEAR(regs);
 
     /* AND control register 3 bits 0-15 with the supplied PKM value
        and replace the SASN in CR3 bits 16-31 with new PASN */
@@ -3790,8 +3779,6 @@ DEF_INST(program_transfer)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RRE(inst, regs, r1, r2);
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 0);
 
@@ -3811,8 +3798,6 @@ int     r1, r2;                         /* Values of R fields        */
     {
         ARCH_DEP(operation_exception)(inst,regs);
     }
-
-    SAVE_PSWIA_FOR_BEAR(regs);
 
     RRE(inst, regs, r1, r2);
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 1);

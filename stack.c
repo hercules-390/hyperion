@@ -321,6 +321,9 @@ int  i;
     /* Load the Trap Control Block Address in gr15 */
     regs->GR_L(15) = duct11 & DUCT11_TCBA;
 
+    /* Update the Breaking Event Address Register */
+    UPDATE_BEAR_A(regs);
+
     /* Set the Trap program address as a 31 bit instruction address */
 #if defined(FEATURE_ESAME)
     regs->psw.amode64 = 0;
@@ -328,7 +331,6 @@ int  i;
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
     regs->psw.IA = trap_ia;
-    UPDATE_BEAR(regs);
     VALIDATE_AIA(regs);
     /* set PSW to primary space */
     regs->psw.asc = 0;

@@ -1270,28 +1270,36 @@ do { \
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
 
 /* Macros for PER3 Breaking Event Address Recording */
-#undef SAVE_PSWIA_FOR_BEAR
-#undef UPDATE_BEAR
-#undef UPDATE_BEAR_FROM_PSWIA
+#undef UPDATE_BEAR_A
+#undef UPDATE_BEAR_C
+#undef UPDATE_BEAR_N
 #if defined(FEATURE_PER3)
- /* SAVE_PSWIA_FOR_BEAR is coded at the start of any instruction that
-    can initiate a breaking event (branch, load PSW). It saves the 
-    current PSW instruction address for later use by UPDATE_BEAR */
- #define SAVE_PSWIA_FOR_BEAR(_regs) {_regs->beia = _regs->psw.IA;}
- /* UPDATE_BEAR copies the address saved by SAVE_PSWIA_FOR_BEAR
-    into the Breaking Event Address Register */
- #define UPDATE_BEAR(_regs) {_regs->bear = _regs->beia;}
- /* UPDATE_BEAR_FROM_PSWIA copies the address PSW instruction address
-    directly into the Breaking Event Address Register. It is used in
-    place of SAVE_PSWIA_FOR_BEAR and UPDATE_BEAR in certain branch 
-    branch instructions which have been optimised to not increment
-    the PSW IA unless the branch is determined to be unsuccessful */ 
- #define UPDATE_BEAR_FROM_PSWIA(_regs) {_regs->bear = _regs->psw.IA;}
+ /* UPDATE_BEAR_A updates the Breaking Event Address Register
+    using the updated instruction address in the current PSW */
+ #define UPDATE_BEAR_A(_regs) {(_regs)->bear = \
+                (_regs)->psw.IA - REAL_ILC(_regs);}
+ /* UPDATE_BEAR_C updates the Breaking Event Address Register
+    using the updated instruction address in a copy of the PSW */
+ #define UPDATE_BEAR_C(_regs,_psw) {(_regs)->bear = \
+                _psw.IA - REAL_ILC(_regs);}
+ /* UPDATE_BEAR_N updates the Breaking Event Address Register
+    using the original instruction address in the current PSW
+    (not yet updated with the current instruction length).  If
+    the instruction is the target of an execute, we must add the
+    length of the target instruction (_len) and deduct the length
+    of the execute instruction (4) to arrive at the instruction
+    address, to account for the optimization performed by the
+    execute instruction. Otherwise the PSW contains the address
+    of the current instruction */
+ #define UPDATE_BEAR_N(_regs,_len) {(_regs)->bear = \
+                unlikely((_regs)->execflag) ? \
+                        (_regs)->psw.IA + (_len) - 4 : \
+                        (_regs)->psw.IA;}
 #else /*!defined(FEATURE_PER3)*/
  /* These macros do nothing if the PER3 facility is not installed. */
- #define SAVE_PSWIA_FOR_BEAR(_regs)
- #define UPDATE_BEAR(_regs)
- #define UPDATE_BEAR_FROM_PSWIA(_regs)
+ #define UPDATE_BEAR_A(_regs)
+ #define UPDATE_BEAR_C(_regs,_psw) 
+ #define UPDATE_BEAR_N(_regs,_len)
 #endif /*!defined(FEATURE_PER3)*/
 
 #define PERFORM_SERIALIZATION(_regs)

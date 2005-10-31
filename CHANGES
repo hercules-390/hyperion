@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+31 Oct 2005 PER3 Breaking Event Address Recording (BEAR) revised - Roger Bowler
 29 Oct 2005 Final(?) console fg/bg default/color highlighting issue fix - Fish
 29 Oct 2005 Fix STFLE SIE intercept - Jan Jaeger
 29 Oct 2005 Fix stdout redirection - Jan Jaeger

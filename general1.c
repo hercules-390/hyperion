@@ -371,8 +371,6 @@ DEF_INST(branch_and_link_register)
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RR(inst, regs, r1, r2);
 
     /* Compute the branch address from the R2 operand */
@@ -400,8 +398,8 @@ VADR    newia;                          /* New instruction address   */
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
     {
+        UPDATE_BEAR_A(regs);
         regs->psw.IA = newia;
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -426,8 +424,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Save the link information in the R1 operand */
@@ -442,8 +438,11 @@ VADR    effective_addr2;                /* Effective address         */
           : (REAL_ILC(regs) << 29)     | (regs->psw.cc << 28)
           | (regs->psw.progmask << 24) | (regs->psw.IA_L & ADDRESS_MAXWRAP(regs));
 
+    /* Update the breaking event address register */
+    UPDATE_BEAR_A(regs);
+
+    /* Update the PSW instruction address */
     regs->psw.IA = effective_addr2;
-    UPDATE_BEAR(regs);
     VALIDATE_AIA(regs);
 
 #if defined(FEATURE_PER)
@@ -465,8 +464,6 @@ DEF_INST(branch_and_save_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
-
-    SAVE_PSWIA_FOR_BEAR(regs);
 
     RR(inst, regs, r1, r2);
 
@@ -494,8 +491,8 @@ VADR    newia;                          /* New instruction address   */
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
     {
+        UPDATE_BEAR_A(regs);
         regs->psw.IA = newia;
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -520,8 +517,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Save the link information in the R1 register */
@@ -535,8 +530,11 @@ VADR    effective_addr2;                /* Effective address         */
     else
         regs->GR_L(r1) = regs->psw.IA_LA24;
 
+    /* Update the breaking event address register */
+    UPDATE_BEAR_A(regs);
+
+    /* Update the PSW instruction address */
     regs->psw.IA = effective_addr2;
-    UPDATE_BEAR(regs);
     VALIDATE_AIA(regs);
 
 #if defined(FEATURE_PER)
@@ -560,8 +558,6 @@ DEF_INST(branch_and_save_and_set_mode)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
-
-    SAVE_PSWIA_FOR_BEAR(regs);
 
     RR(inst, regs, r1, r2);
 
@@ -595,6 +591,7 @@ VADR    newia;                          /* New instruction address   */
     /* Set mode and branch to address specified by R2 operand */
     if ( r2 != 0 )
     {
+        UPDATE_BEAR_A(regs);
 #if defined(FEATURE_ESAME)
         if ( newia & 1)
         {
@@ -622,7 +619,6 @@ VADR    newia;                          /* New instruction address   */
             regs->psw.AMASK = AMASK24;
             regs->psw.IA = newia & 0x00FFFFFF;
         }
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 
 #if defined(FEATURE_PER)
@@ -649,8 +645,6 @@ DEF_INST(branch_and_set_mode)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
-
-    SAVE_PSWIA_FOR_BEAR(regs);
 
     RR(inst, regs, r1, r2);
 
@@ -683,6 +677,7 @@ VADR    newia;                          /* New instruction address   */
     /* Set mode and branch to address specified by R2 operand */
     if ( r2 != 0 )
     {
+        UPDATE_BEAR_A(regs);
 #if defined(FEATURE_ESAME)
         if ( newia & 1)
         {
@@ -710,7 +705,6 @@ VADR    newia;                          /* New instruction address   */
             regs->psw.AMASK = AMASK24;
             regs->psw.IA = newia & 0x00FFFFFF;
         }
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 
 #if defined(FEATURE_PER)
@@ -740,7 +734,7 @@ DEF_INST(branch_on_condition_register)
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & (0x80 >> regs->psw.cc)) && (inst[1] & 0x0F) != 0)
     {
-        UPDATE_BEAR_FROM_PSWIA(regs);
+        UPDATE_BEAR_N(regs, 2);
         regs->psw.IA = regs->GR(inst[1] & 0x0F) & ADDRESS_MAXWRAP(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
@@ -779,7 +773,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
     {
-        UPDATE_BEAR_FROM_PSWIA(regs);
+        UPDATE_BEAR_N(regs, 4);
         RX_BC(inst, regs, b2, effective_addr2);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
@@ -804,19 +798,19 @@ DEF_INST(branch_on_count_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RR(inst, regs, r1, r2);
 
     /* Subtract 1 from the R1 operand and branch if result
            is non-zero and R2 operand is not register zero */
     if ( --(regs->GR_L(r1)) && r2 != 0 )
     {
+        /* Update the breaking event address register */
+        UPDATE_BEAR_A(regs);
+
         /* Compute the branch address from the R2 operand */
         regs->psw.IA = regs->GR(r2);
         if (unlikely(r1 == r2)) regs->psw.IA++;
         regs->psw.IA &= ADDRESS_MAXWRAP(regs);
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -841,15 +835,13 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
     {
+        UPDATE_BEAR_A(regs);
         regs->psw.IA = effective_addr2;
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -875,8 +867,6 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S32     i, j;                           /* Integer work areas        */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Load the increment value from the R3 register */
@@ -891,8 +881,8 @@ S32     i, j;                           /* Integer work areas        */
     /* Branch if result compares high */
     if ( (S32)regs->GR_L(r1) > j )
     {
+        UPDATE_BEAR_A(regs);
         regs->psw.IA = effective_addr2;
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -918,8 +908,6 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S32     i, j;                           /* Integer work areas        */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Load the increment value from the R3 register */
@@ -934,8 +922,8 @@ S32     i, j;                           /* Integer work areas        */
     /* Branch if result compares low or equal */
     if ( (S32)regs->GR_L(r1) <= j )
     {
+        UPDATE_BEAR_A(regs);
         regs->psw.IA = effective_addr2;
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -966,7 +954,7 @@ DEF_INST(branch_relative_on_condition)
     /* Branch if R1 mask bit is set */
     if (inst[1] & (0x80 >> regs->psw.cc))
     {
-        UPDATE_BEAR_FROM_PSWIA(regs);
+        UPDATE_BEAR_N(regs, 4);
         /* Calculate the relative branch address */
         regs->psw.IA = (likely(!regs->execflag) ? regs->psw.IA: regs->ET)
                      + 2*(S16)(fetch_fw(inst) & 0xFFFF);
@@ -998,8 +986,6 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RI(inst, regs, r1, opcd, i2);
 
     /* Save the link information in the R1 operand */
@@ -1013,10 +999,12 @@ U16     i2;                             /* 16-bit operand values     */
     else
         regs->GR_L(r1) = regs->psw.IA_LA24;
 
+    /* Update the breaking event address register */
+    UPDATE_BEAR_A(regs);
+
     /* Calculate the relative branch address */
     regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
-    UPDATE_BEAR(regs);
     VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -1042,16 +1030,14 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RI(inst, regs, r1, opcd, i2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
     {
+        UPDATE_BEAR_A(regs);
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -1078,8 +1064,6 @@ int     r1, r3;                         /* Register numbers          */
 U16     i2;                             /* 16-bit operand            */
 S32     i,j;                            /* Integer workareas         */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RI(inst, regs, r1, r3, i2);
 
     /* Load the increment value from the R3 register */
@@ -1094,9 +1078,9 @@ S32     i,j;                            /* Integer workareas         */
     /* Branch if result compares high */
     if ( (S32)regs->GR_L(r1) > j )
     {
+        UPDATE_BEAR_A(regs);
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -1123,8 +1107,6 @@ int     r1, r3;                         /* Register numbers          */
 U16     i2;                             /* 16-bit operand            */
 S32     i,j;                            /* Integer workareas         */
 
-    SAVE_PSWIA_FOR_BEAR(regs);
-
     RI(inst, regs, r1, r3, i2);
 
     /* Load the increment value from the R3 register */
@@ -1139,9 +1121,9 @@ S32     i,j;                            /* Integer workareas         */
     /* Branch if result compares low or equal */
     if ( (S32)regs->GR_L(r1) <= j )
     {
+        UPDATE_BEAR_A(regs);
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
-        UPDATE_BEAR(regs);
         VALIDATE_AIA(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
