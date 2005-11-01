@@ -1985,7 +1985,7 @@ int     amode64;
     */
     /* Clear the high word of the address mask since
        the 's390_load_psw' function didn't do that for us */
-    regs->psw.amask.F.H.F=0; /* ISW FIXME - Should have a AMASK_H symbol for that */
+    regs->psw.AMASK_H=0;
     if((regs->psw.amode64 = amode64))
     {
         regs->psw.AMASK = AMASK64;

@@ -93,6 +93,7 @@ typedef struct  _PSW {
 
 #define AMASK_G  amask.D
 #define AMASK_L  amask.F.L.F
+#define AMASK_H  amask.F.H.F
 #define AMASK24  0x00FFFFFF
 #define AMASK31  0x7FFFFFFF
 #define AMASK64  0xFFFFFFFFFFFFFFFFULL
