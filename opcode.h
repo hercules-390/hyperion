@@ -305,8 +305,6 @@ do { \
 do { \
     FOOTPRINT ((_regs)); \
     COUNT_INST ((_inst), (_regs)); \
-    if (((_regs)->GR_G(2)) == 0xffffffff00b7b000ULL) \
-    ARCH_DEP(display_inst)((_regs),(_inst)); \
     ARCH_DEP(opcode_table)[_inst[0]]((_inst), (_regs)); \
 } while(0)
 
