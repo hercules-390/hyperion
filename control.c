@@ -5223,7 +5223,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     RETURN_INTCHECK(regs);
 
-}
+} /* end DEF_INST(set_system_mask) */
 
 
 /*-------------------------------------------------------------------*/
@@ -6386,7 +6386,7 @@ VADR    effective_addr1;                /* Effective address         */
 
     RETURN_INTCHECK(regs);
 
-}
+} /* end DEF_INST(store_then_and_system_mask) */
 
 
 /*-------------------------------------------------------------------*/
@@ -6440,7 +6440,8 @@ VADR    effective_addr1;                /* Effective address         */
 
     RETURN_INTCHECK(regs);
 
-}
+} /* end DEF_INST(store_then_or_system_mask) */
+
 
 /*-------------------------------------------------------------------*/
 /* B246 STURA - Store Using Real Address                       [RRE] */
@@ -6473,7 +6474,7 @@ RADR    n;                              /* Unsigned work             */
     }
 #endif /*defined(FEATURE_PER2)*/
 
-}
+} /* end DEF_INST(store_using_real_address) */
 
 
 #if defined(FEATURE_ACCESS_REGISTERS)
