@@ -709,7 +709,7 @@ static __inline__ void concpy ( void *_dest, void *_src, size_t n )
     }
 
     /* copy to dest double-word boundary */
-    n2 = 8 - ((int)dest & 7);
+    n2 = 8 - ((long)dest & 7);
     if (n2 < 8)
     {
         n -= n2;
@@ -721,7 +721,7 @@ static __inline__ void concpy ( void *_dest, void *_src, size_t n )
     {
 #if defined(ASSIST_CMPXCHG8)
         /* copy unaligned double-words */
-        if ((int)src & 7)
+        if ((long)src & 7)
             do {
                 U64 temp;
                 memcpy(&temp, src, 8);
