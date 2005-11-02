@@ -788,7 +788,7 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(FEATURE_PER)*/
     } else
         INST_UPDATE_PSW(regs, 4);
-} /* end DEF_INST(branch_on_condition)
+} /* end DEF_INST(branch_on_condition) */
 
 
 /*-------------------------------------------------------------------*/
