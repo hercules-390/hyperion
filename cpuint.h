@@ -5,29 +5,30 @@
  Floating interrupts are made pending to all CPUs, and are 
  recorded in the sysblk structure, CPU specific interrupts
  are recorded in the regs structure.
- hi0m mmmm pppp p000 xxxx xxx0 xxxx hhhs : type U32
- || | |||| |||| |--- |||| |||- |||| ||||   h:mask  is always '1'
- || | |||| |||| |    |||| |||  |||| ||||   s:state is always '1'
- || | |||| |||| |    |||| |||  |||| |||+--> '1' : PSW_WAIT
- || | |||| |||| |    |||| |||  |||| ||+---> '1' : RESTART
- || | |||| |||| |    |||| |||  |||| |+----> '1' : BROADCAST
- || | |||| |||| |    |||| |||  |||| +-----> '1' : STORSTAT
- || | |||| |||| |    |||| |||  ||||
- || | |||| |||| |    |||| |||  |||+-------> '1' : ETR
- || | |||| |||| |    |||| |||  ||+--------> '1' : EXTSIG
- || | |||| |||| |    |||| |||  |+---------> '1' : INTKEY
- || | |||| |||| |    |||| |||  +----------> '1' : ITIMER
- || | |||| |||| |    |||| |||
- || | |||| |||| |    |||| |||
- || | |||| |||| |    |||| ||+-------------> '1' : SERVSIG
- || | |||| |||| |    |||| |+--------------> '1' : PTIMER
- || | |||| |||| |    |||| +---------------> '1' : CLKC
- || | |||| |||| |    |||| 
- || | |||| |||| |    |||+-----------------> '1' : TODSYNC
- || | |||| |||| |    ||+------------------> '1' : EXTCALL
- || | |||| |||| |    |+-------------------> '1' : EMERSIG
- || | |||| |||| |    +--------------------> '1' : MALFALT
- || | |||| |||| |
+ hi0m mmmm pppp p00p xxxx xxx0 xxxx hhhs : type U32
+ || | |||| |||| |--| |||| |||- |||| ||||   h:mask  is always '1'
+ || | |||| |||| |  | |||| |||  |||| ||||   s:state is always '1'
+ || | |||| |||| |  | |||| |||  |||| |||+--> '1' : PSW_WAIT
+ || | |||| |||| |  | |||| |||  |||| ||+---> '1' : RESTART
+ || | |||| |||| |  | |||| |||  |||| |+----> '1' : BROADCAST
+ || | |||| |||| |  | |||| |||  |||| +-----> '1' : STORSTAT
+ || | |||| |||| |  | |||| |||  ||||
+ || | |||| |||| |  | |||| |||  |||+-------> '1' : ETR
+ || | |||| |||| |  | |||| |||  ||+--------> '1' : EXTSIG
+ || | |||| |||| |  | |||| |||  |+---------> '1' : INTKEY
+ || | |||| |||| |  | |||| |||  +----------> '1' : ITIMER
+ || | |||| |||| |  | |||| |||
+ || | |||| |||| |  | |||| |||
+ || | |||| |||| |  | |||| ||+-------------> '1' : SERVSIG
+ || | |||| |||| |  | |||| |+--------------> '1' : PTIMER
+ || | |||| |||| |  | |||| +---------------> '1' : CLKC
+ || | |||| |||| |  | |||| 
+ || | |||| |||| |  | |||+-----------------> '1' : TODSYNC
+ || | |||| |||| |  | ||+------------------> '1' : EXTCALL
+ || | |||| |||| |  | |+-------------------> '1' : EMERSIG
+ || | |||| |||| |  | +--------------------> '1' : MALFALT
+ || | |||| |||| |  |
+ || | |||| |||| |  +----------------------> '1' : PER IFNUL
  || | |||| |||| |    
  || | |||| |||| |    
  || | |||| |||| +-------------------------> '1' : PER STURA
@@ -60,7 +61,7 @@
 // the predominant host architecture platform for Hercules)
 
 #ifndef    BIT
-  #define  BIT(nr)  ( 1 << (nr) )	  // (bit# counting from the right)
+  #define  BIT(nr)  ( 1 << (nr) )         // (bit# counting from the right)
 #endif
 
 /* Interrupt bit numbers */
@@ -79,7 +80,7 @@
 #define IC_PER_STURA       19 /* 0x00080000 - Architecture dependent (CR9 >> 8) */
 #define IC_UNUSED_18       18 /* 0x00040000 */
 #define IC_UNUSED_17       17 /* 0x00020000 */
-#define IC_UNUSED_16       16 /* 0x00010000 */
+#define IC_PER_IFNUL       16 /* 0x00010000 - Architecture dependent (CR9 >> 8) */
 #define IC_MALFALT         15 /* 0x00008000 - Architecture dependent (CR0) */
 #define IC_EMERSIG         14 /* 0x00004000 - Architecture dependent (CR0) */
 #define IC_EXTCALL         13 /* 0x00002000 - Architecture dependent (CR0) */
@@ -144,6 +145,7 @@
                          | BIT(IC_PER_SA) \
                          | BIT(IC_PER_GRA) \
                          | BIT(IC_PER_STURA) \
+                         | BIT(IC_PER_IFNUL) \
                          )
 
 /* SIE & Assist supported events */
@@ -417,6 +419,12 @@
      (_regs)->ints_state |= BIT(IC_PER_STURA); \
  } while (0)
 
+#define ON_IC_PER_IFNUL(_regs) \
+ do { \
+   if ( (_regs)->ints_mask & BIT(IC_PER_IFNUL) ) \
+     (_regs)->ints_state |= BIT(IC_PER_IFNUL); \
+ } while (0)
+
 
   /* * * * * * * * * * * * * *
    * Set state bit to '0'    *
@@ -558,6 +566,11 @@
    (_regs)->ints_state &= ~BIT(IC_PER_STURA); \
  } while (0)
 
+#define OFF_IC_PER_IFNUL(_regs) \
+ do { \
+   (_regs)->ints_state &= ~BIT(IC_PER_IFNUL); \
+ } while (0)
+
 
   /* * * * * * * * * * * * * *
    * Test interrupt state    *
@@ -584,6 +597,7 @@
 #define IS_IC_PER_SA(_regs)     ( (_regs)->ints_state & BIT(IC_PER_SA)    )
 #define IS_IC_PER_GRA(_regs)    ( (_regs)->ints_state & BIT(IC_PER_GRA)   )
 #define IS_IC_PER_STURA(_regs)  ( (_regs)->ints_state & BIT(IC_PER_STURA) )
+#define IS_IC_PER_IFNUL(_regs)  ( (_regs)->ints_state & BIT(IC_PER_IFNUL) )
 
 
   /* * * * * * * * * * * * * *
@@ -604,6 +618,7 @@
 #define EN_IC_PER_SA(_regs)     ( EN_IC_PER(_regs) && ((_regs)->ints_mask & BIT(IC_PER_SA))    )
 #define EN_IC_PER_GRA(_regs)    ( EN_IC_PER(_regs) && ((_regs)->ints_mask & BIT(IC_PER_GRA))   )
 #define EN_IC_PER_STURA(_regs)  ( EN_IC_PER(_regs) && ((_regs)->ints_mask & BIT(IC_PER_STURA)) )
+#define EN_IC_PER_IFNUL(_regs)  ( EN_IC_PER(_regs) && ((_regs)->ints_mask & BIT(IC_PER_IFNUL)) )
 
 
   /* * * * * * * * * * * * * * * * * * * * * * * * *

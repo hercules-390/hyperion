@@ -629,9 +629,23 @@ int     len = 0;                        /* Lengths for page crossing */
         if(!regs->instvalid)
             regs->peradr = addr;
 
+        /* Test for PER instruction-fetching event */
         if( EN_IC_PER_IF(regs)
           && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
+        {
             ON_IC_PER_IF(regs);
+      #if defined(FEATURE_PER3)
+            /* If CR9_IFNUL (PER instruction-fetching nullification) is
+               set, take a program check immediately, without executing
+               the instruction or updating the PSW instruction address */
+            if ( EN_IC_PER_IFNUL(regs) )
+            {
+                ON_IC_PER_IFNUL(regs);
+                regs->psw.zeroilc = 1;
+                ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
+            }
+      #endif /*defined(FEATURE_PER3)*/
+        }
     }
 #endif /*defined(FEATURE_PER)*/
 
