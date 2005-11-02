@@ -230,7 +230,16 @@ int     icode = 0;                      /* Interception code         */
 
     SIE_PERFMON(SIE_PERF_ENTER);
 
-    if(!regs->psw.amode || !PRIMARY_SPACE_MODE(&(regs->psw)))
+    /*
+     * FIXME : Also allow SIE when host is in 
+     *         HOME SPACE Mode (PSW Bits 16 & 17 set to 1)
+     *         This needs to be validated vs architecture specs
+     *         - ISW -
+    */
+
+    if(!regs->psw.amode 
+            || ! (PRIMARY_SPACE_MODE(&(regs->psw)) 
+                || HOME_SPACE_MODE(&(regs->psw))))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     if((effective_addr2 & (sizeof(SIEBK)-1)) != 0
