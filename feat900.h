@@ -62,7 +62,7 @@
 #define FEATURE_PERFORM_LOCKED_OPERATION
 #define FEATURE_PER
 #define FEATURE_PER2
-//#define FEATURE_PER3                                             /*@Z9*/
+#define FEATURE_PER3                                             /*@Z9*/
 #define FEATURE_PRIVATE_SPACE
 #define FEATURE_PROTECTION_INTERCEPTION_CONTROL
 #define FEATURE_QUEUED_DIRECT_IO
