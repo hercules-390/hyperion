@@ -139,12 +139,12 @@ endif
 # List of Libtool shared libraries & loadable modules
 #
 
-  HERCLIBS = $(LIBFTHREADS)
+  HERCLIBS = $(LIBFTHREADS) \
+              libhercu.la \
+              libherct.la \
+              libhercd.la
 
   HERCLIBS2 = libhercs.la  \
-              libhercu.la \
-              libhercd.la \
-              libherct.la \
               libherc.la
 
   HERCMODS = dyngui.la   \
