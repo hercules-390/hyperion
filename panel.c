@@ -210,22 +210,26 @@ static void PaintButton
 static
 void NP_screen()
 {
-
+    /*
+      PROGRAMMING NOTE: It was decided that "New Panel" screens
+      should ALWAYS be grey/black REGARDLESS of what the user's
+      default bg/fg term colors are set to.
+    */
     DEVBLK *dev;
     char *devclass;
     int p, a;
     char c[2];
     char devnam[128];
 
-    set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
     clear_screen( confp );
 
-    set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_BLUE );
+    set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
 
     set_screen_pos( confp,  1,  1 ); fprintf( confp, " Hercules   CPU              %7.7s ", get_arch_mode_string(NULL));
     set_screen_pos( confp,  1, 38 ); fprintf( confp, "|             Peripherals                  ");
 
-    set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
 
     set_screen_pos( confp,  2, 39 ); fprintf( confp, " # Addr Modl Type Assignment            " );
     set_screen_pos( confp,  4,  9 ); fprintf( confp, "PSW"                                      );
@@ -269,7 +273,7 @@ void NP_screen()
 
     NPlastdev = a;
 
-    set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
+    set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
 
     for (p = 2; p < 25; p++) {
         set_screen_pos( confp, p, 38 );
@@ -280,7 +284,7 @@ void NP_screen()
     set_screen_pos( confp, 24,  1 ); fprintf( confp, "-------------------------------------"      );
     set_screen_pos( confp, 24, 39 ); fprintf( confp, "------------------------------------------" );
 
-    set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG );
+    set_screen_color( confp, COLOR_WHITE, COLOR_BLACK );
 
     set_screen_pos( confp, 14,  6 ); fprintf( confp, "G" );
     set_screen_pos( confp, 14, 14 ); fprintf( confp, "C" );
@@ -324,6 +328,11 @@ void NP_screen()
 static
 void NP_update()
 {
+    /*
+      PROGRAMMING NOTE: It was decided that "New Panel" screens
+      should ALWAYS be grey/black REGARDLESS of what the user's
+      default bg/fg term colors are set to.
+    */
     int s, i, r, c;
     int online, busy, pend, open;
     QWORD curpsw;
@@ -347,7 +356,7 @@ void NP_update()
              NPhelpup = 0;
              NPhelpdown = 0;
         } else {
-        set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
+        set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
         clear_screen( confp );
         set_screen_pos( confp, 1, 1 );
         fprintf(confp, "All commands consist of one character keypresses.  The various commands are\n");
@@ -382,7 +391,7 @@ void NP_update()
     if (!regs) regs = &sysblk.dummyregs;
 
 #if defined(OPTION_MIPS_COUNTING)
-    set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_BLUE );
+    set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
     set_screen_pos( confp, 1, 16 );
     fprintf(confp, "%4.4X:",regs->cpuad);
     set_screen_pos( confp, 1, 22 );
@@ -407,7 +416,7 @@ void NP_update()
             curpsw[7] |= 0x01;
     }
     pswwait = curpsw[1] & 0x02;
-    set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
+    set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
     set_screen_pos( confp, 3, 2 );
     fprintf (confp, "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X",
                     curpsw[0], curpsw[1], curpsw[2], curpsw[3],
@@ -488,7 +497,7 @@ void NP_update()
         }
     }
     set_screen_pos( confp, 19, 2 );
-    set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
+    set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
 #ifdef OPTION_MIPS_COUNTING
     fprintf(confp, "%2.1d.%2.2d  %5d",
             sysblk.mipsrate / 1000000, (sysblk.mipsrate % 1000000) / 10000,
@@ -501,19 +510,19 @@ void NP_update()
         (unsigned)regs->instcount);
 #endif
     if (NPaddress != NPcuraddr) {
-        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
+        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
         set_screen_pos( confp, 16, 11 );
         fprintf(confp, "%8.8X", NPaddress);
         NPcuraddr = NPaddress;
     }
     if (NPdata != NPcurdata) {
-        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
+        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
         set_screen_pos( confp, 16, 29 );
         fprintf(confp, "%8.8X", NPdata);
         NPcurdata = NPdata;
     }
     if (NPregdisp != NPcurrg) {
-        set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG );
+        set_screen_color( confp, COLOR_WHITE, COLOR_BLACK );
         switch (NPcurrg) {
             case 0: set_screen_pos( confp, 14,  6 ); fprintf(confp, "G" ); break;
             case 1: set_screen_pos( confp, 14, 14 ); fprintf(confp, "C" ); break;
@@ -522,7 +531,7 @@ void NP_update()
             default: break;
         }
         NPcurrg = NPregdisp;
-        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
+        set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
         switch (NPregdisp) {
             case 0: set_screen_pos( confp, 14,  6 ); fprintf(confp, "G" ); break;
             case 1: set_screen_pos( confp, 14, 14 ); fprintf(confp, "C" ); break;
@@ -548,9 +557,9 @@ void NP_update()
               ch[0] = a | 0x40;
               ch[1] = '\0';
               if (online) {
-                  set_screen_color( confp, COLOR_LIGHT_GREEN, COLOR_DEFAULT_BG );
+                  set_screen_color( confp, COLOR_LIGHT_GREEN, COLOR_BLACK );
               } else {
-                  set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
+                  set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
               }
               fprintf(confp, "%s", ch);
               NPonline[a - 1] = online;
@@ -558,9 +567,9 @@ void NP_update()
          if (busy != NPbusy[a - 1] || pend != NPpend[a - 1]) {
               set_screen_pos( confp, p, 42 );
               if (busy | pend) {
-                  set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_DEFAULT_BG );
+                  set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
               } else {
-                  set_screen_color( confp, COLOR_DEFAULT_FG,   COLOR_DEFAULT_BG );
+                  set_screen_color( confp, COLOR_LIGHT_GREY,   COLOR_BLACK );
               }
               fprintf(confp, "%4.4X", dev->devnum);
               NPbusy[a - 1] = busy;
@@ -569,16 +578,16 @@ void NP_update()
          if (open != NPopen[a - 1]) {
               set_screen_pos( confp, p, 47 );
               if (open) {
-                  set_screen_color( confp, COLOR_LIGHT_GREEN, COLOR_DEFAULT_BG );
+                  set_screen_color( confp, COLOR_LIGHT_GREEN, COLOR_BLACK );
               } else {
-                  set_screen_color( confp, COLOR_DEFAULT_FG,  COLOR_DEFAULT_BG );
+                  set_screen_color( confp, COLOR_LIGHT_GREY,  COLOR_BLACK );
               }
               fprintf(confp, "%4.4X", dev->devtype);
               NPopen[a - 1] = open;
          }
          (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
          if (strcmp(NPdevname[a - 1], devnam) != 0) {
-             set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
+             set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
              set_screen_pos( confp, p, 57 );
              fprintf(confp, "%.24s", devnam);
              erase_to_eol( confp );
@@ -593,10 +602,10 @@ void NP_update()
         if (strlen(NPprompt1) > 0) {
             s = 2 + ((38 - strlen(NPprompt1)) / 2);
             set_screen_pos( confp, 24, s );
-            set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_BLUE );
+            set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
             fprintf(confp, NPprompt1);
         } else {
-            set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
+            set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
             set_screen_pos( confp, 24, 1 );
             fprintf(confp, "-------------------------------------");
         }
@@ -606,10 +615,10 @@ void NP_update()
         if (strlen(NPprompt2) > 0) {
             s = 42 + ((38 - strlen(NPprompt2)) / 2);
             set_screen_pos( confp, 24, s );
-            set_screen_color( confp, COLOR_DEFAULT_LIGHT, COLOR_BLUE );
+            set_screen_color( confp, COLOR_WHITE, COLOR_BLUE );
             fprintf(confp, NPprompt2);
         } else {
-            set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
+            set_screen_color( confp, COLOR_LIGHT_GREY, COLOR_BLACK );
             set_screen_pos( confp, 24, 39 );
             fprintf(confp, "------------------------------------------");
         }
@@ -790,6 +799,12 @@ int     kblen;                          /* Number of chars in kbbuf  */
     set_or_reset_console_mode( keybfd, 1 );
 
     /* Clear the screen */
+    /*
+      PROGRAMMING NOTE: It was decided the default panel screen
+      *should* honor the user's specified bg/fg colors settings
+      (but not on the "New Panel" screens though; see Programming
+      Notes in the "NP_xxx" functions)
+    */
     set_screen_color( confp, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
     clear_screen( confp );
 

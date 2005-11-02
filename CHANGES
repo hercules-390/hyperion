@@ -1,6 +1,9 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+01 Nov 2005 It was decided the "New Panel" screens should ALWAYS be grey/black
+            REGARDLESS of what the user's default bg/fg term colors are set to;
+            only the default startup panel should honor the user's settings.
 01 Nov 2005 Clear high portion of Address Mask in ESAME LPSW - Ivan Warren
 31 Oct 2005 PER3 Breaking Event Address Recording (BEAR) revised - Roger Bowler
 29 Oct 2005 Final(?) console fg/bg default/color highlighting issue fix - Fish
