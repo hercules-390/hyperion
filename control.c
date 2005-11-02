@@ -1978,14 +1978,15 @@ int     amode64;
     */
     regs->psw.states &= ~BIT(PSW_NOTESAME_BIT);
 
+    /* Clear the high word of the address mask since
+       the 's390_load_psw' function didn't do that for us */
+    regs->psw.AMASK_H=0;
+
     /* Restore the amode64 flag setting and set the actual correct
        AMASK value according to it (if we need to) since we had to
        force non-amode64 further above to get the 's390_load_psw'
        function to work right without erroneously program-checking.
     */
-    /* Clear the high word of the address mask since
-       the 's390_load_psw' function didn't do that for us */
-    regs->psw.AMASK_H=0;
     if((regs->psw.amode64 = amode64))
     {
         regs->psw.AMASK = AMASK64;
