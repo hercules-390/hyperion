@@ -260,8 +260,6 @@ AH_TEMPLATE( [_INTL_REDIRECT_MACROS],   [Define to 1 if non-Intel architecture (
 AH_TEMPLATE( [CCKD_BZIP2],              [Define to enable bzip2 compression in emulated DASDs] )
 AH_TEMPLATE( [HET_BZIP2],               [Define to enable bzip2 compression in emulated tapes] )
 
-AH_TEMPLATE( [GCRYPT_OPENFORMAT],       [Semantic to use for gcry_cipher_open function] )
-
 ###############################################################################
 #   OS-specific settings that we can't figure out any other way (yet)
 ###############################################################################
@@ -515,8 +513,6 @@ AC_CHECK_LIB( z,      uncompress     )
 AC_CHECK_LIB( bz2,    BZ2_bzBuffToBuffDecompress,
             [ hc_cv_have_libbz2=yes ],
             [ hc_cv_have_libbz2=no  ] )
-
-AM_PATH_LIBGCRYPT( "1.1.90", [hc_cv_have_gcrypt=yes], [hc_cv_have_gcrypt=no] )
 
 AC_CACHE_SAVE()
 
@@ -858,61 +854,6 @@ if test "$GCC" = "yes"; then
     )
 else
     hc_cv_builtin_alloca_broke=no
-fi
-
-#-----------------------------------------------------#
-#  Check whether gcry_cipher_open takes 3 or 4 args   #
-#-----------------------------------------------------#
-
-hc_cv_num_gcrypt_args=0
-
-if test "$hc_cv_have_gcrypt" = "yes" ; then
-
-    AC_MSG_CHECKING( [whether gcry_cipher_open takes 3 or 4 args] )
-
-    hc_temp="$CFLAGS"
-    CFLAGS="$CFLAGS $GCRYPT_CFLAGS"
-
-    AC_COMPILE_IFELSE(
-        [
-            #include <gcrypt.h>
-            int main()
-            {
-              GCRY_CIPHER_HD hd;
-              hd = gcry_cipher_open(0,0,0);
-              return 0;
-            }
-        ],
-        [
-            hc_cv_num_gcrypt_args=3
-        ],
-        AC_COMPILE_IFELSE(
-            [
-                #include <gcrypt.h>
-                int main()
-                {
-                  gcry_cipher_hd_t hd;
-                  gcry_cipher_open(&hd,0,0,0);
-                  return 0;
-                }
-            ],
-            [
-                hc_cv_num_gcrypt_args=4
-            ]
-        )
-    )
-
-    CFLAGS="$hc_temp"
-
-    case "$hc_cv_num_gcrypt_args" in
-
-        3|4)
-            AC_MSG_RESULT( [$hc_cv_num_gcrypt_args] )
-            ;;
-        *)
-            AC_MSG_RESULT( [unknown] )
-            ;;
-    esac
 fi
 
 #------------------------------------------------------------#
@@ -1543,7 +1484,6 @@ AC_DEFINE_UNQUOTED( [MODULESDIR],        "${MODULESDIR}"                )
 AC_DEFINE_UNQUOTED( [PKGDATADIR],        "${PKGDATADIR}"                )
 AC_DEFINE_UNQUOTED( [HERC_LOCALEDIR],    "${HERC_LOCALEDIR}"            )
 AC_DEFINE_UNQUOTED( [MAX_CPU_ENGINES],    ${hc_cv_opt_num_cpu_engines}  )
-AC_DEFINE_UNQUOTED( [GCRYPT_OPENFORMAT],  ${hc_cv_num_gcrypt_args}      )
 
 AC_CACHE_SAVE()
 
@@ -1676,7 +1616,6 @@ AM_CONDITIONAL( BUILD_FTHREADS,      [ test "$hc_cv_opt_fthreads"     = "yes" ] 
 AM_CONDITIONAL( BUILD_FISHHANG,      [ test "$hc_cv_opt_fishhang"     = "yes" ] )
 AM_CONDITIONAL( BUILD_HERCIFC,       [ test "$hc_cv_build_hercifc"    = "yes" ] )
 AM_CONDITIONAL( SETUID_HERCIFC,      [ test "$hc_cv_setuid_hercifc"   = "yes" ] )
-AM_CONDITIONAL( HAVE_GCRYPT,         [ test "$hc_cv_have_gcrypt"      = "yes" ] )
 
 #  Building of shared libraries is forced, and we force use of libtool too.
 

@@ -1,5 +1,6 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
+01 Nov 2005 hercules no longer depends on libgcrypt - Ivan Warren
 01 Nov 2005 Reinstate libhercu/t/d as shlibs/dlls - Ivan Warren
 01 Nov 2005 Allow SIE to be issued from HOME SPACE Mode host - Ivan Warren
 01 Nov 2005 It was decided the "New Panel" screens should ALWAYS be grey/black
