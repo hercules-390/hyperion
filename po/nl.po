@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-28 16:00+0200\n"
+"POT-Creation-Date: 2005-11-02 15:08+0100\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -293,7 +293,7 @@ msgid "HHCCD001I Readahead thread %d started: tid="
 msgstr "HHCCP012I Timer thread gestart: tid=%p, pid=%d\n"
 
 #: cckddasd.c:1498 cckddasd.c:1548 cckddasd.c:1688 cckddasd.c:1810
-#: cckddasd.c:4333 console.c:1548 cpu.c:1132 httpserv.c:863 panel.c:729
+#: cckddasd.c:4333 console.c:1548 cpu.c:1132 httpserv.c:863 panel.c:754
 #: shared.c:2500 shared.c:2701 sockdev.c:407
 #, c-format
 msgid ", pid=%d\n"
@@ -1486,11 +1486,11 @@ msgid "HHCCP015I CPU%4.4X PER event: code=%4.4X perc=%2.2X addr="
 msgstr ""
 
 #: cpu.c:640 ecpsvm.c:409 ecpsvm.c:1195 ecpsvm.c:1200 sie.c:251 sie.c:381
-#: stack.c:390 stack.c:413 stack.c:475 stack.c:493 stack.c:501 stack.c:525
-#: stack.c:548 stack.c:601 stack.c:679 stack.c:707 stack.c:734 stack.c:762
-#: stack.c:774 stack.c:785 stack.c:839 stack.c:863 stack.c:1118 stack.c:1144
-#: stack.c:1152 stack.c:1190 stack.c:1285 stack.c:1321 stack.c:1366
-#: stack.c:1401
+#: stack.c:392 stack.c:415 stack.c:477 stack.c:495 stack.c:503 stack.c:527
+#: stack.c:550 stack.c:603 stack.c:681 stack.c:709 stack.c:736 stack.c:764
+#: stack.c:776 stack.c:787 stack.c:841 stack.c:865 stack.c:1120 stack.c:1146
+#: stack.c:1154 stack.c:1192 stack.c:1287 stack.c:1323 stack.c:1368
+#: stack.c:1403
 msgid "\n"
 msgstr ""
 
@@ -3492,7 +3492,7 @@ msgstr ""
 msgid "HHCDA903E %4.4x FBA blksiz mismatch: %d, expected %d,\n"
 msgstr ""
 
-#: general1.c:3676
+#: general1.c:3686
 msgid "MVCL destructive overlap: "
 msgstr ""
 
@@ -5181,7 +5181,7 @@ msgstr ""
 msgid "HHCCP034W load_main: terminated at end of mainstor\n"
 msgstr ""
 
-#: logger.c:164 logger.c:333
+#: logger.c:164 logger.c:343
 msgid "HHCLG014I logger thread terminating\n"
 msgstr ""
 
@@ -5190,66 +5190,71 @@ msgstr ""
 msgid "HHCLG003E Error writing hardcopy log: %s\n"
 msgstr "HHCLG003E Fout %s bij schrijven naar systeem log\n"
 
-#: logger.c:265
+#: logger.c:236
+#, fuzzy, c-format
+msgid "HHCLG001E Error redirecting stdout: %s\n"
+msgstr "HHCPU004E Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: logger.c:275
 #, c-format
 msgid "HHCLG002E Error reading syslog pipe: %s\n"
 msgstr ""
 
-#: logger.c:377 logger.c:389
+#: logger.c:387 logger.c:399
 #, c-format
 msgid "HHCLG004E Error duplicating stderr: %s\n"
 msgstr ""
 
-#: logger.c:399
+#: logger.c:409
 #, c-format
 msgid "HHCLG005E Error duplicating stdout: %s\n"
 msgstr ""
 
-#: logger.c:409
+#: logger.c:419
 #, c-format
 msgid "HHCLG006E Duplicate error redirecting hardcopy log: %s\n"
 msgstr ""
 
-#: logger.c:416
+#: logger.c:426
 #, c-format
 msgid "HHCLG007S Hardcopy log fdopen failed: %s\n"
 msgstr ""
 
-#: logger.c:432
+#: logger.c:442
 #, c-format
 msgid "HHCLG008S logbuffer malloc failed: %s\n"
 msgstr ""
 
-#: logger.c:439
+#: logger.c:449
 #, c-format
 msgid "HHCLG009S Syslog message pipe creation failed: %s\n"
 msgstr ""
 
-#: logger.c:448
+#: logger.c:458
 #, c-format
 msgid "HHCLG012E Cannot create logger thread: %s\n"
 msgstr ""
 
-#: logger.c:470
+#: logger.c:480
 msgid "HHCLG014E log not active\n"
 msgstr ""
 
-#: logger.c:479 logger.c:481
+#: logger.c:489 logger.c:491
 #, c-format
 msgid "HHCLG015I log closed\n"
 msgstr ""
 
-#: logger.c:495
+#: logger.c:505
 #, fuzzy, c-format
 msgid "HHCLG016E Error opening logfile %s: %s\n"
 msgstr "HHCRD013E Fout %2$s bij openen bestand \"%1$s\"\n"
 
-#: logger.c:503
+#: logger.c:513
 #, fuzzy, c-format
 msgid "HHCLG017S log file fdopen failed for %s: %s\n"
 msgstr "HHCLC039E Fout %2$s bij openen bestand \"%1$s\"\n"
 
-#: logger.c:518
+#: logger.c:528
 #, c-format
 msgid "HHCLG018I log switched to %s\n"
 msgstr ""
@@ -5278,27 +5283,27 @@ msgstr "HHCCP007I CPU%4.4X Architectuur Modus %s\n"
 msgid "HHCCP018I CPU%4.4X: Check-Stop due to host error: %s\n"
 msgstr "HHCCP007I CPU%4.4X Architectuur Modus %s\n"
 
-#: panel.c:728
+#: panel.c:753
 #, fuzzy
 msgid "HHCPN001I Control panel thread started: tid="
 msgstr "HHCPN001I Controle paneel thread gestart: tid=%8.8lX, pid=%d\n"
 
-#: panel.c:755
+#: panel.c:780
 #, c-format
 msgid "HHCPN002S Cannot obtain keyboard buffer: %s\n"
 msgstr ""
 
-#: panel.c:765
+#: panel.c:790
 #, c-format
 msgid "HHCPN003S Cannot obtain message buffer: %s\n"
 msgstr ""
 
-#: panel.c:825
+#: panel.c:856
 #, c-format
 msgid "HHCPN004E select: %s\n"
 msgstr ""
 
-#: panel.c:839
+#: panel.c:870
 #, c-format
 msgid "HHCPN005E keyboard read: %s\n"
 msgstr ""
@@ -5914,101 +5919,101 @@ msgstr "HHCSD006E %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 msgid "HHCSD007I Device %4.4X unbound from socket %s\n"
 msgstr "HHCSD007I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 
-#: stack.c:390
+#: stack.c:392
 msgid "stack: Current stack entry at "
 msgstr ""
 
-#: stack.c:391 stack.c:430 stack.c:763 stack.c:776 stack.c:840 stack.c:879
+#: stack.c:393 stack.c:432 stack.c:765 stack.c:778 stack.c:842 stack.c:881
 #, c-format
 msgid "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n"
 msgstr ""
 
-#: stack.c:413
+#: stack.c:415
 msgid "stack: Forward section header addr "
 msgstr ""
 
-#: stack.c:475 stack.c:762
+#: stack.c:477 stack.c:764
 msgid "stack: New stack entry at "
 msgstr ""
 
-#: stack.c:492 stack.c:500 stack.c:1143 stack.c:1151
+#: stack.c:494 stack.c:502 stack.c:1145 stack.c:1153
 #, c-format
 msgid "stack: GPR%d="
 msgstr ""
 
-#: stack.c:492 stack.c:500 stack.c:524 stack.c:733
+#: stack.c:494 stack.c:502 stack.c:526 stack.c:735
 msgid " stored at V:"
 msgstr ""
 
-#: stack.c:493 stack.c:501 stack.c:525 stack.c:548 stack.c:601 stack.c:679
-#: stack.c:707 stack.c:734 stack.c:1144 stack.c:1152 stack.c:1190 stack.c:1285
-#: stack.c:1321 stack.c:1366
+#: stack.c:495 stack.c:503 stack.c:527 stack.c:550 stack.c:603 stack.c:681
+#: stack.c:709 stack.c:736 stack.c:1146 stack.c:1154 stack.c:1192 stack.c:1287
+#: stack.c:1323 stack.c:1368
 msgid " A:"
 msgstr ""
 
-#: stack.c:524 stack.c:733 stack.c:1189
+#: stack.c:526 stack.c:735 stack.c:1191
 #, c-format
 msgid "stack: AR%d="
 msgstr ""
 
-#: stack.c:546
+#: stack.c:548
 #, c-format
 msgid ""
 "stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
 "stored at V:"
 msgstr ""
 
-#: stack.c:600
+#: stack.c:602
 #, c-format
 msgid "stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X stored at V:"
 msgstr ""
 
-#: stack.c:678
+#: stack.c:680
 #, c-format
 msgid "stack: PSW2=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X stored at V:"
 msgstr ""
 
-#: stack.c:705
+#: stack.c:707
 #, c-format
 msgid ""
 "stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"
 "stored at V:"
 msgstr ""
 
-#: stack.c:774
+#: stack.c:776
 msgid "stack: Previous stack entry updated at A:"
 msgstr ""
 
-#: stack.c:785 stack.c:1401
+#: stack.c:787 stack.c:1403
 msgid "stack: CR15="
 msgstr ""
 
-#: stack.c:839 stack.c:863
+#: stack.c:841 stack.c:865
 msgid "stack: Stack entry located at "
 msgstr ""
 
-#: stack.c:1118
+#: stack.c:1120
 #, c-format
 msgid "stack: Unstacking registers %d-%d from "
 msgstr ""
 
-#: stack.c:1143 stack.c:1151 stack.c:1189
+#: stack.c:1145 stack.c:1153 stack.c:1191
 msgid " loaded from V:"
 msgstr ""
 
-#: stack.c:1283
+#: stack.c:1285
 #, c-format
 msgid ""
 "stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
 "loaded from V:"
 msgstr ""
 
-#: stack.c:1320
+#: stack.c:1322
 #, c-format
 msgid "stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X loaded from V:"
 msgstr ""
 
-#: stack.c:1364
+#: stack.c:1366
 #, c-format
 msgid ""
 "stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"

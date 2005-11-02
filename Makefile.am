@@ -111,15 +111,11 @@ if OPTION_DYNAMIC_LOAD
                    -export-dynamic  \
                    -avoid-version
 
-#  DYNMOD_LD_ADD   = libherc.la    \
-#                   libhercs.la    \
-#                   libhercu.la    \
-#                   $(LDADD)       \
-#                   $(LIBFTHREADS)
-
-  DYNMOD_LD_ADD   = libherc.la  \
-                   libhercs.la  \
-                   $(LDADD)
+  DYNMOD_LD_ADD   = libherc.la    \
+                   libhercs.la    \
+                   libhercu.la    \
+                   $(LDADD)       \
+                   $(LIBFTHREADS)
 
   LIB_LD_FLAGS    = -export-dynamic  \
                    $(XSTATIC)        \
@@ -139,12 +135,12 @@ endif
 # List of Libtool shared libraries & loadable modules
 #
 
-  HERCLIBS = $(LIBFTHREADS) \
-              libhercu.la \
-              libherct.la \
-              libhercd.la
+  HERCLIBS = $(LIBFTHREADS)
 
   HERCLIBS2 = libhercs.la  \
+              libhercu.la \
+              libherct.la \
+              libhercd.la \
               libherc.la
 
   HERCMODS = dyngui.la   \
@@ -277,7 +273,7 @@ endif
 
   libherct_la_LDFLAGS = $(LIB_LD_FLAGS)
 
-  libherct_la_LIBADD  = $(LDADD)
+  libherct_la_LIBADD  = $(LDADD) libhercs.la libhercu.la $(LIBFTHREADS)
 
 #
 # DASD utility subroutines (shared) library
@@ -290,12 +286,11 @@ endif
                         dasdtab.c   \
                         cache.c     \
                         dasdutil.c  \
-                        shared.c    \
-                        pttrace.c
+                        shared.c
 
   libhercd_la_LDFLAGS = $(LIB_LD_FLAGS)
 
-  libhercd_la_LIBADD  = $(LDADD)
+  libhercd_la_LIBADD  = $(LDADD) libhercs.la libhercu.la $(LIBFTHREADS)
 
 #
 ## Pure Utility functions
@@ -310,11 +305,12 @@ endif
                         $(HOSTINFO)  \
                         memrchr.c    \
                         parser.c     \
+                        pttrace.c    \
                         $(LTDL)
 
   libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 
-  libhercu_la_LIBADD  = $(LDADD)
+  libhercu_la_LIBADD  = $(LDADD) libhercs.la $(LIBFTHREADS)
 
 #
 # Core Hercules (shared) library
