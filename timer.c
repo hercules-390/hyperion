@@ -296,6 +296,7 @@ U64     waittime;                       /* CPU wait time in interval */
 U64     now = 0;                        /* Current time of day (us)  */
 U64     then;                           /* Previous time of day (us) */
 int     interval;                       /* Interval (us)             */
+double  cpupct;                         /* Calculated cpu percentage */
 #endif /*OPTION_MIPS_COUNTING*/
 struct  timeval tv;                     /* Structure for gettimeofday
                                            and select function calls */
@@ -414,7 +415,10 @@ struct  timeval tv;                     /* Structure for gettimeofday
                 waittime = regs->waittime;
                 if (regs->waittod)
                     waittime += now - regs->waittod;
-                regs->cpupct = ((double)(interval - waittime)) / ((double)interval);
+                cpupct = ((double)(interval - waittime)) / ((double)interval);
+                if (cpupct < 0.0) cpupct = 0.0;
+                else if (cpupct > 1.0) cpupct = 1.0;
+                regs->cpupct = cpupct;
 
                 /* Reset the wait values */
                 regs->waittime = 0;
