@@ -735,10 +735,10 @@ U16     eax;                            /* Authorization index       */
 
 
 /*-------------------------------------------------------------------*/
-/* Translate a 31-bit virtual address to a real address              */
+/* Translate a virtual address to a real address                     */
 /*                                                                   */
 /* Input:                                                            */
-/*      vaddr   31-bit virtual address to be translated              */
+/*      vaddr   virtual address to be translated                     */
 /*      arn     Access register number or special value (see         */
 /*              load_address_space_designator function for a         */
 /*              complete description of this parameter)              */
