@@ -791,7 +791,7 @@ U16     eax;                            /* Authorization index       */
 /*          exception code is X'0038'.                               */
 /*                                                                   */
 /*      regs->dat.raddr is set to the real address if translation    */
-/*      was unsuccessful; otherwise it may contain the address of    */
+/*      was successful; otherwise it may contain the address of      */
 /*      a page or segment table entry as described above.            */
 /*      For ACCTYPE_PTE or ACCTYPE_LPTEA it contains the address of  */
 /*      the page table entry if translation was successful.          */
