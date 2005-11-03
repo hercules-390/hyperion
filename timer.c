@@ -383,7 +383,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
                 regs = sysblk.regs[cpu];
 
                 /* 0% if first time thru */
-                if (then == 0 || regs->waittod == 0)
+                if (then == 0)
                 {
                     regs->mipsrate = regs->siosrate = 0;
                     regs->cpupct = 0.0;
@@ -412,13 +412,14 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
                 /* Calculate CPU busy percentage */
                 waittime = regs->waittime;
-                if ( sysblk.waiting_mask & BIT(regs->cpuad) )
+                if (regs->waittod)
                     waittime += now - regs->waittod;
                 regs->cpupct = ((double)(interval - waittime)) / ((double)interval);
 
                 /* Reset the wait values */
                 regs->waittime = 0;
-                regs->waittod = now;
+                if (regs->waittod)
+                    regs->waittod = now;
 
                 release_lock(&sysblk.cpulock[cpu]);
 

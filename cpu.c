@@ -1362,8 +1362,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         struct timeval tv;
         gettimeofday (&tv, NULL);
         ADJUST_TOD (tv, regs->lasttod);
-        regs->waittod = (U64)tv.tv_sec;
-        regs->waittod = regs->waittod * 1000000 + tv.tv_usec;
+        regs->waittod = (U64)tv.tv_sec * 1000000 + tv.tv_usec;
 #endif
 
         /* Wait until there is work to do */
@@ -1379,6 +1378,14 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         regs->ints_state |= sysblk.ints_state;
 
         HDC1(debug_cpu_state, regs);
+
+#ifdef OPTION_MIPS_COUNTING
+        /* Calculate the time we waited */
+        gettimeofday (&tv, NULL);
+        ADJUST_TOD (tv, regs->lasttod);
+        regs->waittime += ((U64)tv.tv_sec * 1000000 + tv.tv_usec) - regs->waittod;
+        regs->waittod = 0;
+#endif
 
         /* Purge the lookaside buffers */
         ARCH_DEP(purge_tlb) (regs);
@@ -1397,6 +1404,13 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     /* Test for wait state */
     if (WAITSTATE(&regs->psw))
     {
+#ifdef OPTION_MIPS_COUNTING
+        struct timeval tv;
+        gettimeofday (&tv, NULL);
+        ADJUST_TOD (tv, regs->lasttod);
+        regs->waittod = (U64)tv.tv_sec * 1000000 + tv.tv_usec;
+#endif
+
         /* Test for disabled wait PSW and issue message */
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
         {
@@ -1413,6 +1427,14 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         sysblk.waiting_mask |= BIT(regs->cpuad);
         wait_condition (&regs->intcond, &sysblk.intlock);
         sysblk.waiting_mask &= ~BIT(regs->cpuad);
+
+#ifdef OPTION_MIPS_COUNTING
+        /* Calculate the time we waited */
+        gettimeofday (&tv, NULL);
+        ADJUST_TOD (tv, regs->lasttod);
+        regs->waittime += ((U64)tv.tv_sec * 1000000 + tv.tv_usec) - regs->waittod;
+        regs->waittod = 0;
+#endif
 
         release_lock (&sysblk.intlock);
 

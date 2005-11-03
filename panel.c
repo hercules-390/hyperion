@@ -496,10 +496,10 @@ void NP_update()
             r += 2;
         }
     }
-    set_screen_pos( confp, 19, 2 );
+    set_screen_pos( confp, 19, 1 );
     set_screen_color( confp, COLOR_LIGHT_YELLOW, COLOR_BLACK );
 #ifdef OPTION_MIPS_COUNTING
-    fprintf(confp, "%2.1d.%2.2d  %5d",
+    fprintf(confp, "%3.1d.%2.2d %6d",
             sysblk.mipsrate / 1000000, (sysblk.mipsrate % 1000000) / 10000,
             sysblk.siosrate);
 #else
@@ -735,6 +735,7 @@ QWORD   curpsw;                         /* Current PSW               */
 QWORD   prvpsw;                         /* Previous PSW              */
 BYTE    prvstate = 0xFF;                /* Previous stopped state    */
 U64     prvicount = 0;                  /* Previous instruction count*/
+double  prvcpupct = 0.0;                /* Previous cpu percentage   */
 #if defined(OPTION_SHARED_DEVICES)
 U32     prvscount = 0;                  /* Previous shrdcount        */
 #endif
@@ -1527,6 +1528,7 @@ FinishShutdown:
                   SIE_MODE(regs) ?  regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
                   regs->instcount) != prvicount
+            || prvcpupct != regs->cpupct
 #if defined(OPTION_SHARED_DEVICES)
             || sysblk.shrdcount != prvscount
 #endif
@@ -1539,6 +1541,7 @@ FinishShutdown:
                         SIE_MODE(regs) ? regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
                         regs->instcount;
+            prvcpupct = regs->cpupct;
             prvstate = regs->cpustate;
 #if defined(OPTION_SHARED_DEVICES)
             prvscount = sysblk.shrdcount;
