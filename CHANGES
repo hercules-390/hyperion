@@ -1,5 +1,6 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
+04 Nov 2005 PER3 include BEAR in suspend/resume file - Roger Bowler
 03 Nov 2005 Fix cpu percentage display - Greg Smith
 03 Nov 2005 Fix SIE addressing mode issue - Jan Jaeger
 02 Nov 2005 Activate FEATURE_PER3 - Roger Bowler

@@ -278,6 +278,7 @@
 #define SR_CPU_INTS_STATE       0xace2010a
 #define SR_CPU_INTS_MASK        0xace2010b
 #define SR_CPU_EXTCCPU          0xace2010c
+#define SR_CPU_BEAR             0xace2010d
 #define SR_CPU_OPNDRID          0xace20110
 #define SR_CPU_CHECKSTOP        0xace20111
 #define SR_CPU_HOSTINT          0xace20112

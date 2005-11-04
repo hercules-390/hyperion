@@ -192,6 +192,7 @@ BYTE     psw[16];
         SR_WRITE_VALUE(file, SR_CPU_TODPR, regs->todpr, sizeof(regs->todpr));
         SR_WRITE_VALUE(file, SR_CPU_MONCLASS, regs->monclass, sizeof(regs->monclass));
         SR_WRITE_VALUE(file, SR_CPU_EXCARID, regs->excarid, sizeof(regs->excarid));
+        SR_WRITE_VALUE(file, SR_CPU_BEAR, regs->bear, sizeof(regs->bear));
         SR_WRITE_VALUE(file, SR_CPU_OPNDRID, regs->opndrid, sizeof(regs->opndrid));
         SR_WRITE_VALUE(file, SR_CPU_CHECKSTOP, regs->checkstop, 1);
         SR_WRITE_VALUE(file, SR_CPU_HOSTINT, regs->hostint, 1);
@@ -799,6 +800,11 @@ char     zeros[16];
         case SR_CPU_EXCARID:
             if (regs == NULL) goto sr_null_regs_exit;
             SR_READ_VALUE(file, len, &regs->excarid, sizeof(regs->excarid));
+            break;
+
+        case SR_CPU_BEAR:
+            if (regs == NULL) goto sr_null_regs_exit;
+            SR_READ_VALUE(file, len, &regs->bear, sizeof(regs->bear));
             break;
 
         case SR_CPU_OPNDRID:
