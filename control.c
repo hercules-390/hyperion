@@ -6097,9 +6097,17 @@ U64     dreg;                           /* Double word workarea      */
     /* Load the CPU ID */
     dreg = sysblk.cpuid;
 
+#if !defined(FEATURE_CPUID_FORMAT_1)
     /* If first digit of serial is zero, insert processor id */
     if ((dreg & 0x00F0000000000000ULL) == 0)
         dreg |= (U64)(regs->cpuad & 0x0F) << 52;
+#else
+    /* The first two digits from the CPUID are now the LP identifier */
+    /* The version code is zero, and we are partition 00  */
+    dreg &= 0x0000FFFFFFFF0000ULL;
+    /* Indicate format 1 CPUID */
+    dreg |= 0x8000ULL;
+#endif
 
     /* Store CPU ID at operand address */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
