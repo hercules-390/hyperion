@@ -101,6 +101,14 @@
 #endif /*!defined(FEATURE_SUBSPACE_GROUP)*/
 
 
+#if !defined(FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST)
+ UNDEF_INST(set_address_space_control_fast)
+#else /*!defined(FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST)*/
+ #define s390_set_address_space_control_fast s390_set_address_space_control
+ #define z900_set_address_space_control_fast z900_set_address_space_control
+#endif /*!defined(FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST)*/
+
+
 #if !defined(FEATURE_BRANCH_AND_SET_AUTHORITY)
  UNDEF_INST(branch_and_set_authority)
 #endif /*!defined(FEATURE_BRANCH_AND_SET_AUTHORITY)*/
@@ -158,7 +166,7 @@
  UNDEF_INST(move_with_key)
  UNDEF_INST(program_call)
  UNDEF_INST(program_transfer)
- UNDEF_INST(set_address_space_control_x)
+ UNDEF_INST(set_address_space_control)
  UNDEF_INST(set_secondary_asn)
 #endif /*!defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
@@ -2298,7 +2306,7 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B216*/ GENx___x___x___ ,                                     /*%SETR/SSYN */
  /*B217*/ GENx___x___x___ ,                                   /*%STETR/STSYN */
  /*B218*/ GENx370x390x900 (program_call,S,"PC"),
- /*B219*/ GENx370x390x900 (set_address_space_control_x,S,"SAC"),
+ /*B219*/ GENx370x390x900 (set_address_space_control,S,"SAC"),
  /*B21A*/ GENx___x390x900 (compare_and_form_codeword,S,"CFC"),
  /*B21B*/ GENx___x___x___ ,
  /*B21C*/ GENx___x___x___ ,
@@ -2394,7 +2402,7 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B276*/ GENx___x390x900 (cancel_subchannel,S,"XSCH"),
  /*B277*/ GENx___x390x900 (resume_program,S,"RP"),
  /*B278*/ GENx___x390x900 (store_clock_extended,S,"STCKE"),
- /*B279*/ GENx___x390x900 (set_address_space_control_x,S,"SACF"),
+ /*B279*/ GENx___x390x900 (set_address_space_control_fast,S,"SACF"),
  /*B27A*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B27B*/ GENx___x___x___ ,                                     /* TFF/Sysplx*/
  /*B27C*/ GENx___x___x900 (store_clock_fast,S,"STCKF"),

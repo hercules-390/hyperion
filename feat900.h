@@ -25,6 +25,7 @@
 #define FEATURE_DAT_ENHANCEMENT
 #define FEATURE_DAT_ENHANCEMENT_FACILITY_2                       /*@Z9*/
 #define FEATURE_DUAL_ADDRESS_SPACE
+#define FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST
 #define FEATURE_EMULATE_VM
 #define FEATURE_ESAME
 #define FEATURE_ETF2_ENHANCEMENT                                 /*@Z9*/

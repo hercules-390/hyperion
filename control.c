@@ -4256,7 +4256,7 @@ BYTE    storkey;                        /* Storage key               */
 /* B219 SAC   - Set Address Space Control                        [S] */
 /* B279 SACF  - Set Address Space Control Fast                   [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(set_address_space_control_x)
+DEF_INST(set_address_space_control)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -4266,7 +4266,9 @@ int     ssevent = 0;                    /* 1=space switch event      */
 
     S(inst, regs, b2, effective_addr2);
 
-    if(inst[1] == 0x19)
+#if defined(FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST)
+    if(inst[1] == 0x19) // SAC only
+#endif /*defined(FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST)*/
     {
         /* Perform serialization and checkpoint-synchronization */
         PERFORM_SERIALIZATION (regs);
@@ -4361,7 +4363,9 @@ int     ssevent = 0;                    /* 1=space switch event      */
     if (ssevent)
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
 
-    if(inst[1] == 0x19)
+#if defined(FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST)
+    if(inst[1] == 0x19) // SAC only
+#endif /*defined(FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST)*/
     {
         /* Perform serialization and checkpoint-synchronization */
         PERFORM_SERIALIZATION (regs);

@@ -1302,8 +1302,8 @@ do { \
  #define UPDATE_BEAR_N(_regs,_len)
 #endif /*!defined(FEATURE_PER3)*/
 
-#define PERFORM_SERIALIZATION(_regs)
-#define PERFORM_CHKPT_SYNC(_regs)
+#define PERFORM_SERIALIZATION(_regs) do { } while (0)
+#define PERFORM_CHKPT_SYNC(_regs) do { } while (0)
 
 #if !defined(NO_SETUID)
 
@@ -1703,7 +1703,8 @@ DEF_INST(purge_accesslist_lookaside_buffer);
 DEF_INST(purge_translation_lookaside_buffer);
 DEF_INST(reset_reference_bit);
 DEF_INST(reset_reference_bit_extended);
-DEF_INST(set_address_space_control_x);
+DEF_INST(set_address_space_control);
+DEF_INST(set_address_space_control_fast);
 DEF_INST(set_clock);
 DEF_INST(set_clock_comparator);
 DEF_INST(set_clock_programmable_field);
