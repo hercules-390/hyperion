@@ -964,6 +964,7 @@ BYTE    rbyte[4];                       /* Byte work area            */
 
 /*-------------------------------------------------------------------*/
 /* B205 STCK  - Store Clock                                      [S] */
+/* B27C STCKF - Store Clock Fast                                 [S] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_clock)
 {
@@ -978,8 +979,11 @@ U64     dreg;                           /* Double word work area     */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* Perform serialization before fetching clock */
-    PERFORM_SERIALIZATION (regs);
+#if defined(FEATURE_STORE_CLOCK_FAST)
+    if(inst[1] == 0x05) // STCK only
+#endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
+        /* Perform serialization before fetching clock */
+        PERFORM_SERIALIZATION (regs);
 
     /* Obtain the TOD clock update lock */
     obtain_lock (&sysblk.todlock);
@@ -988,7 +992,13 @@ U64     dreg;                           /* Double word work area     */
     update_TOD_clock();
 
     /* Retrieve the TOD clock value and shift out the epoch */
-    dreg = ((sysblk.todclk + regs->todoffset) << 8) | regs->cpuad;
+    dreg = ((sysblk.todclk + regs->todoffset) << 8);
+
+#if defined(FEATURE_STORE_CLOCK_FAST)
+    if(inst[1] == 0x05) // STCK only
+#endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
+        /* Insert the cpu address to ensure a unique value */
+        dreg |= regs->cpuad;
 
     /* Release the TOD clock update lock */
     release_lock (&sysblk.todlock);
@@ -998,8 +1008,11 @@ U64     dreg;                           /* Double word work area     */
     /* Store TOD clock value at operand address */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 
-    /* Perform serialization after storing clock */
-    PERFORM_SERIALIZATION (regs);
+#if defined(FEATURE_STORE_CLOCK_FAST)
+    if(inst[1] == 0x05) // STCK only
+#endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
+        /* Perform serialization after storing clock */
+        PERFORM_SERIALIZATION (regs);
 
     /* Set condition code zero */
     regs->psw.cc = 0;

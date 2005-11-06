@@ -1,5 +1,6 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
+06 Nov 2006 Store Clock Fast (STCKF) - Jan Jaeger
 05 Nov 2005 New format CPUID for z/Arch mode - Jan Jaeger
 04 Nov 2005 PER3 include BEAR in suspend/resume file - Roger Bowler
 03 Nov 2005 Fix cpu percentage display - Greg Smith

@@ -779,10 +779,11 @@
 #endif /*!defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)*/         /*@Z9*/
 
  
-#if !defined(FEATURE_STORE_CLOCK_FAST)                          /*@Z9*/
- UNDEF_INST(store_clock_fast)                                   /*@Z9*/
-#endif /*!defined(FEATURE_STORE_CLOCK_FAST)*/                   /*@Z9*/
-
+#if !defined(FEATURE_STORE_CLOCK_FAST)            
+ UNDEF_INST(store_clock_fast)                    
+#else /*!defined(FEATURE_STORE_CLOCK_FAST)*/   
+ #define z900_store_clock_fast z900_store_clock
+#endif /*!defined(FEATURE_STORE_CLOCK_FAST)*/   
  
 #if !defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)              /*@Z9*/
  UNDEF_INST(store_facility_list_extended)                       /*@Z9*/
@@ -2396,7 +2397,7 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B279*/ GENx___x390x900 (set_address_space_control_x,S,"SACF"),
  /*B27A*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B27B*/ GENx___x___x___ ,                                     /* TFF/Sysplx*/
- /*B27C*/ GENx___x___x900 (store_clock_fast,S,"STCKF"),         /* Sysplex   */    /*@Z9*/
+ /*B27C*/ GENx___x___x900 (store_clock_fast,S,"STCKF"),
  /*B27D*/ GENx370x390x900 (store_system_information,S,"STSI"),
  /*B27E*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B27F*/ GENx___x___x___ ,                                     /* Sysplex   */
