@@ -201,38 +201,85 @@ TID tid;
         else
             do_shutdown_now();
 }
+/*-------------------------------------------------------------------*/
+/* The following 2 routines display an array of 32/64 registers      */
+/* 1st parameter is the register type (GR, CR, AR, etc..)            */
+/* 2nd parameter is the CPU Address involved                         */
+/* 3rd parameter is an array of 32/64 bit regs                       */
+/* NOTE : 32 bit regs are displayed 4 by 4, while 64 bit regs are    */
+/*        displayed 2 by 2. Change the modulo if to change this      */
+/*        behaviour.                                                 */
+/* These routines are intended to be invoked by display_regs,        */
+/* display_cregs and display_aregs                                   */
+/* Ivan Warren 2005/11/07                                            */
+/*-------------------------------------------------------------------*/
+static void display_regs32(char *hdr,U16 cpuad,U32 *r)
+{
+    int i;
+    for(i=0;i<16;i++)
+    {
+        if(!(i%4))
+        {
+            if(i)
+            {
+                logmsg("\n");
+            }
+            logmsg("CPU%4.4X:",cpuad);
+        }
+        logmsg("  %s%2.2d=%8.8"I32_FMT"X",hdr,i,r[i]);
+    }
+    logmsg("\n");
+}
+
+static void display_regs64(char *hdr,U16 cpuad,U64 *r)
+{
+    int i;
+    for(i=0;i<16;i++)
+    {
+        if(!(i%2))
+        {
+            if(i)
+            {
+                logmsg("\n");
+            }
+            logmsg("CPU%4.4X:",cpuad);
+        }
+        logmsg("  %s%2.2d=%16.16"I64_FMT"X",hdr,i,r[i]);
+    }
+    logmsg("\n");
+}
 
 /*-------------------------------------------------------------------*/
 /* Display general purpose registers                                 */
 /*-------------------------------------------------------------------*/
 void display_regs (REGS *regs)
 {
+    int i;
+    U32 gprs[16];
+#if defined(_FEATURE_ESAME)
+    U64 ggprs[16];
+#endif
+
+#if defined(_FEATURE_ESAME)
     if(regs->arch_mode != ARCH_900)
-        logmsg
-        (
-            "CPU%4.4X:  GR00=%8.8"I32_FMT"X   GR01=%8.8"I32_FMT"X   GR02=%8.8"I32_FMT"X   GR03=%8.8"I32_FMT"X\n"
-            "CPU%4.4X:  GR04=%8.8"I32_FMT"X   GR05=%8.8"I32_FMT"X   GR06=%8.8"I32_FMT"X   GR07=%8.8"I32_FMT"X\n"
-            "CPU%4.4X:  GR08=%8.8"I32_FMT"X   GR09=%8.8"I32_FMT"X   GR10=%8.8"I32_FMT"X   GR11=%8.8"I32_FMT"X\n"
-            "CPU%4.4X:  GR12=%8.8"I32_FMT"X   GR13=%8.8"I32_FMT"X   GR14=%8.8"I32_FMT"X   GR15=%8.8"I32_FMT"X\n"
-
-            ,regs->cpuad ,regs->GR_L(0) ,regs->GR_L(1) ,regs->GR_L(2) ,regs->GR_L(3)
-            ,regs->cpuad ,regs->GR_L(4) ,regs->GR_L(5) ,regs->GR_L(6) ,regs->GR_L(7)
-            ,regs->cpuad ,regs->GR_L(8) ,regs->GR_L(8) ,regs->GR_L(10),regs->GR_L(11)
-            ,regs->cpuad ,regs->GR_L(12),regs->GR_L(13),regs->GR_L(14),regs->GR_L(15)
-        );
+    {
+#endif
+        for(i=0;i<16;i++)
+        {
+            gprs[i]=regs->GR_L(i);
+        }
+        display_regs32("GR",regs->cpuad,gprs);
+#if defined(_FEATURE_ESAME)
+    }
     else
-        logmsg
-        (
-            "CPU%4.4X:  R0=%16.16"I64_FMT"X R1=%16.16"I64_FMT"X R2=%16.16"I64_FMT"X R3=%16.16"I64_FMT"X\n"
-            "CPU%4.4X:  R4=%16.16"I64_FMT"X R5=%16.16"I64_FMT"X R6=%16.16"I64_FMT"X R7=%16.16"I64_FMT"X\n"
-            "CPU%4.4X:  R8=%16.16"I64_FMT"X R9=%16.16"I64_FMT"X RA=%16.16"I64_FMT"X RB=%16.16"I64_FMT"X\n"
-            "CPU%4.4X:  RC=%16.16"I64_FMT"X RD=%16.16"I64_FMT"X RE=%16.16"I64_FMT"X RF=%16.16"I64_FMT"X\n"
-
-            ,regs->cpuad ,regs->GR_G(0) ,regs->GR_G(1) ,regs->GR_G(2) ,regs->GR_G(3)
-            ,regs->cpuad ,regs->GR_G(4) ,regs->GR_G(5) ,regs->GR_G(6) ,regs->GR_G(7)
-            ,regs->cpuad ,regs->GR_G(8) ,regs->GR_G(8) ,regs->GR_G(10),regs->GR_G(11)
-            ,regs->cpuad ,regs->GR_G(12),regs->GR_G(13),regs->GR_G(14),regs->GR_G(15)
-        );
+    {
+        for(i=0;i<16;i++)
+        {
+            ggprs[i]=regs->GR_G(i);
+        }
+        display_regs64("GR",regs->cpuad,ggprs);
+    }
+#endif
 
 } /* end function display_regs */
 
@@ -242,32 +289,32 @@ void display_regs (REGS *regs)
 /*-------------------------------------------------------------------*/
 void display_cregs (REGS *regs)
 {
+    int i;
+    U32 crs[16];
+#if defined(_FEATURE_ESAME)
+    U64 gcrs[16];
+#endif
+
+#if defined(_FEATURE_ESAME)
     if(regs->arch_mode != ARCH_900)
-        logmsg
-        (
-            "CPU%4.4X:  CR00=%8.8"I32_FMT"X   CR01=%8.8"I32_FMT"X   CR02=%8.8"I32_FMT"X   CR03=%8.8"I32_FMT"X\n"
-            "CPU%4.4X:  CR04=%8.8"I32_FMT"X   CR05=%8.8"I32_FMT"X   CR06=%8.8"I32_FMT"X   CR07=%8.8"I32_FMT"X\n"
-            "CPU%4.4X:  CR08=%8.8"I32_FMT"X   CR09=%8.8"I32_FMT"X   CR10=%8.8"I32_FMT"X   CR11=%8.8"I32_FMT"X\n"
-            "CPU%4.4X:  CR12=%8.8"I32_FMT"X   CR13=%8.8"I32_FMT"X   CR14=%8.8"I32_FMT"X   CR15=%8.8"I32_FMT"X\n"
-
-            ,regs->cpuad ,regs->CR_L(0) ,regs->CR_L(1) ,regs->CR_L(2) ,regs->CR_L(3)
-            ,regs->cpuad ,regs->CR_L(4) ,regs->CR_L(5) ,regs->CR_L(6) ,regs->CR_L(7)
-            ,regs->cpuad ,regs->CR_L(8) ,regs->CR_L(8) ,regs->CR_L(10),regs->CR_L(11)
-            ,regs->cpuad ,regs->CR_L(12),regs->CR_L(13),regs->CR_L(14),regs->CR_L(15)
-        );
+    {
+#endif
+        for(i=0;i<16;i++)
+        {
+            crs[i]=regs->CR_L(i);
+        }
+        display_regs32("CR",regs->cpuad,crs);
+#if defined(_FEATURE_ESAME)
+    }
     else
-        logmsg
-        (
-            "CPU%4.4X:  C0=%16.16"I64_FMT"X C1=%16.16"I64_FMT"X C2=%16.16"I64_FMT"X C3=%16.16"I64_FMT"X\n"
-            "CPU%4.4X:  C4=%16.16"I64_FMT"X C5=%16.16"I64_FMT"X C6=%16.16"I64_FMT"X C7=%16.16"I64_FMT"X\n"
-            "CPU%4.4X:  C8=%16.16"I64_FMT"X C9=%16.16"I64_FMT"X CA=%16.16"I64_FMT"X CB=%16.16"I64_FMT"X\n"
-            "CPU%4.4X:  CC=%16.16"I64_FMT"X CD=%16.16"I64_FMT"X CE=%16.16"I64_FMT"X CF=%16.16"I64_FMT"X\n"
-
-            ,regs->cpuad ,regs->CR_G(0) ,regs->CR_G(1) ,regs->CR_G(2) ,regs->CR_G(3)
-            ,regs->cpuad ,regs->CR_G(4) ,regs->CR_G(5) ,regs->CR_G(6) ,regs->CR_G(7)
-            ,regs->cpuad ,regs->CR_G(8) ,regs->CR_G(8) ,regs->CR_G(10),regs->CR_G(11)
-            ,regs->cpuad ,regs->CR_G(12),regs->CR_G(13),regs->CR_G(14),regs->CR_G(15)
-        );
+    {
+        for(i=0;i<16;i++)
+        {
+            gcrs[i]=regs->CR_G(i);
+        }
+        display_regs64("CR",regs->cpuad,gcrs);
+    }
+#endif
 
 } /* end function display_cregs */
 
@@ -277,18 +324,14 @@ void display_cregs (REGS *regs)
 /*-------------------------------------------------------------------*/
 void display_aregs (REGS *regs)
 {
-    logmsg
-    (
-        "CPU%4.4X:  AR00=%8.8"I32_FMT"X   AR01=%8.8"I32_FMT"X   AR02=%8.8"I32_FMT"X   AR03=%8.8"I32_FMT"X\n"
-        "CPU%4.4X:  AR04=%8.8"I32_FMT"X   AR05=%8.8"I32_FMT"X   AR06=%8.8"I32_FMT"X   AR07=%8.8"I32_FMT"X\n"
-        "CPU%4.4X:  AR08=%8.8"I32_FMT"X   AR09=%8.8"I32_FMT"X   AR10=%8.8"I32_FMT"X   AR11=%8.8"I32_FMT"X\n"
-        "CPU%4.4X:  AR12=%8.8"I32_FMT"X   AR13=%8.8"I32_FMT"X   AR14=%8.8"I32_FMT"X   AR15=%8.8"I32_FMT"X\n"
+    int i;
+    U32 ars[16];
 
-        ,regs->cpuad ,regs->AR(0) ,regs->AR(1) ,regs->AR(2) ,regs->AR(3)
-        ,regs->cpuad ,regs->AR(4) ,regs->AR(5) ,regs->AR(6) ,regs->AR(7)
-        ,regs->cpuad ,regs->AR(8) ,regs->AR(8) ,regs->AR(10),regs->AR(11)
-        ,regs->cpuad ,regs->AR(12),regs->AR(13),regs->AR(14),regs->AR(15)
-    );
+    for(i=0;i<16;i++)
+    {
+        ars[i]=regs->AR(i);
+    }
+    display_regs32("AR",regs->cpuad,ars);
 
 } /* end function display_aregs */
 
