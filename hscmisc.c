@@ -231,6 +231,8 @@ static void display_regs32(char *hdr,U16 cpuad,U32 *r)
     logmsg("\n");
 }
 
+#if defined(_900)
+
 static void display_regs64(char *hdr,U16 cpuad,U64 *r)
 {
     int i;
@@ -249,6 +251,8 @@ static void display_regs64(char *hdr,U16 cpuad,U64 *r)
     logmsg("\n");
 }
 
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Display general purpose registers                                 */
 /*-------------------------------------------------------------------*/
@@ -256,11 +260,11 @@ void display_regs (REGS *regs)
 {
     int i;
     U32 gprs[16];
-#if defined(_FEATURE_ESAME)
+#if defined(_900)
     U64 ggprs[16];
 #endif
 
-#if defined(_FEATURE_ESAME)
+#if defined(_900)
     if(regs->arch_mode != ARCH_900)
     {
 #endif
@@ -269,7 +273,7 @@ void display_regs (REGS *regs)
             gprs[i]=regs->GR_L(i);
         }
         display_regs32("GR",regs->cpuad,gprs);
-#if defined(_FEATURE_ESAME)
+#if defined(_900)
     }
     else
     {
@@ -291,11 +295,11 @@ void display_cregs (REGS *regs)
 {
     int i;
     U32 crs[16];
-#if defined(_FEATURE_ESAME)
+#if defined(_900)
     U64 gcrs[16];
 #endif
 
-#if defined(_FEATURE_ESAME)
+#if defined(_900)
     if(regs->arch_mode != ARCH_900)
     {
 #endif
@@ -304,7 +308,7 @@ void display_cregs (REGS *regs)
             crs[i]=regs->CR_L(i);
         }
         display_regs32("CR",regs->cpuad,crs);
-#if defined(_FEATURE_ESAME)
+#if defined(_900)
     }
     else
     {
