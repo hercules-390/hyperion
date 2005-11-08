@@ -213,7 +213,7 @@ TID tid;
 /* display_cregs and display_aregs                                   */
 /* Ivan Warren 2005/11/07                                            */
 /*-------------------------------------------------------------------*/
-static void display_regs32(char *hdr,U16 cpuad,U32 *r)
+static void display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus)
 {
     int i;
     for(i=0;i<16;i++)
@@ -224,29 +224,52 @@ static void display_regs32(char *hdr,U16 cpuad,U32 *r)
             {
                 logmsg("\n");
             }
-            logmsg("CPU%4.4X:",cpuad);
+            if(numcpus>1)
+            {
+                logmsg("CPU%4.4X: ",cpuad);
+            }
         }
-        logmsg("  %s%2.2d=%8.8"I32_FMT"X",hdr,i,r[i]);
+        if(i%4)
+        {
+            logmsg("  ");
+        }
+        logmsg("%s%2.2d=%8.8"I32_FMT"X",hdr,i,r[i]);
     }
     logmsg("\n");
 }
 
 #if defined(_900)
 
-static void display_regs64(char *hdr,U16 cpuad,U64 *r)
+static void display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus)
 {
     int i;
+    int rpl;
+    if(numcpus>1)
+    {
+        rpl=2;
+    }
+    else
+    {
+        rpl=4;
+    }
     for(i=0;i<16;i++)
     {
-        if(!(i%2))
+        if(!(i%rpl))
         {
             if(i)
             {
                 logmsg("\n");
             }
-            logmsg("CPU%4.4X:",cpuad);
+            if(numcpus>1)
+            {
+                logmsg("CPU%4.4X: ",cpuad);
+            }
         }
-        logmsg("  %s%2.2d=%16.16"I64_FMT"X",hdr,i,r[i]);
+        if(i%rpl)
+        {
+            logmsg(" ");
+        }
+        logmsg("%s%1.1X=%16.16"I64_FMT"X",hdr,i,r[i]);
     }
     logmsg("\n");
 }
@@ -272,7 +295,7 @@ void display_regs (REGS *regs)
         {
             gprs[i]=regs->GR_L(i);
         }
-        display_regs32("GR",regs->cpuad,gprs);
+        display_regs32("GR",regs->cpuad,gprs,sysblk.cpus);
 #if defined(_900)
     }
     else
@@ -281,7 +304,7 @@ void display_regs (REGS *regs)
         {
             ggprs[i]=regs->GR_G(i);
         }
-        display_regs64("GR",regs->cpuad,ggprs);
+        display_regs64("R",regs->cpuad,ggprs,sysblk.cpus);
     }
 #endif
 
@@ -307,7 +330,7 @@ void display_cregs (REGS *regs)
         {
             crs[i]=regs->CR_L(i);
         }
-        display_regs32("CR",regs->cpuad,crs);
+        display_regs32("CR",regs->cpuad,crs,sysblk.cpus);
 #if defined(_900)
     }
     else
@@ -316,7 +339,7 @@ void display_cregs (REGS *regs)
         {
             gcrs[i]=regs->CR_G(i);
         }
-        display_regs64("CR",regs->cpuad,gcrs);
+        display_regs64("C",regs->cpuad,gcrs,sysblk.cpus);
     }
 #endif
 
@@ -335,7 +358,7 @@ void display_aregs (REGS *regs)
     {
         ars[i]=regs->AR(i);
     }
-    display_regs32("AR",regs->cpuad,ars);
+    display_regs32("AR",regs->cpuad,ars,sysblk.cpus);
 
 } /* end function display_aregs */
 
@@ -951,9 +974,16 @@ int     n;                              /* Number of bytes in buffer */
     /* Display the PSW */
     memset (qword, 0x00, sizeof(qword));
     copy_psw (regs, qword);
-    n = sprintf (buf,
-                "CPU%4.4X:  PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X ",
-                regs->cpuad,
+    if(sysblk.cpus>1)
+    {
+        n=sprintf(buf,"CPU%4.4X:  ",regs->cpuad);
+    }
+    else
+    {
+        n=0;
+    }
+    n += sprintf (buf+n,
+                "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X ",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
   #if defined(FEATURE_ESAME)
@@ -1069,7 +1099,11 @@ int     n;                              /* Number of bytes in buffer */
                                 (opcode == 0x44 ? ACCTYPE_INSTFETCH :
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ));
-        logmsg ("CPU%4.4X:  %s\n", regs->cpuad, buf);
+        if(sysblk.cpus>1)
+        {
+            logmsg ("CPU%4.4X:  ", regs->cpuad);
+        }
+        logmsg ("%s\n", buf);
     }
 
     /* Display storage at second storage operand location */
@@ -1087,7 +1121,11 @@ int     n;                              /* Number of bytes in buffer */
             n = ARCH_DEP(display_virt) (regs, addr2, buf, b2,
                                         ACCTYPE_READ);
 
-        logmsg ("CPU%4.4X:  %s\n", regs->cpuad, buf);
+        if(sysblk.cpus>1)
+        {
+            logmsg ("CPU%4.4X:  ", regs->cpuad);
+        }
+        logmsg ("%s\n", buf);
     }
 
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
