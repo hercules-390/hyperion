@@ -251,6 +251,9 @@ BYTE ARCH_DEP(scpinfo_ifm)[8] = {
                         | SCCB_IFM0_CHANNEL_PATH_SUBSYSTEM_COMMAND
 //                      | SCCB_IFM0_CHANNEL_PATH_RECONFIG
 //                      | SCCB_IFM0_CPU_INFORMATION
+#ifdef FEATURE_CPU_RECONFIG
+                        | SCCB_IFM0_CPU_RECONFIG
+#endif /*FEATURE_CPU_RECONFIG*/
                         ,
                         0
 //                      | SCCB_IFM1_SIGNAL_ALARM
@@ -259,9 +262,6 @@ BYTE ARCH_DEP(scpinfo_ifm)[8] = {
 //                      | SCCB_IFM1_RESTART_REASONS
 //                      | SCCB_IFM1_INSTRUCTION_ADDRESS_TRACE_BUFFER
                         | SCCB_IFM1_LOAD_PARAMETER
-#ifdef FEATURE_CPU_RECONFIG
-                        | SCCB_IFM0_CPU_RECONFIG
-#endif /*FEATURE_CPU_RECONFIG*/
                         ,
                         0
 //                      | SCCB_IFM2_REAL_STORAGE_INCREMENT_RECONFIG
