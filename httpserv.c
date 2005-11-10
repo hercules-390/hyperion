@@ -27,6 +27,8 @@
 /*                                                                   */
 /*                                           Jan Jaeger - 28/03/2002 */
 
+#include "hstdinc.h"
+
 #include "hercules.h"
 #include "httpmisc.h"
 #include "hostinfo.h"
@@ -599,14 +601,6 @@ TID                     httptid;        /* Negotiation thread id     */
 #endif /*defined(WIN32)*/
         sysblk.httproot = strdup(HTTP_ROOT);
     }
-#if defined(WIN32)
-    if (is_win32_directory(sysblk.httproot))
-    {
-        char  posix_dir[HTTP_PATH_LENGTH];
-        convert_win32_directory_to_posix_directory(sysblk.httproot,posix_dir);
-        free(sysblk.httproot); sysblk.httproot = strdup(posix_dir);
-    }
-#endif /*defined(WIN32)*/
     /* Convert the specified HTTPROOT value to an absolute path
        ending with a '/' and save in sysblk.httproot. */
     {
@@ -639,14 +633,14 @@ TID                     httptid;        /* Negotiation thread id     */
 
     if (lsock < 0)
     {
-        logmsg(_("HHCHT002E socket: %s\n"), strerror(errno));
+        logmsg(_("HHCHT002E socket: %s\n"), strerror(HSO_errno));
         return NULL;
     }
 
     /* Allow previous instance of socket to be reused */
     optval = 1;
     setsockopt (lsock, SOL_SOCKET, SO_REUSEADDR,
-                &optval, sizeof(optval));
+                (void*)&optval, sizeof(optval));
 
     /* Prepare the sockaddr structure for the bind */
     memset (&server, 0, sizeof(server));
@@ -660,7 +654,7 @@ TID                     httptid;        /* Negotiation thread id     */
     {
         rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
 
-        if (rc == 0 || errno != EADDRINUSE) break;
+        if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
 
         logmsg (_("HHCHT003W Waiting for port %u to become free\n"),
                 sysblk.httpport);
@@ -669,7 +663,7 @@ TID                     httptid;        /* Negotiation thread id     */
 
     if (rc != 0)
     {
-        logmsg(_("HHCHT004E bind: %s\n"), strerror(errno));
+        logmsg(_("HHCHT004E bind: %s\n"), strerror(HSO_errno));
         return NULL;
     }
 
@@ -678,7 +672,7 @@ TID                     httptid;        /* Negotiation thread id     */
 
     if (rc < 0)
     {
-        logmsg(_("HHCHT005E listen: %s\n"), strerror(errno));
+        logmsg(_("HHCHT005E listen: %s\n"), strerror(HSO_errno));
         return NULL;
     }
 
@@ -699,8 +693,8 @@ TID                     httptid;        /* Negotiation thread id     */
 
         if (rc < 0 )
         {
-            if (errno == EINTR) continue;
-            logmsg(_("HHCHT007E select: %s\n"), strerror(errno));
+            if (HSO_errno == HSO_EINTR) continue;
+            logmsg(_("HHCHT007E select: %s\n"), strerror(HSO_errno));
             break;
         }
 
@@ -712,14 +706,14 @@ TID                     httptid;        /* Negotiation thread id     */
 
             if (csock < 0)
             {
-                logmsg(_("HHCHT008E accept: %s\n"), strerror(errno));
+                logmsg(_("HHCHT008E accept: %s\n"), strerror(HSO_errno));
                 continue;
             }
 
             if(!(hsock = fdopen(csock,"r+")))
             {
                 logmsg(_("HHCHT009E fdopen: %s\n"),strerror(errno));
-                close(csock);
+                close_socket (csock);
                 continue;
             }
 
@@ -730,7 +724,7 @@ TID                     httptid;        /* Negotiation thread id     */
                 logmsg(_("HHCHT010E http_request create_thread: %s\n"),
                         strerror(errno));
                 fclose (hsock);
-                close (csock);
+                close_socket (csock);
             }
 
         } /* end if(lsock) */
@@ -738,7 +732,7 @@ TID                     httptid;        /* Negotiation thread id     */
     } /* end while */
 
     /* Close the listening socket */
-    close (lsock);
+    close_socket (lsock);
 
     return NULL;
 
