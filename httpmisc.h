@@ -15,6 +15,11 @@
  #define HTTP_ROOT   PKGDATADIR "/"
 #endif
 
+#if !defined(_MSVC_)
+ #define HTTP_PS "/"
+#else
+ #define HTTP_PS "\\"
+#endif
 
 #define HTTP_WELCOME "hercules.html"
 
