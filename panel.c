@@ -890,7 +890,7 @@ void NP_update(REGS *regs)
                 if (!NPcpugraph_valid || NPcpugraphpct[i] != -2.0)
                 {
                     set_color (COLOR_RED, COLOR_BLACK);
-                    set_pos (26+i, 5);
+                    set_pos (26+i, 4);
                     draw_text ("OFFLINE");
                     fill_text (' ', 38);
                     NPcpugraphpct[i] = -2.0;
@@ -901,7 +901,7 @@ void NP_update(REGS *regs)
                 if (!NPcpugraph_valid || NPcpugraphpct[i] != -1.0)
                 {
                     set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
-                    set_pos (26+i, 5);
+                    set_pos (26+i, 4);
                     draw_text ("STOPPED");
                     fill_text (' ', 38);
                     NPcpugraphpct[i] = -1.0;
