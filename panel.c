@@ -1982,6 +1982,17 @@ FinishShutdown:
                 }
             } /* end if(redraw_msgs) */
 
+            if (redraw_cmd)
+            {
+                /* Display the command line */
+                set_pos (cons_rows-1, 1);
+                set_color (COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG);
+                draw_text (CMD_PREFIX_STR);
+                set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+                PUTC_CMDLINE ();
+                fill_text (' ',cons_cols);
+            } /* end if(redraw_cmd) */
+
             if (redraw_status && !sysblk.npquiet)
             {
                 memset (buf, ' ', cons_cols);
@@ -2023,18 +2034,6 @@ FinishShutdown:
                 set_color (COLOR_LIGHT_YELLOW, COLOR_RED);
                 draw_text (buf);
             } /* end if(redraw_status) */
-
-            if (redraw_cmd)
-            {
-                /* Display the command line */
-                set_pos (cons_rows-1, 1);
-                set_color (COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG);
-                draw_text (CMD_PREFIX_STR);
-                set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-                fill_text(' ', cons_cols);
-                set_pos (cons_rows-1, CMD_PREFIX_LEN+1);
-                PUTC_CMDLINE ();
-            } /* end if(redraw_cmd) */
 
             /* Flush screen buffer and reset display update indicators */
             if (redraw_msgs || redraw_cmd || redraw_status)
