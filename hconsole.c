@@ -371,8 +371,8 @@ int  get_console_dim( FILE* confp, int* rows, int* cols )
         return -1;
     }
 
-    *rows = csbi.srWindow.Bottom + 1;
-    *cols = csbi.srWindow.Right  + 1;
+    *rows = 1 + csbi.srWindow.Bottom - csbi.srWindow.Top;
+    *cols = 1 + csbi.srWindow.Right - csbi.srWindow.Left;
     return 0;
 }
 
