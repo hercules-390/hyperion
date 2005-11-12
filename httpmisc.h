@@ -6,12 +6,17 @@
 
 
 #if !defined(PKGDATADIR)
- #define HTTP_ROOT   "/usr/local/share/hercules/"
+ #if !defined(_MSVC_)
+  #define HTTP_ROOT   "/usr/local/share/hercules/"
+ #else
+  #define HTTP_ROOT   "%ProgramFiles%\\Hercules\\html\\"
+ #endif
 #else
  #define HTTP_ROOT   PKGDATADIR "/"
 #endif
-#define HTTP_WELCOME "hercules.html"
 
+
+#define HTTP_WELCOME "hercules.html"
 
 #define HTML_HEADER  "include/header.htmlpart"
 #define HTML_FOOTER  "include/footer.htmlpart"
