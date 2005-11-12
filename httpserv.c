@@ -40,7 +40,7 @@
 extern CGITAB cgidir[];
 
 
-static CONTYP mime_types[] = {
+static MIMETAB mime_types[] = {
     { NULL,    NULL },                            /* No suffix entry */
     { "txt",   "text/plain" },
     { "jcl",   "text/plain" },
@@ -62,7 +62,7 @@ int html_include(WEBBLK *webblk, char *filename)
     strlcpy( fullname, sysblk.httproot, sizeof(fullname) );
     strlcat( fullname, filename,        sizeof(fullname) );
 
-    inclfile = fopen(fullname,"r");
+    inclfile = fopen(fullname,"rb");
 
     if (!inclfile)
     {
@@ -283,12 +283,14 @@ char *http_variable(WEBBLK *webblk, char *name, int type)
 static void http_verify_path(WEBBLK *webblk, char *path)
 {
     char resolved_path[HTTP_PATH_LENGTH];
+#if 0
     int i;
 
     for (i = 0; path[i]; i++)
         if (!isalnum((int)path[i]) && !strchr("/.-_", path[i]))
             http_error(webblk, "404 File Not Found","",
                                "Illegal character in filename");
+#endif
 
     if (!realpath( path, resolved_path ))
     {
@@ -371,7 +373,7 @@ static void http_download(WEBBLK *webblk, char *filename)
     char *filetype;
     char fullname[HTTP_PATH_LENGTH];
     struct stat st;
-    CONTYP *mime_type = mime_types;
+    MIMETAB *mime_type = mime_types;
 
     strlcpy( fullname, sysblk.httproot, sizeof(fullname) );
     strlcat( fullname, filename,        sizeof(fullname) );
@@ -386,7 +388,7 @@ static void http_download(WEBBLK *webblk, char *filename)
         http_error(webblk, "404 File Not Found","",
                            "The requested file is not a regular file");
 
-    fd = open(fullname,O_RDONLY,0);
+    fd = open(fullname,O_RDONLY|O_BINARY,0);
     if (fd == -1)
         http_error(webblk, "404 File Not Found","",
                            strerror(errno));
@@ -420,6 +422,9 @@ static void *http_request(FILE *hsock)
     char *strtok_str;
     CGITAB *cgient;
     int content_length = 0;
+#if defined(_MSVC_)
+    FILE *rsock;
+#endif
 
     if(!(webblk = malloc(sizeof(WEBBLK))))
         http_exit(webblk);
@@ -427,7 +432,15 @@ static void *http_request(FILE *hsock)
     memset(webblk,0,sizeof(WEBBLK));
     webblk->hsock = hsock;
 
+#if defined(_MSVC_)
+    rsock = fdopen(dup(fileno(hsock)),"rb");
+#endif
+
+#if !defined(_MSVC_)
     while (fgets(line, sizeof(line), webblk->hsock))
+#else
+    while (fgets(line, sizeof(line), rsock))
+#endif
     {
         if (*line == '\r' || *line == '\n')
             break;
@@ -454,6 +467,9 @@ static void *http_request(FILE *hsock)
             else
             if(!strcasecmp(pointer,"PUT"))
             {
+#if defined(_MSVC_)
+                fclose(rsock);
+#endif
                 http_error(webblk,"400 Bad Request", "",
                                   "This server does not accept PUT requests");
             }
@@ -489,7 +505,11 @@ static void *http_request(FILE *hsock)
         int i;
             for(i = 0; i < content_length; i++)
             {
+#if !defined(_MSVC_)
                 *pointer = fgetc(webblk->hsock);
+#else
+                *pointer = fgetc(rsock);
+#endif
                 if(*pointer != '\n' && *pointer != '\r')
                     pointer++;
             }
@@ -498,6 +518,9 @@ static void *http_request(FILE *hsock)
             free(post_arg);
         }
     }
+#if defined(_MSVC_)
+    fclose(rsock);
+#endif
 
     if (!authok)
         http_error(webblk, "401 Authorization Required",
@@ -601,6 +624,7 @@ TID                     httptid;        /* Negotiation thread id     */
 #endif /*defined(WIN32)*/
         sysblk.httproot = strdup(HTTP_ROOT);
     }
+
     /* Convert the specified HTTPROOT value to an absolute path
        ending with a '/' and save in sysblk.httproot. */
     {
@@ -622,14 +646,14 @@ TID                     httptid;        /* Negotiation thread id     */
                    strerror(errno));
             return NULL;
         }
-        strlcat(absolute_httproot_path,"/",sizeof(absolute_httproot_path));
+        strlcat(absolute_httproot_path,HTTP_PS,sizeof(absolute_httproot_path));
         free(sysblk.httproot); sysblk.httproot = strdup(absolute_httproot_path);
         TRACE("HTTPROOT = %s\n",sysblk.httproot);// (debug display)
     }
 
 
     /* Obtain a socket */
-    lsock = socket (AF_INET, SOCK_STREAM, 0);
+    lsock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
     if (lsock < 0)
     {
@@ -710,7 +734,7 @@ TID                     httptid;        /* Negotiation thread id     */
                 continue;
             }
 
-            if(!(hsock = fdopen(csock,"r+")))
+            if(!(hsock = fdopen(csock,"r+b")))
             {
                 logmsg(_("HHCHT009E fdopen: %s\n"),strerror(errno));
                 close_socket (csock);

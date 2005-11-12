@@ -60,10 +60,10 @@ typedef struct _CGIVAR {
         ((_webblk)->baseurl)
 
 
-typedef struct _CONTYP {
+typedef struct _MIMETAB {
     char *suffix;
     char *type;
-} CONTYP;
+} MIMETAB;
 
 
 typedef struct _WEBBLK {
