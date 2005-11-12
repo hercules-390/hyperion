@@ -1,6 +1,5 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
-12 Nov 2005 Support variable size panel - Greg Smith
 08 Nov 2005 Fix CPU reconfiguration identification in SCPIN - Jan Jaeger
 06 Nov 2005 Store Clock Fast (STCKF) - Jan Jaeger
 05 Nov 2005 New format CPUID for z/Arch mode - Jan Jaeger
