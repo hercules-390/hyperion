@@ -1017,6 +1017,56 @@ int zone;
 }
 
 
+void cgibin_configure_cpu(WEBBLK *webblk)
+{
+int i,j;
+
+    html_header(webblk);
+
+    fprintf(webblk->hsock,"<h1>Configure CPU</h1>\n");
+
+    for(i = 0; i < MAX_CPU; i++)
+    {
+    char cpuname[8], *cpustate;
+    int  cpuonline = -1;
+
+        sprintf(cpuname,"cpu%d",i);
+        if((cpustate = cgi_variable(webblk,cpuname)))
+            sscanf(cpustate,"%d",&cpuonline);
+        
+        switch(cpuonline) {
+
+        case 0:
+            if(IS_CPU_ONLINE(i))
+                deconfigure_cpu(i);
+            break;
+
+        case 1:
+            if(!IS_CPU_ONLINE(i))
+                configure_cpu(i);
+            break;
+        }
+    }
+
+    for(i = 0; i < MAX_CPU; i++)
+    {
+        fprintf(webblk->hsock,"<p>CPU%4.4X\n"
+                              "<form method=post>\n"
+                              "<select type=submit name=cpu%d>\n",i,i);
+
+        for(j = 0; j < 2; j++)
+            fprintf(webblk->hsock,"<option value=%d%s>%sline</option>\n",
+              j, ((j!=0) == (IS_CPU_ONLINE(i)!=0)) ? " selected" : "", (j) ? "On" : "Off");
+
+        fprintf(webblk->hsock,"</select>\n"
+                              "<input type=submit value=Update>\n"
+                              "</form>\n");
+    }
+
+    html_footer(webblk);
+
+}
+
 
 void cgibin_debug_version_info(WEBBLK *webblk)
 {
@@ -1054,6 +1104,7 @@ void cgibin_xml_rates_info(WEBBLK *webblk)
 CGITAB cgidir[] = {
     { "tasks/syslog", &cgibin_syslog },
     { "tasks/ipl", &cgibin_ipl },
+    { "configure/cpu", &cgibin_configure_cpu },
     { "debug/registers", &cgibin_debug_registers },
     { "debug/storage", &cgibin_debug_storage },
     { "debug/misc", &cgibin_debug_misc },
