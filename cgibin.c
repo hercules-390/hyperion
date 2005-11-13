@@ -1034,6 +1034,8 @@ int i,j;
         if((cpustate = cgi_variable(webblk,cpuname)))
             sscanf(cpustate,"%d",&cpuonline);
         
+        obtain_lock (&sysblk.intlock);
+
         switch(cpuonline) {
 
         case 0:
@@ -1046,6 +1048,8 @@ int i,j;
                 configure_cpu(i);
             break;
         }
+
+        release_lock (&sysblk.intlock);
     }
 
     for(i = 0; i < MAX_CPU; i++)
