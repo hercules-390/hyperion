@@ -27,7 +27,7 @@ images_sources = images/hercules.jpg \
         images/interruptu.gif  images/powerononu.gif  images/storeu.gif  \
         images/loadd.gif       images/restartd.gif    images/sysonu.gif  \
         images/loadonu.gif     images/restartu.gif    images/waitonu.gif \
-        images/osi-certified-60x50.jpg
+        images/osi-certified-60x50.jpg images/note.gif images/back.gif
 
 images_pkgdatadir = $(pkgdatadir)/images
 
