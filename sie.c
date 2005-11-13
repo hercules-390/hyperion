@@ -13,6 +13,15 @@
 #include "hstdinc.h"
 
 // #define SIE_DEBUG
+//
+
+#if !defined(_HENGINE_DLL_)
+#define _HENGINE_DLL_
+#endif
+
+#if !defined(_SIE_C_)
+#define _SIE_C_
+#endif
 
 #include "hercules.h"
 

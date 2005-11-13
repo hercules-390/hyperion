@@ -9,6 +9,16 @@
 
 #include "hercules.h"
 
+#ifndef _CPU_C_
+#ifndef _HENGINE_DLL_
+#define CPU_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define CPU_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else   /* _CPU_C_ */
+#define CPU_DLL_IMPORT DLL_EXPORT
+#endif /* _HENGINE_DLL_ */
+
 #if defined(_370)
  #define _GEN370(_name) &s370_ ## _name,
 #else
@@ -1450,12 +1460,12 @@ void z900_store_psw (REGS *regs, BYTE *addr);
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
 void ARCH_DEP(perform_io_interrupt) (REGS *regs);
 #if defined(_FEATURE_SIE)
-void s370_program_interrupt (REGS *regs, int code);
+CPU_DLL_IMPORT void s370_program_interrupt (REGS *regs, int code);
 #endif /*!defined(_FEATURE_SIE)*/
 #if defined(_FEATURE_ZSIE)
-void s390_program_interrupt (REGS *regs, int code);
+CPU_DLL_IMPORT void s390_program_interrupt (REGS *regs, int code);
 #endif /*!defined(_FEATURE_ZSIE)*/
-void ARCH_DEP(program_interrupt) (REGS *regs, int code);
+CPU_DLL_IMPORT void ARCH_DEP(program_interrupt) (REGS *regs, int code);
 void *cpu_thread (int *cpu);
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
 void display_psw (REGS *regs);

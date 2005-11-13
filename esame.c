@@ -19,8 +19,13 @@
 
 #include "hstdinc.h"
 
-#define _ESAME_C_
+#if !defined(_HENGINE_DLL_)
 #define _HENGINE_DLL_
+#endif
+
+#if !defined(_ESAME_C_)
+#define _ESAME_C_
+#endif
 
 #include "hercules.h"
 

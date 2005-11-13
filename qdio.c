@@ -5,6 +5,14 @@
 
 #include "hstdinc.h"
 
+#if !defined(_HENGINE_DLL_)
+#define _HENGINE_DLL_
+#endif
+
+#if !defined(_QDIO_C_)
+#define _QDIO_C_
+#endif
+
 #include "hercules.h"
 
 #include "opcode.h"
