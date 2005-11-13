@@ -379,12 +379,16 @@ REGS *regs;
         select_ar = 0;
 
     /* Validate cpu number */
-    if (cpu < 0 || cpu >= MAX_CPU)
+    if (cpu < 0 || cpu >= MAX_CPU || !IS_CPU_ONLINE(cpu))
         for (cpu = 0; cpu < MAX_CPU; cpu++)
             if(IS_CPU_ONLINE(cpu))
                 break;
 
-    regs = sysblk.regs[sysblk.pcpu];
+    if(cpu < MAX_CPU)
+        regs = sysblk.regs[cpu];
+    else
+        regs = sysblk.regs[sysblk.pcpu];
+
     if (!regs) regs = &sysblk.dummyregs;
 
     if((value = cgi_variable(webblk,"alter_gr")) && *value == 'A')
