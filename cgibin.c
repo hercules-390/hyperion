@@ -1050,7 +1050,6 @@ void cgibin_xml_rates_info(WEBBLK *webblk)
 CGITAB cgidir[] = {
     { "tasks/syslog", &cgibin_syslog },
     { "tasks/ipl", &cgibin_ipl },
-    { "tasks/xmlrates", &cgibin_xml_rates_info },
     { "debug/registers", &cgibin_debug_registers },
     { "debug/storage", &cgibin_debug_storage },
     { "debug/misc", &cgibin_debug_misc },
@@ -1060,6 +1059,7 @@ CGITAB cgidir[] = {
     { "registers/general", &cgibin_reg_general },
     { "registers/control", &cgibin_reg_control },
     { "registers/psw", &cgibin_psw },
+    { "xml/rates", &cgibin_xml_rates_info },
     { NULL, NULL } };
 
 #endif /*defined(OPTION_HTTP_SERVER)*/
