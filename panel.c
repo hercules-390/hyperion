@@ -916,7 +916,7 @@ void NP_update(REGS *regs)
                     n = 34;
                 set_color (n > 17 ? COLOR_WHITE : COLOR_LIGHT_GREY, COLOR_BLACK);
                 set_pos (26+i, 4);
-                if (n > 0) fill_text ('*', n+3);
+                fill_text ('*', n+3);
                 fill_text (' ', 38);
                 NPcpugraphpct[i] = sysblk.regs[i]->cpupct;
             }
