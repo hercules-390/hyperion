@@ -618,7 +618,7 @@ TID                     httptid;        /* Negotiation thread id     */
        use a reasonable default */
     if (!sysblk.httproot)
         {
-#if defined(WIN32)
+#if defined(_MSVC_)
         char process_dir[HTTP_PATH_LENGTH];
         if (get_process_directory(process_dir,HTTP_PATH_LENGTH) > 0)
             sysblk.httproot = strdup(process_dir);
