@@ -120,14 +120,12 @@
 /*-------------------------------------------------------------------*/
 #if defined(WIN32)                      /* "Windows" options         */
 
-#ifdef HDL_BUILD_SHARED
-  #ifdef _MSVC_
-    #define  DLL_IMPORT   __declspec ( dllimport )
-    #define  DLL_EXPORT   __declspec ( dllexport )
-  #else
-    #define  DLL_IMPORT   extern
-    #define  DLL_EXPORT
-  #endif
+#if defined(HDL_BUILD_SHARED) && defined(_MSVC_)
+  #define  DLL_IMPORT   __declspec ( dllimport )
+  #define  DLL_EXPORT   __declspec ( dllexport )
+#else
+  #define  DLL_IMPORT   extern
+  #define  DLL_EXPORT
 #endif
 
 #define HTTP_SERVER_CONNECT_KLUDGE
