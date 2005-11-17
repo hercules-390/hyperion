@@ -5,14 +5,26 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hercules", "Hercules.vcproj
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Win32 = Debug|Win32
-		Release|Win32 = Release|Win32
+		Debug-dll|Win32      = Debug-dll|Win32
+		Debug-dllmod|Win32   = Debug-dllmod|Win32
+		Debug-static|Win32   = Debug-static|Win32
+		Release-dll|Win32    = Release-dll|Win32
+		Release-dllmod|Win32 = Release-dllmod|Win32
+		Release-static|Win32 = Release-static|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Debug|Win32.ActiveCfg = Debug|Win32
-		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Debug|Win32.Build.0 = Debug|Win32
-		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Release|Win32.ActiveCfg = Release|Win32
-		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Release|Win32.Build.0 = Release|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Debug-dll|Win32.ActiveCfg      = Debug-dll|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Debug-dll|Win32.Build.0        = Debug-dll|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Debug-dllmod|Win32.ActiveCfg   = Debug-dllmod|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Debug-dllmod|Win32.Build.0     = Debug-dllmod|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Debug-static|Win32.ActiveCfg   = Debug-static|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Debug-static|Win32.Build.0     = Debug-static|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Release-dll|Win32.ActiveCfg    = Release-dll|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Release-dll|Win32.Build.0      = Release-dll|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Release-dllmod|Win32.ActiveCfg = Release-dllmod|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Release-dllmod|Win32.Build.0   = Release-dllmod|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Release-static|Win32.ActiveCfg = Release-static|Win32
+		{F17348EA-9067-49DC-9497-5D4BF1E6635B}.Release-static|Win32.Build.0   = Release-static|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -16,7 +16,47 @@
 	</ToolFiles>
 	<Configurations>
 		<Configuration
-			Name="Debug|Win32"
+			Name="Release-dll|Win32"
+			OutputDirectory="./msvc.dll.bin"
+			IntermediateDirectory="./msvc.dll.obj"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat RETAIL makefile-dll.msvc 8"
+				ReBuildCommandLine="makefile.bat RETAIL makefile-dll.msvc 8 -a"
+				CleanCommandLine="makefile.bat RETAIL makefile-dll.msvc 8 clean"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;NDEBUG;"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug-dll|Win32"
+			OutputDirectory="./msvc.debug.dll.bin"
+			IntermediateDirectory="./msvc.debug.dll.obj"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat DEBUG makefile-dll.msvc 8"
+				ReBuildCommandLine="makefile.bat DEBUG makefile-dll.msvc 8 -a"
+				CleanCommandLine="makefile.bat DEBUG makefile-dll.msvc 8 clean"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_DEBUG;"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug-dllmod|Win32"
 			OutputDirectory="./msvc.debug.dllmod.bin"
 			IntermediateDirectory="./msvc.debug.dllmod.obj"
 			ConfigurationType="0"
@@ -36,7 +76,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
+			Name="Release-dllmod|Win32"
 			OutputDirectory="./msvc.dllmod.bin"
 			IntermediateDirectory="./msvc.dllmod.obj"
 			ConfigurationType="0"
@@ -46,6 +86,46 @@
 				BuildCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 8"
 				ReBuildCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 8 -a"
 				CleanCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 8 clean"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;NDEBUG;"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug-static|Win32"
+			OutputDirectory="./msvc.debug.bin"
+			IntermediateDirectory="./msvc.debug.obj"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat DEBUG makefile.msvc 8"
+				ReBuildCommandLine="makefile.bat DEBUG makefile.msvc 8 -a"
+				CleanCommandLine="makefile.bat DEBUG makefile.msvc 8 clean"
+				Output="$(OutDir)"
+				PreprocessorDefinitions="WIN32;_DEBUG;"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release-static|Win32"
+			OutputDirectory="./msvc.bin"
+			IntermediateDirectory="./msvc.obj"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="makefile.bat RETAIL makefile.msvc 8"
+				ReBuildCommandLine="makefile.bat RETAIL makefile.msvc 8 -a"
+				CleanCommandLine="makefile.bat RETAIL makefile.msvc 8 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="WIN32;NDEBUG;"
 				IncludeSearchPath=""
