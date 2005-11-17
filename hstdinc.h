@@ -32,6 +32,11 @@
     #define _WIN32_WINNT 0x0403  // Windows 98 or WinNT SP4 or greater
   #endif
   #include <winsock2.h>
+#endif
+#ifdef WIN32
+  #include <windows.h>
+#endif
+#ifdef _MSVC_
   #include <wincon.h>
   #include <conio.h>
   #include <io.h>
@@ -119,6 +124,11 @@
   #include <byteswap.h>
 #endif
 #ifdef HAVE_BZLIB_H
+  // windows.h #defines 'small' as char and bzlib.h
+  // uses it for a variable name so we must #undef.
+  #if defined(__CYGWIN__)
+    #undef small
+  #endif
   #include <bzlib.h>
   /* ISW 20050427 : CCKD_BZIP2/HET_BZIP2 are usually */
   /* controlled by config.h (automagic). If config.h */
