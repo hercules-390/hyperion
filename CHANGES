@@ -1,5 +1,6 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
+17 Nov 2005 TAPECONV support for 64K blocksize by Charlie Brint - Roger Bowler
 17 Nov 2005 Allow compiling support for up to 32 CPUs - Ivan Warren
 13 Nov 2005 Add CPU configuration option to http server - Jan Jaeger
 11 Nov 2005 Variable size panel - Greg Smith

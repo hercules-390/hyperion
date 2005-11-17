@@ -26,7 +26,23 @@ TAPECONV TITLE 'Convert file to AWSTAPE format'                         00184000
 *        This program converts a tape file to AWSTAPE format.         * 00187000
 *        It reads undefined length blocks of data from SYSUT1 and     * 00188000
 *        writes each block, prefixed by a 6-byte header, to SYSUT2.   * 00189000
+*                                                                     *
+* Modification by Charlie Brint:                                      *
+*        This program has been modified from its original Hercules    *
+*        source format to handle blocks > 32K and < 64k because the   *
+*        default blksize for ADRDSSU is 65,520 in most installations  *
+*        and the original TAPECONV would just truncate blocks at      *
+*        32,760 bytes without giving any error indication.  As a side *
+*        benefit, SYSUT2 can reside on disk even if SYSUT1 is an      *
+*        ADRDSSU dump tape with blocks longer than 32760 because the  *
+*        program never writes blocks longer than 32760 to SYSUT2.     *
+* NOTE:  This version uses the Large Block Interface (LBI) and        *
+*        thus requires OS/390 V2R10 or z/OS to assemble and run.      *
+*        For earlier versions of MVS, the program still assembles and *
+*        runs (without LBI) if you replace &LBI SETB 1 by &LBI SETB 0 *
 *---------------------------------------------------------------------* 00226000
+         GBLB  &LBI
+&LBI     SETB  1                        1=use LBI, 0=do not use LBI
 TAPECONV CSECT                                                          03740000
          LR    R12,R15                  Load base register              03750000
          USING TAPECONV,R12             Establish addressability        03760000
@@ -40,14 +56,32 @@ GENLOOP  EQU   *                                                        03800000
          GET   SYSUT1                   Get input block                 03810000
          LR    R2,R1                    R2=>input block                 03811000
          LH    R4,SYSUT1+82             R4=actual block length          03820000
+         AIF   (NOT &LBI).LBIN1
+         L     R15,SYSUT1+68            Get IOB address
+         SH    R15,=H'4'                Reduce by 4 as per LBI docs
+         L     R4,0(R15)                R4 should now be the blk leng
+.LBIN1   ANOP  ,
+         LR    R5,R4                    Copy length for later use
+         C     R4,=F'65520'             Is the block > 65520 ?
+         BH    EXIT020                  yes, take error exit
+         C     R4,=F'32760'             Is the block > 32760 ?
+         BNH   UNDER32                  no, skip
+         L     R4,=F'32760'             yes, set write length to max
+UNDER32  DS    0H
          MVC   HDRPRVLN,HDRCURLN        Copy previous block length      03830000
-         STCM  R4,B'0001',HDRCURLN      Store low-order length byte     03840000
-         STCM  R4,B'0010',HDRCURLN+1    Store high-order length byte    03850000
+         STCM  R5,B'0001',HDRCURLN      Store low-order length byte
+         STCM  R5,B'0010',HDRCURLN+1    Store high-order length byte
          MVI   HDRFLAG1,HDRF1BOR+HDRF1EOR  Set complete record flags
          MVC   SYSUT2+82(2),=H'6'       Set header length in DCB        03851001
          PUT   SYSUT2,HEADER            Write block header to SYSUT2    03860000
          STH   R4,SYSUT2+82             Set block length in DCB         03870001
          PUT   SYSUT2,(R2)              Write data block to SYSUT2      03880000
+         CR    R4,R5                    Did we write all the data ?
+         BE    GENLOOP                  yes, go back for next record
+         ALR   R2,R4                    no, bump input block pointer
+         SR    R5,R4                    Compute remaining length
+         STH   R5,SYSUT2+82             Set remaining length in DCB
+         PUT   SYSUT2,(R2)              Write the rest of the block
          B     GENLOOP                  Go back for next record         03890000
 GENEOF   DS    0H                                                       03900000
          MVC   HDRPRVLN,HDRCURLN        Copy previous block length      03901000
@@ -76,9 +110,15 @@ HDRFLAG2 DC    X'00'                    Flags byte 2
 *                                                                       04100400
 * Data Control Blocks                                                   04100500
 *                                                                       04100600
-         PRINT NOGEN                                                    04101000
+         AIF   (&LBI).LBID1
 SYSUT1   DCB   DSORG=PS,MACRF=GL,DDNAME=SYSUT1,EODAD=GENEOF,           X04110000
                RECFM=U,LRECL=0,BLKSIZE=32760                            04120000
+         AGO   .LBID2
+.LBID1   ANOP  ,
+SYSUT1   DCB   DSORG=PS,MACRF=GL,DDNAME=SYSUT1,EODAD=GENEOF,           X
+               RECFM=U,LRECL=0,DCBE=MYDCBE
+MYDCBE   DCBE  BLKSIZE=65520  DCB extension, new in OS/390 V2R10
+.LBID2   ANOP  ,
 SYSUT2   DCB   DSORG=PS,MACRF=PM,DDNAME=SYSUT2,                        X04121000
                RECFM=U,LRECL=0,BLKSIZE=32760                            04122000
          LTORG                                                          04130000
