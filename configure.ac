@@ -1133,7 +1133,9 @@ AC_ARG_ENABLE( multi-cpu,
         case "${enableval}" in
         yes)             hc_cv_opt_num_cpu_engines=2                  ;;
         no)              hc_cv_opt_num_cpu_engines=1                  ;;
-        1|2|3|4|5|6|7|8) hc_cv_opt_num_cpu_engines=${enableval}       ;;
+# ISW 20051117 : Raise max CPUs to 32
+#         1|2|3|4|5|6|7|8) hc_cv_opt_num_cpu_engines=${enableval}       ;;
+        [1-9]|[0-2][0-9]|3[0-2]) hc_cv_opt_num_cpu_engines=${enableval}       ;;
         *)               AC_MSG_RESULT( [ERROR: invalid 'multi-cpu' option] )
                          hc_error=yes
                          ;;
