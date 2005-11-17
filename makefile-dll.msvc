@@ -5,6 +5,7 @@
 # This file and the executable program(s) generated from it are
 # subject to the terms of the Hercules Public Licence Version 2
 #
+# DD/MM/YY Description.......................................................
 #   /03/05 DLL version based on work by Roger Bowler - Ivan Warren
 #   /03/05 Place debug/retail builds into separate directories - Fish
 # 08/03/05 Added /QIfist to cflags - JJ
@@ -21,10 +22,35 @@
 # 13/03/05 Place MAP files in separate directory - R.Bowler
 # 06/05/05 Add scsitape, w32stape, user32.lib and remove w32ftol2 - R.Bowler
 # 06/05/05 Can we agree on these o/p directory names?? - Fish
+# 14/11/05 Bring up-to-date; make similar to dllmod version. - Fish
 # ***************************************************************************
 
 !IFNDEF VERSION
-VERSION  = \"3.03msvc\"
+
+#   >>>  Jay!  <<<  Be sure to change the below V1/V2/V3/V4 values to match!
+
+VERSION = \"3.03_msvc\"
+
+# The below VERSION digits values SHOULD match the ABOVE VERSION number.
+#
+# Windows uses 4-digit version numbers: V1.V2.V3.V4. The first three are
+# your standard major/intermediate/minor version level, and the last digit
+# is the "build number". Normally your basic "version number" value (major
+# intermediate, minor) is maintained manually, whereas the "build number"
+# is automatically incremented each time you do a build. Thus the "build
+# number" provides for a guaranteed unique "version#" which may not always
+# be the case when you don't change the major/inter/minor values (or forget
+# to do so) during development and/or fix releases.
+#
+# I plan to try and "automate" the incrementing of the "build count" value
+# (actually it's ALREADY automated on my own system), but it can remain 0
+# for now since at the moment we only support the major/inter/minor scheme.
+
+V1 = 3
+V2 = 0
+V3 = 3
+V4 = 0
+
 !ENDIF
 
 APPVER   = 4.0
@@ -51,8 +77,7 @@ TARGETOS = BOTH
 
 # ISW 20050311
 # If winbuild\zlib\win32_32 exists (relative to current dir)
-#    then use it for ZLIB_DIR *UNLESS* ZLIB_DIR is already
-#    set.
+#    then use it for ZLIB_DIR *UNLESS* ZLIB_DIR is already set.
 #
 # If ZLIB_DIR is improperly set, issue a message and exit *UNLESS*
 # it is set to the word "NONE"
@@ -71,10 +96,39 @@ ZLIB_DIR = winbuild\zlib\win32_32
 
 !IF "$(ZLIB_DIR)" == "NONE"
 !UNDEF ZLIB_DIR
-!ELSE
-!IF !EXIST("$(ZLIB_DIR)\include\zlib.h")
+!ELSEIF !EXIST("$(ZLIB_DIR)\include\zlib.h")
 !ERROR ZLIB_DIR "$(ZLIB_DIR)\include\zlib.h" does not exist. Check ZLIB_DIR
 !ENDIF
+
+!ENDIF
+
+# ---------------------------------------------------------------------
+# To enable BZIP2 compression, first make sure you have the libbz2.dll
+# installed on your system (from: http://sources.redhat.com/bzip2/),
+# and then define an environment variable called "BZIP2_DIR" that
+# specifies the full path to the directory where it is installed.
+# (via the "Advanced" tab of the Control Panel 'System' applet).
+#
+# Note that the directory you specify should contain the libbz2.dll as
+# well as the 'bzlib.h' header file and the 'libbz2.lib' link library.
+#
+# Note: if the path contains blanks, do NOT surround it with quotes!
+# The makefile will do that if it needs to. Just define the variable
+# with the path as-is. E.g.:
+#
+# BZIP2_DIR = E:\MyProjects\bzip2
+# ---------------------------------------------------------------------
+
+!IFDEF BZIP2_DIR
+
+!IF "$(BZIP2_DIR)" == "NONE"
+!UNDEF BZIP2_DIR
+!ELSEIF !EXIST("$(BZIP2_DIR)\bzlib.h")
+!ERROR BZIP2_DIR "$(BZIP2_DIR)\bzlib.h" does not exist. Check BZIP2_DIR
+!ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.lib")
+!ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.lib" does not exist. Check BZIP2_DIR
+!ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.dll")
+!ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.dll" does not exist. Check BZIP2_DIR
 !ENDIF
 
 !ENDIF
@@ -101,18 +155,92 @@ NODEBUG = 1
 #       AFTER calling win32.mak since it sets it.
 # -------------------------------------------------
 
+# Define o/p directories (if not already pre-defined)...
+
+!IF ("$(EXEDIR)" == "") || ("$(OBJDIR)" == "") || ("$(PDBDIR)" == "") || ("$(MAPDIR)" == "")
 !IFDEF NODEBUG
-cdebug  = -Oi -Op -Ot -Oy -DNDEBUG
 EXEDIR  = msvc.dll.bin
 OBJDIR  = msvc.dll.obj
+PDBDIR  = msvc.dll.pdb
 MAPDIR  = msvc.dll.map
-MAPFILE = /map:$(MAPDIR)\$(@B).map /mapinfo:lines 
 !ELSE
-cdebug  = -Zi -Od -DDEBUG
 EXEDIR  = msvc.debug.dll.bin
 OBJDIR  = msvc.debug.dll.obj
+PDBDIR  = msvc.debug.dll.pdb
 MAPDIR  = msvc.debug.dll.map
+!ENDIF
+!ENDIF
+
+!IFDEF VS70COMNTOOLS
+MAPFILE = /map:$(MAPDIR)\$(@B).map /mapinfo:lines
+!ELSE
 MAPFILE = /map:$(MAPDIR)\$(@B).map
+!ENDIF
+
+!IFDEF NODEBUG
+# -------------------------------
+# RETAIL: full optimization
+# -------------------------------
+
+# Fish: Not sure how to check within a makefile for which version
+# of the compiler is going to be used so for now, we'll hard code
+# the test for VS 7.0's compiler (version 13.00) which still supports
+# the /QIfist option (whereas the newer VS 8.0 compiler (vers 14.00)
+# kicks out the warning: "D9035 option 'QIfist' has been deprecated
+# and will be removed in a future release"). Their documentation
+# says to use the new /fp option instead.
+
+!IFDEF VS70COMNTOOLS
+
+cflags = $(cflags) /QIfist
+
+# PROGRAMMING NOTE: we're purposely discarding win32.mak's $(cdebug) settings
+# and replacing them with our own by leaving "$(cdebug)" out of the statement
+
+cdebug  = /O2 /DNDEBUG
+ldebug = $(ldebug)
+
+!ELSEIFDEF VS80COMNTOOLS
+
+# PROGRAMMING NOTE: we're purposely discarding win32.mak's $(cdebug) settings
+# and replacing them with our own by leaving "$(cdebug)" out of the statement
+
+cdebug = /O2 /GL /DNDEBUG
+ldebug = $(ldebug) /LTCG
+
+!ENDIF
+
+# Create .PDB (Program Database) files for debugging for 'Release' builds too!
+# (so we can easily analyze "MiniDump" crash dumps should Herc ever crash)
+
+cdebug = $(cdebug) /Zi /Gm
+ldebug = $(ldebug) /DEBUG /PDB:$(PDBDIR)\$(@B).pdb
+
+!ELSE
+# -------------------------------
+# DEBUG: no optimizations at all
+# -------------------------------
+
+# PROGRAMMING NOTE: we're purposely discarding win32.mak's $(cdebug) settings
+# and replacing them with our own by leaving "$(cdebug)" out of the statement
+
+cdebug  = -Zi -Od -DDEBUG -D_DEBUG -Gm
+ldebug = /DEBUG /PDB:$(PDBDIR)\$(@B).pdb
+
+!ENDIF
+
+!IFDEF VS80COMNTOOLS
+cflags = $(cflags) -D_CRT_SECURE_NO_DEPRECATE
+cflags = $(cflags) -D_CRT_NONSTDC_NO_DEPRECATE
+cflags = $(cflags) -D_USE_32BIT_TIME_T
+ldebug = $(ldebug) /MANIFEST:NO
+!ENDIF
+
+# fish test
+##FISH_HANG = yes
+
+!IFDEF FISH_HANG
+cflags = $(cflags) -DFISH_HANG
 !ENDIF
 
 # ***************************************************************************
@@ -121,35 +249,39 @@ X = $(EXEDIR)\$(NULL)
 O = $(OBJDIR)\$(NULL)
 
 EXECUTABLES = \
-    $(X)hercules.exe \
-    $(X)dasdinit.exe \
-    $(X)dasdisup.exe \
-    $(X)dasdload.exe \
-    $(X)dasdconv.exe \
-    $(X)dasdcopy.exe \
-    $(X)dasdls.exe \
-    $(X)dasdcat.exe \
-    $(X)dasdpdsu.exe \
-    $(X)dasdseq.exe \
-    $(X)tapecopy.exe \
-    $(X)tapemap.exe \
-    $(X)tapesplt.exe \
     $(X)cckdcdsk.exe \
     $(X)cckdcomp.exe \
     $(X)cckddiag.exe \
     $(X)cckdswap.exe \
-    $(X)hetget.exe \
-    $(X)hetinit.exe \
-    $(X)hetmap.exe \
-    $(X)hetupd.exe \
-    $(X)dmap2hrc.exe
+    $(X)dasdcat.exe  \
+    $(X)dasdconv.exe \
+    $(X)dasdcopy.exe \
+    $(X)dasdinit.exe \
+    $(X)dasdisup.exe \
+    $(X)dasdload.exe \
+    $(X)dasdls.exe   \
+    $(X)dasdpdsu.exe \
+    $(X)dasdseq.exe  \
+    $(X)dmap2hrc.exe \
+    $(X)herclin.exe  \
+    $(X)hercules.exe \
+    $(X)hetget.exe   \
+    $(X)hetinit.exe  \
+    $(X)hetmap.exe   \
+    $(X)hetupd.exe   \
+    $(X)tapecopy.exe \
+    $(X)tapemap.exe  \
+    $(X)tapesplt.exe
 
-all: allzlib
+all: allzlib alllibbz2
 
 clean:
-    del /f /q $(EXEDIR)\*.*
     del /f /q $(OBJDIR)\*.*
+    del /f /q $(EXEDIR)\*.*
+    del /f /q $(PDBDIR)\*.*
     del /f /q $(MAPDIR)\*.*
+
+crypto: $(X)dyncrypt.dll
 
 $(OBJDIR):
     if not exist "$(OBJDIR)\$(NULL)" mkdir $(OBJDIR)
@@ -157,23 +289,28 @@ $(OBJDIR):
 $(EXEDIR):
     if not exist "$(EXEDIR)\$(NULL)" mkdir $(EXEDIR)
 
+$(PDBDIR):
+    if not exist "$(PDBDIR)\$(NULL)" mkdir $(PDBDIR)
+
 $(MAPDIR):
     if not exist "$(MAPDIR)\$(NULL)" mkdir $(MAPDIR)
 
-cflags = $(cflags) /QIfist /DVERSION=$(VERSION) /D_MSVC_
+!IFNDEF MAX_CPU_ENGINES
+MAX_CPU_ENGINES = 2
+!ENDIF
 
-# The following line suppresses the warning:
-# C4244: conversion from 'type' to 'type', possible loss of data
-cflags = $(cflags) /wd4244
+# Starting values...
 
-# The following line makes all warnings into errors
-cflags = $(cflags) /WX
+cflags = $(cflags) /D_MSVC_ /DVERSION=$(VERSION) /DMAX_CPU_ENGINES=$(MAX_CPU_ENGINES)
 
 # The following instructs the declaration of DLL export symbols
 cflags = $(cflags) /DHDL_BUILD_SHARED
 
 # user32.lib for the MessageBeep and MessageBox functions
 LIBS = user32.lib
+
+# The following line makes all warnings into errors
+cflags = $(cflags) /WX
 
 !IFDEF ZLIB_DIR
 ZLIB_DLL = $(ZLIB_DIR)\zlib1.dll
@@ -183,8 +320,27 @@ LIBS     = $(LIBS) "$(ZLIB_LIB)"
 cflags   = $(cflags) /DHAVE_LIBZ /DHAVE_ZLIB_H /I"$(ZLIB_INC)"
 !ENDIF
 
-linkexe = $(link) -nologo $(ldebug) $(conlflags) $** $(LIBS) -out:$@ $(MAPFILE) $(conlibsdll)
-linkdll = $(link) -nologo $(ldebug) $(dlllflags) $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(MAPFILE) $(conlibsdll)
+!IFDEF BZIP2_DIR
+BZIP2_DLL = $(BZIP2_DIR)\libbz2.dll
+BZIP2_LIB = $(BZIP2_DIR)/libbz2.lib
+BZIP2_INC = $(BZIP2_DIR)
+LIBS     = $(LIBS) "$(BZIP2_LIB)"
+cflags   = $(cflags) /DHAVE_BZLIB_H /I"$(BZIP2_INC)"
+!ENDIF
+
+# PRERELEASE Flag support
+
+!IFDEF PRERELEASE
+PREREL = -D PRERELEASE=1
+!ELSE
+PREREL =
+!ENDIF
+
+linkexe = $(link) -nologo $(ldebug) $(conlflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE)
+linkdll = $(link) -nologo $(ldebug) $(dlllflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE)
+
+$(O)hercver.res: hercver.rc
+    $(rc) $(rcflags) $(rcvars) -fo $(O)hercver.res -D VERSION=$(VERSION) -D V1=$(V1) -D V2=$(V2) -D V3=$(V3) -D V4=$(V4) $(PREREL) hercver.rc
 
 $(O)build_pch.pch: build_pch.c
     $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yc"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $**
@@ -192,14 +348,17 @@ $(O)build_pch.pch: build_pch.c
 .c{$(OBJDIR)}.obj::
     $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
 
+{crypto}.c{$(OBJDIR)}.obj::
+    $(cc) $(cdebug) $(cflags) /Icrypto /I. /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
+
 #
 # No precompiled headers for these ones.. Sorry!
 #
 $(O)getopt.obj: getopt.c
-    $(cc) $(cdebug) $(cflags) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $**
+    $(cc) $(cdebug) $(cflags) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" getopt.c
 
-$(O)hdlmain.obj: hdlmain.c
-    $(cc) $(cdebug) $(cflags) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $**
+$(O)herclin.obj: herclin.c
+    $(cc) $(cdebug) $(cflags) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" herclin.c
 
 {$(OBJDIR)}.obj{$(EXEDIR)}.exe:
     $(linkexe)
@@ -207,7 +366,7 @@ $(O)hdlmain.obj: hdlmain.c
 {$(OBJDIR)}.obj{$(EXEDIR)}.dll:
     $(linkdll)
 
-# Dummy entry : Since the primary target is .DLL
+# Dummy target entry: Since the primary target is .DLL
 # and .LIB is generated in the same step.. And .LIB
 # are used as input, the following generates an effective
 # rule, with no side effect
@@ -215,183 +374,233 @@ $(O)hdlmain.obj: hdlmain.c
 {$(EXEDIR)}.dll{$(OBJDIR)}.lib:
     echo $* $@
 
-$(X)hsys.dll: $(O)$(@B).obj
+# -------------------------------------------------------------
+# Define what object code goes into each individual DLL...
 
-$(O)hsys.lib: $(X)hsys.dll
+hsys_OBJ = \
+    $(O)hsys.obj
+
+hdasd_OBJ = \
+    $(O)cache.obj    \
+    $(O)cckddasd.obj \
+    $(O)cckdutil.obj \
+    $(O)ckddasd.obj  \
+    $(O)dasdtab.obj  \
+    $(O)dasdutil.obj \
+    $(O)fbadasd.obj  \
+    $(O)shared.obj
+
+htape_OBJ = \
+    $(O)hetlib.obj   \
+    $(O)sllib.obj    \
+    $(O)w32stape.obj
 
 hutil_OBJ = \
     $(O)codepage.obj \
     $(O)fthreads.obj \
-    $(O)getopt.obj \
-    $(O)hdl.obj \
+    $(O)getopt.obj   \
+    $(O)hdl.obj      \
     $(O)hostinfo.obj \
-    $(O)hscutl.obj \
-    $(O)hscutl2.obj \
-    $(O)logger.obj \
-    $(O)logmsg.obj \
-    $(O)memrchr.obj \
-    $(O)parser.obj \
-    $(O)pttrace.obj \
-    $(O)version.obj \
+    $(O)hscutl.obj   \
+    $(O)hscutl2.obj  \
+    $(O)logger.obj   \
+    $(O)logmsg.obj   \
+    $(O)memrchr.obj  \
+    $(O)parser.obj   \
+    $(O)pttrace.obj  \
+    $(O)version.obj  \
     $(O)w32util.obj
 
-$(X)hutil.dll: $(hutil_OBJ) $(O)hsys.lib
-    $(linkdll)
-
-$(O)hutil.lib: $(X)hutil.dll
-
-hdasd_OBJ = \
-    $(O)cache.obj \
-    $(O)cckddasd.obj \
-    $(O)cckdutil.obj \
-    $(O)ckddasd.obj \
-    $(O)dasdtab.obj \
-    $(O)dasdutil.obj \
-    $(O)fbadasd.obj \
-    $(O)shared.obj
-
-$(X)hdasd.dll: $(hdasd_OBJ) $(O)hsys.lib $(O)hutil.lib $(ZLIBLIB)
-    $(linkdll)
-
-$(O)hdasd.lib: $(X)hdasd.dll
-
-htape_OBJ = \
-    $(O)w32stape.obj \
-    $(O)hetlib.obj \
-    $(O)sllib.obj
-
-$(X)htape.dll: $(htape_OBJ) $(O)hutil.lib $(ZLIBLIB)
-    $(linkdll)
-
-$(O)htape.lib: $(X)htape.dll
-
 hengine_OBJ = \
-    $(O)assist.obj \
-    $(O)bldcfg.obj \
-    $(O)cardpch.obj \
-    $(O)cardrdr.obj \
-    $(O)cgibin.obj \
-    $(O)channel.obj \
-    $(O)chsc.obj \
-    $(O)cmpsc.obj \
+    $(O)assist.obj   \
+    $(O)bldcfg.obj   \
+    $(O)cardpch.obj  \
+    $(O)cardrdr.obj  \
+    $(O)cgibin.obj   \
+    $(O)channel.obj  \
+    $(O)chsc.obj     \
+    $(O)cmpsc.obj    \
     $(O)commadpt.obj \
-    $(O)config.obj \
-    $(O)console.obj \
-    $(O)control.obj \
-    $(O)cpu.obj \
-    $(O)crypto.obj \
+    $(O)config.obj   \
+    $(O)console.obj  \
+    $(O)control.obj  \
+    $(O)cpu.obj      \
+    $(O)crypto.obj   \
     $(O)ctc_ctci.obj \
-    $(O)ctc_lcs.obj \
-    $(O)ctcadpt.obj \
-    $(O)dat.obj \
-    $(O)decimal.obj \
+    $(O)ctc_lcs.obj  \
+    $(O)ctcadpt.obj  \
+    $(O)dat.obj      \
+    $(O)decimal.obj  \
     $(O)diagmssf.obj \
     $(O)diagnose.obj \
-    $(O)dyngui.obj \
-    $(O)dyninst.obj \
-    $(O)ecpsvm.obj \
-    $(O)esame.obj \
+    $(O)dyngui.obj   \
+    $(O)dyninst.obj  \
+    $(O)ecpsvm.obj   \
+    $(O)esame.obj    \
     $(O)external.obj \
     $(O)fillfnam.obj \
-    $(O)float.obj \
+    $(O)float.obj    \
     $(O)general1.obj \
     $(O)general2.obj \
     $(O)hconsole.obj \
-    $(O)hdlmain.obj \
-    $(O)history.obj \
-    $(O)hsccmd.obj \
-    $(O)hscmisc.obj \
+    $(O)hdlmain.obj  \
+    $(O)history.obj  \
+    $(O)hsccmd.obj   \
+    $(O)hscmisc.obj  \
     $(O)httpserv.obj \
-    $(O)ieee.obj \
-    $(O)impl.obj \
-    $(O)io.obj \
-    $(O)ipl.obj \
+    $(O)ieee.obj     \
+    $(O)impl.obj     \
+    $(O)io.obj       \
+    $(O)ipl.obj      \
     $(O)loadparm.obj \
-    $(O)machchk.obj \
-    $(O)opcode.obj \
-    $(O)panel.obj \
-    $(O)plo.obj \
-    $(O)printer.obj \
-    $(O)qdio.obj \
-    $(O)qeth.obj \
+    $(O)machchk.obj  \
+    $(O)opcode.obj   \
+    $(O)panel.obj    \
+    $(O)plo.obj      \
+    $(O)printer.obj  \
+    $(O)qdio.obj     \
+    $(O)qeth.obj     \
     $(O)scsitape.obj \
-    $(O)service.obj \
-    $(O)sie.obj \
-    $(O)sockdev.obj \
-    $(O)sr.obj \
-    $(O)stack.obj \
-    $(O)tapedev.obj \
-    $(O)timer.obj \
-    $(O)trace.obj \
-    $(O)tuntap.obj \
-    $(O)vector.obj \
-    $(O)vm.obj \
-    $(O)vstore.obj \
-    $(O)w32ctca.obj \
-    $(O)xstore.obj \
-    $(O)w32chan.obj  
+    $(O)service.obj  \
+    $(O)sie.obj      \
+    $(O)sockdev.obj  \
+    $(O)sr.obj       \
+    $(O)stack.obj    \
+    $(O)tapedev.obj  \
+    $(O)timer.obj    \
+    $(O)trace.obj    \
+    $(O)tuntap.obj   \
+    $(O)vector.obj   \
+    $(O)vm.obj       \
+    $(O)vstore.obj   \
+    $(O)w32chan.obj  \
+    $(O)w32ctca.obj  \
+    $(O)xstore.obj
 
-$(X)hengine.dll: $(hengine_OBJ) $(O)hsys.lib $(O)hdasd.lib $(O)hutil.lib $(O)htape.lib
-    $(linkdll)
+# -------------------------------------------------------------
+# DLL export libraries are dependent on themselves existing
+
+$(O)hdasd.lib:   $(X)hdasd.dll
+
+$(O)htape.lib:   $(X)htape.dll
+
+$(O)hutil.lib:   $(X)hutil.dll
 
 $(O)hengine.lib: $(X)hengine.dll
 
-$(X)hercules.exe: $(O)bootstrap.obj $(O)hengine.lib $(O)hutil.lib
+$(O)hsys.lib:    $(X)hsys.dll
+
+# -------------------------------------------------------------
+# Individual DLLs are dependent their own code as well as the
+# export libraries from other DLLs that they're dependent on..
+
+$(X)hsys.dll:    $(hsys_OBJ)                                                           $(O)hercver.res
+    $(linkdll)
+
+$(X)hutil.dll:   $(hutil_OBJ)   $(O)hsys.lib                                           $(O)hercver.res
+    $(linkdll)
+
+$(X)htape.dll:   $(htape_OBJ)   $(O)hsys.lib               $(O)hutil.lib               $(O)hercver.res
+    $(linkdll)
+
+$(X)hdasd.dll:   $(hdasd_OBJ)   $(O)hsys.lib               $(O)hutil.lib               $(O)hercver.res
+    $(linkdll)
+
+$(X)hengine.dll: $(hengine_OBJ) $(O)hsys.lib $(O)hdasd.lib $(O)hutil.lib $(O)htape.lib $(O)hercver.res
+    $(linkdll)
+
+# -------------------------------------------------------------
+# Main product executables
+
+$(X)hercules.exe: $(O)bootstrap.obj $(O)hengine.lib        $(O)hutil.lib $(O)hercver.res
     $(linkexe)
-    
-$(X)dasdinit.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
 
-$(X)dasdisup.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+$(X)herclin.exe:  $(O)herclin.obj   $(O)hengine.lib        $(O)hutil.lib $(O)hercver.res
+    $(linkexe)
 
-$(X)dasdload.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+# -------------------------------------------------------------
+# System utilities
 
-$(X)dasdconv.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+$(X)dmap2hrc.exe: $(O)$(@B).obj               $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)dasdcopy.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+# -------------------------------------------------------------
+# Dasd utilities
 
-$(X)dasdls.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+$(X)cckdcdsk.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)dasdcat.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+$(X)cckdcomp.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)dasdpdsu.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+$(X)cckddiag.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)dasdseq.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+$(X)cckdswap.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)tapecopy.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib
+$(X)dasdinit.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)tapemap.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib
+$(X)dasdisup.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)tapesplt.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib
+$(X)dasdload.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)cckdcdsk.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+$(X)dasdconv.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)cckdcomp.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+$(X)dasdcopy.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)cckddiag.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+$(X)dasdls.exe:   $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)cckdswap.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib
+$(X)dasdcat.exe:  $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)hetget.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib
+$(X)dasdpdsu.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)hetinit.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib
+$(X)dasdseq.exe:  $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)hetmap.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib
+# -------------------------------------------------------------
+# Tape utilities
 
-$(X)hetupd.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib
+$(X)hetget.exe:   $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
-$(X)dmap2hrc.exe: $(O)$(@B).obj $(O)hsys.lib $(O)hutil.lib
+$(X)hetinit.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+
+$(X)hetmap.exe:   $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+
+$(X)hetupd.exe:   $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+
+$(X)tapecopy.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+
+$(X)tapemap.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+
+$(X)tapesplt.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+
+# -------------------------------------------------------------
 
 !IFDEF ZLIB_DIR
 
 $(X)zlib1.dll:
     XCOPY "$(ZLIB_DLL)" $(X) /V /C /F /H /R /K /O /X /Y
 
-allzlib: $(OBJDIR) $(EXEDIR) $(MAPDIR) $(O)build_pch.pch \
-     $(EXECUTABLES) \
-     $(X)zlib1.dll
+allzlib: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(O)build_pch.pch \
+    $(EXECUTABLES) \
+    $(X)zlib1.dll
 
 !ELSE
-allzlib: $(OBJDIR) $(EXEDIR) $(MAPDIR) $(O)build_pch.pch \
-     $(EXECUTABLES)
+allzlib: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(O)build_pch.pch \
+    $(EXECUTABLES)
 
 !ENDIF
+
+# -------------------------------------------------------------
+
+!IFDEF BZIP2_DIR
+
+$(X)libbz2.dll:
+    XCOPY "$(BZIP2_DLL)" $(X) /V /C /F /H /R /K /O /X /Y
+
+alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(O)build_pch.pch \
+    $(EXECUTABLES) \
+    $(X)libbz2.dll
+
+!ELSE
+alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(O)build_pch.pch \
+    $(EXECUTABLES)
+
+!ENDIF
+
+# -------------------------------------------------------------
