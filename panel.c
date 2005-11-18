@@ -1710,6 +1710,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                     break;
                                 case 'd':
                                     sscanf(cmdline, "%x", &NPdata);
+                                    NPdata_valid = 0;
                                     strcpy(NPprompt1, "");
                                     break;
                                 case 'n':
