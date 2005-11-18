@@ -27,6 +27,8 @@
 /* 05/13/05  Fix crash @ shutdown when initiated externally.         */
 /* 08/17/05  Moved "high water mark" code to panel.c.                */
 /* 09/20/05  sysblk.mipsrate now per second instead of millisecond   */
+/* 11/18/05  Fix crash in UpdateTargetCPU when NUMCPU=0 (as it might */
+/*           be when, e.g., running as a shared device server mode)  */
 /*                                                                   */
 /*********************************************************************/
 
@@ -184,9 +186,8 @@ void  UpdateTargetCPU ()
 
         if (!pTargetCPU_REGS)
         {
-            // Default to CPU #0 (we *MUST* have
-            // a cpu and registers to work with!)
-            pTargetCPU_REGS = sysblk.regs[sysblk.pcpu = 0];
+            // We *MUST* have a cpu and registers to work with!
+            pTargetCPU_REGS = &sysblk.dummyregs;
         }
     }
 
