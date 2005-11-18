@@ -15,7 +15,7 @@ struct DEVGRP               // Device Group Structure
     int      members;       // number of member devices in group
     int      acount;        // number of allocated members in group
     void    *grp_data;      // group dependent data (generic)
-    DEVBLK  *memdev[];      // member devices
+    DEVBLK  *memdev[0];     // member devices
 };
 
 /*-------------------------------------------------------------------*/
