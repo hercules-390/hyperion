@@ -363,7 +363,7 @@ HDLDEP *depent;
 }
 
 
-/* hdl_dadd - add depency
+/* hdl_dadd - add dependency
  */
 static int hdl_dadd (char *name, char *version, int size)
 {
@@ -383,7 +383,7 @@ HDLDEP **newdep;
 }
 
 
-/* hdl_dchk - depency check
+/* hdl_dchk - dependency check
  */
 static int hdl_dchk (char *name, char *version, int size)
 {
@@ -667,6 +667,7 @@ HDLPRE *preload;
     }
 
     hdl_cdll->name = strdup("*Hercules");
+
 /* This was a nice trick. Unfortunatelly, on some platforms */
 /* it becomes impossible. Some platform need fully defined  */
 /* DLLs, some other platforms do not allow dlopen(self)     */
@@ -684,7 +685,7 @@ HDLPRE *preload;
 
     if(!(hdl_cdll->hdldepc = dlsym(hdl_cdll->dll,HDL_DEPC_Q)))
     {
-        fprintf(stderr, _("HHCHD012E No depency section in %s: %s\n"),
+        fprintf(stderr, _("HHCHD012E No dependency section in %s: %s\n"),
           hdl_cdll->name, dlerror());
         exit(1);
     }
