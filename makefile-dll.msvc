@@ -512,10 +512,10 @@ $(X)hengine.dll: $(hengine_OBJ) $(O)hsys.lib $(O)hdasd.lib $(O)hutil.lib $(O)hta
 # -------------------------------------------------------------
 # Main product executables
 
-$(X)hercules.exe: $(O)bootstrap.obj $(O)hengine.lib        $(O)hutil.lib $(O)hercver.res
+$(X)hercules.exe: $(O)bootstrap.obj $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
     $(linkexe)
 
-$(X)herclin.exe:  $(O)herclin.obj   $(O)hengine.lib        $(O)hutil.lib $(O)hercver.res
+$(X)herclin.exe:  $(O)herclin.obj   $(O)hengine.lib $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
     $(linkexe)
 
 # -------------------------------------------------------------
