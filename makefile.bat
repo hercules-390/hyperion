@@ -46,6 +46,8 @@ rem  07/31/05  Fish  Done; putting -s (slient) option back. (I only
 rem                  documented this silliness only so i could start
 rem                  with a non-empty change history section. <grin>
 rem  09/01/05  Fish  '-g' option apparently only for VS 8.0
+rem  11/17/05  Fish  Support for building within DevStudio 6.0
+rem                  whenever VS 8.0 is also installed.
 rem
 rem -------------------------------------------------------------------
 
@@ -57,7 +59,13 @@ if "%1" == "" (
 rem  NOTE: 'MSSdk' not normally defined for most users,
 rem  but it IS defined if Visual Studio is installed...
 
-if not "%MSSdk%" == "" (
+if not "%VS80COMNTOOLS%" == "" (
+
+    rem note "vSvars.bat", not "vCvars.bat"!
+
+    call "%VS80COMNTOOLS%vsvars32.bat"
+
+) else if not "%MSSdk%" == "" (
 
     rem 'MSSdk' ends with "\." (backslash dot)
     rem echo *** MSSdk ***
