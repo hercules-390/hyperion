@@ -87,7 +87,7 @@ void*  fish_thread ( void* arg )
 
 int crash_cmd(int argc, char *argv[],char *cmdline)
 {
-#if 1
+#if 0
     TID tid;
     int num_threads;
     static int didthis = 0;

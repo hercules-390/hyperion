@@ -648,7 +648,11 @@ TID                     httptid;        /* Negotiation thread id     */
                    strerror(errno));
             return NULL;
         }
-        strlcat(absolute_httproot_path,HTTP_PS,sizeof(absolute_httproot_path));
+        /* Append trailing [back]slash, but only if needed */
+        rc = strlen(absolute_httproot_path);
+        if (absolute_httproot_path[rc-1] != '\\' &&
+            absolute_httproot_path[rc-1] != '/')
+            strlcat(absolute_httproot_path,HTTP_PS,sizeof(absolute_httproot_path));
         free(sysblk.httproot); sysblk.httproot = strdup(absolute_httproot_path);
         TRACE("HTTPROOT = %s\n",sysblk.httproot);// (debug display)
     }

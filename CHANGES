@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+18 Nov 2005 Add trailing [back]slash to httproot only if needed - Fish
 18 Nov 2005 Fix crash in UpdateTargetCPU when NUMCPU=0 - Fish
 18 Nov 2005 Refit Ivan's GCC 2.95 fix to sockdev.h - Roger Bowler
 17 Nov 2005 TAPECONV support for 64K blocksize by Charlie Brint - Roger Bowler
