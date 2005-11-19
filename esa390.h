@@ -1842,7 +1842,7 @@ typedef struct _SYSIB121 {              /* Basic Machine CPU         */
 
 typedef struct _SYSIB122 {              /* Basic Machine CPUs        */
         BYTE    resv1[4*8];             /* Reserved                  */
-        BYTE    cap[4*1];               /* CPU capacity              */
+        BYTE    cap[4*1];               /* CPU capability            */
         BYTE    totcpu[2*1];            /* Total CPU count           */
         BYTE    confcpu[2*1];           /* Configured CPU count      */
         BYTE    sbcpu[2*1];             /* Standby CPU count         */

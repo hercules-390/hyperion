@@ -6234,18 +6234,29 @@ SYSIB222  *sysib222;                    /* LPAR CPUs                 */
 SYSIB322  *sysib322;                    /* VM CPUs                   */
 SYSIBVMDB *sysib322;                    /* VM description block      */
 #endif
+
+                          /*  "H    R    C"  */
 static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
                              0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+
+                      /*  "Z    Z"  */
 static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
+
+                           /*  "0    1    2    3    4    5    6    7" */
 static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
+                           /*  "8    9    A    B    C    D    E    F" */
                               0xF8,0xF9,0xC1,0xC2,0xC3,0xC4,0xC5,0xC6 };
+
+                      /*  "E    M    U    L    A    T    O    R" */
 static BYTE model[8] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9 };
+
+                        /* x'004B' = 75 = 75% for each subsequent cpu */
 static BYTE mpfact[32] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                            0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                            0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                            0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B };
 
-#define STSI_CAPACITY   2
+#define STSI_CAPABILITY   2
 
     S(inst, regs, b2, effective_addr2);
 
@@ -6346,7 +6357,7 @@ static BYTE mpfact[32] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             case 2:
                 sysib122 = (SYSIB122*)(m);
                 memset(sysib122, 0x00, sizeof(SYSIB122));
-                STORE_FW(sysib122->cap, STSI_CAPACITY);
+                STORE_FW(sysib122->cap, STSI_CAPABILITY);
                 STORE_HW(sysib122->totcpu, MAX_CPU);
                 STORE_HW(sysib122->confcpu, sysblk.cpus);
                 STORE_HW(sysib122->sbcpu, MAX_CPU - sysblk.cpus);
