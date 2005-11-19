@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+19 Nov 2005 dyngui.c: show offline CPUs as OFFLINE - Fish
 18 Nov 2005 Expand environment vars in httproot if msvc - Fish
 18 Nov 2005 Add trailing [back]slash to httproot only if needed - Fish
 18 Nov 2005 Fix crash in UpdateTargetCPU when NUMCPU=0 - Fish

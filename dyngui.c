@@ -29,6 +29,7 @@
 /* 09/20/05  sysblk.mipsrate now per second instead of millisecond   */
 /* 11/18/05  Fix crash in UpdateTargetCPU when NUMCPU=0 (as it might */
 /*           be when, e.g., running as a shared device server mode)  */
+/* 11/18/05  Show offline CPUs as OFFLINE.                           */
 /*                                                                   */
 /*********************************************************************/
 
@@ -143,7 +144,9 @@ void ProcessingLoop()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-REGS*   pTargetCPU_REGS  = NULL;    // target CPU for commands and displays
+REGS*   pTargetCPU_REGS     = NULL; // target CPU for commands and displays
+REGS*   pPrevTargetCPU_REGS = NULL; // target CPU for commands and displays
+int     pcpu = 0, prev_pcpu = 0;    // target cpu#
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -161,34 +164,22 @@ void  UpdateTargetCPU ()
 
     obtain_lock (&sysblk.intlock);
 
-    if (sysblk.pcpu >= MAX_CPU)
-        sysblk.pcpu = 0;
+    if (pcpu != sysblk.pcpu)
+        pcpu  = sysblk.pcpu;
 
-    if (sysblk.cpus && IS_CPU_ONLINE(sysblk.pcpu))
-        pTargetCPU_REGS = sysblk.regs[sysblk.pcpu];
+    if (pcpu >= MAX_CPU)
+        pcpu = sysblk.pcpu = 0;
+
+    if (sysblk.cpus && pcpu >= 0 && IS_CPU_ONLINE(pcpu))
+        pTargetCPU_REGS = sysblk.regs[pcpu];
     else
     {
-        pTargetCPU_REGS = NULL;
+        // We *MUST* have a cpu and registers to work with!
 
-        if (sysblk.cpus)
-        {
-            // Default to first cpu we find that's online...
-            int i;
-            for (i=0; i < MAX_CPU; i++)
-            {
-                if (IS_CPU_ONLINE(i))
-                {
-                    pTargetCPU_REGS = sysblk.regs[sysblk.pcpu = i];
-                    break;
-                }
-            }
-        }
+        pTargetCPU_REGS = &sysblk.dummyregs;
 
-        if (!pTargetCPU_REGS)
-        {
-            // We *MUST* have a cpu and registers to work with!
-            pTargetCPU_REGS = &sysblk.dummyregs;
-        }
+        if (pcpu >= 0)
+            pcpu = -pcpu; // (indicates dummy/offline cpu)
     }
 
     // If SIE is active, use the guest regs rather than the host regs...
@@ -477,7 +468,6 @@ QWORD  psw, prev_psw;
 BYTE   wait_bit;
 BYTE   prev_cpustate       = 0xFF;
 U64    prev_instcount      = 0;
-REGS*  pPrevTargetCPU_REGS = NULL;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Send status information messages back to the gui...
@@ -536,6 +526,7 @@ void  UpdateStatus ()
 
     if (0
         || pTargetCPU_REGS != pPrevTargetCPU_REGS
+        || pcpu != prev_pcpu
         || memcmp(prev_psw, psw, sizeof(prev_psw)) != 0
         || prev_cpustate   != pTargetCPU_REGS->cpustate
         || (prev_instcount != (
@@ -551,6 +542,7 @@ void  UpdateStatus ()
         // Save new values for next time...
 
         pPrevTargetCPU_REGS = pTargetCPU_REGS;
+        prev_pcpu = pcpu;
         memcpy(prev_psw, psw, sizeof(prev_psw));
         prev_cpustate = pTargetCPU_REGS->cpustate;
         prev_instcount = (
@@ -607,6 +599,19 @@ void  UpdateCPUStatus ()
 {
     if (sysblk.shutdown) return;
 
+    if (pTargetCPU_REGS == &sysblk.dummyregs || pcpu < 0)
+    {
+        // pTargetCPU_REGS == &sysblk.dummyregs; cpu is offline
+
+        gui_fprintf(fStatusStream, "STATUS="
+
+            "CPU%4.4X (((((((((((((((((((((((( OFFLINE ))))))))))))))))))))))))\n"
+
+            ,pcpu < 0 ? -pcpu : pcpu);
+    }
+    else // pTargetCPU_REGS != &sysblk.dummyregs; cpu is online
+    {
+
     // CPU status line...  (PSW, status indicators, and instruction count)
 
     gui_fprintf(fStatusStream, "STATUS="
@@ -651,6 +656,8 @@ void  UpdateCPUStatus ()
 #endif // defined(_FEATURE_SIE)
         pTargetCPU_REGS->instcount)
     );
+
+    } // endif cpu is online/offline
 
     // MIPS rate and SIOS rate...
 
