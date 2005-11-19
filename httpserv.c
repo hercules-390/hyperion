@@ -633,6 +633,12 @@ TID                     httptid;        /* Negotiation thread id     */
         char absolute_httproot_path[HTTP_PATH_LENGTH];
         char save_working_directory[HTTP_PATH_LENGTH];
         int  rc;
+#if defined(_MSVC_)
+        rc = expand_environ_vars( sysblk.httproot, absolute_httproot_path,
+            sizeof(absolute_httproot_path) );
+        if (rc == 0)
+            free(sysblk.httproot); sysblk.httproot = strdup(absolute_httproot_path);
+#endif /* defined(_MSVC_) */
         if (!realpath(sysblk.httproot,absolute_httproot_path))
         {
             logmsg( _("HHCCF066E Invalid HTTPROOT: %s\n"),
@@ -656,7 +662,6 @@ TID                     httptid;        /* Negotiation thread id     */
         free(sysblk.httproot); sysblk.httproot = strdup(absolute_httproot_path);
         TRACE("HTTPROOT = %s\n",sysblk.httproot);// (debug display)
     }
-
 
     /* Obtain a socket */
     lsock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
