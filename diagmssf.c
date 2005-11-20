@@ -451,11 +451,14 @@ static U64        diag204tod;          /* last diag204 tod           */
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
         memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
 //      STORE_HW(cpuinfo->cpaddr,0);
-        dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) / sysblk.cpus;
-        dreg = dreg * 1000000 + (i ? 0 : usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
+        dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec);
+        dreg = dreg * 1000000 + usage.ru_utime.tv_usec + usage.ru_stime.tv_usec;
         dreg <<= 12;
         STORE_DW(cpuinfo->totdispatch,dreg);
-//      cpuinfo->effdispatch = 0;
+        dreg = (U64)(usage.ru_utime.tv_sec) / sysblk.cpus;
+        dreg = dreg * 1000000 + usage.ru_utime.tv_usec;
+        dreg <<= 12;
+        STORE_DW(cpuinfo->effdispatch,dreg);
 
         regs->GR_L(r2) = 0;
 
