@@ -991,6 +991,19 @@ struct DEVBLK {                         /* Device configuration block*/
                                            for Read Subsystem Data   */
 };
 
+
+/*-------------------------------------------------------------------*/
+/* Device Group Structure     (just a group of related devices)      */
+/*-------------------------------------------------------------------*/
+struct DEVGRP               // Device Group Structure
+{
+    int      members;       // number of member devices in group
+    int      acount;        // number of allocated members in group
+    void    *grp_data;      // group dependent data (generic)
+    DEVBLK  *memdev[0];     // member devices
+};
+
+
 /*-------------------------------------------------------------------*/
 /* Structure definitions for CKD headers                             */
 /*-------------------------------------------------------------------*/

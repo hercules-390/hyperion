@@ -7,18 +7,6 @@
 #define _SOCKDEV_H_
 
 /*-------------------------------------------------------------------*/
-/* Device Group Structure     (just a group of related devices)      */
-/*-------------------------------------------------------------------*/
-
-struct DEVGRP               // Device Group Structure
-{
-    int      members;       // number of member devices in group
-    int      acount;        // number of allocated members in group
-    void    *grp_data;      // group dependent data (generic)
-    DEVBLK  *memdev[0];     // member devices
-};
-
-/*-------------------------------------------------------------------*/
 /* Bind structure for "Socket Devices"                               */
 /*-------------------------------------------------------------------*/
 
