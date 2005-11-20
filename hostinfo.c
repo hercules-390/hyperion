@@ -22,11 +22,12 @@ DLL_EXPORT HOST_INFO  hostinfo;     /* Host system information       */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
 {
-    if ( !pHostInfo ) pHostInfo = &hostinfo;
 #if defined(_MSVC_)
+    if ( !pHostInfo ) pHostInfo = &hostinfo;
     w32_init_hostinfo( pHostInfo );
 #elif defined( HAVE_SYS_UTSNAME_H )
     struct utsname uname_info;
+    if ( !pHostInfo ) pHostInfo = &hostinfo;
     uname(        &uname_info );
     strlcpy( pHostInfo->sysname,  uname_info.sysname,  sizeof(pHostInfo->sysname)  );
     strlcpy( pHostInfo->nodename, uname_info.nodename, sizeof(pHostInfo->nodename) );
@@ -36,6 +37,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
     pHostInfo->trycritsec_avail = 0;
     pHostInfo->num_procs = 0;   // (unknown)
 #else
+    if ( !pHostInfo ) pHostInfo = &hostinfo;
     strlcpy( pHostInfo->sysname,  "(unknown)", sizeof(pHostInfo->sysname)  );
     strlcpy( pHostInfo->nodename, "(unknown)", sizeof(pHostInfo->nodename) );
     strlcpy( pHostInfo->release,  "(unknown)", sizeof(pHostInfo->release)  );
