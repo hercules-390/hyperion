@@ -455,7 +455,7 @@ static U64        diag204tod;          /* last diag204 tod           */
         dreg = dreg * 1000000 + usage.ru_utime.tv_usec + usage.ru_stime.tv_usec;
         dreg <<= 12;
         STORE_DW(cpuinfo->totdispatch,dreg);
-        dreg = (U64)(usage.ru_utime.tv_sec) / sysblk.cpus;
+        dreg = (U64)(usage.ru_utime.tv_sec);
         dreg = dreg * 1000000 + usage.ru_utime.tv_usec;
         dreg <<= 12;
         STORE_DW(cpuinfo->effdispatch,dreg);
