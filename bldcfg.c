@@ -554,7 +554,7 @@ char   *sauto_scsi_mount;               /* Auto SCSI tape mounts     */
 #if defined( HTTP_SERVER_CONNECT_KLUDGE )
 char   *shttp_server_kludge_msecs;
 #endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
-int     version = 0x00;                 /* CPU version code          */
+U16     version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
 U16     model;                          /* CPU model number          */
@@ -1128,7 +1128,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
         if (sversion != NULL)
         {
             if (strlen(sversion) != 2
-                || sscanf(sversion, "%hhx%c", &version, &c) != 1
+                || sscanf(sversion, "%hx%c", &version, &c) != 1
                 || version>255)
             {
                 fprintf(stderr, _("HHCCF012S Error in %s line %d: "
