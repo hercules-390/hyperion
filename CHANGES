@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+20 Nov 2005 trace.c: minor fix to PR format-9 trace entry - Fish
+20 Nov 2005 configure.ac, hstdinc.h: Apple OS X build fixes - Fish
 20 Nov 2005 Correct cpu capability value in STSI - Fish
 20 Nov 2005 Reject any intrusive diagnose when diag8cmd is off - Jan Jaeger
 19 Nov 2005 Fix GCC 2.95 errors in hostinfo.c, bldcfg.c - Roger Bowler
