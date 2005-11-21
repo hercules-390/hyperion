@@ -9,7 +9,7 @@
 AC_INIT(hercules.h)                     # (package, version, bugreport email, etc)
 AC_REVISION($Revision$)           # (the version of this configure.ac)
 AC_CONFIG_AUX_DIR(autoconf)             # (directory containing auxillary build tools)
-AM_INIT_AUTOMAKE(hercules,3.02-cvs)     # (the version of our software package)
+AM_INIT_AUTOMAKE(hercules,3.03-cvs)     # (the version of our software package)
 AM_CONFIG_HEADER(config.h)              # (the file the resulting configure script will produce)
 AM_MAINTAINER_MODE()
 AC_CANONICAL_HOST()                     # (sets $host_cpu, $host_vendor, and $host_os)
@@ -415,9 +415,21 @@ AC_CACHE_SAVE()
 #  or not without having to do their own AC_CHECK_HEADERS (since we've already
 #  done it).
 
+#------------------------------------------------------------------------------
+#  PROGRAMMING NOTE: on Darwin sys/socket.h must be included before net/if.h
+#  can be #included. Thus the below two header checks are treated specially.
+
+AC_CHECK_HEADERS( sys/socket.h,   [hc_cv_have_sys_socket_h=yes],   [hc_cv_have_sys_socket_h=no]   )
+AC_CHECK_HEADERS( net/if.h,       [hc_cv_have_net_if_h=yes],       [hc_cv_have_net_if_h=no],
+[
+    #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+    #endif
+] )
+#------------------------------------------------------------------------------
+
 AC_CHECK_HEADERS( arpa/inet.h,    [hc_cv_have_arpa_inet_h=yes],    [hc_cv_have_arpa_inet_h=no]    )
 AC_CHECK_HEADERS( linux/if_tun.h, [hc_cv_have_linux_if_tun_h=yes], [hc_cv_have_linux_if_tun_h=no] )
-AC_CHECK_HEADERS( net/if.h,       [hc_cv_have_net_if_h=yes],       [hc_cv_have_net_if_h=no]       )
 AC_CHECK_HEADERS( net/route.h,    [hc_cv_have_net_route_h=yes],    [hc_cv_have_net_route_h=no]    )
 AC_CHECK_HEADERS( netinet/in.h,   [hc_cv_have_netinet_in_h=yes],   [hc_cv_have_netinet_in_h=no]   )
 AC_CHECK_HEADERS( sys/ioctl.h,    [hc_cv_have_sys_ioctl_h=yes],    [hc_cv_have_sys_ioctl_h=no]    )
@@ -425,7 +437,6 @@ AC_CHECK_HEADERS( sys/mman.h,     [hc_cv_have_sys_mman_h=yes],     [hc_cv_have_s
 AC_CHECK_HEADERS( sys/mount.h,    [hc_cv_have_sys_mount_h=yes],    [hc_cv_have_sys_mount_h=no]    )
 AC_CHECK_HEADERS( sys/mtio.h,     [hc_cv_have_sys_mtio_h=yes],     [hc_cv_have_sys_mtio_h=no]     )
 AC_CHECK_HEADERS( sys/resource.h, [hc_cv_have_sys_resource_h=yes], [hc_cv_have_sys_resource_h=no] )
-AC_CHECK_HEADERS( sys/socket.h,   [hc_cv_have_sys_socket_h=yes],   [hc_cv_have_sys_socket_h=no]   )
 AC_CHECK_HEADERS( sys/uio.h,      [hc_cv_have_sys_uio_h=yes],      [hc_cv_have_sys_uio_h=no]      )
 AC_CHECK_HEADERS( sys/utsname.h,  [hc_cv_have_sys_utsname_h=yes],  [hc_cv_have_sys_utsname_h=no]  )
 AC_CHECK_HEADERS( sys/wait.h,     [hc_cv_have_sys_wait_h=yes],     [hc_cv_have_sys_wait_h=no]     )
@@ -890,6 +901,64 @@ else
     hc_cv_pp_macro_arg_counting_broke=no
 fi
 
+#------------------------------------------------------------#
+#  Check if traditional preprocessor is the K&R C type...    #
+#------------------------------------------------------------#
+#
+# Apple's latest GCC documentation reveals:
+#
+#     ... the -traditional-cpp option has changed.
+#    In Apple GCC 3.1 and earlier Apple GCC compilers,
+#    -traditional-cpp was used to toggle between the
+#    standard GNU GCC preprocessor and Apple's own 
+#    preprocessor, "cpp-precomp". The GNU GCC compiler
+#    interpreted -traditional-cpp differently on all
+#    other platforms. Since cpp-precomp has been removed
+#    for Apple's GCC 3.3 compiler, the standard GNU
+#    meaning of -traditional-cpp has been restored. By
+#    default, the GCC 3.3 preprocessor conforms to the
+#    ISO C standard. Using the -tradtional-cpp option
+#    means the C preprocessor should instead try to
+#    emulate the old "K&R C".
+#
+#------------------------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    AC_CACHE_CHECK( [whether '-traditional-cpp' is K&R C preprocessor],
+
+        [hc_cv_traditional_cpp_is_K_AND_R_C_type],
+        [
+            hc_temp="$CFLAGS"
+            CFLAGS="-Wall -Werror -traditional-cpp"
+
+            AC_COMPILE_IFELSE(
+                [
+                    /* If the following gets an error, then the
+                       "traditional" preprocessor is K&R C type.
+                       Otherwise if it compiles WITHOUT error
+                       the the "traditional" preprocessor is NOT
+                       the K&R C type.
+                    */
+                    #if 1
+                        #include <stdio.h>  // comment/etc...
+                    #endif
+                    int main( int, char**, char** )
+                    {
+                        return 0;
+                    }
+                ],
+                [hc_cv_traditional_cpp_is_K_AND_R_C_type=yes],
+                [hc_cv_traditional_cpp_is_K_AND_R_C_type=no]
+            )
+
+            CFLAGS="$hc_temp"
+        ]
+    )
+else
+    hc_cv_traditional_cpp_is_K_AND_R_C_type=no
+fi
+
 #-----------------------------------------------------------#
 #  Check whether byte-swapping can be done using assembler  #
 #-----------------------------------------------------------#
@@ -1325,11 +1394,21 @@ if test "$hc_cv_opt_fishhang"  = "yes"  &&
 fi
 
 #------------------------------------------------------------------------------
+
+if test "$hc_cv_is_apple"                          = "yes"  &&
+   test "$hc_cv_pp_macro_arg_counting_broke"       = "yes"  &&
+   test "$hc_cv_traditional_cpp_is_K_AND_R_C_type" = "yes"; then
+
+    AC_MSG_RESULT( [ERROR: macro argument counting broken and cannot use -traditional-cpp option to work around it] )
+    hc_error=yes
+fi
+
+#------------------------------------------------------------------------------
 # If any errors have been detected, then abort the configure at this time
 #------------------------------------------------------------------------------
 
 if test "$hc_error" != "no"; then
-    AC_MSG_ERROR( [ERROR: Please correct the previous error(s) and try again] )
+    AC_MSG_ERROR( [Please correct the above error(s) and try again] )
 fi
 
 AC_CACHE_SAVE()
@@ -1570,7 +1649,7 @@ fi
 if test "$hc_cv_is_apple"                    = "yes"  &&
    test "$hc_cv_pp_macro_arg_counting_broke" = "yes"; then
 
-   CPPFLAGS="${CPPFLAGS} -traditional-cpp -Wno-endif-labels"
+    CPPFLAGS="${CPPFLAGS} -traditional-cpp -Wno-endif-labels"
 fi
 
 #--------------------------------------------------#

@@ -84,6 +84,11 @@
 #if defined(BUILD_HERCIFC) || defined(_MSVC_) || !defined(HAVE_LINUX_IF_TUN_H) || !defined(HAVE_NET_IF_H)
   #define NEED_HERCIFC_H
 #endif
+/* PROGRAMMING NOTE: On Darwin, <sys/socket.h> must be included before <net/if.h> */
+#ifdef HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+#endif
+/* PROGRAMMING NOTE: On Darwin, <sys/socket.h> must be included before <net/if.h> */
 #ifdef HAVE_NET_IF_H
   #include <net/if.h>
 #endif
@@ -104,9 +109,6 @@
 #endif
 #ifdef HAVE_SYS_RESOURCE_H
   #include <sys/resource.h>
-#endif
-#ifdef HAVE_SYS_SOCKET_H
-  #include <sys/socket.h>
 #endif
 #ifdef HAVE_SYS_UN_H
   #include <sys/un.h>
