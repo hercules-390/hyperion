@@ -432,11 +432,11 @@ static U64        diag204tod;          /* last diag204 tod           */
               STORE_HW(cpuinfo->cpaddr,sysblk.regs[i]->cpuad);
               STORE_HW(cpuinfo->relshare,100);
               dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) / sysblk.cpus;
-              dreg = dreg * 1000000 + (i ? 0 : (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec));
+              dreg = (dreg * 1000000) + (i ? 0 : (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec));
               tdis += dreg;
               STORE_DW(cpuinfo->totdispatch,dreg);
               dreg = (U64)(usage.ru_utime.tv_sec) / sysblk.cpus;
-              dreg = dreg * 1000000 + (i ? 0 : (usage.ru_utime.tv_usec) );
+              dreg = (dreg * 1000000) + (i ? 0 : (usage.ru_utime.tv_usec) );
               teff += dreg;
               STORE_DW(cpuinfo->effdispatch,dreg);
               cpuinfo += 1;
@@ -453,11 +453,11 @@ static U64        diag204tod;          /* last diag204 tod           */
         memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
 //      STORE_HW(cpuinfo->cpaddr,0);
         dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec);
-        dreg = dreg * 1000000 + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
+        dreg = (dreg * 1000000) + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
 	tdis += dreg;
         STORE_DW(cpuinfo->totdispatch,tdis);
         dreg = (U64)(usage.ru_utime.tv_sec);
-        dreg = dreg * 1000000 + (usage.ru_utime.tv_usec);
+        dreg = (dreg * 1000000) + (usage.ru_utime.tv_usec);
 	teff += dreg;
         STORE_DW(cpuinfo->effdispatch,teff);
 
