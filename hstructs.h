@@ -995,12 +995,11 @@ struct DEVBLK {                         /* Device configuration block*/
 /*-------------------------------------------------------------------*/
 /* Device Group Structure     (just a group of related devices)      */
 /*-------------------------------------------------------------------*/
-struct DEVGRP               // Device Group Structure
-{
-    int      members;       // number of member devices in group
-    int      acount;        // number of allocated members in group
-    void    *grp_data;      // group dependent data (generic)
-    DEVBLK  *memdev[0];     // member devices
+struct DEVGRP {                         /* Device Group Structure    */
+        int     members;                /* #of member devices in grp */
+        int     acount;                 /* #allocated members in grp */
+        void   *grp_data;               /* Group dep data (generic)  */
+        DEVBLK *memdev[0];              /* Member devices            */
 };
 
 
