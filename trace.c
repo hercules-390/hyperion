@@ -867,7 +867,7 @@ int  size;
         tte->pswkey = regs->psw.pkey | TRACE_F9_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
         STORE_DW(tte->retna,  newregs->psw.IA_G | PROBSTATE(&newregs->psw));
-        STORE_DW(tte->newia, regs->psw.IA_L);
+        STORE_DW(tte->newia, regs->psw.IA_G);
     }
 #endif /*defined(FEATURE_ESAME)*/
 
