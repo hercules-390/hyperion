@@ -635,6 +635,9 @@ U32        idaddr;                      /* Address of storage operand*/
 U32        idlen;                       /* Length of storage operand */
 BYTE       buf[40];                     /* Extended identification   */
 #if defined( HAVE_GETLOGIN_R )
+  #if !defined(LOGIN_NAME_MAX)  
+    #define LOGON_NAME_MAX 100
+  #endif
 char       unam[LOGIN_NAME_MAX+1];      /* User name                 */
 #endif
 char      *puser;                       /* Pointer to user name      */
