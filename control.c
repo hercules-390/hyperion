@@ -6216,6 +6216,9 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 #ifdef FEATURE_STORE_SYSTEM_INFORMATION
+
+#if !defined(_STSI_CAPABILITY)
+#define _STSI_CAPABILITY
 static inline U32 stsi_capability (REGS *regs)
 {
 U64               dreg;                /* work doubleword            */
@@ -6226,11 +6229,12 @@ struct rusage     usage;               /* RMF type data              */
         getrusage(RUSAGE_SELF,&usage);
         dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec);
         dreg = (dreg * 1000000) + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
-	dreg = regs->instcount / (dreg ? dreg : 1);
+        dreg = regs->instcount / (dreg ? dreg : 1);
         dreg *= SUSEC_PER_MIPS;
-	return 0x800000 / (dreg ? dreg : 1);
+        return 0x800000 / (dreg ? dreg : 1);
 
 } /* end function stsi_capability */
+#endif /*!defined(_STSI_CAPABILITY)*/
 
 /*-------------------------------------------------------------------*/
 /* B27D STSI  - Store System Information                         [S] */
