@@ -47,6 +47,7 @@
 #          things down WAY too much).
 # 02/08/05 Add optional compilation of cryptographic modules (nmake crypto)
 # 14/11/05 Add /map option back again; make similar to dll version. - Fish
+# 22/11/05 Crypto module now included standard - Ivan
 # ***************************************************************************
 
 !IFNDEF VERSION
@@ -172,6 +173,7 @@ NODEBUG = 1
 !ERROR Invalid build configuration!
 !ENDIF
 
+
 !include <win32.mak>
 
 # -------------------------------------------------
@@ -272,6 +274,12 @@ cflags = $(cflags) -DFISH_HANG
 X = $(EXEDIR)\$(NULL)
 O = $(OBJDIR)\$(NULL)
 
+!IFNDEF NOCRYPTO
+DYNCRYPTDLL = $(X)dyncrypt.dll
+!ELSE
+DYNCRYPTDLL = 
+!ENDIF
+
 EXECUTABLES = \
     $(X)cckdcdsk.exe \
     $(X)cckdcomp.exe \
@@ -308,7 +316,8 @@ MODULES = \
     $(X)hdt3505.dll  \
     $(X)hdt3525.dll  \
     $(X)hdteq.dll    \
-    $(X)hdtqeth.dll
+    $(X)hdtqeth.dll  \
+    $(DYNCRYPTDLL)
 
 all: allzlib alllibbz2
 
@@ -318,7 +327,7 @@ clean:
     del /f /q $(PDBDIR)\*.*
     del /f /q $(MAPDIR)\*.*
 
-crypto: $(X)dyncrypt.dll
+# crypto: $(X)dyncrypt.dll
 
 $(OBJDIR):
     if not exist "$(OBJDIR)\$(NULL)" mkdir $(OBJDIR)
@@ -385,8 +394,10 @@ $(O)build_pch.pch: build_pch.c
 .c{$(OBJDIR)}.obj::
     $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
 
+!IFNDEF NOCRYPTO
 {crypto}.c{$(OBJDIR)}.obj::
     $(cc) $(cdebug) $(cflags) /Icrypto /I. /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
+!ENDIF
 
 #
 # No precompiled headers for these ones.. Sorry!
@@ -580,8 +591,10 @@ $(X)hdteq.dll: $(O)hdteq.obj $(O)hengine.lib $(O)hutil.lib $(O)hercver.res
 $(X)dyngui.dll: $(O)dyngui.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
-$(X)dyncrypt.dll: $(O)dyncrypt.obj $(O)sha1.obj $(O)hercver.res
+!IFNDEF NOCRYPTO
+$(X)dyncrypt.dll: $(O)dyncrypt.obj $(O)sha1.obj $(O)sha256.obj $(O)des.obj $(O)aes.obj $(O)hsys.lib $(O)hengine.lib $(O)hutil.lib $(O)hercver.res
     $(linkdll)
+!ENDIF
 
 # -------------------------------------------------------------
 # Main product executables

@@ -10,6 +10,16 @@
 /*                              Noordwijkerhout, The Netherlands.             */
 /*----------------------------------------------------------------------------*/
 
+#include "hstdinc.h"
+
+#ifndef _DYNCRYPT_C_
+#define _DYNCRYPT_C_
+#endif _DYNCRYPT_C_
+
+#ifndef _DYNCRYPT_DLL_
+#define _DYNCRYPT_DLL_
+#endif
+
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"

@@ -281,7 +281,7 @@ clean:
     del /f /q $(PDBDIR)\*.*
     del /f /q $(MAPDIR)\*.*
 
-crypto: $(X)dyncrypt.dll
+# crypto: $(X)dyncrypt.dll
 
 $(OBJDIR):
     if not exist "$(OBJDIR)\$(NULL)" mkdir $(OBJDIR)
