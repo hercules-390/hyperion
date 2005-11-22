@@ -1319,7 +1319,7 @@ int d2,b2;
 }
 
 /* Gabor Hoffer (performance option) */
-zz_func s370_opcode_table[256];
+DLL_EXPORT zz_func s370_opcode_table[256];
 static zz_func s370_opcode_a4xx[256];
 static zz_func s370_opcode_a5xx[256];
 static zz_func s370_opcode_a6xx[256];
@@ -1361,7 +1361,7 @@ static zz_func z900_opcode_ebxx[256];
 static zz_func z900_opcode_ecxx[256];
 static zz_func z900_opcode_edxx[256];
 
-void copy_opcode_tables()
+DLL_EXPORT void copy_opcode_tables()
 {
 int i;
 
@@ -1466,7 +1466,7 @@ void set_opcode_pointers(REGS *regs)
 #endif
 }
 
-zz_func opcode_table[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*00*/   GENx___x___x___ ,
  /*01*/   GENx___x390x900 (execute_01xx,01xx,""),
  /*02*/   GENx___x___x___ ,
@@ -1725,7 +1725,7 @@ zz_func opcode_table[256][GEN_MAXARCH] = {
  /*FF*/   GENx___x___x___  };
 
 
-zz_func opcode_01xx[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_01xx[256][GEN_MAXARCH] = {
  /*0100*/ GENx___x___x___ ,
  /*0101*/ GENx___x390x900 (program_return,E,"PR"),
  /*0102*/ GENx___x390x900 (update_tree,E,"UPT"),
@@ -1986,7 +1986,7 @@ zz_func opcode_01xx[256][GEN_MAXARCH] = {
 
 // #if defined(FEATURE_ESAME)
 
-zz_func opcode_a4xx[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_a4xx[256][GEN_MAXARCH] = {
  /*A400*/ GENx___x___x___ ,
  /*A401*/ GENx___x___x___ ,
  /*A402*/ GENx___x___x___ ,
@@ -2248,7 +2248,7 @@ zz_func opcode_a4xx[256][GEN_MAXARCH] = {
 
 // #if defined(FEATURE_ESAME)
 
-zz_func opcode_a5xx[16][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_a5xx[16][GEN_MAXARCH] = {
  /*A5x0*/ GENx___x___x900 (insert_immediate_high_high,RI,"IIHH"),
  /*A5x1*/ GENx___x___x900 (insert_immediate_high_low,RI,"IIHL"),
  /*A5x2*/ GENx___x___x900 (insert_immediate_low_high,RI,"IILH"),
@@ -2268,7 +2268,7 @@ zz_func opcode_a5xx[16][GEN_MAXARCH] = {
 
 // #endif /*defined(FEATURE_ESAME)*/
 
-zz_func opcode_a7xx[16][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_a7xx[16][GEN_MAXARCH] = {
  /*A7x0*/ GENx___x390x900 (test_under_mask_high,RI,"TMH"),
  /*A7x1*/ GENx___x390x900 (test_under_mask_low,RI,"TML"),
  /*A7x2*/ GENx___x___x900 (test_under_mask_high_high,RI,"TMHH"),
@@ -2287,7 +2287,7 @@ zz_func opcode_a7xx[16][GEN_MAXARCH] = {
  /*A7xF*/ GENx___x___x900 (compare_long_halfword_immediate,RI,"CGHI") };
 
 
-zz_func opcode_b2xx[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B200*/ GENx370x___x___ (connect_channel_set,S,"CONCS"),
  /*B201*/ GENx370x___x___ (disconnect_channel_set,S,"DISCS"),
  /*B202*/ GENx370x390x900 (store_cpu_id,S,"STIDP"),
@@ -2548,7 +2548,7 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
 
 // #if defined(FEATURE_BASIC_FP_EXTENSIONS)
 
-zz_func opcode_b3xx[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B300*/ GENx___x390x900 (load_positive_bfp_short_reg,RRE,"LPEBR"),
  /*B301*/ GENx___x390x900 (load_negative_bfp_short_reg,RRE,"LNEBR"),
  /*B302*/ GENx___x390x900 (load_and_test_bfp_short_reg,RRE,"LTEBR"),
@@ -2810,7 +2810,7 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
 
 // #if defined(FEATURE_ESAME)
 
-zz_func opcode_b9xx[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B900*/ GENx___x___x900 (load_positive_long_register,RRE,"LPGR"),
  /*B901*/ GENx___x___x900 (load_negative_long_register,RRE,"LNGR"),
  /*B902*/ GENx___x___x900 (load_and_test_long_register,RRE,"LTGR"),
@@ -3072,7 +3072,7 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
 
 // #if defined(FEATURE_ESAME)
 
-zz_func opcode_c0xx[16][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_c0xx[16][GEN_MAXARCH] = {
  /*C0x0*/ GENx___x390x900 (load_address_relative_long,RIL,"LARL"),
  /*C0x1*/ GENx___x___x900 (load_long_fullword_immediate,RIL,"LGFI"),               /*@Z9*/
  /*C0x2*/ GENx___x___x___ ,
@@ -3090,7 +3090,7 @@ zz_func opcode_c0xx[16][GEN_MAXARCH] = {
  /*C0xE*/ GENx___x___x900 (load_logical_immediate_high_fullword,RIL,"LLIHF"),      /*@Z9*/
  /*C0xF*/ GENx___x___x900 (load_logical_immediate_low_fullword,RIL,"LLILF") };     /*@Z9*/  
 
-zz_func opcode_c2xx[16][GEN_MAXARCH] = {                                           /*@Z9*/
+DLL_EXPORT zz_func opcode_c2xx[16][GEN_MAXARCH] = {                                           /*@Z9*/
  /*C2x0*/ GENx___x___x___ ,                                                        /*@Z9*/
  /*C2x1*/ GENx___x___x___ ,                                                        /*@Z9*/
  /*C2x2*/ GENx___x___x___ ,                                                        /*@Z9*/
@@ -3112,7 +3112,7 @@ zz_func opcode_c2xx[16][GEN_MAXARCH] = {                                        
 
 // #if defined(FEATURE_ESAME)
 
-zz_func opcode_e3xx[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E300*/ GENx___x___x___ ,
  /*E301*/ GENx___x___x___ ,
  /*E302*/ GENx___x___x900 (load_and_test_long,RXY,"LTG"),                          /*@Z9*/
@@ -3372,7 +3372,7 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
 
 // #endif /*defined(FEATURE_ESAME)*/
 
-zz_func opcode_e5xx[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_e5xx[256][GEN_MAXARCH] = {
  /*E500*/ GENx370x390x900 (load_address_space_parameters,SSE,"LASP"),
  /*E501*/ GENx370x390x900 (test_protection,SSE,"TPROT"),
  /* The following opcode has been re-used in z/Arch */
@@ -3632,7 +3632,7 @@ zz_func opcode_e5xx[256][GEN_MAXARCH] = {
  /*E5FE*/ GENx___x___x___ ,
  /*E5FF*/ GENx___x___x___  };
 
-zz_func opcode_e6xx[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_e6xx[256][GEN_MAXARCH] = {
  /*E600*/ GENx370x___x___ (ecpsvm_basic_freex,SSE,"FREE"),
  /*E601*/ GENx370x___x___ (ecpsvm_basic_fretx,SSE,"FRET"),
  /*E602*/ GENx370x___x___ (ecpsvm_lock_page,SSE,"VLKPG"),
@@ -3893,7 +3893,7 @@ zz_func opcode_e6xx[256][GEN_MAXARCH] = {
 // #if defined(FEATURE_ESAME)
 
 /* opcodes EBxxxxxx00 */
-zz_func opcode_ebxx[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB00*/ GENx___x___x___ ,
  /*EB01*/ GENx___x___x___ ,
  /*EB02*/ GENx___x___x___ ,
@@ -4155,7 +4155,7 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
 
 // #if defined(FEATURE_ESAME)
 
-zz_func opcode_ecxx[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_ecxx[256][GEN_MAXARCH] = {
  /*EC00*/ GENx___x___x___ ,
  /*EC01*/ GENx___x___x___ ,
  /*EC02*/ GENx___x___x___ ,
@@ -4417,7 +4417,7 @@ zz_func opcode_ecxx[256][GEN_MAXARCH] = {
 
 // #if defined(FEATURE_BASIC_FP_EXTENSIONS)
 
-zz_func opcode_edxx[256][GEN_MAXARCH] = {
+DLL_EXPORT zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED00*/ GENx___x___x___ ,
  /*ED01*/ GENx___x___x___ ,
  /*ED02*/ GENx___x___x___ ,

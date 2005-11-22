@@ -19,6 +19,16 @@
 #define CPU_DLL_IMPORT DLL_EXPORT
 #endif /* _HENGINE_DLL_ */
 
+#ifndef _OPCODE_C_
+#ifndef _HENGINE_DLL_
+#define OPC_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define OPC_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else   /* _OPCODE_C_ */
+#define OPC_DLL_IMPORT DLL_EXPORT
+#endif /* _HENGINE_DLL_ */
+
 #if defined(_370)
  #define _GEN370(_name) &s370_ ## _name,
 #else
@@ -118,30 +128,30 @@ typedef void (ATTR_REGPARM(2) *zz_func) (BYTE inst[], REGS *regs);
  ( (_regs)->psw.zeroilc ? 0 : (_regs)->execflag ? 4 : ILC((_regs)->ip[0]) )
 
 /* Gabor Hoffer (performance option) */
-extern zz_func s370_opcode_table[];
-extern zz_func s390_opcode_table[];
-extern zz_func z900_opcode_table[];
+OPC_DLL_IMPORT zz_func s370_opcode_table[];
+OPC_DLL_IMPORT zz_func s390_opcode_table[];
+OPC_DLL_IMPORT zz_func z900_opcode_table[];
 
-extern zz_func opcode_table[][GEN_MAXARCH];
-extern zz_func opcode_01xx[][GEN_MAXARCH];
-extern zz_func v_opcode_a4xx[][GEN_MAXARCH];
-extern zz_func opcode_a5xx[][GEN_MAXARCH];
-extern zz_func v_opcode_a5xx[][GEN_MAXARCH];
-extern zz_func v_opcode_a6xx[][GEN_MAXARCH];
-extern zz_func opcode_a7xx[][GEN_MAXARCH];
-extern zz_func opcode_b2xx[][GEN_MAXARCH];
-extern zz_func opcode_b3xx[][GEN_MAXARCH];
-extern zz_func opcode_b9xx[][GEN_MAXARCH];
-extern zz_func opcode_c0xx[][GEN_MAXARCH];
-extern zz_func opcode_c2xx[][GEN_MAXARCH];                      /*@Z9*/
-extern zz_func opcode_e3xx[][GEN_MAXARCH];
-extern zz_func opcode_e4xx[][GEN_MAXARCH];
-extern zz_func v_opcode_e4xx[][GEN_MAXARCH];
-extern zz_func opcode_e5xx[][GEN_MAXARCH];
-extern zz_func opcode_e6xx[][GEN_MAXARCH];
-extern zz_func opcode_ebxx[][GEN_MAXARCH];
-extern zz_func opcode_ecxx[][GEN_MAXARCH];
-extern zz_func opcode_edxx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_table[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_01xx[][GEN_MAXARCH];
+extern         zz_func v_opcode_a4xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_a5xx[][GEN_MAXARCH];
+extern         zz_func v_opcode_a5xx[][GEN_MAXARCH];
+extern         zz_func v_opcode_a6xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_a7xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_b2xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_b3xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_b9xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_c0xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_c2xx[][GEN_MAXARCH];                      /*@Z9*/
+OPC_DLL_IMPORT zz_func opcode_e3xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_e4xx[][GEN_MAXARCH];
+extern         zz_func v_opcode_e4xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_e5xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_e6xx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_ebxx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_ecxx[][GEN_MAXARCH];
+OPC_DLL_IMPORT zz_func opcode_edxx[][GEN_MAXARCH];
 
 
 #define DISASM_INSTRUCTION(_inst) \
@@ -1538,7 +1548,7 @@ void sigabend_handler (int signo);
 
 
 /* Functions in module opcode.c */
-void copy_opcode_tables ();
+OPC_DLL_IMPORT void copy_opcode_tables ();
 void set_opcode_pointers (REGS *regs);
 
 

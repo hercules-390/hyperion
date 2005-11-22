@@ -317,6 +317,7 @@ MODULES = \
     $(X)hdt3525.dll  \
     $(X)hdteq.dll    \
     $(X)hdtqeth.dll  \
+    $(X)dyninst.dll  \
     $(DYNCRYPTDLL)
 
 all: allzlib alllibbz2
@@ -589,6 +590,9 @@ $(X)hdteq.dll: $(O)hdteq.obj $(O)hengine.lib $(O)hutil.lib $(O)hercver.res
     $(linkdll)
 
 $(X)dyngui.dll: $(O)dyngui.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+    $(linkdll)
+
+$(X)dyninst.dll: $(O)dyninst.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
 !IFNDEF NOCRYPTO

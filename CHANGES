@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+22 Nov 2005 dyninst module now built in MSVC DLL-MOD version - Ivan Warren
 22 Nov 2005 Crypto module now built in MSVC DLL-MOD version - Ivan Warren
 21 Nov 2005 Added skeletal ptff - Bernard van der Helm
 21 Nov 2005 STSI MP fix - Greg
