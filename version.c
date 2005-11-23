@@ -110,6 +110,10 @@ static const char *build_info[] = {
     "No CCKD BZIP2 support",
 #endif
 
+#if !defined(HAVE_LIBZ)
+    "No ZLIB support",
+#endif
+
 #if !defined(HET_BZIP2)
     "No HET BZIP2 support",
 #endif
