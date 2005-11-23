@@ -203,13 +203,13 @@ ldebug = $(ldebug)
 cdebug = /O2 /GL /DNDEBUG
 ldebug = $(ldebug) /LTCG
 
-!ENDIF
-
 # Create .PDB (Program Database) files for debugging for 'Release' builds too!
 # (so we can easily analyze "MiniDump" crash dumps should Herc ever crash)
 
 cdebug = $(cdebug) /Zi /Gm
 ldebug = $(ldebug) /DEBUG /PDB:$(PDBDIR)\$(@B).pdb
+
+!ENDIF
 
 !ELSE
 # -------------------------------

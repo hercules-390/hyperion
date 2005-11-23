@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+23 Nov 2005 Fix "LNK4099 libcmt.pdb not found" in MSVC static build - Roger Bowler
 22 Nov 2005 dyninst module now built in MSVC DLL-MOD version - Ivan Warren
 22 Nov 2005 Crypto module now built in MSVC DLL-MOD version - Ivan Warren
 21 Nov 2005 Added skeletal ptff - Bernard van der Helm
