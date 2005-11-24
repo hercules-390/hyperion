@@ -477,12 +477,14 @@ AC_CACHE_SAVE()
 #  "HAVE_DECL_XXXX" is #defined to '0' instead of leaving "HAVE_DECL_XXXX" #undefined.
 #  (e.g. #defined to 1 if you have the declaration and #defined to 0 if you don't)
 
-AC_CHECK_DECLS( SIGUSR1,        [hc_cv_have_sigusr1=yes],        [hc_cv_have_sigusr1=no],        [#include <signal.h>] )
-AC_CHECK_DECLS( SIGUSR2,        [hc_cv_have_sigusr2=yes],        [hc_cv_have_sigusr2=no],        [#include <signal.h>] )
-AC_CHECK_DECLS( SIGPIPE,        [hc_cv_have_sigpipe=yes],        [hc_cv_have_sigpipe=no],        [#include <signal.h>] )
-AC_CHECK_DECLS( SIGBUS,         [hc_cv_have_sigbus=yes],         [hc_cv_have_sigbus=no],         [#include <signal.h>] )
-AC_CHECK_DECLS( IFNAMSIZ,       [hc_cv_have_ifnamsiz=yes],       [hc_cv_have_ifnamsiz=no],       [#include <sys/socket.h>] )
-AC_CHECK_DECLS( LOGIN_NAME_MAX, [hc_cv_have_login_name_max=yes], [hc_cv_have_login_name_max=no], [#include <limits.h>] )
+AC_CHECK_DECLS( SIGUSR1,              [hc_cv_have_sigusr1=yes],             [hc_cv_have_sigusr1=no],             [#include <signal.h>] )
+AC_CHECK_DECLS( SIGUSR2,              [hc_cv_have_sigusr2=yes],             [hc_cv_have_sigusr2=no],             [#include <signal.h>] )
+AC_CHECK_DECLS( SIGPIPE,              [hc_cv_have_sigpipe=yes],             [hc_cv_have_sigpipe=no],             [#include <signal.h>] )
+AC_CHECK_DECLS( SIGBUS,               [hc_cv_have_sigbus=yes],              [hc_cv_have_sigbus=no],              [#include <signal.h>] )
+AC_CHECK_DECLS( IFNAMSIZ,             [hc_cv_have_ifnamsiz=yes],            [hc_cv_have_ifnamsiz=no],            [#include <sys/socket.h>] )
+AC_CHECK_DECLS( LOGIN_NAME_MAX,       [hc_cv_have_login_name_max=yes],      [hc_cv_have_login_name_max=no],      [#include <limits.h>] )
+AC_CHECK_DECLS( _SC_NPROCESSORS_CONF, [hc_cv_have_sc_nprocessors_conf=yes], [hc_cv_have_sc_nprocessors_conf=no], [#include <unistd.h>] )
+AC_CHECK_DECLS( _SC_NPROCESSORS_ONLN, [hc_cv_have_sc_nprocessors_onln=yes], [hc_cv_have_sc_nprocessors_onln=no], [#include <unistd.h>] )
 
 AC_CACHE_SAVE()
 
@@ -557,6 +559,7 @@ AC_CHECK_FUNCS( realpath )
 AC_CHECK_FUNCS( fdatasync fsync ftruncate )
 AC_CHECK_FUNCS( inet_aton )
 AC_CHECK_FUNCS( fork socketpair )
+AC_CHECK_FUNCS( sysconf )
 
 AC_CHECK_FUNCS( vsscanf,
                [hc_cv_have_vsscanf=yes],
@@ -1196,7 +1199,7 @@ AC_ARG_ENABLE( multi-cpu,
 
     AC_HELP_STRING( [--enable-multi-cpu=yes|no|NUMBER],
 
-        [enable/disable multi-cpu support (1-8, default 2)]
+        [enable/disable multi-cpu support (1-32, default 2)]
     ),
     [
         case "${enableval}" in
