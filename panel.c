@@ -445,7 +445,7 @@ static void NP_screen_redraw (REGS *regs)
             set_pos (i*2+7,27);
             draw_text (NPregnum[i*4+2]);
             set_pos (i*2+7,36);
-            draw_text (NPregnum[i*4]+3);
+            draw_text (NPregnum[i*4+3]);
         }
     }
 
@@ -487,7 +487,7 @@ static void NP_screen_redraw (REGS *regs)
     draw_button(COLOR_BLUE,  COLOR_LIGHT_GREY, COLOR_WHITE,  " RS", "T", " "  );
 
     set_pos (20, 3);
-    set_color (COLOR_WHITE, COLOR_BLACK);
+    set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
     draw_text ("MIPS");
     set_pos (20, 9);
     draw_text ("SIO/s");
@@ -576,7 +576,7 @@ void NP_update(REGS *regs)
             clr_screen ();
             for (i = 0; strcmp(NPhelp[i], ""); i++)
             {
-                set_pos (i, 1);
+                set_pos (i+1, 1);
                 draw_text (NPhelp[i]);
             }
             return;
@@ -717,7 +717,7 @@ void NP_update(REGS *regs)
                 set_pos (i*2+7,27);
                 draw_text (NPregnum[i*4+2]);
                 set_pos (i*2+7,36);
-                draw_text (NPregnum[i*4]+3);
+                draw_text (NPregnum[i*4+3]);
             }
         }
     }
