@@ -35,7 +35,11 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
     strlcpy( pHostInfo->version,  uname_info.version,  sizeof(pHostInfo->version)  );
     strlcpy( pHostInfo->machine,  uname_info.machine,  sizeof(pHostInfo->machine)  );
     pHostInfo->trycritsec_avail = 0;
+  #if defined(HAVE_SYSCONF) && defined(HAVE_DECL__SC_NPROCESSORS_CONF) && HAVE_DECL__SC_NPROCESSORS_CONF
+    pHostInfo->num_procs = sysconf(_SC_NPROCESSORS_CONF);
+  #else
     pHostInfo->num_procs = 0;   // (unknown)
+  #endif
 #else
     if ( !pHostInfo ) pHostInfo = &hostinfo;
     strlcpy( pHostInfo->sysname,  "(unknown)", sizeof(pHostInfo->sysname)  );
@@ -44,7 +48,11 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
     strlcpy( pHostInfo->version,  "(unknown)", sizeof(pHostInfo->version)  );
     strlcpy( pHostInfo->machine,  "(unknown)", sizeof(pHostInfo->machine)  );
     pHostInfo->trycritsec_avail = 0;
+  #if defined(HAVE_SYSCONF) && defined(HAVE_DECL__SC_NPROCESSORS_CONF) && HAVE_DECL__SC_NPROCESSORS_CONF
+    pHostInfo->num_procs = sysconf(_SC_NPROCESSORS_CONF);
+  #else
     pHostInfo->num_procs = 0;   // (unknown)
+  #endif
 #endif
 }
 
