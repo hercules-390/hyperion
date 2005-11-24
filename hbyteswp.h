@@ -58,7 +58,20 @@ static __inline__ uint32_t (ATTR_REGPARM(1) bswap_32)(uint32_t x)
 
   static __inline  uint64_t  bswap_64(uint64_t x)
   {
+      // Microsoft's Toolkit 2003 compiler (version 1300) has a known bug
+      // that causes the _byteswap_uint64 intrinsic to screw up if global
+      // otimizations are enabled. The new VStudio 8.0 compiler (version
+      // 14.00) doesn't have this problem that I am aware of. - Fish
+
+      #if ( _MSC_VER < 1400 )
+        #pragma optimize("g",off)     // (disable global optimizations)
+      #endif
+
       return _byteswap_uint64((x));
+
+      #if ( _MSC_VER < 1400 )
+        #pragma optimize ( "", on )
+      #endif
   }
 
 #else // !defined( _MSVC_ )
