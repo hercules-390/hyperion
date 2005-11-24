@@ -6,8 +6,9 @@
 # subject to the terms of the Hercules Public Licence Version 2
 #
 # DD/MM/YY Description.......................................................
-#   /03/05 DLL version based on work by Roger Bowler - Ivan Warren
-#   /03/05 Place debug/retail builds into separate directories - Fish
+# 17/02/05 Created by - Roger Bowler
+# 01/03/05 Place debug/retail builds into separate directories - Fish
+# 06/03/05 DLL version - Ivan Warren
 # 08/03/05 Added /QIfist to cflags - JJ
 # 08/03/05 Modified to build DLL version in its own subdirectories separate
 #          from the static build version, and to place the generated .lib

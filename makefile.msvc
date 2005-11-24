@@ -5,8 +5,8 @@
 # This file and the executable program(s) generated from it are
 # subject to the terms of the Hercules Public Licence Version 2
 #
-# dd/mm/yy Created by - R.Bowler
-# dd/mm/yy Place debug/retail builds into separate directories - Fish
+# 17/02/05 Created by - R.Bowler
+# 01/03/05 Place debug/retail builds into separate directories - Fish
 # 08/03/05 Added /QIfist to cflags - JJ
 # 08/03/05 Modified to do "batch build" for faster builds - Fish
 # 08/03/05 Fixed optimization flags - Fish
