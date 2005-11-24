@@ -50,6 +50,7 @@
 # 02/08/05 Add optional compilation of cryptographic modules (nmake crypto)
 # 14/11/05 Add /map option back again; make similar to dll version. - Fish
 # 22/11/05 Crypto module now included standard - Ivan
+# 24/11/05 Rebase all DLLs at 0x400000 (same as executables default) - Fish
 # ***************************************************************************
 
 !IFNDEF VERSION
@@ -323,6 +324,7 @@ MODULES = \
     $(DYNCRYPTDLL)
 
 all: allzlib alllibbz2
+    rebase -b 0x400000 $(X)*.dll
 
 clean:
     del /f /q $(OBJDIR)\*.*
