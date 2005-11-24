@@ -455,12 +455,12 @@ Bernard Van Der Helm's crypto modules (Message Security Assist 1 & 2 Feature)
 is now built automatically as part of the MSVC build.
 
 Should it be necessary to build a version *WITHOUT* the crypto DLL, it is
-possible to instruction the makefile-dllmod.msvc file to bypass building that
-particular code by setiing envionment variable NOCRYPTO
+possible to instruct the makefile-dllmod.msvc file to bypass building that
+particular code by defining the environment variable NOCRYPTO.
 
 Also note that the module is only built in the DLL/Modules version. It
 is not built as part of the DLL and Static versions (because dyncrypt.c
-is module only code).
+is module-only code).
 
 Nov 22nd 2005
 
