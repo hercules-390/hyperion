@@ -397,7 +397,10 @@ char     zeros[16];
             }
 #endif
 #if defined (_900)
-            if (strcasecmp (buf, arch_name[ARCH_900]) == 0)
+            if (0
+                || strcasecmp (buf, arch_name[ARCH_900]) == 0
+                || strcasecmp (buf, "ESAME") == 0
+            )
             {
                 i = ARCH_900;
 #if defined(_FEATURE_CPU_RECONFIG)

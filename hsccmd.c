@@ -48,14 +48,14 @@ int process_script_file(char *,int);
 
 char* fish_msgs[8] =
 {
-    "0000000000000000000000000\n",
-    "11111111111111111111111111\n",
-    "222222222222222222222222222\n",
-    "3333333333333333333333333333\n",
-    "44444444444444444444444444444\n",
-    "555555555555555555555555555555\n",
-    "6666666666666666666666666666666\n",
-    "77777777777777777777777777777777\n",
+    "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222\n",
+    "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+    "4444444444444444444444444444444444444444444444444444444444444444444444444444444444444444\n",
+    "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+    "6666666666666666666666666666666666666666666666666666666666666666666666666666666666666666\n",
+    "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
 };
 
 COND fish_cond;
@@ -87,7 +87,7 @@ void*  fish_thread ( void* arg )
 
 int crash_cmd(int argc, char *argv[],char *cmdline)
 {
-#if 0
+#if 1
     TID tid;
     int num_threads;
     static int didthis = 0;
@@ -3276,7 +3276,10 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
     else
 #endif
 #if defined(_900)
-    if (!strcasecmp (argv[1], arch_name[ARCH_900]))
+    if (0
+        || !strcasecmp (argv[1], arch_name[ARCH_900])
+        || !strcasecmp (argv[1], "ESAME")
+    )
     {
         sysblk.arch_mode = ARCH_900;
 #if defined(_FEATURE_CPU_RECONFIG)
@@ -4176,11 +4179,11 @@ int ListAllCommands(int argc, char *argv[], char *cmdline)
 
     /* sf commands - shadow file add/remove/set/compress/display */
 
-    logmsg( "  %-9.9s    %s \n", "sf+", _("add shadow file") );
-    logmsg( "  %-9.9s    %s \n", "sf-", _("delete shadow file") );
-    logmsg( "  %-9.9s    %s \n", "sf=", _("rename shadow file") );
-    logmsg( "  %-9.9s    %s \n", "sfc", _("compress shadow files") );
-    logmsg( "  %-9.9s    %s \n", "sfd", _("display shadow file stats") );
+    logmsg( "  %-9.9s    %s \n", "sf+dev",    _("add shadow file") );
+    logmsg( "  %-9.9s    %s \n", "sf-dev",    _("delete shadow file") );
+    logmsg( "  %-9.9s    %s \n", "sf=dev ..", _("rename shadow file") );
+    logmsg( "  %-9.9s    %s \n", "sfc",       _("compress shadow files") );
+    logmsg( "  %-9.9s    %s \n", "sfd",       _("display shadow file stats") );
 
     logmsg("\n");
 
@@ -4357,6 +4360,13 @@ CMDHELP ( "script",    "Format: \"script filename [...filename...]\". Sequential
 
 CMDHELP ( "cscript",   "Format: \"cscript\". This command will cancel the currently running script.\n"
                        "if no script is running, no action is taken\n"
+                       )
+
+CMDHELP ( "archmode",  "Format: \"archmode [S/370 | ESA/390 | zARCH | ESAME]\". Entering the command\n"
+                       "without any argument simply displays the current architecture mode. Entering\n"
+                       "the command with an argument sets the architecture mode to the specified value.\n"
+                       "Note: \"ESAME\" (Enterprise System Architecture, Modal Extensions) is simply a\n"
+                       "synonym for \"zARCH\". (they are identical to each other and mean the same thing)\n"
                        )
 
 #if defined(FEATURE_ECPSVM)

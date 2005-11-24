@@ -1105,7 +1105,10 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
             else
 #endif
 #if defined(_900)
-            if (strcasecmp (sarchmode, arch_name[ARCH_900]) == 0)
+            if (0
+                || strcasecmp (sarchmode, arch_name[ARCH_900]) == 0
+                || strcasecmp (sarchmode, "ESAME") == 0
+            )
             {
                 archmode = ARCH_900;
             }

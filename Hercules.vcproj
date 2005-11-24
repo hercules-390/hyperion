@@ -6,6 +6,7 @@
 	ProjectGUID="{F17348EA-9067-49DC-9497-5D4BF1E6635B}"
 	RootNamespace="Hercules"
 	Keyword="MakeFileProj"
+	SignManifests="true"
 	>
 	<Platforms>
 		<Platform
@@ -23,9 +24,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat RETAIL makefile-dll.msvc 8"
-				ReBuildCommandLine="makefile.bat RETAIL makefile-dll.msvc 8 -a"
-				CleanCommandLine="makefile.bat RETAIL makefile-dll.msvc 8 clean"
+				BuildCommandLine="makefile.bat RETAIL makefile-dll.msvc 32"
+				ReBuildCommandLine="makefile.bat RETAIL makefile-dll.msvc 32 -a"
+				CleanCommandLine="makefile.bat RETAIL makefile-dll.msvc 32 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="WIN32;NDEBUG;"
 				IncludeSearchPath=""
@@ -43,9 +44,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat DEBUG makefile-dll.msvc 8"
-				ReBuildCommandLine="makefile.bat DEBUG makefile-dll.msvc 8 -a"
-				CleanCommandLine="makefile.bat DEBUG makefile-dll.msvc 8 clean"
+				BuildCommandLine="makefile.bat DEBUG makefile-dll.msvc 32"
+				ReBuildCommandLine="makefile.bat DEBUG makefile-dll.msvc 32 -a"
+				CleanCommandLine="makefile.bat DEBUG makefile-dll.msvc 32 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="WIN32;_DEBUG;"
 				IncludeSearchPath=""
@@ -63,9 +64,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat DEBUG makefile-dllmod.msvc 8"
-				ReBuildCommandLine="makefile.bat DEBUG makefile-dllmod.msvc 8 -a"
-				CleanCommandLine="makefile.bat DEBUG makefile-dllmod.msvc 8 clean"
+				BuildCommandLine="makefile.bat DEBUG makefile-dllmod.msvc 32"
+				ReBuildCommandLine="makefile.bat DEBUG makefile-dllmod.msvc 32 -a"
+				CleanCommandLine="makefile.bat DEBUG makefile-dllmod.msvc 32 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="WIN32;_DEBUG;"
 				IncludeSearchPath=""
@@ -83,9 +84,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 8"
-				ReBuildCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 8 -a"
-				CleanCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 8 clean"
+				BuildCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 32"
+				ReBuildCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 32 -a"
+				CleanCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 32 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="WIN32;NDEBUG;"
 				IncludeSearchPath=""
@@ -103,9 +104,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat DEBUG makefile.msvc 8"
-				ReBuildCommandLine="makefile.bat DEBUG makefile.msvc 8 -a"
-				CleanCommandLine="makefile.bat DEBUG makefile.msvc 8 clean"
+				BuildCommandLine="makefile.bat DEBUG makefile.msvc 32"
+				ReBuildCommandLine="makefile.bat DEBUG makefile.msvc 32 -a"
+				CleanCommandLine="makefile.bat DEBUG makefile.msvc 32 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="WIN32;_DEBUG;"
 				IncludeSearchPath=""
@@ -123,9 +124,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat RETAIL makefile.msvc 8"
-				ReBuildCommandLine="makefile.bat RETAIL makefile.msvc 8 -a"
-				CleanCommandLine="makefile.bat RETAIL makefile.msvc 8 clean"
+				BuildCommandLine="makefile.bat RETAIL makefile.msvc 32"
+				ReBuildCommandLine="makefile.bat RETAIL makefile.msvc 32 -a"
+				CleanCommandLine="makefile.bat RETAIL makefile.msvc 32 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="WIN32;NDEBUG;"
 				IncludeSearchPath=""
@@ -254,6 +255,10 @@
 			</File>
 			<File
 				RelativePath=".\config.c"
+				>
+			</File>
+			<File
+				RelativePath=".\config.h"
 				>
 			</File>
 			<File

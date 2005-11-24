@@ -1,7 +1,7 @@
 /* FEAT900.H    (c) Copyright Jan Jaeger, 2000-2005          */
 /*      ESAME feature definitions                */
 #if defined(OPTION_900_MODE)
-#define _ARCH_900_NAME "ESAME"
+#define _ARCH_900_NAME "zARCH" /* also: "ESAME" */
 
 /* This file MUST NOT contain #undef statements */
 #define FEATURE_4K_STORAGE_KEYS
