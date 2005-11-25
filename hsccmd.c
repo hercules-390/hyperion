@@ -4362,11 +4362,11 @@ CMDHELP ( "cscript",   "Format: \"cscript\". This command will cancel the curren
                        "if no script is running, no action is taken\n"
                        )
 
-CMDHELP ( "archmode",  "Format: \"archmode [S/370 | ESA/390 | zARCH | ESAME]\". Entering the command\n"
+CMDHELP ( "archmode",  "Format: \"archmode [S/370 | ESA/390 | z/Arch | ESAME]\". Entering the command\n"
                        "without any argument simply displays the current architecture mode. Entering\n"
                        "the command with an argument sets the architecture mode to the specified value.\n"
                        "Note: \"ESAME\" (Enterprise System Architecture, Modal Extensions) is simply a\n"
-                       "synonym for \"zARCH\". (they are identical to each other and mean the same thing)\n"
+                       "synonym for \"z/Arch\". (they are identical to each other and mean the same thing)\n"
                        )
 
 #if defined(FEATURE_ECPSVM)
