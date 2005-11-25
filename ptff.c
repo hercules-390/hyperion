@@ -64,7 +64,23 @@ static void ARCH_DEP(ptff_qto)(REGS *regs)
   logmsg("PTFF fc 0x01 Query TOD Offset\n");
 #endif
 
+  /* Fill Physical Clock */
+  memset(&parameter[0], 0, 8);
 
+  /* Fill TOD Offset */
+  memset(&parameter[8], 0, 8);
+
+  /* Fill Logical TOD Offset */
+  memset(&parameter[16], 0, 8);
+
+  /* Fill TOD Epoch Difference */
+  memset(&parameter[24, 0, 8);
+
+  /* Store the parameter block */
+  ARCH_DEP(vstorec)(parameter, 31, GR_A(1, regs), 1, regs);
+
+  /* Set condition code 0 */
+  regs->psw.cc = 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -72,6 +88,44 @@ static void ARCH_DEP(ptff_qto)(REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(ptff_qsi)(REGS *regs)
 {
+  BYTE parameter[56];
+
+  /* Fill Physical Clock */
+  memset(&parameter[0], 0, 8);
+
+  /* Fill Episode Start Time */
+  memset(&parameter[8], 0, 8);
+
+  /* Fill Episode Base Offset */
+  memset(&parameter[16], 0, 8);
+
+  /* Fill Episode Fine-Steering Rate */
+  memset(&parameter[24], 0, 4);
+
+  /* Fill Episode Gross-Steering Rate */
+  memset(&parameter[28], 0, 4);
+
+  /* Fill New Episode Start Time */
+  memset(&parameter[32], 0, 8);
+
+  /* Fill New Episode Base Offset */
+  memset(&parameter[40], 0, 8);
+
+  /* Fill New Episode Fine-Steering Rate */
+  memset(&parameter[48], 0, 4);
+
+  /* Fill New Episode Gross-Steering Rate */
+  memset(&parameter[52], 0, 4);
+
+#ifdef OPTION_PTFF_DEBUG
+  logmsg("PTFF fc 0x02 Query Steering Information\n");
+#endif
+
+  /* Store the parameter block */
+  ARCH_DEP(vstorec)(parameter, 55, GR_A(1, regs), 1, regs);
+
+  /* Set condition code 0 */
+  regs->psw.cc = 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -79,6 +133,20 @@ static void ARCH_DEP(ptff_qsi)(REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(ptff_qpc)(REGS *regs)
 {
+  BYTE parameter[8];
+
+#ifdef OPTION_PTFF_DEBUG
+  logmsg("PTFF fc 0x03 Query Physical Clock\n");
+#endif
+
+  /* Fill Physical Clock */
+  memset(&parameter[0], 0, 8);
+
+  /* Store the parameter block */
+  ARCH_DEP(vstorec)(parameter, 7, GR_A(1, regs), 1, regs);
+
+  /* Set condition code 0 */
+  regs->psw.cc = 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -86,27 +154,72 @@ static void ARCH_DEP(ptff_qpc)(REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(ptff_ato)(REGS *regs)
 {
+  BYTE parameter[8];
+
+#ifdef OPTION_PTFF_DEBUG
+  logmsg("PTFF fc 0x40 Adjust TOD offset\n");
+#endif
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter, 7, GR_A(1, regs), 1, regs);
+
+  /* Set condition code 0 */
+  regs->psw.cc = 0;
 }
+
 
 /*----------------------------------------------------------------------------*/
 /* 0104 PTFF FC 0x41 Set TOD Offset                                           */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(ptff_sto)(REGS *regs)
 {
+  BYTE parameter[8];
+
+#ifdef OPTION_PTFF_DEBUG
+  logmsg("PTFF fc 0x41 Set TOD offset\n");
+#endif
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter, 7, GR_A(1, regs), 1, regs);
+
+  /* Set condition code 0 */
+  regs->psw.cc = 0;
 }
 
 /*----------------------------------------------------------------------------*/
-/* 0104 PTFF FC 0x42 Set Fine Steering Rate                                   */
+/* 0104 PTFF FC 0x42 Set Fine-Steering Rate                                   */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(ptff_sfs)(REGS *regs)
 {
+  BYTE parameter[4];
+
+#ifdef OPTION_PTFF_DEBUG
+  logmsg("PTFF fc 0x42 Set Fine-Steering Rate\n");
+#endif
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter, 4, GR_A(1, regs), 1, regs);
+
+  /* Set condition code 0 */
+  regs->psw.cc = 0;
 }
 
 /*----------------------------------------------------------------------------*/
-/* 0104 PTFF FC 0x43 Set Gross Steering Rate                                  */
+/* 0104 PTFF FC 0x43 Set Gross-Steering Rate                                  */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(ptff_gfs)(REGS *regs)
 {
+  BYTE parameter[8];
+
+#ifdef OPTION_PTFF_DEBUG
+  logmsg("PTFF fc 0x43 Set Gross-Steering Rate\n");
+#endif
+
+  /* Fetch the parameter block */
+  ARCH_DEP(vfetchc)(parameter, 7, GR_A(1, regs), 1, regs);
+
+  /* Set condition code 0 */
+  regs->psw.cc = 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -175,3 +288,4 @@ DEF_INST(perform_timing_facility_function)
 #endif
 
 #endif /* !defined(_GEN_ARCH) */
+
