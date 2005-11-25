@@ -30,14 +30,27 @@
 /* fc   : function code                                                       */
 /* bit56: bit 56 (what else!)                                                 */
 /*----------------------------------------------------------------------------*/
-#define GR0_fc(regs) (((regs)->GR_L(0)) & 0x7f)
-#define GR0_bit56(reg) (((regs)->GR_L(0)) & 0x80)
+#define GR0_fc(regs)    (((regs)->GR_L(0)) & 0x7f)
+#define GR0_bit56(reg)  (((regs)->GR_L(0)) & 0x80)
+
+#define PTFF_BITS       { 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 
 /*----------------------------------------------------------------------------*/
 /* 0104 PTFF FC 0x00 Query Available Functions                                */
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(ptff_qaf)(REGS *regs)
 {
+  BYTE ptff_bits[] = PTFF_BITS;
+
+#ifdef OPTION_PTFF_DEBUG
+  lognsg("PTFF fc 0x00 Query Available Functions\n");
+#endif
+
+  /* Store the parameter block */
+  ARCH_DEP(vstorec)(ptff_bits, 15, GR_A(1, regs), 1, regs);
+
+  /* Set condition code 0 */
+  regs->psw.cc = 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -45,6 +58,13 @@ static void ARCH_DEP(ptff_qaf)(REGS *regs)
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(ptff_qto)(REGS *regs)
 {
+  BYTE parameter[32];
+
+#ifdef OPTION_PTFF_DEBUG
+  logmsg("PTFF fc 0x01 Query TOD Offset\n");
+#endif
+
+
 }
 
 /*----------------------------------------------------------------------------*/
