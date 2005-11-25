@@ -14,7 +14,7 @@
 
 #ifndef _DYNCRYPT_C_
 #define _DYNCRYPT_C_
-#endif _DYNCRYPT_C_
+#endif 
 
 #ifndef _DYNCRYPT_DLL_
 #define _DYNCRYPT_DLL_
