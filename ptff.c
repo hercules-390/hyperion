@@ -59,13 +59,30 @@ static void ARCH_DEP(ptff_qaf)(REGS *regs)
 static void ARCH_DEP(ptff_qto)(REGS *regs)
 {
   BYTE parameter[32];
+  U64 dreg;
+  U64 tod;
 
 #ifdef OPTION_PTFF_DEBUG
   logmsg("PTFF fc 0x01 Query TOD Offset\n");
 #endif
 
+  /* Obtain the TOD clock update lock */
+  obtain_lock(&sysblk.todlock);
+
+  /* Update the TOD clock */
+  update_TOD_clock();
+
+  /* Retrieve the TOD clock value */
+  dreg = sysblk.todclk + regs->todoffset;
+
+  /* Release the TOD clock update lock */
+  release_lock(&sysblk.todlock);
+
+  /* Isolate TOD value */
+  tod = dreg << 8;
+
   /* Fill Physical Clock */
-  memset(&parameter[0], 0, 8);
+  ARCH_DEP(vstore8)(tod, GR_A(1, regs), 1, regs);
 
   /* Fill TOD Offset */
   memset(&parameter[8], 0, 8);
@@ -288,4 +305,3 @@ DEF_INST(perform_timing_facility_function)
 #endif
 
 #endif /* !defined(_GEN_ARCH) */
-
