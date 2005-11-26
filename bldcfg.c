@@ -144,7 +144,7 @@ static void config_storage(int mainsize, int xpndsize)
 int off;
 
     /* Obtain main storage */
-    sysblk.mainsize = mainsize * 1024 * 1024;
+    sysblk.mainsize = mainsize * 1024 * 1024L;
 
     sysblk.mainstor = calloc((size_t)(sysblk.mainsize + 8192), 1);
 
