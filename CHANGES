@@ -1,7 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
-24 Nov 2005 Accept "zARCH" as synonym for "ESAME" archmode - Fish
+26 Nov 2005 Modify status line in panel.c for ESA/390 under z/SIE - Jan Jaeger
+24 Nov 2005 Accept "z/Arch" as synonym for "ESAME" archmode - Fish
 24 Nov 2005 hbyteswp.h: MSVC workaround for PR# emul/4 - Fish
 24 Nov 2005 Fix some very minor glitches in new panel displays - Fish
 24 Nov 2005 Report #of processors in hostinfo struct for non-MSVC - Fish

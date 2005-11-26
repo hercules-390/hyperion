@@ -2006,6 +2006,12 @@ FinishShutdown:
                     if (regs->arch_mode == ARCH_900)
                         len += sprintf (buf+len, "%16.16"I64_FMT"X ",
                                         fetch_dw (curpsw+8));
+#if defined(_FEATURE_SIE)
+                    else
+			if( SIE_MODE(regs) )
+                            for(i = 0;i < 17;i++)
+                                buf[len++] = ' ';
+#endif /*defined(_FEATURE_SIE)*/
                     len += sprintf (buf+len, "%c%c%c%c%c%c%c%c",
                            regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
                            sysblk.inststep                    ? 'T' : '.',
