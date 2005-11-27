@@ -204,6 +204,10 @@
 #endif /*!defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
 
 
+#if !defined(FEATURE_TOD_CLOCK_STEERING)
+ UNDEF_INST(perform_timing_facility_function)
+#endif
+
 #if !defined(FEATURE_EXTENDED_TOD_CLOCK)
  UNDEF_INST(set_clock_programmable_field)
  UNDEF_INST(store_clock_extended)
@@ -1730,7 +1734,7 @@ DLL_EXPORT zz_func opcode_01xx[256][GEN_MAXARCH] = {
  /*0101*/ GENx___x390x900 (program_return,E,"PR"),
  /*0102*/ GENx___x390x900 (update_tree,E,"UPT"),
  /*0103*/ GENx___x___x___ ,
- /*0104*/ GENx___x___x___ ,
+ /*0104*/ GENx___x___x900 (perform_timing_facility_function,E,"PTFF"),
  /*0105*/ GENx___x___x___ ,                                     /* CMSG      */
  /*0106*/ GENx___x___x___ ,                                     /* TMSG      */
  /*0107*/ GENx___x390x900 (set_clock_programmable_field,E,"SCKPF"),
