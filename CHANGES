@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+27 Nov 2005 Replace crypto support modules by BSD licensed versions - Roger Bowler
 26 Nov 2005 Modify status line in panel.c for ESA/390 under z/SIE - Jan Jaeger
 24 Nov 2005 Accept "z/Arch" as synonym for "ESAME" archmode - Fish
 24 Nov 2005 hbyteswp.h: MSVC workaround for PR# emul/4 - Fish

@@ -1,4 +1,5 @@
 /* $OpenBSD: sha1.c,v 1.5 2004/04/28 20:39:35 hshoexer Exp $ */
+/* modified for use with dyncrypt */
 
 /*
  * SHA-1 in C
@@ -14,26 +15,22 @@
  *   34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
 */
 
-/* #define LITTLE_ENDIAN * This should be #define'd already, if true. */
-/* #define SHA1HANDSOFF * Copies data before messing with it. */
+/* #define SHA1HANDSOFF */ /* Copies data before messing with it. */
 
-#define SHA1HANDSOFF
 
-#include <sys/param.h>
-#include <sys/systm.h>
+#include "hstdinc.h"
+#include "opcode.h" /* For CSWAP macros */
+#include "sha1.h"
 
-#include <crypto/sha1.h>
+#define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)
+#define bzero(_dest,_len) memset(_dest,'\0',_len)
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 
 /* blk0() and blk() perform the initial expand. */
 /* I got the idea of expanding during the round function from SSLeay */
-#if BYTE_ORDER == LITTLE_ENDIAN
-#define blk0(i) (block->l[i] = (rol(block->l[i],24)&0xFF00FF00) \
-    |(rol(block->l[i],8)&0x00FF00FF))
-#else
-#define blk0(i) block->l[i]
-#endif
+/* CSWAP32 performs byteswap if BYTE_ORDER == LITTLE_ENDIAN */
+#define blk0(i) CSWAP32(block->l[i])
 #define blk(i) (block->l[i&15] = rol(block->l[(i+13)&15]^block->l[(i+8)&15] \
     ^block->l[(i+2)&15]^block->l[i&15],1))
 
@@ -52,7 +49,7 @@ SHA1Transform(u_int32_t state[5], unsigned char buffer[SHA1_BLOCK_LENGTH])
     u_int32_t a, b, c, d, e;
     typedef union {
         unsigned char c[64];
-        unsigned int l[16];
+        u_int32_t     l[16];
     } CHAR64LONG16;
     CHAR64LONG16* block;
 #ifdef SHA1HANDSOFF
@@ -176,4 +173,14 @@ SHA1Final(unsigned char digest[SHA1_DIGEST_LENGTH], SHA1_CTX *context)
 #endif
 #endif
 }
+
+
+/* Hashing-only function called by dyncrypt */
+
+void 
+sha1_process(sha1_context *ctx, unsigned char data[64])
+{
+    SHA1Transform(ctx->state, data);
+}
+
 

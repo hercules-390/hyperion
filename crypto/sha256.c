@@ -1,4 +1,5 @@
 /* $OpenBSD: sha2.c,v 1.6 2004/05/03 02:57:36 millert Exp $ */
+/* modified for use with dyncrypt */
 
 /*
  * FILE: sha2.c
@@ -34,10 +35,12 @@
  * $From: sha2.c,v 1.1 2001/11/08 00:01:51 adg Exp adg $
  */
 
-#include <sys/param.h>
-#include <sys/time.h>
-#include <sys/systm.h>
-#include <crypto/sha2.h>
+#include "hstdinc.h"
+#include "opcode.h" /* For CSWAP macros */
+#include "sha256.h"
+
+#define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)
+#define bzero(_dest,_len) memset(_dest,'\0',_len)
 
 /*
  * UNROLLED TRANSFORM LOOP NOTE:
@@ -52,39 +55,8 @@
  *   #define SHA2_UNROLL_TRANSFORM
  *
  */
+#define SHA2_UNROLL_TRANSFORM
 
-
-/*** SHA-256/384/512 Machine Architecture Definitions *****************/
-/*
- * BYTE_ORDER NOTE:
- *
- * Please make sure that your system defines BYTE_ORDER.  If your
- * architecture is little-endian, make sure it also defines
- * LITTLE_ENDIAN and that the two (BYTE_ORDER and LITTLE_ENDIAN) are
- * equivilent.
- *
- * If your system does not define the above, then you can do so by
- * hand like this:
- *
- *   #define LITTLE_ENDIAN 1234
- *   #define BIG_ENDIAN    4321
- *
- * And for little-endian machines, add:
- *
- *   #define BYTE_ORDER LITTLE_ENDIAN 
- *
- * Or for big-endian machines:
- *
- *   #define BYTE_ORDER BIG_ENDIAN
- *
- * The FreeBSD machine this was written on defines BYTE_ORDER
- * appropriately by including <sys/types.h> (which in turn includes
- * <machine/endian.h> where the appropriate definitions are actually
- * made).
- */
-#if !defined(BYTE_ORDER) || (BYTE_ORDER != LITTLE_ENDIAN && BYTE_ORDER != BIG_ENDIAN)
-#error Define BYTE_ORDER to be equal to either LITTLE_ENDIAN or BIG_ENDIAN
-#endif
 
 
 /*** SHA-256/384/512 Various Length Definitions ***********************/
@@ -93,23 +65,6 @@
 #define SHA384_SHORT_BLOCK_LENGTH (SHA384_BLOCK_LENGTH - 16)
 #define SHA512_SHORT_BLOCK_LENGTH (SHA512_BLOCK_LENGTH - 16)
 
-
-/*** ENDIAN REVERSAL MACROS *******************************************/
-#if BYTE_ORDER == LITTLE_ENDIAN
-#define REVERSE32(w,x) { \
- u_int32_t tmp = (w); \
- tmp = (tmp >> 16) | (tmp << 16); \
- (x) = ((tmp & 0xff00ff00UL) >> 8) | ((tmp & 0x00ff00ffUL) << 8); \
-}
-#define REVERSE64(w,x) { \
- u_int64_t tmp = (w); \
- tmp = (tmp >> 32) | (tmp << 32); \
- tmp = ((tmp & 0xff00ff00ff00ff00ULL) >> 8) | \
-       ((tmp & 0x00ff00ff00ff00ffULL) << 8); \
- (x) = ((tmp & 0xffff0000ffff0000ULL) >> 16) | \
-       ((tmp & 0x0000ffff0000ffffULL) << 16); \
-}
-#endif /* BYTE_ORDER == LITTLE_ENDIAN */
 
 /*
  * Macro for incrementally adding the unsigned 64-bit integer n to the
@@ -497,10 +452,10 @@ SHA256_Final(u_int8_t digest[], SHA256_CTX *context)
  /* If no digest buffer is passed, we don't bother doing this: */
  if (digest != NULL) {
   usedspace = (context->bitcount >> 3) % SHA256_BLOCK_LENGTH;
-#if BYTE_ORDER == LITTLE_ENDIAN
+
   /* Convert FROM host byte order */
-  REVERSE64(context->bitcount,context->bitcount);
-#endif
+  context->bitcount = CSWAP64(context->bitcount);
+
   if (usedspace > 0) {
    /* Begin padding with a 1 bit: */
    context->buffer[usedspace++] = 0x80;
@@ -531,23 +486,27 @@ SHA256_Final(u_int8_t digest[], SHA256_CTX *context)
   /* Final transform: */
   SHA256_Transform(context, context->buffer);
 
-#if BYTE_ORDER == LITTLE_ENDIAN
   {
    /* Convert TO host byte order */
    int j;
    for (j = 0; j < 8; j++) {
-    REVERSE32(context->state[j],context->state[j]);
-    *d++ = context->state[j];
+    *d++ = CSWAP32(context->state[j]);
    }
   }
-#else
-  bcopy(context->state, d, SHA256_DIGEST_LENGTH);
-#endif
  }
 
  /* Clean up state data: */
  bzero(context, sizeof(*context));
  usedspace = 0;
+}
+
+
+/* Hashing-only function called by dyncrypt */
+
+void
+sha256_process(sha256_context *ctx, u_int8_t data[64])
+{
+ SHA256_Transform(ctx, data);
 }
 
 
@@ -778,11 +737,11 @@ SHA512_Last(SHA512_CTX *context)
  unsigned int usedspace;
 
  usedspace = (context->bitcount[0] >> 3) % SHA512_BLOCK_LENGTH;
-#if BYTE_ORDER == LITTLE_ENDIAN
+
  /* Convert FROM host byte order */
- REVERSE64(context->bitcount[0],context->bitcount[0]);
- REVERSE64(context->bitcount[1],context->bitcount[1]);
-#endif
+ context->bitcount[0] = CSWAP64(context->bitcount[0]);
+ context->bitcount[1] = CSWAP64(context->bitcount[1]);
+
  if (usedspace > 0) {
   /* Begin padding with a 1 bit: */
   context->buffer[usedspace++] = 0x80;
@@ -825,18 +784,13 @@ SHA512_Final(u_int8_t digest[], SHA512_CTX *context)
   SHA512_Last(context);
 
   /* Save the hash data for output: */
-#if BYTE_ORDER == LITTLE_ENDIAN
   {
    /* Convert TO host byte order */
    int j;
    for (j = 0; j < 8; j++) {
-    REVERSE64(context->state[j],context->state[j]);
-    *d++ = context->state[j];
+    *d++ = CSWAP64(context->state[j]);
    }
   }
-#else
-  bcopy(context->state, d, SHA512_DIGEST_LENGTH);
-#endif
  }
 
  /* Zero out state data */
@@ -871,18 +825,13 @@ SHA384_Final(u_int8_t digest[], SHA384_CTX *context)
   SHA512_Last((SHA512_CTX *)context);
 
   /* Save the hash data for output: */
-#if BYTE_ORDER == LITTLE_ENDIAN
   {
    /* Convert TO host byte order */
    int j;
    for (j = 0; j < 6; j++) {
-    REVERSE64(context->state[j],context->state[j]);
-    *d++ = context->state[j];
+    *d++ = CSWAP64(context->state[j]);
    }
   }
-#else
-  bcopy(context->state, d, SHA384_DIGEST_LENGTH);
-#endif
  }
 
  /* Zero out state data */

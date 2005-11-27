@@ -1,8 +1,9 @@
-/*	$OpenBSD: sha2.h,v 1.2 2004/04/28 23:11:57 millert Exp $	*/
+/* $OpenBSD: sha2.h,v 1.2 2004/04/28 23:11:57 millert Exp $ */
+/* modified for use with dyncrypt */
 
 /*
- * FILE:	sha2.h
- * AUTHOR:	Aaron D. Gifford <me@aarongifford.com>
+ * FILE:        sha2.h
+ * AUTHOR:      Aaron D. Gifford <me@aarongifford.com>
  * 
  * Copyright (c) 2000-2001, Aaron D. Gifford
  * All rights reserved.
@@ -39,51 +40,52 @@
 
 
 /*** SHA-256/384/512 Various Length Definitions ***********************/
-#define SHA256_BLOCK_LENGTH		64
-#define SHA256_DIGEST_LENGTH		32
-#define SHA256_DIGEST_STRING_LENGTH	(SHA256_DIGEST_LENGTH * 2 + 1)
-#define SHA384_BLOCK_LENGTH		128
-#define SHA384_DIGEST_LENGTH		48
-#define SHA384_DIGEST_STRING_LENGTH	(SHA384_DIGEST_LENGTH * 2 + 1)
-#define SHA512_BLOCK_LENGTH		128
-#define SHA512_DIGEST_LENGTH		64
-#define SHA512_DIGEST_STRING_LENGTH	(SHA512_DIGEST_LENGTH * 2 + 1)
+#define SHA256_BLOCK_LENGTH             64
+#define SHA256_DIGEST_LENGTH            32
+#define SHA256_DIGEST_STRING_LENGTH     (SHA256_DIGEST_LENGTH * 2 + 1)
+#define SHA384_BLOCK_LENGTH             128
+#define SHA384_DIGEST_LENGTH            48
+#define SHA384_DIGEST_STRING_LENGTH     (SHA384_DIGEST_LENGTH * 2 + 1)
+#define SHA512_BLOCK_LENGTH             128
+#define SHA512_DIGEST_LENGTH            64
+#define SHA512_DIGEST_STRING_LENGTH     (SHA512_DIGEST_LENGTH * 2 + 1)
 
 
 /*** SHA-256/384/512 Context Structures *******************************/
 typedef struct _SHA256_CTX {
-	u_int32_t	state[8];
-	u_int64_t	bitcount;
-	u_int8_t	buffer[SHA256_BLOCK_LENGTH];
+        u_int32_t       state[8];
+        u_int64_t       bitcount;
+        u_int8_t        buffer[SHA256_BLOCK_LENGTH];
 } SHA256_CTX;
 typedef struct _SHA512_CTX {
-	u_int64_t	state[8];
-	u_int64_t	bitcount[2];
-	u_int8_t	buffer[SHA512_BLOCK_LENGTH];
+        u_int64_t       state[8];
+        u_int64_t       bitcount[2];
+        u_int8_t        buffer[SHA512_BLOCK_LENGTH];
 } SHA512_CTX;
 
 typedef SHA512_CTX SHA384_CTX;
 
-#include <sys/cdefs.h>
-
-__BEGIN_DECLS
 void SHA256_Init(SHA256_CTX *);
 void SHA256_Update(SHA256_CTX *, const u_int8_t *, size_t)
-	__attribute__((__bounded__(__string__,2,3)));
+     /* __attribute__((__bounded__(__string__,2,3))) */;
 void SHA256_Final(u_int8_t[SHA256_DIGEST_LENGTH], SHA256_CTX *)
-	__attribute__((__bounded__(__minbytes__,1,SHA256_DIGEST_LENGTH)));
+     /* __attribute__((__bounded__(__minbytes__,1,SHA256_DIGEST_LENGTH))) */;
 
 void SHA384_Init(SHA384_CTX *);
 void SHA384_Update(SHA384_CTX *, const u_int8_t *, size_t)
-	__attribute__((__bounded__(__string__,2,3)));
+     /* __attribute__((__bounded__(__string__,2,3))) */;
 void SHA384_Final(u_int8_t[SHA384_DIGEST_LENGTH], SHA384_CTX *)
-	__attribute__((__bounded__(__minbytes__,1,SHA384_DIGEST_LENGTH)));
+     /* __attribute__((__bounded__(__minbytes__,1,SHA384_DIGEST_LENGTH))) */;
 
 void SHA512_Init(SHA512_CTX *);
 void SHA512_Update(SHA512_CTX *, const u_int8_t *, size_t)
-	__attribute__((__bounded__(__string__,2,3)));
+     /* __attribute__((__bounded__(__string__,2,3))) */;
 void SHA512_Final(u_int8_t[SHA512_DIGEST_LENGTH], SHA512_CTX *)
-	__attribute__((__bounded__(__minbytes__,1,SHA512_DIGEST_LENGTH)));
-__END_DECLS
+     /* __attribute__((__bounded__(__minbytes__,1,SHA512_DIGEST_LENGTH))) */;
+
+/* Context structure definitions for dyncrypt */
+typedef SHA256_CTX sha256_context;
+typedef SHA384_CTX sha384_context;
+typedef SHA512_CTX sha512_context;
 
 #endif /* _SHA2_H */

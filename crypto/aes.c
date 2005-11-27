@@ -1,4 +1,5 @@
 /* $OpenBSD: rijndael.c,v 1.18 2005/05/25 05:47:53 markus Exp $ */
+/* modified for use by dyncrypt */
 
 /**
  * rijndael-alg-fst.c
@@ -26,12 +27,11 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/param.h>
-#include <sys/systm.h>
+#include "hstdinc.h"
+#include "opcode.h" /* For CSWAP macros */
+#include "aes.h"
 
-#include <crypto/rijndael.h>
-
-#undef FULL_UNROLL
+#define FULL_UNROLL
 
 /*
 Te0[x] = S [x].[02, 01, 01, 03];
@@ -713,8 +713,8 @@ static const u32 rcon[] = {
  0x1B000000, 0x36000000, /* for 128-bit blocks, Rijndael never uses more than 10 rcon values */
 };
 
-#define GETU32(pt) (((u32)(pt)[0] << 24) ^ ((u32)(pt)[1] << 16) ^ ((u32)(pt)[2] <<  8) ^ ((u32)(pt)[3]))
-#define PUTU32(ct, st) { (ct)[0] = (u8)((st) >> 24); (ct)[1] = (u8)((st) >> 16); (ct)[2] = (u8)((st) >>  8); (ct)[3] = (u8)(st); }
+#define GETU32(_storage) fetch_fw((BYTE*)(_storage))
+#define PUTU32(_storage, _value) { store_fw(_storage, _value); }
 
 /**
  * Expand the cipher key into the encryption key schedule.

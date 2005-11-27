@@ -1,4 +1,5 @@
-/*	$OpenBSD: rijndael.h,v 1.11 2005/05/25 05:47:53 markus Exp $ */
+/* $OpenBSD: rijndael.h,v 1.11 2005/05/25 05:47:53 markus Exp $ */
+/* modified for use by dyncrypt */
 
 /**
  * rijndael-alg-fst.h
@@ -28,30 +29,36 @@
 #ifndef __RIJNDAEL_H
 #define __RIJNDAEL_H
 
-#define MAXKC	(256/32)
-#define MAXKB	(256/8)
-#define MAXNR	14
+#define MAXKC   (256/32)
+#define MAXKB   (256/8)
+#define MAXNR   14
 
-typedef unsigned char	u8;
-typedef unsigned short	u16;
-typedef unsigned int	u32;
+typedef u_int8_t        u8;
+typedef u_int16_t       u16;
+typedef u_int32_t       u32;
 
 /*  The structure for key information */
 typedef struct {
-	int	enc_only;		/* context contains only encrypt schedule */
-	int	Nr;			/* key-length-dependent number of rounds */
-	u32	ek[4*(MAXNR + 1)];	/* encrypt key schedule */
-	u32	dk[4*(MAXNR + 1)];	/* decrypt key schedule */
+        int     enc_only;               /* context contains only encrypt schedule */
+        int     Nr;                     /* key-length-dependent number of rounds */
+        u32     ek[4*(MAXNR + 1)];      /* encrypt key schedule */
+        u32     dk[4*(MAXNR + 1)];      /* decrypt key schedule */
 } rijndael_ctx;
 
-int	 rijndael_set_key(rijndael_ctx *, u_char *, int);
-int	 rijndael_set_key_enc_only(rijndael_ctx *, u_char *, int);
-void	 rijndael_decrypt(rijndael_ctx *, u_char *, u_char *);
-void	 rijndael_encrypt(rijndael_ctx *, u_char *, u_char *);
+int      rijndael_set_key(rijndael_ctx *, u_char *, int);
+int      rijndael_set_key_enc_only(rijndael_ctx *, u_char *, int);
+void     rijndael_decrypt(rijndael_ctx *, u_char *, u_char *);
+void     rijndael_encrypt(rijndael_ctx *, u_char *, u_char *);
 
-int	rijndaelKeySetupEnc(unsigned int [], const unsigned char [], int);
-int	rijndaelKeySetupDec(unsigned int [], const unsigned char [], int);
-void	rijndaelEncrypt(const unsigned int [], int, const unsigned char [],
-	    unsigned char []);
+int     rijndaelKeySetupEnc(unsigned int [], const unsigned char [], int);
+int     rijndaelKeySetupDec(unsigned int [], const unsigned char [], int);
+void    rijndaelEncrypt(const unsigned int [], int, const unsigned char [],
+            unsigned char []);
+
+/* Additional definitions for dyncrypt */
+typedef rijndael_ctx    aes_context;
+#define aes_set_key     rijndael_set_key
+#define aes_encrypt     rijndael_encrypt
+#define aes_decrypt     rijndael_decrypt
 
 #endif /* __RIJNDAEL_H */

@@ -103,7 +103,7 @@
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
-static void sha1_getcv(sha1_context *ctx, uint8 icv[20])
+static void sha1_getcv(sha1_context *ctx, BYTE icv[20])
 {
   int i, j;
 
@@ -119,7 +119,7 @@ static void sha1_getcv(sha1_context *ctx, uint8 icv[20])
 /*----------------------------------------------------------------------------*/
 /* Set the initial chaining value                                             */
 /*----------------------------------------------------------------------------*/
-static void sha1_seticv(sha1_context *ctx, uint8 icv[20])
+static void sha1_seticv(sha1_context *ctx, BYTE icv[20])
 {
   int i, j;
 
@@ -139,7 +139,7 @@ static void sha1_seticv(sha1_context *ctx, uint8 icv[20])
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
-static void sha256_getcv(sha256_context *ctx, uint8 icv[32])
+static void sha256_getcv(sha256_context *ctx, BYTE icv[32])
 {
   int i, j;
 
@@ -155,7 +155,7 @@ static void sha256_getcv(sha256_context *ctx, uint8 icv[32])
 /*----------------------------------------------------------------------------*/
 /* Set the initial chaining value                                             */
 /*----------------------------------------------------------------------------*/
-static void sha256_seticv(sha256_context *ctx, uint8 icv[32])
+static void sha256_seticv(sha256_context *ctx, BYTE icv[32])
 {
   int i, j;
 
@@ -174,10 +174,10 @@ static void sha256_seticv(sha256_context *ctx, uint8 icv[32])
 /* Needed functions from sha1.c and sha256.c.                                 */
 /* We do our own counting and padding, we only need the hashing.              */
 /*----------------------------------------------------------------------------*/
-void sha1_process(sha1_context *ctx, uint8 data[64]);
+void sha1_process(sha1_context *ctx, BYTE data[64]);
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-void sha256_process(sha256_context *ctx, uint8 data[64]);
+void sha256_process(sha256_context *ctx, BYTE data[64]);
 #endif
 
 /*----------------------------------------------------------------------------*/
