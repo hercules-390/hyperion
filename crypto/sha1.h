@@ -1,25 +1,26 @@
-#ifndef _SHA1_H
-#define _SHA1_H
+/*	$OpenBSD: sha1.h,v 1.4 2004/04/28 20:39:35 hshoexer Exp $	*/
 
-#ifndef uint8
-#define uint8  unsigned char
-#endif
+/*
+ * SHA-1 in C
+ * By Steve Reid <steve@edmweb.com>
+ * 100% Public Domain
+ */
 
-#ifndef uint32
-#define uint32 unsigned long int
-#endif
+#ifndef _SHA1_H_
+#define _SHA1_H_
 
-typedef struct
-{
-    uint32 total[2];
-    uint32 state[5];
-    uint8 buffer[64];
-}
-sha1_context;
+#define	SHA1_BLOCK_LENGTH		64
+#define	SHA1_DIGEST_LENGTH		20
 
-void sha1_starts( sha1_context *ctx );
-void sha1_update( sha1_context *ctx, uint8 *input, uint32 length );
-void sha1_finish( sha1_context *ctx, uint8 digest[20] );
+typedef struct {
+	u_int32_t	state[5];
+	u_int64_t	count;
+	unsigned char	buffer[SHA1_BLOCK_LENGTH];
+} SHA1_CTX;
+  
+void SHA1Init(SHA1_CTX * context);
+void SHA1Transform(u_int32_t state[5], unsigned char buffer[SHA1_BLOCK_LENGTH]);
+void SHA1Update(SHA1_CTX *context, unsigned char *data, unsigned int len);
+void SHA1Final(unsigned char digest[SHA1_DIGEST_LENGTH], SHA1_CTX *context);
 
-#endif /* sha1.h */
-
+#endif /* _SHA1_H_ */

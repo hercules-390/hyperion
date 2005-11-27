@@ -1,37 +1,31 @@
 #ifndef _DES_H
 #define _DES_H
 
-#ifndef uint8
-#define uint8  unsigned char
-#endif
+typedef u_int32_t word32;
 
-#ifndef uint32
-#define uint32 unsigned long int
-#endif
+typedef struct {
+    word32 k0246[16], k1357[16];
+    word32 iv0, iv1;
+} DESContext;
 
-typedef struct
-{
-    uint32 esk[32];     /* DES encryption subkeys */
-    uint32 dsk[32];     /* DES decryption subkeys */
-}
-des_context;
+typedef struct {
+    DESContext sched[1];
+} des_context;
 
-typedef struct
-{
-    uint32 esk[96];     /* Triple-DES encryption subkeys */
-    uint32 dsk[96];     /* Triple-DES decryption subkeys */
-}
-des3_context;
+typedef struct {
+    DESContext sched[3];
+} des3_context;
+ 
+typedef BYTE CHAR8[8];
 
-int  des_set_key( des_context *ctx, uint8 key[8] );
-void des_encrypt( des_context *ctx, uint8 input[8], uint8 output[8] );
-void des_decrypt( des_context *ctx, uint8 input[8], uint8 output[8] );
+void des_set_key(des_context *ctx, CHAR8 key);
+void des_encrypt(des_context *ctx, CHAR8 input, CHAR8 output);
+void des_decrypt(des_context *ctx, CHAR8 input, CHAR8 output);
 
-int  des3_set_2keys( des3_context *ctx, uint8 key1[8], uint8 key2[8] );
-int  des3_set_3keys( des3_context *ctx, uint8 key1[8], uint8 key2[8],
-                                        uint8 key3[8] );
+void des3_set_2keys(des3_context *ctx, CHAR8 k1, CHAR8 k2);
+void des3_set_3keys(des3_context *ctx, CHAR8 k1, CHAR8 k2, CHAR8 k3);
 
-void des3_encrypt( des3_context *ctx, uint8 input[8], uint8 output[8] );
-void des3_decrypt( des3_context *ctx, uint8 input[8], uint8 output[8] );
+void des3_encrypt(des3_context *ctx, CHAR8 input, CHAR8 output);
+void des3_decrypt(des3_context *ctx, CHAR8 input, CHAR8 output);
 
-#endif /* des.h */
+#endif /*_DES_H*/
