@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+27 Nov 2005 Drop support for makefile.msvc and makefile-dll.msvc - Roger Bowler
 27 Nov 2005 Replace crypto support modules by BSD licensed versions - Roger Bowler
 26 Nov 2005 Modify status line in panel.c for ESA/390 under z/SIE - Jan Jaeger
 24 Nov 2005 Accept "z/Arch" as synonym for "ESAME" archmode - Fish
