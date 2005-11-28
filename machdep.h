@@ -700,9 +700,11 @@ static __inline__ void concpy ( void *_dest, void *_src, size_t n )
     src  = (BYTE*) _src;
 
     /* Special processing for short lengths or overlap */
-    if (n < 8
-     || ((dest <= src && dest + 4 >= src)
-      || (src <= dest && src + 4 >= dest)))
+    if (0
+        || n < 8
+        || (dest <= src && dest + 4 >= src)
+        || (src <= dest && src + 4 >= dest)
+    )
     {
         for ( ; n; n--) *(dest++) = *(src++);
         return;
