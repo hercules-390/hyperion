@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+28 Nov 2005 Fix concpy bug discovered by Fish - Greg Smith
 27 Nov 2005 drop support for MSVC static/dll builds; keep only dllmod - Fish
 27 Nov 2005 Drop support for makefile.msvc and makefile-dll.msvc - Roger Bowler
 27 Nov 2005 Replace crypto support modules by BSD licensed versions - Roger Bowler

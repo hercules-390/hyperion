@@ -699,12 +699,14 @@ static __inline__ void concpy ( void *_dest, void *_src, size_t n )
     dest = (BYTE*) _dest;
     src  = (BYTE*) _src;
 
-    /* Special processing for short lengths or overlap */
-    if (0
-        || n < 8
-        || (dest <= src && dest + 4 >= src)
-        || (src <= dest && src + 4 >= dest)
-    )
+    /*
+     * Special processing for short lengths or overlap where we can't
+     * copy 8 byte chunks at a time
+     */
+    if (n < 8
+     || (dest <= src  && dest + 8 > src)
+     || (src  <= dest && src  + 8 > dest)
+       )
     {
         for ( ; n; n--) *(dest++) = *(src++);
         return;
