@@ -6,7 +6,6 @@
 	ProjectGUID="{F17348EA-9067-49DC-9497-5D4BF1E6635B}"
 	RootNamespace="Hercules"
 	Keyword="MakeFileProj"
-	SignManifests="true"
 	>
 	<Platforms>
 		<Platform
@@ -16,46 +15,6 @@
 	<ToolFiles>
 	</ToolFiles>
 	<Configurations>
-		<Configuration
-			Name="Release-dll|Win32"
-			OutputDirectory="./msvc.dll.bin"
-			IntermediateDirectory="./msvc.dll.obj"
-			ConfigurationType="0"
-			>
-			<Tool
-				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat RETAIL makefile-dll.msvc 32"
-				ReBuildCommandLine="makefile.bat RETAIL makefile-dll.msvc 32 -a"
-				CleanCommandLine="makefile.bat RETAIL makefile-dll.msvc 32 clean"
-				Output="$(OutDir)"
-				PreprocessorDefinitions="WIN32;NDEBUG;"
-				IncludeSearchPath=""
-				ForcedIncludes=""
-				AssemblySearchPath=""
-				ForcedUsingAssemblies=""
-				CompileAsManaged=""
-			/>
-		</Configuration>
-		<Configuration
-			Name="Debug-dll|Win32"
-			OutputDirectory="./msvc.debug.dll.bin"
-			IntermediateDirectory="./msvc.debug.dll.obj"
-			ConfigurationType="0"
-			>
-			<Tool
-				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat DEBUG makefile-dll.msvc 32"
-				ReBuildCommandLine="makefile.bat DEBUG makefile-dll.msvc 32 -a"
-				CleanCommandLine="makefile.bat DEBUG makefile-dll.msvc 32 clean"
-				Output="$(OutDir)"
-				PreprocessorDefinitions="WIN32;_DEBUG;"
-				IncludeSearchPath=""
-				ForcedIncludes=""
-				AssemblySearchPath=""
-				ForcedUsingAssemblies=""
-				CompileAsManaged=""
-			/>
-		</Configuration>
 		<Configuration
 			Name="Debug-dllmod|Win32"
 			OutputDirectory="./msvc.debug.dllmod.bin"
@@ -87,46 +46,6 @@
 				BuildCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 32"
 				ReBuildCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 32 -a"
 				CleanCommandLine="makefile.bat RETAIL makefile-dllmod.msvc 32 clean"
-				Output="$(OutDir)"
-				PreprocessorDefinitions="WIN32;NDEBUG;"
-				IncludeSearchPath=""
-				ForcedIncludes=""
-				AssemblySearchPath=""
-				ForcedUsingAssemblies=""
-				CompileAsManaged=""
-			/>
-		</Configuration>
-		<Configuration
-			Name="Debug-static|Win32"
-			OutputDirectory="./msvc.debug.bin"
-			IntermediateDirectory="./msvc.debug.obj"
-			ConfigurationType="0"
-			>
-			<Tool
-				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat DEBUG makefile.msvc 32"
-				ReBuildCommandLine="makefile.bat DEBUG makefile.msvc 32 -a"
-				CleanCommandLine="makefile.bat DEBUG makefile.msvc 32 clean"
-				Output="$(OutDir)"
-				PreprocessorDefinitions="WIN32;_DEBUG;"
-				IncludeSearchPath=""
-				ForcedIncludes=""
-				AssemblySearchPath=""
-				ForcedUsingAssemblies=""
-				CompileAsManaged=""
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release-static|Win32"
-			OutputDirectory="./msvc.bin"
-			IntermediateDirectory="./msvc.obj"
-			ConfigurationType="0"
-			>
-			<Tool
-				Name="VCNMakeTool"
-				BuildCommandLine="makefile.bat RETAIL makefile.msvc 32"
-				ReBuildCommandLine="makefile.bat RETAIL makefile.msvc 32 -a"
-				CleanCommandLine="makefile.bat RETAIL makefile.msvc 32 clean"
 				Output="$(OutDir)"
 				PreprocessorDefinitions="WIN32;NDEBUG;"
 				IncludeSearchPath=""
@@ -1168,6 +1087,10 @@
 			Name="Other Files"
 			>
 			<File
+				RelativePath=".\autogen.sh"
+				>
+			</File>
+			<File
 				RelativePath=".\CHANGES"
 				>
 			</File>
@@ -1184,10 +1107,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\makefile-dll.msvc"
-				>
-			</File>
-			<File
 				RelativePath=".\makefile-dllmod.msvc"
 				>
 			</File>
@@ -1201,10 +1120,6 @@
 			</File>
 			<File
 				RelativePath=".\makefile.generic"
-				>
-			</File>
-			<File
-				RelativePath=".\makefile.msvc"
 				>
 			</File>
 			<File
