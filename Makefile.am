@@ -175,7 +175,7 @@ bin_PROGRAMS = hercules \
                hetget hetinit hetmap hetupd \
                dmap2hrc \
                $(HERCIFC) \
-			   $(HERCLIN)
+               $(HERCLIN)
 
 EXTRA_PROGRAMS = hercifc
 
@@ -673,39 +673,39 @@ tar: dist
 
 install-exec-local:
 if SETUID_HERCIFC
-	chown root $(DESTDIR)$(bindir)/hercifc
-	chmod 0751 $(DESTDIR)$(bindir)/hercifc
-	chmod +s   $(DESTDIR)$(bindir)/hercifc
-	rm                             hercifc
+        chown root $(DESTDIR)$(bindir)/hercifc
+        chmod 0751 $(DESTDIR)$(bindir)/hercifc
+        chmod +s   $(DESTDIR)$(bindir)/hercifc
+        rm                             hercifc
 endif
 
 install-exec-hook:
-	rm -f $(DESTDIR)$(libdir)/libherc*.a
-	rm -f $(DESTDIR)$(modexecdir)/dyn*.a
-	rm -f $(DESTDIR)$(modexecdir)/hdt*.a
+        rm -f $(DESTDIR)$(libdir)/libherc*.a
+        rm -f $(DESTDIR)$(modexecdir)/dyn*.a
+        rm -f $(DESTDIR)$(modexecdir)/hdt*.a
 if BUILD_SHARED
 else
-	rm -f $(DESTDIR)$(libdir)/libherc*
+        rm -f $(DESTDIR)$(libdir)/libherc*
 endif
 #
 # NOTE : symbolic links point to FINAL destination (not to staged install)
 #
-	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) fba2cfba$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) ckd2cckd$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
+        rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+        (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) fba2cfba$(EXEEXT))
+        rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+        (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) ckd2cckd$(EXEEXT))
+        rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+        (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
+        rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+        (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
 
 uninstall-local:
 
 uninstall-hook:
-	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
-	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
-	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
-	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+        rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+        rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+        rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+        rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
 
 %.s: %.c
-	$(COMPILE) -S $<
+        $(COMPILE) -S $<

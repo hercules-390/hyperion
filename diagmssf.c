@@ -454,11 +454,11 @@ static U64        diag204tod;          /* last diag204 tod           */
 //      STORE_HW(cpuinfo->cpaddr,0);
         dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec);
         dreg = (dreg * 1000000) + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
-	tdis += dreg;
+    tdis += dreg;
         STORE_DW(cpuinfo->totdispatch,tdis);
         dreg = (U64)(usage.ru_utime.tv_sec);
         dreg = (dreg * 1000000) + (usage.ru_utime.tv_usec);
-	teff += dreg;
+    teff += dreg;
         STORE_DW(cpuinfo->effdispatch,teff);
 
         regs->GR_L(r2) = 0;

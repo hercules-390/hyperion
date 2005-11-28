@@ -2008,7 +2008,7 @@ FinishShutdown:
                                         fetch_dw (curpsw+8));
 #if defined(_FEATURE_SIE)
                     else
-			if( SIE_MODE(regs) )
+            if( SIE_MODE(regs) )
                             for(i = 0;i < 17;i++)
                                 buf[len++] = ' ';
 #endif /*defined(_FEATURE_SIE)*/
