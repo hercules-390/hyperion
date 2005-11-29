@@ -1,7 +1,27 @@
 /* MACHDEP.H  Machine specific code                                  */
 
 /*-------------------------------------------------------------------*/
-/* Header file containing machine specific macros                    */
+/*                                                                   */
+/* This header file contains the following functions, defined as     */
+/* either normal unoptimzed C code, or else as hand-tuned optimized  */
+/* assembler-assisted functions for the given machine architecture:  */
+/*                                                                   */
+/*                                                                   */
+/*   Atomic COMPARE-AND-EXCHANGE functions:                          */
+/*                                                                   */
+/*      cmpxchg1, cmpxchg4, cmpxchg8, cmpxchg16                      */
+/*                                                                   */
+/*                                                                   */
+/*   Atomic word/double-word FETCH/STORE functions:                  */
+/*                                                                   */
+/*      fetch_fw, fetch_dw, store_fw, store_dw                       */
+/*                                                                   */
+/*                                                                   */
+/*   Block-Concurrent byte copying                                   */
+/*                                                                   */
+/*      concpy    (does atomic fetchs/stores)                        */
+/*                                                                   */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
 #ifndef _HERCULES_MACHDEP_H
@@ -10,62 +30,54 @@
 #include "opcode.h"         // (need CSWAP32, et.al macros, etc)
 #include "htypes.h"         // (need Hercules fixed-size data types)
 
-#undef ASSIST_CMPXCHG1
-#undef ASSIST_CMPXCHG4
-#undef ASSIST_CMPXCHG8
-#undef ASSIST_CMPXCHG16
-#undef ASSIST_FETCH_DW
-#undef ASSIST_STORE_DW
+#undef ASSIST_CMPXCHG1      // (defined if machine-dependent assist function used)
+#undef ASSIST_CMPXCHG4      // (defined if machine-dependent assist function used)
+#undef ASSIST_CMPXCHG8      // (defined if machine-dependent assist function used)
+#undef ASSIST_CMPXCHG16     // (defined if machine-dependent assist function used)
+#undef ASSIST_FETCH_DW      // (defined if machine-dependent assist function used)
+#undef ASSIST_STORE_DW      // (defined if machine-dependent assist function used)
 
 /*-------------------------------------------------------------------*/
 /* Determine which optimizations we can and should do...             */
 /*-------------------------------------------------------------------*/
 #if defined( _MSVC_ )
 
-  // Optimizations normally only apply for release builds,
-  // but we support enabling them for debug builds as well,
-  // as well as purposely DISABLING them for troubleshooting.
+  // PROGRAMMING NOTE: Optimizations normally only apply for release
+  // builds, but we support optionally enabling them for debug too,
+  // as well as purposely DISABLING them for troubleshooting...
 
-//  #define OPTION_DISABLE_MSVC_OPTIMIZATIONS
-//  #define OPTION_ENABLE_MSVC_OPTIMIZATIONS_FOR_DEBUG_BUILDS_TOO
+     #define  OPTION_ENABLE_MSVC_OPTIMIZATIONS_FOR_DEBUG_BUILDS_TOO
+  // #define  OPTION_DISABLE_MSVC_OPTIMIZATIONS
 
-  #undef X86_64BIT
-  #undef X86_ARCH
+  #undef GEN_MSC_ASSISTS
 
-  // PROGRAMMING NOTE: our "optimizations" (using compiler intrinsics)
-  // only works on version 14.00 or greater of Microsoft's compiler...
-
-  #if ( defined( _MSC_VER ) && _MSC_VER >= 1400 ) && \
-        !defined( OPTION_DISABLE_MSVC_OPTIMIZATIONS ) && \
-    ( ( !defined( DEBUG ) && !defined( _DEBUG ) ) || \
-         defined( OPTION_ENABLE_MSVC_OPTIMIZATIONS_FOR_DEBUG_BUILDS_TOO ) )
-
-    #if defined(_M_IX86) && _M_IX86 >= 600
-      #define X86_32BIT
+  #if defined( DEBUG) || defined( _DEBUG )
+    #if defined(OPTION_ENABLE_MSVC_OPTIMIZATIONS_FOR_DEBUG_BUILDS_TOO) && \
+       !defined(OPTION_DISABLE_MSVC_OPTIMIZATIONS)
+      #define GEN_MSC_ASSISTS
     #endif
-
-    #if defined(_M_IA64) || defined(_M_AMD64)
-      #define X86_64BIT
+  #else // (presumed RELEASE build)
+    #if !defined(OPTION_DISABLE_MSVC_OPTIMIZATIONS)
+      #define GEN_MSC_ASSISTS
     #endif
+  #endif // (debug or release)
 
-    #if defined(X86_32BIT) || defined(X86_64BIT)
-      #define X86_ARCH
-    #endif
+  #undef MSC_X86_32BIT        // any 32-bit X86  (Pentium Pro, Pentium II, Pentium III or better)
+  #undef MSC_X86_64BIT        // any 64-bit X86  (AMD64 or Intel Itanium)
+  #undef MSC_X86_AMD64        // AMD64 only
+  #undef MSC_X86_IA64         // Intel Itanium only
 
+  #if defined( _M_IX86 ) && ( _M_IX86 >= 600 )
+    #define MSC_X86_32BIT
   #endif
-
-  #ifdef X86_ARCH
-
-    #pragma intrinsic ( _InterlockedCompareExchange )
-    #pragma intrinsic ( _InterlockedCompareExchange64 )
-
-    #if defined(_M_IA64)   // 64-bit Intel Itanium only
-      #pragma intrinsic ( _AcquireSpinLock )
-      #pragma intrinsic ( _ReadWriteBarrier )
-      #pragma intrinsic ( _ReleaseSpinLock )
-    #endif
-
-  #endif // X86_ARCH
+  #if defined( _M_AMD64 )
+    #define MSC_X86_AMD64
+    #define MSC_X86_64BIT
+  #endif
+  #if defined( _M_IA64 )
+    #define MSC_X86_IA64
+    #define MSC_X86_64BIT
+  #endif
 
 /*-------------------------------------------------------------------*/
 /* GNU C?  (or other compiler!)     (i.e. NON-Microsoft C/C++)       */
@@ -98,101 +110,175 @@
 /*-------------------------------------------------------------------*/
 #if defined( _MSVC_ )
 
-/*-------------------------------------------------------------------*/
-/* Microsoft VC++: any X86 Architecture... (32-bit -OR- 64-bit)      */
-/*-------------------------------------------------------------------*/
-#ifdef X86_ARCH
+  #if defined(GEN_MSC_ASSISTS) && (defined(MSC_X86_32BIT) || defined(MSC_X86_64BIT))
 
-#define ASSIST_CMPXCHG4
-#define cmpxchg4(x,y,z) cmpxchg4_x86(x,y,z)
-static __inline  BYTE   cmpxchg4_x86(U32 *old, U32 new, void *ptr)
-{
-    // returns 0 == success, 1 otherwise
-    U32 tmp = *old;
-    *old = _InterlockedCompareExchange( ptr, new, *old );
-    return ((tmp == *old) ? 0 : 1);
-}
+    // Any X86 at all (both 32/64-bit)
 
-// (must follow cmpxchg4 since it uses it)
-#define ASSIST_CMPXCHG1
-#define cmpxchg1(x,y,z) cmpxchg1_x86(x,y,z)
-static __inline  BYTE   cmpxchg1_x86(BYTE *old, BYTE new, void *ptr)
-{
-    // returns 0 == success, 1 otherwise
-    long  off, shift;
-    BYTE  cc;
-    U32  *ptr4, val4, old4, new4;
+    #pragma  intrinsic  ( _InterlockedCompareExchange )
 
-    off = (long)ptr & 3;
-    shift = (3 - off) * 8;
-    ptr4 = (U32*)(((BYTE*)ptr) - off);
-    val4 = CSWAP32(*ptr4);
-    old4 = CSWAP32((val4 & ~(0xff << shift)) | (*old << shift));
-    new4 = CSWAP32((val4 & ~(0xff << shift)) | ( new << shift));
-    cc = cmpxchg4(&old4, new4, ptr4);
-    *old = (CSWAP32(old4) >> shift) & 0xff;
-    return cc;
-}
+    #define  ASSIST_CMPXCHG1    // (indicate machine-dependent assist function used)
+    #define  ASSIST_CMPXCHG4    // (indicate machine-dependent assist function used)
+    #define  ASSIST_CMPXCHG8    // (indicate machine-dependent assist function used)
+    #define  ASSIST_FETCH_DW    // (indicate machine-dependent assist function used)
+    #define  ASSIST_STORE_DW    // (indicate machine-dependent assist function used)
 
-#define ASSIST_CMPXCHG8
-#define cmpxchg8(x,y,z) cmpxchg8_x86(x,y,z)
-static __inline  BYTE   cmpxchg8_x86(U64 *old, U64 new, void *ptr)
-{
-    // returns 0 == success, 1 otherwise
-    U64 tmp = *old;
-    *old = _InterlockedCompareExchange64( ptr, new, *old );
-    return ((tmp == *old) ? 0 : 1);
-}
+    #define  cmpxchg1( x, y, z )  cmpxchg1_x86( x, y, z )
+    #define  cmpxchg4( x, y, z )  cmpxchg4_x86( x, y, z )
+    #define  cmpxchg8( x, y, z )  cmpxchg8_x86( x, y, z )
+    #define  fetch_dw( x       )  fetch_dw_x86( x       )
+    #define  store_dw( x, y    )  store_dw_x86( x, y    )
 
-// (must follow cmpxchg8 since it uses it)
-#define ASSIST_FETCH_DW
-#define fetch_dw(x) fetch_dw_x86(x)
-static __inline U64 fetch_dw_x86(void *ptr)
-{
- U64 value = *(U64 *)ptr;
- while ( cmpxchg8 (&value, value, (U64 *)ptr) );
- return CSWAP64 (value);
-}
+    #if ( _MSC_VER < 1400 )
 
-// (must follow cmpxchg8 since it uses it)
-#define ASSIST_STORE_DW
-#define store_dw(x,y) store_dw_x86(x,y)
-static __inline void  store_dw_x86(void *ptr, U64 value)
-{
- U64 orig = *(U64 *)ptr;
- while ( cmpxchg8 (&orig, CSWAP64(value), (U64 *)ptr) );
-}
+      // PROGRAMMING NOTE: compiler versions earlier than VS8 2005
+      // do not have the _InterlockedCompareExchange64 intrinsic so
+      // we use our own hand-coded inline assembler routine instead.
+      // Also note that we can't use __fastcall here since doing so
+      // would interfere with our register usage.
 
-#if defined(_M_IA64)   // 64-bit Intel Itanium only
-#define ASSIST_CMPXCHG16
-#define cmpxchg16(x1,x2,y1,y2,z) cmpxchg16_x86(x1,x2,y1,y2,z)
-static __inline   int            cmpxchg16_x86(U64 *old1, U64 *old2,
-                                               U64  new1, U64  new2,
-                                               volatile void *ptr)
-{
-    // returns 0 == success, 1 otherwise
-    static unsigned __int64 lock = 0;
-    int code;
-    _AcquireSpinLock( &lock );
-    _ReadWriteBarrier();
-    if (*old1 == *(U64*)ptr && *old2 == *((U64*)ptr + 1))
+      static __inline BYTE cmpxchg8_x86 ( U64 *pOldVal, U64 u64NewVal, volatile void *pTarget )
+      {
+          // returns 0 == success, 1 otherwise
+          BYTE  rc;
+          U32   u32NewValHigh = u64NewVal >> 32;
+          U32   u32NewValLow  = u64NewVal & 0xffffffff;
+          __asm
+          {
+              mov    esi, [pOldVal]
+              mov    eax, [esi + 0]
+              mov    edx, [esi + 4]
+              mov    ebx, [u32NewValLow]
+              mov    ecx, [u32NewValHigh]
+              mov    esi, [pTarget]
+      #ifdef  OPTION_SMP
+         lock cmpxchg8b  qword ptr [esi]
+      #else
+              cmpxchg8b  qword ptr [esi]
+      #endif
+              setne  rc
+              jz     success
+              mov    esi, [pOldVal]
+              mov    [esi + 0], eax
+              mov    [esi + 4], edx
+          };
+      success:
+          return rc;
+      }
+
+    #else // ( _MSC_VER >= 1400 )
+
+      #pragma intrinsic ( _InterlockedCompareExchange64 )
+
+      static __inline BYTE __fastcall cmpxchg8_x86 ( U64 *old, U64 new, volatile void *ptr )
+      {
+          // returns 0 == success, 1 otherwise
+          U64 tmp = *old;
+          *old = _InterlockedCompareExchange64( ptr, new, *old );
+          return ((tmp == *old) ? 0 : 1);
+      }
+
+    #endif // ( _MSC_VER >= 1400 )
+
+    static __inline BYTE __fastcall cmpxchg4_x86 ( U32 *old, U32 new, volatile void *ptr )
     {
-        *(U64*)ptr = new1;
-        *((U64*)ptr + 1) = new2;
-        code = 0;
+        // returns 0 == success, 1 otherwise
+        U32 tmp = *old;
+        *old = _InterlockedCompareExchange( ptr, new, *old );
+        return ((tmp == *old) ? 0 : 1);
     }
-    else
-    {
-        *old1 = *((U64*)ptr);
-        *old2 = *((U64*)ptr + 1);
-        code = 1;
-    }
-    _ReleaseSpinLock( &lock );
-    return code;
-}
-#endif // defined(_M_IA64)
 
-#endif // X86_ARCH
+    // (must follow cmpxchg4 since it uses it)
+    static __inline BYTE __fastcall cmpxchg1_x86 ( BYTE *old, BYTE new, volatile void *ptr )
+    {
+        // returns 0 == success, 1 otherwise
+
+        long  off, shift;
+        BYTE  cc;
+        U32  *ptr4, val4, old4, new4;
+
+        off   = (long)ptr & 3;
+        shift = (3 - off) * 8;
+        ptr4  = (U32*)(((BYTE*)ptr) - off);
+        val4  = CSWAP32(*ptr4);
+
+        old4  = CSWAP32((val4 & ~(0xff << shift)) | (*old << shift));
+        new4  = CSWAP32((val4 & ~(0xff << shift)) | ( new << shift));
+
+        cc    = cmpxchg4( &old4, new4, ptr4 );
+
+        *old  = (CSWAP32(old4) >> shift) & 0xff;
+
+        return cc;
+    }
+
+    // (must follow cmpxchg8 since it uses it)
+    static __inline U64 __fastcall fetch_dw_x86 ( volatile void *ptr )
+    {
+        U64 value = *(U64*)ptr;
+        while ( cmpxchg8( &value, value, (U64*)ptr ) );
+        return CSWAP64(value);
+    }
+
+    // (must follow cmpxchg8 since it uses it)
+    static __inline void __fastcall store_dw_x86 ( volatile void *ptr, U64 value )
+    {
+        U64 orig = *(U64*)ptr;
+        while ( cmpxchg8( &orig, CSWAP64(value), (U64*)ptr ) );
+    }
+
+  #endif // defined(GEN_MSC_ASSISTS) && (defined(MSC_X86_32BIT) || defined(MSC_X86_64BIT))
+
+  // ------------------------------------------------------------------
+
+  #if defined(GEN_MSC_ASSISTS) && defined(MSC_X86_IA64)
+
+    // (64-bit Itanium assists only)
+
+    // ZZ FIXME: we should probably use the 'cmpxchg16b' instruction here
+    // instead if the processor supports it (CPUID instruction w/EAX function
+    // code 1 == Feature Information --> ECX bit 13 = CMPXCHG16B available)
+
+    #pragma  intrinsic  ( _AcquireSpinLock )
+    #pragma  intrinsic  ( _ReleaseSpinLock )
+    #pragma  intrinsic  ( _ReadWriteBarrier )
+
+    #define  ASSIST_CMPXCHG16   // (indicate machine-dependent assist function used)
+
+    #define  cmpxchg16(     x1, x2, y1, y2, z ) \
+             cmpxchg16_x86( x1, x2, y1, y2, z )
+
+    static __inline int __fastcall cmpxchg16_x86 ( U64 *old1, U64 *old2,
+                                                   U64  new1, U64  new2,
+                                                   volatile void  *ptr )
+    {
+        // returns 0 == success, 1 otherwise
+
+        static unsigned __int64 lock = 0;
+        int code;
+
+        _AcquireSpinLock( &lock );
+
+        _ReadWriteBarrier();
+
+        if (*old1 == *(U64*)ptr && *old2 == *((U64*)ptr + 1))
+        {
+            *(U64*)ptr = new1;
+            *((U64*)ptr + 1) = new2;
+            code = 0;
+        }
+        else
+        {
+            *old1 = *((U64*)ptr);
+            *old2 = *((U64*)ptr + 1);
+            code = 1;
+        }
+
+        _ReleaseSpinLock( &lock );
+
+        return code;
+    }
+
+  #endif // defined(GEN_MSC_ASSISTS) && defined(MSC_X86_IA64)
 
 #else // !defined( _MSVC_ )
 /*-------------------------------------------------------------------*/

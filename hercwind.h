@@ -115,10 +115,10 @@ typedef int             mode_t;
 #define HAVE_STRUCT_IN_ADDR_S_ADDR
 #define HAVE_U_INT
 #define HAVE_LIBMSVCRT
-#define HAVE_SYS_MTIO_H     // (ours is called 'w32mtio.h')
+#define HAVE_SYS_MTIO_H         // (ours is called 'w32mtio.h')
 
 #ifndef MAX_CPU_ENGINES
-#define MAX_CPU_ENGINES 2
+#define MAX_CPU_ENGINES  2
 #endif
 
 #define OPTION_CONFIG_SYMBOLS
@@ -126,9 +126,10 @@ typedef int             mode_t;
 #define HAVE_STRSIGNAL
 #define EXTERNALGUI
 #define NO_SETUID
-
-#define NO_ATTR_REGPARM         // ZZFIXME: __fastcall
 #define NO_SIGABEND_HANDLER
+
+#undef  NO_ATTR_REGPARM         // ( ATTR_REGPARM(x) == __fastcall )
+#define HAVE_ATTR_REGPARM       // ( ATTR_REGPARM(x) == __fastcall )
 
 #include "getopt.h"
 #define HAVE_GETOPT_LONG

@@ -14,7 +14,11 @@
 /*-------------------------------------------------------------------*/
 
 #if defined(HAVE_ATTR_REGPARM)
-  #define  ATTR_REGPARM(n)   __attribute__  (( regparm(n) ))
+  #ifdef _MSVC_
+    #define  ATTR_REGPARM(n)   __fastcall
+  #else /* GCC presumed */
+    #define  ATTR_REGPARM(n)   __attribute__  (( regparm(n) ))
+  #endif
 #else
   #define  ATTR_REGPARM(n)   /* nothing */
 #endif

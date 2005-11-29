@@ -10,47 +10,47 @@
 
 #if !defined(NO_ASM_BYTESWAP)
 
-#include "htypes.h"       // (need Hercules fixed-size data types)
+  #include "htypes.h"       // (need Hercules fixed-size data types)
 
-#if defined( _MSVC_ )
+  #if defined( _MSVC_ )
 
-static __inline  uint16_t  (ATTR_REGPARM(1) bswap_16)(uint16_t x)
-{
-    return _byteswap_ushort((x));
-}
+    static __inline  uint16_t  __fastcall  bswap_16 ( uint16_t  x )
+    {
+      return _byteswap_ushort((x));
+    }
 
-static __inline  uint32_t  (ATTR_REGPARM(1) bswap_32)(uint32_t x)
-{
-    return _byteswap_ulong((x));
-}
+    static __inline  uint32_t  __fastcall  bswap_32 ( uint32_t  x )
+    {
+      return _byteswap_ulong((x));
+    }
 
-#else // !defined( _MSVC_ )
+  #else // !defined( _MSVC_ )
 
-static __inline__ uint16_t (ATTR_REGPARM(1) bswap_16)(uint16_t x)
-{
-        __asm__("xchgb %b0,%h0" : "=q" (x) :  "0" (x));
-        return x;
-}
+    static __inline__ uint16_t (ATTR_REGPARM(1) bswap_16)(uint16_t x)
+    {
+      __asm__("xchgb %b0,%h0" : "=q" (x) :  "0" (x));
+      return x;
+    }
 
-static __inline__ uint32_t (ATTR_REGPARM(1) bswap_32)(uint32_t x)
-{
-        __asm__("bswap %0" : "=r" (x) : "0" (x));
-        return x;
-}
+    static __inline__ uint32_t (ATTR_REGPARM(1) bswap_32)(uint32_t x)
+    {
+      __asm__("bswap %0" : "=r" (x) : "0" (x));
+      return x;
+    }
 
-#endif // defined( _MSVC_ )
+  #endif // defined( _MSVC_ )
 
 #else // defined(NO_ASM_BYTESWAP)
 
-#define bswap_16(_x) \
-        ( (((_x) & 0xFF00) >> 8) \
-        | (((_x) & 0x00FF) << 8) )
+  #define bswap_16(_x) \
+          ( (((_x) & 0xFF00) >> 8) \
+          | (((_x) & 0x00FF) << 8) )
 
-#define bswap_32(_x) \
-        ( (((_x) & 0xFF000000) >> 24) \
-        | (((_x) & 0x00FF0000) >> 8)  \
-        | (((_x) & 0x0000FF00) << 8)  \
-        | (((_x) & 0x000000FF) << 24) )
+  #define bswap_32(_x) \
+          ( (((_x) & 0xFF000000) >> 24) \
+          | (((_x) & 0x00FF0000) >> 8)  \
+          | (((_x) & 0x0000FF00) << 8)  \
+          | (((_x) & 0x000000FF) << 24) )
 
 #endif // !defined(NO_ASM_BYTESWAP)
 
@@ -66,7 +66,7 @@ static __inline__ uint32_t (ATTR_REGPARM(1) bswap_32)(uint32_t x)
   #if ( _MSC_VER < 1400 )
     #pragma optimize("g",off)     // (disable global optimizations)
   #endif
-  static __inline  uint64_t  bswap_64(uint64_t x)
+  static __inline  uint64_t  __fastcall  bswap_64(uint64_t x)
   {
       return _byteswap_uint64((x));
   }
