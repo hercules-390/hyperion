@@ -17,24 +17,22 @@ rem  Where:
 rem
 rem   %1   DEBUG or RETAIL (used in 'setenv' call)        ((REQUIRED))
 rem
-rem   %2   name of makefile to use (makefile-dllmod.msvc  ((REQUIRED))
-rem                                 or makefile-dll.msvc
-rem                                 or makefile.msvc)
+rem   %2   name of makefile to use (makefile-dllmod.msvc) ((REQUIRED))
 rem
-rem   %3   MAX_CPU_ENGINES value ( 2 to 8 )               ((REQUIRED))
+rem   %3   MAX_CPU_ENGINES value ( 2 to 32 )              ((REQUIRED))
 rem
-rem   %4   extra nmake parameter (usually -a to force     ((OPTIONAL))
+rem   %4   extra nmake parameter (usually '-a' to force   ((OPTIONAL))
 rem                               rebuild of all targets
-rem                               or clean to clean build
-rem                               directories)
+rem                               or 'clean' to clean up
+rem                               all build directories)
 rem
 rem -------------------------------------------------------------------
-rem  (for reference: additional nmake arguments)
+rem  Additional nmake arguments (for reference):
 rem
 rem   -nologo   suppress copyright banner
 rem   -s        silent (suppress commands echoing)
 rem   -k        keep going if error(s)
-rem   -g        display !INCLUDEd files  (apparently a VS 8.0 -ism)
+rem   -g        display !INCLUDEd files  (apparently VS 8.0 only)
 rem
 rem -------------------------------------------------------------------
 rem
