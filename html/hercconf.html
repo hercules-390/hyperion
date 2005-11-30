@@ -1239,6 +1239,7 @@ a real System/390.  The configuration file is an ASCII text file.
     blanks are removed from each line.  Carriage control characters
     are translated to blank lines or ASCII form feed characters.
     If the file exists it will be overwritten.
+    
     <p>
 
     Additional arguments may be specified after the file name:
@@ -1254,6 +1255,18 @@ a real System/390.  The configuration file is an ASCII text file.
         <p>
 
     </dl>
+
+    <p>
+
+    If the filename begins with the vertical bar '|' pipe character,
+    then it is removed and the remainder of the device statement is
+    interpretted as the name of an external program (followed by any
+    necessary arguments) to which to "pipe" the printer output to.
+    This is known as the "print-to-pipe" feature. All printer output
+    is then sent to the piped program's stdin input, and all of the
+    piped program's stdout and stderr output is piped back to Hercules
+    for displaying on the hardware console.
+
     <p>
 
 <a name="3420">
