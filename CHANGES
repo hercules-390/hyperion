@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+29 Nov 2005 build_msc/45, printer/24: Poor man's fork for MSVC builds - Fish
 28 Nov 2005 enable ATTR_REGPARM performance option for MSVC builds - Fish
 28 Nov 2005 enable machine assists in machdep.h for MSVC VC7 compiler - Fish
 28 Nov 2005 Fix concpy bug discovered by Fish - Greg Smith

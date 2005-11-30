@@ -68,10 +68,12 @@ static BYTE printer_immed_commands[256]=
 static int
 open_printer (DEVBLK *dev)
 {
-int             pipefd[2];              /* Pipe descriptors          */
 pid_t           pid;                    /* Child process identifier  */
-int             rc;                     /* Return code               */
 BYTE            pathname[MAX_PATH];     /* file path in host format  */
+#if !defined( _MSVC_ )
+int             pipefd[2];              /* Pipe descriptors          */
+int             rc;                     /* Return code               */
+#endif
 
     /* Regular open if 1st char of filename is not vertical bar */
     if (dev->filename[0] != '|')
@@ -97,6 +99,24 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
     /* Filename is in format |xxx, set up pipe to program xxx */
 
     dev->ispiped = 1;
+
+#if defined( _MSVC_ )
+
+    /* "Poor man's" fork... */
+    pid = w32_poor_mans_fork ( dev->filename+1, &dev->fd );
+    if (pid < 0)
+    {
+        logmsg (_("HHCPR006E %4.4X device initialization error: fork: %s\n"),
+                dev->devnum, strerror(errno));
+        return -1;
+    }
+
+    /* Log start of child process */
+    logmsg (_("HHCPR007I pipe receiver (pid=%d) starting for %4.4X\n"),
+            pid, dev->devnum);
+    dev->ptpcpid = pid;
+
+#else /* !defined( _MSVC_ ) */
 
     /* Create a pipe */
     rc = create_pipe (pipefd);
@@ -190,8 +210,12 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Save pipe write descriptor in the device block */
     dev->fd = pipefd[1];
+    dev->ptpcpid = pid;
+
+#endif /* defined( _MSVC_ ) */
 
     return 0;
+
 } /* end function open_printer */
 
 /*-------------------------------------------------------------------*/
@@ -304,9 +328,21 @@ static void printer_query_device (DEVBLK *dev, char **class,
 /*-------------------------------------------------------------------*/
 static int printer_close_device ( DEVBLK *dev )
 {
+    if (dev->fd < 0) return 0;  /* (nothing to close!) */
+
     /* Close the device file */
     if ( dev->ispiped )
+    {
+#if !defined( _MSVC_ )
         close_pipe ( dev->fd );
+#else /* defined( _MSVC_ ) */
+        close (dev->fd);
+        /* Log end of child process */
+        logmsg (_("HHCPR011I pipe receiver (pid=%d) terminating for %4.4X\n"),
+                dev->ptpcpid, dev->devnum);
+#endif /* defined( _MSVC_ ) */
+        dev->ptpcpid = 0;
+    }
     else
         close (dev->fd);
     dev->fd = -1;

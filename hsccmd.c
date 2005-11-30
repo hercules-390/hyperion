@@ -1020,9 +1020,14 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
 
 int sh_cmd(int argc, char *argv[], char *cmdline)
 {
+    char* cmd = cmdline + 2;
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-    return herc_system (cmdline+2);
+    while (isspace(*cmd)) cmd++;
+    if (*cmd)
+        return herc_system (cmd);
+    panel_command ("help sh");
+    return -1;
 }
 
 ///////////////////////////////////////////////////////////////////////

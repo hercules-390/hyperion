@@ -105,6 +105,9 @@
 #if defined( HAVE_FORK )
 #define  USE_FORK_API_FOR_SH_COMMAND           4
 #endif
+#if defined( _MSVC_ )
+#define  USE_W32_POOR_MANS_FORK                5
+#endif
 #define  USE_ANSI_SYSTEM_API_FOR_SH_COMMAND    9
 
 
@@ -162,7 +165,7 @@
 #define DEFAULT_DEV_PRIO   -8
 
 #ifdef _MSVC_
-  #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
+  #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_W32_POOR_MANS_FORK
 #else
   #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_FORK_API_FOR_SH_COMMAND
 #endif

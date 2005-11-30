@@ -2076,4 +2076,412 @@ DLL_EXPORT int w32_fclose ( FILE* stream )
            (END)           (Socket Handling Functions)            (END)
 \****************************************************************************************/
 
+// Create a child process with redirected standard file HANDLEs...
+//
+// For more information, see KB article 190351 "HOWTO: Spawn Console Processes
+// with Redirected Standard Handles" http://support.microsoft.com/?kbid=190351
+
+#define  PIPEBUFSIZE              (1024)            // SHOULD be big enough!!
+#define  HOLDBUFSIZE              (PIPEBUFSIZE*2)   // twice pipe buffer size
+#define  PIPE_THREAD_STACKSIZE    (64*1024)         // 64K should be plenty!!
+
+#define  CMDLINE_COMMAND_PREFIX   "conspawn "
+#define  MSG_TRUNCATED_MSG        "...(truncated)\n"
+
+char*    buffer_overflow_msg      = NULL;   // used to trim received message
+int      buffer_overflow_msg_len  = 0;      // length of above truncation msg
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// "Poor man's" fork...
+
+UINT WINAPI w32_read_piped_process_stdxxx_output_thread ( void* pThreadParm ); // (fwd ref)
+
+DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildStdinFD )
+{
+    HANDLE hChildReadFromStdin;         // child's stdin  pipe HANDLE (inherited from us)
+    HANDLE hChildWriteToStdout;         // child's stdout pipe HANDLE (inherited from us)
+    HANDLE hChildWriteToStderr;         // child's stderr pipe HANDLE (inherited from us)
+
+    HANDLE hOurWriteToStdin;            // our HANDLE to write-end of child's stdin pipe
+    HANDLE hOurReadFromStdout;          // our HANDLE to read-end of child's stdout pipe
+    HANDLE hOurReadFromStderr;          // our HANDLE to read-end of child's stderr pipe
+
+    HANDLE hOurProcess;                 // (temporary for creating pipes)
+    HANDLE hPipeReadHandle;             // (temporary for creating pipes)
+    HANDLE hPipeWriteHandle;            // (temporary for creating pipes)
+
+    HANDLE hWorkerThread;               // (worker thread to monitor child's pipe)
+    DWORD  dwThreadId;                  // (worker thread to monitor child's pipe)
+
+    STARTUPINFO          siStartInfo;   // (info passed to CreateProcess)
+    PROCESS_INFORMATION  piProcInfo;    // (info returned by CreateProcess)
+    SECURITY_ATTRIBUTES  saAttr;        // (suckurity? we dunt need no stinkin suckurity!)
+
+    char* pszConSpawnCommandLine;       // (because we need to prefix it with "conspawn ")
+    BOOL  bSuccess;                     // (work)
+    int   rc;                           // (work)
+
+    //////////////////////////////////////////////////
+    // Initialize fields...
+
+    buffer_overflow_msg         = MSG_TRUNCATED_MSG;
+    buffer_overflow_msg_len     = strlen( buffer_overflow_msg );
+    saAttr.nLength              = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.lpSecurityDescriptor = NULL; // (we dunt need no stinkin suckurity!)
+    saAttr.bInheritHandle       = TRUE; // (allows our inheritable HANDLEs
+                                        // to be inherited by child)
+    hOurProcess = GetCurrentProcess();  // (for creating pipes)
+
+    //////////////////////////////////////////////////
+    // Only create a stdin pipe if caller will be providing the child's stdin data...
+
+    if (!pnWriteToChildStdinFD)         // (will caller be providing child's stdin?)
+    {
+        // PROGRAMMING NOTE: setting the child's stdin to "GetStdHandle(STD_INPUT_HANDLE)"
+        // does NOT mean the child will be using our stdin as its stdin! Rather, it is
+        // simply a flag telling CreateProcess to create a private stdin for the child.
+
+        hChildReadFromStdin = GetStdHandle(STD_INPUT_HANDLE);  // (no stdin piping)
+    }
+    else
+    {
+        // Create Stdin pipe for sending data to child...
+
+        VERIFY(CreatePipe(&hChildReadFromStdin, &hPipeWriteHandle, &saAttr, PIPEBUFSIZE));
+
+        // Create non-inheritable duplcate of pipe handle for our own private use...
+
+        VERIFY(DuplicateHandle
+        (
+            hOurProcess, hPipeWriteHandle,      // (handle to be duplicated)
+            hOurProcess, &hOurWriteToStdin,     // (non-inheritable duplicate)
+            0,
+            FALSE,                              // (prevents child from inheriting it)
+            DUPLICATE_SAME_ACCESS
+        ));
+        VERIFY(CloseHandle(hPipeWriteHandle));  // (MUST close so child won't hang!)
+    }
+
+    //////////////////////////////////////////////////
+    // Pipe child's Stdout output back to us...
+
+    VERIFY(CreatePipe(&hPipeReadHandle, &hChildWriteToStdout, &saAttr, PIPEBUFSIZE));
+
+    // Create non-inheritable duplcate of pipe handle for our own private use...
+
+    VERIFY(DuplicateHandle
+    (
+        hOurProcess, hPipeReadHandle,       // (handle to be duplicated)
+        hOurProcess, &hOurReadFromStdout,   // (non-inheritable duplicate)
+        0,
+        FALSE,                              // (prevents child from inheriting it)
+        DUPLICATE_SAME_ACCESS
+    ));
+    VERIFY(CloseHandle(hPipeReadHandle));   // (MUST close so child won't hang!)
+
+    //////////////////////////////////////////////////
+    // Pipe child's Stderr output back to us...
+
+    VERIFY(CreatePipe(&hPipeReadHandle, &hChildWriteToStderr, &saAttr, PIPEBUFSIZE));
+
+    // Create non-inheritable duplcate of pipe handle for our own private use...
+
+    VERIFY(DuplicateHandle
+    (
+        hOurProcess, hPipeReadHandle,       // (handle to be duplicated)
+        hOurProcess, &hOurReadFromStderr,   // (non-inheritable duplicate)
+        0,
+        FALSE,                              // (prevents child from inheriting it)
+        DUPLICATE_SAME_ACCESS
+    ));
+    VERIFY(CloseHandle(hPipeReadHandle));   // (MUST close so child won't hang!)
+
+    //////////////////////////////////////////////////
+    // Prepare for creation of child process...
+
+    ZeroMemory(&piProcInfo,  sizeof(PROCESS_INFORMATION));
+    ZeroMemory(&siStartInfo, sizeof(STARTUPINFO        ));
+
+    siStartInfo.cb         = sizeof(STARTUPINFO);   // (size of structure)
+    siStartInfo.dwFlags    = STARTF_USESTDHANDLES;  // (use redirected std HANDLEs)
+    siStartInfo.hStdInput  = hChildReadFromStdin;   // (use redirected std HANDLEs)
+    siStartInfo.hStdOutput = hChildWriteToStdout;   // (use redirected std HANDLEs)
+    siStartInfo.hStdError  = hChildWriteToStderr;   // (use redirected std HANDLEs)
+
+    // Build the command-line for the system to create the child process with...
+
+    rc = strlen(CMDLINE_COMMAND_PREFIX) + strlen(pszCommandLine) + 1;
+    pszConSpawnCommandLine = malloc( rc );
+    strlcpy( pszConSpawnCommandLine, CMDLINE_COMMAND_PREFIX, rc );
+    strlcat( pszConSpawnCommandLine, pszCommandLine,         rc );
+
+    //////////////////////////////////////////////////
+    // Now actually create the child process...
+    //////////////////////////////////////////////////
+
+    bSuccess = CreateProcess
+    (
+        NULL,                       // name of executable module = from command-line
+        pszConSpawnCommandLine,     // command line with arguments
+        NULL,                       // process security attributes = use defaults
+        NULL,                       // primary thread security attributes = use defaults
+        TRUE,                       // HANDLE inheritance flag = allow
+                                    // (required when STARTF_USESTDHANDLES flag is used)
+        DETACHED_PROCESS,           // creation flags = detached console (i.e. no console)
+        NULL,                       // environment block ptr = make a copy from parent's
+        NULL,                       // initial working directory = same as parent's
+        &siStartInfo,               // input STARTUPINFO pointer
+        &piProcInfo                 // output PROCESS_INFORMATION
+    );
+    rc = GetLastError();            // (save return code)
+
+    // Close the HANDLEs we don't need...
+
+    if (pnWriteToChildStdinFD)
+    VERIFY(CloseHandle(hChildReadFromStdin));   // (MUST close so child won't hang!)
+    VERIFY(CloseHandle(hChildWriteToStdout));   // (MUST close so child won't hang!)
+    VERIFY(CloseHandle(hChildWriteToStderr));   // (MUST close so child won't hang!)
+
+           CloseHandle(piProcInfo.hProcess);    // (we don't need this one)
+           CloseHandle(piProcInfo.hThread);     // (we don't need this one)
+
+    free(pszConSpawnCommandLine);               // (not needed anymore)
+
+    // Check results...
+
+    if (!bSuccess)
+    {
+        TRACE("*** CreateProcess() failed! rc = %d : %s\n",
+            rc,w32_strerror(rc));
+
+        if (pnWriteToChildStdinFD)
+        VERIFY(CloseHandle(hOurWriteToStdin));
+        VERIFY(CloseHandle(hOurReadFromStdout));
+        VERIFY(CloseHandle(hOurReadFromStderr));
+
+        errno = rc;
+        return -1;
+    }
+
+    //////////////////////////////////////////////////
+    // Create o/p pipe monitoring worker threads...
+    //////////////////////////////////////////////////
+    // Stdout...
+
+    hWorkerThread = CreateThread
+    (
+        NULL,                                       // pointer to security attributes = use defaults
+        PIPE_THREAD_STACKSIZE,                      // initial thread stack size
+        w32_read_piped_process_stdxxx_output_thread,
+        (void*)hOurReadFromStdout,                  // thread argument = pipe HANDLE
+        0,                                          // special creation flags = none needed
+        &dwThreadId                                 // pointer to receive thread ID
+    );
+    rc = GetLastError();                            // (save return code)
+
+    if (!hWorkerThread || INVALID_HANDLE_VALUE == hWorkerThread)
+    {
+        TRACE("*** CreateThread() failed! rc = %d : %s\n",
+            rc,w32_strerror(rc));
+
+        if (pnWriteToChildStdinFD)
+        VERIFY(CloseHandle(hOurWriteToStdin));
+        VERIFY(CloseHandle(hOurReadFromStdout));
+        VERIFY(CloseHandle(hOurReadFromStderr));
+
+        errno = rc;
+        return -1;
+    }
+    else
+        VERIFY(CloseHandle(hWorkerThread));         // (not needed anymore)
+
+    //////////////////////////////////////////////////
+    // Stderr...
+
+    hWorkerThread = CreateThread
+    (
+        NULL,                                       // pointer to security attributes = use defaults
+        PIPE_THREAD_STACKSIZE,                      // initial thread stack size
+        w32_read_piped_process_stdxxx_output_thread,
+        (void*)hOurReadFromStderr,                  // thread argument = pipe HANDLE
+        0,                                          // special creation flags = none needed
+        &dwThreadId                                 // pointer to receive thread ID
+    );
+    rc = GetLastError();                            // (save return code)
+
+    if (!hWorkerThread || INVALID_HANDLE_VALUE == hWorkerThread)
+    {
+        TRACE("*** CreateThread() failed! rc = %d : %s\n",
+            rc,w32_strerror(rc));
+
+        if (pnWriteToChildStdinFD)
+        VERIFY(CloseHandle(hOurWriteToStdin));
+        VERIFY(CloseHandle(hOurReadFromStdout));
+        VERIFY(CloseHandle(hOurReadFromStderr));
+
+        errno = rc;
+        return -1;
+    }
+    else
+        VERIFY(CloseHandle(hWorkerThread));     // (not needed anymore)
+
+    // Return a C run-time file descriptor
+    // for the write-to-child-stdin HANDLE...
+
+    if ( pnWriteToChildStdinFD )
+        *pnWriteToChildStdinFD = _open_osfhandle( (intptr_t) hOurWriteToStdin, 0 );
+
+    // Success!
+
+    return piProcInfo.dwProcessId;      // (return process-id to caller)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Thread to read message data from the child process's stdxxx o/p pipe...
+
+void w32_parse_piped_process_stdxxx_data ( char* holdbuff, int* pnHoldAmount );
+
+UINT  WINAPI  w32_read_piped_process_stdxxx_output_thread ( void* pThreadParm )
+{
+    HANDLE    hOurReadFromStdxxx;
+    DWORD     nAmountRead;
+    int       nHoldAmount;
+    BOOL      oflow;
+    unsigned  nRetcode;
+
+    char   readbuff [ PIPEBUFSIZE ];
+    char   holdbuff [ HOLDBUFSIZE ];
+
+    hOurReadFromStdxxx  = (HANDLE) pThreadParm;
+    nAmountRead         = 0;
+    nHoldAmount         = 0;
+    oflow               = FALSE;
+    nRetcode            = 0;
+
+    for (;;)
+    {
+        if (!ReadFile(hOurReadFromStdxxx, readbuff, PIPEBUFSIZE-1, &nAmountRead, NULL))
+        {
+            if (ERROR_BROKEN_PIPE == (nRetcode = GetLastError())) nRetcode = 0;
+            break;
+        }
+        *(readbuff+nAmountRead) = 0;
+
+        if (!nAmountRead) break;    // (pipe closed (i.e. broken pipe); time to exit)
+
+        if ((nHoldAmount + nAmountRead) >= (HOLDBUFSIZE-1))
+        {
+            // OVERFLOW! append "truncated" string and force end-of-msg...
+
+            oflow = TRUE;
+            memcpy( holdbuff + nHoldAmount, readbuff, HOLDBUFSIZE - nHoldAmount);
+            strcpy(                         readbuff, buffer_overflow_msg);
+            nAmountRead =                   buffer_overflow_msg_len;
+            nHoldAmount =  HOLDBUFSIZE  -   buffer_overflow_msg_len - 1;
+        }
+
+        // Append new data to end of hold buffer...
+
+        memcpy(holdbuff+nHoldAmount,readbuff,nAmountRead);
+        nHoldAmount += nAmountRead;
+        *(holdbuff+nHoldAmount) = 0;
+
+        // Pass all existing data to parsing function...
+
+        w32_parse_piped_process_stdxxx_data(holdbuff,&nHoldAmount);
+
+        if (oflow) ASSERT(!nHoldAmount); oflow = FALSE;
+    }
+
+    CloseHandle(hOurReadFromStdxxx);    // (prevent HANDLE leak)
+
+    return nRetcode;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Parse piped child's stdout/stderr o/p data into individual newline delimited
+// messages for displaying on the Hercules hardware console...
+
+void w32_parse_piped_process_stdxxx_data ( char* holdbuff, int* pnHoldAmount )
+{
+    // This function executes in the context of the worker thread that calls it.
+
+    char* pbeg;                         // ptr to start of message
+    char* pend;                         // find end of message (MUST NOT BE MODIFIED!)
+    char* pmsgend;                      // work ptr to end of message
+                                        // 'pend' variable MUST NOT BE MODIFIED
+    int nlen;                           // work length of one message
+    int ntotlen;                        // accumulated length of all parsed messages
+
+    // A worker thread that monitors a child's Stdout o/p has received a message
+    // and is calling this function to determine what, if anything, to do with it.
+
+    // (Note: the worker thread that calls us ensures holdbuff is null terminated)
+
+    pbeg = holdbuff;                    // ptr to start of message
+    pend = strchr(pbeg,'\n');           // find end of message (MUST NOT BE MODIFIED!)
+    if (!pend)
+    {
+        pend = strchr(pbeg,'\r');       // find end of message (MUST NOT BE MODIFIED!)
+        if (!pend)
+            return;                     // we don't we have a complete message yet
+    }
+    ntotlen = 0;                        // accumulated length of all parsed messages
+
+    // Parse the message...
+
+    do
+    {
+        nlen = (pend-pbeg);             // get length of THIS message
+        ntotlen += nlen;                // keep track of all that we see
+
+        // Remove trailing newline character and any other trailing blanks...
+
+        // (Note: we MUST NOT MODIFY the 'pend' variable. It should always
+        // point to where the newline character was found so we can start
+        // looking for the next message (if there is one) where this message
+        // ended).
+
+        *pend = 0;                      // (change newline character to null)
+        pmsgend = pend;                 // (start removing blanks from here)
+
+        while (--pmsgend >= pbeg && isspace(*pmsgend)) {*pmsgend = 0; --nlen;}
+
+        logmsg("%s\n",pbeg);            // send all child's msgs to Herc console
+
+        // 'pend' should still point to the end of this message (where newline was)
+
+        pbeg = (pend + 1);              // point to beg of next message (if any)
+        pend = strchr(pbeg,'\n');       // is there another message?
+        if (!pend)
+            pend = strchr(pbeg,'\r');   // is there another message?
+    }
+    while (pend);                       // while messages remain...
+
+    if (ntotlen > *pnHoldAmount)        // make sure we didn't process too much
+    {
+        TRACE("*** ParseStdxxxMsg logic error! ***\n");
+        ASSERT(FALSE);                  // oops!
+    }
+
+    // 'Remove' the messages that we parsed from the caller's hold buffer by
+    // sliding the remainder to the left (i.e. left justifying the remainder
+    // in their hold buffer) and then telling them how much data now remains
+    // in their hold buffer.
+
+    // IMPORTANT PROGRAMMING NOTE! We must use memmove here and not strcpy!
+    // strcpy doesn't work correctly for overlapping source and destination.
+    // If there's 100 bytes remaining and we just want to slide it left by 1
+    // byte (just as an illustrative example), strcpy screws up. This is more
+    // than likely because strcpy is trying to be as efficient as possible and
+    // is grabbing multiple bytes at a time from the source string and plonking
+    // them down into the destination string, thus wiping out part of our source
+    // string. Thus, we MUST use memmove here and NOT strcpy.
+
+    *pnHoldAmount = strlen(pbeg);           // length of data that remains
+    memmove(holdbuff,pbeg,*pnHoldAmount);   // slide left justify remainder
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
 #endif // defined(WIN32)

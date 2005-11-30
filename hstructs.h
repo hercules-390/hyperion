@@ -525,7 +525,7 @@ struct IOINT {                          /* I/O interrupt queue entry */
 /* Device configuration block                                        */
 /*-------------------------------------------------------------------*/
 struct DEVBLK {                         /* Device configuration block*/
-#define HDL_VERS_DEVBLK   "2.17"        /* Internal Version Number   */
+#define HDL_VERS_DEVBLK   "3.03"        /* Internal Version Number   */
 #define HDL_SIZE_DEVBLK   sizeof(DEVBLK)
         DEVBLK *nextdev;                /* -> next device block      */
         LOCK    lock;                   /* Device block lock         */
@@ -789,12 +789,13 @@ struct DEVBLK {                         /* Device configuration block*/
                                            placed in print buffer    */
         int     printrem;               /* Number of bytes remaining
                                            in print buffer           */
-        U32     stopprt;                /* 1=stopped; 0=started      */
+        pid_t   ptpcpid;                /* print-to-pipe child pid   */
         U32                             /* Flags                     */
                 crlf:1,                 /* 1=CRLF delimiters, 0=LF   */
                 diaggate:1,             /* 1=Diagnostic gate command */
                 fold:1,                 /* 1=Fold to upper case      */
-                ispiped:1;              /* 1=Piped device            */
+                ispiped:1,              /* 1=Piped device            */
+                stopprt:1;              /* 1=stopped; 0=started      */
 
         /*  Device dependent fields for tapedev                      */
 

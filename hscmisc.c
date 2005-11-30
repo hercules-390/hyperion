@@ -1267,6 +1267,10 @@ int herc_system (char* command)
 
     return system(command);
 
+#elif HOW_TO_IMPLEMENT_SH_COMMAND == USE_W32_POOR_MANS_FORK
+
+    return w32_poor_mans_fork( command, NULL );
+
 #elif HOW_TO_IMPLEMENT_SH_COMMAND == USE_FORK_API_FOR_SH_COMMAND
 
 extern char **environ;

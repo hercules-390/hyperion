@@ -192,6 +192,7 @@ W32_DLL_IMPORT size_t w32_fwrite ( const void* buff, size_t size, size_t count, 
 W32_DLL_IMPORT int    w32_fprintf( FILE* stream, const char* format, ... );
 W32_DLL_IMPORT int    w32_fclose ( FILE* stream );
 W32_DLL_IMPORT int    w32_get_stdin_char ( char* pCharBuff, size_t wait_millisecs );
+W32_DLL_IMPORT pid_t  w32_poor_mans_fork ( char*  pszCommandLine, int* pnWriteToChildStdinFD );
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
