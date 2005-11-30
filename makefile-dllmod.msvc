@@ -51,6 +51,7 @@
 # 14/11/05 Add /map option back again; make similar to dll version. - Fish
 # 22/11/05 Crypto module now included standard - Ivan
 # 24/11/05 Rebase all DLLs at 0x400000 (same as executables default) - Fish
+# 29/11/05 Create assembly listings if 'ASSEMBLY_LISTINGS' defined - Fish
 # ***************************************************************************
 
 !IFNDEF VERSION
@@ -200,6 +201,14 @@ MAPDIR  = msvc.debug.dllmod.map
 !ENDIF
 !ENDIF
 
+!IFNDEF ASSEMBLY_LISTINGS
+!UNDEF ASMDIR
+!ELSEIFDEF NODEBUG
+ASMDIR = msvc.dllmod.cod
+!ELSE
+ASMDIR = msvc.debug.dllmod.cod
+!ENDIF
+
 !IFDEF VS70COMNTOOLS
 MAPFILE = /map:$(MAPDIR)\$(@B).map /mapinfo:lines
 !ELSE
@@ -326,11 +335,14 @@ MODULES = \
 all: allzlib alllibbz2
     rebase -b 0x400000 $(X)*.dll
 
-clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR)
+clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
     del /f /q $(OBJDIR)\*.*
     del /f /q $(EXEDIR)\*.*
     del /f /q $(PDBDIR)\*.*
     del /f /q $(MAPDIR)\*.*
+!IFDEF ASSEMBLY_LISTINGS
+    del /f /q $(ASMDIR)\*.*
+!ENDIF
 
 crypto: $(X)dyncrypt.dll
 
@@ -345,6 +357,11 @@ $(PDBDIR):
 
 $(MAPDIR):
     if not exist "$(MAPDIR)\$(NULL)" mkdir $(MAPDIR)
+
+!IFDEF ASSEMBLY_LISTINGS
+$(ASMDIR):
+    if not exist "$(ASMDIR)\$(NULL)" mkdir $(ASMDIR)
+!ENDIF
 
 !IFNDEF MAX_CPU_ENGINES
 MAX_CPU_ENGINES = 2
@@ -375,23 +392,29 @@ cflags   = $(cflags) /DHAVE_LIBZ /DHAVE_ZLIB_H /I"$(ZLIB_INC)"
 BZIP2_DLL = $(BZIP2_DIR)\libbz2.dll
 BZIP2_LIB = $(BZIP2_DIR)/libbz2.lib
 BZIP2_INC = $(BZIP2_DIR)
-LIBS     = $(LIBS) "$(BZIP2_LIB)"
-cflags   = $(cflags) /DHAVE_BZLIB_H /I"$(BZIP2_INC)"
+LIBS      = $(LIBS) "$(BZIP2_LIB)"
+cflags    = $(cflags) /DHAVE_BZLIB_H /I"$(BZIP2_INC)"
 !ENDIF
+
+!IFDEF ASSEMBLY_LISTINGS
+# /FAcs = source code, assembly code, and machine code
+cflags = $(cflags) /FAcs /Fa$(ASMDIR)\$(NULL)
+!ENDIF
+
+ldebug = $(ldebug) $(MAPFILE)
+
+rcflags = $(rcflags) -D VERSION=$(VERSION) -D V1=$(V1) -D V2=$(V2) -D V3=$(V3) -D V4=$(V4)
 
 # PRERELEASE Flag support
-
 !IFDEF PRERELEASE
-PREREL = -D PRERELEASE=1
-!ELSE
-PREREL =
+rcflags = $(rcflags) -D PRERELEASE=1
 !ENDIF
 
-linkexe = $(link) -nologo $(ldebug) $(conlflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE)
-linkdll = $(link) -nologo $(ldebug) $(dlllflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE)
+linkexe = $(link) -nologo $(ldebug) $(conlflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll)
+linkdll = $(link) -nologo $(ldebug) $(dlllflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll)
 
 $(O)hercver.res: hercver.rc
-    $(rc) $(rcflags) $(rcvars) -fo $(O)hercver.res -D VERSION=$(VERSION) -D V1=$(V1) -D V2=$(V2) -D V3=$(V3) -D V4=$(V4) $(PREREL) hercver.rc
+    $(rc) $(rcflags) $(rcvars) -fo $(O)hercver.res hercver.rc
 
 $(O)build_pch.pch: build_pch.c
     $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yc"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $**
@@ -671,13 +694,13 @@ $(X)tapesplt.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)her
 $(X)zlib1.dll:
     XCOPY "$(ZLIB_DLL)" $(X) /V /C /F /H /R /K /O /X /Y
 
-allzlib: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(O)build_pch.pch \
+allzlib: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
     $(MODULES) \
     $(EXECUTABLES) \
     $(X)zlib1.dll
 
 !ELSE
-allzlib: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(O)build_pch.pch \
+allzlib: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
     $(MODULES) \
     $(EXECUTABLES)
 
@@ -690,13 +713,13 @@ allzlib: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(O)build_pch.pch \
 $(X)libbz2.dll:
     XCOPY "$(BZIP2_DLL)" $(X) /V /C /F /H /R /K /O /X /Y
 
-alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(O)build_pch.pch \
+alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
     $(MODULES) \
     $(EXECUTABLES) \
     $(X)libbz2.dll
 
 !ELSE
-alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(O)build_pch.pch \
+alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
     $(MODULES) \
     $(EXECUTABLES)
 

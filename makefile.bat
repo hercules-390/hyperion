@@ -46,6 +46,7 @@ rem                  with a non-empty change history section. <grin>
 rem  09/01/05  Fish  '-g' option apparently only for VS 8.0
 rem  11/17/05  Fish  Support for building within DevStudio 6.0
 rem                  whenever VS 8.0 is also installed.
+rem  11/29/05  Fish  Added comments re: 'ASSEMBLY_LISTINGS' option
 rem
 rem -------------------------------------------------------------------
 
@@ -86,6 +87,13 @@ if not "%VS80COMNTOOLS%" == "" (
 
 set CFG=%1
 set MAX_CPU_ENGINES=%3
+
+rem
+rem Uncomment the below to ALWAYS generate assembly (.cod) listings, -OR-
+rem define it yourself with 'set' command before invoking this batch file
+rem
+rem set ASSEMBLY_LISTINGS=1
+
 
 if "%VS80COMNTOOLS%" == "" (
 
