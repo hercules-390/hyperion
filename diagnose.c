@@ -282,16 +282,13 @@ U32   code;
         regs->psw.cc = ARCH_DEP(diag_ppagerel) (r1, r2, regs);
         break;
 
-        /* EXPERIMENTAL */
-#if defined(FEATURE_DIAG220)
+
     case 0x220:
     /*---------------------------------------------------------------*/
-    /* Diagnose 220: TOD Epoch Manipulation ??????????????????????   */
+    /* Diagnose 220: TOD Epoch                                       */
     /*---------------------------------------------------------------*/
-        if(r2 & 1)
-        {
-            ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-        }
+        ODD_CHECK(r2, regs);
+
         switch(regs->GR_L(r1))
         {
             case 0:
@@ -306,7 +303,7 @@ U32   code;
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
         }
         break;
-#endif
+
 
     case 0x23C:
     /*---------------------------------------------------------------*/

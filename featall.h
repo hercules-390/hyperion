@@ -168,6 +168,4 @@
 #undef FEATURE_VECTOR_FACILITY
 #undef FEATURE_WAITSTATE_ASSIST
 
-/* EXPERIMENTAL */
-#undef FEATURE_DIAG220                                          /*ISW*/
 /* end of FEATALL.H */
