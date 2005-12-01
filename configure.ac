@@ -486,6 +486,14 @@ AC_CHECK_DECLS( LOGIN_NAME_MAX,       [hc_cv_have_login_name_max=yes],      [hc_
 AC_CHECK_DECLS( _SC_NPROCESSORS_CONF, [hc_cv_have_sc_nprocessors_conf=yes], [hc_cv_have_sc_nprocessors_conf=no], [#include <unistd.h>] )
 AC_CHECK_DECLS( _SC_NPROCESSORS_ONLN, [hc_cv_have_sc_nprocessors_onln=yes], [hc_cv_have_sc_nprocessors_onln=no], [#include <unistd.h>] )
 
+# The following can be used to replace the OPTION_TUNTAP_* definitions in
+# hostopts.h, whenever the Windows version of the checks involved can be
+# set up. --JRM
+#AC_CHECK_DECLS( SIOCSIFNETMASK,       [hc_cv_have_siocsifnetmask=yes],      [hc_cv_have_siocsifnetmask=no],      [#include <linux/sockios.h>] )
+#AC_CHECK_DECLS( SIOCSIFHWADDR,        [hc_cv_have_siocsifhwaddr=yes],       [hc_cv_have_siocsifhwaddr=no],       [#include <linux/sockios.h>] )
+#AC_CHECK_DECLS( SIOCADDRT,            [hc_cv_have_siocaddrt=yes],           [hc_cv_have_siocaddrt=no],           [#include <linux/sockios.h>] )
+#AC_CHECK_DECLS( SIOCDELRT,            [hc_cv_have_siocdelrt=yes],           [hc_cv_have_siocdelrt=no],           [#include <linux/sockios.h>] )
+
 AC_CACHE_SAVE()
 
 ###############################################################################
@@ -526,6 +534,7 @@ AC_CHECK_LIB( z,      uncompress     )
 AC_CHECK_LIB( bz2,    BZ2_bzBuffToBuffDecompress,
             [ hc_cv_have_libbz2=yes ],
             [ hc_cv_have_libbz2=no  ] )
+AC_CHECK_LIB( iconv,  iconv          )
 
 AC_CACHE_SAVE()
 
@@ -1284,8 +1293,11 @@ if test "$hc_cv_build_hercifc" = "yes"; then
 
    if test "$hc_cv_have_linux_if_tun_h" != "yes"; then
 
-      AC_MSG_RESULT( [ERROR: Required header 'linux/if_tun.h' not found] )
-      hc_error=yes
+      if test "$hc_cv_have_net_if_h" != "yes"; then
+      
+         AC_MSG_RESULT( [ERROR: Required headers 'linux/if_tun.h' or 'net/if.h' not found] )
+         hc_error=yes
+      fi
    fi
 
    if test "$hc_cv_have_net_route_h" != "yes"; then

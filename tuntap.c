@@ -591,12 +591,12 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
     case SIOCSIFHWADDR:
         request_name="SIOCSIFHWADDR"; break;
 #endif
-//#ifdef OPTION_TUNTAP_DELADD_ROUTES
+#ifdef OPTION_TUNTAP_DELADD_ROUTES
     case SIOCADDRT:
         request_name="SIOCADDRT"; break;
     case SIOCDELRT:
         request_name="SIOCDELRT"; break;
-//#endif
+#endif
     default:
         sprintf(unknown_request,"Unknown (0x%x)",iRequest);
         request_name=unknown_request;
@@ -606,20 +606,16 @@ logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
 
 #endif /* ++++++++++++++++++++++ debugging print ++++++++++++++++++++++ */
 
+#ifdef OPTION_TUNTAP_DELADD_ROUTES
     if( iRequest == SIOCADDRT ||
         iRequest == SIOCDELRT )
     {
-#ifdef OPTION_TUNTAP_DELADD_ROUTES
       strcpy( ctlreq.szIFName, ((struct rtentry*)argp)->rt_dev );
       memcpy( &ctlreq.iru.rtentry, argp, sizeof( struct rtentry ) );
       ((struct rtentry*)argp)->rt_dev = NULL;
-#else
-      logmsg(_("HHCTU028E Unsupported call to %s a network route\n"),
-                ((iRequest==SIOCADDRT) ? "ADD" : "DELETE"));
-      return -1;
-#endif
     }
     else
+#endif
     {
       memcpy( &ctlreq.iru.ifreq, argp, sizeof( struct ifreq ) );
     }

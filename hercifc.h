@@ -11,8 +11,9 @@
 #ifndef __HERCIFC_H_
 #define __HERCIFC_H_
 
-#if ( !defined(WIN32) && !defined(HAVE_LINUX_IF_TUN_H) ) || \
-    (  defined(WIN32) && !defined(HAVE_NET_IF_H)       )
+#if ( (!defined(WIN32) && \
+       !(defined(HAVE_LINUX_IF_TUN_H) || defined(HAVE_NET_IF_H)) ) || \
+      (defined(WIN32) && !defined(HAVE_NET_IF_H)) )
 
   struct ifreq
   {
