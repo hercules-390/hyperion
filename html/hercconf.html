@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
 Hercules Version 3: Configuration File</TITLE>
@@ -124,7 +124,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <dt><code>ASN_AND_LX_REUSE <em>DISABLE|enable</em></code>
 <dd><p>
     specifies that the ASN And LX Reuse optional facility is to be
-    DISABLED (by default) or ENABLED. This is a ESAME only
+    DISABLED (by default) or ENABLED. This is a z/Architecture-only
     feature (it is always disabled for S/390 or ESA/390). Set this
     to <code><em>ENABLE</em></code>&nbsp if the operating system supports
     this z/Architecture feature and the use of this feature is desired.
@@ -439,14 +439,18 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="ARCHMODE">
-<dt><code>ARCHMODE S/370 &#124 ESA/390 &#124 ESAME</code>
+<dt><code>ARCHMODE S/370 &#124 ESA/390 &#124 z/Arch &#124 ESAME</code>
 <dd><p>
-    specifies the initial architecture mode.
-    Use <code>S/370</code> for OS/360, VM/370, and MVS 3.8.
-    Use <code>ESA/390</code> for MVS/XA, MVS/ESA, OS/390, VM/ESA, VSE/ESA,
+    specifies the initial architecture mode:
+    <ul compact>
+    <li>use <code>S/370</code> for OS/360, VM/370, and MVS 3.8.
+    <li>use <code>ESA/390</code> for MVS/XA, MVS/ESA, OS/390, VM/ESA, VSE/ESA,
     Linux/390, and ZZSA.
-    Use <code>ESAME</code> for z/OS and zLinux.
-    When ESAME is specified, the machine will always IPL in ESA/390 mode,
+    <li>use <code>z/Arch</code> or <code>ESAME</code> for z/OS and zLinux.
+    </ul>
+    <p><code>ESAME</code> is a synonym for <code>z/Arch</code>.
+    When <code>z/Arch</code> or <code>ESAME</code> is specified,
+    the machine will always IPL in ESA/390 mode,
     but is capable of being switched into z/Architecture mode after IPL.
     This is handled automatically by all z/Architecture operating systems.
     <p>
