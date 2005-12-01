@@ -282,6 +282,32 @@ U32   code;
         regs->psw.cc = ARCH_DEP(diag_ppagerel) (r1, r2, regs);
         break;
 
+        /* EXPERIMENTAL */
+#if defined(FEATURE_DIAG220)
+    case 0x220:
+    /*---------------------------------------------------------------*/
+    /* Diagnose 220: TOD Epoch Manipulation ??????????????????????   */
+    /*---------------------------------------------------------------*/
+        if(r2 & 1)
+        {
+            ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        }
+        switch(regs->GR_L(r1))
+        {
+            case 0:
+                regs->GR_L(r2)  =0xc0000000;
+                regs->GR_L(r2+1)=0x00000000;
+                break;
+            case 1:
+                regs->GR_L(r2)  =0x00000000;
+                regs->GR_L(r2+1)=0x00000000;
+                break;
+            default:
+                ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        }
+        break;
+#endif
+
     case 0x23C:
     /*---------------------------------------------------------------*/
     /* Diagnose 23C: Address Space Services                          */

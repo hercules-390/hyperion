@@ -86,5 +86,8 @@
 #define FEATURE_TRACING
 #define FEATURE_WAITSTATE_ASSIST
 
+/* EXPERIMENTAL */
+#define FEATURE_DIAG220
+
 #endif /*defined(OPTION_900_MODE)*/
 /* end of FEAT900.H */
