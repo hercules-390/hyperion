@@ -1911,7 +1911,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
         Hercules console commands are provided to add a new shadow file, remove
         the current shadow file (with or without backward merge), compress the
-        curent shadow file, and display the shadow file status and statistics
+        current shadow file, and display the shadow file status and statistics
         <p>
 
         For detailed information regarding shadow files and their use, please
@@ -2129,21 +2129,21 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dt><code>rto=0|-1|nnn|<em>3000</em></code>
     <dd><p>
-        Specifies the number of miliseconds before terminating a read on a timeout, when
+        Specifies the number of milliseconds before terminating a read on a timeout, when
         no read termination control character is received. Specifying 0 means the READ ends
-        immediatly. -1 specifies there is no timeout.
+        immediately. -1 specifies there is no timeout.
         <p>
 
     <dt><code>pto=0|-1|nnn|<em>3000</em></code>
     <dd><p>
-        Specifies the number of miliseconds before terminating a POLL on a timeout, when
+        Specifies the number of milliseconds before terminating a POLL on a timeout, when
         no ACK or NACK sequence is received. Specifying 0 means the POLL ends
-        immediatly. -1 specifies there is no timeout.
+        immediately. -1 specifies there is no timeout.
         <p>
 
     <dt><code>eto=0|<em>-1</em>|nnn|<em>10000</em></code>
     <dd><p>
-        Specifies the number of miliseconds before terminating an ENABLE operation on a timeout.
+        Specifies the number of milliseconds before terminating an ENABLE operation on a timeout.
         the timeout applies when <em>DIAL=NO|IN|INOUT</em> is specified, the outgoing TCP call
         fails (<em>DIAL=NO</em>) and there is no previously or currently established TCP connection
         for this line. When <em>DIAL=NO</em> is specified, the timeout defaults to 10 seconds.
