@@ -27,7 +27,7 @@
 #
 #-----------------------------------------------------------------------------
 
-AC_DEFUN( [HC_PROG_CC],
+AC_DEFUN([HC_PROG_CC],
 [
     AC_BEFORE(  [HC_PROG_CC], [AC_PROG_CC] )
     AC_REQUIRE( [AC_PROG_CC] )
@@ -254,7 +254,7 @@ DUPGETOPT2
 #
 #-----------------------------------------------------------------------------
 
-AC_DEFUN( [HC_CHECK_NEED_GETOPT_OPTRESET],
+AC_DEFUN([HC_CHECK_NEED_GETOPT_OPTRESET],
 [
     AC_CACHE_CHECK( [whether 'optreset' needed for 'getopt' use],
 
