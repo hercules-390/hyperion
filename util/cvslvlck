@@ -175,7 +175,7 @@ sub weird {
 			chomp $resp;
 			my $msg = 'HUH?   ';
 			my $instversion = "DUNNO";
-			if ($resp =~ /GNU m4 (\d+.\d+)/) {
+			if ($resp =~ /GNU [mM]4 (\d+.\d+)/) {
 				$instversion = '';
 				$instversion = $1 if defined $1;
 				$instversion = "$1.$2" if defined $1 && defined $2;
@@ -199,7 +199,7 @@ sub getvers {
 	if ($resp =~ /(\d+).(\d+)/) {
 		$vers = "$1.$2";
 		return $vers;
-	} 
+	}
 	print "HUH?\n";
 }
 
@@ -208,13 +208,13 @@ sub ckvers {
 	my @rv = split /\./, $reqvers;
 	my @iv = split /\./, $instvers;
 	for (my $i = 0; $i < @rv; $i++) {
-		if ( (exists $rv[$i]) 
-		  && (exists $iv[$i]) 
+		if ( (exists $rv[$i])
+		  && (exists $iv[$i])
 		  && ($iv[$i] > $rv[$i]) ) {
 			return 'OK';
 		}
-		if ( (exists $rv[$i]) 
-		  && (exists $iv[$i]) 
+		if ( (exists $rv[$i])
+		  && (exists $iv[$i])
 		  && ($iv[$i] < $rv[$i]) ) {
 			return 'UPGRADE';
 		}
