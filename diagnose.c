@@ -292,12 +292,14 @@ U32   code;
         switch(regs->GR_L(r1))
         {
             case 0:
+                /* Obtain TOD features */
                 regs->GR_L(r2)  =0xc0000000;
                 regs->GR_L(r2+1)=0x00000000;
                 break;
             case 1:
-                regs->GR_L(r2)  =0x00000000;
-                regs->GR_L(r2+1)=0x00000000;
+                /* Obtain TOD offset to real TOD in R2, R2+1 */
+                regs->GR_L(r2)  = (regs->todoffset >> 24) & 0xFFFFFFFF;
+                regs->GR_L(r2+1)= (regs->todoffset << 8) & 0xFFFFFFFF; 
                 break;
             default:
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
