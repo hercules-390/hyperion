@@ -99,7 +99,8 @@
     #define _ext_amd64
   #endif
 
-  #if defined(__powerpc__) || defined(__PPC__)
+  #if defined(__powerpc__) || defined(__ppc__) || \
+      defined(__POWERPC__) || defined(__PPC__)
     #define _ext_ppc
   #endif
 
