@@ -581,7 +581,7 @@ AC_CHECK_FUNCS( setresuid getresuid,
 )
 
 if test "$hc_cv_have_getset_uid" != "yes"; then
-    AC_CHECK_FUNCS( setreuid getreuid,
+    AC_CHECK_FUNCS( setreuid geteuid getuid,
                     [hc_cv_have_getset_uid=yes],
                     [hc_cv_have_getset_uid=no; break]
     )
@@ -902,8 +902,8 @@ if test "$GCC" = "yes"; then
                         return 0;
                     }
                 ],
-                [hc_cv_pp_macro_arg_counting_broke=yes],
-                [hc_cv_pp_macro_arg_counting_broke=no]
+                [hc_cv_pp_macro_arg_counting_broke=no],
+                [hc_cv_pp_macro_arg_counting_broke=yes]
             )
 
             CFLAGS="$hc_temp"
@@ -944,24 +944,26 @@ if test "$GCC" = "yes"; then
             hc_temp="$CFLAGS"
             CFLAGS="-Wall -Werror -traditional-cpp"
 
+# Note: The test program MUST start in column 1! Otherwise, the compilation
+# will fail when it's not supposed to.
             AC_COMPILE_IFELSE(
                 [
-                    /* If the following gets an error, then the
-                       "traditional" preprocessor is K&R C type.
-                       Otherwise if it compiles WITHOUT error
-                       the the "traditional" preprocessor is NOT
-                       the K&R C type.
-                    */
-                    #if 1
-                        #include <stdio.h>  // comment/etc...
-                    #endif
-                    int main( int, char**, char** )
-                    {
-                        return 0;
-                    }
+/* If the following gets an error, then the
+   "traditional" preprocessor is K&R C type.
+   Otherwise if it compiles WITHOUT error
+   the the "traditional" preprocessor is NOT
+   the K&R C type.
+*/
+#if 1
+  #include <stdio.h>  // comment/etc...
+#endif
+int main( int, char**, char** )
+{
+  return 0;
+}
                 ],
-                [hc_cv_traditional_cpp_is_K_AND_R_C_type=yes],
-                [hc_cv_traditional_cpp_is_K_AND_R_C_type=no]
+                [hc_cv_traditional_cpp_is_K_AND_R_C_type=no],
+                [hc_cv_traditional_cpp_is_K_AND_R_C_type=yes]
             )
 
             CFLAGS="$hc_temp"
