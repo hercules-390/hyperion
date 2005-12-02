@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+01 Dec 2005 dyngui: SetCurrentDirectory support for shell commands - Fish
+01 Dec 2005 Fix things so BOTH print-to-pipe AND 'sh'ell command work - Fish
 29 Nov 2005 build_msc/45, printer/24: Poor man's fork for MSVC builds - Fish
 28 Nov 2005 enable ATTR_REGPARM performance option for MSVC builds - Fish
 28 Nov 2005 enable machine assists in machdep.h for MSVC VC7 compiler - Fish
