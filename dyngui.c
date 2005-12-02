@@ -30,6 +30,7 @@
 /* 11/18/05  Fix crash in UpdateTargetCPU when NUMCPU=0 (as it might */
 /*           be when, e.g., running as a shared device server mode)  */
 /* 11/18/05  Show offline CPUs as OFFLINE.                           */
+/* 12/01/05  SetCurrentDirectory support for shell commands          */
 /*                                                                   */
 /*********************************************************************/
 
@@ -370,47 +371,55 @@ void*  gui_panel_command (char* pszCommand)
     if ( ']' != *pszCommand )
         goto NotSpecialGUICommand;
 
-    if (strncasecmp(pszCommand+1,"GREGS=",6) == 0)
+    pszCommand++;                                    // (bump past ']')
+
+    if (strncasecmp(pszCommand,"SCD=",4) == 0)
     {
-        gui_wants_gregs = atoi(pszCommand+1+6);
+        SetCurrentDirectory(pszCommand+4);
         return NULL;
     }
 
-    if (strncasecmp(pszCommand+1,"CREGS=",6) == 0)
+    if (strncasecmp(pszCommand,"GREGS=",6) == 0)
     {
-        gui_wants_cregs = atoi(pszCommand+1+6);
+        gui_wants_gregs = atoi(pszCommand+6);
         return NULL;
     }
 
-    if (strncasecmp(pszCommand+1,"AREGS=",6) == 0)
+    if (strncasecmp(pszCommand,"CREGS=",6) == 0)
     {
-        gui_wants_aregs = atoi(pszCommand+1+6);
+        gui_wants_cregs = atoi(pszCommand+6);
         return NULL;
     }
 
-    if (strncasecmp(pszCommand+1,"FREGS=",6) == 0)
+    if (strncasecmp(pszCommand,"AREGS=",6) == 0)
     {
-        gui_wants_fregs = atoi(pszCommand+1+6);
+        gui_wants_aregs = atoi(pszCommand+6);
         return NULL;
     }
 
-    if (strncasecmp(pszCommand+1,"DEVLIST=",8) == 0)
+    if (strncasecmp(pszCommand,"FREGS=",6) == 0)
     {
-        gui_wants_devlist = atoi(pszCommand+1+8);
+        gui_wants_fregs = atoi(pszCommand+6);
+        return NULL;
+    }
+
+    if (strncasecmp(pszCommand,"DEVLIST=",8) == 0)
+    {
+        gui_wants_devlist = atoi(pszCommand+8);
         if ( gui_wants_devlist )
             gui_wants_new_devlist = 0;
         return NULL;
     }
 
-    if (strncasecmp(pszCommand+1,"NEWDEVLIST=",11) == 0)
+    if (strncasecmp(pszCommand,"NEWDEVLIST=",11) == 0)
     {
-        gui_wants_new_devlist = atoi(pszCommand+1+11);
+        gui_wants_new_devlist = atoi(pszCommand+11);
         if ( gui_wants_new_devlist )
             gui_wants_devlist = 0;
         return NULL;
     }
 
-    if (strncasecmp(pszCommand+1,"MAINSTOR=",9) == 0)
+    if (strncasecmp(pszCommand,"MAINSTOR=",9) == 0)
     {
         gui_fprintf(fStatusStream,"MAINSTOR=%"UINT_PTR_FMT"d\n",(uintptr_t)pTargetCPU_REGS->mainstor);
 
@@ -428,9 +437,9 @@ void*  gui_panel_command (char* pszCommand)
     }
 
 #if defined(OPTION_MIPS_COUNTING)
-    if (strncasecmp(pszCommand+1,"CPUPCT=",7) == 0)
+    if (strncasecmp(pszCommand,"CPUPCT=",7) == 0)
     {
-        gui_wants_cpupct = atoi(pszCommand+1+7);
+        gui_wants_cpupct = atoi(pszCommand+7);
         return NULL;
     }
 #endif
