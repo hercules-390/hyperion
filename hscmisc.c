@@ -1269,7 +1269,15 @@ int herc_system (char* command)
 
 #elif HOW_TO_IMPLEMENT_SH_COMMAND == USE_W32_POOR_MANS_FORK
 
-    return w32_poor_mans_fork( command, NULL );
+  #define  SHELL_CMD_SHIM_PGM   "conspawn "
+
+    int rc = strlen(SHELL_CMD_SHIM_PGM) + strlen(command) + 1;
+    char* pszNewCommandLine = malloc( rc );
+    strlcpy( pszNewCommandLine, SHELL_CMD_SHIM_PGM, rc );
+    strlcat( pszNewCommandLine, command,            rc );
+    rc = w32_poor_mans_fork( pszNewCommandLine, NULL );
+    free( pszNewCommandLine );
+    return rc;
 
 #elif HOW_TO_IMPLEMENT_SH_COMMAND == USE_FORK_API_FOR_SH_COMMAND
 

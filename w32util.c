@@ -2085,7 +2085,6 @@ DLL_EXPORT int w32_fclose ( FILE* stream )
 #define  HOLDBUFSIZE              (PIPEBUFSIZE*2)   // twice pipe buffer size
 #define  PIPE_THREAD_STACKSIZE    (64*1024)         // 64K should be plenty!!
 
-#define  CMDLINE_COMMAND_PREFIX   "conspawn "
 #define  MSG_TRUNCATED_MSG        "...(truncated)\n"
 
 char*    buffer_overflow_msg      = NULL;   // used to trim received message
@@ -2117,7 +2116,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     PROCESS_INFORMATION  piProcInfo;    // (info returned by CreateProcess)
     SECURITY_ATTRIBUTES  saAttr;        // (suckurity? we dunt need no stinkin suckurity!)
 
-    char* pszConSpawnCommandLine;       // (because we need to prefix it with "conspawn ")
+    char* pszNewCommandLine;            // (because we build pvt copy for CreateProcess)
     BOOL  bSuccess;                     // (work)
     int   rc;                           // (work)
 
@@ -2137,11 +2136,22 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
     if (!pnWriteToChildStdinFD)         // (will caller be providing child's stdin?)
     {
-        // PROGRAMMING NOTE: setting the child's stdin to "GetStdHandle(STD_INPUT_HANDLE)"
-        // does NOT mean the child will be using our stdin as its stdin! Rather, it is
-        // simply a flag telling CreateProcess to create a private stdin for the child.
+        // PROGRAMMING NOTE: KB article 190351 "HOWTO: Spawn Console Processes with
+        // Redirected Standard Handles" http://support.microsoft.com/?kbid=190351
+        // is WRONG! (or at the very least quite misleading!)
+        
+        // It states that for those stdio handles you do NOT wish to redirect, you
+        // should use "GetStdHandle(STD_xxx_HANDLE)", but that ONLY works when you
+        // have a console to begin with! (which Hercules would NOT have when started
+        // via HercGUI for example (since it specifies "DETACHED_PROCESS" (i.e. no
+        // console) whenever it starts it via its own CreateProcess call).
 
-        hChildReadFromStdin = GetStdHandle(STD_INPUT_HANDLE);  // (no stdin piping)
+        // If you wish to only redirect *some* (but NOT *all*) stdio handles in your
+        // CreateProcess call, the ONLY way to properly do so (regardless of whether
+        // you have a console or not) is by specifying NULL. Specifying NULL for your
+        // stdio handle tells CreateProcess to use the default value for that HANDLE.
+
+        hChildReadFromStdin = NULL;     // (no stdin redirection; use default)
     }
     else
     {
@@ -2210,10 +2220,9 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
     // Build the command-line for the system to create the child process with...
 
-    rc = strlen(CMDLINE_COMMAND_PREFIX) + strlen(pszCommandLine) + 1;
-    pszConSpawnCommandLine = malloc( rc );
-    strlcpy( pszConSpawnCommandLine, CMDLINE_COMMAND_PREFIX, rc );
-    strlcat( pszConSpawnCommandLine, pszCommandLine,         rc );
+    rc = strlen(pszCommandLine) + 1;
+    pszNewCommandLine = malloc( rc );
+    strlcpy( pszNewCommandLine, pszCommandLine, rc );
 
     //////////////////////////////////////////////////
     // Now actually create the child process...
@@ -2222,7 +2231,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     bSuccess = CreateProcess
     (
         NULL,                       // name of executable module = from command-line
-        pszConSpawnCommandLine,     // command line with arguments
+        pszNewCommandLine,          // command line with arguments
         NULL,                       // process security attributes = use defaults
         NULL,                       // primary thread security attributes = use defaults
         TRUE,                       // HANDLE inheritance flag = allow
@@ -2245,7 +2254,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
            CloseHandle(piProcInfo.hProcess);    // (we don't need this one)
            CloseHandle(piProcInfo.hThread);     // (we don't need this one)
 
-    free(pszConSpawnCommandLine);               // (not needed anymore)
+    free(pszNewCommandLine);                    // (not needed anymore)
 
     // Check results...
 
