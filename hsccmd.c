@@ -187,30 +187,42 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
             "  From: %s"
             "  To:   %s\n"
 
-            "        MIPS: %2.1d.%2.2d\n"
-            "        SIOS: %d\n\n"
-
-            "  From: %s"
-            "  To:   %s\n"
-
-            "        MIPS: %2.1d.%2.2d\n"
-            "        SIOS: %d\n\n"
-
-            "Current interval = %d minutes.\n"
-
             ,pszPrevIntervalStartDateTime
             ,pszCurrIntervalStartDateTime
+        );
+
+        logmsg
+        (
+            "        MIPS: %2.1d.%2.2d\n"
+            "        SIOS: %d\n\n"
 
             ,prev_high_mips_rate / 1000000
             ,prev_high_mips_rate % 1000000
             ,prev_high_sios_rate
+        );
+
+        logmsg
+        (
+            "  From: %s"
+            "  To:   %s\n"
 
             ,pszCurrIntervalStartDateTime
             ,pszCurrentDateTime
+        );
+
+        logmsg
+        (
+            "        MIPS: %2.1d.%2.2d\n"
+            "        SIOS: %d\n\n"
 
             ,curr_high_mips_rate / 1000000
             ,curr_high_mips_rate % 1000000
             ,curr_high_sios_rate
+        );
+
+        logmsg
+        (
+            "Current interval = %d minutes.\n"
 
             ,maxrates_rpt_intvl
         );
@@ -3167,7 +3179,7 @@ BYTE    pathname[MAX_PATH];             /* (work)                    */
         if ('#' == scrbuf[0] || '*' == scrbuf[0])
         {
             if ('*' == scrbuf[0])
-                logmsg ("> %s",scrbuf);
+                logmsg ("> %s\n",scrbuf);
             continue;
         }
 
