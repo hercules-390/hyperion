@@ -297,9 +297,14 @@ U32   code;
                 regs->GR_L(r2+1)=0x00000000;
                 break;
             case 1:
+#if 0 /* ZZ: We are currently using the wrong base  fix in progress *JJ */
                 /* Obtain TOD offset to real TOD in R2, R2+1 */
                 regs->GR_L(r2)  = (regs->todoffset >> 24) & 0xFFFFFFFF;
                 regs->GR_L(r2+1)= (regs->todoffset << 8) & 0xFFFFFFFF; 
+#else
+                regs->GR_L(r2)  = 0;
+                regs->GR_L(r2+1)= 0;
+#endif
                 break;
             default:
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
