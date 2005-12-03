@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+04 Dec 2005 Temp fix to allow up to 1031 cckd devices - Greg Smith
 03 Dec 2005 CMPSC no siblings check after 4th/5th child - Bernard/Jacques Dilbert
 02 Dec 2005 Added 'conspawn.exe' to MSVC build (for 'sh'ell cmd) - Fish
 01 Dec 2005 Volker fix to MSVC makefile for VS 8.0 "manifest" files - Fish

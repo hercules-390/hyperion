@@ -379,7 +379,8 @@ static int cache_create (int ix)
 {
     cache_destroy (ix);
     cacheblk[ix].magic = CACHE_MAGIC;
-    cacheblk[ix].nbr = CACHE_DEFAULT_NBR;
+//FIXME See the note in cache.h about CACHE_DEFAULT_L2_NBR
+    cacheblk[ix].nbr = ix != CACHE_L2 ? CACHE_DEFAULT_NBR : CACHE_DEFAULT_L2_NBR;
     cacheblk[ix].empty = cacheblk[ix].nbr;
     initialize_lock (&cacheblk[ix].lock);
     initialize_condition (&cacheblk[ix].waitcond);

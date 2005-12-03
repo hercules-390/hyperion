@@ -229,6 +229,12 @@ typedef struct _CACHEBLK {              /* Cache header              */
 #ifdef _CACHE_C_
 #define CACHE_MAGIC          0x01CACE10 /* Magic number              */
 #define CACHE_DEFAULT_NBR           229 /* Initial entries (prime)   */
+//FIXME the line below increases the size for CACHE_L2.  Since each
+//      cckd device always has an active l2 entry this number
+//      actually limits the number of cckd devices that can be
+//      attached.
+//      This is a workaround to increase the max number of devices
+#define CACHE_DEFAULT_L2_NBR       1031 /* Initial entries for L2    */
 
 #define CACHE_WAITTIME             1000 /* Wait time for entry(usec) */
 
