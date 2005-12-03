@@ -864,6 +864,46 @@
 				RelativePath=".\xstore.c"
 				>
 			</File>
+			<Filter
+				Name="crypto"
+				>
+				<File
+					RelativePath=".\crypto\aes.c"
+					>
+				</File>
+				<File
+					RelativePath=".\crypto\aes.h"
+					>
+				</File>
+				<File
+					RelativePath=".\crypto\des.c"
+					>
+				</File>
+				<File
+					RelativePath=".\crypto\des.h"
+					>
+				</File>
+				<File
+					RelativePath=".\crypto\dyncrypt.c"
+					>
+				</File>
+				<File
+					RelativePath=".\crypto\sha1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\crypto\sha1.h"
+					>
+				</File>
+				<File
+					RelativePath=".\crypto\sha256.c"
+					>
+				</File>
+				<File
+					RelativePath=".\crypto\sha256.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
