@@ -808,7 +808,17 @@ int     j,k;
     if(buf && *buf)
     {
 #ifdef FEATURE_HERCULES_DIAGCALLS
-        if(sysblk.diag8cmd)
+        int shcmd = 0;
+        {
+            char* p = buf;
+            while (*p && isspace(*p)) p++;
+            if ((*(p+0) == 's' || *(p+0) == 'S') &&
+                (*(p+1) == 'h' || *(p+1) == 'H') && 
+                isspace(*(p+2))) shcmd = 1;
+        }
+        if (sysblk.diag8cmd
+            && (!shcmd || !(sysblk.shcmdopt & (SHCMDOPT_DISABLE | SHCMDOPT_NODIAG8)))
+        )
         {
             logmsg (_("HHCVM001I *%s* panel command issued by guest\n"), buf);
             if (cmdflags & CMDFLAGS_RESPONSE)

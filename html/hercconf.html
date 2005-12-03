@@ -268,8 +268,27 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
     Note that when this feature is enabled, systems
-    running under hercules can even issue host commands through the hercules
-    <code>'sh'</code> (shell) command.
+    running under hercules can even issue host commands through the Hercules
+    <code>'sh'</code> (shell) command. This ability may be disabled via the
+    <a href="#SHCMDOPT">SHCMDOPT</a> statement.
+    <p>
+
+<a name="SHCMDOPT">
+<dt><code>SHCMDOPT <em>disable/nodiag8</em></code>
+<dd><p>
+    When set to disable, 'sh' (shell) commands are globally disabled, and will result
+    in an error if entered either directly via the Hercules hardware console or
+    programmatically via the <a href="#DIAG8CMD">DIAG8CMD</a> interface.
+    <p>
+    When set to nodiag8 only the programmatic execution of shell command via the
+    the diagnose 8 interface is diabled; 'sh' (shell) commands entered directly
+    via the Hercules hardware console will still work.
+    <p>
+    <b>NOTE:</b> &nbsp;<i>"entered directly via the Hercules hardware console"</i>
+    also pertains to both commands entered via the
+    <a href="#HTTPROOT">HTTP server facility</a>
+    as well as commands entered via
+    <a href="hercinst.html#RCFILE">.rc "run command"</a> scripts.
     <p>
 
 <a name="CNSLPORT">

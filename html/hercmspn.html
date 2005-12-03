@@ -181,6 +181,20 @@ desired. Any unprocessed commands may be issued manually.
   <dt>Issued by
   <dd>panel.c, function process_rc_file
   </dl>
+<dt><code><a name="HHCPN180E">
+HHCPN180E 'sh' commands are disabled
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The 'sh' (shell) command has been purposely disabled
+via a SHCMDOPT configuration file statement. Shell commands
+entered via the Hercules hardware console will not be processed.
+  <dt>Action
+  <dd>Remove or modify the SHCMDOPT configuration file statement
+  and restart Hercules.
+  <dt>Issued by
+  <dd>hsccmd.c, function sh_cmd
+  </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>

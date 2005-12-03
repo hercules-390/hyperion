@@ -279,7 +279,7 @@ struct ZPBLK {
 /* System configuration block                                        */
 /*-------------------------------------------------------------------*/
 struct SYSBLK {
-#define HDL_VERS_SYSBLK   "2.17"        /* Internal Version Number   */
+#define HDL_VERS_SYSBLK   "3.03"        /* Internal Version Number   */
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
         int     arch_mode;              /* Architecturual mode       */
                                         /* 0 == S/370                */
@@ -347,6 +347,9 @@ struct SYSBLK {
         int     mbm;                    /* Measurement block mode    */
         int     mbd;                    /* Device connect time mode  */
         int     diag8cmd;               /* Allow diagnose 8 commands */
+        BYTE    shcmdopt;               /* 'sh'ell command option    */
+#define SHCMDOPT_DISABLE  0x80          /* Globally disable 'sh' cmd */
+#define SHCMDOPT_NODIAG8  0x40          /* Disallow only for DIAG8   */
         int     toddrag;                /* TOD clock drag factor     */
         int     panrate;                /* Panel refresh rate        */
         int     npquiet;                /* New Panel quiet indicator */

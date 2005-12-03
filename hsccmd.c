@@ -1020,9 +1020,15 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
 
 int sh_cmd(int argc, char *argv[], char *cmdline)
 {
-    char* cmd = cmdline + 2;
+    char* cmd;
     UNREFERENCED(argc);
     UNREFERENCED(argv);
+    if (sysblk.shcmdopt & SHCMDOPT_DISABLE)
+    {
+        logmsg( _("HHCPN180E 'sh' commands are disabled\n"));
+        return -1;
+    }
+    cmd = cmdline + 2;
     while (isspace(*cmd)) cmd++;
     if (*cmd)
         return herc_system (cmd);

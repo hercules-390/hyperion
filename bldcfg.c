@@ -530,6 +530,7 @@ char   *sloadparm;                      /* -> IPL load parameter     */
 char   *ssysepoch;                      /* -> System epoch           */
 char   *stzoffset;                      /* -> System timezone offset */
 char   *sdiag8cmd;                      /* -> Allow diagnose 8       */
+char   *sshcmdopt;                      /* -> SHCMDOPT shell cmd opt */
 char   *stoddrag;                       /* -> TOD clock drag factor  */
 char   *sostailor;                      /* -> OS to tailor system to */
 char   *spanrate;                       /* -> Panel refresh rate     */
@@ -578,6 +579,7 @@ int     archmode;                       /* Architectural mode        */
 S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
 int     diag8cmd;                       /* Allow diagnose 8 commands */
+BYTE    shcmdopt;                       /* Shell cmd allow option(s) */
 int     toddrag;                        /* TOD clock drag factor     */
 U64     ostailor;                       /* OS to tailor system to    */
 int     panrate;                        /* Panel refresh rate        */
@@ -658,6 +660,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
     sysepoch = 1900;
     tzoffset = 0;
     diag8cmd = 0;
+    shcmdopt = 0;
     toddrag = 1;
 #if defined(_390)
     archmode = ARCH_390;
@@ -746,6 +749,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
         ssysepoch = NULL;
         stzoffset = NULL;
         sdiag8cmd = NULL;
+        sshcmdopt = NULL;
         stoddrag = NULL;
         sostailor = NULL;
         spanrate = NULL;
@@ -857,6 +861,10 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "diag8cmd") == 0)
             {
                 sdiag8cmd = operand;
+            }
+            else if (strcasecmp (keyword, "SHCMDOPT") == 0)
+            {
+                sshcmdopt = operand;
             }
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
             else if (strcasecmp (keyword, "toddrag") == 0)
@@ -1398,6 +1406,23 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 
+        /* Parse SHCMDOPT operand */
+        if (sshcmdopt != NULL)
+        {
+            if (strcasecmp (sshcmdopt, "DISABLE") == 0)
+                shcmdopt = SHCMDOPT_DISABLE;
+            else
+            if (strcasecmp (sshcmdopt, "NODIAG8") == 0)
+                shcmdopt = SHCMDOPT_NODIAG8;
+            else
+            {
+                fprintf(stderr, _("HHCCF052S Error in %s line %d: "
+                        "%s: invalid argument\n"),
+                        fname, stmt, sshcmdopt);
+                delayed_exit(1);
+            }
+        }
+
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
         /* Parse TOD clock drag factor operand */
         if (stoddrag != NULL)
@@ -1745,6 +1770,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
 #endif
 
     sysblk.diag8cmd = diag8cmd;
+    sysblk.shcmdopt = shcmdopt;
 
 #if defined(_370) || defined(_390)
     if(dfltver)
