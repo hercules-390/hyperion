@@ -564,11 +564,11 @@ static void ARCH_DEP(print_cce)(int r2, REGS *regs, BYTE *cce, int index)
     logmsg("  cct    : %d\n", CCE_cct(cce));
     logmsg("  x1..x5 : ");
     for(i = 0; i < 5; i++)
-      logmsg("%1d", (int) CCE_x(cce, i));
+      logmsg("%1d", (int) (CCE_x(cce, i) ? 1 : 0));
     logmsg("\n  act    : %d\n", (int) CCE_ecs(cce));
     logmsg("  y1..y2 : ");
     for(i = 0; i < 2; i++)
-      logmsg("%1d", (int) CCE_y(cce, i));
+      logmsg("%1d", (int) (CCE_y(cce, i) ? 1 : 0));
     logmsg("\n  d      : %s\n", TRUEFALSE(CCE_d(cce)));
     logmsg("  cptr   : %04X\n", CCE_cptr(cce));
     logmsg("  mcc    > %s\n", TRUEFALSE(CCE_mcc(cce)));
@@ -768,9 +768,9 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
 {
   BYTE ccce[8];                        /* child compression character entry   */
   int i;                               /* child character index               */
-  int search_siblings;                 /* Indicator for searching siblings    */
+  int ind_search_siblings;             /* Indicator for searching siblings    */
 
-  search_siblings = 1;
+  ind_search_siblings = 1;
 
   /* Get the next character when there are children */
   if(CCE_ccs(cce) && ARCH_DEP(fetch_ch)(r2, regs, iregs, next_ch, 0))
@@ -781,7 +781,7 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
   {
 
     /* Stop searching when child tested and no consecutive child character */
-    if(!search_siblings && !CCE_ccc(cce, i))
+    if(!ind_search_siblings && !CCE_ccc(cce, i))
       return(write_index_symbol);
 
     /* Compare character with child */
@@ -789,7 +789,7 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
     {
 
       /* Child is tested, so stop searching for siblings*/
-      search_siblings = 0;
+      ind_search_siblings = 0;
 
       /* Check if child should not be examined */
       if(!CCE_x(cce, i))
@@ -826,6 +826,12 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
       }
     }
   }
+
+  /* Are there siblings? */
+  if(CCE_mcc(cce))
+    return(search_siblings);
+
+  /* No siblings, write found index symbol */
   return(write_index_symbol);
 }
 
@@ -836,18 +842,14 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
 {
   BYTE ccce[8];                        /* child compression character entry   */
   int i;                               /* sibling character index             */
+  int ind_search_siblings;             /* indicator for keep searching        */
   BYTE sd[16];                         /* sibling descriptor fmt-0 and fmt-1  */
   int sd_ptr;                          /* pointer to sibling descriptor       */
   int searched;                        /* number of children searched         */
   int y_in_parent;                     /* indicator if y bits are in parent   */
-  int search_siblings;                 /* indicator for keep searching        */
 
   /* For now keep searching for siblings */
-  search_siblings = 1;
-
-  /* Are there siblings? */
-  if(!CCE_mcc(cce))
-    return(write_index_symbol);
+  ind_search_siblings = 1;
 
   /* For the first sibling descriptor y bits are in the cce parent */
   y_in_parent = 1;
@@ -870,14 +872,14 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
     {
 
       /* Stop searching when child tested and no consecutive child character */
-      if(!search_siblings && !SD_ccc(regs, sd, i))
+      if(!ind_search_siblings && !SD_ccc(regs, sd, i))
         return(write_index_symbol);
 
       if(*next_ch == SD_sc(regs, sd, i))
       {
 
         /* Child is tested, so stop searching for siblings*/
-        search_siblings = 0;
+        ind_search_siblings = 0;
 
         /* Check if child should not be examined */
         if(!SD_ecb(regs, sd, i, cce, y_in_parent))
@@ -925,7 +927,7 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
     y_in_parent = 0;
 
   }
-  while(search_siblings && SD_msc(regs, sd));
+  while(ind_search_siblings && SD_msc(regs, sd));
   return(write_index_symbol);
 }
 
