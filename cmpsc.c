@@ -564,11 +564,11 @@ static void ARCH_DEP(print_cce)(int r2, REGS *regs, BYTE *cce, int index)
     logmsg("  cct    : %d\n", CCE_cct(cce));
     logmsg("  x1..x5 : ");
     for(i = 0; i < 5; i++)
-      logmsg("%1d", (int) (CCE_x(cce, i) ? 1 : 0));
+      logmsg("%c", (int) (CCE_x(cce, i) ? '1' : '0'));
     logmsg("\n  act    : %d\n", (int) CCE_ecs(cce));
     logmsg("  y1..y2 : ");
     for(i = 0; i < 2; i++)
-      logmsg("%1d", (int) (CCE_y(cce, i) ? 1 : 0));
+      logmsg("%c", (int) (CCE_y(cce, i) ? '1' : '0'));
     logmsg("\n  d      : %s\n", TRUEFALSE(CCE_d(cce)));
     logmsg("  cptr   : %04X\n", CCE_cptr(cce));
     logmsg("  mcc    > %s\n", TRUEFALSE(CCE_mcc(cce)));
