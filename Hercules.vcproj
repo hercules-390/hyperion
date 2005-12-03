@@ -185,6 +185,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\conspawn.c"
+				>
+			</File>
+			<File
 				RelativePath=".\control.c"
 				>
 			</File>

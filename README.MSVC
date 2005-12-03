@@ -419,7 +419,7 @@ NOTE : The libbz2.dll Dynamic Link Library will be copied to the appropriate
 build target directory as part of the build process in order to ensure that
 the DLL is obtainable by the platform PE(*) loader at run time.
 
--- Fish
+-- Fish (copied blatantly from Ivan's ZLIB documentation further above)
 
 (*) PE stands for Program Executable and designates WIndows .EXE & .DLL
 executable file formats.
@@ -437,26 +437,33 @@ incorporate BZIP2 as a compression mechanism, since
 .. Therefore ..
 
 In order for HERCULES to be built with BZIP2 support (DASD, TAPE), go to
-"http://sources.redhat.com/bzip2/" and locate the hyperlink entitled: "Here's
-the source code, including full documentation" in the "Getting the latest
-version - bzip2-1.0.2 (released 26 Jan 2002)" section. (Yep, that's right!
-You're going to have to build the BZIP2 dll for yourself from source!) (either
-that or obtain a pre-built copy of it (and associated header/lib files) from
-someone else you trust). NOTE: This is a 650KB download, and the file is in
-tar.gz format, so you'll need WinZip or other utility to unzip it.
+"http://www.bzip.org/downloads.html" and locate the hyperlink entitled:
+
+  "Here is the 1.0.3 source tarball , which includes full documentation.
+  md5: 8a716bebecb6e647d2e8a29ea5d8447f"
+
+(Yep, that's right! You're going to have to build the BZIP2 dll for yourself
+from source!) (either that or obtain a pre-built copy of it (and associated
+header/lib files) from someone else you trust). NOTE: This is a 650KB download,
+and the file is in tar.gz format, so you'll need WinZip or other utility to
+unzip it.
 
 Extract the files to a directory of your choosing and build the DLL using
 the supplied makefile.msc. Once it's built, then copy the resulting DLL, lib,
 and bzip2.h header file to your defined BZIP2_DIR location and rebuild Herc.
 
-BZIP2 is a compression algorithm written by Julian R Seward and is used in
-Hercules pursuant to the BZIP2 LICENSE (distributed with its source code).
+BZIP2 is a freely available (open-source (BSD-style) license), patent free
+(as far as the author knows), high-quality data compressor
+written by Julian R Seward. It typically compresses files to within 10% to
+15% of the best available techniques (the PPM family of statistical compressors),
+whilst being around twice as fast at compression and six times faster at decompression. 
 
-In source form, the Hercules project DOES NOT contain BZIP2.
-In Binary form, the Hercules project MAY contain an UNMODIFIED version of the
-BZIP2 runtime (DLL).
+In source form, the Hercules project does not contain any BZIP2 source code at all.
 
--- Fish
+In binary form however, the Hercules project may include an unmodified version
+of the BZIP2 runtime DLL in addition to its own distribution binaries.
+
+-- Fish (updated 2005-12-02)
 
 ***********************************************************************
 

@@ -52,6 +52,8 @@
 # 22/11/05 Crypto module now included standard - Ivan
 # 24/11/05 Rebase all DLLs at 0x400000 (same as executables default) - Fish
 # 29/11/05 Create assembly listings if 'ASSEMBLY_LISTINGS' defined - Fish
+# 01/12/05 Fix for VS 8.0 "manifest" files issue - Volker Bandke
+# 02/12/05 Added 'conspawn' utility to build - Fish
 # ***************************************************************************
 
 !IFNDEF VERSION
@@ -271,7 +273,7 @@ ldebug = /DEBUG /PDB:$(PDBDIR)\$(@B).pdb
 cflags = $(cflags) -D_CRT_SECURE_NO_DEPRECATE
 cflags = $(cflags) -D_CRT_NONSTDC_NO_DEPRECATE
 cflags = $(cflags) -D_USE_32BIT_TIME_T
-ldebug = $(ldebug) /MANIFEST:NO
+ldebug = $(ldebug) /MANIFEST
 !ENDIF
 
 # fish test
@@ -297,6 +299,7 @@ EXECUTABLES = \
     $(X)cckdcomp.exe \
     $(X)cckddiag.exe \
     $(X)cckdswap.exe \
+    $(X)conspawn.exe \
     $(X)dasdcat.exe  \
     $(X)dasdconv.exe \
     $(X)dasdcopy.exe \
@@ -334,6 +337,7 @@ MODULES = \
 
 all: allzlib alllibbz2
     rebase -b 0x400000 $(X)*.dll
+    del /f /q $(EXEDIR)\*.manifest
 
 clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
     del /f /q $(OBJDIR)\*.*
@@ -410,8 +414,11 @@ rcflags = $(rcflags) -D VERSION=$(VERSION) -D V1=$(V1) -D V2=$(V2) -D V3=$(V3) -
 rcflags = $(rcflags) -D PRERELEASE=1
 !ENDIF
 
-linkexe = $(link) -nologo $(ldebug) $(conlflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll)
-linkdll = $(link) -nologo $(ldebug) $(dlllflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll)
+MT_EXE_CMD=if exist $@.manifest mt.exe -nologo -outputresource:$@;1 -manifest $@.manifest
+MT_DLL_CMD=if exist $@.manifest mt.exe -nologo -outputresource:$@;2 -manifest $@.manifest
+
+linkexe = $(link) -nologo $(ldebug) $(conlflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE) && $(MT_EXE_CMD)
+linkdll = $(link) -nologo $(ldebug) $(dlllflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE) && $(MT_DLL_CMD)
 
 $(O)hercver.res: hercver.rc
     $(rc) $(rcflags) $(rcvars) -fo $(O)hercver.res hercver.rc
@@ -638,6 +645,8 @@ $(X)herclin.exe:  $(O)herclin.obj   $(O)hdlmain.obj $(O)hengine.lib $(O)hdasd.li
 
 # -------------------------------------------------------------
 # System utilities
+
+$(X)conspawn.exe: $(O)$(@B).obj                                      $(O)hercver.res
 
 $(X)dmap2hrc.exe: $(O)$(@B).obj           $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
