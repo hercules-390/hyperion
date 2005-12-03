@@ -81,7 +81,13 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
       hostpath(pathname, fullfilename, sizeof(pathname));
       if (STAT(pathname,&buf) == 0)
          if (buf.st_mode & S_IFDIR) {
-            strcat(namelist[i]->d_name,"/");
+//          strcat(namelist[i]->d_name,"/");
+// Don't write past end of d_name
+// Problem debugged by bb5ch39t
+            namelist[i] = realloc(namelist[i], sizeof(struct dirent)
+                                + strlen(namelist[i]->d_name) + 2);
+            if (namelist[i])
+               strcat(namelist[i]->d_name,"/");
          }
     }
     /* now check, if filenames have something in common, after a cycle buff
