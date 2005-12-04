@@ -500,6 +500,7 @@ hengine_OBJ = \
     $(O)cgibin.obj   \
     $(O)channel.obj  \
     $(O)chsc.obj     \
+    $(O)clock.obj    \
     $(O)cmpsc.obj    \
     $(O)config.obj   \
     $(O)control.obj  \
@@ -536,7 +537,6 @@ hengine_OBJ = \
     $(O)sr.obj       \
     $(O)stack.obj    \
     $(O)timer.obj    \
-    $(O)clock.obj    \
     $(O)trace.obj    \
     $(O)vector.obj   \
     $(O)vm.obj       \
