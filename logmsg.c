@@ -180,6 +180,16 @@ DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
 /* panel : 0 - No, 1 - Only, 2 - Also */
 DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
 {
+
+/* FIXME: Calling vsnprintf() twice in a row without doing va_end() and
+   va_start() in between produces undefined results. Rather than try to
+   deal with that, I simply increased the size of the malloc()'d buffer
+   to 1024 from 256 to deal with the largest message issued in a single
+   logmsg() call. There's gotta be a better way to do that, but it's
+   beyond me. I got a headache when trying to deal with the varargs
+   stuff the right way. -- JRM, 3 December 2005
+*/
+
     char *bfr;
     int siz=1024;
     int rc=0;
