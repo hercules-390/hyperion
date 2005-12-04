@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+04 Dec 2005 CTCT fixes - Fish
+04 Dec 2005 More proper misc/56 fix (hopefully) - Fish
 04 Dec 2005 Relax SYSEPOCH restrictions - Jan Jaeger
 04 Dec 2005 New clock design - Jan Jaeger
 04 Dec 2005 OS X portability fixes - Jay Maynard
