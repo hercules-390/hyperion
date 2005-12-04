@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+04 Dec 2005 va_copy 'va-list' copying macro - Fish
 04 Dec 2005 tape close fixes (fixes tape devinit crash) - Fish
 04 Dec 2005 Made misc/56 fix compile on gcc 3 through an ugly hack - Jay Maynard
 04 Dec 2005 CTCT fixes - Fish

@@ -83,6 +83,22 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/* Portable macro for copying 'va_list' variable arguments variable  */
+/*-------------------------------------------------------------------*/
+
+// ZZ FIXME: this should probably be handled in configure.ac...
+
+#if !defined( va_copy )
+  #if defined( __va_copy )
+    #define  va_copy            __va_copy
+  #elif defined( _MSVC_ )
+    #define  va_copy(to,from)   (to) = (from)
+  #else
+    #define  va_copy(to,from)   memcpy((to),(from),sizeof(va_list))
+  #endif
+#endif
+
+/*-------------------------------------------------------------------*/
 /* Large File Support portability...                                 */
 /*-------------------------------------------------------------------*/
 

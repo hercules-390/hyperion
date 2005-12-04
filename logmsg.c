@@ -209,7 +209,7 @@ DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
     {                                     \
         free(bfr);                        \
         bfr=malloc(siz+=BFR_CHUNKSIZE);   \
-        memcpy(vl,original_vl,sizeof(vl));\
+        va_copy(vl,original_vl);          \
         if(bfr)                           \
             rc=vsnprintf(bfr,siz,msg,vl); \
     }
@@ -217,14 +217,10 @@ DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
 /* (log_write function proper starts here) */
     char *bfr;
     int siz=BFR_CHUNKSIZE;
-#if defined(_MSVC_)
-    va_list original_vl = vl;
-#else
     va_list original_vl;
-#endif
     int rc=0;
     int slot;
-    memcpy(original_vl,vl,sizeof(original_vl));   /* (preserve original ptr) */
+    va_copy(original_vl,vl);    /* (preserve original value) */
     log_route_init();
     if(panel==1)
     {
