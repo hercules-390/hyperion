@@ -180,7 +180,6 @@ DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
 /* panel : 0 - No, 1 - Only, 2 - Also */
 DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
 {
-
 /* FIXME: Calling vsnprintf() twice in a row without doing va_end() and
    va_start() in between produces undefined results. Rather than try to
    deal with that, I simply increased the size of the malloc()'d buffer
@@ -189,24 +188,36 @@ DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
    beyond me. I got a headache when trying to deal with the varargs
    stuff the right way. -- JRM, 3 December 2005
 */
+/*
+   I've made what I believe to be a proper fix for this issue. Please
+   let me know whether it resolves your issue or not Jay. (Change the
+   chunksize back to 256 like it was and try again). -- Fish, Dec 2005
+*/
+#define  BFR_CHUNKSIZE    (1024)    /* (should be plenty big enough) */
 
+#define  BFR_VSNPRINTF()                  \
+    bfr=malloc(siz);                      \
+    if(bfr)                               \
+        rc=vsnprintf(bfr,siz,msg,vl);     \
+    while(bfr&&(rc<0||rc>=siz))           \
+    {                                     \
+        free(bfr);                        \
+        bfr=malloc(siz+=BFR_CHUNKSIZE);   \
+        vl = original_vl;                 \
+        if(bfr)                           \
+            rc=vsnprintf(bfr,siz,msg,vl); \
+    }
+
+/* (log_write function proper starts here) */
     char *bfr;
-    int siz=1024;
+    int siz=BFR_CHUNKSIZE;
+    va_list original_vl = vl;   /* (preserve original ptr) */
     int rc=0;
     int slot;
     log_route_init();
     if(panel==1)
     {
-        bfr=malloc(siz);
-        if(bfr)
-            rc=vsnprintf(bfr,siz,msg,vl);
-        while(bfr&&(rc<0||rc>=siz))
-        {
-            free(bfr);
-            bfr=malloc(siz+=256);
-            if(bfr)
-                rc=vsnprintf(bfr,siz,msg,vl);
-        }
+        BFR_VSNPRINTF();
         if(bfr&&rc>0)
             write_pipe( logger_syslogfd[LOG_WRITE], bfr, rc );
         free(bfr);
@@ -217,34 +228,14 @@ DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
     release_lock(&log_route_lock);
     if(slot<0 || panel>0)
     {
-        bfr=malloc(siz);
-        if(bfr)
-            rc=vsnprintf(bfr,siz,msg,vl);
-        while(bfr&&(rc<0||rc>=siz))
-        {
-            free(bfr);
-            bfr=malloc(siz+=256);
-            if(bfr)
-                rc=vsnprintf(bfr,siz,msg,vl);
-        }
+        BFR_VSNPRINTF();
         if(bfr&&rc>0)
             write_pipe( logger_syslogfd[LOG_WRITE], bfr, rc );
         free(bfr);
         if(slot<0)
-        {
             return;
-        }
     }
-    bfr=malloc(siz);
-    if(bfr)
-        rc=vsnprintf(bfr,siz,msg,vl);
-    while(bfr&&(rc<0||rc>=siz))
-    {
-        free(bfr);
-        bfr=malloc(siz+=256);
-        if(bfr)
-            rc=vsnprintf(bfr,siz,msg,vl);
-    }
+    BFR_VSNPRINTF();
     if(bfr&&rc>0)
         log_routes[slot].w(log_routes[slot].u,bfr);
     free(bfr);
