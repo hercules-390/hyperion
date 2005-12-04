@@ -668,11 +668,57 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
 }
 
 ///////////////////////////////////////////////////////////////////////
+/* format_TOD - generate displayable date from TOD value */
+/* always uses epoch of 1900 */
+void format_TOD(long long tod, char *buf)
+{
+    unsigned long long hours, minutes, seconds, microseconds;
+    long long days;
+    int year;
+
+    microseconds = (unsigned long long)tod >> 4;
+    seconds = microseconds / 1000000;
+    microseconds -= (seconds * 1000000);
+    minutes = seconds / 60;
+    seconds -= (minutes * 60);
+    hours = minutes / 60;
+    minutes -= (hours * 60);
+    days = hours / 24;
+    hours -= (days * 24);
+    year=1900;
+
+    /* This isn't pretty, but it's guaranteed to get the number of days right
+       since January 1, 1900.  There are 1461 days in four years. */
+    if (days > 1460)
+    {
+    	days -= 1460;
+    	year += 4;
+    }
+    for (; days > 1461; year+=4,days-=1461) /* nothing */ ;
+    if ((year == 1900) && (days > 365))
+    {
+    	/* 1900 was not a leap year */
+    	days -= 365;
+    	year++;
+    }
+    else if (days > 366)
+    {
+    	days -= 366;
+    	year++;
+    }
+    for (; days > 365; year++,days-=365) /* still nothing */ ;
+        
+    sprintf(buf,"%4d.%03lld %02llu:%02llu:%02llu.%06llu",
+    		year,days+1,hours,minutes,seconds,microseconds);
+}
+
+///////////////////////////////////////////////////////////////////////
 /* clocks command - display tod clkc and cpu timer */
 
 int clocks_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
+char clock_buf[30];
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -688,15 +734,23 @@ REGS *regs;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg( _("HHCPN028I tod = %16.16llX\n"),(long long)TOD_CLOCK(regs) << 8);
-    logmsg( "          h/w = %16.16llX\n",(long long)tod_clock << 8);
-    logmsg( "          off = %16.16llX\n",(long long)regs->tod_epoch << 8);
+    format_TOD((long long)TOD_CLOCK(regs),clock_buf);
+    logmsg( _("HHCPN028I tod = %16.16llX    %s\n"),
+    		(long long)TOD_CLOCK(regs) << 8,clock_buf);
+    format_TOD((long long)tod_clock,clock_buf);
+    logmsg( "          h/w = %16.16llX    %s\n",
+    		(long long)tod_clock << 8,clock_buf);
+    format_TOD(-(long long)regs->tod_epoch,clock_buf);
+    logmsg( "          off = %16.16llX    %s\n",
+    		(long long)regs->tod_epoch << 8,clock_buf);
     logmsg( "          ckc = %16.16llX\n", (long long)regs->clkc << 8 );
     logmsg( "          cpt = %16.16llX\n", (long long)regs->ptimer );
 
     if(regs->sie_active)
     {
-        logmsg( _("         vtod = %16.16llX\n"), (long long)TOD_CLOCK(regs->guestregs) << 8);
+        format_TOD((long long)TOD_CLOCK(regs->guestregs),clock_buf);
+        logmsg( _("         vtod = %16.16llX    %s\n"),
+        	(long long)TOD_CLOCK(regs->guestregs) << 8,clock_buf);
 
         logmsg( "         vckc = %16.16llX\n", (long long)regs->guestregs->clkc << 8 );
         logmsg( "         vcpt = %16.16llX\n", (long long)regs->guestregs->ptimer );
