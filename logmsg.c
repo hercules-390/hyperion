@@ -180,20 +180,26 @@ DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
 /* panel : 0 - No, 1 - Only, 2 - Also */
 DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
 {
-/* FIXME: Calling vsnprintf() twice in a row without doing va_end() and
-   va_start() in between produces undefined results. Rather than try to
-   deal with that, I simply increased the size of the malloc()'d buffer
-   to 1024 from 256 to deal with the largest message issued in a single
-   logmsg() call. There's gotta be a better way to do that, but it's
-   beyond me. I got a headache when trying to deal with the varargs
-   stuff the right way. -- JRM, 3 December 2005
-*/
-/*
-   I've made what I believe to be a proper fix for this issue. Please
-   let me know whether it resolves your issue or not Jay. (Change the
-   chunksize back to 256 like it was and try again). -- Fish, Dec 2005
-*/
-#define  BFR_CHUNKSIZE    (1024)    /* (should be plenty big enough) */
+
+/* The reason for this bit of kludgery is that calling vsnprintf() destroys
+   the vararg list pointer passed to it, and so, normally, you have to do
+   va_end()/va_start() in between calls to it. Only one problem: va_start()
+   and va_end() are only valid in the function that's actually passed a
+   variable number of arguments via the ... parameter. That's not this
+   function. Thus, we hack around the problem by saving the vararg pointer.
+   This must be done with memcpy in gcc 3.x, as a regular assignment fails
+   to compile with a complaint about incompatible types - even though both
+   values are declared as va_list! gcc 4 gets this right, as does MSVC.
+   
+   The definition of BFR_CHUNKSIZE is chosen to make things efficient for
+   most messages. It's big enough to hold just about every message sent via
+   log_write(), but not too big.
+   
+   The fix to the original problem is Fish's. I just wrote this comment
+   to document why this bit of weirdness is needed, and found the original
+   problem (see PR misc/56). --JRM, 4 Dec 2005 */
+
+#define  BFR_CHUNKSIZE    (256)
 
 #define  BFR_VSNPRINTF()                  \
     bfr=malloc(siz);                      \
@@ -203,7 +209,7 @@ DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
     {                                     \
         free(bfr);                        \
         bfr=malloc(siz+=BFR_CHUNKSIZE);   \
-        vl = original_vl;                 \
+        memcpy(vl,original_vl,sizeof(vl));\
         if(bfr)                           \
             rc=vsnprintf(bfr,siz,msg,vl); \
     }
@@ -211,9 +217,10 @@ DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
 /* (log_write function proper starts here) */
     char *bfr;
     int siz=BFR_CHUNKSIZE;
-    va_list original_vl = vl;   /* (preserve original ptr) */
+    va_list original_vl;
     int rc=0;
     int slot;
+    memcpy(original_vl,vl,sizeof(original_vl));   /* (preserve original ptr) */
     log_route_init();
     if(panel==1)
     {
