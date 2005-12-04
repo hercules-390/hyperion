@@ -1,7 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
-04 Dec 2005 Made misc/56 fix compiple on gcc 3 through an ugly hack - Jay Maynard
+04 Dec 2005 tape close fixes (fixes tape devinit crash) - Fish
+04 Dec 2005 Made misc/56 fix compile on gcc 3 through an ugly hack - Jay Maynard
 04 Dec 2005 CTCT fixes - Fish
 04 Dec 2005 More proper misc/56 fix (hopefully) - Fish
 04 Dec 2005 Relax SYSEPOCH restrictions - Jan Jaeger
