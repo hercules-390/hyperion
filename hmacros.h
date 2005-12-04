@@ -16,6 +16,9 @@
 /* "Portability" macros for handling _MSVC_ port...                  */
 /*-------------------------------------------------------------------*/
 
+/* PROGRAMMING NOTE: the following 'tape' portability macros are
+   only for physical (SCSI) tape devices, not emulated aws files */
+
 #ifdef _MSVC_
   #define  open_tape            w32_open_tape
   #define  read_tape            w32_read_tape
