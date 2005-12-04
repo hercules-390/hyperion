@@ -4392,7 +4392,6 @@ DEF_INST(set_clock)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Clock value               */
-int     cpu;
 
     S(inst, regs, b2, effective_addr2);
 
