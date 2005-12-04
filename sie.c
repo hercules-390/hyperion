@@ -519,7 +519,7 @@ int     icode = 0;                      /* Interception code         */
 
     /* Load the TOD clock offset for this guest */
     FETCH_DW(GUESTREGS->sie_epoch, STATEBK->epoch);
-    GUESTREGS->todoffset = regs->todoffset + (GUESTREGS->sie_epoch >> 8);
+    GUESTREGS->tod_epoch = regs->tod_epoch + (GUESTREGS->sie_epoch >> 8);
 
     /* Load the clock comparator */
     FETCH_DW(GUESTREGS->clkc, STATEBK->clockcomp);
@@ -644,7 +644,7 @@ int     icode = 0;                      /* Interception code         */
         }
 
         /* Clock comparator */
-        if( (sysblk.todclk + GUESTREGS->todoffset) > GUESTREGS->clkc )
+        if( TOD_CLOCK(GUESTREGS) > GUESTREGS->clkc )
         {
             obtain_lock(&sysblk.intlock);
             ON_IC_CLKC(GUESTREGS);

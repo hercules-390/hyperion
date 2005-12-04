@@ -13,65 +13,6 @@
 
 int ecpsvm_testvtimer(REGS *,int);
 
-void check_timer_event(void);
-
-/*-------------------------------------------------------------------*/
-/* Update TOD clock                                                  */
-/*                                                                   */
-/* This function updates the TOD clock.                              */
-/*                                                                   */
-/* This function is called by timer_update_thread and by cpu_thread  */
-/* instructions that manipulate any of the timer related entities    */
-/* (clock comparator, cpu timer and interval timer).                 */
-/*                                                                   */
-/* Internal function `check_timer_event' is called which will signal */
-/* any timer related interrupts to the appropriate cpu_thread.       */
-/*                                                                   */
-/* Callers *must* own the todlock and *must not* own the intlock.    */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-void update_TOD_clock(void)
-{
-struct timeval  tv;         /* Current time              */
-U64     dreg;           /* Double register work area */
-
-    /* Get current time */
-    gettimeofday (&tv, NULL);
-    ADJUST_TOD (tv, sysblk.lasttod);
-
-    /* Load number of seconds since 00:00:00 01 Jan 1970 */
-    dreg = (U64)tv.tv_sec;
-
-    /* Convert to microseconds */
-    dreg = dreg * 1000000 + tv.tv_usec;
-
-#ifdef OPTION_TODCLOCK_DRAG_FACTOR
-    if (sysblk.toddrag > 1)
-        dreg = sysblk.todclock_init +
-        (dreg - sysblk.todclock_init) / sysblk.toddrag;
-#endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
-
-    /* Shift left 4 bits so that bits 0-7=TOD Clock Epoch,
-       bits 8-59=TOD Clock bits 0-51, bits 60-63=zero */
-    dreg <<= 4;
-
-    /* Ensure that the clock does not go backwards and always
-       returns a unique value in the microsecond range */
-    if( dreg > sysblk.todclk)
-        sysblk.todclk = dreg;
-    else sysblk.todclk += 16;
-
-    /* Get the difference between the last TOD saved and this one */
-    sysblk.todclock_diff = (sysblk.todclock_prev == 0 ? 0 :
-                            sysblk.todclk - sysblk.todclock_prev);
-
-    /* Save the old TOD clock value */
-    sysblk.todclock_prev = sysblk.todclk;
-
-    /* Check if timer event has occurred */
-    check_timer_event();
-}
-
 /*-------------------------------------------------------------------*/
 /* Check for timer event                                             */
 /*                                                                   */
@@ -81,8 +22,9 @@ U64     dreg;           /* Double register work area */
 /* [3] Interval timer                                                */
 /* CPUs with an outstanding interrupt are signalled                  */
 /*                                                                   */
+/* tod_delta is in hercules internal clock format (>> 8)             */
 /*-------------------------------------------------------------------*/
-void check_timer_event(void)
+void update_cpu_timer(U64 tod_delta)
 {
 int             cpu;                    /* CPU counter               */
 REGS           *regs;                   /* -> CPU register context   */
@@ -113,7 +55,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         /*-------------------------------------------*
          * [1] Check for clock comparator interrupt  *
          *-------------------------------------------*/
-        if ((sysblk.todclk + regs->todoffset) > regs->clkc)
+        if (TOD_CLOCK(regs) > regs->clkc)
         {
             if (!IS_IC_CLKC(regs))
             {
@@ -129,7 +71,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         if(regs->sie_active)
         {
         /* Signal clock comparator interrupt if needed */
-            if((sysblk.todclk + regs->guestregs->todoffset) > regs->guestregs->clkc)
+            if(TOD_CLOCK(regs->guestregs) > regs->guestregs->clkc)
             {
                 ON_IC_CLKC(regs->guestregs);
                 intmask |= BIT(regs->cpuad);
@@ -143,7 +85,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
          * [2] Decrement the CPU timer for each CPU  *
          *-------------------------------------------*/
 
-        regs->ptimer = (S64)regs->ptimer - (S64)(sysblk.todclock_diff << 8);
+        regs->ptimer = (S64)regs->ptimer - (tod_delta << 8);
 
         /* Set interrupt flag if the CPU timer is negative */
         if ((S64)regs->ptimer < 0)
@@ -162,7 +104,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         if(regs->sie_active)
         {
             /* Decrement the guest CPU timer */
-            regs->guestregs->ptimer = (S64)regs->guestregs->ptimer - (S64)(sysblk.todclock_diff << 8);
+            regs->guestregs->ptimer = (S64)regs->guestregs->ptimer - (tod_delta << 8);
 
             /* Set interrupt flag if the CPU timer is negative */
             if ((S64)regs->guestregs->ptimer < 0)
@@ -181,7 +123,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
 
 #if defined(OPTION_MIPS_COUNTING) && ( defined(_FEATURE_SIE) || defined(_FEATURE_ECPSVM) )
         /* Calculate diff in interval timer units plus rounding to improve accuracy */
-        itimer_diff = (S32) ((((6*sysblk.todclock_diff)/625)+1) >> 1);
+        itimer_diff = (S32) ((((6*tod_delta)/625)+1) >> 1);
         if (itimer_diff <= 0)           /* Handle gettimeofday low */
             itimer_diff = 1;            /* resolution problems     */
 #endif
@@ -298,9 +240,9 @@ U64     then;                           /* Previous time of day (us) */
 int     interval;                       /* Interval (us)             */
 double  cpupct;                         /* Calculated cpu percentage */
 #endif /*OPTION_MIPS_COUNTING*/
-struct  timeval tv;                     /* Structure for gettimeofday
-                                           and select function calls */
-  UNREFERENCED(argp);
+struct  timeval tv;                     /* Structure for select      */
+
+    UNREFERENCED(argp);
 
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
@@ -318,33 +260,18 @@ struct  timeval tv;                     /* Structure for gettimeofday
             "priority=%d\n"),
             thread_id(), getpid(), getpriority(PRIO_PROCESS,0));
 
-#ifdef OPTION_TODCLOCK_DRAG_FACTOR
-    /* Get current time */
-    gettimeofday (&tv, NULL);
-
-    /* Load number of seconds since 00:00:00 01 Jan 1970 */
-    sysblk.todclock_init = (U64)tv.tv_sec;
-
-    /* Convert to microseconds */
-    sysblk.todclock_init = sysblk.todclock_init * 1000000 + tv.tv_usec;
-#endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
-
     while (sysblk.cpus)
     {
         /* Obtain the TOD lock */
         obtain_lock (&sysblk.todlock);
 
         /* Update TOD clock */
-        update_TOD_clock();
+        update_tod_clock();
 
 #ifdef OPTION_MIPS_COUNTING
         /* Calculate MIPS rate and percentage CPU busy */
-
-        /* Get the difference between the last TOD saved and this one */
-        diff = (prev == 0 ? 0 : sysblk.todclk - prev);
-
-        /* Save the old TOD clock value */
-        prev = sysblk.todclk;
+        diff = (prev == 0 ? 0 : tod_clock - prev);
+        prev = tod_clock;
 
         /* Shift the epoch out of the difference for the CPU timer */
         diff <<= 8;
@@ -357,9 +284,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
 // logmsg("+++ BLIP +++\n"); // (should appear once per second)
             /* Get current time */
             then = now;
-            gettimeofday (&tv, NULL);
-            now = (U64)tv.tv_sec;
-            now = now * 1000000 + tv.tv_usec;
+            now = hw_clock();
             interval = (int)(now - then);
             if (interval < 1)
                 interval = 1;

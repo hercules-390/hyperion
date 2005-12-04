@@ -4410,27 +4410,25 @@ int     cpu;
     /* Obtain the TOD clock update lock */
     obtain_lock (&sysblk.todlock);
 
-    /* Compute the new TOD clock offset in hercules clock units */
-    sysblk.todoffset = (dreg >> 8) - sysblk.todclk;
+    /* Ensure tod clock is current */
+    update_tod_clock();
 
-    /* Update the TOD clock of all CPU's in the configuration
-       as we simulate 1 shared TOD clock, and do not support the
-       TOD clock sync check */
-    for (cpu = 0; cpu < MAX_CPU; cpu++)
-    {
-        obtain_lock(&sysblk.cpulock[cpu]);
-        if (IS_CPU_ONLINE(cpu))
-            sysblk.regs[cpu]->todoffset = sysblk.todoffset;
-        release_lock(&sysblk.cpulock[cpu]);
-    }
+    /* Compute the new TOD clock offset in hercules clock units */
+    set_tod_epoch( (dreg >> 8) - tod_clock);
+
+    /* reset the clock comparator pending flag according to
+       the setting of the tod clock */
+    update_tod_clock();
 
     /* Release the TOD clock update lock */
     release_lock (&sysblk.todlock);
 
-//  /*debug*/logmsg("Set TOD clock=%16.16llX\n", dreg);
-
     /* Return condition code zero */
     regs->psw.cc = 0;
+
+    RETURN_INTCHECK(regs);
+
+//  /*debug*/logmsg("Set TOD clock=%16.16llX\n", dreg);
 
 }
 
@@ -4470,7 +4468,7 @@ U64     dreg;                           /* Clock value               */
 
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
-    update_TOD_clock();
+    update_tod_clock();
 
     /* Release the TOD clock update lock */
     release_lock (&sysblk.todlock);
@@ -4532,7 +4530,7 @@ U64     dreg;                           /* Timer value               */
     regs->ptimer = dreg;
 
     /* reset the cpu timer pending flag according to its value */
-    update_TOD_clock();
+    update_tod_clock();
 
     /* Release the TOD clock update lock */
     release_lock (&sysblk.todlock);
@@ -5981,7 +5979,7 @@ U64     dreg;                           /* Clock value               */
 
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
-    if( (sysblk.todclk + regs->todoffset) > dreg )
+    if( TOD_CLOCK(regs) > dreg )
     {
         ON_IC_CLKC(regs);
 

@@ -354,6 +354,7 @@ endif
                        cmpsc.c      \
                        sie.c        \
                        qdio.c       \
+                       clock.c      \
                        timer.c      \
                        esame.c      \
                        ieee.c       \
@@ -594,6 +595,7 @@ noinst_HEADERS = fishhang.h     \
                  feature.h      \
                  esa390.h       \
                  opcode.h       \
+                 clock.h        \
                  hercules.h     \
                  inline.h       \
                  dat.h          \

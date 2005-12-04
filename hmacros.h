@@ -404,28 +404,4 @@ typedef void (*SIEFN)();
        sched_yield(); \
  } while (0)
 
-/*-------------------------------------------------------------------*/
-/* Macro to handle hosts that don't return unique time-of-day values */
-/*-------------------------------------------------------------------*/
-
-#if defined(NON_UNIQUE_GETTIMEOFDAY)
-#define ADJUST_TOD(tod,lasttod) \
- { \
-   if ((tod).tv_sec  == (lasttod).tv_sec \
-    && (tod).tv_usec <= (lasttod).tv_usec) \
-    { \
-     (tod).tv_usec = (lasttod).tv_usec + 1; \
-     if ((tod).tv_usec > 999999) \
-     { \
-      (tod).tv_sec++; \
-      (tod).tv_usec = 0; \
-     } \
-   } \
-   (lasttod).tv_sec  = (tod).tv_sec; \
-   (lasttod).tv_usec = (tod).tv_usec; \
- }
-#else // !defined(NON_UNIQUE_GETTIMEOFDAY)
-#define ADJUST_TOD(tod,lasttod)
-#endif // defined(NON_UNIQUE_GETTIMEOFDAY)
-
 #endif // _HMACROS_H

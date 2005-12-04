@@ -351,7 +351,7 @@ U16     cpuad;                          /* Originating CPU address   */
     }
 
     /* External interrupt if TOD clock exceeds clock comparator */
-    if ((sysblk.todclk + regs->todoffset) > regs->clkc
+    if ( TOD_CLOCK(regs) > regs->clkc
         && sysblk.insttrace == 0
         && sysblk.inststep == 0
         && OPEN_IC_CLKC(regs) )

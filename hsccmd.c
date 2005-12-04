@@ -688,18 +688,15 @@ REGS *regs;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg( _("HHCPN028I tod = %16.16llX\n"),
-        (long long)(sysblk.todclk + regs->todoffset) << 8
-        );
-
+    logmsg( _("HHCPN028I tod = %16.16llX\n"),(long long)TOD_CLOCK(regs) << 8);
+    logmsg( "          h/w = %16.16llX\n",(long long)tod_clock << 8);
+    logmsg( "          off = %16.16llX\n",(long long)regs->tod_epoch << 8);
     logmsg( "          ckc = %16.16llX\n", (long long)regs->clkc << 8 );
     logmsg( "          cpt = %16.16llX\n", (long long)regs->ptimer );
 
     if(regs->sie_active)
     {
-        logmsg( _("         vtod = %16.16llX\n"),
-            (long long)(sysblk.todclk + regs->guestregs->todoffset) << 8
-            );
+        logmsg( _("         vtod = %16.16llX\n"), (long long)TOD_CLOCK(regs->guestregs) << 8);
 
         logmsg( "         vckc = %16.16llX\n", (long long)regs->guestregs->clkc << 8 );
         logmsg( "         vcpt = %16.16llX\n", (long long)regs->guestregs->ptimer );
@@ -967,7 +964,6 @@ REGS *regs;
     return 0;
 }
 
-#ifdef OPTION_TODCLOCK_DRAG_FACTOR
 
 ///////////////////////////////////////////////////////////////////////
 /* toddrag command - display or set TOD clock drag factor */
@@ -978,20 +974,22 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc > 1)
     {
-        int toddrag = 0;
+        double toddrag = -1.0;
 
-        sscanf(argv[1], "%d", &toddrag);
+        sscanf(argv[1], "%lf", &toddrag);
 
-        if (toddrag > 0 && toddrag <= 10000)
-            sysblk.toddrag = toddrag;
+        if (toddrag >= 0.0001 && toddrag <= 10000.0)
+        {
+            /* Set clock steering based on drag factor */
+            set_tod_steering(-(1.0-(1.0/toddrag)));
+        }
     }
 
-    logmsg( _("HHCPN036I TOD clock drag factor = %d\n"), sysblk.toddrag );
+    logmsg( _("HHCPN036I TOD clock drag factor = %lf\n"), (1.0/(1.0+get_tod_steering())));
 
     return 0;
 }
 
-#endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
 
 #ifdef PANEL_REFRESH_RATE
 
@@ -2666,8 +2664,8 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     unsigned i;
     char    sysid[12];
     BYTE    curpsw[16];
-    char *states[] = {"?", "STOPPED", "STOPPING", "?", "STARTED",
-                      "?", "?", "?", "STARTING"};
+    char *states[] = {"? (0)", "STOPPED", "STOPPING", "? (3)", "STARTED",
+                      "? (5)", "? (6)", "? (7)", "STARTING"};
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -4031,9 +4029,7 @@ COMMAND ( "iodelay",   iodelay_cmd,   "display or set I/O delay value" )
 #if defined(OPTION_W32_CTCI)
 COMMAND ( "tt32stats", tt32stats_cmd, "display CTCI-W32 statistics" )
 #endif
-#ifdef OPTION_TODCLOCK_DRAG_FACTOR
 COMMAND ( "toddrag",   toddrag_cmd,   "display or set TOD clock drag factor" )
-#endif
 #ifdef PANEL_REFRESH_RATE
 COMMAND ( "panrate",   panrate_cmd,   "display or set rate at which console refreshes" )
 #endif

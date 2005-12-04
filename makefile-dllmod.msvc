@@ -536,6 +536,7 @@ hengine_OBJ = \
     $(O)sr.obj       \
     $(O)stack.obj    \
     $(O)timer.obj    \
+    $(O)clock.obj    \
     $(O)trace.obj    \
     $(O)vector.obj   \
     $(O)vm.obj       \

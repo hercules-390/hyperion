@@ -391,13 +391,13 @@ static U64        diag204tod;          /* last diag204 tod           */
         obtain_lock (&sysblk.todlock);
 
         /* Update the TOD clock */
-        update_TOD_clock();
+        update_tod_clock();
 
         /* save last diag204 tod */
         dreg = diag204tod;
 
         /* Retrieve the TOD clock value and shift out the epoch */
-        diag204tod = (sysblk.todclk + regs->todoffset) << 8;
+        diag204tod = TOD_CLOCK(regs) << 8;
 
         /* Release the TOD clock update lock */
         release_lock (&sysblk.todlock);

@@ -43,7 +43,7 @@ struct REGS {                           /* Processor registers       */
         U64     ptimer;                 /* CPU timer                 */
         U64     clkc;                   /* 0-7=Clock comparator epoch,
                                            8-63=Comparator bits 0-55 */
-        S64     todoffset;              /* TOD offset for this CPU   */
+        S64     tod_epoch;              /* TOD epoch for this CPU    */
         U64     instcount;              /* Instruction counter       */
         U64     prevcount;              /* Previous instruction count*/
         U32     mipsrate;               /* Instructions per second   */
@@ -53,7 +53,6 @@ struct REGS {                           /* Processor registers       */
         double  cpupct;                 /* Percent CPU busy          */
         U64     waittod;                /* Time of day last wait (us)*/
         U64     waittime;               /* Wait time (us) in interval*/
-        struct  timeval lasttod;        /* Last gettimeofday         */
         DAT     dat;                    /* Fields for DAT use        */
 
 #define GR_G(_r) gr[(_r)].D
@@ -292,18 +291,6 @@ struct SYSBLK {
         U32     xpndsize;               /* Expanded size (4K pages)  */
         BYTE   *xpndstor;               /* -> Expanded storage       */
         U64     cpuid;                  /* CPU identifier for STIDP  */
-        U64     todclk;                 /* 0-7=TOD clock epoch,
-                                           8-63=TOD clock bits 0-55  */
-        S64     todoffset;              /* Difference in microseconds
-                                           between TOD and Unix time */
-        U64     todclock_init;          /* TOD clock value at start  */
-        U64     todclock_prev;          /* TOD clock previous value  */
-        U64     todclock_diff;          /* TOD clock difference      */
-        LOCK    todlock;                /* TOD clock update lock     */
-        TID     todtid;                 /* Thread-id for TOD update  */
-#if defined(NON_UNIQUE_GETTIMEOFDAY)
-        struct timeval   lasttod;       /* Last gettimeofday         */
-#endif
         TID     wdtid;                  /* Thread-id for watchdog    */
         U16     ipldev;                 /* IPL device                */
         int     iplcpu;                 /* IPL cpu                   */
@@ -315,6 +302,8 @@ struct SYSBLK {
         COND    cpucond;                /* CPU config/deconfig cond  */
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
         TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
+        LOCK    todlock;                /* TOD clock update lock     */
+        TID     todtid;                 /* Thread-id for TOD update  */
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
@@ -350,7 +339,6 @@ struct SYSBLK {
         BYTE    shcmdopt;               /* 'sh'ell command option    */
 #define SHCMDOPT_DISABLE  0x80          /* Globally disable 'sh' cmd */
 #define SHCMDOPT_NODIAG8  0x40          /* Disallow only for DIAG8   */
-        int     toddrag;                /* TOD clock drag factor     */
         int     panrate;                /* Panel refresh rate        */
         int     npquiet;                /* New Panel quiet indicator */
 #if defined(OPTION_SCSI_TAPE)
@@ -661,9 +649,6 @@ struct DEVBLK {                         /* Device configuration block*/
         int     ioactive;               /* System Id active on device*/
 #define DEV_SYS_NONE    0               /* No active system on device*/
 #define DEV_SYS_LOCAL   0xffff          /* Local system active on dev*/
-#if defined(NON_UNIQUE_GETTIMEOFDAY)
-        struct timeval   lasttod;       /* Last gettimeofday         */
-#endif
 
         /*  control flags...                                         */
 

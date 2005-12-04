@@ -404,11 +404,8 @@ a real System/390.  The configuration file is an ASCII text file.
     value (1900) for all systems except OS/360.
     OS/360 expects the base date to be 1960, but specifying this
     value causes an error because OS/360 regards 2000 as an invalid
-    date.  For OS/360, <code>SYSEPOCH 1988</code> is recommended.
+    date.  For OS/360, <code>SYSEPOCH 1928</code> is recommended.
     This makes the year 2000 appear to be 1972.
-    <p>
-    The only supported values for SYSEPOCH are currently 1900, 1928,
-    1960, 1988 and 1970. Specifying any other value causes an error.
     <p>
 
 <a name="TZOFFSET">
@@ -428,10 +425,13 @@ a real System/390.  The configuration file is an ASCII text file.
 <dt><code>TODDRAG <em>nn</em></code>
 <dd><p>
     specifies the TOD clock drag factor.  This parameter can be used
-    to slow down the TOD clock by a factor of <em>nn</em>, which can
-    improve the performance of some operating systems which consume
-    significant amounts of CPU time processing timer interrupts.
-    <em>Use of the TODDRAG parameter is no longer recommended.</em>
+    to slow down or speedup the TOD clock by a factor of <em>nn</em>,
+    a significant slowdown can improve the performance of some operating
+    systems which consume significant amounts of CPU time processing
+    timer interrupts.
+    A drag factor of 2.0 slows down the clock by 50%, A drag factor of
+    0.5 doubles the speed of the clock, a drag factor of 1.01 slows
+    down the clock by 1% and 0.99 speeds up the clock by 1%.
     <p>
 
 <a name="OSTAILOR">

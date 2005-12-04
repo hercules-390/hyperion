@@ -580,7 +580,7 @@ S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
 int     diag8cmd;                       /* Allow diagnose 8 commands */
 BYTE    shcmdopt;                       /* Shell cmd allow option(s) */
-int     toddrag;                        /* TOD clock drag factor     */
+double  toddrag;                        /* TOD clock drag factor     */
 U64     ostailor;                       /* OS to tailor system to    */
 int     panrate;                        /* Panel refresh rate        */
 int     hercprio;                       /* Hercules base priority    */
@@ -661,7 +661,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
     tzoffset = 0;
     diag8cmd = 0;
     shcmdopt = 0;
-    toddrag = 1;
+    toddrag = 1.0;
 #if defined(_390)
     archmode = ARCH_390;
 #else
@@ -866,12 +866,10 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
             {
                 sshcmdopt = operand;
             }
-#ifdef OPTION_TODCLOCK_DRAG_FACTOR
             else if (strcasecmp (keyword, "toddrag") == 0)
             {
                 stoddrag = operand;
             }
-#endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
 #ifdef PANEL_REFRESH_RATE
             else if (strcasecmp (keyword, "panrate") == 0)
             {
@@ -1361,11 +1359,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
         if (ssysepoch != NULL)
         {
             if (strlen(ssysepoch) != 4
-                || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
-                || ((sysepoch != 1900) && (sysepoch != 1928)
-                 && (sysepoch != 1960) && (sysepoch != 1988)
-                 && (sysepoch != 1970)
-                    ))
+                || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1)
             {
                 fprintf(stderr, _("HHCCF022S Error in %s line %d: "
                         "%s is not a valid system epoch.\n"
@@ -1423,12 +1417,11 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 
-#ifdef OPTION_TODCLOCK_DRAG_FACTOR
         /* Parse TOD clock drag factor operand */
         if (stoddrag != NULL)
         {
-            if (sscanf(stoddrag, "%u%c", &toddrag, &c) != 1
-                || toddrag < 1 || toddrag > 10000)
+            if (sscanf(stoddrag, "%lf%c", &toddrag, &c) != 1
+                || toddrag < 0.0001 || toddrag > 10000.0)
             {
                 fprintf(stderr, _("HHCCF024S Error in %s line %d: "
                         "Invalid TOD clock drag factor %s\n"),
@@ -1436,7 +1429,6 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
                 delayed_exit(1);
             }
         }
-#endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
 
 #ifdef PANEL_REFRESH_RATE
         /* Parse panel refresh rate operand */
@@ -1817,44 +1809,16 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
 #endif // defined(OPTION_FISHIO)
 
     /* Set up the system TOD clock offset: compute the number of
-       seconds from the designated year to 1970 for TOD clock
-       adjustment, then add in the specified time zone offset
+     * microseconds offset to the year 1900 */
 
-       The problem here, is that no formular can do it right, as
-       we have to do it wrong in 1928 and 1988 case !
-    */
-    switch (sysepoch) {
-        case 1988:
-            sysblk.todoffset = (18*365 + 4) * -86400LL;
-            break;
-        case 1960:
-            sysblk.todoffset = (10*365 + 3) * 86400ULL;
-            break;
-        case 1928:
-            sysblk.todoffset = (42*365 + 10) * 86400ULL;
-            break;
-        case 1970:
-            sysblk.todoffset = 0;
-            break;
-        default:
-            sysepoch = 1900;
-        case 1900:
-            sysblk.todoffset = (70*365 + 17) * 86400ULL;
-            break;
-    }
+    sysepoch -= 1900;
+    set_tod_epoch((sysepoch*365+(sysepoch/4))*-1382400000000LL);
 
-    /* Compute the timezone offset in seconds and crank that in */
-    tzoffset = (tzoffset/100)*3600 + (tzoffset%100)*60;
-    sysblk.todoffset += tzoffset;
+    /* Set the timezone offset */
+    ajust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
 
-    /* Convert the TOD clock offset to microseconds */
-    sysblk.todoffset *= 1000000;
-
-    /* Convert for the 'hercules internal' format */
-    sysblk.todoffset <<= 4;
-
-    /* Set the TOD clock drag factor */
-    sysblk.toddrag = toddrag;
+    /* Set clock steering based on drag factor */
+    set_tod_steering(-(1.0-(1.0/toddrag)));
 
     /* Set the system OS tailoring value */
     sysblk.pgminttr = ostailor;
@@ -2007,7 +1971,6 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
     sysblk.dummyregs.mainstor = sysblk.mainstor;
     sysblk.dummyregs.storkeys = sysblk.storkeys;
     sysblk.dummyregs.mainlim = sysblk.mainsize - 1;
-    sysblk.dummyregs.todoffset = sysblk.todoffset;
     sysblk.dummyregs.dummy = 1;
     initial_cpu_reset (&sysblk.dummyregs);
     sysblk.dummyregs.arch_mode = sysblk.arch_mode;

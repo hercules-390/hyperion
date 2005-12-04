@@ -997,10 +997,10 @@ U64     dreg;                           /* Double word work area     */
     obtain_lock (&sysblk.todlock);
 
     /* Update the TOD clock value */
-    update_TOD_clock();
+    update_tod_clock();
 
     /* Retrieve the TOD clock value and shift out the epoch */
-    dreg = ((sysblk.todclk + regs->todoffset) << 8);
+    dreg = TOD_CLOCK(regs) << 8;
 
 #if defined(FEATURE_STORE_CLOCK_FAST)
     if(inst[1] == 0x05) // STCK only
@@ -1052,10 +1052,10 @@ U64     dreg;                           /* Double word work area     */
     obtain_lock (&sysblk.todlock);
 
     /* Update the TOD clock value */
-    update_TOD_clock();
+    update_tod_clock();
 
     /* Retrieve the TOD epoch, clock bits 0-51, and 4 zeroes */
-    dreg = (sysblk.todclk + regs->todoffset);
+    dreg = TOD_CLOCK(regs);
 
     /* Release the TOD clock update lock */
     release_lock (&sysblk.todlock);

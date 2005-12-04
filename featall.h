@@ -14,7 +14,6 @@
 #define VECTOR_PARTIAL_SUM_NUMBER     1 /* Vector partial sum number */
 #define CKD_MAXFILES                  4 /* Max files per CKD volume  */
 #define OPTION_MIPS_COUNTING            /* Display MIPS on ctl panel */
-#define OPTION_TODCLOCK_DRAG_FACTOR     /* Enable toddrag feature    */
 #define PANEL_REFRESH_RATE              /* Enable panrate feature    */
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate         */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate         */

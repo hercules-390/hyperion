@@ -341,7 +341,7 @@ int     len2;                           /* Length to copy on page    */
         if (unlikely(addr == 80))
         {
             obtain_lock( &sysblk.todlock );
-            update_TOD_clock ();
+            update_tod_clock ();
         }
 #endif /*FEATURE_INTERVAL_TIMER*/
 
@@ -458,7 +458,7 @@ BYTE    temp[4];                        /* Copy destination          */
         if (unlikely(addr == 80))
         {
             obtain_lock( &sysblk.todlock );
-            update_TOD_clock ();
+            update_tod_clock ();
             release_lock( &sysblk.todlock );
           }
 #endif /*FEATURE_INTERVAL_TIMER*/
@@ -529,7 +529,7 @@ BYTE    temp[8];                        /* Copy destination          */
         if (unlikely(addr == 80))
         {
             obtain_lock( &sysblk.todlock );
-            update_TOD_clock ();
+            update_tod_clock ();
             release_lock( &sysblk.todlock );
           }
 #endif /*FEATURE_INTERVAL_TIMER*/
@@ -766,7 +766,7 @@ int     len2, len3;                     /* Lengths to copy           */
          * must release the todlock for us.
          */
         regs->todlock = 1;
-        update_TOD_clock ();
+        update_tod_clock ();
     }
 #endif /* FEATURE_INTERVAL_TIMER */
 

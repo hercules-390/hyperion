@@ -1078,10 +1078,10 @@ U64  dreg;
         obtain_lock (&sysblk.todlock);
 
         /* Update the TOD clock */
-        update_TOD_clock();
+        update_tod_clock();
 
         /* Retrieve the TOD clock value and shift out the epoch */
-        dreg = (sysblk.todclk << 8) | regs->cpuad;
+        dreg = (TOD_CLOCK(regs) << 8) | regs->cpuad;
 
         /* Release the TOD clock update lock */
         release_lock (&sysblk.todlock);
@@ -1145,10 +1145,10 @@ U64  dreg;
         obtain_lock (&sysblk.todlock);
 
         /* Update the TOD clock */
-        update_TOD_clock();
+        update_tod_clock();
 
         /* Retrieve the TOD clock value including the epoch */
-        dreg = sysblk.todclk;
+        dreg = TOD_CLOCK(regs);
 
         /* Release the TOD clock update lock */
         release_lock (&sysblk.todlock);

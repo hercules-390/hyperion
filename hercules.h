@@ -95,6 +95,7 @@
 #include "version.h"
 
 #include "esa390.h"       // (ESA/390 structure definitions)
+#include "clock.h"        // (TOD definitions)
 #include "hscutl.h"       // (utility functions)
 #include "w32util.h"      // (win32 porting functions)
 

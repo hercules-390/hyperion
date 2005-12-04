@@ -1163,7 +1163,7 @@ int i;
     regs->mainstor = sysblk.mainstor;
     regs->storkeys = sysblk.storkeys;
     regs->mainlim = sysblk.mainsize - 1;
-    regs->todoffset = sysblk.todoffset;
+    regs->tod_epoch = get_tod_epoch();
 
     initialize_condition (&regs->intcond);
 
@@ -1368,10 +1368,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     if (regs->cpustate == CPUSTATE_STOPPED)
     {
 #ifdef OPTION_MIPS_COUNTING
-        struct timeval tv;
-        gettimeofday (&tv, NULL);
-        ADJUST_TOD (tv, regs->lasttod);
-        regs->waittod = (U64)tv.tv_sec * 1000000 + tv.tv_usec;
+        regs->waittod = hw_clock();
 #endif
 
         /* Wait until there is work to do */
@@ -1390,9 +1387,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 
 #ifdef OPTION_MIPS_COUNTING
         /* Calculate the time we waited */
-        gettimeofday (&tv, NULL);
-        ADJUST_TOD (tv, regs->lasttod);
-        regs->waittime += ((U64)tv.tv_sec * 1000000 + tv.tv_usec) - regs->waittod;
+        regs->waittime += hw_clock() - regs->waittod;
         regs->waittod = 0;
 #endif
 
@@ -1414,10 +1409,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     if (WAITSTATE(&regs->psw))
     {
 #ifdef OPTION_MIPS_COUNTING
-        struct timeval tv;
-        gettimeofday (&tv, NULL);
-        ADJUST_TOD (tv, regs->lasttod);
-        regs->waittod = (U64)tv.tv_sec * 1000000 + tv.tv_usec;
+        regs->waittod = hw_clock();
 #endif
 
         /* Test for disabled wait PSW and issue message */
@@ -1439,9 +1431,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 
 #ifdef OPTION_MIPS_COUNTING
         /* Calculate the time we waited */
-        gettimeofday (&tv, NULL);
-        ADJUST_TOD (tv, regs->lasttod);
-        regs->waittime += ((U64)tv.tv_sec * 1000000 + tv.tv_usec) - regs->waittod;
+        regs->waittime += hw_clock() - regs->waittod;
         regs->waittod = 0;
 #endif
 
