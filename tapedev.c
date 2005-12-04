@@ -42,6 +42,8 @@
 /*              All SCSI tapes are processed using the generalized   */
 /*              SCSI tape driver (st.c) which is controlled using    */
 /*              the MTIOCxxx set of IOCTL commands.                  */
+/*              PROGRAMMING NOTE: the 'tape' portability macros for  */
+/*              physical (SCSI) tapes MUST be used for all tape i/o! */
 /* 4. HET       This format is based on the AWSTAPE format but has   */
 /*              been extended to support compression.  Since the     */
 /*              basic file format has remained the same, AWSTAPEs    */
@@ -375,8 +377,8 @@ static void close_awstape (DEVBLK *dev)
     if(dev->fd>=0)
     {
         logmsg(_("HHCTA996I %4.4x - AWS Tape %s closed\n"),dev->devnum,dev->filename);
+        close(dev->fd);
     }
-    close(dev->fd);
     strcpy(dev->filename, TAPE_UNLOADED);
     dev->fd=-1;
     dev->blockid = 0;
@@ -1530,7 +1532,7 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Close the tape descriptor file */
-    close (fd);
+    close (fd); fd = -1;
 
     /* Check that the first record is a TDF header */
     if (memcmp(tdfbuf, "@TDF", 4) != 0)
@@ -2228,7 +2230,8 @@ static int fsf_omatape (DEVBLK *dev, BYTE *unitstat,BYTE code)
     UNREFERENCED(code);
 
     /* Close the current OMA file */
-    close (dev->fd);
+    if (dev->fd >= 0)
+        close (dev->fd);
     dev->fd = -1;
     dev->nxtblkpos = 0;
     dev->prvblkpos = -1;
@@ -2272,7 +2275,8 @@ S32             nxthdro;                /* Offset of next header     */
     if (-1 == curblkl)
     {
         /* Close the current OMA file */
-        close (dev->fd);
+        if (dev->fd >= 0)
+            close (dev->fd);
         dev->fd = -1;
         dev->nxtblkpos = 0;
         dev->prvblkpos = -1;
@@ -2331,7 +2335,8 @@ int             curblkl;                /* Length of current block   */
     if (blkpos >= eofpos)
     {
         /* Close the current OMA file */
-        close (dev->fd);
+        if (dev->fd >= 0)
+            close (dev->fd);
         dev->fd = -1;
         dev->nxtblkpos = 0;
         dev->prvblkpos = -1;
@@ -2414,7 +2419,8 @@ S32             prvhdro;                /* Offset of previous header */
 S32             nxthdro;                /* Offset of next header     */
 
     /* Close the current OMA file */
-    close (dev->fd);
+    if (dev->fd >= 0)
+        close (dev->fd);
     dev->fd = -1;
     dev->nxtblkpos = 0;
     dev->prvblkpos = -1;
@@ -2587,7 +2593,8 @@ S32             nxthdro;                /* Offset of next header     */
 /*-------------------------------------------------------------------*/
 static void close_omatape2(DEVBLK *dev)
 {
-    close (dev->fd);
+    if (dev->fd >= 0)
+        close (dev->fd);
     dev->fd=-1;
     if (dev->omadesc)
     {
