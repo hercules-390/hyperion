@@ -187,9 +187,11 @@ DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
    and va_end() are only valid in the function that's actually passed a
    variable number of arguments via the ... parameter. That's not this
    function. Thus, we hack around the problem by saving the vararg pointer.
-   This must be done with memcpy in gcc 3.x, as a regular assignment fails
-   to compile with a complaint about incompatible types - even though both
-   values are declared as va_list! gcc 4 gets this right, as does MSVC.
+   Since va_list is, per the standard, an opaque type that's not supposed to
+   be modified directly, different compilers go about this different ways,
+   and we can't depend on the portable approach (va_copy) entirely. We
+   make an honest attempt to deal with it by way of a macro in hmacros.h:
+   if va_copy is defined, use it; if not, define it in some usable way.
    
    The definition of BFR_CHUNKSIZE is chosen to make things efficient for
    most messages. It's big enough to hold just about every message sent via
@@ -197,7 +199,10 @@ DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
    
    The fix to the original problem is Fish's. I just wrote this comment
    to document why this bit of weirdness is needed, and found the original
-   problem (see PR misc/56). --JRM, 4 Dec 2005 */
+   problem (see PR misc/56). Willem Konynenberg pointed out that the original
+   solution to the problem was bogus, and suggested the right answer - or,
+   at least, as right as it's going to get given the current design.
+   --JRM, 4 Dec 2005 */
 
 #define  BFR_CHUNKSIZE    (256)
 
