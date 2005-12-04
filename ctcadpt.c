@@ -191,7 +191,10 @@ int  CTCX_Close( DEVBLK* pDEVBLK )
     // Close the device file (if not already closed)
     if( pDEVBLK->fd >= 0 )
     {
-        close( pDEVBLK->fd );
+        if (socket_is_socket( pDEVBLK->fd ))
+            close_socket( pDEVBLK->fd );
+        else
+            close( pDEVBLK->fd );
         pDEVBLK->fd = -1;           // indicate we're now closed
     }
 
@@ -592,7 +595,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
                 dev->devnum, remaddr, remotep );
 
         // probably don't need to do this, not sure...
-        close( parm.listenfd );
+        close_socket( parm.listenfd );
 
         parm.listenfd = socket( AF_INET, SOCK_STREAM, 0 );
 
