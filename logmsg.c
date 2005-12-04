@@ -181,7 +181,7 @@ DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
 DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
 {
     char *bfr;
-    int siz=256;
+    int siz=1024;
     int rc=0;
     int slot;
     log_route_init();

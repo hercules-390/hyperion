@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+04 Dec 2005 OS X portability fixes - Jay Maynard
+04 Dec 2005 misc/56: Brute force fix for segfault in some panel commands - Jay Maynard
 04 Dec 2005 Fix error in sha-1 message digest - Roger Bowler
 03 Dec 2005 Fix fillfnam.c problem debugged by bb5ch39t - Greg Smith
 03 Dec 2005 misc/29: SHCMDOPT shell command disablement cfg stmt - Fish
