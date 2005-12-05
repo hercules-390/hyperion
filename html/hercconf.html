@@ -105,8 +105,8 @@ a real System/390.  The configuration file is an ASCII text file.
 
 <h3>Comment lines</h3>
 <p>
-    Blank lines, and lines beginning with a pound sign ('#' - "hash" to
-    Europeans) or an asterisk, are treated as comments.
+    Blank lines, and lines beginning with a &#035; sign
+    or an asterisk, are treated as comments.
     <p>
 
 <hr><!-- ---------------------------------------------------------------------------- -->
@@ -121,21 +121,21 @@ a real System/390.  The configuration file is an ASCII text file.
 <dl>
 
 <a name="ASN_AND_LX_REUSE">
-<dt><code>ASN_AND_LX_REUSE <em>DISABLE|enable</em></code>
+<dt><code>ASN_AND_LX_REUSE DISABLE &#124; ENABLE</code>
 <dd><p>
     specifies that the ASN And LX Reuse optional facility is to be
-    DISABLED (by default) or ENABLED. This is a z/Architecture-only
+    disabled (by default) or enabled. This is a z/Architecture-only
     feature (it is always disabled for S/390 or ESA/390). Set this
-    to <code><em>ENABLE</em></code>&nbsp if the operating system supports
+    to <code>ENABLE</code>&nbsp if the operating system supports
     this z/Architecture feature and the use of this feature is desired.
-    Set it to <code><em>DISABLE</em></code>&nbsp or do not specify anything
+    Set it to <code>DISABLE</code>&nbsp or do not specify anything
     if the operating system doesn't support this feature, and it
     inadvertently sets CR0 bit 44 to 1, usually leading to unexpected
     program interrupt when instructions such as LASP are issued.
     <p>
 
 <a name="AUTO_SCSI_MOUNT">
-<dt><code>AUTO_SCSI_MOUNT <em>no</code> &nbsp;| <code>1-99</em></code>
+<dt><code>AUTO_SCSI_MOUNT NO</code> &nbsp;&#124; <em>nn</em></code>
 <dd><p>
     specifies whether automatic detection of SCSI tape mounts are to be
     enabled or not.
@@ -144,7 +144,7 @@ a real System/390.  The configuration file is an ASCII text file.
     and causes periodic queries of the SCSI tape drive to automatically
     detect when a new tape is mounted.
     <p>
-    "no" (the default) indicates the option is disabled, forcing all SCSI
+    <code>NO</code> (the default) indicates the option is disabled, forcing all SCSI
     tape mounts to be done manually via an appropriate <code>devinit</code>
     command.
     <p>
@@ -187,7 +187,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <dt><code>LPARNAME <em>name</em></code>
 <dd><p>
     specifies the LPAR name returned by DIAG X'204'.  The default is
-    <code><em>HERCULES</em></code>.
+    <code>HERCULES</code>.
     <p>
 
 <a name="MAINSIZE">
@@ -229,7 +229,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="HTTPPORT">
-<dt><code>HTTPPORT <em>nnnn</em> [AUTH/NOAUTH] <em>[userid password]</em></code>
+<dt><code>HTTPPORT <em>nnnn</em> [AUTH &#124; NOAUTH] [ <em>userid password</em> ]</code>
 <dd><p>
     specifies the port number (in decimal) on which the HTTP server
     will listen. The port number must either be 80
@@ -256,12 +256,12 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="DIAG8CMD">
-<dt><code>DIAG8CMD <em>disable/enable</em></code>
+<dt><code>DIAG8CMD DISABLE &#124; ENABLE</code>
 <dd><p>
-    When set to enable, commands issued through diagnose 8 will be
-    executed by hercules as hercules commands.  When set to disable,
+    When set to <code>ENABLE</code>, commands issued through diagnose 8 will be
+    executed by hercules as hercules commands.  When set to <code>DISABLE</code>,
     commands issued through the diagnose 8 interface will be ignored.
-    The default is disable.
+    The default is <code>DISABLE</code>
     <p>
 
     <i><b>Caution:</b> &nbsp; Enabling this feature may have security consequences</i>
@@ -269,19 +269,19 @@ a real System/390.  The configuration file is an ASCII text file.
 
     Note that when this feature is enabled, systems
     running under hercules can even issue host commands through the Hercules
-    <code>'sh'</code> (shell) command. This ability may be disabled via the
+    <code>sh</code> (shell) command. This ability may be disabled via the
     <a href="#SHCMDOPT">SHCMDOPT</a> statement.
     <p>
 
 <a name="SHCMDOPT">
-<dt><code>SHCMDOPT <em>disable/nodiag8</em></code>
+<dt><code>SHCMDOPT DISABLE &#124; NODIAG8</code>
 <dd><p>
-    When set to disable, 'sh' (shell) commands are globally disabled, and will result
+    When set to <code>DISABLE</code>, <code>sh</code> (shell) commands are globally disabled, and will result
     in an error if entered either directly via the Hercules hardware console or
     programmatically via the <a href="#DIAG8CMD">DIAG8CMD</a> interface.
     <p>
-    When set to nodiag8 only the programmatic execution of shell command via the
-    the diagnose 8 interface is diabled; 'sh' (shell) commands entered directly
+    When set to <code>NODIAG8</code> only the programmatic execution of shell commands via the
+    the diagnose 8 interface is disabled; <code>sh</code> (shell) commands entered directly
     via the Hercules hardware console will still work.
     <p>
     <b>NOTE:</b> &nbsp;<i>"entered directly via the Hercules hardware console"</i>
@@ -475,7 +475,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="DEVTMAX">
-<dt><code>DEVTMAX -1 &#124 0 &#124 1-n</code>
+<dt><code>DEVTMAX -1 &#124 0 &#124 <em>nnn</em></code>
 <dd><p>
     specifies the maximum number of device threads allowed.
     <p>Specify <code>-1</code> to cause 'one time only' temporary threads to be
@@ -492,7 +492,7 @@ a real System/390.  The configuration file is an ASCII text file.
     (or possibly more) to be created for each device defined in your
     configuration. Specifying <code>0</code> means there is no limit to the
     number of threads that can be created.
-    <p>Specify a value from <code>1</code> to <code>n</code> to set an upper limit
+    <p>Specify a value from <code>1</code> to <code><em>nnn</em></code> to set an upper limit
     to the number of threads that can be created to service any I/O request to
     any device. Like the <code>0</code> option, each thread, once done servicing
     an I/O request, enters an idle state. If a new request arrives before the
@@ -568,11 +568,11 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="ECPSVM">
-<dt><code>ECPSVM YES &#124 <em>NO</em> &#124 LEVEL nn</code>
+<dt><code>ECPSVM YES &#124 NO &#124 LEVEL <em>nn</em></code>
 <dd><p>
     specifies whether ECPS:VM (Extended Control Program Support : Virtual Machine)
-    support is to be enabled. If <em>YES</em> is specified, then the support
-    level reported to the operating system is <em>20</em>. The purpose of
+    support is to be enabled. If <code>YES</code> is specified, then the support
+    level reported to the operating system is <code>20</code>. The purpose of
     ECPS:VM is to provide to the VM/370 Operating system a set of shortcut
     facilities to perform hypervisor functions (CP Assists) and virtual
     machine simulation (VM Assists). Although this feature does not affect
@@ -613,7 +613,7 @@ a real System/390.  The configuration file is an ASCII text file.
 </dl>
 
 <p>
-    A comment preceded by a pound sign may be appended to any system
+    A comment preceded by a &#035; sign may be appended to any system
     parameter statement.
 <p>
 
@@ -1026,7 +1026,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
     <dl>
-    <dt><code>groupname</code>
+    <dt><code><em>groupname</em></code>
     <dd><p>
         If a terminal group name is given on the device statement, a device type
         suffix with this group name can be used to indicate that a device in this
@@ -1040,7 +1040,7 @@ a real System/390.  The configuration file is an ASCII text file.
         obviously <i>not</i> be a hexadecimal number.
         <p>
 
-    <dt><code>ipaddr [ mask ]</code>
+    <dt><code><em>ipaddr</em> [ <em>mask</em> ]</code>
     <dd><p>
         The optional IP address and optional subnet mask specify the ip address(es)
         of which client(s) are allowed to connect at the device address identified
@@ -1281,7 +1281,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <p>
 
-    If the filename begins with the vertical bar '|' pipe character,
+    If the filename begins with the vertical bar '&#124;' pipe character,
     then it is removed and the remainder of the device statement is
     interpreted as the name of an external program (followed by any
     necessary arguments) to which to "pipe" the printer output to.
@@ -1442,8 +1442,8 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
     <dl>
-    <dt><code>MAXSIZE</code>=<i>n</i> &nbsp;|&nbsp; <code>MAXSIZEK</code>=<i>n</i>
-         &nbsp;|&nbsp; <code>MAXSIZEM</code>=<i>n</i>
+    <dt><code>MAXSIZE</code>=<i>n</i> &nbsp;&#124;&nbsp; <code>MAXSIZEK</code>=<i>n</i>
+         &nbsp;&#124;&nbsp; <code>MAXSIZEM</code>=<i>n</i>
     <dd><p>
         Specifies the maximum number of bytes (specified in bytes, Kilobytes or
         Megabytes) for the emulated file. This parameter defaults to 0, meaning
@@ -1568,7 +1568,7 @@ a real System/390.  The configuration file is an ASCII text file.
                 of the Linux kernel.
                 <p>
 
-            <dt><code>-d</code> or <code>--debug</code>
+            <dt><code>-d</code> &nbsp;or <code>--debug</code>
             <dd><p>
                 specifies that debugging output is to be produced on the
                 Hercules control panel. This should normally be left
@@ -1666,7 +1666,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
         <dl> <!-- begin LCS parms -->
 
-        <dt><code><em> -n devname or --dev devname</em></code>
+        <dt><code>-n <em>devname</em></code> &nbsp;or <code>--dev <em>devname</em></code>
         <dd><p>
             where <em>devname</em> is:
             <p>
@@ -1689,20 +1689,20 @@ a real System/390.  The configuration file is an ASCII text file.
             </dl>
             <p>
 
-        <dt><code><em>-o filename or --oat filename</em></code>
+        <dt><code>-o <em>filename</em></code> &nbsp;or <code>--oat <em>filename</em></code>
         <dd><p>
             where <em>filename</em> specifies the filename of the Address
             Translation file. If this option is specified, the optional
-            <i>--mac</i> and <em>guestip</em> entries are ignored in preference to
+            <code>--mac</code> and <em>guestip</em> entries are ignored in preference to
             statements in the OAT. (See further below for the <a href=#OAT>syntax
             of the OAT file</a>)
             <p>
 
-        <dt><code><em>-m MAC Address or --mac MAC address</em></code>
+        <dt><code>-m <em>MAC Address</em></code> &nbsp;or <code>--mac <em>MAC address</em></code>
         <dd><p>
             where <em>MAC Address</em> is the optional hardware address of
             the interface in the format: xx:xx:xx:xx:xx:xx. If you use the
-            <i>--oat</i> option, do not specify an address here.
+            <code>--oat</code> option, do not specify an address here.
             <p>
 
         <dt><code><em>guestip</em></code>
@@ -1710,7 +1710,7 @@ a real System/390.  The configuration file is an ASCII text file.
             is an optional IP address of the Hercules
             (guest OS) side. Note: This is only used to
             establish a point-to-point routing table entry
-            on driving system. If you use the <i>--oat</i> option,
+            on driving system. If you use the <code>--oat</code> option,
             do not specify an address here.
             <p>
 
@@ -1768,7 +1768,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
             <p>
 
             <dl> <!-- begin LCS OATFILE parms entry specific information -->
-            <dt><code><em>PRI|SEC|NO</em></code>
+            <dt><code>PRI &#124; SEC &#124; NO</code>
             <dd><p>
                 specifies where a packet with an unknown IP
                 address is forwarded to. PRI is the primary
@@ -1889,17 +1889,17 @@ ROUTE  00  172.021.003.032  255.255.255.224
     <p>
 
     <dl> <!-- begin INET parms -->
-    <dt><code><em>ip-name-or-addr:port:devnum</em></code>
+    <dt><code><em>ip-name-or-addr</em>:<em>port</em>:<em>devnum</em></code>
     <dd><p>
-        <i>ip-name-or-addr</i> specifies the internet name or address
+        <em>ip-name-or-addr</em> specifies the internet name or address
         where the Hercules shared device server is running.
         <p>
 
-        <i>port</i> specifies the port number the shared device server
+        <em>port</em> specifies the port number the shared device server
         is listening on.  If omitted, the default is 3990.
         <p>
 
-        <i>devnum</i> specifies the device number on the shared
+        <em>devnum</em> specifies the device number on the shared
         device server.  If omitted, the default is the current device number.
         <p>
 
@@ -1913,7 +1913,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dl> <!-- begin (CKD) additional DASD arguments -->
 
-    <dt><code><em>sf=shadow-file-name</em></code>
+    <dt><code>sf=<em>shadow-file-name</em></code>
     <dd><p>
         A shadow file contains all the changes made to the emulated dasd since
         it was created, until the next shadow file is created. The moment of the
@@ -1938,7 +1938,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         of the <a href="cckddasd.html">Compressed Dasd Emulation</a> web page.
         <p>
 
-    <dt><code><em>syncio</em></code>
+    <dt><code>syncio</code>
     <dd><p>
         syncio enables possible 'synchronous' i/o. This is a dasd i/o feature
         wherein guest i/o requests are completed "synchronously" during the
@@ -1956,7 +1956,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         <p>
 
         syncio is the default for ckd. syncio statistics may be displayed via
-        the hercules syncio panel command.
+        the hercules <code>syncio</code> panel command.
         <p>
 
         <b>Note:</b> If you plan on using syncio with <b>Linux/390</b> and/or <b>zLinux</b>
@@ -1964,7 +1964,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         configuration file statement as well.
         <p>
 
-    <dt><code><em>readonly</em></code>
+    <dt><code>readonly</code>
     <dd><p>
         readonly returns "write inhibited" sense when a write is attempted.
         Note that not all of the sense bits may be getting set absolutely
@@ -1973,7 +1973,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         hasn't been an issue for a while now.)
         <p>
 
-    <dt><code><em>fakewrite</em></code>
+    <dt><code>fakewrite</code>
     <dd><p>
         fakewrite is a kludge for the readonly sense problem mentioned above.
         Here the disk is not intended to be updated (MVS updates the DSCB
@@ -1981,8 +1981,8 @@ ROUTE  00  172.021.003.032  255.255.255.224
         be successful even though nothing actually gets written.
         <p>
 
-    <dt><code><em>lazywrite</em></code>
-    <dt><code><em>fulltrackio</em></code>
+    <dt><code>lazywrite</code>
+    <dt><code>fulltrackio</code>
     <dd><p>
         These options have been deprecated. They are still accepted, but they
         do absolutely nothing.
@@ -2035,18 +2035,18 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dl> <!-- begin INET parms -->
 
-    <dt><code><em>ip-name-or-addr:port:devnum</em></code>
+    <dt><code><em>ip-name-or-addr</em>:<em>port</em>:<em>devnum</em></code>
     <dd><p>
 
-        <i>ip-name-or-addr</i> specifies the internet name or address
+        <em>ip-name-or-addr</em> specifies the internet name or address
         where the Hercules shared device server is running.
         <p>
 
-        <i>port</i> specifies the port number the shared device server
+        <em>port</em> specifies the port number the shared device server
         is listening on.  If omitted, the default is 3990.
         <p>
 
-        <i>devnum</i> specifies the device number on the shared
+        <em>devnum</em> specifies the device number on the shared
         device server.  If omitted, the default is the current device number.
 
     </dl> <!-- end INET parms -->
@@ -2058,11 +2058,11 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dl> <!-- begin (FBA) additional DASD arguments -->
 
-    <dt><code><em>sf=shadow-file-name</em></code>
+    <dt><code>sf=<em>shadow-file-name</em></code>
     <dd><p>
         The handling of shadow files for FBA devices is identical as that for
         CKD devices. Please refer to the preceding CKD section for information
-        regarding use of the <code><i>sf=</i></code> shadow file option.
+        regarding use of the <code>sf=</code> shadow file option.
         <p>
 
     <dt><code><em>syncio</em></code>
@@ -2103,39 +2103,39 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dl> <!-- begin Communication Adapter parms -->
 
-    <dt><code>DIAL=IN|OUT|INOUT|NO</code>
+    <dt><code>DIAL=IN &#124; OUT &#124; INOUT &#124; NO</code>
     <dd><p>
-        Specifies call direction (if any). If <em>DIAL=NO</em> is specified, the
+        Specifies call direction (if any). If <code>DIAL=NO</code> is specified, the
         TCP outgoing connection is attempted as soon as an 'ENABLE' CCW is executed.
-        Also, in this mode, an incoming connection will always be accepted. If <em>DIAL=IN|INOUT</em>
+        Also, in this mode, an incoming connection will always be accepted. If <code>DIAL=IN&#124;INOUT</code>
         is specified, a TCP incoming call is accepted ONLY if an 'ENABLE' CCW is currently
-        executing on the device. If <em>DIAL=OUT</em>, the 'ENABLE' CCW is rejected.
-        When <em>DIAL=IN|INOUT</em> is specified, a DIAL CCW allows the application
+        executing on the device. If <code>DIAL=OUT</code>, the 'ENABLE' CCW is rejected.
+        When <code>DIAL=IN&#124;INOUT</code> is specified, a DIAL CCW allows the application
         to establish a TCP connection to a specific host. For other DIAL values,
         the DIAL CCW is rejected.
         <p>
 
-    <dt><code>lhost=hostname|ip address|<em>*</em></code>
+    <dt><code>lhost=<em>hostname</em> &#124; <em>ip address</em> &#124; *</code>
     <dd><p>
         Specifies which IP address to listen on. This also conditions the network
         interface from which incoming calls will be accepted. Specifying '*' means
         all incoming TCP calls are accepted, regardless of the destination IP
         address or call origin. This is the default value. Specifying a specific
-        IP address when <em>DIAL=OUT</em> is specified has no effect.
+        IP address when <code>DIAL=OUT</code> is specified has no effect.
         <p>
 
-    <dt><code>lport=service name|port number</code>
+    <dt><code>lport=<em>service name</em> &#124; <em>port number</em></code>
     <dd><p>
         Specifies the TCP port for which to listen to incoming TCP calls. This
-        value is mandatory for <em>DIAL=IN|INOUT|NO</em>. It is ignored for <em>DIAL=OUT</em>.
+        value is mandatory for <code>DIAL=IN&#124;INOUT&#124;NO</code>. It is ignored for <code>DIAL=OUT</code>.
         <p>
 
-    <dt><code>rhost=hostname|ip address</code>
-    <dt><code>rport=service name|port number</code>
+    <dt><code>rhost=<em>hostname</em> &#124; <em>ip address</em></code>
+    <dt><code>rport=<em>service name</em> &#124; <em>port number</em></code>
     <dd><p>
         Specifies the remote host and port to which to direct a TCP connection on a
-        DIAL=NO line when an 'ENABLE' CCW is executed. This option is mandatory when <em>DIAL=NO</em>
-        is specified. It is ignored for other <em>DIAL</em> values.
+        DIAL=NO line when an 'ENABLE' CCW is executed. This option is mandatory when <code>DIAL=NO</code>
+        is specified. It is ignored for other <code>DIAL</code> values.
         <p>
 
     </dl> <!-- end Communication Adapter parms -->
@@ -2146,27 +2146,27 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     <dl> <!-- begin Communication Adapter tuning options -->
 
-    <dt><code>rto=0|-1|nnn|<em>3000</em></code>
+    <dt><code>rto=0 &#124; -1 &#124; <em>nnn</em> &#124; 3000</code>
     <dd><p>
         Specifies the number of milliseconds before terminating a read on a timeout, when
         no read termination control character is received. Specifying 0 means the READ ends
         immediately. -1 specifies there is no timeout.
         <p>
 
-    <dt><code>pto=0|-1|nnn|<em>3000</em></code>
+    <dt><code>pto=0 &#124; -1 &#124; <em>nnn</em> &#124; 3000</code>
     <dd><p>
         Specifies the number of milliseconds before terminating a POLL on a timeout, when
         no ACK or NACK sequence is received. Specifying 0 means the POLL ends
         immediately. -1 specifies there is no timeout.
         <p>
 
-    <dt><code>eto=0|<em>-1</em>|nnn|<em>10000</em></code>
+    <dt><code>eto=0 &#124; -1 &#124; <em>nnn</em> &#124; 10000</code>
     <dd><p>
         Specifies the number of milliseconds before terminating an ENABLE operation on a timeout.
-        the timeout applies when <em>DIAL=NO|IN|INOUT</em> is specified, the outgoing TCP call
-        fails (<em>DIAL=NO</em>) and there is no previously or currently established TCP connection
-        for this line. When <em>DIAL=NO</em> is specified, the timeout defaults to 10 seconds.
-        For <em>DIAL=IN|INOUT</em>, the timeout defaults to -1.
+        the timeout applies when <code>DIAL=NO&#124;IN&#124;INOUT</code> is specified, the outgoing TCP call
+        fails (<code>DIAL=NO</code>) and there is no previously or currently established TCP connection
+        for this line. When <code>DIAL=NO</code> is specified, the timeout defaults to 10 seconds.
+        For <code>DIAL=IN&#124;INOUT</code>, the timeout defaults to -1.
         <p>
 
     </dl> <!-- end Communication Adapter tuning options -->
@@ -2175,7 +2175,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
 <p><br>
 
-A comment preceded by a pound sign may be appended to any device
+A comment preceded by a &#035; sign may be appended to any device
 definition statement.
 <p>
 
