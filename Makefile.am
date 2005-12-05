@@ -659,11 +659,6 @@ noinst_HEADERS = fishhang.h     \
                  w32mtio.h      \
                  $(extra_dynamic_SRC)
 
-#########################################################
-#           B U I L D   R U L E S  . . .
-#########################################################
-
-
 cckd: cckd2ckd$(EXEEXT)  \
       cckdcdsk$(EXEEXT)  \
       cckddiag$(EXEEXT)  \
@@ -671,43 +666,58 @@ cckd: cckd2ckd$(EXEEXT)  \
       cckdswap$(EXEEXT)  \
       dasdcopy$(EXEEXT)
 
+#########################################################
+#           B U I L D   R U L E S  . . .
+#########################################################
+#
+#            ***  PROGRAMMING NOTE! ***
+#
+#  The tabs in the below statements ARE significant!
+#  Not all make programs accept (handle correctly)
+#  make files that use blanks instead of tabs in their
+#  build rules. Thus in order to remain compatible
+#  with older make programs the below build rules
+#  MUST use *tabs* and NOT BLANKS!
+#
+#########################################################
+
 tar: dist
 
 install-exec-local:
 if SETUID_HERCIFC
-	chown root $(DESTDIR)$(bindir)/hercifc
-	chmod 0751 $(DESTDIR)$(bindir)/hercifc
-	chmod +s   $(DESTDIR)$(bindir)/hercifc
-	rm                             hercifc
+    chown root $(DESTDIR)$(bindir)/hercifc
+    chmod 0751 $(DESTDIR)$(bindir)/hercifc
+    chmod +s   $(DESTDIR)$(bindir)/hercifc
+    rm                             hercifc
 endif
 
 install-exec-hook:
-	rm -f $(DESTDIR)$(libdir)/libherc*.a
-	rm -f $(DESTDIR)$(modexecdir)/dyn*.a
-	rm -f $(DESTDIR)$(modexecdir)/hdt*.a
+    rm -f $(DESTDIR)$(libdir)/libherc*.a
+    rm -f $(DESTDIR)$(modexecdir)/dyn*.a
+    rm -f $(DESTDIR)$(modexecdir)/hdt*.a
 if BUILD_SHARED
 else
-	rm -f $(DESTDIR)$(libdir)/libherc*
+    rm -f $(DESTDIR)$(libdir)/libherc*
 endif
 #
 # NOTE : symbolic links point to FINAL destination (not to staged install)
 #
-	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) fba2cfba$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) ckd2cckd$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
+    rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+    (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) fba2cfba$(EXEEXT))
+    rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+    (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) ckd2cckd$(EXEEXT))
+    rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+    (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
+    rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+    (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
 
 uninstall-local:
 
 uninstall-hook:
-	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
-	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
-	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
-	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+    rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+    rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+    rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+    rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
 
 %.s: %.c
-	$(COMPILE) -S $<
+    $(COMPILE) -S $<
