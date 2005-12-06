@@ -747,7 +747,7 @@ char clock_buf[30];
         logmsg( _("         vtod = %16.16llX    %s\n"),
                    (U64)TOD_CLOCK(regs->guestregs) << 8,clock_buf);
         logmsg( _("         voff = %16.16llX\n"),
-                   (U64)regs->guestregs->tod_epoch << 8);
+                   (S64)regs->guestregs->tod_epoch << 8);
         format_tod((U64)regs->guestregs->clkc,clock_buf);
         logmsg( _("         vckc = %16.16llX    %s\n"), 
                    (U64)regs->guestregs->clkc << 8,clock_buf);
