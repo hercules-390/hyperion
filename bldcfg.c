@@ -1812,7 +1812,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
      * microseconds offset to the year 1900 */
 
     sysepoch -= 1900;
-    set_tod_epoch((sysepoch*365+(sysepoch/4))*-1382400000000LL);
+    set_tod_epoch((sysepoch*365+((sysepoch-1)/4)+(sysepoch>0?1:0))*-1382400000000LL);
 
     /* Set the timezone offset */
     ajust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
