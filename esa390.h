@@ -587,6 +587,13 @@ typedef struct _LSED {
 /* ETE words 6 and 7 are unused for ESA/390 */
 /* ETE words 6 and 7 are the entry parameter for ESAME */
 
+/* Clock states */
+#define CC_CLOCK_SET    0               /* Clock in set state        */
+#define CC_CLOCK_NOTSET 1               /* Clock in not-set state    */
+#define CC_CLOCK_ERROR  2               /* Clock in error state      */
+#define CC_CLOCK_STOP   3               /* Clock in stopped state or 
+                                           not-operational state     */
+
 /* SIGP order codes */
 #define SIGP_SENSE               0x01   /* Sense                     */
 #define SIGP_EXTCALL             0x02   /* External call             */

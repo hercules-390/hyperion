@@ -25,6 +25,7 @@ static U64 hw_episode;           /* TOD of start of steering episode */
 
 static S64 hw_offset = 0;       /* Current offset between TOD and HW */
 
+static int clock_state = CC_CLOCK_SET;
 
 static U64 universal_clock(void) /* really: any clock used as a base */
 {

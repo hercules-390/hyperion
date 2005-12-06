@@ -668,48 +668,34 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
 }
 
 ///////////////////////////////////////////////////////////////////////
-/* format_TOD - generate displayable date from TOD value */
+/* format_tod - generate displayable date from TOD value */
 /* always uses epoch of 1900 */
-void format_TOD(long long tod, char *buf)
+void format_tod(unsigned long long tod, char *buf)
 {
-    unsigned long long hours, minutes, seconds, microseconds;
-    long long days;
-    int year;
+    int hours, minutes, seconds, microseconds, days, years, leapyear;
 
-    microseconds = (unsigned long long)tod >> 4;
-    seconds = microseconds / 1000000;
-    microseconds -= (seconds * 1000000);
-    minutes = seconds / 60;
-    seconds -= (minutes * 60);
-    hours = minutes / 60;
-    minutes -= (hours * 60);
-    days = hours / 24;
-    hours -= (days * 24);
-    year=1900;
-
-    /* This isn't pretty, but it's guaranteed to get the number of days right
-       since January 1, 1900.  There are 1461 days in four years. */
-    if (days > 1460)
+    years = (tod/(1461*24*60*60*16000000LL))*4;
+    tod %= 1461*24*60*60*16000000LL;
+    if((years += leapyear = tod / (365*24*60*60*16000000LL)) == 4)
     {
-    	days -= 1460;
-    	year += 4;
+	tod %= 365*24*60*60*16000000LL;
+	years--;
+	tod+=24*60*60*16000000LL;
     }
-    for (; days > 1461; year+=4,days-=1461) /* nothing */ ;
-    if ((year == 1900) && (days > 365))
-    {
-    	/* 1900 was not a leap year */
-    	days -= 365;
-    	year++;
-    }
-    else if (days > 366)
-    {
-    	days -= 366;
-    	year++;
-    }
-    for (; days > 365; year++,days-=365) /* still nothing */ ;
-        
-    sprintf(buf,"%4d.%03lld %02llu:%02llu:%02llu.%06llu",
-    		year,days+1,hours,minutes,seconds,microseconds);
+    else
+	tod %= 365*24*60*60*16000000LL;
+    days = tod / (24*60*60*16000000LL);
+    tod %= 24*60*60*16000000LL;
+    hours = tod / (60*60*16000000LL);
+    tod %= 60*60*16000000LL;
+    minutes = tod / (60*16000000LL);
+    tod %= 60*16000000LL;
+    seconds = tod / 16000000LL;
+    microseconds = (tod % 16000000LL) / 16;
+    
+    
+    sprintf(buf,"%4d.%03d %02d:%02d:%02d.%06d",
+    	1900+years,days+1,hours,minutes,seconds,microseconds);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -734,23 +720,26 @@ char clock_buf[30];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    format_TOD((long long)TOD_CLOCK(regs),clock_buf);
+    format_tod((long long)TOD_CLOCK(regs),clock_buf);
     logmsg( _("HHCPN028I tod = %16.16llX    %s\n"),
     		(long long)TOD_CLOCK(regs) << 8,clock_buf);
-    format_TOD((long long)tod_clock,clock_buf);
+    format_tod((long long)tod_clock,clock_buf);
     logmsg( "          h/w = %16.16llX    %s\n",
     		(long long)tod_clock << 8,clock_buf);
-    format_TOD(-(long long)regs->tod_epoch,clock_buf);
+    format_tod(-(long long)regs->tod_epoch,clock_buf);
     logmsg( "          off = %16.16llX    %s\n",
-    		(long long)regs->tod_epoch << 8,clock_buf);
+    	-(long long)regs->tod_epoch << 8,clock_buf);
     logmsg( "          ckc = %16.16llX\n", (long long)regs->clkc << 8 );
     logmsg( "          cpt = %16.16llX\n", (long long)regs->ptimer );
 
     if(regs->sie_active)
     {
-        format_TOD((long long)TOD_CLOCK(regs->guestregs),clock_buf);
+        format_tod((long long)TOD_CLOCK(regs->guestregs),clock_buf);
         logmsg( _("         vtod = %16.16llX    %s\n"),
         	(long long)TOD_CLOCK(regs->guestregs) << 8,clock_buf);
+        format_tod(-(long long)regs->guestregs->tod_epoch,clock_buf);
+        logmsg( _("         voff = %16.16llX    %s\n"),
+        	-(long long)regs->guestregs->tod_epoch << 8,clock_buf);
 
         logmsg( "         vckc = %16.16llX\n", (long long)regs->guestregs->clkc << 8 );
         logmsg( "         vcpt = %16.16llX\n", (long long)regs->guestregs->ptimer );
