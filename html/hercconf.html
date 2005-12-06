@@ -123,8 +123,8 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="ASN_AND_LX_REUSE">
 <dt><code>ASN_AND_LX_REUSE DISABLE &#124; ENABLE</code>
 <dd><p>
-    specifies that the ASN And LX Reuse optional facility is to be
-    disabled (by default) or enabled. This is a z/Architecture-only
+    specifies that the ASN-and-LX-Reuse Facility is to be disabled or
+    enabled. The default is disabled. This is a z/Architecture-only
     feature (it is always disabled for S/390 or ESA/390). Set this
     to <code>ENABLE</code>&nbsp if the operating system supports
     this z/Architecture feature and the use of this feature is desired.
@@ -132,6 +132,8 @@ a real System/390.  The configuration file is an ASCII text file.
     if the operating system doesn't support this feature, and it
     inadvertently sets CR0 bit 44 to 1, usually leading to unexpected
     program interrupt when instructions such as LASP are issued.
+    <p>
+    <code>ASN_AND_LX_REUSE</code> may be abbreviated as <code>ALRF</code>
     <p>
 
 <a name="AUTO_SCSI_MOUNT">
@@ -2194,7 +2196,7 @@ If you have a question about Hercules, see the
     <a href="hercinst.html"><img src="images/back.gif" border=0 alt="back"></a>
     <p>
 
-    <small>Last updated 05 December 2005
+    <small>Last updated 06 December 2005
     <p>
 
 </center>

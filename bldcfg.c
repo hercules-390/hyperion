@@ -541,7 +541,7 @@ char   *scpuprio;                       /* -> CPU thread priority    */
 char   *sdevprio;                       /* -> Device thread priority */
 char   *spgmprdos;                      /* -> Program product OS OK  */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-char   *sasnandlxreuse;         /* -> ASNLXREUSE Optional    */
+char   *sasnandlxreuse;                 /* -> ASNLXREUSE Optional    */
 #endif
 #if defined(_FEATURE_ECPSVM)
 char   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
@@ -588,7 +588,7 @@ int     todprio;                        /* Timer thread priority     */
 int     cpuprio;                        /* CPU thread priority       */
 int     devprio;                        /* Device thread priority    */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-int     asnandlxreuse;          /* ASN And LX Reuse option   */
+int     asnandlxreuse;                  /* ASN And LX Reuse option   */
 #endif
 BYTE    pgmprdos;                       /* Program product OS OK     */
 DEVBLK *dev;                            /* -> Device Block           */
@@ -1047,7 +1047,8 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
             }
 #endif /*defined(OPTION_HTTP_SERVER)*/
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-            else if (strcasecmp(keyword,"asn_and_lx_reuse") == 0)
+            else if (strcasecmp(keyword,"asn_and_lx_reuse") == 0
+                     || strcasecmp(keyword,"alrf") == 0)
             {
                 sasnandlxreuse = operand;
             }
