@@ -674,16 +674,24 @@ void format_tod(unsigned long long tod, char *buf)
 {
     int hours, minutes, seconds, microseconds, days, years, leapyear;
 
-    years = (tod/(1461*24*60*60*16000000LL))*4;
-    tod %= 1461*24*60*60*16000000LL;
-    if((years += leapyear = tod / (365*24*60*60*16000000LL)) == 4)
+    if(tod > 365*24*60*60*16000000LL)
     {
-	tod %= 365*24*60*60*16000000LL;
-	years--;
-	tod+=24*60*60*16000000LL;
+        tod -= 365*24*60*60*16000000LL;
+        years = ((tod/(1461*24*60*60*16000000LL))*4) + 1;
+        tod %= 1461*24*60*60*16000000LL;
+        if((leapyear = tod / (365*24*60*60*16000000LL)) == 4)
+        {
+	    tod %= 365*24*60*60*16000000LL;
+	    years--;
+	    tod += 365*24*60*60*16000000LL;
+        }
+        else
+	    tod %= 365*24*60*60*16000000LL;
+        years += leapyear;
     }
     else
-	tod %= 365*24*60*60*16000000LL;
+        years = 0;
+
     days = tod / (24*60*60*16000000LL);
     tod %= 24*60*60*16000000LL;
     hours = tod / (60*60*16000000LL);
