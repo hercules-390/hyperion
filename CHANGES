@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+06 Dec 2005 More logmsg cleanup - Ivan Warren
 04 Dec 2005 Added real time conversions to 'clocks' display - Jay Maynard
 04 Dec 2005 va_copy 'va-list' copying macro - Fish
 04 Dec 2005 tape close fixes (fixes tape devinit crash) - Fish

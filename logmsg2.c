@@ -34,11 +34,3 @@ va_list vl;
     vprintf(msg,vl); 
 } /* end function logmsg */
 
-/*-------------------------------------------------------------------*/
-/* Log message: Normal routing with vararg pointer                   */
-/*-------------------------------------------------------------------*/
-void vlogmsg(char *msg, va_list vl)
-{
-    vprintf(msg,vl); 
-} /* end function vlogmsg */ 
-

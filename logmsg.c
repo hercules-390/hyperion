@@ -8,6 +8,46 @@
 
 #include "hercules.h"
 
+#define  BFR_CHUNKSIZE    (256)
+
+/******************************************/
+/* UTILITY MACRO BFR_VSNPRINTF            */
+/* Original design by Fish                */
+/* Modified by Jay Maynard                */
+/* Further modification by Ivan Warren    */
+/*                                        */
+/* Purpose : set 'bfr' to contain         */
+/*  a C string based on a message format  */
+/*  and a va_list of args.                */
+/*  bfr must be free()d when over with    */
+/*  this macro can ONLY be used from the  */
+/*  topmost variable arg function         */
+/*  that is the va_list cannot be passed  */
+/*  as a parameter from another function  */
+/*  since va_xxx functions behavio(u)r    */
+/*  seems to be undefined in those cases  */
+/* char *bfr; must be originally defined  */
+/* int siz;    must be defined and cont-  */
+/*             ain a start size           */
+/* va_list vl; must be defined and init-  */
+/*             ialised with va_start      */
+/* char *msg; is the message format       */
+/* int    rc; to contain final size       */
+/******************************************/
+
+#define  BFR_VSNPRINTF()                  \
+    bfr=malloc(siz);                      \
+    rc=-1;                                \
+    while(bfr&&(rc<0||rc>=siz))           \
+    {                                     \
+        rc=vsnprintf(bfr,siz,msg,vl);     \
+        va_end(vl);                       \
+        if(rc>=0 && rc<siz)               \
+            break;                        \
+        siz+=BFR_CHUNKSIZE;               \
+        bfr=realloc(bfr,siz);             \
+    }
+
 static LOCK log_route_lock;
 
 #define MAX_LOG_ROUTES 16
@@ -106,29 +146,24 @@ DLL_EXPORT void log_close(void)
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void logmsg(char *msg,...)
 {
+    char *bfr=NULL;
+    int rc;
+    int siz=1024;
     va_list vl;
     va_start(vl,msg);
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
-    log_write(0,msg,vl); 
+    BFR_VSNPRINTF();
+    if(bfr)
+        log_write(0,bfr); 
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
-}
-
-/*-------------------------------------------------------------------*/
-/* Log message: Normal routing with vararg pointer                   */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void vlogmsg(char *msg, va_list vl)
-{
-  #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-  #endif
-    log_write(0,msg,vl); 
-  #ifdef NEED_LOGMSG_FFLUSH
-    fflush(stdout);
-  #endif
+    if(bfr)
+    {
+        free(bfr);
+    }
 }
 
 /*-------------------------------------------------------------------*/
@@ -136,15 +171,24 @@ DLL_EXPORT void vlogmsg(char *msg, va_list vl)
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void logmsgp(char *msg,...)
 {
+    char *bfr=NULL;
+    int rc;
+    int siz=1024;
     va_list vl;
     va_start(vl,msg);
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
-    log_write(1,msg,vl); 
+    BFR_VSNPRINTF();
+    if(bfr)
+        log_write(1,bfr); 
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
+    if(bfr)
+    {
+        free(bfr);
+    }
 }
  
 /*-------------------------------------------------------------------*/
@@ -152,15 +196,24 @@ DLL_EXPORT void logmsgp(char *msg,...)
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void logmsgb(char *msg,...)
 {
+    char *bfr=NULL;
+    int rc;
+    int siz=1024;
     va_list vl;
     va_start(vl,msg);
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
-    log_write(2,msg,vl); 
+    BFR_VSNPRINTF();
+    if(bfr)
+        log_write(2,bfr); 
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
+    if(bfr)
+    {
+        free(bfr);
+    }
 }
 
 /*-------------------------------------------------------------------*/
@@ -168,71 +221,40 @@ DLL_EXPORT void logmsgb(char *msg,...)
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
 {
+    char *bfr=NULL;
+    int rc;
+    int siz=1024;
     va_list vl;
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush(stdout);  
+  #endif
     if(dev->ccwtrace||dev->ccwstep) 
     { 
         logmsg("%4.4X:",dev->devnum); 
         va_start(vl,msg);
-        vlogmsg(msg,vl);
+        BFR_VSNPRINTF();
+        if(bfr)
+            log_write(2,bfr); 
     } 
+  #ifdef NEED_LOGMSG_FFLUSH
+    fflush(stdout);  
+  #endif
+    if(bfr)
+    {
+        free(bfr);
+    }
 } /* end function logdevtr */ 
 
 /* panel : 0 - No, 1 - Only, 2 - Also */
-DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
+DLL_EXPORT void log_write(int panel,char *msg)
 {
 
-/* The reason for this bit of kludgery is that calling vsnprintf() destroys
-   the vararg list pointer passed to it, and so, normally, you have to do
-   va_end()/va_start() in between calls to it. Only one problem: va_start()
-   and va_end() are only valid in the function that's actually passed a
-   variable number of arguments via the ... parameter. That's not this
-   function. Thus, we hack around the problem by saving the vararg pointer.
-   Since va_list is, per the standard, an opaque type that's not supposed to
-   be modified directly, different compilers go about this different ways,
-   and we can't depend on the portable approach (va_copy) entirely. We
-   make an honest attempt to deal with it by way of a macro in hmacros.h:
-   if va_copy is defined, use it; if not, define it in some usable way.
-   
-   The definition of BFR_CHUNKSIZE is chosen to make things efficient for
-   most messages. It's big enough to hold just about every message sent via
-   log_write(), but not too big.
-   
-   The fix to the original problem is Fish's. I just wrote this comment
-   to document why this bit of weirdness is needed, and found the original
-   problem (see PR misc/56). Willem Konynenberg pointed out that the original
-   solution to the problem was bogus, and suggested the right answer - or,
-   at least, as right as it's going to get given the current design.
-   --JRM, 4 Dec 2005 */
-
-#define  BFR_CHUNKSIZE    (256)
-
-#define  BFR_VSNPRINTF()                  \
-    bfr=malloc(siz);                      \
-    if(bfr)                               \
-        rc=vsnprintf(bfr,siz,msg,vl);     \
-    while(bfr&&(rc<0||rc>=siz))           \
-    {                                     \
-        free(bfr);                        \
-        bfr=malloc(siz+=BFR_CHUNKSIZE);   \
-        va_copy(vl,original_vl);          \
-        if(bfr)                           \
-            rc=vsnprintf(bfr,siz,msg,vl); \
-    }
-
 /* (log_write function proper starts here) */
-    char *bfr;
-    int siz=BFR_CHUNKSIZE;
-    va_list original_vl;
-    int rc=0;
     int slot;
-    va_copy(original_vl,vl);    /* (preserve original value) */
     log_route_init();
     if(panel==1)
     {
-        BFR_VSNPRINTF();
-        if(bfr&&rc>0)
-            write_pipe( logger_syslogfd[LOG_WRITE], bfr, rc );
-        free(bfr);
+        write_pipe( logger_syslogfd[LOG_WRITE], msg, strlen(msg) );
         return;
     }
     obtain_lock(&log_route_lock);
@@ -240,17 +262,11 @@ DLL_EXPORT void log_write(int panel,char *msg,va_list vl)
     release_lock(&log_route_lock);
     if(slot<0 || panel>0)
     {
-        BFR_VSNPRINTF();
-        if(bfr&&rc>0)
-            write_pipe( logger_syslogfd[LOG_WRITE], bfr, rc );
-        free(bfr);
+        write_pipe( logger_syslogfd[LOG_WRITE], msg, strlen(msg) );
         if(slot<0)
             return;
     }
-    BFR_VSNPRINTF();
-    if(bfr&&rc>0)
-        log_routes[slot].w(log_routes[slot].u,bfr);
-    free(bfr);
+    log_routes[slot].w(log_routes[slot].u,msg);
     return;
 }
 

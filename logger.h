@@ -40,7 +40,6 @@ extern int logger_syslogfd[2];
 
 /* Logging functions in logmsg.c */
 LOG_DLL_IMPORT void logmsg(char *,...);
-LOG_DLL_IMPORT void vlogmsg(char *,va_list vl);
 LOG_DLL_IMPORT void logmsgp(char *,...);
 LOG_DLL_IMPORT void logmsgb(char *,...);
 LOG_DLL_IMPORT void logdevtr(DEVBLK *dev, char *, ...);
@@ -58,7 +57,7 @@ typedef void LOG_CLOSER(void *);
 
 LOG_DLL_IMPORT int log_open(LOG_WRITER*,LOG_CLOSER*,void *);
 LOG_DLL_IMPORT void log_close(void);
-LOG_DLL_IMPORT void log_write(int,char *,va_list);
+LOG_DLL_IMPORT void log_write(int,char *);
 /* End of log routing section */
 
 /* Log routing utility */

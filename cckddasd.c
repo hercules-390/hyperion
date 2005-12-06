@@ -5376,10 +5376,34 @@ int             l;
 
     if (dev && (dev->ccwtrace||dev->ccwstep))
     {
-        logmsg("%4.4X:",dev->devnum);
+        char *bfr;
+        int  sz=1024,rc;
+        bfr=malloc(1024);
         va_start(vl,msg);
-        vlogmsg(msg, vl);
+        while(1)
+        {
+            rc=vsnprintf(bfr,sz,msg,vl);
+            if(rc<0)
+            {
+                free(bfr);
+                bfr=NULL;
+                break;
+            }
+            if(rc<sz)
+            {
+                break;
+            }
+            sz+=256;
+            bfr=realloc(bfr,sz);
+        }
+        if(bfr)
+        {
+            logmsg("%4.4X:%s",dev->devnum,bfr);
+        }
+        va_end(vl);
     }
+    /* ISW FIXME : The following code has a potential */
+    /*             for heap overrun (vsprintf)        */
     if (cckdblk.itrace)
     {
         va_start(vl,msg);
