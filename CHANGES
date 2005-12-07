@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+06 Dec 2005 Mac OS X 10.3 portability fixes - Jay Maynard
 06 Dec 2005 Accept ALRF as abbreviation for ASN_AND_LX_REUSE - Roger Bowler
 06 Dec 2005 Fix leapyear issue in sysepoch and format_tod - Jan Jaeger
 06 Dec 2005 More logmsg cleanup - Ivan Warren

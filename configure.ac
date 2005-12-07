@@ -416,12 +416,34 @@ AC_CACHE_SAVE()
 #  done it).
 
 #------------------------------------------------------------------------------
-#  PROGRAMMING NOTE: on Darwin sys/socket.h must be included before net/if.h
-#  can be #included. Thus the below two header checks are treated specially.
+#  PROGRAMMING NOTE: on Darwin sys/socket.h must be included before
+#  net/if.h, net/route.h, or netinet/in.h can be #included, and on OS X 10.3
+#  (but not 10.4) sys/types.h must be #included before sys/socket.h. Thus
+#  the below four header checks are treated specially. If we ever drop support
+#  for OS X 10.3, a lot of this cruft can be removed, not just here but
+#  anywhere we find ourselves manually including sys/types.h.
 
-AC_CHECK_HEADERS( sys/socket.h,   [hc_cv_have_sys_socket_h=yes],   [hc_cv_have_sys_socket_h=no]   )
+AC_CHECK_HEADERS( sys/socket.h,   [hc_cv_have_sys_socket_h=yes],   [hc_cv_have_sys_socket_h=no],
+[
+    #include <sys/types.h>
+]   )
 AC_CHECK_HEADERS( net/if.h,       [hc_cv_have_net_if_h=yes],       [hc_cv_have_net_if_h=no],
 [
+    #include <sys/types.h>
+    #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_HEADERS( netinet/in.h,   [hc_cv_have_netinet_in_h=yes],   [hc_cv_have_netinet_in_h=no],
+[
+    #include <sys/types.h>
+    #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_HEADERS( net/route.h,    [hc_cv_have_net_route_h=yes],    [hc_cv_have_net_route_h=no],
+[
+    #include <sys/types.h>
     #if HAVE_SYS_SOCKET_H
     #include <sys/socket.h>
     #endif
@@ -430,8 +452,6 @@ AC_CHECK_HEADERS( net/if.h,       [hc_cv_have_net_if_h=yes],       [hc_cv_have_n
 
 AC_CHECK_HEADERS( arpa/inet.h,    [hc_cv_have_arpa_inet_h=yes],    [hc_cv_have_arpa_inet_h=no]    )
 AC_CHECK_HEADERS( linux/if_tun.h, [hc_cv_have_linux_if_tun_h=yes], [hc_cv_have_linux_if_tun_h=no] )
-AC_CHECK_HEADERS( net/route.h,    [hc_cv_have_net_route_h=yes],    [hc_cv_have_net_route_h=no]    )
-AC_CHECK_HEADERS( netinet/in.h,   [hc_cv_have_netinet_in_h=yes],   [hc_cv_have_netinet_in_h=no]   )
 AC_CHECK_HEADERS( sys/ioctl.h,    [hc_cv_have_sys_ioctl_h=yes],    [hc_cv_have_sys_ioctl_h=no]    )
 AC_CHECK_HEADERS( sys/mman.h,     [hc_cv_have_sys_mman_h=yes],     [hc_cv_have_sys_mman_h=no]     )
 AC_CHECK_HEADERS( sys/mount.h,    [hc_cv_have_sys_mount_h=yes],    [hc_cv_have_sys_mount_h=no]    )
@@ -481,7 +501,13 @@ AC_CHECK_DECLS( SIGUSR1,              [hc_cv_have_sigusr1=yes],             [hc_
 AC_CHECK_DECLS( SIGUSR2,              [hc_cv_have_sigusr2=yes],             [hc_cv_have_sigusr2=no],             [#include <signal.h>] )
 AC_CHECK_DECLS( SIGPIPE,              [hc_cv_have_sigpipe=yes],             [hc_cv_have_sigpipe=no],             [#include <signal.h>] )
 AC_CHECK_DECLS( SIGBUS,               [hc_cv_have_sigbus=yes],              [hc_cv_have_sigbus=no],              [#include <signal.h>] )
-AC_CHECK_DECLS( IFNAMSIZ,             [hc_cv_have_ifnamsiz=yes],            [hc_cv_have_ifnamsiz=no],            [#include <sys/socket.h>] )
+AC_CHECK_DECLS( IFNAMSIZ,             [hc_cv_have_ifnamsiz=yes],            [hc_cv_have_ifnamsiz=no],
+[
+    #include <sys/types.h>
+    #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+    #endif
+] )
 AC_CHECK_DECLS( LOGIN_NAME_MAX,       [hc_cv_have_login_name_max=yes],      [hc_cv_have_login_name_max=no],      [#include <limits.h>] )
 AC_CHECK_DECLS( _SC_NPROCESSORS_CONF, [hc_cv_have_sc_nprocessors_conf=yes], [hc_cv_have_sc_nprocessors_conf=no], [#include <unistd.h>] )
 AC_CHECK_DECLS( _SC_NPROCESSORS_ONLN, [hc_cv_have_sc_nprocessors_onln=yes], [hc_cv_have_sc_nprocessors_onln=no], [#include <unistd.h>] )
@@ -503,12 +529,48 @@ AC_CACHE_SAVE()
 AC_CHECK_TYPES( u_int8_t,   [hc_cv_have_u_int8_t=yes],   [hc_cv_have_u_int8_t=no]                              )
 AC_CHECK_TYPES( useconds_t, [hc_cv_have_useconds_t=yes], [hc_cv_have_useconds_t=no]                            )
 AC_CHECK_TYPES( id_t,       [hc_cv_have_id_t=yes],       [hc_cv_have_id_t=no]                                  )
-AC_CHECK_TYPES( u_char,     [hc_cv_have_u_char=yes],     [hc_cv_have_u_char=no],     [#include <sys/socket.h>] )
-AC_CHECK_TYPES( u_short,    [hc_cv_have_u_short=yes],    [hc_cv_have_u_short=no],    [#include <sys/socket.h>] )
-AC_CHECK_TYPES( u_int,      [hc_cv_have_u_int=yes],      [hc_cv_have_u_int=no],      [#include <sys/socket.h>] )
-AC_CHECK_TYPES( u_long,     [hc_cv_have_u_long=yes],     [hc_cv_have_u_long=no],     [#include <sys/socket.h>] )
-AC_CHECK_TYPES( in_addr_t,  [hc_cv_have_in_addr_t=yes],  [hc_cv_have_in_addr_t=no],  [#include <netinet/in.h>] )
-AC_CHECK_TYPES( socklen_t,  [hc_cv_have_socklen_t=yes],  [hc_cv_have_socklen_t=no],  [#include <sys/socket.h>] )
+AC_CHECK_TYPES( u_char,     [hc_cv_have_u_char=yes],     [hc_cv_have_u_char=no],
+[
+    #include <sys/types.h>
+    #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_TYPES( u_short,    [hc_cv_have_u_short=yes],    [hc_cv_have_u_short=no],
+[
+    #include <sys/types.h>
+    #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_TYPES( u_int,      [hc_cv_have_u_int=yes],      [hc_cv_have_u_int=no],
+[
+    #include <sys/types.h>
+    #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_TYPES( u_long,     [hc_cv_have_u_long=yes],     [hc_cv_have_u_long=no],
+[
+    #include <sys/types.h>
+    #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_TYPES( in_addr_t,  [hc_cv_have_in_addr_t=yes],  [hc_cv_have_in_addr_t=no],
+[
+    #include <sys/types.h>
+    #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_TYPES( socklen_t,  [hc_cv_have_socklen_t=yes],  [hc_cv_have_socklen_t=no],
+[
+    #include <sys/types.h>
+    #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+    #endif
+] )
 
 AC_CACHE_SAVE()
 
@@ -602,7 +664,13 @@ AC_CACHE_SAVE()
 AC_CHECK_MEMBERS( [struct in_addr.s_addr],
                   [hc_cv_have_in_addr_s_addr=yes  ],
                   [hc_cv_have_in_addr_s_addr=no   ],
-                  [#include <netinet/in.h>        ] )
+[
+#include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#include <netinet/in.h>
+] )
 
 AC_CHECK_MEMBERS( [struct sigaction.sa_sigaction],
                   [hc_cv_have_sa_sigaction=yes  ],
