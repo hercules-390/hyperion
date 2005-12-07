@@ -1,7 +1,6 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
-06 Dec 2005 Mac OS X 10.3 portability fixes - Jay Maynard
 06 Dec 2005 Accept ALRF as abbreviation for ASN_AND_LX_REUSE - Roger Bowler
 06 Dec 2005 Fix leapyear issue in sysepoch and format_tod - Jan Jaeger
 06 Dec 2005 More logmsg cleanup - Ivan Warren
@@ -83,6 +82,7 @@
 25 Oct 2005 Reinstate SIGP code regressed by enhancements of 23 Oct - Roger Bowler
 24 Oct 2005 Activate FEATURE_DAT_ENHANCEMENT_FACILITY_2 (LPTEA) - Roger Bowler
 24 Oct 2005 LPTEA condition code setting - Roger Bowler
+24 Oct 2005 Don't set iodelay to 800 if OSTAILOR LINUX - Greg Smith
 23 Oct 2005 SIGP/IPL enhancements: add support for new Conditional Emergency
             and Sense Running State orders, add support for Set Architecture
             order parm code 2 and other associated fixes to SIGP processing
