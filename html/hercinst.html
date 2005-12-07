@@ -52,7 +52,7 @@ Hercules that does <i>not</i> require Cygwin), Fish has instructions on his
 
 <ol>
 <li>Download the distribution file
-<a href="hercules-3.02.tar.gz">hercules-3.02.tar.gz</a>
+<a href="hercules-3.03.tar.gz">hercules-3.03.tar.gz</a>
 <p>
 <em>Notes:</em>
 <ol>
@@ -65,8 +65,8 @@ Hercules that does <i>not</i> require Cygwin), Fish has instructions on his
 </ol>
 <p>
 <li>Use these commands to unzip the distribution file:
-<pre>tar xvzf ../hercules-3.02.tar.gz
-cd hercules-3.02</pre>
+<pre>tar xvzf ../hercules-3.03.tar.gz
+cd hercules-3.03</pre>
 
 <li>Verify you have all of the correct versions of all of the
 required packages installed:
@@ -93,7 +93,7 @@ required packages installed:
 </ol>
 
 <em>Important:</em>
-You must use the egcs compiler and the glibc2 library.
+You must use at least version 2.96 of the gcc compiler and the glibc2 library.
 Refer to the <a href="hercfaq.html#3.04">
 Hercules Frequently-Asked Questions</a> page for required
 compiler and other software levels.
@@ -102,7 +102,7 @@ compiler and other software levels.
 <ol>
 <li>Download the RPM file you want:
 <ul>
-<li><a href="hercules-3.02-1.i686.rpm">hercules-3.02-1.i686.rpm</a>: Intel
+<li><a href="hercules-3.03-1.i686.rpm">hercules-3.03-1.i686.rpm</a>: Intel
 </ul>
 <li>Install the RPM:
 <br><code>rpm -Uvh</code> <i>RPMfile</i>
@@ -115,8 +115,7 @@ and the IPLable card deck for the ZZSA standalone utility will be placed in
 
 <h3>Installing Debian packages:</h3>
 
-Debian packages are available for "woody" and later releases.  As of
-this writing, "woody" is not yet released.
+Debian packages are available for "woody" and later releases.
 
 <ul>
 <li>Using apt: <code>apt-get install hercules</code>
@@ -132,16 +131,22 @@ this writing, "woody" is not yet released.
 
 <ol>
 <li>Download the compressed disk image: <a
-href="hercules-3.02.dmg">hercules-3.02.dmg</a>
+href="hercules-3.03-panther.dmg">hercules-3.03-panther.dmg</a> if you're
+running OS X version 10.3, or <a
+href="hercules-3.03-tiger.dmg">hercules-3.03-tiger.dmg</a> if you're running
+version 10.4 or later.
 <li>Mount the image by double-clicking on it in the Finder.
 Your web browser may have done that for you already.
 <li>Installation and use instructions are in the
 file <code>OS&nbsp;X&nbsp;ReadMe.rtf</code>.
 <li>If you want to use CTC networking on your Hercules system, you will need
-to install the supplied Tunnel driver.
+to install the supplied Tunnel driver. Note that, at this writing, the
+Panther version of the driver works fine, but the Tiger version will hang
+at Hercules shutdown, and you must reboot in order to clear the problem.
+Unfortunately, the Panther driver will not work on Tiger at all.
 </ol>
 
-<h3>Installing on Windows:</h3>
+<h3>Installing on Windows with Cygwin:</h3>
 <ol>
 <li>You must first install the Cygwin package.
 Download the 'setup.exe' program from <a href="http://www.cygwin.com">the Cygwin
@@ -151,28 +156,20 @@ labeled "<a href="http://www.cygwin.com/setup.exe">Install or update now!
 (using setup.exe)</a>" and select "Save Target As..." and then run it after
 it's been downloaded) If it's not preselected for you,
 select the libintl-2 package when you're presented with a list of packages
-to install. (NOTE: Hercules version 3.02 was built with version 1.5.5 
+to install. (NOTE: Hercules version 3.03 was built with version 1.5.5 
 of Cygwin, and may not work with other versions, as the
 Cygwin library tends to have subtle incompatibilities from version
-to version that Herucles seems to stress.)
+to version that Hercules seems to stress.)
 
 <li>Download the self-extracting Windows archive: 
 <ul>
-<li><a href="hercules302-i786f.exe">hercules302-i786f.exe</a>: Pentium 4,
+<li><a href="hercules-3.03-cygwin-p4.exe">hercules3.03-cygwin-p4.exe</a>: Pentium 4,
 optimized (Fish) threads version
-<li><a href="hercules302-i686f.exe">hercules302-i686f.exe</a>: Pentium
+<li><a href="hercules-3.03-cygwin-i686.exe">hercules3.03-cygwin-i686.exe</a>: Pentium
 Pro/Pentium II and above, optimized (Fish) threads version
-<li><a href="hercules302-i586f.exe">hercules302-i586f.exe</a>: Pentium,
+<li><a href="hercules-3.03-cygwin-i586.exe">hercules3.03-cygwin-i586.exe</a>: Pentium,
 optimized (Fish) threads version
-<li><a href="hercules302-i786p.exe">hercules302-i786p.exe</a>: Pentium 4,
-standard POSIX threads version
-<li><a href="hercules302-i686p.exe">hercules302-i686p.exe</a>: Pentium
-Pro/Pentium II and above, standard POSIX threads version
-<li><a href="hercules302-i586p.exe">hercules302-i586p.exe</a>: Pentium,
-standard POSIX threads version
 </ul>
-The Fish threads versions are recommended unless you encounter strange
-problems.
 <li>Run one of the above self-extracting archives to install the Hercules
 executables on your system. Also please note that Hercules has several file
 paths compiled into the code, and so it is best to install the package
@@ -435,7 +432,7 @@ Please see our <a href="hercsupp.html">Technical Support</a> web page.
 </A>
 <small>
 <P>
-Last updated 24 Oct 2005
+Last updated 7 December 2005
 </P>
 </small>
 </center>
