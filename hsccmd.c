@@ -670,9 +670,9 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
 ///////////////////////////////////////////////////////////////////////
 /* format_tod - generate displayable date from TOD value */
 /* always uses epoch of 1900 */
-void format_tod(unsigned long long tod, char *buf)
+char * format_tod(U64 tod, char *buf)
 {
-    int hours, minutes, seconds, microseconds, days, years, leapyear;
+    int leapyear, years, days, hours, minutes, seconds, microseconds;
 
     if(tod > 365*24*60*60*16000000LL)
     {
@@ -687,6 +687,7 @@ void format_tod(unsigned long long tod, char *buf)
         }
         else
             tod %= 365*24*60*60*16000000LL;
+
         years += leapyear;
     }
     else
@@ -701,9 +702,10 @@ void format_tod(unsigned long long tod, char *buf)
     seconds = tod / 16000000LL;
     microseconds = (tod % 16000000LL) / 16;
     
-    
     sprintf(buf,"%4d.%03d %02d:%02d:%02d.%06d",
         1900+years,days+1,hours,minutes,seconds,microseconds);
+
+    return buf;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -728,30 +730,30 @@ char clock_buf[30];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    format_tod((U64)TOD_CLOCK(regs),clock_buf);
     logmsg( _("HHCPN028I tod = %16.16llX    %s\n"),
-               (U64)TOD_CLOCK(regs) << 8,clock_buf);
-    format_tod((U64)tod_clock,clock_buf);
+               (U64)TOD_CLOCK(regs) << 8,
+               format_tod((U64)TOD_CLOCK(regs),clock_buf));
     logmsg( _("          h/w = %16.16llX    %s\n"),
-               (U64)tod_clock << 8,clock_buf);
+               (U64)tod_clock << 8,
+               format_tod((U64)tod_clock,clock_buf));
     logmsg( _("          off = %16.16llX\n"),
                 (S64)regs->tod_epoch << 8);
-    format_tod((U64)regs->clkc,clock_buf);
     logmsg( _("          ckc = %16.16llX    %s\n"),
-               (U64)regs->clkc << 8,clock_buf);
+               (U64)regs->clkc << 8,
+               format_tod((U64)regs->clkc,clock_buf));
     logmsg( _("          cpt = %16.16llX\n"), (U64)regs->ptimer );
 
     if(regs->sie_active)
     {
-        format_tod((U64)TOD_CLOCK(regs->guestregs),clock_buf);
         logmsg( _("         vtod = %16.16llX    %s\n"),
-                   (U64)TOD_CLOCK(regs->guestregs) << 8,clock_buf);
+                   (U64)TOD_CLOCK(regs->guestregs) << 8,
+                   format_tod((U64)TOD_CLOCK(regs->guestregs),clock_buf));
         logmsg( _("         voff = %16.16llX\n"),
                    (S64)regs->guestregs->tod_epoch << 8);
-        format_tod((U64)regs->guestregs->clkc,clock_buf);
         logmsg( _("         vckc = %16.16llX    %s\n"), 
-                   (U64)regs->guestregs->clkc << 8,clock_buf);
-        logmsg( "         vcpt = %16.16llX\n", (U64)regs->guestregs->ptimer );
+                   (U64)regs->guestregs->clkc << 8,
+                   format_tod((U64)regs->guestregs->clkc,clock_buf));
+        logmsg( _("         vcpt = %16.16llX\n"),(U64)regs->guestregs->ptimer);
     }
 
     if (regs->arch_mode == ARCH_370)
