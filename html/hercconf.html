@@ -63,6 +63,8 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>   no
 
+    <a href="#DEFSYM">DEFSYM</a>   TAPEDIR "$(HOME)/tapes"
+
 
     #
     #   <a href="#device_definitions">Device definitions</a>
@@ -98,7 +100,7 @@ a real System/390.  The configuration file is an ASCII text file.
     0580      <a href="#3420">3420</a>    ickdsf.ipl
     0581      <a href="#3420">3420</a>    /dev/nst0   # SCSI
     0582      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
-    0583-0587 <a href="#3420">3420</a>    * maxsizeM=170 eotmargin=131072
+    0583-0587 <a href="#3420">3420</a>    $(TAPEDIR)/volumes.$(CUU) maxsizeM=170 eotmargin=131072
 </pre></code>
 </td></tr></table>
 </blockquote></blockquote>
@@ -183,6 +185,24 @@ a real System/390.  The configuration file is an ASCII text file.
     stored by the STIDP instruction.
     The default version code is FD when ARCHMODE S/370 or ARCHMODE ESA/390
     is specified.  For the z/Architecture mode, 00 is used as default.
+    <p>
+
+<a name="DEFSYM">
+<dt><code>DEFSYM <em>symbol</em> <em>value</em></code>
+<dd><p>
+    Defines symbol <em>symbol</em> as to contain value <em>value</em>. The
+    symbol can then be the object of a substitution later in the configuration
+    file or for panel commands. If <em>value</em> contains blanks or spaces, then
+    it should be enclosed in double quotation marks ("). See
+    <a href="#subs">substitutions</a> for a more in-depth discussion
+    on this feature. Substitution is available even if configuration statements,
+    meaning it is possible to perform substitution in the <em>DEFSYM</em> statement itself.
+    However, symbols are always defined as the last step in the process, so attempting
+    to self define a symbol will result in an empty string:
+    <code><pre>
+    DEFSYM FOO $(FOO)
+    </pre></code>
+    Will set symbol FOO to ""
     <p>
 
 <a name="LPARNAME">
@@ -545,10 +565,10 @@ a real System/390.  The configuration file is an ASCII text file.
     bypass a bug in the <b>Linux/390</b> and <b>zLinux</b> <code>dasd.c</code>
     device driver. The problem is more apt to happen under Hercules than
     on a real machine because we may present an I/O interrupt sooner than a
-    real machine.  This problem is being pursued with IBM linux. Meanwhile,
-    if <code><a href="#OSTAILOR">OSTAILOR LINUX</a></code> is specified,
-    then this value defaults to <em>800</em> otherwise the value defaults
-    to <em>0</em>.
+    real machine.  This problem is being pursued with IBM linux. <p /><em>NOTE : At this time,
+    specifying <code><a href="#OSTAILOR">OSTAILOR LINUX</a></code> no longer sets IODELAY 
+    to 800 since the problem described above is no longer present in recent versions of
+    the linux kernel.</em>
     <p>
 
 <a name="CODEPAGE">
@@ -619,6 +639,68 @@ a real System/390.  The configuration file is an ASCII text file.
     parameter statement.
 <p>
 
+<hr><!-- ---------------------------------------------------------------------------- -->
+
+<a name="subs">
+<h4>Symbol substitutions</h4></a>
+<dl> <!-- Begine substitution -->
+<dt><dd>
+<p><br>
+<dd><p>
+    In configuration and device statements, as well as in panel commands, symbols may be substituted for text.
+<dt><h4>syntax</h4>
+<dd><p>
+    To substitute symbol <em>symbol</em> with its contents, the symbol should be enclosed
+    within parenthesis and preceded by a $ sign. For example, if symbol <em>FOO</em> contains
+    the text string <em>&quot;BAR&quot;</em> then <em>$(FOO)</em> will be substituted with the
+    string <em>&quot;BAR&quot</em>;. Symbol names are case sensitive.
+<dt><h4>Example</h4>
+<dd><p>
+    <code><pre>
+...
+DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
+...
+0380 3420 $(TAPEDIR)/scratch.aws
+...
+    </pre></code>
+    In this example, device 0380 will be a 3420 loaded with the AWS tape file in /home/hercules/tapes/scratch.aws
+<dt><h4>Special symbols</h4>
+<dl> <!-- Begine Special -->
+    <dt>
+    <h4>Device group symbols</h4>
+    <dd><p>
+        When multiple devices are defined with a single device definition record, then the symbols<P>
+        <TABLE BORDER=0>
+        <TR><TD><LI>CUU</TD><TD>: 3 digits device number, upper case hexadecimal digits</TD></TR>
+        <TR><TD><LI>CCUU</TD><TD>: 4 digits device number, upper case hexadecimal digits</TD></TR>
+        <TR><TD><LI>cuu</TD><TD>: 3 digits device number, lower case hexadecimal digits</TD></TR>
+        <TR><TD><LI>ccuu</TD><TD>: 4 digits device number, lower case hexadecimal digits</TD></TR>
+        </TABLE>
+        are defined to contain for each device the relevant device address. For example :
+<code><pre>
+0200,0201 3340 /home/hercules/dasds/myvols.$(CUU)
+</pre></code>
+        Will define 2 3340 packs, with device 0200 being loaded with the file myvols.200 and
+        device 0201 defined with myvols.201.
+    <dt><h4>Environment variables</h4>
+    <dd><p>
+        If a symbol is not explicitly defined by a DEFSYM statement and an environment
+        variable by the same name exists, the string contents of that environment variable
+        will be used for substitution.
+    <dt><h4>Undefined symbols</h4>
+    <dd><p>
+        If a symbol is not defined by an explicit DEFSYM, is not an automatically generated symbol
+        or is not an environment variable, an empty string will be substituted.
+    <dt><h4>Escaping substitution, recursion</h4>
+    <dd><p>
+        To be able to specify the '$(' string without incuring substitution, an additional '$' sign
+        should be used. For example, $$(FOO) will not be substituted. If substitution is required but
+        the text is to contain a '$' sign as the very previous character, then $$$(FOO) should be
+        specified (if symbol FOO contains &quot;BAR&quot;, then $$(FOO) will remain &quot;$$(FOO)&quot; while $$$(FOO)
+        will be become &quot;$BAR&quot;).<p>
+        Substitution is NOT recursive (only one substitution pass is made).
+    </dl> <!-- End Special -->
+</dl> <!-- End substitutions -->
 <hr><!-- ---------------------------------------------------------------------------- -->
 
 <a name="process_and_thread_priorities">
@@ -831,6 +913,10 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
     See <em>devnum</em> immediately below for an explanation of how each device number is specified.
+
+    <p />
+    The 4 special subtitution symbols CUU, CCUU, cuu and ccuu are also defined for each
+    device in a device group. See <a href="#subs">substitutions</a> for details.
     <p>
 
 <dt><code><em>devnum</em></code>
