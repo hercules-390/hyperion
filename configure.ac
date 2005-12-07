@@ -1311,7 +1311,7 @@ AC_ARG_ENABLE( custom,
     ]
 )
 
-if test "hc_cv_build_hercifc" = "yes"; then
+if test "$hc_cv_build_hercifc" = "yes"; then
 
     AC_ARG_ENABLE( setuid-hercifc,
 
