@@ -14,7 +14,8 @@
   XPNDSIZE  0                   # Expanded storage size in megabytes
   NUMCPU    1                   # Number of CPUs
 # NUMVEC    1                   # Number of Vector Processors
-  ARCHMODE  ESA/390             # Architecture mode S/370, ESA/390 or ESAME
+  ARCHMODE  ESA/390             # Architecture mode S/370, ESA/390 or z/Arch
+  ALRF      DISABLE             # ASN-and-LX-Reuse facility
   ECPSVM    NO                  # VM Assist : NO or Level (20 recommended)
 
 #------------------------------------------------------------------------------
