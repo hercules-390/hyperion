@@ -9,13 +9,26 @@ Hercules Version 3: Release Notes and Known Issues</TITLE>
 <h1>Hercules Version 3: Release Notes and Known Issues</h1>
 <hr noshade>
 <h2>Release notes for release 3.03</h2>
-<p>Release date: 11 December 2005z
+<p>Release date: 11 December 2005
 <dl>
 <dt>New device types 1052-C and 3215-C
-<dd><p>
-These new integrated Console printer-keyboard is emulated on the
-hercules console. Commands are send to the console by means of a command character.
-(default '/', thus a logon command is send by /logon)
+<dd>
+<p>The new integrated console printer-keyboard is emulated on the
+hercules console. Commands are sent to the console by means of a command character.
+(default '/', thus a logon command is sent by /logon)</p>
+<dt>Message Security Assist
+<dd>
+<p>Starting from release 3.03 the glibcrypt library is no longer needed.</p>
+</dl>
+<h2>Release notes for release 3.02</h2>
+<p>Release date: 11 December 2004
+<dl>
+<dt>ASN-and-LX-reuse facility
+<dd>
+<p>This is a new feature of z/Architecture which can cause problems with
+certain versions of operating systems running in ARCHLVL=2 mode without
+the so-called "Driver 55" fixes. To avoid such problems, specify
+<code>ASN_AND_LX_REUSE DISABLE</code> in the configuration file. </p>
 </dl>
 <h2>Release notes for release 3.01</h2>
 <p>Release date: 30 November 2003
@@ -23,34 +36,56 @@ hercules console. Commands are send to the console by means of a command charact
 <dt>Library modules and HTTP documents default directories
 <dd><p>
 An error in the 3.00 configuration script caused many users to have to
-override the defaule modules and HTTP documents directory in the
+override the default modules and HTTP documents directory in the
 Hercules configuration file, or by setting an environment variable. This
 error has been corrected. Hercules also now reports the actual directory
 that it uses by default for these files at startup time. If you specified
 the MODPATH or HTTPROOT configuration file statements because you
-encountered problems, you should examine the mesages printed at startup to
+encountered problems, you should examine the messages printed at startup to
 see if the default directories are now correct, and remove the statements
-if so.
+if so.</p>
 <p>In general, MODPATH and HTTPROOT should not have to be specified
-except in unusual circumstances.
+except in unusual circumstances.</p>
 <dt>Windows default directories
-<dd>In conjunction with the fix above, the default directories of the
+<dd>
+<p>In conjunction with the fix above, the default directories of the
 Windows distributed binaries have been changed. The new directories are
 under C:\cygwin\usr\local (which is the same as /usr/local under the Cygwin
 environment). No action is needed unless you have specified the MODPATH or
-HTTPROOT configuration file entries; if so, see the previous note.
+HTTPROOT configuration file entries; if so, see the previous note.</p>
+<dt>Message Security Assist
+<dd>
+<p>Support for z990 crypto instructions is conditional on the presence of the
+glibcrypt library.
+When Hercules is BUILT, the development files for glibcrypt should be available.
+When hercules is RUN, the runtime files for glibcrypt should be installed.</p>
+<p>Depending on the level of glibcrypt used to *build* hercules, the associated
+level of glibcrypt should also be present on the target machine. On systems
+supporting shared library versioning, multiple levels of the glibcrypt
+runtime libraries can be installed simultaneously, ensuring availability
+of the z990 crypto instructions, regardless of the level of glibcrypt with
+which hercules was initially built.</p>
+<dt>CTC and LCS device numbers
+<dd>
+<p>CTC and LCS devices now <i>MUST</i> specify ALL addresses on the configuration
+statement.
+Previously (i.e. with version 3.00), only the first (even numbered) device
+needed to be defined and Hercules would automatically define the odd numbered
+device for you. Starting with Hercules version 3.01 however, you now need
+to define BOTH devices, just like you did with versions prior to 3.00.
+Once again, starting with version 3.01, you **MUST** define BOTH DEVICES.</p>
 </dl>
 <h2>Release notes for release 3.00</h2>
 <p>Release date: 3 October 2003
 <dl>
 <dt>CTCI device changes
-<dd><p>
+<dd>
 <ul>
 <li>The CTCI-W32 protocol is deprecated. You should use the CTCI
 protocol instead.</li>
 <li>The VMNET protocol is also deprecated. Not even its author uses it any
 more. Every system on which Hercules is now prebuilt has the TUN/TAP
-driver functionality available inone form or another, and it's much more
+driver functionality available in one form or another, and it's much more
 robust.</li>
 </ul>
 Both of these will go away in a future release.</p>
@@ -91,11 +126,11 @@ and the AP/MP control file is used to build the CP nucleus and
 <code>NUMCPU</code> is set to more than 1 in the <code>hercules.cnf</code>
 file, any of LOK001, LOK003 or other abends will occur. This occurs because
 the Hercules ECPS:VM CP Assist implementation is not MP safe, and
-particularly, attemps VM dispatching without holding necessary AP or MP
+particularly, attempts VM dispatching without holding necessary AP or MP
 locks.</p>
 <dt>Memory allocation on Windows
 <dd>
-<p>Due to the change in Hercules' "mainstor" memory allocation technique to
+<p>Due to the change in the "mainstor" memory allocation technique used by Hercules to
 address a "double memory consumption" bug in Cygwin's malloc implementation,
 some Windows Hercules users may experience an "out of memory" error whenever
 Hercules is started with a large <code>MAINSIZE</code> configuration file
@@ -140,6 +175,6 @@ If you have a question about Hercules, see the
 </center>
 
 <small>
-<p>Last updated 30 November 2003
+<p>Last updated 07 December 2005
 </BODY>
 </HTML>
