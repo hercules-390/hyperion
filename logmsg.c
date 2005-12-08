@@ -40,6 +40,7 @@
     rc=-1;                                \
     while(bfr&&(rc<0||rc>=siz))           \
     {                                     \
+        va_start(vl,msg);                 \
         rc=vsnprintf(bfr,siz,msg,vl);     \
         va_end(vl);                       \
         if(rc>=0 && rc<siz)               \
@@ -150,7 +151,6 @@ DLL_EXPORT void logmsg(char *msg,...)
     int rc;
     int siz=1024;
     va_list vl;
-    va_start(vl,msg);
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
@@ -175,7 +175,6 @@ DLL_EXPORT void logmsgp(char *msg,...)
     int rc;
     int siz=1024;
     va_list vl;
-    va_start(vl,msg);
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
@@ -200,7 +199,6 @@ DLL_EXPORT void logmsgb(char *msg,...)
     int rc;
     int siz=1024;
     va_list vl;
-    va_start(vl,msg);
   #ifdef NEED_LOGMSG_FFLUSH
     fflush(stdout);  
   #endif
@@ -231,7 +229,6 @@ DLL_EXPORT void logdevtr(DEVBLK *dev,char *msg,...)
     if(dev->ccwtrace||dev->ccwstep) 
     { 
         logmsg("%4.4X:",dev->devnum); 
-        va_start(vl,msg);
         BFR_VSNPRINTF();
         if(bfr)
             log_write(2,bfr); 
