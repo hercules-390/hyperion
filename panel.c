@@ -103,9 +103,11 @@ static int    NPcpunum_valid,
 static U16    NPcpunum;
 static double NPcpupct;
 static int    NPpswmode;
+static int    NPpswzhost;
 static QWORD  NPpsw;
 static char   NPpswstate[16];
 static int    NPregmode;
+static int    NPregzhost;
 static U64    NPregs64[16];
 static U32    NPregs[16];
 static U32    NPaddress;
@@ -382,6 +384,11 @@ static void NP_screen_redraw (REGS *regs)
     NPdata_valid     = NPmips_valid     = NPsios_valid =
     NPdevices_valid  = NPcpugraph_valid = 0;
 
+#if defined(_FEATURE_SIE)
+    if(regs->sie_active)
+        regs = regs->guestregs;
+#endif /*defined(_FEATURE_SIE)*/
+
     /*
      * Draw the static parts of the NP screen
      */
@@ -418,13 +425,27 @@ static void NP_screen_redraw (REGS *regs)
 
     /* 4th line - PSW */
     NPpswmode = (regs->arch_mode == ARCH_900);
-    set_pos (4, NPpswmode ? 19 : 10);
+    NPpswzhost =
+#if defined(_FEATURE_SIE)
+                 !NPpswmode && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900;
+#else
+                 0;
+#endif /*defined(_FEATURE_SIE)*/
+    set_pos (4, NPpswmode || NPpswzhost ? 19 : 10);
     draw_text ("PSW");
 
     /* Lines 6 .. 13 : register area */
     set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
     NPregmode = (regs->arch_mode == ARCH_900 && (NPregdisp == 0 || NPregdisp == 1));
-    if (NPregmode == 1)
+    NPregzhost =
+#if defined(_FEATURE_SIE)
+                 (regs->arch_mode != ARCH_900
+               && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900
+               && (NPregdisp == 0 || NPregdisp == 1));
+#else
+                 0;
+#endif /*defined(_FEATURE_SIE)*/
+    if (NPregmode == 1 || NPregzhost)
     {
         for (i = 0; i < 8; i++)
         {
@@ -515,7 +536,7 @@ static void NP_screen_redraw (REGS *regs)
         fill_text ('-', 38);
         set_pos (line++, 1);
         draw_text ("CPU");
-        for (i = 0; i < sysblk.numcpu; i++)
+        for (i = 0; i < HI_CPU; i++)
         {
             sprintf (buf, "%2d  ", i);
             set_pos (line++, 1);
@@ -553,6 +574,7 @@ static
 void NP_update(REGS *regs)
 {
     int     i, n;
+    int     mode, zhost;
     QWORD   curpsw;
     U32     addr, aaddr;
     DEVBLK *dev;
@@ -624,17 +646,26 @@ void NP_update(REGS *regs)
         regs = regs->guestregs;
 #endif /*defined(_FEATURE_SIE)*/
 
+    mode = (regs->arch_mode == ARCH_900);
+    zhost =
+#if defined(_FEATURE_SIE)
+            !mode && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900;
+#else
+            0;
+#endif
+
     /* Redraw the psw template if the mode changed */
-    if (NPpswmode != (regs->arch_mode == ARCH_900))
+    if (NPpswmode != mode || NPpswzhost != zhost)
     {
-        NPpswmode = (regs->arch_mode == ARCH_900);
+        NPpswmode = mode;
+        NPpswzhost = zhost;
         NPpsw_valid = NPpswstate_valid = 0;
         set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
         set_pos (3, 1);
         fill_text (' ',38);
         set_pos (4, 1);
         fill_text (' ', 38);
-        set_pos (4, NPpswmode ? 19 : 10);
+        set_pos (4, NPpswmode || NPpswzhost ? 19 : 10);
         draw_text ("PSW");
     }
 
@@ -645,11 +676,19 @@ void NP_update(REGS *regs)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (3, 3);
-        if (regs->arch_mode == ARCH_900)
+        if (mode)
         {
             draw_dw (fetch_dw(curpsw));
             set_pos (3, 22);
             draw_dw (fetch_dw(curpsw+8));
+        }
+        else if (zhost)
+        {
+            draw_fw (fetch_fw(curpsw));
+            draw_fw (0);
+            set_pos (3, 22);
+            draw_fw (fetch_fw(curpsw+4) & 0x80000000 ? 0x80000000 : 0);
+            draw_fw (fetch_fw(curpsw+4) & 0x7fffffff);
         }
         else
         {
@@ -670,25 +709,33 @@ void NP_update(REGS *regs)
                   regs->checkstop                    ? 'C' : '.',
                   PROBSTATE(&regs->psw)              ? 'P' : '.',
                   SIE_MODE(regs)                     ? 'S' : '.',
-                  regs->arch_mode == ARCH_900        ? 'Z' : '.');
+                  mode                               ? 'Z' : '.');
     if (!NPpswstate_valid || strcmp(NPpswstate, buf))
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK );
-        set_pos (regs->arch_mode == ARCH_900 ? 4 : 3, 30);
+        set_pos (mode || zhost ? 4 : 3, 30);
         draw_text (buf);
         NPpswstate_valid = 1;
         strcpy (NPpswstate, buf);
     }
 
     /* Redraw the register template if the regmode switched */
-    if (NPregmode != (regs->arch_mode == ARCH_900
-                   && (NPregdisp == 0 || NPregdisp == 1)))
+    mode = (regs->arch_mode == ARCH_900 && (NPregdisp == 0 || NPregdisp == 1));
+    zhost =
+#if defined(_FEATURE_SIE)
+            (regs->arch_mode != ARCH_900
+          && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900
+          && (NPregdisp == 0 || NPregdisp == 1));
+#else
+                 0;
+#endif /*defined(_FEATURE_SIE)*/
+    if (NPregmode != mode || NPregzhost != zhost)
     {
-        NPregmode = (regs->arch_mode == ARCH_900
-                  && (NPregdisp == 0 || NPregdisp == 1));
+        NPregmode = mode;
+        NPregzhost = zhost;
         NPregs_valid = 0;
         set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
-        if (NPregmode == 1)
+        if (NPregmode || NPregzhost)
         {
             /* 64 bit registers */
             for (i = 0; i < 8; i++)
@@ -724,7 +771,7 @@ void NP_update(REGS *regs)
 
     /* Display register values */
     set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK );
-    if (NPregmode == 1)
+    if (NPregmode)
     {
         /* 64 bit registers */
         for (i = 0; i < 16; i++)
@@ -744,6 +791,33 @@ void NP_update(REGS *regs)
                     set_pos (6 + i/2, 3 + (i%2)*19);
                     draw_dw (regs->CR_G(i));
                     NPregs64[i] = regs->CR_G(i);
+                }
+                break;
+            }
+        }
+    }
+    else if (NPregzhost)
+    {
+        /* 32 bit registers on 64 bit template */
+        for (i = 0; i < 16; i++)
+        {
+            switch (NPregdisp) {
+            case 0:
+                if (!NPregs_valid || NPregs[i] != regs->GR_L(i))
+                {
+                    set_pos (6 + i/2, 3 + (i%2)*19);
+                    draw_fw (0);
+                    draw_fw (regs->GR_L(i));
+                    NPregs[i] = regs->GR_L(i);
+                }
+                break;
+            case 1:
+                if (!NPregs_valid || NPregs[i] != regs->CR_L(i))
+                {
+                    set_pos (6 + i/2, 3 + (i%2)*19);
+                    draw_fw (0);
+                    draw_fw (regs->CR_L(i));
+                    NPregs[i] = regs->CR_L(i);
                 }
                 break;
             }
@@ -883,7 +957,7 @@ void NP_update(REGS *regs)
     /* Optional cpu graph */
     if (NPcpugraph)
     {
-        for (i = 0; i < sysblk.numcpu; i++)
+        for (i = 0; i < HI_CPU; i++)
         {
             if (!IS_CPU_ONLINE(i))
             {
