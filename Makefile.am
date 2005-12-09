@@ -310,7 +310,7 @@ endif
 
   libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 
-  libhercu_la_LIBADD  = $(LDADD) libhercs.la $(LIBFTHREADS) $(LIBICONV)
+  libhercu_la_LIBADD  = $(LDADD) libhercs.la $(LIBFTHREADS)
 
 #
 # Core Hercules (shared) library
