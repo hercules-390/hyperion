@@ -1732,7 +1732,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
                 (
                     stderr,
 
-                    _( "HHCCFnnnS Error in %s line %d: Invalid HTTP_SERVER_CONNECT_KLUDGE value: %s\n" )
+                    _( "HHCCF066S Error in %s line %d: Invalid HTTP_SERVER_CONNECT_KLUDGE value: %s\n" )
 
                     ,fname
                     ,stmt
