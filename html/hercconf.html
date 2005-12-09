@@ -557,7 +557,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="IODELAY">
-<dt><code>IODELAY <em>usec</em></code>
+<dt><code>IODELAY <em>usec</em> [NOWARN]</code>
 <dd><p>
     specifies the amount of time (in microseconds) to wait after
     an I/O interrupt is ready to be set pending.  This value can also be
@@ -565,10 +565,14 @@ a real System/390.  The configuration file is an ASCII text file.
     bypass a bug in the <b>Linux/390</b> and <b>zLinux</b> <code>dasd.c</code>
     device driver. The problem is more apt to happen under Hercules than
     on a real machine because we may present an I/O interrupt sooner than a
-    real machine.  This problem is being pursued with IBM linux. <p /><em>NOTE : At this time,
-    specifying <code><a href="#OSTAILOR">OSTAILOR LINUX</a></code> no longer sets IODELAY 
-    to 800 since the problem described above is no longer present in recent versions of
-    the linux kernel.</em>
+    real machine.
+    <p>
+    If the IODELAY value is non-zero a warning message (HHCCF037W) will be
+    issued unless <em>NOWARN</em> is specified.
+    <p>
+    NOTE : <a href="#OSTAILOR"><code>OSTAILOR LINUX</code></a> no longer sets
+    IODELAY to 800 since the problem described above is no longer present in
+    recent versions of the linux kernel.
     <p>
 
 <a name="CODEPAGE">
