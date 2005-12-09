@@ -716,15 +716,6 @@ int clocks_cmd(int argc, char *argv[], char *cmdline)
 REGS *regs;
 char clock_buf[30];
 
-U64 temptod;
-U32 ttodhigh;
-U32 ttodlow;
-
-S64 tempepoch;
-S32 tepochhigh;
-S32 tepochlow;
-
-
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -739,79 +730,39 @@ S32 tepochlow;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    temptod=(U64)(TOD_CLOCK(regs)<<8);
-    ttodhigh=(U32)(temptod>>32);
-    ttodlow=(U32)(temptod & 0xffffffff);
-
-    logmsg( _("HHCPN028I tod = %8.8X%8.8X    %s\n"),
-               ttodhigh,
-               ttodlow,
+    logmsg( _("HHCPN028I tod = %16.16"I64_FMT"X    %s\n"),
+               (U64)(TOD_CLOCK(regs) << 8),
                format_tod(clock_buf,(U64)TOD_CLOCK(regs)));
 
-    temptod=(U64)(tod_clock<<8);
-    ttodhigh=(U32)(temptod>>32);
-    ttodlow=(U32)(temptod & 0xffffffff);
-
-    logmsg( _("          h/w = %8.8X%8.8X    %s\n"),
-               ttodhigh,
-               ttodlow,
+    logmsg( _("          h/w = %16.16"I64_FMT"X    %s\n"),
+               (U64)(tod_clock << 8),
                format_tod(clock_buf,(U64)tod_clock));
 
-    tempepoch=(S64)(regs->tod_epoch<<8);
-    tepochhigh=(S32)(tempepoch>>32);
-    tepochlow=(S32)(tempepoch & 0xffffffff);
+    logmsg( _("          off = %16.16"I64_FMT"X\n"),
+                (S64)(regs->tod_epoch << 8));
 
-    logmsg( _("          off = %8.8X%8.8X\n"),
-                tepochhigh,
-                tepochlow);
-
-    temptod=(U64)(regs->clkc << 8);
-    ttodhigh=(U32)(temptod>>32);
-    ttodlow=(U32)(temptod & 0xffffffff);
-
-    logmsg( _("          ckc = %8.8X%8.8X    %s\n"),
-               ttodhigh,
-               ttodlow,
+    logmsg( _("          ckc = %16.16"I64_FMT"X    %s\n"),
+               (U64)(regs->clkc << 8),
                format_tod(clock_buf,(U64)regs->clkc));
 
-    temptod=(U64)(regs->ptimer);
-    ttodhigh=(U32)(temptod>>32);
-    ttodlow=(U32)(temptod & 0xffffffff);
-
-    logmsg( _("          cpt = %8.8X%8.8X\n"),
-               ttodhigh,
-               ttodlow);
+    logmsg( _("          cpt = %16.16"I64_FMT"X\n"), (U64)regs->ptimer );
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_active)
     {
-        temptod=((U64)(TOD_CLOCK(regs->guestregs) <<8));
-        ttodhigh=(U32)(temptod>>32);
-        ttodlow=(U32)(temptod & 0xffffffff);
-        logmsg( _("         vtod = %8.8X%8.8X    %s\n"),
-                   ttodhigh,
-                   ttodlow,
+
+        logmsg( _("         vtod = %16.16"I64_FMT"X    %s\n"),
+                   (U64)TOD_CLOCK(regs->guestregs) << 8,
                    format_tod(clock_buf,(U64)TOD_CLOCK(regs->guestregs)));
 
-        tempepoch=(S64)(regs->guestregs->tod_epoch<<8);
-        tepochhigh=(S32)(tempepoch>>32);
-        tepochlow=(S32)(tempepoch & 0xffffffff);
-        logmsg( _("         voff = %8.8X%8.8X\n"),
-                   tepochhigh,
-                   tepochlow);
+        logmsg( _("         voff = %16.16"I64_FMT"X\n"),
+                   (S64)regs->guestregs->tod_epoch << 8);
 
-        temptod=(U64)(regs->guestregs->clkc <<8);
-        ttodhigh=(U32)(temptod>>32);
-        ttodlow=(U32)(temptod & 0xffffffff);
-        logmsg( _("         vckc = %8.8X%8.8X    %s\n"), 
-                   ttodhigh,
-                   ttodlow,
+        logmsg( _("         vckc = %16.16"I64_FMT"X    %s\n"), 
+                   (U64)regs->guestregs->clkc << 8,
                    format_tod(clock_buf,(U64)regs->guestregs->clkc));
 
-        temptod=(U64)(regs->guestregs->ptimer);
-        ttodhigh=(U32)(temptod>>32);
-        ttodlow=(U32)(temptod & 0xffffffff);
-        logmsg( _("         vcpt = %8.8X%8.8X\n"),(U64)regs->guestregs->ptimer);
+        logmsg( _("         vcpt = %16.16"I64_FMT"X\n"),(U64)regs->guestregs->ptimer);
     }
 #endif
 
