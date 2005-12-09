@@ -568,7 +568,7 @@ a real System/390.  The configuration file is an ASCII text file.
     real machine.
     <p>
     If the IODELAY value is non-zero a warning message (HHCCF037W) will be
-    issued unless <em>NOWARN</em> is specified.
+    issued unless <code>NOWARN</code> is specified.
     <p>
     NOTE : <a href="#OSTAILOR"><code>OSTAILOR LINUX</code></a> no longer sets
     IODELAY to 800 since the problem described above is no longer present in
@@ -646,13 +646,13 @@ a real System/390.  The configuration file is an ASCII text file.
 <hr><!-- ---------------------------------------------------------------------------- -->
 
 <a name="subs">
-<h4>Symbol substitutions</h4></a>
+<h3>Symbol substitutions</h3></a>
 <dl> <!-- Begine substitution -->
 <dt><dd>
 <p><br>
 <dd><p>
     In configuration and device statements, as well as in panel commands, symbols may be substituted for text.
-<dt><h4>syntax</h4>
+<dt><h4>Syntax</h4>
 <dd><p>
     To substitute symbol <em>symbol</em> with its contents, the symbol should be enclosed
     within parenthesis and preceded by a $ sign. For example, if symbol <em>FOO</em> contains
@@ -680,7 +680,7 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
         <TR><TD><LI>cuu</TD><TD>: 3 digits device number, lower case hexadecimal digits</TD></TR>
         <TR><TD><LI>ccuu</TD><TD>: 4 digits device number, lower case hexadecimal digits</TD></TR>
         </TABLE>
-        are defined to contain for each device the relevant device address. For example :
+        are defined to contain for each device the relevant device address. For example:
 <code><pre>
 0200,0201 3340 /home/hercules/dasds/myvols.$(CUU)
 </pre></code>
@@ -708,7 +708,7 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
 <hr><!-- ---------------------------------------------------------------------------- -->
 
 <a name="process_and_thread_priorities">
-<h4>Process and Thread Priorities</h4>
+<h3>Process and Thread Priorities</h3>
 
 <dl> <!-- begin Process and Thread Priorities -->
 
@@ -2276,20 +2276,11 @@ definition statement.
 
 If you have a question about Hercules, see the
 <a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
-<p>
 
-<center>
-
-    <hr width=15% noshade>
-    <p>
-
-    <a href="hercinst.html"><img src="images/back.gif" border=0 alt="back"></a>
-    <p>
-
-    <small>Last updated 07 December 2005
-    <p>
-
+<p><center><hr width=15% noshade>
+<a href="hercinst.html"><img src="images/back.gif" border=0 alt="back"></a>
 </center>
 
+<p class="lastupd">Last updated $Date$ $Revision$</p>
 </BODY>
 </HTML>
