@@ -730,39 +730,39 @@ char clock_buf[30];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg( _("HHCPN028I tod = %16.16"I64_FMT"X    %s\n"),
+    logmsg( _("HHCPN028I tod = %16.16" I64_FMT "X    %s\n"),
                (U64)(TOD_CLOCK(regs) << 8),
                format_tod(clock_buf,(U64)TOD_CLOCK(regs)));
 
-    logmsg( _("          h/w = %16.16"I64_FMT"X    %s\n"),
+    logmsg( _("          h/w = %16.16" I64_FMT "X    %s\n"),
                (U64)(tod_clock << 8),
                format_tod(clock_buf,(U64)tod_clock));
 
-    logmsg( _("          off = %16.16"I64_FMT"X\n"),
+    logmsg( _("          off = %16.16" I64_FMT "X\n"),
                 (S64)(regs->tod_epoch << 8));
 
-    logmsg( _("          ckc = %16.16"I64_FMT"X    %s\n"),
+    logmsg( _("          ckc = %16.16" I64_FMT "X    %s\n"),
                (U64)(regs->clkc << 8),
                format_tod(clock_buf,(U64)regs->clkc));
 
-    logmsg( _("          cpt = %16.16"I64_FMT"X\n"), (U64)regs->ptimer );
+    logmsg( _("          cpt = %16.16" I64_FMT "X\n"), (U64)regs->ptimer );
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_active)
     {
 
-        logmsg( _("         vtod = %16.16"I64_FMT"X    %s\n"),
+        logmsg( _("         vtod = %16.16" I64_FMT "X    %s\n"),
                    (U64)TOD_CLOCK(regs->guestregs) << 8,
                    format_tod(clock_buf,(U64)TOD_CLOCK(regs->guestregs)));
 
-        logmsg( _("         voff = %16.16"I64_FMT"X\n"),
+        logmsg( _("         voff = %16.16" I64_FMT "X\n"),
                    (S64)regs->guestregs->tod_epoch << 8);
 
-        logmsg( _("         vckc = %16.16"I64_FMT"X    %s\n"), 
+        logmsg( _("         vckc = %16.16" I64_FMT "X    %s\n"), 
                    (U64)regs->guestregs->clkc << 8,
                    format_tod(clock_buf,(U64)regs->guestregs->clkc));
 
-        logmsg( _("         vcpt = %16.16"I64_FMT"X\n"),(U64)regs->guestregs->ptimer);
+        logmsg( _("         vcpt = %16.16" I64_FMT "X\n"),(U64)regs->guestregs->ptimer);
     }
 #endif
 
@@ -771,7 +771,7 @@ char clock_buf[30];
         U32 itimer;
         PSA_3XX *psa = (void*) (regs->mainstor + regs->PX);
         FETCH_FW(itimer, psa->inttimer);
-        logmsg( "          itm = %8.8X\n", itimer );
+        logmsg( "          itm = %8.8" I32_FMT "X\n", itimer );
     }
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
