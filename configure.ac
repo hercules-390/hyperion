@@ -1278,11 +1278,11 @@ AC_ARG_ENABLE( multi-cpu,
 
     AC_HELP_STRING( [--enable-multi-cpu=yes|no|NUMBER],
 
-        [enable/disable multi-cpu support (1-32, default 2)]
+        [enable/disable multi-cpu support (1-32, default 8)]
     ),
     [
         case "${enableval}" in
-        yes)             hc_cv_opt_num_cpu_engines=2                  ;;
+        yes)             hc_cv_opt_num_cpu_engines=8                  ;;
         no)              hc_cv_opt_num_cpu_engines=1                  ;;
 # ISW 20051117 : Raise max CPUs to 32
 #         1|2|3|4|5|6|7|8) hc_cv_opt_num_cpu_engines=${enableval}       ;;
@@ -1297,7 +1297,7 @@ AC_ARG_ENABLE( multi-cpu,
             ;;
         esac
     ],
-    [hc_cv_opt_num_cpu_engines=2]
+    [hc_cv_opt_num_cpu_engines=8]
 )
 
 AC_ARG_ENABLE( custom,

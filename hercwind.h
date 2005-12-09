@@ -118,7 +118,7 @@ typedef int             mode_t;
 #define HAVE_SYS_MTIO_H         // (ours is called 'w32mtio.h')
 
 #ifndef MAX_CPU_ENGINES
-#define MAX_CPU_ENGINES  2
+#define MAX_CPU_ENGINES  8
 #endif
 
 #define OPTION_CONFIG_SYMBOLS
