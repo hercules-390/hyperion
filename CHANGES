@@ -1,5 +1,6 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
+09 Dec 2005 MAX_CPU_ENGINES defaults to 8 for MSVC build too - Ivan Warren
 08 Dec 2005 MAX_CPU_ENGINES now defaults to 8 instead of 2 - Greg Smith
 06 Dec 2005 Accept ALRF as abbreviation for ASN_AND_LX_REUSE - Roger Bowler
 06 Dec 2005 Fix leapyear issue in sysepoch and format_tod - Jan Jaeger
