@@ -33,7 +33,7 @@
 <TR><TD><A HREF="#3.01">3.01</A></TD><TD>What PC hardware do I need to run Hercules?</TD></TR>
 <TR><TD><A HREF="#3.02">3.02</A></TD><TD>What sort of MIPS rate can I expect?</TD></TR>
 <TR><TD><A HREF="#3.03">3.03</A></TD><TD>What PC software do I need to run Hercules?</TD></TR>
-<TR><TD><A HREF="#3.04">3.04</A></TD><TD>Which C compiler should I use to build Hercules?</TD></TR>
+<TR><TD><A HREF="#3.04">3.04</A></TD><TD>What software do I need to build Hercules?</TD></TR>
 <TR><TD><A HREF="#3.05">3.05</A></TD><TD>Why do I get an unexpected fixed-point divide exception (program check 0009 or abend 0C9) on a CVB instruction?</TD></TR>
 <TR><TD><A HREF="#3.06">3.06</A></TD><TD>Can Hercules be ported to run on other platforms?</TD></TR>
 <TR><TD>&nbsp;</TD></TR>
@@ -430,22 +430,15 @@
     What PC software do I need to run Hercules?
 </H4>
 <P>
-    1. You need a Linux system with POSIX threads (pthread) support. I will
-    only provide support for Linux 2.2.x kernels with glibc2 (libc6) as
-    supplied in popular distributions such as Red Hat 6.0 or later and
-    SuSE Linux 6.1 or later. My development system runs Red Hat 6.1.
-    You can also run under Windows NT or Windows 2000, though Hercules
-    isn't quite as polished on that platform.
+    The following software platforms are supported:
+    <li>Linux (kernel 2.4 or later)
+    <li>Windows 98, Windows NT, Windows 2000, or Windows XP
+        with <a href="http://sources.redhat.com/cygwin">Cygwin</a>
+    <li>Windows 2000 or Windows XP (without Cygwin)
+    <li>Mac OS X 10.3 or later
 </P>
 <P>
-    2. An egcs C compiler, normally distributed with Linux. See the notes
-    below on this compiler. If you wish to rebuild the Windows version,
-    you will need the
-<a href="http://sources.redhat.com/cygwin">Cygwin</a>
-    tools from Red Hat.
-</P>
-<P>
-    3. You will also need tn3270 client software for the virtual 3270
+    You will also need tn3270 client software for the virtual 3270
     console.  The tn3270 client can run on the same machine as Hercules, or
     on any Unix or Windows box with a TCP/IP connection to the Hercules
     machine.
@@ -478,45 +471,43 @@
     as OS/360 or MVS consoles.
 </P>
 <H4><A NAME="3.04">3.04</A>
-    Which C compiler should I use to build Hercules?
+    What software do I need to build Hercules?
 </H4>
 <P>
-    You <EM>must</EM> use the egcs C compiler. I am using the version that
-    came with Red Hat 6.1 and it seems to work OK. The version number reported
-    by the Linux command <code>cc -v</code> is: egcs-2.91.66 19990314/Linux
-    (egcs-1.1.2 release). If your compiler is version 2.9 or higher, it's
-    EGCS-based, and should work fine, as EGCS version 1 is just another name
-    for gcc version 2.9.
+    To build Hercules for Linux
+    and other Unix-like environments (including Cygwin under Windows),
+    you need to use the <a href="http://gcc.gnu.org">gcc</a> compiler,
+    version 2.95, or
+    version 3.x or above.
+    <i>Note that gcc version 2.96 is not an official version and is not supported</i>.
+    You will also need a full set of GNU development tools, including recent versions
+    of autoconf, automake, libiconv, make, perl, sed, and m4.
+    Refer to the util/cvslvlck file in the Hercules distribution for details.
+    Note that you will also need a reasonably powerful machine (Pentium 1GHz+)
+    with ample RAM (at least 256Mb) because the compilation process is extremely
+    resource hungry.
 </P>
 <P>
-    The older gcc compiler is known to produce incorrect code for some 64-bit
-    (unsigned long) integer operations. I have had reports that earlier
-    versions of egcs produce strange results too.
+    To build Hercules for the Windows native environment (without Cygwin),
+    you need to use the Microsoft C/C++ compiler (MSVC)
+    version 13.x or later.
+    This compiler is available for download from Microsoft as
+    Visual C++ Toolkit 2003 (Version 13.x) or
+    Microsoft Visual C++ 2005 Express (Version 14.x).
+    You also need the current version of the Microsoft Platform SDK, which is also
+    available for download from Microsoft.
+    For further information, see Fish's MSVC Hercules Build page at
+    <a href="http://www.softdevlabs.com/Hercules/hercules-msvc-build.html">
+    http://www.softdevlabs.com/Hercules/hercules-msvc-build.html</a>
+    Alternatively, the Microsoft Visual Studio 7.0 and 8.0 products may be used.
 </P>
-<P>
-    If you have both an old gcc and egcs compilers installed, use the CC
-    parameter on the "make" command to force it to choose the correct compiler:
-<BR>
-<CODE>make CC=egcs</CODE> ...
-</P>
-<p>
-    Red Hat 7.0 ships with two versions of gcc. If you don't do anything
-    special, you get gcc 2.96, which will not compile the Linux kernel, so
-    they included 2.91 as well as <code>kgcc</code>. If you encounter
-    problems when building Hercules with the 2.96 compiler, try
-<code>make CC=kgcc</code>
-    instead. I would appreciate reports as to how well the 2.96 compiler works,
-    as it is a development snapshot, and lots of folks, including the GCC
-    development team ad Linus Torvalds, were very unhappy that Red Hat included
-    it in their distribution.
-</p>
 <H4><A NAME="3.05">3.05</A>
     Why do I get an unexpected fixed-point divide exception (program check
     0009 or abend 0C9) on a CVB instruction?
 </H4>
 <P>
-    You are using an old gcc compiler. You must use the newer egcs-based
-    compiler instead. See previous question for the required compiler level.
+    You are using an old gcc compiler. 
+    See previous question for the required compiler level.
 </P>
 <H4><A NAME="3.06">3.06</A>
     Can Hercules be ported to run on other platforms?

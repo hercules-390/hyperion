@@ -21,7 +21,7 @@ h1, h2, h3, h4
 h1 {color: blue;}
 h2 {color: red; font-style: italic;}
 
-p, li, dt, dd {color: black; font-family: Arial;}
+p, li, dt, dd, td {color: black; font-family: Arial;}
 
 p.lastupd
 {
