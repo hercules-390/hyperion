@@ -293,10 +293,8 @@ static void http_verify_path(WEBBLK *webblk, char *path)
 #endif
 
     if (!realpath( path, resolved_path ))
-    {
         http_error(webblk, "404 File Not Found","",
                            "Invalid pathname");
-    }
 
     // The following verifies the specified file does not lie
     // outside the specified httproot (Note: sysblk.httproot
