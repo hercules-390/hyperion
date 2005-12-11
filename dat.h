@@ -1151,7 +1151,7 @@ U16     sx, px;                         /* Segment and page index,
     /* Extract the private space bit from the ASCE */
     regs->dat.private = ((regs->dat.asd & (ASCE_P|ASCE_R)) != 0);
 
-//  logmsg("asce=%16.16llX\n",regs->dat.asd);
+//  logmsg("asce=%16.16" I64_FMT "X\n",regs->dat.asd);
 
     /* [3.11.4] Look up the address in the TLB */
     /* [10.17] Do not use TLB if processing LRA instruction */
@@ -1248,7 +1248,7 @@ U16     sx, px;                         /* Segment and page index,
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
-//              logmsg("r1te:%16.16llX=>%16.16llX\n",rto,rte);
+//              logmsg("r1te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
 
                 /* Region-first translation exception if the bit 58 of
                    the region-first table entry is set (region invalid) */
@@ -1295,7 +1295,7 @@ U16     sx, px;                         /* Segment and page index,
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
-//              logmsg("r2te:%16.16llX=>%16.16llX\n",rto,rte);
+//              logmsg("r2te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
 
                 /* Region-second translation exception if the bit 58 of
                    the region-second table entry is set (region invalid) */
@@ -1342,7 +1342,7 @@ U16     sx, px;                         /* Segment and page index,
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
-//              logmsg("r3te:%16.16llX=>%16.16llX\n",rto,rte);
+//              logmsg("r3te:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",rto,rte);
 
                 /* Region-third translation exception if the bit 58 of
                    the region-third table entry is set (region invalid) */
@@ -1388,7 +1388,7 @@ U16     sx, px;                         /* Segment and page index,
             /* Fetch segment table entry from absolute storage.  All bytes
                must be fetched concurrently as observed by other CPUs */
             ste = ARCH_DEP(fetch_doubleword_absolute) (sto, regs);
-//          logmsg("ste:%16.16llX=>%16.16llX\n",sto,ste);
+//          logmsg("ste:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",sto,ste);
 
             /* Segment translation exception if segment invalid */
             if (ste & ZSEGTAB_I)
@@ -1430,7 +1430,7 @@ U16     sx, px;                         /* Segment and page index,
             /* Fetch the page table entry from absolute storage.  All bytes
                must be fetched concurrently as observed by other CPUs */
             pte = ARCH_DEP(fetch_doubleword_absolute) (pto, regs);
-//          logmsg("pte:%16.16llX=>%16.16llX\n",pto,pte);
+//          logmsg("pte:%16.16" I64_FMT "X=>%16.16" I64_FMT "X\n",pto,pte);
 
             /* Page translation exception if page invalid */
             if (pte & ZPGETAB_I)
@@ -1486,7 +1486,7 @@ address_excp:
 tran_spec_excp:
 #if defined(FEATURE_ESAME)
 //    logmsg("dat.c: translation specification exception...\n");
-//    logmsg("       pte = %16.16llX, ste = %16.16llX, rte=%16.16llX\n",
+//    logmsg("       pte = %16.16" I64_FMT "X, ste = %16.16" I64_FMT "X, rte=%16.16" I64_FMT "X\n",
 //        pte, ste, rte);
 #else
 //    logmsg("dat.c: translation specification exception...\n");

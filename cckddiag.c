@@ -353,7 +353,7 @@ char               *p;
                 v = (v << 4) + xv[strchr(xd, *s) - xd];
             if (debug) 
                 fprintf(stdout, 
-                        "OFFTIFY string %s hex %8.8llX decimal %" I64_FMT "d\n",
+                        "OFFTIFY string %s hex %8.8" I64_FMT "X decimal %" I64_FMT "d\n",
                         p, (U64)v, (U64)v);
             return v;
         } else {                                 /* decimal input */

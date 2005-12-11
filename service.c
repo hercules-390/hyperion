@@ -912,7 +912,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                 logmsg(_("HHC771I System Type  = %s\n",systype));
                 logmsg(_("HHC772I System Name  = %s\n",sysname));
                 logmsg(_("HHC773I Sysplex Name = %s\n",sysplex));
-                logmsg(_("HHC774I System Level = %16.16llX\n"),syslevel);
+                logmsg(_("HHC774I System Level = %16.16" I64_FMT "X\n"),syslevel);
 #endif
             }
 

@@ -1244,7 +1244,7 @@ REGS *regs;
     regs = sysblk.regs[sysblk.pcpu];
 
     if(regs->arch_mode == ARCH_900)
-        logmsg( "Prefix=%16.16llX\n", (long long)regs->PX_G );
+        logmsg( "Prefix=%16.16" I64_FMT "X\n", (long long)regs->PX_G );
     else
         logmsg( "Prefix=%8.8X\n", regs->PX_L );
 

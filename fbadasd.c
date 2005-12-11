@@ -1061,7 +1061,7 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbaorigin
                      + dev->fbaxblkn) * dev->fbablksiz;
 
-        logdevtr (dev, _("HHCDA077I Positioning to %8.8llX (%" I64_FMT "u)\n"),
+        logdevtr (dev, _("HHCDA077I Positioning to %8.8" I64_FMT "X (%" I64_FMT "u)\n"),
                  (long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba);
 
         /* Return normal status */

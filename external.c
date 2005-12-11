@@ -369,7 +369,7 @@ U16     cpuad;                          /* Originating CPU address   */
     {
         if (sysblk.insttrace || sysblk.inststep)
         {
-            logmsg (_("HHCCP025I External interrupt: CPU timer=%16.16llX\n"),
+            logmsg (_("HHCCP025I External interrupt: CPU timer=%16.16" I64_FMT "X\n"),
                     (long long)regs->ptimer);
         }
         ARCH_DEP(external_interrupt) (EXT_CPU_TIMER_INTERRUPT, regs);
