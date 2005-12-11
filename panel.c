@@ -685,10 +685,12 @@ void NP_update(REGS *regs)
         else if (zhost)
         {
             draw_fw (fetch_fw(curpsw));
-            draw_fw (0);
+//          draw_fw (0);
+            draw_text("--------");
             set_pos (3, 22);
-            draw_fw (fetch_fw(curpsw+4) & 0x80000000 ? 0x80000000 : 0);
-            draw_fw (fetch_fw(curpsw+4) & 0x7fffffff);
+//          draw_fw (fetch_fw(curpsw+4) & 0x80000000 ? 0x80000000 : 0);
+            draw_text("--------");
+            draw_fw (fetch_fw(curpsw+4));
         }
         else
         {
@@ -806,7 +808,8 @@ void NP_update(REGS *regs)
                 if (!NPregs_valid || NPregs[i] != regs->GR_L(i))
                 {
                     set_pos (6 + i/2, 3 + (i%2)*19);
-                    draw_fw (0);
+//                  draw_fw (0);
+                    draw_text("--------");
                     draw_fw (regs->GR_L(i));
                     NPregs[i] = regs->GR_L(i);
                 }
