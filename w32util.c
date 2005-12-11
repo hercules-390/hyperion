@@ -2481,7 +2481,7 @@ void w32_parse_piped_process_stdxxx_data ( char* holdbuff, int* pnHoldAmount )
     // IMPORTANT PROGRAMMING NOTE! We must use memmove here and not strcpy!
     // strcpy doesn't work correctly for overlapping source and destination.
     // If there's 100 bytes remaining and we just want to slide it left by 1
-    // byte (just as an illustrative example), strcpy screws up. This is more
+    // byte (just as an i" I64_FMT "ustrative example), strcpy screws up. This is more
     // than likely because strcpy is trying to be as efficient as possible and
     // is grabbing multiple bytes at a time from the source string and plonking
     // them down into the destination string, thus wiping out part of our source

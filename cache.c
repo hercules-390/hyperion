@@ -347,12 +347,12 @@ DLL_EXPORT int cache_cmd(int argc, char *argv[], char *cmdline)
                 "empty ........... %10d\n"
                 "waiters ......... %10d\n"
                 "waits ........... %10d\n"
-                "buf size ........ %10lld\n"
-                "hits ............ %10lld\n"
-                "fast hits ....... %10lld\n"
-                "misses .......... %10lld\n"
+                "buf size ........ %10" I64_FMT "d\n"
+                "hits ............ %10" I64_FMT "d\n"
+                "fast hits ....... %10" I64_FMT "d\n"
+                "misses .......... %10" I64_FMT "d\n"
                 "hit%% ............ %10d\n"
-                "age ............. %10lld\n"
+                "age ............. %10" I64_FMT "d\n"
                 "last adjusted ... %s"
                 "last wait ....... %s"
                 "adjustments ..... %10d\n",
@@ -364,7 +364,7 @@ DLL_EXPORT int cache_cmd(int argc, char *argv[], char *cmdline)
           cacheblk[ix].adjusts);
         if (argc > 1)
           for (i = 0; i < cacheblk[ix].nbr; i++)
-            logmsg ("[%4d] %16.16llx %8.8x %10p %6d %10lld\n",
+            logmsg ("[%4d] %16.16" I64_FMT "x %8.8x %10p %6d %10" I64_FMT "d\n",
               i, cacheblk[ix].cache[i].key, cacheblk[ix].cache[i].flag,
               cacheblk[ix].cache[i].buf, cacheblk[ix].cache[i].len,
               cacheblk[ix].cache[i].age);

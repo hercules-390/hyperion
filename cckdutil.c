@@ -1593,7 +1593,7 @@ overlap:
     {char buf[5];
         LSEEK (fd, gap[i].pos, SEEK_SET);
         read (fd, &buf, 5);
-        CDSKMSG (m, "%3d 0x%8.8x %5lld %2.2x%2.2x%2.2x%2.2x%2.2x\n",
+        CDSKMSG (m, "%3d 0x%8.8x %5" I64_FMT "d %2.2x%2.2x%2.2x%2.2x%2.2x\n",
                  i+1, (int)gap[i].pos, gap[i].siz, buf[0], buf[1], buf[2], buf[3], buf[4]);
     }
     CDSKMSG (m,"recovery table  size %d\n                  type value\n", r);

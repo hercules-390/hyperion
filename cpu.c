@@ -1019,7 +1019,7 @@ RADR    fsta;                           /* Failing storage address   */
 
     /* Trace the machine check interrupt */
     if (sysblk.insttrace || sysblk.inststep)
-        logmsg (_("HHCCP022I Machine Check code=%16.16llu\n"),
+        logmsg (_("HHCCP022I Machine Check code=%16.16" I64_FMT "u\n"),
                   (long long)mcic);
 
     /* Store the external damage code at PSA+244 */

@@ -1889,7 +1889,7 @@ OFF_T           fpos;
         for (n = 0, i = cckd->free1st; i >= 0; i = cckd->free[i].next)
         {
             if (++n > cckd->freenbr) break;
-            cckd_trace (dev, "%4d: [%4d] prev[%4d] next[%4d] pos %8.8llx len %8d %8.8llx pend %d\n",
+            cckd_trace (dev, "%4d: [%4d] prev[%4d] next[%4d] pos %8.8" I64_FMT "x len %8d %8.8" I64_FMT "x pend %d\n",
                         n, i, cckd->free[i].prev, cckd->free[i].next,
                         (long long)fpos, cckd->free[i].len,
                         (long long)fpos + cckd->free[i].len, cckd->free[i].pending);
@@ -4103,7 +4103,7 @@ int             freenbr=0;              /* Total number free spaces  */
     logmsg (_("HHCCD212I --------------------------------------------------------------------\n"));
 
     /* total statistics */
-    logmsg (_("HHCCD213I [*] %10lld %3lld%% %4d    %7d %7d %7d %7d  %7d\n"),
+    logmsg (_("HHCCD213I [*] %10" I64_FMT "d %3" I64_FMT "d%% %4d    %7d %7d %7d %7d  %7d\n"),
             size, (free * 100) / size, freenbr,
             cckd->totreads, cckd->totwrites, cckd->totl2reads,
             cckd->cachehits, cckd->switches);
@@ -4113,7 +4113,7 @@ int             freenbr=0;              /* Total number free spaces  */
 
     /* base file statistics */
     logmsg (_("HHCCD215I %s\n"), dev->filename);
-    logmsg (_("HHCCD216I [0] %10lld %3lld%% %4d %s %7d %7d %7d\n"),
+    logmsg (_("HHCCD216I [0] %10" I64_FMT "d %3" I64_FMT "d%% %4d %s %7d %7d %7d\n"),
             (long long)st.st_size,
             (long long)((long long)((long long)cckd->cdevhdr[0].free_total * 100) / st.st_size),
             cckd->cdevhdr[0].free_number, ost[cckd->open[0]],
@@ -4125,7 +4125,7 @@ int             freenbr=0;              /* Total number free spaces  */
     /* shadow file statistics */
     for (i = 1; i <= cckd->sfn; i++)
     {
-        logmsg (_("HHCCD218I [%d] %10lld %3lld%% %4d %s %7d %7d %7d\n"),
+        logmsg (_("HHCCD218I [%d] %10" I64_FMT "d %3" I64_FMT "d%% %4d %s %7d %7d %7d\n"),
                 i, (long long)cckd->cdevhdr[i].size,
                 (long long)((long long)((long long)cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].size),
                 cckd->cdevhdr[i].free_number, ost[cckd->open[i]],
@@ -5032,12 +5032,12 @@ void cckd_command_opts()
 /*-------------------------------------------------------------------*/
 void cckd_command_stats()
 {
-    logmsg("reads....%10lld Kbytes...%10lld writes...%10lld Kbytes...%10lld\n"
-            "readaheads%9lld misses...%10lld syncios..%10lld misses...%10lld\n"
-            "switches.%10lld l2 reads.%10lld              stress writes...%10lld\n"
-            "cachehits%10lld misses...%10lld l2 hits..%10lld misses...%10lld\n"
-            "waits                                   i/o......%10lld cache....%10lld\n"
-            "garbage collector   moves....%10lld Kbytes...%10lld\n",
+    logmsg("reads....%10" I64_FMT "d Kbytes...%10" I64_FMT "d writes...%10" I64_FMT "d Kbytes...%10" I64_FMT "d\n"
+            "readaheads%9" I64_FMT "d misses...%10" I64_FMT "d syncios..%10" I64_FMT "d misses...%10" I64_FMT "d\n"
+            "switches.%10" I64_FMT "d l2 reads.%10" I64_FMT "d              stress writes...%10" I64_FMT "d\n"
+            "cachehits%10" I64_FMT "d misses...%10" I64_FMT "d l2 hits..%10" I64_FMT "d misses...%10" I64_FMT "d\n"
+            "waits                                   i/o......%10" I64_FMT "d cache....%10" I64_FMT "d\n"
+            "garbage collector   moves....%10" I64_FMT "d Kbytes...%10" I64_FMT "d\n",
             cckdblk.stats_reads, cckdblk.stats_readbytes >> 10,
             cckdblk.stats_writes, cckdblk.stats_writebytes >> 10,
             cckdblk.stats_readaheads, cckdblk.stats_readaheadmisses,

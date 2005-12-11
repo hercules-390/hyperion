@@ -2086,8 +2086,8 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
 
         found = 1;
 
-        logmsg( _("HHCPN072I %4.4X  synchronous: %12lld "
-                  "asynchronous: %12lld\n"),
+        logmsg( _("HHCPN072I %4.4X  synchronous: %12" I64_FMT "d "
+                  "asynchronous: %12" I64_FMT "d\n"),
                 dev->devnum, (long long)dev->syncios,
                 (long long)dev->asyncios
             );
@@ -2099,8 +2099,8 @@ int syncio_cmd(int argc, char *argv[], char *cmdline)
     if (!found)
         logmsg( _("HHCPN073I No synchronous I/O devices found\n") );
     else
-        logmsg( _("HHCPN074I TOTAL synchronous: %12lld "
-                  "asynchronous: %12lld  %3lld%%\n"),
+        logmsg( _("HHCPN074I TOTAL synchronous: %12" I64_FMT "d "
+                  "asynchronous: %12" I64_FMT "d  %3" I64_FMT "d%%\n"),
                (long long)syncios, (long long)asyncios,
                (long long)((syncios * 100) / (syncios + asyncios + 1))
             );
@@ -3590,16 +3590,16 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
             logmsg(" %2d",regs->aea_common[i]);
     logmsg ("\n");
 
-    logmsg ("aea cr[1]  %16.16llx\n    cr[7]  %16.16llx\n"
-            "    cr[13] %16.16llx\n",
+    logmsg ("aea cr[1]  %16.16" I64_FMT "x\n    cr[7]  %16.16" I64_FMT "x\n"
+            "    cr[13] %16.16" I64_FMT "x\n",
             regs->CR_G(1),regs->CR_G(7),regs->CR_G(13));
 
-    logmsg ("    cr[r]  %16.16llx\n",
+    logmsg ("    cr[r]  %16.16" I64_FMT "x\n",
             regs->CR_G(CR_ASD_REAL));
 
     for(i = 0; i < 16; i++)
         if(regs->aea_ar[i] > 15)
-            logmsg ("    alb[%d] %16.16llx\n",
+            logmsg ("    alb[%d] %16.16" I64_FMT "x\n",
                     regs->alb[i]);
 
     if (regs->sie_active)
@@ -3625,16 +3625,16 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
             logmsg(" %2d",regs->aea_common[i]);
         logmsg ("\n");
 
-        logmsg ("aea cr[1]  %16.16llx\n    cr[7]  %16.16llx\n"
-                "    cr[13] %16.16llx\n",
+        logmsg ("aea cr[1]  %16.16" I64_FMT "x\n    cr[7]  %16.16" I64_FMT "x\n"
+                "    cr[13] %16.16" I64_FMT "x\n",
                 regs->CR_G(1),regs->CR_G(7),regs->CR_G(13));
 
-        logmsg ("    cr[r]  %16.16llx\n",
+        logmsg ("    cr[r]  %16.16" I64_FMT "x\n",
                 regs->CR_G(CR_ASD_REAL));
 
         for(i = 0; i < 16; i++)
             if(regs->aea_ar[i] > 15)
-                logmsg ("    alb[%d] %16.16llx\n",
+                logmsg ("    alb[%d] %16.16" I64_FMT "x\n",
                         regs->alb[i]);
     }
 
@@ -3665,14 +3665,14 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg ("mainstor %p  aim %p  aiv %16.16llx  aie %16.16llx\n",
+    logmsg ("mainstor %p  aim %p  aiv %16.16" I64_FMT "x  aie %16.16" I64_FMT "x\n",
             regs->mainstor,regs->aim,regs->aiv,regs->aie);
 
     if (regs->sie_active)
     {
         regs = regs->guestregs;
         logmsg ("SIE:\n");
-        logmsg ("mainstor %p  aim %p  aiv %16.16llx  aie %16.16llx\n",
+        logmsg ("mainstor %p  aim %p  aiv %16.16" I64_FMT "x  aie %16.16" I64_FMT "x\n",
             regs->mainstor,regs->aim,regs->aiv,regs->aie);
     }
 
@@ -3716,7 +3716,7 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     logmsg ("  ix              asd            vaddr              pte   id c p r w ky       main\n");
     for (i = 0; i < TLBN; i++)
     {
-        logmsg("%s%3.3x %16.16llx %16.16llx %16.16llx %4.4x %1d %1d %1d %1d %2.2x %8.8x\n",
+        logmsg("%s%3.3x %16.16" I64_FMT "x %16.16" I64_FMT "x %16.16" I64_FMT "x %4.4x %1d %1d %1d %1d %2.2x %8.8x\n",
          ((regs->tlb.TLB_VADDR_G(i) & bytemask) == regs->tlbID ? "*" : " "),
          i,regs->tlb.TLB_ASD_G(i),
          ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)),
@@ -3741,7 +3741,7 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
         logmsg ("  ix              asd            vaddr              pte   id c p r w ky       main\n");
         for (i = matches = 0; i < TLBN; i++)
         {
-            logmsg("%s%3.3x %16.16llx %16.16llx %16.16llx %4.4x %1d %1d %1d %1d %2.2x %p\n",
+            logmsg("%s%3.3x %16.16" I64_FMT "x %16.16" I64_FMT "x %16.16" I64_FMT "x %4.4x %1d %1d %1d %1d %2.2x %p\n",
              ((regs->tlb.TLB_VADDR_G(i) & bytemask) == regs->tlbID ? "*" : " "),
              i,regs->tlb.TLB_ASD_G(i),
              ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)),
@@ -3815,10 +3815,10 @@ int count_cmd(int argc, char *argv[], char *cmdline)
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i))
             instcount += sysblk.regs[i]->instcount;
-    logmsg ("  i: %12lld\n", instcount);
+    logmsg ("  i: %12" I64_FMT "d\n", instcount);
 
     for (i = 0; i < OPTION_COUNTING; i++)
-        logmsg ("%3d: %12lld\n", i, sysblk.count[i]);
+        logmsg ("%3d: %12" I64_FMT "d\n", i, sysblk.count[i]);
 
     return 0;
 }

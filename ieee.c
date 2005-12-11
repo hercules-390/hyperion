@@ -746,7 +746,7 @@ static void vfetch_lbfp(struct lbfp *op, VADR addr, int arn, REGS *regs)
     op->sign = (v & 0x8000000000000000ULL) != 0;
     op->exp = (v & 0x7FF0000000000000ULL) >> 52;
     op->fract = v & 0x000FFFFFFFFFFFFFULL;
-    //logmsg("lfetch m=%16.16llx exp=%d fract=%" I64_FMT "x\n", v, op->exp, op->fract);
+    //logmsg("lfetch m=%16.16" I64_FMT "x exp=%d fract=%" I64_FMT "x\n", v, op->exp, op->fract);
 }
 
 #if !defined(_IEEE_C)

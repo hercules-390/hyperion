@@ -1302,19 +1302,19 @@ static int ecpsvm_disp_incprobt(REGS *regs,VADR vmb)
     DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT Entry : VMBLOK @ %8.8X\n",vmb));
     DW_VMTMOUTQ=EVM_LD(vmb+VMTMOUTQ);
     DW_PROBSTRT=EVM_LD(PROBSTRT);
-    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT Entry : VMTMOUTQ = %16.16llx\n",DW_VMTMOUTQ));
-    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT Entry : PROBSTRT = %16.16llx\n",DW_PROBSTRT));
+    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT Entry : VMTMOUTQ = %16.16" I64_FMT "x\n",DW_VMTMOUTQ));
+    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT Entry : PROBSTRT = %16.16" I64_FMT "x\n",DW_PROBSTRT));
     if(DW_VMTMOUTQ==DW_PROBSTRT)
     {
         DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT Already performed"));
         return(2);      /* continue */
     }
     tspent=DW_PROBSTRT-DW_VMTMOUTQ;
-    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT TSPENT = %16.16llx\n",tspent));
+    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT TSPENT = %16.16" I64_FMT "x\n",tspent));
     DW_PROBTIME=EVM_LD(PROBTIME);
     DW_PROBTIME-=tspent;
     EVM_STD(DW_PROBTIME,PROBTIME);
-    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT NEW PROBTIME = %16.16llx\n",DW_PROBTIME));
+    DEBUG_CPASSISTX(DISP0,logmsg("INCPROBT NEW PROBTIME = %16.16" I64_FMT "x\n",DW_PROBTIME));
     return(2);
 }
 
