@@ -29,6 +29,18 @@ p.lastupd
     font-size:        small;
 }
 
+p.warning
+{
+    color:            red;
+    background-color: #FFFFAA;
+    font-style:       italic;
+    font-weight:      bold;
+    padding:          20px;
+    border-width:     2px;
+    border-style:     solid;
+    border-color:     black;
+}
+
 p.box
 {
     background-color: #FFFFAA;
