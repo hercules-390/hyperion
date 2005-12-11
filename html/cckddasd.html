@@ -20,7 +20,8 @@ Hercules: Compressed Dasd Emulation</TITLE>
 </ul>
 
 <hr noshade>
-<h3><a NAME="introduction">Introduction</a></h3>
+<h2><a NAME="introduction">Introduction</a></h2>
+<p>
 Using compressed DASD files you can significantly reduce the file space
 required for emulated DASD files and possibly gain a performance boost
 because less physical I/O occurs.
@@ -63,9 +64,9 @@ are more sensitive to failures and corruption may occur.
 
 <p>
 <hr noshade>
-<p><h3><a NAME="shadowfiles">Shadow Files</a></h3>
+<p><h2><a NAME="shadowfiles">Shadow Files</a></h2>
 
-
+<p>
 An compressed CKD or FBA dasd can have more than one physical file.  The
 additional files are called <em>shadow files</em>.  
 The function is implemented as a kind of
@@ -76,8 +77,7 @@ except for the <em>current</em> file, which is opened <em>read-write</em>.
 <p>
 Shadow files are specified by the <b>sf=</b><i>shadow-file-name</i> parameter
 on the device statement for the compressed DASD device.
-<p>
-    <blockquote>
+<p class="note">
     Please note that the specified shadow filename does <u>not</u> have to
     actually exist. The <i>shadow-file-name</i> operand of the <i>sf=</i>
     parameter is simply a filename <i><u>template</u></i> that will be used
@@ -86,7 +86,6 @@ on the device statement for the compressed DASD device.
     them via the <code>sf+xxxx</code> (or <code>sf+*</code>) command. Please
     refer to the discussion of the <b>sf</b> command several paragraphs
     below for more information.
-    </blockquote>
 <p>
 The shadow file name
 should have spot where the shadow file number will be set.  This is
@@ -144,8 +143,9 @@ or <code>'sf-* nomerge'</code>).
 
 <p>
 <hr noshade>
-<p><h3><a NAME="filestructure">Compressed DASD File Structure</a></h3>
+<p><h2><a NAME="filestructure">Compressed DASD File Structure</a></h2>
 
+<p>
 A compressed DASD file has 6 types of spaces, a <em>device header</em>,
 a <em>compressed device header</em>, a <em>primary lookup table</em>,
 <em>secondary lookup tables</em>, track or block group <em>images</em>,
@@ -331,9 +331,10 @@ the free space chain is maintained in storage.
 <p>
 
 <hr noshade>
-<p><h3><a NAME="howitworks">How It Works</a></h3>
+<p><h2><a NAME="howitworks">How It Works</a></h2>
 
-<b>Reading</b><br>
+<h3>Reading</h3>
+<p>
 A track or block group image is read while executing a channel
 program or by the <em>readahead</em> thread.  An image has to
 be read before it is updated or written to.  An image may be <em>cached</em>.
@@ -358,7 +359,8 @@ the read must enter a <em>cache wait</em>.  When images are detected to be
 accessed sequentially then the readahead thread(s) may be signalled to read
 following sequential images.
 <p>
-<b>Writing</b><br>
+<h3>Writing</h3>
+<p>
 When a cache entry is updated or written to, a bit is turned on indicating
 the cache entry has been updated.  When a <em>cache wait</em> occurs, or
 (more likely) during garbage collection, a cache <em>flush</em> is performed.
@@ -375,7 +377,8 @@ under stress is likely to take up more space than the same image written
 not under stress.  The writer thread(s) run 1 nicer than the CPU thread(s);
 compression is a CPU intensive activity.
 <p>
-<b>Garbage Collection</b><br>
+<h3>Garbage Collection</h3>
+<p>
 The primary function of the garbage collector is to keep the emulated
 compressed DASD files as small as possible.  After all, that is the reason
 for using compressed DASD files in the first place.  Another function
@@ -433,8 +436,9 @@ counter-productive (ie the offset of the new space is greater than the
 current offset).
 
 <hr noshade>
-<p><h3><a name=cckdcommand>The cckd command and initialization statement</a></h3>
+<p><h2><a name=cckdcommand>The cckd command and initialization statement</a></h2>
 
+<p>
 The <b>cckd</b> command and initialization statement can be used to
 affect cckd processing. The <b>CCKD</b> initialization statement is specified
 as a Hercules configuration file statement and supports the same options as
@@ -693,13 +697,15 @@ amount of physical memory you have.
         a noticeable performance degradation.  Note that an fsync will not
         be performed more often than every 5 seconds.
 </ul>
+<p>
 My advice is to use the default options and adjust them only if you have a very
 good reason to do so.
 <p>
 
 <hr noshade>
-<p><h3><a NAME="utilities">Utilities</a></h3>
+<p><h2><a NAME="utilities">Utilities</a></h2>
 
+<p>
 <a NAME="ckd2cckd">
 <li><b>ckd2cckd</b> <i>[options] source-file target-file</i>
    <ul><li><small><b>Description</b></small> Copies a regular CKD Dasd emulation
@@ -809,7 +815,8 @@ good reason to do so.
 </ul>
 
 <hr noshade>
-<p><h3><a NAME="faq">FAQ</a></h3>
+<p><h2><a NAME="faq">FAQ</a></h2>
+<p>
 <table>
 <tr><td valign="top"><b>Q.</b><td>
              What devices are supported ?

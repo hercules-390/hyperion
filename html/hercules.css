@@ -11,7 +11,7 @@ body
     margin-right: 75;
 }
 
-h1, h2, h3, h4
+h1, h2, h3, h4, h5, h6
 {
     font-family: Arial;
     font-weight: bold;
@@ -29,6 +29,15 @@ p.lastupd
     font-size:        small;
 }
 
+p.note
+{
+    background-color: #FFFFAA;
+    padding:          20px;
+    border-width:     1px;
+    border-style:     solid;
+    border-color:     black;
+}
+
 p.warning
 {
     color:            red;
@@ -39,14 +48,6 @@ p.warning
     border-width:     2px;
     border-style:     solid;
     border-color:     black;
-}
-
-p.box
-{
-    background-color: #FFFFAA;
-    padding:          20px;
-    border-width:     1px;
-    border-style:     solid;
 }
 
 pre, code {font-family: Courier;}
