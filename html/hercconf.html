@@ -15,7 +15,7 @@ The configuration file <b><i>hercules.cnf</b></i> contains the
 processor and device layout.  It is roughly equivalent to the IOCDS on
 a real System/390.  The configuration file is an ASCII text file.
 <h3>Example configuration file</h3>
-<blockquote><blockquote>
+<center>
 <table border=1><tr><td>
 <pre><code>
 
@@ -37,6 +37,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#CPUSERIAL">CPUSERIAL</a>  000611
     <a href="#CPUMODEL">CPUMODEL</a>   3090
     <a href="#CPUVERID">CPUVERID</a>   FD
+    <a href="#LPARNAME>LPARNAME</a>   HERCULES
     <a href="#MAINSIZE">MAINSIZE</a>   64
     <a href="#XPNDSIZE">XPNDSIZE</a>   0
     <a href="#NUMCPU">NUMCPU</a>     1
@@ -54,16 +55,25 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#PANRATE">PANRATE</a>    FAST
     <a href="#CODEPAGE">CODEPAGE</a>   default
 
+    <a href="#TODDRAG">TODDRAG</a>    1.0
     <a href="#TODPRIO">TODPRIO</a>    -20
     <a href="#HERCPRIO">HERCPRIO</a>   0
     <a href="#DEVPRIO">DEVPRIO</a>    8
     <a href="#CPUPRIO">CPUPRIO</a>    15
+    <a href="#DEVTMAX">DEVTMAX</a>    8
 
     <a href="#DIAG8CMD">DIAG8CMD</a>   disable
+    <a href="#SHCMDOPT">SHCMDOPT</a>   disable
 
     <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>   no
 
-    <a href="#DEFSYM">DEFSYM</a>   TAPEDIR "$(HOME)/tapes"
+    <a href="#DEFSYM">DEFSYM</a>     TAPEDIR "$(HOME)/tapes"
+    <a href="#MODPATH">MODPATH</a>    /usr/local/hercules
+    <a href="#LDMOD">LDMOD</a>      dyncrypt
+
+    <a href="#ASN_AND_LX_REUSE">ASN_AND_LX_REUSE</a>  disable
+    <a href="#PGMPRDOS">PGMPRDOS</a>   restricted
+    <a href="#ECPSVM">ECPSVM</a>     no
 
 
     #
@@ -103,7 +113,7 @@ a real System/390.  The configuration file is an ASCII text file.
     0583-0587 <a href="#3420">3420</a>    $(TAPEDIR)/volumes.$(CUU) maxsizeM=170 eotmargin=131072
 </pre></code>
 </td></tr></table>
-</blockquote></blockquote>
+</center>
 
 <h3>Comment lines</h3>
 <p>
@@ -647,19 +657,16 @@ a real System/390.  The configuration file is an ASCII text file.
 
 <a name="subs"></a>
 <h3>Symbol substitutions</h3></a>
-<dl> <!-- Begine substitution -->
-<dt><dd>
-<p><br>
-<dd><p>
+<p>
     In configuration and device statements, as well as in panel commands, symbols may be substituted for text.
-<dt><h4>Syntax</h4>
-<dd><p>
+<h4>Syntax</h4>
+<p>
     To substitute symbol <em>symbol</em> with its contents, the symbol should be enclosed
     within parenthesis and preceded by a $ sign. For example, if symbol <em>FOO</em> contains
     the text string <em>&quot;BAR&quot;</em> then <em>$(FOO)</em> will be substituted with the
     string <em>&quot;BAR&quot</em>;. Symbol names are case sensitive.
-<dt><h4>Example</h4>
-<dd><p>
+<h5>Example</h5>
+<p>
     <code><pre>
 ...
 DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
@@ -669,11 +676,9 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     </pre></code>
     <p>
     In this example, device 0380 will be a 3420 loaded with the AWS tape file in /home/hercules/tapes/scratch.aws
-<dt><h4>Special symbols</h4>
-<dl> <!-- Begine Special -->
-    <dt>
-    <h4>Device group symbols</h4>
-    <dd><p>
+<h4>Special symbols</h4>
+    <h5>Device group symbols</h5>
+    <p>
         When multiple devices are defined with a single device definition record, then the symbols<P>
         <TABLE BORDER=0>
         <ul compact>
@@ -690,45 +695,34 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
         <p>
         Will define 2 3340 packs, with device 0200 being loaded with the file myvols.200 and
         device 0201 defined with myvols.201.
-    <dt><h4>Environment variables</h4>
-    <dd><p>
+    <h5>Environment variables</h5>
+    <p>
         If a symbol is not explicitly defined by a DEFSYM statement and an environment
         variable by the same name exists, the string contents of that environment variable
         will be used for substitution.
-    <dt><h4>Undefined symbols</h4>
-    <dd><p>
+    <h5>Undefined symbols</h5>
+    <p>
         If a symbol is not defined by an explicit DEFSYM, is not an automatically generated symbol
         or is not an environment variable, an empty string will be substituted.
-    <dt><h4>Escaping substitution, recursion</h4>
-    <dd><p>
-        To be able to specify the '$(' string without incuring substitution, an additional '$' sign
+    <h4>Escaping substitution, recursion</h4>
+    <p>
+        To be able to specify the '$(' string without incurring substitution, an additional '$' sign
         should be used. For example, $$(FOO) will not be substituted. If substitution is required but
-        the text is to contain a '$' sign as the very previous character, then $$$(FOO) should be
-        specified (if symbol FOO contains &quot;BAR&quot;, then $$(FOO) will remain &quot;$$(FOO)&quot; while $$$(FOO)
-        will be become &quot;$BAR&quot;).<p>
+        the preceding text is to contain a '$' sign as the very last character, then $$$(FOO) should be
+        specified. Thus, if symbol FOO contains &quot;BAR&quot;, then $$(FOO) will remain &quot;$$(FOO)&quot; while $$$(FOO)
+        will become &quot;$BAR&quot;.
+    <p>
         Substitution is NOT recursive (only one substitution pass is made).
-    </dl> <!-- End Special -->
-</dl> <!-- End substitutions -->
 <hr><!-- ---------------------------------------------------------------------------- -->
 
 <a name="process_and_thread_priorities"></a>
 <h3>Process and Thread Priorities</h3>
 
-<dl> <!-- begin Process and Thread Priorities -->
-
-<dt><dd>
-
 <a name="process_priorities"></a>
-<p><br>
-
 <h4>Process Priorities</h4>
-
-<dl> <!-- begin Process Priorities -->
-
-<dt><dd>
-
 <P>
-    <B>Note:</B> Under Linux, a process is a thread and thread priority information
+    <B>Note:</B> Under Linux, a process is a thread and
+    <a href="#thread_priorities">thread priority</a> information
     applies instead.
 <P>
     For Windows, the following conversions are used for translating Unix
@@ -792,19 +786,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     </TR>
 </TABLE>
 
-</dl> <!-- end Process Priorities -->
-
-<dt><dd>
-
 <a name="thread_priorities"></a>
-<p><br>
-
 <h4>Thread Priorities</h4>
-
-<dl> <!-- begin Thread Priorities -->
-
-<dt><dd>
-
 <P>
     On a *ix (Linux/Unix) host, Hercules needs to be a setuid root
     program to allow it to reset its dispatching priority to a high
@@ -879,10 +862,6 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
         <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Idle</TD>
     </TR>
 </TABLE>
-
-</dl> <!-- end Thread Priorities -->
-
-</dl> <!-- end Process and Thread Priorities -->
 
 <hr><!-- ---------------------------------------------------------------------------- -->
 
@@ -1400,7 +1379,7 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     <dt><b>SCSI tapes</b>
     <dd><p>
         The argument specifies the tape device name (usually
-        <b><i>/dev/nst0</i></b>).  SCSI tapes are read and written
+        <code>/dev/nst0</code>).  SCSI tapes are read and written
         using variable length EBCDIC blocks and filemarks exactly
         like a mainframe tape volume. &nbsp;(See also the
         <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>
@@ -1415,7 +1394,7 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
         file called the tape descriptor file (TDF) specifies the
         names of the files which make up the virtual tape.
         The argument specifies the name of the tape descriptor
-        file (for example <b><i>/cdrom/tapes/uaa196.tdf</i></b>)
+        file (for example <code>/cdrom/tapes/uaa196.tdf</code>)
         <p>
 
         Each file on the virtual tape can be in one of three formats:
@@ -1450,7 +1429,7 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
 
         If you have any IBM manuals in Bookmanager format on CDROM,
         you can see some examples of TDF files in the
-        <b><i>\TAPES</i></b> directory on the CDROM.
+        <code>\TAPES</code> directory on the CDROM.
         <p>
 
     <dt><b>AWSTAPE virtual files</b>
@@ -1461,7 +1440,7 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
         a 6-byte header with no data.  This is the same format as is
         used by the P/390.
         The argument specifies the location of the AWSTAPE file
-        (for example <b><i>ickdsf.ipl</i></b>)
+        (for example <code>ickdsf.ipl</code>)
         <p>
 
     <dt><b>HET virtual files</b>
@@ -1472,17 +1451,17 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
         The first argument specifies the location of the HET file.  The
         filename must end with ".het" to be recognized by Hercules as an
         HET file.
-        (for example <b><i>023178.het</i></b>)
+        (for example <code>023178.het</code>)
         <p>
 
         Additional arguments that allow you to control various HET settings
         are:
         <p>
 
-        <dl> <!-- begin Aditional HET arguments -->
+        <dl> <!-- begin Additional HET arguments -->
         <dt><code>AWSTAPE</code>
         <dd><p>
-            The <b><i>AWSTAPE</i></b> argument causes HET files to
+            The <code>AWSTAPE</code> argument causes HET files to
             be written in AWSTAPE format.  This basically, disables
             the additional features provided by the HET format.
             <p>
@@ -1490,47 +1469,49 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
         <dt><code>COMPRESS=<em>n</em></code>
         <dt><code>IDRC=<em>n</em></code>
         <dd><p>
-            <b><i>COMPRESS</i></b> and <b><i>IDRC</i></b> control
+            <code>COMPRESS</code> and <code>IDRC</code> control
             whether compression should be used when writing to HET
-            files.  The value <code><em>n</em></code> can be <b>1</b>
-            to turn on compression (the default) or <b>0</b> to turn
-            it off.  <b><i>IDRC</i></b> is a currently a synonym for
-            <b><i>COMPRESS</i></b>, but may be used in the future to
+            files.  The value <code><em>n</em></code> can be <code>1</code>
+            to turn on compression (the default) or <code>0</code> to turn
+            it off.  <code>IDRC</code> is a currently a synonym for
+            <code>COMPRESS</code>, but may be used in the future to
             control other emulated tape drive features.
             <p>
 
         <dt><code>METHOD=<em>n</em></code>
         <dd><p>
-            The <b><i>METHOD</i></b> option allows you to specify
+            The <code>METHOD</code> option allows you to specify
             which compression method to use.  You may specify
-            <b><i>1</i></b> for ZLIB compression or <b><i>2</i></b>
-            for BZIP2 compression.  The default is <b><i>1</i></b>.
+            <code>1</code> for ZLIB compression or <code>2</code>
+            for BZIP2 compression.  The default is <code>1</code>.
             <p>
 
         <dt><code>LEVEL=<em>n</em></code>
         <dd><p>
-            The <b><i>LEVEL</i></b> option controls the level of
-            compression.  It ranges from <b><i>1</i></b> for fastest
-            compression to <b><i>9</i></b> for best compression.
-            The default is <b><i>4</i></b>.
+            The <code>LEVEL</code> option controls the level of
+            compression.  It ranges from <code>1</code> for fastest
+            compression to <code>9</code> for best compression.
+            The default is <code>4</code>.
             <p>
 
         <dt><code>CHUNKSIZE=<em>nnnnn</em></code>
         <dd><p>
-            The <b><i>CHUNKSIZE</i></b> option allows you to create
+            The <code>CHUNKSIZE</code> option allows you to create
             HET files that contain different chunk sizes.  The AWSTAPE
             (and therefore the HET) format allows each tape block to be
             logically broken up into smaller chunks.  For instance, if
             your S/3x0 application creates tapes with a block size of
             27998, those blocks would be broken down into
-            <code><em>nnnnn</em></code> sized chunks.  To be honest, I
-            can't think of a reason you'd want to change this since
-            decreasing it may reduce compression performance, but it's
-            there if you want it.  The range is from <b><i>4096</i></b>
-            to <b><i>65535</i></b>.  The latter being the default.
+            <code><em>nnnnn</em></code> sized chunks.
+            The range is from <code>4096</code>
+            to <code>65535</code>, the latter being the default.
+            Decreasing the value from its default may reduce compression
+            performance.
+            For compatability with AWSTAPE files created by the P/390,
+            specify <code>AWSTAPE</code> with <code>CHUNKSIZE=4096</code>.
             <p>
 
-        </dl> <!-- end Aditional HET arguments -->
+        </dl> <!-- end Additional HET arguments -->
 
     </dl> <!-- begin Emulated tape types of emulation -->
 
@@ -1814,7 +1795,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
         <dt><b>OAT file syntax</b>
         <dd><p>
             The syntax for the Address Translation file is as follows:
-            <blockquote>
+            <p>
+<table border=1 cellpadding=10><tr><td>
 <pre><code>
 *********************************************************
 * Dev   Mode  Port  Entry specific information...       *
@@ -1831,7 +1813,7 @@ HWADD  01  02:00:FE:DF:00:43
 
 ROUTE  00  172.021.003.032  255.255.255.224
 </code></pre>
-            </blockquote>
+</td></tr></table>
             <p>
 
             <dl> <!-- begin LCS OATFILE parms -->
@@ -1840,20 +1822,17 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
                 <dl>
                 <dt><code><em>Dev</em></code>
-                <dd><p>
-                    is the base device address
+                <dd>is the base device address
                     <p>
 
                 <dt><code><em>Mode</em></code>
-                <dd><p>
-                    is the operation mode: IP or SNA.
+                <dd>is the operation mode: IP or SNA.
                     <p>
                     <i><b>Note:</b> &nbsp;<u>the SNA operation mode is NOT currently implemented</u>.</i>
                     <p>
 
                 <dt><code><em>Port</em></code>
-                <dd><p>
-                    is the virtual (relative) adapter number.
+                <dd>is the virtual (relative) adapter number.
                     <p>
                 </dl>
                 <p>
@@ -1952,11 +1931,9 @@ ROUTE  00  172.021.003.032  255.255.255.224
     the file name by the characters 2, 3, etc.
     <p>
 
-    <blockquote>
     <em><b>Note:</b> &nbsp;When CKD DASD images are spread across multiple files, you must
     specify only the first file name (the file with suffix _1) in the
     configuration statement.</em>
-    </blockquote>
     <p>
 
     If your operating system supports <i>large file sizes</i> (or
@@ -2055,10 +2032,12 @@ ROUTE  00  172.021.003.032  255.255.255.224
         the hercules <code>syncio</code> panel command.
         <p>
 
+        <!-- No longer applicable with current versions of Linux
         <b>Note:</b> If you plan on using syncio with <b>Linux/390</b> and/or <b>zLinux</b>
         you might also want to take a look at the <a href="#IODELAY">IODELAY</a>
         configuration file statement as well.
         <p>
+        -->
 
     <dt><code>readonly</code>
     <dd><p>
