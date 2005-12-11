@@ -686,11 +686,11 @@ void NP_update(REGS *regs)
         {
             draw_fw (fetch_fw(curpsw));
 //          draw_fw (0);
-            draw_text("--------");
+            draw_fw (fetch_fw(curpsw+4)); /* *JJ */
             set_pos (3, 22);
 //          draw_fw (fetch_fw(curpsw+4) & 0x80000000 ? 0x80000000 : 0);
-            draw_text("--------");
-            draw_fw (fetch_fw(curpsw+4));
+//          draw_fw (fetch_fw(curpsw+4) & 0x7fffffff);
+            draw_text("----------------"); /* *JJ */
         }
         else
         {
