@@ -15,6 +15,10 @@ Hercules Version 3: Installation and Operation</TITLE>
 <blockquote>
     <p>
         <a href="#install">Installation Procedure</a>
+        <ul>
+            <li><a href="#instsource">- Building from source</a>
+            <li><a href="#instbinary">- Pre-built binaries</a>
+        </ul>
     </p>
     <p>
         <a href="#config">Configuration Procedure</a>
@@ -35,12 +39,15 @@ Hercules Version 3: Installation and Operation</TITLE>
 
 <p><hr><a name="install"></a>
 <h2>Installation Procedure</h2>
-<h3>Building from source</h3>
-<p>The following instructions apply to the Linux or Mac OS X versions.
+<a name="instsource"></a>
+<h3>Building from source - Windows with Cygwin</h3>
 <p>
 For building the Cygwin version of Hercules on Windows, Volker Bandke
 has instructions on his "<b>Building Hercules for Windows</b>" web page at
 <a href="http://www.bsp-gmbh.com/hercules/herc_w32_2.html">http://www.bsp-gmbh.com/hercules/herc_w32_2.html</a>.
+</p>
+
+<h3>Building from source - Windows (without Cygwin)</h3>
 <p>
 For building the MSVC version of Hercules on Windows (a version of
 Hercules that does <i>not</i> require Cygwin), Fish has instructions on his
@@ -48,21 +55,12 @@ Hercules that does <i>not</i> require Cygwin), Fish has instructions on his
 <a href="http://www.softdevlabs.com/Hercules/hercules-msvc-build.html">http://www.softdevlabs.com/Hercules/hercules-msvc-build.html</a>.
 </p>
 
+<h3>Building from source - Linux and Mac OS X</h3>
 <ol>
 <li>Download the distribution file
 <a href="hercules-3.03.tar.gz">hercules-3.03.tar.gz</a>
-<p>
-<em>Notes:</em>
-<ol>
-<li>By downloading this file you agree to the terms
+<br><em>Note:</em> By downloading this file you agree to the terms
     of the <a href="herclic.html">Q Public Licence</a>.
-<!--
-<li>IE4 may report "problem with security settings or file does
-    not exist" when downloading this file.  I do not know why.
-    If you experience this problem, use IE5 or Netscape Navigator
-    instead.
--->
-</ol>
 <p>
 <li>Use these commands to unzip the distribution file:
 <pre>tar xvzf ../hercules-3.03.tar.gz
@@ -99,6 +97,7 @@ Refer to the <a href="hercfaq.html#3.04">
 Hercules Frequently-Asked Questions</a> page for required
 compiler and other software levels.
 
+<a name="instbinary"></a>
 <h3>Installing prebuilt RPMs:</h3>
 <ol>
 <li>Download the RPM file you want:
@@ -146,6 +145,25 @@ to install the supplied Tunnel driver. Note that, at this writing, the
 Panther version of the driver works fine, but the Tiger version will hang
 at Hercules shutdown, and you must reboot in order to clear the problem.
 Unfortunately, the Panther driver will not work on Tiger at all.
+</ol>
+
+<h3>Installing on Windows (without Cygwin):</h3>
+<ol>
+<li>Download the self-extracting Windows archive: 
+<ul>
+<li><a href="hercules-3.03-native-p4.exe">hercules-3.03-native-p4.exe</a>:
+Pentium 4
+<li><a href="hercules-3.03-native-i686.exe">hercules-3.03-native-i686.exe</a>:
+Pentium Pro, Pentium II, Pentium III, and AMD Athlon and up
+<li><a href="hercules-3.03-native-i586.exe">hercules-3.03-native-i586.exe</a>:
+Pentium and AMD K6
+</ul>
+<li>Run one of the above self-extracting archives to install the Hercules
+executables on your system.
+<li>You will probably also want to install Fish's Hercules GUI for Windows,
+obtainable from
+<a href="http://www.cbttape.org/~fish/hercgui-index.html">
+http://www.cbttape.org/~fish/hercgui-index.html</a>
 </ol>
 
 <h3>Installing on Windows with Cygwin:</h3>
