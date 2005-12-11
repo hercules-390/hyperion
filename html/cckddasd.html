@@ -34,8 +34,8 @@ a specific spot in the emulation file.  The offset of the track or block
 in the file can be directly calculated knowing the track or block number
 and the maximum size of the track or block.  In compressed files, each
 track image or group of blocks may be compressed by
-<a href="http://www.info-zip.org/pub/infozip/zlib/"><b>zlib</b></a> or
-<a href="http://sourceware.cygnus.com/bzip2/"><b>bzip2</b></a>, and only
+<a href="http://www.zlib.net/"><b>zlib</b></a> or
+<a href="http://www.bzip.org/"><b>bzip2</b></a>, and only
 occupies the space neccessary for the compressed image.  The offset of a compressed
 track or block is obtained by performing a two-table lookup.  The lookup
 tables themselves reside in the emulation file.
