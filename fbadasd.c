@@ -610,7 +610,7 @@ fba_read_blkgrp_retry:
     offset = (OFF_T)(blkgrp * FBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
-    logdevtr (dev, _("HHCDA074I read blkgrp %d offset %lld len %d\n"),
+    logdevtr (dev, _("HHCDA074I read blkgrp %d offset %" I64_FMT "d len %d\n"),
               blkgrp, (long long)offset, fba_blkgrp_len(dev, blkgrp));
 
     /* Seek to the block group offset */
@@ -1061,7 +1061,7 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbaorigin
                      + dev->fbaxblkn) * dev->fbablksiz;
 
-        logdevtr (dev, _("HHCDA077I Positioning to %8.8llX (%llu)\n"),
+        logdevtr (dev, _("HHCDA077I Positioning to %8.8llX (%" I64_FMT "u)\n"),
                  (long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba);
 
         /* Return normal status */

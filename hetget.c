@@ -509,7 +509,7 @@ getfile( HETB *hetb, FILE *outf )
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
-                    fprintf( stderr, "IPOS=%lld\n", (U64)curpos );
+                    fprintf( stderr, "IPOS=%" I64_FMT "d\n", (U64)curpos );
                 }
             }
 #endif /*EXTERNALGUI*/
@@ -575,7 +575,7 @@ getfile( HETB *hetb, FILE *outf )
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
-                    fprintf( stderr, "IPOS=%lld\n", (U64)curpos );
+                    fprintf( stderr, "IPOS=%" I64_FMT "d\n", (U64)curpos );
                 }
             }
 #endif /*EXTERNALGUI*/

@@ -1192,7 +1192,7 @@ int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
-    logmsg("%-6.6s%d,%lld\n",mnemonic,r1,i2*2LL);
+    logmsg("%-6.6s%d,%" I64_FMT "d\n",mnemonic,r1,i2*2LL);
 }
 
 void disasm_SI (BYTE inst[], BYTE mnemonic[])

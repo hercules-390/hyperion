@@ -663,7 +663,7 @@ logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
              * billion files. -- JRM */
             file_limit=rlim.rlim_max;
             file_limit=(file_limit>1024)?1024:file_limit;
-//DEBUG     logmsg(_("HHCTU031I Closing %lld files\n"),
+//DEBUG     logmsg(_("HHCTU031I Closing %" I64_FMT "d files\n"),
 //DEBUG              (long long)file_limit);
             for(i=0;(unsigned int)i<file_limit;i++)
             {

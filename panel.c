@@ -2099,7 +2099,7 @@ FinishShutdown:
                            SIE_MODE(regs)                     ? 'S' : '.',
                            regs->arch_mode == ARCH_900        ? 'Z' : '.');
                     buf[len++] = ' ';
-                    sprintf (ibuf, "instcount=%llu",
+                    sprintf (ibuf, "instcount=%" I64_FMT "u",
 #if defined(_FEATURE_SIE)
                         SIE_MODE(regs) ?  (long long) regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/

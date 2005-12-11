@@ -1987,7 +1987,7 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
     l1tabsz = numl1tab * CCKD_L1ENT_SIZE;
     if (l1tabsz > 65536)
     {
-        fprintf (stderr, _("HHCDU053E File size too large: %lld [%d]\n"),
+        fprintf (stderr, _("HHCDU053E File size too large: %" I64_FMT "d [%d]\n"),
                  (long long)(sectors * sectsz), numl1tab);
         return -1;
     }

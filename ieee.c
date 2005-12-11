@@ -517,7 +517,7 @@ void ebfpston(struct ebfp *op)
         op->v = ldexpl(h + l, op->exp - 16383);
         break;
     }
-    //logmsg("exp=%d fracth=%llx fractl=%llx v=%Lg\n", op->exp, op->fracth, op->fractl, op->v);
+    //logmsg("exp=%d fracth=%" I64_FMT "x fractl=%" I64_FMT "x v=%Lg\n", op->exp, op->fracth, op->fractl, op->v);
 }
 
 void lbfpston(struct lbfp *op)
@@ -570,7 +570,7 @@ void lbfpston(struct lbfp *op)
         op->v = ldexp(t, op->exp - 1023);
         break;
     }
-    //logmsg("exp=%d fract=%llx v=%g\n", op->exp, op->fract, op->v);
+    //logmsg("exp=%d fract=%" I64_FMT "x v=%g\n", op->exp, op->fract, op->v);
 }
 
 void sbfpston(struct sbfp *op)
@@ -656,7 +656,7 @@ void ebfpntos(struct ebfp *op)
         op->fractl = (U64)fmodl(ldexp(fabsl(f), 113), pow(2, 64));
         break;
     }
-    //logmsg("exp=%d fracth=%llx fractl=%llx v=%Lg\n", op->exp, op->fracth, op->fractl, op->v);
+    //logmsg("exp=%d fracth=%" I64_FMT "x fractl=%" I64_FMT "x v=%Lg\n", op->exp, op->fracth, op->fractl, op->v);
 }
 
 void lbfpntos(struct lbfp *op)
@@ -685,7 +685,7 @@ void lbfpntos(struct lbfp *op)
         op->fract = (U64)ldexp(fabs(f), 53) & 0xFFFFFFFFFFFFFULL;
         break;
     }
-    //logmsg("exp=%d fract=%llx v=%g\n", op->exp, op->fract, op->v);
+    //logmsg("exp=%d fract=%" I64_FMT "x v=%g\n", op->exp, op->fract, op->v);
 }
 
 void sbfpntos(struct sbfp *op)
@@ -733,7 +733,7 @@ static void get_lbfp(struct lbfp *op, U32 *fpr)
     op->sign = (fpr[0] & 0x80000000) != 0;
     op->exp = (fpr[0] & 0x7FF00000) >> 20;
     op->fract = (((U64)fpr[0] & 0x000FFFFF) << 32) | fpr[1];
-    //logmsg("lget r=%8.8x%8.8x exp=%d fract=%llx\n", fpr[0], fpr[1], op->exp, op->fract);
+    //logmsg("lget r=%8.8x%8.8x exp=%d fract=%" I64_FMT "x\n", fpr[0], fpr[1], op->exp, op->fract);
 }
 #endif  /* !defined(_IEEE_C) */
 
@@ -746,7 +746,7 @@ static void vfetch_lbfp(struct lbfp *op, VADR addr, int arn, REGS *regs)
     op->sign = (v & 0x8000000000000000ULL) != 0;
     op->exp = (v & 0x7FF0000000000000ULL) >> 52;
     op->fract = v & 0x000FFFFFFFFFFFFFULL;
-    //logmsg("lfetch m=%16.16llx exp=%d fract=%llx\n", v, op->exp, op->fract);
+    //logmsg("lfetch m=%16.16llx exp=%d fract=%" I64_FMT "x\n", v, op->exp, op->fract);
 }
 
 #if !defined(_IEEE_C)
@@ -787,7 +787,7 @@ static void put_lbfp(struct lbfp *op, U32 *fpr)
 {
     fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<20) | (op->fract>>32);
     fpr[1] = op->fract & 0xFFFFFFFF;
-    //logmsg("lput exp=%d fract=%llx r=%8.8x%8.8x\n", op->exp, op->fract, fpr[0], fpr[1]);
+    //logmsg("lput exp=%d fract=%" I64_FMT "x r=%8.8x%8.8x\n", op->exp, op->fract, fpr[0], fpr[1]);
 }
 
 static void put_sbfp(struct sbfp *op, U32 *fpr)

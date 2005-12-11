@@ -3719,7 +3719,7 @@ static int      stmtno = 0;             /* Statement number          */
 
 #ifdef EXTERNALGUI
         /* Indicate input file progess */
-        if (extgui) fprintf (stderr, "IPOS=%lld\n", (U64)FTELL(cfp));
+        if (extgui) fprintf (stderr, "IPOS=%" I64_FMT "d\n", (U64)FTELL(cfp));
 #endif /*EXTERNALGUI*/
 
         /* Check for DOS end of file character */

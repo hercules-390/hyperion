@@ -633,7 +633,7 @@ void  UpdateCPUStatus ()
 
         "%c%c%c%c%c%c%c%c "
 
-        "instcount=%llu\n"
+        "instcount=%" I64_FMT "u\n"
 
         ,pTargetCPU_REGS->cpuad
 

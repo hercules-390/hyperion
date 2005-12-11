@@ -2808,9 +2808,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         }
         logmsg( _("          CPU%4.4X: state %s\n"),
                sysblk.regs[i]->cpuad,states[sysblk.regs[i]->cpustate]);
-        logmsg( _("          CPU%4.4X: instcount %lld\n"),
+        logmsg( _("          CPU%4.4X: instcount %" I64_FMT "d\n"),
                sysblk.regs[i]->cpuad,(long long)sysblk.regs[i]->instcount);
-        logmsg( _("          CPU%4.4X: siocount %lld\n"),
+        logmsg( _("          CPU%4.4X: siocount %" I64_FMT "d\n"),
                sysblk.regs[i]->cpuad,(long long)sysblk.regs[i]->siototal);
         copy_psw(sysblk.regs[i], curpsw);
         logmsg( _("          CPU%4.4X: psw %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x"),
@@ -2887,9 +2887,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             }
             logmsg( _("          SIE%4.4X: state %s\n"),
                    sysblk.regs[i]->guestregs->cpuad,states[sysblk.regs[i]->guestregs->cpustate]);
-            logmsg( _("          SIE%4.4X: instcount %lld\n"),
+            logmsg( _("          SIE%4.4X: instcount %" I64_FMT "d\n"),
                    sysblk.regs[i]->guestregs->cpuad,(long long)sysblk.regs[i]->guestregs->instcount);
-            logmsg( _("          SIE%4.4X: siocount %lld\n"),
+            logmsg( _("          SIE%4.4X: siocount %" I64_FMT "d\n"),
                    sysblk.regs[i]->guestregs->cpuad,(long long)sysblk.regs[i]->guestregs->siototal);
             copy_psw(sysblk.regs[i]->guestregs, curpsw);
             logmsg( _("          SIE%4.4X: psw %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x"),
@@ -3003,102 +3003,102 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
             case 0x01:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imap01[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imap01[i2]);
                 break;
             case 0xA4:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapa4[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imapa4[i2]);
                 break;
             case 0xA5:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapa5[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imapa5[i2]);
                 break;
             case 0xA6:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapa6[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imapa6[i2]);
                 break;
             case 0xA7:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapa7[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imapa7[i2]);
                 break;
             case 0xB2:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb2[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imapb2[i2]);
                 break;
             case 0xB3:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb3[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imapb3[i2]);
                 break;
             case 0xB9:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb9[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imapb9[i2]);
                 break;
             case 0xC0:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc0[i2])
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imapc0[i2]);
                 break;
             case 0xC2:                                                      /*@Z9*/
                 for(i2 = 0; i2 < 16; i2++)                                  /*@Z9*/
                     if(sysblk.imapc2[i2])                                   /*@Z9*/
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%llu\n",  /*@Z9*/
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",  /*@Z9*/
                             i1, i2, sysblk.imapc2[i2]);                     /*@Z9*/
                 break;                                                      /*@Z9*/
             case 0xE3:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape3[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imape3[i2]);
                 break;
             case 0xE4:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape4[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imape4[i2]);
                 break;
             case 0xE5:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape5[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imape5[i2]);
                 break;
             case 0xEB:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapeb[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imapeb[i2]);
                 break;
             case 0xEC:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapec[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imapec[i2]);
                 break;
             case 0xED:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imaped[i2])
-                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%" I64_FMT "u\n",
                             i1, i2, sysblk.imaped[i2]);
                 break;
             default:
                 if(sysblk.imapxx[i1])
-                    logmsg("          INST=%2.2X  \tCOUNT=%llu\n",
+                    logmsg("          INST=%2.2X  \tCOUNT=%" I64_FMT "u\n",
                         i1, sysblk.imapxx[i1]);
                 break;
         }

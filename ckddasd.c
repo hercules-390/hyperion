@@ -921,7 +921,7 @@ ckd_read_track_retry:
 
     dev->syncio_active = active;
 
-    logdevtr (dev, _("HHCDA031I read trk %d reading file %d offset %lld len %d\n"),
+    logdevtr (dev, _("HHCDA031I read trk %d reading file %d offset %" I64_FMT "d len %d\n"),
               trk, f+1, (long long)dev->ckdtrkoff, dev->ckdtrksz);
 
     /* Seek to the track image offset */

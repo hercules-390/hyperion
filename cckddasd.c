@@ -621,13 +621,13 @@ int             rc;                     /* Return code               */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "file[%d] fd[%d] read, off 0x%llx len %ld\n",
+    cckd_trace (dev, "file[%d] fd[%d] read, off 0x%" I64_FMT "x len %ld\n",
                 sfx, cckd->fd[sfx], (long long)off, (long)len);
 
     /* Seek to specified offset */
     if (LSEEK (cckd->fd[sfx], off, SEEK_SET) < 0)
     {
-        logmsg (_("HHCCD130E %4.4X file[%d] lseek error, offset 0x%llx: %s\n"),
+        logmsg (_("HHCCD130E %4.4X file[%d] lseek error, offset 0x%" I64_FMT "x: %s\n"),
                 dev->devnum, sfx, (long long)off, strerror(errno));
         cckd_print_itrace ();
         return -1;
@@ -638,10 +638,10 @@ int             rc;                     /* Return code               */
     if (rc < (int)len)
     {
         if (rc < 0)
-            logmsg (_("HHCCD130E %4.4X file[%d] read error, offset 0x%llx: %s\n"),
+            logmsg (_("HHCCD130E %4.4X file[%d] read error, offset 0x%" I64_FMT "x: %s\n"),
                     dev->devnum, sfx, (long long)off, strerror(errno));
         else
-            logmsg (_("HHCCD130E %4.4X file[%d] read incomplete, offset 0x%llx: "
+            logmsg (_("HHCCD130E %4.4X file[%d] read incomplete, offset 0x%" I64_FMT "x: "
                       "read %d expected %d\n"),
                     dev->devnum, sfx, (long long)off, rc, len);
         cckd_print_itrace ();
@@ -662,13 +662,13 @@ int             rc = 0;                 /* Return code               */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "file[%d] fd[%d] write, off 0x%llx len %ld\n",
+    cckd_trace (dev, "file[%d] fd[%d] write, off 0x%" I64_FMT "x len %ld\n",
                 sfx, cckd->fd[sfx], (long long)off, (long)len);
 
     /* Seek to specified offset */
     if (LSEEK (cckd->fd[sfx], off, SEEK_SET) < 0)
     {
-        logmsg (_("HHCCD130E %4.4X file[%d] lseek error, offset 0x%llx: %s\n"),
+        logmsg (_("HHCCD130E %4.4X file[%d] lseek error, offset 0x%" I64_FMT "x: %s\n"),
                 dev->devnum, sfx, (long long)off, strerror(errno));
         return -1;
     }
@@ -678,10 +678,10 @@ int             rc = 0;                 /* Return code               */
     if (rc < (int)len)
     {
         if (rc < 0)
-            logmsg (_("HHCCD130E %4.4X file[%d] write error, offset 0x%llx: %s\n"),
+            logmsg (_("HHCCD130E %4.4X file[%d] write error, offset 0x%" I64_FMT "x: %s\n"),
                     dev->devnum, sfx, (long long)off, strerror(errno));
         else
-            logmsg (_("HHCCD130E %4.4X file[%d] write incomplete, offset 0x%llx: "
+            logmsg (_("HHCCD130E %4.4X file[%d] write incomplete, offset 0x%" I64_FMT "x: "
                       "wrote %d expected %d\n"),
                     dev->devnum, sfx, (long long)off, rc, len);
         cckd_print_itrace ();
@@ -701,13 +701,13 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     cckd = dev->cckd_ext;
 
-    cckd_trace (dev, "file[%d] fd[%d] ftruncate, off 0x%llx\n",
+    cckd_trace (dev, "file[%d] fd[%d] ftruncate, off 0x%" I64_FMT "x\n",
                 sfx, cckd->fd[sfx], (long long)off);
 
     /* Truncate the file */
     if (FTRUNCATE (cckd->fd[sfx], off) < 0)
     {
-        logmsg (_("HHCCD130E %4.4X file[%d] ftruncate error, offset 0x%llx: %s\n"),
+        logmsg (_("HHCCD130E %4.4X file[%d] ftruncate error, offset 0x%" I64_FMT "x: %s\n"),
                 dev->devnum, sfx, (long long)off, strerror(errno));
         cckd_print_itrace ();
         return -1;
@@ -1952,7 +1952,7 @@ cckd_get_space_atend:
         cckd->cdevhdr[sfx].size += len;
         cckd->cdevhdr[sfx].used += len;
 
-        cckd_trace (dev, "get_space atend 0x%llx len %d\n",(long long)fpos, len);
+        cckd_trace (dev, "get_space atend 0x%" I64_FMT "x len %d\n",(long long)fpos, len);
 
         return fpos;
     }
@@ -2034,7 +2034,7 @@ cckd_get_space_atend:
 
     cckd->cdevhdr[sfx].free_imbed += *size - len;
 
-    cckd_trace (dev, "get_space found 0x%llx len %d size %d\n",
+    cckd_trace (dev, "get_space found 0x%" I64_FMT "x len %d size %d\n",
                 (long long)fpos, len, *size);
 
     return fpos;
@@ -2059,7 +2059,7 @@ int             fsize = size;           /* Free space size           */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    cckd_trace (dev, "rel_space offset %llx len %d size %d\n",
+    cckd_trace (dev, "rel_space offset %" I64_FMT "x len %d size %d\n",
                 (long long)pos, len, size);
 
     if (!cckd->free) cckd_read_fsp (dev);
@@ -2215,7 +2215,7 @@ U32             ppos, pos;              /* Free space offsets        */
         i = p;
         p = cckd->free[i].prev;
 
-        cckd_trace (dev, "file[%d] rel_flush_space atend 0x%llx len %d\n",
+        cckd_trace (dev, "file[%d] rel_flush_space atend 0x%" I64_FMT "x len %d\n",
                     sfx, (long long)ppos, cckd->free[i].len);
 
         /* Remove the entry from the chain */
@@ -2416,7 +2416,7 @@ OFF_T           off;                    /* Offset to l1 entry        */
     sfx = cckd->sfn;
     off = (OFF_T)(CCKD_L1TAB_POS + l1x * CCKD_L1ENT_SIZE);
 
-    cckd_trace (dev, "file[%d] write_l1ent[%d] , 0x%llx\n",
+    cckd_trace (dev, "file[%d] write_l1ent[%d] , 0x%" I64_FMT "x\n",
                 sfx, l1x, (long long)off);
 
     if (cckd_write (dev, sfx, off, &cckd->l1[sfx][l1x], CCKD_L1ENT_SIZE) < 0)
@@ -2660,7 +2660,7 @@ int             nullfmt;                /* Null track format         */
         if (cckd->swapend[sfx])
             cckd_swapend_l2 (buf);
 
-        cckd_trace (dev, "file[%d] cache[%d] l2[%d] read offset 0x%llx\n",
+        cckd_trace (dev, "file[%d] cache[%d] l2[%d] read offset 0x%" I64_FMT "x\n",
                     sfx, lru, l1x, (long long)cckd->l1[sfx][l1x]);
 
         cckd->l2reads[sfx]++;
@@ -4480,7 +4480,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
         if (ulen > flen + 65536) ulen = flen + 65536;
         if (ulen > sizeof(buf))  ulen = sizeof(buf);
 
-        cckd_trace (dev, "gcperc selected space 0x%llx len %ld\n",
+        cckd_trace (dev, "gcperc selected space 0x%" I64_FMT "x len %ld\n",
                     (long long)upos, (long)ulen);
 
         if (cckd_read (dev, sfx, upos, buf, ulen) < 0)
@@ -4499,7 +4499,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
                 /* Moving a level 2 table */
                 len = CCKD_L2TAB_SIZE;
                 if (i + len > ulen) break;
-                cckd_trace (dev, "gcperc move l2tab[%d] at pos 0x%llx len %ld\n",
+                cckd_trace (dev, "gcperc move l2tab[%d] at pos 0x%" I64_FMT "x len %ld\n",
                             j, (unsigned long long)(upos + i), (long)len);
 
                 /* Make the level 2 table active */
@@ -4527,7 +4527,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
                 len = (int)l2.size;
                 if (i + l2.len > (int)ulen) break;
 
-                cckd_trace (dev, "gcperc move trk %d at pos 0x%llx len %d\n",
+                cckd_trace (dev, "gcperc move trk %d at pos 0x%" I64_FMT "x len %d\n",
                             trk, (long long)(upos + i), (int)l2.len);
 
                 /* Relocate the track image somewhere else */
@@ -4554,7 +4554,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
 cckd_gc_perc_space_error:
 
-    logmsg (_("HHCCD190E %4.4X file[%d] offset 0x%llx unknown space: "
+    logmsg (_("HHCCD190E %4.4X file[%d] offset 0x%" I64_FMT "x unknown space: "
               "%2.2x%2.2x%2.2x%2.2x%2.2x\n"),
             dev->devnum,cckd->sfn,(long long)(upos + i),
             buf[i], buf[i+1],buf[i+2], buf[i+3], buf[i+4]);

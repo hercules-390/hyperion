@@ -74,7 +74,7 @@ U32               o;                    /* Level 2 table offset      */
     rcoff = LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
     if (rcoff == -1)
     {
-        ENDMSG (m, "lseek error fd %d offset %lld: %s\n",
+        ENDMSG (m, "lseek error fd %d offset %" I64_FMT "d: %s\n",
                 fd, (long long)CKDDASD_DEVHDR_SIZE, strerror(errno));
         return -1;
     }
@@ -92,7 +92,7 @@ U32               o;                    /* Level 2 table offset      */
     rcoff = LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
     if (rcoff == -1)
     {
-        ENDMSG (m, "lseek error fd %d offset %lld: %s\n",
+        ENDMSG (m, "lseek error fd %d offset %" I64_FMT "d: %s\n",
                 fd, (long long)CKDDASD_DEVHDR_SIZE, strerror(errno));
         return -1;
     }
@@ -174,7 +174,7 @@ U32               o;                    /* Level 2 table offset      */
             rcoff = LSEEK (fd, (OFF_T)o, SEEK_SET);
             if (rcoff == -1)
             {
-                ENDMSG (m, "lseek error fd %d offset %lld: %s\n",
+                ENDMSG (m, "lseek error fd %d offset %" I64_FMT "d: %s\n",
                         fd, (long long)o, strerror(errno));
                 free (l1);
                 return -1;
@@ -183,7 +183,7 @@ U32               o;                    /* Level 2 table offset      */
             rc = read (fd, &l2, CCKD_L2TAB_SIZE);
             if (rc != CCKD_L2TAB_SIZE)
             {
-                ENDMSG (m, "l2[%d] read error, offset %lld bytes read %d : %s\n",
+                ENDMSG (m, "l2[%d] read error, offset %" I64_FMT "d bytes read %d : %s\n",
                         i, (long long)o, rc, strerror(errno));
                 free (l1);
                 return -1;
@@ -194,7 +194,7 @@ U32               o;                    /* Level 2 table offset      */
             rcoff = LSEEK (fd, (OFF_T)o, SEEK_SET);
             if (rcoff == -1)
             {
-                ENDMSG (m, "lseek error fd %d offset %lld: %s\n",
+                ENDMSG (m, "lseek error fd %d offset %" I64_FMT "d: %s\n",
                         fd, (long long)o, strerror(errno));
                 free (l1);
                 return -1;
@@ -220,7 +220,7 @@ U32               o;                    /* Level 2 table offset      */
         rcoff = LSEEK (fd, o, SEEK_SET);
         if (rcoff == -1)
         {
-            ENDMSG (m, "lseek error fd %d offset %lld: %s\n",
+            ENDMSG (m, "lseek error fd %d offset %" I64_FMT "d: %s\n",
                     fd, (long long)o, strerror(errno));
             return -1;
         }
@@ -238,7 +238,7 @@ U32               o;                    /* Level 2 table offset      */
         rcoff = LSEEK (fd, (OFF_T)o, SEEK_SET);
         if (rcoff == -1)
         {
-            ENDMSG (m, "lseek error fd %d offset %lld: %s\n",
+            ENDMSG (m, "lseek error fd %d offset %" I64_FMT "d: %s\n",
                     fd, (long long)o, strerror(errno));
             return -1;
         }
@@ -1151,7 +1151,7 @@ free_space_check:
     {
         fsperr = 1;               /* turn on error indicator */
         memset (&fb, 0, CCKD_FREEBLK_SIZE);
-        sprintf (msg, "pos=0x%llx nxt=0x%llx len=%d\n",
+        sprintf (msg, "pos=0x%" I64_FMT "x nxt=0x%" I64_FMT "x len=%d\n",
                  (long long)fsp, (long long)fb.pos, fb.len);
         if (fsp < lopos || fsp > hipos - CCKD_FREEBLK_SIZE) break;
         rcoff = LSEEK (fd, fsp, SEEK_SET);
@@ -1520,14 +1520,14 @@ overlap:
         if (spc[i].pos + spc[i].siz < spc[i+1].pos)
         {
 //          if (othererrs)
-//          CDSKMSG (m, "gap at pos 0x%llx length %d\n",
+//          CDSKMSG (m, "gap at pos 0x%" I64_FMT "x length %d\n",
 //                  (long long)(spc[i].pos + spc[i].siz),
 //                  (int)(spc[i+1].pos - (spc[i].pos + spc[i].siz)));
         }
         else if (spc[i].pos + spc[i].len > spc[i+1].pos)
         {
-            CDSKMSG (m, "%s at pos 0x%llx length %lld overlaps "
-                    "%s at pos 0x%llx\n",
+            CDSKMSG (m, "%s at pos 0x%" I64_FMT "x length %" I64_FMT "d overlaps "
+                    "%s at pos 0x%" I64_FMT "x\n",
                     space[spc[i].typ], (long long)spc[i].pos, spc[i].len,
                     space[spc[i+1].typ], (long long)spc[i+1].pos);
             for (j = i; j < s; j++)
@@ -1648,18 +1648,18 @@ overlap:
         rcoff = LSEEK (fd, gap[i].pos, SEEK_SET);
         if (rcoff == -1)
         {
-            CDSKMSG (m, "lseek failed for gap at pos 0x%llx: %s\n",
+            CDSKMSG (m, "lseek failed for gap at pos 0x%" I64_FMT "x: %s\n",
                     (long long)gap[i].pos, strerror(errno));
             goto cdsk_return;
         }
         rc = read (fd, gapbuf, gap[i].siz);
         if (rc != gap[i].siz)
         {
-            CDSKMSG (m, "read failed for gap at pos 0x%llx length %lld: %s\n",
+            CDSKMSG (m, "read failed for gap at pos 0x%" I64_FMT "x length %" I64_FMT "d: %s\n",
                     (long long)gap[i].pos, gap[i].siz, strerror(errno));
             goto cdsk_return;
         }
-//      CDSKMSG (m, "recovery for gap at pos 0x%llx length %lld\n",
+//      CDSKMSG (m, "recovery for gap at pos 0x%" I64_FMT "x length %" I64_FMT "d\n",
 //               (long long)gap[i].pos, gap[i].siz);
 
         /* search for track images in the gap */
@@ -1703,7 +1703,7 @@ overlap:
             if (n - j < trksz) maxlen = n - j;
             else maxlen = trksz;
 
-            CDSKMSG (m, "%s %d at 0x%llx maxlen %d: ",
+            CDSKMSG (m, "%s %d at 0x%" I64_FMT "x maxlen %d: ",
                      ckddasd ? "trk" : "blk",
                      trk, (long long)(gap[i].pos + j), maxlen);
 
@@ -1972,7 +1972,7 @@ overlap:
             }
                 goto short_gap;
             }
-            CDSKMSG (m, "short gap pos 0x%llx preceded by %s pos 0x%llx\n",
+            CDSKMSG (m, "short gap pos 0x%" I64_FMT "x preceded by %s pos 0x%" I64_FMT "x\n",
                      (long long)gap[i].pos, space[spc[j].typ],
                      (long long)spc[j].pos);
         }
