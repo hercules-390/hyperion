@@ -24,11 +24,9 @@ Hercules Version 3: Installation and Operation</TITLE>
     </p>
     <p>
         <a href="#operating">Operating Procedure</a>
-        <blockquote>
-            <p>
-                <a href="#RCFILE">.RC &nbsp;("run commands")&nbsp; file</a>
-            </p>
-        </blockquote>
+    </p>
+    <p>
+        <a href="#RCFILE">.RC &nbsp;("run commands")&nbsp; file</a>
     </p>
     <p>
         <a href="#support">Technical Support</a>
@@ -58,10 +56,12 @@ Hercules that does <i>not</i> require Cygwin), Fish has instructions on his
 <ol>
 <li>By downloading this file you agree to the terms
     of the <a href="herclic.html">Q Public Licence</a>.
+<!--
 <li>IE4 may report "problem with security settings or file does
     not exist" when downloading this file.  I do not know why.
     If you experience this problem, use IE5 or Netscape Navigator
     instead.
+-->
 </ol>
 <p>
 <li>Use these commands to unzip the distribution file:
@@ -92,8 +92,9 @@ required packages installed:
 <p><li>Install the programs: as root: <p><code>make install</code>
 </ol>
 
+<p>
 <em>Important:</em>
-You must use at least version 2.96 of the gcc compiler and the glibc2 library.
+You must use at least version 2.95 of the gcc compiler and the glibc2 library.
 Refer to the <a href="hercfaq.html#3.04">
 Hercules Frequently-Asked Questions</a> page for required
 compiler and other software levels.
@@ -107,6 +108,7 @@ compiler and other software levels.
 <li>Install the RPM:
 <br><code>rpm -Uvh</code> <i>RPMfile</i>
 </ol>
+<p>
 This will leave the Hercules executables in /usr/bin and the dynamic
 libraries in /usr/lib and /usr/lib/hercules, where you can run them
 from anywhere. Sample configuration files will be placed in /etc/hercules,
@@ -114,7 +116,7 @@ and the IPLable card deck for the ZZSA standalone utility will be placed in
 /var/share/hercules.
 
 <h3>Installing Debian packages:</h3>
-
+<p>
 Debian packages are available for "woody" and later releases.
 
 <ul>
@@ -196,22 +198,15 @@ href="cckddasd.html">this page</a>.
 <p><hr><a name="operating"></a>
 <h2>Operating Procedure</h2>
 <p>
+<em>Note: If you intend to run any licensed software on your PC
+using Hercules, it is your responsibility to ensure that you do not
+violate the software vendor's licensing terms.</em>
 
 <h4>Loading a standalone program or operating system</h4>
 <p>
-<blockquote>
-<em>
-    <dl compact>
-        <dt><u>Note:</u>
-        <dd>If you intend to run any licensed software on your PC
-        using Hercules, it is <u>your</u> responsibility to ensure that you do not
-        violate the software vendor's licensing terms.
-    </dl>
-</em>
-</blockquote>
-<p>
 To start Hercules enter this command at the Unix shell prompt:
 <pre><code>hercules [-f <em>filename</em>] [&gt; <em>logfile</em>]</code></pre>
+<p>
 where <code><em>filename</em></code> is the name of the configuration
 file
 (the default is <b><em>hercules.cnf</em></b>),
@@ -387,7 +382,7 @@ this additional help information. (Note: not every command supports help)
 <p>
 
 <a name="RCFILE">
-<h4>The &nbsp;<u>hercules.rc</u> &nbsp;(run-commands)&nbsp; file:</h4>
+<h4>The &nbsp;hercules.rc &nbsp;(run-commands)&nbsp; file</h4>
 </a>
 <p>
 Hercules also supports the ability to automatically execute panel commands
