@@ -6124,7 +6124,7 @@ U64     dreg;                           /* Double word workarea      */
 #else
     /* The first two digits from the CPUID are now the LP identifier */
     /* The version code is zero, and we are partition 00  */
-    dreg &= 0x0000FFFFFFFF0000ULL;
+    dreg &= 0x00FFFFFFFFFF0000ULL;
     /* Indicate format 1 CPUID */
     dreg |= 0x8000ULL;
 #endif
