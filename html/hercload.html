@@ -9,6 +9,7 @@ Hercules Version 3: Creating DASD</TITLE>
 
 <h1>Hercules Version 3: Creating DASD</h1>
 
+<p>
 This page describes various ways of creating and loading DASD
 volumes for use with Hercules.
 
@@ -36,10 +37,10 @@ volumes for use with Hercules.
 IBM distributes pre-built OS/390 and z/OS systems on two
 different CD-ROM packages:
 <dl>
-<dt>The OS/390 and z/OS Application Development CD (ADCD)
+<dt><b>The OS/390 and z/OS Application Development CD (ADCD)</b>
 <dd>available only to members of IBM PartnerWorld for Developers,
 and
-<dt>The OS/390 and z/OS DemoPkg
+<dt><b>The OS/390 and z/OS DemoPkg</b>
 <dd>available only to IBM employees and qualified IBM Business Partners.
 </dl>
 <p>Both of these packages contain pre-built DASD image files
@@ -195,7 +196,7 @@ The current list of device types and models supported is:
         0671           574560
         0671-04        624456
 </pre>
-<br>
+<p>
 [<b>*</b>] size may be specified else size defaults to the
            first listed model.
 <p>
@@ -204,7 +205,7 @@ The current list of device types and models supported is:
 For CKD volumes which exceed 2GB, such as the 3390-3, and the
 <b>-lfs</b> parameter is not specified, the DASDINIT
 program will create multiple files by appending the characters
-<b><i>_1</b></i>, <b>_2</b></i>, <b>_3</b></i> etc.
+<b>_1</b>, <b>_2</b>, <b>_3</b> etc.
 to the file name specified on the command line.  These characters
 are inserted before the first dot (<b>.</b>) after the last slash
 (<b>/</b>).  If there is no dot, then the characters are appended
@@ -248,6 +249,7 @@ of 3339 cylinders with volume serial number WORK03:
 <pre>
     dasdinit triple.a88 3390-3 work03
 </pre>
+<p>
 Because this volume exceeds 2GB, DASDINIT will create two files
 with <b><i>triple_1.a88</b></i> containing cylinders 0-2518 and
 <b><i>triple_2.a88</b></i> containing cylinders 2519-3339.  If you
@@ -255,6 +257,7 @@ specify
 <pre>
     dasdinit -lfs triple.a88 3390-3 work03
 </pre>
+<p>
 then DASDINIT will create a single file <b><i>triple.a88</i></b>
 containing all the cylinders.  Your platform must support <i>large
 file size</i> to specify the <b>-lfs</b> option.
@@ -289,6 +292,7 @@ ARCHMODE S/370
 000C   1442    init3330.txt
 0151   3330    work01.151
 </code></pre>
+<p>
 After IPLing from card reader device 00A, connect a telnet client
 to port 1052, and press enter.  At the IBCDASDI prompt, enter:
 <pre><code>input=1442 00c</code></pre>
