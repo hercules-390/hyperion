@@ -818,7 +818,8 @@ void NP_update(REGS *regs)
                 if (!NPregs_valid || NPregs[i] != regs->CR_L(i))
                 {
                     set_pos (6 + i/2, 3 + (i%2)*19);
-                    draw_fw (0);
+//                  draw_fw (0);
+                    draw_text("--------");
                     draw_fw (regs->CR_L(i));
                     NPregs[i] = regs->CR_L(i);
                 }
