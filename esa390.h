@@ -1,7 +1,3 @@
-/*-------------------------------------------------------------------*/
-/* Header file containing ESA/390 structure definitions              */
-/*-------------------------------------------------------------------*/
-
 /* ESA390.H     (c) Copyright Roger Bowler, 1994-2005                */
 /*              ESA/390 Data Areas                                   */
 
@@ -601,15 +597,15 @@ typedef struct _LSED {
 #define SIGP_START               0x04   /* Start                     */
 #define SIGP_STOP                0x05   /* Stop                      */
 #define SIGP_RESTART             0x06   /* Restart                   */
-#define SIGP_IPR                 0x07   /* Initial program reset     */   /* 370 only */
-#define SIGP_PR                  0x08   /* Program reset             */   /* 370 only */
+#define SIGP_IPR                 0x07   /* Initial program reset  370*/
+#define SIGP_PR                  0x08   /* Program reset          370*/
 #define SIGP_STOPSTORE           0x09   /* Stop and store status     */
-#define SIGP_IMPL                0x0A   /* Initial uprogram load     */   /* 370 only */
+#define SIGP_IMPL                0x0A   /* Initial uprogram load  370*/
 #define SIGP_INITRESET           0x0B   /* Initial CPU reset         */
 #define SIGP_RESET               0x0C   /* CPU reset                 */
 #define SIGP_SETPREFIX           0x0D   /* Set prefix                */
 #define SIGP_STORE               0x0E   /* Store status at address   */
-#define SIGP_STOREX              0x11   /* Store ext status at addr  */   /* 390 only */
+#define SIGP_STOREX              0x11   /* Store ext stat at addr 390*/
 #define SIGP_SETARCH             0x12   /* Set architecture mode     */
 #define SIGP_COND_EMERGENCY      0x13   /* Conditional Emergency     */
 #define SIGP_SENSE_RUNNING_STATE 0x15   /* Sense Running State       */
@@ -1785,27 +1781,27 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 
 /* Zone Parameter Block */
 typedef struct _ZPB1 {
-    FWORD   mso;         /* Main Storage Origin
-                            bits 0-15 must be 0       */
-    FWORD   msl;         /* Main Storage Limit
-                            bits 0-15 must be 0       */
-    FWORD   eso;         /* Expanded Storage Origin
-                            bits 0-7 must be 0        */
-    FWORD   esl;         /* Expanded Storage Limit
-                            bits 0-7 must be 0        */
-    FWORD   res[4];      /* Reserved bits - must be 0 */
+        FWORD   mso;                    /* Main Storage Origin
+                                           bits 0-15 must be 0       */
+        FWORD   msl;                    /* Main Storage Limit
+                                           bits 0-15 must be 0       */
+        FWORD   eso;                    /* Expanded Storage Origin
+                                           bits 0-7 must be 0        */
+        FWORD   esl;                    /* Expanded Storage Limit
+                                           bits 0-7 must be 0        */
+        FWORD   res[4];                 /* Reserved bits - must be 0 */
 } ZPB1;
 
 typedef struct _ZPB2 {
-    DBLWRD   mso;        /* Main Storage Origin
-                            bits 0-19 must be 0       */
-    DBLWRD   msl;        /* Main Storage Limit
-                            bits 0-19 must be 0       */
+        DBLWRD  mso;                    /* Main Storage Origin
+                                           bits 0-19 must be 0       */
+        DBLWRD  msl;                    /* Main Storage Limit
+                                           bits 0-19 must be 0       */
 #define ZPB2_MS_VALID 0x00000FFFFFFFFFFFULL
-    DBLWRD   eso;        /* Expanded Storage Origin
-                            bits 0-7 must be 0        */
-    DBLWRD   esl;        /* Expanded Storage Limit
-                            bits 0-7 must be 0        */
+        DBLWRD  eso;                    /* Expanded Storage Origin
+                                           bits 0-7 must be 0        */
+        DBLWRD  esl;                    /* Expanded Storage Limit
+                                           bits 0-7 must be 0        */
 #define ZPB2_ES_VALID 0x00FFFFFFFFFFFFFFULL
 } ZPB2;
 
