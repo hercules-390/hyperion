@@ -563,6 +563,9 @@ AC_CHECK_TYPES( in_addr_t,  [hc_cv_have_in_addr_t=yes],  [hc_cv_have_in_addr_t=n
     #if HAVE_SYS_SOCKET_H
     #include <sys/socket.h>
     #endif
+    #if HAVE_NETINET_IN_H
+    #include <netinet/in.h>
+    #endif
 ] )
 AC_CHECK_TYPES( socklen_t,  [hc_cv_have_socklen_t=yes],  [hc_cv_have_socklen_t=no],
 [
