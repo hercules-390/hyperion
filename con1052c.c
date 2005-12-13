@@ -351,7 +351,8 @@ int  i;
 
     for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
     {
-        if(dev->hnd == &con1052_device_hndinfo
+        if(dev->allocated
+          && dev->hnd == &con1052_device_hndinfo
           && !strncasecmp(cmd,dev->filename,strlen(dev->filename)) )
         {
             input = cmd + strlen(dev->filename);
