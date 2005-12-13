@@ -928,12 +928,14 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
                 fprintf(stderr, _("HHCCF061W Warning in %s line %d: "
                     "ECPS:VM Statement deprecated. Use ECPSVM instead\n"),
                     fname, stmt);
+                addargc=0;
             }
             else if(strcasecmp(keyword, "ecpsvm") == 0)
             {
                 secpsvmlevel=operand;
                 secpsvmlvl=addargv[0];
                 ecpsvmac=addargc;
+                addargc=0;
             }
 #endif /*defined(_FEATURE_ECPSVM)*/
 #ifdef OPTION_IODELAY_KLUDGE
@@ -1565,7 +1567,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
                     ecpsvmavail=1;
                     if(ecpsvmac==0)
                     {
-                        fprintf(stderr, _("HHCCF062W Warning in %s line %d: "
+                        logmsg(_("HHCCF062W Warning in %s line %d: "
                                 "Missing ECPSVM level value. 20 Assumed\n"),
                                 fname, stmt);
                         ecpsvmavail=1;
@@ -1574,7 +1576,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
                     }
                     if (sscanf(secpsvmlvl, "%d%c", &ecpsvmlevel, &c) != 1)
                     {
-                        fprintf(stderr, _("HHCCF051W Warning in %s line %d: "
+                        logmsg(_("HHCCF051W Warning in %s line %d: "
                                 "Invalid ECPSVM level value : %s. 20 Assumed\n"),
                                 fname, stmt, secpsvmlevel);
                         ecpsvmavail=1;
@@ -1586,7 +1588,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
                 ecpsvmavail=1;
                 if (sscanf(secpsvmlevel, "%d%c", &ecpsvmlevel, &c) != 1)
                 {
-                    fprintf(stderr, _("HHCCF051W Error in %s line %d: "
+                    logmsg(_("HHCCF051W Error in %s line %d: "
                             "Invalid ECPSVM keyword : %s. NO Assumed\n"),
                             fname, stmt, secpsvmlevel);
                     ecpsvmavail=0;
@@ -1595,7 +1597,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
                 }
                 else
                 {
-                    fprintf(stderr, _("HHCCF063W Warning in %s line %d: "
+                    logmsg(_("HHCCF063W Warning in %s line %d: "
                             "Specifying ECPSVM level directly is deprecated. Use the 'LEVEL' keyword instead.\n"),
                             fname, stmt);
                     break;
