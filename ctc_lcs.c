@@ -629,9 +629,12 @@ int  LCS_Close( DEVBLK* pDEVBLK )
 // LCS_Query
 //
 
+
 void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
                  int     iBufLen, char*  pBuffer )
 {
+    char *sType[] = { "", " Pri", " Sec" };
+
     PLCSDEV     pLCSDEV = (PLCSDEV)pDEVBLK->dev_data;
 
     *ppszClass = "CTCA";
@@ -642,9 +645,10 @@ void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
         return;
     }
 
-    snprintf( pBuffer, iBufLen, "LCS Port %2.2X %s (%s)",
+    snprintf( pBuffer, iBufLen, "LCS Port %2.2X %s%s (%s)",
               pLCSDEV->bPort,
-              pLCSDEV->bMode == LCSDEV_MODE_IP ? "IP " : "SNA",
+              pLCSDEV->bMode == LCSDEV_MODE_IP ? "IP" : "SNA",
+              sType[pLCSDEV->bType],
               pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort].szNetDevName );
 }
 
@@ -1919,11 +1923,11 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                     }
 
                     if( strcasecmp( argv[1], "PRI" ) == 0 )
-                        bType = 1;
+                        bType = LCSDEV_TYPE_PRIMARY;
                     else if( strcasecmp( argv[1], "SEC" ) == 0 )
-                        bType = 2;
+                        bType = LCSDEV_TYPE_SECONDARY;
                     else if( strcasecmp( argv[1], "NO" ) == 0 )
-                        bType = 0;
+                        bType = LCSDEV_TYPE_NONE;
                     else
                     {
                         logmsg( _("HHCLC031E Error in %s: %s: "
