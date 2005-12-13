@@ -576,7 +576,7 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
                             "at offset %4.4X"
                             " in track at cyl %4.4X head %4.4X\n"
                             "at offset %8.8X in input file %s\n",
-                            rc, iptr-itrkbuf, cyl, head,
+                            rc, (unsigned int)(iptr-itrkbuf), cyl, head,
                             offset, ifname);
                     EXIT(9);
                 }

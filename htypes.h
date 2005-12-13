@@ -64,12 +64,12 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
 
 #if defined(SIZEOF_LONG) && SIZEOF_LONG == 8
  #define UINT_PTR_FMT             I64_FMT
- #define      PTR_FMTx    "%16.16"I64_FMT"x"
- #define      PTR_FMTX    "%16.16"I64_FMT"X"
+ #define      PTR_FMTx    "%16.16" I64_FMT "x"
+ #define      PTR_FMTX    "%16.16" I64_FMT "X"
 #else // defined(SIZEOF_LONG) && SIZEOF_LONG == 4
  #define UINT_PTR_FMT             I32_FMT
- #define      PTR_FMTx      "%8.8"I32_FMT"x"
- #define      PTR_FMTX      "%8.8"I32_FMT"X"
+ #define      PTR_FMTx      "%8.8" I32_FMT "x"
+ #define      PTR_FMTX      "%8.8" I32_FMT "X"
 #endif
 
 /*-------------------------------------------------------------------*/

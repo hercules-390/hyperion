@@ -2102,9 +2102,9 @@ FinishShutdown:
                     buf[len++] = ' ';
                     sprintf (ibuf, "instcount=%" I64_FMT "u",
 #if defined(_FEATURE_SIE)
-                        SIE_MODE(regs) ?  (long long) regs->hostregs->instcount :
+                        SIE_MODE(regs) ?  (U64) regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
-                        (long long)regs->instcount);
+                        (U64)regs->instcount);
                     if (len + (int)strlen(ibuf) < cons_cols)
                         len = cons_cols - strlen(ibuf);
                     strcpy (buf + len, ibuf);

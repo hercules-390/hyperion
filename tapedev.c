@@ -1397,7 +1397,7 @@ OFF_T cursize;
         if(dev->tdparms.maxsize>0)
         {
             cursize=het_tell(dev->hetb);
-            if(cursize+dev->tdparms.eotmargin>(OFF_T)dev->tdparms.maxsize)
+            if(cursize+(unsigned)dev->tdparms.eotmargin>(OFF_T)dev->tdparms.maxsize)
             {
                 return 1;
             }

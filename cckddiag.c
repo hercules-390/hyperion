@@ -360,7 +360,7 @@ char               *p;
             v = (OFF_T) atoll(s);
             if (debug) 
                 fprintf(stdout, 
-                        "OFFTIFY string %s decimal %8.8X %d\n", 
+                        "OFFTIFY string %s decimal %" I64_FMT "X %" I64_FMT "d\n", 
                         p, (U64)v, (U64)v);
             return v;
         }

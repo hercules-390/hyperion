@@ -347,7 +347,7 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
         if ((count_read + blksize) > bufsize)
         {
             printf (_("HHCTC020E AWSTAPE block too large on %s: block size=%d, maximum=%d\n"),
-                   filenamein, count_read+blksize, bufsize);
+                   filenamein, count_read+blksize, (int)bufsize);
             EXIT( RC_ERROR_AWSTAPE_BLOCK_TOO_LARGE );
         } /* end if(count) */
 
