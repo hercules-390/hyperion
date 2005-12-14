@@ -172,11 +172,13 @@ int main( int argc, char **argv )
             continue;
         }
             
+#if defined(DEBUG) || defined(_DEBUG)
         snprintf( szMsgBuffer,sizeof(szMsgBuffer),
                  _("HHCIF006I %s: Doing %s on %s\n"),
                  pszProgName, pOp, pIF);
 
         write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
+#endif /*defined(DEBUG) || defined(_DEBUG)*/
     
         rc = ioctl( sockfd, ctlreq.iCtlOp, pArg );
 
