@@ -326,6 +326,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     create_thread( &pDevCTCBLK->tid, NULL, CTCI_ReadThread, pDevCTCBLK );
 
+    pDevCTCBLK->pDEVBLK[0]->tid = pDevCTCBLK->tid;
+    pDevCTCBLK->pDEVBLK[1]->tid = pDevCTCBLK->tid;
+
     free( pWrkCTCBLK );
     pWrkCTCBLK = NULL;
 
@@ -588,7 +591,7 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
 
         TID tid = pCTCBLK->tid;
         pCTCBLK->fCloseInProgress = 1;  // (ask read thread to exit)
-        signal_thread( tid, SIGINT );   // (for non-Win32 platforms)
+        signal_thread( tid, SIGUSR2 );   // (for non-Win32 platforms)
 //FIXME signal_thread not working for non-MSVC platforms
 #if defined(_MSVC_)
         join_thread( tid, NULL );       // (wait for thread to end)
