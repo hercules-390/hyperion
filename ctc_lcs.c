@@ -252,6 +252,10 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             create_thread( &pLCSBLK->Port[pLCSDev->bPort].tid,
                            &thread_attr, LCS_PortThread,
                            &pLCSBLK->Port[pLCSDev->bPort] );
+
+            /* Identify the thread ID with the devices on which they are active */
+            pLCSDev->pDEVBLK[0]->tid = pLCSBLK->Port[pLCSDev->bPort].tid;
+            pLCSDev->pDEVBLK[1]->tid = pLCSBLK->Port[pLCSDev->bPort].tid;
         }
 
         // Add these devices to the ports device list.
@@ -557,7 +561,7 @@ int  LCS_Close( DEVBLK* pDEVBLK )
         {
             TID tid = pPort->tid;
             pPort->fCloseInProgress = 1;
-            signal_thread( tid, SIGINT );
+            signal_thread( tid, SIGUSR2 );
             join_thread( tid, NULL );
             detach_thread( tid );
         }
