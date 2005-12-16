@@ -2011,7 +2011,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         of the <a href="cckddasd.html">Compressed Dasd Emulation</a> web page.
         <p>
 
-    <dt><code>syncio</code>
+    <dt><code>[no]syncio</code>
     <dd><p>
         syncio enables possible 'synchronous' i/o. This is a dasd i/o feature
         wherein guest i/o requests are completed "synchronously" during the
@@ -2039,6 +2039,10 @@ ROUTE  00  172.021.003.032  255.255.255.224
         <p>
         -->
 
+        <p>
+        <code>syncio</code> may be abbreviated as
+        <code>syio</code> 
+
     <dt><code>readonly</code>
     <dd><p>
         readonly returns "write inhibited" sense when a write is attempted.
@@ -2046,6 +2050,9 @@ ROUTE  00  172.021.003.032  255.255.255.224
         correctly however. (Some people have reported getting different
         error messages under hercules than a real machine, but it really
         hasn't been an issue for a while now.)
+        <p>
+        <code>readonly</code> may be abbreviated as
+        <code>rdonly</code> or <code>ro</code>
         <p>
 
     <dt><code>fakewrite</code>
@@ -2055,12 +2062,42 @@ ROUTE  00  172.021.003.032  255.255.255.224
         last referenced field for a readonly file) and any writes appear to
         be successful even though nothing actually gets written.
         <p>
+        <code>fakewrite</code> may be abbreviated as
+        <code>fakewrt</code> or <code>fw</code>  
+        <p>
 
-    <dt><code>lazywrite</code>
-    <dt><code>fulltrackio</code>
+    <dt><code>[no]lazywrite</code>
+    <dt><code>[no]fulltrackio</code>
     <dd><p>
         These options have been deprecated. They are still accepted, but they
         do absolutely nothing.
+        <p>
+        <code>fulltrackio</code> may be abbreviated as
+        <code>fulltrkio</code> or <code>ftio</code>
+        <p>
+
+    <dt><code>cu=<em>type</em></code>
+    <dd><p>
+        Specifies the type of control unit to which this device is attached.
+        The use of this parameter does not necessarily imply that
+        all functions of the specified control unit are emulated,
+        its only purpose is to force a particular control unit type
+        to be indicated in the data returned by SENSE ID and similar CCW's.
+        <p>
+        The default value depends on the device type:
+        <center><table border=1 cellpadding=3>
+        <tr align="center"><th>Device type</th><th>Default CU type</dev></th></tr>
+        <tr align="center"><td>2311 2314</td><td>2841</td></tr>
+        <tr align="center"><td>3330 3340<br>3350 3375<br>3380</td><td>3880</td></tr>
+        <tr align="center"><td>3390</td><td>3990</td></tr>
+        <tr align="center"><td>9345</td><td>9343</td></tr>
+        </table></center>
+        <p>
+        Other values which may be specified are:
+        3990-3 3990-6
+        <p>
+        Normally the default value is appropriate and this parameter need
+        not be specified.
         <p>
 
     </dl> <!-- end (CKD) additional DASD arguments  -->
@@ -2140,7 +2177,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         regarding use of the <code>sf=</code> shadow file option.
         <p>
 
-    <dt><code><em>syncio</em></code>
+    <dt><code>[no]syncio</code>
     <dd><p>
         syncio enables possible 'synchronous' i/o and is explained in detail in
         the preceding CKD dasd section. Note however that syncio is currently
@@ -2148,6 +2185,10 @@ ROUTE  00  172.021.003.032  255.255.255.224
         and must therefore be specifically enabled if you wish to use it for FBA
         dasd.
         <p>
+
+        <p>
+        <code>syncio</code> may be abbreviated as
+        <code>syio</code> 
 
     </dl> <!-- end (FBA) additional DASD arguments  -->
     <p>
