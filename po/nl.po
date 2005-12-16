@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-13 19:42-0600\n"
+"POT-Creation-Date: 2005-12-15 20:23-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -1638,181 +1638,181 @@ msgstr ""
 msgid "HHCCT073I %4.4X: TUN device %s opened\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: ctc_ctci.c:686
+#: ctc_ctci.c:689
 #, c-format
 msgid "HHCCT040I %4.4X: Halt or Clear Recognized\n"
 msgstr ""
 
-#: ctc_ctci.c:735
+#: ctc_ctci.c:738
 #, c-format
 msgid "HHCCT041I %4.4X: CTC Received Frame (%d bytes):\n"
 msgstr ""
 
-#: ctc_ctci.c:773
+#: ctc_ctci.c:776
 #, fuzzy, c-format
 msgid "HHCCT042E %4.4X: Write CCW count %u is invalid\n"
 msgstr "HHCDA002E %4.4X:Bestandsnaam niet opgegeven of ongeldig\n"
 
-#: ctc_ctci.c:802
+#: ctc_ctci.c:805
 #, c-format
 msgid "HHCCT043I %4.4X: Interface command: %s %8.8X\n"
 msgstr ""
 
-#: ctc_ctci.c:829 ctcadpt.c:732
+#: ctc_ctci.c:832 ctcadpt.c:732
 #, c-format
 msgid "CTC101W %4.4X: Write buffer contains invalid frame offset %u\n"
 msgstr ""
 
-#: ctc_ctci.c:851
+#: ctc_ctci.c:854
 #, c-format
 msgid ""
 "HHCCT044E %4.4X: Write buffer contains incomplete segment header at offset %"
 "4.4X\n"
 msgstr ""
 
-#: ctc_ctci.c:871
+#: ctc_ctci.c:874
 #, c-format
 msgid ""
 "HHCCT045E %4.4X: Write buffer contains invalid segment length %u at offset %"
 "4.4X\n"
 msgstr ""
 
-#: ctc_ctci.c:886
+#: ctc_ctci.c:889
 #, c-format
 msgid "HHCCT046I %4.4X: Sending packet to %s:\n"
 msgstr ""
 
-#: ctc_ctci.c:896
+#: ctc_ctci.c:899
 #, c-format
 msgid "HHCCT047E %4.4X: Error writing to %s: %s\n"
 msgstr ""
 
-#: ctc_ctci.c:961
+#: ctc_ctci.c:964
 #, c-format
 msgid "HHCCT048E %4.4X: Error reading from %s: %s\n"
 msgstr ""
 
-#: ctc_ctci.c:973
+#: ctc_ctci.c:976
 #, c-format
 msgid "HHCCT049I %4.4X: Received packet from %s (%d bytes):\n"
 msgstr ""
 
-#: ctc_ctci.c:985
+#: ctc_ctci.c:988
 #, c-format
 msgid "HHCCT072W %4.4X: Packet too big; dropped.\n"
 msgstr ""
 
-#: ctc_ctci.c:1130 ctc_ctci.c:1307
+#: ctc_ctci.c:1133 ctc_ctci.c:1310
 #, c-format
 msgid "HHCCT056E %4.4X: Incorrect number of parameters\n"
 msgstr ""
 
-#: ctc_ctci.c:1205
+#: ctc_ctci.c:1208
 #, c-format
 msgid "HHCCT050E %4.4X: Invalid adapter address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1214
+#: ctc_ctci.c:1217
 #, fuzzy, c-format
 msgid "HHCCT051E %4.4X: Invalid device name %s\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: ctc_ctci.c:1228
+#: ctc_ctci.c:1231
 #, c-format
 msgid "HHCCT052E %4.4X: Invalid kernel buffer size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1244
+#: ctc_ctci.c:1247
 #, c-format
 msgid "HHCCT053E %4.4X: Invalid DLL I/O buffer size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1258
+#: ctc_ctci.c:1261
 #, c-format
 msgid "HHCCT054E %4.4X: Invalid MTU size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1269
+#: ctc_ctci.c:1272
 #, c-format
 msgid "HHCCT055E %4.4X: Invalid netmask %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1280
+#: ctc_ctci.c:1283
 #, c-format
 msgid "HHCCT056E %4.4X: Invalid MAC address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1317
+#: ctc_ctci.c:1320
 #, c-format
 msgid "HHCCT057E %4.4X: Incorrect number of parameters\n"
 msgstr ""
 
-#: ctc_ctci.c:1325
+#: ctc_ctci.c:1328
 #, c-format
 msgid "HHCCT058E %4.4X: Invalid IP address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1337
+#: ctc_ctci.c:1340
 #, c-format
 msgid "HHCCT059E %4.4X: Invalid IP address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1353
+#: ctc_ctci.c:1356
 #, fuzzy, c-format
 msgid "HHCCT060E %4.4X: Incorrect number of parameters\n"
 msgstr "HHCCA013E %4.4X:Incorrecte %s specifikatie %s\n"
 
-#: ctc_ctci.c:1362
+#: ctc_ctci.c:1365
 #, fuzzy, c-format
 msgid "HHCCT061E %4.4X: invalid device name %s\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: ctc_ctci.c:1376
+#: ctc_ctci.c:1379
 #, fuzzy, c-format
 msgid "HHCCT062E %4.4X: Invalid MTU size %s\n"
 msgstr "HHCCA018E %4.4X:Bind fout: %s\n"
 
-#: ctc_ctci.c:1387
+#: ctc_ctci.c:1390
 #, fuzzy, c-format
 msgid "HHCCT063E %4.4X: Invalid IP address %s\n"
 msgstr "HHCPN130E Ongeldig frame adres %8.8X\n"
 
-#: ctc_ctci.c:1399
+#: ctc_ctci.c:1402
 #, fuzzy, c-format
 msgid "HHCCT064E %4.4X: Invalid IP address %s\n"
 msgstr "HHCPN130E Ongeldig frame adres %8.8X\n"
 
-#: ctc_ctci.c:1411
+#: ctc_ctci.c:1414
 #, fuzzy, c-format
 msgid "HHCCT065E %4.4X: Invalid netmask %s\n"
 msgstr "HHCCA018E %4.4X:Bind fout: %s\n"
 
-#: ctc_ctci.c:1422
+#: ctc_ctci.c:1425
 #, fuzzy, c-format
 msgid "HHCCT066E %4.4X: Incorrect number of parameters\n"
 msgstr "HHCCA013E %4.4X:Incorrecte %s specifikatie %s\n"
 
-#: ctc_ctci.c:1440
+#: ctc_ctci.c:1443
 #, c-format
 msgid "HHCCT067E %4.4X: Invalid IP address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1455
+#: ctc_ctci.c:1458
 #, c-format
 msgid "HHCCT068E %4.4X: Invalid MAC address %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1487
+#: ctc_ctci.c:1490
 #, c-format
 msgid "HHCCT069E %4.4X: Invalid kernel buffer size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1504
+#: ctc_ctci.c:1507
 #, c-format
 msgid "HHCCT070E %4.4X: Invalid DLL I/O buffer size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1515
+#: ctc_ctci.c:1518
 #, c-format
 msgid "HHCCT071E %4.4X: Incorrect number of parameters\n"
 msgstr ""
@@ -1822,234 +1822,234 @@ msgstr ""
 msgid "HHCLC001E %4.4X unable to allocate LCSBLK\n"
 msgstr ""
 
-#: ctc_lcs.c:701
+#: ctc_lcs.c:705
 #, c-format
 msgid "HHCLC002I %4.4X: Halt or Clear Recognized\n"
 msgstr ""
 
-#: ctc_lcs.c:744
+#: ctc_lcs.c:748
 #, c-format
 msgid "HHCLC003I %4.4X: LCS Read Buffer:\n"
 msgstr ""
 
-#: ctc_lcs.c:807
+#: ctc_lcs.c:811
 #, c-format
 msgid "HHCLCxxxI %4.4X: Startup\n"
 msgstr ""
 
-#: ctc_lcs.c:812
+#: ctc_lcs.c:816
 #, c-format
 msgid "HHCLCxxxI %4.4X: Shutdown\n"
 msgstr ""
 
-#: ctc_lcs.c:818
+#: ctc_lcs.c:822
 #, c-format
 msgid "HHCLCxxxI %4.4X: Start LAN\n"
 msgstr ""
 
-#: ctc_lcs.c:823
+#: ctc_lcs.c:827
 #, c-format
 msgid "HHCLCxxxI %4.4X: Stop LAN\n"
 msgstr ""
 
-#: ctc_lcs.c:829
+#: ctc_lcs.c:833
 #, c-format
 msgid "HHCLCxxxI %4.4X: Query\n"
 msgstr ""
 
-#: ctc_lcs.c:835
+#: ctc_lcs.c:839
 #, c-format
 msgid "HHCLCxxxI %4.4X: Stat\n"
 msgstr ""
 
-#: ctc_lcs.c:860
+#: ctc_lcs.c:864
 #, c-format
 msgid "HHCLC004I %4.4X: Sending packet to %s:\n"
 msgstr ""
 
-#: ctc_lcs.c:869
+#: ctc_lcs.c:873
 #, c-format
 msgid "HHCLC005E %4.4X: Error writing to %s: %s\n"
 msgstr ""
 
-#: ctc_lcs.c:888
+#: ctc_lcs.c:892
 #, c-format
 msgid "HHCLC006I %4.4X Triggering Event.\n"
 msgstr ""
 
-#: ctc_lcs.c:1181
+#: ctc_lcs.c:1185
 #, c-format
 msgid "HHCLC007E Error in call to socket: %s.\n"
 msgstr ""
 
-#: ctc_lcs.c:1194
+#: ctc_lcs.c:1198
 #, c-format
 msgid "HHCLC008E ioctl error on device %s: %s.\n"
 msgstr ""
 
-#: ctc_lcs.c:1258
+#: ctc_lcs.c:1262
 #, fuzzy, c-format
 msgid "HHCLC042E Port %2.2X: Read error: %s\n"
 msgstr "HHCDL072E Fout %2$s bij lezan van bestand \"%1$s\"\n"
 
-#: ctc_lcs.c:1267
+#: ctc_lcs.c:1271
 #, c-format
 msgid "HHCLC009I Port %2.2X: Read Buffer:\n"
 msgstr ""
 
-#: ctc_lcs.c:1296
+#: ctc_lcs.c:1300
 #, c-format
 msgid "HHCLC010I Port %2.2X: IPV4 frame for %8.8X\n"
 msgstr ""
 
-#: ctc_lcs.c:1323
+#: ctc_lcs.c:1327
 #, c-format
 msgid "HHCLC011I Port %2.2X: ARP frame for %8.8X\n"
 msgstr ""
 
-#: ctc_lcs.c:1347
+#: ctc_lcs.c:1351
 #, c-format
 msgid "HHCLC012I Port %2.2X: SNA frame\n"
 msgstr ""
 
-#: ctc_lcs.c:1377
+#: ctc_lcs.c:1381
 #, c-format
 msgid "HHCLC013I Port %2.2X: No match found - selecting primary %4.4X\n"
 msgstr ""
 
-#: ctc_lcs.c:1387
+#: ctc_lcs.c:1391
 #, c-format
 msgid "HHCLC014I Port %2.2X: No match found - selecting secondary %4.4X\n"
 msgstr ""
 
-#: ctc_lcs.c:1398
+#: ctc_lcs.c:1402
 #, c-format
 msgid "HHCLC015I Port %2.2X: No match found - Discarding frame\n"
 msgstr ""
 
-#: ctc_lcs.c:1406
+#: ctc_lcs.c:1410
 #, c-format
 msgid "HHCLC016I Port %2.2X: Enqueing frame to device %4.4X (%8.8X)\n"
 msgstr ""
 
-#: ctc_lcs.c:1420
+#: ctc_lcs.c:1424
 #, c-format
 msgid "HHCLC041W Port %2.2X: Frame too big; discarded.\n"
 msgstr ""
 
-#: ctc_lcs.c:1649
+#: ctc_lcs.c:1653
 #, c-format
 msgid "HHCLC017E %4.4X invalid device name %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1665
+#: ctc_lcs.c:1669
 #, c-format
 msgid "HHCLC018E %4.4X invalid MAC address %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1689
+#: ctc_lcs.c:1693
 #, c-format
 msgid "HHCLC019E %4.4X too many arguments in statement.\n"
 msgstr ""
 
-#: ctc_lcs.c:1699
+#: ctc_lcs.c:1703
 #, c-format
 msgid "HHCLC020E %4.4X invalid IP address %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1754
+#: ctc_lcs.c:1758
 #, fuzzy, c-format
 msgid "HHCLC039E Cannot open file %s: %s\n"
 msgstr "HHCLC039E Fout %2$s bij openen bestand \"%1$s\"\n"
 
-#: ctc_lcs.c:1806
+#: ctc_lcs.c:1810
 #, c-format
 msgid "HHCLC021E Invalid HWADD statement in %s: %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1815
+#: ctc_lcs.c:1819
 #, c-format
 msgid ""
 "HHCLC022E Invalid MAC in HWADD statement in %s: %s (%s)\n"
 " "
 msgstr ""
 
-#: ctc_lcs.c:1832
+#: ctc_lcs.c:1836
 #, c-format
 msgid "HHCLC023E Invalid ROUTE statement in %s: %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1839
+#: ctc_lcs.c:1843
 #, c-format
 msgid "HHCLC024E Invalid net address in ROUTE %s: %s (%s)\n"
 msgstr ""
 
-#: ctc_lcs.c:1848
+#: ctc_lcs.c:1852
 #, c-format
 msgid "HHCLC025E Invalid net mask in ROUTE %s: %s (%s)\n"
 msgstr ""
 
-#: ctc_lcs.c:1880
+#: ctc_lcs.c:1884
 #, c-format
 msgid "HHCLC026E Error in %s: Missing device number or mode\n"
 msgstr ""
 
-#: ctc_lcs.c:1889
+#: ctc_lcs.c:1893
 #, c-format
 msgid "HHCLC027E Error in %s: %s: Invalid device number\n"
 msgstr ""
 
-#: ctc_lcs.c:1901
+#: ctc_lcs.c:1905
 #, c-format
 msgid "HHCLC028E Error in %s: %s:Missing PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1909
+#: ctc_lcs.c:1913
 #, c-format
 msgid "HHCLC029E Error in %s: %s: Invalid PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1919
+#: ctc_lcs.c:1923
 #, c-format
 msgid "HHCLC030E Error in %s: %s: Invalid number of arguments\n"
 msgstr ""
 
-#: ctc_lcs.c:1933
+#: ctc_lcs.c:1937
 #, c-format
 msgid "HHCLC031E Error in %s: %s: Invalid entry starting at %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1943
+#: ctc_lcs.c:1947
 #, c-format
 msgid "HHCLC032E Error is %s: %s: Invalid IP address (%s)\n"
 msgstr ""
 
-#: ctc_lcs.c:1958
+#: ctc_lcs.c:1962
 #, c-format
 msgid "HHCLC033E Error in %s: %s: Missing PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1966
+#: ctc_lcs.c:1970
 #, c-format
 msgid "HHCLC034E Error in %s: %s:Invalid PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1974
+#: ctc_lcs.c:1978
 #, c-format
 msgid "HHCLC035E Error in %s: %s: SNA does not accept any arguments\n"
 msgstr ""
 
-#: ctc_lcs.c:1982
+#: ctc_lcs.c:1986
 #, c-format
 msgid "HHCLC036E Error in %s: %s: Invalid MODE\n"
 msgstr ""
 
-#: ctc_lcs.c:2047
+#: ctc_lcs.c:2051
 #, c-format
 msgid "HHCLC037E Error reading file %s line %d: %s\n"
 msgstr ""
 
-#: ctc_lcs.c:2071
+#: ctc_lcs.c:2075
 #, c-format
 msgid "HHCLC038E File %s line %d is too long\n"
 msgstr ""
@@ -3649,12 +3649,12 @@ msgstr ""
 msgid "HHCIF004W %s: Unknown request: %8.8lX.\n"
 msgstr ""
 
-#: hercifc.c:176
+#: hercifc.c:177
 #, fuzzy, c-format
 msgid "HHCIF006I %s: Doing %s on %s\n"
 msgstr "HHCDC001E %1$s:Fout %3$s bij openen bestand \"%2$s\"\n"
 
-#: hercifc.c:186
+#: hercifc.c:188
 #, c-format
 msgid "HHCIF005E %s: ioctl error doing %s on %s: %s\n"
 msgstr ""
