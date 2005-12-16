@@ -575,6 +575,11 @@ EXTRA_DIST = autoconf/config.rpath \
              makefile.msvc         \
              makefile-dll.msvc     \
              makefile-dllmod.msvc  \
+             makefile.bat          \
+             Hercules.dsp          \
+             Hercules.dsw          \
+             Hercules.vcproj       \
+             Hercules.sln          \
              hercver.rc            \
              build_pch.c           \
              getopt.c              \
