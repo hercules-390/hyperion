@@ -582,6 +582,7 @@ EXTRA_DIST = autoconf/config.rpath \
              Hercules.sln          \
              hercver.rc            \
              build_pch.c           \
+             conspawn.c            \
              getopt.c              \
              w32stape.c
 
