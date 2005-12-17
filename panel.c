@@ -1558,7 +1558,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             {
                                 panel_command("quit");
                             }
-                            strcpy(NPprompt1, "");
+                            strcpy(NPprompt1, "Powering down");
                             redraw_status = 1;
                             break;
                         default:
