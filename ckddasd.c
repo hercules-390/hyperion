@@ -173,6 +173,11 @@
 #define CONFIG_DATA_SIZE        256     /* Number of bytes returned
                                            by Read Config Data CCW   */
 
+#define EXTENT_CHECK(_dev, _cyl, _head)                                        \
+        ( (_cyl) < (_dev)->ckdxbcyl || (_cyl) > (_dev)->ckdxecyl               \
+            || ((_cyl) == (_dev)->ckdxbcyl && (_head) < (_dev)->ckdxbhead)     \
+            || ((_cyl) == (_dev)->ckdxecyl && (_head) > (_dev)->ckdxehead) )
+
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
@@ -1563,12 +1568,7 @@ int             head;                   /* Next head for multitrack  */
 
     /* File protect error if next track is outside the
        limits of the device or outside the defined extent */
-    if (cyl >= dev->ckdcyls
-        || (dev->ckdxtdef
-            && (cyl < dev->ckdxbcyl || cyl > dev->ckdxecyl
-                || (cyl == dev->ckdxbcyl && head < dev->ckdxbhead)
-                || (cyl == dev->ckdxecyl && head > dev->ckdxehead)
-            )))
+    if ( EXTENT_CHECK(dev, cyl, head) )
     {
     if (dev->ckdtrkof)
             ckd_build_sense (dev, 0, SENSE1_FP | SENSE1_IE, 0, 0, 0);
@@ -2100,8 +2100,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* Reset flags at start of CCW chain */
     if (chained == 0 && !dev->syncio_retry)
     {
-        dev->ckdxtdef = 0;
-        dev->ckdsetfm = 0;
         dev->ckdlocat = 0;
         dev->ckdspcnt = 0;
         dev->ckdseek = 0;
@@ -2119,6 +2117,17 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* ISW20030819-1 : Clear Write HA flag */
         dev->ckdwrha = 0;
         dev->ckdssdlen = 0;
+
+        /* Set initial define extent parameters */
+        dev->ckdxtdef = 0;
+        dev->ckdsetfm = 0;
+        dev->ckdfmask = 0;
+        dev->ckdxgattr = 0;
+        dev->ckdxblksz = 0;
+        dev->ckdxbcyl = 0;
+        dev->ckdxbhead = 0;
+        dev->ckdxecyl = dev->ckdcyls - 1;
+        dev->ckdxehead = dev->ckdheads - 1;
     }
     dev->syncio_retry = 0;
 
@@ -2171,16 +2180,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             break;
         }
 
-        /* Set define extent parameters */
+        /* No more define extend allowed */
         dev->ckdxtdef = 1;
         dev->ckdsetfm = 1;
-        dev->ckdfmask = 0;
-        dev->ckdxgattr = 0;
-        dev->ckdxblksz = 0;
-        dev->ckdxbcyl = 0;
-        dev->ckdxbhead = 0;
-        dev->ckdxecyl = dev->ckdcyls - 1;
-        dev->ckdxehead = dev->ckdheads - 1;
 
         /* Set locate record parameters */
         dev->ckdloper = CKDOPER_ORIENT_DATA | CKDOPER_RDDATA;
@@ -3249,10 +3251,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* File protected if outside defined extent */
-        if (dev->ckdxtdef
-            && (cyl < dev->ckdxbcyl || cyl > dev->ckdxecyl
-                || (cyl == dev->ckdxbcyl && head < dev->ckdxbhead)
-                || (cyl == dev->ckdxecyl && head > dev->ckdxehead)))
+        if ( EXTENT_CHECK(dev, cyl, head) )
         {
             ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3303,8 +3302,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* File protected if cyl 0 head 0 is outside defined extent */
-        if (dev->ckdxtdef
-            && (dev->ckdxbcyl > 0 || dev->ckdxbhead > 0))
+        if (dev->ckdxbcyl > 0 || dev->ckdxbhead > 0)
         {
             ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -4475,9 +4473,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* File protect error if seek address is outside extent */
-        if (cyl < dev->ckdxbcyl || cyl > dev->ckdxecyl
-            || (cyl == dev->ckdxbcyl && head < dev->ckdxbhead)
-            || (cyl == dev->ckdxecyl && head > dev->ckdxehead))
+        if ( EXTENT_CHECK(dev, cyl, head) )
         {
             ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -4605,6 +4601,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* DEFINE EXTENT                                                 */
     /*---------------------------------------------------------------*/
+    {
+    U16 bcyl, bhead, ecyl, ehead;
+
         /* Calculate residual byte count */
         num = (count < 16) ? count : 16;
         *residual = count - num;
@@ -4681,22 +4680,20 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Bytes 8-11 contain the extent begin cylinder and head */
-        dev->ckdxbcyl = (iobuf[8] << 8) | iobuf[9];
-        dev->ckdxbhead = (iobuf[10] << 8) | iobuf[11];
+        bcyl = (iobuf[8] << 8) | iobuf[9];
+        bhead = (iobuf[10] << 8) | iobuf[11];
 
         /* Bytes 12-15 contain the extent end cylinder and head */
-        dev->ckdxecyl = (iobuf[12] << 8) | iobuf[13];
-        dev->ckdxehead = (iobuf[14] << 8) | iobuf[15];
+        ecyl = (iobuf[12] << 8) | iobuf[13];
+        ehead = (iobuf[14] << 8) | iobuf[15];
 
         /* Validate the extent description by checking that the
            ending track is not less than the starting track and
-           that the extent does not exceed the device size */
-        if (dev->ckdxecyl < dev->ckdxbcyl
-            || (dev->ckdxecyl == dev->ckdxbcyl
-                && dev->ckdxehead < dev->ckdxbhead)
-//          || dev->ckdxecyl >= dev->ckdcyls
-            || dev->ckdxbhead >= dev->ckdheads
-            || dev->ckdxehead >= dev->ckdheads)
+           that the extent does not exceed the already defined extent */
+        if ( bcyl > ecyl
+            || (bcyl == ecyl && bhead > ehead)
+            || EXTENT_CHECK(dev, bcyl, bhead) 
+            || EXTENT_CHECK(dev, ecyl, ehead) )
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_4);
@@ -4708,6 +4705,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdxtdef = 1;
         *unitstat = CSW_CE | CSW_DE;
         break;
+    }
 
     case 0x64:
     /*---------------------------------------------------------------*/
