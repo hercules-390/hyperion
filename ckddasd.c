@@ -2255,6 +2255,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
+    case 0xA6:
+//FIXME: 0xA6 ccw is undoc'd.  We are treating it as 0x86 except
+//       we will allow a DX ccw to follow.
     case 0x06:
     case 0x86:
     /*---------------------------------------------------------------*/
@@ -2348,6 +2351,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         else
             *unitstat = CSW_CE | CSW_DE;
+
+        if (code == 0xa6 && dev->ckdlcount <= 1)
+            dev->ckdxtdef = 0;
 
         break;
 
@@ -3764,6 +3770,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         break;
 
+    case 0xA5:
+//FIXME: 0xA5 ccw is undoc'd.  We are treating it as 0x85 except
+//       we will allow a DX ccw to follow.
     case 0x85:
     /*---------------------------------------------------------------*/
     /* WRITE UPDATE DATA                                             */
@@ -3847,6 +3856,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
+
+        if (code == 0xa5 && dev->ckdlcount <= 1)
+            dev->ckdxtdef = 0;
 
         break;
 

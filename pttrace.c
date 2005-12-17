@@ -407,7 +407,7 @@ DLL_EXPORT void ptt_pthread_print ()
 PTT_TRACE *p;
 int   i;
 char  result[32]; // (result is 'int'; if 64-bits, 19 digits or more!)
-char *tbuf;
+char  tbuf[256];
 time_t tt;
 const char dot = '.';
 
@@ -421,7 +421,7 @@ const char dot = '.';
     {
         if (p[i].tid)
         {
-            tt = p[i].tv.tv_sec; tbuf = ctime(&tt); tbuf[19] = '\0';
+            tt = p[i].tv.tv_sec; strcpy(tbuf, ctime(&tt)); tbuf[19] = '\0';
 
             if (p[i].result == PTT_MAGIC)
                 result[0] = '\0';
