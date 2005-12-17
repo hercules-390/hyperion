@@ -4701,6 +4701,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             break;
         }
 
+        /* Define the new extent */
+        dev->ckdxbcyl = bcyl;
+        dev->ckdxbhead = bhead;
+        dev->ckdxecyl = ecyl;
+        dev->ckdxehead = ehead;
+
         /* Set extent defined flag and return normal status */
         dev->ckdxtdef = 1;
         *unitstat = CSW_CE | CSW_DE;
