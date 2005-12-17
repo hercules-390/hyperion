@@ -495,7 +495,12 @@ is <A HREF="http://linuxvm.org/">http://linuxvm.org/</A>
 </B>
 <dd>
     Brown University tn3270 is freely available. You can download it from <a
-    href="http://www.brown.edu/Facilities/CIS/tn3270/">http://www.brown.edu/Facilities/CIS/tn3270/</a>.
+    href="http://www.brown.edu/Facilities/CIS/tn3270/">http://www.brown.edu/Facilities/CIS/tn3270/</a>. 
+    There is one setting that must be changed to use this program with some
+    operating systems, especially MVS 3.8: Open a connection to Hercules,
+    but before IPLing the system, go to the Session->Features menu and set
+    "Change embedded nulls to blanks" to "No". Click on "OK". Now, click on
+    File->Save default settings... to make the setting permanent.
 </dl>
 <P>
     Other tn3270 clients, such as QWS3270, IBM Personal Communications,
