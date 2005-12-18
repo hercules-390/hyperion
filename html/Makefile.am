@@ -8,7 +8,7 @@ dist_pkgdata_DATA = cckddasd.html fishgui.html hercconf.html hercfaq.html     \
         hercmssd.html hercmsta.html hercmstc.html hercmste.html hercmstm.html \
         hercmsts.html hercmstt.html hercmstu.html hercmsvm.html hercnew.html  \
         hercrdr.html hercrnot.html hercsupp.html herctcp.html hercules.html   \
-        index.html tasks.html
+        index.html tasks.html hercules.css
 
 include_sources = include/header.htmlpart include/footer.htmlpart
 
