@@ -60,7 +60,7 @@
 
 #   >>>  Jay!  <<<  Be sure to change the below V1/V2/V3/V4 values to match!
 
-VERSION = \"3.03_msvc\"
+VERSION = \"3.03\"
 
 # The below VERSION digits values SHOULD match the ABOVE VERSION number.
 #
