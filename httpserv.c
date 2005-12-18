@@ -657,7 +657,7 @@ TID                     httptid;        /* Negotiation thread id     */
         if (absolute_httproot_path[rc-1] != *HTTP_PS)
             strlcat(absolute_httproot_path,HTTP_PS,sizeof(absolute_httproot_path));
         free(sysblk.httproot); sysblk.httproot = strdup(absolute_httproot_path);
-        TRACE("HTTPROOT = %s\n",sysblk.httproot);// (debug display)
+        logmsg(_("HHCHT013I Using HTTPROOT directory \"%s\"\n"),sysblk.httproot);
     }
 
     /* Obtain a socket */
