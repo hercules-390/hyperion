@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-15 20:23-0600\n"
+"POT-Creation-Date: 2005-12-17 18:05-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -788,197 +788,197 @@ msgstr ""
 msgid "HHCCP077I %4.4X:Sense=%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n"
 msgstr ""
 
-#: ckddasd.c:210
+#: ckddasd.c:215
 msgid "HHCDA001E File name missing or invalid\n"
 msgstr ""
 
-#: ckddasd.c:227
+#: ckddasd.c:232
 #, c-format
 msgid "HHCDA002E %4.4X:File not found or invalid\n"
 msgstr ""
 
-#: ckddasd.c:328
+#: ckddasd.c:333
 #, c-format
 msgid "HHCDA003E parameter %d is invalid: %s\n"
 msgstr ""
 
-#: ckddasd.c:339
+#: ckddasd.c:344
 #, c-format
 msgid "HHCDA004I opening %s readonly%s\n"
 msgstr ""
 
-#: ckddasd.c:353
+#: ckddasd.c:358
 #, c-format
 msgid "HHCDA005E %s open error: %s\n"
 msgstr ""
 
-#: ckddasd.c:362
+#: ckddasd.c:367
 #, c-format
 msgid "HHCDA006E %s not in a single file for shadowing\n"
 msgstr ""
 
-#: ckddasd.c:371
+#: ckddasd.c:376
 #, c-format
 msgid "HHCDA007E %s fstat error: %s\n"
 msgstr ""
 
-#: ckddasd.c:381
+#: ckddasd.c:386
 #, c-format
 msgid "HHCDA008E %s read error: %s\n"
 msgstr ""
 
-#: ckddasd.c:384
+#: ckddasd.c:389
 #, c-format
 msgid "HHCDA09E %s CKD header incomplete\n"
 msgstr ""
 
-#: ckddasd.c:394
+#: ckddasd.c:399
 #, c-format
 msgid "HHCDA010E %s CKD header invalid\n"
 msgstr ""
 
-#: ckddasd.c:403
+#: ckddasd.c:408
 #, c-format
 msgid "HHCDA011E %s Only 1 CCKD file allowed\n"
 msgstr ""
 
-#: ckddasd.c:418
+#: ckddasd.c:423
 #, c-format
 msgid "HHCDA012E %s read error: %s\n"
 msgstr ""
 
-#: ckddasd.c:423
+#: ckddasd.c:428
 #, c-format
 msgid "HHCDA013E %s CCKD header incomplete\n"
 msgstr ""
 
-#: ckddasd.c:481
+#: ckddasd.c:486
 #, c-format
 msgid "HHCDA014E %s CKD file out of sequence\n"
 msgstr ""
 
-#: ckddasd.c:488
+#: ckddasd.c:493
 #, c-format
 msgid "HHCDA015I %s seq=%d cyls=%d-%d\n"
 msgstr ""
 
-#: ckddasd.c:502
+#: ckddasd.c:507
 #, c-format
 msgid "HHCDA016E %s heads=%d trklen=%d, expected heads=%d trklen=%d\n"
 msgstr ""
 
-#: ckddasd.c:515
+#: ckddasd.c:520
 #, c-format
 msgid "HHCDA017E %s CKD header inconsistent with file size\n"
 msgstr ""
 
-#: ckddasd.c:523
+#: ckddasd.c:528
 #, c-format
 msgid "HHCDA018E %s CKD header high cylinder incorrect\n"
 msgstr ""
 
-#: ckddasd.c:549
+#: ckddasd.c:554
 #, c-format
 msgid "HHCDA019E %s exceeds maximum %d CKD files\n"
 msgstr ""
 
-#: ckddasd.c:560
+#: ckddasd.c:565
 #, c-format
 msgid "HHCDA020I %s cyls=%d heads=%d tracks=%d trklen=%d\n"
 msgstr ""
 
-#: ckddasd.c:581
+#: ckddasd.c:586
 #, c-format
 msgid "HHCDA021E %4.4X device type %4.4X not found in dasd table\n"
 msgstr ""
 
-#: ckddasd.c:590
+#: ckddasd.c:595
 #, c-format
 msgid "HHCDA022E %4.4X control unit %s not found in dasd table\n"
 msgstr ""
 
-#: ckddasd.c:672
+#: ckddasd.c:677
 #, c-format
 msgid "HHCDA023I %4.4X cache hits %d, misses %d, waits %d\n"
 msgstr ""
 
-#: ckddasd.c:755
+#: ckddasd.c:760
 #, c-format
 msgid "HHCDA024I read trk %d cur trk %d\n"
 msgstr ""
 
-#: ckddasd.c:784
+#: ckddasd.c:789
 #, c-format
 msgid "HHCDA025I read track: updating track %d\n"
 msgstr ""
 
-#: ckddasd.c:795
+#: ckddasd.c:800
 #, c-format
 msgid "HHCDA026E error writing trk %d: lseek error: %s\n"
 msgstr ""
 
-#: ckddasd.c:814
+#: ckddasd.c:819
 #, c-format
 msgid "HHCDA027E error writing trk %d: write error: %s\n"
 msgstr ""
 
-#: ckddasd.c:856
+#: ckddasd.c:861
 #, c-format
 msgid "HHCDA028I read trk %d cache hit, using cache[%d]\n"
 msgstr ""
 
-#: ckddasd.c:893
+#: ckddasd.c:898
 #, c-format
 msgid "HHCDA029I read trk %d no available cache entry, waiting\n"
 msgstr ""
 
-#: ckddasd.c:901
+#: ckddasd.c:906
 #, c-format
 msgid "HHCDA030I read trk %d cache miss, using cache[%d]\n"
 msgstr ""
 
-#: ckddasd.c:924
+#: ckddasd.c:929
 msgid "HHCDA031I read trk %d reading file %d offset %"
 msgstr ""
 
-#: ckddasd.c:924 fbadasd.c:613
+#: ckddasd.c:929 fbadasd.c:613
 #, c-format
 msgid "d len %d\n"
 msgstr ""
 
-#: ckddasd.c:933
+#: ckddasd.c:938
 #, c-format
 msgid "HHCDA032E error reading trk %d: lseek error: %s\n"
 msgstr ""
 
-#: ckddasd.c:951
+#: ckddasd.c:956
 #, c-format
 msgid "HHCDA033E error reading trk %d: read error: %s\n"
 msgstr ""
 
-#: ckddasd.c:974
+#: ckddasd.c:979
 #, c-format
 msgid "HHCDA034I read trk %d trkhdr %2.2x %2.2x%2.2x %2.2x%2.2x\n"
 msgstr ""
 
-#: ckddasd.c:983
+#: ckddasd.c:988
 #, c-format
 msgid ""
 "HHCDA035E %4.4X invalid track header for cyl %d head %d  %2.2x%2.2x%2.2x%2.2x"
 "%2.2x\n"
 msgstr ""
 
-#: ckddasd.c:1491
+#: ckddasd.c:1496
 #, c-format
 msgid "HHCDA038I seeking to cyl %d head %d\n"
 msgstr ""
 
-#: ckddasd.c:1530
+#: ckddasd.c:1535
 #, c-format
 msgid "HHCDA039E MT advance error: locate record %d file mask %2.2X\n"
 msgstr ""
 
-#: ckddasd.c:1562
+#: ckddasd.c:1567
 #, c-format
 msgid "HHCDA040I MT advance to cyl %d head %d\n"
 msgstr ""
@@ -1049,12 +1049,12 @@ msgstr ""
 msgid "HHCDA053E Data chaining not supported for CCW %2.2X\n"
 msgstr ""
 
-#: ckddasd.c:3348
+#: ckddasd.c:3352
 #, c-format
 msgid "HHCDA054I set file mask %2.2X\n"
 msgstr ""
 
-#: ckddasd.c:3516
+#: ckddasd.c:3520
 #, c-format
 msgid "HHCDA055I search key %s\n"
 msgstr ""
