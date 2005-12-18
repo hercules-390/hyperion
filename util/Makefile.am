@@ -1,5 +1,6 @@
-bin_SCRIPTS = dasdlist
+bin_SCRIPTS = dasdlist cvslvlck
 
-dist_pkgdata_DATA = cckddump.hla awswrite.jcl rawstape.jcl tapeconv.jcl zzsacard.bin
+dist_pkgdata_DATA = cckddump.hla awswrite.jcl rawstape.jcl tapeconv.jcl\
+                    zzsacard.bin awssl-v19g cckdload.hla 
 
-EXTRA_DIST = dasdlist  dasdlist.bat
+EXTRA_DIST = dasdlist  dasdlist.bat cvslvlck

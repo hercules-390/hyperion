@@ -560,12 +560,15 @@ dmap2hrc_LDFLAGS      = $(tools_LD_FLAGS)
 
 EXTRA_DIST = autoconf/config.rpath \
              autoconf/mkinstalldirs \
+             COPYRIGHT             \
              hercules.cnf          \
              cckdfix.c             \
              README.COMMADPT       \
              README.CVS            \
              README.ECPSVM         \
              README.HDL            \
+             README.ISSUES         \
+             README.MINGW          \
              README.NETWORKING     \
              README.OSX            \
              README.TAPE           \
