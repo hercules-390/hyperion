@@ -4617,9 +4617,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            or (for 3390 only) preceded by Read IPL */
         if (dev->ckdlcount > 0
 #if 0
-            || dev->ckdxtdef || dev->ckdsetfm
+            || dev->ckdxtdef
 #endif
-            || dev->ckdspcnt
+            || dev->ckdsetfm || dev->ckdspcnt
             || (dev->ckdrdipl && dev->devtype == 0x3390))
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
