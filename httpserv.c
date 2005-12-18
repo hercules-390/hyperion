@@ -619,7 +619,10 @@ TID                     httptid;        /* Negotiation thread id     */
 #if defined(_MSVC_)
         char process_dir[HTTP_PATH_LENGTH];
         if (get_process_directory(process_dir,HTTP_PATH_LENGTH) > 0)
+        {
+            strcat(process_dir,"\\html");
             sysblk.httproot = strdup(process_dir);
+        }
         else
 #endif /*defined(WIN32)*/
         sysblk.httproot = strdup(HTTP_ROOT);
