@@ -2354,9 +2354,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         else
             *unitstat = CSW_CE | CSW_DE;
 
-        if (code == 0xa6 && dev->ckdlcount <= 1)
-            dev->ckdxtdef = 0;
-
         break;
 
     case 0x0E:
@@ -3302,7 +3299,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* File protected if cyl 0 head 0 is outside defined extent */
-        if (dev->ckdxbcyl > 0 || dev->ckdxbhead > 0)
+        if ( EXTENT_CHECK(dev, 0, 0) )
         {
             ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -3854,9 +3851,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
-
-        if (code == 0xa5 && dev->ckdlcount <= 1)
-            dev->ckdxtdef = 0;
 
         break;
 
@@ -4602,7 +4596,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /* DEFINE EXTENT                                                 */
     /*---------------------------------------------------------------*/
     {
-    U16 bcyl, bhead, ecyl, ehead;
+    U16 bcyl, bhead, ecyl, ehead, xblksz;
+    BYTE fmask, xgattr;
 
         /* Calculate residual byte count */
         num = (count < 16) ? count : 16;
@@ -4621,7 +4616,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            preceded by Define Extent, Space Count, or Set File Mask,
            or (for 3390 only) preceded by Read IPL */
         if (dev->ckdlcount > 0
-            || dev->ckdxtdef || dev->ckdspcnt || dev->ckdsetfm
+#if 0
+            || dev->ckdxtdef || dev->ckdsetfm
+#endif
+            || dev->ckdspcnt
             || (dev->ckdrdipl && dev->devtype == 0x3390))
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
@@ -4631,8 +4629,20 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Bytes 0-1 contain the file mask and global attributes */
-        dev->ckdfmask = iobuf[0];
-        dev->ckdxgattr = iobuf[1];
+        fmask = iobuf[0];
+        xgattr = iobuf[1];
+
+        if(dev->ckdxtdef
+         && (dev->ckdfmask != fmask || dev->ckdxgattr != xgattr) )
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_2);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+        
+        dev->ckdfmask = fmask;
+        dev->ckdxgattr = xgattr;
 
         /* Validate the global attributes byte bits 0-1 */
         if ((dev->ckdxgattr & CKDGATR_ARCH) != CKDGATR_ARCH_ECKD)
@@ -4653,13 +4663,24 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Bytes 2-3 contain the extent block size */
-        dev->ckdxblksz = (iobuf[2] << 8) | iobuf[3];
+        xblksz = (iobuf[2] << 8) | iobuf[3];
 
         /* If extent block size is zero then use the maximum R0
            record length (as returned in device characteristics
            bytes 44 and 45) plus 8 */
-        if (dev->ckdxblksz == 0)
-            dev->ckdxblksz = dev->ckdtab->r0 + 8;
+        if (xblksz == 0)
+            xblksz = dev->ckdtab->r0 + 8;
+
+        if(dev->ckdxtdef
+         && dev->ckdxblksz != xblksz )
+        {
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_2);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+                
+        dev->ckdxblksz = xblksz;
 
         /* Validate the extent block */
         if (dev->ckdxblksz > dev->ckdtab->r0 + 8)
@@ -4696,7 +4717,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             || EXTENT_CHECK(dev, ecyl, ehead) )
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
-                            FORMAT_0, MESSAGE_4);
+                            FORMAT_0, dev->ckdxtdef ? MESSAGE_2 : MESSAGE_4);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
