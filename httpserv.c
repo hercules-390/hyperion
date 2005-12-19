@@ -620,7 +620,7 @@ TID                     httptid;        /* Negotiation thread id     */
         char process_dir[HTTP_PATH_LENGTH];
         if (get_process_directory(process_dir,HTTP_PATH_LENGTH) > 0)
         {
-            strcat(process_dir,"\\html");
+            strlcat(process_dir,"\\html",HTTP_PATH_LENGTH);
             sysblk.httproot = strdup(process_dir);
         }
         else
