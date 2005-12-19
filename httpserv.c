@@ -49,7 +49,11 @@ static MIMETAB mime_types[] = {
     { "css",   "text/css"                  },
     { "html",  "text/html"                 },
     { "htm",   "text/html"                 },
+/* This one should be:
     { "ico",   "image/vnd.microsoft.icon"  },
+   but Apache 2 sets it as: */
+    { "ico",   "image/x-icon"              },
+/* so we'll go with what's actually in use. --JRM */
     { NULL,    NULL } };                     /* Default suffix entry */
 
 
