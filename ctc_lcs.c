@@ -255,7 +255,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
             /* Identify the thread ID with the devices on which they are active */
             pLCSDev->pDEVBLK[0]->tid = pLCSBLK->Port[pLCSDev->bPort].tid;
-            pLCSDev->pDEVBLK[1]->tid = pLCSBLK->Port[pLCSDev->bPort].tid;
+            if (pLCSDev->pDEVBLK[1])
+                pLCSDev->pDEVBLK[1]->tid = pLCSBLK->Port[pLCSDev->bPort].tid;
         }
 
         // Add these devices to the ports device list.
