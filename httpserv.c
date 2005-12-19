@@ -42,13 +42,14 @@ extern CGITAB cgidir[];
 
 static MIMETAB mime_types[] = {
     { NULL,    NULL },                            /* No suffix entry */
-    { "txt",   "text/plain" },
-    { "jcl",   "text/plain" },
-    { "gif",   "image/gif"  },
-    { "jpg",   "image/jpeg" },
-    { "css",   "text/css"   },
-    { "html",  "text/html"  },
-    { "htm",   "text/html"  },
+    { "txt",   "text/plain"                },
+    { "jcl",   "text/plain"                },
+    { "gif",   "image/gif"                 },
+    { "jpg",   "image/jpeg"                },
+    { "css",   "text/css"                  },
+    { "html",  "text/html"                 },
+    { "htm",   "text/html"                 },
+    { "ico",   "image/vnd.microsoft.icon"  },
     { NULL,    NULL } };                     /* Default suffix entry */
 
 
