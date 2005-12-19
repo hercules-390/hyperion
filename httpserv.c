@@ -642,8 +642,8 @@ TID                     httptid;        /* Negotiation thread id     */
 #endif /* defined(_MSVC_) */
         if (!realpath(sysblk.httproot,absolute_httproot_path))
         {
-            logmsg( _("HHCCF066E Invalid HTTPROOT: %s\n"),
-                   strerror(errno));
+            logmsg( _("HHCCF066E Invalid HTTPROOT: \"%s\": %s\n"),
+                   sysblk.httproot, strerror(errno));
             return NULL;
         }
         VERIFY(getcwd(save_working_directory,sizeof(save_working_directory)));
@@ -651,8 +651,8 @@ TID                     httptid;        /* Negotiation thread id     */
         VERIFY(!chdir(save_working_directory)); // (restore cwd)
         if (rc != 0)
         {
-            logmsg( _("HHCCF066E Invalid HTTPROOT: %s\n"),
-                   strerror(errno));
+            logmsg( _("HHCCF066E Invalid HTTPROOT: \"%s\": %s\n"),
+                   absolute_httproot_path, strerror(errno));
             return NULL;
         }
         /* Append trailing [back]slash, but only if needed */
