@@ -93,11 +93,18 @@ DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
 /*-------------------------------------------------------------------*/
 /* Display host system information on the indicated stream           */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void display_hostinfo ( HOST_INFO* pHostInfo, FILE *f )
+DLL_EXPORT void display_hostinfo ( HOST_INFO* pHostInfo, FILE *f, int httpfd )
 {
     char host_info_str[256]; init_hostinfo( pHostInfo );
     get_hostinfo_str(pHostInfo, host_info_str, sizeof(host_info_str));
-    if (!f) f = stdout; if (f != stdout)
-         fprintf(f, "%s\n", host_info_str);
-    else logmsg(    "%s\n", host_info_str);
+    if(httpfd<0)
+    {
+        if (!f) f = stdout; if (f != stdout)
+             fprintf(f, "%s\n", host_info_str);
+        else logmsg(    "%s\n", host_info_str);
+    }
+    else
+    {
+        hprintf(httpfd,"%s\n",host_info_str);
+    }
 }

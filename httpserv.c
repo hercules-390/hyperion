@@ -56,7 +56,6 @@ static MIMETAB mime_types[] = {
 /* so we'll go with what's actually in use. --JRM */
     { NULL,    NULL } };                     /* Default suffix entry */
 
-
 int html_include(WEBBLK *webblk, char *filename)
 {
     FILE *inclfile;
@@ -73,7 +72,7 @@ int html_include(WEBBLK *webblk, char *filename)
     {
         logmsg(_("HHCHT011E html_include: Cannot open %s: %s\n"),
           fullname,strerror(errno));
-        fprintf(webblk->hsock,_("ERROR: Cannot open %s: %s\n"),
+        hprintf(webblk->sock,_("ERROR: Cannot open %s: %s\n"),
           filename,strerror(errno));
         return FALSE;
     }
@@ -82,30 +81,29 @@ int html_include(WEBBLK *webblk, char *filename)
     {
         ret = fread(buffer, 1, sizeof(buffer), inclfile);
         if (ret <= 0) break;
-        fwrite(buffer, 1, ret, webblk->hsock);
+        hwrite(webblk->sock,buffer, ret);
     }
 
     fclose(inclfile);
     return TRUE;
 }
 
-
 void html_header(WEBBLK *webblk)
 {
     if (webblk->request_type != REQTYPE_POST)
-        fprintf(webblk->hsock,"Expires: 0\n");
+        hprintf(webblk->sock,"Expires: 0\n");
 
-    fprintf(webblk->hsock,"Content-type: text/html;\n\n");
+    hprintf(webblk->sock,"Content-type: text/html;\n\n");
 
     if (!html_include(webblk,HTML_HEADER))
-        fprintf(webblk->hsock,"<HTML>\n<HEAD>\n<TITLE>Hercules</TITLE>\n</HEAD>\n<BODY>\n\n");
+        hprintf(webblk->sock,"<HTML>\n<HEAD>\n<TITLE>Hercules</TITLE>\n</HEAD>\n<BODY>\n\n");
 }
 
 
 void html_footer(WEBBLK *webblk)
 {
     if (!html_include(webblk,HTML_FOOTER))
-        fprintf(webblk->hsock,"\n</BODY>\n</HTML>\n");
+        hprintf(webblk->sock,"\n</BODY>\n</HTML>\n");
 }
 
 
@@ -114,7 +112,7 @@ static void http_exit(WEBBLK *webblk)
 CGIVAR *cgivar;
     if(webblk)
     {
-        fclose(webblk->hsock);
+        close_socket(webblk->sock);
         if(webblk->user) free(webblk->user);
         if(webblk->request) free(webblk->request);
         cgivar = webblk->cgivar;
@@ -134,7 +132,7 @@ CGIVAR *cgivar;
 
 static void http_error(WEBBLK *webblk, char *err, char *header, char *info)
 {
-    fprintf(webblk->hsock,"HTTP/1.0 %s\n%sConnection: close\n"
+    hprintf(webblk->sock,"HTTP/1.0 %s\n%sConnection: close\n"
                           "Content-Type: text/html\n\n"
                           "<HTML><HEAD><TITLE>%s</TITLE></HEAD>"
                           "<BODY><H1>%s</H1><P>%s</BODY></HTML>\n\n",
@@ -396,26 +394,26 @@ static void http_download(WEBBLK *webblk, char *filename)
         http_error(webblk, "404 File Not Found","",
                            strerror(errno));
 
-    fprintf(webblk->hsock,"HTTP/1.0 200 OK\n");
+    hprintf(webblk->sock,"HTTP/1.0 200 OK\n");
     if ((filetype = strrchr(filename,'.')))
         for(mime_type++;mime_type->suffix
           && strcasecmp(mime_type->suffix,filetype + 1);
           mime_type++);
     if(mime_type->type)
-        fprintf(webblk->hsock,"Content-Type: %s\n", mime_type->type);
+        hprintf(webblk->sock,"Content-Type: %s\n", mime_type->type);
 
-    fprintf(webblk->hsock,"Expires: %s\n",
+    hprintf(webblk->sock,"Expires: %s\n",
       http_timestring(tbuf,sizeof(tbuf),time(NULL)+HTML_STATIC_EXPIRY_TIME));
 
-    fprintf(webblk->hsock,"Content-Length: %d\n\n", (int)st.st_size);
+    hprintf(webblk->sock,"Content-Length: %d\n\n", (int)st.st_size);
     while ((length = read(fd, buffer, sizeof(buffer))) > 0)
-            fwrite(buffer, 1, length, webblk->hsock);
+            hwrite(webblk->sock,buffer, length);
     close(fd);
     http_exit(webblk);
 }
 
 
-static void *http_request(FILE *hsock)
+static void *http_request(int sock)
 {
     WEBBLK *webblk;
     int authok = !sysblk.httpauth;
@@ -427,25 +425,14 @@ static void *http_request(FILE *hsock)
     int content_length = 0;
 // MSVC appears to use the same buffer for reading and writing on socket file descriptors
 // as a workaround we dub the fd and open a second file specifically for reading *JJ
-#if defined(_MSVC_)
-    FILE *rsock;
-#endif
 
     if(!(webblk = malloc(sizeof(WEBBLK))))
         http_exit(webblk);
 
     memset(webblk,0,sizeof(WEBBLK));
-    webblk->hsock = hsock;
+    webblk->sock = sock;
 
-#if defined(_MSVC_)
-    rsock = fdopen(dup(fileno(hsock)),"rb");
-#endif
-
-#if !defined(_MSVC_)
-    while (fgets(line, sizeof(line), webblk->hsock))
-#else
-    while (fgets(line, sizeof(line), rsock))
-#endif
+    while (hgets(line, sizeof(line), webblk->sock))
     {
         if (*line == '\r' || *line == '\n')
             break;
@@ -472,9 +459,6 @@ static void *http_request(FILE *hsock)
             else
             if(!strcasecmp(pointer,"PUT"))
             {
-#if defined(_MSVC_)
-                fclose(rsock);
-#endif
                 http_error(webblk,"400 Bad Request", "",
                                   "This server does not accept PUT requests");
             }
@@ -510,11 +494,7 @@ static void *http_request(FILE *hsock)
         int i;
             for(i = 0; i < content_length; i++)
             {
-#if !defined(_MSVC_)
-                *pointer = fgetc(webblk->hsock);
-#else
-                *pointer = fgetc(rsock);
-#endif
+                *pointer = hgetc(webblk->sock);
                 if(*pointer != '\n' && *pointer != '\r')
                     pointer++;
             }
@@ -523,9 +503,6 @@ static void *http_request(FILE *hsock)
             free(post_arg);
         }
     }
-#if defined(_MSVC_)
-    fclose(rsock);
-#endif
 
     if (!authok)
         http_error(webblk, "401 Authorization Required",
@@ -567,8 +544,8 @@ static void *http_request(FILE *hsock)
         if(!strcmp(cgient->path, url))
         {
         char tbuf[80];
-            fprintf(webblk->hsock,"HTTP/1.0 200 OK\nConnection: close\n");
-            fprintf(webblk->hsock,"Date: %s\n",
+            hprintf(webblk->sock,"HTTP/1.0 200 OK\nConnection: close\n");
+            hprintf(webblk->sock,"Date: %s\n",
               http_timestring(tbuf,sizeof(tbuf),time(NULL)));
             (cgient->cgibin) (webblk);
             http_exit(webblk);
@@ -582,8 +559,8 @@ static void *http_request(FILE *hsock)
         if( (dyncgi = HDL_FINDSYM(webblk->baseurl)) )
         {
         char tbuf[80];
-            fprintf(webblk->hsock,"HTTP/1.0 200 OK\nConnection: close\n");
-            fprintf(webblk->hsock,"Date: %s\n",
+            hprintf(webblk->sock,"HTTP/1.0 200 OK\nConnection: close\n");
+            hprintf(webblk->sock,"Date: %s\n",
               http_timestring(tbuf,sizeof(tbuf),time(NULL)));
             dyncgi(webblk);
             http_exit(webblk);
@@ -603,7 +580,6 @@ void *http_server (void *arg)
 int                     rc;             /* Return code               */
 int                     lsock;          /* Socket for listening      */
 int                     csock;          /* Socket for conversation   */
-FILE                   *hsock;          /* Socket for conversation   */
 struct sockaddr_in      server;         /* Server address structure  */
 fd_set                  selset;         /* Read bit map for select   */
 int                     optval;         /* Argument for setsockopt   */
@@ -750,20 +726,12 @@ TID                     httptid;        /* Negotiation thread id     */
                 continue;
             }
 
-            if(!(hsock = fdopen(csock,"r+b")))
-            {
-                logmsg(_("HHCHT009E fdopen: %s\n"),strerror(errno));
-                close_socket (csock);
-                continue;
-            }
-
             /* Create a thread to execute the http request */
             if ( create_thread (&httptid, &sysblk.detattr,
-                                http_request, hsock) )
+                                http_request, (void *)(long)csock) )
             {
                 logmsg(_("HHCHT010E http_request create_thread: %s\n"),
                         strerror(errno));
-                fclose (hsock);
                 close_socket (csock);
             }
 

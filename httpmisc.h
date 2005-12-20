@@ -69,7 +69,7 @@ typedef struct _MIMETAB {
 typedef struct _WEBBLK {
 #define HDL_VERS_WEBBLK "2.17"
 #define HDL_SIZE_WEBBLK sizeof(WEBBLK)
-    FILE *hsock;
+    int sock;
     int request_type;
 #define REQTYPE_NONE   0
 #define REQTYPE_GET    1
@@ -94,7 +94,6 @@ typedef struct _CGITAB {
 void html_header(WEBBLK *webblk);
 void html_footer(WEBBLK *webblk);
 int html_include(WEBBLK *webblk, char *filename);
-
 
 char *http_variable(WEBBLK *webblk, char *name, int type);
 void *http_server (void *arg);

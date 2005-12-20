@@ -165,10 +165,11 @@ DLL_EXPORT int  get_buildinfo_strings(const char*** pppszBldInfoStr)
     return ( sizeof(build_info) / sizeof(build_info[0]) );
 }
 
+
 /*-------------------------------------------------------------------*/
 /* Display version and copyright                                     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void display_version (FILE *f, char *prog, const char verbose)
+DLL_EXPORT void display_version_2 (FILE *f, char *prog, const char verbose,int httpfd)
 {
     unsigned int i;
     const char** ppszBldInfoStr = NULL;
@@ -188,14 +189,20 @@ DLL_EXPORT void display_version (FILE *f, char *prog, const char verbose)
         /* Log version */
 
     if ( f != stdout )
-        fprintf (f, _("%sVersion %s\n"), prog, VERSION);
+        if(httpfd<0)
+            fprintf (f, _("%sVersion %s\n"), prog, VERSION);
+        else
+            hprintf (httpfd, _("%sVersion %s\n"), prog, VERSION);
     else
         logmsg  (   _("%sVersion %s\n"), prog, VERSION);
 
     /* Log Copyright */
 
     if ( f != stdout )
-        fprintf (f, "%s\n", HERCULES_COPYRIGHT);
+        if(httpfd<0)
+            fprintf (f, "%s\n", HERCULES_COPYRIGHT);
+        else
+            hprintf (httpfd, "%s\n", HERCULES_COPYRIGHT);
     else
         logmsg  (   "%s\n", HERCULES_COPYRIGHT);
 
@@ -205,21 +212,30 @@ DLL_EXPORT void display_version (FILE *f, char *prog, const char verbose)
         /* Log build date/time */
 
         if ( f != stdout )
-            fprintf (f, _("Built on %s at %s\n"), __DATE__, __TIME__);
+            if(httpfd<0)
+                fprintf (f, _("Built on %s at %s\n"), __DATE__, __TIME__);
+            else
+                hprintf (httpfd, _("Built on %s at %s\n"), __DATE__, __TIME__);
         else
             logmsg  (   _("Built on %s at %s\n"), __DATE__, __TIME__);
 
         /* Log "unusual" build options */
 
         if ( f != stdout )
-            fprintf (f, _("Build information:\n"));
+            if(httpfd<0)
+                fprintf (f, _("Build information:\n"));
+            else
+                hprintf (httpfd, _("Build information:\n"));
         else
             logmsg  (   _("Build information:\n"));
 
         if (!(i = get_buildinfo_strings( &ppszBldInfoStr )))
         {
             if ( f != stdout )
-                fprintf (f, "  (none)\n");
+                if(httpfd<0)
+                    fprintf (f, "  (none)\n");
+                else
+                    hprintf (httpfd, "  (none)\n");
             else
                 logmsg  (   "  (none)\n");
         }
@@ -228,13 +244,27 @@ DLL_EXPORT void display_version (FILE *f, char *prog, const char verbose)
             for(; i; i--, ppszBldInfoStr++ )
             {
                 if ( f != stdout )
-                    fprintf (f, "  %s\n", *ppszBldInfoStr);
+                    if(httpfd<0)
+                        fprintf (f, "  %s\n", *ppszBldInfoStr);
+                    else
+                        hprintf (httpfd, "  %s\n", *ppszBldInfoStr);
                 else
                     logmsg  (   "  %s\n", *ppszBldInfoStr);
             }
         }
 
-        display_hostinfo( &hostinfo, f );
+        if(f != stdout)
+            if(httpfd<0)
+                display_hostinfo( &hostinfo, f, -1 );
+            else
+                display_hostinfo( &hostinfo, (FILE *)-1,httpfd );
+        else
+            display_hostinfo( &hostinfo, f, -1 );
     }
 
 } /* end function display_version */
+
+DLL_EXPORT void display_version(FILE *f,char *prog,const char verbose)
+{
+    display_version_2(f,prog,verbose,-1);
+}

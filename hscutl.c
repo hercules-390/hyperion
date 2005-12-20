@@ -635,3 +635,73 @@ DLL_EXPORT void cause_crash()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+
+
+/*******************************************/
+/* Read/Write to socket functions          */
+/*******************************************/
+DLL_EXPORT int hgetc(int s)
+{
+    char c;
+    int rc;
+    rc=recv(s,&c,1,0);
+    if(rc<1)
+    {
+        return EOF;
+    }
+    return c;
+}
+
+DLL_EXPORT char * hgets(char *b,size_t c,int s)
+{
+    size_t ix=0;
+    while(ix<c)
+    {
+        b[ix]=hgetc(s);
+        if(b[ix]==EOF)
+        {
+            return NULL;
+        }
+        b[ix+1]=0;
+        if(b[ix]=='\n')
+        {
+            return(b);
+        }
+        ix++;
+    }
+    return NULL;
+}
+
+DLL_EXPORT int hwrite(int s,const char *bfr,size_t sz)
+{
+    return send(s,bfr,sz,0);
+}
+
+DLL_EXPORT int hprintf(int s,char *fmt,...)
+{
+    char *bfr;
+    size_t bsize=1024;
+    int rc;
+    va_list vl;
+
+    bfr=malloc(bsize);
+    while(1)
+    {
+        if(!bfr)
+        {
+            return -1;
+        }
+        va_start(vl,fmt);
+        rc=vsnprintf(bfr,bsize,fmt,vl);
+        va_end(vl);
+        if(rc<(int)bsize)
+        {
+            break;
+        }
+        bsize+=1024;
+        bfr=realloc(bfr,bsize);
+    }
+    rc=hwrite(s,bfr,strlen(bfr));
+    free(bfr);
+    return rc;
+}

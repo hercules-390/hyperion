@@ -168,4 +168,10 @@ HUT_DLL_IMPORT int timeval_add      (struct timeval *dif_timeval, struct timeval
 // TEST
 HUT_DLL_IMPORT void cause_crash();
 
+/* Read/write to socket functions */
+HUT_DLL_IMPORT int hprintf(int s,char *fmt,...);
+HUT_DLL_IMPORT int hwrite(int s,const char *,size_t);
+HUT_DLL_IMPORT int hgetc(int s);
+HUT_DLL_IMPORT char *hgets(char *b,size_t c,int s);
+
 #endif /* __HSCUTL_H__ */

@@ -37,6 +37,7 @@
 #define HDL_SIZE_HERCULES sizeof(VERSION)
 
 VER_DLL_IMPORT void display_version(FILE *f, char *prog, const char verbose);
+VER_DLL_IMPORT void display_version_2(FILE *f, char *prog, const char verbose,int httpfd);
 VER_DLL_IMPORT int get_buildinfo_strings(const char*** pppszBldInfoStr);
 
 #define HERCULES_COPYRIGHT \
