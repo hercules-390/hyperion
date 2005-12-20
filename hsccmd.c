@@ -3451,7 +3451,7 @@ BYTE c;                                 /* Character work area       */
     {
         if (aaddr > regs->mainlim)
         {
-            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            release_lock(&sysblk.intlock);
             logmsg( _("HHCPN130E Invalid frame address %8.8X\n"), aaddr );
             return -1;
         }
