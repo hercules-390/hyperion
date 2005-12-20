@@ -27,11 +27,12 @@ images_sources = images/loadoffu.gif images/restartu.gif \
         images/favicon.ico images/poweroffu.gif images/sysonu.gif \
         images/greend.gif images/poweronoffd.gif images/translucentoffd.gif \
         images/greenu.gif images/poweronoffu.gif images/translucentoffu.gif \
-        images/hercpic-blk-256.jpg images/poweronond.gif images/translucentond.gif \
+                          images/poweronond.gif images/translucentond.gif \
         images/hercules.jpg images/powerononu.gif images/translucentonu.gif \
         images/interruptd.gif images/redd.gif images/waitoffu.gif \
         images/interruptu.gif images/redu.gif images/waitonu.gif \
-        images/loadd.gif images/restartd.gif
+        images/loadd.gif images/restartd.gif \
+        images/hercpic-rblk-256.gif images/hercpic-rblk-80.gif
 
 images_pkgdatadir = $(pkgdatadir)/images
 
