@@ -114,8 +114,7 @@ if OPTION_DYNAMIC_LOAD
   DYNMOD_LD_ADD   = libherc.la    \
                    libhercs.la    \
                    libhercu.la    \
-                   $(LDADD)       \
-                   $(LIBFTHREADS)
+                   $(LDADD)
 
   LIB_LD_FLAGS    = -export-dynamic  \
                    $(XSTATIC)        \
@@ -273,7 +272,7 @@ endif
 
   libherct_la_LDFLAGS = $(LIB_LD_FLAGS)
 
-  libherct_la_LIBADD  = $(LDADD) libhercs.la libhercu.la $(LIBFTHREADS)
+  libherct_la_LIBADD  = $(LDADD) libhercs.la libhercu.la
 
 #
 # DASD utility subroutines (shared) library
@@ -290,7 +289,7 @@ endif
 
   libhercd_la_LDFLAGS = $(LIB_LD_FLAGS)
 
-  libhercd_la_LIBADD  = $(LDADD) libhercs.la libhercu.la $(LIBFTHREADS)
+  libhercd_la_LIBADD  = $(LDADD) libhercs.la libhercu.la
 
 #
 ## Pure Utility functions
@@ -384,7 +383,6 @@ endif
                       libhercu.la     \
                       libherct.la     \
                       libhercd.la     \
-                      $(LIBFTHREADS)  \
                       $(LDADD)
 
 #
