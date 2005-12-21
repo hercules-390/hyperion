@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-19 21:21-0600\n"
+"POT-Creation-Date: 2005-12-21 14:10+0100\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -304,7 +304,7 @@ msgid "HHCCD001I Readahead thread %d started: tid="
 msgstr "HHCCP012I Timer thread gestart: tid=%p, pid=%d\n"
 
 #: cckddasd.c:1498 cckddasd.c:1548 cckddasd.c:1688 cckddasd.c:1810
-#: cckddasd.c:4333 console.c:1548 cpu.c:1142 httpserv.c:616 panel.c:1256
+#: cckddasd.c:4333 console.c:1548 cpu.c:1142 httpserv.c:592 panel.c:1256
 #: shared.c:2500 shared.c:2701 sockdev.c:407
 #, c-format
 msgid ", pid=%d\n"
@@ -4993,77 +4993,72 @@ msgstr ""
 msgid "%sInstruction fetch error\n"
 msgstr ""
 
-#: httpserv.c:74
+#: httpserv.c:73
 #, fuzzy, c-format
 msgid "HHCHT011E html_include: Cannot open %s: %s\n"
 msgstr "HHCHT011E html_include: Fout %2$s bij openen bestand \"%1$s\"\n"
 
-#: httpserv.c:76
+#: httpserv.c:75
 #, c-format
 msgid "ERROR: Cannot open %s: %s\n"
 msgstr "FOUT: Kan %s niet openen: %s\n"
 
-#: httpserv.c:272
+#: httpserv.c:270
 #, c-format
 msgid "HHCHT012I cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n"
 msgstr ""
 
-#: httpserv.c:615
+#: httpserv.c:591
 #, fuzzy
 msgid "HHCHT001I HTTP listener thread started: tid="
 msgstr "HHCCP012I Timer thread gestart: tid=%p, pid=%d\n"
 
-#: httpserv.c:650 httpserv.c:659
+#: httpserv.c:626 httpserv.c:635
 #, fuzzy, c-format
 msgid "HHCCF066E Invalid HTTPROOT: \"%s\": %s\n"
 msgstr "HHCCA018E %4.4X:Bind fout: %s\n"
 
-#: httpserv.c:668
+#: httpserv.c:644
 #, c-format
 msgid "HHCHT013I Using HTTPROOT directory \"%s\"\n"
 msgstr ""
 
-#: httpserv.c:676
+#: httpserv.c:652
 #, c-format
 msgid "HHCHT002E socket: %s\n"
 msgstr ""
 
-#: httpserv.c:699
+#: httpserv.c:675
 #, c-format
 msgid "HHCHT003W Waiting for port %u to become free\n"
 msgstr ""
 
-#: httpserv.c:706
+#: httpserv.c:682
 #, c-format
 msgid "HHCHT004E bind: %s\n"
 msgstr ""
 
-#: httpserv.c:715
+#: httpserv.c:691
 #, c-format
 msgid "HHCHT005E listen: %s\n"
 msgstr ""
 
-#: httpserv.c:719
+#: httpserv.c:695
 #, c-format
 msgid "HHCHT006I Waiting for HTTP requests on port %u\n"
 msgstr ""
 
-#: httpserv.c:737
+#: httpserv.c:713
 #, c-format
 msgid "HHCHT007E select: %s\n"
 msgstr ""
 
-#: httpserv.c:749
+#: httpserv.c:725
 #, c-format
 msgid "HHCHT008E accept: %s\n"
 msgstr ""
 
-#: httpserv.c:755
-#, c-format
-msgid "HHCHT009E fdopen: %s\n"
-msgstr ""
-
-#: httpserv.c:764
+#: httpserv.c:733
 #, fuzzy, c-format
 msgid "HHCHT010E http_request create_thread: %s\n"
 msgstr "HHCPN119E Fout %2$s bij lezen van bestand \"%1$s\"\n"
@@ -6823,17 +6818,17 @@ msgstr "HHCLC039E Fout %2$s bij openen bestand \"%1$s\"\n"
 msgid "HHCTU027E execl error on %s: %s.\n"
 msgstr "HHCTA024E Fout %2$s bij openen van bestand \"%1$s\"\n"
 
-#: version.c:191 version.c:193
+#: version.c:193 version.c:195 version.c:197
 #, c-format
 msgid "%sVersion %s\n"
 msgstr "%sVersie %s\n"
 
-#: version.c:208 version.c:210
+#: version.c:216 version.c:218 version.c:220
 #, c-format
 msgid "Built on %s at %s\n"
 msgstr ""
 
-#: version.c:215 version.c:217
+#: version.c:226 version.c:228 version.c:230
 #, c-format
 msgid "Build information:\n"
 msgstr ""

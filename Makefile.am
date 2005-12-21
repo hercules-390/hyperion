@@ -10,7 +10,7 @@ lns=@LN_S@
 
 SUBDIRS = m4 po util html man . crypto
 
-LDADD = @LTLIBINTL@ @LIBS@
+LDADD = @LTLIBICONV@ @LTLIBINTL@ @LIBS@
 
 AM_CPPFLAGS = -I$(top_srcdir)
 
@@ -33,9 +33,6 @@ fishhang_SRC  = fishhang.c
 if BUILD_FTHREADS
   FTHREADS    = $(fthreads_SRC)
   FISHIO      = $(fishio_SRC)
-  LIBFTHREADS = libfthreads.la
-  FHOSTINFO   = hostinfo.c
-  HOSTINFO    =
 if BUILD_FISHHANG
     FISHHANG  = $(fishhang_SRC)
 else
@@ -45,9 +42,6 @@ else
   FTHREADS    =
   FISHHANG    =
   FISHIO      =
-  LIBFTHREADS =
-  FHOSTINFO   =
-  HOSTINFO    = hostinfo.c
 endif
 
 # We need to still include the source for the dynamic modules
@@ -134,7 +128,7 @@ endif
 # List of Libtool shared libraries & loadable modules
 #
 
-  HERCLIBS = $(LIBFTHREADS)
+  HERCLIBS = 
 
   HERCLIBS2 = libhercs.la  \
               libhercu.la \
@@ -242,17 +236,6 @@ if OPTION_DYNAMIC_LOAD
 
 endif
 
-if BUILD_FTHREADS
-  libfthreads_la_SOURCES = $(FTHREADS)  \
-                           $(FISHHANG)  \
-                           $(FHOSTINFO)
-
-  libfthreads_la_LDFLAGS = $(LIB_LD_FLAGS)
-
-  libfthreads_la_LIBADD  = $(LDADD)
-
-endif
-
 #
 # Common data areas (shared) library
 #
@@ -301,15 +284,17 @@ endif
                         logger.c     \
                         logmsg.c     \
                         hdl.c        \
-                        $(HOSTINFO)  \
+                        hostinfo.c   \
                         memrchr.c    \
                         parser.c     \
                         pttrace.c    \
+                        $(FTHREADS)  \
+                        $(FISHHANG)  \
                         $(LTDL)
 
   libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 
-  libhercu_la_LIBADD  = $(LDADD) libhercs.la $(LIBFTHREADS)
+  libhercu_la_LIBADD  = $(LDADD) libhercs.la
 
 #
 # Core Hercules (shared) library

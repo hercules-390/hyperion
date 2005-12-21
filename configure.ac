@@ -199,6 +199,7 @@ hc_cv_have_lt_dlopen=yes
 
 
 AM_GNU_GETTEXT([external])              #
+AM_ICONV
 
 HC_LD_DISALLOWDUPS()                    # (add duplicate symbols option to LDFLAGS)
 
