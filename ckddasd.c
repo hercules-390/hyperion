@@ -296,7 +296,8 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
             memcmp ("sf=", argv[i], 3) == 0)
         {
             if ('\"' == argv[i][3]) argv[i]++;
-            dev->dasdsfn = strdup(argv[i]+3);
+            hostpath(pathname, argv[i]+3, sizeof(pathname));
+            dev->dasdsfn = strdup(pathname);
             if (dev->dasdsfn)
             {
                 /* Set the pointer to the suffix character */

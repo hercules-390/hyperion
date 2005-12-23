@@ -1,5 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
+
+23 Dec 2005 Fix for Windows ..\relative path shadow files - Fish
 11 Dec 2005 Correction to format 1 STIDP - Jan Jaeger
 10 Dec 2005 Update FAQ software prerequisite sections - Roger Bowler
 09 Dec 2005 MAX_CPU_ENGINES defaults to 8 for MSVC build too - Ivan Warren
