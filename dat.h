@@ -1584,7 +1584,7 @@ reg_third_invalid:
     } /* end if(ACCTYPE_LPTEA) */
      
     /* Otherwise set translation exception code */
-    goto reg_second_excp;
+    goto reg_third_excp;
 
 asce_type_excp:
 //  logmsg("rfx = %4.4X, rsx %4.4X, rtx = %4.4X, tt = %1.1X\n",
