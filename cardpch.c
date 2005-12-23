@@ -137,7 +137,8 @@ static void cardpch_query_device (DEVBLK *dev, char **class,
 static int cardpch_close_device ( DEVBLK *dev )
 {
     /* Close the device file */
-    close (dev->fd);
+    if (dev->fd >= 0)
+        close (dev->fd);
     dev->fd = -1;
 
     return 0;
