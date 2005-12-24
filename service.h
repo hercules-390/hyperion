@@ -10,6 +10,7 @@
 /* Service Call Logical Processor command word definitions           */
 /*-------------------------------------------------------------------*/
 #define SCLP_READ_SCP_INFO      0x00020001
+#define SCLP_READ_SCP_INFO_IFL  0x00120001
 #define SCLP_READ_CHP_INFO      0x00030001
 #define SCLP_READ_CSI_INFO      0x001C0001
 
@@ -280,6 +281,7 @@ typedef struct _SCCB_EVENT_MASK {
 #define SCCB_EVENT_SUPP_RECV_MASK ( \
         (0x80000000 >> (SCCB_EVD_TYPE_MSG-1)) | \
         (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) | \
+/*      (0x80000000 >> (SCCB_EVD_TYPE_VT220-1)) | */ \
         (0x80000000 >> (SCCB_EVD_TYPE_CPIDENT-1)) )
 //      FWORD   sclp_send_mask;
 #define SCCB_EVENT_SUPP_SEND_MASK ( \
@@ -287,6 +289,7 @@ typedef struct _SCCB_EVENT_MASK {
         (0x80000000 >> (SCCB_EVD_TYPE_STATECH-1)) | \
         (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) | \
         (0x80000000 >> (SCCB_EVD_TYPE_SIGQ-1)) | \
+/*      (0x80000000 >> (SCCB_EVD_TYPE_VT220-1)) | */ \
         (0x80000000 >> (SCCB_EVD_TYPE_CPCMD-1)) )
     } SCCB_EVENT_MASK;
 
@@ -300,6 +303,7 @@ typedef struct _SCCB_EVD_HDR {
 #define SCCB_EVD_TYPE_STATECH   0x08    /* State Change              */
 #define SCCB_EVD_TYPE_PRIOR     0x09    /* Priority message/command  */
 #define SCCB_EVD_TYPE_CPIDENT   0x0B    /* CntlProgIdent             */
+#define SCCB_EVD_TYPE_VT220     0x1A    /* VT220 Msg                 */
 #define SCCB_EVD_TYPE_SIGQ      0x1D    /* SigQuiesce                */
 #define SCCB_EVD_TYPE_CPCMD     0x20    /* CntlProgOpCmd             */
         BYTE    flag;
