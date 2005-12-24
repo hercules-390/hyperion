@@ -8,13 +8,8 @@
 
 #define RTLD_NOW 0
 
-#if 1
 #define dlopen(_name, _flags) \
         (void*) ((_name) ? LoadLibrary((_name)) : GetModuleHandle( NULL ) )
-#else
-#define dlopen(_name, _flags) \
-        (void*) ((_name) ? LoadLibrary((_name)) : LoadLibrary("HERCULES.DLL") )
-#endif
 #define dlsym(_handle, _symbol) \
         (void*)GetProcAddress((HMODULE)(_handle), (_symbol))
 #define dlclose(_handle) \
