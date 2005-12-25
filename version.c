@@ -89,7 +89,7 @@ static const char *build_info[] = {
 
 #if defined(OPTION_HTTP_SERVER)
     "HTTP Server support",
-#if defined(PKGDATADIR)
+#if defined(PKGDATADIR) && defined(DEBUG)
     "HTTP document default root directory is "PKGDATADIR,
 #endif
 #endif
