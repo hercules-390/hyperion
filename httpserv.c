@@ -423,8 +423,6 @@ static void *http_request(int sock)
     char *strtok_str;
     CGITAB *cgient;
     int content_length = 0;
-// MSVC appears to use the same buffer for reading and writing on socket file descriptors
-// as a workaround we dub the fd and open a second file specifically for reading *JJ
 
     if(!(webblk = malloc(sizeof(WEBBLK))))
         http_exit(webblk);
