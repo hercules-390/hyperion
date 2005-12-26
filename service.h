@@ -10,7 +10,7 @@
 /* Service Call Logical Processor command word definitions           */
 /*-------------------------------------------------------------------*/
 #define SCLP_READ_SCP_INFO      0x00020001
-#define SCLP_READ_SCP_INFO_IFL  0x00120001
+#define SCLP_READ_IFL_INFO      0x00120001
 #define SCLP_READ_CHP_INFO      0x00030001
 #define SCLP_READ_CSI_INFO      0x001C0001
 

@@ -596,7 +596,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     switch (sclp_command & SCLP_COMMAND_MASK) {
 
     case SCLP_READ_SCP_INFO:
-    case SCLP_READ_SCP_INFO_IFL:
+    case SCLP_READ_IFL_INFO:
 
         /* Set the main storage change bit */
         STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
@@ -704,7 +704,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         sccb->resp = SCCB_RESP_INFO;
 
         /* OR in program product OS restriction flag. */
-        if(sclp_command != SCLP_READ_SCP_INFO_IFL)
+        if(sclp_command != SCLP_READ_IFL_INFO)
             sccb->resp |= sysblk.pgmprdos;
 
         break;
