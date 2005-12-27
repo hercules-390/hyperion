@@ -1432,7 +1432,7 @@ BYTE    tbyte;                          /* Work byte                 */
     /* Set condition code according to result */
     regs->psw.cc =
             ( tbyte == 0 ) ? 0 :            /* result all zeroes */
-            ((tbyte^i2) == 0) ? 3 :         /* result all ones   */
+            ( tbyte == i2) ? 3 :            /* result all ones   */
             1 ;                             /* result mixed      */
 }
 
@@ -1460,7 +1460,7 @@ U16     h2;                             /* 16-bit operand values     */
     /* Set condition code according to result */
     regs->psw.cc =
             ( h1 == 0 ) ? 0 :           /* result all zeroes */
-            ((h1 ^ i2) == 0) ? 3 :      /* result all ones   */
+            ( h1 == i2) ? 3 :           /* result all ones   */
             ((h1 & h2) == 0) ? 1 :      /* leftmost bit zero */
             2;                          /* leftmost bit one  */
 }
@@ -1490,7 +1490,7 @@ U16     h2;                             /* 16-bit operand values     */
     /* Set condition code according to result */
     regs->psw.cc =
             ( h1 == 0 ) ? 0 :           /* result all zeroes */
-            ((h1 ^ i2) == 0) ? 3 :      /* result all ones   */
+            ( h1 == i2) ? 3 :           /* result all ones   */
             ((h1 & h2) == 0) ? 1 :      /* leftmost bit zero */
             2;                          /* leftmost bit one  */
 

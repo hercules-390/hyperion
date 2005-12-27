@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+27 Dec 2005 Performance patch TM, TMH, TML - Bernard van der Helm
 24 Dec 2005 Add IFL SCPINFO support for zLinux zipl code - Jan Jaeger
 23 Dec 2005 Fix for Windows ..\relative path shadow files - Fish
 11 Dec 2005 Correction to format 1 STIDP - Jan Jaeger
