@@ -339,10 +339,10 @@ PTFFQTO qto;
 void ARCH_DEP(query_available_functions) (REGS *regs)
 {
 PTFFQAF qaf;
-    STORE_DW(qaf.sb[0] , 0xF0000000);        /* Functions 0x00..0x1F */
-    STORE_DW(qaf.sb[1] , 0x00000000);        /* Functions 0x20..0x3F */
-    STORE_DW(qaf.sb[2] , 0xF0000000);        /* Functions 0x40..0x5F */
-    STORE_DW(qaf.sb[3] , 0x00000000);        /* Functions 0x60..0x7F */
+    STORE_FW(qaf.sb[0] , 0xF0000000);        /* Functions 0x00..0x1F */
+    STORE_FW(qaf.sb[1] , 0x00000000);        /* Functions 0x20..0x3F */
+    STORE_FW(qaf.sb[2] , 0xF0000000);        /* Functions 0x40..0x5F */
+    STORE_FW(qaf.sb[3] , 0x00000000);        /* Functions 0x60..0x7F */
 
     ARCH_DEP(vstorec) (&qaf, sizeof(qaf)-1, regs->GR(1), 1, regs);
 }
