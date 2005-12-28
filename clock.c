@@ -310,13 +310,13 @@ void ARCH_DEP(query_physical_clock) (REGS *regs)
 void ARCH_DEP(query_steering_information) (REGS *regs)
 {
 PTFFQSI qsi;
-    STORE_DW(qsi.physclk, hw_clock() );
-    STORE_DW(qsi.oldestart, old.start_time );
-    STORE_DW(qsi.oldebase, old.base_offset );
+    STORE_DW(qsi.physclk, hw_clock() << 8);
+    STORE_DW(qsi.oldestart, old.start_time << 8);
+    STORE_DW(qsi.oldebase, old.base_offset << 8);
     STORE_FW(qsi.oldfsr, old.fine_s_rate );
     STORE_FW(qsi.oldgsr, old.gross_s_rate );
-    STORE_DW(qsi.newestart, new.start_time );
-    STORE_DW(qsi.newebase, new.base_offset );
+    STORE_DW(qsi.newestart, new.start_time << 8);
+    STORE_DW(qsi.newebase, new.base_offset << 8);
     STORE_FW(qsi.newfsr, new.fine_s_rate );
     STORE_FW(qsi.newgsr, new.gross_s_rate );
 
@@ -327,10 +327,10 @@ PTFFQSI qsi;
 void ARCH_DEP(query_tod_offset) (REGS *regs)
 {
 PTFFQTO qto;
-    STORE_DW(qto.physclk, hw_clock() );
-    STORE_DW(qto.todoff, hw_offset );
-    STORE_DW(qto.ltodoff, current->base_offset );
-    STORE_DW(qto.todepoch, regs->tod_epoch);
+    STORE_DW(qto.physclk, hw_clock() << 8);
+    STORE_DW(qto.todoff, hw_offset << 8);
+    STORE_DW(qto.ltodoff, current->base_offset << 8);
+    STORE_DW(qto.todepoch, regs->tod_epoch << 8);
 
     ARCH_DEP(vstorec) (&qto, sizeof(qto)-1, regs->GR(1), 1, regs);
 }
