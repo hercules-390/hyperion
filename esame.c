@@ -33,6 +33,8 @@
 
 #include "inline.h"
 
+#include "clock.h"
+
 #define CRYPTO_EXTERN extern
 #include "crypto.h"
 
@@ -4645,6 +4647,66 @@ int     cc;                             /* Condition code            */
 
 } /* end DEF_INST(load_real_address_long) */
 #endif /*defined(FEATURE_ESAME)*/
+
+
+#if defined(FEATURE_TOD_CLOCK_STEERING)
+/*-------------------------------------------------------------------*/
+/* 0104 PTFF  - Perform Timing Facility Function                 [E] */
+/*-------------------------------------------------------------------*/
+DEF_INST(perform_timing_facility_function)
+{
+    E(inst, regs);
+
+    UNREFERENCED(inst);
+
+    SIE_INTERCEPT(regs);
+
+    if(regs->GR_L(0) & PTFF_GPR0_RESV)
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+    switch(regs->GR_L(0) & PTFF_GPR0_FC_MASK)
+    {
+        case PTFF_GPR0_FC_QAF:
+            ARCH_DEP(query_available_functions) (regs);
+            regs->psw.cc = 0;
+            break;
+        case PTFF_GPR0_FC_QTO:
+            ARCH_DEP(query_tod_offset) (regs);
+            regs->psw.cc = 0;
+            break;
+        case PTFF_GPR0_FC_QSI:
+            ARCH_DEP(query_steering_information) (regs);
+            regs->psw.cc = 0;
+            break;
+        case PTFF_GPR0_FC_QPT:
+            ARCH_DEP(query_physical_clock) (regs);
+            regs->psw.cc = 0;
+            break;
+        case PTFF_GPR0_FC_ATO:
+            PRIV_CHECK(regs);
+            ARCH_DEP(adjust_tod_offset) (regs);
+            regs->psw.cc = 0;
+            break;
+        case PTFF_GPR0_FC_STO:
+            PRIV_CHECK(regs);
+            ARCH_DEP(set_tod_offset) (regs);
+            regs->psw.cc = 0;
+            break;
+        case PTFF_GPR0_FC_SFS:
+            PRIV_CHECK(regs);
+            ARCH_DEP(set_fine_s_rate) (regs);
+            regs->psw.cc = 0;
+            break;
+        case PTFF_GPR0_FC_SGS:
+            PRIV_CHECK(regs);
+            ARCH_DEP(set_gross_s_rate) (regs);
+            regs->psw.cc = 0;
+            break;
+        default:
+            regs->psw.cc = 3;
+    }
+}
+#endif /*defined(FEATURE_TOD_CLOCK_STEERING)*/
 
 
 #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)

@@ -2137,6 +2137,7 @@ DEF_INST(extract_stacked_registers_long);
 DEF_INST(extract_psw);
 DEF_INST(extract_and_set_extended_authority);
 DEF_INST(load_address_relative_long);
+DEF_INST(perform_timing_facility_function);                     /*@Z9*/
 DEF_INST(store_facility_list);
 DEF_INST(store_facility_list_extended);                         /*@Z9*/
 DEF_INST(load_long_halfword_immediate);

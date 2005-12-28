@@ -31,6 +31,9 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
     int    rc     =  0;
     REGS  *regs;
 
+    /* Reset the clock steering registers */
+    csr_reset();
+
     /* Configure the cpu if it is not online */
     if (!IS_CPU_ONLINE(cpu))
     {

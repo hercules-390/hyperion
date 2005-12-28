@@ -1819,12 +1819,6 @@ typedef struct _ZPB2 {
 #define STSI_GPR1_SEL2_MASK     0x0000FFFF
 #define STSI_GPR1_RESERVED      0xFFFF0000
 
-#define SIGA_FC_W       0               /* Initiate Output           */
-#define SIGA_FC_R       1               /* Initiate Input            */
-#define SIGA_FC_S       2               /* Synchronize               */
-
-#define SIGA_FC_MAX     SIGA_FC_S
-
 typedef struct _SYSIB111 {              /* Basic Machine Config      */
         BYTE    resv1[4*8];             /* Reserved                  */
         BYTE    manufact[4*4];          /* Manufacturer              */
@@ -1896,6 +1890,47 @@ typedef struct _SYSIBVMDB {             /* Virtual Machine Desc Block*/
         BYTE    vmcaf[4*1];             /* VM capability adjustment  */
         BYTE    cpid[4*4];              /* Control Program ID        */
     }   SYSIBVMDB;
+
+#define PTFF_GPR0_RESV          0x00000080
+#define PTFF_GPR0_FC_MASK       0x0000007F
+#define PTFF_GPR0_FC_QAF        0x00
+#define PTFF_GPR0_FC_QTO        0x01
+#define PTFF_GPR0_FC_QSI        0x02
+#define PTFF_GPR0_FC_QPT        0x03
+#define PTFF_GPR0_FC_ATO        0x40
+#define PTFF_GPR0_FC_STO        0x41
+#define PTFF_GPR0_FC_SFS        0x42
+#define PTFF_GPR0_FC_SGS        0x43
+
+typedef struct _PTFFQAF {               /* Query Available Functions */
+        FWORD   sb[4];                  /* Status Bits words         */
+    }   PTFFQAF;
+
+typedef struct _PTFFQTO {               /* Query TOD Offset          */
+        DBLWRD  physclk;                /* Physical Clock            */
+        DBLWRD  todoff;                 /* TOD Offset                */
+        DBLWRD  ltodoff;                /* Logical TOD Offset        */
+        DBLWRD  todepoch;               /* TOD Epoch Difference      */
+    }   PTFFQTO;
+
+typedef struct _PTFFQSI {               /* Query Steering Information*/
+        DBLWRD  physclk;                /* Physical Clock            */
+        DBLWRD  oldestart;              /* Old Episode Start Time    */
+        DBLWRD  oldebase;               /* Old Episode Base Offset   */
+        FWORD   oldfsr;                 /* Old Episode Fine St. Rate */
+        FWORD   oldgsr;                 /* Old Episode Gross St. Rate*/
+        DBLWRD  newestart;              /* New Episode Start Time    */
+        DBLWRD  newebase;               /* New Episode Base Offset   */
+        FWORD   newfsr;                 /* New Episode Fine St. Rate */
+        FWORD   newgsr;                 /* New Episode Gross St. Rate*/
+    }   PTFFQSI;
+
+
+#define SIGA_FC_W       0               /* Initiate Output           */
+#define SIGA_FC_R       1               /* Initiate Input            */
+#define SIGA_FC_S       2               /* Synchronize               */
+
+#define SIGA_FC_MAX     SIGA_FC_S
 
 /* Bit definitions for floating-point-control register */
 #define FPC_MASK        0xF8000000

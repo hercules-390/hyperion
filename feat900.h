@@ -82,7 +82,7 @@
 #define FEATURE_SUPPRESSION_ON_PROTECTION
 #define FEATURE_SYSTEM_CONSOLE
 #define FEATURE_TEST_BLOCK
-//#define FEATURE_TOD_CLOCK_STEERING                              /*@Z9*/
+#define FEATURE_TOD_CLOCK_STEERING                              /*@Z9*/
 #define FEATURE_TRACING
 #define FEATURE_WAITSTATE_ASSIST
 
