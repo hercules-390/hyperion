@@ -44,11 +44,10 @@ void csr_reset()
     old = new;
 }
 
-
+static U64 universal_tod;
 static U64 universal_clock(void) /* really: any clock used as a base */
 {
     struct timeval tv;
-    U64 universal_tod;
 
     gettimeofday (&tv, NULL);
 
@@ -71,7 +70,7 @@ static U64 universal_clock(void) /* really: any clock used as a base */
 /* The hercules hardware clock, based on the universal clock, but    */
 /* running at its own speed as optionally set by set_tod_steering()  */
 /* The hardware clock returns a unique value                         */
-static U64 base_tod_old = 0;
+static U64 hw_tod = 0;
 U64 hw_clock(void)
 {
 U64 base_tod;
@@ -84,16 +83,12 @@ U64 base_tod;
     base_tod += (S64)(base_tod - hw_episode) * hw_steering;
 
     /* Ensure that the clock returns a unique value */
-    if(base_tod_old < base_tod)
-    {
-        base_tod_old = base_tod;
-        return base_tod;
-    }
+    if(hw_tod < base_tod)
+        hw_tod = base_tod;
     else
-    {
-	base_tod_old += 0x10;
-        return base_tod_old;
-    }
+	hw_tod += 0x10;
+
+    return hw_tod;
 }
 
 
@@ -103,9 +98,9 @@ U64 base_tod;
 void set_tod_steering(double steering)
 {
     obtain_lock(&sysblk.todlock);
-    hw_offset = hw_clock() - universal_clock();
+    hw_offset = hw_clock() - universal_tod;
     hw_steering = steering;
-    hw_episode = tod_clock;
+    hw_episode = hw_tod;
     release_lock(&sysblk.todlock);
 }
 
@@ -113,10 +108,11 @@ void set_tod_steering(double steering)
 /* Start a new episode */
 static inline void start_new_episode()
 {
-    hw_offset = hw_clock() - universal_clock();
+    hw_offset = hw_clock() - universal_tod;
+    hw_episode = hw_tod;
+    new.start_time = hw_episode;
+    hw_steering = ldexp(2,-44) * (S32)(new.fine_s_rate + new.gross_s_rate);
     current = &new;
-    hw_episode = current->start_time;
-    hw_steering = ldexp(2,-44) * (S32)(current->fine_s_rate + current->gross_s_rate);
 }
 
 
@@ -127,7 +123,6 @@ static inline void prepare_new_episode()
     {
         old = new;
         current = &old;
-	new.start_time = hw_clock();
     }
 }
 
@@ -247,7 +242,7 @@ U64 new_clock,
     
     /* If we are in the old episode, and the new episode has arrived
        then we must take action to start the new episode */
-    if(current == &old && new_clock >= new.start_time)
+    if(current == &old)
         start_new_episode();
 
     /* Set the clock to the new updated value with offset applied */
@@ -303,14 +298,15 @@ S64 offset;
 
 void ARCH_DEP(query_physical_clock) (REGS *regs)
 {
-    ARCH_DEP(vstore8) (hw_clock() << 8, regs->GR(1), 1, regs);
+    ARCH_DEP(vstore8) (universal_clock() << 8, regs->GR(1), 1, regs);
 }
 
 
 void ARCH_DEP(query_steering_information) (REGS *regs)
 {
 PTFFQSI qsi;
-    STORE_DW(qsi.physclk, hw_clock() << 8);
+    obtain_lock(&sysblk.todlock);
+    STORE_DW(qsi.physclk, universal_clock() << 8);
     STORE_DW(qsi.oldestart, old.start_time << 8);
     STORE_DW(qsi.oldebase, old.base_offset << 8);
     STORE_FW(qsi.oldfsr, old.fine_s_rate );
@@ -319,6 +315,7 @@ PTFFQSI qsi;
     STORE_DW(qsi.newebase, new.base_offset << 8);
     STORE_FW(qsi.newfsr, new.fine_s_rate );
     STORE_FW(qsi.newgsr, new.gross_s_rate );
+    release_lock(&sysblk.todlock);
 
     ARCH_DEP(vstorec) (&qsi, sizeof(qsi)-1, regs->GR(1), 1, regs);
 }
@@ -327,10 +324,12 @@ PTFFQSI qsi;
 void ARCH_DEP(query_tod_offset) (REGS *regs)
 {
 PTFFQTO qto;
-    STORE_DW(qto.physclk, hw_clock() << 8);
-    STORE_DW(qto.todoff, (hw_clock() - universal_clock()) << 8);
+    obtain_lock(&sysblk.todlock);
+    STORE_DW(qto.todoff, (hw_clock() - universal_tod) << 8);
+    STORE_DW(qto.physclk, universal_tod << 8);
     STORE_DW(qto.ltodoff, current->base_offset << 8);
     STORE_DW(qto.todepoch, regs->tod_epoch << 8);
+    release_lock(&sysblk.todlock);
 
     ARCH_DEP(vstorec) (&qto, sizeof(qto)-1, regs->GR(1), 1, regs);
 }
