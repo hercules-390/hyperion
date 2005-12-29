@@ -231,11 +231,9 @@ int     icode = 0;                      /* Interception code         */
 
     S(inst, regs, b2, effective_addr2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_INTERCEPT(regs);
 
     PRIV_CHECK(regs);
-
-    SIE_INTERCEPT(regs);
 
     SIE_PERFMON(SIE_PERF_ENTER);
 

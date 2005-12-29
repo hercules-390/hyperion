@@ -157,8 +157,6 @@ DEF_INST(trap2)
 
     UNREFERENCED(inst);
 
-    SIE_MODE_XC_SOPEX(regs);
-
     ARCH_DEP(trap_x) (0, regs, 0);
 
 } /* end DEF_INST(trap2) */
@@ -175,8 +173,6 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
-
-    SIE_MODE_XC_SOPEX(regs);
 
     ARCH_DEP(trap_x) (1, regs, effective_addr2);
 
@@ -944,6 +940,8 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
+    SIE_XC_INTERCEPT(regs);
+
     PRIV_CHECK(regs);
 
     /* Program check if bits 44-51 of r2 register are non-zero */
@@ -1063,7 +1061,7 @@ int     cc;                             /* Condition code            */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     PRIV_CHECK(regs);
 
@@ -1516,7 +1514,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 
     RRE(inst, regs, r1, r2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     /* Find the virtual address of the entry descriptor
        of the current state entry in the linkage stack */
@@ -4830,7 +4828,7 @@ int     cc;                             /* Condition code            */
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     PRIV_CHECK(regs);
 

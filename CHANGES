@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+29 Dec 2005 SIE XC interception fixes - Jan Jaeger
 29 Dec 2005 Performance patch STCM, STCMY, STCMH - Bernard van der Helm
 29 Dec 2005 Performance patch ICM, ICMY, ICMH - Bernard van der Helm
 28 Dec 2005 Perform Timing Facility Function - Jan Jaeger / Bernard van der Helm

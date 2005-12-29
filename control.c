@@ -336,7 +336,7 @@ CREG    inst_cr;                        /* Instruction CR            */
 
     RRE(inst, regs, r1, r2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     /* Special operation exception if DAT is off or ASF not enabled */
     if (REAL_MODE(&(regs->psw))
@@ -617,7 +617,7 @@ VADR    n = 0;                          /* Work area                 */
 
     RRE(inst, regs, r1, r2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATB(regs, IC3, BAKR))
@@ -836,7 +836,7 @@ int     r1, r2;                         /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     /* Special operation exception if DAT is off */
     if ( (regs->psw.sysmask & PSW_DATMODE) == 0 )
@@ -872,7 +872,7 @@ int r1, r2;                             /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     /* Special operation exception if DAT is off */
     if ( (regs->psw.sysmask & PSW_DATMODE) == 0 )
@@ -905,7 +905,7 @@ int     r1, r2;                         /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     /* Special operation exception if DAT is off */
     if ( (regs->psw.sysmask & PSW_DATMODE) == 0 )
@@ -942,7 +942,7 @@ int r1, r2;                             /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     /* Special operation exception if DAT is off */
     if ( (regs->psw.sysmask & PSW_DATMODE) == 0 )
@@ -977,7 +977,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 
     RRE(inst, regs, r1, r2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     /* Find the virtual address of the entry descriptor
        of the current state entry in the linkage stack */
@@ -1005,8 +1005,7 @@ int     max_esta_code;
 
     RRE(inst, regs, r1, r2);
 
-
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     if (REAL_MODE(&regs->psw)
         || SECONDARY_SPACE_MODE(&regs->psw)
@@ -1591,7 +1590,7 @@ CREG    inst_cr;                        /* Instruction CR            */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     PRIV_CHECK(regs);
 
@@ -2051,7 +2050,7 @@ void ARCH_DEP(load_real_address_proc) (REGS *regs,
 {
 int     cc;                             /* Condition code            */
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     PRIV_CHECK(regs);
 
@@ -2236,7 +2235,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 
     RRE(inst, regs, r1, unused);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     if (REAL_MODE(&regs->psw)
         || SECONDARY_SPACE_MODE(&regs->psw)
@@ -2276,7 +2275,7 @@ GREG    l;                              /* Unsigned workarea         */
     SS(inst, regs, r1, r3, b1, effective_addr1,
                                      b2, effective_addr2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     /* Program check if secondary space control (CR0 bit 5) is 0,
        or if DAT is off, or if in AR mode or home-space mode */
@@ -2338,7 +2337,7 @@ GREG    l;                              /* Unsigned workarea         */
     SS(inst, regs, r1, r3, b1, effective_addr1,
                                      b2, effective_addr2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
     /* Program check if secondary space control (CR0 bit 5) is 0,
        or if DAT is off, or if in AR mode or home-space mode */
@@ -2541,7 +2540,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     S(inst, regs, b2, effective_addr2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATB(regs, IC2, PC))
@@ -3216,7 +3215,7 @@ int     rc;                             /* return code from load_psw */
 
     UNREFERENCED(inst);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATB(regs, IC3, PR))
@@ -3510,7 +3509,7 @@ int     ssevent = 0;                    /* 1=space switch event      */
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_XC_INTERCEPT(regs);
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATB(regs, IC2, PT))
@@ -4395,11 +4394,9 @@ U64     dreg;                           /* Clock value               */
 
     S(inst, regs, b2, effective_addr2);
 
-    SIE_MODE_XC_OPEX(regs);
+    SIE_INTERCEPT(regs);
 
     PRIV_CHECK(regs);
-
-    SIE_INTERCEPT(regs);
 
     DW_CHECK(effective_addr2, regs);
 
@@ -4631,8 +4628,9 @@ U16     ax;                             /* Authorization index       */
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
-    SIE_MODE_XC_OPEX(regs);
     UNREFERENCED(r2);
+
+    SIE_XC_INTERCEPT(regs);
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);

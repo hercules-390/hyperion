@@ -3094,7 +3094,7 @@ DLL_EXPORT zz_func opcode_c0xx[16][GEN_MAXARCH] = {
  /*C0xE*/ GENx___x___x900 (load_logical_immediate_high_fullword,RIL,"LLIHF"),      /*@Z9*/
  /*C0xF*/ GENx___x___x900 (load_logical_immediate_low_fullword,RIL,"LLILF") };     /*@Z9*/  
 
-DLL_EXPORT zz_func opcode_c2xx[16][GEN_MAXARCH] = {                                           /*@Z9*/
+DLL_EXPORT zz_func opcode_c2xx[16][GEN_MAXARCH] = {                                /*@Z9*/
  /*C2x0*/ GENx___x___x___ ,                                                        /*@Z9*/
  /*C2x1*/ GENx___x___x___ ,                                                        /*@Z9*/
  /*C2x2*/ GENx___x___x___ ,                                                        /*@Z9*/

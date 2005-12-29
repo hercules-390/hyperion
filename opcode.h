@@ -1166,22 +1166,17 @@ do { \
 #endif /*!defined(_FEATURE_SIE)*/
 
 
-#undef SIE_MODE_XC_OPEX
-#undef SIE_MODE_XC_SOPEX
+#undef SIE_XC_INTERCEPT
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
 
-#define SIE_MODE_XC_OPEX(_regs) \
-    if((SIE_MODE((_regs)) && ((_regs)->siebk->mx & SIE_MX_XC))) \
-        ARCH_DEP(program_interrupt)((_regs), PGM_OPERATION_EXCEPTION)
-#define SIE_MODE_XC_SOPEX(_regs) \
-    if((SIE_MODE((_regs)) && ((_regs)->siebk->mx & SIE_MX_XC))) \
-        ARCH_DEP(program_interrupt)((_regs), PGM_SPECIAL_OPERATION_EXCEPTION)
+#define SIE_XC_INTERCEPT(_regs) \
+    if(SIE_STATB((_regs), MX, XC)) \
+        SIE_INTERCEPT((_regs))
 
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
-#define SIE_MODE_XC_OPEX(_regs)
-#define SIE_MODE_XC_SOPEX(_regs)
+#define SIE_XC_INTERCEPT(_regs)
 
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
