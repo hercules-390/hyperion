@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+29 Dec 2005 Performance patch ICM - Bernard van der Helm
 28 Dec 2005 Perform Timing Facility Function - Jan Jaeger / Bernard van der Helm
 27 Dec 2005 Performance patch TM, TMH, TML, TMHH, TMHL, TMY - Bernard van der Helm
 24 Dec 2005 Add IFL SCPINFO support for zLinux zipl code - Jan Jaeger

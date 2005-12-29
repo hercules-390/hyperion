@@ -3141,6 +3141,7 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 
+#if 0 /* Old ICM */
 /*-------------------------------------------------------------------*/
 /* BF   ICM   - Insert Characters under Mask                    [RS] */
 /*-------------------------------------------------------------------*/
@@ -3206,6 +3207,131 @@ static const unsigned int               /* Turn reg bytes off by mask*/
 
     } /* switch (r3) */
 
+}
+#endif /* Old ICM */
+
+/*-------------------------------------------------------------------*/
+/* BF   ICM   - Insert Characters under Mask                    [RS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_characters_under_mask)
+{
+  BYTE bytes[4];
+  int b2;
+  VADR effective_addr2;
+  static void *jmptable[] = { &&m0, &&m1, &&m2, &&m3, &&m4, &&m5, &&m6, &&m7, &&m8, &&m9, &&ma, &&mb, &&mc, &&md, &&me, &&mf };
+  int r1;
+  int r3;
+  U32 value;
+
+  RS(inst, regs, r1, r3, b2, effective_addr2);
+
+  goto *jmptable[r3]; 
+
+  m0: /* 0000 */
+  ARCH_DEP(vfetchb)(effective_addr2, b2, regs);  /* conform POP! */
+  regs->psw.cc = 0;
+  return;
+
+  m1: /* 0001 */
+  value = ARCH_DEP(vfetchb)(effective_addr2, b2, regs);
+  regs->GR_L(r1) &= 0xffffff00;
+  regs->GR_L(r1) |= value;
+  regs->psw.cc = value ? value & 0x00000080 ? 1 : 2 : 0;
+  return;
+
+  m2: /* 0010 */
+  value = ARCH_DEP(vfetchb)(effective_addr2, b2, regs) << 8;
+  regs->GR_L(r1) &= 0xffff00ff;
+  goto x2;
+
+  m3: /* 0011 */
+  value = ARCH_DEP(vfetch2)(effective_addr2, b2, regs);
+  regs->GR_L(r1) &= 0xffff0000;
+  goto x2;
+
+  m4: /* 0100 */
+  value = ARCH_DEP(vfetchb)(effective_addr2, b2, regs) << 16;
+  regs->GR_L(r1) &= 0xff00ffff;
+  goto x1;
+
+  m5: /* 0101 */
+  ARCH_DEP(vfetchc)(bytes, 1, effective_addr2, b2, regs);
+  value = (bytes[0] << 16) | bytes[1];
+  regs->GR_L(r1) &= 0xff00ff00;
+  goto x1;
+
+  m6: /* 0110 */
+  value = ARCH_DEP(vfetch2)(effective_addr2, b2, regs) << 8;
+  regs->GR_L(r1) &= 0xff0000ff;
+  goto x1;
+
+  m7: /* 0111 */
+  bytes[0] = 0;
+  ARCH_DEP(vfetchc)(&bytes[1], 2, effective_addr2, b2, regs);
+  value = fetch_fw(bytes);
+  regs->GR_L(r1) &= 0xff000000;
+  goto x1;
+
+  m8: /* 1000 */
+  value = ARCH_DEP(vfetchb)(effective_addr2, b2, regs) << 24;
+  regs->GR_L(r1) &= 0x00ffffff;
+  goto x0;
+
+  m9: /* 1001 */
+  ARCH_DEP(vfetchc)(bytes, 1, effective_addr2, b2, regs);
+  value = (bytes[0] << 24) | bytes[1];
+  regs->GR_L(r1) &= 0x00ffff00;
+  goto x0;
+
+  ma: /* 1010 */
+  ARCH_DEP(vfetchc)(bytes, 1, effective_addr2, b2, regs);
+  value = (bytes[0] << 24) | (bytes[1] << 8);
+  regs->GR_L(r1) &= 0x00ff00ff;
+  goto x0;
+
+  mb: /* 1011 */
+  ARCH_DEP(vfetchc)(bytes, 2, effective_addr2, b2, regs);
+  value = (bytes[0] << 24) | (bytes[1] << 8) | bytes[2];
+  regs->GR_L(r1) &= 0x00ff0000;
+  goto x0;
+
+  mc: /* 1100 */
+  value = ARCH_DEP(vfetch2)(effective_addr2, b2, regs) << 16;
+  regs->GR_L(r1) &= 0x0000ffff;
+  goto x0;
+
+  md: /* 1101 */
+  ARCH_DEP(vfetchc)(bytes, 2, effective_addr2, b2, regs);
+  value = (bytes[0] << 24) | (bytes[1] << 16) | bytes[2];
+  regs->GR_L(r1) &= 0x0000ff00;
+  goto x0;
+
+  me: /* 1110 */
+  bytes[3] = 0;
+  ARCH_DEP(vfetchc)(bytes, 2, effective_addr2, b2, regs);
+  value = fetch_fw(bytes);
+  regs->GR_L(r1) &= 0x000000ff;
+  goto x0;
+
+  mf: /* 1111 */
+  value = regs->GR_L(r1) = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
+  regs->psw.cc = value ? value & 0x80000000 ? 1 : 2 : 0;
+  return;
+
+  x0: /* or, check byte 0 and exit*/
+  regs->GR_L(r1) |= value;
+  regs->psw.cc = value ? value & 0x80000000 ? 1 : 2 : 0;
+  return;
+
+  x1: /* or, check byte 1 and exit*/
+  regs->GR_L(r1) |= value;
+  regs->psw.cc = value ? value & 0x00800000 ? 1 : 2 : 0;
+  return;
+
+  x2: /* or, check byte 2 and exit */
+  regs->GR_L(r1) |= value;
+  regs->psw.cc = value ? value & 0x00008000 ? 1 : 2 : 0;
+  return;
 }
 
 
