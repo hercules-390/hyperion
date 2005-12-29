@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-29 12:25-0600\n"
+"POT-Creation-Date: 2005-12-29 13:44-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -1887,169 +1887,164 @@ msgstr ""
 msgid "HHCLC008E ioctl error on device %s: %s.\n"
 msgstr ""
 
-#: ctc_lcs.c:1263
+#: ctc_lcs.c:1264
 #, fuzzy, c-format
 msgid "HHCLC042E Port %2.2X: Read error: %s\n"
 msgstr "HHCDL072E Fout %2$s bij lezan van bestand \"%1$s\"\n"
 
-#: ctc_lcs.c:1272
+#: ctc_lcs.c:1273
 #, c-format
 msgid "HHCLC009I Port %2.2X: Read Buffer:\n"
 msgstr ""
 
-#: ctc_lcs.c:1301
+#: ctc_lcs.c:1302
 #, c-format
 msgid "HHCLC010I Port %2.2X: IPV4 frame for %8.8X\n"
 msgstr ""
 
-#: ctc_lcs.c:1328
+#: ctc_lcs.c:1329
 #, c-format
 msgid "HHCLC011I Port %2.2X: ARP frame for %8.8X\n"
 msgstr ""
 
-#: ctc_lcs.c:1352
+#: ctc_lcs.c:1353
 #, c-format
 msgid "HHCLC012I Port %2.2X: SNA frame\n"
 msgstr ""
 
-#: ctc_lcs.c:1382
+#: ctc_lcs.c:1383
 #, c-format
 msgid "HHCLC013I Port %2.2X: No match found - selecting primary %4.4X\n"
 msgstr ""
 
-#: ctc_lcs.c:1392
+#: ctc_lcs.c:1393
 #, c-format
 msgid "HHCLC014I Port %2.2X: No match found - selecting secondary %4.4X\n"
 msgstr ""
 
-#: ctc_lcs.c:1403
+#: ctc_lcs.c:1404
 #, c-format
 msgid "HHCLC015I Port %2.2X: No match found - Discarding frame\n"
 msgstr ""
 
-#: ctc_lcs.c:1411
+#: ctc_lcs.c:1412
 #, c-format
 msgid "HHCLC016I Port %2.2X: Enqueing frame to device %4.4X (%8.8X)\n"
 msgstr ""
 
-#: ctc_lcs.c:1425
+#: ctc_lcs.c:1426
 #, c-format
 msgid "HHCLC041W Port %2.2X: Frame too big; discarded.\n"
 msgstr ""
 
-#: ctc_lcs.c:1654
+#: ctc_lcs.c:1655
 #, c-format
 msgid "HHCLC017E %4.4X invalid device name %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1670
+#: ctc_lcs.c:1671
 #, c-format
 msgid "HHCLC018E %4.4X invalid MAC address %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1694
+#: ctc_lcs.c:1695
 #, c-format
 msgid "HHCLC019E %4.4X too many arguments in statement.\n"
 msgstr ""
 
-#: ctc_lcs.c:1704
+#: ctc_lcs.c:1705
 #, c-format
 msgid "HHCLC020E %4.4X invalid IP address %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1759
+#: ctc_lcs.c:1760
 #, fuzzy, c-format
 msgid "HHCLC039E Cannot open file %s: %s\n"
 msgstr "HHCLC039E Fout %2$s bij openen bestand \"%1$s\"\n"
 
-#: ctc_lcs.c:1811
+#: ctc_lcs.c:1812
 #, c-format
 msgid "HHCLC021E Invalid HWADD statement in %s: %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1820
+#: ctc_lcs.c:1821
 #, c-format
 msgid ""
 "HHCLC022E Invalid MAC in HWADD statement in %s: %s (%s)\n"
 " "
 msgstr ""
 
-#: ctc_lcs.c:1837
+#: ctc_lcs.c:1838
 #, c-format
 msgid "HHCLC023E Invalid ROUTE statement in %s: %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1844
+#: ctc_lcs.c:1845
 #, c-format
 msgid "HHCLC024E Invalid net address in ROUTE %s: %s (%s)\n"
 msgstr ""
 
-#: ctc_lcs.c:1853
+#: ctc_lcs.c:1854
 #, c-format
 msgid "HHCLC025E Invalid net mask in ROUTE %s: %s (%s)\n"
 msgstr ""
 
-#: ctc_lcs.c:1885
+#: ctc_lcs.c:1886
 #, c-format
 msgid "HHCLC026E Error in %s: Missing device number or mode\n"
 msgstr ""
 
-#: ctc_lcs.c:1894
+#: ctc_lcs.c:1895
 #, c-format
 msgid "HHCLC027E Error in %s: %s: Invalid device number\n"
 msgstr ""
 
-#: ctc_lcs.c:1906
+#: ctc_lcs.c:1907
 #, c-format
 msgid "HHCLC028E Error in %s: %s:Missing PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1914
+#: ctc_lcs.c:1915
 #, c-format
 msgid "HHCLC029E Error in %s: %s: Invalid PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1924
-#, c-format
-msgid "HHCLC030E Error in %s: %s: Invalid number of arguments\n"
-msgstr ""
-
-#: ctc_lcs.c:1938
+#: ctc_lcs.c:1931
 #, c-format
 msgid "HHCLC031E Error in %s: %s: Invalid entry starting at %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1948
+#: ctc_lcs.c:1943
 #, c-format
 msgid "HHCLC032E Error is %s: %s: Invalid IP address (%s)\n"
 msgstr ""
 
-#: ctc_lcs.c:1963
+#: ctc_lcs.c:1959
 #, c-format
 msgid "HHCLC033E Error in %s: %s: Missing PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1971
+#: ctc_lcs.c:1967
 #, c-format
 msgid "HHCLC034E Error in %s: %s:Invalid PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1979
+#: ctc_lcs.c:1975
 #, c-format
 msgid "HHCLC035E Error in %s: %s: SNA does not accept any arguments\n"
 msgstr ""
 
-#: ctc_lcs.c:1987
+#: ctc_lcs.c:1983
 #, c-format
 msgid "HHCLC036E Error in %s: %s: Invalid MODE\n"
 msgstr ""
 
-#: ctc_lcs.c:2052
+#: ctc_lcs.c:2048
 #, c-format
 msgid "HHCLC037E Error reading file %s line %d: %s\n"
 msgstr ""
 
-#: ctc_lcs.c:2076
+#: ctc_lcs.c:2072
 #, c-format
 msgid "HHCLC038E File %s line %d is too long\n"
 msgstr ""
