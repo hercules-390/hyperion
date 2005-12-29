@@ -263,7 +263,7 @@ U64 new_clock,
 void ARCH_DEP(set_gross_s_rate) (REGS *regs)
 {
 S32 gsr;
-    gsr = ARCH_DEP(vfetch4) (regs->GR(1), 1, regs);
+    gsr = ARCH_DEP(vfetch4) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 
     set_gross_steering_rate(gsr);
 }
@@ -272,7 +272,7 @@ S32 gsr;
 void ARCH_DEP(set_fine_s_rate) (REGS *regs)
 {
 S32 fsr;
-    fsr = ARCH_DEP(vfetch4) (regs->GR(1), 1, regs);
+    fsr = ARCH_DEP(vfetch4) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 
     set_fine_steering_rate(fsr);
 }
@@ -281,7 +281,7 @@ S32 fsr;
 void ARCH_DEP(set_tod_offset) (REGS *regs)
 {
 S64 offset;
-    offset = ARCH_DEP(vfetch8) (regs->GR(1), 1, regs);
+    offset = ARCH_DEP(vfetch8) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 
     set_tod_offset(offset >> 8);
 }
@@ -290,7 +290,7 @@ S64 offset;
 void ARCH_DEP(adjust_tod_offset) (REGS *regs)
 {
 S64 offset;
-    offset = ARCH_DEP(vfetch8) (regs->GR(1), 1, regs);
+    offset = ARCH_DEP(vfetch8) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 
     adjust_tod_offset(offset >> 8);
 }
@@ -298,7 +298,7 @@ S64 offset;
 
 void ARCH_DEP(query_physical_clock) (REGS *regs)
 {
-    ARCH_DEP(vstore8) (universal_clock() << 8, regs->GR(1), 1, regs);
+    ARCH_DEP(vstore8) (universal_clock() << 8, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
 
 
@@ -317,7 +317,7 @@ PTFFQSI qsi;
     STORE_FW(qsi.newgsr, new.gross_s_rate );
     release_lock(&sysblk.todlock);
 
-    ARCH_DEP(vstorec) (&qsi, sizeof(qsi)-1, regs->GR(1), 1, regs);
+    ARCH_DEP(vstorec) (&qsi, sizeof(qsi)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
 
 
@@ -331,7 +331,7 @@ PTFFQTO qto;
     STORE_DW(qto.todepoch, regs->tod_epoch << 8);
     release_lock(&sysblk.todlock);
 
-    ARCH_DEP(vstorec) (&qto, sizeof(qto)-1, regs->GR(1), 1, regs);
+    ARCH_DEP(vstorec) (&qto, sizeof(qto)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
 
 
@@ -343,7 +343,7 @@ PTFFQAF qaf;
     STORE_FW(qaf.sb[2] , 0xF0000000);        /* Functions 0x40..0x5F */
     STORE_FW(qaf.sb[3] , 0x00000000);        /* Functions 0x60..0x7F */
 
-    ARCH_DEP(vstorec) (&qaf, sizeof(qaf)-1, regs->GR(1), 1, regs);
+    ARCH_DEP(vstorec) (&qaf, sizeof(qaf)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
 #endif /*defined(FEATURE_TOD_CLOCK_STEERING)*/
 

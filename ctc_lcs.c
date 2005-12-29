@@ -1203,6 +1203,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSHDR pHeader )
     }
 
     memcpy( pReply->MAC_Address, ifr.ifr_hwaddr.sa_data, IFHWADDRLEN );
+// ZZ pReply->MAC_Address[0] = pReply->MAC_Address[0] ^ 0xff;
 #endif /* defined(SIOCGIFHWADDR) */
 
     // FIXME: Really should read /proc/net/dev and report the stats
@@ -1919,14 +1920,6 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( argc > 1 )
                 {
-                    if( argc != 3 )
-                    {
-                        logmsg( _("HHCLC030E Error in %s: %s: "
-                                  "Invalid number of arguments\n"),
-                                pszOATName, pszStatement );
-                        return -1;
-                    }
-
                     if( strcasecmp( argv[1], "PRI" ) == 0 )
                         bType = LCSDEV_TYPE_PRIMARY;
                     else if( strcasecmp( argv[1], "SEC" ) == 0 )
@@ -1941,17 +1934,20 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                         return -1;
                     }
 
-                    pszIPAddress = strdup( argv[2] );
-
-                    if( inet_aton( pszIPAddress, &addr ) == 0 )
+                    if( argc > 2 )
                     {
-                        logmsg( _("HHCLC032E Error is %s: %s: "
-                                  "Invalid IP address (%s)\n"),
-                                pszOATName, pszStatement, pszIPAddress );
-                        return -1;
-                    }
+                        pszIPAddress = strdup( argv[2] );
 
-                    lIPAddr = addr.s_addr;
+                        if( inet_aton( pszIPAddress, &addr ) == 0 )
+                        {
+                            logmsg( _("HHCLC032E Error is %s: %s: "
+                                      "Invalid IP address (%s)\n"),
+                                    pszOATName, pszStatement, pszIPAddress );
+                            return -1;
+                        }
+
+                        lIPAddr = addr.s_addr;
+                    }
                 }
             }
             else if( strcasecmp( pszOperand, "SNA" ) == 0 )
