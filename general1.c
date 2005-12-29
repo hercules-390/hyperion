@@ -3141,7 +3141,7 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 
-#if 0 /* Old ICM */
+#if 1 /* Old ICM */
 /*-------------------------------------------------------------------*/
 /* BF   ICM   - Insert Characters under Mask                    [RS] */
 /*-------------------------------------------------------------------*/
@@ -3208,7 +3208,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
     } /* switch (r3) */
 
 }
-#endif /* Old ICM */
+#else /* New ICM */
 
 /*-------------------------------------------------------------------*/
 /* BF   ICM   - Insert Characters under Mask                    [RS] */
@@ -3333,6 +3333,7 @@ DEF_INST(insert_characters_under_mask)
   regs->psw.cc = value ? value & 0x00008000 ? 1 : 2 : 0;
   return;
 }
+#endif /* New ICM */
 
 
 /*-------------------------------------------------------------------*/

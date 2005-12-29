@@ -920,7 +920,7 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 
-#if 0
+#if 1 /* Old STCM */
 /*-------------------------------------------------------------------*/
 /* BE   STCM  - Store Characters under Mask                     [RS] */
 /*-------------------------------------------------------------------*/
@@ -969,7 +969,7 @@ BYTE    rbyte[4];                       /* Byte work area            */
 
     } /* switch (r3) */
 }
-#endif
+#else /* New STCM */
 
 /*-------------------------------------------------------------------*/
 /* BE   STCM  - Store Characters under Mask                     [RS] */
@@ -1055,6 +1055,7 @@ DEF_INST(store_characters_under_mask)
   ARCH_DEP(vstore4)(regs->GR_L(r1), effective_addr2, b2, regs);
   return;
 }
+#endif /* New STCM */
 
 /*-------------------------------------------------------------------*/
 /* B205 STCK  - Store Clock                                      [S] */

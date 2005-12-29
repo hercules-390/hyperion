@@ -2042,7 +2042,7 @@ BYTE    rbyte[4],                       /* Register bytes            */
 
 
 #if defined(FEATURE_ESAME)
-#if 0 /* Old STCMH */
+#if 1 /* Old STCMH */
 /*-------------------------------------------------------------------*/
 /* EB2C STCMH - Store Characters under Mask High               [RSY] */
 /*-------------------------------------------------------------------*/
@@ -2086,7 +2086,7 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
     } /* switch (r3) */
 
 } /* end DEF_INST(store_characters_under_mask_high) */
-#endif /* Old STCMH */
+#else /* New STCMH */
 
 /*-------------------------------------------------------------------*/
 /* EB2C STCMH - Store Characters under Mask High               [RSY] */
@@ -2173,11 +2173,13 @@ DEF_INST(store_characters_under_mask_high)
   return;
 }
 
+#endif /* New STCMH */
+
 #endif /*defined(FEATURE_ESAME)*/
 
 
 #if defined(FEATURE_ESAME)
-#if 0 /* Old ICMH */
+#if 1 /* Old ICMH */
 /*-------------------------------------------------------------------*/
 /* EB80 ICMH  - Insert Characters under Mask High              [RSY] */
 /*-------------------------------------------------------------------*/
@@ -2234,7 +2236,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
     } /* switch (r3) */
 
 } /* end DEF_INST(insert_characters_under_mask_high) */
-#endif /* Old ICMH */
+#else /* New ICMH */
 
 /*-------------------------------------------------------------------*/
 /* EB80 ICMH  - Insert Characters under Mask High              [RSY] */
@@ -2359,6 +2361,8 @@ DEF_INST(insert_characters_under_mask_high)
   regs->psw.cc = value ? value & 0x00008000 ? 1 : 2 : 0;
   return;
 }
+#endif /* New ICMH */
+
 #endif /*defined(FEATURE_ESAME)*/
 
 
@@ -6568,7 +6572,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 #if defined(FEATURE_LONG_DISPLACEMENT)
-#if 0 /* Old ICMY */
+#if 1 /* Old ICMY */
 /*-------------------------------------------------------------------*/
 /* EB81 ICMY  - Insert Characters under Mask Long Displacement [RSY] */
 /*-------------------------------------------------------------------*/
@@ -6625,7 +6629,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
     } /* switch (r3) */
 
 } /* end DEF_INST(insert_characters_under_mask_y) */
-#endif /* Old ICMY */
+#else /* New ICMY */
 
 /*-------------------------------------------------------------------*/
 /* EB81 ICMY  - Insert Characters under Mask Long Displacement [RSY] */
@@ -6750,6 +6754,8 @@ DEF_INST(insert_characters_under_mask_y)
   regs->psw.cc = value ? value & 0x00008000 ? 1 : 2 : 0;
   return;
 }
+#endif /* New ICMY */
+
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -7115,7 +7121,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 #if defined(FEATURE_LONG_DISPLACEMENT)
-#if 0 /* Old STCMY */
+#if 1 /* Old STCMY */
 /*-------------------------------------------------------------------*/
 /* EB2D STCMY - Store Characters under Mask (Long Displacement)[RSY] */
 /*-------------------------------------------------------------------*/
@@ -7159,7 +7165,7 @@ BYTE    rbyte[4];                       /* Byte work area            */
     } /* switch (r3) */
 
 } /* end DEF_INST(store_characters_under_mask_y) */
-#endif /* Old STCMY */
+#else /* New STCMY */
 
 /*-------------------------------------------------------------------*/
 /* EB2D STCMY - Store Characters under Mask (Long Displacement)[RSY] */
@@ -7245,6 +7251,7 @@ DEF_INST(store_characters_under_mask_y)
   ARCH_DEP(vstore4)(regs->GR_L(r1), effective_addr2, b2, regs);
   return;
 }
+#endif /* New STCMY */
 
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
