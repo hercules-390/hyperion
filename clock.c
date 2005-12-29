@@ -328,7 +328,7 @@ void ARCH_DEP(query_tod_offset) (REGS *regs)
 {
 PTFFQTO qto;
     STORE_DW(qto.physclk, hw_clock() << 8);
-    STORE_DW(qto.todoff, hw_offset << 8);
+    STORE_DW(qto.todoff, (hw_clock() - universal_clock()) << 8);
     STORE_DW(qto.ltodoff, current->base_offset << 8);
     STORE_DW(qto.todepoch, regs->tod_epoch << 8);
 
