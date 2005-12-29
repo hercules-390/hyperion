@@ -127,7 +127,7 @@ static inline void prepare_new_episode()
     {
         old = new;
         current = &old;
-	new.start_time = universal_clock();
+	new.start_time = hw_clock();
     }
 }
 
@@ -247,7 +247,7 @@ U64 new_clock,
     
     /* If we are in the old episode, and the new episode has arrived
        then we must take action to start the new episode */
-    if(current == &old)
+    if(current == &old && new_clock >= new.start_time)
         start_new_episode();
 
     /* Set the clock to the new updated value with offset applied */
@@ -303,14 +303,14 @@ S64 offset;
 
 void ARCH_DEP(query_physical_clock) (REGS *regs)
 {
-    ARCH_DEP(vstore8) (universal_clock() << 8, regs->GR(1), 1, regs);
+    ARCH_DEP(vstore8) (hw_clock() << 8, regs->GR(1), 1, regs);
 }
 
 
 void ARCH_DEP(query_steering_information) (REGS *regs)
 {
 PTFFQSI qsi;
-    STORE_DW(qsi.physclk, universal_clock() << 8);
+    STORE_DW(qsi.physclk, hw_clock() << 8);
     STORE_DW(qsi.oldestart, old.start_time << 8);
     STORE_DW(qsi.oldebase, old.base_offset << 8);
     STORE_FW(qsi.oldfsr, old.fine_s_rate );
@@ -327,7 +327,7 @@ PTFFQSI qsi;
 void ARCH_DEP(query_tod_offset) (REGS *regs)
 {
 PTFFQTO qto;
-    STORE_DW(qto.physclk, universal_clock() << 8);
+    STORE_DW(qto.physclk, hw_clock() << 8);
     STORE_DW(qto.todoff, (hw_clock() - universal_clock()) << 8);
     STORE_DW(qto.ltodoff, current->base_offset << 8);
     STORE_DW(qto.todepoch, regs->tod_epoch << 8);
