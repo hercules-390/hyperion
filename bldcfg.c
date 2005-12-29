@@ -1826,6 +1826,9 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
     sysblk.devthwm  = sysblk.devtunavail = 0;
 #endif // defined(OPTION_FISHIO)
 
+    /* Reset the clock steering registers */
+    csr_reset();
+
     /* Set up the system TOD clock offset: compute the number of
      * microseconds offset to the year 1900 */
 
