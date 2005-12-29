@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-29 04:46-0600\n"
+"POT-Creation-Date: 2005-12-29 12:25-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3515,7 +3515,7 @@ msgstr ""
 msgid "HHCDA903E %4.4x FBA blksiz mismatch: %d, expected %d,\n"
 msgstr ""
 
-#: general1.c:3820
+#: general1.c:3821
 msgid "MVCL destructive overlap: "
 msgstr ""
 
@@ -5087,40 +5087,40 @@ msgstr ""
 msgid "IMPL EXIT\n"
 msgstr ""
 
-#: ipl.c:187
+#: ipl.c:184
 #, c-format
 msgid "HHCCP027E Device %4.4X not in configuration\n"
 msgstr ""
 
-#: ipl.c:196
+#: ipl.c:193
 msgid "HHCCP028E Device not connected to channelset\n"
 msgstr ""
 
-#: ipl.c:253
+#: ipl.c:250
 #, c-format
 msgid ""
 "HHCCP029E %s mode IPL failed: CSW status=%2.2X%2.2X\n"
 "           Sense="
 msgstr ""
 
-#: ipl.c:348
+#: ipl.c:345
 #, c-format
 msgid "HHCCP031E Load from %s failed: %s\n"
 msgstr ""
 
-#: ipl.c:410
+#: ipl.c:407
 #, c-format
 msgid ""
 "HHCCP030E %s mode IPL failed: Invalid IPL PSW: %2.2X%2.2X%2.2X%2.2X %2.2X%"
 "2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: ipl.c:564
+#: ipl.c:561
 #, c-format
 msgid "HHCCP033E load_main: %s: %s\n"
 msgstr ""
 
-#: ipl.c:574
+#: ipl.c:571
 msgid "HHCCP034W load_main: terminated at end of mainstor\n"
 msgstr ""
 
