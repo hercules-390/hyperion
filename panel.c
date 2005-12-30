@@ -1406,15 +1406,6 @@ char    buf[1024];                      /* Buffer workarea           */
                         case 'p':
                             panel_command("stop");
                             break;
-                        case 'T':                   /* RESTART */
-                        case 't':
-                            panel_command("restart");
-                            break;
-                        case 'E':                   /* Ext int */
-                        case 'e':
-                            panel_command("ext");
-                            redraw_status = 1;
-                            break;
                         case 'O':                   /* Store */
                         case 'o':
                             regs = copy_regs(sysblk.pcpu);
@@ -1536,6 +1527,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             }
                             NPdataentry = 1;
                             NPpending = 'n';
+                            NPasgn = i;
                             NPcurrow = 3 + i;
                             NPcurcol = 58;
                             NPdatalen = cons_cols - 57;
@@ -1559,6 +1551,36 @@ char    buf[1024];                      /* Buffer workarea           */
                                 panel_command("quit");
                             }
                             strcpy(NPprompt1, "Powering down");
+                            redraw_status = 1;
+                            break;
+                        case 'T':                   /* Restart */
+                        case 't':
+                            NPdevsel = 1;
+                            NPsel2 = 5;
+                            strcpy(NPprompt1, "Confirm Restart Y or N");
+                            redraw_status = 1;
+                            break;
+                        case 5:                    /* Restart - part 2 */
+                            if (NPdevice == 'y' || NPdevice == 'Y')
+                            {
+                                panel_command("restart");
+                            }
+                            strcpy(NPprompt1, "");
+                            redraw_status = 1;
+                            break;
+                        case 'E':                   /* Ext int */
+                        case 'e':
+                            NPdevsel = 1;
+                            NPsel2 = 6;
+                            strcpy(NPprompt1, "Confirm External Interrupt Y or N");
+                            redraw_status = 1;
+                            break;
+                        case 6:                    /* External - part 2 */
+                            if (NPdevice == 'y' || NPdevice == 'Y')
+                            {
+                                panel_command("ext");
+                            }
+                            strcpy(NPprompt1, "");
                             redraw_status = 1;
                             break;
                         default:
