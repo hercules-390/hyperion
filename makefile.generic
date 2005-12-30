@@ -2,7 +2,7 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-VERSION  = \"3.02\"
+VERSION  = \"3.03\"
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
@@ -24,6 +24,14 @@ LFLAGS	 = -lpthread -lm -lz
 CFLAGS  += -DHAVE_SQRTL
 
 CFLAGS  += -DHAVE_SETRESUID
+
+CFLAGS  += -DHAVE_STRERROR_R
+
+CFLAGS  += -DHAVE_NET_IF_H
+
+CFLAGS  += -DHAVE_SIGNAL_H
+
+CFLAGS  += -DHAVE_SYS_RESOURCE_H
 
 # Uncomment the lines below to enable Compressed CKD bzip2 compression
 CFLAGS	+= -DHAVE_LIBZ -DCCKD_BZIP2
