@@ -140,9 +140,13 @@ typedef struct _DLLENT {                /* DLL entry                 */
 
 /* SHLIBEXT defined by ISW in configure.ac/config.h */
 #if defined( HDL_BUILD_SHARED ) && defined( LTDL_SHLIB_EXT )
-#define HDL_MODULE_SUFFIX   LTDL_SHLIB_EXT
+  #define   HDL_MODULE_SUFFIX   LTDL_SHLIB_EXT
 #else
-#define HDL_MODULE_SUFFIX   ".la"
+  #if defined(_MSVC_)
+    #define HDL_MODULE_SUFFIX   ".dll"
+  #else
+    #define HDL_MODULE_SUFFIX   ".la"
+  #endif
 #endif
 
 
