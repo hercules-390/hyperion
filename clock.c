@@ -231,14 +231,11 @@ static void adjust_tod_offset(S64 offset)
 U64 update_tod_clock(void)
 {
 U64 new_clock, 
-    old_clock,
     tod_delta;
 
     new_clock = hw_clock();
 
-    old_clock = tod_clock;
-
-    tod_delta = tod_clock - old_clock;
+    tod_delta = new_clock - tod_clock;
     
     /* If we are in the old episode, and the new episode has arrived
        then we must take action to start the new episode */

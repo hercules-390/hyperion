@@ -149,6 +149,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\clock.c"
+				>
+			</File>
+			<File
+				RelativePath=".\clock.h"
+				>
+			</File>
+			<File
 				RelativePath=".\cmpsc.c"
 				>
 			</File>
