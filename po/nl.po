@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-29 13:44-0600\n"
+"POT-Creation-Date: 2005-12-30 09:23-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -1515,12 +1515,12 @@ msgstr ""
 msgid "HHCCP015I CPU%4.4X PER event: code=%4.4X perc=%2.2X addr="
 msgstr ""
 
-#: cpu.c:649 ecpsvm.c:417 ecpsvm.c:1203 ecpsvm.c:1208 sie.c:262 sie.c:392
-#: stack.c:400 stack.c:423 stack.c:485 stack.c:503 stack.c:511 stack.c:535
-#: stack.c:558 stack.c:611 stack.c:689 stack.c:717 stack.c:744 stack.c:772
-#: stack.c:784 stack.c:795 stack.c:849 stack.c:873 stack.c:1128 stack.c:1154
-#: stack.c:1162 stack.c:1200 stack.c:1295 stack.c:1331 stack.c:1376
-#: stack.c:1411
+#: cpu.c:649 ecpsvm.c:417 ecpsvm.c:1203 ecpsvm.c:1208 sie.c:260 sie.c:390
+#: stack.c:403 stack.c:426 stack.c:488 stack.c:506 stack.c:514 stack.c:538
+#: stack.c:561 stack.c:614 stack.c:692 stack.c:720 stack.c:747 stack.c:775
+#: stack.c:787 stack.c:798 stack.c:852 stack.c:876 stack.c:1131 stack.c:1157
+#: stack.c:1165 stack.c:1203 stack.c:1298 stack.c:1334 stack.c:1379
+#: stack.c:1414
 msgid "\n"
 msgstr ""
 
@@ -3777,7 +3777,7 @@ msgstr ""
 #: hsccmd.c:728 hsccmd.c:1008 hsccmd.c:1129 hsccmd.c:1157 hsccmd.c:1185
 #: hsccmd.c:1213 hsccmd.c:1241 hsccmd.c:1272 hsccmd.c:1301 hsccmd.c:1338
 #: hsccmd.c:1365 hsccmd.c:1392 hsccmd.c:2440 hsccmd.c:2588 hsccmd.c:2655
-#: hsccmd.c:3442 hsccmd.c:3570 hsccmd.c:3663 hsccmd.c:3705
+#: hsccmd.c:3441 hsccmd.c:3569 hsccmd.c:3662 hsccmd.c:3704
 #, fuzzy, c-format
 msgid "HHCPN160W CPU%4.4X not configured\n"
 msgstr "HHCCP003I CPU%4.4X Architectuur Modus %s\n"
@@ -4122,7 +4122,7 @@ msgstr ""
 msgid "d asynchronous: %12"
 msgstr ""
 
-#: hsccmd.c:2090 hsccmd.c:2811 hsccmd.c:2813 hsccmd.c:2890 hsccmd.c:2892
+#: hsccmd.c:2090 hsccmd.c:2810 hsccmd.c:2812 hsccmd.c:2889 hsccmd.c:2891
 msgid "d\n"
 msgstr ""
 
@@ -4375,573 +4375,573 @@ msgstr ""
 msgid "          Last 'TXT' record had address: %3.3X\n"
 msgstr "          Laatste 'TXT' record had adres: %3.3X\n"
 
-#: hsccmd.c:2742
+#: hsccmd.c:2741
 #, fuzzy, c-format
 msgid "HHCPN123I CPU%4.4X: offline\n"
 msgstr "HHCCP003I CPU%4.4X Architectuur Modus %s\n"
 
-#: hsccmd.c:2748
+#: hsccmd.c:2747
 #, c-format
 msgid "HHCPN123I CPU%4.4X: CPUint=%8.8X (State:%8.8X)&(Mask:%8.8X)\n"
 msgstr ""
 
-#: hsccmd.c:2753
+#: hsccmd.c:2752
 #, fuzzy, c-format
 msgid "          CPU%4.4X: Interrupt %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2755 hsccmd.c:2759 hsccmd.c:2763 hsccmd.c:2767 hsccmd.c:2771
-#: hsccmd.c:2775 hsccmd.c:2779 hsccmd.c:2783 hsccmd.c:2787 hsccmd.c:2791
-#: hsccmd.c:2795 hsccmd.c:2834 hsccmd.c:2838 hsccmd.c:2842 hsccmd.c:2846
-#: hsccmd.c:2850 hsccmd.c:2854 hsccmd.c:2858 hsccmd.c:2862 hsccmd.c:2866
-#: hsccmd.c:2870 hsccmd.c:2874 hsccmd.c:2913 hsccmd.c:2916 hsccmd.c:2919
-#: hsccmd.c:2922 hsccmd.c:2926
+#: hsccmd.c:2754 hsccmd.c:2758 hsccmd.c:2762 hsccmd.c:2766 hsccmd.c:2770
+#: hsccmd.c:2774 hsccmd.c:2778 hsccmd.c:2782 hsccmd.c:2786 hsccmd.c:2790
+#: hsccmd.c:2794 hsccmd.c:2833 hsccmd.c:2837 hsccmd.c:2841 hsccmd.c:2845
+#: hsccmd.c:2849 hsccmd.c:2853 hsccmd.c:2857 hsccmd.c:2861 hsccmd.c:2865
+#: hsccmd.c:2869 hsccmd.c:2873 hsccmd.c:2912 hsccmd.c:2915 hsccmd.c:2918
+#: hsccmd.c:2921 hsccmd.c:2925
 msgid "not "
 msgstr ""
 
-#: hsccmd.c:2757
+#: hsccmd.c:2756
 #, fuzzy, c-format
 msgid "          CPU%4.4X: I/O interrupt %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2761
+#: hsccmd.c:2760
 #, c-format
 msgid "          CPU%4.4X: Clock comparator %spending\n"
 msgstr ""
 
-#: hsccmd.c:2765
+#: hsccmd.c:2764
 #, c-format
 msgid "          CPU%4.4X: CPU timer %spending\n"
 msgstr ""
 
-#: hsccmd.c:2769
+#: hsccmd.c:2768
 #, c-format
 msgid "          CPU%4.4X: Interval timer %spending\n"
 msgstr ""
 
-#: hsccmd.c:2773
+#: hsccmd.c:2772
 #, c-format
 msgid "          CPU%4.4X: External call %spending\n"
 msgstr ""
 
-#: hsccmd.c:2777
+#: hsccmd.c:2776
 #, c-format
 msgid "          CPU%4.4X: Emergency signal %spending\n"
 msgstr ""
 
-#: hsccmd.c:2781
+#: hsccmd.c:2780
 #, fuzzy, c-format
 msgid "          CPU%4.4X: Machine check interrupt %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2785
+#: hsccmd.c:2784
 #, fuzzy, c-format
 msgid "          CPU%4.4X: Service signal %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2789
+#: hsccmd.c:2788
 #, c-format
 msgid "          CPU%4.4X: CPU interlock %sheld\n"
 msgstr ""
 
-#: hsccmd.c:2793
+#: hsccmd.c:2792
 #, fuzzy, c-format
 msgid "          CPU%4.4X: lock %sheld\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2800
+#: hsccmd.c:2799
 #, c-format
 msgid "          CPU%4.4X: No channelset connected\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2804
+#: hsccmd.c:2803
 #, c-format
 msgid "          CPU%4.4X: Connected to channelset %4.4X\n"
 msgstr "          CPU%4.4X: Verbonden met kanaalset %4.4X\n"
 
-#: hsccmd.c:2809
+#: hsccmd.c:2808
 #, fuzzy, c-format
 msgid "          CPU%4.4X: state %s\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2811
+#: hsccmd.c:2810
 #, fuzzy
 msgid "          CPU%4.4X: instcount %"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2813
+#: hsccmd.c:2812
 #, fuzzy
 msgid "          CPU%4.4X: siocount %"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2816
+#: hsccmd.c:2815
 #, c-format
 msgid "          CPU%4.4X: psw %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x"
 msgstr ""
 
-#: hsccmd.c:2820 hsccmd.c:2899
+#: hsccmd.c:2819 hsccmd.c:2898
 #, c-format
 msgid " %2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x"
 msgstr ""
 
-#: hsccmd.c:2827
+#: hsccmd.c:2826
 #, c-format
 msgid "HHCPN123I SIE%4.4X: CPUint=%8.8X (State:%8.8X)&(Mask:%8.8X)\n"
 msgstr ""
 
-#: hsccmd.c:2832
+#: hsccmd.c:2831
 #, fuzzy, c-format
 msgid "          SIE%4.4X: Interrupt %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2836
+#: hsccmd.c:2835
 #, fuzzy, c-format
 msgid "          SIE%4.4X: I/O interrupt %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2840
+#: hsccmd.c:2839
 #, fuzzy, c-format
 msgid "          SIE%4.4X: Clock comparator %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2844
+#: hsccmd.c:2843
 #, fuzzy, c-format
 msgid "          SIE%4.4X: CPU timer %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2848
+#: hsccmd.c:2847
 #, fuzzy, c-format
 msgid "          SIE%4.4X: Interval timer %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2852
+#: hsccmd.c:2851
 #, fuzzy, c-format
 msgid "          SIE%4.4X: External call %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2856
+#: hsccmd.c:2855
 #, fuzzy, c-format
 msgid "          SIE%4.4X: Emergency signal %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2860
+#: hsccmd.c:2859
 #, fuzzy, c-format
 msgid "          SIE%4.4X: Machine check interrupt %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2864
+#: hsccmd.c:2863
 #, fuzzy, c-format
 msgid "          SIE%4.4X: Service signal %spending\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2868
+#: hsccmd.c:2867
 #, fuzzy, c-format
 msgid "          SIE%4.4X: CPU interlock %sheld\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2872
+#: hsccmd.c:2871
 #, fuzzy, c-format
 msgid "          SIE%4.4X: lock %sheld\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2879
+#: hsccmd.c:2878
 #, fuzzy, c-format
 msgid "          SIE%4.4X: No channelset connected\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2883
+#: hsccmd.c:2882
 #, fuzzy, c-format
 msgid "          SIE%4.4X: Connected to channelset %4.4X\n"
 msgstr "          CPU%4.4X: Verbonden met kanaalset %4.4X\n"
 
-#: hsccmd.c:2888
+#: hsccmd.c:2887
 #, fuzzy, c-format
 msgid "          SIE%4.4X: state %s\n"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2890
+#: hsccmd.c:2889
 #, fuzzy
 msgid "          SIE%4.4X: instcount %"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2892
+#: hsccmd.c:2891
 #, fuzzy
 msgid "          SIE%4.4X: siocount %"
 msgstr "          CPU%4.4X: Geen kanaalset aangesloten\n"
 
-#: hsccmd.c:2895
+#: hsccmd.c:2894
 #, c-format
 msgid "          SIE%4.4X: psw %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x"
 msgstr ""
 
-#: hsccmd.c:2906
+#: hsccmd.c:2905
 #, c-format
 msgid "          Config mask %8.8X started mask %8.8X waiting mask %8.8X\n"
 msgstr ""
 
-#: hsccmd.c:2909
+#: hsccmd.c:2908
 #, c-format
 msgid "          Broadcast count %d code %d\n"
 msgstr ""
 
-#: hsccmd.c:2912
+#: hsccmd.c:2911
 #, c-format
 msgid "          Signaling facility %sbusy\n"
 msgstr ""
 
-#: hsccmd.c:2915
+#: hsccmd.c:2914
 #, c-format
 msgid "          TOD lock %sheld\n"
 msgstr ""
 
-#: hsccmd.c:2918
+#: hsccmd.c:2917
 #, c-format
 msgid "          Main lock %sheld\n"
 msgstr ""
 
-#: hsccmd.c:2921
+#: hsccmd.c:2920
 #, c-format
 msgid "          Int lock %sheld\n"
 msgstr ""
 
-#: hsccmd.c:2925
+#: hsccmd.c:2924
 #, c-format
 msgid "          Ioq lock %sheld\n"
 msgstr ""
 
-#: hsccmd.c:2939
+#: hsccmd.c:2938
 #, c-format
 msgid "          DEV%4.4X: busy %s\n"
 msgstr ""
 
-#: hsccmd.c:2941
+#: hsccmd.c:2940
 #, c-format
 msgid "          DEV%4.4X: reserved %s\n"
 msgstr ""
 
-#: hsccmd.c:2943
+#: hsccmd.c:2942
 #, c-format
 msgid "          DEV%4.4X: suspended\n"
 msgstr ""
 
-#: hsccmd.c:2945
+#: hsccmd.c:2944
 #, c-format
 msgid "          DEV%4.4X: I/O pending\n"
 msgstr ""
 
-#: hsccmd.c:2947
+#: hsccmd.c:2946
 #, c-format
 msgid "          DEV%4.4X: PCI pending\n"
 msgstr ""
 
-#: hsccmd.c:2949
+#: hsccmd.c:2948
 #, c-format
 msgid "          DEV%4.4X: Attn pending\n"
 msgstr ""
 
-#: hsccmd.c:2951
+#: hsccmd.c:2950
 #, c-format
 msgid "          DEV%4.4X: CRW pending\n"
 msgstr ""
 
-#: hsccmd.c:2953
+#: hsccmd.c:2952
 #, c-format
 msgid "          DEV%4.4X: lock held\n"
 msgstr ""
 
-#: hsccmd.c:2956
+#: hsccmd.c:2955
 msgid "          I/O interrupt queue: "
 msgstr ""
 
-#: hsccmd.c:2959
+#: hsccmd.c:2958
 msgid "(NULL)"
 msgstr ""
 
-#: hsccmd.c:2965
+#: hsccmd.c:2964
 #, c-format
 msgid "          DEV%4.4X,%s%s%s%s, pri %d\n"
 msgstr ""
 
-#: hsccmd.c:2994
+#: hsccmd.c:2993
 msgid "HHCPN124I Instruction counts reset to zero.\n"
 msgstr ""
 
-#: hsccmd.c:2998
+#: hsccmd.c:2997
 msgid "HHCPN125I Instruction count display:\n"
 msgstr ""
 
-#: hsccmd.c:3138
+#: hsccmd.c:3137
 msgid "HHCPN996E The script command requires a filename\n"
 msgstr ""
 
-#: hsccmd.c:3151
+#: hsccmd.c:3150
 msgid "HHCPN997E Only 1 script may be invoked from the panel at any time\n"
 msgstr ""
 
-#: hsccmd.c:3166
+#: hsccmd.c:3165
 msgid "HHCPN998E Script aborted : user cancel request\n"
 msgstr ""
 
-#: hsccmd.c:3186
+#: hsccmd.c:3185
 msgid "HHCPN998E Script aborted : Script recursion level exceeded\n"
 msgstr ""
 
-#: hsccmd.c:3196
+#: hsccmd.c:3195
 #, c-format
 msgid "HHCPN007E Script file %s open failed: %s\n"
 msgstr ""
 
-#: hsccmd.c:3201
+#: hsccmd.c:3200
 #, c-format
 msgid "HHCPN995E Script file %s not found\n"
 msgstr ""
 
-#: hsccmd.c:3209
+#: hsccmd.c:3208
 #, c-format
 msgid "HHCPN008I Script file processing started using file %s\n"
 msgstr ""
 
-#: hsccmd.c:3217
+#: hsccmd.c:3216
 #, c-format
 msgid "HHCPN009E Script file buffer malloc failed: %s\n"
 msgstr ""
 
-#: hsccmd.c:3259
+#: hsccmd.c:3258
 #, c-format
 msgid "HHCPN010W Ignoring invalid SCRIPT file pause statement: %s\n"
 msgstr ""
 
-#: hsccmd.c:3265
+#: hsccmd.c:3264
 #, c-format
 msgid "HHCPN011I Pausing SCRIPT file processing for %d seconds...\n"
 msgstr ""
 
-#: hsccmd.c:3269
+#: hsccmd.c:3268
 msgid "HHCPN012I Resuming SCRIPT file processing...\n"
 msgstr ""
 
-#: hsccmd.c:3287
+#: hsccmd.c:3286
 msgid "HHCPN013I EOF reached on SCRIPT file. Processing complete.\n"
 msgstr ""
 
-#: hsccmd.c:3292
+#: hsccmd.c:3291
 #, c-format
 msgid "HHCPN014E I/O error reading SCRIPT file: %s\n"
 msgstr ""
 
-#: hsccmd.c:3297
+#: hsccmd.c:3296
 #, c-format
 msgid "HHCPN999I Script %s aborted due to previous conditions\n"
 msgstr ""
 
-#: hsccmd.c:3326
+#: hsccmd.c:3325
 #, fuzzy, c-format
 msgid "HHCPN126I Architecture mode = %s\n"
 msgstr "HHCPN126I Achitectuur modus = %s\n"
 
-#: hsccmd.c:3339
+#: hsccmd.c:3338
 msgid "HHCPN127E All CPU's must be stopped to change architecture\n"
 msgstr ""
 
-#: hsccmd.c:3380
+#: hsccmd.c:3379
 #, fuzzy, c-format
 msgid "HHCPN128E Invalid architecture mode %s\n"
 msgstr "HHCPN128E Ongeldige achitectuur modus %s\n"
 
-#: hsccmd.c:3394
+#: hsccmd.c:3393
 #, fuzzy, c-format
 msgid "HHCPN129I Architecture successfully set to %s mode.\n"
 msgstr "HHCPN129I CPU%4.4X Architectuur Modus %s\n"
 
-#: hsccmd.c:3431
+#: hsccmd.c:3430
 msgid "on"
 msgstr ""
 
-#: hsccmd.c:3434
+#: hsccmd.c:3433
 msgid "off"
 msgstr ""
 
-#: hsccmd.c:3455
+#: hsccmd.c:3454
 #, fuzzy, c-format
 msgid "HHCPN130E Invalid frame address %8.8X\n"
 msgstr "HHCPN130E Ongeldig frame adres %8.8X\n"
 
-#: hsccmd.c:3462
+#: hsccmd.c:3461
 #, c-format
 msgid "HHCPN131I Frame %8.8X marked %s\n"
 msgstr ""
 
-#: hsccmd.c:3463
+#: hsccmd.c:3462
 msgid "usable"
 msgstr ""
 
-#: hsccmd.c:3463
+#: hsccmd.c:3462
 msgid "unusable"
 msgstr ""
 
-#: hsccmd.c:3476
+#: hsccmd.c:3475
 #, c-format
 msgid "HHCPN132I Instruction tracing is now %s\n"
 msgstr ""
 
-#: hsccmd.c:3488
+#: hsccmd.c:3487
 #, c-format
 msgid "HHCPN133I Instruction stepping is now %s\n"
 msgstr ""
 
-#: hsccmd.c:3504
+#: hsccmd.c:3503
 #, c-format
 msgid "HHCPN134I CKD KEY trace is now %s\n"
 msgstr ""
 
-#: hsccmd.c:3519
+#: hsccmd.c:3518
 #, c-format
 msgid "HHCPN135E Device number %4.4X not found\n"
 msgstr ""
 
-#: hsccmd.c:3527
+#: hsccmd.c:3526
 #, c-format
 msgid "HHCPN136I CCW tracing is now %s for device %4.4X\n"
 msgstr ""
 
-#: hsccmd.c:3532
+#: hsccmd.c:3531
 #, c-format
 msgid "HHCPN137I CCW stepping is now %s for device %4.4X\n"
 msgstr ""
 
-#: hsccmd.c:3541
+#: hsccmd.c:3540
 msgid "HHCPN138E Unrecognized +/- command.\n"
 msgstr ""
 
-#: hsccmd.c:3845
+#: hsccmd.c:3844
 #, c-format
 msgid "HHCHD100I Loading %s ...\n"
 msgstr ""
 
-#: hsccmd.c:3847
+#: hsccmd.c:3846
 #, c-format
 msgid "HHCHD101I Module %s loaded\n"
 msgstr ""
 
-#: hsccmd.c:3870
+#: hsccmd.c:3869
 #, c-format
 msgid "HHCHD102I Unloading %s ...\n"
 msgstr ""
 
-#: hsccmd.c:3872
+#: hsccmd.c:3871
 #, c-format
 msgid "HHCHD103I Module %s unloaded\n"
 msgstr ""
 
-#: hsccmd.c:3917
+#: hsccmd.c:3916
 msgid "HHCPN150W evm command is deprecated. Use \"ecpsvm\" instead\n"
 msgstr ""
 
-#: hsccmd.c:3940
+#: hsccmd.c:3939
 #, c-format
 msgid "HHCPN161I (void *) ..........%7d\n"
 msgstr ""
 
-#: hsccmd.c:3941
+#: hsccmd.c:3940
 #, c-format
 msgid "HHCPN162I (unsigned int) ....%7d\n"
 msgstr ""
 
-#: hsccmd.c:3942
+#: hsccmd.c:3941
 #, c-format
 msgid "HHCPN163I SYSBLK ............%7d\n"
 msgstr ""
 
-#: hsccmd.c:3943
+#: hsccmd.c:3942
 #, c-format
 msgid "HHCPN164I REGS ..............%7d\n"
 msgstr ""
 
-#: hsccmd.c:3944
+#: hsccmd.c:3943
 #, c-format
 msgid "HHCPN165I DEVBLK ............%7d\n"
 msgstr ""
 
-#: hsccmd.c:3945
+#: hsccmd.c:3944
 #, c-format
 msgid "HHCPN166I TLB entry .........%7d\n"
 msgstr ""
 
-#: hsccmd.c:3946
+#: hsccmd.c:3945
 #, c-format
 msgid "HHCPN167I TLB table .........%7d\n"
 msgstr ""
 
-#: hsccmd.c:4221
+#: hsccmd.c:4220
 #, c-format
 msgid "HHCPN139E Command \"%s\" not found; enter '?' for list.\n"
 msgstr ""
 
-#: hsccmd.c:4248
+#: hsccmd.c:4247
 msgid ""
 "HHCPN140I Valid panel commands are...\n"
 "\n"
 msgstr ""
 
-#: hsccmd.c:4258
+#: hsccmd.c:4257
 #, c-format
 msgid "  %-9.9s    %s \n"
 msgstr ""
 
-#: hsccmd.c:4265
+#: hsccmd.c:4264
 msgid "add shadow file"
 msgstr ""
 
-#: hsccmd.c:4266
+#: hsccmd.c:4265
 msgid "delete shadow file"
 msgstr ""
 
-#: hsccmd.c:4267
+#: hsccmd.c:4266
 msgid "rename shadow file"
 msgstr ""
 
-#: hsccmd.c:4268
+#: hsccmd.c:4267
 msgid "compress shadow files"
 msgstr ""
 
-#: hsccmd.c:4269
+#: hsccmd.c:4268
 msgid "display shadow file stats"
 msgstr ""
 
-#: hsccmd.c:4275
+#: hsccmd.c:4274
 msgid "turn instruction tracing on/off"
 msgstr ""
 
-#: hsccmd.c:4276
+#: hsccmd.c:4275
 msgid "turn instruction stepping on/off"
 msgstr ""
 
-#: hsccmd.c:4277
+#: hsccmd.c:4276
 msgid "turn CCW tracing on/off"
 msgstr ""
 
-#: hsccmd.c:4278
+#: hsccmd.c:4277
 msgid "turn CCW stepping on/off"
 msgstr ""
 
-#: hsccmd.c:4280
+#: hsccmd.c:4279
 msgid "turn CKD_KEY tracing on/off"
 msgstr ""
 
-#: hsccmd.c:4282
+#: hsccmd.c:4281
 msgid "mark frames unusable/usable"
 msgstr ""
 
-#: hsccmd.c:4498
+#: hsccmd.c:4497
 msgid "HHCPN141E Missing argument\n"
 msgstr ""
 
-#: hsccmd.c:4506
+#: hsccmd.c:4505
 #, c-format
 msgid "%s"
 msgstr ""
 
-#: hsccmd.c:4511
+#: hsccmd.c:4510
 msgid "HHCPN142I No additional help available.\n"
 msgstr ""
 
@@ -5755,25 +5755,25 @@ msgstr ""
 msgid "HHCSH999E OPTION_SHARED_DEVICES not defined"
 msgstr ""
 
-#: sie.c:262
+#: sie.c:260
 msgid "SIE: state descriptor "
 msgstr ""
 
-#: sie.c:287
+#: sie.c:285
 #, fuzzy, c-format
 msgid "HHCCP079E CPU%4.4X: calloc failed for sie regs: %s\n"
 msgstr "HHCCP007I CPU%4.4X Architectuur Modus %s\n"
 
-#: sie.c:392
+#: sie.c:390
 #, c-format
 msgid "SIE: zone %d: mso="
 msgstr ""
 
-#: sie.c:392
+#: sie.c:390
 msgid " msl="
 msgstr ""
 
-#: sie.c:723
+#: sie.c:721
 #, c-format
 msgid "SIE: interception code %d\n"
 msgstr ""
@@ -5900,101 +5900,101 @@ msgstr "HHCSD006E %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 msgid "HHCSD007I Device %4.4X unbound from socket %s\n"
 msgstr "HHCSD007I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 
-#: stack.c:400
+#: stack.c:403
 msgid "stack: Current stack entry at "
 msgstr ""
 
-#: stack.c:401 stack.c:440 stack.c:773 stack.c:786 stack.c:850 stack.c:889
+#: stack.c:404 stack.c:443 stack.c:776 stack.c:789 stack.c:853 stack.c:892
 #, c-format
 msgid "stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n"
 msgstr ""
 
-#: stack.c:423
+#: stack.c:426
 msgid "stack: Forward section header addr "
 msgstr ""
 
-#: stack.c:485 stack.c:772
+#: stack.c:488 stack.c:775
 msgid "stack: New stack entry at "
 msgstr ""
 
-#: stack.c:502 stack.c:510 stack.c:1153 stack.c:1161
+#: stack.c:505 stack.c:513 stack.c:1156 stack.c:1164
 #, c-format
 msgid "stack: GPR%d="
 msgstr ""
 
-#: stack.c:502 stack.c:510 stack.c:534 stack.c:743
+#: stack.c:505 stack.c:513 stack.c:537 stack.c:746
 msgid " stored at V:"
 msgstr ""
 
-#: stack.c:503 stack.c:511 stack.c:535 stack.c:558 stack.c:611 stack.c:689
-#: stack.c:717 stack.c:744 stack.c:1154 stack.c:1162 stack.c:1200 stack.c:1295
-#: stack.c:1331 stack.c:1376
+#: stack.c:506 stack.c:514 stack.c:538 stack.c:561 stack.c:614 stack.c:692
+#: stack.c:720 stack.c:747 stack.c:1157 stack.c:1165 stack.c:1203 stack.c:1298
+#: stack.c:1334 stack.c:1379
 msgid " A:"
 msgstr ""
 
-#: stack.c:534 stack.c:743 stack.c:1199
+#: stack.c:537 stack.c:746 stack.c:1202
 #, c-format
 msgid "stack: AR%d="
 msgstr ""
 
-#: stack.c:556
+#: stack.c:559
 #, c-format
 msgid ""
 "stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
 "stored at V:"
 msgstr ""
 
-#: stack.c:610
+#: stack.c:613
 #, c-format
 msgid "stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X stored at V:"
 msgstr ""
 
-#: stack.c:688
+#: stack.c:691
 #, c-format
 msgid "stack: PSW2=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X stored at V:"
 msgstr ""
 
-#: stack.c:715
+#: stack.c:718
 #, c-format
 msgid ""
 "stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"
 "stored at V:"
 msgstr ""
 
-#: stack.c:784
+#: stack.c:787
 msgid "stack: Previous stack entry updated at A:"
 msgstr ""
 
-#: stack.c:795 stack.c:1411
+#: stack.c:798 stack.c:1414
 msgid "stack: CR15="
 msgstr ""
 
-#: stack.c:849 stack.c:873
+#: stack.c:852 stack.c:876
 msgid "stack: Stack entry located at "
 msgstr ""
 
-#: stack.c:1128
+#: stack.c:1131
 #, c-format
 msgid "stack: Unstacking registers %d-%d from "
 msgstr ""
 
-#: stack.c:1153 stack.c:1161 stack.c:1199
+#: stack.c:1156 stack.c:1164 stack.c:1202
 msgid " loaded from V:"
 msgstr ""
 
-#: stack.c:1293
+#: stack.c:1296
 #, c-format
 msgid ""
 "stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
 "loaded from V:"
 msgstr ""
 
-#: stack.c:1330
+#: stack.c:1333
 #, c-format
 msgid "stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X loaded from V:"
 msgstr ""
 
-#: stack.c:1374
+#: stack.c:1377
 #, c-format
 msgid ""
 "stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"
