@@ -1,7 +1,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETGET.C     (c) Copyright Leland Lucius, 2000-2005
+|| HETGET.C     (c) Copyright Leland Lucius, 2000-2006
 ||              Released under terms of the Q Public License.
 ||
 || Extract files from an HET file

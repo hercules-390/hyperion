@@ -1,8 +1,8 @@
 /*
  * dasdcat
  *
- * Vast swathes copied from dasdpdsu.c (c) Copyright Roger Bowler, 1999-2005
- * Changes and additions Copyright 2000-2005 by Malcolm Beattie
+ * Vast swathes copied from dasdpdsu.c (c) Copyright Roger Bowler, 1999-2006
+ * Changes and additions Copyright 2000-2006 by Malcolm Beattie
  */
 
 #include "hstdinc.h"

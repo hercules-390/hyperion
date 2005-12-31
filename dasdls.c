@@ -1,8 +1,8 @@
 /*
  * dasdls
  *
- * Copyright 2000-2005 by Malcolm Beattie
- * Based on code copyright by Roger Bowler, 1999-2005
+ * Copyright 2000-2006 by Malcolm Beattie
+ * Based on code copyright by Roger Bowler, 1999-2006
  */
 
 #include "hstdinc.h"

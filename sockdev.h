@@ -1,4 +1,4 @@
-/* SOCKDEV.H    (c) Copyright Hercules development, 2003-2005        */
+/* SOCKDEV.H    (c) Copyright Hercules development, 2003-2006        */
 /*              SocketDevice support                                 */
 
 #include "htypes.h"         // need Herc's struct typedefs

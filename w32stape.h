@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // W32STAPE.H   --   Hercules Win32 SCSI Tape handling module
 //
-// (c) Copyright "Fish" (David B. Trout), 2005. Released under
+// (c) Copyright "Fish" (David B. Trout), 2005-2006. Released under
 // the Q Public License (http://www.conmicro.cx/hercules/herclic.html)
 // as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////

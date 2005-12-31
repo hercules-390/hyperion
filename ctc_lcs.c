@@ -2,7 +2,7 @@
 // Hercules LAN Channel Station Support
 // ====================================================================
 //
-// Copyright (C) 2002-2005 by James A. Pierson
+// Copyright (C) 2002-2006 by James A. Pierson
 
 #include "hstdinc.h"
 #include "hercules.h"

@@ -1,13 +1,13 @@
-/*******************************************/
-/* (C) Copyright 2005 Roger Bowler & Others*/
-/* Initial author : Ivan Warren            */
-/*                                         */
-/* HERCLIN.C                               */
-/*                                         */
-/* THIS IS SAMPLE CODE DEMONSTRATING       */
-/* THE USE OF THE INITIAL HARDWARE PANEL   */
-/* INTERFACE FEATURE.                      */
-/*******************************************/
+/************************************************/
+/* (C) Copyright 2005-2006 Roger Bowler & Others*/
+/* Initial author : Ivan Warren                 */
+/*                                              */
+/* HERCLIN.C                                    */
+/*                                              */
+/* THIS IS SAMPLE CODE DEMONSTRATING            */
+/* THE USE OF THE INITIAL HARDWARE PANEL        */
+/* INTERFACE FEATURE.                           */
+/************************************************/
 #ifdef _MSVC_
 #include <windows.h>
 #include <conio.h>

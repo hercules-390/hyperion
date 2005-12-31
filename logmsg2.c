@@ -1,4 +1,4 @@
-/* LOGMSG2.C    (c) Copyright Roger Bowler, 2005                     */
+/* LOGMSG2.C    (c) Copyright Roger Bowler, 2005-2006                */
 /*              Message log function for batch programs              */
 
 /* This file and the executable program(s) generated from it are     */

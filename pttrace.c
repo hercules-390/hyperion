@@ -1,4 +1,4 @@
-/* PTTRACE.C   (c) Copyright Greg Smith, 2003-2005                   */
+/* PTTRACE.C   (c) Copyright Greg Smith, 2003-2006                   */
 /*       pthreads trace debugger                                     */
 
 /*-------------------------------------------------------------------*/

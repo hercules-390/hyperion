@@ -1,4 +1,4 @@
-/* SERVICE.H    (c) Copyright Jan Jaeger, 1999-2005                  */
+/* SERVICE.H    (c) Copyright Jan Jaeger, 1999-2006                  */
 /*              Service Processor Architectured fields               */
 
 

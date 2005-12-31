@@ -3,7 +3,7 @@
 /* may be missing on some platform ports, or other convenient mis-   */
 /* laneous global utility functions.                                 */
 /*********************************************************************/
-/* (c) 2003-2005 Ivan Warren & Others -- Released under the Q Public */
+/* (c) 2003-2006 Ivan Warren & Others -- Released under the Q Public */
 /* License -- This file is portion of the HERCULES S/370, S/390 and  */
 /* z/Architecture emulator                                           */
 /*********************************************************************/

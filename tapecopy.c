@@ -1,8 +1,8 @@
-/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2005                */
+/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2006                */
 /*              Convert SCSI tape into AWSTAPE format                */
 
 /*              Read from AWSTAPE and write to SCSI tape mods        */
-/*              Copyright 2005 James R. Maynard III                  */
+/*              Copyright 2005-2006 James R. Maynard III             */
 
 /*-------------------------------------------------------------------*/
 /* This program reads a SCSI tape and produces a disk file with      */

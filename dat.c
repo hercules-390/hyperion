@@ -1,6 +1,6 @@
 /* DAT.C */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
 #include "hstdinc.h"
 #include "hercules.h"

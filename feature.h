@@ -1,4 +1,4 @@
-/* FEATURES.H   (c) Copyright Jan Jaeger, 2000-2005                  */
+/* FEATURES.H   (c) Copyright Jan Jaeger, 2000-2006                  */
 /*      Architecture-dependent macro definitions                     */
 /*-------------------------------------------------------------------*/
 /* S/370, ESA/390 and ESAME features implemented                     */

@@ -2,8 +2,8 @@
 // Hercules - TUN/TAP Abstraction Layer
 // ====================================================================
 //
-// Copyright (C) 2002-2005 by James A. Pierson
-//           (C) 2002-2005 by "Fish" (David B. Trout)
+// Copyright (C) 2002-2006 by James A. Pierson
+//           (C) 2002-2006 by "Fish" (David B. Trout)
 //
 // TUN/TAP implementations differ among platforms. Linux and FreeBSD
 // offer much the same functionality but with differing semantics.

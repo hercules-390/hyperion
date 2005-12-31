@@ -1,4 +1,4 @@
-/* CODEPAGE.C   (c) Copyright Jan Jaeger, 1999-2005                  */
+/* CODEPAGE.C   (c) Copyright Jan Jaeger, 1999-2006                  */
 /*              Code Page conversion                                 */
 
 #include "hstdinc.h"

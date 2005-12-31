@@ -1,8 +1,8 @@
-/* OPCODE.H (c) Copyright Jan Jaeger, 2000-2005          */
+/* OPCODE.H (c) Copyright Jan Jaeger, 2000-2006          */
 /*      Instruction decoding macros and prototypes       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2005      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
 #ifndef _OPCODE_H
 #define _OPCODE_H

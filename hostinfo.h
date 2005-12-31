@@ -1,4 +1,4 @@
-/* HOSTINFO.H   (c) Copyright "Fish" (David B. Trout), 2002-2005     */
+/* HOSTINFO.H   (c) Copyright "Fish" (David B. Trout), 2002-2006     */
 
 /*   Released under the Q Public License                             */
 /*      (http://www.conmicro.cx/hercules/herclic.html)               */

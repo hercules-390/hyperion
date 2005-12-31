@@ -1,4 +1,4 @@
-/* LOADPARM.C   (c) Copyright Jan Jaeger, 2004-2005                  */
+/* LOADPARM.C   (c) Copyright Jan Jaeger, 2004-2006                  */
 /*              SCLP / MSSF loadparm                                 */
 
 #include "hstdinc.h"

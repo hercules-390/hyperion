@@ -2,9 +2,9 @@
 #define __HCHAN_H__
 /*
  * Hercules Generic Channel internal definitions
- * (c) Ivan Scott Warren 2004-2005
+ * (c) Ivan Scott Warren 2004-2006
  *     based on work
- * (c) Roger Bowler, Jan Jaeger and Others 1999-2005
+ * (c) Roger Bowler, Jan Jaeger and Others 1999-2006
  * This code is covered by the QPL Licence
  */
 

@@ -1,7 +1,7 @@
 /* HSCMISC.C    Misc. system command routines                        */
 /*                                                                   */
-/*              (c) Copyright Roger Bowler, 1999-2005                */
-/*              (c) Copyright Jan Jaeger, 1999-2005                  */
+/*              (c) Copyright Roger Bowler, 1999-2006                */
+/*              (c) Copyright Jan Jaeger, 1999-2006                  */
 
 #include "hstdinc.h"
 

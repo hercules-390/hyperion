@@ -1,4 +1,4 @@
-/* SHARED.C     (c)Copyright Greg Smith, 2002-2005                   */
+/* SHARED.C     (c)Copyright Greg Smith, 2002-2006                   */
 /*              Shared Device Server                                 */
 
 #include "hstdinc.h"

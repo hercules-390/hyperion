@@ -2,7 +2,7 @@
 // Hercules Channel to Channel Emulation Support
 // ====================================================================
 //
-// Copyright (C) 2002-2005 by James A. Pierson
+// Copyright (C) 2002-2006 by James A. Pierson
 //
 
 #ifndef __CTCADPT_H_

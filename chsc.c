@@ -1,8 +1,8 @@
-/* CHSC.C       (c) Copyright Jan Jaeger, 2002-2005                  */
+/* CHSC.C       (c) Copyright Jan Jaeger, 2002-2006                  */
 /*              Channel Subsystem Call                               */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2005      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements channel subsystem interface functions      */

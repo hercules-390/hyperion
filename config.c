@@ -1,4 +1,4 @@
-/* CONFIG.C     (c) Copyright Jan Jaeger, 2000-2005                  */
+/* CONFIG.C     (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              Device configuration functions                       */
 
 /*-------------------------------------------------------------------*/

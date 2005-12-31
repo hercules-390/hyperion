@@ -1,11 +1,11 @@
 // Hercules Channel-to-Channel Emulation Support
 // ====================================================================
 //
-// Copyright (C) James A. Pierson, 2002-2005
-//               Roger Bowler, 2000-2005
+// Copyright (C) James A. Pierson, 2002-2006
+//               Roger Bowler, 2000-2006
 //
-// vmnet     (C) Copyright Willem Konynenberg, 2000-2005
-// CTCT      (C) Copyright Vic Cross, 2001-2005
+// vmnet     (C) Copyright Willem Konynenberg, 2000-2006
+// CTCT      (C) Copyright Vic Cross, 2001-2006
 //
 // Notes:
 //   This module contains the remaining CTC emulation modes that

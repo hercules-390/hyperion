@@ -1,4 +1,4 @@
-/* HDTEQ.C      (c) Copyright Jan Jaeger, 2003-2005                  */
+/* HDTEQ.C      (c) Copyright Jan Jaeger, 2003-2006                  */
 /*              Hercules Dynamic Loader                              */
 
 #include "hstdinc.h"

@@ -1,4 +1,4 @@
-/* CON1052.C    (c)Copyright Jan Jaeger, 2004-2005                   */
+/* CON1052.C    (c)Copyright Jan Jaeger, 2004-2006                   */
 /*              Emulated 1052 on hercules console                    */
 
 #include "hstdinc.h"

@@ -1,4 +1,4 @@
-/* DASDCOPY.C   (c) Copyright Roger Bowler, 1999-2005                */
+/* DASDCOPY.C   (c) Copyright Roger Bowler, 1999-2006                */
 /*       Copy a dasd file to another dasd file.                      */
 /*       Input file and output file may be compressed or not.        */
 /*       Files may be either ckd (or cckd) or fba (or cfba) but      */

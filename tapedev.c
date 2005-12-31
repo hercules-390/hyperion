@@ -1,4 +1,4 @@
-/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2005                */
+/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2006                */
 /* JCS - minor changes by John Summerfield                           */
 /*              ESA/390 Tape Device Handler                          */
 /* Original Author : Roger Bowler                                    */

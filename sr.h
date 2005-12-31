@@ -1,4 +1,4 @@
-/* SR.H         (c)Copyright Greg Smith, 2004-2005                   */
+/* SR.H         (c)Copyright Greg Smith, 2004-2006                   */
 /*              Suspend/Resume a Hercules session                    */
 
 /*

@@ -16,7 +16,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| SLLIB.H      (c) Copyright Leland Lucius, 2000-2005
+|| SLLIB.H      (c) Copyright Leland Lucius, 2000-2006
 ||              Released under terms of the Q Public License.
 ||
 || Header for Standard Label library.

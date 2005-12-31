@@ -1,4 +1,4 @@
-/* HERCWIND.H   (c) Copyright Roger Bowler, 2005                     */
+/* HERCWIND.H   (c) Copyright Roger Bowler, 2005-2006                */
 /*              MSVC Environment Specific Definitions                */
 
 /* This file and the executable program(s) generated from it are     */

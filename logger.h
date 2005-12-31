@@ -1,4 +1,4 @@
-/* LOGGER.H     (c) Copyright Jan Jaeger, 2003-2005                  */
+/* LOGGER.H     (c) Copyright Jan Jaeger, 2003-2006                  */
 /*              System logger functions                              */
 
 #ifndef __LOGGER_H__

@@ -1,4 +1,4 @@
-/* HSOCKET.H    (c) Copyright Roger Bowler, 2005                     */
+/* HSOCKET.H    (c) Copyright Roger Bowler, 2005-2006                */
 /*              Equates for socket functions                         */
 
 /*  This header file contains equates for the socket functions       */

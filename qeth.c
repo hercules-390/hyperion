@@ -1,4 +1,4 @@
-/* QETH.C       (c) Copyright Jan Jaeger,   1999-2005                */
+/* QETH.C       (c) Copyright Jan Jaeger,   1999-2006                */
 /*              OSA Express                                          */
 
 /* This module contains device handling functions for the            */

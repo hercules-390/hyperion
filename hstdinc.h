@@ -1,4 +1,4 @@
-/* HSTDINC.H    (c) Copyright Roger Bowler, 1999-2005                */
+/* HSTDINC.H    (c) Copyright Roger Bowler, 1999-2006                */
 /*              Hercules precompilation-eligible Header Files        */
 
 /* This file contains #include statements for all of the header      */

@@ -1,4 +1,4 @@
-/* VERSION.C    (c) Copyright Roger Bowler, 1999-2005                */
+/* VERSION.C    (c) Copyright Roger Bowler, 1999-2006                */
 /*              Hercules Version Display Module                      */
 
 /*-------------------------------------------------------------------*/

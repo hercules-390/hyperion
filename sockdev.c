@@ -1,4 +1,4 @@
-/* SOCKDEV.C    (c) Copyright Hercules development, 2003-2005        */
+/* SOCKDEV.C    (c) Copyright Hercules development, 2003-2006        */
 /*              Socketdevice support                                 */
 
 #include "hstdinc.h"
