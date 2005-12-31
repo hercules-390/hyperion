@@ -217,7 +217,8 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Save the file name in the device block */
-    strcpy (dev->filename, argv[0]);
+    hostpath(pathname, argv[0], sizeof(pathname));
+    strcpy (dev->filename, pathname);
 
     /* Device is shareable */
     dev->shared = 1;
