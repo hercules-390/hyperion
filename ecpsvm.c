@@ -348,17 +348,14 @@ VADR    effective_addr1, \
 
 #define STPT(_x) \
 { \
-    obtain_lock(&sysblk.todlock); \
-    EVM_STD(regs->ptimer,_x); \
-    release_lock(&sysblk.todlock); \
+    EVM_STD(get_cpu_timer(regs),_x); \
 }
 
 #define SPT(_x) \
 { \
-    obtain_lock(&sysblk.todlock); \
-    regs->ptimer=EVM_LD(_x); \
+    set_cpu_timer(regs,EVM_LD(_x)); \
     obtain_lock(&sysblk.intlock); \
-    if((regs->ptimer & 0x8000000000000000ULL)) \
+    if(CPU_TIMER(regs) < 0) \
     { \
         ON_IC_PTIMER(regs); \
     } \
@@ -367,7 +364,6 @@ VADR    effective_addr1, \
         OFF_IC_PTIMER(regs); \
     } \
     release_lock(&sysblk.intlock); \
-    release_lock(&sysblk.todlock); \
 }
 
 

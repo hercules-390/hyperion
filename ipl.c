@@ -506,8 +506,8 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
 
     regs->PX     = 0;
     regs->todpr  = 0;
-    regs->ptimer = 0;
     regs->clkc   = 0;
+    set_cpu_timer(regs, 0);
 
     /* The breaking event address register is initialised to 1 */
     regs->bear = 1;

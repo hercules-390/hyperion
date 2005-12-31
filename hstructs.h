@@ -40,7 +40,7 @@ struct REGS {                           /* Processor registers       */
         DW      ea;                     /* Exception address         */
         DW      et;                     /* Execute Target address    */
 
-        U64     ptimer;                 /* CPU timer                 */
+        S64     cpu_timer;              /* CPU timer epoch           */
         U64     clkc;                   /* 0-7=Clock comparator epoch,
                                            8-63=Comparator bits 0-55 */
         S64     tod_epoch;              /* TOD epoch for this CPU    */

@@ -1274,11 +1274,11 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     regs->tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace);
 
     /* Perform invalidation */
-    if (regs->invalidate)
+    if (unlikely(regs->invalidate))
         ARCH_DEP(invalidate_tlbe)(regs, regs->invalidate_main);
 
     /* Take interrupts if CPU is not stopped */
-    if (regs->cpustate == CPUSTATE_STARTED)
+    if (likely(regs->cpustate == CPUSTATE_STARTED))
     {
         /* Process machine check interrupt */
         if ( OPEN_IC_MCKPENDING(regs) )
@@ -1311,7 +1311,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     } /*CPU_STARTED*/
 
     /* If CPU is stopping, change status to stopped */
-    if (regs->cpustate == CPUSTATE_STOPPING)
+    if (unlikely(regs->cpustate == CPUSTATE_STOPPING))
     {
         /* Change CPU status to stopped */
         regs->opinterv = 0;
@@ -1370,8 +1370,9 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     } /* end if(restart) */
 
     /* This is where a stopped CPU will wait */
-    if (regs->cpustate == CPUSTATE_STOPPED)
+    if (unlikely(regs->cpustate == CPUSTATE_STOPPED))
     {
+    S64 saved_timer;
 #ifdef OPTION_MIPS_COUNTING
         regs->waittod = hw_clock();
 #endif
@@ -1379,6 +1380,12 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         /* Wait until there is work to do */
         HDC1(debug_cpu_state, regs);
 
+        /* The CPU timer is not being decremented for
+         * a CPU that is in the manual state
+         * (e.g. stopped in single step mode
+         * or otherwise)
+         */
+        saved_timer = get_cpu_timer(regs);
         regs->ints_state = IC_INITIAL_STATE;
         sysblk.started_mask &= ~BIT(regs->cpuad);
         while (regs->cpustate == CPUSTATE_STOPPED)
@@ -1387,6 +1394,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         }
         sysblk.started_mask |= BIT(regs->cpuad);
         regs->ints_state |= sysblk.ints_state;
+        set_cpu_timer(regs,saved_timer);
 
         HDC1(debug_cpu_state, regs);
 
@@ -1480,6 +1488,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
         ARCH_DEP(display_inst) (regs, regs->ip);
         if (sysblk.inststep || shouldbreak)
         {
+        S64 saved_timer;
             /* Put CPU into stopped state */
             regs->opinterv = 0;
             regs->cpustate = CPUSTATE_STOPPED;
@@ -1489,12 +1498,19 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
             HDC1(debug_cpu_state, regs);
 
+            /* The CPU timer is not being decremented for
+             * a CPU that is in the manual state
+             * (e.g. stopped in single step mode
+             * or otherwise)
+             */
+            saved_timer = get_cpu_timer(regs);
             sysblk.waiting_mask |= BIT(regs->cpuad);
             while (regs->cpustate == CPUSTATE_STOPPED)
             {
                 wait_condition (&regs->intcond, &sysblk.intlock);
             }
             sysblk.waiting_mask &= ~BIT(regs->cpuad);
+            set_cpu_timer(regs, saved_timer);
 
             HDC1(debug_cpu_state, regs);
 

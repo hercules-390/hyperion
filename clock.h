@@ -32,6 +32,9 @@ void ajust_tod_epoch(S64);              /* Adjust TOD epoch          */
 S64 get_tod_epoch(void);                /* Get TOD epoch             */
 U64 hw_clock(void);                     /* Get hardware clock        */ 
 
+void set_cpu_timer(REGS *, S64);        /* Set CPU timer             */
+S64 get_cpu_timer(REGS *);              /* Retrieve CPU timer        */
+
 #endif
 
 void ARCH_DEP(set_gross_s_rate) (REGS *);
@@ -43,13 +46,23 @@ void ARCH_DEP(query_steering_information) (REGS *);
 void ARCH_DEP(query_tod_offset) (REGS *);
 void ARCH_DEP(query_available_functions) (REGS *);
 
+
 _CLOCK_EXTERN U64 tod_clock;            /* Bits 0-7 TOD clock epoch  */
                                         /* Bits b-63 TOD bits 0-55   */
 
 _CLOCK_EXTERN S64 tod_epoch;            /* Bits 0-7 TOD clock epoch  */
                                         /* Bits 8-63 offset bits 0-55*/
 
+_CLOCK_EXTERN U64 hw_tod;               /* Hardware clock            */
+
+
 #define SECONDS_IN_SEVENTY_YEARS ((70*365 + 17) * 86400ULL)
 
 #define TOD_CLOCK(_regs) \
     (tod_clock + (_regs)->tod_epoch)
+
+#define CPU_TIMER(_regs) \
+    ((S64)((_regs)->cpu_timer - hw_tod))
+
+#define ITIMER_ACCESS(_addr) \
+    (unlikely(unlikely(_addr) < 84) && ((_addr) >= 80))

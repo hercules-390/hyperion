@@ -186,7 +186,7 @@ BYTE     psw[16];
         SR_WRITE_VALUE(file, SR_CPU_DXC, regs->dxc, sizeof(regs->dxc));
         SR_WRITE_VALUE(file, SR_CPU_MC, regs->MC_G, sizeof(regs->MC_G));
         SR_WRITE_VALUE(file, SR_CPU_EA, regs->EA_G, sizeof(regs->EA_G));
-        SR_WRITE_VALUE(file, SR_CPU_PTIMER, regs->ptimer, sizeof(regs->ptimer));
+        SR_WRITE_VALUE(file, SR_CPU_PTIMER, get_cpu_timer(regs), sizeof(S64));
         SR_WRITE_VALUE(file, SR_CPU_CLKC, regs->clkc, sizeof(regs->clkc));
         SR_WRITE_VALUE(file, SR_CPU_CHANSET, regs->chanset, sizeof(regs->chanset));
         SR_WRITE_VALUE(file, SR_CPU_TODPR, regs->todpr, sizeof(regs->todpr));
@@ -312,6 +312,7 @@ DEVBLK  *dev = NULL;
 IOINT   *ioq = NULL;
 char     buf[SR_MAX_STRING_LENGTH+1];
 char     zeros[16];
+S64      dreg;
 
     UNREFERENCED(cmdline);
 
@@ -777,7 +778,8 @@ char     zeros[16];
 
         case SR_CPU_PTIMER:
             if (regs == NULL) goto sr_null_regs_exit;
-            SR_READ_VALUE(file, len, &regs->ptimer, sizeof(regs->ptimer));
+            SR_READ_VALUE(file, len, &dreg, sizeof(S64));
+            set_cpu_timer(regs, dreg);
             break;
 
         case SR_CPU_CLKC:

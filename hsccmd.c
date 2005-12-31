@@ -745,7 +745,11 @@ char clock_buf[30];
                (U64)(regs->clkc << 8),
                format_tod(clock_buf,(U64)regs->clkc));
 
-    logmsg( _("          cpt = %16.16" I64_FMT "X\n"), (U64)regs->ptimer );
+
+    if (regs->cpustate != CPUSTATE_STOPPED)
+        logmsg( _("          cpt = %16.16" I64_FMT "X\n"), get_cpu_timer(regs) );
+    else
+        logmsg( _("          cpt = not decrementing\n"));
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_active)
@@ -762,7 +766,7 @@ char clock_buf[30];
                    (U64)regs->guestregs->clkc << 8,
                    format_tod(clock_buf,(U64)regs->guestregs->clkc));
 
-        logmsg( _("         vcpt = %16.16" I64_FMT "X\n"),(U64)regs->guestregs->ptimer);
+        logmsg( _("         vcpt = %16.16" I64_FMT "X\n"),get_cpu_timer(regs->guestregs));
     }
 #endif
 

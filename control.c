@@ -4502,7 +4502,7 @@ DEF_INST(set_cpu_timer)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U64     dreg;                           /* Timer value               */
+S64     dreg;                           /* Timer value               */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -4516,14 +4516,12 @@ U64     dreg;                           /* Timer value               */
 #endif /*defined(_FEATURE_SIE)*/
 
     /* Fetch the CPU timer value from operand location */
-    dreg = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs )
-                & 0xFFFFFFFFFFFFF000ULL;
+    dreg = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
+
+    set_cpu_timer(regs, dreg);
 
     /* Obtain the TOD clock update lock */
     obtain_lock (&sysblk.todlock);
-
-    /* Update the CPU timer */
-    regs->ptimer = dreg;
 
     /* reset the cpu timer pending flag according to its value */
     update_tod_clock();
@@ -6140,7 +6138,7 @@ DEF_INST(store_cpu_timer)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U64     dreg;                           /* Double word workarea      */
+S64     dreg;                           /* Double word workarea      */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -6153,20 +6151,14 @@ U64     dreg;                           /* Double word workarea      */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* Obtain the TOD clock update lock */
-    obtain_lock (&sysblk.todlock);
-
     /* Save the CPU timer value */
-    dreg = --regs->ptimer;
-
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
+    dreg = get_cpu_timer(regs);
 
     /* Obtain the interrupt lock */
     obtain_lock (&sysblk.intlock);
 
     /* reset the cpu timer pending flag according to its value */
-    if( (S64)regs->ptimer < 0 )
+    if( CPU_TIMER(regs) < 0 )
     {
         ON_IC_PTIMER(regs);
 

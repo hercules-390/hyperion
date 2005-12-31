@@ -85,10 +85,8 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
          * [2] Decrement the CPU timer for each CPU  *
          *-------------------------------------------*/
 
-        regs->ptimer = (S64)regs->ptimer - (tod_delta << 8);
-
         /* Set interrupt flag if the CPU timer is negative */
-        if ((S64)regs->ptimer < 0)
+        if (CPU_TIMER(regs) < 0)
         {
             if (!IS_IC_PTIMER(regs))
             {
@@ -103,11 +101,8 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         /* When running under SIE also update the SIE copy */
         if(regs->sie_active)
         {
-            /* Decrement the guest CPU timer */
-            regs->guestregs->ptimer = (S64)regs->guestregs->ptimer - (tod_delta << 8);
-
             /* Set interrupt flag if the CPU timer is negative */
-            if ((S64)regs->guestregs->ptimer < 0)
+            if (CPU_TIMER(regs->guestregs) < 0)
             {
                 ON_IC_PTIMER(regs->guestregs);
                 intmask |= BIT(regs->cpuad);

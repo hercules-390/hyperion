@@ -364,13 +364,13 @@ U16     cpuad;                          /* Originating CPU address   */
     }
 
     /* External interrupt if CPU timer is negative */
-    if ((S64)regs->ptimer < 0
+    if ( CPU_TIMER(regs) < 0
         && OPEN_IC_PTIMER(regs) )
     {
         if (sysblk.insttrace || sysblk.inststep)
         {
             logmsg (_("HHCCP025I External interrupt: CPU timer=%16.16" I64_FMT "X\n"),
-                    (long long)regs->ptimer);
+                    (long long)CPU_TIMER(regs) << 8);
         }
         ARCH_DEP(external_interrupt) (EXT_CPU_TIMER_INTERRUPT, regs);
     }
@@ -460,7 +460,6 @@ U16     cpuad;                          /* Originating CPU address   */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(store_status) (REGS *ssreg, RADR aaddr)
 {
-U64     dreg;                           /* Double register work area */
 int     i;                              /* Array subscript           */
 PSA     *sspsa;                         /* -> Store status area      */
 
@@ -485,8 +484,7 @@ PSA     *sspsa;                         /* -> Store status area      */
     sspsa = (void*)(ssreg->mainstor + aaddr);
 
     /* Store CPU timer in bytes 216-223 */
-    dreg = ssreg->ptimer;
-    STORE_DW(sspsa->storeptmr, ssreg->ptimer);
+    STORE_DW(sspsa->storeptmr, get_cpu_timer(ssreg));
 
     /* Store clock comparator in bytes 224-231 */
 #if defined(FEATURE_ESAME)

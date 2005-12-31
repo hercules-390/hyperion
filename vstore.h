@@ -338,7 +338,7 @@ int     len2;                           /* Length to copy on page    */
     if ( NOCROSS2K(addr,len) )
     {
 #ifdef FEATURE_INTERVAL_TIMER
-        if (unlikely(addr == 80))
+        if (ITIMER_ACCESS(addr))
         {
             obtain_lock( &sysblk.todlock );
             update_tod_clock ();
@@ -348,7 +348,7 @@ int     len2;                           /* Length to copy on page    */
         memcpy (dest, main1, len + 1);
 
 #ifdef FEATURE_INTERVAL_TIMER
-        if (unlikely(addr == 80))
+        if (ITIMER_ACCESS(addr))
             release_lock( &sysblk.todlock );
 #endif /*FEATURE_INTERVAL_TIMER*/
     }
@@ -455,7 +455,7 @@ BYTE    temp[4];                        /* Copy destination          */
     if ((addr & 0x7FF) <= 0x7FC)
     {
 #ifdef FEATURE_INTERVAL_TIMER
-        if (unlikely(addr == 80))
+        if (ITIMER_ACCESS(addr))
         {
             obtain_lock( &sysblk.todlock );
             update_tod_clock ();
@@ -487,7 +487,7 @@ _VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn, REGS *regs)
 {
     if ( (likely(!(addr & 0x03)) || ((addr & 0x7ff) <= 0x7fc ))
 #if defined(FEATURE_INTERVAL_TIMER)
-     && addr != 80
+     && !ITIMER_ACCESS(addr)
 #endif
        )
     {
@@ -526,7 +526,7 @@ BYTE    temp[8];                        /* Copy destination          */
     if ((addr & 0x7FF) <= 0x7F8)
     {
 #ifdef FEATURE_INTERVAL_TIMER
-        if (unlikely(addr == 80))
+        if (ITIMER_ACCESS(addr))
         {
             obtain_lock( &sysblk.todlock );
             update_tod_clock ();
@@ -758,7 +758,7 @@ int     len2, len3;                     /* Lengths to copy           */
      */
 
 #ifdef FEATURE_INTERVAL_TIMER
-    if (unlikely(addr2 == 80))
+    if (ITIMER_ACCESS(addr2))
     {
         obtain_lock (&sysblk.todlock);
         /* If a program check occurs during address translation
@@ -835,7 +835,7 @@ int     len2, len3;                     /* Lengths to copy           */
     }
 
 #ifdef FEATURE_INTERVAL_TIMER
-    if (unlikely(addr2 == 80))
+    if (ITIMER_ACCESS(addr2))
     {
         regs->todlock = 0;
         release_lock (&sysblk.todlock);

@@ -22,13 +22,7 @@
 
 #include "clock.h"
 
-static double hw_steering = 0.0;  /* Current TOD clock steering rate */
-
-static U64 hw_episode;           /* TOD of start of steering episode */
-
-static S64 hw_offset = 0;       /* Current offset between TOD and HW */
-
-static int clock_state = CC_CLOCK_SET;
+// static int clock_state = CC_CLOCK_SET;
 
 static CSR old;
 static CSR new;
@@ -70,7 +64,10 @@ static U64 universal_clock(void) /* really: any clock used as a base */
 /* The hercules hardware clock, based on the universal clock, but    */
 /* running at its own speed as optionally set by set_tod_steering()  */
 /* The hardware clock returns a unique value                         */
-static U64 hw_tod = 0;
+static double hw_steering = 0.0;  /* Current TOD clock steering rate */
+static U64 hw_episode;           /* TOD of start of steering episode */
+static S64 hw_offset = 0;       /* Current offset between TOD and HW */
+// static U64 hw_tod = 0;             /* Globally defined in clock.h */
 U64 hw_clock(void)
 {
 U64 base_tod;
@@ -99,8 +96,8 @@ void set_tod_steering(double steering)
 {
     obtain_lock(&sysblk.todlock);
     hw_offset = hw_clock() - universal_tod;
-    hw_steering = steering;
     hw_episode = hw_tod;
+    hw_steering = steering;
     release_lock(&sysblk.todlock);
 }
 
@@ -108,7 +105,7 @@ void set_tod_steering(double steering)
 /* Start a new episode */
 static inline void start_new_episode()
 {
-    hw_offset = hw_clock() - universal_tod;
+    hw_offset = hw_tod - universal_tod;
     hw_episode = hw_tod;
     new.start_time = hw_episode;
     hw_steering = ldexp(2,-44) * (S32)(new.fine_s_rate + new.gross_s_rate);
@@ -210,6 +207,27 @@ static void adjust_tod_offset(S64 offset)
 }
 
 
+/* The cpu timer is internally kept as an offset to the hw_clock()
+ * the cpu timer counts down as the clock approaches the timer epoch
+ */
+void set_cpu_timer(REGS *regs, S64 timer)
+{
+    obtain_lock(&sysblk.todlock);
+    regs->cpu_timer = (timer >> 8) + hw_clock();
+    release_lock(&sysblk.todlock);
+}
+
+
+S64 get_cpu_timer(REGS *regs)
+{
+S64 timer;
+    obtain_lock(&sysblk.todlock);
+    timer = (regs->cpu_timer - hw_clock()) << 8;
+    release_lock(&sysblk.todlock);
+    return timer;
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Update TOD clock                                                  */
 /*                                                                   */
@@ -228,6 +246,7 @@ static void adjust_tod_offset(S64 offset)
 /* has been adjusted.                                                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+// static U64 tod_clock;
 static U64 tod_timer;
 U64 update_tod_clock(void)
 {

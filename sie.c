@@ -228,6 +228,7 @@ RADR    effective_addr2;                /* address of state desc.    */
 int     n;                              /* Loop counter              */
 U16     lhcpu;                          /* Last Host CPU address     */
 int     icode = 0;                      /* Interception code         */
+U64     dreg;
 
     S(inst, regs, b2, effective_addr2);
 
@@ -513,7 +514,8 @@ int     icode = 0;                      /* Interception code         */
 #endif /*!defined(FEATURE_ESAME)*/
 
     /* Load the CPU timer */
-    FETCH_DW(GUESTREGS->ptimer, STATEBK->cputimer);
+    FETCH_DW(dreg, STATEBK->cputimer);
+    set_cpu_timer(GUESTREGS, dreg);
 
     /* Load the TOD clock offset for this guest */
     FETCH_DW(GUESTREGS->sie_epoch, STATEBK->epoch);
@@ -634,7 +636,7 @@ int     icode = 0;                      /* Interception code         */
         obtain_lock(&sysblk.todlock);
 
         /* CPU timer */
-        if( (S64)GUESTREGS->ptimer < 0 )
+        if(CPU_TIMER(GUESTREGS) < 0)
         {
             obtain_lock(&sysblk.intlock);
             ON_IC_PTIMER(GUESTREGS);
@@ -788,7 +790,7 @@ int     n;
     }
 
     /* Save CPU timer  */
-    STORE_DW(STATEBK->cputimer, GUESTREGS->ptimer);
+    STORE_DW(STATEBK->cputimer, get_cpu_timer(GUESTREGS));
 
     /* Save clock comparator */
     GUESTREGS->clkc <<= 8; /* Internal Hercules format */
