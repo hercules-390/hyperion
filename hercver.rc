@@ -9,6 +9,12 @@
   #error This file is not editable by Microsoft Visual C++
 #endif
 
+/////////////////////////////////////////////////////////////////////////////////////////
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+001 ICON DISCARDABLE "hercules.ico"
+/////////////////////////////////////////////////////////////////////////////////////////
+
 #include <winver.h>
 
 #ifndef NONE

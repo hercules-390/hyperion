@@ -919,6 +919,10 @@
 			ParseFiles="false"
 			>
 			<File
+				RelativePath=".\hercules.ico"
+				>
+			</File>
+			<File
 				RelativePath=".\hercver.rc"
 				>
 			</File>
