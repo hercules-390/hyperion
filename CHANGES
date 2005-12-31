@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+31 Dec 2005 Fix for Windows ..\relative path dasd files - Fish
+31 Dec 2005 Add space as valid volser char, remove owner field check - Fish
 29 Dec 2005 Fix bug causing semigraphical panel to always devinit the first
             device, regardless of what device was specified - Jay Maynard
 29 Dec 2005 Add confirmations to semigraphical panel EXT and RST (external
