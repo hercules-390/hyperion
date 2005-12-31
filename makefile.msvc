@@ -5,3 +5,4 @@
 # Static version is no longer supported. Use makefile-dllmod.msvc instead.      																					    
 #
 # ***************************************************************************
+!include makefile-dllmod.msvc
