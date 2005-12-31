@@ -95,13 +95,13 @@ static const char *sl_errstr[] =
 #define SL_ERRSTR_MAX ( sizeof( sl_errstr) / sizeof( sl_errstr[ 0 ] ) )
 
 /*
-|| Valid characters for a Standard Label  (from: SC26-4565-01
-|| "MVS/DFP 3.3: Using Magnetic Tape Labels and File Structure")
+|| Valid characters for a Standard Label
+|| (from: SC26-4565-01 "3.4 Label Definition and Organization")
 */
 static const char
 sl_cset[] =
 {
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"%&'()*+,-./:;<=>?"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 !\"%&'()*+,-./:;<=>?"
 };
 
 /*
@@ -947,7 +947,7 @@ sl_vol( SLLABEL *lab,
     if( owner != NULL )
     {
         len = strlen( owner );
-        if( ( len > 10 ) ||  ( (int)strspn( owner, sl_cset ) != len ) )
+        if( len > 10 )
         {
             return( SLE_OWNER );
         }
