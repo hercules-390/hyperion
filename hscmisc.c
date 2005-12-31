@@ -187,6 +187,7 @@ static void do_shutdown_now()
 */
 static void do_shutdown_wait()
 {
+    SET_THREAD_NAME(-1,"do_shutdown_wait");
     logmsg(_("HHCIN098I Shutdown initiated\n"));
     wait_sigq_resp();
     do_shutdown_now();

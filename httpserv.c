@@ -424,6 +424,8 @@ static void *http_request(int sock)
     CGITAB *cgient;
     int content_length = 0;
 
+    SET_THREAD_NAME(-1,"http_request");
+
     if(!(webblk = malloc(sizeof(WEBBLK))))
         http_exit(webblk);
 
@@ -584,6 +586,8 @@ int                     optval;         /* Argument for setsockopt   */
 TID                     httptid;        /* Negotiation thread id     */
 
     UNREFERENCED(arg);
+
+    SET_THREAD_NAME(-1,"http_server");
 
     /* Display thread started message on control panel */
     logmsg (_("HHCHT001I HTTP listener thread started: "

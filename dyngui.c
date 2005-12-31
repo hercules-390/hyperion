@@ -1142,6 +1142,8 @@ void Cleanup()
 
 void gui_panel_display ()
 {
+    SET_THREAD_NAME(-1,"dyngui");
+
     if ( !bDoneProcessing )
     {
         logmsg(_("HHCDG001I dyngui.dll initiated\n"));

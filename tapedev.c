@@ -4396,8 +4396,15 @@ static int autoload_mount_next(DEVBLK *dev)
 
 static void *autoload_wait_for_tapemount_thread(void *db)
 {
+char    thread_name[64];
 int     rc  = -1;
 DEVBLK *dev = (DEVBLK*) db;
+
+    snprintf(thread_name,sizeof(thread_name),
+        "autoload wait for %4.4X tapemount thread",
+        dev->devnum);
+    thread_name[sizeof(thread_name)-1]=0;
+    SET_THREAD_NAME(-1,thread_name);
 
     obtain_lock(&dev->lock);
     {

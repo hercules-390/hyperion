@@ -1495,8 +1495,11 @@ TID             tid;                    /* Readahead thread id       */
     }
 
     if (!cckdblk.batch)
-    logmsg (_("HHCCD001I Readahead thread %d started: tid="TIDPAT", pid=%d\n"),
+    {
+        SET_THREAD_NAME(-1,"cckd_ra");
+        logmsg (_("HHCCD001I Readahead thread %d started: tid="TIDPAT", pid=%d\n"),
             ra, thread_id(), getpid());
+    }
 
     while (ra <= cckdblk.ramax)
     {
@@ -1685,8 +1688,11 @@ BYTE            buf2[65536];            /* Compress buffer           */
     writer = (long)arg;
 
     if (!cckdblk.batch)
-    logmsg (_("HHCCD002I Writer thread %d started: tid="TIDPAT", pid=%d\n"),
+    {
+        SET_THREAD_NAME(-1,"cckd_writer");
+        logmsg (_("HHCCD002I Writer thread %d started: tid="TIDPAT", pid=%d\n"),
             writer, thread_id(), getpid());
+    }
 
     while (writer <= cckdblk.wrmax || cckdblk.wrpending)
     {
@@ -4223,8 +4229,11 @@ int             gctab[5]= {             /* default gcol parameters   */
     }
 
     if (!cckdblk.batch)
-    logmsg (_("HHCCD003I Garbage collector thread started: tid="TIDPAT", pid=%d \n"),
+    {
+        SET_THREAD_NAME(-1,"cckd_gcol");
+        logmsg (_("HHCCD003I Garbage collector thread started: tid="TIDPAT", pid=%d \n"),
               thread_id(), getpid());
+    }
 
     while (gcol <= cckdblk.gcmax)
     {

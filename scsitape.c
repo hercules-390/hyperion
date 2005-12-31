@@ -1031,6 +1031,7 @@ void *scsi_tapemountmon_thread( void *db )
     int priority;
     /* int rc; */
 
+    SET_THREAD_NAME(-1,"scsi_tapemountmon_thread");
 
     // Set thread priority BELOW that of the cpu and device threads
     // in order to minimize whatever impact we may have on them...

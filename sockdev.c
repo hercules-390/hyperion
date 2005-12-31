@@ -402,6 +402,8 @@ void* socket_thread( void* arg )
 
     UNREFERENCED( arg );
 
+    SET_THREAD_NAME(-1,"socket_thread");
+
     /* Display thread started message on control panel */
     logmsg (_("HHCSD020I Socketdevice listener thread started: "
             "tid="TIDPAT", pid=%d\n"),

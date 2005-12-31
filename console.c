@@ -1220,6 +1220,8 @@ char                    num_procs[16];  /* #of processors string     */
 char                    rejmsg[256];    /* Rejection message         */
 char                    group[16];      /* Console group             */
 
+    SET_THREAD_NAME(-1,"connect_client");
+
     /* Load the socket address from the thread parameter */
     csock = *csockp;
 
@@ -1540,6 +1542,8 @@ DEVBLK                *dev;             /* -> Device block           */
 BYTE                   unitstat;        /* Status after receive data */
 
     UNREFERENCED(arg);
+
+    SET_THREAD_NAME(-1,"console_connection_handler");
 
     hdl_adsc("console_shutdown",console_shutdown, NULL);
 

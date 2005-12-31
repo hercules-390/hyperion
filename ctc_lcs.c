@@ -1249,6 +1249,8 @@ static void*  LCS_PortThread( PLCSPORT pPort )
     BYTE        szBuff[2048];
     char        bReported = 0;
 
+    SET_THREAD_NAME(-1,"LCS_PortThread");
+
     pPort->pid = getpid();
 
     do

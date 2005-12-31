@@ -423,4 +423,14 @@ typedef void (*SIEFN)();
        sched_yield(); \
  } while (0)
 
+/*-------------------------------------------------------------------*/
+/* Macro for Setting a Thread Name  (mostly for debugging purposes)  */
+/*-------------------------------------------------------------------*/
+
+#ifdef _MSVC_
+  #define  SET_THREAD_NAME(t,n)     w32_set_thread_name((t),(n))
+#else
+  #define  SET_THREAD_NAME(t,n)     set_thread_name((t),(n))
+#endif
+
 #endif // _HMACROS_H

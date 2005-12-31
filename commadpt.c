@@ -545,6 +545,7 @@ static struct timeval *commadpt_setto(struct timeval *tv,int tmo)
 /*-------------------------------------------------------------------*/
 static void *commadpt_thread(void *vca)
 {
+    char thread_name[32];       /* Thread Name string                */
     COMMADPT    *ca;            /* Work CA Control Block Pointer     */
     int        sockopt;         /* Used for setsocketoption          */
     struct sockaddr_in sin;     /* bind socket address structure     */
@@ -577,6 +578,12 @@ static void *commadpt_thread(void *vca)
 
     /* get a work copy of devnum (for messages) */
     devnum=ca->devnum;
+
+    /* Set thread-name for debugging purposes */
+    snprintf(thread_name,sizeof(thread_name),
+        "commadpt %4.4X thread",devnum);
+    thread_name[sizeof(thread_name)-1]=0;
+    SET_THREAD_NAME(-1,thread_name);
 
     /* reset shutdown flag */
     ca_shutdown=0;

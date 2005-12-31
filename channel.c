@@ -1260,10 +1260,13 @@ void adjust_thread_priority(int *newprio)
 /*-------------------------------------------------------------------*/
 void *device_thread (void *arg)
 {
-DEVBLK  *dev;
+char    thread_name[32];
+DEVBLK *dev;
 int     current_priority;               /* Current thread priority   */
 
     UNREFERENCED(arg);
+
+    SET_THREAD_NAME(-1,"idle device thread");
 
     adjust_thread_priority(&sysblk.devprio);
     current_priority = getpriority(PRIO_PROCESS, 0);
@@ -1278,6 +1281,11 @@ int     current_priority;               /* Current thread priority   */
     {
         while ((dev=sysblk.ioq) != NULL)
         {
+            snprintf ( thread_name, sizeof(thread_name),
+                "device %4.4X thread", dev->devnum );
+            thread_name[sizeof(thread_name)-1]=0;
+            SET_THREAD_NAME(-1,thread_name);
+
             sysblk.ioq = dev->nextioq;
             if (sysblk.ioq && sysblk.devtwait)
                 signal_condition(&sysblk.ioqcond);
@@ -1295,6 +1303,8 @@ int     current_priority;               /* Current thread priority   */
             obtain_lock(&sysblk.ioqlock);
             dev->tid = 0;
         }
+
+        SET_THREAD_NAME(-1,"idle device thread");
 
         if (sysblk.devtmax < 0
          || (sysblk.devtmax == 0 && sysblk.devtwait > 3)
@@ -2236,6 +2246,8 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     }
     else
     {
+        char thread_name[32];
+
         /* Execute the CCW chain on a separate thread */
         if ( create_thread (&dev->tid, &sysblk.detattr,
                             ARCH_DEP(execute_ccw_chain), dev) )
@@ -2245,6 +2257,11 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
             release_lock (&dev->lock);
             return 2;
         }
+
+        snprintf(thread_name,sizeof(thread_name),
+            "execute %4.4X ccw chain",dev->devnum);
+        thread_name[sizeof(thread_name)-1]=0;
+        SET_THREAD_NAME(dev->tid,thread_name);
     }
 
     /* Return with condition code zero */

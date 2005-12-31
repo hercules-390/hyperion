@@ -2395,6 +2395,8 @@ struct timeval  wait;                   /* Wait time for select      */
 BYTE            hdr[SHRD_HDR_SIZE + 65536];  /* Header + buffer      */
 BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
 
+    SET_THREAD_NAME(-1,"serverConnect");
+
     csock = *psock;
     free (psock);
 
@@ -2695,6 +2697,8 @@ fd_set                  selset;         /* Read bit map for select   */
 TID                     tid;            /* Negotiation thread id     */
 
     UNREFERENCED(arg);
+
+    SET_THREAD_NAME(-1,"shared_server");
 
     /* Display thread started message on control panel */
     logmsg (_("HHCSH049I Shared device %d" "." "%d thread started: "

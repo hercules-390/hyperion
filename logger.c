@@ -228,6 +228,8 @@ int bytes_read;
 
     UNREFERENCED(arg);
 
+    SET_THREAD_NAME(-1,"logger_thread");
+
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
 

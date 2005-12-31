@@ -15,6 +15,8 @@
 
 int main(int ac,char *av[])
 {
+    SET_THREAD_NAME(-1,"bootstrap");
+
 #if defined( OPTION_DYNAMIC_LOAD ) && defined( HDL_USE_LIBTOOL )
     LTDL_SET_PRELOADED_SYMBOLS();
 #endif
@@ -53,6 +55,8 @@ static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs );
 int main(int ac,char *av[])
 {
     int rc = 0;
+
+    SET_THREAD_NAME(-1,"bootstrap");
 
     // If we're being debugged, then let the debugger
     // catch the exception. Otherwise, let our exception
@@ -137,6 +141,10 @@ static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
     {
         if ( CreateMiniDump( pExceptionPtrs ) )
         {
+            // ZZ FIXME: Figure out why this MessageBox never appears.
+            // It *used* to but it's not anymore and I don't know why.
+            // The function *is* always returning TRUE...  <grumble>
+
             MessageBox
             (
                 NULL,
@@ -170,7 +178,8 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
     _wmakepath( wszDumpPath, g_wszHercDrive, g_wszHercDir, L"Hercules", L".dmp" );
 
     _tprintf( _T("Creating crash dump \"%S\"...\n"), wszDumpPath );
-    _tprintf( _T("(Please wait; this may take a few minutes)\n") );
+    _tprintf( _T("Please wait; this may take a few minutes...\n") );
+    _tprintf( _T("(another message will appear when the dump is complete)\n") );
 
     hDumpFile = CreateFileW
     (

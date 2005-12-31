@@ -1220,6 +1220,8 @@ static DWORD WINAPI ReadStdInW32Thread( LPVOID lpParameter )
 
     UNREFERENCED( lpParameter );
 
+    SET_THREAD_NAME(-1,"ReadStdInW32Thread");
+
     for (;;)
     {
         WaitForSingleObject( hGotStdIn, INFINITE );
@@ -2304,6 +2306,8 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     else
         VERIFY(CloseHandle(hWorkerThread));         // (not needed anymore)
 
+    SET_THREAD_NAME(dwThreadId,"w32_read_piped_process_stdOUT_output_thread");
+
     //////////////////////////////////////////////////
     // Stderr...
 
@@ -2333,6 +2337,8 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     }
     else
         VERIFY(CloseHandle(hWorkerThread));     // (not needed anymore)
+
+    SET_THREAD_NAME(dwThreadId,"w32_read_piped_process_stdERR_output_thread");
 
     // Return a C run-time file descriptor
     // for the write-to-child-stdin HANDLE...
@@ -2492,5 +2498,38 @@ void w32_parse_piped_process_stdxxx_data ( char* holdbuff, int* pnHoldAmount )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// The following is documented in Microsoft's Visual Studio developer documentation...
 
-#endif // defined(WIN32)
+#define  MS_VC_EXCEPTION   0x406D1388       // (special value)
+
+typedef struct tagTHREADNAME_INFO
+{
+    DWORD   dwType;         // must be 0x1000
+    LPCSTR  pszName;        // pointer to name (in same addr space)
+    DWORD   dwThreadID;     // thread ID (-1 caller thread)
+    DWORD   dwFlags;        // reserved for future use, must be zero
+}
+THREADNAME_INFO;
+
+DLL_EXPORT void w32_set_thread_name( TID tid, char* name )
+{
+    THREADNAME_INFO info;
+
+    info.dwType     = 0x1000;
+    info.pszName    = name;         // (should really be LPCTSTR)
+    info.dwThreadID = tid;          // (-1 == current thread, else tid)
+    info.dwFlags    = 0;
+
+    __try
+    {
+        RaiseException( MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (DWORD*)&info );
+    }
+    __except ( EXCEPTION_CONTINUE_EXECUTION )
+    {
+        /* (do nothing) */
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+#endif // defined( _MSVC_ )

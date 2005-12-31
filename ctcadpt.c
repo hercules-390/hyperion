@@ -953,6 +953,10 @@ static void*  CTCT_ListenThread( void* argp )
     parm = *((CTCG_PARMBLK*) argp);
     free( argp );
 
+    snprintf(str,sizeof(str),"CTCT %4.4X ListenThread",parm.dev);
+    str[sizeof(str)-1]=0;
+    SET_THREAD_NAME(-1,str);
+
     for( ; ; )
     {
         servlen = sizeof(parm.addr);

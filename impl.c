@@ -79,6 +79,8 @@ int i;
 
     UNREFERENCED(arg);
 
+    SET_THREAD_NAME(-1,"watchdog_thread");
+
     /* Set watchdog priority just below cpu priority
        such that it will not invalidly detect an
        inoperable cpu */
@@ -131,6 +133,7 @@ void *log_do_callback(void *dummy)
     char *msgbuf;
     int msgcnt = -1,msgnum;
     UNREFERENCED(dummy);
+    SET_THREAD_NAME(-1,"log_do_callback");
     while(msgcnt)
     {
         if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
@@ -155,6 +158,8 @@ void* process_rc_file (void* dummy)
 char   *rcname;                         /* hercules.rc name pointer  */
 
     UNREFERENCED(dummy);
+
+    SET_THREAD_NAME(-1,"process_rc_file");
 
     /* Obtain the name of the hercules.rc file or default */
 
@@ -182,6 +187,8 @@ int     msgnum;                         /*                           */
 int     msgcnt;                         /*                           */
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
+
+    SET_THREAD_NAME(-1,"impl");
 
 #if defined(FISH_HANG)
     /* "FishHang" debugs lock/cond/threading logic. Thus it must

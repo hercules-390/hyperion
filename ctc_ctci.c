@@ -946,6 +946,10 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
     int      iLength;
     BYTE     szBuff[2048];
 
+    snprintf(szBuff,sizeof(szBuff),"CTCI %4.4X ReadThread",pDEVBLK->devnum);
+    szBuff[sizeof(szBuff)-1]=0;
+    SET_THREAD_NAME(-1,szBuff);
+
     // ZZ FIXME: Try to avoid race condition at startup with hercifc
     SLEEP(10);
 

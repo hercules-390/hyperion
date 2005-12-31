@@ -1072,8 +1072,13 @@ static REGS *(* run_cpu[GEN_MAXARCH]) (int cpu, REGS *oldregs) =
 /*-------------------------------------------------------------------*/
 void *cpu_thread (int *ptr)
 {
+char  thread_name[16];
 REGS *regs = NULL;
 int   cpu  = *ptr;
+
+    snprintf(thread_name,sizeof(thread_name),"cpu%d thread",cpu);
+    thread_name[sizeof(thread_name)-1]=0;
+    SET_THREAD_NAME(-1,thread_name);
 
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
