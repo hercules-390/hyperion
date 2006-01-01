@@ -4403,21 +4403,12 @@ U64     dreg;                           /* Clock value               */
     /* Fetch new TOD clock value from operand address */
     dreg = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs);
 
-    /* Obtain the TOD clock update lock */
-    obtain_lock (&sysblk.todlock);
-
-    /* Ensure tod clock is current */
-    update_tod_clock();
-
-    /* Compute the new TOD clock offset in hercules clock units */
-    set_tod_epoch( (dreg >> 8) - tod_clock);
+    /* Set the clock epoch register */
+    set_tod_clock(dreg >> 8);
 
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
     update_tod_clock();
-
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
 
     /* Return condition code zero */
     regs->psw.cc = 0;
@@ -4451,23 +4442,28 @@ U64     dreg;                           /* Clock value               */
 #endif /*defined(_FEATURE_SIE)*/
 
     /* Fetch clock comparator value from operand location */
-    dreg = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs )
-                & 0xFFFFFFFFFFFFF000ULL;
+    dreg = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
 //  /*debug*/logmsg("Set clock comparator=%16.16" I64_FMT "X\n", dreg);
 
-    /* Obtain the TOD clock update lock */
-    obtain_lock (&sysblk.todlock);
+    dreg >>= 8;
 
-    /* Update the clock comparator and set epoch to zero */
-    regs->clkc = dreg >> 8;
+    obtain_lock(regs->cpulock);
 
+    regs->clkc = dreg;
+
+#if 0
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
-    update_tod_clock();
+    if( TOD_CLOCK(regs) > dreg )
+        ON_IC_CLKC(regs);
+    else
+        OFF_IC_CLKC(regs);
+#endif
 
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
+    release_lock (regs->cpulock);
+
+    update_tod_clock();
 
     RETURN_INTCHECK(regs);
 }
@@ -4518,16 +4514,17 @@ S64     dreg;                           /* Timer value               */
     /* Fetch the CPU timer value from operand location */
     dreg = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
+    obtain_lock(regs->cpulock);
+
     set_cpu_timer(regs, dreg);
 
-    /* Obtain the TOD clock update lock */
-    obtain_lock (&sysblk.todlock);
-
     /* reset the cpu timer pending flag according to its value */
-    update_tod_clock();
+    if( CPU_TIMER(regs) < 0 )
+        ON_IC_PTIMER(regs);
+    else
+        OFF_IC_PTIMER(regs);
 
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
+    release_lock(regs->cpulock);
 
 //  /*debug*/logmsg("Set CPU timer=%16.16" I64_FMT "X\n", dreg);
 
@@ -5970,17 +5967,13 @@ U64     dreg;                           /* Clock value               */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* Obtain the TOD clock update lock */
-    obtain_lock (&sysblk.todlock);
-
     /* Save clock comparator value */
     dreg = regs->clkc;
 
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
+    update_tod_clock();
 
     /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
+    obtain_lock (regs->cpulock);
 
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
@@ -5994,7 +5987,7 @@ U64     dreg;                           /* Clock value               */
         if( OPEN_IC_CLKC(regs) )
         {
             regs->psw.IA -= 4;
-            release_lock (&sysblk.intlock);
+            release_lock (regs->cpulock);
             VALIDATE_AIA(regs);
             RETURN_INTCHECK(regs);
         }
@@ -6002,14 +5995,10 @@ U64     dreg;                           /* Clock value               */
     else
         OFF_IC_CLKC(regs);
 
-    /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
-
-    /* Shift out the epoch */
-    dreg <<= 8;
+    release_lock (regs->cpulock);
 
     /* Store clock comparator value at operand location */
-    ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
+    ARCH_DEP(vstore8) ((dreg << 8), effective_addr2, b2, regs );
 
 //  /*debug*/logmsg("Store clock comparator=%16.16" I64_FMT "X\n", dreg);
 
@@ -6151,11 +6140,10 @@ S64     dreg;                           /* Double word workarea      */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
+    obtain_lock(regs->cpulock);
+
     /* Save the CPU timer value */
     dreg = get_cpu_timer(regs);
-
-    /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
 
     /* reset the cpu timer pending flag according to its value */
     if( CPU_TIMER(regs) < 0 )
@@ -6167,8 +6155,7 @@ S64     dreg;                           /* Double word workarea      */
            and we are enabled for such interrupts *JJ */
         if( OPEN_IC_PTIMER(regs) )
         {
-            /* Release the interrupt lock */
-            release_lock (&sysblk.intlock);
+            release_lock(regs->cpulock);
 
             regs->psw.IA -= 4;
             VALIDATE_AIA(regs);
@@ -6178,8 +6165,7 @@ S64     dreg;                           /* Double word workarea      */
     else
         OFF_IC_PTIMER(regs);
 
-    /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
+    release_lock(regs->cpulock);
 
     /* Store CPU timer value at operand location */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );

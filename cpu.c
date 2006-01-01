@@ -398,20 +398,6 @@ static char *pgmintname[] = {
         RELEASE_MAINLOCK(realregs->guestregs);
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
-    /* Unlock the TOD lock if held */
-    if (realregs->todlock)
-    {
-        realregs->todlock = 0;
-        release_lock(&sysblk.todlock);
-    }
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
-    if(realregs->sie_active && realregs->guestregs->todlock)
-    {
-        realregs->guestregs->todlock = 0;
-        release_lock(&sysblk.todlock);
-    }
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
-
     /* Remove PER indication from program interrupt code
        such that interrupt code specific tests may be done.
        The PER indication will be stored in the PER handling
@@ -1171,6 +1157,7 @@ int i;
     regs->tod_epoch = get_tod_epoch();
 
     initialize_condition (&regs->intcond);
+    regs->cpulock = &sysblk.cpulock[cpu];
 
 #if defined(_FEATURE_VECTOR_FACILITY)
     regs->vf = &sysblk.vf[cpu];

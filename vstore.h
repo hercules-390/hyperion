@@ -338,18 +338,22 @@ int     len2;                           /* Length to copy on page    */
     if ( NOCROSS2K(addr,len) )
     {
 #ifdef FEATURE_INTERVAL_TIMER
-        if (ITIMER_ACCESS(addr))
+        if (ITIMER_ACCESS(addr) && !regs->mainlock)
         {
-            obtain_lock( &sysblk.todlock );
             update_tod_clock ();
+            obtain_lock( &sysblk.mainlock );
+            regs->mainlock = 2;
         }
 #endif /*FEATURE_INTERVAL_TIMER*/
 
         memcpy (dest, main1, len + 1);
 
 #ifdef FEATURE_INTERVAL_TIMER
-        if (ITIMER_ACCESS(addr))
-            release_lock( &sysblk.todlock );
+        if (unlikely(regs->mainlock == 2))
+        {
+            regs->mainlock = 0;
+            release_lock( &sysblk.mainlock );
+        }
 #endif /*FEATURE_INTERVAL_TIMER*/
     }
     else
@@ -456,11 +460,7 @@ BYTE    temp[4];                        /* Copy destination          */
     {
 #ifdef FEATURE_INTERVAL_TIMER
         if (ITIMER_ACCESS(addr))
-        {
-            obtain_lock( &sysblk.todlock );
             update_tod_clock ();
-            release_lock( &sysblk.todlock );
-          }
 #endif /*FEATURE_INTERVAL_TIMER*/
         return fetch_fw(main1);
     }
@@ -527,11 +527,7 @@ BYTE    temp[8];                        /* Copy destination          */
     {
 #ifdef FEATURE_INTERVAL_TIMER
         if (ITIMER_ACCESS(addr))
-        {
-            obtain_lock( &sysblk.todlock );
             update_tod_clock ();
-            release_lock( &sysblk.todlock );
-          }
 #endif /*FEATURE_INTERVAL_TIMER*/
         return fetch_dw(main1);
     }
@@ -758,15 +754,15 @@ int     len2, len3;                     /* Lengths to copy           */
      */
 
 #ifdef FEATURE_INTERVAL_TIMER
-    if (ITIMER_ACCESS(addr2))
+    if (ITIMER_ACCESS(addr2) && !regs->mainlock)
     {
-        obtain_lock (&sysblk.todlock);
+        update_tod_clock ();
+        obtain_lock (&sysblk.mainlock);
+        regs->mainlock = 2;
         /* If a program check occurs during address translation
          * (when a boundary is crossed), then program_interrupt
          * must release the todlock for us.
          */
-        regs->todlock = 1;
-        update_tod_clock ();
     }
 #endif /* FEATURE_INTERVAL_TIMER */
 
@@ -835,10 +831,10 @@ int     len2, len3;                     /* Lengths to copy           */
     }
 
 #ifdef FEATURE_INTERVAL_TIMER
-    if (ITIMER_ACCESS(addr2))
+    if (unlikely(regs->mainlock == 2))
     {
-        regs->todlock = 0;
-        release_lock (&sysblk.todlock);
+        regs->mainlock = 0;
+        release_lock (&sysblk.mainlock);
     }
 #endif /* FEATURE_INTERVAL_TIMER */
 

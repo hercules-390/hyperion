@@ -387,20 +387,14 @@ static U64        diag204tod;          /* last diag204 tod           */
         if ( abs > regs->mainlim )
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-        /* Obtain the TOD clock update lock */
-        obtain_lock (&sysblk.todlock);
+        /* save last diag204 tod */
+        dreg = diag204tod;
 
         /* Update the TOD clock */
         update_tod_clock();
 
-        /* save last diag204 tod */
-        dreg = diag204tod;
-
         /* Retrieve the TOD clock value and shift out the epoch */
         diag204tod = TOD_CLOCK(regs) << 8;
-
-        /* Release the TOD clock update lock */
-        release_lock (&sysblk.todlock);
 
         /* Point to DIAG 204 data area */
         hdrinfo = (DIAG204_HDR*)(regs->mainstor + abs);

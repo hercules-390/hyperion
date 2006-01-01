@@ -68,22 +68,45 @@ static double hw_steering = 0.0;  /* Current TOD clock steering rate */
 static U64 hw_episode;           /* TOD of start of steering episode */
 static S64 hw_offset = 0;       /* Current offset between TOD and HW */
 // static U64 hw_tod = 0;             /* Globally defined in clock.h */
-U64 hw_clock(void)
-{
-U64 base_tod;
 
+static inline U64 hw_adjust(U64 base_tod)
+{
     /* Apply hardware offset, this is the offset achieved by all
        previous steering episodes */
-    base_tod = universal_clock() + hw_offset;
-
+    base_tod += hw_offset;
+    
     /* Apply the steering offset from the current steering episode */
     base_tod += (S64)(base_tod - hw_episode) * hw_steering;
 
     /* Ensure that the clock returns a unique value */
     if(hw_tod < base_tod)
-        hw_tod = base_tod;
+        return base_tod;
     else
-	hw_tod += 0x10;
+	return hw_tod += 0x10;
+}
+
+
+U64 hw_clock(void)
+{
+U64 temp_tod;
+
+    /* Get the time of day (GMT) */
+    temp_tod = universal_clock();
+
+    obtain_lock(&sysblk.todlock);
+
+    /* Ajust speed and ensure uniqueness */
+    hw_tod = hw_adjust(temp_tod);
+
+    release_lock(&sysblk.todlock);
+
+    return hw_tod;
+}
+
+
+static U64 hw_clock_l(void)
+{
+    hw_tod = hw_adjust(universal_clock());
 
     return hw_tod;
 }
@@ -95,7 +118,7 @@ U64 base_tod;
 void set_tod_steering(double steering)
 {
     obtain_lock(&sysblk.todlock);
-    hw_offset = hw_clock() - universal_tod;
+    hw_offset = hw_clock_l() - universal_tod;
     hw_episode = hw_tod;
     hw_steering = steering;
     release_lock(&sysblk.todlock);
@@ -165,6 +188,14 @@ void ajust_tod_epoch(S64 epoch)
 }
 
 
+void set_tod_clock(U64 tod)
+{
+    obtain_lock(&sysblk.todlock);
+    set_tod_epoch(tod - hw_clock_l());
+    release_lock(&sysblk.todlock);
+}
+
+
 S64 get_tod_epoch()
 {
     return tod_epoch;
@@ -212,18 +243,14 @@ static void adjust_tod_offset(S64 offset)
  */
 void set_cpu_timer(REGS *regs, S64 timer)
 {
-    obtain_lock(&sysblk.todlock);
     regs->cpu_timer = (timer >> 8) + hw_clock();
-    release_lock(&sysblk.todlock);
 }
 
 
 S64 get_cpu_timer(REGS *regs)
 {
 S64 timer;
-    obtain_lock(&sysblk.todlock);
     timer = (regs->cpu_timer - hw_clock()) << 8;
-    release_lock(&sysblk.todlock);
     return timer;
 }
 
@@ -253,7 +280,9 @@ U64 update_tod_clock(void)
 U64 new_clock, 
     tod_delta;
 
-    new_clock = hw_clock();
+    obtain_lock(&sysblk.todlock);
+
+    new_clock = hw_clock_l();
     tod_delta = new_clock - tod_timer;
     tod_timer = new_clock;
     
@@ -263,13 +292,16 @@ U64 new_clock,
         start_new_episode();
 
     /* Set the clock to the new updated value with offset applied */
-    tod_clock = new_clock + current->base_offset;
+    new_clock += current->base_offset;
+    tod_clock = new_clock;
+
+    release_lock(&sysblk.todlock);
 
     /* Update the timers and check if either a clock related event has
        become pending */
     update_cpu_timer(tod_delta);
 
-    return tod_delta;
+    return new_clock;
 }
 
 
@@ -342,7 +374,7 @@ void ARCH_DEP(query_tod_offset) (REGS *regs)
 {
 PTFFQTO qto;
     obtain_lock(&sysblk.todlock);
-    STORE_DW(qto.todoff, (hw_clock() - universal_tod) << 8);
+    STORE_DW(qto.todoff, (hw_clock_l() - universal_tod) << 8);
     STORE_DW(qto.physclk, universal_tod << 8);
     STORE_DW(qto.ltodoff, current->base_offset << 8);
     STORE_DW(qto.todepoch, regs->tod_epoch << 8);

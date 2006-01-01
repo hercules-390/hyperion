@@ -36,18 +36,20 @@ S32             itimer_diff;            /* TOD difference in TU      */
 #endif
 U32             intmask = 0;            /* Interrupt CPU mask        */
 
-    /* Access the diffent register contexts with the intlock held */
-    obtain_lock (&sysblk.intlock);
-
     /* Check for [1] clock comparator, [2] cpu timer, and
      * [3] interval timer interrupts for each CPU.
      */
     for (cpu = 0; cpu < HI_CPU; cpu++)
     {
+        obtain_lock(&sysblk.cpulock[cpu]);
+
         /* Ignore this CPU if it is not started */
         if (!IS_CPU_ONLINE(cpu)
          || CPUSTATE_STOPPED == sysblk.regs[cpu]->cpustate)
+        {
+            release_lock(&sysblk.cpulock[cpu]);
             continue;
+        }
 
         /* Point to the CPU register context */
         regs = sysblk.regs[cpu];
@@ -112,6 +114,8 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         }
 #endif /*defined(_FEATURE_SIE)*/
 
+        release_lock(&sysblk.cpulock[cpu]);
+
         /*-------------------------------------------*
          * [3] Check for interval timer interrupt    *
          *-------------------------------------------*/
@@ -128,6 +132,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             /* Point to PSA in main storage */
             psa = (PSA_3XX*)(regs->mainstor + regs->PX);
 
+            obtain_lock(&sysblk.mainlock);
                     /* Decrement the location 80 timer */
             FETCH_FW(itimer,psa->inttimer);
                     olditimer = itimer;
@@ -146,6 +151,9 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             itimer -= 76800 / CLK_TCK;
 #endif
             STORE_FW(psa->inttimer,itimer);
+            release_lock(&sysblk.mainlock);
+
+            obtain_lock(&sysblk.cpulock[cpu]);
 
             /* Set interrupt flag and interval timer interrupt pending
                if the interval timer went from positive to negative */
@@ -169,7 +177,10 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             }
 #endif /* _FEATURE_ECPSVM */
 
+            release_lock(&sysblk.cpulock[cpu]);
+
         } /*if(regs->arch_mode == ARCH_370)*/
+
 
 #if defined(_FEATURE_SIE)
         /* When running under SIE also update the SIE copy */
@@ -179,6 +190,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
               && SIE_STATNB(regs->guestregs, M, ITMOF))
             {
                 /* Decrement the location 80 timer */
+                obtain_lock(&sysblk.mainlock);
                 FETCH_FW(itimer,regs->guestregs->sie_psa->inttimer);
                 olditimer = itimer;
 
@@ -188,7 +200,9 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
                 itimer -= 76800 / CLK_TCK;
 #endif
                 STORE_FW(regs->guestregs->sie_psa->inttimer,itimer);
+                release_lock(&sysblk.mainlock);
 
+                obtain_lock(&sysblk.cpulock[cpu]);
                 /* Set interrupt flag and interval timer interrupt pending
                    if the interval timer went from positive to negative */
                 if (itimer < 0 && olditimer >= 0)
@@ -196,6 +210,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
                     ON_IC_ITIMER(regs->guestregs);
                     intmask |= BIT(regs->cpuad);
                 }
+                release_lock(&sysblk.cpulock[cpu]);
             }
         }
 #endif /*defined(_FEATURE_SIE)*/
@@ -206,8 +221,6 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
     /* If a timer interrupt condition was detected for any CPU
        then wake up those CPUs if they are waiting */
     WAKEUP_CPUS_MASK (intmask);
-
-    release_lock(&sysblk.intlock);
 
 } /* end function check_timer_event */
 
@@ -259,9 +272,6 @@ struct  timeval tv;                     /* Structure for select      */
 
     while (sysblk.cpus)
     {
-        /* Obtain the TOD lock */
-        obtain_lock (&sysblk.todlock);
-
         /* Update TOD clock */
         update_tod_clock();
 
@@ -360,9 +370,6 @@ struct  timeval tv;                     /* Structure for select      */
 
         } /* end if(usecctr) */
 #endif /*OPTION_MIPS_COUNTING*/
-
-        /* Release the TOD lock */
-        release_lock (&sysblk.todlock);
 
         /* Sleep for one system clock tick by specifying a one-microsecond
            delay, which will get stretched out to the next clock tick */

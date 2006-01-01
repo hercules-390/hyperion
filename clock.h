@@ -34,6 +34,7 @@ U64 hw_clock(void);                     /* Get hardware clock        */
 
 void set_cpu_timer(REGS *, S64);        /* Set CPU timer             */
 S64 get_cpu_timer(REGS *);              /* Retrieve CPU timer        */
+void set_tod_clock(U64);                /* Set TOD clock             */
 
 #endif
 

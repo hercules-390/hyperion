@@ -149,8 +149,7 @@ struct REGS {                           /* Processor registers       */
         BYTE    cpustate;               /* CPU stopped/started state */
         unsigned int                    /* Flags (cpu thread only)   */
                 opinterv:1,             /* 1=Operator intervening    */
-                mainlock:1,             /* 1=Mainlock held           */
-                todlock:1,              /* 1=TODlock held            */
+                mainlock:2,             /* !0=Mainlock held           */
                 checkstop:1,            /* 1=CPU is checkstop-ed     */
                 hostint:1,              /* 1=Host generated interrupt*/
                 execflag:1,             /* 1=EXecuted instruction    */
@@ -194,6 +193,7 @@ struct REGS {                           /* Processor registers       */
         jmp_buf archjmp;                /* longjmp destination to
                                            switch architecture mode  */
         COND    intcond;                /* CPU interrupt condition   */
+        LOCK    *cpulock;               /* CPU lock for this CPU     */
 
      /* Opcode table pointers                                        */
 

@@ -1080,9 +1080,6 @@ U64     dreg;                           /* Double word work area     */
         /* Perform serialization before fetching clock */
         PERFORM_SERIALIZATION (regs);
 
-    /* Obtain the TOD clock update lock */
-    obtain_lock (&sysblk.todlock);
-
     /* Update the TOD clock value */
     update_tod_clock();
 
@@ -1094,9 +1091,6 @@ U64     dreg;                           /* Double word work area     */
 #endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
         /* Insert the cpu address to ensure a unique value */
         dreg |= regs->cpuad;
-
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
 
 // /*debug*/logmsg("Store TOD clock=%16.16" I64_FMT "X\n", dreg);
 
@@ -1135,17 +1129,11 @@ U64     dreg;                           /* Double word work area     */
     /* Perform serialization before fetching clock */
     PERFORM_SERIALIZATION (regs);
 
-    /* Obtain the TOD clock update lock */
-    obtain_lock (&sysblk.todlock);
-
     /* Update the TOD clock value */
     update_tod_clock();
 
     /* Retrieve the TOD epoch, clock bits 0-51, and 4 zeroes */
     dreg = TOD_CLOCK(regs);
-
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
 
     /* Check that all 16 bytes of the operand are accessible */
     ARCH_DEP(validate_operand) (effective_addr2, b2, 15, ACCTYPE_WRITE, regs);

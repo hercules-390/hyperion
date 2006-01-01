@@ -1074,17 +1074,11 @@ U64  dreg;
         /* Calculate the number of registers to be traced, minus 1 */
         n = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;
 
-        /* Obtain the TOD clock update lock */
-        obtain_lock (&sysblk.todlock);
-
         /* Update the TOD clock */
         update_tod_clock();
 
         /* Retrieve the TOD clock value and shift out the epoch */
         dreg = (TOD_CLOCK(regs) << 8) | regs->cpuad;
-
-        /* Release the TOD clock update lock */
-        release_lock (&sysblk.todlock);
 
         tte->format = TRACE_F1_TR_FMT | n;
         tte->fmt2 = TRACE_F1_TR_FM2;
@@ -1141,17 +1135,11 @@ U64  dreg;
         /* Calculate the number of registers to be traced, minus 1 */
         n = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;
 
-        /* Obtain the TOD clock update lock */
-        obtain_lock (&sysblk.todlock);
-
         /* Update the TOD clock */
         update_tod_clock();
 
         /* Retrieve the TOD clock value including the epoch */
         dreg = TOD_CLOCK(regs);
-
-        /* Release the TOD clock update lock */
-        release_lock (&sysblk.todlock);
 
         tte->format = TRACE_F2_TR_FMT | n;
         tte->fmt2 = TRACE_F2_TR_FM2;

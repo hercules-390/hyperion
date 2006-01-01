@@ -633,23 +633,15 @@ U64     dreg;
         }
 
         /* Intialize guest timers */
-        obtain_lock(&sysblk.todlock);
+        obtain_lock(regs->cpulock);
 
         /* CPU timer */
         if(CPU_TIMER(GUESTREGS) < 0)
-        {
-            obtain_lock(&sysblk.intlock);
             ON_IC_PTIMER(GUESTREGS);
-            release_lock(&sysblk.intlock);
-        }
 
         /* Clock comparator */
         if( TOD_CLOCK(GUESTREGS) > GUESTREGS->clkc )
-        {
-            obtain_lock(&sysblk.intlock);
             ON_IC_CLKC(GUESTREGS);
-            release_lock(&sysblk.intlock);
-        }
 
 #if !defined(FEATURE_ESAME)
         /* Interval timer if S/370 and timer is enabled */
@@ -661,11 +653,7 @@ U64     dreg;
             /* Set the interval timer pending according to the T bit
                in the state control */
             if(STATEBK->s & SIE_S_T)
-            {
-                obtain_lock(&sysblk.intlock);
                 ON_IC_ITIMER(GUESTREGS);
-                release_lock(&sysblk.intlock);
-            }
 
             /* Fetch the residu from the state descriptor */
             FETCH_FW(residue,STATEBK->residue);
@@ -684,16 +672,12 @@ U64     dreg;
             /* Set interrupt flag and interval timer interrupt pending
                if the interval timer went from positive to negative */
             if (itimer < 0 && olditimer >= 0)
-            {
-                obtain_lock(&sysblk.intlock);
                 ON_IC_ITIMER(GUESTREGS);
-                release_lock(&sysblk.intlock);
-            }
         }
+
 #endif /*!defined(FEATURE_ESAME)*/
 
-        /* Finished with timers */
-        release_lock(&sysblk.todlock);
+        release_lock(regs->cpulock);
 
         /* Early exceptions associated with the guest load_psw() */
         if(icode)
@@ -793,8 +777,7 @@ int     n;
     STORE_DW(STATEBK->cputimer, get_cpu_timer(GUESTREGS));
 
     /* Save clock comparator */
-    GUESTREGS->clkc <<= 8; /* Internal Hercules format */
-    STORE_DW(STATEBK->clockcomp, GUESTREGS->clkc);
+    STORE_DW(STATEBK->clockcomp, GUESTREGS->clkc << 8);
 
 #if !defined(FEATURE_ESAME)
     /* If this is a S/370 guest, and the interval timer is enabled
