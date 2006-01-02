@@ -277,8 +277,8 @@ struct  timeval tv;                     /* Structure for select      */
 
 #ifdef OPTION_MIPS_COUNTING
         /* Calculate MIPS rate and percentage CPU busy */
-        diff = (prev == 0 ? 0 : tod_clock - prev);
-        prev = tod_clock;
+        diff = (prev == 0 ? 0 : hw_tod - prev);
+        prev = hw_tod;
 
         /* Shift the epoch out of the difference for the CPU timer */
         diff <<= 8;

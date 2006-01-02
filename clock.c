@@ -175,24 +175,27 @@ double get_tod_steering(void)
 
 void set_tod_epoch(S64 epoch)
 {
+    obtain_lock(&sysblk.todlock);
     csr_reset();
-    tod_epoch = adjust_epoch_cpu_all(epoch);
+    tod_epoch = epoch;
+    release_lock(&sysblk.todlock);
+    adjust_epoch_cpu_all(epoch);
 }
 
 
 void ajust_tod_epoch(S64 epoch)
 {
+    obtain_lock(&sysblk.todlock);
     csr_reset();
     tod_epoch += epoch;
+    release_lock(&sysblk.todlock);
     adjust_epoch_cpu_all(tod_epoch);
 }
 
 
 void set_tod_clock(U64 tod)
 {
-    obtain_lock(&sysblk.todlock);
-    set_tod_epoch(tod - hw_clock_l());
-    release_lock(&sysblk.todlock);
+    set_tod_epoch(tod - hw_clock());
 }
 
 
@@ -255,6 +258,30 @@ S64 timer;
 }
 
 
+U64 tod_clock(REGS *regs)
+{
+U64 current_tod;
+
+    obtain_lock(&sysblk.todlock);
+
+    current_tod = hw_clock_l();
+    
+    /* If we are in the old episode, and the new episode has arrived
+       then we must take action to start the new episode */
+    if(current == &old)
+        start_new_episode();
+
+    /* Set the clock to the new updated value with offset applied */
+    current_tod += current->base_offset;
+
+    tod_value = current_tod;
+
+    release_lock(&sysblk.todlock);
+
+    return current_tod + regs->tod_epoch;
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Update TOD clock                                                  */
 /*                                                                   */
@@ -273,7 +300,7 @@ S64 timer;
 /* has been adjusted.                                                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-// static U64 tod_clock;
+// static U64 tod_value;
 static U64 tod_timer;
 U64 update_tod_clock(void)
 {
@@ -293,7 +320,7 @@ U64 new_clock,
 
     /* Set the clock to the new updated value with offset applied */
     new_clock += current->base_offset;
-    tod_clock = new_clock;
+    tod_value = new_clock;
 
     release_lock(&sysblk.todlock);
 

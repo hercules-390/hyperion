@@ -390,11 +390,8 @@ static U64        diag204tod;          /* last diag204 tod           */
         /* save last diag204 tod */
         dreg = diag204tod;
 
-        /* Update the TOD clock */
-        update_tod_clock();
-
         /* Retrieve the TOD clock value and shift out the epoch */
-        diag204tod = TOD_CLOCK(regs) << 8;
+        diag204tod = tod_clock(regs) << 8;
 
         /* Point to DIAG 204 data area */
         hdrinfo = (DIAG204_HDR*)(regs->mainstor + abs);

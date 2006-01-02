@@ -1080,11 +1080,8 @@ U64     dreg;                           /* Double word work area     */
         /* Perform serialization before fetching clock */
         PERFORM_SERIALIZATION (regs);
 
-    /* Update the TOD clock value */
-    update_tod_clock();
-
     /* Retrieve the TOD clock value and shift out the epoch */
-    dreg = TOD_CLOCK(regs) << 8;
+    dreg = tod_clock(regs) << 8;
 
 #if defined(FEATURE_STORE_CLOCK_FAST)
     if(inst[1] == 0x05) // STCK only
@@ -1129,11 +1126,8 @@ U64     dreg;                           /* Double word work area     */
     /* Perform serialization before fetching clock */
     PERFORM_SERIALIZATION (regs);
 
-    /* Update the TOD clock value */
-    update_tod_clock();
-
     /* Retrieve the TOD epoch, clock bits 0-51, and 4 zeroes */
-    dreg = TOD_CLOCK(regs);
+    dreg = tod_clock(regs);
 
     /* Check that all 16 bytes of the operand are accessible */
     ARCH_DEP(validate_operand) (effective_addr2, b2, 15, ACCTYPE_WRITE, regs);
@@ -1153,7 +1147,7 @@ U64     dreg;                           /* Double word work area     */
     effective_addr2 &= ADDRESS_MAXWRAP(regs);
 
     /* Store nonzero value in pos 72 to 111 */
-    dreg = (dreg << 21) | 0x00100000 | (regs->cpuad << 16) | regs->todpr;
+    dreg = 0x0000000100000000ULL | (regs->cpuad << 16) | regs->todpr;
 
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 

@@ -731,11 +731,11 @@ char clock_buf[30];
     regs = sysblk.regs[sysblk.pcpu];
 
     logmsg( _("HHCPN028I tod = %16.16" I64_FMT "X    %s\n"),
-               (U64)(TOD_CLOCK(regs) << 8),
+               (U64)(tod_clock(regs) << 8),
                format_tod(clock_buf,(U64)TOD_CLOCK(regs)));
 
     logmsg( _("          h/w = %16.16" I64_FMT "X    %s\n"),
-               (U64)(tod_clock << 8),
+               (U64)(hw_clock() << 8),
                format_tod(clock_buf,(U64)tod_clock));
 
     logmsg( _("          off = %16.16" I64_FMT "X\n"),

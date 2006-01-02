@@ -4408,7 +4408,14 @@ U64     dreg;                           /* Clock value               */
 
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
-    update_tod_clock();
+    obtain_lock(regs->cpulock);
+
+    if( tod_clock(regs) > regs->clkc )
+        ON_IC_CLKC(regs);
+    else
+        OFF_IC_CLKC(regs);
+
+    release_lock(regs->cpulock);
 
     /* Return condition code zero */
     regs->psw.cc = 0;
@@ -4452,18 +4459,14 @@ U64     dreg;                           /* Clock value               */
 
     regs->clkc = dreg;
 
-#if 0
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
-    if( TOD_CLOCK(regs) > dreg )
+    if( tod_clock(regs) > dreg )
         ON_IC_CLKC(regs);
     else
         OFF_IC_CLKC(regs);
-#endif
 
     release_lock (regs->cpulock);
-
-    update_tod_clock();
 
     RETURN_INTCHECK(regs);
 }
@@ -5967,17 +5970,15 @@ U64     dreg;                           /* Clock value               */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* Save clock comparator value */
-    dreg = regs->clkc;
-
-    update_tod_clock();
-
     /* Obtain the interrupt lock */
     obtain_lock (regs->cpulock);
 
+    /* Save clock comparator value */
+    dreg = regs->clkc;
+
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
-    if( TOD_CLOCK(regs) > dreg )
+    if( tod_clock(regs) > dreg )
     {
         ON_IC_CLKC(regs);
 
