@@ -570,7 +570,8 @@ EXTRA_DIST = autoconf/config.rpath \
              build_pch.c           \
              conspawn.c            \
              getopt.c              \
-             w32stape.c
+             w32stape.c            \
+             hercules.ico
 
 
 #
