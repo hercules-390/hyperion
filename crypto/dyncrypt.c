@@ -51,6 +51,12 @@
 /*----------------------------------------------------------------------------*/
 /* Bit strings for query functions                                            */
 /*----------------------------------------------------------------------------*/
+#undef KIMD_BITS
+#undef KLMD_BITS
+#undef KM_BITS
+#undef KMAC_BITS
+#undef KMC_BITS
+
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
 #define KIMD_BITS       { 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 #else
