@@ -595,8 +595,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     /* Test SCLP command word */
     switch (sclp_command & SCLP_COMMAND_MASK) {
 
-    case SCLP_READ_SCP_INFO:
     case SCLP_READ_IFL_INFO:
+        if(!sysblk.pgmprdos)
+            goto invalidcmd;
+    case SCLP_READ_SCP_INFO:
 
         /* Set the main storage change bit */
         STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
@@ -1319,6 +1321,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #endif /*FEATURE_CPU_RECONFIG*/
 
     default:
+    invalidcmd:
 
         if( HDC3(debug_sclp_unknown_command, sclp_command, sccb, regs) )
             break;
