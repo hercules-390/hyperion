@@ -1402,11 +1402,11 @@ char    buf[1024];                      /* Buffer workarea           */
                             break;
                         case 'S':                   /* START */
                         case 's':
-                            panel_command("start");
+                            panel_command("startall");
                             break;
                         case 'P':                   /* STOP */
                         case 'p':
-                            panel_command("stop");
+                            panel_command("stopall");
                             break;
                         case 'O':                   /* Store */
                         case 'o':
