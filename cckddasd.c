@@ -4674,7 +4674,11 @@ OFF_T           pos, fpos;              /* File offsets              */
         if (i < 0 || fpos >= cckd->l2bounds || cckd->free[i].pending)
             goto cckd_gc_l2_exit;
 
-        if (cckd->free[i].len < CCKD_L2TAB_SIZE)
+        if (cckd->free[i].len < CCKD_L2TAB_SIZE
+         || (cckd->free[i].len != CCKD_L2TAB_SIZE
+          && cckd->free[i].len < CCKD_L2TAB_SIZE + CCKD_FREEBLK_SIZE
+            )
+           )
         {
             for (i = 0; i < cckd->cdevhdr[sfx].numl1tab; i++)
                 if (fpos + cckd->free[i].len == (OFF_T)cckd->l1[sfx][i])
