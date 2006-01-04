@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+04 Jan 2006 Correct bit codes returned in query function with no MSA ext 1 - Bernard
 01 Jan 2006 CPU Timer rework - Jan Jaeger
 31 Dec 2005 SET_THREAD_NAME for easier MSVC debugging - Fish
 31 Dec 2005 Fix for Windows ..\relative path dasd files - Fish
