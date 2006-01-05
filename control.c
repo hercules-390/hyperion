@@ -4408,14 +4408,14 @@ U64     dreg;                           /* Clock value               */
 
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
-    obtain_lock(regs->cpulock);
+    obtain_lock(&sysblk.intlock);
 
     if( tod_clock(regs) > regs->clkc )
         ON_IC_CLKC(regs);
     else
         OFF_IC_CLKC(regs);
 
-    release_lock(regs->cpulock);
+    release_lock(&sysblk.intlock);
 
     /* Return condition code zero */
     regs->psw.cc = 0;
@@ -4455,7 +4455,7 @@ U64     dreg;                           /* Clock value               */
 
     dreg >>= 8;
 
-    obtain_lock(regs->cpulock);
+    obtain_lock(&sysblk.intlock);
 
     regs->clkc = dreg;
 
@@ -4466,7 +4466,7 @@ U64     dreg;                           /* Clock value               */
     else
         OFF_IC_CLKC(regs);
 
-    release_lock (regs->cpulock);
+    release_lock (&sysblk.intlock);
 
     RETURN_INTCHECK(regs);
 }
@@ -4517,7 +4517,7 @@ S64     dreg;                           /* Timer value               */
     /* Fetch the CPU timer value from operand location */
     dreg = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
-    obtain_lock(regs->cpulock);
+    obtain_lock(&sysblk.intlock);
 
     set_cpu_timer(regs, dreg);
 
@@ -4527,7 +4527,7 @@ S64     dreg;                           /* Timer value               */
     else
         OFF_IC_PTIMER(regs);
 
-    release_lock(regs->cpulock);
+    release_lock(&sysblk.intlock);
 
 //  /*debug*/logmsg("Set CPU timer=%16.16" I64_FMT "X\n", dreg);
 
@@ -5971,7 +5971,7 @@ U64     dreg;                           /* Clock value               */
 #endif /*defined(_FEATURE_SIE)*/
 
     /* Obtain the interrupt lock */
-    obtain_lock (regs->cpulock);
+    obtain_lock (&sysblk.intlock);
 
     /* Save clock comparator value */
     dreg = regs->clkc;
@@ -5987,8 +5987,8 @@ U64     dreg;                           /* Clock value               */
            and we are enabled for such interrupts *JJ */
         if( OPEN_IC_CLKC(regs) )
         {
+            release_lock (&sysblk.intlock);
             regs->psw.IA -= 4;
-            release_lock (regs->cpulock);
             VALIDATE_AIA(regs);
             RETURN_INTCHECK(regs);
         }
@@ -5996,7 +5996,7 @@ U64     dreg;                           /* Clock value               */
     else
         OFF_IC_CLKC(regs);
 
-    release_lock (regs->cpulock);
+    release_lock (&sysblk.intlock);
 
     /* Store clock comparator value at operand location */
     ARCH_DEP(vstore8) ((dreg << 8), effective_addr2, b2, regs );
@@ -6141,7 +6141,7 @@ S64     dreg;                           /* Double word workarea      */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-    obtain_lock(regs->cpulock);
+    obtain_lock(&sysblk.intlock);
 
     /* Save the CPU timer value */
     dreg = get_cpu_timer(regs);
@@ -6156,7 +6156,7 @@ S64     dreg;                           /* Double word workarea      */
            and we are enabled for such interrupts *JJ */
         if( OPEN_IC_PTIMER(regs) )
         {
-            release_lock(regs->cpulock);
+            release_lock(&sysblk.intlock);
 
             regs->psw.IA -= 4;
             VALIDATE_AIA(regs);
@@ -6166,7 +6166,7 @@ S64     dreg;                           /* Double word workarea      */
     else
         OFF_IC_PTIMER(regs);
 
-    release_lock(regs->cpulock);
+    release_lock(&sysblk.intlock);
 
     /* Store CPU timer value at operand location */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );

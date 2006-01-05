@@ -36,6 +36,9 @@ S32             itimer_diff;            /* TOD difference in TU      */
 #endif
 U32             intmask = 0;            /* Interrupt CPU mask        */
 
+    /* Access the diffent register contexts with the intlock held */
+    obtain_lock (&sysblk.intlock);
+
     /* Check for [1] clock comparator, [2] cpu timer, and
      * [3] interval timer interrupts for each CPU.
      */
@@ -221,6 +224,8 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
     /* If a timer interrupt condition was detected for any CPU
        then wake up those CPUs if they are waiting */
     WAKEUP_CPUS_MASK (intmask);
+
+    release_lock(&sysblk.intlock);
 
 } /* end function check_timer_event */
 

@@ -633,7 +633,7 @@ U64     dreg;
         }
 
         /* Intialize guest timers */
-        obtain_lock(regs->cpulock);
+        obtain_lock(&sysblk.intlock);
 
         /* CPU timer */
         if(CPU_TIMER(GUESTREGS) < 0)
@@ -677,7 +677,7 @@ U64     dreg;
 
 #endif /*!defined(FEATURE_ESAME)*/
 
-        release_lock(regs->cpulock);
+        release_lock(&sysblk.intlock);
 
         /* Early exceptions associated with the guest load_psw() */
         if(icode)
