@@ -736,7 +736,7 @@ char clock_buf[30];
 
     logmsg( _("          h/w = %16.16" I64_FMT "X    %s\n"),
                (U64)(hw_clock() << 8),
-               format_tod(clock_buf,(U64)tod_clock));
+               format_tod(clock_buf,(U64)hw_tod));
 
     logmsg( _("          off = %16.16" I64_FMT "X\n"),
                 (S64)(regs->tod_epoch << 8));
