@@ -746,18 +746,18 @@ char arch370_flag = 0;
 
 /* Get the clock values all at once for consistency and so we can
    release the CPU lock more quickly. */
-    tod_now = TOD_CLOCK(regs);
+    tod_now = tod_clock(regs);
     hw_now = hw_tod;
     epoch_now = regs->tod_epoch;
     clkc_now = regs->clkc;
-    cpt_now = get_cpu_timer(regs);
+    cpt_now = CPU_TIMER(regs);
 #if defined(_FEATURE_SIE)
     if(regs->sie_active)
     {
         vtod_now = TOD_CLOCK(regs->guestregs);
         vepoch_now = regs->guestregs->tod_epoch;
         vclkc_now = regs->guestregs->clkc;
-        vcpt_now = get_cpu_timer(regs->guestregs);
+        vcpt_now = CPU_TIMER(regs->guestregs);
         sie_flag = 1;
     }
 #endif
