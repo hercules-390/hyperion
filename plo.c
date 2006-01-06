@@ -70,7 +70,7 @@ VADR op4addr;
     op2 = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
 
     /* load 1st op. compare value */
-    op1c = ARCH_DEP(vfetch8)(effective_addr4 + 8, b4, regs);
+    op1c = ARCH_DEP(wfetch8)(effective_addr4 + 8, b4, regs);
 
     if(op1c == op2)
     {
@@ -80,16 +80,16 @@ VADR op4addr;
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
 #if defined(FEATURE_ESAME)
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
-        op4addr = ARCH_DEP(vfetch4)(effective_addr4 + 76, b4, regs);
+        op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
 #endif
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
@@ -98,14 +98,14 @@ VADR op4addr;
         op4 = ARCH_DEP(vfetch8)(op4addr, r3, regs);
 
         /* replace the 3rd operand with the 4th operand */
-        ARCH_DEP(vstore8)(op4, effective_addr4 + 40, b4, regs);
+        ARCH_DEP(wstore8)(op4, effective_addr4 + 40, b4, regs);
 
         return 0;
     }
     else
     {
         /* replace the first op compare value with 2nd op */
-        ARCH_DEP(vstore8)(op2, effective_addr4 + 8, b4, regs);
+        ARCH_DEP(wstore8)(op2, effective_addr4 + 8, b4, regs);
 
         return 1;
     }
@@ -173,13 +173,13 @@ VADR op4addr;
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
 
@@ -187,7 +187,7 @@ VADR op4addr;
         ARCH_DEP(vfetchc) ( op4, 16-1, op4addr, r3, regs );
 
         /* replace the 3rd operand with the 4th operand */
-        ARCH_DEP(vstorec) ( op4, 16-1, effective_addr4 + 32, b4, regs );
+        ARCH_DEP(wstorec) ( op4, 16-1, effective_addr4 + 32, b4, regs );
 
         return 0;
     }
@@ -250,7 +250,7 @@ U64 op1c,
     DW_CHECK(effective_addr2, regs);
 
     /* Load first op compare value */
-    op1c = ARCH_DEP(vfetch8)(effective_addr4 + 8, b4, regs);
+    op1c = ARCH_DEP(wfetch8)(effective_addr4 + 8, b4, regs);
 
     /* Load 2nd operand */
     op2 = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
@@ -258,7 +258,7 @@ U64 op1c,
     if(op1c == op2)
     {
         /* Load 1st op replacement value */
-        op1r = ARCH_DEP(vfetch8)(effective_addr4 + 24, b4, regs);
+        op1r = ARCH_DEP(wfetch8)(effective_addr4 + 24, b4, regs);
 
         /* Store at 2nd operand location */
         ARCH_DEP(vstore8)(op1r, effective_addr2, b2, regs);
@@ -268,7 +268,7 @@ U64 op1c,
     else
     {
         /* Replace 1st op comp value by 2nd op */
-        ARCH_DEP(vstore8)(op2, effective_addr4 + 8, b4, regs);
+        ARCH_DEP(wstore8)(op2, effective_addr4 + 8, b4, regs);
 
         return 1;
     }
@@ -334,7 +334,7 @@ BYTE op1c[16],
     if(!memcmp(op1c,op2,16))
     {
         /* Load 1st op replacement value */
-        ARCH_DEP(vfetchc) ( op1r, 16-1, effective_addr4 + 16, b4, regs );
+        ARCH_DEP(wfetchc) ( op1r, 16-1, effective_addr4 + 16, b4, regs );
 
         /* Store at 2nd operand location */
         ARCH_DEP(vstorec) ( op1r, 16-1, effective_addr2, b2, regs );
@@ -418,7 +418,7 @@ VADR op4addr;
     DW_CHECK(effective_addr4, regs);
 
     /* load 1st op compare value from the pl */
-    op1c = ARCH_DEP(vfetch8)(effective_addr4 + 8, b4, regs);
+    op1c = ARCH_DEP(wfetch8)(effective_addr4 + 8, b4, regs);
 
     /* load 2nd operand */
     op2 = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
@@ -426,14 +426,14 @@ VADR op4addr;
     if(op1c != op2)
     {
         /* replace the 1st op compare value with 2nd op */
-        ARCH_DEP(vstore8)(op2, effective_addr4 + 8, b4, regs);
+        ARCH_DEP(wstore8)(op2, effective_addr4 + 8, b4, regs);
 
         return 1;
     }
     else
     {
         /* Load 3rd op compare value */
-        op3c = ARCH_DEP(vfetch8)(effective_addr4 + 40, b4, regs);
+        op3c = ARCH_DEP(wfetch8)(effective_addr4 + 40, b4, regs);
 
         /* When in ar mode, ar3 is used to access the
            operand. The alet is fetched from the pl */
@@ -441,16 +441,16 @@ VADR op4addr;
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
 #if defined(FEATURE_ESAME)
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
-        op4addr = ARCH_DEP(vfetch4)(effective_addr4 + 76, b4, regs);
+        op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
 #endif
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
@@ -460,15 +460,15 @@ VADR op4addr;
 
         if(op3c != op4)
         {
-            ARCH_DEP(vstore8)(op4, effective_addr4 + 40, b4, regs);
+            ARCH_DEP(wstore8)(op4, effective_addr4 + 40, b4, regs);
 
             return 2;
         }
         else
         {
             /* load replacement values */
-            op1r = ARCH_DEP(vfetch8)(effective_addr4 + 24, b4, regs);
-            op3r = ARCH_DEP(vfetch8)(effective_addr4 + 56, b4, regs);
+            op1r = ARCH_DEP(wfetch8)(effective_addr4 + 24, b4, regs);
+            op3r = ARCH_DEP(wfetch8)(effective_addr4 + 56, b4, regs);
 
             /* Verify access to 2nd operand */
             ARCH_DEP(validate_operand) (effective_addr2, b2, 8-1,
@@ -571,7 +571,7 @@ VADR op4addr;
     else
     {
         /* Load 3rd op compare value */
-        ARCH_DEP(vfetchc) ( op3c, 16-1, effective_addr4 + 32, b4, regs );
+        ARCH_DEP(wfetchc) ( op3c, 16-1, effective_addr4 + 32, b4, regs );
 
         /* When in ar mode, ar3 is used to access the
            operand. The alet is fetched from the pl */
@@ -579,13 +579,13 @@ VADR op4addr;
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
 
@@ -594,15 +594,15 @@ VADR op4addr;
 
         if(memcmp(op3c,op4,16))
         {
-            ARCH_DEP(vstorec) ( op4, 16-1, effective_addr4 + 32, b4, regs );
+            ARCH_DEP(wstorec) ( op4, 16-1, effective_addr4 + 32, b4, regs );
 
             return 2;
         }
         else
         {
             /* load replacement values */
-            ARCH_DEP(vfetchc) ( op1r, 16-1, effective_addr4 + 16, b4, regs );
-            ARCH_DEP(vfetchc) ( op3r, 16-1, effective_addr4 + 48, b4, regs );
+            ARCH_DEP(wfetchc) ( op1r, 16-1, effective_addr4 + 16, b4, regs );
+            ARCH_DEP(wfetchc) ( op3r, 16-1, effective_addr4 + 48, b4, regs );
 
             /* Verify access to 2nd operand */
             ARCH_DEP(validate_operand) (effective_addr2, b2, 16-1,
@@ -672,13 +672,13 @@ VADR op4addr;
     DW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
 
-    op1c = ARCH_DEP(vfetch8)(effective_addr4 + 8, b4, regs);
+    op1c = ARCH_DEP(wfetch8)(effective_addr4 + 8, b4, regs);
     op2 = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
 
     if(op1c == op2)
     {
-        op1r = ARCH_DEP(vfetch8)(effective_addr4 + 24, b4, regs);
-        op3 = ARCH_DEP(vfetch8)(effective_addr4 + 56, b4, regs);
+        op1r = ARCH_DEP(wfetch8)(effective_addr4 + 24, b4, regs);
+        op3 = ARCH_DEP(wfetch8)(effective_addr4 + 56, b4, regs);
 
         /* Verify access to 2nd operand */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 8-1,
@@ -690,16 +690,16 @@ VADR op4addr;
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
 #if defined(FEATURE_ESAME)
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
-        op4addr = ARCH_DEP(vfetch4)(effective_addr4 + 76, b4, regs);
+        op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
 #endif
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
@@ -712,7 +712,7 @@ VADR op4addr;
     else
     {
         /* Store 2nd op at 1st op comare value */
-        ARCH_DEP(vstore8)(op2, effective_addr4 + 8, b4, regs);
+        ARCH_DEP(wstore8)(op2, effective_addr4 + 8, b4, regs);
 
         return 1;
     }
@@ -778,8 +778,8 @@ VADR op4addr;
 
     if(!memcmp(op1c,op2,16))
     {
-        ARCH_DEP(vfetchc) ( op1r, 16-1, effective_addr4 + 16, b4, regs );
-        ARCH_DEP(vfetchc) ( op3, 16-1, effective_addr4 + 48, b4, regs );
+        ARCH_DEP(wfetchc) ( op1r, 16-1, effective_addr4 + 16, b4, regs );
+        ARCH_DEP(wfetchc) ( op3, 16-1, effective_addr4 + 48, b4, regs );
 
         /* Verify access to 2nd operand */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 16-1,
@@ -791,13 +791,13 @@ VADR op4addr;
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
 
@@ -834,8 +834,8 @@ VADR op4addr,
     FW_CHECK(effective_addr4, regs);
 
     op2 = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
-    op3 = ARCH_DEP(vfetch4)(effective_addr4 + 60, b4, regs);
-    op5 = ARCH_DEP(vfetch4)(effective_addr4 + 92, b4, regs);
+    op3 = ARCH_DEP(wfetch4)(effective_addr4 + 60, b4, regs);
+    op5 = ARCH_DEP(wfetch4)(effective_addr4 + 92, b4, regs);
 
     if(regs->GR_L(r1) == op2) 
     { 
@@ -850,26 +850,26 @@ VADR op4addr,
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
-            op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
+            op6alet = ARCH_DEP(wfetch4)(effective_addr4 + 100, b4, regs);
             regs->AR(r3) = op6alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
 #if defined(FEATURE_ESAME)
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
-        op4addr = ARCH_DEP(vfetch4)(effective_addr4 + 76, b4, regs);
+        op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
 #endif
         op4addr &= ADDRESS_MAXWRAP(regs);
         FW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
 #if defined(FEATURE_ESAME)
-        op6addr = ARCH_DEP(vfetch8)(effective_addr4 + 104, b4, regs);
+        op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
 #else
-        op6addr = ARCH_DEP(vfetch4)(effective_addr4 + 108, b4, regs);
+        op6addr = ARCH_DEP(wfetch4)(effective_addr4 + 108, b4, regs);
 #endif
         op6addr &= ADDRESS_MAXWRAP(regs);
         FW_CHECK(op6addr, regs);
@@ -925,14 +925,14 @@ VADR op4addr,
     DW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
 
-    op1c = ARCH_DEP(vfetch8)(effective_addr4 + 8, b4, regs);
+    op1c = ARCH_DEP(wfetch8)(effective_addr4 + 8, b4, regs);
     op2 = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
 
     if(op1c == op2)
     {
-        op1r = ARCH_DEP(vfetch8)(effective_addr4 + 24, b4, regs);
-        op3 = ARCH_DEP(vfetch8)(effective_addr4 + 56, b4, regs);
-        op5 = ARCH_DEP(vfetch8)(effective_addr4 + 88, b4, regs);
+        op1r = ARCH_DEP(wfetch8)(effective_addr4 + 24, b4, regs);
+        op3 = ARCH_DEP(wfetch8)(effective_addr4 + 56, b4, regs);
+        op5 = ARCH_DEP(wfetch8)(effective_addr4 + 88, b4, regs);
 
         /* Verify access to 2nd operand */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 8-1,
@@ -944,26 +944,26 @@ VADR op4addr,
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
-            op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
+            op6alet = ARCH_DEP(wfetch4)(effective_addr4 + 100, b4, regs);
             regs->AR(r3) = op6alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
 #if defined(FEATURE_ESAME)
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
-        op4addr = ARCH_DEP(vfetch4)(effective_addr4 + 76, b4, regs);
+        op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
 #endif
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
 #if defined(FEATURE_ESAME)
-        op6addr = ARCH_DEP(vfetch8)(effective_addr4 + 104, b4, regs);
+        op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
 #else
-        op6addr = ARCH_DEP(vfetch4)(effective_addr4 + 108, b4, regs);
+        op6addr = ARCH_DEP(wfetch4)(effective_addr4 + 108, b4, regs);
 #endif
         op6addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op6addr, regs);
@@ -994,7 +994,7 @@ VADR op4addr,
     }
     else
     {
-        ARCH_DEP(vstore8)(op2, effective_addr4 + 8, b4, regs);
+        ARCH_DEP(wstore8)(op2, effective_addr4 + 8, b4, regs);
 
         return 1;
     }
@@ -1021,8 +1021,8 @@ VADR op4addr,
 
     if(regs->GR_G(r1) == op2)
     {
-        op3 = ARCH_DEP(vfetch8)(effective_addr4 + 56, b4, regs);
-        op5 = ARCH_DEP(vfetch8)(effective_addr4 + 88, b4, regs);
+        op3 = ARCH_DEP(wfetch8)(effective_addr4 + 56, b4, regs);
+        op5 = ARCH_DEP(wfetch8)(effective_addr4 + 88, b4, regs);
 
         /* Verify access to 2nd operand */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 8-1,
@@ -1034,19 +1034,19 @@ VADR op4addr,
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
-            op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
+            op6alet = ARCH_DEP(wfetch4)(effective_addr4 + 100, b4, regs);
             regs->AR(r3) = op6alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
-        op6addr = ARCH_DEP(vfetch8)(effective_addr4 + 104, b4, regs);
+        op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
         op6addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op6addr, regs);
 
@@ -1108,9 +1108,9 @@ VADR op4addr,
 
     if(!memcmp(op1c,op2,16))
     {
-        ARCH_DEP(vfetchc)(op1c, 16-1, effective_addr4 + 16, b4, regs);
-        ARCH_DEP(vfetchc)(op3, 16-1, effective_addr4 + 48, b4, regs);
-        ARCH_DEP(vfetchc)(op5, 16-1, effective_addr4 + 80, b4, regs);
+        ARCH_DEP(wfetchc)(op1c, 16-1, effective_addr4 + 16, b4, regs);
+        ARCH_DEP(wfetchc)(op3, 16-1, effective_addr4 + 48, b4, regs);
+        ARCH_DEP(wfetchc)(op5, 16-1, effective_addr4 + 80, b4, regs);
 
         /* Verify access to 2nd operand */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 16-1,
@@ -1122,19 +1122,19 @@ VADR op4addr,
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
-            op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
+            op6alet = ARCH_DEP(wfetch4)(effective_addr4 + 100, b4, regs);
             regs->AR(r3) = op6alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
-        op6addr = ARCH_DEP(vfetch8)(effective_addr4 + 104, b4, regs);
+        op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
         op6addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op6addr, regs);
 
@@ -1191,9 +1191,9 @@ VADR op4addr,
     FW_CHECK(effective_addr4, regs);
 
     op2 = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
-    op3 = ARCH_DEP(vfetch4)(effective_addr4 + 60, b4, regs);
-    op5 = ARCH_DEP(vfetch4)(effective_addr4 + 92, b4, regs);
-    op7 = ARCH_DEP(vfetch4)(effective_addr4 + 124, b4, regs);
+    op3 = ARCH_DEP(wfetch4)(effective_addr4 + 60, b4, regs);
+    op5 = ARCH_DEP(wfetch4)(effective_addr4 + 92, b4, regs);
+    op7 = ARCH_DEP(wfetch4)(effective_addr4 + 124, b4, regs);
 
     if(regs->GR_L(r1) == op2) 
     { 
@@ -1207,36 +1207,36 @@ VADR op4addr,
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
-            op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
-            op8alet = ARCH_DEP(vfetch4)(effective_addr4 + 132, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
+            op6alet = ARCH_DEP(wfetch4)(effective_addr4 + 100, b4, regs);
+            op8alet = ARCH_DEP(wfetch4)(effective_addr4 + 132, b4, regs);
             regs->AR(r3) = op8alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
 #if defined(FEATURE_ESAME)
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
-        op4addr = ARCH_DEP(vfetch4)(effective_addr4 + 76, b4, regs);
+        op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
 #endif
         op4addr &= ADDRESS_MAXWRAP(regs);
         FW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
 #if defined(FEATURE_ESAME)
-        op6addr = ARCH_DEP(vfetch8)(effective_addr4 + 104, b4, regs);
+        op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
 #else
-        op6addr = ARCH_DEP(vfetch4)(effective_addr4 + 108, b4, regs);
+        op6addr = ARCH_DEP(wfetch4)(effective_addr4 + 108, b4, regs);
 #endif
         op6addr &= ADDRESS_MAXWRAP(regs);
         FW_CHECK(op6addr, regs);
 
         /* Load address of operand 8 */
 #if defined(FEATURE_ESAME)
-        op8addr = ARCH_DEP(vfetch8)(effective_addr4 + 136, b4, regs);
+        op8addr = ARCH_DEP(wfetch8)(effective_addr4 + 136, b4, regs);
 #else
-        op8addr = ARCH_DEP(vfetch4)(effective_addr4 + 140, b4, regs);
+        op8addr = ARCH_DEP(wfetch4)(effective_addr4 + 140, b4, regs);
 #endif
         op8addr &= ADDRESS_MAXWRAP(regs);
         FW_CHECK(op8addr, regs);
@@ -1311,15 +1311,15 @@ VADR op4addr,
     DW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
 
-    op1c = ARCH_DEP(vfetch8)(effective_addr4 + 8, b4, regs);
+    op1c = ARCH_DEP(wfetch8)(effective_addr4 + 8, b4, regs);
     op2 = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
 
     if(op1c == op2)
     {
-        op1r = ARCH_DEP(vfetch8)(effective_addr4 + 24, b4, regs);
-        op3 = ARCH_DEP(vfetch8)(effective_addr4 + 56, b4, regs);
-        op5 = ARCH_DEP(vfetch8)(effective_addr4 + 88, b4, regs);
-        op7 = ARCH_DEP(vfetch8)(effective_addr4 + 120, b4, regs);
+        op1r = ARCH_DEP(wfetch8)(effective_addr4 + 24, b4, regs);
+        op3 = ARCH_DEP(wfetch8)(effective_addr4 + 56, b4, regs);
+        op5 = ARCH_DEP(wfetch8)(effective_addr4 + 88, b4, regs);
+        op7 = ARCH_DEP(wfetch8)(effective_addr4 + 120, b4, regs);
 
         /* Verify access to 2nd operand */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 8-1,
@@ -1331,36 +1331,36 @@ VADR op4addr,
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
-            op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
-            op8alet = ARCH_DEP(vfetch4)(effective_addr4 + 132, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
+            op6alet = ARCH_DEP(wfetch4)(effective_addr4 + 100, b4, regs);
+            op8alet = ARCH_DEP(wfetch4)(effective_addr4 + 132, b4, regs);
             regs->AR(r3) = op8alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
 #if defined(FEATURE_ESAME)
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
 #else
-        op4addr = ARCH_DEP(vfetch4)(effective_addr4 + 76, b4, regs);
+        op4addr = ARCH_DEP(wfetch4)(effective_addr4 + 76, b4, regs);
 #endif
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
 #if defined(FEATURE_ESAME)
-        op6addr = ARCH_DEP(vfetch8)(effective_addr4 + 104, b4, regs);
+        op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
 #else
-        op6addr = ARCH_DEP(vfetch4)(effective_addr4 + 108, b4, regs);
+        op6addr = ARCH_DEP(wfetch4)(effective_addr4 + 108, b4, regs);
 #endif
         op6addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op6addr, regs);
 
         /* Load address of operand 8 */
 #if defined(FEATURE_ESAME)
-        op8addr = ARCH_DEP(vfetch8)(effective_addr4 + 136, b4, regs);
+        op8addr = ARCH_DEP(wfetch8)(effective_addr4 + 136, b4, regs);
 #else
-        op8addr = ARCH_DEP(vfetch4)(effective_addr4 + 140, b4, regs);
+        op8addr = ARCH_DEP(wfetch4)(effective_addr4 + 140, b4, regs);
 #endif
         op8addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op8addr, regs);
@@ -1407,7 +1407,7 @@ VADR op4addr,
     }
     else
     {
-        ARCH_DEP(vstore8)(op2, effective_addr4 + 8, b4, regs);
+        ARCH_DEP(wstore8)(op2, effective_addr4 + 8, b4, regs);
 
         return 1;
     }
@@ -1437,9 +1437,9 @@ VADR op4addr,
 
     if(regs->GR_G(r1) == op2)
     {
-        op3 = ARCH_DEP(vfetch8)(effective_addr4 + 56, b4, regs);
-        op5 = ARCH_DEP(vfetch8)(effective_addr4 + 88, b4, regs);
-        op7 = ARCH_DEP(vfetch8)(effective_addr4 + 120, b4, regs);
+        op3 = ARCH_DEP(wfetch8)(effective_addr4 + 56, b4, regs);
+        op5 = ARCH_DEP(wfetch8)(effective_addr4 + 88, b4, regs);
+        op7 = ARCH_DEP(wfetch8)(effective_addr4 + 120, b4, regs);
 
         /* Verify access to 2nd operand */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 8-1,
@@ -1451,25 +1451,25 @@ VADR op4addr,
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
-            op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
-            op8alet = ARCH_DEP(vfetch4)(effective_addr4 + 132, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
+            op6alet = ARCH_DEP(wfetch4)(effective_addr4 + 100, b4, regs);
+            op8alet = ARCH_DEP(wfetch4)(effective_addr4 + 132, b4, regs);
             regs->AR(r3) = op8alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
-        op6addr = ARCH_DEP(vfetch8)(effective_addr4 + 104, b4, regs);
+        op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
         op6addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op6addr, regs);
 
         /* Load address of operand 8 */
-        op8addr = ARCH_DEP(vfetch8)(effective_addr4 + 136, b4, regs);
+        op8addr = ARCH_DEP(wfetch8)(effective_addr4 + 136, b4, regs);
         op8addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op8addr, regs);
 
@@ -1550,10 +1550,10 @@ VADR op4addr,
 
     if(!memcmp(op1c,op2,16))
     {
-        ARCH_DEP(vfetchc)(op1r, 16-1, effective_addr4 + 16, b4, regs);
-        ARCH_DEP(vfetchc)(op3, 16-1, effective_addr4 + 48, b4, regs);
-        ARCH_DEP(vfetchc)(op5, 16-1, effective_addr4 + 80, b4, regs);
-        ARCH_DEP(vfetchc)(op7, 16-1, effective_addr4 + 112, b4, regs);
+        ARCH_DEP(wfetchc)(op1r, 16-1, effective_addr4 + 16, b4, regs);
+        ARCH_DEP(wfetchc)(op3, 16-1, effective_addr4 + 48, b4, regs);
+        ARCH_DEP(wfetchc)(op5, 16-1, effective_addr4 + 80, b4, regs);
+        ARCH_DEP(wfetchc)(op7, 16-1, effective_addr4 + 112, b4, regs);
 
         /* Verify access to 2nd operand */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 16-1,
@@ -1565,25 +1565,25 @@ VADR op4addr,
         {
             if(r3 == 0)
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-            op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
-            op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
-            op8alet = ARCH_DEP(vfetch4)(effective_addr4 + 132, b4, regs);
+            op4alet = ARCH_DEP(wfetch4)(effective_addr4 + 68, b4, regs);
+            op6alet = ARCH_DEP(wfetch4)(effective_addr4 + 100, b4, regs);
+            op8alet = ARCH_DEP(wfetch4)(effective_addr4 + 132, b4, regs);
             regs->AR(r3) = op8alet;
             SET_AEA_AR(regs, r3);
         }
 
         /* Load address of operand 4 */
-        op4addr = ARCH_DEP(vfetch8)(effective_addr4 + 72, b4, regs);
+        op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
-        op6addr = ARCH_DEP(vfetch8)(effective_addr4 + 104, b4, regs);
+        op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
         op6addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op6addr, regs);
 
         /* Load address of operand 8 */
-        op8addr = ARCH_DEP(vfetch8)(effective_addr4 + 136, b4, regs);
+        op8addr = ARCH_DEP(wfetch8)(effective_addr4 + 136, b4, regs);
         op8addr &= ADDRESS_MAXWRAP(regs);
         DW_CHECK(op8addr, regs);
 

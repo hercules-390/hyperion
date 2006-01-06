@@ -31,11 +31,10 @@ void set_tod_epoch(S64);                /* Set TOD epoch             */
 void ajust_tod_epoch(S64);              /* Adjust TOD epoch          */
 S64 get_tod_epoch(void);                /* Get TOD epoch             */
 U64 hw_clock(void);                     /* Get hardware clock        */ 
-U64 tod_clock(REGS *);                  /* Get TOD clock             */ 
-
 void set_cpu_timer(REGS *, S64);        /* Set CPU timer             */
 S64 get_cpu_timer(REGS *);              /* Retrieve CPU timer        */
 void set_tod_clock(U64);                /* Set TOD clock             */
+U64 tod_clock(REGS *);                  /* Get TOD clock             */ 
 
 #endif
 

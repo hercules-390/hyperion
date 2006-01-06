@@ -23,6 +23,91 @@
 /* move_chars   Move characters using specified keys and addrspaces  */
 /* validate_operand   Validate addressing, protection, translation   */
 /*-------------------------------------------------------------------*/
+/* And provided by means of macro's address wrapping versions of     */
+/* the above:                                                        */
+/* wstoreX                                                           */
+/* wfetchX                                                           */
+/* wmove_chars                                                       */
+/* wvalidate_operand                                                 */
+/*-------------------------------------------------------------------*/
+
+#define s370_wstorec(_src, _len, _addr, _arn, _regs) \
+        s370_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+#define s370_wstoreb(_value, _addr, _arn, _regs) \
+        s370_vstoreb((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s370_wstore2(_value, _addr, _arn, _regs) \
+        s370_vstore2((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s370_wstore4(_value, _addr, _arn, _regs) \
+        s370_vstore4((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s370_wstore8(_value, _addr, _arn, _regs) \
+        s370_vstore8((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s370_wfetchc(_dest, _len, _addr, _arn, _regs) \
+        s370_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+#define s370_wfetchb(_addr, _arn, _regs) \
+        s370_vfetchb(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s370_wfetch2(_addr, _arn, _regs) \
+        s370_vfetch2(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s370_wfetch4(_addr, _arn, _regs) \
+        s370_vfetch4(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s370_wfetch8(_addr, _arn, _regs) \
+        s370_vfetch8(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s370_wmove_chars(_addr1, _arn1, _key1, _addr2, _arn2, _key2, _len, _regs) \
+        s370_move_chars(((_addr1) & ADDRESS_MAXWRAP((_regs))), (_arn1), (_key1), \
+                        ((_addr2) & ADDRESS_MAXWRAP((_regs))), (_arn2), (_key2), (_len), (_regs))
+#define s370_wvalidate_operand(_addr, _arn, _len, _acctype, _regs) \
+        s370_validate_operand(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_len), (_acctype), (_regs))
+
+#define s390_wstorec(_src, _len, _addr, _arn, _regs) \
+        s390_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+#define s390_wstoreb(_value, _addr, _arn, _regs) \
+        s390_vstoreb((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s390_wstore2(_value, _addr, _arn, _regs) \
+        s390_vstore2((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s390_wstore4(_value, _addr, _arn, _regs) \
+        s390_vstore4((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s390_wstore8(_value, _addr, _arn, _regs) \
+        s390_vstore8((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s390_wfetchc(_dest, _len, _addr, _arn, _regs) \
+        s390_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+#define s390_wfetchb(_addr, _arn, _regs) \
+        s390_vfetchb(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s390_wfetch2(_addr, _arn, _regs) \
+        s390_vfetch2(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s390_wfetch4(_addr, _arn, _regs) \
+        s390_vfetch4(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s390_wfetch8(_addr, _arn, _regs) \
+        s390_vfetch8(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define s390_wmove_chars(_addr1, _arn1, _key1, _addr2, _arn2, _key2, _len, _regs) \
+        s390_move_chars(((_addr1) & ADDRESS_MAXWRAP((_regs))), (_arn1), (_key1), \
+                        ((_addr2) & ADDRESS_MAXWRAP((_regs))), (_arn2), (_key2), (_len), (_regs))
+#define s390_wvalidate_operand(_addr, _arn, _len, _acctype, _regs) \
+        s390_validate_operand(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_len), (_acctype), (_regs))
+
+#define z900_wstorec(_src, _len, _addr, _arn, _regs) \
+        z900_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+#define z900_wstoreb(_value, _addr, _arn, _regs) \
+        z900_vstoreb((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define z900_wstore2(_value, _addr, _arn, _regs) \
+        z900_vstore2((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define z900_wstore4(_value, _addr, _arn, _regs) \
+        z900_vstore4((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define z900_wstore8(_value, _addr, _arn, _regs) \
+        z900_vstore8((_value), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define z900_wfetchc(_dest, _len, _addr, _arn, _regs) \
+        z900_vfetchc((_dest), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
+#define z900_wfetchb(_addr, _arn, _regs) \
+        z900_vfetchb(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define z900_wfetch2(_addr, _arn, _regs) \
+        z900_vfetch2(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define z900_wfetch4(_addr, _arn, _regs) \
+        z900_vfetch4(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define z900_wfetch8(_addr, _arn, _regs) \
+        z900_vfetch8(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
+#define z900_wmove_chars(_addr1, _arn1, _key1, _addr2, _arn2, _key2, _len, _regs) \
+        z900_move_chars(((_addr1) & ADDRESS_MAXWRAP((_regs))), (_arn1), (_key1), \
+                        ((_addr2) & ADDRESS_MAXWRAP((_regs))), (_arn2), (_key2), (_len), (_regs))
+#define z900_wvalidate_operand(_addr, _arn, _len, _acctype, _regs) \
+        z900_validate_operand(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_len), (_acctype), (_regs))
 
 /*-------------------------------------------------------------------*/
 /*              Operand Length Checking Macros                       */
