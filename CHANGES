@@ -1,10 +1,13 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+06 Jan 2006 Change clocks panel command to snapshot all values used before
+            formatting and printing for consistency - Jay Maynard
 04 Jan 2006 Change semigraphical panel START and STOP buttons to issue
             startall and sopall, respectively - Jay Maynard
 04 Jan 2006 Fix cckd_gc_l2 bug - Greg Smith
-04 Jan 2006 Correct bit codes returned in query function with no MSA ext 1 - Bernard
+04 Jan 2006 Correct bit codes returned in query function with no MSA ext 1 -
+            Bernard van der Helm
 01 Jan 2006 CPU Timer rework - Jan Jaeger
 31 Dec 2005 SET_THREAD_NAME for easier MSVC debugging - Fish
 31 Dec 2005 Fix for Windows ..\relative path dasd files - Fish

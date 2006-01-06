@@ -715,6 +715,20 @@ int clocks_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
 char clock_buf[30];
+U64 tod_now;
+U64 hw_now;
+S64 epoch_now;
+U64 clkc_now;
+U64 cpt_now;
+#if defined(_FEATURE_SIE)
+U64 vtod_now = 0;
+S64 vepoch_now = 0;
+U64 vclkc_now = 0;
+U64 vcpt_now = 0;
+char sie_flag = 0;
+#endif
+U32 itimer = 0;
+char arch370_flag = 0;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -730,55 +744,70 @@ char clock_buf[30];
     }
     regs = sysblk.regs[sysblk.pcpu];
 
+/* Get the clock values all at once for consistency and so we can
+   release the CPU lock more quickly. */
+    tod_now = TOD_CLOCK(regs);
+    hw_now = hw_tod;
+    epoch_now = regs->tod_epoch;
+    clkc_now = regs->clkc;
+    cpt_now = get_cpu_timer(regs);
+#if defined(_FEATURE_SIE)
+    if(regs->sie_active)
+    {
+        vtod_now = TOD_CLOCK(regs->guestregs);
+        vepoch_now = regs->guestregs->tod_epoch;
+        vclkc_now = regs->guestregs->clkc;
+        vcpt_now = get_cpu_timer(regs->guestregs);
+        sie_flag = 1;
+    }
+#endif
+    if (regs->arch_mode == ARCH_370)
+    {
+        PSA_3XX *psa = (void*) (regs->mainstor + regs->PX);
+        FETCH_FW(itimer, psa->inttimer);
+        arch370_flag = 1;
+    }
+        
+    release_lock(&sysblk.cpulock[sysblk.pcpu]);
+
     logmsg( _("HHCPN028I tod = %16.16" I64_FMT "X    %s\n"),
-               (U64)(tod_clock(regs) << 8),
-               format_tod(clock_buf,(U64)TOD_CLOCK(regs)));
+               (tod_now << 8),format_tod(clock_buf,tod_now));
 
     logmsg( _("          h/w = %16.16" I64_FMT "X    %s\n"),
-               (U64)(hw_tod << 8),
-               format_tod(clock_buf,(U64)hw_tod));
+               (hw_now << 8),format_tod(clock_buf,hw_now));
 
     logmsg( _("          off = %16.16" I64_FMT "X\n"),
-                (S64)(regs->tod_epoch << 8));
+               (epoch_now << 8));
 
     logmsg( _("          ckc = %16.16" I64_FMT "X    %s\n"),
-               (U64)(regs->clkc << 8),
-               format_tod(clock_buf,(U64)regs->clkc));
-
+               (clkc_now << 8),format_tod(clock_buf,clkc_now));
 
     if (regs->cpustate != CPUSTATE_STOPPED)
-        logmsg( _("          cpt = %16.16" I64_FMT "X\n"), get_cpu_timer(regs) );
+        logmsg( _("          cpt = %16.16" I64_FMT "X\n"), cpt_now);
     else
         logmsg( _("          cpt = not decrementing\n"));
 
 #if defined(_FEATURE_SIE)
-    if(regs->sie_active)
+    if(sie_flag)
     {
 
         logmsg( _("         vtod = %16.16" I64_FMT "X    %s\n"),
-                   (U64)TOD_CLOCK(regs->guestregs) << 8,
-                   format_tod(clock_buf,(U64)TOD_CLOCK(regs->guestregs)));
+                   (vtod_now << 8),format_tod(clock_buf,vtod_now));
 
         logmsg( _("         voff = %16.16" I64_FMT "X\n"),
-                   (S64)regs->guestregs->tod_epoch << 8);
+                   (vepoch_now << 8));
 
         logmsg( _("         vckc = %16.16" I64_FMT "X    %s\n"), 
-                   (U64)regs->guestregs->clkc << 8,
-                   format_tod(clock_buf,(U64)regs->guestregs->clkc));
+                   (vclkc_now << 8),format_tod(clock_buf,vclkc_now));
 
-        logmsg( _("         vcpt = %16.16" I64_FMT "X\n"),get_cpu_timer(regs->guestregs));
+        logmsg( _("         vcpt = %16.16" I64_FMT "X\n"),vcpt_now);
     }
 #endif
 
-    if (regs->arch_mode == ARCH_370)
+    if (arch370_flag)
     {
-        U32 itimer;
-        PSA_3XX *psa = (void*) (regs->mainstor + regs->PX);
-        FETCH_FW(itimer, psa->inttimer);
         logmsg( "          itm = %8.8" I32_FMT "X\n", itimer );
     }
-
-    release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     return 0;
 }
