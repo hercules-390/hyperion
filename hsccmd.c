@@ -719,12 +719,12 @@ U64 tod_now;
 U64 hw_now;
 S64 epoch_now;
 U64 clkc_now;
-U64 cpt_now;
+S64 cpt_now;
 #if defined(_FEATURE_SIE)
 U64 vtod_now = 0;
 S64 vepoch_now = 0;
 U64 vclkc_now = 0;
-U64 vcpt_now = 0;
+S64 vcpt_now = 0;
 char sie_flag = 0;
 #endif
 U32 itimer = 0;
