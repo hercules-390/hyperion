@@ -141,9 +141,11 @@ char    *p, buf[1024];                  /* Work buffer               */
             rmtnum = p + 1;
         }
 
+#if !defined(_MSVC_)
         if ( strcmp (ipname, "localhost") == 0)
             dev->localhost = 1;
         else
+#endif
         {
             if ( (he = gethostbyname (ipname)) == NULL )
                 return -1;
