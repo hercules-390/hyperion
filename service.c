@@ -706,7 +706,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         sccb->resp = SCCB_RESP_INFO;
 
         /* OR in program product OS restriction flag. */
-        if(sclp_command != SCLP_READ_IFL_INFO)
+        if((sclp_command & SCLP_COMMAND_MASK) != SCLP_READ_IFL_INFO)
             sccb->resp |= sysblk.pgmprdos;
 
         break;
