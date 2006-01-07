@@ -141,7 +141,7 @@ char    *p, buf[1024];                  /* Work buffer               */
             rmtnum = p + 1;
         }
 
-#if defined( HAVE_SYS_UN_H ))
+#if defined( HAVE_SYS_UN_H )
         if ( strcmp (ipname, "localhost") == 0)
             dev->localhost = 1;
         else
