@@ -282,6 +282,7 @@ U64 current_tod;
 }
 
 
+#if 0
 S32 get_int_timer(REGS *regs)
 {
     return (S32)TOD_TO_ITIMER(regs->int_timer - hw_clock());
@@ -292,6 +293,7 @@ void set_int_timer(REGS *regs, S32 itimer)
 {
     regs->int_timer = ITIMER_TO_TOD(itimer) + hw_clock();
 }
+#endif
 
 
 /*-------------------------------------------------------------------*/
@@ -347,7 +349,7 @@ U64 new_clock,
 #endif
 
 
-#if defined(FEATURE_INTERVAL_TIMER)
+#if defined(FEATURE_INTERVAL_TIMER) && 0
 void ARCH_DEP(store_int_timer) (REGS *regs)
 {
 S32 itimer;
