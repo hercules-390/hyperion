@@ -599,7 +599,7 @@ U64     dreg;
         /* Get PSA pointer and ensure PSA is paged in */
         if(GUESTREGS->sie_pref)
         {
-            GUESTREGS->sie_psa = (PSA_3XX*)(GUESTREGS->mainstor + GUESTREGS->PX);
+            GUESTREGS->psa = (PSA_3XX*)(GUESTREGS->mainstor + GUESTREGS->PX);
             GUESTREGS->sie_px = GUESTREGS->PX;
         }
         else
@@ -629,7 +629,7 @@ U64     dreg;
                 release_lock(&sysblk.intlock);
                 return;
             }
-            GUESTREGS->sie_psa = (PSA_3XX*)(GUESTREGS->mainstor + GUESTREGS->sie_px);
+            GUESTREGS->psa = (PSA_3XX*)(GUESTREGS->mainstor + GUESTREGS->sie_px);
         }
 
         /* Intialize guest timers */
@@ -659,7 +659,7 @@ U64     dreg;
             FETCH_FW(residue,STATEBK->residue);
 
             /* Fetch the timer value from location 80 */
-            FETCH_FW(olditimer,GUESTREGS->sie_psa->inttimer);
+            FETCH_FW(olditimer,GUESTREGS->psa->inttimer);
 
             /* Bit position 23 of the interval timer is decremented
                once for each multiple of 3,333 usecs containded in
@@ -667,7 +667,7 @@ U64     dreg;
             itimer = olditimer - ((residue / 3333) >> 4);
 
             /* Store the timer back */
-            STORE_FW(GUESTREGS->sie_psa->inttimer, itimer);
+            STORE_FW(GUESTREGS->psa->inttimer, itimer);
 
             /* Set interrupt flag and interval timer interrupt pending
                if the interval timer went from positive to negative */
@@ -774,7 +774,7 @@ int     n;
     }
 
     /* Save CPU timer  */
-    STORE_DW(STATEBK->cputimer, get_cpu_timer(GUESTREGS));
+    STORE_DW(STATEBK->cputimer, cpu_timer(GUESTREGS));
 
     /* Save clock comparator */
     STORE_DW(STATEBK->clockcomp, GUESTREGS->clkc << 8);
@@ -790,6 +790,12 @@ int     n;
         else
             STATEBK->s &= ~SIE_S_T;
     }
+
+#ifdef FEATURE_INTERVAL_TIMER
+    /* Save the shadow interval timer */
+    STORE_FW(GUESTREGS->psa->inttimer, int_timer(GUESTREGS));
+#endif
+
 #endif /*!defined(FEATURE_ESAME)*/
 
     /* Save TOD Programmable Field */
@@ -900,6 +906,15 @@ int ARCH_DEP(run_sie) (REGS *regs)
     /* Reset any PER pending indication */
     OFF_IC_PER(GUESTREGS);
 #endif /*defined(_FEATURE_PER)*/
+
+#ifdef FEATURE_INTERVAL_TIMER
+    /* Load the shadow interval timer */
+    {
+    S32 itimer;
+        FETCH_FW(itimer,GUESTREGS->psa->inttimer);
+        set_int_timer(GUESTREGS, itimer);
+    }
+#endif
 
     do {
         SIE_PERFMON(SIE_PERF_RUNLOOP_1);

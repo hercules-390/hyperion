@@ -1152,6 +1152,7 @@ int i;
     regs->arch_mode = sysblk.arch_mode;
     regs->chanset = cpu;
     regs->mainstor = sysblk.mainstor;
+    regs->psa = (PSA*)regs->mainstor;
     regs->storkeys = sysblk.storkeys;
     regs->mainlim = sysblk.mainsize - 1;
     regs->tod_epoch = get_tod_epoch();
@@ -1372,7 +1373,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
          * (e.g. stopped in single step mode
          * or otherwise)
          */
-        saved_timer = get_cpu_timer(regs);
+        saved_timer = cpu_timer(regs);
         regs->ints_state = IC_INITIAL_STATE;
         sysblk.started_mask &= ~BIT(regs->cpuad);
         while (regs->cpustate == CPUSTATE_STOPPED)
@@ -1490,7 +1491,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
              * (e.g. stopped in single step mode
              * or otherwise)
              */
-            saved_timer = get_cpu_timer(regs);
+            saved_timer = cpu_timer(regs);
             sysblk.waiting_mask |= BIT(regs->cpuad);
             while (regs->cpustate == CPUSTATE_STOPPED)
             {

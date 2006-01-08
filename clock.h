@@ -31,12 +31,17 @@ void set_tod_epoch(S64);                /* Set TOD epoch             */
 void ajust_tod_epoch(S64);              /* Adjust TOD epoch          */
 S64 get_tod_epoch(void);                /* Get TOD epoch             */
 U64 hw_clock(void);                     /* Get hardware clock        */ 
+S64 cpu_timer(REGS *);                  /* Retrieve CPU timer        */
 void set_cpu_timer(REGS *, S64);        /* Set CPU timer             */
-S64 get_cpu_timer(REGS *);              /* Retrieve CPU timer        */
-void set_tod_clock(U64);                /* Set TOD clock             */
+S32 int_timer(REGS *);                  /* Get interval timer        */
+void set_int_timer(REGS *, S32);        /* Set interval timer        */
 U64 tod_clock(REGS *);                  /* Get TOD clock             */ 
+void set_tod_clock(U64);                /* Set TOD clock             */
 
 #endif
+
+void ARCH_DEP(store_int_timer) (REGS *);
+void ARCH_DEP(fetch_int_timer) (REGS *);
 
 void ARCH_DEP(set_gross_s_rate) (REGS *);
 void ARCH_DEP(set_fine_s_rate) (REGS *);
@@ -65,11 +70,17 @@ _CLOCK_EXTERN U64 hw_tod;               /* Hardware clock            */
 #define CPU_TIMER(_regs) \
     ((S64)((_regs)->cpu_timer - hw_tod))
 
+#define CPU_TIMER(_regs) \
+    ((S64)((_regs)->cpu_timer - hw_tod))
+
 #define ITIMER_TO_TOD(_units) \
     (625*(_units)/3)
 
 #define TOD_TO_ITIMER(_units) \
     (3*(_units)/625)
+
+#define INT_TIMER(_regs) \
+    ((S32)TOD_TO_ITIMER((S64)((_regs)->int_timer - hw_tod)))
 
 #define ITIMER_ACCESS(_addr) \
     (unlikely(unlikely(_addr) < 84) && ((_addr) >= 80))

@@ -783,7 +783,7 @@ char arch370_flag = 0;
                (clkc_now << 8),format_tod(clock_buf,clkc_now));
 
     if (regs->cpustate != CPUSTATE_STOPPED)
-        logmsg( _("          cpt = %16.16" I64_FMT "X\n"), cpt_now);
+        logmsg( _("          cpt = %16.16" I64_FMT "X\n"), cpt_now << 8);
     else
         logmsg( _("          cpt = not decrementing\n"));
 
@@ -800,13 +800,13 @@ char arch370_flag = 0;
         logmsg( _("         vckc = %16.16" I64_FMT "X    %s\n"), 
                    (vclkc_now << 8),format_tod(clock_buf,vclkc_now));
 
-        logmsg( _("         vcpt = %16.16" I64_FMT "X\n"),vcpt_now);
+        logmsg( _("         vcpt = %16.16" I64_FMT "X\n"),vcpt_now << 8);
     }
 #endif
 
     if (arch370_flag)
     {
-        logmsg( "          itm = %8.8" I32_FMT "X\n", itimer );
+        logmsg( "          itm = %8.8" I32_FMT "X\n", INT_TIMER(regs) );
     }
 
     return 0;

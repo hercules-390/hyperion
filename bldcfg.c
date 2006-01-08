@@ -1996,6 +1996,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
      * (sysblk.pcpu) is not configured (ie cpu_thread not started).
      */
     sysblk.dummyregs.mainstor = sysblk.mainstor;
+    sysblk.dummyregs.psa = (PSA*)sysblk.mainstor;
     sysblk.dummyregs.storkeys = sysblk.storkeys;
     sysblk.dummyregs.mainlim = sysblk.mainsize - 1;
     sysblk.dummyregs.dummy = 1;

@@ -172,6 +172,11 @@ int     rc;
     /* Store the interrupt code in the PSW */
     regs->psw.intcode = code;
 
+#if defined(FEATURE_INTERVAL_TIMER)
+    /* Ensure the interrupt timer is uptodate */
+    STORE_FW(regs->psa->inttimer, int_timer(regs));
+#endif
+
     /* Zero extcpuad field unless extcall or ems signal */
     if(code != EXT_EXTERNAL_CALL_INTERRUPT
     && code != EXT_EMERGENCY_SIGNAL_INTERRUPT)
@@ -351,7 +356,7 @@ U16     cpuad;                          /* Originating CPU address   */
     }
 
     /* External interrupt if TOD clock exceeds clock comparator */
-    if ( TOD_CLOCK(regs) > regs->clkc
+    if ( tod_clock(regs) > regs->clkc
         && sysblk.insttrace == 0
         && sysblk.inststep == 0
         && OPEN_IC_CLKC(regs) )
@@ -484,7 +489,7 @@ PSA     *sspsa;                         /* -> Store status area      */
     sspsa = (void*)(ssreg->mainstor + aaddr);
 
     /* Store CPU timer in bytes 216-223 */
-    STORE_DW(sspsa->storeptmr, get_cpu_timer(ssreg));
+    STORE_DW(sspsa->storeptmr, cpu_timer(ssreg));
 
     /* Store clock comparator in bytes 224-231 */
 #if defined(FEATURE_ESAME)

@@ -160,6 +160,10 @@ int     len2;                           /* Length to end of page     */
     {
         memcpy(MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey),
                src, len + 1);
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(fetch_int_timer)(regs);
+#endif
     }
     else
     {
@@ -196,6 +200,10 @@ BYTE   *main1;                          /* Mainstor address          */
 
     main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
     *main1 = value;
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(fetch_int_timer)(regs);
+#endif
 
 } /* end function ARCH_DEP(vstoreb) */
 
@@ -223,6 +231,10 @@ BYTE   *sk;                             /* Storage key addresses     */
     {
         main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
         STORE_HW (main1, value);
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(fetch_int_timer)(regs);
+#endif
     }
     else
     {
@@ -248,6 +260,10 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
         BYTE *mn;
         mn = MADDR (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
         STORE_HW(mn, value);
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(fetch_int_timer)(regs);
+#endif
     }
     else
         ARCH_DEP(vstore2_full)(value, addr, arn, regs);
@@ -279,6 +295,10 @@ BYTE    temp[4];                        /* Copied value              */
     {
         main1 = MADDR (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
         STORE_FW(main1, value);
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(fetch_int_timer)(regs);
+#endif
     }
     else
     {
@@ -315,6 +335,10 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
         BYTE *mn;
         mn = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
         STORE_FW(mn, value);
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(fetch_int_timer)(regs);
+#endif
     }
     else
         ARCH_DEP(vstore4_full)(value,addr,arn,regs);
@@ -392,6 +416,10 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
         BYTE *mn;
         mn=MADDR(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
         STORE_DW(mn, value);
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(fetch_int_timer)(regs);
+#endif
     }
     else
         ARCH_DEP(vstore8_full)(value,addr,arn,regs);
@@ -423,23 +451,10 @@ int     len2;                           /* Length to copy on page    */
     if ( NOCROSS2K(addr,len) )
     {
 #ifdef FEATURE_INTERVAL_TIMER
-        if (ITIMER_ACCESS(addr) && !regs->mainlock)
-        {
-            update_tod_clock ();
-            obtain_lock( &sysblk.mainlock );
-            regs->mainlock = 2;
-        }
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(store_int_timer)(regs);
 #endif /*FEATURE_INTERVAL_TIMER*/
-
         memcpy (dest, main1, len + 1);
-
-#ifdef FEATURE_INTERVAL_TIMER
-        if (unlikely(regs->mainlock == 2))
-        {
-            regs->mainlock = 0;
-            release_lock( &sysblk.mainlock );
-        }
-#endif /*FEATURE_INTERVAL_TIMER*/
     }
     else
     {
@@ -471,6 +486,10 @@ _VSTORE_C_STATIC BYTE ARCH_DEP(vfetchb) (VADR addr, int arn,
 {
 BYTE   *mn;                           /* Main storage address      */
 
+#ifdef FEATURE_INTERVAL_TIMER
+    if( ITIMER_ACCESS(addr) )
+        ARCH_DEP(store_int_timer)(regs);
+#endif /*FEATURE_INTERVAL_TIMER*/
     mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
     return *mn;
 } /* end function ARCH_DEP(vfetchb) */
@@ -498,6 +517,10 @@ BYTE   *main1, *main2;                  /* Main storage addresses    */
 
     if( (addr & 0x7FF) < 0x7FF)
     {
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(store_int_timer)(regs);
+#endif /*FEATURE_INTERVAL_TIMER*/
         return fetch_hw (main1);
     }
 
@@ -512,6 +535,10 @@ _VSTORE_C_STATIC U16 ARCH_DEP(vfetch2) (VADR addr, int arn, REGS *regs)
     if(likely(!(addr & 0x01)) || ((addr & 0x7ff) !=0x7ff ))
     {
         BYTE *mn;
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(store_int_timer)(regs);
+#endif /*FEATURE_INTERVAL_TIMER*/
         mn = MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
         return fetch_hw(mn);
     }
@@ -544,8 +571,8 @@ BYTE    temp[4];                        /* Copy destination          */
     if ((addr & 0x7FF) <= 0x7FC)
     {
 #ifdef FEATURE_INTERVAL_TIMER
-        if (ITIMER_ACCESS(addr))
-            update_tod_clock ();
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(store_int_timer)(regs);
 #endif /*FEATURE_INTERVAL_TIMER*/
         return fetch_fw(main1);
     }
@@ -570,13 +597,13 @@ BYTE    temp[4];                        /* Copy destination          */
 
 _VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn, REGS *regs)
 {
-    if ( (likely(!(addr & 0x03)) || ((addr & 0x7ff) <= 0x7fc ))
-#if defined(FEATURE_INTERVAL_TIMER)
-     && !ITIMER_ACCESS(addr)
-#endif
-       )
+    if ( (likely(!(addr & 0x03)) || ((addr & 0x7ff) <= 0x7fc )))
     {
         BYTE *mn;
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(store_int_timer)(regs);
+#endif /*FEATURE_INTERVAL_TIMER*/
         mn=MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
         return fetch_fw(mn);
     }
@@ -611,8 +638,8 @@ BYTE    temp[8];                        /* Copy destination          */
     if ((addr & 0x7FF) <= 0x7F8)
     {
 #ifdef FEATURE_INTERVAL_TIMER
-        if (ITIMER_ACCESS(addr))
-            update_tod_clock ();
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(store_int_timer)(regs);
 #endif /*FEATURE_INTERVAL_TIMER*/
         return fetch_dw(main1);
     }
@@ -652,6 +679,10 @@ _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
     if(likely(!(addr & 0x07)) || ((addr & 0x7ff) <= 0x7f8 ))
     {
         BYTE *mn;
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(store_int_timer)(regs);
+#endif /*FEATURE_INTERVAL_TIMER*/
         mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
         return fetch_dw(mn);
     }
@@ -815,12 +846,21 @@ BYTE   *source1, *source2;              /* Source addresses          */
 BYTE   *sk1, *sk2;                      /* Storage key addresses     */
 int     len2, len3;                     /* Lengths to copy           */
 
+#ifdef FEATURE_INTERVAL_TIMER
+    if( ITIMER_ACCESS(addr2) )
+        ARCH_DEP(store_int_timer)(regs);
+#endif /*FEATURE_INTERVAL_TIMER*/
+
     /* Quick out if copying just 1 byte */
     if (unlikely(len == 0))
     {
         source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
         dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE, key1);
         *dest1 = *source1;
+#ifdef FEATURE_INTERVAL_TIMER
+        if( ITIMER_ACCESS(addr1) )
+            ARCH_DEP(fetch_int_timer)(regs);
+#endif /*FEATURE_INTERVAL_TIMER*/
         return;
     }
 
@@ -837,19 +877,6 @@ int     len2, len3;                     /* Lengths to copy           */
      *     (b) dest boundary crossed first
      *     (c) source boundary crossed first
      */
-
-#ifdef FEATURE_INTERVAL_TIMER
-    if (ITIMER_ACCESS(addr2) && !regs->mainlock)
-    {
-        update_tod_clock ();
-        obtain_lock (&sysblk.mainlock);
-        regs->mainlock = 2;
-        /* If a program check occurs during address translation
-         * (when a boundary is crossed), then program_interrupt
-         * must release the todlock for us.
-         */
-    }
-#endif /* FEATURE_INTERVAL_TIMER */
 
     if ( NOCROSS2K(addr1,len) )
     {
@@ -916,12 +943,9 @@ int     len2, len3;                     /* Lengths to copy           */
     }
 
 #ifdef FEATURE_INTERVAL_TIMER
-    if (unlikely(regs->mainlock == 2))
-    {
-        regs->mainlock = 0;
-        release_lock (&sysblk.mainlock);
-    }
-#endif /* FEATURE_INTERVAL_TIMER */
+        if( ITIMER_ACCESS(addr1) )
+            ARCH_DEP(fetch_int_timer)(regs);
+#endif /*FEATURE_INTERVAL_TIMER*/
 
 } /* end function ARCH_DEP(move_chars) */
 
@@ -957,6 +981,11 @@ _VSTORE_C_STATIC void ARCH_DEP(validate_operand) (VADR addr, int arn,
         MADDR ((addr + len) & ADDRESS_MAXWRAP(regs),
                arn, regs, acctype, regs->psw.pkey);
     }
+#ifdef FEATURE_INTERVAL_TIMER
+    else
+        if( ITIMER_ACCESS(addr) )
+            ARCH_DEP(store_int_timer)(regs);
+#endif /*FEATURE_INTERVAL_TIMER*/
 } /* end function ARCH_DEP(validate_operand) */
 
 #endif /*!defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C)*/

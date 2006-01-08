@@ -4568,6 +4568,9 @@ RADR    n;                              /* Prefix value              */
     /* Load new value into prefix register */
     regs->PX = n;
 
+    /* Set pointer to active PSA structure */
+    regs->psa = (PSA_3XX*)(regs->mainstor + regs->PX);
+
     /* Invalidate the ALB and TLB */
     ARCH_DEP(purge_tlb) (regs);
 #if defined(FEATURE_ACCESS_REGISTERS)
@@ -6144,7 +6147,7 @@ S64     dreg;                           /* Double word workarea      */
     obtain_lock(&sysblk.intlock);
 
     /* Save the CPU timer value */
-    dreg = get_cpu_timer(regs);
+    dreg = cpu_timer(regs);
 
     /* reset the cpu timer pending flag according to its value */
     if( CPU_TIMER(regs) < 0 )

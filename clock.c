@@ -250,7 +250,7 @@ void set_cpu_timer(REGS *regs, S64 timer)
 }
 
 
-S64 get_cpu_timer(REGS *regs)
+S64 cpu_timer(REGS *regs)
 {
 S64 timer;
     timer = (regs->cpu_timer - hw_clock()) << 8;
@@ -282,8 +282,7 @@ U64 current_tod;
 }
 
 
-#if 0
-S32 get_int_timer(REGS *regs)
+S32 int_timer(REGS *regs)
 {
     return (S32)TOD_TO_ITIMER(regs->int_timer - hw_clock());
 }
@@ -292,8 +291,20 @@ S32 get_int_timer(REGS *regs)
 void set_int_timer(REGS *regs, S32 itimer)
 {
     regs->int_timer = ITIMER_TO_TOD(itimer) + hw_clock();
+    regs->old_timer = itimer;
 }
-#endif
+
+
+static inline void chk_int_timer(REGS *regs)
+{
+S32 itimer;
+    itimer = int_timer(regs);
+    obtain_lock(&sysblk.intlock);
+    if(itimer < 0 && regs->old_timer >= 0)
+        ON_IC_ITIMER(regs);
+    release_lock(&sysblk.intlock);
+    regs->old_timer = itimer;
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -349,16 +360,11 @@ U64 new_clock,
 #endif
 
 
-#if defined(FEATURE_INTERVAL_TIMER) && 0
+#if defined(FEATURE_INTERVAL_TIMER)
 void ARCH_DEP(store_int_timer) (REGS *regs)
 {
-S32 itimer;
-    itimer = get_int_timer(regs);
-    STORE_FW(regs->psa->inttimer, itimer);
-    obtain_lock(&sysblk.intlock);
-    if(itimer < 0)
-        ON_IC_ITIMER(regs);
-    release_lock(&sysblk.intlock);
+    STORE_FW(regs->psa->inttimer, int_timer(regs));
+    chk_int_timer(regs);
 }
 
 
@@ -367,10 +373,6 @@ void ARCH_DEP(fetch_int_timer) (REGS *regs)
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
     set_int_timer(regs, itimer);
-    obtain_lock(&sysblk.intlock);
-    if(itimer < 0)
-        ON_IC_ITIMER(regs);
-    release_lock(&sysblk.intlock);
 }
 #endif
 

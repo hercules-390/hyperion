@@ -164,7 +164,6 @@ int ARCH_DEP(load_ipl) (U16 devnum, int cpu, int clear)
 {
 REGS   *regs;                           /* -> Regs                   */
 DEVBLK *dev;                            /* -> Device control block   */
-PSA    *psa;                            /* -> Prefixed storage area  */
 int     i;                              /* Array subscript           */
 BYTE    unitstat;                       /* IPL device unit status    */
 BYTE    chanstat;                       /* IPL device channel status */
@@ -195,23 +194,20 @@ BYTE    chanstat;                       /* IPL device channel status */
         return -1;
     }
 
-    /* Point to the PSA in main storage */
-    psa = (PSA*)(regs->mainstor + regs->PX);
-
     /* Set Main Storage Reference and Update bits */
     STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
     sysblk.main_clear = sysblk.xpnd_clear = 0;
 
     /* Build the IPL CCW at location 0 */
-    psa->iplpsw[0] = 0x02;              /* CCW command = Read */
-    psa->iplpsw[1] = 0;                 /* Data address = zero */
-    psa->iplpsw[2] = 0;
-    psa->iplpsw[3] = 0;
-    psa->iplpsw[4] = CCW_FLAGS_CC | CCW_FLAGS_SLI;
+    regs->psa->iplpsw[0] = 0x02;              /* CCW command = Read */
+    regs->psa->iplpsw[1] = 0;                 /* Data address = zero */
+    regs->psa->iplpsw[2] = 0;
+    regs->psa->iplpsw[3] = 0;
+    regs->psa->iplpsw[4] = CCW_FLAGS_CC | CCW_FLAGS_SLI;
                                         /* CCW flags */
-    psa->iplpsw[5] = 0;                 /* Reserved byte */
-    psa->iplpsw[6] = 0;                 /* Byte count = 24 */
-    psa->iplpsw[7] = 24;
+    regs->psa->iplpsw[5] = 0;                 /* Reserved byte */
+    regs->psa->iplpsw[6] = 0;                 /* Byte count = 24 */
+    regs->psa->iplpsw[7] = 24;
 
     /* Enable the subchannel for the IPL device */
     dev->pmcw.flag5 |= PMCW5_E;
@@ -262,12 +258,12 @@ BYTE    chanstat;                       /* IPL device channel status */
 
 #ifdef FEATURE_S370_CHANNEL
     /* Test the EC mode bit in the IPL PSW */
-    if (psa->iplpsw[1] & 0x08) {
+    if (regs->psa->iplpsw[1] & 0x08) {
         /* In EC mode, store device address at locations 184-187 */
-        STORE_FW(psa->ioid, dev->devnum);
+        STORE_FW(regs->psa->ioid, dev->devnum);
     } else {
         /* In BC mode, store device address at locations 2-3 */
-        STORE_HW(psa->iplpsw + 2, dev->devnum);
+        STORE_HW(regs->psa->iplpsw + 2, dev->devnum);
     }
 #endif /*FEATURE_S370_CHANNEL*/
 
@@ -275,12 +271,12 @@ BYTE    chanstat;                       /* IPL device channel status */
     /* Set LPUM */
     dev->pmcw.lpum = 0x80;
     /* Store X'0001' + subchannel number at locations 184-187 */
-    psa->ioid[0] = 0;
-    psa->ioid[1] = 1;
-    STORE_HW(psa->ioid + 2, dev->subchan);
+    regs->psa->ioid[0] = 0;
+    regs->psa->ioid[1] = 1;
+    STORE_HW(regs->psa->ioid + 2, dev->subchan);
 
     /* Store zeroes at locations 188-191 */
-    memset (psa->ioparm, 0, 4);
+    memset (regs->psa->ioparm, 0, 4);
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Save IPL device number and cpu number */
@@ -395,21 +391,19 @@ int     rc, rx;                         /* Return codes (work)       */
 /*-------------------------------------------------------------------*/
 static int ARCH_DEP(common_load_finish) (REGS *regs)
 {
-    /* Point to Prefixed Storage Area (PSA) in main storage */
-    PSA* psa = (PSA*)(regs->mainstor + regs->PX);
-
     /* Zeroize the interrupt code in the PSW */
     regs->psw.intcode = 0;
 
     /* Load IPL PSW from PSA+X'0' */
-    if (ARCH_DEP(load_psw) (regs, psa->iplpsw) != 0)
+    if (ARCH_DEP(load_psw) (regs, regs->psa->iplpsw) != 0)
     {
         logmsg (_("HHCCP030E %s mode IPL failed: Invalid IPL PSW: "
                 "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
                 get_arch_mode_string(regs),
-                psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
-                psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
-                psa->iplpsw[6], psa->iplpsw[7]);
+                regs->psa->iplpsw[0], regs->psa->iplpsw[1],
+                regs->psa->iplpsw[2], regs->psa->iplpsw[3],
+                regs->psa->iplpsw[4], regs->psa->iplpsw[5],
+                regs->psa->iplpsw[6], regs->psa->iplpsw[7]);
         HDC1(debug_cpu_state, regs);
         return -1;
     }
@@ -475,6 +469,14 @@ int             i;                      /* Array subscript           */
         ON_IC_INTERRUPT(regs);
     }
 
+#ifdef FEATURE_INTERVAL_TIMER
+    {
+    S32 itimer;
+        FETCH_FW(itimer, regs->psa->inttimer);
+        set_int_timer(regs,itimer);
+    }
+#endif
+
 #if defined(_FEATURE_SIE)
    if(regs->guestregs)
    {
@@ -508,6 +510,7 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     regs->todpr  = 0;
     regs->clkc   = 0;
     set_cpu_timer(regs, 0);
+    set_int_timer(regs, 0);
 
     /* The breaking event address register is initialised to 1 */
     regs->bear = 1;

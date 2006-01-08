@@ -41,6 +41,8 @@ struct REGS {                           /* Processor registers       */
         DW      et;                     /* Execute Target address    */
 
         S64     cpu_timer;              /* CPU timer epoch           */
+        S64     int_timer;              /* S/370 Interval timer      */
+        S32     old_timer;              /* S/370 Interval timer int  */
         U64     clkc;                   /* 0-7=Clock comparator epoch,
                                            8-63=Comparator bits 0-55 */
         S64     tod_epoch;              /* TOD epoch for this CPU    */
@@ -122,7 +124,7 @@ struct REGS {                           /* Processor registers       */
                                            register context          */
         REGS   *guestregs;              /* Pointer to the guest
                                            register context          */
-        PSA_3XX *sie_psa;               /* PSA of guest CPU          */
+        PSA_3XX *psa;                   /* PSA of guest CPU          */
         RADR    sie_px;                 /* Host address of guest px  */
         RADR    sie_mso;                /* Main Storage Origin       */
         RADR    sie_xso;                /* eXpanded Storage Origin   */
