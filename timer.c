@@ -28,7 +28,6 @@ void update_cpu_timer(U64 tod_delta)
 {
 int             cpu;                    /* CPU counter               */
 REGS           *regs;                   /* -> CPU register context   */
-PSA_3XX        *psa;                    /* -> Prefixed storage area  */
 S32             itimer;                 /* Interval timer value      */
 #if defined(OPTION_MIPS_COUNTING) && ( defined(_FEATURE_SIE) || defined(_FEATURE_ECPSVM) )
 S32             itimer_diff;            /* TOD difference in TU      */
