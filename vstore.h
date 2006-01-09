@@ -201,8 +201,8 @@ BYTE   *main1;                          /* Mainstor address          */
     main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
     *main1 = value;
 #ifdef FEATURE_INTERVAL_TIMER
-        if( ITIMER_ACCESS(addr,1-1) )
-            ARCH_DEP(fetch_int_timer)(regs);
+    if( ITIMER_ACCESS(addr,1-1) )
+        ARCH_DEP(fetch_int_timer)(regs);
 #endif
 
 } /* end function ARCH_DEP(vstoreb) */
@@ -947,8 +947,8 @@ int     len2, len3;                     /* Lengths to copy           */
     }
 
 #ifdef FEATURE_INTERVAL_TIMER
-        if( ITIMER_ACCESS(addr1,len) )
-            ARCH_DEP(fetch_int_timer)(regs);
+    if( ITIMER_ACCESS(addr1,len) )
+        ARCH_DEP(fetch_int_timer)(regs);
 #endif /*FEATURE_INTERVAL_TIMER*/
 
 } /* end function ARCH_DEP(move_chars) */
