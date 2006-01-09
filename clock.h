@@ -82,5 +82,5 @@ _CLOCK_EXTERN U64 hw_tod;               /* Hardware clock            */
 #define INT_TIMER(_regs) \
     ((S32)TOD_TO_ITIMER((S64)((_regs)->int_timer - hw_tod)))
 
-#define ITIMER_ACCESS(_addr) \
-    (unlikely(unlikely(_addr) < 84) && ((_addr) >= 80))
+#define ITIMER_ACCESS(_addr, _len) \
+    (unlikely(unlikely(((_addr) + (_len)) < 84) && ((_addr) >= 80)))
