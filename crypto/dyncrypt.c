@@ -269,7 +269,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
     ARCH_DEP(vfetchc)(buffer, 63, GR_A(r2, regs), r2, regs);
 
 #ifdef OPTION_KIMD_DEBUG
-    LOGBYTE2("  input :", buffer, 16, 4);
+    LOGBYTE2("input :", buffer, 16, 4);
 #endif
 
     sha1_process(&context, buffer);
@@ -350,7 +350,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
     ARCH_DEP(vfetchc)(buffer, 63, GR_A(r2, regs), r2, regs);
 
 #ifdef OPTION_KIMD_DEBUG
-    LOGBYTE2("  input :", buffer, 16, 4);
+    LOGBYTE2("input :", buffer, 16, 4);
 #endif
 
     sha256_process(&context, buffer);
