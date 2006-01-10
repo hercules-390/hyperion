@@ -46,6 +46,9 @@ struct REGS {                           /* Processor registers       */
         U64     clkc;                   /* 0-7=Clock comparator epoch,
                                            8-63=Comparator bits 0-55 */
         S64     tod_epoch;              /* TOD epoch for this CPU    */
+        S64     ecps_vtimer;            /* ECPS Virtual Int. timer   */
+        S32     ecps_oldtmr;            /* ECPS Virtual Int. tmr int */
+        FW     *ecps_vtmrpt;            /* Pointer to VTMR or zero   */
         U64     instcount;              /* Instruction counter       */
         U64     prevcount;              /* Previous instruction count*/
         U32     mipsrate;               /* Instructions per second   */

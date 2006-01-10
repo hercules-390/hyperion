@@ -779,24 +779,21 @@ int     n;
     /* Save clock comparator */
     STORE_DW(STATEBK->clockcomp, GUESTREGS->clkc << 8);
 
-#if !defined(FEATURE_ESAME)
+#if defined(_FEATURE_INTERVAL_TIMER) && !defined(FEATURE_ESAME)
     /* If this is a S/370 guest, and the interval timer is enabled
        then save the timer state control bit */
     if( (STATEBK->m & SIE_M_370)
      && !(STATEBK->m & SIE_M_ITMOF))
     {
+        /* Save the shadow interval timer */
+        s370_store_int_timer(regs);
+
         if(IS_IC_ITIMER(GUESTREGS))
             STATEBK->s |= SIE_S_T;
         else
             STATEBK->s &= ~SIE_S_T;
     }
-
-#ifdef FEATURE_INTERVAL_TIMER
-    /* Save the shadow interval timer */
-    STORE_FW(GUESTREGS->psa->inttimer, int_timer(GUESTREGS));
-#endif
-
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*defined(_FEATURE_INTERVAL_TIMER) && !defined(FEATURE_ESAME)*/
 
     /* Save TOD Programmable Field */
     STORE_HW(STATEBK->todpf, GUESTREGS->todpr);
