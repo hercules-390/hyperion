@@ -393,19 +393,8 @@ void ARCH_DEP(store_int_timer) (REGS *regs)
 {
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
-    /*
-     * FIXME ????
-     * THIS DOESN'T LOOK RIGHT :
-     *   By doing this, looking at location X'50' has
-     *   the effect of reseting the interval timer
-     *   to the value to which it was last set, since
-     *   the interval timer at location X'50'
-     *   is no longer updated by the timer thread
-     */
-    /*
     if(itimer != regs->old_timer)
         set_int_timer(regs, itimer);
-    */
     STORE_FW(regs->psa->inttimer, int_timer(regs));
 #if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
