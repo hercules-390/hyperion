@@ -2990,18 +2990,6 @@ DEF_INST(divide_bfp_short)
     }
 }
 
-/*
- * B38C EFPC  - EXTRACT FPC                                    [RRE]
- */
-DEF_INST(extract_floating_point_control_register)
-{
-    int r1, unused;
-
-    RRE(inst, regs, r1, unused);
-    //logmsg("EFPC r1=%d\n", r1);
-
-    regs->GR_L(r1) = regs->fpc;
-}
 
 /*
  * B342 LTXBR - LOAD AND TEST (extended BFP)                   [RRE]
