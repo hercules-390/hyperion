@@ -315,7 +315,6 @@ S32 int_timer(REGS *regs)
 
 void set_int_timer(REGS *regs, S32 itimer)
 {
-    logmsg("SETINT : %8.8X\n",itimer);
     regs->int_timer = ITIMER_TO_TOD(itimer) + hw_clock();
     regs->old_timer = itimer;
 }
@@ -328,7 +327,6 @@ S32 itimer;
     obtain_lock(&sysblk.intlock);
     if(itimer < 0 && regs->old_timer >= 0)
         ON_IC_ITIMER(regs);
-    logmsg("CHKINT : %8.8X\n",itimer);
     regs->old_timer = itimer;
 #if defined(_FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
@@ -416,7 +414,6 @@ S32 itimer;
         set_int_timer(regs, itimer);
     */
     STORE_FW(regs->psa->inttimer, INT_TIMER(regs));
-    logmsg("STOREINT : CUR %8.8X\n",INT_TIMER(regs));
 #if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
     {
@@ -434,7 +431,6 @@ void ARCH_DEP(fetch_int_timer) (REGS *regs)
 {
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
-    logmsg("FETCH : %8.8X\n",itimer);
     set_int_timer(regs, itimer);
 #if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
