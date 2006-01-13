@@ -1985,7 +1985,7 @@ DLL_EXPORT zz_func opcode_01xx[256][GEN_MAXARCH] = {
  /*01FC*/ GENx___x___x___ ,
  /*01FD*/ GENx___x___x___ ,
  /*01FE*/ GENx___x___x___ ,
- /*01FF*/ GENx___x390x900 (trap2,E,"TRAP") };
+ /*01FF*/ GENx___x390x900 (trap2,E,"TRAP2") };
 
 
 // #if defined(FEATURE_ESAME)
@@ -2547,7 +2547,7 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2FC*/ GENx___x___x___ ,
  /*B2FD*/ GENx___x___x___ ,
  /*B2FE*/ GENx___x___x___ ,
- /*B2FF*/ GENx___x390x900 (trap4,S,"TRAP") };
+ /*B2FF*/ GENx___x390x900 (trap4,S,"TRAP4") };
 
 
 // #if defined(FEATURE_BASIC_FP_EXTENSIONS)
@@ -2749,13 +2749,31 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B3C1*/ GENx___x___x___ ,
  /*B3C2*/ GENx___x___x___ ,
  /*B3C3*/ GENx___x___x___ ,
- /*B3C4*/ GENx___x___x900 (dummy_instruction,RRE,"CEGR"),
- /*B3C5*/ GENx___x___x900 (dummy_instruction,RRE,"CDGR"),
- /*B3C6*/ GENx___x___x900 (dummy_instruction,RRE,"CXGR"),
+
+
+ /* The following instructions haven't been coded yet */
+
+ /*B3C4   GENx___x___x900 (dummy_instruction,RRE,"CEGR"),*/
+          GENx___x___x___ ,
+
+ /*B3C5   GENx___x___x900 (dummy_instruction,RRE,"CDGR"),*/
+          GENx___x___x___ ,
+
+ /*B3C6   GENx___x___x900 (dummy_instruction,RRE,"CXGR"),*/
+          GENx___x___x___ ,
+
  /*B3C7*/ GENx___x___x___ ,
- /*B3C8*/ GENx___x___x900 (dummy_instruction,RRF_R,"CGER"),
- /*B3C9*/ GENx___x___x900 (dummy_instruction,RRF_R,"CGDR"),
- /*B3CA*/ GENx___x___x900 (dummy_instruction,RRF_R,"CGXR"),
+
+ /*B3C8   GENx___x___x900 (dummy_instruction,RRF_M,"CGER"),*/
+          GENx___x___x___ ,
+
+ /*B3C9   GENx___x___x900 (dummy_instruction,RRF_M,"CGDR"),*/
+          GENx___x___x___ ,
+
+ /*B3CA   GENx___x___x900 (dummy_instruction,RRF_M,"CGXR"),*/
+          GENx___x___x___ ,
+
+
  /*B3CB*/ GENx___x___x___ ,
  /*B3CC*/ GENx___x___x___ ,
  /*B3CD*/ GENx___x___x___ ,
@@ -3005,7 +3023,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9BB*/ GENx___x___x___ ,
  /*B9BC*/ GENx___x___x___ ,
  /*B9BD*/ GENx___x___x___ ,
- /*B9BE*/ GENx___x___x900 (search_string_unicode,SS_L,"SRSTU"),
+ /*B9BE*/ GENx___x___x900 (search_string_unicode,RRE,"SRSTU"),
  /*B9BF*/ GENx___x___x___ ,
  /*B9C0*/ GENx___x___x___ ,
  /*B9C1*/ GENx___x___x___ ,
