@@ -228,6 +228,8 @@ struct _ECPSVM_SASTATS
     BYTE micevma2; \
     BYTE micevma3; \
     BYTE micevma4; \
+    if(SIE_STATE(regs)) \
+        return 1; \
     if(!PROBSTATE(&regs->psw)) \
     { \
           return(1); \
