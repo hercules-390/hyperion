@@ -2891,14 +2891,14 @@ int     i;
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/* 20   LPDR  - Load Positive Floating Point Long Register     [RRE] */
+/* 20   LPDR  - Load Positive Floating Point Long Register      [RR] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_positive_float_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;
 
-    RRE(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
     i2 = FPR2I(r2);
@@ -2914,14 +2914,14 @@ int     i1, i2;
 
 
 /*-------------------------------------------------------------------*/
-/* 21   LNDR  - Load Negative Floating Point Long Register     [RRE] */
+/* 21   LNDR  - Load Negative Floating Point Long Register      [RR] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_negative_float_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;
 
-    RRE(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
     i2 = FPR2I(r2);
@@ -2938,14 +2938,14 @@ int     i1, i2;
 
 
 /*-------------------------------------------------------------------*/
-/* 22   LTDR  - Load and Test Floating Point Long Register     [RRE] */
+/* 22   LTDR  - Load and Test Floating Point Long Register      [RR] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_test_float_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;
 
-    RRE(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
     i2 = FPR2I(r2);
@@ -2965,14 +2965,14 @@ int     i1, i2;
 
 
 /*-------------------------------------------------------------------*/
-/* 23   LCDR  - Load Complement Floating Point Long Register   [RRE] */
+/* 23   LCDR  - Load Complement Floating Point Long Register    [RR] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_complement_float_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;
 
-    RRE(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
     i2 = FPR2I(r2);
