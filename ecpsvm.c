@@ -190,16 +190,6 @@ struct _ECPSVM_SASTATS
     VALIDATE_AIA(regs); \
 } while(0)
 
-#if defined(_FEATURE_SIE)
-#define INITSIESTATE(_regs)       \
-    do {                          \
-        SIE_STATE(&(_regs)) = 0;  \
-        (_regs).sie_mode = 0;     \
-    } while(0)
-#else
-#define INITSIESTATE(_regs)
-#endif
-
 #define INITPSEUDOIP(_regs) \
     do {    \
         (_regs).ip="\0\0";  \
@@ -207,7 +197,6 @@ struct _ECPSVM_SASTATS
 
 #define INITPSEUDOREGS(_regs) \
     do { \
-        INITSIESTATE((_regs)); \
         INITPSEUDOIP((_regs)); \
     } while(0)
 

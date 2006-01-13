@@ -285,7 +285,7 @@ U64 current_tod;
 #if defined(_FEATURE_INTERVAL_TIMER)
 
 
-#if defined(_FEATURE_ECPSVM) && 0
+#if defined(_FEATURE_ECPSVM)
 static inline S32 ecps_vtimer(REGS *regs)
 {
     return (S32)TOD_TO_ITIMER(regs->ecps_vtimer - hw_clock());
@@ -320,12 +320,17 @@ S32 itimer;
     obtain_lock(&sysblk.intlock);
     if(itimer < 0 && regs->old_timer >= 0)
         ON_IC_ITIMER(regs);
-#if defined(_FEATURE_ECPSVM) && 0
-// ZZ INCOMPLETE ADD VTIMER CHECK
-// ZZ MAYBE WE SHOULD USE A CPUINT BIT FOR THE VTIMER
+    regs->old_timer = itimer;
+#if defined(_FEATURE_ECPSVM)
+    if(regs->ecps_vtmrpt)
+    {
+        itimer = ecps_vtimer(regs);
+        if(itimer < 0 && regs->ecps_oldtmr >= 0)
+            ON_IC_ECPSVTIMER(regs);
+        regs->ecps_oldtmr = itimer;
+    }
 #endif /*defined(_FEATURE_ECPSVM)*/
     release_lock(&sysblk.intlock);
-    regs->old_timer = itimer;
 }
 #endif /*defined(_FEATURE_INTERVAL_TIMER)*/
 
@@ -389,20 +394,14 @@ void ARCH_DEP(store_int_timer) (REGS *regs)
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
     if(itimer != regs->old_timer)
-    {
-        set_int_timer(regs, itimer - 0x100);
-        regs->old_timer = itimer;
-    }
+        set_int_timer(regs, itimer);
     STORE_FW(regs->psa->inttimer, int_timer(regs));
-#if defined(FEATURE_ECPSVM) && 0
+#if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
     {
-        FETCH_FW(itimer, regs->ecps_vtmrpt)
+        FETCH_FW(itimer, regs->ecps_vtmrpt);
         if(itimer != regs->ecps_oldtmr)
-        {
-            set_ecps_vtimer(regs, itimer - 0x100);
-            regs->ecps_oldtmr = itimer;
-        }
+            set_ecps_vtimer(regs, itimer);
         STORE_FW(regs->ecps_vtmrpt, ecps_vtimer(regs));
     }
 #endif /*defined(FEATURE_ECPSVM)*/
@@ -415,11 +414,11 @@ void ARCH_DEP(fetch_int_timer) (REGS *regs)
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
     set_int_timer(regs, itimer);
-#if defined(FEATURE_ECPSVM) && 0
+#if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
     {
-        FETCH_FW(itimer, regs->vtmrpt)
-        set_ecps_vtimer(regs, itimer)
+        FETCH_FW(itimer, regs->ecps_vtmrpt);
+        set_ecps_vtimer(regs, itimer);
     }
 #endif /*defined(FEATURE_ECPSVM)*/
 }

@@ -5,7 +5,7 @@
  Floating interrupts are made pending to all CPUs, and are 
  recorded in the sysblk structure, CPU specific interrupts
  are recorded in the regs structure.
- hi0m mmmm pppp p00p xxxx xxx0 xxxx hhhs : type U32
+ hi0m mmmm pppp p00p xxxx xxxx xxxx hhhs : type U32
  || | |||| |||| |--| |||| |||| |||| ||||   h:mask  is always '1'
  || | |||| |||| |  | |||| |||| |||| ||||   s:state is always '1'
  || | |||| |||| |  | |||| |||| |||| |||+--> '1' : PSW_WAIT
@@ -18,7 +18,7 @@
  || | |||| |||| |  | |||| |||| |+---------> '1' : INTKEY
  || | |||| |||| |  | |||| |||| +----------> '1' : ITIMER
  || | |||| |||| |  | |||| ||||
- || | |||| |||| |  | |||| |||+------------> '1' : ECPS VTIMER (NOT YET IN USE)
+ || | |||| |||| |  | |||| |||+------------> '1' : ECPS VTIMER
  || | |||| |||| |  | |||| ||+-------------> '1' : SERVSIG
  || | |||| |||| |  | |||| |+--------------> '1' : PTIMER
  || | |||| |||| |  | |||| +---------------> '1' : CLKC
@@ -88,7 +88,7 @@
 #define IC_CLKC            11 /* 0x00000800 - Architecture dependent (CR0) */
 #define IC_PTIMER          10 /* 0x00000400 - Architecture dependent (CR0) */
 #define IC_SERVSIG          9 /* 0x00000200 - Architecture dependent (CR0) */
-#define IC_UNUSED_8         8 /* 0x00000100 */
+#define IC_ECPSVTIMER       8 /* 0x00000100 - Not Architecture dependent */
 #define IC_ITIMER           7 /* 0x00000080 - Architecture dependent (CR0) */
 #define IC_INTKEY           6 /* 0x00000040 - Architecture dependent (CR0) */
 #define IC_EXTSIG           5 /* 0x00000020 - Architecture dependent (CR0) */
@@ -120,6 +120,7 @@
                          | BIT(IC_CLKC) \
                          | BIT(IC_PTIMER) \
                          | BIT(IC_SERVSIG) \
+                         | BIT(IC_ECPSVTIMER) \
                          | BIT(IC_ITIMER) \
                          | BIT(IC_INTKEY) \
                          | BIT(IC_EXTSIG) \
@@ -352,6 +353,14 @@
      (_regs)->ints_state |= BIT(IC_PTIMER); \
  } while (0)
 
+#define ON_IC_ECPSVTIMER(_regs) \
+ do { \
+   if ( (_regs)->ints_mask & BIT(IC_ECPSVTIMER) ) \
+     (_regs)->ints_state |= BIT(IC_INTERRUPT) | BIT(IC_ECPSVTIMER); \
+   else \
+     (_regs)->ints_state |= BIT(IC_ECPSVTIMER); \
+ } while (0)
+
 #define ON_IC_CLKC(_regs) \
  do { \
    if ( (_regs)->ints_mask & BIT(IC_CLKC) ) \
@@ -516,6 +525,11 @@
    (_regs)->ints_state &= ~BIT(IC_PTIMER); \
  } while (0)
 
+#define OFF_IC_ECPSVTIMER(_regs) \
+ do { \
+   (_regs)->ints_state &= ~BIT(IC_ECPSVTIMER); \
+ } while (0)
+
 #define OFF_IC_CLKC(_regs) \
  do { \
    (_regs)->ints_state &= ~BIT(IC_CLKC); \
@@ -587,6 +601,7 @@
 #define IS_IC_SERVSIG           ( sysblk.ints_state   & BIT(IC_SERVSIG)   )
 #define IS_IC_ITIMER(_regs)     ( (_regs)->ints_state & BIT(IC_ITIMER)    )
 #define IS_IC_PTIMER(_regs)     ( (_regs)->ints_state & BIT(IC_PTIMER)    )
+#define IS_IC_ECPSVTIMER(_regs) ( (_regs)->ints_state & BIT(IC_ECPSVTIMER))
 #define IS_IC_CLKC(_regs)       ( (_regs)->ints_state & BIT(IC_CLKC)      )
 #define IS_IC_EXTCALL(_regs)    ( (_regs)->ints_state & BIT(IC_EXTCALL)   )
 #define IS_IC_MALFALT(_regs)    ( (_regs)->ints_state & BIT(IC_MALFALT)   )
@@ -642,6 +657,9 @@
 
 #define OPEN_IC_PTIMER(_regs) \
                         ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_PTIMER) )
+
+#define OPEN_IC_ECPSVTIMER(_regs) \
+                        ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_ECPSVTIMER) )
 
 #define OPEN_IC_CLKC(_regs) \
                         ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_CLKC) )

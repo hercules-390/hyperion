@@ -43,6 +43,10 @@
  #define _FEATURE_INTERVAL_TIMER
 #endif
 
+#if defined(FEATURE_ECPSVM)
+ #define _FEATURE_ECPSVM
+#endif
+
 #if defined(FEATURE_VECTOR_FACILITY)
  #define _FEATURE_VECTOR_FACILITY
 #endif
