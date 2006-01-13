@@ -302,7 +302,7 @@ static inline void set_ecps_vtimer(REGS *regs, S32 vtimer)
 
 S32 int_timer(REGS *regs)
 {
-    return (S32)TOD_TO_ITIMER((S64)(regs->int_timer) - hw_clock());
+    return (S32)TOD_TO_ITIMER((S64)(regs->int_timer - hw_clock()));
 }
 
 
