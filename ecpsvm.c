@@ -314,6 +314,7 @@ VADR    effective_addr1, \
         effective_addr2; \
      SSE(inst, regs, b1, effective_addr1, b2, effective_addr2); \
      PRIV_CHECK(regs); \
+     SIE_INTERCEPT(regs); \
      if(!sysblk.ecpsvm.available) \
      { \
           DEBUG_CPASSISTX(_inst,logmsg(_("HHCEV300D : CPASSTS "#_inst" ECPS:VM Disabled in configuration "))); \
