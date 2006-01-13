@@ -130,7 +130,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
 
         if(regs->arch_mode == ARCH_370)
         {
-            itimer = int_timer(regs);
+            itimer = INT_TIMER(regs);
             if (itimer < 0 && regs->old_timer >= 0)
             {
 #if defined(_FEATURE_ECPSVM)
@@ -164,7 +164,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             if(SIE_STATB(regs->guestregs, M, 370)
               && SIE_STATNB(regs->guestregs, M, ITMOF))
             {
-                itimer = int_timer(regs->guestregs);
+                itimer = INT_TIMER(regs->guestregs);
                 obtain_lock(&sysblk.cpulock[cpu]);
                 if (itimer < 0 && regs->guestregs->old_timer >= 0)
                 /* Set interrupt flag and interval timer interrupt pending

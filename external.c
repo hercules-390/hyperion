@@ -174,7 +174,7 @@ int     rc;
 
 #if defined(FEATURE_INTERVAL_TIMER)
     /* Ensure the interrupt timer is uptodate */
-    STORE_FW(regs->psa->inttimer, int_timer(regs));
+    STORE_FW(regs->psa->inttimer, INT_TIMER(regs));
 #endif
 
     /* Zero extcpuad field unless extcall or ems signal */

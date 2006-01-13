@@ -300,10 +300,17 @@ static inline void set_ecps_vtimer(REGS *regs, S32 vtimer)
 #endif /*defined(_FEATURE_ECPSVM)*/
 
 
+/*******************************************/
+/* Following commented out ISW20060113     */
+/* Reason : Duplicate of INT_TIMER macro   */
+/*          Wrong casting : Bad ret value  */
+/*******************************************/
+/*
 S32 int_timer(REGS *regs)
 {
     return (S32)TOD_TO_ITIMER(regs->int_timer - hw_clock());
 }
+*/
 
 
 void set_int_timer(REGS *regs, S32 itimer)
@@ -316,7 +323,7 @@ void set_int_timer(REGS *regs, S32 itimer)
 static inline void chk_int_timer(REGS *regs)
 {
 S32 itimer;
-    itimer = int_timer(regs);
+    itimer = INT_TIMER(regs);
     obtain_lock(&sysblk.intlock);
     if(itimer < 0 && regs->old_timer >= 0)
         ON_IC_ITIMER(regs);
@@ -395,7 +402,7 @@ S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
     if(itimer != regs->old_timer)
         set_int_timer(regs, itimer);
-    STORE_FW(regs->psa->inttimer, int_timer(regs));
+    STORE_FW(regs->psa->inttimer, INT_TIMER(regs));
 #if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
     {
