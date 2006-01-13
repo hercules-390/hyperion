@@ -2324,6 +2324,10 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
 int     wfc;                            /* Well-Formedness-Checking  */
 #endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
+// NOTE: it's faster to decode with RRE format
+// and then to handle the 'wfc' flag separately...
+
+//  RRF_M(inst, regs, r1, r2, wfc);
     RRE(inst, regs, r1, r2);
 
     ODD2_CHECK(r1, r2, regs);
@@ -2476,6 +2480,10 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
 int     wfc;                            /* WellFormednessChecking    */
 #endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
 
+// NOTE: it's faster to decode with RRE format
+// and then to handle the 'wfc' flag separately...
+
+//  RRF_M(inst, regs, r1, r2, wfc);
     RRE(inst, regs, r1, r2);
 
     ODD2_CHECK(r1, r2, regs);

@@ -1919,6 +1919,10 @@ DEF_INST(convert_utf8_to_utf32)
 #endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
   int xlated;                      /* characters translated          */
 
+// NOTE: it's faster to decode with RRE format
+// and then to handle the 'wfc' flag separately...
+
+//RRF_M(inst, regs, r1, r2, wfc);
   RRE(inst, regs, r1, r2);
   ODD2_CHECK(r1, r2, regs);
 
@@ -2159,6 +2163,10 @@ DEF_INST(convert_utf16_to_utf32)
 #endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
   int xlated;                      /* characters translated          */
 
+// NOTE: it's faster to decode with RRE format
+// and then to handle the 'wfc' flag separately...
+
+//RRF_M(inst, regs, r1, r2, wfc);
   RRE(inst, regs, r1, r2);
   ODD2_CHECK(r1, r2, regs);
 
@@ -2486,7 +2494,7 @@ DEF_INST(convert_utf32_to_utf16)
 }
 
 /*-------------------------------------------------------------------*/
-/* B9B1 STSTU - Search String Unicode                          [RRE] */
+/* B9BE SRSTU - Search String Unicode                          [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(search_string_unicode)
 {

@@ -1970,7 +1970,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
 /*----------------------------------------------------------------------------*/
-/* B93E Compute intermediate message digest (KIMD)                            */
+/* B93E KIMD  - Compute intermediate message digest                     [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(compute_intermediate_message_digest_d)
 {
@@ -2015,7 +2015,7 @@ DEF_INST(compute_intermediate_message_digest_d)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B93F Compute last message digest (KLMD)                                    */
+/* B93F KLMD  - Compute last message digest                             [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(compute_last_message_digest_d)
 {
@@ -2060,7 +2060,7 @@ DEF_INST(compute_last_message_digest_d)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B92E Cipher message (KM)                                                   */
+/* B92E KM    - Cipher message                                          [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_d)
 {
@@ -2113,7 +2113,7 @@ DEF_INST(cipher_message_d)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B91E Compute message authentication code (KMAC)                            */
+/* B91E KMAC  - Compute message authentication code                     [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(compute_message_authentication_code_d)
 {
@@ -2158,7 +2158,7 @@ DEF_INST(compute_message_authentication_code_d)
 }
 
 /*----------------------------------------------------------------------------*/
-/* B92F Cipher message with chaining (KMC)                                    */
+/* B92F KMC   - Cipher message with chaining                            [RRE] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(cipher_message_with_chaining_d)
 {

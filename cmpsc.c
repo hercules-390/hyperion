@@ -1055,6 +1055,8 @@ static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce)
 }
 
 /*----------------------------------------------------------------------------*/
+/* B263 CMPSC - Compression Call                                        [RRE] */
+/*----------------------------------------------------------------------------*/
 /* compression_call. Compression and expanding looks simple in this function. */
 /*----------------------------------------------------------------------------*/
 DEF_INST(compression_call)

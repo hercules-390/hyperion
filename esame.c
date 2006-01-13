@@ -5239,6 +5239,10 @@ BYTE    svalue, dvalue, tvalue;
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
+// NOTE: it's faster to decode with RRE format
+// and then to handle the 'tccc' flag separately...
+
+//  RRF_M(inst, regs, r1, r2, tccc);
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
@@ -5330,6 +5334,10 @@ U16     dvalue, tvalue;
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
+// NOTE: it's faster to decode with RRE format
+// and then to handle the 'tccc' flag separately...
+
+//  RRF_M(inst, regs, r1, r2, tccc);
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
@@ -5421,6 +5429,10 @@ BYTE    dvalue, tvalue;
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
+// NOTE: it's faster to decode with RRE format
+// and then to handle the 'tccc' flag separately...
+
+//  RRF_M(inst, regs, r1, r2, tccc);
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
@@ -5517,6 +5529,10 @@ U16     svalue, dvalue, tvalue;
 int     tccc;                   /* Test-Character-Comparison Control */
 #endif
 
+// NOTE: it's faster to decode with RRE format
+// and then to handle the 'tccc' flag separately...
+
+//  RRF_M(inst, regs, r1, r2, tccc);
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
