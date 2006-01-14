@@ -5643,6 +5643,9 @@ static char *ordername[] = {
             /* Load new value into prefix register of target CPU */
             tregs->PX = abs;
 
+            /* Set pointer to active PSA structure */
+            tregs->psa = (PSA_3XX*)(tregs->mainstor + tregs->PX);
+
             /* Invalidate the ALB and TLB of the target CPU */
             ARCH_DEP(purge_tlb) (tregs);
 #if defined(FEATURE_ACCESS_REGISTERS)

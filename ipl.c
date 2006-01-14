@@ -470,11 +470,7 @@ int             i;                      /* Array subscript           */
     }
 
 #ifdef FEATURE_INTERVAL_TIMER
-    {
-    S32 itimer;
-        FETCH_FW(itimer, regs->psa->inttimer);
-        set_int_timer(regs,itimer);
-    }
+    ARCH_DEP(store_int_timer) (regs);
 #endif
 
 #if defined(_FEATURE_SIE)
