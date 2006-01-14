@@ -26,7 +26,7 @@ void csr_reset(void);                   /* Reset cs registers        */
 void set_tod_steering(double);          /* Set steering rate         */
 double get_tod_steering(void);          /* Get steering rate         */
 U64 update_tod_clock(void);             /* Update the TOD clock      */
-void update_cpu_timer(U64);             /* Update the CPU timer      */
+void update_cpu_timer(void);            /* Update the CPU timer      */
 void set_tod_epoch(S64);                /* Set TOD epoch             */
 void ajust_tod_epoch(S64);              /* Adjust TOD epoch          */
 S64 get_tod_epoch(void);                /* Get TOD epoch             */

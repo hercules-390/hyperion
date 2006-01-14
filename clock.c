@@ -288,13 +288,13 @@ U64 current_tod;
 #if defined(_FEATURE_ECPSVM)
 static inline S32 ecps_vtimer(REGS *regs)
 {
-    return (S32)TOD_TO_ITIMER(regs->ecps_vtimer - hw_clock());
+    return (S32)TOD_TO_ITIMER((S64)(regs->ecps_vtimer - hw_clock()));
 }
 
 
 static inline void set_ecps_vtimer(REGS *regs, S32 vtimer)
 {
-    regs->ecps_vtimer = ITIMER_TO_TOD(vtimer) + hw_clock();
+    regs->ecps_vtimer = (U64)(hw_clock() + ITIMER_TO_TOD(vtimer));
     regs->ecps_oldtmr = vtimer;
 }
 #endif /*defined(_FEATURE_ECPSVM)*/
@@ -308,7 +308,7 @@ S32 int_timer(REGS *regs)
 
 void set_int_timer(REGS *regs, S32 itimer)
 {
-    regs->int_timer = ITIMER_TO_TOD(itimer) + hw_clock();
+    regs->int_timer = (U64)(hw_clock() + ITIMER_TO_TOD(itimer));
     regs->old_timer = itimer;
 }
 
@@ -362,17 +362,13 @@ int pending = 0;
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 // static U64 tod_value;
-static U64 tod_timer;
 U64 update_tod_clock(void)
 {
-U64 new_clock, 
-    tod_delta;
+    U64 new_clock;
 
     obtain_lock(&sysblk.todlock);
 
     new_clock = hw_clock_l();
-    tod_delta = new_clock - tod_timer;
-    tod_timer = new_clock;
     
     /* If we are in the old episode, and the new episode has arrived
        then we must take action to start the new episode */
@@ -387,7 +383,7 @@ U64 new_clock,
 
     /* Update the timers and check if either a clock related event has
        become pending */
-    update_cpu_timer(tod_delta);
+    update_cpu_timer();
 
     return new_clock;
 }

@@ -24,7 +24,7 @@
 /*                                                                   */
 /* tod_delta is in hercules internal clock format (>> 8)             */
 /*-------------------------------------------------------------------*/
-void update_cpu_timer(U64 tod_delta)
+void update_cpu_timer(void)
 {
 int             cpu;                    /* CPU counter               */
 REGS           *regs;                   /* -> CPU register context   */
