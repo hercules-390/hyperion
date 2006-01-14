@@ -854,6 +854,7 @@ U32    *p;                              /* Mainstor pointer          */
     {
         p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
         STORE_FW (p, regs->GR_L(r1));
+        ITIMER_UPDATE(effective_addr2, 4-1, regs);
     }
     else
         ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );

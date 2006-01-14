@@ -398,7 +398,7 @@ S32 itimer;
     if(itimer != regs->old_timer)
         set_int_timer(regs, itimer);
     else
-        itimer = int_timer(regs);
+        regs->old_timer = itimer = int_timer(regs);
     STORE_FW(regs->psa->inttimer, itimer);
 #if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
@@ -407,7 +407,7 @@ S32 itimer;
         if(itimer != regs->ecps_oldtmr)
             set_ecps_vtimer(regs, itimer);
         else
-            itimer = ecps_vtimer(regs);
+            regs->ecps_oldtmr = itimer = ecps_vtimer(regs);
         STORE_FW(regs->ecps_vtmrpt, itimer);
     }
 #endif /*defined(FEATURE_ECPSVM)*/

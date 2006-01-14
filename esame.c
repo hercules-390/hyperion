@@ -33,8 +33,6 @@
 
 #include "inline.h"
 
-#include "clock.h"
-
 #define CRYPTO_EXTERN extern
 #include "crypto.h"
 
