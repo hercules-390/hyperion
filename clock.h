@@ -66,10 +66,10 @@ _CLOCK_EXTERN U64 hw_tod;               /* Hardware clock            */
 #define SECONDS_IN_SEVENTY_YEARS ((70*365 + 17) * 86400ULL)
 
 #define ITIMER_TO_TOD(_units) \
-    (625*(_units)/3)
+    ((S64)(625*((S64)(_units))/3))
 
 #define TOD_TO_ITIMER(_units) \
-    (3*(_units)/625)
+    ((S32)(3*(_units)/625))
 
 #define TOD_CLOCK(_regs) \
     (tod_value + (_regs)->tod_epoch)
