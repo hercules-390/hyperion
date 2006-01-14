@@ -174,7 +174,7 @@ int     rc;
 
 #if defined(FEATURE_INTERVAL_TIMER)
     /* Ensure the interrupt timer is uptodate */
-    STORE_FW(regs->psa->inttimer, int_timer(regs));
+    ARCH_DEP(store_int_timer) (regs);
 #endif
 
     /* Zero extcpuad field unless extcall or ems signal */
@@ -392,7 +392,6 @@ U16     cpuad;                          /* Originating CPU address   */
         {
             logmsg (_("HHCCP026I External interrupt: Interval timer\n"));
         }
-        ARCH_DEP(store_int_timer) (regs);
         OFF_IC_ITIMER(regs);
         ARCH_DEP(external_interrupt) (EXT_INTERVAL_TIMER_INTERRUPT, regs);
     }
@@ -400,7 +399,6 @@ U16     cpuad;                          /* Originating CPU address   */
 #if defined(FEATURE_ECPSVM)
     if ( OPEN_IC_ECPSVTIMER(regs) )
     {
-        ARCH_DEP(store_int_timer) (regs);
         OFF_IC_ECPSVTIMER(regs);
         ARCH_DEP(external_interrupt) (EXT_VINTERVAL_TIMER_INTERRUPT,regs);
     }
