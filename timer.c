@@ -11,7 +11,7 @@
 #include "feat390.h"
 #include "feat370.h"
 
-int ecpsvm_testvtimer(REGS *,int);
+// ZZ int ecpsvm_testvtimer(REGS *,int);
 
 /*-------------------------------------------------------------------*/
 /* Check for timer event                                             */
@@ -28,10 +28,6 @@ void update_cpu_timer(U64 tod_delta)
 {
 int             cpu;                    /* CPU counter               */
 REGS           *regs;                   /* -> CPU register context   */
-S32             itimer;                 /* Interval timer value      */
-#if defined(OPTION_MIPS_COUNTING) && ( defined(_FEATURE_SIE) || defined(_FEATURE_ECPSVM) )
-S32             itimer_diff;            /* TOD difference in TU      */
-#endif
 U32             intmask = 0;            /* Interrupt CPU mask        */
 
     /* Access the diffent register contexts with the intlock held */
@@ -115,46 +111,16 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         }
 #endif /*defined(_FEATURE_SIE)*/
 
-        release_lock(&sysblk.cpulock[cpu]);
 
         /*-------------------------------------------*
          * [3] Check for interval timer interrupt    *
          *-------------------------------------------*/
 
-#if defined(OPTION_MIPS_COUNTING) && ( defined(_FEATURE_SIE) || defined(_FEATURE_ECPSVM) )
-        /* Calculate diff in interval timer units plus rounding to improve accuracy */
-        itimer_diff = (S32) ((((6*tod_delta)/625)+1) >> 1);
-        if (itimer_diff <= 0)           /* Handle gettimeofday low */
-            itimer_diff = 1;            /* resolution problems     */
-#endif
-
         if(regs->arch_mode == ARCH_370)
         {
-            itimer = int_timer(regs);
-            if (itimer < 0 && regs->old_timer >= 0)
-            {
-#if defined(_FEATURE_ECPSVM)
-                regs->rtimerint=1;      /* To resolve concurrent V/R Int Timer Ints */
-#endif
-                ON_IC_ITIMER(regs);
+            if( chk_int_timer(regs) )
                 intmask |= BIT(regs->cpuad);
-            }
-            regs->old_timer = itimer;
-#if defined(_FEATURE_ECPSVM)
-#if defined(OPTION_MIPS_COUNTING)
-            if(ecpsvm_testvtimer(regs,itimer_diff)==0)
-#else /* OPTION_MIPS_COUNTING */
-            if(ecpsvm_testvtimer(regs,76800 / CLK_TCK)==0)
-#endif /* OPTION_MIPS_COUNTING */
-            {
-                ON_IC_ITIMER(regs);
-                intmask |= BIT(regs->cpuad);
-            }
-#endif /* _FEATURE_ECPSVM */
-
-            release_lock(&sysblk.cpulock[cpu]);
-
-        } /*if(regs->arch_mode == ARCH_370)*/
+        }
 
 
 #if defined(_FEATURE_SIE)
@@ -164,21 +130,13 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             if(SIE_STATB(regs->guestregs, M, 370)
               && SIE_STATNB(regs->guestregs, M, ITMOF))
             {
-                itimer = int_timer(regs->guestregs);
-                obtain_lock(&sysblk.cpulock[cpu]);
-                if (itimer < 0 && regs->guestregs->old_timer >= 0)
-                /* Set interrupt flag and interval timer interrupt pending
-                   if the interval timer went from positive to negative */
-                {
-                    ON_IC_ITIMER(regs->guestregs);
+                if( chk_int_timer(regs->guestregs) )
                     intmask |= BIT(regs->cpuad);
-                }
-                regs->guestregs->old_timer = itimer;
-                release_lock(&sysblk.cpulock[cpu]);
             }
         }
 #endif /*defined(_FEATURE_SIE)*/
 
+    release_lock(&sysblk.cpulock[cpu]);
 
     } /* end for(cpu) */
 

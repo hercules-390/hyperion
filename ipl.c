@@ -536,11 +536,6 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
       ARCH_DEP(initial_cpu_reset)(regs->guestregs);
 #endif /*defined(_FEATURE_SIE)*/
 
-#if defined(FEATURE_ECPSVM)
-    regs->vtimerint=0;
-    regs->rtimerint=0;
-#endif
-
     return 0;
 } /* end function initial_cpu_reset */
 

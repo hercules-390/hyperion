@@ -37,6 +37,7 @@ S32 int_timer(REGS *);                  /* Get interval timer        */
 void set_int_timer(REGS *, S32);        /* Set interval timer        */
 U64 tod_clock(REGS *);                  /* Get TOD clock             */ 
 void set_tod_clock(U64);                /* Set TOD clock             */
+int chk_int_timer(REGS *);              /* Check int_timer pending   */
 
 #endif
 
@@ -77,7 +78,7 @@ _CLOCK_EXTERN U64 hw_tod;               /* Hardware clock            */
     (625*(_units)/3)
 
 #define TOD_TO_ITIMER(_units) \
-    (3*(_units)/625)
+    (3*((_units)/625))
 
 #define INT_TIMER(_regs) \
     ((S32)TOD_TO_ITIMER((S64)((_regs)->int_timer - hw_tod)))

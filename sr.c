@@ -203,8 +203,6 @@ BYTE     psw[16];
         SR_WRITE_VALUE(file, SR_CPU_INVALIDATE, regs->invalidate, 1);
         SR_WRITE_VALUE(file, SR_CPU_SIGPRESET, regs->sigpreset, 1);
         SR_WRITE_VALUE(file, SR_CPU_SIGPIRESET, regs->sigpireset, 1);
-        SR_WRITE_VALUE(file, SR_CPU_VTIMERINT, regs->vtimerint, 1);
-        SR_WRITE_VALUE(file, SR_CPU_RTIMERINT, regs->rtimerint, 1);
         SR_WRITE_VALUE(file, SR_CPU_INTS_STATE, regs->ints_state, sizeof(regs->ints_state));
         SR_WRITE_VALUE(file, SR_CPU_INTS_MASK, regs->ints_mask, sizeof(regs->ints_mask));
         for (j = 0; j < MAX_CPU_ENGINES; j++)
@@ -851,18 +849,6 @@ S64      dreg;
             if (regs == NULL) goto sr_null_regs_exit;
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             regs->sigpireset = rc;
-            break;
-
-        case SR_CPU_VTIMERINT:
-            if (regs == NULL) goto sr_null_regs_exit;
-            SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            regs->vtimerint = rc;
-            break;
-
-        case SR_CPU_RTIMERINT:
-            if (regs == NULL) goto sr_null_regs_exit;
-            SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            regs->rtimerint = rc;
             break;
 
         case SR_CPU_INTS_STATE:

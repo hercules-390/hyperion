@@ -192,11 +192,12 @@ struct _ECPSVM_SASTATS
 
 #define INITPSEUDOIP(_regs) \
     do {    \
-        (_regs).ip="\0\0";  \
+        (_regs).ip=(BYTE*)"\0\0";  \
     } while(0)
 
 #define INITPSEUDOREGS(_regs) \
     do { \
+        memset(&(_regs),0,sizeof((_regs))); \
         INITPSEUDOIP((_regs)); \
     } while(0)
 
@@ -216,7 +217,7 @@ struct _ECPSVM_SASTATS
     while(0)
 
 
-#define SASSIST_PROLOGX( _instname, _cput ) \
+#define SASSIST_PROLOG( _instname) \
     VADR amicblok; \
     VADR vpswa; \
     BYTE *vpswa_p; \
@@ -229,7 +230,7 @@ struct _ECPSVM_SASTATS
     BYTE micevma3; \
     BYTE micevma4; \
     if(SIE_STATE(regs)) \
-        return 1; \
+        return(1); \
     if(!PROBSTATE(&regs->psw)) \
     { \
           return(1); \
@@ -245,6 +246,7 @@ struct _ECPSVM_SASTATS
           return(1); \
     } \
     CR6=regs->CR_L(6); \
+    regs->ecps_vtmrpt = NULL; /* Assume vtimer off until validated */ \
     if(!(CR6 & ECPSVM_CR6_VMASSIST)) \
     { \
         DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : EVMA Disabled by guest\n"))); \
@@ -261,54 +263,35 @@ struct _ECPSVM_SASTATS
         return(1); \
     } \
     /* Load the micblok copy */ \
-    if((_cput)) \
-    { \
-        micblok.MICRSEG=EVM_L(amicblok); \
-        micblok.MICCREG=EVM_L(amicblok+4); \
-        micblok.MICVPSW=EVM_L(amicblok+8); \
-        micblok.MICWORK=EVM_L(amicblok+12); \
-        micblok.MICVTMR=EVM_L(amicblok+16); \
-        micblok.MICACF=EVM_L(amicblok+20); \
-    } \
-    else \
-    { \
-        FETCH_FW(micblok.MICRSEG,regs->mainstor+amicblok); \
-        FETCH_FW(micblok.MICCREG,regs->mainstor+amicblok+4); \
-        FETCH_FW(micblok.MICVPSW,regs->mainstor+amicblok+8); \
-        FETCH_FW(micblok.MICWORK,regs->mainstor+amicblok+12); \
-        FETCH_FW(micblok.MICVTMR,regs->mainstor+amicblok+16); \
-        FETCH_FW(micblok.MICACF,regs->mainstor+amicblok+20); \
-    } \
+    micblok.MICRSEG=EVM_L(amicblok); \
+    micblok.MICCREG=EVM_L(amicblok+4); \
+    micblok.MICVPSW=EVM_L(amicblok+8); \
+    micblok.MICWORK=EVM_L(amicblok+12); \
+    micblok.MICVTMR=EVM_L(amicblok+16); \
+    micblok.MICACF=EVM_L(amicblok+20); \
     micpend=(micblok.MICVPSW >> 24); \
     vpswa=micblok.MICVPSW & ADDRESS_MAXWRAP(regs); \
     micevma=(micblok.MICACF >> 24); \
     micevma2=((micblok.MICACF & 0x00ff0000) >> 16); \
     micevma3=((micblok.MICACF & 0x0000ff00) >> 8); \
     micevma4=(micblok.MICACF  & 0x000000ff); \
-    /* Set ref bit on page where Virtual PSW is stored */ \
-    if((_cput)) \
+    if((CR6 & ECPSVM_CR6_VIRTTIMR)) \
     { \
-        vpswa_p=MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
+        regs->ecps_vtmrpt = MADDR(micblok.MICVTMR,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
     } \
+    /* Set ref bit on page where Virtual PSW is stored */ \
+    vpswa_p=MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
     DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" VPSWA= %8.8X Virtual "),vpswa)); \
     DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" CR6= %8.8X\n"),CR6)); \
     DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" MICVTMR= %8.8X\n"),micblok.MICVTMR)); \
     DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" Real "))); \
     DEBUG_SASSISTX(_instname,display_psw(regs)); \
-    if((_cput)) \
-    { \
-        /* Load the Virtual PSW in a temporary REGS structure */ \
-        INITPSEUDOREGS(vpregs); \
-        ARCH_DEP(load_psw) (&vpregs,vpswa_p); \
-        DEBUG_SASSISTX(_instname,display_psw(&vpregs)); \
-    } \
+    /* Load the Virtual PSW in a temporary REGS structure */ \
+    INITPSEUDOREGS(vpregs); \
+    ARCH_DEP(load_psw) (&vpregs,vpswa_p); \
+    DEBUG_SASSISTX(_instname,display_psw(&vpregs)); \
 
 
-#define SASSIST_PROLOG( _instname ) \
-    SASSIST_PROLOGX(_instname,1)
-
-#define SASSIST_PROLOG_VT( _instname ) \
-    SASSIST_PROLOGX(_instname,0)
 
 #define ECPSVM_PROLOG(_inst) \
 int     b1, b2; \
@@ -873,13 +856,11 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
             regs->fpr[i*4+3]=FW1;
         }
 
-        memset(&wregs,0,sizeof(wregs));
         INITPSEUDOREGS(wregs);
-    work_p=MADDR(vmb+VMPSW,0,regs,USE_REAL_ADDR,0);
+        work_p=MADDR(vmb+VMPSW,0,regs,USE_REAL_ADDR,0);
         ARCH_DEP(load_psw) (&wregs,work_p);    /* Load user's Virtual PSW in work structure */
 
         /* Build REAL PSW */
-        memset(&rregs,0,sizeof(rregs));
         INITPSEUDOREGS(rregs);
         /* Copy IAR */
         rregs.psw.IA=wregs.psw.IA & ADDRESS_MAXWRAP(regs);
@@ -2243,7 +2224,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
         return(1); /* Something in the NEW PSW we can't handle.. let CP do it */
     }
     /* Store the OLD SVC PSW */
-    psa=(PSA_3XX *)MADDR((VADR)0, USE_PRIMARY_SPACE, regs, ACCTYPE_WRITE, 0);
+// ZZ    psa=(PSA_3XX *)MADDR((VADR)0, USE_PRIMARY_SPACE, regs, ACCTYPE_WRITE, 0);
                                                                                          /* Use all around access key 0 */
                                                                                          /* Also sets change bit        */
     /* Set intcode in PSW (for BC mode) */
@@ -2315,48 +2296,13 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
     return(0);
 }
 
-int ecpsvm_testvtimer(REGS *regs,int td)
-{
-    U32 vtmr;
-    U32 ovtmr;
-    int doint=0;
-    SASSIST_PROLOG_VT(VTIMER);
-    if(!(CR6 & ECPSVM_CR6_VIRTTIMR))
-    {
-        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER reject : Disabled by CR6\n"));
-        return(1);
-    }
-    /* Update the Virt timer */
-
-    FETCH_FW(vtmr,regs->mainstor+micblok.MICVTMR);
-    ovtmr=vtmr;
-    vtmr-=td;
-    DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER old=%8.8X, New=%8.8X\n",ovtmr,vtmr));
-    STORE_FW(regs->mainstor+micblok.MICVTMR,vtmr);
-    if( (vtmr & 0x80000000) != (ovtmr & 0x80000000) )
-    {
-        doint=1;
-        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Need to reflect INT\n"));
-    }
-    SASSIST_HIT(VTIMER);
-    if(doint)
-    {
-        regs->vtimerint=1;
-    }
-    if(regs->vtimerint)
-    {
-        ON_IC_ITIMER(regs);
-    }
-    return(regs->vtimerint?0:1);        /* Also say yes if vtimerint was set before */
-}
-
 
 int     ecpsvm_virttmr_ext(REGS *regs)
 {
     DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Checking if we can IRPT\n"));
     DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Virtual"));
     DEBUG_SASSISTX(VTIMER,display_psw(regs));
-    if(!regs->vtimerint)
+    if(IS_IC_ECPSVTIMER(regs))
     {
         DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Not pending\n"));
         return(1);

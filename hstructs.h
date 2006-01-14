@@ -48,7 +48,7 @@ struct REGS {                           /* Processor registers       */
         S64     tod_epoch;              /* TOD epoch for this CPU    */
         S64     ecps_vtimer;            /* ECPS Virtual Int. timer   */
         S32     ecps_oldtmr;            /* ECPS Virtual Int. tmr int */
-        FW     *ecps_vtmrpt;            /* Pointer to VTMR or zero   */
+        BYTE   *ecps_vtmrpt;            /* Pointer to VTMR or zero   */
         U64     instcount;              /* Instruction counter       */
         U64     prevcount;              /* Previous instruction count*/
         U32     mipsrate;               /* Instructions per second   */
@@ -168,12 +168,7 @@ struct REGS {                           /* Processor registers       */
                 invalidate:1,           /* 1=Do AIA/AEA invalidation */
                 tracing:1,              /* 1=Trace is active         */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
-                sigpireset:1,           /* 1=SIGP initial cpu reset  */
-                vtimerint:1,            /* 1=Virtual Timer interrupt */
-                                        /* (ECPS:VM)                 */
-                rtimerint:1;            /* 1=Concurrent Virt & Real  */
-                                        /* Interval Timer interrupts */
-                                        /* (ECPS:VM Only)            */
+                sigpireset:1;           /* 1=SIGP initial cpu reset  */
         U32     ints_state;             /* CPU Interrupts Status     */
         U32     ints_mask;              /* Respective Interrupts Mask*/
         BYTE    malfcpu                 /* Malfuction alert flags    */

@@ -388,40 +388,23 @@ U16     cpuad;                          /* Originating CPU address   */
 #endif /*defined(_FEATURE_SIE)*/
         )
     {
-#if defined(FEATURE_ECPSVM)
-        if(ecpsvm_virttmr_ext(regs)==0)
-        {
-            regs->vtimerint=0;
-            /* If no Real Int Timer Int pending */
-            /* Otherwise, we keep the Int Timer */
-            /* status on                        */
-            if(!regs->rtimerint)
-            {
-                OFF_IC_ITIMER(regs);
-            }
-            ARCH_DEP(external_interrupt) (EXT_VINTERVAL_TIMER_INTERRUPT,regs);
-        }
-#endif
         if (sysblk.insttrace || sysblk.inststep)
         {
             logmsg (_("HHCCP026I External interrupt: Interval timer\n"));
         }
-        /* NOTE : Virtual Interval Timer may still be there.. */
-        /*        but we will have to wait for the next timer */
-        /*        pass , because if regs->vtimerint is still  */
-        /*        1, it means the conditions were not right   */
-        /*        to present the interrupt...                 */
+        ARCH_DEP(store_int_timer) (regs);
         OFF_IC_ITIMER(regs);
-#if defined(FEATURE_ECPSVM)
-        if(regs->rtimerint)
-        {
-            regs->rtimerint=0;
-#endif
-            ARCH_DEP(external_interrupt) (EXT_INTERVAL_TIMER_INTERRUPT, regs);
-#if defined(FEATURE_ECPSVM)
-        }
-#endif
+        ARCH_DEP(external_interrupt) (EXT_INTERVAL_TIMER_INTERRUPT, regs);
     }
+
+#if defined(FEATURE_ECPSVM)
+    if ( OPEN_IC_ECPSVTIMER(regs) )
+    {
+        ARCH_DEP(store_int_timer) (regs);
+        OFF_IC_ECPSVTIMER(regs);
+        ARCH_DEP(external_interrupt) (EXT_VINTERVAL_TIMER_INTERRUPT,regs);
+    }
+#endif /*FEATURE_ECPSVM*/
 #endif /*FEATURE_INTERVAL_TIMER*/
 
     /* External interrupt if service signal is pending */

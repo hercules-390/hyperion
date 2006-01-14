@@ -313,24 +313,32 @@ void set_int_timer(REGS *regs, S32 itimer)
 }
 
 
-static inline void chk_int_timer(REGS *regs)
+int chk_int_timer(REGS *regs)
 {
 S32 itimer;
+int pending = 0;
+
     itimer = int_timer(regs);
-    obtain_lock(&sysblk.intlock);
     if(itimer < 0 && regs->old_timer >= 0)
+    {
         ON_IC_ITIMER(regs);
+        pending = 1;
+    }
     regs->old_timer = itimer;
 #if defined(_FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
     {
         itimer = ecps_vtimer(regs);
         if(itimer < 0 && regs->ecps_oldtmr >= 0)
+        {
             ON_IC_ECPSVTIMER(regs);
+            pending = 1;
+        }
         regs->ecps_oldtmr = itimer;
     }
 #endif /*defined(_FEATURE_ECPSVM)*/
-    release_lock(&sysblk.intlock);
+
+    return pending;
 }
 #endif /*defined(_FEATURE_INTERVAL_TIMER)*/
 

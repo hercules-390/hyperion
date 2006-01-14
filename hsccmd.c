@@ -806,7 +806,7 @@ char arch370_flag = 0;
 
     if (arch370_flag)
     {
-        logmsg( "          itm = %8.8" I32_FMT "X\n", INT_TIMER(regs) );
+        logmsg( _("          itm = %8.8" I32_FMT "X\n"), INT_TIMER(regs) );
     }
 
     return 0;
@@ -2798,10 +2798,18 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             sysblk.regs[i]->cpuad,
             IS_IC_PTIMER(sysblk.regs[i]) ? "" : _("not ")
             );
+#if defined(_FEATURE_INTERVAL_TIMER)
         logmsg( _("          CPU%4.4X: Interval timer %spending\n"),
             sysblk.regs[i]->cpuad,
             IS_IC_ITIMER(sysblk.regs[i]) ? "" : _("not ")
             );
+#if defined(_FEATURE_ECPSVM)
+        logmsg( _("          CPU%4.4X: ECPS vtimer %spending\n"),
+            sysblk.regs[i]->cpuad,
+            IS_IC_ECPSVTIMER(sysblk.regs[i]) ? "" : _("not ")
+            );
+#endif /*defined(_FEATURE_ECPSVM)*/
+#endif /*defined(_FEATURE_INTERVAL_TIMER)*/
         logmsg( _("          CPU%4.4X: External call %spending\n"),
             sysblk.regs[i]->cpuad,
             IS_IC_EXTCALL(sysblk.regs[i]) ? "" : _("not ")
