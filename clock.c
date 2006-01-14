@@ -324,7 +324,6 @@ int pending = 0;
         ON_IC_ITIMER(regs);
         pending = 1;
     }
-    regs->old_timer = itimer;
 #if defined(_FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
     {
@@ -334,7 +333,6 @@ int pending = 0;
             ON_IC_ECPSVTIMER(regs);
             pending = 1;
         }
-        regs->ecps_oldtmr = itimer;
     }
 #endif /*defined(_FEATURE_ECPSVM)*/
 
@@ -399,14 +397,18 @@ S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
     if(itimer != regs->old_timer)
         set_int_timer(regs, itimer);
-    STORE_FW(regs->psa->inttimer, int_timer(regs));
+    else
+        itimer = int_timer(regs);
+    STORE_FW(regs->psa->inttimer, itimer);
 #if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
     {
         FETCH_FW(itimer, regs->ecps_vtmrpt);
         if(itimer != regs->ecps_oldtmr)
             set_ecps_vtimer(regs, itimer);
-        STORE_FW(regs->ecps_vtmrpt, ecps_vtimer(regs));
+        else
+            itimer = ecps_vtimer(regs);
+        STORE_FW(regs->ecps_vtmrpt, itimer);
     }
 #endif /*defined(FEATURE_ECPSVM)*/
     chk_int_timer(regs);
