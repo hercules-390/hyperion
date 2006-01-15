@@ -36,6 +36,7 @@
 #define CRYPTO_EXTERN extern
 #include "crypto.h"
 
+#include "clock.h"
 
 #if defined(FEATURE_BINARY_FLOATING_POINT)
 /*-------------------------------------------------------------------*/
