@@ -52,7 +52,7 @@
 /*                                                                   */
 /* This subroutine is called by the CVB/CVBY/CVBG instructions.      */
 /* It performs the conversion of a 8-byte or 16-byte packed          */
-/* decimal number into a 64-bit signed binary result.                */
+/* decimal number into a 64-bit SIGNED binary result.                */
 /* This routine is not architecture-dependent; all of its operands   */
 /* are contained in work areas passed by the architecture-dependent  */
 /* instruction routines which handle all main-storage accesses and   */
@@ -65,7 +65,7 @@
 /*              (7 for CVB/CVBY or 15 for CVBG).                     */
 /* Output:                                                           */
 /*      result  Points to an U64 field which will receive the        */
-/*              result as a 64-bit signed binary number.             */
+/*              result as a 64-bit SIGNED binary number.             */
 /*      ovf     Points to an int field which will be set to 1 if     */
 /*              the result overflows 63 bits plus sign, else 0.      */
 /*              If overflow occurs, the result field will contain    */
@@ -80,7 +80,10 @@ void packed_to_binary (BYTE *dec, int len, U64 *result,
 U64     dreg;                           /* 64-bit result accumulator */
 int     i;                              /* Loop counter              */
 int     h, d=0;                         /* Decimal digits            */
-U64     oreg = 0;                       /* 64 bit overflow work reg  */
+U64     inter_u64max_div10;
+int     inter_u64max_rem10;
+U64     pos_u64max = (U64) LLONG_MAX;
+U64     neg_u64max = (U64) LLONG_MIN;
 
     /* Initialize result flags */
     *ovf = 0;
@@ -88,6 +91,24 @@ U64     oreg = 0;                       /* 64 bit overflow work reg  */
 
     /* Initialize 64-bit result accumulator */
     dreg = 0;
+
+    /* Initialize max unsigned intermediate value for overflow check */
+    if ((dec[len] & 0x0F) == 0x0B ||
+        (dec[len] & 0x0F) == 0x0D)
+    {
+        inter_u64max_div10 =       (neg_u64max / 10);
+        inter_u64max_rem10 = (int) (neg_u64max % 10);
+    }
+    else if ((dec[len] & 0x0F) < 0x0A)
+    {
+        *dxf = 1;
+        return;
+    }
+    else
+    {
+        inter_u64max_div10 =       (pos_u64max / 10);
+        inter_u64max_rem10 = (int) (pos_u64max % 10);
+    }
 
     /* Convert decimal digits to binary */
     for (i = 0; i <= len; i++)
@@ -103,16 +124,17 @@ U64     oreg = 0;                       /* 64 bit overflow work reg  */
             return;
         }
 
+        /* Check for overflow before accumulating */
+        if ( dreg >  inter_u64max_div10 ||
+            (dreg == inter_u64max_div10 &&
+                h >  inter_u64max_rem10)) // (NOTE: 'h', not 'd')
+        {
+            *ovf = 1;
+        }
+
         /* Accumulate high-order digit into result */
         dreg *= 10;
         dreg += h;
-
-        /* Set overflow indicator if an overflow has occurred */
-        if(dreg < oreg)
-            *ovf = 1;
-
-        /* Save current value */
-        oreg = dreg;
 
         /* Check for valid low-order digit or sign */
         if (i < len)
@@ -122,6 +144,14 @@ U64     oreg = 0;                       /* 64 bit overflow work reg  */
             {
                 *dxf = 1;
                 return;
+            }
+
+            /* Check for overflow before accumulating */
+            if ( dreg >  inter_u64max_div10 ||
+                (dreg == inter_u64max_div10 &&
+                    d >  inter_u64max_rem10)) // (NOTE: 'd', not 'h')
+            {
+                *ovf = 1;
             }
 
             /* Accumulate low-order digit into result */
@@ -143,9 +173,17 @@ U64     oreg = 0;                       /* 64 bit overflow work reg  */
     /* Result is negative if sign is X'B' or X'D' */
     if (d == 0x0B || d == 0x0D)
     {
-        if( (S64)dreg == -1LL )
+        /* Check for UNDERflow (less than min negative) */
+        if ( dreg > neg_u64max )
             *ovf = 1;
+        else
         dreg = -((S64)dreg);
+    }
+    else
+    {
+        /* Check for OVERflow (greater than max positive) */
+        if ( dreg > pos_u64max )
+            *ovf = 1;
     }
 
     /* Set result field and return */
