@@ -419,7 +419,7 @@ VADR    effective_addr2,
                         effective_addr2, b2, effective_addr4, b4, regs);
                 break;
             case PLO_CSGR:
-                regs->psw.cc = ARCH_DEP(plo_clgr) (r1, r3,
+                regs->psw.cc = ARCH_DEP(plo_csgr) (r1, r3,
                         effective_addr2, b2, effective_addr4, b4, regs);
                 break;
             case PLO_CSX:
