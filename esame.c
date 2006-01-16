@@ -4738,7 +4738,7 @@ BYTE ARCH_DEP(stfl_data)[8] = {
                  | STFL_2_TRAN_FAC2
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
-//               | STFL_2_MSG_SECURITY
+                 | STFL_2_MSG_SECURITY
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 #if defined(FEATURE_LONG_DISPLACEMENT)
                  | STFL_2_LONG_DISPL_INST
@@ -4788,21 +4788,25 @@ void ARCH_DEP(adjust_stfl_data) ()
 #if defined(_900) || defined(FEATURE_ESAME)
     /* ESAME might be installed but not active */
     if(sysblk.arch_z900)
-        ARCH_DEP(stfl_data)[0] |= STFL_0_ESAME_INSTALLED;
+        ARCH_DEP(stfl_data)[0] |= STFL_0_ESAME_ACTIVE;
+    else
+        ARCH_DEP(stfl_data)[0] &= ~STFL_0_ESAME_ACTIVE;
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/
 
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
     /* MSA is enabled only if the dyncrypt DLL module is loaded */
     if(ARCH_DEP(cipher_message))
         ARCH_DEP(stfl_data)[2] |= STFL_2_MSG_SECURITY;
+    else
+        ARCH_DEP(stfl_data)[2] &= ~STFL_2_MSG_SECURITY;
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
 #if defined(FEATURE_ASN_AND_LX_REUSE)
     /* ALRF enablement is an option in the configuration file */
-    if(!sysblk.asnandlxreuse)
-    {
+    if(sysblk.asnandlxreuse)
+        ARCH_DEP(stfl_data)[0] |= STFL_0_ASN_LX_REUSE;
+    else
         ARCH_DEP(stfl_data)[0] &= ~STFL_0_ASN_LX_REUSE;
-    }
 #endif
 } /* end ARCH_DEP(adjust_stfl_data) */
 
