@@ -82,8 +82,8 @@ int     i;                              /* Loop counter              */
 int     h, d=0;                         /* Decimal digits            */
 U64     inter_u64max_div10;
 int     inter_u64max_rem10;
-U64     pos_u64max = (U64) LLONG_MAX;
-U64     neg_u64max = (U64) LLONG_MIN;
+U64     pos_u64max = 9223372036854775807ULL;  // (LLONG_MAX)
+U64     neg_u64max = 9223372036854775808ULL;  // (LLONG_MIN)
 
     /* Initialize result flags */
     *ovf = 0;
