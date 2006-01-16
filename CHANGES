@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+15 Jan 2006 Fix stfl_data/adjust_stfl_data flag settings bug - Fish
+15 Jan 2006 Fix 'CVB' overflow check bug in packed_to_binary - Fish
 06 Jan 2006 Correct address wrapping in PLO - Jan Jaeger
 06 Jan 2006 Change clocks panel command to snapshot all values used before
             formatting and printing for consistency - Jay Maynard
