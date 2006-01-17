@@ -1,9 +1,6 @@
 /* HERCWIND.H   (c) Copyright Roger Bowler, 2005-2006                */
 /*              MSVC Environment Specific Definitions                */
 
-/* This file and the executable program(s) generated from it are     */
-/* subject to the terms of the Hercules Public Licence Version 2     */
-
 /*-------------------------------------------------------------------*/
 /* Header file containing additional data structures and function    */
 /* prototypes required by Hercules in the MSVC environment           */
