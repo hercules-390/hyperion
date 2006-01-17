@@ -875,10 +875,6 @@ SOURCE=.\logmsg.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\logmsg2.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\ltdl.c
 # End Source File
 # Begin Source File
