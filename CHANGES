@@ -8,7 +8,7 @@
 06 Jan 2006 Change clocks panel command to snapshot all values used before
             formatting and printing for consistency - Jay Maynard
 04 Jan 2006 Change semigraphical panel START and STOP buttons to issue
-            startall and sopall, respectively - Jay Maynard
+            startall and stopall, respectively - Jay Maynard
 04 Jan 2006 Fix cckd_gc_l2 bug - Greg Smith
 04 Jan 2006 Correct bit codes returned in query function with no MSA ext 1 -
             Bernard van der Helm
