@@ -4788,9 +4788,9 @@ void ARCH_DEP(adjust_stfl_data) ()
 #if defined(_900) || defined(FEATURE_ESAME)
     /* ESAME might be installed but not active */
     if(sysblk.arch_z900)
-        ARCH_DEP(stfl_data)[0] |= STFL_0_ESAME_ACTIVE;
+        ARCH_DEP(stfl_data)[0] |= STFL_0_ESAME_INSTALLED;
     else
-        ARCH_DEP(stfl_data)[0] &= ~STFL_0_ESAME_ACTIVE;
+        ARCH_DEP(stfl_data)[0] &= ~STFL_0_ESAME_INSTALLED;
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/
 
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
