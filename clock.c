@@ -362,7 +362,7 @@ int pending = 0;
 // static U64 tod_value;
 U64 update_tod_clock(void)
 {
-    U64 new_clock;
+U64 new_clock;
 
     obtain_lock(&sysblk.todlock);
 
@@ -396,7 +396,10 @@ void ARCH_DEP(store_int_timer) (REGS *regs)
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
     if(itimer != regs->old_timer)
+    {
+// ZZ   logmsg(D_("Interval timer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->old_timer);
         set_int_timer(regs, itimer);
+    }
     else
         regs->old_timer = itimer = int_timer(regs);
     STORE_FW(regs->psa->inttimer, itimer);
@@ -405,7 +408,10 @@ S32 itimer;
     {
         FETCH_FW(itimer, regs->ecps_vtmrpt);
         if(itimer != regs->ecps_oldtmr)
+        {
+// ZZ       logmsg(D_("ECPS vtimer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->ecps_vtimer);
             set_ecps_vtimer(regs, itimer);
+        }
         else
             regs->ecps_oldtmr = itimer = ecps_vtimer(regs);
         STORE_FW(regs->ecps_vtmrpt, itimer);
