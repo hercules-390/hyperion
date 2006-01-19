@@ -42,6 +42,7 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
+#include "clock.h"
 
 
 /*-------------------------------------------------------------------*/
@@ -238,6 +239,9 @@ BYTE   *dest;                           /* Pointer to target byte    */
 
     /* AND byte with immediate operand, setting condition code */
     regs->psw.cc = ((*dest &= i2) != 0);
+
+    /* Update interval timer if necessary */
+    ITIMER_UPDATE(effective_addr1,4-1,regs);
 }
 
 
@@ -257,6 +261,9 @@ int     cc = 0;                         /* Condition code            */
 
     SS_L(inst, regs, len, b1, addr1, b2, addr2);
 
+    ITIMER_SYNC(addr2,len,regs);
+    ITIMER_SYNC(addr1,len,regs);
+
     /* Quick out for 1 byte (no boundary crossed) */
     if (unlikely(len == 0))
     {
@@ -264,6 +271,7 @@ int     cc = 0;                         /* Condition code            */
         dest1 = MADDR (addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
         *dest1 &= *source1;
         regs->psw.cc = (*dest1 != 0);
+        ITIMER_UPDATE(addr1,0,regs);
         return;
     }
 
@@ -365,6 +373,7 @@ int     cc = 0;                         /* Condition code            */
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
         *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
+    ITIMER_UPDATE(addr1,len,regs);
 
     regs->psw.cc = cc;
 
@@ -1442,6 +1451,8 @@ U32     old;                            /* old value                 */
 
     FW_CHECK(addr2, regs);
 
+    ITIMER_SYNC(addr2,4-1,regs);
+
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
@@ -1478,6 +1489,10 @@ U32     old;                            /* old value                 */
             if (sysblk.cpus > 1)
                 sched_yield();
     }
+    else
+    {
+        ITIMER_UPDATE(addr2,4-1,regs);
+    }
 }
 
 /*-------------------------------------------------------------------*/
@@ -1496,6 +1511,8 @@ U64     old, new;                       /* old, new values           */
     ODD2_CHECK(r1, r3, regs);
 
     DW_CHECK(addr2, regs);
+
+    ITIMER_SYNC(addr2,8-1,regs);
 
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
@@ -1535,6 +1552,10 @@ U64     old, new;                       /* old, new values           */
 #endif /*defined(_FEATURE_SIE)*/
             if (sysblk.cpus > 1)
                 sched_yield();
+    }
+    else
+    {
+        ITIMER_UPDATE(addr2,8-1,regs);
     }
 }
 
@@ -1652,6 +1673,9 @@ VADR     ea1, ea2;                      /* Effective addresses       */
 BYTE    *m1, *m2;                       /* Mainstor addresses        */
 
     SS_L(inst, regs, len, b1, ea1, b2, ea2);
+
+    ITIMER_SYNC(ea1,len,regs);
+    ITIMER_SYNC(ea2,len,regs);
 
     /* Translate addresses of leftmost operand bytes */
     m1 = MADDR (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey);
@@ -2911,11 +2935,15 @@ BYTE   *dest;                           /* Pointer to target byte    */
 
     SI(inst, regs, i2, b1, effective_addr1);
 
+    ITIMER_SYNC(effective_addr1,1,regs);
+
     /* Get byte mainstor address */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* XOR byte with immediate operand, setting condition code */
     regs->psw.cc = ((*dest ^= i2) != 0);
+
+    ITIMER_UPDATE(effective_addr1,0,regs);
 }
 
 
@@ -2934,6 +2962,9 @@ int     i;                              /* Loop counter              */
 int     cc = 0;                         /* Condition code            */
 
     SS_L(inst, regs, len, b1, addr1, b2, addr2);
+
+    ITIMER_SYNC(addr1,len,regs);
+    ITIMER_SYNC(addr2,len,regs);
 
     /* Quick out for 1 byte (no boundary crossed) */
     if (unlikely(len == 0))
@@ -3055,6 +3086,8 @@ int     cc = 0;                         /* Condition code            */
     }
 
     regs->psw.cc = cc;
+
+    ITIMER_UPDATE(addr1,len,regs);
 
 }
 
@@ -3240,17 +3273,23 @@ DEF_INST(load)
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+#if 0
 U32    *p;                              /* Mainstor pointer          */
+#endif
 
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
+
+    /* FOLLOWING BLOCK COMMENTED OUT ISW 20060119 */
+#if 0
     if ((effective_addr2 & 3) == 0)
     {
         p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
         regs->GR_L(r1) = fetch_fw(p);
     }
     else
+#endif
         regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load) */
@@ -3460,6 +3499,8 @@ U32     rwork[16];                      /* Intermediate work area    */
     /* Calculate number of regs to fetch */
     n = ((r3 - r1) & 0xF) + 1;
 
+    ITIMER_SYNC(effective_addr2,n*4-1,regs);
+
     /* Calculate number of words to next boundary */
     m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
 
@@ -3664,6 +3705,9 @@ int     len, len3, len4;                /* Work lengths              */
 VADR    n;                              /* Work area                 */
 BYTE   *dest, *source;                  /* Mainstor addresses        */
 BYTE    pad;                            /* Padding byte              */
+#if defined(FEATURE_INTERVAL_TIMER)
+int     orglen1;                        /* Original dest length      */
+#endif
 
     RR(inst, regs, r1, r2);
 
@@ -3675,12 +3719,19 @@ BYTE    pad;                            /* Padding byte              */
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
     SET_GR_A(r2, regs,addr2);
 
+
     /* Load padding byte from bits 0-7 of R2+1 register */
     pad = regs->GR_LHHCH(r2+1);
 
     /* Load operand lengths from bits 8-31 of R1+1 and R2+1 */
     len1 = regs->GR_LA24(r1+1);
     len2 = regs->GR_LA24(r2+1);
+
+#if defined(FEATURE_INTERVAL_TIMER)
+    orglen1=len1;
+#endif
+
+    ITIMER_SYNC(addr2,len2,regs);
 
     /* Test for destructive overlap */
     if ( len2 > 1 && len1 > 1
@@ -3793,6 +3844,8 @@ BYTE    pad;                            /* Padding byte              */
 
     } /* while (len1) */
 
+    ITIMER_UPDATE(addr1,orglen1,regs);
+
     /* If len1 is non-zero then we were interrupted */
     if (len1)
         RETURN_INTCHECK(regs);
@@ -3904,6 +3957,8 @@ int     i;                              /* Loop counter              */
 
     SS_L(inst, regs, len, arn1, addr1, arn2, addr2);
 
+    ITIMER_SYNC(addr2,len,regs);
+
     /* Translate addresses of leftmost operand bytes */
     dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     sk1 = regs->dat.storkey;
@@ -4001,6 +4056,7 @@ int     i;                              /* Loop counter              */
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
         *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
+    ITIMER_UPDATE(addr1,len,regs);
 }
 
 
@@ -4159,6 +4215,8 @@ int     i;                              /* Loop counter              */
 
     SS_L(inst, regs, len, arn1, addr1, arn2, addr2);
 
+    ITIMER_SYNC(addr2,len,regs);
+
     /* Translate addresses of leftmost operand bytes */
     dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     sk1 = regs->dat.storkey;
@@ -4256,6 +4314,7 @@ int     i;                              /* Loop counter              */
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
         *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
+    ITIMER_UPDATE(addr1,len,regs);
 }
 
 

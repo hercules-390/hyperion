@@ -1859,6 +1859,8 @@ U16     updated = 0;                    /* Updated control regs      */
     /* Calculate number of regs to load */
     n = ((r3 - r1) & 0xF) + 1;
 
+    ITIMER_SYNC(effective_addr2,(n*4)-1,regs);
+
 #if defined(_FEATURE_SIE)
     if (SIE_MODE(regs))
     {
@@ -6063,6 +6065,8 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     /* Store on next page */
     for ( ; i < n; i++)
         store_fw (p2++, regs->CR_L((r1 + i) & 0xF));
+
+    ITIMER_UPDATE(effective_addr2,(n*4)-1,regs);
 
 } /* end DEF_INST(store_control) */
 

@@ -42,6 +42,7 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
+#include "clock.h"
 
 
 /*-------------------------------------------------------------------*/
@@ -90,11 +91,13 @@ BYTE   *dest;                           /* Pointer to target byte    */
 
     SI(inst, regs, i2, b1, effective_addr1);
 
+    ITIMER_SYNC(effective_addr1,1,regs);
     /* Get byte mainstor address */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* OR byte with immediate operand, setting condition code */
     regs->psw.cc = ((*dest |= i2) != 0);
+    ITIMER_UPDATE(effective_addr1,1,regs);
 }
 
 
@@ -114,6 +117,9 @@ int     cc = 0;                         /* Condition code            */
 
     SS_L(inst, regs, len, b1, addr1, b2, addr2);
 
+    ITIMER_SYNC(addr1,len,regs);
+    ITIMER_SYNC(addr2,len,regs);
+
     /* Quick out for 1 byte (no boundary crossed) */
     if (unlikely(len == 0))
     {
@@ -121,6 +127,7 @@ int     cc = 0;                         /* Condition code            */
         dest1 = MADDR (addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
         *dest1 |= *source1;
         regs->psw.cc = (*dest1 != 0);
+        ITIMER_UPDATE(addr1,len,regs);
         return;
     }
 
@@ -224,6 +231,8 @@ int     cc = 0;                         /* Condition code            */
     }
 
     regs->psw.cc = cc;
+
+    ITIMER_UPDATE(addr1,len,regs);
 
 }
 
@@ -845,11 +854,15 @@ DEF_INST(store)
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+#if 0
 U32    *p;                              /* Mainstor pointer          */
+#endif
 
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
+    /* FOLLOWING BLOCK COMMENTED OUT ISW 20060119 */
+#if 0
     if ((effective_addr2 & 3) == 0)
     {
         p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
@@ -857,6 +870,7 @@ U32    *p;                              /* Mainstor pointer          */
         ITIMER_UPDATE(effective_addr2, 4-1, regs);
     }
     else
+#endif
         ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
 
 } /* end DEF_INST(store) */
@@ -1138,6 +1152,8 @@ U32     rwork[16];                      /* Intermediate work area    */
     if (unlikely(w))
         ARCH_DEP(vstorec) (rwork, (n * 4) - 1, effective_addr2, b2, regs);
 
+    ITIMER_UPDATE(effective_addr2,(n*4)-1,regs);
+
 } /* end DEF_INST(store_multiple) */
 
 
@@ -1354,6 +1370,7 @@ BYTE    old;                            /* Old value                 */
 
     S(inst, regs, b2, effective_addr2);
 
+    ITIMER_SYNC(effective_addr2,0,regs);
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
@@ -1390,6 +1407,10 @@ BYTE    old;                            /* Old value                 */
 #endif /*defined(_FEATURE_SIE)*/
             if (sysblk.cpus > 1)
                 sched_yield();
+    }
+    else
+    {
+        ITIMER_UPDATE(effective_addr2,0,regs);
     }
 }
 
