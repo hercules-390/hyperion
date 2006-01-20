@@ -22,7 +22,7 @@ typedef fthread_attr_t    ATTR;
 
 #if defined(FISH_HANG)
 
-    #define create_thread(ptid,pat,fn,arg)         fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg))
+    #define create_thread(ptid,pat,fn,arg,nm)      fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),(nm))
     #define join_thread(tid,pcode)                 fthread_join(__FILE__,__LINE__,(tid),(pcode))
 
     #define initialize_lock(plk)                   fthread_mutex_init(__FILE__,__LINE__,(plk),NULL)
@@ -42,7 +42,7 @@ typedef fthread_attr_t    ATTR;
 
 #else // !defined(FISH_HANG)
 
-    #define create_thread(ptid,pat,fn,arg)         fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg))
+    #define create_thread(ptid,pat,fn,arg,nm)      fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),nm)
     #define join_thread(tid,pcode)                 fthread_join((tid),(pcode))
 
     #define initialize_lock(plk)                   fthread_mutex_init((plk),NULL)
@@ -123,7 +123,7 @@ typedef pthread_attr_t                  ATTR;
 #define detach_thread(tid) \
         pthread_detach((tid))
 typedef void*THREAD_FUNC(void*);
-#define create_thread(ptid,pat,fn,arg) \
+#define create_thread(ptid,pat,fn,arg,nm) \
         pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
 #define exit_thread(_code) \
         pthread_exit((_code))
@@ -177,11 +177,11 @@ typedef void*THREAD_FUNC(void*);
         ptt_pthread_cond_timedwait((pcond),(plk),(timeout),__FILE__,__LINE__)
 #undef  create_thread
 #if     defined(OPTION_FTHREADS)
-#define create_thread(ptid,pat,fn,arg) \
-        ptt_pthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),__FILE__,__LINE__)
+#define create_thread(ptid,pat,fn,arg,nm) \
+        ptt_pthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),(nm),__FILE__,__LINE__)
 #else
-#define create_thread(ptid,pat,fn,arg) \
-        ptt_pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg,__FILE__,__LINE__)
+#define create_thread(ptid,pat,fn,arg,nm) \
+        ptt_pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg,(nm),__FILE__,__LINE__)
 #endif
 #undef  join_thread
 #define join_thread(tid,pcode) \

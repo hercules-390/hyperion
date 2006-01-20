@@ -195,7 +195,7 @@ int result;
 }
 
 DLL_EXPORT int ptt_pthread_create(pthread_t *tid, ATTR *attr,
-                       void *(*start)(), void *arg, char *file, int line)
+                       void *(*start)(), void *arg, char *nm, char *file, int line)
 {
 int result;
 
@@ -312,11 +312,11 @@ int result;
 }
 
 DLL_EXPORT int ptt_pthread_create(fthread_t *tid, ATTR *attr,
-                       PFT_THREAD_FUNC start, void *arg, char *file, int line)
+                       PFT_THREAD_FUNC start, void *arg, char *nm, char *file, int line)
 {
 int result;
 
-    result = fthread_create(tid, attr, start, arg);
+    result = fthread_create(tid, attr, start, arg, nm);
     PTTRACE ("create", (void *)*tid, NULL, file, line, result);
     return result;
 }

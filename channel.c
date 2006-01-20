@@ -1266,8 +1266,6 @@ int     current_priority;               /* Current thread priority   */
 
     UNREFERENCED(arg);
 
-    SET_THREAD_NAME(-1,"idle device thread");
-
     adjust_thread_priority(&sysblk.devprio);
     current_priority = getpriority(PRIO_PROCESS, 0);
 
@@ -1284,7 +1282,7 @@ int     current_priority;               /* Current thread priority   */
             snprintf ( thread_name, sizeof(thread_name),
                 "device %4.4X thread", dev->devnum );
             thread_name[sizeof(thread_name)-1]=0;
-            SET_THREAD_NAME(-1,thread_name);
+            SET_THREAD_NAME(thread_name);
 
             sysblk.ioq = dev->nextioq;
             if (sysblk.ioq && sysblk.devtwait)
@@ -1304,7 +1302,7 @@ int     current_priority;               /* Current thread priority   */
             dev->tid = 0;
         }
 
-        SET_THREAD_NAME(-1,"idle device thread");
+        SET_THREAD_NAME("idle device thread");
 
         if (sysblk.devtmax < 0
          || (sysblk.devtmax == 0 && sysblk.devtwait > 3)
@@ -2229,7 +2227,8 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
             signal_condition(&sysblk.ioqcond);
         else if (sysblk.devtmax == 0 || sysblk.devtnbr < sysblk.devtmax)
         {
-            rc = create_thread(&dev->tid,&sysblk.detattr,device_thread,NULL);
+            rc = create_thread (&dev->tid, &sysblk.detattr,
+                        device_thread, NULL, "idle device thread");
             if (rc != 0 && sysblk.devtnbr == 0)
             {
                 logmsg (_("HHCCP067E %4.4X create_thread error: %s"),
@@ -2247,21 +2246,19 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     else
     {
         char thread_name[32];
+        snprintf(thread_name,sizeof(thread_name),
+            "execute %4.4X ccw chain",dev->devnum);
+        thread_name[sizeof(thread_name)-1]=0;
 
         /* Execute the CCW chain on a separate thread */
         if ( create_thread (&dev->tid, &sysblk.detattr,
-                            ARCH_DEP(execute_ccw_chain), dev) )
+                    ARCH_DEP(execute_ccw_chain), dev, thread_name) )
         {
             logmsg (_("HHCCP068E %4.4X create_thread error: %s"),
                     dev->devnum, strerror(errno));
             release_lock (&dev->lock);
             return 2;
         }
-
-        snprintf(thread_name,sizeof(thread_name),
-            "execute %4.4X ccw chain",dev->devnum);
-        thread_name[sizeof(thread_name)-1]=0;
-        SET_THREAD_NAME(dev->tid,thread_name);
     }
 
     /* Return with condition code zero */

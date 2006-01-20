@@ -105,6 +105,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     int             rc = 0;             // Return code
     int             nIFType;            // Interface type
     int             nIFFlags;           // Interface flags
+    char            thread_name[32];
 
     nIFType =               // Interface type
         0
@@ -324,7 +325,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     pDevCTCBLK->pDEVBLK[0]->fd =
     pDevCTCBLK->pDEVBLK[1]->fd = pDevCTCBLK->fd;
 
-    create_thread( &pDevCTCBLK->tid, NULL, CTCI_ReadThread, pDevCTCBLK );
+    snprintf(thread_name,sizeof(thread_name),"CTCI %4.4X ReadThread",pDEVBLK->devnum);
+    thread_name[sizeof(thread_name)-1]=0;
+    create_thread( &pDevCTCBLK->tid, NULL, CTCI_ReadThread, pDevCTCBLK, thread_name );
 
     pDevCTCBLK->pDEVBLK[0]->tid = pDevCTCBLK->tid;
     pDevCTCBLK->pDEVBLK[1]->tid = pDevCTCBLK->tid;
@@ -945,10 +948,6 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
     DEVBLK*  pDEVBLK = pCTCBLK->pDEVBLK[0];
     int      iLength;
     BYTE     szBuff[2048];
-
-    snprintf(szBuff,sizeof(szBuff),"CTCI %4.4X ReadThread",pDEVBLK->devnum);
-    szBuff[sizeof(szBuff)-1]=0;
-    SET_THREAD_NAME(-1,szBuff);
 
     // ZZ FIXME: Try to avoid race condition at startup with hercifc
     SLEEP(10);

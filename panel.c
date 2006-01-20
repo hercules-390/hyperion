@@ -1251,7 +1251,7 @@ int     kblen;                          /* Number of chars in kbbuf  */
 U32     aaddr;                          /* Absolute address for STO  */
 char    buf[1024];                      /* Buffer workarea           */
 
-    SET_THREAD_NAME(-1,"panel_display");
+    SET_THREAD_NAME("panel_display");
 
     /* Display thread started message on control panel */
     logmsg (_("HHCPN001I Control panel thread started: "

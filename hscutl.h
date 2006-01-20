@@ -70,9 +70,6 @@
   /* (returns 1==true if it's a socket, 0==false otherwise)    */
   int socket_is_socket( int sfd );
 
-  /* Set a thread's name for debugger/debugging purposes */
-  void set_thread_name( TID tid, char* name );
-
 #endif // !defined(_MSVC_)
 
 /*********************************************************************/

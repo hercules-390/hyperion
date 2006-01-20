@@ -448,6 +448,7 @@ void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 
 static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 {
+    char           str[80];            // Thread name
     int            rc;                 // Return code
     int            mtu;                // MTU size (binary)
     int            lport;              // Listen port (binary)
@@ -636,7 +637,9 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         arg = malloc( sizeof( CTCG_PARMBLK ) );
         memcpy( arg, &parm, sizeof( parm ) );
         arg->dev = dev;
-        create_thread( &tid, NULL, CTCT_ListenThread, arg );
+        snprintf(str,sizeof(str),"CTCT %4.4X ListenThread",parm.dev);
+        str[sizeof(str)-1]=0;
+        create_thread( &tid, NULL, CTCT_ListenThread, arg, str );
     }
     else  // successfully connected (outbound) to the other end
     {
@@ -952,10 +955,6 @@ static void*  CTCT_ListenThread( void* argp )
     // set up the parameters passed via create_thread
     parm = *((CTCG_PARMBLK*) argp);
     free( argp );
-
-    snprintf(str,sizeof(str),"CTCT %4.4X ListenThread",parm.dev);
-    str[sizeof(str)-1]=0;
-    SET_THREAD_NAME(-1,str);
 
     for( ; ; )
     {

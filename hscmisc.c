@@ -187,7 +187,6 @@ static void do_shutdown_now()
 */
 static void do_shutdown_wait()
 {
-    SET_THREAD_NAME(-1,"do_shutdown_wait");
     logmsg(_("HHCIN098I Shutdown initiated\n"));
     wait_sigq_resp();
     do_shutdown_now();
@@ -206,7 +205,8 @@ TID tid;
         cancel_wait_sigq();
     else
         if(can_signal_quiesce() && !signal_quiesce(0,0))
-            create_thread(&tid, &sysblk.detattr, do_shutdown_wait, NULL);
+            create_thread(&tid, &sysblk.detattr, do_shutdown_wait,
+                          NULL, "do_shutdown_wait");
         else
             do_shutdown_now();
 }

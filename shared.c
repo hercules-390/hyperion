@@ -2397,8 +2397,6 @@ struct timeval  wait;                   /* Wait time for select      */
 BYTE            hdr[SHRD_HDR_SIZE + 65536];  /* Header + buffer      */
 BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
 
-    SET_THREAD_NAME(-1,"serverConnect");
-
     csock = *psock;
     free (psock);
 
@@ -2700,8 +2698,6 @@ TID                     tid;            /* Negotiation thread id     */
 
     UNREFERENCED(arg);
 
-    SET_THREAD_NAME(-1,"shared_server");
-
     /* Display thread started message on control panel */
     logmsg (_("HHCSH049I Shared device %d" "." "%d thread started: "
             "tid="TIDPAT", pid=%d\n"),
@@ -2859,7 +2855,7 @@ TID                     tid;            /* Negotiation thread id     */
 
             /* Create a thread to complete the client connection */
             if ( create_thread (&tid, &sysblk.detattr,
-                                serverConnect, psock) )
+                                serverConnect, psock, "serverConnect") )
             {
                 logmsg(_("HHCSH061E serverConnect create_thread: %s\n"),
                         strerror(HSO_errno));

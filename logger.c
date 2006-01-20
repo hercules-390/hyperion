@@ -228,8 +228,6 @@ int bytes_read;
 
     UNREFERENCED(arg);
 
-    SET_THREAD_NAME(-1,"logger_thread");
-
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
 
@@ -464,7 +462,9 @@ DLL_EXPORT void logger_init(void)
 
     setvbuf (logger_syslog[LOG_WRITE], NULL, _IONBF, 0);
 
-    if (create_thread (&logger_tid, &logger_attr, logger_thread, NULL))
+    if (create_thread (&logger_tid, &logger_attr,
+                       logger_thread, NULL, "logger_thread")
+       )
     {
         fprintf(stderr, _("HHCLG012E Cannot create logger thread: %s\n"),
           strerror(errno));

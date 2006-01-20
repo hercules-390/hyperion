@@ -920,7 +920,8 @@ int  fthread_create
     fthread_t*       pdwThreadID,
     fthread_attr_t*  pThreadAttr,
     PFT_THREAD_FUNC  pfnThreadFunc,
-    void*            pvThreadArgs
+    void*            pvThreadArgs,
+    char*            pszName
 )
 {
     static BOOL            bDidInit = FALSE;
@@ -1022,6 +1023,8 @@ int  fthread_create
     *pdwThreadID            = dwThreadID;
 
     InsertListHead ( &ThreadListHead, &pFTHREAD->ThreadListLink );
+
+    SET_THREAD_NAME_ID ( dwThreadID, pszName );
 
     UnlockThreadsList();
 

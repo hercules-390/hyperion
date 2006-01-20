@@ -15,7 +15,7 @@
 
 int main(int ac,char *av[])
 {
-    SET_THREAD_NAME(-1,"bootstrap");
+    SET_THREAD_NAME("bootstrap");
 
 #if defined( OPTION_DYNAMIC_LOAD ) && defined( HDL_USE_LIBTOOL )
     LTDL_SET_PRELOADED_SYMBOLS();
@@ -56,7 +56,7 @@ int main(int ac,char *av[])
 {
     int rc = 0;
 
-    SET_THREAD_NAME(-1,"bootstrap");
+    SET_THREAD_NAME("bootstrap");
 
     // If we're being debugged, then let the debugger
     // catch the exception. Otherwise, let our exception

@@ -1058,13 +1058,8 @@ static REGS *(* run_cpu[GEN_MAXARCH]) (int cpu, REGS *oldregs) =
 /*-------------------------------------------------------------------*/
 void *cpu_thread (int *ptr)
 {
-char  thread_name[16];
 REGS *regs = NULL;
 int   cpu  = *ptr;
-
-    snprintf(thread_name,sizeof(thread_name),"cpu%d thread",cpu);
-    thread_name[sizeof(thread_name)-1]=0;
-    SET_THREAD_NAME(-1,thread_name);
 
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
@@ -1099,7 +1094,7 @@ int   cpu  = *ptr;
     if (!sysblk.todtid)
     {
         if ( create_thread (&sysblk.todtid, &sysblk.detattr,
-             timer_update_thread, NULL) )
+             timer_update_thread, NULL, "timer_update_thread") )
         {
             logmsg (_("HHCCP006S Cannot create timer thread: %s\n"),
                            strerror(errno));

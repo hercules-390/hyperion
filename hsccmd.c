@@ -116,7 +116,7 @@ int crash_cmd(int argc, char *argv[],char *cmdline)
     }
 
     while (num_threads--)
-        create_thread( &tid, &sysblk.detattr, fish_thread, (void*) num_threads );
+        create_thread( &tid, &sysblk.detattr, fish_thread, (void*) num_threads , "fish_thread");
 
     sleep( 1 );
 
@@ -2208,7 +2208,7 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
        and more threads can be created */
 
     if (sysblk.ioq && (!sysblk.devtmax || sysblk.devtnbr < sysblk.devtmax))
-        create_thread(&tid, &sysblk.detattr, device_thread, NULL);
+        create_thread(&tid, &sysblk.detattr, device_thread, NULL, "idle device thread");
 
     /* Wakeup threads in case they need to terminate */
     broadcast_condition (&sysblk.ioqcond);

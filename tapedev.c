@@ -3090,7 +3090,8 @@ static void ReqAutoMount( DEVBLK *dev )
                 &dev->stape_mountmon_tid,
                 &sysblk.detattr,
                 scsi_tapemountmon_thread,
-                dev
+                dev,
+                "scsi_tapemountmon_thread"
             )
             == 0
         );
@@ -4396,15 +4397,8 @@ static int autoload_mount_next(DEVBLK *dev)
 
 static void *autoload_wait_for_tapemount_thread(void *db)
 {
-char    thread_name[64];
 int     rc  = -1;
 DEVBLK *dev = (DEVBLK*) db;
-
-    snprintf(thread_name,sizeof(thread_name),
-        "autoload wait for %4.4X tapemount thread",
-        dev->devnum);
-    thread_name[sizeof(thread_name)-1]=0;
-    SET_THREAD_NAME(-1,thread_name);
 
     obtain_lock(&dev->lock);
     {
@@ -5101,7 +5095,13 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         if ( dev->als )
         {
             TID dummy_tid;
-            create_thread( &dummy_tid, &sysblk.detattr, autoload_wait_for_tapemount_thread, dev );
+            char thread_name[64];
+            snprintf(thread_name,sizeof(thread_name),
+                "autoload wait for %4.4X tapemount thread",
+                dev->devnum);
+            thread_name[sizeof(thread_name)-1]=0;
+            create_thread( &dummy_tid, &sysblk.detattr, autoload_wait_for_tapemount_thread,
+                           dev, thread_name );
         }
 
         ReqAutoMount(dev);

@@ -1220,7 +1220,7 @@ static DWORD WINAPI ReadStdInW32Thread( LPVOID lpParameter )
 
     UNREFERENCED( lpParameter );
 
-    SET_THREAD_NAME(-1,"ReadStdInW32Thread");
+    SET_THREAD_NAME ("ReadStdInW32Thread");
 
     for (;;)
     {
@@ -2306,7 +2306,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     else
         VERIFY(CloseHandle(hWorkerThread));         // (not needed anymore)
 
-    SET_THREAD_NAME(dwThreadId,"w32_read_piped_process_stdOUT_output_thread");
+    SET_THREAD_NAME_ID(dwThreadId,"w32_read_piped_process_stdOUT_output_thread");
 
     //////////////////////////////////////////////////
     // Stderr...
@@ -2338,7 +2338,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     else
         VERIFY(CloseHandle(hWorkerThread));     // (not needed anymore)
 
-    SET_THREAD_NAME(dwThreadId,"w32_read_piped_process_stdERR_output_thread");
+    SET_THREAD_NAME_ID(dwThreadId,"w32_read_piped_process_stdERR_output_thread");
 
     // Return a C run-time file descriptor
     // for the write-to-child-stdin HANDLE...

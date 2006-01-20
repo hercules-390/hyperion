@@ -1443,7 +1443,7 @@ TID             tid;                    /* Readahead thread id       */
         if (cckdblk.rawaiting)
             signal_condition (&cckdblk.racond);
         else if (cckdblk.ras < cckdblk.ramax)
-            create_thread (&tid, NULL, cckd_ra, NULL);
+            create_thread (&tid, NULL, cckd_ra, NULL, "cckd_ra");
     }
 
     release_lock (&cckdblk.ralock);
@@ -1496,7 +1496,6 @@ TID             tid;                    /* Readahead thread id       */
 
     if (!cckdblk.batch)
     {
-        SET_THREAD_NAME(-1,"cckd_ra");
         logmsg (_("HHCCD001I Readahead thread %d started: tid="TIDPAT", pid=%d\n"),
             ra, thread_id(), getpid());
     }
@@ -1532,7 +1531,7 @@ TID             tid;                    /* Readahead thread id       */
             if (cckdblk.rawaiting)
                 signal_condition (&cckdblk.racond);
             else if (cckdblk.ras < cckdblk.ramax)
-                create_thread (&tid, NULL, cckd_ra, dev);
+                create_thread (&tid, NULL, cckd_ra, dev, "cckd_ra");
         }
 
         if (!cckd || cckd->stopping || cckd->merging) continue;
@@ -1580,8 +1579,7 @@ TID             tid;                    /* Writer thread id          */
             signal_condition (&cckdblk.wrcond);
         else if (cckdblk.wrs < cckdblk.wrmax)
         {
-            rc = create_thread (&tid, NULL, cckd_writer, (void *)((long)cckdblk.wrs + 1));
-            if (rc == 0) cckdblk.wrs++;
+            create_thread (&tid, NULL, cckd_writer, NULL, "cckd_writer");
         }
     }
     release_lock (&cckdblk.wrlock);
@@ -1662,7 +1660,6 @@ void cckd_writer(void *arg)
 {
 DEVBLK         *dev;                    /* Device block              */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-int             rc;                     /* Return code               */
 int             writer;                 /* Writer identifier         */
 int             o;                      /* Cache entry found         */
 U16             devnum;                 /* Device number             */
@@ -1677,6 +1674,8 @@ U32             flag;                   /* Cache flag                */
 static char    *compress[] = {"none", "zlib", "bzip2"};
 BYTE            buf2[65536];            /* Compress buffer           */
 
+    UNREFERENCED(arg);
+
 #ifndef WIN32
     /* Set writer priority just below cpu priority to mimimize the
        compression effect */
@@ -1685,11 +1684,19 @@ BYTE            buf2[65536];            /* Compress buffer           */
 #endif
 
     obtain_lock (&cckdblk.wrlock);
-    writer = (long)arg;
+
+    writer = ++cckdblk.wrs;
+
+    /* Return without messages if too many already started */
+    if (writer > cckdblk.wrmax)
+    {
+        --cckdblk.wrs;
+        release_lock (&cckdblk.wrlock);
+        return;
+    }
 
     if (!cckdblk.batch)
     {
-        SET_THREAD_NAME(-1,"cckd_writer");
         logmsg (_("HHCCD002I Writer thread %d started: tid="TIDPAT", pid=%d\n"),
             writer, thread_id(), getpid());
     }
@@ -1726,8 +1733,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
                 signal_condition (&cckdblk.wrcond);
             else if (cckdblk.wrs < cckdblk.wrmax)
             {
-                rc = create_thread (&tid, NULL, cckd_writer, (void *)((long)cckdblk.wrs + 1));
-                if (rc == 0) cckdblk.wrs++;
+                create_thread (&tid, NULL, cckd_writer, NULL, "cckd_writer");
             }
         }
         release_lock (&cckdblk.wrlock);
@@ -1792,7 +1798,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
 
         /* Schedule the garbage collector */
         if (cckdblk.gcs < cckdblk.gcmax)
-            create_thread (&tid, NULL, cckd_gcol, NULL);
+            create_thread (&tid, NULL, cckd_gcol, NULL, "cckd_gcol");
 
         obtain_lock (&cckd->iolock);
         cache_lock (CACHE_DEVBUF);
@@ -4230,7 +4236,6 @@ int             gctab[5]= {             /* default gcol parameters   */
 
     if (!cckdblk.batch)
     {
-        SET_THREAD_NAME(-1,"cckd_gcol");
         logmsg (_("HHCCD003I Garbage collector thread started: tid="TIDPAT", pid=%d \n"),
               thread_id(), getpid());
     }
@@ -5337,7 +5342,7 @@ int   val, opts = 0;
             }
             cckd_unlock_devchain();
             if (flag && cckdblk.gcs < cckdblk.gcmax)
-                create_thread (&tid, NULL, cckd_gcol, NULL);
+                create_thread (&tid, NULL, cckd_gcol, NULL, "cckd_gcol");
         }
         else
         {

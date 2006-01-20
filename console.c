@@ -1220,8 +1220,6 @@ char                    num_procs[16];  /* #of processors string     */
 char                    rejmsg[256];    /* Rejection message         */
 char                    group[16];      /* Console group             */
 
-    SET_THREAD_NAME(-1,"connect_client");
-
     /* Load the socket address from the thread parameter */
     csock = *csockp;
 
@@ -1543,8 +1541,6 @@ BYTE                   unitstat;        /* Status after receive data */
 
     UNREFERENCED(arg);
 
-    SET_THREAD_NAME(-1,"console_connection_handler");
-
     hdl_adsc("console_shutdown",console_shutdown, NULL);
 
     /* Display thread started message on control panel */
@@ -1749,7 +1745,8 @@ BYTE                   unitstat;        /* Status after receive data */
 
             /* Create a thread to complete the client connection */
             if ( create_thread (&tidneg, &sysblk.detattr,
-                                connect_client, &csock) )
+                        connect_client, &csock, "connect_client")
+               )
             {
                 TNSERROR("console: DBG030: connect_client create_thread: %s\n",
                         strerror(errno));
@@ -1890,7 +1887,9 @@ console_initialise()
         if (!sysblk.cnsltid)
         {
             if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
-                                console_connection_handler, NULL) )
+                                console_connection_handler, NULL,
+                                "console_connection_handler")
+               )
             {
                 logmsg (_("HHCTE005E Cannot create console thread: %s\n"),
                         strerror(errno));

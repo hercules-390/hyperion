@@ -624,16 +624,6 @@ DLL_EXPORT int socket_is_socket( int sfd )
     return ( FSTAT( sfd, &st ) == 0 && S_ISSOCK( st.st_mode ) );
 }
 
-/* Set a thread's name for debugger/debugging purposes */
-DLL_EXPORT void set_thread_name( TID tid, char* name )
-{
-    /* I don't know how to do this on non-Windows platforms, */
-    /* nor even if it is supported, so for now we do nothing */
-
-    UNREFERENCED(tid);
-    UNREFERENCED(name);
-}
-
 #endif // !defined(WIN32)
 
 //////////////////////////////////////////////////////////////////////////////////////////

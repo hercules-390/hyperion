@@ -1233,19 +1233,19 @@ S64      dreg;
 #if defined(_370)
             case ARCH_370:
                 rc = create_thread (&dev->tid, &sysblk.detattr,
-                                    s370_execute_ccw_chain, dev);
+                                    s370_execute_ccw_chain, dev, "device thread");
                 break;
 #endif
 #if defined(_390)
             case ARCH_390:
                 rc = create_thread (&dev->tid, &sysblk.detattr,
-                                    s390_execute_ccw_chain, dev);
+                                    s390_execute_ccw_chain, dev, "device thread");
                 break;
 #endif
 #if defined(_900)
             case ARCH_900:
                 rc = create_thread (&dev->tid, &sysblk.detattr,
-                                    z900_execute_ccw_chain, dev);
+                                    z900_execute_ccw_chain, dev, "device thread");
                 break;
 #endif
             } /* switch (sysblk.arch_mode) */

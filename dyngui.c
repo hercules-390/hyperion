@@ -1142,7 +1142,7 @@ void Cleanup()
 
 void gui_panel_display ()
 {
-    SET_THREAD_NAME(-1,"dyngui");
+    SET_THREAD_NAME("dyngui");
 
     if ( !bDoneProcessing )
     {

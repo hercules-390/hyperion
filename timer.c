@@ -176,8 +176,6 @@ struct  timeval tv;                     /* Structure for select      */
 
     UNREFERENCED(argp);
 
-    SET_THREAD_NAME(-1,"timer_update_thread");
-
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
 

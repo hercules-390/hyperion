@@ -428,9 +428,11 @@ typedef void (*SIEFN)();
 /*-------------------------------------------------------------------*/
 
 #ifdef _MSVC_
-  #define  SET_THREAD_NAME(t,n)     w32_set_thread_name((t),(n))
+  #define  SET_THREAD_NAME_ID(t,n)  w32_set_thread_name((t),(n))
+  #define  SET_THREAD_NAME(n)       SET_THREAD_NAME_ID(GetCurrentThreadId(),(n))
 #else
-  #define  SET_THREAD_NAME(t,n)     set_thread_name((t),(n))
+  #define  SET_THREAD_NAME_ID(t,n)
+  #define  SET_THREAD_NAME(n)
 #endif
 
 #endif // _HMACROS_H

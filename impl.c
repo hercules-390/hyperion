@@ -79,8 +79,6 @@ int i;
 
     UNREFERENCED(arg);
 
-    SET_THREAD_NAME(-1,"watchdog_thread");
-
     /* Set watchdog priority just below cpu priority
        such that it will not invalidly detect an
        inoperable cpu */
@@ -133,7 +131,6 @@ void *log_do_callback(void *dummy)
     char *msgbuf;
     int msgcnt = -1,msgnum;
     UNREFERENCED(dummy);
-    SET_THREAD_NAME(-1,"log_do_callback");
     while(msgcnt)
     {
         if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
@@ -158,8 +155,6 @@ void* process_rc_file (void* dummy)
 char   *rcname;                         /* hercules.rc name pointer  */
 
     UNREFERENCED(dummy);
-
-    SET_THREAD_NAME(-1,"process_rc_file");
 
     /* Obtain the name of the hercules.rc file or default */
 
@@ -188,7 +183,7 @@ int     msgcnt;                         /*                           */
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
 
-    SET_THREAD_NAME(-1,"impl");
+    SET_THREAD_NAME("impl");
 
 #if defined(FISH_HANG)
     /* "FishHang" debugs lock/cond/threading logic. Thus it must
@@ -391,7 +386,7 @@ TID     logcbtid;                       /* RC file thread identifier */
 #if !defined(NO_SIGABEND_HANDLER)
     /* Start the watchdog */
     if ( create_thread (&sysblk.wdtid, &sysblk.detattr,
-                        watchdog_thread, NULL) )
+                        watchdog_thread, NULL, "watchdog_thread") )
     {
         fprintf (stderr,
               _("HHCIN004S Cannot create watchdog thread: %s\n"),
@@ -405,7 +400,7 @@ TID     logcbtid;                       /* RC file thread identifier */
     {
         /* Start the http server connection thread */
         if ( create_thread (&sysblk.httptid, &sysblk.detattr,
-                            http_server, NULL) )
+                            http_server, NULL, "http_server") )
         {
             fprintf (stderr,
                   _("HHCIN005S Cannot create http_server thread: %s\n"),
@@ -419,7 +414,7 @@ TID     logcbtid;                       /* RC file thread identifier */
     /* Start the shared server */
     if (sysblk.shrdport)
         if ( create_thread (&sysblk.shrdtid, &sysblk.detattr,
-                            shared_server, NULL) )
+                            shared_server, NULL, "shared_server") )
         {
             fprintf (stderr,
                   _("HHCIN006S Cannot create shared_server thread: %s\n"),
@@ -434,7 +429,9 @@ TID     logcbtid;                       /* RC file thread identifier */
 
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
             if (dev->connecting)
-                if ( create_thread (&tid, &sysblk.detattr, *dev->hnd->init, dev) )
+                if ( create_thread (&tid, &sysblk.detattr,
+                           *dev->hnd->init, dev, "device connecting thread")
+                   )
                 {
                     fprintf (stderr,
                           _("HHCIN007S Cannot create %4.4X connection thread: %s\n"),
@@ -445,13 +442,15 @@ TID     logcbtid;                       /* RC file thread identifier */
 #endif
 
     /* Start up the RC file processing thread */
-    create_thread(&rctid,&sysblk.detattr,process_rc_file,NULL);
+    create_thread(&rctid,&sysblk.detattr,
+                  process_rc_file,NULL,"process_rc_file");
 
     if(log_callback)
     {
         // 'herclin' called us. IT'S in charge. Create its requested
         // logmsg intercept callback function and return back to it.
-        create_thread(&logcbtid,&sysblk.detattr,log_do_callback,NULL);
+        create_thread(&logcbtid,&sysblk.detattr,
+                      log_do_callback,NULL,"log_do_callback");
         return(0);
     }
 

@@ -251,7 +251,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             initialize_join_attr( &thread_attr );
             create_thread( &pLCSBLK->Port[pLCSDev->bPort].tid,
                            &thread_attr, LCS_PortThread,
-                           &pLCSBLK->Port[pLCSDev->bPort] );
+                           &pLCSBLK->Port[pLCSDev->bPort],
+                           "LCS_PortThread" );
 
             /* Identify the thread ID with the devices on which they are active */
             pLCSDev->pDEVBLK[0]->tid = pLCSBLK->Port[pLCSDev->bPort].tid;
@@ -1248,8 +1249,6 @@ static void*  LCS_PortThread( PLCSPORT pPort )
     U32         lIPAddress;
     BYTE        szBuff[2048];
     char        bReported = 0;
-
-    SET_THREAD_NAME(-1,"LCS_PortThread");
 
     pPort->pid = getpid();
 

@@ -402,8 +402,6 @@ void* socket_thread( void* arg )
 
     UNREFERENCED( arg );
 
-    SET_THREAD_NAME(-1,"socket_thread");
-
     /* Display thread started message on control panel */
     logmsg (_("HHCSD020I Socketdevice listener thread started: "
             "tid="TIDPAT", pid=%d\n"),
@@ -520,7 +518,7 @@ int bind_device (DEVBLK* dev, char* spec)
         ATTR joinable_attr;
         initialize_join_attr( &joinable_attr );
         if ( create_thread( &sysblk.socktid, &joinable_attr,
-                                    socket_thread, NULL ) )
+                            socket_thread, NULL, "socket_thread" ) )
             {
                 logmsg( _( "HHCSD023E Cannot create socketdevice thread: errno=%d: %s\n" ),
                         errno, strerror( errno ) );
