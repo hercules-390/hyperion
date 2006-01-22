@@ -1623,6 +1623,7 @@ DLL_EXPORT int w32_FD_ISSET( int fd, fd_set* pSet )
     return 0;   // (file not a member of the specified set)
 }
 //////////////////////////////////////////////////////////////////////////////////////////
+// Win32 "socketpair()" and "pipe()" functionality...
 
 #if !defined( HAVE_SOCKETPAIR )
 
@@ -1639,14 +1640,20 @@ DLL_EXPORT int socketpair( int domain, int type, int protocol, int socket_vector
     // temporary listening socket bound to the localhost loopback address (127.0.0.1)
     // and then having the other socket connect to it...
 
-    if ( AF_INET     != domain   ) return WSAEAFNOSUPPORT;
-    if ( SOCK_STREAM != protocol ) return WSAEPROTONOSUPPORT;
-    if ( IPPROTO_IP  != type     ) return WSAEPROTOTYPE;
+    //  "Upon successful completion, 0 shall be returned; otherwise,
+    //   -1 shall be returned and errno set to indicate the error."
+
+    if ( AF_INET     != domain   ) { errno = WSAEAFNOSUPPORT;    return -1; }
+    if ( SOCK_STREAM != protocol ) { errno = WSAEPROTONOSUPPORT; return -1; }
+    if ( IPPROTO_IP  != type     ) { errno = WSAEPROTOTYPE;      return -1; }
 
     socket_vector[0] = socket_vector[1] = INVALID_SOCKET;
 
     if ( INVALID_SOCKET == (temp_listen_socket = socket( AF_INET, SOCK_STREAM, 0 )) )
-        return (int)WSAGetLastError();
+    {
+        errno = (int)WSAGetLastError();
+        return -1;
+    }
 
     memset( &localhost_addr, 0, len);
 
@@ -1663,7 +1670,8 @@ DLL_EXPORT int socketpair( int domain, int type, int protocol, int socket_vector
     {
         int nLastError = (int)WSAGetLastError();
         closesocket( temp_listen_socket );
-        return nLastError;
+        errno = nLastError;
+        return -1;
     }
 
     if (0
@@ -1675,7 +1683,8 @@ DLL_EXPORT int socketpair( int domain, int type, int protocol, int socket_vector
         closesocket( socket_vector[1] );
                      socket_vector[1] = INVALID_SOCKET;
         closesocket( temp_listen_socket );
-        return nLastError;
+        errno = nLastError;
+        return -1;
     }
 
     closesocket( temp_listen_socket );
@@ -2487,7 +2496,7 @@ void w32_parse_piped_process_stdxxx_data ( char* holdbuff, int* pnHoldAmount )
     // IMPORTANT PROGRAMMING NOTE! We must use memmove here and not strcpy!
     // strcpy doesn't work correctly for overlapping source and destination.
     // If there's 100 bytes remaining and we just want to slide it left by 1
-    // byte (just as an i" I64_FMT "ustrative example), strcpy screws up. This is more
+    // byte (just as an illustrative example), strcpy screws up. This is more
     // than likely because strcpy is trying to be as efficient as possible and
     // is grabbing multiple bytes at a time from the source string and plonking
     // them down into the destination string, thus wiping out part of our source
