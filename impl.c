@@ -307,7 +307,11 @@ TID     logcbtid;                       /* RC file thread identifier */
     if (arg_error)
     {
         fprintf (stderr,
-                "usage: %s [-f config-filename]\n",
+                "usage: %s [-f config-filename] [-d]"
+#if defined(OPTION_DYNAMIC_LOAD)
+                " [-p dyn-load-dir] [[-l dynmod-to-load]...]"
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
+                " [> logfile]\n",
                 argv[0]);
         delayed_exit(1);
     }
