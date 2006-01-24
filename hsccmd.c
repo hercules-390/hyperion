@@ -44,92 +44,17 @@ extern void ecpsvm_command(int argc,char **argv);
 int process_script_file(char *,int);
 
 ///////////////////////////////////////////////////////////////////////
-/* cause_crash command - purposely crash Herc for debugging purposes */
+/* $test_cmd - do something or other */
 
-char* fish_msgs[8] =
+int $test_cmd(int argc, char *argv[],char *cmdline)
 {
-    "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
-    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-    "2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222\n",
-    "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-    "4444444444444444444444444444444444444444444444444444444444444444444444444444444444444444\n",
-    "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-    "6666666666666666666666666666666666666666666666666666666666666666666666666666666666666666\n",
-    "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
-};
-
-COND fish_cond;
-LOCK fish_lock;
-
-void*  fish_thread ( void* arg )
-{
-    int i, thread_num = (int) arg;
-
-    srand( time( NULL ) );
-
-    logmsg( "\n** thread %d waiting\n", thread_num );
-
-    obtain_lock    (             &fish_lock );
-    wait_condition ( &fish_cond, &fish_lock );
-    release_lock   (             &fish_lock );
-
-    logmsg( "\n** thread %d starting\n", thread_num );
-
-    for (i=0; i < 50*1000; i++)
-        logmsg( fish_msgs[ rand() % 8 ] );
-
-    sleep(5);
-
-    logmsg( "\n** thread %d done\n", thread_num );
-
-    return NULL;
-}
-
-int crash_cmd(int argc, char *argv[],char *cmdline)
-{
-#if 1
-    TID tid;
-    int num_threads;
-    static int didthis = 0;
-
-    UNREFERENCED(cmdline);
-
-    if (!didthis)
+    // Cause Hercules to hang...
+    while(1)
     {
-        didthis = 1;
-        initialize_condition ( &fish_cond );
-        initialize_lock      ( &fish_lock );
+        logmsg("** $test_cmd!\n");
+        sleep(5);
     }
-
-    if (argc != 2)
-    {
-        logmsg("invalid arg; 1-8\n");
-        return 0;
-    }
-
-    num_threads = atoi(argv[1]);
-
-    if (num_threads < 0 || num_threads > 8)
-    {
-        logmsg("invalid arg; 1-8\n");
-        return 0;
-    }
-
-    while (num_threads--)
-        create_thread( &tid, &sysblk.detattr, fish_thread, (void*) num_threads , "fish_thread");
-
-    sleep( 1 );
-
-    broadcast_condition ( &fish_cond );
-
     return 0;
-#else
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-    cause_crash();      // (should not return)
-    return 0;           // (make compiler happy)
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -4170,8 +4095,8 @@ COMMAND ( "sizeof",    sizeof_cmd,    "Display size of structures\n" )
 COMMAND ( "suspend",   suspend_cmd,   "Suspend hercules" )
 COMMAND ( "resume",    resume_cmd,    "Resume hercules\n" )
 
-#define CRASH_CMD   "c_crash"       // (hidden internal command)
-COMMAND ( CRASH_CMD,   crash_cmd,     "(hidden internal command)" )
+#define   TEST_CMD "$test"          // (hidden internal command)
+COMMAND ( TEST_CMD, $test_cmd,        "(hidden internal command)" )
 
 COMMAND ( NULL, NULL, NULL )         /* (end of table) */
 };
@@ -4294,7 +4219,7 @@ int ListAllCommands(int argc, char *argv[], char *cmdline)
     for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
     {
         // (don't display hidden internal commands)
-        if ( strcasecmp( pCmdTab->pszCommand, CRASH_CMD ) != 0 )
+        if ( strcasecmp( pCmdTab->pszCommand, TEST_CMD ) != 0 )
             logmsg( _("  %-9.9s    %s \n"), pCmdTab->pszCommand, pCmdTab->pszCmdDesc );
     }
 
