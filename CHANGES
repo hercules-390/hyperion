@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+24 Jan 2006 Export needed http server functions so people (like me!)
+            can create cgi-bin dynamic modules if they want to - Fish
 19 Jan 2006 Tweaks to SET_THREAD_NAME - Greg Smith
 16 Jan 2006 Fix PLO_CSGR to call plo_csgr instead of plo_clgr - Greg Smith
 15 Jan 2006 Fix stfl_data/adjust_stfl_data flag settings bug - Fish

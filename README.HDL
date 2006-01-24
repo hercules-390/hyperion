@@ -566,7 +566,6 @@ HDL_FINAL_SECTION;
 /* char *cgi_baseurl(WEBBLK *webblk);                                */
 /*   Returns the url as requested by the user                        */
 /*                                                                   */
-/*                                                                   */
 /* void html_header(WEBBLK *webblk);                                 */
 /*   Sets up the standard html header, and includes the              */
 /*   html/header.htmlpart file.                                      */
@@ -581,7 +580,7 @@ HDL_FINAL_SECTION;
 /*                                                                   */
 /*                                           Jan Jaeger - 28/03/2002 */
 
-
+#include "hstdinc.h"
 #include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"
@@ -589,14 +588,10 @@ HDL_FINAL_SECTION;
 
 #if defined(OPTION_HTTP_SERVER)
 
-
-
 void cgibin_test(WEBBLK *webblk)
 {
     html_header(webblk);
-
-    fprintf(webblk->hsock, "<H2>Sample cgi routine</H2>\n");
-
+    hprintf(webblk->hsock, "<H2>Sample cgi routine</H2>\n");
     html_footer(webblk);
 }
 
@@ -629,6 +624,5 @@ HDL_FINAL_SECTION;
 {
 }
 END_FINAL_SECTION;
-
 
 #endif /*defined(OPTION_HTTP_SERVER)*/

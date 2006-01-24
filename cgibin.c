@@ -44,6 +44,10 @@
 
 
 #include "hstdinc.h"
+
+#define _CGIBIN_C_
+#define _HENGINE_DLL_
+
 #include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"

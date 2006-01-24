@@ -1,8 +1,25 @@
 /* HTTPMISC.C   (c)Copyright Jan Jaeger, 2002-2006                   */
 /*              HTTP Server                                          */
 
-#if !defined(_HTTPMISC_H)
+#ifndef _HTTPMISC_H
 #define _HTTPMISC_H
+
+
+#ifdef      _HTTPSERV_C_
+  /* We're building the 'httpserv.c' module, so export
+     our entry-points so that others may import them */
+  #define                        HTTP_DLL_IMPORT    DLL_EXPORT
+#else    /* _HTTPSERV_C_  */
+  /* We're building the 'hengine.dll' module, so declare
+     our entry-points as extern so we can link ourselves */
+  #ifdef     _HENGINE_DLL_
+    #define                      HTTP_DLL_IMPORT    extern
+  #else  /* _HENGINE_DLL_ */
+  /* Some other module is being built, so declare our
+     entry-points as 'import' so they can import them */
+    #define                      HTTP_DLL_IMPORT    DLL_IMPORT
+  #endif /* _HENGINE_DLL_ */
+#endif   /* _HTTPSERV_C_  */
 
 
 #if !defined(PKGDATADIR)
@@ -91,11 +108,11 @@ typedef struct _CGITAB {
 } CGITAB;
 
 
-void html_header(WEBBLK *webblk);
-void html_footer(WEBBLK *webblk);
-int html_include(WEBBLK *webblk, char *filename);
+HTTP_DLL_IMPORT void  html_header   (WEBBLK *webblk);
+HTTP_DLL_IMPORT void  html_footer   (WEBBLK *webblk);
+HTTP_DLL_IMPORT int   html_include  (WEBBLK *webblk, char *filename);
+HTTP_DLL_IMPORT char *http_variable (WEBBLK *webblk, char *name, int type);
 
-char *http_variable(WEBBLK *webblk, char *name, int type);
 void *http_server (void *arg);
 
-#endif /*!defined(_HTTPMISC_H)*/
+#endif /* _HTTPMISC_H */

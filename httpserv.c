@@ -29,6 +29,9 @@
 
 #include "hstdinc.h"
 
+#define _HTTPSERV_C_
+#define _HENGINE_DLL_
+
 #include "hercules.h"
 #include "httpmisc.h"
 #include "hostinfo.h"
@@ -56,7 +59,7 @@ static MIMETAB mime_types[] = {
 /* so we'll go with what's actually in use. --JRM */
     { NULL,    NULL } };                     /* Default suffix entry */
 
-int html_include(WEBBLK *webblk, char *filename)
+DLL_EXPORT int html_include(WEBBLK *webblk, char *filename)
 {
     FILE *inclfile;
     char fullname[HTTP_PATH_LENGTH];
@@ -88,7 +91,7 @@ int html_include(WEBBLK *webblk, char *filename)
     return TRUE;
 }
 
-void html_header(WEBBLK *webblk)
+DLL_EXPORT void html_header(WEBBLK *webblk)
 {
     if (webblk->request_type != REQTYPE_POST)
         hprintf(webblk->sock,"Expires: 0\n");
@@ -100,7 +103,7 @@ void html_header(WEBBLK *webblk)
 }
 
 
-void html_footer(WEBBLK *webblk)
+DLL_EXPORT void html_footer(WEBBLK *webblk)
 {
     if (!html_include(webblk,HTML_FOOTER))
         hprintf(webblk->sock,"\n</BODY>\n</HTML>\n");
@@ -273,7 +276,7 @@ static void http_dump_cgi_variables(WEBBLK *webblk)
 #endif
 
 
-char *http_variable(WEBBLK *webblk, char *name, int type)
+DLL_EXPORT char *http_variable(WEBBLK *webblk, char *name, int type)
 {
     CGIVAR *cv;
     for(cv = webblk->cgivar; cv; cv = cv->next)
