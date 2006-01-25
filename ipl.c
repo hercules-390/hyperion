@@ -503,6 +503,12 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     memset ( regs->cr,             0, sizeof(regs->cr)            );
 
     regs->PX     = 0;
+    /* 
+     * ISW20060125 : Since we reset the prefix, we must also adjust 
+     * the PSA ptr
+     */
+    regs->psa = (PSA*)regs->mainstor;
+
     regs->todpr  = 0;
     regs->clkc   = 0;
     set_cpu_timer(regs, 0);

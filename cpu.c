@@ -1147,7 +1147,13 @@ int i;
     regs->arch_mode = sysblk.arch_mode;
     regs->chanset = cpu;
     regs->mainstor = sysblk.mainstor;
+    /* 
+     * ISW20060125 : LINE REMOVED : This is the job of 
+     *               the INITIAL CPU RESET
+     */
+#if 0
     regs->psa = (PSA*)regs->mainstor;
+#endif
     regs->storkeys = sysblk.storkeys;
     regs->mainlim = sysblk.mainsize - 1;
     regs->tod_epoch = get_tod_epoch();
