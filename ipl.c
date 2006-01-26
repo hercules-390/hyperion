@@ -507,7 +507,7 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
      * ISW20060125 : Since we reset the prefix, we must also adjust 
      * the PSA ptr
      */
-    regs->psa = (PSA*)regs->mainstor;
+    regs->psa = (PSA_3XX *)regs->mainstor;
 
     regs->todpr  = 0;
     regs->clkc   = 0;
