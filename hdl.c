@@ -125,6 +125,7 @@ HDLSHD *shdent;
 DLL_EXPORT void hdl_setpath(char *path)
 {
     hdl_modpath = path;
+    logmsg(_("HHCHD018I Loadable module directory is %s\n"),hdl_modpath);
 }
 
 
@@ -668,8 +669,8 @@ HDLPRE *preload;
 
     hdl_cdll->name = strdup("*Hercules");
 
-/* This was a nice trick. Unfortunatelly, on some platforms */
-/* it becomes impossible. Some platform need fully defined  */
+/* This was a nice trick. Unfortunately, on some platforms  */
+/* it becomes impossible. Some platforms need fully defined */
 /* DLLs, some other platforms do not allow dlopen(self)     */
 
 #if 1
