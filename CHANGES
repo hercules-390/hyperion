@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+28 Jan 2006 Added floating point instr CEGR, CDGR and CXGR - Bernard van der Helm
 24 Jan 2006 Export needed http server functions so people (like me!)
             can create cgi-bin dynamic modules if they want to - Fish
 19 Jan 2006 Tweaks to SET_THREAD_NAME - Greg Smith
