@@ -494,8 +494,6 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     /* Clear reset pending indicators */
     regs->sigpireset = regs->sigpreset = 0;
 
-    /* Perform a CPU reset */
-    ARCH_DEP(cpu_reset) (regs);
 
     /* Clear the registers */
     memset ( &regs->psw,           0, sizeof(regs->psw)           );
@@ -508,6 +506,9 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
      * the PSA ptr
      */
     regs->psa = (PSA_3XX *)regs->mainstor;
+
+    /* Perform a CPU reset (after setting PSA) */
+    ARCH_DEP(cpu_reset) (regs);
 
     regs->todpr  = 0;
     regs->clkc   = 0;
