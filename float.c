@@ -25,6 +25,7 @@
 /* Long Displacement Facility: LDY,LEY,STDY,STEY   R.Bowler 29/06/03 */
 /* FPS Extensions Facility: LXR,LZER,LZDR,LZXR     R.Bowler 06juil03 */
 /* HFP Multiply and Add/Subtract Facility          R.Bowler 10juil03 */
+/* Convert 64fixed to float family CEGR,CDGR,CXGR  BvdHelm  28/01/06 */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -5493,6 +5494,125 @@ S64     fix;
             fl.sign = POS;
             fl.ms_fract = fix;
         }
+        fl.ls_fract = 0;
+        fl.expo = 76;  /* 64 + 12 (Herc ms fract is 12 digits) */
+
+        /* Normalize result */
+        normal_ef(&fl);
+
+        /* To register */
+        store_ef(&fl, regs->fpr + i1);
+    } else {
+        /* true zero */
+        regs->fpr[i1] = 0;
+        regs->fpr[i1+1] = 0;
+        regs->fpr[i1+FPREX] = 0;
+        regs->fpr[i1+FPREX+1] = 0;
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* B3C4 CEGR - Convert from 64Fixed to Float. Short Register   [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_64fixed_to_float_short_reg)
+{
+int     r1, r2;                         /* Values of R fields        */
+int     i1;
+LONG_FLOAT fl;
+U64     fix;
+
+    RRE(inst, regs, r1, r2);
+    HFPREG_CHECK(r1, regs);
+    i1 = FPR2I(r1);
+    fix = regs->GR_L(r2);
+
+    /* Test for negative value */
+    if (fix & 0x8000000000000000ULL) {
+        fix = ~fix + 1;  /* fix = abs(fix); */
+        fl.sign = NEG;
+    } else
+        fl.sign = POS;
+
+    if (fix) {
+        fl.long_fract = fix;
+        fl.expo = 78;
+
+        /* Normalize result */
+        normal_lf(&fl);
+
+        /* To register (converting to short float) */
+        regs->fpr[i1] = ((U32)fl.sign << 31) | ((U32)fl.expo << 24) | (fl.long_fract >> 32);
+    } else {
+        /* true zero */
+        regs->fpr[i1] = 0;
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* B3C5 CDGR - Convert from 64Fixed to Float. Long Register    [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_64fixed_to_float_long_reg)
+{
+int     r1, r2;                         /* Values of R fields        */
+int     i1;
+LONG_FLOAT fl;
+U64     fix;
+
+    RRE(inst, regs, r1, r2);
+    HFPREG_CHECK(r1, regs);
+    i1 = FPR2I(r1);
+    fix = regs->GR_L(r2);
+
+    /* Test for negative value */
+    if (fix & 0x8000000000000000ULL) {
+        fix = ~fix + 1;  /* fix = abs(fix); */
+        fl.sign = NEG;
+    } else
+        fl.sign = POS;
+
+    if (fix) {
+        fl.long_fract = fix;
+        fl.expo = 78;
+
+        /* Normalize result */
+        normal_lf(&fl);
+
+        /* To register */
+        store_lf(&fl, regs->fpr + i1);
+    } else {
+        /* true zero */
+        regs->fpr[i1] = 0;
+        regs->fpr[i1+1] = 0;
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* B3C6 CXGR - Convert from 64Fixed to Float. Extended Register[RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_64fixed_to_float_ext_reg)
+{
+int     r1, r2;                         /* Values of R fields        */
+int     i1;
+EXTENDED_FLOAT fl;
+U64     fix;
+
+    RRE(inst, regs, r1, r2);
+    HFPODD_CHECK(r1, regs);
+    i1 = FPR2I(r1);
+    fix = regs->GR_L(r2);
+
+    /* Test for negative value */
+    if (fix & 0x8000000000000000ULL) {
+        fix = ~fix + 1;  /* fix = abs(fix); */
+        fl.sign = NEG;
+    } else
+        fl.sign = POS;
+
+    if (fix) {
+        fl.ms_fract = fix;
         fl.ls_fract = 0;
         fl.expo = 76;  /* 64 + 12 (Herc ms fract is 12 digits) */
 

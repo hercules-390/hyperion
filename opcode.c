@@ -2749,21 +2749,12 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B3C1*/ GENx___x___x___ ,
  /*B3C2*/ GENx___x___x___ ,
  /*B3C3*/ GENx___x___x___ ,
-
-
- /* The following instructions haven't been coded yet */
-
- /*B3C4   GENx___x___x900 (dummy_instruction,RRE,"CEGR"),*/
-          GENx___x___x___ ,
-
- /*B3C5   GENx___x___x900 (dummy_instruction,RRE,"CDGR"),*/
-          GENx___x___x___ ,
-
- /*B3C6   GENx___x___x900 (dummy_instruction,RRE,"CXGR"),*/
-          GENx___x___x___ ,
-
+ /*B3C4*/ GENx___x___x900 (convert_64fixed_to_float_short_reg,RRE,"CEGR"),
+ /*B3C5*/ GENx___x___x900 (convert_64fixed_to_float_long_reg,RRE,"CDGR"),
+ /*B3C6*/ GENx___x___x900 (convert_64fixed_to_float_ext_reg,RRE,"CXGR"),
  /*B3C7*/ GENx___x___x___ ,
 
+ /* The following instructuib haven't been coded yet */
  /*B3C8   GENx___x___x900 (dummy_instruction,RRF_M,"CGER"),*/
           GENx___x___x___ ,
 
