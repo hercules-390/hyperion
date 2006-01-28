@@ -1214,7 +1214,7 @@ BYTE                    model;          /* 3270 model (2,3,4,5,X)    */
 BYTE                    extended;       /* Extended attributes (Y,N) */
 char                    buf[256];       /* Message buffer            */
 char                    conmsg[256];    /* Connection message        */
-char                    devmsg[16];     /* Device message            */
+char                    devmsg[25];     /* Device message            */
 char                    hostmsg[256];   /* Host ID message           */
 char                    num_procs[16];  /* #of processors string     */
 char                    rejmsg[256];    /* Rejection message         */
@@ -1368,12 +1368,6 @@ char                    group[16];      /* Console group             */
                 "Hercules version %s built on %s %s",
                 VERSION, __DATE__, __TIME__);
 
-    if (dev)
-    {
-        snprintf (devmsg, sizeof(devmsg), " device %4.4X", dev->devnum);
-        strlcat(conmsg,devmsg,sizeof(conmsg));
-    }
-
     /* Reject the connection if no available console device */
     if (dev == NULL)
     {
@@ -1447,6 +1441,11 @@ char                    group[16];      /* Console group             */
         if (clientip) free(clientip);
         return NULL;
     }
+    else
+    {
+        snprintf (devmsg, sizeof(devmsg), "Connected to device %4.4X",
+                  dev->devnum);
+    }
 
     logmsg (_("HHCTE009I Client %s connected to %4.4X device %4.4X\n"),
             clientip, dev->devtype, dev->devnum);
@@ -1456,9 +1455,11 @@ char                    group[16];      /* Console group             */
     {
         len = snprintf (buf, sizeof(buf),
                     "\xF5\x40\x11\x40\x40\x1D\x60%s"
-                    "\x11\xC1\x50\x1D\x60%s",
+                    "\x11\xC1\x50\x1D\x60%s"
+                    "\x11\xC2\x60\x1D\x60%s",
                     translate_to_ebcdic(conmsg),
-                    translate_to_ebcdic(hostmsg));
+                    translate_to_ebcdic(hostmsg),
+                    translate_to_ebcdic(devmsg));
 
         if (len < sizeof(buf))
         {
@@ -1480,7 +1481,8 @@ char                    group[16];      /* Console group             */
     }
     else
     {
-        len = snprintf (buf, sizeof(buf), "%s\r\n%s\r\n", conmsg, hostmsg);
+        len = snprintf (buf, sizeof(buf), "%s\r\n%s\r\n%s\r\n",
+                        conmsg, hostmsg, devmsg);
     }
 
     if (class != 'P')  /* do not write connection resp on 3287 */
