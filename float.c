@@ -5525,7 +5525,7 @@ U64     fix;
     RRE(inst, regs, r1, r2);
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
-    fix = regs->GR_L(r2);
+    fix = regs->GR_G(r2);
 
     /* Test for negative value */
     if (fix & 0x8000000000000000ULL) {
@@ -5563,7 +5563,7 @@ U64     fix;
     RRE(inst, regs, r1, r2);
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
-    fix = regs->GR_L(r2);
+    fix = regs->GR_G(r2);
 
     /* Test for negative value */
     if (fix & 0x8000000000000000ULL) {
@@ -5602,7 +5602,7 @@ U64     fix;
     RRE(inst, regs, r1, r2);
     HFPODD_CHECK(r1, regs);
     i1 = FPR2I(r1);
-    fix = regs->GR_L(r2);
+    fix = regs->GR_G(r2);
 
     /* Test for negative value */
     if (fix & 0x8000000000000000ULL) {
