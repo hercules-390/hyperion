@@ -617,17 +617,23 @@ TID                     httptid;        /* Negotiation thread id     */
         char save_working_directory[HTTP_PATH_LENGTH];
         int  rc;
 #if defined(_MSVC_)
+        /* Expand any embedded %var% environ vars */
         rc = expand_environ_vars( sysblk.httproot, absolute_httproot_path,
             sizeof(absolute_httproot_path) );
         if (rc == 0)
-            free(sysblk.httproot); sysblk.httproot = strdup(absolute_httproot_path);
+        {
+            free(sysblk.httproot);
+            sysblk.httproot = strdup(absolute_httproot_path);
+        }
 #endif /* defined(_MSVC_) */
+        /* Convert to absolute path */
         if (!realpath(sysblk.httproot,absolute_httproot_path))
         {
             logmsg( _("HHCCF066E Invalid HTTPROOT: \"%s\": %s\n"),
                    sysblk.httproot, strerror(errno));
             return NULL;
         }
+        /* Verify that the absolute path is valid */
         VERIFY(getcwd(save_working_directory,sizeof(save_working_directory)));
         rc = chdir(absolute_httproot_path);     // (verify path)
         VERIFY(!chdir(save_working_directory)); // (restore cwd)
@@ -641,7 +647,9 @@ TID                     httptid;        /* Negotiation thread id     */
         rc = strlen(absolute_httproot_path);
         if (absolute_httproot_path[rc-1] != *HTTP_PS)
             strlcat(absolute_httproot_path,HTTP_PS,sizeof(absolute_httproot_path));
-        free(sysblk.httproot); sysblk.httproot = strdup(absolute_httproot_path);
+        /* Save the absolute path */
+        free(sysblk.httproot);
+        sysblk.httproot = strdup(absolute_httproot_path);
         logmsg(_("HHCHT013I Using HTTPROOT directory \"%s\"\n"),sysblk.httproot);
     }
 
