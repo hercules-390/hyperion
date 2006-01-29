@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+29 Jan 2006 Added 2305-2 and 2305-2 CKD disk and 2835 control unit definitions
+            from CBT file 296 BLKDISK command - Jay Maynard
 28 Jan 2006 Added floating point instr CEGR, CDGR and CXGR - Bernard van der Helm
 24 Jan 2006 Export needed http server functions so people (like me!)
             can create cgi-bin dynamic modules if they want to - Fish
