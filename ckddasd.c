@@ -570,7 +570,8 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Set number of sense bytes */
     dev->numsense = 32;
-    if ((dev->devtype == 0x2311 ) || (dev->devtype == 0x2314 ))
+    if ((dev->devtype == 0x2311 ) || (dev->devtype == 0x2314 )
+     || (dev->devtype == 0x2305 ))
     {
         dev->numsense = 6;
     }
@@ -1376,6 +1377,11 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
     /* Sense byte 4 is the physical device address */
     dev->sense[4] = 0;
 
+    if (dev->devtype == 0x2305)
+    {
+       /*             0x40=ONLINE             0x04=END OF CYL */
+        dev->sense[3] = (((dev->sense[1]) & 0x20) >> 3) | 0x40;
+    }
     if (dev->devtype == 0x2311)
     {
        /* 0x80=READY, 0x40=ONLINE 0x08=ONLINE 0x04=END OF CYL */
@@ -1428,7 +1434,8 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
     }
     else
     {
-     if ((dev->devtype == 0x2311 ) || (dev->devtype == 0x2314 ))
+     if ((dev->devtype == 0x2311 ) || (dev->devtype == 0x2314 )
+      || (dev->devtype == 0x2305 ))
      {
      }
      else

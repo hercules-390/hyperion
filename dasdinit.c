@@ -21,7 +21,7 @@
 /*              (this program will not overwrite an existing file)   */
 /*                                                                   */
 /* devtype      is the emulated device type.                         */
-/*              CKD: 2311, 2314, 3330, 3350, 3375, 3380,             */
+/*              CKD: 2305, 2311, 2314, 3330, 3350, 3375, 3380,       */
 /*                   3390, 9345                                      */
 /*              FBA: 0671, 3310, 3370, 9313, 9332, 9335, 9336        */
 /*                                                                   */
@@ -108,7 +108,7 @@ argexit ( int code, char *m )
 
 "  filename   name of dasd image file to be created\n\n"
 
-"  devtype    CKD: 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345\n"
+"  devtype    CKD: 2305, 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345\n"
 "             FBA: 0671, 3310, 3370, 9313, 9332, 9335, 9336\n\n"
 
 "  model      device model (implies size) (opt)\n\n"
