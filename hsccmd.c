@@ -653,6 +653,7 @@ S64 vcpt_now = 0;
 char sie_flag = 0;
 #endif
 U32 itimer = 0;
+char itimer_formatted[20];
 char arch370_flag = 0;
 
     UNREFERENCED(cmdline);
@@ -688,8 +689,12 @@ char arch370_flag = 0;
 #endif
     if (regs->arch_mode == ARCH_370)
     {
-        PSA_3XX *psa = (void*) (regs->mainstor + regs->PX);
-        FETCH_FW(itimer, psa->inttimer);
+        itimer = INT_TIMER(regs);
+        /* The interval timer counts 76800 per second, or one every
+           13.0208 microseconds. */
+        sprintf(itimer_formatted,"%02u:%02u:%02u.%06u",
+                (itimer/(76800*60*60)),((itimer%(76800*60*60))/(76800*60)),
+                ((itimer%(76800*60))/76800),((itimer%76800)*13));
         arch370_flag = 1;
     }
         
@@ -731,7 +736,8 @@ char arch370_flag = 0;
 
     if (arch370_flag)
     {
-        logmsg( _("          itm = %8.8" I32_FMT "X\n"), INT_TIMER(regs) );
+        logmsg( _("          itm = %8.8" I32_FMT "X                     %s\n"),
+                   itimer, itimer_formatted );
     }
 
     return 0;
