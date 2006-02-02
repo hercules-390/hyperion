@@ -23,8 +23,8 @@ VM/SP 6 (with or without HPO option)
     but rely on the SIE instruction to perform some of these functions.
 
 A VM/SP Guest (or VM/370 Guest with 4K Storage key updates) running under
-[z/]VM[/[XA|ESA]] can theorically use the VM and CP Assists. This implementation
-is not finalized yet (see BUGS section)
+[z/]VM[/[XA|ESA]] will NOT have access to either the CP assists or VM Assists.
+The ECPS:VM Feature is disabled when running under SIE.
 
 ************************
 
@@ -156,12 +156,14 @@ VM Assists for MVS
 *****************
 BUGS & Caveats :
 
-ECPS:VM Has not been tested in a AP/MP System.
-My belief is that they WILL NOT WORK.
-ECPS:VM Should be disabled if the system is MP or AP generated
+ECPS:VM will NOT work in an AP or MP system. An AP or MP generated system 
+locks the control blocks being manipulated by the assisted functions 
+(VMBLOK, RDEVBLOK, VDEVBLOK, etc..). However, the current ECPS:VM 
+implementation doesn't lock any of those structures. Therefore, CP will
+fairly quickly abend because it will find some of the control blocks
+to not have been locked when they should (various LOKXXX abends).
 
-For the time being, ECPS:VM Should be disabled on the host system when running VM/SP Under [z/]VM/[XA/ESA]
-because ECPS:VM Under SIE is still not finalized
+Consequently, ECPS:VM must be disabled when a AP or MP system is used.
 
 *****************
 
