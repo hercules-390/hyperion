@@ -595,7 +595,7 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
 ///////////////////////////////////////////////////////////////////////
 /* format_tod - generate displayable date from TOD value */
 /* always uses epoch of 1900 */
-char * format_tod(char *buf, U64 tod)
+char * format_tod(char *buf, U64 tod, int flag1900)
 {
     int leapyear, years, days, hours, minutes, seconds, microseconds;
 
@@ -617,6 +617,8 @@ char * format_tod(char *buf, U64 tod)
     }
     else
         years = 0;
+    if (flag1900)
+        years += 1900;
 
     days = tod / (24*60*60*16000000LL);
     tod %= 24*60*60*16000000LL;
@@ -628,7 +630,7 @@ char * format_tod(char *buf, U64 tod)
     microseconds = (tod % 16000000LL) / 16;
     
     sprintf(buf,"%4d.%03d %02d:%02d:%02d.%06d",
-        1900+years,days+1,hours,minutes,seconds,microseconds);
+        years,days+1,hours,minutes,seconds,microseconds);
 
     return buf;
 }
@@ -643,11 +645,15 @@ char clock_buf[30];
 U64 tod_now;
 U64 hw_now;
 S64 epoch_now;
+U64 epoch_now_abs;
+char epoch_sign;
 U64 clkc_now;
 S64 cpt_now;
 #if defined(_FEATURE_SIE)
 U64 vtod_now = 0;
 S64 vepoch_now = 0;
+U64 vepoch_now_abs = 0;
+char vepoch_sign = ' ';
 U64 vclkc_now = 0;
 S64 vcpt_now = 0;
 char sie_flag = 0;
@@ -672,7 +678,7 @@ char arch370_flag = 0;
 
 /* Get the clock values all at once for consistency and so we can
    release the CPU lock more quickly. */
-    tod_now = tod_clock(regs);
+    tod_now = (tod_clock(regs) << 8) >> 8;
     hw_now = hw_tod;
     epoch_now = regs->tod_epoch;
     clkc_now = regs->clkc;
@@ -680,7 +686,7 @@ char arch370_flag = 0;
 #if defined(_FEATURE_SIE)
     if(regs->sie_active)
     {
-        vtod_now = TOD_CLOCK(regs->guestregs);
+        vtod_now = (TOD_CLOCK(regs->guestregs) << 8) >> 8;
         vepoch_now = regs->guestregs->tod_epoch;
         vclkc_now = regs->guestregs->clkc;
         vcpt_now = CPU_TIMER(regs->guestregs);
@@ -701,16 +707,26 @@ char arch370_flag = 0;
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     logmsg( _("HHCPN028I tod = %16.16" I64_FMT "X    %s\n"),
-               (tod_now << 8),format_tod(clock_buf,tod_now));
+               (tod_now << 8),format_tod(clock_buf,tod_now,TRUE));
 
     logmsg( _("          h/w = %16.16" I64_FMT "X    %s\n"),
-               (hw_now << 8),format_tod(clock_buf,hw_now));
+               (hw_now << 8),format_tod(clock_buf,hw_now,TRUE));
 
-    logmsg( _("          off = %16.16" I64_FMT "X\n"),
-               (epoch_now << 8));
+    if (epoch_now < 0) {
+        epoch_now_abs = -(epoch_now);
+        epoch_sign = '-';
+    }
+    else
+    {
+        epoch_now_abs = epoch_now;
+        epoch_sign = ' ';
+    }
+    logmsg( _("          off = %16.16" I64_FMT "X   %c%s\n"),
+               (epoch_now << 8),epoch_sign,
+               format_tod(clock_buf,epoch_now_abs,FALSE));
 
     logmsg( _("          ckc = %16.16" I64_FMT "X    %s\n"),
-               (clkc_now << 8),format_tod(clock_buf,clkc_now));
+               (clkc_now << 8),format_tod(clock_buf,clkc_now,TRUE));
 
     if (regs->cpustate != CPUSTATE_STOPPED)
         logmsg( _("          cpt = %16.16" I64_FMT "X\n"), cpt_now << 8);
@@ -722,13 +738,23 @@ char arch370_flag = 0;
     {
 
         logmsg( _("         vtod = %16.16" I64_FMT "X    %s\n"),
-                   (vtod_now << 8),format_tod(clock_buf,vtod_now));
+                   (vtod_now << 8),format_tod(clock_buf,vtod_now,TRUE));
 
-        logmsg( _("         voff = %16.16" I64_FMT "X\n"),
-                   (vepoch_now << 8));
+        if (epoch_now < 0) {
+            epoch_now_abs = -(epoch_now);
+            epoch_sign = '-';
+        }
+        else
+        {
+            epoch_now_abs = epoch_now;
+            epoch_sign = ' ';
+        }
+        logmsg( _("         voff = %16.16" I64_FMT "X   %c%s\n"),
+                   (vepoch_now << 8),vepoch_sign,
+                   format_tod(clock_buf,vepoch_now_abs,FALSE));
 
         logmsg( _("         vckc = %16.16" I64_FMT "X    %s\n"), 
-                   (vclkc_now << 8),format_tod(clock_buf,vclkc_now));
+                   (vclkc_now << 8),format_tod(clock_buf,vclkc_now,TRUE));
 
         logmsg( _("         vcpt = %16.16" I64_FMT "X\n"),vcpt_now << 8);
     }
