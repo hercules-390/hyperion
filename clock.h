@@ -28,7 +28,7 @@ double get_tod_steering(void);          /* Get steering rate         */
 U64 update_tod_clock(void);             /* Update the TOD clock      */
 void update_cpu_timer(void);            /* Update the CPU timer      */
 void set_tod_epoch(S64);                /* Set TOD epoch             */
-void ajust_tod_epoch(S64);              /* Adjust TOD epoch          */
+void adjust_tod_epoch(S64);             /* Adjust TOD epoch          */
 S64 get_tod_epoch(void);                /* Get TOD epoch             */
 U64 hw_clock(void);                     /* Get hardware clock        */ 
 S64 cpu_timer(REGS *);                  /* Retrieve CPU timer        */

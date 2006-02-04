@@ -1836,7 +1836,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
     set_tod_epoch((sysepoch*365+((sysepoch>0?sysepoch-1:sysepoch)/4))*-1382400000000LL);
 
     /* Set the timezone offset */
-    ajust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
+    adjust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
 
     /* Set clock steering based on drag factor */
     set_tod_steering(-(1.0-(1.0/toddrag)));

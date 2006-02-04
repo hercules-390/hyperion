@@ -2712,7 +2712,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
               && iobuf[1] != O3270_RA
               && iobuf[1] != O3270_EUA)
             {
-                /* Copy the write control character and ajust buffer */
+                /* Copy the write control character and adjust buffer */
                 buf[len++] = *iobuf++; num--;
                 /* Insert the SBA order */
                 buf[len++] = O3270_SBA;

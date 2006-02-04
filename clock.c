@@ -183,7 +183,7 @@ void set_tod_epoch(S64 epoch)
 }
 
 
-void ajust_tod_epoch(S64 epoch)
+void adjust_tod_epoch(S64 epoch)
 {
     obtain_lock(&sysblk.todlock);
     csr_reset();
