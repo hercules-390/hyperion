@@ -528,6 +528,7 @@ char   *snumvec;                        /* -> Number of VFs          */
 char   *sarchmode;                      /* -> Architectural mode     */
 char   *sloadparm;                      /* -> IPL load parameter     */
 char   *ssysepoch;                      /* -> System epoch           */
+char   *syroffset;                      /* -> System year offset     */
 char   *stzoffset;                      /* -> System timezone offset */
 char   *sdiag8cmd;                      /* -> Allow diagnose 8       */
 char   *sshcmdopt;                      /* -> SHCMDOPT shell cmd opt */
@@ -579,6 +580,7 @@ U16     shrdport;                       /* Shared device port number */
 int     archmode;                       /* Architectural mode        */
 S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
+S32     yroffset;                       /* System year offset        */
 int     diag8cmd;                       /* Allow diagnose 8 commands */
 BYTE    shcmdopt;                       /* Shell cmd allow option(s) */
 double  toddrag;                        /* TOD clock drag factor     */
@@ -660,6 +662,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
     numcpu = 0;
     numvec = MAX_CPU_ENGINES;
     sysepoch = 1900;
+    yroffset = 0;
     tzoffset = 0;
     diag8cmd = 0;
     shcmdopt = 0;
@@ -749,6 +752,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
         sarchmode = NULL;
         sloadparm = NULL;
         ssysepoch = NULL;
+        syroffset = NULL;
         stzoffset = NULL;
         sdiag8cmd = NULL;
         sshcmdopt = NULL;
@@ -855,6 +859,10 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "sysepoch") == 0)
             {
                 ssysepoch = operand;
+            }
+            else if (strcasecmp (keyword, "yroffset") == 0)
+            {
+                syroffset = operand;
             }
             else if (strcasecmp (keyword, "tzoffset") == 0)
             {
@@ -1369,12 +1377,30 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
         if (ssysepoch != NULL)
         {
             if (strlen(ssysepoch) != 4
-                || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1)
+                || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
+                || (sysepoch != 1900 && sysepoch != 1928 && sysepoch != 1960
+                    && sysepoch != 1988))
             {
                 fprintf(stderr, _("HHCCF022S Error in %s line %d: "
                         "%s is not a valid system epoch.\n"
-                        "Patch config.c to expand the table\n"),
+                        "          The only legal values are 1900, "
+                        "1928, 1960, and 1988.\n"
+                        "          You may need to use the YROFFSET "
+                        "parameter.\n"),
                         fname, stmt, ssysepoch);
+                delayed_exit(1);
+            }
+        }
+
+        /* Parse year offset operand */
+        if (syroffset != NULL)
+        {
+            if (sscanf(syroffset, "%d%c", &yroffset, &c) != 1
+                || (yroffset < -142) || (yroffset > 142))
+            {
+                fprintf(stderr, _("HHCCF070S Error in %s line %d: "
+                        "%s is not a valid year offset\n"),
+                        fname, stmt, syroffset);
                 delayed_exit(1);
             }
         }
@@ -1830,10 +1856,37 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
     csr_reset();
 
     /* Set up the system TOD clock offset: compute the number of
-     * microseconds offset to the year 1900 */
+     * microseconds offset to 0000 GMT, 1 January 1900 */
 
-    sysepoch -= 1900;
-    set_tod_epoch((sysepoch*365+((sysepoch>0?sysepoch-1:sysepoch)/4))*-1382400000000LL);
+    sysblk.sysepoch = sysepoch;
+    
+    if (sysepoch == 1928)
+    {
+        sysepoch = 1900;
+        yroffset = -28;
+        logmsg( _("HHCCF071W SYSEPOCH 1928 is deprecated and "
+              	"will be invalid in a future release.\n"
+                "          Specify SYSEPOCH 1900 and YROFFSET -28 instead.\n"));
+    }
+    if (sysepoch == 1988)
+    {
+        sysepoch = 1960;
+        yroffset = -28;
+        logmsg( _("HHCCF071W SYSEPOCH 1988 is deprecated and "
+              	"will be invalid in a future release.\n"
+                "          Specify SYSEPOCH 1960 and YROFFSET -28 instead.\n"));
+    }
+    /* Only 1900 and 1960 are valid by this point. There are 16*1000000 clock
+       increments in one second, 86400 seconds in one day, and 14 leap days
+       between 1 January 1900 and 1 January 1960. */
+    if (sysepoch == 1960)
+        set_tod_epoch(((60*365)+14)*(-86400*16*1000000LL));
+    else
+        set_tod_epoch(0);
+
+    /* Set the year offset. This has been handled above for the case of
+       SYSEPOCH 1928 or 1988, for backwards compatibility. */
+    adjust_tod_epoch((yroffset*365+(yroffset/4))*(86400*16*1000000LL));
 
     /* Set the timezone offset */
     adjust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);
@@ -2038,7 +2091,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
         ,( sysblk.asnandlxreuse ) ? "EN" : "DIS"
         ,( sysblk.diag8cmd      ) ? "EN" : "DIS"
     );
-
+    
     /* Start the CPUs */
     obtain_lock (&sysblk.intlock);
     for(i = 0; i < numcpu; i++)

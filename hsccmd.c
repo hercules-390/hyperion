@@ -595,7 +595,7 @@ int quiet_cmd(int argc, char *argv[], char *cmdline)
 ///////////////////////////////////////////////////////////////////////
 /* format_tod - generate displayable date from TOD value */
 /* always uses epoch of 1900 */
-char * format_tod(char *buf, U64 tod, int flag1900)
+char * format_tod(char *buf, U64 tod, int flagdate)
 {
     int leapyear, years, days, hours, minutes, seconds, microseconds;
 
@@ -617,8 +617,6 @@ char * format_tod(char *buf, U64 tod, int flag1900)
     }
     else
         years = 0;
-    if (flag1900)
-        years += 1900;
 
     days = tod / (24*60*60*16000000LL);
     tod %= 24*60*60*16000000LL;
@@ -628,9 +626,15 @@ char * format_tod(char *buf, U64 tod, int flag1900)
     tod %= 60*16000000LL;
     seconds = tod / 16000000LL;
     microseconds = (tod % 16000000LL) / 16;
+
+    if (flagdate)
+    {
+        years += 1900;
+        days += 1;
+    }
     
     sprintf(buf,"%4d.%03d %02d:%02d:%02d.%06d",
-        years,days+1,hours,minutes,seconds,microseconds);
+        years,days,hours,minutes,seconds,microseconds);
 
     return buf;
 }
