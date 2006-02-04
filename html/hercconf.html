@@ -438,17 +438,17 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="SYSEPOCH"></a>
 <dt><code>SYSEPOCH <em>yyyy</em></code>
 <dd><p>
-    specifies the base date for the TOD clock.  Use the default
-    value (1900) for all systems except OS/360. Use 1960 for OS/360.
-    This value was formerly used to offset the TOD clock by a number of
-    years to move the date before the year 2000 for non-Y2K-compliant
-    operating systems. This use is deprecated and will be removed in a
-    future release. For now, <code>SYSEPOCH</code> values of
-    <code>1928</code> and <code>1988</code> are accepted; if specified,
-    they will have the same result as specifying <code>SYSEPOCH
-    1900</code> or <code>SYSEPOCH 1960</code> and <code>YROFFSET -28</code>,
-    and will produce a warning message at Hercules startup reminding you
-    to change the config file.
+    specifies the base date for the TOD clock.  Use the default value
+    (<code>1900</code>) for all systems except OS/360. Use <code>1960</code>
+    for OS/360.  This value was formerly used to offset the TOD clock by a
+    number of years to move the date before the year 2000 for
+    non-Y2K-compliant operating systems. This use is deprecated and will be
+    removed in a future release. For now, <code>SYSEPOCH</code> values of
+    <code>1928</code> and <code>1988</code> are accepted; if specified, they
+    will have the same result as specifying <code>SYSEPOCH 1900</code> or
+    <code>SYSEPOCH 1960</code> and <code>YROFFSET -28</code>, and will
+    produce a warning message at Hercules startup reminding you to change
+    the config file.
     <p>
 
 <a name="YROFFSET"></a>
@@ -460,10 +460,10 @@ a real System/390.  The configuration file is an ASCII text file.
     non-Y2K-compliant operating systems is <code>YROFFSET -28</code>, which
     has the advantage that the day of the week and the presence or absence
     of February 29 is the same as the current year. This value may not be
-    specified as greater than &plusmn142 years, the total range of the TOD
-    clock. Specifying a value that causes the computed year to be earlier
-    than the value of <code>SYSEPOCH</code> or more than 142 years later
-    than that value will produce unexpected results.
+    specified as greater than &plusmn;142 years, the total range of the TOD
+    clock. Specifying a value that causes the computed TOD clock year to be
+    earlier than the value of <code>SYSEPOCH</code> or more than 142 years
+    later than that value will produce unexpected results.
     <p>
 
 <a name="TZOFFSET"></a>
