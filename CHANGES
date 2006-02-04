@@ -1,6 +1,9 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+03 Feb 2006 Fixed off-by-one-day bug with SYSEPOCH other than 1900; added
+            new config parameter, YROFFSET, and limited SYSEPOCH to 1900
+            or 1960 - Jay Maynard
 29 Jan 2006 Added 2305-2 and 2305-2 CKD disk and 2835 control unit definitions
             from CBT file 296 BLKDISK command - Jay Maynard
 28 Jan 2006 Added floating point instr CEGR, CDGR and CXGR - Bernard van der Helm
