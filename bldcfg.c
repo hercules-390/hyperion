@@ -1858,6 +1858,7 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
     /* Set up the system TOD clock offset: compute the number of
      * microseconds offset to 0000 GMT, 1 January 1900 */
 
+#if 1
     sysblk.sysepoch = sysepoch;
     
     if (sysepoch == 1928)
@@ -1887,6 +1888,12 @@ BYTE    pathname[MAX_PATH];             /* file path in host format  */
     /* Set the year offset. This has been handled above for the case of
        SYSEPOCH 1928 or 1988, for backwards compatibility. */
     adjust_tod_epoch((yroffset*365+(yroffset/4))*(86400*16*1000000LL));
+#else
+
+    sysepoch -= 1900 + yroffset;
+
+    set_tod_epoch((sysepoch*365+(sysepoch>3?((sysepoch/4)-1):(sysepoch/4)))*-1382400000000LL);
+#endif
 
     /* Set the timezone offset */
     adjust_tod_epoch((tzoffset/100*3600+(tzoffset%100)*60)*16000000LL);

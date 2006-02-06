@@ -2,7 +2,7 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-VERSION  = \"3.02\"
+VERSION  = \"3.03\"
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
@@ -12,8 +12,8 @@ DESTDIR  = $(PREFIX)/usr/bin
 DESTLIB  = $(PREFIX)/usr/lib
 
 # For Linux use:
-CFLAGS  = -O3 -march=pentium -fomit-frame-pointer
-CFLAGS += -DVERSION=$(VERSION) -DHAVE_INTTYPES_H -DMAX_CPU_ENGINES=2
+CFLAGS  = -O3 -march=pentium -fomit-frame-pointer -I.
+// CFLAGS += -DVERSION=$(VERSION) -DHAVE_INTTYPES_H -DMAX_CPU_ENGINES=2
 CFLAGS += -W -Wall
 # For older Linux versions use:
 # For Linux/390 use:
@@ -21,23 +21,21 @@ CFLAGS += -W -Wall
 
 LFLAGS	 = -lpthread -lm -lz
 
-CFLAGS  += -DHAVE_SQRTL
-
-CFLAGS  += -DHAVE_SETRESUID
+CFLAGS += -DHAVE_CONFIG_H
 
 # Uncomment the lines below to enable Compressed CKD bzip2 compression
-CFLAGS	+= -DHAVE_LIBZ -DCCKD_BZIP2
+// CFLAGS	+= -DHAVE_LIBZ -DCCKD_BZIP2
 LFLAGS	+= -lbz2
 
 # Uncomment the lines below to enable HET bzip2 compression
-CFLAGS	+= -DHET_BZIP2
+// CFLAGS	+= -DHET_BZIP2
 LFLAGS	+= -lbz2
 
 # Dynamic loader support
-LFLAGS	+= -rdynamic -ldl
-CFLAGS  += -DOPTION_DYNAMIC_LOAD
+// LFLAGS	+= -rdynamic -ldl
+// CFLAGS  += -DOPTION_DYNAMIC_LOAD
 
-CFLAGS  += -DOPTION_CONFIG_SYMBOLS 
+// CFLAGS  += -DOPTION_CONFIG_SYMBOLS 
 
 EXEFILES = hercules hercifc \
            dasdinit dasdisup dasdload dasdconv dasdls dasdcat dasdpdsu dasdseq \
