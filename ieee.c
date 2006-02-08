@@ -141,7 +141,7 @@ do { \
 #endif
 
 struct ebfp {
-    char    sign;
+    BYTE    sign;
     int fpclass;
     int exp;
     U64 fracth;
@@ -149,14 +149,14 @@ struct ebfp {
     long double v;
 };
 struct lbfp {
-    char    sign;
+    BYTE    sign;
     int fpclass;
     int exp;
     U64 fract;
     double  v;
 };
 struct sbfp {
-    char    sign;
+    BYTE    sign;
     int fpclass;
     int exp;
     int fract;

@@ -776,7 +776,7 @@ main( int argc, char *argv[] )
             /*
             || Open the output file
             */
-            BYTE pathname[MAX_PATH];
+            char pathname[MAX_PATH];
             hostpath(pathname, opts.ofile, sizeof(pathname));
             outf = fopen( pathname, "wb" );
             if( outf != NULL )

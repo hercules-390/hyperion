@@ -103,7 +103,7 @@ FILE           *ofp;                    /* Output file pointer       */
 BYTE            ofname[256];            /* Output file name          */
 int             offset;                 /* Offset of record in buffer*/
 BYTE            card[81];               /* Logical record (ASCIIZ)   */
-BYTE            pathname[MAX_PATH];     /* ofname in host path format*/
+char            pathname[MAX_PATH];     /* ofname in host path format*/
 
     /* Build the output file name */
     memset (ofname, 0, sizeof(ofname));

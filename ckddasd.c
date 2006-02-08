@@ -173,6 +173,15 @@
 #define CONFIG_DATA_SIZE        256     /* Number of bytes returned
                                            by Read Config Data CCW   */
 
+/*
+ * ISW20060207
+ * EXTENT_CHECK0 is just to shut up a stupid gcc 4 warning..
+ * It doesn't hurt otherwise
+ * EXTENT_CHECK0(dev) is the same as EXTENT_CHECK(dev,0,0)
+ */
+#define EXTENT_CHECK0(_dev) ((_dev)->ckdxbcyl > 0                            \
+            || ((_dev)->ckdxbcyl==0 && (_dev)->ckdxbhead>0))
+
 #define EXTENT_CHECK(_dev, _cyl, _head)                                        \
         ( (_cyl) < (_dev)->ckdxbcyl || (_cyl) > (_dev)->ckdxecyl               \
             || ((_cyl) == (_dev)->ckdxbcyl && (_head) < (_dev)->ckdxbhead)     \
@@ -204,7 +213,7 @@ int             highcyl;                /* Highest cyl# in CKD file  */
 char           *cu = NULL;              /* Specified control unit    */
 char           *kw;                     /* Argument keyword          */
 int             cckd=0;                 /* 1 if compressed CKD       */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x3380;
@@ -3141,7 +3150,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             /* Bytes 0-31 contain node descriptor data */
             iobuf[0] = 0x00;
             memcpy (&iobuf[1], "010", 3);
-            sprintf (&iobuf[4], "00%4.4X   HRCZZ000000000001",
+            sprintf ((char *)&iobuf[4], "00%4.4X   HRCZZ000000000001",
                                 dev->ckdcu->devt);
             for (i = 1; i < 30; i++)
                 iobuf[i] = host_to_guest(iobuf[i]);
@@ -3308,7 +3317,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* File protected if cyl 0 head 0 is outside defined extent */
-        if ( EXTENT_CHECK(dev, 0, 0) )
+        if ( EXTENT_CHECK0(dev) )
         {
             ckd_build_sense (dev, 0, SENSE1_FP, 0, 0, 0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5167,7 +5176,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         iobuf[0] = 0xCC;
         iobuf[1] = 0x01;
         iobuf[2] = 0x01;
-        sprintf (&iobuf[4], "00%4.4X0%2.2XHRCZZ000000000001",
+        sprintf ((char *)&iobuf[4], "00%4.4X0%2.2XHRCZZ000000000001",
                             dev->ckdtab->devt, dev->ckdtab->model);
         for (i = 4; i < 30; i++)
             iobuf[i] = host_to_guest(iobuf[i]);
@@ -5181,7 +5190,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Bytes 64-95 contain node element descriptor 3 (CU) data */
         iobuf[64] = 0xD4;
         iobuf[65] = 0x02;
-        sprintf (&iobuf[68], "00%4.4X0%2.2XHRCZZ000000000001",
+        sprintf ((char *)&iobuf[68], "00%4.4X0%2.2XHRCZZ000000000001",
                             dev->ckdcu->devt, dev->ckdcu->model);
         for (i = 68; i < 94; i++)
             iobuf[i] = host_to_guest(iobuf[i]);

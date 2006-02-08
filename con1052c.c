@@ -199,7 +199,7 @@ BYTE    c;                              /* Print character           */
         iobuf[len] = '\0';
 
         /* Send the data to the console */
-        logmsg(iobuf);
+        logmsg((char *)iobuf);
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;

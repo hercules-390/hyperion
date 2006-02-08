@@ -505,7 +505,7 @@ int   new_hrdcpyfd;
     }
     else
     {
-        BYTE pathname[MAX_PATH];
+        char pathname[MAX_PATH];
         hostpath(pathname, filename, sizeof(pathname));
 
         new_hrdcpyfd = open(pathname,

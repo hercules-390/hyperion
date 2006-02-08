@@ -369,7 +369,7 @@ int             txtlen;                 /* Byte count from TXT card  */
 int             txtadr;                 /* Address from TXT card     */
 int             tfd;                    /* Object file descriptor    */
 BYTE            objrec[80];             /* Object card image         */
-BYTE            pathname[MAX_PATH];     /* iplfnm in host path format*/
+char            pathname[MAX_PATH];     /* iplfnm in host path format*/
 
     /* Open the object file */
     hostpath(pathname, iplfnm, sizeof(pathname));
@@ -2644,11 +2644,11 @@ char            xrecname[8];            /* XMIT control record name  */
 int             datarecn = 0;           /* Data record counter       */
 int             datafiln = 0;           /* Data file counter         */
 int             copyfiln = 0;           /* Seq num of file to copy   */
-BYTE            dsorg;                  /* Dataset organization      */
-BYTE            recfm;                  /* Dataset record format     */
-U16             lrecl;                  /* Dataset record length     */
-U16             blksz;                  /* Dataset block size        */
-U16             keyln;                  /* Dataset key length        */
+BYTE            dsorg=0;                /* Dataset organization      */
+BYTE            recfm=0;                /* Dataset record format     */
+U16             lrecl=0;                /* Dataset record length     */
+U16             blksz=0;                /* Dataset block size        */
+U16             keyln=0;                /* Dataset key length        */
 U16             dirnm;                  /* Number of directory blocks*/
 int             enddir = 0;             /* 1=End of directory found  */
 BYTE           *blkptr;                 /* -> Data block in record   */
@@ -2677,7 +2677,7 @@ int             outrec = 0;             /* Output record number      */
 TTRCONV        *ttrtab;                 /* -> TTR conversion table   */
 int             numttr = 0;             /* TTR table array index     */
 COPYR1         *copyr1;                 /* -> header record 1        */
-BYTE            pathname[MAX_PATH];     /* xfname in host path format*/
+char            pathname[MAX_PATH];     /* xfname in host path format*/
 
     /* Open the input file */
     hostpath(pathname, xfname, sizeof(pathname));
@@ -3461,7 +3461,7 @@ int             outtrk = 0;             /* Output relative track     */
 int             outrec = 0;             /* Output record number      */
 struct STAT     st;                     /* Data area for fstat()     */
 DATABLK         datablk;                /* Data block                */
-BYTE            pathname[MAX_PATH];     /* sfname in host path format*/
+char            pathname[MAX_PATH];     /* sfname in host path format*/
 
     /* Perform some checks */
     if (!(dsorg & DSORG_PS) && !(dsorg & DSORG_DA))
@@ -4373,7 +4373,7 @@ int             stmtno;                 /* Statement number          */
 BYTE            comp = 0xff;            /* Compression algoritm      */
 int             altcylflag = 0;         /* Alternate cylinders flag  */
 int             lfs = 0;                /* 1 = Large file            */
-BYTE            pathname[MAX_PATH];     /* cfname in host path format*/
+char            pathname[MAX_PATH];     /* cfname in host path format*/
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)

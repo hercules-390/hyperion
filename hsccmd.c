@@ -48,6 +48,9 @@ int process_script_file(char *,int);
 
 int $test_cmd(int argc, char *argv[],char *cmdline)
 {
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
     // Cause Hercules to hang...
     while(1)
     {
@@ -2414,7 +2417,7 @@ REGS *regs;
     int     fd;                         /* File descriptor           */
     int     len;                        /* Number of bytes read      */
     BYTE    c;                          /* (dummy sscanf work area)  */
-    BYTE    pathname[MAX_PATH];         /* fname in host path format */
+    char    pathname[MAX_PATH];         /* fname in host path format */
 
     UNREFERENCED(cmdline);
 
@@ -2542,7 +2545,7 @@ REGS *regs;
     char   *loadaddr;                   /* loadcore memory address   */
     U32     aaddr;                      /* Absolute storage address  */
     int     len;                        /* Number of bytes read      */
-    BYTE    pathname[MAX_PATH];         /* file in host path format  */
+    char    pathname[MAX_PATH];         /* file in host path format  */
 
     UNREFERENCED(cmdline);
 
@@ -2617,7 +2620,7 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
     int     len;                        /* Number of bytes read      */
     int     n;
     REGS   *regs;
-    BYTE    pathname[MAX_PATH];
+    char    pathname[MAX_PATH];
 
     UNREFERENCED(cmdline);
 
@@ -3177,7 +3180,7 @@ char   *scrbuf = NULL;                  /* RC file input buffer      */
 int     scrlen;                         /* length of RC file record  */
 int     scr_pause_amt = 0;              /* seconds to pause RC file  */
 char   *p;                              /* (work)                    */
-BYTE    pathname[MAX_PATH];             /* (work)                    */
+char    pathname[MAX_PATH];             /* (work)                    */
 
     /* Check the recursion level - if it exceeds a certain amount
        abort the script stack

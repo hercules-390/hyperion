@@ -24,7 +24,7 @@ int             fd;                     /* File descriptor           */
 int             level=-1;               /* Level for chkdsk          */
 int             force=0;                /* 1=Compress if OPENED set  */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)

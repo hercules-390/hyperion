@@ -69,7 +69,7 @@ static int
 open_printer (DEVBLK *dev)
 {
 pid_t           pid;                    /* Child process identifier  */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 #if !defined( _MSVC_ )
 int             pipefd[2];              /* Pipe descriptors          */
 int             rc;                     /* Return code               */

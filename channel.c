@@ -1724,8 +1724,8 @@ BYTE    area[64];                       /* Data display area         */
 int     midawseq;                       /* MIDAW counter (0=1st)  @MW*/
 U32     midawptr;                       /* Real addr of MIDAW     @MW*/
 U16     midawrem;                       /* CCW bytes remaining    @MW*/
-U16     midawlen;                       /* MIDAW data length      @MW*/
-RADR    midawdat;                       /* MIDAW data area addr   @MW*/
+U16     midawlen=0;                     /* MIDAW data length      @MW*/
+RADR    midawdat=0;                     /* MIDAW data area addr   @MW*/
 BYTE    midawflg;                       /* MIDAW flags            @MW*/
 #endif /*defined(FEATURE_MIDAW)*/                               /*@MW*/
 

@@ -59,7 +59,7 @@ int     cfba = 0;                       /* 1 = Compressed fba        */
 int     i;                              /* Loop index                */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
-BYTE    pathname[MAX_PATH];             /* file path in host format  */
+char    pathname[MAX_PATH];             /* file path in host format  */
 
     if (!dev->typname || !sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = DEFAULT_FBA_TYPE;

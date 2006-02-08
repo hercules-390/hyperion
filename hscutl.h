@@ -53,7 +53,7 @@
     On Windows it converts inpath of the form "/cygdrive/x/foo.bar"
     to outpath in the form "x:/foo.bar" for Windows compatibility.
   */
-  BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize );
+  char *hostpath( char *outpath, const char *inpath, size_t buffsize );
 
   /* Poor man's  "fcntl( fd, F_GETFL )"... */
   /* (only returns access-mode flags and not any others) */

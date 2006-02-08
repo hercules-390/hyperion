@@ -1152,7 +1152,7 @@ free_space_check:
         fsperr = 1;               /* turn on error indicator */
         memset (&fb, 0, CCKD_FREEBLK_SIZE);
         sprintf (msg, "pos=0x%" I64_FMT "x nxt=0x%" I64_FMT "x len=%d\n",
-                 (long long)fsp, (long long)fb.pos, fb.len);
+                 (S64)fsp, (S64)fb.pos, fb.len);
         if (fsp < lopos || fsp > hipos - CCKD_FREEBLK_SIZE) break;
         rcoff = LSEEK (fd, fsp, SEEK_SET);
         if (rcoff == -1) break;
@@ -2137,6 +2137,7 @@ BYTE           *bufp;                   /* Buffer pointer            */
 int             bufl;                   /* Buffer length             */
 int             comps = 0;              /* Supported compressions    */
 char           *compression[] = {"none", "zlib", "bzip2", "????"};
+unsigned int    ubufl;                  /* for bz2 compat            */
 
 #if defined(HAVE_LIBZ)
     comps |= CCKD_COMPRESS_ZLIB;
@@ -2198,8 +2199,8 @@ char           *compression[] = {"none", "zlib", "bzip2", "????"};
     case CCKD_COMPRESS_BZIP2:
         bufp = (BYTE *)&buf2;
         memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
-        bufl = sizeof(buf2) - CKDDASD_TRKHDR_SIZE;
-        rc = BZ2_bzBuffToBuffDecompress ( (void *)&buf2[CKDDASD_TRKHDR_SIZE], (size_t *)&bufl,
+        ubufl = sizeof(buf2) - CKDDASD_TRKHDR_SIZE;
+        rc = BZ2_bzBuffToBuffDecompress ( (void *)&buf2[CKDDASD_TRKHDR_SIZE], &ubufl,
                          (void *)&buf[CKDDASD_TRKHDR_SIZE], len, 0, 0);
         if (rc != BZ_OK)
         {
@@ -2210,6 +2211,7 @@ char           *compression[] = {"none", "zlib", "bzip2", "????"};
                          buf[0], buf[1], buf[2], buf[3], buf[4]);
             return -1;
         }
+        bufl=ubufl;
         bufl += CKDDASD_TRKHDR_SIZE;
         break;
 #endif

@@ -582,7 +582,7 @@ DLL_EXPORT int timeval_add
   On Windows it converts inpath of the form "/cygdrive/x/foo.bar"
   to outpath in the form "x:/foo.bar" for Windows compatibility.
 */
-DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
+DLL_EXPORT char *hostpath( char *outpath, const char *inpath, size_t buffsize )
 {
     if (inpath && outpath && buffsize > 1)
         strlcpy( outpath, inpath, buffsize );

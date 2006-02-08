@@ -23,7 +23,7 @@ int             rc;                     /* Return code               */
 char           *fn;                     /* File name                 */
 int             fd;                     /* File descriptor           */
 int             bigend;                 /* 1 = big-endian file       */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");

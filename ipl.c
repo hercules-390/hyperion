@@ -552,7 +552,7 @@ int len;
 int rc = 0;
 RADR pageaddr;
 U32  pagesize;
-BYTE pathname[MAX_PATH];
+char pathname[MAX_PATH];
 
     hostpath(pathname, fname, sizeof(pathname));
 

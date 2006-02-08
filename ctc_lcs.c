@@ -1751,7 +1751,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     char*       pszNetMask   = NULL;
 
     struct in_addr  addr;               // Work area for addresses
-    BYTE        pathname[MAX_PATH];     // pszOATName in host path format
+    char        pathname[MAX_PATH];     // pszOATName in host path format
 
     // Open the configuration file
     hostpath(pathname, pszOATName, sizeof(pathname));

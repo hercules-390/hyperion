@@ -24,7 +24,7 @@ int             level=1;                /* Chkdsk level checking     */
 int             ro=0;                   /* 1=Open readonly           */
 int             force=0;                /* 1=Check if OPENED bit on  */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");

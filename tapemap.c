@@ -59,7 +59,7 @@ int             minblksz;               /* Minimum block size        */
 int             maxblksz;               /* Maximum block size        */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
     set_codepage(NULL);
 

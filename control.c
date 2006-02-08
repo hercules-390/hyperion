@@ -319,7 +319,7 @@ DEF_INST(branch_in_subspace_group)
 {
 int     r1, r2;                         /* Values of R fields        */
 U32     alet;                           /* Destination subspace ALET */
-U32     dasteo;                         /* Destination ASTE origin   */
+U32     dasteo=0;                       /* Destination ASTE origin   */
 U32     daste[16];                      /* ASN second table entry    */
 RADR    ducto;                          /* DUCT origin               */
 U32     duct0;                          /* DUCT word 0               */
@@ -1580,8 +1580,8 @@ U32     aste[16];                       /* ASN second table entry    */
 RADR    pstd;                           /* Primary STD               */
 RADR    sstd;                           /* Secondary STD             */
 U32     ltd;                            /* Linkage table designation */
-U32     pasteo;                         /* Primary ASTE origin       */
-U32     sasteo;                         /* Secondary ASTE origin     */
+U32     pasteo=0;                       /* Primary ASTE origin       */
+U32     sasteo=0;                       /* Secondary ASTE origin     */
 U16     ax;                             /* Authorisation index       */
 #ifdef FEATURE_SUBSPACE_GROUP
 U16     xcode;                          /* Exception code            */
@@ -2512,7 +2512,7 @@ RADR    pstd;                           /* Primary STD or ASCE       */
 U32     oldpstd;                        /* Old Primary STD or ASCE   */
 U32     ltdesig;                        /* Linkage table designation
                                            (LTD or LFTD)             */
-U32     pasteo;                         /* Primary ASTE origin       */
+U32     pasteo=0;                       /* Primary ASTE origin       */
 RADR    lto;                            /* Linkage table origin      */
 U32     ltl;                            /* Linkage table length      */
 U32     lte;                            /* Linkage table entry       */
@@ -3203,8 +3203,8 @@ RADR    alsed;                          /* Absolute addr of LSED of
                                            previous stack entry      */
 LSED   *lsedp;                          /* -> LSED in main storage   */
 U32     aste[16];                       /* ASN second table entry    */
-U32     pasteo;                         /* Primary ASTE origin       */
-U32     sasteo;                         /* Secondary ASTE origin     */
+U32     pasteo=0;                       /* Primary ASTE origin       */
+U32     sasteo=0;                       /* Secondary ASTE origin     */
 U16     oldpasn;                        /* Original primary ASN      */
 U32     oldpstd;                        /* Original primary STD      */
 U16     pasn = 0;                       /* New primary ASN           */
@@ -3500,7 +3500,7 @@ VADR    ia;                             /* New instruction address   */
 int     prob;                           /* New problem state bit     */
 RADR    abs;                            /* Absolute address          */
 U32     ltd;                            /* Linkage table designation */
-U32     pasteo;                         /* Primary ASTE origin       */
+U32     pasteo=0;                       /* Primary ASTE origin       */
 U32     aste[16];                       /* ASN second table entry    */
 CREG    pstd;                           /* Primary STD               */
 U32     oldpstd;                        /* Old Primary STD           */
@@ -4622,7 +4622,7 @@ void ARCH_DEP(set_secondary_asn_proc) (REGS *regs,
 {
 U16     sasn;                           /* New Secondary ASN         */
 RADR    sstd;                           /* Secondary STD             */
-U32     sasteo;                         /* Secondary ASTE origin     */
+U32     sasteo=0;                       /* Secondary ASTE origin     */
 U32     aste[16];                       /* ASN second table entry    */
 U32     sastein;                        /* New Secondary ASTEIN      */
 U16     xcode;                          /* Exception code            */

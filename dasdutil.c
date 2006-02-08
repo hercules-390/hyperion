@@ -513,7 +513,7 @@ char           *argv[2];                /* Arguments to              */
 int             argc=0;                 /*                           */
 char            sfxname[1024];          /* Suffixed file name        */
 char            typname[64];
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Obtain storage for the file descriptor structure */
     cif = (CIFBLK*) calloc (sizeof(CIFBLK), 1);
@@ -1153,7 +1153,7 @@ int             fileseq;                /* CKD header sequence number*/
 int             highcyl;                /* CKD header high cyl number*/
 int             x=O_EXCL;               /* Open option               */
 CKDDEV         *ckdtab;                 /* -> CKD table entry        */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Locate the CKD dasd table entry */
     ckdtab = dasd_lookup (DASD_CKDDEV, NULL, devtype, volcyls);
@@ -1828,7 +1828,7 @@ BYTE           *buf;                    /* -> Sector data buffer     */
 U32             minsect;                /* Minimum sector count      */
 U32             maxsect;                /* Maximum sector count      */
 int             x=O_EXCL;               /* Open option               */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Special processing for compressed fba */
     if (comp != 0xff)
@@ -1977,7 +1977,7 @@ unsigned long   len2;                   /* Compressed buffer length  */
 BYTE            buf2[256];              /* Compressed buffer         */
 BYTE            buf[65536];             /* Buffer                    */
 int             x=O_EXCL;               /* Open option               */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
     UNREFERENCED(lfs);
 

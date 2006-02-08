@@ -198,6 +198,7 @@ DLL_EXPORT int ptt_pthread_create(pthread_t *tid, ATTR *attr,
                        void *(*start)(), void *arg, char *nm, char *file, int line)
 {
 int result;
+    UNREFERENCED(nm);
 
     result = pthread_create(tid, attr, start, arg);
     PTTRACE ("create", (void *)*tid, NULL, file, line, result);

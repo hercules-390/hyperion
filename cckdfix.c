@@ -5,7 +5,7 @@ int             fd;
 CKDDASD_DEVHDR  devhdr;
 CCKDDASD_DEVHDR cdevhdr;
 int             heads, cyls, devt;
-BYTE            pathname[MAX_PATH];
+char            pathname[MAX_PATH];
 
         hostpath(pathname, argv[1], sizeof(pathname));
 

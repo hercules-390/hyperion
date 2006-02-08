@@ -29,7 +29,7 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   char *buff;
   char *filename, *path, *tmp;
   char result[1024];
-  BYTE pathname[MAX_PATH];
+  char pathname[MAX_PATH];
 
   /* part3 goes from cursor position to the end of line */
   part3 = cmdlinefull + cmdoff;

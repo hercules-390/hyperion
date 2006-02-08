@@ -504,7 +504,7 @@ long            density;                /* Tape density code         */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 int64_t         bytes_read;             /* Bytes read from i/p file  */
 int64_t         file_bytes;             /* Byte count for curr file  */
-BYTE            pathname[MAX_PATH];     /* file name in host format  */
+char            pathname[MAX_PATH];     /* file name in host format  */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");

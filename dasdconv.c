@@ -110,7 +110,7 @@ argexit ( int code )
 /*      offset  Current offset in file (for error message only)      */
 /*-------------------------------------------------------------------*/
 static void
-read_input_data (IFD ifd, BYTE *ifname, BYTE *buf, int reqlen,
+read_input_data (IFD ifd, char *ifname, BYTE *buf, int reqlen,
                 U32 offset)
 {
 int     rc;                             /* Return code               */
@@ -251,7 +251,7 @@ int             n;                      /* Integer work area         */
 /*      Input file descriptor                                        */
 /*-------------------------------------------------------------------*/
 static IFD 
-open_input_image (BYTE *ifname, U16 *devt, U32 *vcyls,
+open_input_image (char *ifname, U16 *devt, U32 *vcyls,
                 U32 *itrkl, BYTE **itrkb, BYTE *volser)
 {
 int             rc;                     /* Return code               */
@@ -272,9 +272,9 @@ BYTE           *dptr;                   /* -> Data in input buffer   */
 U32             cyl;                    /* Cylinder number           */
 U32             head;                   /* Head number               */
 BYTE            rec;                    /* Record number             */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
-    hostpath(pathname, ifname, sizeof(pathname));
+    hostpath(pathname, (char *)ifname, sizeof(pathname));
 
     /* Open the HDR-30 CKD image file */
   #if defined(HAVE_LIBZ)
@@ -366,7 +366,7 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
                      H30CKD_TRKHDR_SIZE);
 
     /* Initialize the volume serial number */
-    strcpy (volser, "(NONE)");
+    strcpy ((char *)volser, "(NONE)");
 
     /* Search for volume label in record 3 of first track */
     pbuf = itrkbuf + H30CKD_TRKHDR_SIZE;
@@ -387,7 +387,7 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
             /* Extract volser if it is a volume label */
             if (klen == 4 && memcmp(kptr, ebcdicvol1, 4) == 0
             && dlen == 80 && memcmp(dptr, ebcdicvol1, 4) == 0)
-                make_asciiz (volser, 7, dptr+4, 6);
+                make_asciiz ((char *)volser, 7, dptr+4, 6);
             break;
         }
     } /* end while */
@@ -421,9 +421,9 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
 /*      volser  Volume serial number                                 */
 /*-------------------------------------------------------------------*/
 static void
-convert_ckd_file (IFD ifd, BYTE *ifname, int itrklen, BYTE *itrkbuf,
+convert_ckd_file (IFD ifd, char *ifname, int itrklen, BYTE *itrkbuf,
                 int repl,
-                BYTE *ofname, int fseqn, U16 devtype, U32 heads,
+                char *ofname, int fseqn, U16 devtype, U32 heads,
                 U32 trksize, BYTE *obuf, U32 start, U32 end,
                 U32 volcyls, BYTE *volser)
 {
@@ -447,7 +447,7 @@ int             ilen;                   /* Bytes left in input buffer*/
 H30CKD_TRKHDR  *ith;                    /* -> Input track header     */
 U32             ihc, ihh;               /* Input trk header cyl,head */
 U32             offset;                 /* Current input file offset */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
     UNREFERENCED(volser);
 
@@ -464,7 +464,7 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
         highcyl = end;
 
     /* Create the AWSCKD image file */
-    hostpath(pathname, ofname, sizeof(pathname));
+    hostpath(pathname, (char *)ofname, sizeof(pathname));
     ofd = open (pathname,
                 O_WRONLY | O_CREAT | O_BINARY | (repl ? 0 : O_EXCL),
                 S_IRUSR | S_IWUSR | S_IRGRP);
@@ -660,16 +660,16 @@ BYTE            pathname[MAX_PATH];     /* file path in host format  */
 /* Otherwise a single file is created without a suffix.              */
 /*-------------------------------------------------------------------*/
 static void
-convert_ckd (int lfs, IFD ifd, BYTE *ifname, int itrklen,
+convert_ckd (int lfs, IFD ifd, char *ifname, int itrklen,
             BYTE *itrkbuf, int repl,
-            BYTE *ofname, U16 devtype, U32 heads,
+            char *ofname, U16 devtype, U32 heads,
             U32 maxdlen, U32 volcyls, BYTE *volser)
 {
 int             i;                      /* Array subscript           */
-BYTE            *s;                     /* String pointer            */
+char            *s;                     /* String pointer            */
 int             fileseq;                /* File sequence number      */
-BYTE            sfname[260];            /* Suffixed name of this file*/
-BYTE            *suffix;                /* -> Suffix character       */
+char            sfname[260];            /* Suffixed name of this file*/
+char            *suffix;                /* -> Suffix character       */
 U32             endcyl;                 /* Last cylinder of this file*/
 U32             cyl;                    /* Cylinder number           */
 U32             cylsize;                /* Cylinder size in bytes    */
@@ -795,8 +795,8 @@ U32             volcyls;                /* Total cylinders on volume */
 U32             heads = 0;              /* Number of tracks/cylinder */
 U32             maxdlen = 0;            /* Maximum R1 data length    */
 U16             devtype;                /* Device type               */
-BYTE            ifname[256];            /* Input file name           */
-BYTE            ofname[256];            /* Output file name          */
+char            ifname[256];            /* Input file name           */
+char            ofname[256];            /* Output file name          */
 BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
 int             lfs = 0;                /* 1 = Build large file      */
 

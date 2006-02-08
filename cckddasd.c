@@ -543,7 +543,7 @@ int cckd_open (DEVBLK *dev, int sfx, int flags, mode_t mode)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             err;                    /* 1 = issue error message   */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
     cckd = dev->cckd_ext;
 
@@ -3440,7 +3440,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             rc;                     /* Return code               */
 int             i;                      /* Index                     */
 struct STAT     st;                     /* stat() buffer             */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
     cckd = dev->cckd_ext;
 

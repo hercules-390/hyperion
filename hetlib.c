@@ -137,7 +137,7 @@ het_open( HETB **hetb, char *filename, int flags )
     int   rc;
     int   fd;
     int   oflags;
-    BYTE  pathname[MAX_PATH];
+    char  pathname[MAX_PATH];
 
     /*
     || Initialize

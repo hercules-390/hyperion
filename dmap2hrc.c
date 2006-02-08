@@ -62,7 +62,7 @@ DEVMAP_DEV      device;                 /* Device record             */
 char            output_type[5];         /* Device type to print      */
 char           *output_filename;        /* -> filename to print      */
 int             more_devices;           /* More devices this ctlr?   */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)

@@ -1091,7 +1091,7 @@ int main(int argc, char **argv) {
     FILE    *fout = NULL;           // output file
     CIFBLK  *cif;
     int      dsn_recs_written = 0, bail, dsorg, rc;
-    BYTE     pathname[MAX_PATH];
+    char     pathname[MAX_PATH];
 
     fprintf(stderr, "dasdseq %s Copyright 1999-2006 Roger Bowler\n"
         "Portions Copyright 2001-2006 James M. Morrison\n", VERSION);

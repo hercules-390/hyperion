@@ -629,7 +629,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 char **newargv;
 char **orig_newargv;
 #endif
-BYTE    pathname[MAX_PATH];             /* file path in host format  */
+char    pathname[MAX_PATH];             /* file path in host format  */
 
 #if !defined(OPTION_CONFIG_SYMBOLS)
     UNREFERENCED(j);

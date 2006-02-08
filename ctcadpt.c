@@ -637,7 +637,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         arg = malloc( sizeof( CTCG_PARMBLK ) );
         memcpy( arg, &parm, sizeof( parm ) );
         arg->dev = dev;
-        snprintf(str,sizeof(str),"CTCT %4.4X ListenThread",parm.dev);
+        snprintf(str,sizeof(str),"CTCT %4.4X ListenThread",dev->devnum);
         str[sizeof(str)-1]=0;
         create_thread( &tid, NULL, CTCT_ListenThread, arg, str );
     }

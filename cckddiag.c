@@ -170,6 +170,7 @@ int             rc;                     /* Return code               */
 BYTE           *bufp;                   /* Buffer pointer            */
 #endif
 size_t          bufl;                   /* Buffer length             */
+unsigned int    ubufl;                  /* when size_t != unsigned int */
 
 #if !defined( HAVE_LIBZ ) && !defined( CCKD_BZIP2 )
     UNREFERENCED(heads);
@@ -212,10 +213,10 @@ size_t          bufl;                   /* Buffer length             */
     case CCKD_COMPRESS_BZIP2:
         bufp = obuf;
         memcpy(obuf, ibuf, CKDDASD_TRKHDR_SIZE);
-        bufl = obuflen - CKDDASD_TRKHDR_SIZE;
+        ubufl = obuflen - CKDDASD_TRKHDR_SIZE;
         rc = BZ2_bzBuffToBuffDecompress ( 
                  (char *)&obuf[CKDDASD_TRKHDR_SIZE], 
-                 &bufl,
+                 &ubufl,
                  (char *)&ibuf[CKDDASD_TRKHDR_SIZE], 
                  ibuflen, 0, 0);
         if (rc != BZ_OK) {
@@ -226,6 +227,7 @@ size_t          bufl;                   /* Buffer length             */
                          ibuf[0], ibuf[1], ibuf[2], ibuf[3], ibuf[4]);
             return -1;
         }
+	bufl=ubufl;
         bufl += CKDDASD_TRKHDR_SIZE;
         break;
 #endif
@@ -406,7 +408,7 @@ int             heads=0;                /* Heads per cylinder        */
 int             blks;                   /* Number fba blocks         */
 OFF_T           trkhdroff=0;            /* offset to assoc. trk hdr  */
 int             imglen=0;               /* track length              */
-BYTE            pathname[MAX_PATH];     /* file path in host format  */
+char            pathname[MAX_PATH];     /* file path in host format  */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
