@@ -65,6 +65,16 @@ _CLOCK_EXTERN U64 hw_tod;               /* Hardware clock            */
 
 #define SECONDS_IN_SEVENTY_YEARS ((70*365 + 17) * 86400ULL)
 
+#define TOD_4YEARS (1461*24*60*60*16000000ULL)
+#define TOD_LYEAR  (366*24*60*60*16000000ULL)
+#define TOD_YEAR   (365*24*60*60*16000000ULL)
+#define TOD_DAY    (24*60*60*16000000ULL)
+#define TOD_HOUR   (60*60*16000000ULL)
+#define TOD_MIN    (60*16000000ULL)
+#define TOD_SEC    (16000000ULL)
+#define TOD_USEC   (16ULL)
+
+
 #define ITIMER_TO_TOD(_units) \
     ((S64)(625*((S64)(_units))/3))
 

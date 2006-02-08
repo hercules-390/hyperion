@@ -602,33 +602,33 @@ char * format_tod(char *buf, U64 tod, int flagdate)
 {
     int leapyear, years, days, hours, minutes, seconds, microseconds;
 
-    if(tod > 365*24*60*60*16000000LL)
+    if(tod >= TOD_YEAR)
     {
-        tod -= 365*24*60*60*16000000LL;
-        years = ((tod/(1461*24*60*60*16000000LL))*4) + 1;
-        tod %= 1461*24*60*60*16000000LL;
-        if((leapyear = tod / (365*24*60*60*16000000LL)) == 4)
+        tod -= TOD_YEAR;
+        years = (tod / TOD_4YEARS * 4) + 1;
+        tod %= TOD_4YEARS;
+        if((leapyear = tod / TOD_YEAR) == 4)
         {
-            tod %= 365*24*60*60*16000000LL;
+            tod %= TOD_YEAR;
             years--;
-            tod += 365*24*60*60*16000000LL;
+            tod += TOD_YEAR;
         }
         else
-            tod %= 365*24*60*60*16000000LL;
+            tod %= TOD_YEAR;
 
         years += leapyear;
     }
     else
         years = 0;
 
-    days = tod / (24*60*60*16000000LL);
-    tod %= 24*60*60*16000000LL;
-    hours = tod / (60*60*16000000LL);
-    tod %= 60*60*16000000LL;
-    minutes = tod / (60*16000000LL);
-    tod %= 60*16000000LL;
-    seconds = tod / 16000000LL;
-    microseconds = (tod % 16000000LL) / 16;
+    days = tod / TOD_DAY;
+    tod %= TOD_DAY;
+    hours = tod / TOD_HOUR;
+    tod %= TOD_HOUR;
+    minutes = tod / TOD_MIN;
+    tod %= TOD_MIN;
+    seconds = tod / TOD_SEC;
+    microseconds = (tod % TOD_SEC) / TOD_USEC;
 
     if (flagdate)
     {
