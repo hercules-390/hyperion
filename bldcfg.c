@@ -507,6 +507,31 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
     return(gcount);
 }
 
+
+static inline S64 lyear_adjust(int epoch)
+{
+int year, leapyear;
+U64 tod = hw_clock();
+
+    if(tod >= TOD_YEAR)
+    {
+        tod -= TOD_YEAR;
+        year = (tod / TOD_4YEARS * 4) + 1;
+        tod %= TOD_4YEARS;
+        if((leapyear = tod / TOD_YEAR) == 4)
+            year--;
+        year += leapyear;
+    }
+    else
+       year = 0;
+
+    if(epoch > 0)
+        return (((year % 4) != 0) && (((year % 4) - (epoch % 4)) <= 0)) ? -TOD_DAY : 0;
+    else
+        return (((year % 4) == 0 && (-epoch % 4) != 0) || ((year % 4) + (-epoch % 4) > 4)) ? TOD_DAY : 0;
+}
+
+
 DLL_EXPORT char *config_cnslport = "3270";
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
@@ -1858,7 +1883,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     /* Set up the system TOD clock offset: compute the number of
      * microseconds offset to 0000 GMT, 1 January 1900 */
 
-#if 1
+#if 0
     if (sysepoch == 1928)
     {
         sysepoch = 1900;
@@ -1889,9 +1914,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #else
     sysepoch -= 1900 + yroffset;
 
-    set_tod_epoch((sysepoch*365+
-                  (sysepoch>3?((sysepoch/4)-1):(sysepoch/4)))
-                  *(-86400*16*1000000LL));
+    set_tod_epoch(((sysepoch*365+(sysepoch/4))*-TOD_DAY)+lyear_adjust(sysepoch));
 #endif
     sysblk.sysepoch = sysepoch;
 
