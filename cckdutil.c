@@ -1016,8 +1016,8 @@ char *compression[] = {"none", "zlib", "bzip2"};
                  (unsigned int)cdevhdr.free_imbed,
                  (unsigned int)cdevhdr.free_number);
         hdrerr = 1;
-        if (level < 1)
-        {   level = 1;
+        if (level < 0)
+        {   level = 0;
             CDSKMSG (m, "forcing check level %d\n", level);
         }
     }
