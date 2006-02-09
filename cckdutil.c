@@ -1174,8 +1174,8 @@ free_space_check:
 
     if (fsperr)
     {   CDSKMSG (m, "free space errors found: %s\n", msg);
-        if (level < 1)
-        {   level = 1;
+        if (level < 0)
+        {   level = 0;
             CDSKMSG (m, "forcing check level %d\n", level);
         }
     }
