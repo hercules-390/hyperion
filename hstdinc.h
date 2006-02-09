@@ -102,6 +102,9 @@
 #ifdef HAVE_SYS_MMAN_H
   #include <sys/mman.h>
 #endif
+#ifdef HAVE_SYS_PARAM_H
+  #include <sys/param.h>
+#endif
 #ifdef HAVE_SYS_MOUNT_H
   #include <sys/mount.h>
 #endif

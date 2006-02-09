@@ -88,7 +88,7 @@ typedef struct _CTLREQ
   union
   {
     struct ifreq     ifreq;
-#if !defined(__APPLE__)
+#if !defined(__APPLE__) && !defined(__FreeBSD__)
     struct rtentry   rtentry;
 #endif
   }

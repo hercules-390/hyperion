@@ -1,8 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
-06 Feb 2006 Codepage 1047 conversion tables - Jay Maynard, supplied by
-            Kevin Leonard
+08 Feb 2005 FreeBSD portability fixes - Mark Szlaga
+06 Feb 2006 Codepage 1047 conversion tables - Kevin Leonard
 03 Feb 2006 Fixed off-by-one-day bug with SYSEPOCH other than 1900; added
             new config parameter, YROFFSET, and limited SYSEPOCH to 1900
             or 1960 - Jay Maynard
