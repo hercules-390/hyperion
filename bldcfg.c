@@ -1907,22 +1907,22 @@ char    pathname[MAX_PATH];             /* file path in host format  */
        increments in one second, 86400 seconds in one day, and 14 leap days
        between 1 January 1900 and 1 January 1960. */
     if (sysepoch == 1960)
-        set_tod_epoch(((60*365)+14)*(-86400*16*1000000LL));
+        set_tod_epoch(((60*365)+14)*-TOD_DAY);
     else
         set_tod_epoch(0);
 
     /* Set the year offset. This has been handled above for the case of
        SYSEPOCH 1928 or 1988, for backwards compatibility. */
-    adjust_tod_epoch((yroffset*365+(yroffset/4))*(86400*16*1000000LL));
+    adjust_tod_epoch((yroffset*365+(yroffset/4))*TOD_DAY);
 #else
     if(sysepoch != 1900 && sysepoch != 1960)
         if(sysepoch < 1960)
-            logmsg(_("HHCVF072W SYSEPOCH %04d is depricated "
-                     "please specify \"SYSEPOCH 1900 %s%d\"\n"),
+            logmsg(_("HHCCF072W SYSEPOCH %04d is deprecated. "
+                     "Please specify \"SYSEPOCH 1900 %s%d\".\n"),
                      sysepoch, 1900-sysepoch > 0 ? "+" : "", 1900-sysepoch);
         else
-            logmsg(_("HHCVF073W SYSEPOCH %04d is depricated "
-                     "please specify \"SYSEPOCH 1960 %s%d\"\n"),
+            logmsg(_("HHCCF073W SYSEPOCH %04d is deprecated. "
+                     "Please specify \"SYSEPOCH 1960 %s%d\".\n"),
                      sysepoch, 1960-sysepoch > 0 ? "+" : "", 1960-sysepoch);
 
     if(sysepoch == 1960 || sysepoch == 1988)
