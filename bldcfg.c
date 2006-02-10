@@ -606,6 +606,7 @@ int     archmode;                       /* Architectural mode        */
 S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
 S32     yroffset;                       /* System year offset        */
+S64     ly1960;                         /* Leap offset for 1960 epoch*/
 int     diag8cmd;                       /* Allow diagnose 8 commands */
 BYTE    shcmdopt;                       /* Shell cmd allow option(s) */
 double  toddrag;                        /* TOD clock drag factor     */
@@ -884,6 +885,11 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "sysepoch") == 0)
             {
                 ssysepoch = operand;
+                if (addargc > 0)
+                {
+                    syroffset = addargv[0];
+                    addargc--;
+                }
             }
             else if (strcasecmp (keyword, "yroffset") == 0)
             {
@@ -1403,15 +1409,12 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         {
             if (strlen(ssysepoch) != 4
                 || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
-                || (sysepoch != 1900 && sysepoch != 1928 && sysepoch != 1960
-                    && sysepoch != 1988))
+                || sysepoch <= 1800 || sysepoch >= 2100)
             {
                 fprintf(stderr, _("HHCCF022S Error in %s line %d: "
                         "%s is not a valid system epoch.\n"
-                        "          The only legal values are 1900, "
-                        "1928, 1960, and 1988.\n"
-                        "          You may need to use the YROFFSET "
-                        "parameter.\n"),
+                        "          The only valid values are "
+                        "1801-2099\n"),
                         fname, stmt, ssysepoch);
                 delayed_exit(1);
             }
@@ -1912,9 +1915,24 @@ char    pathname[MAX_PATH];             /* file path in host format  */
        SYSEPOCH 1928 or 1988, for backwards compatibility. */
     adjust_tod_epoch((yroffset*365+(yroffset/4))*(86400*16*1000000LL));
 #else
+    if(sysepoch != 1900 && sysepoch != 1960)
+        if(sysepoch < 1960)
+            logmsg(_("HHCVF072W SYSEPOCH %04d is depricated "
+                     "please specify \"SYSEPOCH 1900 %s%d\"\n"),
+                     sysepoch, 1900-sysepoch > 0 ? "+" : "", 1900-sysepoch);
+        else
+            logmsg(_("HHCVF073W SYSEPOCH %04d is depricated "
+                     "please specify \"SYSEPOCH 1960 %s%d\"\n"),
+                     sysepoch, 1960-sysepoch > 0 ? "+" : "", 1960-sysepoch);
+
+    if(sysepoch == 1960 || sysepoch == 1988)
+        ly1960 = TOD_DAY;
+    else
+        ly1960 = 0;
+
     sysepoch -= 1900 + yroffset;
 
-    set_tod_epoch(((sysepoch*365+(sysepoch/4))*-TOD_DAY)+lyear_adjust(sysepoch));
+    set_tod_epoch(((sysepoch*365+(sysepoch/4))*-TOD_DAY)+lyear_adjust(sysepoch)+ly1960);
 #endif
     sysblk.sysepoch = sysepoch;
 
