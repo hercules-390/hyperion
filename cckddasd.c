@@ -176,6 +176,7 @@ int             i, j;                   /* Loop indexes              */
     initialize_condition (&cckdblk.wrcond);
     initialize_condition (&cckdblk.devcond);
     initialize_condition (&cckdblk.termcond);
+    initialize_join_attr (&cckdblk.attr);
 
     /* Initialize some variables */
     cckdblk.wrprio     = 16;
@@ -1443,7 +1444,7 @@ TID             tid;                    /* Readahead thread id       */
         if (cckdblk.rawaiting)
             signal_condition (&cckdblk.racond);
         else if (cckdblk.ras < cckdblk.ramax)
-            create_thread (&tid, NULL, cckd_ra, NULL, "cckd_ra");
+            create_thread (&tid, &cckdblk.attr, cckd_ra, NULL, "cckd_ra");
     }
 
     release_lock (&cckdblk.ralock);
@@ -1531,7 +1532,7 @@ TID             tid;                    /* Readahead thread id       */
             if (cckdblk.rawaiting)
                 signal_condition (&cckdblk.racond);
             else if (cckdblk.ras < cckdblk.ramax)
-                create_thread (&tid, NULL, cckd_ra, dev, "cckd_ra");
+                create_thread (&tid, &cckdblk.attr, cckd_ra, dev, "cckd_ra");
         }
 
         if (!cckd || cckd->stopping || cckd->merging) continue;
@@ -1579,7 +1580,7 @@ TID             tid;                    /* Writer thread id          */
             signal_condition (&cckdblk.wrcond);
         else if (cckdblk.wrs < cckdblk.wrmax)
         {
-            create_thread (&tid, NULL, cckd_writer, NULL, "cckd_writer");
+            create_thread (&tid, &cckdblk.attr, cckd_writer, NULL, "cckd_writer");
         }
     }
     release_lock (&cckdblk.wrlock);
@@ -1733,7 +1734,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
                 signal_condition (&cckdblk.wrcond);
             else if (cckdblk.wrs < cckdblk.wrmax)
             {
-                create_thread (&tid, NULL, cckd_writer, NULL, "cckd_writer");
+                create_thread (&tid, &cckdblk.attr, cckd_writer, NULL, "cckd_writer");
             }
         }
         release_lock (&cckdblk.wrlock);
@@ -1798,7 +1799,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
 
         /* Schedule the garbage collector */
         if (cckdblk.gcs < cckdblk.gcmax)
-            create_thread (&tid, NULL, cckd_gcol, NULL, "cckd_gcol");
+            create_thread (&tid, &cckdblk.attr, cckd_gcol, NULL, "cckd_gcol");
 
         obtain_lock (&cckd->iolock);
         cache_lock (CACHE_DEVBUF);
@@ -5342,7 +5343,7 @@ int   val, opts = 0;
             }
             cckd_unlock_devchain();
             if (flag && cckdblk.gcs < cckdblk.gcmax)
-                create_thread (&tid, NULL, cckd_gcol, NULL, "cckd_gcol");
+                create_thread (&tid, &cckdblk.attr, cckd_gcol, NULL, "cckd_gcol");
         }
         else
         {

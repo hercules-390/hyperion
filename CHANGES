@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+10 Feb 2005 cckd specifies attr for create_thread - Greg Smith
 08 Feb 2005 FreeBSD portability fixes - Mark Szlaga
 06 Feb 2006 Codepage 1047 conversion tables - Kevin Leonard
 03 Feb 2006 Fixed off-by-one-day bug with SYSEPOCH other than 1900; added

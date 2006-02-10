@@ -1170,6 +1170,8 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         DEVBLK          *dev1st;        /* 1st device in cckd queue  */
         int              batch:1;       /* 1=called in batch mode    */
 
+        ATTR             attr;          /* Thread attributes         */
+
         BYTE             comps;         /* Supported compressions    */
         BYTE             comp;          /* Override compression      */
         int              compparm;      /* Override compression parm */
