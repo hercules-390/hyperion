@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+11 Feb 2006 Added option s to dasdcat to preserve sequence numbers when
+            generating card image output - Jay Maynard
 10 Feb 2006 cckd specifies attr for create_thread - Greg Smith
 08 Feb 2006 FreeBSD portability fixes - Mark Szlaga
 06 Feb 2006 Codepage 1047 conversion tables - Kevin Leonard

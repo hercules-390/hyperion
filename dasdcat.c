@@ -18,6 +18,7 @@
 #define OPT_CARDS 0x2
 #define OPT_PDS_WILDCARD 0x4
 #define OPT_PDS_LISTONLY 0x8
+#define OPT_SEQNO 0x10
 
 int end_of_track(BYTE *p)
 {
@@ -35,7 +36,7 @@ int do_cat_cards(BYTE *buf, int len, unsigned long optflags)
 
  while (len) {
  char card[81];
- make_asciiz(card, sizeof(card), buf, 72);
+ make_asciiz(card, sizeof(card), buf, (optflags & OPT_SEQNO) ? 80 : 72);
  if (optflags & OPT_PDS_WILDCARD) {
  putchar('|');
  putchar(' ');
@@ -236,6 +237,8 @@ int do_cat(CIFBLK *cif, char *file)
  optflags |= OPT_ASCIIFY;
  else if (*p == 'c')
  optflags |= OPT_CARDS;
+ else if (*p == 's')
+ optflags |= OPT_SEQNO;
  else
  fprintf(stderr, _("HHCDT005E unknown dataset name option: '%c'\n"), *p);
  }
