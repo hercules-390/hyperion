@@ -891,10 +891,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                     addargc--;
                 }
             }
+#if 0 
+// YROFFSET is now 2nd operand of SYSEPOCH
             else if (strcasecmp (keyword, "yroffset") == 0)
             {
                 syroffset = operand;
             }
+#endif
             else if (strcasecmp (keyword, "tzoffset") == 0)
             {
                 stzoffset = operand;
@@ -1916,6 +1919,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     adjust_tod_epoch((yroffset*365+(yroffset/4))*TOD_DAY);
 #else
     if(sysepoch != 1900 && sysepoch != 1960)
+    {
         if(sysepoch < 1960)
             logmsg(_("HHCCF072W SYSEPOCH %04d is deprecated. "
                      "Please specify \"SYSEPOCH 1900 %s%d\".\n"),
@@ -1924,6 +1928,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             logmsg(_("HHCCF073W SYSEPOCH %04d is deprecated. "
                      "Please specify \"SYSEPOCH 1960 %s%d\".\n"),
                      sysepoch, 1960-sysepoch > 0 ? "+" : "", 1960-sysepoch);
+    }
 
     if(sysepoch == 1960 || sysepoch == 1988)
         ly1960 = TOD_DAY;
