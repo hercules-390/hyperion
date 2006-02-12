@@ -891,13 +891,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                     addargc--;
                 }
             }
-#if 0 
-// YROFFSET is now 2nd operand of SYSEPOCH
             else if (strcasecmp (keyword, "yroffset") == 0)
             {
                 syroffset = operand;
             }
-#endif
             else if (strcasecmp (keyword, "tzoffset") == 0)
             {
                 stzoffset = operand;
