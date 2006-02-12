@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-08 15:11+0100\n"
+"POT-Creation-Date: 2006-02-12 16:04-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -228,341 +228,341 @@ msgstr ""
 msgid "cckdcomp: OPENED bit is on, use `-f'\n"
 msgstr ""
 
-#: cckddasd.c:310
+#: cckddasd.c:311
 #, fuzzy, c-format
 msgid "HHCCD101E %4.4X error initializing shadow files\n"
 msgstr "HHCPR003E %$14.4X:Fout %3$s bij schrijven naar bestand \"%2$s\"\n"
 
-#: cckddasd.c:567
+#: cckddasd.c:568
 #, fuzzy, c-format
 msgid "HHCCD130E %4.4X file[%d] %s open error: %s\n"
 msgstr "HHCDA058E Fout %2$s bij openen bestand \"%1$s\"\n"
 
-#: cckddasd.c:602
+#: cckddasd.c:603
 #, fuzzy, c-format
 msgid "HHCCD130E %4.4X file[%d] close error: %s\n"
 msgstr "HHCDU040E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
 
-#: cckddasd.c:630 cckddasd.c:671
+#: cckddasd.c:631 cckddasd.c:672
 #, fuzzy
 msgid "HHCCD130E %4.4X file[%d] lseek error, offset 0x%"
 msgstr "HHCDU010E Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: cckddasd.c:630 cckddasd.c:641 cckddasd.c:671 cckddasd.c:681 cckddasd.c:710
+#: cckddasd.c:631 cckddasd.c:642 cckddasd.c:672 cckddasd.c:682 cckddasd.c:711
 #, c-format
 msgid "x: %s\n"
 msgstr ""
 
-#: cckddasd.c:641
+#: cckddasd.c:642
 #, fuzzy
 msgid "HHCCD130E %4.4X file[%d] read error, offset 0x%"
 msgstr "HHCDU010E Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: cckddasd.c:644
+#: cckddasd.c:645
 #, fuzzy
 msgid "HHCCD130E %4.4X file[%d] read incomplete, offset 0x%"
 msgstr "HHCDU010E Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: cckddasd.c:644
+#: cckddasd.c:645
 #, c-format
 msgid "x: read %d expected %d\n"
 msgstr ""
 
-#: cckddasd.c:681
+#: cckddasd.c:682
 #, fuzzy
 msgid "HHCCD130E %4.4X file[%d] write error, offset 0x%"
 msgstr "HHCDU010E Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: cckddasd.c:684
+#: cckddasd.c:685
 #, fuzzy
 msgid "HHCCD130E %4.4X file[%d] write incomplete, offset 0x%"
 msgstr "HHCDU010E Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: cckddasd.c:684
+#: cckddasd.c:685
 #, c-format
 msgid "x: wrote %d expected %d\n"
 msgstr ""
 
-#: cckddasd.c:710
+#: cckddasd.c:711
 #, fuzzy
 msgid "HHCCD130E %4.4X file[%d] ftruncate error, offset 0x%"
 msgstr "HHCDU010E Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: cckddasd.c:732
+#: cckddasd.c:733
 #, fuzzy, c-format
 msgid "HHCCD130E %4.4X malloc error, size %d: %s\n"
 msgstr "HHCCA018E %4.4X:Bind fout: %s\n"
 
-#: cckddasd.c:753
+#: cckddasd.c:754
 #, fuzzy, c-format
 msgid "HHCCD130E %4.4X calloc error, size %d: %s\n"
 msgstr "HHCDU040E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
 
-#: cckddasd.c:1499
+#: cckddasd.c:1500
 #, fuzzy, c-format
 msgid "HHCCD001I Readahead thread %d started: tid="
 msgstr "HHCCP012I Timer thread gestart: tid=%p, pid=%d\n"
 
-#: cckddasd.c:1499 cckddasd.c:1550 cckddasd.c:1700 cckddasd.c:1822
-#: cckddasd.c:4347 console.c:1550 cpu.c:1128 httpserv.c:593 panel.c:1258
+#: cckddasd.c:1500 cckddasd.c:1551 cckddasd.c:1701 cckddasd.c:1823
+#: cckddasd.c:4348 console.c:1550 cpu.c:1128 httpserv.c:593 panel.c:1258
 #: shared.c:2502 shared.c:2703 sockdev.c:407
 #, c-format
 msgid ", pid=%d\n"
 msgstr ""
 
-#: cckddasd.c:1550
+#: cckddasd.c:1551
 #, c-format
 msgid "HHCCD011I Readahead thread %d stopping: tid="
 msgstr ""
 
-#: cckddasd.c:1700
+#: cckddasd.c:1701
 #, fuzzy, c-format
 msgid "HHCCD002I Writer thread %d started: tid="
 msgstr "HHCCP012I Timer thread gestart: tid=%p, pid=%d\n"
 
-#: cckddasd.c:1822
+#: cckddasd.c:1823
 #, fuzzy, c-format
 msgid "HHCCD012I Writer thread %d stopping: tid="
 msgstr "HHCCP012I Timer thread gestart: tid=%p, pid=%d\n"
 
-#: cckddasd.c:1960
+#: cckddasd.c:1961
 #, c-format
 msgid "HHCCD102E %4.4X file[%d] get space error, size exceeds 4G\n"
 msgstr ""
 
-#: cckddasd.c:2467
+#: cckddasd.c:2468
 #, fuzzy, c-format
 msgid "HHCCD110E %4.4X file[%d] devhdr id error\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: cckddasd.c:3098
+#: cckddasd.c:3099
 #, c-format
 msgid "HHCCD121E %4.4X file[%d] trklen err for %2.2x%2.2x%2.2x%2.2x%2.2x\n"
 msgstr ""
 
-#: cckddasd.c:3267
+#: cckddasd.c:3268
 #, c-format
 msgid ""
 "HHCCD122E %4.4X file[%d] invalid byte 0 trk %d: buf %2.2x%2.2x%2.2x%2.2x%"
 "2.2x\n"
 msgstr ""
 
-#: cckddasd.c:3289
+#: cckddasd.c:3290
 #, c-format
 msgid ""
 "HHCCD123E %4.4X file[%d] invalid byte 0 blkgrp %d: buf %2.2x%2.2x%2.2x%2.2x%"
 "2.2x\n"
 msgstr ""
 
-#: cckddasd.c:3304
+#: cckddasd.c:3305
 #, c-format
 msgid ""
 "HHCCD124E %4.4X file[%d] invalid %s hdr %s %d: %s compression unsupported\n"
 msgstr ""
 
-#: cckddasd.c:3312
+#: cckddasd.c:3313
 #, c-format
 msgid ""
 "HHCCD125E %4.4X file[%d] invalid %s hdr %s %d buf %p:%2.2x%2.2x%2.2x%2.2x%"
 "2.2x\n"
 msgstr ""
 
-#: cckddasd.c:3466
+#: cckddasd.c:3467
 #, c-format
 msgid ""
 "HHCCD142E %4.4X file[%d] shadow file name %s\n"
 "      collides with %4.4X file[%d] name %s\n"
 msgstr ""
 
-#: cckddasd.c:3511
+#: cckddasd.c:3512
 #, c-format
 msgid ""
 "HHCCD151E %4.4X file[%d] error re-opening %s readonly\n"
 "  %s\n"
 msgstr ""
 
-#: cckddasd.c:3539
+#: cckddasd.c:3540
 #, fuzzy, c-format
 msgid "HHCCD161E %4.4X file[%d] no shadow file name\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: cckddasd.c:3547
+#: cckddasd.c:3548
 #, c-format
 msgid "HHCCD161E %4.4X file[%d] max shadow files exceeded\n"
 msgstr ""
 
-#: cckddasd.c:3630
+#: cckddasd.c:3631
 #, fuzzy, c-format
 msgid "HHCCD160E %4.4X not a cckd device\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: cckddasd.c:3660
+#: cckddasd.c:3661
 #, c-format
 msgid "HHCCD161E %4.4X file[%d] error adding shadow file\n"
 msgstr ""
 
-#: cckddasd.c:3669
+#: cckddasd.c:3670
 #, fuzzy, c-format
 msgid "HHCCD162I %4.4X file[%d] %s added\n"
 msgstr "HHCCA018E %4.4X:Bind fout: %s\n"
 
-#: cckddasd.c:3716
+#: cckddasd.c:3717
 #, fuzzy, c-format
 msgid "HHCCD170E %4.4X not a cckd device\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: cckddasd.c:3722
+#: cckddasd.c:3723
 #, c-format
 msgid "HHCCD171E %4.4X file[%d] cannot remove base file\n"
 msgstr ""
 
-#: cckddasd.c:3766
+#: cckddasd.c:3767
 #, c-format
 msgid ""
 "HHCCD172E %4.4X file[%d] not merged, file[%d] cannot be opened read-write%s\n"
 msgstr ""
 
-#: cckddasd.c:3780
+#: cckddasd.c:3781
 #, c-format
 msgid "HHCCD173E %4.4X file[%d] not merged, file[%d] check failed\n"
 msgstr ""
 
-#: cckddasd.c:3793
+#: cckddasd.c:3794
 #, c-format
 msgid "HHCCD174E %4.4X file[%d] not merged, file not hardened\n"
 msgstr ""
 
-#: cckddasd.c:3958
+#: cckddasd.c:3959
 #, c-format
 msgid "HHCCD181I %4.4X shadow file [%d] successfully %s%s\n"
 msgstr ""
 
-#: cckddasd.c:3990
+#: cckddasd.c:3991
 #, fuzzy, c-format
 msgid "HHCCD201W %4.4X device is not a shadow file\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: cckddasd.c:3995
+#: cckddasd.c:3996
 #, c-format
 msgid "HHCCD202W %4.4X file shadowing not activated\n"
 msgstr ""
 
-#: cckddasd.c:4003
+#: cckddasd.c:4004
 #, fuzzy, c-format
 msgid "HHCCD203W %4.4X shadowing is already active\n"
 msgstr "HHCCP005E CPU%4.4X thread al gestart\n"
 
-#: cckddasd.c:4012
+#: cckddasd.c:4013
 #, fuzzy, c-format
 msgid "HHCCD204I %4.4X shadow file name set to %s\n"
 msgstr "HHCCP007I CPU%4.4X Architectuur Modus %s\n"
 
-#: cckddasd.c:4030
+#: cckddasd.c:4031
 #, c-format
 msgid "HHCCD205W %4.4X device is not a shadow file\n"
 msgstr ""
 
-#: cckddasd.c:4095
+#: cckddasd.c:4096
 #, fuzzy, c-format
 msgid "HHCCD206W %4.4X device is not a shadow file\n"
 msgstr "HHCPN015E Ongeldig apparaat nummer\n"
 
-#: cckddasd.c:4112
+#: cckddasd.c:4113
 msgid ""
 "HHCCD210I           size free  nbr st   reads  writes l2reads    hits "
 "switches\n"
 msgstr ""
 
-#: cckddasd.c:4114
+#: cckddasd.c:4115
 msgid ""
 "HHCCD211I                                                  readaheads   "
 "misses\n"
 msgstr ""
 
-#: cckddasd.c:4115
+#: cckddasd.c:4116
 msgid ""
 "HHCCD212I "
 "--------------------------------------------------------------------\n"
 msgstr ""
 
-#: cckddasd.c:4118
+#: cckddasd.c:4119
 msgid "HHCCD213I [*] %10"
 msgstr ""
 
-#: cckddasd.c:4118 cckddasd.c:4128 cckddasd.c:4140
+#: cckddasd.c:4119 cckddasd.c:4129 cckddasd.c:4141
 msgid "d %3"
 msgstr ""
 
-#: cckddasd.c:4118
+#: cckddasd.c:4119
 #, c-format
 msgid "d%% %4d    %7d %7d %7d %7d  %7d\n"
 msgstr ""
 
-#: cckddasd.c:4123
+#: cckddasd.c:4124
 #, c-format
 msgid ""
 "HHCCD214I                                                     %7d  %7d\n"
 msgstr ""
 
-#: cckddasd.c:4127
+#: cckddasd.c:4128
 #, c-format
 msgid "HHCCD215I %s\n"
 msgstr ""
 
-#: cckddasd.c:4128
+#: cckddasd.c:4129
 msgid "HHCCD216I [0] %10"
 msgstr ""
 
-#: cckddasd.c:4128 cckddasd.c:4140
+#: cckddasd.c:4129 cckddasd.c:4141
 #, c-format
 msgid "d%% %4d %s %7d %7d %7d\n"
 msgstr ""
 
-#: cckddasd.c:4135
+#: cckddasd.c:4136
 #, c-format
 msgid "HHCCD217I %s\n"
 msgstr ""
 
-#: cckddasd.c:4140
+#: cckddasd.c:4141
 msgid "HHCCD218I [%d] %10"
 msgstr ""
 
-#: cckddasd.c:4239
+#: cckddasd.c:4240
 #, fuzzy
 msgid "HHCCD003I Garbage collector thread started: tid="
 msgstr "HHCTE001I Controle paneel thread gestart: tid=%8.8lX, pid=%d\n"
 
-#: cckddasd.c:4239
+#: cckddasd.c:4240
 #, c-format
 msgid ", pid=%d \n"
 msgstr ""
 
-#: cckddasd.c:4347
+#: cckddasd.c:4348
 msgid "HHCCD013I Garbage collector thread stopping: tid="
 msgstr ""
 
-#: cckddasd.c:4571
+#: cckddasd.c:4572
 #, fuzzy
 msgid "HHCCD190E %4.4X file[%d] offset 0x%"
 msgstr "HHCDU040E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
 
-#: cckddasd.c:4571
+#: cckddasd.c:4572
 #, c-format
 msgid "x unknown space: %2.2x%2.2x%2.2x%2.2x%2.2x\n"
 msgstr ""
 
-#: cckddasd.c:4840
+#: cckddasd.c:4841
 #, c-format
 msgid ""
 "HHCCD193E %4.4X file[%d] uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x\n"
 msgstr ""
 
-#: cckddasd.c:4843
+#: cckddasd.c:4844
 #, c-format
 msgid "HHCCD194E %4.4X file[%d] %s compression not supported\n"
 msgstr ""
 
-#: cckddasd.c:5368
+#: cckddasd.c:5369
 msgid "HHCCD900I print_itrace\n"
 msgstr ""
 
@@ -1076,17 +1076,17 @@ msgstr ""
 msgid "HHCDA055I search key %s\n"
 msgstr ""
 
-#: codepage.c:474
+#: codepage.c:475
 #, c-format
 msgid "HHCCF072I Using internal codepage conversion table %s\n"
 msgstr ""
 
-#: codepage.c:481
+#: codepage.c:485
 #, c-format
 msgid "HHCCF072I Using external codepage conversion table %s\n"
 msgstr ""
 
-#: codepage.c:485
+#: codepage.c:491
 #, c-format
 msgid "HHCCF051E Codepage conversion table %s is not defined\n"
 msgstr ""
@@ -2235,27 +2235,27 @@ msgstr ""
 msgid "HHCCT033E %4.4X: Error: read: %s\n"
 msgstr ""
 
-#: dasdcat.c:32
+#: dasdcat.c:33
 #, c-format
 msgid "HHCDT002E Can't make 80 column card images from block length %d\n"
 msgstr ""
 
-#: dasdcat.c:108
+#: dasdcat.c:109
 #, c-format
 msgid "HHCDT003E Directory block byte count is invalid\n"
 msgstr ""
 
-#: dasdcat.c:210
+#: dasdcat.c:211
 #, c-format
 msgid "HHCDT004E non-PDS-members not yet supported\n"
 msgstr ""
 
-#: dasdcat.c:240
+#: dasdcat.c:243
 #, c-format
 msgid "HHCDT005E unknown dataset name option: '%c'\n"
 msgstr ""
 
-#: dasdcat.c:337
+#: dasdcat.c:340
 #, c-format
 msgid "HHCDT001E failed to open image %s\n"
 msgstr ""
