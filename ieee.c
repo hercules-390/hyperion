@@ -1954,7 +1954,7 @@ DEF_INST(convert_fix32_to_bfp_ext_reg)
     RRE(inst, regs, r1, r2);
     //logmsg("CXFBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
+    BFPREGPAIR2_CHECK(r1, 0, regs);
 
     op2 = regs->GR_L(r2);
 
@@ -2032,7 +2032,7 @@ DEF_INST(convert_fix64_to_bfp_ext_reg)
     RRE(inst, regs, r1, r2);
     //logmsg("CXGBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
+    BFPREGPAIR2_CHECK(r1, 0, regs);
 
     op2 = regs->GR_G(r2);
 
