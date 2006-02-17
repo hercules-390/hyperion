@@ -3942,12 +3942,13 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
 
     logmsg(_("HHCPN161I (void *) ..........%7d\n"),sizeof(void *));
-    logmsg(_("HHCPN162I (unsigned int) ....%7d\n"),sizeof(unsigned int));
-    logmsg(_("HHCPN163I SYSBLK ............%7d\n"),sizeof(SYSBLK));
-    logmsg(_("HHCPN164I REGS ..............%7d\n"),sizeof(REGS));
-    logmsg(_("HHCPN165I DEVBLK ............%7d\n"),sizeof(DEVBLK));
-    logmsg(_("HHCPN166I TLB entry .........%7d\n"),sizeof(TLB)/TLBN);
-    logmsg(_("HHCPN167I TLB table .........%7d\n"),sizeof(TLB));
+    logmsg(_("HHCPN161I (unsigned int) ....%7d\n"),sizeof(unsigned int));
+    logmsg(_("HHCPN161I (off_t) ...........%7d\n"),sizeof(OFF_T));
+    logmsg(_("HHCPN161I SYSBLK ............%7d\n"),sizeof(SYSBLK));
+    logmsg(_("HHCPN161I REGS ..............%7d\n"),sizeof(REGS));
+    logmsg(_("HHCPN161I DEVBLK ............%7d\n"),sizeof(DEVBLK));
+    logmsg(_("HHCPN161I TLB entry .........%7d\n"),sizeof(TLB)/TLBN);
+    logmsg(_("HHCPN161I TLB table .........%7d\n"),sizeof(TLB));
     return 0;
 }
 
