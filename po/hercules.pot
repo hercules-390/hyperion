@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-12 16:04-0600\n"
+"POT-Creation-Date: 2006-02-17 21:53-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4837,104 +4837,109 @@ msgstr ""
 
 #: hsccmd.c:3945
 #, c-format
-msgid "HHCPN162I (unsigned int) ....%7d\n"
+msgid "HHCPN161I (unsigned int) ....%7d\n"
 msgstr ""
 
 #: hsccmd.c:3946
 #, c-format
-msgid "HHCPN163I SYSBLK ............%7d\n"
+msgid "HHCPN161I (off_t) ...........%7d\n"
 msgstr ""
 
 #: hsccmd.c:3947
 #, c-format
-msgid "HHCPN164I REGS ..............%7d\n"
+msgid "HHCPN161I SYSBLK ............%7d\n"
 msgstr ""
 
 #: hsccmd.c:3948
 #, c-format
-msgid "HHCPN165I DEVBLK ............%7d\n"
+msgid "HHCPN161I REGS ..............%7d\n"
 msgstr ""
 
 #: hsccmd.c:3949
 #, c-format
-msgid "HHCPN166I TLB entry .........%7d\n"
+msgid "HHCPN161I DEVBLK ............%7d\n"
 msgstr ""
 
 #: hsccmd.c:3950
 #, c-format
-msgid "HHCPN167I TLB table .........%7d\n"
+msgid "HHCPN161I TLB entry .........%7d\n"
 msgstr ""
 
-#: hsccmd.c:4225
+#: hsccmd.c:3951
+#, c-format
+msgid "HHCPN161I TLB table .........%7d\n"
+msgstr ""
+
+#: hsccmd.c:4226
 #, c-format
 msgid "HHCPN139E Command \"%s\" not found; enter '?' for list.\n"
 msgstr ""
 
-#: hsccmd.c:4252
+#: hsccmd.c:4253
 msgid ""
 "HHCPN140I Valid panel commands are...\n"
 "\n"
 msgstr ""
 
-#: hsccmd.c:4262
+#: hsccmd.c:4263
 #, c-format
 msgid "  %-9.9s    %s \n"
 msgstr ""
 
-#: hsccmd.c:4269
+#: hsccmd.c:4270
 msgid "add shadow file"
 msgstr ""
 
-#: hsccmd.c:4270
+#: hsccmd.c:4271
 msgid "delete shadow file"
 msgstr ""
 
-#: hsccmd.c:4271
+#: hsccmd.c:4272
 msgid "rename shadow file"
 msgstr ""
 
-#: hsccmd.c:4272
+#: hsccmd.c:4273
 msgid "compress shadow files"
 msgstr ""
 
-#: hsccmd.c:4273
+#: hsccmd.c:4274
 msgid "display shadow file stats"
 msgstr ""
 
-#: hsccmd.c:4279
+#: hsccmd.c:4280
 msgid "turn instruction tracing on/off"
 msgstr ""
 
-#: hsccmd.c:4280
+#: hsccmd.c:4281
 msgid "turn instruction stepping on/off"
 msgstr ""
 
-#: hsccmd.c:4281
+#: hsccmd.c:4282
 msgid "turn CCW tracing on/off"
 msgstr ""
 
-#: hsccmd.c:4282
+#: hsccmd.c:4283
 msgid "turn CCW stepping on/off"
 msgstr ""
 
-#: hsccmd.c:4284
+#: hsccmd.c:4285
 msgid "turn CKD_KEY tracing on/off"
 msgstr ""
 
-#: hsccmd.c:4286
+#: hsccmd.c:4287
 msgid "mark frames unusable/usable"
 msgstr ""
 
-#: hsccmd.c:4502
+#: hsccmd.c:4503
 msgid "HHCPN141E Missing argument\n"
 msgstr ""
 
-#: hsccmd.c:4510
+#: hsccmd.c:4511
 #, c-format
 msgid "%s"
 msgstr ""
 
-#: hsccmd.c:4515
+#: hsccmd.c:4516
 msgid "HHCPN142I No additional help available.\n"
 msgstr ""
 
