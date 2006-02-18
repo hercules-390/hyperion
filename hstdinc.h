@@ -127,7 +127,9 @@
   #include <sys/wait.h>
 #endif
 #ifdef HAVE_BYTESWAP_H
+ #ifndef NO_ASM_BYTESWAP
   #include <byteswap.h>
+ #endif
 #endif
 #ifdef HAVE_BZLIB_H
   // windows.h #defines 'small' as char and bzlib.h

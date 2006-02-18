@@ -83,7 +83,7 @@
 #include "hthreads.h"     // (Hercules-wide threading macros)
 #include "hmacros.h"      // (Hercules-wide #define macros)
 
-#if !defined(HAVE_BYTESWAP_H)
+#if !defined(HAVE_BYTESWAP_H) || defined(NO_ASM_BYTESWAP)
  #include "hbyteswp.h"    // (Hercules equivalent of <byteswap.h>)
 #endif
 

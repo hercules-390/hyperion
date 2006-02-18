@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+18 Feb 2006 Reinstate byteswap.h check - Greg Smith
 15 Feb 2006 Fixed spurious specification exception in CXFBR and CXGBR - Greg
             Smith, found by Pasi Pirhonen
 11 Feb 2006 Added option s to dasdcat to preserve sequence numbers when
