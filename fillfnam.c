@@ -50,7 +50,11 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   strncpy(part2, cmdlinefull + i + 1, cmdoff - i - 1);
   part2[cmdoff - i - 1] = '\0';
 
-  path = (char*)malloc(strlen(part2) + 1);
+  len = strlen(part2);
+  /* 3 characters minimum needed, for ./\0 in path. */
+  if (len < 2)
+    len = 2;
+  path = (char*)malloc(len + 1);
   filename = part2;
   /* is it pure filename or is there whole path ? */
   tmp = strrchr(part2, '/');

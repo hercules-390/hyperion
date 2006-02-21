@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+21 Feb 2006 Fix string overrun when hitting tab at the wrong time - Bjoern
+            Zeeb
 18 Feb 2006 Reinstate byteswap.h check - Greg Smith
 15 Feb 2006 Fixed spurious specification exception in CXFBR and CXGBR - Greg
             Smith, found by Pasi Pirhonen
