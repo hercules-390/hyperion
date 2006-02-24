@@ -5513,9 +5513,9 @@ S64     fix;
 
 
 /*-------------------------------------------------------------------*/
-/* B3C4 CEGR - Convert from 64Fixed to Float. Short Register   [RRE] */
+/* B3C4 CEGR - Convert from Fix64 to Float. Short Register     [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_64fixed_to_float_short_reg)
+DEF_INST(convert_fix64_to_float_short_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1;
@@ -5551,9 +5551,9 @@ U64     fix;
 
 
 /*-------------------------------------------------------------------*/
-/* B3C5 CDGR - Convert from 64Fixed to Float. Long Register    [RRE] */
+/* B3C5 CDGR - Convert from Fix64 to Float. Long Register      [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_64fixed_to_float_long_reg)
+DEF_INST(convert_fix64_to_float_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1;
@@ -5590,9 +5590,9 @@ U64     fix;
 
 
 /*-------------------------------------------------------------------*/
-/* B3C6 CXGR - Convert from 64Fixed to Float. Extended Register[RRE] */
+/* B3C6 CXGR - Convert from Fix64 to Float. Extended Register[RRE]   */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_64fixed_to_float_ext_reg)
+DEF_INST(convert_fix64_to_float_ext_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1;
