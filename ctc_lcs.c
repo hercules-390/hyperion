@@ -1025,7 +1025,9 @@ static void  LCS_Shutdown( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 {
     PLCSPORT    pPort;
+#ifdef OPTION_TUNTAP_DELADD_ROUTES
     PLCSRTE     pRoute;
+#endif
     PLCSSTDFRM  pReply;
 
     pPort = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];

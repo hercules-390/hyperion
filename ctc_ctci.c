@@ -1117,7 +1117,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 #if defined( WIN32 )
     strcpy( pCTCBLK->szTUNCharName,  tt32_get_default_iface() );
 #else
-    strcpy( pCTCBLK->szTUNCharName,  "/dev/net/tun" );
+    strcpy( pCTCBLK->szTUNCharName,  HERCTUN_DEV );
 #endif
 
 #if defined( WIN32 )
