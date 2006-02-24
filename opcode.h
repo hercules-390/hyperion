@@ -1853,6 +1853,9 @@ DEF_INST(convert_fix64_to_float_ext_reg);
 DEF_INST(convert_float_short_to_fixed_reg);
 DEF_INST(convert_float_long_to_fixed_reg);
 DEF_INST(convert_float_ext_to_fixed_reg);
+DEF_INST(convert_float_short_to_fix64_reg); /* under construction! Bernard van der Helm */
+DEF_INST(convert_float_long_to_fix64_reg); /* under construction! Bernard van der Helm */
+DEF_INST(convert_float_ext_to_fix64_reg); /* under construction! Bernard van der Helm */
 DEF_INST(loadlength_float_short_to_long);
 DEF_INST(loadlength_float_long_to_ext);
 DEF_INST(loadlength_float_short_to_ext);
