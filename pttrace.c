@@ -94,17 +94,24 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
             return -1;
         }
         OBTAIN_PTTLOCK;
-        if (pttrace == NULL)
+        if (pttracen == 0)
         {
-            if (pttracen != 0)
+            if (pttrace != NULL)
             {
                 RELEASE_PTTLOCK;
                 logmsg( _("HHCPT002E Trace is busy\n"));
                 return -1;
             }
         }
-        else
+        else if (pttrace)
+        {
+            pttracen = 0;
+            RELEASE_PTTLOCK;
+            usleep(100);
+            OBTAIN_PTTLOCK;
             free (pttrace);
+            pttrace = NULL;
+        }
         ptt_trace_init (n, 0);
         RELEASE_PTTLOCK;
     }
@@ -352,9 +359,9 @@ DLL_EXPORT int ptt_pthread_kill(fthread_t tid, int sig, char *file, int line)
 DLL_EXPORT void ptt_pthread_trace (char * type, void *data1, void *data2,
                         char *file, int line, int result)
 {
-int i;
+int i, n;
 
-    if (pttrace == NULL) return;
+    if (pttrace == NULL || pttracen == 0) return;
 
     /*
     ** Fish debug: it appears MSVC sometimes sets the __FILE__ macro
@@ -385,13 +392,13 @@ int i;
     if (pttimer == 0 && strcasecmp(file, "timer.c") == 0) return;
 
     OBTAIN_PTTLOCK;
-    if (pttrace == NULL)
+    if (pttrace == NULL || (n = pttracen) == 0)
     {
         RELEASE_PTTLOCK;
         return;
     }
     i = pttracex++;
-    if (pttracex >= pttracen) pttracex = 0;
+    if (pttracex >= n) pttracex = 0;
     RELEASE_PTTLOCK;
     pttrace[i].tid   = thread_id();
     pttrace[i].type  = type;
@@ -405,58 +412,57 @@ int i;
 
 DLL_EXPORT void ptt_pthread_print ()
 {
-PTT_TRACE *p;
-int   i;
+int   i, n;
 char  result[32]; // (result is 'int'; if 64-bits, 19 digits or more!)
 char  tbuf[256];
 time_t tt;
 const char dot = '.';
 
-    if (pttrace == NULL) return;
+    if (pttrace == NULL || pttracen == 0) return;
     OBTAIN_PTTLOCK;
-    p = pttrace;
-    pttrace = NULL;
+    n = pttracen;
+    pttracen = 0;
     RELEASE_PTTLOCK;
     i = pttracex;
     do
     {
-        if (p[i].tid)
+        if (pttrace[i].tid)
         {
-            tt = p[i].tv.tv_sec; strcpy(tbuf, ctime(&tt)); tbuf[19] = '\0';
+            tt = pttrace[i].tv.tv_sec; strcpy(tbuf, ctime(&tt)); tbuf[19] = '\0';
 
-            if (p[i].result == PTT_MAGIC)
+            if (pttrace[i].result == PTT_MAGIC)
                 result[0] = '\0';
             else
-                sprintf(result, "%d", p[i].result);
+                sprintf(result, "%d", pttrace[i].result);
 
             logmsg
             (
-                "%8.8x "                // Thead id
-                "%-12.12s "             // Trace type (string; 12 chars)
-                PTR_FMTx" "             // Data value 1
-                PTR_FMTx" "             // Data value 2
-                "%-12.12s "             // File name
-                "%4d "                  // Line number
-                "%s%c%6.6ld "           // Time of day (HH:MM:SS.usecs)
-                "%s\n"                  // Numeric result (or empty string)
+                "%8.8x "                      // Thead id
+                "%-12.12s "                   // Trace type (string; 12 chars)
+                PTR_FMTx" "                   // Data value 1
+                PTR_FMTx" "                   // Data value 2
+                "%-12.12s "                   // File name
+                "%4d "                        // Line number
+                "%s%c%6.6ld "                 // Time of day (HH:MM:SS.usecs)
+                "%s\n"                        // Numeric result (or empty string)
 
-                ,(U32)p[i].tid          // Thead id
-                ,p[i].type              // Trace type (string; 12 chars)
-                ,(uintptr_t)p[i].data1  // Data value 1
-                ,(uintptr_t)p[i].data2  // Data value 2
-                ,p[i].file              // File name
-                ,p[i].line              // Line number
-                ,tbuf + 11              // Time of day (HH:MM:SS)
-                ,dot                    // Time of day (decimal point)
-                ,p[i].tv.tv_usec        // Time of day (microseconds)
-                ,result                 // Numeric result (or empty string)
+                ,(U32)pttrace[i].tid          // Thead id
+                ,pttrace[i].type              // Trace type (string; 12 chars)
+                ,(uintptr_t)pttrace[i].data1  // Data value 1
+                ,(uintptr_t)pttrace[i].data2  // Data value 2
+                ,pttrace[i].file              // File name
+                ,pttrace[i].line              // Line number
+                ,tbuf + 11                    // Time of day (HH:MM:SS)
+                ,dot                          // Time of day (decimal point)
+                ,pttrace[i].tv.tv_usec        // Time of day (microseconds)
+                ,result                       // Numeric result (or empty string)
             );
         }
-        if (++i >= pttracen) i = 0;
+        if (++i >= n) i = 0;
     } while (i != pttracex);
-    memset (p, 0, PTT_TRACE_SIZE * pttracen);
+    memset (pttrace, 0, PTT_TRACE_SIZE * n);
     pttracex = 0;
-    pttrace = p;
+    pttracen = n;
 }
 
 #endif

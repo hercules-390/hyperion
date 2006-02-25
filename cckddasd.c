@@ -5390,6 +5390,8 @@ void cckd_trace(DEVBLK *dev, char *msg, ...)
 {
 va_list         vl;
 struct timeval  tv;
+time_t          t;
+char            tbuf[64];
 CCKD_TRACE     *p;
 int             l;
 
@@ -5425,18 +5427,24 @@ int             l;
     /*             for heap overrun (vsprintf)        */
     if (cckdblk.itrace)
     {
+        gettimeofday(&tv, NULL);
+        t = tv.tv_sec;
+        strcpy(tbuf, ctime(&t));
+        tbuf[19] = '\0';
+
         va_start(vl,msg);
+
         p = cckdblk.itracep++;
         if (p >= cckdblk.itracex)
         {
             p = cckdblk.itrace;
             cckdblk.itracep = p + 1;
         }
-        gettimeofday(&tv, NULL);
+
         if (p)
         {
-            l = sprintf ((char *)p, "%6.6ld" "." "%6.6ld %4.4X:",
-                      tv.tv_sec, tv.tv_usec, dev ? dev->devnum : 0);
+            l = sprintf ((char *)p, "%s" "." "%6.6ld %4.4X:",
+                      tbuf+11, tv.tv_usec, dev ? dev->devnum : 0);
             vsprintf ((char *)p + l, msg, vl);
         }
     }
