@@ -1271,9 +1271,8 @@ void ARCH_DEP(diagnose_002) (REGS *regs, int r1, int r3)
 DEVBLK *dev;
 U32    newgr1;
 
-    /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( regs->GR_LHH(1) != 0x0001 )
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    /* Program check if the ssid including lcss is invalid */
+    SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
     dev = find_device_by_subchan (regs->GR_LHL(1));

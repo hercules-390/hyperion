@@ -525,6 +525,7 @@ struct DEVBLK {                         /* Device configuration block*/
 
         /*  device identification                                    */
 
+        U16     ssid;                   /* Subsystem ID incl. lcssid */
         U16     subchan;                /* Subchannel number         */
         U16     devnum;                 /* Device number             */
         U16     devtype;                /* Device type               */

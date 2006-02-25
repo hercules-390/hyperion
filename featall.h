@@ -35,6 +35,7 @@
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
 #define FEATURE_ALD_FORMAT            0 /* Use fmt0 Access-lists     */
 #define FEATURE_SIE_MAXZONES          8 /* Maximum SIE Zones         */
+#define FEATURE_LCSS_MAX              1 /* Number of supported lcss's*/
 // #define SIE_DEBUG_PERFMON            /* SIE performance monitor   */
 #define OPTION_LPARNAME                 /* DIAG 204 lparname         */
 #define OPTION_HTTP_SERVER              /* HTTP server support       */

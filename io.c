@@ -66,9 +66,8 @@ DEVBLK *dev;                            /* -> device block           */
 #endif
        SIE_INTERCEPT(regs);
 
-    /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( regs->GR_LHH(1) != 0x0001 )
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    /* Program check if the ssid including lcss is invalid */
+    SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
     dev = find_device_by_subchan (regs->GR_LHL(1));
@@ -112,9 +111,8 @@ DEVBLK *dev;                            /* -> device block           */
 #endif
        SIE_INTERCEPT(regs);
 
-    /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( regs->GR_LHH(1) != 0x0001 )
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    /* Program check if the ssid including lcss is invalid */
+    SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
     dev = find_device_by_subchan (regs->GR_LHL(1));
@@ -172,9 +170,8 @@ PMCW    pmcw;                           /* Path management ctl word  */
         || (pmcw.flag27 & PMCW27_RESV))
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
-    /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( regs->GR_LHH(1) != 0x0001 )
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    /* Program check if the ssid including lcss is invalid */
+    SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
     dev = find_device_by_subchan (regs->GR_LHL(1));
@@ -326,9 +323,8 @@ DEVBLK *dev;                            /* -> device block           */
 #endif
        SIE_INTERCEPT(regs);
 
-    /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( regs->GR_LHH(1) != 0x0001 )
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    /* Program check if the ssid including lcss is invalid */
+    SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
     dev = find_device_by_subchan (regs->GR_LHL(1));
@@ -494,9 +490,8 @@ ORB     orb;                            /* Operation request block   */
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 #endif /*!defined(FEATURE_MIDAW)*/                              /*@MW*/
 
-    /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( regs->GR_LHH(1) != 0x0001 )
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    /* Program check if the ssid including lcss is invalid */
+    SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
     dev = find_device_by_subchan (regs->GR_LHL(1));
@@ -613,9 +608,8 @@ SCHIB   schib;                          /* Subchannel information blk*/
 
     SIE_INTERCEPT(regs);
 
-    /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( regs->GR_LHH(1) != 0x0001 )
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    /* Program check if the ssid including lcss is invalid */
+    SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
     dev = find_device_by_subchan (regs->GR_LHL(1));
@@ -784,9 +778,8 @@ int     cc;                             /* Condition Code            */
 
     FW_CHECK(effective_addr2, regs);
 
-    /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( regs->GR_LHH(1) != 0x0001 )
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    /* Program check if the ssid including lcss is invalid */
+    SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
     dev = find_device_by_subchan (regs->GR_LHL(1));
@@ -842,9 +835,8 @@ DEVBLK *dev;                            /* -> device block           */
 #endif
        SIE_INTERCEPT(regs);
 
-    /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( regs->GR_LHH(1) != 0x0001 )
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    /* Program check if the ssid including lcss is invalid */
+    SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
     dev = find_device_by_subchan (regs->GR_LHL(1));

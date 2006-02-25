@@ -40,9 +40,8 @@ DEVBLK *dev;                            /* -> device block           */
     if(regs->GR_L(0) > SIGA_FC_MAX)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    /* Operand exception if reg 1 bits 0-15 not X'0001' */
-    if ( regs->GR_LHH(1) != 0x0001 )
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+    /* Program check if the ssid including lcss is invalid */
+    SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
     dev = find_device_by_subchan (regs->GR_LHL(1));
