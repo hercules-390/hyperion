@@ -370,7 +370,7 @@ do { \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
 #define SSID_CHECK(_regs) \
-    if((!(_regs)->GR_LHH(1) & 0x0001)) \
+    if((!((_regs)->GR_LHH(1) & 0x0001)) \
     || (_regs)->GR_LHH(1) > (0x0001|((FEATURE_LCSS_MAX-1) << 1))) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_OPERAND_EXCEPTION)
 
