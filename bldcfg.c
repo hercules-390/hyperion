@@ -2015,14 +2015,14 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                    orig_newargv[j]=newargv[j]=resolve_symbol_string(addargv[j]);
                }
                 /* Build the device configuration block */
-               rc=attach_device(devnum, sdevtype, addargc, newargv);
+               rc=attach_device(0, devnum, sdevtype, addargc, newargv);
                for(j=0;j<addargc;j++)
                {
                    free(orig_newargv[j]);
                }
 #else /* #if defined(OPTION_CONFIG_SYMBOLS) */
                 /* Build the device configuration block (no syms) */
-               rc=attach_device(devnum, sdevtype, addargc, addargv);
+               rc=attach_device(0, devnum, sdevtype, addargc, addargv);
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
                if(rc!=0)
                {

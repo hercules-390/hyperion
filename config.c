@@ -57,7 +57,7 @@ int     cpu;
     /* Detach all devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
        if (dev->allocated)
-           detach_subchan(dev->subchan);
+           detach_subchan(SSID_TO_LCSS(dev->ssid), dev->subchan);
 
 #if !defined(OPTION_FISHIO)
     /* Terminate device threads */
@@ -145,7 +145,7 @@ static void AddDevnumFastLookup(DEVBLK *dev,U16 devnum)
     }
     sysblk.devnum_fl[Channel][devnum & 0xff]=dev;
 }
-static void AddSubchanFastLookup(DEVBLK *dev,U16 subchan)
+static void AddSubchanFastLookup(DEVBLK *dev,U16 ssid, U16 subchan)
 {
     unsigned int schw;
 #if 0
@@ -153,10 +153,10 @@ static void AddSubchanFastLookup(DEVBLK *dev,U16 subchan)
 #endif
     if(sysblk.subchan_fl==NULL)
     {
-        sysblk.subchan_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256);
-        memset(sysblk.subchan_fl,0,sizeof(DEVBLK **)*256);
+        sysblk.subchan_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
+        memset(sysblk.subchan_fl,0,sizeof(DEVBLK **)*256*FEATURE_LCSS_MAX);
     }
-    schw=(subchan & 0xff00)>>8;
+    schw=((subchan & 0xff00)>>8)|(SSID_TO_LCSS(ssid)<<8);
     if(sysblk.subchan_fl[schw]==NULL)
     {
         sysblk.subchan_fl[schw]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
@@ -178,7 +178,7 @@ static void DelDevnumFastLookup(U16 devnum)
     }
     sysblk.devnum_fl[Channel][devnum & 0xff]=NULL;
 }
-static void DelSubchanFastLookup(U16 subchan)
+static void DelSubchanFastLookup(U16 ssid, U16 subchan)
 {
     unsigned int schw;
 #if 0
@@ -188,7 +188,7 @@ static void DelSubchanFastLookup(U16 subchan)
     {
         return;
     }
-    schw=(subchan & 0xff00)>>8;
+    schw=((subchan & 0xff00)>>8)|(SSID_TO_LCSS(ssid) << 8);
     if(sysblk.subchan_fl[schw]==NULL)
     {
         return;
@@ -197,7 +197,7 @@ static void DelSubchanFastLookup(U16 subchan)
 }
 #endif
 
-DEVBLK *get_devblk(U16 devnum)
+DEVBLK *get_devblk(U16 lcss, U16 devnum)
 {
 DEVBLK *dev;
 DEVBLK**dvpp;
@@ -227,7 +227,7 @@ DEVBLK**dvpp;
         /* Add the new device block to the end of the chain */
         *dvpp = dev;
 
-        dev->subchan = sysblk.highsubchan++;
+        dev->subchan = sysblk.highsubchan[lcss]++;
     }
 
     /* Initialize the device block */
@@ -239,8 +239,9 @@ DEVBLK**dvpp;
     dev->cpuprio = sysblk.cpuprio;
     dev->devprio = sysblk.devprio;
     dev->hnd = NULL;
+    dev->ssid = LCSS_TO_SSID(lcss);
     dev->devnum = devnum;
-    dev->chanset = devnum >> 12;
+    dev->chanset = lcss;
     if( dev->chanset >= sysblk.numcpu)
         dev->chanset = sysblk.numcpu > 0 ? sysblk.numcpu - 1 : 0;
     dev->fd = -1;
@@ -307,7 +308,7 @@ void ret_devblk(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 /* Function to build a device configuration block                    */
 /*-------------------------------------------------------------------*/
-int attach_device (U16 devnum, char *type,
+int attach_device (U16 lcss, U16 devnum, char *type,
                    int addargc, char *addargv[])
 {
 DEVBLK *dev;                            /* -> Device block           */
@@ -322,7 +323,7 @@ int     i;                              /* Loop index                */
     }
 
     /* obtain device block */
-    dev = get_devblk(devnum);
+    dev = get_devblk(lcss,devnum);
 
     if(!(dev->hnd = hdl_ghnd(type)))
     {
@@ -417,7 +418,7 @@ int     i;                              /* Loop index                */
     obtain_lock(&dev->lock);
 
 #if defined(OPTION_FAST_DEVLOOKUP)
-    DelSubchanFastLookup(dev->subchan);
+    DelSubchanFastLookup(dev->ssid, dev->subchan);
     if(dev->pmcw.flag5 & PMCW5_V)
         DelDevnumFastLookup(dev->devnum);
 #endif
@@ -479,13 +480,13 @@ int     i;                              /* Loop index                */
 /*-------------------------------------------------------------------*/
 /* Function to delete a device configuration block by subchannel     */
 /*-------------------------------------------------------------------*/
-int detach_subchan (U16 subchan)
+int detach_subchan (U16 lcss, U16 subchan)
 {
 DEVBLK *dev;                            /* -> Device block           */
 int    rc;
 
     /* Find the device block */
-    dev = find_device_by_subchan (subchan);
+    dev = find_device_by_subchan ((LCSS_TO_SSID(lcss)<<16)|subchan);
 
     if (dev == NULL)
     {
@@ -564,8 +565,8 @@ DEVBLK *dev;                            /* -> Device block           */
     /* Disable the device */
     dev->pmcw.flag5 &= ~PMCW5_E;
 #if defined(OPTION_FAST_DEVLOOKUP)
-    DelSubchanFastLookup(olddevn);
-    DelSubchanFastLookup(newdevn);
+    DelDevnumFastLookup(olddevn);
+    DelDevnumFastLookup(newdevn);
 #endif
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
@@ -738,8 +739,10 @@ int Chan;
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the subchannel number       */
 /*-------------------------------------------------------------------*/
-DEVBLK *find_device_by_subchan (U16 subchan)
+DEVBLK *find_device_by_subchan (U32 ioid)
 {
+    U16 subchan = ioid & 0xFFFF;
+    unsigned int schw;
     DEVBLK *dev;
 #if defined(OPTION_FAST_DEVLOOKUP)
 #if 0
@@ -747,9 +750,10 @@ DEVBLK *find_device_by_subchan (U16 subchan)
 #endif
     if(sysblk.subchan_fl!=NULL)
     {
-        if(sysblk.subchan_fl[(subchan & 0xff00)>>8]!=NULL)
+        schw=((subchan & 0xff00)>>8)|(IOID_TO_LCSS(ioid)<<8);
+        if(sysblk.subchan_fl[schw]!=NULL)
         {
-            dev=sysblk.subchan_fl[(subchan & 0xff00)>>8][subchan & 0xff];
+            dev=sysblk.subchan_fl[schw][subchan & 0xff];
             if(dev)
             {
                 return dev;
@@ -766,11 +770,11 @@ DEVBLK *find_device_by_subchan (U16 subchan)
 #if defined(OPTION_FAST_DEVLOOKUP)
     if(dev)
     {
-        AddSubchanFastLookup(dev,subchan);
+        AddSubchanFastLookup(dev, IOID_TO_SSID(ioid), subchan);
     }
     else
     {
-        DelSubchanFastLookup(subchan);
+        DelSubchanFastLookup(IOID_TO_SSID(ioid), subchan);
     }
 #endif
 

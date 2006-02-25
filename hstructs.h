@@ -353,7 +353,7 @@ struct SYSBLK {
         DEVBLK ***subchan_fl;           /* Subchannel table fast     */
                                         /* lookup table              */
 #endif  /* FAST_DEVICE_LOOKUP */
-        U16     highsubchan;            /* Highest subchannel + 1    */
+        U16     highsubchan[FEATURE_LCSS_MAX];  /* Highest subchan+1 */
         U32     chp_reset[8];           /* Channel path reset masks  */
         IOINT  *iointq;                 /* I/O interrupt queue       */
 #if !defined(OPTION_FISHIO)

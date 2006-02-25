@@ -70,7 +70,7 @@ DEVBLK *dev;                            /* -> device block           */
     SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_LHL(1));
+    dev = find_device_by_subchan (regs->GR_L(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
@@ -115,7 +115,7 @@ DEVBLK *dev;                            /* -> device block           */
     SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_LHL(1));
+    dev = find_device_by_subchan (regs->GR_L(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
@@ -174,7 +174,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_LHL(1));
+    dev = find_device_by_subchan (regs->GR_L(1));
 
     /* Condition code 3 if subchannel does not exist */
     if (dev == NULL)
@@ -327,7 +327,7 @@ DEVBLK *dev;                            /* -> device block           */
     SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_LHL(1));
+    dev = find_device_by_subchan (regs->GR_L(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
@@ -494,7 +494,7 @@ ORB     orb;                            /* Operation request block   */
     SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_LHL(1));
+    dev = find_device_by_subchan (regs->GR_L(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, is not enabled, or no path available */
@@ -612,7 +612,7 @@ SCHIB   schib;                          /* Subchannel information blk*/
     SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_LHL(1));
+    dev = find_device_by_subchan (regs->GR_L(1));
 
     /* Set condition code 3 if subchannel does not exist */
     if (dev == NULL)
@@ -782,7 +782,7 @@ int     cc;                             /* Condition Code            */
     SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_LHL(1));
+    dev = find_device_by_subchan (regs->GR_L(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
@@ -839,7 +839,7 @@ DEVBLK *dev;                            /* -> device block           */
     SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_LHL(1));
+    dev = find_device_by_subchan (regs->GR_L(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */

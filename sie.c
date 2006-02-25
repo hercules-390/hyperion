@@ -1275,7 +1275,7 @@ U32    newgr1;
     SSID_CHECK(regs);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_LHL(1));
+    dev = find_device_by_subchan (regs->GR_L(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */

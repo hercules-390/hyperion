@@ -3416,7 +3416,7 @@ retry:
 
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* Extract the I/O address and interrupt parameter */
-    *ioid = 0x00010000 | dev->subchan;
+    *ioid = (dev->ssid << 16) | dev->subchan;
     FETCH_FW(*ioparm,dev->pmcw.intparm);
 #if defined(FEATURE_ESAME) || defined(_FEATURE_IO_ASSIST)
     *iointid =
@@ -3518,7 +3518,7 @@ DEVBLK *dev;                            /* -> Device control block   */
 
     /* Extract the I/O address and interrupt parameter for
        the first pending subchannel */
-    *ioid = 0x00010000 | dev->subchan;
+    *ioid = (dev->ssid << 16) | dev->subchan;
     FETCH_FW(*ioparm,dev->pmcw.intparm);
     *iointid = (0x80000000 >> (dev->pmcw.flag25 & PMCW25_VISC))
              | (dev->pmcw.zone << 16);

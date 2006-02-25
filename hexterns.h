@@ -119,12 +119,12 @@ HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
 void build_config (char *fname);
 void release_config ();
 DLL_EXPORT DEVBLK *find_device_by_devnum (U16 devnum);
-DEVBLK *find_device_by_subchan (U16 subchan);
-DEVBLK *get_devblk (U16 devnum);
+DEVBLK *find_device_by_subchan (U32 ioid);
+DEVBLK *get_devblk (U16 lcss, U16 devnum);
 void ret_devblk (DEVBLK *dev);
-int  attach_device (U16 devnum, char *devtype, int addargc,
+int  attach_device (U16 lcss, U16 devnum, char *devtype, int addargc,
         char *addargv[]);
-int  detach_subchan (U16 subchan);
+int  detach_subchan (U16 lcss, U16 subchan);
 int  detach_device (U16 devnum);
 int  define_device (U16 olddev, U16 newdev);
 DLL_EXPORT int  group_device(DEVBLK *dev, int members);

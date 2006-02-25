@@ -270,10 +270,7 @@ BYTE    chanstat;                       /* IPL device channel status */
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* Set LPUM */
     dev->pmcw.lpum = 0x80;
-    /* Store X'0001' + subchannel number at locations 184-187 */
-    regs->psa->ioid[0] = 0;
-    regs->psa->ioid[1] = 1;
-    STORE_HW(regs->psa->ioid + 2, dev->subchan);
+    STORE_FW(regs->psa->ioid, (dev->ssid<<16)|dev->subchan);
 
     /* Store zeroes at locations 188-191 */
     memset (regs->psa->ioparm, 0, 4);

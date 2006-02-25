@@ -370,9 +370,21 @@ do { \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
 #define SSID_CHECK(_regs) \
-    if((_regs)->GR_LHH(1) < 0x0001 \
+    if((!(_regs)->GR_LHH(1) & 0x0001)) \
     || (_regs)->GR_LHH(1) > (0x0001|((FEATURE_LCSS_MAX-1) << 1))) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_OPERAND_EXCEPTION)
+
+#define IOID_TO_SSID(_ioid) \
+    ((_ioid) >> 16)
+
+#define IOID_TO_LCSS(_ioid) \
+    ((_ioid) >> 17)
+
+#define SSID_TO_LCSS(_ssid) \
+    ((_ssid) >> 1)
+
+#define LCSS_TO_SSID(_lcss) \
+    (((_lcss) << 1) | 1)
 
 #define PER_RANGE_CHECK(_addr, _low, _high) \
   ( (((_high) & MAXADDRESS) >= ((_low) & MAXADDRESS)) ? \

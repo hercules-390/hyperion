@@ -37,6 +37,15 @@ int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
     CHSC_REQ4 *chsc_req4 = (CHSC_REQ4 *)(chsc_req);
     CHSC_RSP4 *chsc_rsp4 = (CHSC_RSP4 *)(chsc_rsp);
 
+#if 0
+{ U16 resv1, resv2, resv3;
+    FETCH_HW(resv1,chsc_req4->resv1);
+    FETCH_HW(resv2,chsc_req4->resv2);
+    FETCH_HW(resv3,chsc_req4->resv3);
+    logmsg(D_("chsc_get_sch_desc: resv1=%4.4X resv2=%4.4X resv3=%4.4X\n"),resv1,resv2,resv3);
+}
+#endif
+
     FETCH_HW(f_sch,chsc_req4->f_sch);
     FETCH_HW(l_sch,chsc_req4->l_sch);
     
@@ -60,7 +69,8 @@ int ARCH_DEP(chsc_get_sch_desc) (CHSC_REQ *chsc_req, CHSC_RSP *chsc_rsp)
     {
     DEVBLK *dev;
         memset(chsc_rsp4, 0x00, sizeof(CHSC_RSP4) );
-        if((dev = find_device_by_subchan(sch)))
+// ZZ FIXME:  Dunno how to put the proper lcss id in here...
+        if((dev = find_device_by_subchan(0x00010000|sch)))
         {
             chsc_rsp4->sch_val = 1;
             if(dev->pmcw.flag5 & PMCW5_V)

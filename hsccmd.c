@@ -1833,7 +1833,7 @@ BYTE c;                                 /* Character work area       */
     }
 #endif
 
-    return  attach_device (devnum, argv[2], argc-3, &argv[3]);
+    return  attach_device (0, devnum, argv[2], argc-3, &argv[3]);
 }
 
 ///////////////////////////////////////////////////////////////////////

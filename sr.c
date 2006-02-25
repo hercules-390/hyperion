@@ -960,7 +960,7 @@ S64      dreg;
             dev = find_device_by_devnum(devnum);
             if (dev == NULL)
             {
-                if (attach_device (devnum, buf, devargc, devargv))
+                if (attach_device (0, devnum, buf, devargc, devargv))
                 {
                     logmsg( _("HHCSR118W Device %4.4X initialization failed\n"),
                             devnum);
