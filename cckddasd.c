@@ -295,9 +295,10 @@ int             fdflags;                /* File flags                */
         cckd->fd[i] = -1;
         cckd->open[i] = CCKD_OPEN_NONE;
     }
+    cckd->maxsize = sizeof(OFF_T) > 4 ? 0xffffffffll : 0x7fffffffll;
 
     /* call the chkdsk function */
-    if (cckd_chkdsk (cckd->fd[0], stdout, 0) < 0)
+    if (cckd_chkdsk (dev, 0) < 0)
         return -1;
 
     /* Perform initial read */
@@ -1956,10 +1957,10 @@ int             len;                    /* Requested length          */
 cckd_get_space_atend:
 
         fpos = (OFF_T)cckd->cdevhdr[sfx].size;
-        if ((U64)(fpos + len) > (U64)4294967295ULL)
+        if ((long long)(fpos + len) > cckd->maxsize)
         {
-            logmsg (_("HHCCD102E %4.4X file[%d] get space error, size exceeds 4G\n"),
-                    dev->devnum, sfx);
+            logmsg (_("HHCCD102E %4.4X file[%d] get space error, size exceeds %lldM\n"),
+                    dev->devnum, sfx, (cckd->maxsize >> 20) + 1);
             return -1;
         }
         cckd->cdevhdr[sfx].size += len;
@@ -2277,7 +2278,6 @@ int cckd_read_chdr (DEVBLK *dev)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             sfx;                    /* File index                */
-int             fend,mend;              /* Byte order indicators     */
 
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
@@ -2292,13 +2292,11 @@ int             fend,mend;              /* Byte order indicators     */
 
     /* Check endian format */
     cckd->swapend[sfx] = 0;
-    fend = ((cckd->cdevhdr[sfx].options & CCKD_BIGENDIAN) != 0);
-    mend = cckd_endian ();
-    if (fend != mend)
+    if ((cckd->cdevhdr[sfx].options & CCKD_BIGENDIAN) != cckd_endian())
     {
         if (cckd->open[sfx] == CCKD_OPEN_RW)
         {
-            if (cckd_swapend (cckd->fd[sfx], stdout) < 0)
+            if (cckd_swapend (dev) < 0)
                 return -1;
             cckd_swapend_chdr (&cckd->cdevhdr[sfx]);
         }
@@ -2336,7 +2334,12 @@ int             sfx;                    /* File index                */
 
     cckd_trace (dev, "file[%d] write_chdr\n", sfx);
 
-    if (cckd_write (dev, sfx, CKDDASD_DEVHDR_SIZE, &cckd->cdevhdr[sfx], CCKDDASD_DEVHDR_SIZE) < 0)
+    /* Set version.release.modlvl */
+    cckd->cdevhdr[sfx].vrm[0] = CCKD_VERSION;
+    cckd->cdevhdr[sfx].vrm[1] = CCKD_RELEASE;
+    cckd->cdevhdr[sfx].vrm[2] = CCKD_MODLVL;
+
+    if (cckd_write (dev, sfx, CCKD_DEVHDR_POS, &cckd->cdevhdr[sfx], CCKD_DEVHDR_SIZE) < 0)
         return -1;
 
     return 0;
@@ -2482,7 +2485,7 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 } /* end function cckd_read_init */
 
 /*-------------------------------------------------------------------*/
-/* Read  the free space                                              */
+/* Read free space                                                   */
 /*-------------------------------------------------------------------*/
 int cckd_read_fsp (DEVBLK *dev)
 {
@@ -2490,6 +2493,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 OFF_T           fpos;                   /* Free space offset         */
 int             sfx;                    /* File index                */
 int             i;                      /* Index                     */
+CCKD_FREEBLK    freeblk;                /* First freeblk read        */
 
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
@@ -2512,18 +2516,61 @@ int             i;                      /* Index                     */
     if (cckd->cdevhdr[sfx].free_number)
     {
         cckd->free1st = 0;
+
+        /* Read the first freeblk to determine old/new format */
         fpos = (OFF_T)cckd->cdevhdr[sfx].free;
-        for (i = 0; i < cckd->cdevhdr[sfx].free_number; i++)
+        if (cckd_read (dev, sfx, fpos, &freeblk, CCKD_FREEBLK_SIZE) < 0)
+            return -1;
+
+        if (memcmp(&freeblk, "FREE_BLK", 8) == 0)
         {
-            if (cckd_read (dev, sfx, fpos, &cckd->free[i], CCKD_FREEBLK_SIZE) < 0)
+            /* new format free space */
+            CCKD_FREEBLK *fsp;
+            U32 ofree = cckd->cdevhdr[sfx].free;
+            int n = cckd->cdevhdr[sfx].free_number * CCKD_FREEBLK_SIZE;
+            if ((fsp = cckd_malloc (dev, "fsp", n)) == NULL)
                 return -1;
-            cckd->free[i].prev = i - 1;
-            cckd->free[i].next = i + 1;
-            fpos = (OFF_T)cckd->free[i].pos;
-        }
-        cckd->free[i-1].next = -1;
-        cckd->freelast = i-1;
-    }
+            fpos += CCKD_FREEBLK_SIZE;
+            if (cckd_read (dev, sfx, fpos, fsp, n) < 0)
+                return -1;
+            for (i = 0; i < cckd->cdevhdr[sfx].free_number; i++)
+            {
+                if (i == 0)
+                    cckd->cdevhdr[sfx].free = fsp[i].pos;
+                else
+                    cckd->free[i-1].pos = fsp[i].pos;
+                cckd->free[i].pos  = 0;
+                cckd->free[i].len  = fsp[i].len;
+                cckd->free[i].prev = i - 1;
+                cckd->free[i].next = i + 1;
+            }
+            cckd->free[i-1].next = -1;
+            cckd->freelast = i-1;
+            free (fsp);
+
+            /* truncate if new format free space was at the end */
+            if (ofree == cckd->cdevhdr[sfx].size)
+            {
+                fpos = (OFF_T)cckd->cdevhdr[sfx].size;
+                cckd_ftruncate(dev, sfx, fpos);
+            }
+        } /* new format free space */
+        else
+        {
+            /* old format free space */
+            fpos = (OFF_T)cckd->cdevhdr[sfx].free;
+            for (i = 0; i < cckd->cdevhdr[sfx].free_number; i++)
+            {
+                if (cckd_read (dev, sfx, fpos, &cckd->free[i], CCKD_FREEBLK_SIZE) < 0)
+                    return -1;
+                cckd->free[i].prev = i - 1;
+                cckd->free[i].next = i + 1;
+                fpos = (OFF_T)cckd->free[i].pos;
+            }
+            cckd->free[i-1].next = -1;
+            cckd->freelast = i-1;
+        } /* old format free space */
+    } /* if (cckd->cdevhdr[sfx].free_number) */
 
     /* Build singly linked chain of available free space entries */
     if (cckd->cdevhdr[sfx].free_number < cckd->freenbr)
@@ -2547,32 +2594,85 @@ int cckd_write_fsp (DEVBLK *dev)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 OFF_T           fpos;                   /* Free space offset         */
+U32             ppos;                   /* Previous free space offset*/
 int             sfx;                    /* File index                */
-int             i;                      /* Index                     */
+int             i, j, n;                /* Work variables            */
+int             rc;                     /* Return code               */
+CCKD_FREEBLK   *fsp = NULL;             /* -> new format free space  */
 
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
+    if (cckd->free == NULL)
+        return 0;
+
     cckd_trace (dev, "file[%d] write_fsp number %d\n",
                 sfx, cckd->cdevhdr[sfx].free_number);
 
+    /* get rid of pending free space */
     for (i = 0; i < CCKD_MAX_FREEPEND; i++)
         cckd_flush_space(dev);
 
+    /* sanity checks */
     if (cckd->cdevhdr[sfx].free_number == 0 || cckd->cdevhdr[sfx].free == 0)
     {
         cckd->cdevhdr[sfx].free_number = cckd->cdevhdr[sfx].free = 0;
         cckd->free1st = cckd->freelast = cckd->freeavail = -1;
     }
 
-    fpos = (OFF_T)cckd->cdevhdr[sfx].free;
-    for (i = cckd->free1st; i >= 0; i = cckd->free[i].next)
+    /* Write any free spaces */
+    if (cckd->cdevhdr[sfx].free)
     {
-        if (cckd_write (dev, sfx, fpos, &cckd->free[i], CCKD_FREEBLK_SIZE) < 0)
-            return -1;
-        fpos = (OFF_T)cckd->free[i].pos;
-    }
+        /* size needed for new format free space */
+        n = (cckd->cdevhdr[sfx].free_number+1) * CCKD_FREEBLK_SIZE;
 
+        /* look for existing free space to fit new format free space */   
+        fpos = 0;
+        for (i = cckd->free1st; i >= 0; i = cckd->free[i].next)
+            if (n <= (int)cckd->free[i].len)
+                break;
+        if (i >= 0)
+            fpos = cckd->free[i].prev < 0
+                 ? (OFF_T)cckd->cdevhdr[sfx].free
+                 : (OFF_T)cckd->free[cckd->free[i].prev].pos;
+
+        /* if no applicable space see if we can append to the file */
+        if (fpos == 0 && cckd->maxsize - cckd->cdevhdr[sfx].size >= n)
+            fpos = (OFF_T)cckd->cdevhdr[sfx].size;
+
+        if (fpos && (fsp = cckd_malloc (dev, "fsp", n)) == NULL)
+            fpos = 0;
+
+        if (fpos)
+        {
+            /* New format free space */
+            memcpy (&fsp[0], "FREE_BLK", 8);
+            ppos = cckd->cdevhdr[sfx].free;
+            for (i = cckd->free1st, j = 1; i >= 0; i = cckd->free[i].next)
+            {
+                fsp[j].pos = ppos;
+                fsp[j++].len = cckd->free[i].len;
+                ppos = cckd->free[i].pos;
+            }
+            rc = cckd_write (dev, sfx, fpos, fsp, n);
+            cckd_free (dev, "fsp", fsp);
+            if (rc < 0)
+                return -1;
+            cckd->cdevhdr[sfx].free = (U32)fpos;
+        } /* new format free space */
+        else
+        {
+            /* Old format free space */
+            for (i = cckd->free1st; i >= 0; i = cckd->free[i].next)
+            {
+                if (cckd_write (dev, sfx, fpos, &cckd->free[i], CCKD_FREEBLK_SIZE) < 0)
+                    return -1;
+                fpos = (OFF_T)cckd->free[i].pos;
+            }
+        } /* old format free space */
+    } /* if (cckd->cdevhdr[sfx].free) */
+
+    /* Free the free space array */
     if (cckd->free) cckd_free (dev, "free", cckd->free);
     cckd->free = NULL;
     cckd->freenbr = 0;
@@ -3488,7 +3588,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 break;
 
         /* Call the chkdsk function */
-        rc = cckd_chkdsk (cckd->fd[cckd->sfn], stdout, 0);
+        rc = cckd_chkdsk (dev, 0);
         if (rc < 0) return -1;
 
         /* Perform initial read */
@@ -3776,7 +3876,7 @@ BYTE            buf[65536];             /* Buffer                    */
     }
     else
     {
-        if (cckd_chkdsk (cckd->fd[to_sfx], stdout, 0) < 0)
+        if (cckd_chkdsk (dev, 0) < 0)
         {
             logmsg (_("HHCCD173E %4.4X file[%d] not merged, "
                     "file[%d] check failed\n"),
@@ -3931,7 +4031,7 @@ BYTE            buf[65536];             /* Buffer                    */
 
         /* Validate the merge */
         cckd_harden (dev);
-        cckd_chkdsk (cckd->fd[to_sfx], stdout, err ? 2 : 0);
+        cckd_chkdsk (dev, err ? 2 : 0);
         cckd_read_init (dev);
 
     } /* if merge */
@@ -4057,7 +4157,7 @@ int             rc;                     /* Return code               */
     cckd_harden (dev);
 
     /* Call the compress function */
-    rc = cckd_comp (cckd->fd[cckd->sfn], stdout);
+    rc = cckd_comp (dev);
 
     /* Perform initial read */
     rc = cckd_read_init (dev);
@@ -4396,6 +4496,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
     if (!cckd->l2ok)
         cckd_gc_l2(dev, buf);
 
+    /* garbage collection cycle */
     while (moved < size && after < 4)
     {
         obtain_lock (&cckd->filelock);
@@ -4573,6 +4674,7 @@ cckd_gc_perc_space_error:
               "%2.2x%2.2x%2.2x%2.2x%2.2x\n"),
             dev->devnum,cckd->sfn,(long long)(upos + i),
             buf[i], buf[i+1],buf[i+2], buf[i+3], buf[i+4]);
+    cckd->cdevhdr[cckd->sfn].options |= CCKD_SPERRS;
     cckd_print_itrace();
 
 cckd_gc_perc_error:

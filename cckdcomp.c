@@ -18,13 +18,13 @@ int syntax ();
 
 int main (int argc, char *argv[])
 {
+int             i;                      /* Index                     */
 int             rc;                     /* Return code               */
-char           *fn;                     /* File name                 */
-int             fd;                     /* File descriptor           */
 int             level=-1;               /* Level for chkdsk          */
 int             force=0;                /* 1=Compress if OPENED set  */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
-char            pathname[MAX_PATH];     /* file path in host format  */
+DEVBLK          devblk;                 /* DEVBLK                    */
+DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -51,6 +51,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                        break;
             case 'f':  if (argv[0][2] != '\0') return syntax ();
                        force = 1;
+                       break;
             case 'v':  if (argv[0][2] != '\0') return syntax ();
                        display_version 
                          (stderr, "Hercules cckd compress program ", FALSE);
@@ -58,62 +59,64 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             default:   return syntax ();
         }
     }
-    if (argc != 1) return syntax ();
-    fn = argv[0];
 
-    /* open the file */
-    hostpath(pathname, fn, sizeof(pathname));
-    fd = open (pathname, O_RDWR|O_BINARY);
-    if (fd < 0)
+    if (argc < 1) return syntax ();
+
+    for (i = 0; i < argc; i++)
     {
-        fprintf (stderr,
-                 "cckdcomp: error opening file %s: %s\n",
-                 fn, strerror(errno));
-        return -1;
-    }
+        memset (dev, 0, sizeof(DEVBLK));
 
-    /* Check CCKD_OPENED bit if -f not specified */
-    if (!force)
-    {
-        if (LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
+        /* open the file */
+        hostpath(dev->filename, argv[i], sizeof(dev->filename));
+        dev->fd = open (dev->filename, O_RDWR|O_BINARY);
+        if (dev->fd < 0)
         {
-            fprintf (stderr, _("cckdcomp: lseek error: %s\n"),strerror(errno));
-            close (fd);
-            return -1;
+            cckdumsg (dev, 700, "open error: %s\n", strerror(errno));
+            continue;
         }
-        if (read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE) < CCKDDASD_DEVHDR_SIZE)
+
+        /* Check CCKD_OPENED bit if -f not specified */
+        if (!force)
         {
-            fprintf (stderr, _("cckdcomp: read error: %s\n"),strerror(errno));
-            close (fd);
-            return -1;
-        }
-        if (cdevhdr.options & CCKD_OPENED)
+            if (LSEEK (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
+            {
+                cckdumsg (dev, 702, "lseek error offset 0x%" I64_FMT "x: %s\n",
+                          (long long)CCKD_DEVHDR_POS, strerror(errno));
+                close (dev->fd);
+                continue;
+            }
+            if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
+            {
+                cckdumsg (dev, 703, "read error rc=%d offset 0x%" I64_FMT "x len %d: %s\n",
+                          rc, (long long)CCKD_DEVHDR_POS, CCKD_DEVHDR_SIZE,
+                          rc < 0 ? strerror(errno) : "incomplete");
+                close (dev->fd);
+                continue;
+            }
+            if (cdevhdr.options & CCKD_OPENED)
+            {
+                cckdumsg (dev, 707, "OPENED bit is on, use -f\n");
+                close (dev->fd);
+                continue;
+            }
+        } /* if (!force) */
+
+        /* call chkdsk */
+        if (cckd_chkdsk (dev, level) < 0)
         {
-            fprintf (stderr, _("cckdcomp: OPENED bit is on, use `-f'\n"));
-            close (fd);
-            return -1;
+            cckdumsg (dev, 708, "chkdsk errors\n");
+            close (dev->fd);
+            continue;
         }
-    }
+    
+        /* call compress */
+        rc = cckd_comp (dev);
 
-    /* call chkdsk() if level was specified */
-    if (level >= 0)
-    {
-        rc = cckd_chkdsk (fd, stderr, level);
-        if (rc < 0)
-        {
-            fprintf (stderr,
-               "cckdcomp: terminating due to chkdsk errors%s\n", "");
-            return -1;
-        }
-    }
+        close (dev->fd);
 
-    /* call the actual compress function */
-    rc = cckd_comp (fd, stderr);
+    } /* for each arg */
 
-    close (fd);
-
-    return rc;
-
+    return 0;
 }
 
 /*-------------------------------------------------------------------*/
@@ -122,7 +125,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
 int syntax()
 {
-    fprintf (stderr, "\ncckdcomp [-v] [-f] [-level] file-name\n"
+    fprintf (stderr, "\ncckdcomp [-v] [-f] [-level] file1 [file2 ... ]\n"
                 "\n"
                 "          -v      display version and exit\n"
                 "\n"
@@ -131,8 +134,9 @@ int syntax()
                 "        chkdsk level is a digit 0 - 3:\n"
                 "          -0  --  minimal checking\n"
                 "          -1  --  normal  checking\n"
+                "          -2  --  intermediate checking\n"
                 "          -3  --  maximal checking\n"
-                "         default  don't check\n"
+                "         default  0\n"
                 "\n");
     return -1;
 }

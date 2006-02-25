@@ -1063,13 +1063,15 @@ struct CCKDDASD_DEVHDR {                /* Compress device header    */
 /* 46 */S16              compress_parm; /* Compression parameter     */
 /* 48 */BYTE             resv2[464];    /* Reserved                  */
 };
+#define CCKD_DEVHDR      CCKDDASD_DEVHDR
 
 #define CCKD_VERSION           0
-#define CCKD_RELEASE           2
+#define CCKD_RELEASE           3
 #define CCKD_MODLVL            1
 
 #define CCKD_NOFUDGE           1         /* [deprecated]             */
 #define CCKD_BIGENDIAN         2
+#define CCKD_SPERRS            32        /* Space errors detected    */
 #define CCKD_ORDWR             64        /* Opened read/write since
                                             last chkdsk              */
 #define CCKD_OPENED            128
@@ -1091,10 +1093,15 @@ struct CCKDDASD_DEVHDR {                /* Compress device header    */
 struct CCKD_L2ENT {                     /* Level 2 table entry       */
         U32              pos;           /* Track offset              */
         U16              len;           /* Track length              */
-        U16              size;          /* Track size [deprecated]   */
+        U16              size;          /* Track size  (size >= len) */
 };
 
-struct CCKD_FREEBLK {                   /* Free block                */
+struct CCKD_FREEBLK {                   /* Free block (file)         */
+        U32              pos;           /* Position next free blk    */
+        U32              len;           /* Length this free blk      */
+};
+
+struct CCKD_IFREEBLK {                  /* Free block (internal)     */
         U32              pos;           /* Position next free blk    */
         U32              len;           /* Length this free blk      */
         int              prev;          /* Index to prev free blk    */
@@ -1115,12 +1122,15 @@ typedef  CCKD_L2ENT   CCKD_L2TAB[256];  /* Level 2 table             */
 typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
 
 #define CCKDDASD_DEVHDR_SIZE   ((ssize_t)sizeof(CCKDDASD_DEVHDR))
+#define CCKD_DEVHDR_SIZE       CCKDDASD_DEVHDR_SIZE
+#define CCKD_DEVHDR_POS        CKDDASD_DEVHDR_SIZE
 #define CCKD_L1ENT_SIZE        ((ssize_t)sizeof(CCKD_L1ENT))
-#define CCKD_L1TAB_POS         CKDDASD_DEVHDR_SIZE+CCKDDASD_DEVHDR_SIZE
+#define CCKD_L1TAB_POS         ((CCKD_DEVHDR_POS)+(CCKD_DEVHDR_SIZE))
 #define CCKD_L2ENT_SIZE        ((ssize_t)sizeof(CCKD_L2ENT))
 #define CCKD_L2TAB_SIZE        ((ssize_t)sizeof(CCKD_L2TAB))
-#define CCKD_FREEBLK_SIZE      8
-#define CCKD_FREEBLK_ISIZE     ((ssize_t)sizeof(CCKD_FREEBLK))
+#define CCKD_FREEBLK_SIZE      ((ssize_t)sizeof(CCKD_FREEBLK))
+#define CCKD_FREEBLK_ISIZE     ((ssize_t)sizeof(CCKD_IFREEBLK))
+#define CCKD_IFREEBLK_SIZE     (CCKD_FREEBLK_ISIZE)
 
 /* Flag bits */
 #define CCKD_SIZE_EXACT         0x01    /* Space obtained is exact   */
@@ -1257,6 +1267,7 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
         LOCK             filelock;      /* File lock                 */
         LOCK             iolock;        /* I/O lock                  */
         COND             iocond;        /* I/O condition             */
+        long long        maxsize;       /* Maximum file size         */
         int              iowaiters;     /* Number I/O waiters        */
         int              wrpending;     /* Number writes pending     */
         int              ras;           /* Number readaheads active  */
@@ -1269,7 +1280,7 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
         int              active;        /* Active cache entry        */
         BYTE            *newbuf;        /* Uncompressed buffer       */
         unsigned int     freemin;       /* Minimum free space size   */
-        CCKD_FREEBLK    *free;          /* Internal free space chain */
+        CCKD_IFREEBLK   *free;          /* Internal free space chain */
         int              freenbr;       /* Number free space entries */
         int              free1st;       /* Index of 1st entry        */
         int              freelast;      /* Index of last entry       */

@@ -260,16 +260,17 @@ CCKD_DLL_IMPORT int     cckd_command(char *, int);
 CCKD_DLL_IMPORT void    cckd_print_itrace ();
 
 /* Functions in module cckdutil.c */
-CCDU_DLL_IMPORT int     cckd_swapend (int, FILE *);
-CCDU_DLL_IMPORT void    cckd_swapend_chdr (CCKDDASD_DEVHDR *);
+CCDU_DLL_IMPORT int     cckd_swapend (DEVBLK *);
+CCDU_DLL_IMPORT void    cckd_swapend_chdr (CCKD_DEVHDR *);
 CCDU_DLL_IMPORT void    cckd_swapend_l1 (CCKD_L1ENT *, int);
 CCDU_DLL_IMPORT void    cckd_swapend_l2 (CCKD_L2ENT *);
 CCDU_DLL_IMPORT void    cckd_swapend_free (CCKD_FREEBLK *);
 CCDU_DLL_IMPORT void    cckd_swapend4 (char *);
 CCDU_DLL_IMPORT void    cckd_swapend2 (char *);
 CCDU_DLL_IMPORT int     cckd_endian ();
-CCDU_DLL_IMPORT int     cckd_comp (int, FILE *);
-CCDU_DLL_IMPORT int     cckd_chkdsk(int, FILE *, int);
+CCDU_DLL_IMPORT int     cckd_comp (DEVBLK *);
+CCDU_DLL_IMPORT int     cckd_chkdsk (DEVBLK *, int);
+CCDU_DLL_IMPORT void    cckdumsg (DEVBLK *, int, char *, ...);
 
 /* Functions in module hscmisc.c */
 int herc_system (char* command);

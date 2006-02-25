@@ -13,17 +13,19 @@
 /* Swap the `endianess' of  cckd file                                */
 /*-------------------------------------------------------------------*/
 
-void syntax ();
+int syntax ();
 
 int main ( int argc, char *argv[])
 {
 CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
+int             level = 0;              /* Chkdsk level              */
+int             force = 0;              /* 1=swap if OPENED bit on   */
 int             rc;                     /* Return code               */
-char           *fn;                     /* File name                 */
-int             fd;                     /* File descriptor           */
-int             bigend;                 /* 1 = big-endian file       */
-char            pathname[MAX_PATH];     /* file path in host format  */
+int             i;                      /* Index                     */
+int             bigend;                 /* 1=big-endian file         */
+DEVBLK          devblk;                 /* DEVBLK                    */
+DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
@@ -41,76 +43,140 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 #endif /*EXTERNALGUI*/
 
-    /* Display the program identification message */
-    display_version (stderr, "Hercules cckd swap-endian program ", FALSE);
-
-    if (argc != 2) syntax ();
-    fn = argv[1];
-
-    /* open the input file */
-    hostpath(pathname, fn, sizeof(pathname));
-    fd = open (pathname, O_RDWR|O_BINARY);
-    if (fd < 0)
+    /* parse the arguments */
+    for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
-        fprintf (stderr,
-                 _("cckdswap: error opening %s: %s\n"),
-                 fn, strerror(errno));
-        return -1;
+        if(**argv != '-') break;
+
+        switch(argv[0][1])
+        {
+            case '0':
+            case '1':
+            case '2':
+            case '3':  if (argv[0][2] != '\0') return syntax ();
+                       level = (argv[0][1] & 0xf);
+                       break;
+            case 'f':  if (argv[0][2] != '\0') return syntax ();
+                       force = 1;
+                       break;
+            case 'v':  if (argv[0][2] != '\0') return syntax ();
+                       display_version 
+                         (stderr, "Hercules cckd swap program ", FALSE);
+                       return 0;
+            default:   return syntax ();
+        }
     }
 
-    /* read the CKD device header */
-    rc = read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
-    if (rc != CKDDASD_DEVHDR_SIZE)
+    if (argc < 1) return syntax ();
+
+    for (i = 0; i < argc; i++)
     {
-        fprintf (stderr, _("cckdswap: %s read error: %s\n"),
-                 fn, strerror(errno));
-        return -1;
-    }
-    if (memcmp(devhdr.devid, "CKD_C370", 8) != 0
-     && memcmp(devhdr.devid, "CKD_S370", 8) != 0)
-    {
-        fprintf (stderr,
-         _("cckdswap: %s is not a compressed ckd file\n"),
-         fn);
-        return -1;
-    }
+        memset (dev, 0, sizeof (DEVBLK));
+        dev->batch = 1;
 
-    /* read the compressed CKD device header */
-    rc = read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-    if (rc != CCKDDASD_DEVHDR_SIZE)
-    {
-        fprintf (stderr, _("cckdswap: %s read error: %s\n"),
-                 fn, strerror(errno));
-        return -1;
-    }
+        /* open the input file */
+        hostpath(dev->filename, argv[i], sizeof(dev->filename));
+        dev->fd = open (dev->filename, O_RDWR|O_BINARY);
+        if (dev->fd < 0)
+        {
+            cckdumsg (dev, 700, "open error: %s\n", strerror(errno));
+            continue;
+        }
 
-    /* get the byte order of the file */
-    bigend = (cdevhdr.options & CCKD_BIGENDIAN) != 0;
+        /* read the CKD device header */
+        if ((rc = read (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE)) < CKDDASD_DEVHDR_SIZE)
+        {
+            cckdumsg (dev, 703, "read error rc=%d offset 0x%" I64_FMT "x len %d: %s\n",
+                      rc, (long long)0, CKDDASD_DEVHDR_SIZE,
+                      rc < 0 ? strerror(errno) : "incomplete");
+            close (dev->fd);
+            continue;
+        }
+        if (memcmp(devhdr.devid, "CKD_C370", 8) != 0
+         && memcmp(devhdr.devid, "CKD_S370", 8) != 0
+         && memcmp(devhdr.devid, "FBA_C370", 8) != 0
+         && memcmp(devhdr.devid, "FBA_S370", 8) != 0)
+        {
+            cckdumsg (dev, 999, "not a compressed dasd file\n");
+            close (dev->fd);
+            continue;
+        }
 
-    /* swap the byte order of the file */
-    rc = cckd_swapend (fd, stderr);
-    if (rc < 0)
-    {
-        fprintf (stderr, _("cckdswap: error during swap\n"));
-        return -1;
-    }
+        /* read the compressed CKD device header */
+        if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
+        {
+            cckdumsg (dev, 703, "read error rc=%d offset 0x%" I64_FMT "x len %d: %s\n",
+                      rc, (long long)CCKD_DEVHDR_POS, CCKD_DEVHDR_SIZE,
+                      rc < 0 ? strerror(errno) : "incomplete");
+            close (dev->fd);
+            continue;
+        }
 
-    printf (_("cckdswap: %s changed from %s to %s\n"), fn,
-            bigend ? "big-endian" : "little-endian",
-            bigend ? "little-endian" : "big-endian");
+        /* Check the OPENED bit */
+        if (!force && (cdevhdr.options & CCKD_OPENED))
+        {
+            cckdumsg (dev, 707, "OPENED bit is on, use -f\n");
+            close (dev->fd);
+            continue;
+        }
 
-    close (fd);
+        /* get the byte order of the file */
+        bigend = (cdevhdr.options & CCKD_BIGENDIAN);
+
+        /* call chkdsk */
+        if (cckd_chkdsk (dev, level) < 0)
+        {
+            cckdumsg (dev, 708, "chkdsk errors\n");
+            close (dev->fd);
+            continue;
+        }
+
+        /* re-read the compressed CKD device header */
+        if (LSEEK (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
+        {
+            cckdumsg (dev, 702, "lseek error offset 0x%" I64_FMT "x: %s\n",
+                      (long long)CCKD_DEVHDR_POS, strerror(errno));
+            close (dev->fd);
+            continue;
+        }
+        if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
+        {
+            cckdumsg (dev, 703, "read error rc=%d offset 0x%" I64_FMT "x len %d: %s\n",
+                      rc, (long long)CCKD_DEVHDR_POS, CCKD_DEVHDR_SIZE,
+                      rc < 0 ? strerror(errno) : "incomplete");
+            close (dev->fd);
+            continue;
+        }
+
+        /* swap the byte order of the file if chkdsk didn't do it for us */
+        if (bigend == (cdevhdr.options & CCKD_BIGENDIAN))
+        {
+            cckdumsg (dev, 101, "converting to %s\n",
+                      bigend ? "litle-endian" : "big-endian");
+            if (cckd_swapend (dev) < 0)
+                cckdumsg (dev, 910, "error during swap\n");
+        }
+
+        close (dev->fd);
+    } /* for each arg */
 
     return 0;
 } /* end main */
 
-void syntax ()
+int syntax ()
 {
-    printf (_("usage:  cckdswap cckd-file\n"
-            "\n"
-            "     cckd-file    --   name of the compressed ckd\n"
-            "                       file which will have its\n"
-            "                       byte order swapped\n"));
-    exit (1);
+    fprintf (stderr, "\ncckdswap [-v] [-f] file1 [file2 ... ]\n"
+                "\n"
+                "          -v      display version and exit\n"
+                "\n"
+                "          -f      force check even if OPENED bit is on\n"
+                "\n"
+                "        chkdsk level is a digit 0 - 3:\n"
+                "          -0  --  minimal checking\n"
+                "          -1  --  normal  checking\n"
+                "          -2  --  intermediate checking\n"
+                "          -3  --  maximal checking\n"
+                "         default  0\n"
+                "\n");
+    return -1;
 } /* end function syntax */
-

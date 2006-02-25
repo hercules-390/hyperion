@@ -163,6 +163,7 @@ typedef struct CCKDDASD_DEVHDR  CCKDDASD_DEVHDR;  // Compress device header
 typedef struct CCKD_L2ENT       CCKD_L2ENT;       // Level 2 table entry
 
 typedef struct CCKD_FREEBLK     CCKD_FREEBLK;     // Free block
+typedef struct CCKD_IFREEBLK    CCKD_IFREEBLK;    // Free block (internal)
 typedef struct CCKD_RA          CCKD_RA;          // Readahead queue entry
 
 typedef struct CCKDBLK          CCKDBLK;          // Global cckd dasd block

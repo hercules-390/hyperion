@@ -17,14 +17,14 @@ int syntax ();
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
-int             cckd_chkdsk_rc = 0;     /* Program return code       */
-char           *fn;                     /* File name                 */
-int             fd;                     /* File descriptor           */
+int             i;                      /* Index                     */
+int             rc;                     /* Return code               */
 int             level=1;                /* Chkdsk level checking     */
 int             ro=0;                   /* 1=Open readonly           */
 int             force=0;                /* 1=Check if OPENED bit on  */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
-char            pathname[MAX_PATH];     /* file path in host format  */
+DEVBLK          devblk;                 /* DEVBLK                    */
+DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
@@ -52,7 +52,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             case '0':
             case '1':
             case '2':
-            case '3':  if (argv[0][2] != '\0') return syntax ();
+            case '3':
+            case '4':  if (argv[0][2] != '\0') return syntax ();
                        level = (argv[0][1] & 0xf);
                        break;
             case 'f':  if (argv[0][2] != '\0') return syntax ();
@@ -70,77 +71,54 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
     }
 
-    if (argc != 1) return syntax ();
+    if (argc < 1) return syntax ();
 
-    fn = argv[0];
-
-    /* open the file */
-    hostpath(pathname, fn, sizeof(pathname));
-    if (ro)
-        fd = open (pathname, O_RDONLY|O_BINARY);
-    else
-        fd = open (pathname, O_RDWR|O_BINARY);
-    if (fd < 0)
+    for (i = 0; i < argc; i++)
     {
-        fprintf (stderr,
-                 _("cckdcdsk: error opening file %s: %s\n"),
-                 fn, strerror(errno));
-        return -1;
-    }
+        memset (dev, 0, sizeof(DEVBLK));
+        dev->batch = 1;
 
-    /* Check CCKD_OPENED bit if -f not specified */
-    if (!force)
-    {
-        if (LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
+        /* open the file */
+        hostpath(dev->filename, argv[i], sizeof(dev->filename));
+        dev->fd = open (dev->filename, ro ? O_RDONLY|O_BINARY : O_RDWR|O_BINARY);
+        if (dev->fd < 0)
         {
-            fprintf (stderr, _("cckdcdsk: lseek error: %s\n"),strerror(errno));
-            close (fd);
-            return -1;
+            cckdumsg (dev, 700, "open error: %s\n", strerror(errno));
+            continue;
         }
-        if (read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE) < CCKDDASD_DEVHDR_SIZE)
+
+        /* Check CCKD_OPENED bit if -f not specified */
+        if (!force)
         {
-            fprintf (stderr, _("cckdcdsk: read error: %s\n"),strerror(errno));
-            close (fd);
-            return -1;
-        }
-        if (cdevhdr.options & CCKD_OPENED)
-        {
-            fprintf (stderr, _("cckdcdsk: OPENED bit is on, use `-f'\n"));
-            close (fd);
-            return -1;
-        }
-    }
+            if (LSEEK (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
+            {
+                cckdumsg (dev, 702, "lseek error offset 0x%" I64_FMT "x: %s\n",
+                          (long long)CCKD_DEVHDR_POS, strerror(errno));
+                close (dev->fd);
+                continue;
+            }
+            if ((rc = read (dev->fd, &cdevhdr, CCKD_DEVHDR_SIZE)) < CCKD_DEVHDR_SIZE)
+            {
+                cckdumsg (dev, 703, "read error rc=%d offset 0x%" I64_FMT "x len %d: %s\n",
+                          rc, (long long)CCKD_DEVHDR_POS, CCKD_DEVHDR_SIZE,
+                          rc < 0 ? strerror(errno) : "incomplete");
+                close (dev->fd);
+                continue;
+            }
+            if (cdevhdr.options & CCKD_OPENED)
+            {
+                cckdumsg (dev, 707, "OPENED bit is on, use -f\n");
+                close (dev->fd);
+                continue;
+            }
+        } /* if (!force) */
 
-    /* call the actual chkdsk function */
-    cckd_chkdsk_rc = cckd_chkdsk (fd, stderr, level);
+        rc = cckd_chkdsk (dev, level);
 
-    /* print some statistics */
-    if (LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
-    {
-        fprintf (stderr, _("lseek error: %s\n"),strerror(errno));
-        if (!cckd_chkdsk_rc) cckd_chkdsk_rc = 1;
-    }
-    else
-    {
-        if (read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE) < 0)
-        {
-            fprintf (stderr, _("read error: %s\n"),strerror(errno));
-            if (!cckd_chkdsk_rc) cckd_chkdsk_rc = 1;
-        }
-        else
-        {
-            if (cckd_endian() != ((cdevhdr.options & CCKD_BIGENDIAN) != 0))
-                cckd_swapend_chdr (&cdevhdr);
+        close (dev->fd);
+    } /* for each arg */
 
-            fprintf (stdout, _("size %d used %d free %d imbed %d first 0x%x number %d\n"),
-                     cdevhdr.size, cdevhdr.used, cdevhdr.free_total,
-                     cdevhdr.free_imbed, cdevhdr.free, cdevhdr.free_number);
-        }
-    }
-
-    close (fd);
-
-    return cckd_chkdsk_rc;
+    return 0;
 }
 
 /*-------------------------------------------------------------------*/
@@ -148,7 +126,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 /*-------------------------------------------------------------------*/
 int syntax()
 {
-    fprintf (stderr, _("\ncckdcdsk [-v] [-f] [-level] [-ro] file-name\n"
+    fprintf (stderr, _("\ncckdcdsk [-v] [-f] [-level] [-ro] file1 [file2 ...]\n"
                 "\n"
                 "          -v      display version and exit\n"
                 "\n"
