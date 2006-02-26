@@ -1761,7 +1761,8 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
         (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
 
         /* Display the device definition and status */
-        logmsg( "%4.4X %4.4X %s %s%s%s\n",
+        logmsg( "%d:%4.4X %4.4X %s %s%s%s\n",
+                SSID_TO_LCSS(dev->ssid),
                 dev->devnum, dev->devtype, devnam,
                 (dev->fd > 2 ? _("open ") : ""),
                 (dev->busy ? _("busy ") : ""),
@@ -1809,6 +1810,8 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 int attach_cmd(int argc, char *argv[], char *cmdline)
 {
 U16  devnum /* , dummy_devtype */;
+U16  lcss;
+char *clcss, *cdev;
 BYTE c;                                 /* Character work area       */
 
     UNREFERENCED(cmdline);
@@ -1819,11 +1822,33 @@ BYTE c;                                 /* Character work area       */
         return -1;
     }
 
-    if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
+    if((cdev = strchr(argv[1],':')))
     {
-        logmsg( _("HHCPN059E Device number %s is invalid\n"), argv[1] );
+        clcss = argv[1];
+        *cdev++ = '\0';
+    }
+    else
+    {
+        clcss = NULL;
+        cdev = argv[1];
+    }   
+
+    if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
+    {
+        logmsg( _("HHCPN059E Device number %s is invalid\n"), cdev );
         return -1;
     }
+
+    if(clcss)
+    {
+        if (sscanf(clcss, "%hd%c", &lcss, &c) != 1)
+        {
+            logmsg( _("HHCPN059E LCSS id %s is invalid\n"), clcss );
+            return -1;
+        }
+    }
+    else
+        lcss = 0;
 
 #if 0 /* JAP - Breaks the whole idea behind devtype.c */
     if (sscanf(argv[2], "%hx%c", &dummy_devtype, &c) != 1)
@@ -1833,7 +1858,7 @@ BYTE c;                                 /* Character work area       */
     }
 #endif
 
-    return  attach_device (0, devnum, argv[2], argc-3, &argv[3]);
+    return  attach_device (lcss, devnum, argv[2], argc-3, &argv[3]);
 }
 
 ///////////////////////////////////////////////////////////////////////

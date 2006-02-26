@@ -239,6 +239,8 @@ DEVBLK**dvpp;
     dev->cpuprio = sysblk.cpuprio;
     dev->devprio = sysblk.devprio;
     dev->hnd = NULL;
+    if(lcss >= FEATURE_LCSS_MAX)
+        lcss = 0;
     dev->ssid = LCSS_TO_SSID(lcss);
     dev->devnum = devnum;
     dev->chanset = lcss;
