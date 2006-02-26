@@ -202,6 +202,9 @@ DEVBLK *get_devblk(U16 lcss, U16 devnum)
 DEVBLK *dev;
 DEVBLK**dvpp;
 
+    if(lcss >= FEATURE_LCSS_MAX)
+        lcss = 0;
+
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         if (!(dev->allocated)) break;
 
@@ -239,8 +242,6 @@ DEVBLK**dvpp;
     dev->cpuprio = sysblk.cpuprio;
     dev->devprio = sysblk.devprio;
     dev->hnd = NULL;
-    if(lcss >= FEATURE_LCSS_MAX)
-        lcss = 0;
     dev->ssid = LCSS_TO_SSID(lcss);
     dev->devnum = devnum;
     dev->chanset = lcss;
@@ -492,14 +493,14 @@ int    rc;
 
     if (dev == NULL)
     {
-        logmsg (_("HHCCF046E Subchannel %4.4X does not exist\n"), subchan);
+        logmsg (_("HHCCF046E Subchannel %d:%4.4X does not exist\n"), lcss, subchan);
         return 1;
     }
 
     rc = detach_devblk( dev );
 
     if(!rc)
-        logmsg (_("HHCCF047I Subchannel %4.4X detached\n"), subchan);
+        logmsg (_("HHCCF047I Subchannel %d:%4.4X detached\n"), lcss, subchan);
 
     return rc;
 }
