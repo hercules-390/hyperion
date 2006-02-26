@@ -206,7 +206,7 @@ DEVBLK**dvpp;
         lcss = 0;
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (!(dev->allocated)) break;
+        if (!(dev->allocated) && dev->ssid == LCSS_TO_SSID(lcss)) break;
 
     if(!dev)
     {
@@ -230,6 +230,7 @@ DEVBLK**dvpp;
         /* Add the new device block to the end of the chain */
         *dvpp = dev;
 
+        dev->ssid = LCSS_TO_SSID(lcss);
         dev->subchan = sysblk.highsubchan[lcss]++;
     }
 
@@ -242,7 +243,6 @@ DEVBLK**dvpp;
     dev->cpuprio = sysblk.cpuprio;
     dev->devprio = sysblk.devprio;
     dev->hnd = NULL;
-    dev->ssid = LCSS_TO_SSID(lcss);
     dev->devnum = devnum;
     dev->chanset = lcss;
     if( dev->chanset >= sysblk.numcpu)
@@ -470,6 +470,9 @@ int     i;                              /* Loop index                */
     }
 
     ret_devblk(dev);
+
+    /* Zeroize the PMCW */
+    memset (&dev->pmcw, 0, sizeof(PMCW));
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Signal machine check */
@@ -768,7 +771,7 @@ DEVBLK *find_device_by_subchan (U32 ioid)
     logmsg("DEBUG : FDBS SL Looking for %d\n",subchan);
 #endif
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (dev->allocated && dev->subchan == subchan) break;
+        if (dev->subchan == subchan) break;
 
 #if defined(OPTION_FAST_DEVLOOKUP)
     if(dev)
