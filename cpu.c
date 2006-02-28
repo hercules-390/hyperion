@@ -1145,7 +1145,6 @@ int i;
 
     regs->cpuad = cpu;
     regs->arch_mode = sysblk.arch_mode;
-    regs->chanset = cpu;
     regs->mainstor = sysblk.mainstor;
     /* 
      * ISW20060125 : LINE REMOVED : This is the job of 

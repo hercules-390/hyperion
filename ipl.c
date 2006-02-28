@@ -523,6 +523,12 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     regs->CR(2) = 0xFFFFFFFF;
 #endif /*FEATURE_S370_CHANNEL*/
 
+    regs->chanset = 
+#if defined(FEATURE_CHANNEL_SWITCHING)
+                    regs->cpuad < FEATURE_LCSS_MAX ? regs->cpuad :
+#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
+                                                                   0;
+
     /* Initialize the machine check masks in control register 14 */
     regs->CR(14) = CR14_CHKSTOP | CR14_SYNCMCEL | CR14_XDMGRPT;
 

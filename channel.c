@@ -1220,7 +1220,7 @@ int i;
     /* Connect each channel set to its home cpu */
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i))
-            sysblk.regs[i]->chanset = i;
+            sysblk.regs[i]->chanset = i < FEATURE_LCSS_MAX ? i : 0;
 
     /* Reset each device in the configuration */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
