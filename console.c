@@ -1218,9 +1218,9 @@ static char *herclogo[]={
     " HHH          HHH  EEE R  R  CCC  UU  LLL EEE SSSS",
     " HHH          HHH",
     " HHH          HHH",
-    " HHH          HHH   My PC Thinks it's a MAINFRAME",
+    " HHH          HHH   My PC thinks it's a MAINFRAME",
     "",
-    " Copyright (c) 1999-2006 Roger Bowler, Jan Jaeger and others"};
+    " Copyright (c) 1999-2006 Roger Bowler, Jan Jaeger, and others"};
 static int GENSBA(char *buf,size_t len,int row,int col)
 {
     int pos;
@@ -1546,7 +1546,7 @@ size_t                  currow;
             len=sizeof(buf)-2;
             currow=0;
 
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Hercules Version : ");
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Hercules version  :");
             ASSERT(rc!=0);
             ix+=rc;
             len-=rc;
@@ -1557,7 +1557,7 @@ size_t                  currow;
             len-=rc;
             currow++;
 
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Build Date       : ");
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Build date        :");
             ASSERT(rc!=0);
             ix+=rc;
             len-=rc;
@@ -1568,7 +1568,7 @@ size_t                  currow;
             len-=rc;
             currow++;
 
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host system name : ");
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host system name  :");
             ASSERT(rc!=0);
             ix+=rc;
             len-=rc;
@@ -1579,7 +1579,7 @@ size_t                  currow;
             len-=rc;
             currow++;
 
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host OS Version  : ");
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host OS version   :");
             ASSERT(rc!=0);
             ix+=rc;
             len-=rc;
@@ -1593,7 +1593,7 @@ size_t                  currow;
             len-=rc;
             currow++;
 
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host Arch        : ");
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host architecture :");
             ASSERT(rc!=0);
             ix+=rc;
             len-=rc;
@@ -1603,7 +1603,7 @@ size_t                  currow;
             ix+=rc;
             len-=rc;
 
-            rc=WRITEAT(&buf[ix],len,currow,40,SF_ATTR_PROTECTED,"Host CPUs        : ");
+            rc=WRITEAT(&buf[ix],len,currow,40,SF_ATTR_PROTECTED,"Host CPUs         :");
             ASSERT(rc!=0);
             ix+=rc;
             len-=rc;
@@ -1615,7 +1615,7 @@ size_t                  currow;
             len-=rc;
             currow++;
 
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Dev Chanl subsys : ");
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Dev chanl subsys  :");
             ASSERT(rc!=0);
             ix+=rc;
             len-=rc;
@@ -1625,7 +1625,7 @@ size_t                  currow;
             ASSERT(rc!=0);
             ix+=rc;
             len-=rc;
-            rc=WRITEAT(&buf[ix],len,currow,40,SF_ATTR_PROTECTED,"Device number    : ");
+            rc=WRITEAT(&buf[ix],len,currow,40,SF_ATTR_PROTECTED,"Device number     :");
             ASSERT(rc!=0);
             ix+=rc;
             len-=rc;

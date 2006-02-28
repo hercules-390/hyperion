@@ -28,7 +28,7 @@ typedef struct HOST_INFO
     char  sysname[20];
     char  nodename[20];
     char  release[20];
-    char  version[20];
+    char  version[50];
     char  machine[20];
     int   trycritsec_avail;             /* 1=TryEnterCriticalSection */
     int   num_procs;                    /* #of processors            */
