@@ -878,6 +878,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 ORB     orb;                            /* Operation request blk @IZW*/
 VADR    ccwaddr;                        /* CCW address for start I/O */
 BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
+U16     lcss;
 
     S(inst, regs, b2, effective_addr2);
 #if defined(FEATURE_ECPSVM)
@@ -894,8 +895,14 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
 
     SIE_INTERCEPT(regs);
 
+#if defined(FEATURE_CHANNEL_SWITCHING)
+        lcss=regs->chanset;
+#else
+        lcss=0;
+#endif
+         
     /* Locate the device block */
-    dev = find_device_by_devnum (0,effective_addr2);
+    dev = find_device_by_devnum (lcss,effective_addr2);
 
     /* Set condition code 3 if device does not exist */
     if (dev == NULL
@@ -936,6 +943,7 @@ DEF_INST(test_io)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block for SIO   */
+U16     lcss;
 
     S(inst, regs, b2, effective_addr2);
 
@@ -943,8 +951,14 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 
     SIE_INTERCEPT(regs);
 
+#if defined(FEATURE_CHANNEL_SWITCHING)
+    lcss=regs->chanset;
+#else
+    lcss=0;
+#endif
+
     /* Locate the device block */
-    dev = find_device_by_devnum (0,effective_addr2);
+    dev = find_device_by_devnum (lcss,effective_addr2);
 
     /* Set condition code 3 if device does not exist */
     if (dev == NULL
@@ -978,6 +992,7 @@ DEF_INST(halt_io)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block for SIO   */
+U16     lcss;
 
     S(inst, regs, b2, effective_addr2);
 
@@ -985,8 +1000,14 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 
     SIE_INTERCEPT(regs);
 
+#if defined(FEATURE_CHANNEL_SWITCHING)
+    lcss=regs->chanset;
+#else
+    lcss=0;
+#endif
+
     /* Locate the device block */
-    dev = find_device_by_devnum (0,effective_addr2);
+    dev = find_device_by_devnum (lcss,effective_addr2);
 
     /* Set condition code 3 if device does not exist */
     if (dev == NULL
