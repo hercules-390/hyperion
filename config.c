@@ -252,8 +252,6 @@ DEVBLK**dvpp;
     dev->hnd = NULL;
     dev->devnum = devnum;
     dev->chanset = lcss;
-    if( dev->chanset >= sysblk.numcpu)
-        dev->chanset = sysblk.numcpu > 0 ? sysblk.numcpu - 1 : 0;
     dev->fd = -1;
     dev->ioint.dev = dev;
     dev->ioint.pending = 1;
