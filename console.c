@@ -1194,6 +1194,90 @@ BYTE    c;                              /* Character work area       */
 
 } /* end function recv_1052_data */
 
+/* The following code and functions are here
+ * to build a more fancy logo
+ */
+#define SF_ATTR_PROTECTED   0x20
+#define SF_ATTR_NUMERIC     0x10
+/* One of */
+#define SF_ATTR_WDISPNSEL   0x00
+#define SF_ATTR_WDISPSEL    0x04
+#define SF_ATTR_HIGHLIGHT   0x08
+#define SF_ATTR_INVISIBLE   0x0C
+
+#define SF_ATTR_MDT         0x01
+
+static char *herclogo[]={
+    " HHH          HHH   The S/370, ESA/390 and z/Architecture",
+    " HHH          HHH                Emulator",
+    " HHH          HHH",
+    " HHH          HHH  EEE RRR   CCC U  U L   EEE SSSS",
+    " HHHHHHHHHHHHHHHH  E   R  R C    U  U L   E   S",
+    " HHHHHHHHHHHHHHHH  EEE RRR  C    U  U L   EEE  SS",
+    " HHHHHHHHHHHHHHHH  E   R R  C    U  U L   E      S",
+    " HHH          HHH  EEE R  R  CCC  UU  LLL EEE SSSS",
+    " HHH          HHH",
+    " HHH          HHH",
+    " HHH          HHH   My PC Thinks it's a MAINFRAME",
+    "",
+    " Copyright (c) 1999-2006 Roger Bowler, Jan Jaeger and others"};
+static int GENSBA(char *buf,size_t len,int row,int col)
+{
+    int pos;
+    pos=row*80+col;
+    if(len<4)
+    {
+        return(0);
+    }
+    buf[0]=0x11;
+    buf[1]=sba_code[pos >> 6];
+    buf[2]=sba_code[pos & 0x3f];
+    buf[3]=0;
+    return 3;
+}
+
+
+static int GENSF(char *buf,size_t len,int attr)
+{
+    if(len<3)
+    {
+        return(0);
+    }
+    buf[0]=0x1D;
+    buf[1]=sba_code[attr & 0x3f];
+    buf[2]=0;
+    return 2;
+}
+
+static int WRITEAT(char *buf,size_t len,int row,int col,int attr,const char *msg)
+{
+    int rc;
+    int ix;
+    ix=0;
+    rc=GENSBA(buf,len,row,col);
+    if(!rc)
+    {
+        return 0;
+    }
+    len-=rc;
+    ix+=rc;
+    rc=GENSF(&buf[ix],len,attr);
+    if(!rc)
+    {
+        return 0;
+    }
+    len-=rc;
+    ix+=rc;
+    rc=strlen(msg);
+    if(rc>(int)len)
+    {
+        return 0;
+    }
+    strcpy(&buf[ix],msg);
+    translate_to_ebcdic(&buf[ix]);
+    ix+=rc;
+    return ix;
+}
 
 /*-------------------------------------------------------------------*/
 /* NEW CLIENT CONNECTION THREAD                                      */
@@ -1212,13 +1296,16 @@ U16                     devnum;         /* Requested device number   */
 BYTE                    class;          /* D=3270, P=3287, K=3215/1052 */
 BYTE                    model;          /* 3270 model (2,3,4,5,X)    */
 BYTE                    extended;       /* Extended attributes (Y,N) */
-char                    buf[256];       /* Message buffer            */
+char                    buf[1920];       /* Message buffer            */
 char                    conmsg[256];    /* Connection message        */
 char                    devmsg[25];     /* Device message            */
 char                    hostmsg[256];   /* Host ID message           */
 char                    num_procs[16];  /* #of processors string     */
 char                    rejmsg[256];    /* Rejection message         */
 char                    group[16];      /* Console group             */
+size_t                  i;
+size_t                  logoheight;
+size_t                  currow;
 
     /* Load the socket address from the thread parameter */
     csock = *csockp;
@@ -1443,16 +1530,125 @@ char                    group[16];      /* Console group             */
     }
     else
     {
-        snprintf (devmsg, sizeof(devmsg), "Connected to device %4.4X",
-                  dev->devnum);
+        snprintf (devmsg, sizeof(devmsg), "Connected to device %d:%4.4X",
+                  SSID_TO_LCSS(dev->ssid), dev->devnum);
     }
 
-    logmsg (_("HHCTE009I Client %s connected to %4.4X device %4.4X\n"),
-            clientip, dev->devtype, dev->devnum);
+    logmsg (_("HHCTE009I Client %s connected to %4.4X device %d:%4.4X\n"),
+            clientip, dev->devtype, SSID_TO_LCSS(dev->ssid), dev->devnum);
 
     /* Send connection message to client */
     if (class != 'K')
     {
+            int ix=0;
+            buf[ix++]=0xf5;
+            buf[ix++]=0x40;
+            len=sizeof(buf)-2;
+            currow=0;
+
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Hercules Version : ");
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            snprintf(conmsg,sizeof(conmsg),"%s",VERSION);
+            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            currow++;
+
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Build Date       : ");
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            snprintf(conmsg,sizeof(conmsg),"%s %s",__DATE__,__TIME__);
+            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            currow++;
+
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host system name : ");
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            snprintf(conmsg,sizeof(conmsg),"%s",cons_hostinfo.nodename);
+            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            currow++;
+
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host OS Version  : ");
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            snprintf(conmsg,sizeof(conmsg),"%s-%s %s"
+                            ,cons_hostinfo.sysname
+                            ,cons_hostinfo.release
+                            ,cons_hostinfo.version);
+            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            currow++;
+
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host Arch        : ");
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            snprintf(conmsg,sizeof(conmsg),"%s",cons_hostinfo.machine);
+            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+
+            rc=WRITEAT(&buf[ix],len,currow,40,SF_ATTR_PROTECTED,"Host CPUs        : ");
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            snprintf(conmsg,sizeof(conmsg),"%s"
+                            ,num_procs);
+            rc=WRITEAT(&buf[ix],len,currow,60,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            currow++;
+
+            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Dev Chanl subsys : ");
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            snprintf(conmsg,sizeof(conmsg),"%d"
+                            ,SSID_TO_LCSS(dev->ssid));
+            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            rc=WRITEAT(&buf[ix],len,currow,40,SF_ATTR_PROTECTED,"Device number    : ");
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            snprintf(conmsg,sizeof(conmsg),"%4.4X"
+                            ,dev->devnum);
+            rc=WRITEAT(&buf[ix],len,currow,60,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
+            ASSERT(rc!=0);
+            ix+=rc;
+            len-=rc;
+            currow++;
+
+            logoheight=sizeof(herclogo)/sizeof(char *);
+            for(i=0;i<logoheight;i++)
+            {
+                rc=WRITEAT(&buf[ix],len,i+currow+((24-(logoheight+currow))/2),10,SF_ATTR_PROTECTED,herclogo[i]);
+                ASSERT(rc!=0);
+                ix+=rc;
+                len-=rc;
+            }
+            len=ix;
+
+        /*
+
         len = snprintf (buf, sizeof(buf),
                     "\xF5\x40\x11\x40\x40\x1D\x60%s"
                     "\x11\xC1\x50\x1D\x60%s"
@@ -1460,6 +1656,7 @@ char                    group[16];      /* Console group             */
                     translate_to_ebcdic(conmsg),
                     translate_to_ebcdic(hostmsg),
                     translate_to_ebcdic(devmsg));
+        */
 
         if (len < sizeof(buf))
         {
