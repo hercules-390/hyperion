@@ -1536,8 +1536,8 @@ void store_status (REGS *ssreg, U64 aaddr);
 /* Functions in module ipl.c */
 int          load_main          (char *fname, RADR startloc);
 int ARCH_DEP(load_main)         (char *fname, RADR startloc);
-int          load_ipl           (U16  devnum, int cpu, int clear);
-int ARCH_DEP(load_ipl)          (U16  devnum, int cpu, int clear);
+int          load_ipl           (U16 lcss, U16  devnum, int cpu, int clear);
+int ARCH_DEP(load_ipl)          (U16 lcss, U16  devnum, int cpu, int clear);
 int          load_hmc           (char *fname, int cpu, int clear);
 int ARCH_DEP(load_hmc)          (char *fname, int cpu, int clear);
 int          system_reset       (             int cpu, int clear);

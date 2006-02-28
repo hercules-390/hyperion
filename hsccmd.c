@@ -1600,8 +1600,11 @@ int ipl_cmd2(int argc, char *argv[], char *cmdline, int clear)
 BYTE c;                                 /* Character work area       */
 int  rc;                                /* Return code               */
 
-    unsigned i;
-    U16      devnum;
+unsigned i;
+U16  lcss;
+U16  devnum;
+char *cdev, *clcss;
+    
 
     if (argc < 2)
     {
@@ -1623,10 +1626,36 @@ int  rc;                                /* Return code               */
     /* If the ipl device is not a valid hex number we assume */
     /* This is a load from the service processor             */
 
-    if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
+    if((cdev = strchr(argv[1],':')))
+    {
+        clcss = argv[1];
+        cdev++;
+    }
+    else
+    {
+        clcss = NULL;
+        cdev = argv[1];
+    }   
+
+    if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
         rc = load_hmc(strtok(cmdline+3," \t"), sysblk.pcpu, clear);
     else
-        rc = load_ipl (devnum, sysblk.pcpu, clear);
+    {
+        *--cdev = '\0';
+
+        if(clcss)
+        {
+            if (sscanf(clcss, "%hd%c", &lcss, &c) != 1)
+            {
+                logmsg( _("HHCPN059E LCSS id %s is invalid\n"), clcss );
+                return -1;
+            }
+        }
+        else
+            lcss = 0;
+
+        rc = load_ipl (lcss, devnum, sysblk.pcpu, clear);
+    }
 
     release_lock (&sysblk.intlock);
 

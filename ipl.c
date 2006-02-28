@@ -160,7 +160,7 @@ static int ARCH_DEP(common_load_begin) (int cpu, int clear)
 /* Returns 0 if successful, -1 if error                              */
 /* intlock MUST be held on entry                                     */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(load_ipl) (U16 devnum, int cpu, int clear)
+int ARCH_DEP(load_ipl) (U16 lcss, U16 devnum, int cpu, int clear)
 {
 REGS   *regs;                           /* -> Regs                   */
 DEVBLK *dev;                            /* -> Device control block   */
@@ -177,19 +177,13 @@ BYTE    chanstat;                       /* IPL device channel status */
     regs = sysblk.regs[cpu];    /* Point to IPL CPU's registers */
 
     /* Point to the device block for the IPL device */
-    dev = find_device_by_devnum (0,devnum);
+    dev = find_device_by_devnum (lcss,devnum);
     if (dev == NULL)
     {
-        logmsg (_("HHCCP027E Device %4.4X not in configuration\n"),
-                devnum);
-        HDC1(debug_cpu_state, regs);
-        return -1;
-    }
-
-    if (sysblk.arch_mode == ARCH_370
-      && dev->chanset != regs->chanset)
-    {
-        logmsg(_("HHCCP028E Device not connected to channelset\n"));
+        logmsg (_("HHCCP027E Device %4.4X not in configuration%s\n"),
+                devnum,
+                (sysblk.arch_mode == ARCH_370 ?
+                  " or not conneceted to channelset" : ""));
         HDC1(debug_cpu_state, regs);
         return -1;
     }
@@ -615,21 +609,21 @@ char pathname[MAX_PATH];
 /*  Load / IPL         (Load Normal  -or-  Load Clear)               */
 /*-------------------------------------------------------------------*/
 
-int load_ipl (U16 devnum, int cpu, int clear)
+int load_ipl (U16 lcss, U16 devnum, int cpu, int clear)
 {
     switch(sysblk.arch_mode) {
 #if defined(_370)
         case ARCH_370:
-            return s370_load_ipl (devnum, cpu, clear);
+            return s370_load_ipl (lcss, devnum, cpu, clear);
 #endif
 #if defined(_390)
         case ARCH_390:
-            return s390_load_ipl(devnum, cpu, clear);
+            return s390_load_ipl (lcss, devnum, cpu, clear);
 #endif
 #if defined(_900)
         case ARCH_900:
             /* z/Arch always starts out in ESA390 mode */
-            return s390_load_ipl(devnum, cpu, clear);
+            return s390_load_ipl (lcss, devnum, cpu, clear);
 #endif
     }
     return -1;
