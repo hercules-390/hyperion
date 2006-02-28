@@ -1209,16 +1209,16 @@ BYTE    c;                              /* Character work area       */
 
 static char *herclogo[]={
     " HHH          HHH   The S/370, ESA/390 and z/Architecture",
-    " HHH          HHH                Emulator",
+    " HHH          HHH                 Emulator",
     " HHH          HHH",
-    " HHH          HHH  EEE RRR   CCC U  U L   EEE SSSS",
-    " HHHHHHHHHHHHHHHH  E   R  R C    U  U L   E   S",
-    " HHHHHHHHHHHHHHHH  EEE RRR  C    U  U L   EEE  SS",
-    " HHHHHHHHHHHHHHHH  E   R R  C    U  U L   E      S",
-    " HHH          HHH  EEE R  R  CCC  UU  LLL EEE SSSS",
+    " HHH          HHH  EEEE RRR   CCC U  U L    EEEE  SSS",
+    " HHHHHHHHHHHHHHHH  E    R  R C    U  U L    E    S",
+    " HHHHHHHHHHHHHHHH  EEE  RRR  C    U  U L    EEE   SS",
+    " HHHHHHHHHHHHHHHH  E    R R  C    U  U L    E       S",
+    " HHH          HHH  EEEE R  R  CCC  UU  LLLL EEEE SSS ",
     " HHH          HHH",
     " HHH          HHH",
-    " HHH          HHH   My PC thinks it's a MAINFRAME",
+    " HHH          HHH     My PC thinks it's a MAINFRAME",
     "",
     " Copyright (c) 1999-2006 Roger Bowler, Jan Jaeger, and others"};
 static int GENSBA(char *buf,size_t len,int row,int col)
