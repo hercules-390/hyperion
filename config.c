@@ -413,10 +413,12 @@ int     i;                              /* Loop index                */
     machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
+    /*
     if(lcss!=0 && sysblk.arch_mode==ARCH_370)
     {
         logmsg(_("HHCCF078W %d:%4.4X : Only devices on CSS 0 are usable in S/370 mode\n"),lcss,devnum);
     }
+    */
 
     return 0;
 } /* end function attach_device */
