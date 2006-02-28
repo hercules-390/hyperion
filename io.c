@@ -930,7 +930,6 @@ DEF_INST(test_io)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block for SIO   */
-U16     lcss;
 
     S(inst, regs, b2, effective_addr2);
 
@@ -967,7 +966,6 @@ DEF_INST(halt_io)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block for SIO   */
-U16     lcss;
 
     S(inst, regs, b2, effective_addr2);
 
