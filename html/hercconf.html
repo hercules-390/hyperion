@@ -911,6 +911,7 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
 <blockquote>
 
 <dl> <!-- begin Device records -->
+<a name="devnums"></a>
 
 <dt><code><em>devnum(s)</em></code>
 <dd><p>
@@ -939,6 +940,25 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     for ESA/390, or 0000 to 0FFF for S/370.  The device number uniquely
     identifies each device to the operating system.
     <p>
+<dt><code><em>Channel Set/Logical Channel Subsystem</em></code>
+<dd><p>
+    An optional Channel Set or Logical Channel Subsystem Identification can be
+    specified for a device number or group of devices. The Identification
+    number is specified at the beginning of the definition, followed by a ':'
+    character. For example :<p>
+    1:0400-040F 3270<p>
+    defines 3270 devices 400 to 40F to be on S/370 Channel Set 1 or on S/390
+    or z/Architecture Logical Channel Subsystem # 1.<p>
+    Since each Logical Channel Subsystem defines its own device numbering space, 
+    care should be taken in S/370 mode as to define a coherent set of device
+    numbers.<p>
+    Not all S/390 or z/Architecture operating systems support Multiple Logical
+    Channel Subsystems (this feature was introduced with the z9-109).<p>
+    If no Channel Set/Logical Channel Subsystem Identification is specified,
+    then it is assumed to be 0.
+    <p>
+<dt><code>Generic Syntax for device numbers<p>
+<em>[n:]CCUU[,CCUU][-CCUU][.nn][...]</em></code>
 
 <dt><code><em>devtype</em></code>
 <dd><p>
