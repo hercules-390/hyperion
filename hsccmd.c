@@ -43,6 +43,7 @@ extern void ecpsvm_command(int argc,char **argv);
 #endif
 int process_script_file(char *,int);
 
+
 ///////////////////////////////////////////////////////////////////////
 /* $test_cmd - do something or other */
 
@@ -58,6 +59,12 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
         sleep(5);
     }
     return 0;
+}
+
+/* Issue generic Device not found error message */
+static void devnotfound_msg(U16 lcss,U16 devnum)
+{
+    logmsg(_("HHCPN181E Device number %d:%4.4X not found\n"),lcss,devnum);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -293,22 +300,22 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         /* start specified printer device */
 
         U16      devnum;
+        U16      lcss;
         int      stopprt;
         DEVBLK*  dev;
         char*    devclass;
         char     devnam[256];
         int      rc;
-        BYTE    c;                      /* Character work area       */
 
-        if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
+        rc=parse_single_devnum(argv[1],&lcss,&devnum);
+        if (rc<0)
         {
-            logmsg( _("HHCPN015E Invalid device number\n") );
             return -1;
         }
 
-        if (!(dev = find_device_by_devnum (devnum)))
+        if (!(dev = find_device_by_devnum (lcss,devnum)))
         {
-            logmsg( _("HHCPN016E Device number %4.4X not found\n"), devnum );
+            devnotfound_msg(lcss,devnum);
             return -1;
         }
 
@@ -316,8 +323,8 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 
         if (strcasecmp(devclass,"PRT"))
         {
-            logmsg( _("HHCPN017E Device %4.4X is not a printer device\n"),
-                      devnum );
+            logmsg( _("HHCPN017E Device %d:%4.4X is not a printer device\n"),
+                      lcss, devnum );
             return -1;
         }
 
@@ -330,16 +337,16 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         if (rc) dev->stopprt = stopprt;
 
         switch (rc) {
-            case 0: logmsg(_("HHCPN018I Printer %4.4X started\n"), devnum);
+            case 0: logmsg(_("HHCPN018I Printer %d:%4.4X started\n"), lcss,devnum);
                     break;
-            case 1: logmsg(_("HHCPN019E Printer %4.4X not started: "
-                             "busy or interrupt pending\n"), devnum);
+            case 1: logmsg(_("HHCPN019E Printer %d:%4.4X not started: "
+                             "busy or interrupt pending\n"), lcss, devnum);
                     break;
-            case 2: logmsg(_("HHCPN020E Printer %4.4X not started: "
-                             "attention request rejected\n"), devnum);
+            case 2: logmsg(_("HHCPN020E Printer %d:%4.4X not started: "
+                             "attention request rejected\n"), lcss, devnum);
                     break;
-            case 3: logmsg(_("HHCPN021E Printer %4.4X not started: "
-                             "subchannel not enabled\n"), devnum);
+            case 3: logmsg(_("HHCPN021E Printer %d:%4.4X not started: "
+                             "subchannel not enabled\n"), lcss, devnum);
                     break;
         }
 
@@ -388,20 +395,21 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
         /* stop specified printer device */
 
         U16      devnum;
+        U16      lcss;
         DEVBLK*  dev;
         char*    devclass;
         char     devnam[256];
-        BYTE    c;                      /* Character work area       */
+        int     rc;
 
-        if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
+        rc=parse_single_devnum(argv[1],&lcss,&devnum);
+        if (rc<0)
         {
-            logmsg( _("HHCPN022E Invalid device number\n") );
             return -1;
         }
 
-        if (!(dev = find_device_by_devnum (devnum)))
+        if (!(dev = find_device_by_devnum (lcss, devnum)))
         {
-            logmsg( _("HHCPN023E Device number %4.4X not found\n"), devnum );
+            devnotfound_msg(lcss,devnum);
             return -1;
         }
 
@@ -409,14 +417,14 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
         if (strcasecmp(devclass,"PRT"))
         {
-            logmsg( _("HHCPN024E Device %4.4X is not a printer device\n"),
-                      devnum );
+            logmsg( _("HHCPN024E Device %d:%4.4X is not a printer device\n"),
+                      lcss, devnum );
             return -1;
         }
 
         dev->stopprt = 1;
 
-        logmsg( _("HHCPN025I Printer %4.4X stopped\n"), devnum );
+        logmsg( _("HHCPN025I Printer %d:%4.4X stopped\n"), lcss, devnum );
     }
 
     return 0;
@@ -942,6 +950,7 @@ int tt32stats_cmd(int argc, char *argv[], char *cmdline)
 {
     int      rc = 0;
     U16      devnum;
+    U16      lcss;
     DEVBLK*  dev;
     BYTE     c;
 
@@ -953,23 +962,23 @@ int tt32stats_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
-    if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
+    rc=parse_single_devnum(argv[1],&lcss,&devnum);
+    if (rc<0)
     {
-        logmsg( _("HHCPN032E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
-    if (!(dev = find_device_by_devnum (devnum)) &&
-        !(dev = find_device_by_devnum (devnum ^ 0x01)))
+    if (!(dev = find_device_by_devnum (lcss, devnum)) &&
+        !(dev = find_device_by_devnum (lcss, devnum ^ 0x01)))
     {
-        logmsg( _("HHCPN033E Device number %4.4X not found\n"), devnum );
+        devnotfound_msg(lcss,devnum);
         return -1;
     }
 
     if (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype)
     {
-        logmsg( _("HHCPN034E Device %4.4X is not a CTCI or LCS device\n"),
-                  devnum );
+        logmsg( _("HHCPN034E Device %d:%4.4X is not a CTCI or LCS device\n"),
+                  lcss, devnum );
         return -1;
     }
 
@@ -1456,10 +1465,10 @@ int bdelete_cmd(int argc, char *argv[], char *cmdline)
 int i_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
-BYTE c;                                 /* Character work area       */
 
     int      rc = 0;
     U16      devnum;
+    U16      lcss;
     DEVBLK*  dev;
 
     UNREFERENCED(cmdline);
@@ -1470,15 +1479,15 @@ BYTE c;                                 /* Character work area       */
         return -1;
     }
 
-    if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
+    rc=parse_single_devnum(argv[1],&lcss,&devnum);
+    if (rc<0)
     {
-        logmsg( _("HHCPN043E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
-    if (!(dev = find_device_by_devnum (devnum)))
+    if (!(dev = find_device_by_devnum (lcss, devnum)))
     {
-        logmsg( _("HHCPN044E Device number %4.4X not found\n"), devnum );
+        devnotfound_msg(lcss,devnum);
         return -1;
     }
 
@@ -1809,11 +1818,6 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
 int attach_cmd(int argc, char *argv[], char *cmdline)
 {
-U16  devnum /* , dummy_devtype */;
-U16  lcss;
-char *clcss, *cdev;
-BYTE c;                                 /* Character work area       */
-
     UNREFERENCED(cmdline);
 
     if (argc < 3)
@@ -1821,7 +1825,9 @@ BYTE c;                                 /* Character work area       */
         logmsg( _("HHCPN057E Missing argument(s)\n") );
         return -1;
     }
+    return parse_and_attach_devices(argv[1],argv[2],argc-3,&argv[3]);
 
+#if 0
     if((cdev = strchr(argv[1],':')))
     {
         clcss = argv[1];
@@ -1859,6 +1865,7 @@ BYTE c;                                 /* Character work area       */
 #endif
 
     return  attach_device (lcss, devnum, argv[2], argc-3, &argv[3]);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1867,7 +1874,8 @@ BYTE c;                                 /* Character work area       */
 int detach_cmd(int argc, char *argv[], char *cmdline)
 {
 U16  devnum;
-BYTE c;                                 /* Character work area       */
+U16  lcss;
+int rc;
 
     UNREFERENCED(cmdline);
 
@@ -1877,13 +1885,13 @@ BYTE c;                                 /* Character work area       */
         return -1;
     }
 
-    if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
+    rc=parse_single_devnum(argv[1],&lcss,&devnum);
+    if (rc<0)
     {
-        logmsg( _("HHCPN061E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
-    return  detach_device (devnum);
+    return  detach_device (lcss, devnum);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1892,7 +1900,8 @@ BYTE c;                                 /* Character work area       */
 int define_cmd(int argc, char *argv[], char *cmdline)
 {
 U16  devnum, newdevn;
-BYTE c;                                 /* Character work area       */
+U16 lcss,newlcss;
+int rc;
 
     UNREFERENCED(cmdline);
 
@@ -1902,19 +1911,23 @@ BYTE c;                                 /* Character work area       */
         return -1;
     }
 
-    if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
+    rc=parse_single_devnum(argv[1],&lcss,&devnum);
+    if (rc<0)
     {
-        logmsg( _("HHCPN063E Device number %s is invalid\n"), argv[1] );
+        return -1;
+    }
+    rc=parse_single_devnum(argv[1],&newlcss,&newdevn);
+    if (rc<0)
+    {
+        return -1;
+    }
+    if(lcss!=newlcss)
+    {
+        logmsg(_("HHCPN182E Device numbers can only be redefined within the same Logical channel subsystem\n"));
         return -1;
     }
 
-    if (sscanf(argv[2], "%hx%c", &newdevn, &c) != 1)
-    {
-        logmsg( _("HHCPN064E Device number %s is invalid\n"), argv[2] );
-        return -1;
-    }
-
-    return  define_device (devnum, newdevn);
+    return  define_device (lcss, devnum, newdevn);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -2061,7 +2074,8 @@ int ds_cmd(int argc, char *argv[], char *cmdline)
 {
 DEVBLK*  dev;
 U16      devnum;
-BYTE c;                                 /* Character work area       */
+U16      lcss;
+int rc;
 
     UNREFERENCED(cmdline);
 
@@ -2071,15 +2085,16 @@ BYTE c;                                 /* Character work area       */
         return -1;
     }
 
-    if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
+    rc=parse_single_devnum(argv[1],&lcss,&devnum);
+
+    if (rc<0)
     {
-        logmsg( _("HHCPN070E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
-    if (!(dev = find_device_by_devnum (devnum)))
+    if (!(dev = find_device_by_devnum (lcss,devnum)))
     {
-        logmsg( _("HHCPN071E Device number %4.4X not found\n"), devnum );
+        devnotfound_msg(lcss,devnum);
         return -1;
     }
 
@@ -2222,8 +2237,9 @@ char   *cmd = cmdline;                  /* Copy of panel command     */
 char   *devascii;                       /* ASCII text device number  */
 DEVBLK *dev;                            /* -> Device block           */
 U16     devnum;                         /* Device number             */
-BYTE    c;                              /* Character work area       */
+U16     lcss  ;                         /* Logical CSS               */
 int     flag;                           /* Flag for sf-              */
+int rc;
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -2258,22 +2274,21 @@ int     flag;                           /* Flag for sf-              */
         }
         else
         {
-            if (sscanf (devascii, "%hx%c", &devnum, &c) != 1)
+            rc=parse_single_devnum(devascii,&lcss,&devnum);
+            if (rc<0)
             {
-                logmsg( _("HHCPN082E Invalid device number\n") );
                 return -1;
             }
-            dev = find_device_by_devnum (devnum);
+            dev = find_device_by_devnum (lcss,devnum);
             if (dev == NULL)
             {
-                logmsg( _("HHCPN083E Device number %4.4X not found\n"),
-                          devnum );
+                devnotfound_msg(lcss,devnum);
                 return -1;
             }
             if (dev->cckd_ext == NULL)
             {
-                logmsg( _("HHCPN084E Device number %4.4X "
-                          "is not a cckd device\n"), devnum );
+                logmsg( _("HHCPN084E Device number %d:%4.4X "
+                          "is not a cckd device\n"), lcss, devnum );
                 return -1;
             }
         }
@@ -2283,8 +2298,8 @@ int     flag;                           /* Flag for sf-              */
         /* Perform the action */
         do {
             n++;
-            if (scan) logmsg( _("HHCPN085I Processing device %4.4X\n"),
-                                dev->devnum );
+            if (scan) logmsg( _("HHCPN085I Processing device %d:%4.4X\n"),
+                                SSID_TO_LCSS(dev->ssid), dev->devnum );
 
             switch (action) {
             case '+': if (devascii != NULL)
@@ -2368,7 +2383,8 @@ int devinit_cmd(int argc, char *argv[], char *cmdline)
 {
 DEVBLK*  dev;
 U16      devnum;
-BYTE c;                                 /* Character work area       */
+U16      lcss;
+int rc;
 
     UNREFERENCED(cmdline);
 
@@ -2378,15 +2394,16 @@ BYTE c;                                 /* Character work area       */
         return -1;
     }
 
-    if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
+    rc=parse_single_devnum(argv[1],&lcss,&devnum);
+
+    if (rc<0)
     {
-        logmsg( _("HHCPN094E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
-    if (!(dev = find_device_by_devnum (devnum)))
+    if (!(dev = find_device_by_devnum (lcss, devnum)))
     {
-        logmsg( _("HHCPN095E Device number %4.4X not found\n"), devnum );
+        devnotfound_msg(lcss,devnum);
         return -1;
     }
 
@@ -2398,8 +2415,8 @@ BYTE c;                                 /* Character work area       */
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         release_lock (&dev->lock);
-        logmsg( _("HHCPN096E Device %4.4X busy or interrupt pending\n"),
-                  devnum );
+        logmsg( _("HHCPN096E Device %d:%4.4X busy or interrupt pending\n"),
+                  lcss, devnum );
         return -1;
     }
 
@@ -2414,10 +2431,10 @@ BYTE c;                                 /* Character work area       */
     {
         if ((dev->hnd->init)(dev, argc-2, &argv[2]) < 0)
         {
-            logmsg( _("HHCPN097E Initialization failed for device %4.4X\n"),
-                      devnum );
+            logmsg( _("HHCPN097E Initialization failed for device %d:%4.4X\n"),
+                      lcss, devnum );
         } else {
-            logmsg( _("HHCPN098I Device %4.4X initialized\n"), devnum );
+            logmsg( _("HHCPN098I Device %d:%4.4X initialized\n"), lcss, devnum );
         }
     }
 
@@ -2965,21 +2982,21 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         else
             sprintf (sysid, "id=%d", dev->ioactive);
         if (dev->busy && !(dev->suspended && dev->ioactive == DEV_SYS_NONE))
-            logmsg( _("          DEV%4.4X: busy %s\n"), dev->devnum, sysid );
+            logmsg( _("          DEV %d:%4.4X: busy %s\n"), SSID_TO_LCSS(dev->ssid), dev->devnum, sysid );
         if (dev->reserved)
-            logmsg( _("          DEV%4.4X: reserved %s\n"), dev->devnum, sysid );
+            logmsg( _("          DEV %d:%4.4X: reserved %s\n"), SSID_TO_LCSS(dev->ssid), dev->devnum, sysid );
         if (dev->suspended)
-            logmsg( _("          DEV%4.4X: suspended\n"), dev->devnum );
+            logmsg( _("          DEV %d:%4.4X: suspended\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
         if (dev->pending && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV%4.4X: I/O pending\n"), dev->devnum );
+            logmsg( _("          DEV %d:%4.4X: I/O pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
         if (dev->pcipending && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV%4.4X: PCI pending\n"), dev->devnum );
+            logmsg( _("          DEV %d:%4.4X: PCI pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
         if (dev->attnpending && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV%4.4X: Attn pending\n"), dev->devnum );
+            logmsg( _("          DEV %d:%4.4X: Attn pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
         if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV%4.4X: CRW pending\n"), dev->devnum );
+            logmsg( _("          DEV %d:%4.4X: CRW pending\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
         if (test_lock(&dev->lock) && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("          DEV%4.4X: lock held\n"), dev->devnum );
+            logmsg( _("          DEV %d:%4.4X: lock held\n"), SSID_TO_LCSS(dev->ssid), dev->devnum );
     }
 
     logmsg( _("          I/O interrupt queue: ") );
@@ -2991,8 +3008,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     for (io = sysblk.iointq; io; io = io->next)
         logmsg
         (
-            _("          DEV%4.4X,%s%s%s%s, pri %d\n")
+            _("          DEV %d:%4.4X,%s%s%s%s, pri %d\n")
 
+            ,SSID_TO_LCSS(io->dev->ssid)
             ,io->dev->devnum
 
             ,io->pending      ? " normal"  : ""
@@ -3449,6 +3467,7 @@ int OnOffCommand(int argc, char *argv[], char *cmdline)
     U32     aaddr;                      /* Absolute storage address  */
     DEVBLK* dev;
     U16     devnum;
+    U16     lcss;
 REGS *regs;
 BYTE c;                                 /* Character work area       */
 
@@ -3540,12 +3559,12 @@ BYTE c;                                 /* Character work area       */
     // s+devn and s-devn commands - turn CCW stepping on/off
 
     if ((cmd[0] == 't' || cmd[0] == 's')
-        && sscanf(cmd+2, "%hx%c", &devnum, &c) == 1)
+        && parse_single_devnum_silent(cmd+2,&lcss,&devnum))
     {
-        dev = find_device_by_devnum (devnum);
+        dev = find_device_by_devnum (lcss, devnum);
         if (dev == NULL)
         {
-            logmsg( _("HHCPN135E Device number %4.4X not found\n"), devnum );
+            devnotfound_msg(lcss,devnum);
             release_lock(&sysblk.intlock);
             return -1;
         }
@@ -3553,13 +3572,13 @@ BYTE c;                                 /* Character work area       */
         if (cmd[0] == 't')
         {
             dev->ccwtrace = oneorzero;
-            logmsg( _("HHCPN136I CCW tracing is now %s for device %4.4X\n"),
-                onoroff, devnum
+            logmsg( _("HHCPN136I CCW tracing is now %s for device %d:%4.4X\n"),
+                onoroff, lcss, devnum
                 );
         } else {
             dev->ccwstep = oneorzero;
-            logmsg( _("HHCPN137I CCW stepping is now %s for device %4.4X\n"),
-                onoroff, devnum
+            logmsg( _("HHCPN137I CCW stepping is now %s for device %d:%4.4X\n"),
+                onoroff, lcss, devnum
                 );
         }
         release_lock(&sysblk.intlock);
@@ -4189,6 +4208,12 @@ int ProcessPanelCommand (char* pszCmdLine)
     }
 
 #if defined(OPTION_CONFIG_SYMBOLS)
+    /* Perform variable substitution */
+    /* First, set some 'dynamic' symbols to their own values */
+    set_symbol("CUU","$(CUU)");
+    set_symbol("cuu","$(cuu)");
+    set_symbol("CCUU","$(CCUU)");
+    set_symbol("ccuu","$(ccuu)");
     cl=resolve_symbol_string(pszCmdLine);
 #else
     cl=pszCmdLine;

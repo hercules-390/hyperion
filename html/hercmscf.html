@@ -937,6 +937,69 @@ HHCCF069I Run-options enabled for this run:<br>
   <dd>bldcfg.c, function build_config
   </dl>
 </dl>
+<dt><code><a name="HHCCF074E">
+HHCCF074E Unspecified error occured while parsing Logical Channel Subsystem Identification
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A logic error occured while parsing the Logical Channel Subsystem Identification component
+      of a device number or device number group.
+  <dt>Action
+  <dd>Notify hercules support. This is an error in the hercules parsing routines.
+  <dt>Issued by
+  <dd>config.c, function parse_lcss
+  </dl>
+</dl>
+<dt><code><a name="HHCCF075E">
+HHCCF075E No more than 1 Logical Channel Subsystem Identification may be specified
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>While specifying a device number or device number group, more than 1 ':' character was
+  encountered while parsing the Logical Channel Subsystem Identification component. There can
+  be only one Logical Channel Subsystem Identification for a device or group of devices.
+  <dt>Action
+  <dd>Correct the device number or device number group specification and either reissue the 
+  command or restart the hercules engine (depending on whether the error occured while issuing a command
+  or while starting the engine).
+  <dt>Issued by
+  <dd>config.c, function parse_lcss
+  </dl>
+</dl>
+<dt><code><a name="HHCCF076E">
+HHCCF076E Non numeric Logical Channel Subsystem Identification XX
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>While specifying a device number or device number group, a non decimal value was
+  encountered while parsing the Logical Channel Subsystem Identification component. The 
+  Logical Channel Subsystem Identification for a device or group of devices must be specified as
+  a numeric value.
+  <dt>Action
+  <dd>Correct the device number or device number group specification and either reissue the 
+  command or restart the hercules engine (depending on whether the error occured while issuing a command
+  or while starting the engine).
+  <dt>Issued by
+  <dd>config.c, function parse_lcss
+  </dl>
+</dl>
+<dt><code><a name="HHCCF077E">
+HHCCF077E Logical Channel Subsystem Identification NN exceeds maximum of 3
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>While specifying a device number or device number group, a Logical Channel Identification
+  was encountered that exceeded the architecture maximum value of MM. 
+  The Logical Channel Subsystem Identification for a device or group of devices must be within 0
+  and 3 (inclusive).
+  <dt>Action
+  <dd>Correct the device number or device number group specification and either reissue the 
+  command or restart the hercules engine (depending on whether the error occured while issuing a command
+  or while starting the engine).
+  <dt>Issued by
+  <dd>config.c, function parse_lcss
+  </dl>
+</dl>
 <p><center><hr width=15% noshade></center>
 <p>
 If you have a question about Hercules, see the

@@ -895,7 +895,7 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
     SIE_INTERCEPT(regs);
 
     /* Locate the device block */
-    dev = find_device_by_devnum (effective_addr2);
+    dev = find_device_by_devnum (0,effective_addr2);
 
     /* Set condition code 3 if device does not exist */
     if (dev == NULL
@@ -944,7 +944,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     SIE_INTERCEPT(regs);
 
     /* Locate the device block */
-    dev = find_device_by_devnum (effective_addr2);
+    dev = find_device_by_devnum (0,effective_addr2);
 
     /* Set condition code 3 if device does not exist */
     if (dev == NULL
@@ -986,7 +986,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     SIE_INTERCEPT(regs);
 
     /* Locate the device block */
-    dev = find_device_by_devnum (effective_addr2);
+    dev = find_device_by_devnum (0,effective_addr2);
 
     /* Set condition code 3 if device does not exist */
     if (dev == NULL

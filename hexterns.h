@@ -118,20 +118,24 @@ HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
 /* Functions in module config.c */
 void build_config (char *fname);
 void release_config ();
-DLL_EXPORT DEVBLK *find_device_by_devnum (U16 devnum);
+DLL_EXPORT DEVBLK *find_device_by_devnum (U16 lcss, U16 devnum);
 DEVBLK *find_device_by_subchan (U32 ioid);
 DEVBLK *get_devblk (U16 lcss, U16 devnum);
 void ret_devblk (DEVBLK *dev);
-int  attach_device (U16 lcss, U16 devnum, char *devtype, int addargc,
+int  attach_device (U16 lcss, U16 devnum, const char *devtype, int addargc,
         char *addargv[]);
 int  detach_subchan (U16 lcss, U16 subchan);
-int  detach_device (U16 devnum);
-int  define_device (U16 olddev, U16 newdev);
+int  detach_device (U16 lcss, U16 devnum);
+int  define_device (U16 lcss, U16 olddev, U16 newdev);
 DLL_EXPORT int  group_device(DEVBLK *dev, int members);
 int  configure_cpu (int cpu);
 int  deconfigure_cpu (int cpu);
 DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 #define MAX_ARGS  12                    /* Max argv[] array size     */
+int parse_and_attach_devices(const char *devnums,const char *devtype,int ac,char **av);
+int parse_single_devnum(const char *spec, U16 *lcss, U16 *devnum);
+int parse_single_devnum_silent(const char *spec, U16 *lcss, U16 *devnum);
+
 
 /* Global data areas and functions in module cpu.c                   */
 extern const char* arch_name[];
@@ -155,7 +159,7 @@ HCMD_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
-HHDL_DLL_IMPORT char *(*hdl_device_type_equates) (char *);
+HHDL_DLL_IMPORT char *(*hdl_device_type_equates) (const char *);
 HCMD_DLL_IMPORT void *(panel_command_r)          (void *cmdline);
 HPAN_DLL_IMPORT void  (panel_display_r)          (void);
 

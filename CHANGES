@@ -1,6 +1,9 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+28 Feb 2006 Generalize Multiple CSS device numbering for most statements
+            and panel commands. Allow multiple devices on panel attach
+            command. Multiple CSS support for suspend/resume - Ivan Warren
 26 Feb 2006 Implement LCSS feature - Jan Jaeger
 25 Feb 2006 cckd 0.3.1 - Greg Smith
 24 Feb 2006 Skeletal last floating point instructions - Bernard van der Helm

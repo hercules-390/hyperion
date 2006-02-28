@@ -50,14 +50,14 @@ typedef struct _HDLSHD {
 HDL_DLL_IMPORT void    hdl_adsc(char*, void *, void *);/* Add shutdown routine      */
 HDL_DLL_IMPORT int     hdl_rmsc(void *, void *);       /* Remove shutdown routine   */
 HDL_DLL_IMPORT void    hdl_shut(void);                 /* Call all shutdown routines*/
-DLL_EXPORT DEVHND *hdl_ghnd(char *devname);        /* Get device handler        */
+DLL_EXPORT DEVHND *hdl_ghnd(const char *devname);        /* Get device handler        */
 
 /*********************************************************************/
 
 #if !defined(OPTION_DYNAMIC_LOAD)
 
 #define HDL_DEVICE_SECTION                              \
-DLL_EXPORT DEVHND *hdl_ghnd(char *devtype)                         \
+DLL_EXPORT DEVHND *hdl_ghnd(const char *devtype)                         \
 {
 
 #define HDL_DEVICE( _devname, _devhnd )                 \

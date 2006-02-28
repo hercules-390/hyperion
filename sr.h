@@ -174,6 +174,13 @@
 #define SR_SYS_VMACTIVE         0xace10042
 #define SR_SYS_MSCHDELAY        0xace10043
 #define SR_SYS_LOADPARM         0xace10044
+ /*
+  * Following 3 tags added for Multiple 
+  * Logical Channel Subsystem support
+  */
+#define SR_SYS_IOPENDING_LCSS   0xace10045
+#define SR_SYS_PCIPENDING_LCSS  0xace10046
+#define SR_SYS_ATTNPENDING_LCSS 0xace10047
 
 #define SR_SYS_SERVC            0xace11000
 
@@ -364,6 +371,11 @@
 #define SR_DEV_ARGC             0xace30002
 #define SR_DEV_ARGV             0xace30003
 #define SR_DEV_TYPNAME          0xace30004
+ /*
+  * Following tag added for multiple Logical
+  * Channel subsystem support
+  */
+#define SR_DEV_LCSS             0xace30005
 #define SR_DEV_ORB              0xace30010
 #define SR_DEV_PMCW             0xace30011
 #define SR_DEV_SCSW             0xace30012

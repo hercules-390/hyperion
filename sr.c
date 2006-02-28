@@ -142,11 +142,20 @@ BYTE     psw[16];
 
     for (ioq = sysblk.iointq; ioq; ioq = ioq->next)
         if (ioq->pcipending)
+        {
+            SR_WRITE_VALUE(file,SR_SYS_PCIPENDING_LCSS, SSID_TO_LCSS(ioq->dev->ssid),sizeof(U16));
             SR_WRITE_VALUE(file,SR_SYS_PCIPENDING, ioq->dev->devnum,sizeof(ioq->dev->devnum));
+        }
         else if (ioq->attnpending)
+        {
+            SR_WRITE_VALUE(file,SR_SYS_ATTNPENDING_LCSS, SSID_TO_LCSS(ioq->dev->ssid),sizeof(U16));
             SR_WRITE_VALUE(file,SR_SYS_ATTNPENDING, ioq->dev->devnum,sizeof(ioq->dev->devnum));
+        }
         else
+        {
+            SR_WRITE_VALUE(file,SR_SYS_IOPENDING_LCSS, SSID_TO_LCSS(ioq->dev->ssid),sizeof(U16));
             SR_WRITE_VALUE(file,SR_SYS_IOPENDING, ioq->dev->devnum,sizeof(ioq->dev->devnum));
+        }
 
     for (i = 0; i < 8; i++)
         SR_WRITE_VALUE(file,SR_SYS_CHP_RESET+i,sysblk.chp_reset[i],sizeof(sysblk.chp_reset[0]));
@@ -220,6 +229,7 @@ BYTE     psw[16];
 
         /* These fields must come first so the device could be attached */
         SR_WRITE_VALUE(file, SR_DEV, dev->devnum, sizeof(dev->devnum));
+        SR_WRITE_VALUE(file, SR_DEV_LCSS, SSID_TO_LCSS(dev->ssid), sizeof(U16));
         SR_WRITE_VALUE(file, SR_DEV_ARGC, dev->argc, sizeof(dev->argc));
         for (i = 0; i < dev->argc; i++)
             if (dev->argv[i])
@@ -302,6 +312,7 @@ U32      started_mask = 0;
 int      i, rc;
 REGS    *regs = NULL;
 U16      devnum=0;
+U16      lcss=0;
 U16      hw;
 int      devargc;
 char    *devargv[16];
@@ -509,9 +520,13 @@ S64      dreg;
             SR_READ_VALUE(file, len, &sysblk.mbd, sizeof(sysblk.mbd));
             break;
 
+        case SR_SYS_IOPENDING_LCSS:
+            SR_READ_VALUE(file,len,&lcss,sizeof(lcss));
+            break;
+
         case SR_SYS_IOPENDING:
             SR_READ_VALUE(file, len, &hw, sizeof(hw));
-            dev = find_device_by_devnum(hw);
+            dev = find_device_by_devnum(lcss,hw);
             if (dev == NULL) break;
             if (ioq == NULL)
                 sysblk.iointq = &dev->ioint;
@@ -519,11 +534,16 @@ S64      dreg;
                 ioq->next = &dev->ioint;
             ioq = &dev->ioint;
             dev = NULL;
+            lcss = 0;
+            break;
+
+        case SR_SYS_PCIPENDING_LCSS:
+            SR_READ_VALUE(file,len,&lcss,sizeof(lcss));
             break;
 
         case SR_SYS_PCIPENDING:
             SR_READ_VALUE(file, len, &hw, sizeof(hw));
-            dev = find_device_by_devnum(hw);
+            dev = find_device_by_devnum(lcss,hw);
             if (dev == NULL) break;
             if (ioq == NULL)
                 sysblk.iointq = &dev->pciioint;
@@ -531,11 +551,16 @@ S64      dreg;
                 ioq->next = &dev->pciioint;
             ioq = &dev->pciioint;
             dev = NULL;
+            lcss = 0;
+            break;
+
+        case SR_SYS_ATTNPENDING_LCSS:
+            SR_READ_VALUE(file,len,&lcss,sizeof(lcss));
             break;
 
         case SR_SYS_ATTNPENDING:
             SR_READ_VALUE(file, len, &hw, sizeof(hw));
-            dev = find_device_by_devnum(hw);
+            dev = find_device_by_devnum(lcss,hw);
             if (dev == NULL) break;
             if (ioq == NULL)
                 sysblk.iointq = &dev->attnioint;
@@ -543,6 +568,7 @@ S64      dreg;
                 ioq->next = &dev->attnioint;
             ioq = &dev->attnioint;
             dev = NULL;
+            lcss = 0;
             break;
 
         case SR_SYS_CHP_RESET_0:
@@ -941,6 +967,11 @@ S64      dreg;
 
         case SR_DEV:
             SR_READ_VALUE(file, len, &devnum, sizeof(devnum));
+            lcss=0;
+            break;
+
+        case SR_DEV_LCSS:
+            SR_READ_VALUE(file, len, &lcss, sizeof(U16));
             break;
 
         case SR_DEV_ARGC:
@@ -957,10 +988,10 @@ S64      dreg;
 
         case SR_DEV_TYPNAME:
             SR_READ_STRING(file, buf, len);
-            dev = find_device_by_devnum(devnum);
+            dev = find_device_by_devnum(lcss,devnum);
             if (dev == NULL)
             {
-                if (attach_device (0, devnum, buf, devargc, devargv))
+                if (attach_device (lcss, devnum, buf, devargc, devargv))
                 {
                     logmsg( _("HHCSR118W Device %4.4X initialization failed\n"),
                             devnum);

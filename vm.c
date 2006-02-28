@@ -111,7 +111,7 @@ U16             devnum;                 /* Device number             */
     devnum = regs->GR_L(r1);
 
     /* Locate the device block */
-    dev = find_device_by_devnum (devnum);
+    dev = find_device_by_devnum (0,devnum);
 
     /* Return condition code 3 if device does not exist */
     if (dev == NULL) return 3;
@@ -219,7 +219,7 @@ BYTE            skey1, skey2;           /* Storage keys of first and
                 | ioparm.sbicount[3];
 
     /* Locate the device block */
-    dev = find_device_by_devnum (devnum);
+    dev = find_device_by_devnum (0,devnum);
 
     /* Set return code 2 and cond code 1 if device does not exist
        or does not support the synchronous I/O call */
@@ -469,7 +469,7 @@ BYTE            chanstat = 0;           /* Subchannel status         */
                 | ioparm.ccwaddr[3];
 
     /* Locate the device block */
-    dev = find_device_by_devnum (devnum);
+    dev = find_device_by_devnum (0,devnum);
 
     /* Set return code 1 and cond code 1 if device does not exist */
     if (dev == NULL)

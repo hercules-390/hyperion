@@ -1071,6 +1071,8 @@ static int VMNET_Init(DEVBLK *dev, int argc, char *argv[])
 U16             xdevnum;                /* Pair device devnum        */
 BYTE            c;                      /* tmp for scanf             */
 DEVBLK          *xdev;                  /* Pair device               */
+int rc;
+U16 lcss;
 
     dev->devtype = 0x3088;
 
@@ -1086,13 +1088,14 @@ DEVBLK          *xdev;                  /* Pair device               */
         logmsg(_("HHCCT027E %4.4X: Not enough parameters\n"), dev->devnum);
         return -1;
     }
-    if (strlen(argv[0]) > 4
-        || sscanf(argv[0], "%hx%c", &xdevnum, &c) != 1) {
-        logmsg(_("HHCCT028E %4.4X: Bad device number '%s'\n"),
-                  dev->devnum, argv[0]);
+    rc=parse_single_devnum(argv[0],&lcss,&xdevnum);
+    if (rc<0)
+    {
+        logmsg(_("HHCCT028E %d:%4.4X: Bad device number '%s'\n"),
+                  SSID_TO_LCSS(dev->ssid), dev->devnum, argv[0]);
         return -1;
     }
-    xdev = find_device_by_devnum(xdevnum);
+    xdev = find_device_by_devnum(lcss,xdevnum);
     if (xdev != NULL) {
         if (start_vmnet(dev, xdev, argc - 1, &argv[1]))
             return -1;

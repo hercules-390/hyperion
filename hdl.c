@@ -49,7 +49,7 @@ static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
 
 /* Global hdl_device_type_equates */
 
-DLL_EXPORT char *(*hdl_device_type_equates)(char *);
+DLL_EXPORT char *(*hdl_device_type_equates)(const char *);
 
 /* hdl_adsc - add shutdown call
  */
@@ -228,7 +228,7 @@ HDLDEV *newhnd;
 
 /* hdl_fhnd - find registered device handler
  */
-static DEVHND * hdl_fhnd (char *devname)
+static DEVHND * hdl_fhnd (const char *devname)
 {
 DLLENT *dllent;
 HDLDEV *hndent;
@@ -250,7 +250,7 @@ HDLDEV *hndent;
 
 /* hdl_bdnm - build device module name
  */
-static char * hdl_bdnm (char *ltype)
+static char * hdl_bdnm (const char *ltype)
 {
 char *dtname;
 unsigned int n;
@@ -269,7 +269,7 @@ unsigned int n;
 
 /* hdl_ghnd - obtain device handler
  */
-DLL_EXPORT DEVHND * hdl_ghnd (char *devtype)
+DLL_EXPORT DEVHND * hdl_ghnd (const char *devtype)
 {
 DEVHND *hnd;
 char *hdtname;

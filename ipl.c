@@ -177,7 +177,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     regs = sysblk.regs[cpu];    /* Point to IPL CPU's registers */
 
     /* Point to the device block for the IPL device */
-    dev = find_device_by_devnum (devnum);
+    dev = find_device_by_devnum (0,devnum);
     if (dev == NULL)
     {
         logmsg (_("HHCCP027E Device %4.4X not in configuration\n"),

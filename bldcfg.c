@@ -57,12 +57,17 @@
  #undef   _GEN_ARCH
 #endif
 
-
 typedef struct _DEVARRAY
 {
     U16 cuu1;
     U16 cuu2;
 } DEVARRAY;
+
+typedef struct _DEVNUMSDESC
+{
+    BYTE lcss;
+    DEVARRAY *da;
+} DEVNUMSDESC;
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
@@ -350,163 +355,6 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 
     return 0;
 } /* end function read_config */
-/*-------------------------------------------------------------------*/
-/* Function to Parse compound device numbers                         */
-/* Syntax : CCUU[-CUU][,CUU..][.nn][...]                             */
-/* Examples : 200-23F                                                */
-/*            200,201                                                */
-/*            200.16                                                 */
-/*            200-23F,280.8                                          */
-/*            etc...                                                 */
-/* - is the range specification (from CUU to CUU)                    */
-/* , is the separator                                                */
-/* . is the count indicator (nn is decimal)                          */
-/* 1st parm is the specification string as specified above           */
-/* 2nd parm is the address of an array of DEVARRAY                   */
-/* Return value : 0 - Parsing error, etc..                           */
-/*                >0 - Size of da                                    */
-/*                                                                   */
-/* NOTE : A basic validity check is made for the following :         */
-/*        All CUUs must belong on the same channel                   */
-/*        (this check is to eventually pave the way to a formal      */
-/*         channel/cu/device architecture)                           */
-/*        no 2 identical CCUUs                                       */
-/*   ex : 200,300 : WRONG                                            */
-/*        200.12,200.32 : WRONG                                      */
-/*        2FF.2 : WRONG                                              */
-/* NOTE : caller should free the array returned in da if the return  */
-/*        value is not 0                                             */
-/*-------------------------------------------------------------------*/
-static size_t parse_devnums(const char *spec,DEVARRAY **da)
-{
-    size_t gcount;      /* Group count                     */
-    size_t i;           /* Index runner                    */
-    char *grps;         /* Pointer to current devnum group */
-    char *sc;           /* Specification string copy       */
-    DEVARRAY *dgrs;     /* Device groups                   */
-    U16  cuu1,cuu2;     /* CUUs                            */
-    char *strptr;       /* strtoul ptr-ptr                 */
-// FIXME: gcc 2.96 for BYTE causes invalid HHCCF057E ... WTF ??
-//  BYTE basechan=0;    /* Channel for all CUUs            */
-    int  basechan=0;    /* Channel for all CUUs            */
-    int  duplicate;     /* duplicated CUU indicator        */
-    int badcuu;         /* offending CUU                   */
-
-    sc=malloc(strlen(spec)+1);
-    strcpy(sc,spec);
-
-    /* Split by ',' groups */
-    gcount=0;
-    grps=strtok(sc,",");
-    dgrs=NULL;
-    while(grps!=NULL)
-    {
-        if(dgrs==NULL)
-        {
-            dgrs=malloc(sizeof(DEVARRAY));
-        }
-        else
-        {
-            dgrs=realloc(dgrs,(sizeof(DEVARRAY))*(gcount+1));
-        }
-        cuu1=strtoul(grps,&strptr,16);
-        switch(*strptr)
-        {
-        case 0:     /* Single CUU */
-            cuu2=cuu1;
-            break;
-        case '-':   /* CUU Range */
-            cuu2=strtoul(&strptr[1],&strptr,16);
-            if(*strptr!=0)
-            {
-                fprintf(stderr,_("HHCCF053E Incorrect second device number in device range near character %c\n"),*strptr);
-                free(dgrs);
-                return(0);
-            }
-            break;
-        case '.':   /* CUU Count */
-            cuu2=cuu1+strtoul(&strptr[1],&strptr,10);
-            cuu2--;
-            if(*strptr!=0)
-            {
-                fprintf(stderr,_("HHCCF054E Incorrect Device count near character %c\n"),*strptr);
-                free(dgrs);
-                return(0);
-            }
-            break;
-        default:
-            fprintf(stderr,_("HHCCF055E Incorrect device address specification near character %c\n"),*strptr);
-            free(dgrs);
-            return(0);
-        }
-        /* Check cuu1 <= cuu2 */
-        if(cuu1>cuu2)
-        {
-            fprintf(stderr,_("HHCCF056E Incorrect device address range. %4.4X < %4.4X\n"),cuu2,cuu1);
-            free(dgrs);
-            return(0);
-        }
-        if(gcount==0)
-        {
-            basechan=(cuu1 >> 8) & 0xff;
-        }
-        badcuu=-1;
-        if(((cuu1 >> 8) & 0xff) != basechan)
-        {
-            badcuu=cuu1;
-        }
-        else
-        {
-            if(((cuu2 >> 8) & 0xff) != basechan)
-            {
-                badcuu=cuu2;
-            }
-        }
-        if(badcuu>=0)
-        {
-            fprintf(stderr,_("HHCCF057E %4.4X is on wrong channel (1st device defined on channel %2.2X)\n"),badcuu,basechan);
-            free(dgrs);
-            return(0);
-        }
-        /* Check for duplicates */
-        duplicate=0;
-        for(i=0;i<gcount;i++)
-        {
-            /* check 1st cuu not within existing range */
-            if(cuu1>=dgrs[i].cuu1 && cuu1<=dgrs[i].cuu2)
-            {
-                duplicate=1;
-                break;
-            }
-            /* check 2nd cuu not within existing range */
-            if(cuu2>=dgrs[i].cuu1 && cuu1<=dgrs[i].cuu2)
-            {
-                duplicate=1;
-                break;
-            }
-            /* check current range doesn't completelly overlap existing range */
-            if(cuu1<dgrs[i].cuu1 && cuu2>dgrs[i].cuu2)
-            {
-                duplicate=1;
-                break;
-            }
-        }
-        if(duplicate)
-        {
-            fprintf(stderr,_("HHCCF058E Some or all devices in %4.4X-%4.4X duplicate devices already defined\n"),cuu1,cuu2);
-            free(dgrs);
-            return(0);
-        }
-        dgrs[gcount].cuu1=cuu1;
-        dgrs[gcount].cuu2=cuu2;
-        gcount++;
-        grps=strtok(NULL,",");
-    }
-    free(sc);
-    *da=dgrs;
-    return(gcount);
-}
-
 
 static inline S64 lyear_adjust(int epoch)
 {
@@ -539,7 +387,7 @@ DLL_EXPORT char *config_cnslport = "3270";
 void build_config (char *fname)
 {
 int     rc;                             /* Return code               */
-int     i,j;                            /* Array subscript           */
+int     i;                              /* Array subscript           */
 int     scount;                         /* Statement counter         */
 /* int     cpu; */                      /* CPU number                */
 FILE   *fp;                             /* Configuration file pointer*/
@@ -623,10 +471,6 @@ BYTE    pgmprdos;                       /* Program product OS OK     */
 DEVBLK *dev;                            /* -> Device Block           */
 char   *sdevnum;                        /* -> Device number string   */
 char   *sdevtype;                       /* -> Device type string     */
-U16     devnum;                         /* Device number             */
-DEVARRAY *devnarray=NULL;               /* Compound device numbers   */
-size_t  devncount;                      /* size of comp devnum array */
-int     baddev;                         /* devblk attach failed ind  */
 int     devtmax;                        /* Max number device threads */
 #if defined(_FEATURE_ECPSVM)
 int     ecpsvmavail;                    /* ECPS:VM Available flag    */
@@ -650,10 +494,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            pipe is opened... prevents
                                            cygwin from thrashing in
                                            select(). sigh            */
-#endif
-#if defined(OPTION_CONFIG_SYMBOLS)
-char **newargv;
-char **orig_newargv;
 #endif
 char    pathname[MAX_PATH];             /* file path in host format  */
 
@@ -1983,79 +1823,16 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             delayed_exit(1);
         }
         /* Parse devnum */
-        devncount=parse_devnums(sdevnum,&devnarray);
+        rc=parse_and_attach_devices(sdevnum,sdevtype,addargc,addargv);
 
-        if(devncount==0)
+        if(rc==-2)
         {
             fprintf(stderr, _("HHCCF036S Error in %s line %d: "
                     "%s is not a valid device number(s) specification\n"),
                     fname, stmt, sdevnum);
             delayed_exit(1);
         }
-#if defined(OPTION_CONFIG_SYMBOLS)
-        newargv=malloc(MAX_ARGS*sizeof(char *));
-        orig_newargv=malloc(MAX_ARGS*sizeof(char *));
-#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
-        for(baddev=0,i=0;i<(int)devncount;i++)
-        {
-            for(devnum=devnarray[i].cuu1;devnum<=devnarray[i].cuu2;devnum++)
-            {
-#if defined(OPTION_CONFIG_SYMBOLS)
-               char wrkbfr[16];
-               snprintf(wrkbfr,sizeof(wrkbfr),"%3.3x",devnum);
-               set_symbol("cuu",wrkbfr);
-               snprintf(wrkbfr,sizeof(wrkbfr),"%4.4x",devnum);
-               set_symbol("ccuu",wrkbfr);
-               snprintf(wrkbfr,sizeof(wrkbfr),"%3.3X",devnum);
-               set_symbol("CUU",wrkbfr);
-               snprintf(wrkbfr,sizeof(wrkbfr),"%4.4X",devnum);
-               set_symbol("CCUU",wrkbfr);
-               for(j=0;j<addargc;j++)
-               {
-                   orig_newargv[j]=newargv[j]=resolve_symbol_string(addargv[j]);
-               }
-                /* Build the device configuration block */
-               rc=attach_device(0, devnum, sdevtype, addargc, newargv);
-               for(j=0;j<addargc;j++)
-               {
-                   free(orig_newargv[j]);
-               }
-#else /* #if defined(OPTION_CONFIG_SYMBOLS) */
-                /* Build the device configuration block (no syms) */
-               rc=attach_device(0, devnum, sdevtype, addargc, addargv);
-#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
-               if(rc!=0)
-               {
-                   baddev=1;
-                   break;
-               }
-            }
-            if(baddev)
-            {
-                break;
-            }
-        }
-#if defined(OPTION_CONFIG_SYMBOLS)
-        free(newargv);
-        free(orig_newargv);
-#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
-        free(devnarray);
 
-        // Programming Note (mostly for myself!): while it is proper to
-        // abort Hercules startup for control file statement errors, it
-        // is NOT proper to do so for any device statement errors. If a
-        // device fails to initialize (due to statement (syntax) error,
-        // file not found, etc), the error is simply logged to the Herc
-        // log file but Hercules startup is NOT to be aborted. This was
-        // supposedly decided/determined back in 2003/03/20 by a change
-        // that Jan made but which I was unaware of. Sorry!  --  Fish
-        /*
-        if (baddev)
-        {
-            // (error message already issued)
-            delayed_exit(1); // (abort startup)
-        }
-        */
 
         /* Read next device record from the configuration file */
         if (read_config (fname, fp))
