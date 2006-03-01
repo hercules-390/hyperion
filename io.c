@@ -1065,8 +1065,8 @@ int     i;
 
     effective_addr2 &= 0xFFFF;
 
-    /* Hercules has as many channelsets as CPU's */
-    if(effective_addr2 >= MAX_CPU)
+    /* Hercules has as many channelsets as CSS's */
+    if(effective_addr2 >= FEATURE_LCSS_MAX)
     {
         regs->psw.cc = 3;
         return;
@@ -1126,8 +1126,8 @@ int     i;
 
     SIE_INTERCEPT(regs);
 
-    /* Hercules has as many channelsets as CPU's */
-    if(effective_addr2 >= MAX_CPU)
+    /* Hercules has as many channelsets as CSS's */
+    if(effective_addr2 >= FEATURE_LCSS_MAX)
     {
         regs->psw.cc = 3;
         return;
