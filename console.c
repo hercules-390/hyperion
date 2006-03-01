@@ -1207,6 +1207,7 @@ BYTE    c;                              /* Character work area       */
 
 #define SF_ATTR_MDT         0x01
 
+/*
 static char *herclogo[]={
     " HHH          HHH   The S/370, ESA/390 and z/Architecture",
     " HHH          HHH                 Emulator",
@@ -1221,62 +1222,323 @@ static char *herclogo[]={
     " HHH          HHH     My PC thinks it's a MAINFRAME",
     "",
     " Copyright (c) 1999-2006 Roger Bowler, Jan Jaeger, and others"};
-static int GENSBA(char *buf,size_t len,int row,int col)
+    */
+
+static char *herclogo[]={
+"@ALIGN NONE",
+"@SBA 0,0",
+"@SF P",
+"Hercules Version  :",
+"@SF HP",
+"$(VERSION)",
+"@NL",
+"@SF P",
+"Host name         :",
+"@SF HP",
+"$(HOSTNAME)",
+"@NL",
+"@SF P",
+"Host OS           :",
+"@SF HP",
+"$(HOSTOS)-$(HOSTOSREL) $(HOSTOSVER)",
+"@NL",
+"@SF P",
+"Host Architecture :",
+"@SF HP",
+"$(HOSTARCH)",
+"@NL",
+"@SF P",
+"Processors        :",
+"@SF HP",
+"$(HOSTNUMCPUS)",
+"@NL",
+"@SF P",
+"Chanl Subsys      :",
+"@SF HP",
+"$(CSS)",
+"@NL",
+"@SF P",
+"Device number     :",
+"@SF HP",
+"$(CCUU)",
+"@NL",
+"@SF P",
+"Subchannel        :",
+"@SF HP",
+"$(SUBCHAN)",
+"@SF P",
+"@ALIGN LEFT",
+"",
+"",
+"           HHH          HHH   The S/370, ESA/390 and z/Architecture",
+"           HHH          HHH                 Emulator",
+"           HHH          HHH",
+"           HHH          HHH  EEEE RRR   CCC U  U L    EEEE  SSS",
+"           HHHHHHHHHHHHHHHH  E    R  R C    U  U L    E    S",
+"           HHHHHHHHHHHHHHHH  EEE  RRR  C    U  U L    EEE   SS",
+"           HHHHHHHHHHHHHHHH  E    R R  C    U  U L    E       S",
+"           HHH          HHH  EEEE R  R  CCC  UU  LLLL EEEE SSS",
+"           HHH          HHH",
+"           HHH          HHH",
+"           HHH          HHH     My PC thinks it's a MAINFRAME",
+"",
+"           Copyright (c) 1999-2006 Roger Bowler, Jan Jaeger, and others"};
+
+#define LOGO_BUFFERSIZE 256;
+
+static char *buffer_addchar(char *b,size_t *l,size_t *al,char c)
+{
+    size_t len;
+    size_t alen;
+    len=*l;
+    alen=*al;
+    if(len>=alen)
+    {
+        if(!alen)
+        {
+            alen=LOGO_BUFFERSIZE;
+            b=malloc(alen);
+            if(!b)
+            {
+                return NULL;
+            }
+        }
+        else
+        {
+            alen+=LOGO_BUFFERSIZE;
+            b=realloc(b,alen);
+            if(!b)
+            {
+                return NULL;
+            }
+        }
+    }
+    b[len++]=c;
+    *al=alen;
+    *l=len;
+    return b;
+}
+
+static char *buffer_addstring(char *b,size_t *l,size_t *al,char *s)
+{
+    size_t i;
+    for(i=0;s[i]!=0;i++)
+    {
+        b=buffer_addchar(b,l,al,s[i]);
+        if(!b)
+        {
+            return NULL;
+        }
+    }
+    return b;
+}
+
+static char *buffer_addsba(char *b,size_t *l,size_t *al,int x, int y)
 {
     int pos;
-    pos=row*80+col;
-    if(len<4)
-    {
-        return(0);
-    }
-    buf[0]=0x11;
-    buf[1]=sba_code[pos >> 6];
-    buf[2]=sba_code[pos & 0x3f];
-    buf[3]=0;
-    return 3;
+    logmsg("Going to %d,%d\n",x,y);
+    pos=x*80+y;
+    b=buffer_addchar(b,l,al,0x11);
+    if(!b) return NULL;
+    b=buffer_addchar(b,l,al,sba_code[pos>>6]);
+    if(!b) return NULL;
+    b=buffer_addchar(b,l,al,sba_code[pos & 0x3f]);
+    return b;
+}
+static char *buffer_addsf(char *b,size_t *l,size_t *al,int a)
+{
+    b=buffer_addchar(b,l,al,0x1d);
+    if(!b) return NULL;
+    b=buffer_addchar(b,l,al,sba_code[a & 0x3f]);
+    return b;
 }
 
-
-static int GENSF(char *buf,size_t len,int attr)
+#define ALIGN_NONE 0
+#define ALIGN_CENTER 1
+#define ALIGN_LEFT 2
+#define ALIGN_RIGHT 3
+static char *build_logo(char **logodata,size_t logosize,size_t *blen)
 {
-    if(len<3)
-    {
-        return(0);
-    }
-    buf[0]=0x1D;
-    buf[1]=sba_code[attr & 0x3f];
-    buf[2]=0;
-    return 2;
-}
+    size_t  len;
+    size_t  alen;
+    char *bfr;
+    char    *cline;
+    size_t i,j;
+    char    *verb;
+    char    *rest;
+    int     xpos,ypos;
+    int     attr;
+    int     align;
+#if defined(OPTION_CONFIG_SYMBOLS)
+    char    *wrk;
+#endif
 
-static int WRITEAT(char *buf,size_t len,int row,int col,int attr,const char *msg)
-{
-    int rc;
-    int ix;
-    ix=0;
-    rc=GENSBA(buf,len,row,col);
-    if(!rc)
+    bfr=NULL;
+    len=0;
+    alen=0;
+    bfr=buffer_addchar(bfr,&len,&alen,0xf5);
+    bfr=buffer_addchar(bfr,&len,&alen,0x40);
+    if(bfr==NULL)
     {
-        return 0;
+        return NULL;
     }
-    len-=rc;
-    ix+=rc;
-    rc=GENSF(&buf[ix],len,attr);
-    if(!rc)
+    align=ALIGN_NONE;
+    xpos=0;
+    ypos=0;
+    attr=SF_ATTR_PROTECTED;
+    for(i=0;i<logosize;i++)
     {
-        return 0;
+        cline=malloc(strlen(logodata[i]));
+        strcpy(cline,logodata[i]);
+        while(1)
+        {
+            if(cline[0]!='@')
+            {
+#if defined(OPTION_CONFIG_SYMBOLS)
+                wrk=resolve_symbol_string(cline);
+                free(cline);
+                cline=wrk;
+#endif
+                switch(align)
+                {
+                    case ALIGN_RIGHT:
+                        ypos=strlen(cline);
+                        if(ypos<80)
+                        {
+                            ypos=80-ypos;
+                        }
+                        else
+                        {
+                            ypos=0;
+                        }
+                        break;
+                    case ALIGN_CENTER:
+                        ypos=strlen(cline);
+                        if(ypos<80)
+                        {
+                            ypos=(80-ypos)/2;
+                        }
+                        break;
+                    case ALIGN_LEFT:
+                        ypos=0;
+                        break;
+                    default:
+                        break;
+                }
+                bfr=buffer_addsba(bfr,&len,&alen,xpos,ypos);
+                bfr=buffer_addsf(bfr,&len,&alen,attr);
+                if(align==ALIGN_NONE)
+                {
+                    ypos+=strlen(cline);
+                    ypos++;
+                }
+                else
+                {
+                    xpos++;
+                    ypos=0;
+                }
+                bfr=buffer_addstring(bfr,&len,&alen,(char *)translate_to_ebcdic(cline));
+                break;
+            }
+            verb=strtok(cline," \t");
+            if(verb!=NULL)
+            {
+                rest=strtok(NULL," \t");
+            }
+            else
+            {
+                break;
+            }
+            if(strcasecmp(verb,"@sba")==0)
+            {
+                if(rest==NULL)
+                {
+                    break;
+                }
+                wrk=strtok(rest,",");
+                if(wrk!=NULL)
+                {
+                    xpos=atoi(wrk);
+                }
+                wrk=strtok(NULL,",");
+                if(wrk!=NULL)
+                {
+                    ypos=atoi(wrk);
+                }
+                break;
+            }
+            if(strcasecmp(verb,"@sf")==0)
+            {
+                attr=SF_ATTR_PROTECTED;
+                if(rest==NULL)
+                {
+                    break;
+                }
+                for(j=0;rest[j]!=0;j++)
+                {
+                    switch(rest[j])
+                    {
+                        case 'h':
+                        case 'H':
+                            attr|=SF_ATTR_HIGHLIGHT;
+                            break;
+                        case 'i':
+                        case 'I':
+                            attr&=~SF_ATTR_PROTECTED;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                break;
+            }
+            if(strcasecmp(verb,"@nl")==0)
+            {
+                xpos++;
+                ypos=0;
+                break;
+            }
+            if(strcasecmp(verb,"@align")==0)
+            {
+                align=ALIGN_NONE;
+                if(rest==NULL)
+                {
+                    break;
+                }
+                while(1)
+                {
+                    if(strcasecmp(rest,"center")==0)
+                    {
+                        align=ALIGN_CENTER;
+                        break;
+                    }
+                    if(strcasecmp(rest,"right")==0)
+                    {
+                        align=ALIGN_RIGHT;
+                        break;
+                    }
+                    if(strcasecmp(rest,"none")==0)
+                    {
+                        align=ALIGN_NONE;
+                        break;
+                    }
+                    if(strcasecmp(rest,"left")==0)
+                    {
+                        align=ALIGN_LEFT;
+                        break;
+                    }
+                    break;
+                }
+                break;
+            }
+            break;
+        }
+        free(cline);
     }
-    len-=rc;
-    ix+=rc;
-    rc=strlen(msg);
-    if(rc>(int)len)
-    {
-        return 0;
-    }
-    strcpy(&buf[ix],msg);
-    translate_to_ebcdic(&buf[ix]);
-    ix+=rc;
-    return ix;
+    bfr=buffer_addchar(bfr,&len,&alen,IAC);
+    bfr=buffer_addchar(bfr,&len,&alen,EOR_MARK);
+    *blen=len;
+    return bfr;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1303,9 +1565,8 @@ char                    hostmsg[256];   /* Host ID message           */
 char                    num_procs[16];  /* #of processors string     */
 char                    rejmsg[256];    /* Rejection message         */
 char                    group[16];      /* Console group             */
-size_t                  i;
 size_t                  logoheight;
-size_t                  currow;
+char                    *logobfr;
 
     /* Load the socket address from the thread parameter */
     csock = *csockp;
@@ -1540,151 +1801,47 @@ size_t                  currow;
     /* Send connection message to client */
     if (class != 'K')
     {
-            int ix=0;
-            buf[ix++]=0xf5;
-            buf[ix++]=0x40;
-            len=sizeof(buf)-2;
-            currow=0;
-
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Hercules version  :");
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            snprintf(conmsg,sizeof(conmsg),"%s",VERSION);
-            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            currow++;
-
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Build date        :");
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            snprintf(conmsg,sizeof(conmsg),"%s %s",__DATE__,__TIME__);
-            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            currow++;
-
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host system name  :");
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            snprintf(conmsg,sizeof(conmsg),"%s",cons_hostinfo.nodename);
-            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            currow++;
-
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host OS version   :");
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            snprintf(conmsg,sizeof(conmsg),"%s-%s %s"
-                            ,cons_hostinfo.sysname
-                            ,cons_hostinfo.release
-                            ,cons_hostinfo.version);
-            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            currow++;
-
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Host architecture :");
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            snprintf(conmsg,sizeof(conmsg),"%s",cons_hostinfo.machine);
-            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-
-            rc=WRITEAT(&buf[ix],len,currow,40,SF_ATTR_PROTECTED,"Host CPUs         :");
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            snprintf(conmsg,sizeof(conmsg),"%s"
-                            ,num_procs);
-            rc=WRITEAT(&buf[ix],len,currow,60,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            currow++;
-
-            rc=WRITEAT(&buf[ix],len,currow,00,SF_ATTR_PROTECTED,"Dev chanl subsys  :");
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            snprintf(conmsg,sizeof(conmsg),"%d"
-                            ,SSID_TO_LCSS(dev->ssid));
-            rc=WRITEAT(&buf[ix],len,currow,20,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            rc=WRITEAT(&buf[ix],len,currow,40,SF_ATTR_PROTECTED,"Device number     :");
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            snprintf(conmsg,sizeof(conmsg),"%4.4X"
-                            ,dev->devnum);
-            rc=WRITEAT(&buf[ix],len,currow,60,SF_ATTR_PROTECTED|SF_ATTR_HIGHLIGHT,conmsg);
-            ASSERT(rc!=0);
-            ix+=rc;
-            len-=rc;
-            currow++;
-
+        set_symbol("VERSION",VERSION);
+        set_symbol("BDATE",__DATE__);
+        set_symbol("BTIME",__TIME__);
+        set_symbol("HOSTNAME",cons_hostinfo.nodename);
+        set_symbol("HOSTOS",cons_hostinfo.sysname);
+        set_symbol("HOSTOSREL",cons_hostinfo.release);
+        set_symbol("HOSTOSVER",cons_hostinfo.version);
+        set_symbol("HOSTARCH",cons_hostinfo.machine);
+        set_symbol("HOSTNUMCPUS",num_procs);
+        snprintf(conmsg,sizeof(conmsg),"%3.3X",dev->devnum);
+        set_symbol("CUU",conmsg);
+        snprintf(conmsg,sizeof(conmsg),"%3.3x",dev->devnum);
+        set_symbol("cuu",conmsg);
+        snprintf(conmsg,sizeof(conmsg),"%4.4X",dev->devnum);
+        set_symbol("CCUU",conmsg);
+        snprintf(conmsg,sizeof(conmsg),"%4.4X",dev->devnum);
+        set_symbol("ccuu",conmsg);
+        snprintf(conmsg,sizeof(conmsg),"%d",SSID_TO_LCSS(dev->ssid));
+        set_symbol("CSS",conmsg);
+        snprintf(conmsg,sizeof(conmsg),"%4.4X",dev->subchan);
+        set_symbol("SUBCHAN",conmsg);
+        if(sysblk.herclogo!=NULL)
+        {
+            logobfr=build_logo(sysblk.herclogo,sysblk.logolines,&len);
+        }
+        else
+        {
             logoheight=sizeof(herclogo)/sizeof(char *);
-            for(i=0;i<logoheight;i++)
-            {
-                rc=WRITEAT(&buf[ix],len,i+currow+((24-(logoheight+currow))/2),10,SF_ATTR_PROTECTED,herclogo[i]);
-                ASSERT(rc!=0);
-                ix+=rc;
-                len-=rc;
-            }
-            len=ix;
-
-        /*
-
-        len = snprintf (buf, sizeof(buf),
-                    "\xF5\x40\x11\x40\x40\x1D\x60%s"
-                    "\x11\xC1\x50\x1D\x60%s"
-                    "\x11\xC2\x60\x1D\x60%s",
-                    translate_to_ebcdic(conmsg),
-                    translate_to_ebcdic(hostmsg),
-                    translate_to_ebcdic(devmsg));
-        */
-
-        if (len < sizeof(buf))
-        {
-            buf[len++] = IAC;
-        }
-        else
-        {
-            ASSERT(FALSE);
-        }
-
-        if (len < sizeof(buf))
-        {
-            buf[len++] = EOR_MARK;
-        }
-        else
-        {
-            ASSERT(FALSE);
+            logobfr=build_logo(herclogo,logoheight,&len);
         }
     }
     else
     {
         len = snprintf (buf, sizeof(buf), "%s\r\n%s\r\n%s\r\n",
                         conmsg, hostmsg, devmsg);
+        logobfr=buf;
     }
 
     if (class != 'P')  /* do not write connection resp on 3287 */
     {
-        rc = send_packet (csock, (BYTE *)buf, len, "CONNECTION RESPONSE");
+        rc = send_packet (csock, (BYTE *)logobfr, len, "CONNECTION RESPONSE");
     }
 
     /* Raise attention interrupt for the device,

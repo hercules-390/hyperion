@@ -414,6 +414,7 @@ char   *stodprio;                       /* -> Timer thread priority  */
 char   *scpuprio;                       /* -> CPU thread priority    */
 char   *sdevprio;                       /* -> Device thread priority */
 char   *spgmprdos;                      /* -> Program product OS OK  */
+char   *slogofile;                      /* -> 3270 logo file         */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
 char   *sasnandlxreuse;                 /* -> ASNLXREUSE Optional    */
 #endif
@@ -631,6 +632,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sdevprio = NULL;
         sdevtmax = NULL;
         spgmprdos = NULL;
+        slogofile = NULL;
 #if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
         secpsvmlvl = NULL;
@@ -796,6 +798,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "codepage") == 0)
             {
                 set_codepage(operand);
+            }
+            else if (strcasecmp (keyword, "logofile") == 0)
+            {
+                slogofile=operand;
             }
 #if defined(_FEATURE_ECPSVM)
             /* ECPS:VM support */
@@ -1435,6 +1441,15 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                         fname, stmt, spgmprdos);
                 delayed_exit(1);
             }
+        }
+        if(slogofile != NULL)
+        {
+            sysblk.logofile=slogofile;
+            readlogo(sysblk.logofile);
+        }
+        else
+        {
+            readlogo("herclogo.txt");
         }
 
 #if defined(_FEATURE_ECPSVM)

@@ -489,6 +489,9 @@ struct SYSBLK {
             + sizeof(sysblk.imapxx) )
 #endif
 
+        char    *logofile;              /* Fancy 3270 logo box       */
+        char    **herclogo;             /* 3270 Logo data            */
+        size_t  logolines;              /* Number of lines in logo   */
 #if defined(OPTION_MIPS_COUNTING)
         /* Merged Counters for all CPUs                              */
         U64     instcount;              /* Instruction counter       */

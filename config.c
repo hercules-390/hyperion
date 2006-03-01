@@ -1175,5 +1175,46 @@ parse_and_attach_devices(const char *sdevnum,
         return baddev?0:-1;
 } 
 
+#define MAX_LOGO_LINES 256
+int
+readlogo(char *fn)
+{
+    char    **data;
+    char    bfr[256];
+    char    *rec;
+    size_t i;
+    FILE *lf;
+    if(sysblk.herclogo!=NULL)
+    {
+        for(i=0;i<sysblk.logolines;i++)
+        {
+            free(sysblk.herclogo[i]);
+        }
+        free(sysblk.herclogo);
+        sysblk.herclogo=NULL;
+    }
+    lf=fopen(fn,"r");
+    if(lf==NULL)
+    {
+        return -1;
+    }
+    data=malloc(sizeof(char *)*MAX_LOGO_LINES);
+    sysblk.logolines=0;
+    while((rec=fgets(bfr,sizeof(bfr),lf))!=NULL)
+    {
+        rec[strlen(rec)-1]=0;
+        data[sysblk.logolines]=malloc(strlen(rec)+1);
+        strcpy(data[sysblk.logolines],rec);
+        sysblk.logolines++;
+        if(sysblk.logolines>MAX_LOGO_LINES)
+        {
+            break;
+        }
+    }
+    fclose(lf);
+    sysblk.herclogo=data;
+    return 0;
+}
+
 #endif /*!defined(_GEN_ARCH)*/
 

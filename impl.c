@@ -269,7 +269,7 @@ TID     logcbtid;                       /* RC file thread identifier */
         cfgfile = "hercules.cnf";
 
     /* Process the command line options */
-    while ((c = getopt(argc, argv, "f:p:l:d")) != EOF)
+    while ((c = getopt(argc, argv, "f:p:l:db:")) != EOF)
     {
 
         switch (c) {
@@ -291,6 +291,9 @@ TID     logcbtid;                       /* RC file thread identifier */
             }
             break;
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
+        case 'b':
+            sysblk.logofile=optarg;
+            break;
         case 'd':
             sysblk.daemon_mode = 1;
             break;

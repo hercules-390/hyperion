@@ -1,0 +1,58 @@
+@ALIGN NONE
+@SBA 0,0
+@SF P
+Hercules Version  :
+@SF HP
+$(VERSION)
+@NL
+@SF P
+Host name         :
+@SF HP
+$(HOSTNAME)
+@NL
+@SF P
+Host OS           :
+@SF HP
+$(HOSTOS)-$(HOSTOSREL) $(HOSTOSVER)
+@NL
+@SF P
+Host Architecture :
+@SF HP
+$(HOSTARCH)
+@NL
+@SF P
+Processors        :
+@SF HP
+$(HOSTNUMCPUS)
+@NL
+@SF P
+Chanl Subsys      :
+@SF HP
+$(CSS)
+@NL
+@SF P
+Device number     :
+@SF HP
+$(CCUU)
+@NL
+@SF P
+Subchannel        :
+@SF HP
+$(SUBCHAN)
+@SF P
+@ALIGN LEFT
+
+
+           HHH          HHH   The S/370, ESA/390 and z/Architecture
+           HHH          HHH                 Emulator
+           HHH          HHH
+           HHH          HHH  EEEE RRR   CCC U  U L    EEEE  SSS
+           HHHHHHHHHHHHHHHH  E    R  R C    U  U L    E    S
+           HHHHHHHHHHHHHHHH  EEE  RRR  C    U  U L    EEE   SS
+           HHHHHHHHHHHHHHHH  E    R R  C    U  U L    E       S
+           HHH          HHH  EEEE R  R  CCC  UU  LLLL EEEE SSS
+           HHH          HHH
+           HHH          HHH
+           HHH          HHH     My PC thinks it's a MAINFRAME
+
+           Copyright (c) 1999-2006 Roger Bowler, Jan Jaeger, and others
