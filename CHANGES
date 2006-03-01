@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+01 Mar 2006 Customizable 3270 Logo screen. See README.HERCLOGO - Ivan Warren
 28 Feb 2006 Generalize Multiple CSS device numbering for most statements
             and panel commands. Allow multiple devices on panel attach
             command. Multiple CSS support for suspend/resume - Ivan Warren
