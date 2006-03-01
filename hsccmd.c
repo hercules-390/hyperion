@@ -952,7 +952,6 @@ int tt32stats_cmd(int argc, char *argv[], char *cmdline)
     U16      devnum;
     U16      lcss;
     DEVBLK*  dev;
-    BYTE     c;
 
     UNREFERENCED(cmdline);
 
