@@ -726,7 +726,7 @@ int Chan;
     Chan=(devnum & 0xff00)>>8 | ((lcss & (FEATURE_LCSS_MAX-1))<<8);
     if(sysblk.devnum_fl!=NULL)
     {
-        devtab=sysblk.devnum_fl[(devnum & 0xff00)>>8];
+        devtab=sysblk.devnum_fl[Chan];
         if(devtab!=NULL)
         {
             dev=devtab[devnum & 0xff];
