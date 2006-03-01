@@ -1336,7 +1336,6 @@ static char *buffer_addstring(char *b,size_t *l,size_t *al,char *s)
 static char *buffer_addsba(char *b,size_t *l,size_t *al,int x, int y)
 {
     int pos;
-    logmsg("Going to %d,%d\n",x,y);
     pos=x*80+y;
     b=buffer_addchar(b,l,al,0x11);
     if(!b) return NULL;
