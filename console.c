@@ -1387,7 +1387,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
     attr=SF_ATTR_PROTECTED;
     for(i=0;i<logosize;i++)
     {
-        cline=malloc(strlen(logodata[i]));
+        cline=malloc(strlen(logodata[i])+1);
         strcpy(cline,logodata[i]);
         while(1)
         {
