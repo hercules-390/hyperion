@@ -555,6 +555,7 @@ EXTRA_DIST = autoconf/config.rpath \
              README.NETWORKING     \
              README.OSX            \
              README.TAPE           \
+             README.HERCLOGO       \
              CHANGES               \
              RELEASE.NOTES         \
              README.MSVC           \
@@ -571,6 +572,7 @@ EXTRA_DIST = autoconf/config.rpath \
              conspawn.c            \
              getopt.c              \
              w32stape.c            \
+             herclogo.txt          \
              hercules.ico
 
 
