@@ -80,6 +80,16 @@
 #define CCDU_DLL_IMPORT DLL_EXPORT
 #endif
 
+#ifndef _CONFIG_C_
+#ifndef _HENGINE_DLL_
+#define CONF_DLL_IMPORT DLL_IMPORT
+#else   /* _HDASD_DLL_ */
+#define CONF_DLL_IMPORT extern
+#endif  /* _HDASD_DLL_ */
+#else
+#define CONF_DLL_IMPORT DLL_EXPORT
+#endif
+
 #if defined( _MSC_VER ) && (_MSC_VER >= 1300) && (_MSC_VER < 1400)
 //  '_ftol'   is defined in MSVCRT.DLL
 //  '_ftol2'  we define ourselves in "w32ftol2.c"
@@ -118,7 +128,7 @@ HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
 /* Functions in module config.c */
 void build_config (char *fname);
 void release_config ();
-DLL_EXPORT DEVBLK *find_device_by_devnum (U16 lcss, U16 devnum);
+CONF_DLL_IMPORT DEVBLK *find_device_by_devnum (U16 lcss, U16 devnum);
 DEVBLK *find_device_by_subchan (U32 ioid);
 DEVBLK *get_devblk (U16 lcss, U16 devnum);
 void ret_devblk (DEVBLK *dev);
@@ -133,7 +143,7 @@ int  deconfigure_cpu (int cpu);
 DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 #define MAX_ARGS  12                    /* Max argv[] array size     */
 int parse_and_attach_devices(const char *devnums,const char *devtype,int ac,char **av);
-int parse_single_devnum(const char *spec, U16 *lcss, U16 *devnum);
+CONF_DLL_IMPORT int parse_single_devnum(const char *spec, U16 *lcss, U16 *devnum);
 int parse_single_devnum_silent(const char *spec, U16 *lcss, U16 *devnum);
 int readlogo(char *fn);
 
