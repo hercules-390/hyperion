@@ -1069,7 +1069,6 @@ char *ipaddress;
 static int VMNET_Init(DEVBLK *dev, int argc, char *argv[])
 {
 U16             xdevnum;                /* Pair device devnum        */
-BYTE            c;                      /* tmp for scanf             */
 DEVBLK          *xdev;                  /* Pair device               */
 int rc;
 U16 lcss;
