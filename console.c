@@ -1440,14 +1440,11 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                 break;
             }
             verb=strtok(cline," \t");
-            if(verb!=NULL)
-            {
-                rest=strtok(NULL," \t");
-            }
-            else
+            if(verb==NULL)
             {
                 break;
             }
+            rest=strtok(NULL," \t");
             if(strcasecmp(verb,"@sba")==0)
             {
                 if(rest==NULL)
@@ -1567,6 +1564,7 @@ char                    group[16];      /* Console group             */
 size_t                  logoheight;
 char                    *logobfr;
 
+    logobfr=NULL;
     /* Load the socket address from the thread parameter */
     csock = *csockp;
 
@@ -1841,6 +1839,10 @@ char                    *logobfr;
     if (class != 'P')  /* do not write connection resp on 3287 */
     {
         rc = send_packet (csock, (BYTE *)logobfr, len, "CONNECTION RESPONSE");
+    }
+    if(logobfr)
+    {
+        free(logobfr);
     }
 
     /* Raise attention interrupt for the device,
