@@ -3587,7 +3587,7 @@ BYTE c;                                 /* Character work area       */
     // s+devn and s-devn commands - turn CCW stepping on/off
 
     if ((cmd[0] == 't' || cmd[0] == 's')
-        && parse_single_devnum_silent(cmd+2,&lcss,&devnum))
+        && parse_single_devnum_silent(&cmd[2],&lcss,&devnum)==0 )
     {
         dev = find_device_by_devnum (lcss, devnum);
         if (dev == NULL)
