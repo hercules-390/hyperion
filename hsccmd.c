@@ -62,9 +62,10 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
 }
 
 /* Issue generic Device not found error message */
-static void devnotfound_msg(U16 lcss,U16 devnum)
+static int devnotfound_msg(U16 lcss,U16 devnum)
 {
     logmsg(_("HHCPN181E Device number %d:%4.4X not found\n"),lcss,devnum);
+    return -1;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -2261,146 +2262,115 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
 
 int ShadowFile_cmd(int argc, char *argv[], char *cmdline)
 {
-char   *cmd = cmdline;                  /* Copy of panel command     */
-char   *devascii;                       /* ASCII text device number  */
+char    action;                         /* Action character `+-cd'   */
+char   *devascii;                       /* -> Device name            */
 DEVBLK *dev;                            /* -> Device block           */
 U16     devnum;                         /* Device number             */
-U16     lcss  ;                         /* Logical CSS               */
-int     flag;                           /* Flag for sf-              */
-int rc;
+U16     lcss;                           /* Logical CSS               */
+int     scan = 0;                       /* 1=Device name is `*'      */
+int     n = 0;                          /* Number devices scanned    */
+int     flag = 1;                       /* sf- flag (default merge)  */
 
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
 
-    if (strncasecmp(cmd,"sf",2)==0 && strlen(cmd) > 3)
+    if (strlen(argv[0]) < 3 || strchr ("+-cd", argv[0][2]) == NULL)
     {
-        int  scan = 0, n = 0;
-        BYTE action = cmd[2];
+        logmsg( _("HHCPN091E Command must be 'sf+', 'sf-', "
+                                "'sfc', or 'sfd'\n") );
+        return -1;
+    }
 
-        /* Get device number or "*" */
-        devascii = strtok(cmd+3," \t");
-        if (devascii == NULL || strcmp (devascii, "") == 0)
+    action = argv[0][2];
+    /*
+     * device name either follows the action character or is the
+     * next operand
+     */
+    if (strlen(argv[0]) > 3)
+        devascii = argv[0] + 3;
+    else
+    {
+        argv++; argc--;
+        devascii = argv[0];
+    }
+
+    /* device name can be `*' meaning all cckd devices */
+    if (strcmp (devascii, "*") == 0)
+    {
+        for (dev=sysblk.firstdev; dev && !dev->cckd_ext; dev=dev->nextdev);
+            /* nothing */
+        if (!dev)
         {
-            logmsg( _("HHCPN079E Missing device number\n") );
+            logmsg( _("HHCPN081E No cckd devices found\n") );
             return -1;
         }
-        if (strcmp (devascii, "*") == 0)
+        scan = 1;
+    }
+    else
+    {
+        if (parse_single_devnum(devascii,&lcss,&devnum) < 0)
+            return -1;
+        if ((dev = find_device_by_devnum (lcss,devnum)) == NULL)
+            return devnotfound_msg(lcss,devnum);
+        if (dev->cckd_ext == NULL)
         {
-            if (action == '=')
-            {
-                logmsg( _("HHCPN080E Invalid device number\n") );
-                return -1;
-            }
-            for (dev=sysblk.firstdev; dev && !dev->cckd_ext; dev=dev->nextdev);
-                /* nothing */
-            if (!dev)
-            {
-                logmsg( _("HHCPN081E No cckd devices found\n") );
-                return -1;
-            }
-            scan = 1;
+            logmsg( _("HHCPN084E Device number %d:%4.4X "
+                      "is not a cckd device\n"), lcss, devnum );
+            return -1;
         }
+    }
+
+    /* For `sf-' the operand can be `nomerge', `merge' or `force' */
+    if (action == '-' && argc > 1)
+    {
+        if (strcmp(argv[1], "nomerge") == 0)
+            flag = 0;
+        else if (strcmp(argv[1], "merge") == 0)
+            flag = 1;
+        else if (strcmp(argv[1], "force") == 0)
+            flag = 2;
         else
         {
-            rc=parse_single_devnum(devascii,&lcss,&devnum);
-            if (rc<0)
-            {
-                return -1;
-            }
-            dev = find_device_by_devnum (lcss,devnum);
-            if (dev == NULL)
-            {
-                devnotfound_msg(lcss,devnum);
-                return -1;
-            }
-            if (dev->cckd_ext == NULL)
-            {
-                logmsg( _("HHCPN084E Device number %d:%4.4X "
-                          "is not a cckd device\n"), lcss, devnum );
-                return -1;
-            }
+            logmsg( _("HHCPN087E Operand must be "
+                      "`merge', `nomerge' or `force'\n") );
+            return -1;
         }
-
-        devascii = strtok(NULL," \t");
-
-        /* Perform the action */
-        do {
-            n++;
-            if (scan) logmsg( _("HHCPN085I Processing device %d:%4.4X\n"),
-                                SSID_TO_LCSS(dev->ssid), dev->devnum );
-
-            switch (action) {
-            case '+': if (devascii != NULL)
-                      {
-                          logmsg( _("HHCPN086E Unexpected operand: %s\n"),
-                                    devascii );
-                          return -1;
-                      }
-                      cckd_sf_add (dev);
-                      break;
-
-            case '-': flag = -1;
-                      if (devascii == NULL)
-                          flag = 1;
-                      else if (strcmp(devascii, "merge") == 0)
-                          flag = 1;
-                      else if (strcmp(devascii, "nomerge") == 0)
-                          flag = 0;
-                      else if (strcmp(devascii, "force") == 0)
-                          flag = 2;
-                      if (flag >= 0)
-                          cckd_sf_remove (dev, flag);
-                      else
-                      {
-                          logmsg( _("HHCPN087E Operand must be "
-                                    "`merge', `nomerge' or `force'\n") );
-                          return -1;
-                      }
-                      break;
-
-            case '=': if (devascii != NULL)
-                          cckd_sf_newname (dev, devascii);
-                      else
-                          logmsg( _("HHCPN088E Shadow file name "
-                                    "not specified\n") );
-                      break;
-
-            case 'c': if (devascii != NULL)
-                      {
-                          logmsg( _("HHCPN089E Unexpected operand: %s\n"),
-                                    devascii );
-                          return -1;
-                      }
-                      cckd_sf_comp (dev);
-                      break;
-
-            case 'd': if (devascii != NULL)
-                      {
-                          logmsg( _("HHCPN090E Unexpected operand: %s\n"),
-                                    devascii );
-                          return -1;
-                      }
-                      cckd_sf_stats (dev);
-                      break;
-
-            default:  logmsg( _("HHCPN091E Command must be 'sf+', 'sf-', "
-                                "'sf=', 'sfc', or 'sfd'\n") );
-                      return -1;
-            }
-
-            /* Next cckd device if scanning */
-            if (scan)
-            {
-                for (dev=dev->nextdev; dev && !dev->cckd_ext; dev=dev->nextdev);
-            }
-            else dev = NULL;
-
-        } while (dev);
-
-        if (scan) logmsg( _("HHCPN092I %d devices processed\n"), n );
-
-        return 0;
+        argv++; argc--;
     }
+
+    /* No other operands allowed */
+    if (argc > 1)
+    {
+        logmsg( _("HHCPN089E Unexpected operand: %s\n"), argv[1] );
+        return -1;
+    }
+
+    /* Perform the action */
+    while (dev)
+    {
+        if (scan) logmsg( _("HHCPN085I Processing device %d:%4.4X\n"),
+                            SSID_TO_LCSS(dev->ssid), dev->devnum );
+
+        switch (action) {
+        case '+': cckd_sf_add (dev);
+                  break;
+        case '-': cckd_sf_remove (dev, flag);
+                  break;
+        case 'c': cckd_sf_comp (dev);
+                  break;
+        case 'd': cckd_sf_stats (dev);
+                  break;
+        }
+        n++;
+
+        /* Next cckd device if scanning */
+        if (scan)
+            for (dev=dev->nextdev; dev && !dev->cckd_ext; dev=dev->nextdev);
+        else dev = NULL;
+
+    } /* while (dev) */
+
+    if (scan) logmsg( _("HHCPN092I %d devices processed\n"), n );
+
     return 0;
 }
 
