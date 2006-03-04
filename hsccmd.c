@@ -2290,7 +2290,11 @@ int     flag = 1;                       /* sf- flag (default merge)  */
     else
     {
         argv++; argc--;
-        devascii = argv[0];
+        if (argc < 0 || (devascii = argv[0]) == NULL)
+        {
+            logmsg( _("HHCPN079E Missing device number\n") );
+            return -1;
+        }
     }
 
     /* device name can be `*' meaning all cckd devices */
