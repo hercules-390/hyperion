@@ -801,6 +801,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
             else if (strcasecmp (keyword, "logofile") == 0)
             {
+                fprintf(stderr, _("HHCCF061W Warning in %s line %d: "
+                    "LOGOFILE statement deprecated. Use HERCLOGO instead\n"),
+                    fname, stmt);
+                slogofile=operand;
+            }
+            else if (strcasecmp (keyword, "herclogo") == 0)
+            {
                 slogofile=operand;
             }
 #if defined(_FEATURE_ECPSVM)
@@ -1442,14 +1449,21 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 delayed_exit(1);
             }
         }
-        if(slogofile != NULL)
+        if(sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
         {
-            sysblk.logofile=slogofile;
-            readlogo(sysblk.logofile);
+            if(slogofile != NULL) /* LogoFile SET in hercules config */
+            {
+                sysblk.logofile=slogofile;
+                readlogo(sysblk.logofile);
+            }
+            else /* Try to Read Logo File using Default FileName */
+            {
+                readlogo("herclogo.txt");
+            } /* Otherwise Use Internal LOGO */
         }
-        else
+        else /* LogoFile passed in command line */
         {
-            readlogo("herclogo.txt");
+            readlogo(sysblk.logofile);
         }
 
 #if defined(_FEATURE_ECPSVM)

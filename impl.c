@@ -310,7 +310,7 @@ TID     logcbtid;                       /* RC file thread identifier */
     if (arg_error)
     {
         fprintf (stderr,
-                "usage: %s [-f config-filename] [-d]"
+                "usage: %s [-f config-filename] [-d] [-b logo-filename]"
 #if defined(OPTION_DYNAMIC_LOAD)
                 " [-p dyn-load-dir] [[-l dynmod-to-load]...]"
 #endif /* defined(OPTION_DYNAMIC_LOAD) */

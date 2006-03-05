@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+05 Mar 2006 hercules logo spec precedence fix by "Rodrigo" - Ivan Warren
 01 Mar 2006 Customizable 3270 Logo screen. See README.HERCLOGO - Ivan Warren
 28 Feb 2006 Generalize Multiple CSS device numbering for most statements
             and panel commands. Allow multiple devices on panel attach

@@ -14,8 +14,11 @@ the current directory.
 The name of the logo file can also be specified as a startup option by
 using the '-b' flag.
 
-Additionally, the file may also be specified by using the 'LOGOFILE' 
+Additionally, the file may also be specified by using the 'HERCLOGO' 
 configuration statement.
+
+(NOTE : The statement was previously LOGOFILE, but LOGOFILE has been
+ deprecated).
 
 Each line in the file represent either an order or a plain text line.
 
