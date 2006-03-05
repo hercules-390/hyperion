@@ -3991,7 +3991,9 @@ int herclogo_cmd(int argc,char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
     if(argc<2)
     {
-        return missingparameter_msg(argv[0]);
+        sysblk.logofile=NULL;
+        clearlogo();
+        return 0;
     }
     return readlogo(argv[1]);
 }
@@ -4536,6 +4538,10 @@ CMDHELP ( "evm",      "Format: \"evm\". This command is deprecated.\n"
                        "use \"ecpsvm\" instead\n"
                        )
 #endif
+
+CMDHELP ( "herclogo",  "Format: \"herclogo [<filename>]\". Load a new logo file for 3270 terminal sessions\n"
+                       "If no filename is specified, the built-in logo is used instead\n"
+                       )
 
 #if defined(FISH_HANG)
 CMDHELP ( "FishHangReport", "When built with --enable-fthreads --enable-fishhang, a detailed record of\n"

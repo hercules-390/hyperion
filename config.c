@@ -1176,14 +1176,10 @@ parse_and_attach_devices(const char *sdevnum,
 } 
 
 #define MAX_LOGO_LINES 256
-int
-readlogo(char *fn)
+void
+clearlogo()
 {
-    char    **data;
-    char    bfr[256];
-    char    *rec;
     size_t i;
-    FILE *lf;
     if(sysblk.herclogo!=NULL)
     {
         for(i=0;i<sysblk.logolines;i++)
@@ -1193,6 +1189,17 @@ readlogo(char *fn)
         free(sysblk.herclogo);
         sysblk.herclogo=NULL;
     }
+}
+int
+readlogo(char *fn)
+{
+    char    **data;
+    char    bfr[256];
+    char    *rec;
+    FILE *lf;
+
+    clearlogo();
+
     lf=fopen(fn,"r");
     if(lf==NULL)
     {
