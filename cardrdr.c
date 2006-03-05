@@ -866,6 +866,7 @@ DEVHND cardrdr_device_hndinfo = {
         NULL,                          /* Device Query used          */
         NULL,                          /* Device Reserve             */
         NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
         NULL,                          /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */

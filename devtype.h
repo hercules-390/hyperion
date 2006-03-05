@@ -40,6 +40,7 @@ struct DEVHND {
         DEVUF *used;                   /* Device Query used          */
         DEVRR *reserve;                /* Device Reserve             */
         DEVRR *release;                /* Device Release             */
+        DEVRR *attention;              /* Device Attention           */
         DEVIM immed;                   /* Immediate CCW Codes        */
         DEVSA *siga_r;                 /* Signal Adapter Input       */
         DEVSA *siga_w;                 /* Signal Adapter Output      */

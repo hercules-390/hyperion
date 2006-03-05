@@ -5566,6 +5566,7 @@ DEVHND cckddasd_device_hndinfo = {
         &cckd_used,                     /* Device Query used          */
         NULL,                           /* Device Reserve             */
         NULL,                           /* Device Release             */
+        NULL,                           /* Device Attention           */
         NULL,                           /* Immediate CCW Codes        */
         NULL,                           /* Signal Adapter Input       */
         NULL,                           /* Signal Adapter Ouput       */
@@ -5587,6 +5588,7 @@ DEVHND cfbadasd_device_hndinfo = {
         &cfba_used,                     /* Device Query used          */
         NULL,                           /* Device Reserve             */
         NULL,                           /* Device Release             */
+        NULL,                           /* Device Attention           */
         NULL,                           /* Immediate CCW Codes        */
         NULL,                           /* Signal Adapter Input       */
         NULL,                           /* Signal Adapter Ouput       */

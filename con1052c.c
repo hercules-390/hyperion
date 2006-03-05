@@ -331,6 +331,7 @@ DEVHND con1052_device_hndinfo = {
         NULL,                          /* Device Query used          */
         NULL,                          /* Device Reserve             */
         NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
         con1052_immed,                 /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */

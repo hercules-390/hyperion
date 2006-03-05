@@ -2985,6 +2985,7 @@ DEVHND shared_ckd_device_hndinfo = {
         &shared_used,                  /* Device Query used          */
         &shared_reserve,               /* Device Reserve             */
         &shared_release,               /* Device Release             */
+        NULL,                          /* Device Attention           */
         NULL,                          /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
@@ -3006,6 +3007,7 @@ DEVHND shared_fba_device_hndinfo = {
         &shared_used,                  /* Device Query used          */
         &shared_reserve,               /* Device Reserve             */
         &shared_release,               /* Device Release             */
+        NULL,                          /* Device Attention           */
         NULL,                          /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */

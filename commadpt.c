@@ -2487,6 +2487,7 @@ DEVHND comadpt_device_hndinfo = {
         NULL,                          /* Device Query used          */
         NULL,                          /* Device Reserve             */
         NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
         commadpt_immed_command,        /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */

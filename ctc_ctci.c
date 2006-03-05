@@ -81,6 +81,7 @@ DEVHND ctci_device_hndinfo =
         NULL,                          /* Device Query used          */
         NULL,                          /* Device Reserve             */
         NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
         CTCI_Immed_Commands,           /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */

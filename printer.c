@@ -815,6 +815,7 @@ DEVHND printer_device_hndinfo = {
         NULL,                          /* Device Query used          */
         NULL,                          /* Device Reserve             */
         NULL,                          /* Device Release             */
+        NULL,                          /* Device Attention           */
         printer_immed_commands,        /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */

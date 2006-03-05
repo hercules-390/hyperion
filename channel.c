@@ -2010,6 +2010,8 @@ DLL_EXPORT int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 {
     obtain_lock (&dev->lock);
 
+    if (dev->hnd->attention) (dev->hnd->attention) (dev);
+
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* If subchannel not valid and enabled, do not present interrupt */
     if ((dev->pmcw.flag5 & PMCW5_V) == 0
