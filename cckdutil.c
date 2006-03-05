@@ -329,21 +329,25 @@ int             fd;                     /* File descriptor           */
 struct STAT     fst;                    /* File status buffer        */
 long long       maxsize;                /* Max cckd file size        */
 int             rc;                     /* Return code               */
-OFF_T           off, lopos, hipos;      /* File offsets              */
+OFF_T           off;                    /* File offset               */
 OFF_T           l2area;                 /* Boundary for l2 tables    */
 int             len;                    /* Length                    */
 int             i, j, l, n;             /* Work variables            */
 int             relocate = 0;           /* 1=spaces will be relocated*/
 int             l1size;                 /* l1 table size             */
+U32             next;                   /* offset of next space      */
 int             s;                      /* space table index         */
 CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
 CCKD_DEVHDR     cdevhdr;                /* CCKD device header        */
 CCKD_L1ENT     *l1=NULL;                /* -> l1 table               */
 CCKD_L2ENT    **l2=NULL;                /* -> l2 table array         */
 SPCTAB         *spctab=NULL;            /* -> space table            */
+BYTE           *rbuf=NULL;              /* Relocation buffer         */
+BYTE           *p;                      /* -> relocation buffer      */
+int             rlen=0;                 /* Relocation buffer length  */
 CCKD_L2ENT      zero_l2[256];           /* Empty l2 table (zeros)    */
 CCKD_L2ENT      ff_l2[256];             /* Empty l2 table (0xff's)   */
-BYTE            buf[65536];             /* Buffer                    */
+BYTE            buf[65536*4];           /* Buffer                    */
 
     /*---------------------------------------------------------------
      * Get fd
@@ -359,8 +363,6 @@ BYTE            buf[65536];             /* Buffer                    */
      *---------------------------------------------------------------*/
     if (FSTAT (fd, &fst) < 0)
         goto comp_fstat_error;
-    hipos = fst.st_size;
-
     maxsize = sizeof(OFF_T) == 4 ? 0x7fffffffll : 0xffffffffll;
 
     /*---------------------------------------------------------------
@@ -492,79 +494,58 @@ comp_restart:
     if ((l2 = calloc (n, len)) == NULL)
         goto comp_calloc_error;
     for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
-        if (spctab[i].typ == SPCTAB_L2)
+    {
+        if (spctab[i].typ != SPCTAB_L2) continue;
+        l = spctab[i].val;
+        len = CCKD_L2TAB_SIZE;
+        if ((l2[l] = malloc (len)) == NULL)
+            goto comp_malloc_error;
+        off = (OFF_T)spctab[i].pos;
+        if (LSEEK (fd, off, SEEK_SET) < 0)
+            goto comp_lseek_error;
+        if ((rc = read (fd, l2[l], len)) != len)
+            goto comp_read_error;
+        for (j = 0; j < 256; j++)
         {
-            l = spctab[i].val;
-            len = CCKD_L2TAB_SIZE;
-            if ((l2[l] = malloc (len)) == NULL)
-                goto comp_malloc_error;
-            off = (OFF_T)spctab[i].pos;
-            if (LSEEK (fd, off, SEEK_SET) < 0)
-                goto comp_lseek_error;
-            if ((rc = read (fd, l2[spctab[i].val], len)) != len)
-                goto comp_read_error;
-            for (j = 0; j < 256; j++)
-                if (l2[l][j].pos != 0 && l2[l][j].pos != 0xffffffff)
-                {
-                    spctab[s].typ = SPCTAB_TRK;
-                    spctab[s].val = spctab[i].val*256 + j;
-                    spctab[s].pos = l2[l][j].pos;
-                    spctab[s].len = l2[l][j].len;
-                    spctab[s].siz = l2[l][j].size;
-                    s++;
-                } /* if non-null l2 entry */
-            /* check if empty l2 table */
-            if (memcmp (l2[l], &zero_l2, CCKD_L2TAB_SIZE) == 0)
-            {
-                spctab[i].typ = SPCTAB_NONE;
-                free (l2[l]);
-                l2[l] = NULL;
-                l1[l] = 0;
-                relocate = 1;
-            }
-            else if (memcmp (l2[l], &ff_l2, CCKD_L2TAB_SIZE) == 0)
-            {
-                spctab[i].typ = SPCTAB_NONE;
-                free (l2[l]);
-                l2[l] = NULL;
-                l1[l] = 0xffffffff;
-                relocate = 1;
-            }
-        } /* if space is l2 table */
+            if (l2[l][j].pos == 0 || l2[l][j].pos == 0xffffffff)
+                continue;
+            spctab[s].typ = SPCTAB_TRK;
+            spctab[s].val = spctab[i].val*256 + j;
+            spctab[s].pos = l2[l][j].pos;
+            spctab[s].len = l2[l][j].len;
+            spctab[s].siz = l2[l][j].size;
+            s++;
+        } /* for each l2 entry */
+        /* check if empty l2 table */
+        if (memcmp (l2[l], &zero_l2, CCKD_L2TAB_SIZE) == 0
+         || memcmp (l2[l], &ff_l2,   CCKD_L2TAB_SIZE) == 0)
+        {
+            l1[l] = l2[l][0].pos; /* 0x00000000 or 0xffffffff */
+            spctab[i].typ = SPCTAB_NONE;
+            free (l2[l]);
+            l2[l] = NULL;
+            relocate = 1;
+        }
+    } /* for each space */
     qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
     while (spctab[s-1].typ == SPCTAB_NONE) s--;
-
-    /*---------------------------------------------------------------
-     * Truncate any free space at the end of the file.
-     * Note that entry `s-1' is always SPCTAB_EOF (after sort)
-     * and that there are at least 4 entries in the table.
-     *---------------------------------------------------------------*/
-    if (spctab[s-2].pos + spctab[s-2].siz < spctab[s-1].pos)
-    {
-        off = (OFF_T)spctab[s-2].pos + spctab[s-2].siz;
-        rc = FTRUNCATE (fd, off);
-        spctab[s-1].pos = (U32)off;
+    /* set relocate flag if last space is free space */
+    if (spctab[s-2].pos + spctab[s-2].len != spctab[s-1].pos)
         relocate = 1;
-    }
 
     /*---------------------------------------------------------------
-     * l2 relocation
-     * We want all the l2 tables to reside just after the l1 table,
-     * in order.  If any tracks currently reside in this area then
-     * we relocate them to the end of the file if there is room.
+     * relocate l2 tables in order
      *---------------------------------------------------------------*/
 
     /* determine l2 area */
-    lopos = CCKD_L1TAB_POS + l1size;
-    hipos = spctab[s-1].pos;
+    l2area = CCKD_L1TAB_POS + l1size;
     for (i = 0; i < cdevhdr.numl1tab; i++)
-        if (l1[i] != 0 && l1[i] != 0xffffffff)
-        {
-            if (l1[i] != lopos)
-                relocate = 1;
-            lopos += CCKD_L2TAB_SIZE;
-        }
-    l2area = lopos;
+    {
+        if (l1[i] == 0 || l1[i] == 0xffffffff) continue;
+        if (l1[i] != l2area)
+            relocate = 1;
+        l2area += CCKD_L2TAB_SIZE;
+    }
 
     /* quick return if all l2 tables are orderered and no free space */
     if (!relocate)
@@ -582,127 +563,149 @@ comp_restart:
     /* file will be updated */
     cdevhdr.options |= CCKD_ORDWR;
 
-    /* relocate tracks in the area to the end of the file */
-    for (i = n = 0; spctab[i].pos < l2area; i++)
+    /* calculate track size within the l2 area */
+    for (i = rlen = 0; spctab[i].pos < l2area; i++)
         if (spctab[i].typ == SPCTAB_TRK)
-        {
-            if ((long long)hipos + spctab[i].len > maxsize)
-                continue;
-            off = (OFF_T)spctab[i].pos;
-            if (LSEEK (fd, off, SEEK_SET) < 0)
-                goto comp_lseek_error;
-            len = spctab[i].len;
-            if ((rc = read (fd, buf, len)) != len)
-                goto comp_read_error;
-            off = hipos;
-            spctab[i].pos = (U32)off;
-            spctab[i].siz = spctab[i].len;
-            hipos += len;
-            if (LSEEK (fd, off, SEEK_SET) < 0)
-                goto comp_lseek_error;
-            if ((rc = write (fd, buf, len)) != len)
-                goto comp_write_error;
-            n++;
-        } /* if relocated track */
-    spctab[s-1].pos = (U32)hipos;
+            rlen += sizeof(spctab[i].val) + sizeof(spctab[i].len)
+                 +  spctab[i].len;
 
-    /* sort the table if we relocated any tracks */
-    if (n) qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
-
-    /* compress the space in the l2 area */
-    for (i = 1; spctab[i].pos < l2area; i++)
-        if (spctab[i-1].pos + spctab[i-1].len < spctab[i].pos)
-        {
-            off = (OFF_T)spctab[i].pos;
-            if (LSEEK (fd, off, SEEK_SET) < 0)
-                goto comp_lseek_error;
-            len = spctab[i].len;
-            if ((rc = read (fd, buf, len)) != len)
-                goto comp_read_error;
-            off = (OFF_T)spctab[i-1].pos + spctab[i-1].len;
-            if (LSEEK (fd, off, SEEK_SET) < 0)
-                goto comp_lseek_error;
-            if ((rc = write (fd, buf, len)) != len)
-                goto comp_write_error;
-            spctab[i].pos = (U32)off;
-        }
-    /*
-     * if there is a gap in the l2 area, relocate l2 tables.
-     * note that `i' indexes the first space table entry that
-     * isn't completely within the l2 area
-     */
-    lopos = (OFF_T)spctab[i-1].pos + spctab[i-1].len;
-    len = (int)((OFF_T)spctab[i].pos - lopos);
-    for (n = 0; len >= CCKD_L2TAB_SIZE && spctab[i].typ != SPCTAB_EOF; i++)
-        if (spctab[i].typ == SPCTAB_L2)
-        {
-            spctab[i].pos = (U32)lopos;
-            lopos += CCKD_L2TAB_SIZE;
-            len -= CCKD_L2TAB_SIZE;
-            n++;
-        }
-
-    /* sort the table if we relocated any l2 tables */
-    if (n) qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
-
-    /* if all l2 tables are in the l2 area then order the l2 tables */
-    for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
-        if (spctab[i].typ == SPCTAB_L2
-         && (OFF_T)spctab[i].pos + CCKD_L2TAB_SIZE > l2area)
-            break;
-    if (spctab[i].typ == SPCTAB_EOF) 
+    /* read any tracks in the l2area into rbuf */
+    if ((len = rlen) > 0)
     {
-        /* get rid of all the l2 table entries */
-        for (i = 0; (OFF_T)spctab[i].pos < l2area; i++)
-            if (spctab[i].typ == SPCTAB_L2)
-                spctab[i].typ = SPCTAB_NONE;
+        if ((rbuf = malloc (len)) == NULL)
+            goto comp_malloc_error;
+        for (i = 0, p = rbuf; spctab[i].pos < l2area; i++)
+        {
+            if (spctab[i].typ != SPCTAB_TRK) continue;
+            memcpy (p, &spctab[i].val, sizeof(spctab[i].val));
+            p += sizeof(spctab[i].val);
+            memcpy (p, &spctab[i].len, sizeof(spctab[i].len));
+            p += sizeof(spctab[i].len);
+            off = (OFF_T)spctab[i].pos;
+            if (LSEEK (fd, off, SEEK_SET) < 0)
+                goto comp_lseek_error;
+            len = spctab[i].len;
+            if ((rc = read (fd, p, len)) != len)
+                goto comp_read_error;
+            p += len;
+            spctab[i].typ = SPCTAB_NONE;
+        } /* for each space in the l2 area */
         qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
         while (spctab[s-1].typ == SPCTAB_NONE) s--;
-        /* add all the l2 tables entries back in order */
-        lopos = CCKD_L1TAB_POS + l1size;
-        for (i = 0; i < cdevhdr.numl1tab; i++)
-        {
-            if (l1[i] == 0 || l1[i] == 0xffffffff) continue;
-            spctab[s].typ = SPCTAB_L2;
-            spctab[s].val = i;
-            spctab[s].pos = (U32)lopos;
-            spctab[s].len =
-            spctab[s].siz = CCKD_L2TAB_SIZE;
-            s++;
-            lopos += CCKD_L2TAB_SIZE;
-        }
-        qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
+    } /* if any tracks to relocate */
+
+    /* remove all l2 tables from the space table */
+    for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
+        if (spctab[i].typ == SPCTAB_L2)
+            spctab[i].typ = SPCTAB_NONE;
+    qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
+    while (spctab[s-1].typ == SPCTAB_NONE) s--;
+
+    /* add all l2 tables at their ordered offsets */
+    off = CCKD_L1TAB_POS + l1size;
+    for (i = 0; i < cdevhdr.numl1tab; i++)
+    {
+        if (l1[i] == 0 || l1[i] == 0xffffffff) continue;
+        spctab[s].typ = SPCTAB_L2;
+        spctab[s].val = i;
+        spctab[s].pos = (U32)off;
+        spctab[s].len =
+        spctab[s].siz = CCKD_L2TAB_SIZE;
+        s++;
+        off += CCKD_L2TAB_SIZE;
     }
+    qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
+    /* set end-of-file position */
+    spctab[s-1].pos = spctab[s-2].pos + spctab[s-2].len;
 
     /*---------------------------------------------------------------
      * Perform compression
      *---------------------------------------------------------------*/
-    for (i = 1; spctab[i].typ != SPCTAB_EOF; i++)
-        if (spctab[i-1].pos + spctab[i-1].len < spctab[i].pos)
+
+    /* move spaces left */
+    for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
+    {
+        /* ignore contiguous spaces */
+        if (spctab[i].pos + spctab[i].len == spctab[i+1].pos)
+            continue;
+
+        /* found a gap */
+        off = (OFF_T)spctab[i+1].pos;
+
+        /* figure out how much we can read */
+        for (len = 0, j = i + 1; spctab[j].typ != SPCTAB_EOF; j++)
         {
-            off = (OFF_T)spctab[i].pos;
-            if (LSEEK (fd, off, SEEK_SET) < 0)
-                goto comp_lseek_error;
-            len = spctab[i].len;
-            if ((rc = read (fd, buf, len)) != len)
-                goto comp_read_error;
-            off = (OFF_T)spctab[i-1].pos + spctab[i-1].len;
-            if (LSEEK (fd, off, SEEK_SET) < 0)
-                goto comp_lseek_error;
-            if ((rc = write (fd, buf, len)) != len)
-                goto comp_write_error;
-            spctab[i].pos = (U32)off;
-            spctab[i].siz = len;
-        } /* if gap between two spaces */
+            if (len + spctab[j].len > sizeof(buf))
+                break;
+            next = spctab[j].pos + spctab[j].len;
+            spctab[j].pos = spctab[i].pos + spctab[i].len + len;
+            spctab[j].siz = spctab[j].len;
+            len += spctab[j].len;
+            if (next != spctab[j+1].pos)
+                break;
+        } /* search for contiguous spaces */
+
+        /* this can happen if the next space is end-of-file */
+        if (len == 0)
+            continue;
+
+        /* read the image(s) to be relocated */
+        if (LSEEK (fd, off, SEEK_SET) < 0)
+            goto comp_lseek_error;
+        if ((rc = read (fd, buf, len)) != len)
+            goto comp_write_error;
+
+        /* write the images */
+        off = (OFF_T)spctab[i].pos + spctab[i].len;
+        if (LSEEK (fd, off, SEEK_SET) < 0)
+            goto comp_lseek_error;
+        if ((rc = write (fd, buf, len)) != len)
+            goto comp_write_error;
+    }
+
+    /* adjust the size of the file */
     spctab[s-1].pos = spctab[s-2].pos + spctab[s-2].len;
-    hipos = (OFF_T)spctab[i].pos;
-    rc = FTRUNCATE (fd, hipos);
+
+    /*---------------------------------------------------------------
+     * Write spaces relocated from the l2area to the end of the file
+     *---------------------------------------------------------------*/
+    off = (OFF_T)spctab[s-1].pos;
+    p = rbuf;
+    while (rlen)
+    {
+        spctab[s].typ = SPCTAB_TRK;
+        spctab[s].pos = (U32)off;
+        memcpy (&spctab[s].val, p, sizeof(spctab[s].val));
+        p += sizeof(spctab[s].val);
+        memcpy (&spctab[s].len, p, sizeof(spctab[s].len));
+        spctab[s].siz = spctab[s].len;
+        p += sizeof(spctab[s].len);
+
+        if (LSEEK (fd, off, SEEK_SET) < 0)
+            goto comp_lseek_error;
+        len = spctab[s].len;
+        if ((rc = write (fd, p, len)) != len)
+            goto comp_write_error;
+
+        p += len;
+        off += len;
+        rlen -= len + sizeof(spctab[s].val) + sizeof(spctab[s].len);
+        s++;
+    } /* for each relocated space in l2area */
+
+    /* adjust the space table */
+    if (rbuf)
+    {
+        free (rbuf); rbuf = NULL;
+        qsort (spctab, s, sizeof(SPCTAB), comp_spctab_sort);
+        spctab[s-1].pos = spctab[s-2].pos + spctab[s-2].len;
+    }
 
     /*---------------------------------------------------------------
      * Update the device header
      *---------------------------------------------------------------*/
     cdevhdr.size =
-    cdevhdr.used = (U32)hipos;
+    cdevhdr.used = spctab[s-1].pos;
     cdevhdr.free =
     cdevhdr.free_total =
     cdevhdr.free_largest =
@@ -713,9 +716,9 @@ comp_restart:
     cdevhdr.vrm[2] = CCKD_MODLVL;
 
     /*---------------------------------------------------------------
-     * Update l1 and l2 tables
+     * Update the lookup tables
      *---------------------------------------------------------------*/
-    for (i = 1; spctab[i].typ != SPCTAB_EOF; i++)
+    for (i = 0; spctab[i].typ != SPCTAB_EOF; i++)
         if (spctab[i].typ == SPCTAB_L2)
             l1[spctab[i].val] = spctab[i].pos;
         else if (spctab[i].typ == SPCTAB_TRK)
@@ -759,8 +762,16 @@ comp_restart:
                 goto comp_lseek_error;
         }
 
-    cckdumsg (dev, 102, "compress successful, %lld bytes released\n",
-              (long long)fst.st_size - hipos);
+    /* truncate the file */
+    off = (OFF_T)spctab[s-1].pos;
+    if (off < fst.st_size)
+    {
+        FTRUNCATE (fd, off);
+        cckdumsg (dev, 102, "compress successful, %lld bytes released\n",
+              (long long)fst.st_size - off);
+    }
+    else
+        cckdumsg (dev, 102, "compress successful, L2 tables relocated\n");
 
     /*---------------------------------------------------------------
      * Return
@@ -772,6 +783,7 @@ comp_return_ok:
 
 comp_return:
 
+    if (rbuf) free(rbuf);
     if (l2)
     {
         for (i = 0; i < cdevhdr.numl1tab; i++)
@@ -779,7 +791,6 @@ comp_return:
                 free (l2[i]);
         free (l2);
     }
-
     if (l1) free (l1);
     if (spctab) free (spctab);
 
