@@ -170,7 +170,9 @@ int             rc;                     /* Return code               */
 BYTE           *bufp;                   /* Buffer pointer            */
 #endif
 size_t          bufl;                   /* Buffer length             */
+#ifdef CCKD_BZIP2
 unsigned int    ubufl;                  /* when size_t != unsigned int */
+#endif
 
 #if !defined( HAVE_LIBZ ) && !defined( CCKD_BZIP2 )
     UNREFERENCED(heads);
@@ -227,7 +229,7 @@ unsigned int    ubufl;                  /* when size_t != unsigned int */
                          ibuf[0], ibuf[1], ibuf[2], ibuf[3], ibuf[4]);
             return -1;
         }
-	bufl=ubufl;
+        bufl=ubufl;
         bufl += CKDDASD_TRKHDR_SIZE;
         break;
 #endif
