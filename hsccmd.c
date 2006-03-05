@@ -67,6 +67,12 @@ static int devnotfound_msg(U16 lcss,U16 devnum)
     logmsg(_("HHCPN181E Device number %d:%4.4X not found\n"),lcss,devnum);
     return -1;
 }
+/* Issue generic missing parameter message */
+static int missingparameter_msg(char *cmd)
+{
+    logmsg(_("HHCPN182E The %s command is missing a required parameter\n"),cmd);
+    return -1;
+}
 
 ///////////////////////////////////////////////////////////////////////
 /* maxrates command - report maximum seen mips/sios rates */
@@ -3979,6 +3985,17 @@ int evm_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif
 
+/* Set the hercules logo file */
+int herclogo_cmd(int argc,char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+    if(argc<2)
+    {
+        return missingparameter_msg(argv[0]);
+    }
+    return readlogo(argv[1]);
+}
+
 ///////////////////////////////////////////////////////////////////////
 /* sizeof - Display sizes of various structures/tables */
 int sizeof_cmd(int argc, char *argv[], char *cmdline)
@@ -4180,6 +4197,8 @@ COMMAND ( "sizeof",    sizeof_cmd,    "Display size of structures\n" )
 
 COMMAND ( "suspend",   suspend_cmd,   "Suspend hercules" )
 COMMAND ( "resume",    resume_cmd,    "Resume hercules\n" )
+
+COMMAND ( "herclogo",    herclogo_cmd,    "Read a new hercules logo file\n" )
 
 #define   TEST_CMD "$test"          // (hidden internal command)
 COMMAND ( TEST_CMD, $test_cmd,        "(hidden internal command)" )

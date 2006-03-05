@@ -20,6 +20,12 @@ configuration statement.
 (NOTE : The statement was previously LOGOFILE, but LOGOFILE has been
  deprecated).
 
+The file may also be specified by using the 'HERCLOGO' environment
+variable.
+
+The file to be used can also be specified at run time using the
+'HERCLOGO' panel command.
+
 Each line in the file represent either an order or a plain text line.
 
 The orders are as follows :

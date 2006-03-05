@@ -1458,7 +1458,15 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
             else /* Try to Read Logo File using Default FileName */
             {
-                readlogo("herclogo.txt");
+                slogofile=getenv("HERCLOGO");
+                if(slogofile==NULL)
+                {
+                    readlogo("herclogo.txt");
+                }
+                else
+                {
+                    readlogo(slogofile);
+                }
             } /* Otherwise Use Internal LOGO */
         }
         else /* LogoFile passed in command line */
