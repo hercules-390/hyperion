@@ -68,11 +68,13 @@ static int devnotfound_msg(U16 lcss,U16 devnum)
     return -1;
 }
 /* Issue generic missing parameter message */
+/*
 static int missingparameter_msg(char *cmd)
 {
     logmsg(_("HHCPN182E The %s command is missing a required parameter\n"),cmd);
     return -1;
 }
+*/
 
 ///////////////////////////////////////////////////////////////////////
 /* maxrates command - report maximum seen mips/sios rates */

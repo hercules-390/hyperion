@@ -146,6 +146,7 @@ int parse_and_attach_devices(const char *devnums,const char *devtype,int ac,char
 CONF_DLL_IMPORT int parse_single_devnum(const char *spec, U16 *lcss, U16 *devnum);
 int parse_single_devnum_silent(const char *spec, U16 *lcss, U16 *devnum);
 int readlogo(char *fn);
+void clearlogo(void);
 
 
 /* Global data areas and functions in module cpu.c                   */
