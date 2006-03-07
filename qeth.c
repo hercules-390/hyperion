@@ -294,15 +294,27 @@ logmsg(D_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum);
 #if defined(OPTION_DYNAMIC_LOAD)
 static
 #endif
-DEVHND qeth_device_hndinfo = {
-        &qeth_init_handler,
-        &qeth_execute_ccw,
-        &qeth_close_device,
-        &qeth_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        &qeth_initiate_input,
-        &qeth_initiate_output,
-        NULL, NULL
+DEVHND qeth_device_hndinfo =
+{
+        &qeth_init_handler,     /* Device Initialisation      */
+        &qeth_execute_ccw,      /* Device CCW execute         */
+        &qeth_close_device,     /* Device Close               */
+        &qeth_query_device,     /* Device Query               */
+        NULL,                   /* Device Start channel pgm   */
+        NULL,                   /* Device End channel pgm     */
+        NULL,                   /* Device Resume channel pgm  */
+        NULL,                   /* Device Suspend channel pgm */
+        NULL,                   /* Device Read                */
+        NULL,                   /* Device Write               */
+        NULL,                   /* Device Query used          */
+        NULL,                   /* Device Reserve             */
+        NULL,                   /* Device Release             */
+        NULL,                   /* Device Attention           */
+        NULL,                   /* Immediate CCW Codes        */
+        &qeth_initiate_input,   /* Signal Adapter Input       */
+        &qeth_initiate_output,  /* Signal Adapter Output      */
+        NULL,                   /* Hercules suspend           */
+        NULL                    /* Hercules resume            */
 };
 
 /* Libtool static name colision resolution */
