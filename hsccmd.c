@@ -4010,6 +4010,7 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
 
     logmsg(_("HHCPN161I (void *) ..........%7d\n"),sizeof(void *));
     logmsg(_("HHCPN161I (unsigned int) ....%7d\n"),sizeof(unsigned int));
+    logmsg(_("HHCPN161I (size_t) ..........%7d\n"),sizeof(size_t));
     logmsg(_("HHCPN161I (off_t) ...........%7d\n"),sizeof(OFF_T));
     logmsg(_("HHCPN161I SYSBLK ............%7d\n"),sizeof(SYSBLK));
     logmsg(_("HHCPN161I REGS ..............%7d\n"),sizeof(REGS));
