@@ -4,6 +4,7 @@
 #include "hstdinc.h"
 
 #define _HERCULES_SR_C
+#define _HENGINE_DLL_
 
 #include "hercules.h"
 #include "opcode.h"
