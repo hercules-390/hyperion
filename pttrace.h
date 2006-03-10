@@ -63,7 +63,7 @@ PTT_DLL_IMPORT int ptt_pthread_kill(TID, int, char *, int);
 PTT_DLL_IMPORT void ptt_trace_init (int n, int init);
 PTT_DLL_IMPORT int  ptt_cmd(int argc, char *argv[], char*cmdline);
 PTT_DLL_IMPORT void ptt_pthread_trace (char *, void *, void *, char *, int, int);
-PTT_DLL_IMPORT void ptt_pthread_print ();
+PTT_DLL_IMPORT int  ptt_pthread_print ();
 
 typedef struct _PTT_TRACE {
         TID          tid;               /* Thead id                   */

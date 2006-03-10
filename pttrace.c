@@ -21,6 +21,7 @@ LOCK       pttlock;                     /* Pthreads trace lock       */
 int        pttimer;                     /* 1=trace timer events      */
 int        pttnothreads;                /* 1=no threads events       */
 int        pttnolock;                   /* 1=no PTT locking          */
+int        pttnotod;                    /* 1=don't call gettimeofday */
 
 DLL_EXPORT void ptt_trace_init (int n, int init)
 {
@@ -46,78 +47,106 @@ DLL_EXPORT void ptt_trace_init (int n, int init)
         pttimer = 0; /* (default = 'notimer') */
         pttnothreads = 0;
         pttnolock = 0;
+        pttnotod = 0;
     }
 }
 
 DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
 {
+    int  rc = 0;
     int  n;
     char c;
 
     UNREFERENCED(cmdline);
 
-    if (argc > 1)
+    /* print trace table if no arguments */
+    if (argc <= 1 && pttracen)
+        return ptt_pthread_print();
+
+    /* process arguments; last arg can be trace table size */
+    for (--argc, argv++; argc; --argc, ++argv)
     {
-        if (argc == 2 && strcasecmp("timer", argv[1]) == 0)
+        if (strcasecmp("opts", argv[0]) == 0)
+            continue;
+        else if (strcasecmp("timer", argv[0]) == 0)
         {
             pttimer = 1;
-            return 0;
+            continue;
         }
-        if (argc == 2 && strcasecmp("notimer", argv[1]) == 0)
+        else if (strcasecmp("notimer", argv[0]) == 0)
         {
             pttimer = 0;
-            return 0;
+            continue;
         }
-        if (argc == 2 && strcasecmp("nothreads", argv[1]) == 0)
+        else if (strcasecmp("nothreads", argv[0]) == 0)
         {
             pttnothreads = 1;
-            return 0;
+            continue;
         }
-        if (argc == 2 && strcasecmp("threads", argv[1]) == 0)
+        else if (strcasecmp("threads", argv[0]) == 0)
         {
             pttnothreads = 0;
-            return 0;
+            continue;
         }
-        if (argc == 2 && strcasecmp("nolock", argv[1]) == 0)
+        else if (strcasecmp("nolock", argv[0]) == 0)
         {
             pttnolock = 1;
-            return 0;
+            continue;
         }
-        if (argc == 2 && strcasecmp("lock", argv[1]) == 0)
+        else if (strcasecmp("lock", argv[0]) == 0)
         {
             pttnolock = 0;
-            return 0;
+            continue;
         }
-        if (argc != 2 || sscanf(argv[1], "%d%c", &n, &c) != 1 || n < 0)
+        else if (strcasecmp("notod", argv[0]) == 0)
         {
-            logmsg( _("HHCPT001E Invalid value\n"));
-            return -1;
+            pttnotod = 1;
+            continue;
         }
-        OBTAIN_PTTLOCK;
-        if (pttracen == 0)
+        else if (strcasecmp("tod", argv[0]) == 0)
         {
-            if (pttrace != NULL)
-            {
-                RELEASE_PTTLOCK;
-                logmsg( _("HHCPT002E Trace is busy\n"));
-                return -1;
-            }
+            pttnotod = 0;
+            continue;
         }
-        else if (pttrace)
+        else if (argc == 1 && sscanf(argv[0], "%d%c", &n, &c) == 1 && n >= 0)
         {
-            pttracen = 0;
-            RELEASE_PTTLOCK;
-            usleep(100);
             OBTAIN_PTTLOCK;
-            free (pttrace);
-            pttrace = NULL;
+            if (pttracen == 0)
+            {
+                if (pttrace != NULL)
+                {
+                    RELEASE_PTTLOCK;
+                    logmsg( _("HHCPT002E Trace is busy\n"));
+                    return -1;
+                }
+            }
+            else if (pttrace)
+            {
+                pttracen = 0;
+                RELEASE_PTTLOCK;
+                usleep(1000);
+                OBTAIN_PTTLOCK;
+                free (pttrace);
+                pttrace = NULL;
+            }
+            ptt_trace_init (n, 0);
+            RELEASE_PTTLOCK;
         }
-        ptt_trace_init (n, 0);
-        RELEASE_PTTLOCK;
-    }
-    else
-        ptt_pthread_print();
-    return 0;
+        else
+        {
+            logmsg( _("HHCPT001E Invalid value: %s\n"), argv[0]);
+            rc = -1;
+            break;
+        }
+    } /* for each ptt argument */
+
+    logmsg( _("HHCPT003I ptt %s %s %s %s %d\n"),
+           pttimer ? "timer" : "notimer",
+           pttnothreads ? "nothreads" : "threads",
+           pttnolock ? "nolock" : "lock",
+           pttnotod ? "notod" : "tod",
+           pttracen);
+    return rc;
 }
 
 #ifndef OPTION_FTHREADS
@@ -406,11 +435,12 @@ int i, n;
     pttrace[i].data2 = data2;
     pttrace[i].file  = file;
     pttrace[i].line  = line;
-    gettimeofday(&pttrace[i].tv,NULL);
+    if (pttnotod == 0)
+        gettimeofday(&pttrace[i].tv,NULL);
     pttrace[i].result = result;
 }
 
-DLL_EXPORT void ptt_pthread_print ()
+DLL_EXPORT int ptt_pthread_print ()
 {
 int   i, n;
 char  result[32]; // (result is 'int'; if 64-bits, 19 digits or more!)
@@ -418,7 +448,7 @@ char  tbuf[256];
 time_t tt;
 const char dot = '.';
 
-    if (pttrace == NULL || pttracen == 0) return;
+    if (pttrace == NULL || pttracen == 0) return 0;
     OBTAIN_PTTLOCK;
     n = pttracen;
     pttracen = 0;
@@ -463,6 +493,7 @@ const char dot = '.';
     memset (pttrace, 0, PTT_TRACE_SIZE * n);
     pttracex = 0;
     pttracen = n;
+    return 0;
 }
 
 #endif
