@@ -121,8 +121,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     //           may be enabled via IFF_UP. If it's not in IFF_RUNNING
     //           state however, then IFF_UP cannot be set because the
     //           interface is technically "broken" (not operational),
-    //           and non-operational (non-working) interfaces cannot be
-    //           enabled.  --  Fish, June 2004.
+    //           and non-operational (non-working) interfaces cannot
+    //           be enabled.  --  Fish, June 2004.
 
     nIFFlags =              // Interface flags
         0

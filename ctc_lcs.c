@@ -1049,6 +1049,16 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 #endif
         }
 
+        // ZZ FIXME: Technically, IFF_RUNNING should NOT be set by the user.
+        //           Only the interface itself should set IFF_RUNNING when-
+        //           ever it is successfully created/initialized (i.e. is
+        //           operational). Once it's operational (running), then it
+        //           may be enabled via IFF_UP. If it's not in IFF_RUNNING
+        //           state however, then IFF_UP cannot be set because the
+        //           interface is technically "broken" (not operational),
+        //           and non-operational (non-working) interfaces cannot
+        //           be enabled.  --  Fish, June 2004.
+
         VERIFY( TUNTAP_SetFlags( pPort->szNetDevName,
                          IFF_UP | IFF_RUNNING | IFF_BROADCAST ) == 0 );
 
