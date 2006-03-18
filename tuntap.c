@@ -466,15 +466,15 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
         return -1;
     }
 
+    sin = (struct sockaddr_in*)&rtentry.rt_gateway;
+    sin->sin_family = AF_INET;
+
     if( pszGWAddr )
     {
-        sin = (struct sockaddr_in*)&rtentry.rt_gateway;
-        sin->sin_family = AF_INET;
-
         if( !inet_aton( pszGWAddr, &sin->sin_addr ) )
         {
             logmsg( _("HHCTU020E %s: Invalid gateway address: %s.\n"),
-                    pszNetDevName, !pszGWAddr ? "NULL" : pszGWAddr );
+                    pszNetDevName, pszGWAddr );
             return -1;
         }
     }
@@ -534,12 +534,14 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
     sin = (struct sockaddr_in*)&rtentry.rt_gateway;
     sin->sin_family = AF_INET;
 
-    if( !pszGWAddr  ||
-        !inet_aton( pszGWAddr, &sin->sin_addr ) )
+    if( pszGWAddr )
     {
-        logmsg( _("HHCTU024E %s: Invalid gateway address: %s.\n"),
-                pszNetDevName, !pszGWAddr ? "NULL" : pszGWAddr );
-        return -1;
+        if( !inet_aton( pszGWAddr, &sin->sin_addr ) )
+        {
+            logmsg( _("HHCTU024E %s: Invalid gateway address: %s.\n"),
+                    pszNetDevName, pszGWAddr );
+            return -1;
+        }
     }
 
     rtentry.rt_flags = iFlags;
