@@ -1541,9 +1541,9 @@ DLL_EXPORT int inet_aton( const char* cp, struct in_addr* addr )
 #endif // !defined( HAVE_INET_ATON )
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// All internal calls to Windows's 'FD_ISSET' or 'FD_ISSET' macros MUST use the below
-// macros instead and NOT the #defined 'FD_ISSET' or 'FD_ISSET' macros! The #defined
-// 'FD_ISSET' and 'FD_ISSET' macros are coded (in hmacros.h) to route the calls to the
+// All internal calls to Windows's 'FD_ISSET' or 'FD_SET' macros MUST use the below
+// macros instead and NOT the #defined 'FD_ISSET' or 'FD_SET' macros! The #defined
+// 'FD_ISSET' and 'FD_SET' macros are coded (in hmacros.h) to route the calls to the
 // internal 'w32_FD_SET' and 'w32_FD_ISSET' functions further below!
 
 #define  ORIGINAL_FD_ISSET    __WSAFDIsSet
