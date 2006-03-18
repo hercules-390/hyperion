@@ -1359,6 +1359,10 @@ static void*  LCS_PortThread( PLCSPORT pPort )
                     else if( pDev->bType == LCSDEV_TYPE_SECONDARY )
                         pDevSec = pDev;
                 }
+                else if( sFrameType == 0x0835 )   // RARP
+                {
+                    // we forgot about this one Jim!
+                }
                 else if( sFrameType == 0x80D5 )   // SNA
                 {
                     if( pPort->pLCSBLK->fDebug && !bReported )
@@ -1449,7 +1453,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
 
     // We must do the close since we were the one doing the i/o...
 
-    VERIFY( TUNTAP_Close( pPort->fd ) == 0 );
+    VERIFY( pPort->fd == -1 || TUNTAP_Close( pPort->fd ) == 0 );
 
     // Housekeeping - Cleanup Port Block
 

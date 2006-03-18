@@ -1006,7 +1006,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 
     // We must do the close since we were the one doing the i/o...
 
-    VERIFY( TUNTAP_Close( pCTCBLK->fd ) == 0 );
+    VERIFY( pCTCBLK->fd == -1 || TUNTAP_Close( pCTCBLK->fd ) == 0 );
     pCTCBLK->fd = -1;
 
     return NULL;
