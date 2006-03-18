@@ -47,8 +47,16 @@ int process_script_file(char *,int);
 ///////////////////////////////////////////////////////////////////////
 /* $test_cmd - do something or other */
 
+#ifdef _MSVC_ // (damn optimizer is getting in the way so disable it)
+#pragma optimize( "", off )
+#endif
+
 int $test_cmd(int argc, char *argv[],char *cmdline)
 {
+    int x, zero;
+    zero = argc ? 0 : argc;
+    x = 1/zero;
+
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
@@ -60,6 +68,10 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
     }
     return 0;
 }
+
+#ifdef _MSVC_ // (damn optimizer is getting in the way so disable it)
+#pragma optimize( "", on )
+#endif
 
 /* Issue generic Device not found error message */
 static int devnotfound_msg(U16 lcss,U16 devnum)
