@@ -37,12 +37,12 @@
   #include <windows.h>
 #endif
 #ifdef _MSVC_
+  #include <tchar.h>
   #include <wincon.h>
   #include <conio.h>
   #include <io.h>
   #include <lmcons.h>
   #include <tlhelp32.h>
-  #include <tchar.h>
   #include <dbghelp.h>
   #include <crtdbg.h>
 #endif
