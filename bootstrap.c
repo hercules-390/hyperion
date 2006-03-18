@@ -25,6 +25,9 @@ int main(int ac,char *av[])
 
 #else // defined( _MSVC_ )
 
+// (damn optimizer is getting in the way so disable it)
+#pragma optimize( "", off )
+
 ///////////////////////////////////////////////////////////////////////////////
 // Windows version...
 
@@ -41,10 +44,23 @@ typedef BOOL (MINIDUMPWRITEDUMPFUNC)
 
 static MINIDUMPWRITEDUMPFUNC*  g_pfnMiniDumpWriteDumpFunc  = NULL;
 static HMODULE                 g_hDbgHelpDll               = NULL;
-static WCHAR                   g_wszHercDrive[_MAX_DRIVE]  = L"";
-static WCHAR                   g_wszHercDir[2*_MAX_DIR]    = L"";
+
+// Global string buffers to prevent C4748 warning: "/GS can not protect
+// parameters and local variables from local buffer overrun because
+// optimizations are disabled in function"
+
+static WCHAR  g_wszHercDrive [ 4 * _MAX_DRIVE ]  = {0};
+static WCHAR  g_wszHercDir   [ 4 * _MAX_DIR   ]  = {0};
+static WCHAR  g_wszFileDir   [ 4 * _MAX_DIR   ]  = {0};
+static WCHAR  g_wszHercPath  [ 4 * _MAX_PATH  ]  = {0};
+static WCHAR  g_wszDumpPath  [ 4 * _MAX_PATH  ]  = {0};
+static WCHAR  g_wszFileName  [ 4 * _MAX_FNAME ]  = {0};
+
+// (forward reference)
 
 static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs );
+
+// (helper macro)
 
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(x) (sizeof(x)/sizeof(x[0]))
@@ -74,9 +90,8 @@ int main(int ac,char *av[])
                 GetProcAddress( g_hDbgHelpDll, _T("MiniDumpWriteDump")))
         )
         {
-            WCHAR wszHercPath[_MAX_PATH] = L"";
-            GetModuleFileNameW( NULL, wszHercPath, ARRAYSIZE(wszHercPath) );
-            _wsplitpath( wszHercPath, g_wszHercDrive, g_wszHercDir, NULL, NULL );
+            GetModuleFileNameW( NULL, g_wszHercPath, ARRAYSIZE(g_wszHercPath) );
+            _wsplitpath( g_wszHercPath, g_wszHercDrive, g_wszHercDir, NULL, NULL );
         }
 
         SetErrorMode( SEM_NOGPFAULTERRORBOX );
@@ -172,18 +187,17 @@ static BOOL CALLBACK MyMiniDumpCallback  // (fwd ref)
 static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 {
     BOOL bSuccess = FALSE;
-    WCHAR wszDumpPath[4*_MAX_PATH];
     HANDLE hDumpFile;
 
-    _wmakepath( wszDumpPath, g_wszHercDrive, g_wszHercDir, L"Hercules", L".dmp" );
+    _wmakepath( g_wszDumpPath, g_wszHercDrive, g_wszHercDir, L"Hercules", L".dmp" );
 
-    _tprintf( _T("Creating crash dump \"%S\"...\n"), wszDumpPath );
+    _tprintf( _T("Creating crash dump \"%ls\"...\n"), g_wszDumpPath );
     _tprintf( _T("Please wait; this may take a few minutes...\n") );
     _tprintf( _T("(another message will appear when the dump is complete)\n") );
 
     hDumpFile = CreateFileW
     (
-        wszDumpPath,
+        g_wszDumpPath,
         GENERIC_WRITE,
         0, NULL, CREATE_ALWAYS,
         FILE_ATTRIBUTE_NORMAL, NULL
@@ -224,7 +238,7 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 
         if ( bSuccess )
         {
-            _tprintf( _T("Dump \"%S\" created.\n"), wszDumpPath );
+            _tprintf( _T("Dump \"%ls\" created.\n"), g_wszDumpPath );
         }
         else
             _tprintf( _T("MiniDumpWriteDump failed! Error: %u\n"), GetLastError() );
@@ -240,20 +254,20 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 ///////////////////////////////////////////////////////////////////////////////
 // Build User Stream Arrays...
 
-#define MAX_MINIDUMP_USER_STREAMS  (50)
+#define MAX_MINIDUMP_USER_STREAMS  (64)
 
-static MINIDUMP_USER_STREAM UserStreamArray[MAX_MINIDUMP_USER_STREAMS];
+static  char                  g_host_info_str [ 1024 ];
+static  MINIDUMP_USER_STREAM  UserStreamArray [ MAX_MINIDUMP_USER_STREAMS ];
 
 static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
 {
-    static char host_info_str[256];
     const char** ppszBldInfoStr;
     int nNumBldInfoStrs;
     ULONG UserStreamCount;
 
     _ASSERTE( pMDUSI );
 
-    get_hostinfo_str( NULL, host_info_str, sizeof(host_info_str) );
+    get_hostinfo_str( NULL, g_host_info_str, sizeof(g_host_info_str) );
     nNumBldInfoStrs = get_buildinfo_strings( &ppszBldInfoStr );
 
     UserStreamCount = min( (3+nNumBldInfoStrs), MAX_MINIDUMP_USER_STREAMS );
@@ -282,8 +296,8 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
     if ( UserStreamCount < pMDUSI->UserStreamCount )
     {
         UserStreamArray[UserStreamCount].Type       = CommentStreamA;
-        UserStreamArray[UserStreamCount].Buffer     =        host_info_str;
-        UserStreamArray[UserStreamCount].BufferSize = strlen(host_info_str)+1;
+        UserStreamArray[UserStreamCount].Buffer     =        g_host_info_str;
+        UserStreamArray[UserStreamCount].BufferSize = strlen(g_host_info_str)+1;
         UserStreamCount++;
     }
 
@@ -397,18 +411,16 @@ static BOOL CALLBACK MyMiniDumpCallback
 static BOOL IsDataSectionNeeded( const WCHAR* pwszModuleName )
 {
     BOOL bNeeded = FALSE;
-    WCHAR wszFileDir[_MAX_DIR] = L"";
-    WCHAR wszFileName[_MAX_FNAME] = L"";
 
     _ASSERTE( pwszModuleName );
 
-    _wsplitpath( pwszModuleName, NULL, wszFileDir, wszFileName, NULL );
+    _wsplitpath( pwszModuleName, NULL, g_wszFileDir, g_wszFileName, NULL );
 
-    if ( _wcsicmp( wszFileName, L"ntdll" ) == 0 )
+    if ( _wcsicmp( g_wszFileName, L"ntdll" ) == 0 )
     {
         bNeeded = TRUE;
     }
-    else if ( _wcsicmp( wszFileDir, g_wszHercDir ) == 0 )
+    else if ( _wcsicmp( g_wszFileDir, g_wszHercDir ) == 0 )
     {
         bNeeded = TRUE;
     }
@@ -417,5 +429,7 @@ static BOOL IsDataSectionNeeded( const WCHAR* pwszModuleName )
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+#pragma optimize( "", on )
 
 #endif // !defined( _MSVC_ )
