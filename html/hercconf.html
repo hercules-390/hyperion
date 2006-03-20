@@ -1405,26 +1405,25 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     <p>
 
     If the filename begins with the vertical bar '&#124;' pipe character,
-    then it is removed and the remainder of the device statement is
-    interpreted as the name of an external program to which to "pipe"
-    the printer output to. This is known as the "print-to-pipe" feature.
-    All printer output is then sent to the piped program's stdin input,
-    and all of the piped program's stdout and stderr output is piped back
-    to Hercules for displaying on the hardware console.
+    then it is removed and the remainder of the filename is interpreted as
+    a command line (the name of a program or batch file followed by any
+    necessary arguments) to which to "pipe" the printer output to.
+    This is known as the "print-to-pipe" feature. All printer output
+    is then sent to the piped program's stdin input, and all of the
+    piped program's stdout and stderr output is piped back to Hercules
+    for displaying on the hardware console.
 
     <p>
-
-    Note that unfortunately the print-to-pipe feature does not currently
-    support passing any arguments to the pipe program. Currently, all
-    arguments following the filename are intrepretted as device-statement
-    parameters and not arguments to be passed to the pipe program. While
-    this minor shortcoming <i>may</i> be addressed in a future release,
-    until then if you need to pass any arguments to your pipe program
-    you will have to find some other means of doing so (such as specifying
-    a script or batch file as the name of the pipe program instead, and
-    then having IT invoke the actual pipe program with whatever arguments
-    it may require).
-
+    If the "print-to-pipe" command line contains arguments, then quotes
+    must be placed around the entire filename string including the 
+    vertical bar, for example:
+    <pre>
+    000E 1403 "|/usr/bin/lpr -Phplj" crlf          <em>(for Unix)</em>
+    000E 1403 "|c:\utils\pr -s -PLPT1:" crlf       <em>(for Windows)</em>
+    </pre>
+    The above example uses the pr program downloaded
+    from <a href="http://www.atnetsend.net/computing/">
+    http://www.atnetsend.net/computing/</a>
     <p>
 
 <a name="3420"></a>
