@@ -259,7 +259,7 @@ int     i;                              /* Array subscript           */
     }
 
     /* Save the file name in the device block */
-    strcpy (dev->filename, argv[0]);
+    strncpy (dev->filename, argv[0], sizeof(dev->filename));
 
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
         dev->devtype = 0x1403;
