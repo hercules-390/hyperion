@@ -447,10 +447,13 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Open the AWSTAPE file */
     hostpath(pathname, dev->filename, sizeof(pathname));
-    rc = open (pathname, O_RDWR | O_BINARY);
+    if(!dev->tdparms.logical_readonly)
+    {
+        rc = open (pathname, O_RDWR | O_BINARY);
+    }
 
     /* If file is read-only, attempt to open again */
-    if (rc < 0 && (EROFS == errno || EACCES == errno))
+    if (dev->tdparms.logical_readonly || (rc < 0 && (EROFS == errno || EACCES == errno)))
     {
         dev->readonly = 1;
         rc = open (pathname, O_RDONLY | O_BINARY);
