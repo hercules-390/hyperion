@@ -1556,13 +1556,14 @@ BYTE                    model;          /* 3270 model (2,3,4,5,X)    */
 BYTE                    extended;       /* Extended attributes (Y,N) */
 char                    buf[1920];       /* Message buffer            */
 char                    conmsg[256];    /* Connection message        */
-char                    devmsg[25];     /* Device message            */
+char                    devmsg[64];     /* Device message            */
 char                    hostmsg[256];   /* Host ID message           */
 char                    num_procs[16];  /* #of processors string     */
 char                    rejmsg[256];    /* Rejection message         */
 char                    group[16];      /* Console group             */
 size_t                  logoheight;
 char                    *logobfr;
+char                    *logoout;
 
     logobfr=NULL;
     /* Load the socket address from the thread parameter */
@@ -1828,17 +1829,18 @@ char                    *logobfr;
             logoheight=sizeof(herclogo)/sizeof(char *);
             logobfr=build_logo(herclogo,logoheight,&len);
         }
+        logoout=logobfr;
     }
     else
     {
         len = snprintf (buf, sizeof(buf), "%s\r\n%s\r\n%s\r\n",
                         conmsg, hostmsg, devmsg);
-        logobfr=buf;
+        logoout=buf;
     }
 
     if (class != 'P')  /* do not write connection resp on 3287 */
     {
-        rc = send_packet (csock, (BYTE *)logobfr, len, "CONNECTION RESPONSE");
+        rc = send_packet (csock, (BYTE *)logoout, len, "CONNECTION RESPONSE");
     }
     if(logobfr)
     {
