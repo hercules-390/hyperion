@@ -278,7 +278,7 @@ struct ZPBLK {
 /* System configuration block                                        */
 /*-------------------------------------------------------------------*/
 struct SYSBLK {
-#define HDL_VERS_SYSBLK   "3.04"        /* Internal Version Number   */
+#define HDL_VERS_SYSBLK   "3.05"        /* Internal Version Number   */
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
         int     arch_mode;              /* Architecturual mode       */
                                         /* 0 == S/370                */
@@ -320,6 +320,7 @@ struct SYSBLK {
         LOCK    intlock;                /* Interrupt lock            */
         LOCK    sigplock;               /* Signal processor lock     */
         ATTR    detattr;                /* Detached thread attribute */
+        ATTR    joinattr;               /* Joinable thread attribute */
         TID     cnsltid;                /* Thread-id for console     */
         TID     socktid;                /* Thread-id for sockdev     */
 #if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
@@ -345,6 +346,7 @@ struct SYSBLK {
 #if defined(OPTION_SCSI_TAPE)
         int     auto_scsi_mount_secs;   /* Check for SCSI tape mount
                                            frequency; 0 == disabled  */
+#define DEFAULT_AUTO_SCSI_MOUNT_SECS  (5)
 #endif
         DEVBLK *firstdev;               /* -> First device block     */
 #if defined(OPTION_FAST_DEVLOOKUP)
