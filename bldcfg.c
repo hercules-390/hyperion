@@ -1630,6 +1630,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             {
                 sysblk.auto_scsi_mount_secs = 0;
             }
+            else if ( strcasecmp( sauto_scsi_mount, "yes" ) == 0 )
+            {
+                sysblk.auto_scsi_mount_secs = DEFAULT_AUTO_SCSI_MOUNT_SECS;
+            }
             else
             {
                 int auto_scsi_mount_secs;
@@ -1736,6 +1740,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     initialize_lock (&sysblk.sigplock);
     initialize_condition (&sysblk.broadcast_cond);
     initialize_detach_attr (&sysblk.detattr);
+    initialize_join_attr   (&sysblk.joinattr);
     initialize_condition (&sysblk.cpucond);
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         initialize_lock (&sysblk.cpulock[i]);
