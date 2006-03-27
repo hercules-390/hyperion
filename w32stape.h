@@ -18,6 +18,8 @@
 
 #include "w32mtio.h"        // Win32 version of 'mtio.h'
 
+#define  WIN32_TAPE_DEVICE_NAME    "\\\\.\\Tape0"
+
 #ifndef _W32STAPE_C_
   #ifndef _HTAPE_DLL_
     #define W32ST_DLL_IMPORT  DLL_IMPORT
