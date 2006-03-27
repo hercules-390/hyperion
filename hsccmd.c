@@ -53,19 +53,10 @@ int process_script_file(char *,int);
 
 int $test_cmd(int argc, char *argv[],char *cmdline)
 {
-    int x, zero;
-    zero = argc ? 0 : argc;
-    x = 1/zero;
-
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
-    // Cause Hercules to hang...
-    while(1)
-    {
-        logmsg("** $test_cmd!\n");
-        sleep(5);
-    }
+    cause_crash();
     return 0;
 }
 
