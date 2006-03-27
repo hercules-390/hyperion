@@ -2819,8 +2819,6 @@ static void ReqAutoMount( DEVBLK *dev )
     char*  eyecatcher =
 "*******************************************************************************";
 
-    TRACE( "** ReqAutoMount...\n" );
-
     ///////////////////////////////////////////////////////////////////
 
     // The Automatic Cartridge Loader or "ACL" (sometimes also referred
@@ -2907,22 +2905,14 @@ static void ReqAutoMount( DEVBLK *dev )
     tapemsg = ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 ) ?
         dev->tapemsg2 : dev->tapemsg1;
 
-    TRACE( "** ReqAutoMount: tapemsg = \"%s\"\n", tapemsg );
-
     /* Extract volser from message */
     strncpy( volser, tapemsg+1, sizeof(volser)-1 ); volser[sizeof(volser)-1]=0;
 
-    TRACE( "** ReqAutoMount: volser = \"%s\"\n", volser );
-
     /* Set some boolean flags */
     autoload = ( dev->tapedispflags & TAPEDISPFLG_AUTOLOADER ) ? TRUE : FALSE;
-    TRACE( "** ReqAutoMount: autoload = %s\n", autoload ? "TRUE" : "FALSE" );
     stdlbled = ( 'S' == tapemsg[7] )                           ? TRUE : FALSE;
-    TRACE( "** ReqAutoMount: stdlbled = %s\n", stdlbled ? "TRUE" : "FALSE" );
     ascii    = ( 'A' == tapemsg[7] )                           ? TRUE : FALSE;
-    TRACE( "** ReqAutoMount: ascii = %s\n", ascii ? "TRUE" : "FALSE" );
     scratch  = ( 'S' == tapemsg[0] )                           ? TRUE : FALSE;
-    TRACE( "** ReqAutoMount: scratch = %s\n", scratch ? "TRUE" : "FALSE" );
     mountreq =
     (0
         || (       TAPEDISPTYP_MOUNT       == dev->tapedisptype )
@@ -2935,7 +2925,6 @@ static void ReqAutoMount( DEVBLK *dev )
            )
     )
     ? TRUE : FALSE;
-    TRACE( "** ReqAutoMount: mountreq = %s\n", mountreq ? "TRUE" : "FALSE" );
     unmountreq =
     (0
         || (       TAPEDISPTYP_UNMOUNT     == dev->tapedisptype )
@@ -2945,7 +2934,6 @@ static void ReqAutoMount( DEVBLK *dev )
            )
     )
     ? TRUE : FALSE;
-    TRACE( "** ReqAutoMount: unmountreq = %s\n", unmountreq ? "TRUE" : "FALSE" );
 
 #if defined(OPTION_SCSI_TAPE)
 #if 1
@@ -3085,7 +3073,6 @@ static void ReqAutoMount( DEVBLK *dev )
         &&  sysblk.auto_scsi_mount_secs
     )
     {
-        TRACE( "** ReqAutoMount: creating mount monitoring thread...\n" );
         VERIFY
         (
             create_thread
@@ -3137,17 +3124,11 @@ BYTE*           msg;                    /* (work buf ptr)            */
     msg1[ sizeof(msg1) - 1 ] = 0;
     msg2[ sizeof(msg2) - 1 ] = 0;
 
-    TRACE( "** load_display: msg1 = \"%s\", msg2 = \"%s\"\n", msg1, msg2 );
-
     tapeloaded = dev->tmh->tapeloaded( dev, NULL, 0 );
-
-    TRACE( "** load_display: tapeloaded = %s\n", tapeloaded ? "TRUE" : "FALSE" );
 
     switch ( fcb & FCB_FS )  // (high-order 3 bits)
     {
     case FCB_FS_READYGO:     // 0x00
-
-        TRACE( "** load_display: FCB_FS_READYGO\n" );
 
         /*
         || 000b: "The message specified in bytes 1-8 and 9-16 is
@@ -3165,8 +3146,6 @@ BYTE*           msg;                    /* (work buf ptr)            */
         break;
 
     case FCB_FS_UNMOUNT:     // 0x20
-
-        TRACE( "** load_display: FCB_FS_UNMOUNT\n" );
 
         /*
         || 001b: "The message specified in bytes 1-8 is maintained
@@ -3196,8 +3175,6 @@ BYTE*           msg;                    /* (work buf ptr)            */
 
     case FCB_FS_MOUNT:       // 0x40
 
-        TRACE( "** load_display: FCB_FS_MOUNT\n" );
-
         /*
         || 010b: "The message specified in bytes 1-8 is maintained
         ||       until the drive is next loaded. If the drive is
@@ -3225,8 +3202,6 @@ BYTE*           msg;                    /* (work buf ptr)            */
     case FCB_FS_NOP:         // 0x60
     default:
 
-        TRACE( "** load_display: FCB_FS_NOP/default\n" );
-
         /*
         || 011b: "This value is used to physically access a drive
         ||       without changing the message display. This option
@@ -3237,8 +3212,6 @@ BYTE*           msg;                    /* (work buf ptr)            */
         return;
 
     case FCB_FS_RESET_DISPLAY: // 0x80
-
-        TRACE( "** load_display: FCB_FS_RESET_DISPLAY\n" );
 
         /*
         || 100b: "The host message being displayed is cancelled and
@@ -3251,8 +3224,6 @@ BYTE*           msg;                    /* (work buf ptr)            */
         break;
 
     case FCB_FS_UMOUNTMOUNT: // 0xE0
-
-        TRACE( "** load_display: FCB_FS_UMOUNTMOUNT\n" );
 
         /*
         || 111b: "The message in bytes 1-8 is displayed until a tape
@@ -3290,9 +3261,6 @@ BYTE*           msg;                    /* (work buf ptr)            */
 
         break;
     }
-
-    TRACE( "** load_display: (after switch): dev->tapemsg1 = \"%s\", dev->tapemsg2 = \"%s\"\n",
-        dev->tapemsg1, dev->tapemsg2 );
 
     /* Set the flags... */
 
@@ -3377,8 +3345,6 @@ int ldpt=0;
             {
                 ldpt=1;
             }
-            TRACE( "*** IsAtLoadPoint: ldpt=%d (%sat load-point)\n",
-                ldpt, ldpt ? "" : "NOT " );
             break;
 #endif /* defined(OPTION_SCSI_TAPE) */
 
@@ -3392,7 +3358,6 @@ int ldpt=0;
     }
     else // ( dev->fd < 0 )
     {
-        TRACE( "** IsAtLoadPoint: fd < 0\n" );
         if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
             ldpt=0; /* (tape cannot possibly be at loadpoint
                         if the device cannot even be opened!) */
@@ -4117,11 +4082,7 @@ union
     if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
     {
         if ( open_scsitape( dev, NULL, 0 ) < 0 )
-        {
-            TRACE( "** mountnewtape: open_scsitape failed\n" );
             return -1; // (error msg already issued)
-        }
-        TRACE( "** mountnewtape: open_scsitape success\n" );
     }
 #endif
 
@@ -4636,7 +4597,6 @@ int             rc;
     {
         // No. Just mount whatever tape there is (if any)...
         rc = mountnewtape( dev, argc, argv );
-        TRACE( "** tapedev_init_handler: mountnewtape: rc=%d\n", rc );
     }
     else
     {
@@ -4655,7 +4615,6 @@ int             rc;
             }
             rc = dev->als ? rc : -1;
         }
-        TRACE( "** tapedev_init_handler: autoload_mount_xxxx: rc=%d\n", rc );
     }
     return rc;
 } /* end function tapedev_init_handler */

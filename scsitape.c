@@ -19,9 +19,9 @@
 
 #if defined(OPTION_SCSI_TAPE)
 
-#define  ENABLE_TRACING_STMTS   0   // (debugging: 1/0 enable/disable)
+//#define  ENABLE_TRACING_STMTS     // (Fish: DEBUGGING)
 
-#if ENABLE_TRACING_STMTS
+#ifdef ENABLE_TRACING_STMTS
   #if !defined(DEBUG)
     #warning DEBUG required for ENABLE_TRACING_STMTS
   #endif
@@ -72,23 +72,11 @@ int save_errno;
     dev->sstat = GMT_DR_OPEN( -1 );
 
     /* Open the SCSI tape device */
-    TRACE( "** open_scsitape: calling 'open'...\n" );
     rc = open_tape (dev->filename, O_RDWR | O_BINARY);
-    save_errno = errno;
-    {
-        TRACE( "** open_scsitape: back from 'open'\n" );
-    }
-    errno = save_errno;
     if (rc < 0 && EROFS == errno )
     {
         dev->readonly = 1;
-        TRACE( "** open_scsitape: retrying 'open'...\n" );
         rc = open_tape (dev->filename, O_RDONLY | O_BINARY);
-        save_errno = errno;
-        {
-            TRACE( "** open_scsitape: back from 'open' retry\n" );
-        }
-        errno = save_errno;
     }
 
     /* Check for successful open */
@@ -101,44 +89,31 @@ int save_errno;
         return -1; // (FATAL error; device cannot be opened)
     }
 
-    TRACE( "** open_scsitape: open success\n" );
-
     /* Store the file descriptor in the device block */
     dev->fd = rc;
 
     /* Obtain the initial tape device/media status information */
-    TRACE( "** open_scsitape: calling 'update_status_scsitape'...\n" );
     update_status_scsitape( dev, 0 );
-    TRACE( "** open_scsitape: back from 'update_status_scsitape'...\n" );
 
     /* Finish up the open process... */
     if ( STS_NOT_MOUNTED( dev ) )
     {
-        TRACE( "** open_scsitape: STS_NOT_MOUNTED\n" );
         /*
             Intervention required if no tape is currently mounted.
             Note: we return "success" because the filename is good
             (device CAN be opened) but close the file descriptor
             since there's no tape currently mounted on the drive.
         */
-        TRACE( "** open_scsitape: calling 'close'...\n" );
         close_tape(dev->fd);
         dev->fd = -1;
-        TRACE( "** open_scsitape: back from 'close'\n" );
         build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
         rc = 0; // (because device file IS valid and CAN be opened)
     }
     else
     {
         /* Set variable length block processing */
-        TRACE( "** open_scsitape: calling 'finish_scsitape_tapemount'...\n" );
         rc = finish_scsitape_tapemount( dev, unitstat, code );
-        TRACE( "** open_scsitape: back from 'finish_scsitape_tapemount'; rc=%d, fd%s0\n",
-            rc, dev->fd < 0 ? "<" : ">=" );
-        ASSERT( 0 == rc || dev->fd < 0 );
     }
-
-    TRACE( "** open_scsitape: exit\n" );
 
     return rc;
 } /* end function open_scsitape */
@@ -813,9 +788,7 @@ int driveready_scsitape(DEVBLK *dev,BYTE *unitstat,BYTE code)
     UNREFERENCED(code);
 
     /* Update tape status */
-    TRACE( "** driveready_scsitape: calling 'update_status_scsitape'...\n" );
     update_status_scsitape( dev, 0 );
-    TRACE( "** driveready_scsitape: back from 'update_status_scsitape'...\n" );
 
     return ( !STS_NOT_MOUNTED( dev ) );
 } /* end function driveready_scsitape */
@@ -870,7 +843,6 @@ void update_status_scsitape( DEVBLK* dev, int no_trace )
 {
     if ( dev->fd < 0 )
     {
-        TRACE( "** update_status_scsitape: fd < 0\n" );
         // The device is offline and cannot currently be used.
         dev->sstat = GMT_DR_OPEN(-1);
     }
@@ -880,21 +852,9 @@ void update_status_scsitape( DEVBLK* dev, int no_trace )
         int rc, save_errno;                 /* Return code from ioctl    */
         long saved_stat = dev->sstat;       /* (save existing status)    */
 
-        TRACE( "** update_status_scsitape: calling 'ioctl'...\n" );
         rc = ioctl_tape (dev->fd, MTIOCGET, (char*)&stblk);
-        save_errno = errno;
-        {
-            TRACE( "** update_status_scsitape: back from 'ioctl'...\n" );
-        }
-        errno = save_errno;
         if (rc < 0)
         {
-            save_errno = errno;
-            {
-                TRACE( "** update_status_scsitape: ioctl(MTIOCGET) failed\n" );
-            }
-            errno = save_errno;
-
             // Don't bother issuing an error message if the problem
             // was simply that there isn't/wasn't any tape mounted,
             // of if the device is simply busy or not opened yet...
@@ -930,16 +890,9 @@ void update_status_scsitape( DEVBLK* dev, int no_trace )
                 stblk.mt_gstat = GMT_DR_OPEN( -1 );
             }
         }
-        else
-        {
-            TRACE( "** update_status_scsitape: ioctl(MTIOCGET) success\n" );
-        }
 
         dev->sstat = stblk.mt_gstat;    // (save new status)
     }
-
-    TRACE( "** update_status_scsitape: dev->sstat=0x%8.8X (%s)\n",
-        dev->sstat, STS_NOT_MOUNTED(dev) ? "NO-TAPE" : "READY"  );
 
     /*
     ** If tape has been ejected, then close the file because the driver
@@ -950,9 +903,7 @@ void update_status_scsitape( DEVBLK* dev, int no_trace )
     {
         if ( dev->fd > 0 )
         {
-            TRACE( "** update_status_scsitape: calling 'close'...\n" );
             close_tape (dev->fd);
-            TRACE( "** update_status_scsitape: back from 'close'...\n" );
             dev->fd = -1;
         }
         dev->sstat     = GMT_DR_OPEN( -1 );
@@ -1014,7 +965,6 @@ void update_status_scsitape( DEVBLK* dev, int no_trace )
         &&   sysblk.auto_scsi_mount_secs
     )
     {
-        TRACE( "** update_status_scsitape: creating mount monitoring thread...\n" );
         VERIFY
         (
             create_thread
@@ -1028,8 +978,6 @@ void update_status_scsitape( DEVBLK* dev, int no_trace )
             == 0
         );
     }
-
-    TRACE( "** update_status_scsitape: exit\n" );
 
 } /* end function update_status_scsitape */
 
@@ -1076,17 +1024,12 @@ void *scsi_tapemountmon_thread( void *db )
     )
     {
         release_lock( &dev->lock );
-        TRACE( "** scsi_tapemountmon_thread: sleeping for %d seconds...\n",
             sysblk.auto_scsi_mount_secs );
         SLEEP( sysblk.auto_scsi_mount_secs );
-        TRACE( "** scsi_tapemountmon_thread: waking up...\n" );
         obtain_lock( &dev->lock );
 
         if ( !sysblk.auto_scsi_mount_secs )
-        {
-            TRACE( "** scsi_tapemountmon_thread: disable detected; exiting...\n" );
             break;
-        }
 
         if ( dev->fd < 0 )
         {
@@ -1094,18 +1037,14 @@ void *scsi_tapemountmon_thread( void *db )
             // until it's ready. (Note: 'open_scsitape' automatically
             // calls 'update_status_scsitape' for us)
 
-            TRACE( "** scsi_tapemountmon_thread: calling 'open_scsitape'...\n" );
             open_scsitape( dev, NULL, 0 );
-            TRACE( "** scsi_tapemountmon_thread: back from 'open_scsitape'...\n" );
         }
         else
         {
             // The DRIVE is ready, but there's still not any tape mounted;
             // keep retrieving the status until we know it's mounted...
 
-            TRACE( "** scsi_tapemountmon_thread: calling 'update_status_scsitape'...\n" );
             update_status_scsitape( dev, 1 );
-            TRACE( "** scsi_tapemountmon_thread: back from 'update_status_scsitape'...\n" );
         }
     }
 
@@ -1118,13 +1057,11 @@ void *scsi_tapemountmon_thread( void *db )
     {
         // Set drive to variable length block processing mode, etc...
 
-        TRACE( "** scsi_tapemountmon_thread: calling 'finish_scsitape_tapemount'...\n" );
         if ( finish_scsitape_tapemount( dev, NULL, 0 ) == 0 )
         {
             // Notify the guest that the tape has now been loaded by
             // presenting an unsolicited device attention interrupt...
 
-            TRACE( "** scsi_tapemountmon_thread: calling 'device_attention'...\n" );
             release_lock( &dev->lock );
             device_attention( dev, CSW_DE );
             obtain_lock( &dev->lock );
