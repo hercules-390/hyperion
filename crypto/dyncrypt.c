@@ -1831,8 +1831,10 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
       return;
     }
 
-    /* Set cv for next 8 bytes */
-    memcpy(cv, ocv, 8);
+    /* ISW 20060327                               */
+    /* FIXME : PLEASE VALIDATE THE FOLLOWING LINE */
+    /* Set cv for next 16 bytes */
+    memcpy(cv, ocv, 16);
   }
 
   /* CPU-determined amount of data processed */
