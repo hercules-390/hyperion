@@ -161,9 +161,21 @@ strlcat(char *dst, const char *src, size_t siz);
 #endif
 
 /* Subtract/add gettimeofday struct timeval */
-//#include <sys/time.h> // (you'll need this too)
 HUT_DLL_IMPORT int timeval_subtract (struct timeval *beg_timeval, struct timeval *end_timeval, struct timeval *dif_timeval);
 HUT_DLL_IMPORT int timeval_add      (struct timeval *dif_timeval, struct timeval *accum_timeval);
+
+/*
+  Easier to use timed_wait_condition that waits for
+  the specified relative amount of time without you
+  having to build an absolute timeout time yourself
+*/
+HUT_DLL_IMPORT int timed_wait_condition_relative_usecs
+(
+    COND*            pCOND,     // ptr to condition to wait on
+    LOCK*            pLOCK,     // ptr to controlling lock (must be held!)
+    U32              usecs,     // max #of microseconds to wait
+    struct timeval*  pTV        // [OPTIONAL] ptr to tod value (may be NULL)
+);
 
 // TEST
 HUT_DLL_IMPORT void cause_crash();

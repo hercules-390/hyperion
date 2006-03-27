@@ -562,6 +562,42 @@ DLL_EXPORT int timeval_add
     return ((accum_timeval->tv_sec < 0 || accum_timeval->tv_usec < 0) ? -1 : 0);
 }
 
+/*
+  Easier to use timed_wait_condition that waits for
+  the specified relative amount of time without you
+  having to build an absolute timeout time yourself
+*/
+DLL_EXPORT int timed_wait_condition_relative_usecs
+(
+    COND*            pCOND,     // ptr to condition to wait on
+    LOCK*            pLOCK,     // ptr to controlling lock (must be held!)
+    U32              usecs,     // max #of microseconds to wait
+    struct timeval*  pTV        // [OPTIONAL] ptr to tod value (may be NULL)
+)
+{
+    struct timespec timeout_timespec;
+    struct timeval  now;
+
+    if (!pTV)
+    {
+        pTV = &now;
+        gettimeofday( pTV, NULL );
+    }
+
+    timeout_timespec.tv_sec  = pTV->tv_sec  + ( usecs / 1000000 );
+    timeout_timespec.tv_nsec = pTV->tv_usec + ( usecs % 1000000 );
+
+    if ( timeout_timespec.tv_nsec > 1000000 )
+    {
+        timeout_timespec.tv_sec  += timeout_timespec.tv_nsec / 1000000;
+        timeout_timespec.tv_nsec %=                            1000000;
+    }
+
+    timeout_timespec.tv_nsec *= 1000;
+
+    return timed_wait_condition( pCOND, pLOCK, &timeout_timespec );
+}
+
 /*********************************************************************
   The following couple of Hercules 'utility' functions may be defined
   elsewhere depending on which host platform we're being built for...
