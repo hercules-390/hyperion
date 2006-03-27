@@ -112,8 +112,10 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 /* Function used to compare filenames */
 #if defined(MIXEDCASE_FILENAMES_ARE_UNIQUE)
   #define strfilenamecmp  strcmp
+  #define strnfilenamecmp  strncmp
 #else
   #define strfilenamecmp  strcasecmp
+  #define strnfilenamecmp  strncasecmp
 #endif
 
 /* Global data areas in module config.c                              */
