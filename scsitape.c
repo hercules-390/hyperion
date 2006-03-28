@@ -1024,7 +1024,6 @@ void *scsi_tapemountmon_thread( void *db )
     )
     {
         release_lock( &dev->lock );
-            sysblk.auto_scsi_mount_secs );
         SLEEP( sysblk.auto_scsi_mount_secs );
         obtain_lock( &dev->lock );
 
