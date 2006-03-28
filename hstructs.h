@@ -522,7 +522,7 @@ struct IOINT {                          /* I/O interrupt queue entry */
 /* Device configuration block                                        */
 /*-------------------------------------------------------------------*/
 struct DEVBLK {                         /* Device configuration block*/
-#define HDL_VERS_DEVBLK   "3.03"        /* Internal Version Number   */
+#define HDL_VERS_DEVBLK   "3.05"        /* Internal Version Number   */
 #define HDL_SIZE_DEVBLK   sizeof(DEVBLK)
         DEVBLK *nextdev;                /* -> next device block      */
         LOCK    lock;                   /* Device block lock         */
@@ -838,8 +838,17 @@ struct DEVBLK {                         /* Device configuration block*/
                                         /*        or a device init   */
 #if defined(OPTION_SCSI_TAPE)
         U32     sstat;                  /* Generic SCSI tape device-
-                                           independent status field  */
+                                           independent status field;
+                                           (struct mtget->mt_gstat)  */
         TID     stape_mountmon_tid;     /* Tape-mount monitor thread */
+        U32                             /* Additional SCSI flags:    */
+                stape_close_rewinds:1,  /* 1=Rewind at close         */
+                stape_getstat_busy:1,   /* 1=Status wrkr thrd busy   */
+                stape_getstat_exit:1;   /* 1=Ask stat wrkr thrd exit */
+        TID     stape_getstat_tid;      /* Tape status wrkr thrd tid */
+        LOCK    stape_getstat_lock;     /* LOCK for status wrkr thrd */
+        COND    stape_getstat_cond;     /* COND for status wrkr thrd */
+        U32     stape_getstat_sstat;    /* status wrkr thrd status   */
 #endif
         BYTE    tapedevt;               /* Hercules tape device type */
         TAPEMEDIA_HANDLER *tmh;         /* Tape Media Handling       */
@@ -869,9 +878,10 @@ struct DEVBLK {                         /* Device configuration block*/
 #define TAPEDISPTYP_REWINDING      3    /* Rewind in progress   (SYS)*/
 #define TAPEDISPTYP_UNLOADING      4    /* Unload in progress   (SYS)*/
 #define TAPEDISPTYP_CLEAN          5    /* Clean recommended    (SYS)*/
-#define TAPEDISPTYP_MOUNT          6    /* Mount Message active      */
-#define TAPEDISPTYP_UNMOUNT        7    /* Unmount message active    */
-#define TAPEDISPTYP_UMOUNTMOUNT    8    /* Unmount/Mount msg active  */
+#define TAPEDISPTYP_MOUNT          6    /* Display Until Mounted     */
+#define TAPEDISPTYP_UNMOUNT        7    /* Display Until Unmounted   */
+#define TAPEDISPTYP_UMOUNTMOUNT    8    /* Display #1 Until Unmounted,
+                                              then #2 Until Mounted  */
 #define TAPEDISPTYP_WAITACT        9    /* Display until motion      */
 
 #define IS_TAPEDISPTYP_SYSMSG( dev ) \
