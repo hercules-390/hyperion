@@ -150,18 +150,19 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="AUTO_SCSI_MOUNT"></a>
-<dt><code>AUTO_SCSI_MOUNT NO</code> &nbsp;&#124; <em>nn</em></code>
+<dt><code>AUTO_SCSI_MOUNT &nbsp;NO &#124; YES &#124; <em>nn</em></code>
 <dd><p>
     specifies whether automatic detection of SCSI tape mounts are to be
     enabled or not.
     <p>
+    Specifying <code>NO</code> or 0 seconds (the default) indicates
+    the option is disabled, forcing all SCSI tape mounts to be done
+    manually via an appropriate <code>devinit</code> command.
+    <p>
     A value from 1 to 99 seconds inclusive enables the option
     and causes periodic queries of the SCSI tape drive to automatically
-    detect when a new tape is mounted.
-    <p>
-    <code>NO</code> (the default) indicates the option is disabled, forcing all SCSI
-    tape mounts to be done manually via an appropriate <code>devinit</code>
-    command.
+    detect when a new tape is mounted. Specifying <code>YES</code>&nbsp;
+    is the same as specifying 5 seconds, the current default interval.
     <p>
     The <code>scsimount</code> panel command may also be used to display
     and/or modify this value on demand once Hercules has been started. Note
@@ -169,9 +170,9 @@ a real System/390.  The configuration file is an ASCII text file.
     and/or dismounts that may still be pending.
     <p>
     <i>
-    <b>Note:</b> &nbsp;enabling this option may negatively impact Hercules performance
-    depending on how the host operating system (Windows, Linux, etc) handles
-    SCSI attached tape drive status queries.
+    <b>Note:</b> &nbsp;enabling this option may cause Hercules to take
+    considerably longer to shutdown depending on how the host operating system
+    (Windows, Linux, etc) handles SCSI attached tape drive status queries.
     </i>
     <p>
 
