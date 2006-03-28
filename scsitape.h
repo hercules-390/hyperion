@@ -21,7 +21,7 @@
 #include "w32stape.h"
 
 extern int   open_scsitape            ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern void  close_scsitape           ( DEVBLK *dev);
+extern void  close_scsitape           ( DEVBLK *dev );
 extern int   read_scsitape            ( DEVBLK *dev, BYTE *buf,          BYTE *unitstat, BYTE code );
 extern int   write_scsitape           ( DEVBLK *dev, BYTE *buf, U16 len, BYTE *unitstat, BYTE code );
 extern int   write_scsimark           ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
@@ -34,9 +34,10 @@ extern int   bsf_scsitape             ( DEVBLK *dev,                     BYTE *u
 extern int   rewind_scsitape          ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern void  rewind_unload_scsitape   ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   driveready_scsitape      ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   finish_scsitape_tapemount( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern void  update_status_scsitape   ( DEVBLK *dev, int no_trace );
+extern int   finish_scsitape_open     ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern void  update_status_scsitape   ( DEVBLK *dev );
 extern void *scsi_tapemountmon_thread ( void   *devblk );
+extern void  kill_stape_status_thread ( DEVBLK *dev );
 
 #endif // defined(OPTION_SCSI_TAPE)
 
