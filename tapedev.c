@@ -2813,9 +2813,9 @@ static void UpdateDisplay( DEVBLK *dev )
 static void ReqAutoMount( DEVBLK *dev )
 {
     char   volser[7];
-    BYTE   autoload, mountreq, unmountreq, stdlbled, ascii, scratch;
-    char*  tapemsg;
+    BYTE   tapeloaded, autoload, mountreq, unmountreq, stdlbled, ascii, scratch;
     char*  lbltype;
+    char*  tapemsg = "";
     char*  eyecatcher =
 "*******************************************************************************";
 
@@ -2827,30 +2827,30 @@ static void ReqAutoMount( DEVBLK *dev )
     // unloaded, BUT ONLY IF the 'Index Automatic Load' bit (bit 7) of
     // the FCB (Format Control Byte, byte 0) was on whenever the Load
     // Display ccw was sent to the drive. If the bit was not on when
-    // the Load Display ccw was issued, then the requested message is
-    // simply displayed (if any) as a Dismount, Mount, ot Dismount/Mount
-    // request to the operator, and the ACL  is NOT activated (i.e. the
-    // next tape is NOT (will NOT be) automatically loaded).
-
+    // the Load Display ccw was issued, then the requested message (if
+    // any) is displayed until the next tape mount/dismount and the ACL
+    // is NOT activated (i.e. the next tape is NOT automatically loaded).
     // If the bit was on however, then, as stated, the ACF component of
     // the drive will automatically load the next [specified] cartridge.
 
     // Whenever the ACL facility is activated (via bit 7 of byte 0 of
-    // the Load Display ccw), then only bytes 1-8 of the Mount Message
-    // (or bytes 9-17 of a Dismount/Mount Message) are displayed to let
-    // the operator know which tape is currently being processed by the
-    // autoloader and thus is basically for informational purposes only
-    // (i.e. the operator does NOT need to do anything (i.e. the message
-    // is NOT a mount request) since the auto-loader is handling tape
-    // mounts for them *automatically*).
+    // the Load Display ccw), then only bytes 1-8 of the "Display Until
+    // Mounted" message (or bytes 9-17 of a "Display Until Dismounted
+    // Then Mounted" message) are displayed to let the operator know
+    // which tape is currently being processed by the autoloader and
+    // thus is basically for informational purposes only (the operator
+    // does NOT need to do anything since the auto-loader is handling
+    // tape mounts for them automatically; i.e. the message is NOT an
+    // operator mount/dismount request).
 
-    // If 'Index Automatic Load' bit was *not* set in the Load Display
-    // ccw however, then the specified Unmount, Mount or Unmount/Mount
-    // message is meant as an unmount or mount (or unmount-then-mount)
-    // request for the actual [human being] *operator*,  and thus they
-    // DO need to take some sort of action (since the ACL/ACF automatic
-    // loader facility is not active) -- i.e. the message is an actual
-    // request to the *operator* to *manually* load or unload a tape).
+    // If the 'Index Automatic Load' bit was not set in the Load Display
+    // CCW however, then the specified "Display Until Mounted", "Display
+    // Until Unmounted" or "Display Until Unmounted Then Display Until
+    // Mounted" message is meant as a mount, unmount, or unmount-then-
+    // mount request for the actual [human being] operator, and thus
+    // they DO need to take some sort of action (since the ACL automatic
+    // loader facility is not active; i.e. the message is a request to
+    // the operator to manually unload, load or unload then load a tape).
 
     // THUS... If the TAPEDISPFLG_AUTOLOADER flag is set (indicating
     // the autoloader is (or should be) active), then the message we
@@ -2864,7 +2864,7 @@ static void ReqAutoMount( DEVBLK *dev )
     // the specified tape volume).
 
     // Also please note that while there are no formally established
-    // standards regarding the format of the Load Display ccw message
+    // standards regarding the format of the Load Display CCW message
     // text, there are however certain established conventions (estab-
     // lished by IBM naturally). If the first character is an 'M', it
     // means "Please MOUNT the indicated volume". An 'R' [apparently]
@@ -2879,8 +2879,7 @@ static void ReqAutoMount( DEVBLK *dev )
     // tape is obviously being requested (there doesn't seem to be any
     // convention/consensus regarding the format for requesting scratch
     // tapes; some shops for example use 'XXXSCR' to indicate that a
-    // scratch tape from a specific pool of tapes (pool 'XXX') should
-    // be mounted).
+    // scratch tape from tape pool 'XXX' should be mounted).
 
     ///////////////////////////////////////////////////////////////////
 
@@ -2895,45 +2894,68 @@ static void ReqAutoMount( DEVBLK *dev )
     /* Reset work flag */
     dev->tapedispflags &= ~TAPEDISPFLG_REQAUTOMNT;
 
-    // If the drive doesn't have a display,
-    // then it can't have an auto-loader either...
-
+    /* If the drive doesn't have a display,
+       then it can't have an auto-loader either */
     if ( !dev->tdparms.displayfeat )
         return;
 
-    /* Get ptr to correct message */
-    tapemsg = ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 ) ?
-        dev->tapemsg2 : dev->tapemsg1;
+    /* Determine if mount or unmount request
+       and get pointer to correct message */
+
+    tapeloaded = dev->tmh->tapeloaded( dev, NULL, 0 ) ? TRUE : FALSE;
+
+    mountreq   = FALSE;     // (default)
+    unmountreq = FALSE;     // (default)
+
+    if (tapeloaded)
+    {
+        // A tape IS already loaded...
+
+        // 1st byte of message1 non-blank, *AND*,
+        // unmount request or,
+        // unmountmount request and not message2-only flag?
+
+        if (' ' != *(tapemsg = dev->tapemsg1) &&
+            (0
+                || TAPEDISPTYP_UNMOUNT == dev->tapedisptype
+                || (1
+                    && TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
+                    && !(dev->tapedispflags & TAPEDISPFLG_MESSAGE2)
+                   )
+            )
+        )
+            unmountreq = TRUE;
+    }
+    else
+    {
+        // NO TAPE is loaded yet...
+
+        // mount request and 1st byte of msg1 non-blank, *OR*,
+        // unmountmount request and 1st byte of msg2 non-blank?
+
+        if (
+        (1
+            && TAPEDISPTYP_MOUNT == dev->tapedisptype
+            && ' ' != *(tapemsg = dev->tapemsg1)
+        )
+        ||
+        (1
+            && TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
+            && ' ' != *(tapemsg = dev->tapemsg2)
+        ))
+            mountreq = TRUE;
+    }
 
     /* Extract volser from message */
-    strncpy( volser, tapemsg+1, sizeof(volser)-1 ); volser[sizeof(volser)-1]=0;
+    strncpy( volser, tapemsg+1, 6 ); volser[6]=0;
 
     /* Set some boolean flags */
-    autoload = ( dev->tapedispflags & TAPEDISPFLG_AUTOLOADER ) ? TRUE : FALSE;
-    stdlbled = ( 'S' == tapemsg[7] )                           ? TRUE : FALSE;
-    ascii    = ( 'A' == tapemsg[7] )                           ? TRUE : FALSE;
-    scratch  = ( 'S' == tapemsg[0] )                           ? TRUE : FALSE;
-    mountreq =
-    (0
-        || (       TAPEDISPTYP_MOUNT       == dev->tapedisptype )
-        || (1
-            &&     TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
-            &&   (0
-                  || ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2  )
-                  || ( dev->tapedispflags & TAPEDISPFLG_ALTERNATE )
-                 )
-           )
-    )
-    ? TRUE : FALSE;
-    unmountreq =
-    (0
-        || (       TAPEDISPTYP_UNMOUNT     == dev->tapedisptype )
-        || (1
-            &&     TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
-            &&  !( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
-           )
-    )
-    ? TRUE : FALSE;
+    autoload = ( dev->tapedispflags & TAPEDISPFLG_AUTOLOADER )    ?  TRUE  :  FALSE;
+    stdlbled = ( 'S' == tapemsg[7] )                              ?  TRUE  :  FALSE;
+    ascii    = ( 'A' == tapemsg[7] )                              ?  TRUE  :  FALSE;
+    scratch  = ( 'S' == tapemsg[0] )                              ?  TRUE  :  FALSE;
+
+    lbltype = stdlbled ? "SL" : "UL";
 
 #if defined(OPTION_SCSI_TAPE)
 #if 1
@@ -2942,7 +2964,7 @@ static void ReqAutoMount( DEVBLK *dev )
 
     // Since we currently don't have any way of activating a SCSI tape
     // drive's REAL autoloader mechanism whenever we receive an auto-
-    // mount message [from the guest o/s via the Load Display ccw], we
+    // mount message [from the guest o/s via the Load Display CCW], we
     // issue a normal operator mount request message instead (in order
     // to ask the [Hercules] operator (a real human being) to please
     // perform the automount for us instead since we can't [currently]
@@ -2953,13 +2975,11 @@ static void ReqAutoMount( DEVBLK *dev )
     // similar for the Linux world), then the following workaround can
     // be safely removed.
 
-        autoload = FALSE;       // (forced, for now; see above)
+    autoload = FALSE;       // (temporarily forced; see above)
 
     // ****************************************************************
 #endif
 #endif /* defined(OPTION_SCSI_TAPE) */
-
-    lbltype = stdlbled ? "SL" : "UL";
 
     if ( autoload )
     {
@@ -2967,10 +2987,6 @@ static void ReqAutoMount( DEVBLK *dev )
         // hardware autoloader facility (i.e. the SCSI medium changer)
         // to unload and/or load the tape(s) if this were a SCSI auto-
         // loading tape drive.
-
-        // For now though, we'll just issue an informative message...
-
-        // (Note: issue unmount msg first (if any), before any mount msg)
 
         if ( unmountreq )
         {
@@ -3000,8 +3016,6 @@ static void ReqAutoMount( DEVBLK *dev )
         // If this is a mount or unmount request, inform the
         // [Hercules] operator of the action they're expected to take...
 
-        // (Note: issue unmount msg first (if any), before any mount msg)
-
         if ( unmountreq )
         {
             char* keep_or_retain = "";
@@ -3029,7 +3043,6 @@ static void ReqAutoMount( DEVBLK *dev )
                     eyecatcher );
             }
         }
-
         if ( mountreq )
         {
             if ( scratch )
@@ -3050,6 +3063,8 @@ static void ReqAutoMount( DEVBLK *dev )
 
 #if defined(OPTION_SCSI_TAPE)
 
+	//                   AUTO-SCSI-MOUNT
+	//
     // If a mount is being issued and no tape is currently mounted
     // on this device, then kick off the tape mount monitoring thread
     // (if it doesn't already exist) that will monitor for tape mounts.
@@ -3057,20 +3072,14 @@ static void ReqAutoMount( DEVBLK *dev )
     // Note that we do this regardless of whether or not this was a
     // request for a manual mount or an autoloader automatic mount.
 
-    // Note too that we only do this if the drive has a message display
-    // (tdparms.displayfeat). If the drive doesn't have a message display,
-    // then the function that monitors the status of the SCSI tape will
-    // kick off the thread instead whenever it notices there's no tape
-    // mounted. (But if the drive has a display (which it obviously must
-    // or we wouldn't even be here) then we kick off the thread here)...
+    obtain_lock( &dev->stape_getstat_lock );
 
     if (1
-        &&  TAPEDEVT_SCSITAPE == dev->tapedevt
-        &&  dev->tdparms.displayfeat
         &&  mountreq
+        &&  sysblk.auto_scsi_mount_secs
+        &&  TAPEDEVT_SCSITAPE == dev->tapedevt
         &&  STS_NOT_MOUNTED( dev )
         && !dev->stape_mountmon_tid
-        &&  sysblk.auto_scsi_mount_secs
     )
     {
         VERIFY
@@ -3086,8 +3095,12 @@ static void ReqAutoMount( DEVBLK *dev )
             == 0
         );
     }
+
+    release_lock( &dev->stape_getstat_lock );
+
 #endif /* defined(OPTION_SCSI_TAPE) */
-}
+
+} /* end function ReqAutoMount */
 
 /*-------------------------------------------------------------------*/
 /* Load Display channel command processing...                        */
@@ -3167,7 +3180,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                logmsg(_("HHCTA099I %4.4X: Tape Unmount Request: \"%s\"\n"),
+                logmsg(_("HHCTA099I %4.4X: Tape Display \"%s\" Until Unmounted\n"),
                     dev->devnum, dev->tapemsg1 );
         }
 
@@ -3193,7 +3206,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
-                logmsg(_("HHCTA099I %4.4X: Tape Mount Request: \"%s\"\n"),
+                logmsg(_("HHCTA099I %4.4X: Tape Display \"%s\" Until Mounted\n"),
                     dev->devnum, dev->tapemsg1 );
         }
 
@@ -3246,7 +3259,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                logmsg(_("HHCTA099I %4.4X: Tape Demount/Mount Request: \"%s\", \"%s\"\n"),
+                logmsg(_("HHCTA099I %4.4X: Tape Display \"%s\" Until Unmounted, then \"%s\" Until Mounted\n"),
                     dev->devnum, dev->tapemsg1, dev->tapemsg2 );
         }
         else
@@ -3255,7 +3268,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedispflags = TAPEDISPFLG_MESSAGE2 | TAPEDISPFLG_REQAUTOMNT;
 
             if ( dev->ccwtrace || dev->ccwstep )
-                logmsg(_("HHCTA099I %4.4X: Tape Mount Request: \"%s\"\n"),
+                logmsg(_("HHCTA099I %4.4X: Tape \"%s\" Until Mounted\n"),
                     dev->devnum, dev->tapemsg2 );
         }
 
@@ -3309,7 +3322,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
     UpdateDisplay( dev );
     ReqAutoMount( dev );
 
-} /* end function issue_mount_message */
+} /* end function load_display */
 
 /*-------------------------------------------------------------------*/
 /* ISW : START Of New SENSE handling */
@@ -3340,7 +3353,7 @@ int ldpt=0;
 
 #if defined(OPTION_SCSI_TAPE)
         case TAPEDEVT_SCSITAPE:
-            update_status_scsitape( dev, 0 );
+            update_status_scsitape( dev );
             if ( STS_BOT( dev ) )
             {
                 ldpt=1;
@@ -3383,15 +3396,15 @@ int sns4mat;
     case TAPE_BSENSE_TAPEUNLOADED:
         switch(ccwcode)
         {
-        case 0x01:
-        case 0x02:
-        case 0x0C:
+        case 0x01: // write
+        case 0x02: // read
+        case 0x0C: // read backward
             *unitstat=CSW_CE | CSW_UC;
             break;
-        case 0x03:
+        case 0x03: // nop
             *unitstat=CSW_UC;
             break;
-        case 0x0f:
+        case 0x0f: // rewind unload
             *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
             break;
         default:
@@ -3537,15 +3550,15 @@ static void build_sense_Streaming(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccw
     case TAPE_BSENSE_TAPEUNLOADED:
         switch(ccwcode)
         {
-        case 0x01:
-        case 0x02:
-        case 0x0C:
+        case 0x01: // write
+        case 0x02: // read
+        case 0x0C: // read backward
             *unitstat=CSW_CE | CSW_UC | (dev->tdparms.deonirq?CSW_DE:0);
             break;
-        case 0x03:
+        case 0x03: // nop
             *unitstat=CSW_UC;
             break;
-        case 0x0f:
+        case 0x0f: // rewind unload
             /*
             *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
             */
@@ -3652,15 +3665,15 @@ static void build_sense_3410_3420(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccw
     case TAPE_BSENSE_TAPEUNLOADED:
         switch(ccwcode)
         {
-        case 0x01:
-        case 0x02:
-        case 0x0C:
+        case 0x01: // write
+        case 0x02: // read
+        case 0x0C: // read backward
             *unitstat=CSW_CE | CSW_UC | (dev->tdparms.deonirq?CSW_DE:0);
             break;
-        case 0x03:
+        case 0x03: // nop
             *unitstat=CSW_UC;
             break;
-        case 0x0f:
+        case 0x0f: // rewind unload
             /*
             *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
             */
@@ -3808,15 +3821,16 @@ int sense_built;
             if(dev->tmh->passedeot(dev))
             {
                 if (TAPE_BSENSE_STATUSONLY==ERCode &&
-                   ( code==0x01 ||
-                     code==0x17 ||
-                     code==0x1F
+                   ( code==0x01 || // write
+                     code==0x17 || // erase gap
+                     code==0x1F    // write tapemark
                    )
                 )
                 {
                     *unitstat|=CSW_UX;
                 }
             }
+            break;
         }
     }
     if(!sense_built)
@@ -3846,6 +3860,9 @@ static struct tape_format_entry fmttab[]={
 #if defined(OPTION_SCSI_TAPE)
     /* This entry matches a filename starting with /dev/ */
     {"^/dev/",    TAPEDEVT_SCSITAPE,  &tmh_scsi, "SCSI Tape"},
+#if defined(_MSVC_)
+    {"^\\\\\\\\\\.\\\\Tape[0-9]", TAPEDEVT_SCSITAPE, &tmh_scsi, "SCSI Tape"},
+#endif // _MSVC_
 #endif
     /* This entry matches a filename ending with .het    */
     {"\\.het$",   TAPEDEVT_HET,       &tmh_het,  "Hercules Formatted Tape"},
@@ -3941,11 +3958,29 @@ union
                 rc = strcasecmp( &dev->filename[rc-4], ".tdf" );
             break;
 #if defined(OPTION_SCSI_TAPE)
-        case TAPEDEVT_SCSITAPE: // filename starts with "/dev/"
-            if ( (rc = strlen(dev->filename)) <= 5 )
-                rc = -1;
+        case TAPEDEVT_SCSITAPE: // filename starts with "\\.\Tape" or "/dev/"
+#if defined(_MSVC_)
+            if (1
+                && strncasecmp(dev->filename, "\\\\.\\Tape", 8) == 0
+                && isdigit(*(dev->filename+8))
+                &&  0  ==  *(dev->filename+9)
+            )
+                rc = 0;
             else
-                rc = strncasecmp( dev->filename, "/dev/", 5 );
+#endif // _MSVC_
+            {
+                if ( (rc = strlen(dev->filename)) <= 5 )
+                    rc = -1;
+                else
+                    rc = strncasecmp( dev->filename, "/dev/", 5 );
+                if (0 == rc)
+                {
+                    if (strncasecmp( dev->filename+5, "st", 2 ) == 0)
+                        dev->stape_close_rewinds = 1; // (rewind at close)
+                    else
+                        dev->stape_close_rewinds = 0; // (otherwise don't)
+                }
+            }
             break;
 #endif
         case TAPEDEVT_HET:      // filename ends with ".het"
@@ -4074,25 +4109,15 @@ union
         } // end switch (parser (&ptab[0], argv[i], &res))
     } // end for (i = 1; i < argc; i++)
 
-#if defined(OPTION_SCSI_TAPE)
-    // If this is a SCSI tape, open the device file (which also
-    // obtains our starting tape status value, which itself kicks
-    // off the tape mount monitoring thread if approrpriate)...
-
-    if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
-    {
-        if ( open_scsitape( dev, NULL, 0 ) < 0 )
-            return -1; // (error msg already issued)
-    }
-#endif
-
     /* Adjust the display if necessary */
     if(dev->tdparms.displayfeat)
     {
         if(strcmp(dev->filename,TAPE_UNLOADED)==0)
         {
+            /* NO tape is loaded */
             if(TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype)
             {
+                /* A new tape SHOULD be mounted */
                 dev->tapedisptype   = TAPEDISPTYP_MOUNT;
                 dev->tapedispflags |= TAPEDISPFLG_REQAUTOMNT;
                 strlcpy( dev->tapemsg1, dev->tapemsg2, sizeof(dev->tapemsg1) );
@@ -4104,6 +4129,7 @@ union
         }
         else
         {
+            /* A tape IS already loaded */
             dev->tapedisptype = TAPEDISPTYP_IDLE;
         }
         UpdateDisplay(dev);
@@ -4684,6 +4710,10 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
 /*-------------------------------------------------------------------*/
 static int tapedev_close_device ( DEVBLK *dev )
 {
+#if defined(OPTION_SCSI_TAPE)
+    if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
+        kill_stape_status_thread( dev );
+#endif /* defined(OPTION_SCSI_TAPE) */
     autoload_close(dev);
     dev->tmh->close(dev);
     ASSERT( dev->fd < 0 );
@@ -4787,7 +4817,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     }
 
     /* Command reject if data chaining and command is not READ */
-    if ((flags & CCW_FLAGS_CD) && code != 0x02 && code != 0x0C)
+    if (1
+        && (flags & CCW_FLAGS_CD)   // data chaining
+        && code != 0x02             // read
+        && code != 0x0C             // read backwards
+    )
     {
         logmsg(_("HHCTA072E Data chaining not supported for CCW %2.2X\n"),
                 code);
@@ -5062,8 +5096,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 "autoload wait for %4.4X tapemount thread",
                 dev->devnum);
             thread_name[sizeof(thread_name)-1]=0;
-            create_thread( &dummy_tid, &sysblk.detattr, autoload_wait_for_tapemount_thread,
-                           dev, thread_name );
+            create_thread( &dummy_tid, &sysblk.detattr,
+                autoload_wait_for_tapemount_thread,
+                dev, thread_name );
         }
 
         ReqAutoMount(dev);
@@ -5418,7 +5453,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Block to seek */
         ASSERT( count >= sizeof(locblock) );
-//      memcpy( (BYTE*)&locblock, iobuf, sizeof(locblock) );
         FETCH_FW(locblock, iobuf);
 
         /* Check for invalid/reserved Format Mode bits */
@@ -5427,8 +5461,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
             break;
         }
-
-        locblock &= 0x003FFFFF;   // (Logical Block Number)
 
         /* Calculate residual byte count */
         len = sizeof(locblock);
