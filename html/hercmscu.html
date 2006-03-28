@@ -1,0 +1,550 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 3: System Messages: CU - CCKD Utilities</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 3: System Messages: CU - CCKD Utilities</h1>
+<p>
+Messages issued by the cckd utility commands (cckdcdsk, cckdcomp and
+cckdswap) and cckd utility functions (cckd_chkdsk, cckd_comp and
+cckd_swap) are described here.  The utility functions are called by
+both the <a href="cckddasd.html#utilities">utility</a> commands and
+Hercules.
+<h3>Messages</h3>
+Messages are in the format
+<br>
+<b>HHCCU</b><i>nnn</i><b>t</b> <i>file</i> message text
+<br>
+where <i>nnn</i> is the message number, <i>t</i> is either <b>I</b>,
+<b>W</b> or <b>E</b>, depending on the severity of the message.
+<i>file</i> will either be the part of the file name following the last
+slash (<b>/</b> or <b>\</b>) when called by a utility command, or
+will be <i>xxxx</i>: file[<i>n</i>] where <i>xxxx</i> is the device
+number and <i>n</i> is the shadow file number when called by Hercules.
+<p>
+The <i>file</i> portion of the message is omitted below for brevity.
+<p><center><hr width="15%" noshade></center>
+<p>
+<dl>
+
+<dt><code><a name="HHCCU101I">
+HHCCU101I converting to <em>endian-format</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The file is in the wrong endian (byte order) format for the
+      host architecture.  The file is being converted to the host
+      endian format <em>endian-format</em>.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c functions cckd_comp and cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU102I">
+HHCCU102I compress successful, <em>n</em> bytes released
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The compress function successfully completed and free <em>n</em>
+      bytes from the file.  If <em>n</em> is 0, then the level 2 tables
+      were repositioned to the beginning of the file in order.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU103I">
+HHCCU103I file already compressed
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The compress function determined that the file is already compressed.
+      The file is not updated.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU104I">
+HHCCU103I free space rebuilt
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>Free space errors were detected and free space has been successfully rebuilt
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU300I">
+HHCCU300I <em>number</em> <em>space</em> images recovered
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>Recovery phase 1 completed, recovering <em>number</em> <em>spaces</em> (<b>trk</b>s or <b>blkgrp</b>s)
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU301I">
+HHCCU301I <em>space</em>[<em>id</em>] recovered offset <em>offset</em> len <em>length</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The space <em>space</em> (<b>trk</b> or <b>blkgrp</b>) was recovered at offset <em>offset</em>
+      and length <em>length</em>.
+      <em>id</em> is the trk or blkgrp number.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU500W">
+HHCCU500W recovery not completed, file opened read-only
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>Phase 3 recovery did not complete because the file is not opened for write
+  <dt><b>Action</b>
+  <dd>Omit the <b>-ro</b> option for cckdcdsk, or change the file
+      permissions to enable the file to be opened for read-write for Hercules
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU501W">
+HHCCU501W recovery not completed, missing compression
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>Phase 3 recovery did not complete because one or more trk or blkgrp images
+      were compressed using a compression (<b>zlib</b> or <b>bzip2</b>) that was
+      not built into Hercules
+  <dt><b>Action</b>
+  <dd>Processing terminates.  The file has not been updated.
+      Build Hercules with the missing compression libraries.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU502W">
+HHCCU502W free space not rebuilt, file opened read-only
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>Free space errors were detected but the free space was not rebuilt
+      because the file is not opened for write
+  <dt><b>Action</b>
+  <dd>Omit the <b>-ro</b> option for cckdcdsk, or change the file
+      permissions to enable the file to be opened for read-write for Hercules
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU600W">
+HHCCU600W forcing check level <em>level</em>[; <em>reason</em>]
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>Errors have been detected in the compressed file that warrant the
+      escalation of the check level to <em>level</em>.  An additional
+      explanation <em>reason</em> may be supplied.
+  <dt><b>Action</b>
+  <dd>At a minimum, free space will be rebuilt
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU601W">
+HHCCU601W cdevhdr inconsistencies found code=<em>code</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The space statistics in the cckddasd device header (cdevhdr) contain
+      inconsistencies described by <em>code</em>.  <em>code</em> is a
+      16-bit bit field and more than one bit may be on.  See cckdutil.c for
+      the different bit settings.
+  <dt><b>Action</b>
+  <dd>At a minimum, free space will be rebuilt
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+%s offset 0x%" I32_FMT "x len %d is out of bounds
+
+<dt><code><a name="HHCCU602W">
+HHCCU602W <em>space</em> offset <em>offset</em> len <em>length</em> is out of bounds
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The space <em>space</em> (trk, blkgrp or l2) either precedes the
+      end of the L1 table (at the beginning of the file) or exceeds the
+      end of the file
+  <dt><b>Action</b>
+  <dd>The space will be recovered.  If the space is an L2 table, then all
+      tracks or block groups associated with the table will also be recovered.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU603W">
+HHCCU603W <em>space1</em> offset <em>offset1</em> len <em>length</em>
+          overlaps <em>space2</em> offset <em>offset2</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The space <em>space1</em> overlaps space <em>space2</em>.
+  <dt><b>Action</b>
+  <dd>The spaces will be recovered.  If either space is an L2 table, then all
+      tracks or block groups associated with that table will also be recovered.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU604W">
+HHCCU604W <em>space</em> l2 inconsistency: len <em>length</em>, size <em>size</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The space <em>space</em> (trk or blkgrp) has an inconsistent l2 entry.
+      Either the length <em>length</em> is too small or is too large or exceeds
+      the size <em>size</em>
+  <dt><b>Action</b>
+  <dd>The space will be recovered.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU610W">
+HHCCU610W free space errors detected
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>Free space is not consistent
+  <dt><b>Action</b>
+  <dd>Free space will be rebuilt
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU620W">
+HHCCU620W <em>space</em>[<em>id</em>] hdr error offset <em>offset</em>: <em>xxxxxxxxxx</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>A header error was found for <em>space</em> (<b>trk</b> or <b>blkgrp</b>) during validation.
+      <em>id</em> is the trk or blkgrp number.  The header is located at file offset <em>offset</em>.
+      The contents of the 5 byte header is <em>xxxxxxxxxx</em> in hex.
+      <p>
+      The first byte of the header should be either <b>00</b> (compress none),
+      <b>01</b> (compress zlib) or <b>02</b> (compress bzip2).<br>
+      For ckd, the next two bytes is the cylinder (in big-endian byte order) and the two
+      bytes after that is the head (also in big-endian byte order).<br>
+      For fba, the next four bytes is the block group number (in big-endian byte order).
+      <p>
+      The header contains an invalid value.  Either the offset is incorrect or the header has
+      been overlaid.
+  <dt><b>Action</b>
+  <dd>The space will be recovered
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU621W">
+HHCCU621W <em>space</em>[<em>id</em>] compressed using <em>compression</em>, not supported
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>During validation, the header for <em>space</em> (<b>trk</b> or <b>blkgrp</b>) indicates
+      that the space was compressed using <em>compression</em> (<b>zlib</b> or <b>bzip2</b>) but
+      support for that compression method was not built into Hercules.
+      <em>id</em> is the trk or blkgrp number.
+  <dt><b>Action</b>
+  <dd>Processing continues.  However, no recovery will take place.<br>
+      Build Hercules with the specified compression library.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU622W">
+HHCCU622W <em>space</em>[<em>id</em>] offset <em>offset</em> len <em>length</em> validation error
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The <em>space</em> (<b>trk</b> or <b>blkgrp</b>) at offset <em>offset</em> and length <em>length</em>
+      failed validation.
+      <em>id</em> is the trk or blkgrp number.
+      Either the space did not uncompress successfully or the uncompressed space
+      contains some kind of error.
+      This error is detected during check level 3 validation.
+  <dt><b>Action</b>
+  <dd>The space will be recovered
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_comp
+  </dl>
+
+<dt><code><a name="HHCCU700E">
+HHCCU700E open error: <em>error text</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>Open failed for the file.
+      The text associated with the error number is displayed.
+  <dt><b>Action</b>
+  <dd>Processing for the file terminates.
+  <dt><b>Issued by</b>
+  <dd>cckdccdsk.c, cckdcomp.c
+  </dl>
+
+<dt><code><a name="HHCCU701E">
+HHCCU701E fstat error: <em>error text</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The file status system call failed.
+      The text associated with the error number is displayed.
+  <dt><b>Action</b>
+  <dd>Function processing terminates.  Probable Hercules logic error.
+      Contact the hercules mailing list for assistance.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c functions cckd_swapend, cckd_comp and cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU702E">
+HHCCU702E lseek error offset <em>offset</em>: <em>error text</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>File reposition to offset <em>offset</em> failed.
+      The text associated with the error number is displayed.
+  <dt><b>Action</b>
+  <dd>Function processing terminates.  Probable Hercules logic error.
+      Contact the hercules mailing list for assistance.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c functions cckd_swapend, cckd_comp and cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU703E">
+HHCCU703E read error rc=<em>retcode</em> offset <em>offset</em> len <em>length</em>: <em>error text</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>A read failed at offset <em>offset</em> for length <em>length</em>.
+      If <em>retcode</em> is not negative then the read was incomplete and the value
+      indicates how many bytes were read.  Otherwise
+      the text associated with the error number is displayed.
+  <dt><b>Action</b>
+  <dd>Function processing terminates.  Possible Hercules logic error.
+      Possible hardware error.
+      Contact the hercules mailing list for assistance.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c functions cckd_swapend, cckd_comp and cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU704E">
+HHCCU704E write error rc=<em>retcode</em> offset <em>offset</em> len <em>length</em>: <em>error text</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>A write failed at offset <em>offset</em> for length <em>length</em>.
+      If <em>retcode</em> is not negative then the write was incomplete and the value
+      indicates how many bytes were written.  Otherwise
+      the text associated with the error number is displayed.
+  <dt><b>Action</b>
+  <dd>Function processing terminates.  Possible Hercules logic error.
+      Possible hardware error.
+      Contact the hercules mailing list for assistance.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c functions cckd_swapend, cckd_comp and cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU705E">
+HHCCU705E malloc error, size <em>size</em>: <em>error text</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>Malloc (allocate memory) failed for size <em>size</em>.
+  <dt><b>Action</b>
+  <dd>Function processing terminates.
+      Try reducing Hercules storage requirements (eg mainsize).
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c functions cckd_swapend, cckd_comp and cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU706E">
+HHCCU706E calloc error, size <em>size</em>: <em>error text</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>Calloc (allocate cleared memory) failed for size <em>size</em>.
+  <dt><b>Action</b>
+  <dd>Function processing terminates.
+      Try reducing Hercules storage requirements (eg mainsize).
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c functions cckd_swapend, cckd_comp and cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU707E">
+HHCCU707E OPENED bit is on, use -f
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The file OPENED bit is on in the cckd header but <b>-f</b> was not specified
+  <dt><b>Action</b>
+  <dd>File processing terminates.
+      Make sure the file is not in use.  If it is not, try the command again
+      specifying the <b>-f</b> option.
+  <dt><b>Issued by</b>
+  <dd>cckdcdsk.c, cckdcomp.c
+  </dl>
+
+<dt><code><a name="HHCCU708E">
+HHCCU708E chkdsk errors
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The utility called cckd_chkdsk for the file and it returned in error
+  <dt><b>Action</b>
+  <dd>File processing terminates.
+      Perform the actions suggested by the preceding cckd_chkdsk errors
+  <dt><b>Issued by</b>
+  <dd>cckdcomp.c
+  </dl>
+
+
+<dt><code><a name="HHCCU900E">
+HHCCU900E dasd lookup error type=<em>type</em> cyls=<em>cyls</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The device type <em>type</em> from the device header along with
+      the number of cylinders <em>cyls</em> did not match a table entry
+      in dasdtab.c.  Note that <em>type</em> is the last two bytes of the
+      device type (eg <i>90</i> for a <i>3390</i> device type).
+  <dt><b>Action</b>
+  <dd>Function processing terminates.
+      Specify the correct file name or manually correct the device header.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU901E">
+HHCCU901E bad trksize: <em>size1</em>, expecting <em>size2</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The track size <em>size1</em> from the device header does match the
+      track size <em>size2</em> from the table entry in dasdtab.c
+  <dt><b>Action</b>
+  <dd>Function processing terminates.
+      Specify the correct file name or manually correct the device header.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU902E">
+HHCCU902E bad number of heads: <em>heads1</em>, expecting <em>heads2</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The number of heads <em>heads1</em> from the device header does match the
+      number of heads <em>heads2</em> from the table entry in dasdtab.c
+  <dt><b>Action</b>
+  <dd>Function processing terminates.
+      Specify the correct file name or manually correct the device header.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU903E">
+HHCCU903E bad `numl1tab': <em>nbr1</em>, expecting <em>nbr2</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The number of L1 table entries <em>nbr1</em> in the cckd device header
+      does not match the number calculated <em>nbr2</em>.
+      The number calculated is the number of cylinders times the number of heads
+      (ie the number of tracks) divided by 256, rounded up by 1 if there is a
+      remainder.
+  <dt><b>Action</b>
+  <dd>Function processing terminates.
+      Specify the correct file name or manually correct the device headers.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU904E">
+HHCCU904E file too small to contain L1 table: %<em>size1</em>, need <em>size2</em>
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The size of the file <em>size1</em> is not large enough to contain all L1 table entries;
+      the size required is <em>size2</em>.  The minimum size of a cckd file is<br>
+      512 <b>+</b> 512 <b>+</b> ( 4 <b>*</b> number of L1 entries)
+  <dt><b>Action</b>
+  <dd>Function processing terminates.
+      Specify the correct file name.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU905E">
+HHCCU905E not enough file space for recovery
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>During phase 2 recovery, there is not enough space in the maximum file size
+      to contain the rebuilt L2 tables.  This is an unusual situation and probably
+      indicates some kind of programming error.
+  <dt><b>Action</b>
+  <dd>Function processing terminates.  The file has not been updated.
+      Contact the hercules mailing list for assistance.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU910E">
+HHCCU910E error during swap
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>Error occurred during cckd_swap().
+      See the preceding error messages.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c function cckd_chkdsk
+  </dl>
+
+<dt><code><a name="HHCCU999E">
+HHCCU999E not a compressed file
+</a></code>
+<dd><dl>
+  <dt><b>Meaning</b>
+  <dd>The first 8 bytes of the file did not match an expected identifier.
+      For a cckd file, the identifier must be either <b>CKD_C370</b> or
+      <b>CKD_S370</b>.
+      For a cfba file, the identifier must be either <b>FBA_C370</b> or
+      <b>FBA_S370</b>.
+  <dt><b>Action</b>
+  <dd>Function processing terminates.
+      Specify the correct file name.
+  <dt><b>Issued by</b>
+  <dd>cckdutil.c functions cckd_swapend, cckd_comp and cckd_chkdsk
+  </dl>
+
+
+
+
+
+
+</dl>
+<p><center><hr width="15%" noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<p><center><hr width="15%" noshade>
+<a href="hercmsg.html"><img src="images/back.gif" border=0 alt="back"></a>
+</center>
+<p>
+<small>
+Last updated 22 February 2006
+</small>
+</BODY>
+</HTML>
