@@ -1,6 +1,52 @@
-
-####   Don't forget to change the version number in configure.ac!   ####
-
+27 Mar 2006 SCSI tape fixes (MAJOR COMMIT):  (Fish)
+             1) serialize open/close processing
+             2) support "YES" as valid AUTO_SCSI_MOUNT specification
+                (uses default interval value, currently 5 seconds)
+             3) "scsimount" panel command:
+                 a) support '0' and 'yes'
+                 b) don't issue "no active mount requests"
+                    for tape drives without display feature
+                 c) fix mount/unmount request detection
+             4) process 'rewind' option at CLOSE, not open (oops)
+             5) add devnum (with LCSS prefix) to most messages
+             6) attempt to fix *nix issue of 'EOF' status not being set
+                when BSR/FSR spaces over a tapemark
+             7) reset 'blockid' to -1 and remove redundant update
+                status call in BSF/FSF.
+             8) reset 'curfilen' to 0 in rewind_scsitape (and 'blockid'
+                to -1 if rewind fails)
+             9) fix erase-gap and data-security-erase functions
+                so they actually return an i/o status
+            10) start automount thread (if AUTO_SCSI_MOUNT is specified)
+                when tape is determined to be not mounted regardless
+                of whether drive/device-type has display-feature
+            11) remove premature open_scsitape call in tapedev_init_handler
+                to reinstate original behavior of not opening the tape until
+                needed by tapedev CCW processing (PR# tape/18 "slow startup")
+            12) in an effort to reduce the impact of slow tape status
+                retrieval (that in addition to the above premature call
+                to open_scsitape (which calls update_status_scsitape)
+                was what was causing PR# tape/18 "slow startup"), a new
+                tape status worker thread retrieval technique was designed
+                which allows specifying a timeout value completely different
+                from whatever one the host o/s may use (if any).
+            13) change message text in 'load_display' function to be more
+                technically accurate and fix ReqAutoMount mount/unmount
+                request detection to correct bogus mount/unmount messages
+            14) add support for Windows tape device names ("\\.\Tape0")
+            15) use blockid (as returned by Read Block Id CCW) *as-is*
+                in LOCATE BLOCK CCW,
+            16) complete rewrite/overhaul of w32stape.c:
+               a) remove rewind logic from open
+                  (now done by 'close_scsitape')
+               b) properly track positioning status and setting of
+                  errno values after each i/o so that accuracy of
+                  device status & errno can be relied upon (e.g.
+                  BOT/EOF/EOT/EOD can now be properly detected)
+               c) BSF/BSR fixed to move BACKWARDS, not forwards (oops)
+               d) fix Read Block Id logic (MTIOCPOS) to return a more
+                  technically accurate position value (the actual one)
+            17) many minor editorial corrections (remove TRACE stmts, etc)
 05 Mar 2006 hercules logo spec precedence fix by "Rodrigo" - Ivan Warren
 01 Mar 2006 Customizable 3270 Logo screen. See README.HERCLOGO - Ivan Warren
 28 Feb 2006 Generalize Multiple CSS device numbering for most statements
