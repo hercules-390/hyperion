@@ -65,7 +65,6 @@ int open_scsitape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 int             rc;                     /* Return code               */
 /* int             i; */                /* Array subscript           */
 /* struct mtop     opblk; */            /* Area for MTIOCTOP ioctl   */
-int save_errno;
 
     ASSERT( dev->fd < 0 );  // (sanity check)
     dev->fd = -1;
