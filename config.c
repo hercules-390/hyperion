@@ -229,6 +229,10 @@ DEVBLK**dvpp;
         initialize_lock (&dev->lock);
         initialize_condition (&dev->resumecond);
         initialize_condition (&dev->iocond);
+#if defined(OPTION_SCSI_TAPE)
+        initialize_lock      (&dev->stape_getstat_lock);
+        initialize_condition (&dev->stape_getstat_cond);
+#endif
 
         /* Search for the last device block on the chain */
         for (dvpp = &(sysblk.firstdev); *dvpp != NULL;
