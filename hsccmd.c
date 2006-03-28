@@ -830,11 +830,14 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 int scsimount_cmd(int argc, char *argv[], char *cmdline)
 {
     char*  eyecatcher =
-"*******************************************************************************";
+"*************************************************************************************************";
     DEVBLK*  dev;
+    int      tapeloaded;
     char*    tapemsg;
     char     volname[7];
-    BYTE     mountreq;
+    BYTE     mountreq, unmountreq;
+    char*    label_type;
+    int      old_auto_scsi_mount_secs = sysblk.auto_scsi_mount_secs;
     UNREFERENCED(cmdline);
 
     if (argc > 1)
@@ -843,11 +846,15 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         {
             sysblk.auto_scsi_mount_secs = 0;
         }
+        else if ( strcasecmp( argv[1], "yes" ) == 0 )
+        {
+            sysblk.auto_scsi_mount_secs = DEFAULT_AUTO_SCSI_MOUNT_SECS;
+        }
         else
         {
             int auto_scsi_mount_secs; BYTE c;
             if ( sscanf( argv[1], "%d%c", &auto_scsi_mount_secs, &c ) != 1
-                || auto_scsi_mount_secs <= 0 || auto_scsi_mount_secs > 99 )
+                || auto_scsi_mount_secs < 0 || auto_scsi_mount_secs > 99 )
             {
                 logmsg
                 (
@@ -876,64 +883,109 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         if ( !dev->allocated || TAPEDEVT_SCSITAPE != dev->tapedevt )
             continue;  // (not an active SCSI tape device; skip)
 
-        logmsg( _("SCSI auto-mount thread %s active for drive %4.4X = %s.\n"),
-            dev->stape_mountmon_tid ? "is" : "not", dev->devnum, dev->filename );
+        // If they're trying to shutdown the mount-monitoring threads
+        // then wake them up so they can see they're supposed to exit...
 
-        if (0
-            || !dev->tdparms.displayfeat
-            || (1
-                && TAPEDISPTYP_MOUNT       != dev->tapedisptype
-                && TAPEDISPTYP_UNMOUNT     != dev->tapedisptype
-                && TAPEDISPTYP_UMOUNTMOUNT != dev->tapedisptype
-               )
-        )
+        if (sysblk.auto_scsi_mount_secs == 0 &&
+            sysblk.auto_scsi_mount_secs != old_auto_scsi_mount_secs)
         {
-            logmsg( _("No mount/dismount requests pending for drive %4.4X = %s.\n\n"),
-                dev->devnum, dev->filename );
-            continue;
-        }
-
-        if ( TAPEDISPTYP_MOUNT == dev->tapedisptype )
-        {
-            mountreq = TRUE;
-            tapemsg = dev->tapemsg1;
-        }
-        else if ( TAPEDISPTYP_UNMOUNT == dev->tapedisptype )
-        {
-            mountreq = FALSE;
-            tapemsg = dev->tapemsg1;
-        }
-        else // ( TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype )
-        {
-            if ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
-            {
-                mountreq = TRUE;
-                tapemsg = dev->tapemsg2;
-            }
-            else
-            {
-                mountreq = FALSE;
-                tapemsg = dev->tapemsg1;
-            }
-        }
-
-        volname[0]=0;
-
-        if (*tapemsg && *(tapemsg+1))
-        {
-            strncpy( volname, tapemsg+1, sizeof(volname)-1 );
-            volname[sizeof(volname)-1]=0;
+            broadcast_condition( &dev->stape_getstat_cond );
+            usleep(10*1000);
         }
 
         logmsg
         (
-            _("\n%s\nHHCCF069I %s of volume \"%6.6s\" pending for drive %4.4X = %s\n%s\n\n"),
+            _("SCSI auto-mount thread %s active for drive %u:%4.4X = %s.\n")
 
-            eyecatcher,
-            mountreq ? "Mount" : "Dismount", volname,
-            dev->devnum, dev->filename,
-            eyecatcher
+            ,dev->stape_mountmon_tid ? "IS" : "is NOT"
+            ,SSID_TO_LCSS(dev->ssid)
+            ,dev->devnum
+            ,dev->filename
         );
+
+        if (!dev->tdparms.displayfeat)
+            continue;
+
+        mountreq   = FALSE;     // (default)
+        unmountreq = FALSE;     // (default)
+
+        if (0
+            || TAPEDISPTYP_MOUNT       == dev->tapedisptype
+            || TAPEDISPTYP_UNMOUNT     == dev->tapedisptype
+            || TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
+        )
+        {
+            tapeloaded = dev->tmh->tapeloaded( dev, NULL, 0 );
+
+            if ( TAPEDISPTYP_MOUNT == dev->tapedisptype && !tapeloaded )
+            {
+                mountreq   = TRUE;
+                unmountreq = FALSE;
+                tapemsg = dev->tapemsg1;
+            }
+            else if ( TAPEDISPTYP_UNMOUNT == dev->tapedisptype && tapeloaded )
+            {
+                unmountreq = TRUE;
+                mountreq   = FALSE;
+                tapemsg = dev->tapemsg1;
+            }
+            else // ( TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype )
+            {
+                if (tapeloaded)
+                {
+                    if ( !(dev->tapedispflags & TAPEDISPFLG_MESSAGE2) )
+                    {
+                        unmountreq = TRUE;
+                        mountreq   = FALSE;
+                        tapemsg = dev->tapemsg1;
+                    }
+                }
+                else // (!tapeloaded)
+                {
+                    mountreq   = TRUE;
+                    unmountreq = FALSE;
+                    tapemsg = dev->tapemsg2;
+                }
+            }
+        }
+
+        if ((mountreq || unmountreq) && ' ' != *tapemsg)
+        {
+            switch (*(tapemsg+7))
+            {
+                case 'A': label_type = "ascii-standard"; break;
+                case 'S': label_type = "standard"; break;
+                case 'N': label_type = "non"; break;
+                case 'U': label_type = "un"; break;
+            }
+
+            volname[0]=0;
+
+            if (*(tapemsg+1))
+            {
+                strncpy( volname, tapemsg+1, 6 );
+                volname[6]=0;
+            }
+
+            logmsg
+            (
+                _("\n%s\nHHCCF069I %s of %s-labeled volume \"%s\" pending for drive %u:%4.4X = %s\n%s\n\n")
+
+                ,eyecatcher
+                ,mountreq ? "Mount" : "Dismount"
+                ,label_type
+                ,volname
+                ,SSID_TO_LCSS(dev->ssid)
+                ,dev->devnum
+                ,dev->filename
+                ,eyecatcher
+            );
+        }
+        else
+        {
+            logmsg( _("No mount/dismount requests pending for drive %u:%4.4X = %s.\n\n"),
+                SSID_TO_LCSS(dev->ssid),dev->devnum, dev->filename );
+        }
     }
 
     return 0;
@@ -4404,27 +4456,28 @@ CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need hel
                        )
 
 #if defined( OPTION_SCSI_TAPE )
-CMDHELP ( "scsimount", "Format:    \"scsimount  [ no | 1-99 ]\".\n\n"
+CMDHELP ( "scsimount", "Format:    \"scsimount  [ no | yes | 0-99 ]\".\n\n"
 
-                       "Displays or modifies the automatic SCSI tape mounts option. When entered\n"
-                       "without any operands, it displays the current value and any pending tape\n"
-                       "mount requests. Entering 'no' disables automatic tape mount detection.\n\n"
+                       "Displays or modifies the automatic SCSI tape mounts option.\n\n"
 
-                       "Entering a value between 1-99 seconds enables the option and specifies\n"
-                       "how often to query SCSI tape drives to automatically detect when a tape\n"
-                       "has been mounted (upon which an unsolicited device-attention interrupt\n"
-                       "will be presented to the guest operating system).\n\n"
+                       "When entered without any operands, it displays the current interval\n"
+                       "and any pending tape mount requests. Entering 'no' (or 0 seconds)\n"
+                       "disables automount detection.\n\n"
 
-                       "NOTE! enabling this option MAY negatively impact Hercules performance,\n"
-                       "depending on how the host operating system (Windows, Linux, etc) processes\n"
-                       "SCSI attached tape drive 'status' queries.\n")
+                       "Entering a value between 1-99 seconds (or 'yes') enables the option\n"
+                       "and specifies how often to query SCSI tape drives to automatically\n"
+                       "detect when a tape has been mounted (upon which an unsolicited\n"
+                       "device-attention interrupt will be presented to the guest operating\n"
+                       "system). 'yes' is equivalent to specifying a 5 second interval.\n"
+                       )
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
 CMDHELP ( "hst",       "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"hst 0\" displays\n"
                        "list of last ten commands entered from command line\n"
                        "hst n, where n is a positive number retrieves n-th command from list\n"
                        "hst n, where n is a negative number retrieves n-th last command\n"
-                       "hst without an argument works exactly as hst -1, it retrieves last command\n")
+                       "hst without an argument works exactly as hst -1, it retrieves last command\n"
+                       )
 
 CMDHELP ( "cpu",       "Format: \"cpu nnnn\" where 'nnnn' is the cpu address of\n"
                        "the cpu in your multiprocessor configuration which you wish\n"
