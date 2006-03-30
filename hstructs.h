@@ -151,7 +151,8 @@ struct REGS {                           /* Processor registers       */
         U64     bear;                   /* Breaking event address reg*/
 // #endif /*defined(FEATURE_PER3)*/
 
-        BYTE    cpustate;               /* CPU stopped/started state */
+        U32     ints_state;             /* CPU Interrupts Status     */
+        U32     ints_mask;              /* Respective Interrupts Mask*/
         unsigned int                    /* Flags (cpu thread only)   */
                 opinterv:1,             /* 1=Operator intervening    */
                 mainlock:2,             /* !0=Mainlock held           */
@@ -169,8 +170,7 @@ struct REGS {                           /* Processor registers       */
                 tracing:1,              /* 1=Trace is active         */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
                 sigpireset:1;           /* 1=SIGP initial cpu reset  */
-        U32     ints_state;             /* CPU Interrupts Status     */
-        U32     ints_mask;              /* Respective Interrupts Mask*/
+        BYTE    cpustate;               /* CPU stopped/started state */
         BYTE    malfcpu                 /* Malfuction alert flags    */
                     [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
         BYTE    emercpu                 /* Emergency signal flags    */
