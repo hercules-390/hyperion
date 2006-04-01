@@ -18,8 +18,6 @@
 
 #include "hercules.h"
 #include "opcode.h"             /* Required for SETMODE macro        */
-
-
 static ATTR  logger_attr;
 static COND  logger_cond;
 static LOCK  logger_lock;
@@ -371,7 +369,6 @@ int bytes_read;
 
 DLL_EXPORT void logger_init(void)
 {
-//  initialize_detach_attr (&logger_attr);
     initialize_join_attr(&logger_attr);     // (JOINable)
     initialize_condition (&logger_cond);
     initialize_lock (&logger_lock);
