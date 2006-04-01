@@ -1521,8 +1521,9 @@ DLL_EXPORT int socket_is_socket( int sfd )
 DLL_EXPORT int inet_aton( const char* cp, struct in_addr* addr )
 {
     // Return success as long as both args are not NULL *and*
-    // the result is not INADDR_NONE, -OR- if it is, if
-    // that's the actual expected value of the conversion...
+    // the result is not INADDR_NONE (0xFFFFFFFF), -OR- if it
+    // is [INADDR_NONE], [we return success] if that is the
+    // actual expected value of the conversion...
 
     return
     (
