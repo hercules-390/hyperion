@@ -51,6 +51,7 @@
 # 29/11/05 Create assembly listings if 'ASSEMBLY_LISTINGS' defined - Fish
 # 01/12/05 Fix for VS 8.0 "manifest" files issue - Volker Bandke
 # 02/12/05 Added 'conspawn' utility to build - Fish
+# 30/03/06 (just changed some tabs to spaces) - Fish
 # ***************************************************************************
 
 !IFNDEF VERSION
@@ -582,10 +583,10 @@ $(O)hsys.lib:    $(X)hsys.dll
 # Individual DLLs are dependent their own code as well as the
 # export libraries from other DLLs that they're dependent on..
 
-$(X)hsys.dll:    $(hsys_OBJ)    			       $(O)hercver.res
+$(X)hsys.dll:    $(hsys_OBJ)                                                   $(O)hercver.res
     $(linkdll)
 
-$(X)hutil.dll:   $(hutil_OBJ)   $(O)hsys.lib    		       $(O)hercver.res
+$(X)hutil.dll:   $(hutil_OBJ)   $(O)hsys.lib                                   $(O)hercver.res
     $(linkdll)
 
 $(X)htape.dll:   $(htape_OBJ)   $(O)hsys.lib           $(O)hutil.lib           $(O)hercver.res
@@ -653,9 +654,9 @@ $(X)herclin.exe:  $(O)herclin.obj   $(O)hdlmain.obj $(O)hengine.lib $(O)hdasd.li
 # -------------------------------------------------------------
 # System utilities
 
-$(X)conspawn.exe: $(O)$(@B).obj 				     $(O)hercver.res
+$(X)conspawn.exe: $(O)$(@B).obj                                          $(O)hercver.res
 
-$(X)dmap2hrc.exe: $(O)$(@B).obj 	  $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
+$(X)dmap2hrc.exe: $(O)$(@B).obj               $(O)hsys.lib $(O)hutil.lib $(O)hercver.res
 
 # -------------------------------------------------------------
 # Dasd utilities
