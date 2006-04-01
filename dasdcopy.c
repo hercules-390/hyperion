@@ -416,7 +416,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     close_image_file(icif); close_image_file(ocif);
-    if (!quiet) printf (_("\nHHCDC010I Copy successful !!!       \n"));
+    if (!quiet) printf (_("HHCDC010I %s successfully completed.\n"), pgm);
     return 0;
 }
 
