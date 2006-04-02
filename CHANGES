@@ -1,3 +1,6 @@
+01 Apr 2006 tapecopy: accept WIN32 "\\.\Tape0" filename, use blockid
+            segment# for ext GUI progress msgs, rewind at exit - Fish
+01 Apr 2006 Addt'l Win32 SCSI status fixes for utils; s/b ok now - Fish
 27 Mar 2006 SCSI tape fixes (MAJOR COMMIT):  (Fish)
              1) serialize open/close processing
              2) support "YES" as valid AUTO_SCSI_MOUNT specification
