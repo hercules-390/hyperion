@@ -26,10 +26,103 @@
 #ifdef WIN32
 
 ////////////////////////////////////////////////////////////////////////////////////
+// Global data...
+
+#define  W32STAPE_MAX_FDNUMS  (32)      // (admitedly low, but easily increased)
+
+typedef int  ifd_t;     // (internal fd)
+typedef int  ufd_t;     // (user fd)
+
+#define  W32STAPE_IFD2UFD( ifd )         ((ufd_t)( (ifd) |  0x7F000000 ))
+#define  W32STAPE_UFD2IFD( ufd )         ((ifd_t)( (ufd) & ~0x7F000000 ))
+
+static  BYTE    g_ifds    [ W32STAPE_MAX_FDNUMS ]  = {0};   // (0 == avail, 0xFF == used)
+static  HANDLE  g_handles [ W32STAPE_MAX_FDNUMS ]  = {0};   // (WIN32 handles)
+static  char*   g_fnames  [ W32STAPE_MAX_FDNUMS ]  = {0};   // (for posterity)
+static  U32     g_fstats  [ W32STAPE_MAX_FDNUMS ]  = {0};   // (running status)
+
+static  LOCK    g_lock; // (master global access lock)
+
+#define  lock()     obtain_w32stape_lock()
+#define  unlock()   release_lock( &g_lock )
+
+static void obtain_w32stape_lock()
+{
+    static int bDidInit  = 0;
+    static int bInitBusy = 1;
+    if (!bDidInit)
+    {
+        bDidInit = 1;
+        initialize_lock ( &g_lock );
+        memset( g_ifds,    0, sizeof ( g_ifds    ) );
+        memset( g_handles, 0, sizeof ( g_handles ) );
+        memset( g_fnames,  0, sizeof ( g_fnames  ) );
+        memset( g_fstats,  0, sizeof ( g_fstats  ) );
+        bInitBusy = 0;
+    }
+    while (bInitBusy) Sleep(10);
+    obtain_lock ( &g_lock );
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Allocate an internal fd number...
+
+static
+ifd_t  w32_alloc_ifd()
+{
+    ifd_t ifd = -1;
+    errno = EMFILE;
+
+    lock();
+    {
+        BYTE* pifd_slot = memchr( g_ifds, 0, W32STAPE_MAX_FDNUMS );
+
+        if (pifd_slot)
+        {
+            int n = (int) (pifd_slot - g_ifds);
+
+            if ( n >= 0  &&  n < W32STAPE_MAX_FDNUMS )
+            {
+                *pifd_slot = 1;
+                errno = 0;
+                ifd = n;
+            }
+        }
+    }
+    unlock();
+
+    return ifd;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Release an internal fd number...
+
+static
+int w32_free_ifd( ifd_t  ifd )
+{
+    int rc = 0;
+    errno = 0;
+
+    lock();
+    {
+        if ( ifd >= 0  &&  ifd < W32STAPE_MAX_FDNUMS )
+            g_ifds [ ifd ] = 0;
+        else
+        {
+            rc = -1;
+            errno = EBADF;
+        }
+    }
+    unlock();
+
+    return rc;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
 // Retrieve the status of the tape drive...
 
 static
-DWORD  w32_get_tape_status ( HANDLE hFile)
+DWORD  w32_get_tape_status ( HANDLE hFile )
 {
     // ***************************************************************
     //  PROGRAMMING NOTE: it is THIS LOOP (retrieving the status
@@ -51,19 +144,19 @@ DWORD  w32_get_tape_status ( HANDLE hFile)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Open tape device...
-//
-// PROGRAMMING NOTE: our open function can't call any of our other 'internal'
-// functions since they all expect "dev->fd" to have a valid value and it hasn't
-// been set yet since we haven't even opened the device yet nor returned the 'fd'
-// value back to the caller so they can then plug it into the DEVBLK!
 
 DLL_EXPORT
-int w32_open_tape ( const char* path, int oflag, ... )
+ufd_t w32_open_tape ( const char* path, int oflag, ... )
 {
+    ifd_t       ifd;
     HANDLE      hFile;
     char        szTapeDeviceName[10];
     const char* pszTapeDevNum;
     DWORD       dwDesiredAccess;
+
+    // Reserve an fd number right away and bail if none available...
+    if ( (ifd = w32_alloc_ifd()) < 0 )
+        return -1;
 
     // If they specified a Windows device name,
     // use it as-is.
@@ -98,6 +191,7 @@ int w32_open_tape ( const char* path, int oflag, ... )
         }
         else
         {
+            VERIFY( w32_free_ifd( ifd ) == 0 );
             errno = EINVAL;     // (bad device name)
             return -1;          // (open failure)
         }
@@ -110,6 +204,7 @@ int w32_open_tape ( const char* path, int oflag, ... )
         && (( O_BINARY | O_RDONLY) != oflag)
     )
     {
+        VERIFY( w32_free_ifd( ifd ) == 0 );
         errno = EINVAL;     // (invalid open flags)
         return -1;          // (open failure)
     }
@@ -136,48 +231,26 @@ int w32_open_tape ( const char* path, int oflag, ... )
 
     if ( INVALID_HANDLE_VALUE == hFile )
     {
-        errno = w32_trans_w32error( GetLastError() );
+        int save_errno = w32_trans_w32error( GetLastError() );
+        VERIFY( w32_free_ifd( ifd ) == 0 );
+        errno = save_errno;
         return -1;
     }
 
-    // Success! Return our HANDLE as the file descriptor...
+    // Success! Return their file descriptor...
 
-    return ( (int) hFile ); // (for SCSI tapes, dev->fd is actually a HANDLE)
-}
+    g_handles [ ifd ]  = hFile;                     // (WIN32 handle)
+    g_fnames  [ ifd ]  = strdup( path );            // (for posterity)
+    g_fstats  [ ifd ]  = GMT_ONLINE (0xFFFFFFFF);   // (initial status)
 
-////////////////////////////////////////////////////////////////////////////////////
-// Locate the DEVBLK for the given tape device HANDLE...
-//
-// PROGRAMMING NOTE: our open function (w32_open_tape) always returns a HANDLE
-// for the 'fd' (file descriptor), so all we have to do is search the list of
-// devices looking for the one with dev->fd == HANDLE.
-//
-// Also note that yes I am aware that this is a very inefficient way
-// to find the device block but until I can eventually implement some
-// type of hash lookup table or something it'll have to do. - Fish
-
-static
-DEVBLK* w32_internal_getdev ( int fd )
-{
-    DEVBLK* dev;
-
-    ASSERT( fd > 0 );
-
-    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (1
-            && dev->allocated
-            && TAPEDEVT_SCSITAPE == dev->tapedevt
-            && dev->fd == fd
-        )
-            return dev; // (found)
-    return NULL;    // (not found)
+    return W32STAPE_IFD2UFD( ifd );                 // (user fd result)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Post-process a tape i/o return code...
 //
 // Examine 'errno' (which should have been manually set to the return
-// code from the current i/o) and update the DEVBLK status appropriately,
+// code from the current i/o) and update the internal status appropriately,
 // depending on what type of error it was (tapemark, etc)...
 //
 //     -------------------------------------------------------------
@@ -192,7 +265,7 @@ DEVBLK* w32_internal_getdev ( int fd )
 //     do
 //     {
 //         errno = SetTapePosition( ... );
-//         errno = w32_internal_rc ( &dev->sstat );
+//         errno = w32_internal_rc ( pStat );
 //     }
 //     while ( EINTR == errno );
 //     return errno ? -1 : 0;
@@ -264,46 +337,64 @@ int w32_internal_rc ( U32* pStat )
 ////////////////////////////////////////////////////////////////////////////////////
 // (forward references for private helper functions)
 
-int   w32_internal_mtop       ( int fd, U32* pStat, struct mtop*  mtop  );
-int   w32_internal_mtget      ( int fd, U32* pStat, struct mtget* mtget );
-int   w32_internal_mtpos      ( int fd, U32* pStat, DWORD* pdwPos ); // "GetTapePosition()"
-
-U32*  w32_internal_GetStatPtr ( int fd, U32* pStat ) // (passed pStat is default)
-{
-    DEVBLK* dev = w32_internal_getdev ( fd );
-    return dev ? &dev->sstat : pStat;
-}
+int  w32_internal_mtop  ( HANDLE hFile, U32* pStat, struct mtop*  mtop  );
+int  w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget );
+int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos ); // "GetTapePosition()"
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Close tape device...
 
 DLL_EXPORT
-int w32_close_tape ( int fd )
+int w32_close_tape ( ufd_t  ufd )
 {
-    if ( fd <= 0 )
+    ifd_t  ifd  = W32STAPE_UFD2IFD( ufd );
+    int    rc   = -1;
+    errno       = EBADF;
+
+    lock();
+
+    if (1
+        &&         ifd    >=  0
+        &&         ifd    <   W32STAPE_MAX_FDNUMS
+        && g_ifds[ ifd ]  !=  0
+    )
     {
-        errno = EBADF;
-        return -1;
+        // Deallocate resources
+
+        HANDLE  hFile  = g_handles[ ifd ];
+        char*   pName  = g_fnames [ ifd ];
+
+        g_handles[ ifd ] = NULL;
+        g_fnames [ ifd ] = NULL;
+        g_fstats [ ifd ] = GMT_DR_OPEN (0xFFFFFFFF);
+
+        VERIFY( w32_free_ifd( ifd ) == 0 );
+
+        // Close the file...
+
+        free( pName );
+
+        errno  =  CloseHandle( hFile ) ? 0 : w32_trans_w32error( GetLastError() );
+        rc     =  errno ? -1 : 0;
     }
 
-    if ( !CloseHandle( (HANDLE) fd ) )
-    {
-        errno = w32_trans_w32error( GetLastError() );
-        return -1;
-    }
+    unlock();
 
-    return 0;
+    return rc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Read tape...
 
 DLL_EXPORT
-ssize_t  w32_read_tape ( int fd, void* buf, size_t nbyte )
+ssize_t  w32_read_tape ( ufd_t ufd, void* buf, size_t nbyte )
 {
-    BOOL     bSuccess;
-    DWORD    dwBytesRead;
-    U32      dummy_sstat, *pStat = NULL;
+    BOOL    bSuccess;
+    DWORD   dwBytesRead;
+
+    ifd_t   ifd    = W32STAPE_UFD2IFD( ufd );
+    U32*    pStat  = NULL;
+    HANDLE  hFile;
 
     if (!buf)
     {
@@ -311,21 +402,30 @@ ssize_t  w32_read_tape ( int fd, void* buf, size_t nbyte )
         return -1;
     }
 
-    if ( fd <= 0 )
+    lock();
+
+    if (0
+        ||         ifd    <   0
+        ||         ifd    >=  W32STAPE_MAX_FDNUMS
+        || g_ifds[ ifd ]  ==  0
+    )
     {
+        unlock();
         errno = EBADF;
         return -1;
     }
 
-    // (NOTE: *must* FOLLOW check for fd <= 0)
-    pStat = w32_internal_GetStatPtr( fd, &dummy_sstat );
+    unlock();
+
+    hFile = g_handles[ ifd ];
+    pStat = &g_fstats[ ifd ];
 
     // Do the i/o, save results, update device status
     // (based on the results), then check results...
 
     do
     {
-        bSuccess = ReadFile( (HANDLE) fd, buf, nbyte, &dwBytesRead, NULL );
+        bSuccess = ReadFile( hFile, buf, nbyte, &dwBytesRead, NULL );
         errno    = GetLastError();
         errno    = w32_internal_rc ( pStat );
     }
@@ -349,11 +449,14 @@ ssize_t  w32_read_tape ( int fd, void* buf, size_t nbyte )
 // Write tape...
 
 DLL_EXPORT
-ssize_t  w32_write_tape ( int fd, const void* buf, size_t nbyte )
+ssize_t  w32_write_tape ( ufd_t ufd, const void* buf, size_t nbyte )
 {
     BOOL     bSuccess;
     DWORD    dwBytesWritten;
-    U32      dummy_sstat, *pStat = NULL;
+
+    ifd_t    ifd    = W32STAPE_UFD2IFD( ufd );
+    U32*     pStat  = NULL;
+    HANDLE   hFile;
 
     if (!buf)
     {
@@ -361,21 +464,30 @@ ssize_t  w32_write_tape ( int fd, const void* buf, size_t nbyte )
         return -1;
     }
 
-    if ( fd <= 0 )
+    lock();
+
+    if (0
+        ||         ifd    <   0
+        ||         ifd    >=  W32STAPE_MAX_FDNUMS
+        || g_ifds[ ifd ]  ==  0
+    )
     {
+        unlock();
         errno = EBADF;
         return -1;
     }
 
-    // (NOTE: *must* FOLLOW check for fd <= 0)
-    pStat = w32_internal_GetStatPtr( fd, &dummy_sstat );
+    unlock();
+
+    hFile = g_handles[ ifd ];
+    pStat = &g_fstats[ ifd ];
 
     // Do the i/o, save results, update device status
     // (based on the results), then check results...
 
     do
     {
-        bSuccess = WriteFile( (HANDLE) fd, buf, nbyte, &dwBytesWritten, NULL );
+        bSuccess = WriteFile( hFile, buf, nbyte, &dwBytesWritten, NULL );
         errno    = GetLastError();
         errno    = w32_internal_rc ( pStat );
     }
@@ -391,21 +503,32 @@ ssize_t  w32_write_tape ( int fd, const void* buf, size_t nbyte )
 // ioctl...    (perform some type of control function, e.g. fsf, rewind, etc)
 
 DLL_EXPORT
-int w32_ioctl_tape ( int fd, int request, ... )
+int w32_ioctl_tape ( ufd_t ufd, int request, ... )
 {
     va_list  vl;
-    void*    ptr  = NULL;
-    int      rc   = 0;
-    U32      dummy_sstat, *pStat = NULL;
+    void*    ptr    = NULL;
+    int      rc     = 0;
+    ifd_t    ifd    = W32STAPE_UFD2IFD( ufd );
+    U32*     pStat  = NULL;
+    HANDLE   hFile;
 
-    if ( fd <= 0 )
+    lock();
+
+    if (0
+        ||         ifd    <   0
+        ||         ifd    >=  W32STAPE_MAX_FDNUMS
+        || g_ifds[ ifd ]  ==  0
+    )
     {
+        unlock();
         errno = EBADF;
         return -1;
     }
 
-    // (NOTE: *must* FOLLOW check for fd <= 0)
-    pStat = w32_internal_GetStatPtr( fd, &dummy_sstat );
+    unlock();
+
+    hFile = g_handles[ ifd ];
+    pStat = &g_fstats[ ifd ];
 
     va_start ( vl, request );
     ptr = va_arg( vl, void* );
@@ -421,7 +544,7 @@ int w32_ioctl_tape ( int fd, int request, ... )
         case MTIOCTOP:  // (perform tape operation)
         {
             struct mtop* mtop = ptr;
-            rc = w32_internal_mtop ( fd, pStat, mtop );
+            rc = w32_internal_mtop ( hFile, pStat, mtop );
         }
         break;
 
@@ -429,7 +552,7 @@ int w32_ioctl_tape ( int fd, int request, ... )
         {
             struct mtget* mtget = ptr;
             memset( mtget, 0, sizeof(*mtget) );
-            rc = w32_internal_mtget ( fd, pStat, mtget );
+            rc = w32_internal_mtget ( hFile, pStat, mtget );
         }
         break;
 
@@ -437,7 +560,7 @@ int w32_ioctl_tape ( int fd, int request, ... )
         {
             struct mtpos* mtpos = ptr;
             memset( mtpos, 0, sizeof(*mtpos) );
-            rc = w32_internal_mtpos( fd, pStat, &mtpos->mt_blkno );
+            rc = w32_internal_mtpos( hFile, pStat, &mtpos->mt_blkno );
         }
         break;
 
@@ -456,7 +579,7 @@ int w32_ioctl_tape ( int fd, int request, ... )
 // Private internal helper function...   return 0 == success, -1 == failure
 
 static
-int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
+int w32_internal_mtop ( HANDLE hFile, U32* pStat, struct mtop* mtop )
 {
     int rc = 0;
 
@@ -478,7 +601,7 @@ int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
             {
                 do
                 {
-                    errno = PrepareTape( (HANDLE) fd, TAPE_LOAD, FALSE );
+                    errno = PrepareTape( hFile, TAPE_LOAD, FALSE );
                     errno = w32_internal_rc ( pStat );
                 }
                 while ( EINTR == errno );
@@ -498,7 +621,7 @@ int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
             {
                 do
                 {
-                    errno = PrepareTape( (HANDLE) fd, TAPE_UNLOAD, FALSE );
+                    errno = PrepareTape( hFile, TAPE_UNLOAD, FALSE );
                     errno = w32_internal_rc ( pStat );
                 }
                 while ( EINTR == errno );
@@ -510,7 +633,7 @@ int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
         {
             do
             {
-                errno = SetTapePosition( (HANDLE) fd, TAPE_ABSOLUTE_BLOCK, 0, mtop->mt_count, 0, FALSE );
+                errno = SetTapePosition( hFile, TAPE_ABSOLUTE_BLOCK, 0, mtop->mt_count, 0, FALSE );
                 errno = w32_internal_rc ( pStat );
             }
             while ( EINTR == errno );
@@ -528,7 +651,7 @@ int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
             {
                 do
                 {
-                    errno = SetTapePosition( (HANDLE) fd, TAPE_REWIND, 0, 0, 0, FALSE );
+                    errno = SetTapePosition( hFile, TAPE_REWIND, 0, 0, 0, FALSE );
                     errno = w32_internal_rc ( pStat );
                 }
                 while ( EINTR == errno );
@@ -555,7 +678,7 @@ int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
 
                 do
                 {
-                    errno = SetTapePosition( (HANDLE) fd, TAPE_SPACE_FILEMARKS, 0, liCount.LowPart, liCount.HighPart, FALSE );
+                    errno = SetTapePosition( hFile, TAPE_SPACE_FILEMARKS, 0, liCount.LowPart, liCount.HighPart, FALSE );
                     errno = w32_internal_rc ( pStat );
                 }
                 while ( EINTR == errno );
@@ -582,7 +705,7 @@ int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
 
                 do
                 {
-                    errno = SetTapePosition( (HANDLE) fd, TAPE_SPACE_RELATIVE_BLOCKS, 0, liCount.LowPart, liCount.HighPart, FALSE );
+                    errno = SetTapePosition( hFile, TAPE_SPACE_RELATIVE_BLOCKS, 0, liCount.LowPart, liCount.HighPart, FALSE );
                     errno = w32_internal_rc ( pStat );
                 }
                 while ( EINTR == errno );
@@ -598,7 +721,7 @@ int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
 
             do
             {
-                errno = SetTapeParameters( (HANDLE) fd, SET_TAPE_MEDIA_INFORMATION, &media_parms );
+                errno = SetTapeParameters( hFile, SET_TAPE_MEDIA_INFORMATION, &media_parms );
                 errno = w32_internal_rc ( pStat );
             }
             while ( EINTR == errno );
@@ -633,7 +756,7 @@ int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
 
                 do
                 {
-                    errno = WriteTapemark( (HANDLE) fd, TAPE_LONG_FILEMARKS, mtop->mt_count, FALSE );
+                    errno = WriteTapemark( hFile, TAPE_LONG_FILEMARKS, mtop->mt_count, FALSE );
                     errno = w32_internal_rc ( pStat );
                 }
                 while ( EINTR == errno );
@@ -642,7 +765,7 @@ int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
                 {
                     do
                     {
-                        errno = WriteTapemark( (HANDLE) fd, TAPE_FILEMARKS, mtop->mt_count, FALSE );
+                        errno = WriteTapemark( hFile, TAPE_FILEMARKS, mtop->mt_count, FALSE );
                         errno = w32_internal_rc ( pStat );
                     }
                     while ( EINTR == errno );
@@ -683,7 +806,7 @@ int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
 
                 do
                 {
-                    errno = EraseTape( (HANDLE) fd, dwEraseType, bImmediate );
+                    errno = EraseTape( hFile, dwEraseType, bImmediate );
                     errno = w32_internal_rc ( pStat );
                 }
                 while ( EINTR == errno );
@@ -713,33 +836,27 @@ int w32_internal_mtop ( int fd, U32* pStat, struct mtop* mtop )
 // Private internal helper function...   return 0 == success, -1 == failure
 
 static
-int w32_internal_mtget ( int fd, U32* pStat, struct mtget* mtget )
+int w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget )
 {
     TAPE_GET_MEDIA_PARAMETERS   media_parms;
     DWORD                       dwRetCode, dwSize, dwPosition;
 
     ASSERT( pStat && mtget );
-    memset( &media_parms, 0, sizeof(media_parms) );
 
-    // (we don't currently support the following info)
-
-    mtget->mt_resid   =   0;        // (unknown/unsupported)
-    mtget->mt_erreg   =   0;        // (unknown/unsupported)
-    mtget->mt_fileno  =  -1;        // (unknown/unsupported)
-    mtget->mt_blkno   =  -1;        // (unknown as of yet; set further below)
-
-    // We know the tape is online otherwise how was it even opened?
-
-    mtget->mt_type    =  MT_ISSCSI2;                // "Generic ANSI SCSI-2 tape unit"
-    mtget->mt_gstat  |=  GMT_ONLINE (0xFFFFFFFF);   // (obviously! duh!)
+    mtget->mt_resid   =   0;            // (unknown/unsupported)
+    mtget->mt_erreg   =   0;            // (unknown/unsupported)
+    mtget->mt_fileno  =  -1;            // (unknown/unsupported)
+    mtget->mt_blkno   =  -1;            // (unknown as of yet; set further below)
+    mtget->mt_type    =  MT_ISSCSI2;    // "Generic ANSI SCSI-2 tape unit"
+    mtget->mt_gstat   =  -1;            // (purposely invalid; set correctly below)
 
     // Reset the mounted status; it will get set further below...
 
-    mtget->mt_gstat &= ~GMT_DR_OPEN (0xFFFFFFFF);
+    *pStat &= ~GMT_DR_OPEN (0xFFFFFFFF);
 
     // Attempt to retrieve the status of the tape-drive...
 
-    dwRetCode = w32_get_tape_status( (HANDLE) fd );
+    dwRetCode = w32_get_tape_status( hFile );
 
     // Windows returns 'ERROR_NOT_READY' if no tape is mounted
     // instead of the usual expected 'ERROR_NO_MEDIA_IN_DRIVE'
@@ -756,12 +873,12 @@ int w32_internal_mtget ( int fd, U32* pStat, struct mtget* mtget )
     )
     {
         // (these statuse are now obsolete)
-        mtget->mt_gstat  &=  ~GMT_WR_PROT (0xFFFFFFFF);
-        mtget->mt_gstat  &=  ~GMT_BOT     (0xFFFFFFFF);
-        mtget->mt_gstat  &=  ~GMT_EOT     (0xFFFFFFFF);
-        mtget->mt_gstat  &=  ~GMT_EOD     (0xFFFFFFFF);
-        mtget->mt_gstat  &=  ~GMT_EOF     (0xFFFFFFFF);
-        mtget->mt_gstat  &=  ~GMT_SM      (0xFFFFFFFF);
+        *pStat  &=  ~GMT_WR_PROT (0xFFFFFFFF);
+        *pStat  &=  ~GMT_BOT     (0xFFFFFFFF);
+        *pStat  &=  ~GMT_EOT     (0xFFFFFFFF);
+        *pStat  &=  ~GMT_EOD     (0xFFFFFFFF);
+        *pStat  &=  ~GMT_EOF     (0xFFFFFFFF);
+        *pStat  &=  ~GMT_SM      (0xFFFFFFFF);
     }
 
     // There's no sense trying to get media parameters
@@ -769,46 +886,48 @@ int w32_internal_mtget ( int fd, U32* pStat, struct mtget* mtget )
 
     if ( ERROR_NO_MEDIA_IN_DRIVE == dwRetCode )
     {
-        mtget->mt_gstat |= GMT_DR_OPEN (0xFFFFFFFF);    // (no tape mounted in drive)
-        *pStat = mtget->mt_gstat;                       // (keep DEVBLK status in sync)
-        return 0;                                       // (nothing more we can do)
+        *pStat |= GMT_DR_OPEN (0xFFFFFFFF);     // (no tape mounted in drive)
+        mtget->mt_gstat = *pStat;               // (return current status)
+        return 0;                               // (nothing more we can do)
     }
 
     // A tape appears to be mounted on the drive...
     // Retrieve the media parameters information...
 
     dwSize = sizeof(media_parms);
-    dwRetCode = GetTapeParameters( (HANDLE) fd, GET_TAPE_MEDIA_INFORMATION, &dwSize, &media_parms );
+    memset( &media_parms, 0, dwSize );
+    dwRetCode = GetTapeParameters( hFile, GET_TAPE_MEDIA_INFORMATION, &dwSize, &media_parms );
     ASSERT( sizeof(media_parms) == dwSize );
 
     if ( NO_ERROR == dwRetCode )
         mtget->mt_dsreg = media_parms.BlockSize;
     else
-        mtget->mt_dsreg = 0;            // (unknown; variable blocks presumed)
+        mtget->mt_dsreg = 0;    // (unknown; variable blocks presumed)
 
     // Lastly, attempt to determine if we are at BOT (i.e. load-point)...
 
-    if ( 0 != ( errno = w32_internal_mtpos( fd, pStat, &dwPosition ) ) )
+    if ( 0 != ( errno = w32_internal_mtpos( hFile, pStat, &dwPosition ) ) )
     {
-        *pStat = mtget->mt_gstat;       // (keep DEVBLK status in sync)
+        mtget->mt_gstat = *pStat;
         return -1;
     }
 
     mtget->mt_blkno = BLK_FROM_TAPE_BLKID( dwPosition );
 
     if ( IS_TAPE_BLKID_BOT( dwPosition ) )
-        mtget->mt_gstat |= GMT_BOT (0xFFFFFFFF);
+        *pStat |=  GMT_BOT (0xFFFFFFFF);
+    else
+        *pStat &= ~GMT_BOT (0xFFFFFFFF);
 
-    *pStat = mtget->mt_gstat;           // (keep DEVBLK status in sync)
-
-    return 0;   // (success)
+    mtget->mt_gstat = *pStat;
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Private internal helper function...   return 0 == success, -1 == failure
 
 static
-int  w32_internal_mtpos ( int fd, U32* pStat, DWORD* pdwPos )
+int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos )
 {
     DWORD dwDummyPartition, dwDummyPositionHigh;
 
@@ -828,15 +947,16 @@ int  w32_internal_mtpos ( int fd, U32* pStat, DWORD* pdwPos )
 
     do
     {
+        U32 dummy_stat = 0;
         errno = GetTapePosition
         (
-            (HANDLE) fd,
+            hFile,
             TAPE_ABSOLUTE_POSITION,
             &dwDummyPartition,
             pdwPos,
             &dwDummyPositionHigh
         );
-        errno = w32_internal_rc ( pStat );
+        errno = w32_internal_rc ( &dummy_stat );
     }
     while ( EINTR == errno );
 
@@ -866,7 +986,9 @@ int  w32_internal_mtpos ( int fd, U32* pStat, DWORD* pdwPos )
     // tape is indeed currently positioned at load-point / BOT. - Fish
 
     if ( IS_TAPE_BLKID_BOT( *pdwPos ) )
-        *pStat |= GMT_BOT (0xFFFFFFFF);     // (keep DEVBLK status in sync)
+        *pStat |=  GMT_BOT (0xFFFFFFFF);
+    else
+        *pStat &= ~GMT_BOT (0xFFFFFFFF);
 
     return 0;
 }
