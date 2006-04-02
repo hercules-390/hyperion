@@ -65,12 +65,15 @@ int open_scsitape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 int rc;
 
     /* Is an open for this device already in progress? */
+    obtain_lock( &dev->stape_getstat_lock );
     if ( dev->stape_mountmon_tid )
     {
+        release_lock( &dev->stape_getstat_lock );
         /* Yes. Device is good but no tape is mounted (yet) */
         build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
         return 0; // (quick exit; in progress == open success)
     }
+    release_lock( &dev->stape_getstat_lock );
 
     ASSERT( dev->fd < 0 );  // (sanity check)
     dev->fd = -1;
@@ -103,12 +106,15 @@ int rc;
     update_status_scsitape( dev );
 
     /* Asynchronous open now in progress? */
+    obtain_lock( &dev->stape_getstat_lock );
     if ( dev->stape_mountmon_tid )
     {
+        release_lock( &dev->stape_getstat_lock );
         /* Yes. Device is good but no tape is mounted (yet) */
         build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
         return 0; // (quick exit; in progress == open success)
     }
+    release_lock( &dev->stape_getstat_lock );
 
     /* Finish up the open process... */
     if ( STS_NOT_MOUNTED( dev ) )
@@ -1292,7 +1298,9 @@ void *scsi_tapemountmon_thread( void *db )
     // so they can know to start us back up again
     // if this drive ever has its tape unloaded again...
 
+    obtain_lock( &dev->stape_getstat_lock );
     dev->stape_mountmon_tid = 0;  // (we're going away)
+    release_lock( &dev->stape_getstat_lock );
 
     return NULL;
 
