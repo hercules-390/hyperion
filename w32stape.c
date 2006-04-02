@@ -900,7 +900,14 @@ int w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget )
     ASSERT( sizeof(media_parms) == dwSize );
 
     if ( NO_ERROR == dwRetCode )
+    {
         mtget->mt_dsreg = media_parms.BlockSize;
+
+        if (media_parms.WriteProtected)
+            *pStat |=  GMT_WR_PROT (0xFFFFFFFF);
+        else
+            *pStat &= ~GMT_WR_PROT (0xFFFFFFFF);
+    }
     else
         mtget->mt_dsreg = 0;    // (unknown; variable blocks presumed)
 
