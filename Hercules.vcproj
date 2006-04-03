@@ -469,10 +469,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\hercnls.h"
-				>
-			</File>
-			<File
 				RelativePath=".\hercules.h"
 				>
 			</File>
