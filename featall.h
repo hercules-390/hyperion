@@ -46,6 +46,8 @@
 #ifndef FISH_HANG
 #define OPTION_PTTRACE                  /* Pthreads tracing          */
 #endif
+#define OPTION_DEBUG_MESSAGES           // Prefix msgs with filename
+                                        // and line# if DEBUG build
 
 /*********************************************************************\
  *********************************************************************

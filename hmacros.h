@@ -177,13 +177,14 @@
 
 /* Add message prefix filename:linenumber: to messages
    when compiled with debug enabled - JJ 30/12/99 */
-#define DEBUG_MESSAGES
+/* But only if OPTION_DEBUG_MESSAGES defined in featall.h - Fish */
+
 #define DEBUG_MSG_Q( _string ) #_string
 #define DEBUG_MSG_M( _string ) DEBUG_MSG_Q( _string )
 #define DEBUG_MSG( _string ) __FILE__ ":" DEBUG_MSG_M( __LINE__ ) ":" _string
 #define D_( _string ) DEBUG_MSG( _string )
 
-#if defined(DEBUG)
+#if defined(OPTION_DEBUG_MESSAGES) && defined(DEBUG)
   #define DEBUG_( _string ) D_( _string )
 #else
   #define DEBUG_( _string ) _string
