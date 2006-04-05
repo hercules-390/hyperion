@@ -146,7 +146,7 @@ extern void build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code);
 #define STS_EOD(dev)            GMT_EOD     ( (dev)->sstat )
 #define STS_WR_PROT(dev)        GMT_WR_PROT ( (dev)->sstat )
 #define STS_ONLINE(dev)         GMT_ONLINE  ( (dev)->sstat )
-#define STS_NOT_MOUNTED(dev)    GMT_DR_OPEN ( (dev)->sstat )
+#define STS_NOT_MOUNTED(dev)   (GMT_DR_OPEN ( (dev)->sstat ) || (dev)->fd < 0)
 #endif
 
 #define  AUTOLOAD_WAIT_FOR_TAPEMOUNT_INTERVAL_SECS  (5) /* (default) */

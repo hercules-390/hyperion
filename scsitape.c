@@ -34,6 +34,11 @@
   #define VERIFY(a)   ((void)(a))
 #endif
 
+void create_automount_thread( DEVBLK* dev );  // (fwd ref)
+
+// (the following is just a [slightly] shorter name for our own internal use)
+#define SLOW_UPDATE_STATUS_TIMEOUT  MAX_NORMAL_SCSI_DRIVE_QUERY_RESPONSE_TIMEOUT_USECS
+
 /*-------------------------------------------------------------------*/
 /*                 Open a SCSI tape device                           */
 /*                                                                   */
@@ -60,7 +65,7 @@
 /* and the device file thus cannot even be opened.                   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-int open_scsitape (DEVBLK *dev, BYTE *unitstat,BYTE code)
+int open_scsitape (DEVBLK *dev, BYTE *unitstat, BYTE code)
 {
 int rc;
 
@@ -103,7 +108,7 @@ int rc;
 
     /* Obtain the initial tape device/media status information */
     /* and start the mount-monitoring thread if option enabled */
-    update_status_scsitape( dev );
+    update_status_scsitape( dev, 0 );
 
     /* Asynchronous open now in progress? */
     obtain_lock( &dev->stape_getstat_lock );
@@ -123,8 +128,10 @@ int rc;
            Note: we return "success" because the filename is good
            (device CAN be opened) but close the file descriptor
            since there's no tape currently mounted on the drive.*/
+#if !defined( _MSVC_ )
         dev->fd = -1;
         close_tape( rc );
+#endif // !_MSVC_
         build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
         return 0; // (because device file IS valid and CAN be opened)
     }
@@ -203,7 +210,8 @@ void close_scsitape(DEVBLK *dev)
     }
 
     close_tape( fd );
-    dev->sstat = GMT_DR_OPEN( -1 );
+    dev->sstat               = GMT_DR_OPEN(-1);
+    dev->stape_getstat_sstat = GMT_DR_OPEN(-1);
     dev->blockid = -1;
     dev->curfilen = 0;
     dev->poserror = 1;
@@ -284,7 +292,7 @@ int  save_errno;
                 SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->filename, errno, strerror(errno));
 
-        update_status_scsitape( dev );
+        update_status_scsitape( dev, 0 );
     }
     errno = save_errno;
 
@@ -351,7 +359,7 @@ struct mtop opblk;
                 SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->filename, errno, strerror(errno));
 
-        update_status_scsitape( dev );
+        update_status_scsitape( dev, 0 );
     }
     errno = save_errno;
 
@@ -416,20 +424,11 @@ struct mtop opblk;
        that a tapemark was detected... (in which case
        we incremnent the file number and return 0).
     */
-    // NOTE: I'm suspecting the reason the MT driver
-    // wasn't setting EOF when it spaced over a tapemark
-    // was possibly because we were inadvertently causing
-    // the EOF status to get reset/lost as a result of
-    // our calling the 'get status' function. I hope
-    // it now works correctly on *nix with the below
-    // commented out. -- Fish
-#if 0
     save_errno = errno;
     {
-        update_status_scsitape( dev );
+        update_status_scsitape( dev, 0 );
     }
     errno = save_errno;
-#endif
 
     if ( EIO == errno && STS_EOF(dev) )
     {
@@ -513,7 +512,7 @@ struct mtop opblk;
     */
 
     /* Obtain tape status before backward space... (no choice!) */
-    update_status_scsitape( dev );
+    update_status_scsitape( dev, 0 );
 
     /* Unit check if already at start of tape */
     if ( STS_BOT( dev ) )
@@ -542,20 +541,11 @@ struct mtop opblk;
        that a tapemark was detected... (in which case
        we decrement the file number and return 0).
     */
-    // NOTE: I'm suspecting the reason the MT driver
-    // wasn't setting EOF when it spaced over a tapemark
-    // was possibly because we were inadvertently causing
-    // the EOF status to get reset/lost as a result of
-    // our calling the 'get status' function. I hope
-    // it now works correctly on *nix with the below
-    // commented out. -- Fish
-#if 0
     save_errno = errno;
     {
-        update_status_scsitape( dev );
+        update_status_scsitape( dev, 0 );
     }
     errno = save_errno;
-#endif
 
     if ( EIO == errno && STS_EOF(dev) )
     {
@@ -695,7 +685,7 @@ struct mtop opblk;
     */
 
     /* Obtain tape status before backward space... (no choice!) */
-    update_status_scsitape( dev );
+    update_status_scsitape( dev, 0 );
 
     /* Unit check if already at start of tape */
     if ( STS_BOT( dev ) )
@@ -885,16 +875,24 @@ int dse_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
 /* Determine if the tape is Ready   (tape drive door status)         */
 /* Returns:  true/false:  1 = ready,   0 = NOT ready                 */
 /*-------------------------------------------------------------------*/
-int driveready_scsitape(DEVBLK *dev,BYTE *unitstat,BYTE code)
+int is_tape_mounted_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
 {
     UNREFERENCED(unitstat);
     UNREFERENCED(code);
 
-    /* Update tape status */
-    update_status_scsitape( dev );
+    /* Update tape mounted status */
+    update_status_scsitape( dev, 1 );
 
     return ( !STS_NOT_MOUNTED( dev ) );
 } /* end function driveready_scsitape */
+
+/*-------------------------------------------------------------------*/
+/* Forward references...                                             */
+/*-------------------------------------------------------------------*/
+extern void  update_status_scsitape   ( DEVBLK* dev, int mountstat_only );
+static void  scsi_get_status_fast     ( DEVBLK* dev, int mountstat_only );
+static void* get_stape_status_thread  ( void*   db  );
+extern void  kill_stape_status_thread ( DEVBLK* dev );
 
 /*-------------------------------------------------------------------*/
 /* get_stape_status_thread                                           */
@@ -904,74 +902,43 @@ void* get_stape_status_thread( void *db )
 {
     DEVBLK* dev = db;                   /* Pointer to device block   */
     struct mtget mtget;                 /* device status work field  */
-    int priority;                       /* Thread priority           */
     int rc;                             /* return code               */
-
-    // Set thread priority BELOW that of the cpu and device threads
-    // in order to minimize whatever impact we may have on them...
-
-    priority = ((sysblk.cpuprio > sysblk.devprio) ? sysblk.cpuprio : sysblk.devprio ) + 8;
-    SETMODE(ROOT); VERIFY(setpriority(PRIO_PROCESS,0,priority)==0); SETMODE(USER);
 
     obtain_lock( &dev->stape_getstat_lock );
     dev->stape_getstat_busy = 0;
     broadcast_condition( &dev->stape_getstat_cond );
 
-    for (;;)
+    do
     {
-        // Wait for work...
-
-        wait_condition( &dev->stape_getstat_cond, &dev->stape_getstat_lock );
-
-        // Check if time to exit...
-
-        if (0
-            || sysblk.shutdown
-            || dev->stape_getstat_exit
-        )
-            break;
-
-        // Perform work...
-
         // Since this may take quite a while to do if there's no tape
         // mounted, we release the lock before attempting to retrieve
         // the status and then reacquire it afterwards before moving
         // the results back into the device block...
-
         dev->stape_getstat_busy = 1;
         release_lock( &dev->stape_getstat_lock );
 
-        // (this is the call that may take a LOOOONG time to complete)
-
+        // NOTE: the following may take up to *>10<* seconds to
+        // complete on Windows whenever there's no tape mounted!
         if ( dev->fd > 0 )
             rc = ioctl_tape( dev->fd, MTIOCGET, (char*)&mtget );
         else
             rc = -1;
 
-        // Since the above may have taken quite a while to complete
-        // (up to *10* seconds on Windows!) we need to check again
-        // if we're to exit since things could have changed quite
-        // dramatically during that time...
-
+        // (reacquire lock now that status has been retrieved)
         obtain_lock( &dev->stape_getstat_lock );
         dev->stape_getstat_busy = 0;
 
-        if (0
-            || sysblk.shutdown
-            || dev->stape_getstat_exit
-        )
-            break;
-
         // Indicate work completed...
-
         if ( 0 == rc )
             dev->stape_getstat_sstat = mtget.mt_gstat;
-
         broadcast_condition( &dev->stape_getstat_cond );
+
+        // Wait for more work...
+        wait_condition( &dev->stape_getstat_cond, &dev->stape_getstat_lock );
     }
+    while ( !sysblk.shutdown && !dev->stape_getstat_exit );
 
     // Indicate we're going away...
-
     dev->stape_getstat_tid = 0;
     broadcast_condition( &dev->stape_getstat_cond );
     release_lock( &dev->stape_getstat_lock );
@@ -979,7 +946,6 @@ void* get_stape_status_thread( void *db )
     return NULL;
 
 } /* end function get_stape_status_thread */
-
 
 /*-------------------------------------------------------------------*/
 /* kill_stape_status_thread                                          */
@@ -995,7 +961,7 @@ void kill_stape_status_thread ( DEVBLK *dev )
     (
         &dev->stape_getstat_cond,   // ptr to condition to wait on
         &dev->stape_getstat_lock,   // ptr to controlling lock (must be held!)
-        10*1000,                    // max #of microseconds to wait
+        SLOW_UPDATE_STATUS_TIMEOUT, // max #of usecs to wait
         NULL                        // [OPTIONAL] ptr to tod value (may be NULL)
     );
     release_lock( &dev->stape_getstat_lock );
@@ -1003,23 +969,58 @@ void kill_stape_status_thread ( DEVBLK *dev )
 
 } /* end function kill_stape_status_thread */
 
-
 /*-------------------------------------------------------------------*/
 /* scsi_get_status_fast                                              */
 /*-------------------------------------------------------------------*/
 static
-void scsi_get_status_fast( DEVBLK* dev )
+void scsi_get_status_fast( DEVBLK* dev, int mountstat_only )
 {
-    struct timeval wait_tod;
+    struct timeval curr_tod;            /* TOD of status REQUEST     */
+    struct timeval diff_tod;            /* Calculated elapsed TOD    */
+    int min_query_interval;             /* Min drive query frequency */
+
+    if (likely(mountstat_only))
+    {
+        // All they're interested in is whether the tape is mounted
+        // or not. Check to see if it's time to retrieve the ACTUAL
+        // (true) status again. If it's not time yet keep returning
+        // the current (possibly 'x' seconds old) status.
+
+        gettimeofday( &curr_tod, NULL );
+
+        VERIFY( timeval_subtract( &dev->stape_getstat_query_tod,
+            &curr_tod, &diff_tod ) == 0 );
+
+        min_query_interval = sysblk.auto_scsi_mount_secs ?
+            sysblk.auto_scsi_mount_secs : DEFAULT_AUTO_SCSI_MOUNT_SECS;
+
+        // Is it time to do a REAL query yet?
+
+        if (likely( diff_tod.tv_sec < min_query_interval ))
+            return;     // (no, keep using existing status)
+    }
+
+    // This is either NOT a "mount status only" request -OR- is
+    // an internal "full (true) status" (non-mount-status) request.
+    // Ask our asynchonous status-retrieval thread to retrieve the
+    // actual (true) tape drive status, which allows us to specify
+    // a timeout value so we don't end up having to wait forever
+    // (hence the "fast" in our function name).
+
+    if (unlikely( dev->fd < 0 ))    // (has drive been opened yet?)
+        return;                     // (cannot proceed until it is)
 
     obtain_lock( &dev->stape_getstat_lock );
 
-    // Create the status retrieval thread if it hasn't been yet...
+    // Create the status retrieval thread if it hasn't been yet.
+    // We do the actual retrieval of the status in a worker thread
+    // because retrieving the status from a drive that doesn't have
+    // a tape mounted takes a very long time (at least on Windows).
 
-    if ( !dev->stape_getstat_tid )
+    if (unlikely( !dev->stape_getstat_tid ))
     {
-        dev->stape_getstat_busy = 0;
         dev->stape_getstat_exit = 0;
+        dev->stape_getstat_sstat = GMT_DR_OPEN(-1); // (until we learn otherwise)
 
         VERIFY
         (
@@ -1037,60 +1038,49 @@ void scsi_get_status_fast( DEVBLK* dev )
         wait_condition( &dev->stape_getstat_cond, &dev->stape_getstat_lock );
     }
 
-    // Wake it up...
+    // Wake up the status retrieval thread...
 
-    if (!dev->stape_getstat_busy)
-        broadcast_condition( &dev->stape_getstat_cond );
-
-    // Wait only so long for status to be retrieved...
-
-    gettimeofday( &wait_tod, NULL );
-
-    for (;;)
+    if ( !dev->stape_getstat_busy )
     {
-        if (0 != timed_wait_condition_relative_usecs
-        (
-            &dev->stape_getstat_cond,   // ptr to condition to wait on
-            &dev->stape_getstat_lock,   // ptr to controlling lock (must be held!)
-            10*1000,                    // max #of microseconds to wait
-            &wait_tod                   // [OPTIONAL] ptr to tod value (may be NULL)
-        ))
-            break;  // (timeout; keep use existing status)
-
-        // If request was completed, then use the new status...
-
-        if (!dev->stape_getstat_busy)
-        {
-            // Updated status retrieved; update device block...
-            dev->sstat = dev->stape_getstat_sstat;
-            break;
-        }
-
-        // Else spurious wakeup; keep waiting...
+        dev->stape_getstat_busy = 1;
+        broadcast_condition( &dev->stape_getstat_cond );
     }
+
+    // Wait only so long for the status to be retrieved...
+
+    timed_wait_condition_relative_usecs
+    (
+        &dev->stape_getstat_cond,       // ptr to condition to wait on
+        &dev->stape_getstat_lock,       // ptr to controlling lock (must be held!)
+        SLOW_UPDATE_STATUS_TIMEOUT,     // max #of microseconds to wait
+        NULL                            // [OPTIONAL] ptr to tod value (may be NULL)
+    );
+
+    dev->sstat = dev->stape_getstat_sstat;  // (save updated status)
 
     release_lock( &dev->stape_getstat_lock );
 
 } /* end function scsi_get_status_fast */
 
-
 /*-------------------------------------------------------------------*/
 /* Update SCSI tape status (and display it if CCW tracing is active) */
 /*-------------------------------------------------------------------*/
-void update_status_scsitape( DEVBLK* dev )
+void update_status_scsitape( DEVBLK* dev, int mountstat_only )
 {
-    if ( dev->fd < 0 )
+    if (unlikely( dev->fd < 0 ))
     {
         // The device is offline and cannot currently be used.
         dev->sstat = GMT_DR_OPEN(-1);
     }
     else
     {
-        scsi_get_status_fast( dev );
+        scsi_get_status_fast( dev, mountstat_only );
     }
 
+    create_automount_thread( dev );
+
     /* Display tape status if tracing is active */
-    if ( dev->ccwtrace || dev->ccwstep )
+    if (unlikely( dev->ccwtrace || dev->ccwstep ))
     {
         char  buf[256];
 
@@ -1119,6 +1109,17 @@ void update_status_scsitape( DEVBLK* dev )
         logmsg ( _("HHCTA023I %s\n"), buf );
     }
 
+} /* end function update_status_scsitape */
+
+/*-------------------------------------------------------------------*/
+/*                  ASYNCHRONOUS TAPE OPEN                           */
+/* SCSI tape tape-mount monitoring thread (monitors for tape mounts) */
+/* Auto-started by 'update_status_scsitape' when it notices there is */
+/* no tape mounted on whatever device it's checking the status of,   */
+/* or by the ReqAutoMount function for unsatisfied mount requests.   */
+/*-------------------------------------------------------------------*/
+void create_automount_thread( DEVBLK* dev )
+{
 	//               AUTO-SCSI-MOUNT
 	//
     // If no tape is currently mounted on this device,
@@ -1149,29 +1150,14 @@ void update_status_scsitape( DEVBLK* dev )
     }
 
     release_lock( &dev->stape_getstat_lock );
+}
 
-} /* end function update_status_scsitape */
-
-/*-------------------------------------------------------------------*/
-/*                  ASYNCHRONOUS TAPE OPEN                           */
-/* SCSI tape tape-mount monitoring thread (monitors for tape mounts) */
-/* Auto-started by 'update_status_scsitape' when it notices there is */
-/* no tape mounted on whatever device it's checking the status of,   */
-/* or by the ReqAutoMount function for unsatisfied mount requests.   */
-/*-------------------------------------------------------------------*/
 void *scsi_tapemountmon_thread( void *db )
 {
     struct timeval interval_tod;
     BYTE tape_was_mounted;
     DEVBLK* dev = db;
-    int priority;
     int fd, timeout, exit = 0;
-
-    // Set thread priority BELOW that of the cpu and device threads
-    // in order to minimize whatever impact we may have on them...
-
-    priority = ((sysblk.cpuprio > sysblk.devprio) ? sysblk.cpuprio : sysblk.devprio ) + 8;
-    SETMODE(ROOT); VERIFY(setpriority(PRIO_PROCESS,0,priority)==0); SETMODE(USER);
 
     logmsg
     (
@@ -1250,16 +1236,18 @@ void *scsi_tapemountmon_thread( void *db )
             dev->fd = fd;   // (so far so good)
         }
 
-        // Retrieve status...
-        scsi_get_status_fast( dev );
+        // Retrieve full status...
+        update_status_scsitape( dev, 0 );
 
         // Mounted yet?
         if ( !STS_NOT_MOUNTED( dev ) )
             break; // YEP!
 
         // Close device and go back to sleep...
+#if !defined( _MSVC_ )
         dev->fd = -1;
         close_tape( fd );
+#endif // !_MSVC_
     }
 
     // Finish open processing...

@@ -33,11 +33,24 @@ extern int   fsf_scsitape             ( DEVBLK *dev,                     BYTE *u
 extern int   bsf_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   rewind_scsitape          ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern void  rewind_unload_scsitape   ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   driveready_scsitape      ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern int   is_tape_mounted_scsitape ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   finish_scsitape_open     ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern void  update_status_scsitape   ( DEVBLK *dev );
+extern void  update_status_scsitape   ( DEVBLK *dev, int mountstat_only );
 extern void *scsi_tapemountmon_thread ( void   *devblk );
 extern void  kill_stape_status_thread ( DEVBLK *dev );
+
+// PROGRAMMING NOTE: I'm not sure of what the the actual/proper value
+// should be (or is) for the following value but I've coded what seems
+// to me to be a reasonable value for it. As you can probably guess
+// based on its [admittedly rather verbose] name, it's the maximum
+// amount of time that a SCSI tape drive query call should take (i.e.
+// asking the system for the drive's status shouldn't, under normal
+// circumstances, take any longer than this time). It should be set
+// to the most pessimistic value we can reasonably stand, and should
+// probably be at least as long as the host operating system's thread
+// scheduling time-slice quantum.  -  Fish, April 2006
+
+#define MAX_NORMAL_SCSI_DRIVE_QUERY_RESPONSE_TIMEOUT_USECS  (25*1000)
 
 #endif // defined(OPTION_SCSI_TAPE)
 

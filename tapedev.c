@@ -2642,14 +2642,22 @@ static int rewind_omatape(DEVBLK *dev,BYTE *unitstat,BYTE code)
     return 0;
 }
 /*-------------------------------------------------------------------*/
-/* Get 3480/3490/3590 Display text in 'human' form                   */
+/*      Get 3480/3490/3590 Display text in 'human' form              */
+/* If not a 3480/3490/3590, then just update status if a SCSI tape   */
 /*-------------------------------------------------------------------*/
 static void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
 {
     msgbfr[0]=0;
 
     if ( !dev->tdparms.displayfeat )
-        return; // (drive doesn't have a display)
+    {
+        // (drive doesn't have a display)
+#if defined(OPTION_SCSI_TAPE)
+        if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            update_status_scsitape( dev, 1 );
+#endif
+        return;
+    }
 
     if ( !IS_TAPEDISPTYP_SYSMSG( dev ) )
     {
@@ -2672,9 +2680,9 @@ static void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
             strlcpy ( msg2,   dev->tapemsg2, sizeof(msg2) );
             strlcat ( msg2,   "        ",    sizeof(msg2) );
 
-            strlcat ( msgbfr, msg1,              lenbfr );
-            strlcat ( msgbfr, "\" / \"",         lenbfr );
-            strlcat ( msgbfr, msg2,              lenbfr );
+            strlcat ( msgbfr, msg1,             lenbfr );
+            strlcat ( msgbfr, "\" / \"",        lenbfr );
+            strlcat ( msgbfr, msg2,             lenbfr );
             strlcat ( msgbfr, "\"",             lenbfr );
             strlcat ( msgbfr, " (alternating)", lenbfr );
         }
@@ -2806,6 +2814,11 @@ static void UpdateDisplay( DEVBLK *dev )
         logmsg(_("HHCTA100I %4.4X: Now Displays: %s\n"),
             dev->devnum, msgbfr );
     }
+#if defined(OPTION_SCSI_TAPE)
+    else
+        if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            update_status_scsitape( dev, 1 );
+#endif
 }
 /*-------------------------------------------------------------------*/
 /* Issue Automatic Mount Requests as defined by the display          */
@@ -3061,45 +3074,6 @@ static void ReqAutoMount( DEVBLK *dev )
         }
     }
 
-#if defined(OPTION_SCSI_TAPE)
-
-	//                   AUTO-SCSI-MOUNT
-	//
-    // If a mount is being issued and no tape is currently mounted
-    // on this device, then kick off the tape mount monitoring thread
-    // (if it doesn't already exist) that will monitor for tape mounts.
-
-    // Note that we do this regardless of whether or not this was a
-    // request for a manual mount or an autoloader automatic mount.
-
-    obtain_lock( &dev->stape_getstat_lock );
-
-    if (1
-        &&  mountreq
-        &&  sysblk.auto_scsi_mount_secs
-        &&  TAPEDEVT_SCSITAPE == dev->tapedevt
-        &&  STS_NOT_MOUNTED( dev )
-        && !dev->stape_mountmon_tid
-    )
-    {
-        VERIFY
-        (
-            create_thread
-            (
-                &dev->stape_mountmon_tid,
-                &sysblk.detattr,
-                scsi_tapemountmon_thread,
-                dev,
-                "scsi_tapemountmon_thread"
-            )
-            == 0
-        );
-    }
-
-    release_lock( &dev->stape_getstat_lock );
-
-#endif /* defined(OPTION_SCSI_TAPE) */
-
 } /* end function ReqAutoMount */
 
 /*-------------------------------------------------------------------*/
@@ -3353,7 +3327,7 @@ int ldpt=0;
 
 #if defined(OPTION_SCSI_TAPE)
         case TAPEDEVT_SCSITAPE:
-            update_status_scsitape( dev );
+            update_status_scsitape( dev, 0 );
             if ( STS_BOT( dev ) )
             {
                 ldpt=1;
@@ -4005,7 +3979,9 @@ union
     /* Initialize device dependent fields */
     dev->fd                = -1;
 #if defined(OPTION_SCSI_TAPE)
-    dev->sstat             = GMT_DR_OPEN( -1 );
+    dev->sstat               = GMT_DR_OPEN(-1);
+    dev->stape_getstat_sstat = GMT_DR_OPEN(-1);
+    gettimeofday( &dev->stape_getstat_query_tod, NULL );
 #endif
     dev->omadesc           = NULL;
     dev->omafiles          = 0;
@@ -4132,9 +4108,9 @@ union
             /* A tape IS already loaded */
             dev->tapedisptype = TAPEDISPTYP_IDLE;
         }
-        UpdateDisplay(dev);
-        ReqAutoMount(dev);
     }
+    UpdateDisplay(dev);
+    ReqAutoMount(dev);
     return 0;
 
 } /* end function mountnewtape */
@@ -4592,6 +4568,13 @@ int             rc;
         dev->numdevchar = 64;
     }
 
+    /* Initialize SCSI tape control fields */
+#if defined(OPTION_SCSI_TAPE)
+    dev->sstat               = GMT_DR_OPEN(-1);
+    dev->stape_getstat_sstat = GMT_DR_OPEN(-1);
+    gettimeofday( &dev->stape_getstat_query_tod, NULL );
+#endif
+
     /* Clear the DPA */
     memset(dev->pgid, 0, sizeof(dev->pgid));
 
@@ -4673,6 +4656,13 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
             snprintf( tapepos, sizeof(tapepos), "[%d:%8.8lX]",
                 dev->curfilen, dev->nxtblkpos );
         }
+#if defined(OPTION_SCSI_TAPE)
+        else
+        {
+            if (STS_BOT    ( dev )) strlcat(tapepos,"LDPT ",sizeof(tapepos));
+            if (STS_WR_PROT( dev )) strlcat(tapepos,"*FP* ",sizeof(tapepos));
+        }
+#endif
 
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt
 #if defined(OPTION_SCSI_TAPE)
@@ -4687,8 +4677,8 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
                 dev->filename, (dev->readonly ? " ro" : ""),
 
                 tapepos,
-                dev->tdparms.displayfeat ? ", Display: " : "",
-                dev->tdparms.displayfeat ?    dispmsg    : "");
+                dev->tdparms.displayfeat ? "Display: " : "",
+                dev->tdparms.displayfeat ?  dispmsg    : "");
         }
         else /* ( TAPEDEVT_SCSITAPE == dev->tapedevt && STS_NOT_MOUNTED(dev) ) */
         {
@@ -5951,7 +5941,7 @@ static TAPEMEDIA_HANDLER tmh_scsi = {
     &write_scsimark,
     &dse_scsitape,
     &erg_scsitape,
-    &driveready_scsitape,
+    &is_tape_mounted_scsitape,
     &return_false1    /* passedeot */
 };
 #endif /* defined(OPTION_SCSI_TAPE) */
