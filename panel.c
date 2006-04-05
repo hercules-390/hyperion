@@ -60,6 +60,7 @@
 static int    NPDup = 0;       /* 1 when new panel is up */
 static int    NPDinit = 0;     /* 1 when new panel is initialized */
 static int    NPhelpup = 0;    /* 1 when displaying help panel */
+static int    NPhelppaint = 1; /* 1 when the help panel needs painted */
 static int    NPhelpdown = 0;  /* 1 when the help panel is brought down */
 static int    NPregdisp = 0;   /* which regs are displayed 0=gpr, 1=cr, 2=ar, 3=fpr */
 
@@ -591,15 +592,20 @@ void NP_update(REGS *regs)
              NP_screen_redraw(regs);
              NPhelpup = 0;
              NPhelpdown = 0;
+             NPhelppaint = 1;
         }
         else
         {
-            set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
-            clr_screen ();
-            for (i = 0; strcmp(NPhelp[i], ""); i++)
+            if (NPhelppaint)
             {
-                set_pos (i+1, 1);
-                draw_text (NPhelp[i]);
+                set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
+                clr_screen ();
+                for (i = 0; strcmp(NPhelp[i], ""); i++)
+                {
+                    set_pos (i+1, 1);
+                    draw_text (NPhelp[i]);
+                }
+                NPhelppaint = 0;
             }
             return;
         }
@@ -1054,6 +1060,7 @@ void NP_update(REGS *regs)
             draw_text (buf);
             set_pos (i+3, 58);
             draw_text (devnam);
+            erase_to_eol( confp );
         }
     }
 
@@ -1895,7 +1902,7 @@ char    buf[1024];                      /* Buffer workarea           */
                 }
                 i++;
             } /* end for(i) */
-        }
+        } /* end if keystroke */
 
 FinishShutdown:
 
@@ -2161,10 +2168,10 @@ FinishShutdown:
                     NPDinit = 1;
                     NP_screen_redraw(regs);
                 }
-                NP_update(regs);
-                fflush (confp);
-                redraw_msgs = redraw_cmd = redraw_status = 0;
             }
+            NP_update(regs);
+            fflush (confp);
+            redraw_msgs = redraw_cmd = redraw_status = 0;
         }
 
     /* =END= */
