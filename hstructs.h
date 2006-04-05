@@ -849,6 +849,8 @@ struct DEVBLK {                         /* Device configuration block*/
         LOCK    stape_getstat_lock;     /* LOCK for status wrkr thrd */
         COND    stape_getstat_cond;     /* COND for status wrkr thrd */
         U32     stape_getstat_sstat;    /* status wrkr thrd status   */
+        struct timeval
+                stape_getstat_query_tod;/* TOD of actual drive query */
 #endif
         BYTE    tapedevt;               /* Hercules tape device type */
         TAPEMEDIA_HANDLER *tmh;         /* Tape Media Handling       */
