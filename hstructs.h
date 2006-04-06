@@ -798,9 +798,9 @@ struct DEVBLK {                         /* Device configuration block*/
         U16     omafiles;               /* Number of OMA tape files  */
         U16     curfilen;               /* Current file number       */
         long    blockid;                /* Current device block ID   */
-        long    nxtblkpos;              /* Offset from start of file
+        OFF_T   nxtblkpos;              /* Offset from start of file
                                            to next block             */
-        long    prvblkpos;              /* Offset from start of file
+        OFF_T   prvblkpos;              /* Offset from start of file
                                            to previous block         */
         U16     curblkrem;              /* Number of bytes unread
                                            from current block        */
@@ -820,9 +820,9 @@ struct DEVBLK {                         /* Device configuration block*/
                                         /* MVS 3.8j workaround       */
             U16 logical_readonly;       /* Tape is forced READ ONLY  */
             U16 chksize;                /* Chunk size                */
-            size_t maxsize;             /* Maximum allowed TAPE file
+            OFF_T maxsize;              /* Maximum allowed TAPE file
                                            size                      */
-            size_t eotmargin;           /* Amount of space left
+            OFF_T eotmargin;            /* Amount of space left
                                            before reporting EOT      */
         }       tdparms;                /* HET device parms          */
         U32                             /* Flags                     */
