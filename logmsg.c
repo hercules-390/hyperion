@@ -38,13 +38,14 @@
 #define  BFR_VSNPRINTF()                  \
     bfr=malloc(siz);                      \
     rc=-1;                                \
-    while(bfr&&(rc<0||rc>=siz))           \
+    while(bfr&&rc<0)                      \
     {                                     \
         va_start(vl,msg);                 \
         rc=vsnprintf(bfr,siz,msg,vl);     \
         va_end(vl);                       \
         if(rc>=0 && rc<siz)               \
             break;                        \
+        rc=-1;                            \
         siz+=BFR_CHUNKSIZE;               \
         bfr=realloc(bfr,siz);             \
     }
