@@ -750,14 +750,14 @@ het_read( HETB *hetb, void *sbuf )
     char *tptr;
     int rc;
     unsigned long slen;
-    int flags;
+    int flags1, flags2;
     unsigned long tlen;
     char tbuf[ HETMAX_BLOCKSIZE ];
 
     /*
     || Initialize
     */
-    flags = 0;
+    flags1 = flags2 = 0;
     tlen = 0;
     tptr = sbuf;
 
@@ -778,7 +778,7 @@ het_read( HETB *hetb, void *sbuf )
         /*
         || Have we seen a BOR chunk yet?
         */
-        if( !( flags & HETHDR_FLAGS1_BOR ) )
+        if( !( flags1 & HETHDR_FLAGS1_BOR ) )
         {
             /*
             || Nope, so this chunk MUST have the BOR set
@@ -794,8 +794,14 @@ het_read( HETB *hetb, void *sbuf )
             */
             if( hetb->decompress )
             {
-                if( hetb->chdr.flags1 & HETHDR_FLAGS1_COMPRESS )
+                if( hetb->chdr.flags1 & HETHDR_FLAGS1_COMPRESS ||
+                    hetb->chdr.flags2 & HETHDR_FLAGS2_COMPRESS )
                 {
+                    if( ( hetb->chdr.flags1 & HETHDR_FLAGS1_COMPRESS ) &&
+                        ( hetb->chdr.flags2 & HETHDR_FLAGS2_COMPRESS ) )
+                    {
+                        return( HETE_BADCOMPRESS );
+                    }
                     tptr = tbuf;
                 }
             }
@@ -803,7 +809,8 @@ het_read( HETB *hetb, void *sbuf )
             /*
             || Save flags for later validation
             */
-            flags = hetb->chdr.flags1;
+            flags1 = hetb->chdr.flags1;
+            flags2 = hetb->chdr.flags2;
         }
         else
         {
@@ -819,8 +826,13 @@ het_read( HETB *hetb, void *sbuf )
         /*
         || Compression flags from related chunks must match
         */
-        if( ( flags & HETHDR_FLAGS1_COMPRESS ) !=
+        if( (            flags1 & HETHDR_FLAGS1_COMPRESS ) !=
             ( hetb->chdr.flags1 & HETHDR_FLAGS1_COMPRESS ) )
+        {
+            return( HETE_BADCOMPRESS );
+        }
+        if( (            flags2 & HETHDR_FLAGS2_COMPRESS ) !=
+            ( hetb->chdr.flags2 & HETHDR_FLAGS2_COMPRESS ) )
         {
             return( HETE_BADCOMPRESS );
         }
@@ -874,9 +886,31 @@ het_read( HETB *hetb, void *sbuf )
         switch( hetb->chdr.flags1 & HETHDR_FLAGS1_COMPRESS )
         {
             case 0:
+                switch( hetb->chdr.flags2 & HETHDR_FLAGS2_COMPRESS )
+                {
+                    case 0:
+                    break;
+#if defined( HAVE_LIBZ )
+                    case HETHDR_FLAGS2_ZLIB_BUSTECH:
+                        slen = HETMAX_BLOCKSIZE;
+
+                        rc = uncompress( sbuf, &slen, (unsigned char *)tbuf, tlen );
+                        if( rc != Z_OK )
+                        {
+                            errno = rc;
+                            return( HETE_DECERR );
+                        }
+
+                        tlen = slen;
+                    break;
+#endif /* defined( HAVE_LIBZ ) */
+                    default:
+                        return( HETE_UNKMETH );
+                    break;
+                }
             break;
 
-#if defined(HAVE_LIBZ)
+#if defined( HAVE_LIBZ )
             case HETHDR_FLAGS1_ZLIB:
                 slen = HETMAX_BLOCKSIZE;
 
@@ -889,7 +923,7 @@ het_read( HETB *hetb, void *sbuf )
 
                 tlen = slen;
             break;
-#endif
+#endif /* defined( HAVE_LIBZ ) */
 
 #if defined( HET_BZIP2 )
             case HETHDR_FLAGS1_BZLIB:

@@ -38,10 +38,10 @@
 */
 typedef struct _hethdr
 {
-    uint8_t        clen[ 2 ];          /* Length of current block          */
-    uint8_t        plen[ 2 ];          /* Length of previous block         */
-    uint8_t        flags1;             /* Flags byte 1                     */
-    uint8_t        flags2;             /* Flags byte 2                     */
+    uint8_t        clen[ 2 ];          /* Length of current block           */
+    uint8_t        plen[ 2 ];          /* Length of previous block          */
+    uint8_t        flags1;             /* Flags byte 1                      */
+    uint8_t        flags2;             /* Flags byte 2                      */
 } HETHDR;
 
 /*
@@ -61,23 +61,29 @@ typedef struct _hethdr
 #define HETHDR_FLAGS1_ZLIB      0x01    /* ZLIB compression                 */
 
 /*
+|| Definitions for HETHDR flags byte 2 (incompatable with AWSTAPE and HET)
+*/
+#define HETHDR_FLAGS2_COMPRESS     0x80 /* Compression method mask          */
+#define HETHDR_FLAGS2_ZLIB_BUSTECH 0x80 /* Bus-Tech ZLIB compression        */
+
+/*
 || Control block for Hercules Emulated Tape files
 */
 typedef struct _hetb
 {
     FILE            *fd;                /* Tape file descriptor             */
-    uint32_t       chksize;            /* Size of output chunks            */
-    uint32_t       ublksize;           /* Current block compressed size    */
-    uint32_t       cblksize;           /* Current block uncompressed size  */
-    uint32_t       cblk;               /* Current block number             */
+    uint32_t       chksize;            /* Size of output chunks             */
+    uint32_t       ublksize;           /* Current block compressed size     */
+    uint32_t       cblksize;           /* Current block uncompressed size   */
+    uint32_t       cblk;               /* Current block number              */
     HETHDR          chdr;               /* Current block header             */
-    uint8_t        writeprotect:1;     /* TRUE=write protected             */
-    uint8_t        readlast:1;         /* TRUE=last i/o was read           */
-    uint8_t        truncated:1;        /* TRUE=file truncated              */
-    uint8_t        compress:1;         /* TRUE=compress written data       */
-    uint8_t        decompress:1;       /* TRUE=decompress read data        */
-    uint8_t        method:2;           /* 1=ZLIB, 2=BZLIB compresion       */
-    uint8_t        level:4;            /* 1=<n<=9 compression level        */
+    uint8_t        writeprotect:1;     /* TRUE=write protected              */
+    uint8_t        readlast:1;         /* TRUE=last i/o was read            */
+    uint8_t        truncated:1;        /* TRUE=file truncated               */
+    uint8_t        compress:1;         /* TRUE=compress written data        */
+    uint8_t        decompress:1;       /* TRUE=decompress read data         */
+    uint8_t        method:2;           /* 1=ZLIB, 2=BZLIB compresion        */
+    uint8_t        level:4;            /* 1=<n<=9 compression level         */
 } HETB;
 
 /*
