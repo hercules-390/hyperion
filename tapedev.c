@@ -483,7 +483,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 /* If successful, return value is zero, and buffer contains header.  */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-static int readhdr_awstape (DEVBLK *dev, long blkpos,
+static int readhdr_awstape (DEVBLK *dev, OFF_T blkpos,
                         AWSTAPE_BLKHDR *buf, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
@@ -558,7 +558,7 @@ static int read_awstape (DEVBLK *dev, BYTE *buf, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
-long            blkpos;                 /* Offset of block header    */
+OFF_T           blkpos;                 /* Offset of block header    */
 U16             blklen;                 /* Data length of block      */
 
     /* Initialize current block position */
@@ -630,7 +630,7 @@ static int write_awstape (DEVBLK *dev, BYTE *buf, U16 blklen,
 int             rc;                     /* Return code               */
 OFF_T           rcoff;                  /* Return code from lseek()  */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
-long            blkpos;                 /* Offset of block header    */
+OFF_T           blkpos;                 /* Offset of block header    */
 U16             prvblkl;                /* Length of previous block  */
 
     /* Initialize current block position and previous block length */
@@ -752,7 +752,7 @@ static int write_awsmark (DEVBLK *dev, BYTE *unitstat,BYTE code)
 int             rc;                     /* Return code               */
 OFF_T           rcoff;                  /* Return code from lseek()  */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
-long            blkpos;                 /* Offset of block header    */
+OFF_T           blkpos;                 /* Offset of block header    */
 U16             prvblkl;                /* Length of previous block  */
 
     /* Initialize current block position and previous block length */
@@ -841,7 +841,7 @@ static int fsb_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
-long            blkpos;                 /* Offset of block header    */
+OFF_T           blkpos;                 /* Offset of block header    */
 U16             blklen;                 /* Data length of block      */
 
     /* Initialize current block position */
@@ -884,7 +884,7 @@ int             rc;                     /* Return code               */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 U16             curblkl;                /* Length of current block   */
 U16             prvblkl;                /* Length of previous block  */
-long            blkpos;                 /* Offset of block header    */
+OFF_T           blkpos;                 /* Offset of block header    */
 
     /* Unit check if already at start of tape */
     if (!dev->nxtblkpos)
@@ -1174,7 +1174,7 @@ OFF_T           cursize;                /* Current size for size chk */
     if(dev->tdparms.maxsize>0)
     {
         cursize=het_tell(dev->hetb);
-        if(cursize>=(OFF_T)dev->tdparms.maxsize)
+        if(cursize>=dev->tdparms.maxsize)
         {
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
             return -1;
@@ -1199,7 +1199,7 @@ OFF_T           cursize;                /* Current size for size chk */
     if(dev->tdparms.maxsize>0)
     {
         cursize=het_tell(dev->hetb);
-        if(cursize>(OFF_T)dev->tdparms.maxsize)
+        if(cursize>dev->tdparms.maxsize)
         {
             logmsg(_("TAPE EOT Handling : max capacity exceeded\n"));
             if(dev->tdparms.strictsize)
@@ -1400,7 +1400,7 @@ OFF_T cursize;
         if(dev->tdparms.maxsize>0)
         {
             cursize=het_tell(dev->hetb);
-            if(cursize+(unsigned)dev->tdparms.eotmargin>(OFF_T)dev->tdparms.maxsize)
+            if(cursize+dev->tdparms.eotmargin>dev->tdparms.maxsize)
             {
                 return 1;
             }
@@ -1791,7 +1791,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if ( rc >= 0 ) /* LSEEK overflow */ errno = EOVERFLOW;
         logmsg (_("HHCTA051E Error opening %s: %s\n"),
                 omadesc->filename, strerror(errno));
-
+        close(rc);
         build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
         return -1;
     }
