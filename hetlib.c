@@ -1560,7 +1560,8 @@ het_bsb( HETB *hetb )
 {
     int rc;
     int newblk;
-    int offset;
+    int offset;     // (note: safe to use 'int' as offset here
+                    //  since we only ever seek from SEEK_CUR)
     int tapemark = FALSE;
 
     /*
