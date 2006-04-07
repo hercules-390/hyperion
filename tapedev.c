@@ -4653,7 +4653,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
 
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
         {
-            snprintf( tapepos, sizeof(tapepos), "[%d:%8.8lX]",
+            snprintf( tapepos, sizeof(tapepos), "[%d:%8.8lX] ",
                 dev->curfilen, dev->nxtblkpos );
         }
 #if defined(OPTION_SCSI_TAPE)
@@ -4700,10 +4700,6 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
 /*-------------------------------------------------------------------*/
 static int tapedev_close_device ( DEVBLK *dev )
 {
-#if defined(OPTION_SCSI_TAPE)
-    if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
-        kill_stape_status_thread( dev );
-#endif /* defined(OPTION_SCSI_TAPE) */
     autoload_close(dev);
     dev->tmh->close(dev);
     ASSERT( dev->fd < 0 );

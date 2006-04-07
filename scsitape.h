@@ -37,7 +37,6 @@ extern int   is_tape_mounted_scsitape ( DEVBLK *dev,                     BYTE *u
 extern int   finish_scsitape_open     ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern void  update_status_scsitape   ( DEVBLK *dev, int mountstat_only );
 extern void *scsi_tapemountmon_thread ( void   *devblk );
-extern void  kill_stape_status_thread ( DEVBLK *dev );
 
 // PROGRAMMING NOTE: I'm not sure of what the the actual/proper value
 // should be (or is) for the following value but I've coded what seems

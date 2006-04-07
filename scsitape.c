@@ -196,27 +196,48 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
 /*-------------------------------------------------------------------*/
 void close_scsitape(DEVBLK *dev)
 {
-    int fd = dev->fd; dev->fd = -1;
+    obtain_lock( &dev->stape_getstat_lock );
 
-    if (fd < 0) return;
-
-    if (dev->stape_close_rewinds)
+    // Shutdown the worker threads if they're running...
+    while ( dev->stape_getstat_tid || dev->stape_mountmon_tid )
     {
-        struct mtop opblk;
-//      opblk.mt_op    = MTLOAD;    // (not sure which is more correct)
-        opblk.mt_op    = MTREW;
-        opblk.mt_count = 1;
-        ioctl_tape ( fd, MTIOCTOP, (char*)&opblk) ;
+        dev->stape_getstat_exit = 1;
+        broadcast_condition( &dev->stape_getstat_cond );
+        wait_condition( &dev->stape_getstat_cond, &dev->stape_getstat_lock );
     }
 
-    close_tape( fd );
+    // Close the file if it's open...
+    if (dev->fd >= 0)
+    {
+        if (dev->stape_close_rewinds)
+        {
+            struct mtop opblk;
+//          opblk.mt_op    = MTLOAD;    // (not sure which is more correct)
+            opblk.mt_op    = MTREW;
+            opblk.mt_count = 1;
+
+            if (ioctl_tape ( dev->fd, MTIOCTOP, (char*)&opblk) != 0)
+            {
+                logmsg (_("HHCTA073W Error rewinding %u:%4.4X=%s; errno=%d: %s\n"),
+                        SSID_TO_LCSS(dev->ssid), dev->devnum,
+                        dev->filename, errno, strerror(errno));
+            }
+        }
+        close_tape( dev->fd );
+
+        dev->fd        = -1;
+        dev->blockid   = -1;
+        dev->curfilen  =  0;
+        dev->poserror  =  1;
+        dev->nxtblkpos =  0;
+        dev->prvblkpos = -1;
+    }
+
     dev->sstat               = GMT_DR_OPEN(-1);
     dev->stape_getstat_sstat = GMT_DR_OPEN(-1);
-    dev->blockid = -1;
-    dev->curfilen = 0;
-    dev->poserror = 1;
-    dev->nxtblkpos = 0;
-    dev->prvblkpos = -1;
+    dev->stape_getstat_exit  = 0;
+
+    release_lock( &dev->stape_getstat_lock );
 
 } /* end function close_scsitape */
 
@@ -766,7 +787,7 @@ struct mtop opblk;
     dev->blockid  = -1;     // (because the rewind failed)
     dev->curfilen = -1;     // (because the rewind failed)
 
-    logmsg (_("HHCTA073E Error rewinding %u:%4.4X=%s; errno=%d:  %s\n"),
+    logmsg (_("HHCTA073E Error rewinding %u:%4.4X=%s; errno=%d: %s\n"),
             SSID_TO_LCSS(dev->ssid), dev->devnum,
             dev->filename, errno, strerror(errno));
 
@@ -948,28 +969,6 @@ void* get_stape_status_thread( void *db )
 } /* end function get_stape_status_thread */
 
 /*-------------------------------------------------------------------*/
-/* kill_stape_status_thread                                          */
-/*-------------------------------------------------------------------*/
-void kill_stape_status_thread ( DEVBLK *dev )
-{
-    // (NOTE: also kills mount-monitoring thread too if active)
-    obtain_lock( &dev->stape_getstat_lock );
-    dev->stape_getstat_exit = 1;
-    broadcast_condition( &dev->stape_getstat_cond );
-//  wait_condition( &dev->stape_getstat_cond, &dev->stape_getstat_lock );
-    timed_wait_condition_relative_usecs
-    (
-        &dev->stape_getstat_cond,   // ptr to condition to wait on
-        &dev->stape_getstat_lock,   // ptr to controlling lock (must be held!)
-        SLOW_UPDATE_STATUS_TIMEOUT, // max #of usecs to wait
-        NULL                        // [OPTIONAL] ptr to tod value (may be NULL)
-    );
-    release_lock( &dev->stape_getstat_lock );
-//  join_thread(dev->stape_getstat_tid,NULL);
-
-} /* end function kill_stape_status_thread */
-
-/*-------------------------------------------------------------------*/
 /* scsi_get_status_fast                                              */
 /*-------------------------------------------------------------------*/
 static
@@ -1017,9 +1016,8 @@ void scsi_get_status_fast( DEVBLK* dev, int mountstat_only )
     // because retrieving the status from a drive that doesn't have
     // a tape mounted takes a very long time (at least on Windows).
 
-    if (unlikely( !dev->stape_getstat_tid ))
+    if (unlikely( !dev->stape_getstat_tid && !dev->stape_getstat_exit ))
     {
-        dev->stape_getstat_exit = 0;
         dev->stape_getstat_sstat = GMT_DR_OPEN(-1); // (until we learn otherwise)
 
         VERIFY
@@ -1130,9 +1128,10 @@ void create_automount_thread( DEVBLK* dev )
     obtain_lock( &dev->stape_getstat_lock );
 
     if (1
+        &&  sysblk.auto_scsi_mount_secs
         &&  STS_NOT_MOUNTED( dev )
         && !dev->stape_mountmon_tid
-        &&  sysblk.auto_scsi_mount_secs
+        && !dev->stape_getstat_exit
     )
     {
         VERIFY
@@ -1178,6 +1177,17 @@ void *scsi_tapemountmon_thread( void *db )
 
         obtain_lock( &dev->stape_getstat_lock );
 
+        if (0
+            || sysblk.shutdown
+            || !sysblk.auto_scsi_mount_secs
+            || dev->stape_getstat_exit
+        )
+        {
+            exit = 1;
+            release_lock( &dev->stape_getstat_lock );
+            break;  // (time to exit)
+        }
+
         gettimeofday( &interval_tod, NULL );
 
         for (;;)
@@ -1197,8 +1207,7 @@ void *scsi_tapemountmon_thread( void *db )
                 || dev->stape_getstat_exit
             )
             {
-                dev->stape_getstat_exit = exit = 1;
-                broadcast_condition( &dev->stape_getstat_cond );
+                exit = 1;
                 break;  // (time to exit)
             }
 
@@ -1239,15 +1248,33 @@ void *scsi_tapemountmon_thread( void *db )
         // Retrieve full status...
         update_status_scsitape( dev, 0 );
 
+        obtain_lock( &dev->stape_getstat_lock );
+
+        if (0
+            || sysblk.shutdown
+            || !sysblk.auto_scsi_mount_secs
+            || dev->stape_getstat_exit
+        )
+        {
+            exit = 1;
+            release_lock( &dev->stape_getstat_lock );
+            break;
+        }
+
         // Mounted yet?
         if ( !STS_NOT_MOUNTED( dev ) )
+        {
+            release_lock( &dev->stape_getstat_lock );
             break; // YEP!
+        }
 
         // Close device and go back to sleep...
 #if !defined( _MSVC_ )
         dev->fd = -1;
         close_tape( fd );
 #endif // !_MSVC_
+
+        release_lock( &dev->stape_getstat_lock );
     }
 
     // Finish open processing...
@@ -1288,6 +1315,7 @@ void *scsi_tapemountmon_thread( void *db )
 
     obtain_lock( &dev->stape_getstat_lock );
     dev->stape_mountmon_tid = 0;  // (we're going away)
+    broadcast_condition( &dev->stape_getstat_cond );
     release_lock( &dev->stape_getstat_lock );
 
     return NULL;
