@@ -61,4 +61,8 @@ extern  int   console_beep( FILE* confp );
 extern  int   get_console_dim( FILE* confp, int* rows, int* cols );
 extern  int   set_console_cursor_shape( FILE* confp, int ins );
 
+#if defined( _MSVC_ )
+extern  int   w32_set_console_title( char* pszTitle );
+#endif
+
 #endif // _HCONSOLE_H

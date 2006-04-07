@@ -412,6 +412,39 @@ int  set_console_cursor_shape( FILE* confp, int ins )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// From KB article 124103: "How To Obtain a Console Window Handle (HWND)"
+// http://support.microsoft.com/?kbid=124103
+
+#define MAX_WINDOW_TITLE_LEN  (256)   // (purely arbitrary)
+
+static TCHAR g_szOriginalTitle[ MAX_WINDOW_TITLE_LEN ] = {0};
+
+int w32_set_console_title( char* pszTitle )
+{
+    TCHAR    szNewTitleBuff [ MAX_WINDOW_TITLE_LEN ];
+    LPCTSTR  pszNewTitle = NULL;
+
+    if (!g_szOriginalTitle[0])
+        VERIFY(GetConsoleTitle( g_szOriginalTitle, MAX_WINDOW_TITLE_LEN ));
+
+    if (pszTitle)
+    {
+        _sntprintf( szNewTitleBuff, MAX_WINDOW_TITLE_LEN-1, _T("%hs"), pszTitle );
+        szNewTitleBuff[MAX_WINDOW_TITLE_LEN-1]=0;
+        pszNewTitle = szNewTitleBuff;
+    }
+    else
+        pszNewTitle = g_szOriginalTitle;
+
+    if (!SetConsoleTitle( pszNewTitle ))
+    {
+        errno = GetLastError();
+        return -1;
+    }
+    return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 

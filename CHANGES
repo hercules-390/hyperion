@@ -1,3 +1,4 @@
+07 Apr 2006 New 'PANTITLE' config stmt to set console/panel title - Fish
 06 Apr 2006 PR# 34/tape: prevent tape mount unless no tape mounted - Fish
 06 Apr 2006 Missed a scsimount detach/devinit bug - Fish
 06 Apr 2006 PR# 53/tape: Bus-Tech compressed AWS file support - Fish

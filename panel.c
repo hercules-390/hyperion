@@ -1304,6 +1304,12 @@ char    buf[1024];                      /* Buffer workarea           */
     /* Put the terminal into cbreak mode */
     set_or_reset_console_mode( keybfd, 1 );
 
+    /* Set console title */
+#if defined( _MSVC_ )
+    if (sysblk.pantitle)
+        w32_set_console_title(sysblk.pantitle);
+#endif /* defined( _MSVC_ ) */
+
     /* Clear the screen */
     set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
     clr_screen ();

@@ -343,6 +343,7 @@ struct SYSBLK {
 #define SHCMDOPT_NODIAG8  0x40          /* Disallow only for DIAG8   */
         int     panrate;                /* Panel refresh rate        */
         int     npquiet;                /* New Panel quiet indicator */
+        char   *pantitle;               /* Alt console panel title   */
 #if defined(OPTION_SCSI_TAPE)
         int     auto_scsi_mount_secs;   /* Check for SCSI tape mount
                                            frequency; 0 == disabled  */

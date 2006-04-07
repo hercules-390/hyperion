@@ -812,6 +812,12 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             {
                 slogofile=operand;
             }
+            else if (strcasecmp (keyword, "pantitle") == 0)
+            {
+                if (sysblk.pantitle)
+                    free(sysblk.pantitle);
+                sysblk.pantitle = strdup(operand);
+            }
             else if (strcasecmp (keyword, "mounted_tape_reinit") == 0)
             {
                 smountedtapereinit = operand;
