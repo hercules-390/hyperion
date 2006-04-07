@@ -382,7 +382,9 @@ struct SYSBLK {
                 shutdown:1,             /* 1 = shutdown requested    */
                 shutfini:1,             /* 1 = shutdown complete     */
                 main_clear:1,           /* 1 = mainstor is cleared   */
-                xpnd_clear:1;           /* 1 = xpndstor is cleared   */
+                xpnd_clear:1,           /* 1 = xpndstor is cleared   */
+                nomountedtapereinit:1;  /* 1 = disallow tape devinit
+                                             if tape already mounted */
         U32     ints_state;             /* Common Interrupts Status  */
         U32     config_mask;            /* Configured CPUs           */
         U32     started_mask;           /* Started CPUs              */

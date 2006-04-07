@@ -2449,7 +2449,8 @@ int devinit_cmd(int argc, char *argv[], char *cmdline)
 DEVBLK*  dev;
 U16      devnum;
 U16      lcss;
-int rc;
+int      rc;
+int      nomountedtapereinit = sysblk.nomountedtapereinit;
 
     UNREFERENCED(cmdline);
 
@@ -2483,6 +2484,23 @@ int rc;
         logmsg( _("HHCPN096E Device %d:%4.4X busy or interrupt pending\n"),
                   lcss, devnum );
         return -1;
+    }
+
+    if (nomountedtapereinit)
+    {
+        if (0
+            || TAPEDEVT_SCSITAPE == dev->tapedevt
+            || strcmp(argv[2], TAPE_UNLOADED) != 0
+        )
+        {
+            if (dev->tmh->tapeloaded( dev, NULL, 0 ))
+            {
+                release_lock (&dev->lock);
+                logmsg(_("HHCPN183E Reinit rejected for drive %u:%4.4X; drive not empty\n"),
+                    SSID_TO_LCSS(dev->ssid), dev->devnum);
+                return -1;
+            }
+        }
     }
 
     /* Close the existing file, if any */

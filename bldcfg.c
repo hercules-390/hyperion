@@ -415,6 +415,7 @@ char   *scpuprio;                       /* -> CPU thread priority    */
 char   *sdevprio;                       /* -> Device thread priority */
 char   *spgmprdos;                      /* -> Program product OS OK  */
 char   *slogofile;                      /* -> 3270 logo file         */
+char   *smountedtapereinit;             /* -> mounted tape reinit opt*/
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
 char   *sasnandlxreuse;                 /* -> ASNLXREUSE Optional    */
 #endif
@@ -633,6 +634,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sdevtmax = NULL;
         spgmprdos = NULL;
         slogofile = NULL;
+        smountedtapereinit = NULL;
 #if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
         secpsvmlvl = NULL;
@@ -809,6 +811,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "herclogo") == 0)
             {
                 slogofile=operand;
+            }
+            else if (strcasecmp (keyword, "mounted_tape_reinit") == 0)
+            {
+                smountedtapereinit = operand;
             }
 #if defined(_FEATURE_ECPSVM)
             /* ECPS:VM support */
@@ -1449,6 +1455,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 delayed_exit(1);
             }
         }
+
+        /* Parse terminal logo option */
         if(sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
         {
             if(slogofile != NULL) /* LogoFile SET in hercules config */
@@ -1472,6 +1480,27 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         else /* LogoFile passed in command line */
         {
             readlogo(sysblk.logofile);
+        }
+
+        /* Parse "mounted_tape_reinit" option */
+        if ( smountedtapereinit )
+        {
+            if ( strcasecmp( smountedtapereinit, "disallow" ) == 0 )
+            {
+                sysblk.nomountedtapereinit = 1;
+            }
+            else if ( strcasecmp( sauto_scsi_mount, "allow" ) == 0 )
+            {
+                sysblk.nomountedtapereinit = 0;
+            }
+            else
+            {
+                fprintf(stderr, _("HHCCF052S Error in %s line %d: "
+                        "%s: invalid argument\n"),
+                        fname, stmt, smountedtapereinit);
+                delayed_exit(1);
+            }
+            smountedtapereinit = NULL;
         }
 
 #if defined(_FEATURE_ECPSVM)

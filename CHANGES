@@ -1,6 +1,10 @@
+06 Apr 2006 PR# 34/tape: prevent tape mount unless no tape mounted - Fish
+06 Apr 2006 Missed a scsimount detach/devinit bug - Fish
 06 Apr 2006 PR# 53/tape: Bus-Tech compressed AWS file support - Fish
 06 Apr 2006 PR# 70/tape: AWS tapes 2GB filesize limitation - Fish
-05 Apr 2006 FINAL(?) SCSI tape mods: fix bsr/fsr in light of 01 Apr 2006
+05 Apr 2006 PR# 18/tape: Herc very slow initializing if no tape in SCSI
+            tape drive, PR# 48/tape: Tape mount/unmount messages still
+            not handled correctly, fix bsr/fsr in light of 01 Apr 2006
             w32stape fixes for utilities, tweak to auto-scsi-mount logic
             to eliminate(?) WIN32 drive query inefficiencies - Fish
 05 Apr 2006 fix(?) panel.c to always refresh the New Panel display,
