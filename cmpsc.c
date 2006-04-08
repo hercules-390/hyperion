@@ -309,7 +309,7 @@ static void ARCH_DEP(print_sd)(int r2, REGS *regs, BYTE *sd, int index);
 #if !defined(TESTCH261)
 #define TESTCH261(regs, processed, length) \
 {\
-  if(((processed) += (length)) > 260) \
+  if(unlikely(((processed) += (length)) > 260)) \
     ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION); \
 }
 #endif /* !defined(TESTCH261) */
@@ -381,14 +381,14 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   {
 
     /* Can we write an index or interchange symbol */
-    if(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r1 + 1, iregs))
+    if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r1 + 1, iregs)))
     {
       regs->psw.cc = 1;
       return;
     }
 
     /* Get the next character, return on end of source */
-    if(ARCH_DEP(fetch_ch)(r2, regs, iregs, &next_ch, 0))
+    if(unlikely(ARCH_DEP(fetch_ch)(r2, regs, iregs, &next_ch, 0)))
       return;
 
     /* Get the alphabet entry */
@@ -434,7 +434,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     COMMITREGS(regs, iregs, r1, r2);
 
     /* When reached end of source, return to caller */
-    if(eos)
+    if(unlikely(eos))
       return;
   }
 
@@ -461,7 +461,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   {
 
     /* Get an index symbol, return on end of source */
-    if(ARCH_DEP(fetch_is)(r2, regs, iregs, &index_symbol))
+    if(unlikely(ARCH_DEP(fetch_is)(r2, regs, iregs, &index_symbol)))
       return;
 
     /* Check if this is an alphabet entry */
@@ -470,7 +470,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 
       /* Write the alphabet entry, return on trouble */
       byte = index_symbol;
-      if(ARCH_DEP(store_ch)(r1, regs, iregs, &byte, 1, 0))
+      if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, &byte, 1, 0)))
         return;
 
       /* Adjust destination registers */
@@ -499,7 +499,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         TESTCH261(regs, written, ECE_psl(ece));
 
         /* Output extension characters in preceeded entry, return on trouble */
-        if(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_psl(ece), ECE_ofst(ece)))
+        if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_psl(ece), ECE_ofst(ece))))
           return;
 
         /* Get the preceeding entry */
@@ -507,7 +507,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         FETCH_ECE(r2, regs, ece, pptr);
 
         /* Check for processing entry 128 */
-        if(++entries > 127)
+        if(unlikely(++entries > 127))
         {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
@@ -522,7 +522,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       TESTCH261(regs, written, ECE_csl(ece));
 
       /* Output extension characters in last or only unpreceeded entry, return on trouble */
-      if(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_csl(ece), 0))
+      if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_csl(ece), 0)))
         return;
 
       /* Adjust destination registers */
@@ -589,7 +589,7 @@ static void ARCH_DEP(print_cce)(int r2, REGS *regs, BYTE *cce, int index)
 static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int offset)
 {
   /* Check for end of source condition */
-  if(GR_A(r2 + 1, iregs) <= (U32) offset)
+  if(unlikely(GR_A(r2 + 1, iregs) <= (U32) offset))
   {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
@@ -662,7 +662,7 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol
   BYTE work[3];
 
   /* Check if we can read an index symbol */
-  if(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r2 + 1, iregs))
+  if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r2 + 1, iregs)))
   {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
@@ -773,7 +773,7 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
   ind_search_siblings = 1;
 
   /* Get the next character when there are children */
-  if(CCE_ccs(cce) && ARCH_DEP(fetch_ch)(r2, regs, iregs, next_ch, 0))
+  if(unlikely((CCE_ccs(cce) && ARCH_DEP(fetch_ch)(r2, regs, iregs, next_ch, 0))))
     return(end_of_source);
 
   /* Now check all children in parent */
@@ -792,7 +792,7 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
       ind_search_siblings = 0;
 
       /* Check if child should not be examined */
-      if(!CCE_x(cce, i))
+      if(unlikely(!CCE_x(cce, i)))
       {
 
         /* No need to examine child, found the last match */
@@ -872,7 +872,7 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
     {
 
       /* Stop searching when child tested and no consecutive child character */
-      if(!ind_search_siblings && !SD_ccc(regs, sd, i))
+      if(unlikely(!ind_search_siblings && !SD_ccc(regs, sd, i)))
         return(write_index_symbol);
 
       if(*next_ch == SD_sc(regs, sd, i))
@@ -882,7 +882,7 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
         ind_search_siblings = 0;
 
         /* Check if child should not be examined */
-        if(!SD_ecb(regs, sd, i, cce, y_in_parent))
+        if(unlikely(!SD_ecb(regs, sd, i, cce, y_in_parent)))
         {
 
           /* No need to examine child, found the last match */
@@ -938,7 +938,7 @@ static int ARCH_DEP(store_ch)(int r1, REGS *regs, REGS *iregs, BYTE *data, int l
 {
 
   /* Check destination size */
-  if(GR_A(r1 + 1, iregs) < length + (U32) offset)
+  if(unlikely(GR_A(r1 + 1, iregs) < length + (U32) offset))
   {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
@@ -978,7 +978,7 @@ static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 inde
   BYTE work[3];                        /* work bytes                          */
 
   /* Check if symbol translation is requested */
-  if(GR0_st(regs))
+  if(unlikely(GR0_st(regs)))
   {
 
     /* Get the interchange symbol */
@@ -1002,7 +1002,7 @@ static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 inde
   threebytes = (GR0_smbsz(regs) + GR1_cbn(iregs)) > 16;
 
   /* Get the storage */
-  if(threebytes)
+  if(unlikely(threebytes))
     ARCH_DEP(vfetchc)(work, 2, GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
   else
     ARCH_DEP(vfetchc)(work, 1, GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
@@ -1014,7 +1014,7 @@ static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 inde
   work[1] |= (set_mask >> 8) & 0xFF;
 
   /* Set the storage */
-  if(threebytes)
+  if(unlikely(threebytes))
   {
     work[2] &= clear_mask & 0xFF;
     work[2] |= set_mask & 0xFF;
@@ -1101,7 +1101,7 @@ DEF_INST(compression_call)
   COMMITREGS(&iregs, regs, r1, r2);
 
   /* Now go to the requested function */
-  if(GR0_e(regs))
+  if(likely(GR0_e(regs)))
     ARCH_DEP(expand)(r1, r2, regs, &iregs);
   else
     ARCH_DEP(compress)(r1, r2, regs, &iregs);
