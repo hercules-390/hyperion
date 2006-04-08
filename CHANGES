@@ -1,3 +1,4 @@
+08 Apr 2006 Added likely/unlikely statements cmpsc.c - Bernard van der Helm
 07 Apr 2006 New 'PANTITLE' config stmt to set console/panel title - Fish
 06 Apr 2006 PR# 34/tape: prevent tape mount unless no tape mounted - Fish
 06 Apr 2006 Missed a scsimount detach/devinit bug - Fish
