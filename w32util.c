@@ -508,16 +508,16 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
     static LARGE_INTEGER   liStartingSystemTime;
     static double          dHPCTicksPerMicrosecond;
     static struct timeval  tvPrevious;
-    static BOOL            bDidInit = FALSE;
+    static BOOL            bInSync = FALSE;
 
     UNREFERENCED(pTZ);
 
-    if ( !bDidInit )
+    if ( !bInSync )
     {
         FILETIME       ftStartingSystemTime;
         LARGE_INTEGER  liHPCTicksPerSecond;
 
-        bDidInit = TRUE;
+        bInSync = TRUE;
 
         // The "GetSystemTimeAsFileTime" function obtains the current system date
         // and time. The information is in Coordinated Universal Time (UTC) format.
@@ -571,7 +571,7 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 #define  RESYNC_GTOD_EVERY_SECS  30
 
     if ( (pTV->tv_sec - tvPrevious.tv_sec ) > RESYNC_GTOD_EVERY_SECS )
-        bDidInit = FALSE;
+        bInSync = FALSE;    // (force resync)
 
     // Ensure each call returns a unique value...
 
@@ -588,10 +588,12 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
         }
     }
 
-    // Save returned value for next time...
+    // Return to caller if no resync needed
 
-    if ( bDidInit )
+    if ( bInSync )
         return 0;
+
+    // (resync needed before returning)
 
     return gettimeofday( pTV, NULL );
 }
