@@ -590,9 +590,6 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 
     // Save returned value for next time...
 
-    tvPrevious.tv_sec  = pTV->tv_sec;
-    tvPrevious.tv_usec = pTV->tv_usec;
-
     if ( bDidInit )
         return 0;
 
