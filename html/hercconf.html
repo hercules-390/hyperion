@@ -54,6 +54,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <a href="#CNSLPORT">CNSLPORT</a>   3270
     <a href="#PANRATE">PANRATE</a>    FAST
+    <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
     <a href="#CODEPAGE">CODEPAGE</a>   default
 
     <a href="#TODDRAG">TODDRAG</a>    1.0
@@ -66,7 +67,8 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#DIAG8CMD">DIAG8CMD</a>   disable
     <a href="#SHCMDOPT">SHCMDOPT</a>   disable
 
-    <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>   no
+    <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>      no
+    <a href="#MOUNTED_TAPE_REINIT">MOUNTED_TAPE_REINIT</a>  allow
 
     <a href="#DEFSYM">DEFSYM</a>     TAPEDIR "$(HOME)/tapes"
     <a href="#MODPATH">MODPATH</a>    /usr/local/hercules
@@ -133,8 +135,25 @@ a real System/390.  The configuration file is an ASCII text file.
 
 <dl>
 
+<a name="ARCHMODE"></a>
+<dt><code>ARCHMODE &nbsp; S/370 &#124 ESA/390 &#124 z/Arch &#124 ESAME</code>
+<dd><p>
+    specifies the initial architecture mode:
+    <ul compact>
+    <li>use <code>S/370</code> for OS/360, VM/370, and MVS 3.8.
+    <li>use <code>ESA/390</code> for MVS/XA, MVS/ESA, OS/390, VM/ESA, VSE/ESA,
+    Linux/390, and ZZSA.
+    <li>use <code>z/Arch</code> or <code>ESAME</code> for z/OS and zLinux.
+    </ul>
+    <p><code>ESAME</code> is a synonym for <code>z/Arch</code>.
+    When <code>z/Arch</code> or <code>ESAME</code> is specified,
+    the machine will always IPL in ESA/390 mode,
+    but is capable of being switched into z/Architecture mode after IPL.
+    This is handled automatically by all z/Architecture operating systems.
+    <p>
+
 <a name="ASN_AND_LX_REUSE"></a>
-<dt><code>ASN_AND_LX_REUSE DISABLE &#124; ENABLE</code>
+<dt><code>ASN_AND_LX_REUSE &nbsp; DISABLE &#124; ENABLE</code>
 <dd><p>
     specifies that the ASN-and-LX-Reuse Facility (ALRF) is to be disabled 
     or enabled. The default is disabled. This is a z/Architecture-only
@@ -150,7 +169,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="AUTO_SCSI_MOUNT"></a>
-<dt><code>AUTO_SCSI_MOUNT &nbsp;NO &#124; YES &#124; <em>nn</em></code>
+<dt><code>AUTO_SCSI_MOUNT &nbsp; NO &#124; YES &#124; <em>nn</em></code>
 <dd><p>
     specifies whether automatic detection of SCSI tape mounts are to be
     enabled or not.
@@ -176,22 +195,68 @@ a real System/390.  The configuration file is an ASCII text file.
     </i>
     <p>
 
-<a name="CPUSERIAL"></a>
-<dt><code>CPUSERIAL <em>xxxxxx</em></code>
+<a name="CODEPAGE"></a>
+<dt><code>CODEPAGE &nbsp; <em>codepage</em></code>
 <dd><p>
-    specifies the 6 hexadecimal digit CPU serial
-    number stored by the STIDP instruction
+    specifies the codepage conversion table used for ASCII/EBCDIC translation.
+    <p>
+
+    "default" specifies traditional hercules codepage. Code pages "437/037",
+    "437/500" and "850/273" are also supported.
+    <p>
+
+    Iconv single byte codepages may also be used. (eg."UTF8/EBCDIC-CP-NL")
+    <p>
+
+    If no codepage is specified then the environment variable HERCULES_CP
+    will be inspected. The default codepage used is "default"
+
+    <p>
+
+<a name="CNSLPORT"></a>
+<dt><code>CNSLPORT &nbsp; <i>nnnn</i></code>
+<dd><p>
+    specifies the port number (in decimal) to which tn3270 and
+    telnet clients will connect
+    <p>
+
+    The CNSLPORT statement may also have the form of host:port, where
+    the telnet console server will bind to the specified address.
     <p>
 
 <a name="CPUMODEL"></a>
-<dt><code>CPUMODEL <em>xxxx</em></code>
+<dt><code>CPUMODEL &nbsp; <em>xxxx</em></code>
 <dd><p>
     specifies the 4 hexadecimal digit CPU model number
     stored by the STIDP instruction
     <p>
 
+<a name="CPUPRIO"></a>
+<dt><code>CPUPRIO &nbsp; <em>nn</em></code>
+<dd><p>
+    specifies the priority of the CPU thread.  Default is a nice value
+    of 15, which means a low priority such that I/O can be scheduled and
+    completed in favour of CPU cycles being burned. On Multi-CPU
+    systems, a real CPU can be "dedicated" to Hercules, by giving the
+    CPU thread a very high dispatching priority (-20).
+    See <a href="#thread_priorities">"Thread Priorities"</a>
+    below for more information.
+    <p>
+
+    <i><b>Caution:</b> &nbsp; CPUPRIO should not have a higher dispatching
+    priority than the TOD Clock and timer thread.</i>
+    </ol>
+    <p>
+
+<a name="CPUSERIAL"></a>
+<dt><code>CPUSERIAL &nbsp; <em>xxxxxx</em></code>
+<dd><p>
+    specifies the 6 hexadecimal digit CPU serial
+    number stored by the STIDP instruction
+    <p>
+
 <a name="CPUVERID"></a>
-<dt><code>CPUVERID <em>xx</em></code>
+<dt><code>CPUVERID &nbsp; <em>xx</em></code>
 <dd><p>
     specifies the 2 hexadecimal digit CPU version code
     stored by the STIDP instruction.
@@ -200,7 +265,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="DEFSYM"></a>
-<dt><code>DEFSYM <em>symbol</em> <em>value</em></code>
+<dt><code>DEFSYM &nbsp; <em>symbol</em> <em>value</em></code>
 <dd><p>
     Defines symbol <em>symbol</em> as to contain value <em>value</em>. The
     symbol can then be the object of a substitution later in the configuration
@@ -218,194 +283,8 @@ a real System/390.  The configuration file is an ASCII text file.
     Will set symbol FOO to &quot;&quot;
     <p>
 
-<a name="LPARNAME"></a>
-<dt><code>LPARNAME <em>name</em></code>
-<dd><p>
-    specifies the LPAR name returned by DIAG X'204'.  The default is
-    <code>HERCULES</code>.
-    <p>
-
-<a name="MAINSIZE"></a>
-<dt><code>MAINSIZE <em>nnnn</em></code>
-<dd><p>
-    specifies the main storage size in megabytes, where
-    <code><em>nnnn</em></code> is a decimal number. The lower limit is 2.
-    The actual upper limit is determined by your host system's architecture
-    and operating system, and (on some systems) the amount of physical
-    memory and paging space you have available.
-    <p>
-
-<a name="XPNDSIZE"></a>
-<dt><code>XPNDSIZE <em>nnnn</em></code>
-<dd><p>
-    specifies the expanded storage size in megabytes, where
-    <code><em>nnnn</em></code> is a decimal number. The lower limit is 0.
-    The actual upper limit is determined by your host system's architecture
-    and operating system, and (on some systems) the amount of physical
-    memory and paging space you have available.
-    <p>
-
-<a name="HTTPROOT"></a>
-<dt><code>HTTPROOT <em>directory</em></code>
-<dd><p>
-    specifies the root directory where the HTTP server's files reside.
-    If not specified, the default value for Win32 builds of Hercules is the
-    directory where the Hercules executable itself is executing out of, and for
-    non-Win32 builds it is the directory specified as the default package
-    installation directory when the Hercules executable was built (which can
-    vary depending on how the Hercules package was built, but is usually
-    <tt>/usr/local/share/hercules/</tt>).
-    <p>
-
-    Note: Windows users of Hercules who do not have the complete Cygwin package
-    installed (i.e. only have the required Cygwin DLLs installed instead)
-    should specify this value in the form: "<tt>/cygdrive/x/pathname/</tt>"
-    where '<tt>x</tt>' is the Windows drive letter. For example, if the Windows
-    directory where the http server's files reside is
-    "<tt>K:\Hercules\html\</tt>", then you should specify
-    "<tt>/cygdrive/k/Hercules/html/</tt>"
-    on your <tt>HTTPROOT</tt> statement.
-    <p>
-
-<a name="HTTPPORT"></a>
-<dt><code>HTTPPORT <em>nnnn</em> [AUTH &#124; NOAUTH] [ <em>userid password</em> ]</code>
-<dd><p>
-    specifies the port number (in decimal) on which the HTTP server
-    will listen. The port number must either be 80
-    or within the range 1024 - 65535 inclusive. If no HTTPPORT statement is
-    present or an invalid port number is specified, then the HTTP server thread
-    will not be activated.<br>
-    <tt>AUTH</tt> indictates that a userid and password are required to access
-    the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
-    are not required. The userid and password may be any valid string.
-    <p>
-
-<a name="SHRDPORT"></a>
-<dt><code>SHRDPORT <em>nnnn</em></code>
-<dd><p>
-    specifies the port number (in decimal) on which the Shared Device server
-    will listen.  Specifying SHRDPORT will allow other Hercules instances
-    to access devices on this instance.  (Currently only DASD devices may
-    be shared).  By default, the other Hercules instances (clients) will
-    use port 3990.  If you specify a different port number, then you will
-    have to specify this port number on the device statement for the other
-    Hercules clients.
-    If no SHRDPORT statement is present then the Shared Device server thread
-    will not be activated.<br>
-    <p>
-
-<a name="DIAG8CMD"></a>
-<dt><code>DIAG8CMD DISABLE &#124; ENABLE</code>
-<dd><p>
-    When set to <code>ENABLE</code>, commands issued through diagnose 8 will be
-    executed by hercules as hercules commands.  When set to <code>DISABLE</code>,
-    commands issued through the diagnose 8 interface will be ignored.
-    The default is <code>DISABLE</code>
-    <p>
-
-    <i><b>Caution:</b> &nbsp; Enabling this feature may have security consequences</i>
-    <p>
-
-    Note that when this feature is enabled, systems
-    running under hercules can even issue host commands through the Hercules
-    <code>sh</code> (shell) command. This ability may be disabled via the
-    <a href="#SHCMDOPT">SHCMDOPT</a> statement.
-    <p>
-
-<a name="SHCMDOPT"></a>
-<dt><code>SHCMDOPT DISABLE &#124; NODIAG8</code>
-<dd><p>
-    When set to <code>DISABLE</code>, <code>sh</code> (shell) commands are globally disabled, and will result
-    in an error if entered either directly via the Hercules hardware console or
-    programmatically via the <a href="#DIAG8CMD">DIAG8CMD</a> interface.
-    <p>
-    When set to <code>NODIAG8</code> only the programmatic execution of shell commands via the
-    the diagnose 8 interface is disabled; <code>sh</code> (shell) commands entered directly
-    via the Hercules hardware console will still work.
-    <p>
-    <b>NOTE:</b> &nbsp;<i>"entered directly via the Hercules hardware console"</i>
-    also pertains to both commands entered via the
-    <a href="#HTTPROOT">HTTP server facility</a>
-    as well as commands entered via
-    <a href="hercinst.html#RCFILE">.rc "run command"</a> scripts.
-    <p>
-
-<a name="CNSLPORT"></a>
-<dt><code>CNSLPORT &nbsp;<i>nnnn</i></code>
-<dd><p>
-    specifies the port number (in decimal) to which tn3270 and
-    telnet clients will connect
-    <p>
-
-    The CNSLPORT statement may also have the form of host:port, where
-    the telnet console server will bind to the specified address.
-    <p>
-
-<a name="NUMCPU"></a>
-<dt><code>NUMCPU <em>nn</em></code>
-<dd><p>
-    specifies the number of emulated CPUs.
-    <p>
-
-    <em>Note:</em>
-    Multiprocessor emulation is only available when the definition of
-    the compile-time variable <code>MAX_CPU_ENGINES</code>
-    in the file <tt>config.h</tt> has a value of more than 1.
-    Current versions of Hercules already have this value
-    set to 2 by default, so all you need to do is specify
-    <tt>NUMCPU 2</tt>
-    in your configuration file. If you wish to define a greater value
-    for <tt>MAX_CPU_ENGINES</tt>, use the
-    <tt>--enable-multi-cpu=NUMBER</tt>
-    option when you do your <tt>./configure</tt> before doing your
-    <tt>make</tt>.
-    <p>
-
-    Multiprocessor emulation works best
-    if your host system actually has more than one physical CPU, but you can
-    still emulate multiple CPUs nervertheless  even on a uniprocessor system
-    (and you might even achieve a small performance benefit when you do).
-    There is little point, however, in specifying <tt>NUMCPU</tt> greater
-    than 1 unless your guest operating system (running under Hercules) is
-    actually able to support multiple CPUs (and if you do not actually need
-    multiprocessor emulation, then setting <tt>MAX_CPU_ENGINES</tt> to 1 at
-    compile time might even produce a slight performance advantage too).
-    <p>
-
-<a name="NUMVEC"></a>
-<dt><code>NUMVEC <em>nn</em></code>
-<dd><p>
-    specifies the number of emulated vector facilities. Default is one per
-    CPU. Only available by default in ESA/390 mode.
-    <p>
-
-<a name="HERCPRIO"></a>
-<dt><code>HERCPRIO <em>nn</em></code>
-<dd><p>
-    specifies the process priority for Hercules.  The default is 0.
-    See <a href="#process_priorities">"Process Priorities"</a>
-    below for more information.
-    <p>
-
-<a name="CPUPRIO"></a>
-<dt><code>CPUPRIO <em>nn</em></code>
-<dd><p>
-    specifies the priority of the CPU thread.  Default is a nice value
-    of 15, which means a low priority such that I/O can be scheduled and
-    completed in favour of CPU cycles being burned. On Multi-CPU
-    systems, a real CPU can be "dedicated" to Hercules, by giving the
-    CPU thread a very high dispatching priority (-20).
-    See <a href="#thread_priorities">"Thread Priorities"</a>
-    below for more information.
-    <p>
-
-    <i><b>Caution:</b> &nbsp; CPUPRIO should not have a higher dispatching
-    priority than the TOD Clock and timer thread.</i>
-    </ol>
-    <p>
-
 <a name="DEVPRIO"></a>
-<dt><code>DEVPRIO <em>nn</em></code>
+<dt><code>DEVPRIO &nbsp; <em>nn</em></code>
 <dd><p>
     specifies the priority of the device threads.  The default value is 8.
     See <a href="#thread_priorities">"Thread Priorities"</a>
@@ -416,127 +295,8 @@ a real System/390.  The configuration file is an ASCII text file.
     priority than the TOD Clock and timer thread.</i>
     <p>
 
-<a name="TODPRIO"></a>
-<dt><code>TODPRIO <em>nn</em></code>
-<dd><p>
-    specifies the priority of the TOD Clock and timer thread.  The
-    default value is -20.  See
-    <a href="#thread_priorities">"Thread Priorities"</a>
-    below for more information.
-    <p>
-
-    <i><b>Caution:</b> &nbsp; TODPRIO should be given a dispatching
-    priority equal to or higher than any other thread within Hercules.</i>
-    <p>
-
-<a name="LOADPARM"></a>
-<dt><code>LOADPARM <em>xxxxxxxx</em></code>
-<dd><p>
-    specifies the eight-character IPL parameter which is used
-    by some operating systems to select system parameters.
-    <p>
-
-<a name="SYSEPOCH"></a>
-<dt><code>SYSEPOCH <em>yyyy</em> [&plusmn<em>years</em>]</code>
-<dd><p>
-    specifies the base date for the TOD clock.  Use the default value
-    (<code>1900</code>) for all systems except OS/360. Use <code>1960</code>
-    for OS/360.  Values other than these were formerly used to offset the
-    TOD clock by a number of years to move the date before the year 2000 for
-    non-Y2K-compliant operating systems. This use is deprecated, and support
-    will be removed in a future release; at that time, only values of
-    <code>1900</code> or <code>1960</code> will be accepted. Other values
-    will produce a warning message with the equivalent values to specify in
-    the SYSEPOCH statement.<br>
-    An optional year offset may be specified, and will be treated as though
-    it had been specified on a <a href="#YROFFSET"><code>YROFFSET</code></a>
-    statement.
-    <p>
-
-<a name="YROFFSET"></a>
-<dt><code>YROFFSET &plusmn;<em>years</em></code>
-<dd><p>
-    specifies a number of years to offset the TOD clock from the actual
-    date. Positive numbers will move the clock forward in time, while
-    negative numbers will move it backward. A common value for
-    non-Y2K-compliant operating systems is <code>YROFFSET -28</code>, which
-    has the advantage that the day of the week and the presence or absence
-    of February 29 is the same as the current year. This value may not be
-    specified as greater than &plusmn;142 years, the total range of the TOD
-    clock. Specifying a value that causes the computed TOD clock year to be
-    earlier than the value of <a href="#SYSEPOCH"><code>SYSEPOCH</code></a>
-    or more than 142 years later than that value will produce unexpected
-    results.
-    <p>
-
-<a name="TZOFFSET"></a>
-<dt><code>TZOFFSET &plusmn;<em>hhmm</em></code>
-<dd><p>
-    specifies the hours and minutes by which the TOD clock will
-    be offset from the current system time.  For GMT, use the
-    default value (0000).  For timezones west of Greenwich, specify
-    a negative value (example: <code>-0500</code> for US Eastern Standard
-    Time, <code>-0800</code> for US Pacific Standard Time).
-    For timezones east of Greenwich, specify a positive value
-    (example: <code>+0100</code> for Central European Time,
-    <code>+0930</code> for South Australian Time).
-    <p>
-
-<a name="TODDRAG"></a>
-<dt><code>TODDRAG <em>nn</em></code>
-<dd><p>
-    specifies the TOD clock drag factor.  This parameter can be used
-    to slow down or speed up the TOD clock by a factor of <em>nn</em>.
-    A significant slowdown can improve the performance of some operating
-    systems which consume significant amounts of CPU time processing
-    timer interrupts.
-    A drag factor of 2.0 slows down the clock by 50%. A drag factor of
-    0.5 doubles the speed of the clock. A drag factor of 1.01 slows
-    down the clock by 1%, and 0.99 speeds up the clock by 1%.
-    <p>
-
-<a name="OSTAILOR"></a>
-<dt><code>OSTAILOR OS/390 &#124; z/OS &#124; 
-    VM &#124; VSE &#124; LINUX &#124; QUIET &#124; NULL</code>
-<dd><p>
-    specifies the intended operating system.  The effect of this
-    parameter is to reduce control panel message traffic by
-    selectively suppressing trace messages for program checks
-    which are considered normal in the specified environment.
-    <code>QUIET</code> discards all exception messages.
-    <code>NULL</code> allows all exception messages to be logged.
-    If this statement is omitted, exception messages for program
-    checks 10, 11, 16, and 1C are suppressed.
-    <p>
-
-<a name="PANRATE"></a>
-<dt><code>PANRATE SLOW &#124 FAST &#124 <em>nn</em></code>
-<dd><p>
-    specifies the panel refresh rate, in milliseconds between refreshes. SLOW
-    is the same as 500, and FAST is the same as 50. A value less than the
-    Linux system clock tick interval (10 on Intel, 1 on Alpha), or more than
-    5000, will be rejected. SLOW is the default.
-    <p>
-
-<a name="ARCHMODE"></a>
-<dt><code>ARCHMODE S/370 &#124 ESA/390 &#124 z/Arch &#124 ESAME</code>
-<dd><p>
-    specifies the initial architecture mode:
-    <ul compact>
-    <li>use <code>S/370</code> for OS/360, VM/370, and MVS 3.8.
-    <li>use <code>ESA/390</code> for MVS/XA, MVS/ESA, OS/390, VM/ESA, VSE/ESA,
-    Linux/390, and ZZSA.
-    <li>use <code>z/Arch</code> or <code>ESAME</code> for z/OS and zLinux.
-    </ul>
-    <p><code>ESAME</code> is a synonym for <code>z/Arch</code>.
-    When <code>z/Arch</code> or <code>ESAME</code> is specified,
-    the machine will always IPL in ESA/390 mode,
-    but is capable of being switched into z/Architecture mode after IPL.
-    This is handled automatically by all z/Architecture operating systems.
-    <p>
-
 <a name="DEVTMAX"></a>
-<dt><code>DEVTMAX -1 &#124 0 &#124 <em>nnn</em></code>
+<dt><code>DEVTMAX &nbsp; -1 &#124 0 &#124 <em>nnn</em></code>
 <dd><p>
     specifies the maximum number of device threads allowed.
     <p>Specify <code>-1</code> to cause 'one time only' temporary threads to be
@@ -568,8 +328,262 @@ a real System/390.  The configuration file is an ASCII text file.
     is <code>0</code>.
     <p>
 
+<a name="DIAG8CMD"></a>
+<dt><code>DIAG8CMD &nbsp; DISABLE &#124; ENABLE</code>
+<dd><p>
+    When set to <code>ENABLE</code>, commands issued through diagnose 8 will be
+    executed by hercules as hercules commands.  When set to <code>DISABLE</code>,
+    commands issued through the diagnose 8 interface will be ignored.
+    The default is <code>DISABLE</code>
+    <p>
+
+    <i><b>Caution:</b> &nbsp; Enabling this feature may have security consequences</i>
+    <p>
+
+    Note that when this feature is enabled, systems
+    running under hercules can even issue host commands through the Hercules
+    <code>sh</code> (shell) command. This ability may be disabled via the
+    <a href="#SHCMDOPT">SHCMDOPT</a> statement.
+    <p>
+
+<a name="ECPSVM"></a>
+<dt><code>ECPSVM &nbsp; YES &#124 NO &#124 LEVEL <em>nn</em></code>
+<dd><p>
+    specifies whether ECPS:VM (Extended Control Program Support : Virtual Machine)
+    support is to be enabled. If <code>YES</code> is specified, then the support
+    level reported to the operating system is <code>20</code>. The purpose of
+    ECPS:VM is to provide to the VM/370 Operating system a set of shortcut
+    facilities to perform hypervisor functions (CP Assists) and virtual
+    machine simulation (VM Assists). Although this feature does not affect
+    VM Operating system products operating in XA, ESA or z/Architecture mode,
+    it will affect VM/370 and VM/SP products running under VM/XA, VM/ESA or z/VM.
+    Running VM/370 and VM/SP products under VM/XA, VM/ESA or z/VM should be
+    done with ECPS:VM disabled. ECPS:VM should not be enabled in an AP or MP
+    environment. ECPS:VM has no effect on non-VM operating systems. It is
+    however recommended to disable ECPS:VM when running native non-VM operating
+    systems. If a specific LEVEL is specified, this value will be reported
+    to the operating system when it issues a Store ECPS:VM level, but it
+    doesn't otherwise alter the ECPS:VM facility operations. This is a partial
+    implementation.
+    <p>
+
+<a name="HERCPRIO"></a>
+<dt><code>HERCPRIO &nbsp; <em>nn</em></code>
+<dd><p>
+    specifies the process priority for Hercules.  The default is 0.
+    See <a href="#process_priorities">"Process Priorities"</a>
+    below for more information.
+    <p>
+
+<a name="HTTPPORT"></a>
+<dt><code>HTTPPORT &nbsp; <em>nnnn</em> [AUTH &#124; NOAUTH] [ <em>userid password</em> ]</code>
+<dd><p>
+    specifies the port number (in decimal) on which the HTTP server
+    will listen. The port number must either be 80
+    or within the range 1024 - 65535 inclusive. If no HTTPPORT statement is
+    present or an invalid port number is specified, then the HTTP server thread
+    will not be activated.<br>
+    <tt>AUTH</tt> indictates that a userid and password are required to access
+    the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
+    are not required. The userid and password may be any valid string.
+    <p>
+
+<a name="HTTPROOT"></a>
+<dt><code>HTTPROOT &nbsp; <em>directory</em></code>
+<dd><p>
+    specifies the root directory where the HTTP server's files reside.
+    If not specified, the default value for Win32 builds of Hercules is the
+    directory where the Hercules executable itself is executing out of, and for
+    non-Win32 builds it is the directory specified as the default package
+    installation directory when the Hercules executable was built (which can
+    vary depending on how the Hercules package was built, but is usually
+    <tt>/usr/local/share/hercules/</tt>).
+    <p>
+
+    Note: Windows users of Hercules who do not have the complete Cygwin package
+    installed (i.e. only have the required Cygwin DLLs installed instead)
+    should specify this value in the form: "<tt>/cygdrive/x/pathname/</tt>"
+    where '<tt>x</tt>' is the Windows drive letter. For example, if the Windows
+    directory where the http server's files reside is
+    "<tt>K:\Hercules\html\</tt>", then you should specify
+    "<tt>/cygdrive/k/Hercules/html/</tt>"
+    on your <tt>HTTPROOT</tt> statement.
+    <p>
+
+<a name="IODELAY"></a>
+<dt><code>IODELAY &nbsp; <em>usec</em> [NOWARN]</code>
+<dd><p>
+    specifies the amount of time (in microseconds) to wait after
+    an I/O interrupt is ready to be set pending.  This value can also be
+    set using the Hercules console.  The purpose of this parameter is to
+    bypass a bug in the <b>Linux/390</b> and <b>zLinux</b> <code>dasd.c</code>
+    device driver. The problem is more apt to happen under Hercules than
+    on a real machine because we may present an I/O interrupt sooner than a
+    real machine.
+    <p>
+    If the IODELAY value is non-zero a warning message (HHCCF037W) will be
+    issued unless <code>NOWARN</code> is specified.
+    <p>
+    NOTE : <a href="#OSTAILOR"><code>OSTAILOR LINUX</code></a> no longer sets
+    IODELAY to 800 since the problem described above is no longer present in
+    recent versions of the linux kernel.
+    <p>
+
+<a name="LDMOD"></a>
+<dt><code>LDMOD &nbsp; <em>module list</em></code>
+<dd><p>
+    specifies additional modules that are to be loaded by the hercules dynamic loader.
+    The default search order is with the hercules directory in the default DLL search
+    path. Most systems also support absolute filenames (ie names starting with '/'
+    or '.') in which case the default search path is not taken.
+    <p>
+    Multiple LDMOD statements may be used.
+    <p>
+
+<a name="LOADPARM"></a>
+<dt><code>LOADPARM &nbsp; <em>xxxxxxxx</em></code>
+<dd><p>
+    specifies the eight-character IPL parameter which is used
+    by some operating systems to select system parameters.
+    <p>
+
+<a name="LPARNAME"></a>
+<dt><code>LPARNAME &nbsp; <em>name</em></code>
+<dd><p>
+    specifies the LPAR name returned by DIAG X'204'.  The default is
+    <code>HERCULES</code>.
+    <p>
+
+<a name="MAINSIZE"></a>
+<dt><code>MAINSIZE &nbsp; <em>nnnn</em></code>
+<dd><p>
+    specifies the main storage size in megabytes, where
+    <code><em>nnnn</em></code>&nbsp; is a decimal number. The lower limit is 2.
+    The actual upper limit is determined by your host system's architecture
+    and operating system, and (on some systems) the amount of physical
+    memory and paging space you have available.
+    <p>
+
+<a name="MODPATH"></a>
+<dt><code>MODPATH &nbsp; <em>path</em></code>
+<dd><p>
+    specifies the path where dynamic modules are loaded from. When a modpath
+    statement is specified, the path on the modpath statement is searched before
+    the default path is searched. When a relative path is specified is interpreted
+    as a relative path within the default search path, if an absolute path is
+    specified is interpreted as such.
+    <p>
+    The default MODPATH is hercules, which means modules are loaded from the
+    directory hercules within the default LD_LIBRARY_PATH.
+    <p>
+
+<a name="MOUNTED_TAPE_REINIT"></a>
+<dt><code>MOUNTED_TAPE_REINIT &nbsp; DISALLOW &#124; ALLOW</code>
+<dd><p>
+    specifies whether reinitialization of tape drive devices (via the
+    <code>devinit</code> command, in order to mount a new tape) should
+    be allowed if there is already a tape mounted on the drive.
+    <p>
+    Specifying <code>ALLOW</code> (the default) indicates new tapes may
+    be mounted (via <code>'devinit nnnn <i>new-tape-filename</i>'</code>)
+    irrespective of whether or not there is already a tape mounted on the drive.
+    <p>
+    Specifying <code>DISALLOW</code> prevents new tapes from being mounted
+    if one is already mounted. When <code>DISALLOW</code> is specified
+    and a tape is already mounted on the drive, it must first be unmounted
+    (via the command <code>'devinit <i>nnnn</i> *'</code>) before
+    the new tape can be mounted. Otherwise the devinit attempt to mount
+    the new tape is rejected.
+    <p>
+    This option is meant as a safety mechanism to protect against
+    accidentally dismounting a tape from the wrong drive as a result of
+    a simple typo (thereby cancelling a potentially important tape job)
+    and was added by user request.
+    <p>
+    Also note that for SCSI tape drives the <code>'devinit <i>nnnn</i> *'</code>
+    command has no affect as the tape must be unmounted manually (since it is
+    a real physical device and not one emulated via a disk file like .AWS tapes).
+    <p>
+
+<a name="NUMCPU"></a>
+<dt><code>NUMCPU &nbsp; <em>nn</em></code>
+<dd><p>
+    specifies the number of emulated CPUs.
+    <p>
+
+    <em>Note:</em>
+    Multiprocessor emulation is only available when the definition of
+    the compile-time variable <code>MAX_CPU_ENGINES</code>
+    in the file <tt>config.h</tt> has a value of more than 1.
+    Current versions of Hercules already have this value
+    set to 2 by default, so all you need to do is specify
+    <tt>NUMCPU 2</tt>
+    in your configuration file. If you wish to define a greater value
+    for <tt>MAX_CPU_ENGINES</tt>, use the
+    <tt>--enable-multi-cpu=NUMBER</tt>
+    option when you do your <tt>./configure</tt> before doing your
+    <tt>make</tt>.
+    <p>
+
+    Multiprocessor emulation works best
+    if your host system actually has more than one physical CPU, but you can
+    still emulate multiple CPUs nervertheless  even on a uniprocessor system
+    (and you might even achieve a small performance benefit when you do).
+    There is little point, however, in specifying <tt>NUMCPU</tt> greater
+    than 1 unless your guest operating system (running under Hercules) is
+    actually able to support multiple CPUs (and if you do not actually need
+    multiprocessor emulation, then setting <tt>MAX_CPU_ENGINES</tt> to 1 at
+    compile time might even produce a slight performance advantage too).
+    <p>
+
+<a name="NUMVEC"></a>
+<dt><code>NUMVEC &nbsp; <em>nn</em></code>
+<dd><p>
+    specifies the number of emulated vector facilities. Default is one per
+    CPU. Only available by default in ESA/390 mode.
+    <p>
+
+<a name="OSTAILOR"></a>
+<dt><code>OSTAILOR &nbsp; OS/390 &#124; z/OS &#124; 
+    VM &#124; VSE &#124; LINUX &#124; QUIET &#124; NULL</code>
+<dd><p>
+    specifies the intended operating system.  The effect of this
+    parameter is to reduce control panel message traffic by
+    selectively suppressing trace messages for program checks
+    which are considered normal in the specified environment.
+    <code>QUIET</code> discards all exception messages.
+    <code>NULL</code> allows all exception messages to be logged.
+    If this statement is omitted, exception messages for program
+    checks 10, 11, 16, and 1C are suppressed.
+    <p>
+
+<a name="PANRATE"></a>
+<dt><code>PANRATE &nbsp; SLOW &#124 FAST &#124 <em>nn</em></code>
+<dd><p>
+    specifies the panel refresh rate, in milliseconds between refreshes. SLOW
+    is the same as 500, and FAST is the same as 50. A value less than the
+    Linux system clock tick interval (10 on Intel, 1 on Alpha), or more than
+    5000, will be rejected. SLOW is the default.
+    <p>
+
+<a name="PANTITLE"></a>
+<dt><code>PANTITLE &nbsp; <em>"title-string"</em></code>
+<dd><p>
+    specifies an optional console window title-bar string to be used
+    in place of the default one supplied by Windows. If the value
+    contains any blanks it must be enclosed within double-quotes.
+    <p>
+    This option allows one to distinguish between different Hercules
+    sessions when running more than one instance of Hercules on the same
+    Windows host.
+    <p>
+    Note that this option has no effect when Hercules is run under control
+    of the Hercules GUI since Hercules's console window is hidden in favor
+    of using the GUI's console window instead.
+    <p>
+
 <a name="PGMPRDOS"></a>
-<dt><code>PGMPRDOS RESTRICTED &#124 LICENSED</code>
+<dt><code>PGMPRDOS &nbsp; RESTRICTED &#124 LICENSED</code>
 <dd><p>
     specifies whether or not Hercules will run licensed program product ESA
     or z/Architecture operating systems.  Specify <code>RESTRICTED</code> to
@@ -594,86 +608,120 @@ a real System/390.  The configuration file is an ASCII text file.
     remind you of your responsibility to comply with software license terms.
     <p>
 
-<a name="IODELAY"></a>
-<dt><code>IODELAY <em>usec</em> [NOWARN]</code>
+<a name="SHCMDOPT"></a>
+<dt><code>SHCMDOPT &nbsp; DISABLE &#124; NODIAG8</code>
 <dd><p>
-    specifies the amount of time (in microseconds) to wait after
-    an I/O interrupt is ready to be set pending.  This value can also be
-    set using the Hercules console.  The purpose of this parameter is to
-    bypass a bug in the <b>Linux/390</b> and <b>zLinux</b> <code>dasd.c</code>
-    device driver. The problem is more apt to happen under Hercules than
-    on a real machine because we may present an I/O interrupt sooner than a
-    real machine.
+    When set to <code>DISABLE</code>, <code>sh</code> (shell) commands are globally disabled, and will result
+    in an error if entered either directly via the Hercules hardware console or
+    programmatically via the <a href="#DIAG8CMD">DIAG8CMD</a> interface.
     <p>
-    If the IODELAY value is non-zero a warning message (HHCCF037W) will be
-    issued unless <code>NOWARN</code> is specified.
+    When set to <code>NODIAG8</code> only the programmatic execution of shell commands via the
+    the diagnose 8 interface is disabled; <code>sh</code> (shell) commands entered directly
+    via the Hercules hardware console will still work.
     <p>
-    NOTE : <a href="#OSTAILOR"><code>OSTAILOR LINUX</code></a> no longer sets
-    IODELAY to 800 since the problem described above is no longer present in
-    recent versions of the linux kernel.
+    <b>NOTE:</b> &nbsp;<i>"entered directly via the Hercules hardware console"</i>
+    also pertains to both commands entered via the
+    <a href="#HTTPROOT">HTTP server facility</a>
+    as well as commands entered via
+    <a href="hercinst.html#RCFILE">.rc "run command"</a> scripts.
     <p>
 
-<a name="CODEPAGE"></a>
-<dt><code>CODEPAGE <em>codepage</em></code>
+<a name="SHRDPORT"></a>
+<dt><code>SHRDPORT &nbsp; <em>nnnn</em></code>
 <dd><p>
-    specifies the codepage conversion table used for ASCII/EBCDIC translation.
+    specifies the port number (in decimal) on which the Shared Device server
+    will listen.  Specifying SHRDPORT will allow other Hercules instances
+    to access devices on this instance.  (Currently only DASD devices may
+    be shared).  By default, the other Hercules instances (clients) will
+    use port 3990.  If you specify a different port number, then you will
+    have to specify this port number on the device statement for the other
+    Hercules clients.
+    If no SHRDPORT statement is present then the Shared Device server thread
+    will not be activated.<br>
     <p>
 
-    "default" specifies traditional hercules codepage. Code pages "437/037",
-    "437/500" and "850/273" are also supported.
-    <p>
-
-    Iconv single byte codepages may also be used. (eg."UTF8/EBCDIC-CP-NL")
-    <p>
-
-    If no codepage is specified then the environment variable HERCULES_CP
-    will be inspected. The default codepage used is "default"
-
-    <p>
-
-<a name="ECPSVM"></a>
-<dt><code>ECPSVM YES &#124 NO &#124 LEVEL <em>nn</em></code>
+<a name="SYSEPOCH"></a>
+<dt><code>SYSEPOCH &nbsp; <em>yyyy</em> [&plusmn<em>years</em>]</code>
 <dd><p>
-    specifies whether ECPS:VM (Extended Control Program Support : Virtual Machine)
-    support is to be enabled. If <code>YES</code> is specified, then the support
-    level reported to the operating system is <code>20</code>. The purpose of
-    ECPS:VM is to provide to the VM/370 Operating system a set of shortcut
-    facilities to perform hypervisor functions (CP Assists) and virtual
-    machine simulation (VM Assists). Although this feature does not affect
-    VM Operating system products operating in XA, ESA or z/Architecture mode,
-    it will affect VM/370 and VM/SP products running under VM/XA, VM/ESA or z/VM.
-    Running VM/370 and VM/SP products under VM/XA, VM/ESA or z/VM should be
-    done with ECPS:VM disabled. ECPS:VM should not be enabled in an AP or MP
-    environment. ECPS:VM has no effect on non-VM operating systems. It is
-    however recommended to disable ECPS:VM when running native non-VM operating
-    systems. If a specific LEVEL is specified, this value will be reported
-    to the operating system when it issues a Store ECPS:VM level, but it
-    doesn't otherwise alter the ECPS:VM facility operations. This is a partial
-    implementation.
+    specifies the base date for the TOD clock.  Use the default value
+    (<code>1900</code>) for all systems except OS/360. Use <code>1960</code>
+    for OS/360.  Values other than these were formerly used to offset the
+    TOD clock by a number of years to move the date before the year 2000 for
+    non-Y2K-compliant operating systems. This use is deprecated, and support
+    will be removed in a future release; at that time, only values of
+    <code>1900</code> or <code>1960</code> will be accepted. Other values
+    will produce a warning message with the equivalent values to specify in
+    the SYSEPOCH statement.<br>
+    An optional year offset may be specified, and will be treated as though
+    it had been specified on a <a href="#YROFFSET"><code>YROFFSET</code></a>
+    statement.
     <p>
 
-<a name="LDMOD"></a>
-<dt><code>LDMOD <em>module list</em></code>
+<a name="TODDRAG"></a>
+<dt><code>TODDRAG &nbsp; <em>nn</em></code>
 <dd><p>
-    specifies additional modules that are to be loaded by the hercules dynamic loader.
-    The default search order is with the hercules directory in the default DLL search
-    path. Most systems also support absolute filenames (ie names starting with '/'
-    or '.') in which case the default search path is not taken.
-    <p>
-    Multiple LDMOD statements may be used.
+    specifies the TOD clock drag factor.  This parameter can be used
+    to slow down or speed up the TOD clock by a factor of <em>nn</em>.
+    A significant slowdown can improve the performance of some operating
+    systems which consume significant amounts of CPU time processing
+    timer interrupts.
+    A drag factor of 2.0 slows down the clock by 50%. A drag factor of
+    0.5 doubles the speed of the clock. A drag factor of 1.01 slows
+    down the clock by 1%, and 0.99 speeds up the clock by 1%.
     <p>
 
-<a name="MODPATH"></a>
-<dt><code>MODPATH <em>path</em></code>
+<a name="TODPRIO"></a>
+<dt><code>TODPRIO &nbsp; <em>nn</em></code>
 <dd><p>
-    specifies the path where dynamic modules are loaded from. When a modpath
-    statement is specified, the path on the modpath statement is searched before
-    the default path is searched. When a relative path is specified is interpreted
-    as a relative path within the default search path, if an absolute path is
-    specified is interpreted as such.
+    specifies the priority of the TOD Clock and timer thread.  The
+    default value is -20.  See
+    <a href="#thread_priorities">"Thread Priorities"</a>
+    below for more information.
     <p>
-    The default MODPATH is hercules, which means modules are loaded from the
-    directory hercules within the default LD_LIBRARY_PATH.
+
+    <i><b>Caution:</b> &nbsp; TODPRIO should be given a dispatching
+    priority equal to or higher than any other thread within Hercules.</i>
+    <p>
+
+<a name="TZOFFSET"></a>
+<dt><code>TZOFFSET &nbsp; &plusmn;<em>hhmm</em></code>
+<dd><p>
+    specifies the hours and minutes by which the TOD clock will
+    be offset from the current system time.  For GMT, use the
+    default value (0000).  For timezones west of Greenwich, specify
+    a negative value (example: <code>-0500</code> for US Eastern Standard
+    Time, <code>-0800</code> for US Pacific Standard Time).
+    For timezones east of Greenwich, specify a positive value
+    (example: <code>+0100</code> for Central European Time,
+    <code>+0930</code> for South Australian Time).
+    <p>
+
+<a name="XPNDSIZE"></a>
+<dt><code>XPNDSIZE &nbsp; <em>nnnn</em></code>
+<dd><p>
+    specifies the expanded storage size in megabytes, where
+    <code><em>nnnn</em></code> is a decimal number. The lower limit is 0.
+    The actual upper limit is determined by your host system's architecture
+    and operating system, and (on some systems) the amount of physical
+    memory and paging space you have available.
+    <p>
+
+<a name="YROFFSET"></a>
+<dt><code>YROFFSET &nbsp; &plusmn;<em>years</em></code>
+<dd><p>
+    specifies a number of years to offset the TOD clock from the actual
+    date. Positive numbers will move the clock forward in time, while
+    negative numbers will move it backward. A common value for
+    non-Y2K-compliant operating systems is <code>YROFFSET -28</code>, which
+    has the advantage that the day of the week and the presence or absence
+    of February 29 is the same as the current year. This value may not be
+    specified as greater than &plusmn;142 years, the total range of the TOD
+    clock. Specifying a value that causes the computed TOD clock year to be
+    earlier than the value of <a href="#SYSEPOCH"><code>SYSEPOCH</code></a>
+    or more than 142 years later than that value will produce unexpected
+    results.
+    <p>
+
 </dl>
 
 <p>
