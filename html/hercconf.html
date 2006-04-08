@@ -1486,12 +1486,16 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
 
     <dt><b>SCSI tapes</b>
     <dd><p>
-        The argument specifies the tape device name (usually
-        <code>/dev/nst0</code>).  SCSI tapes are read and written
+        The argument specifies the tape device name, usually
+        "<code>/dev/nst0</code>" or, for Windows, "<code>\\.\Tape0</code>".
+        <p>
+        SCSI tapes are read and written
         using variable length EBCDIC blocks and filemarks exactly
-        like a mainframe tape volume. &nbsp;(See also the
+        like a mainframe tape volume.
+        <p>
+        See also the
         <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>
-        configuration option).
+        configuration option.
         <p>
 
     <dt><b>Optical Media Attach (OMA) virtual files</b>
