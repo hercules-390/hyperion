@@ -438,7 +438,7 @@ DLL_EXPORT int usleep ( useconds_t useconds )
     static HANDLE  hTimer      = NULL;
     LARGE_INTEGER  liDueTime;
 
-    if ( !bDidInit )
+    if (unlikely( !bDidInit ))
     {
         bDidInit = TRUE;
 
@@ -447,7 +447,7 @@ DLL_EXPORT int usleep ( useconds_t useconds )
         VERIFY( ( hTimer = CreateWaitableTimer( NULL, TRUE, NULL ) ) != NULL );
     }
 
-    if ( useconds < 0 || useconds >= 1000000 )
+    if (unlikely( useconds < 0 || useconds >= 1000000 ))
     {
         errno = EINVAL;
         return -1;
@@ -512,7 +512,7 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 
     UNREFERENCED(pTZ);
 
-    if ( !bInSync )
+    if (unlikely( !bInSync ))
     {
         FILETIME       ftStartingSystemTime;
         LARGE_INTEGER  liHPCTicksPerSecond;
@@ -534,7 +534,7 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
         tvPrevious.tv_usec = 0;
     }
 
-    if (!pTV)
+    if (unlikely( !pTV ))
         return EFAULT;
 
     // Query current high-performance counter value...
@@ -559,7 +559,7 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
     pTV->tv_sec   =  (long)(liCurrentHPCValue.QuadPart / 1000000);
     pTV->tv_usec  =  (long)(liCurrentHPCValue.QuadPart % 1000000);
 
-    if ( !tvPrevious.tv_sec )
+    if (unlikely( !tvPrevious.tv_sec ))
     {
         tvPrevious.tv_sec  = pTV->tv_sec;
         tvPrevious.tv_usec = pTV->tv_usec;
@@ -570,7 +570,7 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 
 #define  RESYNC_GTOD_EVERY_SECS  30
 
-    if ( (pTV->tv_sec - tvPrevious.tv_sec ) > RESYNC_GTOD_EVERY_SECS )
+    if (unlikely( (pTV->tv_sec - tvPrevious.tv_sec ) > RESYNC_GTOD_EVERY_SECS ))
         bInSync = FALSE;    // (force resync)
 
     // Ensure each call returns a unique value...
@@ -590,7 +590,7 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 
     // Return to caller if no resync needed
 
-    if ( bInSync )
+    if (likely( bInSync ))
         return 0;
 
     // (resync needed before returning)
