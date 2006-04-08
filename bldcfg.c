@@ -1495,7 +1495,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             {
                 sysblk.nomountedtapereinit = 1;
             }
-            else if ( strcasecmp( sauto_scsi_mount, "allow" ) == 0 )
+            else if ( strcasecmp( smountedtapereinit, "allow" ) == 0 )
             {
                 sysblk.nomountedtapereinit = 0;
             }
