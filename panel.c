@@ -2174,10 +2174,10 @@ FinishShutdown:
                     NPDinit = 1;
                     NP_screen_redraw(regs);
                 }
+                NP_update(regs);
+                fflush (confp);
+                redraw_msgs = redraw_cmd = redraw_status = 0;
             }
-            NP_update(regs);
-            fflush (confp);
-            redraw_msgs = redraw_cmd = redraw_status = 0;
         }
 
     /* =END= */
