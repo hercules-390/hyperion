@@ -1089,7 +1089,7 @@ DEF_INST(compression_call)
 #endif /* OPTION_CMPSC_DEBUGLVL */
 
   /* Check the registers on even-odd pairs and valid compression-data symbol size */
-  if(r1 & 0x01 || r2 & 0x01 || !GR0_cdss(regs) || GR0_cdss(regs) > 5)
+  if(unlikely(r1 & 0x01 || r2 & 0x01 || !GR0_cdss(regs) || GR0_cdss(regs) > 5))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
 #if (__GEN_ARCH == 900)
