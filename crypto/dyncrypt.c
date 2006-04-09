@@ -240,11 +240,11 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 64 || GR0_m(regs))
+  if(unlikely(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 64 || GR0_m(regs)))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -292,7 +292,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -321,11 +321,11 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 64 || GR0_m(regs))
+  if(unlikely(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 64 || GR0_m(regs)))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -373,7 +373,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -424,7 +424,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR0_m(regs))
+  if(unlikely(!r2 || r2 & 0x01 || GR0_m(regs)))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Test writeability output chaining value */
@@ -443,7 +443,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
   while(crypted += 64 < PROCESS_MAX)
   {
     /* Check for last block */
-    if(GR_A(r2 + 1, regs) < 64)
+    if(likely(GR_A(r2 + 1, regs) < 64))
       break;
 
     /* Fetch and process a block of data */
@@ -475,14 +475,14 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
   }
 
   /* Check if cpu determined amount of data is processed */
-  if(GR_A(r2 + 1, regs) >= 64)
+  if(unlikely(GR_A(r2 + 1, regs) >= 64))
   {
     regs->psw.cc = 3;
     return;
   }
 
   /* Fetch and process possible last block of data */
-  if(GR_A(r2 + 1, regs))
+  if(likely(GR_A(r2 + 1, regs)))
   {
     ARCH_DEP(vfetchc)(buffer, GR_A(r2 + 1, regs) - 1, GR_A(r2, regs), r2, regs);
 
@@ -494,7 +494,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 
   /* Do the padding */
   i = GR_A(r2 + 1, regs);
-  if(i > 55)
+  if(unlikely(i > 55))
   {
     buffer[i++] = 0x80;
     while(i < 64)
@@ -558,7 +558,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR0_m(regs))
+  if(unlikely(!r2 || r2 & 0x01 || GR0_m(regs)))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Test writeability output chaining value */
@@ -577,7 +577,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   while(crypted += 64 < PROCESS_MAX)
   {
     /* Check for last block */
-    if(GR_A(r2 + 1, regs) < 64)
+    if(likely(GR_A(r2 + 1, regs) < 64))
       break;
 
     /* Fetch and process a block of data */
@@ -609,14 +609,14 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   }
 
   /* Check if cpu determined amount of data is processed */
-  if(GR_A(r2 + 1, regs) >= 64)
+  if(unlikely(GR_A(r2 + 1, regs) >= 64))
   {
     regs->psw.cc = 3;
     return;
   }
 
   /* Fetch and process possible last block of data */
-  if(GR_A(r2 + 1, regs))
+  if(likely(GR_A(r2 + 1, regs)))
   {
     ARCH_DEP(vfetchc)(buffer, GR_A(r2 + 1, regs) - 1, GR_A(r2, regs), r2, regs);
 
@@ -628,7 +628,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 
   /* Do the padding */
   i = GR_A(r2 + 1, regs);
-  if(i > 55)
+  if(unlikely(i > 55))
   {
     buffer[i++] = 0x80;
     while(i < 64)
@@ -710,11 +710,11 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8)
+  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -754,7 +754,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs, GR_A(r1,regs) + 8);
-    if(r1 != r2)
+    if(likely(r1 != r2))
       SET_GR_A(r2, regs, GR_A(r2,regs) + 8);
     SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 8);
 
@@ -765,7 +765,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -791,11 +791,11 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8)
+  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -836,7 +836,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
-    if(r1 != r2)
+    if(likely(r1 != r2))
       SET_GR_A(r2, regs,GR_A(r2,regs) + 8);
     SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 8);
 
@@ -847,7 +847,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -873,11 +873,11 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8)
+  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -919,7 +919,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
-    if(r1 != r2)
+    if(likely(r1 != r2))
       SET_GR_A(r2, regs,GR_A(r2,regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 8);
 
@@ -930,7 +930,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -957,11 +957,11 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 16)
+  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 16))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -1001,7 +1001,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs,GR_A(r1,regs) + 16);
-    if(r1 != r2)
+    if(likely(r1 != r2))
       SET_GR_A(r2, regs,GR_A(r2,regs) + 16);
     SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 16);
 
@@ -1012,7 +1012,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -1064,11 +1064,11 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8 || GR0_m(regs))
+  if(unlikely(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8 || GR0_m(regs)))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -1124,7 +1124,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -1155,11 +1155,11 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8 || GR0_m(regs))
+  if(unlikely(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8 || GR0_m(regs)))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -1219,7 +1219,7 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -1251,11 +1251,11 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8 || GR0_m(regs))
+  if(unlikely(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8 || GR0_m(regs)))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -1317,7 +1317,7 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -1367,11 +1367,11 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8)
+  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -1442,7 +1442,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
-    if(r1 != r2)
+    if(likely(r1 != r2))
       SET_GR_A(r2, regs, GR_A(r2,regs) + 8);
     SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 8);
 
@@ -1453,7 +1453,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -1486,11 +1486,11 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8)
+  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -1567,7 +1567,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
-    if(r1 != r2)
+    if(likely(r1 != r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 8);
 
@@ -1578,7 +1578,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -1612,11 +1612,11 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8)
+  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -1695,7 +1695,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
-    if(r1 != r2)
+    if(likely(r1 != r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 8);
 
@@ -1706,7 +1706,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -1739,11 +1739,11 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 16)
+  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 16))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -1814,7 +1814,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs,GR_A(r1,regs) + 16);
-    if(r1 != r2)
+    if(likely(r1 != r2))
       SET_GR_A(r2, regs, GR_A(r2,regs) + 16);
     SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 16);
 
@@ -1825,7 +1825,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
@@ -1860,11 +1860,11 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8)
+  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
-  if(!GR_A(r2 + 1, regs))
+  if(unlikely(!GR_A(r2 + 1, regs)))
   {
     regs->psw.cc = 0;
     return;
@@ -1943,7 +1943,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
-    if(r1 != r2)
+    if(likely(r1 != r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 8);
 
@@ -1954,7 +1954,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 #endif
 
     /* check for end of data */
-    if(!GR_A(r2 + 1, regs))
+    if(unlikely(!GR_A(r2 + 1, regs)))
     {
       regs->psw.cc = 0;
       return;
