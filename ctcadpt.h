@@ -123,14 +123,11 @@ typedef struct _ETHFRM ETHFRM, *PETHFRM;
 
 struct  _IP4FRM
 {
-    BYTE        bVersion:4;              // 0x00
-    BYTE        bHeaderLength:4;         // 0x00
+    BYTE        bVersIHL;                // 0x00 Vers:4, IHL:4
     BYTE        bTOS;                    // 0x01
     HWORD       hwTotalLength;           // 0x02
     HWORD       hwIdentification;        // 0x04
-    U16
-        bFlags:3,                        // 0x06
-        sFragmentOffset:13;
+    U16         bFlagsFragOffset;        // 0x06 Flags:3, FragOffset:13
     BYTE        bTTL;                    // 0x08
     BYTE        bProtocol;               // 0x09
     HWORD       hwChecksum;              // 0x0A
@@ -222,14 +219,13 @@ struct  _CTCBLK
     LOCK        EventLock;                // Condition LOCK
     COND        Event;                    // Condition signal
 
-    unsigned int
-        fDebug:1,                         // Debugging
-        fOldFormat:1,                     // Old Config Format
-        fCreated:1,                       // Interface Created
-        fStarted:1,                       // Startup Received
-        fDataPending:1,                   // Data is pending for
+    u_int       fDebug:1;                 // Debugging
+    u_int       fOldFormat:1;             // Old Config Format
+    u_int       fCreated:1;               // Interface Created
+    u_int       fStarted:1;               // Startup Received
+    u_int       fDataPending:1;           // Data is pending for
                                           //   read device
-        fCloseInProgress:1;               // Close in progress
+    u_int       fCloseInProgress:1;       // Close in progress
 
     int         iKernBuff;                // Kernel buffer in K bytes.
     int         iIOBuff;                  // I/O buffer in K bytes.
@@ -319,12 +315,11 @@ struct  _LCSDEV
     LOCK        EventLock;                // Condition LOCK
     COND        Event;                    // Condition signal
 
-    U16
-      fCreated:1,                         // DEVBLK(s) Created
-      fStarted:1,                         // Device Started
-      fRouteAdded:1,                      // Routing Added
-      fReplyPending:1,                    // Cmd Reply is Pending
-      fDataPending:1;                     // Data is Pending
+    u_int       fCreated:1;               // DEVBLK(s) Created
+    u_int       fStarted:1;               // Device Started
+    u_int       fRouteAdded:1;            // Routing Added
+    u_int       fReplyPending:1;          // Cmd Reply is Pending
+    u_int       fDataPending:1;           // Data is Pending
 
     PLCSDEV     pNext;                    // Next device
 };
@@ -354,13 +349,12 @@ struct  _LCSPORT
     LOCK        EventLock;                // Condition LOCK
     COND        Event;                    // Condition signal
 
-    U16
-      fUsed:1,                            // Port is used
-      fLocalMAC:1,                        // MAC is specified in OAT
-      fCreated:1,                         // Interface Created
-      fStarted:1,                         // Startup Received
-      fRouteAdded:1,                      // Routing Added
-      fCloseInProgress:1;                 // Close in progress
+    u_int       fUsed:1;                  // Port is used
+    u_int       fLocalMAC:1;              // MAC is specified in OAT
+    u_int       fCreated:1;               // Interface Created
+    u_int       fStarted:1;               // Startup Received
+    u_int       fRouteAdded:1;            // Routing Added
+    u_int       fCloseInProgress:1;       // Close in progress
 
     int         fd;                       // TUN/TAP fd
     TID         tid;                      // Read Thread ID
@@ -395,8 +389,7 @@ struct  _LCSBLK
     char*       pszMACAddress;            // MAC Address (string)
     MAC         bMAC_Address;             // MAC Address (binary)
 
-    BYTE
-      fDebug:1;
+    u_int       fDebug:1;
 
     int         icDevices;                // Number of devices
 

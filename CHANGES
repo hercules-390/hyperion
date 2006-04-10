@@ -1,3 +1,4 @@
+10 Apr 2006 Portability: change bitfield types from BYTE to u_int - Fish
 09 Apr 2006 Transparently handle BSD sockaddr_in sin_len - Fish
 09 Apr 2006 Un-"fix" panel.c refresh (sigh) - Fish
 09 Apr 2006 Fix bug causing bogus routing table setup for CTCI - Bjoern Zeeb

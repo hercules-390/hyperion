@@ -404,9 +404,9 @@ struct SYSBLK {
 //
         /* ECPS:VM */
         struct {
-                U16 available:1,
-                    debug:1;
-                U16 level;
+            u_int level:16;
+            u_int debug:1;
+            u_int available:1;
         } ecpsvm;                       /* ECPS:VM structure         */
 //
 #endif
@@ -743,10 +743,9 @@ struct DEVBLK {                         /* Device configuration block*/
         int     pos3270;                /* Current screen position   */
         int     keybdrem;               /* Number of bytes remaining
                                            in keyboard read buffer   */
-        U32                             /* Flags                     */
-                eab3270:1,              /* 1=Extended attributes     */
-                ewa3270:1,              /* 1=Last erase was EWA      */
-                prompt1052:1;           /* 1=Prompt for linemode i/p */
+        u_int   eab3270:1;              /* 1=Extended attributes     */
+        u_int   ewa3270:1;              /* 1=Last erase was EWA      */
+        u_int   prompt1052:1;           /* 1=Prompt for linemode i/p */
         BYTE    aid3270;                /* Current input AID value   */
         BYTE    mod3270;                /* 3270 model number         */
 
@@ -760,13 +759,12 @@ struct DEVBLK {                         /* Device configuration block*/
                                            read from data buffer     */
         int     cardrem;                /* Number of bytes remaining
                                            in data buffer            */
-        U32                             /* Flags                     */
-                multifile:1,            /* 1=auto-open next i/p file */
-                rdreof:1,               /* 1=Unit exception at EOF   */
-                ebcdic:1,               /* 1=Card deck is EBCDIC     */
-                ascii:1,                /* 1=Convert ASCII to EBCDIC */
-                trunc:1,                /* Truncate overlength record*/
-                autopad:1;              /* 1=Pad incomplete last rec
+        u_int   multifile:1;            /* 1=auto-open next i/p file */
+        u_int   rdreof:1;               /* 1=Unit exception at EOF   */
+        u_int   ebcdic:1;               /* 1=Card deck is EBCDIC     */
+        u_int   ascii:1;                /* 1=Convert ASCII to EBCDIC */
+        u_int   trunc:1;                /* Truncate overlength record*/
+        u_int   autopad:1;              /* 1=Pad incomplete last rec
                                            to 80 bytes if EBCDIC     */
 
         /*  Device dependent fields for ctcadpt                      */
@@ -776,8 +774,7 @@ struct DEVBLK {                         /* Device configuration block*/
         int     ctcrem;                 /* bytes remaining in buffer */
         int     ctclastpos;             /* last packet read          */
         int     ctclastrem;             /* last packet read          */
-        U32                             /* Flags                     */
-                ctcxmode:1;             /* 0=Basic mode, 1=Extended  */
+        u_int   ctcxmode:1;             /* 0=Basic mode, 1=Extended  */
         BYTE    ctctype;                /* CTC_xxx device type       */
         BYTE    netdevname[IFNAMSIZ];   /* network device name       */
 
@@ -788,12 +785,11 @@ struct DEVBLK {                         /* Device configuration block*/
         int     printrem;               /* Number of bytes remaining
                                            in print buffer           */
         pid_t   ptpcpid;                /* print-to-pipe child pid   */
-        U32                             /* Flags                     */
-                crlf:1,                 /* 1=CRLF delimiters, 0=LF   */
-                diaggate:1,             /* 1=Diagnostic gate command */
-                fold:1,                 /* 1=Fold to upper case      */
-                ispiped:1,              /* 1=Piped device            */
-                stopprt:1;              /* 1=stopped; 0=started      */
+        u_int   crlf:1;                 /* 1=CRLF delimiters, 0=LF   */
+        u_int   diaggate:1;             /* 1=Diagnostic gate command */
+        u_int   fold:1;                 /* 1=Fold to upper case      */
+        u_int   ispiped:1;              /* 1=Piped device            */
+        u_int   stopprt:1;              /* 1=stopped; 0=started      */
 
         /*  Device dependent fields for tapedev                      */
 
@@ -813,26 +809,25 @@ struct DEVBLK {                         /* Device configuration block*/
 
         struct                          /* HET device parms          */
         {
-            U16 compress:1;             /* 1=Compression enabled     */
-            U16 method:3;               /* Compression method        */
-            U16 level:4;                /* Compression level         */
-            U16 strictsize:1;           /* Strictly enforce MAXSIZE  */
-            U16 displayfeat:1;          /* Device has a display      */
+          u_int compress:1;             /* 1=Compression enabled     */
+          u_int method:3;               /* Compression method        */
+          u_int level:4;                /* Compression level         */
+          u_int strictsize:1;           /* Strictly enforce MAXSIZE  */
+          u_int displayfeat:1;          /* Device has a display      */
                                         /* feature installed         */
-            U16 deonirq:1;              /* DE on IRQ on tape motion  */
+          u_int deonirq:1;              /* DE on IRQ on tape motion  */
                                         /* MVS 3.8j workaround       */
-            U16 logical_readonly;       /* Tape is forced READ ONLY  */
-            U16 chksize;                /* Chunk size                */
-            OFF_T maxsize;              /* Maximum allowed TAPE file
+          u_int logical_readonly:1;     /* Tape is forced READ ONLY  */
+          U16   chksize;                /* Chunk size                */
+          OFF_T maxsize;                /* Maximum allowed TAPE file
                                            size                      */
-            OFF_T eotmargin;            /* Amount of space left
+          OFF_T eotmargin;              /* Amount of space left
                                            before reporting EOT      */
         }       tdparms;                /* HET device parms          */
-        U32                             /* Flags                     */
-                poserror:1,             /* Positioning error         */
-                readonly:1,             /* 1=Tape is write-protected */
-                longfmt:1,              /* 1=Long record format (DDR)*/ /*DDR*/
-                sns_pending:1;          /* Contingency Allegiance    */
+        u_int   poserror:1;             /* Positioning error         */
+        u_int   readonly:1;             /* 1=Tape is write-protected */
+        u_int   longfmt:1;              /* 1=Long record format (DDR)*/ /*DDR*/
+        u_int   sns_pending:1;          /* Contingency Allegiance    */
                                         /* - means : don't build a   */
                                         /* sense on X'04' : it's     */
                                         /* aleady there              */
@@ -844,10 +839,9 @@ struct DEVBLK {                         /* Device configuration block*/
                                            independent status field;
                                            (struct mtget->mt_gstat)  */
         TID     stape_mountmon_tid;     /* Tape-mount monitor thread */
-        U32                             /* Additional SCSI flags:    */
-                stape_close_rewinds:1,  /* 1=Rewind at close         */
-                stape_getstat_busy:1,   /* 1=Status wrkr thrd busy   */
-                stape_getstat_exit:1;   /* 1=Ask stat wrkr thrd exit */
+        u_int   stape_close_rewinds:1;  /* 1=Rewind at close         */
+        u_int   stape_getstat_busy:1;   /* 1=Status wrkr thrd busy   */
+        u_int   stape_getstat_exit:1;   /* 1=Ask stat wrkr thrd exit */
         TID     stape_getstat_tid;      /* Tape status wrkr thrd tid */
         LOCK    stape_getstat_lock;     /* LOCK for status wrkr thrd */
         COND    stape_getstat_cond;     /* COND for status wrkr thrd */
@@ -975,28 +969,27 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ckdreserved1;           /* Alignment                 */
         void   *cckd_ext;               /* -> Compressed ckddasd
                                            extension otherwise NULL  */
-        U32                             /* Flags                     */
-                ckd3990:1,              /* 1=Control unit is 3990    */
-                ckdxtdef:1,             /* 1=Define Extent processed */
-                ckdsetfm:1,             /* 1=Set File Mask processed */
-                ckdlocat:1,             /* 1=Locate Record processed */
-                ckdspcnt:1,             /* 1=Space Count processed   */
-                ckdseek:1,              /* 1=Seek command processed  */
-                ckdskcyl:1,             /* 1=Seek cylinder processed */
-                ckdrecal:1,             /* 1=Recalibrate processed   */
-                ckdrdipl:1,             /* 1=Read IPL processed      */
-                ckdxmark:1,             /* 1=End of track mark found */
-                ckdhaeq:1,              /* 1=Search Home Addr Equal  */
-                ckdideq:1,              /* 1=Search ID Equal         */
-                ckdkyeq:1,              /* 1=Search Key Equal        */
-                ckdwckd:1,              /* 1=Write R0 or Write CKD   */
-                ckdtrkof:1,             /* 1=Track ovfl on this blk  */
-                ckdssi:1,               /* 1=Set Special Intercept   */
-                ckdnolazywr:1,          /* 1=Perform updates now     */
-                ckdrdonly:1,            /* 1=Open read only          */
-                ckdwrha:1,              /* 1=Write Home Address      */
+        u_int   ckd3990:1;              /* 1=Control unit is 3990    */
+        u_int   ckdxtdef:1;             /* 1=Define Extent processed */
+        u_int   ckdsetfm:1;             /* 1=Set File Mask processed */
+        u_int   ckdlocat:1;             /* 1=Locate Record processed */
+        u_int   ckdspcnt:1;             /* 1=Space Count processed   */
+        u_int   ckdseek:1;              /* 1=Seek command processed  */
+        u_int   ckdskcyl:1;             /* 1=Seek cylinder processed */
+        u_int   ckdrecal:1;             /* 1=Recalibrate processed   */
+        u_int   ckdrdipl:1;             /* 1=Read IPL processed      */
+        u_int   ckdxmark:1;             /* 1=End of track mark found */
+        u_int   ckdhaeq:1;              /* 1=Search Home Addr Equal  */
+        u_int   ckdideq:1;              /* 1=Search ID Equal         */
+        u_int   ckdkyeq:1;              /* 1=Search Key Equal        */
+        u_int   ckdwckd:1;              /* 1=Write R0 or Write CKD   */
+        u_int   ckdtrkof:1;             /* 1=Track ovfl on this blk  */
+        u_int   ckdssi:1;               /* 1=Set Special Intercept   */
+        u_int   ckdnolazywr:1;          /* 1=Perform updates now     */
+        u_int   ckdrdonly:1;            /* 1=Open read only          */
+        u_int   ckdwrha:1;              /* 1=Write Home Address      */
                                         /* Line above ISW20030819-1  */
-                ckdfakewr:1;            /* 1=Fake successful write
+        u_int   ckdfakewr:1;            /* 1=Fake successful write
                                              for read only file      */
         U16     ckdssdlen;              /* #of bytes of data prepared
                                            for Read Subsystem Data   */

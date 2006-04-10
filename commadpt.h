@@ -9,8 +9,8 @@ typedef struct _COMMADPT_RING
     size_t sz;
     size_t hi;
     size_t lo;
-    BYTE   havedata:1,
-        overflow:1;
+    u_int havedata:1;
+    u_int overflow:1;
 } COMMADPT_RING;
 
 struct COMMADPT
@@ -41,35 +41,34 @@ struct COMMADPT
     U16  dialcount;             /* data count for dial                      */
     BYTE pollix;                /* Next POLL Index                          */
     U16  pollused;              /* Count of Poll data used during Poll      */
-    U32
-        enabled:1,              /* An ENABLE CCW has been sucesfully issued */
-        connect:1,              /* A connection exists with the remote peer */
-        eibmode:1,              /* EIB Setmode issued                       */
-        dialin:1,               /* This is a SWITCHED DIALIN line           */
-        dialout:1,              /* This is a SWITCHED DIALOUT line          */
-        have_cthread:1,         /* the comm thread is running               */
-        dolisten:1,             /* Start a listen                           */
-        listening:1,            /* Listening                                */
-        haltpending:1,          /* A request has been issued to halt current*/
+    u_int enabled:1;            /* An ENABLE CCW has been sucesfully issued */
+    u_int connect:1;            /* A connection exists with the remote peer */
+    u_int eibmode:1;            /* EIB Setmode issued                       */
+    u_int dialin:1;             /* This is a SWITCHED DIALIN line           */
+    u_int dialout:1;            /* This is a SWITCHED DIALOUT line          */
+    u_int have_cthread:1;       /* the comm thread is running               */
+    u_int dolisten:1;           /* Start a listen                           */
+    u_int listening:1;          /* Listening                                */
+    u_int haltpending:1;        /* A request has been issued to halt current*/
                                 /* CCW                                      */
-        xparwwait:1,            /* Transparent Write Wait state : a Write   */
+    u_int xparwwait:1;          /* Transparent Write Wait state : a Write   */
                                 /* was previously issued that turned the    */
                                 /* line into transparent mode. Anything     */
                                 /* else than another write, Sense or NO-OP  */
                                 /* is rejected with SENSE_CR                */
                                 /* This condition is reset upon receipt of  */
                                 /* DLE/ETX or DLE/ETB on a subsequent write */
-        input_overrun:1,        /* The input ring buffer has overwritten    */
+    u_int input_overrun:1;      /* The input ring buffer has overwritten    */
                                 /* itself                                   */
-        in_textmode:1,          /* Input buffer processing : text mode      */
-        in_xparmode:1,          /* Input buffer processing : transparent    */
-        gotdle:1,               /* DLE Received in inbound flow             */
-        pollsm:1,               /* Issue Status Modifier on POLL Exit       */
-        badpoll:1,              /* Bad poll data (>7 Bytes before ENQ)      */
-        callissued:1,           /* The connect out for the DIAL/ENABLE      */
+    u_int in_textmode:1;        /* Input buffer processing : text mode      */
+    u_int in_xparmode:1;        /* Input buffer processing : transparent    */
+    u_int gotdle:1;             /* DLE Received in inbound flow             */
+    u_int pollsm:1;             /* Issue Status Modifier on POLL Exit       */
+    u_int badpoll:1;            /* Bad poll data (>7 Bytes before ENQ)      */
+    u_int callissued:1;         /* The connect out for the DIAL/ENABLE      */
                                 /* has already been issued                  */
-        readcomp:1,             /* Data in the read buffer completes a read */
-        datalostcond:1;         /* Data Lost Condition Raised               */
+    u_int readcomp:1;           /* Data in the read buffer completes a read */
+    u_int datalostcond:1;       /* Data Lost Condition Raised               */
 };
 
 enum {

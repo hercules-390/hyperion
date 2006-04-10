@@ -70,7 +70,7 @@ typedef struct  _PSW {
         BYTE     zerobyte;              /* Zeroes          (24 - 31) */
                                         /* or (esame)      (24 - 30) */
         U32      zeroword;              /* esame only      (32 - 63) */
-        BYTE                            /* Addressing mode (31 - 32) */
+        u_int                           /* Addressing mode (31 - 32) */
                  amode64:1,             /* 64-bit addressing         */
                  amode:1,               /* 31-bit addressing         */
                  zeroilc:1;             /* 1=Zero ILC                */
@@ -185,9 +185,8 @@ typedef struct _DAT {
         int     stid;                   /* Address space indicator   */
         BYTE   *storkey;                /* ->Storage key             */
         U16     xcode;                  /* Translation exception code*/
-        BYTE    private:1,              /* 1=Private address space   */
+        u_int   private:1,              /* 1=Private address space   */
                 protect:2;              /* 1=Page prot, 2=ALE prot   */
-        BYTE    reserved[1];            /* [alignment]               */
       } DAT;
 
 /* Bit definitions for control register 0 */

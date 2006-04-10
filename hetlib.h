@@ -71,19 +71,19 @@ typedef struct _hethdr
 */
 typedef struct _hetb
 {
-    FILE            *fd;                /* Tape file descriptor             */
-    uint32_t       chksize;            /* Size of output chunks             */
-    uint32_t       ublksize;           /* Current block compressed size     */
-    uint32_t       cblksize;           /* Current block uncompressed size   */
-    uint32_t       cblk;               /* Current block number              */
+    FILE           *fd;                 /* Tape file descriptor             */
+    uint32_t        chksize;            /* Size of output chunks            */
+    uint32_t        ublksize;           /* Current block compressed size    */
+    uint32_t        cblksize;           /* Current block uncompressed size  */
+    uint32_t        cblk;               /* Current block number             */
     HETHDR          chdr;               /* Current block header             */
-    uint8_t        writeprotect:1;     /* TRUE=write protected              */
-    uint8_t        readlast:1;         /* TRUE=last i/o was read            */
-    uint8_t        truncated:1;        /* TRUE=file truncated               */
-    uint8_t        compress:1;         /* TRUE=compress written data        */
-    uint8_t        decompress:1;       /* TRUE=decompress read data         */
-    uint8_t        method:2;           /* 1=ZLIB, 2=BZLIB compresion        */
-    uint8_t        level:4;            /* 1=<n<=9 compression level         */
+    u_int           writeprotect:1;     /* TRUE=write protected             */
+    u_int           readlast:1;         /* TRUE=last i/o was read           */
+    u_int           truncated:1;        /* TRUE=file truncated              */
+    u_int           compress:1;         /* TRUE=compress written data       */
+    u_int           decompress:1;       /* TRUE=decompress read data        */
+    u_int           method:2;           /* 1=ZLIB, 2=BZLIB compresion       */
+    u_int           level:4;            /* 1=<n<=9 compression level        */
 } HETB;
 
 /*

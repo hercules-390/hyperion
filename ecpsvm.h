@@ -352,12 +352,12 @@ typedef struct _ECPSVM_VMALIST
 typedef struct _ECPSVM_STAT
 {
     char *name;
-    U32  call;
-    U32  hit;
-    U16  support:1,
-         enabled:1,
-         debug:1,
-        total:1;
+    U32   call;
+    U32   hit;
+    u_int support:1;
+    u_int enabled:1;
+    u_int debug:1;
+    u_int total:1;
 } ECPSVM_STAT;
 
 /* THE FOLLOWING ARE C99 INITIALISATION OF THE ECPSVM INSTRUCTION STATE STRUCTURES */
