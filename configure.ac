@@ -6,6 +6,18 @@
 #    'HC_XXXX..' macros are custom Hercules autoconf macros defined
 #    in the 'hercules.m4' file in the 'autoconf' subdirectory.
 
+###############################################################################
+#
+#                       ***  CHANGE HISTORY  ***
+#
+#  DD/MM/YY Name Description...
+#  -------- ---- --------------------------------------------------------------
+#
+#  09/04/06 Fish Added this Change History section
+#  09/04/06 Fish Added AC_CHECK_MEMBERS for 'sockaddr_in.sin_len'
+#
+###############################################################################
+
 AC_INIT(hercules.h)                     # (package, version, bugreport email, etc)
 AC_REVISION($Revision$)         # (the version of this configure.ac)
 AC_CONFIG_AUX_DIR(autoconf)             # (directory containing auxillary build tools)
@@ -690,6 +702,19 @@ AC_CACHE_SAVE()
 #   Checks for structures and structure members...
 ###############################################################################
 
+AC_CHECK_MEMBERS( [struct sockaddr_in.sin_len],
+                  [hc_cv_have_sockaddr_in_sin_len=yes ],
+                  [hc_cv_have_sockaddr_in_sin_len=no  ],
+[
+#include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+] )
+
 AC_CHECK_MEMBERS( [struct in_addr.s_addr],
                   [hc_cv_have_in_addr_s_addr=yes  ],
                   [hc_cv_have_in_addr_s_addr=no   ],
@@ -698,7 +723,9 @@ AC_CHECK_MEMBERS( [struct in_addr.s_addr],
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
 ] )
 
 AC_CHECK_MEMBERS( [struct sigaction.sa_sigaction],
@@ -1392,6 +1419,7 @@ if test "$hc_cv_is_apple" = "yes"; then
     # byteswap: while the Intel compiler can deal with them, the PPC
     # compiler cannot, and only those options common to both can be used.
     # Turn off dependency tracking, too. -- JRM
+
     if test "$hc_cv_build_apple_univ_binary" = "yes"; then
         hc_cv_regparm_attr_supported=no
         hc_cv_asm_byteswap=no

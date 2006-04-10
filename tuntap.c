@@ -211,7 +211,7 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
     sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
     sin->sin_family = AF_INET;
-    sin->sin_len = sizeof( struct sockaddr_in );
+    set_sockaddr_in_sin_len( sin );
 
     if( !pszNetDevName || !*pszNetDevName )
     {
@@ -248,8 +248,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
     sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
     sin->sin_family = AF_INET;
-    sin->sin_len = sizeof( struct sockaddr_in );
-
+    set_sockaddr_in_sin_len( sin );
 
     if( !pszNetDevName || !*pszNetDevName )
     {
@@ -286,7 +285,7 @@ int           TUNTAP_SetNetMask( char*   pszNetDevName,
     sin = (struct sockaddr_in*)&ifreq.ifr_netmask;
 
     sin->sin_family = AF_INET;
-    sin->sin_len = sizeof( struct sockaddr_in );
+    set_sockaddr_in_sin_len( sin );
 
     if( !pszNetDevName || !*pszNetDevName )
     {
@@ -324,7 +323,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
     sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
     sin->sin_family = AF_INET;
-    sin->sin_len = sizeof( struct sockaddr_in );
+    set_sockaddr_in_sin_len( sin );
 
     if( !pszNetDevName || !*pszNetDevName )
     {
@@ -410,7 +409,7 @@ int             TUNTAP_SetFlags ( char*   pszNetDevName,
     sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
     sin->sin_family = AF_INET;
-    sin->sin_len = sizeof( struct sockaddr_in );
+    set_sockaddr_in_sin_len( sin );
 
     if( !pszNetDevName || !*pszNetDevName )
     {
@@ -452,7 +451,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
 
     sin = (struct sockaddr_in*)&rtentry.rt_dst;
     sin->sin_family = AF_INET;
-    sin->sin_len = sizeof( struct sockaddr_in );
+    set_sockaddr_in_sin_len( sin );
 
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
@@ -464,7 +463,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
 
     sin = (struct sockaddr_in*)&rtentry.rt_genmask;
     sin->sin_family = AF_INET;
-    sin->sin_len = sizeof( struct sockaddr_in );
+    set_sockaddr_in_sin_len( sin );
 
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
@@ -476,7 +475,7 @@ int           TUNTAP_AddRoute( char*   pszNetDevName,
 
     sin = (struct sockaddr_in*)&rtentry.rt_gateway;
     sin->sin_family = AF_INET;
-    sin->sin_len = sizeof( struct sockaddr_in );
+    set_sockaddr_in_sin_len( sin );
 
     if( pszGWAddr )
     {
@@ -520,7 +519,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
 
     sin = (struct sockaddr_in*)&rtentry.rt_dst;
     sin->sin_family = AF_INET;
-    sin->sin_len = sizeof( struct sockaddr_in );
+    set_sockaddr_in_sin_len( sin );
 
     if( !pszDestAddr  ||
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
@@ -532,7 +531,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
 
     sin = (struct sockaddr_in*)&rtentry.rt_genmask;
     sin->sin_family = AF_INET;
-    sin->sin_len = sizeof( struct sockaddr_in );
+    set_sockaddr_in_sin_len( sin );
 
     if( !pszNetMask  ||
         !inet_aton( pszNetMask, &sin->sin_addr ) )
@@ -544,7 +543,7 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
 
     sin = (struct sockaddr_in*)&rtentry.rt_gateway;
     sin->sin_family = AF_INET;
-    sin->sin_len = sizeof( struct sockaddr_in );
+    set_sockaddr_in_sin_len( sin );
 
     if( pszGWAddr )
     {
