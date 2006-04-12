@@ -214,12 +214,12 @@ BYTE    chanstat;                       /* IPL device channel status */
     memset (&dev->orb, 0, sizeof(ORB));                        /*@IWZ*/
     dev->busy = 1;
 
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     /* Execute the IPL channel program */
     ARCH_DEP(execute_ccw_chain) (dev);
 
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     /* Clear the interrupt pending and device busy conditions */
     DEQUEUE_IO_INTERRUPT(&dev->ioint);
@@ -454,9 +454,7 @@ int             i;                      /* Array subscript           */
     ARCH_DEP(purge_alb) (regs);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
-#if defined(_FEATURE_SIE)
-    if(!regs->hostregs)
-#endif /*defined(_FEATURE_SIE)*/
+    if(regs->host)
     {
         /* Put the CPU into the stopped state */
         regs->opinterv = 0;
@@ -468,15 +466,13 @@ int             i;                      /* Array subscript           */
     ARCH_DEP(store_int_timer) (regs);
 #endif
 
-#if defined(_FEATURE_SIE)
-   if(regs->guestregs)
+   if(regs->host && regs->guestregs)
    {
         ARCH_DEP(cpu_reset)(regs->guestregs);
         /* CPU state of SIE copy cannot be controlled */
         regs->guestregs->opinterv = 0;
         regs->guestregs->cpustate = CPUSTATE_STARTED;
    }
-#endif /*defined(_FEATURE_SIE)*/
 
    return 0;
 } /* end function cpu_reset */
@@ -535,10 +531,8 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     regs->CR(15) = 512;
 #endif /*!FEATURE_LINKAGE_STACK*/
 
-#if defined(_FEATURE_SIE)
-    if(regs->guestregs)
+    if(regs->host && regs->guestregs)
       ARCH_DEP(initial_cpu_reset)(regs->guestregs);
-#endif /*defined(_FEATURE_SIE)*/
 
     return 0;
 } /* end function initial_cpu_reset */

@@ -491,12 +491,26 @@ int i;
         if(regs->aea_ar[i] >= CR_ALB_OFFSET)
             regs->aea_ar[i] = 0;
 
-    if(regs->guestregs)
+    if(regs->host && regs->guestregs)
         for(i = 1; i < 16; i++)
             if(regs->guestregs->aea_ar[i] >= CR_ALB_OFFSET)
                 regs->guestregs->aea_ar[i] = 0;
 
 } /* end function purge_alb */
+
+/*-------------------------------------------------------------------*/
+/* Purge the ART lookaside buffer for all CPUs                       */
+/*-------------------------------------------------------------------*/
+_DAT_C_STATIC void ARCH_DEP(purge_alb_all) ()
+{
+int i;
+
+    for (i = 0; i < MAX_CPU; i++)
+        if (IS_CPU_ONLINE(i)
+         && (sysblk.regs[i]->cpubit & sysblk.started_mask))
+            ARCH_DEP(purge_alb) (sysblk.regs[i]);
+
+} /* end function purge_alb_all */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
 
@@ -1682,7 +1696,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
     }
 #if defined(_FEATURE_SIE)
     /* Also clear the guest registers in the SIE copy */
-    if(regs->guestregs)
+    if(regs->host && regs->guestregs)
     {
         INVALIDATE_AIA(regs->guestregs);
         if (((++regs->guestregs->tlbID) & TLBID_BYTEMASK) == 0)
@@ -1693,6 +1707,21 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
     }
 #endif /*defined(_FEATURE_SIE)*/
 } /* end function purge_tlb */
+
+
+/*-------------------------------------------------------------------*/
+/* Purge the translation lookaside buffer for all CPUs               */
+/*-------------------------------------------------------------------*/
+_DAT_C_STATIC void ARCH_DEP(purge_tlb_all) ()
+{
+int i;
+
+    for (i = 0; i < MAX_CPU; i++)
+        if (IS_CPU_ONLINE(i)
+         && (sysblk.regs[i]->cpubit & sysblk.started_mask))
+            ARCH_DEP(purge_tlb) (sysblk.regs[i]);
+
+} /* end function purge_tlb_all */
 
 
 /*-------------------------------------------------------------------*/
@@ -1727,7 +1756,7 @@ RADR ptemask;
 
 #if defined(_FEATURE_SIE)
     /* Also clear the guest registers in the SIE copy */
-    if (regs->guestregs)
+    if (regs->host && regs->guestregs)
     {
         INVALIDATE_AIA(regs->guestregs);
         for (i = 0; i < TLBN; i++)
@@ -1736,7 +1765,7 @@ RADR ptemask;
     }
     else
     /* For guests, clear any host entries */
-    if (regs->hostregs)
+    if (regs->guest)
     {
         INVALIDATE_AIA(regs->hostregs);
         for (i = 0; i < TLBN; i++)
@@ -1746,6 +1775,21 @@ RADR ptemask;
 #endif /*defined(_FEATURE_SIE)*/
 
 } /* end function purge_tlbe */
+
+
+/*-------------------------------------------------------------------*/
+/* Purge translation lookaside buffer entries for all CPUs           */
+/*-------------------------------------------------------------------*/
+_DAT_C_STATIC void ARCH_DEP(purge_tlbe_all) (RADR pfra)
+{
+int i;
+
+    for (i = 0; i < MAX_CPU; i++)
+        if (IS_CPU_ONLINE(i)
+         && (sysblk.regs[i]->cpubit & sysblk.started_mask))
+            ARCH_DEP(purge_tlbe) (sysblk.regs[i], pfra);
+
+} /* end function purge_tlbe_all */
 
 
 /*-------------------------------------------------------------------*/
@@ -1765,7 +1809,7 @@ int  i;
 
 #if defined(_FEATURE_SIE)
     /* Also invalidate the guest registers in the SIE copy */
-    if(regs->guestregs)
+    if(regs->host && regs->guestregs)
     {
         INVALIDATE_AIA(regs->guestregs);
         if (mask == 0)
@@ -1777,7 +1821,7 @@ int  i;
     }
     else
     /* Also invalidate the guest registers in the SIE copy */
-    if(regs->hostregs)
+    if(regs->guest)
     {
         INVALIDATE_AIA(regs->hostregs);
         if (mask == 0)
@@ -1823,7 +1867,7 @@ int i;
 
 #if defined(_FEATURE_SIE)
     /* Also clear the guest registers in the SIE copy */
-    if (regs->guestregs)
+    if (regs->host && regs->guestregs)
     {
         INVALIDATE_AIA_MAIN(regs->guestregs, main);
         for (i = 0; i < TLBN; i++)
@@ -1843,7 +1887,7 @@ int i;
     }
 
     /* Also clear the host registers in the SIE copy */
-    if (regs->hostregs)
+    if (regs->guest)
     {
         INVALIDATE_AIA_MAIN(regs->hostregs, main);
         for (i = 0; i < TLBN; i++)
@@ -1994,16 +2038,11 @@ RADR    pfra;
     }
 #endif /*defined(FEATURE_ESAME)*/
 
-    /* Release mainlock */
-    RELEASE_MAINLOCK(regs);
-
     /* Invalidate TLB entries */
-    obtain_lock (&sysblk.intlock);
-    ARCH_DEP(synchronize_broadcast)(regs, BROADCAST_PTLBE, pfra);
-    release_lock (&sysblk.intlock);
-
-    /* Re-obtain mainlock */
-    OBTAIN_MAINLOCK(regs);
+    OBTAIN_INTLOCK(regs);
+    SYNCHRONIZE_CPUS(regs);
+    ARCH_DEP(purge_tlbe_all) (pfra);
+    RELEASE_INTLOCK(regs);
 
 } /* end function invalidate_pte */
 

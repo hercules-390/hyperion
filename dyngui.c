@@ -163,7 +163,7 @@ void  UpdateTargetCPU ()
     //     sysblk.pcpu      =   panel target cpu
     //     pTargetCPU_REGS  ->  panel target cpu
 
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     if (pcpu != sysblk.pcpu)
         pcpu  = sysblk.pcpu;
@@ -190,7 +190,7 @@ void  UpdateTargetCPU ()
         pTargetCPU_REGS = pTargetCPU_REGS->guestregs;
 #endif
 
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -21,11 +21,14 @@ _DAT_C_STATIC int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
 #if defined(FEATURE_ACCESS_REGISTERS)
 _DAT_C_STATIC U16 ARCH_DEP(translate_alet) (U32 alet, U16 eax,
         int acctype, REGS *regs, U32 *asteo, U32 aste[]);
+_DAT_C_STATIC void ARCH_DEP(purge_alb_all) ();
 _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs);
 #endif
 _DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
         REGS *regs, int acctype);
+_DAT_C_STATIC void ARCH_DEP(purge_tlb_all) ();
 _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs);
+_DAT_C_STATIC void ARCH_DEP(purge_tlbe_all) (RADR pfra);
 _DAT_C_STATIC void ARCH_DEP(purge_tlbe) (REGS *regs, RADR pfra);
 _DAT_C_STATIC void ARCH_DEP(invalidate_tlb) (REGS *regs, BYTE mask);
 #if ARCH_MODE == ARCH_390 && defined(_900)

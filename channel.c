@@ -313,9 +313,9 @@ IOINT *ioint=NULL;
     /* ISW20030812 - Added 6 lines */
     if(ioint)
     {
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
         DEQUEUE_IO_INTERRUPT(ioint);
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
     }
     /* ISW20030812 - END */
 
@@ -416,9 +416,9 @@ int      pending = 0;                   /* New interrupt pending     */
 
     if (pending)
     {
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
         QUEUE_IO_INTERRUPT (&dev->ioint);
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
     }
 
     /* Return the condition code */
@@ -584,9 +584,9 @@ int     cc;                             /* Condition code            */
         /* Return condition code 0 to indicate status was pending */
         release_lock (&dev->lock);
         /* ISW20030812 - Added 3 lines */
-        obtain_lock(&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
         DEQUEUE_IO_INTERRUPT(&dev->pciioint);
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
         /* ISW20030812 - END */
         return 0;
 
@@ -710,9 +710,9 @@ int     cc;                             /* Condition code            */
             /* Return condition code 0 to indicate status was pending */
             release_lock (&dev->lock);
             /* ISW20030812 - Added 3 lines */
-            obtain_lock(&sysblk.intlock);
+            OBTAIN_INTLOCK(regs);
             DEQUEUE_IO_INTERRUPT(&dev->attnioint);
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
             /* ISW20030812 - END */
             if (dev->console)
             {
@@ -732,9 +732,9 @@ int     cc;                             /* Condition code            */
 
     release_lock (&dev->lock);
     /* ISW20030812 - Added 3 lines */
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(regs);
     DEQUEUE_IO_INTERRUPT(&dev->ioint);
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(regs);
     /* ISW20030812 - END */
     /* Signal console thread to redrive select */
     if (dev->console)
@@ -837,9 +837,9 @@ int pending = 0;
     /* Queue any pending i/o interrupt */
     if (pending)
     {
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
         QUEUE_IO_INTERRUPT (&dev->ioint);
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
     }
 
 } /* end function clear_subchan */
@@ -979,9 +979,9 @@ int pending = 0;
     /* Queue any pending i/o interrupt */
     if (pending)
     {
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
         QUEUE_IO_INTERRUPT (&dev->ioint);
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
     }
 
     if (dev->ccwtrace || dev->ccwstep)
@@ -1164,14 +1164,14 @@ int     console = 0;                    /* 1 = console device reset  */
 /*   Called by:                                                      */
 /*     RHCP (Reset Channel Path)    (io.c)                           */
 /*-------------------------------------------------------------------*/
-int chp_reset(BYTE chpid)
+int chp_reset(REGS *regs, BYTE chpid)
 {
 DEVBLK *dev;                            /* -> Device control block   */
 int i;
 int operational = 3;
 int console = 0;
 
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(regs);
 
     /* Reset each device in the configuration */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
@@ -1192,7 +1192,7 @@ int console = 0;
     if (console)
         SIGNAL_CONSOLE_THREAD();
 
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(regs);
 
     return operational;
 
@@ -1384,9 +1384,9 @@ static void ARCH_DEP(raise_pci) (
     release_lock (&dev->lock);
 
     /* Queue the pci pending interrupt */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(dev->regs);
     QUEUE_IO_INTERRUPT (&dev->pciioint);
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(dev->regs);
 
 } /* end function raise_pci */
 
@@ -2080,9 +2080,9 @@ DLL_EXPORT int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
     release_lock (&dev->lock);
 
     /* Queue the i/o interrupt */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(dev->regs);
     QUEUE_IO_INTERRUPT (&dev->attnioint);
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(dev->regs);
 
     return 0;
 } /* end function device_attention */
@@ -2112,6 +2112,8 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 #endif // !defined(OPTION_FISHIO)
 
     obtain_lock (&dev->lock);
+
+    dev->regs = NULL;
 
 #if defined(_FEATURE_IO_ASSIST)
     if(SIE_MODE(regs)
@@ -2194,10 +2196,28 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
         dev->syncio_active = 1;
         dev->syncio_retry = 0;
         dev->ioactive = DEV_SYS_LOCAL;
+        dev->regs = regs;
         release_lock (&dev->lock);
+
+        /*
+         * `syncio' is set with intlock held.  This allows
+         * SYNCHRONIZE_CPUS to consider this CPU waiting while
+         * performing synchronous i/o.
+         */
+        OBTAIN_INTLOCK(regs);
+        regs->hostregs->syncio = 1;
+        RELEASE_INTLOCK(regs);
+
         call_execute_ccw_chain(sysblk.arch_mode, dev);
 
         /* Return if retry not required */
+        if (regs->hostregs->syncio)
+        {
+            OBTAIN_INTLOCK(regs);
+            regs->hostregs->syncio = 0;
+            RELEASE_INTLOCK(regs);
+        }
+        dev->regs = NULL;
         dev->syncio_active = 0;
         if (!dev->syncio_retry)
             return 0;
@@ -2444,9 +2464,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         release_lock (&dev->lock);
 
         /* Queue the interrupt */
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(dev->regs);
         QUEUE_IO_INTERRUPT (&dev->ioint);
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(dev->regs);
 
         if (dev->ccwtrace || dev->ccwstep || tracethis)
             logmsg (_("HHCCP069I Device %4.4X initial status interrupt\n"),
@@ -2483,9 +2503,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             release_lock (&dev->lock);
 
             /* Queue the pending interrupt */
-            obtain_lock (&sysblk.intlock);
+            OBTAIN_INTLOCK(dev->regs);
             QUEUE_IO_INTERRUPT (&dev->ioint);
-            release_lock (&sysblk.intlock);
+            RELEASE_INTLOCK(dev->regs);
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("HHCCP070I Device %4.4X attention completed\n"),
@@ -2548,10 +2568,10 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             release_lock (&dev->lock);
 
             /* Queue the pending interrupt */
-            obtain_lock (&sysblk.intlock);
+            OBTAIN_INTLOCK(dev->regs);
             DEQUEUE_IO_INTERRUPT(&dev->pciioint);
             QUEUE_IO_INTERRUPT(&dev->ioint);
-            release_lock (&sysblk.intlock);
+            RELEASE_INTLOCK(dev->regs);
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("HHCCP071I Device %4.4X clear completed\n"),
@@ -2603,10 +2623,10 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             release_lock (&dev->lock);
 
             /* Queue the pending interrupt */
-            obtain_lock (&sysblk.intlock);
+            OBTAIN_INTLOCK(dev->regs);
             DEQUEUE_IO_INTERRUPT(&dev->pciioint);
             QUEUE_IO_INTERRUPT(&dev->ioint);
-            release_lock (&sysblk.intlock);
+            RELEASE_INTLOCK(dev->regs);
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("HHCCP072I Device %4.4X halt completed\n"),
@@ -2762,9 +2782,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                 {
                     dev->pending = 1;
                     release_lock (&dev->lock);
-                    obtain_lock (&sysblk.intlock);
+                    OBTAIN_INTLOCK(dev->regs);
                     QUEUE_IO_INTERRUPT(&dev->ioint);
-                    release_lock (&sysblk.intlock);
+                    RELEASE_INTLOCK(dev->regs);
                     obtain_lock (&dev->lock);
                 }
 
@@ -3176,9 +3196,10 @@ resume_suspend:
     release_lock (&dev->lock);
 
     /* Queue the pending interrupt */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(dev->regs);
+    if (dev->regs) dev->regs->hostregs->syncio = 0;
     QUEUE_IO_INTERRUPT (&dev->ioint);
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(dev->regs);
 
     return NULL;
 

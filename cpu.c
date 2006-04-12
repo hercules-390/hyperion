@@ -373,7 +373,7 @@ static char *pgmintname[] = {
     realregs = sysblk.regs[regs->cpuad];
 #endif /*!defined(_FEATURE_SIE)*/
 
-    /* Prevent machine check when in (almos) interrupt loop */
+    /* Prevent machine check when in (almost) interrupt loop */
     realregs->instcount++;
 
     /* Set instruction length (ilc) */
@@ -391,12 +391,8 @@ static char *pgmintname[] = {
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Unlock the main storage lock if held */
-    if (realregs->mainlock)
+    if (realregs->cpuad == sysblk.mainowner)
         RELEASE_MAINLOCK(realregs);
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
-    if(realregs->sie_active && realregs->guestregs->mainlock)
-        RELEASE_MAINLOCK(realregs->guestregs);
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Remove PER indication from program interrupt code
        such that interrupt code specific tests may be done.
@@ -789,7 +785,7 @@ static char *pgmintname[] = {
     {
 #endif /*defined(_FEATURE_SIE)*/
 
-        obtain_lock(&sysblk.intlock);
+        OBTAIN_INTLOCK(realregs);
 
         /* Store current PSW at PSA+X'28' or PSA+X'150' for ESAME */
         ARCH_DEP(store_psw) (realregs, psa->pgmold);
@@ -800,7 +796,7 @@ static char *pgmintname[] = {
 #if defined(_FEATURE_SIE)
             if(SIE_MODE(realregs))
             {
-                release_lock(&sysblk.intlock);
+                RELEASE_INTLOCK(realregs);
                 longjmp(realregs->progjmp, pcode);
             }
             else
@@ -814,7 +810,7 @@ static char *pgmintname[] = {
             }
         }
 
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(realregs);
 
         longjmp(realregs->progjmp, SIE_NO_INTERCEPT);
 
@@ -855,7 +851,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
         regs->cpustate = CPUSTATE_STARTED;
     }
 
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(regs);
 
     if ( rc )
         ARCH_DEP(program_interrupt)(regs, rc);
@@ -956,12 +952,12 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 
         if ( rc )
         {
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
             ARCH_DEP(program_interrupt) (regs, rc);
         }
     }
 
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(regs);
 
     longjmp(regs->progjmp, icode);
 
@@ -1025,7 +1021,7 @@ RADR    fsta;                           /* Failing storage address   */
     /* Load new PSW from PSA+X'70' */
     rc = ARCH_DEP(load_psw) ( regs, psa->mcknew );
 
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(regs);
 
     if ( rc )
         ARCH_DEP(program_interrupt) (regs, rc);
@@ -1078,7 +1074,7 @@ int   cpu  = *ptr;
             cpu, thread_id(), getpid(),
             getpriority(PRIO_PROCESS,0));
 
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     /* Signal cpu has started */
     signal_condition (&sysblk.cpucond);
@@ -1098,7 +1094,7 @@ int   cpu  = *ptr;
         {
             logmsg (_("HHCCP006S Cannot create timer thread: %s\n"),
                            strerror(errno));
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(NULL);
             return NULL;
         }
     }
@@ -1128,7 +1124,7 @@ int   cpu  = *ptr;
     logmsg (_("HHCCP008I CPU%4.4X thread ended: tid="TIDPAT", pid=%d\n"),
             cpu, thread_id(), getpid());
 
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     return NULL;
 }
@@ -1144,6 +1140,7 @@ int i;
     obtain_lock (&sysblk.cpulock[cpu]);
 
     regs->cpuad = cpu;
+    regs->cpubit = BIT(cpu);
     regs->arch_mode = sysblk.arch_mode;
     regs->mainstor = sysblk.mainstor;
     /* 
@@ -1166,23 +1163,25 @@ int i;
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
     initial_cpu_reset(regs);
 
-#if defined(_FEATURE_SIE)
-    if (hostregs)
-    {
-        hostregs->guestregs = regs;
-        regs->hostregs = hostregs;
-        regs->sie_mode = 1;
-        regs->opinterv = 0;
-        regs->cpustate = CPUSTATE_STARTED;
-    }
-    else
-#endif /*defined(_FEATURE_SIE)*/
+    if (hostregs == NULL)
     {
         regs->cpustate = CPUSTATE_STOPPING;
         ON_IC_INTERRUPT(regs);
+        regs->hostregs = regs;
+        regs->host = 1;
         sysblk.regs[cpu] = regs;
-        sysblk.config_mask |= BIT(cpu);
-        sysblk.started_mask |= BIT(cpu);
+        sysblk.config_mask |= regs->cpubit;
+        sysblk.started_mask |= regs->cpubit;
+    }
+    else
+    {
+        hostregs->guestregs = regs;
+        regs->hostregs = hostregs;
+        regs->guestregs = regs;
+        regs->guest = 1;
+        regs->sie_mode = 1;
+        regs->opinterv = 0;
+        regs->cpustate = CPUSTATE_STARTED;
     }
 
     /* Initialize accelerated lookup fields */
@@ -1212,24 +1211,24 @@ int i;
 /*-------------------------------------------------------------------*/
 void *cpu_uninit (int cpu, REGS *regs)
 {
-    if (!regs->hostregs)
-        obtain_lock (&sysblk.cpulock[cpu]);
-
-    if (regs->guestregs)
+    if (regs->host)
     {
-        cpu_uninit (cpu, regs->guestregs);
-        free (regs->guestregs);
+        obtain_lock (&sysblk.cpulock[cpu]);
+        if (regs->guestregs)
+        {
+            cpu_uninit (cpu, regs->guestregs);
+            free (regs->guestregs);
+        }
     }
 
     destroy_condition(&regs->intcond);
 
-    if (!regs->hostregs)
+    if (regs->host)
     {
         /* Remove CPU from all CPU bit masks */
         sysblk.config_mask &= ~BIT(cpu);
         sysblk.started_mask &= ~BIT(cpu);
         sysblk.waiting_mask &= ~BIT(cpu);
-
         sysblk.regs[cpu] = NULL;
         release_lock (&sysblk.cpulock[cpu]);
     }
@@ -1251,12 +1250,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
 
     /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(regs);
     OFF_IC_INTERRUPT(regs);
-
-    /* Perform broadcasted purge of ALB and TLB */
-    while (IS_IC_BROADCAST(regs))
-        ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
 
     /* Set tracing bit */
     regs->tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace);
@@ -1322,7 +1317,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
             ARCH_DEP (initial_cpu_reset) (regs);
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
 
@@ -1332,7 +1327,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
             ARCH_DEP(cpu_reset) (regs);
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
 
@@ -1343,7 +1338,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             ARCH_DEP(store_status) (regs, 0);
             logmsg (_("HHCCP010I CPU%4.4X store status completed.\n"),
                     regs->cpuad);
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
     } /*CPUSTATE_STOPPING*/
@@ -1375,12 +1370,14 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
          */
         saved_timer = cpu_timer(regs);
         regs->ints_state = IC_INITIAL_STATE;
-        sysblk.started_mask &= ~BIT(regs->cpuad);
+        sysblk.started_mask &= ~regs->cpubit;
+        sysblk.intowner = LOCK_OWNER_NONE;
         while (regs->cpustate == CPUSTATE_STOPPED)
         {
             wait_condition (&regs->intcond, &sysblk.intlock);
         }
-        sysblk.started_mask |= BIT(regs->cpuad);
+        sysblk.intowner = regs->cpuad;
+        sysblk.started_mask |= regs->cpubit;
         regs->ints_state |= sysblk.ints_state;
         set_cpu_timer(regs,saved_timer);
 
@@ -1398,7 +1395,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         ARCH_DEP(purge_alb) (regs);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
 
         /* If the architecture mode has changed we must adapt */
         if(sysblk.arch_mode != regs->arch_mode)
@@ -1421,14 +1418,16 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                     regs->cpuad);
             display_psw (regs);
             regs->cpustate = CPUSTATE_STOPPING;
-            release_lock (&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
 
         /* Wait for I/O, external or restart interrupt */
-        sysblk.waiting_mask |= BIT(regs->cpuad);
+        sysblk.waiting_mask |= regs->cpubit;
+        sysblk.intowner = LOCK_OWNER_NONE;
         wait_condition (&regs->intcond, &sysblk.intlock);
-        sysblk.waiting_mask &= ~BIT(regs->cpuad);
+        sysblk.intowner = regs->cpuad;
+        sysblk.waiting_mask &= ~regs->cpubit;
 
 #ifdef OPTION_MIPS_COUNTING
         /* Calculate the time we waited */
@@ -1436,13 +1435,13 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         regs->waittod = 0;
 #endif
 
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
 
         longjmp(regs->progjmp, SIE_NO_INTERCEPT);
     } /* end if(wait) */
 
     /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(regs);
 
     /* Do progjmp if tracing so we get into the right loop */
     if (regs->tracing)
@@ -1482,7 +1481,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
             regs->cpustate = CPUSTATE_STOPPED;
 
             /* Wait for start command from panel */
-            obtain_lock (&sysblk.intlock);
+            OBTAIN_INTLOCK(regs);
 
             HDC1(debug_cpu_state, regs);
 
@@ -1492,17 +1491,19 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
              * or otherwise)
              */
             saved_timer = cpu_timer(regs);
-            sysblk.waiting_mask |= BIT(regs->cpuad);
+            sysblk.waiting_mask |= regs->cpubit;
+            sysblk.intowner = LOCK_OWNER_NONE;
             while (regs->cpustate == CPUSTATE_STOPPED)
             {
                 wait_condition (&regs->intcond, &sysblk.intlock);
             }
-            sysblk.waiting_mask &= ~BIT(regs->cpuad);
+            sysblk.intowner = regs->cpuad;
+            sysblk.waiting_mask &= ~regs->cpubit;
             set_cpu_timer(regs, saved_timer);
 
             HDC1(debug_cpu_state, regs);
 
-            release_lock (&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
         }
     }
 } /* process_trace */
@@ -1544,7 +1545,7 @@ REGS    regs;
     regs.tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace);
     regs.ints_state |= sysblk.ints_state;
 
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(&regs);
 
     /* Establish longjmp destination for architecture switch */
     setjmp(regs.archjmp);
@@ -1552,7 +1553,7 @@ REGS    regs;
     /* Switch architecture mode if appropriate */
     if(sysblk.arch_mode != regs.arch_mode)
     {
-        obtain_lock(&sysblk.intlock);
+        OBTAIN_INTLOCK(&regs);
         regs.arch_mode = sysblk.arch_mode;
         oldregs = malloc (sizeof(REGS));
         if (oldregs)

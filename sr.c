@@ -71,7 +71,7 @@ BYTE     psw[16];
     }
 
     /* Save CPU state and stop all CPU's */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
     started_mask = sysblk.started_mask;
     while (sysblk.started_mask)
     {
@@ -84,11 +84,11 @@ BYTE     psw[16];
                 signal_condition(&sysblk.regs[i]->intcond);
             }
         }
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
         usleep (1000);
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(NULL);
     }
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     /* Wait for I/O queue to clear out */
 #ifdef OPTION_FISHIO
@@ -338,16 +338,16 @@ S64      dreg;
     memset (zeros, 0, sizeof(zeros));
 
     /* Make sure all CPUs are deconfigured or stopped */
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         if (IS_CPU_ONLINE(i)
          && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
         {
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(NULL);
             logmsg( _("HHCSR103E All CPU's must be stopped to resume\n") );
             return -1;
         }
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     file = SR_OPEN (fn, "rb");
     if (file == NULL)
@@ -366,11 +366,11 @@ S64      dreg;
     }
 
     /* Deconfigure all CPUs */
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         if (IS_CPU_ONLINE(i))
             deconfigure_cpu(i);
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     while (key != SR_EOF)
     {
@@ -621,15 +621,15 @@ S64      dreg;
                        i, MAX_CPU_ENGINES-1);
                 goto sr_error_exit;
             }
-            obtain_lock (&sysblk.intlock);
+            OBTAIN_INTLOCK(NULL);
             if (IS_CPU_ONLINE(i))
             {
-                release_lock (&sysblk.intlock);
+                RELEASE_INTLOCK(NULL);
                 logmsg( _("HHCSR114E CPU%4.4d already configured\n"), i);
                 goto sr_error_exit;
             }
             rc = configure_cpu(i);
-            release_lock (&sysblk.intlock);
+            RELEASE_INTLOCK(NULL);
             if (rc < 0)
             {
                 logmsg( _("HHCSR115E CPU%4.4d unable to configure online\n"), i);
@@ -1297,7 +1297,7 @@ S64      dreg;
     machine_check_crwpend();
 
     /* Start the CPUs */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
     ON_IC_IOPENDING;
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         if (IS_CPU_ONLINE(i) && (started_mask & BIT(i)))
@@ -1307,7 +1307,7 @@ S64      dreg;
             sysblk.regs[i]->checkstop = 0;
             WAKEUP_CPU(sysblk.regs[i]);
         }
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     return 0;
 

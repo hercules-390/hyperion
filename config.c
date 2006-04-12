@@ -42,11 +42,11 @@ DEVBLK *dev;
 int     cpu;
 
     /* Deconfigure all CPU's */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
         if(IS_CPU_ONLINE(cpu))
             deconfigure_cpu(cpu);
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
 #if defined(OPTION_SHARED_DEVICES)
     /* Terminate the shared device listener thread */

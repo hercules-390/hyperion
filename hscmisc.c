@@ -39,9 +39,9 @@ static int is_wait_sigq_pending()
 {
 int pending;
 
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
     pending = wait_sigq_pending;
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     return pending;
 }
@@ -52,14 +52,14 @@ int pending, i;
     /* Wait for all CPU's to stop */
     do
     {
-        obtain_lock(&sysblk.intlock);
+        OBTAIN_INTLOCK(NULL);
         wait_sigq_pending = 0;
         for (i = 0; i < MAX_CPU_ENGINES; i++)
         if (IS_CPU_ONLINE(i)
           && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
             wait_sigq_pending = 1;
         pending = wait_sigq_pending;
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
 
         if(pending)
             SLEEP(1);
@@ -69,9 +69,9 @@ int pending, i;
 
 static void cancel_wait_sigq()
 {
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
     wait_sigq_pending = 0;
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 }
 
 /*                       do_shutdown_now

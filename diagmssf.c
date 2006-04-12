@@ -237,11 +237,11 @@ DEVBLK            *dev;                /* Device block pointer       */
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(regs);
 
     /* If a service signal is pending then we cannot process the request */
     if( IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_ADDR)) {
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
         return 2;   /* Service Processor Busy */
     }
 
@@ -347,7 +347,7 @@ DEVBLK            *dev;                /* Device block pointer       */
     ON_IC_SERVSIG; 
 
     /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(regs);
 
     /* Return condition code 0: Command initiated */
     return 0;

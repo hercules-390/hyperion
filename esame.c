@@ -902,9 +902,13 @@ U64     old;                            /* Old value                 */
         /* Perform requested funtion specified as per request code in r2 */
         if (regs->GR_L(r2) & 3)
         {
-            obtain_lock (&sysblk.intlock);
-            ARCH_DEP(synchronize_broadcast)(regs, regs->GR_L(r2) & 3, 0);
-            release_lock (&sysblk.intlock);
+            OBTAIN_INTLOCK(regs);
+            SYNCHRONIZE_CPUS(regs);
+            if (regs->GR_L(r2) & 1)
+                ARCH_DEP(purge_tlb_all)();
+            if (regs->GR_L(r2) & 2)
+                ARCH_DEP(purge_alb_all)();
+            RELEASE_INTLOCK(regs);
         }
     }
     else
@@ -1019,9 +1023,10 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
            a clearing ASCE is passed in the r3 register. This conforms
            to the POP which only specifies the minimum set of entries
            which must be cleared from the TLB. */
-        obtain_lock (&sysblk.intlock);
-        ARCH_DEP(synchronize_broadcast)(regs, BROADCAST_PTLB, 0);
-        release_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
+        SYNCHRONIZE_CPUS(regs);
+        ARCH_DEP(purge_tlb_all)();
+        RELEASE_INTLOCK(regs);
 
     } /* end if(invalidation-and-clearing) */
     else
@@ -1033,9 +1038,10 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
            clearing ASCE passed in the r3 register. This conforms
            to the POP which only specifies the minimum set of entries
            which must be cleared from the TLB. */
-        obtain_lock (&sysblk.intlock);
-        ARCH_DEP(synchronize_broadcast)(regs, BROADCAST_PTLB, 0);
-        release_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
+        SYNCHRONIZE_CPUS(regs);
+        ARCH_DEP(purge_tlb_all)();
+        RELEASE_INTLOCK(regs);
 
     } /* end else(clearing-by-ASCE) */
 

@@ -296,7 +296,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(NULL);
         if (IS_CPU_ONLINE(sysblk.pcpu))
         {
             REGS *regs = sysblk.regs[sysblk.pcpu];
@@ -305,7 +305,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
             regs->checkstop = 0;
             WAKEUP_CPU(regs);
         }
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
     }
     else
     {
@@ -391,7 +391,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(NULL);
         if (IS_CPU_ONLINE(sysblk.pcpu))
         {
             REGS *regs = sysblk.regs[sysblk.pcpu];
@@ -400,7 +400,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
             ON_IC_INTERRUPT(regs);
             WAKEUP_CPU (regs);
         }
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
     }
     else
     {
@@ -454,7 +454,7 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
     mask = (~sysblk.started_mask) & sysblk.config_mask;
     for (i = 0; mask; i++)
     {
@@ -468,7 +468,7 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
         mask >>= 1;
     }
 
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     return 0;
 }
@@ -485,7 +485,7 @@ DLL_EXPORT int stopall_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     mask = sysblk.started_mask;
     for (i = 0; mask; i++)
@@ -501,7 +501,7 @@ DLL_EXPORT int stopall_cmd(int argc, char *argv[], char *cmdline)
         mask >>= 1;
     }
 
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     return 0;
 }
@@ -525,7 +525,7 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
             on = 0;
     }
 
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     if (IS_CPU_ONLINE(sysblk.pcpu))
     {
@@ -542,7 +542,7 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
             configure_cpu(sysblk.pcpu);
     }
 
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     if (on >= 0) cf_cmd (0, NULL, NULL);
 
@@ -567,7 +567,7 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
             on = 0;
     }
 
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         if (IS_CPU_ONLINE(i))
@@ -585,7 +585,7 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
                 configure_cpu(i);
         }
 
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     if (on >= 0) cfall_cmd (0, NULL, NULL);
 
@@ -1362,11 +1362,11 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     logmsg( _("HHCPN038I Restart key depressed\n") );
 
     /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
         logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu );
         return 0;
     }
@@ -1384,7 +1384,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     WAKEUP_CPU (sysblk.regs[sysblk.pcpu]);
 
     /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     return 0;
 }
@@ -1588,7 +1588,7 @@ int ext_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     ON_IC_INTKEY;
 
@@ -1597,7 +1597,7 @@ int ext_cmd(int argc, char *argv[], char *cmdline)
     /* Signal waiting CPUs that an interrupt is pending */
     WAKEUP_CPUS_MASK (sysblk.waiting_mask);
 
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     return 0;
 }
@@ -1627,20 +1627,20 @@ int reset_cmd(int ac,char *av[],char *cmdline,int clear)
     UNREFERENCED(ac);
     UNREFERENCED(av);
     UNREFERENCED(cmdline);
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i)
          && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
         {
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(NULL);
             logmsg( _("HHCPN053E System reset/clear rejected: All CPU's must be stopped\n") );
             return -1;
         }
 
     system_reset (sysblk.pcpu, clear);
 
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     return 0;
 
@@ -1675,13 +1675,13 @@ char *cdev, *clcss;
         return -1;
     }
 
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i)
          && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
         {
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(NULL);
             logmsg( _("HHCPN053E ipl rejected: All CPU's must be stopped\n") );
             return -1;
         }
@@ -1720,7 +1720,7 @@ char *cdev, *clcss;
         rc = load_ipl (lcss, devnum, sysblk.pcpu, clear);
     }
 
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     return rc;
 }
@@ -2915,9 +2915,21 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             sysblk.regs[i]->cpuad,
             IS_IC_SERVSIG                    ? "" : _("not ")
             );
-        logmsg( _("          CPU%4.4X: CPU interlock %sheld\n"),
+        logmsg( _("          CPU%4.4X: Mainlock held: %s\n"),
             sysblk.regs[i]->cpuad,
-            sysblk.regs[i]->mainlock ? "" : _("not ")
+            sysblk.regs[i]->cpuad == sysblk.mainowner ? _("yes") : _("no")
+            );
+        logmsg( _("          CPU%4.4X: Waiting for mainlock: %s\n"),
+            sysblk.regs[i]->cpuad,
+            sysblk.regs[i]->mainwait ? _("yes") : _("no")
+            );
+        logmsg( _("          CPU%4.4X: Intlock held: %s\n"),
+            sysblk.regs[i]->cpuad,
+            sysblk.regs[i]->cpuad == sysblk.intowner ? _("yes") : _("no")
+            );
+        logmsg( _("          CPU%4.4X: Waiting for intlock: %s\n"),
+            sysblk.regs[i]->cpuad,
+            sysblk.regs[i]->intwait && !(sysblk.waiting_mask & BIT(i)) ? _("yes") : _("no")
             );
         logmsg( _("          CPU%4.4X: lock %sheld\n"),
             sysblk.regs[i]->cpuad,
@@ -2994,10 +3006,6 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                 sysblk.regs[i]->guestregs->cpuad,
                 IS_IC_SERVSIG                    ? "" : _("not ")
                 );
-            logmsg( _("          SIE%4.4X: CPU interlock %sheld\n"),
-                sysblk.regs[i]->guestregs->cpuad,
-                sysblk.regs[i]->guestregs->mainlock ? "" : _("not ")
-                );
             logmsg( _("          SIE%4.4X: lock %sheld\n"),
                 sysblk.regs[i]->guestregs->cpuad,
                 test_lock(&sysblk.cpulock[i]) ? "" : _("not ")
@@ -3035,20 +3043,19 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     logmsg( _("          Config mask %8.8X started mask %8.8X waiting mask %8.8X\n"),
         sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask
         );
-    logmsg( _("          Broadcast count %d code %d\n"),
-        sysblk.broadcast_count, sysblk.broadcast_code
-        );
     logmsg( _("          Signaling facility %sbusy\n"),
         test_lock(&sysblk.sigplock) ? "" : _("not ")
         );
     logmsg( _("          TOD lock %sheld\n"),
         test_lock(&sysblk.todlock) ? "" : _("not ")
         );
-    logmsg( _("          Main lock %sheld\n"),
-        test_lock(&sysblk.mainlock) ? "" : _("not ")
+    logmsg( _("          Mainlock %sheld; owner %4.4x\n"),
+        test_lock(&sysblk.mainlock) ? "" : _("not "),
+        sysblk.mainowner
         );
-    logmsg( _("          Int lock %sheld\n"),
-        test_lock(&sysblk.intlock) ? "" : _("not ")
+    logmsg( _("          Intlock %sheld; owner %4.4x\n"),
+        test_lock(&sysblk.intlock) ? "" : _("not "),
+        sysblk.intowner
         );
 #if !defined(OPTION_FISHIO)
     logmsg( _("          Ioq lock %sheld\n"),
@@ -3350,7 +3357,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
         return 0;
     }
 
-    for (;;)
+    for (; ;)
     {
         script_test_userabort();
         if(scr_aborted)
@@ -3458,14 +3465,14 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
         return 0;
     }
 
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     /* Make sure all CPUs are deconfigured or stopped */
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         if (IS_CPU_ONLINE(i)
          && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
         {
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(NULL);
             logmsg( _("HHCPN127E All CPU's must be stopped to change "
                       "architecture\n") );
             return -1;
@@ -3506,7 +3513,7 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
     else
 #endif
     {
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
         logmsg( _("HHCPN128E Invalid architecture mode %s\n"), argv[1] );
         return -1;
     }
@@ -3534,7 +3541,7 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
                 deconfigure_cpu(i);
 #endif
 
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     return 0;
 }
@@ -3565,11 +3572,11 @@ BYTE c;                                 /* Character work area       */
         onoroff = _("off");
     }
 
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
         logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
@@ -3582,14 +3589,14 @@ BYTE c;                                 /* Character work area       */
     {
         if (aaddr > regs->mainlim)
         {
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(NULL);
             logmsg( _("HHCPN130E Invalid frame address %8.8X\n"), aaddr );
             return -1;
         }
         STORAGE_KEY(aaddr, regs) &= ~(STORKEY_BADFRM);
         if (!oneorzero)
             STORAGE_KEY(aaddr, regs) |= STORKEY_BADFRM;
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
         logmsg( _("HHCPN131I Frame %8.8X marked %s\n"), aaddr,
                 oneorzero ? _("usable") : _("unusable")
             );
@@ -3603,7 +3610,7 @@ BYTE c;                                 /* Character work area       */
     {
         sysblk.insttrace = oneorzero;
         SET_IC_TRACE;
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
         logmsg( _("HHCPN132I Instruction tracing is now %s\n"), onoroff );
         return 0;
     }
@@ -3615,7 +3622,7 @@ BYTE c;                                 /* Character work area       */
     {
         sysblk.inststep = oneorzero;
         SET_IC_TRACE;
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
         logmsg( _("HHCPN133I Instruction stepping is now %s\n"), onoroff );
         return 0;
     }
@@ -3631,7 +3638,7 @@ BYTE c;                                 /* Character work area       */
             if (dev->devchar[10] == 0x20)
                 dev->ckdkeytrace = oneorzero;
         }
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
         logmsg( _("HHCPN134I CKD KEY trace is now %s\n"), onoroff );
         return 0;
     }
@@ -3648,7 +3655,7 @@ BYTE c;                                 /* Character work area       */
         if (dev == NULL)
         {
             devnotfound_msg(lcss,devnum);
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(NULL);
             return -1;
         }
 
@@ -3664,11 +3671,11 @@ BYTE c;                                 /* Character work area       */
                 onoroff, lcss, devnum
                 );
         }
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
         return 0;
     }
 
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
     logmsg( _("HHCPN138E Unrecognized +/- command.\n") );
     return -1;
 }

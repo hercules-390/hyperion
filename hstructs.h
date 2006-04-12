@@ -105,28 +105,38 @@ struct REGS {                           /* Processor registers       */
         BYTE   *storkeys;               /* -> Main storage key array */
         RADR    mainlim;                /* Central Storage limit or  */
                                         /* guest storage limit (SIE) */
-#if defined(_FEATURE_SIE)
-     /* These notes are to try and maintain my own sanity ... Greg
-      * `sie_state' has the real address of the SIEBK
-      * `siebk' has the mainstor address of the SIEBK
-      * `sie_active' is 1 in hostregs if SIE is executing
-      *         and the current register context is `guestregs'
-      * `sie_mode' is 1 in guestregs always
-      * `hostregs' is always NULL in hostregs
-      *         (sysblk.regs[i]->hostregs == NULL)
-      * `guestregs' is always NULL in guestregs
-      *         (sysblk.regs[i]->guestregs->guestregs == NULL)
+
+     /*
+      * The fields hostregs and guestregs have been move outside the
+      * scope of _FEATURE_SIE to reduce conditional code.
+      *
+      *   sysblk.regs[i] always points to the host regs
+      *   flag `host' is always 1 for the host regs
+      *   flag `guest' is always 1 for the guest regs
+      *   `hostregs' is always equal to sysblk.regs[i] (in both
+      *       hostregs and guestregs)
+      *   `guestregs' is always equal to sysblk.regs[i]->guestregs
+      *       (in both hostregs and guestregs).
+      *       sysblk.regs[i]->guestregs is NULL until the first SIE
+      *       instruction is executed on that CPU.
+      *   `sie_active' is 1 in hostregs if SIE is executing
+      *       and the current register context is `guestregs'
+      *   `sie_mode' is 1 in guestregs always
+      *   `sie_state' has the real address of the SIEBK
+      *   `siebk' has the mainstor address of the SIEBK
       */
+        REGS   *hostregs;               /* Pointer to the hypervisor
+                                           register context          */
+        REGS   *guestregs;              /* Pointer to the guest
+                                           register context          */
+
+#if defined(_FEATURE_SIE)
         RADR    sie_state;              /* Address of the SIE state
                                            descriptor block or 0 when
                                            not running under SIE     */
         SIEBK  *siebk;                  /* Sie State Desc structure  */
         SIEFN   sie_guestpi;            /* SIE guest pgm int routine */
         SIEFN   sie_hostpi;             /* SIE host pgm int routine  */
-        REGS   *hostregs;               /* Pointer to the hypervisor
-                                           register context          */
-        REGS   *guestregs;              /* Pointer to the guest
-                                           register context          */
         PSA_3XX *psa;                   /* PSA of guest CPU          */
         RADR    sie_px;                 /* Host address of guest px  */
         RADR    sie_mso;                /* Main Storage Origin       */
@@ -151,16 +161,20 @@ struct REGS {                           /* Processor registers       */
         U64     bear;                   /* Breaking event address reg*/
 // #endif /*defined(FEATURE_PER3)*/
 
+        U32     cpubit;
         U32     ints_state;             /* CPU Interrupts Status     */
         U32     ints_mask;              /* Respective Interrupts Mask*/
         unsigned int                    /* Flags (cpu thread only)   */
                 opinterv:1,             /* 1=Operator intervening    */
-                mainlock:2,             /* !0=Mainlock held           */
+                mainwait:1,             /* 1=Waiting on mainlock     */
+                intwait:1,              /* 1=Waiting on intlock      */
                 checkstop:1,            /* 1=CPU is checkstop-ed     */
                 hostint:1,              /* 1=Host generated interrupt*/
                 execflag:1,             /* 1=EXecuted instruction    */
                 instvalid:1,            /* 1=Inst field is valid     */
-                permode:1;              /* 1=PER active              */
+                permode:1,              /* 1=PER active              */
+                host:1,                 /* REGS are hostregs         */
+                guest:1;                /* REGS are guestregs        */
         unsigned int                    /* Flags (intlock serialized)*/
                 dummy:1,                /* 1=Dummy regs structure    */
                 configured:1,           /* 1=CPU is online           */
@@ -169,7 +183,8 @@ struct REGS {                           /* Processor registers       */
                 invalidate:1,           /* 1=Do AIA/AEA invalidation */
                 tracing:1,              /* 1=Trace is active         */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
-                sigpireset:1;           /* 1=SIGP initial cpu reset  */
+                sigpireset:1,           /* 1=SIGP initial cpu reset  */
+                syncio:1;               /* 1=Synchronous i/o active  */
         BYTE    cpustate;               /* CPU stopped/started state */
         BYTE    malfcpu                 /* Malfuction alert flags    */
                     [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
@@ -317,7 +332,9 @@ struct SYSBLK {
         U32     footprptr[MAX_CPU_ENGINES];
 #endif
         LOCK    mainlock;               /* Main storage lock         */
+        U16     mainowner;              /* Mainlock owner            */
         LOCK    intlock;                /* Interrupt lock            */
+        U16     intowner;               /* Intlock owner             */
         LOCK    sigplock;               /* Signal processor lock     */
         ATTR    detattr;                /* Detached thread attribute */
         ATTR    joinattr;               /* Joinable thread attribute */
@@ -390,15 +407,6 @@ struct SYSBLK {
         U32     config_mask;            /* Configured CPUs           */
         U32     started_mask;           /* Started CPUs              */
         U32     waiting_mask;           /* Waiting CPUs              */
-        int     broadcast_code;         /* Broadcast code            */
-#define BROADCAST_PTLB  1               /* Broadcast purge tlb       */
-#define BROADCAST_PALB  2               /* Broadcast purge alb       */
-#define BROADCAST_PTLBE 4               /* Broadcast purge tlb entry */
-        DW      broadcast_pfra;         /* Broadcast pfra            */
-#define BROADCAST_PFRA_G broadcast_pfra.D
-#define BROADCAST_PFRA_L broadcast_pfra.F.L.F
-        int     broadcast_count;        /* Broadcast CPU count       */
-        COND    broadcast_cond;         /* Broadcast condition       */
         U64     breakaddr[2];           /* Breakpoint addresses      */
 #ifdef FEATURE_ECPSVM
 //
@@ -528,6 +536,7 @@ struct DEVBLK {                         /* Device configuration block*/
 #define HDL_VERS_DEVBLK   "3.05"        /* Internal Version Number   */
 #define HDL_SIZE_DEVBLK   sizeof(DEVBLK)
         DEVBLK *nextdev;                /* -> next device block      */
+        REGS   *regs;                   /* -> REGS if syncio         */
         LOCK    lock;                   /* Device block lock         */
         int     allocated;              /* Device block free/in use  */
 

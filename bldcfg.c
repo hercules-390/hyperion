@@ -1771,9 +1771,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #endif
     initialize_lock (&sysblk.todlock);
     initialize_lock (&sysblk.mainlock);
+    sysblk.mainowner = LOCK_OWNER_NONE;
     initialize_lock (&sysblk.intlock);
+    sysblk.intowner = LOCK_OWNER_NONE;
     initialize_lock (&sysblk.sigplock);
-    initialize_condition (&sysblk.broadcast_cond);
     initialize_detach_attr (&sysblk.detattr);
     initialize_join_attr   (&sysblk.joinattr);
     initialize_condition (&sysblk.cpucond);
@@ -1997,10 +1998,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     );
     
     /* Start the CPUs */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
     for(i = 0; i < numcpu; i++)
         configure_cpu(i);
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     /* close configuration file */
     rc = fclose(fp);

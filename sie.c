@@ -272,9 +272,9 @@ U64     dreg;
      */
     if (regs->sie_active)
     {
-        obtain_lock(&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
         regs->sie_active = 0;
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
     }
 
      /* Initialize guestregs if first time */
@@ -592,9 +592,9 @@ U64     dreg;
          * access guestregs when holding intlock.
          * This is the *only* place sie_active is set to one.
          */
-        obtain_lock(&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
         regs->sie_active = 1;
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
 
         /* Get PSA pointer and ensure PSA is paged in */
         if(GUESTREGS->sie_pref)
@@ -610,9 +610,9 @@ U64     dreg;
                 SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
                            SIE_VI_WHY_PFACC, GUESTREGS);
                 STATEBK->c = SIE_C_VALIDITY;
-                obtain_lock(&sysblk.intlock);
+                OBTAIN_INTLOCK(regs);
                 regs->sie_active = 0;
-                release_lock(&sysblk.intlock);
+                RELEASE_INTLOCK(regs);
                 return;
             }
 
@@ -624,16 +624,16 @@ U64     dreg;
                 SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
                            SIE_VI_WHY_PFACC, GUESTREGS);
                 STATEBK->c = SIE_C_VALIDITY;
-                obtain_lock(&sysblk.intlock);
+                OBTAIN_INTLOCK(regs);
                 regs->sie_active = 0;
-                release_lock(&sysblk.intlock);
+                RELEASE_INTLOCK(regs);
                 return;
             }
             GUESTREGS->psa = (PSA_3XX*)(GUESTREGS->mainstor + GUESTREGS->sie_px);
         }
 
         /* Intialize guest timers */
-        obtain_lock(&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
 
         /* CPU timer */
         if(CPU_TIMER(GUESTREGS) < 0)
@@ -677,7 +677,7 @@ U64     dreg;
 
 #endif /*!defined(FEATURE_ESAME)*/
 
-        release_lock(&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
 
         /* Early exceptions associated with the guest load_psw() */
         if(icode)
@@ -713,9 +713,9 @@ int     n;
     SIE_PERFMON(SIE_PERF_PGMINT);
 
     /* Indicate we have left SIE mode */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(regs);
     regs->sie_active = 0;
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(regs);
 
     /* zeroize interception status */
     STATEBK->f = 0;
@@ -941,21 +941,13 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     if( OPEN_IC_PERINT(GUESTREGS) )
                         ARCH_DEP(program_interrupt) (GUESTREGS, PGM_PER_EVENT);
 
-                    obtain_lock(&sysblk.intlock);
+                    OBTAIN_INTLOCK(regs);
 
                     /* Turn off "possible interrupt" flag */
                     /* Otherwise we come back here every  */
                     /* time                               */
                     /* ISW20041224                        */
                     OFF_IC_INTERRUPT(GUESTREGS);
-
-                    /* Perform broadcasted purge of ALB and TLB if requested
-                       synchronize_broadcast() must be called until there are
-                       no more broadcast pending because synchronize_broadcast()
-                       releases and reacquires the mainlock. */
-
-                    while ((IS_IC_BROADCAST(regs)))
-                        ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
 
                     if( OPEN_IC_EXTPENDING(GUESTREGS) )
                         ARCH_DEP(perform_external_interrupt) (GUESTREGS);
@@ -975,7 +967,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                         /* Test for disabled wait PSW and issue message */
                         if( IS_IC_DISABLED_WAIT_PSW(GUESTREGS) )
                         {
-                            release_lock (&sysblk.intlock);
+                            RELEASE_INTLOCK(regs);
                             longjmp(GUESTREGS->progjmp, SIE_INTERCEPT_WAIT);
                         }
 
@@ -986,7 +978,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                          || SIE_I_HOST(regs)
                                           )
                         {
-                            release_lock (&sysblk.intlock);
+                            RELEASE_INTLOCK(regs);
                             break;
                         }
 
@@ -1001,20 +993,20 @@ int ARCH_DEP(run_sie) (REGS *regs)
                             waittime.tv_sec = now.tv_sec;
                             waittime.tv_nsec = ((now.tv_usec + 3333) * 1000);
 
-                            sysblk.waiting_mask |= BIT(regs->cpuad);
+                            sysblk.waiting_mask |= regs->cpubit;
                             timed_wait_condition
                                  (&regs->intcond, &sysblk.intlock, &waittime);
-                            sysblk.waiting_mask &= ~BIT(regs->cpuad);
+                            sysblk.waiting_mask &= ~regs->cpubit;
                         }
 
-                        release_lock (&sysblk.intlock);
+                        RELEASE_INTLOCK(regs);
 
                         break;
 
                     } /* end if(wait) */
 #endif
 
-                    release_lock(&sysblk.intlock);
+                    RELEASE_INTLOCK(regs);
                 }
 
                 if(
@@ -1230,7 +1222,7 @@ int     zone;                           /* Zone number               */
     if( IS_IC_IOPENDING )
     {
         /* Obtain the interrupt lock */
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
 
         /* Test and clear pending interrupt, set condition code */
         if( ARCH_DEP(present_zone_io_interrupt) (&ioid, &ioparm,
@@ -1244,7 +1236,7 @@ int     zone;                           /* Zone number               */
             STORE_FW(tpziid[2],iointid);
 
             /* Release the interrupt lock */
-            release_lock (&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
 
             ARCH_DEP(vstorec(&tpziid, sizeof(tpziid)-1,regs->GR(2), 2, regs));
 
@@ -1253,7 +1245,7 @@ int     zone;                           /* Zone number               */
         else
         {
             /* Release the interrupt lock */
-            release_lock (&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
             regs->psw.cc = 0;
         }
 

@@ -5,12 +5,12 @@
  Floating interrupts are made pending to all CPUs, and are 
  recorded in the sysblk structure, CPU specific interrupts
  are recorded in the regs structure.
- hi0m mmmm pppp p00p xxxx xxxx xxxx hhhs : type U32
- || | |||| |||| |--| |||| |||| |||| ||||   h:mask  is always '1'
- || | |||| |||| |  | |||| |||| |||| ||||   s:state is always '1'
- || | |||| |||| |  | |||| |||| |||| |||+--> '1' : PSW_WAIT
- || | |||| |||| |  | |||| |||| |||| ||+---> '1' : RESTART
- || | |||| |||| |  | |||| |||| |||| |+----> '1' : BROADCAST
+ hi0m mmmm pppp p00p xxxx xxxx xxxx h0hs : type U32
+ || | |||| |||| |--| |||| |||| |||| |-||   h:mask  is always '1'
+ || | |||| |||| |  | |||| |||| |||| | ||   s:state is always '1'
+ || | |||| |||| |  | |||| |||| |||| | |+--> '1' : PSW_WAIT
+ || | |||| |||| |  | |||| |||| |||| | +---> '1' : RESTART
+ || | |||| |||| |  | |||| |||| |||| |             (available)
  || | |||| |||| |  | |||| |||| |||| +-----> '1' : STORSTAT
  || | |||| |||| |  | |||| |||| ||||
  || | |||| |||| |  | |||| |||| |||+-------> '1' : ETR
@@ -94,7 +94,7 @@
 #define IC_EXTSIG           5 /* 0x00000020 - Architecture dependent (CR0) */
 #define IC_ETR              4 /* 0x00000010 - Architecture dependent (CR0) */
 #define IC_STORSTAT         3 /* 0x00000008 */
-#define IC_BROADCAST        2 /* 0x00000004 */
+#define IC_UNUSED_2         2 /* 0x00000004 */
 #define IC_RESTART          1 /* 0x00000002 */
 #define IC_PSW_WAIT         0 /* 0x00000001 */
 
@@ -102,7 +102,6 @@
 #define IC_INITIAL_STATE   BIT(IC_PSW_WAIT)
 #define IC_INITIAL_MASK  ( BIT(IC_INTERRUPT) \
                          | BIT(IC_RESTART) \
-                         | BIT(IC_BROADCAST) \
                          | BIT(IC_STORSTAT) \
                          )
 
@@ -150,8 +149,7 @@
                          )
 
 /* SIE & Assist supported events */
-#define IC_SIE_INT       ( BIT(IC_BROADCAST) \
-                         | BIT(IC_IO) \
+#define IC_SIE_INT       ( BIT(IC_IO) \
                          | BIT(IC_CLKC) \
                          | BIT(IC_PTIMER) \
                          | BIT(IC_ITIMER) \
@@ -253,11 +251,6 @@
 #define ON_IC_RESTART(_regs) \
  do { \
    (_regs)->ints_state |= BIT(IC_INTERRUPT) | BIT(IC_RESTART); \
- } while (0)
-
-#define ON_IC_BROADCAST(_regs) \
- do { \
-   (_regs)->ints_state |= BIT(IC_INTERRUPT) | BIT(IC_BROADCAST); \
  } while (0)
 
 #define ON_IC_STORSTAT(_regs) \
@@ -449,11 +442,6 @@
    (_regs)->ints_state &= ~BIT(IC_RESTART); \
  } while (0)
 
-#define OFF_IC_BROADCAST(_regs) \
- do { \
-   (_regs)->ints_state &= ~BIT(IC_BROADCAST); \
- } while (0)
-
 #define OFF_IC_STORSTAT(_regs) \
  do { \
    (_regs)->ints_state &= ~BIT(IC_STORSTAT); \
@@ -592,7 +580,6 @@
 
 #define IS_IC_INTERRUPT(_regs)  ( (_regs)->ints_state & BIT(IC_INTERRUPT) )
 #define IS_IC_RESTART(_regs)    ( (_regs)->ints_state & BIT(IC_RESTART)   )
-#define IS_IC_BROADCAST(_regs)  ( (_regs)->ints_state & BIT(IC_BROADCAST) )
 #define IS_IC_STORSTAT(_regs)   ( (_regs)->ints_state & BIT(IC_STORSTAT)  )
 #define IS_IC_IOPENDING         ( sysblk.ints_state   & BIT(IC_IO)        )
 #define IS_IC_MCKPENDING(_regs) ( (_regs)->ints_state &     IC_MCKPENDING )

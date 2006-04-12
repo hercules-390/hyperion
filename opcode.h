@@ -238,18 +238,38 @@ int used; \
    will be able to perform as what appears as an
    interlocked update to other CPU's - Jan Jaeger */
 
-#define OBTAIN_MAINLOCK(_register_context) \
+#define OBTAIN_MAINLOCK(_regs) \
 do { \
+    (_regs)->hostregs->mainwait = 1; \
     obtain_lock(&sysblk.mainlock); \
-    (_register_context)->mainlock = 1; \
+    (_regs)->hostregs->mainwait = 0; \
+    sysblk.mainowner = (_regs)->hostregs->cpuad; \
 } while(0)
 
-#define RELEASE_MAINLOCK(_register_context) \
+#define RELEASE_MAINLOCK(_regs) \
 do { \
-    (_register_context)->mainlock = 0; \
+    sysblk.mainowner = LOCK_OWNER_NONE; \
     release_lock(&sysblk.mainlock); \
 } while(0)
 
+
+#define OBTAIN_INTLOCK(_regs) \
+do { \
+    REGS *intregs = (_regs); \
+    if (intregs) intregs->hostregs->intwait = 1; \
+    obtain_lock(&sysblk.intlock); \
+    if (intregs) intregs->hostregs->intwait = 0; \
+    sysblk.intowner = intregs ? intregs->hostregs->cpuad : LOCK_OWNER_OTHER; \
+} while(0)
+
+#define RELEASE_INTLOCK(_regs) \
+do { \
+    sysblk.intowner = LOCK_OWNER_NONE; \
+    release_lock(&sysblk.intlock); \
+} while(0)
+
+#define LOCK_OWNER_NONE  0xFFFF
+#define LOCK_OWNER_OTHER 0xFFFE
 
 #if defined(_FEATURE_SIE)
   #define SIE_MODE(_register_context) \
@@ -599,7 +619,7 @@ do { \
    ARCH_DEP(invalidate_tlbe)((_regs), mn); \
    if (sysblk.cpus > 1) { \
      int i; \
-     obtain_lock (&sysblk.intlock); \
+     OBTAIN_INTLOCK ((_regs)); \
      for (i = 0; i < HI_CPU; i++) { \
        if (IS_CPU_ONLINE(i) && i != (_regs)->cpuad) { \
          if ( sysblk.waiting_mask & BIT(i) ) \
@@ -614,7 +634,7 @@ do { \
          } \
        } \
      } \
-     release_lock(&sysblk.intlock); \
+     RELEASE_INTLOCK((_regs)); \
    } \
  } while (0)
 
@@ -1337,6 +1357,45 @@ do { \
 #define PERFORM_SERIALIZATION(_regs) do { } while (0)
 #define PERFORM_CHKPT_SYNC(_regs) do { } while (0)
 
+/*
+ * Spin until all other CPUs are waiting
+ * Caller holds intlock and may hold mainlock.
+ */
+#define SYNCHRONIZE_CPUS(_regs) \
+ do { \
+  int i,j,n=0; \
+  U32 wmask = sysblk.waiting_mask | (_regs)->cpubit; \
+  U32 mask = sysblk.started_mask & ~wmask; \
+  for (i = 0; mask; i++) \
+    if (mask & BIT(i)) { \
+      mask &= ~BIT(i); \
+      if (sysblk.regs[i]->intwait || sysblk.regs[i]->syncio) \
+        wmask |= BIT(i); \
+      else \
+        ON_IC_INTERRUPT (sysblk.regs[i]); \
+    } \
+  mask = sysblk.started_mask & ~wmask; \
+  while (mask) { \
+    for (i = 0; mask; i++) \
+      if (mask & BIT(i)) { \
+        mask &= ~BIT(i); \
+        if (sysblk.regs[i]->intwait) \
+          wmask |= BIT(i); \
+        else if (sysblk.regs[i]->mainwait) { \
+          j = sysblk.mainowner; \
+          if (j < MAX_CPU_ENGINES && (wmask & BIT(j))) \
+            wmask |= BIT(i); \
+        } \
+      } \
+    mask = sysblk.started_mask & ~wmask; \
+    if (mask) { \
+      if (++n & 0x7f) sched_yield(); \
+      else usleep(1); \
+    } \
+  } \
+ } while (0)
+
+
 #if !defined(NO_SETUID)
 
 /* SETMODE(INIT)
@@ -1457,7 +1516,7 @@ int  ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
 int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm,
                                               U32 *iointid, BYTE zone);
 void io_reset (void);
-int  chp_reset(BYTE chpid);
+int  chp_reset(REGS *, BYTE chpid);
 void channelset_reset(REGS *regs);
 DLL_EXPORT int  device_attention (DEVBLK *dev, BYTE unitstat);
 DLL_EXPORT int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
@@ -1527,7 +1586,6 @@ void ARCH_DEP(diag204_call) (int r1, int r2, REGS *regs);
 
 
 /* Functions in module external.c */
-void ARCH_DEP(synchronize_broadcast) (REGS *regs, int code, RADR pfra);
 void ARCH_DEP(perform_external_interrupt) (REGS *regs);
 void ARCH_DEP(store_status) (REGS *ssreg, RADR aaddr);
 void store_status (REGS *ssreg, U64 aaddr);
@@ -1553,7 +1611,7 @@ void xstorage_clear(void);
 /* Functions in module machchk.c */
 int  ARCH_DEP(present_mck_interrupt) (REGS *regs, U64 *mcic, U32 *xdmg,
     RADR *fsta);
-U32  channel_report (void);
+U32  channel_report (REGS *);
 void machine_check_crwpend (void);
 void ARCH_DEP(sync_mck_interrupt) (REGS *regs);
 void sigabend_handler (int signo);

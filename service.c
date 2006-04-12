@@ -104,7 +104,7 @@ void scp_command (char *command, int priomsg)
     }
 
     /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     /* If an event buffer available signal is pending then reject the
        command with message indicating that service processor is busy */
@@ -113,7 +113,7 @@ void scp_command (char *command, int priomsg)
         logmsg (_("HHCCP039E Service Processor busy\n"));
 
         /* Release the interrupt lock */
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
         return;
     }
 
@@ -132,7 +132,7 @@ void scp_command (char *command, int priomsg)
     WAKEUP_CPUS_MASK (sysblk.waiting_mask);
 
     /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
 } /* end function scp_command */
 
@@ -153,7 +153,7 @@ int signal_quiesce (U16 count, BYTE unit)
     }
 
     /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     /* If an event buffer available signal is pending then reject the
        command with message indicating that service processor is busy */
@@ -162,7 +162,7 @@ int signal_quiesce (U16 count, BYTE unit)
         logmsg (_("HHCCP082E Service Processor busy\n"));
 
         /* Release the interrupt lock */
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
         return -1;
     }
 
@@ -180,7 +180,7 @@ int signal_quiesce (U16 count, BYTE unit)
     WAKEUP_CPUS_MASK (sysblk.waiting_mask);
 
     /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
     return 0;
 } /* end function signal_quiesce */
@@ -580,13 +580,13 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         || (sclp_command & SCLP_COMMAND_CLASS) == 0x01)
     {
         /* Obtain the interrupt lock */
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
 
         /* If a service signal is pending then return condition
            code 2 to indicate that service processor is busy */
         if (IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_ADDR))
         {
-            release_lock (&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
             regs->psw.cc = 2;
             return;
         }
@@ -1348,7 +1348,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     ON_IC_SERVSIG;
 
     /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(regs);
 
     /* Set condition code 0 */
     regs->psw.cc = 0;

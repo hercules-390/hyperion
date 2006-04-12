@@ -31,7 +31,7 @@ REGS           *regs;                   /* -> CPU register context   */
 U32             intmask = 0;            /* Interrupt CPU mask        */
 
     /* Access the diffent register contexts with the intlock held */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
 
     /* Check for [1] clock comparator, [2] cpu timer, and
      * [3] interval timer interrupts for each CPU.
@@ -144,7 +144,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
        then wake up those CPUs if they are waiting */
     WAKEUP_CPUS_MASK (intmask);
 
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
 } /* end function check_timer_event */
 

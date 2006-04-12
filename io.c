@@ -291,13 +291,13 @@ BYTE    chpid;
 
     chpid = regs->GR_L(1) & 0xFF;
 
-    if( !(regs->psw.cc = chp_reset(chpid)) )
+    if( !(regs->psw.cc = chp_reset(regs, chpid)) )
     {
-        obtain_lock(&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
         sysblk.chp_reset[chpid/32] |= 0x80000000 >> (chpid % 32);
         ON_IC_CHANRPT;
         WAKEUP_CPUS_MASK (sysblk.waiting_mask);
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
     }
 
     RETURN_INTCHECK(regs);
@@ -581,7 +581,7 @@ U32     n;                              /* Integer work area         */
     ARCH_DEP(validate_operand) (effective_addr2, b2, 0, ACCTYPE_WRITE, regs);
 
     /* Obtain any pending channel report */
-    n = channel_report();
+    n = channel_report(regs);
 
     /* Store channel report word at operand address */
     ARCH_DEP(vstore4) ( n, effective_addr2, b2, regs );
@@ -687,14 +687,14 @@ RADR    pfx;                            /* Prefix                    */
     if( IS_IC_IOPENDING )
     {
         /* Obtain the interrupt lock */
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(regs);
 
         /* Test and clear pending interrupt, set condition code */
         icode = ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm,
                                                        &iointid, NULL);
 
         /* Release the interrupt lock */
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(regs);
 
         /* Store the SSID word and I/O parameter if an interrupt was pending */
         if (icode)
@@ -1083,7 +1083,7 @@ int     i;
     /* Disconnect channel set */
     regs->chanset = 0xFFFF;
 
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(regs);
 
     /* If the addressed channelset is connected to another
        CPU then return with cc1 */
@@ -1092,7 +1092,7 @@ int     i;
         if (IS_CPU_ONLINE(i)
          && sysblk.regs[i]->chanset == effective_addr2)
         {
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
             regs->psw.cc = 1;
             return;
         }
@@ -1104,7 +1104,7 @@ int     i;
     /* Interrupts may be pending on this channelset */
     ON_IC_IOPENDING;
 
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(regs);
 
     regs->psw.cc = 0;
 
@@ -1142,7 +1142,7 @@ int     i;
         return;
     }
 
-    obtain_lock(&sysblk.intlock);
+    OBTAIN_INTLOCK(regs);
 
     /* If the addressed channelset is connected to another
        CPU then return with cc0 */
@@ -1158,12 +1158,12 @@ int     i;
             }
             else
                 regs->psw.cc = 1;
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
             return;
         }
     }
 
-    release_lock(&sysblk.intlock);
+    RELEASE_INTLOCK(regs);
 
     /* The channel set is not connected, no operation
        is performed */

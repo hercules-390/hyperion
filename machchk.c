@@ -42,7 +42,7 @@
 /* the channel report word for the first channel path or device      */
 /* which has a CRW pending, and resets the CRW for that device.      */
 /*-------------------------------------------------------------------*/
-U32 channel_report()
+U32 channel_report(REGS *regs)
 {
 DEVBLK *dev;
 U32 i,j;
@@ -52,17 +52,17 @@ U32 i,j;
     {
         if(sysblk.chp_reset[i])
         {
-            obtain_lock(&sysblk.intlock);
+            OBTAIN_INTLOCK(regs);
             for(j = 0; j < 32; j++)
             {
                 if(sysblk.chp_reset[i] & (0x80000000 >> j))
                 {
                     sysblk.chp_reset[i] &= ~(0x80000000 >> j);
-                    release_lock(&sysblk.intlock);
+                    RELEASE_INTLOCK(regs);
                     return CRW_SOL | CRW_CHPID | CRW_AR | CRW_INIT | ((i*32)+j);
                 }
             }
-            release_lock(&sysblk.intlock);
+            RELEASE_INTLOCK(regs);
         }
     }
 
@@ -90,10 +90,10 @@ U32 i,j;
 void machine_check_crwpend()
 {
     /* Signal waiting CPUs that an interrupt may be pending */
-    obtain_lock (&sysblk.intlock);
+    OBTAIN_INTLOCK(NULL);
     ON_IC_CHANRPT;
     WAKEUP_CPUS_MASK (sysblk.waiting_mask);
-    release_lock (&sysblk.intlock);
+    RELEASE_INTLOCK(NULL);
 
 } /* end function machine_check_crwpend */
 
@@ -198,13 +198,14 @@ U64     mcic = MCIC_P  |  /* Instruction processing damage */
 U32     xdmg = 0;
 RADR    fsta = 0;
 
+
+    /* Release intlock if held */
+    if (regs->cpuad == sysblk.intowner)
+        RELEASE_INTLOCK(regs);
+
     /* Release mainlock if held */
-    if (regs->mainlock)
+    if (regs->cpuad == sysblk.mainowner)
         RELEASE_MAINLOCK(regs);
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
-    if(regs->sie_active && regs->guestregs->mainlock)
-        RELEASE_MAINLOCK(regs->guestregs);
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Exit SIE when active */
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)

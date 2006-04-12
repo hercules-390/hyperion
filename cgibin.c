@@ -713,7 +713,7 @@ U32 doipl;
     }
     else
     {
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(NULL);
         /* Perform IPL function */
         if( load_ipl(0, ipldev, iplcpu,0) )
         {
@@ -725,7 +725,7 @@ U32 doipl;
         {
             hprintf(webblk->sock,"<h3>IPL completed</h3>\n");
         }
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
     }
 
     html_footer(webblk);
@@ -1038,7 +1038,7 @@ int i,j;
         if((cpustate = cgi_variable(webblk,cpuname)))
             sscanf(cpustate,"%d",&cpuonline);
         
-        obtain_lock (&sysblk.intlock);
+        OBTAIN_INTLOCK(NULL);
 
         switch(cpuonline) {
 
@@ -1053,7 +1053,7 @@ int i,j;
             break;
         }
 
-        release_lock (&sysblk.intlock);
+        RELEASE_INTLOCK(NULL);
     }
 
     for(i = 0; i < MAX_CPU; i++)
