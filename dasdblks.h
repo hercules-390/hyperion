@@ -198,8 +198,8 @@ struct FORMAT5_DSCB {                   /* DSCB5: Free space map     */
 #define RECFM_BLOCKED           0x10    /* Bit 3=Blocked             */
 #define RECFM_SPANNED           0x08    /* Bit 4=Spanned or standard */
 #define RECFM_CTLCHAR           0x06    /* Bits 5-6=Carriage control */
-#define RECFM_CTLCHAR_A         0x02    /* ...ANSI carriage control  */
-#define RECFM_CTLCHAR_M         0x04    /* ...Machine carriage ctl.  */
+#define RECFM_CTLCHAR_A         0x04    /* ...ANSI carriage control  */
+#define RECFM_CTLCHAR_M         0x02    /* ...Machine carriage ctl.  */
 
 /*-------------------------------------------------------------------*/
 /* Definition of PDS directory entry                                 */

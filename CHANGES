@@ -1,4 +1,5 @@
-12 Apr 2005 SYNCHRONIZE_CPUS macro in place of synchronize_broadcast - Greg
+14 Apr 2006 RECFM bits in dasdblks.h (correction by Christophe Nillon) - Roger Bowler
+12 Apr 2006 SYNCHRONIZE_CPUS macro in place of synchronize_broadcast - Greg
 10 Apr 2006 Portability: change bitfield types from BYTE to u_int - Fish
 09 Apr 2006 Transparently handle BSD sockaddr_in sin_len - Fish
 09 Apr 2006 Un-"fix" panel.c refresh (sigh) - Fish
