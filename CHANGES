@@ -1,3 +1,4 @@
+19 Apr 2006 Re-fix panel refresh (fill_text, not erase_to_eol; sigh) - Fish
 14 Apr 2006 RECFM bits in dasdblks.h (correction by Christophe Nillon) - Roger Bowler
 12 Apr 2006 SYNCHRONIZE_CPUS macro in place of synchronize_broadcast - Greg
 10 Apr 2006 Portability: change bitfield types from BYTE to u_int - Fish

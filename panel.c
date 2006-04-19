@@ -1060,7 +1060,7 @@ void NP_update(REGS *regs)
             draw_text (buf);
             set_pos (i+3, 58);
             draw_text (devnam);
-            erase_to_eol( confp );
+            fill_text (' ', PANEL_MAX_COLS);
         }
     }
 
@@ -2174,10 +2174,10 @@ FinishShutdown:
                     NPDinit = 1;
                     NP_screen_redraw(regs);
                 }
-                NP_update(regs);
-                fflush (confp);
-                redraw_msgs = redraw_cmd = redraw_status = 0;
             }
+            NP_update(regs);
+            fflush (confp);
+            redraw_msgs = redraw_cmd = redraw_status = 0;
         }
 
     /* =END= */
