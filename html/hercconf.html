@@ -272,14 +272,14 @@ a real System/390.  The configuration file is an ASCII text file.
     file or for panel commands. If <em>value</em> contains blanks or spaces, then
     it should be enclosed in double quotation marks (&quot;). See
     <a href="#subs">substitutions</a> for a more in-depth discussion
-    on this feature. Substitution is available even in configuration statements,
+    on this feature.
+    <p>
+    Substitution is available even in configuration statements,
     meaning it is possible to perform substitution in the <em>DEFSYM</em> statement itself.
     However, symbols are always defined as the last step in the process, so attempting
     to self define a symbol will result in an empty string:
     <code><pre>
-    DEFSYM FOO $(FOO)
-    </pre></code>
-    <p>
+    DEFSYM FOO $(FOO)</pre></code>
     Will set symbol FOO to &quot;&quot;
     <p>
 
@@ -313,7 +313,7 @@ a real System/390.  The configuration file is an ASCII text file.
     (or possibly more) to be created for each device defined in your
     configuration. Specifying <code>0</code> means there is no limit to the
     number of threads that can be created.
-    <p>Specify a value from <code>1</code> to <code><em>nnn</em></code> to set an upper limit
+    <p>Specify a value from <code>1</code> to <code><em>nnn</em></code> &nbsp;to set an upper limit
     to the number of threads that can be created to service any I/O request to
     any device. Like the <code>0</code> option, each thread, once done servicing
     an I/O request, enters an idle state. If a new request arrives before the
@@ -340,7 +340,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <i><b>Caution:</b> &nbsp; Enabling this feature may have security consequences</i>
     <p>
 
-    Note that when this feature is enabled, systems
+    Note that when this feature is enabled systems
     running under hercules can even issue host commands through the Hercules
     <code>sh</code> (shell) command. This ability may be disabled via the
     <a href="#SHCMDOPT">SHCMDOPT</a> statement.
@@ -616,7 +616,7 @@ a real System/390.  The configuration file is an ASCII text file.
     programmatically via the <a href="#DIAG8CMD">DIAG8CMD</a> interface.
     <p>
     When set to <code>NODIAG8</code> only the programmatic execution of shell commands via the
-    the diagnose 8 interface is disabled; <code>sh</code> (shell) commands entered directly
+    the diagnose 8 interface is disabled, but <code>sh</code> (shell) commands entered directly
     via the Hercules hardware console will still work.
     <p>
     <b>NOTE:</b> &nbsp;<i>"entered directly via the Hercules hardware console"</i>
@@ -741,32 +741,34 @@ a real System/390.  The configuration file is an ASCII text file.
     within parenthesis and preceded by a $ sign. For example, if symbol <em>FOO</em> contains
     the text string <em>&quot;BAR&quot;</em> then <em>$(FOO)</em> will be substituted with the
     string <em>&quot;BAR&quot</em>;. Symbol names are case sensitive.
-<h5>Example</h5>
-<p>
-    <code><pre>
-...
-DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
-...
-0380 3420 $(TAPEDIR)/scratch.aws
-...
-    </pre></code>
-    <p>
+
+<h5>Example</h5><code><pre>
+        DEFSYM  TAPEDIR  &quot;/home/hercules/tapes&quot;
+
+        ...
+
+        0380  3420  $(TAPEDIR)/scratch.aws
+
+        ...</pre></code>
     In this example, device 0380 will be a 3420 loaded with the AWS tape file in /home/hercules/tapes/scratch.aws
 <h4>Special symbols</h4>
     <h5>Device group symbols</h5>
     <p>
         When multiple devices are defined with a single device definition record, then the symbols<P>
-        <TABLE BORDER=0>
-        <ul compact>
-        <TR><TD><LI>CUU</TD><TD>: 3 digits device number, upper case hexadecimal digits</TD></TR>
-        <TR><TD><LI>CCUU</TD><TD>: 4 digits device number, upper case hexadecimal digits</TD></TR>
-        <TR><TD><LI>cuu</TD><TD>: 3 digits device number, lower case hexadecimal digits</TD></TR>
-        <TR><TD><LI>ccuu</TD><TD>: 4 digits device number, lower case hexadecimal digits</TD></TR>
-        </ul>
-        </TABLE>
+        <blockquote>
+            <TABLE BORDER=0>
+                <ul compact>
+                    <TR><TD><LI>&nbsp; CUU  &nbsp; </TD><TD> &nbsp; (3 digits device number, upper case hexadecimal digits)</TD></TR>
+                    <TR><TD><LI>&nbsp; CCUU &nbsp; </TD><TD> &nbsp; (4 digits device number, upper case hexadecimal digits)</TD></TR>
+                    <TR><TD><LI>&nbsp; cuu  &nbsp; </TD><TD> &nbsp; (3 digits device number, lower case hexadecimal digits)</TD></TR>
+                    <TR><TD><LI>&nbsp; ccuu &nbsp; </TD><TD> &nbsp; (4 digits device number, lower case hexadecimal digits)</TD></TR>
+                </ul>
+            </TABLE>
+        </blockquote>
         are defined to contain for each device the relevant device address. For example:
+        <p>
 <code><pre>
-0200,0201 3340 /home/hercules/dasds/myvols.$(CUU)
+    0200,0201  3340  /home/hercules/dasds/myvols.$(CUU)
 </pre></code>
         <p>
         Will define 2 3340 packs, with device 0200 being loaded with the file myvols.200 and
@@ -939,6 +941,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     </TR>
 </TABLE>
 
+<p>
+
 <hr><!-- ---------------------------------------------------------------------------- -->
 
 <a name="device_definitions"></a>
@@ -955,7 +959,9 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     </blockquote>
     <p>
 
-    where:
+    where the generic syntax for device numbers is &nbsp;
+    <code>[n:]CCUU[,CCUU][-CCUU][.nn][...]</code> &nbsp;
+    as explained below:
 
 <blockquote>
 
@@ -989,7 +995,7 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     for ESA/390, or 0000 to 0FFF for S/370.  The device number uniquely
     identifies each device to the operating system.
     <p>
-<dt><code><em>Channel Set/Logical Channel Subsystem</em></code>
+<dt><code><em>Channel Set / Logical Channel Subsystem</em></code>
 <dd><p>
     An optional Channel Set or Logical Channel Subsystem Identification can be
     specified for a device number or group of devices. The Identification
@@ -1003,16 +1009,14 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     numbers.<p>
     Not all S/390 or z/Architecture operating systems support Multiple Logical
     Channel Subsystems (this feature was introduced with the z9-109).<p>
-    If no Channel Set/Logical Channel Subsystem Identification is specified,
+    If no Channel Set or Logical Channel Subsystem Identification is specified,
     then it is assumed to be 0.
     <p>
-<dt><code>Generic Syntax for device numbers<p>
-<em>[n:]CCUU[,CCUU][-CCUU][.nn][...]</em></code>
 
 <dt><code><em>devtype</em></code>
 <dd><p>
     is the device type.  Valid device types are shown in the
-    <a href="#device_types_table">table</a> just below.
+    <a href="#device_types_table">table</a> below.
     <p>
 
 <dt><code><em>arguments</em></code>
@@ -1030,7 +1034,7 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
 
 <a name="device_types_table"></a>
 
-    <table>
+    <table width=85%>
     <tr>
 
         <td width=15%>
@@ -1253,6 +1257,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     over any ip address / subnet mask value which may also be specified.
     <p>
 
+<p><br>
+
 <a name="consysc"></a>
 <dt><em>Integrated Console printer-keyboard devices</em>
 <dd><p>
@@ -1270,6 +1276,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     <p>
     All integrated devices must use a different command prefix. 
     <p>
+
+<p><br>
 
 <a name="conprkb"></a>
 <dt><em>Console printer-keyboard devices</em>
@@ -1302,6 +1310,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     <a href="#loc3270">Local non-SNA 3270 devices</a> section with the exception
     that the "noprompt" option, if specified, must precede the other arguments.
     <p>
+
+<p><br>
 
 <a name="1442"></a>
 <a name="3505"></a>
@@ -1391,6 +1401,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     </dl>
     <p>
 
+<p><br>
+
 <a name="3525"></a>
 <a name="cardpch"></a>
 <dt><em>Card punch devices</em>
@@ -1422,6 +1434,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
 
     </dl>
     <p>
+
+<p><br>
 
 <a name="1403"></a>
 <a name="printer"></a>
@@ -1474,6 +1488,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     from <a href="http://www.atnetsend.net/computing/">
     http://www.atnetsend.net/computing/</a>
     <p>
+
+<p><br>
 
 <a name="3420"></a>
 <a name="tapedev"></a>
@@ -1677,6 +1693,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     See the README.TAPE file for additional information, system and application programming for tape devices.
     <p>
 
+<p><br>
+
 <a name="ctca"></a>
 <a name="3088"></a>
 <dt><em>Channel-to-channel adapters</em>
@@ -1693,7 +1711,7 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
     <p>
 
     <dl> <!-- begin emulation types -->
-
+    
 <a name="CTCI"></a>
     <dt><b>CTCI</b> &nbsp; &nbsp; (Channel to Channel link to TCP/IP stack)
     <dd><p>
@@ -1705,6 +1723,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
         (Note: The CTCI protocol is only for the Linux version of
         Hercules. For Windows, use the below CTCI protocol instead).
         <p>
+
+<p><br>
 
     <dt><b>CTCI</b>  &nbsp; &nbsp; (Channel to Channel link to Win32 TCP/IP stack)
     <dd><p>
@@ -1722,61 +1742,108 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
 
             <dl> <!-- begin Required for both Linux and Windows -->
 
-            <dt><code><em>guestip</em></code>
-            <dd><p>
-                specifies the IP address of the guest operating system
-                running under Hercules.
-                <p>
+                <dt><code><em>guestip</em></code>
+                <dd><p>
+                    specifies the IP address of the guest operating system
+                    running under Hercules.
+                    <p>
 
-            <dt><code><em>hostip</em></code>
-            <dd><p>
-                specifies the IP address of the host (Linux or Windows) side
-                of the point-to-point link. This may or may not be the same
-                as your system's regular IP address. For Windows, if the
-                host system is configured with DHCP, this should instead be
-                the MAC address of the Ethernet adapter you wish to use to
-                have Hercules communicate with the outside world.
-                <p>
+                <dt><code><em>hostip</em></code>
+                <dd><p>
+                    specifies the IP address of the host (Linux or Windows) side
+                    of the point-to-point link. This may or may not be the same
+                    as your system's regular IP address. For Windows, if the
+                    host system is configured with DHCP, this should instead be
+                    the MAC address of the Ethernet adapter you wish to use to
+                    have Hercules communicate with the outside world.
+                    <p>
 
             </dl> <!-- end Required for both Linux and Windows -->
-
-            <p>
-
-        <dt>Optional for Linux:
-        <dd><p>
-            If these arguments are specified, they must precede the required
-            arguments.
-            <p>
-
-            <dl> <!-- begin Optional for Linux -->
-
-            <dt><code>-n <em>name</em></code> &nbsp;or <code>--dev <em>name</em></code>
-            <dd><p>
-                specifies the name of the tunnel device to use. The default
-                is /dev/net/tun, which is correct for version 2.4 and above
-                of the Linux kernel.
-                <p>
-
-            <dt><code>-d</code> &nbsp;or <code>--debug</code>
-            <dd><p>
-                specifies that debugging output is to be produced on the
-                Hercules control panel. This should normally be left
-                unspecified.
-                <p>
-
-            </dl> <!-- end Optional for Linux -->
 
             <p>
 
         <dt>Optional for Windows:
         <dd><p>
             If these arguments are specified, they must precede the required
-            arguments. See Fish's
-            <a href="http://www.softdevlabs.com/Hercules/ctci-w32-index.html">CTCI-W32</a>
-            page for further details and information.
+            arguments.
             <p>
 
+            <dl> <!-- begin Optional for Windows -->
+            <dl> <!-- (begin INDENT) -->
+
+                <dt><code>-k &nbsp;<em>kernel-capture-buffer-size</em></code>
+                    <dd>
+                <dt><code>-i &nbsp;<em>tuntap32-i/o-buffer-size</em></code>
+                    <dd>
+                <p>
+
+            </dl> <!-- (end INDENT) -->
+            </dl> <!-- end Optional for Windows -->
+            
+            <p>
+            See Fish's
+            <a href="http://www.softdevlabs.com/Hercules/ctci-w32-index.html">CTCI-W32</a>
+            page for further details and information.
+
+        <p>
+
+        <dt>Optional for both Linux and Windows:
+        <dd><p>
+            If these arguments are specified, they must precede the required
+            arguments:
+            <p>
+
+            <dl> <!-- begin Optional for both Linux and Windows -->
+
+                <dt><code>-n <em>name</em></code> &nbsp;&nbsp; or &nbsp; <code>--dev <em>name</em></code>
+                <dd><p>
+                    specifies the name of the tunnel device to use.
+                    <p>
+                    The default
+                    for Linux is /dev/net/tun (which is correct for version 2.4
+                    and above of the Linux kernel).
+                    <p>
+                    For Windows, specify the IP address or MAC address of the
+                    real Windows adapter to emulate the virtual guest's adapter on.
+                    The default is the first adapter found according to Windows'
+                    adapter binding order, which may not be the one you want if
+                    you have multiple adapters.
+                    <p>
+                    See
+                    <a href="http://www.softdevlabs.com/Hercules/ctci-w32-faq.html#wireless">question #22
+                    of the CTCI-W32 F.A.Q. (Frequently Asked Questions)</a>
+                    document for more information about adapter binding order, and the
+                    <a href="http://www.softdevlabs.com/Hercules/ctci-w32-readme.html#herccfg">CTCI-W32 Configuration</a>
+                    web page for general information regarding CTCI-W32 configuration.
+                    <p>
+
+                <dt><code>-m <em>MAC address</em></code> &nbsp;&nbsp; or &nbsp; <code>--mac <em>MAC address</em></code>
+                <dd><p>
+                    where <em>'MAC address'</em> is the optional hardware address for
+                    the virtual interface in the format: hh:hh:hh:hh:hh:hh. The default value
+                    is '00:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion is constructed
+                    from the last 3 octets of the specified <code><i>guestip</i></code>.
+                    <p>
+
+                <dt><code>-s <em>netmask</em></code>
+                <dd><p>
+                    where <em>netmask</em> is the netmask to use for the
+                    automatically added point-to-point route in standard
+                    dotted internet noitation (e.g. 255.255.255.0)
+                    <p>
+
+                <dt><code>-d</code> &nbsp;&nbsp; or &nbsp; <code>--debug</code>
+                <dd><p>
+                    specifies that debugging output is to be produced on the
+                    Hercules control panel. This should normally be left
+                    unspecified.
+                    <p>
+
+            </dl> <!-- end Optional for both Linux and Windows -->
+
         </dl> <!-- end CTCI parms -->
+        
+<p><br>
 
 <a name="CTCT"></a>
     <dt><b>CTCT</b> &nbsp; &nbsp; (Channel to Channel Emulation via TCP connection)
@@ -1823,6 +1890,8 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
         transport NJE, SNA, PVM, etc. type payloads. This may change in the future.
         <p>
 
+<p><br>
+
 <a name="LCS"></a>
     <dt><b>LCS</b> &nbsp; &nbsp; (LAN Channel Station Emulation)
     <dd><p>
@@ -1855,30 +1924,32 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
 
         <dl> <!-- begin LCS parms -->
 
-        <dt><code>-n <em>devname</em></code> &nbsp;or <code>--dev <em>devname</em></code>
+        <dt><code>-n <em>devname</em></code> &nbsp;&nbsp; or &nbsp; <code>--dev <em>devname</em></code>
         <dd><p>
             where <em>devname</em> is:
             <p>
 
-            <dl>
-            <dt>(*nix)
-            <dd><p>
-                the name of the TUN/TAP special character device,
-                normally /dev/net/tun.
-                <p>
+            <dl> <!-- begin 'devname' -->
+            
+                <dt>(*nix)
+                <dd><p>
+                    the name of the TUN/TAP special character device,
+                    normally /dev/net/tun.
+                    <p>
 
-            <dt>(Windows)
-            <dd><p>
-                is either the IP or MAC address of the driving
-                systems network card. TunTap32 will automatically select
-                the first network card it finds if this option is
-                omitted, this may not be desirable for some users.
-                <p>
+                <dt>(Windows)
+                <dd><p>
+                    is either the IP or MAC address of the driving
+                    systems network card. TunTap32 will automatically select
+                    the first network card it finds if this option is
+                    omitted, this may not be desirable for some users.
+                    <p>
 
-            </dl>
+             </dl> <!-- end 'devname' -->
+
             <p>
 
-        <dt><code>-o <em>filename</em></code> &nbsp;or <code>--oat <em>filename</em></code>
+        <dt><code>-o <em>filename</em></code> &nbsp;&nbsp; or &nbsp; <code>--oat <em>filename</em></code>
         <dd><p>
             where <em>filename</em> specifies the filename of the Address
             Translation file. If this option is specified, the optional
@@ -1887,10 +1958,10 @@ DEFSYM TAPEDIR &quot;/home/hercules/tapes&quot;
             of the OAT file</a>)
             <p>
 
-        <dt><code>-m <em>MAC Address</em></code> &nbsp;or <code>--mac <em>MAC address</em></code>
+        <dt><code>-m <em>MAC Address</em></code> &nbsp;&nbsp; or &nbsp; <code>--mac <em>MAC address</em></code>
         <dd><p>
             where <em>MAC Address</em> is the optional hardware address of
-            the interface in the format: xx:xx:xx:xx:xx:xx. If you use the
+            the interface in the format: hh:hh:hh:hh:hh:hh. If you use the
             <code>--oat</code> option, do not specify an address here.
             <p>
 
@@ -1931,43 +2002,46 @@ ROUTE  00  172.021.003.032  255.255.255.224
             <dl> <!-- begin LCS OATFILE parms -->
             <dt>where:
             <dd><p>
+                <dl> <!-- (begin INDENT) -->
+                    <dt><code><em>Dev</em></code>
+                    <dd>is the base device address
+                        <p>
 
-                <dl>
-                <dt><code><em>Dev</em></code>
-                <dd>is the base device address
-                    <p>
+                    <dt><code><em>Mode</em></code>
+                    <dd>is the operation mode: IP or SNA.
+                        <p>
+                        <i><b>Note:</b> &nbsp;<u>the SNA operation mode is NOT currently implemented</u>.</i>
+                        <p>
 
-                <dt><code><em>Mode</em></code>
-                <dd>is the operation mode: IP or SNA.
-                    <p>
-                    <i><b>Note:</b> &nbsp;<u>the SNA operation mode is NOT currently implemented</u>.</i>
-                    <p>
-
-                <dt><code><em>Port</em></code>
-                <dd>is the virtual (relative) adapter number.
-                    <p>
-                </dl>
-                <p>
+                    <dt><code><em>Port</em></code>
+                    <dd>is the virtual (relative) adapter number.
+                        <p>
+                </dl> <!-- (end INDENT) -->
             </dl> <!-- end LCS OATFILE parms -->
+
             <p>
 
             For IP modes, the entry specific information is as follows:
             <p>
 
-            <dl> <!-- begin LCS OATFILE parms entry specific information -->
-            <dt><code>PRI &#124; SEC &#124; NO</code>
-            <dd><p>
-                specifies where a packet with an unknown IP
-                address is forwarded to. PRI is the primary
-                default entry, SEC specifies the entry to use
-                when the primary is not available, and NO
-                specifies that this is not a default entry.
-                <p>
+            <dl> <!-- begin IP Mode parms -->
+            <dl> <!-- (begin INDENT) -->
 
-            <dt><code><em>nnn.nnn.nnn.nnn</code></em>
-            <dd><p>
-                specifies the home IP address
-            </dl> <!-- end LCS OATFILE parms entry specific information -->
+                <dt><code>PRI &#124; SEC &#124; NO</code>
+                <dd><p>
+                    specifies where a packet with an unknown IP
+                    address is forwarded to. PRI is the primary
+                    default entry, SEC specifies the entry to use
+                    when the primary is not available, and NO
+                    specifies that this is not a default entry.
+                    <p>
+
+                <dt><code><em>nnn.nnn.nnn.nnn</code></em>
+                <dd><p>
+                    specifies the home IP address
+
+            </dl> <!-- (end INDENT) -->
+            </dl> <!-- end IP Mode parms -->
             <p>
 
             When the operation mode is IP, specify only the even (read)
@@ -1978,21 +2052,33 @@ ROUTE  00  172.021.003.032  255.255.255.224
             <i><b>Note:</b> &nbsp;<u>the SNA operation mode is NOT currently implemented</u>.</i>
             <p>
 
-            Additionally, two other statements can be included in the
-            address translation file. The HWADD and ROUTE statements.
-            <p>
+            Additionally, two other statements may be included in the
+            address translation file. The HWADD and ROUTE statements:
 
-            Use the HWADD to specify a hardware (MAC) address for a
-            virtual adapter. The first parameter after HWADD specifies
-            with relative adapter for which the address is applied.
             <p>
+            <dl> <!-- begin HWADD and ROUTE -->
+            <dl> <!-- (begin INDENT) -->
 
-            The ROUTE statement is included for convenience. This allows the
-            hercifc program to create a network route for this specified
-            virtual adapter. Please note that it is not necessary to include
-            point-to-point routes for each IP address in the table. This is
-            done automatically by the emulation module.
-            <p>
+                <dt><code>HWADD &nbsp;pp <i>&nbsp;hh:hh:hh:hh:hh:hh</i></code>
+                <dd><p>
+                    Use the HWADD to specify a hardware (MAC) address for a
+                    virtual adapter. The first parameter after HWADD specifies
+                    with relative adapter for which the address is applied.
+
+                    <p>
+
+                <dt><code>ROUTE &nbsp;pp <i>&nbsp;nnn.nnn.nnn.nnn &nbsp;...</i></code>
+                <dd><p>
+                    The ROUTE statement is included for convenience. This allows the
+                    hercifc program to create a network route for this specified
+                    virtual adapter. Please note that it is not necessary to include
+                    point-to-point routes for each IP address in the table. This is
+                    done automatically by the emulation module.
+
+                    <p>
+
+            </dl> <!-- (end INDENT) -->
+            </dl> <!-- end HWADD and ROUTE -->
 
             The read/write devices can be swapped by coding the odd address
             of the even-odd pair in the OAT
@@ -2001,24 +2087,23 @@ ROUTE  00  172.021.003.032  255.255.255.224
             Up to 4 virtual (relative) adapters 00-03 are currently supported.
 
         </dl> <!-- end LCS parms -->
+
         <p>
 
         If no Address Translation file is specified, the emulation module
         will create the following:
         <p>
 
-        <dl>
-            An ethernet adapter (port 0) for TCP/IP traffic only.
-        </dl>
-        <p>
-
-        <dl>
-            Two device addresses will be defined (devnum and devnum + 1).
-        </dl>
+        <ul>
+            <li>An ethernet adapter (port 0) for TCP/IP traffic only.
+            <li>Two device addresses will be defined (devnum and devnum + 1).
+        </ul>
         <p>
 
     </dl> <!-- end emulation types -->
     <p>
+
+<p><br>
 
 <a name="3380"></a>
 <a name="ckddasd"></a>
@@ -2154,6 +2239,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         <p>
         <code>syncio</code> may be abbreviated as
         <code>syio</code> 
+        <p>
 
     <dt><code>readonly</code>
     <dd><p>
@@ -2197,16 +2283,18 @@ ROUTE  00  172.021.003.032  255.255.255.224
         to be indicated in the data returned by SENSE ID and similar CCW's.
         <p>
         The default value depends on the device type:
-        <center><table border=1 cellpadding=3>
-        <tr align="center"><th>Device type</th><th>Default CU type</dev></th></tr>
-        <tr align="center"><td>2311 2314</td><td>2841</td></tr>
-        <tr align="center"><td>3330 3340<br>3350 3375<br>3380</td><td>3880</td></tr>
-        <tr align="center"><td>3390</td><td>3990</td></tr>
-        <tr align="center"><td>9345</td><td>9343</td></tr>
-        </table></center>
+        <blockquote>
+            <table border=1 cellpadding=3>
+            <tr align="center"><th>Device type</th><th>Default CU type</dev></th></tr>
+            <tr align="center"><td>2311 2314</td><td>2841</td></tr>
+            <tr align="center"><td>3330 3340<br>3350 3375<br>3380</td><td>3880</td></tr>
+            <tr align="center"><td>3390</td><td>3990</td></tr>
+            <tr align="center"><td>9345</td><td>9343</td></tr>
+            </table>
+        </blockquote>
         <p>
         Other values which may be specified are:
-        3990-3 3990-6
+        3990-3 and 3990-6.
         <p>
         Normally the default value is appropriate and this parameter need
         not be specified.
@@ -2214,6 +2302,8 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     </dl> <!-- end (CKD) additional DASD arguments  -->
     <p>
+
+<p><br>
 
 <a name="3370"></a>
 <a name="fbadasd"></a>
@@ -2304,6 +2394,8 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
     </dl> <!-- end (FBA) additional DASD arguments  -->
     <p>
+
+<p><br>
 
 <a name="comline"></a>
 <dt><em>Communication Line</em>

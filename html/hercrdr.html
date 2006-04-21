@@ -20,37 +20,46 @@ Socket readers were implemented by Fish, based upon code originally
 contributed by Malcolm Beattie.
 <p>
 Socket readers are defined in the Hercules configuration file like this:
-<br><code>
-<i>devnum</i> <i>devtype</i> <i>sockspec</i> sockdev [<i>option ...</i>]
-</code>
+<p>
+<blockquote>
+    <code>
+        <i>devnum</i> <i>devtype</i> <i>sockspec</i> sockdev [<i>option ...</i>]
+    </code>
+</blockquote>
 <p>
 The socket specification <i>sockspec</i> can take any of the following
 formats:
+<blockquote>
 <dl>
-<dt><code><em>ipaddr</em>:<em>port</em></code>
-<dd>The reader listens on the specified IP address and port number.
-    <em>ipaddr</em> must be the IP address of an interface on the local
-    system.
-    For example, <code>127.0.0.1:1234</code> to accept only jobs submitted
-    locally via the loopback interface.
-<dt><code><em>hostname</em>:<em>port</em></code>
-<dd>Similar to the previous example, where <em>hostname</em> must resolve
-    to an IP address belonging to the local system.
-    Example: <code>localhost:1234</code>.
-<dt><code><em>port</em></code>
-<dd>The reader listens on the specified port number and accepts jobs
-    submitted to any IP address defined on the local system.
-    Example: <code>1234</code>.
-<dt><code><em>sockpath</em>/<em>sockname</em></code>
-<dd>The reader listens on the specified Unix Domain Socket.
-    Example: <code>/tmp/hercrdr.00C</code>.
+    <dt><code><em>ipaddr</em>:<em>port</em></code>
+        <dd><p>The reader listens on the specified IP address and port number.
+        <em>ipaddr</em> must be the IP address of an interface on the local
+        system.
+        For example, <code>127.0.0.1:1234</code> to accept only jobs submitted
+        locally via the loopback interface.
+        <p>
+    <dt><code><em>hostname</em>:<em>port</em></code>
+        <dd><p>Similar to the previous example, where <em>hostname</em> must resolve
+        to an IP address belonging to the local system.
+        Example: <code>localhost:1234</code>.
+        <p>
+    <dt><code><em>port</em></code>
+        <dd><p>The reader listens on the specified port number and accepts jobs
+        submitted to any IP address defined on the local system.
+        Example: <code>1234</code>.
+        <p>
+    <dt><code><em>sockpath/sockname</em></code>
+        <dd><p>The reader listens on the specified Unix Domain Socket.
+        Example: <code>/tmp/hercrdr.00C</code>.
+        <p>
 </dl>
+</blockquote>
 <h3>Examples</h3>
 <pre><code>
-000A    2501    127.0.0.1:2501 sockdev ascii trunc eof
-000C    3505    localhost:1234 sockdev ascii trunc eof
-0012    3505    3505 sockdev ascii trunc eof
-0014    2501    /tmp/hercrdr.014 sockdev ascii trunc eof
+    000A   2501   127.0.0.1:2501    sockdev  ascii  trunc  eof
+    000C   3505   localhost:1234    sockdev  ascii  trunc  eof
+    0012   3505   3505              sockdev  ascii  trunc  eof
+    0014   2501   /tmp/hercrdr.014  sockdev  ascii  trunc  eof
 </code></pre>
 
 <h2>Submitting jobs from Windows</h2>
@@ -65,36 +74,36 @@ Here's the "help information" that's displayed whenever you enter
 "HercRdr" without any parameters:
 
 <pre><code>
-C:\WINDOWS>hercrdr
-Submits card file(s) to a Hercules card reader bound to a given socket:port.
+    C:\WINDOWS>hercrdr
+    Submits card file(s) to a Hercules card reader bound to a given socket:port.
 
-Format:
+    Format:
 
- HERCRDR [-nnn] [host:port] file [file...]
+     HERCRDR [-nnn] [host:port] file [file...]
 
-Where:
+    Where:
 
- -nnn timeout value in seconds (1-999; default is 3)
- host:port sock_spec of target reader (if not specified,
- value of HERCRDR environ var is used, if set)
- file file(s) to be submitted
+     -nnn timeout value in seconds (1-999; default is 3)
+     host:port sock_spec of target reader (if not specified,
+     value of HERCRDR environ var is used, if set)
+     file file(s) to be submitted
 
-Examples:
+    Examples:
 
- HERCRDR localhost:1234 fileone.txt filetwo.txt
- set HERCRDR=localhost:1234
- HERCRDR file3.txt file4.txt
- HERCRDR override:5678 filefive.txt
- HERCRDR 192.168.0.1:5678 666.txt 777.txt 888.txt 999.txt
+     HERCRDR localhost:1234 fileone.txt filetwo.txt
+     set HERCRDR=localhost:1234
+     HERCRDR file3.txt file4.txt
+     HERCRDR override:5678 filefive.txt
+     HERCRDR 192.168.0.1:5678 666.txt 777.txt 888.txt 999.txt
 
-Returns:
+    Returns:
 
- -1 unclassified error
- 0 file(s) successfully submitted
- 1 no route to host (bad sock_spec or connection refused)
- 2 timeout value exceeded while trying to connect
- 3 transmission error (e.g. connection prematurely closed)
- 4 file not found (or other file error)
+     -1 unclassified error
+     0 file(s) successfully submitted
+     1 no route to host (bad sock_spec or connection refused)
+     2 timeout value exceeded while trying to connect
+     3 transmission error (e.g. connection prematurely closed)
+     4 file not found (or other file error)
 
 </code></pre>
 
@@ -109,32 +118,32 @@ then you can capture the authentic mainframe experience by submitting
 jobs directly from your edit session.  The SUB command can be implemented
 by means of a REXX macro, such as this one provided by Volker Bandke:
 <pre><code>
-/* +----------------------------- REXX -----------------------------+ */
-/*                                                                    */
-/*      Name: D:\APPS\SPFPRO\REXX\USER\SUB.SPF                        */
-/*                                                                    */
-/*      Type: SPF edit macro                                          */
-/*                                                                    */
-/*      Desc: submit JCL to MVS 3.8                                   */
-/*                                                                    */
-/*      Creation date: 24 Aug 1999, creation time: 18:49:40           */
-/*                                                                    */
-/*      Author: (c) Volker Bandke                                     */
-/*                                                                    */
-/* +----------------------------------------------------------------+ */
-'isredit macro (p1 p2 p3 p4 p5 p6 p7 p8 p9)'
-"ISREDIT (member) = MEMBER"
-"ISPEXEC CONTROL ERRORS CANCEL"
-parse upper var member file '.' ext
-do
-'ISREDIT REPLACE' $$$$$$$$.SPF '.ZF .ZL'
-ADDRESS "CMD" "HERCRDR 192.168.1.102:3505 $$$$$$$$.SPF"
-zedsmsg = 'File submitted'
-zedlmsg = 'The member '||member||' has been submitted to MVS'
-'ispexec setmsg msg(isrz000)'
-ADDRESS "CMD" "DELETE $$$$$$$$.SPF"
-end
-EXIT 0
+    /* +----------------------------- REXX -----------------------------+ */
+    /*                                                                    */
+    /*      Name: D:\APPS\SPFPRO\REXX\USER\SUB.SPF                        */
+    /*                                                                    */
+    /*      Type: SPF edit macro                                          */
+    /*                                                                    */
+    /*      Desc: submit JCL to MVS 3.8                                   */
+    /*                                                                    */
+    /*      Creation date: 24 Aug 1999, creation time: 18:49:40           */
+    /*                                                                    */
+    /*      Author: (c) Volker Bandke                                     */
+    /*                                                                    */
+    /* +----------------------------------------------------------------+ */
+    'isredit macro (p1 p2 p3 p4 p5 p6 p7 p8 p9)'
+    "ISREDIT (member) = MEMBER"
+    "ISPEXEC CONTROL ERRORS CANCEL"
+    parse upper var member file '.' ext
+    do
+    'ISREDIT REPLACE' $$$$$$$$.SPF '.ZF .ZL'
+    ADDRESS "CMD" "HERCRDR 192.168.1.102:3505 $$$$$$$$.SPF"
+    zedsmsg = 'File submitted'
+    zedlmsg = 'The member '||member||' has been submitted to MVS'
+    'ispexec setmsg msg(isrz000)'
+    ADDRESS "CMD" "DELETE $$$$$$$$.SPF"
+    end
+    EXIT 0
 </code></pre>
 
 <h2>Submitting jobs from Unix</h2>
@@ -144,39 +153,39 @@ Malcolm Beattie has provided a simple Perl script which can
 submit jobs using either TCP/IP or Unix Domain Sockets.
 <p>
 The script is invoked using one of the following command formats:
-<code>
-<br>hercsub 192.168.1.102:3505 dummy.jcl
-<br>hercsub /tmp/hercrdr.00C dummy jcl
-</code>
 <p>
+<blockquote>
+    <pre>
+    hercsub  192.168.1.102:3505  dummy.jcl
+    hercsub  /tmp/hercrdr.00C  dummy jcl</pre>
+</blockquote>
 Here is the sample script:
 <pre><code>
-============== hercsub ================
-#!/usr/bin/perl
-use Socket;
-use IO::Socket::UNIX;
-use IO::Socket::INET;
+    #!/usr/bin/perl
+    use Socket;
+    use IO::Socket::UNIX;
+    use IO::Socket::INET;
 
-if (@ARGV &lt; 1) {
-  print STDERR "Usage: hercsub socket_spec [job]\n";
-  exit 2;
-}
+    if (@ARGV &lt; 1) {
+      print STDERR "Usage: hercsub socket_spec [job]\n";
+      exit 2;
+    }
 
-my $spec = shift @ARGV;
-my $sock;
+    my $spec = shift @ARGV;
+    my $sock;
 
-if ($spec =~ m{^/}) {
-  $sock = IO::Socket::UNIX->new(Peer => $spec);
-} else {
-  $sock = IO::Socket::INET->new(PeerAddr => $spec);
-}
+    if ($spec =~ m{^/}) {
+      $sock = IO::Socket::UNIX->new(Peer => $spec);
+    } else {
+      $sock = IO::Socket::INET->new(PeerAddr => $spec);
+    }
 
-die "Failed to connect to socket $spec: $!\n" unless defined($sock);
+    die "Failed to connect to socket $spec: $!\n" unless defined($sock);
 
-while (&lt;&gt;) {
-  print $sock $_;
-}
-========== end of hercsub =============
+    while (&lt;&gt;) {
+      print $sock $_;
+    }
+
 </code></pre>
 
 <h3>Using the netcat program</h3>
@@ -186,9 +195,12 @@ reader via TCP/IP.
 <p>
 Install netcat (which is useful for innumerable other things as well)
 and use:
-<br><code>nc -w1 localhost 1234 &lt; dummy.jcl</code>
 <p>
-For more information, type <code>man nc</code>.
+<blockquote>
+    <code>nc -w1 localhost 1234 &lt; dummy.jcl</code>
+</blockquote>
+<p>
+For more information, type &nbsp;<code>man nc</code>.
 
 
 <p><center><hr width=15% noshade>
@@ -196,6 +208,6 @@ For more information, type <code>man nc</code>.
 </center>
 
 <small>
-<p>Last updated 3 October 2003
+<p>Last updated 21 Apr 2006
 </BODY>
 </HTML>
