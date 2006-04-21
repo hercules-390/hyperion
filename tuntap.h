@@ -35,6 +35,9 @@ extern int      TUNTAP_CreateInterface  ( char*   pszTUNDevice,
 // Configure TUN/TAP Interface
 //
 
+#ifdef   OPTION_TUNTAP_CLRIPADDR
+extern int      TUNTAP_ClrIPAddr        ( char*   pszNetDevName );
+#endif
 extern int      TUNTAP_SetIPAddr        ( char*   pszNetDevName,
                                           char*   pszIPAddr );
 extern int      TUNTAP_SetDestAddr      ( char*   pszNetDevName,
@@ -54,6 +57,8 @@ extern int      TUNTAP_SetMACAddr       ( char*   pszNetDevName,
 
 extern int      TUNTAP_SetFlags         ( char*   pszNetDevName,
                                           int     iFlags );
+extern int      TUNTAP_GetFlags         ( char*   pszNetDevName,
+                                          int*    piFlags );
 
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
 extern int      TUNTAP_AddRoute         ( char*   pszNetDevName,

@@ -98,7 +98,7 @@ static void tuntap_term(void)
 //                       IFF_NO_PI - Do not include packet information
 //
 // Output:
-//      pfd           Pointer to receive the file descriptor if the
+//      pfd           Pointer to receive the file descriptor of the
 //                       TUN/TAP interface.
 //      pszNetDevName Pointer to receive the name if the interface.
 //
@@ -195,6 +195,30 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
   #undef  TUNTAP_IOCtl
   #define TUNTAP_IOCtl    IFC_IOCtl
 #endif
+
+#ifdef   OPTION_TUNTAP_CLRIPADDR
+//
+// TUNTAP_ClrIPAddr
+//
+
+int             TUNTAP_ClrIPAddr( char*   pszNetDevName )
+{
+    struct ifreq        ifreq;
+
+    memset( &ifreq, 0, sizeof( struct ifreq ) );
+
+    if( !pszNetDevName || !*pszNetDevName )
+    {
+        logmsg( _("HHCTU005E Invalid net device name specified: %s\n"),
+                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        return -1;
+    }
+
+    strcpy( ifreq.ifr_name, pszNetDevName );
+
+    return TUNTAP_IOCtl( 0, SIOCDIFADDR, (char*)&ifreq );
+}
+#endif /* OPTION_TUNTAP_CLRIPADDR */
 
 //
 // TUNTAP_SetIPAddr
@@ -418,11 +442,44 @@ int             TUNTAP_SetFlags ( char*   pszNetDevName,
         return -1;
     }
 
-    strcpy( ifreq.ifr_name, pszNetDevName );
+    strlcpy( ifreq.ifr_name, pszNetDevName, sizeof(ifreq.ifr_name) );
 
     ifreq.ifr_flags = iFlags;
 
     return TUNTAP_IOCtl( 0, SIOCSIFFLAGS, (char*)&ifreq );
+}
+
+//
+// TUNTAP_GetFlags
+//
+
+int      TUNTAP_GetFlags ( char*   pszNetDevName,
+                           int*    piFlags )
+{
+    struct ifreq        ifreq;
+    struct sockaddr_in* sin;
+    int                 rc;
+
+    memset( &ifreq, 0, sizeof( struct ifreq ) );
+
+    sin = (struct sockaddr_in*)&ifreq.ifr_addr;
+
+    sin->sin_family = AF_INET;
+
+    if( !pszNetDevName || !*pszNetDevName )
+    {
+        logmsg( _("HHCTU016E Invalid net device name specified: %s\n"),
+                pszNetDevName ? pszNetDevName : "(null pointer)" );
+        return -1;
+    }
+
+    strlcpy( ifreq.ifr_name, pszNetDevName, sizeof(ifreq.ifr_name) );
+
+    rc = TUNTAP_IOCtl( 0, SIOCGIFFLAGS, (char*)&ifreq );
+
+    *piFlags = ifreq.ifr_flags;
+
+    return rc;
 }
 
 //
