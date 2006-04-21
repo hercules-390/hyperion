@@ -87,6 +87,7 @@ extern void     packet_trace( BYTE *addr, int len );
 
 #define FRAME_TYPE_IP   0x0800
 #define FRAME_TYPE_ARP  0x0806
+#define FRAME_TYPE_RARP 0x0835
 #define FRAME_TYPE_SNA  0x80D5
 
 #if !(defined(IFHWADDRLEN))             // Only predefined on Linux
@@ -401,7 +402,7 @@ struct  _LCSBLK
 };
 
 // ---------------------------------------------------------------------
-// LCS Command Header
+// LCS Command Header  --  all LCS frames start with this header
 // ---------------------------------------------------------------------
 
 struct _LCSHDR
@@ -415,33 +416,33 @@ struct _LCSHDR
     HWORD       hwSequenceNo;
     HWORD       hwReturnCode;
 
-    BYTE        bLanType;
+    BYTE        bLanType;                   // LCS_FRAME_TYPE_ENET, etc
     BYTE        bRelAdapterNo;
 } ATTRIBUTE_PACKED;
 
-#define LCS_FRAME_TYPE_CNTL  0x00          // LCS command mode
-#define LCS_FRAME_TYPE_ENET  0x01
-#define LCS_FRAME_TYPE_TR    0x02
-#define LCS_FRAME_TYPE_FDDI  0x07
-#define LCS_FRAME_TYPE_AUTO  0xFF
+#define LCS_FRAME_TYPE_CNTL  0x00           // LCS command mode
+#define LCS_FRAME_TYPE_ENET  0x01           // Ethernet
+#define LCS_FRAME_TYPE_TR    0x02           // Token Ring
+#define LCS_FRAME_TYPE_FDDI  0x07           // FDDI
+#define LCS_FRAME_TYPE_AUTO  0xFF           // auto-detect
 
-#define LCS_PORT_0           0x00          // Port 0
-#define LCS_PORT_1           0x01          // Port 1
-#define LCS_PORT_2           0x02          // Port 2
-#define LCS_PORT_3           0x03          // Port 3
+#define LCS_PORT_0           0x00           // Port 0
+#define LCS_PORT_1           0x01           // Port 1
+#define LCS_PORT_2           0x02           // Port 2
+#define LCS_PORT_3           0x03           // Port 3
 
-#define LCS_TIMING           0x00          // Timing request
-#define LCS_STRTLAN          0x01          // Start LAN
-#define LCS_STOPLAN          0x02          // Stop  LAN
-#define LCS_GENSTAT          0x03          // Generate Stats
-#define LCS_LANSTAT          0x04          // LAN Stats
-#define LCS_LISTLAN          0x06          // List LAN
-#define LCS_STARTUP          0x07          // Start Host
-#define LCS_SHUTDOWN         0x08          // Shutdown Host
-#define LCS_LISTLAN2         0x0B          // Another version
-#define LCS_QIPASSIST        0xB2          // Multicast
-#define LCS_SETIPM           0xB4          // Set IPM
-#define LCS_DELIPM           0xB5          // Delete? IPM
+#define LCS_TIMING           0x00           // Timing request
+#define LCS_STRTLAN          0x01           // Start LAN
+#define LCS_STOPLAN          0x02           // Stop  LAN
+#define LCS_GENSTAT          0x03           // Generate Stats
+#define LCS_LANSTAT          0x04           // LAN Stats
+#define LCS_LISTLAN          0x06           // List LAN
+#define LCS_STARTUP          0x07           // Start Host
+#define LCS_SHUTDOWN         0x08           // Shutdown Host
+#define LCS_LISTLAN2         0x0B           // Another version
+#define LCS_QIPASSIST        0xB2           // Multicast
+#define LCS_SETIPM           0xB4           // Set IPM
+#define LCS_DELIPM           0xB5           // Delete? IPM
 
 #define LCS_INIT_PROG        0x00
 #define LCS_INIT_LGW         0x01
@@ -452,17 +453,7 @@ struct _LCSHDR
 
 struct _LCSSTDFRM
 {
-    HWORD       hwOffset;
-    BYTE        bType;
-    BYTE        bSlot;
-
-    BYTE        bCmdCode;
-    BYTE        bInitiator;
-    HWORD       hwSequenceNo;
-    HWORD       hwReturnCode;
-
-    BYTE        bLanType;
-    BYTE        bRelAdapterNo;
+    LCSHDR      bLCSHdr;
     HWORD       hwParameterCount;
     BYTE        bOperatorFlags[3];
     BYTE        _reserved[3];
@@ -475,18 +466,7 @@ struct _LCSSTDFRM
 
 struct _LCSSTRTFRM
 {
-    HWORD       hwOffset;
-    BYTE        bType;
-    BYTE        bSlot;
-
-    BYTE        bCmdCode;
-    BYTE        bInitiator;
-    HWORD       hwSequenceNo;
-    HWORD       hwReturnCode;
-
-    BYTE        bLanType;
-    BYTE        bRelAdapterNo;
-
+    LCSHDR      bLCSHdr;
     HWORD       hwBufferSize;
     BYTE        _unused2[6];
 } ATTRIBUTE_PACKED;
@@ -497,18 +477,7 @@ struct _LCSSTRTFRM
 
 struct  _LCSQIPFRM
 {
-    HWORD       hwOffset;
-    BYTE        bType;
-    BYTE        bSlot;
-
-    BYTE        bCmdCode;
-    BYTE        bInitiator;
-    HWORD       hwSequenceNo;
-    HWORD       hwReturnCode;
-
-    BYTE        bLanType;
-    BYTE        bRelAdapterNo;
-
+    LCSHDR      bLCSHdr;
     HWORD       hwNumIPPairs;
     HWORD       hwIPAssistsSupported;
     HWORD       hwIPAssistsEnabled;
@@ -529,18 +498,7 @@ struct  _LCSQIPFRM
 
 struct  _LCSLSTFRM
 {
-    HWORD       hwOffset;
-    BYTE        bType;
-    BYTE        bSlot;
-
-    BYTE        bCmdCode;
-    BYTE        bInitiator;
-    HWORD       hwSequenceNo;
-    HWORD       hwReturnCode;
-
-    BYTE        bLanType;
-    BYTE        bRelAdapterNo;
-
+    LCSHDR      bLCSHdr;
     BYTE        _unused1[10];
     MAC         MAC_Address;
     FWORD       fwPacketsDeblocked;
@@ -569,18 +527,7 @@ struct  _LCSIPMPAIR
 
 struct  _LCSIPMFRM
 {
-    HWORD       hwOffset;
-    BYTE        bType;
-    BYTE        bSlot;
-
-    BYTE        bCmdCode;
-    BYTE        bInitiator;
-    HWORD       hwSequenceNo;
-    HWORD       hwReturnCode;
-
-    BYTE        bLanType;
-    BYTE        bRelAdapterNo;
-
+    LCSHDR      bLCSHdr;
     HWORD       hwNumIPPairs;
     U16         hwIPAssistsSupported;
     U16         hwIPAssistsEnabled;
