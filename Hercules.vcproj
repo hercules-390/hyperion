@@ -746,6 +746,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\w32chan.c"
+							>
+						</File>
+						<File
 							RelativePath=".\w32util.c"
 							>
 						</File>
@@ -975,10 +979,6 @@
 						</File>
 						<File
 							RelativePath=".\vstore.h"
-							>
-						</File>
-						<File
-							RelativePath=".\w32chan.c"
 							>
 						</File>
 						<File
