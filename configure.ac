@@ -15,6 +15,11 @@
 #
 #  09/04/06 Fish Added this Change History section
 #  09/04/06 Fish Added AC_CHECK_MEMBERS for 'sockaddr_in.sin_len'
+#  11/04/06 Fish Remove JRM comments re: SIOCSIFNETMASK, SIOCSIFHWADDR,
+#                SIOCADDRT and SIOCDELRT declarations (AC_CHECK_DECLS)
+#                since now automatically handled by hercwind.h & hostopts.h.
+#  20/04/06 Fish Add AC_CHECK_DECLS check for SIOCDIFADDR per Kees Verruijt
+#                [kees@verruijt.net] for Apple OS X 10.4.6 TUNTAP_ClrIPAddr
 #
 ###############################################################################
 
@@ -550,13 +555,11 @@ AC_CHECK_DECLS( LOGIN_NAME_MAX,       [hc_cv_have_login_name_max=yes],      [hc_
 AC_CHECK_DECLS( _SC_NPROCESSORS_CONF, [hc_cv_have_sc_nprocessors_conf=yes], [hc_cv_have_sc_nprocessors_conf=no], [#include <unistd.h>] )
 AC_CHECK_DECLS( _SC_NPROCESSORS_ONLN, [hc_cv_have_sc_nprocessors_onln=yes], [hc_cv_have_sc_nprocessors_onln=no], [#include <unistd.h>] )
 
-# The following can be used to replace the OPTION_TUNTAP_* definitions in
-# hostopts.h, whenever the Windows version of the checks involved can be
-# set up. --JRM
-#AC_CHECK_DECLS( SIOCSIFNETMASK,       [hc_cv_have_siocsifnetmask=yes],      [hc_cv_have_siocsifnetmask=no],      [#include <linux/sockios.h>] )
-#AC_CHECK_DECLS( SIOCSIFHWADDR,        [hc_cv_have_siocsifhwaddr=yes],       [hc_cv_have_siocsifhwaddr=no],       [#include <linux/sockios.h>] )
-#AC_CHECK_DECLS( SIOCADDRT,            [hc_cv_have_siocaddrt=yes],           [hc_cv_have_siocaddrt=no],           [#include <linux/sockios.h>] )
-#AC_CHECK_DECLS( SIOCDELRT,            [hc_cv_have_siocdelrt=yes],           [hc_cv_have_siocdelrt=no],           [#include <linux/sockios.h>] )
+AC_CHECK_DECLS( SIOCSIFNETMASK,       [hc_cv_have_siocsifnetmask=yes],      [hc_cv_have_siocsifnetmask=no],      [#include <linux/sockios.h>] )
+AC_CHECK_DECLS( SIOCSIFHWADDR,        [hc_cv_have_siocsifhwaddr=yes],       [hc_cv_have_siocsifhwaddr=no],       [#include <linux/sockios.h>] )
+AC_CHECK_DECLS( SIOCADDRT,            [hc_cv_have_siocaddrt=yes],           [hc_cv_have_siocaddrt=no],           [#include <linux/sockios.h>] )
+AC_CHECK_DECLS( SIOCDELRT,            [hc_cv_have_siocdelrt=yes],           [hc_cv_have_siocdelrt=no],           [#include <linux/sockios.h>] )
+AC_CHECK_DECLS( SIOCDIFADDR,          [hc_cv_have_siocdifaddr=yes],         [hc_cv_have_siocdifaddr=no],         [#include <linux/sockios.h>] )
 
 AC_CACHE_SAVE()
 
