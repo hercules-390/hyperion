@@ -99,7 +99,6 @@
 /* Constants used in "#if OPTION_NAME == OPTION_VALUE" statements    */
 /*-------------------------------------------------------------------*/
 
-
 //       HOW_TO_IMPLEMENT_SH_COMMAND
 
 #if defined( HAVE_FORK )
@@ -116,6 +115,39 @@
 #define  CURSOR_SHAPE_NOT_SUPPORTED             0
 #define  CURSOR_SHAPE_VIA_SPECIAL_LINUX_ESCAPE  1
 
+
+/*-------------------------------------------------------------------*/
+/* The following is now handled automatically for ALL host platforms */
+/*-------------------------------------------------------------------*/
+
+#undef    OPTION_TUNTAP_SETNETMASK      /* (default initial setting) */
+#undef    OPTION_TUNTAP_SETMACADDR      /* (default initial setting) */
+#undef    OPTION_TUNTAP_DELADD_ROUTES   /* (default initial setting) */
+
+#if defined(HAVE_DECL_SIOCSIFNETMASK) && \
+            HAVE_DECL_SIOCSIFNETMASK
+
+  #define OPTION_TUNTAP_SETNETMASK      /* TUNTAP_SetNetMask works   */
+
+#endif
+#if defined(HAVE_DECL_SIOCSIFHWADDR) && \
+            HAVE_DECL_SIOCSIFHWADDR
+
+  #define OPTION_TUNTAP_SETMACADDR      /* TUNTAP_SetMACAddr works   */
+
+#endif
+#if defined(HAVE_DECL_SIOCADDRT) && defined(HAVE_DECL_SIOCDELRT) && \
+            HAVE_DECL_SIOCADDRT  &&         HAVE_DECL_SIOCDELRT
+
+  #define OPTION_TUNTAP_DELADD_ROUTES   /* Del/Add Routes    works   */
+
+#endif
+#if defined(HAVE_DECL_SIOCDIFADDR) && \
+            HAVE_DECL_SIOCDIFADDR
+
+  #define OPTION_TUNTAP_CLRIPADDR       /* TUNTAP_ClrIPAddr works    */
+
+#endif
 
 
 /*-------------------------------------------------------------------*/
@@ -140,7 +172,9 @@
 #else
   #undef  OPTION_FISHIO                 /* Use Herc's I/O scheduler  */
 #endif
+
 #define OPTION_W32_CTCI                 /* Fish's TunTap for CTCA's  */
+#undef  TUNTAP_IFF_RUNNING_NEEDED       /* TunTap32 doesn't allow it */
 
 #define OPTION_SCSI_TAPE                /* SCSI tape support         */
 #ifdef _MSVC_
@@ -151,10 +185,6 @@
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported!)          */
 #endif
 #undef  OPTION_FBA_BLKDEVICE            /* (no FBA BLKDEVICE support)*/
-
-#define OPTION_TUNTAP_SETNETMASK        /* TUNTAP_SetNetMask works   */
-#define OPTION_TUNTAP_SETMACADDR        /* TUNTAP_SetMACAddr works   */
-#define OPTION_TUNTAP_DELADD_ROUTES     /* Del/Add Routes    works   */
 
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #undef  MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" same as "fOo"!!)   */
@@ -179,14 +209,12 @@
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
 
+#define TUNTAP_IFF_RUNNING_NEEDED       /* Needed by tuntap driver?? */
+
 #undef  OPTION_SCSI_TAPE                /* No SCSI tape support      */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #undef  OPTION_FBA_BLKDEVICE            /* (no FBA BLKDEVICE support)*/
-
-#undef  OPTION_TUNTAP_SETNETMASK        /* TUNTAP_SetNetMask broken  */
-#undef  OPTION_TUNTAP_SETMACADDR        /* TUNTAP_SetMACAddr broken  */
-#undef  OPTION_TUNTAP_DELADD_ROUTES     /* Del/Add Routes    broken  */
 
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
@@ -208,11 +236,10 @@
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
 
+#define TUNTAP_IFF_RUNNING_NEEDED       /* Needed by tuntap driver?? */
+
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
-
-#undef  OPTION_TUNTAP_SETMACADDR        /* TUNTAP_SetMACAddr broken  */
-#undef  OPTION_TUNTAP_DELADD_ROUTES     /* Del/Add Routes    broken  */
 
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
@@ -227,21 +254,19 @@
 
 
 /*-------------------------------------------------------------------*/
-/* Hard-coded OTHER host-specific features and options...            */
+/* Hard-coded OTHER (e.g. *nix) host-specific features and options...*/
 /*-------------------------------------------------------------------*/
 #else                                   /* "Other platform" options  */
 
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
 
+#define TUNTAP_IFF_RUNNING_NEEDED       /* Needed by tuntap driver?? */
+
 #define OPTION_SCSI_TAPE                /* SCSI tape support         */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #define OPTION_FBA_BLKDEVICE            /* FBA block device support  */
-
-#define OPTION_TUNTAP_SETNETMASK        /* TUNTAP_SetNetMask works   */
-#define OPTION_TUNTAP_SETMACADDR        /* TUNTAP_SetMACAddr works   */
-#define OPTION_TUNTAP_DELADD_ROUTES     /* Del/Add Routes    works   */
 
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
