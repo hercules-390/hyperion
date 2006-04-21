@@ -136,10 +136,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\hercifc.c"
-					>
-				</File>
-				<File
 					RelativePath=".\herclin.c"
 					>
 				</File>
@@ -289,10 +285,6 @@
 								>
 							</File>
 							<File
-								RelativePath=".\tuntap.c"
-								>
-							</File>
-							<File
 								RelativePath=".\tuntap.h"
 								>
 							</File>
@@ -321,7 +313,15 @@
 								>
 							</File>
 							<File
+								RelativePath=".\hercifc.c"
+								>
+							</File>
+							<File
 								RelativePath=".\qeth.c"
+								>
+							</File>
+							<File
+								RelativePath=".\tuntap.c"
 								>
 							</File>
 							<File
