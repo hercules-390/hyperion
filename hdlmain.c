@@ -78,6 +78,7 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( debug_watchdog_signal,      UNRESOLVED      );
 #if defined(OPTION_W32_CTCI)
     HDL_REGISTER( debug_tt32_stats,           UNRESOLVED      );
+    HDL_REGISTER( debug_tt32_tracing,         UNRESOLVED      );
 #endif
 
     HDL_REGISTER( hdl_device_type_equates,    UNRESOLVED      );
@@ -118,6 +119,7 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE( debug_chsc_unknown_request );
 #if defined(OPTION_W32_CTCI)
     HDL_RESOLVE( debug_tt32_stats           );
+    HDL_RESOLVE( debug_tt32_tracing         );
 #endif
 
     HDL_RESOLVE( hdl_device_type_equates    );

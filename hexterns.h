@@ -326,7 +326,8 @@ int  ecpsvm_virttmr_ext(REGS *regs);
 
 /* Functions in module w32ctca.c */
 #if defined(OPTION_W32_CTCI)
-HSYS_DLL_IMPORT int (*debug_tt32_stats) (int);
+HSYS_DLL_IMPORT int  (*debug_tt32_stats)   (int);
+HSYS_DLL_IMPORT void (*debug_tt32_tracing) (int);
 #endif // defined(OPTION_W32_CTCI)
 
 #endif // _HEXTERNS_H
