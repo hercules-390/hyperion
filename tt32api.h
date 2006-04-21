@@ -37,13 +37,19 @@
  *
  *                            CHANGE HISTORY
  *
- *  MM/DD/YY   Version      Description...
- *  --------  ---------    -------------------------------------------------------
+ *  MM/DD/YY   Version    Description...
+ *  --------  ---------  -------------------------------------------------------
  *
- *  12/22/01    1.0.0       Created.
- *  07/20/02    2.0.0       JAP: LCS modifications/enhancements.
- *  07/02/03    2.0.2       Fish: use std 'uint32_t' type instead of Win32 DWORD
- *  09/04/05    2.1.0       Fish: 'open_ex': errno clobber workaround
+ *  12/22/01    1.0.0     Created.
+ *  07/20/02    2.0.0     JAP: LCS modifications/enhancements.
+ *  07/02/03    2.0.2     Fish: use std 'uint32_t' type instead of Win32 DWORD
+ *  06/16/04    2.1.0     Fish: 'ex' variant functions to pass errno value.
+ *  11/01/03    3.1.0     Fish: TT32MINMTU, TT32MAXMTU, TT32DEFMTU
+ *  11/03/03    3.1.0     Fish: TT32_MAX_MULTICAST_LIST_ENTRIES
+ *  12/31/03    3.1.0     Fish: support for deprecated functions dropped/deleted.
+ *  02/05/06    3.1.0     Fish: New exported function: 'tuntap32_build_herc_iface_mac'
+ *  02/14/06    3.1.0     Fish: Added #defines for TUNTAP32_DLLNAME
+ *  04/14/06    3.1.0     Fish: Added 'tuntap32_calc_checksum' function
  *
 \**********************************************************************************/
 
@@ -54,6 +60,12 @@
 extern "C"
 {
 #endif
+
+#define TT32MINMTU   (     60)       // minimum MTU value
+#define TT32DEFMTU   (   1500)       // default MTU value
+#define TT32MAXMTU  ((64*1024)-14)   // maximum MTU value  (14 == eth_hdr_size)
+
+#define TT32_MAX_MULTICAST_LIST_ENTRIES  (32)
 
 #define TT32SDEVBUFF    _IOW('T', 220, int)
 #define TT32GDEVBUFF    _IOR('T', 220, int)
@@ -67,7 +79,7 @@ struct tt32ctl
 {
     union
     {
-        char    ctln_name[IFNAMSIZ];    // Interface name, e.g. "en0".
+        char    ctln_name[IFNAMSIZ];    // iface name (e.g. "tun0")
     } tt32_ctln;
 
     union
@@ -83,27 +95,27 @@ struct tt32ctl
 #define tt32ctl_iobuffsize   tt32_ctlu.ctlu_iobuffsize
 #define tt32ctl_readtimeout  tt32_ctlu.ctlu_readtimeout
 
-typedef struct _tagTT32STATS
+typedef struct TT32STATS
 {
-    uint32_t  dwStructSize;         // size of this structure
-    uint32_t  dwKernelBuffSize;     // size of kernel capture buffer
-    uint32_t  dwReadBuffSize;       // size of dll I/O buffer
-    uint32_t  dwMaxBytesReceived;   // max dll I/O bytes received
+    uint32_t  dwStructSize;             // size of this structure
+    uint32_t  dwKernelBuffSize;         // size of kernel capture buffer
+    uint32_t  dwReadBuffSize;           // size of dll I/O buffer
+    uint32_t  dwMaxBytesReceived;       // max dll I/O bytes received
 
-    int64_t  n64WriteCalls;         // total #of write requests
-    int64_t  n64WriteIOs;           // total #of write I/Os
+    int64_t  n64WriteCalls;             // total #of write requests
+    int64_t  n64WriteIOs;               // total #of write I/Os
 
-    int64_t  n64ReadCalls;          // total #of read requests
-    int64_t  n64ReadIOs;            // total #of read I/Os
+    int64_t  n64ReadCalls;              // total #of read requests
+    int64_t  n64ReadIOs;                // total #of read I/Os
 
-    int64_t  n64PacketsRead;        // total #of packets read
-    int64_t  n64PacketsWritten;     // total #of packets written
+    int64_t  n64PacketsRead;            // total #of packets read
+    int64_t  n64PacketsWritten;         // total #of packets written
 
-    int64_t  n64BytesRead;          // total #of bytes read
-    int64_t  n64BytesWritten;       // total #of bytes written
+    int64_t  n64BytesRead;              // total #of bytes read
+    int64_t  n64BytesWritten;           // total #of bytes written
 
-    int64_t  n64InternalPackets;    // total #of packets handled internally
-    int64_t  n64IgnoredPackets;     // total #of packets ignored
+    int64_t  n64InternalPackets;        // total #of packets handled internally
+    int64_t  n64IgnoredPackets;         // total #of packets ignored
 }
 TT32STATS, *PTT32STATS;
 
@@ -118,52 +130,77 @@ TT32STATS, *PTT32STATS;
 
 typedef void (__cdecl *ptr_to_print_debug_string_func)(const char* debug_string);
 
-extern int         WINAPI EXPORT tuntap32_open_ex /*EXPERIMENTAL*/ (char* gatewaydev, int flags, int* errnum);
+extern const char* WINAPI EXPORT tuntap32_copyright_string         ();
+extern const char* WINAPI EXPORT tuntap32_version_string           ();
+extern void        WINAPI EXPORT tuntap32_version_numbers          (int* major, int* inter, int* minor, int* build);
+extern int         WINAPI EXPORT tuntap32_set_debug_output_func    (ptr_to_print_debug_string_func pfn);
+extern int         WINAPI EXPORT tuntap32_open                     (char* gatewaydev, int flags);
+extern int         WINAPI EXPORT tuntap32_write                    (int fd, u_char* buffer, u_long len);
+extern int         WINAPI EXPORT tuntap32_read                     (int fd, u_char* buffer, u_long len);
+extern int         WINAPI EXPORT tuntap32_close                    (int fd);
+extern int         WINAPI EXPORT tuntap32_ioctl                    (int fd, int request, char* argp);
+extern int         WINAPI EXPORT tuntap32_get_stats                (int fd, TT32STATS* stats);
+extern const char* WINAPI EXPORT tuntap32_get_default_iface        ();
+extern void        WINAPI EXPORT tuntap32_build_herc_iface_mac     (u_char* mac, const u_char* ip);
+extern u_short     WINAPI EXPORT tuntap32_calc_inet_checksum       (u_char* buffer, u_long bytes);
 
-extern const char* WINAPI EXPORT tuntap32_copyright_string  ();
-extern const char* WINAPI EXPORT tuntap32_version_string    ();
-extern void        WINAPI EXPORT tuntap32_version_numbers   (int* major, int* inter, int* minor, int* build);
-extern int         WINAPI EXPORT tuntap32_set_debug_output_func (ptr_to_print_debug_string_func pfn);
+/* (functions to work around an as-yet unidentified/unresolved 'errno' bug) */
 
-extern int         WINAPI EXPORT tuntap32_open              (char* gatewaydev, int flags);
-extern int         WINAPI EXPORT tuntap32_write             (int fd, u_char* buffer, u_long len);
-extern int         WINAPI EXPORT tuntap32_read              (int fd, u_char* buffer, u_long len);
-extern int         WINAPI EXPORT tuntap32_close             (int fd);
-extern int         WINAPI EXPORT tuntap32_ioctl             (int fd, int request, char* argp);
-extern int         WINAPI EXPORT tuntap32_get_stats         (int fd, TT32STATS* stats);
-extern const char* WINAPI EXPORT tuntap32_get_default_iface ();
-
-// For compatability with previous releases (do not use if at all possible!)
-extern int         WINAPI EXPORT tuntap32_open_ip_tuntap    (char* virtualipaddr, char* gatewayipaddr,
-                                                             u_long capturebuffersize, u_long iobuffersize);
-extern int         WINAPI EXPORT tuntap32_write_ip_tun      (int fd, u_char* buffer, u_long len);
-extern int         WINAPI EXPORT tuntap32_read_ip_tap       (int fd, u_char* buffer, u_long len, u_long timeout);
-extern int         WINAPI EXPORT tuntap32_close_ip_tuntap   (int fd);
-extern int         WINAPI EXPORT tuntap32_get_ip_stats      (int fd, TT32STATS* stats);
+extern const char* WINAPI EXPORT tuntap32_copyright_string_ex      (                                                int* eno);
+extern const char* WINAPI EXPORT tuntap32_version_string_ex        (                                                int* eno);
+extern void        WINAPI EXPORT tuntap32_version_numbers_ex       (int* major, int* inter, int* minor, int* build, int* eno);
+extern int         WINAPI EXPORT tuntap32_set_debug_output_func_ex (ptr_to_print_debug_string_func pfn,             int* eno);
+extern int         WINAPI EXPORT tuntap32_open_ex                  (char* gatewaydev, int flags,                    int* eno);
+extern int         WINAPI EXPORT tuntap32_write_ex                 (int fd, u_char* buffer, u_long len,             int* eno);
+extern int         WINAPI EXPORT tuntap32_read_ex                  (int fd, u_char* buffer, u_long len,             int* eno);
+extern int         WINAPI EXPORT tuntap32_close_ex                 (int fd,                                         int* eno);
+extern int         WINAPI EXPORT tuntap32_ioctl_ex                 (int fd, int request, char* argp,                int* eno);
+extern int         WINAPI EXPORT tuntap32_get_stats_ex             (int fd, TT32STATS* stats,                       int* eno);
+extern const char* WINAPI EXPORT tuntap32_get_default_iface_ex     (                                                int* eno);
 
 /* (in case they want to use LoadLibrary and GetProcAddress instead) */
 
-typedef int         (WINAPI *ptuntap32_open_ex) /*EXPERIMENTAL*/ (char*,int,int*);
+#if defined(_UNICODE) || defined(UNICODE)
+  #if defined(_DEBUG) || defined(DEBUG)
+    #define  TUNTAP32_DLLNAME  "TunTap32UD.dll"
+  #else // release, not debug
+    #define  TUNTAP32_DLLNAME  "TunTap32U.dll"
+  #endif // debug or release
+#else // ansi, not unicode
+  #if defined(_DEBUG) || defined(DEBUG)
+    #define  TUNTAP32_DLLNAME  "TunTap32D.dll"
+  #else // release, not debug
+    #define  TUNTAP32_DLLNAME  "TunTap32.dll"
+  #endif // debug or release
+#endif // unicode or ansi
 
-typedef const char* (WINAPI *ptuntap32_copyright_string) ();
-typedef const char* (WINAPI *ptuntap32_version_string)   ();
-typedef void        (WINAPI *ptuntap32_version_numbers)  (int*,int*,int*,int*);
-typedef int         (WINAPI *ptuntap32_set_debug_output_func) (ptr_to_print_debug_string_func);
+typedef const char* (WINAPI *ptuntap32_copyright_string)           ();
+typedef const char* (WINAPI *ptuntap32_version_string)             ();
+typedef void        (WINAPI *ptuntap32_version_numbers)            (int*,int*,int*,int*);
+typedef int         (WINAPI *ptuntap32_set_debug_output_func)      (ptr_to_print_debug_string_func);
+typedef int         (WINAPI *ptuntap32_open)                       (char*,int);
+typedef int         (WINAPI *ptuntap32_write)                      (int,u_char*,u_long);
+typedef int         (WINAPI *ptuntap32_read)                       (int,u_char*,u_long);
+typedef int         (WINAPI *ptuntap32_close)                      (int);
+typedef int         (WINAPI *ptuntap32_ioctl)                      (int,int,char*);
+typedef int         (WINAPI *ptuntap32_get_stats)                  (int fd, TT32STATS* stats);
+typedef const char* (WINAPI *ptuntap32_get_default_iface)          ();
+typedef void        (WINAPI *ptuntap32_build_herc_iface_mac)       (u_char* mac, const u_char* ip);
+typedef u_short     (WINAPI *ptuntap32_calc_checksum)              (u_char*, u_long);
 
-typedef int         (WINAPI *ptuntap32_open)             (char*,int);
-typedef int         (WINAPI *ptuntap32_write)            (int,u_char*,u_long);
-typedef int         (WINAPI *ptuntap32_read)             (int,u_char*,u_long);
-typedef int         (WINAPI *ptuntap32_close)            (int);
-typedef int         (WINAPI *ptuntap32_ioctl)            (int,int,char*);
-typedef int         (WINAPI *ptuntap32_get_stats)        (int fd, TT32STATS* stats);
-typedef const char* (WINAPI *ptuntap32_get_default_iface)();
+/* (functions to work around an as-yet unidentified/unresolved 'errno' bug) */
 
-// For compatability with previous releases (do not use if at all possible!)
-typedef int         (WINAPI *ptuntap32_open_ip_tuntap)   (char*,char*,u_long,u_long);
-typedef int         (WINAPI *ptuntap32_write_ip_tun)     (int,u_char*,u_long);
-typedef int         (WINAPI *ptuntap32_read_ip_tap)      (int,u_char*,u_long,u_long);
-typedef int         (WINAPI *ptuntap32_close_ip_tuntap)  (int);
-typedef int         (WINAPI *ptuntap32_get_ip_stats)     (int, TT32STATS*);
+typedef const char* (WINAPI *ptuntap32_copyright_string_ex)        (                                                int* eno);
+typedef const char* (WINAPI *ptuntap32_version_string_ex)          (                                                int* eno);
+typedef void        (WINAPI *ptuntap32_version_numbers_ex)         (int* major, int* inter, int* minor, int* build, int* eno);
+typedef int         (WINAPI *ptuntap32_set_debug_output_func_ex)   (ptr_to_print_debug_string_func pfn,             int* eno);
+typedef int         (WINAPI *ptuntap32_open_ex)                    (char* gatewaydev, int flags,                    int* eno);
+typedef int         (WINAPI *ptuntap32_write_ex)                   (int fd, u_char* buffer, u_long len,             int* eno);
+typedef int         (WINAPI *ptuntap32_read_ex)                    (int fd, u_char* buffer, u_long len,             int* eno);
+typedef int         (WINAPI *ptuntap32_close_ex)                   (int fd,                                         int* eno);
+typedef int         (WINAPI *ptuntap32_ioctl_ex)                   (int fd, int request, char* argp,                int* eno);
+typedef int         (WINAPI *ptuntap32_get_stats_ex)               (int fd, TT32STATS* stats,                       int* eno);
+typedef const char* (WINAPI *ptuntap32_get_default_iface_ex)       (                                                int* eno);
 
 /**********************************************************************************/
 

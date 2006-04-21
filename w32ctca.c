@@ -19,184 +19,105 @@ int w32ctca_dummy = 0;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+// We prefer the '_ex' variety as they resolve the "no error" errno issue...
+// But if they're not available we'll settle for the older version...
+
+#define TT32_PROCADDRS( name )                                  \
+                                                                \
+ptuntap32_ ## name ## _ex   g_tt32_pfn_ ##name ## _ex  = NULL;  \
+ptuntap32_ ## name          g_tt32_pfn_ ## name        = NULL
+
+#define GET_TT32_PROCADDRS( name )                                \
+                                                                  \
+    g_tt32_pfn_ ## name ## _ex  =                                 \
+    (ptuntap32_ ## name ## _ex  ) GetProcAddress( g_tt32_hmoddll, \
+     "tuntap32_" # name   "_ex" );                                \
+    g_tt32_pfn_ ## name         =                                 \
+    (ptuntap32_ ## name         ) GetProcAddress( g_tt32_hmoddll, \
+     "tuntap32_" # name         ); if (!                          \
+    g_tt32_pfn_ ## name         ) goto error
+
+///////////////////////////////////////////////////////////////////////////////////////////
 // Global variables...
 
 #define  TT32_DEFAULT_IFACE     "00-00-5E-80-00-00"
 
-char     g_tt32_dllname[MAX_TT32_DLLNAMELEN] = {0};
-HMODULE  g_tt32_hmoddll = NULL;
+CRITICAL_SECTION  g_tt32_lock;   // (lock for accessing ALL below variables)
 
-////////////////// EXPERIMENTAL //////////////////
-ptuntap32_open_ex               g_tt32_pfn_open_ex               = NULL;
-////////////////// EXPERIMENTAL //////////////////
+char              g_tt32_dllname [ MAX_TT32_DLLNAMELEN ]  = {0};
+HMODULE           g_tt32_hmoddll                          = NULL;
 
+TT32_PROCADDRS ( open                  );
+TT32_PROCADDRS ( close                 );
+TT32_PROCADDRS ( read                  );
+TT32_PROCADDRS ( write                 );
+TT32_PROCADDRS ( ioctl                 );
+TT32_PROCADDRS ( get_stats             );
+TT32_PROCADDRS ( get_default_iface     );
+TT32_PROCADDRS ( set_debug_output_func );
+TT32_PROCADDRS ( version_string        );
+TT32_PROCADDRS ( version_numbers       );
+TT32_PROCADDRS ( copyright_string      );
 
+// (NOTE: the following function only exists in v3.0+)
 
-ptuntap32_copyright_string      g_tt32_pfn_copyright_string      = NULL;
-ptuntap32_version_string        g_tt32_pfn_version_string        = NULL;
-ptuntap32_version_numbers       g_tt32_pfn_version_numbers       = NULL;
-ptuntap32_open                  g_tt32_pfn_open                  = NULL;
-ptuntap32_write                 g_tt32_pfn_write                 = NULL;
-ptuntap32_read                  g_tt32_pfn_read                  = NULL;
-ptuntap32_close                 g_tt32_pfn_close                 = NULL;
-ptuntap32_ioctl                 g_tt32_pfn_ioctl                 = NULL;
-ptuntap32_get_default_iface     g_tt32_pfn_get_default_iface     = NULL;
-ptuntap32_get_stats             g_tt32_pfn_get_stats             = NULL;
-ptuntap32_set_debug_output_func g_tt32_pfn_set_debug_output_func = NULL;
-
-CRITICAL_SECTION  g_tt32_lock;              // (lock for accessing above variables)
+ptuntap32_build_herc_iface_mac   g_tt32_pfn_build_herc_iface_mac   = NULL;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-BOOL tt32_loaddll();    // (forward reference)
-
-void            tt32_init()
+BOOL GetTT32ProcAddrs()
 {
-    InitializeCriticalSection( &g_tt32_lock );
-}
+    GET_TT32_PROCADDRS ( open                  );
+    GET_TT32_PROCADDRS ( close                 );
+    GET_TT32_PROCADDRS ( read                  );
+    GET_TT32_PROCADDRS ( write                 );
+    GET_TT32_PROCADDRS ( ioctl                 );
+    GET_TT32_PROCADDRS ( get_stats             );
+    GET_TT32_PROCADDRS ( get_default_iface     );
+    GET_TT32_PROCADDRS ( set_debug_output_func );
+    GET_TT32_PROCADDRS ( version_string        );
+    GET_TT32_PROCADDRS ( version_numbers       );
+    GET_TT32_PROCADDRS ( copyright_string      );
 
-//
-// tt32_open
-//
+    // (NOTE: we don't NEED this function (since it's new to
+    //   v3.0+ of tuntap32) so it's okay if it doesn't exist)
 
-int             tt32_open( char* pszGatewayDevice, int iFlags )
-{
-#if 0
-    if (!tt32_loaddll()) return -1;
-    return g_tt32_pfn_open( pszGatewayDevice, iFlags );
-#else
-    ////////////////// EXPERIMENTAL //////////////////
-    int rc, errnum;
-    if (!tt32_loaddll()) return -1;
-    if (!g_tt32_pfn_open_ex)
-        return g_tt32_pfn_open( pszGatewayDevice, iFlags );
-    rc = g_tt32_pfn_open_ex( pszGatewayDevice, iFlags, &errnum );
-    errno = errnum;
-    return rc;
-    ////////////////// EXPERIMENTAL //////////////////
-#endif
-}
+    g_tt32_pfn_build_herc_iface_mac  =
+    (ptuntap32_build_herc_iface_mac  ) GetProcAddress( g_tt32_hmoddll,
+     "tuntap32_build_herc_iface_mac" );
 
-//
-//
-//
+    LeaveCriticalSection(&g_tt32_lock);
+    return TRUE;
 
-int             tt32_read( int fd, u_char* buffer, u_long size )
-{
-    if (!tt32_loaddll()) return -1;
-    return g_tt32_pfn_read( fd, buffer, size );
-}
+error:
 
-//
-//
-//
-
-int             tt32_write( int fd, u_char* buffer, u_long size )
-{
-    if (!tt32_loaddll()) return -1;
-    return g_tt32_pfn_write( fd, buffer, size );
-}
-
-//
-//
-//
-
-int             tt32_close( int fd )
-{
-    if (!tt32_loaddll()) return -1;
-#if defined(DEBUG) || defined(_DEBUG)
-    display_tt32_stats(fd);
-#endif // defined(DEBUG) || defined(_DEBUG)
-    return g_tt32_pfn_close(fd);
-}
-
-//
-//
-//
-
-int             tt32_ioctl( int fd, int iRequest, char* argp )
-{
-    if (!tt32_loaddll()) return -1;
-    return g_tt32_pfn_ioctl( fd, iRequest, argp );
-}
-
-//
-//
-//
-
-const char*     tt32_get_default_iface()
-{
-    const char* pszDefaultIFace = NULL;
-    if (tt32_loaddll())
-        pszDefaultIFace = g_tt32_pfn_get_default_iface();
-    return ( pszDefaultIFace ? pszDefaultIFace : TT32_DEFAULT_IFACE );
-}
-
-//
-//
-//
-
-int             display_tt32_stats( int fd )
-{
-    TT32STATS stats;
-
-    if (!tt32_loaddll()) return -1;
-
-    memset(&stats,0,sizeof(stats));
-    stats.dwStructSize = sizeof(stats);
-
-        g_tt32_pfn_get_stats(fd,&stats);
-
-    logmsg
-    (
-        "%s Statistics:\n\n"
-        "Size of Kernel Hold Buffer:      %5luK\n"
-        "Size of DLL I/O Buffer:          %5luK\n"
-        "Maximum DLL I/O Bytes Received:  %5luK\n\n"
-        "%12" I64_FMT "d Write Calls\n"
-        "%12" I64_FMT "d Write I/Os\n"
-        "%12" I64_FMT "d Read Calls\n"
-        "%12" I64_FMT "d Read I/Os\n"
-        "%12" I64_FMT "d Packets Read\n"
-        "%12" I64_FMT "d Packets Written\n"
-        "%12" I64_FMT "d Bytes Read\n"
-        "%12" I64_FMT "d Bytes Written\n"
-        "%12" I64_FMT "d Internal Packets\n"
-        "%12" I64_FMT "d Ignored Packets\n"
-        ,
-        g_tt32_dllname
-        ,(stats.dwKernelBuffSize   + 1023) / 1024
-        ,(stats.dwReadBuffSize     + 1023) / 1024
-        ,(stats.dwMaxBytesReceived + 1023) / 1024
-        ,stats.n64WriteCalls
-        ,stats.n64WriteIOs
-        ,stats.n64ReadCalls
-        ,stats.n64ReadIOs
-        ,stats.n64PacketsRead
-        ,stats.n64PacketsWritten
-        ,stats.n64BytesRead
-        ,stats.n64BytesWritten
-        ,stats.n64InternalPackets
-        ,stats.n64IgnoredPackets
-    );
-
-    return 0;
+    FreeLibrary( g_tt32_hmoddll );
+    g_tt32_hmoddll = NULL;
+    logmsg( "** tt32_loaddll: One of the GetProcAddress calls failed\n" );
+    LeaveCriticalSection(&g_tt32_lock);
+    return FALSE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Debug string output function for use by the TUNTAP32.DLL...
 
-#if defined(DEBUG) || defined(_DEBUG)
-void __cdecl tt32_output_debug_string(const char* debug_string)
+void __cdecl tt32_output_debug_string( const char* debug_string )
 {
-    TRACE("%s",debug_string);
+    logmsg( "%s", debug_string );
 }
-#endif // defined(DEBUG) || defined(_DEBUG)
+
+void  enable_tt32_debug_tracing( int enable )
+{
+    // Pass to TunTap32 DLL a pointer to the function it can use to
+    // display debug messages with. This function of our's (that we
+    // are passing it a pointer to) will then display its debugging
+    // message (string) on the Hercules console so we can see it.
+
+    VERIFY( g_tt32_pfn_set_debug_output_func( enable ? &tt32_output_debug_string : NULL ) );
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Load the TUNTAP32.DLL...
-
-#define MAX_ERR_MSG_LEN  (256)
 
 BOOL tt32_loaddll()
 {
@@ -205,9 +126,9 @@ BOOL tt32_loaddll()
     char   tt32_dllname_out_buff [ MAX_PATH ] = {0};
     static int tt32_init_done = 0;
 
-    if(!tt32_init_done)
+    if (!tt32_init_done)
     {
-        tt32_init();
+        InitializeCriticalSection( &g_tt32_lock );
         tt32_init_done = 1;
     }
 
@@ -283,93 +204,239 @@ BOOL tt32_loaddll()
         }
     }
 
-    g_tt32_pfn_copyright_string =
-    (ptuntap32_copyright_string) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_copyright_string"); if (!
-    g_tt32_pfn_copyright_string) goto error;
+    // Resolve our required DLL entry-point variables...
 
-    g_tt32_pfn_version_string =
-    (ptuntap32_version_string) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_version_string"); if (!
-    g_tt32_pfn_version_string) goto error;
-
-    g_tt32_pfn_version_numbers =
-    (ptuntap32_version_numbers) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_version_numbers"); if (!
-    g_tt32_pfn_version_numbers) goto error;
-
-    g_tt32_pfn_open =
-    (ptuntap32_open) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_open"); if (!
-    g_tt32_pfn_open) goto error;
-
-    ////////////////// EXPERIMENTAL //////////////////
-    g_tt32_pfn_open_ex =
-    (ptuntap32_open_ex) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_open_ex");
-    ////////////////// EXPERIMENTAL //////////////////
-
-    g_tt32_pfn_write =
-    (ptuntap32_write) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_write"); if (!
-    g_tt32_pfn_write) goto error;
-
-    g_tt32_pfn_read =
-    (ptuntap32_read) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_read"); if (!
-    g_tt32_pfn_read) goto error;
-
-    g_tt32_pfn_close =
-    (ptuntap32_close) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_close"); if (!
-    g_tt32_pfn_close) goto error;
-
-    g_tt32_pfn_ioctl =
-    (ptuntap32_ioctl) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_ioctl"); if (!
-    g_tt32_pfn_ioctl) goto error;
-
-    g_tt32_pfn_get_default_iface =
-    (ptuntap32_get_default_iface) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_get_default_iface"); if (!
-    g_tt32_pfn_get_default_iface) goto error;
-
-    g_tt32_pfn_get_stats =
-    (ptuntap32_get_stats) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_get_stats"); if (!
-    g_tt32_pfn_get_stats) goto error;
-
-    g_tt32_pfn_set_debug_output_func =
-    (ptuntap32_set_debug_output_func) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_set_debug_output_func"); if (!
-    g_tt32_pfn_set_debug_output_func) goto error;
-
-    LeaveCriticalSection(&g_tt32_lock);
-
-#if defined(DEBUG) || defined(_DEBUG)
-
-    // Pass to TunTap32 DLL a pointer to the function it can use to
-    // display debug messages with. This function of our's (that we
-    // are passing it a pointer to) will then display its debugging
-    // message (string) on the Hercules console so we can see it.
-
-    VERIFY(g_tt32_pfn_set_debug_output_func(&tt32_output_debug_string));
-
-#endif // defined(DEBUG) || defined(_DEBUG)
+    if (!GetTT32ProcAddrs())
+        return FALSE;
 
     logmsg("%s version %s initiated\n",
         g_tt32_dllname,
         g_tt32_pfn_version_string());
 
+#if defined(DEBUG) || defined(_DEBUG)
+    enable_tt32_debug_tracing(1);   // (enable debug tracing by default for DEBUG builds)
+#endif
+
     return TRUE;
+}
 
-error:
+///////////////////////////////////////////////////////////////////////////////////////////
 
-    FreeLibrary(g_tt32_hmoddll);
-    g_tt32_hmoddll = NULL;
-    LeaveCriticalSection(&g_tt32_lock);
-    logmsg("** tt32_loaddll: One of the GetProcAddress calls failed\n");
-    return FALSE;
+int  tt32_open( char* pszGatewayDevice, int iFlags )
+{
+    int rc, errnum;
+    if (!tt32_loaddll()) return -1;
+    if (!      g_tt32_pfn_open_ex )
+        return g_tt32_pfn_open    ( pszGatewayDevice, iFlags );
+    rc    =    g_tt32_pfn_open_ex ( pszGatewayDevice, iFlags, &errnum );
+    errno =                                                    errnum;
+    return rc;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+int  tt32_read( int fd, u_char* buffer, u_long size )
+{
+    int rc, errnum;
+    if (!tt32_loaddll()) return -1;
+    if (!      g_tt32_pfn_read_ex )
+        return g_tt32_pfn_read    ( fd, buffer, size );
+    rc    =    g_tt32_pfn_read_ex ( fd, buffer, size, &errnum );
+    errno =                                            errnum;
+    return rc;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+int  tt32_write( int fd, u_char* buffer, u_long size )
+{
+    int rc, errnum;
+    if (!tt32_loaddll()) return -1;
+    if (!      g_tt32_pfn_write_ex )
+        return g_tt32_pfn_write    ( fd, buffer, size );
+    rc    =    g_tt32_pfn_write_ex ( fd, buffer, size, &errnum );
+    errno =                                             errnum;
+    return rc;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+int  tt32_close( int fd )
+{
+    int rc, errnum;
+    if (!tt32_loaddll()) return -1;
+#if defined(DEBUG) || defined(_DEBUG)
+    display_tt32_stats(fd);
+#endif
+    if (!      g_tt32_pfn_close_ex )
+        return g_tt32_pfn_close    ( fd );
+    rc    =    g_tt32_pfn_close_ex ( fd, &errnum );
+    errno =                               errnum;
+    return rc;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+int  tt32_ioctl( int fd, int iRequest, char* argp )
+{
+    int rc, errnum;
+    if (!tt32_loaddll()) return -1;
+    if (!      g_tt32_pfn_ioctl_ex )
+        return g_tt32_pfn_ioctl    ( fd, iRequest, argp );
+    rc    =    g_tt32_pfn_ioctl_ex ( fd, iRequest, argp, &errnum );
+    errno =                                               errnum;
+    return rc;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+const char*  tt32_get_default_iface()
+{
+    int errnum;
+    const char* pszDefaultIFace = NULL;
+    if (tt32_loaddll())
+    {
+        if (!                    g_tt32_pfn_get_default_iface_ex )
+               pszDefaultIFace = g_tt32_pfn_get_default_iface    ();
+        else { pszDefaultIFace = g_tt32_pfn_get_default_iface_ex ( &errnum );
+            errno =                                                 errnum;
+        }
+    }
+    return ( pszDefaultIFace ? pszDefaultIFace : TT32_DEFAULT_IFACE );
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+int  display_tt32_stats( int fd )
+{
+    int errnum;
+    TT32STATS stats;
+
+    if (!tt32_loaddll()) return -1;
+
+    memset(&stats,0,sizeof(stats));
+    stats.dwStructSize = sizeof(stats);
+
+    if (!  g_tt32_pfn_get_stats_ex )
+           g_tt32_pfn_get_stats    ( fd, &stats );
+    else { g_tt32_pfn_get_stats_ex ( fd, &stats, &errnum );
+        errno =                                   errnum;
+    }
+
+    logmsg
+    (
+        "%s Statistics:\n\n"
+        "Size of Kernel Hold Buffer:      %5luK\n"
+        "Size of DLL I/O Buffer:          %5luK\n"
+        "Maximum DLL I/O Bytes Received:  %5luK\n\n"
+        "%12" I64_FMT "d Write Calls\n"
+        "%12" I64_FMT "d Write I/Os\n"
+        "%12" I64_FMT "d Read Calls\n"
+        "%12" I64_FMT "d Read I/Os\n"
+        "%12" I64_FMT "d Packets Read\n"
+        "%12" I64_FMT "d Packets Written\n"
+        "%12" I64_FMT "d Bytes Read\n"
+        "%12" I64_FMT "d Bytes Written\n"
+        "%12" I64_FMT "d Internal Packets\n"
+        "%12" I64_FMT "d Ignored Packets\n"
+        ,
+        g_tt32_dllname
+        ,(stats.dwKernelBuffSize   + 1023) / 1024
+        ,(stats.dwReadBuffSize     + 1023) / 1024
+        ,(stats.dwMaxBytesReceived + 1023) / 1024
+        ,stats.n64WriteCalls
+        ,stats.n64WriteIOs
+        ,stats.n64ReadCalls
+        ,stats.n64ReadIOs
+        ,stats.n64PacketsRead
+        ,stats.n64PacketsWritten
+        ,stats.n64BytesRead
+        ,stats.n64BytesWritten
+        ,stats.n64InternalPackets
+        ,stats.n64IgnoredPackets
+    );
+
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Routine to build a default MAC address for CTCI device virtual interface...
+// (used by 'CTCI_Init' function in ctc_ctci.c)
+
+void tt32_build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip )
+{
+    if (!in_ip || !out_mac)
+    {
+        ASSERT( FALSE );
+        return; // (nothing we to do!)
+    }
+
+    // We prefer to let TunTap32 do it for us (since IT'S the one
+    // that decides what it should really be) but if they're using
+    // an older version of TunTap32 that doesn't have the function
+    // then we'll do it ourselves just like before...
+
+    if (g_tt32_pfn_build_herc_iface_mac)
+    {
+        g_tt32_pfn_build_herc_iface_mac( out_mac, in_ip );
+        return;
+    }
+
+    // Build a default MAC addr based on the guest (destination) ip
+    // address so as to effectively *UNOFFICIALLY* assign ourselves
+    // the following Ethernet address block:
+
+    /* (from: http://www.iana.org/assignments/ethernet-numbers)
+       (only the first 2 and last 2 paragraphs are of interest)
+
+        IANA ETHERNET ADDRESS BLOCK - UNICAST USE
+
+        The IANA owns an Ethernet address block which may be used for
+        unicast address asignments or other special purposes.
+
+        The IANA may assign unicast global IEEE 802 MAC address from it's
+        assigned OUI (00-00-5E) for use in IETF standard track protocols.  The
+        intended usage is for dynamic mapping between IP addresses and IEEE
+        802 MAC addresses.  These IEEE 802 MAC addresses are not to be
+        permanently assigned to any hardware interface, nor is this a
+        substitute for a network equipment supplier getting its own OUI.
+
+        ... (snipped)
+
+        Using this representation, the range of Internet Unicast addresses is:
+
+               00-00-5E-00-00-00  to  00-00-5E-FF-FF-FF  in hex, ...
+
+        ... (snipped)
+
+        The low order 24 bits of these unicast addresses are assigned as
+        follows:
+
+        Dotted Decimal          Description                     Reference
+        ----------------------- ------------------------------- ---------
+        000.000.000-000.000.255 Reserved                        [IANA]
+        000.001.000-000.001.255 Virual Router Redundancy (VRRP) [Hinden]
+        000.002.000-127.255.255 Reserved                        [IANA]
+        128.000.000-255.255.255 Hercules TUNTAP (CTCI)          [Fish] (*UNOFFICIAL*)
+    */
+
+    // Here's what we're basically doing:
+
+    //    00-00-5E-00-00-00  to  00-00-5E-00-00-FF  =  'Reserved' by IANA
+    //    00-00-5E-00-01-00  to  00-00-5E-00-01-FF  =  'VRRP' by Hinden
+    //    00-00-5E-00-02-00  to  00-00-5E-7F-FF-FF  =  (unassigned)
+    //    00-00-5E-80-00-00  to  00-00-5E-FF-FF-FF  =  'Hercules' by Fish (*UNOFFICIAL*)
+
+    //    00-00-5E-00-00-00   (starting value)
+    //    00-00-5E-ip-ip-ip   (move in low-order 3 bytes of destination IP address)
+    //    00-00-5E-8p-ip-ip   ('OR' on the x'80' high-order bit)
+
+    *(out_mac+0) = 0x00;
+    *(out_mac+1) = 0x00;
+    *(out_mac+2) = 0x5E;
+    *(out_mac+3) = *(in_ip+1) | 0x80;
+    *(out_mac+4) = *(in_ip+2);
+    *(out_mac+5) = *(in_ip+3);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

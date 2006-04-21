@@ -31,13 +31,16 @@ extern void tt32_init
 #define DEF_TT32DLL_BUFFSIZE_K   (  64)
 #define MAX_TT32DLL_BUFFSIZE_K   (8192)
 
-extern int tt32_open(char* pszGatewayDevice, int iFlags);
-extern int tt32_read(int fd, u_char* buffer, u_long size);
-extern int tt32_write(int fd, u_char* buffer, u_long size);
-extern int tt32_close (int fd);
-extern int tt32_ioctl(int fd, int iRequest, char* argp);
-extern const char* tt32_get_default_iface();
-extern int display_tt32_stats (int fd);
+extern int          tt32_open                 ( char* pszGatewayDevice, int iFlags );
+extern int          tt32_read                 ( int fd, u_char* buffer, u_long size );
+extern int          tt32_write                ( int fd, u_char* buffer, u_long size );
+extern int          tt32_close                ( int fd );
+extern int          tt32_ioctl                ( int fd, int iRequest, char* argp );
+extern const char*  tt32_get_default_iface    ();
+extern void         tt32_build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip );
+
+extern int  display_tt32_stats ( int fd );
+extern void enable_tt32_debug_tracing( int enable );
 
 #endif // defined(OPTION_W32_CTCI)
 
