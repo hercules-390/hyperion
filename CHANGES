@@ -1,3 +1,11 @@
+21 Apr 2006 Apple OS X 10.4.6 TUNTAP_ClrIPAddr (ioctl(SIOCDIFADDR))
+            patch by Kees Verruijt [kees@verruijt.net] - Fish
+21 Apr 2006 tt32 v3.1: replace tt32stats cmd with tt32 cmd - Fish
+21 Apr 2006 tt32 v3.1: new "tuntap32_build_herc_iface_mac" function - Fish
+21 Apr 2006 tt32 v3.1: new "_ex" functions - Fish
+21 Apr 2006 LCS support for RARP frames - Fish
+21 Apr 2006 TUNTAP_GetFlags: don't read LCS adapter until iface is IFF_UP
+            (resolves "HHCLC042E port 00: Read error" issue) - Fish
 19 Apr 2006 Re-fix panel refresh (fill_text, not erase_to_eol; sigh) - Fish
 14 Apr 2006 RECFM bits in dasdblks.h (correction by Christophe Nillon) - Roger Bowler
 12 Apr 2006 SYNCHRONIZE_CPUS macro in place of synchronize_broadcast - Greg
