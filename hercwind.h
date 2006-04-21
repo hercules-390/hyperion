@@ -46,6 +46,14 @@
 
 ///////////////////////////////////////////////////////////////////////
 // Disable some warnings that tend to get in the way...
+//
+// FIXME: purposely disabling warning C4244 is dangerous IMO and might
+// come back to haunt us in the future when we DO happen to introduce
+// an unintentional coding error that results in unexpected data loss.
+//
+// We should instead take the time to fix all places where it's issued
+// (being sure to add comments when we do) so that we can then rely on
+// C4244 to warn us of real/actual coding errors.  -  Fish, April 2006
 
 #pragma warning( disable: 4142 ) // C4142: benign redefinition of type
 #pragma warning( disable: 4244 ) // C4244: conversion from 'type' to 'type', possible loss of data
@@ -137,5 +145,13 @@ typedef int             mode_t;
 #define HAVE_FABSL
 #define HAVE_FMODL
 #define HAVE_FREXPL
+
+// The following are needed by hostopts.h...
+
+#define HAVE_DECL_SIOCSIFNETMASK  1     // (manually defined in tuntap.h)
+#define HAVE_DECL_SIOCSIFHWADDR   1     // (manually defined in tuntap.h)
+#define HAVE_DECL_SIOCADDRT       1     // (manually defined in tuntap.h)
+#define HAVE_DECL_SIOCDELRT       1     // (manually defined in tuntap.h)
+#define HAVE_DECL_SIOCDIFADDR     0     // (unsupported by CTCI-W32)
 
 #endif /*!defined(_HERCWIND_H)*/
