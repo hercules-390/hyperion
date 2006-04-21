@@ -52,7 +52,7 @@ int main( int argc, char **argv )
                  pszProgName );
         exit( 1 );
     }
-        
+
     // Obtain a socket for ioctl operations
     sockfd = socket( AF_INET, SOCK_DGRAM, 0 );
 
@@ -72,7 +72,7 @@ int main( int argc, char **argv )
         rc = read( STDIN_FILENO, 
                    &ctlreq, 
                    CTLREQ_SIZE );
-        
+
         if( rc == -1 )
         {
             fprintf( stderr,
@@ -149,11 +149,19 @@ int main( int argc, char **argv )
             pIF  = ctlreq.szIFName;
             ctlreq.iru.rtentry.rt_dev = ctlreq.szIFName;
             break;
+
         case SIOCDELRT:
             pOp  = "SIOCDELRT";
             pArg = &ctlreq.iru.rtentry;
             pIF  = ctlreq.szIFName;
             ctlreq.iru.rtentry.rt_dev = ctlreq.szIFName;
+            break;
+#endif
+#ifdef OPTION_TUNTAP_CLRIPADDR
+        case SIOCDIFADDR:
+            pOp  = "SIOCDIFADDR";
+            pArg = &ctlreq.iru.ifreq;
+            pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
 #endif
         case CTLREQ_OP_DONE:
@@ -166,12 +174,10 @@ int main( int argc, char **argv )
             snprintf( szMsgBuffer,sizeof(szMsgBuffer),
                      _("HHCIF004W %s: Unknown request: %8.8lX.\n"),
                      pszProgName, ctlreq.iCtlOp );
-            
             write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
-
             continue;
         }
-            
+
 #if defined(DEBUG) || defined(_DEBUG)
         snprintf( szMsgBuffer,sizeof(szMsgBuffer),
                  _("HHCIF006I %s: Doing %s on %s\n"),
@@ -179,9 +185,8 @@ int main( int argc, char **argv )
 
         write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
 #endif /*defined(DEBUG) || defined(_DEBUG)*/
-    
-        rc = ioctl( sockfd, ctlreq.iCtlOp, pArg );
 
+        rc = ioctl( sockfd, ctlreq.iCtlOp, pArg );
         if( rc < 0 )
         {
             snprintf( szMsgBuffer,sizeof(szMsgBuffer),
