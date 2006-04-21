@@ -1061,7 +1061,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 #endif
         }
 
-        nIFFlags =               // Interface flags
+        nIFFlags =              // Interface flags
             0
             | IFF_UP            // (interface is being enabled)
             | IFF_BROADCAST     // (interface broadcast addr is valid)
@@ -1069,9 +1069,9 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
 #if defined( TUNTAP_IFF_RUNNING_NEEDED )
 
-        nIFFlags =              // Interface flags
+        nIFFlags |=             // ADDITIONAL Interface flags
             0
-            | IFF_RUNNING       // (interface is operational)
+            | IFF_RUNNING       // (interface is ALSO operational)
             ;
 
 #endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
