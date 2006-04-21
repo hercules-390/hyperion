@@ -474,6 +474,7 @@ DLL_EXPORT int usleep ( useconds_t useconds )
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// gettimeofday...
 
 #if !defined( HAVE_GETTIMEOFDAY )
 
@@ -601,6 +602,7 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// scandir...
 
 #if !defined( HAVE_SCANDIR )
 
