@@ -110,6 +110,12 @@ int main( int argc, char **argv )
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
 
+        case SIOCGIFFLAGS:
+            pOp  = "SIOCGIFFLAGS";
+            pArg = &ctlreq.iru.ifreq;
+            pIF  = ctlreq.iru.ifreq.ifr_name;
+            break;
+
         case SIOCSIFMTU:
             pOp  = "SIOCSIFMTU";
             pArg = &ctlreq.iru.ifreq;

@@ -1082,7 +1082,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     int             iMTU;
     int             i;
     MAC             mac;                // Work area for MAC address
-#if defined(WIN32)
+#if defined(OPTION_W32_CTCI)
     int             iKernBuff;
     int             iIOBuff;
 #endif
@@ -1094,13 +1094,13 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // Set some initial defaults
     strcpy( pCTCBLK->szMTU,     "1500" );
     strcpy( pCTCBLK->szNetMask, "255.255.255.255" );
-#if defined( WIN32 )
+#if defined( OPTION_W32_CTCI )
     strcpy( pCTCBLK->szTUNCharName,  tt32_get_default_iface() );
 #else
     strcpy( pCTCBLK->szTUNCharName,  HERCTUN_DEV );
 #endif
 
-#if defined( WIN32 )
+#if defined( OPTION_W32_CTCI )
     pCTCBLK->iKernBuff     = DEF_TT32DRV_BUFFSIZE_K * 1024;
     pCTCBLK->iIOBuff       = DEF_TT32DRV_BUFFSIZE_K * 1024;
 #endif
@@ -1205,7 +1205,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             break;
 
         case 'k':     // Kernel Buffer Size (ignored if not Windows)
-#if defined( WIN32 )
+#if defined( OPTION_W32_CTCI )
             iKernBuff = atoi( optarg );
 
             if( iKernBuff < MIN_TT32DLL_BUFFSIZE_K    ||
@@ -1221,7 +1221,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             break;
 
         case 'i':     // I/O Buffer Size (ignored if not Windows)
-#if defined( WIN32 )
+#if defined( OPTION_W32_CTCI )
             iIOBuff = atoi( optarg );
 
             if( iIOBuff < MIN_TT32DLL_BUFFSIZE_K    ||
@@ -1249,7 +1249,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             strcpy( pCTCBLK->szMTU, optarg );
             break;
 
-        case 's':     // Netmask of point-to-point link (ignored if Windows)
+        case 's':     // Netmask of point-to-point link
             if( inet_aton( optarg, &addr ) == 0 )
             {
                 logmsg( _("HHCCT055E %4.4X: Invalid netmask %s\n"),
@@ -1260,7 +1260,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             strcpy( pCTCBLK->szNetMask, optarg );
             break;
 
-        case 'm':     // (ignored if not Windows)
+        case 'm':
             if( ParseMAC( optarg, mac ) != 0 )
             {
                 logmsg( _("HHCCT056E %4.4X: Invalid MAC address %s\n"),

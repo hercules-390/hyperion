@@ -645,26 +645,38 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 
     // Select string to represent ioctl request for debugging.
     switch (iRequest) {
-    case SIOCSIFADDR:
+#ifdef OPTION_TUNTAP_CLRIPADDR
+    case              SIOCDIFADDR:
+        request_name="SIOCDIFADDR"; break;
+#endif
+    case              SIOCSIFADDR:
         request_name="SIOCSIFADDR"; break;
-    case SIOCSIFDSTADDR:
+
+    case              SIOCSIFDSTADDR:
         request_name="SIOCSIFDSTADDR"; break;
-    case SIOCSIFMTU:
+
+    case              SIOCSIFMTU:
         request_name="SIOCSIFMTU"; break;
-    case SIOCSIFFLAGS:
+
+    case              SIOCSIFFLAGS:
         request_name="SIOCSIFFLAGS"; break;
+
+    case              SIOCGIFFLAGS:
+        request_name="SIOCGIFFLAGS"; break;
+
 #ifdef OPTION_TUNTAP_SETNETMASK
-    case SIOCSIFNETMASK:
+    case              SIOCSIFNETMASK:
         request_name="SIOCSIFNETMASK"; break;
 #endif
 #ifdef OPTION_TUNTAP_SETMACADDR
-    case SIOCSIFHWADDR:
+    case              SIOCSIFHWADDR:
         request_name="SIOCSIFHWADDR"; break;
 #endif
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
-    case SIOCADDRT:
+    case              SIOCADDRT:
         request_name="SIOCADDRT"; break;
-    case SIOCDELRT:
+
+    case              SIOCDELRT:
         request_name="SIOCDELRT"; break;
 #endif
     default:

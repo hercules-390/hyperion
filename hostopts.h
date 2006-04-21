@@ -123,6 +123,7 @@
 #undef    OPTION_TUNTAP_SETNETMASK      /* (default initial setting) */
 #undef    OPTION_TUNTAP_SETMACADDR      /* (default initial setting) */
 #undef    OPTION_TUNTAP_DELADD_ROUTES   /* (default initial setting) */
+#undef    OPTION_TUNTAP_CLRIPADDR       /* (default initial setting) */
 
 #if defined(HAVE_DECL_SIOCSIFNETMASK) && \
             HAVE_DECL_SIOCSIFNETMASK
