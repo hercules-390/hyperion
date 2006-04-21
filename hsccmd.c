@@ -1012,6 +1012,18 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
 
 int tt32stats_cmd(int argc, char *argv[], char *cmdline)
 {
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    logmsg( _("HHCPNxxxE cmd deprecated; try 'tt32' instead\n") );
+    return -1;
+}
+
+/* tt32stats command - display CTCI-W32 statistics */
+
+int tt32_cmd( int argc, char *argv[], char *cmdline )
+{
     int      rc = 0;
     U16      devnum;
     U16      lcss;
@@ -1021,35 +1033,73 @@ int tt32stats_cmd(int argc, char *argv[], char *cmdline)
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN031E Missing device number\n") );
-        return -1;
+        logmsg( _("HHCPNxxxE Missing arguments; enter 'help tt32' for help.\n") );
+        rc = -1;
     }
-
-    rc=parse_single_devnum(argv[1],&lcss,&devnum);
-    if (rc<0)
+    else if (strcasecmp(argv[1],"stats") == 0)
     {
-        return -1;
-    }
+        if (argc < 3)
+        {
+            logmsg( _("HHCPN031E Missing device number\n") );
+            return -1;
+        }
 
-    if (!(dev = find_device_by_devnum (lcss, devnum)) &&
-        !(dev = find_device_by_devnum (lcss, devnum ^ 0x01)))
+        if ((rc = parse_single_devnum(argv[2], &lcss, &devnum)) < 0)
+            return -1;
+
+        if (!(dev = find_device_by_devnum (lcss, devnum)) &&
+            !(dev = find_device_by_devnum (lcss, devnum ^ 0x01)))
+        {
+            devnotfound_msg(lcss,devnum);
+            return -1;
+        }
+
+        if (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype)
+        {
+            logmsg( _("HHCPN034E Device %d:%4.4X is not a CTCI or LCS device\n"),
+                      lcss, devnum );
+            return -1;
+        }
+
+        if (debug_tt32_stats)
+            rc = debug_tt32_stats (dev->fd);
+        else
+        {
+            logmsg( _("(error)\n") );
+            rc = -1;
+        }
+    }
+    else if (strcasecmp(argv[1],"debug") == 0)
     {
-        devnotfound_msg(lcss,devnum);
-        return -1;
+        if (debug_tt32_tracing)
+        {
+            debug_tt32_tracing(1); // 1=ON
+            rc = 0;
+            logmsg( _("HHCPNxxxI TT32 debug tracing messages enabled\n") );
+        }
+        else
+        {
+            logmsg( _("(error)\n") );
+            rc = -1;
+        }
     }
-
-    if (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype)
+    else if (strcasecmp(argv[1],"nodebug") == 0)
     {
-        logmsg( _("HHCPN034E Device %d:%4.4X is not a CTCI or LCS device\n"),
-                  lcss, devnum );
-        return -1;
+        if (debug_tt32_tracing)
+        {
+            debug_tt32_tracing(0); // 0=OFF
+            rc = 0;
+            logmsg( _("HHCPNxxxI TT32 debug tracing messages disabled\n") );
+        }
+        else
+        {
+            logmsg( _("(error)\n") );
+            rc = -1;
+        }
     }
-
-    if (debug_tt32_stats)
-        rc = debug_tt32_stats (dev->fd);
     else
     {
-        logmsg( _("(error)\n") );
+        logmsg( _("HHCPNxxxE Invalid argument\n") );
         rc = -1;
     }
 
@@ -4244,7 +4294,8 @@ COMMAND ( "lsdep",     lsdep_cmd,     "list module dependencies\n" )
 COMMAND ( "iodelay",   iodelay_cmd,   "display or set I/O delay value" )
 #endif
 #if defined(OPTION_W32_CTCI)
-COMMAND ( "tt32stats", tt32stats_cmd, "display CTCI-W32 statistics" )
+COMMAND ( "tt32stats", tt32stats_cmd, "(deprecated; use 'tt32' cmd instead)" )
+COMMAND ( "tt32",      tt32_cmd,      "control/query CTCI-W32 functionality" )
 #endif
 COMMAND ( "toddrag",   toddrag_cmd,   "display or set TOD clock drag factor" )
 #ifdef PANEL_REFRESH_RATE
@@ -4479,6 +4530,14 @@ CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need hel
                        "the format of the command and its various required or optional\n"
                        "parameters and is not meant to replace reading the documentation.\n"
                        )
+
+#if defined( OPTION_W32_CTCI )
+CMDHELP ( "tt32",      "Format:  \"tt32   debug | nodebug | stats <devnum>\".\n\n"
+
+                       "Enables or disables global CTCI-W32 debug tracing\n"
+                       "or displays TunTap32 stats for the specified CTC device.\n"
+                       )
+#endif /* defined( OPTION_W32_CTCI ) */
 
 #if defined( OPTION_SCSI_TAPE )
 CMDHELP ( "scsimount", "Format:    \"scsimount  [ no | yes | 0-99 ]\".\n\n"
