@@ -630,6 +630,8 @@ int  LCS_Close( DEVBLK* pDEVBLK )
         pLCSBLK = NULL;
     }
 
+    pDEVBLK->dev_data = NULL;
+
     return 0;
 }
 

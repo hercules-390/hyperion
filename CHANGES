@@ -1,3 +1,4 @@
+23 Apr 2006 PR# network/69: segfault @ incomplete LCS group attach - Fish
 23 Apr 2006 Fix LCS port read delay / hercifc SIOCGIFFLAGS issue - Fish
 21 Apr 2006 Apple OS X 10.4.6 TUNTAP_ClrIPAddr (ioctl(SIOCDIFADDR))
             patch by Kees Verruijt [kees@verruijt.net] - Fish
