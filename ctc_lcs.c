@@ -558,7 +558,13 @@ int  LCS_Close( DEVBLK* pDEVBLK )
         if( pPort->fd >= 0 )
         {
             TID tid = pPort->tid;
-            pPort->fCloseInProgress = 1;
+            obtain_lock( &pPort->EventLock );
+            {
+                pPort->fStarted = 0;
+                pPort->fCloseInProgress = 1;
+                signal_condition( &pPort->Event );
+            }
+            release_lock( &pPort->EventLock );
             signal_thread( tid, SIGUSR2 );
             join_thread( tid, NULL );
             detach_thread( tid );
@@ -1107,9 +1113,11 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
             LCS_IP_FRAG_REASSEMBLY        |
             LCS_MULTICAST_SUPPORT;
 
+        obtain_lock( &pPort->EventLock );
         pPort->fStarted = 1;
-
-        SLEEP( 1 );
+        signal_condition( &pPort->Event );
+        release_lock( &pPort->EventLock );
+        usleep( 250*1000 );
     }
 
     release_lock( &pPort->Lock );
@@ -1157,7 +1165,10 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
     pPort = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
 
+    obtain_lock( &pPort->EventLock );
     pPort->fStarted = 0;
+    signal_condition( &pPort->Event );
+    release_lock( &pPort->EventLock );
 
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
 
@@ -1328,7 +1339,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
     PETHFRM     pEthFrame;
     PIP4FRM     pIPFrame   = NULL;
     PARPFRM     pARPFrame  = NULL;
-    int         iLength, iFlags = 0;
+    int         iLength;
     U16         sFrameType;
     U32         lIPAddress;
     BYTE*       pMAC;
@@ -1337,27 +1348,41 @@ static void*  LCS_PortThread( PLCSPORT pPort )
 
     pPort->pid = getpid();
 
-    // Wait for Lan to be Started...
-    while
-    (1
-        && !(iFlags & IFF_UP)
-        && !pPort->fCloseInProgress
-        && -1 != pPort->fd
-    )
+    for (;;)
     {
-        SLEEP(1);
-        VERIFY( 0 == TUNTAP_GetFlags ( pPort->szNetDevName, &iFlags ) );
-    }
+        obtain_lock( &pPort->EventLock );
+        {
+            // Don't read unless/until port is enabled...
 
-    while( pPort->fd != -1 && !pPort->fCloseInProgress )
-    {
+            while (1
+                && !(pPort->fd < 0)
+                && !pPort->fCloseInProgress
+                && !pPort->fStarted
+            )
+            {
+                timed_wait_condition_relative_usecs
+                (
+                    &pPort->Event,      // ptr to condition to wait on
+                    &pPort->EventLock,  // ptr to controlling lock (must be held!)
+                    250*1000,           // max #of microseconds to wait
+                    NULL                // [OPTIONAL] ptr to tod value (may be NULL)
+                );
+            }
+        }
+        release_lock( &pPort->EventLock );
+
+        // Exit when told...
+
+        if ( pPort->fd < 0 || pPort->fCloseInProgress )
+            break;
+
         // Read an IP packet from the TAP device
         iLength = TUNTAP_Read( pPort->fd, szBuff, sizeof( szBuff ) );
 
         // Check for other error condition
         if( iLength < 0 )
         {
-            if( pPort->fd == -1 || pPort->fCloseInProgress )
+            if( pPort->fd < 0 || pPort->fCloseInProgress )
                 break;
             logmsg( _("HHCLC042E Port %2.2X: Read error: %s\n"),
                 pPort->bPort, strerror( errno ) );

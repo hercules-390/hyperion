@@ -475,7 +475,26 @@ int      TUNTAP_GetFlags ( char*   pszNetDevName,
 
     strlcpy( ifreq.ifr_name, pszNetDevName, sizeof(ifreq.ifr_name) );
 
+    // PROGRAMMING NOTE: hercifc can't "get" information,
+    // only "set" it. Thus because we normally use hercifc
+    // to issue ioctl codes to the interface (on non-Win32)
+    // we bypass hercifc altogether and issue the ioctl
+    // ourselves directly to the device itself, bypassing
+    // hercifc completely. Note that for Win32 however,
+    // 'TUNTAP_IOCtl' routes to a TunTap32.DLL call and
+    // thus works just fine. We need special handling
+    // only for non-Win32 platforms. - Fish
+
+#if defined( OPTION_W32_CTCI )
+
     rc = TUNTAP_IOCtl( 0, SIOCGIFFLAGS, (char*)&ifreq );
+
+#else // (non-Win32 platforms)
+    {
+        int sockfd = socket( AF_INET, SOCK_DGRAM, 0 );
+        rc = ioctl( sockfd, SIOCGIFFLAGS, &ifreq );
+    }
+#endif
 
     *piFlags = ifreq.ifr_flags;
 

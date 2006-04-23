@@ -110,11 +110,13 @@ int main( int argc, char **argv )
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
 
+#if 0 /* (hercifc can't "get" information, only "set" it) */
         case SIOCGIFFLAGS:
             pOp  = "SIOCGIFFLAGS";
             pArg = &ctlreq.iru.ifreq;
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
+#endif /* (caller should do 'ioctl' directly themselves instead) */
 
         case SIOCSIFMTU:
             pOp  = "SIOCSIFMTU";
