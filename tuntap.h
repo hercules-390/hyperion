@@ -73,6 +73,9 @@ extern int      TUNTAP_DelRoute         ( char*   pszNetDevName,
                                           int     iFlags );
 #endif
 
+// (the following function used by Win32 *and* NON-Win32 platforms)
+extern void build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip );
+
 //
 // Helper Macros
 //

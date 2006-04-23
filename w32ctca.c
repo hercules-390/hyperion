@@ -360,83 +360,20 @@ int  display_tt32_stats( int fd )
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Routine to build a default MAC address for CTCI device virtual interface...
-// (used by 'CTCI_Init' function in ctc_ctci.c)
+// BOOLEAN FUNCTION
 
-void tt32_build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip )
+int tt32_build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip )
 {
-    if (!in_ip || !out_mac)
-    {
-        ASSERT( FALSE );
-        return; // (nothing we to do!)
-    }
-
     // We prefer to let TunTap32 do it for us (since IT'S the one
     // that decides what it should really be) but if they're using
     // an older version of TunTap32 that doesn't have the function
     // then we'll do it ourselves just like before...
 
-    if (g_tt32_pfn_build_herc_iface_mac)
-    {
-        g_tt32_pfn_build_herc_iface_mac( out_mac, in_ip );
-        return;
-    }
+    if (!g_tt32_pfn_build_herc_iface_mac)
+        return 0;   // (FALSE: must do it yourself)
 
-    // Build a default MAC addr based on the guest (destination) ip
-    // address so as to effectively *UNOFFICIALLY* assign ourselves
-    // the following Ethernet address block:
-
-    /* (from: http://www.iana.org/assignments/ethernet-numbers)
-       (only the first 2 and last 2 paragraphs are of interest)
-
-        IANA ETHERNET ADDRESS BLOCK - UNICAST USE
-
-        The IANA owns an Ethernet address block which may be used for
-        unicast address asignments or other special purposes.
-
-        The IANA may assign unicast global IEEE 802 MAC address from it's
-        assigned OUI (00-00-5E) for use in IETF standard track protocols.  The
-        intended usage is for dynamic mapping between IP addresses and IEEE
-        802 MAC addresses.  These IEEE 802 MAC addresses are not to be
-        permanently assigned to any hardware interface, nor is this a
-        substitute for a network equipment supplier getting its own OUI.
-
-        ... (snipped)
-
-        Using this representation, the range of Internet Unicast addresses is:
-
-               00-00-5E-00-00-00  to  00-00-5E-FF-FF-FF  in hex, ...
-
-        ... (snipped)
-
-        The low order 24 bits of these unicast addresses are assigned as
-        follows:
-
-        Dotted Decimal          Description                     Reference
-        ----------------------- ------------------------------- ---------
-        000.000.000-000.000.255 Reserved                        [IANA]
-        000.001.000-000.001.255 Virual Router Redundancy (VRRP) [Hinden]
-        000.002.000-127.255.255 Reserved                        [IANA]
-        128.000.000-255.255.255 Hercules TUNTAP (CTCI)          [Fish] (*UNOFFICIAL*)
-    */
-
-    // Here's what we're basically doing:
-
-    //    00-00-5E-00-00-00  to  00-00-5E-00-00-FF  =  'Reserved' by IANA
-    //    00-00-5E-00-01-00  to  00-00-5E-00-01-FF  =  'VRRP' by Hinden
-    //    00-00-5E-00-02-00  to  00-00-5E-7F-FF-FF  =  (unassigned)
-    //    00-00-5E-80-00-00  to  00-00-5E-FF-FF-FF  =  'Hercules' by Fish (*UNOFFICIAL*)
-
-    //    00-00-5E-00-00-00   (starting value)
-    //    00-00-5E-ip-ip-ip   (move in low-order 3 bytes of destination IP address)
-    //    00-00-5E-8p-ip-ip   ('OR' on the x'80' high-order bit)
-
-    *(out_mac+0) = 0x00;
-    *(out_mac+1) = 0x00;
-    *(out_mac+2) = 0x5E;
-    *(out_mac+3) = *(in_ip+1) | 0x80;
-    *(out_mac+4) = *(in_ip+2);
-    *(out_mac+5) = *(in_ip+3);
+    g_tt32_pfn_build_herc_iface_mac( out_mac, in_ip );
+    return 1;       // (TRUE: ok we did it for you)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

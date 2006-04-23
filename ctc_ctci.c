@@ -236,7 +236,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
         if ((in_addr_t)-1 != (wrk_guest_ip_addr = inet_addr( pDevCTCBLK->szGuestIPAddr )))
         {
-            tt32_build_herc_iface_mac ( wrk_guest_mac_addr, (const BYTE*) &wrk_guest_ip_addr );
+            build_herc_iface_mac ( wrk_guest_mac_addr, (const BYTE*) &wrk_guest_ip_addr );
 
             snprintf
             (
