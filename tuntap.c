@@ -649,10 +649,13 @@ int           TUNTAP_DelRoute( char*   pszNetDevName,
 static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 {
     char*       pszCfgCmd;     // Interface config command
-    /* char*       request_name; */ // debugging: name of ioctl request
-    /* char        unknown_request[]="Unknown (0x00000000)"; */
     int         rc;
     CTLREQ      ctlreq;
+
+#if defined(DEBUG) || defined(_DEBUG)
+    char*       request_name;  // debugging: name of ioctl request
+    char        unknown_request[] = "Unknown (0x00000000)";
+#endif
 
     UNREFERENCED( fd );
 
@@ -660,9 +663,10 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 
     ctlreq.iCtlOp = iRequest;
 
-#if 0 /* ++++++++++++++++++++++ debugging print ++++++++++++++++++++++ */
+#if defined(DEBUG) || defined(_DEBUG)
 
     // Select string to represent ioctl request for debugging.
+
     switch (iRequest) {
 #ifdef OPTION_TUNTAP_CLRIPADDR
     case              SIOCDIFADDR:
@@ -702,10 +706,8 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         sprintf(unknown_request,"Unknown (0x%x)",iRequest);
         request_name=unknown_request;
     }
-logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
-          request_name,ifc_fd[0],ifc_fd[1]);
 
-#endif /* ++++++++++++++++++++++ debugging print ++++++++++++++++++++++ */
+#endif // defined(DEBUG) || defined(_DEBUG)
 
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
     if( iRequest == SIOCADDRT ||
@@ -733,8 +735,9 @@ logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
         // Obtain the name of the interface config program or default
         if( !( pszCfgCmd = getenv( "HERCULES_IFC" ) ) )
             pszCfgCmd = HERCIFC_CMD;
-//DEBUG     logmsg(_("HHCTU029I Executing '%s' to configure interface\n")
-//DEBUG               pszCfgCmd);
+
+        TRACE(_("HHCTU029I Executing '%s' to configure interface\n")
+            pszCfgCmd);
 
         // Fork a process to execute the hercifc
         ifc_pid = fork();
@@ -764,8 +767,10 @@ logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
              * billion files. -- JRM */
             file_limit=rlim.rlim_max;
             file_limit=(file_limit>1024)?1024:file_limit;
-//DEBUG     logmsg(_("HHCTU031I Closing %" I64_FMT "d files\n"),
-//DEBUG              (long long)file_limit);
+
+            TRACE(_("HHCTU031I Closing %" I64_FMT "d files\n"),
+                (long long)file_limit);
+
             for(i=0;(unsigned int)i<file_limit;i++)
             {
                 if(i!=ifc_fd[1] && i!=STDOUT_FILENO)
@@ -793,6 +798,9 @@ logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
 
     // Populate some common fields
     ctlreq.iType = 1;
+
+    TRACE(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
+        request_name,ifc_fd[0],ifc_fd[1]);
 
     write( ifc_fd[0], &ctlreq, CTLREQ_SIZE );
 
