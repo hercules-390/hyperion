@@ -736,7 +736,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         if( !( pszCfgCmd = getenv( "HERCULES_IFC" ) ) )
             pszCfgCmd = HERCIFC_CMD;
 
-        TRACE(_("HHCTU029I Executing '%s' to configure interface\n")
+        TRACE(_("HHCTU029I Executing '%s' to configure interface\n"),
             pszCfgCmd);
 
         // Fork a process to execute the hercifc
@@ -799,8 +799,10 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
     // Populate some common fields
     ctlreq.iType = 1;
 
+#if defined(DEBUG) || defined(_DEBUG)
     TRACE(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
         request_name,ifc_fd[0],ifc_fd[1]);
+#endif
 
     write( ifc_fd[0], &ctlreq, CTLREQ_SIZE );
 
