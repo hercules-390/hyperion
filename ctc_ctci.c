@@ -122,9 +122,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
 #if defined( TUNTAP_IFF_RUNNING_NEEDED )
 
-    nIFFlags |=             // Interface flags
+    nIFFlags |=             // ADDITIONAL Interface flags
         0
-        | IFF_RUNNING       // (interface is operational)
+        | IFF_RUNNING       // (interface is ALSO operational)
         ;
 
 #endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
