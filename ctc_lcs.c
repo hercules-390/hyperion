@@ -1190,7 +1190,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
     // Next, remove any extra routing entries
     // (specified by the user in their OAT file)
-    // that we may ve also added...
+    // that we may have also added...
 
     for( pRoute = pPort->pRoutes; pRoute; pRoute = pRoute->pNext )
     {
