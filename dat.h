@@ -641,7 +641,7 @@ U16     eax;                            /* Authorization index       */
         else if(ACCESS_REGISTER_MODE(&regs->psw)
         #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
           || (regs->sie_active
-            && (regs->guestregs->siebk->mx & SIE_MX_XC)
+            && SIE_FEATB(regs->guestregs, MX, XC)
             && AR_BIT(&regs->guestregs->psw))
         #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
           || (arn & USE_ARMODE)
@@ -653,7 +653,7 @@ U16     eax;                            /* Authorization index       */
             alet = (arn == 0) ? 0 :
         #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             /* Obtain guest ALET if guest is XC guest in AR mode */
-            (regs->sie_active && (regs->guestregs->siebk->mx & SIE_MX_XC)
+            (regs->sie_active && SIE_FEATB(regs->guestregs, MX, XC)
              && AR_BIT(&regs->guestregs->psw))
               ? regs->guestregs->AR(arn) :
             /* else if in SIE mode but not an XC guest in AR mode
@@ -715,6 +715,19 @@ U16     eax;                            /* Authorization index       */
                     regs->aea_ar[arn] = CR_ALB_OFFSET + arn;
                     regs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
                     regs->aea_aleprot[arn] = regs->dat.protect & 2;
+
+    #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+                    /* Build a host real space entry for each XC dataspace */
+                    if(regs->sie_active && arn > 0 && SIE_FEATB(regs->guestregs, MX, XC) && AR_BIT(&regs->guestregs->psw))
+                    {
+                        regs->guestregs->dat.asd = regs->dat.asd ^ TLB_HOST_ASD;
+
+                        regs->guestregs->CR(CR_ALB_OFFSET + arn) = regs->guestregs->dat.asd;
+                        regs->guestregs->aea_ar[arn] = CR_ALB_OFFSET + arn;
+                        regs->guestregs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
+                        regs->guestregs->aea_aleprot[arn] = regs->dat.protect & 2;
+                    }
+    #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
                 }
 
@@ -1671,7 +1684,7 @@ tran_excp_addr:
     if (ACCESS_REGISTER_MODE(&regs->psw)
 #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       || (regs->sie_active
-        && (regs->guestregs->siebk->mx & SIE_MX_XC)
+        && SIE_FEATB(regs->guestregs, MX, XC)
         && AR_BIT(&regs->guestregs->psw))
 #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
        )
@@ -2154,7 +2167,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + regs->dat.aaddr,
-            (arn > 0 && AR_BIT(&regs->psw) && (regs->siebk->mx & SIE_MX_XC))
+            (arn > 0 && AR_BIT(&regs->psw) && SIE_FEATB(regs, MX, XC))
             ? arn : USE_PRIMARY_SPACE,
             regs->hostregs, ACCTYPE_SIE))
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
@@ -2168,6 +2181,12 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
         if ( REAL_MODE(&regs->psw) || (arn == USE_REAL_ADDR) )
             regs->tlb.TLB_PTE(ix)   = addr & TLBID_PAGEMASK;
+
+#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+        /* Indicate a host real space entry for a XC dataspace */
+        if(arn > 0 && SIE_FEATB(regs, MX, XC) && AR_BIT(&regs->psw))
+            regs->tlb.TLB_ASD(ix) = regs->dat.asd;
+#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
         /* Convert host real address to host absolute address */
         regs->hostregs->dat.aaddr = aaddr =

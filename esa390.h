@@ -151,6 +151,7 @@ typedef struct  _PSW {
 #define TLB_MASK        0x3FF           /* Mask for 1024 entries     */
 #define TLB_REAL_ASD_L  0xFFFFFFFF      /* ASD values for real mode  */
 #define TLB_REAL_ASD_G  0xFFFFFFFFFFFFFFFFULL
+#define TLB_HOST_ASD    0x800           /* Host entry for XC guest   */
 typedef struct _TLB  {
         DW              asd[TLBN];      /* Address space designator  */
 #define TLB_ASD_G(_n)   asd[(_n)].D
