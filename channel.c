@@ -901,7 +901,7 @@ int pending = 0;
 
     /* If the device is busy then signal subchannel to halt */
     if ((dev->busy && dev->ioactive == DEV_SYS_LOCAL)
-     || dev->startpending)
+     || dev->startpending || dev->suspended)
     {
         /* Set halt pending condition and reset pending condition */
         dev->scsw.flag2 |= (SCSW2_FC_HALT | SCSW2_AC_HALT);

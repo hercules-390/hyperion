@@ -1,3 +1,4 @@
+27 Apr 2006 Fix halt_subchan to terminate suspended i/o - Greg Smith
 26 Apr 2006 Fix AR tlb lookup in XC mode - Jan Jaeger
 23 Apr 2006 PR# network/69: segfault @ incomplete LCS group attach - Fish
 23 Apr 2006 Fix LCS port read delay / hercifc SIOCGIFFLAGS issue - Fish
