@@ -1521,6 +1521,8 @@ REGS    regs;
         memcpy (&regs, oldregs, sizeof(REGS));
         free (oldregs);
         regs.hostregs = &regs;
+        if (regs.guestregs)
+            regs.guestregs->hostregs = &regs;
         sysblk.regs[cpu] = &regs;
         release_lock(&sysblk.cpulock[cpu]);
         logmsg (_("HHCCP007I CPU%4.4X architecture mode set to %s\n"),
