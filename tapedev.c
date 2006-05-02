@@ -5448,6 +5448,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             break;
         }
 
+        locblock &= 0x003FFFFF;   /* Mask off format mode bits */
+
         /* Calculate residual byte count */
         len = sizeof(locblock);
         num = (count < len) ? count : len;
