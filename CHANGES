@@ -1,3 +1,5 @@
+02 May 2006 PERFORM SUBSYSTEM FUMCTION and CONTROL ACCESS CCWs - Adrian
+            Trenkwalder
 02 May 2006 Fix for invalid bits in LOCATE BLOCK tape CCW - Adrian Trenkwalder
 30 Apr 2006 Dyncrypt changed towards POP - Bernard van der Helm
 27 Apr 2006 Fix halt_subchan to terminate suspended i/o - Greg Smith

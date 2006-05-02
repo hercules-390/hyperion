@@ -257,6 +257,9 @@ BYTE     psw[16];
         SR_WRITE_BUF  (file, SR_DEV_SENSE, dev->sense, 32);
         SR_WRITE_VALUE(file, SR_DEV_PGSTAT, dev->pgstat, sizeof(dev->pgstat));
         SR_WRITE_BUF  (file, SR_DEV_PGID, dev->pgid, 11);
+        /* By Adrian - SR_DEV_DRVPWD                          */   
+        SR_WRITE_BUF  (file, SR_DEV_DRVPWD, dev->drvpwd, 11);   
+   
         SR_WRITE_VALUE(file, SR_DEV_BUSY, dev->busy, 1);
         SR_WRITE_VALUE(file, SR_DEV_RESERVED, dev->reserved, 1);
         SR_WRITE_VALUE(file, SR_DEV_SUSPENDED, dev->suspended, 1);
@@ -1148,6 +1151,20 @@ S64      dreg;
             }
             SR_READ_BUF(file, &dev->pgid, len);
             break;
+   
+        /* By Adrian - SR_DEV_DRVPWD                          */   
+        case SR_DEV_DRVPWD:   
+            SR_SKIP_NULL_DEV(dev, file, len);   
+            if (len != 11)   
+            {   
+                logmsg( _("HHCSR134E Device %4.4X DRVPWD size mismatch: %d expected %d\n"),   
+                        dev->devnum, len, 11);   
+                goto sr_error_exit;   
+            }   
+            SR_READ_BUF(file, &dev->drvpwd, len);   
+            break;   
+   
+   
 
         case SR_DEV_BUSY:
             SR_SKIP_NULL_DEV(dev, file, len);

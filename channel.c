@@ -1116,6 +1116,9 @@ void device_reset (DEVBLK *dev)
     dev->ckdssi = 0;
     memset (dev->sense, 0, sizeof(dev->sense));
     memset (dev->pgid, 0, sizeof(dev->pgid));
+    /* By Adrian - Reset drive password */   
+    memset (dev->drvpwd, 0, sizeof(dev->drvpwd));   
+   
 #if defined(_FEATURE_IO_ASSIST)
     dev->mainstor = sysblk.mainstor;
     dev->storkeys = sysblk.storkeys;

@@ -389,6 +389,9 @@
 #define SR_DEV_SENSE            0xace3001a
 #define SR_DEV_PGSTAT           0xace3001b
 #define SR_DEV_PGID             0xace3001c
+ /* By Adrian - SR_DEV_DRVPWD              */   
+#define SR_DEV_DRVPWD           0xace3001d   
+   
 #define SR_DEV_BUSY             0xace30020
 #define SR_DEV_RESERVED         0xace30021
 #define SR_DEV_SUSPENDED        0xace30022

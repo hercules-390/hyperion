@@ -668,6 +668,9 @@ struct DEVBLK {                         /* Device configuration block*/
         int     ioactive;               /* System Id active on device*/
 #define DEV_SYS_NONE    0               /* No active system on device*/
 #define DEV_SYS_LOCAL   0xffff          /* Local system active on dev*/
+        /* By Adrian - Password for Tape drive (and 1 spare)         */   
+        BYTE    drvpwd[11];	 	          /* Password for drive        */   
+        BYTE    reserved3;              /* (pad/align/unused/avail)  */   
 
         /*  control flags...                                         */
 
