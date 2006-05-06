@@ -564,7 +564,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 ckd->name, heads);
     } else {
         blks  = 0;
-      #if 0 /* cdevhdr is uninitialised and blks is never referenced... */
+      #if 0 /* cdevhdr is uninitialized and blks is never referenced... */
         blks  = ((U32)(cdevhdr.cyls[0]) << 24)
               | ((U32)(cdevhdr.cyls[2]) << 16)
               | ((U32)(cdevhdr.cyls[1]) << 8)

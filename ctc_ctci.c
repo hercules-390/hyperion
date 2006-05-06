@@ -590,7 +590,7 @@ void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
 
     if(!pCTCBLK)
     {
-        strlcpy(pBuffer,"*Uninitialised",iBufLen);
+        strlcpy(pBuffer,"*Uninitialized",iBufLen);
         return;
     }
 
