@@ -113,7 +113,7 @@ void  enable_tt32_debug_tracing( int enable )
     // are passing it a pointer to) will then display its debugging
     // message (string) on the Hercules console so we can see it.
 
-    VERIFY( g_tt32_pfn_set_debug_output_func( enable ? &tt32_output_debug_string : NULL ) );
+    g_tt32_pfn_set_debug_output_func( enable ? &tt32_output_debug_string : NULL );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
