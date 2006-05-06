@@ -128,10 +128,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\dasdutil.c"
-					>
-				</File>
-				<File
 					RelativePath=".\dmap2hrc.c"
 					>
 				</File>
@@ -366,6 +362,10 @@
 							</File>
 							<File
 								RelativePath=".\dasdtab.c"
+								>
+							</File>
+							<File
+								RelativePath=".\dasdutil.c"
 								>
 							</File>
 							<File
