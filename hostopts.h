@@ -38,7 +38,9 @@
 #ifndef _HOSTOPTS_H
 #define _HOSTOPTS_H
 
+#if defined(_MSVC_)
 #include "hercwind.h"   // (need HAVE_DECL_SIOCSIFHWADDR, etc)
+#endif
 
 /*-------------------------------------------------------------------*/
 /* ZZ FIXME
