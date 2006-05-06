@@ -75,6 +75,7 @@ int     cpu;
 /*-------------------------------------------------------------------*/
 int configure_cpu(int cpu)
 {
+int   i;
 char  thread_name[16];
 
     if(IS_CPU_ONLINE(cpu))
@@ -92,8 +93,19 @@ char  thread_name[16];
         return -1;
     }
 
+    /* Find out if we are a cpu thread */
+    for (i = 0; i < MAX_CPU_ENGINES; i++)
+        if (sysblk.cputid[i] == thread_id())
+            break;
+
+    if (i < MAX_CPU_ENGINES)
+        sysblk.regs[i]->intwait = 1;
+
     /* Wait for CPU thread to initialize */
     wait_condition (&sysblk.cpucond, &sysblk.intlock);
+
+    if (i < MAX_CPU_ENGINES)
+        sysblk.regs[i]->intwait = 0;
 
     return 0;
 } /* end function configure_cpu */
@@ -105,6 +117,8 @@ char  thread_name[16];
 /*-------------------------------------------------------------------*/
 int deconfigure_cpu(int cpu)
 {
+int   i;
+
     if (!IS_CPU_ONLINE(cpu))
         return -1;
 
@@ -115,8 +129,20 @@ int deconfigure_cpu(int cpu)
     /* Wake up CPU as it may be waiting */
     WAKEUP_CPU (sysblk.regs[cpu]);
 
+
+    /* Find out if we are a cpu thread */
+    for (i = 0; i < MAX_CPU_ENGINES; i++)
+        if (sysblk.cputid[i] == thread_id())
+            break;
+
+    if (i < MAX_CPU_ENGINES)
+        sysblk.regs[i]->intwait = 1;
+
     /* Wait for CPU thread to terminate */
     wait_condition (&sysblk.cpucond, &sysblk.intlock);
+
+    if (i < MAX_CPU_ENGINES)
+        sysblk.regs[i]->intwait = 0;
 
     join_thread (sysblk.cputid[cpu], NULL);
     detach_thread( sysblk.cputid[cpu] );
