@@ -57,8 +57,12 @@
 
 #include "hstdinc.h"      // Precompilation-eligible header files
 
-#if defined(HAVE_GETOPT_LONG) && !defined(__GETOPT_H__)
-  #include <getopt.h>
+#ifdef _MSVC_
+  #include "getopt.h"
+#else
+  #if defined(HAVE_GETOPT_LONG) && !defined(__GETOPT_H__)
+    #include <getopt.h>
+  #endif
 #endif
 
 #ifdef OPTION_DYNAMIC_LOAD

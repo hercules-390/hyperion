@@ -38,6 +38,8 @@
 #ifndef _HOSTOPTS_H
 #define _HOSTOPTS_H
 
+#include "hercwind.h"   // (need HAVE_DECL_SIOCSIFHWADDR, etc)
+
 /*-------------------------------------------------------------------*/
 /* ZZ FIXME
                   'OPTION_SCSI_ERASE_TAPE'

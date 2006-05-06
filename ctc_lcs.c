@@ -1084,6 +1084,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
 #endif /* defined( TUNTAP_IFF_RUNNING_NEEDED ) */
 
+        // Enable the interface by turning on the IFF_UP flag...
         VERIFY( TUNTAP_SetFlags( pPort->szNetDevName, nIFFlags ) == 0 );
 
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
@@ -1167,10 +1168,17 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
     pPort = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
 
+    // Serialize access to eliminate ioctl errors
+    obtain_lock( &pPort->Lock );
+
     obtain_lock( &pPort->EventLock );
     pPort->fStarted = 0;
     signal_condition( &pPort->Event );
     release_lock( &pPort->EventLock );
+    usleep( 250*1000 );
+
+    // Disable the interface by turning off the IFF_UP flag...
+    VERIFY( TUNTAP_SetFlags( pPort->szNetDevName, 0 ) == 0 );
 
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
 
@@ -1201,6 +1209,8 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
                          RTF_UP ) == 0 );
     }
 #endif
+
+    release_lock( &pPort->Lock );
 
     // FIXME: Really need to iterate through the devices and close
     //        the TAP interface if all devices have been stopped.
