@@ -52,6 +52,7 @@
 # 01/12/05 Fix for VS 8.0 "manifest" files issue - Volker Bandke
 # 02/12/05 Added 'conspawn' utility to build - Fish
 # 30/03/06 (just changed some tabs to spaces) - Fish
+# 04/05/06 clean: skip 'del' (delete) if files don't exist - Fish
 # ***************************************************************************
 
 !IFNDEF VERSION
@@ -344,15 +345,15 @@ MODULES = \
 
 all: allzlib alllibbz2
     rebase -b 0x400000 $(X)*.dll
-    del /f /q $(EXEDIR)\*.manifest
+    if exist $(EXEDIR)\*.manifest del /f /q $(EXEDIR)\*.manifest
 
 clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
-    del /f /q $(OBJDIR)\*.*
-    del /f /q $(EXEDIR)\*.*
-    del /f /q $(PDBDIR)\*.*
-    del /f /q $(MAPDIR)\*.*
+    if exist $(OBJDIR)\*.* del /f /q $(OBJDIR)\*.*
+    if exist $(EXEDIR)\*.* del /f /q $(EXEDIR)\*.*
+    if exist $(PDBDIR)\*.* del /f /q $(PDBDIR)\*.*
+    if exist $(MAPDIR)\*.* del /f /q $(MAPDIR)\*.*
 !IFDEF ASSEMBLY_LISTINGS
-    del /f /q $(ASMDIR)\*.*
+    if exist $(ASMDIR)\*.* del /f /q $(ASMDIR)\*.*
 !ENDIF
 
 crypto: $(X)dyncrypt.dll
