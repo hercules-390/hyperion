@@ -1,3 +1,6 @@
+06 May 2006 Fix SYNCHRONIZE_CPUS bit-flag serialization issue - Fish
+06 May 2006 Fix header-#include and stop-lan port-serialization issues
+            causing some tuntap calls (e.g. set-macaddr) to fail - Fish
 02 May 2006 PERFORM SUBSYSTEM FUMCTION and CONTROL ACCESS CCWs - Adrian
             Trenkwalder
 02 May 2006 Fix for invalid bits in LOCATE BLOCK tape CCW - Adrian Trenkwalder
