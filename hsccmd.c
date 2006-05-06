@@ -4147,6 +4147,8 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     logmsg(_("HHCPN161I DEVBLK ............%7d\n"),sizeof(DEVBLK));
     logmsg(_("HHCPN161I TLB entry .........%7d\n"),sizeof(TLB)/TLBN);
     logmsg(_("HHCPN161I TLB table .........%7d\n"),sizeof(TLB));
+    logmsg(_("HHCPN161I FILENAME_MAX ......%7d\n"),FILENAME_MAX);
+    logmsg(_("HHCPN161I PATH_MAX ..........%7d\n"),PATH_MAX);
     return 0;
 }
 
