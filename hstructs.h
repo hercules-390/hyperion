@@ -164,10 +164,17 @@ struct REGS {                           /* Processor registers       */
         U32     cpubit;
         U32     ints_state;             /* CPU Interrupts Status     */
         U32     ints_mask;              /* Respective Interrupts Mask*/
+     /*
+      * Making the following flags 'stand-alone' (instead of bit-
+      * flags like they were) addresses a compiler bit-flag serial-
+      * ization issue that occurs with the 'SYNCHRONIZE_CPUS' macro
+      * used during synchronize broadcast (cpu<->cpu communication)
+      */
+        int     mainwait;               /* 1=Waiting on mainlock     */
+        int     intwait;                /* 1=Waiting on intlock      */
+
         unsigned int                    /* Flags (cpu thread only)   */
                 opinterv:1,             /* 1=Operator intervening    */
-                mainwait:1,             /* 1=Waiting on mainlock     */
-                intwait:1,              /* 1=Waiting on intlock      */
                 checkstop:1,            /* 1=CPU is checkstop-ed     */
                 hostint:1,              /* 1=Host generated interrupt*/
                 execflag:1,             /* 1=EXecuted instruction    */
