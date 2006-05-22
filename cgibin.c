@@ -1100,11 +1100,10 @@ void cgibin_xml_rates_info(WEBBLK *webblk)
     hprintf(webblk->sock,"<hercules>\n");
     hprintf(webblk->sock,"\t<arch>%d</arch>\n", sysblk.arch_mode);
     hprintf(webblk->sock,"\t<mips>%.1d.%.2d</mips>\n",
-        sysblk.mipsrate / 1000, (sysblk.mipsrate % 1000) / 10);
+        sysblk.mipsrate / 1000000, (sysblk.mipsrate % 1000000) / 10000);
     hprintf(webblk->sock,"\t<siosrate>%d</siosrate>\n", sysblk.siosrate);
     hprintf(webblk->sock,"</hercules>\n");
 }
-
 
 /* The following table is the cgi-bin directory, which               */
 /* associates directory filenames with cgibin routines               */
