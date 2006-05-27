@@ -407,6 +407,12 @@ int             i;                      /* Index                     */
     for (i = 0; i <= cckd->sfn; i++)
         cckd_free (dev, "l1", cckd->l1[i]);
 
+    /* reset the device handler */
+    if (cckd->ckddasd)
+        dev->hnd = &ckddasd_device_hndinfo;
+    else
+        dev->hnd = &fbadasd_device_hndinfo;
+
     /* write some statistics */
     if (!dev->batch)
         cckd_sf_stats (dev);
@@ -416,10 +422,11 @@ int             i;                      /* Index                     */
     dev->cckd_ext= NULL;
     cckd_free (dev, "ext", cckd);
 
-    free (dev->dasdsfn);
+    if (dev->dasdsfn) free (dev->dasdsfn);
     dev->dasdsfn = NULL;
 
     close (dev->fd);
+    dev->fd = -1;
 
     /* If no more devices then perform global termination */
     if (cckdblk.dev1st == NULL) cckddasd_term ();
