@@ -219,6 +219,10 @@ static void ARCH_DEP(kimd_query)(int r1, int r2, REGS *regs)
   /* Store the parameter block */
   ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
 
+#ifdef OPTION_KIMD_DEBUG
+  LOGBYTE("parameter block:", parameter_block, 16);
+#endif
+
   /* Set condition code 0 */
   regs->psw.cc = 0;
 }
@@ -405,6 +409,10 @@ static void ARCH_DEP(klmd_query)(int r1, int r2, REGS *regs)
 
   /* Store the parameter block */
   ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KLMD_DEBUG
+  LOGBYTE("parameter block:", parameter_block, 16);
+#endif
 
   /* Set condition code 0 */
   regs->psw.cc = 0;
@@ -692,6 +700,10 @@ static void ARCH_DEP(km_query)(int r1, int r2, REGS *regs)
 
   /* Store the parameter block */
   ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KM_DEBUG
+  LOGBYTE("parameter block:", parameter_block, 16);
+#endif
 
   /* Set condition code 0 and return */
   regs->psw.cc = 0;
@@ -1051,6 +1063,10 @@ static void ARCH_DEP(kmac_query)(int r1, int r2, REGS *regs)
   /* Store the parameter block */
   ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
 
+#ifdef OPTION_KMAC_DEBUG
+  LOGBYTE("parameter block:", parameter_block, 16);
+#endif
+
   /* Set condition code 0 */
   regs->psw.cc = 0;
 }
@@ -1348,6 +1364,10 @@ static void ARCH_DEP(kmc_query)(int r1, int r2, REGS *regs)
 
   /* Store the parameter block */
   ARCH_DEP(vstorec)(parameter_block, 15, GR_A(1, regs), 1, regs);
+
+#ifdef OPTION_KMC_DEBUG
+  LOGBYTE("parameter block:", parameter_block, 16);
+#endif
 
   /* Set condition code 0 */
   regs->psw.cc = 0;
