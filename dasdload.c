@@ -4519,7 +4519,7 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
     if (extgui) fprintf (stderr, "REQCYLS=%d\n", reqcyls);
 #endif /*EXTERNALGUI*/
     rc = create_ckd (ofname, devtype, outheads, outmaxdl, reqcyls,
-                     volser, comp, lfs, 0, 0);
+                     volser, comp, lfs, 0, 0, 0);
     if (rc < 0)
     {
         XMERRF ("HHCDL007E Cannot create %s\n", ofname);

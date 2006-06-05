@@ -8,7 +8,7 @@
 /*                                                                   */
 /* The program is invoked from the shell prompt using the command:   */
 /*                                                                   */
-/*      dasdinit [-options] filename devtype[-model] volser [size]   */
+/*      dasdinit [-options] filename devtype[-model] [volser] [size] */
 /*                                                                   */
 /* options      options:                                             */
 /*                -a    include alternate cylinders                  */
@@ -16,6 +16,7 @@
 /*                -z    build compressed device using zlib           */
 /*                -bz2  build compressed device using bzip2          */
 /*                -0    build compressed device with no compression  */
+/*                -r    "raw" init (bypass VOL1 & IPL track fmt)     */
 /*                                                                   */
 /* filename     is the name of the disk image file to be created     */
 /*              (this program will not overwrite an existing file)   */
@@ -29,10 +30,11 @@
 /*              size. If specified, then size shouldn't be specified.*/
 /*                                                                   */
 /* volser       is the volume serial number (1-6 characters)         */
+/*              (only if '-r' option not used)                       */
 /*                                                                   */
 /* size         is the size of the device (in cylinders for CKD      */
 /*              devices, or in 512-byte sectors for FBA devices).    */
-/*              Shouldn't be specified if model is specified.        */ 
+/*              Shouldn't be specified if model is specified.        */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 #include "hstdinc.h"
@@ -83,7 +85,7 @@ argexit ( int code, char *m )
 
 "Builds an empty dasd image file:\n\n"
 
-"  dasdinit [-options] filename devtype[-model] volser [size]\n\n"
+"  dasdinit [-options] filename devtype[-model] [volser] [size]\n\n"
 
 "where:\n\n"
 
@@ -102,7 +104,7 @@ argexit ( int code, char *m )
         fprintf(stderr,
 "  -a         build dasd image file that includes alternate cylinders\n"
 "             (option ignored if size is manually specified)\n"
-
+"  -r         build 'raw' dasd image file  (no VOL1 or IPL track)\n"
 "  -linux     null track images will look like linux dasdfmt'ed images\n"
 "             (3390 device type only)\n\n"
 
@@ -113,7 +115,8 @@ argexit ( int code, char *m )
 
 "  model      device model (implies size) (opt)\n\n"
 
-"  volser     volume serial number (1-6 characters)\n\n"
+"  volser     volume serial number (1-6 characters)\n"
+"             (specified only if '-r' option not used)\n\n"
 
 "  size       number of CKD cylinders or 512-byte FBA sectors\n"
 "             (required if model not specified else optional)\n"
@@ -130,6 +133,8 @@ argexit ( int code, char *m )
 int main ( int argc, char *argv[] )
 {
 int     altcylflag = 0;                 /* Alternate cylinders flag  */
+int     rawflag = 0;                    /* Raw format flag           */
+int     volsize_argnum = 4;             /* argc value of size option */
 U32     size = 0;                       /* Volume size               */
 U32     altsize = 0;                    /* Alternate cylinders       */
 U32     heads = 0;                      /* Number of tracks/cylinder */
@@ -161,7 +166,7 @@ int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
         argexit(-1, NULL);
 
     /* Process optional arguments */
-    for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--) 
+    for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--)
     {
         if (strcmp("0", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_NONE;
@@ -175,6 +180,8 @@ int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
 #endif
         else if (strcmp("a", &argv[1][1]) == 0)
             altcylflag = 1;
+        else if (strcmp("r", &argv[1][1]) == 0)
+            rawflag = 1;
         else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(OFF_T) > 4)
             lfs = 1;
         else if (strcmp("linux", &argv[1][1]) == 0)
@@ -184,7 +191,7 @@ int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
 
     /* Check remaining number of arguments */
 
-    if (argc < 4 || argc > 5)
+    if (argc < (rawflag ? 3 : 4) || argc > (rawflag ? 4 : 5))
         argexit(5, NULL);
 
     /* The first argument is the file name */
@@ -227,23 +234,33 @@ int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
         /* Specified model not found */
         argexit(2, argv[2]);
 
-    /* The third argument is the volume serial number */
-    if (!argv[3] || strlen(argv[3]) == 0
-        || strlen(argv[3]) > sizeof(volser)-1)
-        argexit(3, argv[3]);
-
-    strcpy (volser, argv[3]);
-    string_to_upper (volser);
-
-    /* The fourth argument is the volume size */
-    if (argc > 4)
+    /* If -r option specified, then there is not volume serial
+       argument and volume size argument is actually argument
+       number 3 and not argument number 4 as otherwise */
+    if (rawflag)
+        volsize_argnum = 3;
+    else
     {
-        if (argc > 5)
+        volsize_argnum = 4;
+
+        /* The third argument is the volume serial number */
+        if (!argv[3] || strlen(argv[3]) == 0
+            || strlen(argv[3]) > sizeof(volser)-1)
+            argexit(3, argv[3]);
+
+        strcpy (volser, argv[3]);
+        string_to_upper (volser);
+    }
+
+    /* The fourth argument (or third for -r) is the volume size */
+    if (argc > volsize_argnum)
+    {
+        if (argc > (volsize_argnum+1))
             argexit(5, NULL);
 
-        if (!argv[4] || strlen(argv[4]) == 0
-            || sscanf(argv[4], "%u%c", &size, &c) != 1)
-            argexit(4, argv[4]);
+        if (!argv[volsize_argnum] || strlen(argv[volsize_argnum]) == 0
+            || sscanf(argv[volsize_argnum], "%u%c", &size, &c) != 1)
+            argexit(4, argv[volsize_argnum]);
 
         altcylflag = 0;
     }
@@ -259,10 +276,10 @@ int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
 
     if (type == 'C')
         create_ckd (fname, devtype, heads, maxdlen, size, volser,
-                    comp, lfs, 0, nullfmt);
+                    comp, lfs, 0, nullfmt, rawflag);
     else
         create_fba (fname, devtype, sectsize, size, volser, comp,
-                    lfs, 0);
+                    lfs, 0, rawflag);
 
     /* Display completion message */
 

@@ -310,10 +310,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Create the output file */
     if (ckddasd)
         rc = create_ckd(ofile, idev->devtype, idev->ckdheads,
-                        ckd->r1, cyls, "", comp, lfs, 1+r, nullfmt);
+                        ckd->r1, cyls, "", comp, lfs, 1+r, nullfmt, 0);
     else
         rc = create_fba(ofile, idev->devtype, fba->size,
-                        blks, "", comp, lfs, 1+r);
+                        blks, "", comp, lfs, 1+r, 0);
     if (rc < 0)
     {
         fprintf (stderr, _("HHCDC006E %s: %s create failed\n"), pgm, ofile);
