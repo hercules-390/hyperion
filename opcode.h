@@ -66,7 +66,7 @@
         (void*)& _mnemonic \
     }
 
-#define GENx___x390x_(_name)_format,_mnemonic) \
+#define GENx___x390x_(_name,_format,_mnemonic) \
     { \
     _GEN370(operation_exception) \
     _GEN390(_name) \
