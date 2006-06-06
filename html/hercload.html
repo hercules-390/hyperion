@@ -76,33 +76,38 @@ create a file containing an empty DASD volume.
 The format of the dasdinit command is:
 <p><br>
 <pre>
-      dasdinit [-options] filename devtype[-model] volser [size]
+Hercules DASD image file creation program
+Version 3.04
+(c)Copyright 1999-2006 by Roger Bowler, Jan Jaeger, and others
+Builds an empty dasd image file:
 
-    where:
+  dasdinit [-options] filename devtype[-model] [volser] [size]
 
-      options:
-      -z         build compressed dasd image file using zlib
-      -bz2       build compressed dasd image file using bzip2
-      -0         build compressed dasd image file with no compression
-      -lfs       build large uncompressed ckd file (>2G)
-      -a         build dasd image file that includes alternate cylinders
-                 (option ignored if size is manually specified)
-      -linux     build dasd image file in linux dasdfmt format (3390 only).
-                 linux s390/s390x dasdfmt will not be required for this volume.
-                 WARNING: this file will NOT be usable by linux in prior
-                          releases of hercules.
+where:
 
-      filename   name of dasd image file to be created
+  -v         display version info and help
+  -z         build compressed dasd image file using zlib
+  -bz2       build compressed dasd image file using bzip2
+  -0         build compressed dasd image file with no compression
+  -lfs       build a large (uncompressed) dasd file (if supported)
+  -a         build dasd image file that includes alternate cylinders
+             (option ignored if size is manually specified)
+  -r         build 'raw' dasd image file  (no VOL1 or IPL track)
+  -linux     null track images will look like linux dasdfmt'ed images
+             (3390 device type only)
 
-      devtype    CKD: 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345
-                 FBA: 3310, 3370, 9332, 9335, 9336
+  filename   name of dasd image file to be created
 
-      model      device model (implies size) (optional)
+  devtype    CKD: 2305, 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345
+             FBA: 0671, 3310, 3370, 9313, 9332, 9335, 9336
 
-      volser     volume serial number (1-6 characters)
+  model      device model (implies size) (opt)
 
-      size       number of CKD cylinders or 512-byte FBA sectors
-                 (required if model not specified else optional)
+  volser     volume serial number (1-6 characters)
+             (specified only if '-r' option not used)
+
+  size       number of CKD cylinders or 512-byte FBA sectors
+             (required if model not specified else optional)
 </pre>
 <p><br>
 <a NAME="models">
