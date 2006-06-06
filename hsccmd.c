@@ -2499,12 +2499,14 @@ int devinit_cmd(int argc, char *argv[], char *cmdline)
 DEVBLK*  dev;
 U16      devnum;
 U16      lcss;
-int      rc;
+int      i, rc;
 int      nomountedtapereinit = sysblk.nomountedtapereinit;
+int      init_argc;
+char   **init_argv;
 
     UNREFERENCED(cmdline);
 
-    if (argc < 3)
+    if (argc < 2)
     {
         logmsg( _("HHCPN093E Missing argument(s)\n") );
         return -1;
@@ -2536,11 +2538,12 @@ int      nomountedtapereinit = sysblk.nomountedtapereinit;
         return -1;
     }
 
+    /* Prevent accidental re-init'ing of already loaded tape drives */
     if (nomountedtapereinit)
     {
         if (0
             || TAPEDEVT_SCSITAPE == dev->tapedevt
-            || strcmp(argv[2], TAPE_UNLOADED) != 0
+            || (argc >= 3 && strcmp(argv[2], TAPE_UNLOADED) != 0)
         )
         {
             if (dev->tmh->tapeloaded( dev, NULL, 0 ))
@@ -2559,23 +2562,70 @@ int      nomountedtapereinit = sysblk.nomountedtapereinit;
         (dev->hnd->close)(dev);
     }
 
-    /* Call the device init routine to do the hard work */
+    /* Build the device initialization arguments array */
     if (argc > 2)
     {
-        if ((dev->hnd->init)(dev, argc-2, &argv[2]) < 0)
+        /* Use the specified new arguments */
+        init_argc = argc-2;
+        init_argv = &argv[2];
+    }
+    else
+    {
+        /* Use the same arguments as originally used */
+        init_argc = dev->argc;
+        if (init_argc)
         {
-            logmsg( _("HHCPN097E Initialization failed for device %d:%4.4X\n"),
-                      lcss, devnum );
-        } else {
-            logmsg( _("HHCPN098I Device %d:%4.4X initialized\n"), lcss, devnum );
+            init_argv = malloc ( init_argc * sizeof(char*) );
+            for (i = 0; i < init_argc; i++)
+                if (dev->argv[i])
+                    init_argv[i] = strdup(dev->argv[i]);
+                else
+                    init_argv[i] = NULL;
         }
+        else
+            init_argv = NULL;
+    }
+
+    /* Call the device init routine to do the hard work */
+    if ((rc = (dev->hnd->init)(dev, init_argc, init_argv)) < 0)
+    {
+        logmsg( _("HHCPN097E Initialization failed for device %d:%4.4X\n"),
+                  lcss, devnum );
+    } else {
+        logmsg( _("HHCPN098I Device %d:%4.4X initialized\n"), lcss, devnum );
+    }
+
+    /* Save arguments for next time */
+    if (rc == 0)
+    {
+        for (i = 0; i < dev->argc; i++)
+            if (dev->argv[i])
+                free(dev->argv[i]);
+        if (dev->argv)
+            free(dev->argv);
+
+        dev->argc = init_argc;
+        if (init_argc)
+        {
+            dev->argv = malloc ( init_argc * sizeof(char*) );
+            for (i = 0; i < init_argc; i++)
+                if (init_argv[i])
+                    dev->argv[i] = strdup(init_argv[i]);
+                else
+                    dev->argv[i] = NULL;
+        }
+        else
+            dev->argv = NULL;
     }
 
     /* Release the device lock */
     release_lock (&dev->lock);
 
     /* Raise unsolicited device end interrupt for the device */
-    return  device_attention (dev, CSW_DE);
+    if (rc == 0)
+        rc = device_attention (dev, CSW_DE);
+
+    return rc;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -4609,7 +4659,9 @@ CMDHELP ( "attach",    "Format: \"attach devn type [arg...]\n"
 CMDHELP ( "define",    "Format: \"define olddevn newdevn\"\n"
                        )
 
-CMDHELP ( "devinit",   "Format: \"devinit devn arg [arg...]\"\n"
+CMDHELP ( "devinit",   "Format: \"devinit devn [arg...]\"\n"
+                       "If no arguments are given then the same arguments are used\n"
+                       "as were used the last time the device was created/initialized.\n"
                        )
 
 CMDHELP ( "sh",        "Format: \"sh command [args...]\" where 'command' is any valid shell\n"
