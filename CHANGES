@@ -1,3 +1,4 @@
+07 Jun 2006 PR# misc/71: Incorrect disassembly of some instructions - Fish
 05 Jun 2006 PR# misc/68: devinit w/no arguments == use original - Fish
 05 Jun 2006 PR# dasd/81: DASDINIT option to bypass VOL1 creation - Fish
 06 May 2006 Fix SYNCHRONIZE_CPUS bit-flag serialization issue - Fish
