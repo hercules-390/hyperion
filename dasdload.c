@@ -144,7 +144,7 @@ argexit ( int code )
             "\t-bz2: compress using bzip2\n"
 #endif
             );
-    if (sizeof(OFF_T) > 4)
+    if (sizeof(off_t) > 4)
         fprintf (stderr,
             "\t-lfs: create single large output file\n"
             );
@@ -3459,7 +3459,7 @@ int             outtrkbr = 0;           /* Output bytes remaining on
                                            track of real device      */
 int             outtrk = 0;             /* Output relative track     */
 int             outrec = 0;             /* Output record number      */
-struct STAT     st;                     /* Data area for fstat()     */
+struct stat     st;                     /* Data area for fstat()     */
 DATABLK         datablk;                /* Data block                */
 char            pathname[MAX_PATH];     /* sfname in host path format*/
 
@@ -3500,7 +3500,7 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
     }
 
     /* Get input file status */
-    rc = FSTAT(sfd, &st);
+    rc = fstat(sfd, &st);
     if (rc < 0)
     {
         XMERRF ("HHCDL126E Cannot stat %s: %s\n",
@@ -3719,7 +3719,7 @@ static int      stmtno = 0;             /* Statement number          */
 
 #ifdef EXTERNALGUI
         /* Indicate input file progess */
-        if (extgui) fprintf (stderr, "IPOS=%" I64_FMT "d\n", (U64)FTELL(cfp));
+        if (extgui) fprintf (stderr, "IPOS=%" I64_FMT "d\n", (U64)ftell(cfp));
 #endif /*EXTERNALGUI*/
 
         /* Check for DOS end of file character */
@@ -4404,7 +4404,7 @@ char            pathname[MAX_PATH];     /* cfname in host path format*/
 #endif
         else if (strcmp("a", &argv[1][1]) == 0)
             altcylflag = 1;
-        else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(OFF_T) > 4)
+        else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(off_t) > 4)
             lfs = 1;
         else argexit(0);
     }

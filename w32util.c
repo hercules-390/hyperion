@@ -242,8 +242,8 @@ DLL_EXPORT int w32_fseeki64 ( FILE* stream, __int64 offset, int origin )
     }
     else if (SEEK_END == origin)
     {
-        struct STAT fst;
-        if ( FSTAT( fileno( stream ), &fst ) != 0 )
+        struct stat fst;
+        if ( fstat( fileno( stream ), &fst ) != 0 )
             return -1;
         offset_from_beg = (__int64)fst.st_size + offset;
     }

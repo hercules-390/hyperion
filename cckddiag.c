@@ -117,13 +117,13 @@ void *makbuf(int len, char *label) {
 int readpos(
             int fd,               /* opened CCKD image file          */
             void *buf,            /* buffer of size len              */
-            OFF_T offset,         /* offset into CCKD image to read  */
+            off_t offset,         /* offset into CCKD image to read  */
             size_t len            /* length of data to read          */
             ) {
     if (debug) 
         fprintf(stdout, "\nREADPOS seeking %d (0x%8.8X)\n", 
                         (int)offset, (unsigned int)offset);
-    if (LSEEK(fd, offset, SEEK_SET) < 0) {
+    if (lseek(fd, offset, SEEK_SET) < 0) {
         fprintf(stdout, _("lseek to pos 0x%8.8x error: %s\n"),
                         (unsigned int) offset, strerror(errno));
         clean();
@@ -335,19 +335,19 @@ int             len;
 }
 
 /*-------------------------------------------------------------------*/
-/* offtify - given decimal or hex input string, return OFF_T         */
+/* offtify - given decimal or hex input string, return off_t         */
 /* Locale independent, does not check for overflow                   */
 /* References <ctype.h> and <string.h>                               */
 /*-------------------------------------------------------------------*/
 /* Based on code in P. J. Plauger's "The Standard C Library"         */
 /* See page 34, in Chapter 2 (ctype.h)                               */
-OFF_T offtify(char *s) {
+off_t offtify(char *s) {
 
 static const char  xd[] = {"0123456789abcdefABCDEF"};
 static const char  xv[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
                            10, 11, 12, 13, 14, 15, 
                            10, 11, 12, 13, 14, 15};
-OFF_T              v;
+off_t              v;
 char               *p;
 
         p = s;
@@ -361,7 +361,7 @@ char               *p;
                         p, (U64)v, (U64)v);
             return v;
         } else {                                 /* decimal input */
-            v = (OFF_T) atoll(s);
+            v = (off_t) atoll(s);
             if (debug) 
                 fprintf(stdout, 
                         "OFFTIFY string %s decimal %" I64_FMT "X %" I64_FMT "d\n", 
@@ -404,11 +404,11 @@ int             op_tt = 0;              /* relative track #          */
 int             swapend;                /* 1 = New endianess doesn't
                                              match machine endianess */
 int             n, trk=0, l1ndx=0, l2ndx=0;
-OFF_T           l2taboff=0;             /* offset to assoc. L2 table */
+off_t           l2taboff=0;             /* offset to assoc. L2 table */
 int             ckddasd;                /* 1=CKD dasd  0=FBA dasd    */
 int             heads=0;                /* Heads per cylinder        */
 int             blks;                   /* Number fba blocks         */
-OFF_T           trkhdroff=0;            /* offset to assoc. trk hdr  */
+off_t           trkhdroff=0;            /* offset to assoc. trk hdr  */
 int             imglen=0;               /* track length              */
 char            pathname[MAX_PATH];     /* file path in host format  */
 

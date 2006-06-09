@@ -98,7 +98,7 @@ argexit ( int code, char *m )
 #endif
 "  -0         build compressed dasd image file with no compression\n"
 );
-        if (sizeof(OFF_T) > 4) fprintf(stderr,
+        if (sizeof(off_t) > 4) fprintf(stderr,
 "  -lfs       build a large (uncompressed) dasd file (if supported)\n"
 );
         fprintf(stderr,
@@ -182,7 +182,7 @@ int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
             altcylflag = 1;
         else if (strcmp("r", &argv[1][1]) == 0)
             rawflag = 1;
-        else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(OFF_T) > 4)
+        else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(off_t) > 4)
             lfs = 1;
         else if (strcmp("linux", &argv[1][1]) == 0)
             nullfmt = CKDDASD_NULLTRK_FMT2;

@@ -117,7 +117,7 @@ int reclen = 0;
 /*
 || Previously reported file position
 */
-static OFF_T prevpos = 0;
+static off_t prevpos = 0;
 /*
 || Report progress every this many bytes
 */
@@ -505,7 +505,7 @@ getfile( HETB *hetb, FILE *outf )
             if( extgui )
             {
                 /* Report progress every nnnK */
-                OFF_T curpos = FTELL( hetb->fd );
+                off_t curpos = ftell( hetb->fd );
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
@@ -571,7 +571,7 @@ getfile( HETB *hetb, FILE *outf )
             if( extgui )
             {
                 /* Report progress every nnnK */
-                OFF_T curpos = FTELL( hetb->fd );
+                off_t curpos = ftell( hetb->fd );
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;

@@ -104,7 +104,7 @@ char            pathname[MAX_PATH];
 
 //      memset (&cdevhdr.resv2, 0, 464);
 
-        LSEEK (fd, 0, SEEK_SET);
+        lseek (fd, 0, SEEK_SET);
         write (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
         write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
 

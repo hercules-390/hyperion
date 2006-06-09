@@ -183,6 +183,6 @@ HET_DLL_IMPORT int het_bsf( HETB *hetb );
 HET_DLL_IMPORT int het_fsf( HETB *hetb );
 HET_DLL_IMPORT int het_rewind( HETB *hetb );
 HET_DLL_IMPORT const char *het_error( int rc );
-HET_DLL_IMPORT OFF_T het_tell ( HETB *hetb );
+HET_DLL_IMPORT off_t het_tell ( HETB *hetb );
 
 #endif /* defined( _HETLIB_H_ ) */

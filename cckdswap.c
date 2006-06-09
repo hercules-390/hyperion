@@ -132,7 +132,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
         }
 
         /* re-read the compressed CKD device header */
-        if (LSEEK (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
+        if (lseek (dev->fd, CCKD_DEVHDR_POS, SEEK_SET) < 0)
         {
             cckdumsg (dev, 702, "lseek error offset 0x%" I64_FMT "x: %s\n",
                       (long long)CCKD_DEVHDR_POS, strerror(errno));

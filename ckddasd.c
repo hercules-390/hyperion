@@ -198,7 +198,7 @@ static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 int ckddasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int             rc;                     /* Return code               */
-struct STAT     statbuf;                /* File information          */
+struct stat     statbuf;                /* File information          */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 int             i;                      /* Loop index                */
@@ -234,7 +234,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Check for possible remote device */
     hostpath(pathname, dev->filename, sizeof(pathname));
-    if (STAT(pathname, &statbuf) < 0)
+    if (stat(pathname, &statbuf) < 0)
     {
         rc = shared_ckd_init ( dev, argc, argv);
         if (rc < 0)
@@ -381,7 +381,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
 
         /* Determine the device size */
-        rc = FSTAT (dev->fd, &statbuf);
+        rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
             logmsg (_("HHCDA007E %s fstat error: %s\n"),
@@ -476,7 +476,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     devhdr.fileseq = fileseq == 1 ? 0 : fileseq;
                     highcyl = 0;
                     devhdr.highcyl[0] = devhdr.highcyl[1] = 0;
-                    LSEEK (dev->fd, 0, SEEK_SET);
+                    lseek (dev->fd, 0, SEEK_SET);
                     rc = write (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE);
                 }
             }
@@ -524,7 +524,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
         /* Consistency check device header */
         if (cckd == 0 && dev->dasdcopy == 0 && (cyls * heads != trks
-            || ((OFF_T)trks * trksize) + CKDDASD_DEVHDR_SIZE
+            || ((off_t)trks * trksize) + CKDDASD_DEVHDR_SIZE
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
         {
@@ -764,7 +764,7 @@ int ckddasd_read_track (DEVBLK *dev, int trk, BYTE *unitstat)
 int             rc;                     /* Return code               */
 int             cyl;                    /* Cylinder                  */
 int             head;                   /* Head                      */
-OFF_T           offset;                 /* File offsets              */
+off_t           offset;                 /* File offsets              */
 int             i,o,f;                  /* Indexes                   */
 int             active;                 /* 1=Synchronous I/O active  */
 CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
@@ -804,8 +804,8 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         dev->bufupd = 0;
 
         /* Seek to the old track image offset */
-        offset = (OFF_T)(dev->ckdtrkoff + dev->bufupdlo);
-        offset = LSEEK (dev->fd, offset, SEEK_SET);
+        offset = (off_t)(dev->ckdtrkoff + dev->bufupdlo);
+        offset = lseek (dev->fd, offset, SEEK_SET);
         if (offset < 0)
         {
             /* Handle seek error condition */
@@ -889,7 +889,7 @@ ckd_read_track_retry:
 
         /* Calculate the track offset */
         dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
-             (OFF_T)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
+             (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
 
         dev->syncio_active = active;
 
@@ -934,7 +934,7 @@ ckd_read_track_retry:
 
     /* Calculate the track offset */
     dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
-         (OFF_T)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
+         (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
 
     dev->syncio_active = active;
 
@@ -942,8 +942,8 @@ ckd_read_track_retry:
               trk, f+1, (long long)dev->ckdtrkoff, dev->ckdtrksz);
 
     /* Seek to the track image offset */
-    offset = (OFF_T)dev->ckdtrkoff;
-    offset = LSEEK (dev->fd, offset, SEEK_SET);
+    offset = (off_t)dev->ckdtrkoff;
+    offset = lseek (dev->fd, offset, SEEK_SET);
     if (offset < 0)
     {
         /* Handle seek error condition */

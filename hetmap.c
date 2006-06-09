@@ -32,7 +32,7 @@ static const char help[] =
 
 #ifdef EXTERNALGUI
 /* Previous reported file position */
-static OFF_T prevpos = 0;
+static off_t prevpos = 0;
 /* Report progress every this many bytes */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
 #endif /*EXTERNALGUI*/
@@ -247,7 +247,7 @@ main( int argc, char *argv[] )
         if( extgui )
         {
             /* Report progress every nnnK */
-            OFF_T curpos = FTELL( hetb->fd );
+            off_t curpos = ftell( hetb->fd );
             if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
             {
                 prevpos = curpos;

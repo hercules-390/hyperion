@@ -1077,7 +1077,7 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 static int shared_fba_blkgrp_len (DEVBLK *dev, int blkgrp)
 {
-OFF_T   offset;                         /* Offset of block group     */
+off_t   offset;                         /* Offset of block group     */
 
     offset = blkgrp * FBA_BLKGRP_SIZE;
     if (dev->fbaend - offset < FBA_BLKGRP_SIZE)

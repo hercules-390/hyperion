@@ -51,7 +51,7 @@
 int fbadasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int     rc;                             /* Return code               */
-struct  STAT statbuf;                   /* File information          */
+struct  stat statbuf;                   /* File information          */
 int     startblk;                       /* Device origin block number*/
 int     numblks;                        /* Device block count        */
 BYTE    c;                              /* Character work area       */
@@ -79,7 +79,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Check for possible remote device */
     hostpath(pathname, dev->filename, sizeof(pathname));
-    if (STAT(pathname, &statbuf) < 0)
+    if (stat(pathname, &statbuf) < 0)
     {
         rc = shared_fba_init ( dev, argc, argv);
         if (rc < 0)
@@ -199,7 +199,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     else
     {
         /* Determine the device size */
-        rc = FSTAT (dev->fd, &statbuf);
+        rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
             logmsg (_("HHCDA064E File %s fstat error: %s\n"),
@@ -323,7 +323,7 @@ void fbadasd_query_device (DEVBLK *dev, char **class,
 /*-------------------------------------------------------------------*/
 static int fba_blkgrp_len (DEVBLK *dev, int blkgrp)
 {
-OFF_T   offset;                         /* Offset of block group     */
+off_t   offset;                         /* Offset of block group     */
 
     offset = blkgrp * FBA_BLKGRP_SIZE;
     if (dev->fbaend - offset < FBA_BLKGRP_SIZE)
@@ -478,7 +478,7 @@ int fbadasd_read_blkgrp (DEVBLK *dev, int blkgrp, BYTE *unitstat)
 int             rc;                     /* Return code               */
 int             i, o;                   /* Cache indexes             */
 int             len;                    /* Length to read            */
-OFF_T           offset;                 /* File offsets              */
+off_t           offset;                 /* File offsets              */
 
     /* Return if reading the same block group */
     if (blkgrp >= 0 && blkgrp == dev->bufcur)
@@ -497,8 +497,8 @@ OFF_T           offset;                 /* File offsets              */
         dev->bufupd = 0;
 
         /* Seek to the old block group offset */
-        offset = (OFF_T)((dev->bufcur * FBA_BLKGRP_SIZE) + dev->bufupdlo);
-        offset = LSEEK (dev->fd, offset, SEEK_SET);
+        offset = (off_t)((dev->bufcur * FBA_BLKGRP_SIZE) + dev->bufupdlo);
+        offset = lseek (dev->fd, offset, SEEK_SET);
         if (offset < 0)
         {
             /* Handle seek error condition */
@@ -607,14 +607,14 @@ fba_read_blkgrp_retry:
     cache_unlock (CACHE_DEVBUF);
 
     /* Get offset and length */
-    offset = (OFF_T)(blkgrp * FBA_BLKGRP_SIZE);
+    offset = (off_t)(blkgrp * FBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
     logdevtr (dev, _("HHCDA074I read blkgrp %d offset %" I64_FMT "d len %d\n"),
               blkgrp, (long long)offset, fba_blkgrp_len(dev, blkgrp));
 
     /* Seek to the block group offset */
-    offset = LSEEK (dev->fd, offset, SEEK_SET);
+    offset = lseek (dev->fd, offset, SEEK_SET);
     if (offset < 0)
     {
         /* Handle seek error condition */

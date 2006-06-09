@@ -816,9 +816,9 @@ struct DEVBLK {                         /* Device configuration block*/
         U16     omafiles;               /* Number of OMA tape files  */
         U16     curfilen;               /* Current file number       */
         long    blockid;                /* Current device block ID   */
-        OFF_T   nxtblkpos;              /* Offset from start of file
+        off_t   nxtblkpos;              /* Offset from start of file
                                            to next block             */
-        OFF_T   prvblkpos;              /* Offset from start of file
+        off_t   prvblkpos;              /* Offset from start of file
                                            to previous block         */
         U16     curblkrem;              /* Number of bytes unread
                                            from current block        */
@@ -838,9 +838,9 @@ struct DEVBLK {                         /* Device configuration block*/
                                         /* MVS 3.8j workaround       */
           u_int logical_readonly:1;     /* Tape is forced READ ONLY  */
           U16   chksize;                /* Chunk size                */
-          OFF_T maxsize;                /* Maximum allowed TAPE file
+          off_t maxsize;                /* Maximum allowed TAPE file
                                            size                      */
-          OFF_T eotmargin;              /* Amount of space left
+          off_t eotmargin;              /* Amount of space left
                                            before reporting EOT      */
         }       tdparms;                /* HET device parms          */
         u_int   poserror:1;             /* Positioning error         */
@@ -932,8 +932,8 @@ struct DEVBLK {                         /* Device configuration block*/
         FBADEV *fbatab;                 /* Device table entry        */
         int     fbaorigin;              /* Device origin block number*/
         int     fbanumblk;              /* Number of blocks in device*/
-        OFF_T   fbarba;                 /* Relative byte offset      */
-        OFF_T   fbaend;                 /* Last RBA in file          */
+        off_t   fbarba;                 /* Relative byte offset      */
+        off_t   fbaend;                 /* Last RBA in file          */
         int     fbaxblkn;               /* Offset from start of device
                                            to first block of extent  */
         int     fbaxfirst;              /* Block number within dataset
@@ -957,7 +957,7 @@ struct DEVBLK {                         /* Device configuration block*/
                                            in each CKD image file    */
         CKDDEV *ckdtab;                 /* Device table entry        */
         CKDCU  *ckdcu;                  /* Control unit entry        */
-        OFF_T   ckdtrkoff;              /* Track image file offset   */
+        off_t   ckdtrkoff;              /* Track image file offset   */
         int     ckdcyls;                /* Number of cylinders       */
         int     ckdtrks;                /* Number of tracks          */
         int     ckdheads;               /* #of heads per cylinder    */
@@ -1308,7 +1308,7 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
         int              l1x;           /* Active level 2 table index*/
         CCKD_L2ENT      *l2;            /* Active level 2 table      */
         int              l2active;      /* Active level 2 cache entry*/
-        OFF_T            l2bounds;      /* L2 tables boundary        */
+        off_t            l2bounds;      /* L2 tables boundary        */
         int              active;        /* Active cache entry        */
         BYTE            *newbuf;        /* Uncompressed buffer       */
         unsigned int     freemin;       /* Minimum free space size   */

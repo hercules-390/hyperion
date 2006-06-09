@@ -391,8 +391,8 @@ static void close_awstape (DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 static int rewind_awstape (DEVBLK *dev,BYTE *unitstat,BYTE code)
 {
-    OFF_T rcoff;
-    rcoff=LSEEK(dev->fd,0,SEEK_SET);
+    off_t rcoff;
+    rcoff=lseek(dev->fd,0,SEEK_SET);
     if(rcoff<0)
     {
         build_senseX(TAPE_BSENSE_REWINDFAILED,dev,unitstat,code);
@@ -483,14 +483,14 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 /* If successful, return value is zero, and buffer contains header.  */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-static int readhdr_awstape (DEVBLK *dev, OFF_T blkpos,
+static int readhdr_awstape (DEVBLK *dev, off_t blkpos,
                         AWSTAPE_BLKHDR *buf, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
-OFF_T           rcoff;                  /* Return code from lseek()  */
+off_t           rcoff;                  /* Return code from lseek()  */
 
     /* Reposition file to the requested block header */
-    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    rcoff = lseek (dev->fd, blkpos, SEEK_SET);
     if (rcoff < 0)
     {
         /* Handle seek error condition */
@@ -558,7 +558,7 @@ static int read_awstape (DEVBLK *dev, BYTE *buf, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
-OFF_T           blkpos;                 /* Offset of block header    */
+off_t           blkpos;                 /* Offset of block header    */
 U16             blklen;                 /* Data length of block      */
 
     /* Initialize current block position */
@@ -628,9 +628,9 @@ static int write_awstape (DEVBLK *dev, BYTE *buf, U16 blklen,
                         BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
-OFF_T           rcoff;                  /* Return code from lseek()  */
+off_t           rcoff;                  /* Return code from lseek()  */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
-OFF_T           blkpos;                 /* Offset of block header    */
+off_t           blkpos;                 /* Offset of block header    */
 U16             prvblkl;                /* Length of previous block  */
 
     /* Initialize current block position and previous block length */
@@ -653,7 +653,7 @@ U16             prvblkl;                /* Length of previous block  */
     }
 
     /* Reposition file to the new block header */
-    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    rcoff = lseek (dev->fd, blkpos, SEEK_SET);
     if (rcoff < 0)
     {
         /* Handle seek error condition */
@@ -750,9 +750,9 @@ U16             prvblkl;                /* Length of previous block  */
 static int write_awsmark (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
-OFF_T           rcoff;                  /* Return code from lseek()  */
+off_t           rcoff;                  /* Return code from lseek()  */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
-OFF_T           blkpos;                 /* Offset of block header    */
+off_t           blkpos;                 /* Offset of block header    */
 U16             prvblkl;                /* Length of previous block  */
 
     /* Initialize current block position and previous block length */
@@ -775,7 +775,7 @@ U16             prvblkl;                /* Length of previous block  */
     }
 
     /* Reposition file to the new block header */
-    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    rcoff = lseek (dev->fd, blkpos, SEEK_SET);
     if (rcoff < 0)
     {
         /* Handle seek error condition */
@@ -841,7 +841,7 @@ static int fsb_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
-OFF_T           blkpos;                 /* Offset of block header    */
+off_t           blkpos;                 /* Offset of block header    */
 U16             blklen;                 /* Data length of block      */
 
     /* Initialize current block position */
@@ -884,7 +884,7 @@ int             rc;                     /* Return code               */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 U16             curblkl;                /* Length of current block   */
 U16             prvblkl;                /* Length of previous block  */
-OFF_T           blkpos;                 /* Offset of block header    */
+off_t           blkpos;                 /* Offset of block header    */
 
     /* Unit check if already at start of tape */
     if (!dev->nxtblkpos)
@@ -1168,7 +1168,7 @@ static int write_het (DEVBLK *dev, BYTE *buf, U16 blklen,
                       BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
-OFF_T           cursize;                /* Current size for size chk */
+off_t           cursize;                /* Current size for size chk */
 
     /* Check if we have already violated the size limit */
     if(dev->tdparms.maxsize>0)
@@ -1207,7 +1207,7 @@ OFF_T           cursize;                /* Current size for size chk */
                 logmsg(_("TAPE EOT Handling : max capacity enforced\n"));
                 het_bsb(dev->hetb);
                 cursize=het_tell(dev->hetb);
-                FTRUNCATE( fileno(dev->hetb->fd),cursize);
+                ftruncate( fileno(dev->hetb->fd),cursize);
                 dev->hetb->truncated=TRUE; /* SHOULD BE IN HETLIB */
             }
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
@@ -1394,7 +1394,7 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 static int passedeot_het (DEVBLK *dev)
 {
-OFF_T cursize;
+off_t cursize;
     if(dev->fd>0)
     {
         if(dev->tdparms.maxsize>0)
@@ -1460,7 +1460,7 @@ int             tdfsize;                /* Size of TDF file in bytes */
 int             filecount;              /* Number of files           */
 int             stmt;                   /* TDF file statement number */
 int             fd;                     /* TDF file descriptor       */
-struct STAT     statbuf;                /* TDF file information      */
+struct stat     statbuf;                /* TDF file information      */
 U32             blklen;                 /* Fixed block length        */
 int             tdfpos;                 /* Position in TDF buffer    */
 char           *tdfbuf;                 /* -> TDF file buffer        */
@@ -1503,7 +1503,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Determine the size of the tape descriptor file */
-    rc = FSTAT (fd, &statbuf);
+    rc = fstat (fd, &statbuf);
     if (rc < 0)
     {
         logmsg (_("HHCTA040E %s fstat error: %s\n"),
@@ -1786,9 +1786,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = open (pathname, O_RDONLY | O_BINARY);
 
     /* Check for successful open */
-    if (rc < 0 || LSEEK (rc, 0, SEEK_END) > LONG_MAX)
+    if (rc < 0 || lseek (rc, 0, SEEK_END) > LONG_MAX)
     {
-        if ( rc >= 0 ) /* LSEEK overflow */ errno = EOVERFLOW;
+        if ( rc >= 0 ) /* lseek overflow */ errno = EOVERFLOW;
         logmsg (_("HHCTA051E Error opening %s: %s\n"),
                 omadesc->filename, strerror(errno));
         close(rc);
@@ -1817,7 +1817,7 @@ static int readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
                         S32 *pnxthdro, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
-OFF_T           rcoff;                  /* Return code from lseek()  */
+off_t           rcoff;                  /* Return code from lseek()  */
 int             padding;                /* Number of padding bytes   */
 OMATAPE_BLKHDR  omahdr;                 /* OMATAPE block header      */
 S32             curblkl;                /* Length of current block   */
@@ -1825,7 +1825,7 @@ S32             prvhdro;                /* Offset of previous header */
 S32             nxthdro;                /* Offset of next header     */
 
     /* Seek to start of block header */
-    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    rcoff = lseek (dev->fd, blkpos, SEEK_SET);
     if (rcoff < 0)
     {
         /* Handle seek error condition */
@@ -1986,7 +1986,7 @@ S32             nxthdro;                /* Offset of next header     */
 static int read_omafixed (DEVBLK *dev, OMATAPE_DESC *omadesc,
                         BYTE *buf, BYTE *unitstat,BYTE code)
 {
-OFF_T           rcoff;                  /* Return code from lseek()  */
+off_t           rcoff;                  /* Return code from lseek()  */
 int             blklen;                 /* Block length              */
 long            blkpos;                 /* Offset of block in file   */
 
@@ -1994,7 +1994,7 @@ long            blkpos;                 /* Offset of block in file   */
     blkpos = dev->nxtblkpos;
 
     /* Seek to new current block position */
-    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    rcoff = lseek (dev->fd, blkpos, SEEK_SET);
     if (rcoff < 0)
     {
         /* Handle seek error condition */
@@ -2058,7 +2058,7 @@ static int read_omatext (DEVBLK *dev, OMATAPE_DESC *omadesc,
                         BYTE *buf, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
-OFF_T           rcoff;                  /* Return code from lseek()  */
+off_t           rcoff;                  /* Return code from lseek()  */
 int             num;                    /* Number of characters read */
 int             pos;                    /* Position in I/O buffer    */
 long            blkpos;                 /* Offset of block in file   */
@@ -2068,7 +2068,7 @@ BYTE            c;                      /* Character work area       */
     blkpos = dev->nxtblkpos;
 
     /* Seek to new current block position */
-    rcoff = LSEEK (dev->fd, blkpos, SEEK_SET);
+    rcoff = lseek (dev->fd, blkpos, SEEK_SET);
     if (rcoff < 0)
     {
         /* Handle seek error condition */
@@ -2313,15 +2313,15 @@ S32             nxthdro;                /* Offset of next header     */
 static int fsb_omafixed (DEVBLK *dev, OMATAPE_DESC *omadesc,
                         BYTE *unitstat,BYTE code)
 {
-OFF_T           eofpos;                 /* Offset of end of file     */
-OFF_T           blkpos;                 /* Offset of current block   */
+off_t           eofpos;                 /* Offset of end of file     */
+off_t           blkpos;                 /* Offset of current block   */
 int             curblkl;                /* Length of current block   */
 
     /* Initialize current block position */
     blkpos = dev->nxtblkpos;
 
     /* Seek to end of file to determine file size */
-    eofpos = LSEEK (dev->fd, 0, SEEK_END);
+    eofpos = lseek (dev->fd, 0, SEEK_END);
     if (eofpos < 0 || eofpos >= LONG_MAX)
     {
         /* Handle seek error condition */
@@ -2415,7 +2415,7 @@ OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
 static int bsf_omatape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
-OFF_T           pos;                    /* File position             */
+off_t           pos;                    /* File position             */
 OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
 S32             curblkl;                /* Length of current block   */
 S32             prvhdro;                /* Offset of previous header */
@@ -2452,7 +2452,7 @@ S32             nxthdro;                /* Offset of next header     */
     if ( 'H' == omadesc->format )
         pos -= sizeof(OMATAPE_BLKHDR);
 
-    pos = LSEEK (dev->fd, pos, SEEK_END);
+    pos = lseek (dev->fd, pos, SEEK_END);
     if (pos < 0)
     {
         /* Handle seek error condition */

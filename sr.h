@@ -482,7 +482,7 @@
 #define SR_WRITE(_ptr, _size, _nmemb, _stream) \
  fwrite((_ptr), (_size), (_nmemb), (_stream))
 #define SR_SEEK(_stream, _offset, _whence) \
- FSEEK((_stream), (_offset), (_whence))
+ fseek((_stream), (_offset), (_whence))
 #define SR_CLOSE(_stream) \
  fclose((_stream))
 #endif

@@ -73,7 +73,7 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   n = scandir(path, &namelist, filter, alphasort);
   if (n > 0) {
     for (i=0; i<n; i++) {
-      struct STAT buf;
+      struct stat buf;
       char fullfilename[256];
       /* namelist[i]->d_name contains filtered filenames, check if they are
          directories with stat(), before that create whole path */
@@ -83,7 +83,7 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
          sprintf(fullfilename, "%s", namelist[i]->d_name);
       /* if it is a directory, add '/' to the end so it can be seen on screen*/
       hostpath(pathname, fullfilename, sizeof(pathname));
-      if (STAT(pathname,&buf) == 0)
+      if (stat(pathname,&buf) == 0)
          if (buf.st_mode & S_IFDIR) {
 //          strcat(namelist[i]->d_name,"/");
 // Don't write past end of d_name

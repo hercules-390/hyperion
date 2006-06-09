@@ -58,11 +58,11 @@ DLL_EXPORT int cckd_swapend (DEVBLK *dev)
 CCKDDASD_EXT     *cckd;                 /* -> cckd extension         */
 int               fd;                   /* File descriptor           */
 int               rc;                   /* Return code               */
-struct STAT       fst;                  /* File status buffer        */
+struct stat       fst;                  /* File status buffer        */
 int               i;                    /* Index                     */
 int               swapend;              /* 1=swap space              */
 int               len;                  /* Length                    */
-OFF_T             off, lopos, hipos;    /* File offsets              */
+off_t             off, lopos, hipos;    /* File offsets              */
 CCKD_DEVHDR       cdevhdr;              /* Compressed ckd header     */
 CCKD_L1ENT       *l1 = NULL;            /* Level 1 table             */
 CCKD_L2ENT        l2[256];              /* Level 2 table             */
@@ -76,13 +76,13 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
         fd = cckd->fd[cckd->sfn];
 
     /* Get file size */
-    if (FSTAT (fd, &fst) < 0)
+    if (fstat (fd, &fst) < 0)
         goto cswp_fstat_error;
     hipos = fst.st_size;
 
     /* Device header */
     off = CCKD_DEVHDR_POS;
-    if (LSEEK (fd, off, SEEK_SET) < 0)
+    if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
     len = CCKD_DEVHDR_SIZE;
     if ((rc = read (fd, &cdevhdr, len)) != len)
@@ -90,7 +90,7 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     swapend = (cdevhdr.options & CCKD_BIGENDIAN) != cckd_endian();
     cckd_swapend_chdr (&cdevhdr);
     cdevhdr.options |= CCKD_ORDWR;
-    if (LSEEK (fd, off, SEEK_SET) < 0)
+    if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
     if ((rc = write (fd, &cdevhdr, len)) != len)
         goto cswp_write_error;
@@ -101,12 +101,12 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     if ((l1 = malloc (len)) == NULL)
         goto cswp_malloc_error;
     off = CCKD_L1TAB_POS;
-    if (LSEEK (fd, off, SEEK_SET) < 0)
+    if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
     if ((rc = read (fd, l1, len)) != len)
         goto cswp_read_error;
     cckd_swapend_l1 (l1, (int)cdevhdr.numl1tab);
-    if (LSEEK (fd, off, SEEK_SET) < 0)
+    if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
     if ((rc = write (fd, l1, len)) != len)
         goto cswp_write_error;
@@ -119,14 +119,14 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
         if (l1[i] == 0    || l1[i] == 0xffffffff
          || l1[i] < lopos || l1[i] > hipos - CCKD_L2TAB_SIZE)
             continue;
-        off = (OFF_T)l1[i];
-        if (LSEEK (fd, off, SEEK_SET) < 0)
+        off = (off_t)l1[i];
+        if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
         len = CCKD_L2TAB_SIZE;
         if ((rc = read (fd, l2, len)) != len)
             goto cswp_read_error;
         cckd_swapend_l2 (l2);
-        if (LSEEK (fd, off, SEEK_SET) < 0)
+        if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
         if ((rc = write (fd, l2, len)) != len)
             goto cswp_write_error;
@@ -139,8 +139,8 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     if (cdevhdr.free && cdevhdr.free >= lopos
      && cdevhdr.free <= hipos - CCKD_FREEBLK_SIZE)
     {
-        off = (OFF_T)cdevhdr.free;
-        if (LSEEK (fd, off, SEEK_SET) < 0)
+        off = (off_t)cdevhdr.free;
+        if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
         len = CCKD_FREEBLK_SIZE;
         if ((rc = read (fd, &freeblk, len)) != len)
@@ -153,12 +153,12 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
                 off += CCKD_FREEBLK_SIZE;
                 if (off > hipos - CCKD_FREEBLK_SIZE)
                     break;
-                if (LSEEK (fd, off, SEEK_SET) < 0)
+                if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
                 if ((rc = read (fd, &freeblk, len)) != len)
                     goto cswp_read_error;
                 cckd_swapend_free (&freeblk);
-                if (LSEEK (fd, off, SEEK_SET) < 0)
+                if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
                 if ((rc = write (fd, &freeblk, len)) != len)
                     goto cswp_write_error;
@@ -171,17 +171,17 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
             {
                 if (off < lopos || off > hipos - CCKD_FREEBLK_SIZE)
                     break;
-                if (LSEEK (fd, off, SEEK_SET) < 0)
+                if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
                 if ((rc = read (fd, &freeblk, len)) != len)
                     goto cswp_read_error;
                 cckd_swapend_free (&freeblk);
-                if (LSEEK (fd, off, SEEK_SET) < 0)
+                if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
                 if ((rc = write (fd, &freeblk, len)) != len)
                     goto cswp_write_error;
                 if (!swapend) cckd_swapend_free (&freeblk);
-                off = (OFF_T)freeblk.pos;
+                off = (off_t)freeblk.pos;
             } /* for each free space */
         } /* else old format free space */
     } /* if free space */
@@ -326,11 +326,11 @@ DLL_EXPORT int cckd_comp (DEVBLK *dev)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             fd;                     /* File descriptor           */
-struct STAT     fst;                    /* File status buffer        */
+struct stat     fst;                    /* File status buffer        */
 long long       maxsize;                /* Max cckd file size        */
 int             rc;                     /* Return code               */
-OFF_T           off;                    /* File offset               */
-OFF_T           l2area;                 /* Boundary for l2 tables    */
+off_t           off;                    /* File offset               */
+off_t           l2area;                 /* Boundary for l2 tables    */
 int             len;                    /* Length                    */
 int             i, j, l, n;             /* Work variables            */
 int             relocate = 0;           /* 1=spaces will be relocated*/
@@ -361,15 +361,15 @@ BYTE            buf[65536*4];           /* Buffer                    */
     /*---------------------------------------------------------------
      * Get file statistics
      *---------------------------------------------------------------*/
-    if (FSTAT (fd, &fst) < 0)
+    if (fstat (fd, &fst) < 0)
         goto comp_fstat_error;
-    maxsize = sizeof(OFF_T) == 4 ? 0x7fffffffll : 0xffffffffll;
+    maxsize = sizeof(off_t) == 4 ? 0x7fffffffll : 0xffffffffll;
 
     /*---------------------------------------------------------------
      * Read device header
      *---------------------------------------------------------------*/
     off = 0;
-    if (LSEEK (fd, off, SEEK_SET) < 0)
+    if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
     len = CKDDASD_DEVHDR_SIZE;
     if ((rc = read (fd, &devhdr, len)) != len)
@@ -389,7 +389,7 @@ comp_restart:
      * Read compressed device header
      *---------------------------------------------------------------*/
     off = CCKD_DEVHDR_POS;
-    if (LSEEK (fd, off, SEEK_SET) < 0)
+    if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
     len = CCKD_DEVHDR_SIZE;
     if ((rc = read (fd, &cdevhdr, len)) != len)
@@ -411,7 +411,7 @@ comp_restart:
     /*---------------------------------------------------------------
      * Some header checks
      *---------------------------------------------------------------*/
-    if ((OFF_T)cdevhdr.size != fst.st_size
+    if ((off_t)cdevhdr.size != fst.st_size
      || cdevhdr.size != cdevhdr.used || cdevhdr.free != 0
      || cdevhdr.free_total != 0      || cdevhdr.free_largest != 0
      || cdevhdr.free_number != 0     || cdevhdr.free_imbed != 0)
@@ -433,7 +433,7 @@ comp_restart:
     if ((l1 = malloc (len)) == NULL)
         goto comp_malloc_error;
     off = CCKD_L1TAB_POS;
-    if (LSEEK (fd, off, SEEK_SET) < 0)
+    if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
     if ((rc = read (fd, l1, len)) != len)
         goto comp_read_error;
@@ -500,8 +500,8 @@ comp_restart:
         len = CCKD_L2TAB_SIZE;
         if ((l2[l] = malloc (len)) == NULL)
             goto comp_malloc_error;
-        off = (OFF_T)spctab[i].pos;
-        if (LSEEK (fd, off, SEEK_SET) < 0)
+        off = (off_t)spctab[i].pos;
+        if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
         if ((rc = read (fd, l2[l], len)) != len)
             goto comp_read_error;
@@ -581,8 +581,8 @@ comp_restart:
             p += sizeof(spctab[i].val);
             memcpy (p, &spctab[i].len, sizeof(spctab[i].len));
             p += sizeof(spctab[i].len);
-            off = (OFF_T)spctab[i].pos;
-            if (LSEEK (fd, off, SEEK_SET) < 0)
+            off = (off_t)spctab[i].pos;
+            if (lseek (fd, off, SEEK_SET) < 0)
                 goto comp_lseek_error;
             len = spctab[i].len;
             if ((rc = read (fd, p, len)) != len)
@@ -630,7 +630,7 @@ comp_restart:
             continue;
 
         /* found a gap */
-        off = (OFF_T)spctab[i+1].pos;
+        off = (off_t)spctab[i+1].pos;
 
         /* figure out how much we can read */
         for (len = 0, j = i + 1; spctab[j].typ != SPCTAB_EOF; j++)
@@ -650,14 +650,14 @@ comp_restart:
             continue;
 
         /* read the image(s) to be relocated */
-        if (LSEEK (fd, off, SEEK_SET) < 0)
+        if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
         if ((rc = read (fd, buf, len)) != len)
             goto comp_write_error;
 
         /* write the images */
-        off = (OFF_T)spctab[i].pos + spctab[i].len;
-        if (LSEEK (fd, off, SEEK_SET) < 0)
+        off = (off_t)spctab[i].pos + spctab[i].len;
+        if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
         if ((rc = write (fd, buf, len)) != len)
             goto comp_write_error;
@@ -669,7 +669,7 @@ comp_restart:
     /*---------------------------------------------------------------
      * Write spaces relocated from the l2area to the end of the file
      *---------------------------------------------------------------*/
-    off = (OFF_T)spctab[s-1].pos;
+    off = (off_t)spctab[s-1].pos;
     p = rbuf;
     while (rlen)
     {
@@ -681,7 +681,7 @@ comp_restart:
         spctab[s].siz = spctab[s].len;
         p += sizeof(spctab[s].len);
 
-        if (LSEEK (fd, off, SEEK_SET) < 0)
+        if (lseek (fd, off, SEEK_SET) < 0)
             goto comp_lseek_error;
         len = spctab[s].len;
         if ((rc = write (fd, p, len)) != len)
@@ -736,7 +736,7 @@ comp_restart:
 
     /* write cdevhdr */
     off = CCKD_DEVHDR_POS;
-    if (LSEEK (fd, off, SEEK_SET) < 0)
+    if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
     len = CCKD_DEVHDR_SIZE;
     if ((rc = write (fd, &cdevhdr, len)) != len)
@@ -744,7 +744,7 @@ comp_restart:
 
     /* write l1 table */
     off = CCKD_L1TAB_POS;
-    if (LSEEK (fd, off, SEEK_SET) < 0)
+    if (lseek (fd, off, SEEK_SET) < 0)
         goto comp_lseek_error;
     len = l1size;
     if ((rc = write (fd, l1, len)) != len)
@@ -754,8 +754,8 @@ comp_restart:
     for (i = 0; i < cdevhdr.numl1tab; i++)
         if (l1[i] != 0 && l1[i] != 0xffffffff)
         {
-            off = (OFF_T)l1[i];
-            if (LSEEK (fd, off, SEEK_SET) < 0)
+            off = (off_t)l1[i];
+            if (lseek (fd, off, SEEK_SET) < 0)
                 goto comp_lseek_error;
             len = CCKD_L2TAB_SIZE;
             if ((rc = write (fd, l2[i], len)) != len)
@@ -763,10 +763,10 @@ comp_restart:
         }
 
     /* truncate the file */
-    off = (OFF_T)spctab[s-1].pos;
+    off = (off_t)spctab[s-1].pos;
     if (off < fst.st_size)
     {
-        FTRUNCATE (fd, off);
+        ftruncate (fd, off);
         cckdumsg (dev, 102, "compress successful, %lld bytes released\n",
               (long long)fst.st_size - off);
     }
@@ -873,7 +873,7 @@ DLL_EXPORT int cckd_chkdsk(DEVBLK *dev, int level)
 {
 CCKDDASD_EXT   *cckd;                   /* -> ckd extension          */
 int             fd;                     /* file descriptor           */
-struct STAT     fst;                    /* file status information   */
+struct stat     fst;                    /* file status information   */
 int             fdflags;                /* file descriptor flags     */
 long long       maxsize;                /* max cckd file size        */
 int             ro;                     /* 1=file opened read-only   */
@@ -883,7 +883,7 @@ BYTE            compmask[256];          /* compression byte mask
                                            00 - supported
                                            0x - valid, not supported
                                            ff - invalid              */
-OFF_T           off;                    /* file offset               */
+off_t           off;                    /* file offset               */
 int             len;                    /* length to read            */
 int             rc;                     /* function return code      */
 int             comp;                   /* trkhdr compression byte[0]*/
@@ -935,10 +935,10 @@ BYTE            buf[4*65536];           /* buffer                    */
         fd = cckd->fd[cckd->sfn];
 
     /* Get some file information */
-    if ( FSTAT (fd, &fst) < 0 )
+    if ( fstat (fd, &fst) < 0 )
         goto cdsk_fstat_error;
     hipos = fst.st_size;
-    maxsize = sizeof(OFF_T) == 4 ? 0x7fffffffll : 0xffffffffll;
+    maxsize = sizeof(off_t) == 4 ? 0x7fffffffll : 0xffffffffll;
     fdflags = get_file_accmode_flags(fd);
     ro = (fdflags & O_RDWR) == 0;
 
@@ -962,7 +962,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     /* Read the device header */
     off = 0;
-    if ( LSEEK (fd, off, SEEK_SET) < 0)
+    if ( lseek (fd, off, SEEK_SET) < 0)
         goto cdsk_lseek_error;
 
     len = CKDDASD_DEVHDR_SIZE;
@@ -992,7 +992,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     /* Read the cckd device header */
     off = CCKD_DEVHDR_POS;
-    if ( LSEEK (fd, off, SEEK_SET) < 0)
+    if ( lseek (fd, off, SEEK_SET) < 0)
         goto cdsk_lseek_error;
 
     len = CCKD_DEVHDR_SIZE;
@@ -1113,7 +1113,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     /* cdevhdr inconsistencies check */
     hdrerr  = 0;
-    hdrerr |= fst.st_size  != (OFF_T)cdevhdr.size && cdevhdr.size != cdevhdr.free  ? 0x0001 : 0;
+    hdrerr |= fst.st_size  != (off_t)cdevhdr.size && cdevhdr.size != cdevhdr.free  ? 0x0001 : 0;
     hdrerr |= cdevhdr.size != cdevhdr.used + cdevhdr.free_total                    ? 0x0002 : 0;
     hdrerr |= cdevhdr.free_largest > cdevhdr.free_total - cdevhdr.free_imbed       ? 0x0004 : 0;
     hdrerr |= cdevhdr.free == 0 && cdevhdr.free_number != 0                        ? 0x0008 : 0;
@@ -1166,7 +1166,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     if ((l1 = malloc (len)) == NULL)
         goto cdsk_error;
     off = CCKD_L1TAB_POS;
-    if ( LSEEK (fd, off, SEEK_SET) < 0)
+    if ( lseek (fd, off, SEEK_SET) < 0)
         goto cdsk_lseek_error;
     if ((rc = read (fd, l1, len)) != len)
         goto cdsk_read_error;
@@ -1292,7 +1292,7 @@ BYTE            buf[4*65536];           /* buffer                    */
             continue;
 
         off = spctab[i].pos;
-        if ( LSEEK (fd, off, SEEK_SET) < 0 )
+        if ( lseek (fd, off, SEEK_SET) < 0 )
             goto cdsk_lseek_error;
         len = CCKD_L2TAB_SIZE;
         if ((rc = read (fd, l2tab, len)) != len)
@@ -1366,8 +1366,8 @@ BYTE            buf[4*65536];           /* buffer                    */
             continue;
 
         /* check if the space is out of bounds */
-        valid = (OFF_T)spctab[i].pos >= lopos
-             && (OFF_T)spctab[i].pos + spctab[i].siz <= hipos;
+        valid = (off_t)spctab[i].pos >= lopos
+             && (off_t)spctab[i].pos + spctab[i].siz <= hipos;
 
         /* Overlap check */
         if (len < 0 || !valid)
@@ -1467,10 +1467,10 @@ BYTE            buf[4*65536];           /* buffer                    */
             fsp = NULL;
 
             /* Read the free space */
-            off = (OFF_T)cdevhdr.free;
+            off = (off_t)cdevhdr.free;
             len = CCKD_FREEBLK_SIZE;
             if (off < lopos || off + CCKD_FREEBLK_SIZE > hipos
-             || LSEEK (fd, off, SEEK_SET) < 0
+             || lseek (fd, off, SEEK_SET) < 0
              || (rc = read (fd, &freeblk, len)) != len)
                 break;
 
@@ -1503,12 +1503,12 @@ BYTE            buf[4*65536];           /* buffer                    */
             else
             {
                 /* old format free space */
-                off = (OFF_T)cdevhdr.free;
+                off = (off_t)cdevhdr.free;
                 len = CCKD_FREEBLK_SIZE;
                 for (i = 0; i < cdevhdr.free_number; i++)
                 {
                     if (off < lopos || off > hipos) break;
-                    if (LSEEK (fd, off, SEEK_SET) < 0)
+                    if (lseek (fd, off, SEEK_SET) < 0)
                         goto cdsk_lseek_error;
                     if ((rc = read (fd, &freeblk, len)) != len)
                         goto cdsk_read_error;
@@ -1520,7 +1520,7 @@ BYTE            buf[4*65536];           /* buffer                    */
                     spctab[s].siz = freeblk.len;
                     s++;
                     lopos = off + freeblk.len;
-                    off = (OFF_T)freeblk.pos;
+                    off = (off_t)freeblk.pos;
                 }
                 if (i >= cdevhdr.free_number && freeblk.pos == 0)
                     fsperr = 0;
@@ -1555,7 +1555,7 @@ cdsk_space_check:
 
             /* read the header or image depending on the check level */
             off = spctab[i].pos;
-            if ( LSEEK (fd, off, SEEK_SET) < 0 )
+            if ( lseek (fd, off, SEEK_SET) < 0 )
                 goto cdsk_lseek_error;
             len = level < 3 ? CKDDASD_TRKHDR_SIZE : spctab[i].len;
             if ((rc = read (fd, buf, len)) != len)
@@ -1673,8 +1673,8 @@ cdsk_recovery:
                 len = flen < sizeof(buf) ? flen : sizeof(buf);
 
                 /* read the free space */
-                off = (OFF_T)fpos;
-                if (LSEEK (fd, off, SEEK_SET) < 0)
+                off = (off_t)fpos;
+                if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
                 if ((rc = read (fd, buf, len)) != len)
                     goto cdsk_read_error;
@@ -1893,8 +1893,8 @@ cdsk_ckd_recover:
                 len = flen < sizeof(buf) ? flen : sizeof(buf);
 
                 /* read the free space */
-                off = (OFF_T)fpos;
-                if (LSEEK (fd, off, SEEK_SET) < 0)
+                off = (off_t)fpos;
+                if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
                 if ((rc = read (fd, buf, len)) != len)
                     goto cdsk_read_error;
@@ -2191,7 +2191,7 @@ cdsk_fba_recover:
 
         /* Write the l1 table */
         off = CCKD_L1TAB_POS;
-        if (LSEEK (fd, off, SEEK_SET) < 0)
+        if (lseek (fd, off, SEEK_SET) < 0)
             goto cdsk_lseek_error;
         len = l1size;
         if ((rc = write (fd, l1, len)) != len)
@@ -2204,8 +2204,8 @@ cdsk_fba_recover:
             l1x = spctab[i].val;
             if (spctab[i].typ != SPCTAB_L2 || l2[l1x] == NULL)
                 continue;
-            off = (OFF_T)l1[l1x];
-            if (LSEEK (fd, off, SEEK_SET) < 0)
+            off = (off_t)l1[l1x];
+            if (lseek (fd, off, SEEK_SET) < 0)
                 goto cdsk_lseek_error;
             len = CCKD_L2TAB_SIZE;
             if ((rc = write (fd, l2[l1x], len)) != len)
@@ -2276,14 +2276,14 @@ cdsk_fsperr_retry:
             while (spctab[i].typ != SPCTAB_FREE && spctab[i].typ != SPCTAB_EOF)
             {
                 /* Read the space and write shifted to the left */
-                off = (OFF_T)spctab[i].pos;
-                if (LSEEK (fd, off, SEEK_SET) < 0)
+                off = (off_t)spctab[i].pos;
+                if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
                 len = spctab[i].siz;
                 if ((rc = read (fd, buf, len)) != len) 
                     goto cdsk_read_error;
                 off -= l;
-                if (LSEEK (fd, off, SEEK_SET) < 0)
+                if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
                 if ((rc = write (fd, buf, len)) != len) 
                     goto cdsk_write_error;
@@ -2294,14 +2294,14 @@ cdsk_fsperr_retry:
                 {
                     l1x = spctab[i].val/256;
                     l2x = spctab[i].val%256;
-                    off = (OFF_T)l1[l1x] + l2x * CCKD_L2ENT_SIZE;
-                    if (LSEEK (fd, off, SEEK_SET) < 0)
+                    off = (off_t)l1[l1x] + l2x * CCKD_L2ENT_SIZE;
+                    if (lseek (fd, off, SEEK_SET) < 0)
                         goto cdsk_lseek_error;
                     len = CCKD_L2ENT_SIZE;
                     if ((rc = read (fd, &l2ent, len)) != len) 
                         goto cdsk_read_error;
                     l2ent.pos -= l;
-                    if (LSEEK (fd, off, SEEK_SET) < 0)
+                    if (lseek (fd, off, SEEK_SET) < 0)
                         goto cdsk_lseek_error;
                     if ((rc = write (fd, &l2ent, len)) != len) 
                         goto cdsk_write_error;
@@ -2352,11 +2352,11 @@ cdsk_fsperr_retry:
             /* look for existing free space to fit new format free space */   
             for (i = off = 0; !off && spctab[i].typ != SPCTAB_EOF; i++)
                 if (spctab[i].typ == SPCTAB_FREE && len <= (int)spctab[i].siz)
-                    off = (OFF_T)spctab[i].pos;
+                    off = (off_t)spctab[i].pos;
 
             /* if no applicable space see if we can append to the file */
             if (!off && maxsize - cdevhdr.size >= len)
-                off = (OFF_T)cdevhdr.size;
+                off = (off_t)cdevhdr.size;
 
             /* get free space buffer */
             if (off && (fsp = malloc (len)) == NULL)
@@ -2374,7 +2374,7 @@ cdsk_fsperr_retry:
                     }
 
                 /* Write the free space */
-                if (LSEEK (fd, off, SEEK_SET) < 0)
+                if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
                 if ((rc = write (fd, fsp, len)) != len)
                     goto cdsk_write_error;
@@ -2389,22 +2389,22 @@ cdsk_fsperr_retry:
                 len = CCKD_FREEBLK_SIZE;
                 for (i = 0; spctab[i].typ != SPCTAB_FREE; i++);
                 cdevhdr.free = spctab[i].pos;
-                off = (OFF_T)spctab[i].pos;
+                off = (off_t)spctab[i].pos;
                 freeblk.pos = 0;
                 freeblk.len = spctab[i].siz;
                 for (i = i + 1; spctab[i].typ != SPCTAB_EOF; i++)
                     if (spctab[i].typ == SPCTAB_FREE)
                     {
                         freeblk.pos = spctab[i].pos;
-                        if (LSEEK (fd, off, SEEK_SET) < 0)
+                        if (lseek (fd, off, SEEK_SET) < 0)
                             goto cdsk_lseek_error;
                         if (write (fd, &freeblk, len) != len)
                             goto cdsk_write_error;
-                        off = (OFF_T)spctab[i].pos;
+                        off = (off_t)spctab[i].pos;
                         freeblk.pos = 0;
                         freeblk.len = spctab[i].len;
                     }
-                if (LSEEK (fd, off, SEEK_SET) < 0)
+                if (lseek (fd, off, SEEK_SET) < 0)
                     goto cdsk_lseek_error;
                 if (write (fd, &freeblk, len) != len)
                     goto cdsk_write_error;
@@ -2413,24 +2413,24 @@ cdsk_fsperr_retry:
 
         /* Write cdevhdr and l1 table */
         off = CCKD_DEVHDR_POS;
-        if (LSEEK (fd, off, SEEK_SET) < 0)
+        if (lseek (fd, off, SEEK_SET) < 0)
             goto cdsk_lseek_error;
         len = CCKD_DEVHDR_SIZE;
         if (write (fd, &cdevhdr, len) != len)
             goto cdsk_write_error;
 
         off = CCKD_L1TAB_POS;
-        if (LSEEK (fd, off, SEEK_SET) < 0)
+        if (lseek (fd, off, SEEK_SET) < 0)
             goto cdsk_lseek_error;
         len = l1size;
         if (write (fd, l1, len) != len)
             goto cdsk_write_error;
 
         /* Truncate the file */
-        off = (OFF_T)cdevhdr.size;
+        off = (off_t)cdevhdr.size;
         if (cdevhdr.free == cdevhdr.size)
             off += (cdevhdr.free_number+1) * CCKD_FREEBLK_SIZE;
-        rc = FTRUNCATE (fd, off);
+        rc = ftruncate (fd, off);
 
         cckdumsg (dev, 104, "free space rebuilt\n");
 
@@ -2462,7 +2462,7 @@ cdsk_return_ok:
         cdevhdr.vrm[2] = CCKD_MODLVL;
 
         off = CCKD_DEVHDR_POS;
-        if (LSEEK (fd, CCKD_DEVHDR_POS, SEEK_SET) >= 0)
+        if (lseek (fd, CCKD_DEVHDR_POS, SEEK_SET) >= 0)
             write (fd, &cdevhdr, CCKD_DEVHDR_SIZE);
     }
 

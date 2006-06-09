@@ -557,7 +557,7 @@ int syntax (char *pgm)
             "     -cyls  n          size of output file\n"
             "     -a                output file will have alt cyls\n"
             ),
-            (sizeof(OFF_T) > 4) ? _( "     -lfs              create single large output file\n" ) : ( "" )
+            (sizeof(off_t) > 4) ? _( "     -lfs              create single large output file\n" ) : ( "" )
             );
     else if (strcmp(pgm, "fba2cfba") == 0)
         snprintf(usage,8192,_(
@@ -612,7 +612,7 @@ int syntax (char *pgm)
             "%s"
             "     -blks  n          size of output file\n"
             ),
-            (sizeof(OFF_T) > 4) ? _( "     -lfs              create single large output file\n" ) : ( "" )
+            (sizeof(off_t) > 4) ? _( "     -lfs              create single large output file\n" ) : ( "" )
             );
     else
         snprintf(usage,8192,_(
@@ -654,7 +654,7 @@ int syntax (char *pgm)
 #else
             ""
 #endif
-            ,(sizeof(OFF_T) > 4) ? _( "     -lfs              output ckd file will be a single file\n" ) : ( "" )
+            ,(sizeof(off_t) > 4) ? _( "     -lfs              output ckd file will be a single file\n" ) : ( "" )
             );
     printf (usage);
     return -1;

@@ -104,55 +104,41 @@
 
 #ifdef _MSVC_
   /* "Native" 64-bit Large File Support */
-  #define    OFF_T              __int64
+  #define    off_t              __int64
   #if (_MSC_VER >= 1400)
-    #define  FTRUNCATE          _chsize_s
-    #define  FTELL              _ftelli64
-    #define  FSEEK              _fseeki64
+    #define  ftruncate          _chsize_s
+    #define  ftell              _ftelli64
+    #define  fseek              _fseeki64
   #else // (_MSC_VER < 1400)
-    #define  FTRUNCATE          w32_ftrunc64
-    #define  FTELL              w32_ftelli64
-    #define  FSEEK              w32_fseeki64
+    #define  ftruncate          w32_ftrunc64
+    #define  ftell              w32_ftelli64
+    #define  fseek              w32_fseeki64
   #endif
-  #define    LSEEK              _lseeki64
-  #define    FSTAT              _fstati64
-  #define    STAT               _stati64
+  #define    lseek              _lseeki64
+  #define    fstat              _fstati64
+  #define    stat               _stati64
 #elif defined(_LFS_LARGEFILE) || ( defined(SIZEOF_OFF_T) && SIZEOF_OFF_T > 4 )
   /* Native 64-bit Large File Support */
-  #define    OFF_T              off_t
-  #define    FTRUNCATE          ftruncate
   #if defined(HAVE_FSEEKO)
-    #define  FTELL              ftello
-    #define  FSEEK              fseeko
+    #define  ftell              ftello
+    #define  fseek              fseeko
   #else
     #if defined(SIZEOF_LONG) && SIZEOF_LONG <= 4
       #warning fseek/ftell use offset arguments of insufficient size
     #endif
-    #define  FTELL              ftell
-    #define  FSEEK              fseek
   #endif
-  #define    LSEEK              lseek
-  #define    FSTAT              fstat
-  #define    STAT               stat
 #elif defined(_LFS64_LARGEFILE)
   /* Transitional 64-bit Large File Support */
-  #define    OFF_T              off64_t
-  #define    FTRUNCATE          ftruncate64
-  #define    FTELL              ftello64
-  #define    FSEEK              fseeko64
-  #define    LSEEK              lseek64
-  #define    FSTAT              fstat64
-  #define    STAT               stat64
+  #define    off_t              off64_t
+  #define    ftruncate          ftruncate64
+  #define    ftell              ftello64
+  #define    fseek              fseeko64
+  #define    lseek              lseek64
+  #define    fstat              fstat64
+  #define    stat               stat64
 #else // !defined(_LFS_LARGEFILE) && !defined(_LFS64_LARGEFILE) && (!defined(SIZEOF_OFF_T) || SIZEOF_OFF_T <= 4)
   /* No 64-bit Large File Support at all */
   #warning 'Large File Support' missing
-  #define    OFF_T              off_t
-  #define    FTRUNCATE          ftruncate
-  #define    FTELL              ftell
-  #define    FSEEK              fseek
-  #define    LSEEK              lseek
-  #define    FSTAT              fstat
-  #define    STAT               stat
 #endif
 
 /*-------------------------------------------------------------------*/

@@ -1134,7 +1134,7 @@ create_ckd_file (char *fname, int fseqn, U16 devtype, U32 heads,
                 int nullfmt, int rawflag)
 {
 int             rc;                     /* Return code               */
-OFF_T           rcoff;                  /* Return value from lseek() */
+off_t           rcoff;                  /* Return value from lseek() */
 int             fd;                     /* File descriptor           */
 int             i;                      /* Loop counter              */
 int             n;                      /* Loop delimiter            */
@@ -1613,7 +1613,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         cdevhdr.size = cdevhdr.used = cpos;
 
         /* Rewrite the compressed device header */
-        rcoff = LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
+        rcoff = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
         if (rcoff == -1)
         {
             fprintf (stderr, _("HHCDU036E %s compressed device header "
@@ -1631,7 +1631,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         }
 
         /* Rewrite the secondary lookup table */
-        rcoff = LSEEK (fd, (OFF_T)l1[0], SEEK_SET);
+        rcoff = lseek (fd, (off_t)l1[0], SEEK_SET);
         if (rcoff == -1)
         {
             fprintf (stderr, _("HHCDU038E %s secondary lookup table "
@@ -1647,7 +1647,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                     fname, errno ? strerror(errno) : "incomplete");
             return -1;
         }
-        rc = FTRUNCATE(fd, (OFF_T)cdevhdr.size);
+        rc = ftruncate(fd, (off_t)cdevhdr.size);
 
         free (l1);
         cyl = volcyls;
@@ -1898,8 +1898,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* If the `dasdcopy' bit is on then simply allocate the space */
     if (dasdcopy)
     {
-        OFF_T sz = sectors * sectsz;
-        rc = FTRUNCATE (fd, sz);
+        off_t sz = sectors * sectsz;
+        rc = ftruncate (fd, sz);
         if (rc < 0)
         {
             fprintf (stderr, _("HHCDU049E %s dasdcopy ftruncate error: %s\n"),
@@ -1984,7 +1984,7 @@ create_compressed_fba (char *fname, U16 devtype, U32 sectsz,
            int rawflag)
 {
 int             rc;                     /* Return code               */
-OFF_T           rcoff;                  /* Return value from lseek() */
+off_t           rcoff;                  /* Return value from lseek() */
 int             fd;                     /* File descriptor           */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
@@ -2139,7 +2139,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Re-write the compressed device header */
-    rcoff = LSEEK (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
+    rcoff = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
     if (rcoff < 0)
     {
         fprintf (stderr, _("HHCDU063E %s cdevhdr lseek error: %s\n"),
@@ -2155,7 +2155,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Re-write the 1st level 2 table */
-    rcoff = LSEEK (fd, CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz, SEEK_SET);
+    rcoff = lseek (fd, CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz, SEEK_SET);
     if (rcoff < 0)
     {
         fprintf (stderr, _("HHCDU065E %s l2tab lseek error: %s\n"),

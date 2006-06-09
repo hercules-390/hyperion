@@ -94,7 +94,7 @@ argexit ( int code )
           #endif /*defined(HAVE_LIBZ)*/
             "\toutfile  = name of AWSCKD image file to be created\n"  
             "options:\n\t-r       = replace existing output file\n");
-    if (sizeof(OFF_T) > 4) fprintf(stderr,
+    if (sizeof(off_t) > 4) fprintf(stderr,
             "\t-lfs     = build one large output file (if supported)\n"
 );
     EXIT(code);
@@ -823,7 +823,7 @@ int             lfs = 0;                /* 1 = Build large file      */
         if (strcmp(argv[1], "-r") == 0)
             repl = 1;
         else
-        if (sizeof(OFF_T) > 4 && strcmp(argv[1], "-lfs") == 0)
+        if (sizeof(off_t) > 4 && strcmp(argv[1], "-lfs") == 0)
             lfs = 1;
         else
             argexit(5);

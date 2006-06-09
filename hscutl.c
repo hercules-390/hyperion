@@ -656,8 +656,8 @@ DLL_EXPORT int  socket_deinit ( void ) { return 0; }
 /* (returns 1==true if it's a socket, 0==false otherwise)    */
 DLL_EXPORT int socket_is_socket( int sfd )
 {
-    struct STAT st;
-    return ( FSTAT( sfd, &st ) == 0 && S_ISSOCK( st.st_mode ) );
+    struct stat st;
+    return ( fstat( sfd, &st ) == 0 && S_ISSOCK( st.st_mode ) );
 }
 
 #endif // !defined(WIN32)

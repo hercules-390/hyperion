@@ -2766,7 +2766,7 @@ int loadcore_cmd(int argc, char *argv[], char *cmdline)
 REGS *regs;
 
     char   *fname;                      /* -> File name (ASCIIZ)     */
-    struct STAT statbuff;               /* Buffer for file status    */
+    struct stat statbuff;               /* Buffer for file status    */
     char   *loadaddr;                   /* loadcore memory address   */
     U32     aaddr;                      /* Absolute storage address  */
     int     len;                        /* Number of bytes read      */
@@ -2783,7 +2783,7 @@ REGS *regs;
     fname = argv[1];
     hostpath(pathname, fname, sizeof(pathname));
 
-    if (STAT(pathname, &statbuff) < 0)
+    if (stat(pathname, &statbuff) < 0)
     {
         logmsg( _("HHCPN109E Cannot open %s: %s\n"),
             fname, strerror(errno));
@@ -4191,7 +4191,7 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     logmsg(_("HHCPN161I (void *) ..........%7d\n"),sizeof(void *));
     logmsg(_("HHCPN161I (unsigned int) ....%7d\n"),sizeof(unsigned int));
     logmsg(_("HHCPN161I (size_t) ..........%7d\n"),sizeof(size_t));
-    logmsg(_("HHCPN161I (off_t) ...........%7d\n"),sizeof(OFF_T));
+    logmsg(_("HHCPN161I (off_t) ...........%7d\n"),sizeof(off_t));
     logmsg(_("HHCPN161I SYSBLK ............%7d\n"),sizeof(SYSBLK));
     logmsg(_("HHCPN161I REGS ..............%7d\n"),sizeof(REGS));
     logmsg(_("HHCPN161I DEVBLK ............%7d\n"),sizeof(DEVBLK));

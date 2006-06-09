@@ -1037,7 +1037,7 @@ int
 het_write_header( HETB *hetb, int len, int flags1, int flags2 )
 {
     int    rc;
-    OFF_T  rcoff;
+    off_t  rcoff;
 
 #if defined( HETDEBUGW )
     printf("write hdr: pl=%d, cl=%d, f1=%02x, f2=%02x\n",
@@ -1075,7 +1075,7 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
     */
     if( !hetb->readlast )
     {
-        FSEEK( hetb->fd, 0, SEEK_CUR );
+        fseek( hetb->fd, 0, SEEK_CUR );
         hetb->readlast = FALSE;
     }
 
@@ -1084,13 +1084,13 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
     */
     if( !hetb->truncated )
     {
-        rcoff = FTELL( hetb->fd );
+        rcoff = ftell( hetb->fd );
         if( rcoff == -1 )
         {
             return( HETE_ERROR );
         }
 
-        rc = FTRUNCATE( fileno( hetb->fd ), rcoff );
+        rc = ftruncate( fileno( hetb->fd ), rcoff );
         if( rc == -1 )
         {
             return( HETE_ERROR );
@@ -1634,7 +1634,7 @@ het_bsb( HETB *hetb )
         /*
         || Reposition to start of chunk
         */
-        rc = FSEEK( hetb->fd,
+        rc = fseek( hetb->fd,
                     offset,
                     SEEK_CUR );
         if( rc == -1 )
@@ -1667,7 +1667,7 @@ het_bsb( HETB *hetb )
     || Reposition to chunk header preceding this one so we can load keep the
     || chdr in the HET current.
     */
-    rc = FSEEK( hetb->fd,
+    rc = fseek( hetb->fd,
                 offset,
                 SEEK_CUR );
     if( rc == -1 )
@@ -1687,7 +1687,7 @@ het_bsb( HETB *hetb )
     /*
     || Finally reposition back to the where we should be
     */
-    rc = FSEEK( hetb->fd,
+    rc = fseek( hetb->fd,
                 HETHDR_CLEN( hetb ),
                 SEEK_CUR );
     if( rc == -1 )
@@ -1804,7 +1804,7 @@ het_fsb( HETB *hetb )
         /*
         || Seek to next chunk
         */
-        rc = FSEEK( hetb->fd,
+        rc = fseek( hetb->fd,
                     HETHDR_CLEN( hetb ),
                     SEEK_CUR );
         if( rc == -1 )
@@ -2071,7 +2071,7 @@ het_rewind( HETB *hetb )
     /*
     || Just seek to the beginning of the file
     */
-    rc = FSEEK( hetb->fd,
+    rc = fseek( hetb->fd,
                 0,
                 SEEK_SET );
     if( rc == -1 )
@@ -2174,10 +2174,10 @@ het_error( int rc )
     SYNOPSIS
             #include "hetlib.h"
 
-            OFF_T het_tell( HETB *hetb )
+            off_t het_tell( HETB *hetb )
 
     DESCRIPTION
-            Returns a OFF_T describing the actual read/write cursor
+            Returns a off_t describing the actual read/write cursor
             within the HET file
 
     RETURN VALUE
@@ -2197,7 +2197,7 @@ het_error( int rc )
             {
                 HETB *hetb;
                 int rc;
-                OFF_T rwptr;
+                off_t rwptr;
 
                 rc = het_open( &hetb, argv[ 1 ], 0 );
                 if( rc >= 0 )
@@ -2224,10 +2224,10 @@ het_error( int rc )
 ==DOC==*/
 
 DLL_EXPORT
-OFF_T
+off_t
 het_tell( HETB *hetb )
 {
-    OFF_T rwptr = FTELL( hetb->fd );
+    off_t rwptr = ftell( hetb->fd );
     if ( rwptr < 0 )
     {
         return HETE_ERROR;

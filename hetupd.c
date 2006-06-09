@@ -34,7 +34,7 @@ static HETB *s_hetb     = NULL;
 static HETB *d_hetb     = NULL;
 #ifdef EXTERNALGUI
 /* Previous reported file position */
-static OFF_T prevpos = 0;
+static off_t prevpos = 0;
 /* Report progress every this many bytes */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
 #endif /*EXTERNALGUI*/
@@ -122,7 +122,7 @@ copytape( void )
         if( extgui )
         {
             /* Report progress every nnnK */
-            OFF_T curpos = FTELL( s_hetb->fd );
+            off_t curpos = ftell( s_hetb->fd );
             if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
             {
                 prevpos = curpos;
