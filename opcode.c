@@ -1006,7 +1006,7 @@ BYTE* name; \
 BYTE operands[64]
 
 #define DISASM_SET_NAME \
-    name = mnemonic+1; while(*name && *name != '=') name++; *name=0; name++
+    name = mnemonic+1; while(*name++)
 
 #define DISASM_PRINT_OPERANDS \
     snprintf(operands,sizeof(operands)-1,

@@ -54,7 +54,7 @@
     _GEN390(operation_exception) \
     _GEN900(operation_exception) \
         (void*)&disasm_none, \
-        (void*)&"?????" "=" "?" \
+        (void*)&"?????" "\0" "?" \
     }
 
 #define GENx370x___x___(_name,_format,_mnemonic) \
@@ -63,7 +63,7 @@
     _GEN390(operation_exception) \
     _GEN900(operation_exception) \
         (void*)&disasm_ ## _format, \
-        (void*)& _mnemonic "=" #_name \
+        (void*)& _mnemonic "\0" #_name \
     }
 
 #define GENx___x390x_(_name,_format,_mnemonic) \
@@ -72,7 +72,7 @@
     _GEN390(_name) \
     _GEN900(operation_exception) \
         (void*)&disasm_ ## _format, \
-        (void*)& _mnemonic "=" #_name \
+        (void*)& _mnemonic "\0" #_name \
     }
 
 #define GENx370x390x___(_name,_format,_mnemonic) \
@@ -81,7 +81,7 @@
     _GEN390(_name) \
     _GEN900(operation_exception) \
         (void*)&disasm_ ## _format, \
-        (void*)& _mnemonic "=" #_name \
+        (void*)& _mnemonic "\0" #_name \
     }
 
 #define GENx___x___x900(_name,_format,_mnemonic) \
@@ -90,7 +90,7 @@
     _GEN390(operation_exception) \
     _GEN900(_name) \
         (void*)&disasm_ ## _format, \
-        (void*)& _mnemonic "=" #_name \
+        (void*)& _mnemonic "\0" #_name \
     }
 
 #define GENx370x___x900(_name,_format,_mnemonic) \
@@ -99,7 +99,7 @@
     _GEN390(operation_exception) \
     _GEN900(_name) \
         (void*)&disasm_ ## _format, \
-        (void*)& _mnemonic "=" #_name \
+        (void*)& _mnemonic "\0" #_name \
     }
 
 #define GENx___x390x900(_name,_format,_mnemonic) \
@@ -108,7 +108,7 @@
     _GEN390(_name) \
     _GEN900(_name) \
         (void*)&disasm_ ## _format, \
-        (void*)& _mnemonic "=" #_name \
+        (void*)& _mnemonic "\0" #_name \
     }
 
 #define GENx370x390x900(_name,_format,_mnemonic) \
@@ -117,7 +117,7 @@
     _GEN390(_name) \
     _GEN900(_name) \
         (void*)&disasm_ ## _format, \
-        (void*)& _mnemonic "=" #_name \
+        (void*)& _mnemonic "\0" #_name \
     }
 
 
