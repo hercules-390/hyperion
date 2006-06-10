@@ -397,6 +397,7 @@ struct SYSBLK {
         U32     servparm;               /* Service signal parameter  */
         unsigned int                    /* Flags                     */
                 daemon_mode:1,          /* Daemon mode active        */
+                panel_init:1,           /* Panel display initialized */
                 sigintreq:1,            /* 1=SIGINT request pending  */
                 insttrace:1,            /* 1=Instruction trace       */
                 inststep:1,             /* 1=Instruction step        */

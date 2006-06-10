@@ -1265,6 +1265,9 @@ char    buf[1024];                      /* Buffer workarea           */
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
+    /* Notify logger_thread we're in control */
+    sysblk.panel_init = 1;
+
     hdl_adsc("panel_cleanup",panel_cleanup, NULL);
     history_init();
 
