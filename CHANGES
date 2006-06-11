@@ -1,3 +1,6 @@
+11 Jun 2006 PR# tape/88: "SCSI tape issues": 1. WTM failures with some
+            mfg/model drives (e.g. STK4890), 2. Spurious HHCTA073W for
+            'rewind-at-close' devtype - Fish
 10 Jun 2006 PR# misc/87: Herc system startup message issuance problem - Fish
 09 Jun 2006 PR# emul/91: Change FTELL, FSEEK, etc to lowercase - Fish
 09 Jun 2006 Instr disassembly enhancement: display instruction name - Fish

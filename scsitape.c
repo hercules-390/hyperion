@@ -819,6 +819,12 @@ struct mtop opblk;
         if ( dev->ccwtrace || dev->ccwstep )
             logmsg (_("HHCTA077I Tape %u:%4.4X unloaded\n"),
                 SSID_TO_LCSS(dev->ssid), dev->devnum);
+
+        // PR# tape/88: no sense with 'close_scsitape'
+        // attempting a rewind if the tape is unloaded!
+
+        dev->stape_close_rewinds = 0;   // (skip rewind attempt)
+
         close_scsitape( dev ); // (required for REW UNLD)
         return;
     }

@@ -41,6 +41,8 @@ static  HANDLE  g_handles [ W32STAPE_MAX_FDNUMS ]  = {0};   // (WIN32 handles)
 static  char*   g_fnames  [ W32STAPE_MAX_FDNUMS ]  = {0};   // (for posterity)
 static  U32     g_fstats  [ W32STAPE_MAX_FDNUMS ]  = {0};   // (running status)
 
+static  TAPE_GET_DRIVE_PARAMETERS g_drive_parms [ W32STAPE_MAX_FDNUMS ] = {0};  // (drive parameters)
+
 static  LOCK    g_lock; // (master global access lock)
 
 #define  lock()     obtain_w32stape_lock()
@@ -152,7 +154,7 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
     HANDLE      hFile;
     char        szTapeDeviceName[10];
     const char* pszTapeDevNum;
-    DWORD       dwDesiredAccess;
+    DWORD       dwDesiredAccess, dwSizeofDriveParms;
 
     // Reserve an fd number right away and bail if none available...
     if ( (ifd = w32_alloc_ifd()) < 0 )
@@ -242,6 +244,22 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
     g_handles [ ifd ]  = hFile;                     // (WIN32 handle)
     g_fnames  [ ifd ]  = strdup( path );            // (for posterity)
     g_fstats  [ ifd ]  = GMT_ONLINE (0xFFFFFFFF);   // (initial status)
+
+    // Save drive parameters for later...
+
+    memset( &g_drive_parms[ifd], 0, sizeof(TAPE_GET_DRIVE_PARAMETERS) );
+
+    dwSizeofDriveParms = sizeof(GET_TAPE_DRIVE_INFORMATION);
+
+    VERIFY( NO_ERROR == GetTapeParameters
+    (
+        hFile,
+        GET_TAPE_DRIVE_INFORMATION,
+        &dwSizeofDriveParms,
+        &g_drive_parms[ifd]
+    ));
+
+    ASSERT( sizeof(GET_TAPE_DRIVE_INFORMATION) == dwSizeofDriveParms );
 
     return W32STAPE_IFD2UFD( ifd );                 // (user fd result)
 }
@@ -337,7 +355,7 @@ int w32_internal_rc ( U32* pStat )
 ////////////////////////////////////////////////////////////////////////////////////
 // (forward references for private helper functions)
 
-int  w32_internal_mtop  ( HANDLE hFile, U32* pStat, struct mtop*  mtop  );
+int  w32_internal_mtop  ( HANDLE hFile, U32* pStat, struct mtop*  mtop, ifd_t ifd );
 int  w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget );
 int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos ); // "GetTapePosition()"
 
@@ -544,7 +562,7 @@ int w32_ioctl_tape ( ufd_t ufd, int request, ... )
         case MTIOCTOP:  // (perform tape operation)
         {
             struct mtop* mtop = ptr;
-            rc = w32_internal_mtop ( hFile, pStat, mtop );
+            rc = w32_internal_mtop ( hFile, pStat, mtop, ifd );
         }
         break;
 
@@ -579,7 +597,7 @@ int w32_ioctl_tape ( ufd_t ufd, int request, ... )
 // Private internal helper function...   return 0 == success, -1 == failure
 
 static
-int w32_internal_mtop ( HANDLE hFile, U32* pStat, struct mtop* mtop )
+int w32_internal_mtop ( HANDLE hFile, U32* pStat, struct mtop* mtop, ifd_t ifd )
 {
     int rc = 0;
 
@@ -748,28 +766,21 @@ int w32_internal_mtop ( HANDLE hFile, U32* pStat, struct mtop* mtop )
                 //     application to position the tape at the beginning of the filemark
                 //     and to overwrite the filemark and the erase gap."
                 //
-                // Thus if the attempt to write a TAPE_LONG_FILEMARKS fails, then we
-                // automatically retry specifying generic TAPE_FILEMARKS. If that fails
-                // however, then we give up and return the error.
-                //
-                // (I.e. We purposely NEVER request the TAPE_SHORT_FILEMARKS variety!)
+                // Thus if TAPE_LONG_FILEMARKS is not supported we try ONLY the generic
+                // TAPE_FILEMARKS variety and return an error if that fails; we do NOT
+                // ever attempt the TAPE_SHORT_FILEMARKS or TAPE_SETMARKS variety.
+
+                DWORD  dwTapemarkType = TAPE_LONG_FILEMARKS;
+
+                if ( !( g_drive_parms[ifd].FeaturesHigh & TAPE_DRIVE_WRITE_LONG_FMKS ) )
+                    dwTapemarkType = TAPE_FILEMARKS;
 
                 do
                 {
-                    errno = WriteTapemark( hFile, TAPE_LONG_FILEMARKS, mtop->mt_count, FALSE );
+                    errno = WriteTapemark( hFile, dwTapemarkType, mtop->mt_count, FALSE );
                     errno = w32_internal_rc ( pStat );
                 }
                 while ( EINTR == errno );
-
-                if (ERROR_NOT_SUPPORTED == errno)
-                {
-                    do
-                    {
-                        errno = WriteTapemark( hFile, TAPE_FILEMARKS, mtop->mt_count, FALSE );
-                        errno = w32_internal_rc ( pStat );
-                    }
-                    while ( EINTR == errno );
-                }
             }
         }
         break;
