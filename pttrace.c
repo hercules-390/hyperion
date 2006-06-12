@@ -18,10 +18,12 @@ PTT_TRACE *pttrace;                     /* Pthreads trace table      */
 int        pttracex;                    /* Pthreads trace index      */
 int        pttracen;                    /* Pthreads trace entries    */
 LOCK       pttlock;                     /* Pthreads trace lock       */
-int        pttimer;                     /* 1=trace timer events      */
+int        pttimer;                     /* 1=trace timer/clock events*/
+int        pttlogger;                   /* 1=trace loger events      */
 int        pttnothreads;                /* 1=no threads events       */
 int        pttnolock;                   /* 1=no PTT locking          */
 int        pttnotod;                    /* 1=don't call gettimeofday */
+int        pttnowrap;                   /* 1=don't wrap              */
 
 DLL_EXPORT void ptt_trace_init (int n, int init)
 {
@@ -45,9 +47,11 @@ DLL_EXPORT void ptt_trace_init (int n, int init)
         pthread_mutex_init (&pttlock, NULL);
 #endif
         pttimer = 0; /* (default = 'notimer') */
+        pttlogger = 0;
         pttnothreads = 0;
         pttnolock = 0;
         pttnotod = 0;
+        pttnowrap = 0;
     }
 }
 
@@ -78,6 +82,16 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
             pttimer = 0;
             continue;
         }
+        else if (strcasecmp("logger", argv[0]) == 0)
+        {
+            pttlogger = 1;
+            continue;
+        }
+        else if (strcasecmp("nologger", argv[0]) == 0)
+        {
+            pttlogger = 0;
+            continue;
+        }
         else if (strcasecmp("nothreads", argv[0]) == 0)
         {
             pttnothreads = 1;
@@ -106,6 +120,16 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
         else if (strcasecmp("tod", argv[0]) == 0)
         {
             pttnotod = 0;
+            continue;
+        }
+        else if (strcasecmp("nowrap", argv[0]) == 0)
+        {
+            pttnowrap = 1;
+            continue;
+        }
+        else if (strcasecmp("wrap", argv[0]) == 0)
+        {
+            pttnowrap = 0;
             continue;
         }
         else if (argc == 1 && sscanf(argv[0], "%d%c", &n, &c) == 1 && n >= 0)
@@ -140,11 +164,13 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
         }
     } /* for each ptt argument */
 
-    logmsg( _("HHCPT003I ptt %s %s %s %s %d\n"),
+    logmsg( _("HHCPT003I ptt %s %s %s %s %s %s %d\n"),
            pttimer ? "timer" : "notimer",
            pttnothreads ? "nothreads" : "threads",
            pttnolock ? "nolock" : "lock",
            pttnotod ? "notod" : "tod",
+           pttnowrap ? "nowrap" : "wrap",
+           pttlogger ? "logger" : "nologger",
            pttracen);
     return rc;
 }
@@ -406,19 +432,20 @@ int i, n;
         if (!p) p = strrchr( file, '/' );
         if (p)
             file = p+1;
-#if 1
-        if ( strcasecmp( file, "logger.c" ) == 0 )
-            return; // fish debug: I'm not interested in these
-#endif
     }
 #endif
 
-/* Timer thread can produce hundreds of entries per second
- * (by obtaining intlock and todlock each HZ).
- * Command `ptt timer' will trace timer entries, `ptt notimer'
- * (default) will ignore timer entries.
- */
-    if (pttimer == 0 && strcasecmp(file, "timer.c") == 0) return;
+    /*
+     * Messages from timer.c, clock.c and/or logger.c are not usually
+     * that interesting and take up table space.  Check the flags to
+     * see if we want to trace them.
+     */
+    if (pttimer   == 0 && strcasecmp(file, "timer.c")  == 0) return;
+    if (pttimer   == 0 && strcasecmp(file, "clock.c")  == 0) return;
+    if (pttlogger == 0 && strcasecmp(file, "logger.c") == 0) return;
+
+    /* check for `nowrap' */
+    if (pttnowrap && pttracex + 1 >= pttracen) return;
 
     OBTAIN_PTTLOCK;
     if (pttrace == NULL || (n = pttracen) == 0)
