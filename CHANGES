@@ -1,3 +1,4 @@
+13 Jun 2006 Added diagnose 308 reipl. Not activated in feat900.h! - Bernard
 11 Jun 2006 PR# tape/88: "SCSI tape issues": 1. WTM failures with some
             mfg/model drives (e.g. STK4890), 2. Spurious HHCTA073W for
             'rewind-at-close' devtype - Fish
