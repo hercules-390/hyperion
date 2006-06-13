@@ -168,6 +168,14 @@ U32   code;
         ARCH_DEP(diag204_call) (r1, r2, regs);
         regs->psw.cc = 0;
         break;
+
+    case 0x224:
+    /*---------------------------------------------------------------*/
+    /* Diagnose 224: CPU Names                                       */
+    /*---------------------------------------------------------------*/
+        ARCH_DEP(diag224_call) (r1, r2, regs);
+        regs->psw.cc = 0;
+        break;
 #endif /*defined(FEATURE_HYPERVISOR)*/
 
 #if 0

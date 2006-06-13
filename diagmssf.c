@@ -171,7 +171,9 @@ typedef struct _DIAG204_PART {
 typedef struct _DIAG204_PART_CPU {
         HWORD   cpaddr;                 /* CP address                */
         HWORD   resv2[2];
-        HWORD   relshare;               /* Relative share            */
+        BYTE    index;                  /* Index into diag224 area   */
+        BYTE    cflag;                  /*   ???                     */
+        HWORD   weight;                 /* Weight                    */
         DBLWRD  totdispatch;            /* Total dispatch time       */
         DBLWRD  effdispatch;            /* Effective dispatch time   */
     } DIAG204_PART_CPU;
@@ -421,7 +423,7 @@ static U64        diag204tod;          /* last diag204 tod           */
           {
               memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
               STORE_HW(cpuinfo->cpaddr,sysblk.regs[i]->cpuad);
-              STORE_HW(cpuinfo->relshare,100);
+              STORE_HW(cpuinfo->weight,100);
               dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) / sysblk.cpus;
               dreg = (dreg * 1000000) + (i ? 0 : (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec));
               tdis += dreg;
@@ -462,6 +464,54 @@ static U64        diag204tod;          /* last diag204 tod           */
     } /*switch(regs->GR_L(r2))*/
 
 } /* end function diag204_call */
+
+/*-------------------------------------------------------------------*/
+/* Process LPAR DIAG 224 call                                        */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP(diag224_call) (int r1, int r2, REGS *regs)
+{
+RADR              abs;                 /* abs addr of data area      */
+BYTE             *p;                   /* pointer to the data area   */
+int               i;                   /* loop index                 */
+
+//FIXME : this is probably incomplete.
+//        see linux/arch/s390/hypfs/hypfs_diag.c
+    UNREFERENCED(r1);
+
+    abs = APPLY_PREFIXING (regs->GR_L(r2), regs->PX);
+
+    /* Program check if data area is not on a page boundary */
+    if ( (abs & PAGEFRAME_BYTEMASK) != 0x000)
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+    /* Program check if data area is outside main storage */
+    if ( abs > regs->mainlim )
+        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+
+    /* Point to DIAG 224 data area */
+    p = regs->mainstor + abs;
+
+    /* Mark page referenced */
+    STORAGE_KEY(abs, regs) |= STORKEY_REF | STORKEY_CHANGE;
+
+    /* First byte contains the number of entries - 1 */
+    *p = 0;
+
+    /* Clear the next 15 bytes */
+    memset (p + 1, 0, 15);
+
+    /* Set the first and only 16 byte entry */
+    p += 16;
+    if (sysblk.pgmprdos == PGM_PRD_OS_LICENSED)
+        memcpy(p, "CP                ", 16);
+    else
+        memcpy(p, "ICF               ", 16);
+
+    /* Convert to EBCDIC */
+    for (i = 0; i < 16; i++)
+        p[i] = host_to_guest(p[i]);
+
+} /* end function diag224_call */
 
 
 #if !defined(_GEN_ARCH)

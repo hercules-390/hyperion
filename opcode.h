@@ -1583,6 +1583,7 @@ void ARCH_DEP(diagnose_call) (VADR effective_addr2, int b2, int r1, int r3,
 void ARCH_DEP(scpend_call) (void);
 int  ARCH_DEP(mssf_call) (int r1, int r2, REGS *regs);
 void ARCH_DEP(diag204_call) (int r1, int r2, REGS *regs);
+void ARCH_DEP(diag224_call) (int r1, int r2, REGS *regs);
 
 
 /* Functions in module external.c */
