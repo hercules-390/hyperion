@@ -475,6 +475,37 @@ U32   code;
 
 #endif /*FEATURE_HERCULES_DIAGCALLS*/
 
+#ifdef FEATURE_DIAG308_REIPL
+    /*---------------------------------------------------------------*/
+    /* Diagnose 308: re-IPL with previous parameters                 */
+    /*---------------------------------------------------------------*/
+    case 0x308:
+        {
+          int i;
+          U32 mask;
+          REGS *regs;
+
+          /* Stop all cpu's */
+          OBTAIN_INTLOCK(NULL);
+          mask = sysblk.started_mask;
+          for(i = 0; mask; i++)
+          {
+            if(mask & 1)
+            {
+              regs = sysblk.regs[i];
+              regs -> cpustate = CPUSTATE_STOPPED;
+            }
+            mask >>= 1;
+          }
+
+          /* re-ipl with previous ipl parameters */
+          load_ipl(sysblk.reipl_devnum, sysblk.reipl_devnum, sysblk.reipl_cpu, 0);
+          logmsg("Diagnose 308 called, system re-ipled\n");
+          RELEASE_INTLOCK(NULL);
+        }
+        break;
+#endif /* FEATURE_DIAG308_REIPL */
+
     default:
     /*---------------------------------------------------------------*/
     /* Diagnose xxx: Invalid function code                           */

@@ -178,6 +178,13 @@ BYTE    chanstat;                       /* IPL device channel status */
 
     /* The actual IPL proper starts here... */
 
+#ifdef FEATURE_DIAG308_REIPL
+    /* Save ipl parameters for possible reipl */
+    sysblk.reipl_lcss = lcss;
+    sysblk.reipl_devnum = devnum;
+    sysblk.reipl_cpu = cpu;
+#endif /* FEATURE_DIAG308_REIPL */
+
     regs = sysblk.regs[cpu];    /* Point to IPL CPU's registers */
 
     /* Point to the device block for the IPL device */

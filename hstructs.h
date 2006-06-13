@@ -521,6 +521,13 @@ struct SYSBLK {
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 
         REGS    dummyregs;              /* Regs for unconfigured CPU */
+
+#ifdef FEATURE_DIAG308_REIPL
+        U16     reipl_lcss;
+        U16     reipl_devnum;
+        int     reipl_cpu;
+#endif /* FEATURE_DIAG308_REIPL */        
+
 };
 
 /*-------------------------------------------------------------------*/
