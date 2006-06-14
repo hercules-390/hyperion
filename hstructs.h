@@ -316,6 +316,7 @@ struct SYSBLK {
         TID     wdtid;                  /* Thread-id for watchdog    */
         U16     ipldev;                 /* IPL device                */
         int     iplcpu;                 /* IPL cpu                   */
+        int     ipllcss;                /* IPL lcss                  */
         int     numcpu;                 /* Number of CPUs installed  */
         int     numvec;                 /* Number vector processors  */
         int     maxcpu;                 /* Max number of CPUs        */
@@ -521,12 +522,6 @@ struct SYSBLK {
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 
         REGS    dummyregs;              /* Regs for unconfigured CPU */
-
-#ifdef FEATURE_DIAG308_REIPL
-        U16     reipl_lcss;
-        U16     reipl_devnum;
-        int     reipl_cpu;
-#endif /* FEATURE_DIAG308_REIPL */        
 
 };
 
