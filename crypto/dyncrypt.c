@@ -33,11 +33,13 @@
 /*----------------------------------------------------------------------------*/
 /* Debugging options                                                          */
 /*----------------------------------------------------------------------------*/
-//#define OPTION_KIMD_DEBUG
-//#define OPTION_KLMD_DEBUG
-//#define OPTION_KM_DEBUG
-//#define OPTION_KMAC_DEBUG
-//#define OPTION_KMC_DEBUG
+#if 0
+#define OPTION_KIMD_DEBUG
+#define OPTION_KLMD_DEBUG
+#define OPTION_KM_DEBUG
+#define OPTION_KMAC_DEBUG
+#define OPTION_KMC_DEBUG
+#endif
 
 /*----------------------------------------------------------------------------*/
 /* General Purpose Register 0 macro's (GR0)                                   */
@@ -1818,14 +1820,14 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
     ARCH_DEP(vstorec)(message_block, 15, GR_A(r1, regs), r1, regs);
 
 #ifdef OPTION_KMC_DEBUG
-    LOGBYTE("output:", message_block, 15);
+    LOGBYTE("output:", message_block, 16);
 #endif
 
     /* Store the output chaining value */
     ARCH_DEP(vstorec)(ocv, 15, GR_A(1, regs), 1, regs);
 
 #ifdef OPTION_KMC_DEBUG
-    LOGBYTE("ocv   :", ocv, 15);
+    LOGBYTE("ocv   :", ocv, 16);
 #endif
 
     /* Update the registers */
