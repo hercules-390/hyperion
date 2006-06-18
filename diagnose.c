@@ -82,6 +82,50 @@ static char *prefix[] = {
 }
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
+#if defined(FEATURE_DIAG308_REIPL) && !defined(STOP_CPUS_AND_IPL)
+#define STOP_CPUS_AND_IPL
+/*---------------------------------------------------------------------------*/
+/* Within diagnose 0x308 (re-ipl) a thread is started with the next code.    */
+/*---------------------------------------------------------------------------*/
+void *stop_cpus_and_ipl(int *whatever)
+{
+  int i;
+  char iplcmd[256];
+  int cpustates;
+  int mask;
+
+  UNREFERENCED(whatever);
+  panel_command("stopall");
+  logmsg("Diagnose 0x308 called: System is re-ipled\n");
+  sprintf(iplcmd, "ipl %03X", sysblk.ipldev);
+  do
+  {
+    OBTAIN_INTLOCK(NULL);
+    cpustates = CPUSTATE_STOPPED;
+    mask = sysblk.started_mask;
+    for(i = 0; mask; i++)
+    {
+      if(mask & 1)
+      {
+        logmsg("Checking cpu %d\n", i);
+        if(IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
+          cpustates = sysblk.regs[i]->cpustate;
+      }
+      mask >>= 1;
+    }
+    RELEASE_INTLOCK(NULL);
+    if(cpustates != CPUSTATE_STOPPED)
+    {
+      logmsg("Waiting 1 second for cpu's to stop...\n");
+      sleep(1);
+    }
+  }
+  while(cpustates != CPUSTATE_STOPPED);
+  panel_command(iplcmd);  
+  exit_thread(NULL);
+}
+#endif /*defined(FEATURE_DIAG308_REIPL)*/
+
 /*-------------------------------------------------------------------*/
 /* Diagnose instruction                                              */
 /*-------------------------------------------------------------------*/
@@ -489,27 +533,13 @@ U32   code;
     /*---------------------------------------------------------------*/
     case 0x308:
         {
-          int i;
-          U32 mask;
-          REGS *regs;
+          ATTR attr;
+          TID tid;
 
-          /* Stop all cpu's */
-          OBTAIN_INTLOCK(NULL);
-          mask = sysblk.started_mask;
-          for(i = 0; mask; i++)
-          {
-            if(mask & 1)
-            {
-              regs = sysblk.regs[i];
-              regs -> cpustate = CPUSTATE_STOPPED;
-            }
-            mask >>= 1;
-          }
-
-          /* re-ipl with previous ipl parameters */
-          load_ipl(sysblk.reipl_devnum, sysblk.reipl_devnum, sysblk.reipl_cpu, 0);
-          logmsg("Diagnose 308 called, system re-ipled\n");
-          RELEASE_INTLOCK(NULL);
+          if(create_thread(&tid, &attr, stop_cpus_and_ipl, NULL, "Stop cpus and ipl"))
+            logmsg("Error starting thread in diagnose 0x308: %s\n", strerror(errno));
+          regs->cpustate = CPUSTATE_STOPPING;
+          ON_IC_INTERRUPT(regs);
         }
         break;
 #endif /* FEATURE_DIAG308_REIPL */
