@@ -1,3 +1,4 @@
+18 Jun 2006 Add diagnose 0x308 - re-ipl - Bernard van der Helm
 13 Jun 2006 Add diagnose 0x224 - CPU name array - Greg Smith
 13 Jun 2006 Added diagnose 308 reipl. Not activated in feat900.h! - Bernard
 11 Jun 2006 PR# tape/88: "SCSI tape issues": 1. WTM failures with some
