@@ -111,9 +111,10 @@ a real System/390.  The configuration file is an ASCII text file.
     0440.2    <a href="#device_types_table">LCS</a>     -n   /dev/net/tun   192.168.200.2
 
     0580      <a href="#3420">3420</a>    ickdsf.ipl
-    0581      <a href="#3420">3420</a>    /dev/nst0   # SCSI
-    0582      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
-    0583-0587 <a href="#3420">3420</a>    $(TAPEDIR)/volumes.$(CUU) maxsizeM=170 eotmargin=131072
+    0581      <a href="#3420">3420</a>    /dev/nst0   # SCSI  (Linux or Windows)
+    0582      <a href="#3420">3420</a>    \\.\Tape0   # SCSI  (Windows only)
+    0583      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
+    0584-0587 <a href="#3420">3420</a>    $(TAPEDIR)/volumes.$(CUU) maxsizeM=170 eotmargin=131072
 </pre></code>
 </td></tr></table>
 </center>
@@ -155,7 +156,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="ASN_AND_LX_REUSE"></a>
 <dt><code>ASN_AND_LX_REUSE &nbsp; DISABLE &#124; ENABLE</code>
 <dd><p>
-    specifies that the ASN-and-LX-Reuse Facility (ALRF) is to be disabled 
+    specifies that the ASN-and-LX-Reuse Facility (ALRF) is to be disabled
     or enabled. The default is disabled. This is a z/Architecture-only
     feature (it is always disabled for S/390 or ESA/390). Set this
     to <code>ENABLE</code>&nbsp if the operating system supports
@@ -190,8 +191,9 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
     <i>
     <b>Note:</b> &nbsp;enabling this option may cause Hercules to take
-    considerably longer to shutdown depending on how the host operating system
-    (Windows, Linux, etc) handles SCSI attached tape drive status queries.
+    longer to shutdown depending on the value specified for this option
+    as well as how the host operating system (Windows, Linux, etc) handles
+    host-attached SCSI-tape-drive status queries.
     </i>
     <p>
 
@@ -544,7 +546,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="OSTAILOR"></a>
-<dt><code>OSTAILOR &nbsp; OS/390 &#124; z/OS &#124; 
+<dt><code>OSTAILOR &nbsp; OS/390 &#124; z/OS &#124;
     VM &#124; VSE &#124; LINUX &#124; QUIET &#124; NULL</code>
 <dd><p>
     specifies the intended operating system.  The effect of this
@@ -1004,7 +1006,7 @@ a real System/390.  The configuration file is an ASCII text file.
     1:0400-040F 3270<p>
     defines 3270 devices 400 to 40F to be on S/370 Channel Set 1 or on S/390
     or z/Architecture Logical Channel Subsystem # 1.<p>
-    Since each Logical Channel Subsystem defines its own device numbering space, 
+    Since each Logical Channel Subsystem defines its own device numbering space,
     care should be taken in S/370 mode as to define a coherent set of device
     numbers.<p>
     Not all S/390 or z/Architecture operating systems support Multiple Logical
@@ -1263,7 +1265,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <dt><em>Integrated Console printer-keyboard devices</em>
 <dd><p>
 
-    There is one optional argument which is the command prefix 
+    There is one optional argument which is the command prefix
     for sending input to the device. The default command prefix is '/'.
     <p><em>
     <b>Note:</b> There is no restriction on the character you can select.
@@ -1271,10 +1273,10 @@ a real System/390.  The configuration file is an ASCII text file.
     command, you will not be able to use that command.
     </em>
     <p>
-    
+
     To send a logon command to a 1052-C or 3215-C enter /logon on the hercules console.
     <p>
-    All integrated devices must use a different command prefix. 
+    All integrated devices must use a different command prefix.
     <p>
 
 <p><br>
@@ -1448,7 +1450,7 @@ a real System/390.  The configuration file is an ASCII text file.
     blanks are removed from each line.  Carriage control characters
     are translated to blank lines or ASCII form feed characters.
     If the file exists it will be overwritten.
-    
+
     <p>
 
     Additional arguments may be specified after the file name:
@@ -1478,7 +1480,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <p>
     If the "print-to-pipe" command line contains arguments, then quotes
-    must be placed around the entire filename string including the 
+    must be placed around the entire filename string including the
     vertical bar, for example:
     <pre>
     000E 1403 "|/usr/bin/lpr -Phplj" crlf          <em>(for Unix)</em>
@@ -1500,18 +1502,26 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <dl> <!-- begin Emulated tape types of emulation -->
 
-    <dt><b>SCSI tapes</b>
+    <dt><b><u>Real</u>, <u>physical</u> (i.e. host attached) SCSI tape drives</b>
     <dd><p>
-        The argument specifies the tape device name, usually
-        "<code>/dev/nst0</code>" or, for Windows, "<code>\\.\Tape0</code>".
+        The argument specifies the tape's <u>device-name</u> as it is known
+        (referred to) by the host operating system (Linux, Windows, etc),
+        usually &nbsp;"<code><b>/dev/nst0</b></code>"&nbsp; <i>(for Linux or
+        Windows)</i> or &nbsp;"<code><b>\\.\Tape0</b></code>" &nbsp; <i>(for
+        Windows only)</i>, where '0' of course means tape drive number
+        0 (your first or only host-attached SCSI tape drive), '1' means your
+        second host-attached SCSI tape drive, etc.
         <p>
-        SCSI tapes are read and written
-        using variable length EBCDIC blocks and filemarks exactly
-        like a mainframe tape volume.
+        Host-attached SCSI tapes are read and written using variable length
+        EBCDIC blocks and filemarks exactly like a mainframe tape volume, and
+        as a result can be freely used/exchanged on either (i.e. SCSI tapes
+        created on a real mainframe can subsequently be read by Hercules just
+        fine, and a SCSI tape created by Hercules can be subsequently read on
+        a mainframe just fine, thus providing a convenient means of exchanging
+        data between the two).
         <p>
-        See also the
-        <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>
-        configuration option.
+        If you plan on using SCSI tapes with Hercules you might also be interested
+        in the <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a> configuration option.
         <p>
 
     <dt><b>Optical Media Attach (OMA) virtual files</b>
@@ -1643,26 +1653,30 @@ a real System/390.  The configuration file is an ASCII text file.
 
     </dl> <!-- begin Emulated tape types of emulation -->
 
-    The following parameters apply to both AWS and HET emulation files:
+    <p><br>
+
+    The following parameters apply to both <b>AWS</b> and <b>HET</b> emulation files:
     <p>
 
-    <dl>
-    <dt><code>MAXSIZE</code>=<i>n</i> &nbsp;&#124;&nbsp; <code>MAXSIZEK</code>=<i>n</i>
-         &nbsp;&#124;&nbsp; <code>MAXSIZEM</code>=<i>n</i>
-    <dd><p>
-        Specifies the maximum number of bytes (specified in bytes, Kilobytes or
-        Megabytes) for the emulated file. This parameter defaults to 0, meaning
-        there is no limit on the file size.
-        <p>
+    <blockquote>
+        <dl>
+        <dt><code>MAXSIZE</code>=<i>n</i> &nbsp;&#124;&nbsp; <code>MAXSIZEK</code>=<i>n</i>
+             &nbsp;&#124;&nbsp; <code>MAXSIZEM</code>=<i>n</i>
+        <dd><p>
+            Specifies the maximum number of bytes (specified in bytes, Kilobytes or
+            Megabytes) for the emulated file. This parameter defaults to 0, meaning
+            there is no limit on the file size.
+            <p>
 
-    <dt><code>EOTMARGIN</code>=<em>n</em>
-    <dd><p>
-        Specifies the number of bytes remaining before reaching <em>maxsize</em>
-        at which point the tape device will signal the presence of the 'End Of Tape'
-        marker, thus allowing the program to switch to the next tape.
-        <p>
+        <dt><code>EOTMARGIN</code>=<em>n</em>
+        <dd><p>
+            Specifies the number of bytes remaining before reaching <em>maxsize</em>
+            at which point the tape device will signal the presence of the 'End Of Tape'
+            marker, thus allowing the program to switch to the next tape.
+            <p>
 
-    </dl>
+        </dl>
+    </blockquote>
 
     Additionally, if the file name starts with the '@' character (at sign), the file
     really describes a list of tape emulation files to be loaded in succession.
@@ -1690,7 +1704,12 @@ a real System/390.  The configuration file is an ASCII text file.
     <i>A <b>SCSI tape</b> device should <b><u>NOT</u></b> be given in a file list.</i>
     <p>
 
-    See the README.TAPE file for additional information, system and application programming for tape devices.
+    <p>
+
+    Refer to the distributed source-code's "<b>README.TAPE</b>" document for 
+    additional information regarding system and application programming for tape
+    devices and instructions regarding use of the emulated <b>ACF (Automatic
+    Cartridge Feeder)</b> feature for virtual (non-SCSI) tape devices.
     <p>
 
 <p><br>
@@ -1711,7 +1730,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
     <dl> <!-- begin emulation types -->
-    
+
 <a name="CTCI"></a>
     <dt><b>CTCI</b> &nbsp; &nbsp; (Channel to Channel link to TCP/IP stack)
     <dd><p>
@@ -1779,7 +1798,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
             </dl> <!-- (end INDENT) -->
             </dl> <!-- end Optional for Windows -->
-            
+
             <p>
             See Fish's
             <a href="http://www.softdevlabs.com/Hercules/ctci-w32-index.html">CTCI-W32</a>
@@ -1842,7 +1861,7 @@ a real System/390.  The configuration file is an ASCII text file.
             </dl> <!-- end Optional for both Linux and Windows -->
 
         </dl> <!-- end CTCI parms -->
-        
+
 <p><br>
 
 <a name="CTCT"></a>
@@ -1930,7 +1949,7 @@ a real System/390.  The configuration file is an ASCII text file.
             <p>
 
             <dl> <!-- begin 'devname' -->
-            
+
                 <dt>(*nix)
                 <dd><p>
                     the name of the TUN/TAP special character device,
@@ -2238,7 +2257,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
         <p>
         <code>syncio</code> may be abbreviated as
-        <code>syio</code> 
+        <code>syio</code>
         <p>
 
     <dt><code>readonly</code>
@@ -2261,7 +2280,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         be successful even though nothing actually gets written.
         <p>
         <code>fakewrite</code> may be abbreviated as
-        <code>fakewrt</code> or <code>fw</code>  
+        <code>fakewrt</code> or <code>fw</code>
         <p>
 
     <dt><code>[no]lazywrite</code>
@@ -2390,7 +2409,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 
         <p>
         <code>syncio</code> may be abbreviated as
-        <code>syio</code> 
+        <code>syio</code>
 
     </dl> <!-- end (FBA) additional DASD arguments  -->
     <p>
