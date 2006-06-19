@@ -122,7 +122,7 @@ void *stop_cpus_and_ipl(int *whatever)
   }
   while(cpustates != CPUSTATE_STOPPED);
   panel_command(iplcmd);  
-  exit_thread(NULL);
+  return NULL;
 }
 #endif /*defined(FEATURE_DIAG308_REIPL)*/
 
