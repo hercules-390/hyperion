@@ -13,6 +13,7 @@ DLL_EXPORT int extgui = 0;
 
 #if defined(OPTION_W32_CTCI)
 DLL_EXPORT int (*debug_tt32_stats)(int) = NULL;
+DLL_EXPORT void (*debug_tt32_tracing)(int) = NULL;
 #endif
 #if defined(OPTION_DYNAMIC_LOAD)
 
