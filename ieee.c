@@ -1954,7 +1954,7 @@ DEF_INST(convert_fix32_to_bfp_ext_reg)
     RRE(inst, regs, r1, r2);
     //logmsg("CXFBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, 0, regs);
+    BFPREGPAIR_CHECK(r1, regs);
 
     op2 = regs->GR_L(r2);
 
@@ -2032,7 +2032,7 @@ DEF_INST(convert_fix64_to_bfp_ext_reg)
     RRE(inst, regs, r1, r2);
     //logmsg("CXGBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, 0, regs);
+    BFPREGPAIR_CHECK(r1, regs);
 
     op2 = regs->GR_G(r2);
 
@@ -2115,7 +2115,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("CFXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
+    BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3,regs);
 
     get_ebfp(&op2, regs->fpr + FPR2I(r2));
@@ -2311,7 +2311,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("CGXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
+    BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3,regs);
 
     get_ebfp(&op2, regs->fpr + FPR2I(r2));
@@ -3243,7 +3243,7 @@ DEF_INST(loadlength_bfp_long_to_ext_reg)
     RRE(inst, regs, r1, r2);
     //logmsg("LXDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, 0, regs);
+    BFPREGPAIR_CHECK(r1, regs);
 
     get_lbfp(&op2, regs->fpr + FPR2I(r2));
 
@@ -3263,9 +3263,9 @@ DEF_INST(loadlength_bfp_long_to_ext)
     struct lbfp op2;
 
     RXE(inst, regs, r1, b2, effective_addr2);
-    //logmsg("LXEB r1=%d b2=%d\n", r1, b2);
+    //logmsg("LXDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, 0, regs);
+    BFPREGPAIR_CHECK(r1, regs);
 
     vfetch_lbfp(&op2, effective_addr2, b2, regs);
 
@@ -3286,7 +3286,7 @@ DEF_INST(loadlength_bfp_short_to_ext_reg)
     RRE(inst, regs, r1, r2);
     //logmsg("LXEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, 0, regs);
+    BFPREGPAIR_CHECK(r1, regs);
 
     get_sbfp(&op2, regs->fpr + FPR2I(r2));
 
@@ -3308,7 +3308,7 @@ DEF_INST(loadlength_bfp_short_to_ext)
     RXE(inst, regs, r1, b2, effective_addr2);
     //logmsg("LXEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, 0, regs);
+    BFPREGPAIR_CHECK(r1, regs);
 
     vfetch_sbfp(&op2, effective_addr2, b2, regs);
 
@@ -3859,7 +3859,7 @@ DEF_INST(multiply_bfp_long_to_ext_reg)
     RRE(inst, regs, r1, r2);
     //logmsg("MXDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, 0, regs);
+    BFPREGPAIR_CHECK(r1, regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
     get_lbfp(&op2, regs->fpr + FPR2I(r2));
@@ -3890,7 +3890,7 @@ DEF_INST(multiply_bfp_long_to_ext)
     RXE(inst, regs, r1, b2, effective_addr2);
     //logmsg("MXDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, 0, regs);
+    BFPREGPAIR_CHECK(r1, regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
     vfetch_lbfp(&op2, effective_addr2, b2, regs);
@@ -4900,7 +4900,7 @@ DEF_INST(testdataclass_bfp_ext)
 
     //logmsg("TCXB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK( r1, 0, regs );
+    BFPREGPAIR_CHECK(r1, regs);
 
     // retrieve first operand.
     get_ebfp(&op1, regs->fpr + FPR2I(r1));

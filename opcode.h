@@ -385,8 +385,12 @@ do { \
     if( PROBSTATE(&(_regs)->psw) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_PRIVILEGED_OPERATION_EXCEPTION)
 
+#define BFPREGPAIR_CHECK(_r, _regs) \
+    if( ((_r) & 1) ) \
+        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+
 #define BFPREGPAIR2_CHECK(_r1, _r2, _regs) \
-    if( ((_r1) & 2) || ((_r2) & 2) ) \
+    if( ((_r1) & 1) || ((_r2) & 1) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
 #define SSID_CHECK(_regs) \

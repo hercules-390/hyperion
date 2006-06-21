@@ -1,3 +1,4 @@
+21 Jun 2006 Correction to BFPREGPAIR checks to prevent spurious 0C6 - Roger Bowler
 18 Jun 2006 Add diagnose 0x308 - re-ipl - Bernard van der Helm
 13 Jun 2006 Add diagnose 0x224 - CPU name array - Greg Smith
 13 Jun 2006 Added diagnose 308 reipl. Not activated in feat900.h! - Bernard
