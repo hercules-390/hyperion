@@ -385,12 +385,16 @@ do { \
     if( PROBSTATE(&(_regs)->psw) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_PRIVILEGED_OPERATION_EXCEPTION)
 
+    /* Program check if r is not 0,1,4,5,8,9,12, or 13 (designating 
+       the lower-numbered register of a floating-point register pair) */
 #define BFPREGPAIR_CHECK(_r, _regs) \
-    if( ((_r) & 1) ) \
+    if( ((_r) & 2) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
+    /* Program check if r1 and r2 are not both 0,1,4,5,8,9,12, or 13
+       (lower-numbered register of a floating-point register pair) */
 #define BFPREGPAIR2_CHECK(_r1, _r2, _regs) \
-    if( ((_r1) & 1) || ((_r2) & 1) ) \
+    if( ((_r1) & 2) || ((_r2) & 2) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
 #define SSID_CHECK(_regs) \
