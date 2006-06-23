@@ -4,13 +4,27 @@
 /*  This header file contains equates for the socket functions       */
 /*  and constants whose values differ between Unix and Winsock       */
 
-#if !defined(_HSOCKET_H) 
-#define _HSOCKET_H  
+#if !defined(_HSOCKET_H)
+#define _HSOCKET_H
+
+/*-------------------------------------------------------------------*/
+/* Socket related constants related to 'shutdown' API call           */
+/*-------------------------------------------------------------------*/
+
+#ifdef _MSVC_
+
+    /* Map SUS/*nix constants to Windows socket equivalents */
+
+    #define  SHUT_RD     SD_RECEIVE
+    #define  SHUT_WR     SD_SEND
+    #define  SHUT_RDWR   SD_BOTH
+
+#endif
 
 #if defined(_WINSOCKAPI_)
 
 /*-------------------------------------------------------------------*/
-/* Equates for systems which use the Winsock API                     */                                                                                                                                                                                      
+/* Equates for systems which use the Winsock API                     */
 /*-------------------------------------------------------------------*/
 
 #define get_HSO_errno()         ((int)WSAGetLastError())
@@ -18,7 +32,7 @@
 
 #define HSO_errno               get_HSO_errno()
 
-#define HSO_EINTR               WSAEINTR  
+#define HSO_EINTR               WSAEINTR
 #define HSO_EBADF               WSAEBADF
 #define HSO_EACCES              WSAEACCES
 #define HSO_EFAULT              WSAEFAULT

@@ -113,9 +113,54 @@ DLL_EXPORT void html_footer(WEBBLK *webblk)
 static void http_exit(WEBBLK *webblk)
 {
 CGIVAR *cgivar;
+int rc;
     if(webblk)
     {
-        close_socket(webblk->sock);
+        /* MS SDK docs state:
+
+            "To assure that all data is sent and received on a connected
+             socket before it is closed, an application should use shutdown
+             to close connection before calling closesocket. For example,
+             to initiate a graceful disconnect:
+
+                1, Call WSAAsyncSelect to register for FD_CLOSE notification.
+                2. Call shutdown with how=SD_SEND.
+                3. When FD_CLOSE received, call recv until zero returned,
+                   or SOCKET_ERROR.
+                4. Call closesocket.
+
+            Note: The shutdown function does not block regardless of the
+            SO_LINGER setting on the socket."
+        */
+
+        // Notify other end of connection to not expect any more data from us.
+        // They should detect this via their own 'recv' returning zero bytes
+        // (thus letting them know they've thus received all the data from us
+        // they're ever going to receive). They should then do their own
+        // 'shutdown(s,SHUT_WR)' at their end letting US know we're also not
+        // going to be receiving any more data from THEM. This is called a
+        // "graceful close" of the connection...
+
+        shutdown( webblk->sock, SHUT_WR );
+
+        // Now wait for them to shudown THEIR end of the connection (i.e. wait
+        // for them to do their own 'shutdown(s,SHUT_WR)') by "hanging" on a
+        // 'recv' call until we either eventually detect they've shutdown their
+        // end of the connection (0 bytes received) or else an error occurs...
+
+        do
+        {
+            BYTE c;
+            rc = read_socket( webblk->sock, &c, 1 );
+        }
+        while ( rc > 0 );
+
+        // NOW we can SAFELY close the socket since we now KNOW for CERTAIN
+        // that they've received ALL of the data we previously sent to them...
+        // (otherwise they wouldn't have close their connection on us!)
+
+        close_socket( webblk->sock );
+
         if(webblk->user) free(webblk->user);
         if(webblk->request) free(webblk->request);
         cgivar = webblk->cgivar;
