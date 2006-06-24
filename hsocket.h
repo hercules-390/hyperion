@@ -13,7 +13,7 @@
 
 #ifdef _MSVC_
 
-    /* Map SUS/*nix constants to Windows socket equivalents */
+    /* Map SUS\*nix constants to Windows socket equivalents */
 
     #define  SHUT_RD     SD_RECEIVE
     #define  SHUT_WR     SD_SEND
