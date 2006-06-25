@@ -35,6 +35,8 @@ typedef  struct  COPYR1         COPYR1;         // IEBCOPY header record 1
 typedef  struct  COPYR2         COPYR2;         // IEBCOPY header record 2
 typedef  struct  DATABLK        DATABLK;        // IEBCOPY unload data rec
 
+#define  MAX_TRACKS   32767
+
 /*-------------------------------------------------------------------*/
 /* Definition of DSCB records in VTOC                                */
 /*-------------------------------------------------------------------*/
@@ -317,7 +319,8 @@ struct DATABLK {                        /* IEBCOPY unload data rec   */
         BYTE    rec;                    /* Record number             */
         BYTE    klen;                   /* Key length                */
         HWORD   dlen;                   /* Data length               */
-        BYTE    kdarea[32760];          /* Key and data area         */
+#define MAX_DATALEN      32767
+        BYTE    kdarea[MAX_DATALEN];    /* Key and data area         */
 };
 
 /*-------------------------------------------------------------------*/

@@ -1,3 +1,5 @@
+25 Jun 2006 Fix seq dasdload blksize pad bug - Peter Sylvester
+            [peter.sylvester@edelweb.fr] by Fish
 23 Jun 2006 PR#s misc/21 and network/62: HTTP Server: do 'shutdown' to
             gracefully close connection before closing the socket - Fish
 22 Jun 2006 Back out incorrect modification to BFPREGPAIR macros - Roger Bowler

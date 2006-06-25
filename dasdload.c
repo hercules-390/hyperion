@@ -3536,7 +3536,9 @@ char            pathname[MAX_PATH];     /* sfname in host path format*/
         /* Pad the block if necessary */
         if (rc < blksz)
         {
-            blksz = ((rc / lrecl) + 1) * lrecl;
+            /* Adjust blksize down to next
+               highest multiple of lrecl */
+            blksz = (((rc-1) / lrecl) + 1) * lrecl;
             memset (&datablk.kdarea[rc], 0, blksz - rc);
         }
 
@@ -3990,7 +3992,7 @@ BYTE            c;                      /* Character work area       */
     if (plrecl == NULL) return 0;
 
     if (sscanf(plrecl, "%u%c", lrecl, &c) != 1
-        || *lrecl > 32767)
+        || *lrecl > MAX_DATALEN)
     {
         XMERRF ("HHCDL030E Invalid logical record length: %s\n",
                 plrecl);
@@ -4002,7 +4004,7 @@ BYTE            c;                      /* Character work area       */
     if (pblksz == NULL) return 0;
 
     if (sscanf(pblksz, "%u%c", blksz, &c) != 1
-        || *blksz > 32767)
+        || *blksz > MAX_DATALEN)
     {
         XMERRF ("HHCDL031E Invalid block size: %s\n",
                 pblksz);
@@ -4155,7 +4157,7 @@ int             fsflag = 0;             /* 1=Free space message sent */
         case METHOD_XMIT:               /* IEBCOPY wrapped in XMIT */
         case METHOD_VS:                 /* "straight" IEBCOPY */
             /* Create dataset using IEBCOPY file as input */
-            maxtrks = 32767;
+            maxtrks = MAX_TRACKS;
             rc = process_iebcopy_file (ifname, ofname, cif,
                                     devtype, heads, trklen,
                                     outcyl, outhead, maxtrks,
