@@ -194,6 +194,22 @@ TID     logcbtid;                       /* RC file thread identifier */
     /* Initialize 'hostinfo' BEFORE display_version is called */
     init_hostinfo( &hostinfo );
 
+    /* Display Herc's version information on the terminal so the
+       user can see what version they're actually running before
+       the main control panel is displayed. Note that we're doing
+       this before logger_init gets called so that it actually is
+       written to the actual screen and not deferred until later
+       like messages usually are once logger_init gets called and
+       the logmsg pipe and logger thread get setup/intialized.
+
+       Also note that we only do this when we're NOT running in
+       daemon_mode (i.e. when we're NOT under the control of an
+       external gui). If we're  running under the control of an
+       external GUI, it is the second call further (below handled
+       by the logger thread / redirected pipes) that is the one
+       that ends up displaying the version that the GUI actually
+       sees
+    */
     if(isatty(STDERR_FILENO))
         display_version (stderr, "Hercules ", TRUE);
     else
@@ -205,16 +221,32 @@ TID     logcbtid;                       /* RC file thread identifier */
     VERIFY( socket_init() == 0 );
 #endif
 
-    /* Clear the system configuration block */
-    memset (&sysblk, 0, sizeof(SYSBLK));
-
-    /* ensure hdl_shut is called in case of shutdown
+    /* Ensure hdl_shut is called in case of shutdown
        hdl_shut will ensure entries are only called once */
     atexit(hdl_shut);
 
     set_codepage(NULL);
 
+    /* Clear the system configuration block */
+    memset (&sysblk, 0, sizeof(SYSBLK));
+
+    /* Set the daemon_mode flag indicating whether we running in
+       background/daemon mode or not (meaning both stdout/stderr
+       are redirected to a non-tty device). Note that this flag
+       needs to be set before logger_init gets called since the
+       logger_logfile_write function relies on its setting.
+    */
+    sysblk.daemon_mode = !isatty(STDERR_FILENO) && !isatty(STDOUT_FILENO);
+
+    /* Initialize the logmsg pipe and associated logger thread.
+       This causes all subsequent logmsg's to be redirected to
+       the logger facility for handling by virtue of stdout/stderr
+       being redirected to the logger facility.
+    */
     logger_init();
+
+#if 0 // 20060628: doesn't seem to occur anymore; will remove perm-
+      // anently once we're certain this is indeed now a dead issue.
 
     /* ZZFIXME: I don't know what's going on (yet), but for some reason
        log messages seem to get permanently "stuck" in the logmsg pipe.
@@ -223,8 +255,21 @@ TID     logcbtid;                       /* RC file thread identifier */
        without the GUI and is thus NOT a GUI related issue.
     */
     usleep(100000);     /* wait a bit before issuing messages */
+#endif
 
-    /* Display the version identifier */
+    /* Now display the version information again after logger_init
+       has been called so that either the panel display thread or the
+       external gui can see the version which was previously possibly
+       only displayed to the actual physical screen the first time we
+       did it further above (depending on whether we're running in
+       daemon_mode (external gui mode) or not). This it the call that
+       the panel thread or the one the external gui actually "sees".
+       The first call further above wasn't seen by either since it
+       was issued before logger_init was called and thus got written
+       directly to the physical screen whereas this one will be inter-
+       cepted and handled by the logger facility thereby allowing the
+       panel thread or external gui to "see" it and thus display it.
+    */
     display_version (stdout, "Hercules ", TRUE);
 
 #if defined(OPTION_DYNAMIC_LOAD)
@@ -237,10 +282,6 @@ TID     logcbtid;                       /* RC file thread identifier */
     bindtextdomain(PACKAGE, HERC_LOCALEDIR);
     textdomain(PACKAGE);
 #endif
-
-    /* default to background mode when both stdout and stderr
-       are redirected to a non-tty device */
-    sysblk.daemon_mode = !isatty(STDERR_FILENO);
 
 #ifdef EXTERNALGUI
     /* Set GUI flag if specified as final argument */
