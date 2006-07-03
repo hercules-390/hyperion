@@ -17,6 +17,9 @@
 #include "opcode.h"
 /* getopt dynamic linking kludge */
 #include "herc_getopt.h"
+#if defined(OPTION_W32_CTCI)
+#include "tt32api.h"
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Ivan Warren 20040227                                              */
@@ -106,7 +109,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     int             rc = 0;             // Return code
     int             nIFType;            // Interface type
     int             nIFFlags;           // Interface flags
-    char            thread_name[32];
+    char            thread_name[32];    // CTCI_ReadThread
 
     nIFType =               // Interface type
         0
@@ -222,6 +225,31 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                   pDevCTCBLK->pDEVBLK[0]->devnum,
                   pDevCTCBLK->szTUNDevName);
     }
+
+#if defined(OPTION_W32_CTCI)
+
+    // Set the specified driver/dll i/o buffer sizes..
+    {
+        struct tt32ctl tt32ctl;
+
+        memset( &tt32ctl, 0, sizeof(tt32ctl) );
+        strlcpy( tt32ctl.tt32ctl_name, pDevCTCBLK->szTUNDevName, sizeof(tt32ctl.tt32ctl_name) );
+
+        tt32ctl.tt32ctl_devbuffsize = pDevCTCBLK->iKernBuff;
+        if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
+        {
+            logmsg( _("HHCCT074W TT32SDEVBUFF failed for device %s: %s.\n"),
+                    pDevCTCBLK->szTUNDevName, strerror( errno ) );
+        }
+
+        tt32ctl.tt32ctl_iobuffsize = pDevCTCBLK->iIOBuff;
+        if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
+        {
+            logmsg( _("HHCCT075W TT32SIOBUFF failed for device %s: %s.\n"),
+                    pDevCTCBLK->szTUNDevName, strerror( errno ) );
+        }
+    }
+#endif
 
 #ifdef OPTION_TUNTAP_CLRIPADDR
     VERIFY( TUNTAP_ClrIPAddr ( pDevCTCBLK->szTUNDevName ) == 0 );
@@ -1101,8 +1129,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 #endif
 
 #if defined( OPTION_W32_CTCI )
-    pCTCBLK->iKernBuff     = DEF_TT32DRV_BUFFSIZE_K * 1024;
-    pCTCBLK->iIOBuff       = DEF_TT32DRV_BUFFSIZE_K * 1024;
+    pCTCBLK->iKernBuff = DEF_CAPTURE_BUFFSIZE;
+    pCTCBLK->iIOBuff   = DEF_PACKET_BUFFSIZE;
 #endif
 
     // Initialize getopt's counter. This is necessary in the case
@@ -1158,8 +1186,10 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         static struct option options[] =
         {
             { "dev",     1, NULL, 'n' },
+#if defined( OPTION_W32_CTCI )
             { "kbuff",   1, NULL, 'k' },
             { "ibuff",   1, NULL, 'i' },
+#endif
             { "mtu",     1, NULL, 't' },
             { "netmask", 1, NULL, 's' },
             { "mac",     1, NULL, 'm' },
@@ -1168,10 +1198,18 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         };
 
         c = getopt_long( argc, argv,
-                 "n:k:i:t:s:m:d",
+                 "n"
+#if defined( OPTION_W32_CTCI )
+                 ":k:i"
+#endif
+                 ":t:s:m:d",
                  options, &iOpt );
 #else /* defined(HAVE_GETOPT_LONG) */
-        c = getopt( argc, argv, "n:k:i:t:s:m:d");
+        c = getopt( argc, argv, "n"
+#if defined( OPTION_W32_CTCI )
+            ":k:i"
+#endif
+            ":t:s:m:d");
 #endif /* defined(HAVE_GETOPT_LONG) */
 
         if( c == -1 ) // No more options found
@@ -1204,12 +1242,12 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             strcpy( pCTCBLK->szTUNCharName, optarg );
             break;
 
-        case 'k':     // Kernel Buffer Size (ignored if not Windows)
 #if defined( OPTION_W32_CTCI )
+        case 'k':     // Kernel Buffer Size (Windows only)
             iKernBuff = atoi( optarg );
 
-            if( iKernBuff < MIN_TT32DLL_BUFFSIZE_K    ||
-                iKernBuff > MAX_TT32DLL_BUFFSIZE_K )
+            if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
+                iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
             {
                 logmsg( _("HHCCT052E %4.4X: Invalid kernel buffer size %s\n"),
                     pDEVBLK->devnum, optarg );
@@ -1217,15 +1255,13 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             }
 
             pCTCBLK->iKernBuff = iKernBuff * 1024;
-#endif
             break;
 
-        case 'i':     // I/O Buffer Size (ignored if not Windows)
-#if defined( OPTION_W32_CTCI )
+        case 'i':     // I/O Buffer Size (Windows only)
             iIOBuff = atoi( optarg );
 
-            if( iIOBuff < MIN_TT32DLL_BUFFSIZE_K    ||
-                iIOBuff > MAX_TT32DLL_BUFFSIZE_K )
+            if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
+                iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
             {
                 logmsg( _("HHCCT053E %4.4X: Invalid DLL I/O buffer size %s\n"),
                     pDEVBLK->devnum, optarg );
@@ -1233,8 +1269,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             }
 
             pCTCBLK->iIOBuff = iIOBuff * 1024;
-#endif
             break;
+#endif // defined( OPTION_W32_CTCI )
 
         case 't':     // MTU of point-to-point link (ignored if Windows)
             iMTU = atoi( optarg );
@@ -1467,8 +1503,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // Kernel Buffer Size
                 iKernBuff = atoi( *argv );
 
-                if( iKernBuff < MIN_TT32DRV_BUFFSIZE_K ||
-                    iKernBuff > MAX_TT32DRV_BUFFSIZE_K )
+                if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE ||
+                    iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
                 {
                     logmsg( _("HHCCT069E %4.4X: Invalid kernel buffer size %s\n"),
                         pDEVBLK->devnum, *argv );
@@ -1484,8 +1520,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // I/O Buffer Size
                 iIOBuff = atoi( *argv );
 
-                if( iIOBuff < MIN_TT32DLL_BUFFSIZE_K ||
-                    iIOBuff > MAX_TT32DLL_BUFFSIZE_K )
+                if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE ||
+                    iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
                 {
                     logmsg( _("HHCCT070E %4.4X: Invalid DLL I/O buffer size %s\n"),
                         pDEVBLK->devnum, *argv );

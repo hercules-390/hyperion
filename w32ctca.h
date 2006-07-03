@@ -23,14 +23,6 @@ extern void tt32_init
 (
 );
 
-#define MIN_TT32DRV_BUFFSIZE_K   ( 128)
-#define DEF_TT32DRV_BUFFSIZE_K   (1024)
-#define MAX_TT32DRV_BUFFSIZE_K   (8192)
-
-#define MIN_TT32DLL_BUFFSIZE_K   (   8)
-#define DEF_TT32DLL_BUFFSIZE_K   (  64)
-#define MAX_TT32DLL_BUFFSIZE_K   (8192)
-
 extern int          tt32_open                 ( char* pszGatewayDevice, int iFlags );
 extern int          tt32_read                 ( int fd, u_char* buffer, u_long size );
 extern int          tt32_write                ( int fd, u_char* buffer, u_long size );

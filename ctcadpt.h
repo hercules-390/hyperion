@@ -393,6 +393,8 @@ struct  _LCSBLK
     u_int       fDebug:1;
 
     int         icDevices;                // Number of devices
+    int         iKernBuff;                // Kernel buffer in K bytes.
+    int         iIOBuff;                  // I/O buffer in K bytes.
 
     PLCSDEV     pDevices;                 // -> Device chain
     LCSPORT     Port[LCS_MAX_PORTS];      // Port Blocks

@@ -11,6 +11,9 @@
 #include "hercifc.h"
 #include "opcode.h"
 #include "herc_getopt.h"
+#if defined(OPTION_W32_CTCI)
+#include "tt32api.h"
+#endif
 
 /* CCW Codes 0x03 & 0xC3 are immediate commands */
 static BYTE CTC_Immed_Commands[256]=
@@ -243,6 +246,35 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                                          IFF_TAP | IFF_NO_PI,
                                          &pLCSBLK->Port[pLCSDev->bPort].fd,
                                          pLCSBLK->Port[pLCSDev->bPort].szNetDevName );
+
+            logmsg(_("HHCLC073I %4.4X: TAP device %s opened\n"),
+                      pLCSDev->pDEVBLK[0]->devnum,
+                      pLCSBLK->Port[pLCSDev->bPort].szNetDevName);
+
+#if defined(OPTION_W32_CTCI)
+
+            // Set the specified driver/dll i/o buffer sizes..
+            {
+                struct tt32ctl tt32ctl;
+
+                memset( &tt32ctl, 0, sizeof(tt32ctl) );
+                strlcpy( tt32ctl.tt32ctl_name, pLCSBLK->Port[pLCSDev->bPort].szNetDevName, sizeof(tt32ctl.tt32ctl_name) );
+
+                tt32ctl.tt32ctl_devbuffsize = pLCSBLK->iKernBuff;
+                if( TUNTAP_IOCtl( pLCSBLK->Port[pLCSDev->bPort].fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
+                {
+                    logmsg( _("HHCLC074W TT32SDEVBUFF failed for device %s: %s.\n"),
+                            pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
+                }
+
+                tt32ctl.tt32ctl_iobuffsize = pLCSBLK->iIOBuff;
+                if( TUNTAP_IOCtl( pLCSBLK->Port[pLCSDev->bPort].fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
+                {
+                    logmsg( _("HHCLC075W TT32SIOBUFF failed for device %s: %s.\n"),
+                            pLCSBLK->Port[pLCSDev->bPort].szNetDevName, strerror( errno ) );
+                }
+            }
+#endif
 
             // Indicate that the port is used.
             pLCSBLK->Port[pLCSDev->bPort].fUsed    = 1;
@@ -1753,6 +1785,10 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     struct in_addr  addr;               // Work area for addresses
     MAC             mac;
     int             i;
+#if defined(OPTION_W32_CTCI)
+    int             iKernBuff;
+    int             iIOBuff;
+#endif
 
     // Housekeeping
     memset( &addr, 0, sizeof( struct in_addr ) );
@@ -1766,6 +1802,10 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     pLCSBLK->pszOATFilename = NULL;
     pLCSBLK->pszIPAddress   = NULL;
     pLCSBLK->pszMACAddress  = NULL;
+#if defined( OPTION_W32_CTCI )
+    pLCSBLK->iKernBuff = DEF_CAPTURE_BUFFSIZE;
+    pLCSBLK->iIOBuff   = DEF_PACKET_BUFFSIZE;
+#endif
 
     // Initialize getopt's counter. This is necessary in the case
     // that getopt was used previously for another device.
@@ -1803,6 +1843,10 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         static struct option options[] =
         {
             { "dev",   1, NULL, 'n' },
+#if defined(OPTION_W32_CTCI)
+            { "kbuff", 1, NULL, 'k' },
+            { "ibuff", 1, NULL, 'i' },
+#endif
             { "oat",   1, NULL, 'o' },
             { "mac",   1, NULL, 'm' },
             { "debug", 0, NULL, 'd' },
@@ -1810,9 +1854,17 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         };
 
         c = getopt_long( argc, argv,
-                         "n:o:m:d", options, &iOpt );
+                         "n"
+#if defined( OPTION_W32_CTCI )
+                         ":k:i"
+#endif
+                         ":o:m:d", options, &iOpt );
 #else /* defined(HAVE_GETOPT_LONG) */
-        c = getopt( argc, argv, "n:o:m:d" );
+        c = getopt( argc, argv, "n"
+#if defined( OPTION_W32_CTCI )
+            ":k:i"
+#endif
+            ":o:m:d" );
 #endif /* defined(HAVE_GETOPT_LONG) */
 
         if( c == -1 )
@@ -1831,6 +1883,36 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             pLCSBLK->pszTUNDevice = strdup( optarg );
 
             break;
+
+#if defined( OPTION_W32_CTCI )
+        case 'k':     // Kernel Buffer Size (Windows only)
+            iKernBuff = atoi( optarg );
+
+            if( iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE    ||
+                iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
+            {
+                logmsg( _("HHCLC052E %4.4X: Invalid kernel buffer size %s\n"),
+                    pDEVBLK->devnum, optarg );
+                return -1;
+            }
+
+            pLCSBLK->iKernBuff = iKernBuff * 1024;
+            break;
+
+        case 'i':     // I/O Buffer Size (Windows only)
+            iIOBuff = atoi( optarg );
+
+            if( iIOBuff * 1024 < MIN_PACKET_BUFFSIZE    ||
+                iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
+            {
+                logmsg( _("HHCLC053E %4.4X: Invalid DLL I/O buffer size %s\n"),
+                    pDEVBLK->devnum, optarg );
+                return -1;
+            }
+
+            pLCSBLK->iIOBuff = iIOBuff * 1024;
+            break;
+#endif // defined( OPTION_W32_CTCI )
 
         case 'o':
             pLCSBLK->pszOATFilename = strdup( optarg );

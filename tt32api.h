@@ -40,7 +40,7 @@
  *  MM/DD/YY   Version    Description...
  *  --------  ---------  -------------------------------------------------------
  *
- *  12/22/01    1.0.0     Created.
+ *  12/22/01    1.0.0     Fish: Created.
  *  07/20/02    2.0.0     JAP: LCS modifications/enhancements.
  *  07/02/03    2.0.2     Fish: use std 'uint32_t' type instead of Win32 DWORD
  *  06/16/04    2.1.0     Fish: 'ex' variant functions to pass errno value.
@@ -50,6 +50,7 @@
  *  02/05/06    3.1.0     Fish: New exported function: 'tuntap32_build_herc_iface_mac'
  *  02/14/06    3.1.0     Fish: Added #defines for TUNTAP32_DLLNAME
  *  04/14/06    3.1.0     Fish: Added 'tuntap32_calc_checksum' function
+ *  07/02/06    3.2.0     Fish: Added #defines for min/max/def buffer sizes
  *
 \**********************************************************************************/
 
@@ -94,6 +95,18 @@ struct tt32ctl
 #define tt32ctl_devbuffsize  tt32_ctlu.ctlu_devbuffsize
 #define tt32ctl_iobuffsize   tt32_ctlu.ctlu_iobuffsize
 #define tt32ctl_readtimeout  tt32_ctlu.ctlu_readtimeout
+
+/* WinPCap device driver capture buffer sizes */
+
+#define MIN_CAPTURE_BUFFSIZE  (64*1024)      /* minimum = 64K */
+#define DEF_CAPTURE_BUFFSIZE  (1*1024*1024)  /* default =  1M */
+#define MAX_CAPTURE_BUFFSIZE  (16*1024*1024) /* maximum = 16M */
+
+/* FishPack I/O buffer sizes */
+
+#define MIN_PACKET_BUFFSIZE   (16*1024)      /* minimum =  16K */
+#define DEF_PACKET_BUFFSIZE   (1*64*1024)    /* default =  64K */
+#define MAX_PACKET_BUFFSIZE   (1024*1024)    /* maximum =   1M */
 
 typedef struct TT32STATS
 {
