@@ -480,6 +480,10 @@ const char dot = '.';
     n = pttracen;
     pttracen = 0;
     RELEASE_PTTLOCK;
+
+//debug code -- temporary -- Greg
+ipending_cmd(0,NULL,NULL);
+
     i = pttracex;
     do
     {

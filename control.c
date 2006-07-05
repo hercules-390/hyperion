@@ -5545,6 +5545,9 @@ static char *ordername[] = {
                 break;
             }
 
+//debug code -- temporary -- Greg
+ptt_pthread_print();
+
             /* Make restart interrupt pending in the target CPU */
             ON_IC_RESTART(tregs);
             /* Set cpustate to stopping. If the restart is successful,
