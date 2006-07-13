@@ -48,6 +48,9 @@
 #include "w32chan.h"
 #endif // defined(OPTION_FISHIO)
 
+/* Temporary debug */
+extern	int	ipending_cmd(int,void *,void *);
+
 #if defined(FEATURE_BRANCH_AND_SET_AUTHORITY)
 /*-------------------------------------------------------------------*/
 /* B25A BSA   - Branch and Set Authority                       [RRE] */
@@ -5546,6 +5549,7 @@ static char *ordername[] = {
             }
 
 //debug code -- temporary -- Greg
+ipending_cmd(0,NULL,NULL);
 ptt_pthread_print();
 
             /* Make restart interrupt pending in the target CPU */

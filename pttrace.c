@@ -25,9 +25,6 @@ int        pttnolock;                   /* 1=no PTT locking          */
 int        pttnotod;                    /* 1=don't call gettimeofday */
 int        pttnowrap;                   /* 1=don't wrap              */
 
-//debug code -- temporary -- Greg
-extern int ipending_cmd(int,void *,void *);
-
 DLL_EXPORT void ptt_trace_init (int n, int init)
 {
     if (n > 0)
@@ -484,9 +481,8 @@ const char dot = '.';
     pttracen = 0;
     RELEASE_PTTLOCK;
 
-//debug code -- temporary -- Greg
-ipending_cmd(0,NULL,NULL);
 
+/* ISW : Call to ipending_cmd moved to control.c */
     i = pttracex;
     do
     {
