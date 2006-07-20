@@ -469,20 +469,18 @@ int i, n;
 
 DLL_EXPORT int ptt_pthread_print ()
 {
-int   i, n;
+int   i, n, count = 0;
 char  result[32]; // (result is 'int'; if 64-bits, 19 digits or more!)
 char  tbuf[256];
 time_t tt;
 const char dot = '.';
 
-    if (pttrace == NULL || pttracen == 0) return 0;
+    if (pttrace == NULL || pttracen == 0) return count;
     OBTAIN_PTTLOCK;
     n = pttracen;
     pttracen = 0;
     RELEASE_PTTLOCK;
 
-
-/* ISW : Call to ipending_cmd moved to control.c */
     i = pttracex;
     do
     {
@@ -517,13 +515,14 @@ const char dot = '.';
                 ,pttrace[i].tv.tv_usec        // Time of day (microseconds)
                 ,result                       // Numeric result (or empty string)
             );
+            count++;
         }
         if (++i >= n) i = 0;
     } while (i != pttracex);
     memset (pttrace, 0, PTT_TRACE_SIZE * n);
     pttracex = 0;
     pttracen = n;
-    return 0;
+    return count;
 }
 
 #endif

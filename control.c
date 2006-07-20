@@ -5549,8 +5549,7 @@ static char *ordername[] = {
             }
 
 //debug code -- temporary -- Greg
-ipending_cmd(0,NULL,NULL);
-ptt_pthread_print();
+if (ptt_pthread_print()) ipending_cmd(0,NULL,NULL);
 
             /* Make restart interrupt pending in the target CPU */
             ON_IC_RESTART(tregs);
