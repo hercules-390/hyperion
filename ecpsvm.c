@@ -635,8 +635,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
     U16  HW1;
     U32  FW1;
     U64  DW1;
-    U32  CPEXBKUP[16];  /* CPEXBLOK Regs backup except GPR15 which is useless */
-                        /* If it's useless, why's it referred to below? JRM */
+    U32  CPEXBKUP[15];  /* CPEXBLOK Regs backup except GPR15 which is useless */
     VADR F_ECBLOK;      /* Pointer to user's EC block for extended VM */
     VADR F_CPEXADD;
     U32  F_QUANTUM;
@@ -738,7 +737,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         EVM_ST(dl+40,CPEXBKUP[12]);
         EVM_ST(dl+44,CPEXBKUP[13]);
         EVM_ST(dl+48,CPEXBKUP[14]);
-        EVM_ST(dl+52,CPEXBKUP[15]);
+        EVM_ST(dl+52,EVM_L(F_CPEXB+X'0C')); /* DSPSAVE + 12 = CPEXADD */
         EVM_ST(dl+56,CPEXBKUP[0]);
         EVM_ST(dl+60,CPEXBKUP[1]);  /* Note : DMKDSP Is wrong -  SCHMASK is at +64 (not +60) */
         /* Upon taking this exit, GPRS 12-15 are same as entry */

@@ -1,3 +1,4 @@
+21 Jul 2006 Small change to ECPS:VM fix by P. Coghlan - Ivan Warren
 21 Jul 2006 Several small bugfixes from Peter Coghlan - Jay Maynard
 21 Jul 2006 read_socket and write_socket wrapper routines to fix short
             read problems for sockdev card readers (new source file
