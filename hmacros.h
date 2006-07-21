@@ -47,12 +47,12 @@
 
 #ifdef _MSVC_
   #define  socket               w32_socket
-  #define  read_socket(f,b,n)   recv(f,b,n,0)
-  #define  write_socket(f,b,n)  send(f,b,n,0)
+  int read_socket(int fd, char *ptr, int nbytes);
+  int write_socket(int fd, const char *ptr, int nbytes);
   #define  close_socket(f)      closesocket(f)
 #else
-  #define  read_socket(f,b,n)   read(f,b,n)
-  #define  write_socket(f,b,n)  write(f,b,n)
+  int read_socket(int fd, char *ptr, int nbytes);
+  int write_socket(int fd, const char *ptr, int nbytes);
   #define  close_socket(f)      close(f)
 #endif
 

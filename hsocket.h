@@ -133,4 +133,11 @@
 
 #endif
 
+/*-------------------------------------------------------------------*/
+/* Local function definitions                                        */
+/*-------------------------------------------------------------------*/
+
+int read_socket(int fd, char *ptr, int nbytes);
+int write_socket(int fd, const char *ptr, int nbytes);
+
 #endif /*!defined(_HSOCKET_H)*/

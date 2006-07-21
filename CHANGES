@@ -1,3 +1,6 @@
+21 Jul 2006 read_socket and write_socket wrapper routines to fix short
+            read problems for sockdev card readers (new source file
+            hsocket.c) - Robert Styma and Jay Maynard
 02 Jul 2006 PR# network/93: honor specified CTCI-W32 buffer sizes - Fish
 28 Jun 2006 Fix doubled/duplicated startup 'version' logmsgs caused by
             PR# misc/87 when Herc is run in daemon/hercgui mode  - Fish

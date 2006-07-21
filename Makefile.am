@@ -285,6 +285,7 @@ endif
                         logmsg.c     \
                         hdl.c        \
                         hostinfo.c   \
+                        hsocket.c    \
                         memrchr.c    \
                         parser.c     \
                         pttrace.c    \
