@@ -737,7 +737,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         EVM_ST(dl+40,CPEXBKUP[12]);
         EVM_ST(dl+44,CPEXBKUP[13]);
         EVM_ST(dl+48,CPEXBKUP[14]);
-        EVM_ST(dl+52,EVM_L(F_CPEXB+X'0C')); /* DSPSAVE + 12 = CPEXADD */
+        EVM_ST(dl+52,EVM_L(F_CPEXB+12)); /* DSPSAVE + 12 = CPEXADD */
         EVM_ST(dl+56,CPEXBKUP[0]);
         EVM_ST(dl+60,CPEXBKUP[1]);  /* Note : DMKDSP Is wrong -  SCHMASK is at +64 (not +60) */
         /* Upon taking this exit, GPRS 12-15 are same as entry */
