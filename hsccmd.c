@@ -4215,9 +4215,9 @@ int call_ ## xxx_cmd ( int argc, char *argv[], char *cmdline )  { \
 
 // Externally defined commands routing functions...
 
-CALL_EXT_CMD ( ptt_cmd    );
-CALL_EXT_CMD ( cache_cmd  );
-CALL_EXT_CMD ( shared_cmd );
+CALL_EXT_CMD ( ptt_cmd    )
+CALL_EXT_CMD ( cache_cmd  )
+CALL_EXT_CMD ( shared_cmd )
 
 ///////////////////////////////////////////////////////////////////////
 // Layout of command routing table...

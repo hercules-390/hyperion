@@ -543,13 +543,13 @@
 
 
 #if !defined(FEATURE_REGION_RELOCATE)
- UNDEF_INST(store_zone_parameter);
- UNDEF_INST(set_zone_parameter);
+ UNDEF_INST(store_zone_parameter)
+ UNDEF_INST(set_zone_parameter)
 #endif /*!defined(FEATURE_REGION_RELOCATE)*/
 
 
 #if !defined(FEATURE_IO_ASSIST)
- UNDEF_INST(test_pending_zone_interrupt);
+ UNDEF_INST(test_pending_zone_interrupt)
 #endif /*!defined(FEATURE_IO_ASSIST)*/
 
 
@@ -620,22 +620,22 @@
 
 
 #if !defined(FEATURE_ESAME_N3_ESA390) && !defined(FEATURE_ESAME)
- UNDEF_INST(add_logical_carry);
- UNDEF_INST(add_logical_carry_register);
- UNDEF_INST(branch_relative_and_save_long);
- UNDEF_INST(branch_relative_on_condition_long);
- UNDEF_INST(divide_logical);
- UNDEF_INST(divide_logical_register);
- UNDEF_INST(extract_psw);
- UNDEF_INST(load_address_relative_long);
- UNDEF_INST(multiply_logical);
- UNDEF_INST(multiply_logical_register);
- UNDEF_INST(rotate_left_single_logical);
- UNDEF_INST(set_addressing_mode_24);
- UNDEF_INST(set_addressing_mode_31);
- UNDEF_INST(subtract_logical_borrow);
- UNDEF_INST(subtract_logical_borrow_register);
- UNDEF_INST(test_addressing_mode);
+ UNDEF_INST(add_logical_carry)
+ UNDEF_INST(add_logical_carry_register)
+ UNDEF_INST(branch_relative_and_save_long)
+ UNDEF_INST(branch_relative_on_condition_long)
+ UNDEF_INST(divide_logical)
+ UNDEF_INST(divide_logical_register)
+ UNDEF_INST(extract_psw)
+ UNDEF_INST(load_address_relative_long)
+ UNDEF_INST(multiply_logical)
+ UNDEF_INST(multiply_logical_register)
+ UNDEF_INST(rotate_left_single_logical)
+ UNDEF_INST(set_addressing_mode_24)
+ UNDEF_INST(set_addressing_mode_31)
+ UNDEF_INST(subtract_logical_borrow)
+ UNDEF_INST(subtract_logical_borrow_register)
+ UNDEF_INST(test_addressing_mode)
 #endif /*!defined(FEATURE_ESAME_N3_ESA390) && !defined(FEATURE_ESAME)*/
 
 
@@ -650,31 +650,30 @@
 
 
 #if !defined(FEATURE_ECPSVM)
- UNDEF_INST(ecpsvm_basic_freex);
- UNDEF_INST(ecpsvm_basic_fretx);
- UNDEF_INST(ecpsvm_lock_page);
- UNDEF_INST(ecpsvm_unlock_page);
- UNDEF_INST(ecpsvm_decode_next_ccw);
- UNDEF_INST(ecpsvm_free_ccwstor);
- UNDEF_INST(ecpsvm_locate_vblock);
- UNDEF_INST(ecpsvm_disp1);
- UNDEF_INST(ecpsvm_tpage);
- UNDEF_INST(ecpsvm_tpage_lock);
- UNDEF_INST(ecpsvm_inval_segtab);
- UNDEF_INST(ecpsvm_inval_ptable);
- UNDEF_INST(ecpsvm_decode_first_ccw);
- UNDEF_INST(ecpsvm_dispatch_main);
- UNDEF_INST(ecpsvm_locate_rblock);
- UNDEF_INST(ecpsvm_comm_ccwproc);
- UNDEF_INST(ecpsvm_unxlate_ccw);
- UNDEF_INST(ecpsvm_disp2);
- UNDEF_INST(ecpsvm_store_level);
- UNDEF_INST(ecpsvm_loc_chgshrpg);
- UNDEF_INST(ecpsvm_extended_freex);
- UNDEF_INST(ecpsvm_extended_fretx);
- UNDEF_INST(ecpsvm_prefmach_assist);
+ UNDEF_INST(ecpsvm_basic_freex)
+ UNDEF_INST(ecpsvm_basic_fretx)
+ UNDEF_INST(ecpsvm_lock_page)
+ UNDEF_INST(ecpsvm_unlock_page)
+ UNDEF_INST(ecpsvm_decode_next_ccw)
+ UNDEF_INST(ecpsvm_free_ccwstor)
+ UNDEF_INST(ecpsvm_locate_vblock)
+ UNDEF_INST(ecpsvm_disp1)
+ UNDEF_INST(ecpsvm_tpage)
+ UNDEF_INST(ecpsvm_tpage_lock)
+ UNDEF_INST(ecpsvm_inval_segtab)
+ UNDEF_INST(ecpsvm_inval_ptable)
+ UNDEF_INST(ecpsvm_decode_first_ccw)
+ UNDEF_INST(ecpsvm_dispatch_main)
+ UNDEF_INST(ecpsvm_locate_rblock)
+ UNDEF_INST(ecpsvm_comm_ccwproc)
+ UNDEF_INST(ecpsvm_unxlate_ccw)
+ UNDEF_INST(ecpsvm_disp2)
+ UNDEF_INST(ecpsvm_store_level)
+ UNDEF_INST(ecpsvm_loc_chgshrpg)
+ UNDEF_INST(ecpsvm_extended_freex)
+ UNDEF_INST(ecpsvm_extended_fretx)
+ UNDEF_INST(ecpsvm_prefmach_assist)
 #endif /*!defined(FEATURE_ECPSVM)*/
-
 
 #if !defined(FEATURE_LONG_DISPLACEMENT)
  UNDEF_INST(add_y)
@@ -969,31 +968,31 @@ BYTE* mnemonic; \
 }
 
 
-DISASM_ROUTE(table,[0]);
-DISASM_ROUTE(01xx,[1]);
-DISASM_ROUTE(a5xx,[1] & 0x0F);
-DISASM_ROUTE(a7xx,[1] & 0x0F);
-DISASM_ROUTE(b2xx,[1]);
-DISASM_ROUTE(b3xx,[1]);
-DISASM_ROUTE(b9xx,[1]);
-DISASM_ROUTE(c0xx,[1] & 0x0F);
-DISASM_ROUTE(c2xx,[1] & 0x0F);                                  /*@Z9*/
-DISASM_ROUTE(e3xx,[5]);
-DISASM_ROUTE(e5xx,[1]);
-DISASM_ROUTE(e6xx,[1]);
-DISASM_ROUTE(ebxx,[5]);
-DISASM_ROUTE(ecxx,[5]);
-DISASM_ROUTE(edxx,[5]);
+DISASM_ROUTE(table,[0])
+DISASM_ROUTE(01xx,[1])
+DISASM_ROUTE(a5xx,[1] & 0x0F)
+DISASM_ROUTE(a7xx,[1] & 0x0F)
+DISASM_ROUTE(b2xx,[1])
+DISASM_ROUTE(b3xx,[1])
+DISASM_ROUTE(b9xx,[1])
+DISASM_ROUTE(c0xx,[1] & 0x0F)
+DISASM_ROUTE(c2xx,[1] & 0x0F)                                   /*@Z9*/
+DISASM_ROUTE(e3xx,[5])
+DISASM_ROUTE(e5xx,[1])
+DISASM_ROUTE(e6xx,[1])
+DISASM_ROUTE(ebxx,[5])
+DISASM_ROUTE(ecxx,[5])
+DISASM_ROUTE(edxx,[5])
 
 #if defined(FEATURE_VECTOR_FACILITY)
  #define opcode_a4xx v_opcode_a4xx
- DISASM_ROUTE(a4xx,[1]);
+ DISASM_ROUTE(a4xx,[1])
  #undef opcode_a4xx
  #define opcode_a6xx v_opcode_a6xx
- DISASM_ROUTE(a6xx,[1]);
+ DISASM_ROUTE(a6xx,[1])
  #undef opcode_a6xx
  #define opcode_e4xx v_opcode_e4xx
- DISASM_ROUTE(e4xx,[1]);
+ DISASM_ROUTE(e4xx,[1])
  #undef opcode_e4xx
 #else /*defined(FEATURE_VECTOR_FACILITY)*/
  #define disasm_a4xx disasm_none

@@ -3639,7 +3639,7 @@ HDL_DEPENDENCY_SECTION;
      HDL_DEPENDENCY(DEVBLK);
      HDL_DEPENDENCY(SYSBLK);
 }
-END_DEPENDENCY_SECTION;
+END_DEPENDENCY_SECTION
 
 
 #if defined(WIN32) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
@@ -3650,16 +3650,16 @@ END_DEPENDENCY_SECTION;
     HDL_RESOLVE_PTRVAR( psysblk, sysblk );
     HDL_RESOLVE( config_cnslport );
   }
-  END_RESOLVER_SECTION;
+  END_RESOLVER_SECTION
 #endif
 
 
-HDL_DEVICE_SECTION;
+HDL_DEVICE_SECTION
 {
     HDL_DEVICE(1052, constty_device_hndinfo );
     HDL_DEVICE(3215, constty_device_hndinfo );
     HDL_DEVICE(3270, loc3270_device_hndinfo );
     HDL_DEVICE(3287, loc3270_device_hndinfo );
 }
-END_DEVICE_SECTION;
+END_DEVICE_SECTION
 #endif

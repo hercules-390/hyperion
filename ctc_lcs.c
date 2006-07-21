@@ -2396,7 +2396,7 @@ HDL_DEPENDENCY_SECTION;
      HDL_DEPENDENCY(HERCULES);
      HDL_DEPENDENCY(DEVBLK);
 }
-END_DEPENDENCY_SECTION;
+END_DEPENDENCY_SECTION
 
 HDL_REGISTER_SECTION;       // ("Register" our entry-points)
 
@@ -2410,7 +2410,7 @@ HDL_REGISTER_SECTION;       // ("Register" our entry-points)
   HDL_REGISTER ( debug_tt32_tracing, enable_tt32_debug_tracing );
 #endif
 
-END_REGISTER_SECTION;
+END_REGISTER_SECTION
 
 
 HDL_DEVICE_SECTION;
@@ -2427,5 +2427,5 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(CTCI-W32,ctci_device_hndinfo );
 #endif
 }
-END_DEVICE_SECTION;
+END_DEVICE_SECTION
 #endif

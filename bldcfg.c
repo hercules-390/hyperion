@@ -1989,11 +1989,15 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     (
         "HHCCF069I Run-options enabled for this run:\n"
         "          NUMCPU:           %d\n"
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
         "          ASN-and-LX-reuse: %sabled\n"
+#endif
         "          DIAG8CMD:         %sabled\n"
 
         ,sysblk.numcpu
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
         ,( sysblk.asnandlxreuse ) ? "EN" : "DIS"
+#endif
         ,( sysblk.diag8cmd      ) ? "EN" : "DIS"
     );
     

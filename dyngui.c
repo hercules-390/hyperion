@@ -1190,7 +1190,7 @@ HDL_DEPENDENCY ( SYSBLK   );        // master control block
 HDL_DEPENDENCY ( REGS     );        // cpu regs and such
 HDL_DEPENDENCY ( DEVBLK   );        // device info block
 
-END_DEPENDENCY_SECTION;
+END_DEPENDENCY_SECTION
 
 ///////////////////////////////////////////////////////////////////////////////
 //                        HDL_REGISTER_SECTION
@@ -1214,7 +1214,7 @@ HDL_REGISTER ( daemon_task,     gui_panel_display   );// (Yep! We override EITHE
 HDL_REGISTER ( debug_cpu_state, gui_debug_cpu_state );
 HDL_REGISTER ( panel_command,   gui_panel_command   );
 
-END_REGISTER_SECTION;
+END_REGISTER_SECTION
 
 #if defined( WIN32 ) && !defined( HDL_USE_LIBTOOL )
 #if !defined( _MSVC_ )
@@ -1242,7 +1242,7 @@ END_REGISTER_SECTION;
   HDL_RESOLVE_PTRVAR (  psysblk,           sysblk         );
 #endif
 
-  END_RESOLVER_SECTION;
+  END_RESOLVER_SECTION
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1261,7 +1261,7 @@ HDL_FINAL_SECTION;
                                 //  to display ALL shutdown msgs)
     return gui_nounload;        // (reject unloads when activated)
 }
-END_FINAL_SECTION;
+END_FINAL_SECTION
 
 ///////////////////////////////////////////////////////////////////////////////
 

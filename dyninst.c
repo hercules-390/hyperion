@@ -272,7 +272,7 @@ HDL_DEPENDENCY_SECTION;
      HDL_DEPENDENCY (DEVBLK);
      HDL_DEPENDENCY (SYSBLK);
 
-} END_DEPENDENCY_SECTION;
+} END_DEPENDENCY_SECTION
 
 
 HDL_REGISTER_SECTION;
@@ -283,7 +283,7 @@ HDL_REGISTER_SECTION;
     opcode_save();
 #endif
 }
-END_REGISTER_SECTION;
+END_REGISTER_SECTION
 
 
 HDL_RESOLVER_SECTION;
@@ -411,7 +411,7 @@ int opcode, extop;
     /* Copy opcodes to performance shadow tables */
     copy_opcode_tables();
 
-} END_RESOLVER_SECTION;
+} END_RESOLVER_SECTION
 
 
 HDL_FINAL_SECTION;
@@ -419,7 +419,7 @@ HDL_FINAL_SECTION;
 
     opcode_restore();
 
-} END_FINAL_SECTION;
+} END_FINAL_SECTION
 
 
 #endif /*!defined(_GEN_ARCH)*/

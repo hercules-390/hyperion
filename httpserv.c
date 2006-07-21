@@ -96,7 +96,7 @@ DLL_EXPORT void html_header(WEBBLK *webblk)
     if (webblk->request_type != REQTYPE_POST)
         hprintf(webblk->sock,"Expires: 0\n");
 
-    hprintf(webblk->sock,"Content-type: text/html;\n\n");
+    hprintf(webblk->sock,"Content-type: text/html\n\n");
 
     if (!html_include(webblk,HTML_HEADER))
         hprintf(webblk->sock,"<HTML>\n<HEAD>\n<TITLE>Hercules</TITLE>\n</HEAD>\n<BODY>\n\n");

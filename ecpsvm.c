@@ -635,7 +635,8 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
     U16  HW1;
     U32  FW1;
     U64  DW1;
-    U32  CPEXBKUP[15];  /* CPEXBLOK Regs backup except GPR15 which is useless */
+    U32  CPEXBKUP[16];  /* CPEXBLOK Regs backup except GPR15 which is useless */
+                        /* If it's useless, why's it referred to below? JRM */
     VADR F_ECBLOK;      /* Pointer to user's EC block for extended VM */
     VADR F_CPEXADD;
     U32  F_QUANTUM;
