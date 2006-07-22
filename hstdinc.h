@@ -219,7 +219,6 @@
   #include <unistd.h>           // Unix standard definitions
 #endif
 
-#include "hsocket.h"            // Equates for socket functions
 #include "hostopts.h"           // Must come before htypes.h
 #include "htypes.h"             // Hercules-wide data types
 

@@ -500,6 +500,7 @@ hutil_OBJ = \
     $(O)parser.obj   \
     $(O)pttrace.obj  \
     $(O)version.obj  \
+    $(O)hsocket.obj  \
     $(O)w32util.obj
 
 hengine_OBJ = \

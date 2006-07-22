@@ -2,6 +2,10 @@
 /*              Socket read/write routines                           */
 
 #include "hstdinc.h"
+
+#define _HSOCKET_C_
+#define _HUTIL_DLL_
+
 #include "hercules.h"
 
 /************************************************************************
@@ -32,7 +36,7 @@ OUTPUTS:
 
 *************************************************************************/
 
-int read_socket(int fd, char *ptr, int nbytes)
+DLL_EXPORT int read_socket(int fd, char *ptr, int nbytes)
 {
 int   nleft, nread;
 
@@ -104,7 +108,7 @@ OUTPUTS:
  * Use in place of write() when fd is a stream socket.
  */
 
-int write_socket(int fd, const char *ptr, int nbytes)
+DLL_EXPORT int write_socket(int fd, const char *ptr, int nbytes)
 {
 int  nleft, nwritten;
 

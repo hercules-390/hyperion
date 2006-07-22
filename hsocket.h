@@ -7,6 +7,16 @@
 #if !defined(_HSOCKET_H)
 #define _HSOCKET_H
 
+#ifndef _HSOCKET_C_
+#ifndef _HUTIL_DLL_
+#define HSOCK_DLL_IMPORT DLL_IMPORT
+#else   
+#define HSOCK_DLL_IMPORT extern
+#endif 
+#else
+#define HSOCK_DLL_IMPORT DLL_EXPORT
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Socket related constants related to 'shutdown' API call           */
 /*-------------------------------------------------------------------*/
@@ -137,7 +147,7 @@
 /* Local function definitions                                        */
 /*-------------------------------------------------------------------*/
 
-int read_socket(int fd, char *ptr, int nbytes);
-int write_socket(int fd, const char *ptr, int nbytes);
+HSOCK_DLL_IMPORT int read_socket(int fd, char *ptr, int nbytes);
+HSOCK_DLL_IMPORT int write_socket(int fd, const char *ptr, int nbytes);
 
 #endif /*!defined(_HSOCKET_H)*/

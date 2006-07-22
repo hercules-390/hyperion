@@ -116,6 +116,7 @@
 #include "sockdev.h"
 #include "w32ctca.h"
 
+#include "hsocket.h"
 #include "hstructs.h"     // (Hercules-wide structures)
 #include "hexterns.h"     // (Hercules-wide extern function prototypes)
 

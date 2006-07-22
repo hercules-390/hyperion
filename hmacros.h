@@ -47,12 +47,16 @@
 
 #ifdef _MSVC_
   #define  socket               w32_socket
+/* Now defined in hsocket.h
   int read_socket(int fd, char *ptr, int nbytes);
   int write_socket(int fd, const char *ptr, int nbytes);
+*/
   #define  close_socket(f)      closesocket(f)
 #else
+/* Now defined in hsocket.h
   int read_socket(int fd, char *ptr, int nbytes);
   int write_socket(int fd, const char *ptr, int nbytes);
+*/
   #define  close_socket(f)      close(f)
 #endif
 
