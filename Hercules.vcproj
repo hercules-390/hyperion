@@ -634,6 +634,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hsocket.c"
+							>
+						</File>
+						<File
 							RelativePath=".\hsys.c"
 							>
 						</File>
