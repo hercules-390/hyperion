@@ -105,12 +105,8 @@
 
 //       HOW_TO_IMPLEMENT_SH_COMMAND
 
-#if defined( HAVE_FORK )
 #define  USE_FORK_API_FOR_SH_COMMAND           4
-#endif
-#if defined( _MSVC_ )
 #define  USE_W32_POOR_MANS_FORK                5
-#endif
 #define  USE_ANSI_SYSTEM_API_FOR_SH_COMMAND    9
 
 
@@ -257,11 +253,10 @@
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
 
-
 /*-------------------------------------------------------------------*/
-/* Hard-coded OTHER (e.g. *nix) host-specific features and options...*/
+/* GNU 'C' (e.g. Linux) options...                                   */
 /*-------------------------------------------------------------------*/
-#else                                   /* "Other platform" options  */
+#elif defined(__GNUC__)                 /* E.g. Linux options        */
 
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
@@ -281,8 +276,41 @@
 #define DEFAULT_CPU_PRIO   15
 #define DEFAULT_DEV_PRIO    8
 
-#define HOW_TO_IMPLEMENT_SH_COMMAND       USE_FORK_API_FOR_SH_COMMAND
+#if defined( HAVE_FORK )
+  #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_FORK_API_FOR_SH_COMMAND
+#else
+  #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
+#endif
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_VIA_SPECIAL_LINUX_ESCAPE
+
+/*-------------------------------------------------------------------*/
+/* Hard-coded OTHER (DEFAULT) host-specific features and options...  */
+/*-------------------------------------------------------------------*/
+#else                                   /* "Other platform" options  */
+
+#define DLL_IMPORT   extern             /* (a safe default)          */
+#define DLL_EXPORT
+
+#undef TUNTAP_IFF_RUNNING_NEEDED        /* (tuntape support unknown) */
+#undef  OPTION_SCSI_TAPE                /* (NO SCSI tape support)    */
+#undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
+#undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
+#undef  OPTION_FBA_BLKDEVICE            /* (no FBA BLKDEVICE support)*/
+
+#define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
+#define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
+
+#define DEFAULT_HERCPRIO    0
+#define DEFAULT_TOD_PRIO  -20
+#define DEFAULT_CPU_PRIO   15
+#define DEFAULT_DEV_PRIO    8
+
+#if defined( HAVE_FORK )
+  #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_FORK_API_FOR_SH_COMMAND
+#else
+  #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
+#endif
+#define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
 
 #endif // (host-specific tests)
 
