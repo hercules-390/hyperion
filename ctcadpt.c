@@ -642,7 +642,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         arg->dev = dev;
         snprintf(str,sizeof(str),"CTCT %4.4X ListenThread",dev->devnum);
         str[sizeof(str)-1]=0;
-        create_thread( &tid, NULL, CTCT_ListenThread, arg, str );
+        create_thread( &tid, &sysblk.joinattr, CTCT_ListenThread, arg, str );
     }
     else  // successfully connected (outbound) to the other end
     {

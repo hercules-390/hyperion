@@ -328,7 +328,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     snprintf(thread_name,sizeof(thread_name),"CTCI %4.4X ReadThread",pDEVBLK->devnum);
     thread_name[sizeof(thread_name)-1]=0;
-    create_thread( &pDevCTCBLK->tid, NULL, CTCI_ReadThread, pDevCTCBLK, thread_name );
+    create_thread( &pDevCTCBLK->tid, &sysblk.joinattr, CTCI_ReadThread, pDevCTCBLK, thread_name );
 
     pDevCTCBLK->pDEVBLK[0]->tid = pDevCTCBLK->tid;
     pDevCTCBLK->pDEVBLK[1]->tid = pDevCTCBLK->tid;
