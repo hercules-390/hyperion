@@ -119,6 +119,10 @@ BOOL bDoneProcessing = FALSE;       // (set to TRUE to exit)
 
 void ProcessingLoop()
 {
+    // Notify logger_thread we're in control
+
+    sysblk.panel_init = 1;
+
     // Our main purpose in life: read input stream and process
     // any commands that may be entered, and send periodic status
     // information back to the external gui via its status stream.

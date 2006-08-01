@@ -3424,26 +3424,40 @@ char    pathname[MAX_PATH];             /* (work)                    */
         scr_aborted=1;
         return 0;
     }
-    /* Open RC file. If it doesn't exist, then issue error message
-       only if this is NOT the RuntimeConfiguration (rc) file */
+
+    /* Open RC file */
+
     hostpath(pathname, script_name, sizeof(pathname));
+
     if (!(scrfp = fopen(pathname, "r")))
     {
-        if (ENOENT != errno && !isrcfile)
-            logmsg(_("HHCPN007E Script file %s open failed: %s\n"),
-                script_name, strerror(errno));
-        return 0;
-        if(errno==ENOENT)
+        int save_errno = errno;
+
+        if (!isrcfile)
         {
-            logmsg(_("HHCPN995E Script file %s not found\n"),
-                script_name);
+            if (ENOENT != errno)
+                logmsg(_("HHCPN007E Script file \"%s\" open failed: %s\n"),
+                    script_name, strerror(errno));
+            else
+                logmsg(_("HHCPN995E Script file \"%s\" not found\n"),
+                    script_name);
         }
+        else /* (this IS the .rc file...) */
+        {
+            if (ENOENT != errno)
+                logmsg(_("HHCPN007E Script file \"%s\" open failed: %s\n"),
+                    script_name, strerror(errno));
+        }
+
+        errno = save_errno;
+        return -1;
     }
+
     scr_recursion++;
 
     if(isrcfile)
     {
-        logmsg(_("HHCPN008I Script file processing started using file %s\n"),
+        logmsg(_("HHCPN008I Script file processing started using file \"%s\"\n"),
            script_name);
     }
 
@@ -3531,7 +3545,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
         }
         else
         {
-           logmsg (_("HHCPN999I Script %s aborted due to previous conditions\n"),
+           logmsg (_("HHCPN999I Script \"%s\" aborted due to previous conditions\n"),
                script_name);
            scr_uaborted=1;
         }

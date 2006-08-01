@@ -153,17 +153,29 @@ DLL_EXPORT  COMMANDHANDLER getCommandHandler(void)
 void* process_rc_file (void* dummy)
 {
 char   *rcname;                         /* hercules.rc name pointer  */
+int     is_default_rc = 0;              /* 1==default name used      */
 
     UNREFERENCED(dummy);
 
     /* Obtain the name of the hercules.rc file or default */
 
-    if(!(rcname = getenv("HERCULES_RC")))
+    if (!(rcname = getenv("HERCULES_RC")))
+    {
         rcname = "hercules.rc";
+        is_default_rc = 1;
+    }
 
     /* Run the script processor for this file */
 
-    process_script_file(rcname,1);
+    while (!sysblk.panel_init)
+        usleep( 100 * 1000 );
+
+    if (process_script_file(rcname,1) != 0)
+        if (ENOENT == errno)
+            if (!is_default_rc)
+                logmsg(_("HHCPN995E .RC file \"%s\" not found.\n"),
+                    rcname);
+        // (else error message already issued)
 
     return NULL;
 }
