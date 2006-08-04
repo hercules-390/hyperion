@@ -1,4 +1,4 @@
-01 Aug 2006 New conspawn keyword: 'startgui' to start Windows GUI
+03 Aug 2006 New conspawn keyword: 'startgui' to start Windows GUI
             application via ShellExecute to prevent hang at exit - Fish
 01 Aug 2006 PR# misc/94: Sporadic missed .RC file processing - Fish
 21 Jul 2006 Small change to ECPS:VM fix by P. Coghlan - Ivan Warren
