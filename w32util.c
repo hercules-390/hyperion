@@ -2249,7 +2249,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         NULL,                       // primary thread security attributes = use defaults
         TRUE,                       // HANDLE inheritance flag = allow
                                     // (required when STARTF_USESTDHANDLES flag is used)
-        CREATE_NO_WINDOW,           // creation flags = no console
+        CREATE_NO_WINDOW | DETACHED_PROCESS, // creation flags = no console, detached
         NULL,                       // environment block ptr = make a copy from parent's
         NULL,                       // initial working directory = same as parent's
         &siStartInfo,               // input STARTUPINFO pointer

@@ -1,6 +1,38 @@
-                     Version 3.02 RELEASE NOTES
 
-- TODO
+                     Version 3.05 RELEASE NOTES
+
+
+- The 'conspawn' utility used to process 'sh' commands now recognizes a
+  specially designed keyword "startgui" to accomodate automatic starting
+  of Windows GUI applications via the .RC file or panel command-line.
+
+  If the first word following 'sh' is "startgui", then the "ShellExecute"
+  API is used to start the requested program rather than the 'system()'
+  API as otherwise. This is to address an issue related to running Hercules
+  via the HercGUI graphical front end wherein programs started via the .RC
+  file would cause HercGUI to hang at PowerOff until all programs started
+  by Hercules (via the .RC file or panel command-line) were first closed.
+
+  If the program you wish to invoke via the 'sh' command is a command-line
+  program (that thus uses stdio to read from stdin and write to stdout)
+  then "startgui" should NOT be used. Instead, simply start the program
+  as before (e.g. "sh cmd /c myprog myargs...").
+
+  If the application you wish top start is a normal Windows GUI application
+  however, then the "startgui" keyword should be used instead. For example,
+  to automatically start the Vista 3270 terminal emulator from your .RC file,
+  use: "sh  startgui  D:\Vista32\Vista32.exe  Hercules.ses".
+
+  Again, this is only for starting Windows GUI programs and thus does not
+  impact non-GUI (command-line) programs nor, obviously, non-MSVC builds
+  of Hercules nor when Hercules is run via the command-line (in non-GUI mode).
+  This is only for the Window MSVC build of Hercules and only when Hercules
+  is started via HercGUI and only when starting a Windows GUI program via
+  the 'sh' command either via the panel command-line or the .RC file. (Note:
+  the panel command-line also includes commands entered via the http server
+  interface as well)
+
+
 
                      Version 3.01 RELEASE NOTES
 
