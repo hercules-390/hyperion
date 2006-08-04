@@ -40,6 +40,8 @@ static  BYTE    g_ifds    [ W32STAPE_MAX_FDNUMS ]  = {0};   // (0 == avail, 0xFF
 static  HANDLE  g_handles [ W32STAPE_MAX_FDNUMS ]  = {0};   // (WIN32 handles)
 static  char*   g_fnames  [ W32STAPE_MAX_FDNUMS ]  = {0};   // (for posterity)
 static  U32     g_fstats  [ W32STAPE_MAX_FDNUMS ]  = {0};   // (running status)
+static  U32     g_BOTmsk  [ W32STAPE_MAX_FDNUMS ]  = {0};   // (BOT block-id mask)
+static  U32     g_BOTbot  [ W32STAPE_MAX_FDNUMS ]  = {0};   // (BOT block-id value)
 
 static  TAPE_GET_DRIVE_PARAMETERS g_drive_parms [ W32STAPE_MAX_FDNUMS ] = {0};  // (drive parameters)
 
@@ -56,10 +58,12 @@ static void obtain_w32stape_lock()
     {
         bDidInit = 1;
         initialize_lock ( &g_lock );
-        memset( g_ifds,    0, sizeof ( g_ifds    ) );
-        memset( g_handles, 0, sizeof ( g_handles ) );
-        memset( g_fnames,  0, sizeof ( g_fnames  ) );
-        memset( g_fstats,  0, sizeof ( g_fstats  ) );
+        memset( g_ifds,    0x00, sizeof ( g_ifds    ) );
+        memset( g_handles, 0x00, sizeof ( g_handles ) );
+        memset( g_fnames,  0x00, sizeof ( g_fnames  ) );
+        memset( g_fstats,  0x00, sizeof ( g_fstats  ) );
+        memset( g_BOTmsk,  0xFF, sizeof ( g_BOTmsk  ) );
+        memset( g_BOTbot,  0x00, sizeof ( g_BOTbot  ) );
         bInitBusy = 0;
     }
     while (bInitBusy) Sleep(10);
@@ -244,6 +248,8 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
     g_handles [ ifd ]  = hFile;                     // (WIN32 handle)
     g_fnames  [ ifd ]  = strdup( path );            // (for posterity)
     g_fstats  [ ifd ]  = GMT_ONLINE (0xFFFFFFFF);   // (initial status)
+    g_BOTmsk  [ ifd ]  = 0xFFFFFFFF;                // (BOT block-id mask)
+    g_BOTbot  [ ifd ]  = 0x00000000;                // (BOT block-id value)
 
     // Save drive parameters for later...
 
@@ -262,6 +268,41 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
     ASSERT( sizeof(GET_TAPE_DRIVE_INFORMATION) == dwSizeofDriveParms );
 
     return W32STAPE_IFD2UFD( ifd );                 // (user fd result)
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Define physical BOT block-id mask / value...
+
+// PROGRAMMING NOTE: For the time being, we require 'tapedev.c' to provide to us
+// the information we need in order to detect physical BOT (load-point). This is
+// only until such time as I can add SCSI PassThru support to Hercules so that we
+// can talk SCSI directly to the device ourselves (to determine such things as
+// what type of device (manufacturer/model) we're dealing with, etc).
+
+DLL_EXPORT
+int w32_define_BOT ( ufd_t ufd, U32 msk, U32 bot )
+{
+    ifd_t  ifd  = W32STAPE_UFD2IFD( ufd );
+
+    lock();
+
+    if (0
+        ||         ifd    <   0
+        ||         ifd    >=  W32STAPE_MAX_FDNUMS
+        || g_ifds[ ifd ]  ==  0
+    )
+    {
+        unlock();
+        errno = EBADF;
+        return -1;
+    }
+
+    g_BOTmsk [ ifd ]  = msk;   // (BOT block-id mask)
+    g_BOTbot [ ifd ]  = bot;   // (BOT block-id value)
+
+    unlock();
+
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -355,9 +396,9 @@ int w32_internal_rc ( U32* pStat )
 ////////////////////////////////////////////////////////////////////////////////////
 // (forward references for private helper functions)
 
-int  w32_internal_mtop  ( HANDLE hFile, U32* pStat, struct mtop*  mtop, ifd_t ifd );
-int  w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget );
-int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos ); // "GetTapePosition()"
+int  w32_internal_mtop  ( HANDLE hFile, U32* pStat, struct mtop*  mtop,  ifd_t ifd );
+int  w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget, ifd_t ifd );
+int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos,       ifd_t ifd ); // "GetTapePosition()"
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Close tape device...
@@ -385,6 +426,8 @@ int w32_close_tape ( ufd_t  ufd )
         g_handles[ ifd ] = NULL;
         g_fnames [ ifd ] = NULL;
         g_fstats [ ifd ] = GMT_DR_OPEN (0xFFFFFFFF);
+        g_BOTmsk [ ifd ] = 0xFFFFFFFF;
+        g_BOTbot [ ifd ] = 0x00000000;
 
         VERIFY( w32_free_ifd( ifd ) == 0 );
 
@@ -570,7 +613,7 @@ int w32_ioctl_tape ( ufd_t ufd, int request, ... )
         {
             struct mtget* mtget = ptr;
             memset( mtget, 0, sizeof(*mtget) );
-            rc = w32_internal_mtget ( hFile, pStat, mtget );
+            rc = w32_internal_mtget ( hFile, pStat, mtget, ifd );
         }
         break;
 
@@ -578,7 +621,7 @@ int w32_ioctl_tape ( ufd_t ufd, int request, ... )
         {
             struct mtpos* mtpos = ptr;
             memset( mtpos, 0, sizeof(*mtpos) );
-            rc = w32_internal_mtpos( hFile, pStat, &mtpos->mt_blkno );
+            rc = w32_internal_mtpos( hFile, pStat, &mtpos->mt_blkno, ifd );
         }
         break;
 
@@ -847,7 +890,7 @@ int w32_internal_mtop ( HANDLE hFile, U32* pStat, struct mtop* mtop, ifd_t ifd )
 // Private internal helper function...   return 0 == success, -1 == failure
 
 static
-int w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget )
+int w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget, ifd_t ifd )
 {
     TAPE_GET_MEDIA_PARAMETERS   media_parms;
     DWORD                       dwRetCode, dwSize, dwPosition;
@@ -924,15 +967,15 @@ int w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget )
 
     // Lastly, attempt to determine if we are at BOT (i.e. load-point)...
 
-    if ( 0 != ( errno = w32_internal_mtpos( hFile, pStat, &dwPosition ) ) )
+    if ( 0 != ( errno = w32_internal_mtpos( hFile, pStat, &dwPosition, ifd ) ) )
     {
         mtget->mt_gstat = *pStat;
         return -1;
     }
 
-    mtget->mt_blkno = BLK_FROM_TAPE_BLKID( dwPosition );
+    mtget->mt_blkno = dwPosition;
 
-    if ( IS_TAPE_BLKID_BOT( dwPosition ) )
+    if ( ( dwPosition & g_BOTmsk[ ifd ] ) == g_BOTbot[ ifd ] )
         *pStat |=  GMT_BOT (0xFFFFFFFF);
     else
         *pStat &= ~GMT_BOT (0xFFFFFFFF);
@@ -945,7 +988,7 @@ int w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget )
 // Private internal helper function...   return 0 == success, -1 == failure
 
 static
-int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos )
+int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos, ifd_t ifd )
 {
     DWORD dwDummyPartition, dwDummyPositionHigh;
 
@@ -999,11 +1042,8 @@ int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos )
     //    indicate the block address of the next data block to be
     //    transferred between the initiator and the target if a READ
     //    or WRITE command is issued."
-    //
-    // Thus checking for position zero here should tell us whether the
-    // tape is indeed currently positioned at load-point / BOT. - Fish
 
-    if ( IS_TAPE_BLKID_BOT( *pdwPos ) )
+    if ( ( *pdwPos & g_BOTmsk[ ifd ] ) == g_BOTbot[ ifd ] )
         *pStat |=  GMT_BOT (0xFFFFFFFF);
     else
         *pStat &= ~GMT_BOT (0xFFFFFFFF);

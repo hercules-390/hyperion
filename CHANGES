@@ -1,3 +1,5 @@
+03 Aug 2006 Add official support for 3590 tape device types using 32-bit
+            block-ids affecting LOCATE BLOCK, etc / BOT detection - Fish
 03 Aug 2006 New conspawn keyword: 'startgui' to start Windows GUI
             application via ShellExecute to prevent hang at exit - Fish
 01 Aug 2006 PR# misc/94: Sporadic missed .RC file processing - Fish

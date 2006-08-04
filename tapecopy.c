@@ -493,6 +493,10 @@ int64_t         bytes_read;             /* Bytes read from i/p file  */
 int64_t         file_bytes;             /* Byte count for curr file  */
 char            pathname[MAX_PATH];     /* file name in host format  */
 struct mtget    mtget;                  /* Area for MTIOCGET ioctl   */
+#if defined(EXTERNALGUI)
+struct mtpos    mtpos;                  /* Area for MTIOCPOS ioctl   */
+int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
+#endif /*defined(EXTERNALGUI)*/
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
@@ -681,14 +685,37 @@ struct mtget    mtget;                  /* Area for MTIOCGET ioctl   */
     file_bytes = 0;
 
 #if defined(EXTERNALGUI)
+    // Notify the GUI of the high-end of the copy-progress range...
     if ( extgui )
     {
-        // The seg# portion the SCSI tape physical
-        // block-id number values ranges from 1 to 95...
-        fprintf( stderr, "BLKS=%d\n", 95 );
+        // Retrieve BOT block-id...
+        VERIFY( 0 == ioctl_tape( devfd, MTIOCPOS, (char*)&mtpos ) );
+
+        is3590 = ((mtpos.mt_blkno & 0x7F000000) != 0x01000000) ? 1 : 0;
+
+        if (!is3590)
+        {
+            // The seg# portion the SCSI tape physical
+            // block-id number values ranges from 1 to 95...
+            fprintf( stderr, "BLKS=%d\n", 95 );
+        }
+        else
+        {
+            // FIXME: 3590s (e.g. Magstar) use 32-bit block addressing,
+            // and thus its block-id does not contain a seg# value, so
+            // we must use some other technique. For now, we'll simply
+            // presume the last block on the tape is block# 0x003FFFFF
+            // (just to keep things simple).
+
+            fprintf( stderr, "BLKS=%d\n", 0x003FFFFF );
+        }
+
+        // Init time of last issued progress message
         prev_progress_time = time( NULL );
     }
 #endif /*defined(EXTERNALGUI)*/
+
+    /* Perform the copy... */
 
     while (1)
     {
@@ -699,10 +726,14 @@ struct mtget    mtget;                  /* Area for MTIOCGET ioctl   */
             if ( ( curr_progress_time = time( NULL ) ) >=
                 ( prev_progress_time + PROGRESS_INTERVAL_SECS ) )
             {
-                struct mtpos mtpos;
                 prev_progress_time = curr_progress_time;
                 if ( ioctl_tape( devfd, MTIOCPOS, (char*)&mtpos ) == 0 )
-                    fprintf( stderr, "BLK=%d\n", SEG_FROM_TAPE_BLKID( mtpos.mt_blkno ) );
+                {
+                    if (!is3590)
+                        fprintf( stderr, "BLK=%d\n", (mtpos.mt_blkno >> 24) & 0x0000007F );
+                    else
+                        fprintf( stderr, "BLK=%d\n", mtpos.mt_blkno );
+                }
             }
         }
 #endif /*defined(EXTERNALGUI)*/

@@ -187,6 +187,34 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
         return -1; /* (fatal error) */
     }
 
+#ifdef _MSVC_
+
+    // PROGRAMMING NOTE: Need to tell 'w32stape.c' here the
+    // information it needs to detect physical BOT (load-point).
+
+    // This is not normally needed as most drivers determine
+    // it for themselves based on the type (manufacturer/model)
+    // of tape drive being used, but since I haven't added the
+    // code to 'w32stape.c' to do that yet (involves talking
+    // directly to the SCSI device itself) we thus, for now,
+    // need to pass that information directly to 'w32stape.c'
+    // ourselves...
+
+    {
+        U32 msk  = 0xFF3FFFFF;      // (3480/3490 default)
+        U32 bot  = 0x01000000;      // (3480/3490 default)
+
+        if ( 0x3590 == dev->devtype )
+        {
+            msk  = 0xFFFFFFFF;      // (3590 default)
+            bot  = 0x00000000;      // (3590 default)
+        }
+
+        VERIFY( 0 == w32_define_BOT( dev->fd, msk, bot ) );
+    }
+
+#endif // _MSVC_
+
     return 0;  /* (success) */
 
 } /* end function finish_scsitape_open */

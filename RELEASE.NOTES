@@ -1,8 +1,10 @@
+-------------------------------------------------------------------------------
+
 
                      Version 3.05 RELEASE NOTES
 
 
-- The 'conspawn' utility used to process 'sh' commands now recognizes a
+* The 'conspawn' utility used to process 'sh' commands now recognizes a
   specially designed keyword "startgui" to accomodate automatic starting
   of Windows GUI applications via the .RC file or panel command-line.
 
@@ -18,7 +20,7 @@
   then "startgui" should NOT be used. Instead, simply start the program
   as before (e.g. "sh cmd /c myprog myargs...").
 
-  If the application you wish top start is a normal Windows GUI application
+  If the application you wish to start is a normal Windows GUI application
   however, then the "startgui" keyword should be used instead. For example,
   to automatically start the Vista 3270 terminal emulator from your .RC file,
   use: "sh  startgui  D:\Vista32\Vista32.exe  Hercules.ses".
@@ -32,6 +34,41 @@
   the panel command-line also includes commands entered via the http server
   interface as well)
 
+
+* Real SCSI tape drives used with Hercules must provide a certain minimum set
+  is "IBM compatible" support in their SCSI command set/behavior in order to
+  work properly with Hercules. Furthermore, the Hercules device-type used on
+  your device statement in your Hercules configuration file must match the
+  the level of support/behavior that they provide.
+
+  For example, all SCSI tape drives used with Hercules must provide the ability
+  to set variable-length blocks as well as long erase-gaps (long erase-gaps
+  allows new data to be appended to the end of existing data without having to
+  write a tape-mark to separate the new data from the old existing data first).
+
+  Another example would be using a model of SCSI tape drive that happens to
+  report physical block-id values in a format different from the way real IBM
+  mainframe tape drives report them. 3480/3490 tape drives for example report
+  their block-ids (used in Read Block Id and Locate CCWs) in a very specific
+  format wherein bits 1-7 of the high-order byte of the reported 4-byte block-
+  id indicates the tape's physical "segment" location of where the lower 20-
+  bit block-id block is physically located on the tape. (The block-id segment
+  is used by the tape drive to quickly position itself to the approximate
+  location where the desired block acually resides and thus allows high-speed
+  positioning for the Locate CCW).
+
+  If the model of SCSI tape drive you are actually using with Hercules however
+  does not use this same block-id format, then it cannot be used with Hercules
+  as a 3480 or 3490 model tape drive. If the SCSI tape drive you are using
+  reports its block-ids using a full 32-bit block-id value (the same way a
+  3590 model tape drive does), then it MUST be defined to Hercules as a model
+  3590 device-type or else chances are good it will not work properly with your
+  guest operating system. (Of course it goes without saying that your guest
+  operating system [that you're running under Hercules] should also support/
+  understand model 3590 tape drives too if you expect your real SCSI tape drive
+  to work properly with Hercule and your guest operating system)
+
+-------------------------------------------------------------------------------
 
 
                      Version 3.01 RELEASE NOTES
@@ -83,6 +120,7 @@
   Once again, starting with version 3.01, you **MUST** define BOTH DEVICES.
 
 -------------------------------------------------------------------------------
+
 
                      Version 3.00 RELEASE NOTES
 
@@ -189,3 +227,5 @@
   (or remove it altogether and let it default) in order to leave enough memory
   remaining for Hercules (Cygwin actually) to be able to satisfy its 'mmap'
   request for your desired MAINSIZE amount.
+  
+-------------------------------------------------------------------------------

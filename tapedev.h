@@ -145,10 +145,10 @@ extern void build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code);
 #define PSF_ACTION_AC_ER        0x01    /* ..Extended Recovery       */   
 #define PSF_ORDER_RVF           0x90    /* Reset Volume Fenced       */   
 #define PSF_ORDER_PIN_DEV       0xA1    /* Pin Device                */   
-#define PSF_ACTION_PIN_CU0     	0x00    /* ..Control unit 0          */   
-#define PSF_ACTION_PIN_CU1     	0x01    /* ..Control unit 1          */   
+#define PSF_ACTION_PIN_CU0      0x00    /* ..Control unit 0          */   
+#define PSF_ACTION_PIN_CU1      0x01    /* ..Control unit 1          */   
 #define PSF_ORDER_UNPIN_DEV     0xA2    /* Unpin Device              */   
-#define PSF_FLAG_ZERO     	0x00    /* Must be zero for all ord. */   
+#define PSF_FLAG_ZERO       0x00    /* Must be zero for all ord. */   
    
 /* By Adrian Trenkwalder                                             */   
 /* Control Access Function Control                                   */   
@@ -277,36 +277,5 @@ struct TAPEAUTOLOADENTRY
     int    argc;
     char **argv;
 };
-
-/*-------------------------------------------------------------------*/
-/* Read Block ID (X'22') CCW opcode "block ID" fields                */
-/*-------------------------------------------------------------------*/
-/*
-    The following information was gleened from:
-
-    http://publibz.boulder.ibm.com/cgi-bin/bookmgr/BOOKS/A29H1000/1.18?DT=19940107102652
-
-    and:
-
-    page 4-78 (Table 4-72 "Block ID Field Description" and Table 4-73
-    "Format Codes") of my "Fujitsu Model M2488 Cartridge Tape Drive
-    Product Guide" manual, which describes the various SCSI commands
-    the drive understands and which is supposed to be IBM compatible.
-*/
-
-#define  DIR_FROM_TAPE_BLKID( blkid )  (((blkid) >> 31) & 0x00000001 )  // (0 == wrap1, 1 == wrap2)
-#define  SEG_FROM_TAPE_BLKID( blkid )  (((blkid) >> 24) & 0x0000007F )  // (NOTE: value ranges from 1 to 95)
-#define  FMT_FROM_TAPE_BLKID( blkid )  (((blkid) >> 22) & 0x00000003 )  // (see below equates)
-#define  BLK_FROM_TAPE_BLKID( blkid )  (((blkid)      ) & 0x003FFFFF )  // (logical block# within segment)
-
-#define  IS_TAPE_BLKID_BOT( blkid )    (((blkid) & 0xFF3FFFFF) == 0x01000000)
-
-#define  TAPE_BLKID_DIR_FORWARD   0     // (BOT --> EOT == wrap 1)
-#define  TAPE_BLKID_DIR_BACKWARD  1     // (BOT <-- EOT == wrap 2)
-
-#define  TAPE_BLKID_FMT_18NONP    0     // 00b == 18 track, non-packeted
-#define  TAPE_BLKID_FMT_36PACK    1     // 01b == 36 track, packeted
-#define  TAPE_BLKID_FMT_18PACK    2     // 10b == 18 track, packeted
-#define  TAPE_BLKID_FMT_RESRVD    3     // 11b == reserved
 
 #endif // __TAPEDEV_H__

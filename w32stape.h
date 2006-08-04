@@ -31,6 +31,7 @@
 #endif
 
 W32ST_DLL_IMPORT int     w32_open_tape  ( const char* path, int oflag,   ... );
+W32ST_DLL_IMPORT int     w32_define_BOT ( int fd, U32 msk, U32 bot );
 W32ST_DLL_IMPORT int     w32_ioctl_tape ( int fd,       int request, ... );
 W32ST_DLL_IMPORT int     w32_close_tape ( int fd );
 W32ST_DLL_IMPORT ssize_t w32_read_tape  ( int fd,       void* buf, size_t nbyte );

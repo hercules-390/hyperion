@@ -5445,13 +5445,15 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         FETCH_FW(locblock, iobuf);
 
         /* Check for invalid/reserved Format Mode bits */
-        if (0x00C00000 == (locblock & 0x00C00000))
+        if (0x3590 != dev->devtype &&
+            0x00C00000 == (locblock & 0x00C00000))
         {
             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
             break;
         }
 
-        locblock &= 0x003FFFFF;   /* Re-applied by Adrian */ 
+        if (0x3590 != dev->devtype)     /* Added by Fish */
+            locblock &= 0x003FFFFF;     /* Re-applied by Adrian */ 
  
         /* Calculate residual byte count */
         len = sizeof(locblock);
@@ -6252,6 +6254,7 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(3420, tapedev_device_hndinfo );
     HDL_DEVICE(3480, tapedev_device_hndinfo );
     HDL_DEVICE(3490, tapedev_device_hndinfo );
+    HDL_DEVICE(3590, tapedev_device_hndinfo );
     HDL_DEVICE(9347, tapedev_device_hndinfo );
     HDL_DEVICE(9348, tapedev_device_hndinfo );
     HDL_DEVICE(8809, tapedev_device_hndinfo );
