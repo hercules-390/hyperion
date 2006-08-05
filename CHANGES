@@ -1,3 +1,4 @@
+05 Aug 2006 Added addressing mode in panel - Bernard van der Helm
 03 Aug 2006 Add official support for 3590 tape device types using 32-bit
             block-ids affecting LOCATE BLOCK, etc / BOT detection - Fish
 03 Aug 2006 New conspawn keyword: 'startgui' to start Windows GUI
