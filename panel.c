@@ -709,7 +709,8 @@ void NP_update(REGS *regs)
     }
 
     /* Display psw state */
-    sprintf (buf, "%c%c%c%c%c%c%c%c",
+    sprintf (buf, "%d%c%c%c%c%c%c%c%c",
+                  regs->psw.amode64 ? 64 : regs->psw.amode ? 31 : 24, 
                   regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
                   sysblk.inststep                    ? 'T' : '.',
                   WAITSTATE (&regs->psw)             ? 'W' : '.',
@@ -721,7 +722,7 @@ void NP_update(REGS *regs)
     if (!NPpswstate_valid || strcmp(NPpswstate, buf))
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK );
-        set_pos (mode || zhost ? 4 : 3, 30);
+        set_pos (mode || zhost ? 4 : 3, 28);
         draw_text (buf);
         NPpswstate_valid = 1;
         strcpy (NPpswstate, buf);
@@ -2130,7 +2131,8 @@ FinishShutdown:
                             for(i = 0;i < 17;i++)
                                 buf[len++] = ' ';
 #endif /*defined(_FEATURE_SIE)*/
-                    len += sprintf (buf+len, "%c%c%c%c%c%c%c%c",
+                    len += sprintf (buf+len, "%d%c%c%c%c%c%c%c%c",
+                           regs->psw.amode64 ? 64 : regs->psw.amode ? 31 : 24, 
                            regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
                            sysblk.inststep                    ? 'T' : '.',
                            WAITSTATE(&regs->psw)              ? 'W' : '.',
