@@ -709,8 +709,9 @@ void NP_update(REGS *regs)
     }
 
     /* Display psw state */
-    sprintf (buf, "%d%c%c%c%c%c%c%c%c",
-                  regs->psw.amode64 ? 64 : regs->psw.amode ? 31 : 24, 
+    sprintf (buf, "%c%c%c%c%c%c%c%c%c",
+                  regs->psw.amode64                  ? '6' : 
+                  regs->psw.amode                    ? '3' : '2', 
                   regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
                   sysblk.inststep                    ? 'T' : '.',
                   WAITSTATE (&regs->psw)             ? 'W' : '.',
@@ -2131,8 +2132,9 @@ FinishShutdown:
                             for(i = 0;i < 17;i++)
                                 buf[len++] = ' ';
 #endif /*defined(_FEATURE_SIE)*/
-                    len += sprintf (buf+len, "%d%c%c%c%c%c%c%c%c",
-                           regs->psw.amode64 ? 64 : regs->psw.amode ? 31 : 24, 
+                    len += sprintf (buf+len, "%c%c%c%c%c%c%c%c%c",
+                           regs->psw.amode64                  ? '6' :
+                           regs->psw.amode                    ? '3' : '2', 
                            regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
                            sysblk.inststep                    ? 'T' : '.',
                            WAITSTATE(&regs->psw)              ? 'W' : '.',
