@@ -257,7 +257,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 19, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 19, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 19, GR_A(1, regs), 1, regs);
@@ -340,7 +340,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 31, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 31, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs), 1, regs);
@@ -442,7 +442,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 19, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 19, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 27, GR_A(1, regs), 1, regs);
@@ -575,7 +575,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 31, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 31, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 39, GR_A(1, regs), 1, regs);
@@ -719,6 +719,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
   des_context context;
   int crypted;
   BYTE message_block[8];
+  int modifier_bit;
   BYTE parameter_block[8];
 
 #ifdef OPTION_KM_DEBUG
@@ -748,6 +749,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
+  modifier_bit = GR0_m(regs);
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -758,7 +760,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* Do the job */
-    if(GR0_m(regs))
+    if(modifier_bit)
       des_decrypt(&context, message_block, message_block); 
     else
       des_encrypt(&context, message_block, message_block);
@@ -802,6 +804,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
   des3_context context;
   int crypted;
   BYTE message_block[8];
+  int modifier_bit;
   BYTE parameter_block[16];
 
 #ifdef OPTION_KM_DEBUG
@@ -832,6 +835,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
+  modifier_bit = GR0_m(regs);
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -842,7 +846,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* Do the job */
-    if(GR0_m(regs))
+    if(modifier_bit)
       des3_decrypt(&context, message_block, message_block);
     else
       des3_encrypt(&context, message_block, message_block);
@@ -886,6 +890,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
   des3_context context;
   int crypted;
   BYTE message_block[8];
+  int modifier_bit;
   BYTE parameter_block[24];
 
 #ifdef OPTION_KM_DEBUG
@@ -917,6 +922,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
+  modifier_bit = GR0_m(regs);
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -927,7 +933,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
     /* Do the job */
-    if(GR0_m(regs))
+    if(modifier_bit)
       des3_decrypt(&context, message_block, message_block);
     else
       des3_encrypt(&context, message_block, message_block);
@@ -972,6 +978,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
   aes_context context;
   int crypted;
   BYTE message_block[16];
+  int modifier_bit;
   BYTE parameter_block[16];
 
 #ifdef OPTION_KM_DEBUG
@@ -1001,6 +1008,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
+  modifier_bit = GR0_m(regs);
   while(crypted += 16 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -1011,7 +1019,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* Do the job */
-    if(GR0_m(regs))
+    if(modifier_bit)
       aes_decrypt(&context, message_block, message_block);
     else
       aes_encrypt(&context, message_block, message_block);
@@ -1102,7 +1110,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 15, GR_A(1, regs), 1, regs);
@@ -1191,7 +1199,7 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 23, GR_A(1, regs), 1, regs);
@@ -1285,7 +1293,7 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs), 1, regs);
@@ -1384,6 +1392,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   int crypted;
   int i;
   BYTE message_block[8];
+  int modifier_bit;
   BYTE ocv[8];
   BYTE parameter_block[16];
 
@@ -1403,7 +1412,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 15, GR_A(1, regs), 1, regs);
@@ -1418,6 +1427,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
+  modifier_bit = GR0_m(regs);
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -1428,7 +1438,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* Do the job */
-    if(GR0_m(regs))
+    if(modifier_bit)
     {
 
       /* Save the ocv */
@@ -1501,6 +1511,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
   int crypted;
   int i;
   BYTE message_block[8];
+  int modifier_bit;
   BYTE ocv[8];
   BYTE parameter_block[24];
 
@@ -1520,7 +1531,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 23, GR_A(1, regs), 1, regs);
@@ -1537,6 +1548,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
+  modifier_bit = GR0_m(regs);
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -1547,7 +1559,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* Do the job */
-    if(GR0_m(regs))
+    if(modifier_bit)
     {
 
       /* Save the ocv */
@@ -1625,6 +1637,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
   int crypted;
   int i;
   BYTE message_block[8];
+  int modifier_bit;
   BYTE ocv[8];
   BYTE parameter_block[32];
 
@@ -1644,7 +1657,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs), 1, regs);
@@ -1663,6 +1676,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
+  modifier_bit = GR0_m(regs);
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -1673,7 +1687,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
     /* Do the job */
-    if(GR0_m(regs))
+    if(modifier_bit)
     {
 
       /* Save the ocv */
@@ -1750,6 +1764,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
   int crypted;
   int i;
   BYTE message_block[16];
+  int modifier_bit;
   BYTE ocv[16];
   BYTE parameter_block[32];
 
@@ -1769,7 +1784,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 15, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 15, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs), 1, regs);
@@ -1784,6 +1799,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
+  modifier_bit = GR0_m(regs);
   while(crypted += 16 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -1794,7 +1810,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* Do the job */
-    if(GR0_m(regs))
+    if(modifier_bit)
     {
 
       /* Save the ovc */
@@ -1888,7 +1904,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
   }
 
   /* Test writeability output chaining value */
-  ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
+  ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 7, ACCTYPE_WRITE, regs);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, 31, GR_A(1, regs), 1, regs);
