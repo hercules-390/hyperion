@@ -1318,6 +1318,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\autoconf\hercules.m4"
+					>
+				</File>
+				<File
 					RelativePath=".\makefile-dllmod.msvc"
 					>
 				</File>

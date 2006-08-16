@@ -135,6 +135,7 @@ typedef int             mode_t;
 
 #undef  NO_ATTR_REGPARM         // ( ATTR_REGPARM(x) == __fastcall )
 #define HAVE_ATTR_REGPARM       // ( ATTR_REGPARM(x) == __fastcall )
+#define C99_FLEXIBLE_ARRAYS     // ("DEVBLK *memdev[];" supported)
 
 //#include "getopt.h"
 #define HAVE_GETOPT_LONG

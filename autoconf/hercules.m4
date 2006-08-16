@@ -8,6 +8,73 @@
 
 #-----------------------------------------------------------------------------
 #
+# Macro:  HC_C99_FLEXIBLE_ARRAYS()
+#
+#  Checks whether or not the compiler supports C99 flexible arrays
+#
+# Parms:   None
+# Input:   Nothing
+# Output:  $hc_cv_c99_flexible_array,
+#          AC_DEFINE() for 'C99_FLEXIBLE_ARRAYS' if yes.
+# Note:    Since AC_DEFINE() might be issued, a corresponding
+#          AH_TEMPLATE() for 'C99_FLEXIBLE_ARRAYS' is of course
+#          also needed somewhere in configure.ac
+#
+# Credit:  Modeled after 'AC_C99_FLEXIBLE_ARRAY' macro copyright
+#          by Erik de Castro Lopo <erikd AT mega-nerd DOT com>:
+#
+#             "Permission to use, copy, modify, distribute,
+#              and sell this file for any purpose is hereby
+#              granted without fee, provided that the above
+#              copyright and this permission notice appear
+#              in all copies.  No representations are made
+#              about the suitability of this software for any
+#              purpose.  It is provided "as is" without express
+#              or implied warranty."
+#
+#-----------------------------------------------------------------------------
+
+AC_DEFUN([HC_C99_FLEXIBLE_ARRAYS],
+[
+    AC_CACHE_CHECK( C99 struct flexible arrays support,
+
+        [hc_cv_c99_flexible_array],
+        [
+            # Initialize to unknown
+            hc_cv_c99_flexible_array=no
+
+            AC_TRY_LINK(
+                [[
+                    #include <stdlib.h>
+
+                    typedef struct
+                    {
+                        int foo;
+                        char bar[];
+                    }
+                    FOOBAR;
+                ]],
+                [
+                    int main(int argc, char *argv[])
+                    {
+                        FOOBAR* p = calloc( 1, sizeof(FOOBAR) + 16 );
+                        return 0;
+                    }
+                ],
+                [hc_cv_c99_flexible_array=yes],
+                [hc_cv_c99_flexible_array=no]
+            )
+        ]
+    )
+
+    if test "$hc_cv_c99_flexible_array" = "yes"; then
+
+        AC_DEFINE([C99_FLEXIBLE_ARRAYS])
+    fi
+])
+
+#-----------------------------------------------------------------------------
+#
 # Macro:  HC_PROG_CC()       ((((( DEPRECATED )))))
 #
 #  Prevents undesired CFLAGS settings set by default AC_PROG_CC macro.

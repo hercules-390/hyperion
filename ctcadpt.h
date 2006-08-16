@@ -113,7 +113,11 @@ struct _ETHFRM
     MAC         bDestMAC;                // 0x00
     MAC         bSrcMAC;                 // 0x06
     HWORD       hwEthernetType;          // 0x0C
+#ifdef C99_FLEXIBLE_ARRAYS
+    BYTE        bData[];                 // 0x0E
+#else
     BYTE        bData[0];                // 0x0E
+#endif
 } ATTRIBUTE_PACKED;
 
 typedef struct _ETHFRM ETHFRM, *PETHFRM;
@@ -134,7 +138,11 @@ struct  _IP4FRM
     HWORD       hwChecksum;              // 0x0A
     U32         lSrcIP;                  // 0x0C
     U32         lDstIP;                  // 0x10
+#ifdef C99_FLEXIBLE_ARRAYS
+    BYTE        bData[];                 // 0x14
+#else
     BYTE        bData[0];                // 0x14
+#endif
 } ATTRIBUTE_PACKED;
 
 typedef struct _IP4FRM IP4FRM, *PIP4FRM;
@@ -246,7 +254,11 @@ struct  _CTCBLK
 struct _CTCIHDR                         // CTCI Block Header
 {
     HWORD   hwOffset;                   // Offset of next block
+#ifdef C99_FLEXIBLE_ARRAYS
+    BYTE    bData[];                    // Beginning of data
+#else
     BYTE    bData[0];                   // Beginning of data
+#endif
 } ATTRIBUTE_PACKED;
 
 struct _CTCISEG                         // CTCI Segment Header
@@ -255,7 +267,11 @@ struct _CTCISEG                         // CTCI Segment Header
                                         //   this header
     HWORD   hwType;                     // Ethernet packet type
     HWORD   _reserved;                  // Unused, set to zeroes
+#ifdef C99_FLEXIBLE_ARRAYS
+    BYTE    bData[];                    // Beginning of data
+#else
     BYTE    bData[0];                   // Beginning of data
+#endif
 } ATTRIBUTE_PACKED;
 
 // ====================================================================
@@ -459,7 +475,11 @@ struct _LCSSTDFRM
     HWORD       hwParameterCount;
     BYTE        bOperatorFlags[3];
     BYTE        _reserved[3];
+#ifdef C99_FLEXIBLE_ARRAYS
+    BYTE        bData[];
+#else
     BYTE        bData[0];
+#endif
 } ATTRIBUTE_PACKED;
 
 // ---------------------------------------------------------------------

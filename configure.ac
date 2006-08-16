@@ -20,6 +20,7 @@
 #                since now automatically handled by hercwind.h & hostopts.h.
 #  20/04/06 Fish Add AC_CHECK_DECLS check for SIOCDIFADDR per Kees Verruijt
 #                [kees@verruijt.net] for Apple OS X 10.4.6 TUNTAP_ClrIPAddr
+#  16/08/06 Fish Check for C99 flexible arrays support.
 #
 ###############################################################################
 
@@ -244,6 +245,8 @@ AH_TEMPLATE( [PKGDATADIR],              [Directory where the HTTP server will fi
 AH_TEMPLATE( [HERC_LOCALEDIR],          [Directory where to find NLS data] )
 AH_TEMPLATE( [MODULESDIR],              [Directory where HERCULES modules are installed] )
 AH_TEMPLATE( [DEBUG],                   [Define to enable extra debugging code (TRACE/VERIFY/ASSERT macros)] )
+
+AH_TEMPLATE( [C99_FLEXIBLE_ARRAYS],     [Define if your gcc properly supports C99 flexible arrays] )
 
 AH_TEMPLATE( [HAVE_ATTR_REGPARM],       [Define if your gcc properly supports __attribute__((regparm(n)))] )
 AH_TEMPLATE( [NO_ASM_BYTESWAP],         [Define to disable assembler routines for byte swapping] )
@@ -857,6 +860,20 @@ AC_CACHE_CHECK( [if this is the broken 2.96 version of GCC],
         fi
     ]
 )
+
+#----------------------------------------------#
+#  Check C99 if flexible arrays are supported  #
+#----------------------------------------------#
+#  The logic to test whether C99 flexible      #
+#  arrays are supported is defined in the      #
+#  'HC_C99_FLEXIBLE_ARRAYS' macro in the       #
+#  'hercules.m4' file in the 'autoconf' sub-   #
+#   directory, and issues the AC_DEFINE for    #
+#  'C99_FLEXIBLE_ARRAYS' if it's supported     #
+#  and also sets '$hc_cv_c99_flexible_array'.  #
+#----------------------------------------------#
+
+HC_C99_FLEXIBLE_ARRAYS()
 
 #--------------------------------------------------------#
 #  Check if GCC supports '__attribute__ ((regparm(n)))'  #
