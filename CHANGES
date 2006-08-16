@@ -14,8 +14,8 @@
             PR# misc/87 when Herc is run in daemon/hercgui mode  - Fish
 25 Jun 2006 Fix seq dasdload blksize pad bug - Peter Sylvester
             [peter.sylvester@edelweb.fr] by Fish
-23 Jun 2006 PR#s misc/21 and network/62: HTTP Server: do 'shutdown' to
-            gracefully close connection before closing the socket - Fish
+23 Jun 2006 PR#s misc/21 and PR# network/62: HTTP Server: do 'shutdown'
+            to gracefully close connection before closing the socket - Fish
 22 Jun 2006 Back out incorrect modification to BFPREGPAIR macros - Roger Bowler
 21 Jun 2006 Correct unresolved external symbol __imp__debug_tt32_tracing - Roger Bowler
 21 Jun 2006 Correct BFPREGPAIR checks to prevent spurious 0C6 - Roger Bowler
@@ -188,16 +188,16 @@
 04 Dec 2005 Added real time conversions to 'clocks' display - Jay Maynard
 04 Dec 2005 va_copy 'va-list' copying macro - Fish
 04 Dec 2005 tape close fixes (fixes tape devinit crash) - Fish
-04 Dec 2005 Made misc/56 fix compile on gcc 3 through an ugly hack - Jay Maynard
+04 Dec 2005 Made PR# misc/56 fix compile on gcc 3 through an ugly hack - Jay Maynard
 04 Dec 2005 CTCT fixes - Fish
-04 Dec 2005 More proper misc/56 fix (hopefully) - Fish
+04 Dec 2005 More proper PR# misc/56 fix (hopefully) - Fish
 04 Dec 2005 Relax SYSEPOCH restrictions - Jan Jaeger
 04 Dec 2005 New clock design - Jan Jaeger
 04 Dec 2005 OS X portability fixes - Jay Maynard
-04 Dec 2005 misc/56: Brute force fix for segfault in some panel commands - Jay Maynard
+04 Dec 2005 PR# misc/56: Brute force fix for segfault in some panel commands - Jay Maynard
 04 Dec 2005 Fix error in sha-1 message digest - Roger Bowler
 03 Dec 2005 Fix fillfnam.c problem debugged by bb5ch39t - Greg Smith
-03 Dec 2005 misc/29: SHCMDOPT shell command disablement cfg stmt - Fish
+03 Dec 2005 PR# misc/29: SHCMDOPT shell command disablement cfg stmt - Fish
 03 Dec 2005 Add crypto files to VS8 vcproj file - Fish
 03 Dec 2005 Fix MSVC conspawn/shell cmd glitch: CREATE_NO_WINDOW - Fish
 03 Dec 2005 Temp fix to allow up to 1031 cckd devices - Greg Smith
@@ -206,7 +206,7 @@
 01 Dec 2005 Volker fix to MSVC makefile for VS 8.0 "manifest" files - Fish
 01 Dec 2005 dyngui: SetCurrentDirectory support for shell commands - Fish
 01 Dec 2005 Fix things so BOTH print-to-pipe AND 'sh'ell command work - Fish
-29 Nov 2005 build_msc/45, printer/24: Poor man's fork for MSVC builds - Fish
+29 Nov 2005 PR# build_msc/45, PR# printer/24: Poor man's fork for MSVC builds - Fish
 28 Nov 2005 enable ATTR_REGPARM performance option for MSVC builds - Fish
 28 Nov 2005 enable machine assists in machdep.h for MSVC VC7 compiler - Fish
 28 Nov 2005 Fix concpy bug discovered by Fish - Greg Smith
@@ -299,15 +299,15 @@
 04 Oct 2005 rename FEATURE_LOAD_PAGE_TABLE_ENTRY_ADDRESS as FEATURE_DAT_ENHANCEMENT_FACILITY_2 - Roger Bowler
 04 Oct 2005 rename FEATURE_BRANCH_DETECTION as FEATURE_PER3 - Roger Bowler
 04 Oct 2005 rename FEATURE_CPACF_ENHANCEMENTS as FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 - Roger Bowler
-22 Sep 2005 tape/27: *proper* VC7 Large File Support - Fish 
+22 Sep 2005 PR# tape/27: *proper* VC7 Large File Support - Fish 
 21 Sep 2005 Init cckd->l2active to -1 instead of 0 - Greg
 21 Sep 2005 tweak concpy to avoid double byteswap - Fish
 21 Sep 2005 Add inline assembler assists to startup buildinfo display - Fish
 21 Sep 2005 sysblk.mipsrate now per second instead of millisecond, fix
             bug in timer_update_thread when elapsed < 1 millisec - Fish
 20 Sep 2005 Fix divide_single fixed-point-divide-exception check - Greg
-16 Sep 2005 hercgui/22: issue dasdload REQCYL= progress msg sooner - Fish
-16 Sep 2005 tape/27: discard bug-ridden VC7 Large File Support - Fish
+16 Sep 2005 PR# hercgui/22: issue dasdload REQCYL= progress msg sooner - Fish
+16 Sep 2005 PR# tape/27: discard bug-ridden VC7 Large File Support - Fish
 16 Sep 2005 startio should return cc 2 if startpending is on - Greg
 16 Sep 2005 Changes to allow building via Cygwin if desired - Fish
 16 Sep 2005 Bring MSVC branch up-to-date with head branch - Fish
@@ -327,13 +327,13 @@
                was read instead of simply returning 0 bytes read.
             2. w32_internal_mtop: MTWEOF: changed to retry WriteTapemark
                with generic TAPE_FILEMARKS if TAPE_LONG_FILEMARKS fails.
-31 Aug 2005 tape/31: Merge Jay's tapecopy changes (that added support
+31 Aug 2005 PR# tape/31: Merge Jay's tapecopy changes (that added support
             for copying from AWS i/p to SCSI o/p) from cvs head into
             the MSVC 'mingw_port' branch - Fish
 30 Aug 2005 dasdtab entries for 3990 model 3 and 6 - Roger Bowler
 30 Aug 2005 Add back support for 'CTCI-W32' format device statements,
             remove 28 Aug messages that say it's not supported - Fish
-29 Aug 2005 misc/12: support for Cygwin paths (e.g./cygdrive/x/) - Fish
+29 Aug 2005 PR# misc/12: support for Cygwin paths (e.g./cygdrive/x/) - Fish
 28 Aug 2005 Tell about unsupported CTC emulations - Fish
 28 Aug 2005 Tell where crash dump is going - Fish
 18 Aug 2005 ostailor panel command; add display to pgmtrace command - Fish
@@ -356,7 +356,7 @@
 30 Jul 2005 ALS5: AFI,AGFI,ALFI,ALGFI,CFI,CGFI,CLFI,CLGFI,LGFI,SLFI,SLGFI - Roger Bowler
 30 Jul 2005 ALS5 framework: LPTEA,STCKF,STFLE - Roger Bowler
 30 Jul 2005 dasdcat/hetlib: add O_BINARY to open - Fish
-29 Jul 2005 misc/9: Cap reported mips/sios rates - Fish
+29 Jul 2005 PR# misc/9: Cap reported mips/sios rates - Fish
 29 Jul 2005 Add missing support for 'try_obtain_lock' to PTT tracing - Fish
 29 Jul 2005 Reapply Ivan's 16 Mar 2005 console close logic update errone-
             ously negated trying to keep MSVC sync'ed with cvs head - Fish
@@ -369,7 +369,7 @@
             "_USE_32BIT_TIME_T" to makefile-dllmod.msvc as VS8 workaround - Fish
 05 Jul 2005 bootstrap.c: added addt'l verbage to "Oops!" message - Fish
 05 Jul 2005 ASN-and-LX-reuse facility fixes to PC/PR/PT et al. instructions - Fish
-04 Jul 2005 emul/4: MSVC port puts garbage in bits 64-95 of ESAME PSW - Roger Bowler
+04 Jul 2005 PR# emul/4: MSVC port puts garbage in bits 64-95 of ESAME PSW - Roger Bowler
 03 Jul 2005 hstruct.h: CR_SIZE obsoleted - Fish
 03 Jul 2005 bldcfg.c: Log run options - Fish
 03 Jul 2005 Move DISABLE_CRT_INVALID_PARAMETER_HANDLER logic
