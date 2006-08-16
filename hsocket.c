@@ -44,7 +44,7 @@ nleft = nbytes;
 while (nleft > 0)
 {
 
-#ifdef WIN32
+#ifdef _MSVC_
    nread = recv(fd, ptr, nleft, 0);
    if ((nread == SOCKET_ERROR) || (nread < 0))
       {
@@ -116,7 +116,7 @@ nleft = nbytes;
 while (nleft > 0)
 {
 
-#ifdef WIN32
+#ifdef _MSVC_
    nwritten = send(fd, ptr, nleft, 0);
    if (nwritten <= 0)
       {
