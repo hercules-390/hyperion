@@ -44,7 +44,7 @@ AC_DEFUN([HC_C99_FLEXIBLE_ARRAYS],
             hc_cv_c99_flexible_array=no
 
             AC_TRY_LINK(
-                [[
+                [
                     #include <stdlib.h>
 
                     typedef struct
@@ -53,7 +53,7 @@ AC_DEFUN([HC_C99_FLEXIBLE_ARRAYS],
                         char bar[];
                     }
                     FOOBAR;
-                ]],
+                ],
                 [
                     int main(int argc, char *argv[])
                     {
