@@ -344,9 +344,9 @@ Refer to http://www.kiyoinc.com/herc3088.html for more details.
 
 =================================================================
 [1] The TunTap32.dll and FishPack.dll are part of Fish's CTCI-W32
-http://home.sprintmail.com/~dtrout/Hercules/ctci-w32-index.html
+http://www.softdevlabs.com/Hercules/ctci-w32-index.html
 package, but the required WinPCap packet driver must be installed
-separately from http://winpcap.polito.it  See Fish's web page for
+separately from http://www.winpcap.org  See Fish's web page for
 details.
 
 ALSO NOTE that it is HIGHLY RECOMMENDED that you stick with using
