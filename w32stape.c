@@ -255,7 +255,7 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
 
     memset( &g_drive_parms[ifd], 0, sizeof(TAPE_GET_DRIVE_PARAMETERS) );
 
-    dwSizeofDriveParms = sizeof(GET_TAPE_DRIVE_INFORMATION);
+    dwSizeofDriveParms = sizeof(TAPE_GET_DRIVE_PARAMETERS);
 
     VERIFY( NO_ERROR == GetTapeParameters
     (
@@ -265,7 +265,7 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
         &g_drive_parms[ifd]
     ));
 
-    ASSERT( sizeof(GET_TAPE_DRIVE_INFORMATION) == dwSizeofDriveParms );
+    ASSERT( sizeof(TAPE_GET_DRIVE_PARAMETERS) == dwSizeofDriveParms );
 
     return W32STAPE_IFD2UFD( ifd );                 // (user fd result)
 }
