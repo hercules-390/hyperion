@@ -655,7 +655,7 @@ char * format_tod(char *buf, U64 tod, int flagdate)
         years += 1900;
         days += 1;
     }
-    
+
     sprintf(buf,"%4d.%03d %02d:%02d:%02d.%06d",
         years,days,hours,minutes,seconds,microseconds);
 
@@ -730,7 +730,7 @@ char arch370_flag = 0;
                 ((itimer%(76800*60))/76800),((itimer%76800)*13));
         arch370_flag = 1;
     }
-        
+
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
     logmsg( _("HHCPN028I tod = %16.16" I64_FMT "X    %s\n"),
@@ -780,7 +780,7 @@ char arch370_flag = 0;
                    (vepoch_now << 8),vepoch_sign,
                    format_tod(clock_buf,vepoch_now_abs,FALSE));
 
-        logmsg( _("         vckc = %16.16" I64_FMT "X    %s\n"), 
+        logmsg( _("         vckc = %16.16" I64_FMT "X    %s\n"),
                    (vclkc_now << 8),format_tod(clock_buf,vclkc_now,TRUE));
 
         logmsg( _("         vcpt = %16.16" I64_FMT "X\n"),vcpt_now << 8);
@@ -891,6 +891,27 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         {
             broadcast_condition( &dev->stape_getstat_cond );
             usleep(10*1000);
+        }
+        else if (sysblk.auto_scsi_mount_secs != 0)
+        {
+            // If they're trying to startup the mount-monitoring threads
+            // then force a status refresh to cause them to get created.
+
+            // NOTE! We MUST do TWO refreshes here! The first one to
+            // replace any stale "mounted" status with a "not mounted"
+            // status (if such a status happens to be true of course),
+            // and the second one to cause the auto-mount thread to be
+            // created (as a result of the [hopefully] now current not-
+            // mounted status). The idea here is the auto-mount threads
+            // are only created when there's no tape mounted. If, for
+            // whatever reason, the current status indicates a tape is
+            // already mounted when in reality there isn't, then the
+            // auto-mount thread would not get created! Thus we always
+            // do TWO refreshes to make *sure* it gets created (if it
+            // actually needs to be of course)...
+
+            dev->tmh->passedeot( dev ); // (refresh potential stale status)
+            dev->tmh->passedeot( dev ); // (force auto-mount thread creation)
         }
 
         logmsg
@@ -1717,7 +1738,7 @@ unsigned i;
 U16  lcss;
 U16  devnum;
 char *cdev, *clcss;
-    
+
 
     if (argc < 2)
     {
@@ -1748,7 +1769,7 @@ char *cdev, *clcss;
     {
         clcss = NULL;
         cdev = argv[1];
-    }   
+    }
 
     if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
         rc = load_hmc(strtok(cmdline+3," \t"), sysblk.pcpu, clear);
@@ -1909,7 +1930,28 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
         ASSERT(dev->pmcw.flag5 & PMCW5_V);  // (sanity check)
 
         /* Call device handler's query definition function */
-        (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
+
+#if defined(OPTION_SCSI_TAPE)
+        if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+        {
+            // NOTE! We MUST do TWO refreshes here! The first one to
+            // replace any stale "mounted" status with a "not mounted"
+            // status (if such a status happens to be true of course),
+            // and the second one to cause the auto-mount thread to be
+            // created (as a result of the [hopefully] now current not-
+            // mounted status). The idea here is the auto-mount threads
+            // are only created when there's no tape mounted. If, for
+            // whatever reason, the current status indicates a tape is
+            // already mounted when in reality there isn't, then the
+            // auto-mount thread would not get created! Thus we always
+            // do TWO refreshes to make *sure* it gets created (if it
+            // actually needs to be of course)...
+
+            dev->tmh->passedeot( dev ); // (refresh potential stale status)
+            dev->tmh->passedeot( dev ); // (force auto-mount thread creation)
+        }
+#endif
+        dev->hnd->query( dev, &devclass, sizeof(devnam), devnam );
 
         /* Display the device definition and status */
         logmsg( "%d:%4.4X %4.4X %s %s%s%s\n",
@@ -1979,7 +2021,7 @@ int attach_cmd(int argc, char *argv[], char *cmdline)
     {
         clcss = NULL;
         cdev = argv[1];
-    }   
+    }
 
     if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
     {
