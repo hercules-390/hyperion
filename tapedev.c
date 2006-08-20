@@ -191,7 +191,7 @@ static BYTE TapeImmedCommands[256]=
     0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,  /* 40 */
     0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,  /* 50 */
     0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,  /* 60 */
-    0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,  /* 70 */ /* Adrian Trenkwalder - 77 was 1 */   
+    0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,  /* 70 */ /* Adrian Trenkwalder - 77 was 1 */
     0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,  /* 80 */
     0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,  /* 90 */
     0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,  /* A0 */
@@ -299,7 +299,7 @@ static BYTE TapeCommands3480[256]=
     0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,  /* 40 */
     0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,0,  /* 50 */
     0,0,0,3,2,0,0,0,0,0,0,3,0,0,0,0,  /* 60 */
-    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0,  /* 70 */ /* Allow 77 (was 0) - Adrian Trenkwalder */   
+    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0,  /* 70 */ /* Allow 77 (was 0) - Adrian Trenkwalder */
     0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,  /* 80 */
     0,0,0,3,0,0,0,1,0,0,0,0,0,0,0,2,  /* 90 */
     0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,2,  /* A0 */
@@ -2896,6 +2896,15 @@ static void ReqAutoMount( DEVBLK *dev )
 
     ///////////////////////////////////////////////////////////////////
 
+    /* Open the file/drive if needed */
+    if (dev->fd < 0)
+    {
+        BYTE unitstat = 0, code = 0;
+        dev->tmh->open( dev, &unitstat, code );
+        dev->tmh->passedeot( dev ); // (refresh potential stale status)
+        dev->tmh->passedeot( dev ); // (force auto-mount thread creation)
+    }
+
     /* Disabled when [non-SCSI] ACL in use */
     if ( dev->als )
         return;
@@ -3981,7 +3990,6 @@ union
 #if defined(OPTION_SCSI_TAPE)
     dev->sstat               = GMT_DR_OPEN(-1);
     dev->stape_getstat_sstat = GMT_DR_OPEN(-1);
-    gettimeofday( &dev->stape_getstat_query_tod, NULL );
 #endif
     dev->omadesc           = NULL;
     dev->omafiles          = 0;
@@ -4572,14 +4580,13 @@ int             rc;
 #if defined(OPTION_SCSI_TAPE)
     dev->sstat               = GMT_DR_OPEN(-1);
     dev->stape_getstat_sstat = GMT_DR_OPEN(-1);
-    gettimeofday( &dev->stape_getstat_query_tod, NULL );
 #endif
 
     /* Clear the DPA */
     memset(dev->pgid, 0, sizeof(dev->pgid));
-    /* Clear Drive password - Adrian */   
-    memset(dev->drvpwd, 0, sizeof(dev->drvpwd));   
-   
+    /* Clear Drive password - Adrian */
+    memset(dev->drvpwd, 0, sizeof(dev->drvpwd));
+
 
     /* Request the channel to merge data chained write CCWs into
        a single buffer before passing data to the device handler */
@@ -4639,9 +4646,13 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
 {
     char dispmsg[256]; dispmsg[0]=0;
 
-    GetDisplayMsg( dev, dispmsg, sizeof(dispmsg) );
+    if (!dev || !class || !buffer || !buflen)
+        return;
 
     *class = "TAPE";
+    *buffer = 0;
+
+    GetDisplayMsg( dev, dispmsg, sizeof(dispmsg) );
 
     if ( !strcmp( dev->filename, TAPE_UNLOADED ) )
     {
@@ -4658,12 +4669,17 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
         {
             snprintf( tapepos, sizeof(tapepos), "[%d:%8.8lX] ",
                 dev->curfilen, dev->nxtblkpos );
+            tapepos[sizeof(tapepos)-1] = 0;
         }
 #if defined(OPTION_SCSI_TAPE)
         else
         {
-            if (STS_BOT    ( dev )) strlcat(tapepos,"LDPT ",sizeof(tapepos));
-            if (STS_WR_PROT( dev )) strlcat(tapepos,"*FP* ",sizeof(tapepos));
+            if (STS_BOT( dev )) strlcat(tapepos,"*BOT* ",sizeof(tapepos));
+            // If tape has a display, then GetDisplayMsg already
+            // appended *FP* for us. Otherwise we need to do it.
+            if ( !dev->tdparms.displayfeat )
+                if (STS_WR_PROT( dev ))
+                    strlcat(tapepos,"*FP* ",sizeof(tapepos));
         }
 #endif
 
@@ -4696,6 +4712,8 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
                 dev->tdparms.displayfeat ?    dispmsg    : ""  );
         }
     }
+
+    buffer[buflen-1] = 0;
 } /* end function tapedev_query_device */
 
 /*-------------------------------------------------------------------*/
@@ -5453,8 +5471,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         if (0x3590 != dev->devtype)     /* Added by Fish */
-            locblock &= 0x003FFFFF;     /* Re-applied by Adrian */ 
- 
+            locblock &= 0x003FFFFF;     /* Re-applied by Adrian */
+
         /* Calculate residual byte count */
         len = sizeof(locblock);
         num = (count < len) ? count : len;
@@ -5536,238 +5554,238 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
 
     case 0x77:
-    /* By Adrian Trenkwalder */   
-   
+    /* By Adrian Trenkwalder */
+
     /*---------------------------------------------------------------*/
     /* PERFORM SUBSYSTEM FUNCTION                                    */
     /*---------------------------------------------------------------*/
-    
-        /* Byte 0 is the PSF order */   
-        switch(iobuf[0])   
-        {   
-        /*-----------------------------------------------------------*/   
-        /* Activate/Deactivate Forced Error Logging                  */   
-        /* 0x8000nn / 0x8100nn                                       */   
-        /*-----------------------------------------------------------*/   
-        case PSF_ORDER_AFEL:   
-        case PSF_ORDER_DFEL:   
-	      /* Calculate residual byte count */   
-  	      num = (count < 3) ? count : 3;   
-    	    *residual = count - num;   
-   
-      	    /* Control information length must be at least 3 bytes */   
-            /* and the flag byte must be zero for all orders       */   
-            if ( (count < 3)   
-                ||  (iobuf[1] != PSF_FLAG_ZERO)   
-        	      || ((iobuf[2] != PSF_ACTION_FEL_IMPLICIT)   
-        	      && (iobuf[2] != PSF_ACTION_FEL_EXPLICIT))   
-               )   
-            {   
-               build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code); 
-               break; 
-            }   
-   
-            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);   
-            break;   
-   
-        /*-----------------------------------------------------------*/   
-        /* Activate/Deactivate Access Control                        */   
-        /* 0x8200nn / 0x8300nn                                       */   
-        /*-----------------------------------------------------------*/   
-        case PSF_ORDER_AAC:   
-        case PSF_ORDER_DAC:   
-	        /* Calculate residual byte count */   
-  	      num = (count < 4) ? count : 4;   
-    	    *residual = count - num;   
-   
-      	  /* Control information length must be at least 4 bytes */   
-          /* and the flag byte must be zero for all orders       */   
-          if ( (count < 3)   
-              || (iobuf[1] != PSF_FLAG_ZERO)   
-        	    || ((iobuf[2] != PSF_ACTION_AC_LWP)   
-        	    && (iobuf[2] != PSF_ACTION_AC_DCD)   
-        	    && (iobuf[2] != PSF_ACTION_AC_DCR)   
-        	    && (iobuf[2] != PSF_ACTION_AC_ER))   
-             )   
-            {   
-              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);   
-              break;   
-            }   
-   
-          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);   
-          break;   
-   
-        /*-----------------------------------------------------------*/   
-        /* Reset Volume Fenced                                       */   
-        /* 0x9000                                                    */   
-        /*-----------------------------------------------------------*/   
-        case PSF_ORDER_RVF:   
-	        /* Calculate residual byte count */   
-  	      num = (count < 2) ? count : 2;   
-    	    *residual = count - num;   
-   
-      	  /* Control information length must be at least 2 bytes */   
-          /* and the flag byte must be zero for all orders       */   
-          if ( (count < 2)   
-              || (iobuf[1] != PSF_FLAG_ZERO)   
-             )   
-            {   
-              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);   
-              break;   
-            }   
-   
-          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);   
-          break;   
-   
-        /*-----------------------------------------------------------*/   
-        /* Pin Device                                                */   
-        /* 0xA100nn                                                  */   
-        /*-----------------------------------------------------------*/   
-        case PSF_ORDER_PIN_DEV:   
-	        /* Calculate residual byte count */   
-  	      num = (count < 3) ? count : 3;   
-    	    *residual = count - num;   
-   
-      	  /* Control information length must be at least 3 bytes */   
-          /* and the flag byte must be zero for all orders       */   
-          if ( (count < 3)   
-        	    || (iobuf[1] != PSF_FLAG_ZERO)   
-         	    || ((iobuf[2] != PSF_ACTION_PIN_CU0)   
-        	    && (iobuf[2] != PSF_ACTION_PIN_CU1))   
-             )   
-            {   
-              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);   
-              break;   
-            }   
-          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);   
-          break;   
-   
-        /*-----------------------------------------------------------*/   
-        /* Unpin Device                                              */   
-        /* 0xA200                                                    */   
-        /*-----------------------------------------------------------*/   
-        case PSF_ORDER_UNPIN_DEV:   
-	        /* Calculate residual byte count */   
-  	      num = (count < 2) ? count : 2;   
-    	    *residual = count - num;   
-   
-      	  /* Control information length must be at least 2 bytes */   
-          /* and the flag byte must be zero for all orders       */   
-          if ( (count < 2)   
-        	    || (iobuf[1] != PSF_FLAG_ZERO)   
-             )   
-            {   
-              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);   
-              break;   
-            }   
-          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);   
-          break;   
-   
-        /*-----------------------------------------------------------*/   
+
+        /* Byte 0 is the PSF order */
+        switch(iobuf[0])
+        {
+        /*-----------------------------------------------------------*/
+        /* Activate/Deactivate Forced Error Logging                  */
+        /* 0x8000nn / 0x8100nn                                       */
+        /*-----------------------------------------------------------*/
+        case PSF_ORDER_AFEL:
+        case PSF_ORDER_DFEL:
+          /* Calculate residual byte count */
+          num = (count < 3) ? count : 3;
+            *residual = count - num;
+
+            /* Control information length must be at least 3 bytes */
+            /* and the flag byte must be zero for all orders       */
+            if ( (count < 3)
+                ||  (iobuf[1] != PSF_FLAG_ZERO)
+                  || ((iobuf[2] != PSF_ACTION_FEL_IMPLICIT)
+                  && (iobuf[2] != PSF_ACTION_FEL_EXPLICIT))
+               )
+            {
+               build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+               break;
+            }
+
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+            break;
+
+        /*-----------------------------------------------------------*/
+        /* Activate/Deactivate Access Control                        */
+        /* 0x8200nn / 0x8300nn                                       */
+        /*-----------------------------------------------------------*/
+        case PSF_ORDER_AAC:
+        case PSF_ORDER_DAC:
+            /* Calculate residual byte count */
+          num = (count < 4) ? count : 4;
+            *residual = count - num;
+
+          /* Control information length must be at least 4 bytes */
+          /* and the flag byte must be zero for all orders       */
+          if ( (count < 3)
+              || (iobuf[1] != PSF_FLAG_ZERO)
+                || ((iobuf[2] != PSF_ACTION_AC_LWP)
+                && (iobuf[2] != PSF_ACTION_AC_DCD)
+                && (iobuf[2] != PSF_ACTION_AC_DCR)
+                && (iobuf[2] != PSF_ACTION_AC_ER))
+             )
+            {
+              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+              break;
+            }
+
+          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+          break;
+
+        /*-----------------------------------------------------------*/
+        /* Reset Volume Fenced                                       */
+        /* 0x9000                                                    */
+        /*-----------------------------------------------------------*/
+        case PSF_ORDER_RVF:
+            /* Calculate residual byte count */
+          num = (count < 2) ? count : 2;
+            *residual = count - num;
+
+          /* Control information length must be at least 2 bytes */
+          /* and the flag byte must be zero for all orders       */
+          if ( (count < 2)
+              || (iobuf[1] != PSF_FLAG_ZERO)
+             )
+            {
+              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+              break;
+            }
+
+          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+          break;
+
+        /*-----------------------------------------------------------*/
+        /* Pin Device                                                */
+        /* 0xA100nn                                                  */
+        /*-----------------------------------------------------------*/
+        case PSF_ORDER_PIN_DEV:
+            /* Calculate residual byte count */
+          num = (count < 3) ? count : 3;
+            *residual = count - num;
+
+          /* Control information length must be at least 3 bytes */
+          /* and the flag byte must be zero for all orders       */
+          if ( (count < 3)
+                || (iobuf[1] != PSF_FLAG_ZERO)
+                || ((iobuf[2] != PSF_ACTION_PIN_CU0)
+                && (iobuf[2] != PSF_ACTION_PIN_CU1))
+             )
+            {
+              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+              break;
+            }
+          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+          break;
+
+        /*-----------------------------------------------------------*/
+        /* Unpin Device                                              */
+        /* 0xA200                                                    */
+        /*-----------------------------------------------------------*/
+        case PSF_ORDER_UNPIN_DEV:
+            /* Calculate residual byte count */
+          num = (count < 2) ? count : 2;
+            *residual = count - num;
+
+          /* Control information length must be at least 2 bytes */
+          /* and the flag byte must be zero for all orders       */
+          if ( (count < 2)
+                || (iobuf[1] != PSF_FLAG_ZERO)
+             )
+            {
+              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+              break;
+            }
+          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+          break;
+
+        /*-----------------------------------------------------------*/
         /* Nou yet supported                                                         */
-        /* 0x180000000000mm00iiiiii   Prepare for Read Subsystem Data */   
-        /* 0x1B00                     Set Special Intercept Condition          */   
-        /* 0x1C00xxccnnnn0000iiiiii.. Message Not Supported               */   
-        /*-----------------------------------------------------------*/   
-        case PSF_ORDER_PRSD:   
-        case PSF_ORDER_SSIC:   
-        case PSF_ORDER_MNS:   
-        // Fall through   
-        default:   
-          build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);   
-          break;   
-        }	/* End switch iobuf */   
-        break;   
-   
-    case 0xE3:   
-        /* By Adrian Trenkwalder */   
+        /* 0x180000000000mm00iiiiii   Prepare for Read Subsystem Data */
+        /* 0x1B00                     Set Special Intercept Condition          */
+        /* 0x1C00xxccnnnn0000iiiiii.. Message Not Supported               */
+        /*-----------------------------------------------------------*/
+        case PSF_ORDER_PRSD:
+        case PSF_ORDER_SSIC:
+        case PSF_ORDER_MNS:
+        // Fall through
+        default:
+          build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+          break;
+        }   /* End switch iobuf */
+        break;
+
+    case 0xE3:
+        /* By Adrian Trenkwalder */
 
     /*---------------------------------------------------------------*/
-    /* Control Access                                                */   
+    /* Control Access                                                */
     /*---------------------------------------------------------------*/
-        /* Calculate residual byte count */   
-        num = (count < 12) ? count : 12;   
-        *residual = count - num;   
-   
-        /* Control information length must be at least 12 bytes */   
-        if (count < 12)   
-        {   
-          build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);   
-          break;   
-        }   
-   
-        /* Byte 0 is the CAC mode-of-use */   
-        switch(iobuf[0])   
-        {   
-        /*-----------------------------------------------------------*/   
-        /* Set Password                                              */   
-        /* 0x00nnnnnnnnnnnnnnnnnnnnnn                                */   
-        /*-----------------------------------------------------------*/   
-        case CAC_SET_PASSWORD:   
-          /* Password must not be zero                               */   
-          /* and the device path must be Explicitly Enabled          */   
-          if (( memcmp(iobuf+1,"\00\00\00\00\00\00\00\00\00\00\00",11)==0)   
-               ||((dev->pgstat & SPG_PARTSTAT_XENABLED) == 0) )   
-          {   
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);   
-            break;   
-          }   
-	        /* Set Password if none set yet                            */   
-          if (memcmp(dev->drvpwd,"\00\00\00\00\00\00\00\00\00\00\00",11)==0)   
-          {   
-            memcpy(dev->drvpwd,iobuf+1,11);   
-          }   
-          /* Password already set - they must match                 */   
-	        else   
-          {   
-            if (memcmp(dev->drvpwd,iobuf+1,11)!=0)   
-            {   
-              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);   
-              break;   
-            }   
-	        }   
-          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);   
-          break;   
-   
-        /*-----------------------------------------------------------*/   
-        /* Conditional Enable                                        */   
-        /* 0x80nnnnnnnnnnnnnnnnnnnnnn                                */   
-        /*-----------------------------------------------------------*/   
-        case CAC_COND_ENABLE:   
-          /* A drive password must be set and it must match the one given as input */   
-          if (  (memcmp(dev->drvpwd,"\00\00\00\00\00\00\00\00\00\00\00",11)==0)   
-              ||(memcmp(dev->drvpwd,iobuf+1,11)!=0)   
-             )   
-          {   
-             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);   
-             break;   
-      	  }   
-          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);   
-          break;   
-   
-      /*-----------------------------------------------------------*/   
-      /* Conditional Disable                                       */   
-      /* 0x40nnnnnnnnnnnnnnnnnnnnnn                                */   
-      /*-----------------------------------------------------------*/   
-      case CAC_COND_DISABLE:   
-        /* A drive password is set, it must match the one given as input */   
-        if (  (memcmp(dev->drvpwd,"\00\00\00\00\00\00\00\00\00\00\00",11)!=0)   
-            &&(memcmp(dev->drvpwd,iobuf+1,11)!=0)   
-           )   
-        {   
-           build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);   
-           break;   
-        }   
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);   
-        break;   
-   
-      default:   
-          build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);   
-          break;   
-      }	/* End switch iobuf */   
-      break;   
-   
-   
+        /* Calculate residual byte count */
+        num = (count < 12) ? count : 12;
+        *residual = count - num;
+
+        /* Control information length must be at least 12 bytes */
+        if (count < 12)
+        {
+          build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+          break;
+        }
+
+        /* Byte 0 is the CAC mode-of-use */
+        switch(iobuf[0])
+        {
+        /*-----------------------------------------------------------*/
+        /* Set Password                                              */
+        /* 0x00nnnnnnnnnnnnnnnnnnnnnn                                */
+        /*-----------------------------------------------------------*/
+        case CAC_SET_PASSWORD:
+          /* Password must not be zero                               */
+          /* and the device path must be Explicitly Enabled          */
+          if (( memcmp(iobuf+1,"\00\00\00\00\00\00\00\00\00\00\00",11)==0)
+               ||((dev->pgstat & SPG_PARTSTAT_XENABLED) == 0) )
+          {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+          }
+            /* Set Password if none set yet                            */
+          if (memcmp(dev->drvpwd,"\00\00\00\00\00\00\00\00\00\00\00",11)==0)
+          {
+            memcpy(dev->drvpwd,iobuf+1,11);
+          }
+          /* Password already set - they must match                 */
+            else
+          {
+            if (memcmp(dev->drvpwd,iobuf+1,11)!=0)
+            {
+              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+              break;
+            }
+            }
+          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+          break;
+
+        /*-----------------------------------------------------------*/
+        /* Conditional Enable                                        */
+        /* 0x80nnnnnnnnnnnnnnnnnnnnnn                                */
+        /*-----------------------------------------------------------*/
+        case CAC_COND_ENABLE:
+          /* A drive password must be set and it must match the one given as input */
+          if (  (memcmp(dev->drvpwd,"\00\00\00\00\00\00\00\00\00\00\00",11)==0)
+              ||(memcmp(dev->drvpwd,iobuf+1,11)!=0)
+             )
+          {
+             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+             break;
+          }
+          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+          break;
+
+      /*-----------------------------------------------------------*/
+      /* Conditional Disable                                       */
+      /* 0x40nnnnnnnnnnnnnnnnnnnnnn                                */
+      /*-----------------------------------------------------------*/
+      case CAC_COND_DISABLE:
+        /* A drive password is set, it must match the one given as input */
+        if (  (memcmp(dev->drvpwd,"\00\00\00\00\00\00\00\00\00\00\00",11)!=0)
+            &&(memcmp(dev->drvpwd,iobuf+1,11)!=0)
+           )
+        {
+           build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+           break;
+        }
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+      default:
+          build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+          break;
+      } /* End switch iobuf */
+      break;
+
+
     case 0xCB: /* 9-track 800 bpi */
     case 0xC3: /* 9-track 1600 bpi */
     case 0xD3: /* 9-track 6250 bpi */
@@ -6071,10 +6089,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         dev->pgstat=0;          /* Reset to All Implicitly enabled */
         memset(dev->pgid,0,11); /* Reset Path group ID password */
-		/* Drive Password  - Adrian       */   
-        memset(dev->drvpwd,0,sizeof(dev->drvpwd)); /* Reset drive password */   
-   
-   
+        /* Drive Password  - Adrian       */
+        memset(dev->drvpwd,0,sizeof(dev->drvpwd)); /* Reset drive password */
+
+
         /* Return unit status */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
@@ -6171,7 +6189,16 @@ static TAPEMEDIA_HANDLER tmh_scsi = {
     &dse_scsitape,
     &erg_scsitape,
     &is_tape_mounted_scsitape,
-    &return_false1    /* passedeot */
+    // PROGRAMMING NOTE: the following vector is actually assigned
+    // to the 'passedeot' entry-point, but since SCSI tapes aren't
+    // emulated devices but rather real hardware devices instead
+    // (who's status already includes whether EOT has been passed
+    // or not), this particular media-handler entry-point is not
+    // currently needed for its original intended purpose. Thus we
+    // can safely use it for our own custom purposes, which in our
+    // case is to force a manual refreshing/updating of the actual
+    // drive status information on behalf of the caller.
+    &force_status_update
 };
 #endif /* defined(OPTION_SCSI_TAPE) */
 

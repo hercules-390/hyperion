@@ -34,6 +34,7 @@ extern int   bsf_scsitape             ( DEVBLK *dev,                     BYTE *u
 extern int   rewind_scsitape          ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern void  rewind_unload_scsitape   ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   is_tape_mounted_scsitape ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern int   force_status_update      ( DEVBLK *dev );
 extern int   finish_scsitape_open     ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern void  update_status_scsitape   ( DEVBLK *dev, int mountstat_only );
 extern void *scsi_tapemountmon_thread ( void   *devblk );
