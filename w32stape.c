@@ -270,6 +270,7 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
     if (NO_ERROR != dwRetCode)
     {
         int save_errno = w32_trans_w32error( GetLastError() );
+        CloseHandle( hFile );
         VERIFY( w32_free_ifd( ifd ) == 0 );
         errno = save_errno;
         return -1;
