@@ -679,7 +679,7 @@ struct DEVBLK {                         /* Device configuration block*/
 #define DEV_SYS_NONE    0               /* No active system on device*/
 #define DEV_SYS_LOCAL   0xffff          /* Local system active on dev*/
         /* By Adrian - Password for Tape drive (and 1 spare)         */   
-        BYTE    drvpwd[11];	 	          /* Password for drive        */   
+        BYTE    drvpwd[11];               /* Password for drive        */   
         BYTE    reserved3;              /* (pad/align/unused/avail)  */   
 
         /*  control flags...                                         */
@@ -863,10 +863,11 @@ struct DEVBLK {                         /* Device configuration block*/
         TID     stape_mountmon_tid;     /* Tape-mount monitor thread */
         u_int   stape_close_rewinds:1;  /* 1=Rewind at close         */
         u_int   stape_getstat_busy:1;   /* 1=Status wrkr thrd busy   */
-        u_int   stape_getstat_exit:1;   /* 1=Ask stat wrkr thrd exit */
+        u_int   stape_threads_exit:1;   /* 1=Ask helpr thrds to exit */
         TID     stape_getstat_tid;      /* Tape status wrkr thrd tid */
         LOCK    stape_getstat_lock;     /* LOCK for status wrkr thrd */
         COND    stape_getstat_cond;     /* COND for status wrkr thrd */
+        COND    stape_exit_cond;        /* thread wait for exit COND */
         U32     stape_getstat_sstat;    /* status wrkr thrd status   */
         struct timeval
                 stape_getstat_query_tod;/* TOD of actual drive query */

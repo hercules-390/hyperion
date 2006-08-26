@@ -824,6 +824,41 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 #endif /*OPTION_IODELAY_KLUDGE*/
 
 #if defined( OPTION_SCSI_TAPE )
+
+///////////////////////////////////////////////////////////////////////
+// (helper function for 'scsimount' and 'devlist' commands)
+
+static void try_scsi_refresh( DEVBLK* dev )
+{
+    // PROGRAMMING NOTE: we can only ever cause the auto-scsi-mount
+    // thread to startup or shutdown [according to the current user
+    // setting] if the current drive status is "not mounted".
+
+    // What we unfortunately CANNOT do (indeed MUST NOT do!) however
+    // is actually "force" a refresh of a current [presumably bogus]
+    // "mounted" status (to presumably detect that a tape that was
+    // once mounted has now been manually unmounted for example).
+
+    // The reasons for why this is not possible is clearly explained
+    // in the 'force_status_update' function in 'scsitape.c'. All we
+    // can ever hope to do here is either cause an already-running
+    // auto-mount thread to exit (if the user has just now disabled
+    // auto-mounts) or else cause one to automatically start (if they
+    // just enabled auto-mounts and there's no tape already mounted).
+
+    // If the user manually unloaded a mounted tape (such that there
+    // is now no longer a tape mounted even though the drive status
+    // says there is), then they unfortunately have no choice but to
+    // manually issue the 'devinit' command themselves, because, as
+    // explained, we unfortunately cannot refresh a mounted status
+    // for them (due to the inherent danger of doing so as explained
+    // by the comments in 'force_status_update' in member scsitape.c).
+
+    broadcast_condition( &dev->stape_exit_cond );   // (force exit if needed)
+    dev->tmh->passedeot( dev );                     // (maybe update status)
+    usleep(10*1000);                                // (let thread start/end)
+}
+
 ///////////////////////////////////////////////////////////////////////
 /* scsimount command - display or adjust the SCSI auto-mount option */
 
@@ -883,36 +918,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         if ( !dev->allocated || TAPEDEVT_SCSITAPE != dev->tapedevt )
             continue;  // (not an active SCSI tape device; skip)
 
-        // If they're trying to shutdown the mount-monitoring threads
-        // then wake them up so they can see they're supposed to exit...
-
-        if (sysblk.auto_scsi_mount_secs == 0 &&
-            sysblk.auto_scsi_mount_secs != old_auto_scsi_mount_secs)
-        {
-            broadcast_condition( &dev->stape_getstat_cond );
-            usleep(10*1000);
-        }
-        else if (sysblk.auto_scsi_mount_secs != 0)
-        {
-            // If they're trying to startup the mount-monitoring threads
-            // then force a status refresh to cause them to get created.
-
-            // NOTE! We MUST do TWO refreshes here! The first one to
-            // replace any stale "mounted" status with a "not mounted"
-            // status (if such a status happens to be true of course),
-            // and the second one to cause the auto-mount thread to be
-            // created (as a result of the [hopefully] now current not-
-            // mounted status). The idea here is the auto-mount threads
-            // are only created when there's no tape mounted. If, for
-            // whatever reason, the current status indicates a tape is
-            // already mounted when in reality there isn't, then the
-            // auto-mount thread would not get created! Thus we always
-            // do TWO refreshes to make *sure* it gets created (if it
-            // actually needs to be of course)...
-
-            dev->tmh->passedeot( dev ); // (refresh potential stale status)
-            dev->tmh->passedeot( dev ); // (force auto-mount thread creation)
-        }
+        try_scsi_refresh( dev );    // (see comments in function)
 
         logmsg
         (
@@ -1004,7 +1010,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         }
         else
         {
-            logmsg( _("No mount/dismount requests pending for drive %u:%4.4X = %s.\n\n"),
+            logmsg( _("No mount/dismount requests pending for drive %u:%4.4X = %s.\n"),
                 SSID_TO_LCSS(dev->ssid),dev->devnum, dev->filename );
         }
     }
@@ -1933,23 +1939,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
 
 #if defined(OPTION_SCSI_TAPE)
         if (TAPEDEVT_SCSITAPE == dev->tapedevt)
-        {
-            // NOTE! We MUST do TWO refreshes here! The first one to
-            // replace any stale "mounted" status with a "not mounted"
-            // status (if such a status happens to be true of course),
-            // and the second one to cause the auto-mount thread to be
-            // created (as a result of the [hopefully] now current not-
-            // mounted status). The idea here is the auto-mount threads
-            // are only created when there's no tape mounted. If, for
-            // whatever reason, the current status indicates a tape is
-            // already mounted when in reality there isn't, then the
-            // auto-mount thread would not get created! Thus we always
-            // do TWO refreshes to make *sure* it gets created (if it
-            // actually needs to be of course)...
-
-            dev->tmh->passedeot( dev ); // (refresh potential stale status)
-            dev->tmh->passedeot( dev ); // (force auto-mount thread creation)
-        }
+            try_scsi_refresh( dev );  // (see comments in function)
 #endif
         dev->hnd->query( dev, &devclass, sizeof(devnam), devnam );
 
