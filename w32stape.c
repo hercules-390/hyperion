@@ -158,7 +158,7 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
     HANDLE      hFile;
     char        szTapeDeviceName[10];
     const char* pszTapeDevNum;
-    DWORD       dwDesiredAccess, dwSizeofDriveParms;
+    DWORD       dwDesiredAccess, dwSizeofDriveParms, dwRetCode;
 
     // Reserve an fd number right away and bail if none available...
     if ( (ifd = w32_alloc_ifd()) < 0 )
@@ -243,29 +243,48 @@ ufd_t w32_open_tape ( const char* path, int oflag, ... )
         return -1;
     }
 
-    // Success! Return their file descriptor...
+    // Save drive parameters for later...
+
+    memset( &g_drive_parms[ifd], 0, sizeof(TAPE_GET_DRIVE_PARAMETERS) );
+    dwSizeofDriveParms = sizeof(TAPE_GET_DRIVE_PARAMETERS);
+
+    do
+    {
+        dwRetCode = GetTapeParameters
+        (
+            hFile,
+            GET_TAPE_DRIVE_INFORMATION,
+            &dwSizeofDriveParms,
+            &g_drive_parms[ifd]
+        );
+    }
+    while ((NO_ERROR != dwRetCode)              // (if not normal completion,
+    &&                                          // check for retry conditions)
+    (0
+        || ERROR_MEDIA_CHANGED == dwRetCode     // (likely but unimportant; retry)
+        || ERROR_BUS_RESET     == dwRetCode     // (unlikely but possible;  retry)
+    ));
+
+    // Did that work?
+
+    if (NO_ERROR != dwRetCode)
+    {
+        int save_errno = w32_trans_w32error( GetLastError() );
+        VERIFY( w32_free_ifd( ifd ) == 0 );
+        errno = save_errno;
+        return -1;
+    }
+
+    ASSERT( NO_ERROR == dwRetCode );
+    ASSERT( sizeof(TAPE_GET_DRIVE_PARAMETERS) == dwSizeofDriveParms );
+
+    // Save control info & return their file descriptor...
 
     g_handles [ ifd ]  = hFile;                     // (WIN32 handle)
     g_fnames  [ ifd ]  = strdup( path );            // (for posterity)
     g_fstats  [ ifd ]  = GMT_ONLINE (0xFFFFFFFF);   // (initial status)
     g_BOTmsk  [ ifd ]  = 0xFFFFFFFF;                // (BOT block-id mask)
     g_BOTbot  [ ifd ]  = 0x00000000;                // (BOT block-id value)
-
-    // Save drive parameters for later...
-
-    memset( &g_drive_parms[ifd], 0, sizeof(TAPE_GET_DRIVE_PARAMETERS) );
-
-    dwSizeofDriveParms = sizeof(TAPE_GET_DRIVE_PARAMETERS);
-
-    VERIFY( NO_ERROR == GetTapeParameters
-    (
-        hFile,
-        GET_TAPE_DRIVE_INFORMATION,
-        &dwSizeofDriveParms,
-        &g_drive_parms[ifd]
-    ));
-
-    ASSERT( sizeof(TAPE_GET_DRIVE_PARAMETERS) == dwSizeofDriveParms );
 
     return W32STAPE_IFD2UFD( ifd );                 // (user fd result)
 }
