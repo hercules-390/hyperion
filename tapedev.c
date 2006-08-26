@@ -2896,11 +2896,14 @@ static void ReqAutoMount( DEVBLK *dev )
 
     ///////////////////////////////////////////////////////////////////
 
-    /* Open the file/drive if needed */
+    /* Open the file/drive if needed (kick off auto-mount if needed) */
     if (dev->fd < 0)
     {
         BYTE unitstat = 0, code = 0;
         dev->tmh->open( dev, &unitstat, code );
+        // PROGRAMMING NOTE: it's important to do TWO refreshes here
+        // to cause the auto-mount thread to get created. Doing only
+        // one doesn't work and doing two shouldn't cause any harm.
         dev->tmh->passedeot( dev ); // (refresh potential stale status)
         dev->tmh->passedeot( dev ); // (force auto-mount thread creation)
     }
@@ -6189,6 +6192,7 @@ static TAPEMEDIA_HANDLER tmh_scsi = {
     &dse_scsitape,
     &erg_scsitape,
     &is_tape_mounted_scsitape,
+
     // PROGRAMMING NOTE: the following vector is actually assigned
     // to the 'passedeot' entry-point, but since SCSI tapes aren't
     // emulated devices but rather real hardware devices instead
@@ -6198,6 +6202,14 @@ static TAPEMEDIA_HANDLER tmh_scsi = {
     // can safely use it for our own custom purposes, which in our
     // case is to force a manual refreshing/updating of the actual
     // drive status information on behalf of the caller.
+
+    //                    ** IMPORTANT! **
+
+    // Please read the WARNING comments in the force_status_update
+    // function itself! It's important to NOT call this entry-point
+    // indiscriminately as doing so could cause improper functioning
+    // of the guest o/s!
+
     &force_status_update
 };
 #endif /* defined(OPTION_SCSI_TAPE) */
