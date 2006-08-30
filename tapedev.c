@@ -1,8 +1,8 @@
 /* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2006                */
 /* JCS - minor changes by John Summerfield                           */
 /*              ESA/390 Tape Device Handler                          */
-/* Original Author : Roger Bowler                                    */
-/* Prime Maintainer : Ivan Warren                                    */
+/* Original Author: Roger Bowler                                     */
+/* Prime Maintainer: Ivan Warren                                     */
 
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
@@ -137,10 +137,10 @@ enum
 /*-------------------------------------------------------------------*/
 /* Ivan Warren 20030224                                              */
 /* Code / Devtype Validity Tables                                    */
-/* SOURCES : GX20-1850-2 (S/370 Reference Summary (3410/3411/3420)   */
-/* SOURCES : GX20-0157-1 (370/XA Reference Summary (3420/3422/3430/  */
+/* SOURCES: GX20-1850-2 (S/370 Reference Summary (3410/3411/3420)    */
+/* SOURCES: GX20-0157-1 (370/XA Reference Summary (3420/3422/3430/   */
 /*                                                  3480)            */
-/* SOURCES : GA33-1510-0 (S/370 Model 115 FC (for 3410/3411)         */
+/* SOURCES: GA33-1510-0 (S/370 Model 115 FC (for 3410/3411)          */
 /* ITEMS MARKED NEED_CHECK Need to be verified                       */
 /*    (especially for a need for a tape to be loaded or not)         */
 /*-------------------------------------------------------------------*/
@@ -174,9 +174,9 @@ static  TapeDeviceDepSenseFunction *TapeSenseTable[]={
 /* This table is used by channel.c to determine if a CCW code is an  */
 /* immediate command or not                                          */
 /* The tape is addressed in the DEVHND structure as 'DEVIMM immed'   */
-/* 0 : Command is NOT an immediate command                           */
-/* 1 : Command is an immediate command                               */
-/* Note : An immediate command is defined as a command which returns */
+/* 0: Command is NOT an immediate command                            */
+/* 1: Command is an immediate command                                */
+/* Note: An immediate command is defined as a command which returns  */
 /* CE (channel end) during initialisation (that is, no data is       */
 /* actually transfered. In this case, IL is not indicated for a CCW  */
 /* Format 0 or for a CCW Format 1 when IL Suppression Mode is in     */
@@ -205,13 +205,13 @@ static BYTE TapeImmedCommands[256]=
 /* Ivan Warren 20030224                                              */
 /* This table is used by TapeCommandIsValid to determine if a CCW    */
 /* code is valid for the device                                      */
-/* 0 : Command is NOT valid                                          */
-/* 1 : Command is Valid, Tape MUST be loaded                         */
-/* 2 : Command is Valid, Tape NEED NOT be loaded                     */
-/* 3 : Command is Valid, But is a NO-OP (return CE+DE now)           */
-/* 4 : Command is Valid, But is a NO-OP (for virtual tapes)          */
-/* 5 : Command is Valid, Tape MUST be loaded (add DE to status)      */
-/* 6 : Command is Valid, Tape load attempted (but not an error)      */
+/*  0: Command is NOT valid                                          */
+/*  1: Command is Valid, Tape MUST be loaded                         */
+/*  2: Command is Valid, Tape NEED NOT be loaded                     */
+/*  3: Command is Valid, But is a NO-OP (return CE+DE now)           */
+/*  4: Command is Valid, But is a NO-OP (for virtual tapes)          */
+/*  5: Command is Valid, Tape MUST be loaded (add DE to status)      */
+/*  6: Command is Valid, Tape load attempted (but not an error)      */
 /*          (used for sense and no contingency allegiance exists)    */
 /*-------------------------------------------------------------------*/
 static BYTE TapeCommands3410[256]=
@@ -347,8 +347,8 @@ static BYTE *TapeCommandTable[]={
      TapeCommands9347,  /* 9347 (Maybe all streaming tapes) code table */
      NULL};
 
-/* Device type list : */
-/* Format : D/T, Command Table Index in TapeCommandTable,
+/* Device type list: */
+/* Format: D/T, Command Table Index in TapeCommandTable,
    UC on RewUnld, CUE on RewUnld, Sense Build Function Table Index */
 #define TAPEDEVTYPELISTENTRYSIZE  5  /* #of values per devtype */
 static int TapeDevtypeList[]={0x3410,0,1,0,0,
@@ -665,7 +665,7 @@ U16             prvblkl;                /* Length of previous block  */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
         return -1;
     }
-    /* ISW : Determine if we are passed maxsize */
+    /* ISW: Determine if we are passed maxsize */
     if(dev->tdparms.maxsize>0)
     {
         if(dev->nxtblkpos+blklen+sizeof(awshdr) > dev->tdparms.maxsize)
@@ -674,7 +674,7 @@ U16             prvblkl;                /* Length of previous block  */
             return -1;
         }
     }
-    /* ISW : End of virtual physical EOT determination */
+    /* ISW: End of virtual physical EOT determination */
 
     /* Build the 6-byte block header */
     awshdr.curblkl[0] = blklen & 0xFF;
@@ -786,7 +786,7 @@ U16             prvblkl;                /* Length of previous block  */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
         return -1;
     }
-    /* ISW : Determine if we are passed maxsize */
+    /* ISW: Determine if we are passed maxsize */
     if(dev->tdparms.maxsize>0)
     {
         if(dev->nxtblkpos+sizeof(awshdr) > dev->tdparms.maxsize)
@@ -795,7 +795,7 @@ U16             prvblkl;                /* Length of previous block  */
             return -1;
         }
     }
-    /* ISW : End of virtual physical EOT determination */
+    /* ISW: End of virtual physical EOT determination */
 
     /* Build the 6-byte block header */
     awshdr.curblkl[0] = 0;
@@ -1201,10 +1201,10 @@ off_t           cursize;                /* Current size for size chk */
         cursize=het_tell(dev->hetb);
         if(cursize>dev->tdparms.maxsize)
         {
-            logmsg(_("TAPE EOT Handling : max capacity exceeded\n"));
+            logmsg(_("TAPE EOT Handling: max capacity exceeded\n"));
             if(dev->tdparms.strictsize)
             {
-                logmsg(_("TAPE EOT Handling : max capacity enforced\n"));
+                logmsg(_("TAPE EOT Handling: max capacity enforced\n"));
                 het_bsb(dev->hetb);
                 cursize=het_tell(dev->hetb);
                 ftruncate( fileno(dev->hetb->fd),cursize);
@@ -1748,8 +1748,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Unit exception if beyond end of tape */
-    /* ISW : CHANGED PROCESSING - RETURN UNDEFINITE Tape Marks */
-    /*       NOTE : The last entry in the TDF table is ALWAYS  */
+    /* ISW: CHANGED PROCESSING - RETURN UNDEFINITE Tape Marks  */
+    /*       NOTE: The last entry in the TDF table is ALWAYS   */
     /*              an EOT Condition                           */
     /*              This is ensured by the TDF reading routine */
 #if 0
@@ -3311,9 +3311,9 @@ BYTE*           msg;                    /* (work buf ptr)            */
 } /* end function load_display */
 
 /*-------------------------------------------------------------------*/
-/* ISW : START Of New SENSE handling */
+/* ISW: START Of New SENSE handling */
 
-/* ISW : Extracted from original build_sense routine */
+/* ISW: Extracted from original build_sense routine */
 int IsAtLoadPoint(DEVBLK *dev)
 {
 int ldpt=0;
@@ -3688,7 +3688,7 @@ static void build_sense_3410_3420(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccw
         /* On 3411/3420 the tape runs off the reel in that case */
         /* this will cause pressure loss in both columns */
     case TAPE_BSENSE_LOCATEERR:
-        /* Locate error : This is more like improperly formatted tape */
+        /* Locate error: This is more like improperly formatted tape */
         /* i.e. the tape broke inside the drive                       */
         /* So EC instead of DC                                        */
     case TAPE_BSENSE_TAPELOADFAIL:
@@ -3784,7 +3784,7 @@ static void build_sense_3420(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode)
 }
 /*-------------------------------------------------------------------*/
 /* Construct sense bytes and unit status                             */
-/* note : name changed because semantic changed                      */
+/* note  name changed because semantic changed                       */
 /* ERCode is the internal Error Recovery code                        */
 /*-------------------------------------------------------------------*/
 void build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code)
@@ -3857,19 +3857,19 @@ static struct tape_format_entry fmttab[]={
 };
 
 /*-------------------------------------------------------------------*/
-/* mountnewtape : mount a tape in the drive */
-/* Syntax :                                 */
+/* mountnewtape: mount a tape in the drive  */
+/* Syntax:                                  */
 /* filename [parms]                         */
-/*    where parms are :                     */
-/*          awstape :                       */
+/*    where parms are:                      */
+/*          awstape:                        */
 /*                    set the HET parms     */
 /*                    be compatible with the*/
 /*                    R|P/390|IS tape file  */
 /*                    Format (HET files)    */
-/*          idrc|compress=0|1 :             */
+/*          idrc|compress = 0|1:            */
 /*                    Write tape blocks     */
 /*                    with compression      */
-/*            (std deviation : Read backwrd */
+/*            (std deviation: Read backwrd  */
 /*            allowed on compressed HET     */
 /*            tapes while it is not on IDRC */
 /*            formated 3480 tapes)          */
@@ -3916,7 +3916,7 @@ union
         if(rc<0)
         {
             regerror(rc,&regwrk,errbfr,1024);
-            logmsg (_("HHCTA999E Device %4.4X : Unable to determine tape format type for %s : Internal error : Regcomp error %s on index %d\n"),dev->devnum,dev->filename,errbfr,i);
+            logmsg (_("HHCTA999E Device %4.4X: Unable to determine tape format type for %s: Internal error: Regcomp error %s on index %d\n"),dev->devnum,dev->filename,errbfr,i);
                 return -1;
         }
         rc=regexec(&regwrk,dev->filename,1,&regwrk2,0);
@@ -3931,7 +3931,7 @@ union
             break;
         }
         regerror(rc,&regwrk,errbfr,1024);
-        logmsg (_("HHCTA999E Device %4.4X : Unable to determine tape format type for %s : Internal error : Regexec error %s on index %d\n"),dev->devnum,dev->filename,errbfr,i);
+        logmsg (_("HHCTA999E Device %4.4X: Unable to determine tape format type for %s: Internal error: Regexec error %s on index %d\n"),dev->devnum,dev->filename,errbfr,i);
         regfree(&regwrk);
         return -1;
 #else
@@ -3977,7 +3977,7 @@ union
             break;
         default:                // (should not occur)
             ASSERT(0);
-            logmsg (_("HHCTA999E Device %4.4X : Unable to determine tape format type for %s\n"),dev->devnum,dev->filename);
+            logmsg (_("HHCTA999E Device %4.4X: Unable to determine tape format type for %s\n"),dev->devnum,dev->filename);
             return -1;
         }
         if (!rc) break;
@@ -3985,7 +3985,7 @@ union
     }
     if (strcmp (dev->filename, TAPE_UNLOADED)!=0)
     {
-        logmsg (_("HHCTA998I Device %4.4X : %s is a %s\n"),dev->devnum,dev->filename,fmttab[i].descr);
+        logmsg (_("HHCTA998I Device %4.4X: %s is a %s\n"),dev->devnum,dev->filename,fmttab[i].descr);
     }
 
     /* Initialize device dependent fields */
@@ -4013,11 +4013,11 @@ union
     /* Process remaining parameters */
     for (i = 1; i < argc; i++)
     {
-        logmsg (_("XXXXXXXXX Device %4.4X : parameter: '%s'\n"), dev->devnum,argv[i]);
+        logmsg (_("HHCTA066I Device %4.4X: parameter: '%s'\n"), dev->devnum,argv[i]);
         switch (parser (&ptab[0], argv[i], &res))
         {
         case TDPARM_NONE:
-            logmsg (_("HHCTA067E Device %4.4X : %s - Unrecognized parameter: '%s'\n"), dev->devnum,dev->filename,argv[i]);
+            logmsg (_("HHCTA067E Device %4.4X: %s - Unrecognized parameter: '%s'\n"), dev->devnum,dev->filename,argv[i]);
             return -1;
             break;
 
@@ -4129,7 +4129,7 @@ union
 /*-------------------------------------------------------------------*/
 /* AUTOLOADER Feature */
 
-/* autoload_global_parms : Appends a blank delimited word */
+/* autoload_global_parms: Appends a blank delimited word  */
 /* to the list of parameters that will be passed          */
 /* for every tape mounted by the autoloader               */
 
@@ -4147,7 +4147,7 @@ static void autoload_global_parms(DEVBLK *dev,char *par)
 }
 
 /*-------------------------------------------------------------------*/
-/* autoload_clean_entry : release storage allocated */
+/* autoload_clean_entry: release storage allocated  */
 /* for an autoloader slot (except the slot itself   */
 
 static void autoload_clean_entry(DEVBLK *dev,int ix)
@@ -4167,7 +4167,7 @@ static void autoload_clean_entry(DEVBLK *dev,int ix)
 }
 
 /*-------------------------------------------------------------------*/
-/* autoload_close : terminate autoloader operations */
+/* autoload_close: terminate autoloader operations  */
 /* release all storage allocated by the autoloader  */
 /* facility                                         */
 static void autoload_close(DEVBLK *dev)
@@ -4198,14 +4198,14 @@ static void autoload_close(DEVBLK *dev)
 }
 
 /*-------------------------------------------------------------------*/
-/* autoload_tape_entry : populate an autoloader slot */
+/* autoload_tape_entry: populate an autoloader slot  */
 /*           also expands the size of the autoloader */
 
 static void autoload_tape_entry(DEVBLK *dev,char *fn,char **strtokw)
 {
     char *p;
     TAPEAUTOLOADENTRY tae;
-    logmsg(_("TAPE Autoloader : Adding tape entry %s\n"),fn);
+    logmsg(_("TAPE Autoloader: Adding tape entry %s\n"),fn);
     memset(&tae,0,sizeof(tae));
     tae.filename=malloc(strlen(fn)+sizeof(char)+1);
     strcpy(tae.filename,fn);
@@ -4233,7 +4233,7 @@ static void autoload_tape_entry(DEVBLK *dev,char *fn,char **strtokw)
 }
 
 /*-------------------------------------------------------------------*/
-/* autoload_init : initialise the Autoloader feature */
+/* autoload_init: initialise the Autoloader feature */
 
 static void autoload_init(DEVBLK *dev,int ac,char **av)
 {
@@ -4254,7 +4254,7 @@ static void autoload_init(DEVBLK *dev,int ac,char **av)
     {
         return;
     }
-    logmsg(_("TAPE : Autoloader file request fn=%s\n"),&av[0][1]);
+    logmsg(_("TAPE: Autoloader file request fn=%s\n"),&av[0][1]);
     hostpath(pathname, &av[0][1], sizeof(pathname));
     if(!(aldf=fopen(pathname,"r")))
     {
@@ -4302,7 +4302,7 @@ static void autoload_init(DEVBLK *dev,int ac,char **av)
 }
 
 /*-------------------------------------------------------------------*/
-/* autoload_mount_tape : mount in the drive the tape */
+/* autoload_mount_tape: mount in the drive the tape */
 /*       positionned in the autoloader slot #alix    */
 
 static int autoload_mount_tape(DEVBLK *dev,int alix)
@@ -4345,7 +4345,7 @@ static int autoload_mount_tape(DEVBLK *dev,int alix)
 }
 
 /*-------------------------------------------------------------------*/
-/* autoload_mount_first : mount in the drive the tape */
+/* autoload_mount_first: mount in the drive the tape */
 /*       positionned in the 1st autoloader slot       */
 
 static int autoload_mount_first(DEVBLK *dev)
@@ -4355,7 +4355,7 @@ static int autoload_mount_first(DEVBLK *dev)
 }
 
 /*-------------------------------------------------------------------*/
-/* autoload_mount_next : mount in the drive the tape */
+/* autoload_mount_next: mount in the drive the tape */
 /*       positionned in the slot after the currently */
 /*       mounted tape. if this is the last tape,     */
 /*       close the autoloader                        */
@@ -4741,13 +4741,13 @@ static int tapedev_close_device ( DEVBLK *dev )
 /*-------------------------------------------------------------------*/
 /* Ivan Warren 20030224                                              */
 /* Determine if a CCW code is valid for the Device                   */
-/* rc = 0 : Command is NOT valid                                     */
-/* rc = 1 : Command is Valid, tape MUST be loaded                    */
-/* rc = 2 : Command is Valid, tape NEED NOT be loaded                */
-/* rc = 3 : Command is Valid, But is a NO-OP (Return CE+DE now)      */
-/* rc = 4 : Command is Valid, But is a NO-OP for virtual tapes       */
-/* rc = 5 : Command is Valid, Tape Must be loaded - Add DE to status */
-/* rc = 6 : Command is Valid, Tape load attempted - but not an error */
+/*  rc = 0: Command is NOT valid                                     */
+/*  rc = 1: Command is Valid, tape MUST be loaded                    */
+/*  rc = 2: Command is Valid, tape NEED NOT be loaded                */
+/*  rc = 3: Command is Valid, But is a NO-OP (Return CE+DE now)      */
+/*  rc = 4: Command is Valid, But is a NO-OP for virtual tapes       */
+/*  rc = 5: Command is Valid, Tape Must be loaded - Add DE to status */
+/*  rc = 6: Command is Valid, Tape load attempted - but not an error */
 /*          (used for sense and no contingency allegiance exists)    */
 /*-------------------------------------------------------------------*/
 
@@ -4840,7 +4840,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     }
 
     /* Open the device file if necessary */
-    /* Ivan Warren 2003-02-24 : Change logic in early determination
+    /* Ivan Warren 2003-02-24: Change logic in early determination
      * of CCW handling - use a determination table
     */
     drc=TapeCommandIsValid(code,dev->devtype,&rustat);
@@ -5223,7 +5223,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     {
         BYTE  blockid[8];       // (temp work)
 
-        /* ISW : Removed 3480 check - checked performed previously */
+        /* ISW: Removed 3480 check - checked performed previously */
         /* Only valid on 3480 devices */
         /*
         if (dev->devtype != 0x3480)
@@ -5825,7 +5825,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             break;
         }
         *residual = count - 1;
-        /* FIXME : Handle Supervisor Inhibit and IDRC bits */
+        /* FIXME: Handle Supervisor Inhibit and IDRC bits */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -5904,7 +5904,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /* SENSE ID                                                      */
     /*---------------------------------------------------------------*/
         /* SENSE ID did not exist on the 3803 */
-        /* Changed logic : numdevid is 0 if 0xE4 not supported */
+        /* Changed logic: numdevid is 0 if 0xE4 not supported */
         if (!dev->numdevid)
         {
             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
@@ -6259,7 +6259,7 @@ DEVHND tapedev_device_hndinfo = {
 };
 
 /* Libtool static name colision resolution */
-/* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
+/* note: lt_dlopen will look for symbol & modulename_LTX_symbol */
 #if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
 #define hdl_ddev hdt3420_LTX_hdl_ddev
 #define hdl_depc hdt3420_LTX_hdl_depc
