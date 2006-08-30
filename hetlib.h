@@ -93,15 +93,6 @@ typedef struct _hetb
 #define HETMETH_BZLIB           2       /* BZLIB compression                */
 
 /*
-|| Default settings
-*/
-#define HETDFLT_COMPRESS        TRUE    /* Compress written data            */
-#define HETDFLT_DECOMPRESS      TRUE    /* Decompress read data             */
-#define HETDFLT_METHOD          HETMETH_ZLIB /* Use ZLIB compression        */
-#define HETDFLT_LEVEL           4       /* Middle of the road               */
-#define HETDFLT_CHKSIZE         HETMAX_BLOCKSIZE /* As big as it gets       */
-
-/*
 || Limits
 */
 #define HETMIN_METHOD           1       /* Minimum compression method       */
@@ -116,6 +107,15 @@ typedef struct _hetb
 #define HETMAX_CHUNKSIZE        65535   /* Maximum chunksize                */
 #define HETMIN_BLOCKSIZE        1       /* Minimum blocksize                */
 #define HETMAX_BLOCKSIZE        65535   /* Maximum blocksize                */
+
+/*
+|| Default settings
+*/
+#define HETDFLT_COMPRESS        TRUE    /* Compress written data            */
+#define HETDFLT_DECOMPRESS      TRUE    /* Decompress read data             */
+#define HETDFLT_METHOD          HETMETH_ZLIB /* Use ZLIB compression        */
+#define HETDFLT_LEVEL           4       /* Middle of the road               */
+#define HETDFLT_CHKSIZE         HETMAX_BLOCKSIZE /* As big as it gets       */
 
 /*
 || Flags for het_open()
