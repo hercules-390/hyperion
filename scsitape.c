@@ -61,7 +61,7 @@ void define_BOT_pos( DEVBLK *dev )
     U32 msk  = 0xFF3FFFFF;      // (3480/3490 default)
     U32 bot  = 0x01000000;      // (3480/3490 default)
 
-    if ( 0x3590 == dev->devtype )
+    if ( dev->stape_blkid_32 )
     {
         msk  = 0xFFFFFFFF;      // (3590 default)
         bot  = 0x00000000;      // (3590 default)
@@ -918,18 +918,21 @@ int erg_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
 {
 #if defined( OPTION_SCSI_ERASE_GAP )
 
-    struct mtop opblk;
-
-    opblk.mt_op    = MTERASE;
-    opblk.mt_count = 0;         // (zero means "short" erase-gap)
-
-    if ( ioctl_tape( dev->fd, MTIOCTOP, (char*)&opblk ) < 0 )
+    if (!dev->stape_no_erg)
     {
-        logmsg (_("HHCTA999E Erase Gap error on %u:%4.4X=%s; errno=%d: %s\n"),
-                SSID_TO_LCSS(dev->ssid), dev->devnum,
-                dev->filename, errno, strerror(errno));
-        build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
-        return -1;
+        struct mtop opblk;
+    
+        opblk.mt_op    = MTERASE;
+        opblk.mt_count = 0;         // (zero means "short" erase-gap)
+    
+        if ( ioctl_tape( dev->fd, MTIOCTOP, (char*)&opblk ) < 0 )
+        {
+            logmsg (_("HHCTA999E Erase Gap error on %u:%4.4X=%s; errno=%d: %s\n"),
+                    SSID_TO_LCSS(dev->ssid), dev->devnum,
+                    dev->filename, errno, strerror(errno));
+            build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
+            return -1;
+        }
     }
 #endif // defined( OPTION_SCSI_ERASE_GAP )
 
@@ -1032,6 +1035,10 @@ void* get_stape_status_thread( void *db )
     struct mtget mtget;                 /* device status work field  */
     int rc;                             /* return code               */
 
+    struct timeval beg_tod;
+    struct timeval end_tod;
+    struct timeval diff_tod;
+
     // PROGRAMMING NOTE: it is EXTREMELY IMPORTANT that the status-
     // retrieval thread (i.e. ourselves) be set to a priority that
     // is AT LEAST one priority slot ABOVE what the device-threads
@@ -1068,6 +1075,8 @@ void* get_stape_status_thread( void *db )
 
     do
     {
+        gettimeofday( &beg_tod, NULL );
+
         // Notify requestors we received their request(s)...
         dev->stape_getstat_busy = 1;
         broadcast_condition( &dev->stape_getstat_cond );
@@ -1136,15 +1145,6 @@ void* get_stape_status_thread( void *db )
                 rc = ioctl_tape( dev->fd, MTIOCGET, (char*)&mtget );
             }
             obtain_lock( &dev->stape_getstat_lock );
-
-            // PROGRAMMING NOTE: it's IMPORTANT to save the time
-            // of the last query AFTER it returns and not before.
-            // Otherwise if the actual query takes longer than 1
-            // second we'd end up not waiting at all (0 seconds)
-            // between each query! (which is the very thing we
-            // are trying to prevent from happening!)
-
-            gettimeofday( &dev->stape_getstat_query_tod, NULL );
         }
         else
             rc = -1;
@@ -1162,8 +1162,29 @@ void* get_stape_status_thread( void *db )
 
         // Notify requestors new updated status is available
         // and go back to sleep to wait for the next request...
+
+        {
+            // PROGRAMMING NOTE: it's IMPORTANT to save the time
+            // of the last query AFTER it returns and not before.
+            // Otherwise if the actual query takes longer than 1
+            // second we'd end up not waiting at all (0 seconds)
+            // between each query! (which is the very thing we
+            // are trying to prevent from happening!)
+
+            gettimeofday( &end_tod, NULL );
+        }
+
         dev->stape_getstat_busy = 0;                        // (idle; waiting for work)
         broadcast_condition( &dev->stape_getstat_cond );    // (new status available)
+
+        {
+            VERIFY(0 == timeval_subtract( &beg_tod, &end_tod, &diff_tod ) );
+            PTT("stat query", (diff_tod.tv_sec * 1000) + ((diff_tod.tv_usec + 500) / 1000), 0, 0);
+
+            dev->stape_getstat_query_tod.tv_sec  = end_tod.tv_sec;
+            dev->stape_getstat_query_tod.tv_usec = end_tod.tv_usec;
+        }
+
         wait_condition( &dev->stape_getstat_cond, &dev->stape_getstat_lock );
     }
     while ( !sysblk.shutdown && !dev->stape_threads_exit );

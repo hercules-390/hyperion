@@ -187,13 +187,16 @@ a real System/390.  The configuration file is an ASCII text file.
     The <code>scsimount</code> panel command may also be used to display
     and/or modify this value on demand once Hercules has been started. Note
     too that the <code>scsimount</code> panel command also lists any mounts
-    and/or dismounts that may still be pending.
+    and/or dismounts that may still be pending on the drive, as long as
+    you've define your tape drive as a model that has an LCD "display"
+    (such as a model 3480, 3490 or 3590).
     <p>
     <i>
     <b>Note:</b> &nbsp;enabling this option may cause Hercules to take
     longer to shutdown depending on the value specified for this option
-    as well as how the host operating system (Windows, Linux, etc) handles
-    host-attached SCSI-tape-drive status queries.
+    as well as how the host operating system (Windows, Linux, etc) and
+    associated hardware (SCSI adapter) behaves to drive status queries
+    for drives which do not have any media currently mounted on them.
     </i>
     <p>
 
@@ -1520,9 +1523,91 @@ a real System/390.  The configuration file is an ASCII text file.
         a mainframe just fine, thus providing a convenient means of exchanging
         data between the two).
         <p>
-        If you plan on using SCSI tapes with Hercules you might also be interested
-        in the <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a> configuration option.
+        The only <i>required</i> device statement parameter for SCSI attached tape
+        drives is the name of the device as it is known by the host (as explained
+        above). However, depending on what actual model of SCSI tape drive you
+        actually have and how it behaves, you may need to specify one or more
+        additional optional parameters for Hercules to provide proper emulation
+        of the desired device type.
         <p>
+        For example: a Quantum 'DLT' (Digital Linear Tape) SCSI tape drive does
+        not return nor use a block-id format compatible with 3480/3490 drives
+        (it instead uses a full 32-bit block-id just like the model 3590 does).
+        It also does not support the Erase Gap CCW at all.
+        <p>
+        Thus, in order to use, for example, a Quantum DLT drive with Hercules,
+        you <i>MUST</i> specify some special additional options to prevent the
+        Erase Gap command from being issued to the drive as well as to inform
+        Hercules that the drive uses 32-bit block-ids.
+        <p>
+        At present, the only optional device statement parameters supported are
+        those listed below.
+        <p>
+        <b>Please note</b> that the below options define how the actual SCSI hardware
+        device behaves, which is completely different from the way the <i>emulated</i>
+        device will appear to behave to your guest. That is to say, if you define
+        your tape drive to Hercules as a 3480 device, then Hercules will perform
+        3480 device type emulation such that the device appears to your guest o/s
+        as if it were a 3480 device. If the <i>actual</i> SCSI device behaves as
+        a 3590 device however (perhaps using/returning 32-bit block-ids instead
+        of the expected 22-bit format block-ids that 3480's use), then you <i>MUST</i>
+        specify the <code>--blkid-32</code> special option on your Hercules device
+        statement so that Hercules's emulation logic can know that it needs to
+        translate 22-bit block-ids to 32-bit ones before sending them to the
+        actual SCSI hardware (and vice versa: to translate 32-bit block-ids from
+        the actual SCSI drive into 22-bit format block-ids that your guest expects
+        from a 3480 device).
+        <p>
+                <center><h4>Special options for SCSI tapes</h4></center>
+        <p>
+        <dl>
+        <dt><code>--no-erg</code>
+        <dd><p>
+            This option is intended to prevent issuance of the Erase Gap
+            command to those SCSI tape drives which do not support it (such
+            as the Quantum DLT series). It causes Hercules's device emulation
+            logic to ignore any Erase Gap commands issued to the drive and
+            to return immediate 'success' instead.
+            <p>
+            This option should
+            only be used (specified) for drives such as the Quantum, which
+            support switching from read mode to write mode in the middle of
+            a data stream without the need of an intervening Erase Gap command.
+            Specifying it for any other model SCSI drive may cause incorrect
+            functioning as a result of the Erase Gap command not being issued
+            to the actual SCSI hardware.
+            <p>
+            Check the manufacturer information for your particular model of
+            SCSI-attached tape drive (and/or use Fish's
+            "<a href="http://www.softdevlabs.com/Hercules">ftape</a>"
+            Windows utility)
+            to determine whether or not this option is needed for your
+            particular drive.
+            <p>
+        <dt><code>--blkid-32</code>
+        <dd><p>
+            This option indicates that your SCSI-attached tape drive only
+            supports 32-bit block-ids (as used by 3590 drives) and not the 22-bit
+            format used by 3480/3490 drives. You should only specify this option
+            if you intend to define the drive as a model 3480 or 3490 device, and
+            then only if your actual SCSI drive uses 32-bit block-ids of course.
+            If you define your Hercules tape drive as a model 3590 device however,
+            then this option is of course not needed since model 3590 drives
+            are already presumed to use 32-bit block-ids.
+            <p>
+            Specifying this option on a 3480/3490 device statement will cause
+            Hercules device emulation logic to automatically translate the actual
+            SCSI tape drive's 32-bit block-id into 22-bit format before returning
+            it back to the guest operating system (since that is the format it
+            expects it to be in for a model 3480/3490 drive), and to translate the
+            guest's 22-bit format block-id into 32-bit format before sending it
+            to the actual SCSI hardware (since that is the format that the actual
+            hardware requires it to be in).
+        </dl>
+        <p>
+        NOTE: If you plan on using SCSI tapes with Hercules you might also be interested
+        in the <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a> configuration option.
+        <p><br>
 
     <dt><b>Optical Media Attach (OMA) virtual files</b>
     <dd><p>
@@ -1568,7 +1653,7 @@ a real System/390.  The configuration file is an ASCII text file.
         If you have any IBM manuals in Bookmanager format on CDROM,
         you can see some examples of TDF files in the
         <code>\TAPES</code> directory on the CDROM.
-        <p>
+        <p><br>
 
     <dt><b>AWSTAPE virtual files</b>
     <dd><p>
@@ -1579,9 +1664,9 @@ a real System/390.  The configuration file is an ASCII text file.
         used by the P/390.
         The argument specifies the location of the AWSTAPE file
         (for example <code>ickdsf.ipl</code>)
-        <p>
+        <p><br>
 
-    <dt><b>HET virtual files</b>
+    <dt><b>HET virtual files</b> &nbsp;&nbsp; (<b>H</b>ercules <b>E</b>mulated <b>T</b>ape)
     <dd><p>
         These contain a complete tape in one file and have the same
         structure as the AWSTAPE format with the added ability to have
@@ -1609,9 +1694,9 @@ a real System/390.  The configuration file is an ASCII text file.
         <dd><p>
             <code>COMPRESS</code> and <code>IDRC</code> control
             whether compression should be used when writing to HET
-            files.  The value <code><em>n</em></code> can be <code>1</code>
+            files.  The value <code><em>n</em></code> &nbsp;can be <code>1</code>
             to turn on compression (the default) or <code>0</code> to turn
-            it off.  <code>IDRC</code> is a currently a synonym for
+            it off.  <code>IDRC</code> is currently a synonym for
             <code>COMPRESS</code>, but may be used in the future to
             control other emulated tape drive features.
             <p>
@@ -1628,7 +1713,7 @@ a real System/390.  The configuration file is an ASCII text file.
         <dd><p>
             The <code>LEVEL</code> option controls the level of
             compression.  It ranges from <code>1</code> for fastest
-            compression to <code>9</code> for best compression.
+            compression to <code>9</code> &nbsp;for best compression.
             The default is <code>4</code>.
             <p>
 
@@ -1640,7 +1725,7 @@ a real System/390.  The configuration file is an ASCII text file.
             logically broken up into smaller chunks.  For instance, if
             your S/3x0 application creates tapes with a block size of
             27998, those blocks would be broken down into
-            <code><em>nnnnn</em></code> sized chunks.
+            <code><em>nnnnn</em></code> &nbsp;sized chunks.
             The range is from <code>4096</code>
             to <code>65535</code>, the latter being the default.
             Decreasing the value from its default may reduce compression
@@ -1672,7 +1757,7 @@ a real System/390.  The configuration file is an ASCII text file.
         <dd><p>
             Specifies the number of bytes remaining before reaching <em>maxsize</em>
             at which point the tape device will signal the presence of the 'End Of Tape'
-            marker, thus allowing the program to switch to the next tape.
+            marker (reflector), thus allowing the program to switch to the next tape.
             <p>
 
         </dl>
@@ -1682,23 +1767,25 @@ a real System/390.  The configuration file is an ASCII text file.
     really describes a list of tape emulation files to be loaded in succession.
     <p>
 
-    The syntax of each line is identical to the information specified that can be
-    specified after the device type when the emulation file is specified directly
+    The syntax of each line is identical to the information that can be
+    specified after the device type when the options are specified directly
     after the device type in the configuration file.
     <p>
 
-    If the emulation file filename in the file list is the '*' character, then this
-    specifies a set of options to be applied to all additional emulation files
-    specified in the file list.
+    If the emulation file filename in the file list is the '<b>*</b>' (asterisk)
+    character, then this specifies a set of options to be applied to <i>all</i>
+    additional emulation files specified in the file list.
     <p>
 
-    Parameters are appended in succession. In all cases, is the same parameter is
+    Parameters are appended in succession. In all cases, if the same parameter is
     specified more than once, the last instance takes precedence.
     <p>
 
     Therefore, it is possible to specify a set of parameters in the base configuration
-    file, another set on a '*' line, and another set for each individual lines.
-    Parameter are then appended in that order.
+    file, another set on a '*' line, and another set for each individual line.
+    Parameters are then appended in that order: options specified on the base device
+    statement itself first, followed by those options specified on the '*' statement,
+    and finally those specified on each individual file list statement last.
     <p>
 
     <i>A <b>SCSI tape</b> device should <b><u>NOT</u></b> be given in a file list.</i>

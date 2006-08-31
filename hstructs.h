@@ -862,6 +862,8 @@ struct DEVBLK {                         /* Device configuration block*/
                                            (struct mtget->mt_gstat)  */
         TID     stape_mountmon_tid;     /* Tape-mount monitor thread */
         u_int   stape_close_rewinds:1;  /* 1=Rewind at close         */
+        u_int   stape_blkid_32:1;       /* 1=block-ids are 32 bits   */
+        u_int   stape_no_erg:1;         /* 1=ignore Erase Gap CCWs   */
         u_int   stape_getstat_busy:1;   /* 1=Status wrkr thrd busy   */
         u_int   stape_threads_exit:1;   /* 1=Ask helpr thrds to exit */
         TID     stape_getstat_tid;      /* Tape status wrkr thrd tid */

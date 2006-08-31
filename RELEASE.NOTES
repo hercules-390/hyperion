@@ -38,7 +38,7 @@
 * Real SCSI tape drives used with Hercules must provide a certain minimum set
   is "IBM compatible" support in their SCSI command set/behavior in order to
   work properly with Hercules. Furthermore, the Hercules device-type used on
-  your device statement in your Hercules configuration file must match the
+  your device statement in your Hercules configuration file should match the
   the level of support/behavior that they provide.
 
   For example, all SCSI tape drives used with Hercules must provide the ability
@@ -51,22 +51,36 @@
   mainframe tape drives report them. 3480/3490 tape drives for example report
   their block-ids (used in Read Block Id and Locate CCWs) in a very specific
   format wherein bits 1-7 of the high-order byte of the reported 4-byte block-
-  id indicates the tape's physical "segment" location of where the lower 20-
-  bit block-id block is physically located on the tape. (The block-id segment
-  is used by the tape drive to quickly position itself to the approximate
-  location where the desired block acually resides and thus allows high-speed
-  positioning for the Locate CCW).
+  id indicates the tape's physical "segment" location of where the lower 22-
+  bit block number is physically located on the tape. (The block-id segment
+  is used to allow the tape drive to quickly position itself to the approximate
+  location where the desired block acually resides on the tape and thus allows
+  high-speed positioning for the Locate CCW).
 
-  If the model of SCSI tape drive you are actually using with Hercules however
-  does not use this same block-id format, then it cannot be used with Hercules
-  as a 3480 or 3490 model tape drive. If the SCSI tape drive you are using
-  reports its block-ids using a full 32-bit block-id value (the same way a
-  3590 model tape drive does), then it MUST be defined to Hercules as a model
-  3590 device-type or else chances are good it will not work properly with your
-  guest operating system. (Of course it goes without saying that your guest
-  operating system [that you're running under Hercules] should also support/
-  understand model 3590 tape drives too if you expect your real SCSI tape drive
-  to work properly with Hercule and your guest operating system)
+  If the model of SCSI tape drive you are actually using with Hercules does not
+  use this same block-id format however, then it cannot be used with Hercules
+  as a 3480 or 3490 model tape drive with specially defined options.
+
+  If the SCSI tape drive you are using reports its block-ids using a 32-bit
+  block-id value (the same way a 3590 model tape drive does), then similarly,
+  it should be defined to Hercules as a model 3590 device-type as well (since
+  that is how it is behaving with respect the format of the returned blockid
+  values). It you wish to define it in Hercules as a model 3480 or 3490, then
+  you will need to use specially defined options before it will work properly
+  as the model drive you wish it to emulate.
+
+  With all that being said, it should be noted that PARTIAL support for 3590
+  device emulation is possible with judicious use the aforementioned special
+  options, but full/complete 3590 support is unlikely due to lack of publicly
+  available documentation. Details regarding 3590 CCW handling is restricted 
+  (confidential) IBM proprietary information, and is not normally available
+  outside of IBM. Not long ago IBM was required by US law to publish such
+  information, but unfortunately for Hercules, such is no longer the case.
+
+  For further information regarding use of SCSI attached tape drives with
+  Hercules and their associated specially defined options, please refer to
+  the section on SCSI tape drives in the Hercules's Device Configuration
+  documentation.
 
 -------------------------------------------------------------------------------
 

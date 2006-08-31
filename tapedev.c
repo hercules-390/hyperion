@@ -57,12 +57,15 @@
 /*      3480 Read Block ID and Locate CCWs by Brandon Hill           */
 /*      Unloaded tape support by Brandon Hill                    v209*/
 /*      HET format support by Leland Lucius                      v209*/
+/*      3590 support by Fish (David B. Trout)  ** INCOMPLETE **      */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/* Reference information for OMA file formats:                       */
+/* Reference information:                                            */
 /* SC53-1200 S/370 and S/390 Optical Media Attach/2 User's Guide     */
 /* SC53-1201 S/370 and S/390 Optical Media Attach/2 Technical Ref    */
+/* SG24-2506 IBM 3590 Tape Subsystem Technical Guide                 */
+/* GA32-0331 Magstar 3590 Hardware Reference                         */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -109,6 +112,8 @@ static PARSER ptab[] =
     { "strictsize", "%d" },
     { "readonly", "%d" },
     { "deonirq", "%d" },
+    { "--blkid-32", NULL },
+    { "--no-erg", NULL },
     { NULL, NULL },
 };
 
@@ -131,7 +136,9 @@ enum
     TDPARM_EOTMARGIN,
     TDPARM_STRICTSIZE,
     TDPARM_READONLY,
-    TDPARM_DEONIRQ
+    TDPARM_DEONIRQ,
+    TDPARM_BLKID32,
+    TDPARM_NOERG
 };
 
 /*-------------------------------------------------------------------*/
@@ -211,8 +218,6 @@ static BYTE TapeImmedCommands[256]=
 /*  3: Command is Valid, But is a NO-OP (return CE+DE now)           */
 /*  4: Command is Valid, But is a NO-OP (for virtual tapes)          */
 /*  5: Command is Valid, Tape MUST be loaded (add DE to status)      */
-/*  6: Command is Valid, Tape load attempted (but not an error)      */
-/*          (used for sense and no contingency allegiance exists)    */
 /*-------------------------------------------------------------------*/
 static BYTE TapeCommands3410[256]=
  /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
@@ -309,6 +314,25 @@ static BYTE TapeCommands3480[256]=
     0,0,0,2,2,0,0,0,0,0,0,3,0,0,0,0,  /* E0 */
     0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0}; /* F0 */
 
+static BYTE TapeCommands3590[256]=
+ /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+  { 0,1,1,1,2,0,1,5,0,0,1,2,0,0,0,5,  /* 00 */ /* 0x06 == "Read Forward" added, 0x0C == "Read Backward" replaced with 0x0A == "Read Previous" */
+    0,0,1,3,2,0,0,1,0,0,0,1,0,0,0,1,  /* 10 */
+    0,0,1,3,2,0,0,1,0,0,0,3,0,0,0,1,  /* 20 */
+    0,0,0,3,2,0,0,1,0,0,0,3,0,0,2,1,  /* 30 */ /* 0x3E == "Read SS Data" */
+    0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,  /* 40 */
+    0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,0,  /* 50 */
+    0,0,2,3,2,0,0,0,0,0,0,3,0,0,0,0,  /* 60 */ /* 0x62 == "Read Media Characteristics" */
+    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0,  /* 70 */
+    0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,  /* 80 */
+    0,0,0,3,0,0,0,1,0,0,0,0,0,0,0,2,  /* 90 */
+    0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,2,  /* A0 */
+    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0,  /* B0 */
+    0,0,2,2,0,0,0,2,0,0,0,3,0,0,0,2,  /* C0 */ /* 0xC2 == "Medium Sense", 0xCF == "Mode Sense" */
+    0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0,  /* D0 */
+    0,0,0,2,2,0,0,0,0,0,0,3,0,0,0,0,  /* E0 */
+    0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0}; /* F0 */
+
 static BYTE TapeCommands9347[256]=
  /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
   { 0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5,  /* 00 */
@@ -345,6 +369,7 @@ static BYTE *TapeCommandTable[]={
      TapeCommands3430,  /* 3430 Code Table */
      TapeCommands3480,  /* 3480 (Maybe all 38K Tapes) Code Table */
      TapeCommands9347,  /* 9347 (Maybe all streaming tapes) code table */
+     TapeCommands3590,  /* 3590 Code Table*/
      NULL};
 
 /* Device type list: */
@@ -358,7 +383,7 @@ static int TapeDevtypeList[]={0x3410,0,1,0,0,
                               0x3430,3,0,0,3,
                               0x3480,4,0,0,4,
                               0x3490,4,0,0,4,
-                              0x3590,4,0,0,4,
+                              0x3590,6,0,0,4,
                               0x9347,5,0,0,5,
                               0x9348,5,0,0,5,
                               0x8809,5,0,0,5,
@@ -3839,21 +3864,22 @@ struct tape_format_entry {
     int  fmtcode;                       /* the device code      */
     TAPEMEDIA_HANDLER *tmh;             /* The media dispatcher */
     char *descr;                        /* readable description */
+    char *short_descr;                  /* (same but shorter)   */
 };
 static struct tape_format_entry fmttab[]={
     /* This entry matches a filename ending with .tdf    */
-    {"\\.tdf$",    TAPEDEVT_OMATAPE,  &tmh_oma,  "Optical Media Attachment (OMA) tape"},
+    {"\\.tdf$",    TAPEDEVT_OMATAPE,  &tmh_oma,  "Optical Media Attachment (OMA) tape", "OMA tape" },
 #if defined(OPTION_SCSI_TAPE)
     /* This entry matches a filename starting with /dev/ */
-    {"^/dev/",    TAPEDEVT_SCSITAPE,  &tmh_scsi, "SCSI Tape"},
+    {"^/dev/",    TAPEDEVT_SCSITAPE,  &tmh_scsi, "SCSI attached tape drive", "SCSI tape" },
 #if defined(_MSVC_)
-    {"^\\\\\\\\\\.\\\\Tape[0-9]", TAPEDEVT_SCSITAPE, &tmh_scsi, "SCSI Tape"},
+    {"^\\\\\\\\\\.\\\\Tape[0-9]", TAPEDEVT_SCSITAPE, &tmh_scsi, "SCSI attached tape drive", "SCSI tape" },
 #endif // _MSVC_
 #endif
     /* This entry matches a filename ending with .het    */
-    {"\\.het$",   TAPEDEVT_HET,       &tmh_het,  "Hercules Formatted Tape"},
+    {"\\.het$",   TAPEDEVT_HET,       &tmh_het,  "Hercules Emulated Tape file", "HET tape" },
     /* This entry matches any other entry                */
-    {NULL,        TAPEDEVT_AWSTAPE,   &tmh_aws,  "AWS Format tape file   "} /* Anything goes */
+    {NULL,        TAPEDEVT_AWSTAPE,   &tmh_aws,  "AWS Format tape file", "AWS tape" } /* Anything goes */
 };
 
 /*-------------------------------------------------------------------*/
@@ -3873,7 +3899,12 @@ static struct tape_format_entry fmttab[]={
 /*            allowed on compressed HET     */
 /*            tapes while it is not on IDRC */
 /*            formated 3480 tapes)          */
-/*  .. TO DO ..                             */
+/*  --no-erg: for SCSI tape only, means to  */
+/*            ignore Erase Gap i/o's and to */
+/*            return 'success' instead.     */
+/*  --blkid-32: for SCSI tape only, means   */
+/*            the hardware only supports    */
+/*            full 32-bit block-ids.        */
 static int mountnewtape(DEVBLK *dev,int argc,char **argv)
 {
 #ifdef HAVE_REGEX_H
@@ -3881,6 +3912,8 @@ regex_t    regwrk;                      /* REGEXP work area          */
 regmatch_t regwrk2;                     /* REGEXP match area         */
 char       errbfr[1024];                /* Working storage           */
 #endif
+char*      descr;                       /* Device descr from fmttab  */
+char*      short_descr;                 /* Short descr from fmttab   */
 int        i;                           /* Loop control              */
 int        rc;                          /* various rtns return codes */
 union
@@ -3983,9 +4016,11 @@ union
         if (!rc) break;
 #endif
     }
+    descr       = fmttab[i].descr;       // (save device description)
+    short_descr = fmttab[i].short_descr; // (save device description)
     if (strcmp (dev->filename, TAPE_UNLOADED)!=0)
     {
-        logmsg (_("HHCTA998I Device %4.4X: %s is a %s\n"),dev->devnum,dev->filename,fmttab[i].descr);
+        logmsg (_("HHCTA998I Device %4.4X: %s is a %s\n"),dev->devnum,dev->filename,descr);
     }
 
     /* Initialize device dependent fields */
@@ -4011,90 +4046,192 @@ union
     dev->tdparms.eotmargin = 128*1024; // 128K EOT margin (default)
 
     /* Process remaining parameters */
+    rc = 0;
     for (i = 1; i < argc; i++)
     {
-        logmsg (_("HHCTA066I Device %4.4X: parameter: '%s'\n"), dev->devnum,argv[i]);
+        logmsg (_("HHCTA066I %s device %4.4X parameter: '%s'\n"), short_descr, dev->devnum, argv[i]);
         switch (parser (&ptab[0], argv[i], &res))
         {
         case TDPARM_NONE:
-            logmsg (_("HHCTA067E Device %4.4X: %s - Unrecognized parameter: '%s'\n"), dev->devnum,dev->filename,argv[i]);
-            return -1;
+            logmsg (_("HHCTA067E Device %4.4X: %s - Unrecognized parameter: '%s'\n"),
+                dev->devnum,dev->filename,argv[i]);
+            rc = -1;
             break;
 
         case TDPARM_AWSTAPE:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             dev->tdparms.compress = FALSE;
             dev->tdparms.chksize = 4096;
             break;
 
         case TDPARM_IDRC:
         case TDPARM_COMPRESS:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             dev->tdparms.compress = (res.num ? TRUE : FALSE);
             break;
 
         case TDPARM_METHOD:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             if (res.num < HETMIN_METHOD || res.num > HETMAX_METHOD)
             {
                 logmsg(_("HHCTA068E Method must be within %u-%u\n"),
                     HETMIN_METHOD, HETMAX_METHOD);
-                return -1;
+                rc = -1;
+                break;
             }
             dev->tdparms.method = res.num;
             break;
 
         case TDPARM_LEVEL:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             if (res.num < HETMIN_LEVEL || res.num > HETMAX_LEVEL)
             {
                 logmsg(_("HHCTA069E Level must be within %u-%u\n"),
                     HETMIN_LEVEL, HETMAX_LEVEL);
-                return -1;
+                rc = -1;
+                break;
             }
             dev->tdparms.level = res.num;
             break;
 
         case TDPARM_CHKSIZE:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             if (res.num < HETMIN_CHUNKSIZE || res.num > HETMAX_CHUNKSIZE)
             {
                 logmsg (_("HHCTA070E Chunksize must be within %u-%u\n"),
                     HETMIN_CHUNKSIZE, HETMAX_CHUNKSIZE);
-                return -1;
+                rc = -1;
+                break;
             }
             dev->tdparms.chksize = res.num;
             break;
 
         case TDPARM_MAXSIZE:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             dev->tdparms.maxsize=res.num;
             break;
 
         case TDPARM_MAXSIZEK:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             dev->tdparms.maxsize=res.num*1024;
             break;
 
         case TDPARM_MAXSIZEM:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             dev->tdparms.maxsize=res.num*1024*1024;
             break;
 
         case TDPARM_EOTMARGIN:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             dev->tdparms.eotmargin=res.num;
             break;
 
         case TDPARM_STRICTSIZE:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             dev->tdparms.strictsize=res.num;
             break;
 
         case TDPARM_READONLY:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             dev->tdparms.logical_readonly=(res.num ? 1 : 0 );
             break;
 
         case TDPARM_DEONIRQ:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
             dev->tdparms.deonirq=(res.num ? 1 : 0 );
+            break;
+
+        case TDPARM_BLKID32:
+            if (TAPEDEVT_SCSITAPE != dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"),
+                    argv[i], short_descr );
+                rc = -1;
+                break;
+            }
+            dev->stape_blkid_32 = 1;
+            break;
+
+        case TDPARM_NOERG:
+            if (TAPEDEVT_SCSITAPE != dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"),
+                    argv[i], short_descr );
+                rc = -1;
+                break;
+            }
+            dev->stape_no_erg = 1;
             break;
 
         default:
             logmsg(_("HHCTA071E Error in '%s' parameter\n"), argv[i]);
-            return -1;
+            rc = -1;
             break;
         } // end switch (parser (&ptab[0], argv[i], &res))
     } // end for (i = 1; i < argc; i++)
+
+    if (0 != rc)
+        return -1;
 
     /* Adjust the display if necessary */
     if(dev->tdparms.displayfeat)
@@ -4789,6 +4926,165 @@ int devtfound=0;
 /* END PRELIM_CCW_CHECK */
 
 /*-------------------------------------------------------------------*/
+/* PROGRAMMING NOTE: for the 32-bit to 22-bit (and vice versa)       */
+/* conversion, we're relying on (hoping really!) that an actual      */
+/* 32-bit block-id value will never actually exceed 30 bits (1-bit   */
+/* wrap + 7-bit segment# + 22-bit block-id) since we perform the     */
+/* conversion by simply splitting the low-order 30 bits of a 32-bit  */
+/* block-id into separate 8-bit (wrap and segment#) and 22-bit       */
+/* (block-id) fields, and then shifting them into their appropriate  */
+/* position (and of course combining/appending them for the opposite */
+/* conversion).                                                      */
+/*                                                                   */
+/* As such, this of course implies that we are thus treating the     */
+/* wrap bit and 7-bit segment number values of a "22-bit format"     */
+/* blockid as simply the high-order 8 bits of an actual 30-bit       */
+/* physical blockid (which may or may not work properly on actual    */
+/* SCSI hardware depdending on how[*] it handles inaccurate blockid  */
+/* values).                                                          */
+/*                                                                   */
+/* -----------------                                                 */
+/* [*] Most(?) [SCSI] devices treat the blockid value used in a      */
+/* Locate CCW as simply an "approximate location" of where the       */
+/* block in question actually resides on the physical tape, and      */
+/* will, after positioning itself to the *approximate* physical      */
+/* location of where the block in question is *believed* to reside   */
+/* (as indicated by the supplied Locate blockid), perform the        */
+/* *actual* positioning in low-speed mode based on its reading of    */
+/* its actual internally recorded blockid values. Thus, even when/if */
+/* the supplied Locate block-id value is wrong, the Locate should    */
+/* still succeed, albeit less efficiently (as it may be starting     */
+/* its locate at a physical position quite distant from where the    */
+/* actual block is physically located on the media).                 */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/* Convert a 3590 32-bit blockid into 3480 "22-bit format" blockid   */
+/*-------------------------------------------------------------------*/
+void blockid_32_to_22 ( BYTE *in_32blkid, BYTE *out_22blkid )
+{
+    out_22blkid[0] = ((in_32blkid[0] << 2) & 0xFC) | ((in_32blkid[1] >> 6) & 0x03);
+    out_22blkid[1] = in_32blkid[1] & 0x3F;
+    out_22blkid[2] = in_32blkid[2];
+    out_22blkid[3] = in_32blkid[3];
+}
+
+/*-------------------------------------------------------------------*/
+/* Convert a 3480 "22-bit format" blockid into a 3590 32-bit blockid */
+/*-------------------------------------------------------------------*/
+void blockid_22_to_32 ( BYTE *in_22blkid, BYTE *out_32blkid )
+{
+    out_32blkid[0] = (in_22blkid[0] >> 2) & 0x3F;
+    out_32blkid[1] = ((in_22blkid[0] << 6) & 0xC0) | (in_22blkid[1] & 0x3F);
+    out_32blkid[2] = in_22blkid[2];
+    out_32blkid[3] = in_22blkid[3];
+}
+
+/*-------------------------------------------------------------------*/
+/* Locate CCW helper: convert guest-supplied 3480 or 3590 blockid    */
+/*                    to the actual SCSI hardware blockid format     */
+/*-------------------------------------------------------------------*/
+void blockid_emulated_to_actual
+(
+    DEVBLK  *dev,           // ptr to Hercules device
+    BYTE    *emu_blkid,     // ptr to i/p 4-byte block-id in guest storage
+    BYTE    *act_blkid      // ptr to o/p 4-byte block-id for actual SCSI i/o
+)
+{
+    if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
+    {
+        memcpy( act_blkid, emu_blkid, 4 );
+        return;
+    }
+
+    if (0x3590 == dev->devtype)
+    {
+        // 3590 being emulated; guest block-id is full 32-bits...
+
+        if (dev->stape_blkid_32)
+        {
+            // SCSI using full 32-bit block-ids too. Just copy as-is...
+
+            memcpy( act_blkid, emu_blkid, 4 );
+        }
+        else
+        {
+            // SCSI using 22-bit block-ids. Use low-order 30 bits
+            // of 32-bit guest-supplied blockid and convert it
+            // into a "22-bit format" blockid value for SCSI...
+
+            blockid_32_to_22 ( emu_blkid, act_blkid );
+        }
+    }
+    else // 3480 being emulated; guest block-id is 22-bits...
+    {
+        if (dev->stape_blkid_32)
+        {
+            // SCSI using full 32-bit block-ids. Extract the wrap,
+            // segment# and 22-bit blockid bits from the "22-bit
+            // format" guest-supplied blockid value and combine
+            // (append) them into a contiguous low-order 30 bits
+            // of a 32-bit blockid value for SCSI to use...
+
+            blockid_22_to_32 ( emu_blkid, act_blkid );
+        }
+        else
+        {
+            // SCSI using 22-bit block-ids too. Just copy as-is...
+
+            memcpy( act_blkid, emu_blkid, 4 );
+        }
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* Read Block Id CCW helper:  convert an actual SCSI block-id        */
+/*                            to guest emulated 3480/3590 format     */
+/*-------------------------------------------------------------------*/
+void blockid_actual_to_emulated
+(
+    DEVBLK  *dev,           // ptr to Hercules device (for 'devtype')
+    BYTE    *act_blkid,     // ptr to i/p 4-byte block-id from actual SCSI i/o
+    BYTE    *emu_blkid      // ptr to o/p 4-byte block-id in guest storage
+)
+{
+    if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
+    {
+        memcpy( emu_blkid, act_blkid, 4 );
+        return;
+    }
+
+    if (dev->stape_blkid_32)
+    {
+        // SCSI using full 32-bit block-ids...
+        if (0x3590 == dev->devtype)
+        {
+            // Emulated device is a 3590 too. Just copy as-is...
+            memcpy( emu_blkid, act_blkid, 4 );
+        }
+        else
+        {
+            // Emulated device using 22-bit format. Convert...
+            blockid_32_to_22 ( act_blkid, emu_blkid );
+        }
+    }
+    else
+    {
+        // SCSI using 22-bit format block-ids...
+        if (0x3590 == dev->devtype)
+        {
+            // Emulated device using full 32-bit format. Convert...
+            blockid_22_to_32 ( act_blkid, emu_blkid );
+        }
+        else
+        {
+            // Emulated device using 22-bit format too. Just copy as-is...
+            memcpy( emu_blkid, act_blkid, 4 );
+        }
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
 static void tapedev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
@@ -4895,10 +5191,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /* Process depending on CCW opcode */
     switch (code) {
 
-    case 0x01:
     /*---------------------------------------------------------------*/
     /* WRITE                                                         */
     /*---------------------------------------------------------------*/
+    case 0x01:
         /* Unit check if tape is write-protected */
         if (dev->readonly)
         {
@@ -4922,10 +5218,44 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
+    /*---------------------------------------------------------------*/
+    /* READ FORWARD  (3590 only)                                     */
+    /*---------------------------------------------------------------*/
+    case 0x06:
+
+        /* From: SG24-2506-01 "IBM 3590 Tape Subsystem Technical Guide"
+
+        http://publibz.boulder.ibm.com/cgi-bin/bookmgr/FRAMESET/EZ309601/CCONTENTS?DT=19961211181910
+
+        5.2.1 Separate Channel Commands for IPL Read and Normal Read
+
+        On IBM 3480/3490 tape devices there is only one Read Forward
+        CCW, the X'02' command code.  This CCW is used to perform not
+        only normal read operations but also an IPL Read from tape,
+        for example, DFSMSdss Stand-Alone Restore.  When the CCW is
+        used as an IPL Read, it is not subject to resetting event
+        notification, by definition.  Because there is only one Read
+        Forward CCW, it cannot be subject to resetting event notification
+        on IBM 3480 and 3490 devices.
+
+        To differentiate between an IPL Read and a normal read forward
+        operation, the X'02' command code has been redefined to be the
+        IPL Read CCW, and a new X'06' command code has been defined to
+        be the Read Forward CCW.  The new Read Forward CCW, X'06', is
+        subject to resetting event notification, as should be the case
+        for normal read CCWs issued by applications or other host software.
+        */
+
+        // PROGRAMMING NOTE: I'm not sure what they mean by "resetting
+        // event notification" above, but for now we'll just FALL THROUGH
+        // to the below IPL READ logic...
+
+        // (purposely FALL THROUGH to below IPL READ logic for now)
+
+    /*---------------------------------------------------------------*/
+    /* IPL READ  (non-3590)                                          */
+    /*---------------------------------------------------------------*/
     case 0x02:
-    /*---------------------------------------------------------------*/
-    /* READ FORWARD                                                  */
-    /*---------------------------------------------------------------*/
         /* Read a block from the tape according to device type */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
@@ -4960,17 +5290,17 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         break;
 
-    case 0x03:
     /*---------------------------------------------------------------*/
     /* CONTROL NO-OPERATION                                          */
     /*---------------------------------------------------------------*/
+    case 0x03:
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x07:
     /*---------------------------------------------------------------*/
     /* REWIND                                                        */
     /*---------------------------------------------------------------*/
+    case 0x07:
         if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
              TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
@@ -4995,10 +5325,46 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x0C:
+    /*---------------------------------------------------------------*/
+    /* READ PREVIOUS  (3590)                                         */
+    /*---------------------------------------------------------------*/
+    case 0x0A:
+
+        /* From: SG24-2506-01 "IBM 3590 Tape Subsystem Technical Guide"
+
+        http://publibz.boulder.ibm.com/cgi-bin/bookmgr/FRAMESET/EZ309601/CCONTENTS?DT=19961211181910
+
+        5.2.2 Read Previous to Replace Read Backward:
+
+        The ESCON-attached Magstar tape drive does not support the
+        Read Backward CCW (command code, X'0C').  It supports a new
+        Read Previous CCW that allows processing of an IBM 3590 High
+        Performance Tape Cartridge in the backward direction without
+        the performance penalties that exist with the Read Backward
+        CCW.  IBM 3480 and 3490 devices had to reread the physical
+        block from the medium for each request of a logical block.
+        The Magstar tape drive retains the physical block in the
+        device buffer and satisfies any subsequent Read Previous from
+        the buffer, similar to how Read Forward operates.  The Read
+        Previous CCW operates somewhat like the Read Backward CCW
+        in that it can be used to process the volumes in the backward
+        direction.  It is different from the Read Backward, however,
+        because the data is transferred to the host in the same order
+        in which it was written, rather than in reverse order like
+        Read Backward.
+        */
+
+        // PROGRAMMING NOTE: until we can add support to Hercules
+        // allowing direct SCSI i/o (so that we can issue the 'Read
+        // Reverse' command directly to the SCSI device), we will
+        // simply FALL THROUGH to our existing "Read Backward" logic.
+
+        // (purposely FALL THROUGH to the 'READ BACKWARD' logic below)
+
     /*---------------------------------------------------------------*/
     /* READ BACKWARD                                                 */
     /*---------------------------------------------------------------*/
+    case 0x0C:
         /* Backspace to previous block according to device type */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
@@ -5018,6 +5384,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             build_senseX(TAPE_BSENSE_READTM,dev,unitstat,code);
             break;
         }
+
+        /* Now read in a forward direction the actual data block
+           we just backspaced over */
         len=dev->tmh->read(dev,iobuf,unitstat,code);
 
         /* Exit with unit check status if read error condition */
@@ -5048,10 +5417,32 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x0F:
+    /*---------------------------------------------------------------*/
+    /* READ MEDIA CHARACTERISTICS  (3590)                            */
+    /*---------------------------------------------------------------*/
+    case 0x62:
+
+        /* From: SG24-2506-01 "IBM 3590 Tape Subsystem Technical Guide"
+
+        http://publibz.boulder.ibm.com/cgi-bin/bookmgr/FRAMESET/EZ309601/CCONTENTS?DT=19961211181910
+
+        5.2.3 New Read Media Characteristics
+
+        The new Read Media Characteristics CCW (command code x'62')
+        provides up to 256 bytes of information about the media and
+        formats supported by the Magstar tape drive.
+        */
+
+        // ZZ FIXME: not coded yet.
+
+        /* Set command reject sense byte, and unit check status */
+        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+        break;
+
     /*---------------------------------------------------------------*/
     /* REWIND UNLOAD                                                 */
     /*---------------------------------------------------------------*/
+    case 0x0F:
         if ( dev->tdparms.displayfeat )
         {
             if ( TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype )
@@ -5114,10 +5505,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         ReqAutoMount(dev);
         break;
 
-    case 0x17:
     /*---------------------------------------------------------------*/
     /* ERASE GAP                                                     */
     /*---------------------------------------------------------------*/
+    case 0x17:
         /* Unit check if tape is write-protected */
         if (0
             || dev->readonly
@@ -5148,10 +5539,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         break;
 
-    case 0x97:
     /*---------------------------------------------------------------*/
     /* DATA SECURITY ERASE                                           */
     /*---------------------------------------------------------------*/
+    case 0x97:
         /* Unit check if tape is write-protected */
         if (0
             || dev->readonly
@@ -5189,10 +5580,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         break;
 
-    case 0x1F:
     /*---------------------------------------------------------------*/
     /* WRITE TAPE MARK                                               */
     /*---------------------------------------------------------------*/
+    case 0x1F:
         /* Unit check if tape is write-protected */
         if (dev->readonly)
         {
@@ -5216,24 +5607,12 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x22:
     /*---------------------------------------------------------------*/
     /* READ BLOCK ID                                                 */
     /*---------------------------------------------------------------*/
+    case 0x22:
     {
         BYTE  blockid[8];       // (temp work)
-
-        /* ISW: Removed 3480 check - checked performed previously */
-        /* Only valid on 3480 devices */
-        /*
-        if (dev->devtype != 0x3480)
-        {
-            dev->sense[0] = SENSE_CR;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            build_sense(dev);
-            break;
-        }
-        */
 
         /* Calculate number of bytes and residual byte count */
         len = 2*sizeof(dev->blockid);
@@ -5262,25 +5641,30 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 // Either this is not a scsi tape, or else the MTIOCPOS
                 // call failed; use our emulated blockid value...
 
-                // ZZ FIXME: I hope this is right: if the current position is
-                // unknown (invalid) due to a previous positioning error, then
-                // return a known-to-be-invalid position value...
-
                 if (dev->poserror)
                 {
-                    memset( blockid, 0xFF, 8 );
+                    // ZZ FIXME: I hope this is right: if the current position
+                    // is unknown (invalid) due to a previous positioning error,
+                    // then return a known-to-be-invalid position value...
+
+                    memset( blockid, 0xFF, 4 );
                 }
                 else
                 {
-                    blockid[0] = 0x01;
-                    blockid[1] = (dev->blockid >> 16) & 0x3F;
-                    blockid[2] = (dev->blockid >> 8 ) & 0xFF;
-                    blockid[3] = (dev->blockid      ) & 0xFF;
-
-                    blockid[4] = 0x01;
-                    blockid[5] = (dev->blockid >> 16) & 0x3F;
-                    blockid[6] = (dev->blockid >> 8 ) & 0xFF;
-                    blockid[7] = (dev->blockid      ) & 0xFF;
+                    if (0x3590 == dev->devtype)
+                    {
+                        blockid[0] = (dev->blockid >> 24) & 0xFF;
+                        blockid[1] = (dev->blockid >> 16) & 0xFF;
+                        blockid[2] = (dev->blockid >> 8 ) & 0xFF;
+                        blockid[3] = (dev->blockid      ) & 0xFF;
+                    }
+                    else // (3480 et. al)
+                    {
+                        blockid[0] = 0x01;
+                        blockid[1] = (dev->blockid >> 16) & 0x3F;
+                        blockid[2] = (dev->blockid >> 8 ) & 0xFF;
+                        blockid[3] = (dev->blockid      ) & 0xFF;
+                    }
                 }
 #if defined(OPTION_SCSI_TAPE)
             }
@@ -5289,23 +5673,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 // This IS a scsi tape *and* the MTIOCPOS call succeeded;
                 // use the actual hardware blockid value as returned by
                 // MTIOCPOS...
-
-                // PROGRAMMING NOTE: According to the docs on MTIOCPOS, it
-                // is *supposed* to return an actual hardware blockid value
-                // that can then be used in an MTSEEK call, so we purposely
-                // return the blockid value "as-is" here (without doing any
-                // type of shifting/masking, etc)...
-
-                // ZZ FIXME: I have no idea what to do if the blockid value
-                // should happen to exceed the 22 bits allocated for it. The
-                // IBM tape docs don't say anything about it being possible
-                // for a READ BLOCK ID to get a unit-check, so I'm not sure
-                // what to do if that should ever happen. (I'm not certain,
-                // but I somehow don't think such a thing is even possible
-                // on a real device. Does anyone know for sure?)
-
-//              if (mtpos.mt_blkno & ~0x3FFFFF)
-//                  .... (unit-check/SENSE1_TAPE_RSE??) ....
 
                 // ZZ FIXME: Even though the two blockid fields that the
                 // READ BLOCK ID ccw opcode returns ("Channel block ID" and
@@ -5317,17 +5684,13 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 // directly for ourselves, we really have no choice but to
                 // return the same value for both here...
 
-                blockid[0] = (mtpos.mt_blkno >> 24) & 0xFF;
-                blockid[1] = (mtpos.mt_blkno >> 16) & 0xFF;
-                blockid[2] = (mtpos.mt_blkno >> 8 ) & 0xFF;
-                blockid[3] = (mtpos.mt_blkno      ) & 0xFF;
-
-                blockid[4] = (mtpos.mt_blkno >> 24) & 0xFF;
-                blockid[5] = (mtpos.mt_blkno >> 16) & 0xFF;
-                blockid[6] = (mtpos.mt_blkno >> 8 ) & 0xFF;
-                blockid[7] = (mtpos.mt_blkno      ) & 0xFF;
+                blockid_actual_to_emulated( dev, (BYTE*)&mtpos.mt_blkno, blockid );
             }
 #endif
+            // We return the same values for both the "Channel block ID"
+            // and "Device block ID"...
+
+            memcpy( &blockid[4], &blockid[0], 4 );
         }
 
         /* Copy Block Id value to channel I/O buffer... */
@@ -5336,10 +5699,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
     }
 
-    case 0x27:
     /*---------------------------------------------------------------*/
     /* BACKSPACE BLOCK                                               */
     /*---------------------------------------------------------------*/
+    case 0x27:
         /* Backspace to previous block according to device type */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
@@ -5364,10 +5727,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x2F:
     /*---------------------------------------------------------------*/
     /* BACKSPACE FILE                                                */
     /*---------------------------------------------------------------*/
+    case 0x2F:
         /* Backspace to previous file according to device type */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
@@ -5387,10 +5750,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x37:
     /*---------------------------------------------------------------*/
     /* FORWARD SPACE BLOCK                                           */
     /*---------------------------------------------------------------*/
+    case 0x37:
         /* Forward to next block according to device type */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
@@ -5415,10 +5778,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x3F:
     /*---------------------------------------------------------------*/
     /* FORWARD SPACE FILE                                            */
     /*---------------------------------------------------------------*/
+    case 0x3F:
         /* Forward to next file according to device type */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
@@ -5438,10 +5801,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x43:
     /*---------------------------------------------------------------*/
     /* SYNCHRONIZE                                                   */
     /*---------------------------------------------------------------*/
+    case 0x43:
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
@@ -5450,10 +5813,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x4F:
     /*---------------------------------------------------------------*/
     /* LOCATE BLOCK                                                  */
     /*---------------------------------------------------------------*/
+    case 0x4F:
         /* Check for minimum count field */
         if (count < sizeof(dev->blockid))
         {
@@ -5474,7 +5837,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         if (0x3590 != dev->devtype)     /* Added by Fish */
-            locblock &= 0x003FFFFF;     /* Re-applied by Adrian */
+//          locblock &= 0x003FFFFF;     /* Re-applied by Adrian */
+            locblock &= 0xFF3FFFFF;     /* Changed by Fish */
 
         /* Calculate residual byte count */
         len = sizeof(locblock);
@@ -5501,10 +5865,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         /* Start of block locate code */
         {
 #if defined(OPTION_SCSI_TAPE)
-            struct  mtop   mtop;
+            struct mtop  mtop;
 
-            mtop.mt_op    = MTSEEK;
-            mtop.mt_count = locblock;
+            mtop.mt_op = MTSEEK;
+
+            blockid_emulated_to_actual( dev, iobuf, (BYTE*)&mtop.mt_count );
 
             /* Let the hardware do the locate if this is a SCSI drive;
                Else do it the hard way if it's not (or an error occurs) */
@@ -5556,12 +5921,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x77:
-    /* By Adrian Trenkwalder */
-
     /*---------------------------------------------------------------*/
     /* PERFORM SUBSYSTEM FUNCTION                                    */
     /*---------------------------------------------------------------*/
+    case 0x77:
+        /* By Adrian Trenkwalder */
 
         /* Byte 0 is the PSF order */
         switch(iobuf[0])
@@ -5685,10 +6049,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
           break;
 
         /*-----------------------------------------------------------*/
-        /* Nou yet supported                                                         */
-        /* 0x180000000000mm00iiiiii   Prepare for Read Subsystem Data */
-        /* 0x1B00                     Set Special Intercept Condition          */
-        /* 0x1C00xxccnnnn0000iiiiii.. Message Not Supported               */
+        /* Not yet supported                                         */
+        /* 0x180000000000mm00iiiiii  Prepare for Read Subsystem Data */
+        /* 0x1B00                    Set Special Intercept Condition */
+        /* 0x1C00xxccnnnn0000iiiiii..Message Not Supported           */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_PRSD:
         case PSF_ORDER_SSIC:
@@ -5700,12 +6064,12 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }   /* End switch iobuf */
         break;
 
-    case 0xE3:
-        /* By Adrian Trenkwalder */
-
     /*---------------------------------------------------------------*/
     /* Control Access                                                */
     /*---------------------------------------------------------------*/
+    case 0xE3:
+        /* By Adrian Trenkwalder */
+
         /* Calculate residual byte count */
         num = (count < 12) ? count : 12;
         *residual = count - num;
@@ -5766,11 +6130,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
           build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
           break;
 
-      /*-----------------------------------------------------------*/
-      /* Conditional Disable                                       */
-      /* 0x40nnnnnnnnnnnnnnnnnnnnnn                                */
-      /*-----------------------------------------------------------*/
-      case CAC_COND_DISABLE:
+        /*-----------------------------------------------------------*/
+        /* Conditional Disable                                       */
+        /* 0x40nnnnnnnnnnnnnnnnnnnnnn                                */
+        /*-----------------------------------------------------------*/
+        case CAC_COND_DISABLE:
         /* A drive password is set, it must match the one given as input */
         if (  (memcmp(dev->drvpwd,"\00\00\00\00\00\00\00\00\00\00\00",11)!=0)
             &&(memcmp(dev->drvpwd,iobuf+1,11)!=0)
@@ -5782,13 +6146,26 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-      default:
+        default:
           build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
           break;
-      } /* End switch iobuf */
+        } /* End switch iobuf */
       break;
 
+    /*---------------------------------------------------------------*/
+    /* READ SUBSYSTEM DATA  (3590)                                   */
+    /*---------------------------------------------------------------*/
+    case 0x3E:
 
+        // ZZ FIXME: not coded yet.
+
+        /* Set command reject sense byte, and unit check status */
+        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* MODE SET   (non-cartidge drives?)                             */
+    /*---------------------------------------------------------------*/
     case 0xCB: /* 9-track 800 bpi */
     case 0xC3: /* 9-track 1600 bpi */
     case 0xD3: /* 9-track 6250 bpi */
@@ -5815,7 +6192,22 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
 
     /*---------------------------------------------------------------*/
-    /* MODE SET (3480/3490/3590)                                     */
+    /* MODE SENSE   (3590)                                           */
+    /*---------------------------------------------------------------*/
+    case 0xCF:
+
+        // ZZ FIXME: not written yet.
+
+        // For now, just treat identically to above MODE SET.
+
+        // NOTE: Might possibly be able to be moved/combined into
+        // the previous 'MODE SET' logic??
+
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* MODE SET   (3480/3490/3590 cartidge drives only?)             */
     /*---------------------------------------------------------------*/
     case 0xDB: /* 3480 mode set */
         /* Check for count field at least 1 */
@@ -5829,10 +6221,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0xA4:
     /*---------------------------------------------------------------*/
     /* Read and Reset Buffered Log (9347)                            */
     /*---------------------------------------------------------------*/
+    case 0xA4:
         /* Calculate residual byte count */
         num = (count < dev->numsense) ? count : dev->numsense;
         *residual = count - num;
@@ -5849,10 +6241,21 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         dev->sns_pending=0;
         break;
 
-    case 0x04:
+    /*---------------------------------------------------------------*/
+    /* MEDIUM SENSE   (3590)                                         */
+    /*---------------------------------------------------------------*/
+    case 0xC2:
+
+        // Similar to (if not identical to) SCSI "Test Unit Ready"
+        // command. Basically just used to determine whether there
+        // is a tape mounted on the drive or not.
+
+        // (purposely FALL THROUGH to the normal 'SENSE' logic below)
+
     /*---------------------------------------------------------------*/
     /* SENSE                                                         */
     /*---------------------------------------------------------------*/
+    case 0x04:
         /* Calculate residual byte count */
         num = (count < dev->numsense) ? count : dev->numsense;
         *residual = count - num;
@@ -5879,10 +6282,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         dev->sns_pending=0;
         break;
 
-    case 0x24:
     /*---------------------------------------------------------------*/
     /* READ BUFFERED LOG                                             */
     /*---------------------------------------------------------------*/
+    case 0x24:
         /* Calculate residual byte count */
         num = (count < 64) ? count : 64;
         *residual = count - num;
@@ -5899,10 +6302,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0xE4:
     /*---------------------------------------------------------------*/
     /* SENSE ID                                                      */
     /*---------------------------------------------------------------*/
+    case 0xE4:
         /* SENSE ID did not exist on the 3803 */
         /* Changed logic: numdevid is 0 if 0xE4 not supported */
         if (!dev->numdevid)
@@ -5923,10 +6326,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x34:
     /*---------------------------------------------------------------*/
     /* SENSE PATH GROUP ID                                           */
     /*---------------------------------------------------------------*/
+    case 0x34:
         /* Calculate residual byte count */
         num = (count < 12) ? count : 12;
         *residual = count - num;
@@ -5950,20 +6353,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0xAF:
     /*---------------------------------------------------------------*/
     /* SET PATH GROUP ID                                             */
     /*---------------------------------------------------------------*/
-        /* Command reject if path group feature is not available */
-        /* Following check removed - performed earlier */
-        /*
-        if (dev->devtype != 0x3480)
-        {
-            dev->sense[0] = SENSE_CR;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
-        */
+    case 0xAF:
 
         /* Calculate residual byte count */
         num = (count < 12) ? count : 12;
@@ -6008,10 +6401,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         } // end switch((iobuf[0] & SPG_SET_COMMAND))
         break;
 
-    case 0x64:
     /*---------------------------------------------------------------*/
     /* READ DEVICE CHARACTERISTICS                                   */
     /*---------------------------------------------------------------*/
+    case 0x64:
         /* Command reject if device characteristics not available */
         if (!dev->numdevchar)
         {
@@ -6031,10 +6424,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0x9F:
     /*---------------------------------------------------------------*/
     /* LOAD DISPLAY                                                  */
     /*---------------------------------------------------------------*/
+    case 0x9F:
         /* Calculate residual byte count */
         num = (count < 17) ? count : 17;
         *residual = count - num;
@@ -6046,10 +6439,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0xB7:
     /*---------------------------------------------------------------*/
     /* ASSIGN                                                        */
     /*---------------------------------------------------------------*/
+    case 0xB7:
         /* Calculate residual byte count */
         num = (count < 11) ? count : 11;
         *residual = count - num;
@@ -6075,10 +6468,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    case 0xC7:
     /*---------------------------------------------------------------*/
     /* UNASSIGN                                                      */
     /*---------------------------------------------------------------*/
+    case 0xC7:
         /* Calculate residual byte count */
         num = (count < 11) ? count : 11;
         *residual = count - num;
@@ -6100,10 +6493,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
-    default:
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
+    default:
         /* Set command reject sense byte, and unit check status */
         build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
 
