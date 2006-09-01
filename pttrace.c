@@ -24,6 +24,10 @@ int        pttnothreads;                /* 1=no threads events       */
 int        pttnolock;                   /* 1=no PTT locking          */
 int        pttnotod;                    /* 1=don't call gettimeofday */
 int        pttnowrap;                   /* 1=don't wrap              */
+int        pttto;                       /* timeout in seconds        */
+TID        ptttotid;                    /* timeout thread id         */
+LOCK       ptttolock;                   /* timeout thread lock       */
+COND       ptttocond;                   /* timeout thread condition  */
 
 DLL_EXPORT void ptt_trace_init (int n, int init)
 {
@@ -52,13 +56,26 @@ DLL_EXPORT void ptt_trace_init (int n, int init)
         pttnolock = 0;
         pttnotod = 0;
         pttnowrap = 0;
+        pttto = 0;
+        ptttotid = 0;
+#if defined(OPTION_FTHREADS)
+        fthread_mutex_init (&ptttolock, NULL);
+ #if defined(FISH_HANG)
+        fthread_cond_init (__FILE__, __LINE__, &ptttocond);
+ #else
+        fthread_cond_init (&ptttocond);
+ #endif
+#else
+        pthread_mutex_init (&ptttolock, NULL);
+        pthread_cond_init (&ptttocond, NULL);
+#endif
     }
 }
 
 DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
 {
     int  rc = 0;
-    int  n;
+    int  n, to = -1;
     char c;
 
     UNREFERENCED(cmdline);
@@ -132,6 +149,12 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
             pttnowrap = 0;
             continue;
         }
+        else if (strncasecmp("to=", argv[0], 3) == 0 && strlen(argv[0]) > 3
+              && (sscanf(&argv[0][3], "%d%c", &to, &c) == 1 && to >= 0))
+        {
+            pttto = to;
+            continue;
+        }
         else if (argc == 1 && sscanf(argv[0], "%d%c", &n, &c) == 1 && n >= 0)
         {
             OBTAIN_PTTLOCK;
@@ -164,15 +187,56 @@ DLL_EXPORT int ptt_cmd(int argc, char *argv[], char* cmdline)
         }
     } /* for each ptt argument */
 
-    logmsg( _("HHCPT003I ptt %s %s %s %s %s %s %d\n"),
+    logmsg( _("HHCPT003I ptt %s %s %s %s %s %s to=%d %d\n"),
            pttimer ? "timer" : "notimer",
            pttnothreads ? "nothreads" : "threads",
            pttnolock ? "nolock" : "lock",
            pttnotod ? "notod" : "tod",
            pttnowrap ? "nowrap" : "wrap",
            pttlogger ? "logger" : "nologger",
+           pttto,
            pttracen);
+
+    /* wakeup timeout thread if to= specified */
+    if (to >= 0 && ptttotid)
+    {
+        obtain_lock (&ptttolock);
+        ptttotid = 0;
+        signal_condition (&ptttocond);
+        release_lock (&ptttolock);
+    }
+
+    /* start timeout thread if positive to= specified */
+    if (to > 0)
+    {
+        obtain_lock (&ptttolock);
+        ptttotid = 0;
+        create_thread (&ptttotid, NULL, ptt_timeout, NULL, "ptt_timeout");
+        release_lock (&ptttolock);
+    }
+
     return rc;
+}
+
+/* thread to print trace after timeout */
+void *ptt_timeout()
+{
+    struct timeval  now;
+    struct timespec tm;
+
+    obtain_lock (&ptttolock);
+    gettimeofday (&now, NULL);
+    tm.tv_sec = now.tv_sec + pttto;
+    tm.tv_nsec = now.tv_usec * 1000;
+    timed_wait_condition (&ptttocond, &ptttolock, &tm);
+    if (thread_id() == ptttotid)
+    {
+        ptt_pthread_print();
+        pttto = 0;
+        ptttotid = 0;
+    }
+    release_lock (&ptttolock);
+    return NULL;
 }
 
 #ifndef OPTION_FTHREADS
