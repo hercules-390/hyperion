@@ -1,4 +1,4 @@
-04 Sep 2006 Win32 PCRE (Perl-Compatible Regular Expression) support - Fish
+06 Sep 2006 Win32 PCRE (Perl-Compatible Regular Expression) support - Fish
 31 Aug 2006 Support emulating 3590 SCSI as 3480/3490's and vice versa - Fish
 31 Aug 2006 Preliminary support for 3590 (partial and very incomplete) - Fish
 24 Aug 2006 Set Windows default thread priorities same as other hosts - Fish
