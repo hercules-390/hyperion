@@ -53,6 +53,7 @@
 # 02/12/05 Added 'conspawn' utility to build - Fish
 # 30/03/06 (just changed some tabs to spaces) - Fish
 # 04/05/06 clean: skip 'del' (delete) if files don't exist - Fish
+# 04/09/06 PCRE (Regular Expressions) support (http://www.pcre.org) - Fish
 # ***************************************************************************
 
 !IFNDEF VERSION
@@ -170,6 +171,49 @@ ZLIB_DIR = winbuild\zlib\win32_32
 !ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.dll" does not exist. Check BZIP2_DIR
 !ENDIF
 
+!ENDIF
+
+# ---------------------------------------------------------------------
+# To enable PCRE (Perl-Compatible Regular Expressions) support, first
+# download 'Binaries'  and 'Developer files' packages from the GNUWin32
+# PCRE website at: http://gnuwin32.sourceforge.net/packages/pcre.htm.
+# Then create a permanent directory somewhere called whatever you want
+# with a 'bin', 'lib' and 'include' subdirectory, and then define an
+# environment variable called "PCRE_DIR" pointing to that directory.
+# Finally, make sure the below names of the include (header), lib and
+# DLL names are correct, making whatever adjustments may be necessary.
+# ---------------------------------------------------------------------
+
+!IFDEF PCRE_DIR
+!IF "$(PCRE_DIR)" == "NONE"
+!UNDEF PCRE_DIR
+!ELSE
+
+PCRE_INCNAME  = pcreposix.h
+PCRE_LIBNAME1 = pcre.lib
+PCRE_LIBNAME2 = pcreposix.lib
+PCRE_DLLNAME1 = pcre3.dll
+PCRE_DLLNAME2 = pcreposix3.dll
+PCRE_INCDIR   = $(PCRE_DIR)\include
+PCRE_INCPATH  = $(PCRE_DIR)\include\$(PCRE_INCNAME)
+PCRE_LIBPATH1 = $(PCRE_DIR)\lib\$(PCRE_LIBNAME1)
+PCRE_LIBPATH2 = $(PCRE_DIR)\lib\$(PCRE_LIBNAME2)
+PCRE_DLLPATH1 = $(PCRE_DIR)\bin\$(PCRE_DLLNAME1)
+PCRE_DLLPATH2 = $(PCRE_DIR)\bin\$(PCRE_DLLNAME2)
+
+!IF !EXIST("$(PCRE_INCPATH)")
+!ERROR PCRE_DIR "$(PCRE_INCPATH)" does not exist. Check PCRE_DIR
+!ELSEIF !EXIST("$(PCRE_LIBPATH1)")
+!ERROR PCRE_DIR "$(PCRE_LIBPATH1)" does not exist. Check PCRE_DIR
+!ELSEIF !EXIST("$(PCRE_LIBPATH2)")
+!ERROR PCRE_DIR "$(PCRE_LIBPATH2)" does not exist. Check PCRE_DIR
+!ELSEIF !EXIST("$(PCRE_DLLPATH1)")
+!ERROR PCRE_DIR "$(PCRE_DLLPATH1)" does not exist. Check PCRE_DIR
+!ELSEIF !EXIST("$(PCRE_DLLPATH2)")
+!ERROR PCRE_DIR "$(PCRE_DLLPATH2)" does not exist. Check PCRE_DIR
+!ENDIF
+
+!ENDIF
 !ENDIF
 
 # -------------------------------------------------
@@ -343,7 +387,7 @@ MODULES = \
     $(X)dyninst.dll  \
     $(DYNCRYPTDLL)
 
-all: allzlib alllibbz2
+all: allzlib alllibbz2 allpcre
     rebase -b 0x400000 $(X)*.dll
     if exist $(EXEDIR)\*.manifest del /f /q $(EXEDIR)\*.manifest
 
@@ -406,6 +450,12 @@ BZIP2_LIB = $(BZIP2_DIR)/libbz2.lib
 BZIP2_INC = $(BZIP2_DIR)
 LIBS      = $(LIBS) "$(BZIP2_LIB)"
 cflags    = $(cflags) /DHAVE_BZLIB_H /I"$(BZIP2_INC)"
+!ENDIF
+
+!IFDEF PCRE_DIR
+LIBS   = $(LIBS) "$(PCRE_LIBPATH1)"
+LIBS   = $(LIBS) "$(PCRE_LIBPATH2)"
+cflags = $(cflags) /DHAVE_PCRE /I"$(PCRE_INCDIR)" /DPCRE_INCNAME=\"$(PCRE_INCNAME)\"
 !ENDIF
 
 !IFDEF ASSEMBLY_LISTINGS
@@ -739,6 +789,29 @@ alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
 
 !ELSE
 alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
+    $(MODULES) \
+    $(EXECUTABLES)
+
+!ENDIF
+
+# -------------------------------------------------------------
+
+!IFDEF PCRE_DIR
+
+$(X)$(PCRE_DLLNAME1):
+    XCOPY "$(PCRE_DLLPATH1)" $(X) /V /C /F /H /R /K /O /X /Y
+
+$(X)$(PCRE_DLLNAME2):
+    XCOPY "$(PCRE_DLLPATH2)" $(X) /V /C /F /H /R /K /O /X /Y
+
+allpcre: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
+    $(MODULES) \
+    $(EXECUTABLES) \
+    $(X)$(PCRE_DLLNAME1) \
+    $(X)$(PCRE_DLLNAME2)
+
+!ELSE
+allpcre: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
     $(MODULES) \
     $(EXECUTABLES)
 

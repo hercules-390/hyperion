@@ -3907,11 +3907,11 @@ static struct tape_format_entry fmttab[]={
 /*            full 32-bit block-ids.        */
 static int mountnewtape(DEVBLK *dev,int argc,char **argv)
 {
-#ifdef HAVE_REGEX_H
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
 regex_t    regwrk;                      /* REGEXP work area          */
 regmatch_t regwrk2;                     /* REGEXP match area         */
 char       errbfr[1024];                /* Working storage           */
-#endif
+#endif // HAVE_REGEX_H
 char*      descr;                       /* Device descr from fmttab  */
 char*      short_descr;                 /* Short descr from fmttab   */
 int        i;                           /* Loop control              */
@@ -3944,7 +3944,7 @@ union
         {
             break;
         }
-#ifdef HAVE_REGEX_H
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
         rc=regcomp(&regwrk,fmttab[i].fmtreg,REG_ICASE);
         if(rc<0)
         {
@@ -3967,7 +3967,7 @@ union
         logmsg (_("HHCTA999E Device %4.4X: Unable to determine tape format type for %s: Internal error: Regexec error %s on index %d\n"),dev->devnum,dev->filename,errbfr,i);
         regfree(&regwrk);
         return -1;
-#else
+#else // !HAVE_REGEX_H
         switch ( dev->tapedevt )
         {
         case TAPEDEVT_OMATAPE: // filename ends with ".tdf"
@@ -4001,7 +4001,7 @@ union
                 }
             }
             break;
-#endif
+#endif // OPTION_SCSI_TAPE
         case TAPEDEVT_HET:      // filename ends with ".het"
             if ( (rc = strlen(dev->filename)) <= 4 )
                 rc = -1;
@@ -4014,7 +4014,7 @@ union
             return -1;
         }
         if (!rc) break;
-#endif
+#endif // HAVE_REGEX_H
     }
     descr       = fmttab[i].descr;       // (save device description)
     short_descr = fmttab[i].short_descr; // (save device description)

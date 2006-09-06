@@ -155,4 +155,12 @@ typedef int             mode_t;
 #define HAVE_DECL_SIOCDELRT       1     // (manually defined in tuntap.h)
 #define HAVE_DECL_SIOCDIFADDR     0     // (unsupported by CTCI-W32)
 
+// GNUWin32 PCRE (Perl-Compatible Regular Expressions) support...
+
+#ifdef HAVE_PCRE
+  // (earlier packages failed to define this so we must do so ourselves)
+  #define  PCRE_DATA_SCOPE  extern __declspec(dllimport)
+  #include PCRE_INCNAME     // (passed by makefile)
+#endif
+
 #endif /*!defined(_HERCWIND_H)*/

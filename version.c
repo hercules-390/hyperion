@@ -114,6 +114,10 @@ static const char *build_info[] = {
     "No ZLIB support",
 #endif
 
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+    "With Regular Expressions support",
+#endif
+
 #if !defined(HET_BZIP2)
     "No HET BZIP2 support",
 #endif
