@@ -82,6 +82,42 @@
   the section on SCSI tape drives in the Hercules's Device Configuration
   documentation.
 
+
+* In order to ensure proper functioning of the TOD clock with older versions
+  of guest operating systems, the default values of Hercules's internal thread
+  priorities for the Windows version of Hercules were changed to be identical
+  to those used by all other supported platforms. Originally, the default
+  thread priority values for the Windows version of Hercules were:
+
+               ***  3.04  Default  Priorities  ***
+
+            Thread    Priority           Meaning
+            -------   --------   ------------------------
+            DEVPRIO     -8        Above Normal priority
+            HERCPRIO     0        Normal priority
+            TODPRIO      0        Normal priority
+            CPUPRIO      0        Normal priority
+
+  which caused acceptable performance/functioning on most, but not all, guest
+  operating systems. Beginning with version 3.05 however, the prioriries now
+  default to:
+
+               ***  3.05  Default  Priorities  ***
+
+            Thread    Priority           Meaning
+            -------   --------   ------------------------
+            TODPRIO    -20        Time Critical priority
+            HERCPRIO     0        Normal priority
+            DEVPRIO      8        Below Normal priority
+            CPUPRIO     15        Below Normal priority
+
+  which may on more modern guest operating systems (which handle the TOD clock
+  differently than do older less sophticated versions) cause a slight decrease
+  in overall performance. If such is the case, the original default priorities
+  (and thus the original behavior) can be obtained via addition of appropriate
+  HERCPRIO, TODPRIO, DEVPRIO and CPUPRIO control file statements with values
+  identical to the original version 3.04 default values.
+
 -------------------------------------------------------------------------------
 
 
