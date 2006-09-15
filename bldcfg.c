@@ -136,8 +136,13 @@ void delayed_exit (int exit_code)
 {
     /* Delay exiting is to give the system
      * time to display the error message. */
+    fflush(stderr);  
+    fflush(stdout);  
     usleep(100000);
-    hdl_shut();
+//  hdl_shut();
+    do_shutdown();
+    fflush(stderr);  
+    fflush(stdout);  
     usleep(100000);
     exit(exit_code);
 }
