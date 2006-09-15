@@ -153,9 +153,31 @@ DLL_EXPORT  COMMANDHANDLER getCommandHandler(void)
 void* process_rc_file (void* dummy)
 {
 char   *rcname;                         /* hercules.rc name pointer  */
-int     is_default_rc = 0;              /* 1==default name used      */
+int     i, is_default_rc = 0;           /* 1==default name used      */
 
     UNREFERENCED(dummy);
+
+    /* Wait for all configured CPUs to enter the STOPPED state */
+
+    OBTAIN_INTLOCK(NULL);
+
+    for (i = 0; i < MAX_CPU_ENGINES; i++)
+    {
+        while (IS_CPU_ONLINE(i)
+            && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
+        {
+            RELEASE_INTLOCK(NULL);
+            usleep( 10 * 1000 );
+            OBTAIN_INTLOCK(NULL);
+        }
+    }
+
+    RELEASE_INTLOCK(NULL);
+
+    /* Wait for panel thread to engage */
+
+    while (!sysblk.panel_init)
+        usleep( 10 * 1000 );
 
     /* Obtain the name of the hercules.rc file or default */
 
@@ -166,9 +188,6 @@ int     is_default_rc = 0;              /* 1==default name used      */
     }
 
     /* Run the script processor for this file */
-
-    while (!sysblk.panel_init)
-        usleep( 100 * 1000 );
 
     if (process_script_file(rcname,1) != 0)
         if (ENOENT == errno)
