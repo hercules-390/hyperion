@@ -721,6 +721,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
   BYTE message_block[8];
   int modifier_bit;
   BYTE parameter_block[8];
+  int r1_is_not_r2;
 
 #ifdef OPTION_KM_DEBUG
   logmsg("  KM: function 1: dea\n");
@@ -750,6 +751,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
   modifier_bit = GR0_m(regs);
+  r1_is_not_r2 = r1 != r2;
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -774,7 +776,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs, GR_A(r1, regs) + 8);
-    if(likely(r1 != r2))
+    if(likely(r1_is_not_r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
@@ -806,6 +808,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
   BYTE message_block[8];
   int modifier_bit;
   BYTE parameter_block[16];
+  int r1_is_not_r2;
 
 #ifdef OPTION_KM_DEBUG
   logmsg("  KM: function 2: tdea-128\n");
@@ -836,6 +839,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
   modifier_bit = GR0_m(regs);
+  r1_is_not_r2 = r1 != r2;
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -860,7 +864,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs, GR_A(r1, regs) + 8);
-    if(likely(r1 != r2))
+    if(likely(r1_is_not_r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
@@ -892,6 +896,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
   BYTE message_block[8];
   int modifier_bit;
   BYTE parameter_block[24];
+  int r1_is_not_r2;
 
 #ifdef OPTION_KM_DEBUG
   logmsg("  KM: function 3: tdea-192\n");
@@ -923,6 +928,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
   modifier_bit = GR0_m(regs);
+  r1_is_not_r2 = r1 != r2;
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -947,7 +953,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs, GR_A(r1, regs) + 8);
-    if(likely(r1 != r2))
+    if(likely(r1_is_not_r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
@@ -980,6 +986,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
   BYTE message_block[16];
   int modifier_bit;
   BYTE parameter_block[16];
+  int r1_is_not_r2;
 
 #ifdef OPTION_KM_DEBUG
   logmsg("  KM: function 18: aes-128\n");
@@ -1009,6 +1016,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
   modifier_bit = GR0_m(regs);
+  r1_is_not_r2 = r1 != r2;
   while(crypted += 16 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -1033,7 +1041,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs, GR_A(r1, regs) + 16);
-    if(likely(r1 != r2))
+    if(likely(r1_is_not_r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 16);
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
 
@@ -1395,6 +1403,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   int modifier_bit;
   BYTE ocv[8];
   BYTE parameter_block[16];
+  int r1_is_not_r2;
 
 #ifdef OPTION_KMC_DEBUG
   logmsg("  KMC: function 1: dea\n");
@@ -1428,6 +1437,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
   modifier_bit = GR0_m(regs);
+  r1_is_not_r2 = r1 != r2;
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -1476,7 +1486,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs, GR_A(r1, regs) + 8);
-    if(likely(r1 != r2))
+    if(likely(r1_is_not_r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
@@ -1514,6 +1524,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
   int modifier_bit;
   BYTE ocv[8];
   BYTE parameter_block[24];
+  int r1_is_not_r2;
 
 #ifdef OPTION_KMC_DEBUG
   logmsg("  KMC: function 2: tdea-128\n");
@@ -1549,6 +1560,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
   modifier_bit = GR0_m(regs);
+  r1_is_not_r2 = r1 != r2;
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -1601,7 +1613,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs, GR_A(r1, regs) + 8);
-    if(likely(r1 != r2))
+    if(likely(r1_is_not_r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
@@ -1640,6 +1652,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
   int modifier_bit;
   BYTE ocv[8];
   BYTE parameter_block[32];
+  int r1_is_not_r2;
 
 #ifdef OPTION_KMC_DEBUG
   logmsg("  KMC: function 3: tdea-192\n");
@@ -1677,6 +1690,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
   modifier_bit = GR0_m(regs);
+  r1_is_not_r2 = r1 != r2;
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -1729,7 +1743,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs, GR_A(r1, regs) + 8);
-    if(likely(r1 != r2))
+    if(likely(r1_is_not_r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
@@ -1767,6 +1781,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
   int modifier_bit;
   BYTE ocv[16];
   BYTE parameter_block[32];
+  int r1_is_not_r2;
 
 #ifdef OPTION_KMC_DEBUG
   logmsg("  KMC: function 18: aes-128\n");
@@ -1800,6 +1815,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
   modifier_bit = GR0_m(regs);
+  r1_is_not_r2 = r1 != r2;
   while(crypted += 16 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -1848,7 +1864,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs, GR_A(r1, regs) + 16);
-    if(likely(r1 != r2))
+    if(likely(r1_is_not_r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 16);
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 16);
 
@@ -1887,6 +1903,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
   BYTE parameter_block[32];
   BYTE ocv[8];
   BYTE tcv[8];
+  int r1_is_not_r2;
 
 #ifdef OPTION_KMC_DEBUG
   logmsg("  KMC: function 67: prng\n");
@@ -1923,6 +1940,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 
   /* Try to process the CPU-determined amount of data */
   crypted = 0;
+  r1_is_not_r2 = r1 != r2;
   while(crypted += 8 < PROCESS_MAX)
   {
     /* Fetch a block of data */
@@ -1975,7 +1993,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 
     /* Update the registers */
     SET_GR_A(r1, regs, GR_A(r1, regs) + 8);
-    if(likely(r1 != r2))
+    if(likely(r1_is_not_r2))
       SET_GR_A(r2, regs, GR_A(r2, regs) + 8);
     SET_GR_A(r2 + 1, regs, GR_A(r2 + 1, regs) - 8);
 
