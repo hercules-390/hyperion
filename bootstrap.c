@@ -102,6 +102,12 @@ int main(int ac,char *av[])
         }
         __except
         (
+            fflush(stdout),
+            fflush(stderr),
+            _ftprintf( stderr, _T("]!OOPS!\n") ),
+            fflush(stdout),
+            fflush(stderr),
+            Sleep(10),
             _tprintf( _T("\n\n") ),
             _tprintf( _T("                   ***************\n") ),
             _tprintf( _T("                   *    OOPS!    *\n") ),
@@ -124,20 +130,51 @@ int main(int ac,char *av[])
 
 ///////////////////////////////////////////////////////////////////////////////
 
+static HWND FindConsoleHandle()
+{
+    static LPCTSTR pszTempTitle = _T("{98C1C303-2A9E-11d4-9FF5-0060677l8D04}");
+    TCHAR szSaveTitle[512];
+    HWND hWnd;
+    if (!GetConsoleTitle(szSaveTitle,ARRAYSIZE(szSaveTitle)))
+        return NULL;
+    if (!SetConsoleTitle(pszTempTitle))
+        return NULL;
+    Sleep(20);
+    hWnd = FindWindow(NULL,pszTempTitle);
+    SetConsoleTitle(szSaveTitle);
+    return hWnd;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs );
 
 static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
 {
+    UINT uiMBFlags =
+        0
+        | MB_SYSTEMMODAL
+        | MB_TOPMOST
+        | MB_SETFOREGROUND
+        ;
+
+    HWND hwndMBOwner = FindConsoleHandle();
+
+    if (!hwndMBOwner || !IsWindowVisible(hwndMBOwner))
+        hwndMBOwner = GetDesktopWindow();
+
     if ( !g_pfnMiniDumpWriteDumpFunc )
     {
         MessageBox
         (
-            NULL,
+            hwndMBOwner,
             _T("The creation of a crash dump for analysis by the Hercules ")
             _T("development team is NOT possible\nbecause the required 'DbgHelp.dll' ")
             _T("is missing or is not installed or was otherwise not located.")
             ,_T("OOPS!  Hercules has crashed!"),
-            MB_OK
+            uiMBFlags
+                | MB_ICONERROR
+                | MB_OK
         );
 
         return;
@@ -145,27 +182,27 @@ static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
 
     if ( IDYES == MessageBox
     (
-        NULL,
+        hwndMBOwner,
         _T("The creation of a crash dump for further analysis by ")
         _T("the Hercules development team is strongly suggested.\n\n")
         _T("Would you like to create a crash dump for ")
         _T("the Hercules development team to analyze?")
         ,_T("OOPS!  Hercules has crashed!"),
-        MB_YESNO
+        uiMBFlags
+            | MB_ICONERROR
+            | MB_YESNO
     ))
     {
         if ( CreateMiniDump( pExceptionPtrs ) )
         {
-            // ZZ FIXME: Figure out why this MessageBox never appears.
-            // It *used* to but it's not anymore and I don't know why.
-            // The function *is* always returning TRUE...  <grumble>
-
             MessageBox
             (
-                NULL,
+                hwndMBOwner,
                 _T("Please send the dump to the Hercules development team for analysis.")
                 ,_T("Dump Complete"),
-                MB_OK
+                uiMBFlags
+                    | MB_ICONEXCLAMATION
+                    | MB_OK
             );
         }
     }
