@@ -3524,7 +3524,7 @@ char    pathname[MAX_PATH];             /* (work)                    */
         if ('#' == scrbuf[0] || '*' == scrbuf[0])
         {
             if ('*' == scrbuf[0])
-                logmsg ("> %s\n",scrbuf);
+                logmsg ("%s\n",scrbuf);
             continue;
         }
 
@@ -4872,14 +4872,7 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
         return NULL;
 
     /* Echo the command to the control panel */
-#if 0
-    logmsg( "%s%s\n",
-        rc_cmd ? "> " : "",
-        cmd
-        );
-#else
     logmsg( "%s\n", cmd);
-#endif
 
     /* Set target CPU for commands and displays */
     regs = sysblk.regs[sysblk.pcpu];
