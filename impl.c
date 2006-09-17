@@ -153,23 +153,29 @@ DLL_EXPORT  COMMANDHANDLER getCommandHandler(void)
 void* process_rc_file (void* dummy)
 {
 char   *rcname;                         /* hercules.rc name pointer  */
-int     i, is_default_rc = 0;           /* 1==default name used      */
+int     is_default_rc  = 0;             /* 1 == default name used    */
+int     numcpu         = 0;             /* #of ONLINE & STOPPED CPUs */
+int     i;                              /* (work)                    */
 
     UNREFERENCED(dummy);
 
-    /* Wait for all configured CPUs to enter the STOPPED state */
+    /* Wait for all installed/configured CPUs to
+       come ONLINE and enter the STOPPED state */
 
     OBTAIN_INTLOCK(NULL);
 
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
+    for (;;)
     {
-        while (IS_CPU_ONLINE(i)
-            && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
-        {
-            RELEASE_INTLOCK(NULL);
-            usleep( 10 * 1000 );
-            OBTAIN_INTLOCK(NULL);
-        }
+        numcpu = 0;
+        for (i = 0; i < MAX_CPU_ENGINES; i++)
+            if (IS_CPU_ONLINE(i) &&
+                CPUSTATE_STOPPED == sysblk.regs[i]->cpustate)
+                numcpu++;
+        if (numcpu == sysblk.numcpu)
+            break;
+        RELEASE_INTLOCK(NULL);
+        usleep( 10 * 1000 );
+        OBTAIN_INTLOCK(NULL);
     }
 
     RELEASE_INTLOCK(NULL);
