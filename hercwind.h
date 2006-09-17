@@ -151,8 +151,8 @@ typedef int             mode_t;
 
 #define HAVE_DECL_SIOCSIFNETMASK  1     // (manually defined in tuntap.h)
 #define HAVE_DECL_SIOCSIFHWADDR   1     // (manually defined in tuntap.h)
-#define HAVE_DECL_SIOCADDRT       1     // (manually defined in tuntap.h)
-#define HAVE_DECL_SIOCDELRT       1     // (manually defined in tuntap.h)
+#define HAVE_DECL_SIOCADDRT       0     // (unsupported by CTCI-W32)
+#define HAVE_DECL_SIOCDELRT       0     // (unsupported by CTCI-W32)
 #define HAVE_DECL_SIOCDIFADDR     0     // (unsupported by CTCI-W32)
 
 // GNUWin32 PCRE (Perl-Compatible Regular Expressions) support...

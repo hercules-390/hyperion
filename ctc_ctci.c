@@ -307,21 +307,6 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     VERIFY( TUNTAP_SetFlags   ( pDevCTCBLK->szTUNDevName, nIFFlags                  ) == 0 );
 
-#ifdef OPTION_TUNTAP_DELADD_ROUTES
-
-    // Add a Point-To-Point routing entry to the
-    // host's routing table for our interface...
-
-    if( pDevCTCBLK->szGuestIPAddr[0] )
-    {
-        VERIFY( TUNTAP_AddRoute( pDevCTCBLK->szTUNDevName,
-                         pDevCTCBLK->szGuestIPAddr,
-                         "255.255.255.255",
-                         NULL,
-                         RTF_UP | RTF_HOST ) == 0 );
-    }
-#endif
-
     // Copy the fd to make panel.c happy
     pDevCTCBLK->pDEVBLK[0]->fd =
     pDevCTCBLK->pDEVBLK[1]->fd = pDevCTCBLK->fd;
@@ -996,20 +981,6 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
             usleep( CTC_DELAY_USECS );  // (wait a bit before retrying...)
         }
     }
-
-#ifdef OPTION_TUNTAP_DELADD_ROUTES
-
-    // Delete the route we added for our interface...
-
-    if( pCTCBLK->szGuestIPAddr[0] )
-    {
-        VERIFY( TUNTAP_DelRoute( pCTCBLK->szTUNDevName,
-                         pCTCBLK->szGuestIPAddr,
-                         "255.255.255.255",
-                         NULL,
-                         RTF_UP | RTF_HOST ) == 0 );
-    }
-#endif
 
     // We must do the close since we were the one doing the i/o...
 
