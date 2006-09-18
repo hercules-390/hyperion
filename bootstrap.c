@@ -130,6 +130,10 @@ int main(int ac,char *av[])
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#pragma warning( push )
+#pragma warning( disable: 4748 ) // C4748: /GS can not protect parameters and
+                                 // local variables from local buffer overrun
+                                 // because optimizations are disabled in function
 static HWND FindConsoleHandle()
 {
     static LPCTSTR pszTempTitle = _T("{98C1C303-2A9E-11d4-9FF5-0060677l8D04}");
@@ -144,6 +148,8 @@ static HWND FindConsoleHandle()
     SetConsoleTitle(szSaveTitle);
     return hWnd;
 }
+
+#pragma warning( pop ) 
 
 ///////////////////////////////////////////////////////////////////////////////
 
