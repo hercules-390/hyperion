@@ -56,6 +56,9 @@ static WCHAR  g_wszHercPath  [ 4 * _MAX_PATH  ]  = {0};
 static WCHAR  g_wszDumpPath  [ 4 * _MAX_PATH  ]  = {0};
 static WCHAR  g_wszFileName  [ 4 * _MAX_FNAME ]  = {0};
 
+static TCHAR    g_szSaveTitle[ 512 ] = {0};
+static LPCTSTR  g_pszTempTitle = _T("{98C1C303-2A9E-11d4-9FF5-0060677l8D04}");
+
 // (forward reference)
 
 static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs );
@@ -130,26 +133,18 @@ int main(int ac,char *av[])
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma warning( push )
-#pragma warning( disable: 4748 ) // C4748: /GS can not protect parameters and
-                                 // local variables from local buffer overrun
-                                 // because optimizations are disabled in function
 static HWND FindConsoleHandle()
 {
-    static LPCTSTR pszTempTitle = _T("{98C1C303-2A9E-11d4-9FF5-0060677l8D04}");
-    TCHAR szSaveTitle[512];
     HWND hWnd;
-    if (!GetConsoleTitle(szSaveTitle,ARRAYSIZE(szSaveTitle)))
+    if (!GetConsoleTitle(g_szSaveTitle,ARRAYSIZE(g_szSaveTitle)))
         return NULL;
-    if (!SetConsoleTitle(pszTempTitle))
+    if (!SetConsoleTitle(g_pszTempTitle))
         return NULL;
     Sleep(20);
-    hWnd = FindWindow(NULL,pszTempTitle);
-    SetConsoleTitle(szSaveTitle);
+    hWnd = FindWindow(NULL,g_pszTempTitle);
+    SetConsoleTitle(g_szSaveTitle);
     return hWnd;
 }
-
-#pragma warning( pop ) 
 
 ///////////////////////////////////////////////////////////////////////////////
 
