@@ -111,6 +111,8 @@ static PARSER ptab[] =
     { "eotmargin", "%d" },
     { "strictsize", "%d" },
     { "readonly", "%d" },
+    { "ro", "%d" },
+    { "noring", "%d" },
     { "deonirq", "%d" },
     { "--blkid-32", NULL },
     { "--no-erg", NULL },
@@ -136,6 +138,8 @@ enum
     TDPARM_EOTMARGIN,
     TDPARM_STRICTSIZE,
     TDPARM_READONLY,
+    TDPARM_RO,
+    TDPARM_NORING,
     TDPARM_DEONIRQ,
     TDPARM_BLKID32,
     TDPARM_NOERG
@@ -4182,6 +4186,8 @@ union
             break;
 
         case TDPARM_READONLY:
+        case TDPARM_RO:
+        case TDPARM_NORING:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
                 logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
@@ -4201,6 +4207,7 @@ union
             dev->tdparms.deonirq=(res.num ? 1 : 0 );
             break;
 
+#if defined(OPTION_SCSI_TAPE)
         case TDPARM_BLKID32:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
@@ -4222,6 +4229,7 @@ union
             }
             dev->stape_no_erg = 1;
             break;
+#endif /* defined(OPTION_SCSI_TAPE) */
 
         default:
             logmsg(_("HHCTA071E Error in '%s' parameter\n"), argv[i]);
@@ -4808,7 +4816,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
         {
             snprintf( tapepos, sizeof(tapepos), "[%d:%8.8lX] ",
-                dev->curfilen, dev->nxtblkpos );
+                dev->curfilen, (unsigned long int)dev->nxtblkpos );
             tapepos[sizeof(tapepos)-1] = 0;
         }
 #if defined(OPTION_SCSI_TAPE)
@@ -4997,6 +5005,7 @@ void blockid_emulated_to_actual
         return;
     }
 
+#if defined(OPTION_SCSI_TAPE)
     if (0x3590 == dev->devtype)
     {
         // 3590 being emulated; guest block-id is full 32-bits...
@@ -5035,6 +5044,7 @@ void blockid_emulated_to_actual
             memcpy( act_blkid, emu_blkid, 4 );
         }
     }
+#endif /* defined(OPTION_SCSI_TAPE) */
 }
 
 /*-------------------------------------------------------------------*/
@@ -5054,6 +5064,7 @@ void blockid_actual_to_emulated
         return;
     }
 
+#if defined(OPTION_SCSI_TAPE)
     if (dev->stape_blkid_32)
     {
         // SCSI using full 32-bit block-ids...
@@ -5082,6 +5093,7 @@ void blockid_actual_to_emulated
             memcpy( emu_blkid, act_blkid, 4 );
         }
     }
+#endif /* defined(OPTION_SCSI_TAPE) */
 }
 
 /*-------------------------------------------------------------------*/

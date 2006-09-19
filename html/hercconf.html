@@ -1764,6 +1764,23 @@ a real System/390.  The configuration file is an ASCII text file.
             marker (reflector), thus allowing the program to switch to the next tape.
             <p>
 
+        <dt><code>READONLY</code>=<em>n</em>
+        <dt><code>RO</code>=<em>n</em>
+        <dt><code>NORING</code>=<em>n</em>
+        <dd><p>
+            Specifies whether the tape is mounted read-only (without a write
+            ring, or with the cartridge protect switch set to "write
+            protect". A parameter of 1 means read-only; a parameter of 0
+            means read-write.
+            <p>
+
+        <dt><code>DEONIRQ</code>=<em>n</em>
+        <dd><p>
+            Specifies whether a device end is presented if intervention is
+            required during tape motion. A parameter of 1 selects this
+            option; a parameter of 0 turns it off.
+            <p>
+
         </dl>
     </blockquote>
 

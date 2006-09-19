@@ -1,3 +1,5 @@
+19 Sep 2006 Added RO and NORING as synonyms for READONLY tape config option;
+            fixed compilation if SCSI not supported - Jay Maynard
 15 Sep 2006 PR# misc/96: fix premature .RC processing wrt CPUSTATE - Fish
 06 Sep 2006 Win32 PCRE (Perl-Compatible Regular Expression) support - Fish
 31 Aug 2006 Support emulating 3590 SCSI as 3480/3490's and vice versa - Fish
