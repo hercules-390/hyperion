@@ -560,8 +560,18 @@ a real System/390.  The configuration file is an ASCII text file.
     which are considered normal in the specified environment.
     <code>QUIET</code> discards all exception messages.
     <code>NULL</code> allows all exception messages to be logged.
-    If this statement is omitted, exception messages for program
-    checks 10, 11, 16, and 1C are suppressed.
+    <p>
+    Optionally prefix any value except <code>QUIET</code> or
+    <code>NULL</code> with '+' to cause the suppressions for that
+    environment to be combined (added) to those already specified,
+    or with '-' to remove such suppressions (i.e. to allow them).
+    <p>
+    If the <code>OSTAILOR</code>
+    statement is omitted, exception messages for program checks
+    10, 11, 16, and 1C are suppressed.
+    <p>
+    Use the <code>ostailor</code> or <code>pgmtrace</code> panel
+    commands to display or alter the current settings.
     <p>
 
 <a name="PANRATE"></a>
