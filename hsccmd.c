@@ -4880,8 +4880,9 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 #ifdef _FEATURE_SYSTEM_CONSOLE
     if ('.' == cmd[0] || '!' == cmd[0])
     {
-       scp_command (cmd+1, cmd[0] == '!');
-       return NULL;
+        if (!cmd[1]) { cmd[1]=' '; cmd[2]=0; }
+        scp_command (cmd+1, cmd[0] == '!');
+        return NULL;
     }
 #endif /*_FEATURE_SYSTEM_CONSOLE*/
 

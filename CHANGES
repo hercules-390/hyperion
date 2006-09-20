@@ -1,3 +1,4 @@
+20 Sep 2006 PR# misc/89: fix "HHCCP038E No SCP command" - Fish
 19 Sep 2006 Added RO and NORING as synonyms for READONLY tape config option;
             fixed compilation if SCSI not supported - Jay Maynard
 15 Sep 2006 PR# misc/96: fix premature .RC processing wrt CPUSTATE - Fish
