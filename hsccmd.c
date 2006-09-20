@@ -2192,9 +2192,29 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
         sysblk.pgminttr = OS_OS390;
         return 0;
     }
+    if (strcasecmp (argv[1], "+OS/390") == 0)
+    {
+        sysblk.pgminttr &= OS_OS390;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "-OS/390") == 0)
+    {
+        sysblk.pgminttr |= ~OS_OS390;
+        return 0;
+    }
     if (strcasecmp (argv[1], "Z/OS") == 0)
     {
         sysblk.pgminttr = OS_ZOS;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "+Z/OS") == 0)
+    {
+        sysblk.pgminttr &= OS_ZOS;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "-Z/OS") == 0)
+    {
+        sysblk.pgminttr |= ~OS_ZOS;
         return 0;
     }
     if (strcasecmp (argv[1], "VSE") == 0)
@@ -2202,14 +2222,44 @@ int ostailor_cmd(int argc, char *argv[], char *cmdline)
         sysblk.pgminttr = OS_VSE;
         return 0;
     }
+    if (strcasecmp (argv[1], "+VSE") == 0)
+    {
+        sysblk.pgminttr &= OS_VSE;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "-VSE") == 0)
+    {
+        sysblk.pgminttr |= ~OS_VSE;
+        return 0;
+    }
     if (strcasecmp (argv[1], "VM") == 0)
     {
         sysblk.pgminttr = OS_VM;
         return 0;
     }
+    if (strcasecmp (argv[1], "+VM") == 0)
+    {
+        sysblk.pgminttr &= OS_VM;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "-VM") == 0)
+    {
+        sysblk.pgminttr |= ~OS_VM;
+        return 0;
+    }
     if (strcasecmp (argv[1], "LINUX") == 0)
     {
         sysblk.pgminttr = OS_LINUX;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "+LINUX") == 0)
+    {
+        sysblk.pgminttr &= OS_LINUX;
+        return 0;
+    }
+    if (strcasecmp (argv[1], "-LINUX") == 0)
+    {
+        sysblk.pgminttr |= ~OS_LINUX;
         return 0;
     }
     if (strcasecmp (argv[1], "NULL") == 0)
@@ -4736,7 +4786,8 @@ CMDHELP ( "ostailor",  "Format: \"ostailor quiet | os/390 | z/os | vm | vse | li
                        "traffic by selectively suppressing program check trace messages which are\n"
                        "considered normal in the specified environment. 'quiet' suppresses all\n"
                        "exception messages, whereas 'null' suppresses none of them. The other options\n"
-                       "suppress some messages and not others depending on the specified o/s.\n"
+                       "suppress some messages and not others depending on the specified o/s. Prefix\n"
+                       "values with '+' to combine them with existing values or '-' to exclude them.\n"
                        "SEE ALSO the 'pgmtrace' command which allows you to further fine tune\n"
                        "the tracing of program interrupt exceptions.\n"
                        )

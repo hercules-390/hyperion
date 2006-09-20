@@ -1396,21 +1396,61 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             {
                 ostailor = OS_OS390;
             }
+            else if (strcasecmp (sostailor, "+OS/390") == 0)
+            {
+                ostailor &= OS_OS390;
+            }
+            else if (strcasecmp (sostailor, "-OS/390") == 0)
+            {
+                ostailor |= ~OS_OS390;
+            }
             else if (strcasecmp (sostailor, "Z/OS") == 0)
             {
                 ostailor = OS_ZOS;
+            }
+            else if (strcasecmp (sostailor, "+Z/OS") == 0)
+            {
+                ostailor &= OS_ZOS;
+            }
+            else if (strcasecmp (sostailor, "-Z/OS") == 0)
+            {
+                ostailor |= ~OS_ZOS;
             }
             else if (strcasecmp (sostailor, "VSE") == 0)
             {
                 ostailor = OS_VSE;
             }
+            else if (strcasecmp (sostailor, "+VSE") == 0)
+            {
+                ostailor &= OS_VSE;
+            }
+            else if (strcasecmp (sostailor, "-VSE") == 0)
+            {
+                ostailor |= ~OS_VSE;
+            }
             else if (strcasecmp (sostailor, "VM") == 0)
             {
                 ostailor = OS_VM;
             }
+            else if (strcasecmp (sostailor, "+VM") == 0)
+            {
+                ostailor &= OS_VM;
+            }
+            else if (strcasecmp (sostailor, "-VM") == 0)
+            {
+                ostailor |= ~OS_VM;
+            }
             else if (strcasecmp (sostailor, "LINUX") == 0)
             {
                 ostailor = OS_LINUX;
+            }
+            else if (strcasecmp (sostailor, "+LINUX") == 0)
+            {
+                ostailor &= OS_LINUX;
+            }
+            else if (strcasecmp (sostailor, "-LINUX") == 0)
+            {
+                ostailor |= ~OS_LINUX;
             }
             else if (strcasecmp (sostailor, "NULL") == 0)
             {
