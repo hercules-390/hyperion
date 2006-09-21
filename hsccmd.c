@@ -65,19 +65,16 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
 #endif
 
 /* Issue generic Device not found error message */
-static int devnotfound_msg(U16 lcss,U16 devnum)
+static inline int devnotfound_msg(U16 lcss,U16 devnum)
 {
     logmsg(_("HHCPN181E Device number %d:%4.4X not found\n"),lcss,devnum);
     return -1;
 }
-/* Issue generic missing parameter message */
-/*
-static int missingparameter_msg(char *cmd)
+/* Issue generic Missing device number message */
+static inline void missing_devnum()
 {
-    logmsg(_("HHCPN182E The %s command is missing a required parameter\n"),cmd);
-    return -1;
+    logmsg( _("HHCPN031E Missing device number\n") );
 }
-*/
 
 ///////////////////////////////////////////////////////////////////////
 /* maxrates command - report maximum seen mips/sios rates */
@@ -1067,7 +1064,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
     {
         if (argc < 3)
         {
-            logmsg( _("HHCPN031E Missing device number\n") );
+            missing_devnum();
             return -1;
         }
 
@@ -1615,7 +1612,7 @@ REGS *regs;
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN042E Missing device number\n") );
+        missing_devnum();
         return -1;
     }
 
@@ -1748,7 +1745,7 @@ char *cdev, *clcss;
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN052E Missing device number\n") );
+        missing_devnum();
         return -1;
     }
 
@@ -1879,10 +1876,33 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     DEVBLK** orig_pDevBlkPtrs;
     size_t   nDevCount, i;
     int      bTooMany = 0;
+    U16      lcss;
+    U16      ssid;
+    U16      devnum;
+    int      single_devnum = 0;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
+
+    if (argc >= 2)
+    {
+        single_devnum = 1;
+
+        if (parse_single_devnum(argv[1], &lcss, &devnum) < 0)   
+        {
+            // (error message already issued)
+            return -1;
+        }
+
+        if (!(dev = find_device_by_devnum (lcss, devnum)))
+        {
+            devnotfound_msg(lcss, devnum);
+            return -1;
+        }
+
+        ssid = LCSS_TO_SSID(lcss);
+    }
 
     // Since we wish to display the list of devices in ascending device
     // number order, we build our own private a sorted array of DEVBLK
@@ -1907,11 +1927,17 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     {
         if (dev->pmcw.flag5 & PMCW5_V)  // (valid device?)
         {
+            if (single_devnum && (dev->ssid != ssid || dev->devnum != devnum))
+                continue;
+
             if (nDevCount < MAX_DEVLIST_DEVICES)
             {
                 *pDevBlkPtr = dev;      // (save ptr to DEVBLK)
                 nDevCount++;            // (count array entries)
                 pDevBlkPtr++;           // (bump to next entry)
+
+                if (single_devnum)
+                    break;
             }
             else
             {
@@ -2055,7 +2081,7 @@ int rc;
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN060E Missing device number\n") );
+        missing_devnum();
         return -1;
     }
 
@@ -2305,7 +2331,7 @@ int rc;
 
     if (argc < 2)
     {
-        logmsg( _("HHCPN069E Missing device number\n") );
+        missing_devnum();
         return -1;
     }
 
@@ -2487,7 +2513,7 @@ int     flag = 1;                       /* sf- flag (default merge)  */
         argv++; argc--;
         if (argc < 0 || (devascii = argv[0]) == NULL)
         {
-            logmsg( _("HHCPN079E Missing device number\n") );
+            missing_devnum();
             return -1;
         }
     }
@@ -3427,12 +3453,52 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 
 #endif /*defined(OPTION_INSTRUCTION_COUNTING)*/
 
+
+///////////////////////////////////////////////////////////////////////
+/* defsym command - define substitution symbol */
+
+#if defined(OPTION_CONFIG_SYMBOLS)
+
+int defsym_cmd(int argc, char *argv[], char *cmdline)
+{
+    char* sym;
+    char* value = "";
+
+    if (argc < 2)
+    {
+        list_all_symbols();
+        return 0;
+    }
+
+    /* point to symbol name */
+    sym = argv[1];
+
+    if (argc >= 3)
+    {
+        /* point to first non-blank following symbol name */
+        cmdline += strlen("defsym") + 1;
+        while (isspace(*cmdline)) cmdline++;
+        cmdline += strlen(sym) + 1;
+        value = cmdline;
+        while (*value && isspace(*value)) value++;
+    }
+
+    /* define the symbol */
+    set_symbol(sym,value);
+    return 0;
+}
+
+#endif // defined(OPTION_CONFIG_SYMBOLS)
+
+///////////////////////////////////////////////////////////////////////
 /* PATCH ISW20030220 - Script command support */
 
 static int scr_recursion=0;     /* Recursion count (set to 0) */
 static int scr_aborted=0;          /* Script abort flag */
 static int scr_uaborted=0;          /* Script user abort flag */
 TID scr_tid=0;
+
+///////////////////////////////////////////////////////////////////////
 
 int cscript_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -3445,6 +3511,8 @@ int cscript_cmd(int argc, char *argv[], char *cmdline)
     }
     return 0;
 }
+
+///////////////////////////////////////////////////////////////////////
 
 int script_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -3478,6 +3546,9 @@ int script_cmd(int argc, char *argv[], char *cmdline)
     }
     return(0);
 }
+
+///////////////////////////////////////////////////////////////////////
+
 void script_test_userabort()
 {
         if(scr_uaborted)
@@ -3486,6 +3557,8 @@ void script_test_userabort()
            scr_aborted=1;
         }
 }
+
+///////////////////////////////////////////////////////////////////////
 
 int process_script_file(char *script_name,int isrcfile)
 {
@@ -4409,7 +4482,7 @@ COMMAND ( "attach",    attach_cmd,    "configure device" )
 COMMAND ( "detach",    detach_cmd,    "remove device" )
 COMMAND ( "define",    define_cmd,    "rename device" )
 COMMAND ( "devinit",   devinit_cmd,   "reinitialize device" )
-COMMAND ( "devlist",   devlist_cmd,   "list all devices\n" )
+COMMAND ( "devlist",   devlist_cmd,   "list device or all devices\n" )
 
 #if defined( OPTION_SCSI_TAPE )
 COMMAND ( "scsimount", scsimount_cmd, "automatic SCSI tape mounts\n" )
@@ -4459,6 +4532,9 @@ COMMAND ( "maxrates",  maxrates_cmd,  "display maximum observed MIPS/SIOS rate f
 
 #if defined(FISH_HANG)
 COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/event objects\n" )
+#endif
+#if defined(OPTION_CONFIG_SYMBOLS)
+COMMAND ( "defsym",    defsym_cmd,    "Define symbol" )
 #endif
 COMMAND ( "script",    script_cmd,    "Run a sequence of panel commands contained in a file" )
 COMMAND ( "cscript",   cscript_cmd,   "Cancels a running script thread\n" )
@@ -4807,6 +4883,16 @@ CMDHELP ( "loadtext",  "Format: \"loadtext filename [address]\". This command is
                        "to the 'loadcore' command except that it loads a text deck file with \"TXT\"\n"
                        "and \"END\" 80 byte records (i.e. an object deck).\n"
                        )
+
+#if defined(OPTION_CONFIG_SYMBOLS)
+CMDHELP ( "defsym",    "Format: \"defsym symbol [value]\". Defines symbol 'symbol' to contain value 'value'.\n"
+                       "The symbol can then be the object of a substitution for later panel commands.\n"
+                       "If 'value' contains blanks or spaces, then it should be enclosed within double\n"
+                       "quotation marks (""). For more detailed information regarding symbol substitution\n"
+                       "refer to the 'DEFSYM' configuration file statement in Hercules documentation.\n"
+                       )
+#endif
+
 CMDHELP ( "script",    "Format: \"script filename [...filename...]\". Sequentially executes the commands contained\n"
                        "within the file -filename-. The script file may also contain \"script\" commands,\n"
                        "but the system ensures that no more than 10 levels of script are invoked at any\n"

@@ -477,6 +477,19 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
     return(resstr);
 }
 
+/* (called by defsym panel command) */
+DLL_EXPORT void list_all_symbols(void)
+{
+    SYMBOL_TOKEN* tok; int i;
+    for ( i=0; i < symbol_count; i++ )
+    {
+        tok = symbols[i];
+        if (tok)
+            logmsg("HHCPN042I %s=%s\n", tok->var, tok->val ? tok->val : "");
+    }
+    return;
+}
+
 DLL_EXPORT void kill_all_symbols(void)
 {
     SYMBOL_TOKEN        *tok;
