@@ -444,7 +444,7 @@ DEF_INST(service_call)
 U32             r1, r2;                 /* Values of R fields        */
 U32             sclp_command;           /* SCLP command code         */
 U32             sccb_real_addr;         /* SCCB real address         */
-U32             i;                      /* Array subscripts          */
+int             i;                      /* Array subscripts          */
 U32             realmb;                 /* Real storage size in MB   */
 U32             sccb_absolute_addr;     /* Absolute address of SCCB  */
 U32             sccblen;                /* Length of SCCB            */
@@ -466,17 +466,17 @@ U32             chpbit;                 /* Bit number for CHPID      */
 #ifdef FEATURE_SYSTEM_CONSOLE
 SCCB_EVENT_MASK*evd_mask;               /* Event mask                */
 SCCB_EVD_HDR   *evd_hdr;                /* Event header              */
-U32             evd_len;                /* Length of event data      */
+U16             evd_len;                /* Length of event data      */
 SCCB_EVD_BK    *evd_bk;                 /* Event data                */
 SCCB_MCD_BK    *mcd_bk;                 /* Message Control Data      */
 SCCB_SGQ_BK    *sgq_bk;                 /* Signal Quiesce            */
-U32             mcd_len;                /* Length of MCD             */
+U16             mcd_len;                /* Length of MCD             */
 SCCB_OBJ_HDR   *obj_hdr;                /* Object Header             */
-U32             obj_len;                /* Length of Object          */
-U32             obj_type;               /* Object type               */
+U16             obj_len;                /* Length of Object          */
+U16             obj_type;               /* Object type               */
 SCCB_MTO_BK    *mto_bk;                 /* Message Text Object       */
 BYTE           *event_msg;              /* Message Text pointer      */
-U32             event_msglen;           /* Message Text length       */
+int             event_msglen;           /* Message Text length       */
 SCCB_CPI_BK    *cpi_bk;                 /* Control Program Info      */
 BYTE            message[4089];          /* Maximum event data buffer
                                            length plus one for \0    */
@@ -850,6 +850,12 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             while (mcd_len > sizeof(SCCB_MCD_BK))
             {
                 FETCH_HW(obj_len,obj_hdr->length);
+                if (obj_len == 0)
+                {
+                    sccb->reas = SCCB_REAS_BUFF_LEN_ERR;
+                    sccb->resp = SCCB_RESP_BUFF_LEN_ERR;
+                    break;
+                }
                 FETCH_HW(obj_type,obj_hdr->type);
                 if (obj_type == SCCB_OBJ_TYPE_MESSAGE)
                 {
@@ -857,7 +863,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                     event_msg = (BYTE*)(mto_bk+1);
                     event_msglen = obj_len -
                             (sizeof(SCCB_OBJ_HDR) + sizeof(SCCB_MTO_BK));
-                    if ((int)event_msglen < 0)
+                    if (event_msglen < 0)
                     {
                         sccb->reas = SCCB_REAS_BUFF_LEN_ERR;
                         sccb->resp = SCCB_RESP_BUFF_LEN_ERR;

@@ -1,3 +1,4 @@
+22 Sep 2006 Fix possible loop in SERVC WRITE_EVENT_DATA - Jan Jaeger
 22 Sep 2006 PR# misc/30: HAO (Hercules Automatic Operator) - Bernard
             van der Helm by Fish
 21 Sep 2006 PR# misc/79: single device devlist & defsym command - Fish
