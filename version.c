@@ -70,12 +70,12 @@ static const char *build_info[] = {
     "Using fthreads instead of pthreads",
 #endif
 #if defined(OPTION_DYNAMIC_LOAD)
-    "With Dynamic loading support",
+    "Dynamic loading support",
 #if defined(MODULESDIR)
     "Loadable module default base directory is "MODULESDIR,
 #endif
 #else
-    "Without Dynamic loading support",
+    "No Dynamic loading support",
 #endif
 #if defined(HDL_BUILD_SHARED)
     "Using shared libraries",
@@ -84,7 +84,7 @@ static const char *build_info[] = {
 #endif
 
 #if !defined(EXTERNALGUI)
-    "No external GUI support",
+    "No External GUI support",
 #endif
 
 #if defined(OPTION_HTTP_SERVER)
@@ -115,7 +115,11 @@ static const char *build_info[] = {
 #endif
 
 #if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
-    "With Regular Expressions support",
+    "Regular Expressions support",
+#endif
+
+#if defined(OPTION_HAO)
+    "Automatic Operator support",
 #endif
 
 #if !defined(HET_BZIP2)

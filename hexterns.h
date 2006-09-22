@@ -50,6 +50,16 @@
 #define HCMD_DLL_IMPORT DLL_EXPORT
 #endif
 
+#ifndef _HAO_C_
+#ifndef _HENGINE_DLL_
+#define HAO_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define HAO_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else
+#define HAO_DLL_IMPORT DLL_EXPORT
+#endif
+
 #ifndef _PANEL_C_
 #ifndef _HENGINE_DLL_
 #define HPAN_DLL_IMPORT DLL_IMPORT
@@ -166,6 +176,13 @@ HPAN_DLL_IMPORT time_t curr_int_start_time; // (start time of current interval)
 HPAN_DLL_IMPORT time_t prev_int_start_time; // (start time of previous interval)
 HPAN_DLL_IMPORT void update_maxrates_hwm(); // (update high-water-mark values)
 #endif // OPTION_MIPS_COUNTING
+
+/* Functions in module hao.c (Hercules Automatic Operator) */
+#if defined(OPTION_HAO)
+HAO_DLL_IMPORT void hao_initialize(void);       /* initialize hao */
+HAO_DLL_IMPORT void hao_command(char *command); /* process hao command */
+HAO_DLL_IMPORT void hao_message(char *message); /* process message */
+#endif /* defined(OPTION_HAO) */
 
 /* Functions in module hsccmd.c (so PTT debugging patches can access them) */
 HCMD_DLL_IMPORT int aia_cmd     (int argc, char *argv[], char *cmdline);

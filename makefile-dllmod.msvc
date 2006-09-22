@@ -54,13 +54,14 @@
 # 30/03/06 (just changed some tabs to spaces) - Fish
 # 04/05/06 clean: skip 'del' (delete) if files don't exist - Fish
 # 04/09/06 PCRE (Regular Expressions) support (http://www.pcre.org) - Fish
+# 06/09/06 HAO (Hercules Automatic Operator) support - Fish
 # ***************************************************************************
 
 !IFNDEF VERSION
 
 #   >>>  Jay!  <<<  Be sure to change the below V1/V2/V3/V4 values to match!
 
-VERSION = \"3.04\"
+VERSION = \"Pre-3.05\"
 
 # The below VERSION digits values SHOULD match the ABOVE VERSION number.
 #
@@ -579,6 +580,7 @@ hengine_OBJ = \
     $(O)hconsole.obj \
     $(O)history.obj  \
     $(O)hsccmd.obj   \
+    $(O)hao.obj      \
     $(O)hscmisc.obj  \
     $(O)httpserv.obj \
     $(O)ieee.obj     \

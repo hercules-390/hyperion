@@ -369,6 +369,9 @@ struct SYSBLK {
         int     panrate;                /* Panel refresh rate        */
         int     npquiet;                /* New Panel quiet indicator */
         char   *pantitle;               /* Alt console panel title   */
+#if defined(OPTION_HAO)
+        TID     haotid;                 /* Herc Auto-Oper thread-id  */
+#endif /* defined(OPTION_HAO) */
 #if defined(OPTION_SCSI_TAPE)
         int     auto_scsi_mount_secs;   /* Check for SCSI tape mount
                                            frequency; 0 == disabled  */

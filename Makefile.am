@@ -1,7 +1,11 @@
-## Process this file with automake to produce Makefile.in
-#
+# ***************************************************************************
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
+# Process this file with 'automake' to produce Makefile.in
 #
+# DD/MM/YY Description.......................................................
+# 06/09/06 Change History added - Fish
+# 06/09/06 HAO (Hercules Automatic Operator) support - Fish
+# ***************************************************************************
 
 AUTOMAKE_OPTIONS = foreign 1.5
 ACLOCAL_AMFLAGS  = -I m4
@@ -348,6 +352,7 @@ endif
                        cgibin.c     \
                        loadparm.c   \
                        hsccmd.c     \
+                       hao.c        \
                        hscmisc.c    \
                        sr.c         \
                        $(FISHIO)    \

@@ -598,6 +598,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hao.c"
+							>
+						</File>
+						<File
 							RelativePath=".\hchan.c"
 							>
 						</File>

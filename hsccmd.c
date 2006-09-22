@@ -4372,6 +4372,19 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
 }
 
 ///////////////////////////////////////////////////////////////////////
+/* hao - Hercules Automatic Operator */
+
+#if defined(OPTION_HAO)
+int hao_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    hao_command(cmdline);   /* (actual HAO code is in module hao.c) */
+    return 0;
+}
+#endif /* defined(OPTION_HAO) */
+
+///////////////////////////////////////////////////////////////////////
 // Handle externally defined commands...
 
 // (for use in CMDTAB COMMAND entry further below)
@@ -4422,6 +4435,9 @@ COMMAND ( "help",      HelpCommand,   "command specific help\n" )
 COMMAND ( "*",         comment_cmd,   "(log comment to syslog)\n" )
 
 COMMAND ( "hst",       History,       "history of commands" )
+#if defined(OPTION_HAO)
+COMMAND ( "hao",       hao_cmd,       "Hercules Automatic Operator" )
+#endif /* defined(OPTION_HAO) */
 COMMAND ( "log",       log_cmd,       "direct log output" )
 COMMAND ( "version",   version_cmd,   "display version information\n" )
 
@@ -4437,7 +4453,7 @@ COMMAND ( "startall",  startall_cmd,  "start all CPU's" )
 COMMAND ( "stopall",   stopall_cmd,   "stop all CPU's\n" )
 
 #ifdef _FEATURE_CPU_RECONFIG
-COMMAND ( "cf",        cf_cmd,        "configure CPU online or offline" )
+COMMAND ( "cf",        cf_cmd,        "configure current CPU online or offline" )
 COMMAND ( "cfall",     cfall_cmd,     "configure all CPU's online or offline\n" )
 #endif
 
@@ -4786,12 +4802,30 @@ CMDHELP ( "hst",       "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"
                        "hst n, where n is a negative number retrieves n-th last command\n"
                        "hst without an argument works exactly as hst -1, it retrieves last command\n"
                        )
+#if defined(OPTION_HAO)
+// Hercules Automatic Operator
+CMDHELP ( "hao",       "Format: \"hao  tgt <tgt> | cmd <cmd> | list <n> | del <n> | clear \".\n"
+                       "  hao tgt <tgt> : define target rule (regex pattern) to react on\n"
+                       "  hao cmd <cmd> : define command for previously defined rule\n"
+                       "  hao list <n>  : list all rules/commands or only at index <n>\n"
+                       "  hao del <n>   : delete the rule at index <n>\n"
+                       "  hao clear     : delete all rules (stops automatic operator)\n"
+                       )
+#endif /* defined(OPTION_HAO) */
 
-CMDHELP ( "cpu",       "Format: \"cpu nnnn\" where 'nnnn' is the cpu address of\n"
-                       "the cpu in your multiprocessor configuration which you wish\n"
-                       "all panel commands to apply to. For example, entering 'cpu 1'\n"
-                       "followed by \"gpr\" will display the general purpose registers\n"
-                       "for cpu#1 in your configuration as opposed to cpu#0\n"
+CMDHELP ( "cpu",       "Format: \"cpu hh\" where 'hh' is the hexadecimal cpu address of the cpu\n"
+                       "in your multiprocessor configuration which you wish all panel commands\n"
+                       "to apply to. For example, entering 'cpu 1F' followed by \"gpr\" will\n"
+                       "display the general purpose registers for cpu 31 of your configuration.\n"
+                       )
+
+CMDHELP ( "cf",        "Configure current CPU online or offline:  Format->  \"cf [on|off]\"\n"
+                       "Where the 'current' CPU is defined as whatever CPU was defined as\n"
+                       "the panel command target cpu via the \"cpu\" panel command. (Refer\n"
+                       "to the 'cpu' command for further information) Entering 'cf' by itself\n"
+                       "simply displays the current online/offline status of the current cpu.\n"
+                       "Otherwise the current cpu is configured online or offline as specified.\n"
+                       "Use 'cfall' to configure/display all CPUs online/offline state.\n"
                        )
 
 CMDHELP ( "start",     "Entering the 'start' command by itself simply starts a stopped\n"

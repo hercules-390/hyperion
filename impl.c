@@ -202,6 +202,11 @@ int     i;                              /* (work)                    */
                     rcname);
         // (else error message already issued)
 
+#if defined(OPTION_HAO)
+    /* Initialize the Hercules Automatic Operator */
+    hao_initialize();
+#endif /* defined(OPTION_HAO) */
+
     return NULL;
 }
 

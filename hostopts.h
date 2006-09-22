@@ -150,6 +150,9 @@
 
 #endif
 
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+  #define OPTION_HAO                    /* Herc automatic operator   */
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Hard-coded Win32-specific features and options...                 */
