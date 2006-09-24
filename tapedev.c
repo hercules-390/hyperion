@@ -111,8 +111,10 @@ static PARSER ptab[] =
     { "eotmargin", "%d" },
     { "strictsize", "%d" },
     { "readonly", "%d" },
-    { "ro", "%d" },
-    { "noring", "%d" },
+    { "ro", NULL },
+    { "noring", NULL },
+    { "rw", NULL },
+    { "ring", NULL },
     { "deonirq", "%d" },
     { "--blkid-32", NULL },
     { "--no-erg", NULL },
@@ -140,6 +142,8 @@ enum
     TDPARM_READONLY,
     TDPARM_RO,
     TDPARM_NORING,
+    TDPARM_RW,
+    TDPARM_RING,
     TDPARM_DEONIRQ,
     TDPARM_BLKID32,
     TDPARM_NOERG
@@ -4186,6 +4190,15 @@ union
             break;
 
         case TDPARM_READONLY:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
+            dev->tdparms.logical_readonly=(res.num ? 1 : 0 );
+            break;
+
         case TDPARM_RO:
         case TDPARM_NORING:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
@@ -4194,7 +4207,18 @@ union
                 rc = -1;
                 break;
             }
-            dev->tdparms.logical_readonly=(res.num ? 1 : 0 );
+            dev->tdparms.logical_readonly=1;
+            break;
+
+        case TDPARM_RW:
+        case TDPARM_RING:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                rc = -1;
+                break;
+            }
+            dev->tdparms.logical_readonly=0;
             break;
 
         case TDPARM_DEONIRQ:
