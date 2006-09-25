@@ -1573,6 +1573,15 @@ fi
 
 #------------------------------------------------------------------------------
 
+if test "$hc_cv_opt_auto_oper" = "yes"  &&
+   test "$hc_cv_have_regex_h" != "yes"; then
+
+   AC_MSG_RESULT( [ERROR: automatic-operator requested but 'regex.h' header not found] )
+   hc_error=yes
+fi
+
+#------------------------------------------------------------------------------
+
 if test "$hc_cv_opt_external_gui" = "yes"  &&
    test "$hc_cv_is_windows"      != "yes"; then
 
