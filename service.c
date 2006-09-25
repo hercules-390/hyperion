@@ -1130,7 +1130,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         {
             servc_cp_recv_mask <<= 8;
             servc_cp_send_mask <<= 8;
-            if (i < masklen)
+            if ((U32)i < masklen)
             {
                 servc_cp_recv_mask |= evd_mask->masks[i];
                 servc_cp_send_mask |= evd_mask->masks[i + masklen];
@@ -1142,7 +1142,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Write the events that we support back */
         memset (&evd_mask->masks[2 * masklen], 0, 2 * masklen);
-        for (i = 0; (i < 4) && (i < masklen); i++)
+        for (i = 0; (i < 4) && ((U32)i < masklen); i++)
         {
             evd_mask->masks[i + (2 * masklen)] |=
                 (ARCH_DEP(sclp_recv_mask) >> ((3-i)*8)) & 0xFF;
@@ -1203,7 +1203,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         xstincnum = (sysblk.xpndsize << XSTORE_PAGESHIFT)
                         / XSTORE_INCREMENT_SIZE;
         FETCH_FW(i, sccbxmap->incnum);
-        if ( i < 1 || i > xstincnum )
+        if ( i < 1 || (U32)i > xstincnum )
         {
             sccb->reas = SCCB_REAS_INVALID_RSC;
             sccb->resp = SCCB_RESP_REJECT;
