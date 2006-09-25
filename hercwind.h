@@ -157,10 +157,11 @@ typedef int             mode_t;
 
 // GNUWin32 PCRE (Perl-Compatible Regular Expressions) support...
 
-#ifdef HAVE_PCRE
+#if defined(HAVE_PCRE)
   // (earlier packages failed to define this so we must do so ourselves)
   #define  PCRE_DATA_SCOPE  extern __declspec(dllimport)
-  #include PCRE_INCNAME     // (passed by makefile)
+  #include PCRE_INCNAME                 // (passed by makefile)
+  #define  OPTION_HAO                   // Hercules Automatic Operator
 #endif
 
 #endif /*!defined(_HERCWIND_H)*/

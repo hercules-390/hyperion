@@ -21,6 +21,7 @@
 #  20/04/06 Fish Add AC_CHECK_DECLS check for SIOCDIFADDR per Kees Verruijt
 #                [kees@verruijt.net] for Apple OS X 10.4.6 TUNTAP_ClrIPAddr
 #  16/08/06 Fish Check for C99 flexible arrays support.
+#  25/09/06 Fish OPTION_HAO  <==  --disable/enable-automatic-operator
 #
 ###############################################################################
 
@@ -262,6 +263,7 @@ AH_TEMPLATE( [HAVE_INTTYPES_H],         [Define if inttypes.h header file is pre
 AH_TEMPLATE( [HAVE_U_INT],              [Define if your system uses u_int8_t, etc, instead of uint8_t] )
 
 AH_TEMPLATE( [OPTION_CONFIG_SYMBOLS],   [Define to enable symbolic substitutions in configuration file] )
+AH_TEMPLATE( [OPTION_HAO],              [Define to enable Hercules Automatic Operator feature] )
 AH_TEMPLATE( [OPTION_DYNAMIC_LOAD],     [Define to enable Hercules Dynamic Loader feature] )
 AH_TEMPLATE( [HDL_BUILD_SHARED],        [Define to indicate shared libraries are being used] )
 AH_TEMPLATE( [HDL_USE_LIBTOOL],         [Define to cause dynamic loader to use libtool instead of dlopen] )
@@ -1296,6 +1298,24 @@ AC_ARG_ENABLE( configsymbols,
     [hc_cv_opt_configsymbols=yes]
 )
 
+AC_ARG_ENABLE( automatic-operator,
+
+    AC_HELP_STRING( [--disable-automatic-operator],
+
+        [disable Hercules Automatic Operator feature]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_auto_oper=yes                      ;;
+        no)  hc_cv_opt_auto_oper=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'automatic-operator' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_auto_oper=$hc_cv_have_regex_h]
+)
+
 AC_ARG_ENABLE( external-gui,
 
     AC_HELP_STRING( [--disable-external-gui],
@@ -1792,6 +1812,7 @@ test "$hc_cv_opt_debug"                = "yes"  &&  AC_DEFINE(DEBUG)
 test "$hc_cv_have_inttypes_h"          = "yes"  &&  AC_DEFINE(HAVE_INTTYPES_H)
 test "$hc_cv_have_u_int8_t"            = "yes"  &&  AC_DEFINE(HAVE_U_INT)
 test "$hc_cv_opt_configsymbols"        = "yes"  &&  AC_DEFINE(OPTION_CONFIG_SYMBOLS)
+test "$hc_cv_opt_auto_oper"            = "yes"  &&  AC_DEFINE(OPTION_HAO)
 test "$hc_cv_opt_dynamic_load"         = "yes"  &&  AC_DEFINE(OPTION_DYNAMIC_LOAD)
 test "$hc_cv_opt_fthreads"             = "yes"  &&  AC_DEFINE(OPTION_FTHREADS)
 test "$hc_cv_opt_fishhang"             = "yes"  &&  AC_DEFINE(FISH_HANG)
