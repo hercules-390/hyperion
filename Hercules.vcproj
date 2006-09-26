@@ -1350,6 +1350,42 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Utilities"
+				>
+				<File
+					RelativePath=".\util\awssl-v19g"
+					>
+				</File>
+				<File
+					RelativePath=".\util\awswrite.jcl"
+					>
+				</File>
+				<File
+					RelativePath=".\util\cckddump.hla"
+					>
+				</File>
+				<File
+					RelativePath=".\util\cckdload.hla"
+					>
+				</File>
+				<File
+					RelativePath=".\util\dasdlist"
+					>
+				</File>
+				<File
+					RelativePath=".\util\dasdlist.bat"
+					>
+				</File>
+				<File
+					RelativePath=".\util\rawstape.jcl"
+					>
+				</File>
+				<File
+					RelativePath=".\util\tapeconv.jcl"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>
