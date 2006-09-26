@@ -28,10 +28,13 @@ Hercules Version 3: Installation and Operation</TITLE>
     </p>
     <p>
         <a href="#operating">Operating Procedure</a>
+        <ul>
+            <li><a href="#commands">Panel commands</a>
+            <li><a href="#RCFILE">The .RC &nbsp;("run commands")&nbsp; file</a>
+            <li><a href="#HAO">HAO &nbsp;("Hercules Automatic Operator")</a>
+        </ul>
     </p>
-    <p>
-        <a href="#RCFILE">.RC &nbsp;("run commands")&nbsp; file</a>
-    </p>
+
     <p>
         <a href="#support">Technical Support</a>
     </p>
@@ -190,12 +193,12 @@ labeled "<a href="http://www.cygwin.com/setup.exe">Install or update now!
 (using setup.exe)</a>" and select "Save Target As..." and then run it after
 it's been downloaded) If it's not preselected for you,
 select the libintl-2 package when you're presented with a list of packages
-to install. (NOTE: Hercules version 3.04 was built with version 1.5.15 
+to install. (NOTE: Hercules version 3.04 was built with version 1.5.15
 of Cygwin, and may not work with other versions, as the
 Cygwin library tends to have subtle incompatibilities from version
 to version that Hercules seems to stress.)
 
-<li>Download the self-extracting Windows archive: 
+<li>Download the self-extracting Windows archive:
 <ul>
 <li><a href="http://www.hercules-390.org/hercules-3.04-cygwin-p4.exe">hercules-3.04-cygwin-p4.exe</a>:
 Pentium 4 version
@@ -249,32 +252,32 @@ where:
 <blockquote>
 <dl>
         <dt><code><em>filename</em></code><p><dd>
-        
+
             is the name of the configuration file.
             The default, if none is specified, is <b><em>hercules.cnf</em></b>.
             The default may be overridden via the <code>HERCULES_CNF</code>
             environment variable.
         <p>
         <dt><code><em>-d</em></code><p><dd>
-        
+
             specifies that Hercules is to be run in 'daemon' mode,
             wherein it runs invisibly with no attached console.
         <p>
         <dt><code><em>dyndir</em></code><p><dd>
-        
+
             is the directory from which dynamic modules are to be loaded.
             The default depends on the host platform on which Hercules
             is being run. This option overrides the default.
         <p>
         <dt><code><em>dynmod</em></code><p><dd>
-        
+
             is the name of an additional dynamic module to be loaded
             at startup. More than one additional module may be specified,
             although each must be preceded with the <code>-l</code>
             option specifier.
         <p>
         <dt><code><em>logfile</em></code><p><dd>
-        
+
             is an optional log file which will receive a copy of
             all messages displayed on the control panel
         <p>
@@ -291,10 +294,20 @@ instead of a tn3270 client.
 <p>
 Now you can enter an ipl command from the control panel.
 
+<p><br>
+<hr width="50%">
 
+<a name="commands">
 <h4>Panel commands</h4>
 <p>
+The following is what is displayed on the Hercules harware console (HMC)
+in response to the '?' command being entered. Please note that it may not
+be completely accurate or up-to-date. Please enter the '?' command for
+yourself for a more complete, accurate and up-to-date list of supported
+panel commands.
+<p>
 <pre>
+
     Command      Description...
     -------      -----------------------------------------------
     ?            list all commands
@@ -417,8 +430,9 @@ Now you can enter an ipl command from the control panel.
     s{+/-}dev    turn CCW stepping on/off
     t{+/-}CKD    turn CKD_KEY tracing on/off
     f{+/-}adr    mark frames unusable/usable
+
 </pre>
-<p> 
+<p>
 The <em>ipl</em> command may also be used to perform a load from cdrom or
 server.  For example if a standard SuSE S/390 Linux distribution CD is loaded
 and mounted on /cdrom for example, this cdrom may then be ipl-ed by:
@@ -447,7 +461,9 @@ Press ? to obtain help in either control panel.
 Some commands also offer additional help information regarding their syntax,
 etc. Enter&nbsp; "<tt>help <i>&lt;command name&gt;</i></tt>" &nbsp; to display
 this additional help information. (Note: not every command supports help)
+
 <p>
+<hr width="50%">
 
 <a name="RCFILE">
 <h4>The &nbsp;hercules.rc &nbsp;(run-commands)&nbsp; file</h4>
@@ -480,15 +496,42 @@ value <tt><i>nnn</i></tt> can be any number from 1 to 999 and specifies the
 number of seconds to delay before reading the next line. Creative use of the
 run-commands file can completely automate Hercules startup.
 <p>
-    
+<hr width="50%">
+
+<a name="HAO">
+<h4>The "Hercules Automatic Operator" (HAO) Facility</h4>
+</a>
+<p>
+The Hercules Automatic Operator (HAO) feature is a facility that allows one
+to automatically issue panel commands in response to certain messages being
+issued.
+<p>
+To use the Hercules Automatic Operator facility, one first defines a "rule"
+consisting of a "target" and an associated "command". The "target" is just
+a regular expression pattern used to match against the text of the various
+messages that Hercules issues as it runs. Whenever a match is found, the
+rule "fires" and its associated command is automatically issued.
+<p>
+The Hercules Automatic Operator facility is <i>only</i> for those messages
+issued <i>by Hercules</i> to its HMC (hardware console). It <i>cannot</i>
+be used for whatever messages the guest operating system may issue to any
+of its terminals. It is only a <i>Hercules</i> automatic operator and
+<i>not</i> a "VSE", "MVS", "VM", etc, automatic operator.
+<p>
+For more information regarding Hercules Automatic Operator facility
+(including brief usage instructions) please refer to the
+<code><u>README.HAO</u></code>
+document included as part of the source-code distribution.
+<p>
+
 <p><hr><a name="support"></a>
 <h2>Technical Support</h2>
 
 <P>
-Please see our <a href="hercsupp.html">Technical Support</a> web page.
+For technical support, please refer our <a href="hercsupp.html">Technical Support</a> web page.
 </P>
 
-<p><center><hr width=15% noshade>
+<p><center><hr width=15% noshade><p>
 <a href="index.html"><img src="images/back.gif" border=0 alt="back"></a>
 </center>
 <p class="lastupd">Last updated $Date$ $Revision$</p>
