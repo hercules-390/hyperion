@@ -21,6 +21,7 @@
 /*      CPUPRIO parameter by Jan Jaeger                              */
 /*      HERCPRIO, TODPRIO, DEVPRIO parameters by Mark L. Gaubatz     */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/*      $(DEFSYM) symbol substitution support by Ivan Warren         */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -503,10 +504,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            select(). sigh            */
 #endif
 char    pathname[MAX_PATH];             /* file path in host format  */
-
-#if !defined(OPTION_CONFIG_SYMBOLS)
-    UNREFERENCED(j);
-#endif
 
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
@@ -1855,7 +1852,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sysepoch = 1900;
         yroffset = -28;
         logmsg( _("HHCCF071W SYSEPOCH 1928 is deprecated and "
-              	"will be invalid in a future release.\n"
+                "will be invalid in a future release.\n"
                 "          Specify SYSEPOCH 1900 and YROFFSET -28 instead.\n"));
     }
     if (sysepoch == 1988)
@@ -1863,7 +1860,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sysepoch = 1960;
         yroffset = -28;
         logmsg( _("HHCCF071W SYSEPOCH 1988 is deprecated and "
-              	"will be invalid in a future release.\n"
+                "will be invalid in a future release.\n"
                 "          Specify SYSEPOCH 1960 and YROFFSET -28 instead.\n"));
     }
     /* Only 1900 and 1960 are valid by this point. There are 16*1000000 clock

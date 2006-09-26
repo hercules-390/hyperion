@@ -1368,9 +1368,7 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
     int     xpos,ypos;
     int     attr;
     int     align;
-#if defined(OPTION_CONFIG_SYMBOLS)
     char    *wrk;
-#endif
 
     bfr=NULL;
     len=0;
@@ -1799,6 +1797,7 @@ char                    *logoout;
     /* Send connection message to client */
     if (class != 'K')
     {
+#if defined(OPTION_CONFIG_SYMBOLS)
         set_symbol("VERSION",VERSION);
         set_symbol("BDATE",__DATE__);
         set_symbol("BTIME",__TIME__);
@@ -1820,6 +1819,7 @@ char                    *logoout;
         set_symbol("CSS",conmsg);
         snprintf(conmsg,sizeof(conmsg),"%4.4X",dev->subchan);
         set_symbol("SUBCHAN",conmsg);
+#endif // defined(OPTION_CONFIG_SYMBOLS)
         if(sysblk.herclogo!=NULL)
         {
             logobfr=build_logo(sysblk.herclogo,sysblk.logolines,&len);

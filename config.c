@@ -1136,11 +1136,12 @@ parse_and_attach_devices(const char *sdevnum,
         int         baddev;
         size_t      devncount;
         DEVARRAY    *da;
-        int         i,j;
+        int         i;
         U16         devnum;
         int         rc;
 
 #if defined(OPTION_CONFIG_SYMBOLS)
+        int         j;
         char        **newargv;
         char        **orig_newargv;
 #endif
