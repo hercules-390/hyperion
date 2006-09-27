@@ -127,6 +127,8 @@ typedef int             mode_t;
 #endif
 
 #define OPTION_CONFIG_SYMBOLS
+#define OPTION_ENHANCED_CONFIG_SYMBOLS
+#define OPTION_ENHANCED_CONFIG_INCLUDE
 #define OPTION_FTHREADS 
 #define HAVE_STRSIGNAL
 #define EXTERNALGUI

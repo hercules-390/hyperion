@@ -77,7 +77,7 @@ and how they are used.
     <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>      no
     <a href="#MOUNTED_TAPE_REINIT">MOUNTED_TAPE_REINIT</a>  allow
 
-    <a href="#DEFSYM">DEFSYM</a>     TAPEDIR "$(HOME)/tapes"
+    <a href="#DEFSYM">DEFSYM</a>     TAPEDIR "<a href="#subs">$(HOME)</a>/tapes"
     <a href="#MODPATH">MODPATH</a>    /usr/local/hercules
     <a href="#LDMOD">LDMOD</a>      dyncrypt
 
@@ -85,6 +85,9 @@ and how they are used.
     <a href="#PGMPRDOS">PGMPRDOS</a>   restricted
     <a href="#ECPSVM">ECPSVM</a>     no
 
+    <a href="#INCLUDE">INCLUDE</a>   mydevs.cfg
+    <a href="#IGNORE">IGNORE</a>    INCLUDE_ERRORS
+    <a href="#INCLUDE">INCLUDE</a>   optdevs.cfg
 
     #
     #   <a href="#device_definitions">Device definitions</a>
@@ -103,9 +106,9 @@ and how they are used.
     0228.8    <a href="#3270">3270</a>    GROUP2
     0230.16   <a href="#3270">3270</a>
 
-    0120      <a href="#3380">3380</a>    mvsv5r.120
-    0121      <a href="#3380">3380</a>    mvsv5d.121
-    0122      <a href="#3380">3380</a>    mvswk1.122
+    0120      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5r.120
+    0121      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5d.121
+    0122      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvswk1.122
     0123      <a href="#3380">3380</a>    192.168.1.100
 
     0140      <a href="#3370">3370</a>    dosres.140
@@ -121,9 +124,9 @@ and how they are used.
     0581      <a href="#3420">3420</a>    \\.\Tape0   # SCSI  (Windows only)
     0582      <a href="#3420">3420</a>    ickdsf.ipl
     0583      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
-    0584-0587 <a href="#3420">3420</a>    $(TAPEDIR)/volumes.$(CUU) maxsizeM=170 eotmargin=131072
+    0584-0587 <a href="#3420">3420</a>    <a href="#subs">$(TAPEDIR)</a>/volumes.<a href="#subs">$(CUU)</a> maxsizeM=170 eotmargin=131072
 
-    0590      <a href="#Quantum">3480</a>    /dev/nst0 --no-erg --blkid-32   # Quantum DLT SCSI
+    0590      <a href="#3420">3480</a>    /dev/nst0 <a href="#Quantum">--no-erg</a> <a href="#Quantum">--blkid-32</a>   # <a href="#Quantum">Quantum DLT SCSI</a>
 </pre></code>
 </td></tr></table>
 </center>
@@ -422,6 +425,29 @@ and how they are used.
     "<tt>K:\Hercules\html\</tt>", then you should specify
     "<tt>/cygdrive/k/Hercules/html/</tt>"
     on your <tt>HTTPROOT</tt> statement.
+    <p>
+
+<a name="IGNORE"></a>
+<dt><code>IGNORE &nbsp; INCLUDE_ERRORS</code>
+<dd><p>
+    Indicates that errors caused by subsequent
+    <code><a href="#INCLUDE">INCLUDE</a></code> statements
+    for files which do not exist should instead be ignored rather
+    than causing startup to be aborted (as would otherwise normally
+    occur).
+    <p>
+
+<a name="INCLUDE"></a>
+<dt><code>INCLUDE &nbsp; <em>filepath</em></code>
+<dd><p>
+    An <code>INCLUDE</code> statement tells Hercules configuration file
+    processing to treat the contents of the file specified by <em>filepath</em>
+    as if its contents had appeared in the configuration file at the point
+    where the <code>INCLUDE</code> statement appears.
+    <p>
+    Note that the included file may itself contain yet another
+    <code>INCLUDE</code> statement as long as the maximum nesting depth
+    (current 8) is not exceeded.
     <p>
 
 <a name="IODELAY"></a>
@@ -815,6 +841,83 @@ and how they are used.
         will become &quot;$BAR&quot;.
     <p>
         Substitution is NOT recursive (only one substitution pass is made).
+    <p>
+<hr><!-- ---------------------------------------------------------------------------- -->
+
+<a name="ENHSYMINC"></a>
+<h3>Enhanced symbol substitutions</h3></a>
+<p>
+    Enhanced symbol substitution differs from the above normal symbol substitution
+    in several very important ways:
+    <p>
+    First, the syntax is different. Enhanced substitution symbol names are specified
+    using <code>${var}</code> (dollar + brace) rather than <code>$(var)</code>
+    (dollar + parenthesis).
+    <p>
+    Second, the enhanced syntax supports specifying a default value that is to be used
+    instead whenever the name symbol is otherwise not defined. The default value is
+    placed within the opening and closing braces just as the symbol name is, but
+    separated from it by either a single equal sign '<code>=</code>' or a
+    colon-equal-sign '<code>:=</code>'.
+    <p>
+    For example, specifying "<code>${DASD_PATH=dasd/}</code>" in your configuration
+    file requests that the value of the "DASD_PATH" symbol or environment variable be
+    substituted, or, if the variable is undefined, to use the value "<code>dasd/</code>"
+    instead. If no default value is specified then an empty string is used instead.
+    <p>
+    Finally, enhanced symbol substitution occurs only from host defined environment
+    variables and <i>not</i> from any identically named <code>DEFSYM</code> symbol
+    should one exist. For example, if environment variable 'FOO' is defined with the
+    value "bar", then the configuration file statement "<code>DEFSYM FOO myfoo</code>"
+    followed immediately by the statement "<code>${FOO}</code>" causes the value
+    "<code>bar</code>" to be substituted and <i>not</i> '<code>myfoo</code>' as might
+    otherwise be believed, whereas the statement "<code>$(FOO)</code>", since it is
+    a normal symbol substitution sequence <i>does</i> get replaced with "<code>myfoo</code>"
+    (since that was the value defined to it via the preceding <code>DEFSYM</code>
+    statement).
+    <p>
+    In other words each symbol substitution technique is supported completely separately
+    from one another. <code>DEFSYM</code> allows one to define/undefine/use private (internally
+    defined) symbols separate from the host operating system's environment variable pool,
+    whereas the enhanced symbol substitution does not and instead only allows read-only
+    access to the host's environment variable pool with no support for modifying an already
+    defined symbol (environment variable) but a nonethless convenient means of defining
+    a default value to be used should the specified host environment variable be currently
+    undefined.
+    <p>
+    Further note that symbol names, being the names of environment variables, are subject
+    to whatever case sensitivity or case insensitivity that the host operating system
+    happens to enforce/allow. On Windows, environment variables are not case sensitive, whereas on other
+    operating systems they may be. Thus "<code>${FOO}</code>", "<code>${foo}</code>",
+    "<code>${Foo}</code>", etc, all cause the same value to be substituted on Windows,
+    whereas the <code>DEFSYM</code> symbols <code>$(FOO)</code> and <code>$(foo)</code>,
+    being two completely different and unique symbols, could be substituted with two
+    completely different values (since <code>DEFSYM</code> <b><i>is</i></b>
+    case sensitive across <i>all</i> supported platforms, <i>including</i> Windows).
+    <p>
+<h4>Syntax</h4>
+<p>
+    To substitute symbol <em>symbol</em> with the current environment variable value,
+    the symbol should be enclosed within braces and preceded by a $ sign. For example,
+    if an environment variable named <code>FOO</code> holds the value "BAR", then
+    <code>${FOO}</code> will be substituted with the string "BAR". If the environment variable
+    "FOO" is not defined then a null (empty) string is substituted instead.
+    <p>
+    If the string "<code>${FOO:=myfoo}</code>" is used instead, then the value "BAR" will still be
+    substituted if the value "BAR" was indeed previously assigned to FOO, but will be
+    substituted with the value "<code>myfoo</code>" instead if the environment variable
+    FOO is currently undefined.
+    <p>
+    Note too that the default value is a literal
+    string and no substitution is applied to it. Thus attempting to use the syntax
+    "<code>${foo=${bar}}</code>" will <i>not</i> yield the expected results. It will
+    <i>not</i> be substituted with the currently defined value of the "bar" environment
+    variable, but rather will <i>always</i> be substituted with the literal string
+    "<code>${bar</code>" followed immediately by the literal character '<code>}</code>'.
+    <p>
+    Symbol names (environment variable names) are not case sensitive on Windows whereas
+    they might be on other host operating systems.
+    <p>
 <hr><!-- ---------------------------------------------------------------------------- -->
 
 <a name="process_and_thread_priorities"></a>
@@ -1534,6 +1637,9 @@ and how they are used.
         0 (your first or only host-attached SCSI tape drive), '1' means your
         second host-attached SCSI tape drive, etc.
         <p>
+        If you plan on using SCSI tapes with Hercules you might also be interested
+        in the <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a> configuration option.
+        <p>
         Host-attached SCSI tapes are read and written using variable length
         EBCDIC blocks and filemarks exactly like a mainframe tape volume, and
         as a result can be freely used/exchanged on either (i.e. SCSI tapes
@@ -1548,8 +1654,6 @@ and how they are used.
         actually have and how it behaves, you may need to specify one or more
         additional optional parameters for Hercules to provide proper emulation
         of the desired device type.
-        <br>
-<a name="Quantum"></a>
         <br>
         For example: a <b>Quantum 'DLT' (Digital Linear Tape) SCSI</b> tape drive does
         not return nor use a block-id format compatible with 3480/3490 drives
@@ -1578,8 +1682,14 @@ and how they are used.
         actual SCSI hardware (and vice versa: to translate 32-bit block-ids from
         the actual SCSI drive into 22-bit format block-ids that your guest expects
         from a 3480 device).
-        <p>
+        <br>
+<a name="Quantum"></a>
+        <br>
                 <center><h4>Special options for SCSI tapes</h4></center>
+        <p>
+        As explained just above, certain model SCSI tape drives such as the Quantum
+        DLT series may require special handling in order to provide the desired proper
+        device type emulation. These special options are:
         <p>
         <dl>
         <dt><code>--no-erg</code>
@@ -1625,9 +1735,6 @@ and how they are used.
             to the actual SCSI hardware (since that is the format that the actual
             hardware requires it to be in).
         </dl>
-        <p>
-        NOTE: If you plan on using SCSI tapes with Hercules you might also be interested
-        in the <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a> configuration option.
         <p><br>
 
     <dt><b>Optical Media Attach (OMA) virtual files</b>

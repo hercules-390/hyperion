@@ -1,3 +1,5 @@
+26 Sep 2006 PR# misc/99: Config file "include <filename>" with "Enhanced"
+            symbol substitution - Hackules & Enrico Sorichetti by Fish
 26 Sep 2006 Fix ieee bfp to integer conversions - Jimmy by Greg Smith
 23 Sep 2006 RO/RW/RING/NORING tape config options (replaces previous
             RO/NORING) - Kevin Leonard by Jay Maynard

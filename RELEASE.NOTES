@@ -89,7 +89,7 @@
   to those used by all other supported platforms. Originally, the default
   thread priority values for the Windows version of Hercules were:
 
-               ***  3.04  Default  Priorities  ***
+            ***  3.04 (and prior) Default Priorities  ***
 
             Thread    Priority           Meaning
             -------   --------   ------------------------
@@ -102,7 +102,7 @@
   operating systems. Beginning with version 3.05 however, the prioriries now
   default to:
 
-               ***  3.05  Default  Priorities  ***
+            ***  3.05 (and later) Default  Priorities  ***
 
             Thread    Priority           Meaning
             -------   --------   ------------------------
@@ -117,6 +117,21 @@
   (and thus the original behavior) can be obtained via addition of appropriate
   HERCPRIO, TODPRIO, DEVPRIO and CPUPRIO control file statements with values
   identical to the original version 3.04 default values.
+
+
+* Additional configuration file usability enhancements have been implemented
+  in the form of a new 'INCLUDE' (and associated 'IGNORE') statement, allowing
+  configuration files to "include" statements from a different named file.
+
+  Additonally, a new "enhanced" symbolic substitution syntax is now also
+  supported. Refer to the Hercules "Configuration File" documentation for
+  further information and details.
+
+  A rather nifty "Automatic Operator" facility has also been implemented in
+  the current release as well. While not exactly a "configuration file
+  usability enhancement", it is nevertheless something we hope might prove
+  to be more useful/helpful to our many users. See the "README.HAO" document
+  for more information.
 
 -------------------------------------------------------------------------------
 

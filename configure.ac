@@ -22,6 +22,8 @@
 #                [kees@verruijt.net] for Apple OS X 10.4.6 TUNTAP_ClrIPAddr
 #  16/08/06 Fish Check for C99 flexible arrays support.
 #  25/09/06 Fish OPTION_HAO  <==  --disable/enable-automatic-operator
+#  25/09/06 Fish "--disable/enable-enhanced-configsymbols/configincludes" ==>
+#                OPTION_ENHANCED_CONFIG_SYMBOLS, OPTION_ENHANCED_CONFIG_INCLUDE
 #
 ###############################################################################
 
@@ -263,6 +265,8 @@ AH_TEMPLATE( [HAVE_INTTYPES_H],         [Define if inttypes.h header file is pre
 AH_TEMPLATE( [HAVE_U_INT],              [Define if your system uses u_int8_t, etc, instead of uint8_t] )
 
 AH_TEMPLATE( [OPTION_CONFIG_SYMBOLS],   [Define to enable symbolic substitutions in configuration file] )
+AH_TEMPLATE( [OPTION_ENHANCED_CONFIG_SYMBOLS], [Define to enable enhanced-mode symbolic substitutions in configuration file] )
+AH_TEMPLATE( [OPTION_ENHANCED_CONFIG_INCLUDE], [Define to enable enhanced-mode 'include' file support in configuration file] )
 AH_TEMPLATE( [OPTION_HAO],              [Define to enable Hercules Automatic Operator feature] )
 AH_TEMPLATE( [OPTION_DYNAMIC_LOAD],     [Define to enable Hercules Dynamic Loader feature] )
 AH_TEMPLATE( [HDL_BUILD_SHARED],        [Define to indicate shared libraries are being used] )
@@ -1298,6 +1302,42 @@ AC_ARG_ENABLE( configsymbols,
     [hc_cv_opt_configsymbols=yes]
 )
 
+AC_ARG_ENABLE( enhanced-configsymbols,
+
+    AC_HELP_STRING( [--disable-enhanced-configsymbols],
+
+        [disable enhanced-mode symbolic substitutions in configuration file]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_enhanced_configsymbols=yes                      ;;
+        no)  hc_cv_opt_enhanced_configsymbols=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'enhanced-configsymbols' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_enhanced_configsymbols=yes]
+)
+
+AC_ARG_ENABLE( enhanced-configincludes,
+
+    AC_HELP_STRING( [--disable-enhanced-configincludes],
+
+        [disable enhanced-mode 'include' file support in configuration file]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_enhanced_configincludes=yes                      ;;
+        no)  hc_cv_opt_enhanced_configincludes=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'enhanced-configincludes' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_enhanced_configincludes=yes]
+)
+
 AC_ARG_ENABLE( automatic-operator,
 
     AC_HELP_STRING( [--disable-automatic-operator],
@@ -1817,26 +1857,28 @@ AC_MSG_NOTICE( [                                         ] )
 #  (place only AC_DEFINE here; place AC_DEFINE_UNQUOTED above)  #
 #---------------------------------------------------------------#
 
-test "$hc_cv_opt_debug"                = "yes"  &&  AC_DEFINE(DEBUG)
-test "$hc_cv_have_inttypes_h"          = "yes"  &&  AC_DEFINE(HAVE_INTTYPES_H)
-test "$hc_cv_have_u_int8_t"            = "yes"  &&  AC_DEFINE(HAVE_U_INT)
-test "$hc_cv_opt_configsymbols"        = "yes"  &&  AC_DEFINE(OPTION_CONFIG_SYMBOLS)
-test "$hc_cv_opt_auto_oper"            = "yes"  &&  AC_DEFINE(OPTION_HAO)
-test "$hc_cv_opt_dynamic_load"         = "yes"  &&  AC_DEFINE(OPTION_DYNAMIC_LOAD)
-test "$hc_cv_opt_fthreads"             = "yes"  &&  AC_DEFINE(OPTION_FTHREADS)
-test "$hc_cv_opt_fishhang"             = "yes"  &&  AC_DEFINE(FISH_HANG)
-test "$hc_cv_hdl_build_shared"         = "yes"  &&  AC_DEFINE(HDL_BUILD_SHARED)
-test "$hc_cv_have_lt_dlopen"           = "yes"  &&  AC_DEFINE(HDL_USE_LIBTOOL)
-test "$hc_cv_is_windows"               = "yes"  &&  AC_DEFINE(WIN32)
-test "$hc_cv_opt_external_gui"         = "yes"  &&  AC_DEFINE(EXTERNALGUI)
-test "$hc_cv_opt_cckd_bzip2"           = "yes"  &&  AC_DEFINE(CCKD_BZIP2)
-test "$hc_cv_opt_het_bzip2"            = "yes"  &&  AC_DEFINE(HET_BZIP2)
-test "$hc_cv_timespec_in_sys_types_h"  = "yes"  &&  AC_DEFINE(TIMESPEC_IN_SYS_TYPES_H)
-test "$hc_cv_timespec_in_time_h"       = "yes"  &&  AC_DEFINE(TIMESPEC_IN_TIME_H)
-test "$hc_cv_have_getset_uid"         != "yes"  &&  AC_DEFINE(NO_SETUID)
-test "$hc_cv_asm_byteswap"            != "yes"  &&  AC_DEFINE(NO_ASM_BYTESWAP)
-test "$hc_cv_non_unique_gettimeofday"  = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETTIMEOFDAY)
-test "$hc_cv_build_hercifc"            = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
+test "$hc_cv_opt_debug"                   = "yes"  &&  AC_DEFINE(DEBUG)
+test "$hc_cv_have_inttypes_h"             = "yes"  &&  AC_DEFINE(HAVE_INTTYPES_H)
+test "$hc_cv_have_u_int8_t"               = "yes"  &&  AC_DEFINE(HAVE_U_INT)
+test "$hc_cv_opt_configsymbols"           = "yes"  &&  AC_DEFINE(OPTION_CONFIG_SYMBOLS)
+test "$hc_cv_opt_enhanced_configsymbols"  = "yes"  &&  AC_DEFINE(OPTION_ENHANCED_CONFIG_SYMBOLS)
+test "$hc_cv_opt_enhanced_configincludes" = "yes"  &&  AC_DEFINE(OPTION_ENHANCED_CONFIG_INCLUDE)
+test "$hc_cv_opt_auto_oper"               = "yes"  &&  AC_DEFINE(OPTION_HAO)
+test "$hc_cv_opt_dynamic_load"            = "yes"  &&  AC_DEFINE(OPTION_DYNAMIC_LOAD)
+test "$hc_cv_opt_fthreads"                = "yes"  &&  AC_DEFINE(OPTION_FTHREADS)
+test "$hc_cv_opt_fishhang"                = "yes"  &&  AC_DEFINE(FISH_HANG)
+test "$hc_cv_hdl_build_shared"            = "yes"  &&  AC_DEFINE(HDL_BUILD_SHARED)
+test "$hc_cv_have_lt_dlopen"              = "yes"  &&  AC_DEFINE(HDL_USE_LIBTOOL)
+test "$hc_cv_is_windows"                  = "yes"  &&  AC_DEFINE(WIN32)
+test "$hc_cv_opt_external_gui"            = "yes"  &&  AC_DEFINE(EXTERNALGUI)
+test "$hc_cv_opt_cckd_bzip2"              = "yes"  &&  AC_DEFINE(CCKD_BZIP2)
+test "$hc_cv_opt_het_bzip2"               = "yes"  &&  AC_DEFINE(HET_BZIP2)
+test "$hc_cv_timespec_in_sys_types_h"     = "yes"  &&  AC_DEFINE(TIMESPEC_IN_SYS_TYPES_H)
+test "$hc_cv_timespec_in_time_h"          = "yes"  &&  AC_DEFINE(TIMESPEC_IN_TIME_H)
+test "$hc_cv_have_getset_uid"            != "yes"  &&  AC_DEFINE(NO_SETUID)
+test "$hc_cv_asm_byteswap"               != "yes"  &&  AC_DEFINE(NO_ASM_BYTESWAP)
+test "$hc_cv_non_unique_gettimeofday"     = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETTIMEOFDAY)
+test "$hc_cv_build_hercifc"               = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
 
 if test $hc_cv_have_sa_sigaction != yes ||
    test $hc_cv_have_sigusr1      != yes ||

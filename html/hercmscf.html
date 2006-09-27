@@ -574,12 +574,12 @@ failed. The error is described by <code><em>error</em></code>.
   <dt>Issued by
   <dd>config.c, function build_config
   </dl>
-<dt><code><a name="HHCCF039W">
-HHCCF039W PGMPRDOS LICENSED specified.<br>
-          Licensed program product operating systems are enabled.<br>
-          You are responsible for meeting all conditions of your<br>
-          software license.
-</a></code>
+<dt><a name="HHCCF039W"><pre>
+HHCCF039W PGMPRDOS LICENSED specified.
+          Licensed program product operating systems are enabled.
+          You are responsible for meeting all conditions of your
+          software license.</pre>
+</a>
 <dd><dl>
   <dt>Meaning
   <dd>The configuration parameter <code>PGMPRDOS LICENSED</code> was
@@ -757,7 +757,7 @@ HHCCF052S Error in <em>filename</em> line <em>lineno</em>:
   <dd>config.c, function build_config
   </dl>
 <dt><code><a name="HHCCF053E">
-        HHCCF053E Incorrect second device number in device range near character <em>c</em>
+HHCCF053E Incorrect second device number in device range near character <em>c</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
@@ -920,12 +920,11 @@ HHCCF068S Error in <em>filename</em> line <em>lineno</em>: Invalid Auto_SCSI_Mou
   <dt>Issued by
   <dd>bldcfg.c, function build_config
   </dl>
-<dt><code><a name="HHCCF069I">
-HHCCF069I Run-options enabled for this run:<br>
-           NUMCPU:           n<br>
-           ASN-and-LX-reuse: Enabled/Disabled<br>
-           DIAG8CMD:         Enabled/Disabled
-<br>
+<dt><code><a name="HHCCF069I"><pre>
+HHCCF069I Run-options enabled for this run:
+          NUMCPU:           n
+          ASN-and-LX-reuse: Enabled/Disabled
+          DIAG8CMD:         Enabled/Disabled</pre>
 </a></code>
 <dd><dl>
   <dt>Meaning
@@ -936,7 +935,6 @@ HHCCF069I Run-options enabled for this run:<br>
   <dt>Issued by
   <dd>bldcfg.c, function build_config
   </dl>
-</dl>
 <dt><code><a name="HHCCF074E">
 HHCCF074E Unspecified error occured while parsing Logical Channel Subsystem Identification
 </a></code>
@@ -949,7 +947,6 @@ HHCCF074E Unspecified error occured while parsing Logical Channel Subsystem Iden
   <dt>Issued by
   <dd>config.c, function parse_lcss
   </dl>
-</dl>
 <dt><code><a name="HHCCF075E">
 HHCCF075E No more than 1 Logical Channel Subsystem Identification may be specified
 </a></code>
@@ -965,7 +962,6 @@ HHCCF075E No more than 1 Logical Channel Subsystem Identification may be specifi
   <dt>Issued by
   <dd>config.c, function parse_lcss
   </dl>
-</dl>
 <dt><code><a name="HHCCF076E">
 HHCCF076E Non numeric Logical Channel Subsystem Identification XX
 </a></code>
@@ -982,7 +978,6 @@ HHCCF076E Non numeric Logical Channel Subsystem Identification XX
   <dt>Issued by
   <dd>config.c, function parse_lcss
   </dl>
-</dl>
 <dt><code><a name="HHCCF077E">
 HHCCF077E Logical Channel Subsystem Identification NN exceeds maximum of 3
 </a></code>
@@ -999,6 +994,94 @@ HHCCF077E Logical Channel Subsystem Identification NN exceeds maximum of 3
   <dt>Issued by
   <dd>config.c, function parse_lcss
   </dl>
+
+
+<dt><code><a name="HHCCF081I">
+HHCCF081I <em>fname</em> Will ignore include errors .
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An <code>ignore include_errors</code> statement was encountered
+  in file <em>fname</em> requesting that any <code>include</code> statements
+  subsequently found within file <em>fname</em> which happen to reference
+  include files which do not exist should simply cause a
+  <code><a href="#HHCCF084W">HHCCF084W</a></code>
+  warning instead of a
+  <code><a href="#HHCCF085S">HHCCF085S</a></code>
+  fatal error.
+  <dt>Action
+  <dd>Processing continues. This is an informational-only message.
+  <dt>Issued by
+  <dd>bldcfg.c, function build_config
+  </dl>
+
+
+<dt><code><a name="HHCCF082S">
+HHCCF082S Error in <em>fname</em> line <em>nnn</em>: Maximum nesting level (<em>nn</em>) reached
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The maximum number of nested <code>include</code> statements has been exceeded.
+  The <code>include</code> statement which caused the maximum nesting level of <em>nn</em>
+  to be exceeded is identified as statement number <em>nnn</em> of file <em>fname</em>.
+  <dt>Action
+  <dd>This is a fatal error. Configuration file processing is immediately terminated
+  and Hercules startup is aborted. Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>bldcfg.c, function build_config
+  </dl>
+
+
+<dt><code><a name="HHCCF083I">
+HHCCF083I <em>fname1</em> Including <em>fname2</em> at <em>nnn</em>.
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An <code>include</code> statement for file <em>fname2</em> was encountered
+  on line <em>nnn</em> of file <em>fname1</em>.
+  <dt>Action
+  <dd>Configuration file processing switches immediately to processing the statements
+  contained in file <em>fname2</em>. Once all of the ststements in file <em>fname2</em>
+  have been completely processed, configuration file processing will then return to
+  statement <em>nnn+1</em> of file <em>fname1</em>. This is an informational-only message.
+  <dt>Issued by
+  <dd>bldcfg.c, function build_config
+  </dl>
+
+
+<dt><code><a name="HHCCF084W">
+HHCCF084W <em>fname1</em> Open error ignored file <em>fname2</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>File <em>fname1</em> contained an <code>include</code> statement for file
+  <em>fname2</em> which could not be opened because of <em>error</em>.
+  <dt>Action
+  <dd>Processing continues. This is a informational warning only. Check to make
+  sure the filename specified by <em>fname2</em> was spelled correctly and restart
+  Hercules if desired.
+  <dt>Issued by
+  <dd>bldcfg.c, function build_config
+  </dl>
+
+
+<dt><code><a name="HHCCF085S">
+HHCCF085S <em>fname1</em> Open error file <em>fname2</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>File <em>fname1</em> contained an <code>include</code> statement for file
+  <em>fname2</em> which could not be opened because of <em>error</em>.
+  <dt>Action
+  <dd>This is a fatal error. Configuration file processing is immediately terminated
+  and Hercules startup is aborted. Correct the possible misspelling of filename
+  <em>fname2</em> and restart Hercules.
+  <dt>Issued by
+  <dd>bldcfg.c, function build_config
+  </dl>
+
+
+
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>
