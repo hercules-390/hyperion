@@ -265,7 +265,7 @@ signbit (double x)
   int32_t hx;
 
   GET_HIGH_WORD (hx, x);
-  return hx & 0x80000000;
+  return (hx & 0x80000000) != 0;
 }
 
 #if !defined(HAVE_FREXPL)

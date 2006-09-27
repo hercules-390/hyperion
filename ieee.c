@@ -141,26 +141,23 @@ do { \
 #endif
 
 struct ebfp {
-    BYTE    sign;
-    int fpclass;
+    int sign;
     int exp;
     U64 fracth;
     U64 fractl;
     long double v;
 };
 struct lbfp {
-    BYTE    sign;
-    int fpclass;
+    int sign;
     int exp;
     U64 fract;
-    double  v;
+    double v;
 };
 struct sbfp {
-    BYTE    sign;
-    int fpclass;
+    int sign;
     int exp;
     int fract;
-    float   v;
+    float v;
 };
 
 #ifndef HAVE_SQRTL
@@ -973,7 +970,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
  */
 static int cnvt_hfp_to_bfp (U32 *fpr, int rounding,
         int bfp_fractbits, int bfp_emax, int bfp_ebias,
-        BYTE *result_sign, int *result_exp, U64 *result_fract)
+        int *result_sign, int *result_exp, U64 *result_fract)
 {
     BYTE sign;
     short expo;
@@ -2530,7 +2527,7 @@ static int integer_ebfp(struct ebfp *op, int mode, REGS *regs)
         } else {
             ieee_exception(FE_INVALID, regs);
         }
-        ebfpston(op);
+        ebfpntos(op);
 
         raised = fetestexcept(FE_ALL_EXCEPT);
         if (raised) {
@@ -2575,7 +2572,7 @@ static int integer_lbfp(struct lbfp *op, int mode, REGS *regs)
         } else {
             ieee_exception(FE_INVALID, regs);
         }
-        lbfpston(op);
+        lbfpntos(op);
 
         raised = fetestexcept(FE_ALL_EXCEPT);
         if (raised) {
@@ -2620,7 +2617,7 @@ static int integer_sbfp(struct sbfp *op, int mode, REGS *regs)
         } else {
             ieee_exception(FE_INVALID, regs);
         }
-        sbfpston(op);
+        sbfpntos(op);
 
         raised = fetestexcept(FE_ALL_EXCEPT);
         if (raised) {
