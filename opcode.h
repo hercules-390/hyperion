@@ -144,6 +144,7 @@ OPC_DLL_IMPORT zz_func opcode_b3xx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_b9xx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_c0xx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_c2xx[][GEN_MAXARCH];                      /*@Z9*/
+OPC_DLL_IMPORT zz_func opcode_c8xx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_e3xx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_e4xx[256][GEN_MAXARCH];
 extern         zz_func v_opcode_e4xx[][GEN_MAXARCH];
@@ -198,6 +199,9 @@ int used; \
     case 0xC2:                                     /*@Z9*/ \
         used = sysblk.imapc2[(_inst)[1] & 0x0F]++; /*@Z9*/ \
         break;                                     /*@Z9*/ \
+    case 0xC8:
+        used = sysblk.imapc8[(_inst)[1] & 0x0F]++;
+        break;
     case 0xE3: \
         used = sysblk.imape3[(_inst)[5]]++; \
         break; \
@@ -1115,6 +1119,32 @@ do { \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
+            (_b1) = (temp >> 12) & 0xf; \
+            (_effective_addr1) = temp & 0xfff; \
+        if((_b1) != 0) \
+        { \
+        (_effective_addr1) += (_regs)->GR((_b1)); \
+        (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+        } \
+        (_b2) = (_inst)[4] >> 4; \
+        (_effective_addr2) = (((_inst)[4] & 0x0F) << 8) | (_inst)[5]; \
+        if((_b2) != 0) \
+        { \
+        (_effective_addr2) += (_regs)->GR((_b2)); \
+        (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+        } \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+
+
+/* RSS storage to storage with additional register */
+#undef RSS
+#define RSS(_inst, _regs, _r3, _b1, _effective_addr1, \
+                     _b2, _effective_addr2) \
+    {   U32 temp; \
+            memcpy (&temp, (_inst), 4); \
+            temp = CSWAP32(temp); \
+            (_r3) = (temp >> 20) & 0xf; \
             (_b1) = (temp >> 12) & 0xf; \
             (_effective_addr1) = temp & 0xfff; \
         if((_b1) != 0) \
@@ -2430,6 +2460,9 @@ DEF_INST(load_logical_halfword);                                /*@Z9*/
 DEF_INST(load_logical_halfword_register);                       /*@Z9*/
 DEF_INST(load_logical_long_halfword_register);                  /*@Z9*/
 DEF_INST(find_leftmost_one_long_register);                      /*@Z9*/
+DEF_INST(move_with_optional_specifications);
+DEF_INST(extract_cpu_time);
+DEF_INST(compare_and_swap_and_store);
 
 
 /* Instructions in ecpsvm.c */

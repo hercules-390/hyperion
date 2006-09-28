@@ -2091,6 +2091,75 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
 #endif /*defined(FEATURE_ESAME)*/
 
 
+#if defined(FEATURE_MODEL_Z9BC)
+/*-------------------------------------------------------------------*/
+/* C8x1 ECTG  - Extract CPU Time                               [RSS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(extract_cpu_time)
+{
+int     b1,
+        b2;                             /* Base of effective addr    */
+VADR    effective_addr1,
+        effective_addr2;                /* Effective address         */
+int     r3;                             /* R3                        */
+S64     dreg;                           /* Double word workarea      */
+U64     gr0, gr1;
+
+    RSS(inst, regs, r3, b1, effective_addr1, b2, effective_addr2);
+
+#if defined(_FEATURE_SIE)
+    if(SIE_STATB(regs, IC3, SPT))
+        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif /*defined(_FEATURE_SIE)*/
+
+    OBTAIN_INTLOCK(regs);
+
+    /* Save the CPU timer value */
+    dreg = cpu_timer(regs);
+
+    /* reset the cpu timer pending flag according to its value */
+    if( CPU_TIMER(regs) < 0 )
+    {
+        ON_IC_PTIMER(regs);
+
+        /* Roll back the instruction and take the
+           timer interrupt if we have a pending CPU timer
+           and we are enabled for such interrupts *JJ */
+        if( OPEN_IC_PTIMER(regs) )
+        {
+            RELEASE_INTLOCK(regs);
+
+            regs->psw.IA -= 6;
+            VALIDATE_AIA(regs);
+            RETURN_INTCHECK(regs);
+        }
+    }
+    else
+        OFF_IC_PTIMER(regs);
+
+    RELEASE_INTLOCK(regs);
+
+    /* The value of the current CPU timer is subtracted from the first
+     * operand and the result is placed in general register 0
+     */
+    gr0 = ARCH_DEP(vfetch8) (effective_addr1, b1, regs) - dreg;
+    /* The second operand is placed in general register 1
+     */
+    gr1 = ARCH_DEP(vfetch8) (effective_addr2, b2, regs);
+    /* The eight bytes at the third operand location replace the contents 
+     * of general register R3. The operands are treated as unsigned 64-bit
+     * integers. The contents of R3 is treated according to current 
+     * addressing mode. 
+     */
+    regs->GR_G(r3) = ARCH_DEP(wfetch8) (regs->GR_G(r3), r3, regs);
+    regs->GR_G(0) = gr0;
+    regs->GR_G(1) = gr1;
+
+    RETURN_INTCHECK(regs);
+}
+#endif /*defined(FEATURE_MODEL_Z9BC)*/
+
+
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
 /* EB80 ICMH  - Insert Characters under Mask High              [RSY] */

@@ -213,6 +213,11 @@
  UNDEF_INST(store_clock_extended)
 #endif /*!defined(FEATURE_EXTENDED_TOD_CLOCK)*/
 
+#if !defined(FEATURE_MODEL_Z9BC)
+ UNDEF_INST(move_with_optional_specifications)
+ UNDEF_INST(extract_cpu_time)
+ UNDEF_INST(compare_and_swap_and_store)
+#endif /*!defined(FEATURE_MODEL_Z9BC)*/
 
 #if !defined(FEATURE_STORE_SYSTEM_INFORMATION)
  UNDEF_INST(store_system_information)
@@ -277,6 +282,9 @@
  UNDEF_INST(load_psw_extended)
 #endif /*!defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)*/
 
+#if !defined(FEATURE_ESAME)
+ UNDEF_INST(execute_c8xx)
+#endif /*!defined(FEATURE_ESAME)*/
 
 #if !defined(FEATURE_BASIC_FP_EXTENSIONS)
  UNDEF_INST(execute_b3xx)
@@ -902,6 +910,13 @@ DEF_INST(execute_c2xx)                                          /*@Z9*/
 #endif /*defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)*/
 
 
+#if defined(FEATURE_ESAME)
+DEF_INST(execute_c8xx)
+{
+    regs->ARCH_DEP(opcode_c8xx)[inst[1]](inst, regs);
+}
+#endif /*defined(FEATURE_ESAME)*/
+
 #if defined(FEATURE_VECTOR_FACILITY)
 
 DEF_INST(execute_a4xx)
@@ -977,6 +992,7 @@ DISASM_ROUTE(b3xx,[1])
 DISASM_ROUTE(b9xx,[1])
 DISASM_ROUTE(c0xx,[1] & 0x0F)
 DISASM_ROUTE(c2xx,[1] & 0x0F)                                   /*@Z9*/
+DISASM_ROUTE(c8xx,[1] & 0x0F)
 DISASM_ROUTE(e3xx,[5])
 DISASM_ROUTE(e5xx,[1])
 DISASM_ROUTE(e6xx,[1])
@@ -1499,6 +1515,21 @@ int b1,d1,b2,d2;
     DISASM_LOGMSG;
 }
 
+void disasm_RSS (BYTE inst[], BYTE mnemonic[])
+{
+DISASM_COMMON_VARS;
+int r3,b1,d1,b2,d2;
+    r3 = inst[1] >> 4;
+    b1 = inst[2] >> 4;
+    d1 = (inst[2] & 0x0F) << 8 | inst[3];
+    b2 = inst[4] >> 4;
+    d2 = (inst[4] & 0x0F) << 8 | inst[5];
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2);
+    DISASM_LOGMSG;
+}
+
 void disasm_VST (BYTE inst[], BYTE mnemonic[])
 {
 DISASM_COMMON_VARS;
@@ -1600,6 +1631,7 @@ static zz_func z900_opcode_b3xx[256];
 static zz_func z900_opcode_b9xx[256];
 static zz_func z900_opcode_c0xx[256];
 static zz_func z900_opcode_c2xx[256];                           /*@Z9*/
+static zz_func z900_opcode_c8xx[256];
 static zz_func z900_opcode_e3xx[256];
 static zz_func z900_opcode_e5xx[256];
 static zz_func z900_opcode_ebxx[256];
@@ -1653,6 +1685,7 @@ int i;
         z900_opcode_b9xx [i] = opcode_b9xx [i][ARCH_900];
         z900_opcode_c0xx [i] = opcode_c0xx [i&0x0F][ARCH_900];
         z900_opcode_c2xx [i] = opcode_c2xx [i&0x0F][ARCH_900];  /*@Z9*/
+        z900_opcode_c8xx [i] = opcode_c8xx [i&0x0F][ARCH_900];
         z900_opcode_e3xx [i] = opcode_e3xx [i][ARCH_900];
         z900_opcode_e5xx [i] = opcode_e5xx [i][ARCH_900];
         z900_opcode_ebxx [i] = opcode_ebxx [i][ARCH_900];
@@ -1703,6 +1736,7 @@ void set_opcode_pointers(REGS *regs)
     regs->z900_opcode_b9xx = z900_opcode_b9xx;
     regs->z900_opcode_c0xx = z900_opcode_c0xx;
     regs->z900_opcode_c2xx = z900_opcode_c2xx;                  /*@Z9*/
+    regs->z900_opcode_c8xx = z900_opcode_c8xx;
     regs->z900_opcode_e3xx = z900_opcode_e3xx;
     regs->z900_opcode_e5xx = z900_opcode_e5xx;
     regs->z900_opcode_ebxx = z900_opcode_ebxx;
@@ -1912,7 +1946,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*C5*/   GENx___x___x___ ,
  /*C6*/   GENx___x___x___ ,
  /*C7*/   GENx___x___x___ ,
- /*C8*/   GENx___x___x___ ,
+ /*C8*/   GENx___x___x900 (execute_c8xx,c8xx,""),
  /*C9*/   GENx___x___x___ ,
  /*CA*/   GENx___x___x___ ,
  /*CB*/   GENx___x___x___ ,
@@ -3352,6 +3386,24 @@ DLL_EXPORT zz_func opcode_c2xx[16][GEN_MAXARCH] = {                             
  /*C2xD*/ GENx___x390x900 (compare_fullword_immediate,RIL,"CFI"),                  /*@Z9*/
  /*C2xE*/ GENx___x___x900 (compare_logical_long_fullword_immediate,RIL,"CLGFI"),   /*@Z9*/
  /*C2xF*/ GENx___x390x900 (compare_logical_fullword_immediate,RIL,"CLFI") };       /*@Z9*/
+
+DLL_EXPORT zz_func opcode_c8xx[16][GEN_MAXARCH] = {
+ /*C8x0*/ GENx___x___x900 (move_with_optional_specifications,RSS,"MVCOS"),
+ /*C8x1*/ GENx___x___x900 (extract_cpu_time,RSS,"ECTG"),
+ /*C8x2*/ GENx___x___x900 (compare_and_swap_and_store,RSS,"CSST"),
+ /*C8x3*/ GENx___x___x___ ,
+ /*C8x4*/ GENx___x___x___ ,
+ /*C8x5*/ GENx___x___x___ ,
+ /*C8x6*/ GENx___x___x___ ,
+ /*C8x7*/ GENx___x___x___ ,
+ /*C8x8*/ GENx___x___x___ ,
+ /*C8x9*/ GENx___x___x___ ,
+ /*C8xA*/ GENx___x___x___ ,
+ /*C8xB*/ GENx___x___x___ ,
+ /*C8xC*/ GENx___x___x___ ,
+ /*C8xD*/ GENx___x___x___ ,
+ /*C8xE*/ GENx___x___x___ ,
+ /*C8xF*/ GENx___x___x___ };
 
 // #endif /*defined(FEATURE_ESAME)*/
 

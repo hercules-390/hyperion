@@ -236,7 +236,7 @@ struct REGS {                           /* Processor registers       */
         FUNC   *z900_opcode_01xx, *z900_opcode_a5xx, *z900_opcode_a7xx,
                *z900_opcode_b2xx, *z900_opcode_b3xx, *z900_opcode_b9xx,
                *z900_opcode_c0xx,
-               *z900_opcode_c2xx,                               /*@Z9*/
+               *z900_opcode_c2xx, *z900_opcode_c8xx,            /*@Z9*/
                *z900_opcode_e3xx, *z900_opcode_e5xx,
                *z900_opcode_ebxx, *z900_opcode_ecxx, *z900_opcode_edxx;
 
@@ -487,6 +487,7 @@ struct SYSBLK {
         U64 imapb9[256];
         U64 imapc0[16];
         U64 imapc2[16];                                         /*@Z9*/
+        U64 imapc8[16];
         U64 imape3[256];
         U64 imape4[256];
         U64 imape5[256];
@@ -505,6 +506,7 @@ struct SYSBLK {
             + sizeof(sysblk.imapb9) \
             + sizeof(sysblk.imapc0) \
             + sizeof(sysblk.imapc2) /*@Z9*/ \
+            + sizeof(sysblk.imapc8) \
             + sizeof(sysblk.imape3) \
             + sizeof(sysblk.imape4) \
             + sizeof(sysblk.imape5) \

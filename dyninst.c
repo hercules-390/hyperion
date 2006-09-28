@@ -32,6 +32,7 @@
  #define opcode_b9xx  opcode_b9xx_r
  #define opcode_c0xx  opcode_c0xx_r
  #define opcode_c2xx  opcode_c2xx_r
+ #define opcode_c8xx  opcode_c8xx_r
  #define opcode_e3xx  opcode_e3xx_r
  #define opcode_e5xx  opcode_e5xx_r
  #define opcode_e6xx  opcode_e6xx_r
@@ -54,6 +55,7 @@
  #undef opcode_b9xx
  #undef opcode_c0xx
  #undef opcode_c2xx
+ #undef opcode_c8xx
  #undef opcode_e3xx
  #undef opcode_e5xx
  #undef opcode_e6xx
@@ -91,6 +93,7 @@ static zz_func save_b3xx[256][GEN_MAXARCH];
 static zz_func save_b9xx[256][GEN_MAXARCH];
 static zz_func save_c0xx[16][GEN_MAXARCH];
 static zz_func save_c2xx[16][GEN_MAXARCH];                      /*@Z9*/
+static zz_func save_c8xx[16][GEN_MAXARCH];
 static zz_func save_e3xx[256][GEN_MAXARCH];
 static zz_func save_e5xx[256][GEN_MAXARCH];
 static zz_func save_e6xx[256][GEN_MAXARCH];
@@ -113,6 +116,7 @@ static zz_func save_edxx[256][GEN_MAXARCH];
   static void * opcode_b9xx;
   static void * opcode_c0xx;
   static void * opcode_c2xx;                                    /*@Z9*/
+  static void * opcode_c8xx;
   static void * opcode_e3xx;
   static void * opcode_e5xx;
   static void * opcode_e6xx;
@@ -148,6 +152,7 @@ static void opcode_save()
     memcpy(save_b9xx,opcode_b9xx,sizeof(save_b9xx));
     memcpy(save_c0xx,opcode_c0xx,sizeof(save_c0xx));
     memcpy(save_c2xx,opcode_c2xx,sizeof(save_c2xx));            /*@Z9*/
+    memcpy(save_c8xx,opcode_c8xx,sizeof(save_c8xx));
     memcpy(save_e3xx,opcode_e3xx,sizeof(save_e3xx));
     memcpy(save_e5xx,opcode_e5xx,sizeof(save_e5xx));
     memcpy(save_e6xx,opcode_e6xx,sizeof(save_e6xx));
@@ -171,6 +176,7 @@ static void opcode_restore()
     memcpy(opcode_b9xx,save_b9xx,sizeof(save_b9xx));
     memcpy(opcode_c0xx,save_c0xx,sizeof(save_c0xx));
     memcpy(opcode_c2xx,save_c2xx,sizeof(save_c2xx));            /*@Z9*/
+    memcpy(opcode_c8xx,save_c2xx,sizeof(save_c8xx));
     memcpy(opcode_e3xx,save_e3xx,sizeof(save_e3xx));
     memcpy(opcode_e5xx,save_e5xx,sizeof(save_e5xx));
     memcpy(opcode_e6xx,save_e6xx,sizeof(save_e6xx));
@@ -307,6 +313,7 @@ int opcode, extop;
         HDL_RESOLVE(opcode_b9xx);
         HDL_RESOLVE(opcode_c0xx);
         HDL_RESOLVE(opcode_c2xx);                               /*@Z9*/
+        HDL_RESOLVE(opcode_c8xx);
         HDL_RESOLVE(opcode_e3xx);
         HDL_RESOLVE(opcode_e5xx);
         HDL_RESOLVE(opcode_e6xx);
@@ -371,6 +378,11 @@ int opcode, extop;
                 for(extop = 0; extop < 16; extop++)                        /*@Z9*/
                     assign_extop1(opcode, extop, opcode_c2xx, save_c2xx);  /*@Z9*/
                 break;                                                     /*@Z9*/
+
+            case 0xC8:
+                for(extop = 0; extop < 16; extop++)
+                    assign_extop1(opcode, extop, opcode_c8xx, save_c8xx);
+                break;
 
             case 0xE3:
                 for(extop = 0; extop < 256; extop++)
