@@ -572,11 +572,13 @@ DLL_EXPORT int usleep ( useconds_t useconds )
 
 #if !defined( HAVE_GETTIMEOFDAY )
 
-// Number of 100 nanosecond units from 1 Jan 1601 to 1 Jan 1970
+// Number of 100-nanosecond units from 1 Jan 1601 to 1 Jan 1970
 
 #define  EPOCH_BIAS  116444736000000000ULL
 
-static LARGE_INTEGER FileTimeToTimeMicroseconds( const FILETIME* pFT )
+// Helper function to convert Windows system-time value to microseconds...
+
+static LARGE_INTEGER FileTimeToMicroseconds( const FILETIME* pFT )
 {
     LARGE_INTEGER  liWork;  // (work area)
 
@@ -585,7 +587,7 @@ static LARGE_INTEGER FileTimeToTimeMicroseconds( const FILETIME* pFT )
     liWork.HighPart = pFT->dwHighDateTime;
     liWork.LowPart  = pFT->dwLowDateTime;
 
-    // Convert to 100 nanosecond units since 1 Jan 1970
+    // Convert to 100-nanosecond units since 1 Jan 1970
 
     liWork.QuadPart -= EPOCH_BIAS;
 
@@ -598,21 +600,22 @@ static LARGE_INTEGER FileTimeToTimeMicroseconds( const FILETIME* pFT )
 
 DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
 {
-    LARGE_INTEGER          liCurrentHPCValue;
-    static LARGE_INTEGER   liStartingHPCValue;
-    static LARGE_INTEGER   liStartingSystemTime;
-    static double          dHPCTicksPerMicrosecond;
-    static struct timeval  tvPrevious;
-    static BOOL            bInSync = FALSE;
+    LARGE_INTEGER          liCurrentHPCValue;       // (high-performance-counter tick count)
+    static LARGE_INTEGER   liStartingHPCValue;      // (high-performance-counter tick count)
+    static LARGE_INTEGER   liStartingSystemTime;    // (time of last resync in microseconds)
+    static struct timeval  tvPrevSyncVal = {0,0};   // (time of last resync as timeval)
+    static struct timeval  tvPrevRetVal  = {0,0};   // (previously returned value)
+    static double          dHPCTicksPerMicrosecond; // (just what it says)
+    static BOOL            bInSync = FALSE;         // (work flag)
 
     UNREFERENCED(pTZ);
+
+    // One-time (and periodic!) initialization...
 
     if (unlikely( !bInSync ))
     {
         FILETIME       ftStartingSystemTime;
         LARGE_INTEGER  liHPCTicksPerSecond;
-
-        bInSync = TRUE;
 
         // The "GetSystemTimeAsFileTime" function obtains the current system date
         // and time. The information is in Coordinated Universal Time (UTC) format.
@@ -623,11 +626,16 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
         VERIFY( QueryPerformanceFrequency( &liHPCTicksPerSecond ) );
         dHPCTicksPerMicrosecond = (double) liHPCTicksPerSecond.QuadPart / 1000000.0;
 
-        liStartingSystemTime = FileTimeToTimeMicroseconds( &ftStartingSystemTime );
+        liStartingSystemTime = FileTimeToMicroseconds( &ftStartingSystemTime );
 
-        tvPrevious.tv_sec = 0;
-        tvPrevious.tv_usec = 0;
+        tvPrevSyncVal.tv_sec = 0;       // (to force init further below)
+        tvPrevSyncVal.tv_usec = 0;      // (to force init further below)
+
+        bInSync = TRUE;
     }
+
+    // The following check for user error must FOLLOW the above initialization
+    // code block so the above initialization code block ALWAYS gets executed!
 
     if (unlikely( !pTV ))
         return EFAULT;
@@ -654,43 +662,62 @@ DLL_EXPORT int gettimeofday ( struct timeval* pTV, void* pTZ )
     pTV->tv_sec   =  (long)(liCurrentHPCValue.QuadPart / 1000000);
     pTV->tv_usec  =  (long)(liCurrentHPCValue.QuadPart % 1000000);
 
-    if (unlikely( !tvPrevious.tv_sec ))
-    {
-        tvPrevious.tv_sec  = pTV->tv_sec;
-        tvPrevious.tv_usec = pTV->tv_usec;
-    }
-
     // Re-sync to system clock every so often to prevent clock drift
     // since high-performance timer updated independently from clock.
 
 #define  RESYNC_GTOD_EVERY_SECS  30
 
-    if (unlikely( (pTV->tv_sec - tvPrevious.tv_sec ) > RESYNC_GTOD_EVERY_SECS ))
-        bInSync = FALSE;    // (force resync)
+    // (initialize time of previous 'sync')
 
-    // Ensure each call returns a unique value...
-
-    while (pTV->tv_sec < tvPrevious.tv_sec ||
-        (pTV->tv_sec  == tvPrevious.tv_sec &&
-         pTV->tv_usec <= tvPrevious.tv_usec))
+    if (unlikely( !tvPrevSyncVal.tv_sec ))
     {
-        pTV->tv_usec += 1;
+        tvPrevSyncVal.tv_sec  = pTV->tv_sec;
+        tvPrevSyncVal.tv_usec = pTV->tv_usec;
+    }
 
-        if (pTV->tv_usec >= 1000000)
+    // (is is time to resync again?)
+
+    if (unlikely( (pTV->tv_sec - tvPrevSyncVal.tv_sec ) > RESYNC_GTOD_EVERY_SECS ))
+    {
+        bInSync = FALSE;    // (force resync)
+        return gettimeofday( pTV, NULL );
+    }
+
+    // Ensure that each call returns a unique, ever-increasing value...
+
+    if (unlikely( !tvPrevRetVal.tv_sec ))
+    {
+        tvPrevRetVal.tv_sec  = pTV->tv_sec;
+        tvPrevRetVal.tv_usec = pTV->tv_usec;
+    }
+
+    if (unlikely
+    (0
+        ||      pTV->tv_sec  <  tvPrevRetVal.tv_sec
+        || (1
+            &&  pTV->tv_sec  == tvPrevRetVal.tv_sec
+            &&  pTV->tv_usec <= tvPrevRetVal.tv_usec
+           )
+    ))
+    {
+        pTV->tv_usec = tvPrevRetVal.tv_sec;
+        pTV->tv_usec = tvPrevRetVal.tv_usec + 1;
+
+        if (unlikely(pTV->tv_usec >= 1000000))
         {
-            pTV->tv_usec -= 1000000;
-            pTV->tv_sec  += 1;
+            pTV->tv_sec  += pTV->tv_usec / 1000000;
+            pTV->tv_usec  = pTV->tv_usec % 1000000;
         }
     }
 
-    // Return to caller if no resync needed
+    // Save previously returned value for next time...
 
-    if (likely( bInSync ))
-        return 0;
+    tvPrevRetVal.tv_sec  = pTV->tv_sec;
+    tvPrevRetVal.tv_usec = pTV->tv_usec;
 
-    // (resync needed before returning)
+    // Done!
 
-    return gettimeofday( pTV, NULL );
+    return 0;       // (always unless user error)
 }
 
 #endif
