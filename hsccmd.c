@@ -660,6 +660,40 @@ char * format_tod(char *buf, U64 tod, int flagdate)
 }
 
 ///////////////////////////////////////////////////////////////////////
+/* timerint - display or set the timer interval */
+
+int timerint_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if (argc > 1)
+    {
+        if (!strcasecmp(argv[1],"default"))
+            sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
+        else if (!strcasecmp(argv[1],"reset"))
+            sysblk.timerint = DEFAULT_TIMER_REFRESH_USECS;
+        else
+        {
+            int timerint = 0; BYTE c;
+
+            if (1
+                && sscanf(argv[1], "%d%c", &timerint, &c) == 1
+                && timerint >= 1
+                && timerint <= 1000000
+            )
+            {
+                sysblk.timerint = timerint;
+            }
+        }
+    }
+
+    logmsg( _("HHCPN037I Timer update interval = %d microsecond(s)\n"),
+              sysblk.timerint );
+
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
 /* clocks command - display tod clkc and cpu timer */
 
 int clocks_cmd(int argc, char *argv[], char *cmdline)
@@ -4485,6 +4519,7 @@ COMMAND ( "fpr",       fpr_cmd,       "display floating point registers" )
 COMMAND ( "cr",        cr_cmd,        "display control registers" )
 COMMAND ( "ar",        ar_cmd,        "display access registers" )
 COMMAND ( "pr",        pr_cmd,        "display prefix register" )
+COMMAND ( "timerint",  timerint_cmd,  "display or set timers update interval" )
 COMMAND ( "clocks",    clocks_cmd,    "display tod clkc and cpu timer" )
 COMMAND ( "ipending",  ipending_cmd,  "display pending interrupts" )
 COMMAND ( "ds",        ds_cmd,        "display subchannel" )

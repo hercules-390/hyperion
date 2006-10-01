@@ -173,6 +173,10 @@ int     interval;                       /* Interval (us)             */
 double  cpupct;                         /* Calculated cpu percentage */
 #endif /*OPTION_MIPS_COUNTING*/
 struct  timeval tv;                     /* Structure for select      */
+#if defined( HAVE_NANOSLEEP )
+struct  timespec  rqtp;                 /* requested sleep interval  */
+struct  timespec  rmtp;                 /* remaining sleep interval  */
+#endif
 
     UNREFERENCED(argp);
 
@@ -293,11 +297,31 @@ struct  timeval tv;                     /* Structure for select      */
         } /* end if(usecctr) */
 #endif /*OPTION_MIPS_COUNTING*/
 
-        /* Sleep for one system clock tick by specifying a one-microsecond
-           delay, which will get stretched out to the next clock tick */
-        tv.tv_sec = 0;
-        tv.tv_usec = 1;
-        select (0, NULL, NULL, NULL, &tv);
+        /* Sleep for another timer update interval... */
+
+#if defined( HAVE_NANOSLEEP )
+
+        rqtp.tv_sec  = 0;
+        rqtp.tv_nsec = sysblk.timerint * 1000;
+
+        while ( nanosleep ( &rqtp, &rmtp ) < 0 )
+        {
+            // (EINTR presumed)
+            rqtp.tv_sec  = rmtp.tv_sec;
+            rqtp.tv_nsec = rmtp.tv_nsec;
+        }
+
+#elif defined( HAVE_USLEEP )
+
+        usleep ( sysblk.timerint );
+
+#else
+        tv.tv_sec  = 0;
+        tv.tv_usec = sysblk.timerint;
+
+        select ( 0, NULL, NULL, NULL, &tv );
+
+#endif /* nanosleep, usleep or select */
 
     } /* end while */
 

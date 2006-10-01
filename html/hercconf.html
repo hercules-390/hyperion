@@ -50,44 +50,46 @@ and how they are used.
     <a href="#NUMCPU">NUMCPU</a>     1
     <a href="#NUMVEC">NUMVEC</a>     1
     <a href="#SYSEPOCH">SYSEPOCH</a>   1900
-    ##<a href="#YROFFSET">YROFFSET</a>   -28
+    <a href="#YROFFSET">YROFFSET</a>   -28
     <a href="#TZOFFSET">TZOFFSET</a>   -0500
 
-    ##<a href="#HTTPROOT">HTTPROOT</a>   /usr/local/share/hercules/
+    <a href="#HTTPROOT">HTTPROOT</a>   /usr/local/share/hercules/
     <a href="#HTTPPORT">HTTPPORT</a>   8081 NOAUTH
 
     <a href="cckddasd.html#cckdcommand">CCKD</a>       cache=8
     <a href="#SHRDPORT">SHRDPORT</a>   3990
 
-    <a href="#CNSLPORT">CNSLPORT</a>   3270
-    <a href="#PANRATE">PANRATE</a>    FAST
     <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
     <a href="#CODEPAGE">CODEPAGE</a>   default
+    <a href="#CNSLPORT">CNSLPORT</a>   3270
+    <a href="#PANRATE">PANRATE</a>    FAST
 
-    <a href="#TODDRAG">TODDRAG</a>    1.0
-    <a href="#TODPRIO">TODPRIO</a>    -20
     <a href="#HERCPRIO">HERCPRIO</a>   0
+    <a href="#TODPRIO">TODPRIO</a>    -20
     <a href="#DEVPRIO">DEVPRIO</a>    8
     <a href="#CPUPRIO">CPUPRIO</a>    15
+
+    <a href="#TIMERINT">TIMERINT</a>   DEFAULT
+    <a href="#TODDRAG">TODDRAG</a>    1.0
     <a href="#DEVTMAX">DEVTMAX</a>    8
 
     <a href="#DIAG8CMD">DIAG8CMD</a>   disable
     <a href="#SHCMDOPT">SHCMDOPT</a>   disable
 
-    <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>      no
-    <a href="#MOUNTED_TAPE_REINIT">MOUNTED_TAPE_REINIT</a>  allow
-
     <a href="#DEFSYM">DEFSYM</a>     TAPEDIR "<a href="#subs">$(HOME)</a>/tapes"
     <a href="#MODPATH">MODPATH</a>    /usr/local/hercules
     <a href="#LDMOD">LDMOD</a>      dyncrypt
 
-    <a href="#ASN_AND_LX_REUSE">ASN_AND_LX_REUSE</a>  disable
     <a href="#PGMPRDOS">PGMPRDOS</a>   restricted
     <a href="#ECPSVM">ECPSVM</a>     no
+    <a href="#ASN_AND_LX_REUSE">ASN_AND_LX_REUSE</a>  disable
 
-    <a href="#INCLUDE">INCLUDE</a>   mydevs.cfg
-    <a href="#IGNORE">IGNORE</a>    INCLUDE_ERRORS
-    <a href="#INCLUDE">INCLUDE</a>   optdevs.cfg
+    <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>      no
+    <a href="#MOUNTED_TAPE_REINIT">MOUNTED_TAPE_REINIT</a>  allow
+
+    <a href="#INCLUDE">INCLUDE</a>    mydevs.cfg
+    <a href="#IGNORE">IGNORE</a>     INCLUDE_ERRORS
+    <a href="#INCLUDE">INCLUDE</a>    optdevs.cfg
 
     #
     #   <a href="#device_definitions">Device definitions</a>
@@ -707,6 +709,29 @@ and how they are used.
     statement.
     <p>
 
+<a name="TIMERINT"></a>
+<dt><code>TIMERINT &nbsp; DEFAULT &#124 <em>nnnn</em></code>
+<dd><p>
+    specifies the internal timers update interval, in microseconds.  This
+    parameter specifies how frequently Hercules's internal timers-update thread
+    updates the TOD Clock, CPU Timer, and other architectural related
+    clock/timer values.  The default interval is 50 microseconds, which
+    strikes a reasonable balance between clock accuracy and overall host
+    performance. The minimum allowed value is 1 microsecond and the maximum
+    is 1000000 microseconds (i.e. one second).
+    <p>
+    <i><b><u>Caution</u>!</b> &nbsp;While a lower TIMERINT value may help
+    increase the accuracy of your guest's TOD Clock and CPU Timer values,
+    it could also have a severe negative impact on the overall performance
+    of your host operating system. This is especially true when a low TIMERINT
+    value is coupled with a high <a href="#HERCPRIO">HERCPRIO</a> and
+    <a href="#TODPRIO">TODPRIO</a> priority setting. Exercise extreme caution
+    when choosing your desired TIMERINT in relationship to your chosen
+    <a href="#HERCPRIO">HERCPRIO</a> and <a href="#TODPRIO">TODPRIO</a>
+    priority settings.
+    </i>
+    <p>
+
 <a name="TODDRAG"></a>
 <dt><code>TODDRAG &nbsp; <em>nn</em></code>
 <dd><p>
@@ -923,6 +948,8 @@ and how they are used.
 <a name="process_and_thread_priorities"></a>
 <h3>Process and Thread Priorities</h3>
 
+<p><br>
+
 <a name="process_priorities"></a>
 <h4>Process Priorities</h4>
 <P>
@@ -932,141 +959,257 @@ and how they are used.
 <P>
     For Windows, the following conversions are used for translating Unix
     process priorities to Windows process priority classes:
-<BR>
+<P>
 <BR>
 <table frame="VOID" rules="NONE" cellpadding="0" cellspacing="0">
     <TR>
-        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%"><BR></TH>
-        <TH ALIGN="RIGHT" VALIGN="BASELINE" COLSPAN="3" WIDTH="14%">Unix Priority</TH>
+        <TH ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">Unix<br>Priority</TH>
         <TH ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%"><BR></TH>
-        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Windows Priority Class</TH>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Windows Process<br>Priority Class</TH>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%"><br>Meaning</TH>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-20</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-16</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-20 to -16</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Realtime</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Real-time</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Process that has the highest possible priority. The threads of the process
+            preempt the threads of all other processes, including operating system processes
+            performing important tasks. For example, a real-time process that executes for
+            more than a very brief interval can cause disk caches not to flush or cause
+            the mouse to be unresponsive.
+        </TD>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-15</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-9</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-15 to -9</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">High</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">High</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Process that performs time-critical tasks that must be executed immediately.
+            The threads of the process preempt the threads of normal or idle priority class
+            processes. An example is the Task List, which must respond quickly when called
+            by the user, regardless of the load on the operating system. Use extreme care
+            when using the high-priority class, because a high-priority class application
+            can use nearly all available CPU time.
+        </TD>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-8</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-1</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-8 to -1</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Above Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Above Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Process that has priority above the Normal class but below the High class.
+        </TD>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">0</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">7</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">0 to 7</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Process with no special scheduling needs.
+        </TD>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">8</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">15</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">8 to 15</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Below Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Below Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Process that has priority above the Idle class but below the Normal class.
+        </TD>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">16</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">20</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">16 to 20</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Low</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Idle</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Process whose threads run only when the system is idle. The threads of the
+            process are preempted by the threads of any process running in a higher priority
+            class. An example is a screen saver. The idle-priority class is inherited by
+            child processes.
+        </TD>
     </TR>
 </TABLE>
+
+<p><br>
+<blockquote>
+    <i>
+    <b><u>Caution</u>!</b> &nbsp; On Windows, the value you choose for your
+    <a href="#HERCPRIO">Process Priority</a>
+    has a direct impact on how your
+    <a href="#thread_priorities">Thread Priorities</a> are interpreted!
+    You should never modify one without understanding what impact your doing so
+    might have on the other!
+    </i>
+</blockquote>
+
+<p><br>
 
 <a name="thread_priorities"></a>
 <h4>Thread Priorities</h4>
 <P>
-    On a *ix (Linux/Unix) host, Hercules needs to be a setuid root
+    On a *nix (Linux/Unix) host, Hercules needs to be a setuid root
     program to allow it to reset its dispatching priority to a high
     (negative) value
     (i.e., <code>chown root.root hercules; chmod +s hercules</code>).
 <P>
     For Windows, the following conversions are used for translating
     Linux/Unix thread priorities to Windows thread priorities:
-<P>
+<P><BR>
 
 <table frame="VOID" rules="NONE" cellpadding="0" cellspacing="0">
     <TR>
-        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%"><BR></TH>
-        <TH ALIGN="RIGHT" VALIGN="BASELINE" COLSPAN="3" WIDTH="14%">Unix Priority</TH>
+        <TH ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">Unix<br>Priority</TH>
         <TH ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%"><BR></TH>
-        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Windows Priority</TH>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Windows<br>Thread Priority</TH>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%"><br>Meaning</TH>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-20</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-16</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-20 to -16</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Time Critical</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Time Critical</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Base priority of 15 for Idle, Below Normal, Normal, Above Normal, or High
+            class processes, and a base priority of 31 for Realtime class processes.
+        </TD>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-15</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-9</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-15 to -9</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Highest</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Highest</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Priority 2 points above the priority class.
+        </TD>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-8</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-1</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">-8 to -1</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Above Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Above Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Priority 1 point above the priority class.
+        </TD>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">0</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">7</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">0 to 7</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Normal priority for the priority class.
+        </TD>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">8</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">15</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">8 to 15</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Below Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Below Normal</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Priority 1 point below the priority class.
+        </TD>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">16</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">19</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">16 to 19</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Lowest</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Lowest</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Priority 2 points below the priority class.
+        </TD>
+    </TR>
+    <TR> <!-- ============================================================================ -->
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">&nbsp;</TD>
     </TR>
     <TR>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">20</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">20</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">&nbsp;</TD>
-        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Idle</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="20%">Idle</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="63%">
+            Base priority of 1 for Idle, Below Normal, Normal, Above Normal, or High
+            class processes, and a base priority of 16 for Realtime class processes.
+        </TD>
     </TR>
 </TABLE>
+
+<p><br>
+<blockquote>
+    <i>
+    <b><u>Caution</u>!</b> &nbsp; On Windows, your Thread Priority is interpreted
+    differently based on your chosen <a href="#HERCPRIO">Process Priority</a> setting!
+    You should never modify your Thread Priority settings without first reviewing your
+    chosen <a href="#HERCPRIO">Process Priority</a> setting!
+    </i>
+</blockquote>
 
 <p>
 

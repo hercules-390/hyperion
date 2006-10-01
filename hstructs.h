@@ -367,6 +367,7 @@ struct SYSBLK {
 #define SHCMDOPT_DISABLE  0x80          /* Globally disable 'sh' cmd */
 #define SHCMDOPT_NODIAG8  0x40          /* Disallow only for DIAG8   */
         int     panrate;                /* Panel refresh rate        */
+        int     timerint;               /* microsecs timer interval  */
         int     npquiet;                /* New Panel quiet indicator */
         char   *pantitle;               /* Alt console panel title   */
 #if defined(OPTION_HAO)

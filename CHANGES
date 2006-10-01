@@ -1,6 +1,8 @@
+30 Sep 2006 timer interval config stmt & panel cmd - Enrico Sorichetti by Fish
+30 Sep 2006 Use nanosleep in timer_update_thread if available - Fish
 28 Sep 2006 RSS instruction format and ECTG instruction - Jan Jaeger
 26 Sep 2006 PR# misc/99: Config file "include <filename>" with "Enhanced"
-            symbol substitution - Hackules & Enrico Sorichetti by Fish
+            symbol substitution - Hackules by Enrico Sorichetti by Fish
 26 Sep 2006 Fix ieee bfp to integer conversions - Jimmy by Greg Smith
 23 Sep 2006 RO/RW/RING/NORING tape config options (replaces previous
             RO/NORING) - Kevin Leonard by Jay Maynard

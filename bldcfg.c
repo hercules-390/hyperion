@@ -557,6 +557,7 @@ char   *sshcmdopt;                      /* -> SHCMDOPT shell cmd opt */
 char   *stoddrag;                       /* -> TOD clock drag factor  */
 char   *sostailor;                      /* -> OS to tailor system to */
 char   *spanrate;                       /* -> Panel refresh rate     */
+char   *stimerint;                      /* -> Timer update interval  */
 char   *sdevtmax;                       /* -> Max device threads     */
 char   *shercprio;                      /* -> Hercules base priority */
 char   *stodprio;                       /* -> Timer thread priority  */
@@ -610,6 +611,7 @@ int     diag8cmd;                       /* Allow diagnose 8 commands */
 BYTE    shcmdopt;                       /* Shell cmd allow option(s) */
 double  toddrag;                        /* TOD clock drag factor     */
 U64     ostailor;                       /* OS to tailor system to    */
+int     timerint;                       /* Timer update interval     */
 int     panrate;                        /* Panel refresh rate        */
 int     hercprio;                       /* Hercules base priority    */
 int     todprio;                        /* Timer thread priority     */
@@ -688,13 +690,14 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     archmode = ARCH_370;
 #endif
     ostailor = OS_NONE;
-    panrate = PANEL_REFRESH_RATE_SLOW;
+    panrate  = PANEL_REFRESH_RATE_SLOW;
+    timerint = DEFAULT_TIMER_REFRESH_USECS;
     hercprio = DEFAULT_HERCPRIO;
     todprio  = DEFAULT_TOD_PRIO;
     cpuprio  = DEFAULT_CPU_PRIO;
     devprio  = DEFAULT_DEV_PRIO;
     pgmprdos = PGM_PRD_OS_RESTRICTED;
-    devtmax = MAX_DEVICE_THREADS;
+    devtmax  = MAX_DEVICE_THREADS;
 #if defined(_FEATURE_ECPSVM)
     ecpsvmavail = 0;
     ecpsvmlevel = 20;
@@ -827,6 +830,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         stoddrag = NULL;
         sostailor = NULL;
         spanrate = NULL;
+        stimerint = NULL;
         shercprio = NULL;
         stodprio = NULL;
         scpuprio = NULL;
@@ -961,6 +965,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 spanrate = operand;
             }
 #endif /*PANEL_REFRESH_RATE*/
+            else if (strcasecmp (keyword, "timerint") == 0)
+            {
+                stimerint = operand;
+            }
             else if (strcasecmp (keyword, "ostailor") == 0)
             {
                 sostailor = operand;
@@ -1584,6 +1592,27 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
 #endif /*PANEL_REFRESH_RATE*/
 
+        /* Parse timer update interval*/
+        if (stimerint)
+        {
+            if  (strcasecmp (stimerint, "default") == 0)
+                timerint = DEFAULT_TIMER_REFRESH_USECS;
+            else
+            {
+                if (0
+                    || sscanf(stimerint, "%d%c", &timerint, &c) != 1
+                    || timerint < 1
+                    || timerint > 1000000
+                )
+                {
+                    fprintf(stderr, _("HHCCF025S Error in %s line %d: "
+                            "Invalid timer update interval %s\n"),
+                            fname, inc_stmtnum[inc_level], stimerint);
+                    delayed_exit(1);
+                }
+            }
+        }
+
         /* Parse OS tailoring operand */
         if (sostailor != NULL)
         {
@@ -2123,6 +2152,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     /* Set the panel refresh rate */
     sysblk.panrate = panrate;
 
+    /* Set the timer update interval */
+    sysblk.timerint = timerint;
+
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();
 
@@ -2203,7 +2235,12 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     } /* end while(1) */
 
-    /* Configure storage now.  We do this after processing the device
+#if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
+    /* close configuration file */
+    rc = fclose(inc_fp[inc_level]);
+#endif // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
+
+    /* Now configure storage.  We do this after processing the device
      * statements so the fork()ed hercifc process won't require as much
      * virtual storage.  We will need to update all the devices too.
      */
@@ -2285,17 +2322,12 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #endif
         ,( sysblk.diag8cmd      ) ? "EN" : "DIS"
     );
-    
+
     /* Start the CPUs */
     OBTAIN_INTLOCK(NULL);
     for(i = 0; i < numcpu; i++)
         configure_cpu(i);
     RELEASE_INTLOCK(NULL);
-
-#if !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
-    /* close configuration file */
-    rc = fclose(inc_fp[inc_level]);
-#endif // !defined( OPTION_ENHANCED_CONFIG_INCLUDE )
 
 } /* end function build_config */
 

@@ -17,6 +17,7 @@
 #define PANEL_REFRESH_RATE              /* Enable panrate feature    */
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate         */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate         */
+#define DEFAULT_TIMER_REFRESH_USECS  50 /* Default timer refresh int */
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
 #undef  OPTION_NO_INLINE_DAT            /* Performance option        */
 #undef  OPTION_NO_INLINE_LOGICAL        /* Performance option        */

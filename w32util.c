@@ -413,6 +413,123 @@ DLL_EXPORT unsigned sleep ( unsigned seconds )
 //#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// high resolution sleep
+
+#if !defined( HAVE_NANOSLEEP ) || !defined( HAVE_USLEEP )
+
+static int w32_nanosleep ( const struct timespec* rqtp )
+{
+    /*
+    DESCRIPTION
+
+        The nanosleep() function shall cause the current thread
+        to be suspended from execution until either the time interval
+        specified by the rqtp argument has elapsed or a signal is
+        delivered to the calling thread, and its action is to invoke
+        a signal-catching function or to terminate the process. The
+        suspension time may be longer than requested because the argument
+        value is rounded up to an integer multiple of the sleep resolution
+        or because of the scheduling of other activity by the system.
+        But, except for the case of being interrupted by a signal, the
+        suspension time shall not be less than the time specified by rqtp,
+        as measured by the system clock CLOCK_REALTIME.
+
+        The use of the nanosleep() function has no effect on the action
+        or blockage of any signal.
+
+    RETURN VALUE
+
+        If the nanosleep() function returns because the requested time
+        has elapsed, its return value shall be zero.
+
+        If the nanosleep() function returns because it has been interrupted
+        by a signal, it shall return a value of -1 and set errno to indicate
+        the interruption. If the rmtp argument is non-NULL, the timespec
+        structure referenced by it is updated to contain the amount of time
+        remaining in the interval (the requested time minus the time actually
+        slept). If the rmtp argument is NULL, the remaining time is not returned.
+
+        If nanosleep() fails, it shall return a value of -1 and set errno
+        to indicate the error.
+
+    ERRORS
+
+        The nanosleep() function shall fail if:
+
+        [EINTR]   The nanosleep() function was interrupted by a signal.
+
+        [EINVAL]  The rqtp argument specified a nanosecond value less than zero
+                  or greater than or equal to 1000 million.
+    */
+
+    static BOOL    bDidInit    = FALSE;
+    static HANDLE  hTimer      = NULL;
+    LARGE_INTEGER  liDueTime;
+
+    // Create the waitable timer if needed...
+
+    if (unlikely( !bDidInit ))
+    {
+        bDidInit = TRUE;
+
+        VERIFY( ( hTimer = CreateWaitableTimer( NULL, TRUE, NULL ) ) != NULL );
+    }
+
+    // Check passed parameters...
+
+    if (unlikely(!rqtp
+        || rqtp->tv_nsec < 0
+        || rqtp->tv_nsec >= 1000000000
+    ))
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    // Note: Win32 waitable timers: parameter is #of 100-nanosecond intervals.
+    //       Positive values indicate absolute UTC time. Negative values indicate
+    //       relative time. The actual timer accuracy depends on the capability
+    //       of your hardware.
+
+    liDueTime.QuadPart = -(                 // (negative means relative)
+        (((__int64)rqtp->tv_sec * 10000000))
+        +
+        (((__int64)rqtp->tv_nsec + 99) / 100)
+    );
+
+    // Set the waitable timer...
+
+    VERIFY( SetWaitableTimer( hTimer, &liDueTime, 0, NULL, NULL, FALSE ) );
+
+    // Wait for the waitable timer to expire...
+
+    VERIFY( WaitForSingleObject( hTimer, INFINITE ) == WAIT_OBJECT_0 );
+
+    return 0;
+}
+
+#endif
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// nanosleep - high resolution sleep
+
+#if !defined( HAVE_NANOSLEEP )
+
+DLL_EXPORT int nanosleep ( const struct timespec* rqtp, struct timespec* rmtp )
+{
+    if (unlikely(rmtp))
+    {
+        rmtp->tv_sec  = 0;
+        rmtp->tv_nsec = 0;
+    }
+
+    return w32_nanosleep ( rqtp );
+}
+
+#endif
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// usleep - suspend execution for an interval
 
 #if !defined( HAVE_USLEEP )
 
@@ -434,18 +551,7 @@ DLL_EXPORT int usleep ( useconds_t useconds )
     //     [EINVAL]     The time interval specified
     //                  one million or more microseconds"
 
-    static BOOL    bDidInit    = FALSE;
-    static HANDLE  hTimer      = NULL;
-    LARGE_INTEGER  liDueTime;
-
-    if (unlikely( !bDidInit ))
-    {
-        bDidInit = TRUE;
-
-        // Create the waitable timer...
-
-        VERIFY( ( hTimer = CreateWaitableTimer( NULL, TRUE, NULL ) ) != NULL );
-    }
+    struct timespec rqtp;
 
     if (unlikely( useconds < 0 || useconds >= 1000000 ))
     {
@@ -453,22 +559,10 @@ DLL_EXPORT int usleep ( useconds_t useconds )
         return -1;
     }
 
-    // Note: Win32 waitable timers: parameter is #of 100-nanosecond intervals.
-    //       Positive values indicate absolute UTC time. Negative values indicate
-    //       relative time. The actual timer accuracy depends on the capability
-    //       of your hardware.
+    rqtp.tv_sec  = 0;
+    rqtp.tv_nsec = useconds * 1000;
 
-    liDueTime.QuadPart = -10 * useconds;    // (negative means relative)
-
-    // Set the waitable timer...
-
-    VERIFY( SetWaitableTimer( hTimer, &liDueTime, 0, NULL, NULL, FALSE ) );
-
-    // Wait for the waitable timer to expire...
-
-    VERIFY( WaitForSingleObject( hTimer, INFINITE ) == WAIT_OBJECT_0 );
-
-    return 0;
+    return w32_nanosleep ( &rqtp );
 }
 
 #endif

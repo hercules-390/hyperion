@@ -24,6 +24,7 @@
 #  25/09/06 Fish OPTION_HAO  <==  --disable/enable-automatic-operator
 #  25/09/06 Fish "--disable/enable-enhanced-configsymbols/configincludes" ==>
 #                OPTION_ENHANCED_CONFIG_SYMBOLS, OPTION_ENHANCED_CONFIG_INCLUDE
+#  27/09/06 Fish Add check for nanosleep.
 #
 ###############################################################################
 
@@ -671,7 +672,7 @@ AC_CHECK_FUNCS( strerror_r )
 AC_CHECK_FUNCS( strsignal, [hc_cv_have_strsignal=yes], [hc_cv_have_strsignal=no] )
 AC_CHECK_FUNCS( sys_siglist )
 AC_CHECK_FUNCS( InitializeCriticalSectionAndSpinCount )
-AC_CHECK_FUNCS( sleep usleep )
+AC_CHECK_FUNCS( sleep usleep nanosleep )
 AC_CHECK_FUNCS( sched_yield )
 AC_CHECK_FUNCS( strtok_r )
 AC_CHECK_FUNCS( pipe )
