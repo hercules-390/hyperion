@@ -93,10 +93,11 @@
 
             Thread    Priority           Meaning
             -------   --------   ------------------------
-            DEVPRIO     -8        Above Normal priority
-            HERCPRIO     0        Normal priority
-            TODPRIO      0        Normal priority
-            CPUPRIO      0        Normal priority
+            HERCPRIO     0        Normal Process priority
+
+            DEVPRIO     -8        Above Normal  Thread priority
+            TODPRIO      0        Normal        Thread priority
+            CPUPRIO      0        Normal        Thread priority
 
   which caused acceptable performance/functioning on most, but not all, guest
   operating systems. Beginning with version 3.05 however, the prioriries now
@@ -106,10 +107,11 @@
 
             Thread    Priority           Meaning
             -------   --------   ------------------------
-            TODPRIO    -20        Time Critical priority
-            HERCPRIO     0        Normal priority
-            DEVPRIO      8        Below Normal priority
-            CPUPRIO     15        Below Normal priority
+            HERCPRIO     0        Normal Process priority
+
+            TODPRIO    -20        Time Critical  Thread priority
+            DEVPRIO      8        Below Normal   Thread priority
+            CPUPRIO     15        Lowest         Thread priority
 
   which may on more modern guest operating systems (which handle the TOD clock
   differently than do older less sophticated versions) cause a slight decrease
