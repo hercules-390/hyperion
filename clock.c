@@ -323,6 +323,7 @@ int pending = 0;
     {
         ON_IC_ITIMER(regs);
         pending = 1;
+        regs->old_timer=itimer;
     }
 #if defined(_FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
@@ -331,7 +332,8 @@ int pending = 0;
         if(itimer < 0 && regs->ecps_oldtmr >= 0)
         {
             ON_IC_ECPSVTIMER(regs);
-            pending = 1;
+            pending += 2;
+            regs->ecps_oldtmr=itimer;
         }
     }
 #endif /*defined(_FEATURE_ECPSVM)*/
@@ -391,17 +393,27 @@ U64 new_clock;
 
 
 #if defined(FEATURE_INTERVAL_TIMER)
-void ARCH_DEP(store_int_timer) (REGS *regs)
+static void ARCH_DEP(_store_int_timer_2) (REGS *regs,int getlock)
 {
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
+    if(getlock)
+    {
+        OBTAIN_INTLOCK(regs->hostregs?regs:NULL);
+    }
     if(itimer != regs->old_timer)
     {
 // ZZ   logmsg(D_("Interval timer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->old_timer);
         set_int_timer(regs, itimer);
     }
     else
-        regs->old_timer = itimer = int_timer(regs);
+    {
+        itimer=int_timer(regs);
+        if(!chk_int_timer(regs) & 1)
+        {
+            regs->old_timer = itimer;
+        }
+    }
     STORE_FW(regs->psa->inttimer, itimer);
 #if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
@@ -413,11 +425,28 @@ S32 itimer;
             set_ecps_vtimer(regs, itimer);
         }
         else
-            regs->ecps_oldtmr = itimer = ecps_vtimer(regs);
+        {
+            itimer=ecps_vtimer(regs);
+            if(!chk_int_timer(regs) & 2)
+            {
+                regs->ecps_oldtmr = itimer;
+            }
+        }
         STORE_FW(regs->ecps_vtmrpt, itimer);
     }
+    if(getlock)
+    {
+        RELEASE_INTLOCK(regs->hostregs?regs:NULL);
+    }
 #endif /*defined(FEATURE_ECPSVM)*/
-    chk_int_timer(regs);
+}
+void ARCH_DEP(store_int_timer) (REGS *regs)
+{
+    ARCH_DEP(_store_int_timer_2) (regs,1);
+}
+void ARCH_DEP(store_int_timer_nolock) (REGS *regs)
+{
+    ARCH_DEP(_store_int_timer_2) (regs,0);
 }
 
 
@@ -425,6 +454,7 @@ void ARCH_DEP(fetch_int_timer) (REGS *regs)
 {
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
+    OBTAIN_INTLOCK(regs->hostregs?regs:NULL);
     set_int_timer(regs, itimer);
 #if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
@@ -433,6 +463,7 @@ S32 itimer;
         set_ecps_vtimer(regs, itimer);
     }
 #endif /*defined(FEATURE_ECPSVM)*/
+    RELEASE_INTLOCK(regs->hostregs?regs:NULL);
 }
 #endif
 

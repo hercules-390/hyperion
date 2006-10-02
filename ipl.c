@@ -464,7 +464,7 @@ int             i;                      /* Array subscript           */
     }
 
 #ifdef FEATURE_INTERVAL_TIMER
-    ARCH_DEP(store_int_timer) (regs);
+    ARCH_DEP(store_int_timer_nolock) (regs);
 #endif
 
    if(regs->host && regs->guestregs)

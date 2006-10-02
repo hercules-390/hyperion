@@ -75,10 +75,6 @@ int     rc;
     /* Store the interrupt code in the PSW */
     regs->psw.intcode = code;
 
-#if defined(FEATURE_INTERVAL_TIMER)
-    /* Ensure the interrupt timer is uptodate */
-    ARCH_DEP(store_int_timer) (regs);
-#endif
 
     /* Zero extcpuad field unless extcall or ems signal */
     if(code != EXT_EXTERNAL_CALL_INTERRUPT
@@ -113,7 +109,12 @@ int     rc;
         }
     }
 
+#if defined(FEATURE_INTERVAL_TIMER)
+    /* Ensure the interval timer is uptodate */
+    ARCH_DEP(store_int_timer_nolock) (regs);
+#endif
     RELEASE_INTLOCK(regs);
+
 
     if ( SIE_MODE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
