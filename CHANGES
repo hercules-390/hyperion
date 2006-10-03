@@ -1,4 +1,5 @@
-01 Sep 2006 minor(?) accuracy/efficiency tweaks to Win32 'gettimeofday' - Fish
+02 Oct 2006 Fix some interval timer processing issues. Ivan Warren
+01 Oct 2006 minor(?) accuracy/efficiency tweaks to Win32 'gettimeofday' - Fish
 30 Sep 2006 timer interval config stmt & panel cmd - Enrico Sorichetti by Fish
 30 Sep 2006 Use nanosleep in timer_update_thread if available - Fish
 28 Sep 2006 RSS instruction format and ECTG instruction - Jan Jaeger
