@@ -323,7 +323,6 @@ int pending = 0;
     {
         ON_IC_ITIMER(regs);
         pending = 1;
-        regs->old_timer=itimer;
     }
 #if defined(_FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
@@ -333,7 +332,6 @@ int pending = 0;
         {
             ON_IC_ECPSVTIMER(regs);
             pending += 2;
-            regs->ecps_oldtmr=itimer;
         }
     }
 #endif /*defined(_FEATURE_ECPSVM)*/
@@ -396,6 +394,8 @@ U64 new_clock;
 static void ARCH_DEP(_store_int_timer_2) (REGS *regs,int getlock)
 {
 S32 itimer;
+S32 vtimer=0;
+
     FETCH_FW(itimer, regs->psa->inttimer);
     if(getlock)
     {
@@ -403,42 +403,50 @@ S32 itimer;
     }
     if(itimer != regs->old_timer)
     {
-// ZZ   logmsg(D_("Interval timer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->old_timer);
+// ZZ       logmsg(D_("Interval timer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->old_timer);
         set_int_timer(regs, itimer);
     }
     else
     {
         itimer=int_timer(regs);
-        if(!chk_int_timer(regs) & 1)
-        {
-            regs->old_timer = itimer;
-        }
     }
     STORE_FW(regs->psa->inttimer, itimer);
 #if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
     {
-        FETCH_FW(itimer, regs->ecps_vtmrpt);
-        if(itimer != regs->ecps_oldtmr)
+        FETCH_FW(vtimer, regs->ecps_vtmrpt);
+        if(vtimer != regs->ecps_oldtmr)
         {
 // ZZ       logmsg(D_("ECPS vtimer out of sync, core=%8.8X, internal=%8.8X\n"), itimer, regs->ecps_vtimer);
             set_ecps_vtimer(regs, itimer);
         }
         else
         {
-            itimer=ecps_vtimer(regs);
-            if(!chk_int_timer(regs) & 2)
-            {
-                regs->ecps_oldtmr = itimer;
-            }
+            vtimer=ecps_vtimer(regs);
         }
         STORE_FW(regs->ecps_vtmrpt, itimer);
     }
+#endif /*defined(FEATURE_ECPSVM)*/
+
+    /* ISW : Invoke chk_int_timer *before* setting old_timer */
+    /*       however, the value must be one fetched *before* */
+    /*       chk_int_timer was invoked otherwise a window    */
+    /*       exists during which the interval timer could go */
+    /*       negative undetected                             */
+
+    chk_int_timer(regs);
+    regs->old_timer = itimer;
+#if defined(FEATURE_ECPSVM)
+    if(regs->ecps_vtmrpt)
+    {
+        regs->ecps_oldtmr = vtimer;
+    }
+#endif /*defined(FEATURE_ECPSVM)*/
+
     if(getlock)
     {
         RELEASE_INTLOCK(regs->hostregs?regs:NULL);
     }
-#endif /*defined(FEATURE_ECPSVM)*/
 }
 void ARCH_DEP(store_int_timer) (REGS *regs)
 {
