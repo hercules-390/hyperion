@@ -5055,7 +5055,6 @@ void *panel_command (void *cmdline)
     char  cmd[MAX_CMD_LEN];             /* Copy of panel command     */
     char *pCmdLine;
     unsigned i;
-REGS *regs = sysblk.regs[sysblk.pcpu];
 
     pCmdLine = cmdline; ASSERT(pCmdLine);
     /* every command will be stored in history list */
@@ -5079,9 +5078,6 @@ REGS *regs = sysblk.regs[sysblk.pcpu];
 
     /* Echo the command to the control panel */
     logmsg( "%s\n", cmd);
-
-    /* Set target CPU for commands and displays */
-    regs = sysblk.regs[sysblk.pcpu];
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
     if ('.' == cmd[0] || '!' == cmd[0])

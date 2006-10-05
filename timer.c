@@ -38,15 +38,10 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
      */
     for (cpu = 0; cpu < HI_CPU; cpu++)
     {
-        obtain_lock(&sysblk.cpulock[cpu]);
-
         /* Ignore this CPU if it is not started */
         if (!IS_CPU_ONLINE(cpu)
          || CPUSTATE_STOPPED == sysblk.regs[cpu]->cpustate)
-        {
-            release_lock(&sysblk.cpulock[cpu]);
             continue;
-        }
 
         /* Point to the CPU register context */
         regs = sysblk.regs[cpu];
@@ -135,8 +130,6 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             }
         }
 #endif /*defined(_FEATURE_SIE)*/
-
-    release_lock(&sysblk.cpulock[cpu]);
 
     } /* end for(cpu) */
 
