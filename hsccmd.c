@@ -899,11 +899,12 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
 "*************************************************************************************************";
     DEVBLK*  dev;
     int      tapeloaded;
-    char*    tapemsg;
+    char*    tapemsg="";
     char     volname[7];
     BYTE     mountreq, unmountreq;
     char*    label_type;
-    int      old_auto_scsi_mount_secs = sysblk.auto_scsi_mount_secs;
+    // Unused..
+    // int      old_auto_scsi_mount_secs = sysblk.auto_scsi_mount_secs;
     UNREFERENCED(cmdline);
 
     if (argc > 1)
@@ -1015,6 +1016,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
                 case 'S': label_type = "standard"; break;
                 case 'N': label_type = "non"; break;
                 case 'U': label_type = "un"; break;
+                default : label_type = "??"; break;
             }
 
             volname[0]=0;
@@ -1911,7 +1913,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     size_t   nDevCount, i;
     int      bTooMany = 0;
     U16      lcss;
-    U16      ssid;
+    U16      ssid=0;
     U16      devnum;
     int      single_devnum = 0;
 

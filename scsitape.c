@@ -69,6 +69,8 @@ void define_BOT_pos( DEVBLK *dev )
 
     VERIFY( 0 == w32_define_BOT( dev->fd, msk, bot ) );
 
+#else
+    UNREFERENCED(dev);
 #endif // _MSVC_
 }
 
@@ -1391,7 +1393,7 @@ void create_automount_thread( DEVBLK* dev )
 void *scsi_tapemountmon_thread( void *db )
 {
     struct timeval interval_tod;
-    BYTE tape_was_mounted;
+    BYTE tape_was_mounted=0;
     DEVBLK* dev = db;
     int fd, timeout, shutdown = 0;
 

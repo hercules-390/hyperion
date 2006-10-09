@@ -369,7 +369,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   BYTE cce[8];                         /* compression character entry         */
   int eos;                             /* indication end of source            */
   U16 last_match;                      /* Last matched index symbol           */
-  BYTE next_ch;                        /* next character read                 */
+  BYTE next_ch=0;                      /* next character read                 */
   int xlated;                          /* number of bytes processed           */
 
   /* Initialize end of source */
@@ -448,7 +448,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 {
   BYTE byte;                           /* a byte                              */
-  U16 index_symbol;                    /* Index symbol                        */
+  U16 index_symbol=0;                  /* Index symbol                        */
   BYTE ece[8];                         /* Expansion Character Entry           */
   int entries;                         /* Entries processed                   */
   U16 pptr;                            /* predecessor pointer                 */

@@ -165,7 +165,9 @@ U64     then;                           /* Previous time of day (us) */
 int     interval;                       /* Interval (us)             */
 double  cpupct;                         /* Calculated cpu percentage */
 #endif /*OPTION_MIPS_COUNTING*/
+#if !defined(HAVE_NANOSLEEP) && !defined(HAVE_USLEEP)
 struct  timeval tv;                     /* Structure for select      */
+#endif
 #if defined( HAVE_NANOSLEEP )
 struct  timespec  rqtp;                 /* requested sleep interval  */
 struct  timespec  rmtp;                 /* remaining sleep interval  */

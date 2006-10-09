@@ -21,7 +21,7 @@ PARAMETERS:
    1.   fd        -  int (INPUT)
                      This is the file descriptor for the socket to be read.
  
-   2.   ptr        - pointer to char (OUTPUT)
+   2.   ptr        - pointer to void (OUTPUT)
                      This is a pointer to where the data is to be put.
 
    3.   nbytes     - int (INPUT)
@@ -36,7 +36,7 @@ OUTPUTS:
 
 *************************************************************************/
 
-DLL_EXPORT int read_socket(int fd, char *ptr, int nbytes)
+DLL_EXPORT int read_socket(int fd, void *ptr, int nbytes)
 {
 int   nleft, nread;
 
@@ -89,7 +89,7 @@ PARAMETERS:
    1.   fd        -  int (OUTPUT)
                      This is the file descriptor for the socket to be written.
  
-   2.   ptr        - pointer to char (INPUT)
+   2.   ptr        - pointer to void (INPUT)
                      This is a pointer to where the data is to be gotten from.
 
    3.   nbytes     - int (INPUT)
@@ -108,7 +108,7 @@ OUTPUTS:
  * Use in place of write() when fd is a stream socket.
  */
 
-DLL_EXPORT int write_socket(int fd, const char *ptr, int nbytes)
+DLL_EXPORT int write_socket(int fd, const void *ptr, int nbytes)
 {
 int  nleft, nwritten;
 

@@ -972,10 +972,10 @@ DEF_INST(dummy_instruction)
 #if !defined(_GEN_ARCH)
 
 #define DISASM_ROUTE(_table,_route) \
-void disasm_ ## _table (BYTE inst[], BYTE unused[]) \
+void disasm_ ## _table (BYTE inst[], char unused[]) \
 { \
 func disasm_fn; \
-BYTE* mnemonic; \
+char* mnemonic; \
     UNREFERENCED(unused); \
     mnemonic = (void*)opcode_ ## _table [inst _route ][GEN_MAXARCH-1]; \
     disasm_fn = (void*)opcode_ ## _table [inst _route ][GEN_MAXARCH-2]; \
@@ -1017,8 +1017,8 @@ DISASM_ROUTE(edxx,[5])
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
 
 #define DISASM_COMMON_VARS \
-BYTE* name; \
-BYTE operands[64]
+char* name; \
+char operands[64]
 
 #define DISASM_SET_NAME \
     name = mnemonic+1; while(*name++)
@@ -1030,7 +1030,7 @@ BYTE operands[64]
     operands[sizeof(operands)-1]=0; \
     logmsg("%-6.6s%-19s    %s\n",mnemonic,operands,name)
 
-void disasm_none (BYTE inst[], BYTE mnemonic[])
+void disasm_none (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
     UNREFERENCED(inst);
@@ -1040,7 +1040,7 @@ DISASM_COMMON_VARS;
     DISASM_LOGMSG;
 }
 
-void disasm_E (BYTE inst[], BYTE mnemonic[])
+void disasm_E (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
     UNREFERENCED(inst);
@@ -1050,7 +1050,7 @@ DISASM_COMMON_VARS;
     DISASM_LOGMSG;
 }
 
-void disasm_RR (BYTE inst[], BYTE mnemonic[])
+void disasm_RR (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1, r2;
@@ -1063,7 +1063,7 @@ int r1, r2;
 }
 
 // "Mnemonic   R1"
-void disasm_RR_R1 (BYTE inst[], BYTE mnemonic[])
+void disasm_RR_R1 (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1;
@@ -1074,7 +1074,7 @@ int r1;
     DISASM_LOGMSG;
 }
 
-void disasm_RR_SVC (BYTE inst[], BYTE mnemonic[])
+void disasm_RR_SVC (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
     DISASM_SET_NAME;
@@ -1083,7 +1083,7 @@ DISASM_COMMON_VARS;
     DISASM_LOGMSG;
 }
 
-void disasm_RRE (BYTE inst[], BYTE mnemonic[])
+void disasm_RRE (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1, r2;
@@ -1096,7 +1096,7 @@ int r1, r2;
 }
 
 // "Mnemonic   R1"
-void disasm_RRE_R1 (BYTE inst[], BYTE mnemonic[])
+void disasm_RRE_R1 (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1;
@@ -1107,7 +1107,7 @@ int r1;
     DISASM_LOGMSG;
 }
 
-void disasm_RRF_R (BYTE inst[], BYTE mnemonic[])
+void disasm_RRF_R (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,r3,r2;
@@ -1120,7 +1120,7 @@ int r1,r3,r2;
     DISASM_LOGMSG;
 }
 
-void disasm_RRF_M (BYTE inst[], BYTE mnemonic[])
+void disasm_RRF_M (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int m3,r1,r2;
@@ -1133,7 +1133,7 @@ int m3,r1,r2;
     DISASM_LOGMSG;
 }
 
-void disasm_RRF_M3 (BYTE inst[], BYTE mnemonic[])
+void disasm_RRF_M3 (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int m3,r1,r2;
@@ -1146,7 +1146,7 @@ int m3,r1,r2;
     DISASM_LOGMSG;
 }
 
-void disasm_RRF_RM (BYTE inst[], BYTE mnemonic[])
+void disasm_RRF_RM (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r3,m4,r1,r2;
@@ -1160,7 +1160,7 @@ int r3,m4,r1,r2;
     DISASM_LOGMSG;
 }
 
-void disasm_RX (BYTE inst[], BYTE mnemonic[])
+void disasm_RX (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,x2,b2,d2;
@@ -1174,7 +1174,7 @@ int r1,x2,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_RXE (BYTE inst[], BYTE mnemonic[])
+void disasm_RXE (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,x2,b2,d2;
@@ -1188,7 +1188,7 @@ int r1,x2,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_RXY (BYTE inst[], BYTE mnemonic[])
+void disasm_RXY (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,x2,b2,d2;
@@ -1202,7 +1202,7 @@ int r1,x2,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_RXF (BYTE inst[], BYTE mnemonic[])
+void disasm_RXF (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,r3,x2,b2,d2;
@@ -1217,7 +1217,7 @@ int r1,r3,x2,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_RS (BYTE inst[], BYTE mnemonic[])
+void disasm_RS (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,r3,b2,d2;
@@ -1232,7 +1232,7 @@ int r1,r3,b2,d2;
 }
 
 // "Mnemonic   R1,D2(B2)"
-void disasm_RS_R1D2B2 (BYTE inst[], BYTE mnemonic[])
+void disasm_RS_R1D2B2 (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,b2,d2;
@@ -1245,7 +1245,7 @@ int r1,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_RSE (BYTE inst[], BYTE mnemonic[])
+void disasm_RSE (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,r3,b2,d2;
@@ -1259,7 +1259,7 @@ int r1,r3,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_RSY (BYTE inst[], BYTE mnemonic[])
+void disasm_RSY (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,r3,b2,d2;
@@ -1273,7 +1273,7 @@ int r1,r3,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_RSL (BYTE inst[], BYTE mnemonic[])
+void disasm_RSL (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int l1,b1,d1;
@@ -1286,7 +1286,7 @@ int l1,b1,d1;
     DISASM_LOGMSG;
 }
 
-void disasm_RSI (BYTE inst[], BYTE mnemonic[])
+void disasm_RSI (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,r3,i2;
@@ -1299,7 +1299,7 @@ int r1,r3,i2;
     DISASM_LOGMSG;
 }
 
-void disasm_RI (BYTE inst[], BYTE mnemonic[])
+void disasm_RI (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,i2;
@@ -1311,7 +1311,7 @@ int r1,i2;
     DISASM_LOGMSG;
 }
 
-void disasm_RI_B (BYTE inst[], BYTE mnemonic[])
+void disasm_RI_B (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,i2;
@@ -1323,7 +1323,7 @@ int r1,i2;
     DISASM_LOGMSG;
 }
 
-void disasm_RIE (BYTE inst[], BYTE mnemonic[])
+void disasm_RIE (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,r3,i2;
@@ -1336,20 +1336,21 @@ int r1,r3,i2;
     DISASM_LOGMSG;
 }
 
-void disasm_RIL (BYTE inst[], BYTE mnemonic[])
+void disasm_RIL (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,i2;
+    const S64 Two_S64=2;
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
     DISASM_SET_NAME;
     DISASM_PRINT_OPERANDS
-        "%d,%" I64_FMT "d",r1,i2*2LL);
+        "%d,%" I64_FMT "d",r1,i2*Two_S64);
     DISASM_LOGMSG;
 }
 
-void disasm_SI (BYTE inst[], BYTE mnemonic[])
+void disasm_SI (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int i2,b1,d1;
@@ -1362,7 +1363,7 @@ int i2,b1,d1;
     DISASM_LOGMSG;
 }
 
-void disasm_SIY (BYTE inst[], BYTE mnemonic[])
+void disasm_SIY (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int i2,b1,d1;
@@ -1375,7 +1376,7 @@ int i2,b1,d1;
     DISASM_LOGMSG;
 }
 
-void disasm_S (BYTE inst[], BYTE mnemonic[])
+void disasm_S (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int d2,b2;
@@ -1387,7 +1388,7 @@ int d2,b2;
     DISASM_LOGMSG;
 }
 
-void disasm_SS (BYTE inst[], BYTE mnemonic[])
+void disasm_SS (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int l1,l2,b1,d1,b2,d2;
@@ -1403,7 +1404,7 @@ int l1,l2,b1,d1,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_SS_L (BYTE inst[], BYTE mnemonic[])
+void disasm_SS_L (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int l1,b1,d1,b2,d2;
@@ -1419,7 +1420,7 @@ int l1,b1,d1,b2,d2;
 }
 
 // "Mnemonic   D1(B1),D2(L2,B2)"
-void disasm_SS_L2 (BYTE inst[], BYTE mnemonic[])
+void disasm_SS_L2 (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int l2,b1,d1,b2,d2;
@@ -1434,7 +1435,7 @@ int l2,b1,d1,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_SS_R (BYTE inst[], BYTE mnemonic[])
+void disasm_SS_R (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,r3,b2,d2,b4,d4;
@@ -1451,7 +1452,7 @@ int r1,r3,b2,d2,b4,d4;
 }
 
 // "Mnemonic   D1(R1,B1),D2(B2),R3"
-void disasm_SS_R3 (BYTE inst[], BYTE mnemonic[])
+void disasm_SS_R3 (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,r3,b1,d1,b2,d2;
@@ -1468,7 +1469,7 @@ int r1,r3,b1,d1,b2,d2;
 }
 
 // "Mnemonic   R1,D2(B2),R3,D4(B4)"
-void disasm_SS_RSRS (BYTE inst[], BYTE mnemonic[])
+void disasm_SS_RSRS (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r1,r3,b2,d2,b4,d4;
@@ -1485,7 +1486,7 @@ int r1,r3,b2,d2,b4,d4;
 }
 
 // "Mnemonic   D1(L1,B1),D2(B2),I3"
-void disasm_SS_I (BYTE inst[], BYTE mnemonic[])
+void disasm_SS_I (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int l1,i3,b1,d1,b2,d2;
@@ -1501,7 +1502,7 @@ int l1,i3,b1,d1,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_SSE (BYTE inst[], BYTE mnemonic[])
+void disasm_SSE (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int b1,d1,b2,d2;
@@ -1515,7 +1516,7 @@ int b1,d1,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_RSS (BYTE inst[], BYTE mnemonic[])
+void disasm_RSS (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r3,b1,d1,b2,d2;
@@ -1530,7 +1531,7 @@ int r3,b1,d1,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_VST (BYTE inst[], BYTE mnemonic[])
+void disasm_VST (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int vr3,rt2,vr1,rs2;
@@ -1544,7 +1545,7 @@ int vr3,rt2,vr1,rs2;
     DISASM_LOGMSG;
 }
 
-void disasm_VR (BYTE inst[], BYTE mnemonic[])
+void disasm_VR (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int vr1,fr3,gr2;
@@ -1557,7 +1558,7 @@ int vr1,fr3,gr2;
     DISASM_LOGMSG;
 }
 
-void disasm_VS (BYTE inst[], BYTE mnemonic[])
+void disasm_VS (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int rs2;
@@ -1568,7 +1569,7 @@ int rs2;
     DISASM_LOGMSG;
 }
 
-void disasm_VRSE (BYTE inst[], BYTE mnemonic[])
+void disasm_VRSE (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int vr1,vr3,d2,b2;
@@ -1582,7 +1583,7 @@ int vr1,vr3,d2,b2;
     DISASM_LOGMSG;
 }
 
-void disasm_S_NW (BYTE inst[], BYTE mnemonic[])
+void disasm_S_NW (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int d2,b2;

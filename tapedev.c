@@ -701,7 +701,7 @@ U16             prvblkl;                /* Length of previous block  */
     /* ISW: Determine if we are passed maxsize */
     if(dev->tdparms.maxsize>0)
     {
-        if(dev->nxtblkpos+blklen+sizeof(awshdr) > dev->tdparms.maxsize)
+        if((off_t)(dev->nxtblkpos+blklen+sizeof(awshdr)) > dev->tdparms.maxsize)
         {
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
             return -1;
@@ -822,7 +822,7 @@ U16             prvblkl;                /* Length of previous block  */
     /* ISW: Determine if we are passed maxsize */
     if(dev->tdparms.maxsize>0)
     {
-        if(dev->nxtblkpos+sizeof(awshdr) > dev->tdparms.maxsize)
+        if((off_t)(dev->nxtblkpos+sizeof(awshdr)) > dev->tdparms.maxsize)
         {
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
             return -1;

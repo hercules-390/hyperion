@@ -160,7 +160,7 @@ OPC_DLL_IMPORT zz_func opcode_edxx[][GEN_MAXARCH];
 
 typedef void (*func) ();
 
-extern void disasm_table (BYTE inst[], BYTE mnemonic[]);
+extern void disasm_table (BYTE inst[], char mnemonic[]);
 
 
 #if defined(OPTION_INSTRUCTION_COUNTING)

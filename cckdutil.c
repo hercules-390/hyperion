@@ -2583,6 +2583,7 @@ int             len2;                   /* Positive `len'            */
 int             kl, dl;                 /* Key/Data lengths          */
 BYTE           *bufp;                   /* Buffer pointer            */
 int             bufl;                   /* Buffer length             */
+unsigned int    bufsz;
 #if defined(HAVE_LIBZ) || defined(CCKD_BZIP2)
 int             rc;                     /* Return code               */
 BYTE            buf2[65536];            /* Uncompressed buffer       */
@@ -2622,10 +2623,12 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
         bufp = (BYTE *)buf2;
         memcpy (buf2, buf, CKDDASD_TRKHDR_SIZE);
         bufl = sizeof(buf2) - CKDDASD_TRKHDR_SIZE;
-        rc = BZ2_bzBuffToBuffDecompress ( (void *)&buf2[CKDDASD_TRKHDR_SIZE], (size_t *)&bufl,
+        bufsz=bufl;
+        rc = BZ2_bzBuffToBuffDecompress ( (void *)&buf2[CKDDASD_TRKHDR_SIZE], &bufsz,
                          (void *)&buf[CKDDASD_TRKHDR_SIZE], len - CKDDASD_TRKHDR_SIZE, 0, 0);
         if (rc != BZ_OK)
             return 0;
+        bufl=bufsz;
         bufl += CKDDASD_TRKHDR_SIZE;
         break;
 #endif

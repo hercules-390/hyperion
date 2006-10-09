@@ -79,7 +79,8 @@ typedef struct _DEVNUMSDESC
 /*-------------------------------------------------------------------*/
 #define MAX_INC_LEVEL 8                 /* Maximum nest level        */
 static int  inc_level;                  /* Current nesting level     */
-static int  inc_fname[MAX_INC_LEVEL];   /* filename (base or incl)   */
+// following commented out ISW 20061009 : Not referenced anywhere.
+// static int  inc_fname[MAX_INC_LEVEL];   /* filename (base or incl)   */
 static int  inc_stmtnum[MAX_INC_LEVEL]; /* statement number          */
 static int  inc_ignore_errors = 0;      /* 1==ignore include errors  */
 #ifdef EXTERNALGUI
