@@ -36,11 +36,13 @@ OUTPUTS:
 
 *************************************************************************/
 
-DLL_EXPORT int read_socket(int fd, void *ptr, int nbytes)
+DLL_EXPORT int read_socket(int fd, void *_ptr, int nbytes)
 {
 int   nleft, nread;
+char  *ptr;
 
 nleft = nbytes;
+ptr=_ptr;
 while (nleft > 0)
 {
 
@@ -108,11 +110,13 @@ OUTPUTS:
  * Use in place of write() when fd is a stream socket.
  */
 
-DLL_EXPORT int write_socket(int fd, const void *ptr, int nbytes)
+DLL_EXPORT int write_socket(int fd, const void *_ptr, int nbytes)
 {
 int  nleft, nwritten;
+char *ptr;
 
 nleft = nbytes;
+ptr=_ptr;
 while (nleft > 0)
 {
 
