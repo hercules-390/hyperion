@@ -2583,7 +2583,9 @@ int             len2;                   /* Positive `len'            */
 int             kl, dl;                 /* Key/Data lengths          */
 BYTE           *bufp;                   /* Buffer pointer            */
 int             bufl;                   /* Buffer length             */
+#ifdef CCKD_BZIP2
 unsigned int    bufsz;
+#endif
 #if defined(HAVE_LIBZ) || defined(CCKD_BZIP2)
 int             rc;                     /* Return code               */
 BYTE            buf2[65536];            /* Uncompressed buffer       */

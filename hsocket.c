@@ -113,7 +113,7 @@ OUTPUTS:
 DLL_EXPORT int write_socket(int fd, const void *_ptr, int nbytes)
 {
 int  nleft, nwritten;
-char *ptr;
+const char *ptr;
 
 nleft = nbytes;
 ptr=_ptr;
