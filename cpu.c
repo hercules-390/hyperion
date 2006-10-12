@@ -538,8 +538,10 @@ static char *pgmintname[] = {
     px = realregs->PX;
 
     /* If under SIE use translated to host absolute prefix */
+#if defined(_FEATURE_SIE)
     if(SIE_MODE(regs))
         px = regs->sie_px;
+#endif
 
 #if defined(_FEATURE_SIE)
     if(!SIE_MODE(regs) ||
@@ -647,10 +649,11 @@ static char *pgmintname[] = {
         if( IS_IC_PER_SA(realregs) && ACCESS_REGISTER_MODE(&realregs->psw) )
             psa->perarid = realregs->peraid;
 
+#if defined(_FEATURE_SIE)
         /* Reset PER pending indication */
         if(nointercept)
             OFF_IC_PER(realregs);
-
+#endif
     }
     else
     {
@@ -892,7 +895,11 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 #endif
     {
         /* Point to PSA in main storage */
-        pfx = SIE_MODE(regs) ? regs->sie_px : regs->PX;
+        pfx =
+#if defined(_FEATURE_SIE)
+              SIE_MODE(regs) ? regs->sie_px :
+#endif
+              regs->PX;
         psa = (void*)(regs->mainstor + pfx);
         STORAGE_KEY(pfx, regs) |= (STORKEY_REF | STORKEY_CHANGE);
     }

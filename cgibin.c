@@ -978,13 +978,17 @@ int zone;
                               "<td>%8.8X</td>"
                               "<td>%2.2X</td></tr>\n",
                               zone,
+#if defined(_FEATURE_SIE)
                               (U32)sysblk.zpb[zone].mso << 20,
                               ((U32)sysblk.zpb[zone].msl << 20) | 0xFFFFF,
                               (U32)sysblk.zpb[zone].eso << 20,
                               ((U32)sysblk.zpb[zone].esl << 20) | 0xFFFFF,
                               (U32)sysblk.zpb[zone].mbo,
-                              sysblk.zpb[zone].mbk);
-
+                              sysblk.zpb[zone].mbk
+#else
+                              0, 0, 0, 0, 0, 0
+#endif
+               );
     }
 
     hprintf(webblk->sock,"</table>\n");

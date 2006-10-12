@@ -505,7 +505,9 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     regs->todpr  = 0;
     regs->clkc   = 0;
     set_cpu_timer(regs, 0);
+#ifdef _FEATURE_INTERVAL_TIMER
     set_int_timer(regs, 0);
+#endif
 
     /* The breaking event address register is initialised to 1 */
     regs->bear = 1;

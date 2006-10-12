@@ -1,3 +1,4 @@
+12 Oct 2006 Fix 370 and 390 only modes - Greg Smith
 09 Oct 2006 Fix some compiler warnings - Ivan Warren
 02 Oct 2006 Fix some interval timer processing issues - Ivan Warren
 01 Oct 2006 minor(?) accuracy/efficiency tweaks to Win32 'gettimeofday' - Fish

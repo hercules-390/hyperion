@@ -105,6 +105,7 @@ struct REGS {                           /* Processor registers       */
         BYTE   *storkeys;               /* -> Main storage key array */
         RADR    mainlim;                /* Central Storage limit or  */
                                         /* guest storage limit (SIE) */
+        PSA_3XX *psa;                   /* -> PSA for this CPU       */
 
      /*
       * The fields hostregs and guestregs have been move outside the
@@ -137,7 +138,6 @@ struct REGS {                           /* Processor registers       */
         SIEBK  *siebk;                  /* Sie State Desc structure  */
         SIEFN   sie_guestpi;            /* SIE guest pgm int routine */
         SIEFN   sie_hostpi;             /* SIE host pgm int routine  */
-        PSA_3XX *psa;                   /* PSA of guest CPU          */
         RADR    sie_px;                 /* Host address of guest px  */
         RADR    sie_mso;                /* Main Storage Origin       */
         RADR    sie_xso;                /* eXpanded Storage Origin   */
@@ -145,11 +145,11 @@ struct REGS {                           /* Processor registers       */
         RADR    sie_rcpo;               /* Ref and Change Preserv.   */
         RADR    sie_scao;               /* System Contol Area        */
         S64     sie_epoch;              /* TOD offset in state desc. */
+#endif /*defined(_FEATURE_SIE)*/
         unsigned int
                 sie_active:1,           /* SIE active (host only)    */
                 sie_mode:1,             /* Running under SIE (guest) */
                 sie_pref:1;             /* Preferred-storage mode    */
-#endif /*defined(_FEATURE_SIE)*/
 
 // #if defined(FEATURE_PER)
         U16     perc;                   /* PER code                  */

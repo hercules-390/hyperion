@@ -106,7 +106,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         }
 #endif /*defined(_FEATURE_SIE)*/
 
-
+#if defined(_FEATURE_INTERVAL_TIMER)
         /*-------------------------------------------*
          * [3] Check for interval timer interrupt    *
          *-------------------------------------------*/
@@ -130,6 +130,8 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             }
         }
 #endif /*defined(_FEATURE_SIE)*/
+
+#endif /*defined(_FEATURE_INTERVAL_TIMER)*/
 
     } /* end for(cpu) */
 
