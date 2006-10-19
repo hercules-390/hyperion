@@ -51,6 +51,93 @@ static void tuntap_term(void)
 // Primary Module Entry Points
 // ====================================================================
 
+static int TUNTAP_SetMode (int fd, struct ifreq *ifr)
+{
+    int rc;
+
+    /* Try TUNTAP_ioctl first */
+    rc = TUNTAP_IOCtl (fd, TUNSETIFF, (char *) ifr);
+
+#if !defined(OPTION_W32_CTCI)
+    /* If invalid value, try with the pre-2.4.5 value */
+    if (rc != 0 && errno == EINVAL)
+        rc = TUNTAP_IOCtl (fd, ('T' << 8) | 202, (char *) ifr);
+
+    /* kludge for EPERM and linux 2.6.18 */
+    if (rc != 0 && errno == EPERM)
+    {
+        int             ifd[2];
+        char           *hercifc;
+        pid_t           pid;
+        CTLREQ          ctlreq;
+        fd_set          selset;
+        struct timeval  tv;
+        int             sv_err;
+        int             status;
+
+        if (socketpair (AF_UNIX, SOCK_STREAM, 0, ifd) < 0)
+            return -1;
+
+        if (!(hercifc = getenv ("HERCULES_IFC")))
+            hercifc = HERCIFC_CMD;
+
+        pid = fork();
+
+        if (pid < 0)
+            return -1;
+        else if (pid == 0)
+        {
+            /* child */
+            dup2 (ifd[0], STDIN_FILENO);
+            dup2 (STDOUT_FILENO, STDERR_FILENO);
+            dup2 (ifd[0], STDOUT_FILENO);
+            close (ifd[1]);
+            rc = execlp (hercifc, hercifc, NULL );
+            return -1;
+        }
+
+        /* parent */
+        close(ifd[0]);
+
+        /* Request hercifc to issue the TUNSETIFF ioctl */
+        memset (&ctlreq, 0, CTLREQ_SIZE);
+        ctlreq.iCtlOp = TUNSETIFF;
+        ctlreq.iProcID = fd;
+        memcpy (&ctlreq.iru.ifreq, ifr, sizeof (struct ifreq));
+        write (ifd[1], &ctlreq, CTLREQ_SIZE);
+
+        /* Get response, if any, from hercifc */
+        FD_ZERO (&selset);
+        FD_SET (ifd[1], &selset);
+        tv.tv_sec = 5;
+        tv.tv_usec = 0;
+        rc = select (ifd[1]+1, &selset, NULL, NULL, &tv);
+        if (rc > 0)
+        {
+            rc = read (ifd[1], &ctlreq, CTLREQ_SIZE);
+            if (rc > 0)
+                memcpy (ifr, &ctlreq.iru.ifreq, sizeof (struct ifreq));
+        }
+        else if (rc == 0)
+        {
+            logmsg (_("HHCTU001E %s timeout, possible older version?\n"),
+                    hercifc);
+            errno = EPERM;
+            rc = -1;
+        }
+
+        /* clean-up */
+        sv_err = errno;
+        close (ifd[1]);
+        kill (pid, SIGINT);
+        waitpid (pid, &status, 0);
+        errno = sv_err;
+    }
+#endif /* if !defined(OPTION_W32_CTCI) */
+
+    return rc;
+}
+
 //
 // TUNTAP_CreateInterface
 //
@@ -142,14 +229,9 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
         struct ifreq ifr;
 
         memset( &ifr, 0, sizeof( ifr ) );
-
         ifr.ifr_flags = iFlags;
 
-        // First try the value from the header that we ship (2.4.8)
-        // If this fails with EINVAL, try with the pre-2.4.5 value
-        if( TUNTAP_IOCtl( fd, TUNSETIFF, (char*)&ifr ) != 0 &&
-            ( errno != EINVAL ||
-              TUNTAP_IOCtl( fd, ('T' << 8) | 202, (char*)&ifr ) != 0 )  )
+        if( TUNTAP_SetMode (fd, &ifr) < 0 )
         {
             logmsg( _("HHCTU003E Error setting TUN/TAP mode: %s: %s\n"),
                     pszTUNDevice, strerror( errno ) );

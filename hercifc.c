@@ -36,8 +36,10 @@ int main( int argc, char **argv )
     void*       pArg         = NULL;    // -> ifreq or rtentry 
     CTLREQ      ctlreq;                 // Request Buffer
     int         sockfd;                 // Socket descriptor
+    int         fd;                     // FD for ioctl
     int         rc;                     // Return code
     pid_t       ppid;                   // Parent's PID
+    int         answer;                 // 1 = write answer to stdout
     char        szMsgBuffer[255];
 
     UNREFERENCED( argc );
@@ -90,8 +92,19 @@ int main( int argc, char **argv )
             exit( 4 );
         }
 
+        fd = sockfd;
+        answer = 0;
+
         switch( ctlreq.iCtlOp )
         {
+        case TUNSETIFF:
+            pOp  = "TUNSETIFF";
+            pArg = &ctlreq.iru.ifreq;
+            pIF  = "?";
+            fd = ctlreq.iProcID;
+            answer = 1;
+            break;
+
         case SIOCSIFADDR:
             pOp  = "SIOCSIFADDR";
             pArg = &ctlreq.iru.ifreq;
@@ -115,6 +128,7 @@ int main( int argc, char **argv )
             pOp  = "SIOCGIFFLAGS";
             pArg = &ctlreq.iru.ifreq;
             pIF  = ctlreq.iru.ifreq.ifr_name;
+            answer = 1;
             break;
 #endif /* (caller should do 'ioctl' directly themselves instead) */
 
@@ -194,7 +208,7 @@ int main( int argc, char **argv )
         write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
 #endif /*defined(DEBUG) || defined(_DEBUG)*/
 
-        rc = ioctl( sockfd, ctlreq.iCtlOp, pArg );
+        rc = ioctl( fd, ctlreq.iCtlOp, pArg );
         if( rc < 0 )
         {
             snprintf( szMsgBuffer,sizeof(szMsgBuffer),
@@ -203,6 +217,10 @@ int main( int argc, char **argv )
             
             write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
         }
+        else if (answer)
+        {
+            write( STDOUT_FILENO, &ctlreq, CTLREQ_SIZE );
+        }
     }
 
     // Never reached.
@@ -210,3 +228,4 @@ int main( int argc, char **argv )
 }
 
 #endif // defined(BUILD_HERCIFC)
+

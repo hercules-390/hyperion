@@ -1,3 +1,4 @@
+19 Oct 2006 Fix TUNSETIFF problem on linux 2.6.18 - Greg Smith
 12 Oct 2006 Fix 370 and 390 only modes - Greg Smith
 09 Oct 2006 Fix some compiler warnings - Ivan Warren
 02 Oct 2006 Fix some interval timer processing issues - Ivan Warren
