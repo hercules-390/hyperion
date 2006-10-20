@@ -687,7 +687,7 @@ tar: dist
 install-exec-local:
 if SETUID_HERCIFC
 	chown root $(DESTDIR)$(bindir)/hercifc
-	chmod 0751 $(DESTDIR)$(bindir)/hercifc
+	chmod 0750 $(DESTDIR)$(bindir)/hercifc
 	chmod +s   $(DESTDIR)$(bindir)/hercifc
 	rm                             hercifc
 endif
