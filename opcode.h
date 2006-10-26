@@ -199,9 +199,9 @@ int used; \
     case 0xC2:                                     /*@Z9*/ \
         used = sysblk.imapc2[(_inst)[1] & 0x0F]++; /*@Z9*/ \
         break;                                     /*@Z9*/ \
-    case 0xC8:
-        used = sysblk.imapc8[(_inst)[1] & 0x0F]++;
-        break;
+    case 0xC8: \
+        used = sysblk.imapc8[(_inst)[1] & 0x0F]++; \
+        break; \
     case 0xE3: \
         used = sysblk.imape3[(_inst)[5]]++; \
         break; \
