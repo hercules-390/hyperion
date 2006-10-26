@@ -51,6 +51,25 @@
 #define GR0_m(regs)     (((regs)->GR_L(0) & 0x00000080) ? TRUE : FALSE)
 
 /*----------------------------------------------------------------------------*/
+/* Instructions registers validity checks                                     */
+/*----------------------------------------------------------------------------*/
+#define KCASE1_REGCHECK(_r1,_r2,_regs) \
+  do { \
+    if(unlikely(!(_r2) || ((_r2)&1) || GR0_m((_regs)))) \
+      ARCH_DEP(program_interrupt)((_regs), PGM_SPECIFICATION_EXCEPTION); \
+  } while(0)
+#define KCASE2_REGCHECK(_r1,_r2,_regs) \
+  do { \
+    if(unlikely(!(_r1) || (_r1)&1 || !(_r2) || ((_r2)&1))) \
+      ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION); \
+  } while(0)
+#define KM_REGCHECK    KCASE2_REGCHECK
+#define KMC_REGCHECK   KCASE2_REGCHECK
+#define KLMD_REGCHECK  KCASE1_REGCHECK
+#define KIMD_REGCHECK  KCASE1_REGCHECK
+#define KMAC_REGCHECK  KCASE1_REGCHECK
+
+/*----------------------------------------------------------------------------*/
 /* Bit strings for query functions                                            */
 /*----------------------------------------------------------------------------*/
 #undef KIMD_BITS
@@ -246,7 +265,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 64 || GR0_m(regs)))
+  if(unlikely(GR_A(r2 + 1, regs) % 64))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -329,7 +348,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 64 || GR0_m(regs)))
+  if(unlikely(GR_A(r2 + 1, regs) % 64))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -436,10 +455,6 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KLMD_DEBUG
   logmsg("  KLMD: function 1: sha-1\n");
 #endif
-
-  /* Check special conditions */
-  if(unlikely(!r2 || r2 & 0x01 || GR0_m(regs)))
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 19, ACCTYPE_WRITE, regs);
@@ -569,10 +584,6 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 #ifdef OPTION_KLMD_DEBUG
   logmsg("  KLMD: function 2: sha-256\n");
 #endif
-
-  /* Check special conditions */
-  if(unlikely(!r2 || r2 & 0x01 || GR0_m(regs)))
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1, regs), 1, 31, ACCTYPE_WRITE, regs);
@@ -728,7 +739,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
+  if(unlikely(GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -815,7 +826,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
+  if(unlikely(GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -903,7 +914,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
+  if(unlikely(GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -993,7 +1004,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 16))
+  if(unlikely(GR_A(r2 + 1, regs) % 16))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -1107,7 +1118,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8 || GR0_m(regs)))
+  if(unlikely(GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -1196,7 +1207,7 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8 || GR0_m(regs)))
+  if(unlikely(GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -1290,7 +1301,7 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8 || GR0_m(regs)))
+  if(unlikely(GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -1410,7 +1421,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
+  if(unlikely(GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -1531,7 +1542,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
+  if(unlikely(GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -1659,7 +1670,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
+  if(unlikely(GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -1788,7 +1799,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 16))
+  if(unlikely(GR_A(r2 + 1, regs) % 16))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -1910,7 +1921,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
 #endif
 
   /* Check special conditions */
-  if(unlikely(!r1 || r1 & 0x01 || !r2 || r2 & 0x01 || GR_A(r2 + 1, regs) % 8))
+  if(unlikely(GR_A(r2 + 1, regs) % 8))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Return with cc 0 on zero length */
@@ -2042,6 +2053,8 @@ DEF_INST(compute_intermediate_message_digest_d)
   logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
 #endif
 
+  KIMD_REGCHECK(r1,r2,regs);
+
   switch(GR0_fc(regs))
   {
     case 0:
@@ -2087,6 +2100,8 @@ DEF_INST(compute_last_message_digest_d)
   logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
 #endif
 
+  KLMD_REGCHECK(r1,r2,regs);
+
   switch(GR0_fc(regs))
   {
     case 0:
@@ -2131,6 +2146,8 @@ DEF_INST(cipher_message_d)
   logmsg("    fc      : %d\n", GR0_fc(regs));
   logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
 #endif
+
+  KM_REGCHECK(r1,r2,regs);
 
   switch(GR0_fc(regs))
   {
@@ -2183,6 +2200,8 @@ DEF_INST(compute_message_authentication_code_d)
   logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
 #endif
 
+  KMAC_REGCHECK(r1,r2,regs);
+
   switch(GR0_fc(regs))
   {
     case 0:
@@ -2229,6 +2248,8 @@ DEF_INST(cipher_message_with_chaining_d)
   logmsg("    fc      : %d\n", GR0_fc(regs));
   logmsg("  GR01      : " F_GREG "\n", regs->GR(1));
 #endif
+
+  KMC_REGCHECK(r1,r2,regs);
 
   switch(GR0_fc(regs))
   {
