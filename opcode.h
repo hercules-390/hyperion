@@ -746,9 +746,7 @@ do { \
 /* RX register and indexed storage */
 #undef RX
 #define RX(_inst, _regs, _r1, _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             (_b2) = (temp >> 16) & 0xf; \
             (_effective_addr2) = temp & 0xfff; \
@@ -764,9 +762,7 @@ do { \
 /* RX_BC register and indexed storage - optimized for BC */
 #undef RX_BC
 #define RX_BC(_inst, _regs, _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_effective_addr2) = temp & 0xfff; \
             (_b2) = (temp >> 16) & 0xf; \
             if((_b2)) \
@@ -780,9 +776,7 @@ do { \
 /* RXE register and indexed storage with extended op code */
 #undef RXE
 #define RXE(_inst, _regs, _r1, _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             (_b2) = (temp >> 16) & 0xf; \
             (_effective_addr2) = temp & 0xfff; \
@@ -830,8 +824,7 @@ do { \
 #if defined(FEATURE_LONG_DISPLACEMENT)
 #define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
     {   U32 temp; S32 temp2; int tempx; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+            temp  = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             tempx = (temp >> 16) & 0xf; \
             (_b2) = (temp >> 12) & 0xf; \
@@ -846,9 +839,7 @@ do { \
     }
 #else /*!defined(FEATURE_LONG_DISPLACEMENT)*/
 #define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             (_b2) = (temp >> 16) & 0xf; \
             (_effective_addr2) = temp & 0xfff; \
@@ -870,9 +861,7 @@ do { \
 /* RS register and storage with additional R3 or M3 field */
 #undef RS
 #define RS(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             (_r3) = (temp >> 16) & 0xf; \
             (_b2) = (temp >> 12) & 0xf; \
@@ -911,8 +900,7 @@ do { \
 #if defined(FEATURE_LONG_DISPLACEMENT)
 #define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
     {   U32 temp; S32 temp2; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+            temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             (_r3) = (temp >> 16) & 0xf; \
             (_b2) = (temp >> 12) & 0xf; \
@@ -926,9 +914,7 @@ do { \
     }
 #else /*!defined(FEATURE_LONG_DISPLACEMENT)*/
 #define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             (_r3) = (temp >> 16) & 0xf; \
             (_b2) = (temp >> 12) & 0xf; \
@@ -945,9 +931,7 @@ do { \
 /* RSL storage operand with extended op code and 4-bit L field */
 #undef RSL
 #define RSL(_inst, _regs, _l1, _b1, _effective_addr1) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_l1) = (temp >> 20) & 0xf; \
             (_b1) = (temp >> 12) & 0xf; \
             (_effective_addr1) = temp & 0xfff; \
@@ -962,9 +946,7 @@ do { \
 /* RSI register and immediate with additional R3 field */
 #undef RSI
 #define RSI(_inst, _regs, _r1, _r3, _i2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             (_r3) = (temp >> 16) & 0xf; \
             (_i2) = temp & 0xffff; \
@@ -974,9 +956,7 @@ do { \
 /* RI register and immediate with extended 4-bit op code */
 #undef RI
 #define RI(_inst, _regs, _r1, _op, _i2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             (_op) = (temp >> 16) & 0xf; \
             (_i2) = temp & 0xffff; \
@@ -986,9 +966,7 @@ do { \
 /* RIE register and immediate with ext.opcode and additional R3 */
 #undef RIE
 #define RIE(_inst, _regs, _r1, _r3, _i2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             (_r3) = (temp >> 16) & 0xf; \
             (_i2) = temp & 0xffff; \
@@ -998,9 +976,7 @@ do { \
 /* RIL register and longer immediate with extended 4 bit op code */
 #undef RIL
 #define RIL(_inst, _regs, _r1, _op, _i2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             (_op) = (temp >> 16) & 0xf; \
             (_i2) = ((temp & 0xffff) << 16) \
@@ -1012,9 +988,7 @@ do { \
 /* SI storage and immediate */
 #undef SI
 #define SI(_inst, _regs, _i2, _b1, _effective_addr1) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_i2) = (temp >> 16) & 0xff; \
             (_b1) = (temp >> 12) & 0xf; \
             (_effective_addr1) = temp & 0xfff; \
@@ -1031,8 +1005,7 @@ do { \
 #if defined(FEATURE_LONG_DISPLACEMENT)
 #define SIY(_inst, _regs, _i2, _b1, _effective_addr1) \
     {   U32 temp; S32 temp1; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+            temp = fetch_fw(_inst); \
             (_i2) = (temp >> 16) & 0xff; \
             (_b1) = (temp >> 12) & 0xf; \
             temp1 = (_inst[4] << 12) | (temp & 0xfff); \
@@ -1048,9 +1021,7 @@ do { \
 /* S storage operand only */
 #undef S
 #define S(_inst, _regs, _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_b2) = (temp >> 12) & 0xf; \
             (_effective_addr2) = temp & 0xfff; \
         if((_b2) != 0) \
@@ -1065,9 +1036,7 @@ do { \
 #undef SS
 #define SS(_inst, _regs, _r1, _r3, \
         _b1, _effective_addr1, _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
             (_r3) = (temp >> 16) & 0xf; \
             (_b1) = (temp >> 12) & 0xf; \
@@ -1091,9 +1060,7 @@ do { \
 #undef SS_L
 #define SS_L(_inst, _regs, _l, \
         _b1, _effective_addr1, _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_l) = (temp >> 16) & 0xff; \
             (_b1) = (temp >> 12) & 0xf; \
             (_effective_addr1) = temp & 0xfff; \
@@ -1116,9 +1083,7 @@ do { \
 #undef SSE
 #define SSE(_inst, _regs, _b1, _effective_addr1, \
                      _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_b1) = (temp >> 12) & 0xf; \
             (_effective_addr1) = temp & 0xfff; \
         if((_b1) != 0) \
@@ -1141,9 +1106,7 @@ do { \
 #undef RSS
 #define RSS(_inst, _regs, _r3, _b1, _effective_addr1, \
                      _b2, _effective_addr2) \
-    {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
+    {   U32 temp = fetch_fw(_inst); \
             (_r3) = (temp >> 20) & 0xf; \
             (_b1) = (temp >> 12) & 0xf; \
             (_effective_addr1) = temp & 0xfff; \

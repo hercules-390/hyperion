@@ -627,49 +627,91 @@ U32  *ptr4, val4, old4, new4;
 /* Defaults...    (REGARDLESS of host and/or build platform)         */
 /*-------------------------------------------------------------------*/
 
+#if !defined(OPTION_STRICT_ALIGNMENT) && !defined(OPTION_NO_STRICT_ALIGNMENT)
+ #if !defined(_MSVC_) && !defined(_ext_ia32) && !defined(_ext_amd64) && !defined(_ext_ppc)
+  #define OPTION_STRICT_ALIGNMENT
+ #endif
+#endif
+
 #ifndef fetch_hw
-static __inline__ U16 fetch_hw(volatile void *ptr) {
- U16 value;
- memcpy(&value, (BYTE *)ptr, 2);
- return CSWAP16(value);
-}
+ #ifdef OPTION_STRICT_ALIGNMENT
+  static __inline__ U16 fetch_hw(volatile void *ptr) {
+   U16 value;
+   memcpy(&value, (BYTE *)ptr, 2);
+   return CSWAP16(value);
+  }
+ #else
+  static __inline__ U16 fetch_hw(volatile void *ptr) {
+   return CSWAP16(*(U16 *)ptr);
+  }
+ #endif
 #endif
 
 #ifndef store_hw
-static __inline__ void store_hw(volatile void *ptr, U16 value) {
- U16 tmp = CSWAP16(value);
- memcpy((BYTE *)ptr, &tmp, 2);
-}
+ #ifdef OPTION_STRICT_ALIGNMENT
+  static __inline__ void store_hw(volatile void *ptr, U16 value) {
+   U16 tmp = CSWAP16(value);
+   memcpy((BYTE *)ptr, &tmp, 2);
+  }
+ #else
+  static __inline__ void store_hw(volatile void *ptr, U16 value) {
+   *(U16 *)ptr = CSWAP16(value);
+  }
+ #endif
 #endif
 
 #ifndef fetch_fw
-static __inline__ U32 fetch_fw(volatile void *ptr) {
- U32 value;
- memcpy(&value, (BYTE *)ptr, 4);
- return CSWAP32(value);
-}
+ #ifdef OPTION_STRICT_ALIGNMENT
+  static __inline__ U32 fetch_fw(volatile void *ptr) {
+   U32 value;
+   memcpy(&value, (BYTE *)ptr, 4);
+   return CSWAP32(value);
+  }
+ #else
+  static __inline__ U32 fetch_fw(volatile void *ptr) {
+   return CSWAP32(*(U32 *)ptr);
+  }
+ #endif
 #endif
 
 #ifndef store_fw
-static __inline__ void store_fw(volatile void *ptr, U32 value) {
- U32 tmp = CSWAP32(value);
- memcpy((BYTE *)ptr, &tmp, 4);
-}
+ #ifdef OPTION_STRICT_ALIGNMENT
+  static __inline__ void store_fw(volatile void *ptr, U32 value) {
+   U32 tmp = CSWAP32(value);
+   memcpy((BYTE *)ptr, &tmp, 4);
+  }
+ #else
+  static __inline__ void store_fw(volatile void *ptr, U32 value) {
+   *(U32 *)ptr = CSWAP32(value);
+  }
+ #endif
 #endif
 
 #ifndef fetch_dw
-static __inline__ U64 fetch_dw(volatile void *ptr) {
- U64 value;
- memcpy(&value, (BYTE *)ptr, 8);
- return CSWAP64(value);
-}
+ #ifdef OPTION_STRICT_ALIGNMENT
+  static __inline__ U64 fetch_dw(volatile void *ptr) {
+   U64 value;
+   memcpy(&value, (BYTE *)ptr, 8);
+   return CSWAP64(value);
+  }
+ #else
+  static __inline__ U64 fetch_fw(volatile void *ptr) {
+   return CSWAP64(*(U64 *)ptr);
+  }
+ #endif
 #endif
 
 #ifndef store_dw
-static __inline__ void store_dw(volatile void *ptr, U64 value) {
- U64 tmp = CSWAP64(value);
- memcpy((BYTE *)ptr, &tmp, 8);
-}
+ #ifdef OPTION_STRICT_ALIGNMENT
+  static __inline__ void store_dw(volatile void *ptr, U64 value) {
+   U64 tmp = CSWAP64(value);
+   memcpy((BYTE *)ptr, &tmp, 8);
+  }
+ #else
+  static __inline__ void store_dw(volatile void *ptr, U64 value) {
+   *(U64 *)ptr = CSWAP64(value);
+  }
+ #endif
 #endif
 
 #ifndef BIT
