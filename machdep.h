@@ -695,7 +695,7 @@ U32  *ptr4, val4, old4, new4;
    return CSWAP64(value);
   }
  #else
-  static __inline__ U64 fetch_fw(volatile void *ptr) {
+  static __inline__ U64 fetch_dw(volatile void *ptr) {
    return CSWAP64(*(U64 *)ptr);
   }
  #endif
