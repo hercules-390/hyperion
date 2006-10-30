@@ -10,12 +10,15 @@
 /*      dasdconv [options] infile outfile                            */
 /*                                                                   */
 /* options      -r means overwrite existing outfile                  */
+/*              -lfs creates one large output file (if supported)    */
 /* infile       is the name of the HDR-30 format CKD image file.     */
 /*              A compressed (.gz) image is also acceptable if       */
 /*              this module was compiled with HAVE_LIBZ option.      */
 /* outfile      is the name of the AWSCKD image file to be created.  */
 /*              If the image exceeds 2GB then multiple files will    */
 /*              be created, with names suffixed _1, _2, etc.         */
+/*              (except if the underlying file system supports files */
+/*              larger than 2GB and the -lfs option is specified).   */
 /*              This program will not overwrite an existing file.    */
 /*-------------------------------------------------------------------*/
 
@@ -95,8 +98,7 @@ argexit ( int code )
             "\toutfile  = name of AWSCKD image file to be created\n"  
             "options:\n\t-r       = replace existing output file\n");
     if (sizeof(off_t) > 4) fprintf(stderr,
-            "\t-lfs     = build one large output file (if supported)\n"
-);
+            "\t-lfs     = build one large output file\n");
     EXIT(code);
 } /* end function argexit */
 
