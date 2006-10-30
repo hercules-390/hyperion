@@ -1,3 +1,4 @@
+30 Oct 2006 Reinstate dasdconv stdin option - Roger Bowler
 27 Oct 2006 Reformatted dyncrypt.c, no functional change - Bernard
 26 Oct 2006 make KM/KMC/KMAC/KIMD/KLMD compliant regarding stringent
             register checkings as per POP - Ivan Warren
@@ -333,7 +334,7 @@
 04 Oct 2005 rename FEATURE_LOAD_PAGE_TABLE_ENTRY_ADDRESS as FEATURE_DAT_ENHANCEMENT_FACILITY_2 - Roger Bowler
 04 Oct 2005 rename FEATURE_BRANCH_DETECTION as FEATURE_PER3 - Roger Bowler
 04 Oct 2005 rename FEATURE_CPACF_ENHANCEMENTS as FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 - Roger Bowler
-22 Sep 2005 PR# tape/27: *proper* VC7 Large File Support - Fish 
+22 Sep 2005 PR# tape/27: *proper* VC7 Large File Support - Fish
 21 Sep 2005 Init cckd->l2active to -1 instead of 0 - Greg
 21 Sep 2005 tweak concpy to avoid double byteswap - Fish
 21 Sep 2005 Add inline assembler assists to startup buildinfo display - Fish

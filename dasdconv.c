@@ -11,9 +11,11 @@
 /*                                                                   */
 /* options      -r means overwrite existing outfile                  */
 /*              -lfs creates one large output file (if supported)    */
-/* infile       is the name of the HDR-30 format CKD image file.     */
-/*              A compressed (.gz) image is also acceptable if       */
-/*              this module was compiled with HAVE_LIBZ option.      */
+/* infile       is the name of the HDR-30 format CKD image file      */
+/*              ("-" means that the CKD image is read from stdin)    */
+/*              If this module was compiled with HAVE_LIBZ option    */
+/*              activated, then the input file may be compressed     */
+/*              or uncompressed. Otherwise it must be uncompressed.  */
 /* outfile      is the name of the AWSCKD image file to be created.  */
 /*              If the image exceeds 2GB then multiple files will    */
 /*              be created, with names suffixed _1, _2, etc.         */
@@ -91,9 +93,10 @@ argexit ( int code )
 {
     fprintf (stderr,
             "Syntax:\tdasdconv [options] infile outfile\n"
-            "where:\n\tinfile   = name of input HDR-30 CKD image file\n"
+            "where:\n\tinfile   = name of input HDR-30 CKD image file"
+                                " (\"-\" means stdin)\n"
           #if defined(HAVE_LIBZ)
-            "\t\t   or name of compressed (.gz) image file\n"
+            "\t\t   (input file may be compressed)\n"
           #endif /*defined(HAVE_LIBZ)*/
             "\toutfile  = name of AWSCKD image file to be created\n"  
             "options:\n\t-r       = replace existing output file\n");
@@ -280,7 +283,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Open the HDR-30 CKD image file */
   #if defined(HAVE_LIBZ)
-    ifd = gzopen (pathname, "rb");
+    if (strcmp(ifname, "-") == 0)
+        ifd = gzdopen (STDIN_FILENO, "rb");
+    else
+        ifd = gzopen (pathname, "rb");
+
     if (ifd == NULL)
     {
         fprintf (stderr,
@@ -290,13 +297,19 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         EXIT(3);
     }
   #else /*!defined(HAVE_LIBZ)*/
-    ifd = open (pathname, O_RDONLY | O_BINARY);
-    if (ifd < 0)
+    if (strcmp(ifname, "-") == 0)
+        ifd = STDIN_FILENO;
+    else
     {
-        fprintf (stderr,
-                "Cannot open %s: %s\n",
-                ifname, strerror(errno));
-        EXIT(3);
+        ifd = open (pathname, O_RDONLY | O_BINARY);
+
+        if (ifd < 0)
+        {
+            fprintf (stderr,
+                    "Cannot open %s: %s\n",
+                    ifname, strerror(errno));
+            EXIT(3);
+        }
     }
   #endif /*!defined(HAVE_LIBZ)*/
 
@@ -821,6 +834,7 @@ int             lfs = 0;                /* 1 = Build large file      */
     /* Process the options in the argument list */
     for (; argc > 1; argc--, argv++)
     {
+        if (strcmp(argv[1], "-") == 0) break;
         if (argv[1][0] != '-') break;
         if (strcmp(argv[1], "-r") == 0)
             repl = 1;
