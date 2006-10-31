@@ -1134,7 +1134,7 @@ AC_MSG_CHECKING( [whether byte-swapping can be done using assembler] )
 
 case "$host_cpu" in
 
-    i486|i586|i686|i786)
+    i486|i586|i686|i786|x86_64)
 
         hc_cv_asm_byteswap=yes
         ;;

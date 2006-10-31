@@ -1,3 +1,4 @@
+31 Oct 2006 Use accelerated byte swaps for x86_64 - Ivan Warren
 30 Oct 2006 Reinstate dasdconv stdin option - Roger Bowler
 27 Oct 2006 Reformatted dyncrypt.c, no functional change - Bernard
 26 Oct 2006 make KM/KMC/KMAC/KIMD/KLMD compliant regarding stringent
