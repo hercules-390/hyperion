@@ -1130,7 +1130,8 @@ fi
 
 AC_MSG_CHECKING( [whether byte-swapping can be done using assembler] )
 
-# (byteswap assembler routines are i486+ only)
+# (use our own byteswap assembler routines are i486+ only)
+# use system's byteswap routines if present...
 
 case "$host_cpu" in
 
@@ -1139,7 +1140,7 @@ case "$host_cpu" in
         hc_cv_asm_byteswap=yes
         ;;
     *)
-        hc_cv_asm_byteswap=no
+        hc_cv_asm_byteswap=$hc_cv_have_byteswap_h
         ;;
 esac
 
