@@ -379,7 +379,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
 
-    UPDATE_BEAR_C(regs, save_psw);
+    UPDATE_BEAR_PSW(regs, &save_psw, 4);
     SET_IC_ECMODE_MASK(regs);
     SET_AEA_MODE(regs);
     VALIDATE_AIA(regs);
@@ -1927,7 +1927,7 @@ DEF_INST(branch_relative_on_condition_long)
     if (inst[1] & (0x80 >> regs->psw.cc))
     {
         /* Update the Breaking Event Address Register */
-        UPDATE_BEAR_N(regs, 6);
+        UPDATE_BEAR(regs,0);
 
         /* Calculate the relative branch address */
         regs->psw.IA = (likely(!regs->execflag) ? regs->psw.IA : regs->ET)
@@ -1965,7 +1965,7 @@ U32     i2;                             /* 32-bit operand values     */
         regs->GR_L(r1) = regs->psw.IA_LA24;
 
     /* Update the Breaking Event Address Register */
-    UPDATE_BEAR_A(regs);
+    UPDATE_BEAR(regs,6);
 
     /* Set instruction address to the relative branch address */
     regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
@@ -2218,7 +2218,7 @@ S64     i,j;                            /* Integer workareas         */
     /* Branch if result compares high */
     if ( (S64)regs->GR_G(r1) > j )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,6);
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*i2) & ADDRESS_MAXWRAP(regs);
         VALIDATE_AIA(regs);
@@ -2253,7 +2253,7 @@ S64     i,j;                            /* Integer workareas         */
     /* Branch if result compares low or equal */
     if ( (S64)regs->GR_G(r1) <= j )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,6);
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*i2) & ADDRESS_MAXWRAP(regs);
         VALIDATE_AIA(regs);
@@ -2289,7 +2289,7 @@ S64     i, j;                           /* Integer work areas        */
     /* Branch if result compares high */
     if ( (S64)regs->GR_G(r1) > j )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,6);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
         PER_SB(regs, regs->psw.IA);
@@ -2324,7 +2324,7 @@ S64     i, j;                           /* Integer work areas        */
     /* Branch if result compares low or equal */
     if ( (S64)regs->GR_G(r1) <= j )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,6);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
         PER_SB(regs, regs->psw.IA);
@@ -2471,7 +2471,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_G(r1)) )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,6);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
         PER_SB(regs, regs->psw.IA);
@@ -2499,7 +2499,7 @@ VADR    newia;                          /* New instruction address   */
            is non-zero and R2 operand is not register zero */
     if ( --(regs->GR_G(r1)) && r2 != 0 )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
         regs->psw.IA = newia;
         VALIDATE_AIA(regs);
         PER_SB(regs, regs->psw.IA);
@@ -3171,7 +3171,7 @@ U16     i2;                             /* 16-bit operand values     */
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_G(r1)) )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
         VALIDATE_AIA(regs);
@@ -4573,7 +4573,7 @@ int     rc;
     ARCH_DEP(vfetchc) ( qword, 16-1, effective_addr2, b2, regs );
 
     /* Update the breaking event address register */
-    UPDATE_BEAR_A(regs);
+    UPDATE_BEAR(regs,4);
 
     /* Load updated PSW */
     if ( ( rc = ARCH_DEP(load_psw) ( regs, qword ) ) )

@@ -1695,39 +1695,6 @@ do { \
 
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
 
-/* Macros for PER3 Breaking Event Address Recording */
-#undef UPDATE_BEAR_A
-#undef UPDATE_BEAR_C
-#undef UPDATE_BEAR_N
-#if defined(FEATURE_PER3)
- /* UPDATE_BEAR_A updates the Breaking Event Address Register
-    using the updated instruction address in the current PSW */
- #define UPDATE_BEAR_A(_regs) {(_regs)->bear = \
-                (_regs)->psw.IA - REAL_ILC(_regs);}
- /* UPDATE_BEAR_C updates the Breaking Event Address Register
-    using the updated instruction address in a copy of the PSW */
- #define UPDATE_BEAR_C(_regs,_psw) {(_regs)->bear = \
-                _psw.IA - REAL_ILC(_regs);}
- /* UPDATE_BEAR_N updates the Breaking Event Address Register
-    using the original instruction address in the current PSW
-    (not yet updated with the current instruction length).  If
-    the instruction is the target of an execute, we must add the
-    length of the target instruction (_len) and deduct the length
-    of the execute instruction (4) to arrive at the instruction
-    address, to account for the optimization performed by the
-    execute instruction. Otherwise the PSW contains the address
-    of the current instruction */
- #define UPDATE_BEAR_N(_regs,_len) {(_regs)->bear = \
-                unlikely((_regs)->execflag) ? \
-                        (_regs)->psw.IA + (_len) - 4 : \
-                        (_regs)->psw.IA;}
-#else /*!defined(FEATURE_PER3)*/
- /* These macros do nothing if the PER3 facility is not installed. */
- #define UPDATE_BEAR_A(_regs)
- #define UPDATE_BEAR_C(_regs,_psw) 
- #define UPDATE_BEAR_N(_regs,_len)
-#endif /*!defined(FEATURE_PER3)*/
-
 #define PERFORM_SERIALIZATION(_regs) do { } while (0)
 #define PERFORM_CHKPT_SYNC(_regs) do { } while (0)
 

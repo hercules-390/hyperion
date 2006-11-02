@@ -177,7 +177,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->psw.states |= BIT(PSW_PROB_BIT);
 
         /* Update the breaking event address register */
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
 
         /* Set PSW instruction address and amode from R2 register */
       #if defined(FEATURE_ESAME)
@@ -222,7 +222,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
       #endif /*FEATURE_TRACING*/
 
         /* Update the breaking event address register */
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
          
         /* If R1 is non-zero, save the current PSW addressing mode
            and instruction address in the R1 register */
@@ -509,7 +509,7 @@ CREG    inst_cr;                        /* Instruction CR            */
     }
 
     /* Update the breaking event address register */
-    UPDATE_BEAR_A(regs);
+    UPDATE_BEAR(regs,4);
 
     /* Set mode and branch to address specified by R2 operand */
     regs->psw.IA = newia;
@@ -677,7 +677,7 @@ VADR    n = 0;                          /* Work area                 */
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
         regs->psw.IA = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
         PER_SB(regs, regs->psw.IA);
         VALIDATE_AIA(regs);
@@ -1940,7 +1940,7 @@ int     amode64;
     STORE_DW ( dword, ARCH_DEP(vfetch8) ( effective_addr2, b2, regs ) );
 
     /* Update the breaking event address register */
-    UPDATE_BEAR_A(regs);
+    UPDATE_BEAR(regs,4);
 
     /* Load updated PSW (ESA/390 Format in ESAME mode) */
 #if !defined(FEATURE_ESAME)
@@ -2911,7 +2911,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
       #endif /*!defined(FEATURE_ESAME)*/
 
         /* Update the breaking event address register */
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
 
         /* Update the PSW from the entry table */
       #if defined(FEATURE_ESAME)
@@ -2995,7 +2995,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
                                         pcnum, regs);
 
         /* Update the breaking event address register */
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
 
         /* Update the PSW from the entry table */
       #if defined(FEATURE_ESAME)
@@ -3242,7 +3242,7 @@ int     rc;                             /* return code from load_psw */
     memset( &newregs.tlb.vaddr, 0, TLBN * sizeof(DW) );
 
     /* Update the copy of the breaking event address register */
-    UPDATE_BEAR_A(&newregs);
+    UPDATE_BEAR(&newregs,2);
 
     /* Save the primary ASN (CR4) and primary STD (CR1) */
     oldpasn = regs->CR_LHL(4);
@@ -3694,7 +3694,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     PER_SB(regs, ia);
 
     /* Update the breaking event address register */
-    UPDATE_BEAR_A(regs);
+    UPDATE_BEAR(regs,4);
 
     /* Replace PSW amode, instruction address, and problem state bit */
     regs->psw.amode = amode;

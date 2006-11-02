@@ -325,7 +325,7 @@ int  i;
     regs->GR_L(15) = duct11 & DUCT11_TCBA;
 
     /* Update the Breaking Event Address Register */
-    UPDATE_BEAR_A(regs);
+    UPDATE_BEAR(regs,trap_is_trap4 ? 4 : 2);
 
     /* Set the Trap program address as a 31 bit instruction address */
 #if defined(FEATURE_ESAME)

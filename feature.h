@@ -108,6 +108,8 @@
 #undef TLBID_BYTEMASK
 #undef ASD_PRIVATE
 #undef PER_SB
+#undef UPDATE_BEAR
+#undef UPDATE_BEAR_PSW
 
 #if __GEN_ARCH == 370
 
@@ -801,5 +803,18 @@ do { \
 #else /*!defined(FEATURE_PER)*/
  #define PER_SB(_regs,_addr)
 #endif /*!defined(FEATURE_PER)*/
+
+/*
+ * PER3 Breaking Event Address Recording (BEAR)
+ */
+#if defined(FEATURE_PER3)
+ #define UPDATE_BEAR(_regs, _len) \
+  (_regs)->bear = (_regs)->psw.IA - ( unlikely((_regs)->execflag) ? 4 : (_len) )
+ #define UPDATE_BEAR_PSW(_regs, _psw, _len) \
+  (_regs)->bear = (_psw)->IA - ( unlikely((_regs)->execflag) ? 4 : (_len) )
+#else
+ #define UPDATE_BEAR(_regs, _len)
+ #define UPDATE_BEAR_PSW(_regs, _psw, _len)
+#endif
 
 /* end of FEATURES.H */

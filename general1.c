@@ -415,7 +415,7 @@ VADR    newia;                          /* New instruction address   */
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,2);
         regs->psw.IA = newia;
         VALIDATE_AIA(regs);
         PER_SB(regs, regs->psw.IA);
@@ -448,7 +448,7 @@ VADR    effective_addr2;                /* Effective address         */
           | (regs->psw.progmask << 24) | (regs->psw.IA_L & ADDRESS_MAXWRAP(regs));
 
     /* Update the breaking event address register */
-    UPDATE_BEAR_A(regs);
+    UPDATE_BEAR(regs,4);
 
     /* Update the PSW instruction address */
     regs->psw.IA = effective_addr2;
@@ -491,7 +491,7 @@ VADR    newia;                          /* New instruction address   */
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,2);;
         regs->psw.IA = newia;
         VALIDATE_AIA(regs);
         PER_SB(regs, regs->psw.IA);
@@ -523,7 +523,7 @@ VADR    effective_addr2;                /* Effective address         */
         regs->GR_L(r1) = regs->psw.IA_LA24;
 
     /* Update the breaking event address register */
-    UPDATE_BEAR_A(regs);
+    UPDATE_BEAR(regs,4);
 
     /* Update the PSW instruction address */
     regs->psw.IA = effective_addr2;
@@ -573,7 +573,7 @@ VADR    newia;                          /* New instruction address   */
     /* Set mode and branch to address specified by R2 operand */
     if ( r2 != 0 )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,2);
 #if defined(FEATURE_ESAME)
         if ( newia & 1)
         {
@@ -649,7 +649,7 @@ VADR    newia;                          /* New instruction address   */
     /* Set mode and branch to address specified by R2 operand */
     if ( r2 != 0 )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,2);
 #if defined(FEATURE_ESAME)
         if ( newia & 1)
         {
@@ -697,7 +697,7 @@ DEF_INST(branch_on_condition_register)
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & (0x80 >> regs->psw.cc)) && (inst[1] & 0x0F) != 0)
     {
-        UPDATE_BEAR_N(regs, 2);
+        UPDATE_BEAR(regs, 0);
         regs->psw.IA = regs->GR(inst[1] & 0x0F) & ADDRESS_MAXWRAP(regs);
         VALIDATE_AIA(regs);
         PER_SB(regs, regs->psw.IA);
@@ -728,7 +728,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
     {
-        UPDATE_BEAR_N(regs, 4);
+        UPDATE_BEAR(regs,0);
         RX_BC(inst, regs, b2, effective_addr2);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
@@ -752,7 +752,7 @@ int     r1, r2;                         /* Values of R fields        */
     if ( --(regs->GR_L(r1)) && r2 != 0 )
     {
         /* Update the breaking event address register */
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,2);
 
         /* Compute the branch address from the R2 operand */
         regs->psw.IA = regs->GR(r2);
@@ -779,7 +779,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
         PER_SB(regs, regs->psw.IA);
@@ -812,7 +812,7 @@ S32     i, j;                           /* Integer work areas        */
     /* Branch if result compares high */
     if ( (S32)regs->GR_L(r1) > j )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
         PER_SB(regs, regs->psw.IA);
@@ -845,7 +845,7 @@ S32     i, j;                           /* Integer work areas        */
     /* Branch if result compares low or equal */
     if ( (S32)regs->GR_L(r1) <= j )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
         PER_SB(regs, regs->psw.IA);
@@ -869,7 +869,7 @@ DEF_INST(branch_relative_on_condition)
     /* Branch if R1 mask bit is set */
     if (inst[1] & (0x80 >> regs->psw.cc))
     {
-        UPDATE_BEAR_N(regs, 4);
+        UPDATE_BEAR(regs,0);
         /* Calculate the relative branch address */
         regs->psw.IA = (likely(!regs->execflag) ? regs->psw.IA: regs->ET)
                      + 2*(S16)(fetch_fw(inst) & 0xFFFF);
@@ -907,7 +907,7 @@ U16     i2;                             /* 16-bit operand values     */
         regs->GR_L(r1) = regs->psw.IA_LA24;
 
     /* Update the breaking event address register */
-    UPDATE_BEAR_A(regs);
+    UPDATE_BEAR(regs,4);
 
     /* Calculate the relative branch address */
     regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
@@ -934,7 +934,7 @@ U16     i2;                             /* 16-bit operand values     */
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
         VALIDATE_AIA(regs);
@@ -969,7 +969,7 @@ S32     i,j;                            /* Integer workareas         */
     /* Branch if result compares high */
     if ( (S32)regs->GR_L(r1) > j )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
         VALIDATE_AIA(regs);
@@ -1004,7 +1004,7 @@ S32     i,j;                            /* Integer workareas         */
     /* Branch if result compares low or equal */
     if ( (S32)regs->GR_L(r1) <= j )
     {
-        UPDATE_BEAR_A(regs);
+        UPDATE_BEAR(regs,4);
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
         VALIDATE_AIA(regs);
