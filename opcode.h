@@ -663,6 +663,28 @@ do { \
             (_regs)->psw.IA += (_len); \
         } while(0)
 
+#undef DECODER_TEST_RRE
+#define DECODER_TEST_RRF_R
+#define DECODER_TEST_RRF_M
+#define DECODER_TEST_RRF_RM
+#undef DECODER_TEST_RX
+#define DECODER_TEST_RXE
+#define DECODER_TEST_RXF
+#define DECODER_TEST_RXY
+#undef DECODER_TEST_RS
+#define DECODER_TEST_RSY
+#undef DECODER_TEST_RSL
+#undef DECODER_TEST_RSI
+#undef DECODER_TEST_RI
+#define DECODER_TEST_RIL
+#undef DECODER_TEST_SI
+#define DECODER_TEST_SIY
+#undef DECODER_TEST_S
+#define DECODER_TEST_SS
+#define DECODER_TEST_SS_L
+#define DECODER_TEST_SSE
+#define DECODER_TEST_RSS
+
 /* E implied operands and extended op code */
 #undef E
 #define E(_inst, _regs) \
@@ -682,22 +704,15 @@ do { \
 
 /* RR special format for SVC instruction */
 #undef RR_SVC
-#if defined(FETCHIBYTE1)
-#define RR_SVC(_inst, _regs, _svc) \
-        { \
-            FETCHIBYTE1((_svc), (_inst)) \
-            INST_UPDATE_PSW((_regs), 2); \
-        }
-#else
 #define RR_SVC(_inst, _regs, _svc) \
         { \
             (_svc) = (_inst)[1]; \
             INST_UPDATE_PSW((_regs), 2); \
         }
-#endif
 
 /* RRE register to register with extended op code */
 #undef RRE
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RRE)
 #define RRE(_inst, _regs, _r1, _r2) \
         { \
             int i = (_inst)[3]; \
@@ -705,9 +720,19 @@ do { \
             (_r2) = i & 0xf; \
             INST_UPDATE_PSW((_regs), 4); \
         }
+#else
+#define RRE(_inst, _regs, _r1, _r2) \
+        { \
+            int i = (_inst)[3]; \
+            (_r2) = i & 0xf; \
+            (_r1) = i >> 4; \
+            INST_UPDATE_PSW((_regs), 4); \
+        }
+#endif
 
 /* RRF register to register with additional R3 field */
 #undef RRF_R
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RRF_R)
 #define RRF_R(_inst, _regs, _r1, _r2, _r3) \
         { \
             int i = (_inst)[2]; \
@@ -717,9 +742,19 @@ do { \
             (_r2) = i & 0xf; \
             INST_UPDATE_PSW((_regs), 4); \
         }
+#else
+#define RRF_R(_inst, _regs, _r1, _r2, _r3) \
+      { U32 temp = fetch_fw(_inst); \
+            (_r2) = (temp      ) & 0xf; \
+            (_r3) = (temp >>  4) & 0xf; \
+            (_r1) = (temp >> 12) & 0xf; \
+            INST_UPDATE_PSW((_regs), 4); \
+        }
+#endif
 
 /* RRF register to register with additional M3 field */
 #undef RRF_M
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RRF_M)
 #define RRF_M(_inst, _regs, _r1, _r2, _m3) \
         { \
             int i = (_inst)[2]; \
@@ -729,9 +764,19 @@ do { \
             (_r2) = i & 0xf; \
             INST_UPDATE_PSW((_regs), 4); \
         }
+#else
+#define RRF_M(_inst, _regs, _r1, _r2, _m3) \
+      { U32 temp = fetch_fw(_inst); \
+            (_m3) = (temp >> 12) & 0xf; \
+            (_r2) = (temp      ) & 0xf; \
+            (_r1) = (temp >>  4) & 0xf; \
+            INST_UPDATE_PSW((_regs), 4); \
+        }
+#endif
 
 /* RRF register to register with additional R3 and M4 fields */
 #undef RRF_RM
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RRF_RM)
 #define RRF_RM(_inst, _regs, _r1, _r2, _r3, _m4) \
         { \
             int i = (_inst)[2]; \
@@ -742,9 +787,20 @@ do { \
             (_r2) = i & 0xf; \
             INST_UPDATE_PSW((_regs), 4); \
         }
+#else
+#define RRF_RM(_inst, _regs, _r1, _r2, _r3, _m4) \
+      { U32 temp = fetch_fw(_inst); \
+            (_r3) = (temp >> 12) & 0xf; \
+            (_m4) = (temp >>  8) & 0xf; \
+            (_r2) = (temp      ) & 0xf; \
+            (_r1) = (temp >>  4) & 0xf; \
+            INST_UPDATE_PSW((_regs), 4); \
+        }
+#endif
 
 /* RX register and indexed storage */
 #undef RX
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RX)
 #define RX(_inst, _regs, _r1, _b2, _effective_addr2) \
     {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
@@ -758,6 +814,21 @@ do { \
             (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
             INST_UPDATE_PSW((_regs), 4); \
     }
+#else
+#define RX(_inst, _regs, _r1, _b2, _effective_addr2) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 16) & 0xf; \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_b2) = (temp >> 12) & 0xf; \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            (_r1) = (temp >> 20) & 0xf; \
+            INST_UPDATE_PSW((_regs), 4); \
+    }
+#endif
 
 /* RX_BC register and indexed storage - optimized for BC */
 #undef RX_BC
@@ -775,6 +846,7 @@ do { \
 
 /* RXE register and indexed storage with extended op code */
 #undef RXE
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RXE)
 #define RXE(_inst, _regs, _r1, _b2, _effective_addr2) \
     {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
@@ -793,9 +865,25 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 6); \
     }
+#else
+#define RXE(_inst, _regs, _r1, _b2, _effective_addr2) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 16) & 0xf; \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_b2) = (temp >> 12) & 0xf; \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            (_r1) = (temp >> 20) & 0xf; \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+#endif
 
 /* RXF register and indexed storage with ext.opcode and additional R3 */
 #undef RXF
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RXF)
 #define RXF(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
     {   U32 temp; \
         (_r1) = (_inst)[4] >> 4; \
@@ -817,11 +905,28 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 6); \
     }
+#else
+#define RXF(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 16) & 0xf; \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_b2) = (temp >> 12) & 0xf; \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            (_r3) = (temp >> 20) & 0xf; \
+            (_r1) = (_inst)[4] >> 4; \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+#endif
 
 /* RXY register and indexed storage with extended op code
    and long displacement */
 #undef RXY
 #if defined(FEATURE_LONG_DISPLACEMENT)
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RXY)
 #define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
     {   U32 temp; S32 temp2; int tempx; \
             temp  = fetch_fw(_inst); \
@@ -837,7 +942,30 @@ do { \
             (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
             INST_UPDATE_PSW((_regs), 6); \
     }
+#else
+#define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
+    {   U32 temp; S32 disp2; \
+            temp  = fetch_fw(_inst); \
+            (_effective_addr2) = 0; \
+            (_b2) = (temp >> 16) & 0xf; \
+            if ((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_b2) = (temp >> 12) & 0xf; \
+            if ((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            disp2 = temp & 0xfff; \
+            if (unlikely((_inst)[4])) { \
+                disp2 |= (_inst[4] << 12); \
+                if (disp2 & 0x80000) disp2 |= 0xfff00000; \
+            } \
+            (_effective_addr2) += disp2; \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            (_r1) = (temp >> 20) & 0xf; \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+#endif
 #else /*!defined(FEATURE_LONG_DISPLACEMENT)*/
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RXY)
 #define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
     {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
@@ -856,10 +984,26 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 6); \
     }
+#else
+#define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 16) & 0xf; \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_b2) = (temp >> 12) & 0xf; \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            (_r1) = (temp >> 20) & 0xf; \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+#endif
 #endif /*!defined(FEATURE_LONG_DISPLACEMENT)*/
 
 /* RS register and storage with additional R3 or M3 field */
 #undef RS
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RS)
 #define RS(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
     {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
@@ -873,7 +1017,23 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 4); \
     }
+#else
+#define RS(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if((_b2)) \
+            { \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_r3) = (temp >> 16) & 0xf; \
+            (_r1) = (temp >> 20) & 0xf; \
+            INST_UPDATE_PSW((_regs), 4); \
+    }
+#endif
 
+#if 0
 /* RSE register and storage with extended op code and additional
    R3 or M3 field (note, this is NOT the ESA/390 vector RSE format) */
 /* Note: Effective June 2003, RSE is retired and replaced by RSY */
@@ -893,11 +1053,13 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 6); \
     }
+#endif
 
 /* RSY register and storage with extended op code, long displacement,
    and additional R3 or M3 field */
 #undef RSY
 #if defined(FEATURE_LONG_DISPLACEMENT)
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RSY)
 #define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
     {   U32 temp; S32 temp2; \
             temp = fetch_fw(_inst); \
@@ -912,7 +1074,28 @@ do { \
             (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
             INST_UPDATE_PSW((_regs), 6); \
     }
+#else
+#define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
+    {   U32 temp; S32 disp2; \
+            temp = fetch_fw(_inst); \
+            (_effective_addr2) = 0; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if ((_b2)) \
+                _effective_addr2 += (_regs)->GR((_b2)); \
+            disp2 = temp & 0xfff; \
+            if (unlikely((_inst)[4])) { \
+                disp2 |= (_inst[4] << 12); \
+                if (disp2 & 0x80000) disp2 |= 0xfff00000; \
+            } \
+            (_effective_addr2) += disp2; \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            (_r3) = (temp >> 16) & 0xf; \
+            (_r1) = (temp >> 20) & 0xf; \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+#endif
 #else /*!defined(FEATURE_LONG_DISPLACEMENT)*/
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RSY)
 #define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
     {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
@@ -926,10 +1109,24 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 6); \
     }
+#else
+#define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            (_r3) = (temp >> 16) & 0xf; \
+            (_r1) = (temp >> 20) & 0xf; \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+#endif
 #endif /*!defined(FEATURE_LONG_DISPLACEMENT)*/
 
 /* RSL storage operand with extended op code and 4-bit L field */
 #undef RSL
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RSL)
 #define RSL(_inst, _regs, _l1, _b1, _effective_addr1) \
     {   U32 temp = fetch_fw(_inst); \
             (_l1) = (temp >> 20) & 0xf; \
@@ -942,9 +1139,23 @@ do { \
             } \
             INST_UPDATE_PSW((_regs), 6); \
         }
+#else
+#define RSL(_inst, _regs, _l1, _b1, _effective_addr1) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr1) = temp & 0xfff; \
+            (_b1) = (temp >> 12) & 0xf; \
+            if((_b1)) { \
+                (_effective_addr1) += (_regs)->GR((_b1)); \
+                (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_l1) = (temp >> 20) & 0xf; \
+            INST_UPDATE_PSW((_regs), 6); \
+        }
+#endif
 
 /* RSI register and immediate with additional R3 field */
 #undef RSI
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RSI)
 #define RSI(_inst, _regs, _r1, _r3, _i2) \
     {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
@@ -952,9 +1163,19 @@ do { \
             (_i2) = temp & 0xffff; \
             INST_UPDATE_PSW((_regs), 4); \
     }
+#else
+#define RSI(_inst, _regs, _r1, _r3, _i2) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_i2) = temp & 0xffff; \
+            (_r3) = (temp >> 16) & 0xf; \
+            (_r1) = (temp >> 20) & 0xf; \
+            INST_UPDATE_PSW((_regs), 4); \
+    }
+#endif
 
 /* RI register and immediate with extended 4-bit op code */
 #undef RI
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RI)
 #define RI(_inst, _regs, _r1, _op, _i2) \
     {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
@@ -962,6 +1183,15 @@ do { \
             (_i2) = temp & 0xffff; \
             INST_UPDATE_PSW((_regs), 4); \
     }
+#else
+#define RI(_inst, _regs, _r1, _op, _i2) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_op) = (temp >> 16) & 0xf; \
+            (_i2) = temp & 0xffff; \
+            (_r1) = (temp >> 20) & 0xf; \
+            INST_UPDATE_PSW((_regs), 4); \
+    }
+#endif
 
 /* RIE register and immediate with ext.opcode and additional R3 */
 #undef RIE
@@ -975,6 +1205,7 @@ do { \
 
 /* RIL register and longer immediate with extended 4 bit op code */
 #undef RIL
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RIL)
 #define RIL(_inst, _regs, _r1, _op, _i2) \
     {   U32 temp = fetch_fw(_inst); \
             (_r1) = (temp >> 20) & 0xf; \
@@ -984,9 +1215,19 @@ do { \
           | (_inst)[5]; \
             INST_UPDATE_PSW((_regs), 6); \
     }
+#else
+#define RIL(_inst, _regs, _r1, _op, _i2) \
+    { \
+            (_i2) = fetch_fw(&(_inst)[2]); \
+            (_op) = ((_inst)[1]     ) & 0xf; \
+            (_r1) = ((_inst)[1] >> 4) & 0xf; \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+#endif
 
 /* SI storage and immediate */
 #undef SI
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_SI)
 #define SI(_inst, _regs, _i2, _b1, _effective_addr1) \
     {   U32 temp = fetch_fw(_inst); \
             (_i2) = (temp >> 16) & 0xff; \
@@ -999,10 +1240,24 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 4); \
     }
+#else
+#define SI(_inst, _regs, _i2, _b1, _effective_addr1) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr1) = temp & 0xfff; \
+            (_b1) = (temp >> 12) & 0xf; \
+            if((_b1)) { \
+                (_effective_addr1) += (_regs)->GR((_b1)); \
+                (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_i2) = (temp >> 16) & 0xff; \
+            INST_UPDATE_PSW((_regs), 4); \
+    }
+#endif
 
 /* SIY storage and immediate with long displacement */
 #undef SIY
 #if defined(FEATURE_LONG_DISPLACEMENT)
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_SIY)
 #define SIY(_inst, _regs, _i2, _b1, _effective_addr1) \
     {   U32 temp; S32 temp1; \
             temp = fetch_fw(_inst); \
@@ -1016,10 +1271,30 @@ do { \
             (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
             INST_UPDATE_PSW((_regs), 6); \
     }
+#else
+#define SIY(_inst, _regs, _i2, _b1, _effective_addr1) \
+    {   U32 temp; S32 disp; \
+            temp = fetch_fw(_inst); \
+            (_effective_addr1) = 0; \
+            (_b1) = (temp >> 12) & 0xf; \
+            if ((_b1)) \
+                (_effective_addr1) += (_regs)->GR((_b1)); \
+            disp = temp & 0xfff; \
+            if (unlikely((_inst)[4])) { \
+                disp |= (_inst[4] << 12); \
+                if (disp & 0x80000) disp |= 0xfff00000; \
+            } \
+            (_effective_addr1) += disp; \
+            (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+            INST_UPDATE_PSW((_regs), 6); \
+            (_i2) = (temp >> 16) & 0xff; \
+    }
+#endif
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 /* S storage operand only */
 #undef S
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_S)
 #define S(_inst, _regs, _b2, _effective_addr2) \
     {   U32 temp = fetch_fw(_inst); \
             (_b2) = (temp >> 12) & 0xf; \
@@ -1031,9 +1306,22 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 4); \
     }
+#else
+#define S(_inst, _regs, _b2, _effective_addr2) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if((_b2) != 0) { \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            INST_UPDATE_PSW((_regs), 4); \
+    }
+#endif
 
 /* SS storage to storage with two 4-bit L or R fields */
 #undef SS
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_SS)
 #define SS(_inst, _regs, _r1, _r3, \
         _b1, _effective_addr1, _b2, _effective_addr2) \
     {   U32 temp = fetch_fw(_inst); \
@@ -1055,9 +1343,32 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 6); \
     }
+#else
+#define SS(_inst, _regs, _r1, _r3, \
+        _b1, _effective_addr1, _b2, _effective_addr2) \
+    {   U32 temp; \
+            temp = fetch_fw((_inst)+2); \
+            (_effective_addr1) = (temp >> 16) & 0xfff; \
+            (_b1) = (temp >> 28); \
+            if ((_b1)) { \
+                (_effective_addr1) += (_regs)->GR((_b1)); \
+                (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if ((_b2)) { \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_r3) = ((_inst)[1]     ) & 0xf; \
+            (_r1) = ((_inst)[1] >> 4) & 0xf; \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+#endif
 
 /* SS storage to storage with one 8-bit L field */
 #undef SS_L
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_SS_L)
 #define SS_L(_inst, _regs, _l, \
         _b1, _effective_addr1, _b2, _effective_addr2) \
     {   U32 temp = fetch_fw(_inst); \
@@ -1078,9 +1389,31 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 6); \
     }
+#else
+#define SS_L(_inst, _regs, _l, \
+        _b1, _effective_addr1, _b2, _effective_addr2) \
+    {   U32 temp; \
+            temp = fetch_fw((_inst)+2); \
+            (_effective_addr1) = (temp >> 16) & 0xfff; \
+            (_b1) = (temp >> 28); \
+            if((_b1)) { \
+                (_effective_addr1) += (_regs)->GR((_b1)); \
+                (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if ((_b2)) { \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_l) = (_inst)[1]; \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+#endif
 
 /* SSE storage to storage with extended op code */
 #undef SSE
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_SSE)
 #define SSE(_inst, _regs, _b1, _effective_addr1, \
                      _b2, _effective_addr2) \
     {   U32 temp = fetch_fw(_inst); \
@@ -1100,10 +1433,29 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 6); \
     }
-
+#else
+#define SSE(_inst, _regs, _b1, _effective_addr1, \
+                     _b2, _effective_addr2) \
+    {   U32 temp = fetch_fw((_inst)+2); \
+            (_effective_addr1) = (temp >> 16) & 0xfff; \
+            (_b1) = (temp >> 28); \
+            if((_b1)) { \
+                (_effective_addr1) += (_regs)->GR((_b1)); \
+                (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if ((_b2)) { \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+#endif
 
 /* RSS storage to storage with additional register */
 #undef RSS
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RSS)
 #define RSS(_inst, _regs, _r3, _b1, _effective_addr1, \
                      _b2, _effective_addr2) \
     {   U32 temp = fetch_fw(_inst); \
@@ -1124,7 +1476,28 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 6); \
     }
-
+#else
+#define RSS(_inst, _regs, _r3, _b1, _effective_addr1, \
+                     _b2, _effective_addr2) \
+    {   U32 temp; \
+            temp = fetch_fw((_inst)+2); \
+            (_effective_addr1) = (temp >> 16) & 0xfff; \
+            (_b1) = (temp >> 28); \
+            if((_b1)) { \
+                (_effective_addr1) += (_regs)->GR((_b1)); \
+                (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if ((_b2)) { \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_b1) = ((_inst)[1]     ) & 0xf;\
+            (_r3) = ((_inst)[1] >> 4) & 0xf; \
+            INST_UPDATE_PSW((_regs), 6); \
+    }
+#endif
 
 #undef SIE_TRANSLATE_ADDR
 #undef SIE_LOGICAL_TO_ABS
