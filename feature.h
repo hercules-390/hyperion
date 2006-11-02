@@ -107,6 +107,7 @@
 #undef TLBID_PAGEMASK
 #undef TLBID_BYTEMASK
 #undef ASD_PRIVATE
+#undef PER_SB
 
 #if __GEN_ARCH == 370
 
@@ -774,5 +775,31 @@ do { \
        ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
      ) \
  )
+
+/*
+ * PER Successful Branch
+ */
+#if defined(FEATURE_PER)
+ #if defined(FEATURE_PER2)
+  #define PER_SB(_regs, _addr) \
+   do { \
+    if (unlikely(EN_IC_PER_SB((_regs))) \
+     && (!((_regs)->CR(9) & CR9_BAC) \
+      || PER_RANGE_CHECK((_addr) & ADDRESS_MAXWRAP((_regs)), \
+                          (_regs)->CR(10), (_regs)->CR(11)) \
+        ) \
+       ) \
+     ON_IC_PER_SB((_regs)); \
+   } while (0)
+ #else /*!defined(FEATURE_PER2)*/
+  #define PER_SB(_regs, _addr) \
+   do { \
+    if (unlikely(EN_IC_PER_SB((_regs)))) \
+     ON_IC_PER_SB((_regs)); \
+   } while (0)
+ #endif /*!defined(FEATURE_PER2)*/
+#else /*!defined(FEATURE_PER)*/
+ #define PER_SB(_regs,_addr)
+#endif /*!defined(FEATURE_PER)*/
 
 /* end of FEATURES.H */

@@ -418,15 +418,7 @@ VADR    newia;                          /* New instruction address   */
         UPDATE_BEAR_A(regs);
         regs->psw.IA = newia;
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
 
 } /* end DEF_INST(branch_and_link_register) */
@@ -461,16 +453,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Update the PSW instruction address */
     regs->psw.IA = effective_addr2;
     VALIDATE_AIA(regs);
-
-#if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-      && ( !(regs->CR(9) & CR9_BAC)
-       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-        )
-        ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+    PER_SB(regs, regs->psw.IA);
 
 } /* end DEF_INST(branch_and_link) */
 
@@ -511,15 +494,7 @@ VADR    newia;                          /* New instruction address   */
         UPDATE_BEAR_A(regs);
         regs->psw.IA = newia;
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
 
 } /* end DEF_INST(branch_and_save_register) */
@@ -553,17 +528,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Update the PSW instruction address */
     regs->psw.IA = effective_addr2;
     VALIDATE_AIA(regs);
-
-#if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-      && ( !(regs->CR(9) & CR9_BAC)
-       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-        )
-        ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
-
+    PER_SB(regs, regs->psw.IA);
 } /* end DEF_INST(branch_and_save) */
 
 
@@ -637,17 +602,7 @@ VADR    newia;                          /* New instruction address   */
             regs->psw.IA = newia & 0x00FFFFFF;
         }
         VALIDATE_AIA(regs);
-
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
-
+        PER_SB(regs, regs->psw.IA);
     }
 
 } /* end DEF_INST(branch_and_save_and_set_mode) */
@@ -723,16 +678,7 @@ VADR    newia;                          /* New instruction address   */
             regs->psw.IA = newia & 0x00FFFFFF;
         }
         VALIDATE_AIA(regs);
-
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
 
 } /* end DEF_INST(branch_and_set_mode) */
@@ -754,15 +700,7 @@ DEF_INST(branch_on_condition_register)
         UPDATE_BEAR_N(regs, 2);
         regs->psw.IA = regs->GR(inst[1] & 0x0F) & ADDRESS_MAXWRAP(regs);
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( unlikely(EN_IC_PER_SB(regs))
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
     else
     {
@@ -794,15 +732,7 @@ VADR    effective_addr2;                /* Effective address         */
         RX_BC(inst, regs, b2, effective_addr2);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     } else
         INST_UPDATE_PSW(regs, 4);
 } /* end DEF_INST(branch_on_condition) */
@@ -829,15 +759,7 @@ int     r1, r2;                         /* Values of R fields        */
         if (unlikely(r1 == r2)) regs->psw.IA++;
         regs->psw.IA &= ADDRESS_MAXWRAP(regs);
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
 
 } /* end DEF_INST(branch_on_count_register) */
@@ -860,15 +782,7 @@ VADR    effective_addr2;                /* Effective address         */
         UPDATE_BEAR_A(regs);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
 
 } /* end DEF_INST(branch_on_count) */
@@ -901,15 +815,7 @@ S32     i, j;                           /* Integer work areas        */
         UPDATE_BEAR_A(regs);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
 
 } /* end DEF_INST(branch_on_index_high) */
@@ -942,15 +848,7 @@ S32     i, j;                           /* Integer work areas        */
         UPDATE_BEAR_A(regs);
         regs->psw.IA = effective_addr2;
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
 
 } /* end DEF_INST(branch_on_index_low_or_equal) */
@@ -976,15 +874,7 @@ DEF_INST(branch_relative_on_condition)
         regs->psw.IA = (likely(!regs->execflag) ? regs->psw.IA: regs->ET)
                      + 2*(S16)(fetch_fw(inst) & 0xFFFF);
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( unlikely(EN_IC_PER_SB(regs))
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
     else
         INST_UPDATE_PSW(regs, 4);
@@ -1023,15 +913,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
     VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+    PER_SB(regs, regs->psw.IA);
  
 } /* end DEF_INST(branch_relative_and_save) */
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
@@ -1056,15 +938,7 @@ U16     i2;                             /* 16-bit operand values     */
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
  
 } /* end DEF_INST(branch_relative_on_count) */
@@ -1099,15 +973,7 @@ S32     i,j;                            /* Integer workareas         */
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
 
 } /* end DEF_INST(branch_relative_on_index_high) */
@@ -1142,15 +1008,7 @@ S32     i,j;                            /* Integer workareas         */
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
         VALIDATE_AIA(regs);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
     }
 
 } /* end DEF_INST(branch_relative_on_index_low_or_equal) */

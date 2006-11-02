@@ -298,15 +298,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
 
-#if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-      && ( !(regs->CR(9) & CR9_BAC)
-       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-        )
-        ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+    /* Check for Successful Branch PER event */
+    PER_SB(regs, regs->psw.IA);
 
     VALIDATE_AIA(regs);
 
@@ -592,15 +585,8 @@ CREG    inst_cr;                        /* Instruction CR            */
     else
         VALIDATE_AIA(regs);
 
-#if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-      && ( !(regs->CR(9) & CR9_BAC)
-       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-        )
-        ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+    /* Check for Successful Branch PER event */
+    PER_SB(regs, regs->psw.IA);
 
 } /* end DEF_INST(branch_in_subspace_group) */
 #endif /*defined(FEATURE_SUBSPACE_GROUP)*/
@@ -693,19 +679,9 @@ VADR    n = 0;                          /* Work area                 */
     {
         UPDATE_BEAR_A(regs);
         regs->psw.IA = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-          && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-            )
-            ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+        PER_SB(regs, regs->psw.IA);
+        VALIDATE_AIA(regs);
     }
-
-    VALIDATE_AIA(regs);
 
 } /* end DEF_INST(branch_and_stack) */
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
@@ -3166,15 +3142,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     SET_AEA_COMMON(regs);             // cr[1], cr[7] may be updated
     INVALIDATE_AIA(regs);
 
-#if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-      && ( !(regs->CR(9) & CR9_BAC)
-       || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-        )
-        ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+    /* Check for Successful Branch PER event */
+    PER_SB(regs, regs->psw.IA);
 
     /* Generate space switch event if required */
     if ( ssevent || (pasn != 0 && IS_IC_PER(regs)) )
@@ -3449,13 +3418,8 @@ int     rc;                             /* return code from load_psw */
         regs->perc = newregs.perc;
     }
 
-    if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-      && ( !(regs->CR(9) & CR9_BAC)
-       || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-        )
-        ON_IC_PER_SB(regs);
+    PER_SB(regs, regs->psw.IA);
+
 #endif /*defined(FEATURE_PER)*/
 
     /* Update cpu states */
@@ -3726,15 +3690,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
 
-#if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs)
-#if defined(FEATURE_PER2)
-      && ( !(regs->CR(9) & CR9_BAC)
-       || PER_RANGE_CHECK(ia,regs->CR(10),regs->CR(11)) )
-#endif /*defined(FEATURE_PER2)*/
-        )
-        ON_IC_PER_SB(regs);
-#endif /*defined(FEATURE_PER)*/
+    /* Check for Successful Branch PER event */
+    PER_SB(regs, ia);
 
     /* Update the breaking event address register */
     UPDATE_BEAR_A(regs);
