@@ -1,3 +1,4 @@
+04 Nov 2006 Added CGER, CGDR, CGXR - Bernard van der Helm
 31 Oct 2006 Use accelerated byte swaps for x86_64 - Ivan Warren
 30 Oct 2006 Reinstate dasdconv stdin option - Roger Bowler
 27 Oct 2006 Reformatted dyncrypt.c, no functional change - Bernard
