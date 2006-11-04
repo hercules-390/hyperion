@@ -3029,9 +3029,9 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B3C5*/ GENx___x___x900 (convert_fix64_to_float_long_reg,RRE,"CDGR"),
  /*B3C6*/ GENx___x___x900 (convert_fix64_to_float_ext_reg,RRE,"CXGR"),
  /*B3C7*/ GENx___x___x___ ,
- /*B3C8*/ GENx___x___x900 (convert_float_short_to_fix64_reg,RRF_M,"CGER"), /* under construction! Bernard van der Helm */
- /*B3C9*/ GENx___x___x900 (convert_float_long_to_fix64_reg,RRF_M,"CGDR"), /* under construction! Bernard van der Helm */
- /*B3CA*/ GENx___x___x900 (convert_float_ext_to_fix64_reg,RRF_M,"CGXR"), /* under construction! Bernard van der Helm */
+ /*B3C8*/ GENx___x___x900 (convert_float_short_to_fix64_reg,RRF_M,"CGER"),
+ /*B3C9*/ GENx___x___x900 (convert_float_long_to_fix64_reg,RRF_M,"CGDR"),
+ /*B3CA*/ GENx___x___x900 (convert_float_ext_to_fix64_reg,RRF_M,"CGXR"),
  /*B3CB*/ GENx___x___x___ ,
  /*B3CC*/ GENx___x___x___ ,
  /*B3CD*/ GENx___x___x___ ,
