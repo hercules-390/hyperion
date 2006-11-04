@@ -26,6 +26,7 @@
 /* FPS Extensions Facility: LXR,LZER,LZDR,LZXR     R.Bowler 06juil03 */
 /* HFP Multiply and Add/Subtract Facility          R.Bowler 10juil03 */
 /* Convert 64fixed to float family CEGR,CDGR,CXGR  BvdHelm  28/01/06 */
+/* Completed the family CGER, CGDR and CGXR        BvdHelm  04/11/06 */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
