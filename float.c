@@ -6039,12 +6039,6 @@ U64     lsfract;
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_float_short_to_fix64_reg)
 {
-#if 1
-    /* under construction! Bernard van der Helm */
-    UNREFERENCED(inst);
-    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION); /* For now */
-#else
-
 int     r1, r2;                         /* Values of R fields        */
 int     m3;
 SHORT_FLOAT fl;
@@ -6064,7 +6058,7 @@ U32     lsfract;
 
         if (fl.expo > 72) {
             /* exeeds range by exponent */
-            regs->GR_L(r1) = fl.sign ? 0x80000000UL : 0x7FFFFFFFUL;
+            regs->GR_G(r1) = fl.sign ? 0x8000000000000000ULL : 0x7FFFFFFFFFFFFFFFULL;
             regs->psw.cc = 3;
             return;
         }
@@ -6075,7 +6069,7 @@ U32     lsfract;
                 /* negative */
                 if (fl.short_fract > 0x80000000UL) {
                     /* exeeds range by value */
-                    regs->GR_L(r1) = 0x80000000UL;
+                    regs->GR_G(r1) = 0x8000000000000000ULL;
                     regs->psw.cc = 3;
                     return;
                 }
@@ -6083,7 +6077,7 @@ U32     lsfract;
                 /* positive */
                 if (fl.short_fract > 0x7FFFFFFFUL) {
                     /* exeeds range by value */
-                    regs->GR_L(r1) = 0x7FFFFFFFUL;
+                    regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
                     regs->psw.cc = 3;
                     return;
                 }
@@ -6159,21 +6153,18 @@ U32     lsfract;
         }
         if (fl.sign) {
             /* negative */
-            regs->GR_L(r1) = -((S32) fl.short_fract);
+            regs->GR_G(r1) = -((S64) fl.short_fract);
             regs->psw.cc = 1;
         } else {
             /* positive */
-            regs->GR_L(r1) = fl.short_fract;
+            regs->GR_G(r1) = fl.short_fract;
             regs->psw.cc = 2;
         }
     } else {
         /* zero */
-        regs->GR_L(r1) = 0;
+        regs->GR_G(r1) = 0;
         regs->psw.cc = 0;
     }
-
-#endif
-
 }
 
 
@@ -6182,12 +6173,6 @@ U32     lsfract;
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_float_long_to_fix64_reg)
 {
-#if 1
-    /* under construction! Bernard van der Helm */
-    UNREFERENCED(inst);
-    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION); /* For now */
-#else
-
 int     r1, r2;                         /* Values of R fields        */
 int     m3;
 LONG_FLOAT fl;
@@ -6207,7 +6192,7 @@ U64     lsfract;
 
         if (fl.expo > 72) {
             /* exeeds range by exponent */
-            regs->GR_L(r1) = fl.sign ? 0x80000000UL : 0x7FFFFFFFUL;
+            regs->GR_G(r1) = fl.sign ? 0x8000000000000000ULL : 0x7FFFFFFFFFFFFFFFULL;
             regs->psw.cc = 3;
             return;
         }
@@ -6247,7 +6232,7 @@ U64     lsfract;
                     /* negative */
                     if (fl.long_fract > 0x80000000UL) {
                         /* exeeds range by value */
-                        regs->GR_L(r1) = 0x80000000UL;
+                        regs->GR_G(r1) = 0x8000000000000000ULL;
                         regs->psw.cc = 3;
                         return;
                     }
@@ -6255,7 +6240,7 @@ U64     lsfract;
                     /* positive */
                     if (fl.long_fract > 0x7FFFFFFFUL) {
                         /* exeeds range by value */
-                        regs->GR_L(r1) = 0x7FFFFFFFUL;
+                        regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
                         regs->psw.cc = 3;
                         return;
                     }
@@ -6301,21 +6286,18 @@ U64     lsfract;
         }
         if (fl.sign) {
             /* negative */
-            regs->GR_L(r1) = -((S32) fl.long_fract);
+            regs->GR_G(r1) = -((S64) fl.long_fract);
             regs->psw.cc = 1;
         } else {
             /* positive */
-            regs->GR_L(r1) = fl.long_fract;
+            regs->GR_G(r1) = fl.long_fract;
             regs->psw.cc = 2;
         }
     } else {
         /* zero */
-        regs->GR_L(r1) = 0;
+        regs->GR_G(r1) = 0;
         regs->psw.cc = 0;
     }
-
-#endif
-
 }
 
 
@@ -6324,12 +6306,6 @@ U64     lsfract;
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_float_ext_to_fix64_reg)
 {
-#if 1
-    /* under construction! Bernard van der Helm */
-    UNREFERENCED(inst);
-    ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION); /* For now */
-#else
-
 int     r1, r2;                         /* Values of R fields        */
 int     m3;
 EXTENDED_FLOAT fl;
@@ -6350,7 +6326,7 @@ U64     lsfract;
 
         if (fl.expo > 72) {
             /* exeeds range by exponent */
-            regs->GR_L(r1) = fl.sign ? 0x80000000UL : 0x7FFFFFFFUL;
+            regs->GR_G(r1) = fl.sign ? 0x8000000000000000ULL : 0x7FFFFFFFFFFFFFFFULL;
             regs->psw.cc = 3;
             return;
         }
@@ -6436,31 +6412,28 @@ U64     lsfract;
             /* negative */
             if (fl.ms_fract > 0x80000000UL) {
                 /* exeeds range by value */
-                regs->GR_L(r1) = 0x80000000UL;
+                regs->GR_G(r1) = 0x8000000000000000ULL;
                 regs->psw.cc = 3;
                 return;
             }
-            regs->GR_L(r1) = -((S32) fl.ms_fract);
+            regs->GR_G(r1) = -((S64) fl.ms_fract);
             regs->psw.cc = 1;
         } else {
             /* positive */
             if (fl.ms_fract > 0x7FFFFFFFUL) {
                 /* exeeds range by value */
-                regs->GR_L(r1) = 0x7FFFFFFFUL;
+                regs->GR_G(r1) = 0x7FFFFFFFUL;
                 regs->psw.cc = 3;
                 return;
             }
-            regs->GR_L(r1) = fl.ms_fract;
+            regs->GR_G(r1) = fl.ms_fract;
             regs->psw.cc = 2;
         }
     } else {
         /* zero */
-        regs->GR_L(r1) = 0;
+        regs->GR_G(r1) = 0;
         regs->psw.cc = 0;
     }
-
-#endif
-
 }
 
 
