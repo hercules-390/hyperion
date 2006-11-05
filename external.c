@@ -261,8 +261,10 @@ U16     cpuad;                          /* Originating CPU address   */
 
     /* External interrupt if TOD clock exceeds clock comparator */
     if ( tod_clock(regs) > regs->clkc
+#if 0 //FIXME: this causes a loop
         && sysblk.insttrace == 0
         && sysblk.inststep == 0
+#endif
         && OPEN_IC_CLKC(regs) )
     {
         if (sysblk.insttrace || sysblk.inststep)
