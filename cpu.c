@@ -789,7 +789,7 @@ static char *pgmintname[] = {
     {
 #endif /*defined(_FEATURE_SIE)*/
 //FIXME: Why are we getting intlock here??
-        OBTAIN_INTLOCK(realregs);
+//      OBTAIN_INTLOCK(realregs);
 
         /* Store current PSW at PSA+X'28' or PSA+X'150' for ESAME */
         ARCH_DEP(store_psw) (realregs, psa->pgmold);
@@ -800,7 +800,7 @@ static char *pgmintname[] = {
 #if defined(_FEATURE_SIE)
             if(SIE_MODE(realregs))
             {
-                RELEASE_INTLOCK(realregs);
+//              RELEASE_INTLOCK(realregs);
                 longjmp(realregs->progjmp, pcode);
             }
             else
@@ -809,12 +809,14 @@ static char *pgmintname[] = {
                 logmsg (_("HHCCP016I CPU%4.4X: Program interrupt loop: "),
                           realregs->cpuad);
                 display_psw (realregs);
+                OBTAIN_INTLOCK(realregs);
                 realregs->cpustate = CPUSTATE_STOPPING;
                 ON_IC_INTERRUPT(realregs);
+                RELEASE_INTLOCK(realregs);
             }
         }
 
-        RELEASE_INTLOCK(realregs);
+//      RELEASE_INTLOCK(realregs);
 
         longjmp(realregs->progjmp, SIE_NO_INTERCEPT);
 
