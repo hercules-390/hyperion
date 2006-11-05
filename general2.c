@@ -1398,7 +1398,7 @@ BYTE    old;                            /* Old value                 */
 #if defined(_FEATURE_SIE)
         if(SIE_STATB(regs, IC0, TS1))
         {
-            if( !OPEN_IC_PERINT(regs) )
+            if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
             else
                 longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);

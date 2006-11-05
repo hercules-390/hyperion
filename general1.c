@@ -1337,7 +1337,7 @@ U32     old;                            /* old value                 */
 #if defined(_FEATURE_SIE)
         if(SIE_STATB(regs, IC0, CS1))
         {
-            if( !OPEN_IC_PERINT(regs) )
+            if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
             else
                 longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
@@ -1401,7 +1401,7 @@ U64     old, new;                       /* old, new values           */
 #if defined(_FEATURE_SIE)
         if(SIE_STATB(regs, IC0, CS1))
         {
-            if( !OPEN_IC_PERINT(regs) )
+            if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
             else
                 longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);

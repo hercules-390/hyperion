@@ -1,3 +1,4 @@
+05 Nov 2006 Simplify PER processing - Greg Smith
 04 Nov 2006 Added CGER, CGDR, CGXR - Bernard van der Helm
 31 Oct 2006 Use accelerated byte swaps for x86_64 - Ivan Warren
 30 Oct 2006 Reinstate dasdconv stdin option - Roger Bowler

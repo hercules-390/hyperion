@@ -402,7 +402,7 @@ static char *pgmintname[] = {
 
     /* If this is a concurrent PER event then we must add the PER
        bit to the interrupts code */
-    if( OPEN_IC_PERINT(realregs) )
+    if( OPEN_IC_PER(realregs) )
         pcode |= PGM_PER_EVENT;
 
     /* Perform serialization and checkpoint synchronization */
@@ -626,7 +626,7 @@ static char *pgmintname[] = {
            code == 0x40) )
               OFF_IC_PER_SA(realregs);
 
-    if( OPEN_IC_PERINT(realregs) )
+    if( OPEN_IC_PER(realregs) )
     {
         if( realregs->tracing )
             logmsg(_("HHCCP015I CPU%4.4X PER event: code=%4.4X perc=%2.2X "
@@ -634,12 +634,13 @@ static char *pgmintname[] = {
               regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
               (realregs->psw.IA - ilc) & ADDRESS_MAXWRAP(realregs) );
 
-        realregs->perc |= OPEN_IC_PERINT(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
+        realregs->perc |= OPEN_IC_PER(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
 
         /* Positions 14 and 15 contain zeros if a storage alteration
            event was not indicated */
-        if( !(OPEN_IC_PERINT(realregs) & IC_PER_SA)
-          || (OPEN_IC_PERINT(realregs) & IC_PER_STURA) )
+//FIXME: is this right??
+        if( !(OPEN_IC_PER_SA(realregs))
+          || (OPEN_IC_PER_STURA(realregs)) )
             realregs->perc &= 0xFFFC;
 
         STORE_HW(psa->perint, realregs->perc);
@@ -787,7 +788,7 @@ static char *pgmintname[] = {
     if(nointercept)
     {
 #endif /*defined(_FEATURE_SIE)*/
-
+//FIXME: Why are we getting intlock here??
         OBTAIN_INTLOCK(realregs);
 
         /* Store current PSW at PSA+X'28' or PSA+X'150' for ESAME */
@@ -1250,10 +1251,10 @@ void *cpu_uninit (int cpu, REGS *regs)
 /*-------------------------------------------------------------------*/
 /* Process interrupt                                                 */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(process_interrupt)(REGS *regs)
+int ARCH_DEP(process_interrupt)(REGS *regs)
 {
     /* Process PER program interrupts */
-    if( OPEN_IC_PERINT(regs) )
+    if( OPEN_IC_PER(regs) )
         ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
 
     /* Obtain the interrupt lock */
@@ -1315,7 +1316,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 #endif /*FEATURE_VECTOR_FACILITY*/
 
             /* Thread exit (note - intlock still held) */
-            return;
+            return 1;
         }
 
         /* If initial CPU reset pending then perform reset */
@@ -1454,6 +1455,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     if (regs->tracing)
         longjmp(regs->progjmp, SIE_NO_INTERCEPT);
 
+    return 0;
+
 } /* process_interrupt */
 
 /*-------------------------------------------------------------------*/
@@ -1586,18 +1589,15 @@ REGS    regs;
     /* Set `execflag' is 0 in case EXecuted instruction did a longjmp() */
     regs.execflag = 0;
 
-    if (regs.tracing || PER_MODE(&regs))
+    if (regs.tracing)
         goto slowloop;
 
     while (1)
     {
-        /* Test for interrupts if it appears that one may be pending */
-        if ( unlikely(IC_INTERRUPT_CPU_NO_PER(&regs)) )
-        {
-            ARCH_DEP(process_interrupt)(&regs);
-            if (!regs.configured)
+        /* Test for pending interrupt */
+        if ( unlikely(INTERRUPT_PENDING(&regs)) )
+            if (ARCH_DEP(process_interrupt)(&regs))
                 return cpu_uninit(cpu, &regs);
-        }
 
         regs.ip = INSTRUCTION_FETCH(regs.inst, regs.psw.IA, &regs, 0);
         regs.instcount++;
@@ -1615,28 +1615,21 @@ REGS    regs;
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
-        } while (!IC_INTERRUPT_CPU_NO_PER(&regs));
+        } while (!INTERRUPT_PENDING(&regs));
         regs.instvalid = 0;
     }
 
 slowloop:
     while (1)
     {
-        /* Test for interrupts if it appears that one may be pending */
-        if ( IC_INTERRUPT_CPU(&regs) )
-        {
-            ARCH_DEP(process_interrupt)(&regs);
-            if (!regs.configured)
+        /* Test for pending interrupt */
+        if ( unlikely(INTERRUPT_PENDING(&regs)) )
+            if (ARCH_DEP(process_interrupt)(&regs))
                 return cpu_uninit(cpu, &regs);
-        }
 
-        /* Fetch the next sequential instruction */
         regs.ip = INSTRUCTION_FETCH(regs.inst, regs.psw.IA, &regs, 0);
-
         if( regs.tracing )
             ARCH_DEP(process_trace)(&regs);
-
-        /* Execute the instruction */
         regs.instcount++;
         EXECUTE_INSTRUCTION(regs.ip, &regs);
     }

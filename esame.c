@@ -390,7 +390,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if((HOME_SPACE_MODE(&(regs->psw)) ^ HOME_SPACE_MODE(&save_psw))
      && (!REAL_MODE(&regs->psw))
      && ((regs->CR(1) & SSEVENT_BIT) || (regs->CR(13) & SSEVENT_BIT)
-      || OPEN_IC_PERINT(regs) ))
+      || OPEN_IC_PER(regs) ))
     {
         if (HOME_SPACE_MODE(&(regs->psw)))
         {
@@ -2377,7 +2377,7 @@ U64     old;                            /* old value                 */
 #if defined(_FEATURE_ZSIE)
         if(SIE_STATB(regs, IC0, CS1))
         {
-            if( !OPEN_IC_PERINT(regs) )
+            if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
             else
                 longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
@@ -2441,7 +2441,7 @@ U64     old1, old2;                     /* old value                 */
 #if defined(_FEATURE_ZSIE)
         if(SIE_STATB(regs, IC0, CS1))
         {
-            if( !OPEN_IC_PERINT(regs) )
+            if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
             else
                 longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
@@ -4114,8 +4114,14 @@ U16     updated = 0;                    /* Updated control regs      */
         SET_AEA_COMMON(regs);
     if (updated & BIT(regs->aea_ar[USE_INST_SPACE]))
         INVALIDATE_AIA(regs);
-    if ((updated & BIT(9)) && EN_IC_PER_SA(regs))
-        ARCH_DEP(invalidate_tlb)(regs,~(ACC_WRITE|ACC_CHECK));
+    if (updated & BIT(9))
+    {
+        OBTAIN_INTLOCK(regs);
+        SET_IC_PER(regs);
+        RELEASE_INTLOCK(regs);
+        if (EN_IC_PER_SA(regs))
+            ARCH_DEP(invalidate_tlb)(regs,~(ACC_WRITE|ACC_CHECK));
+    }
 
     RETURN_INTCHECK(regs);
 
@@ -6144,7 +6150,7 @@ U32     old;                            /* old value                 */
 #if defined(_FEATURE_SIE)
         if(SIE_STATB(regs, IC0, CS1))
         {
-            if( !OPEN_IC_PERINT(regs) )
+            if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
             else
                 longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
@@ -6206,7 +6212,7 @@ U64     old, new;                       /* old, new values           */
 #if defined(_FEATURE_SIE)
         if(SIE_STATB(regs, IC0, CS1))
         {
-            if( !OPEN_IC_PERINT(regs) )
+            if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
             else
                 longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);

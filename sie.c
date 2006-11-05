@@ -844,17 +844,17 @@ int     n;
 
 #if defined(_FEATURE_PER)
         /* Handle PER or concurrent PER event */
-        if( OPEN_IC_PERINT(GUESTREGS)
+        if( OPEN_IC_PER(GUESTREGS)
           && ECMODE(&GUESTREGS->psw)
           && (GUESTREGS->psw.sysmask & PSW_PERMODE) )
         {
         PSA *psa;
 #if defined(_FEATURE_PER2)
-            GUESTREGS->perc |= OPEN_IC_PERINT(GUESTREGS) >> ((32 - IC_CR9_SHIFT) - 16);
+            GUESTREGS->perc |= OPEN_IC_PER(GUESTREGS) >> ((32 - IC_CR9_SHIFT) - 16);
             /* Positions 14 and 15 contain zeros if a storage alteration
                event was not indicated */
-            if( !(OPEN_IC_PERINT(GUESTREGS) & IC_PER_SA)
-              || (OPEN_IC_PERINT(GUESTREGS) & IC_PER_STURA) )
+            if( !(OPEN_IC_PER_SA(GUESTREGS))
+              || (OPEN_IC_PER_STURA(GUESTREGS)) )
                 GUESTREGS->perc &= 0xFFFC;
 
 #endif /*defined(_FEATURE_PER2)*/
@@ -938,7 +938,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     SIE_PERFMON(SIE_PERF_INTCHECK);
 
                     /* Process PER program interrupts */
-                    if( OPEN_IC_PERINT(GUESTREGS) )
+                    if( OPEN_IC_PER(GUESTREGS) )
                         ARCH_DEP(program_interrupt) (GUESTREGS, PGM_PER_EVENT);
 
                     OBTAIN_INTLOCK(regs);
@@ -1042,7 +1042,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE(gregs);
                 } while( likely(!SIE_I_HOST(regs)
                                 && GUESTREGS->siebk->v==oldv
-                                && !SIE_IC_INTERRUPT_CPU(GUESTREGS)));
+                                && !SIE_INTERRUPT_PENDING(GUESTREGS)));
                 /******************************************/
                 /* ABOVE : Keep executing instructions    */
                 /*         in a tight loop until...       */
@@ -1054,7 +1054,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                             && !SIE_I_WAIT(GUESTREGS)
                             && !SIE_I_EXT(GUESTREGS)
                             && !SIE_I_IO(GUESTREGS)
-                            && !SIE_IC_INTERRUPT_CPU(GUESTREGS)));
+                            && !SIE_INTERRUPT_PENDING(GUESTREGS)));
             /******************************************/
             /* ABOVE : Remain in SIE until...         */
             /*  - A Host Interrupt is made pending    */
@@ -1066,7 +1066,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
         if(icode == 0 || icode == SIE_NO_INTERCEPT)
         {
             /* Check PER first, higher priority */
-            if( OPEN_IC_PERINT(GUESTREGS) )
+            if( OPEN_IC_PER(GUESTREGS) )
                 ARCH_DEP(program_interrupt) (GUESTREGS, PGM_PER_EVENT);
 
             if( SIE_I_EXT(GUESTREGS) )

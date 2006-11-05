@@ -1894,8 +1894,14 @@ U16     updated = 0;                    /* Updated control regs      */
     if (updated & BIT(regs->aea_ar[USE_INST_SPACE]))
         INVALIDATE_AIA(regs);
 #endif
-    if ((updated & BIT(9)) && EN_IC_PER_SA(regs))
-        ARCH_DEP(invalidate_tlb)(regs,~(ACC_WRITE|ACC_CHECK));
+    if (updated & BIT(9))
+    {
+        OBTAIN_INTLOCK(regs);
+        SET_IC_PER(regs);
+        RELEASE_INTLOCK(regs);
+        if (EN_IC_PER_SA(regs))
+            ARCH_DEP(invalidate_tlb)(regs,~(ACC_WRITE|ACC_CHECK));
+    }
 
     RETURN_INTCHECK(regs);
 
@@ -4305,7 +4311,7 @@ int     ssevent = 0;                    /* 1=space switch event      */
     if (((oldmode != 3 && mode == 3) || (oldmode == 3 && mode != 3))
          && (regs->CR(1) & SSEVENT_BIT
               || regs->CR(13) & SSEVENT_BIT
-              || OPEN_IC_PERINT(regs) ))
+              || OPEN_IC_PER(regs) ))
       {
         /* Indicate space-switch event required */
         ssevent = 1;
