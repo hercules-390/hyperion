@@ -23,9 +23,7 @@
 #undef  OPTION_NO_INLINE_LOGICAL        /* Performance option        */
 #undef  OPTION_NO_INLINE_VSTORE         /* Performance option        */
 #undef  OPTION_NO_INLINE_IFETCH         /* Performance option        */
-#define OPTION_FAST_MOVECHAR            /* Performance option        */
-#define OPTION_FAST_MOVELONG            /* Performance option        */
-#define OPTION_FAST_PREFIX              /* Performance option        */
+#define OPTION_NO_CS_MAINLOCK           /* Performance option        */
 #define OPTION_FAST_DEVLOOKUP           /* Fast devnum/subchan lookup*/
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */

@@ -1378,7 +1378,7 @@ BYTE    old;                            /* Old value                 */
     main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
+    OBTAIN_MAINLOCK1(regs);
 
     /* Get old value */
     old = *main2;
@@ -1388,7 +1388,7 @@ BYTE    old;                            /* Old value                 */
     regs->psw.cc = old >> 7;
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
+    RELEASE_MAINLOCK1(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);

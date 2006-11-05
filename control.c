@@ -728,13 +728,13 @@ U32     old;                            /* old value                 */
     old = CSWAP32 (regs->GR_L(r1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
+    OBTAIN_MAINLOCK4(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r1+1)), main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
+    RELEASE_MAINLOCK4(regs);
 
     if (regs->psw.cc == 0)
     {
