@@ -512,6 +512,8 @@ static void* hao_thread(void* dummy)
   char*  msgend  = NULL;
   char   svchar  = 0;
 
+  UNREFERENCED(dummy);
+
   logmsg(HHCAO001I, thread_id(), getpriority(PRIO_PROCESS,0), getpid());
 
   /* Wait for panel thread to engage */

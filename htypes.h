@@ -58,7 +58,7 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
   #define  I64_FMT                  "l"
 #else // defined(SIZEOF_LONG) && SIZEOF_LONG == 4
   #define  I16_FMT                  "h"
-  #define  I32_FMT                  "l"
+  #define  I32_FMT                  ""
   #define  I64_FMT                  "ll"
 #endif
 
