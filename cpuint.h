@@ -164,6 +164,10 @@
  * to avoid multiple updates to `ints_mask'.
  */
 
+#define IC_CR0_TO_INTMASK(_regs) \
+(  ( (_regs)->CR(0) & IC_EXTPENDING) \
+  | (((_regs)->CR(0) & BIT(IC_ITIMER)) ? BIT(IC_ECPSVTIMER) : 0) )
+
 #define IC_MASK(_regs) \
  ( ( IC_INITIAL_MASK ) \
  | ( ECMODE(&(_regs)->psw) \
@@ -172,7 +176,7 @@
    ) \
  | ( MACHMASK(&(_regs)->psw) ? ((_regs)->CR(14) & IC_MCKPENDING) : 0 ) \
  | ( PER_MODE((_regs)) ? ((_regs)->ints_mask & IC_PER_MASK) : 0 ) \
- | ( ((_regs)->psw.sysmask & PSW_EXTMASK) ? ((_regs)->CR(0) & IC_EXTPENDING) : 0 ) \
+ | ( ((_regs)->psw.sysmask & PSW_EXTMASK) ? (IC_CR0_TO_INTMASK((_regs))) : 0 ) \
  | ( WAITSTATE(&(_regs)->psw) ? BIT(IC_PSW_WAIT) : 0 ) \
  )
 
@@ -181,7 +185,7 @@
  | ( ((_regs)->psw.sysmask & PSW_IOMASK) ? BIT(IC_IO) : 0 ) \
  | ( MACHMASK(&(_regs)->psw) ? ((_regs)->CR(14) & IC_MCKPENDING) : 0 ) \
  | ( PER_MODE((_regs)) ? ((_regs)->ints_mask & IC_PER_MASK) : 0 ) \
- | ( ((_regs)->psw.sysmask & PSW_EXTMASK) ? ((_regs)->CR(0) & IC_EXTPENDING) : 0 ) \
+ | ( ((_regs)->psw.sysmask & PSW_EXTMASK) ? (IC_CR0_TO_INTMASK((_regs))) : 0 ) \
  | ( WAITSTATE(&(_regs)->psw) ? BIT(IC_PSW_WAIT) : 0 ) \
  )
 
@@ -190,7 +194,7 @@
  | ( ((_regs)->psw.sysmask & 0xFE) ? BIT(IC_IO) : 0 ) \
  | ( MACHMASK(&(_regs)->psw) ? ((_regs)->CR(14) & IC_MCKPENDING) : 0 ) \
  | ( PER_MODE((_regs)) ? ((_regs)->ints_mask & IC_PER_MASK) : 0 ) \
- | ( ((_regs)->psw.sysmask & PSW_EXTMASK) ? ((_regs)->CR(0) & IC_EXTPENDING) : 0 ) \
+ | ( ((_regs)->psw.sysmask & PSW_EXTMASK) ? (IC_CR0_TO_INTMASK((_regs))) : 0 ) \
  | ( WAITSTATE(&(_regs)->psw) ? BIT(IC_PSW_WAIT) : 0 ) \
  )
 
