@@ -178,7 +178,7 @@ struct REGS {                           /* Processor registers       */
                 checkstop:1,            /* 1=CPU is checkstop-ed     */
                 hostint:1,              /* 1=Host generated interrupt*/
                 execflag:1,             /* 1=EXecuted instruction    */
-                instvalid:1,            /* 1=Inst field is valid     */
+                instinvalid:1,          /* 1=Inst field is invalid   */
                 permode:1,              /* 1=PER active              */
                 host:1,                 /* REGS are hostregs         */
                 guest:1;                /* REGS are guestregs        */

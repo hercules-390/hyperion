@@ -651,31 +651,57 @@ _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
 /* Fetch instruction from halfword-aligned virtual storage location  */
 /*                                                                   */
 /* Input:                                                            */
-/*      dest    Pointer to 6-byte area to receive instruction bytes  */
-/*      addr    Logical address of leftmost instruction halfword     */
 /*      regs    Pointer to the CPU register context                  */
+/*      exec    If 1 then called by EXecute otherwise called by      */
+/*              INSTRUCTION_FETCH                                    */
+/*                                                                   */
+/* If called by INSTRUCTION_FETCH then                               */
+/*      addr    regs->psw.IA                                         */
+/*      dest    regs->inst                                           */
+/*                                                                   */
+/* If called by EXecute then                                         */
+/*      addr    regs->ET                                             */
+/*      dest    regs->exinst                                         */
 /*                                                                   */
 /* Output:                                                           */
-/*      If successful, from one to three instruction halfwords will  */
-/*      be fetched from main storage and stored into the 6-byte area */
-/*      pointed to by dest.                                          */
+/*      If successful, a pointer is returned to the instruction. If  */
+/*      the instruction crossed a page boundary then the instruction */
+/*      is copied either to regs->inst or regs->exinst (depending on */
+/*      the exec flag).  Otherwise the pointer points into mainstor. */
+/*                                                                   */
+/*      If the exec flag is 0 and tracing or PER is not active then  */
+/*      the AIA is updated.  This forces interrupts to be checked    */
+/*      instfetch to be call for each instruction.  Note that        */
+/*      process_trace() is called from here if tracing is active.    */
 /*                                                                   */
 /*      A program check may be generated if the instruction address  */
 /*      is odd, or causes an addressing or translation exception,    */
-/*      and in this case the function does not return.               */
+/*      and in this case the function does not return.  In the       */
+/*      latter case, regs->instinvalid is 1 which indicates to       */
+/*      program_interrupt that the exception occurred during         */
+/*      instruction fetch.                                           */
+/*                                                                   */
+/*      Because this function is inlined and `exec' is a constant    */
+/*      (either 0 or 1) the references to exec are optimized out by  */
+/*      the compiler.                                                */
 /*-------------------------------------------------------------------*/
-_VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (BYTE *dest, VADR addr,
-                                                            REGS *regs)
+_VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (REGS *regs, int exec)
 {
-BYTE   *ia;                             /* Instruction address       */
-int     len = 0;                        /* Lengths for page crossing */
+VADR    addr;                           /* Instruction address       */
+BYTE   *ia;                             /* Instruction pointer       */
+BYTE   *dest;                           /* Copied instruction        */
+int     pagesz;                         /* Effective page size       */
+int     offset;                         /* Address offset into page  */
+int     len;                            /* Length for page crossing  */
 
-    /* Make sure addresses are wrapped */
+    addr = exec ? regs->ET : regs->psw.IA;
     addr &= ADDRESS_MAXWRAP(regs);
-    regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+
+    pagesz = addr < 0x800 ? 0x800 : PAGEFRAME_PAGESIZE;
+    offset = (int)(addr & PAGEFRAME_BYTEMASK);
 
     /* Program check if instruction address is odd */
-    if ( unlikely(addr & 0x01) )
+    if ( unlikely(offset & 0x01) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
 #if defined(FEATURE_PER)
@@ -693,8 +719,7 @@ int     len = 0;                        /* Lengths for page crossing */
         regs->perc = 0;
 #endif /*!defined(FEATURE_PER2)*/
 
-        /* For EXecute instvalid will be true */
-        if(!regs->instvalid)
+        if(!exec)
             regs->peradr = addr;
 
         /* Test for PER instruction-fetching event */
@@ -717,42 +742,42 @@ int     len = 0;                        /* Lengths for page crossing */
     }
 #endif /*defined(FEATURE_PER)*/
 
-    /* Get instruction address */
+    if (!exec)
+        regs->instinvalid = 1;
+
     ia = MADDR (addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
 
     /* If boundary is crossed then copy instruction to destination */
-    if ( unlikely((addr & 0x7FF) > 0x7FA) )
+    if ( offset + ILC(ia[0]) > pagesz )
     {
-     // NOTE: `dest' must be at least 8 bytes
-        len = 0x800 - (addr & 0x7FF);
-        if (ILC(ia[0]) > len)
+        /* Note - dest is 8 bytes */
+        dest = exec ? regs->exinst : regs->inst;
+        memcpy (dest, ia, 4);
+        len = pagesz - offset;
+        offset = 0;
+        addr = (addr + len) & ADDRESS_MAXWRAP(regs);
+        ia = MADDR(addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+        memcpy(dest + len, ia, 4);
+    }
+    else
+        dest = ia;
+
+    if (!exec)
+    {
+        regs->instinvalid = 0;
+
+        /* Update the AIA */
+        if (likely(!regs->tracing && !regs->permode))
         {
-            memcpy (dest, ia, 4);
-            addr = (addr + len) & ADDRESS_MAXWRAP(regs);
-            ia = MADDR(addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
-            memcpy(dest + len, ia, 4);
+            regs->AIV =  addr & PAGEFRAME_PAGEMASK;
+            regs->AIE = (addr & PAGEFRAME_PAGEMASK) | (pagesz - 5);
+            regs->aim = NEW_INSTADDR(regs, addr - offset, ia - offset);
         }
-        else
-            len = 0;
+        else if (regs->tracing)
+            ARCH_DEP(process_trace)(regs);
     }
 
-    /* Update the AIA */
-    if (!regs->instvalid
-#if defined(FEATURE_PER)
-      && !EN_IC_PER(regs)
-#endif /*defined(FEATURE_PER)*/
-       )
-    {
-        int off;
-        regs->AIV = addr & TLB_PAGEMASK;
-        regs->AIE = (addr & TLB_PAGEMASK)
-                  | (addr < PSA_SIZE ? 0x7FB : (TLB_BYTEMASK -  4));
-        off = addr & TLB_BYTEMASK;
-        regs->aim = NEW_INSTADDR(regs, addr-off, ia-off);
-    }
-
-    regs->instvalid = 1;
-    return len ? dest : ia;
+    return dest;
 
 } /* end function ARCH_DEP(instfetch) */
 #endif

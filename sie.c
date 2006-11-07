@@ -259,7 +259,7 @@ U64     dreg;
 
 #if defined(SIE_DEBUG)
     logmsg(_("SIE: state descriptor " F_RADR "\n"),effective_addr2);
-    ARCH_DEP(display_inst) (regs, regs->ip);
+    ARCH_DEP(display_inst) (regs, regs->instinvalid ? NULL : regs->ip);
 #endif /*defined(SIE_DEBUG)*/
 
     if(effective_addr2 > regs->mainlim - (sizeof(SIEBK)-1))
@@ -574,12 +574,9 @@ U64     dreg;
     /* Initialize accelerated address lookup values */
     SET_AEA_MODE(GUESTREGS);
     SET_AEA_COMMON(GUESTREGS);
-
-    /* Force instfetch() to be called for the first instruction */
-    GUESTREGS->instvalid = 0;
-    GUESTREGS->ip = GUESTREGS->inst;
-    GUESTREGS->inst[0] = 0;
     INVALIDATE_AIA(GUESTREGS);
+
+    GUESTREGS->tracing = regs->tracing;
 
     /*
      * Do setjmp(progjmp) because translate_addr() may result in
@@ -705,8 +702,8 @@ int     n;
 
 #if defined(SIE_DEBUG)
     logmsg(_("SIE: interception code %d\n"),code);
-    ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->instvalid ?
-                                        GUESTREGS->ip : NULL);
+    ARCH_DEP(display_inst) (GUESTREGS,
+                            GUESTREGS->instinvalid ? NULL : GUESTREGS->ip);
 #endif /*defined(SIE_DEBUG)*/
 
     SIE_PERFMON(SIE_PERF_EXIT);
@@ -874,7 +871,7 @@ int     n;
         /* Update interception parameters in the state descriptor */
         if(GUESTREGS->ip[0] != 0x44)
         {
-            if(GUESTREGS->instvalid)
+            if(!GUESTREGS->instinvalid)
                 memcpy(STATEBK->ipa, GUESTREGS->ip, ILC(GUESTREGS->ip[0]));
         }
         else
@@ -1014,32 +1011,34 @@ int ARCH_DEP(run_sie) (REGS *regs)
                                           )
                     break;
 
-                GUESTREGS->ip = INSTRUCTION_FETCH(GUESTREGS->inst, GUESTREGS->psw.IA, GUESTREGS, 0);
+                GUESTREGS->ip = INSTRUCTION_FETCH(GUESTREGS, 0);
 
 #if defined(SIE_DEBUG)
                 /* Display the instruction */
-                ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->ip);
+                ARCH_DEP(display_inst) (GUESTREGS,
+                         GUESTREGS->instinvalid ? NULL : GUESTREGS->ip);
 #endif /*defined(SIE_DEBUG)*/
 
                 SIE_PERFMON(SIE_PERF_EXEC);
-                regs->instcount++;
+                GUESTREGS->instcount = 1;
                 EXECUTE_INSTRUCTION(GUESTREGS->ip, GUESTREGS);
 
-#ifdef FEATURE_PER
-                if (!PER_MODE(GUESTREGS))
-#endif
                 do
                 {
-                    REGS *gregs = GUESTREGS;
                     SIE_PERFMON(SIE_PERF_EXEC_U);
-                    UNROLLED_EXECUTE(gregs);
-                    UNROLLED_EXECUTE(gregs);
-                    UNROLLED_EXECUTE(gregs);
-                    regs->instcount += 7;
-                    UNROLLED_EXECUTE(gregs);
-                    UNROLLED_EXECUTE(gregs);
-                    UNROLLED_EXECUTE(gregs);
-                    UNROLLED_EXECUTE(gregs);
+
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+
+                    GUESTREGS->instcount += 8;
+
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+
                 } while( likely(!SIE_I_HOST(regs)
                                 && GUESTREGS->siebk->v==oldv
                                 && !SIE_INTERRUPT_PENDING(GUESTREGS)));
@@ -1050,6 +1049,9 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 /*  - An external source changes siebk->v */
                 /*  - A guest interrupt is made pending   */
                 /******************************************/
+
+                regs->instcount += GUESTREGS->instcount;
+
             } while( unlikely(!SIE_I_HOST(regs)
                             && !SIE_I_WAIT(GUESTREGS)
                             && !SIE_I_EXT(GUESTREGS)

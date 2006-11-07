@@ -74,19 +74,18 @@ _VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn,
         REGS *regs);
 _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn,
         REGS *regs);
-_VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (BYTE *dest, VADR addr,
-        REGS *regs);
 _VSTORE_C_STATIC void ARCH_DEP(move_chars) (VADR addr1, int arn1,
       BYTE key1, VADR addr2, int arn2, BYTE key2, int len, REGS *regs);
 _VSTORE_C_STATIC void ARCH_DEP(validate_operand) (VADR addr, int arn,
         int len, int acctype, REGS *regs);
+_VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (REGS *regs, int exec);
 
 #if defined(_FEATURE_SIE) && defined(_370) && !defined(_IEEE_C_)
-_VFETCH_C_STATIC BYTE * s370_instfetch (BYTE *dest, U32 addr, REGS *regs);
+_VFETCH_C_STATIC BYTE * s370_instfetch (REGS *regs, int exec);
 #endif /*defined(_FEATURE_SIE)*/
 
 #if defined(_FEATURE_ZSIE) && defined(_900)
-_VFETCH_C_STATIC BYTE * s390_instfetch (BYTE *dest, U32 addr, REGS *regs);
+_VFETCH_C_STATIC BYTE * s390_instfetch (REGS *regs, int exec);
 #endif /*defined(_FEATURE_ZSIE)*/
 
 #if !defined(_INLINE_H)

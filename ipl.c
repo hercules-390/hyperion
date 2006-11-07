@@ -434,7 +434,7 @@ int             i;                      /* Array subscript           */
     regs->extccpu = 0;
     for (i = 0; i < MAX_CPU; i++)
         regs->emercpu[i] = 0;
-    regs->instvalid = 0;
+    regs->instinvalid = 1;
     regs->instcount = 0;
 
     /* Clear interrupts */

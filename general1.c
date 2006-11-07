@@ -2957,36 +2957,30 @@ DEF_INST(execute)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
 BYTE   *ip;                             /* -> executed instruction   */
 
-    RX(inst, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, regs->ET);
 
-    ODD_CHECK(effective_addr2, regs);
+    ODD_CHECK(regs->ET, regs);
 
 #if defined(_FEATURE_SIE)
     /* Ensure that the instruction field is zero, such that
        zeros are stored in the interception parm field, if
        the interrupt is intercepted */
-    memset(regs->exinst, 0, 2);
+    memset(regs->exinst, 0, 8);
 #endif /*defined(_FEATURE_SIE)*/
 
     /* Fetch target instruction from operand address */
-    ip = INSTRUCTION_FETCH(regs->exinst, effective_addr2, regs, 1);
+    ip = INSTRUCTION_FETCH(regs, 1);
     if (ip != regs->exinst)
-        memcpy (regs->exinst, ip, 6);
+        memcpy (regs->exinst, ip, 8);
 
     /* Program check if recursive execute */
     if ( regs->exinst[0] == 0x44 )
         ARCH_DEP(program_interrupt) (regs, PGM_EXECUTE_EXCEPTION);
 
-    /* Save the execute target address for use with relative
-                                                        instructions */
-    regs->ET = effective_addr2;
-
     /* Or 2nd byte of instruction with low-order byte of R1 */
-    if ( r1 != 0 )
-        regs->exinst[1] |= regs->GR_LHLCL(r1);
+    regs->exinst[1] |= r1 ? regs->GR_LHLCL(r1) : 0;
 
     /*
      * Execute the target instruction.

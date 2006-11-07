@@ -466,7 +466,7 @@ static char *pgmintname[] = {
       || code == PGM_STACK_TYPE_EXCEPTION
       || code == PGM_STACK_OPERATION_EXCEPTION
       || code == PGM_VECTOR_OPERATION_EXCEPTION)
-      && realregs->instvalid)
+      && !realregs->instinvalid)
     {
         realregs->psw.IA -= ilc;
         realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
@@ -474,7 +474,7 @@ static char *pgmintname[] = {
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
         /* When in SIE mode the guest instruction causing this
            host exception must also be nullified */
-        if(realregs->sie_active && realregs->guestregs->instvalid)
+        if(realregs->sie_active && !realregs->guestregs->instinvalid)
         {
             realregs->guestregs->psw.IA -= sie_ilc;
             realregs->guestregs->psw.IA &= ADDRESS_MAXWRAP(realregs->guestregs);
@@ -485,7 +485,7 @@ static char *pgmintname[] = {
 
     /* The OLD PSW must be incremented on the following
        exceptions during instfetch */
-    if(!realregs->instvalid &&
+    if(realregs->instinvalid &&
       (  code == PGM_PROTECTION_EXCEPTION
       || code == PGM_ADDRESSING_EXCEPTION
       || code == PGM_SPECIFICATION_EXCEPTION
@@ -524,9 +524,11 @@ static char *pgmintname[] = {
 #endif /*defined(SIE_DEBUG)*/
         logmsg (_("CPU%4.4X: %s CODE=%4.4X ILC=%d\n"), realregs->cpuad,
                 pgmintname[ (code - 1) & 0x3F], pcode, ilc);
-        ARCH_DEP(display_inst) (realregs, realregs->instvalid ?
-                                                realregs->ip : NULL);
+        ARCH_DEP(display_inst) (realregs,
+                                realregs->instinvalid ? NULL : realregs->ip);
     }
+
+    realregs->instinvalid = 0;
 
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
     /* If this is a host exception in SIE state then leave SIE */
@@ -1253,7 +1255,7 @@ void *cpu_uninit (int cpu, REGS *regs)
 /*-------------------------------------------------------------------*/
 /* Process interrupt                                                 */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(process_interrupt)(REGS *regs)
+int (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 {
     /* Process PER program interrupts */
     if( OPEN_IC_PER(regs) )
@@ -1263,8 +1265,9 @@ int ARCH_DEP(process_interrupt)(REGS *regs)
     OBTAIN_INTLOCK(regs);
     OFF_IC_INTERRUPT(regs);
 
-    /* Set tracing bit */
-    regs->tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace);
+    /* If tracing, invalidate AIA */
+    if (regs->tracing)
+        INVALIDATE_AIA(regs);
 
     /* Perform invalidation */
     if (unlikely(regs->invalidate))
@@ -1318,6 +1321,7 @@ int ARCH_DEP(process_interrupt)(REGS *regs)
 #endif /*FEATURE_VECTOR_FACILITY*/
 
             /* Thread exit (note - intlock still held) */
+            cpu_uninit(regs->cpuad, regs);
             return 1;
         }
 
@@ -1591,17 +1595,13 @@ REGS    regs;
     /* Set `execflag' is 0 in case EXecuted instruction did a longjmp() */
     regs.execflag = 0;
 
-    if (regs.tracing)
-        goto slowloop;
-
     while (1)
     {
-        /* Test for pending interrupt */
         if ( unlikely(INTERRUPT_PENDING(&regs)) )
             if (ARCH_DEP(process_interrupt)(&regs))
-                return cpu_uninit(cpu, &regs);
+                return NULL;
 
-        regs.ip = INSTRUCTION_FETCH(regs.inst, regs.psw.IA, &regs, 0);
+        regs.ip = INSTRUCTION_FETCH(&regs, 0);
         regs.instcount++;
         EXECUTE_INSTRUCTION(regs.ip, &regs);
 
@@ -1618,22 +1618,6 @@ REGS    regs;
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
         } while (!INTERRUPT_PENDING(&regs));
-        regs.instvalid = 0;
-    }
-
-slowloop:
-    while (1)
-    {
-        /* Test for pending interrupt */
-        if ( unlikely(INTERRUPT_PENDING(&regs)) )
-            if (ARCH_DEP(process_interrupt)(&regs))
-                return cpu_uninit(cpu, &regs);
-
-        regs.ip = INSTRUCTION_FETCH(regs.inst, regs.psw.IA, &regs, 0);
-        if( regs.tracing )
-            ARCH_DEP(process_trace)(&regs);
-        regs.instcount++;
-        EXECUTE_INSTRUCTION(regs.ip, &regs);
     }
 
 } /* end function cpu_thread */

@@ -207,7 +207,7 @@ BYTE     psw[16];
         SR_WRITE_VALUE(file, SR_CPU_CHECKSTOP, regs->checkstop, 1);
         SR_WRITE_VALUE(file, SR_CPU_HOSTINT, regs->hostint, 1);
         SR_WRITE_VALUE(file, SR_CPU_EXECFLAG, regs->execflag, 1);
-        SR_WRITE_VALUE(file, SR_CPU_INSTVALID, regs->instvalid, 1);
+//      SR_WRITE_VALUE(file, SR_CPU_INSTVALID, regs->instvalid, 1);
         SR_WRITE_VALUE(file, SR_CPU_PERMODE, regs->permode, 1);
         SR_WRITE_VALUE(file, SR_CPU_LOADSTATE, regs->loadstate, 1);
         SR_WRITE_VALUE(file, SR_CPU_INVALIDATE, regs->invalidate, 1);

@@ -333,15 +333,10 @@ do { \
 
 /* Instruction fetching */
 
-#define INSTRUCTION_FETCH(_dest, _addr, _regs, _valid) \
-  likely(VALID_AIA((_regs),(_addr))) \
-  ? (_regs)->instvalid = 1, MAINADDR((_regs)->aim, (_addr)) \
-  : ((_regs)->instvalid = (_valid), \
-     ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)) \
-    )
-
-
-
+#define INSTRUCTION_FETCH(_regs, _exec) \
+  likely(VALID_AIA((_regs),(_exec) ? (_regs)->ET : (_regs)->psw.IA)) \
+  ? MAINADDR((_regs)->aim, (_exec) ? (_regs)->ET : (_regs)->psw.IA) \
+  : ARCH_DEP(instfetch) ((_regs), (_exec))
 
 /* Instruction execution */
 
@@ -1869,14 +1864,17 @@ DLL_EXPORT int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
 #if defined(_370)
 void s370_store_psw (REGS *regs, BYTE *addr);
 int  s370_load_psw (REGS *regs, BYTE *addr);
+void s370_process_trace (REGS *regs);
 #endif
 #if defined(_390)
 int  s390_load_psw (REGS *regs, BYTE *addr);
 void s390_store_psw (REGS *regs, BYTE *addr);
+void s390_process_trace (REGS *regs);
 #endif /*defined(_FEATURE_ZSIE)*/
 #if defined(_900)
 int  z900_load_psw (REGS *regs, BYTE *addr);
 void z900_store_psw (REGS *regs, BYTE *addr);
+void z900_process_trace (REGS *regs);
 #endif
 
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
