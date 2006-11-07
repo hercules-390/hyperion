@@ -111,7 +111,26 @@
 /* I/O interrupt subclasses */
 #define IC_IOPENDING     ( BIT(IC_IO) )
 
+/* External interrupt subclasses in CR 0 */
+#define IC_EXT_SCM_CR0   ( BIT(IC_MALFALT) \
+                         | BIT(IC_EMERSIG) \
+                         | BIT(IC_EXTCALL) \
+                         | BIT(IC_TODSYNC) \
+                         | BIT(IC_CLKC) \
+                         | BIT(IC_PTIMER) \
+                         | BIT(IC_SERVSIG) \
+                         | BIT(IC_ITIMER) \
+                         | BIT(IC_INTKEY) \
+                         | BIT(IC_EXTSIG) \
+                         | BIT(IC_ETR) \
+                         )
+
 /* External interrupt subclasses */
+
+/* 
+ * Adds ECPS:VM Vtimer which has no individual
+ * subclass mask in CR0
+ */
 #define IC_EXTPENDING    ( BIT(IC_MALFALT) \
                          | BIT(IC_EMERSIG) \
                          | BIT(IC_EXTCALL) \
@@ -164,9 +183,18 @@
  * to avoid multiple updates to `ints_mask'.
  */
 
+#undef IC_CR0_TO_INTMASK
+#if defined(FEATURE_ECPSVM)
+
 #define IC_CR0_TO_INTMASK(_regs) \
-(  ( (_regs)->CR(0) & IC_EXTPENDING) \
+(  ( (_regs)->CR(0) & IC_EXT_SCM_CR0) \
   | (((_regs)->CR(0) & BIT(IC_ITIMER)) ? BIT(IC_ECPSVTIMER) : 0) )
+#else
+
+#define IC_CR0_TO_INTMASK(_regs) \
+ ( (_regs)->CR(0) & IC_EXT_SCM_CR0)
+
+#endif /* FEATURE_ECPSVM */
 
 #define IC_MASK(_regs) \
  ( ( IC_INITIAL_MASK ) \
