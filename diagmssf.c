@@ -170,7 +170,7 @@ typedef struct _DIAG204_PART {
 
 typedef struct _DIAG204_PART_CPU {
         HWORD   cpaddr;                 /* CP address                */
-        HWORD   resv2[2];
+        BYTE    resv2[2];
         BYTE    index;                  /* Index into diag224 area   */
         BYTE    cflag;                  /*   ???                     */
         HWORD   weight;                 /* Weight                    */
