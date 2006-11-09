@@ -174,6 +174,11 @@ BYTE     psw[16];
     servc_hsuspend(file);
     SR_WRITE_HDR(file, SR_DELIMITER, 0);
 
+    /* Save clock state */
+    SR_WRITE_HDR(file, SR_SYS_CLOCK, 0);
+    clock_hsuspend(file);
+    SR_WRITE_HDR(file, SR_DELIMITER, 0);
+
     /* Write CPU data */
     for (i = 0; i < MAX_CPU_ENGINES; i++)
     {
@@ -613,6 +618,11 @@ S64      dreg;
 
         case SR_SYS_SERVC:
             rc = servc_hresume(file);
+            if (rc < 0) goto sr_error_exit;
+            break;
+
+        case SR_SYS_CLOCK:
+            rc = clock_hresume(file);
             if (rc < 0) goto sr_error_exit;
             break;
 

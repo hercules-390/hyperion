@@ -1,3 +1,4 @@
+08 Nov 2006 Fix (hopefully) hang after resume - Greg Smith
 08 Nov 2006 Fix Diag 204 RMF structure size - Ivan Warren
             Detected by "aleeuw2000"
 06 Nov 2006 Update to instfetch processing - Greg Smith

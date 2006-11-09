@@ -38,6 +38,8 @@ void set_int_timer(REGS *, S32);        /* Set interval timer        */
 U64 tod_clock(REGS *);                  /* Get TOD clock             */ 
 void set_tod_clock(U64);                /* Set TOD clock             */
 int chk_int_timer(REGS *);              /* Check int_timer pending   */
+int clock_hsuspend(void *file);         /* Hercules suspend          */
+int clock_hresume(void *file);          /* Hercules resume           */
 
 #endif
 

@@ -184,6 +184,8 @@
 
 #define SR_SYS_SERVC            0xace11000
 
+#define SR_SYS_CLOCK            0xace12000
+
 #define SR_CPU                  0xace20000
 #define SR_CPU_ARCHMODE         0xace20001
 #define SR_CPU_PX               0xace20002
