@@ -357,6 +357,101 @@ int altcyls;                            /* Number alternate cyls     */
     return 64;
 }
 
+
+/*-------------------------------------------------------------------*/
+/* Build CKD configuration data                                      */
+/*-------------------------------------------------------------------*/
+int dasd_build_ckd_config_data (DEVBLK *dev, BYTE *iobuf, int count)
+{
+int  i;
+BYTE buf[256];
+
+    /* Clear the configuration data area */
+    memset (buf, 0, 256);
+
+    /* Bytes 0-31 contain node element descriptor 1 (HDA) data */
+    buf[0] = 0xCC;
+    buf[1] = 0x01;
+    buf[2] = 0x01;
+    sprintf ((char *)&buf[4], "00%4.4X0%2.2XHRCZZ000000000001",
+                        dev->ckdtab->devt, dev->ckdtab->model);
+    for (i = 4; i < 30; i++)
+        buf[i] = host_to_guest(buf[i]);
+    buf[31] = 0x30;
+
+    /* Bytes 32-63 contain node element descriptor 2 (unit) data */
+    memcpy (&buf[32], &buf[0], 32);
+    buf[33] = 0x00;
+    buf[34] = 0x00;
+
+    /* Bytes 64-95 contain node element descriptor 3 (CU) data */
+    buf[64] = 0xD4;
+    buf[65] = 0x02;
+    sprintf ((char *)&buf[68], "00%4.4X0%2.2XHRCZZ000000000001",
+                        dev->ckdcu->devt, dev->ckdcu->model);
+    for (i = 68; i < 94; i++)
+        buf[i] = host_to_guest(buf[i]);
+    buf[95] = 0x91;
+
+    /* Bytes 96-127 contain node element desc 4 (subsystem) data */
+    memcpy (&buf[96], &buf[64], 32);
+    buf[96] = 0xF0;
+    buf[97] = 0x00;
+    buf[98] = 0x00;
+    buf[99] = 0x01;
+
+    /* Bytes 128-223 contain zeroes */
+
+    /* Bytes 224-255 contain node element qualifier data */
+    buf[224] = 0x80;
+    buf[230] = 0x3c;
+    buf[232] = (myssid >> 8) & 0xff;
+    buf[233] = myssid & 0xff;
+    buf[234] = 0x80;
+    buf[235] = dev->devnum & 0xff;
+    buf[236] = dev->devnum & 0xff;
+    buf[237] = dev->devnum & 0xff;
+    buf[241] = 0x80; /* Channel: 80=Parallel,40=ESCON,10=Fiber */
+    buf[243] = dev->devnum & 0xff;
+
+    /* Copy data characteristics to the I/O buf */
+    count = count > 256 ? 256 : count;
+    memcpy (iobuf, buf, count);
+
+    return 256;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Build CKD subsystem status                                        */
+/*-------------------------------------------------------------------*/
+int dasd_build_ckd_subsys_status (DEVBLK *dev, BYTE *iobuf, int count)
+{
+int  num;
+BYTE buf[44];
+
+    /* Build the basic subsystem status data in the I/O area */
+    memset (buf, 0, 44);
+    buf[1] = dev->devnum & 0xFF;
+    buf[38] = (myssid >> 8) & 0xff;
+    buf[39] = myssid & 0xff;
+    num = 40;
+
+    /* Build an additional 4 bytes of data for the 3990-6 */
+    if (dev->ckdcu->code == 0x15) 
+    {
+        buf[0] = 0x01;            /* Set 3990-6 enhanced flag */
+        num = 44;                   
+    } /* end if(3990-6) */
+
+    /* Copy subsystem status to the I/O buf */
+    count = count > num ? num : count;
+    memcpy (iobuf, buf, count);
+
+    return num;
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Build FBA devid field                                             */
 /*-------------------------------------------------------------------*/

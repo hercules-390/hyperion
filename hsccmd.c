@@ -32,6 +32,7 @@
 #endif /* defined(OPTION_FISHIO) */
 
 #include "tapedev.h"
+#include "dasdtab.h"
 
 ///////////////////////////////////////////////////////////////////////
 // (forward references, etc)
@@ -2047,6 +2048,156 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     }
 
     return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* qd command - query dasd */
+int qd_cmd(int argc, char *argv[], char *cmdline)
+{
+    DEVBLK*  dev;
+    DEVBLK** pDevBlkPtr;
+    DEVBLK** orig_pDevBlkPtrs;
+    size_t   nDevCount, i, j, num;
+    int      bTooMany = 0;
+    U16      lcss;
+    U16      ssid=0;
+    U16      devnum;
+    int      single_devnum = 0;
+    BYTE     iobuf[256];
+    BYTE     cbuf[17];
+
+    UNREFERENCED(cmdline);
+
+    if (argc >= 2)
+    {
+        single_devnum = 1;
+
+        if (parse_single_devnum(argv[1], &lcss, &devnum) < 0)   
+            return -1;
+        if (!(dev = find_device_by_devnum (lcss, devnum)))
+        {
+            devnotfound_msg(lcss, devnum);
+            return -1;
+        }
+        ssid = LCSS_TO_SSID(lcss);
+    }
+
+    if (!(orig_pDevBlkPtrs = malloc(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES)))
+    {
+        logmsg( _("HHCPN146E Work buffer malloc failed: %s\n"),
+            strerror(errno) );
+        return -1;
+    }
+
+    nDevCount = 0;
+    pDevBlkPtr = orig_pDevBlkPtrs;
+
+    for (dev = sysblk.firstdev; dev && nDevCount <= MAX_DEVLIST_DEVICES; dev = dev->nextdev)
+    {
+        if (dev->pmcw.flag5 & PMCW5_V)  // (valid device?)
+        {
+            if (single_devnum && (dev->ssid != ssid || dev->devnum != devnum))
+                continue;
+            if (!dev->ckdcyls)
+                continue;
+
+            if (nDevCount < MAX_DEVLIST_DEVICES)
+            {
+                *pDevBlkPtr = dev;      // (save ptr to DEVBLK)
+                nDevCount++;            // (count array entries)
+                pDevBlkPtr++;           // (bump to next entry)
+
+                if (single_devnum)
+                    break;
+            }
+            else
+            {
+                bTooMany = 1;           // (no more room)
+                break;                  // (no more room)
+            }
+        }
+    }
+
+    // Sort the DEVBLK pointers into ascending sequence by device number.
+
+    qsort(orig_pDevBlkPtrs, nDevCount, sizeof(DEVBLK*), SortDevBlkPtrsAscendingByDevnum);
+
+    // Now use our sorted array of DEVBLK pointers
+    // to display our sorted list of devices...
+
+    for (i = nDevCount, pDevBlkPtr = orig_pDevBlkPtrs; i; --i, pDevBlkPtr++)
+    {
+        dev = *pDevBlkPtr;                  // --> DEVBLK
+
+        /* Display sense-id */
+        for (j = 0; j < dev->numdevid; j++)
+        {
+            if (j == 0)
+                logmsg("%4.4x SNSID 00 ",dev->devnum);
+            else if (j%16 == 0)
+                logmsg("\n           %2.2x ", j);
+            if (j%4 == 0)
+                logmsg(" ");
+            logmsg("%2.2x", dev->devid[j]);
+        }
+        logmsg("\n");
+
+        /* Display device characteristics */
+        for (j = 0; j < dev->numdevchar; j++)
+        {
+            if (j == 0)
+                logmsg("%4.4x RDC   00 ",dev->devnum);
+            else if (j%16 == 0)
+                logmsg("\n           %2.2x ", j);
+            if (j%4 == 0)
+                logmsg(" ");
+            logmsg("%2.2x", dev->devchar[j]);
+        }
+        logmsg("\n");
+
+        /* Display configuration data */
+        dasd_build_ckd_config_data (dev, iobuf, 256);
+        for (j = 0; j < 256; j++)
+        {
+            if (j == 0)
+                logmsg("%4.4x RCD   00 ",dev->devnum);
+            else if (j%16 == 0)
+                logmsg(" |%s|\n           %2.2x ", cbuf, j);
+            if (j%4 == 0)
+                logmsg(" ");
+            logmsg("%2.2x", iobuf[j]);
+            cbuf[j%16] = isprint(guest_to_host(iobuf[j])) ? guest_to_host(iobuf[j]) : '.';
+        }
+        logmsg(" |%s|\n", cbuf);
+
+        /* Display subsystem status */
+        num = dasd_build_ckd_subsys_status(dev, iobuf, 44);
+        for (j = 0; j < num; j++)
+        {
+            if (j == 0)
+                logmsg("%4.4x SNSS  00 ",dev->devnum);
+            else if (j%16 == 0)
+                logmsg("\n           %2.2x ", j);
+            if (j%4 == 0)
+                logmsg(" ");
+            logmsg("%2.2x", iobuf[j]);
+        }
+        logmsg("\n");
+    }
+
+    free ( orig_pDevBlkPtrs );
+
+    if (bTooMany)
+    {
+        logmsg( _("HHCPN147W Warning: not all devices shown (max %d)\n"),
+            MAX_DEVLIST_DEVICES);
+
+        return -1;      // (treat as error)
+    }
+
+    return 0;
+#undef myssid
+#undef CONFIG_DATA_SIZE
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -4536,6 +4687,7 @@ COMMAND ( "detach",    detach_cmd,    "remove device" )
 COMMAND ( "define",    define_cmd,    "rename device" )
 COMMAND ( "devinit",   devinit_cmd,   "reinitialize device" )
 COMMAND ( "devlist",   devlist_cmd,   "list device or all devices\n" )
+COMMAND ( "qd",        qd_cmd,        "query dasd\n" )
 
 #if defined( OPTION_SCSI_TAPE )
 COMMAND ( "scsimount", scsimount_cmd, "automatic SCSI tape mounts\n" )

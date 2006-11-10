@@ -22,6 +22,10 @@
 #define DTB_DLL_IMPORT DLL_EXPORT
 #endif
 
+#define CKD_CONFIG_DATA_SIZE 256
+#define myssid (dev->devnum & 0xffe0)   /* Storage subsystem identifier
+                                           32 devices per subsystem  */
+
 /*-------------------------------------------------------------------*/
 /* Definition of a CKD DASD device entry                             */
 /*-------------------------------------------------------------------*/
@@ -96,6 +100,8 @@ typedef struct _FBADEV {                /* FBA Device entry          */
 DTB_DLL_IMPORT void   *dasd_lookup (int, char *, U32   , U32   );
 int     dasd_build_ckd_devid (CKDDEV *, CKDCU *, BYTE *);
 int     dasd_build_ckd_devchar (CKDDEV *, CKDCU *, BYTE *, int);
+int     dasd_build_ckd_config_data (DEVBLK *, BYTE *, int);
+int     dasd_build_ckd_subsys_status (DEVBLK *, BYTE *, int);
 int     dasd_build_fba_devid (FBADEV *, BYTE *);
 int     dasd_build_fba_devchar (FBADEV *, BYTE *, int);
 

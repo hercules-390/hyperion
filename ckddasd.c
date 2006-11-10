@@ -2084,8 +2084,6 @@ BYTE            cchhr[5];               /* Search argument           */
 BYTE            sector;                 /* Sector number             */
 BYTE            key[256];               /* Key for search operations */
 BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
-#define myssid (dev->devnum & 0xffe0)   /* Storage subsystem identifier
-                                           32 devices per subsystem  */
 
     /* If this is a data-chained READ, then return any data remaining
        in the buffer which was not used by the previous CCW */
@@ -5096,24 +5094,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Build the basic subsystem status data in the I/O area */
-        memset (iobuf, 0x00, 40);
-        iobuf[1] = dev->devnum & 0xFF;
-        iobuf[38] = (myssid >> 8) & 0xff;
-        iobuf[39] = myssid & 0xff;
-        num = 40;
-
-        /* Build an additional 4 bytes of data for the 3990-6 */
-        if (dev->ckdcu->code == 0x15) 
-        {
-            iobuf[0] = 0x01;            /* Set 3990-6 enhanced flag */
-            memset (iobuf+40, 0x00, 4);
-            num = 44;                   
-        } /* end if(3990-6) */
+        num = dasd_build_ckd_subsys_status (dev, iobuf, count);
 
         /* Calculate residual byte count */
-        num = (count < num) ? count : num;
-        *residual = count - num;
-        if (count < 40) *more = 1;
+        *residual = count < num ? 0 : count - num;
+        *more = count < num;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
@@ -5164,58 +5149,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             break;
         }
 
+        /* Build the configuration data area */
+        num = dasd_build_ckd_config_data (dev, iobuf, count);
+
         /* Calculate residual byte count */
-        num = (count < CONFIG_DATA_SIZE) ? count : CONFIG_DATA_SIZE;
-        *residual = count - num;
-        if (count < CONFIG_DATA_SIZE) *more = 1;
-
-        /* Clear the configuration data area */
-        memset (iobuf, 0x00, CONFIG_DATA_SIZE);
-
-        /* Bytes 0-31 contain node element descriptor 1 (HDA) data */
-        iobuf[0] = 0xCC;
-        iobuf[1] = 0x01;
-        iobuf[2] = 0x01;
-        sprintf ((char *)&iobuf[4], "00%4.4X0%2.2XHRCZZ000000000001",
-                            dev->ckdtab->devt, dev->ckdtab->model);
-        for (i = 4; i < 30; i++)
-            iobuf[i] = host_to_guest(iobuf[i]);
-        iobuf[31] = 0x30;
-
-        /* Bytes 32-63 contain node element descriptor 2 (unit) data */
-        memcpy (&iobuf[32], &iobuf[0], 32);
-        iobuf[33] = 0x00;
-        iobuf[34] = 0x00;
-
-        /* Bytes 64-95 contain node element descriptor 3 (CU) data */
-        iobuf[64] = 0xD4;
-        iobuf[65] = 0x02;
-        sprintf ((char *)&iobuf[68], "00%4.4X0%2.2XHRCZZ000000000001",
-                            dev->ckdcu->devt, dev->ckdcu->model);
-        for (i = 68; i < 94; i++)
-            iobuf[i] = host_to_guest(iobuf[i]);
-        iobuf[95] = 0x91;
-
-       /* Bytes 96-127 contain node element desc 4 (subsystem) data */
-        memcpy (&iobuf[96], &iobuf[64], 32);
-        iobuf[96] = 0xF0;
-        iobuf[97] = 0x00;
-        iobuf[98] = 0x00;
-        iobuf[99] = 0x01;
-
-        /* Bytes 128-223 contain zeroes */
-
-        /* Bytes 224-255 contain node element qualifier data */
-        iobuf[224] = 0x80;
-        iobuf[230] = 0x3c;
-        iobuf[232] = (myssid >> 8) & 0xff;
-        iobuf[233] = myssid & 0xff;
-        iobuf[234] = 0x80;
-        iobuf[235] = dev->devnum & 0xff;
-        iobuf[236] = dev->devnum & 0xff;
-        iobuf[237] = dev->devnum & 0xff;
-        iobuf[241] = 0x80; /* Channel: 80=Parallel,40=ESCON,10=Fiber */
-        iobuf[243] = dev->devnum & 0xff;
+        *residual = count < num ? 0 : count - num;
+        *more = count < num;
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
