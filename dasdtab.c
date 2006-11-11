@@ -361,7 +361,7 @@ int altcyls;                            /* Number alternate cyls     */
 /*-------------------------------------------------------------------*/
 /* Build CKD configuration data                                      */
 /*-------------------------------------------------------------------*/
-int dasd_build_ckd_config_data (DEVBLK *dev, BYTE *iobuf, int count)
+DLL_EXPORT int dasd_build_ckd_config_data (DEVBLK *dev, BYTE *iobuf, int count)
 {
 int  i;
 BYTE buf[256];
@@ -425,7 +425,7 @@ BYTE buf[256];
 /*-------------------------------------------------------------------*/
 /* Build CKD subsystem status                                        */
 /*-------------------------------------------------------------------*/
-int dasd_build_ckd_subsys_status (DEVBLK *dev, BYTE *iobuf, int count)
+DLL_EXPORT int dasd_build_ckd_subsys_status (DEVBLK *dev, BYTE *iobuf, int count)
 {
 int  num;
 BYTE buf[44];

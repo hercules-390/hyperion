@@ -100,8 +100,8 @@ typedef struct _FBADEV {                /* FBA Device entry          */
 DTB_DLL_IMPORT void   *dasd_lookup (int, char *, U32   , U32   );
 int     dasd_build_ckd_devid (CKDDEV *, CKDCU *, BYTE *);
 int     dasd_build_ckd_devchar (CKDDEV *, CKDCU *, BYTE *, int);
-int     dasd_build_ckd_config_data (DEVBLK *, BYTE *, int);
-int     dasd_build_ckd_subsys_status (DEVBLK *, BYTE *, int);
+DTB_DLL_IMPORT int     dasd_build_ckd_config_data (DEVBLK *, BYTE *, int);
+DTB_DLL_IMPORT int     dasd_build_ckd_subsys_status (DEVBLK *, BYTE *, int);
 int     dasd_build_fba_devid (FBADEV *, BYTE *);
 int     dasd_build_fba_devchar (FBADEV *, BYTE *, int);
 
