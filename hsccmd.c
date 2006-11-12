@@ -2303,7 +2303,7 @@ int rc;
     {
         return -1;
     }
-    rc=parse_single_devnum(argv[1],&newlcss,&newdevn);
+    rc=parse_single_devnum(argv[2],&newlcss,&newdevn);
     if (rc<0)
     {
         return -1;
