@@ -1927,7 +1927,7 @@ DEF_INST(branch_relative_on_condition_long)
     if (inst[1] & (0x80 >> regs->psw.cc))
     {
         /* Update the Breaking Event Address Register */
-        UPDATE_BEAR(regs,0);
+        UPDATE_BEAR(regs,-1);
 
         /* Calculate the relative branch address */
         regs->psw.IA = (likely(!regs->execflag) ? regs->psw.IA : regs->ET)

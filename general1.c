@@ -697,7 +697,7 @@ DEF_INST(branch_on_condition_register)
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & (0x80 >> regs->psw.cc)) && (inst[1] & 0x0F) != 0)
     {
-        UPDATE_BEAR(regs, 0);
+        UPDATE_BEAR(regs, 1);
         regs->psw.IA = regs->GR(inst[1] & 0x0F) & ADDRESS_MAXWRAP(regs);
         VALIDATE_AIA(regs);
         PER_SB(regs, regs->psw.IA);
