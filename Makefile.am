@@ -555,6 +555,7 @@ EXTRA_DIST = autoconf/config.rpath \
              README.COMMADPT       \
              README.CVS            \
              README.ECPSVM         \
+             README.HAO            \
              README.HDL            \
              README.ISSUES         \
              README.MINGW          \
