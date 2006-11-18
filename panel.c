@@ -1198,11 +1198,11 @@ REGS *copy_regs(int cpu)
         return &sysblk.dummyregs;
     }
 
-    memcpy (&copyregs, regs, sizeof(REGS) - sizeof(TLB));
+    memcpy (&copyregs, regs, sysblk.regs_copy_len);
 #if defined(_FEATURE_SIE)
     if (regs->sie_active)
     {
-        memcpy (&copysieregs, regs->guestregs, sizeof(REGS) - sizeof(TLB));
+        memcpy (&copysieregs, regs->guestregs, sysblk.regs_copy_len);
         copyregs.guestregs = &copysieregs;
         copysieregs.hostregs = &copyregs;
         regs = &copysieregs;

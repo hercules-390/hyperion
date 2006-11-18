@@ -32,7 +32,6 @@
  */
 
 #include "hstdinc.h"
-#include "opcode.h" /* For CSWAP macros */
 #include "des.h"
 
 

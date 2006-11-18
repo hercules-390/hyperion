@@ -1,3 +1,4 @@
+18 Nov 2006 Multi-byte opcode performance fix for ia32 - Greg Smith
 09 Nov 2006 qd (query ckd dasd) panel command - Greg Smith
 08 Nov 2006 Fix (hopefully) hang after resume - Greg Smith
 08 Nov 2006 Fix Diag 204 RMF structure size - Ivan Warren

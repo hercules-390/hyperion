@@ -19,7 +19,6 @@
 
 
 #include "hstdinc.h"
-#include "opcode.h" /* For CSWAP macros */
 #include "sha1.h"
 
 #define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)

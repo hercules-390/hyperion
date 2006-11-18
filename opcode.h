@@ -10,24 +10,24 @@
 #include "hercules.h"
 
 #ifndef _CPU_C_
-#ifndef _HENGINE_DLL_
-#define CPU_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define CPU_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
+ #ifndef _HENGINE_DLL_
+  #define CPU_DLL_IMPORT DLL_IMPORT
+ #else   /* _HENGINE_DLL_ */
+  #define CPU_DLL_IMPORT extern
+ #endif  /* _HENGINE_DLL_ */
 #else   /* _CPU_C_ */
-#define CPU_DLL_IMPORT DLL_EXPORT
-#endif /* _HENGINE_DLL_ */
+ #define CPU_DLL_IMPORT DLL_EXPORT
+#endif /* _CPU_C_ */
 
 #ifndef _OPCODE_C_
-#ifndef _HENGINE_DLL_
-#define OPC_DLL_IMPORT DLL_IMPORT
-#else   /* _HENGINE_DLL_ */
-#define OPC_DLL_IMPORT extern
-#endif  /* _HENGINE_DLL_ */
+ #ifndef _HENGINE_DLL_
+  #define OPC_DLL_IMPORT DLL_IMPORT
+ #else   /* _HENGINE_DLL_ */
+  #define OPC_DLL_IMPORT extern
+ #endif  /* _HENGINE_DLL_ */
 #else   /* _OPCODE_C_ */
-#define OPC_DLL_IMPORT DLL_EXPORT
-#endif /* _HENGINE_DLL_ */
+ #define OPC_DLL_IMPORT DLL_EXPORT
+#endif /* _OPCODE_C_ */
 
 #if defined(_370)
  #define _GEN370(_name) &s370_ ## _name,

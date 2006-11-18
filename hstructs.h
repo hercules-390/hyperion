@@ -10,6 +10,7 @@
 #define _HSTRUCTS_H
 
 #include "hercules.h"
+#include "opcode.h"
 
 /*-------------------------------------------------------------------*/
 /* Structure definition for CPU register context                     */
@@ -22,6 +23,13 @@ struct REGS {                           /* Processor registers       */
 
         DW      px;                     /* Prefix register           */
         PSW     psw;                    /* Program status word       */
+
+     /* AIA - Instruction fetch accelerator                          */
+
+        BYTE   *aim;                    /* Mainstor address          */
+        DW      aiv;                    /* Virtual address           */
+        DW      aie;                    /* Virtual page end address  */
+
         PSW     captured_zpsw;          /* Captured-z/Arch PSW reg   */
         DW      gr[16];                 /* General registers         */
 
@@ -217,35 +225,6 @@ struct REGS {                           /* Processor registers       */
         COND    intcond;                /* CPU interrupt condition   */
         LOCK    *cpulock;               /* CPU lock for this CPU     */
 
-     /* Opcode table pointers                                        */
-
-        FUNC   *s370_opcode_table;
-        FUNC   *s370_opcode_a4xx, *s370_opcode_a5xx, *s370_opcode_a6xx,
-               *s370_opcode_b2xx, *s370_opcode_e4xx, *s370_opcode_e5xx,
-               *s370_opcode_e6xx, *s370_opcode_edxx;
-
-        FUNC   *s390_opcode_table;
-        FUNC   *s390_opcode_01xx, *s390_opcode_a4xx, *s390_opcode_a5xx,
-               *s390_opcode_a6xx, *s390_opcode_a7xx, *s390_opcode_b2xx,
-               *s390_opcode_b3xx, *s390_opcode_b9xx, *s390_opcode_c0xx,
-               *s390_opcode_c2xx,                               /*@Z9*/
-               *s390_opcode_e3xx, *s390_opcode_e4xx, *s390_opcode_e5xx,
-               *s390_opcode_ebxx, *s390_opcode_ecxx, *s390_opcode_edxx;
-
-        FUNC   *z900_opcode_table;
-        FUNC   *z900_opcode_01xx, *z900_opcode_a5xx, *z900_opcode_a7xx,
-               *z900_opcode_b2xx, *z900_opcode_b3xx, *z900_opcode_b9xx,
-               *z900_opcode_c0xx,
-               *z900_opcode_c2xx, *z900_opcode_c8xx,            /*@Z9*/
-               *z900_opcode_e3xx, *z900_opcode_e5xx,
-               *z900_opcode_ebxx, *z900_opcode_ecxx, *z900_opcode_edxx;
-
-     /* AIA - Instruction fetch accelerator                          */
-
-        BYTE   *aim;                    /* Mainstor address          */
-        DW      aiv;                    /* Virtual address           */
-        DW      aie;                    /* Virtual page end address  */
-
      /* Mainstor address lookup accelerator                          */
 
         BYTE    aea_mode;               /* aea addressing mode       */
@@ -258,6 +237,76 @@ struct REGS {                           /* Processor registers       */
         BYTE    aea_common_alb[16];     /* alb pseudo registers      */
 
         BYTE    aea_aleprot[16];        /* ale protected             */
+
+        U64     regs_copy_end;          /* Copy regs to here         */
+
+     /* Opcode table pointers                                        */
+
+        FUNC   *s370_opcode_table;
+        FUNC   *s370_opcode_a4xx,
+               *s370_opcode_a5xx,
+               *s370_opcode_a6xx,
+ #if defined(MULTI_BYTE_ASSIST)
+                s370_opcode_b2xx[256],
+ #else
+               *s370_opcode_b2xx,
+ #endif
+               *s370_opcode_e4xx,
+               *s370_opcode_e5xx,
+               *s370_opcode_e6xx,
+               *s370_opcode_edxx;
+
+        FUNC   *s390_opcode_table;
+        FUNC   *s390_opcode_01xx,
+               *s390_opcode_a4xx,
+               *s390_opcode_a5xx,
+               *s390_opcode_a6xx,
+ #if defined(MULTI_BYTE_ASSIST)
+                s390_opcode_a7xx[256],
+                s390_opcode_b2xx[256],
+                s390_opcode_b9xx[256],
+                s390_opcode_c0xx[256],
+                s390_opcode_e3xx[256],
+                s390_opcode_ebxx[256],
+ #else
+               *s390_opcode_a7xx,
+               *s390_opcode_b2xx,
+               *s390_opcode_b9xx,
+               *s390_opcode_c0xx,
+               *s390_opcode_e3xx,
+               *s390_opcode_ebxx,
+ #endif
+               *s390_opcode_b3xx,
+               *s390_opcode_c2xx,
+               *s390_opcode_e4xx,
+               *s390_opcode_e5xx,
+               *s390_opcode_ecxx,
+               *s390_opcode_edxx;
+
+        FUNC   *z900_opcode_table;
+        FUNC   *z900_opcode_01xx,
+               *z900_opcode_a5xx,
+ #if defined(MULTI_BYTE_ASSIST)
+                z900_opcode_a7xx[256],
+                z900_opcode_b2xx[256],
+                z900_opcode_b9xx[256],
+                z900_opcode_c0xx[256],
+                z900_opcode_e3xx[256],
+                z900_opcode_ebxx[256],
+ #else
+               *z900_opcode_a7xx,
+               *z900_opcode_b2xx,
+               *z900_opcode_b9xx,
+               *z900_opcode_c0xx,
+               *z900_opcode_e3xx,
+               *z900_opcode_ebxx,
+ #endif
+               *z900_opcode_b3xx,
+               *z900_opcode_c2xx,
+               *z900_opcode_c8xx,
+               *z900_opcode_e5xx,
+               *z900_opcode_ecxx,
+               *z900_opcode_edxx;
 
      /* TLB - Translation lookaside buffer                           */
 
@@ -526,6 +575,8 @@ struct SYSBLK {
         U32     mipsrate;               /* Instructions per second   */
         U32     siosrate;               /* IOs per second            */
 #endif /*defined(OPTION_MIPS_COUNTING)*/
+
+        int     regs_copy_len;          /* Length to copy for REGS   */
 
         REGS    dummyregs;              /* Regs for unconfigured CPU */
 

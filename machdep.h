@@ -533,6 +533,11 @@ static __inline__ void store_dw_i686(void *ptr, U64 value)
   #endif
  #endif
 
+#if defined(OPTION_MULTI_BYTE_ASSIST)
+#define MULTI_BYTE_ASSIST
+#define MULTI_BYTE_ASSIST_IA32
+#endif
+
 #endif /* defined(_ext_ia32) */
 
 /*-------------------------------------------------------------------*/

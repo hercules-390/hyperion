@@ -4550,6 +4550,7 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     logmsg(_("HHCPN161I (off_t) ...........%7d\n"),sizeof(off_t));
     logmsg(_("HHCPN161I SYSBLK ............%7d\n"),sizeof(SYSBLK));
     logmsg(_("HHCPN161I REGS ..............%7d\n"),sizeof(REGS));
+    logmsg(_("HHCPN161I REGS (copy len) ...%7d\n"),sysblk.regs_copy_len);
     logmsg(_("HHCPN161I DEVBLK ............%7d\n"),sizeof(DEVBLK));
     logmsg(_("HHCPN161I TLB entry .........%7d\n"),sizeof(TLB)/TLBN);
     logmsg(_("HHCPN161I TLB table .........%7d\n"),sizeof(TLB));

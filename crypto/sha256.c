@@ -36,7 +36,14 @@
  */
 
 #include "hstdinc.h"
+
+#if !defined(_HENGINE_DLL_)
+#define _HENGINE_DLL_
+#endif
+
+#include "hercules.h"
 #include "opcode.h" /* For CSWAP macros */
+
 #include "sha256.h"
 
 #define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)

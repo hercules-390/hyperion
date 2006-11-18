@@ -272,6 +272,10 @@ TID     logcbtid;                       /* RC file thread identifier */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
+    /* Copy length for regs */
+    sysblk.regs_copy_len = (int)((uintptr_t)&sysblk.dummyregs.regs_copy_end
+                               - (uintptr_t)&sysblk.dummyregs);
+
     /* Set the daemon_mode flag indicating whether we running in
        background/daemon mode or not (meaning both stdout/stderr
        are redirected to a non-tty device). Note that this flag

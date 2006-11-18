@@ -3211,38 +3211,7 @@ int     rc;                             /* return code from load_psw */
     PERFORM_CHKPT_SYNC (regs);
 
     /* Create a working copy of the CPU registers... */
-
-    /*
-       PROGRAMMING NOTE: The following code is designed to make a copy
-       of everything in the REGS structure *except* the TLB (since it
-       is so large, and besides, we're going to invalidate the entire
-       thing anyway, so why even bother to copy it in the first place?)
-
-       When it was originally written, the TLB was the VERY LAST field
-       defined in the REGS structure. The below code is simply checking
-       to make sure no new fields have been added to the REGS structure
-       *following* the TLB field (since it's designed to only copy the
-       REGS structure *up to* the TLB, but *not* anything else that may
-       be *following* the TLB).
-       
-       If new fields have been added to the REGS structure *following*
-       the TLB however, then the test fails and we simply make a copy
-       of the entire REGS structure (which, as explained, is undesirable
-       since it's a waste of time to copy data you're not going to use
-       anyway). Thus the below test is simply a performance enhancement
-       and nothing more (i.e. it doesn't matter WHICH way we do it, as
-       long as it gets done).
-    */
-    if ((uintptr_t)regs + sizeof(REGS) == (uintptr_t)&regs->tlb + sizeof(TLB))
-    {
-        // Make a working copy of everything *EXCEPT* the TLB...
-        memcpy( &newregs, regs, sizeof(REGS) - sizeof(TLB) );
-    }
-    else
-    {
-        // Make a COMPLETE copy of the *entire* REGS structure...
-        newregs = *regs;
-    }
+    memcpy( &newregs, regs, sysblk.regs_copy_len );
 
     /* Now INVALIDATE ALL TLB ENTRIES in our working copy.. */
     memset( &newregs.tlb.vaddr, 0, TLBN * sizeof(DW) );

@@ -830,14 +830,34 @@ DEF_INST(execute_01xx)
 
 DEF_INST(execute_a7xx)
 {
+#if defined(MULTI_BYTE_ASSIST_IA32)
+    UNREFERENCED(inst);
+    UNREFERENCED(regs);
+ __asm__ (
+	"movzbl	1(%%eax),%%ecx\n\t"
+        "jmp	*%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_a7xx)))
+	);
+#else
     regs->ARCH_DEP(opcode_a7xx)[inst[1]](inst, regs);
+#endif
 }
 #endif
 
 
 DEF_INST(execute_b2xx)
 {
+#if defined(MULTI_BYTE_ASSIST_IA32)
+    UNREFERENCED(inst);
+    UNREFERENCED(regs);
+ __asm__ (
+	"movzbl	1(%%eax),%%ecx\n\t"
+        "jmp	*%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_b2xx)))
+	);
+#else
     regs->ARCH_DEP(opcode_b2xx)[inst[1]](inst, regs);
+#endif
 }
 
 
@@ -875,19 +895,49 @@ DEF_INST(execute_a5xx)
 
 DEF_INST(execute_b9xx)
 {
+#if defined(MULTI_BYTE_ASSIST_IA32)
+    UNREFERENCED(inst);
+    UNREFERENCED(regs);
+ __asm__ (
+	"movzbl	1(%%eax),%%ecx\n\t"
+        "jmp	*%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_b9xx)))
+	);
+#else
     regs->ARCH_DEP(opcode_b9xx)[inst[1]](inst, regs);
+#endif
 }
 
 
 DEF_INST(execute_e3xx)
 {
+#if defined(MULTI_BYTE_ASSIST_IA32)
+    UNREFERENCED(inst);
+    UNREFERENCED(regs);
+ __asm__ (
+	"movzbl	5(%%eax),%%ecx\n\t"
+        "jmp	*%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_e3xx)))
+	);
+#else
     regs->ARCH_DEP(opcode_e3xx)[inst[5]](inst, regs);
+#endif
 }
 
 
 DEF_INST(execute_ebxx)
 {
+#if defined(MULTI_BYTE_ASSIST_IA32)
+    UNREFERENCED(inst);
+    UNREFERENCED(regs);
+ __asm__ (
+	"movzbl	5(%%eax),%%ecx\n\t"
+        "jmp	*%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_ebxx)))
+	);
+#else
     regs->ARCH_DEP(opcode_ebxx)[inst[5]](inst, regs);
+#endif
 }
 
 
@@ -899,7 +949,17 @@ DEF_INST(execute_ecxx)
 
 DEF_INST(execute_c0xx)
 {
+#if defined(MULTI_BYTE_ASSIST_IA32)
+    UNREFERENCED(inst);
+    UNREFERENCED(regs);
+ __asm__ (
+	"movzbl	1(%%eax),%%ecx\n\t"
+        "jmp	*%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_c0xx)))
+	);
+#else
     regs->ARCH_DEP(opcode_c0xx)[inst[1]](inst, regs);
+#endif
 }
 
 
@@ -1703,7 +1763,12 @@ void set_opcode_pointers(REGS *regs)
     regs->s370_opcode_a4xx = s370_opcode_a4xx;
     regs->s370_opcode_a5xx = s370_opcode_a5xx;
     regs->s370_opcode_a6xx = s370_opcode_a6xx;
+ #if defined(MULTI_BYTE_ASSIST)
+    memcpy(regs->s370_opcode_b2xx, s370_opcode_b2xx,
+           sizeof(s370_opcode_b2xx));
+ #else
     regs->s370_opcode_b2xx = s370_opcode_b2xx;
+ #endif
     regs->s370_opcode_e4xx = s370_opcode_e4xx;
     regs->s370_opcode_e5xx = s370_opcode_e5xx;
     regs->s370_opcode_e6xx = s370_opcode_e6xx;
@@ -1714,16 +1779,31 @@ void set_opcode_pointers(REGS *regs)
     regs->s390_opcode_a4xx = s390_opcode_a4xx;
     regs->s390_opcode_a5xx = s390_opcode_a5xx;
     regs->s390_opcode_a6xx = s390_opcode_a6xx;
+ #if defined(MULTI_BYTE_ASSIST)
+    memcpy(regs->s390_opcode_a7xx, s390_opcode_a7xx,
+           sizeof(s390_opcode_a7xx));
+    memcpy(regs->s390_opcode_b2xx, s390_opcode_b2xx,
+           sizeof(s390_opcode_b2xx));
+    memcpy(regs->s390_opcode_b9xx, s390_opcode_b9xx,
+           sizeof(s390_opcode_b9xx));
+    memcpy(regs->s390_opcode_c0xx, s390_opcode_c0xx,
+           sizeof(s390_opcode_c0xx));
+    memcpy(regs->s390_opcode_e3xx, s390_opcode_e3xx,
+           sizeof(s390_opcode_e3xx));
+    memcpy(regs->s390_opcode_ebxx, s390_opcode_ebxx,
+           sizeof(s390_opcode_ebxx));
+ #else
     regs->s390_opcode_a7xx = s390_opcode_a7xx;
     regs->s390_opcode_b2xx = s390_opcode_b2xx;
-    regs->s390_opcode_b3xx = s390_opcode_b3xx;
     regs->s390_opcode_b9xx = s390_opcode_b9xx;
     regs->s390_opcode_c0xx = s390_opcode_c0xx;
-    regs->s390_opcode_c2xx = s390_opcode_c2xx;                  /*@Z9*/
     regs->s390_opcode_e3xx = s390_opcode_e3xx;
+    regs->s390_opcode_ebxx = s390_opcode_ebxx;
+ #endif
+    regs->s390_opcode_b3xx = s390_opcode_b3xx;
+    regs->s390_opcode_c2xx = s390_opcode_c2xx;                  /*@Z9*/
     regs->s390_opcode_e4xx = s390_opcode_e4xx;
     regs->s390_opcode_e5xx = s390_opcode_e5xx;
-    regs->s390_opcode_ebxx = s390_opcode_ebxx;
     regs->s390_opcode_ecxx = s390_opcode_ecxx;
     regs->s390_opcode_edxx = s390_opcode_edxx;
 #endif
@@ -1731,16 +1811,31 @@ void set_opcode_pointers(REGS *regs)
     regs->z900_opcode_table= z900_opcode_table;
     regs->z900_opcode_01xx = z900_opcode_01xx;
     regs->z900_opcode_a5xx = z900_opcode_a5xx;
+ #if defined(MULTI_BYTE_ASSIST)
+    memcpy(regs->z900_opcode_a7xx, z900_opcode_a7xx,
+           sizeof(z900_opcode_a7xx));
+    memcpy(regs->z900_opcode_b2xx, z900_opcode_b2xx,
+           sizeof(z900_opcode_b2xx));
+    memcpy(regs->z900_opcode_b9xx, z900_opcode_b9xx,
+           sizeof(z900_opcode_b9xx));
+    memcpy(regs->z900_opcode_c0xx, z900_opcode_c0xx,
+           sizeof(z900_opcode_c0xx));
+    memcpy(regs->z900_opcode_e3xx, z900_opcode_e3xx,
+           sizeof(z900_opcode_e3xx));
+    memcpy(regs->z900_opcode_ebxx, z900_opcode_ebxx,
+           sizeof(z900_opcode_ebxx));
+ #else
     regs->z900_opcode_a7xx = z900_opcode_a7xx;
     regs->z900_opcode_b2xx = z900_opcode_b2xx;
-    regs->z900_opcode_b3xx = z900_opcode_b3xx;
     regs->z900_opcode_b9xx = z900_opcode_b9xx;
     regs->z900_opcode_c0xx = z900_opcode_c0xx;
+    regs->z900_opcode_e3xx = z900_opcode_e3xx;
+    regs->z900_opcode_ebxx = z900_opcode_ebxx;
+ #endif
+    regs->z900_opcode_b3xx = z900_opcode_b3xx;
     regs->z900_opcode_c2xx = z900_opcode_c2xx;                  /*@Z9*/
     regs->z900_opcode_c8xx = z900_opcode_c8xx;
-    regs->z900_opcode_e3xx = z900_opcode_e3xx;
     regs->z900_opcode_e5xx = z900_opcode_e5xx;
-    regs->z900_opcode_ebxx = z900_opcode_ebxx;
     regs->z900_opcode_ecxx = z900_opcode_ecxx;
     regs->z900_opcode_edxx = z900_opcode_edxx;
 #endif
