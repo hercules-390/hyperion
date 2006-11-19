@@ -81,7 +81,7 @@ DEVBLK *dev;                            /* -> device block           */
         break;
 
     case SIGA_FC_W:
-    if(dev->hnd->siga_r)
+    if(dev->hnd->siga_w)
             regs->psw.cc = (dev->hnd->siga_w) (dev, regs->GR_L(2) );
         else
             regs->psw.cc = 3;
