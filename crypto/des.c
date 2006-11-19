@@ -32,6 +32,15 @@
  */
 
 #include "hstdinc.h"
+
+#if !defined(_HENGINE_DLL_)
+#define _HENGINE_DLL_
+#endif
+
+#include "hercules.h"
+#include "opcode.h" /* For fetch_fw */
+
+
 #include "des.h"
 
 
