@@ -769,6 +769,22 @@ U16             prvblkl;                /* Length of previous block  */
 
     dev->blockid++;
 
+    /* Set new physical EOF */
+    do rc = ftruncate( dev->fd, dev->nxtblkpos );
+    while (EINTR == rc);
+
+    if (rc != 0)
+    {
+        /* Handle write error condition */
+        logmsg (_("HHCTA010E Error writing data block "
+                "at offset %8.8lX in file %s: %s\n"),
+                blkpos, dev->filename, strerror(errno));
+
+        /* Set unit check with equipment check */
+        build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
+        return -1;
+    }
+
     /* Return normal status */
     return 0;
 
@@ -856,6 +872,22 @@ U16             prvblkl;                /* Length of previous block  */
     /* Calculate the offsets of the next and previous blocks */
     dev->nxtblkpos = blkpos + sizeof(awshdr);
     dev->prvblkpos = blkpos;
+
+    /* Set new physical EOF */
+    do rc = ftruncate( dev->fd, dev->nxtblkpos );
+    while (EINTR == rc);
+
+    if (rc != 0)
+    {
+        /* Handle write error condition */
+        logmsg (_("HHCTA017E Error writing tape mark "
+                "at offset %8.8lX in file %s: %s\n"),
+                blkpos, dev->filename, strerror(errno));
+
+        /* Set unit check with equipment check */
+        build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
+        return -1;
+    }
 
     /* Return normal status */
     return 0;
@@ -1248,9 +1280,9 @@ off_t           cursize;                /* Current size for size chk */
         }
     }
 
-
     /* Return normal status */
     dev->blockid++;
+
     return 0;
 
 } /* end function write_het */
@@ -1282,6 +1314,7 @@ int             rc;                     /* Return code               */
 
     /* Return normal status */
     dev->blockid++;
+
     return 0;
 
 } /* end function write_hetmark */

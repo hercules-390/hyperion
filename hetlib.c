@@ -1343,6 +1343,16 @@ het_write( HETB *hetb, void *sbuf, int slen )
     while( slen > 0 );
 
     /*
+    || Set new physical EOF
+    */
+    do rc = ftruncate( fileno( hetb->fd ), ftell( hetb->fd ) );
+    while (EINTR == rc);
+    if (rc != 0)
+    {
+        return( HETE_ERROR );
+    }
+
+    /*
     || Success
     */
     return( hetb->cblksize );
@@ -1417,6 +1427,16 @@ het_tapemark( HETB *hetb )
     if( rc < 0 )
     {
         return( rc );
+    }
+
+    /*
+    || Set new physical EOF
+    */
+    do rc = ftruncate( fileno( hetb->fd ), ftell( hetb->fd ) );
+    while (EINTR == rc);
+    if (rc != 0)
+    {
+        return( HETE_ERROR );
     }
 
     /*

@@ -1,3 +1,4 @@
+22 Nov 2006 Fix aws/het files trailing garbage - Fish
 19 Nov 2006 Fix small typo in qdio.c - Jan Jaeger
 18 Nov 2006 Multi-byte opcode performance fix for ia32 - Greg Smith
 09 Nov 2006 qd (query ckd dasd) panel command - Greg Smith
