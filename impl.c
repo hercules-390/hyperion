@@ -193,6 +193,12 @@ int     i;                              /* (work)                    */
         is_default_rc = 1;
     }
 
+#if defined(OPTION_HAO)
+    /* Initialize the Hercules Automatic Operator */
+
+    hao_initialize();
+#endif /* defined(OPTION_HAO) */
+
     /* Run the script processor for this file */
 
     if (process_script_file(rcname,1) != 0)
@@ -201,11 +207,6 @@ int     i;                              /* (work)                    */
                 logmsg(_("HHCPN995E .RC file \"%s\" not found.\n"),
                     rcname);
         // (else error message already issued)
-
-#if defined(OPTION_HAO)
-    /* Initialize the Hercules Automatic Operator */
-    hao_initialize();
-#endif /* defined(OPTION_HAO) */
 
     return NULL;
 }
