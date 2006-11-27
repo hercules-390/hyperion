@@ -1,3 +1,4 @@
+27 Nov 2006 Remove GNU dependencies from dasdlist - Bjoern A. Zeeb (rbowler)
 26 Nov 2006 Move initialization hao before .rc processing - Bernard 
 22 Nov 2006 Fix aws/het files trailing garbage - Fish
 19 Nov 2006 Fix small typo in qdio.c - Jan Jaeger
