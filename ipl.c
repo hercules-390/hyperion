@@ -74,9 +74,21 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
 
         /* Reset all CPUs in the configuration */
         for (cpu = 0; cpu < MAX_CPU; cpu++)
+        {
             if (IS_CPU_ONLINE(cpu))
-                if (ARCH_DEP(initial_cpu_reset) (sysblk.regs[cpu]))
+            {
+                regs=sysblk.regs[cpu];
+                if (ARCH_DEP(initial_cpu_reset) (regs))
+                {
                     rc = -1;
+                }
+                /* Clear GPRS as part of the CPU CLEAR RESET 
+                 * operation
+                 */
+                memset (regs->cr,0,sizeof(regs->cr));
+
+            }
+        }
 
         /* Perform I/O subsystem reset */
         io_reset ();
@@ -85,8 +97,6 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
         sysblk.main_clear = sysblk.xpnd_clear = 0;
         storage_clear();
         xstorage_clear();
-        /* Clear GPRS */
-        memset(regs->gr,0, sizeof(regs->gr));
 
     }
 
