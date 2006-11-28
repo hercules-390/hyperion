@@ -85,6 +85,9 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
         sysblk.main_clear = sysblk.xpnd_clear = 0;
         storage_clear();
         xstorage_clear();
+        /* Clear GPRS */
+        memset(regs->gr,0, sizeof(regs->gr));
+
     }
 
     /* ZZ FIXME: we should probably present a machine-check
