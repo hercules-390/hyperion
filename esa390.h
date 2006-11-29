@@ -1305,6 +1305,10 @@ typedef struct _MBK {
                                            facility is installed  @Z9*/
 #define STFL_3_ETF3_ENHANCEMENT 0x02    /* Extended translation   @Z9
                                            facility 3 enhancement @Z9*/
+#define STFL_5_FPS_ENHANCEMENT  0x40    /* Floating point support    
+                                           enhancement               */
+#define STFL_5_DECIMAL_FLOAT    0x20    /* Decimal floating point
+                                           (DFP) facility            */
 
 /* Bit definitions for the Vector Facility */
 #define VSR_M    0x0001000000000000ULL  /* Vector mask mode bit      */

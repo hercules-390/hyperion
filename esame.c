@@ -4773,6 +4773,12 @@ BYTE ARCH_DEP(stfl_data)[8] = {
                  0
                  ,
                  0
+#if defined(FEATURE_FPS_ENHANCEMENT)
+                 | STFL_5_FPS_ENHANCEMENT
+#endif /*defined(FEATURE_FPS_ENHANCEMENT)*/
+#if defined(FEATURE_DECIMAL_FLOATING_POINT)
+                 | STFL_5_DECIMAL_FLOAT
+#endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
                  ,
                  0
                  ,
