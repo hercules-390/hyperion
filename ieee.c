@@ -231,9 +231,9 @@ struct sbfp {
 #define subtract_ebfp ARCH_DEP(subtract_ebfp)
 #define subtract_lbfp ARCH_DEP(subtract_lbfp)
 #define subtract_sbfp ARCH_DEP(subtract_sbfp)
-#define testdataclass_ebfp ARCH_DEP(testdataclass_ebfp)
-#define testdataclass_lbfp ARCH_DEP(testdataclass_lbfp)
-#define testdataclass_sbfp ARCH_DEP(testdataclass_sbfp)
+#define test_data_class_ebfp ARCH_DEP(test_data_class_ebfp)
+#define test_data_class_lbfp ARCH_DEP(test_data_class_lbfp)
+#define test_data_class_sbfp ARCH_DEP(test_data_class_sbfp)
 #define divint_lbfp ARCH_DEP(divint_lbfp)
 #define divint_sbfp ARCH_DEP(divint_sbfp)
 
@@ -3109,7 +3109,7 @@ DEF_INST(load_and_test_bfp_short_reg)
 /*
  * B357 FIEBR - LOAD FP INTEGER (short BFP)                    [RRF]
  */
-DEF_INST(load_fp_int_short_reg)
+DEF_INST(load_fp_int_bfp_short_reg)
 {
     int r1, r2, m3, pgm_check;
     struct sbfp op;
@@ -3129,12 +3129,12 @@ DEF_INST(load_fp_int_short_reg)
 
     put_sbfp(&op, regs->fpr + FPR2I(r1));
 
-} /* end DEF_INST(load_fp_int_short_reg) */
+} /* end DEF_INST(load_fp_int_bfp_short_reg) */
 
 /*
  * B35F FIDBR - LOAD FP INTEGER (long BFP)                     [RRF]
  */
-DEF_INST(load_fp_int_long_reg)
+DEF_INST(load_fp_int_bfp_long_reg)
 {
     int r1, r2, m3, pgm_check;
     struct lbfp op;
@@ -3154,12 +3154,12 @@ DEF_INST(load_fp_int_long_reg)
 
     put_lbfp(&op, regs->fpr + FPR2I(r1));
 
-} /* end DEF_INST(load_fp_int_long_reg) */
+} /* end DEF_INST(load_fp_int_bfp_long_reg) */
 
 /*
  * B347 FIXBR - LOAD FP INTEGER (extended BFP)                 [RRF]
  */
-DEF_INST(load_fp_int_ext_reg)
+DEF_INST(load_fp_int_bfp_ext_reg)
 {
     int r1, r2, m3, pgm_check;
     struct ebfp op;
@@ -3180,7 +3180,7 @@ DEF_INST(load_fp_int_ext_reg)
 
     put_ebfp(&op, regs->fpr + FPR2I(r1));
 
-} /* end DEF_INST(load_fp_int_ext_reg) */
+} /* end DEF_INST(load_fp_int_bfp_ext_reg) */
 
 /*
  * B29D LFPC  - LOAD FPC                                         [S]
@@ -3190,7 +3190,7 @@ DEF_INST(load_fp_int_ext_reg)
 /*
  * B304 LDEBR - LOAD LENGTHENED (short to long BFP)            [RRE]
  */
-DEF_INST(loadlength_bfp_short_to_long_reg)
+DEF_INST(load_lengthened_bfp_short_to_long_reg)
 {
     int r1, r2;
     struct lbfp op1;
@@ -3210,7 +3210,7 @@ DEF_INST(loadlength_bfp_short_to_long_reg)
 /*
  * ED04 LDEB  - LOAD LENGTHENED (short to long BFP)            [RXE]
  */
-DEF_INST(loadlength_bfp_short_to_long)
+DEF_INST(load_lengthened_bfp_short_to_long)
 {
     int r1, b2;
     VADR effective_addr2;
@@ -3231,7 +3231,7 @@ DEF_INST(loadlength_bfp_short_to_long)
 /*
  * B305 LXDBR - LOAD LENGTHENED (long to extended BFP)         [RRE]
  */
-DEF_INST(loadlength_bfp_long_to_ext_reg)
+DEF_INST(load_lengthened_bfp_long_to_ext_reg)
 {
     int r1, r2;
     struct ebfp op1;
@@ -3252,7 +3252,7 @@ DEF_INST(loadlength_bfp_long_to_ext_reg)
 /*
  * ED05 LXDB  - LOAD LENGTHENED (long to extended BFP)         [RXE]
  */
-DEF_INST(loadlength_bfp_long_to_ext)
+DEF_INST(load_lengthened_bfp_long_to_ext)
 {
     int r1, b2;
     VADR effective_addr2;
@@ -3274,7 +3274,7 @@ DEF_INST(loadlength_bfp_long_to_ext)
 /*
  * B306 LXEBR - LOAD LENGTHENED (short to extended BFP)        [RRE]
  */
-DEF_INST(loadlength_bfp_short_to_ext_reg)
+DEF_INST(load_lengthened_bfp_short_to_ext_reg)
 {
     int r1, r2;
     struct ebfp op1;
@@ -3295,7 +3295,7 @@ DEF_INST(loadlength_bfp_short_to_ext_reg)
 /*
  * ED06 LXEB  - LOAD LENGTHENED (short to extended BFP)        [RXE]
  */
-DEF_INST(loadlength_bfp_short_to_ext)
+DEF_INST(load_lengthened_bfp_short_to_ext)
 {
     int r1, b2;
     VADR effective_addr2;
@@ -3599,7 +3599,7 @@ DEF_INST(load_positive_bfp_short_reg)
 /*
  * B344 LEDBR - LOAD ROUNDED (long to short BFP)                [RRE]
  */
-DEF_INST(round_bfp_long_to_short_reg)
+DEF_INST(load_rounded_bfp_long_to_short_reg)
 {
     int r1, r2, raised;
     struct sbfp op1;
@@ -3642,12 +3642,12 @@ DEF_INST(round_bfp_long_to_short_reg)
 
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
-} /* end DEF_INST(round_bfp_long_to_short_reg) */
+} /* end DEF_INST(load_rounded_bfp_long_to_short_reg) */
 
 /*
  * B345 LDXBR - LOAD ROUNDED (extended to long BFP)             [RRE]
  */
-DEF_INST(round_bfp_ext_to_long_reg)
+DEF_INST(load_rounded_bfp_ext_to_long_reg)
 {
     int r1, r2, raised;
     struct lbfp op1;
@@ -3691,12 +3691,12 @@ DEF_INST(round_bfp_ext_to_long_reg)
 
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
-} /* end DEF_INST(round_bfp_ext_to_long_reg) */
+} /* end DEF_INST(load_rounded_bfp_ext_to_long_reg) */
 
 /*
  * B346 LEXBR - LOAD ROUNDED (extended to short BFP)            [RRE]
  */
-DEF_INST(round_bfp_ext_to_short_reg)
+DEF_INST(load_rounded_bfp_ext_to_short_reg)
 {
     int r1, r2, raised;
     struct sbfp op1;
@@ -3740,7 +3740,7 @@ DEF_INST(round_bfp_ext_to_short_reg)
 
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
-} /* end DEF_INST(round_bfp_ext_to_short_reg) */
+} /* end DEF_INST(load_rounded_bfp_ext_to_short_reg) */
 
 /*
  * MULTIPLY (extended)
@@ -4801,7 +4801,7 @@ DEF_INST(subtract_bfp_short)
  * ED10 TCEB   - TEST DATA CLASS (short BFP)                   [RXE]
  * Per Jessen, Willem Konynenberg, 20 September 2001
  */
-DEF_INST(testdataclass_bfp_short)
+DEF_INST(test_data_class_bfp_short)
 {
     int r1, b2;
     VADR effective_addr2;
@@ -4843,7 +4843,7 @@ DEF_INST(testdataclass_bfp_short)
  * ED11 TCDB   - TEST DATA CLASS (long BFP)                   [RXE]
  * Per Jessen, Willem Konynenberg, 20 September 2001
  */
-DEF_INST(testdataclass_bfp_long)
+DEF_INST(test_data_class_bfp_long)
 {
     int r1, b2;
     VADR effective_addr2;
@@ -4885,7 +4885,7 @@ DEF_INST(testdataclass_bfp_long)
  * ED12 TCXB   - TEST DATA CLASS (extended BFP)               [RXE]
  * Per Jessen, Willem Konynenberg, 20 September 2001
  */
-DEF_INST(testdataclass_bfp_ext)
+DEF_INST(test_data_class_bfp_ext)
 {
     int r1, b2;
     VADR effective_addr2;

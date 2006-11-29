@@ -3033,7 +3033,7 @@ int     pgm_check;
 /* 25   LDXR  - Load Rounded Floating Point Long Register       [RR] */
 /*              Older mnemonic of this instruction is LRDR           */
 /*-------------------------------------------------------------------*/
-DEF_INST(round_float_long_reg)
+DEF_INST(load_rounded_float_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 LONG_FLOAT fl;
@@ -3536,7 +3536,7 @@ int     pgm_check;
 /* 35   LEDR  - Load Rounded Floating Point Short Register      [RR] */
 /*              Older mnemonic of this instruction is LRER           */
 /*-------------------------------------------------------------------*/
-DEF_INST(round_float_short_reg)
+DEF_INST(load_rounded_float_short_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 LONG_FLOAT from_fl;
@@ -4650,7 +4650,7 @@ SHORT_FLOAT fl;
 /*-------------------------------------------------------------------*/
 /* B324 LDER  - Load Length. Float. Short to Long Register     [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(loadlength_float_short_to_long_reg)
+DEF_INST(load_lengthened_float_short_to_long_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1;
@@ -4670,7 +4670,7 @@ int     i1;
 /*-------------------------------------------------------------------*/
 /* B325 LXDR  - Load Length. Float. Long to Extended Register  [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(loadlength_float_long_to_ext_reg)
+DEF_INST(load_lengthened_float_long_to_ext_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;
@@ -4705,7 +4705,7 @@ int     i1, i2;
 /*-------------------------------------------------------------------*/
 /* B326 LXER  - Load Length. Float. Short to Extended Register [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(loadlength_float_short_to_ext_reg)
+DEF_INST(load_lengthened_float_short_to_ext_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;
@@ -5048,7 +5048,7 @@ int     i1, i2;
 /*-------------------------------------------------------------------*/
 /* B366 LEXR  - Load Rounded Float. Extended to Short Register [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(round_float_ext_to_short_reg)
+DEF_INST(load_rounded_float_ext_to_short_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 EXTENDED_FLOAT from_fl;
@@ -6441,7 +6441,7 @@ U64     lsfract;
 /*-------------------------------------------------------------------*/
 /* ED24 LDE   - Load Lengthened Floating Point Short to Long   [RXE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(loadlength_float_short_to_long)
+DEF_INST(load_lengthened_float_short_to_long)
 {
 int     r1;                             /* Value of R field          */
 int     i1;
@@ -6463,7 +6463,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* ED25 LXD  - Load Lengthened Floating Point Long to Extended [RXE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(loadlength_float_long_to_ext)
+DEF_INST(load_lengthened_float_long_to_ext)
 {
 int     r1;                             /* Value of R field          */
 int     i1;
@@ -6501,7 +6501,7 @@ U64     wkd;
 /*-------------------------------------------------------------------*/
 /* ED26 LXE   - Load Lengthened Float. Short to Extended       [RXE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(loadlength_float_short_to_ext)
+DEF_INST(load_lengthened_float_short_to_ext)
 {
 int     r1;                             /* Value of R field          */
 int     i1;

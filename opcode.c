@@ -298,7 +298,7 @@
  UNDEF_INST(load_and_test_float_long_reg)
  UNDEF_INST(load_complement_float_long_reg)
  UNDEF_INST(halve_float_long_reg)
- UNDEF_INST(round_float_long_reg)
+ UNDEF_INST(load_rounded_float_long_reg)
  UNDEF_INST(multiply_float_ext_reg)
  UNDEF_INST(multiply_float_long_to_ext_reg)
  UNDEF_INST(load_float_long_reg)
@@ -314,7 +314,7 @@
  UNDEF_INST(load_and_test_float_short_reg)
  UNDEF_INST(load_complement_float_short_reg)
  UNDEF_INST(halve_float_short_reg)
- UNDEF_INST(round_float_short_reg)
+ UNDEF_INST(load_rounded_float_short_reg)
  UNDEF_INST(add_float_ext_reg)
  UNDEF_INST(subtract_float_ext_reg)
  UNDEF_INST(load_float_short_reg)
@@ -349,16 +349,16 @@
 
 
 #if !defined(FEATURE_HFP_EXTENSIONS)
- UNDEF_INST(loadlength_float_short_to_long_reg)
- UNDEF_INST(loadlength_float_long_to_ext_reg)
- UNDEF_INST(loadlength_float_short_to_ext_reg)
+ UNDEF_INST(load_lengthened_float_short_to_long_reg)
+ UNDEF_INST(load_lengthened_float_long_to_ext_reg)
+ UNDEF_INST(load_lengthened_float_short_to_ext_reg)
  UNDEF_INST(squareroot_float_ext_reg)
  UNDEF_INST(multiply_float_short_reg)
  UNDEF_INST(load_positive_float_ext_reg)
  UNDEF_INST(load_negative_float_ext_reg)
  UNDEF_INST(load_and_test_float_ext_reg)
  UNDEF_INST(load_complement_float_ext_reg)
- UNDEF_INST(round_float_ext_to_short_reg)
+ UNDEF_INST(load_rounded_float_ext_to_short_reg)
  UNDEF_INST(load_fp_int_float_ext_reg)
  UNDEF_INST(compare_float_ext_reg)
  UNDEF_INST(load_fp_int_float_short_reg)
@@ -369,9 +369,9 @@
  UNDEF_INST(convert_float_short_to_fixed_reg)
  UNDEF_INST(convert_float_long_to_fixed_reg)
  UNDEF_INST(convert_float_ext_to_fixed_reg)
- UNDEF_INST(loadlength_float_short_to_long)
- UNDEF_INST(loadlength_float_long_to_ext)
- UNDEF_INST(loadlength_float_short_to_ext)
+ UNDEF_INST(load_lengthened_float_short_to_long)
+ UNDEF_INST(load_lengthened_float_long_to_ext)
+ UNDEF_INST(load_lengthened_float_short_to_ext)
  UNDEF_INST(squareroot_float_short)
  UNDEF_INST(squareroot_float_long)
  UNDEF_INST(multiply_float_short)
@@ -475,9 +475,9 @@
  UNDEF_INST(load_and_test_bfp_ext_reg)
  UNDEF_INST(load_and_test_bfp_long_reg)
  UNDEF_INST(load_and_test_bfp_short_reg)
- UNDEF_INST(load_fp_int_ext_reg)
- UNDEF_INST(load_fp_int_long_reg)
- UNDEF_INST(load_fp_int_short_reg)
+ UNDEF_INST(load_fp_int_bfp_ext_reg)
+ UNDEF_INST(load_fp_int_bfp_long_reg)
+ UNDEF_INST(load_fp_int_bfp_short_reg)
  UNDEF_INST(load_complement_bfp_ext_reg)
  UNDEF_INST(load_complement_bfp_long_reg)
  UNDEF_INST(load_complement_bfp_short_reg)
@@ -487,12 +487,15 @@
  UNDEF_INST(load_positive_bfp_ext_reg)
  UNDEF_INST(load_positive_bfp_long_reg)
  UNDEF_INST(load_positive_bfp_short_reg)
- UNDEF_INST(loadlength_bfp_short_to_long)
- UNDEF_INST(loadlength_bfp_short_to_long_reg)
- UNDEF_INST(loadlength_bfp_long_to_ext)
- UNDEF_INST(loadlength_bfp_long_to_ext_reg)
- UNDEF_INST(loadlength_bfp_short_to_ext)
- UNDEF_INST(loadlength_bfp_short_to_ext_reg)
+ UNDEF_INST(load_lengthened_bfp_short_to_long)
+ UNDEF_INST(load_lengthened_bfp_short_to_long_reg)
+ UNDEF_INST(load_lengthened_bfp_long_to_ext)
+ UNDEF_INST(load_lengthened_bfp_long_to_ext_reg)
+ UNDEF_INST(load_lengthened_bfp_short_to_ext)
+ UNDEF_INST(load_lengthened_bfp_short_to_ext_reg)
+ UNDEF_INST(load_rounded_bfp_long_to_short_reg)
+ UNDEF_INST(load_rounded_bfp_ext_to_long_reg)
+ UNDEF_INST(load_rounded_bfp_ext_to_short_reg)
  UNDEF_INST(multiply_bfp_ext_reg)
  UNDEF_INST(multiply_bfp_long_to_ext_reg)
  UNDEF_INST(multiply_bfp_long_to_ext)
@@ -510,9 +513,6 @@
  UNDEF_INST(multiply_subtract_bfp_long)
  UNDEF_INST(multiply_subtract_bfp_short_reg)
  UNDEF_INST(multiply_subtract_bfp_short)
- UNDEF_INST(round_bfp_long_to_short_reg)
- UNDEF_INST(round_bfp_ext_to_long_reg)
- UNDEF_INST(round_bfp_ext_to_short_reg)
  UNDEF_INST(squareroot_bfp_ext_reg)
  UNDEF_INST(squareroot_bfp_long)
  UNDEF_INST(squareroot_bfp_long_reg)
@@ -523,9 +523,9 @@
  UNDEF_INST(subtract_bfp_long_reg)
  UNDEF_INST(subtract_bfp_short)
  UNDEF_INST(subtract_bfp_short_reg)
- UNDEF_INST(testdataclass_bfp_short)
- UNDEF_INST(testdataclass_bfp_long)
- UNDEF_INST(testdataclass_bfp_ext)
+ UNDEF_INST(test_data_class_bfp_short)
+ UNDEF_INST(test_data_class_bfp_long)
+ UNDEF_INST(test_data_class_bfp_ext)
 #endif /*!defined(FEATURE_BINARY_FLOATING_POINT)*/
 
 
@@ -1889,7 +1889,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*22*/   GENx370x390x900 (load_and_test_float_long_reg,RR,"LTDR"),
  /*23*/   GENx370x390x900 (load_complement_float_long_reg,RR,"LCDR"),
  /*24*/   GENx370x390x900 (halve_float_long_reg,RR,"HDR"),
- /*25*/   GENx370x390x900 (round_float_long_reg,RR,"LDXR"),
+ /*25*/   GENx370x390x900 (load_rounded_float_long_reg,RR,"LDXR"),
  /*26*/   GENx370x390x900 (multiply_float_ext_reg,RR,"MXR"),
  /*27*/   GENx370x390x900 (multiply_float_long_to_ext_reg,RR,"MXDR"),
  /*28*/   GENx370x390x900 (load_float_long_reg,RR,"LDR"),
@@ -1905,7 +1905,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*32*/   GENx370x390x900 (load_and_test_float_short_reg,RR,"LTER"),
  /*33*/   GENx370x390x900 (load_complement_float_short_reg,RR,"LCER"),
  /*34*/   GENx370x390x900 (halve_float_short_reg,RR,"HER"),
- /*35*/   GENx370x390x900 (round_float_short_reg,RR,"LEDR"),
+ /*35*/   GENx370x390x900 (load_rounded_float_short_reg,RR,"LEDR"),
  /*36*/   GENx370x390x900 (add_float_ext_reg,RR,"AXR"),
  /*37*/   GENx370x390x900 (subtract_float_ext_reg,RR,"SXR"),
  /*38*/   GENx370x390x900 (load_float_short_reg,RR,"LER"),
@@ -2938,9 +2938,9 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B301*/ GENx___x390x900 (load_negative_bfp_short_reg,RRE,"LNEBR"),
  /*B302*/ GENx___x390x900 (load_and_test_bfp_short_reg,RRE,"LTEBR"),
  /*B303*/ GENx___x390x900 (load_complement_bfp_short_reg,RRE,"LCEBR"),
- /*B304*/ GENx___x390x900 (loadlength_bfp_short_to_long_reg,RRE,"LDEBR"),
- /*B305*/ GENx___x390x900 (loadlength_bfp_long_to_ext_reg,RRE,"LXDBR"),
- /*B306*/ GENx___x390x900 (loadlength_bfp_short_to_ext_reg,RRE,"LXEBR"),
+ /*B304*/ GENx___x390x900 (load_lengthened_bfp_short_to_long_reg,RRE,"LDEBR"),
+ /*B305*/ GENx___x390x900 (load_lengthened_bfp_long_to_ext_reg,RRE,"LXDBR"),
+ /*B306*/ GENx___x390x900 (load_lengthened_bfp_short_to_ext_reg,RRE,"LXEBR"),
  /*B307*/ GENx___x390x900 (multiply_bfp_long_to_ext_reg,RRE,"MXDBR"),
  /*B308*/ GENx___x390x900 (compare_and_signal_bfp_short_reg,RRE,"KEBR"),
  /*B309*/ GENx___x390x900 (compare_bfp_short_reg,RRE,"CEBR"),
@@ -2970,9 +2970,9 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B321*/ GENx___x___x___ ,
  /*B322*/ GENx___x___x___ ,
  /*B323*/ GENx___x___x___ ,
- /*B324*/ GENx___x390x900 (loadlength_float_short_to_long_reg,RRE,"LDER"),
- /*B325*/ GENx___x390x900 (loadlength_float_long_to_ext_reg,RRE,"LXDR"),
- /*B326*/ GENx___x390x900 (loadlength_float_short_to_ext_reg,RRE,"LXER"),
+ /*B324*/ GENx___x390x900 (load_lengthened_float_short_to_long_reg,RRE,"LDER"),
+ /*B325*/ GENx___x390x900 (load_lengthened_float_long_to_ext_reg,RRE,"LXDR"),
+ /*B326*/ GENx___x390x900 (load_lengthened_float_short_to_ext_reg,RRE,"LXER"),
  /*B327*/ GENx___x___x___ ,
  /*B328*/ GENx___x___x___ ,
  /*B329*/ GENx___x___x___ ,
@@ -3002,10 +3002,10 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B341*/ GENx___x390x900 (load_negative_bfp_ext_reg,RRE,"LNXBR"),
  /*B342*/ GENx___x390x900 (load_and_test_bfp_ext_reg,RRE,"LTXBR"),
  /*B343*/ GENx___x390x900 (load_complement_bfp_ext_reg,RRE,"LCXBR"),
- /*B344*/ GENx___x390x900 (round_bfp_long_to_short_reg,RRE,"LEDBR"),
- /*B345*/ GENx___x390x900 (round_bfp_ext_to_long_reg,RRE,"LDXBR"),
- /*B346*/ GENx___x390x900 (round_bfp_ext_to_short_reg,RRE,"LEXBR"),
- /*B347*/ GENx___x390x900 (load_fp_int_ext_reg,RRF_M,"FIXBR"),
+ /*B344*/ GENx___x390x900 (load_rounded_bfp_long_to_short_reg,RRE,"LEDBR"),
+ /*B345*/ GENx___x390x900 (load_rounded_bfp_ext_to_long_reg,RRE,"LDXBR"),
+ /*B346*/ GENx___x390x900 (load_rounded_bfp_ext_to_short_reg,RRE,"LEXBR"),
+ /*B347*/ GENx___x390x900 (load_fp_int_bfp_ext_reg,RRF_M,"FIXBR"),
  /*B348*/ GENx___x390x900 (compare_and_signal_bfp_ext_reg,RRE,"KXBR"),
  /*B349*/ GENx___x390x900 (compare_bfp_ext_reg,RRE,"CXBR"),
  /*B34A*/ GENx___x390x900 (add_bfp_ext_reg,RRE,"AXBR"),
@@ -3021,7 +3021,7 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B354*/ GENx___x___x___ ,
  /*B355*/ GENx___x___x___ ,
  /*B356*/ GENx___x___x___ ,
- /*B357*/ GENx___x390x900 (load_fp_int_short_reg,RRF_M,"FIEBR"),
+ /*B357*/ GENx___x390x900 (load_fp_int_bfp_short_reg,RRF_M,"FIEBR"),
  /*B358*/ GENx___x390x900 (convert_bfp_short_to_float_long_reg,RRE,"THDER"),
  /*B359*/ GENx___x390x900 (convert_bfp_long_to_float_long_reg,RRE,"THDR"),
  /*B35A*/ GENx___x___x___ ,
@@ -3029,14 +3029,14 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B35C*/ GENx___x___x___ ,
  /*B35D*/ GENx___x___x___ ,
  /*B35E*/ GENx___x___x___ ,
- /*B35F*/ GENx___x390x900 (load_fp_int_long_reg,RRF_M,"FIDBR"),
+ /*B35F*/ GENx___x390x900 (load_fp_int_bfp_long_reg,RRF_M,"FIDBR"),
  /*B360*/ GENx___x390x900 (load_positive_float_ext_reg,RRE,"LPXR"),
  /*B361*/ GENx___x390x900 (load_negative_float_ext_reg,RRE,"LNXR"),
  /*B362*/ GENx___x390x900 (load_and_test_float_ext_reg,RRE,"LTXR"),
  /*B363*/ GENx___x390x900 (load_complement_float_ext_reg,RRE,"LCXR"),
  /*B364*/ GENx___x___x___ ,
  /*B365*/ GENx___x390x900 (load_float_ext_reg,RRE,"LXR"),
- /*B366*/ GENx___x390x900 (round_float_ext_to_short_reg,RRE,"LEXR"),
+ /*B366*/ GENx___x390x900 (load_rounded_float_ext_to_short_reg,RRE,"LEXR"),
  /*B367*/ GENx___x390x900 (load_fp_int_float_ext_reg,RRE,"FIXR"),
  /*B368*/ GENx___x___x___ ,
  /*B369*/ GENx___x390x900 (compare_float_ext_reg,RRE,"CXR"),
@@ -4825,9 +4825,9 @@ DLL_EXPORT zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED01*/ GENx___x___x___ ,
  /*ED02*/ GENx___x___x___ ,
  /*ED03*/ GENx___x___x___ ,
- /*ED04*/ GENx___x390x900 (loadlength_bfp_short_to_long,RXE,"LDEB"),
- /*ED05*/ GENx___x390x900 (loadlength_bfp_long_to_ext,RXE,"LXDB"),
- /*ED06*/ GENx___x390x900 (loadlength_bfp_short_to_ext,RXE,"LXEB"),
+ /*ED04*/ GENx___x390x900 (load_lengthened_bfp_short_to_long,RXE,"LDEB"),
+ /*ED05*/ GENx___x390x900 (load_lengthened_bfp_long_to_ext,RXE,"LXDB"),
+ /*ED06*/ GENx___x390x900 (load_lengthened_bfp_short_to_ext,RXE,"LXEB"),
  /*ED07*/ GENx___x390x900 (multiply_bfp_long_to_ext,RXE,"MXDB"),
  /*ED08*/ GENx___x390x900 (compare_and_signal_bfp_short,RXE,"KEB"),
  /*ED09*/ GENx___x390x900 (compare_bfp_short,RXE,"CEB"),
@@ -4837,9 +4837,9 @@ DLL_EXPORT zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED0D*/ GENx___x390x900 (divide_bfp_short,RXE,"DEB"),
  /*ED0E*/ GENx___x390x900 (multiply_add_bfp_short,RXF,"MAEB"),
  /*ED0F*/ GENx___x390x900 (multiply_subtract_bfp_short,RXF,"MSEB"),
- /*ED10*/ GENx___x390x900 (testdataclass_bfp_short,RXE,"TCEB"),
- /*ED11*/ GENx___x390x900 (testdataclass_bfp_long,RXE,"TCDB"),
- /*ED12*/ GENx___x390x900 (testdataclass_bfp_ext,RXE,"TCXB"),
+ /*ED10*/ GENx___x390x900 (test_data_class_bfp_short,RXE,"TCEB"),
+ /*ED11*/ GENx___x390x900 (test_data_class_bfp_long,RXE,"TCDB"),
+ /*ED12*/ GENx___x390x900 (test_data_class_bfp_ext,RXE,"TCXB"),
  /*ED13*/ GENx___x___x___ ,
  /*ED14*/ GENx___x390x900 (squareroot_bfp_short,RXE,"SQEB"),
  /*ED15*/ GENx___x390x900 (squareroot_bfp_long,RXE,"SQDB"),
@@ -4857,9 +4857,9 @@ DLL_EXPORT zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED21*/ GENx___x___x___ ,
  /*ED22*/ GENx___x___x___ ,
  /*ED23*/ GENx___x___x___ ,
- /*ED24*/ GENx___x390x900 (loadlength_float_short_to_long,RXE,"LDE"),
- /*ED25*/ GENx___x390x900 (loadlength_float_long_to_ext,RXE,"LXD"),
- /*ED26*/ GENx___x390x900 (loadlength_float_short_to_ext,RXE,"LXE"),
+ /*ED24*/ GENx___x390x900 (load_lengthened_float_short_to_long,RXE,"LDE"),
+ /*ED25*/ GENx___x390x900 (load_lengthened_float_long_to_ext,RXE,"LXD"),
+ /*ED26*/ GENx___x390x900 (load_lengthened_float_short_to_ext,RXE,"LXE"),
  /*ED27*/ GENx___x___x___ ,
  /*ED28*/ GENx___x___x___ ,
  /*ED29*/ GENx___x___x___ ,
