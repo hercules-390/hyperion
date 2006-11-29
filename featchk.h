@@ -305,14 +305,23 @@
  #undef FEATURE_FPS_EXTENSIONS
 #endif
 
+#if defined(FEATURE_BINARY_FLOATING_POINT) \
+ && !defined(FEATURE_BASIC_FP_EXTENSIONS)
+ #error Binary floating point requires basic FP extensions
+#endif
+
+#if defined(FEATURE_DECIMAL_FLOATING_POINT) \
+ && !defined(FEATURE_BASIC_FP_EXTENSIONS)
+ #error Decimal floating point requires basic FP extensions
+#endif
+
 #if defined(FEATURE_BASIC_FP_EXTENSIONS) \
  && !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
  #error Basic FP extensions requires hexadecimal floating point
 #endif
 
 #if !defined(FEATURE_BASIC_FP_EXTENSIONS)
- #if defined(FEATURE_BINARY_FLOATING_POINT) \
-  || defined(FEATURE_HFP_EXTENSIONS) \
+ #if defined(FEATURE_HFP_EXTENSIONS) \
   || defined(FEATURE_FPS_EXTENSIONS)
   #error Floating point extensions require basic FP extensions
  #endif

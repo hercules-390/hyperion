@@ -1,5 +1,6 @@
+29 Nov 2006 Begin Decimal Floating Point (DFP) framework - Roger Bowler
 27 Nov 2006 Remove GNU dependencies from dasdlist - Bjoern A. Zeeb (rbowler)
-26 Nov 2006 Move initialization hao before .rc processing - Bernard 
+26 Nov 2006 Move initialization hao before .rc processing - Bernard
 22 Nov 2006 Fix aws/het files trailing garbage - Fish
 19 Nov 2006 Fix small typo in qdio.c - Jan Jaeger
 18 Nov 2006 Multi-byte opcode performance fix for ia32 - Greg Smith
