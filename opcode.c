@@ -390,6 +390,16 @@
 #endif /*!defined(FEATURE_FPS_EXTENSIONS)*/
 
 
+#if !defined(FEATURE_FPS_ENHANCEMENT)
+ UNDEF_INST(copy_sign_dfp_long_reg)
+ UNDEF_INST(load_complement_dfp_long_reg)
+ UNDEF_INST(load_dfp_from_gr_long_reg)
+ UNDEF_INST(load_gr_from_dfp_long_reg)
+ UNDEF_INST(load_negative_dfp_long_reg)
+ UNDEF_INST(load_positive_dfp_long_reg)
+#endif /*!defined(FEATURE_FPS_ENHANCEMENT)*/
+
+
 #if !defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
  UNDEF_INST(multiply_add_float_short_reg)
  UNDEF_INST(multiply_add_float_long_reg)
@@ -834,10 +844,10 @@ DEF_INST(execute_a7xx)
     UNREFERENCED(inst);
     UNREFERENCED(regs);
  __asm__ (
-	"movzbl	1(%%eax),%%ecx\n\t"
-        "jmp	*%c0(%%edx,%%ecx,4)"
+        "movzbl 1(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
         : : "i" (offsetof(REGS,ARCH_DEP(opcode_a7xx)))
-	);
+        );
 #else
     regs->ARCH_DEP(opcode_a7xx)[inst[1]](inst, regs);
 #endif
@@ -851,10 +861,10 @@ DEF_INST(execute_b2xx)
     UNREFERENCED(inst);
     UNREFERENCED(regs);
  __asm__ (
-	"movzbl	1(%%eax),%%ecx\n\t"
-        "jmp	*%c0(%%edx,%%ecx,4)"
+        "movzbl 1(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
         : : "i" (offsetof(REGS,ARCH_DEP(opcode_b2xx)))
-	);
+        );
 #else
     regs->ARCH_DEP(opcode_b2xx)[inst[1]](inst, regs);
 #endif
@@ -899,10 +909,10 @@ DEF_INST(execute_b9xx)
     UNREFERENCED(inst);
     UNREFERENCED(regs);
  __asm__ (
-	"movzbl	1(%%eax),%%ecx\n\t"
-        "jmp	*%c0(%%edx,%%ecx,4)"
+        "movzbl 1(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
         : : "i" (offsetof(REGS,ARCH_DEP(opcode_b9xx)))
-	);
+        );
 #else
     regs->ARCH_DEP(opcode_b9xx)[inst[1]](inst, regs);
 #endif
@@ -915,10 +925,10 @@ DEF_INST(execute_e3xx)
     UNREFERENCED(inst);
     UNREFERENCED(regs);
  __asm__ (
-	"movzbl	5(%%eax),%%ecx\n\t"
-        "jmp	*%c0(%%edx,%%ecx,4)"
+        "movzbl 5(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
         : : "i" (offsetof(REGS,ARCH_DEP(opcode_e3xx)))
-	);
+        );
 #else
     regs->ARCH_DEP(opcode_e3xx)[inst[5]](inst, regs);
 #endif
@@ -931,10 +941,10 @@ DEF_INST(execute_ebxx)
     UNREFERENCED(inst);
     UNREFERENCED(regs);
  __asm__ (
-	"movzbl	5(%%eax),%%ecx\n\t"
-        "jmp	*%c0(%%edx,%%ecx,4)"
+        "movzbl 5(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
         : : "i" (offsetof(REGS,ARCH_DEP(opcode_ebxx)))
-	);
+        );
 #else
     regs->ARCH_DEP(opcode_ebxx)[inst[5]](inst, regs);
 #endif
@@ -953,10 +963,10 @@ DEF_INST(execute_c0xx)
     UNREFERENCED(inst);
     UNREFERENCED(regs);
  __asm__ (
-	"movzbl	1(%%eax),%%ecx\n\t"
-        "jmp	*%c0(%%edx,%%ecx,4)"
+        "movzbl 1(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
         : : "i" (offsetof(REGS,ARCH_DEP(opcode_c0xx)))
-	);
+        );
 #else
     regs->ARCH_DEP(opcode_c0xx)[inst[1]](inst, regs);
 #endif
@@ -3036,10 +3046,10 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B36D*/ GENx___x___x___ ,
  /*B36E*/ GENx___x___x___ ,
  /*B36F*/ GENx___x___x___ ,
- /*B370*/ GENx___x___x___ ,
- /*B371*/ GENx___x___x___ ,
- /*B372*/ GENx___x___x___ ,
- /*B373*/ GENx___x___x___ ,
+ /*B370*/ GENx___x390x900 (load_positive_dfp_long_reg,RRE,"LPDFR"),
+ /*B371*/ GENx___x390x900 (load_negative_dfp_long_reg,RRE,"LNDFR"),
+ /*B372*/ GENx___x390x900 (copy_sign_dfp_long_reg,RRF_M,"CPSDR"),
+ /*B373*/ GENx___x390x900 (load_complement_dfp_long_reg,RRE,"LCDFR"),
  /*B374*/ GENx___x390x900 (load_zero_float_short_reg,RRE_R1,"LZER"),
  /*B375*/ GENx___x390x900 (load_zero_float_long_reg,RRE_R1,"LZDR"),
  /*B376*/ GENx___x390x900 (load_zero_float_ext_reg,RRE_R1,"LZXR"),
@@ -3117,7 +3127,7 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B3BE*/ GENx___x___x___ ,
  /*B3BF*/ GENx___x___x___ ,
  /*B3C0*/ GENx___x___x___ ,
- /*B3C1*/ GENx___x___x___ ,
+ /*B3C1*/ GENx___x390x900 (load_dfp_from_gr_long_reg,RRE,"LDGR"),
  /*B3C2*/ GENx___x___x___ ,
  /*B3C3*/ GENx___x___x___ ,
  /*B3C4*/ GENx___x___x900 (convert_fix64_to_float_short_reg,RRE,"CEGR"),
@@ -3129,7 +3139,7 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B3CA*/ GENx___x___x900 (convert_float_ext_to_fix64_reg,RRF_M,"CGXR"),
  /*B3CB*/ GENx___x___x___ ,
  /*B3CC*/ GENx___x___x___ ,
- /*B3CD*/ GENx___x___x___ ,
+ /*B3CD*/ GENx___x390x900 (load_gr_from_dfp_long_reg,RRE,"LGDR"),
  /*B3CE*/ GENx___x___x___ ,
  /*B3CF*/ GENx___x___x___ ,
  /*B3D0*/ GENx___x___x___ ,

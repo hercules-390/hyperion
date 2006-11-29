@@ -2886,4 +2886,12 @@ DEF_INST(testdataclass_bfp_short);
 DEF_INST(testdataclass_bfp_long);
 DEF_INST(testdataclass_bfp_ext);
 
+/* Instructions in dfp.c */
+DEF_INST(copy_sign_dfp_long_reg);
+DEF_INST(load_complement_dfp_long_reg);
+DEF_INST(load_dfp_from_gr_long_reg);
+DEF_INST(load_gr_from_dfp_long_reg);
+DEF_INST(load_negative_dfp_long_reg);
+DEF_INST(load_positive_dfp_long_reg);
+
 /* end of OPCODE.H */
