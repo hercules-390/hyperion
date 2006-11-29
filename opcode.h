@@ -414,6 +414,17 @@ do { \
     if( ((_r1) & 2) || ((_r2) & 2) || ((_r3) & 2) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
+    /* Program check if fpc is not valid contents for FPC register */
+#if !defined(FEATURE_DECIMAL_FLOATING_POINT)
+ #define FPC_CHECK(_fpc, _regs) \
+    if((_fpc) & (FPC_RESERVED | FPC_DRM)) \
+        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+#else /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
+ #define FPC_CHECK(_fpc, _regs) \
+    if((_fpc) & FPC_RESERVED) \
+        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+#endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
+
 #define SSID_CHECK(_regs) \
     if((!((_regs)->GR_LHH(1) & 0x0001)) \
     || (_regs)->GR_LHH(1) > (0x0001|((FEATURE_LCSS_MAX-1) << 1))) \

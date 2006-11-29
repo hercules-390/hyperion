@@ -315,6 +315,11 @@
  #error Decimal floating point requires basic FP extensions
 #endif
 
+#if defined(FEATURE_DECIMAL_FLOATING_POINT) \
+ && !defined(FEATURE_BINARY_FLOATING_POINT)
+ #error Decimal floating point requires binary floating point
+#endif
+
 #if defined(FEATURE_BASIC_FP_EXTENSIONS) \
  && !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
  #error Basic FP extensions requires hexadecimal floating point

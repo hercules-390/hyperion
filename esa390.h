@@ -1956,8 +1956,9 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define FPC_DXC_U       0x00001000
 #define FPC_DXC_X       0x00000800
 #define FPC_DXC_Y       0x00000400
-#define FPC_RM          0x00000003
-#define FPC_RESERVED    0x070700FC
+#define FPC_DRM         0x00000070
+#define FPC_BRM         0x00000003
+#define FPC_RESERVED    0x0707008C
 
 /* Data exception codes */
 #define DXC_DECIMAL             0x00    /* Decimal operand exception */

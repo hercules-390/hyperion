@@ -75,10 +75,11 @@ U32     tmp_fpc;
     /* Load FPC register from operand address */
     tmp_fpc = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
 
-    if(tmp_fpc & FPC_RESERVED)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-    else
-        regs->fpc = tmp_fpc;
+    /* Program check if reserved bits are non-zero */
+    FPC_CHECK(tmp_fpc, regs);
+
+    /* Update FPC register */
+    regs->fpc = tmp_fpc;
 
 } /* end DEF_INST(load_fpc) */
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
@@ -96,11 +97,11 @@ int     r1, unused;                     /* Values of R fields        */
 
     BFPINST_CHECK(regs);
 
+    /* Program check if reserved bits are non-zero */
+    FPC_CHECK(regs->GR_L(r1), regs);
+     
     /* Load FPC register from R1 register bits 32-63 */
-    if(regs->GR_L(r1) & FPC_RESERVED)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-    else
-        regs->fpc = regs->GR_L(r1);
+    regs->fpc = regs->GR_L(r1);
 
 } /* end DEF_INST(set_fpc) */
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
@@ -138,9 +139,9 @@ VADR    effective_addr2;                /* Effective address         */
 
     BFPINST_CHECK(regs);
 
-    /* Set FPC register rounding mode bits from operand address */
-    regs->fpc &= ~(FPC_RM);
-    regs->fpc |= (effective_addr2 & FPC_RM);
+    /* Set FPC register BFP rounding mode bits from operand address */
+    regs->fpc &= ~(FPC_BRM);
+    regs->fpc |= (effective_addr2 & FPC_BRM);
 
 } /* end DEF_INST(set_bfp_rounding_mode) */
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/

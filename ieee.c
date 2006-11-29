@@ -1252,7 +1252,7 @@ static int add_ebfp(struct ebfp *op1, struct ebfp *op2, REGS *regs)
     } else if (cl1 == FP_ZERO) {
         if (cl2 == FP_ZERO && op1->sign != op2->sign) {
             /* exact-zero difference result */
-            ebfpzero(op1, ((regs->fpc & FPC_RM) == 3) ? 1 : 0);
+            ebfpzero(op1, ((regs->fpc & FPC_BRM) == 3) ? 1 : 0);
         } else {
             *op1 = *op2;
             cl1 = cl2;
