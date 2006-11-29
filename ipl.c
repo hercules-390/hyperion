@@ -85,7 +85,7 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
                 /* Clear GPRS as part of the CPU CLEAR RESET 
                  * operation
                  */
-                memset (regs->cr,0,sizeof(regs->cr));
+                memset (regs->gr,0,sizeof(regs->cr));
 
             }
         }
