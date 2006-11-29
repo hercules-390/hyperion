@@ -662,6 +662,7 @@ do { \
 #define DECODER_TEST_RRF_R
 #define DECODER_TEST_RRF_M
 #define DECODER_TEST_RRF_RM
+#define DECODER_TEST_RRR
 #undef DECODER_TEST_RX
 #define DECODER_TEST_RXE
 #define DECODER_TEST_RXF
@@ -792,6 +793,28 @@ do { \
             INST_UPDATE_PSW((_regs), 4); \
         }
 #endif
+
+/* RRR register to register with register */
+#undef RRR
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RRR)
+#define RRR(_inst, _regs, _r1, _r2, _r3) \
+        { \
+            int i = (_inst)[2]; \
+            (_r3) = i >> 4; \
+            i = (_inst)[3]; \
+            (_r1) = i >> 4; \
+            (_r2) = i & 0xf; \
+            INST_UPDATE_PSW((_regs), 4); \
+        }
+#else
+#define RRR(_inst, _regs, _r1, _r2, _r3) \
+      { U32 temp = fetch_fw(_inst); \
+            (_r3) = (temp >> 12) & 0xf; \
+            (_r2) = (temp      ) & 0xf; \
+            (_r1) = (temp >>  4) & 0xf; \
+            INST_UPDATE_PSW((_regs), 4); \
+        }
+#endif /*RRR*/
 
 /* RX register and indexed storage */
 #undef RX

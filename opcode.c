@@ -1291,6 +1291,19 @@ int r3,m4,r1,r2;
     DISASM_LOGMSG;
 }
 
+void disasm_RRR (BYTE inst[], char mnemonic[])
+{
+DISASM_COMMON_VARS;
+int r1,r2,r3;
+    r3 = inst[2] >> 4;
+    r1 = inst[3] >> 4;
+    r2 = inst[3] & 0x0F;
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d,%d",r1,r2,r3);
+    DISASM_LOGMSG;
+}
+
 void disasm_RX (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
