@@ -1963,15 +1963,24 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define DXC_DECIMAL             0x00    /* Decimal operand exception */
 #define DXC_AFP_REGISTER        0x01    /* AFP register exception    */
 #define DXC_BFP_INSTRUCTION     0x02    /* BFP instruction exception */
+#define DXC_DFP_INSTRUCTION     0x03    /* DFP instruction exception */
 #define DXC_IEEE_INEXACT_TRUNC  0x08    /* IEEE inexact, truncated   */
+#define DXC_IEEE_INEXACT_IISE   0x0B    /* IEEE inexact (IISE)    DFP*/
 #define DXC_IEEE_INEXACT_INCR   0x0C    /* IEEE inexact, incremented */
 #define DXC_IEEE_UF_EXACT       0x10    /* IEEE underflow. exact     */
+#define DXC_IEEE_UF_EXACT_IISE  0x13    /* IEEE u/flow,exact(IISE)DFP*/
 #define DXC_IEEE_UF_INEX_TRUNC  0x18    /* IEEE u/flow,inexact,trunc */
+#define DXC_IEEE_UF_INEX_IISE   0x1B    /* IEEE u/flow,inex(IISE) DFP*/
 #define DXC_IEEE_UF_INEX_INCR   0x1C    /* IEEE u/flow,inexact,incr  */
 #define DXC_IEEE_OF_EXACT       0x20    /* IEEE overflow. exact      */
+#define DXC_IEEE_OF_EXACT_IISE  0x23    /* IEEE o/flow,exact(IISE)DFP*/
 #define DXC_IEEE_OF_INEX_TRUNC  0x28    /* IEEE o/flow,inexact,trunc */
+#define DXC_IEEE_OF_INEX_IISE   0x2B    /* IEEE o/flow,inex(IISE) DFP*/
 #define DXC_IEEE_OF_INEX_INCR   0x2C    /* IEEE o/flow,inexact,incr  */
 #define DXC_IEEE_DIV_ZERO       0x40    /* IEEE division by zero     */
+#define DXC_IEEE_DIV_ZERO_IISE  0x43    /* IEEE div by zero(IISE) DFP*/
 #define DXC_IEEE_INVALID_OP     0x80    /* IEEE invalid operation    */
+#define DXC_IEEE_INV_OP_IISE    0x83    /* IEEE invalid op (IISE) DFP*/
+/* Note: IISE = IEEE-interruption-simulation event */
 
 #endif // _ESA390_H
