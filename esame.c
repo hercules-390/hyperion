@@ -127,9 +127,9 @@ int     r1, unused;                     /* Values of R fields        */
 
 #if defined(FEATURE_BINARY_FLOATING_POINT)
 /*-------------------------------------------------------------------*/
-/* B299 SRNM  - Set Rounding Mode                                [S] */
+/* B299 SRNM  - Set BFP Rounding Mode                            [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(set_rounding_mode)
+DEF_INST(set_bfp_rounding_mode)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -142,7 +142,7 @@ VADR    effective_addr2;                /* Effective address         */
     regs->fpc &= ~(FPC_RM);
     regs->fpc |= (effective_addr2 & FPC_RM);
 
-} /* end DEF_INST(set_rounding_mode) */
+} /* end DEF_INST(set_bfp_rounding_mode) */
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
 
 

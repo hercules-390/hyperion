@@ -433,7 +433,7 @@
  UNDEF_INST(load_fpc)
  UNDEF_INST(set_fpc)
  UNDEF_INST(extract_fpc)
- UNDEF_INST(set_rounding_mode)
+ UNDEF_INST(set_bfp_rounding_mode)
 #endif /*!defined(FEATURE_BINARY_FLOATING_POINT)*/
 
 
@@ -2927,7 +2927,7 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B296*/ GENx___x___x___ ,
  /*B297*/ GENx___x___x___ ,
  /*B298*/ GENx___x___x___ ,
- /*B299*/ GENx___x390x900 (set_rounding_mode,S,"SRNM"),
+ /*B299*/ GENx___x390x900 (set_bfp_rounding_mode,S,"SRNM"),
  /*B29A*/ GENx___x___x___ ,
  /*B29B*/ GENx___x___x___ ,
  /*B29C*/ GENx___x390x900 (store_fpc,S,"STFPC"),

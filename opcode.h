@@ -2541,7 +2541,7 @@ DEF_INST(store_fpc);
 DEF_INST(load_fpc);
 DEF_INST(set_fpc);
 DEF_INST(extract_fpc);
-DEF_INST(set_rounding_mode);
+DEF_INST(set_bfp_rounding_mode);
 DEF_INST(trap2);
 DEF_INST(trap4);
 DEF_INST(resume_program);
