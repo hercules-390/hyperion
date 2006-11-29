@@ -1277,6 +1277,33 @@ int m3,r1,r2;
     DISASM_LOGMSG;
 }
 
+void disasm_RRF_M4 (BYTE inst[], char mnemonic[])
+{
+DISASM_COMMON_VARS;
+int m4,r1,r2;
+    m4 = inst[2] & 0x0F;
+    r1 = inst[3] >> 4;
+    r2 = inst[3] & 0x0F;
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d,%d",r1,r2,m4);
+    DISASM_LOGMSG;
+}
+
+void disasm_RRF_MM (BYTE inst[], char mnemonic[])
+{
+DISASM_COMMON_VARS;
+int m3,m4,r1,r2;
+    m3 = inst[2] >> 4;
+    m4 = inst[2] & 0x0F;
+    r1 = inst[3] >> 4;
+    r2 = inst[3] & 0x0F;
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d,%d,%d",r1,m3,r2,m4);
+    DISASM_LOGMSG;
+}
+
 void disasm_RRF_RM (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
@@ -2932,11 +2959,11 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2B6*/ GENx___x___x___ ,
  /*B2B7*/ GENx___x___x___ ,
  /*B2B8*/ GENx___x___x___ ,
- /*B2B9*/ GENx___x___x___ ,
+ /*B2B9*/ GENx___x390x900 (set_dfp_rounding_mode,S,"SRNMT"),
  /*B2BA*/ GENx___x___x___ ,
  /*B2BB*/ GENx___x___x___ ,
  /*B2BC*/ GENx___x___x___ ,
- /*B2BD*/ GENx___x___x___ ,
+ /*B2BD*/ GENx___x390x900 (load_fpc_and_signal,S,"LFAS"),
  /*B2BE*/ GENx___x___x___ ,
  /*B2BF*/ GENx___x___x___ ,
  /*B2C0*/ GENx___x___x___ ,                                     /*$ADRN      */
@@ -3141,7 +3168,7 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B382*/ GENx___x___x___ ,
  /*B383*/ GENx___x___x___ ,
  /*B384*/ GENx___x390x900 (set_fpc,RRE_R1,"SFPC"),
- /*B385*/ GENx___x___x___ ,
+ /*B385*/ GENx___x390x900 (set_fpc_and_signal_reg,RRE,"SFASR"),
  /*B386*/ GENx___x___x___ ,
  /*B387*/ GENx___x___x___ ,
  /*B388*/ GENx___x___x___ ,
@@ -3216,54 +3243,54 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B3CD*/ GENx___x390x900 (load_gr_from_dfp_long_reg,RRE,"LGDR"),
  /*B3CE*/ GENx___x___x___ ,
  /*B3CF*/ GENx___x___x___ ,
- /*B3D0*/ GENx___x___x___ ,
- /*B3D1*/ GENx___x___x___ ,
- /*B3D2*/ GENx___x___x___ ,
- /*B3D3*/ GENx___x___x___ ,
- /*B3D4*/ GENx___x___x___ ,
- /*B3D5*/ GENx___x___x___ ,
- /*B3D6*/ GENx___x___x___ ,
- /*B3D7*/ GENx___x___x___ ,
- /*B3D8*/ GENx___x___x___ ,
- /*B3D9*/ GENx___x___x___ ,
- /*B3DA*/ GENx___x___x___ ,
- /*B3DB*/ GENx___x___x___ ,
- /*B3DC*/ GENx___x___x___ ,
- /*B3DD*/ GENx___x___x___ ,
- /*B3DE*/ GENx___x___x___ ,
- /*B3DF*/ GENx___x___x___ ,
- /*B3E0*/ GENx___x___x___ ,
- /*B3E1*/ GENx___x___x___ ,
- /*B3E2*/ GENx___x___x___ ,
- /*B3E3*/ GENx___x___x___ ,
- /*B3E4*/ GENx___x___x___ ,
- /*B3E5*/ GENx___x___x___ ,
+ /*B3D0*/ GENx___x390x900 (multiply_dfp_long_reg,RRR,"MDTR"),
+ /*B3D1*/ GENx___x390x900 (divide_dfp_long_reg,RRR,"DDTR"),
+ /*B3D2*/ GENx___x390x900 (add_dfp_long_reg,RRR,"ADTR"),
+ /*B3D3*/ GENx___x390x900 (subtract_dfp_long_reg,RRR,"SDTR"),
+ /*B3D4*/ GENx___x390x900 (load_lengthened_dfp_short_to_long_reg,RRF_M4,"LDETR"),
+ /*B3D5*/ GENx___x390x900 (load_rounded_dfp_long_to_short_reg,RRF_MM,"LEDTR"),
+ /*B3D6*/ GENx___x390x900 (load_and_test_dfp_long_reg,RRE,"LTDTR"),
+ /*B3D7*/ GENx___x390x900 (load_fp_int_dfp_long_reg,RRF_MM,"FIDTR"),
+ /*B3D8*/ GENx___x390x900 (multiply_dfp_ext_reg,RRR,"MXTR"),
+ /*B3D9*/ GENx___x390x900 (divide_dfp_ext_reg,RRR,"DXTR"),
+ /*B3DA*/ GENx___x390x900 (add_dfp_ext_reg,RRR,"AXTR"),
+ /*B3DB*/ GENx___x390x900 (subtract_dfp_ext_reg,RRR,"SXTR"),
+ /*B3DC*/ GENx___x390x900 (load_lengthened_dfp_long_to_ext_reg,RRF_M4,"LXDTR"),
+ /*B3DD*/ GENx___x390x900 (load_rounded_dfp_ext_to_long_reg,RRF_MM,"LDXTR"),
+ /*B3DE*/ GENx___x390x900 (load_and_test_dfp_ext_reg,RRE,"LTXTR"),
+ /*B3DF*/ GENx___x390x900 (load_fp_int_dfp_ext_reg,RRF_MM,"FIXTR"),
+ /*B3E0*/ GENx___x390x900 (compare_and_signal_dfp_long_reg,RRE,"KDTR"),
+ /*B3E1*/ GENx___x390x900 (convert_dfp_long_to_fix64_reg,RRF_M,"CGDTR"),
+ /*B3E2*/ GENx___x390x900 (convert_dfp_long_to_ubcd64_reg,RRE,"CUDTR"),
+ /*B3E3*/ GENx___x390x900 (convert_dfp_long_to_sbcd64_reg,RRF_M4,"CSDTR"),
+ /*B3E4*/ GENx___x390x900 (compare_dfp_long_reg,RRE,"CDTR"),
+ /*B3E5*/ GENx___x390x900 (extract_biased_exponent_dfp_long_to_fix64_reg,RRE,"EEDTR"),
  /*B3E6*/ GENx___x___x___ ,
- /*B3E7*/ GENx___x___x___ ,
- /*B3E8*/ GENx___x___x___ ,
- /*B3E9*/ GENx___x___x___ ,
- /*B3EA*/ GENx___x___x___ ,
- /*B3EB*/ GENx___x___x___ ,
- /*B3EC*/ GENx___x___x___ ,
- /*B3ED*/ GENx___x___x___ ,
+ /*B3E7*/ GENx___x390x900 (extract_significance_dfp_long_reg,RRE,"ESDTR"),
+ /*B3E8*/ GENx___x390x900 (compare_and_signal_dfp_ext_reg,RRE,"KXTR"),
+ /*B3E9*/ GENx___x390x900 (convert_dfp_ext_to_fix64_reg,RRF_M,"CGXTR"),
+ /*B3EA*/ GENx___x390x900 (convert_dfp_ext_to_ubcd128_reg,RRE,"CUXTR"),
+ /*B3EB*/ GENx___x390x900 (convert_dfp_ext_to_sbcd128_reg,RRF_M4,"CSXTR"),
+ /*B3EC*/ GENx___x390x900 (compare_dfp_ext_reg,RRE,"CXTR"),
+ /*B3ED*/ GENx___x390x900 (extract_biased_exponent_dfp_ext_to_fix64_reg,RRE,"EEXTR"),
  /*B3EE*/ GENx___x___x___ ,
- /*B3EF*/ GENx___x___x___ ,
+ /*B3EF*/ GENx___x390x900 (extract_significance_dfp_ext_reg,RRE,"ESXTR"),
  /*B3F0*/ GENx___x___x___ ,
- /*B3F1*/ GENx___x___x___ ,
- /*B3F2*/ GENx___x___x___ ,
- /*B3F3*/ GENx___x___x___ ,
- /*B3F4*/ GENx___x___x___ ,
- /*B3F5*/ GENx___x___x___ ,
- /*B3F6*/ GENx___x___x___ ,
- /*B3F7*/ GENx___x___x___ ,
+ /*B3F1*/ GENx___x390x900 (convert_fix64_to_dfp_long_reg,RRE,"CDGTR"),
+ /*B3F2*/ GENx___x390x900 (convert_ubcd64_to_dfp_long_reg,RRE,"CDUTR"),
+ /*B3F3*/ GENx___x390x900 (convert_sbcd64_to_dfp_long_reg,RRE,"CDSTR"),
+ /*B3F4*/ GENx___x390x900 (compare_exponent_dfp_long_reg,RRE,"CEDTR"),
+ /*B3F5*/ GENx___x390x900 (quantize_dfp_long_reg,RRF_RM,"QADTR"),
+ /*B3F6*/ GENx___x390x900 (insert_biased_exponent_fix64_to_dfp_long_reg,RRF_M,"IEDTR"),
+ /*B3F7*/ GENx___x390x900 (reround_dfp_long_reg,RRF_RM,"RRDTR"),
  /*B3F8*/ GENx___x___x___ ,
- /*B3F9*/ GENx___x___x___ ,
- /*B3FA*/ GENx___x___x___ ,
- /*B3FB*/ GENx___x___x___ ,
- /*B3FC*/ GENx___x___x___ ,
- /*B3FD*/ GENx___x___x___ ,
- /*B3FE*/ GENx___x___x___ ,
- /*B3FF*/ GENx___x___x___  };
+ /*B3F9*/ GENx___x390x900 (convert_fix64_to_dfp_ext_reg,RRE,"CXGTR"),
+ /*B3FA*/ GENx___x390x900 (convert_ubcd128_to_dfp_ext_reg,RRE,"CXUTR"),
+ /*B3FB*/ GENx___x390x900 (convert_sbcd128_to_dfp_ext_reg,RRE,"CXSTR"),
+ /*B3FC*/ GENx___x390x900 (compare_exponent_dfp_ext_reg,RRE,"CEXTR"),
+ /*B3FD*/ GENx___x390x900 (quantize_dfp_ext_reg,RRF_RM,"QAXTR"),
+ /*B3FE*/ GENx___x390x900 (insert_biased_exponent_fix64_to_dfp_ext_reg,RRF_M,"IEXTR"),
+ /*B3FF*/ GENx___x390x900 (reround_dfp_ext_reg,RRF_RM,"RRXTR") };
 
 // #endif /*defined(FEATURE_BASIC_FP_EXTENSIONS)*/
 
@@ -4959,32 +4986,32 @@ DLL_EXPORT zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED3D*/ GENx___x___x900 (multiply_unnormal_float_long_to_ext_high,RXF,"MYH"),      /*@Z9*/
  /*ED3E*/ GENx___x___x900 (multiply_add_float_long,RXF,"MAD"),
  /*ED3F*/ GENx___x___x900 (multiply_subtract_float_long,RXF,"MSD"),
- /*ED40*/ GENx___x___x___ ,
- /*ED41*/ GENx___x___x___ ,
+ /*ED40*/ GENx___x390x900 (shift_coefficient_left_dfp_long,RXF,"SLDT"),
+ /*ED41*/ GENx___x390x900 (shift_coefficient_right_dfp_long,RXF,"SRDT"),
  /*ED42*/ GENx___x___x___ ,
  /*ED43*/ GENx___x___x___ ,
  /*ED44*/ GENx___x___x___ ,
  /*ED45*/ GENx___x___x___ ,
  /*ED46*/ GENx___x___x___ ,
  /*ED47*/ GENx___x___x___ ,
- /*ED48*/ GENx___x___x___ ,
- /*ED49*/ GENx___x___x___ ,
+ /*ED48*/ GENx___x390x900 (shift_coefficient_left_dfp_ext,RXF,"SLXT"),
+ /*ED49*/ GENx___x390x900 (shift_coefficient_right_dfp_ext,RXF,"SRXT"),
  /*ED4A*/ GENx___x___x___ ,
  /*ED4B*/ GENx___x___x___ ,
  /*ED4C*/ GENx___x___x___ ,
  /*ED4D*/ GENx___x___x___ ,
  /*ED4E*/ GENx___x___x___ ,
  /*ED4F*/ GENx___x___x___ ,
- /*ED50*/ GENx___x___x___ ,
- /*ED51*/ GENx___x___x___ ,
+ /*ED50*/ GENx___x390x900 (test_data_class_dfp_short,RXE,"TDCET"),
+ /*ED51*/ GENx___x390x900 (test_data_group_dfp_short,RXE,"TDGET"),
  /*ED52*/ GENx___x___x___ ,
  /*ED53*/ GENx___x___x___ ,
- /*ED54*/ GENx___x___x___ ,
- /*ED55*/ GENx___x___x___ ,
+ /*ED54*/ GENx___x390x900 (test_data_class_dfp_long,RXE,"TDCDT"),
+ /*ED55*/ GENx___x390x900 (test_data_group_dfp_long,RXE,"TDGDT"),
  /*ED56*/ GENx___x___x___ ,
  /*ED57*/ GENx___x___x___ ,
- /*ED58*/ GENx___x___x___ ,
- /*ED59*/ GENx___x___x___ ,
+ /*ED58*/ GENx___x390x900 (test_data_class_dfp_ext,RXE,"TDCXT"),
+ /*ED59*/ GENx___x390x900 (test_data_group_dfp_ext,RXE,"TDGXT"),
  /*ED5A*/ GENx___x___x___ ,
  /*ED5B*/ GENx___x___x___ ,
  /*ED5C*/ GENx___x___x___ ,
