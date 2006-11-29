@@ -396,6 +396,24 @@ do { \
     if( ((_r1) & 2) || ((_r2) & 2) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
+    /* Program check if r is not 0,1,4,5,8,9,12, or 13 (designating 
+       the lower-numbered register of a floating-point register pair) */
+#define DFPREGPAIR_CHECK(_r, _regs) \
+    if( ((_r) & 2) ) \
+        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+
+    /* Program check if r1 and r2 are not both 0,1,4,5,8,9,12, or 13
+       (lower-numbered register of a floating-point register pair) */
+#define DFPREGPAIR2_CHECK(_r1, _r2, _regs) \
+    if( ((_r1) & 2) || ((_r2) & 2) ) \
+        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+
+    /* Program check if r1, r2, r3 are not all 0,1,4,5,8,9,12, or 13
+       (lower-numbered register of a floating-point register pair) */
+#define DFPREGPAIR3_CHECK(_r1, _r2, _r3, _regs) \
+    if( ((_r1) & 2) || ((_r2) & 2) || ((_r3) & 2) ) \
+        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+
 #define SSID_CHECK(_regs) \
     if((!((_regs)->GR_LHH(1) & 0x0001)) \
     || (_regs)->GR_LHH(1) > (0x0001|((FEATURE_LCSS_MAX-1) << 1))) \
@@ -458,6 +476,7 @@ do { \
 #if defined(FEATURE_BASIC_FP_EXTENSIONS)
 #if defined(_FEATURE_SIE)
 
+    /* Program check if BFP instruction is executed when AFP control is zero */
 #define BFPINST_CHECK(_regs) \
         if( !((_regs)->CR(0) & CR0_AFP) \
             || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
@@ -465,6 +484,13 @@ do { \
             ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
         }
 
+    /* Program check if DFP instruction is executed when AFP control is zero */
+#define DFPINST_CHECK(_regs) \
+        if( !((_regs)->CR(0) & CR0_AFP) \
+            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            (_regs)->dxc = DXC_DFP_INSTRUCTION; \
+            ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        }
 
     /* Program check if r1 is not 0, 2, 4, or 6 */
 #define HFPREG_CHECK(_r, _regs) \
@@ -511,11 +537,20 @@ do { \
     }
 #else /*!defined(_FEATURE_SIE)*/
 
+    /* Program check if BFP instruction is executed when AFP control is zero */
 #define BFPINST_CHECK(_regs) \
         if( !((_regs)->CR(0) & CR0_AFP) ) { \
             (_regs)->dxc = DXC_BFP_INSTRUCTION; \
             ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
         }
+
+    /* Program check if DFP instruction is executed when AFP control is zero */
+#define DFPINST_CHECK(_regs) \
+        if( !((_regs)->CR(0) & CR0_AFP) ) { \
+            (_regs)->dxc = DXC_DFP_INSTRUCTION; \
+            ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        }
+
 
     /* Program check if r1 is not 0, 2, 4, or 6 */
 #define HFPREG_CHECK(_r, _regs) \
