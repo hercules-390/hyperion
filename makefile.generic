@@ -2,7 +2,7 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-VERSION  = \"3.03\"
+VERSION  = \"3.04\"
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
@@ -60,7 +60,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                crypto.o external.o float.o trace.o chsc.o \
                machchk.o vector.o xstore.o cmpsc.o sie.o qdio.o \
                timer.o esame.o cckddasd.o cckdutil.o dasdtab.o \
-               parser.o ieee.o httpserv.o bldcfg.o sr.o \
+               parser.o ieee.o dfp.o httpserv.o bldcfg.o sr.o \
                cgibin.o codepage.o loadparm.o fillfnam.o \
                hsccmd.o hscmisc.o logger.o history.o \
                cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o \

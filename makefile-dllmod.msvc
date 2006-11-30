@@ -568,6 +568,7 @@ hengine_OBJ = \
     $(O)crypto.obj   \
     $(O)dat.obj      \
     $(O)decimal.obj  \
+    $(O)dfp.obj      \
     $(O)diagmssf.obj \
     $(O)diagnose.obj \
     $(O)ecpsvm.obj   \

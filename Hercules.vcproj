@@ -542,6 +542,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\dfp.c"
+							>
+						</File>
+						<File
 							RelativePath=".\diagmssf.c"
 							>
 						</File>

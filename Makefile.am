@@ -347,6 +347,7 @@ endif
                        timer.c      \
                        esame.c      \
                        ieee.c       \
+                       dfp.c        \
                        machdep.h    \
                        httpserv.c   \
                        cgibin.c     \
