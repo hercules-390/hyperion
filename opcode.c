@@ -901,34 +901,14 @@ DEF_INST(execute_01xx)
 
 DEF_INST(execute_a7xx)
 {
-#if defined(MULTI_BYTE_ASSIST_IA32)
-    UNREFERENCED(inst);
-    UNREFERENCED(regs);
- __asm__ (
-        "movzbl 1(%%eax),%%ecx\n\t"
-        "jmp    *%c0(%%edx,%%ecx,4)"
-        : : "i" (offsetof(REGS,ARCH_DEP(opcode_a7xx)))
-        );
-#else
     regs->ARCH_DEP(opcode_a7xx)[inst[1]](inst, regs);
-#endif
 }
 #endif
 
 
 DEF_INST(execute_b2xx)
 {
-#if defined(MULTI_BYTE_ASSIST_IA32)
-    UNREFERENCED(inst);
-    UNREFERENCED(regs);
- __asm__ (
-        "movzbl 1(%%eax),%%ecx\n\t"
-        "jmp    *%c0(%%edx,%%ecx,4)"
-        : : "i" (offsetof(REGS,ARCH_DEP(opcode_b2xx)))
-        );
-#else
     regs->ARCH_DEP(opcode_b2xx)[inst[1]](inst, regs);
-#endif
 }
 
 
@@ -966,49 +946,19 @@ DEF_INST(execute_a5xx)
 
 DEF_INST(execute_b9xx)
 {
-#if defined(MULTI_BYTE_ASSIST_IA32)
-    UNREFERENCED(inst);
-    UNREFERENCED(regs);
- __asm__ (
-        "movzbl 1(%%eax),%%ecx\n\t"
-        "jmp    *%c0(%%edx,%%ecx,4)"
-        : : "i" (offsetof(REGS,ARCH_DEP(opcode_b9xx)))
-        );
-#else
     regs->ARCH_DEP(opcode_b9xx)[inst[1]](inst, regs);
-#endif
 }
 
 
 DEF_INST(execute_e3xx)
 {
-#if defined(MULTI_BYTE_ASSIST_IA32)
-    UNREFERENCED(inst);
-    UNREFERENCED(regs);
- __asm__ (
-        "movzbl 5(%%eax),%%ecx\n\t"
-        "jmp    *%c0(%%edx,%%ecx,4)"
-        : : "i" (offsetof(REGS,ARCH_DEP(opcode_e3xx)))
-        );
-#else
     regs->ARCH_DEP(opcode_e3xx)[inst[5]](inst, regs);
-#endif
 }
 
 
 DEF_INST(execute_ebxx)
 {
-#if defined(MULTI_BYTE_ASSIST_IA32)
-    UNREFERENCED(inst);
-    UNREFERENCED(regs);
- __asm__ (
-        "movzbl 5(%%eax),%%ecx\n\t"
-        "jmp    *%c0(%%edx,%%ecx,4)"
-        : : "i" (offsetof(REGS,ARCH_DEP(opcode_ebxx)))
-        );
-#else
     regs->ARCH_DEP(opcode_ebxx)[inst[5]](inst, regs);
-#endif
 }
 
 
@@ -1020,17 +970,7 @@ DEF_INST(execute_ecxx)
 
 DEF_INST(execute_c0xx)
 {
-#if defined(MULTI_BYTE_ASSIST_IA32)
-    UNREFERENCED(inst);
-    UNREFERENCED(regs);
- __asm__ (
-        "movzbl 1(%%eax),%%ecx\n\t"
-        "jmp    *%c0(%%edx,%%ecx,4)"
-        : : "i" (offsetof(REGS,ARCH_DEP(opcode_c0xx)))
-        );
-#else
     regs->ARCH_DEP(opcode_c0xx)[inst[1]](inst, regs);
-#endif
 }
 
 

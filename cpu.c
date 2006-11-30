@@ -1142,6 +1142,10 @@ int   cpu  = *ptr;
 }
 
 
+void s370_set_jump_pointers(REGS *regs, int jump);
+void s390_set_jump_pointers(REGS *regs, int jump);
+void z900_set_jump_pointers(REGS *regs, int jump);
+
 /*-------------------------------------------------------------------*/
 /* Initialize a CPU                                                  */
 /*-------------------------------------------------------------------*/
@@ -1209,6 +1213,20 @@ int i;
 
     /* Initialize opcode table pointers */
     set_opcode_pointers (regs);
+
+    /* Set multi-byte jump code pointers */
+#if defined(_370)
+    if (regs->arch_mode == ARCH_370)
+        s370_set_jump_pointers(regs, 0);
+#endif
+#if defined(_390)
+    if (regs->arch_mode == ARCH_390)
+        s390_set_jump_pointers(regs, 0);
+#endif
+#if defined(_900)
+    if (regs->arch_mode == ARCH_900)
+        z900_set_jump_pointers(regs, 0);
+#endif
 
     regs->configured = 1;
 
@@ -1623,6 +1641,104 @@ REGS    regs;
 } /* end function cpu_thread */
 
 
+/*-------------------------------------------------------------------*/
+/* Set Jump Pointers                                                 */
+/*                                                                   */
+/* For supported architectures and certain multi-byte instructions,  */
+/* EXECUTE_INSTRUCTION and UNROLLED_EXECUTE call a label in this     */
+/* function which does a jump to the real instruction.               */
+/*                                                                   */
+/* The reason why we use labels instead of individual pointers is    */
+/* that if -fomit-frame-pointer is omitted then the backframe        */
+/* isn't pushed onto the stack.                                      */
+/*                                                                   */
+/* The reason why this routine is in cpu.c is an attempt to provide  */
+/* locality with the corresponding run_cpu function.                 */
+/*                                                                   */
+/* This routine is called from cpu_init                              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP(set_jump_pointers) (REGS *regs, int jump)
+{
+    UNREFERENCED(regs);
+
+#if defined(MULTI_BYTE_ASSIST)
+
+    /* Use `switch' to confuse smart-ass optimizing compilers */
+    switch (jump) {
+
+ #if defined(MULTI_BYTE_ASSIST_IA32)
+  #if ARCH_MODE != ARCH_370
+    case 0xa7:
+jump_a7xx:
+ __asm__ (
+        "movzbl 1(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_a7xx)))
+        );
+        return;
+  #endif /* ARCH_MODE != ARCH_370 */
+    case 0xb2:
+jump_b2xx:
+ __asm__ (
+        "movzbl 1(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_b2xx)))
+        );
+        return;
+  #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
+    case 0xb9:
+jump_b9xx:
+ __asm__ (
+        "movzbl 1(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_b9xx)))
+        );
+        return;
+    case 0xc0:
+jump_c0xx:
+ __asm__ (
+        "movzbl 1(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_c0xx)))
+        );
+        return;
+    case 0xe3:
+jump_e3xx:
+ __asm__ (
+        "movzbl 5(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_e3xx)))
+        );
+        return;
+    case 0xeb:
+jump_ebxx:
+ __asm__ (
+        "movzbl 5(%%eax),%%ecx\n\t"
+        "jmp    *%c0(%%edx,%%ecx,4)"
+        : : "i" (offsetof(REGS,ARCH_DEP(opcode_ebxx)))
+        );
+        return;
+  #endif /* defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390) */
+ #endif /* defined(MULTI_BYTE_ASSIST_IA32) */
+
+    } /* switch(jump) */
+
+ #if ARCH_MODE != ARCH_370
+    ARCH_DEP(opcode_table)[0xa7] = &&jump_a7xx;
+ #endif
+    ARCH_DEP(opcode_table)[0xb2] = &&jump_b2xx;
+ #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
+    ARCH_DEP(opcode_table)[0xb9] = &&jump_b9xx;
+    ARCH_DEP(opcode_table)[0xc0] = &&jump_c0xx;
+    ARCH_DEP(opcode_table)[0xe3] = &&jump_e3xx;
+    ARCH_DEP(opcode_table)[0xeb] = &&jump_ebxx;
+ #endif /* defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390) */
+
+#endif /* defined(MULTI_BYTE_ASSIST) */
+
+}
+
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE2)
@@ -1641,7 +1757,9 @@ REGS    regs;
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr)
 {
-REGS cregs = *regs;
+REGS cregs;
+
+    memcpy(&cregs, regs, sysblk.regs_copy_len);
 
     switch(cregs.arch_mode) {
 #if defined(_370)
