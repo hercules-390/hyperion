@@ -146,8 +146,8 @@ int     i2;                             /* FP register subscript     */
     i2 = FPR2I(r2);
 
     /* Load general register contents from FP register */
-    regs->GR_H(r2) = regs->fpr[i1];
-    regs->GR_L(r2) = regs->fpr[i1+1];
+    regs->GR_H(r1) = regs->fpr[i2];
+    regs->GR_L(r1) = regs->fpr[i2+1];
 
 } /* end DEF_INST(load_gr_from_fpr_long_reg) */
 
