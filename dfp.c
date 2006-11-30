@@ -23,6 +23,9 @@
 
 
 #if defined(FEATURE_FPS_ENHANCEMENT)
+/*===================================================================*/
+/* FLOATING POINT SUPPORT INSTRUCTIONS                               */
+/*===================================================================*/
 /* Note: the Floating Point Support instructions use the HFPREG_CHECK
    and HFPREG2_CHECK macros to enforce an AFP-register data exception
    if an FPS instruction attempts to use one of the 12 additional FPR
@@ -156,8 +159,33 @@ int     i2;                             /* FP register subscript     */
 
 
 #if defined(FEATURE_DECIMAL_FLOATING_POINT)
+/*===================================================================*/
+/* DECIMAL FLOATING POINT INSTRUCTIONS                               */
+/*===================================================================*/
+/* Note: the DFP instructions use the DFPINST_CHECK macro to check the
+   setting of the AFP-register-control bit in CR0. If this bit is zero
+   then the macro generates a DFP-instruction data exception. */
 
-/* Decimal Floating Point instructions will be inserted here */
+/*-------------------------------------------------------------------*/
+/* B2B9 SRNMT - Set DFP Rounding Mode                            [S] */
+/*-------------------------------------------------------------------*/
+DEF_INST(set_dfp_rounding_mode)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    S(inst, regs, b2, effective_addr2);
+
+    DFPINST_CHECK(regs);
+
+    /* Set FPC register DFP rounding mode bits from operand address */
+    regs->fpc &= ~(FPC_DRM);
+    regs->fpc |= (effective_addr2 & FPC_DRM);
+
+} /* end DEF_INST(set_dfp_rounding_mode) */
+
+
+/* Additional Decimal Floating Point instructions to be inserted here */
 
 #endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
 
