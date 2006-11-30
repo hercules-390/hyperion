@@ -167,6 +167,51 @@ int     i2;                             /* FP register subscript     */
    then the macro generates a DFP-instruction data exception. */
 
 /*-------------------------------------------------------------------*/
+/* B2BD LFAS  - Load FPC and Signal                              [S] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_fpc_and_signal)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     tmp_fpc;
+
+    S(inst, regs, b2, effective_addr2);
+
+    DFPINST_CHECK(regs);
+
+    /* Load FPC register from operand address */
+    tmp_fpc = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
+
+    /* Program check if reserved bits are non-zero */
+    FPC_CHECK(tmp_fpc, regs);
+
+    /* Update FPC register */
+    regs->fpc = tmp_fpc;
+
+} /* end DEF_INST(load_fpc_and_signal) */
+
+
+/*-------------------------------------------------------------------*/
+/* B385 SFASR - Set FPC and Signal                             [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(set_fpc_and_signal)
+{
+int     r1, unused;                     /* Values of R fields        */
+
+    RRE(inst, regs, r1, unused);
+
+    DFPINST_CHECK(regs);
+
+    /* Program check if reserved bits are non-zero */
+    FPC_CHECK(regs->GR_L(r1), regs);
+     
+    /* Load FPC register from R1 register bits 32-63 */
+    regs->fpc = regs->GR_L(r1);
+
+} /* end DEF_INST(set_fpc_and_signal) */
+
+
+/*-------------------------------------------------------------------*/
 /* B2B9 SRNMT - Set DFP Rounding Mode                            [S] */
 /*-------------------------------------------------------------------*/
 DEF_INST(set_dfp_rounding_mode)

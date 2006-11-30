@@ -574,7 +574,7 @@
  UNDEF_INST(reround_dfp_ext_reg)
  UNDEF_INST(reround_dfp_long_reg)
  UNDEF_INST(set_dfp_rounding_mode)
- UNDEF_INST(set_fpc_and_signal_reg)
+ UNDEF_INST(set_fpc_and_signal)
  UNDEF_INST(shift_coefficient_left_dfp_ext)
  UNDEF_INST(shift_coefficient_left_dfp_long)
  UNDEF_INST(shift_coefficient_right_dfp_ext)
@@ -3108,7 +3108,7 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B382*/ GENx___x___x___ ,
  /*B383*/ GENx___x___x___ ,
  /*B384*/ GENx___x390x900 (set_fpc,RRE_R1,"SFPC"),
- /*B385*/ GENx___x390x900 (set_fpc_and_signal_reg,RRE,"SFASR"),
+ /*B385*/ GENx___x390x900 (set_fpc_and_signal,RRE_R1,"SFASR"),
  /*B386*/ GENx___x___x___ ,
  /*B387*/ GENx___x___x___ ,
  /*B388*/ GENx___x___x___ ,

@@ -3006,7 +3006,7 @@ DEF_INST(quantize_dfp_long_reg);
 DEF_INST(reround_dfp_ext_reg);
 DEF_INST(reround_dfp_long_reg);
 DEF_INST(set_dfp_rounding_mode);
-DEF_INST(set_fpc_and_signal_reg);
+DEF_INST(set_fpc_and_signal);
 DEF_INST(shift_coefficient_left_dfp_ext);
 DEF_INST(shift_coefficient_left_dfp_long);
 DEF_INST(shift_coefficient_right_dfp_ext);
