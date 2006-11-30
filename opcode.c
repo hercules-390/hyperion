@@ -391,12 +391,12 @@
 
 
 #if !defined(FEATURE_FPS_ENHANCEMENT)
- UNDEF_INST(copy_sign_dfp_long_reg)
- UNDEF_INST(load_complement_dfp_long_reg)
- UNDEF_INST(load_dfp_from_gr_long_reg)
- UNDEF_INST(load_gr_from_dfp_long_reg)
- UNDEF_INST(load_negative_dfp_long_reg)
- UNDEF_INST(load_positive_dfp_long_reg)
+ UNDEF_INST(copy_sign_fpr_long_reg)
+ UNDEF_INST(load_complement_fpr_long_reg)
+ UNDEF_INST(load_fpr_from_gr_long_reg)
+ UNDEF_INST(load_gr_from_fpr_long_reg)
+ UNDEF_INST(load_negative_fpr_long_reg)
+ UNDEF_INST(load_positive_fpr_long_reg)
 #endif /*!defined(FEATURE_FPS_ENHANCEMENT)*/
 
 
@@ -3087,10 +3087,10 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B36D*/ GENx___x___x___ ,
  /*B36E*/ GENx___x___x___ ,
  /*B36F*/ GENx___x___x___ ,
- /*B370*/ GENx___x390x900 (load_positive_dfp_long_reg,RRE,"LPDFR"),
- /*B371*/ GENx___x390x900 (load_negative_dfp_long_reg,RRE,"LNDFR"),
- /*B372*/ GENx___x390x900 (copy_sign_dfp_long_reg,RRF_M,"CPSDR"),
- /*B373*/ GENx___x390x900 (load_complement_dfp_long_reg,RRE,"LCDFR"),
+ /*B370*/ GENx___x390x900 (load_positive_fpr_long_reg,RRE,"LPDFR"),
+ /*B371*/ GENx___x390x900 (load_negative_fpr_long_reg,RRE,"LNDFR"),
+ /*B372*/ GENx___x390x900 (copy_sign_fpr_long_reg,RRF_M,"CPSDR"),
+ /*B373*/ GENx___x390x900 (load_complement_fpr_long_reg,RRE,"LCDFR"),
  /*B374*/ GENx___x390x900 (load_zero_float_short_reg,RRE_R1,"LZER"),
  /*B375*/ GENx___x390x900 (load_zero_float_long_reg,RRE_R1,"LZDR"),
  /*B376*/ GENx___x390x900 (load_zero_float_ext_reg,RRE_R1,"LZXR"),
@@ -3168,7 +3168,7 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B3BE*/ GENx___x___x___ ,
  /*B3BF*/ GENx___x___x___ ,
  /*B3C0*/ GENx___x___x___ ,
- /*B3C1*/ GENx___x390x900 (load_dfp_from_gr_long_reg,RRE,"LDGR"),
+ /*B3C1*/ GENx___x390x900 (load_fpr_from_gr_long_reg,RRE,"LDGR"),
  /*B3C2*/ GENx___x___x___ ,
  /*B3C3*/ GENx___x___x___ ,
  /*B3C4*/ GENx___x___x900 (convert_fix64_to_float_short_reg,RRE,"CEGR"),
@@ -3180,7 +3180,7 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B3CA*/ GENx___x___x900 (convert_float_ext_to_fix64_reg,RRF_M,"CGXR"),
  /*B3CB*/ GENx___x___x___ ,
  /*B3CC*/ GENx___x___x___ ,
- /*B3CD*/ GENx___x390x900 (load_gr_from_dfp_long_reg,RRE,"LGDR"),
+ /*B3CD*/ GENx___x390x900 (load_gr_from_fpr_long_reg,RRE,"LGDR"),
  /*B3CE*/ GENx___x___x___ ,
  /*B3CF*/ GENx___x___x___ ,
  /*B3D0*/ GENx___x390x900 (multiply_dfp_long_reg,RRR,"MDTR"),

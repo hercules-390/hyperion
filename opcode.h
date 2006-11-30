@@ -2956,12 +2956,12 @@ DEF_INST(test_data_class_bfp_long);
 DEF_INST(test_data_class_bfp_ext);
 
 /* Instructions in dfp.c */
-DEF_INST(copy_sign_dfp_long_reg);
-DEF_INST(load_complement_dfp_long_reg);
-DEF_INST(load_dfp_from_gr_long_reg);
-DEF_INST(load_gr_from_dfp_long_reg);
-DEF_INST(load_negative_dfp_long_reg);
-DEF_INST(load_positive_dfp_long_reg);
+DEF_INST(copy_sign_fpr_long_reg);
+DEF_INST(load_complement_fpr_long_reg);
+DEF_INST(load_fpr_from_gr_long_reg);
+DEF_INST(load_gr_from_fpr_long_reg);
+DEF_INST(load_negative_fpr_long_reg);
+DEF_INST(load_positive_fpr_long_reg);
 DEF_INST(add_dfp_ext_reg);
 DEF_INST(add_dfp_long_reg);
 DEF_INST(compare_dfp_ext_reg);
