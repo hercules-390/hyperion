@@ -1,4 +1,5 @@
 30 Nov 2006 Floating Point Support Enhancement feature - Roger Bowler
+29 Nov 2006 Zero out GPRS on IPL Clear and System clear - Ivan Warren
 29 Nov 2006 Begin Decimal Floating Point (DFP) framework - Roger Bowler
 27 Nov 2006 Remove GNU dependencies from dasdlist - Bjoern A. Zeeb (rbowler)
 26 Nov 2006 Move initialization hao before .rc processing - Bernard
