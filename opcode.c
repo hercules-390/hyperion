@@ -1810,7 +1810,8 @@ int i;
 void set_opcode_pointers(REGS *regs)
 {
 #if defined(_370)
-    regs->s370_opcode_table= s370_opcode_table;
+    memcpy(regs->s370_opcode_table, s370_opcode_table,
+           sizeof(s370_opcode_table));
     regs->s370_opcode_a4xx = s370_opcode_a4xx;
     regs->s370_opcode_a5xx = s370_opcode_a5xx;
     regs->s370_opcode_a6xx = s370_opcode_a6xx;
@@ -1825,7 +1826,8 @@ void set_opcode_pointers(REGS *regs)
     regs->s370_opcode_e6xx = s370_opcode_e6xx;
 #endif
 #if defined(_390)
-    regs->s390_opcode_table= s390_opcode_table;
+    memcpy(regs->s390_opcode_table, s390_opcode_table,
+           sizeof(s390_opcode_table));
     regs->s390_opcode_01xx = s390_opcode_01xx;
     regs->s390_opcode_a4xx = s390_opcode_a4xx;
     regs->s390_opcode_a5xx = s390_opcode_a5xx;
@@ -1859,7 +1861,8 @@ void set_opcode_pointers(REGS *regs)
     regs->s390_opcode_edxx = s390_opcode_edxx;
 #endif
 #if defined(_900)
-    regs->z900_opcode_table= z900_opcode_table;
+    memcpy(regs->z900_opcode_table, z900_opcode_table,
+           sizeof(z900_opcode_table));
     regs->z900_opcode_01xx = z900_opcode_01xx;
     regs->z900_opcode_a5xx = z900_opcode_a5xx;
  #if defined(MULTI_BYTE_ASSIST)

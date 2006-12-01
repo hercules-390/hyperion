@@ -1660,7 +1660,6 @@ REGS    regs;
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(set_jump_pointers) (REGS *regs, int jump)
 {
-    UNREFERENCED(regs);
 
 #if defined(MULTI_BYTE_ASSIST)
 
@@ -1725,17 +1724,20 @@ jump_ebxx:
     } /* switch(jump) */
 
  #if ARCH_MODE != ARCH_370
-    ARCH_DEP(opcode_table)[0xa7] = &&jump_a7xx;
+    regs->ARCH_DEP(opcode_table)[0xa7] = &&jump_a7xx;
  #endif
-    ARCH_DEP(opcode_table)[0xb2] = &&jump_b2xx;
+    regs->ARCH_DEP(opcode_table)[0xb2] = &&jump_b2xx;
  #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
-    ARCH_DEP(opcode_table)[0xb9] = &&jump_b9xx;
-    ARCH_DEP(opcode_table)[0xc0] = &&jump_c0xx;
-    ARCH_DEP(opcode_table)[0xe3] = &&jump_e3xx;
-    ARCH_DEP(opcode_table)[0xeb] = &&jump_ebxx;
+    regs->ARCH_DEP(opcode_table)[0xb9] = &&jump_b9xx;
+    regs->ARCH_DEP(opcode_table)[0xc0] = &&jump_c0xx;
+    regs->ARCH_DEP(opcode_table)[0xe3] = &&jump_e3xx;
+    regs->ARCH_DEP(opcode_table)[0xeb] = &&jump_ebxx;
  #endif /* defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390) */
 
-#endif /* defined(MULTI_BYTE_ASSIST) */
+#else /* !defined(MULTI_BYTE_ASSIST) */
+    UNREFERENCED(regs);
+    UNREFERENCED(jump);
+#endif /* !defined(MULTI_BYTE_ASSIST) */
 
 }
 

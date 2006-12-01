@@ -242,7 +242,7 @@ struct REGS {                           /* Processor registers       */
 
      /* Opcode table pointers                                        */
 
-        FUNC   *s370_opcode_table;
+        FUNC    s370_opcode_table[256];
         FUNC   *s370_opcode_a4xx,
                *s370_opcode_a5xx,
                *s370_opcode_a6xx,
@@ -256,7 +256,7 @@ struct REGS {                           /* Processor registers       */
                *s370_opcode_e6xx,
                *s370_opcode_edxx;
 
-        FUNC   *s390_opcode_table;
+        FUNC    s390_opcode_table[256];
         FUNC   *s390_opcode_01xx,
                *s390_opcode_a4xx,
                *s390_opcode_a5xx,
@@ -283,7 +283,7 @@ struct REGS {                           /* Processor registers       */
                *s390_opcode_ecxx,
                *s390_opcode_edxx;
 
-        FUNC   *z900_opcode_table;
+        FUNC    z900_opcode_table[256];
         FUNC   *z900_opcode_01xx,
                *z900_opcode_a5xx,
  #if defined(MULTI_BYTE_ASSIST)

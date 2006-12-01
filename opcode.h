@@ -314,7 +314,10 @@ do { \
 /* Accelerator for instruction addresses */
 
 #define VALID_AIA(_regs, _addr) \
-((_addr) < (_regs)->AIE && (_regs)->AIV == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01)))
+( \
+    likely((_addr) < (_regs)->AIE) \
+ && likely((_regs)->AIV == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01))) \
+)
 
 #define VALIDATE_AIA(_regs) \
 do { \
@@ -344,7 +347,7 @@ do { \
 do { \
     FOOTPRINT ((_regs)); \
     COUNT_INST ((_inst), (_regs)); \
-    ARCH_DEP(opcode_table)[_inst[0]]((_inst), (_regs)); \
+    (_regs)->ARCH_DEP(opcode_table)[_inst[0]]((_inst), (_regs)); \
 } while(0)
 
 #define UNROLLED_EXECUTE(_regs) \
