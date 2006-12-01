@@ -1960,6 +1960,13 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define FPC_BRM         0x00000003
 #define FPC_RESERVED    0x0707008C
 
+/* Shift counts to allow alignment of each field in the FPC register */
+#define FPC_MASK_SHIFT  27
+#define FPC_FLAG_SHIFT  19
+#define FPC_DXC_SHIFT   8
+#define FPC_DRM_SHIFT   4
+#define FPC_BRM_SHIFT   0
+
 /* Data exception codes */
 #define DXC_DECIMAL             0x00    /* Decimal operand exception */
 #define DXC_AFP_REGISTER        0x01    /* AFP register exception    */

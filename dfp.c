@@ -223,9 +223,9 @@ VADR    effective_addr2;                /* Effective address         */
 
     DFPINST_CHECK(regs);
 
-    /* Set FPC register DFP rounding mode bits from operand address */
+    /* Set DFP rounding mode in FPC register from address bits 61-63 */
     regs->fpc &= ~(FPC_DRM);
-    regs->fpc |= (effective_addr2 & FPC_DRM);
+    regs->fpc |= ((effective_addr2 << FPC_DRM_SHIFT) & FPC_DRM);
 
 } /* end DEF_INST(set_dfp_rounding_mode) */
 
