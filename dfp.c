@@ -166,6 +166,7 @@ int     i2;                             /* FP register subscript     */
    setting of the AFP-register-control bit in CR0. If this bit is zero
    then the macro generates a DFP-instruction data exception. */
 
+#if !defined(_DFP_ARCH_INDEPENDENT_)
 /*-------------------------------------------------------------------*/
 /* Check if IEEE-interruption-simulation event is to be recognized   */
 /*                                                                   */
@@ -225,6 +226,8 @@ U32     dxc;                            /* Data exception code or 0  */
     /* Return data exception code or zero */
     return dxc;
 } /* end function fpc_signal_check */
+#define _DFP_ARCH_INDEPENDENT_
+#endif /*!defined(_DFP_ARCH_INDEPENDENT_)*/
 
 /*-------------------------------------------------------------------*/
 /* B2BD LFAS  - Load FPC and Signal                              [S] */
