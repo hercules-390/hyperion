@@ -220,11 +220,19 @@ inline static size_t commadpt_ring_popbfr(COMMADPT_RING *ring,BYTE *b,size_t sz)
 /*-------------------------------------------------------------------*/
 static void commadpt_clean_device(DEVBLK *dev)
 {
-    commadpt_ring_terminate(&dev->commadpt->inbfr);
-    commadpt_ring_terminate(&dev->commadpt->outbfr);
-    commadpt_ring_terminate(&dev->commadpt->rdwrk);
+    if(!dev)
+    {
+        /*
+         * Shouldn't happen.. But during shutdown, some weird
+         * things happen !
+         */
+        return;
+    }
     if(dev->commadpt!=NULL)
     {
+        commadpt_ring_terminate(&dev->commadpt->inbfr);
+        commadpt_ring_terminate(&dev->commadpt->outbfr);
+        commadpt_ring_terminate(&dev->commadpt->rdwrk);
         free(dev->commadpt);
         dev->commadpt=NULL;
         if(dev->ccwtrace)
@@ -1673,14 +1681,14 @@ static int commadpt_close_device ( DEVBLK *dev )
         logmsg(_("HHCCA300D %4.4X:Closing down\n"),dev->devnum);
     }
 
-    /* Obtain the CA lock */
-    obtain_lock(&dev->commadpt->lock);
-
     /* Terminate current I/O thread if necessary */
     if(dev->busy)
     {
         commadpt_halt(dev);
     }
+
+    /* Obtain the CA lock */
+    obtain_lock(&dev->commadpt->lock);
 
     /* Terminate worker thread if it is still up */
     if(dev->commadpt->have_cthread)
