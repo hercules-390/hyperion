@@ -43,9 +43,9 @@ int clock_hresume(void *file);          /* Hercules resume           */
 
 #endif
 
-void ARCH_DEP(store_int_timer) (REGS *);
+DLL_EXPORT void ARCH_DEP(store_int_timer) (REGS *);
 void ARCH_DEP(store_int_timer_nolock) (REGS *);
-void ARCH_DEP(fetch_int_timer) (REGS *);
+DLL_EXPORT void ARCH_DEP(fetch_int_timer) (REGS *);
 
 void ARCH_DEP(set_gross_s_rate) (REGS *);
 void ARCH_DEP(set_fine_s_rate) (REGS *);
