@@ -562,17 +562,21 @@ S32 vtimer=0;
         RELEASE_INTLOCK(regs->hostregs?regs:NULL);
     }
 }
-void ARCH_DEP(store_int_timer) (REGS *regs)
+
+
+DLL_EXPORT void ARCH_DEP(store_int_timer) (REGS *regs)
 {
     ARCH_DEP(_store_int_timer_2) (regs,1);
 }
+
+
 void ARCH_DEP(store_int_timer_nolock) (REGS *regs)
 {
     ARCH_DEP(_store_int_timer_2) (regs,0);
 }
 
 
-void ARCH_DEP(fetch_int_timer) (REGS *regs)
+DLL_EXPORT void ARCH_DEP(fetch_int_timer) (REGS *regs)
 {
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
