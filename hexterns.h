@@ -205,6 +205,7 @@ HSYS_DLL_IMPORT void *(*debug_cpu_state)            (REGS *);
 HSYS_DLL_IMPORT void *(*debug_watchdog_signal)      (REGS *);
 HSYS_DLL_IMPORT void *(*debug_program_interrupt)    (REGS *, int);
 HSYS_DLL_IMPORT void *(*debug_diagnose)             (U32, int,  int, REGS *);
+HSYS_DLL_IMPORT void *(*debug_iucv)                 (int, VADR, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_unknown_command) (U32,    void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_unknown_event)   (void *, void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
@@ -217,6 +218,7 @@ void panel_display (void);
 #define debug_device_state              NULL
 #define debug_program_interrupt         NULL
 #define debug_diagnose                  NULL
+#define debug_iucv                      NULL
 #define debug_sclp_unknown_command      NULL
 #define debug_sclp_unknown_event        NULL
 #define debug_sclp_event_data           NULL
