@@ -21,6 +21,11 @@
 #include "opcode.h"
 #include "inline.h"
 
+#if defined(FEATURE_DECIMAL_FLOATING_POINT)
+#include "decimal128.h"
+#include "decimal64.h"
+#include "decimal32.h"
+#endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
 
 #if defined(FEATURE_FPS_ENHANCEMENT)
 /*===================================================================*/
@@ -230,6 +235,147 @@ U32     dxc;                            /* Data exception code or 0  */
 #endif /*!defined(_DFP_ARCH_INDEPENDENT_)*/
 
 /*-------------------------------------------------------------------*/
+/* Copy a DFP extended register into a decimal128 structure          */
+/*                                                                   */
+/* Input:                                                            */
+/*      rn      FP register number (left register of pair)           */
+/*      xp      Pointer to decimal128 structure                      */
+/*      regs    CPU register context                                 */
+/*-------------------------------------------------------------------*/
+static inline void
+ARCH_DEP(dfp_reg_to_decimal128) (int rn, decimal128 *xp, REGS *regs)
+{
+int     i, j;                           /* FP register subscripts    */
+QW      *qp;                            /* Quadword pointer          */
+
+    i = FPR2I(rn);                      /* Left register index       */
+    j = i + FPREX;                      /* Right register index      */
+    qp = (QW*)xp;                       /* Convert to QW pointer     */
+    qp->F.HH.F = regs->fpr[i];          /* Copy FPR bits 0-31        */
+    qp->F.HL.F = regs->fpr[i+1];        /* Copy FPR bits 32-63       */
+    qp->F.LH.F = regs->fpr[j];          /* Copy FPR bits 64-95       */
+    qp->F.LL.F = regs->fpr[j+1];        /* Copy FPR bits 96-127      */
+
+} /* end function dfp_reg_to_decimal128 */
+
+/*-------------------------------------------------------------------*/
+/* Load a DFP extended register from a decimal128 structure          */
+/*                                                                   */
+/* Input:                                                            */
+/*      rn      FP register number (left register of pair)           */
+/*      xp      Pointer to decimal128 structure                      */
+/*      regs    CPU register context                                 */
+/*-------------------------------------------------------------------*/
+static inline void
+ARCH_DEP(dfp_reg_from_decimal128) (int rn, decimal128 *xp, REGS *regs)
+{
+int     i, j;                           /* FP register subscripts    */
+QW      *qp;                            /* Quadword pointer          */
+
+    i = FPR2I(rn);                      /* Left register index       */
+    j = i + FPREX;                      /* Right register index      */
+    qp = (QW*)xp;                       /* Convert to QW pointer     */
+    regs->fpr[i]   = qp->F.HH.F;        /* Load FPR bits 0-31        */
+    regs->fpr[i+1] = qp->F.HL.F;        /* Load FPR bits 32-63       */
+    regs->fpr[j]   = qp->F.LH.F;        /* Load FPR bits 64-95       */
+    regs->fpr[j+1] = qp->F.LL.F;        /* Load FPR bits 96-127      */
+
+} /* end function dfp_reg_from_decimal128 */
+
+/*-------------------------------------------------------------------*/
+/* Check for DFP exception conditions and raise data exception       */
+/*                                                                   */
+/* Input:                                                            */
+/*      set     Decimal number context                               */
+/*      regs    CPU register context                                 */
+/*-------------------------------------------------------------------*/
+static inline void
+ARCH_DEP(dfp_status_check) (decContext *set, REGS *regs)
+{
+
+
+} /* end function dfp_status_check */
+
+
+#define UNDEF_INST(_x) \
+        DEF_INST(_x) { ARCH_DEP(operation_exception) \
+        (inst,regs); }
+
+/*-------------------------------------------------------------------*/
+/* B3DA AXTR  - Add DFP Extended Register                      [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_dfp_ext_reg) 
+{
+int             r1, r2, r3;             /* Values of R fields        */
+int             i1, i2, i3;             /* FP register subscripts    */
+decimal128      x1, x2, x3;             /* Extended DFP values       */
+decNumber       d1, d2, d3;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+
+    RRR(inst, regs, r1, r2, r3);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR3_CHECK(r1, r2, r3, regs);
+    i1 = FPR2I(r1);
+    i2 = FPR2I(r2);
+    i3 = FPR2I(r3);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Add r3 to r2 giving result in r1 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    ARCH_DEP(dfp_reg_to_decimal128)(r3, &x3, regs);
+    decimal128ToNumber(&x2, &d2);
+    decimal128ToNumber(&x3, &d3);
+    decNumberAdd(&d1, &d2, &d3, &set);
+    decimal128FromNumber(&x1, &d1, &set);
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+    /* Set condition code */
+    regs->psw.cc = decNumberIsZero(&d1) ? 0 :
+                   decNumberIsNegative(&d1) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    ARCH_DEP(dfp_status_check)(&set, regs);
+
+} /* end DEF_INST(add_dfp_ext_reg) */ 
+
+
+/* Additional Decimal Floating Point instructions to be inserted here */
+UNDEF_INST(add_dfp_long_reg)
+UNDEF_INST(compare_dfp_ext_reg)
+UNDEF_INST(compare_dfp_long_reg)
+UNDEF_INST(compare_and_signal_dfp_ext_reg)
+UNDEF_INST(compare_and_signal_dfp_long_reg)
+UNDEF_INST(compare_exponent_dfp_ext_reg)
+UNDEF_INST(compare_exponent_dfp_long_reg)
+UNDEF_INST(convert_fix64_to_dfp_ext_reg)
+UNDEF_INST(convert_fix64_to_dfp_long_reg)
+UNDEF_INST(convert_sbcd128_to_dfp_ext_reg)
+UNDEF_INST(convert_sbcd64_to_dfp_long_reg)
+UNDEF_INST(convert_ubcd128_to_dfp_ext_reg)
+UNDEF_INST(convert_ubcd64_to_dfp_long_reg)
+UNDEF_INST(convert_dfp_ext_to_fix64_reg)
+UNDEF_INST(convert_dfp_long_to_fix64_reg)
+UNDEF_INST(convert_dfp_ext_to_sbcd128_reg)
+UNDEF_INST(convert_dfp_long_to_sbcd64_reg)
+UNDEF_INST(convert_dfp_ext_to_ubcd128_reg)
+UNDEF_INST(convert_dfp_long_to_ubcd64_reg)
+UNDEF_INST(divide_dfp_ext_reg)
+UNDEF_INST(divide_dfp_long_reg)
+UNDEF_INST(extract_biased_exponent_dfp_ext_to_fix64_reg)
+UNDEF_INST(extract_biased_exponent_dfp_long_to_fix64_reg)
+UNDEF_INST(extract_significance_dfp_ext_reg)
+UNDEF_INST(extract_significance_dfp_long_reg)
+UNDEF_INST(insert_biased_exponent_fix64_to_dfp_ext_reg)
+UNDEF_INST(insert_biased_exponent_fix64_to_dfp_long_reg)
+UNDEF_INST(load_and_test_dfp_ext_reg)
+UNDEF_INST(load_and_test_dfp_long_reg)
+UNDEF_INST(load_fp_int_dfp_ext_reg)
+UNDEF_INST(load_fp_int_dfp_long_reg)
+
+ 
+/*-------------------------------------------------------------------*/
 /* B2BD LFAS  - Load FPC and Signal                              [S] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_fpc_and_signal)
@@ -266,6 +412,37 @@ U32     dxc;
     }
 
 } /* end DEF_INST(load_fpc_and_signal) */
+
+
+UNDEF_INST(load_lengthened_dfp_long_to_ext_reg)
+UNDEF_INST(load_lengthened_dfp_short_to_long_reg)
+UNDEF_INST(load_rounded_dfp_ext_to_long_reg)
+UNDEF_INST(load_rounded_dfp_long_to_short_reg)
+UNDEF_INST(multiply_dfp_ext_reg)
+UNDEF_INST(multiply_dfp_long_reg)
+UNDEF_INST(quantize_dfp_ext_reg)
+UNDEF_INST(quantize_dfp_long_reg)
+UNDEF_INST(reround_dfp_ext_reg)
+UNDEF_INST(reround_dfp_long_reg)
+
+ 
+/*-------------------------------------------------------------------*/
+/* B2B9 SRNMT - Set DFP Rounding Mode                            [S] */
+/*-------------------------------------------------------------------*/
+DEF_INST(set_dfp_rounding_mode)
+{
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    S(inst, regs, b2, effective_addr2);
+
+    DFPINST_CHECK(regs);
+
+    /* Set DFP rounding mode in FPC register from address bits 61-63 */
+    regs->fpc &= ~(FPC_DRM);
+    regs->fpc |= ((effective_addr2 << FPC_DRM_SHIFT) & FPC_DRM);
+
+} /* end DEF_INST(set_dfp_rounding_mode) */
 
 
 /*-------------------------------------------------------------------*/
@@ -306,26 +483,18 @@ U32     dxc;
 } /* end DEF_INST(set_fpc_and_signal) */
 
 
-/*-------------------------------------------------------------------*/
-/* B2B9 SRNMT - Set DFP Rounding Mode                            [S] */
-/*-------------------------------------------------------------------*/
-DEF_INST(set_dfp_rounding_mode)
-{
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-
-    S(inst, regs, b2, effective_addr2);
-
-    DFPINST_CHECK(regs);
-
-    /* Set DFP rounding mode in FPC register from address bits 61-63 */
-    regs->fpc &= ~(FPC_DRM);
-    regs->fpc |= ((effective_addr2 << FPC_DRM_SHIFT) & FPC_DRM);
-
-} /* end DEF_INST(set_dfp_rounding_mode) */
-
-
-/* Additional Decimal Floating Point instructions to be inserted here */
+UNDEF_INST(shift_coefficient_left_dfp_ext)
+UNDEF_INST(shift_coefficient_left_dfp_long)
+UNDEF_INST(shift_coefficient_right_dfp_ext)
+UNDEF_INST(shift_coefficient_right_dfp_long)
+UNDEF_INST(subtract_dfp_ext_reg)
+UNDEF_INST(subtract_dfp_long_reg)
+UNDEF_INST(test_data_class_dfp_ext)
+UNDEF_INST(test_data_class_dfp_long)
+UNDEF_INST(test_data_class_dfp_short)
+UNDEF_INST(test_data_group_dfp_ext)
+UNDEF_INST(test_data_group_dfp_long)
+UNDEF_INST(test_data_group_dfp_short)
 
 #endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
 
