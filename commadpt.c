@@ -123,7 +123,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
 /*-------------------------------------------------------------------*/
 /* Buffer ring management : Init a buffer ring                       */
 /*-------------------------------------------------------------------*/
-void commadpt_ring_init(COMMADPT_RING *ring,size_t sz)
+void commadpt_ring_init(COMMADPT_RING *ring,size_t sz,int trace)
 {
     ring->bfr=malloc(sz);
     ring->sz=sz;
@@ -131,12 +131,24 @@ void commadpt_ring_init(COMMADPT_RING *ring,size_t sz)
     ring->lo=0;
     ring->havedata=0;
     ring->overflow=0;
+    if(trace)
+    {
+        logmsg("HCCCA999D : Ring buffer for ring %p allocated at %p\n",
+            ring,
+            ring->bfr);
+    }
 }
 /*-------------------------------------------------------------------*/
 /* Buffer ring management : Free a buffer ring                       */
 /*-------------------------------------------------------------------*/
-static void commadpt_ring_terminate(COMMADPT_RING *ring)
+static void commadpt_ring_terminate(COMMADPT_RING *ring,int trace)
 {
+    if(trace)
+    {
+        logmsg("HCCCA999D : Ring buffer for ring %p at %p freed\n",
+            ring,
+            ring->bfr);
+    }
     if(ring->bfr!=NULL)
     {
         free(ring->bfr);
@@ -230,9 +242,12 @@ static void commadpt_clean_device(DEVBLK *dev)
     }
     if(dev->commadpt!=NULL)
     {
-        commadpt_ring_terminate(&dev->commadpt->inbfr);
-        commadpt_ring_terminate(&dev->commadpt->outbfr);
-        commadpt_ring_terminate(&dev->commadpt->rdwrk);
+        commadpt_ring_terminate(&dev->commadpt->inbfr,dev->ccwtrace);
+        commadpt_ring_terminate(&dev->commadpt->outbfr,dev->ccwtrace);
+        commadpt_ring_terminate(&dev->commadpt->rdwrk,dev->ccwtrace);
+        commadpt_ring_terminate(&dev->commadpt->pollbfr,dev->ccwtrace);
+        /* release the CA lock */
+        release_lock(&dev->commadpt->lock);
         free(dev->commadpt);
         dev->commadpt=NULL;
         if(dev->ccwtrace)
@@ -264,10 +279,10 @@ static int commadpt_alloc_device(DEVBLK *dev)
         return -1;
     }
     memset(dev->commadpt,0,sizeof(COMMADPT));
-    commadpt_ring_init(&dev->commadpt->inbfr,4096);
-    commadpt_ring_init(&dev->commadpt->outbfr,4096);
-    commadpt_ring_init(&dev->commadpt->pollbfr,4096);
-    commadpt_ring_init(&dev->commadpt->rdwrk,65536);
+    commadpt_ring_init(&dev->commadpt->inbfr,4096,dev->ccwtrace);
+    commadpt_ring_init(&dev->commadpt->outbfr,4096,dev->ccwtrace);
+    commadpt_ring_init(&dev->commadpt->pollbfr,4096,dev->ccwtrace);
+    commadpt_ring_init(&dev->commadpt->rdwrk,65536,dev->ccwtrace);
     dev->commadpt->dev=dev;
     return 0;
 }
@@ -1327,10 +1342,6 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
                 logmsg(_("HHCCA300D %4.4X:Initialisation starting\n"),dev->devnum);
         }
 
-        if(dev->commadpt!=NULL)
-        {
-            commadpt_clean_device(dev);
-        }
         rc=commadpt_alloc_device(dev);
         if(rc<0)
         {
@@ -1700,10 +1711,9 @@ static int commadpt_close_device ( DEVBLK *dev )
         dev->commadpt->have_cthread=0;
     }
 
-    /* release the CA lock */
-    release_lock(&dev->commadpt->lock);
 
     /* Free all work storage */
+    /* The CA lock will be released by the cleanup routine */
     commadpt_clean_device(dev);
 
     /* Indicate to hercules the device is no longer opened */
