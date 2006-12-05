@@ -176,7 +176,7 @@ static void commadpt_ring_flush(COMMADPT_RING *ring)
 inline static void commadpt_ring_push(COMMADPT_RING *ring,BYTE b)
 {
     ring->bfr[ring->hi++]=b;
-    if(ring->hi>ring->sz)
+    if(ring->hi>=ring->sz)
     {
         ring->hi=0;
     }
@@ -204,7 +204,7 @@ inline static BYTE commadpt_ring_pop(COMMADPT_RING *ring)
 {
     register BYTE b;
     b=ring->bfr[ring->lo++];
-    if(ring->lo>ring->sz)
+    if(ring->lo>=ring->sz)
     {
         ring->lo=0;
     }
