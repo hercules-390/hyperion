@@ -26,6 +26,10 @@
                  U64 D;
                  struct { FW H; FW L; } F;
                } DW;
+ typedef union {
+                 struct { DW H; DW L; } D;
+                 struct { FW HH; FW HL; FW LH; FW LL; } F;
+               } QW;
 
 #else // !defined(WORDS_BIGENDIAN)
 
@@ -42,6 +46,10 @@
                  U64 D;
                  struct { FW L; FW H; } F;
                } DW;
+ typedef union {
+                 struct { DW L; DW H; } D;
+                 struct { FW LL; FW LH; FW HL; FW HH; } F;
+               } QW;
 
 #endif // defined(WORDS_BIGENDIAN)
 
