@@ -111,8 +111,8 @@ The procedure for completing the TUN/TAP setup for Linux 2.4 is shown below.
     <br>chgrp <em>xxxxx</em> /dev/net/tun
         </code>(where <em>xxxxx</em> is the group under which
                 you run Hercules)<code>
-    <br>chmod g+w /dev/net/tun
-    <br>chmod o-r /dev/net/tun
+    <br>chmod g+rw /dev/net/tun
+    <br>chmod o-rw /dev/net/tun
     </code>
 <li>Edit the file <b><i>/etc/modules.conf</i></b> (it is called
     <b><i>/etc/conf.modules</i></b> in some distributions)
@@ -121,6 +121,31 @@ The procedure for completing the TUN/TAP setup for Linux 2.4 is shown below.
     <br>This causes the TUN/TAP driver to be loaded automatically
     when the /dev/net/tun device is opened by Hercules.
 </ol>
+
+<h2>Installing the TUN/TAP Driver (Linux 2.6)</h2>
+<p>
+For distributions based on the Linux 2.6 kernel you will probably find that the
+TUN/TAP driver is already installed and the /dev/net/tun device is already
+defined. If not, then follow the procedure for Linux 2.4 as descibed above.
+<p>
+You will certainly need to alter the permissions on the /dev/net/tun device
+to allow Hercules to open it.
+<ul>
+<li>Use the following commands to set the necessary permissions:
+    <code>
+    <br>su </code>(enter the root password when prompted)<code>
+    <br>chgrp <em>xxxxx</em> /dev/net/tun
+        </code>(where <em>xxxxx</em> is the group under which
+                you run Hercules)<code>
+    <br>chmod g+rw /dev/net/tun
+    <br>chmod o-rw /dev/net/tun
+    </code>
+</ul>
+<p>
+In Linux 2.6 the file <b><i>/etc/modules.conf</i></b> no longer exists,
+instead there is a file called <b><i>/etc/modprobe.conf</i></b>.
+TUN/TAP will usually work, however, without any change to the modprobe
+configuration.
 
 <h2><a name="hercifc">Configuring the TUN interface</a></h2>
 <p>
@@ -339,10 +364,8 @@ Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
 </ol>
 
 <p><center><hr width=15% noshade>
-<a href="hercconf.html"><img src="images/back.gif" border=0></a>
+<a href="hercconf.html"><img src="images/back.gif" border=0 alt="back"></a>
 </center>
-
-<small>
-<p>Last updated 6 October 2003
+<p class="lastupd">Last updated $Date$ $Revision$</p>
 </BODY>
 </HTML>
