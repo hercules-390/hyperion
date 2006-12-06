@@ -12,7 +12,7 @@ ACLOCAL_AMFLAGS  = -I m4
 
 lns=@LN_S@
 
-SUBDIRS = m4 po util html man . crypto
+SUBDIRS = m4 po util html man . crypto decNumber
 
 LDADD = @LTLIBICONV@ @LTLIBINTL@ @LIBS@
 
