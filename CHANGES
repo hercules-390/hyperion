@@ -1,3 +1,4 @@
+06 Dec 2006 Include Mike Cowlishaw decNumber package - Roger Bowler
 30 Nov 2006 Floating Point Support Enhancement feature - Roger Bowler
 29 Nov 2006 Zero out GPRS on IPL Clear and System clear - Ivan Warren
 29 Nov 2006 Begin Decimal Floating Point (DFP) framework - Roger Bowler

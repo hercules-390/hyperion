@@ -55,6 +55,7 @@
 # 04/05/06 clean: skip 'del' (delete) if files don't exist - Fish
 # 04/09/06 PCRE (Regular Expressions) support (http://www.pcre.org) - Fish
 # 06/09/06 HAO (Hercules Automatic Operator) support - Fish
+# 06/12/06 Add decNumber for DFP (Decimal Floating Point) support - Roger Bowler
 # ***************************************************************************
 
 !IFNDEF VERSION
@@ -386,6 +387,7 @@ MODULES = \
     $(X)hdteq.dll    \
     $(X)hdtqeth.dll  \
     $(X)dyninst.dll  \
+    $(X)decNumber.dll \
     $(DYNCRYPTDLL)
 
 all: allzlib alllibbz2 allpcre
@@ -493,6 +495,12 @@ $(O)build_pch.pch: build_pch.c
     $(cc) $(cdebug) $(cflags) /Icrypto /I. /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
 !ENDIF
 
+{decNumber}.c{$(OBJDIR)}.obj::
+    $(cc) $(cdebug) $(cflags) /IdecNumber /I. $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
+
+$(O)dfp.obj: dfp.c
+    $(cc) $(cdebug) $(cflags) /IdecNumber /I. /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" dfp.c
+
 #
 # No precompiled headers for these ones.. Sorry!
 #
@@ -553,6 +561,14 @@ hutil_OBJ = \
     $(O)version.obj  \
     $(O)hsocket.obj  \
     $(O)w32util.obj
+
+decNumber_OBJ = \
+    $(O)decContext.obj \
+    $(O)decimal128.obj \
+    $(O)decimal32.obj  \
+    $(O)decimal64.obj  \
+    $(O)decNumber.obj  \
+    $(O)decPacked.obj   
 
 hengine_OBJ = \
     $(O)assist.obj   \
@@ -624,6 +640,8 @@ hmodule_OBJ = \
 # -------------------------------------------------------------
 # DLL export libraries are dependent on themselves existing
 
+$(O)decNumber.lib: $(X)decNumber.dll
+
 $(O)hdasd.lib:   $(X)hdasd.dll
 
 $(O)htape.lib:   $(X)htape.dll
@@ -650,7 +668,8 @@ $(X)htape.dll:   $(htape_OBJ)   $(O)hsys.lib           $(O)hutil.lib           $
 $(X)hdasd.dll:   $(hdasd_OBJ)   $(O)hsys.lib           $(O)hutil.lib           $(O)hercver.res
     $(linkdll)
 
-$(X)hengine.dll: $(hengine_OBJ) $(O)hsys.lib $(O)hdasd.lib $(O)hutil.lib $(O)htape.lib $(O)hercver.res
+$(X)hengine.dll: $(hengine_OBJ) $(O)hsys.lib $(O)hdasd.lib $(O)hutil.lib \
+                 $(O)htape.lib $(O)decNumber.lib $(O)hercver.res
     $(linkdll)
 
 # -------------------------------------------------------------
@@ -696,6 +715,10 @@ $(X)dyninst.dll: $(O)dyninst.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)
 $(X)dyncrypt.dll: $(O)dyncrypt.obj $(O)sha1.obj $(O)sha256.obj $(O)des.obj $(O)aes.obj $(O)hsys.lib $(O)hengine.lib $(O)hutil.lib $(O)hercver.res
     $(linkdll)
 !ENDIF
+
+$(X)decNumber.dll: $(decNumber_OBJ) $(O)hercver.res
+    $(linkdll)
+    $(link) -nologo $(ldebug) $(dlllflags) $** $(LIBS) /def:decNumber\decNumber.def -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE) && $(MT_DLL_CMD)
 
 # -------------------------------------------------------------
 # Main product executables

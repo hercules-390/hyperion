@@ -216,6 +216,74 @@
 					</Filter>
 				</Filter>
 				<Filter
+					Name="decNumber"
+					>
+					<Filter
+						Name="Header Files"
+						>
+						<File
+							RelativePath=".\decNumber\decContext.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decDPD.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decimal128.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decimal32.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decimal64.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decNumber.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decNumberLocal.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decPacked.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="Source Files"
+						>
+						<File
+							RelativePath=".\decNumber\decContext.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decimal128.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decimal32.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decimal64.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decNumber.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decPacked.c"
+							>
+						</File>
+					</Filter>
+				</Filter>
+				<Filter
 					Name="Devices"
 					>
 					<Filter
