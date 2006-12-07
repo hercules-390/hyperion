@@ -501,6 +501,9 @@ $(O)build_pch.pch: build_pch.c
 $(O)dfp.obj: dfp.c
     $(cc) $(cdebug) $(cflags) /IdecNumber /I. /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" dfp.c
 
+$(O)decNumber.res: decNumber\decNumber.rc
+    $(rc) $(rcflags) $(rcvars) -i decNumber -fo $(O)decNumber.res decNumber\decNumber.rc
+
 #
 # No precompiled headers for these ones.. Sorry!
 #
@@ -716,8 +719,7 @@ $(X)dyncrypt.dll: $(O)dyncrypt.obj $(O)sha1.obj $(O)sha256.obj $(O)des.obj $(O)a
     $(linkdll)
 !ENDIF
 
-$(X)decNumber.dll: $(decNumber_OBJ) $(O)hercver.res
-    $(linkdll)
+$(X)decNumber.dll: $(decNumber_OBJ) $(O)decNumber.res
     $(link) -nologo $(ldebug) $(dlllflags) $** $(LIBS) /def:decNumber\decNumber.def -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE) && $(MT_DLL_CMD)
 
 # -------------------------------------------------------------
