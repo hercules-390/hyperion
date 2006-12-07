@@ -231,6 +231,34 @@ U32     dxc;                            /* Data exception code or 0  */
     /* Return data exception code or zero */
     return dxc;
 } /* end function fpc_signal_check */
+
+/*-------------------------------------------------------------------*/
+/* Set rounding mode in decimal context structure                    */
+/*                                                                   */
+/* Input:                                                            */
+/*      pset    Pointer to decimal number context structure          */
+/*      drm     Decimal rounding mode                                */
+/* Output:                                                           */
+/*      Context structure rounding mode field is set according       */
+/*      to the value of the DRM field                                */
+/*-------------------------------------------------------------------*/
+static inline void
+dfp_rounding_mode(decContext *pset, U32 drm)
+{
+    /* Set rounding mode according to DRM value */
+    switch (drm) {
+    case DRM_RNE:  pset->round = DEC_ROUND_HALF_EVEN; break;
+    case DRM_RTZ:  pset->round = DEC_ROUND_DOWN; break;
+    case DRM_RTPI: pset->round = DEC_ROUND_CEILING; break;
+    case DRM_RTMI: pset->round = DEC_ROUND_FLOOR; break;
+    case DRM_RNAZ: pset->round = DEC_ROUND_HALF_UP; break;
+    case DRM_RNTZ: pset->round = DEC_ROUND_HALF_DOWN; break;
+    case DRM_RAFZ: pset->round = DEC_ROUND_UP; break;
+    case DRM_RFSP: pset->round = DEC_ROUND_DOWN; break;
+    } /* end switch(drm) */
+
+} /* end function dfp_rounding_mode */
+
 #define _DFP_ARCH_INDEPENDENT_
 #endif /*!defined(_DFP_ARCH_INDEPENDENT_)*/
 
@@ -307,7 +335,6 @@ ARCH_DEP(dfp_status_check) (decContext *set, REGS *regs)
 DEF_INST(add_dfp_ext_reg) 
 {
 int             r1, r2, r3;             /* Values of R fields        */
-int             i1, i2, i3;             /* FP register subscripts    */
 decimal128      x1, x2, x3;             /* Extended DFP values       */
 decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
@@ -315,12 +342,12 @@ decContext      set;                    /* Working context           */
     RRR(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
-    i1 = FPR2I(r1);
-    i2 = FPR2I(r2);
-    i3 = FPR2I(r3);
 
     /* Initialise the context for extended DFP */
     decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Set rounding mode */
+    dfp_rounding_mode(&set, (regs->fpc & FPC_DRM) >> FPC_DRM_SHIFT);
 
     /* Add r3 to r2 giving result in r1 */
     ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);

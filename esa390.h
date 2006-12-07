@@ -1999,4 +1999,20 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define DXC_IEEE_INV_OP_IISE    0x83    /* IEEE invalid op (IISE) DFP*/
 /* Note: IISE = IEEE-interruption-simulation event */
 
+/* Decimal rounding modes */
+#define DRM_RNE                 0       /* Round to nearest tie even */
+#define DRM_RTZ                 1       /* Round toward zero         */
+#define DRM_RTPI                2       /* Round toward +infinity    */
+#define DRM_RTMI                3       /* Round toward -infinity    */
+#define DRM_RNAZ                4       /* Round nearest tie away 0  */
+#define DRM_RNTZ                5       /* Round nearest tie toward 0*/
+#define DRM_RAFZ                6       /* Round away from zero      */
+#define DRM_RFSP                7       /* Prepare shorter precision */
+
+/* Binary rounding modes */
+#define BRM_RNE                 0       /* Round to nearest tie even */
+#define BRM_RTZ                 1       /* Round toward zero         */
+#define BRM_RTPI                2       /* Round toward +infinity    */
+#define BRM_RTMI                3       /* Round toward -infinity    */
+
 #endif // _ESA390_H
