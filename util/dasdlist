@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # This command prints a track from a CKD DASD image file.
 # It uses the Unix Octal Dump (od) command to firstly obtain
@@ -9,12 +9,12 @@ filename=$1
 cyl=$2
 head=$3
 
-if [ -z $filename ]; then
+if [ -z "$filename" ]; then
     echo "Usage: dasdlist filename [cyl head]"
     exit 1
 fi
 
-if [ ! -e $filename ]; then
+if [ ! -f $filename ]; then
     echo "File $filename does not exist"
     exit 1
 fi
@@ -34,12 +34,15 @@ fi
 heads=`od -An -tu4 -j 8 -N 4 $filename`
 trklen=`od -An -tu4 -j 12 -N 4 $filename`
 
-echo "$filename $(($heads)) trks/cyl, $(($trklen)) bytes/trk"
+heads=`expr $heads`
+trklen=`expr $trklen`
+
+echo "$filename $heads trks/cyl, $trklen bytes/trk"
 
 #
 # If cylinder number is not given then exit
 #
-if [ -z $cyl ] || [ -z $head ]; then
+if [ -z "$cyl" ] || [ -z "$head" ]; then
     echo "To dump a track specify dasdlist $filename cyl head"
     exit 0
 fi
@@ -47,12 +50,12 @@ fi
 #
 # Calculate the offset to the requested cylinder and track
 #
-offset=$((512+(($cyl*$heads)+$head)*$trklen))
-num=$(($trklen))
+offset=`expr 512 + '(' $cyl '*' $heads + $head ')' '*' $trklen`
+num=`expr $trklen`
 
 #
 # Dump the requested track
 #
-echo "$filename Cyl $(($cyl)) Head $(($head))"
+echo "$filename Cyl $cyl Head $head"
 echo "od -Ax -tx1 -j $offset -N $num $filename"
 od -Ax -tx1 -j $offset -N $num $filename
