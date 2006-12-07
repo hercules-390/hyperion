@@ -25,6 +25,7 @@
 #  25/09/06 Fish "--disable/enable-enhanced-configsymbols/configincludes" ==>
 #                OPTION_ENHANCED_CONFIG_SYMBOLS, OPTION_ENHANCED_CONFIG_INCLUDE
 #  27/09/06 Fish Add check for nanosleep.
+#  07/12/06 jj   Add decNumber/Makefile to ac_output
 #
 ###############################################################################
 
@@ -1987,7 +1988,7 @@ AM_CONDITIONAL( USE_DLLTOOL,         [ test "$hc_cv_is_windows"       = "yes" ] 
 
 AC_CACHE_SAVE()
 
-AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile po/Makefile.in po/Makefile man/Makefile m4/Makefile ] )
+AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile po/Makefile.in po/Makefile man/Makefile m4/Makefile decNumber/Makefile] )
 
 ###############################################################################
 #   (end-of-file)
