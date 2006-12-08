@@ -234,6 +234,13 @@ void set_lparname(char *name);
 void get_lparname(BYTE *dest);
 char *str_lparname();
 
+#if defined(OPTION_SET_STSI_INFO)
+/* Functions in control.c */
+void set_manufacturer(char *name);
+void set_plant(char *name);
+void set_model(char *name);
+#endif /* defined(OPTION_SET_STSI_INFO) */
+
 /* Functions in module impl.c */
 IMPL_DLL_IMPORT void system_cleanup(void);
 

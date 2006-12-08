@@ -6169,6 +6169,60 @@ struct rusage     usage;               /* RMF type data              */
 } /* end function stsi_capability */
 #endif /*!defined(_STSI_CAPABILITY)*/
 
+#if !defined(SET_STSI_STATIC)
+#define SET_STSI_STATIC
+#if defined(OPTION_SET_STSI_INFO)
+                          /*  "H    R    C"  */
+static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
+                             0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+
+void set_manufacturer(char *name)
+{
+    size_t i;
+
+    for(i = 0; name && i < strlen(name) && i < sizeof(manufact); i++)
+        if(isprint(name[i]))
+            manufact[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+        else
+            manufact[i] = 0x40;
+    for(; i < sizeof(manufact); i++)
+        manufact[i] = 0x40;
+}
+
+                      /*  "Z    Z"  */
+static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
+
+void set_plant(char *name)
+{
+    size_t i;
+
+    for(i = 0; name && i < strlen(name) && i < sizeof(plant); i++)
+        if(isprint(name[i]))
+            plant[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+        else
+            plant[i] = 0x40;
+    for(; i < sizeof(plant); i++)
+        plant[i] = 0x40;
+}
+                      /*  "E    M    U    L    A    T    O    R" */
+static BYTE model[8] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9 };
+
+void set_model(char *name)
+{
+    size_t i;
+
+    for(i = 0; name && i < strlen(name) && i < sizeof(model); i++)
+        if(isprint(name[i]))
+            model[i] = host_to_guest((int)(islower(name[i]) ? toupper(name[i]) : name[i]));
+        else
+            model[i] = 0x40;
+    for(; i < sizeof(model); i++)
+        model[i] = 0x40;
+}
+
+#endif /* defined(OPTION_STSI_INFO) */
+#endif /* !defined(SET_STSI_STATIC) */
+
 /*-------------------------------------------------------------------*/
 /* B27D STSI  - Store System Information                         [S] */
 /*-------------------------------------------------------------------*/
@@ -6188,6 +6242,7 @@ SYSIB322  *sysib322;                    /* VM CPUs                   */
 SYSIBVMDB *sysib322;                    /* VM description block      */
 #endif
 
+#if !defined(OPTION_SET_STSI_INFO)
                           /*  "H    R    C"  */
 static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
                              0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
@@ -6195,13 +6250,14 @@ static BYTE manufact[16] = { 0xC8,0xD9,0xC3,0x40,0x40,0x40,0x40,0x40,
                       /*  "Z    Z"  */
 static BYTE plant[4] = { 0xE9,0xE9,0x40,0x40 };
 
+                      /*  "E    M    U    L    A    T    O    R" */
+static BYTE model[8] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9 };
+#endif /* !defined(OPTION_SET_STSI_INFO) */
+
                            /*  "0    1    2    3    4    5    6    7" */
 static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                            /*  "8    9    A    B    C    D    E    F" */
                               0xF8,0xF9,0xC1,0xC2,0xC3,0xC4,0xC5,0xC6 };
-
-                      /*  "E    M    U    L    A    T    O    R" */
-static BYTE model[8] = { 0xC5,0xD4,0xE4,0xD3,0xC1,0xE3,0xD6,0xD9 };
 
                         /* x'004B' = 75 = 75% for each subsequent cpu */
 static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
