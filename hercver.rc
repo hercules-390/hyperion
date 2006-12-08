@@ -5,6 +5,10 @@
 //                 (http://www.conmicro.cx/hercules/herclic.html)
 /////////////////////////////////////////////////////////////////////////////////////////
 
+// $Id$
+//
+// $Log$
+
 #ifdef APSTUDIO_INVOKED
   #error This file is not editable by Microsoft Visual C++
 #endif
