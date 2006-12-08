@@ -4,6 +4,10 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+//
+// $Log$
+
 #ifndef _OPCODE_H
 #define _OPCODE_H
 

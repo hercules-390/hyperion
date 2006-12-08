@@ -1,6 +1,8 @@
 /* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2006                */
 /*              Convert SCSI tape into AWSTAPE format                */
 
+// $Id$
+
 /*              Read from AWSTAPE and write to SCSI tape mods        */
 /*              Copyright 2005-2006 James R. Maynard III             */
 
@@ -10,6 +12,8 @@
 /* If no disk file name is supplied, then the program simply         */
 /* prints a summary of the tape files and blocksizes.                */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

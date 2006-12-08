@@ -4,6 +4,10 @@
 /* laneous global utility functions.                                 */
 /*********************************************************************/
 
+// $Id$
+//
+// $Log$
+
 #ifndef __HSCUTL_H__
 #define __HSCUTL_H__
 

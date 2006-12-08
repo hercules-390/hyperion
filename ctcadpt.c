@@ -15,6 +15,10 @@
 //
 //   Please read README.NETWORKING for more info.
 //
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _CTCADPT_C_

@@ -1,6 +1,8 @@
 /* ESAME.C      (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              ESAME (z/Architecture) instructions                  */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements the instructions which exist in ESAME      */
 /* mode but not in ESA/390 mode, as described in the manual          */
@@ -16,6 +18,8 @@
 /*      DAT enhancement facility - Roger Bowler              July2004*/
 /*      Extended immediate facility - Roger Bowler            Aug2005*/
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

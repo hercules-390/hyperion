@@ -1,6 +1,8 @@
 /* DASDTAB.C    (c) Copyright Roger Bowler, 1999-2006                */
 /*              Hercules Supported DASD definitions                  */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains the tables that define the attributes of     */
 /* each DASD device and control unit supported by Hercules.          */
@@ -11,6 +13,8 @@
 /* device capacity page at: http://www.sdisw.com/dasd_capacity.html  */
 /* (used with permission)                                            */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

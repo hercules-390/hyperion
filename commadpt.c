@@ -6,6 +6,10 @@
 /* Prime Maintainer : Ivan Warren                                    */
 /*-------------------------------------------------------------------*/
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 #include "hercules.h"
 #include "devtype.h"

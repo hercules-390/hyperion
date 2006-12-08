@@ -3,6 +3,8 @@
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements miscellaneous diagnose functions           */
 /* described in SC24-5670 VM/ESA CP Programming Services             */
@@ -10,6 +12,8 @@
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

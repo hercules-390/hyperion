@@ -1,12 +1,16 @@
 /*  VERSION.H   (c) Copyright Roger Bowler, 1999-2006            */
 /*      ESA/390 Emulator Version definition                      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* Header file defining the Hercules version number.                 */
 /*                                                                   */
 /* NOTE: If you're looking for the place to actually change the      */
 /* number, it's in configure.ac, near the top.                       */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #ifndef _HERCULES_H_
 #define _HERCULES_H_

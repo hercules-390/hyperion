@@ -1,9 +1,13 @@
 /* PTTRACE.C   (c) Copyright Greg Smith, 2003-2006                   */
 /*       pthreads trace debugger                                     */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* Trace threading calls                                             */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

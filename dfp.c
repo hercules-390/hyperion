@@ -1,11 +1,15 @@
 /* DFP.C        (c) Copyright Roger Bowler, 2006                     */
 /*              Decimal Floating Point instructions                  */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements the Decimal Floating Point instructions    */
 /* and the Floating Point Support Enhancement Facility instructions  */
 /* described in the z/Architecture Principles of Operation manual.   */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

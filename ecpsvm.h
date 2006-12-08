@@ -1,3 +1,7 @@
+// $Id$
+//
+// $Log$
+
 #ifndef __ECPSVM_H__
 #define __ECPSVM_H__
 

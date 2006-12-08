@@ -1,6 +1,10 @@
 /* FEATALL.H    (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              Architecture-dependent macro definitions             */
 
+// $Id$
+//
+// $Log$
+
 /*-------------------------------------------------------------------*/
 /* Default features                                                  */
 /*   All existing features MUST be #undef-ed here.                   */

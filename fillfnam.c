@@ -1,3 +1,7 @@
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 #include "hercules.h"
 #include "fillfnam.h"

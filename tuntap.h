@@ -6,6 +6,10 @@
 //           (C) 2002-2006 by "Fish" (David B. Trout)
 //
 
+// $Id$
+//
+// $Log$
+
 #ifndef __TUNTAP_H_
 #define __TUNTAP_H_
 

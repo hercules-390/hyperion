@@ -1,6 +1,10 @@
 /* SHARED.C     (c)Copyright Greg Smith, 2002-2006                   */
 /*              Shared Device Server                                 */
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _HERCULES_SHARED_C

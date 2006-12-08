@@ -1,6 +1,8 @@
 /* DASDCONV.C   (c) Copyright Roger Bowler, 1999-2006                */
 /*              Hercules DASD Utilities: DASD image converter        */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This program converts a CKD disk image from HDR-30 format         */
 /* to the AWSCKD format used by Hercules.                            */
@@ -23,6 +25,8 @@
 /*              larger than 2GB and the -lfs option is specified).   */
 /*              This program will not overwrite an existing file.    */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

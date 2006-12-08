@@ -1,6 +1,8 @@
 /* LOGGER.C     (c) Copyright Jan Jaeger, 2003-2006                  */
 /*              System logger functions                              */
 
+// $Id$
+
 /* If standard output or standard error is redirected then the log   */
 /* is written to the redirection.                                    */
 /* If standard output and standard error are both redirected then    */
@@ -10,6 +12,8 @@
 
 /* Any thread can determine background mode by inspecting stderr     */
 /* for isatty()                                                      */
+
+// $Log$
 
 #include "hstdinc.h"
 

@@ -3,6 +3,10 @@
 // ====================================================================
 //
 // Copyright (C) 2002-2006 by James A. Pierson
+//
+// $Id$
+//
+// $Log$
 
 #include "hstdinc.h"
 #include "hercules.h"

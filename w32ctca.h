@@ -5,6 +5,10 @@
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
+// $Id$
+//
+// $Log$
+
 #ifndef _W32CTCA_H_
 #define _W32CTCA_H_
 

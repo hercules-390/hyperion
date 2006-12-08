@@ -1,3 +1,7 @@
+// $Id$
+//
+// $Log$
+
 #ifndef __COMMADPT_H__
 #define __COMMADPT_H__
 

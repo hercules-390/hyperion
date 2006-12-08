@@ -1,3 +1,7 @@
+// $Id$
+//
+// $Log$
+
 #if !defined( _PTTHREAD_H_ )
 #define _PTTHREAD_H_
 

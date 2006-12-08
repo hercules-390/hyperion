@@ -1,6 +1,10 @@
 /* PARSER.C     (c) Copyright Nobody, 1999-2001                      */
 /*              Simple parameter parser                              */
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _PARSER_C_

@@ -3,6 +3,10 @@
  *
  * Copyright 2000-2006 by Malcolm Beattie
  * Based on code copyright by Roger Bowler, 1999-2006
+ *
+ * $Id$
+ *
+ * $Log$
  */
 
 #include "hstdinc.h"

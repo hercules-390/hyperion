@@ -4,6 +4,10 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+//
+// $Log$
+
 #ifdef HAVE_CONFIG_H
   #include <config.h> // Hercules build configuration options/settings
 #endif

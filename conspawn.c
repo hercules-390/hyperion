@@ -11,6 +11,10 @@
 /*       invoking this program.                                      */
 /*-------------------------------------------------------------------*/
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define PGMNAME  "conspawn"

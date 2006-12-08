@@ -1,6 +1,10 @@
 /* HSOCKET.C    (c) Copyright Hercules development, 2003-2006        */
 /*              Socket read/write routines                           */
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _HSOCKET_C_

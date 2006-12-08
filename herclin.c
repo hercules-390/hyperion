@@ -8,6 +8,11 @@
 /* THE USE OF THE INITIAL HARDWARE PANEL        */
 /* INTERFACE FEATURE.                           */
 /************************************************/
+
+// $Id$
+//
+// $Log$
+
 #ifdef _MSVC_
 #include <windows.h>
 #include <conio.h>

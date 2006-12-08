@@ -4,6 +4,11 @@
 /* Use of this program is governed by the QPL License      */
 /* Original Author : Ivan Warren                           */
 /* Prime Maintainer : Ivan Warren                          */
+/***********************************************************/
+
+// $Id$
+
+/***********************************************************/
 /*                                                         */
 /* General guidelines about E6XX instruction class         */
 /* this is an implementation of ECPS:VM Level 20           */
@@ -46,6 +51,8 @@
 /* +-----+-------+----------------------------------------+*/
 /*                                                         */
 /***********************************************************/
+
+// $Log$
 
 #include "hstdinc.h"
 

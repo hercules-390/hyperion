@@ -8,6 +8,9 @@
 //
 // linux 2.4 modifications (c) Copyright Fritz Elfert, 2001-2006
 //
+// $Id$
+//
+// $Log$
 
 #include "hstdinc.h"
 #include "hercules.h"

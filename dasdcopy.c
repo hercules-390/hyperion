@@ -5,6 +5,10 @@
 /*       file types (ckd/cckd or fba/cfba) may not be mixed.         */
 /*-------------------------------------------------------------------*/
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #include "hercules.h"

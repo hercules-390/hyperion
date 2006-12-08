@@ -1,11 +1,15 @@
 /* tapesplt.C  (c) Copyright Jay Maynard, 2000-2006                 */
 /*              Split AWSTAPE format tape image                      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This program reads an AWSTAPE format tape image file and produces */
 /* output files containing pieces of it, controlled by command line  */
 /* options.                                                          */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

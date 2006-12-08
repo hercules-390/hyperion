@@ -1,3 +1,7 @@
+// $Id$
+//
+// $Log$
+
 #if !defined( _SLLIB_H_ )
 #define _SLLIB_H_
 

@@ -4,10 +4,14 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements channel subsystem interface functions      */
 /* for the Hercules ESA/390 emulator.                                */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

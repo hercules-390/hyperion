@@ -3,6 +3,8 @@
 
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* The machine check function supports dynamic I/O configuration.    */
 /* When a subchannel is added/changed/deleted an ancillary           */
@@ -16,6 +18,8 @@
 /* includes the machine check, checkstop, and malfunction alert      */
 /* external interrupt as defined in the architecture. - 6/8/01 *JJ   */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

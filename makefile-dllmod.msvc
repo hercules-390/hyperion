@@ -2,6 +2,8 @@
 # MAKEFILE-DLLMOD.MSVC (c) Copyright Roger Bowler, 2005
 # Build Hercules for Win32 using MSVC and nmake (DLL version with loadable modules)
 #
+# $Id$
+#
 # DD/MM/YY Description.......................................................
 # 17/02/05 Created by - Roger Bowler
 # 01/03/05 Place debug/retail builds into separate directories - Fish
@@ -56,6 +58,7 @@
 # 04/09/06 PCRE (Regular Expressions) support (http://www.pcre.org) - Fish
 # 06/09/06 HAO (Hercules Automatic Operator) support - Fish
 # 06/12/06 Add decNumber for DFP (Decimal Floating Point) support - Roger Bowler
+# $Log$
 # ***************************************************************************
 
 !IFNDEF VERSION

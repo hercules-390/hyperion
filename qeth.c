@@ -1,12 +1,16 @@
 /* QETH.C       (c) Copyright Jan Jaeger,   1999-2006                */
 /*              OSA Express                                          */
 
+// $Id$
+
 /* This module contains device handling functions for the            */
 /* OSA Express emulated card                                         */
 
 /* Device module hdtqeth.dll devtype QETH (config)                   */
 /* hercules.cnf:                                                     */
 /* 0A00-0A02 QETH <optional parameters>                              */
+
+// $Log$
 
 #include "hstdinc.h"
 

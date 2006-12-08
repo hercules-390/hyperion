@@ -2,6 +2,10 @@
 
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 #include "hercules.h"
 

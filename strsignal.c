@@ -3,6 +3,10 @@
    This file is in the public domain.
 */
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #include "hercules.h"

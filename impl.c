@@ -1,6 +1,8 @@
 /* IMPL.C       (c) Copyright Roger Bowler, 1999-2006                */
 /*              Hercules Initialization Module                       */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module initializes the Hercules S/370 or ESA/390 emulator.   */
 /* It builds the system configuration blocks, creates threads for    */
@@ -8,6 +10,8 @@
 /* control panel which runs under the main thread when in foreground */
 /* mode.                                                             */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

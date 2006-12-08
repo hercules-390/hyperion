@@ -1,6 +1,9 @@
 /* CHSC.H       (c) Copyright Jan Jaeger, 1999-2006                  */
 /*              Channel Subsystem interface fields                   */
 
+// $Id$
+//
+// $Log$
 
 #if !defined(_CHSC_H)
 

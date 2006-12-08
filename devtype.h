@@ -1,6 +1,10 @@
 /* DEVTYPE.H    (c) Copyright Jan Jaeger, 1999-2006                  */
 /*              Hercules Device Definitions                          */
 
+// $Id$
+//
+// $Log$
+
 #if !defined(_DEVICES_H)
 
 #define _DEVICES_H

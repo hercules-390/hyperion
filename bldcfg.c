@@ -3,6 +3,8 @@
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module builds the configuration tables for the Hercules      */
 /* ESA/390 emulator.  It reads information about the processors      */
@@ -27,6 +29,8 @@
 /*          contributed by Enrico Sorichetti based on                */
 /*          original patches by "Hackules"                           */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

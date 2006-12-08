@@ -5,6 +5,10 @@
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _FTHREADS_C_

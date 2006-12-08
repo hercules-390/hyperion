@@ -1,6 +1,8 @@
 /* TRACE.C      (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              Implicit tracing functions                           */
 
+// $Id$
+
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
@@ -15,6 +17,8 @@
 /* Additional credits:                                               */
 /*      ASN-and-LX-reuse facility - Roger Bowler            July 2004*/
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

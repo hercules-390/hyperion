@@ -1,6 +1,8 @@
 /* CACHE.H    (c)Copyright Greg Smith, 2002-2006                     */
 /*            Buffer Cache Manager                                   */
 
+// $Id$
+
 /*-------------------------------------------------------------------
   Description:
     Manages multiple caches in a multi-threaded environment.  A cache
@@ -150,6 +152,8 @@
                   interface is subject to change.
 
   -------------------------------------------------------------------*/
+
+// $Log$
 
 #ifndef _HERCULES_CACHE_H
 #define _HERCULES_CACHE_H 1

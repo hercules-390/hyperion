@@ -1,10 +1,14 @@
 /* VERSION.C    (c) Copyright Roger Bowler, 1999-2006                */
 /*              Hercules Version Display Module                      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module displays the Hercules program name, version, build    */
 /* date and time, and copyright notice to the indicated file.        */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

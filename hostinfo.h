@@ -4,9 +4,13 @@
 /*      (http://www.conmicro.cx/hercules/herclic.html)               */
 /*   as modifications to Hercules.                                   */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* Header file contains host system information                      */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #ifndef _HOSTINFO_H_
 #define _HOSTINFO_H_

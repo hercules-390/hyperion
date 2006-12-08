@@ -1,6 +1,10 @@
 /* CODEPAGE.H   (c) Copyright Jan Jaeger, 1999-2006                  */
 /*              Code Page conversion                                 */
 
+// $Id$
+//
+// $Log$
+
 #ifndef _HERCULES_CODEPAGE_H
 #define _HERCULES_CODEPAGE_H
 

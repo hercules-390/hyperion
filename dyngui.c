@@ -5,6 +5,10 @@
 /* Primary contact:   Fish   [fish@infidels.com]                     */
 /*                                                                   */
 /*********************************************************************/
+
+// $Id$
+
+/*********************************************************************/
 /*                                                                   */
 /* Change log:                                                       */
 /*                                                                   */
@@ -33,6 +37,8 @@
 /* 12/01/05  SetCurrentDirectory support for shell commands          */
 /*                                                                   */
 /*********************************************************************/
+
+// $Log$
 
 #include "hstdinc.h"
 #include "hercules.h"       // (#includes "config." w/#define for VERSION)

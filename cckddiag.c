@@ -2,9 +2,14 @@
 /*       CCKD diagnostic tool                                        */
 /* 2003-02-07 James M. Morrison initial implementation               */
 /* portions borrowed from cckdcdsk & other CCKD code                 */
+
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* Diagnostic tool to display various CCKD data                      */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

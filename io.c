@@ -4,6 +4,8 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements all I/O instructions of the                */
 /* S/370 and ESA/390 architectures, as described in the manuals      */
@@ -29,6 +31,8 @@
 /*      I/O rate counter - Valery Pogonchenko                        */
 /*      64-bit IDAW support - Roger Bowler v209                  @IWZ*/
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

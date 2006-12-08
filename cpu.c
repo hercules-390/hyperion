@@ -4,6 +4,8 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements the CPU instruction execution function of  */
 /* the S/370 and ESA/390 architectures, as described in the manuals  */
@@ -26,6 +28,8 @@
 /*      Basic FP extensions support - Peter Kuschnerus           v209*/
 /*      ASN-and-LX-reuse facility - Roger Bowler, June 2004      @ALR*/
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

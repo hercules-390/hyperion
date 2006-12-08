@@ -1,6 +1,9 @@
 /* CLOCK.H      (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              TOD Clock functions                                  */
 
+// $Id$
+//
+// $Log$
 
 #if !defined(_CLOCK_C_)
  #define _CLOCK_EXTERN extern

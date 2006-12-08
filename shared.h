@@ -1,6 +1,8 @@
 /*-------------------------------------------------------------------
  * Shared device support           (c)Copyright Greg Smith, 2002-2006
  *
+ * $Id$
+ *
  * Shared device support allows multiple Hercules instances to share
  * devices.  The device will be `local' to one instance and `remote'
  * to all other instances.  The local instance is the  * `server' for
@@ -309,7 +311,7 @@
  *
  *
  *
- *
+ * $Log$
  *
  *-------------------------------------------------------------------*/
 

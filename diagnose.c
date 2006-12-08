@@ -1,6 +1,8 @@
 /* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2006                */
 /*              ESA/390 Diagnose Functions                           */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements miscellaneous diagnose functions           */
 /*-------------------------------------------------------------------*/
@@ -11,6 +13,9 @@
 /*      Set/reset bad frame indicator call by Jan Jaeger.            */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 /*-------------------------------------------------------------------*/
+
+// $Log$
+
 #include "hstdinc.h"
 
 #if !defined(_HENGINE_DLL_)

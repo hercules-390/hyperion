@@ -1,10 +1,14 @@
 /* CCKDUTIL.C   (c) Copyright Roger Bowler, 1999-2006                */
 /*       ESA/390 Compressed CKD Common routines                      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains functions for compressed CKD devices         */
 /* used by more than 1 main program.                                 */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

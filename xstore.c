@@ -5,6 +5,10 @@
 
 /* MVPG moved from cpu.c to xstore.c   05/07/00 Jan Jaeger */
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #if !defined(_HENGINE_DLL_)

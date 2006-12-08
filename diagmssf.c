@@ -1,6 +1,8 @@
 /* DIAGMSSF.C   (c) Copyright Jan Jaeger, 1999-2006                  */
 /*              ESA/390 Diagnose Functions                           */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements various diagnose functions                 */
 /* MSSF call as described in SA22-7098-0                             */
@@ -10,6 +12,8 @@
 /*                                             04/12/1999 Jan Jaeger */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

@@ -5,6 +5,10 @@
 /* compile option -DNO_ASM_BYTESWAP will expand 'C' code             */
 /* otherwise Intel (486+) assember will be generated                 */
 
+// $Id$
+//
+// $Log$
+
 #ifndef _BYTESWAP_H
 #define _BYTESWAP_H
 

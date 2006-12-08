@@ -1,6 +1,10 @@
 /* CODEPAGE.C   (c) Copyright Jan Jaeger, 1999-2006                  */
 /*              Code Page conversion                                 */
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _CODEPAGE_C_

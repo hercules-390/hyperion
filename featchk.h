@@ -10,6 +10,10 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
+// $Id$
+//
+// $Log$
+
 #if defined(FEATCHK_CHECK_ALL)
 
 /* FEATURE_INTERPRETIVE_EXECUTION is related to host related issues

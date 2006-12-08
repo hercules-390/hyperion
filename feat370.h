@@ -1,5 +1,10 @@
 /* FEAT370.H    (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              S/370 feature definitions                            */
+
+// $Id$
+//
+// $Log$
+
 #if defined(OPTION_370_MODE)
 #define _ARCH_370_NAME "S/370"
 

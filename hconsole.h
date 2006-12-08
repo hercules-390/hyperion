@@ -5,6 +5,10 @@
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 //////////////////////////////////////////////////////////////////////////////////////////
 
+// $Id$
+//
+// $Log$
+
 #ifndef _HCONSOLE_H
 #define _HCONSOLE_H
 

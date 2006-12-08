@@ -1,6 +1,10 @@
 /* HTTPMISC.C   (c)Copyright Jan Jaeger, 2002-2006                   */
 /*              HTTP Server                                          */
 
+// $Id$
+//
+// $Log$
+
 #ifndef _HTTPMISC_H
 #define _HTTPMISC_H
 

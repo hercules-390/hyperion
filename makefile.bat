@@ -1,5 +1,7 @@
 @echo off
 
+rem $Id$
+
 rem -------------------------------------------------------------------
 rem
 rem                         MAKEFILE.BAT
@@ -48,6 +50,7 @@ rem  11/17/05  Fish  Support for building within DevStudio 6.0
 rem                  whenever VS 8.0 is also installed.
 rem  11/29/05  Fish  Added comments re: 'ASSEMBLY_LISTINGS' option
 rem
+rem $Log$
 rem -------------------------------------------------------------------
 
 if "%1" == "" (

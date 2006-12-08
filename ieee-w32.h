@@ -1,3 +1,7 @@
+// $Id$
+//
+// $Log$
+
 #ifndef _IEEE_W32_H
 #define _IEEE_W32_H
 

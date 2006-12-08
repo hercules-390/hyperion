@@ -1,6 +1,10 @@
 /* SOCKDEV.C    (c) Copyright Hercules development, 2003-2006        */
 /*              Socketdevice support                                 */
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #include "hercules.h"

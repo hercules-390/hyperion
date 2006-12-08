@@ -4,6 +4,8 @@
 /* Original Author: Roger Bowler                                     */
 /* Prime Maintainer: Ivan Warren                                     */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
 /* 3420 magnetic tape devices for the Hercules ESA/390 emulator.     */
@@ -67,6 +69,8 @@
 /* SG24-2506 IBM 3590 Tape Subsystem Technical Guide                 */
 /* GA32-0331 Magstar 3590 Hardware Reference                         */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

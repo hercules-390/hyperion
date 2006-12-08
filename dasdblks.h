@@ -1,11 +1,15 @@
 /* DASDBLKS.H   (c) Copyright Roger Bowler, 1999-2006                */
 /*              DASD control block structures                        */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This header file contains definitions of OS Data Management       */
 /* control block structures for use by the Hercules DASD utilities.  */
 /* It also contains function prototypes for the DASD utilities.      */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hercules.h"
 

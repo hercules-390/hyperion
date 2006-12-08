@@ -1,6 +1,10 @@
 /* W32DL.H      (c) Copyright Jan Jaeger, 2004-2006                  */
 /*              dlopen compat                                        */
 
+// $Id$
+//
+// $Log$
+
 #ifndef _W32_DL_H
 #define _W32_DL_H
 

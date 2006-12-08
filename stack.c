@@ -4,6 +4,8 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements the linkage stack functions of ESA/390     */
 /* described in SA22-7201-04 ESA/390 Principles of Operation.        */
@@ -21,6 +23,8 @@
 /* Correction to stack types in ESAME mode                Jan Jaeger */
 /* ASN-and-LX-reuse facility                  June 2004 Roger Bowler */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

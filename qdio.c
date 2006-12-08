@@ -1,7 +1,11 @@
 /* QDIO.C       (c) Copyright Jan Jaeger, 2003-2006                  */
 /*              Queued Direct Input Output                           */
 
+// $Id$
+
 /*      This module contains the Signal Adapter instruction          */
+
+// $Log$
 
 #include "hstdinc.h"
 

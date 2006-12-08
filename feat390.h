@@ -1,6 +1,10 @@
 /* FEAT390.H    (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              ESA/390 feature definitions                          */
 
+// $Id$
+//
+// $Log$
+
 /* This file MUST NOT contain #undef statements */
 #if defined(OPTION_390_MODE)
 #define _ARCH_390_NAME "ESA/390"

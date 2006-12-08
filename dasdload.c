@@ -1,6 +1,8 @@
 /* DASDLOAD.C   (c) Copyright Roger Bowler, 1999-2006                */
 /*              Hercules DASD Utilities: DASD image loader           */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This program creates a virtual DASD volume from a list of         */
 /* datasets previously unloaded using the TSO XMIT command.          */
@@ -11,6 +13,8 @@
 /*      Corrections to CVOL initialization logic by Jay Maynard      */
 /*      IEBCOPY native dataset support by Ronen Tzur                 */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

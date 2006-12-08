@@ -1,6 +1,9 @@
 /* GCHAN.C       (c) Copyright Ivan Warren, 2005-2006                */
 /* Based on work (c)Roger Bowler, Jan Jaeger & Others 1999-2006      */
 /*              Generic channel device handler                       */
+
+// $Id$
+
 /* This code is covered by the QPL Licence                           */
 /**CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION****/
 /* THIS CODE IS CURRENTLY IN A DEVELOPMENT STAGE AND IS NOT          */
@@ -13,6 +16,7 @@
 /* communicate with external device handlers.                        */
 /*-------------------------------------------------------------------*/
 
+// $Log$
 
 #include "hercules.h"
 

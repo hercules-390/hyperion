@@ -1,6 +1,8 @@
 /* $OpenBSD: rijndael.c,v 1.18 2005/05/25 05:47:53 markus Exp $ */
 /* modified for use by dyncrypt */
 
+// $Id$
+
 /**
  * rijndael-alg-fst.c
  *
@@ -26,6 +28,8 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+// $Log$
 
 #include "hstdinc.h"
 

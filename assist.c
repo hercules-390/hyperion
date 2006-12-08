@@ -1,6 +1,8 @@
 /* ASSIST.C     (c) Copyright Roger Bowler, 1999-2006                */
 /*              ESA/390 MVS Assist Routines                          */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains routines which process the MVS Assist        */
 /* instructions described in the manual GA22-7079-01.                */
@@ -12,6 +14,7 @@
 /*              Add dummy assist instruction - Jay Maynard,          */
 /*                  suggested by Brandon Hill                        */
 
+// $Log$
 
 #include "hstdinc.h"
 

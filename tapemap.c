@@ -1,10 +1,14 @@
 /* TAPEMAP.C   (c) Copyright Jay Maynard, 2000-2006                  */
 /*              Map AWSTAPE format tape image                        */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This program reads an AWSTAPE format tape image file and produces */
 /* a map of the tape, printing any standard label records it finds.  */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

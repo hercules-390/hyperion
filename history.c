@@ -1,3 +1,6 @@
+// $Id$
+//
+// $Log$
 
 #include "hstdinc.h"
 

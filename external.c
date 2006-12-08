@@ -1,6 +1,8 @@
 /* EXTERNAL.C   (c) Copyright Roger Bowler, 1999-2006                */
 /*              ESA/390 External Interrupt and Timer                 */
 
+// $Id$
+
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
@@ -21,6 +23,8 @@
 /*      Fix todclock - Jay Maynard                                   */
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

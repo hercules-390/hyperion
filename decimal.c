@@ -1,6 +1,8 @@
 /* DECIMAL.C    (c) Copyright Roger Bowler, 1991-2006                */
 /*              ESA/390 Packed Decimal Routines                      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains packed decimal subroutines for ESA/390.      */
 /*                                                                   */
@@ -21,6 +23,9 @@
 /* packed_to_binary subroutine - Roger Bowler               29/06/03 */
 /* binary_to_packed subroutine - Roger Bowler              02jul2003 */
 /*-------------------------------------------------------------------*/
+
+// $Log$
+
 #include "hstdinc.h"
 
 #if !defined(_HENGINE_DLL_)

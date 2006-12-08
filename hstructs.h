@@ -6,6 +6,10 @@
 //      The <config.h> header and other required headers are
 //      presumed to have already been #included ahead of it...
 
+// $Id$
+//
+// $Log$
+
 #ifndef _HSTRUCTS_H
 #define _HSTRUCTS_H
 

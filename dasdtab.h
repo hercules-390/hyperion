@@ -1,11 +1,15 @@
 /* DASDTAB.H    (c) Copyright Roger Bowler, 1999-2006                */
 /*              DASD table structures                                */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This header file contains defines the table entries that          */
 /* describe all DASD devices supported by Hercules.                  */
 /* It also contains function prototypes for the DASD table utilities.*/
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #if !defined(_DASDTAB_H)
 #define _DASDTAB_H

@@ -19,6 +19,10 @@
 // The exit status is zero if successful, non-zero if error.
 //
 
+// $Id$
+//
+// $Log$
+
 #include "hercules.h"
 
 #if defined(BUILD_HERCIFC)

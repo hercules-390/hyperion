@@ -1,6 +1,10 @@
 /* CRYPTO.C     (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              Cryptographic instructions                           */
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _CRYPTO_C_

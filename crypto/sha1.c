@@ -1,6 +1,8 @@
 /* $OpenBSD: sha1.c,v 1.5 2004/04/28 20:39:35 hshoexer Exp $ */
 /* modified for use with dyncrypt */
 
+// $Id$
+
 /*
  * SHA-1 in C
  * By Steve Reid <steve@edmweb.com>
@@ -17,6 +19,7 @@
 
 /* #define SHA1HANDSOFF */ /* Copies data before messing with it. */
 
+// $Log$
 
 #include "hstdinc.h"
 #include "sha1.h"

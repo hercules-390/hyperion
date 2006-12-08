@@ -2,6 +2,10 @@
 /*   HTYPES.H             Hercules typedefs...                       */
 /*-------------------------------------------------------------------*/
 
+// $Id$
+//
+// $Log$
+
 #ifndef _HTYPES_H_
 #define _HTYPES_H_
 /*

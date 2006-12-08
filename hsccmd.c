@@ -5,6 +5,8 @@
 /*   Released under the Q Public License (http://www.conmicro.cx/    */
 /*     hercules/herclic.html) as modifications to Hercules.          */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements the various Hercules System Console        */
 /* (i.e. hardware console) commands that the emulator supports.      */
@@ -13,6 +15,8 @@
 /* add additional help text to the HelpTab HELPTAB. Both tables are  */
 /* near the end of this module.                                      */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

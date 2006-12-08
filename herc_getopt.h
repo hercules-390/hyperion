@@ -1,3 +1,7 @@
+// $Id$
+//
+// $Log$
+
 #if !defined(__HERC_GETOPT_H__)
 #    define  __HERC_GETOPT_H__
 

@@ -1,9 +1,13 @@
 /* CONFIG.C     (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              Device configuration functions                       */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* The original configuration builder is now called bldcfg.c         */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

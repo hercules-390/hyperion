@@ -4,6 +4,8 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains various functions which store, fetch, and    */
 /* copy values to, from, or between virtual storage locations.       */
@@ -30,6 +32,8 @@
 /* wmove_chars                                                       */
 /* wvalidate_operand                                                 */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #define s370_wstorec(_src, _len, _addr, _arn, _regs) \
         s370_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 

@@ -2,6 +2,10 @@
 /* Hercules main executable code */
 /*********************************/
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 #include "hercules.h"
 #if defined(HDL_USE_LIBTOOL)

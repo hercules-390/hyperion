@@ -1,6 +1,7 @@
 /* DYNINST.C    (c) Copyright Jan Jaeger, 2003-2006                  */
 /*              Hercules Dynamic Loader                              */
 
+// $Id$
 
 /* This module dynamically loads instructions.  Instruction routine  */
 /* names must be registered under the name of s370_opcode_B220 for   */
@@ -8,6 +9,7 @@
 /* mode respectively.  B220 is the opcode, and is depending on the   */
 /* instruction 2 3 or 4 digits.                                      */
 
+// $Log$
 
 #include "hstdinc.h"
 #include "hercules.h"

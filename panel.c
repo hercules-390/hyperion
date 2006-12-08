@@ -1,6 +1,8 @@
 /* PANEL.C      (c) Copyright Roger Bowler, 1999-2006                */
 /*              ESA/390 Control Panel Commands                       */
-/*                                                                   */
+
+// $Id$
+
 /*              Modified for New Panel Display =NP=                  */
 /*-------------------------------------------------------------------*/
 /* This module is the control panel for the ESA/390 emulator.        */
@@ -24,6 +26,8 @@
 /*      Socket Devices originally designed by Malcolm Beattie;       */
 /*      actual implementation by "Fish" (David B. Trout).            */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

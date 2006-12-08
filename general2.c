@@ -2,6 +2,8 @@
 /*              ESA/390 CPU Emulator                                 */
 /*              Instructions N-Z                                     */
 
+// $Id$
+
 /*              (c) Copyright Peter Kuschnerus, 1999-2006 (UPT & CFC)*/
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
@@ -28,6 +30,8 @@
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
 /*      Clear TEA on data exception - Peter Kuschnerus           v209*/
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

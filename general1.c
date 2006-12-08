@@ -7,6 +7,8 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements all general instructions of the            */
 /* S/370 and ESA/390 architectures, as described in the manuals      */
@@ -28,6 +30,8 @@
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
 /*      Clear TEA on data exception - Peter Kuschnerus           v209*/
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

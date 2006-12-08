@@ -1,6 +1,8 @@
 /* INLINE.H     (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              Inline function definitions                          */
 
+// $Id$
+
 /* Original author Roger Bowler, 1999                                */
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
@@ -9,6 +11,8 @@
 /* ESAME low-address protection          v208d Roger Bowler 20/01/01 */
 /* ESAME subspace replacement            v208e Roger Bowler 27/01/01 */
 /* Multiply/Divide Logical instructions         Vic Cross 13/02/2001 */
+
+// $Log$
 
 // #define INLINE_STORE_FETCH_ADDR_CHECK
 

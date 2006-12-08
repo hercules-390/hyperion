@@ -1,5 +1,7 @@
 /* MACHDEP.H  Machine specific code                                  */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* This header file contains the following functions, defined as     */
@@ -23,6 +25,8 @@
 /*                                                                   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #ifndef _HERCULES_MACHDEP_H
 #define _HERCULES_MACHDEP_H 1

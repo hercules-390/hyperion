@@ -15,6 +15,10 @@
 // that works on all platforms with (hopefully) equal results.
 //
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #include "hercules.h"

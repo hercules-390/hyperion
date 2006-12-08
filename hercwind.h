@@ -6,6 +6,10 @@
 /* prototypes required by Hercules in the MSVC environment           */
 /*-------------------------------------------------------------------*/
 
+// $Id$
+//
+// $Log$
+
 #if !defined(_HERCWIND_H)
 #define _HERCWIND_H
 

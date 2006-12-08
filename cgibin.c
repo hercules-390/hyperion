@@ -1,6 +1,8 @@
 /* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2006                   */
 /*              HTTP cgi-bin routines                                */
 
+// $Id$
+
 /* This file contains all cgi routines that may be executed on the   */
 /* server (ie under control of a hercules thread)                    */
 /*                                                                   */
@@ -42,6 +44,7 @@
 /*                                                                   */
 /*                                           Jan Jaeger - 28/03/2002 */
 
+// $Log$
 
 #include "hstdinc.h"
 

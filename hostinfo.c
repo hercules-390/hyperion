@@ -1,5 +1,7 @@
 /* HOSTINFO.C   (c) Copyright "Fish" (David B. Trout), 2002-2006     */
 
+// $Id$
+
 /*   Released under the Q Public License                             */
 /*      (http://www.conmicro.cx/hercules/herclic.html)               */
 /*   as modifications to Hercules.                                   */
@@ -7,6 +9,8 @@
 /*-------------------------------------------------------------------*/
 /* functions to set/query host system information                    */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

@@ -1,6 +1,8 @@
 /* FLOAT.C      (c) Copyright Peter Kuschnerus, 2000-2006            */
 /*              ESA/390 Hex Floatingpoint Instructions               */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements the ESA/390 Hex Floatingpoint Instructions */
 /* described in the manual ESA/390 Principles of Operation.          */
@@ -28,6 +30,8 @@
 /* Convert 64fixed to float family CEGR,CDGR,CXGR  BvdHelm  28/01/06 */
 /* Completed the family CGER, CGDR and CGXR        BvdHelm  04/11/06 */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

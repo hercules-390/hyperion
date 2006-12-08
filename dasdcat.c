@@ -3,6 +3,10 @@
  *
  * Vast swathes copied from dasdpdsu.c (c) Copyright Roger Bowler, 1999-2006
  * Changes and additions Copyright 2000-2006 by Malcolm Beattie
+ *
+ * $Id$
+ *
+ * $Log$
  */
 
 #include "hstdinc.h"

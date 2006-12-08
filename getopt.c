@@ -1,5 +1,7 @@
 /*      $NetBSD: getopt_long.c,v 1.15 2002/01/31 22:43:40 tv Exp $      */
 
+// $Id$
+
 /*-
  * Copyright (c) 2000 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -35,6 +37,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
+// $Log$
 
 #define _GETOPT_C_
 #define _HUTIL_DLL_

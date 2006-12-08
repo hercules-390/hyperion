@@ -4,6 +4,8 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements the DAT, ALET, and ASN translation         */
 /* functions of the ESA/390 architecture, described in the manual    */
@@ -20,6 +22,8 @@
 /*      ESAME DAT support by Roger Bowler (SA22-7832)                */
 /*      ESAME ASN authorization and ALET translation - Roger Bowler  */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #if !defined(OPTION_NO_INLINE_DAT) || defined(_DAT_C)
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)

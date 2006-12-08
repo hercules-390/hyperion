@@ -1,6 +1,8 @@
 /* Code borrowed from dasdpdsu Copyright 1999-2006 Roger Bowler      */
 /* Changes and additions Copyright 2001-2006, James M. Morrison      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /*                 dasdseq                                           */
@@ -18,6 +20,8 @@
 // Dasdseq now uses the same case for the output dataset as the
 // user specifies on the command line.  Prior versions always
 // used upper case, which seems unnecessarily loud.
+
+// $Log$
 
 #include "hstdinc.h"
 

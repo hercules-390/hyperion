@@ -1,6 +1,8 @@
 /* DASDINIT.C   (c) Copyright Roger Bowler, 1999-2006                */
 /*              Hercules DASD Utilities: DASD image builder          */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* This program creates a disk image file and initializes it as      */
@@ -37,6 +39,9 @@
 /*              Shouldn't be specified if model is specified.        */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+
+// $Log$
+
 #include "hstdinc.h"
 
 #include "hercules.h"

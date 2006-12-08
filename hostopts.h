@@ -2,6 +2,8 @@
 /* HOSTOPTS.H   --   HOST-specific features and options              */
 /*-------------------------------------------------------------------*/
 
+// $Id$
+
 //    This header file #included by 'featall.h' and 'hercules.h'
 
 /*
@@ -34,6 +36,8 @@
 
    Please. :)
 */
+
+// $Log$
 
 #ifndef _HOSTOPTS_H
 #define _HOSTOPTS_H

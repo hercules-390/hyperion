@@ -6,6 +6,10 @@
 //              (C) Copyright James A. Pierson, 2002-2006
 //
 
+// $Id$
+//
+// $Log$
+
 #if defined(NEED_HERCIFC_H)
 
 #ifndef __HERCIFC_H_

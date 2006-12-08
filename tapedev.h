@@ -3,6 +3,10 @@
 /* This module contains tape related structures and defines          */
 /* for the Hercules ESA/390 emulator.                                */
 
+// $Id$
+//
+// $Log$
+
 #ifndef __TAPEDEV_H__
 #define __TAPEDEV_H__
 

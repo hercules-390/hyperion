@@ -1,6 +1,10 @@
 /* LOGGER.H     (c) Copyright Jan Jaeger, 2003-2006                  */
 /*              System logger functions                              */
 
+// $Id$
+//
+// $Log$
+
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 

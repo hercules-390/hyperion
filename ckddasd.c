@@ -1,6 +1,8 @@
 /* CKDDASD.C    (c) Copyright Roger Bowler, 1999-2006                */
 /*              ESA/390 CKD Direct Access Storage Device Handler     */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
 /* count-key-data direct access storage devices.                     */
@@ -15,6 +17,8 @@
 /*      Track overflow write fix by Roger Bowler, thanks to Valery   */
 /*        Pogonchenko and Volker Bandke             V1.71 16/01/2001 */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

@@ -10,6 +10,10 @@
 /*                              Noordwijkerhout, The Netherlands.             */
 /*----------------------------------------------------------------------------*/
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #ifndef _DYNCRYPT_C_

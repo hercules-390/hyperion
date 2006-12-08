@@ -1,6 +1,8 @@
 /* CHANNEL.C    (c) Copyright Roger Bowler, 1999-2006                */
 /*              ESA/390 Channel Emulator                             */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains the channel subsystem functions for the      */
 /* Hercules S/370 and ESA/390 emulator.                              */
@@ -19,6 +21,8 @@
 /*      Read backward fixes contributed by Jay Jaeger   16sep2003    */
 /*      MIDAW support - Roger Bowler                    03aug2005 @MW*/
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

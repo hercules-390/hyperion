@@ -1,9 +1,12 @@
 /* CLOCK.C      (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              TOD Clock functions                                  */
 
+// $Id$
+
 /* The emulated hardware clock is based on the host clock, adjusted  */
 /* by means of an offset and a steering rate.                        */
 
+// $Log$
 
 #include "hstdinc.h"
 

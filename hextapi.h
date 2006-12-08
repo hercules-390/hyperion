@@ -6,6 +6,11 @@
 /*  THE STATE OF THIS API IS NOT YET FINALIZED          */
 /*  AND THEREFORE, THE INTERFACE MAY CHANGE             */
 /********************************************************/
+
+// $Id$
+//
+// $Log$
+
 #ifndef _HEXTAPI_H_
 #define _HEXTAPI_H_
 

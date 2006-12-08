@@ -13,6 +13,8 @@
  * For details, see html/herclic.html
  */
 
+// $Id$
+
 /*
  * This module implements the ESA/390 Binary (IEEE) Floating Point
  * Instructions as described in
@@ -57,6 +59,8 @@
  * actually only 80-bits, so the conversion from extended format to native
  * long double format will cause loss of precision and range.
  */
+
+// $Log$
 
 #include "hstdinc.h"
 

@@ -4,6 +4,8 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements all control instructions of the            */
 /* S/370 and ESA/390 architectures, as described in the manuals      */
@@ -27,6 +29,8 @@
 /*      ASN-and-LX-reuse facility - Roger Bowler            June 2004*/
 /*      SIGP orders 11,12.2,13,15 - Fish                     Oct 2005*/
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

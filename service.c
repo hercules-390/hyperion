@@ -4,6 +4,8 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements service processor functions                */
 /* for the Hercules ESA/390 emulator.                                */
@@ -19,6 +21,8 @@
 /*      Break syscons output if too long - Jan Jaeger                */
 /*      Added CPI - Control Program Information ev. - JJ 2001-11-19  */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

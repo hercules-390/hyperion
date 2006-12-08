@@ -6,6 +6,10 @@
 
 //        This header file #included by 'hercules.h'
 
+// $Id$
+//
+// $Log$
+
 #ifdef HAVE_CONFIG_H
   #include <config.h> // Hercules build configuration options/settings
 #endif

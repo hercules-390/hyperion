@@ -1,10 +1,14 @@
 /* CCKDDASD.C   (c) Copyright Roger Bowler, 1999-2006                */
 /*       ESA/390 Compressed CKD Direct Access Storage Device Handler */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains device functions for compressed emulated     */
 /* count-key-data direct access storage devices.                     */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

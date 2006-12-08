@@ -1,6 +1,8 @@
 /* CONSOLE.C    (c)Copyright Roger Bowler, 1999-2006                 */
 /*              ESA/390 Console Device Handler                       */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for console        */
 /* devices for the Hercules ESA/390 emulator.                        */
@@ -49,6 +51,8 @@
 /* Ignore "Negotiate About Window Size" client option (for now) so   */
 /* WinNT version of telnet works. -- Greg Price (implemted by Fish)  */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 #include "hercules.h"

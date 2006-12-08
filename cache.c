@@ -3,6 +3,10 @@
 
 //FIXME ?? Dynamic resizing is disabled
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _CACHE_C_

@@ -2,9 +2,13 @@
 /*       Perform chkdsk for a Compressed CKD Direct Access Storage   */
 /*       Device file.                                                */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* Perform check function on a compressed ckd file                   */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

@@ -5,6 +5,10 @@
 // Copyright (C) 2002-2006 by James A. Pierson
 //
 
+// $Id$
+//
+// $Log$
+
 #ifndef __CTCADPT_H_
 #define __CTCADPT_H_
 

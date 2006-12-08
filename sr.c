@@ -1,6 +1,10 @@
 /* SR.C         (c)Copyright Greg Smith, 2005-2006                   */
 /*              Suspend/Resume a Hercules session                    */
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _HERCULES_SR_C

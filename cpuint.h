@@ -1,3 +1,7 @@
+// $Id$
+//
+// $Log$
+
 /**********************************************************************
  Interrupts_State & Interrupts_Mask bits definition (Initial_Mask=800E)
  Machine check, PER and external interrupt subclass bit positions

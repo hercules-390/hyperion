@@ -1,6 +1,8 @@
 /* FBADASD.C    (c) Copyright Roger Bowler, 1999-2006                */
 /*              ESA/390 FBA Direct Access Storage Device Handler     */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
 /* fixed block architecture direct access storage devices.           */
@@ -10,6 +12,8 @@
 /* Additional credits:                                               */
 /*      0671 device support by Jay Maynard                           */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

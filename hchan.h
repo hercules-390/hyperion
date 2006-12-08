@@ -1,3 +1,7 @@
+// $Id$
+//
+// $Log$
+
 #ifndef __HCHAN_H__
 #define __HCHAN_H__
 /*

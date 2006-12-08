@@ -1,6 +1,10 @@
 /* SOCKDEV.H    (c) Copyright Hercules development, 2003-2006        */
 /*              SocketDevice support                                 */
 
+// $Id$
+//
+// $Log$
+
 #include "htypes.h"         // need Herc's struct typedefs
 
 #ifndef _SOCKDEV_H_

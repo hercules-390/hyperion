@@ -1,6 +1,8 @@
 /* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2006                   */
 /*              HTTP Server                                          */
 
+// $Id$
+
 /* This file contains all code required for the HTTP server,         */
 /* when the http_server thread is started it will listen on          */
 /* the HTTP port specified on the HTTPPORT config statement.         */
@@ -26,6 +28,8 @@
 /*                                                                   */
 /*                                                                   */
 /*                                           Jan Jaeger - 28/03/2002 */
+
+// $Log$
 
 #include "hstdinc.h"
 

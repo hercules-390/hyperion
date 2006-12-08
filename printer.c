@@ -1,10 +1,14 @@
 /* PRINTER.C    (c) Copyright Roger Bowler, 1999-2006                */
 /*              ESA/390 Line Printer Device Handler                  */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
 /* System/370 line printer devices.                                  */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

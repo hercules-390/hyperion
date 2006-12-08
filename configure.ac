@@ -2,6 +2,8 @@
 # CONFIGURE.AC: Process this file with AutoConf to produce a configure script.
 ###############################################################################
 
+# $Id$
+
 #    AC is AutoConfigure, AM is AutoMake, and AH is AutoHeader. The
 #    'HC_XXXX..' macros are custom Hercules autoconf macros defined
 #    in the 'hercules.m4' file in the 'autoconf' subdirectory.
@@ -28,6 +30,8 @@
 #  07/12/06 jj   Add decNumber/Makefile to ac_output
 #
 ###############################################################################
+
+# $Log$
 
 AC_INIT(hercules.h)                     # (package, version, bugreport email, etc)
 AC_REVISION($Revision$)         # (the version of this configure.ac)

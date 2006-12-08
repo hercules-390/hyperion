@@ -4,6 +4,8 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements the Initial Program Load (IPL) function of */
 /* the S/370, ESA/390 and z/Architectures, described in the manuals: */
@@ -13,6 +15,8 @@
 /*     SA22-7832    z/Architecture Principles of Operation.          */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

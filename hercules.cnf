@@ -2,6 +2,9 @@
 #       Sample configuration file for Hercules ESA/390 emulator
 #
 
+# $Id$
+#
+# $Log$
 
 #------------------------------------------------------------------------------
 #       CPU Configuration

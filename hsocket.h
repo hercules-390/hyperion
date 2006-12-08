@@ -4,6 +4,10 @@
 /*  This header file contains equates for the socket functions       */
 /*  and constants whose values differ between Unix and Winsock       */
 
+// $Id$
+//
+// $Log$
+
 #if !defined(_HSOCKET_H)
 #define _HSOCKET_H
 

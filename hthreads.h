@@ -2,6 +2,10 @@
 /* HTHREADS.H   --   Hercules threading macros and functions         */
 /*-------------------------------------------------------------------*/
 
+// $Id$
+//
+// $Log$
+
 #ifndef _HTHREADS_H
 #define _HTHREADS_H
 

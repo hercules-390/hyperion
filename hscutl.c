@@ -8,6 +8,10 @@
 /* z/Architecture emulator                                           */
 /*********************************************************************/
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _HSCUTL_C_

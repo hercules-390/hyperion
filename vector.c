@@ -1,5 +1,7 @@
 /* vector.c     S/370 and ESA/390 Vector Operations                  */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module implements the Vector Facility instruction execution  */
 /* function of the S/370 and ESA/390 architectures, as described in  */
@@ -11,6 +13,8 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

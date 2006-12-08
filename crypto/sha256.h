@@ -1,6 +1,8 @@
 /* $OpenBSD: sha2.h,v 1.2 2004/04/28 23:11:57 millert Exp $ */
 /* modified for use with dyncrypt */
 
+// $Id$
+
 /*
  * FILE:        sha2.h
  * AUTHOR:      Aaron D. Gifford <me@aarongifford.com>
@@ -34,6 +36,8 @@
  *
  * $From: sha2.h,v 1.1 2001/11/08 00:02:01 adg Exp adg $
  */
+
+// $Log$
 
 #ifndef _SHA2_H
 #define _SHA2_H

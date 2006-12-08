@@ -10,6 +10,11 @@
 /*                            Noordwijkerhout, The Netherlands.              */
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
+
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _HAO_C_

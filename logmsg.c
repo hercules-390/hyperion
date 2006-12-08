@@ -1,6 +1,10 @@
 /* LOGMSG.C : ISW 2003 */
 /* logmsg frontend routing */
 
+// $Id$
+//
+// $Log$
+
 #include "hstdinc.h"
 
 #define _HUTIL_DLL_

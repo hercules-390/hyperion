@@ -1,6 +1,8 @@
 /* DASDPDSU.C   (c) Copyright Roger Bowler, 1999-2006                */
 /*              Hercules DASD Utilities: PDS unloader                */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This program unloads members of a partitioned dataset from        */
 /* a virtual DASD volume and copies each member to a flat file.      */
@@ -15,6 +17,8 @@
 /* working directory. If the ascii keyword is not specified then     */
 /* the members are unloaded as fixed length binary files.            */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 

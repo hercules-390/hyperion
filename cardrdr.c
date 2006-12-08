@@ -1,10 +1,14 @@
 /* CARDRDR.C    (c) Copyright Roger Bowler, 1999-2006                */
 /*              ESA/390 Card Reader Device Handler                   */
 
+// $Id$
+
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
 /* card reader devices.                                              */
 /*-------------------------------------------------------------------*/
+
+// $Log$
 
 #include "hstdinc.h"
 #include "hercules.h"

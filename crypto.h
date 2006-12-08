@@ -1,6 +1,10 @@
 /* CRYPTO.H     (c) Copyright Jan Jaeger, 2000-2006                  */
 /*              Cryptographic instructions                           */
 
+// $Id$
+//
+// $Log$
+
 #if defined(_FEATURE_MESSAGE_SECURITY_ASSIST)
 
 #ifndef _CRYPTO_C_
