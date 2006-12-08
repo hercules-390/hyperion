@@ -9,6 +9,10 @@
 
   CPUSERIAL 002623              # CPU serial number
   CPUMODEL  3090                # CPU model number
+  MODEL     EMULATOR            # STSI returned model
+  PLANT     ZZ                  # STSI returned plant
+  MANUFACTURER HRC              # STSI returned manufacturer
+  LPARNAME  HERCULES            # DIAG 204 returned lparname
   CPUVERID  FD                  # CPU Version Identification
   MAINSIZE  64                  # Main storage size in megabytes
   XPNDSIZE  0                   # Expanded storage size in megabytes
