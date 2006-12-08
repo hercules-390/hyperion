@@ -1,7 +1,0 @@
-# ***************************************************************************
-# MAKEFILE-DLL.MSVC (c) Copyright Roger Bowler, 2005
-# Build Hercules for Win32 using MSVC and nmake (DLL version)
-#
-# DLL version is no longer supported. Use makefile-dllmod.msvc instead.
-#
-# ***************************************************************************
