@@ -48,6 +48,7 @@
 #endif
 //#define OPTION_DEBUG_MESSAGES           // Prefix msgs with filename
                                         // and line# if DEBUG build
+#define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */
 
 /*********************************************************************\
  *********************************************************************
