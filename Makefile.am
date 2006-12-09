@@ -8,6 +8,9 @@
 # 06/09/06 Change History added - Fish
 # 06/09/06 HAO (Hercules Automatic Operator) support - Fish
 # $Log$
+# Revision 1.168  2006/12/08 09:43:16  jj
+# Add CVS message log
+#
 # ***************************************************************************
 
 AUTOMAKE_OPTIONS = foreign 1.5
@@ -571,7 +574,6 @@ EXTRA_DIST = autoconf/config.rpath \
              RELEASE.NOTES         \
              README.MSVC           \
              makefile.msvc         \
-             makefile-dll.msvc     \
              makefile-dllmod.msvc  \
              makefile.bat          \
              Hercules.dsp          \
