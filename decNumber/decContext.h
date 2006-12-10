@@ -37,7 +37,7 @@
   #define DECCAUTHOR   "Mike Cowlishaw"               /* Who to blame */
 
   #if !defined(int32_t)
-    #include <stdint.h>            // C99 standard integers
+    #include <hstdint.h>           // C99 standard integers
   #endif
   #include <signal.h>              // for traps
 
