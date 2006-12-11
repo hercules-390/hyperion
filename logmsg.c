@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.18  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -309,13 +312,13 @@ DLL_EXPORT void log_capture_closer(void *vcd)
     return;
 }
 
-DLL_EXPORT char *log_capture(void *(*func)(void *),void *arg)
+DLL_EXPORT char *log_capture(void *(*fun)(void *),void *p)
 {
     struct log_capture_data cd;
     cd.obfr=NULL;
     cd.sz=0;
     log_open(log_capture_writer,log_capture_closer,&cd);
-    func(arg);
+    fun(p);
     log_close();
     return(cd.obfr);
 }
