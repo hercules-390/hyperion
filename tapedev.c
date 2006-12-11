@@ -71,6 +71,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.110  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -5167,7 +5170,7 @@ static void tapedev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
 int             rc;                     /* Return code               */
 int             len;                    /* Length of data block      */
 long            num;                    /* Number of bytes to read   */
-long            locblock;               /* Block Id for Locate Block */
+U32             locblock;               /* Block Id for Locate Block */
 int             drc;                    /* code disposition          */
 BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
@@ -5920,7 +5923,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Informative message if tracing */
         if ( dev->ccwtrace || dev->ccwstep )
-            logmsg(_("HHCTA081I Locate block 0x%8.8lX on %s%s%4.4X\n")
+            logmsg(_("HHCTA081I Locate block 0x%8.8"I32_FMT"X on %s%s%4.4X\n")
                 ,locblock
                 ,TAPEDEVT_SCSITAPE == dev->tapedevt ? (char*)dev->filename : ""
                 ,TAPEDEVT_SCSITAPE == dev->tapedevt ?             " = "    : ""
