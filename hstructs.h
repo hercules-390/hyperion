@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.52  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #ifndef _HSTRUCTS_H
 #define _HSTRUCTS_H
@@ -879,7 +882,7 @@ struct DEVBLK {                         /* Device configuration block*/
         void   *omadesc;                /* -> OMA descriptor array   */
         U16     omafiles;               /* Number of OMA tape files  */
         U16     curfilen;               /* Current file number       */
-        long    blockid;                /* Current device block ID   */
+        U32     blockid;                /* Current device block ID   */
         off_t   nxtblkpos;              /* Offset from start of file
                                            to next block             */
         off_t   prvblkpos;              /* Offset from start of file
