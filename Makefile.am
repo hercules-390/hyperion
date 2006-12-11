@@ -8,6 +8,9 @@
 # 06/09/06 Change History added - Fish
 # 06/09/06 HAO (Hercules Automatic Operator) support - Fish
 # $Log$
+# Revision 1.169  2006/12/09 01:05:59  ivan
+# Remove makefile-dll.msvc from Makefile.am dist list since it has been removed from the repository
+#
 # Revision 1.168  2006/12/08 09:43:16  jj
 # Add CVS message log
 #
@@ -22,7 +25,7 @@ SUBDIRS = m4 po util html man . crypto decNumber
 
 LDADD = @LTLIBICONV@ @LTLIBINTL@ @LIBS@
 
-AM_CPPFLAGS = -I$(top_srcdir)
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/decNumber
 
 if BUILD_HERCIFC
   HERCIFC = hercifc
