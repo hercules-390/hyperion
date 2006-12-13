@@ -6,6 +6,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.2  2006/12/12 14:07:50  rbowler
+# Make decNumber a shared library not a loadable module
+#
 #
 
 lns=@LN_S@
@@ -59,7 +62,7 @@ noinst_HEADERS = decContext.h      \
 		 decPacked.h  
 
 EXTRA_DIST = decNumber.def     \
-	     decNumber.pdf     \
+	     decnumber.pdf     \
 	     decNumber.rc      \
 	     ICU-license.html  \
 	     readme.txt
