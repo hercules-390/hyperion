@@ -4,16 +4,19 @@
 #
 # $Id$
 #
-# DD/MM/YY Description.......................................................
-# 06/09/06 Change History added - Fish
-# 06/09/06 HAO (Hercules Automatic Operator) support - Fish
 # $Log$
+# Revision 1.170  2006/12/11 16:56:59  rbowler
+# Update Makefile.am to search decNumber for include files
+#
 # Revision 1.169  2006/12/09 01:05:59  ivan
 # Remove makefile-dll.msvc from Makefile.am dist list since it has been removed from the repository
 #
 # Revision 1.168  2006/12/08 09:43:16  jj
 # Add CVS message log
 #
+# DD/MM/YY Description.......................................................
+# 06/09/06 Change History added - Fish
+# 06/09/06 HAO (Hercules Automatic Operator) support - Fish
 # ***************************************************************************
 
 AUTOMAKE_OPTIONS = foreign 1.5
@@ -21,7 +24,7 @@ ACLOCAL_AMFLAGS  = -I m4
 
 lns=@LN_S@
 
-SUBDIRS = m4 po util html man . crypto decNumber
+SUBDIRS = decNumber m4 po util html man . crypto
 
 LDADD = @LTLIBICONV@ @LTLIBINTL@ @LIBS@
 
@@ -384,6 +387,7 @@ endif
                       libhercu.la     \
                       libherct.la     \
                       libhercd.la     \
+                      decNumber/libdecNumber.la \
                       $(LDADD)
 
 #
