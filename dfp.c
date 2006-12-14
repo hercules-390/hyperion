@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.10  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -246,8 +249,8 @@ U32     dxc;                            /* Data exception code or 0  */
 /*      Context structure rounding mode field is set according       */
 /*      to the value of the DRM field                                */
 /*-------------------------------------------------------------------*/
-static inline void
-dfp_rounding_mode(decContext *pset, U32 drm)
+static void
+dfp_set_rounding_mode(decContext *pset, BYTE drm)
 {
     /* Set rounding mode according to DRM value */
     switch (drm) {
@@ -261,10 +264,28 @@ dfp_rounding_mode(decContext *pset, U32 drm)
     case DRM_RFSP: pset->round = DEC_ROUND_DOWN; break;
     } /* end switch(drm) */
 
-} /* end function dfp_rounding_mode */
+} /* end function dfp_set_rounding_mode */
 
 #define _DFP_ARCH_INDEPENDENT_
 #endif /*!defined(_DFP_ARCH_INDEPENDENT_)*/
+
+/*-------------------------------------------------------------------*/
+/* Initialize DFP rounding mode from FPC register                    */
+/*                                                                   */
+/* Input:                                                            */
+/*      set     Decimal number context                               */
+/*      regs    CPU register context                                 */
+/*-------------------------------------------------------------------*/
+static inline void
+ARCH_DEP(dfp_init_rounding_mode) (decContext *pset, REGS *regs)
+{
+BYTE    drm;                            /* Decimal rounding mode     */
+
+    /* Set rounding mode according to DRM value in FPC register */
+    drm = (regs->fpc & FPC_DRM) >> FPC_DRM_SHIFT;
+    dfp_set_rounding_mode(pset, drm);
+
+} /* end function dfp_init_rounding_mode */
 
 /*-------------------------------------------------------------------*/
 /* Copy a DFP extended register into a decimal128 structure          */
@@ -315,17 +336,84 @@ QW      *qp;                            /* Quadword pointer          */
 } /* end function dfp_reg_from_decimal128 */
 
 /*-------------------------------------------------------------------*/
-/* Check for DFP exception conditions and raise data exception       */
+/* Check for DFP exception conditions                                */
+/*                                                                   */
+/* This subroutine is called by the DFP instruction processing       */
+/* routines after the calculation has been performed but before      */
+/* the result is loaded into the result register (or before any      */
+/* storage location is updated, as the case may be).                 */
+/*                                                                   */
+/* The purpose of this subroutine is to check whether any DFP        */
+/* exception conditions are indicated by the decimal context         */
+/* structure, and to initiate the appropriate action if so.          */
 /*                                                                   */
 /* Input:                                                            */
 /*      set     Decimal number context                               */
 /*      regs    CPU register context                                 */
+/*                                                                   */
+/* Output:                                                           */
+/*      Return value is DXC (data exception code) or zero.           */
+/*                                                                   */
+/* When no exception conditions are indicated, the return value      */
+/* is zero indicating that the instruction may proceed normally.     */
+/*                                                                   */
+/* When an exception condition exists and the corresponding mask     */
+/* bit in the FPC register is zero, then the corresponding flag      */
+/* bit is set in the FPC register. The return value is zero to       */
+/* indicate that the instruction may proceed normally.               */
+/*                                                                   */
+/* When an exception condition exists and the corresponding mask     */
+/* bit in the FPC register is one, then the DXC is set according     */
+/* to the type of exception, and one of two actions is taken:        */
+/* - if the exception is of a type which causes the instruction      */
+/*   to be suppressed, then this subroutine raises a program         */
+/*   exception and does not return to the calling instruction        */
+/* - if the exception is of a type which causes the instruction      */
+/*   to be completed, then this subroutine returns with the          */
+/*   DXC code as its return value. The calling instruction will      */
+/*   then raise a program exception after storing its results.       */
 /*-------------------------------------------------------------------*/
-static inline void
-ARCH_DEP(dfp_status_check) (decContext *set, REGS *regs)
+static BYTE
+ARCH_DEP(dfp_status_check) (decContext *pset, REGS *regs)
 {
+BYTE    dxc;                            /* Data exception code       */
 
+    if (pset->status & DEC_IEEE_854_Invalid_operation)
+    {
+        dxc = DXC_IEEE_INVALID_OP;    
+    }
+    else if (pset->status & DEC_IEEE_854_Division_by_zero)
+    {
+        dxc = DXC_IEEE_DIV_ZERO;
+    }
+    else if (pset->status & DEC_IEEE_854_Overflow)
+    {
+        dxc = (pset->status & DEC_IEEE_854_Inexact) ?
+                ((pset->status & DEC_Rounded) ?
+                    DXC_IEEE_OF_INEX_INCR :
+                    DXC_IEEE_OF_INEX_TRUNC ) :
+                    DXC_IEEE_OF_EXACT ;
+    }
+    else if (pset->status & DEC_IEEE_854_Underflow)
+    {
+        dxc = (pset->status & DEC_IEEE_854_Inexact) ?
+                ((pset->status & DEC_Rounded) ?  
+                    DXC_IEEE_UF_INEX_INCR :
+                    DXC_IEEE_UF_INEX_TRUNC ) :
+                    DXC_IEEE_UF_EXACT ;
+    }
+    else if (pset->status & DEC_IEEE_854_Inexact)
+    {
+        dxc = (pset->status & DEC_Rounded) ?  
+                    DXC_IEEE_UF_INEX_INCR :
+                    DXC_IEEE_UF_INEX_TRUNC ;
+    }
+    else
+    {
+        dxc = 0;
+    }
 
+    return dxc;
 } /* end function dfp_status_check */
 
 
@@ -342,6 +430,7 @@ int             r1, r2, r3;             /* Values of R fields        */
 decimal128      x1, x2, x3;             /* Extended DFP values       */
 decNumber       d1, d2, d3;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
     DFPINST_CHECK(regs);
@@ -349,25 +438,33 @@ decContext      set;                    /* Working context           */
 
     /* Initialise the context for extended DFP */
     decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_init_rounding_mode)(&set, regs);
 
-    /* Set rounding mode */
-    dfp_rounding_mode(&set, (regs->fpc & FPC_DRM) >> FPC_DRM_SHIFT);
-
-    /* Add r3 to r2 giving result in r1 */
+    /* Add FP register r3 to FP register r2 */
     ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
     ARCH_DEP(dfp_reg_to_decimal128)(r3, &x3, regs);
     decimal128ToNumber(&x2, &d2);
     decimal128ToNumber(&x3, &d3);
     decNumberAdd(&d1, &d2, &d3, &set);
     decimal128FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
     ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
 
     /* Set condition code */
-    regs->psw.cc = decNumberIsZero(&d1) ? 0 :
+    regs->psw.cc = decNumberIsNaN(&d1) ? 3 :
+                   decNumberIsZero(&d1) ? 0 :
                    decNumberIsNegative(&d1) ? 1 : 2;
 
     /* Raise data exception if error occurred */
-    ARCH_DEP(dfp_status_check)(&set, regs);
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
 
 } /* end DEF_INST(add_dfp_ext_reg) */ 
 
