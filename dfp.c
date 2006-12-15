@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.13  2006/12/15 21:50:23  rbowler
+// Decimal Floating Point: CXSTR instruction
+//
 // Revision 1.12  2006/12/15 13:26:47  rbowler
 // Decimal Floating Point: Exception masks
 //
@@ -582,6 +585,9 @@ int32_t         scale = 0;              /* Scaling factor            */
     DFPREGPAIR_CHECK(r1, regs);
     ODD_CHECK(r2, regs);
 
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
     /* Store general register pair in work area */
     STORE_DW(qwork, regs->GR_G(r2));
     STORE_DW(qwork+8, regs->GR_G(r2+1));
@@ -610,7 +616,47 @@ UNDEF_INST(convert_ubcd128_to_dfp_ext_reg)
 UNDEF_INST(convert_ubcd64_to_dfp_long_reg)
 UNDEF_INST(convert_dfp_ext_to_fix64_reg)
 UNDEF_INST(convert_dfp_long_to_fix64_reg)
-UNDEF_INST(convert_dfp_ext_to_sbcd128_reg)
+
+
+/*-------------------------------------------------------------------*/
+/* B3EB CSXTR - Convert to signed BCD (DFP ext to 128-bit)     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_dfp_ext_to_sbcd128_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m4;                     /* Values of M fields        */
+decimal128      x2;                     /* Extended DFP values       */
+decNumber       dwork;                  /* Working decimal number    */
+decContext      set;                    /* Working context           */
+QWORD           qwork;                  /* Quadword work area        */
+int32_t         scale;                  /* Scaling factor            */
+
+    RRF_M4(inst, regs, r1, r2, m4);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r2, regs);
+    ODD_CHECK(r1, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Load DFP extended number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x2, &dwork);
+
+    /* Convert number to signed BCD in work area */
+    decPackedFromNumber(qwork, sizeof(qwork), &scale, &dwork);
+
+    /* Make the plus-sign X'F' if m4 bit 3 is one */
+    if ((m4 & 0x01) && !decNumberIsNegative(&dwork))
+        qwork[15] |= 0x0F;
+
+    /* Load general register pair r1,r1+1 from work area */
+    FETCH_DW(regs->GR_G(r1), qwork);
+    FETCH_DW(regs->GR_G(r1+1), qwork+8);
+
+} /* end DEF_INST(convert_dfp_ext_to_sbcd128_reg) */
+
+
 UNDEF_INST(convert_dfp_long_to_sbcd64_reg)
 UNDEF_INST(convert_dfp_ext_to_ubcd128_reg)
 UNDEF_INST(convert_dfp_long_to_ubcd64_reg)

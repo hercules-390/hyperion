@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.188  2006/12/08 09:43:29  jj
+// Add CVS message log
+//
 
 #ifndef _OPCODE_H
 #define _OPCODE_H
@@ -714,6 +717,7 @@ do { \
 #undef DECODER_TEST_RRE
 #define DECODER_TEST_RRF_R
 #define DECODER_TEST_RRF_M
+#define DECODER_TEST_RRF_M4
 #define DECODER_TEST_RRF_RM
 #define DECODER_TEST_RRR
 #undef DECODER_TEST_RX
@@ -817,6 +821,28 @@ do { \
 #define RRF_M(_inst, _regs, _r1, _r2, _m3) \
       { U32 temp = fetch_fw(_inst); \
             (_m3) = (temp >> 12) & 0xf; \
+            (_r2) = (temp      ) & 0xf; \
+            (_r1) = (temp >>  4) & 0xf; \
+            INST_UPDATE_PSW((_regs), 4); \
+        }
+#endif
+
+/* RRF register to register with additional M4 field */
+#undef RRF_M4
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RRF_M4)
+#define RRF_M4(_inst, _regs, _r1, _r2, _m4) \
+        { \
+            int i = (_inst)[2]; \
+            (_m4) = i & 0xf; \
+            i = (_inst)[3]; \
+            (_r1) = i >> 4; \
+            (_r2) = i & 0xf; \
+            INST_UPDATE_PSW((_regs), 4); \
+        }
+#else
+#define RRF_M4(_inst, _regs, _r1, _r2, _m4) \
+      { U32 temp = fetch_fw(_inst); \
+            (_m4) = (temp >>  8) & 0xf; \
             (_r2) = (temp      ) & 0xf; \
             (_r1) = (temp >>  4) & 0xf; \
             INST_UPDATE_PSW((_regs), 4); \
