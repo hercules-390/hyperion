@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.12  2006/12/15 13:26:47  rbowler
+// Decimal Floating Point: Exception masks
+//
 // Revision 1.11  2006/12/14 17:25:35  rbowler
 // Decimal Floating Point: Exception conditions
 //
@@ -35,6 +38,7 @@
 #include "decimal128.h"
 #include "decimal64.h"
 #include "decimal32.h"
+#include "decPacked.h"
 #endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
 
 #if defined(FEATURE_FPS_ENHANCEMENT)
@@ -560,7 +564,47 @@ UNDEF_INST(compare_exponent_dfp_ext_reg)
 UNDEF_INST(compare_exponent_dfp_long_reg)
 UNDEF_INST(convert_fix64_to_dfp_ext_reg)
 UNDEF_INST(convert_fix64_to_dfp_long_reg)
-UNDEF_INST(convert_sbcd128_to_dfp_ext_reg)
+
+/*-------------------------------------------------------------------*/
+/* B3FB CXSTR - Convert from signed BCD (128-bit to DFP ext)   [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_sbcd128_to_dfp_ext_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal128      x1;                     /* Extended DFP values       */
+decNumber       dwork, *dp;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+QWORD           qwork;                  /* Quadword work area        */
+int32_t         scale = 0;              /* Scaling factor            */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r1, regs);
+    ODD_CHECK(r2, regs);
+
+    /* Store general register pair in work area */
+    STORE_DW(qwork, regs->GR_G(r2));
+    STORE_DW(qwork+8, regs->GR_G(r2+1));
+
+    /* Convert signed BCD to internal number format */
+    dp = decPackedToNumber(qwork, sizeof(qwork), &scale, &dwork);
+
+    /* Data exception if digits or sign was invalid */
+    if (dp == NULL)
+    {
+        regs->dxc = DXC_DECIMAL;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+    /* Convert internal number to DFP extended format */
+    decimal128FromNumber(&x1, &dwork, &set);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+} /* end DEF_INST(convert_sbcd128_to_dfp_ext_reg) */
+
+
 UNDEF_INST(convert_sbcd64_to_dfp_long_reg)
 UNDEF_INST(convert_ubcd128_to_dfp_ext_reg)
 UNDEF_INST(convert_ubcd64_to_dfp_long_reg)
