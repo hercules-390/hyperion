@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.11  2006/12/14 17:25:35  rbowler
+// Decimal Floating Point: Exception conditions
+//
 // Revision 1.10  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -376,44 +379,122 @@ QW      *qp;                            /* Quadword pointer          */
 static BYTE
 ARCH_DEP(dfp_status_check) (decContext *pset, REGS *regs)
 {
-BYTE    dxc;                            /* Data exception code       */
+BYTE    dxc = 0;                        /* Data exception code       */
+int     suppress = 0;                   /* 1=suppress, 0=complete    */
 
     if (pset->status & DEC_IEEE_854_Invalid_operation)
     {
-        dxc = DXC_IEEE_INVALID_OP;    
+        /* An IEEE-invalid-operation condition was recognized */
+        if ((regs->fpc & FPC_MASK_IMI) == 0)
+        {
+            regs->fpc |= FPC_FLAG_SFI;
+        }
+        else
+        {
+            dxc = DXC_IEEE_INVALID_OP;    
+            suppress = 1;
+        }
     }
     else if (pset->status & DEC_IEEE_854_Division_by_zero)
     {
-        dxc = DXC_IEEE_DIV_ZERO;
+        /* An IEEE-division-by-zero condition was recognized */
+        if ((regs->fpc & FPC_MASK_IMZ) == 0)
+        {
+            /* Division-by-zero mask is zero */
+            regs->fpc |= FPC_FLAG_SFZ;
+        }
+        else
+        {
+            /* Division-by-zero mask is one */
+            dxc = DXC_IEEE_DIV_ZERO;
+            suppress = 1;
+        }
     }
     else if (pset->status & DEC_IEEE_854_Overflow)
     {
-        dxc = (pset->status & DEC_IEEE_854_Inexact) ?
-                ((pset->status & DEC_Rounded) ?
-                    DXC_IEEE_OF_INEX_INCR :
-                    DXC_IEEE_OF_INEX_TRUNC ) :
-                    DXC_IEEE_OF_EXACT ;
+        /* An IEEE-overflow condition was recognized */
+        if ((regs->fpc & FPC_MASK_IMO) == 0)
+        {
+            /* Overflow mask is zero */
+            regs->fpc |= FPC_FLAG_SFO;
+        }
+        else
+        {
+            /* Overflow mask is one */
+            dxc = (pset->status & DEC_IEEE_854_Inexact) ?
+                    ((pset->status & DEC_Rounded) ?
+                        DXC_IEEE_OF_INEX_INCR :
+                        DXC_IEEE_OF_INEX_TRUNC ) :
+                        DXC_IEEE_OF_EXACT ;
+        }
     }
     else if (pset->status & DEC_IEEE_854_Underflow)
     {
-        dxc = (pset->status & DEC_IEEE_854_Inexact) ?
-                ((pset->status & DEC_Rounded) ?  
-                    DXC_IEEE_UF_INEX_INCR :
-                    DXC_IEEE_UF_INEX_TRUNC ) :
-                    DXC_IEEE_UF_EXACT ;
+        /* An IEEE-underflow condition was recognized */
+        if ((regs->fpc & FPC_MASK_IMU) == 0)
+        {
+            /* Underflow mask is zero */
+            if (pset->status & DEC_IEEE_854_Inexact)
+            {
+                if ((regs->fpc & FPC_MASK_IMX) == 0)
+                {
+                    /* Inexact result with inexact mask zero */
+                    regs->fpc |= (FPC_FLAG_SFU | FPC_FLAG_SFX);
+                }
+                else
+                {
+                    /* Inexact result with inexact mask one */
+                    regs->fpc |= FPC_FLAG_SFU;
+                    dxc = (pset->status & DEC_Rounded) ?
+                            DXC_IEEE_INEXACT_INCR :
+                            DXC_IEEE_INEXACT_TRUNC ;
+                }
+            }
+        }
+        else
+        {
+            /* Underflow mask is one */
+            if (pset->status & DEC_IEEE_854_Inexact)
+            {
+                /* Underflow with inexact result */
+                dxc = (pset->status & DEC_Rounded) ?
+                        DXC_IEEE_UF_INEX_INCR :
+                        DXC_IEEE_UF_INEX_TRUNC ;
+            }
+            else
+            {
+                /* Underflow with exact result */
+                dxc = DXC_IEEE_UF_EXACT;
+            }
+        }
     }
     else if (pset->status & DEC_IEEE_854_Inexact)
     {
-        dxc = (pset->status & DEC_Rounded) ?  
-                    DXC_IEEE_UF_INEX_INCR :
-                    DXC_IEEE_UF_INEX_TRUNC ;
-    }
-    else
-    {
-        dxc = 0;
+        /* An IEEE-inexact condition was recognized */
+        if ((regs->fpc & FPC_MASK_IMX) == 0)
+        {
+            /* Inexact mask is zero */
+            regs->fpc |= FPC_FLAG_SFX;
+        }
+        else
+        {
+            /* Inexact mask is one */
+            dxc = (pset->status & DEC_Rounded) ?
+                    DXC_IEEE_INEXACT_INCR :
+                    DXC_IEEE_INEXACT_TRUNC ;
+        }
     }
 
+    /* If suppression is indicated, raise a data exception */
+    if (suppress)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+    /* Otherwise return to complete the instruction */
     return dxc;
+
 } /* end function dfp_status_check */
 
 
