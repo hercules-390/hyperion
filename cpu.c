@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.166  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -289,6 +292,7 @@ int     nointercept;                    /* True for virtual pgmint   */
 #if defined(OPTION_FOOTPRINT_BUFFER)
 U32     n;
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
+char    dxcstr[8]={0};                  /* " DXC=xx" if data excptn  */
 
 static char *pgmintname[] = {
         /* 01 */        "Operation exception",
@@ -526,8 +530,10 @@ static char *pgmintname[] = {
 #if defined(SIE_DEBUG)
         logmsg (MSTRING(_GEN_ARCH) " ");
 #endif /*defined(SIE_DEBUG)*/
-        logmsg (_("CPU%4.4X: %s CODE=%4.4X ILC=%d\n"), realregs->cpuad,
-                pgmintname[ (code - 1) & 0x3F], pcode, ilc);
+        if (code == PGM_DATA_EXCEPTION)
+            sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
+        logmsg (_("CPU%4.4X: %s CODE=%4.4X ILC=%d%s\n"), realregs->cpuad,
+                pgmintname[ (code - 1) & 0x3F], pcode, ilc, dxcstr);
         ARCH_DEP(display_inst) (realregs,
                                 realregs->instinvalid ? NULL : realregs->ip);
     }

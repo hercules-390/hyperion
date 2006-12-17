@@ -1,3 +1,4 @@
+17 Dec 2006 Display DXC in msg HHCCP014I for PIC7 - Roger Bowler
 11 Dec 2006 Set tape blockid to U32 - (by "zazubek") - Ivan Warren
 08 Dec 2006 Add model, plant and manufacturer config parameter - Bernard
 06 Dec 2006 Include Mike Cowlishaw decNumber package - Roger Bowler
