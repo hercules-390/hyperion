@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.52  2006/12/17 21:58:50  rbowler
+// FPR command to display register pairs
+//
 // Revision 1.51  2006/12/08 09:43:26  jj
 // Add CVS message log
 //
@@ -1039,6 +1042,7 @@ int     n;                              /* Number of bytes in buffer */
     if (ilc > 2
         && opcode != 0x84 && opcode != 0x85
         && opcode != 0xA5 && opcode != 0xA7
+        && opcode != 0xB3
         && opcode != 0xC0 && opcode != 0xEC)
     {
         /* Calculate the effective address of the first operand */
@@ -1093,7 +1097,6 @@ int     n;                              /* Number of bytes in buffer */
             ((inst[1] >= 0x20 && inst[1] <= 0x2F)
             || (inst[1] >= 0x40 && inst[1] <= 0x6F)
             || (inst[1] >= 0xA0 && inst[1] <= 0xAF)))
-        || opcode == 0xB3
         || opcode == 0xB9)
     {
         b1 = inst[3] >> 4;
@@ -1151,7 +1154,12 @@ int     n;                              /* Number of bytes in buffer */
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
 
     /* Display the general purpose registers */
-    display_regs (regs);
+    if (!(opcode == 0xB3 || (opcode >= 0x20 && opcode <= 0x3F)) 
+        || (opcode == 0xB3 && (
+                (inst[1] >= 0x80 && inst[1] <= 0xCF)
+                || (inst[1] >= 0xE1 && inst[1] <= 0xFE)
+           )))
+        display_regs (regs);
 
     /* Display control registers if appropriate */
     if (!REAL_MODE(&regs->psw) || regs->ip[0] == 0xB2)
@@ -1161,7 +1169,16 @@ int     n;                              /* Number of bytes in buffer */
     if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         display_aregs (regs);
 
-    // display_fregs (regs)
+    /* Display floating-point registers if appropriate */
+    if (opcode == 0xB3 || opcode == 0xED
+        || (opcode >= 0x20 && opcode <= 0x3F)
+        || (opcode >= 0x60 && opcode <= 0x70)
+        || (opcode >= 0x78 && opcode <= 0x7F)
+        || (opcode == 0xB2 && inst[1] == 0x2D) /*DXR*/
+        || (opcode == 0xB2 && inst[1] == 0x44) /*SQDR*/
+        || (opcode == 0xB2 && inst[1] == 0x45) /*SQER*/
+       )
+        display_fregs (regs);
 
 } /* end function display_inst */
 
