@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.14  2006/12/15 22:49:02  rbowler
+// Decimal Floating Point: CSXTR instruction
+//
 // Revision 1.13  2006/12/15 21:50:23  rbowler
 // Decimal Floating Point: CXSTR instruction
 //
@@ -577,7 +580,7 @@ int             r1, r2;                 /* Values of R fields        */
 decimal128      x1;                     /* Extended DFP values       */
 decNumber       dwork, *dp;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
-QWORD           qwork;                  /* Quadword work area        */
+BYTE            qwork[16];              /* 31-digit packed work area */
 int32_t         scale = 0;              /* Scaling factor            */
 
     RRE(inst, regs, r1, r2);
@@ -628,7 +631,7 @@ int             m4;                     /* Values of M fields        */
 decimal128      x2;                     /* Extended DFP values       */
 decNumber       dwork;                  /* Working decimal number    */
 decContext      set;                    /* Working context           */
-QWORD           qwork;                  /* Quadword work area        */
+BYTE            qwork[17];              /* 33-digit packed work area */
 int32_t         scale;                  /* Scaling factor            */
 
     RRF_M4(inst, regs, r1, r2, m4);
@@ -648,11 +651,12 @@ int32_t         scale;                  /* Scaling factor            */
 
     /* Make the plus-sign X'F' if m4 bit 3 is one */
     if ((m4 & 0x01) && !decNumberIsNegative(&dwork))
-        qwork[15] |= 0x0F;
+        qwork[16] |= 0x0F;
 
-    /* Load general register pair r1,r1+1 from work area */
-    FETCH_DW(regs->GR_G(r1), qwork);
-    FETCH_DW(regs->GR_G(r1+1), qwork+8);
+    /* Load general register pair r1 and r1+1 from
+       rightmost 31 packed decimal digits of work area */
+    FETCH_DW(regs->GR_G(r1), qwork+1);
+    FETCH_DW(regs->GR_G(r1+1), qwork+9);
 
 } /* end DEF_INST(convert_dfp_ext_to_sbcd128_reg) */
 
