@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.193  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -5231,7 +5234,7 @@ void *panel_command (void *cmdline)
     cmd[i] = 0;
 
     /* Ignore null commands (just pressing enter)
-       unless instruction tracing is enabled. */
+       unless instruction stepping is enabled. */
     if (!sysblk.inststep && 0 == cmd[0])
         return NULL;
 
