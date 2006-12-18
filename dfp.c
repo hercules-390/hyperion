@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.15  2006/12/17 16:31:20  rbowler
+// Decimal Floating Point: CSXTR correction
+//
 // Revision 1.14  2006/12/15 22:49:02  rbowler
 // Decimal Floating Point: CSXTR instruction
 //
@@ -664,7 +667,49 @@ int32_t         scale;                  /* Scaling factor            */
 UNDEF_INST(convert_dfp_long_to_sbcd64_reg)
 UNDEF_INST(convert_dfp_ext_to_ubcd128_reg)
 UNDEF_INST(convert_dfp_long_to_ubcd64_reg)
-UNDEF_INST(divide_dfp_ext_reg)
+/*-------------------------------------------------------------------*/
+/* B3D9 DXTR  - Divide DFP Extended Register                   [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(divide_dfp_ext_reg)
+{
+int             r1, r2, r3;             /* Values of R fields        */
+decimal128      x1, x2, x3;             /* Extended DFP values       */
+decNumber       d1, d2, d3;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRR(inst, regs, r1, r2, r3);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR3_CHECK(r1, r2, r3, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_init_rounding_mode)(&set, regs);
+
+    /* Divide FP register r2 by FP register r3 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    ARCH_DEP(dfp_reg_to_decimal128)(r3, &x3, regs);
+    decimal128ToNumber(&x2, &d2);
+    decimal128ToNumber(&x3, &d3);
+    decNumberDivide(&d1, &d2, &d3, &set);
+    decimal128FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(divide_dfp_ext_reg) */
+
+
 UNDEF_INST(divide_dfp_long_reg)
 UNDEF_INST(extract_biased_exponent_dfp_ext_to_fix64_reg)
 UNDEF_INST(extract_biased_exponent_dfp_long_to_fix64_reg)
@@ -721,7 +766,49 @@ UNDEF_INST(load_lengthened_dfp_long_to_ext_reg)
 UNDEF_INST(load_lengthened_dfp_short_to_long_reg)
 UNDEF_INST(load_rounded_dfp_ext_to_long_reg)
 UNDEF_INST(load_rounded_dfp_long_to_short_reg)
-UNDEF_INST(multiply_dfp_ext_reg)
+/*-------------------------------------------------------------------*/
+/* B3D8 MXTR  - Multiply DFP Extended Register                 [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_dfp_ext_reg)
+{
+int             r1, r2, r3;             /* Values of R fields        */
+decimal128      x1, x2, x3;             /* Extended DFP values       */
+decNumber       d1, d2, d3;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRR(inst, regs, r1, r2, r3);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR3_CHECK(r1, r2, r3, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_init_rounding_mode)(&set, regs);
+
+    /* Multiply FP register r2 by FP register r3 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    ARCH_DEP(dfp_reg_to_decimal128)(r3, &x3, regs);
+    decimal128ToNumber(&x2, &d2);
+    decimal128ToNumber(&x3, &d3);
+    decNumberMultiply(&d1, &d2, &d3, &set);
+    decimal128FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(multiply_dfp_ext_reg) */
+
+
 UNDEF_INST(multiply_dfp_long_reg)
 UNDEF_INST(quantize_dfp_ext_reg)
 UNDEF_INST(quantize_dfp_long_reg)
