@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.171  2006/12/13 17:16:30  rbowler
+# Make libherc depend on libdecNumber
+#
 # Revision 1.170  2006/12/11 16:56:59  rbowler
 # Update Makefile.am to search decNumber for include files
 #
@@ -666,6 +669,7 @@ noinst_HEADERS = fishhang.h     \
                  hconsole.h     \
                  hextapi.h      \
                  hstdinc.h      \
+                 hstdint.h      \
                  hsocket.h      \
                  w32stape.h     \
                  w32dl.h        \
