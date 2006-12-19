@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.16  2006/12/18 16:48:06  rbowler
+// Decimal Floating Point: DXTR,MXTR instructions
+//
 // Revision 1.15  2006/12/17 16:31:20  rbowler
 // Decimal Floating Point: CSXTR correction
 //
@@ -632,10 +635,11 @@ DEF_INST(convert_dfp_ext_to_sbcd128_reg)
 int             r1, r2;                 /* Values of R fields        */
 int             m4;                     /* Values of M fields        */
 decimal128      x2;                     /* Extended DFP values       */
+QW              *qp;                    /* Quadword pointer          */
 decNumber       dwork;                  /* Working decimal number    */
 decContext      set;                    /* Working context           */
-BYTE            qwork[17];              /* 33-digit packed work area */
 int32_t         scale;                  /* Scaling factor            */
+BYTE            qwork[17];              /* 33-digit packed work area */
 
     RRF_M4(inst, regs, r1, r2, m4);
     DFPINST_CHECK(regs);
@@ -647,6 +651,13 @@ int32_t         scale;                  /* Scaling factor            */
 
     /* Load DFP extended number from FP register r2 */
     ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+
+    /* If NaN or Inf then use coefficient only */
+    qp = (QW*)&x2;
+    if ((qp->F.HH.F & 0x78000000) == 0X78000000)
+        qp->F.HH.F &= 0x80003FFF;
+
+    /* Convert to internal decimal number format */
     decimal128ToNumber(&x2, &dwork);
 
     /* Convert number to signed BCD in work area */
