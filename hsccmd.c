@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.194  2006/12/18 15:24:48  rbowler
+// Correction of comment (c/tracing/stepping/)
+//
 // Revision 1.193  2006/12/08 09:43:26  jj
 // Add CVS message log
 //
@@ -1347,6 +1350,34 @@ REGS *regs;
     regs = sysblk.regs[sysblk.pcpu];
 
     display_fregs (regs);
+
+    release_lock(&sysblk.cpulock[sysblk.pcpu]);
+
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* fpc command - display floating point control register */
+
+int fpc_cmd(int argc, char *argv[], char *cmdline)
+{
+REGS *regs;
+
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+
+    obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
+
+    if (!IS_CPU_ONLINE(sysblk.pcpu))
+    {
+        release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
+        return 0;
+    }
+    regs = sysblk.regs[sysblk.pcpu];
+
+    logmsg( "FPC=%8.8"I32_FMT"X\n", regs->fpc );
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -4677,6 +4708,7 @@ COMMAND ( "store",     store_cmd,     "store CPU status at absolute zero\n" )
 COMMAND ( "psw",       psw_cmd,       "display program status word" )
 COMMAND ( "gpr",       gpr_cmd,       "display general purpose registers" )
 COMMAND ( "fpr",       fpr_cmd,       "display floating point registers" )
+COMMAND ( "fpc",       fpc_cmd,       "display floating point control register" )
 COMMAND ( "cr",        cr_cmd,        "display control registers" )
 COMMAND ( "ar",        ar_cmd,        "display access registers" )
 COMMAND ( "pr",        pr_cmd,        "display prefix register" )

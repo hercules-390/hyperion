@@ -1,4 +1,5 @@
-17 Dec 2006 FPR command to display register pairs - Roger Bowler
+19 Dec 2006 New FPC command to display FPC register - Roger Bowler
+17 Dec 2006 Modify FPR command to display FP registers in pairs - Roger Bowler
 17 Dec 2006 Display DXC in msg HHCCP014I for PIC7 - Roger Bowler
 11 Dec 2006 Set tape blockid to U32 - (by "zazubek") - Ivan Warren
 08 Dec 2006 Add model, plant and manufacturer config parameter - Bernard
