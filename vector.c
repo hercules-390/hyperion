@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.17  2006/12/08 09:43:31  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -272,8 +275,7 @@ U64     d;
             regs->GR_L(gr1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
-            regs->psw.IA -= REAL_ILC(regs);
-            VALIDATE_AIA(regs);
+            UPD_PSW_IA(regs, PSW_IA(regs, -4));
             return;
 #endif
         }
@@ -347,8 +349,7 @@ U64     d;
             regs->GR_L(gr1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
-            regs->psw.IA -= REAL_ILC(regs);
-            VALIDATE_AIA(regs);
+            UPD_PSW_IA(regs, PSW_IA(regs, -4));
             return;
 #endif
         }
@@ -423,8 +424,7 @@ U64     d;
             regs->GR_L(gr1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
-            regs->psw.IA -= REAL_ILC(regs);
-            VALIDATE_AIA(regs);
+            UPD_PSW_IA(regs, PSW_IA(regs, -4));
             return;
 #endif
         }

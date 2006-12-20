@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.20  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #if defined(OPTION_370_MODE)
 #define _ARCH_370_NAME "S/370"
@@ -24,7 +27,8 @@
 #define FEATURE_CHANNEL_SWITCHING
 #define FEATURE_S370E_EXTENDED_ADDRESSING
 #define FEATURE_TEST_BLOCK
-#define FEATURE_ECPSVM
+//temporary
+#undef FEATURE_ECPSVM
 
 #endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */

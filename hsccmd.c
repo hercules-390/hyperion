@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.195  2006/12/19 14:22:30  rbowler
+// New FPC command to display FPC register
+//
 // Revision 1.194  2006/12/18 15:24:48  rbowler
 // Correction of comment (c/tracing/stepping/)
 //
@@ -4297,15 +4300,15 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg ("mainstor %p  aim %p  aiv %16.16" I64_FMT "x  aie %16.16" I64_FMT "x\n",
-            regs->mainstor,regs->aim,regs->aiv,regs->aie);
+    logmsg ("AIV %16.16" I64_FMT "x aip %p ip %p aie %p aim %p\n",
+            regs->aiv,regs->aip,regs->ip,regs->aie,(BYTE *)regs->aim);
 
     if (regs->sie_active)
     {
         regs = regs->guestregs;
         logmsg ("SIE:\n");
-        logmsg ("mainstor %p  aim %p  aiv %16.16" I64_FMT "x  aie %16.16" I64_FMT "x\n",
-            regs->mainstor,regs->aim,regs->aiv,regs->aie);
+        logmsg ("AIV %16.16" I64_FMT "x aip %p ip %p aie %p\n",
+            regs->aiv,regs->aip,regs->ip,regs->aie);
     }
 
     release_lock (&sysblk.cpulock[sysblk.pcpu]);
@@ -4589,6 +4592,7 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     logmsg(_("HHCPN161I SYSBLK ............%7d\n"),sizeof(SYSBLK));
     logmsg(_("HHCPN161I REGS ..............%7d\n"),sizeof(REGS));
     logmsg(_("HHCPN161I REGS (copy len) ...%7d\n"),sysblk.regs_copy_len);
+    logmsg(_("HHCPN161I PSW ...............%7d\n"),sizeof(PSW));
     logmsg(_("HHCPN161I DEVBLK ............%7d\n"),sizeof(DEVBLK));
     logmsg(_("HHCPN161I TLB entry .........%7d\n"),sizeof(TLB)/TLBN);
     logmsg(_("HHCPN161I TLB table .........%7d\n"),sizeof(TLB));

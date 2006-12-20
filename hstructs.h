@@ -9,6 +9,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.53  2006/12/11 11:39:17  ivan
+// Set tape blockid type to U32 in devblk instead of long that becomes 64 bit wide
+// on 64 bit systems. Suggested by rod/zazubek on main list
+//
 // Revision 1.52  2006/12/08 09:43:28  jj
 // Add CVS message log
 //
@@ -30,14 +34,17 @@ struct REGS {                           /* Processor registers       */
 
         DW      px;                     /* Prefix register           */
         PSW     psw;                    /* Program status word       */
+        BYTE   *ip;                     /* Mainstor inst address     */
 
      /* AIA - Instruction fetch accelerator                          */
+        BYTE   *aip;                    /* Mainstor page address     */
+        uintptr_t aim;                  /* Mainstor xor address      */
+        BYTE   *aie;                    /* Mainstor page end address */
+        DW      aiv;                    /* Virtual page address      */
 
-        BYTE   *aim;                    /* Mainstor address          */
-        DW      aiv;                    /* Virtual address           */
-        DW      aie;                    /* Virtual page end address  */
+        U64     bear;                   /* Breaking event address reg*/
+        BYTE   *bear_ip;                /* Breaking event inst ptr   */
 
-        PSW     captured_zpsw;          /* Captured-z/Arch PSW reg   */
         DW      gr[16];                 /* General registers         */
 
         DW      cr_special[1];          /* Negative Index into cr    */
@@ -54,6 +61,26 @@ struct REGS {                           /* Processor registers       */
         DW      mc;                     /* Monitor Code              */
         DW      ea;                     /* Exception address         */
         DW      et;                     /* Execute Target address    */
+
+        unsigned int                    /* Flags (cpu thread only)   */
+                execflag:1,             /* 1=EXecuted instruction    */
+                permode:1,              /* 1=PER active              */
+                instinvalid:1,          /* 1=Inst field is invalid   */
+                opinterv:1,             /* 1=Operator intervening    */
+                checkstop:1,            /* 1=CPU is checkstop-ed     */
+                hostint:1,              /* 1=Host generated interrupt*/
+                host:1,                 /* REGS are hostregs         */
+                guest:1;                /* REGS are guestregs        */
+        unsigned int                    /* Flags (intlock serialized)*/
+                dummy:1,                /* 1=Dummy regs structure    */
+                configured:1,           /* 1=CPU is online           */
+                loadstate:1,            /* 1=CPU is in load state    */
+                ghostregs:1,            /* 1=Ghost registers (panel) */
+                invalidate:1,           /* 1=Do AIA/AEA invalidation */
+                tracing:1,              /* 1=Trace is active         */
+                sigpreset:1,            /* 1=SIGP cpu reset received */
+                sigpireset:1,           /* 1=SIGP initial cpu reset  */
+                syncio:1;               /* 1=Synchronous i/o active  */
 
         S64     cpu_timer;              /* CPU timer epoch           */
         S64     int_timer;              /* S/370 Interval timer      */
@@ -105,8 +132,6 @@ struct REGS {                           /* Processor registers       */
 #define PX_L      px.F.L.F
 #define AIV_G     aiv.D
 #define AIV_L     aiv.F.L.F
-#define AIE_G     aie.D
-#define AIE_L     aie.F.L.F
 #define AR(_r)    ar[(_r)]
 
         U16     chanset;                /* Connected channel set     */
@@ -172,10 +197,6 @@ struct REGS {                           /* Processor registers       */
         BYTE    peraid;                 /* PER access id             */
 // #endif /*defined(FEATURE_PER)*/
 
-// #if defined(FEATURE_PER3)
-        U64     bear;                   /* Breaking event address reg*/
-// #endif /*defined(FEATURE_PER3)*/
-
         U32     cpubit;
         U32     ints_state;             /* CPU Interrupts Status     */
         U32     ints_mask;              /* Respective Interrupts Mask*/
@@ -188,25 +209,6 @@ struct REGS {                           /* Processor registers       */
         int     mainwait;               /* 1=Waiting on mainlock     */
         int     intwait;                /* 1=Waiting on intlock      */
 
-        unsigned int                    /* Flags (cpu thread only)   */
-                opinterv:1,             /* 1=Operator intervening    */
-                checkstop:1,            /* 1=CPU is checkstop-ed     */
-                hostint:1,              /* 1=Host generated interrupt*/
-                execflag:1,             /* 1=EXecuted instruction    */
-                instinvalid:1,          /* 1=Inst field is invalid   */
-                permode:1,              /* 1=PER active              */
-                host:1,                 /* REGS are hostregs         */
-                guest:1;                /* REGS are guestregs        */
-        unsigned int                    /* Flags (intlock serialized)*/
-                dummy:1,                /* 1=Dummy regs structure    */
-                configured:1,           /* 1=CPU is online           */
-                loadstate:1,            /* 1=CPU is in load state    */
-                ghostregs:1,            /* 1=Ghost registers (panel) */
-                invalidate:1,           /* 1=Do AIA/AEA invalidation */
-                tracing:1,              /* 1=Trace is active         */
-                sigpreset:1,            /* 1=SIGP cpu reset received */
-                sigpireset:1,           /* 1=SIGP initial cpu reset  */
-                syncio:1;               /* 1=Synchronous i/o active  */
         BYTE    cpustate;               /* CPU stopped/started state */
         BYTE    malfcpu                 /* Malfuction alert flags    */
                     [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
@@ -216,10 +218,8 @@ struct REGS {                           /* Processor registers       */
         BYTE    inst[8];                /* Fetched instruction when
                                            instruction crosses a page
                                            boundary                  */
-        BYTE    *ip;                    /* Pointer to last-fetched
-                                           instruction (either inst
-                                           above or in mainstor      */
         BYTE    *invalidate_main;       /* Mainstor addr to invalidat*/
+        PSW     captured_zpsw;          /* Captured-z/Arch PSW reg   */
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS *vf;                     /* Vector Facility           */
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
@@ -245,7 +245,9 @@ struct REGS {                           /* Processor registers       */
 
         BYTE    aea_aleprot[16];        /* ale protected             */
 
+     /* ------------------------------------------------------------ */
         U64     regs_copy_end;          /* Copy regs to here         */
+     /* ------------------------------------------------------------ */
 
      /* Opcode table pointers                                        */
 

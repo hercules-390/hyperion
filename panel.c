@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.209  2006/12/08 09:43:29  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -1214,6 +1217,8 @@ REGS *copy_regs(int cpu)
     else
 #endif
         regs = &copyregs;
+
+    SET_PSW_IA(regs);
 
     release_lock(&sysblk.cpulock[cpu]);
     return regs;

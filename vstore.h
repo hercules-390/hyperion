@@ -34,6 +34,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.66  2006/12/08 09:43:31  jj
+// Add CVS message log
+//
 
 #define s370_wstorec(_src, _len, _addr, _arn, _regs) \
         s370_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs)) 
@@ -698,15 +701,18 @@ int     pagesz;                         /* Effective page size       */
 int     offset;                         /* Address offset into page  */
 int     len;                            /* Length for page crossing  */
 
-    addr = exec ? regs->ET : regs->psw.IA;
-    addr &= ADDRESS_MAXWRAP(regs);
+    SET_BEAR_REG(regs, regs->bear_ip);
 
-    pagesz = addr < 0x800 ? 0x800 : PAGEFRAME_PAGESIZE;
+    addr = exec ? regs->ET
+         : likely(regs->aie == NULL) ? regs->psw.IA : PSW_IA(regs,0);
+
     offset = (int)(addr & PAGEFRAME_BYTEMASK);
 
     /* Program check if instruction address is odd */
     if ( unlikely(offset & 0x01) )
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+
+    pagesz = unlikely(addr < 0x800) ? 0x800 : PAGEFRAME_PAGESIZE;
 
 #if defined(FEATURE_PER)
     /* Save the address address used to fetch the instruction */
@@ -738,17 +744,22 @@ int     len;                            /* Length for page crossing  */
             if ( EN_IC_PER_IFNUL(regs) )
             {
                 ON_IC_PER_IFNUL(regs);
+                regs->psw.IA = addr;
                 regs->psw.zeroilc = 1;
                 ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
             }
       #endif /*defined(FEATURE_PER3)*/
         }
+        /* Quick exit if aia valid */
+        if (!exec && !regs->tracing
+         && regs->aie && regs->ip < regs->aip + pagesz - 5)
+            return regs->ip;
     }
 #endif /*defined(FEATURE_PER)*/
 
-    if (!exec)
-        regs->instinvalid = 1;
+    if (!exec) regs->instinvalid = 1;
 
+    /* Get instruction address */
     ia = MADDR (addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
 
     /* If boundary is crossed then copy instruction to destination */
@@ -761,24 +772,31 @@ int     len;                            /* Length for page crossing  */
         offset = 0;
         addr = (addr + len) & ADDRESS_MAXWRAP(regs);
         ia = MADDR(addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+        if (!exec) regs->ip = ia - len;
         memcpy(dest + len, ia, 4);
     }
     else
+    {
         dest = ia;
+        if (!exec) regs->ip = ia;
+    }
 
     if (!exec)
     {
         regs->instinvalid = 0;
 
         /* Update the AIA */
+        regs->AIV = addr & PAGEFRAME_PAGEMASK;
+        regs->aip = ia - offset;
+        regs->aim = (uintptr_t)regs->aip ^ (uintptr_t)regs->AIV;
         if (likely(!regs->tracing && !regs->permode))
+            regs->aie = regs->aip + pagesz - 5;
+        else
         {
-            regs->AIV =  addr & PAGEFRAME_PAGEMASK;
-            regs->AIE = (addr & PAGEFRAME_PAGEMASK) | (pagesz - 5);
-            regs->aim = NEW_INSTADDR(regs, addr - offset, ia - offset);
+            regs->aie = (BYTE *)1;
+            if (regs->tracing)
+                ARCH_DEP(process_trace)(regs);
         }
-        else if (regs->tracing)
-            ARCH_DEP(process_trace)(regs);
     }
 
     return dest;

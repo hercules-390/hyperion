@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.97  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -726,9 +729,8 @@ int     n;
         case SIE_HOST_INTERRUPT:
            /* If a host interrupt is pending
               then backup the psw and exit */
-            regs->psw.IA -= REAL_ILC(regs);
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
-            VALIDATE_AIA(regs);
+            SET_PSW_IA(regs);
+            UPD_PSW_IA (regs, regs->psw.IA -REAL_ILC(regs));
             break;
         case SIE_HOST_PGMINT:
             break;
@@ -830,6 +832,7 @@ int     n;
 #if defined(FEATURE_BINARY_FLOATING_POINT)
     regs->fpc =  GUESTREGS->fpc;
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
+    INVALIDATE_AIA(regs);
     SET_AEA_MODE(regs);
 
     /* Zeroize the interruption parameters */
@@ -872,6 +875,11 @@ int     n;
         OFF_IC_PER(GUESTREGS);
 #endif /*defined(_FEATURE_PER)*/
 
+        /* Backup to the previous instruction */
+        GUESTREGS->ip -= REAL_ILC(GUESTREGS);
+        if (GUESTREGS->ip < GUESTREGS->aip)
+            GUESTREGS->ip = GUESTREGS->inst;
+
         /* Update interception parameters in the state descriptor */
         if(GUESTREGS->ip[0] != 0x44)
         {
@@ -897,6 +905,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
 {
     int   icode;    /* SIE longjmp intercept code      */
     BYTE  oldv;     /* siebk->v change check reference */
+    BYTE *ip;       /* instruction pointer             */
 
     SIE_PERFMON(SIE_PERF_RUNSIE);
 
@@ -950,6 +959,9 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     /* ISW20041224                        */
                     OFF_IC_INTERRUPT(GUESTREGS);
 
+                    /* Set psw.IA and invalidate the aia */
+                    INVALIDATE_AIA(GUESTREGS);
+
                     if( OPEN_IC_EXTPENDING(GUESTREGS) )
                         ARCH_DEP(perform_external_interrupt) (GUESTREGS);
 
@@ -983,7 +995,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
                             break;
                         }
 
-                        INVALIDATE_AIA(GUESTREGS);
                         SET_AEA_MODE(GUESTREGS);
 
                         {
@@ -1015,17 +1026,17 @@ int ARCH_DEP(run_sie) (REGS *regs)
                                           )
                     break;
 
-                GUESTREGS->ip = INSTRUCTION_FETCH(GUESTREGS, 0);
+                ip = INSTRUCTION_FETCH(GUESTREGS, 0);
 
 #if defined(SIE_DEBUG)
                 /* Display the instruction */
                 ARCH_DEP(display_inst) (GUESTREGS,
-                         GUESTREGS->instinvalid ? NULL : GUESTREGS->ip);
+                         GUESTREGS->instinvalid ? NULL : ip);
 #endif /*defined(SIE_DEBUG)*/
 
                 SIE_PERFMON(SIE_PERF_EXEC);
                 GUESTREGS->instcount = 1;
-                EXECUTE_INSTRUCTION(GUESTREGS->ip, GUESTREGS);
+                EXECUTE_INSTRUCTION(ip, GUESTREGS);
 
                 do
                 {

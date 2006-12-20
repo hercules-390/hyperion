@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.116  2006/12/08 09:43:29  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -1022,7 +1025,7 @@ DEF_INST(execute_e4xx)
 
 DEF_INST(operation_exception)
 {
-    INST_UPDATE_PSW (regs, ILC(inst[0]));
+    INST_UPDATE_PSW (regs, ILC(inst[0]), ILC(inst[0]));
 
 #if defined(MODEL_DEPENDENT)
 #if defined(_FEATURE_SIE)
@@ -1040,7 +1043,7 @@ DEF_INST(operation_exception)
 DEF_INST(dummy_instruction)
 {
 //  logmsg(_("Dummy instruction: ")); ARCH_DEP(display_inst) (regs, inst);
-    INST_UPDATE_PSW (regs, ILC(inst[0]));
+    INST_UPDATE_PSW (regs, ILC(inst[0]), ILC(inst[0]));
 }
 
 

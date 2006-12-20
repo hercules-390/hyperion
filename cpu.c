@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.167  2006/12/17 21:54:24  rbowler
+// Display DXC in msg HHCCP014I for PIC7
+//
 // Revision 1.166  2006/12/08 09:43:19  jj
 // Add CVS message log
 //
@@ -56,9 +59,9 @@
 void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 {
 
-    /* Ensure real instruction address is properly wrapped */
-    if(likely(!regs->psw.zeroilc))
-        regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+    /* Ensure psw.IA is set */
+    if (!regs->psw.zeroilc)
+        SET_PSW_IA(regs);
 
 #if defined(FEATURE_BCMODE)
     if ( ECMODE(&regs->psw) ) {
@@ -135,6 +138,8 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 {
+    INVALIDATE_AIA(regs);
+
     regs->psw.zeroilc = 1;
 
     regs->psw.sysmask = addr[0];
@@ -283,6 +288,7 @@ REGS   *realregs;                       /* True regs structure       */
 RADR    px;                             /* host real address of pfx  */
 int     code;                           /* pcode without PER ind.    */
 int     ilc;                            /* instruction length        */
+BYTE   *ip;                             /* instruction pointer       */
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
 int     sie_ilc=0;                      /* SIE instruction length    */
 #endif
@@ -384,11 +390,34 @@ static char *pgmintname[] = {
     /* Prevent machine check when in (almost) interrupt loop */
     realregs->instcount++;
 
-    /* Set instruction length (ilc) */
-    ilc = REAL_ILC(regs);
+    /* Ensure psw.IA is set and aia invalidated */
+    INVALIDATE_AIA(realregs);
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
     if(realregs->sie_active)
-        sie_ilc = REAL_ILC(realregs->guestregs);
+        INVALIDATE_AIA(realregs->guestregs);
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
+
+    /* Set instruction length (ilc) */
+    ilc = realregs->psw.zeroilc ? 0 : REAL_ILC(realregs);
+    if (realregs->psw.ilc == 0 && !realregs->psw.zeroilc)
+    {
+        /* This can happen if BALR, BASR, BASSM or BSM
+           program checks during trace */
+        ilc = realregs->execflag ? 4 : 2;
+        realregs->ip += 2;
+    }
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+    if(realregs->sie_active)
+    {
+        sie_ilc = realregs->guestregs->psw.zeroilc
+                ? 0 : REAL_ILC(realregs->guestregs);
+        if (realregs->guestregs->psw.ilc == 0
+         && !realregs->guestregs->psw.zeroilc)
+        {
+            sie_ilc = realregs->guestregs->execflag ? 4 : 2;
+            realregs->guestregs->ip += 2;
+        }
+    }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Set `execflag' to 0 in case EXecuted instruction program-checked */
@@ -478,7 +507,6 @@ static char *pgmintname[] = {
     {
         realregs->psw.IA -= ilc;
         realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
-        VALIDATE_AIA(realregs);
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
         /* When in SIE mode the guest instruction causing this
            host exception must also be nullified */
@@ -486,7 +514,6 @@ static char *pgmintname[] = {
         {
             realregs->guestregs->psw.IA -= sie_ilc;
             realregs->guestregs->psw.IA &= ADDRESS_MAXWRAP(realregs->guestregs);
-            VALIDATE_AIA(realregs->guestregs);
         }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
     }
@@ -530,6 +557,8 @@ static char *pgmintname[] = {
 #if defined(SIE_DEBUG)
         logmsg (MSTRING(_GEN_ARCH) " ");
 #endif /*defined(SIE_DEBUG)*/
+        if (code == PGM_DATA_EXCEPTION)
+            sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
         if (code == PGM_DATA_EXCEPTION)
             sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
         logmsg (_("CPU%4.4X: %s CODE=%4.4X ILC=%d%s\n"), realregs->cpuad,
@@ -682,7 +711,7 @@ static char *pgmintname[] = {
     {
         /* Store the program interrupt code at PSA+X'8C' */
         psa->pgmint[0] = 0;
-        psa->pgmint[1] = regs->psw.zeroilc ? 0 : ilc;
+        psa->pgmint[1] = ilc;
         STORE_HW(psa->pgmint + 2, pcode);
 
         /* Store the exception access identification at PSA+160 */
@@ -787,6 +816,7 @@ static char *pgmintname[] = {
 
 #if defined(FEATURE_PER3)
         /* Store the breaking event address register in the PSA */
+        SET_BEAR_REG(regs, regs->bear_ip);
         STORE_W(psa->bea, regs->bear);
 #endif /*defined(FEATURE_PER3)*/
 
@@ -1293,9 +1323,8 @@ int (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     OBTAIN_INTLOCK(regs);
     OFF_IC_INTERRUPT(regs);
 
-    /* If tracing, invalidate AIA */
-    if (regs->tracing)
-        INVALIDATE_AIA(regs);
+    /* Ensure psw.IA is set and invalidate the aia */
+    INVALIDATE_AIA(regs);
 
     /* Perform invalidation */
     if (unlikely(regs->invalidate))
@@ -1485,10 +1514,6 @@ int (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     /* Release the interrupt lock */
     RELEASE_INTLOCK(regs);
 
-    /* Do progjmp if tracing so we get into the right loop */
-    if (regs->tracing)
-        longjmp(regs->progjmp, SIE_NO_INTERCEPT);
-
     return 0;
 
 } /* process_interrupt */
@@ -1503,12 +1528,12 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
      /* Test for breakpoint */
     shouldbreak = sysblk.instbreak
                 ? sysblk.breakaddr[0] <= sysblk.breakaddr[1]
-                  ?      sysblk.breakaddr[0] <= (regs->psw.IA & ADDRESS_MAXWRAP(regs))
-                      && (regs->psw.IA & ADDRESS_MAXWRAP(regs)) <= sysblk.breakaddr[1]
+                  ?      sysblk.breakaddr[0] <= PSW_IA(regs, 0)
+                      && PSW_IA(regs, 0) <= sysblk.breakaddr[1]
                     ? 1
                     : 0
-                  :      sysblk.breakaddr[1] <= (regs->psw.IA & ADDRESS_MAXWRAP(regs))
-                      && (regs->psw.IA & ADDRESS_MAXWRAP(regs)) <= sysblk.breakaddr[0]
+                  :      sysblk.breakaddr[1] <= PSW_IA(regs, 0)
+                      && PSW_IA(regs, 0) <= sysblk.breakaddr[0]
                     ? 1
                     : 0
                 : 0;
@@ -1558,6 +1583,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 /*-------------------------------------------------------------------*/
 REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
 {
+BYTE   *ip;
 REGS    regs;
 
     if (oldregs)
@@ -1629,9 +1655,9 @@ REGS    regs;
             if (ARCH_DEP(process_interrupt)(&regs))
                 return NULL;
 
-        regs.ip = INSTRUCTION_FETCH(&regs, 0);
+        ip = INSTRUCTION_FETCH(&regs, 0);
         regs.instcount++;
-        EXECUTE_INSTRUCTION(regs.ip, &regs);
+        EXECUTE_INSTRUCTION(ip, &regs);
 
         do {
             UNROLLED_EXECUTE(&regs);

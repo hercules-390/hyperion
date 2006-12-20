@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.29  2006/12/08 09:43:31  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -609,7 +612,7 @@ RADR ag;
 int  size;
 int  eamode;
 
-    regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+    SET_PSW_IA(regs);
     eamode = regs->psw.amode64;
 
 #if defined(FEATURE_ESAME)
@@ -745,7 +748,8 @@ RADR raddr;
 RADR ag;
 int  size;
 
-    regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+    SET_PSW_IA(regs);
+    SET_PSW_IA(newregs);
 
 #if defined(FEATURE_ESAME)
     if(!regs->psw.amode64 && !newregs->psw.amode64)
@@ -966,7 +970,7 @@ RADR raddr;
 RADR ag;
 int  size;
 
-    regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+    SET_PSW_IA(regs);
 
     if(!br)
     {

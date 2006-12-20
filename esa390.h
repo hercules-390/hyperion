@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.87  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #ifndef _ESA390_H
 #define _ESA390_H
@@ -81,18 +84,19 @@ typedef struct  _PSW {
         BYTE     progmask;              /* Program mask    (20 - 23) */
         BYTE     zerobyte;              /* Zeroes          (24 - 31) */
                                         /* or (esame)      (24 - 30) */
-        U32      zeroword;              /* esame only      (32 - 63) */
         u_int                           /* Addressing mode (31 - 32) */
-                 amode64:1,             /* 64-bit addressing         */
-                 amode:1,               /* 31-bit addressing         */
+                 amode64:1,             /* 64-bit addressing    (31) */
+                 amode:1,               /* 31-bit addressing    (32) */
                  zeroilc:1;             /* 1=Zero ILC                */
+        U32      zeroword;              /* esame only      (33 - 63) */
         DW       ia;                    /* Instruction addrress      */
                                         /*                 (33 - 63) */
                                         /* or (esame)      (64 -127) */
         DW       amask;                 /* Address wraparound mask   */
         U16      intcode;               /* Interruption code         */
-        U16      unused;                /* (unused)                  */
-    } PSW;                              /* 28 bytes                  */
+        BYTE     ilc;                   /* Instruction length count  */
+        BYTE     unused;
+    } PSW;
 
 #define IA_G     ia.D
 #define IA_H     ia.F.H.F

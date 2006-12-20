@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.70  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #ifdef HAVE_CONFIG_H
   #include <config.h> // Hercules build configuration options/settings
@@ -112,8 +115,6 @@
 #undef TLBID_BYTEMASK
 #undef ASD_PRIVATE
 #undef PER_SB
-#undef UPDATE_BEAR
-#undef UPDATE_BEAR_PSW
 
 #if __GEN_ARCH == 370
 
@@ -807,54 +808,5 @@ do { \
 #else /*!defined(FEATURE_PER)*/
  #define PER_SB(_regs,_addr)
 #endif /*!defined(FEATURE_PER)*/
-
-/*
- * PER3 Breaking Event Address Recording (BEAR)
- */
-#if defined(FEATURE_PER3)
- /*
-  * _len is the value (2, 4 or 6) to be subtracted from psw.IA to set
-  * the bear register (unless execflag is on then 4 is subtracted).
-  * 
-  * A special case arises when _len is set to -1, 0 or 1.  This is
-  * used when psw.IA is not incremented at the beginning of the
-  * instruction (eg BC, BCR, BRC, BRCL).
-  *
-  * If execflag is off then bear is set to psw.IA.  Otherwise
-  * the branch insruction has been EXecuted.  EX decrements psw.IA
-  * by the length of the instruction being executed, anticipating
-  * that the instruction decoder will increment it back.
-  *
-  * If the executed branch instruction is 6 bytes then we need
-  * to set bear to psw.IA+2; if the executed branch instruction
-  * is 4 bytes then we set bear to psw.IA; if the executed
-  * instruction is 2 bytes then we need to set bear to psw.IA-2.
-  *
-  * The following special _len values are used in these cases:
-  *   -1  executed branch instruction is 6 bytes
-  *    0  executed branch instruction is 4 bytes
-  *    1  executed branch instruction is 2 bytes
-  *
-  * Since _len is a constant the compiler will optimize out
-  * all the unnecessary code.
-  */
- #define UPDATE_BEAR(_regs, _len) \
- do { \
-  (_regs)->bear = (_regs)->psw.IA; \
-  if ((_len) == -1) { \
-   if (unlikely((_regs)->execflag)) (_regs)->bear += 2; \
-  } \
-  else if ((_len) == 1) { \
-   if (unlikely((_regs)->execflag)) (_regs)->bear -= 2; \
-  } \
-  else if ((_len) > 1) \
-   (_regs)->bear -= unlikely((_regs)->execflag) ? 4 : (_len); \
- } while (0)
- #define UPDATE_BEAR_PSW(_regs, _psw, _len) \
-  (_regs)->bear = (_psw)->IA - ( unlikely((_regs)->execflag) ? 4 : (_len) )
-#else
- #define UPDATE_BEAR(_regs, _len)
- #define UPDATE_BEAR_PSW(_regs, _psw, _len)
-#endif
 
 /* end of FEATURES.H */
