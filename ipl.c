@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.98  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -86,11 +89,14 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
                 {
                     rc = -1;
                 }
-                /* Clear GPRS as part of the CPU CLEAR RESET 
-                 * operation
-                 */
+                /* Clear all the registers (AR, GPR, FPR, VR)
+                   as part of the CPU CLEAR RESET operation */
+                memset (regs->ar,0,sizeof(regs->ar));
                 memset (regs->gr,0,sizeof(regs->gr));
-
+                memset (regs->fpr,0,sizeof(regs->fpr));
+              #if defined(_FEATURE_VECTOR_FACILITY)
+                memset (regs->vf->vr,0,sizeof(regs->vf->vr));
+              #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
             }
         }
 
@@ -107,7 +113,7 @@ int ARCH_DEP(system_reset) (int cpu, int clear)
     /* ZZ FIXME: we should probably present a machine-check
        if we encounter any errors during the reset (rc != 0) */
     return rc;
-}
+} /* end function system_reset */
 
 /*-------------------------------------------------------------------*/
 /*                  LOAD (aka IPL) functions...                      */

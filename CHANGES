@@ -1,3 +1,4 @@
+20 Dec 2006 Clear AR,FPR,VR regs during Clear Reset - Roger Bowler
 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 19 Dec 2006 Backout mainlockx.pat - possible SMP problmes - Greg Smith
 19 Dec 2006 New FPC command to display FPC register - Roger Bowler
