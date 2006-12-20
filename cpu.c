@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.168  2006/12/20 04:26:19  gsmith
+// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
+//
 // Revision 1.167  2006/12/17 21:54:24  rbowler
 // Display DXC in msg HHCCP014I for PIC7
 //
@@ -288,7 +291,6 @@ REGS   *realregs;                       /* True regs structure       */
 RADR    px;                             /* host real address of pfx  */
 int     code;                           /* pcode without PER ind.    */
 int     ilc;                            /* instruction length        */
-BYTE   *ip;                             /* instruction pointer       */
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
 int     sie_ilc=0;                      /* SIE instruction length    */
 #endif
