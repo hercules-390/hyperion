@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.169  2006/12/20 10:52:08  rbowler
+// cpu.c(294) : warning C4101: 'ip' : unreferenced local variable
+//
 // Revision 1.168  2006/12/20 04:26:19  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -559,8 +562,6 @@ static char *pgmintname[] = {
 #if defined(SIE_DEBUG)
         logmsg (MSTRING(_GEN_ARCH) " ");
 #endif /*defined(SIE_DEBUG)*/
-        if (code == PGM_DATA_EXCEPTION)
-            sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
         if (code == PGM_DATA_EXCEPTION)
             sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
         logmsg (_("CPU%4.4X: %s CODE=%4.4X ILC=%d%s\n"), realregs->cpuad,
