@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.190  2006/12/20 04:26:20  gsmith
+// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
+//
 // Revision 1.189  2006/12/15 22:49:02  rbowler
 // Decimal Floating Point: CSXTR instruction
 //
@@ -1068,7 +1071,7 @@ do { \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
         }
 
-#define RRF_M4_DECODERT_TEST(_inst, _regs, _r1, _r2, _m4, _len, _ilc) \
+#define RRF_M4_DECODER_TEST(_inst, _regs, _r1, _r2, _m4, _len, _ilc) \
       { U32 temp = fetch_fw(_inst); \
             (_m4) = (temp >>  8) & 0xf; \
             (_r2) = (temp      ) & 0xf; \
