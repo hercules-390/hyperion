@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.99  2006/12/20 15:11:54  rbowler
+// Clear AR, FPR, and VR registers during Clear Reset
+//
 // Revision 1.98  2006/12/08 09:43:28  jj
 // Add CVS message log
 //
@@ -514,7 +517,7 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     memset ( &regs->psw,           0, sizeof(regs->psw)           );
     memset ( &regs->captured_zpsw, 0, sizeof(regs->captured_zpsw) );
     memset ( regs->cr,             0, sizeof(regs->cr)            );
-
+    regs->fpc    = 0;
     regs->PX     = 0;
     /* 
      * ISW20060125 : Since we reset the prefix, we must also adjust 
@@ -678,7 +681,7 @@ int load_hmc (char *fname, int cpu, int clear)
 }
 
 /*-------------------------------------------------------------------*/
-/*  Initial CPU Reset    (i.e. CPU Clear Reset)                      */
+/*  Initial CPU Reset                                                */
 /*-------------------------------------------------------------------*/
 int initial_cpu_reset (REGS *regs)
 {
