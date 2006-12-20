@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.173  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -885,13 +888,13 @@ U64     old;                            /* Old value                 */
     old = CSWAP64 (regs->GR_G(r1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK8(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg8 (&old, CSWAP64(regs->GR_G(r1+1)), main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK8(regs);
+    RELEASE_MAINLOCK(regs);
 
     if (regs->psw.cc == 0)
     {
@@ -2365,13 +2368,13 @@ U64     old;                            /* old value                 */
     old = CSWAP64(regs->GR_G(r1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK8(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg8 (&old, CSWAP64(regs->GR_G(r3)), main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK8(regs);
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -2426,7 +2429,7 @@ U64     old1, old2;                     /* old value                 */
     old2 = CSWAP64(regs->GR_G(r1+1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK16(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg16 (&old1, &old2,
@@ -2434,7 +2437,7 @@ U64     old1, old2;                     /* old value                 */
                               main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK16(regs);
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -6144,13 +6147,13 @@ U32     old;                            /* old value                 */
     old = CSWAP32(regs->GR_L(r1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK4(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK4(regs);
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -6205,13 +6208,13 @@ U64     old, new;                       /* old, new values           */
     new = CSWAP64(((U64)(regs->GR_L(r3)) << 32) | regs->GR_L(r3+1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK8(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg8 (&old, new, main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK8(regs);
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);

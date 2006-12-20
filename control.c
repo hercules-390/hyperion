@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.234  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -732,13 +735,13 @@ U32     old;                            /* old value                 */
     old = CSWAP32 (regs->GR_L(r1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK4(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r1+1)), main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK4(regs);
+    RELEASE_MAINLOCK(regs);
 
     if (regs->psw.cc == 0)
     {

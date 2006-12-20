@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.140  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -1324,13 +1327,13 @@ U32     old;                            /* old value                 */
     old = CSWAP32(regs->GR_L(r1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK4(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK4(regs);
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -1387,13 +1390,13 @@ U64     old, new;                       /* old, new values           */
     new = CSWAP64(((U64)(regs->GR_L(r3)) << 32) | regs->GR_L(r3+1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK8(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg8 (&old, new, main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK8(regs);
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);

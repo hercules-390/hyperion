@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.105  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -1382,7 +1385,7 @@ BYTE    old;                            /* Old value                 */
     main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK1(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Get old value */
     old = *main2;
@@ -1392,7 +1395,7 @@ BYTE    old;                            /* Old value                 */
     regs->psw.cc = old >> 7;
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK1(regs);
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
