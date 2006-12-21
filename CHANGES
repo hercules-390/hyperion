@@ -1,3 +1,4 @@
+21 Dec 2006 Range for s+, t+ - Greg Smith
 20 Dec 2006 Fix instruction display in program interrupt - Greg Smith
 20 Dec 2006 Clear FPC register during Initial CPU Reset - Roger Bowler
 20 Dec 2006 Clear AR,FPR,VR regs during Clear Reset - Roger Bowler

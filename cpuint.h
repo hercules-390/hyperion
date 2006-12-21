@@ -1,6 +1,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.38  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 /**********************************************************************
  Interrupts_State & Interrupts_Mask bits definition (Initial_Mask=800E)
@@ -268,13 +271,10 @@
 #define SET_IC_TRACE \
  do { \
    int i; \
-   int tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace); \
    U32 mask = sysblk.started_mask; \
    for (i = 0; mask; i++) { \
-     if (mask & 1) { \
-       sysblk.regs[i]->tracing = tracing; \
+     if (mask & 1) \
        sysblk.regs[i]->ints_state |= BIT(IC_INTERRUPT); \
-     } \
      mask >>= 1; \
    } \
  } while (0)

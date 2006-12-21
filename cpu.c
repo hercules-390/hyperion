@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.171  2006/12/21 01:45:01  gsmith
+// 20 Dec 2006 Fix instruction display in program interrupt - Greg Smithh
+//
 // Revision 1.170  2006/12/20 23:37:29  rbowler
 // ip_pat cpu.c rev 1.168 duplicated 2 lines from rev 1.167
 //
@@ -1334,6 +1337,7 @@ int (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(regs);
     OFF_IC_INTERRUPT(regs);
+    regs->tracing = (sysblk.inststep || sysblk.insttrace);
 
     /* Ensure psw.IA is set and invalidate the aia */
     INVALIDATE_AIA(regs);
@@ -1535,58 +1539,76 @@ int (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(process_trace)(REGS *regs)
 {
-int     shouldbreak;                    /* 1=Stop at breakpoint      */
+int     shouldtrace = 0;                /* 1=Trace instruction       */
+int     shouldstep = 0;                 /* 1=Wait for `g' cmd        */
 
-     /* Test for breakpoint */
-    shouldbreak = sysblk.instbreak
-                ? sysblk.breakaddr[0] <= sysblk.breakaddr[1]
-                  ?      sysblk.breakaddr[0] <= PSW_IA(regs, 0)
-                      && PSW_IA(regs, 0) <= sysblk.breakaddr[1]
-                    ? 1
-                    : 0
-                  :      sysblk.breakaddr[1] <= PSW_IA(regs, 0)
-                      && PSW_IA(regs, 0) <= sysblk.breakaddr[0]
-                    ? 1
-                    : 0
-                : 0;
+    /* Test for trace */
+    if (sysblk.insttrace)
+    {
+        if (sysblk.traceaddr[0] == 0 && sysblk.traceaddr[1] == 0)
+            shouldtrace = 1;
+        else if (sysblk.traceaddr[0] <= sysblk.traceaddr[1]
+              && sysblk.traceaddr[0] <= PSW_IA(regs,0)
+              && sysblk.traceaddr[1] >= PSW_IA(regs,0))
+            shouldtrace = 1;
+        else if (sysblk.traceaddr[0] >= PSW_IA(regs,0)
+              && sysblk.traceaddr[1] <= PSW_IA(regs,0))
+            shouldtrace = 1;
+    }
+
+    /* Test for step */
+    if (sysblk.inststep)
+    {
+        if (sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0)
+            shouldstep = 1;
+        else if (sysblk.stepaddr[0] <= sysblk.stepaddr[1]
+              && sysblk.stepaddr[0] <= PSW_IA(regs,0)
+              && sysblk.stepaddr[1] >= PSW_IA(regs,0))
+            shouldstep = 1;
+        else if (sysblk.stepaddr[0] >= PSW_IA(regs,0)
+              && sysblk.stepaddr[1] <= PSW_IA(regs,0))
+            shouldstep = 1;
+    }
 
     /* Display the instruction */
-    if (sysblk.insttrace || sysblk.inststep || shouldbreak)
+    if (shouldtrace || shouldstep)
     {
         BYTE *ip = regs->ip < regs->aip ? regs->inst : regs->ip;
         ARCH_DEP(display_inst) (regs, ip);
-        if (sysblk.inststep || shouldbreak)
+    }
+
+    /* Stop the CPU */
+    if (shouldstep)
+    {
+        REGS *hostregs = regs->hostregs;
+        S64 saved_timer[2];
+
+        OBTAIN_INTLOCK(hostregs);
+#ifdef OPTION_MIPS_COUNTING
+        hostregs->waittod = hw_clock();
+#endif
+        /* The CPU timer is not decremented for a CPU that is in
+           the manual state (e.g. stopped in single step mode) */
+        saved_timer[0] = cpu_timer(regs);
+        saved_timer[1] = cpu_timer(hostregs);
+        hostregs->cpustate = CPUSTATE_STOPPED;
+        sysblk.started_mask &= ~hostregs->cpubit;
+        hostregs->stepwait = 1;
+        sysblk.intowner = LOCK_OWNER_NONE;
+        while (hostregs->cpustate == CPUSTATE_STOPPED)
         {
-        S64 saved_timer;
-            /* Put CPU into stopped state */
-            regs->opinterv = 0;
-            regs->cpustate = CPUSTATE_STOPPED;
-
-            /* Wait for start command from panel */
-            OBTAIN_INTLOCK(regs);
-
-            HDC1(debug_cpu_state, regs);
-
-            /* The CPU timer is not being decremented for
-             * a CPU that is in the manual state
-             * (e.g. stopped in single step mode
-             * or otherwise)
-             */
-            saved_timer = cpu_timer(regs);
-            sysblk.waiting_mask |= regs->cpubit;
-            sysblk.intowner = LOCK_OWNER_NONE;
-            while (regs->cpustate == CPUSTATE_STOPPED)
-            {
-                wait_condition (&regs->intcond, &sysblk.intlock);
-            }
-            sysblk.intowner = regs->cpuad;
-            sysblk.waiting_mask &= ~regs->cpubit;
-            set_cpu_timer(regs, saved_timer);
-
-            HDC1(debug_cpu_state, regs);
-
-            RELEASE_INTLOCK(regs);
+            wait_condition (&hostregs->intcond, &sysblk.intlock);
         }
+        sysblk.intowner = hostregs->cpuad;
+        hostregs->stepwait = 0;
+        sysblk.started_mask |= hostregs->cpubit;
+        set_cpu_timer(regs,saved_timer[0]);
+        set_cpu_timer(hostregs,saved_timer[1]);
+#ifdef OPTION_MIPS_COUNTING
+        hostregs->waittime += hw_clock() - hostregs->waittod;
+        hostregs->waittod = 0;
+#endif
+        RELEASE_INTLOCK(hostregs);
     }
 } /* process_trace */
 
@@ -1628,7 +1650,7 @@ REGS    regs;
 #endif /*FEATURE_VECTOR_FACILITY*/
     }
 
-    regs.tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace);
+    regs.tracing = (sysblk.inststep || sysblk.insttrace);
     regs.ints_state |= sysblk.ints_state;
 
     RELEASE_INTLOCK(&regs);

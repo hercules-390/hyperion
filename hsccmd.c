@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.196  2006/12/20 04:26:20  gsmith
+// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
+//
 // Revision 1.195  2006/12/19 14:22:30  rbowler
 // New FPC command to display FPC register
 //
@@ -379,18 +382,25 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 }
 
 ///////////////////////////////////////////////////////////////////////
-/* g command - turn off single stepping and start CPU */
+/* g command - start CPUs stopped in instruction stepping */
 
 int g_cmd(int argc, char *argv[], char *cmdline)
 {
+    int i;
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    sysblk.inststep = 0;
-    SET_IC_TRACE;
-
-    return  start_cmd(0,NULL,NULL);
+    OBTAIN_INTLOCK(NULL);
+    for (i = 0; i < HI_CPU; i++)
+        if (IS_CPU_ONLINE(i) && sysblk.regs[i]->stepwait)
+        {
+            sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
+            WAKEUP_CPU(sysblk.regs[i]);
+        }
+    RELEASE_INTLOCK(NULL);
+    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1623,54 +1633,98 @@ REGS *regs;
 }
 
 ///////////////////////////////////////////////////////////////////////
-/* b command - set breakpoint */
-
-int bset_cmd(int argc, char *argv[], char *cmdline)
+/* tracing commands: t, t+, t-, t?, s, s+, s-, s?, b  */
+int trace_cmd(int argc, char *argv[], char *cmdline)
 {
-int  rc;                                /* Return code               */
-BYTE c[2];                              /* Character work area       */
+int  on = 0, off = 0, query = 0;
+int  trace = 0;
+int  rc;
+BYTE c[2];
+U64  addr[2];
+char range[256];
 
-    UNREFERENCED(cmdline);
+    trace = cmdline[0] == 't';
 
-    if (argc != 2)
+    if (strlen(cmdline) > 1)
     {
-        logmsg( _("HHCPN039E Invalid or missing argument\n") );
+        on = cmdline[1] == '+'
+         || (cmdline[0] == 'b' && cmdline[1] == ' ');
+        off = cmdline[1] == '-';
+        query = cmdline[1] == '?';
+    }
+
+    if (argc > 2 || (off && argc > 1) || (query && argc > 1))
+    {
+        logmsg( _("HHCPN039E Invalid arguments\n") );
         return -1;
     }
 
-    rc = sscanf(argv[1], "%"I64_FMT"x%c%"I64_FMT"x%c",
-                        &sysblk.breakaddr[0], &c[0],
-                        &sysblk.breakaddr[1], &c[1]);
-
-    if (rc == 1 || (rc == 3 && c[0] == '-'))
+    /* Get address range */
+    if (argc == 2)
     {
+        rc = sscanf(argv[1], "%"I64_FMT"x%c%"I64_FMT"x%c",
+                    &addr[0], &c[0], &addr[1], &c[1]);
         if (rc == 1)
-            sysblk.breakaddr[1] = sysblk.breakaddr[0];
-        logmsg( _("HHCPN040I Setting breakpoint at %16.16"I64_FMT"X-%16.16"I64_FMT"X\n"),
-            sysblk.breakaddr[0],sysblk.breakaddr[1]);
-        sysblk.instbreak = 1;
-        SET_IC_TRACE;
+        {
+            c[0] = '-';
+            addr[1] = addr[0];
+        }
+        else if (rc != 3 || (c[0] != '-' && c[0] != ':' && c[0] != '.'))
+        {
+            logmsg( _("HHCPN039E Invalid arguments\n") );
+            return -1;
+        }
+        if (c[0] == '.')
+            addr[1] += addr[0];
+        if (trace)
+        {
+            sysblk.traceaddr[0] = addr[0];
+            sysblk.traceaddr[1] = addr[1];
+        }
+        else
+        {
+            sysblk.stepaddr[0] = addr[0];
+            sysblk.stepaddr[1] = addr[1];
+        }
     }
     else
+        c[0] = '-';
+
+    /* Set tracing/stepping bit on or off */
+    if (on || off)
     {
-        logmsg( _("HHCPN039E Invalid or missing argument\n") );
-        return -1;
+        OBTAIN_INTLOCK(NULL);
+        if (trace)
+            sysblk.insttrace = on;
+        else
+            sysblk.inststep = on;
+        SET_IC_TRACE;
+        RELEASE_INTLOCK(NULL);
     }
 
-    return 0;
-}
+    /* Build range for message */
+    range[0] = '\0';
+    if (trace && (sysblk.traceaddr[0] != 0 || sysblk.traceaddr[1] != 0))
+        sprintf(range, "range %" I64_FMT "x%c%" I64_FMT "x",
+                sysblk.traceaddr[0], c[0],
+                c[0] != '.' ? sysblk.traceaddr[1] :
+                sysblk.traceaddr[1] - sysblk.traceaddr[0]);
+    else if (!trace && (sysblk.stepaddr[0] != 0 || sysblk.stepaddr[1] != 0))
+        sprintf(range, "range %" I64_FMT "x%c%" I64_FMT "x",
+                sysblk.stepaddr[0], c[0],
+                c[0] != '.' ? sysblk.stepaddr[1] :
+                sysblk.stepaddr[1] - sysblk.stepaddr[0]);
 
-///////////////////////////////////////////////////////////////////////
-/* b- command - delete breakpoint */
+    /* Determine if this trace is on or off for message */
+    on = (trace && sysblk.insttrace) || (!trace && sysblk.inststep);
+ 
+    /* Display message */
+    logmsg(_("HHCPN040I Instruction %s %s %s\n"),
+           cmdline[0] == 't' ? _("tracing") :
+           cmdline[0] == 's' ? _("stepping") : _("break"),
+           on ? _("on") : _("off"),
+           range);           
 
-int bdelete_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    logmsg( _("HHCPN041I Deleting breakpoint\n") );
-    sysblk.instbreak = 0;
-    SET_IC_TRACE;
     return 0;
 }
 
@@ -4100,30 +4154,6 @@ BYTE c;                                 /* Character work area       */
         return 0;
     }
 
-    /////////////////////////////////////////////////////
-    // t+ and t- commands - instruction tracing on/off
-
-    if (cmd[0]=='t' && cmd[2]=='\0')
-    {
-        sysblk.insttrace = oneorzero;
-        SET_IC_TRACE;
-        RELEASE_INTLOCK(NULL);
-        logmsg( _("HHCPN132I Instruction tracing is now %s\n"), onoroff );
-        return 0;
-    }
-
-    /////////////////////////////////////////////////////
-    // s+ and s- commands - instruction stepping on/off
-
-    if (cmd[0]=='s' && cmd[2]=='\0')
-    {
-        sysblk.inststep = oneorzero;
-        SET_IC_TRACE;
-        RELEASE_INTLOCK(NULL);
-        logmsg( _("HHCPN133I Instruction stepping is now %s\n"), onoroff );
-        return 0;
-    }
-
 #ifdef OPTION_CKD_KEY_TRACING
     /////////////////////////////////////////////////////
     // t+ckd and t-ckd commands - turn CKD_KEY tracing on/off
@@ -4743,8 +4773,17 @@ COMMAND ( "cckd",      cckd_cmd,        "cckd command" )
 COMMAND ( "shrd",  EXT_CMD(shared_cmd), "shrd command" )
 COMMAND ( "quiet",     quiet_cmd,       "toggle automatic refresh of panel display data\n" )
 
-COMMAND ( "b",         bset_cmd,      "set breakpoint" )
-COMMAND ( "b-",        bdelete_cmd,   "delete breakpoint" )
+COMMAND ( "t",         trace_cmd,     "instruction trace" )
+COMMAND ( "t+",        trace_cmd,     "instruction trace on" )
+COMMAND ( "t-",        trace_cmd,     "instruction trace off" )
+COMMAND ( "t?",        trace_cmd,     "instruction trace query" )
+COMMAND ( "s",         trace_cmd,     "instruction stepping" )
+COMMAND ( "s+",        trace_cmd,     "instruction stepping on" )
+COMMAND ( "s-",        trace_cmd,     "instruction stepping off" )
+COMMAND ( "s?",        trace_cmd,     "instruction stepping query" )
+COMMAND ( "b",         trace_cmd,     "set breakpoint" )
+COMMAND ( "b+",        trace_cmd,     "set breakpoint" )
+COMMAND ( "b-",        trace_cmd,     "delete breakpoint" )
 COMMAND ( "g",         g_cmd,         "turn off instruction stepping and start CPU\n" )
 
 COMMAND ( "ostailor",  ostailor_cmd,  "trace program interrupts" )

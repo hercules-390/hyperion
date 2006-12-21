@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.54  2006/12/20 04:26:20  gsmith
+// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
+//
 // Revision 1.53  2006/12/11 11:39:17  ivan
 // Set tape blockid type to U32 in devblk instead of long that becomes 64 bit wide
 // on 64 bit systems. Suggested by rod/zazubek on main list
@@ -78,6 +81,7 @@ struct REGS {                           /* Processor registers       */
                 ghostregs:1,            /* 1=Ghost registers (panel) */
                 invalidate:1,           /* 1=Do AIA/AEA invalidation */
                 tracing:1,              /* 1=Trace is active         */
+                stepwait:1,             /* 1=Wait in inst stepping   */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
                 sigpireset:1,           /* 1=SIGP initial cpu reset  */
                 syncio:1;               /* 1=Synchronous i/o active  */
@@ -461,13 +465,9 @@ struct SYSBLK {
         unsigned int                    /* Flags                     */
                 daemon_mode:1,          /* Daemon mode active        */
                 panel_init:1,           /* Panel display initialized */
-                sigintreq:1,            /* 1=SIGINT request pending  */
-                insttrace:1,            /* 1=Instruction trace       */
-                inststep:1,             /* 1=Instruction step        */
-                instbreak:1,            /* 1=Have breakpoint         */
-                inststop:1,             /* 1 = stop on program check */ /*VMA*/
-                vmactive:1,             /* 1 = vma active            */ /*VMA*/
-                mschdelay:1,            /* 1 = delay MSCH instruction*/ /*LNX*/
+                sigintreq:1,            /* 1 = SIGINT request pending*/
+                insttrace:1,            /* 1 = Instruction trace     */
+                inststep:1,             /* 1 = Instruction step      */
                 shutdown:1,             /* 1 = shutdown requested    */
                 shutfini:1,             /* 1 = shutdown complete     */
                 main_clear:1,           /* 1 = mainstor is cleared   */
@@ -478,7 +478,8 @@ struct SYSBLK {
         U32     config_mask;            /* Configured CPUs           */
         U32     started_mask;           /* Started CPUs              */
         U32     waiting_mask;           /* Waiting CPUs              */
-        U64     breakaddr[2];           /* Breakpoint addresses      */
+        U64     traceaddr[2];           /* Tracing address range     */
+        U64     stepaddr[2];            /* Stepping address range    */
 #ifdef FEATURE_ECPSVM
 //
         /* ECPS:VM */

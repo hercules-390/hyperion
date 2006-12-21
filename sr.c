@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.30  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -167,8 +170,6 @@ BYTE     psw[16];
 
     SR_WRITE_VALUE (file,SR_SYS_SERVPARM,sysblk.servparm,sizeof(sysblk.servparm));
     SR_WRITE_VALUE (file,SR_SYS_SIGINTREQ,sysblk.sigintreq,1);
-    SR_WRITE_VALUE (file,SR_SYS_VMACTIVE,sysblk.vmactive,1);
-    SR_WRITE_VALUE (file,SR_SYS_MSCHDELAY,sysblk.mschdelay,1);
     SR_WRITE_STRING(file,SR_SYS_LOADPARM,str_loadparm());
     SR_WRITE_VALUE (file,SR_SYS_INTS_STATE,sysblk.ints_state,sizeof(sysblk.ints_state));
     SR_WRITE_HDR(file, SR_DELIMITER, 0);
@@ -603,16 +604,6 @@ S64      dreg;
         case SR_SYS_SIGINTREQ:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             sysblk.sigintreq = rc;
-            break;
-
-        case SR_SYS_VMACTIVE:
-            SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            sysblk.vmactive = rc;
-            break;
-
-        case SR_SYS_MSCHDELAY:
-            SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            sysblk.mschdelay = rc;
             break;
 
         case SR_SYS_LOADPARM:

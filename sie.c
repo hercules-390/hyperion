@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.98  2006/12/20 04:26:20  gsmith
+// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
+//
 // Revision 1.97  2006/12/08 09:43:30  jj
 // Add CVS message log
 //
@@ -1004,11 +1007,19 @@ int ARCH_DEP(run_sie) (REGS *regs)
                             gettimeofday(&now, NULL);
                             waittime.tv_sec = now.tv_sec;
                             waittime.tv_nsec = ((now.tv_usec + 3333) * 1000);
-
+#ifdef OPTION_MIPS_COUNTING
+                            regs->waittod = hw_clock();
+#endif
                             sysblk.waiting_mask |= regs->cpubit;
+                            sysblk.intowner = LOCK_OWNER_NONE;
                             timed_wait_condition
                                  (&regs->intcond, &sysblk.intlock, &waittime);
+                            sysblk.intowner = regs->cpuad;
                             sysblk.waiting_mask &= ~regs->cpubit;
+#ifdef OPTION_MIPS_COUNTING
+                            regs->waittime += hw_clock() - regs->waittod;
+                            regs->waittod = 0;
+#endif
                         }
 
                         RELEASE_INTLOCK(regs);
