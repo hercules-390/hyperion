@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.170  2006/12/20 23:37:29  rbowler
+// ip_pat cpu.c rev 1.168 duplicated 2 lines from rev 1.167
+//
 // Revision 1.169  2006/12/20 10:52:08  rbowler
 // cpu.c(294) : warning C4101: 'ip' : unreferenced local variable
 //
@@ -545,6 +548,7 @@ static char *pgmintname[] = {
     if(code && (sysblk.insttrace || sysblk.inststep
         || sysblk.pgminttr & ((U64)1 << ((code - 1) & 0x3F))))
     {
+     BYTE *ip;
 #if defined(OPTION_FOOTPRINT_BUFFER)
         if(!(sysblk.insttrace || sysblk.inststep))
             for(n = sysblk.footprptr[realregs->cpuad] + 1 ;
@@ -566,8 +570,13 @@ static char *pgmintname[] = {
             sprintf(dxcstr, " DXC=%2.2X", regs->dxc);
         logmsg (_("CPU%4.4X: %s CODE=%4.4X ILC=%d%s\n"), realregs->cpuad,
                 pgmintname[ (code - 1) & 0x3F], pcode, ilc, dxcstr);
-        ARCH_DEP(display_inst) (realregs,
-                                realregs->instinvalid ? NULL : realregs->ip);
+
+        /* Calculate instruction pointer */
+        ip = realregs->instinvalid ? NULL
+           : (realregs->ip - ilc < realregs->aip)
+             ? realregs->inst : realregs->ip - ilc;
+
+        ARCH_DEP(display_inst) (realregs, ip);
     }
 
     realregs->instinvalid = 0;
@@ -1544,7 +1553,8 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     /* Display the instruction */
     if (sysblk.insttrace || sysblk.inststep || shouldbreak)
     {
-        ARCH_DEP(display_inst) (regs, regs->ip);
+        BYTE *ip = regs->ip < regs->aip ? regs->inst : regs->ip;
+        ARCH_DEP(display_inst) (regs, ip);
         if (sysblk.inststep || shouldbreak)
         {
         S64 saved_timer;
