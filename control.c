@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.237  2006/12/20 09:09:40  jj
+// Fix bogus log entries
+//
 // Revision 1.236  2006/12/20 04:26:19  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -5200,7 +5203,8 @@ BYTE    order;                          /* SIGP order code           */
 int     cpu;                            /* cpu number                */
 int     set_arch = 0;                   /* Need to switch mode       */
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/
-int     log_sigp = 0;                   /* Log SIGP instruction flag */
+size_t  log_sigp = 0;                   /* Log SIGP instruction flag */
+char    log_buf[128];                   /* Log buffer                */
 static char *ordername[] = {
     /* 0x00                          */  "Unassigned",
     /* 0x01 SIGP_SENSE               */  "Sense",
@@ -5267,8 +5271,8 @@ static char *ordername[] = {
        that is configured offline (which is indeed unusual!)) */
     if (order > LOG_SIGPORDER || !IS_CPU_ONLINE(cpad))
     {
-        log_sigp = 1;
-        logmsg ("CPU%4.4X: SIGP %s (%2.2X) CPU%4.4X, PARM "F_GREG,
+        log_sigp = snprintf ( log_buf, sizeof(log_buf), 
+                "CPU%4.4X: SIGP %s (%2.2X) CPU%4.4X, PARM "F_GREG,
                 regs->cpuad,
                 order >= sizeof(ordername) / sizeof(ordername[0]) ?
                         "Unassigned" : ordername[order],
@@ -5285,7 +5289,7 @@ static char *ordername[] = {
     {
         regs->psw.cc = 2;
         if (log_sigp)
-            logmsg (": CC 2\n");
+            logmsg("%s: CC 2\n",log_buf);
         return;
     }
 
@@ -5306,7 +5310,7 @@ static char *ordername[] = {
         release_lock(&sysblk.sigplock);
         regs->psw.cc = 3;
         if (log_sigp)
-            logmsg (": CC 3\n");
+            logmsg("%s: CC 3\n",log_buf);
         return;
     }
 
@@ -5329,7 +5333,7 @@ static char *ordername[] = {
         release_lock(&sysblk.sigplock);
         regs->psw.cc = 2;
         if (log_sigp)
-            logmsg (": CC 2\n");
+            logmsg("%s: CC 2\n",log_buf);
         return;
     }
 
@@ -5885,9 +5889,9 @@ static char *ordername[] = {
     if (log_sigp)
     {
         if (regs->psw.cc == 0)
-            logmsg (": CC 0\n");
+            logmsg("%s: CC 0\n",log_buf);
         else
-            logmsg (": CC 1 STATUS %8.8X\n", (U32)status);
+            logmsg("%s: CC 1 STATUS %8.8X\n",log_buf, (U32)status);
     }
 
     /* Perform serialization after completing operation */
