@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.10  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -203,7 +206,7 @@ BYTE    c;                              /* Print character           */
         iobuf[len] = '\0';
 
         /* Send the data to the console */
-        logmsg((char *)iobuf);
+        logmsg("%s",(char *)iobuf);
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
