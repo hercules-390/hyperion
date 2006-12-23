@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.17  2006/12/19 22:08:40  rbowler
+// Decimal Floating Point: CSXTR correction for NaN and Inf
+//
 // Revision 1.16  2006/12/18 16:48:06  rbowler
 // Decimal Floating Point: DXTR,MXTR instructions
 //
@@ -258,19 +261,35 @@ U32     dxc;                            /* Data exception code or 0  */
     return dxc;
 } /* end function fpc_signal_check */
 
+#define _DFP_ARCH_INDEPENDENT_
+#endif /*!defined(_DFP_ARCH_INDEPENDENT_)*/
+
 /*-------------------------------------------------------------------*/
 /* Set rounding mode in decimal context structure                    */
 /*                                                                   */
 /* Input:                                                            */
 /*      pset    Pointer to decimal number context structure          */
-/*      drm     Decimal rounding mode                                */
+/*      mask    4-bit mask value                                     */
+/*      regs    CPU register context                                 */
 /* Output:                                                           */
-/*      Context structure rounding mode field is set according       */
-/*      to the value of the DRM field                                */
+/*      If mask bit X'08' is one then the rounding mode in the       */
+/*      context structure is set according to the value (0 to 7)     */
+/*      indicated by the low-order three bits of the mask.           */
+/*      If mask bit X'08' is zero then the rounding mode in the      */
+/*      context structure is set according to the value (0 to 7)     */
+/*      of the DRM field in the FPC register.                        */
 /*-------------------------------------------------------------------*/
-static void
-dfp_set_rounding_mode(decContext *pset, BYTE drm)
+static inline void
+ARCH_DEP(dfp_rounding_mode) (decContext *pset, int mask, REGS *regs)
 {
+BYTE    drm;                            /* Decimal rounding mode     */
+
+    /* Load DRM from mask or from FPC register */
+    if (mask & 0x08)
+        drm = mask & 0x07;
+    else
+        drm = (regs->fpc & FPC_DRM) >> FPC_DRM_SHIFT;
+
     /* Set rounding mode according to DRM value */
     switch (drm) {
     case DRM_RNE:  pset->round = DEC_ROUND_HALF_EVEN; break;
@@ -283,28 +302,7 @@ dfp_set_rounding_mode(decContext *pset, BYTE drm)
     case DRM_RFSP: pset->round = DEC_ROUND_DOWN; break;
     } /* end switch(drm) */
 
-} /* end function dfp_set_rounding_mode */
-
-#define _DFP_ARCH_INDEPENDENT_
-#endif /*!defined(_DFP_ARCH_INDEPENDENT_)*/
-
-/*-------------------------------------------------------------------*/
-/* Initialize DFP rounding mode from FPC register                    */
-/*                                                                   */
-/* Input:                                                            */
-/*      set     Decimal number context                               */
-/*      regs    CPU register context                                 */
-/*-------------------------------------------------------------------*/
-static inline void
-ARCH_DEP(dfp_init_rounding_mode) (decContext *pset, REGS *regs)
-{
-BYTE    drm;                            /* Decimal rounding mode     */
-
-    /* Set rounding mode according to DRM value in FPC register */
-    drm = (regs->fpc & FPC_DRM) >> FPC_DRM_SHIFT;
-    dfp_set_rounding_mode(pset, drm);
-
-} /* end function dfp_init_rounding_mode */
+} /* end function dfp_rounding_mode */
 
 /*-------------------------------------------------------------------*/
 /* Copy a DFP extended register into a decimal128 structure          */
@@ -535,7 +533,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     /* Initialise the context for extended DFP */
     decContextDefault(&set, DEC_INIT_DECIMAL128);
-    ARCH_DEP(dfp_init_rounding_mode)(&set, regs);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
 
     /* Add FP register r3 to FP register r2 */
     ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
@@ -695,7 +693,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     /* Initialise the context for extended DFP */
     decContextDefault(&set, DEC_INIT_DECIMAL128);
-    ARCH_DEP(dfp_init_rounding_mode)(&set, regs);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
 
     /* Divide FP register r2 by FP register r3 */
     ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
@@ -794,7 +792,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     /* Initialise the context for extended DFP */
     decContextDefault(&set, DEC_INIT_DECIMAL128);
-    ARCH_DEP(dfp_init_rounding_mode)(&set, regs);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
 
     /* Multiply FP register r2 by FP register r3 */
     ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
