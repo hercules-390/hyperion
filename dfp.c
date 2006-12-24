@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.18  2006/12/23 17:47:03  rbowler
+// Decimal Floating Point: Decimal rounding mode
+//
 // Revision 1.17  2006/12/19 22:08:40  rbowler
 // Decimal Floating Point: CSXTR correction for NaN and Inf
 //
@@ -566,9 +569,101 @@ BYTE            dxc;                    /* Data exception code       */
 
 /* Additional Decimal Floating Point instructions to be inserted here */
 UNDEF_INST(add_dfp_long_reg)
-UNDEF_INST(compare_dfp_ext_reg)
+
+
+/*-------------------------------------------------------------------*/
+/* B3EC CXTR  - Compare DFP Extended Register                  [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_dfp_ext_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal128      x1, x2;                 /* Extended DFP values       */
+decNumber       d1, d2, dr;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR2_CHECK(r1, r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Compare FP register r1 with FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r1, &x1, regs);
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x1, &d1);
+    decimal128ToNumber(&x2, &d2);
+    decNumberCompare(&dr, &d1, &d2, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Set condition code */
+    regs->psw.cc = decNumberIsNaN(&dr) ? 3 :
+                   decNumberIsZero(&dr) ? 0 :
+                   decNumberIsNegative(&dr) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_dfp_ext_reg) */
+
+
 UNDEF_INST(compare_dfp_long_reg)
-UNDEF_INST(compare_and_signal_dfp_ext_reg)
+
+
+/*-------------------------------------------------------------------*/
+/* B3E8 KXTR  - Compare and Signal DFP Extended Register       [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_and_signal_dfp_ext_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal128      x1, x2;                 /* Extended DFP values       */
+decNumber       d1, d2, dr;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR2_CHECK(r1, r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Compare FP register r1 with FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r1, &x1, regs);
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x1, &d1);
+    decimal128ToNumber(&x2, &d2);
+    decNumberCompare(&dr, &d1, &d2, &set);
+
+    /* Force signaling condition if result is a NaN */
+    if (decNumberIsNaN(&dr))
+        set.status |= DEC_IEEE_854_Invalid_operation;
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Set condition code */
+    regs->psw.cc = decNumberIsNaN(&dr) ? 3 :
+                   decNumberIsZero(&dr) ? 0 :
+                   decNumberIsNegative(&dr) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_and_signal_dfp_ext_reg) */
+
+
 UNDEF_INST(compare_and_signal_dfp_long_reg)
 UNDEF_INST(compare_exponent_dfp_ext_reg)
 UNDEF_INST(compare_exponent_dfp_long_reg)
@@ -726,7 +821,58 @@ UNDEF_INST(extract_significance_dfp_ext_reg)
 UNDEF_INST(extract_significance_dfp_long_reg)
 UNDEF_INST(insert_biased_exponent_fix64_to_dfp_ext_reg)
 UNDEF_INST(insert_biased_exponent_fix64_to_dfp_long_reg)
-UNDEF_INST(load_and_test_dfp_ext_reg)
+/*-------------------------------------------------------------------*/
+/* B3DE LTXTR - Load and Test DFP Extended Register            [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_test_dfp_ext_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal128      x1, x2;                 /* Extended DFP values       */
+decNumber       d;                      /* Working decimal number    */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR2_CHECK(r1, r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Load value from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x2, &d);
+
+    /* For SNaN, force signaling condition and convert to QNaN */
+    if (decNumberIsSNaN(&d))
+    {
+        set.status |= DEC_IEEE_854_Invalid_operation;
+        d.bits &= ~DECSNAN;
+        d.bits |= DECNAN;
+    } 
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Reencode value and load into FP register r1 */
+    decimal128FromNumber(&x1, &d, &set);
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+    /* Set condition code */
+    regs->psw.cc = decNumberIsNaN(&d) ? 3 :
+                   decNumberIsZero(&d) ? 0 :
+                   decNumberIsNegative(&d) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(load_and_test_dfp_ext_reg) */
+
+
 UNDEF_INST(load_and_test_dfp_long_reg)
 UNDEF_INST(load_fp_int_dfp_ext_reg)
 UNDEF_INST(load_fp_int_dfp_long_reg)
@@ -886,7 +1032,54 @@ UNDEF_INST(shift_coefficient_left_dfp_ext)
 UNDEF_INST(shift_coefficient_left_dfp_long)
 UNDEF_INST(shift_coefficient_right_dfp_ext)
 UNDEF_INST(shift_coefficient_right_dfp_long)
-UNDEF_INST(subtract_dfp_ext_reg)
+/*-------------------------------------------------------------------*/
+/* B3DB SXTR  - Subtract DFP Extended Register                 [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_dfp_ext_reg)
+{
+int             r1, r2, r3;             /* Values of R fields        */
+decimal128      x1, x2, x3;             /* Extended DFP values       */
+decNumber       d1, d2, d3;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRR(inst, regs, r1, r2, r3);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR3_CHECK(r1, r2, r3, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
+
+    /* Subtract FP register r3 from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    ARCH_DEP(dfp_reg_to_decimal128)(r3, &x3, regs);
+    decimal128ToNumber(&x2, &d2);
+    decimal128ToNumber(&x3, &d3);
+    decNumberSubtract(&d1, &d2, &d3, &set);
+    decimal128FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+    /* Set condition code */
+    regs->psw.cc = decNumberIsNaN(&d1) ? 3 :
+                   decNumberIsZero(&d1) ? 0 :
+                   decNumberIsNegative(&d1) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(subtract_dfp_ext_reg) */
+
+
 UNDEF_INST(subtract_dfp_long_reg)
 UNDEF_INST(test_data_class_dfp_ext)
 UNDEF_INST(test_data_class_dfp_long)
