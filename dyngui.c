@@ -35,10 +35,16 @@
 /*           be when, e.g., running as a shared device server mode)  */
 /* 11/18/05  Show offline CPUs as OFFLINE.                           */
 /* 12/01/05  SetCurrentDirectory support for shell commands          */
+/* 12/23/06  64-bit zArch registers support                          */
+/* 12/23/06  Improve efficiency of reporting register updates        */
+/* 12/23/06  Forced GUI status update/refresh support                */
 /*                                                                   */
 /*********************************************************************/
 
 // $Log$
+// Revision 1.55  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 #include "hercules.h"       // (#includes "config." w/#define for VERSION)
@@ -111,6 +117,7 @@ void  ReadInputData      (size_t nTimeoutMillsecs);
 void  ProcessInputData   ();
 void* gui_panel_command  (char* pszCommand);
 void  UpdateStatus       ();
+void  HandleForcedRefresh();
 void  UpdateCPUStatus    ();
 void  UpdateRegisters    ();
 void  UpdateDeviceStatus ();
@@ -353,11 +360,16 @@ void  ProcessInputData ()
 ///////////////////////////////////////////////////////////////////////////////
 // (These are actually boolean flags..)
 
-BYTE   gui_wants_gregs       = 1;
-BYTE   gui_wants_cregs       = 1;
-BYTE   gui_wants_aregs       = 1;
-BYTE   gui_wants_fregs       = 1;
-BYTE   gui_wants_devlist     = 1;
+BYTE   gui_forced_refresh    = 1;       // (force initial update refresh)
+
+BYTE   gui_wants_gregs       = 0;
+BYTE   gui_wants_gregs64     = 0;
+BYTE   gui_wants_cregs       = 0;
+BYTE   gui_wants_cregs64     = 0;
+BYTE   gui_wants_aregs       = 0;
+BYTE   gui_wants_fregs       = 0;
+BYTE   gui_wants_fregs64     = 0;
+BYTE   gui_wants_devlist     = 1;       // (should always be initially on)
 BYTE   gui_wants_new_devlist = 0;
 #if defined(OPTION_MIPS_COUNTING)
 BYTE   gui_wants_cpupct      = 0;
@@ -381,7 +393,9 @@ void*  gui_panel_command (char* pszCommand)
     if ( ']' != *pszCommand )
         goto NotSpecialGUICommand;
 
-    pszCommand++;                                    // (bump past ']')
+    gui_forced_refresh = 1;                         // (forced update refresh)
+
+    pszCommand++;                                   // (bump past ']')
 
     if (strncasecmp(pszCommand,"SCD=",4) == 0)
     {
@@ -395,9 +409,21 @@ void*  gui_panel_command (char* pszCommand)
         return NULL;
     }
 
+    if (strncasecmp(pszCommand,"GREGS64=",8) == 0)
+    {
+        gui_wants_gregs64 = atoi(pszCommand+8);
+        return NULL;
+    }
+
     if (strncasecmp(pszCommand,"CREGS=",6) == 0)
     {
         gui_wants_cregs = atoi(pszCommand+6);
+        return NULL;
+    }
+
+    if (strncasecmp(pszCommand,"CREGS64=",8) == 0)
+    {
+        gui_wants_cregs64 = atoi(pszCommand+8);
         return NULL;
     }
 
@@ -410,6 +436,12 @@ void*  gui_panel_command (char* pszCommand)
     if (strncasecmp(pszCommand,"FREGS=",6) == 0)
     {
         gui_wants_fregs = atoi(pszCommand+6);
+        return NULL;
+    }
+
+    if (strncasecmp(pszCommand,"FREGS64=",8) == 0)
+    {
+        gui_wants_fregs64 = atoi(pszCommand+8);
         return NULL;
     }
 
@@ -482,11 +514,23 @@ NotSpecialGUICommand:
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Status updating control fields...
 
 QWORD  psw, prev_psw;
 BYTE   wait_bit;
-BYTE   prev_cpustate       = 0xFF;
-U64    prev_instcount      = 0;
+BYTE   prev_cpustate   = 0xFF;
+U64    prev_instcount  = 0;
+
+U32    prev_gr   [16];
+U64    prev_gr64 [16];
+
+U32    prev_cr   [16];
+U64    prev_cr64 [16];
+
+U32    prev_ar   [16];
+
+U32    prev_fpr  [8*2];
+U32    prev_fpr64[16*2];
 
 ///////////////////////////////////////////////////////////////////////////////
 // Send status information messages back to the gui...
@@ -544,6 +588,7 @@ void  UpdateStatus ()
     bStatusChanged = FALSE;     // (whether or not anything has changed)
 
     if (0
+        || gui_forced_refresh
         || pTargetCPU_REGS != pPrevTargetCPU_REGS
         || pcpu != prev_pcpu
         || memcmp(prev_psw, psw, sizeof(prev_psw)) != 0
@@ -556,7 +601,10 @@ void  UpdateStatus ()
            )
     )
     {
-        bStatusChanged = TRUE;      // (something has indeed changed...)
+        bStatusChanged = TRUE;          // (something has indeed changed...)
+
+        if (gui_forced_refresh)         // (forced refresh?)
+            HandleForcedRefresh();      // (reset all prev values)
 
         // Save new values for next time...
 
@@ -609,6 +657,45 @@ void  UpdateStatus ()
 
     if (gui_wants_new_devlist)  // (if the device list is visible)
         NewUpdateDevStats();    // (update the list of devices...)
+
+    gui_forced_refresh  = 0;    // (reset switch; must follow devlist update)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Forced GUI Refresh: reset all "previous" values to force update...
+
+void HandleForcedRefresh()
+{
+#ifdef OPTION_MIPS_COUNTING
+    prev_mips_rate          = INT_MAX;
+    prev_sios_rate          = INT_MAX;
+#endif
+    prev_instcount          = _UI64_MAX;
+    prev_pcpu               = INT_MAX;
+    pPrevTargetCPU_REGS     = NULL;
+    prev_cpustate           = 0xFF;
+    memset( prev_psw,         0xFF,  sizeof(prev_psw) );
+
+    memset(   &prev_gr   [0], 0xFF,
+        sizeof(prev_gr) );
+
+    memset(   &prev_cr   [0], 0xFF,
+        sizeof(prev_cr) );
+
+    memset(   &prev_ar   [0], 0xFF,
+        sizeof(prev_ar) );
+
+    memset(   &prev_fpr  [0], 0xFF,
+        sizeof(prev_fpr) );
+
+    memset(   &prev_gr64 [0], 0xFF,
+        sizeof(prev_gr64) );
+
+    memset(   &prev_cr64 [0], 0xFF,
+        sizeof(prev_cr64) );
+
+    memset(   &prev_fpr64[0], 0xFF,
+        sizeof(prev_fpr64) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -630,51 +717,50 @@ void  UpdateCPUStatus ()
     }
     else // pTargetCPU_REGS != &sysblk.dummyregs; cpu is online
     {
-
-    // CPU status line...  (PSW, status indicators, and instruction count)
-
-    gui_fprintf(fStatusStream, "STATUS="
-
-        "CPU%4.4X "
-
-        "PSW=%2.2X%2.2X%2.2X%2.2X "
-            "%2.2X%2.2X%2.2X%2.2X "
-            "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
-
-        "%c%c%c%c%c%c%c%c "
-
-        "instcount=%" I64_FMT "u\n"
-
-        ,pTargetCPU_REGS->cpuad
-
-        ,psw[0], psw[1], psw[2],  psw[3]
-        ,psw[4], psw[5], psw[6],  psw[7]
-        ,psw[8], psw[9], psw[10], psw[11], psw[12], psw[13], psw[14], psw[15]
-
-        ,CPUSTATE_STOPPED == pTargetCPU_REGS->cpustate ? 'M' : '.'
-        ,sysblk.inststep                       ? 'T' : '.'
-        ,wait_bit                                      ? 'W' : '.'
-        ,pTargetCPU_REGS->loadstate                    ? 'L' : '.'
-        ,pTargetCPU_REGS->checkstop                    ? 'C' : '.'
-        ,PROBSTATE(&pTargetCPU_REGS->psw)              ? 'P' : '.'
-        ,
+        // CPU status line...  (PSW, status indicators, and instruction count)
+    
+        gui_fprintf(fStatusStream, "STATUS="
+    
+            "CPU%4.4X "
+    
+            "PSW=%2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
+    
+            "%c%c%c%c%c%c%c%c "
+    
+            "instcount=%" I64_FMT "u\n"
+    
+            ,pTargetCPU_REGS->cpuad
+    
+            ,psw[0], psw[1], psw[2],  psw[3]
+            ,psw[4], psw[5], psw[6],  psw[7]
+            ,psw[8], psw[9], psw[10], psw[11], psw[12], psw[13], psw[14], psw[15]
+    
+            ,CPUSTATE_STOPPED == pTargetCPU_REGS->cpustate ? 'M' : '.'
+            ,sysblk.inststep                       ? 'T' : '.'
+            ,wait_bit                                      ? 'W' : '.'
+            ,pTargetCPU_REGS->loadstate                    ? 'L' : '.'
+            ,pTargetCPU_REGS->checkstop                    ? 'C' : '.'
+            ,PROBSTATE(&pTargetCPU_REGS->psw)              ? 'P' : '.'
+            ,
 #if        defined(_FEATURE_SIE)
-        SIE_MODE(pTargetCPU_REGS)                      ? 'S' : '.'
+            SIE_MODE(pTargetCPU_REGS)                      ? 'S' : '.'
 #else  // !defined(_FEATURE_SIE)
-                                                               '.'
+                                                                   '.'
 #endif //  defined(_FEATURE_SIE)
-        ,
+            ,
 #if        defined(_900)
-        ARCH_900 == pTargetCPU_REGS->arch_mode         ? 'Z' : '.'
+            ARCH_900 == pTargetCPU_REGS->arch_mode         ? 'Z' : '.'
 #else  // !defined(_900)
-                                                               '.'
+                                                                   '.'
 #endif //  defined(_900)
-        ,(long long)(
+            ,(long long)(
 #if       defined(_FEATURE_SIE)
-        SIE_MODE(pTargetCPU_REGS) ? pTargetCPU_REGS->hostregs->instcount :
+            SIE_MODE(pTargetCPU_REGS) ? pTargetCPU_REGS->hostregs->instcount :
 #endif // defined(_FEATURE_SIE)
-        pTargetCPU_REGS->instcount)
-    );
+            pTargetCPU_REGS->instcount)
+        );
 
     } // endif cpu is online/offline
 
@@ -719,110 +805,796 @@ void  UpdateCPUStatus ()
 ///////////////////////////////////////////////////////////////////////////////
 // Send status information messages back to the gui...
 
+#define REG32FMT  "%8.8"I32_FMT"X"
+#define REG64FMT  "%16.16"I64_FMT"X"
+
 void  UpdateRegisters ()
 {
     if (sysblk.shutdown) return;
 
     if (gui_wants_gregs)
     {
-        gui_fprintf(fStatusStream,
+        if (0
+            || prev_gr[0] != pTargetCPU_REGS->GR_L(0)
+            || prev_gr[1] != pTargetCPU_REGS->GR_L(1)
+            || prev_gr[2] != pTargetCPU_REGS->GR_L(2)
+            || prev_gr[3] != pTargetCPU_REGS->GR_L(3)
+        )
+        {
+            prev_gr[0] = pTargetCPU_REGS->GR_L(0);
+            prev_gr[1] = pTargetCPU_REGS->GR_L(1);
+            prev_gr[2] = pTargetCPU_REGS->GR_L(2);
+            prev_gr[3] = pTargetCPU_REGS->GR_L(3);
 
-            "GR0-3=%8.8X %8.8X %8.8X %8.8X\n"
-            "GR4-7=%8.8X %8.8X %8.8X %8.8X\n"
-            "GR8-B=%8.8X %8.8X %8.8X %8.8X\n"
-            "GRC-F=%8.8X %8.8X %8.8X %8.8X\n"
+            gui_fprintf(fStatusStream,
 
-            ,pTargetCPU_REGS->GR_L(0)
-            ,pTargetCPU_REGS->GR_L(1)
-            ,pTargetCPU_REGS->GR_L(2)
-            ,pTargetCPU_REGS->GR_L(3)
-            ,pTargetCPU_REGS->GR_L(4)
-            ,pTargetCPU_REGS->GR_L(5)
-            ,pTargetCPU_REGS->GR_L(6)
-            ,pTargetCPU_REGS->GR_L(7)
-            ,pTargetCPU_REGS->GR_L(8)
-            ,pTargetCPU_REGS->GR_L(9)
-            ,pTargetCPU_REGS->GR_L(10)
-            ,pTargetCPU_REGS->GR_L(11)
-            ,pTargetCPU_REGS->GR_L(12)
-            ,pTargetCPU_REGS->GR_L(13)
-            ,pTargetCPU_REGS->GR_L(14)
-            ,pTargetCPU_REGS->GR_L(15)
-        );
+                "GR0-3="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->GR_L(0)
+                ,pTargetCPU_REGS->GR_L(1)
+                ,pTargetCPU_REGS->GR_L(2)
+                ,pTargetCPU_REGS->GR_L(3)
+            );
+        }
+
+        if (0
+            || prev_gr[4] != pTargetCPU_REGS->GR_L(4)
+            || prev_gr[5] != pTargetCPU_REGS->GR_L(5)
+            || prev_gr[6] != pTargetCPU_REGS->GR_L(6)
+            || prev_gr[7] != pTargetCPU_REGS->GR_L(7)
+        )
+        {
+            prev_gr[4] = pTargetCPU_REGS->GR_L(4);
+            prev_gr[5] = pTargetCPU_REGS->GR_L(5);
+            prev_gr[6] = pTargetCPU_REGS->GR_L(6);
+            prev_gr[7] = pTargetCPU_REGS->GR_L(7);
+
+            gui_fprintf(fStatusStream,
+
+                "GR4-7="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->GR_L(4)
+                ,pTargetCPU_REGS->GR_L(5)
+                ,pTargetCPU_REGS->GR_L(6)
+                ,pTargetCPU_REGS->GR_L(7)
+            );
+        }
+
+        if (0
+            || prev_gr[8]  != pTargetCPU_REGS->GR_L(8)
+            || prev_gr[9]  != pTargetCPU_REGS->GR_L(9)
+            || prev_gr[10] != pTargetCPU_REGS->GR_L(10)
+            || prev_gr[11] != pTargetCPU_REGS->GR_L(11)
+        )
+        {
+            prev_gr[8]  = pTargetCPU_REGS->GR_L(8);
+            prev_gr[9]  = pTargetCPU_REGS->GR_L(9);
+            prev_gr[10] = pTargetCPU_REGS->GR_L(10);
+            prev_gr[11] = pTargetCPU_REGS->GR_L(11);
+
+            gui_fprintf(fStatusStream,
+
+                "GR8-B="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->GR_L(8)
+                ,pTargetCPU_REGS->GR_L(9)
+                ,pTargetCPU_REGS->GR_L(10)
+                ,pTargetCPU_REGS->GR_L(11)
+            );
+        }
+
+        if (0
+            || prev_gr[12] != pTargetCPU_REGS->GR_L(12)
+            || prev_gr[13] != pTargetCPU_REGS->GR_L(13)
+            || prev_gr[14] != pTargetCPU_REGS->GR_L(14)
+            || prev_gr[15] != pTargetCPU_REGS->GR_L(15)
+        )
+        {
+            prev_gr[12] = pTargetCPU_REGS->GR_L(12);
+            prev_gr[13] = pTargetCPU_REGS->GR_L(13);
+            prev_gr[14] = pTargetCPU_REGS->GR_L(14);
+            prev_gr[15] = pTargetCPU_REGS->GR_L(15);
+
+            gui_fprintf(fStatusStream,
+
+                "GRC-F="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->GR_L(12)
+                ,pTargetCPU_REGS->GR_L(13)
+                ,pTargetCPU_REGS->GR_L(14)
+                ,pTargetCPU_REGS->GR_L(15)
+            );
+        }
+    }
+
+    if (gui_wants_gregs64)
+    {
+        if (0
+            || prev_gr64[0] != pTargetCPU_REGS->GR_G(0)
+            || prev_gr64[1] != pTargetCPU_REGS->GR_G(1)
+        )
+        {
+            prev_gr64[0] = pTargetCPU_REGS->GR_G(0);
+            prev_gr64[1] = pTargetCPU_REGS->GR_G(1);
+
+            gui_fprintf(fStatusStream,
+
+                "64_GR0-1="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->GR_G(0)
+                ,pTargetCPU_REGS->GR_G(1)
+            );
+        }
+
+        if (0
+            || prev_gr64[2] != pTargetCPU_REGS->GR_G(2)
+            || prev_gr64[3] != pTargetCPU_REGS->GR_G(3)
+        )
+        {
+            prev_gr64[2] = pTargetCPU_REGS->GR_G(2);
+            prev_gr64[3] = pTargetCPU_REGS->GR_G(3);
+
+            gui_fprintf(fStatusStream,
+
+                "64_GR2-3="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->GR_G(2)
+                ,pTargetCPU_REGS->GR_G(3)
+            );
+        }
+
+        if (0
+            || prev_gr64[4] != pTargetCPU_REGS->GR_G(4)
+            || prev_gr64[5] != pTargetCPU_REGS->GR_G(5)
+        )
+        {
+            prev_gr64[4] = pTargetCPU_REGS->GR_G(4);
+            prev_gr64[5] = pTargetCPU_REGS->GR_G(5);
+
+            gui_fprintf(fStatusStream,
+
+                "64_GR4-5="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->GR_G(4)
+                ,pTargetCPU_REGS->GR_G(5)
+            );
+        }
+
+        if (0
+            || prev_gr64[6] != pTargetCPU_REGS->GR_G(6)
+            || prev_gr64[7] != pTargetCPU_REGS->GR_G(7)
+        )
+        {
+            prev_gr64[6] = pTargetCPU_REGS->GR_G(6);
+            prev_gr64[7] = pTargetCPU_REGS->GR_G(7);
+
+            gui_fprintf(fStatusStream,
+
+                "64_GR6-7="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->GR_G(6)
+                ,pTargetCPU_REGS->GR_G(7)
+            );
+        }
+
+        if (0
+            || prev_gr64[8]  != pTargetCPU_REGS->GR_G(8)
+            || prev_gr64[9]  != pTargetCPU_REGS->GR_G(9)
+        )
+        {
+            prev_gr64[8] = pTargetCPU_REGS->GR_G(8);
+            prev_gr64[9] = pTargetCPU_REGS->GR_G(9);
+
+            gui_fprintf(fStatusStream,
+
+                "64_GR8-9="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->GR_G(8)
+                ,pTargetCPU_REGS->GR_G(9)
+            );
+        }
+
+        if (0
+            || prev_gr64[10] != pTargetCPU_REGS->GR_G(10)
+            || prev_gr64[11] != pTargetCPU_REGS->GR_G(11)
+        )
+        {
+            prev_gr64[10] = pTargetCPU_REGS->GR_G(10);
+            prev_gr64[11] = pTargetCPU_REGS->GR_G(11);
+
+            gui_fprintf(fStatusStream,
+
+                "64_GRA-B="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->GR_G(10)
+                ,pTargetCPU_REGS->GR_G(11)
+            );
+        }
+
+        if (0
+            || prev_gr64[12] != pTargetCPU_REGS->GR_G(12)
+            || prev_gr64[13] != pTargetCPU_REGS->GR_G(13)
+        )
+        {
+            prev_gr64[12] = pTargetCPU_REGS->GR_G(12);
+            prev_gr64[13] = pTargetCPU_REGS->GR_G(13);
+
+            gui_fprintf(fStatusStream,
+
+                "64_GRC-D="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->GR_G(12)
+                ,pTargetCPU_REGS->GR_G(13)
+            );
+        }
+
+        if (0
+            || prev_gr64[14] != pTargetCPU_REGS->GR_G(14)
+            || prev_gr64[15] != pTargetCPU_REGS->GR_G(15)
+        )
+        {
+            prev_gr64[14] = pTargetCPU_REGS->GR_G(14);
+            prev_gr64[15] = pTargetCPU_REGS->GR_G(15);
+
+            gui_fprintf(fStatusStream,
+
+                "64_GRE-F="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->GR_G(14)
+                ,pTargetCPU_REGS->GR_G(15)
+            );
+        }
     }
 
     if (gui_wants_cregs)
     {
-        gui_fprintf(fStatusStream,
+        if (0
+            || prev_cr[0] != pTargetCPU_REGS->CR_L(0)
+            || prev_cr[1] != pTargetCPU_REGS->CR_L(1)
+            || prev_cr[2] != pTargetCPU_REGS->CR_L(2)
+            || prev_cr[3] != pTargetCPU_REGS->CR_L(3)
+        )
+        {
+            prev_cr[0] = pTargetCPU_REGS->CR_L(0);
+            prev_cr[1] = pTargetCPU_REGS->CR_L(1);
+            prev_cr[2] = pTargetCPU_REGS->CR_L(2);
+            prev_cr[3] = pTargetCPU_REGS->CR_L(3);
 
-            "CR0-3=%8.8X %8.8X %8.8X %8.8X\n"
-            "CR4-7=%8.8X %8.8X %8.8X %8.8X\n"
-            "CR8-B=%8.8X %8.8X %8.8X %8.8X\n"
-            "CRC-F=%8.8X %8.8X %8.8X %8.8X\n"
+            gui_fprintf(fStatusStream,
 
-            ,pTargetCPU_REGS->CR_L(0)
-            ,pTargetCPU_REGS->CR_L(1)
-            ,pTargetCPU_REGS->CR_L(2)
-            ,pTargetCPU_REGS->CR_L(3)
-            ,pTargetCPU_REGS->CR_L(4)
-            ,pTargetCPU_REGS->CR_L(5)
-            ,pTargetCPU_REGS->CR_L(6)
-            ,pTargetCPU_REGS->CR_L(7)
-            ,pTargetCPU_REGS->CR_L(8)
-            ,pTargetCPU_REGS->CR_L(9)
-            ,pTargetCPU_REGS->CR_L(10)
-            ,pTargetCPU_REGS->CR_L(11)
-            ,pTargetCPU_REGS->CR_L(12)
-            ,pTargetCPU_REGS->CR_L(13)
-            ,pTargetCPU_REGS->CR_L(14)
-            ,pTargetCPU_REGS->CR_L(15)
-        );
+                "CR0-3="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->CR_L(0)
+                ,pTargetCPU_REGS->CR_L(1)
+                ,pTargetCPU_REGS->CR_L(2)
+                ,pTargetCPU_REGS->CR_L(3)
+            );
+        }
+
+        if (0
+            || prev_cr[4] != pTargetCPU_REGS->CR_L(4)
+            || prev_cr[5] != pTargetCPU_REGS->CR_L(5)
+            || prev_cr[6] != pTargetCPU_REGS->CR_L(6)
+            || prev_cr[7] != pTargetCPU_REGS->CR_L(7)
+        )
+        {
+            prev_cr[4] = pTargetCPU_REGS->CR_L(4);
+            prev_cr[5] = pTargetCPU_REGS->CR_L(5);
+            prev_cr[6] = pTargetCPU_REGS->CR_L(6);
+            prev_cr[7] = pTargetCPU_REGS->CR_L(7);
+
+            gui_fprintf(fStatusStream,
+
+                "CR4-7="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->CR_L(4)
+                ,pTargetCPU_REGS->CR_L(5)
+                ,pTargetCPU_REGS->CR_L(6)
+                ,pTargetCPU_REGS->CR_L(7)
+            );
+        }
+
+        if (0
+            || prev_cr[8]  != pTargetCPU_REGS->CR_L(8)
+            || prev_cr[9]  != pTargetCPU_REGS->CR_L(9)
+            || prev_cr[10] != pTargetCPU_REGS->CR_L(10)
+            || prev_cr[11] != pTargetCPU_REGS->CR_L(11)
+        )
+        {
+            prev_cr[8]  = pTargetCPU_REGS->CR_L(8);
+            prev_cr[9]  = pTargetCPU_REGS->CR_L(9);
+            prev_cr[10] = pTargetCPU_REGS->CR_L(10);
+            prev_cr[10] = pTargetCPU_REGS->CR_L(10);
+
+            gui_fprintf(fStatusStream,
+
+                "CR8-B="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->CR_L(8)
+                ,pTargetCPU_REGS->CR_L(9)
+                ,pTargetCPU_REGS->CR_L(10)
+                ,pTargetCPU_REGS->CR_L(11)
+            );
+        }
+
+        if (0
+            || prev_cr[12] != pTargetCPU_REGS->CR_L(12)
+            || prev_cr[13] != pTargetCPU_REGS->CR_L(13)
+            || prev_cr[14] != pTargetCPU_REGS->CR_L(14)
+            || prev_cr[15] != pTargetCPU_REGS->CR_L(15)
+        )
+        {
+            prev_cr[12] = pTargetCPU_REGS->CR_L(12);
+            prev_cr[13] = pTargetCPU_REGS->CR_L(13);
+            prev_cr[14] = pTargetCPU_REGS->CR_L(14);
+            prev_cr[15] = pTargetCPU_REGS->CR_L(15);
+
+            gui_fprintf(fStatusStream,
+
+                "CRC-F="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->CR_L(12)
+                ,pTargetCPU_REGS->CR_L(13)
+                ,pTargetCPU_REGS->CR_L(14)
+                ,pTargetCPU_REGS->CR_L(15)
+            );
+        }
+    }
+
+    if (gui_wants_cregs64)
+    {
+        if (0
+            || prev_cr64[0] != pTargetCPU_REGS->CR_G(0)
+            || prev_cr64[1] != pTargetCPU_REGS->CR_G(1)
+        )
+        {
+            prev_cr64[0] = pTargetCPU_REGS->CR_G(0);
+            prev_cr64[1] = pTargetCPU_REGS->CR_G(1);
+
+            gui_fprintf(fStatusStream,
+
+                "64_CR0-1="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->CR_G(0)
+                ,pTargetCPU_REGS->CR_G(1)
+            );
+        }
+
+        if (0
+            || prev_cr64[2] != pTargetCPU_REGS->CR_G(2)
+            || prev_cr64[3] != pTargetCPU_REGS->CR_G(3)
+        )
+        {
+            prev_cr64[2] = pTargetCPU_REGS->CR_G(2);
+            prev_cr64[3] = pTargetCPU_REGS->CR_G(3);
+
+            gui_fprintf(fStatusStream,
+
+                "64_CR2-3="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->CR_G(2)
+                ,pTargetCPU_REGS->CR_G(3)
+            );
+        }
+
+        if (0
+            || prev_cr64[4] != pTargetCPU_REGS->CR_G(4)
+            || prev_cr64[5] != pTargetCPU_REGS->CR_G(5)
+        )
+        {
+            prev_cr64[4] = pTargetCPU_REGS->CR_G(4);
+            prev_cr64[5] = pTargetCPU_REGS->CR_G(5);
+
+            gui_fprintf(fStatusStream,
+
+                "64_CR4-5="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->CR_G(4)
+                ,pTargetCPU_REGS->CR_G(5)
+            );
+        }
+
+        if (0
+            || prev_cr64[6] != pTargetCPU_REGS->CR_G(6)
+            || prev_cr64[7] != pTargetCPU_REGS->CR_G(7)
+        )
+        {
+            prev_cr64[6] = pTargetCPU_REGS->CR_G(6);
+            prev_cr64[7] = pTargetCPU_REGS->CR_G(7);
+
+            gui_fprintf(fStatusStream,
+
+                "64_CR6-7="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->CR_G(6)
+                ,pTargetCPU_REGS->CR_G(7)
+            );
+        }
+
+        if (0
+            || prev_cr64[8]  != pTargetCPU_REGS->CR_G(8)
+            || prev_cr64[9]  != pTargetCPU_REGS->CR_G(9)
+        )
+        {
+            prev_cr64[8] = pTargetCPU_REGS->CR_G(8);
+            prev_cr64[9] = pTargetCPU_REGS->CR_G(9);
+
+            gui_fprintf(fStatusStream,
+
+                "64_CR8-9="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->CR_G(8)
+                ,pTargetCPU_REGS->CR_G(9)
+            );
+        }
+
+        if (0
+            || prev_cr64[10] != pTargetCPU_REGS->CR_G(10)
+            || prev_cr64[11] != pTargetCPU_REGS->CR_G(11)
+        )
+        {
+            prev_cr64[10] = pTargetCPU_REGS->CR_G(10);
+            prev_cr64[11] = pTargetCPU_REGS->CR_G(11);
+
+            gui_fprintf(fStatusStream,
+
+                "64_CRA-B="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->CR_G(10)
+                ,pTargetCPU_REGS->CR_G(11)
+            );
+        }
+
+        if (0
+            || prev_cr64[12] != pTargetCPU_REGS->CR_G(12)
+            || prev_cr64[13] != pTargetCPU_REGS->CR_G(13)
+        )
+        {
+            prev_cr64[12] = pTargetCPU_REGS->CR_G(12);
+            prev_cr64[13] = pTargetCPU_REGS->CR_G(13);
+
+            gui_fprintf(fStatusStream,
+
+                "64_CRC-D="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->CR_G(12)
+                ,pTargetCPU_REGS->CR_G(13)
+            );
+        }
+
+        if (0
+            || prev_cr64[14] != pTargetCPU_REGS->CR_G(14)
+            || prev_cr64[15] != pTargetCPU_REGS->CR_G(15)
+        )
+        {
+            prev_cr64[14] = pTargetCPU_REGS->CR_G(14);
+            prev_cr64[15] = pTargetCPU_REGS->CR_G(15);
+
+            gui_fprintf(fStatusStream,
+
+                "64_CRE-F="REG64FMT" "REG64FMT"\n"
+
+                ,pTargetCPU_REGS->CR_G(14)
+                ,pTargetCPU_REGS->CR_G(15)
+            );
+        }
     }
 
     if (gui_wants_aregs)
     {
-        gui_fprintf(fStatusStream,
+        if (0
+            || prev_ar[0] != pTargetCPU_REGS->AR(0)
+            || prev_ar[1] != pTargetCPU_REGS->AR(1)
+            || prev_ar[2] != pTargetCPU_REGS->AR(2)
+            || prev_ar[3] != pTargetCPU_REGS->AR(3)
+        )
+        {
+            prev_ar[0] = pTargetCPU_REGS->AR(0);
+            prev_ar[1] = pTargetCPU_REGS->AR(1);
+            prev_ar[2] = pTargetCPU_REGS->AR(2);
+            prev_ar[3] = pTargetCPU_REGS->AR(3);
 
-            "AR0-3=%8.8X %8.8X %8.8X %8.8X\n"
-            "AR4-7=%8.8X %8.8X %8.8X %8.8X\n"
-            "AR8-B=%8.8X %8.8X %8.8X %8.8X\n"
-            "ARC-F=%8.8X %8.8X %8.8X %8.8X\n"
+            gui_fprintf(fStatusStream,
 
-            ,pTargetCPU_REGS->AR(0)
-            ,pTargetCPU_REGS->AR(1)
-            ,pTargetCPU_REGS->AR(2)
-            ,pTargetCPU_REGS->AR(3)
-            ,pTargetCPU_REGS->AR(4)
-            ,pTargetCPU_REGS->AR(5)
-            ,pTargetCPU_REGS->AR(6)
-            ,pTargetCPU_REGS->AR(7)
-            ,pTargetCPU_REGS->AR(8)
-            ,pTargetCPU_REGS->AR(9)
-            ,pTargetCPU_REGS->AR(10)
-            ,pTargetCPU_REGS->AR(11)
-            ,pTargetCPU_REGS->AR(12)
-            ,pTargetCPU_REGS->AR(13)
-            ,pTargetCPU_REGS->AR(14)
-            ,pTargetCPU_REGS->AR(15)
-        );
+                "AR0-3="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->AR(0)
+                ,pTargetCPU_REGS->AR(1)
+                ,pTargetCPU_REGS->AR(2)
+                ,pTargetCPU_REGS->AR(3)
+            );
+        }
+
+        if (0
+            || prev_ar[4] != pTargetCPU_REGS->AR(4)
+            || prev_ar[5] != pTargetCPU_REGS->AR(5)
+            || prev_ar[6] != pTargetCPU_REGS->AR(6)
+            || prev_ar[7] != pTargetCPU_REGS->AR(7)
+        )
+        {
+            prev_ar[4] = pTargetCPU_REGS->AR(4);
+            prev_ar[5] = pTargetCPU_REGS->AR(5);
+            prev_ar[6] = pTargetCPU_REGS->AR(6);
+            prev_ar[7] = pTargetCPU_REGS->AR(7);
+
+            gui_fprintf(fStatusStream,
+
+                "AR4-7="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->AR(4)
+                ,pTargetCPU_REGS->AR(5)
+                ,pTargetCPU_REGS->AR(6)
+                ,pTargetCPU_REGS->AR(7)
+            );
+        }
+
+        if (0
+            || prev_ar[8]  != pTargetCPU_REGS->AR(8)
+            || prev_ar[9]  != pTargetCPU_REGS->AR(9)
+            || prev_ar[10] != pTargetCPU_REGS->AR(10)
+            || prev_ar[11] != pTargetCPU_REGS->AR(11)
+        )
+        {
+            prev_ar[8]  = pTargetCPU_REGS->AR(8);
+            prev_ar[9]  = pTargetCPU_REGS->AR(9);
+            prev_ar[10] = pTargetCPU_REGS->AR(10);
+            prev_ar[11] = pTargetCPU_REGS->AR(11);
+
+            gui_fprintf(fStatusStream,
+
+                "AR8-B="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->AR(8)
+                ,pTargetCPU_REGS->AR(9)
+                ,pTargetCPU_REGS->AR(10)
+                ,pTargetCPU_REGS->AR(11)
+            );
+        }
+
+        if (0
+            || prev_ar[12] != pTargetCPU_REGS->AR(12)
+            || prev_ar[13] != pTargetCPU_REGS->AR(13)
+            || prev_ar[14] != pTargetCPU_REGS->AR(14)
+            || prev_ar[15] != pTargetCPU_REGS->AR(15)
+        )
+        {
+            prev_ar[12] = pTargetCPU_REGS->AR(12);
+            prev_ar[13] = pTargetCPU_REGS->AR(13);
+            prev_ar[14] = pTargetCPU_REGS->AR(14);
+            prev_ar[15] = pTargetCPU_REGS->AR(15);
+
+            gui_fprintf(fStatusStream,
+
+                "ARC-F="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->AR(12)
+                ,pTargetCPU_REGS->AR(13)
+                ,pTargetCPU_REGS->AR(14)
+                ,pTargetCPU_REGS->AR(15)
+            );
+        }
     }
 
     if (gui_wants_fregs)
     {
-        gui_fprintf(fStatusStream,
+        if (0
+            || prev_fpr[0] != pTargetCPU_REGS->fpr[0]
+            || prev_fpr[1] != pTargetCPU_REGS->fpr[1]
+            || prev_fpr[2] != pTargetCPU_REGS->fpr[2]
+            || prev_fpr[3] != pTargetCPU_REGS->fpr[3]
+        )
+        {
+            prev_fpr[0] = pTargetCPU_REGS->fpr[0];
+            prev_fpr[1] = pTargetCPU_REGS->fpr[1];
+            prev_fpr[2] = pTargetCPU_REGS->fpr[2];
+            prev_fpr[3] = pTargetCPU_REGS->fpr[3];
 
-            "FR0-2=%8.8X %8.8X %8.8X %8.8X\n"
-            "FR4-6=%8.8X %8.8X %8.8X %8.8X\n"
+            gui_fprintf(fStatusStream,
 
-            ,pTargetCPU_REGS->fpr[0]
-            ,pTargetCPU_REGS->fpr[1]
-            ,pTargetCPU_REGS->fpr[2]
-            ,pTargetCPU_REGS->fpr[3]
-            ,pTargetCPU_REGS->fpr[4]
-            ,pTargetCPU_REGS->fpr[5]
-            ,pTargetCPU_REGS->fpr[6]
-            ,pTargetCPU_REGS->fpr[7]
-        );
+                "FR0-2="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->fpr[0]
+                ,pTargetCPU_REGS->fpr[1]
+                ,pTargetCPU_REGS->fpr[2]
+                ,pTargetCPU_REGS->fpr[3]
+            );
+        }
+
+        if (0
+            || prev_fpr[4] != pTargetCPU_REGS->fpr[4]
+            || prev_fpr[5] != pTargetCPU_REGS->fpr[5]
+            || prev_fpr[6] != pTargetCPU_REGS->fpr[6]
+            || prev_fpr[7] != pTargetCPU_REGS->fpr[7]
+        )
+        {
+            prev_fpr[4] = pTargetCPU_REGS->fpr[4];
+            prev_fpr[5] = pTargetCPU_REGS->fpr[5];
+            prev_fpr[6] = pTargetCPU_REGS->fpr[6];
+            prev_fpr[7] = pTargetCPU_REGS->fpr[7];
+
+            gui_fprintf(fStatusStream,
+
+                "FR4-6="REG32FMT" "REG32FMT" "REG32FMT" "REG32FMT"\n"
+
+                ,pTargetCPU_REGS->fpr[4]
+                ,pTargetCPU_REGS->fpr[5]
+                ,pTargetCPU_REGS->fpr[6]
+                ,pTargetCPU_REGS->fpr[7]
+            );
+        }
+    }
+
+    if (gui_wants_fregs64)
+    {
+        if (0
+            || prev_fpr64[0] != pTargetCPU_REGS->fpr[0]
+            || prev_fpr64[1] != pTargetCPU_REGS->fpr[1]
+            || prev_fpr64[2] != pTargetCPU_REGS->fpr[2]
+            || prev_fpr64[3] != pTargetCPU_REGS->fpr[3]
+        )
+        {
+            prev_fpr64[0] = pTargetCPU_REGS->fpr[0];
+            prev_fpr64[1] = pTargetCPU_REGS->fpr[1];
+            prev_fpr64[2] = pTargetCPU_REGS->fpr[2];
+            prev_fpr64[3] = pTargetCPU_REGS->fpr[3];
+
+            gui_fprintf(fStatusStream,
+
+                "64_FR0-1="REG32FMT""REG32FMT" "REG32FMT""REG32FMT"\n"
+
+                ,pTargetCPU_REGS->fpr[0]  ,pTargetCPU_REGS->fpr[1]
+                ,pTargetCPU_REGS->fpr[2]  ,pTargetCPU_REGS->fpr[3]
+            );
+        }
+
+        if (0
+            || prev_fpr64[4] != pTargetCPU_REGS->fpr[4]
+            || prev_fpr64[5] != pTargetCPU_REGS->fpr[5]
+            || prev_fpr64[6] != pTargetCPU_REGS->fpr[6]
+            || prev_fpr64[7] != pTargetCPU_REGS->fpr[7]
+        )
+        {
+            prev_fpr64[4] = pTargetCPU_REGS->fpr[4];
+            prev_fpr64[5] = pTargetCPU_REGS->fpr[5];
+            prev_fpr64[6] = pTargetCPU_REGS->fpr[6];
+            prev_fpr64[7] = pTargetCPU_REGS->fpr[7];
+
+            gui_fprintf(fStatusStream,
+
+                "64_FR2-3="REG32FMT""REG32FMT" "REG32FMT""REG32FMT"\n"
+
+                ,pTargetCPU_REGS->fpr[4]  ,pTargetCPU_REGS->fpr[5]
+                ,pTargetCPU_REGS->fpr[6]  ,pTargetCPU_REGS->fpr[7]
+            );
+        }
+
+        if (0
+            || prev_fpr64[8]  != pTargetCPU_REGS->fpr[8]
+            || prev_fpr64[9]  != pTargetCPU_REGS->fpr[9]
+            || prev_fpr64[10] != pTargetCPU_REGS->fpr[10]
+            || prev_fpr64[11] != pTargetCPU_REGS->fpr[11]
+        )
+        {
+            prev_fpr64[8]  = pTargetCPU_REGS->fpr[8];
+            prev_fpr64[9]  = pTargetCPU_REGS->fpr[9];
+            prev_fpr64[10] = pTargetCPU_REGS->fpr[10];
+            prev_fpr64[11] = pTargetCPU_REGS->fpr[11];
+
+            gui_fprintf(fStatusStream,
+
+                "64_FR4-5="REG32FMT""REG32FMT" "REG32FMT""REG32FMT"\n"
+
+                ,pTargetCPU_REGS->fpr[8]  ,pTargetCPU_REGS->fpr[9]
+                ,pTargetCPU_REGS->fpr[10] ,pTargetCPU_REGS->fpr[11]
+
+            );
+        }
+
+        if (0
+            || prev_fpr64[12] != pTargetCPU_REGS->fpr[12]
+            || prev_fpr64[13] != pTargetCPU_REGS->fpr[13]
+            || prev_fpr64[14] != pTargetCPU_REGS->fpr[14]
+            || prev_fpr64[15] != pTargetCPU_REGS->fpr[15]
+        )
+        {
+            prev_fpr64[12] = pTargetCPU_REGS->fpr[12];
+            prev_fpr64[13] = pTargetCPU_REGS->fpr[13];
+            prev_fpr64[14] = pTargetCPU_REGS->fpr[14];
+            prev_fpr64[15] = pTargetCPU_REGS->fpr[15];
+
+            gui_fprintf(fStatusStream,
+
+                "64_FR6-7="REG32FMT""REG32FMT" "REG32FMT""REG32FMT"\n"
+
+                ,pTargetCPU_REGS->fpr[12] ,pTargetCPU_REGS->fpr[13]
+                ,pTargetCPU_REGS->fpr[14] ,pTargetCPU_REGS->fpr[15]
+
+            );
+        }
+
+        if (0
+            || prev_fpr64[16] != pTargetCPU_REGS->fpr[16]
+            || prev_fpr64[17] != pTargetCPU_REGS->fpr[17]
+            || prev_fpr64[18] != pTargetCPU_REGS->fpr[18]
+            || prev_fpr64[19] != pTargetCPU_REGS->fpr[19]
+        )
+        {
+            prev_fpr64[16] = pTargetCPU_REGS->fpr[16];
+            prev_fpr64[17] = pTargetCPU_REGS->fpr[17];
+            prev_fpr64[18] = pTargetCPU_REGS->fpr[18];
+            prev_fpr64[19] = pTargetCPU_REGS->fpr[19];
+
+            gui_fprintf(fStatusStream,
+
+                "64_FR8-9="REG32FMT""REG32FMT" "REG32FMT""REG32FMT"\n"
+
+                ,pTargetCPU_REGS->fpr[16] ,pTargetCPU_REGS->fpr[17]
+                ,pTargetCPU_REGS->fpr[18] ,pTargetCPU_REGS->fpr[19]
+            );
+        }
+
+        if (0
+            || prev_fpr64[20] != pTargetCPU_REGS->fpr[20]
+            || prev_fpr64[21] != pTargetCPU_REGS->fpr[21]
+            || prev_fpr64[22] != pTargetCPU_REGS->fpr[22]
+            || prev_fpr64[23] != pTargetCPU_REGS->fpr[23]
+        )
+        {
+            prev_fpr64[20] = pTargetCPU_REGS->fpr[20];
+            prev_fpr64[21] = pTargetCPU_REGS->fpr[21];
+            prev_fpr64[22] = pTargetCPU_REGS->fpr[22];
+            prev_fpr64[23] = pTargetCPU_REGS->fpr[23];
+
+            gui_fprintf(fStatusStream,
+
+                "64_FRA-B="REG32FMT""REG32FMT" "REG32FMT""REG32FMT"\n"
+
+                ,pTargetCPU_REGS->fpr[20] ,pTargetCPU_REGS->fpr[21]
+                ,pTargetCPU_REGS->fpr[22] ,pTargetCPU_REGS->fpr[23]
+            );
+        }
+
+        if (0
+            || prev_fpr64[24] != pTargetCPU_REGS->fpr[24]
+            || prev_fpr64[25] != pTargetCPU_REGS->fpr[25]
+            || prev_fpr64[26] != pTargetCPU_REGS->fpr[26]
+            || prev_fpr64[27] != pTargetCPU_REGS->fpr[27]
+        )
+        {
+            prev_fpr64[24] = pTargetCPU_REGS->fpr[24];
+            prev_fpr64[25] = pTargetCPU_REGS->fpr[25];
+            prev_fpr64[26] = pTargetCPU_REGS->fpr[26];
+            prev_fpr64[27] = pTargetCPU_REGS->fpr[27];
+
+            gui_fprintf(fStatusStream,
+
+                "64_FRC-D="REG32FMT""REG32FMT" "REG32FMT""REG32FMT"\n"
+
+                ,pTargetCPU_REGS->fpr[24] ,pTargetCPU_REGS->fpr[25]
+                ,pTargetCPU_REGS->fpr[26] ,pTargetCPU_REGS->fpr[27]
+            );
+        }
+
+        if (0
+            || prev_fpr64[28] != pTargetCPU_REGS->fpr[28]
+            || prev_fpr64[29] != pTargetCPU_REGS->fpr[29]
+            || prev_fpr64[30] != pTargetCPU_REGS->fpr[30]
+            || prev_fpr64[31] != pTargetCPU_REGS->fpr[31]
+        )
+        {
+            prev_fpr64[28] = pTargetCPU_REGS->fpr[28];
+            prev_fpr64[29] = pTargetCPU_REGS->fpr[29];
+            prev_fpr64[30] = pTargetCPU_REGS->fpr[30];
+            prev_fpr64[31] = pTargetCPU_REGS->fpr[31];
+
+            gui_fprintf(fStatusStream,
+
+                "64_FRE-F="REG32FMT""REG32FMT" "REG32FMT""REG32FMT"\n"
+
+                ,pTargetCPU_REGS->fpr[28] ,pTargetCPU_REGS->fpr[29]
+                ,pTargetCPU_REGS->fpr[30] ,pTargetCPU_REGS->fpr[31]
+            );
+        }
     }
 }
 
@@ -1011,7 +1783,8 @@ void  NewUpdateDevStats ()
         // for next time. In this way we only send device status
         // msgs to the GUI only when the status actually changes...
 
-        if ( strcmp( pGUIStat->pszNewStatStr, pGUIStat->pszOldStatStr ) )
+        if (gui_forced_refresh ||
+            strcmp( pGUIStat->pszNewStatStr, pGUIStat->pszOldStatStr ))
         {
             gui_fprintf ( fStatusStream, "%s\n", pGUIStat->pszNewStatStr );
             bUpdatesSent = TRUE;
@@ -1132,6 +1905,10 @@ void  Initialize ()
 
     memset(pszCommandBuff,0,nCommandBuffSize);
     nCommandLen = 0;
+
+    // Initialize some variables...
+
+    HandleForcedRefresh();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

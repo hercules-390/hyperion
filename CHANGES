@@ -1,3 +1,4 @@
+23 Dec 2006 Misc dyngui mods (64-bit regs, efficiency, etc) - Fish
 23 Dec 2006 Fix integrated 1052/3215 for output with % - Ivan Warren
 21 Dec 2006 Fix SIGP to do single logmsg - Greg Smith
 21 Dec 2006 Range for s+, t+ - Greg Smith
