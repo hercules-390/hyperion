@@ -77,8 +77,8 @@ $ans = lc $ans;
 if ($ans eq 'y' || $ans eq '') {
 	die "HOME environment variable not set" if ! exists $ENV{'HOME'};
 	my $home = $ENV{'HOME'};		# root nonsense, ~ doesn't work right
-	unless (open PROFILE, "> $home/.profile") {die "Open $home/.profile failed: $!"};
-	print PROFILE "CVSROOT=$cvsroot ; export CVSROOT\n";
+	unless (open PROFILE, ">> $home/.profile") {die "Open $home/.profile failed: $!"};
+	print PROFILE "\nCVSROOT=$cvsroot ; export CVSROOT\n";
 	close PROFILE;
 	print "Updated $home/.profile for CVSROOT\n";
 	print "To use updated CVSROOT value, open new session or logout/login\n";
