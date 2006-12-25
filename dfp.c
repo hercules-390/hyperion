@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.19  2006/12/24 23:02:40  rbowler
+// Decimal Floating Point: CXTR,KXTR,LTXTR,SXTR instructions
+//
 // Revision 1.18  2006/12/23 17:47:03  rbowler
 // Decimal Floating Point: Decimal rounding mode
 //
@@ -263,6 +266,54 @@ U32     dxc;                            /* Data exception code or 0  */
     /* Return data exception code or zero */
     return dxc;
 } /* end function fpc_signal_check */
+
+/* Smallest normal numbers for each format */
+static decNumber SmallNorm32 = {1,DECIMAL32_Emin,0,{1}};
+static decNumber SmallNorm64 = {1,DECIMAL64_Emin,0,{1}}; 
+static decNumber SmallNorm128 = {1,DECIMAL128_Emin,0,{1}}; 
+
+/*-------------------------------------------------------------------*/
+/* Test data class and return condition code                         */
+/*                                                                   */
+/* This subroutine is called by the TDCET, TDCDT, and TDCXT          */
+/* instructions. It tests the data class and sign of a decimal       */
+/* number. Each combination of data class and sign corresponds       */
+/* to one possible of 12 possible bits in a bitmask. The value       */
+/* (0 or 1) of the corresponding bit is returned.                    */
+/*                                                                   */
+/* Input:                                                            */
+/*      pset    Pointer to decimal number context structure          */
+/*      dn      Pointer to decimal number structure to be tested     */
+/*      ds      Pointer to decimal number structure containing       */
+/*              the smallest normal value for the instruction        */
+/*      bits    Bitmask in rightmost 12 bits                         */
+/* Output:                                                           */
+/*      The return value is 0 or 1.                                  */
+/*-------------------------------------------------------------------*/
+static inline int
+dfp_test_data_class(decContext *pset, decNumber *dn, decNumber *ds,
+                        U32 bits)
+{
+int             bitn;                   /* Bit number in word        */
+decNumber       da;                     /* Absolute value of dn      */
+decNumber       dr;                     /* Result of compare da:ds   */
+
+    if (decNumberIsZero(dn)) bitn = 20;
+    else if (decNumberIsInfinite(dn)) bitn = 26;
+    else if (decNumberIsQNaN(dn)) bitn = 28;
+    else if (decNumberIsSNaN(dn)) bitn = 30;  
+    else {
+        decNumberAbs(&da, dn, pset);
+        decNumberCompare(&dr, &da, ds, pset);
+        if (decNumberIsNegative(&dr)) bitn = 22;
+        else bitn = 24;
+    }
+
+    if (decNumberIsNegative(dn)) bitn++;
+
+    return (bits >> (31 - bitn)) & 0x01;
+
+} /* end function dfp_test_data_class */
 
 #define _DFP_ARCH_INDEPENDENT_
 #endif /*!defined(_DFP_ARCH_INDEPENDENT_)*/
@@ -1081,7 +1132,41 @@ BYTE            dxc;                    /* Data exception code       */
 
 
 UNDEF_INST(subtract_dfp_long_reg)
-UNDEF_INST(test_data_class_dfp_ext)
+
+
+/*-------------------------------------------------------------------*/
+/* ED58 TDCXT - Test Data Class DFP Extended                   [RXE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(test_data_class_dfp_ext)
+{
+int             r1;                     /* Value of R field          */
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+decimal128      x1;                     /* Extended DFP values       */
+decNumber       d1;                     /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+U32             bits;                   /* Low 12 bits of address    */
+
+    RXE(inst, regs, r1, b2, effective_addr2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r1, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Convert FP register r1 to decimal number format */
+    ARCH_DEP(dfp_reg_to_decimal128)(r1, &x1, regs);
+    decimal128ToNumber(&x1, &d1);
+
+    /* Isolate rightmost 12 bits of second operand address */
+    bits = effective_addr2 & 0xFFF;
+
+    /* Test data class and set condition code */
+    regs->psw.cc = dfp_test_data_class(&set, &d1, &SmallNorm128, bits);
+
+} /* end DEF_INST(test_data_class_dfp_ext) */
+
+
 UNDEF_INST(test_data_class_dfp_long)
 UNDEF_INST(test_data_class_dfp_short)
 UNDEF_INST(test_data_group_dfp_ext)
