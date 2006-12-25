@@ -2,6 +2,8 @@
 
 #****************************************************************************
 #
+# $Id$
+#
 #                         C V S L V L C K
 #
 #  This perl script checks the user's system for the required levels of
@@ -10,6 +12,8 @@
 #****************************************************************************
 #
 #                       ---- CHANGE LOG ----
+# $Log$
+# 
 # DD/MM/YY Description...
 # 21/09/03 Removed libintl & libtool. Although "gettextize" is no longer
 #          run, pkg "gettext" is still needed to run the msgfmt/msgmerge
