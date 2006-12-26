@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.20  2006/12/25 23:10:12  rbowler
+// Decimal Floating Point: TDCXT instruction
+//
 // Revision 1.19  2006/12/24 23:02:40  rbowler
 // Decimal Floating Point: CXTR,KXTR,LTXTR,SXTR instructions
 //
@@ -267,10 +270,13 @@ U32     dxc;                            /* Data exception code or 0  */
     return dxc;
 } /* end function fpc_signal_check */
 
-/* Smallest normal numbers for each format */
-static decNumber SmallNorm32 = {1,DECIMAL32_Emin,0,{1}};
-static decNumber SmallNorm64 = {1,DECIMAL64_Emin,0,{1}}; 
-static decNumber SmallNorm128 = {1,DECIMAL128_Emin,0,{1}}; 
+/* Bit numbers for Test Data Class instructions */
+#define DFP_TDC_ZERO            52
+#define DFP_TDC_SUBNORMAL       54  
+#define DFP_TDC_NORMAL          56  
+#define DFP_TDC_INFINITY        58  
+#define DFP_TDC_QUIET_NAN       60  
+#define DFP_TDC_SIGNALING_NAN   62  
 
 /*-------------------------------------------------------------------*/
 /* Test data class and return condition code                         */
@@ -278,42 +284,99 @@ static decNumber SmallNorm128 = {1,DECIMAL128_Emin,0,{1}};
 /* This subroutine is called by the TDCET, TDCDT, and TDCXT          */
 /* instructions. It tests the data class and sign of a decimal       */
 /* number. Each combination of data class and sign corresponds       */
-/* to one possible of 12 possible bits in a bitmask. The value       */
-/* (0 or 1) of the corresponding bit is returned.                    */
+/* to one of 12 possible bits in a bitmask. The value (0 or 1)       */
+/* of the corresponding bit is returned.                             */
 /*                                                                   */
 /* Input:                                                            */
 /*      pset    Pointer to decimal number context structure          */
 /*      dn      Pointer to decimal number structure to be tested     */
-/*      ds      Pointer to decimal number structure containing       */
-/*              the smallest normal value for the instruction        */
 /*      bits    Bitmask in rightmost 12 bits                         */
 /* Output:                                                           */
 /*      The return value is 0 or 1.                                  */
 /*-------------------------------------------------------------------*/
 static inline int
-dfp_test_data_class(decContext *pset, decNumber *dn, decNumber *ds,
-                        U32 bits)
+dfp_test_data_class(decContext *pset, decNumber *dn, U32 bits)
 {
-int             bitn;                   /* Bit number in word        */
-decNumber       da;                     /* Absolute value of dn      */
-decNumber       dr;                     /* Result of compare da:ds   */
+int             bitn;                   /* Bit number                */
+decNumber       dm;                     /* Normalized value of dn    */
 
-    if (decNumberIsZero(dn)) bitn = 20;
-    else if (decNumberIsInfinite(dn)) bitn = 26;
-    else if (decNumberIsQNaN(dn)) bitn = 28;
-    else if (decNumberIsSNaN(dn)) bitn = 30;  
+    if (decNumberIsZero(dn))
+        bitn = DFP_TDC_ZERO;
+    else if (decNumberIsInfinite(dn))
+        bitn = DFP_TDC_INFINITY;
+    else if (decNumberIsQNaN(dn))
+        bitn = DFP_TDC_QUIET_NAN;
+    else if (decNumberIsSNaN(dn))
+        bitn = DFP_TDC_SIGNALING_NAN;
     else {
-        decNumberAbs(&da, dn, pset);
-        decNumberCompare(&dr, &da, ds, pset);
-        if (decNumberIsNegative(&dr)) bitn = 22;
-        else bitn = 24;
+        decNumberNormalize(&dm, dn, pset);
+        bitn = (dm.exponent < pset->emin) ?
+                DFP_TDC_SUBNORMAL :
+                DFP_TDC_NORMAL ;
     }
 
     if (decNumberIsNegative(dn)) bitn++;
 
-    return (bits >> (31 - bitn)) & 0x01;
+    return (bits >> (63 - bitn)) & 0x01;
 
 } /* end function dfp_test_data_class */
+
+/* Bit numbers for Test Data Group instructions */
+#define DFP_TDG_SAFE_ZERO       52  
+#define DFP_TDG_EXTREME_ZERO    54  
+#define DFP_TDG_EXTREME_NONZERO 56  
+#define DFP_TDG_SAFE_NZ_LMD_Z   58  
+#define DFP_TDG_SAFE_NZ_LMD_NZ  60  
+#define DFP_TDG_SPECIAL         62  
+ 
+/*-------------------------------------------------------------------*/
+/* Test data group and return condition code                         */
+/*                                                                   */
+/* This subroutine is called by the TDGET, TDGDT, and TDGXT          */
+/* instructions. It tests the exponent and leftmost coefficient      */
+/* digit of a decimal number to determine which of 12 possible       */
+/* groups the number corresponds to. Each group corresponds to       */
+/* one of 12 possible bits in a bitmask. The value (0 or 1) of       */
+/* the corresponding bit is returned.                                */
+/*                                                                   */
+/* Input:                                                            */
+/*      pset    Pointer to decimal number context structure          */
+/*      dn      Pointer to decimal number structure to be tested     */
+/*      cf      Combination field of decimal FP number               */
+/*      bits    Bitmask in rightmost 12 bits                         */
+/* Output:                                                           */
+/*      The return value is 0 or 1.                                  */
+/*-------------------------------------------------------------------*/
+static inline int
+dfp_test_data_group(decContext *pset, decNumber *dn, U32 cf, U32 bits)
+{
+int             bitn;                   /* Bit number                */
+int             extreme;                /* 1=exponent is min or max  */
+
+    extreme = (dn->exponent == pset->emin)
+               || (dn->exponent == pset->emax);
+
+    if (decNumberIsZero(dn))
+        bitn = extreme ?
+                DFP_TDG_EXTREME_ZERO :
+                DFP_TDG_SAFE_ZERO ;
+    else if (decNumberIsInfinite(dn) || decNumberIsNaN(dn))
+        bitn = DFP_TDG_SPECIAL;
+    else if (extreme)
+        bitn = DFP_TDG_EXTREME_NONZERO;
+    else {
+        /* Values 00,08,10 in the combination field indicate
+           that the leftmost digit of the number is zero */
+        bitn = (cf == 0x00 || cf == 0x08 || cf == 0x10) ?
+                DFP_TDG_SAFE_NZ_LMD_Z :
+                DFP_TDG_SAFE_NZ_LMD_NZ ;
+    }
+
+    if (decNumberIsNegative(dn)) bitn++;
+
+    return (bits >> (63 - bitn)) & 0x01;
+
+} /* end function dfp_test_data_group */
 
 #define _DFP_ARCH_INDEPENDENT_
 #endif /*!defined(_DFP_ARCH_INDEPENDENT_)*/
@@ -353,7 +416,11 @@ BYTE    drm;                            /* Decimal rounding mode     */
     case DRM_RNAZ: pset->round = DEC_ROUND_HALF_UP; break;
     case DRM_RNTZ: pset->round = DEC_ROUND_HALF_DOWN; break;
     case DRM_RAFZ: pset->round = DEC_ROUND_UP; break;
-    case DRM_RFSP: pset->round = DEC_ROUND_DOWN; break;
+    case DRM_RFSP:
+    /* Rounding mode DRM_RFSP is not supported by
+       the decNumber library, so we arbitrarily 
+       convert it to another mode instead... */
+        pset->round = DEC_ROUND_DOWN; break;
     } /* end switch(drm) */
 
 } /* end function dfp_rounding_mode */
@@ -1142,8 +1209,8 @@ DEF_INST(test_data_class_dfp_ext)
 int             r1;                     /* Value of R field          */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
-decimal128      x1;                     /* Extended DFP values       */
-decNumber       d1;                     /* Working decimal numbers   */
+decimal128      x1;                     /* Extended DFP value        */
+decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 
@@ -1162,14 +1229,56 @@ U32             bits;                   /* Low 12 bits of address    */
     bits = effective_addr2 & 0xFFF;
 
     /* Test data class and set condition code */
-    regs->psw.cc = dfp_test_data_class(&set, &d1, &SmallNorm128, bits);
+    regs->psw.cc = dfp_test_data_class(&set, &d1, bits);
 
 } /* end DEF_INST(test_data_class_dfp_ext) */
 
 
 UNDEF_INST(test_data_class_dfp_long)
 UNDEF_INST(test_data_class_dfp_short)
-UNDEF_INST(test_data_group_dfp_ext)
+
+
+/*-------------------------------------------------------------------*/
+/* ED59 TDGXT - Test Data Group DFP Extended                   [RXE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(test_data_group_dfp_ext)
+{
+int             r1;                     /* Value of R field          */
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+decimal128      x1;                     /* Extended DFP value        */
+QW              *qp;                    /* Quadword pointer          */
+decNumber       d1;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+U32             bits;                   /* Low 12 bits of address    */
+U32             cf;                     /* Combination field         */
+
+    RXE(inst, regs, r1, b2, effective_addr2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r1, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Load DFP extended number from FP register r1 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r1, &x1, regs);
+
+    /* Extract the combination field from FP register r1 */
+    qp = (QW*)&x1;
+    cf = (qp->F.HH.F & 0x7C000000) >> 26;
+
+    /* Convert to internal decimal number format */
+    decimal128ToNumber(&x1, &d1);
+
+    /* Isolate rightmost 12 bits of second operand address */
+    bits = effective_addr2 & 0xFFF;
+
+    /* Test data group and set condition code */
+    regs->psw.cc = dfp_test_data_group(&set, &d1, cf, bits);
+
+} /* end DEF_INST(test_data_group_dfp_ext) */
+
+
 UNDEF_INST(test_data_group_dfp_long)
 UNDEF_INST(test_data_group_dfp_short)
 
