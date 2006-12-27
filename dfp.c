@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.23  2006/12/27 17:29:05  rbowler
+// Decimal Floating Point: EEXTR instruction
+//
 // Revision 1.22  2006/12/27 17:20:01  rbowler
 // Decimal Floating Point: ESXTR instruction
 //
@@ -216,6 +219,38 @@ int     i2;                             /* FP register subscript     */
    then the macro generates a DFP-instruction data exception. */
 
 #if !defined(_DFP_ARCH_INDEPENDENT_)
+/*-------------------------------------------------------------------*/
+/* Compare exponent and return condition code                        */
+/*                                                                   */
+/* This subroutine is called by the CEETR, CEDTR, and CEXTR          */
+/* instructions. It compares the exponents of two decimal            */
+/* numbers and returns a condition code.                             */
+/*                                                                   */
+/* Input:                                                            */
+/*      d1,d2   Pointers to decimal number structures                */
+/* Output:                                                           */
+/*      The return value is the condition code                       */
+/*-------------------------------------------------------------------*/
+static inline int
+dfp_compare_exponent(decNumber *d1, decNumber *d2)
+{
+int             cc;                     /* Condition code            */
+
+    if (decNumberIsNaN(d1) && decNumberIsNaN(d2))
+        cc = 0;
+    else if (decNumberIsNaN(d1) || decNumberIsNaN(d2))
+        cc = 3;
+    else if (decNumberIsInfinite(d1) && decNumberIsInfinite(d2))
+        cc = 0;
+    else if (decNumberIsInfinite(d1) || decNumberIsInfinite(d2))
+        cc = 3;
+    else
+        cc = (d1->exponent == d2->exponent) ? 0 :
+                (d1->exponent < d2->exponent) ? 1 : 2 ;
+
+    return cc;
+} /* end function dfp_compare_exponent */
+
 /*-------------------------------------------------------------------*/
 /* Check if IEEE-interruption-simulation event is to be recognized   */
 /*                                                                   */
@@ -789,7 +824,37 @@ BYTE            dxc;                    /* Data exception code       */
 
 
 UNDEF_INST(compare_and_signal_dfp_long_reg)
-UNDEF_INST(compare_exponent_dfp_ext_reg)
+
+
+/*-------------------------------------------------------------------*/
+/* B3FC CEXTR - Compare Exponent DFP Extended Register         [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_exponent_dfp_ext_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal128      x1, x2;                 /* Extended DFP values       */
+decNumber       d1, d2;                 /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR2_CHECK(r1, r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Convert FP register values to numbers */
+    ARCH_DEP(dfp_reg_to_decimal128)(r1, &x1, regs);
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x1, &d1);
+    decimal128ToNumber(&x2, &d2);
+
+    /* Compare exponents and set condition code */
+    regs->psw.cc = dfp_compare_exponent(&d1, &d2);
+
+} /* end DEF_INST(compare_exponent_dfp_ext_reg) */
+
+
 UNDEF_INST(compare_exponent_dfp_long_reg)
 UNDEF_INST(convert_fix64_to_dfp_ext_reg)
 UNDEF_INST(convert_fix64_to_dfp_long_reg)
