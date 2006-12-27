@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.24  2006/12/27 22:55:51  rbowler
+// Decimal Floating Point: CEXTR instruction
+//
 // Revision 1.23  2006/12/27 17:29:05  rbowler
 // Decimal Floating Point: EEXTR instruction
 //
@@ -1238,7 +1241,51 @@ BYTE            dxc;                    /* Data exception code       */
 
 
 UNDEF_INST(multiply_dfp_long_reg)
-UNDEF_INST(quantize_dfp_ext_reg)
+
+
+/*-------------------------------------------------------------------*/
+/* B3FD QAXTR - Quantize DFP Extended Register                 [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(quantize_dfp_ext_reg)
+{
+int             r1, r2, r3, m4;         /* Values of R and M fields  */
+decimal128      x1, x2, x3;             /* Extended DFP values       */
+decNumber       d1, d2, d3;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_RM(inst, regs, r1, r2, r3, m4);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR3_CHECK(r1, r2, r3, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_rounding_mode)(&set, m4, regs);
+
+    /* Quantize FP register r3 using FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    ARCH_DEP(dfp_reg_to_decimal128)(r3, &x3, regs);
+    decimal128ToNumber(&x2, &d2);
+    decimal128ToNumber(&x3, &d3);
+    decNumberQuantize(&d1, &d2, &d3, &set);
+    decimal128FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(quantize_dfp_ext_reg) */
+
+
 UNDEF_INST(quantize_dfp_long_reg)
 UNDEF_INST(reround_dfp_ext_reg)
 UNDEF_INST(reround_dfp_long_reg)
