@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.21  2006/12/26 15:49:14  rbowler
+// Decimal Floating Point: TDGXT instruction
+//
 // Revision 1.20  2006/12/25 23:10:12  rbowler
 // Decimal Floating Point: TDCXT instruction
 //
@@ -935,7 +938,50 @@ BYTE            dxc;                    /* Data exception code       */
 UNDEF_INST(divide_dfp_long_reg)
 UNDEF_INST(extract_biased_exponent_dfp_ext_to_fix64_reg)
 UNDEF_INST(extract_biased_exponent_dfp_long_to_fix64_reg)
-UNDEF_INST(extract_significance_dfp_ext_reg)
+
+
+/*-------------------------------------------------------------------*/
+/* B3EF ESXTR - Extract Significance DFP Extended Register     [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(extract_significance_dfp_ext_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal128      x2;                     /* Extended DFP value        */
+decNumber       d2;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+S64             digits;                 /* Number of decimal digits  */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Load DFP extended number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+
+    /* Convert to internal decimal number format */
+    decimal128ToNumber(&x2, &d2);
+
+    /* Calculate number of significant digits */
+    if (decNumberIsZero(&d2))
+        digits = 0;
+    else if (decNumberIsInfinite(&d2))
+        digits = -1;
+    else if (decNumberIsQNaN(&d2))
+        digits = -2;
+    else if (decNumberIsSNaN(&d2))
+        digits = -3;
+    else
+        digits = d2.digits;
+
+    /* Load result into general register r1 */
+    regs->GR(r1) = digits;
+
+} /* end DEF_INST(extract_significance_dfp_ext_reg) */
+
+
 UNDEF_INST(extract_significance_dfp_long_reg)
 UNDEF_INST(insert_biased_exponent_fix64_to_dfp_ext_reg)
 UNDEF_INST(insert_biased_exponent_fix64_to_dfp_long_reg)
