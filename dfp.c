@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.22  2006/12/27 17:20:01  rbowler
+// Decimal Floating Point: ESXTR instruction
+//
 // Revision 1.21  2006/12/26 15:49:14  rbowler
 // Decimal Floating Point: TDGXT instruction
 //
@@ -936,7 +939,48 @@ BYTE            dxc;                    /* Data exception code       */
 
 
 UNDEF_INST(divide_dfp_long_reg)
-UNDEF_INST(extract_biased_exponent_dfp_ext_to_fix64_reg)
+
+
+/*-------------------------------------------------------------------*/
+/* B3ED EEXTR - Extract Biased Exponent DFP Extended Register  [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(extract_biased_exponent_dfp_ext_to_fix64_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal128      x2;                     /* Extended DFP value        */
+decNumber       d2;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+S64             exponent;               /* Biased exponent           */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Load DFP extended number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+
+    /* Convert to internal decimal number format */
+    decimal128ToNumber(&x2, &d2);
+
+    /* Calculate the biased exponent */
+    if (decNumberIsInfinite(&d2))
+        exponent = -1;
+    else if (decNumberIsQNaN(&d2))
+        exponent = -2;
+    else if (decNumberIsSNaN(&d2))
+        exponent = -3;
+    else
+        exponent = d2.exponent + DECIMAL128_Bias;
+
+    /* Load result into general register r1 */
+    regs->GR(r1) = exponent;
+
+} /* end DEF_INST(extract_biased_exponent_dfp_ext_to_fix64_reg) */
+
+
 UNDEF_INST(extract_biased_exponent_dfp_long_to_fix64_reg)
 
 
