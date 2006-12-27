@@ -42,6 +42,9 @@
 /*********************************************************************/
 
 // $Log$
+// Revision 1.56  2006/12/24 13:17:24  fish
+// 64-bit regs support (finally!), better reg update reporting efficiency
+//
 // Revision 1.55  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -670,7 +673,7 @@ void HandleForcedRefresh()
     prev_mips_rate          = INT_MAX;
     prev_sios_rate          = INT_MAX;
 #endif
-    prev_instcount          = _UI64_MAX;
+    prev_instcount          = ULLONG_MAX;
     prev_pcpu               = INT_MAX;
     pPrevTargetCPU_REGS     = NULL;
     prev_cpustate           = 0xFF;
