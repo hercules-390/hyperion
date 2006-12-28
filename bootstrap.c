@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.10  2006/12/08 09:43:16  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -80,6 +83,10 @@ int main(int ac,char *av[])
     int rc = 0;
 
     SET_THREAD_NAME("bootstrap");
+
+    // Disable Microsoft's INSANE invalid crt parameter handling!
+
+    DISABLE_CRT_INVALID_PARAMETER_HANDLER();
 
     // If we're being debugged, then let the debugger
     // catch the exception. Otherwise, let our exception

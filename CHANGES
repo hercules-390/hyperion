@@ -1,3 +1,6 @@
+27 Dec 2006 Permanently disable Microsoft's completely INSANE
+            Invalid CRT Parameter handling behavior - Fish
+27 Dec 2006 PR# tape/100: Fix crash if bad filespec in OMA (TDF) - Fish
 23 Dec 2006 Misc dyngui mods (64-bit regs, efficiency, etc) - Fish
 23 Dec 2006 Fix integrated 1052/3215 for output with % - Ivan Warren
 21 Dec 2006 Fix SIGP to do single logmsg - Greg Smith
