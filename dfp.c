@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.25  2006/12/27 23:22:07  rbowler
+// Decimal Floating Point: QAXTR instruction
+//
 // Revision 1.24  2006/12/27 22:55:51  rbowler
 // Decimal Floating Point: CEXTR instruction
 //
@@ -223,6 +226,82 @@ int     i2;                             /* FP register subscript     */
 
 #if !defined(_DFP_ARCH_INDEPENDENT_)
 /*-------------------------------------------------------------------*/
+/* Extract the leftmost digit from a decimal32/64/128 structure      */
+/*-------------------------------------------------------------------*/
+static const int
+dfp_lmdtable[32] = {0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7,
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 9, 8, 9, 0, 0};
+
+static inline int 
+dfp32_extract_lmd(decimal32 *xp)
+{
+    unsigned int cf = (((FW*)xp)->F & 0x7C000000) >> 26;
+    return dfp_lmdtable[cf];
+} /* end function dfp32_extract_lmd */
+
+static inline int 
+dfp64_extract_lmd(decimal64 *xp)
+{
+    unsigned int cf = (((DW*)xp)->F.H.F & 0x7C000000) >> 26;
+    return dfp_lmdtable[cf];
+} /* end function dfp64_extract_lmd */
+
+static inline int 
+dfp128_extract_lmd(decimal128 *xp)
+{
+    unsigned int cf = (((QW*)xp)->F.HH.F & 0x7C000000) >> 26;
+    return dfp_lmdtable[cf];
+} /* end function dfp128_extract_lmd */
+
+/*-------------------------------------------------------------------*/
+/* Clear the CF and BXCF fields of a decimal32/64/128 structure      */
+/*-------------------------------------------------------------------*/
+static inline void
+dfp32_clear_cf_and_bxcf(decimal32 *xp)
+{
+    ((FW*)xp)->F &= 0x800FFFFF;         /* Clear CF and BXCF fields  */
+} /* end function dfp32_clear_cf_and_bxcf */
+
+static inline void
+dfp64_clear_cf_and_bxcf(decimal64 *xp)
+{
+    ((DW*)xp)->F.H.F &= 0x8003FFFF;     /* Clear CF and BXCF fields  */
+} /* end function dfp64_clear_cf_and_bxcf */
+
+static inline void
+dfp128_clear_cf_and_bxcf(decimal128 *xp)
+{
+    ((QW*)xp)->F.HH.F &= 0x80003FFF;    /* Clear CF and BXCF fields  */
+} /* end function dfp128_clear_cf_and_bxcf */
+
+/*-------------------------------------------------------------------*/
+/* Set the CF field of a decimal32/64/128 structure                  */
+/*-------------------------------------------------------------------*/
+#define DFP_CF_INF      30              /* CF value for Infinity     */
+#define DFP_CF_NAN      31              /* CF value for Not-a-Number */
+
+static inline void
+dfp32_set_cf(decimal32 *xp, U32 cf)
+{
+    ((FW*)xp)->F &= 0x83000000;
+    ((FW*)xp)->F |= (cf & 0x1F) << 26;
+} /* end function dfp32_set_cf */
+
+static inline void
+dfp64_set_cf(decimal64 *xp, U32 cf)
+{
+    ((DW*)xp)->F.H.F &= 0x83FFFFFF;    
+    ((DW*)xp)->F.H.F |= (cf & 0x1F) << 26;
+} /* end function dfp64_set_cf */
+
+static inline void
+dfp128_set_cf(decimal128 *xp, U32 cf)
+{
+    ((QW*)xp)->F.HH.F &= 0x83FFFFFF;
+    ((QW*)xp)->F.HH.F |= (cf & 0x1F) << 26;
+} /* end function dfp128_set_cf */
+
+/*-------------------------------------------------------------------*/
 /* Compare exponent and return condition code                        */
 /*                                                                   */
 /* This subroutine is called by the CEETR, CEDTR, and CEXTR          */
@@ -268,16 +347,16 @@ int             cc;                     /* Condition code            */
 /*      The return value is the data exception code (DXC), or        */
 /*      zero if no IEEE-interruption-simulation event is recognized  */
 /*-------------------------------------------------------------------*/
-static U32
+static BYTE
 fpc_signal_check(U32 cur_fpc, U32 src_fpc)
 {
-U32     cf, sm, enabled_flags;          /* Mask and flag work areas  */
-U32     dxc;                            /* Data exception code or 0  */
+U32             ff, sm, enabled_flags;  /* Mask and flag work areas  */
+BYTE            dxc;                    /* Data exception code or 0  */
 
     /* AND the current FPC flags with the source FPC mask */
-    cf = (cur_fpc & FPC_FLAG) >> FPC_FLAG_SHIFT;
+    ff = (cur_fpc & FPC_FLAG) >> FPC_FLAG_SHIFT;
     sm = (src_fpc & FPC_MASK) >> FPC_MASK_SHIFT;
-    enabled_flags = (cf & sm) << FPC_FLAG_SHIFT;
+    enabled_flags = (ff & sm) << FPC_FLAG_SHIFT;
 
     /* An IEEE-interruption-simulation event is recognized 
        if any current flag corresponds to the source mask */
@@ -386,13 +465,13 @@ decNumber       dm;                     /* Normalized value of dn    */
 /* Input:                                                            */
 /*      pset    Pointer to decimal number context structure          */
 /*      dn      Pointer to decimal number structure to be tested     */
-/*      cf      Combination field of decimal FP number               */
+/*      lmd     Leftmost digit of decimal FP number                  */
 /*      bits    Bitmask in rightmost 12 bits                         */
 /* Output:                                                           */
 /*      The return value is 0 or 1.                                  */
 /*-------------------------------------------------------------------*/
 static inline int
-dfp_test_data_group(decContext *pset, decNumber *dn, U32 cf, U32 bits)
+dfp_test_data_group(decContext *pset, decNumber *dn, int lmd, U32 bits)
 {
 int             bitn;                   /* Bit number                */
 int             extreme;                /* 1=exponent is min or max  */
@@ -409,9 +488,7 @@ int             extreme;                /* 1=exponent is min or max  */
     else if (extreme)
         bitn = DFP_TDG_EXTREME_NONZERO;
     else {
-        /* Values 00,08,10 in the combination field indicate
-           that the leftmost digit of the number is zero */
-        bitn = (cf == 0x00 || cf == 0x08 || cf == 0x10) ?
+        bitn = (lmd == 0) ?
                 DFP_TDG_SAFE_NZ_LMD_Z :
                 DFP_TDG_SAFE_NZ_LMD_NZ ;
     }
@@ -470,6 +547,48 @@ BYTE    drm;                            /* Decimal rounding mode     */
 } /* end function dfp_rounding_mode */
 
 /*-------------------------------------------------------------------*/
+/* Copy a DFP long register into a decimal64 structure               */
+/*                                                                   */
+/* Input:                                                            */
+/*      rn      FP register number                                   */
+/*      xp      Pointer to decimal64 structure                       */
+/*      regs    CPU register context                                 */
+/*-------------------------------------------------------------------*/
+static inline void
+ARCH_DEP(dfp_reg_to_decimal64) (int rn, decimal64 *xp, REGS *regs)
+{
+int     i;                              /* FP register subscript     */
+DW      *dwp;                           /* Doubleword pointer        */
+
+    i = FPR2I(rn);                      /* Register index            */
+    dwp = (DW*)xp;                      /* Convert to DW pointer     */
+    dwp->F.H.F = regs->fpr[i];          /* Copy FPR bits 0-31        */
+    dwp->F.L.F = regs->fpr[i+1];        /* Copy FPR bits 32-63       */
+
+} /* end function dfp_reg_to_decimal64 */
+
+/*-------------------------------------------------------------------*/
+/* Load a DFP long register from a decimal64 structure               */
+/*                                                                   */
+/* Input:                                                            */
+/*      rn      FP register number (left register of pair)           */
+/*      xp      Pointer to decimal64 structure                       */
+/*      regs    CPU register context                                 */
+/*-------------------------------------------------------------------*/
+static inline void
+ARCH_DEP(dfp_reg_from_decimal64) (int rn, decimal64 *xp, REGS *regs)
+{
+int     i;                              /* FP register subscript     */
+DW      *dwp;                           /* Doubleword pointer        */
+
+    i = FPR2I(rn);                      /* Register index            */
+    dwp = (DW*)xp;                      /* Convert to DW pointer     */
+    regs->fpr[i]   = dwp->F.H.F;        /* Load FPR bits 0-31        */
+    regs->fpr[i+1] = dwp->F.L.F;        /* Load FPR bits 32-63       */
+
+} /* end function dfp_reg_from_decimal64 */
+
+/*-------------------------------------------------------------------*/
 /* Copy a DFP extended register into a decimal128 structure          */
 /*                                                                   */
 /* Input:                                                            */
@@ -481,15 +600,15 @@ static inline void
 ARCH_DEP(dfp_reg_to_decimal128) (int rn, decimal128 *xp, REGS *regs)
 {
 int     i, j;                           /* FP register subscripts    */
-QW      *qp;                            /* Quadword pointer          */
+QW      *qwp;                           /* Quadword pointer          */
 
     i = FPR2I(rn);                      /* Left register index       */
     j = i + FPREX;                      /* Right register index      */
-    qp = (QW*)xp;                       /* Convert to QW pointer     */
-    qp->F.HH.F = regs->fpr[i];          /* Copy FPR bits 0-31        */
-    qp->F.HL.F = regs->fpr[i+1];        /* Copy FPR bits 32-63       */
-    qp->F.LH.F = regs->fpr[j];          /* Copy FPR bits 64-95       */
-    qp->F.LL.F = regs->fpr[j+1];        /* Copy FPR bits 96-127      */
+    qwp = (QW*)xp;                      /* Convert to QW pointer     */
+    qwp->F.HH.F = regs->fpr[i];         /* Copy FPR bits 0-31        */
+    qwp->F.HL.F = regs->fpr[i+1];       /* Copy FPR bits 32-63       */
+    qwp->F.LH.F = regs->fpr[j];         /* Copy FPR bits 64-95       */
+    qwp->F.LL.F = regs->fpr[j+1];       /* Copy FPR bits 96-127      */
 
 } /* end function dfp_reg_to_decimal128 */
 
@@ -505,15 +624,15 @@ static inline void
 ARCH_DEP(dfp_reg_from_decimal128) (int rn, decimal128 *xp, REGS *regs)
 {
 int     i, j;                           /* FP register subscripts    */
-QW      *qp;                            /* Quadword pointer          */
+QW      *qwp;                           /* Quadword pointer          */
 
     i = FPR2I(rn);                      /* Left register index       */
     j = i + FPREX;                      /* Right register index      */
-    qp = (QW*)xp;                       /* Convert to QW pointer     */
-    regs->fpr[i]   = qp->F.HH.F;        /* Load FPR bits 0-31        */
-    regs->fpr[i+1] = qp->F.HL.F;        /* Load FPR bits 32-63       */
-    regs->fpr[j]   = qp->F.LH.F;        /* Load FPR bits 64-95       */
-    regs->fpr[j+1] = qp->F.LL.F;        /* Load FPR bits 96-127      */
+    qwp = (QW*)xp;                      /* Convert to QW pointer     */
+    regs->fpr[i]   = qwp->F.HH.F;       /* Load FPR bits 0-31        */
+    regs->fpr[i+1] = qwp->F.HL.F;       /* Load FPR bits 32-63       */
+    regs->fpr[j]   = qwp->F.LH.F;       /* Load FPR bits 64-95       */
+    regs->fpr[j+1] = qwp->F.LL.F;       /* Load FPR bits 96-127      */
 
 } /* end function dfp_reg_from_decimal128 */
 
@@ -920,7 +1039,6 @@ DEF_INST(convert_dfp_ext_to_sbcd128_reg)
 int             r1, r2;                 /* Values of R fields        */
 int             m4;                     /* Values of M fields        */
 decimal128      x2;                     /* Extended DFP values       */
-QW              *qp;                    /* Quadword pointer          */
 decNumber       dwork;                  /* Working decimal number    */
 decContext      set;                    /* Working context           */
 int32_t         scale;                  /* Scaling factor            */
@@ -936,14 +1054,14 @@ BYTE            qwork[17];              /* 33-digit packed work area */
 
     /* Load DFP extended number from FP register r2 */
     ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x2, &dwork);
 
     /* If NaN or Inf then use coefficient only */
-    qp = (QW*)&x2;
-    if ((qp->F.HH.F & 0x78000000) == 0X78000000)
-        qp->F.HH.F &= 0x80003FFF;
-
-    /* Convert to internal decimal number format */
-    decimal128ToNumber(&x2, &dwork);
+    if (decNumberIsNaN(&dwork) || (decNumberIsInfinite(&dwork)))
+    {
+        dfp128_clear_cf_and_bxcf(&x2);
+        decimal128ToNumber(&x2, &dwork);
+    }
 
     /* Convert number to signed BCD in work area */
     decPackedFromNumber(qwork, sizeof(qwork), &scale, &dwork);
@@ -1159,10 +1277,10 @@ UNDEF_INST(load_fp_int_dfp_long_reg)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_fpc_and_signal)
 {
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-U32     src_fpc, new_fpc;               /* New value for FPC         */
-U32     dxc;
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+U32             src_fpc, new_fpc;       /* New value for FPC         */
+BYTE            dxc;                    /* Data exception code       */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -1193,7 +1311,73 @@ U32     dxc;
 } /* end DEF_INST(load_fpc_and_signal) */
 
 
-UNDEF_INST(load_lengthened_dfp_long_to_ext_reg)
+/*-------------------------------------------------------------------*/
+/* B3DC LXDTR - Load Lengthened DFP Long to Extended Register  [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_lengthened_dfp_long_to_ext_reg)
+{
+int             r1, r2, m4;             /* Values of R and M fields  */
+decimal128      x1;                     /* Extended DFP value        */
+decimal64       x2;                     /* Long DFP value            */
+decNumber       d1, d2;                 /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_M4(inst, regs, r1, r2, m4);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r1, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Load DFP long number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x2, &d2);
+
+    /* Convert number to DFP extended format */
+    if (decNumberIsInfinite(&d2) && (m4 & 0x08))
+    {
+        /* For Inf with mask bit 0 set, propagate the digits */
+        dfp64_clear_cf_and_bxcf(&x2);
+        decimal64ToNumber(&x2, &d1);
+        decimal128FromNumber(&x1, &d1, &set);
+        dfp128_set_cf(&x1, DFP_CF_INF);
+    }
+    else if (decNumberIsNaN(&d2))
+    {
+        decimal64ToNumber(&x2, &d1);
+        /* For SNaN with mask bit 0 set, convert to a QNaN
+           and raise signaling condition */
+        if (decNumberIsSNaN(&d2) && (m4 & 0x08) == 0)
+        {
+            set.status |= DEC_IEEE_854_Invalid_operation;
+            d1.bits &= ~DECSNAN;
+            d1.bits |= DECNAN;
+        }
+        decimal128FromNumber(&x1, &d1, &set);
+    }
+    else
+    {
+        decNumberCopy(&d1, &d2);
+        decimal128FromNumber(&x1, &d1, &set);
+    }
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(load_lengthened_dfp_long_to_ext_reg) */
+
+
 UNDEF_INST(load_lengthened_dfp_short_to_long_reg)
 UNDEF_INST(load_rounded_dfp_ext_to_long_reg)
 UNDEF_INST(load_rounded_dfp_long_to_short_reg)
@@ -1296,8 +1480,8 @@ UNDEF_INST(reround_dfp_long_reg)
 /*-------------------------------------------------------------------*/
 DEF_INST(set_dfp_rounding_mode)
 {
-int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
@@ -1315,9 +1499,9 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST(set_fpc_and_signal)
 {
-int     r1, unused;                     /* Values of R fields        */
-U32     src_fpc, new_fpc;               /* New value for FPC         */
-U32     dxc;
+int             r1, unused;             /* Values of R fields        */
+U32             src_fpc, new_fpc;       /* New value for FPC         */
+BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, unused);
 
@@ -1449,11 +1633,10 @@ int             r1;                     /* Value of R field          */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 decimal128      x1;                     /* Extended DFP value        */
-QW              *qp;                    /* Quadword pointer          */
 decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
-U32             cf;                     /* Combination field         */
+int             lmd;                    /* Leftmost digit            */
 
     RXE(inst, regs, r1, b2, effective_addr2);
     DFPINST_CHECK(regs);
@@ -1465,9 +1648,8 @@ U32             cf;                     /* Combination field         */
     /* Load DFP extended number from FP register r1 */
     ARCH_DEP(dfp_reg_to_decimal128)(r1, &x1, regs);
 
-    /* Extract the combination field from FP register r1 */
-    qp = (QW*)&x1;
-    cf = (qp->F.HH.F & 0x7C000000) >> 26;
+    /* Extract the leftmost digit from FP register r1 */
+    lmd = dfp128_extract_lmd(&x1);
 
     /* Convert to internal decimal number format */
     decimal128ToNumber(&x1, &d1);
@@ -1476,7 +1658,7 @@ U32             cf;                     /* Combination field         */
     bits = effective_addr2 & 0xFFF;
 
     /* Test data group and set condition code */
-    regs->psw.cc = dfp_test_data_group(&set, &d1, cf, bits);
+    regs->psw.cc = dfp_test_data_group(&set, &d1, lmd, bits);
 
 } /* end DEF_INST(test_data_group_dfp_ext) */
 
