@@ -1,0 +1,23 @@
+# ***************************************************************************
+#     ZLIB_FLAGS.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  Sets ZLIB-compression-related compiler/linker flags & #defines...
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+!IFDEF ZLIB_DIR
+ZLIB_DLL = $(ZLIB_DIR)\zlib1.dll
+ZLIB_LIB = $(ZLIB_DIR)/lib/zdll.lib
+ZLIB_INC = $(ZLIB_DIR)/include
+LIBS     = $(LIBS) "$(ZLIB_LIB)"
+cflags   = $(cflags) /D HAVE_LIBZ /D HAVE_ZLIB_H /I"$(ZLIB_INC)"
+!ENDIF

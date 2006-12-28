@@ -1,0 +1,61 @@
+# ***************************************************************************
+#     ZLIB_DIR.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  Handles support for ZLIB compression...
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+# ---------------------------------------------------------------------
+# To enable ZLIB compression, first make sure you have the ZLIB dll
+# installed on your system (downloadable from http://www.zlib.net),
+# and then define an environment variable called "ZLIB_DIR" that
+# specifies the full path to the directory where it is installed.
+# (via the "Advanced" tab of the Control Panel 'System' applet).
+#
+# Note that the directory you specify should: a) hold the zlib1.dll
+# itself, b) contain two sub-directories called 'include' and 'lib'
+# where the 'zlib.h', zconf.h' and 'zdll.lib', etc, files reside.
+#
+# Note: if the path contains blanks, do NOT surround it with quotes!
+# The makefile will do that if it needs to. Just define the variable
+# with the path as-is. E.g.:
+#
+# ZLIB_DIR = E:\MyProjects\zlib and bzip2 dlls\zlib latest\zlib122-dll
+# ZLIB_DIR = C:\winbuild\zlib\win32_32
+# ---------------------------------------------------------------------
+
+# ISW 20050311
+# If winbuild\zlib\win32_32 exists (relative to current dir)
+# then use it for ZLIB_DIR *UNLESS* ZLIB_DIR is already set.
+#
+# If ZLIB_DIR is improperly set, issue a message and exit *UNLESS*
+# it is set to the word "NONE"
+#
+# DBT 20050312
+# Minor changes to support paths with blanks in them.
+
+!IFNDEF ZLIB_DIR
+
+!IF EXIST(winbuild\zlib\win32_32\include\zlib.h)
+ZLIB_DIR = winbuild\zlib\win32_32
+!MESSAGE ZLIB_DIR not set. "$(ZLIB_DIR)" implied and checked
+!ENDIF
+
+!ELSE
+
+!IF "$(ZLIB_DIR)" == "NONE"
+!UNDEF ZLIB_DIR
+!ELSEIF !EXIST("$(ZLIB_DIR)\include\zlib.h")
+!ERROR ZLIB_DIR "$(ZLIB_DIR)\include\zlib.h" does not exist. Check ZLIB_DIR
+!ENDIF
+
+!ENDIF

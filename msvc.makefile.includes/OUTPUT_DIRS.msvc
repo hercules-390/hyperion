@@ -1,0 +1,42 @@
+# ***************************************************************************
+#     OUTPUT_DIRS.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  Define the build output directories...
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+!IF ("$(EXEDIR)" == "") || ("$(OBJDIR)" == "") || ("$(PDBDIR)" == "") || ("$(MAPDIR)" == "")
+!IFDEF NODEBUG
+EXEDIR  = msvc.dllmod.bin
+OBJDIR  = msvc.dllmod.obj
+PDBDIR  = msvc.dllmod.pdb
+MAPDIR  = msvc.dllmod.map
+!ELSE
+EXEDIR  = msvc.debug.dllmod.bin
+OBJDIR  = msvc.debug.dllmod.obj
+PDBDIR  = msvc.debug.dllmod.pdb
+MAPDIR  = msvc.debug.dllmod.map
+!ENDIF
+!ENDIF
+
+!IFNDEF ASSEMBLY_LISTINGS
+!UNDEF ASMDIR
+!ELSEIFDEF NODEBUG
+ASMDIR = msvc.dllmod.cod
+!ELSE
+ASMDIR = msvc.debug.dllmod.cod
+!ENDIF
+
+# (shorter names are easier to use)
+
+X = $(EXEDIR)\$(NULL)
+O = $(OBJDIR)\$(NULL)

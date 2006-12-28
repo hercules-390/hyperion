@@ -1,0 +1,30 @@
+# ***************************************************************************
+#     CONFIG.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  Set NODEBUG flag appropriately before !INCLUDEing <win32.mak>
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+# -------------------------------------------------
+# NOTE! must set the 'NODEBUG' variable properly
+#       BEFORE calling win32.mak since it uses it.
+# -------------------------------------------------
+
+!IFNDEF CFG
+NODEBUG = 1
+!ELSEIF  "$(CFG)" == "DEBUG"
+!UNDEF NODEBUG
+!ELSEIF  "$(CFG)" == "RETAIL"
+NODEBUG = 1
+!ELSE
+!ERROR Invalid build configuration!
+!ENDIF

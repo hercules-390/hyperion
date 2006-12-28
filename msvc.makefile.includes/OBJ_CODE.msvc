@@ -1,0 +1,134 @@
+# ***************************************************************************
+#     OBJ_CODE.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  What object code goes in what module...
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+hsys_OBJ = \
+    $(O)hsys.obj
+
+hdasd_OBJ = \
+    $(O)cache.obj    \
+    $(O)cckddasd.obj \
+    $(O)cckdutil.obj \
+    $(O)ckddasd.obj  \
+    $(O)dasdtab.obj  \
+    $(O)dasdutil.obj \
+    $(O)fbadasd.obj  \
+    $(O)shared.obj
+
+htape_OBJ = \
+    $(O)hetlib.obj   \
+    $(O)sllib.obj    \
+    $(O)w32stape.obj
+
+hutil_OBJ = \
+    $(O)codepage.obj \
+    $(O)fthreads.obj \
+    $(O)getopt.obj   \
+    $(O)hdl.obj      \
+    $(O)hostinfo.obj \
+    $(O)hscutl.obj   \
+    $(O)hscutl2.obj  \
+    $(O)logger.obj   \
+    $(O)logmsg.obj   \
+    $(O)memrchr.obj  \
+    $(O)parser.obj   \
+    $(O)pttrace.obj  \
+    $(O)version.obj  \
+    $(O)hsocket.obj  \
+    $(O)w32util.obj
+
+!IFNDEF NOCRYPTO
+dyncrypt_OBJ =       \
+    $(O)dyncrypt.obj \
+    $(O)sha1.obj     \
+    $(O)sha256.obj   \
+    $(O)des.obj      \
+    $(O)aes.obj
+!ENDIF
+
+decNumber_OBJ = \
+    $(O)decContext.obj \
+    $(O)decimal128.obj \
+    $(O)decimal32.obj  \
+    $(O)decimal64.obj  \
+    $(O)decNumber.obj  \
+    $(O)decPacked.obj
+
+hengine_OBJ = \
+    $(O)assist.obj   \
+    $(O)bldcfg.obj   \
+    $(O)cgibin.obj   \
+    $(O)channel.obj  \
+    $(O)chsc.obj     \
+    $(O)clock.obj    \
+    $(O)cmpsc.obj    \
+    $(O)config.obj   \
+    $(O)control.obj  \
+    $(O)cpu.obj      \
+    $(O)crypto.obj   \
+    $(O)dat.obj      \
+    $(O)decimal.obj  \
+    $(O)dfp.obj      \
+    $(O)diagmssf.obj \
+    $(O)diagnose.obj \
+    $(O)ecpsvm.obj   \
+    $(O)esame.obj    \
+    $(O)external.obj \
+    $(O)fillfnam.obj \
+    $(O)float.obj    \
+    $(O)general1.obj \
+    $(O)general2.obj \
+    $(O)hconsole.obj \
+    $(O)history.obj  \
+    $(O)hsccmd.obj   \
+    $(O)hao.obj      \
+    $(O)hscmisc.obj  \
+    $(O)httpserv.obj \
+    $(O)ieee.obj     \
+    $(O)impl.obj     \
+    $(O)io.obj       \
+    $(O)ipl.obj      \
+    $(O)loadparm.obj \
+    $(O)machchk.obj  \
+    $(O)opcode.obj   \
+    $(O)panel.obj    \
+    $(O)plo.obj      \
+    $(O)qdio.obj     \
+    $(O)service.obj  \
+    $(O)sie.obj      \
+    $(O)sr.obj       \
+    $(O)stack.obj    \
+    $(O)timer.obj    \
+    $(O)trace.obj    \
+    $(O)vector.obj   \
+    $(O)vm.obj       \
+    $(O)vstore.obj   \
+    $(O)w32chan.obj  \
+    $(O)xstore.obj
+
+hmodule_OBJ = \
+    $(O)cardpch.obj  \
+    $(O)cardrdr.obj  \
+    $(O)commadpt.obj \
+    $(O)console.obj  \
+    $(O)ctc_ctci.obj \
+    $(O)ctc_lcs.obj  \
+    $(O)ctcadpt.obj  \
+    $(O)printer.obj  \
+    $(O)qeth.obj     \
+    $(O)sockdev.obj  \
+    $(O)tapedev.obj  \
+    $(O)tuntap.obj   \
+    $(O)w32ctca.obj

@@ -1,0 +1,55 @@
+# ***************************************************************************
+#     VERSION.msvc    (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  Handles defining the product VERSION strings
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+!IFNDEF VERSION
+
+#   >>>  Jay!  <<<  Be sure to change the below V1/V2/V3/V4 values to match!
+
+VERSION = \"Pre-3.05\"
+
+# The below VERSION digits values SHOULD match the ABOVE VERSION number.
+#
+# Windows uses 4-digit version numbers: V1.V2.V3.V4. The first three are
+# your standard major/intermediate/minor version level, and the last digit
+# is the "build number". Normally your basic "version number" value (major
+# intermediate, minor) is maintained manually, whereas the "build number"
+# is automatically incremented each time you do a build. Thus the "build
+# number" provides for a guaranteed unique "version#" which may not always
+# be the case when you don't change the major/inter/minor values (or forget
+# to do so) during development and/or fix releases.
+#
+# I plan to try and "automate" the incrementing of the "build count" value
+# (actually it's ALREADY automated on my own system), but it can remain 0
+# for now since at the moment we only support the major/inter/minor scheme.
+#
+# Note: The Hercules intermediate version is the second component of the
+# version number. Version 2.17 was the 17th intermediate release of version
+# 2. Assigning one digit to each of V1-V4 intermixes the build number in
+# V4 with the minor release, and would cause problems with two or more
+# minor releases of the same intermediate release. This is similar to the
+# RPM version numbering scheme; the build number corresponds to the RPM build
+# number (what comes after the - in the version number; 3.03-2 would
+# correspond to V1=3, V2=03, V3=0, V4=2). -- JRM, 12 Feb 06
+
+V1 = 3
+V2 = 05
+V3 = 0
+V4 = 0
+
+!ENDIF
+
+APPVER   = 4.0
+TARGETOS = BOTH

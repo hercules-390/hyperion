@@ -1,0 +1,59 @@
+# ***************************************************************************
+#     PCRE_DIR.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  Handles support for PCRE (Perl Compatible Regular Expressions),
+#  for MSVC, needed by HAO (Hercules Automatic Operator) facility...
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+# ---------------------------------------------------------------------
+# To enable PCRE (Perl-Compatible Regular Expressions) support, first
+# download 'Binaries'  and 'Developer files' packages from the GNUWin32
+# PCRE website at: http://gnuwin32.sourceforge.net/packages/pcre.htm.
+# Then create a permanent directory somewhere called whatever you want
+# with a 'bin', 'lib' and 'include' subdirectory, and then define an
+# environment variable called "PCRE_DIR" pointing to that directory.
+# Finally, make sure the below names of the include (header), lib and
+# DLL names are correct, making whatever adjustments may be necessary.
+# ---------------------------------------------------------------------
+
+!IFDEF PCRE_DIR
+!IF "$(PCRE_DIR)" == "NONE"
+!UNDEF PCRE_DIR
+!ELSE
+
+PCRE_INCNAME  = pcreposix.h
+PCRE_LIBNAME1 = pcre.lib
+PCRE_LIBNAME2 = pcreposix.lib
+PCRE_DLLNAME1 = pcre3.dll
+PCRE_DLLNAME2 = pcreposix3.dll
+PCRE_INCDIR   = $(PCRE_DIR)\include
+PCRE_INCPATH  = $(PCRE_DIR)\include\$(PCRE_INCNAME)
+PCRE_LIBPATH1 = $(PCRE_DIR)\lib\$(PCRE_LIBNAME1)
+PCRE_LIBPATH2 = $(PCRE_DIR)\lib\$(PCRE_LIBNAME2)
+PCRE_DLLPATH1 = $(PCRE_DIR)\bin\$(PCRE_DLLNAME1)
+PCRE_DLLPATH2 = $(PCRE_DIR)\bin\$(PCRE_DLLNAME2)
+
+!IF !EXIST("$(PCRE_INCPATH)")
+!ERROR PCRE_DIR "$(PCRE_INCPATH)" does not exist. Check PCRE_DIR
+!ELSEIF !EXIST("$(PCRE_LIBPATH1)")
+!ERROR PCRE_DIR "$(PCRE_LIBPATH1)" does not exist. Check PCRE_DIR
+!ELSEIF !EXIST("$(PCRE_LIBPATH2)")
+!ERROR PCRE_DIR "$(PCRE_LIBPATH2)" does not exist. Check PCRE_DIR
+!ELSEIF !EXIST("$(PCRE_DLLPATH1)")
+!ERROR PCRE_DIR "$(PCRE_DLLPATH1)" does not exist. Check PCRE_DIR
+!ELSEIF !EXIST("$(PCRE_DLLPATH2)")
+!ERROR PCRE_DIR "$(PCRE_DLLPATH2)" does not exist. Check PCRE_DIR
+!ENDIF
+
+!ENDIF
+!ENDIF

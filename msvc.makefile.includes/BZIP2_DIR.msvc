@@ -1,0 +1,46 @@
+# ***************************************************************************
+#     BZIP2_DIR.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  Handles support for BZIP2 compression...
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+# ---------------------------------------------------------------------
+# To enable BZIP2 compression, first make sure you have the libbz2.dll
+# installed on your system (from: http://sources.redhat.com/bzip2/),
+# and then define an environment variable called "BZIP2_DIR" that
+# specifies the full path to the directory where it is installed.
+# (via the "Advanced" tab of the Control Panel 'System' applet).
+#
+# Note that the directory you specify should contain the libbz2.dll as
+# well as the 'bzlib.h' header file and the 'libbz2.lib' link library.
+#
+# Note: if the path contains blanks, do NOT surround it with quotes!
+# The makefile will do that if it needs to. Just define the variable
+# with the path as-is. E.g.:
+#
+# BZIP2_DIR = E:\MyProjects\bzip2
+# ---------------------------------------------------------------------
+
+!IFDEF BZIP2_DIR
+
+!IF "$(BZIP2_DIR)" == "NONE"
+!UNDEF BZIP2_DIR
+!ELSEIF !EXIST("$(BZIP2_DIR)\bzlib.h")
+!ERROR BZIP2_DIR "$(BZIP2_DIR)\bzlib.h" does not exist. Check BZIP2_DIR
+!ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.lib")
+!ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.lib" does not exist. Check BZIP2_DIR
+!ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.dll")
+!ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.dll" does not exist. Check BZIP2_DIR
+!ENDIF
+
+!ENDIF

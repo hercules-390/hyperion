@@ -1,0 +1,62 @@
+# ***************************************************************************
+#     PRIM_RULES.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  Primary generic build rules...  ('all', 'clean', etc...)
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+# ---------------------------------------------------------------------
+#  Primary build rules...
+# ---------------------------------------------------------------------
+
+all: allzlib alllibbz2 allpcre
+    rebase -b 0x400000 $(X)*.dll
+    if exist $(EXEDIR)\*.manifest   del /f /q $(EXEDIR)\*.manifest
+
+clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
+    if exist $(OBJDIR)\*.*          rmdir /s /q $(OBJDIR)
+    if exist $(EXEDIR)\*.*          rmdir /s /q $(EXEDIR)
+    if exist $(PDBDIR)\*.*          rmdir /s /q $(PDBDIR)
+    if exist $(MAPDIR)\*.*          rmdir /s /q $(MAPDIR)
+!IFDEF ASSEMBLY_LISTINGS
+    if exist $(ASMDIR)\*.*          rmdir /s /q $(ASMDIR)
+!ENDIF
+
+MT_EXE_CMD=if exist $@.manifest mt.exe -nologo -outputresource:$@;1 -manifest $@.manifest
+MT_DLL_CMD=if exist $@.manifest mt.exe -nologo -outputresource:$@;2 -manifest $@.manifest
+
+linkexe = $(link) -nologo $(ldebug) $(conlflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE) && $(MT_EXE_CMD)
+linkdll = $(link) -nologo $(ldebug) $(dlllflags) $(O)build_pch.obj $** $(LIBS) -out:$@ -implib:$(O)$(@B).lib $(conlibsdll) $(MAPFILE) && $(MT_DLL_CMD)
+
+{$(OBJDIR)}.obj{$(EXEDIR)}.exe:
+    $(linkexe)
+
+{$(OBJDIR)}.obj{$(EXEDIR)}.dll:
+    $(linkdll)
+
+# Dummy target entry: Since the primary target is .DLL
+# and .LIB is generated in the same step.. And .LIB
+# are used as input, the following generates an effective
+# rule, with no side effect
+
+{$(EXEDIR)}.dll{$(OBJDIR)}.lib:
+    echo $* $@
+
+.c{$(OBJDIR)}.obj::
+    $(cc) $(cdebug) $(cflags) /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<
+
+# NOTE: to be safe, since this member contains build rules, we need to
+# make sure there's always a blank line following the last build rule
+# in the member so that nmake doesn't complain or otherwise treat the
+# statements immediately following the original !INCLUDE statement as
+# part of the build rule actions. Thus the purpose of the comments you
+# are now reading as the very last few lines in every build rule member.

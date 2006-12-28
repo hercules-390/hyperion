@@ -1,0 +1,63 @@
+# ***************************************************************************
+#     MODULES.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  The MODULES to be built...
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+!IFNDEF NOCRYPTO
+DYNCRYPT_DLL = $(X)dyncrypt.dll
+!ELSE
+DYNCRYPT_DLL =
+!ENDIF
+
+MODULES = \
+    $(X)dyngui.dll   \
+    $(X)hdt1052c.dll \
+    $(X)hdt1403.dll  \
+    $(X)hdt2703.dll  \
+    $(X)hdt3088.dll  \
+    $(X)hdt3270.dll  \
+    $(X)hdt3420.dll  \
+    $(X)hdt3505.dll  \
+    $(X)hdt3525.dll  \
+    $(X)hdteq.dll    \
+    $(X)hdtqeth.dll  \
+    $(X)dyninst.dll  \
+    $(X)decNumber.dll \
+    $(DYNCRYPT_DLL)
+
+EXECUTABLES = \
+    $(X)cckdcdsk.exe \
+    $(X)cckdcomp.exe \
+    $(X)cckddiag.exe \
+    $(X)cckdswap.exe \
+    $(X)conspawn.exe \
+    $(X)dasdcat.exe  \
+    $(X)dasdconv.exe \
+    $(X)dasdcopy.exe \
+    $(X)dasdinit.exe \
+    $(X)dasdisup.exe \
+    $(X)dasdload.exe \
+    $(X)dasdls.exe   \
+    $(X)dasdpdsu.exe \
+    $(X)dasdseq.exe  \
+    $(X)dmap2hrc.exe \
+    $(X)herclin.exe  \
+    $(X)hercules.exe \
+    $(X)hetget.exe   \
+    $(X)hetinit.exe  \
+    $(X)hetmap.exe   \
+    $(X)hetupd.exe   \
+    $(X)tapecopy.exe \
+    $(X)tapemap.exe  \
+    $(X)tapesplt.exe

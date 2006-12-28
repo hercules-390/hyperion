@@ -1,0 +1,39 @@
+# ***************************************************************************
+#     BZIP2_RULES.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  BZIP2 build rules...
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+!IFDEF BZIP2_DIR
+
+$(X)libbz2.dll:
+    XCOPY "$(BZIP2_DLL)" $(X) /V /C /F /H /R /K /O /X /Y
+
+alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
+    $(MODULES) \
+    $(EXECUTABLES) \
+    $(X)libbz2.dll
+
+!ELSE
+alllibbz2: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(O)build_pch.pch \
+    $(MODULES) \
+    $(EXECUTABLES)
+
+!ENDIF
+
+# NOTE: to be safe, since this member contains build rules, we need to
+# make sure there's always a blank line following the last build rule
+# in the member so that nmake doesn't complain or otherwise treat the
+# statements immediately following the original !INCLUDE statement as
+# part of the build rule actions. Thus the purpose of the comments you
+# are now reading as the very last few lines in every build rule member.

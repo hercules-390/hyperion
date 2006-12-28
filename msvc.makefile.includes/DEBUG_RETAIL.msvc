@@ -1,0 +1,87 @@
+# ***************************************************************************
+#     DEBUG_RETAIL.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) Copyright Roger Bowler, 2005-2007
+# --------------------------------------------------------------------------
+#
+#  Sets appropriate compiler/linker flags (cdebug & ldebug) depending on
+#  whether a normal retail release or debugging version of the product is
+#  being built...  (also sets preprocessor #defines too, as appropriate)
+#
+#
+#                           CHANGE HISTORY
+# DD/MM/YY Description
+#
+# 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+#
+# ***************************************************************************
+
+# -------------------------------------------------
+# NOTE! must set our prefered 'cdebug' value(s)
+#       AFTER calling win32.mak since it sets it.
+# -------------------------------------------------
+
+!IFDEF VS70COMNTOOLS
+MAPFILE = /map:$(MAPDIR)\$(@B).map /mapinfo:lines
+!ELSE
+MAPFILE = /map:$(MAPDIR)\$(@B).map
+!ENDIF
+
+!IFDEF NODEBUG
+# -------------------------------
+# RETAIL: full optimization
+# -------------------------------
+
+# Fish: Not sure how to check within a makefile for which version
+# of the compiler is going to be used so for now, we'll hard code
+# the test for VS 7.0's compiler (version 13.00) which still supports
+# the /QIfist option (whereas the newer VS 8.0 compiler (vers 14.00)
+# kicks out the warning: "D9035 option 'QIfist' has been deprecated
+# and will be removed in a future release"). Their documentation
+# says to use the new /fp option instead.
+
+!IFDEF VS70COMNTOOLS
+
+cflags = $(cflags) /QIfist
+
+# PROGRAMMING NOTE: we're purposely discarding win32.mak's $(cdebug) settings
+# and replacing them with our own by leaving "$(cdebug)" out of the statement
+
+cdebug  = /O2 /D NDEBUG
+ldebug = $(ldebug)
+
+!ELSEIFDEF VS80COMNTOOLS
+
+# PROGRAMMING NOTE: we're purposely discarding win32.mak's $(cdebug) settings
+# and replacing them with our own by leaving "$(cdebug)" out of the statement
+
+cdebug = /O2 /GL /D NDEBUG
+ldebug = $(ldebug) /LTCG
+
+!ENDIF
+
+# Create .PDB (Program Database) files for debugging for 'Release' builds too!
+# (so we can easily analyze "MiniDump" crash dumps should Herc ever crash)
+
+cdebug = $(cdebug) /Zi /Gm
+ldebug = $(ldebug) /DEBUG /PDB:$(PDBDIR)\$(@B).pdb
+
+!ELSE
+# -------------------------------
+# DEBUG: no optimizations at all
+# -------------------------------
+
+# PROGRAMMING NOTE: we're purposely discarding win32.mak's $(cdebug) settings
+# and replacing them with our own by leaving "$(cdebug)" out of the statement
+
+cdebug  = -Zi -Od -D DEBUG -D _DEBUG -Gm
+ldebug = /DEBUG /PDB:$(PDBDIR)\$(@B).pdb
+
+!ENDIF
+
+!IFDEF VS80COMNTOOLS
+cflags = $(cflags) -D _CRT_SECURE_NO_DEPRECATE
+cflags = $(cflags) -D _CRT_NONSTDC_NO_DEPRECATE
+cflags = $(cflags) -D _USE_32BIT_TIME_T
+ldebug = $(ldebug) /MANIFEST
+!ENDIF
