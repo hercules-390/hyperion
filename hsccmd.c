@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.197  2006/12/21 22:39:38  gsmith
+// 21 Dec 2006 Range for s+, t+ - Greg Smith
+//
 // Revision 1.196  2006/12/20 04:26:20  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -2252,6 +2255,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
 
         /* Display configuration data */
         dasd_build_ckd_config_data (dev, iobuf, 256);
+        cbuf[16]=0;
         for (j = 0; j < 256; j++)
         {
             if (j == 0)
