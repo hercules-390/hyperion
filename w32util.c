@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.21  2006/12/08 09:43:34  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -46,13 +49,12 @@ static void DummyCRTInvalidParameterHandler  // (override Microsoft insanity)
 static _invalid_parameter_handler  old_iph  = NULL;
 static int                         prev_rm  = 0;
 
-// This function should only ever called whenever we're being run under the
-// control of a debugger. It's sole purpose is to bypass Microsoft's INSANE
-// handling of invalid parameters being passed to CRT functions, which ends
-// up causing TWO COMPLETELY DIFFERENT ASSERTION DIALOGS to appear for EACH
-// and EVERY minor little itty-bitty frickin problem, BOTH of which must be
-// separately dismissed each fricking time of course (which can become VERY
-// annoying after about the sixteenth time I can't even begin to tell you!)
+// This function's sole purpose is to bypass Microsoft's INSANE handling of
+// invalid parameters being passed to CRT functions, which ends up causing
+// TWO COMPLETELY DIFFERENT ASSERTION DIALOGS to appear for EACH and EVERY
+// minor little itty-bitty frickin problem, BOTH of which must be separately
+// dismissed each fricking time of course (which can become VERY annoying
+// after about the sixteenth time I can't even begin to tell you!)
 
 DLL_EXPORT void DisableInvalidParameterHandling()
 {
