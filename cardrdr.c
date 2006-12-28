@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.44  2006/12/08 09:43:17  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -343,12 +346,13 @@ static int cardrdr_close_device ( DEVBLK *dev )
     /* Close the device file */
 
     if (0
-        || (  dev->bs && close_socket( dev->fd ) < 0 )
-        || ( !dev->bs && dev->fh && fclose(dev->fh) != 0 )
+        || (  dev->bs && dev->fd >=  0   && close_socket( dev->fd ) <  0 )
+        || ( !dev->bs && dev->fh != NULL &&    fclose(    dev->fh ) != 0 )
     )
     {
+        int errnum = dev->bs ? get_HSO_errno() : errno;
         logmsg (_("HHCRD011E Close error on file \"%s\": %s\n"),
-            dev->filename, strerror(errno));
+            dev->filename, strerror(errnum));
         dev->fd = -1;
         dev->fh = NULL;
         return -1;
