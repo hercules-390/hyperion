@@ -71,6 +71,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.111  2006/12/11 17:25:59  rbowler
+// Change locblock from long to U32 to correspond with dev->blockid
+//
 // Revision 1.110  2006/12/08 09:43:30  jj
 // Add CVS message log
 //
@@ -1803,6 +1806,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 /*-------------------------------------------------------------------*/
 static int open_omatape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
+int             fd;                     /* File descriptor integer   */
 int             rc;                     /* Return code               */
 OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
 char            pathname[MAX_PATH];     /* file path in host format  */
@@ -1856,15 +1860,20 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Open the OMATAPE file */
     hostpath(pathname, omadesc->filename, sizeof(pathname));
-    rc = open (pathname, O_RDONLY | O_BINARY);
+    fd = open (pathname, O_RDONLY | O_BINARY);
 
     /* Check for successful open */
-    if (rc < 0 || lseek (rc, 0, SEEK_END) > LONG_MAX)
+    if (fd < 0 || lseek (fd, 0, SEEK_END) > LONG_MAX)
     {
-        if ( rc >= 0 ) /* lseek overflow */ errno = EOVERFLOW;
+        if (fd >= 0)            /* (if open was successful, then it) */
+            errno = EOVERFLOW;  /* (must have been a lseek overflow) */
+
         logmsg (_("HHCTA051E Error opening %s: %s\n"),
                 omadesc->filename, strerror(errno));
-        close(rc);
+
+        if (fd >= 0)
+            close(fd);          /* (close the file if it was opened) */
+
         build_senseX(TAPE_BSENSE_TAPELOADFAIL,dev,unitstat,code);
         return -1;
     }
@@ -1873,7 +1882,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     dev->readonly = 1;
 
     /* Store the file descriptor in the device block */
-    dev->fd = rc;
+    dev->fd = fd;
     return 0;
 
 } /* end function open_omatape */
