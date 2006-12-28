@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.26  2006/12/28 15:56:06  rbowler
+// Decimal Floating Point: LXDTR instruction
+//
 // Revision 1.25  2006/12/27 23:22:07  rbowler
 // Decimal Floating Point: QAXTR instruction
 //
@@ -990,7 +993,7 @@ int             r1, r2;                 /* Values of R fields        */
 decimal128      x1;                     /* Extended DFP values       */
 decNumber       dwork, *dp;             /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
-BYTE            qwork[16];              /* 31-digit packed work area */
+BYTE            pwork[16];              /* 31-digit packed work area */
 int32_t         scale = 0;              /* Scaling factor            */
 
     RRE(inst, regs, r1, r2);
@@ -1002,11 +1005,11 @@ int32_t         scale = 0;              /* Scaling factor            */
     decContextDefault(&set, DEC_INIT_DECIMAL128);
 
     /* Store general register pair in work area */
-    STORE_DW(qwork, regs->GR_G(r2));
-    STORE_DW(qwork+8, regs->GR_G(r2+1));
+    STORE_DW(pwork, regs->GR_G(r2));
+    STORE_DW(pwork+8, regs->GR_G(r2+1));
 
     /* Convert signed BCD to internal number format */
-    dp = decPackedToNumber(qwork, sizeof(qwork), &scale, &dwork);
+    dp = decPackedToNumber(pwork, sizeof(pwork), &scale, &dwork);
 
     /* Data exception if digits or sign was invalid */
     if (dp == NULL)
@@ -1024,7 +1027,46 @@ int32_t         scale = 0;              /* Scaling factor            */
 } /* end DEF_INST(convert_sbcd128_to_dfp_ext_reg) */
 
 
-UNDEF_INST(convert_sbcd64_to_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3F3 CDSTR - Convert from signed BCD (64-bit to DFP long)   [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_sbcd64_to_dfp_long_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal64       x1;                     /* Long DFP values           */
+decNumber       dwork, *dp;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            pwork[8];               /* 15-digit packed work area */
+int32_t         scale = 0;              /* Scaling factor            */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Store general register in work area */
+    STORE_DW(pwork, regs->GR_G(r2));
+
+    /* Convert signed BCD to internal number format */
+    dp = decPackedToNumber(pwork, sizeof(pwork), &scale, &dwork);
+
+    /* Data exception if digits or sign was invalid */
+    if (dp == NULL)
+    {
+        regs->dxc = DXC_DECIMAL;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+    /* Convert internal number to DFP long format */
+    decimal64FromNumber(&x1, &dwork, &set);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+} /* end DEF_INST(convert_sbcd64_to_dfp_long_reg) */
+
+
 UNDEF_INST(convert_ubcd128_to_dfp_ext_reg)
 UNDEF_INST(convert_ubcd64_to_dfp_long_reg)
 UNDEF_INST(convert_dfp_ext_to_fix64_reg)
@@ -1042,7 +1084,7 @@ decimal128      x2;                     /* Extended DFP values       */
 decNumber       dwork;                  /* Working decimal number    */
 decContext      set;                    /* Working context           */
 int32_t         scale;                  /* Scaling factor            */
-BYTE            qwork[17];              /* 33-digit packed work area */
+BYTE            pwork[17];              /* 33-digit packed work area */
 
     RRF_M4(inst, regs, r1, r2, m4);
     DFPINST_CHECK(regs);
@@ -1064,21 +1106,64 @@ BYTE            qwork[17];              /* 33-digit packed work area */
     }
 
     /* Convert number to signed BCD in work area */
-    decPackedFromNumber(qwork, sizeof(qwork), &scale, &dwork);
+    decPackedFromNumber(pwork, sizeof(pwork), &scale, &dwork);
 
     /* Make the plus-sign X'F' if m4 bit 3 is one */
     if ((m4 & 0x01) && !decNumberIsNegative(&dwork))
-        qwork[16] |= 0x0F;
+        pwork[sizeof(pwork)-1] |= 0x0F;
 
     /* Load general register pair r1 and r1+1 from
        rightmost 31 packed decimal digits of work area */
-    FETCH_DW(regs->GR_G(r1), qwork+1);
-    FETCH_DW(regs->GR_G(r1+1), qwork+9);
+    FETCH_DW(regs->GR_G(r1), pwork+sizeof(pwork)-16);
+    FETCH_DW(regs->GR_G(r1+1), pwork+sizeof(pwork)-8);
 
 } /* end DEF_INST(convert_dfp_ext_to_sbcd128_reg) */
 
 
-UNDEF_INST(convert_dfp_long_to_sbcd64_reg)
+/*-------------------------------------------------------------------*/
+/* B3E3 CSDTR - Convert to signed BCD (DFP long to 64-bit)     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_dfp_long_to_sbcd64_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m4;                     /* Values of M fields        */
+decimal64       x2;                     /* Long DFP values           */
+decNumber       dwork;                  /* Working decimal number    */
+decContext      set;                    /* Working context           */
+int32_t         scale;                  /* Scaling factor            */
+BYTE            pwork[9];               /* 17-digit packed work area */
+
+    RRF_M4(inst, regs, r1, r2, m4);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Load DFP long number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x2, &dwork);
+
+    /* If NaN or Inf then use coefficient only */
+    if (decNumberIsNaN(&dwork) || (decNumberIsInfinite(&dwork)))
+    {
+        dfp64_clear_cf_and_bxcf(&x2);
+        decimal64ToNumber(&x2, &dwork);
+    }
+
+    /* Convert number to signed BCD in work area */
+    decPackedFromNumber(pwork, sizeof(pwork), &scale, &dwork);
+
+    /* Make the plus-sign X'F' if m4 bit 3 is one */
+    if ((m4 & 0x01) && !decNumberIsNegative(&dwork))
+        pwork[sizeof(pwork)-1] |= 0x0F;
+
+    /* Load general register r1 from rightmost
+       15 packed decimal digits of work area */
+    FETCH_DW(regs->GR_G(r1), pwork+sizeof(pwork)-8);
+
+} /* end DEF_INST(convert_dfp_long_to_sbcd64_reg) */
+
+
 UNDEF_INST(convert_dfp_ext_to_ubcd128_reg)
 UNDEF_INST(convert_dfp_long_to_ubcd64_reg)
 /*-------------------------------------------------------------------*/
