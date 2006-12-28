@@ -282,6 +282,14 @@
 							>
 						</File>
 					</Filter>
+					<Filter
+						Name="Resource Files"
+						>
+						<File
+							RelativePath=".\decNumber\decNumber.rc"
+							>
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="Devices"
@@ -1385,42 +1393,134 @@
 			<Filter
 				Name="Build"
 				>
-				<File
-					RelativePath=".\autogen.sh"
+				<Filter
+					Name="msvc"
 					>
-				</File>
-				<File
-					RelativePath=".\configure.ac"
+					<File
+						RelativePath=".\makefile-dllmod.msvc"
+						>
+					</File>
+					<File
+						RelativePath=".\makefile.bat"
+						>
+					</File>
+					<Filter
+						Name="makefile includes"
+						>
+						<File
+							RelativePath=".\msvc.makefile.includes\BZIP2_DIR.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\BZIP2_FLAGS.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\BZIP2_RULES.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\CONFIG.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\DEBUG_RETAIL.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\HERC_FLAGS.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\MOD_RULES1.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\MOD_RULES2.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\MODULES.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\OBJ_CODE.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\OUTDIR_RULES.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\OUTPUT_DIRS.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\PCRE_DIR.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\PCRE_FLAGS.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\PCRE_RULES.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\PRIM_RULES.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\VERSION.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\ZLIB_DIR.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\ZLIB_FLAGS.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\ZLIB_RULES.msvc"
+							>
+						</File>
+					</Filter>
+				</Filter>
+				<Filter
+					Name="other"
 					>
-				</File>
-				<File
-					RelativePath=".\util\cvslvlck"
-					>
-				</File>
-				<File
-					RelativePath=".\autoconf\hercules.m4"
-					>
-				</File>
-				<File
-					RelativePath=".\makefile-dllmod.msvc"
-					>
-				</File>
-				<File
-					RelativePath=".\Makefile.am"
-					>
-				</File>
-				<File
-					RelativePath=".\makefile.bat"
-					>
-				</File>
-				<File
-					RelativePath=".\makefile.generic"
-					>
-				</File>
-				<File
-					RelativePath=".\makefile.w32"
-					>
-				</File>
+					<File
+						RelativePath=".\autogen.sh"
+						>
+					</File>
+					<File
+						RelativePath=".\configure.ac"
+						>
+					</File>
+					<File
+						RelativePath=".\util\cvslvlck"
+						>
+					</File>
+					<File
+						RelativePath=".\autoconf\hercules.m4"
+						>
+					</File>
+					<File
+						RelativePath=".\Makefile.am"
+						>
+					</File>
+					<File
+						RelativePath=".\makefile.generic"
+						>
+					</File>
+					<File
+						RelativePath=".\makefile.w32"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Utilities"
