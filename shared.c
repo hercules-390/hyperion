@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.34  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -2342,10 +2345,11 @@ int i;                                  /* Loop index                */
     }
 
     logmsg(_("HHCSH043I %s disconnected from %4.4X id=%d\n"),
-           clientip(dev->shrd[ix]->fd), dev->devnum, id);
+        dev->shrd[ix]->ipaddr, dev->devnum, id);
 
     /* Release the SHRD block */
     close_socket (dev->shrd[ix]->fd);
+    free (dev->shrd[ix]->ipaddr);
     free (dev->shrd[ix]);
     dev->shrd[ix] = NULL;
 
@@ -2400,16 +2404,18 @@ int             maxfd;                  /* Max fd for select         */
 struct timeval  wait;                   /* Wait time for select      */
 BYTE            hdr[SHRD_HDR_SIZE + 65536];  /* Header + buffer      */
 BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
+char           *ipaddr = NULL;          /* IP addr of connected peer */
 
     csock = *psock;
     free (psock);
+    ipaddr = clientip(csock);
 
-    shrdtrc(dev,"server_connect %s sock %d\n",clientip(csock),csock);
+    shrdtrc(dev,"server_connect %s sock %d\n",ipaddr,csock);
 
     rc = recvData(csock, hdr, buf, 65536, 1);
     if (rc < 0)
     {
-        logmsg(_("HHCSH0474 %s connect failed\n"), clientip (csock));
+        logmsg(_("HHCSH0474 %s connect failed\n"), ipaddr);
         close_socket (csock);
         return NULL;
     }
@@ -2481,13 +2487,14 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
     if (id == 0) id = serverId (dev);
     dev->shrd[ix]->id = id;
     dev->shrd[ix]->fd = csock;
+    dev->shrd[ix]->ipaddr = strdup(ipaddr);
     dev->shrd[ix]->time = time (NULL);
     dev->shrd[ix]->purgen = -1;
     dev->shrdconn++;
     SHRD_SET_HDR (dev->shrd[ix]->hdr, cmd, flag, devnum, id, len);
 
     logmsg (_("HHCSH053I %s connected to %4.4X id=%d\n"),
-            clientip(csock), devnum, id);
+            ipaddr, devnum, id);
 
     /* Return if device thread already active */
     if (dev->shrdtid)
@@ -2606,7 +2613,7 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
             if (rc < 0)
             {
                 logmsg(_("HHCSH047E %4.4X %s recv error id=%d\n"),
-                     dev->devnum, clientip(dev->shrd[ix]->fd), dev->shrd[ix]->id);
+                    dev->devnum, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id);
                 dev->shrd[ix]->disconnect = 1;
                 dev->shrd[ix]->pending = 0;
                 obtain_lock (&dev->lock);

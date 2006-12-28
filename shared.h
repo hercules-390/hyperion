@@ -312,6 +312,9 @@
  *
  *
  * $Log$
+ * Revision 1.14  2006/12/08 09:43:30  jj
+ * Add CVS message log
+ *
  *
  *-------------------------------------------------------------------*/
 
@@ -411,6 +414,7 @@ typedef char SHRD_TRACE[128];           /* Trace entry               */
 struct SHRD {
         int     id;                     /* Identifier                */
         int     fd;                     /* Socket                    */
+        char   *ipaddr;                 /* IP addr of connected peer */
         time_t  time;                   /* Time last request         */
         int     release;                /* Client release level      */
         int     comp;                   /* Compression parameter     */
