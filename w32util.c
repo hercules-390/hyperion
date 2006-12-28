@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.22  2006/12/28 04:04:33  fish
+// (just a very minor update to some comments)
+//
 // Revision 1.21  2006/12/08 09:43:34  jj
 // Add CVS message log
 //
@@ -1408,7 +1411,7 @@ int w32_get_stdin_char( char* pCharBuff, size_t wait_millisecs )
         hStdInAvailable = CreateEvent(NULL,TRUE,FALSE,NULL);
         hGotStdIn       = CreateEvent(NULL,TRUE,TRUE,NULL); // (initially signaled)
 
-        hThread = CreateThread
+        hThread = (HANDLE) _beginthreadex
         (
             NULL,               // pointer to security attributes
             64*1024,            // initial thread stack size in bytes
@@ -2417,7 +2420,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     //////////////////////////////////////////////////
     // Stdout...
 
-    hWorkerThread = CreateThread
+    hWorkerThread = (HANDLE) _beginthreadex
     (
         NULL,                                       // pointer to security attributes = use defaults
         PIPE_THREAD_STACKSIZE,                      // initial thread stack size
@@ -2430,7 +2433,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
     if (!hWorkerThread || INVALID_HANDLE_VALUE == hWorkerThread)
     {
-        TRACE("*** CreateThread() failed! rc = %d : %s\n",
+        TRACE("*** _beginthreadex() failed! rc = %d : %s\n",
             rc,w32_strerror(rc));
 
         if (pnWriteToChildStdinFD)
@@ -2449,7 +2452,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     //////////////////////////////////////////////////
     // Stderr...
 
-    hWorkerThread = CreateThread
+    hWorkerThread = (HANDLE) _beginthreadex
     (
         NULL,                                       // pointer to security attributes = use defaults
         PIPE_THREAD_STACKSIZE,                      // initial thread stack size
@@ -2462,7 +2465,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
     if (!hWorkerThread || INVALID_HANDLE_VALUE == hWorkerThread)
     {
-        TRACE("*** CreateThread() failed! rc = %d : %s\n",
+        TRACE("*** _beginthreadex() failed! rc = %d : %s\n",
             rc,w32_strerror(rc));
 
         if (pnWriteToChildStdinFD)

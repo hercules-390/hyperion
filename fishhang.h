@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.11  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #ifndef _FISHHANG_H_
 #define _FISHHANG_H_
@@ -102,8 +105,8 @@
     #define MyLeaveCriticalSection(pCS)                     (LeaveCriticalSection((CRITICAL_SECTION*)(pCS)))
     #define MyDeleteCriticalSection(pCS)                    (DeleteCriticalSection((CRITICAL_SECTION*)(pCS)))
 
-    #define MyCreateThread(sec,stack,start,parm,flags,tid)  (CreateThread((sec),(stack),(start),(parm),(flags),(tid)))
-    #define MyExitThread(code)                              (ExitThread((code)))
+    #define MyCreateThread(sec,stack,start,parm,flags,tid)  ((HANDLE) _beginthreadex((sec),(stack),(start),(parm),(flags),(tid)))
+    #define MyExitThread(code)                              (_endthreadex((code)))
 
     #define MyCreateEvent(sec,man,set,name)                 (CreateEvent((sec),(man),(set),(name)))
     #define MySetEvent(h)                                   (SetEvent((h)))

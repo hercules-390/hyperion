@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -711,7 +714,7 @@ HANDLE FishHang_CreateThread
 
     if (!(pFISH_THREAD = CreateFISH_THREAD(pszFileCreated,nLineCreated))) return NULL;
 
-    hThread = CreateThread
+    hThread = (HANDLE) _beginthreadex
     (
         lpThreadAttributes, // pointer to security attributes
         dwStackSize,        // initial thread stack size
@@ -1509,7 +1512,7 @@ void FishHang_ExitThread
     {
         UnlockFishHang();
         logmsg("** FishHang_ExitThread: FindFISH_THREAD failed!\n");
-        if (bFishHangAtExit) ExitThread(dwExitCode);
+        if (bFishHangAtExit) _endthreadex(dwExitCode);
         exit(-1);
     }
 
@@ -1539,7 +1542,7 @@ void FishHang_ExitThread
 
     UnlockFishHang();
 
-    ExitThread(dwExitCode);
+    _endthreadex(dwExitCode);
 }
 
 /////////////////////////////////////////////////////////////////////////////
