@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.27  2006/12/28 23:24:15  rbowler
+// Decimal Floating Point: CDSTR, CSDTR instructions
+//
 // Revision 1.26  2006/12/28 15:56:06  rbowler
 // Decimal Floating Point: LXDTR instruction
 //
@@ -278,31 +281,44 @@ dfp128_clear_cf_and_bxcf(decimal128 *xp)
 } /* end function dfp128_clear_cf_and_bxcf */
 
 /*-------------------------------------------------------------------*/
-/* Set the CF field of a decimal32/64/128 structure                  */
+/* Set the CF and BXCF fields of a decimal32/64/128 structure        */
+/* Input:                                                            */
+/*      xp      Pointer to a decimal32/64/128 structure              */
+/*      cfs     A 32-bit value, of which bits 0-25 are ignored,      */
+/*              bits 26-30 contain the new CF field value (5-bits),  */
+/*              bit 31 is the new BXCF signaling indicator (1-bit).  */
+/* Output:                                                           */
+/*      The CF field and the high-order bit of the BXCF field in     */
+/*      the decimal32/64/128 structure are set to the indicated      */
+/*      values and the remaining bits of the BXCF field are cleared. */
 /*-------------------------------------------------------------------*/
-#define DFP_CF_INF      30              /* CF value for Infinity     */
-#define DFP_CF_NAN      31              /* CF value for Not-a-Number */
+#define DFP_CFS_INF     ((30<<1)|0)     /* CF and BXCF-S for Inf     */
+#define DFP_CFS_QNAN    ((31<<1)|0)     /* CF and BXCF-S for QNaN    */
+#define DFP_CFS_SNAN    ((31<<1)|1)     /* CF and BXCF-S for SNaN    */
 
 static inline void
-dfp32_set_cf(decimal32 *xp, U32 cf)
+dfp32_set_cf_and_bxcf(decimal32 *xp, U32 cfs)
 {
-    ((FW*)xp)->F &= 0x83000000;
-    ((FW*)xp)->F |= (cf & 0x1F) << 26;
-} /* end function dfp32_set_cf */
+    ((FW*)xp)->F &= 0x800FFFFF;         /* Clear CF and BXCF fields  */
+    ((FW*)xp)->F |= (cfs & 0x3F) << 25;
+                                        /* Set CF and BXCF S-bit     */
+} /* end function dfp32_set_cf_and_bxcf */
 
 static inline void
-dfp64_set_cf(decimal64 *xp, U32 cf)
+dfp64_set_cf_and_bxcf(decimal64 *xp, U32 cfs)
 {
-    ((DW*)xp)->F.H.F &= 0x83FFFFFF;    
-    ((DW*)xp)->F.H.F |= (cf & 0x1F) << 26;
-} /* end function dfp64_set_cf */
+    ((DW*)xp)->F.H.F &= 0x8003FFFF;     /* Clear CF and BXCF fields  */
+    ((DW*)xp)->F.H.F |= (cfs & 0x3F) << 25;
+                                        /* Set CF and BXCF S-bit     */
+} /* end function dfp64_set_cf_and_bxcf */
 
 static inline void
-dfp128_set_cf(decimal128 *xp, U32 cf)
+dfp128_set_cf_and_bxcf(decimal128 *xp, U32 cfs)
 {
-    ((QW*)xp)->F.HH.F &= 0x83FFFFFF;
-    ((QW*)xp)->F.HH.F |= (cf & 0x1F) << 26;
-} /* end function dfp128_set_cf */
+    ((QW*)xp)->F.HH.F &= 0x80003FFF;    /* Clear CF and BXCF fields  */
+    ((QW*)xp)->F.HH.F |= (cfs & 0x3F) << 25;
+                                        /* Set CF and BXCF S-bit     */
+} /* end function dfp128_set_cf_and_bxcf */
 
 /*-------------------------------------------------------------------*/
 /* Compare exponent and return condition code                        */
@@ -1426,7 +1442,7 @@ BYTE            dxc;                    /* Data exception code       */
         dfp64_clear_cf_and_bxcf(&x2);
         decimal64ToNumber(&x2, &d1);
         decimal128FromNumber(&x1, &d1, &set);
-        dfp128_set_cf(&x1, DFP_CF_INF);
+        dfp128_set_cf_and_bxcf(&x1, DFP_CFS_INF);
     }
     else if (decNumberIsNaN(&d2))
     {
