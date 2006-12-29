@@ -1,0 +1,12 @@
+* CXGBR test $Id$
+sysclear
+archmode esame
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=B7000230     # LCTL R0,R0,CTLR0  Set AFP bit
+r 204=B3A6000B     # CXGBR R0,R11      Test CXGBR instruction
+r 208=B2B20220     # LPSWE WAITPSW     Load enabled wait PSW
+r 220=07020001800000000000000000FED0D0 # Enabled wait state PSW
+r 230=00040000     # CTLR0             Control register 0 (bit45 AFP control)
+s+
+restart

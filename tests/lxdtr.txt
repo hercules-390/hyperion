@@ -1,0 +1,27 @@
+* LXDTR test $Id$
+sysclear           
+archmode esame
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=B7000240     # LCTL R0,R0,CTLR0  Set CR0 bit 45
+r 204=B2BD0244     # LFAS FPCREG       Load value into FPC register
+r 208=EB2502480004 # LMG R2,R5,INFPOS1 Load R2=INFP,R3=INFN,R4=QNAN,R5=SNAN
+r 20E=B3C10002     # LDGR F0,R2        Load FPR0 from R2 INFP
+r 212=B3C10023     # LDGR F2,R3        Load FPR2 from R3 INFN
+r 216=B3C10014     # LDGR F1,R4        Load FPR1 from R4 QNAN
+r 21A=B3C10035     # LDGR F3,R5        Load FPR3 from R5 SNAN
+r 21E=B3DC0840     # LXDTR F4,F0,8     Load FPR4,6 from FPR0 INFP
+r 222=B3DC0852     # LXDTR F5,F2,8     Load FPR5,7 from FPR2 INFN
+r 226=B3DC0881     # LXDTR F8,F1,8     Load FPR8,10 from FPR1 QNAN
+r 22A=B3DC0893     # LXDTR F9,F3,8     Load FPR9,11 from FPR3 SNAN
+r 22E=B3DA50D4     # AXTR F13,F4,F5    Multiply FPR4,6 by FPR5,7 giving FPR13,15
+r 232=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 240=00040000     # CTLR0             Control register 0 (bit45 AFP control)
+r 244=80000000     # FPCREG            Floating point control register        
+r 248=7833123456789ABC                 # INFP Positive infinity
+r 250=F813ABCDEF123456                 # INFN Negative infinity
+r 258=7D55ABCDEF123456                 # QNAN Quiet NaN   
+r 260=7F55ABCDEF123456                 # SNAN Signaling NaN
+r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
+s+
+restart
