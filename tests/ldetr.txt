@@ -1,0 +1,26 @@
+* LDETR test $Id$
+sysclear           
+archmode esame
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=B7000240     # LCTL R0,R0,CTLR0  Set CR0 bit 45
+r 204=B2BD0244     # LFAS FPCREG       Load value into FPC register
+r 208=78000248     # LE F0,INFP        Load FPR0(short) from INFP
+r 20C=7820024C     # LE F2,INFN        Load FPR2(short) from INFN
+r 210=78100250     # LE F1,QNAN        Load FPR1(short) from QNAN
+r 214=78300254     # LE F3,SNAN        Load FPR3(short) from SNAN
+r 218=B3D40840     # LDETR F4,F0,8     Load FPR4 from FPR0 INFP
+r 21C=B3D40852     # LDETR F5,F2,8     Load FPR5 from FPR2 INFN
+r 220=B3D40881     # LDETR F8,F1,8     Load FPR8 from FPR1 QNAN
+r 224=B3D40893     # LDETR F9,F3,8     Load FPR9 from FPR3 SNAN
+r 228=B3D250F4     # ADTR F15,F4,F5    Multiply FPR4 by FPR5 giving FPR15
+r 22C=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 240=00040000     # CTLR0             Control register 0 (bit45 AFP control)
+r 244=80000000     # FPCREG            Floating point control register        
+r 248=78FE1234                         # INFP Positive infinity
+r 24C=F83EABCD                         # INFN Negative infinity
+r 250=7D56CDEF                         # QNAN Quiet NaN   
+r 254=7F563456                         # SNAN Signaling NaN
+r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
+s+
+restart

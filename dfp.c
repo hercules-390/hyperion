@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.28  2006/12/29 15:00:36  rbowler
+// Decimal Floating Point: LXDTR correction
+//
 // Revision 1.27  2006/12/28 23:24:15  rbowler
 // Decimal Floating Point: CDSTR, CSDTR instructions
 //
@@ -564,6 +567,46 @@ BYTE    drm;                            /* Decimal rounding mode     */
     } /* end switch(drm) */
 
 } /* end function dfp_rounding_mode */
+
+/*-------------------------------------------------------------------*/
+/* Copy a DFP short register into a decimal32 structure              */
+/*                                                                   */
+/* Input:                                                            */
+/*      rn      FP register number                                   */
+/*      xp      Pointer to decimal32 structure                       */
+/*      regs    CPU register context                                 */
+/*-------------------------------------------------------------------*/
+static inline void
+ARCH_DEP(dfp_reg_to_decimal32) (int rn, decimal32 *xp, REGS *regs)
+{
+int     i;                              /* FP register subscript     */
+FW      *fwp;                           /* Fullword pointer          */
+
+    i = FPR2I(rn);                      /* Register index            */
+    fwp = (FW*)xp;                      /* Convert to FW pointer     */
+    fwp->F = regs->fpr[i];              /* Copy FPR bits 0-31        */
+
+} /* end function dfp_reg_to_decimal32 */
+
+/*-------------------------------------------------------------------*/
+/* Load a DFP short register from a decimal32 structure              */
+/*                                                                   */
+/* Input:                                                            */
+/*      rn      FP register number (left register of pair)           */
+/*      xp      Pointer to decimal32 structure                       */
+/*      regs    CPU register context                                 */
+/*-------------------------------------------------------------------*/
+static inline void
+ARCH_DEP(dfp_reg_from_decimal32) (int rn, decimal32 *xp, REGS *regs)
+{
+int     i;                              /* FP register subscript     */
+FW      *fwp;                           /* Fullword pointer          */
+
+    i = FPR2I(rn);                      /* Register index            */
+    fwp = (FW*)xp;                      /* Convert to FW pointer     */
+    regs->fpr[i] = fwp->F;              /* Load FPR bits 0-31        */
+
+} /* end function dfp_reg_from_decimal32 */
 
 /*-------------------------------------------------------------------*/
 /* Copy a DFP long register into a decimal64 structure               */
@@ -1479,7 +1522,73 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(load_lengthened_dfp_long_to_ext_reg) */
 
 
-UNDEF_INST(load_lengthened_dfp_short_to_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3D4 LDETR - Load Lengthened DFP Short to Long Register     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_lengthened_dfp_short_to_long_reg)
+{
+int             r1, r2, m4;             /* Values of R and M fields  */
+decimal64       x1;                     /* Long DFP value            */
+decimal32       x2;                     /* Short DFP value           */
+decNumber       d1, d2;                 /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_M4(inst, regs, r1, r2, m4);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r1, regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Load DFP short number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal32)(r2, &x2, regs);
+    decimal32ToNumber(&x2, &d2);
+
+    /* Convert number to DFP long format */
+    if (decNumberIsInfinite(&d2) && (m4 & 0x08))
+    {
+        /* For Inf with mask bit 0 set, propagate the digits */
+        dfp32_clear_cf_and_bxcf(&x2);
+        decimal32ToNumber(&x2, &d1);
+        decimal64FromNumber(&x1, &d1, &set);
+        dfp64_set_cf_and_bxcf(&x1, DFP_CFS_INF);
+    }
+    else if (decNumberIsNaN(&d2))
+    {
+        decimal32ToNumber(&x2, &d1);
+        /* For SNaN with mask bit 0 set, convert to a QNaN
+           and raise signaling condition */
+        if (decNumberIsSNaN(&d2) && (m4 & 0x08) == 0)
+        {
+            set.status |= DEC_IEEE_854_Invalid_operation;
+            d1.bits &= ~DECSNAN;
+            d1.bits |= DECNAN;
+        }
+        decimal64FromNumber(&x1, &d1, &set);
+    }
+    else
+    {
+        decNumberCopy(&d1, &d2);
+        decimal64FromNumber(&x1, &d1, &set);
+    }
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(load_lengthened_dfp_short_to_long_reg) */
+
+
 UNDEF_INST(load_rounded_dfp_ext_to_long_reg)
 UNDEF_INST(load_rounded_dfp_long_to_short_reg)
 /*-------------------------------------------------------------------*/
