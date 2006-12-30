@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.30  2006/12/30 15:54:18  rbowler
+// Decimal Floating Point: LDETR correction
+//
 // Revision 1.29  2006/12/29 16:38:51  rbowler
 // Decimal Floating Point: LDETR instruction
 //
@@ -913,8 +916,51 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(add_dfp_ext_reg) */ 
 
 
-/* Additional Decimal Floating Point instructions to be inserted here */
-UNDEF_INST(add_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3D2 ADTR  - Add DFP Long Register                          [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_dfp_long_reg)
+{
+int             r1, r2, r3;             /* Values of R fields        */
+decimal64       x1, x2, x3;             /* Long DFP values           */
+decNumber       d1, d2, d3;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRR(inst, regs, r1, r2, r3);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
+
+    /* Add FP register r3 to FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    ARCH_DEP(dfp_reg_to_decimal64)(r3, &x3, regs);
+    decimal64ToNumber(&x2, &d2);
+    decimal64ToNumber(&x3, &d3);
+    decNumberAdd(&d1, &d2, &d3, &set);
+    decimal64FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+    /* Set condition code */
+    regs->psw.cc = decNumberIsNaN(&d1) ? 3 :
+                   decNumberIsZero(&d1) ? 0 :
+                   decNumberIsNegative(&d1) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(add_dfp_long_reg) */
 
 
 /*-------------------------------------------------------------------*/
