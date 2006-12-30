@@ -585,6 +585,26 @@ EXTRA_DIST = autoconf/config.rpath \
              README.MSVC           \
              makefile.msvc         \
              makefile-dllmod.msvc  \
+             msvc.makefile.includes\BZIP2_DIR.msvc    \
+             msvc.makefile.includes\BZIP2_FLAGS.msvc  \
+             msvc.makefile.includes\BZIP2_RULES.msvc  \
+             msvc.makefile.includes\CONFIG.msvc       \
+             msvc.makefile.includes\DEBUG_RETAIL.msvc \
+             msvc.makefile.includes\HERC_FLAGS.msvc   \
+             msvc.makefile.includes\MOD_RULES1.msvc   \
+             msvc.makefile.includes\MOD_RULES2.msvc   \
+             msvc.makefile.includes\MODULES.msvc      \
+             msvc.makefile.includes\OBJ_CODE.msvc     \
+             msvc.makefile.includes\OUTDIR_RULES.msvc \
+             msvc.makefile.includes\OUTPUT_DIRS.msvc  \
+             msvc.makefile.includes\PCRE_DIR.msvc     \
+             msvc.makefile.includes\PCRE_FLAGS.msvc   \
+             msvc.makefile.includes\PCRE_RULES.msvc   \
+             msvc.makefile.includes\PRIM_RULES.msvc   \
+             msvc.makefile.includes\VERSION.msvc      \
+             msvc.makefile.includes\ZLIB_DIR.msvc     \
+             msvc.makefile.includes\ZLIB_FLAGS.msvc   \
+             msvc.makefile.includes\ZLIB_RULES.msvc   \
              makefile.bat          \
              Hercules.dsp          \
              Hercules.dsw          \
