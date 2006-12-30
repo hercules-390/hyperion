@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.198  2006/12/28 03:31:40  fish
+// Fix minor bug in new "QD" (query dasd) command RCD display causing garbled text display.
+//
 // Revision 1.197  2006/12/21 22:39:38  gsmith
 // 21 Dec 2006 Range for s+, t+ - Greg Smith
 //
@@ -1324,8 +1327,6 @@ int gpr_cmd(int argc, char *argv[], char *cmdline)
 REGS *regs;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -1335,7 +1336,39 @@ REGS *regs;
         logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
+
     regs = sysblk.regs[sysblk.pcpu];
+
+    if (argc > 1)
+    {
+        int   reg_num;
+        BYTE  equal_sign, c;
+        U64   reg_value;
+
+        if (argc > 2)
+        {
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            logmsg( _("HHCPNxxxE Invalid format. .Enter \"help gpr\" for help.\n"));
+            return 0;
+        }
+
+        if (0
+            || sscanf( argv[1], "%d%c%"I64_FMT"x%c", &reg_num, &equal_sign, &reg_value, &c ) != 3
+            || 0  > reg_num
+            || 15 < reg_num
+            || '=' != equal_sign
+        )
+        {
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            logmsg( _("HHCPNxxxE Invalid format. .Enter \"help gpr\" for help.\n"));
+            return 0;
+        }
+
+        if ( ARCH_900 == regs->arch_mode )
+            regs->GR_G(reg_num) = (U64) reg_value;
+        else
+            regs->GR_L(reg_num) = (U32) reg_value;
+    }
 
     display_regs (regs);
 
@@ -4744,7 +4777,7 @@ COMMAND ( "sysclear",  sysc_cmd,      "Issue SYSTEM Clear Reset manual operation
 COMMAND ( "store",     store_cmd,     "store CPU status at absolute zero\n" )
 
 COMMAND ( "psw",       psw_cmd,       "display program status word" )
-COMMAND ( "gpr",       gpr_cmd,       "display general purpose registers" )
+COMMAND ( "gpr",       gpr_cmd,       "display or alter general purpose registers" )
 COMMAND ( "fpr",       fpr_cmd,       "display floating point registers" )
 COMMAND ( "fpc",       fpc_cmd,       "display floating point control register" )
 COMMAND ( "cr",        cr_cmd,        "display control registers" )
@@ -5126,6 +5159,15 @@ CMDHELP ( "!message",  "To enter a system control program (i.e. guest operating 
                        )
 #endif
 
+CMDHELP ( "gpr",       "Format:\n\n"
+
+                       "     gpr [nn=xxxxxxxxxxxxxxxx]\"\n\n"
+
+                       "where 'nn' is the optional register number (0 to 15) and 'xxxxxxxxxxxxxxxx'\n"
+                       "is the register value in hexadecimal (1-8 hex digits for 32-bit registers\n"
+                       "or 1-16 hex digits for 64-bit registers). Enter \"gpr\" by itself to display\n"
+                       "the register values without altering them.\n"
+                       )
 CMDHELP ( "r",         "Format: \"r addr[.len]\" or \"r addr-addr\" to display real\n"
                        "storage, or \"r addr=value\" to alter real storage, where 'value'\n"
                        "is a hex string of up to 32 pairs of digits.\n"
