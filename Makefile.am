@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.175  2006/12/30 16:54:07  rbowler
+# Reinstate missing changelog entries
+#
 # Revision 1.174  2006/12/30 15:37:01  jmaynard
 # Removed a coupple of stray ^Ms.
 #
