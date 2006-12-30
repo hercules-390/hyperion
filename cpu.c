@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.172  2006/12/21 22:39:38  gsmith
+// 21 Dec 2006 Range for s+, t+ - Greg Smith
+//
 // Revision 1.171  2006/12/21 01:45:01  gsmith
 // 20 Dec 2006 Fix instruction display in program interrupt - Greg Smithh
 //
@@ -1271,16 +1274,13 @@ int i;
 
     /* Set multi-byte jump code pointers */
 #if defined(_370)
-    if (regs->arch_mode == ARCH_370)
-        s370_set_jump_pointers(regs, 0);
+    s370_set_jump_pointers(regs, 0);
 #endif
 #if defined(_390)
-    if (regs->arch_mode == ARCH_390)
-        s390_set_jump_pointers(regs, 0);
+    s390_set_jump_pointers(regs, 0);
 #endif
 #if defined(_900)
-    if (regs->arch_mode == ARCH_900)
-        z900_set_jump_pointers(regs, 0);
+    z900_set_jump_pointers(regs, 0);
 #endif
 
     regs->configured = 1;
