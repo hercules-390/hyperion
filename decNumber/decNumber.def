@@ -1,3 +1,11 @@
+; $Id$
+; Module-definition file for decNumber DLL (MSVC)
+;
+; This file was added by the Hercules project.
+; It is not part of the original decNumber distribution.
+;
+; $Log$
+;
 LIBRARY decNumber
 EXPORTS
     decContextDefault

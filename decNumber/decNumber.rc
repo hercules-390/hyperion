@@ -1,3 +1,13 @@
+/* $Id$
+ * Resource-definition script file for decNumber DLL (MSVC)
+ *
+ * This file was added by the Hercules project.
+ * It is not part of the original decNumber distribution.
+ *
+ * $Log$
+ *
+ */
+
 #include <winver.h>
 
   #define DECNAME     "decNumber"                       /* Short name */

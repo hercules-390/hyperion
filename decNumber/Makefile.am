@@ -3,9 +3,15 @@
 # Makefile for building the decNumber package
 # for use with Hercules S/370, ESA/390 and z/Architecture emulator
 #
+# This file was added by the Hercules project.
+# It is not part of the original decNumber distribution.
+#
 # $Id$
 #
 # $Log$
+# Revision 1.3  2006/12/13 11:49:02  rbowler
+# Correct make tar error: No rule to make target `decNumber.pdf'
+#
 # Revision 1.2  2006/12/12 14:07:50  rbowler
 # Make decNumber a shared library not a loadable module
 #
