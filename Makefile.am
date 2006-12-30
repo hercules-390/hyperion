@@ -5,6 +5,15 @@
 # $Id$
 #
 # $Log$
+# Revision 1.174  2006/12/30 15:37:01  jmaynard
+# Removed a coupple of stray ^Ms.
+#
+# Revision 1.173  2006/12/30 01:20:09  fish
+# Add new MSVC makefile includes to distribution
+#
+# Revision 1.172  2006/12/18 13:35:51  rbowler
+# Add hstdint.h to make dist
+#
 # Revision 1.171  2006/12/13 17:16:30  rbowler
 # Make libherc depend on libdecNumber
 #
