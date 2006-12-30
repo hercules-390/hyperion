@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.23  2006/12/28 15:49:35  fish
+// Use _beginthreadex/_endthreadex instead of CreateThread/ExitThread in continuing effort to try and resolve our still existing long-standing 'errno' issue...
+//
 // Revision 1.22  2006/12/28 04:04:33  fish
 // (just a very minor update to some comments)
 //
@@ -2234,6 +2237,25 @@ char*    buffer_overflow_msg      = NULL;   // used to trim received message
 int      buffer_overflow_msg_len  = 0;      // length of above truncation msg
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// Fork control...
+
+typedef struct _PIPED_PROCESS_CTL
+{
+    char*               pszBuffer;          // ptr to current logmsgs buffer
+    size_t              nAllocSize;         // allocated size of logmsgs buffer
+    size_t              nStrLen;            // amount used - 1 (because of NULL)
+    CRITICAL_SECTION    csLock;             // lock for accessing above buffer
+}
+PIPED_PROCESS_CTL;
+
+typedef struct _PIPED_THREAD_CTL
+{
+    HANDLE              hStdXXX;            // stdout or stderr handle
+    PIPED_PROCESS_CTL*  pPipedProcessCtl;   // ptr to process control
+}
+PIPED_THREAD_CTL;
+
+//////////////////////////////////////////////////////////////////////////////////////////
 // "Poor man's" fork...
 
 UINT WINAPI w32_read_piped_process_stdxxx_output_thread ( void* pThreadParm ); // (fwd ref)
@@ -2262,6 +2284,10 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     char* pszNewCommandLine;            // (because we build pvt copy for CreateProcess)
     BOOL  bSuccess;                     // (work)
     int   rc;                           // (work)
+
+    PIPED_PROCESS_CTL*  pPipedProcessCtl        = NULL;
+    PIPED_THREAD_CTL*   pPipedStdOutThreadCtl   = NULL;
+    PIPED_THREAD_CTL*   pPipedStdErrThreadCtl   = NULL;
 
     //////////////////////////////////////////////////
     // Initialize fields...
@@ -2394,7 +2420,6 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     VERIFY(CloseHandle(hChildWriteToStdout));   // (MUST close so child won't hang!)
     VERIFY(CloseHandle(hChildWriteToStderr));   // (MUST close so child won't hang!)
 
-           CloseHandle(piProcInfo.hProcess);    // (we don't need this one)
            CloseHandle(piProcInfo.hThread);     // (we don't need this one)
 
     free(pszNewCommandLine);                    // (not needed anymore)
@@ -2415,6 +2440,50 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         return -1;
     }
 
+    // Allocate/intialize control blocks for piped process/thread control...
+
+    // If we were passed a pnWriteToChildStdinFD pointer, then the caller
+    // is in charge of the process and will handle message capturing/logging
+    // (such as is done with the print-to-pipe facility).
+
+    // Otherwise (pnWriteToChildStdinFD is NULL) the caller wishes for us
+    // to capture the piped process's o/p, so we pass a PIPED_PROCESS_CTL
+    // structure to the stdout/stderr monitoring threads. This structure
+    // contains a pointer to a buffer where they can accumulate messages.
+
+    // Then once the process exits WE will then issue the "logmsg". This
+    // is necessary in order to "capture" the process's o/p since the logmsg
+    // capture facility is designed to capture o/p for a specific thread,
+    // where that thread is US! (else if we let the monitoring thread issue
+    // the logmsg's, they'll never get captured since they don't have the
+    // same thread-id as the thread that started the capture, which was us!
+    // (actually it was the caller, but we're the same thread as they are!)).
+
+    pPipedStdOutThreadCtl = malloc( sizeof(PIPED_THREAD_CTL) );
+    pPipedStdErrThreadCtl = malloc( sizeof(PIPED_THREAD_CTL) );
+
+    pPipedStdOutThreadCtl->hStdXXX = hOurReadFromStdout;
+    pPipedStdErrThreadCtl->hStdXXX = hOurReadFromStderr;
+
+    if ( !pnWriteToChildStdinFD )
+    {
+        pPipedProcessCtl = malloc( sizeof(PIPED_PROCESS_CTL) );
+
+        pPipedStdOutThreadCtl->pPipedProcessCtl = pPipedProcessCtl;
+        pPipedStdErrThreadCtl->pPipedProcessCtl = pPipedProcessCtl;
+
+        InitializeCriticalSection( &pPipedProcessCtl->csLock );
+        pPipedProcessCtl->nAllocSize =         1;    // (purposely small for debugging)
+        pPipedProcessCtl->pszBuffer  = malloc( 1 );  // (purposely small for debugging)
+        *pPipedProcessCtl->pszBuffer = 0;            // (null terminate string buffer)
+        pPipedProcessCtl->nStrLen    = 0;            // (no msgs yet)
+    }
+    else
+    {
+        pPipedStdOutThreadCtl->pPipedProcessCtl = NULL;
+        pPipedStdErrThreadCtl->pPipedProcessCtl = NULL;
+    }
+
     //////////////////////////////////////////////////
     // Create o/p pipe monitoring worker threads...
     //////////////////////////////////////////////////
@@ -2425,7 +2494,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         NULL,                                       // pointer to security attributes = use defaults
         PIPE_THREAD_STACKSIZE,                      // initial thread stack size
         w32_read_piped_process_stdxxx_output_thread,
-        (void*)hOurReadFromStdout,                  // thread argument = pipe HANDLE
+        pPipedStdOutThreadCtl,                      // thread argument
         0,                                          // special creation flags = none needed
         &dwThreadId                                 // pointer to receive thread ID
     );
@@ -2440,6 +2509,15 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         VERIFY(CloseHandle(hOurWriteToStdin));
         VERIFY(CloseHandle(hOurReadFromStdout));
         VERIFY(CloseHandle(hOurReadFromStderr));
+
+        if ( !pnWriteToChildStdinFD )
+        {
+            DeleteCriticalSection( &pPipedProcessCtl->csLock );
+            free( pPipedProcessCtl->pszBuffer );
+            free( pPipedProcessCtl );
+        }
+        free( pPipedStdOutThreadCtl );
+        free( pPipedStdErrThreadCtl );
 
         errno = rc;
         return -1;
@@ -2457,7 +2535,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         NULL,                                       // pointer to security attributes = use defaults
         PIPE_THREAD_STACKSIZE,                      // initial thread stack size
         w32_read_piped_process_stdxxx_output_thread,
-        (void*)hOurReadFromStderr,                  // thread argument = pipe HANDLE
+        pPipedStdErrThreadCtl,                      // thread argument
         0,                                          // special creation flags = none needed
         &dwThreadId                                 // pointer to receive thread ID
     );
@@ -2473,6 +2551,15 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
         VERIFY(CloseHandle(hOurReadFromStdout));
         VERIFY(CloseHandle(hOurReadFromStderr));
 
+        if ( !pnWriteToChildStdinFD )
+        {
+            DeleteCriticalSection( &pPipedProcessCtl->csLock );
+            free( pPipedProcessCtl->pszBuffer );
+            free( pPipedProcessCtl );
+        }
+        free( pPipedStdOutThreadCtl );
+        free( pPipedStdErrThreadCtl );
+
         errno = rc;
         return -1;
     }
@@ -2481,11 +2568,37 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
     SET_THREAD_NAME_ID(dwThreadId,"w32_read_piped_process_stdERR_output_thread");
 
-    // Return a C run-time file descriptor
-    // for the write-to-child-stdin HANDLE...
+    // Piped process capture handling...
 
-    if ( pnWriteToChildStdinFD )
+    if ( !pnWriteToChildStdinFD )
+    {
+        // We're in control of the process...
+        // Wait for it to exit...
+
+        WaitForSingleObject( piProcInfo.hProcess, INFINITE );
+        CloseHandle( piProcInfo.hProcess );
+
+        // Now print ALL captured messages AT ONCE...
+
+        logmsg( "%s", pPipedProcessCtl->pszBuffer );
+
+        // Free resources...
+
+        DeleteCriticalSection( &pPipedProcessCtl->csLock );
+        free( pPipedProcessCtl->pszBuffer );
+        free( pPipedProcessCtl );
+    }
+    else
+    {
+        // Caller is in control of the process...
+
+        CloseHandle( piProcInfo.hProcess );
+
+        // Return a C run-time file descriptor
+        // for the write-to-child-stdin HANDLE...
+
         *pnWriteToChildStdinFD = _open_osfhandle( (intptr_t) hOurWriteToStdin, 0 );
+    }
 
     // Success!
 
@@ -2495,30 +2608,40 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 //////////////////////////////////////////////////////////////////////////////////////////
 // Thread to read message data from the child process's stdxxx o/p pipe...
 
-void w32_parse_piped_process_stdxxx_data ( char* holdbuff, int* pnHoldAmount );
+void w32_parse_piped_process_stdxxx_data ( PIPED_PROCESS_CTL* pPipedProcessCtl, char* holdbuff, int* pnHoldAmount );
 
 UINT  WINAPI  w32_read_piped_process_stdxxx_output_thread ( void* pThreadParm )
 {
-    HANDLE    hOurReadFromStdxxx;
-    DWORD     nAmountRead;
-    int       nHoldAmount;
-    BOOL      oflow;
-    unsigned  nRetcode;
+    PIPED_THREAD_CTL*   pPipedStdXXXThreadCtl   = NULL;
+    PIPED_PROCESS_CTL*  pPipedProcessCtl        = NULL;
+
+    HANDLE    hOurReadFromStdxxx  = NULL;
+    DWORD     nAmountRead         = 0;
+    int       nHoldAmount         = 0;
+    BOOL      oflow               = FALSE;
+    unsigned  nRetcode            = 0;
 
     char   readbuff [ PIPEBUFSIZE ];
     char   holdbuff [ HOLDBUFSIZE ];
 
-    hOurReadFromStdxxx  = (HANDLE) pThreadParm;
-    nAmountRead         = 0;
-    nHoldAmount         = 0;
-    oflow               = FALSE;
-    nRetcode            = 0;
+    // Extract parms
+
+    pPipedStdXXXThreadCtl = (PIPED_THREAD_CTL*) pThreadParm;
+
+    pPipedProcessCtl    = pPipedStdXXXThreadCtl->pPipedProcessCtl;
+    hOurReadFromStdxxx  = pPipedStdXXXThreadCtl->hStdXXX;
+
+    free( pPipedStdXXXThreadCtl );      // (prevent memory leak)
+
+    // Begin work...
 
     for (;;)
     {
         if (!ReadFile(hOurReadFromStdxxx, readbuff, PIPEBUFSIZE-1, &nAmountRead, NULL))
         {
-            if (ERROR_BROKEN_PIPE == (nRetcode = GetLastError())) nRetcode = 0;
+            if (ERROR_BROKEN_PIPE == (nRetcode = GetLastError()))
+                nRetcode = 0;
+            // (else keep value returned from GetLastError())
             break;
         }
         *(readbuff+nAmountRead) = 0;
@@ -2544,12 +2667,14 @@ UINT  WINAPI  w32_read_piped_process_stdxxx_output_thread ( void* pThreadParm )
 
         // Pass all existing data to parsing function...
 
-        w32_parse_piped_process_stdxxx_data(holdbuff,&nHoldAmount);
+        w32_parse_piped_process_stdxxx_data( pPipedProcessCtl, holdbuff, &nHoldAmount );
 
         if (oflow) ASSERT(!nHoldAmount); oflow = FALSE;
     }
 
-    CloseHandle(hOurReadFromStdxxx);    // (prevent HANDLE leak)
+    // Finish up...
+
+    CloseHandle( hOurReadFromStdxxx );      // (prevent HANDLE leak)
 
     return nRetcode;
 }
@@ -2558,7 +2683,7 @@ UINT  WINAPI  w32_read_piped_process_stdxxx_output_thread ( void* pThreadParm )
 // Parse piped child's stdout/stderr o/p data into individual newline delimited
 // messages for displaying on the Hercules hardware console...
 
-void w32_parse_piped_process_stdxxx_data ( char* holdbuff, int* pnHoldAmount )
+void w32_parse_piped_process_stdxxx_data ( PIPED_PROCESS_CTL* pPipedProcessCtl, char* holdbuff, int* pnHoldAmount )
 {
     // This function executes in the context of the worker thread that calls it.
 
@@ -2603,7 +2728,45 @@ void w32_parse_piped_process_stdxxx_data ( char* holdbuff, int* pnHoldAmount )
 
         while (--pmsgend >= pbeg && isspace(*pmsgend)) {*pmsgend = 0; --nlen;}
 
-        logmsg("%s\n",pbeg);            // send all child's msgs to Herc console
+        // If we were passed a PIPED_PROCESS_CTL pointer, then the root thread
+        // wants us to just capture the o/p and IT will issue the logmsg within
+        // its own thread. Otherwise root thread isn't interested in capturing
+        // and thus we must issue the individual logmsg's ourselves...
+
+        if (!pPipedProcessCtl)
+        {
+            logmsg("%s\n",pbeg);    // send all child's msgs to Herc console
+        }
+        else
+        {
+            size_t  nNewStrLen, nAllocSizeNeeded;   // (work)
+
+            EnterCriticalSection( &pPipedProcessCtl->csLock );
+
+            nNewStrLen        = strlen( pbeg );
+            nAllocSizeNeeded  = ((((pPipedProcessCtl->nStrLen + nNewStrLen + 2) / 4096) + 1) * 4096);
+
+            if ( nAllocSizeNeeded > pPipedProcessCtl->nAllocSize )
+            {
+                pPipedProcessCtl->nAllocSize = nAllocSizeNeeded;
+                pPipedProcessCtl->pszBuffer  = realloc( pPipedProcessCtl->pszBuffer, nAllocSizeNeeded );
+                ASSERT( pPipedProcessCtl->pszBuffer );
+            }
+
+            if (nNewStrLen)
+            {
+                memcpy( pPipedProcessCtl->pszBuffer + pPipedProcessCtl->nStrLen, pbeg, nNewStrLen );
+                pPipedProcessCtl->nStrLen += nNewStrLen;
+            }
+
+            *(pPipedProcessCtl->pszBuffer + pPipedProcessCtl->nStrLen) = '\n';
+            pPipedProcessCtl->nStrLen++;
+            *(pPipedProcessCtl->pszBuffer + pPipedProcessCtl->nStrLen) = '\0';
+
+            ASSERT( pPipedProcessCtl->nStrLen <= pPipedProcessCtl->nAllocSize );
+
+            LeaveCriticalSection( &pPipedProcessCtl->csLock );
+        }
 
         // 'pend' should still point to the end of this message (where newline was)
 
