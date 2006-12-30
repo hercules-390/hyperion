@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.29  2006/12/29 16:38:51  rbowler
+// Decimal Floating Point: LDETR instruction
+//
 // Revision 1.28  2006/12/29 15:00:36  rbowler
 // Decimal Floating Point: LXDTR correction
 //
@@ -1536,7 +1539,6 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_M4(inst, regs, r1, r2, m4);
     DFPINST_CHECK(regs);
-    DFPREGPAIR_CHECK(r1, regs);
 
     /* Initialise the context for long DFP */
     decContextDefault(&set, DEC_INIT_DECIMAL64);
