@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.54  2006/12/18 14:01:54  rbowler
+// Only show CPU in FPR display if numcpu>1
+//
 // Revision 1.53  2006/12/17 23:03:28  rbowler
 // Display FPR when tracing floating-point instructions
 //
@@ -296,6 +299,51 @@ static void display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus)
 }
 
 #endif
+
+/*-------------------------------------------------------------------*/
+/* Display registers for the instruction about to be executed        */
+/*-------------------------------------------------------------------*/
+void display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode)
+{
+    /* Display the general purpose registers */
+    if (!(opcode == 0xB3 || (opcode >= 0x20 && opcode <= 0x3F)) 
+        || (opcode == 0xB3 && (
+                (inst[1] >= 0x80 && inst[1] <= 0xCF)
+                || (inst[1] >= 0xE1 && inst[1] <= 0xFE)
+           )))
+    {
+        display_regs (regs);
+        logmsg("\n");
+    }
+
+    /* Display control registers if appropriate */
+    if (!REAL_MODE(&regs->psw) && opcode == 0xB2)
+    {
+        display_cregs (regs);
+        logmsg("\n");
+    }
+
+    /* Display access registers if appropriate */
+    if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
+    {
+        display_aregs (regs);
+        logmsg("\n");
+    }
+
+    /* Display floating-point registers if appropriate */
+    if (opcode == 0xB3 || opcode == 0xED
+        || (opcode >= 0x20 && opcode <= 0x3F)
+        || (opcode >= 0x60 && opcode <= 0x70)
+        || (opcode >= 0x78 && opcode <= 0x7F)
+        || (opcode == 0xB2 && inst[1] == 0x2D) /*DXR*/
+        || (opcode == 0xB2 && inst[1] == 0x44) /*SQDR*/
+        || (opcode == 0xB2 && inst[1] == 0x45) /*SQER*/
+       )
+    {
+        display_fregs (regs);
+        logmsg("\n");
+    }
+}
 
 /*-------------------------------------------------------------------*/
 /* Display general purpose registers                                 */
@@ -1035,6 +1083,9 @@ int     n;                              /* Number of bytes in buffer */
     opcode = inst[0];
     ilc = ILC(opcode);
 
+    /* Show regs as they are before the instruction gets executed */
+    display_inst_regs (regs, inst, opcode);
+
     /* Display the instruction */
     n += sprintf (buf+n, "INST=%2.2X%2.2X", inst[0], inst[1]);
     if (ilc > 2) n += sprintf (buf+n, "%2.2X%2.2X", inst[2], inst[3]);
@@ -1159,33 +1210,6 @@ int     n;                              /* Number of bytes in buffer */
     }
 
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
-
-    /* Display the general purpose registers */
-    if (!(opcode == 0xB3 || (opcode >= 0x20 && opcode <= 0x3F)) 
-        || (opcode == 0xB3 && (
-                (inst[1] >= 0x80 && inst[1] <= 0xCF)
-                || (inst[1] >= 0xE1 && inst[1] <= 0xFE)
-           )))
-        display_regs (regs);
-
-    /* Display control registers if appropriate */
-    if (!REAL_MODE(&regs->psw) || regs->ip[0] == 0xB2)
-        display_cregs (regs);
-
-    /* Display access registers if appropriate */
-    if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
-        display_aregs (regs);
-
-    /* Display floating-point registers if appropriate */
-    if (opcode == 0xB3 || opcode == 0xED
-        || (opcode >= 0x20 && opcode <= 0x3F)
-        || (opcode >= 0x60 && opcode <= 0x70)
-        || (opcode >= 0x78 && opcode <= 0x7F)
-        || (opcode == 0xB2 && inst[1] == 0x2D) /*DXR*/
-        || (opcode == 0xB2 && inst[1] == 0x44) /*SQDR*/
-        || (opcode == 0xB2 && inst[1] == 0x45) /*SQER*/
-       )
-        display_fregs (regs);
 
 } /* end function display_inst */
 
