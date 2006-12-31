@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.108  2006/12/20 09:09:40  jj
+// Fix bogus log entries
+//
 // Revision 1.107  2006/12/20 04:26:20  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -1388,7 +1391,7 @@ BYTE    old;                            /* Old value                 */
     main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK1(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Get old value */
     old = *main2;
@@ -1398,7 +1401,7 @@ BYTE    old;                            /* Old value                 */
     regs->psw.cc = old >> 7;
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK1(regs);
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);

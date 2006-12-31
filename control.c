@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.238  2006/12/22 00:51:43  gsmith
+// 21 Dec 2006 Fix SIGP to do single logmsg - Greg Smith
+//
 // Revision 1.237  2006/12/20 09:09:40  jj
 // Fix bogus log entries
 //
@@ -736,13 +739,13 @@ U32     old;                            /* old value                 */
     old = CSWAP32 (regs->GR_L(r1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK4(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r1+1)), main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK4(regs);
+    RELEASE_MAINLOCK(regs);
 
     if (regs->psw.cc == 0)
     {

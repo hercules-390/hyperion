@@ -27,6 +27,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.47  2006/12/20 09:09:40  jj
+// Fix bogus log entries
+//
 // Revision 1.46  2006/12/20 04:26:20  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -294,22 +297,6 @@
 
   #endif // defined(GEN_MSC_ASSISTS) && defined(MSC_X86_IA64)
 
- /* Compare&Swap OBTAIN_MAINLOCKx macros */
- #if defined(OPTION_NO_CS_MAINLOCK)
-  #if defined(cmpxchg1)
-   #define OBTAIN_MAINLOCK1(_regs)
-   #define RELEASE_MAINLOCK1(_regs)
-  #endif
-  #if defined(cmpxchg4)
-   #define OBTAIN_MAINLOCK4(_regs)
-   #define RELEASE_MAINLOCK4(_regs)
-  #endif
-  #if defined(cmpxchg8)
-   #define OBTAIN_MAINLOCK8(_regs)
-   #define RELEASE_MAINLOCK8(_regs)
-  #endif
- #endif
-
 #else // !defined( _MSVC_ )
 /*-------------------------------------------------------------------*/
 /* GNU C or other compiler...   (i.e. NON-Microsoft C/C++)           */
@@ -530,22 +517,6 @@ static __inline__ void store_dw_i686(void *ptr, U64 value)
  while ( cmpxchg8 (&orig, CSWAP64(value), (U64 *)ptr) );
 }
 
- /* Compare&Swap OBTAIN_MAINLOCKx macros */
- #if defined(OPTION_NO_CS_MAINLOCK)
-  #if defined(cmpxchg1)
-   #define OBTAIN_MAINLOCK1(_regs)
-   #define RELEASE_MAINLOCK1(_regs)
-  #endif
-  #if defined(cmpxchg4)
-   #define OBTAIN_MAINLOCK4(_regs)
-   #define RELEASE_MAINLOCK4(_regs)
-  #endif
-  #if defined(cmpxchg8)
-   #define OBTAIN_MAINLOCK8(_regs)
-   #define RELEASE_MAINLOCK8(_regs)
-  #endif
- #endif
-
 #if defined(OPTION_MULTI_BYTE_ASSIST)
 #define MULTI_BYTE_ASSIST
 #define MULTI_BYTE_ASSIST_IA32
@@ -612,22 +583,6 @@ static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
  return code;
 }
 
- /* Compare&Swap OBTAIN_MAINLOCKx macros */
- #if defined(OPTION_NO_CS_MAINLOCK)
-  #if defined(cmpxchg1)
-   #define OBTAIN_MAINLOCK1(_regs)
-   #define RELEASE_MAINLOCK1(_regs)
-  #endif
-  #if defined(cmpxchg4)
-   #define OBTAIN_MAINLOCK4(_regs)
-   #define RELEASE_MAINLOCK4(_regs)
-  #endif
-  #if defined(cmpxchg8)
-   #define OBTAIN_MAINLOCK8(_regs)
-   #define RELEASE_MAINLOCK8(_regs)
-  #endif
- #endif
-
 #endif /* defined(_ext_amd64) */
 
 /*-------------------------------------------------------------------*/
@@ -684,22 +639,6 @@ U32  *ptr4, val4, old4, new4;
     *old = (old4 >> shift) & 0xff;
     return cc;
 }
-
- /* Compare&Swap OBTAIN_MAINLOCKx macros */
- #if defined(OPTION_NO_CS_MAINLOCK)
-  #if defined(cmpxchg1)
-   #define OBTAIN_MAINLOCK1(_regs)
-   #define RELEASE_MAINLOCK1(_regs)
-  #endif
-  #if defined(cmpxchg4)
-   #define OBTAIN_MAINLOCK4(_regs)
-   #define RELEASE_MAINLOCK4(_regs)
-  #endif
-  #if defined(cmpxchg8)
-   #define OBTAIN_MAINLOCK8(_regs)
-   #define RELEASE_MAINLOCK8(_regs)
-  #endif
- #endif
 
 #endif /* defined(_ext_ppc) */
 
@@ -871,29 +810,6 @@ static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volati
  }
  return code;
 }
-#endif
-
-/*
- * If OPTION_NO_CS_MAINLOCK is defined then the assembler assists
- * above may have defined OBTAIN_MAINLOCK1/4/8/16 so that the
- * MAINLOCK is not obtained during cmpxchg.  Otherwise define
- * these macros here to be equivalent to OBTAIN_MAINLOCK
- */
-#ifndef OBTAIN_MAINLOCK1
-#define OBTAIN_MAINLOCK1(_regs)   OBTAIN_MAINLOCK((_regs))
-#define RELEASE_MAINLOCK1(_regs)  RELEASE_MAINLOCK((_regs))
-#endif
-#ifndef OBTAIN_MAINLOCK4
-#define OBTAIN_MAINLOCK4(_regs)   OBTAIN_MAINLOCK((_regs))
-#define RELEASE_MAINLOCK4(_regs)  RELEASE_MAINLOCK((_regs))
-#endif
-#ifndef OBTAIN_MAINLOCK8
-#define OBTAIN_MAINLOCK8(_regs)   OBTAIN_MAINLOCK((_regs))
-#define RELEASE_MAINLOCK8(_regs)  RELEASE_MAINLOCK((_regs))
-#endif
-#ifndef OBTAIN_MAINLOCK16
-#define OBTAIN_MAINLOCK16(_regs)  OBTAIN_MAINLOCK((_regs))
-#define RELEASE_MAINLOCK16(_regs) RELEASE_MAINLOCK((_regs))
 #endif
 
 /*-------------------------------------------------------------------*/

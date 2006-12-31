@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.143  2006/12/20 09:09:40  jj
+// Fix bogus log entries
+//
 // Revision 1.142  2006/12/20 04:26:19  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -1240,13 +1243,13 @@ U32     old;                            /* old value                 */
     old = CSWAP32(regs->GR_L(r1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK4(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK4(regs);
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -1303,13 +1306,13 @@ U64     old, new;                       /* old, new values           */
     new = CSWAP64(((U64)(regs->GR_L(r3)) << 32) | regs->GR_L(r3+1));
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK8(regs);
+    OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg8 (&old, new, main2);
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK8(regs);
+    RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);

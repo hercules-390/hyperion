@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.120  2006/12/20 09:09:40  jj
+// Fix bogus log entries
+//
 // Revision 1.119  2006/12/20 04:26:19  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -36,7 +39,6 @@
 #undef  OPTION_NO_INLINE_LOGICAL        /* Performance option        */
 #undef  OPTION_NO_INLINE_VSTORE         /* Performance option        */
 #undef  OPTION_NO_INLINE_IFETCH         /* Performance option        */
-#define OPTION_NO_CS_MAINLOCK           /* Performance option        */
 #define OPTION_MULTI_BYTE_ASSIST        /* Performance option        */
 #define OPTION_FAST_DEVLOOKUP           /* Fast devnum/subchan lookup*/
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
