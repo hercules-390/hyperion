@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.201  2006/12/31 07:44:52  fish
+// Fix format of 'gpr' help info.
+//
 // Revision 1.200  2006/12/31 07:32:45  fish
 // Fix message number
 //
@@ -5343,7 +5346,9 @@ void *panel_command (void *cmdline)
 
     pCmdLine = cmdline; ASSERT(pCmdLine);
     /* every command will be stored in history list */
-    history_add(cmdline);
+    /* except null commands and script commands */
+    if (*pCmdLine != 0 && scr_recursion == 0)
+        history_add(cmdline);
 
     /* Copy panel command to work area, skipping leading blanks */
     while (*pCmdLine && isspace(*pCmdLine)) pCmdLine++;
