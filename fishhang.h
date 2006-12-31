@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.12  2006/12/28 15:49:35  fish
+// Use _beginthreadex/_endthreadex instead of CreateThread/ExitThread in continuing effort to try and resolve our still existing long-standing 'errno' issue...
+//
 // Revision 1.11  2006/12/08 09:43:21  jj
 // Add CVS message log
 //
@@ -105,8 +108,13 @@
     #define MyLeaveCriticalSection(pCS)                     (LeaveCriticalSection((CRITICAL_SECTION*)(pCS)))
     #define MyDeleteCriticalSection(pCS)                    (DeleteCriticalSection((CRITICAL_SECTION*)(pCS)))
 
+  #ifdef _MSVC_
     #define MyCreateThread(sec,stack,start,parm,flags,tid)  ((HANDLE) _beginthreadex((sec),(stack),(start),(parm),(flags),(tid)))
     #define MyExitThread(code)                              (_endthreadex((code)))
+  #else // (Cygwin)
+    #define MyCreateThread(sec,stack,start,parm,flags,tid)  (CreateThread((sec),(stack),(start),(parm),(flags),(tid)))
+    #define MyExitThread(code)                              (ExitThread((code)))
+  #endif
 
     #define MyCreateEvent(sec,man,set,name)                 (CreateEvent((sec),(man),(set),(name)))
     #define MySetEvent(h)                                   (SetEvent((h)))

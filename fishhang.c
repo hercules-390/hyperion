@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.16  2006/12/28 15:49:34  fish
+// Use _beginthreadex/_endthreadex instead of CreateThread/ExitThread in continuing effort to try and resolve our still existing long-standing 'errno' issue...
+//
 // Revision 1.15  2006/12/08 09:43:21  jj
 // Add CVS message log
 //
@@ -714,7 +717,11 @@ HANDLE FishHang_CreateThread
 
     if (!(pFISH_THREAD = CreateFISH_THREAD(pszFileCreated,nLineCreated))) return NULL;
 
+#ifdef _MSVC_
     hThread = (HANDLE) _beginthreadex
+#else // (Cygwin)
+    hThread = CreateThread
+#endif
     (
         lpThreadAttributes, // pointer to security attributes
         dwStackSize,        // initial thread stack size
