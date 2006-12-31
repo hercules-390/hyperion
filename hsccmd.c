@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.202  2006/12/31 13:44:10  rbowler
+// Omit null commands and script commands in panel command history
+//
 // Revision 1.201  2006/12/31 07:44:52  fish
 // Fix format of 'gpr' help info.
 //
@@ -1317,7 +1320,7 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
     if (sysblk.shcmdopt & SHCMDOPT_DISABLE)
     {
-        logmsg( _("HHCPN180E 'sh' commands are disabled\n"));
+        logmsg( _("HHCPN180E shell commands are disabled\n"));
         return -1;
     }
     cmd = cmdline + 2;
@@ -1326,6 +1329,49 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
         return herc_system (cmd);
     panel_command ("help sh");
     return -1;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* change directory command */
+
+int cd_cmd(int argc, char *argv[], char *cmdline)
+{
+    char* path;
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    if (sysblk.shcmdopt & SHCMDOPT_DISABLE)
+    {
+        logmsg( _("HHCPN180E shell commands are disabled\n"));
+        return -1;
+    }
+    path = cmdline + 2;
+    while (isspace(*path)) path++;
+    chdir(path);
+    panel_command("pwd");
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* print working directory command */
+
+int pwd_cmd(int argc, char *argv[], char *cmdline)
+{
+    char cwd [ MAX_PATH ];
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+    if (sysblk.shcmdopt & SHCMDOPT_DISABLE)
+    {
+        logmsg( _("HHCPN180E shell commands are disabled\n"));
+        return -1;
+    }
+    if (argc > 1)
+    {
+        logmsg( _("HHCPN163E Invalid format. Command does not support any arguments.\n"));
+        return -1;
+    }
+    getcwd( cwd, sizeof(cwd) );
+    logmsg("%s\n",cwd);
+    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1357,7 +1403,7 @@ REGS *regs;
         if (argc > 2)
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            logmsg( _("HHCPN162E Invalid format. .Enter \"help gpr\" for help.\n"));
+            logmsg( _("HHCPN162E Invalid format. Enter \"help gpr\" for help.\n"));
             return 0;
         }
 
@@ -4813,7 +4859,10 @@ COMMAND ( "qd",        qd_cmd,        "query dasd\n" )
 COMMAND ( "scsimount", scsimount_cmd, "automatic SCSI tape mounts\n" )
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
-COMMAND ( "sh",        sh_cmd,          "shell command" )
+COMMAND ( "cd",        cd_cmd,          "change directory command" )
+COMMAND ( "pwd",       pwd_cmd,         "print working directory command" )
+COMMAND ( "sh",        sh_cmd,          "shell command\n" )
+
 COMMAND ( "cache", EXT_CMD(cache_cmd),  "cache command" )
 COMMAND ( "cckd",      cckd_cmd,        "cckd command" )
 COMMAND ( "shrd",  EXT_CMD(shared_cmd), "shrd command" )
