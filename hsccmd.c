@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.199  2006/12/30 20:26:52  fish
+// Add ability to modify gpr reg values to gpr command
+//
 // Revision 1.198  2006/12/28 03:31:40  fish
 // Fix minor bug in new "QD" (query dasd) command RCD display causing garbled text display.
 //
@@ -1348,7 +1351,7 @@ REGS *regs;
         if (argc > 2)
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            logmsg( _("HHCPNxxxE Invalid format. .Enter \"help gpr\" for help.\n"));
+            logmsg( _("HHCPN162E Invalid format. .Enter \"help gpr\" for help.\n"));
             return 0;
         }
 
@@ -1360,7 +1363,7 @@ REGS *regs;
         )
         {
             release_lock(&sysblk.cpulock[sysblk.pcpu]);
-            logmsg( _("HHCPNxxxE Invalid format. .Enter \"help gpr\" for help.\n"));
+            logmsg( _("HHCPN162E Invalid format. .Enter \"help gpr\" for help.\n"));
             return 0;
         }
 
