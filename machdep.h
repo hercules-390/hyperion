@@ -27,6 +27,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.48  2006/12/31 21:16:32  gsmith
+// 2006 Dec 31 really back out mainlockx.pat
+//
 // Revision 1.47  2006/12/20 09:09:40  jj
 // Fix bogus log entries
 //
@@ -517,7 +520,7 @@ static __inline__ void store_dw_i686(void *ptr, U64 value)
  while ( cmpxchg8 (&orig, CSWAP64(value), (U64 *)ptr) );
 }
 
-#if defined(OPTION_MULTI_BYTE_ASSIST)
+#if defined(OPTION_MULTI_BYTE_ASSIST) && !defined(__CYGWIN__)
 #define MULTI_BYTE_ASSIST
 #define MULTI_BYTE_ASSIST_IA32
 #endif
