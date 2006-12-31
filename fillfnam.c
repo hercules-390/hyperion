@@ -1,6 +1,9 @@
-/ $Id$
+// $Id$
 //
 // $Log$
+// Revision 1.9  2006/12/31 11:31:21  fish
+// Fix cmdline tabbed filename-completion for MSVC
+//
 // Revision 1.8  2006/12/08 09:43:21  jj
 // Add CVS message log
 //
