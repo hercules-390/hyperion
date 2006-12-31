@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.21  2006/12/20 04:26:19  gsmith
+// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
+//
 // Revision 1.20  2006/12/08 09:43:21  jj
 // Add CVS message log
 //
@@ -27,8 +30,7 @@
 #define FEATURE_CHANNEL_SWITCHING
 #define FEATURE_S370E_EXTENDED_ADDRESSING
 #define FEATURE_TEST_BLOCK
-//temporary
-#undef FEATURE_ECPSVM
+#define FEATURE_ECPSVM
 
 #endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */
