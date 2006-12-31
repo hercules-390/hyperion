@@ -1,3 +1,4 @@
+31 Dec 2006 Fix cmdline tabbed filename-completion for MSVC - Fish
 30 Dec 2006 Add ability to modify gpr reg values to gpr command - Fish
 30 Dec 2006 PR# build_msc/103: fix MSVC diag 8 'sh' capture - Fish
 27 Dec 2006 Permanently disable Microsoft's completely INSANE

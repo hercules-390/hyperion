@@ -1,6 +1,9 @@
-// $Id$
+/ $Id$
 //
 // $Log$
+// Revision 1.8  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -34,11 +37,29 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   char *filename, *path, *tmp;
   char result[1024];
   char pathname[MAX_PATH];
+#ifdef _MSVC_
+  int within_quoted_string = 0;
+  int quote_pos;
+#endif
 
   /* part3 goes from cursor position to the end of line */
   part3 = cmdlinefull + cmdoff;
   /* looking for ' ','@' or '=' backward, starting from cursor offset
      I am not aware of any other delimiters which can be used in hercules */
+  /* (except for '"' (double quote) for the MSVC version of herc - Fish) */
+#ifdef _MSVC_
+  /* determine if tab was pressed within a quoted string */
+  for (i=0; i < cmdoff; i++)
+      if ('\"' == cmdlinefull[i])
+      {
+          within_quoted_string = !within_quoted_string;
+          quote_pos = i; /* (save position of quote
+                         immediately preceding cmdoff) */
+      }
+  if (within_quoted_string)
+    i = quote_pos; /* (the quote is our delimiter) */
+  else
+#endif
   for (i = cmdoff-1; i>=0; i--)
     if (cmdlinefull[i] == ' '
        || cmdlinefull[i] == '@'
@@ -56,12 +77,25 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
 
   len = strlen(part2);
   /* 3 characters minimum needed, for ./\0 in path. */
+  /* (or 4 chars for MSVC if within quoted string, for \"./\0 - Fish) */
+#ifdef _MSVC_
+  if (within_quoted_string)
+  {
+    if (len < 3)
+      len = 3;
+  }
+  else
+#endif
   if (len < 2)
     len = 2;
   path = (char*)malloc(len + 1);
+  *path = '\0';
   filename = part2;
   /* is it pure filename or is there whole path ? */
   tmp = strrchr(part2, '/');
+#ifdef _MSVC_
+  if (!tmp) tmp = strrchr(part2, '\\');
+#endif
   if (tmp != NULL) {
     filename = tmp + 1;
     strncpy(path, part2, strlen(part2)-strlen(filename));
@@ -69,6 +103,11 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
     tmp[0] = '\0';
   }
   else {
+#ifdef _MSVC_
+    if (within_quoted_string)
+      strcpy(path,"\"./");
+    else
+#endif
     strcpy(path,"./");
   }
   /* this is used in filter function to include only relevant filenames */
@@ -78,13 +117,17 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   if (n > 0) {
     for (i=0; i<n; i++) {
       struct stat buf;
-      char fullfilename[256];
+      char fullfilename[1+MAX_PATH+1];
       /* namelist[i]->d_name contains filtered filenames, check if they are
          directories with stat(), before that create whole path */
       if (tmp != NULL)
          sprintf(fullfilename, "%s%s", path, namelist[i]->d_name);
       else
          sprintf(fullfilename, "%s", namelist[i]->d_name);
+#ifdef _MSVC_
+      if (within_quoted_string)
+        strlcat(fullfilename,"\"",sizeof(fullfilename));
+#endif
       /* if it is a directory, add '/' to the end so it can be seen on screen*/
       hostpath(pathname, fullfilename, sizeof(pathname));
       if (stat(pathname,&buf) == 0)
