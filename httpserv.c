@@ -30,6 +30,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.72  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -663,7 +666,6 @@ TID                     httptid;        /* Negotiation thread id     */
        ending with a '/' and save in sysblk.httproot. */
     {
         char absolute_httproot_path[HTTP_PATH_LENGTH];
-        char save_working_directory[HTTP_PATH_LENGTH];
         int  rc;
 #if defined(_MSVC_)
         /* Expand any embedded %var% environ vars */
@@ -683,10 +685,10 @@ TID                     httptid;        /* Negotiation thread id     */
             return NULL;
         }
         /* Verify that the absolute path is valid */
-        VERIFY(getcwd(save_working_directory,sizeof(save_working_directory)));
-        rc = chdir(absolute_httproot_path);     // (verify path)
-        VERIFY(!chdir(save_working_directory)); // (restore cwd)
-        if (rc != 0)
+        // mode: 0 = exist only, 2 = write, 4 = read, 6 = read/write
+        // rc: 0 = success, -1 = error (errno = cause)
+        // ENOENT = File name or path not found.
+        if (access( absolute_httproot_path, 4 ) != 0)
         {
             logmsg( _("HHCCF066E Invalid HTTPROOT: \"%s\": %s\n"),
                    absolute_httproot_path, strerror(errno));

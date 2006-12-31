@@ -1,3 +1,4 @@
+31 Dec 2006 Fix PR# misc/94 for good this time! (hopefully) - Fish
 31 Dec 2006 new 'cd' and 'pwd' commands to go with 'sh' command - Fish
 31 Dec 2006 Fix cmdline tabbed filename-completion for MSVC - Fish
 30 Dec 2006 Add ability to modify gpr reg values to gpr command - Fish
