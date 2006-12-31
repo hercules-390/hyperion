@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.200  2006/12/31 07:32:45  fish
+// Fix message number
+//
 // Revision 1.199  2006/12/30 20:26:52  fish
 // Add ability to modify gpr reg values to gpr command
 //
@@ -5162,14 +5165,10 @@ CMDHELP ( "!message",  "To enter a system control program (i.e. guest operating 
                        )
 #endif
 
-CMDHELP ( "gpr",       "Format:\n\n"
-
-                       "     gpr [nn=xxxxxxxxxxxxxxxx]\"\n\n"
-
-                       "where 'nn' is the optional register number (0 to 15) and 'xxxxxxxxxxxxxxxx'\n"
-                       "is the register value in hexadecimal (1-8 hex digits for 32-bit registers\n"
-                       "or 1-16 hex digits for 64-bit registers). Enter \"gpr\" by itself to display\n"
-                       "the register values without altering them.\n"
+CMDHELP ( "gpr",       "Format: gpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional register\n"
+                       "number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the register value in hexadecimal\n"
+                       "(1-8 hex digits for 32-bit registers or 1-16 hex digits for 64-bit registers).\n"
+                       "Enter \"gpr\" by itself to display the register values without altering them.\n"
                        )
 CMDHELP ( "r",         "Format: \"r addr[.len]\" or \"r addr-addr\" to display real\n"
                        "storage, or \"r addr=value\" to alter real storage, where 'value'\n"
