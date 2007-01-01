@@ -134,12 +134,20 @@ to allow Hercules to open it.
 <li>Use the following commands to set the necessary permissions:
     <code>
     <br>su </code>(enter the root password when prompted)<code>
-    <br>chgrp <em>xxxxx</em> /dev/net/tun
+    <br>chown root:<em>xxxxx</em> /dev/net/tun
         </code>(where <em>xxxxx</em> is the group under which
                 you run Hercules)<code>
-    <br>chmod g+rw /dev/net/tun
-    <br>chmod o-rw /dev/net/tun
+    <br>chmod 0660 /dev/net/tun
     </code>
+<li><i>Additional notes from Greg Smith:</i>
+    <ol>
+    <li>I find on my Fedora Core 6 system that I have to add the above 2 commands
+        to /etc/rc.local and update /etc/rules.d/50-udev.rules with similar
+        information.
+    <li>In the hercules log you should see /dev/net/tun0 opened. I get a couple
+        of error messages about SIOCDIFADDR and SIOCSIFHWADDR ioctl's failing
+        but these can be ignored (maybe I'll fix that soon).
+    </ol>
 </ul>
 <p>
 In Linux 2.6 the file <b><i>/etc/modules.conf</i></b> no longer exists,
