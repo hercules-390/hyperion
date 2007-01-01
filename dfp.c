@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.31  2006/12/30 20:55:03  rbowler
+// Decimal Floating Point: ADTR instruction
+//
 // Revision 1.30  2006/12/30 15:54:18  rbowler
 // Decimal Floating Point: LDETR correction
 //
@@ -360,6 +363,53 @@ int             cc;                     /* Condition code            */
 
     return cc;
 } /* end function dfp_compare_exponent */
+
+/*-------------------------------------------------------------------*/
+/* Convert 64-bit signed binary integer to decimal number            */
+/*                                                                   */
+/* This subroutine is called by the CDGTR and CXGTR instructions.    */
+/* It converts a 64-bit signed binary integer value into a           */
+/* decimal number structure. The inexact condition will be set       */
+/* in the decimal context structure if the number is rounded to      */
+/* fit the maximum number of digits specified in the context.        */
+/*                                                                   */
+/* Input:                                                            */
+/*      dn      Pointer to decimal number structure                  */
+/*      n       64-bit signed binary integer value                   */
+/*      pset    Pointer to decimal number context structure          */
+/* Output:                                                           */
+/*      The decimal number structure is updated.                     */
+/*-------------------------------------------------------------------*/
+static void
+dfp_number_from_fix64(decNumber *dn, S64 n, decContext *pset)
+{
+int             sign = 0;               /* Sign of binary integer    */
+int             i;                      /* Counter                   */
+BYTE            zoned[32];              /* Zoned decimal work area   */
+static BYTE     maxnegzd[]="-9223372036854775808";
+static U64      maxneg64 = 0x8000000000000000ULL;
+
+    /* Handle maximum negative number as special case */
+    if (n == maxneg64)
+    {
+        decNumberFromString(dn, maxnegzd, pset);
+        return;
+    }
+
+    /* Convert binary value to zoned decimal */
+    if (n < 0) { n = -n; sign = 1; }
+    i = sizeof(zoned) - 1;
+    zoned[i] = '\0';
+    do {
+        zoned[--i] = (n % 10) + '0';
+        n /= 10;
+    } while(i > 1 && n > 0);
+    if (sign) zoned[--i] = '-';
+
+    /* Convert zoned decimal value to decimal number structure */
+    decNumberFromString(dn, zoned+i, pset);
+
+} /* end function dfp_number_from_fix64 */
 
 /*-------------------------------------------------------------------*/
 /* Check if IEEE-interruption-simulation event is to be recognized   */
@@ -1089,7 +1139,49 @@ decContext      set;                    /* Working context           */
 
 
 UNDEF_INST(compare_exponent_dfp_long_reg)
-UNDEF_INST(convert_fix64_to_dfp_ext_reg)
+/*-------------------------------------------------------------------*/
+/* B3F9 CXGTR - Convert from fixed 64 to DFP Extended Register [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_fix64_to_dfp_ext_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+S64             n2;                     /* Value of R2 register      */
+decimal128      x1;                     /* Extended DFP values       */
+decNumber       d1;                     /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r1, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
+
+    /* Load 64-bit binary integer value from r2 register */
+    n2 = (S64)(regs->GR_G(r2));
+
+    /* Convert binary integer to extended DFP format */
+    dfp_number_from_fix64(&d1, n2, &set);
+    decimal128FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(convert_fix64_to_dfp_ext_reg) */
+
+
 UNDEF_INST(convert_fix64_to_dfp_long_reg)
 
 /*-------------------------------------------------------------------*/
