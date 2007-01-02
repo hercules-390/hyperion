@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.42  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -181,7 +184,7 @@ U32   code;
         ON_IC_INTERRUPT(regs);
 
         /* Release the configuration */
-        release_config();
+        do_shutdown();
 
         /* Power Off: exit hercules */
         exit(0);
@@ -560,7 +563,7 @@ U32   code;
     /*  Power Off diagnose on 4361, 9371, 9373, 9375, 9377, 9221:    */
     /*                                                               */
     /*          DS 0H                                                */
-    /*          DC X'8302',S(SHUTDATA)     MUST BE R1 AND R2         */
+    /*          DC X'8302',S(SHUTDATA)     MUST BE R0 AND R2         */
     /*          ...                                                  */
     /*          DS 0H                                                */
     /* SHUTDATA DC X'0000FFFF'             MUST BE X'0000FFFF'       */
@@ -584,7 +587,7 @@ U32   code;
             ON_IC_INTERRUPT(regs);
 
             /* Release the configuration */
-            release_config();
+            do_shutdown();
 
             /* Power Off: exit hercules */
             exit(0);

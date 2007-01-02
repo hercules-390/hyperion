@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.191  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -123,33 +126,45 @@ int deconfigure_cpu(int cpu)
 {
 int   i;
 
-    if (!IS_CPU_ONLINE(cpu))
-        return -1;
-
-    sysblk.regs[cpu]->configured = 0;
-    sysblk.regs[cpu]->cpustate = CPUSTATE_STOPPING;
-    ON_IC_INTERRUPT(sysblk.regs[cpu]);
-
-    /* Wake up CPU as it may be waiting */
-    WAKEUP_CPU (sysblk.regs[cpu]);
-
-
     /* Find out if we are a cpu thread */
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         if (sysblk.cputid[i] == thread_id())
             break;
 
-    if (i < MAX_CPU_ENGINES)
-        sysblk.regs[i]->intwait = 1;
+    /* If we're NOT a CPU thread... */
+    if (cpu != i)
+    {
+        if (!IS_CPU_ONLINE(cpu))
+            return -1;
 
-    /* Wait for CPU thread to terminate */
-    wait_condition (&sysblk.cpucond, &sysblk.intlock);
+        /* Deconfigure CPU */
+        sysblk.regs[cpu]->configured = 0;
+        sysblk.regs[cpu]->cpustate = CPUSTATE_STOPPING;
+        ON_IC_INTERRUPT(sysblk.regs[cpu]);
 
-    if (i < MAX_CPU_ENGINES)
-        sysblk.regs[i]->intwait = 0;
+        /* Wake up CPU as it may be waiting */
+        WAKEUP_CPU (sysblk.regs[cpu]);
 
-    join_thread (sysblk.cputid[cpu], NULL);
-    detach_thread( sysblk.cputid[cpu] );
+        if (i < MAX_CPU_ENGINES)
+            sysblk.regs[i]->intwait = 1;
+
+        /* Wait for CPU thread to terminate */
+        wait_condition (&sysblk.cpucond, &sysblk.intlock);
+
+        if (i < MAX_CPU_ENGINES)
+            sysblk.regs[i]->intwait = 0;
+
+        join_thread (sysblk.cputid[cpu], NULL);
+        detach_thread( sysblk.cputid[cpu] );
+    }
+    else
+    {
+        /* Else we ARE a CPU thread */
+        sysblk.regs[cpu]->configured = 0;
+        sysblk.regs[cpu]->cpustate = CPUSTATE_STOPPING;
+        ON_IC_INTERRUPT(sysblk.regs[cpu]);
+    }
+
     sysblk.cputid[cpu] = 0;
 
     return 0;
