@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.33  2007/01/02 11:39:32  rbowler
+// Decimal Floating Point: CDGTR instruction
+//
 // Revision 1.32  2007/01/01 23:41:23  rbowler
 // Decimal Floating Point: CXGTR instruction
 //
@@ -1059,7 +1062,46 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(compare_dfp_ext_reg) */
 
 
-UNDEF_INST(compare_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3E4 CDTR  - Compare DFP Long Register                      [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_dfp_long_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal64       x1, x2;                 /* Long DFP values           */
+decNumber       d1, d2, dr;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Compare FP register r1 with FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r1, &x1, regs);
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x1, &d1);
+    decimal64ToNumber(&x2, &d2);
+    decNumberCompare(&dr, &d1, &d2, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Set condition code */
+    regs->psw.cc = decNumberIsNaN(&dr) ? 3 :
+                   decNumberIsZero(&dr) ? 0 :
+                   decNumberIsNegative(&dr) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_dfp_long_reg) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1109,7 +1151,50 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(compare_and_signal_dfp_ext_reg) */
 
 
-UNDEF_INST(compare_and_signal_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3E0 KDTR  - Compare and Signal DFP Long Register           [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_and_signal_dfp_long_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal64       x1, x2;                 /* Long DFP values           */
+decNumber       d1, d2, dr;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Compare FP register r1 with FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r1, &x1, regs);
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x1, &d1);
+    decimal64ToNumber(&x2, &d2);
+    decNumberCompare(&dr, &d1, &d2, &set);
+
+    /* Force signaling condition if result is a NaN */
+    if (decNumberIsNaN(&dr))
+        set.status |= DEC_IEEE_854_Invalid_operation;
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Set condition code */
+    regs->psw.cc = decNumberIsNaN(&dr) ? 3 :
+                   decNumberIsZero(&dr) ? 0 :
+                   decNumberIsNegative(&dr) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_and_signal_dfp_long_reg) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1141,7 +1226,34 @@ decContext      set;                    /* Working context           */
 } /* end DEF_INST(compare_exponent_dfp_ext_reg) */
 
 
-UNDEF_INST(compare_exponent_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3F4 CEDTR - Compare Exponent DFP Long Register             [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_exponent_dfp_long_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal64       x1, x2;                 /* Long DFP values           */
+decNumber       d1, d2;                 /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Convert FP register values to numbers */
+    ARCH_DEP(dfp_reg_to_decimal64)(r1, &x1, regs);
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x1, &d1);
+    decimal64ToNumber(&x2, &d2);
+
+    /* Compare exponents and set condition code */
+    regs->psw.cc = dfp_compare_exponent(&d1, &d2);
+
+} /* end DEF_INST(compare_exponent_dfp_long_reg) */
+
+
 /*-------------------------------------------------------------------*/
 /* B3F9 CXGTR - Convert from fixed 64 to DFP Extended Register [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1441,7 +1553,46 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(divide_dfp_ext_reg) */
 
 
-UNDEF_INST(divide_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3D1 DDTR  - Divide DFP Long Register                       [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(divide_dfp_long_reg)
+{
+int             r1, r2, r3;             /* Values of R fields        */
+decimal64       x1, x2, x3;             /* Long DFP values           */
+decNumber       d1, d2, d3;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRR(inst, regs, r1, r2, r3);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
+
+    /* Divide FP register r2 by FP register r3 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    ARCH_DEP(dfp_reg_to_decimal64)(r3, &x3, regs);
+    decimal64ToNumber(&x2, &d2);
+    decimal64ToNumber(&x3, &d3);
+    decNumberDivide(&d1, &d2, &d3, &set);
+    decimal64FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(divide_dfp_long_reg) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1484,7 +1635,43 @@ S64             exponent;               /* Biased exponent           */
 } /* end DEF_INST(extract_biased_exponent_dfp_ext_to_fix64_reg) */
 
 
-UNDEF_INST(extract_biased_exponent_dfp_long_to_fix64_reg)
+/*-------------------------------------------------------------------*/
+/* B3E5 EEDTR - Extract Biased Exponent DFP Long Register      [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(extract_biased_exponent_dfp_long_to_fix64_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal64       x2;                     /* Long DFP value            */
+decNumber       d2;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+S64             exponent;               /* Biased exponent           */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Load DFP long number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+
+    /* Convert to internal decimal number format */
+    decimal64ToNumber(&x2, &d2);
+
+    /* Calculate the biased exponent */
+    if (decNumberIsInfinite(&d2))
+        exponent = -1;
+    else if (decNumberIsQNaN(&d2))
+        exponent = -2;
+    else if (decNumberIsSNaN(&d2))
+        exponent = -3;
+    else
+        exponent = d2.exponent + DECIMAL64_Bias;
+
+    /* Load result into general register r1 */
+    regs->GR(r1) = exponent;
+
+} /* end DEF_INST(extract_biased_exponent_dfp_long_to_fix64_reg) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1529,7 +1716,47 @@ S64             digits;                 /* Number of decimal digits  */
 } /* end DEF_INST(extract_significance_dfp_ext_reg) */
 
 
-UNDEF_INST(extract_significance_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3E7 ESDTR - Extract Significance DFP Long Register         [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(extract_significance_dfp_long_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal64       x2;                     /* Long DFP value            */
+decNumber       d2;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+S64             digits;                 /* Number of decimal digits  */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Load DFP long number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+
+    /* Convert to internal decimal number format */
+    decimal64ToNumber(&x2, &d2);
+
+    /* Calculate number of significant digits */
+    if (decNumberIsZero(&d2))
+        digits = 0;
+    else if (decNumberIsInfinite(&d2))
+        digits = -1;
+    else if (decNumberIsQNaN(&d2))
+        digits = -2;
+    else if (decNumberIsSNaN(&d2))
+        digits = -3;
+    else
+        digits = d2.digits;
+
+    /* Load result into general register r1 */
+    regs->GR(r1) = digits;
+
+} /* end DEF_INST(extract_significance_dfp_long_reg) */
+
+
 UNDEF_INST(insert_biased_exponent_fix64_to_dfp_ext_reg)
 UNDEF_INST(insert_biased_exponent_fix64_to_dfp_long_reg)
 /*-------------------------------------------------------------------*/
