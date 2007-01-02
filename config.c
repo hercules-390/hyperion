@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.192  2007/01/02 18:46:16  fish
+// Fix bug in deconfigure_cpu function & tweak power-off diagnose instructions so that they actually work properly now
+//
 // Revision 1.191  2006/12/08 09:43:18  jj
 // Add CVS message log
 //
@@ -131,7 +134,7 @@ int   i;
         if (sysblk.cputid[i] == thread_id())
             break;
 
-    /* If we're NOT a CPU thread... */
+    /* If we're NOT trying to deconfigure ourselves */
     if (cpu != i)
     {
         if (!IS_CPU_ONLINE(cpu))
@@ -145,12 +148,14 @@ int   i;
         /* Wake up CPU as it may be waiting */
         WAKEUP_CPU (sysblk.regs[cpu]);
 
+        /* (if we're a cpu thread) */
         if (i < MAX_CPU_ENGINES)
             sysblk.regs[i]->intwait = 1;
 
         /* Wait for CPU thread to terminate */
         wait_condition (&sysblk.cpucond, &sysblk.intlock);
 
+        /* (if we're a cpu thread) */
         if (i < MAX_CPU_ENGINES)
             sysblk.regs[i]->intwait = 0;
 
@@ -159,7 +164,7 @@ int   i;
     }
     else
     {
-        /* Else we ARE a CPU thread */
+        /* Else we ARE trying to deconfigure ourselves */
         sysblk.regs[cpu]->configured = 0;
         sysblk.regs[cpu]->cpustate = CPUSTATE_STOPPING;
         ON_IC_INTERRUPT(sysblk.regs[cpu]);
