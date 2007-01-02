@@ -1,4 +1,4 @@
-/* DFP.C        (c) Copyright Roger Bowler, 2006                     */
+/* DFP.C        (c) Copyright Roger Bowler, 2006-2007                */
 /*              Decimal Floating Point instructions                  */
 
 // $Id$
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.32  2007/01/01 23:41:23  rbowler
+// Decimal Floating Point: CXGTR instruction
+//
 // Revision 1.31  2006/12/30 20:55:03  rbowler
 // Decimal Floating Point: ADTR instruction
 //
@@ -1146,10 +1149,9 @@ DEF_INST(convert_fix64_to_dfp_ext_reg)
 {
 int             r1, r2;                 /* Values of R fields        */
 S64             n2;                     /* Value of R2 register      */
-decimal128      x1;                     /* Extended DFP values       */
-decNumber       d1;                     /* Working decimal numbers   */
+decimal128      x1;                     /* Extended DFP value        */
+decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
-BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
     DFPINST_CHECK(regs);
@@ -1166,11 +1168,43 @@ BYTE            dxc;                    /* Data exception code       */
     dfp_number_from_fix64(&d1, n2, &set);
     decimal128FromNumber(&x1, &d1, &set);
 
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+} /* end DEF_INST(convert_fix64_to_dfp_ext_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B3F1 CDGTR - Convert from fixed 64 to DFP Long Register     [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_fix64_to_dfp_long_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+S64             n2;                     /* Value of R2 register      */
+decimal64       x1;                     /* Long DFP value            */
+decNumber       d1;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
+
+    /* Load 64-bit binary integer value from r2 register */
+    n2 = (S64)(regs->GR_G(r2));
+
+    /* Convert binary integer to long DFP format */
+    dfp_number_from_fix64(&d1, n2, &set);
+    decimal64FromNumber(&x1, &d1, &set);
+
     /* Check for exception condition */
     dxc = ARCH_DEP(dfp_status_check)(&set, regs);
 
     /* Load result into FP register r1 */
-    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
 
     /* Raise data exception if error occurred */
     if (dxc != 0)
@@ -1179,10 +1213,8 @@ BYTE            dxc;                    /* Data exception code       */
         ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
     }
 
-} /* end DEF_INST(convert_fix64_to_dfp_ext_reg) */
+} /* end DEF_INST(convert_fix64_to_dfp_long_reg) */
 
-
-UNDEF_INST(convert_fix64_to_dfp_long_reg)
 
 /*-------------------------------------------------------------------*/
 /* B3FB CXSTR - Convert from signed BCD (128-bit to DFP ext)   [RRE] */
