@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.35  2007/01/03 16:05:35  rbowler
+// Decimal Floating Point: TDCDT instruction
+//
 // Revision 1.34  2007/01/02 12:33:46  rbowler
 // Decimal Floating Point: CDTR,KDTR,CEDTR,DDTR,EEDTR,ESDTR instructions
 //
@@ -562,9 +565,10 @@ dfp_test_data_group(decContext *pset, decNumber *dn, int lmd, U32 bits)
 {
 int             bitn;                   /* Bit number                */
 int             extreme;                /* 1=exponent is min or max  */
+int             exp;                    /* Adjusted exponent         */
 
-    extreme = (dn->exponent == pset->emin)
-               || (dn->exponent == pset->emax);
+    exp = dn->exponent + pset->digits - 1;
+    extreme = (exp == pset->emin) || (exp == pset->emax);
 
     if (decNumberIsZero(dn))
         bitn = extreme ?
@@ -2306,7 +2310,44 @@ int             lmd;                    /* Leftmost digit            */
 } /* end DEF_INST(test_data_group_dfp_ext) */
 
 
-UNDEF_INST(test_data_group_dfp_long)
+/*-------------------------------------------------------------------*/
+/* ED55 TDGDT - Test Data Group DFP Long                       [RXE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(test_data_group_dfp_long)
+{
+int             r1;                     /* Value of R field          */
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+decimal64       x1;                     /* Long DFP value            */
+decNumber       d1;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+U32             bits;                   /* Low 12 bits of address    */
+int             lmd;                    /* Leftmost digit            */
+
+    RXE(inst, regs, r1, b2, effective_addr2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Load DFP long number from FP register r1 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r1, &x1, regs);
+
+    /* Extract the leftmost digit from FP register r1 */
+    lmd = dfp64_extract_lmd(&x1);
+
+    /* Convert to internal decimal number format */
+    decimal64ToNumber(&x1, &d1);
+
+    /* Isolate rightmost 12 bits of second operand address */
+    bits = effective_addr2 & 0xFFF;
+
+    /* Test data group and set condition code */
+    regs->psw.cc = dfp_test_data_group(&set, &d1, lmd, bits);
+
+} /* end DEF_INST(test_data_group_dfp_long) */
+
+
 UNDEF_INST(test_data_group_dfp_short)
 
 #endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
