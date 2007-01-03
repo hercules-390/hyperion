@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.71  2006/12/20 04:26:19  gsmith
+// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
+//
 // Revision 1.70  2006/12/08 09:43:21  jj
 // Add CVS message log
 //
@@ -90,6 +93,7 @@
 #undef RADR
 #undef F_RADR
 #undef VADR
+#undef VADR_L
 #undef F_VADR
 #undef GREG
 #undef F_GREG
@@ -189,6 +193,7 @@ s370_ ## _name
 #define F_RADR  "%8.8"I64_FMT"X"
 #endif
 #define VADR    U32
+#define VADR_L  VADR
 #define F_VADR  "%8.8"I32_FMT"X"
 #define GREG    U32
 #define F_GREG  "%8.8"I32_FMT"X"
@@ -295,6 +300,7 @@ s390_ ## _name
 #define F_RADR  "%8.8"I64_FMT"X"
 #endif
 #define VADR    U32
+#define VADR_L  VADR
 #define F_VADR  "%8.8"I32_FMT"X"
 #define GREG    U32
 #define F_GREG  "%8.8"I32_FMT"X"
@@ -415,6 +421,11 @@ z900_ ## _name
 #endif
 #define F_RADR  "%16.16"I64_FMT"X"
 #define VADR    U64
+#if SIZEOF_INT == 4
+#define VADR_L  U32
+#else
+#define VADR_L  VADR
+#endif
 #define F_VADR  "%16.16"I64_FMT"X"
 #define GREG    U64
 #define F_GREG  "%16.16"I64_FMT"X"

@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.191  2006/12/20 10:47:52  rbowler
+// Correct warning C4013: 'RRF_M4_DECODER_TEST' undefined
+//
 // Revision 1.190  2006/12/20 04:26:20  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -831,7 +834,7 @@ do { \
 
 #endif /*!defined(FEATURE_BASIC_FP_EXTENSIONS)*/
 
-#define TLBIX(_addr) (((_addr) >> TLB_PAGESHIFT) & TLB_MASK)
+#define TLBIX(_addr) (((VADR_L)(_addr) >> TLB_PAGESHIFT) & TLB_MASK)
 
 #define MAINADDR(_main, _addr) \
    (BYTE*)((uintptr_t)(_main) ^ (uintptr_t)(_addr))
