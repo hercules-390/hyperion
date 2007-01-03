@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.36  2007/01/03 16:54:19  rbowler
+// Decimal Floating Point: TDGDT instruction, TDGXT correction
+//
 // Revision 1.35  2007/01/03 16:05:35  rbowler
 // Decimal Floating Point: TDCDT instruction
 //
@@ -1818,7 +1821,57 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(load_and_test_dfp_ext_reg) */
 
 
-UNDEF_INST(load_and_test_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3D6 LTDTR - Load and Test DFP Long Register                [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_test_dfp_long_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+decimal64       x1, x2;                 /* Long DFP values           */
+decNumber       d;                      /* Working decimal number    */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Load value from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x2, &d);
+
+    /* For SNaN, force signaling condition and convert to QNaN */
+    if (decNumberIsSNaN(&d))
+    {
+        set.status |= DEC_IEEE_854_Invalid_operation;
+        d.bits &= ~DECSNAN;
+        d.bits |= DECNAN;
+    } 
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Reencode value and load into FP register r1 */
+    decimal64FromNumber(&x1, &d, &set);
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+    /* Set condition code */
+    regs->psw.cc = decNumberIsNaN(&d) ? 3 :
+                   decNumberIsZero(&d) ? 0 :
+                   decNumberIsNegative(&d) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(load_and_test_dfp_long_reg) */
+
+
 UNDEF_INST(load_fp_int_dfp_ext_reg)
 UNDEF_INST(load_fp_int_dfp_long_reg)
 
@@ -2040,7 +2093,46 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(multiply_dfp_ext_reg) */
 
 
-UNDEF_INST(multiply_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3D0 MDTR  - Multiply DFP Long Register                     [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_dfp_long_reg)
+{
+int             r1, r2, r3;             /* Values of R fields        */
+decimal64       x1, x2, x3;             /* Long DFP values           */
+decNumber       d1, d2, d3;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRR(inst, regs, r1, r2, r3);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
+
+    /* Multiply FP register r2 by FP register r3 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    ARCH_DEP(dfp_reg_to_decimal64)(r3, &x3, regs);
+    decimal64ToNumber(&x2, &d2);
+    decimal64ToNumber(&x3, &d3);
+    decNumberMultiply(&d1, &d2, &d3, &set);
+    decimal64FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(multiply_dfp_long_reg) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2086,7 +2178,48 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(quantize_dfp_ext_reg) */
 
 
-UNDEF_INST(quantize_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3F5 QADTR - Quantize DFP Long Register                     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(quantize_dfp_long_reg)
+{
+int             r1, r2, r3, m4;         /* Values of R and M fields  */
+decimal64       x1, x2, x3;             /* Long DFP values           */
+decNumber       d1, d2, d3;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_RM(inst, regs, r1, r2, r3, m4);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, m4, regs);
+
+    /* Quantize FP register r3 using FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    ARCH_DEP(dfp_reg_to_decimal64)(r3, &x3, regs);
+    decimal64ToNumber(&x2, &d2);
+    decimal64ToNumber(&x3, &d3);
+    decNumberQuantize(&d1, &d2, &d3, &set);
+    decimal64FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(quantize_dfp_long_reg) */
+
+
 UNDEF_INST(reround_dfp_ext_reg)
 UNDEF_INST(reround_dfp_long_reg)
 
@@ -2200,7 +2333,51 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(subtract_dfp_ext_reg) */
 
 
-UNDEF_INST(subtract_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3D3 SDTR  - Subtract DFP Long Register                     [RRR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_dfp_long_reg)
+{
+int             r1, r2, r3;             /* Values of R fields        */
+decimal64       x1, x2, x3;             /* Long DFP values           */
+decNumber       d1, d2, d3;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRR(inst, regs, r1, r2, r3);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
+
+    /* Subtract FP register r3 from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    ARCH_DEP(dfp_reg_to_decimal64)(r3, &x3, regs);
+    decimal64ToNumber(&x2, &d2);
+    decimal64ToNumber(&x3, &d3);
+    decNumberSubtract(&d1, &d2, &d3, &set);
+    decimal64FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+    /* Set condition code */
+    regs->psw.cc = decNumberIsNaN(&d1) ? 3 :
+                   decNumberIsZero(&d1) ? 0 :
+                   decNumberIsNegative(&d1) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(subtract_dfp_long_reg) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2268,7 +2445,36 @@ U32             bits;                   /* Low 12 bits of address    */
 } /* end DEF_INST(test_data_class_dfp_long) */
 
 
-UNDEF_INST(test_data_class_dfp_short)
+/*-------------------------------------------------------------------*/
+/* ED50 TDCET - Test Data Class DFP Short                      [RXE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(test_data_class_dfp_short)
+{
+int             r1;                     /* Value of R field          */
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+decimal32       x1;                     /* Short DFP value           */
+decNumber       d1;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+U32             bits;                   /* Low 12 bits of address    */
+
+    RXE(inst, regs, r1, b2, effective_addr2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for short DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL32);
+
+    /* Convert FP register r1 to decimal number format */
+    ARCH_DEP(dfp_reg_to_decimal32)(r1, &x1, regs);
+    decimal32ToNumber(&x1, &d1);
+
+    /* Isolate rightmost 12 bits of second operand address */
+    bits = effective_addr2 & 0xFFF;
+
+    /* Test data class and set condition code */
+    regs->psw.cc = dfp_test_data_class(&set, &d1, bits);
+
+} /* end DEF_INST(test_data_class_dfp_short) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2348,7 +2554,42 @@ int             lmd;                    /* Leftmost digit            */
 } /* end DEF_INST(test_data_group_dfp_long) */
 
 
-UNDEF_INST(test_data_group_dfp_short)
+/*-------------------------------------------------------------------*/
+/* ED51 TDGET - Test Data Group DFP Short                      [RXE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(test_data_group_dfp_short)
+{
+int             r1;                     /* Value of R field          */
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+decimal32       x1;                     /* Short DFP value           */
+decNumber       d1;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+U32             bits;                   /* Low 12 bits of address    */
+int             lmd;                    /* Leftmost digit            */
+
+    RXE(inst, regs, r1, b2, effective_addr2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for short DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL32);
+
+    /* Load DFP short number from FP register r1 */
+    ARCH_DEP(dfp_reg_to_decimal32)(r1, &x1, regs);
+
+    /* Extract the leftmost digit from FP register r1 */
+    lmd = dfp32_extract_lmd(&x1);
+
+    /* Convert to internal decimal number format */
+    decimal32ToNumber(&x1, &d1);
+
+    /* Isolate rightmost 12 bits of second operand address */
+    bits = effective_addr2 & 0xFFF;
+
+    /* Test data group and set condition code */
+    regs->psw.cc = dfp_test_data_group(&set, &d1, lmd, bits);
+
+} /* end DEF_INST(test_data_group_dfp_short) */
 
 #endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
 
