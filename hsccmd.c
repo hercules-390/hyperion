@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.203  2006/12/31 21:53:13  fish
+// new 'cd' and 'pwd' commands to go along with existing 'sh' command
+//
 // Revision 1.202  2006/12/31 13:44:10  rbowler
 // Omit null commands and script commands in panel command history
 //
@@ -400,7 +403,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
 }
 
 ///////////////////////////////////////////////////////////////////////
-/* g command - start CPUs stopped in instruction stepping */
+/* g command - turn off single stepping and start CPU */
 
 int g_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -411,6 +414,8 @@ int g_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
 
     OBTAIN_INTLOCK(NULL);
+    sysblk.inststep = 0;
+    SET_IC_TRACE;
     for (i = 0; i < HI_CPU; i++)
         if (IS_CPU_ONLINE(i) && sysblk.regs[i]->stepwait)
         {

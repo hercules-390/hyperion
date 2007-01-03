@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.173  2006/12/30 16:15:57  gsmith
+// 2006 Dec 30 Fix cpu_init to call set_jump_pointers for all arches
+//
 // Revision 1.172  2006/12/21 22:39:38  gsmith
 // 21 Dec 2006 Range for s+, t+ - Greg Smith
 //
@@ -1540,7 +1543,7 @@ int (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 void ARCH_DEP(process_trace)(REGS *regs)
 {
 int     shouldtrace = 0;                /* 1=Trace instruction       */
-int     shouldstep = 0;                 /* 1=Wait for `g' cmd        */
+int     shouldstep = 0;                 /* 1=Wait for start command  */
 
     /* Test for trace */
     if (sysblk.insttrace)
