@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.24  2006/12/30 18:48:11  fish
+// PR# build_msc/103: fix MSVC diag 8 'sh' capture
+//
 // Revision 1.23  2006/12/28 15:49:35  fish
 // Use _beginthreadex/_endthreadex instead of CreateThread/ExitThread in continuing effort to try and resolve our still existing long-standing 'errno' issue...
 //
@@ -2399,19 +2402,31 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
     bSuccess = CreateProcess
     (
-        NULL,                       // name of executable module = from command-line
-        pszNewCommandLine,          // command line with arguments
-        NULL,                       // process security attributes = use defaults
-        NULL,                       // primary thread security attributes = use defaults
-        TRUE,                       // HANDLE inheritance flag = allow
-                                    // (required when STARTF_USESTDHANDLES flag is used)
-        CREATE_NO_WINDOW | DETACHED_PROCESS, // creation flags = no console, detached
-        NULL,                       // environment block ptr = make a copy from parent's
-        NULL,                       // initial working directory = same as parent's
-        &siStartInfo,               // input STARTUPINFO pointer
-        &piProcInfo                 // output PROCESS_INFORMATION
+        NULL,                   // name of executable module = from command-line
+        pszNewCommandLine,      // command line with arguments
+
+        NULL,                   // process security attributes = use defaults
+        NULL,                   // primary thread security attributes = use defaults
+
+        TRUE,                   // HANDLE inheritance flag = allow
+                                // (required when STARTF_USESTDHANDLES flag is used)
+
+        0,  //  NOTE!  >>>--->  // UNDOCUMENTED SECRET! MUST BE ZERO! Can't be "CREATE_NO_WINDOW"
+                                // nor "DETACHED_PROCESS", etc, or else it sometimes doesn't work
+                                // or else a console window appears! ("ipconfig" being one such
+                                // example). THIS IS NOT DOCUMENTED *ANYWHERE* IN ANY MICROSOFT
+                                // DOCUMENTATION THAT I COULD FIND! I only stumbled across it by
+                                // sheer good fortune in a news group post after some intensive
+                                // Googling and have experimentally verified it works as desired.
+
+        NULL,                   // environment block ptr = make a copy from parent's
+        NULL,                   // initial working directory = same as parent's
+
+        &siStartInfo,           // input STARTUPINFO pointer
+        &piProcInfo             // output PROCESS_INFORMATION
     );
-    rc = GetLastError();            // (save return code)
+
+    rc = GetLastError();                        // (save return code)
 
     // Close the HANDLEs we don't need...
 
