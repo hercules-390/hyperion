@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.34  2007/01/02 12:33:46  rbowler
+// Decimal Floating Point: CDTR,KDTR,CEDTR,DDTR,EEDTR,ESDTR instructions
+//
 // Revision 1.33  2007/01/02 11:39:32  rbowler
 // Decimal Floating Point: CDGTR instruction
 //
@@ -2229,7 +2232,38 @@ U32             bits;                   /* Low 12 bits of address    */
 } /* end DEF_INST(test_data_class_dfp_ext) */
 
 
-UNDEF_INST(test_data_class_dfp_long)
+/*-------------------------------------------------------------------*/
+/* ED54 TDCDT - Test Data Class DFP Long                       [RXE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(test_data_class_dfp_long)
+{
+int             r1;                     /* Value of R field          */
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+decimal64       x1;                     /* Long DFP value            */
+decNumber       d1;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+U32             bits;                   /* Low 12 bits of address    */
+
+    RXE(inst, regs, r1, b2, effective_addr2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Convert FP register r1 to decimal number format */
+    ARCH_DEP(dfp_reg_to_decimal64)(r1, &x1, regs);
+    decimal64ToNumber(&x1, &d1);
+
+    /* Isolate rightmost 12 bits of second operand address */
+    bits = effective_addr2 & 0xFFF;
+
+    /* Test data class and set condition code */
+    regs->psw.cc = dfp_test_data_class(&set, &d1, bits);
+
+} /* end DEF_INST(test_data_class_dfp_long) */
+
+
 UNDEF_INST(test_data_class_dfp_short)
 
 
