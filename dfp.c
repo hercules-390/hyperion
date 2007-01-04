@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.38  2007/01/04 16:22:19  rbowler
+// Decimal Floating Point: IEXTR instruction
+//
 // Revision 1.37  2007/01/03 17:24:20  rbowler
 // Decimal Floating Point: LTDTR,MDTR,QADTR,SDTR,TDCET,TDGET instructions
 //
@@ -408,7 +411,7 @@ static BYTE     maxnegzd[]="-9223372036854775808";
 static U64      maxneg64 = 0x8000000000000000ULL;
 
     /* Handle maximum negative number as special case */
-    if (n == maxneg64)
+    if (n == (S64)maxneg64)
     {
         decNumberFromString(dn, maxnegzd, pset);
         return;
