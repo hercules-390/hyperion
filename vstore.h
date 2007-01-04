@@ -34,6 +34,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.70  2007/01/04 01:08:41  gsmith
+// 03 Jan 2007 single_cpu_dw fetch/store patch for ia32
+//
 // Revision 1.69  2007/01/04 00:29:17  gsmith
 // 03 Jan 2007 vstorex patch to vstore2, vstore4, vstore8
 //
@@ -650,7 +653,7 @@ int     len;                            /* Length for page crossing  */
 
     /* Program check if instruction address is odd */
     if ( unlikely(offset & 0x01) )
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 
     pagesz = unlikely(addr < 0x800) ? 0x800 : PAGEFRAME_PAGESIZE;
 
@@ -686,7 +689,7 @@ int     len;                            /* Length for page crossing  */
                 ON_IC_PER_IFNUL(regs);
                 regs->psw.IA = addr;
                 regs->psw.zeroilc = 1;
-                ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
+                regs->program_interrupt (regs, PGM_PER_EVENT);
             }
       #endif /*defined(FEATURE_PER3)*/
         }

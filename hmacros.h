@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #ifndef _HMACROS_H
 #define _HMACROS_H
@@ -247,8 +250,12 @@
 /* Opcode routing table function pointer */
 typedef void (ATTR_REGPARM(2)*FUNC)();
 
-/* SIE guest/host program interrupt routine function pointer */
-typedef void (*SIEFN)();
+/* Program Interrupt function pointer */
+typedef void (ATTR_REGPARM(2) *pi_func) (REGS *regs, int pcode);
+
+/* trace_br function */
+typedef U32  (*s390_trace_br_func) (int amode,  U32 ia, REGS *regs);
+typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 
 /*-------------------------------------------------------------------*/
 /* compiler optimization hints         (for performance)             */

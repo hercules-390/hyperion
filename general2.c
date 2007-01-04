@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.109  2006/12/31 21:16:32  gsmith
+// 2006 Dec 31 really back out mainlockx.pat
+//
 // Revision 1.108  2006/12/20 09:09:40  jj
 // Fix bogus log entries
 //
@@ -334,7 +337,7 @@ VADR    effective_addr2,
                                      b4, effective_addr4);
 
     if(regs->GR_L(0) & PLO_GPR0_RESV)
-        ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 
     if(regs->GR_L(0) & PLO_GPR0_T)
         switch(regs->GR_L(0) & PLO_GPR0_FC)
@@ -487,7 +490,7 @@ VADR    effective_addr2,
 
 
             default:
-                ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+                regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 
         }
 
@@ -517,7 +520,7 @@ BYTE    termchar;                       /* Terminating character     */
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Load string terminating character from register 0 bits 24-31 */
     termchar = regs->GR_LHLCL(0);
@@ -644,7 +647,7 @@ U32     h, i, j, m;                     /* Integer work areas        */
     {
         regs->psw.cc = 3;
         if ( FOMASK(&regs->psw) )
-            ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+            regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
 
@@ -728,7 +731,7 @@ U32     i, j;                           /* Integer work areas        */
     {
         regs->psw.cc = 3;
         if ( FOMASK(&regs->psw) )
-            ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+            regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
 
@@ -1190,7 +1193,7 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
-        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
 
@@ -1217,7 +1220,7 @@ U32     n;                              /* 32-bit operand values     */
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
-        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
 
@@ -1244,7 +1247,7 @@ U32     n;                              /* 32-bit operand values     */
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
-        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
 
@@ -1360,7 +1363,7 @@ int     rc;                             /* Return code               */
 
     /* Load new PSW from PSA+X'60' */
     if ( (rc = ARCH_DEP(load_psw) ( regs, psa->svcnew ) ) )
-        ARCH_DEP(program_interrupt) (regs, rc);
+        regs->program_interrupt (regs, rc);
 
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -1821,7 +1824,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
         || ( GR_A(4,regs) & UPT_ALIGN_MASK )
         || ( GR_A(5,regs) & UPT_ALIGN_MASK )
     )
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Bubble the tree by moving successively higher nodes towards the
        front (beginning) of the tree, only stopping whenever we either:
@@ -2543,7 +2546,7 @@ DEF_INST(search_string_unicode)
 
   /* Program check if bits 0-15 of register 0 not zero */
   if(regs->GR_L(0) & 0xFFFF0000)
-    ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+    regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Load string terminating character from register 0 bits 16-31 */
   termchar = (U16) regs->GR(0);

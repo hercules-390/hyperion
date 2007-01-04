@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.192  2007/01/03 05:53:34  gsmith
+// 03 Jan 2007 Sloppy fetch - Greg Smith
+//
 // Revision 1.191  2006/12/20 10:47:52  rbowler
 // Correct warning C4013: 'RRF_M4_DECODER_TEST' undefined
 //
@@ -547,78 +550,78 @@ do { \
 
 #define ODD_CHECK(_r, _regs) \
     if( (_r) & 1 ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
 #define ODD2_CHECK(_r1, _r2, _regs) \
     if( ((_r1) & 1) || ((_r2) & 1) ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
 #define FW_CHECK(_value, _regs) \
     if( (_value) & 3 ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
 #define DW_CHECK(_value, _regs) \
     if( (_value) & 7 ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
 #define QW_CHECK(_value, _regs) \
     if( (_value) & 15 ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Program check if m is not 0, 1, or 4 to 7 */
 #define HFPM_CHECK(_m, _regs) \
     if (((_m) == 2) || ((_m) == 3) || ((_m) & 8)) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
 #define PRIV_CHECK(_regs) \
     if( PROBSTATE(&(_regs)->psw) ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_PRIVILEGED_OPERATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_PRIVILEGED_OPERATION_EXCEPTION)
 
     /* Program check if r is not 0,1,4,5,8,9,12, or 13 (designating 
        the lower-numbered register of a floating-point register pair) */
 #define BFPREGPAIR_CHECK(_r, _regs) \
     if( ((_r) & 2) ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Program check if r1 and r2 are not both 0,1,4,5,8,9,12, or 13
        (lower-numbered register of a floating-point register pair) */
 #define BFPREGPAIR2_CHECK(_r1, _r2, _regs) \
     if( ((_r1) & 2) || ((_r2) & 2) ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Program check if r is not 0,1,4,5,8,9,12, or 13 (designating 
        the lower-numbered register of a floating-point register pair) */
 #define DFPREGPAIR_CHECK(_r, _regs) \
     if( ((_r) & 2) ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Program check if r1 and r2 are not both 0,1,4,5,8,9,12, or 13
        (lower-numbered register of a floating-point register pair) */
 #define DFPREGPAIR2_CHECK(_r1, _r2, _regs) \
     if( ((_r1) & 2) || ((_r2) & 2) ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Program check if r1, r2, r3 are not all 0,1,4,5,8,9,12, or 13
        (lower-numbered register of a floating-point register pair) */
 #define DFPREGPAIR3_CHECK(_r1, _r2, _r3, _regs) \
     if( ((_r1) & 2) || ((_r2) & 2) || ((_r3) & 2) ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Program check if fpc is not valid contents for FPC register */
 #if !defined(FEATURE_DECIMAL_FLOATING_POINT)
  #define FPC_CHECK(_fpc, _regs) \
     if((_fpc) & (FPC_RESERVED | FPC_DRM)) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 #else /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
  #define FPC_CHECK(_fpc, _regs) \
     if((_fpc) & FPC_RESERVED) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 #endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
 
 #define SSID_CHECK(_regs) \
     if((!((_regs)->GR_LHH(1) & 0x0001)) \
     || (_regs)->GR_LHH(1) > (0x0001|((FEATURE_LCSS_MAX-1) << 1))) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_OPERAND_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_OPERAND_EXCEPTION)
 
 #define IOID_TO_SSID(_ioid) \
     ((_ioid) >> 16)
@@ -682,7 +685,7 @@ do { \
         if( !((_regs)->CR(0) & CR0_AFP) \
             || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
             (_regs)->dxc = DXC_BFP_INSTRUCTION; \
-            ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         }
 
     /* Program check if DFP instruction is executed when AFP control is zero */
@@ -690,7 +693,7 @@ do { \
         if( !((_regs)->CR(0) & CR0_AFP) \
             || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
             (_regs)->dxc = DXC_DFP_INSTRUCTION; \
-            ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         }
 
     /* Program check if r1 is not 0, 2, 4, or 6 */
@@ -699,7 +702,7 @@ do { \
             || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         } \
     }
 
@@ -709,31 +712,31 @@ do { \
             || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         } \
     }
 
     /* Program check if r1 is not 0 or 4 */
 #define HFPODD_CHECK(_r, _regs) \
     if( (_r) & 2 ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
                || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         } \
     }
 
     /* Program check if r1 and r2 are not 0 or 4 */
 #define HFPODD2_CHECK(_r1, _r2, _regs) \
     if( ((_r1) & 2) || ((_r2) & 2) ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
                 || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         } \
     }
 #else /*!defined(_FEATURE_SIE)*/
@@ -742,14 +745,14 @@ do { \
 #define BFPINST_CHECK(_regs) \
         if( !((_regs)->CR(0) & CR0_AFP) ) { \
             (_regs)->dxc = DXC_BFP_INSTRUCTION; \
-            ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         }
 
     /* Program check if DFP instruction is executed when AFP control is zero */
 #define DFPINST_CHECK(_regs) \
         if( !((_regs)->CR(0) & CR0_AFP) ) { \
             (_regs)->dxc = DXC_DFP_INSTRUCTION; \
-            ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+            (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         }
 
 
@@ -758,7 +761,7 @@ do { \
     if( !((_regs)->CR(0) & CR0_AFP) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         } \
     }
 
@@ -767,29 +770,29 @@ do { \
     if( !((_regs)->CR(0) & CR0_AFP) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         } \
     }
 
     /* Program check if r1 is not 0 or 4 */
 #define HFPODD_CHECK(_r, _regs) \
     if( (_r) & 2 ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         } \
     }
 
     /* Program check if r1 and r2 are not 0 or 4 */
 #define HFPODD2_CHECK(_r1, _r2, _regs) \
     if( ((_r1) & 2) || ((_r2) & 2) ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         } \
     }
 
@@ -808,22 +811,22 @@ do { \
     /* Program check if r1 is not 0, 2, 4, or 6 */
 #define HFPREG_CHECK(_r, _regs) \
     if( (_r) & 9 ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
 #define HFPREG2_CHECK(_r1, _r2, _regs) \
     if( ((_r1) & 9) || ((_r2) & 9) ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Program check if r1 is not 0 or 4 */
 #define HFPODD_CHECK(_r, _regs) \
     if( (_r) & 11 ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Program check if r1 and r2 are not 0 or 4 */
 #define HFPODD2_CHECK(_r1, _r2, _regs) \
     if( ((_r1) & 11) || ((_r2) & 11) ) \
-        ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Convert fpr to index */
 #define FPR2I(_r) \
@@ -2198,7 +2201,7 @@ do { \
 
 #define VOP_CHECK(_regs) \
     if(!((_regs)->CR(0) & CR0_VOP) || !(_regs)->vf->online) \
-        ARCH_DEP(program_interrupt)((_regs), PGM_VECTOR_OPERATION_EXCEPTION)
+        (_regs)->program_interrupt((_regs), PGM_VECTOR_OPERATION_EXCEPTION)
 
 #define VR_INUSE(_vr, _regs) \
     ((_regs)->vf->vsr & (VSR_VIU0 >> ((_vr) >> 1)))
@@ -2483,12 +2486,12 @@ void z900_process_trace (REGS *regs);
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
 void ARCH_DEP(perform_io_interrupt) (REGS *regs);
 #if defined(_FEATURE_SIE)
-CPU_DLL_IMPORT void s370_program_interrupt (REGS *regs, int code);
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt) (REGS *regs, int code);
 #endif /*!defined(_FEATURE_SIE)*/
 #if defined(_FEATURE_ZSIE)
-CPU_DLL_IMPORT void s390_program_interrupt (REGS *regs, int code);
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt) (REGS *regs, int code);
 #endif /*!defined(_FEATURE_ZSIE)*/
-CPU_DLL_IMPORT void ARCH_DEP(program_interrupt) (REGS *regs, int code);
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP(program_interrupt)) (REGS *regs, int code);
 void *cpu_thread (int *cpu);
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
 void display_psw (REGS *regs);
@@ -2590,6 +2593,9 @@ int  ARCH_DEP(program_return_unstack) (REGS *regs, RADR *lsedap, int *rc);
 
 /* Functions in module trace.c */
 CREG  ARCH_DEP(trace_br) (int amode, VADR ia, REGS *regs);
+#if defined(_FEATURE_ZSIE)
+U32  s390_trace_br (int amode, U32 ia, REGS *regs);
+#endif /*!defined(_FEATURE_ZSIE)*/
 CREG  ARCH_DEP(trace_bsg) (U32 alet, VADR ia, REGS *regs);
 CREG  ARCH_DEP(trace_ssar) (int ssair, U16 sasn, REGS *regs);
 CREG  ARCH_DEP(trace_pc) (U32 pcea, REGS *regs);

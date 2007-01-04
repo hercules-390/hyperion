@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.97  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #if !defined(OPTION_NO_INLINE_DAT) || defined(_DAT_C)
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
@@ -157,7 +160,7 @@ asn_asn_tran_spec_excp:
 #endif /*!defined(FEATURE_ESAME)*/
 
 asn_prog_check:
-    ARCH_DEP(program_interrupt) (regs, code);
+    regs->program_interrupt (regs, code);
 
 /* Conditions which the caller may or may not program check */
 asn_afx_tran_excp:
@@ -254,7 +257,7 @@ BYTE    ate;                            /* Authority table entry     */
 
 /* Conditions which always cause program check */
 auth_addr_excp:
-    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+    regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
     return 1;
 
 } /* end function authorize_asn */
@@ -452,7 +455,7 @@ alet_asn_tran_spec_excp:
 #endif /*!defined(FEATURE_ESAME)*/
 
 alet_prog_check:
-    ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);
+    regs->program_interrupt (regs, regs->dat.xcode);
 
 /* Conditions which the caller may or may not program check */
 alet_spec_excp:
@@ -1534,7 +1537,7 @@ spec_oper_excp:
 #endif /*defined(FEATURE_ESAME)*/
 
 tran_prog_check:
-    ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);
+    regs->program_interrupt (regs, regs->dat.xcode);
 
 /* Conditions which the caller may or may not program check */
 seg_tran_invalid:
@@ -1960,7 +1963,7 @@ RADR    pfra;
            ((regs->CR(0) & CR0_PAGE_SIZE) != CR0_PAGE_SZ_4K)) ||
            (((regs->CR(0) & CR0_SEG_SIZE) != CR0_SEG_SZ_64K) &&
            ((regs->CR(0) & CR0_SEG_SIZE) != CR0_SEG_SZ_1M)))
-            ARCH_DEP(program_interrupt) (regs,
+            regs->program_interrupt (regs,
                               PGM_TRANSLATION_SPECIFICATION_EXCEPTION);
 
         /* Combine the page table origin in the R1 register with
@@ -2001,7 +2004,7 @@ RADR    pfra;
     {
         /* Program check if translation format is invalid */
         if ((regs->CR(0) & CR0_TRAN_FMT) != CR0_TRAN_ESA390)
-            ARCH_DEP(program_interrupt) (regs,
+            regs->program_interrupt (regs,
                               PGM_TRANSLATION_SPECIFICATION_EXCEPTION);
 
         /* Combine the page table origin in the R1 register with
@@ -2178,7 +2181,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + regs->dat.aaddr,
                       USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-            (regs->sie_hostpi) (regs->hostregs, regs->hostregs->dat.xcode);
+            (regs->hostregs->program_interrupt) (regs->hostregs, regs->hostregs->dat.xcode);
 
         regs->dat.protect |= regs->hostregs->dat.protect;
         regs->tlb.protect[ix] |= regs->hostregs->dat.protect;
@@ -2267,7 +2270,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
     return regs->mainstor + aaddr;
 
 vabs_addr_excp:
-    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+    regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
 
 vabs_prot_excp:
 #ifdef FEATURE_SUPPRESSION_ON_PROTECTION
@@ -2291,14 +2294,14 @@ vabs_prot_excp:
         regs->hostregs->TEA = regs->TEA;
         regs->hostregs->excarid = regs->excarid;
 #endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
-        (regs->sie_hostpi) (regs->hostregs, PGM_PROTECTION_EXCEPTION);
+        (regs->hostregs->program_interrupt) (regs->hostregs, PGM_PROTECTION_EXCEPTION);
     }
     else
 #endif /*defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
-        ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
+        regs->program_interrupt (regs, PGM_PROTECTION_EXCEPTION);
 
 vabs_prog_check:
-    ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);
+    regs->program_interrupt (regs, regs->dat.xcode);
 
     return NULL; /* prevent warning from compiler */
 } /* end function logical_to_abs */

@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.175  2007/01/04 01:08:41  gsmith
+// 03 Jan 2007 single_cpu_dw fetch/store patch for ia32
+//
 // Revision 1.174  2007/01/03 14:21:41  rbowler
 // Reinstate semantics of 'g' command changed by hsccmd rev 1.197
 //
@@ -302,7 +305,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 /*-------------------------------------------------------------------*/
 /* Load program interrupt new PSW                                    */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(program_interrupt) (REGS *regs, int pcode)
+void (ATTR_REGPARM(2) ARCH_DEP(program_interrupt)) (REGS *regs, int pcode)
 {
 PSA    *psa;                            /* -> Prefixed storage area  */
 REGS   *realregs;                       /* True regs structure       */
@@ -487,7 +490,7 @@ static char *pgmintname[] = {
 #if defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)
         realregs->guestregs->hostint = 1;
 #endif /*defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
-        (realregs->guestregs->sie_guestpi) (realregs->guestregs, pcode);
+        (realregs->guestregs->program_interrupt) (realregs->guestregs, pcode);
     }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
@@ -926,7 +929,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     RELEASE_INTLOCK(regs);
 
     if ( rc )
-        ARCH_DEP(program_interrupt)(regs, rc);
+        regs->program_interrupt(regs, rc);
 
     longjmp (regs->progjmp, SIE_INTERCEPT_RESTART);
 } /* end function restart_interrupt */
@@ -1029,7 +1032,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
         if ( rc )
         {
             RELEASE_INTLOCK(regs);
-            ARCH_DEP(program_interrupt) (regs, rc);
+            regs->program_interrupt (regs, rc);
         }
     }
 
@@ -1100,7 +1103,7 @@ RADR    fsta;                           /* Failing storage address   */
     RELEASE_INTLOCK(regs);
 
     if ( rc )
-        ARCH_DEP(program_interrupt) (regs, rc);
+        regs->program_interrupt (regs, rc);
 
     longjmp (regs->progjmp, SIE_INTERCEPT_MCK);
 } /* end function perform_mck_interrupt */
@@ -1339,7 +1342,7 @@ int (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 {
     /* Process PER program interrupts */
     if( OPEN_IC_PER(regs) )
-        ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
+        regs->program_interrupt (regs, PGM_PER_EVENT);
 
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(regs);
@@ -1656,6 +1659,11 @@ REGS    regs;
                     cpu);
 #endif /*FEATURE_VECTOR_FACILITY*/
     }
+
+    regs.program_interrupt = &ARCH_DEP(program_interrupt);
+#if defined(FEATURE_TRACING)
+    regs.trace_br = (func)&ARCH_DEP(trace_br);
+#endif
 
     regs.tracing = (sysblk.inststep || sysblk.insttrace);
     regs.ints_state |= sysblk.ints_state;

@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.144  2006/12/31 21:16:32  gsmith
+// 2006 Dec 31 really back out mainlockx.pat
+//
 // Revision 1.143  2006/12/20 09:09:40  jj
 // Fix bogus log entries
 //
@@ -78,7 +81,7 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
-        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
 
@@ -105,7 +108,7 @@ U32     n;                              /* 32-bit operand values     */
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
-        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 }
 
@@ -133,7 +136,7 @@ S32     n;                              /* 32-bit operand values     */
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
-        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 }
 
@@ -158,7 +161,7 @@ U16     i2;                             /* 16-bit immediate op       */
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
-        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 }
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
@@ -411,8 +414,8 @@ VADR    newia;                          /* New instruction address   */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
         regs->psw.ilc = 0; // indicates regs->ip not updated
-        regs->CR(12) = ARCH_DEP(trace_br) (regs->psw.amode,
-                                    regs->GR_L(r2), regs);
+        regs->CR(12) = ((ARCH_DEP(trace_br_func))regs->trace_br)
+                        (regs->psw.amode, regs->GR_L(r2), regs);
     }
 #endif /*defined(FEATURE_TRACING)*/
 
@@ -483,8 +486,8 @@ VADR    newia;                          /* New instruction address   */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
         regs->psw.ilc = 0; // indcates regs->ip not updated
-        regs->CR(12) = ARCH_DEP(trace_br) (regs->psw.amode,
-                                    regs->GR_L(r2), regs);
+        regs->CR(12) = ((ARCH_DEP(trace_br_func))regs->trace_br)
+                         (regs->psw.amode, regs->GR_L(r2), regs);
     }
 #endif /*defined(FEATURE_TRACING)*/
 
@@ -1094,7 +1097,7 @@ GREG    gr2_high_bit = CFC_HIGH_BIT;    /* (work constant; uses a64) */
         || GR_A(2,regs) & 1
         || GR_A(3,regs) & 1
     )
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Initialize "end-of-operand-data" index value... */
     max_index = op2_effective_addr & 0x7FFE;
@@ -1844,7 +1847,7 @@ BYTE    termchar;                       /* Terminating character     */
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Load string terminating character from register 0 bits 24-31 */
     termchar = regs->GR_LHLCL(0);
@@ -2551,7 +2554,7 @@ BYTE    dec[8];                         /* Packed decimal operand    */
     if (dxf)
     {
         regs->dxc = DXC_DECIMAL;
-        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+        regs->program_interrupt (regs, PGM_DATA_EXCEPTION);
     }
 
     /* Overflow if result exceeds 31 bits plus sign */
@@ -2563,7 +2566,7 @@ BYTE    dec[8];                         /* Packed decimal operand    */
 
     /* Program check if overflow (R1 contains rightmost 32 bits) */
     if (ovf)
-        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
+        regs->program_interrupt (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
 } /* end DEF_INST(convert_to_binary) */
 
@@ -2632,7 +2635,7 @@ int     divide_overflow;                /* 1=divide overflow         */
 
     /* Program check if overflow */
     if ( divide_overflow )
-        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
+        regs->program_interrupt (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 }
 
 
@@ -2663,7 +2666,7 @@ int     divide_overflow;                /* 1=divide overflow         */
 
     /* Program check if overflow */
     if ( divide_overflow )
-            ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
+        regs->program_interrupt (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
 }
 
@@ -2898,7 +2901,7 @@ BYTE   *ip;                             /* -> executed instruction   */
 
     /* Program check if recursive execute */
     if ( regs->exinst[0] == 0x44 )
-        ARCH_DEP(program_interrupt) (regs, PGM_EXECUTE_EXCEPTION);
+        regs->program_interrupt (regs, PGM_EXECUTE_EXCEPTION);
 
     /* Or 2nd byte of instruction with low-order byte of R1 */
     regs->exinst[1] |= r1 ? regs->GR_LHLCL(r1) : 0;
@@ -3203,7 +3206,7 @@ int     r1, r2;                         /* Values of R fields        */
         regs->GR_L(r1) = regs->GR_L(r2);
         regs->psw.cc = 3;
         if ( FOMASK(&regs->psw) )
-            ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+            regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
 
@@ -3334,7 +3337,7 @@ int     r1, r2;                         /* Values of R fields        */
         regs->GR_L(r1) = regs->GR_L(r2);
         regs->psw.cc = 3;
         if ( FOMASK(&regs->psw) )
-            ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+            regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
 
@@ -3361,7 +3364,7 @@ CREG    n;                              /* Work                      */
 
     /* Program check if monitor class exceeds 15 */
     if ( i2 > 0x0F )
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Ignore if monitor mask in control register 8 is zero */
     n = (regs->CR(8) & CR8_MCMASK) << i2;
@@ -3372,7 +3375,7 @@ CREG    n;                              /* Work                      */
     regs->MONCODE = effective_addr1;
 
     /* Generate a monitor event program interruption */
-    ARCH_DEP(program_interrupt) (regs, PGM_MONITOR_EVENT);
+    regs->program_interrupt (regs, PGM_MONITOR_EVENT);
 
 }
 
@@ -3843,7 +3846,7 @@ int     cpu_length;                     /* length to next page       */
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Load string terminating character from register 0 bits 24-31 */
     termchar = regs->GR_LHLCL(0);

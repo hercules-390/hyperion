@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.99  2006/12/21 22:39:39  gsmith
+// 21 Dec 2006 Range for s+, t+ - Greg Smith
+//
 // Revision 1.98  2006/12/20 04:26:20  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -310,7 +313,8 @@ U64     dreg;
     if (STATEBK->mx & SIE_MX_ESAME)
     {
         GUESTREGS->arch_mode = ARCH_900;
-        GUESTREGS->sie_guestpi = (SIEFN)&z900_program_interrupt;
+        GUESTREGS->program_interrupt = &z900_program_interrupt;
+        GUESTREGS->trace_br = (func)&z900_trace_br;
         icode = z900_load_psw(GUESTREGS, STATEBK->psw);
     }
 #else /*!defined(FEATURE_ESAME)*/
@@ -318,7 +322,7 @@ U64     dreg;
     {
 #if defined(_370)
         GUESTREGS->arch_mode = ARCH_370;
-        GUESTREGS->sie_guestpi = (SIEFN)&s370_program_interrupt;
+        GUESTREGS->program_interrupt = &s370_program_interrupt;
         icode = s370_load_psw(GUESTREGS, STATEBK->psw);
 #else
         /* Validity intercept when 370 mode not installed */
@@ -335,7 +339,8 @@ U64     dreg;
 #endif /*!defined(FEATURE_ESAME)*/
     {
         GUESTREGS->arch_mode = ARCH_390;
-        GUESTREGS->sie_guestpi = (SIEFN)&s390_program_interrupt;
+        GUESTREGS->program_interrupt = &s390_program_interrupt;
+        GUESTREGS->trace_br = (func)&s390_trace_br;
         icode = s390_load_psw(GUESTREGS, STATEBK->psw);
     }
 #if !defined(FEATURE_ESAME)
@@ -348,9 +353,6 @@ U64     dreg;
         return;
     }
 #endif /*!defined(FEATURE_ESAME)*/
-
-    /* Set host program interrupt routine */
-    GUESTREGS->sie_hostpi = (SIEFN)&ARCH_DEP(program_interrupt);
 
     /* Prefered guest indication */
     GUESTREGS->sie_pref = (STATEBK->m & SIE_M_VR) ? 1 : 0;
@@ -688,7 +690,7 @@ U64     dreg;
 
         /* Early exceptions associated with the guest load_psw() */
         if(icode)
-            (GUESTREGS->sie_guestpi) (GUESTREGS, icode);
+            GUESTREGS->program_interrupt (GUESTREGS, icode);
 
         /* Run SIE in guests architecture mode */
         icode = run_sie[GUESTREGS->arch_mode] (regs);

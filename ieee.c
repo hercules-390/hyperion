@@ -61,6 +61,9 @@
  */
 
 // $Log$
+// Revision 1.74  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -135,7 +138,7 @@ do { \
 /* Macro to generate program check if invalid BFP rounding method */
 #define BFPRM_CHECK(x,regs) \
         {if (!((x)==0 || (x)==1 || ((x)>=4 && (x)<=7))) \
-            {program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);}}
+            {regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);}}
 
 #if !defined(_IEEE_C)
 /* Architecture independent code goes within this ifdef */
@@ -198,7 +201,6 @@ struct sbfp {
 /* I guess this could go into an include file... */
 #define vfetch4 ARCH_DEP(vfetch4)
 #define vfetch8 ARCH_DEP(vfetch8)
-#define program_interrupt ARCH_DEP(program_interrupt)
 
 /* locally defined architecture-dependent functions */
 #define ieee_exception ARCH_DEP(ieee_exception)
@@ -273,7 +275,7 @@ static inline int ieee_exception(int raised, REGS * regs)
         regs->fpc |= dxc << 8;
         if (dxc == DXC_IEEE_DIV_ZERO || dxc == DXC_IEEE_INVALID_OP) {
             /* suppress operation */
-            program_interrupt(regs, PGM_DATA_EXCEPTION);
+            regs->program_interrupt(regs, PGM_DATA_EXCEPTION);
         }
         /*
          * Other operations need to take appropriate action
@@ -1290,7 +1292,7 @@ DEF_INST(add_bfp_ext_reg)
     put_ebfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1388,7 +1390,7 @@ DEF_INST(add_bfp_long_reg)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1414,7 +1416,7 @@ DEF_INST(add_bfp_long)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1512,7 +1514,7 @@ DEF_INST(add_bfp_short_reg)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1538,7 +1540,7 @@ DEF_INST(add_bfp_short)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1617,7 +1619,7 @@ DEF_INST(compare_bfp_ext_reg)
     pgm_check = compare_ebfp(&op1, &op2, 0, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1695,7 +1697,7 @@ DEF_INST(compare_bfp_long_reg)
     pgm_check = compare_lbfp(&op1, &op2, 0, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1719,7 +1721,7 @@ DEF_INST(compare_bfp_long)
     pgm_check = compare_lbfp(&op1, &op2, 0, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1797,7 +1799,7 @@ DEF_INST(compare_bfp_short_reg)
     pgm_check = compare_sbfp(&op1, &op2, 0, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1821,7 +1823,7 @@ DEF_INST(compare_bfp_short)
     pgm_check = compare_sbfp(&op1, &op2, 0, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1845,7 +1847,7 @@ DEF_INST(compare_and_signal_bfp_ext_reg)
     pgm_check = compare_ebfp(&op1, &op2, 1, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1868,7 +1870,7 @@ DEF_INST(compare_and_signal_bfp_long_reg)
     pgm_check = compare_lbfp(&op1, &op2, 1, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1892,7 +1894,7 @@ DEF_INST(compare_and_signal_bfp_long)
     pgm_check = compare_lbfp(&op1, &op2, 1, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1915,7 +1917,7 @@ DEF_INST(compare_and_signal_bfp_short_reg)
     pgm_check = compare_sbfp(&op1, &op2, 1, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -1939,7 +1941,7 @@ DEF_INST(compare_and_signal_bfp_short)
     pgm_check = compare_sbfp(&op1, &op2, 1, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -2130,7 +2132,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
                 ebfpston(&op2);logmsg("INEXACT\n");
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2149,7 +2151,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2161,7 +2163,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
         if (raised) {
             pgm_check = ieee_exception(raised, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         regs->GR_L(r1) = op1;
@@ -2195,7 +2197,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
                 lbfpston(&op2);logmsg("INEXACT\n");
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2214,7 +2216,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2226,7 +2228,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
         if (raised) {
             pgm_check = ieee_exception(raised, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         regs->GR_L(r1) = op1;
@@ -2259,7 +2261,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2278,7 +2280,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2290,7 +2292,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
         if (raised) {
             pgm_check = ieee_exception(raised, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         regs->GR_L(r1) = op1;
@@ -2326,7 +2328,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
                 ebfpston(&op2);logmsg("INEXACT\n");
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2345,7 +2347,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2357,7 +2359,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
         if (raised) {
             pgm_check = ieee_exception(raised, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         regs->GR_G(r1) = op1;
@@ -2393,7 +2395,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
                 lbfpston(&op2);logmsg("INEXACT\n");
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2412,7 +2414,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2424,7 +2426,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
         if (raised) {
             pgm_check = ieee_exception(raised, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         regs->GR_G(r1) = op1;
@@ -2459,7 +2461,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2478,7 +2480,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -2490,7 +2492,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
         if (raised) {
             pgm_check = ieee_exception(raised, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         regs->GR_G(r1) = op1;
@@ -2733,7 +2735,7 @@ DEF_INST(divide_bfp_ext_reg)
     put_ebfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -2834,7 +2836,7 @@ DEF_INST(divide_bfp_long_reg)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -2860,7 +2862,7 @@ DEF_INST(divide_bfp_long)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -2961,7 +2963,7 @@ DEF_INST(divide_bfp_short_reg)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -2987,7 +2989,7 @@ DEF_INST(divide_bfp_short)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -3014,7 +3016,7 @@ DEF_INST(load_and_test_bfp_ext_reg)
     }
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 
     switch (ebfpclassify(&op)) {
@@ -3053,7 +3055,7 @@ DEF_INST(load_and_test_bfp_long_reg)
     }
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 
     switch (lbfpclassify(&op)) {
@@ -3092,7 +3094,7 @@ DEF_INST(load_and_test_bfp_short_reg)
     }
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 
     switch (sbfpclassify(&op)) {
@@ -3128,7 +3130,7 @@ DEF_INST(load_fp_int_bfp_short_reg)
     pgm_check = integer_sbfp(&op, m3, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 
     put_sbfp(&op, regs->fpr + FPR2I(r1));
@@ -3153,7 +3155,7 @@ DEF_INST(load_fp_int_bfp_long_reg)
     pgm_check = integer_lbfp(&op, m3, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 
     put_lbfp(&op, regs->fpr + FPR2I(r1));
@@ -3179,7 +3181,7 @@ DEF_INST(load_fp_int_bfp_ext_reg)
     pgm_check = integer_ebfp(&op, m3, regs);
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 
     put_ebfp(&op, regs->fpr + FPR2I(r1));
@@ -3638,7 +3640,7 @@ DEF_INST(load_rounded_bfp_long_to_short_reg)
         if (raised) {
             pgm_check = ieee_exception(raised, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -3687,7 +3689,7 @@ DEF_INST(load_rounded_bfp_ext_to_long_reg)
         if (raised) {
             pgm_check = ieee_exception(raised, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -3736,7 +3738,7 @@ DEF_INST(load_rounded_bfp_ext_to_short_reg)
         if (raised) {
             pgm_check = ieee_exception(raised, regs);
             if (pgm_check) {
-                program_interrupt(regs, pgm_check);
+                regs->program_interrupt(regs, pgm_check);
             }
         }
         break;
@@ -3843,7 +3845,7 @@ DEF_INST(multiply_bfp_ext_reg)
     put_ebfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -3873,7 +3875,7 @@ DEF_INST(multiply_bfp_long_to_ext_reg)
     put_ebfp(&eb1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_bfp_long_to_ext_reg) */
 
@@ -3904,7 +3906,7 @@ DEF_INST(multiply_bfp_long_to_ext)
     put_ebfp(&eb1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_bfp_long_to_ext) */
 
@@ -4004,7 +4006,7 @@ DEF_INST(multiply_bfp_long_reg)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4030,7 +4032,7 @@ DEF_INST(multiply_bfp_long)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4059,7 +4061,7 @@ DEF_INST(multiply_bfp_short_to_long_reg)
     put_lbfp(&lb1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_bfp_short_to_long_reg) */
 
@@ -4089,7 +4091,7 @@ DEF_INST(multiply_bfp_short_to_long)
     put_lbfp(&lb1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_bfp_short_to_long) */
 
@@ -4189,7 +4191,7 @@ DEF_INST(multiply_bfp_short_reg)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4215,7 +4217,7 @@ DEF_INST(multiply_bfp_short)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4242,7 +4244,7 @@ DEF_INST(multiply_add_bfp_long_reg)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_add_bfp_long_reg) */
 
@@ -4270,7 +4272,7 @@ DEF_INST(multiply_add_bfp_long)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_add_bfp_long) */
 
@@ -4297,7 +4299,7 @@ DEF_INST(multiply_add_bfp_short_reg)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_add_bfp_short_reg) */
 
@@ -4325,7 +4327,7 @@ DEF_INST(multiply_add_bfp_short)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_add_bfp_short) */
 
@@ -4353,7 +4355,7 @@ DEF_INST(multiply_subtract_bfp_long_reg)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_subtract_bfp_long_reg) */
 
@@ -4382,7 +4384,7 @@ DEF_INST(multiply_subtract_bfp_long)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_subtract_bfp_long) */
 
@@ -4410,7 +4412,7 @@ DEF_INST(multiply_subtract_bfp_short_reg)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_subtract_bfp_short_reg) */
 
@@ -4439,7 +4441,7 @@ DEF_INST(multiply_subtract_bfp_short)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(multiply_subtract_bfp_short) */
 
@@ -4503,7 +4505,7 @@ DEF_INST(squareroot_bfp_ext_reg)
     put_ebfp(&op, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4556,7 +4558,7 @@ DEF_INST(squareroot_bfp_long_reg)
     put_lbfp(&op, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4581,7 +4583,7 @@ DEF_INST(squareroot_bfp_long)
     put_lbfp(&op, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4634,7 +4636,7 @@ DEF_INST(squareroot_bfp_short_reg)
     put_sbfp(&op, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4659,7 +4661,7 @@ DEF_INST(squareroot_bfp_short)
     put_sbfp(&op, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4691,7 +4693,7 @@ DEF_INST(subtract_bfp_ext_reg)
     put_ebfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4717,7 +4719,7 @@ DEF_INST(subtract_bfp_long_reg)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4744,7 +4746,7 @@ DEF_INST(subtract_bfp_long)
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4770,7 +4772,7 @@ DEF_INST(subtract_bfp_short_reg)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4797,7 +4799,7 @@ DEF_INST(subtract_bfp_short)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 }
 
@@ -4968,7 +4970,7 @@ DEF_INST(divide_integer_bfp_long_reg)
     //logmsg("DIDBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
     BFPINST_CHECK(regs);
     if (r1 == r2 || r2 == r3 || r1 == r3) {
-        program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
     }
     BFPRM_CHECK(m4,regs);
 
@@ -4981,7 +4983,7 @@ DEF_INST(divide_integer_bfp_long_reg)
     put_lbfp(&op3, regs->fpr + FPR2I(r3));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(divide_integer_bfp_long_reg) */
 
@@ -5025,7 +5027,7 @@ DEF_INST(divide_integer_bfp_short_reg)
     //logmsg("DIEBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
     BFPINST_CHECK(regs);
     if (r1 == r2 || r2 == r3 || r1 == r3) {
-        program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
     }
     BFPRM_CHECK(m4,regs);
 
@@ -5038,7 +5040,7 @@ DEF_INST(divide_integer_bfp_short_reg)
     put_sbfp(&op3, regs->fpr + FPR2I(r3));
 
     if (pgm_check) {
-        program_interrupt(regs, pgm_check);
+        regs->program_interrupt(regs, pgm_check);
     }
 } /* end DEF_INST(divide_integer_bfp_short_reg) */
 

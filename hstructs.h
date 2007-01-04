@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.56  2007/01/04 01:08:41  gsmith
+// 03 Jan 2007 single_cpu_dw fetch/store patch for ia32
+//
 // Revision 1.55  2006/12/21 22:39:39  gsmith
 // 21 Dec 2006 Range for s+, t+ - Greg Smith
 //
@@ -184,8 +187,6 @@ struct REGS {                           /* Processor registers       */
                                            descriptor block or 0 when
                                            not running under SIE     */
         SIEBK  *siebk;                  /* Sie State Desc structure  */
-        SIEFN   sie_guestpi;            /* SIE guest pgm int routine */
-        SIEFN   sie_hostpi;             /* SIE host pgm int routine  */
         RADR    sie_px;                 /* Host address of guest px  */
         RADR    sie_mso;                /* Main Storage Origin       */
         RADR    sie_xso;                /* eXpanded Storage Origin   */
@@ -252,6 +253,10 @@ struct REGS {                           /* Processor registers       */
         BYTE    aea_common_alb[16];     /* alb pseudo registers      */
 
         BYTE    aea_aleprot[16];        /* ale protected             */
+
+     /* Function pointers */
+        pi_func program_interrupt;
+        func    trace_br;
 
      /* ------------------------------------------------------------ */
         U64     regs_copy_end;          /* Copy regs to here         */

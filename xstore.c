@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.42  2006/12/08 09:43:34  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -243,7 +246,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
            the specified key is not permitted by the PSW key mask */
         if ( PROBSTATE(&regs->psw)
             && ((regs->CR(3) << (akey >> 4)) & 0x80000000) == 0 )
-            ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
+            regs->program_interrupt (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
         /* If register 0 bit 20 is one, use R0 key for operand 1 */
         if (regs->GR_L(0) & 0x00000800)
@@ -258,7 +261,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
        not all zero, or if bits 20 and 21 are both ones */
     if ((regs->GR_L(0) & 0x0000F000) != 0
         || (regs->GR_L(0) & 0x00000C00) == 0x00000C00)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Determine the logical addresses of each operand */
     vaddr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
@@ -286,7 +289,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         raddr2 = APPLY_PREFIXING (raddr2, regs->PX);
 
         if (raddr2 > regs->mainlim)
-            ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+            regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
         if(SIE_MODE(regs)  && !regs->sie_pref)
@@ -300,7 +303,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
                     USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-                (regs->sie_hostpi) (regs->hostregs, regs->hostregs->dat.xcode);
+                (regs->hostregs->program_interrupt) (regs->hostregs, regs->hostregs->dat.xcode);
 
             /* Convert host real address to host absolute address */
             raddr2 = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
@@ -343,7 +346,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                                  1024 + ((vaddr2 & 0x000FF000) >> 9);
 #endif /*!defined(FEATURE_ESAME)*/
                 if (xpkeya > regs->mainlim)
-                    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+                    regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
                 xpkey2 = regs->mainstor[xpkeya];
 
 /*DEBUG logmsg("MVPG pte2 = " F_CREG ", xkey2 = %2.2X, xpblk2 = %5.5X, akey2 = %2.2X\n",
@@ -383,7 +386,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         raddr1 = APPLY_PREFIXING (raddr1, regs->PX);
 
         if (raddr1 > regs->mainlim)
-            ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+            regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
         if(SIE_MODE(regs)  && !regs->sie_pref)
@@ -396,7 +399,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr1,
                     USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-                (regs->sie_hostpi) (regs->hostregs, regs->hostregs->dat.xcode);
+                (regs->hostregs->program_interrupt) (regs->hostregs, regs->hostregs->dat.xcode);
 
             /* Convert host real address to host absolute address */
             raddr1 = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
@@ -439,7 +442,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                               1024 + ((vaddr1 & 0x000FF000) >> 9);
 #endif /*!defined(FEATURE_ESAME)*/
                 if (xpkeya > regs->mainlim)
-                    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+                    regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
                 xpkey1 = regs->mainstor[xpkeya];
 
 /*DEBUG  logmsg("MVPG pte1 = " F_CREG ", xkey1 = %2.2X, xpblk1 = %5.5X, akey1 = %2.2X\n",
@@ -466,7 +469,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         {
             regs->TEA = vaddr1 | TEA_PROT_AP | regs->dat.stid;
             regs->excarid = (ACCESS_REGISTER_MODE(&regs->psw)) ? r1 : 0;
-            ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
+            regs->program_interrupt (regs, PGM_PROTECTION_EXCEPTION);
         }
 
     } /* end if(!REAL_MODE) */
@@ -508,7 +511,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
             && (pte1 & PAGETAB_ESNK) == 0
             && !((regs->CR(0) & CR0_STORE_OVRD) && ((xpkey1 & STORKEY_KEY) == 0x90)))
         {
-            ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
+            regs->program_interrupt (regs, PGM_PROTECTION_EXCEPTION);
         }
         sk1=NULL;
     }
@@ -529,7 +532,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
             && akey2 != (xpkey2 & STORKEY_KEY)
             && (pte2 & PAGETAB_ESNK) == 0)
         {
-            ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
+            regs->program_interrupt (regs, PGM_PROTECTION_EXCEPTION);
         }
     }
     else
@@ -601,7 +604,7 @@ mvpg_progck:
         regs->TEA |= TEA_MVPG;
         regs->opndrid = (r1 << 4) | r2;
     }
-    ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);
+    regs->program_interrupt (regs, regs->dat.xcode);
 } /* end function move_page */
 
 #endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/

@@ -13,6 +13,9 @@
 /* Multiply/Divide Logical instructions         Vic Cross 13/02/2001 */
 
 // $Log$
+// Revision 1.45  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 // #define INLINE_STORE_FETCH_ADDR_CHECK
 
@@ -478,7 +481,7 @@ static inline BYTE *ARCH_DEP(fetch_main_absolute) (RADR addr,
 {
 #if defined(INLINE_STORE_FETCH_ADDR_CHECK)
     if(addr > regs->mainlim - len)
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+        regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
 #endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
 
     SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
@@ -548,7 +551,7 @@ static inline void ARCH_DEP(store_doubleword_absolute) (U64 value,
 {
 #if defined(INLINE_STORE_FETCH_ADDR_CHECK)
     if(addr > regs->mainlim - 8)
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+        regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
 #endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
 
     SIE_TRANSLATE(&addr, ACCTYPE_WRITE, regs);
@@ -573,7 +576,7 @@ static inline void ARCH_DEP(store_fullword_absolute) (U32 value,
 {
 #if defined(INLINE_STORE_FETCH_ADDR_CHECK)
     if(addr > regs->mainlim - 4)
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+        regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
 #endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
 
     SIE_TRANSLATE(&addr, ACCTYPE_WRITE, regs);
@@ -652,7 +655,7 @@ BYTE    *p;                             /* Mainstor pointer          */
 
     /* Program check if DUCT origin address is invalid */
     if (ducto > regs->mainlim)
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+        regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Fetch DUCT words 0, 1, and 3 from absolute storage
        (note: the DUCT cannot cross a page boundary) */
@@ -674,7 +677,7 @@ BYTE    *p;                             /* Mainstor pointer          */
 
     /* Program check if ASTE origin address is invalid */
     if (ssasteo > regs->mainlim)
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+        regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Fetch subspace ASTE words 0, 2, 3, and 5 from absolute
        storage (note: the ASTE cannot cross a page boundary) */
@@ -691,7 +694,7 @@ BYTE    *p;                             /* Mainstor pointer          */
     {
         regs->excarid = 0;
         if (xcode == NULL)
-            ARCH_DEP(program_interrupt) (regs, PGM_ASTE_VALIDITY_EXCEPTION);
+            regs->program_interrupt (regs, PGM_ASTE_VALIDITY_EXCEPTION);
         else
             *xcode = PGM_ASTE_VALIDITY_EXCEPTION;
         return 0;
@@ -703,7 +706,7 @@ BYTE    *p;                             /* Mainstor pointer          */
     {
         regs->excarid = 0;
         if (xcode == NULL)
-            ARCH_DEP(program_interrupt) (regs, PGM_ASTE_SEQUENCE_EXCEPTION);
+            regs->program_interrupt (regs, PGM_ASTE_SEQUENCE_EXCEPTION);
         else
             *xcode = PGM_ASTE_SEQUENCE_EXCEPTION;
         return 0;
