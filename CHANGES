@@ -1,3 +1,4 @@
+03 Jan 2007 vstorex patch to vstore2, vstore4, vstore8 - Greg Smith
 30 Dec 2006 Minor correction to PR# build_msc/103 fix - Fish
 03 Jan 2007 Sloppy fetch - Greg Smith
 02 Jan 2007 Fix deconfigure_cpu so power-off diagnoses work - Fish
