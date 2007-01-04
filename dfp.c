@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.37  2007/01/03 17:24:20  rbowler
+// Decimal Floating Point: LTDTR,MDTR,QADTR,SDTR,TDCET,TDGET instructions
+//
 // Revision 1.36  2007/01/03 16:54:19  rbowler
 // Decimal Floating Point: TDGDT instruction, TDGXT correction
 //
@@ -1767,7 +1770,75 @@ S64             digits;                 /* Number of decimal digits  */
 } /* end DEF_INST(extract_significance_dfp_long_reg) */
 
 
-UNDEF_INST(insert_biased_exponent_fix64_to_dfp_ext_reg)
+/*-------------------------------------------------------------------*/
+/* B3FE IEXTR - Insert Biased Exponent DFP Extended Register   [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_biased_exponent_fix64_to_dfp_ext_reg)
+{
+int             r1, r2, r3;             /* Values of R fields        */
+decimal128      x1, x3;                 /* Extended DFP values       */
+decNumber       d;                      /* Working decimal number    */
+decContext      set;                    /* Working context           */
+S64             bexp;                   /* Biased exponent           */
+
+    RRF_M(inst, regs, r1, r2, r3);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR2_CHECK(r1, r3, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Load biased exponent from general register r2 */
+    bexp = (S64)(regs->GR(r2));
+
+    /* Load DFP extended number from FP register r3 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r3, &x3, regs);
+
+    /* Insert biased exponent into number */
+    if (bexp > DECIMAL128_Ehigh || bexp == -2 || bexp <= -4)
+    {
+        /* Result is a QNaN with re-encoded coefficient-continuation */
+        dfp128_clear_cf_and_bxcf(&x3);
+        decimal128ToNumber(&x3, &d);
+        decimal128FromNumber(&x1, &d, &set);
+        dfp128_set_cf_and_bxcf(&x1, DFP_CFS_QNAN);
+    }
+    else if (bexp == -3)
+    {
+        /* Result is a SNaN with re-encoded coefficient-continuation */
+        dfp128_clear_cf_and_bxcf(&x3);
+        decimal128ToNumber(&x3, &d);
+        decimal128FromNumber(&x1, &d, &set);
+        dfp128_set_cf_and_bxcf(&x1, DFP_CFS_SNAN);
+    }
+    else if (bexp == -1) /* Infinity */
+    {
+        /* Result is Infinity with re-encoded coefficient-continuation */
+        dfp128_clear_cf_and_bxcf(&x3);
+        decimal128ToNumber(&x3, &d);
+        decimal128FromNumber(&x1, &d, &set);
+        dfp128_set_cf_and_bxcf(&x1, DFP_CFS_INF);
+    }
+    else
+    {
+        decimal128ToNumber(&x3, &d);
+        /* Clear CF and BXCF if source is Infinity or NaN */
+        if (decNumberIsInfinite(&d) || decNumberIsNaN(&d))
+        {
+            dfp128_clear_cf_and_bxcf(&x3);
+            decimal128ToNumber(&x3, &d);
+        }
+        /* Update exponent and re-encode coefficient-continuation */
+        d.exponent = bexp - DECIMAL128_Bias;
+        decimal128FromNumber(&x1, &d, &set);
+    }
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+} /* end DEF_INST(insert_biased_exponent_fix64_to_dfp_ext_reg) */
+
+
 UNDEF_INST(insert_biased_exponent_fix64_to_dfp_long_reg)
 /*-------------------------------------------------------------------*/
 /* B3DE LTXTR - Load and Test DFP Extended Register            [RRE] */
