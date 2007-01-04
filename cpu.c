@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.174  2007/01/03 14:21:41  rbowler
+// Reinstate semantics of 'g' command changed by hsccmd rev 1.197
+//
 // Revision 1.173  2006/12/30 16:15:57  gsmith
 // 2006 Dec 30 Fix cpu_init to call set_jump_pointers for all arches
 //
@@ -1220,6 +1223,7 @@ int i;
     regs->cpubit = BIT(cpu);
     regs->arch_mode = sysblk.arch_mode;
     regs->mainstor = sysblk.mainstor;
+    regs->sysblk = &sysblk;
     /* 
      * ISW20060125 : LINE REMOVED : This is the job of 
      *               the INITIAL CPU RESET

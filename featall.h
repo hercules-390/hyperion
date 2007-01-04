@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.121  2006/12/31 21:16:32  gsmith
+// 2006 Dec 31 really back out mainlockx.pat
+//
 // Revision 1.120  2006/12/20 09:09:40  jj
 // Fix bogus log entries
 //
@@ -40,6 +43,7 @@
 #undef  OPTION_NO_INLINE_VSTORE         /* Performance option        */
 #undef  OPTION_NO_INLINE_IFETCH         /* Performance option        */
 #define OPTION_MULTI_BYTE_ASSIST        /* Performance option        */
+#define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
 #define OPTION_FAST_DEVLOOKUP           /* Fast devnum/subchan lookup*/
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */

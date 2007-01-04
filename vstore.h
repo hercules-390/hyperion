@@ -34,6 +34,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.69  2007/01/04 00:29:17  gsmith
+// 03 Jan 2007 vstorex patch to vstore2, vstore4, vstore8
+//
 // Revision 1.68  2007/01/03 05:53:34  gsmith
 // 03 Jan 2007 Sloppy fetch - Greg Smith
 //
@@ -335,6 +338,7 @@ U32     temp;                           /* Value in right byte order */
 _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
                                          REGS *regs)
 {
+U64    *mn;                             /* Mainstor address          */
 BYTE   *mn1, *mn2, *stop;               /* Mainstor addresses        */
 BYTE   *sk;                             /* Storage key address       */
 int     len;                            /* Length to end of page     */
@@ -344,8 +348,13 @@ U64     temp;                           /* Value in right byte order */
     /* Quick out if boundary not crossed */
     if (likely((addr & 0x7FF) <= 0x7F8))
     {
-        mn1 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        STORE_DW(mn1, value);
+        mn = (U64 *)MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+#if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)
+        if (regs->cpubit == regs->sysblk->started_mask)
+            *mn = CSWAP64(value);
+        else
+#endif
+        STORE_DW(mn, value);
         ITIMER_UPDATE(addr,8-1,regs);
         return;
     }
@@ -556,6 +565,10 @@ U64    dw[2];
     if(likely(((VADR_L)addr & 0x7ff) <= 0x7f8))
     {
         ITIMER_SYNC(addr,8-1,regs);
+#if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_FETCH_DW)
+        if (regs->cpubit == regs->sysblk->started_mask)
+            return CSWAP64(*(U64 *)mn);
+#endif
         return fetch_dw(mn);
     }
 

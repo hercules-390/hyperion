@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.55  2006/12/21 22:39:39  gsmith
+// 21 Dec 2006 Range for s+, t+ - Greg Smith
+//
 // Revision 1.54  2006/12/20 04:26:20  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -174,6 +177,7 @@ struct REGS {                           /* Processor registers       */
                                            register context          */
         REGS   *guestregs;              /* Pointer to the guest
                                            register context          */
+        SYSBLK *sysblk;                 /* Pointer to sysblk         */
 
 #if defined(_FEATURE_SIE)
         RADR    sie_state;              /* Address of the SIE state
