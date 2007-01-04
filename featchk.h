@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.41  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #if defined(FEATCHK_CHECK_ALL)
 
@@ -317,11 +320,6 @@
 #if defined(FEATURE_DECIMAL_FLOATING_POINT) \
  && !defined(FEATURE_BASIC_FP_EXTENSIONS)
  #error Decimal floating point requires basic FP extensions
-#endif
-
-#if defined(FEATURE_DECIMAL_FLOATING_POINT) \
- && !defined(FEATURE_BINARY_FLOATING_POINT)
- #error Decimal floating point requires binary floating point
 #endif
 
 #if defined(FEATURE_BASIC_FP_EXTENSIONS) \
