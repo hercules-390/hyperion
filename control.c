@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.239  2006/12/31 21:16:32  gsmith
+// 2006 Dec 31 really back out mainlockx.pat
+//
 // Revision 1.238  2006/12/22 00:51:43  gsmith
 // 21 Dec 2006 Fix SIGP to do single logmsg - Greg Smith
 //
@@ -5411,6 +5414,8 @@ static char *ordername[] = {
             {
                 U16 check_asn = (parm & 0xFFFF);
 
+                SET_PSW_IA(tregs);
+
                 if (0
 
                     /* PSW disabled for external interruptions,
@@ -5746,6 +5751,7 @@ static char *ordername[] = {
                             sysblk.arch_mode = ARCH_390;
                             set_arch = 1;
 
+                            INVALIDATE_AIA(regs);
                             regs->captured_zpsw = regs->psw;
                             regs->psw.states |= BIT(PSW_NOTESAME_BIT);
                             regs->PX_L &= 0x7FFFE000;
@@ -5755,6 +5761,7 @@ static char *ordername[] = {
                                 if (IS_CPU_ONLINE(cpu) &&
                                     sysblk.regs[cpu]->cpuad != regs->cpuad)
                                 {
+                                    INVALIDATE_AIA(sysblk.regs[cpu]);
                                     sysblk.regs[cpu]->captured_zpsw = sysblk.regs[cpu]->psw;
                                     sysblk.regs[cpu]->psw.states |= BIT(PSW_NOTESAME_BIT);
                                     sysblk.regs[cpu]->PX_L &= 0x7FFFE000;
@@ -5772,6 +5779,7 @@ static char *ordername[] = {
                             sysblk.arch_mode = ARCH_900;
                             set_arch = 1;
 
+                            INVALIDATE_AIA(regs);
                             regs->psw.states &= ~BIT(PSW_NOTESAME_BIT);
                             regs->psw.IA_H = 0;
                             regs->PX_G &= 0x7FFFE000;
@@ -5781,6 +5789,7 @@ static char *ordername[] = {
                                 if (IS_CPU_ONLINE(cpu) &&
                                     sysblk.regs[cpu]->cpuad != regs->cpuad)
                                 {
+                                    INVALIDATE_AIA(sysblk.regs[cpu]);
                                     sysblk.regs[cpu]->psw.states &= ~BIT(PSW_NOTESAME_BIT);
                                     sysblk.regs[cpu]->psw.IA_H = 0;
                                     sysblk.regs[cpu]->PX_G &= 0x7FFFE000;
@@ -5798,6 +5807,7 @@ static char *ordername[] = {
                             sysblk.arch_mode = ARCH_900;
                             set_arch = 1;
 
+                            INVALIDATE_AIA(regs);
                             regs->psw.states &= ~BIT(PSW_NOTESAME_BIT);
                             regs->psw.IA_H = 0;
                             regs->PX_G &= 0x7FFFE000;
@@ -5807,6 +5817,7 @@ static char *ordername[] = {
                                 if (IS_CPU_ONLINE(cpu) &&
                                     sysblk.regs[cpu]->cpuad != regs->cpuad)
                                 {
+                                    INVALIDATE_AIA(sysblk.regs[cpu]);
                                     sysblk.regs[cpu]->psw = sysblk.regs[cpu]->captured_zpsw;
                                     sysblk.regs[cpu]->PX_G &= 0x7FFFE000;
                                 }
