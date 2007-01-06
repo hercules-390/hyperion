@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.57  2007/01/04 23:12:04  gsmith
+// remove thunk calls for program_interrupt
+//
 // Revision 1.56  2007/01/04 01:08:41  gsmith
 // 03 Jan 2007 single_cpu_dw fetch/store patch for ia32
 //
@@ -481,6 +484,7 @@ struct SYSBLK {
                 shutfini:1,             /* 1 = shutdown complete     */
                 main_clear:1,           /* 1 = mainstor is cleared   */
                 xpnd_clear:1,           /* 1 = xpndstor is cleared   */
+                display_inst_traditional:1, /* inst_display mode     */
                 nomountedtapereinit:1;  /* 1 = disallow tape devinit
                                              if tape already mounted */
         U32     ints_state;             /* Common Interrupts Status  */

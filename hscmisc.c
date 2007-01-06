@@ -5,6 +5,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.55  2006/12/30 18:47:30  fish
+// 1. Display regs BEFORE instr being traced.
+// 2. Fix condition for Control Regs trace
+//
 // Revision 1.54  2006/12/18 14:01:54  rbowler
 // Only show CPU in FPR display if numcpu>1
 //
@@ -317,7 +321,7 @@ void display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode)
     }
 
     /* Display control registers if appropriate */
-    if (!REAL_MODE(&regs->psw) && opcode == 0xB2)
+    if (!REAL_MODE(&regs->psw) || opcode == 0xB2)
     {
         display_cregs (regs);
         logmsg("\n");
@@ -1084,7 +1088,8 @@ int     n;                              /* Number of bytes in buffer */
     ilc = ILC(opcode);
 
     /* Show regs as they are before the instruction gets executed */
-    display_inst_regs (regs, inst, opcode);
+    if (!sysblk.display_inst_traditional)
+        display_inst_regs (regs, inst, opcode);
 
     /* Display the instruction */
     n += sprintf (buf+n, "INST=%2.2X%2.2X", inst[0], inst[1]);
@@ -1210,6 +1215,10 @@ int     n;                              /* Number of bytes in buffer */
     }
 
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
+
+    /* Show regs as they are before the instruction gets executed */
+    if (sysblk.display_inst_traditional)
+        display_inst_regs (regs, inst, opcode);
 
 } /* end function display_inst */
 

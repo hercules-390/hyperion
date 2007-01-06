@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.65  2006/12/08 09:43:16  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -571,6 +574,7 @@ char   *sdevprio;                       /* -> Device thread priority */
 char   *spgmprdos;                      /* -> Program product OS OK  */
 char   *slogofile;                      /* -> 3270 logo file         */
 char   *smountedtapereinit;             /* -> mounted tape reinit opt*/
+char   *ssymptom;                       /* -> display_inst option    */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
 char   *sasnandlxreuse;                 /* -> ASNLXREUSE Optional    */
 #endif
@@ -848,6 +852,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sdevtmax = NULL;
         spgmprdos = NULL;
         slogofile = NULL;
+        ssymptom = NULL;
         smountedtapereinit = NULL;
 #if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
@@ -1044,6 +1049,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "mounted_tape_reinit") == 0)
             {
                 smountedtapereinit = operand;
+            }
+            else if (strcasecmp (keyword, "symptom") == 0)
+            {
+                ssymptom = operand;
             }
 #if defined(_FEATURE_ECPSVM)
             /* ECPS:VM support */
@@ -1785,6 +1794,15 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         else /* LogoFile passed in command line */
         {
             readlogo(sysblk.logofile);
+        }
+
+        /* Parse "symptom" option */
+        if (ssymptom)
+        {
+            if (strcasecmp(ssymptom, "traditional") == 0)
+                sysblk.display_inst_traditional = 1;
+            if (strcasecmp(ssymptom, "new") == 0)
+                sysblk.display_inst_traditional = 0;
         }
 
         /* Parse "mounted_tape_reinit" option */

@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.204  2007/01/03 14:21:41  rbowler
+// Reinstate semantics of 'g' command changed by hsccmd rev 1.197
+//
 // Revision 1.203  2006/12/31 21:53:13  fish
 // new 'cd' and 'pwd' commands to go along with existing 'sh' command
 //
@@ -4742,6 +4745,24 @@ int hao_cmd(int argc, char *argv[], char *cmdline)
 #endif /* defined(OPTION_HAO) */
 
 ///////////////////////////////////////////////////////////////////////
+/* symptom - perform display_inst traditionally or new */
+
+int symptom_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+    if (argc == 2)
+    {
+        if (strcasecmp(argv[1], "traditional") == 0)
+            sysblk.display_inst_traditional = 1;
+        if (strcasecmp(argv[1], "new") == 0)
+            sysblk.display_inst_traditional = 0;
+    }
+    logmsg(_("HHCPN162I Hercules symptom dumps displayed in %s mode\n"),
+       sysblk.display_inst_traditional ? _("traditional") : _("new"));
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
 // Handle externally defined commands...
 
 // (for use in CMDTAB COMMAND entry further below)
@@ -4947,6 +4968,8 @@ COMMAND ( "suspend",   suspend_cmd,   "Suspend hercules" )
 COMMAND ( "resume",    resume_cmd,    "Resume hercules\n" )
 
 COMMAND ( "herclogo",    herclogo_cmd,    "Read a new hercules logo file\n" )
+
+COMMAND ( "symptom",   symptom_cmd,    "Display instructions new or traditional\n" )
 
 #define   TEST_CMD "$test"          // (hidden internal command)
 COMMAND ( TEST_CMD, $test_cmd,        "(hidden internal command)" )
