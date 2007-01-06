@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.193  2007/01/04 23:12:04  gsmith
+// remove thunk calls for program_interrupt
+//
 // Revision 1.192  2007/01/03 05:53:34  gsmith
 // 03 Jan 2007 Sloppy fetch - Greg Smith
 //
@@ -900,6 +903,7 @@ do { \
 #define DECODER_TEST_RRF_M
 #define DECODER_TEST_RRF_M4
 #define DECODER_TEST_RRF_RM
+#define DECODER_TEST_RRF_MM
 #define DECODER_TEST_RRR
 #undef DECODER_TEST_RX
 #define DECODER_TEST_RXE
@@ -1110,6 +1114,37 @@ do { \
 #define RRF_RM_DECODER_TEST(_inst, _regs, _r1, _r2, _r3, _m4, _len, _ilc) \
       { U32 temp = fetch_fw(_inst); \
             (_r3) = (temp >> 12) & 0xf; \
+            (_m4) = (temp >>  8) & 0xf; \
+            (_r2) = (temp      ) & 0xf; \
+            (_r1) = (temp >>  4) & 0xf; \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+      }
+
+/* RRF register to register with additional M3 and M4 fields */
+#undef RRF_MM
+
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RRF_MM)
+ #define RRF_MM(_inst, _regs, _r1, _r2, _m3, _m4) \
+         RRF_MM_DECODER(_inst, _regs, _r1, _r2, _m3, _m4, 4, 4)
+#else
+ #define RRF_MM(_inst, _regs, _r1, _r2, _m3, _m4) \
+         RRF_MM_DECODER_TEST(_inst, _regs, _r1, _r2, _m3, _m4, 4, 4)
+#endif
+
+#define RRF_MM_DECODER(_inst, _regs, _r1, _r2, _m3, _m4, _len, _ilc) \
+        { \
+            int i = (_inst)[2]; \
+            (_m3) = i >> 4; \
+            (_m4) = i & 0xf; \
+            i = (_inst)[3]; \
+            (_r1) = i >> 4; \
+            (_r2) = i & 0xf; \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+        }
+
+#define RRF_MM_DECODER_TEST(_inst, _regs, _r1, _r2, _m3, _m4, _len, _ilc) \
+      { U32 temp = fetch_fw(_inst); \
+            (_m3) = (temp >> 12) & 0xf; \
             (_m4) = (temp >>  8) & 0xf; \
             (_r2) = (temp      ) & 0xf; \
             (_r1) = (temp >>  4) & 0xf; \
