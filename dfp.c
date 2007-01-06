@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.40  2007/01/05 16:58:02  rbowler
+// Decimal Floating Point: IEDTR instruction
+//
 // Revision 1.39  2007/01/04 16:36:14  rbowler
 // dfp.c:414: warning: comparison between signed and unsigned
 //
@@ -2016,7 +2019,80 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(load_and_test_dfp_long_reg) */
 
 
-UNDEF_INST(load_fp_int_dfp_ext_reg)
+/*-------------------------------------------------------------------*/
+/* B3DF FIXTR - Load FP Integer DFP Extended Register          [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_fp_int_dfp_ext_reg)
+{
+int             r1, r2, m3, m4;         /* Values of R and M fields  */
+decimal128      x1, x2;                 /* Extended DFP values       */
+decNumber       d1, d2, dc;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR2_CHECK(r1, r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load decimal number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x2, &d2);
+
+    if (decNumberIsInfinite(&d2) == 0 && decNumberIsNaN(&d2) == 0)
+    {
+        /* Remove fractional part of decimal number */
+        decNumberToIntegralValue(&d1, &d2, &set);
+
+        /* Raise inexact condition if M4 bit 1 is zero
+           result differs in value from original value */
+        if ((m4 & 0x04) == 0)
+        {
+            decNumberCompare(&dc, &d1, &d2, &set);
+            if (decNumberIsZero(&dc) == 0)
+            {
+                set.status |= DEC_IEEE_854_Inexact;
+                if (decNumberIsNegative(&dc) == decNumberIsNegative(&d2))
+                    set.status |= DEC_Rounded;
+            }
+        }
+    }
+    else
+    {
+        /* Propagate NaN or default infinity */
+        decNumberCopy(&d1, &d2);
+
+        /* For SNaN, force signaling condition and convert to QNaN */
+        if (decNumberIsSNaN(&d2))
+        {
+            set.status |= DEC_IEEE_854_Invalid_operation;
+            d1.bits &= ~DECSNAN;
+            d1.bits |= DECNAN;
+        }
+    }
+
+    /* Convert result to extended DFP format */
+    decimal128FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(load_fp_int_dfp_ext_reg) */
+
+
 UNDEF_INST(load_fp_int_dfp_long_reg)
 
  
