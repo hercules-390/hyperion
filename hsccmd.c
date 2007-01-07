@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.206  2007/01/07 11:25:33  rbowler
+// Instruction tracing regsfirst and noregs modes
+//
 // Revision 1.205  2007/01/06 09:05:18  gsmith
 // Enable display_inst to display traditionally too
 //
@@ -5135,8 +5138,6 @@ int ListAllCommands(int argc, char *argv[], char *cmdline)
 
     /* x+ and x- commands - turn switches on or off */
 
-    logmsg( "  %-9.9s    %s \n", "t{+/-}",    _("turn instruction tracing on/off") );
-    logmsg( "  %-9.9s    %s \n", "s{+/-}",    _("turn instruction stepping on/off") );
     logmsg( "  %-9.9s    %s \n", "t{+/-}dev", _("turn CCW tracing on/off") );
     logmsg( "  %-9.9s    %s \n", "s{+/-}dev", _("turn CCW stepping on/off") );
 #ifdef OPTION_CKD_KEY_TRACING
@@ -5292,14 +5293,61 @@ CMDHELP ( "sh",        "Format: \"sh command [args...]\" where 'command' is any 
                        )
 
 CMDHELP ( "b",         "Format: \"b addr\" or \"b addr-addr\" where 'addr' is the instruction\n"
-                       "address or range of addresses where you wish to halt execution. Once\n"
-                       "the breakpoint is reached, instruction execution is temporarily halted\n"
-                       "and the next instruction to be executed is displayed. You may then\n"
-                       "examine registers and/or storage, etc. To continue execution after\n"
-                       "reaching a breakpoint, enter the 'g' command.\n"
+                       "address or range of addresses where you wish to halt execution. This\n"
+                       "command is synonymous with the \"s+\" command.\n"
                        )
 
-CMDHELP ( "b-",        "Format: \"b-\"  (removes any previously set breakpoint)\n"
+CMDHELP ( "b-",        "Format: \"b-\"  This command is the same as \"s-\"\n"
+                       )
+
+CMDHELP ( "s",         "Format: \"s addr-addr\" or \"s addr:addr\" or \"s addr.length\"\n"
+                       "sets the instruction stepping and instruction breaking range,\n"
+                       "(which is totally separate from the instruction tracing range).\n"
+                       "With or without a range, the s command displays whether instruction\n"
+                       "stepping is on or off and the range if any.\n"
+                       "The s command by itself does not activate instruction stepping.\n"
+                       "Use the s+ command to activate instruction stepping.\n"
+                       "\"s 0\" eliminates the range (all addresses will be stepped).\n"
+                       )
+
+CMDHELP ( "s?",        "Format: \"s?\" displays whether instruction stepping is on or off\n"
+                       "and the range if any.\n"
+                       )
+
+CMDHELP ( "s+",        "Format: \"s+\" turns on instruction stepping. A range can be specified\n"
+                       "as for the \"s\" command, otherwise the existing range is used. If there\n"
+                       "is no range (or range was specified as 0) then the range includes all\n"
+                       "addresses. When an instruction within the range is about to be executed,\n"
+                       "the CPU is temporarily stopped and the next instruction is displayed.\n"
+                       "You may then examine registers and/or storage, etc, before pressing Enter\n"
+                       "to execute the instruction and stop at the next instruction. To turn\n"
+                       "off instruction stepping and continue execution, enter the \"g\" command.\n"
+                       )
+
+CMDHELP ( "s-",        "Format: \"s-\" turns off instruction stepping.\n"
+                       )
+
+CMDHELP ( "t",         "Format: \"t addr-addr\" or \"t addr:addr\" or \"t addr.length\"\n"
+                       "sets the instruction tracing range (which is totally separate from\n"
+                       "the instruction stepping and breaking range).\n"
+                       "With or without a range, the t command displays whether instruction\n"
+                       "tracing is on or off and the range if any.\n"
+                       "The t command by itself does not activate instruction tracing.\n"
+                       "Use the t+ command to activate instruction tracing.\n"
+                       "\"t 0\" eliminates the range (all addresses will be traced).\n"
+                       )
+
+CMDHELP ( "t?",        "Format: \"t?\" displays whether instruction tracing is on or off\n"
+                       "and the range if any.\n"
+                       )
+
+CMDHELP ( "t+",        "Format: \"t+\" turns on instruction tracing. A range can be specified\n"
+                       "as for the \"t\" command, otherwise the existing range is used. If there\n"
+                       "is no range (or range was specified as 0) then all instructions will be\n"
+                       "traced.\n"
+                       )
+
+CMDHELP ( "t-",        "Format: \"t-\" turns off instruction tracing.\n"
                        )
 
 CMDHELP ( "pgmtrace",  "Format: \"pgmtrace [-]intcode\" where 'intcode' is any valid program\n"
