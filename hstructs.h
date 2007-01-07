@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.58  2007/01/06 09:05:18  gsmith
+// Enable display_inst to display traditionally too
+//
 // Revision 1.57  2007/01/04 23:12:04  gsmith
 // remove thunk calls for program_interrupt
 //
@@ -484,7 +487,8 @@ struct SYSBLK {
                 shutfini:1,             /* 1 = shutdown complete     */
                 main_clear:1,           /* 1 = mainstor is cleared   */
                 xpnd_clear:1,           /* 1 = xpndstor is cleared   */
-                display_inst_traditional:1, /* inst_display mode     */
+                showregsfirst:1,        /* 1 = show regs before inst */
+                showregsnone:1,         /* 1 = show no registers     */
                 nomountedtapereinit:1;  /* 1 = disallow tape devinit
                                              if tape already mounted */
         U32     ints_state;             /* Common Interrupts Status  */

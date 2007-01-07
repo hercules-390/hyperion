@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.205  2007/01/06 09:05:18  gsmith
+// Enable display_inst to display traditionally too
+//
 // Revision 1.204  2007/01/03 14:21:41  rbowler
 // Reinstate semantics of 'g' command changed by hsccmd rev 1.197
 //
@@ -4753,12 +4756,25 @@ int symptom_cmd(int argc, char *argv[], char *cmdline)
     if (argc == 2)
     {
         if (strcasecmp(argv[1], "traditional") == 0)
-            sysblk.display_inst_traditional = 1;
-        if (strcasecmp(argv[1], "new") == 0)
-            sysblk.display_inst_traditional = 0;
+        {
+            sysblk.showregsfirst = 0;
+            sysblk.showregsnone = 0;
+        }
+        if (strcasecmp(argv[1], "regsfirst") == 0)
+        {
+            sysblk.showregsfirst = 1;
+            sysblk.showregsnone = 0;
+        }
+        if (strcasecmp(argv[1], "noregs") == 0)
+        {
+            sysblk.showregsfirst = 0;
+            sysblk.showregsnone = 1;
+        }
     }
     logmsg(_("HHCPN162I Hercules symptom dumps displayed in %s mode\n"),
-       sysblk.display_inst_traditional ? _("traditional") : _("new"));
+        sysblk.showregsnone ? _("noregs") : 
+        sysblk.showregsfirst ? _("regsfirst") : 
+                        _("traditional"));
     return 0;
 }
 
@@ -4969,7 +4985,7 @@ COMMAND ( "resume",    resume_cmd,    "Resume hercules\n" )
 
 COMMAND ( "herclogo",    herclogo_cmd,    "Read a new hercules logo file\n" )
 
-COMMAND ( "symptom",   symptom_cmd,    "Display instructions new or traditional\n" )
+COMMAND ( "symptom",   symptom_cmd,   "Instruction trace display options\n" )
 
 #define   TEST_CMD "$test"          // (hidden internal command)
 COMMAND ( TEST_CMD, $test_cmd,        "(hidden internal command)" )
@@ -5355,6 +5371,11 @@ CMDHELP ( "evm",      "Format: \"evm\". This command is deprecated.\n"
 
 CMDHELP ( "herclogo",  "Format: \"herclogo [<filename>]\". Load a new logo file for 3270 terminal sessions\n"
                        "If no filename is specified, the built-in logo is used instead\n"
+                       )
+
+CMDHELP ( "symptom",   "Format: \"symptom [regsfirst | noregs | traditional]\". Determines how the registers\n"
+                       "are displayed during instruction tracing and stepping. Entering the command without\n"
+                       "any argument simply displays the current mode.\n"
                        )
 
 #if defined(FISH_HANG)

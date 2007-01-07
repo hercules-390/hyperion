@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.66  2007/01/06 09:05:18  gsmith
+// Enable display_inst to display traditionally too
+//
 // Revision 1.65  2006/12/08 09:43:16  jj
 // Add CVS message log
 //
@@ -1800,9 +1803,27 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (ssymptom)
         {
             if (strcasecmp(ssymptom, "traditional") == 0)
-                sysblk.display_inst_traditional = 1;
-            if (strcasecmp(ssymptom, "new") == 0)
-                sysblk.display_inst_traditional = 0;
+            {
+                sysblk.showregsfirst = 0;
+                sysblk.showregsnone = 0;
+            }
+            else if (strcasecmp(ssymptom, "regsfirst") == 0)
+            {
+                sysblk.showregsfirst = 1;
+                sysblk.showregsnone = 0;
+            }
+            else if (strcasecmp(ssymptom, "noregs") == 0)
+            {
+                sysblk.showregsfirst = 0;
+                sysblk.showregsnone = 1;
+            }
+            else
+            {
+                fprintf(stderr, _("HHCCF088S Error in %s line %d: "
+                        "Invalid symptom keyword %s\n"),
+                        fname, inc_stmtnum[inc_level], ssymptom);
+                delayed_exit(1);
+            }
         }
 
         /* Parse "mounted_tape_reinit" option */

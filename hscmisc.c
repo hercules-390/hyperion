@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.56  2007/01/06 09:05:18  gsmith
+// Enable display_inst to display traditionally too
+//
 // Revision 1.55  2006/12/30 18:47:30  fish
 // 1. Display regs BEFORE instr being traced.
 // 2. Fix condition for Control Regs trace
@@ -305,7 +308,7 @@ static void display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus)
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Display registers for the instruction about to be executed        */
+/* Display registers for the instruction display                     */
 /*-------------------------------------------------------------------*/
 void display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode)
 {
@@ -317,21 +320,21 @@ void display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode)
            )))
     {
         display_regs (regs);
-        logmsg("\n");
+        if (sysblk.showregsfirst) logmsg("\n");
     }
 
     /* Display control registers if appropriate */
     if (!REAL_MODE(&regs->psw) || opcode == 0xB2)
     {
         display_cregs (regs);
-        logmsg("\n");
+        if (sysblk.showregsfirst) logmsg("\n");
     }
 
     /* Display access registers if appropriate */
     if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
     {
         display_aregs (regs);
-        logmsg("\n");
+        if (sysblk.showregsfirst) logmsg("\n");
     }
 
     /* Display floating-point registers if appropriate */
@@ -345,7 +348,7 @@ void display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode)
        )
     {
         display_fregs (regs);
-        logmsg("\n");
+        if (sysblk.showregsfirst) logmsg("\n");
     }
 }
 
@@ -1087,8 +1090,8 @@ int     n;                              /* Number of bytes in buffer */
     opcode = inst[0];
     ilc = ILC(opcode);
 
-    /* Show regs as they are before the instruction gets executed */
-    if (!sysblk.display_inst_traditional)
+    /* Show registers associated with the instruction */
+    if (sysblk.showregsfirst)
         display_inst_regs (regs, inst, opcode);
 
     /* Display the instruction */
@@ -1216,8 +1219,8 @@ int     n;                              /* Number of bytes in buffer */
 
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
 
-    /* Show regs as they are before the instruction gets executed */
-    if (sysblk.display_inst_traditional)
+    /* Show registers associated with the instruction */
+    if (!sysblk.showregsfirst && !sysblk.showregsnone)
         display_inst_regs (regs, inst, opcode);
 
 } /* end function display_inst */
