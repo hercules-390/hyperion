@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.207  2007/01/07 22:07:34  rbowler
+// Help text for new inststep/insttrace commands
+//
 // Revision 1.206  2007/01/07 11:25:33  rbowler
 // Instruction tracing regsfirst and noregs modes
 //
@@ -4751,9 +4754,9 @@ int hao_cmd(int argc, char *argv[], char *cmdline)
 #endif /* defined(OPTION_HAO) */
 
 ///////////////////////////////////////////////////////////////////////
-/* symptom - perform display_inst traditionally or new */
+/* traceopt - perform display_inst traditionally or new */
 
-int symptom_cmd(int argc, char *argv[], char *cmdline)
+int traceopt_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     if (argc == 2)
@@ -4774,7 +4777,7 @@ int symptom_cmd(int argc, char *argv[], char *cmdline)
             sysblk.showregsnone = 1;
         }
     }
-    logmsg(_("HHCPN162I Hercules symptom dumps displayed in %s mode\n"),
+    logmsg(_("HHCPN162I Hercules instruction trace displayed in %s mode\n"),
         sysblk.showregsnone ? _("noregs") : 
         sysblk.showregsfirst ? _("regsfirst") : 
                         _("traditional"));
@@ -4988,7 +4991,7 @@ COMMAND ( "resume",    resume_cmd,    "Resume hercules\n" )
 
 COMMAND ( "herclogo",    herclogo_cmd,    "Read a new hercules logo file\n" )
 
-COMMAND ( "symptom",   symptom_cmd,   "Instruction trace display options\n" )
+COMMAND ( "traceopt",  traceopt_cmd,  "Instruction trace display options\n" )
 
 #define   TEST_CMD "$test"          // (hidden internal command)
 COMMAND ( TEST_CMD, $test_cmd,        "(hidden internal command)" )
@@ -5421,9 +5424,9 @@ CMDHELP ( "herclogo",  "Format: \"herclogo [<filename>]\". Load a new logo file 
                        "If no filename is specified, the built-in logo is used instead\n"
                        )
 
-CMDHELP ( "symptom",   "Format: \"symptom [regsfirst | noregs | traditional]\". Determines how the registers\n"
-                       "are displayed during instruction tracing and stepping. Entering the command without\n"
-                       "any argument simply displays the current mode.\n"
+CMDHELP ( "traceopt",  "Format: \"traceopt [regsfirst | noregs | traditional]\". Determines how the\n"
+                       "registers are displayed during instruction tracing and stepping. Entering\n"
+                       "the command without any argument simply displays the current mode.\n"
                        )
 
 #if defined(FISH_HANG)

@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.67  2007/01/07 11:25:33  rbowler
+// Instruction tracing regsfirst and noregs modes
+//
 // Revision 1.66  2007/01/06 09:05:18  gsmith
 // Enable display_inst to display traditionally too
 //
@@ -577,7 +580,7 @@ char   *sdevprio;                       /* -> Device thread priority */
 char   *spgmprdos;                      /* -> Program product OS OK  */
 char   *slogofile;                      /* -> 3270 logo file         */
 char   *smountedtapereinit;             /* -> mounted tape reinit opt*/
-char   *ssymptom;                       /* -> display_inst option    */
+char   *straceopt;                      /* -> display_inst option    */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
 char   *sasnandlxreuse;                 /* -> ASNLXREUSE Optional    */
 #endif
@@ -855,7 +858,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sdevtmax = NULL;
         spgmprdos = NULL;
         slogofile = NULL;
-        ssymptom = NULL;
+        straceopt = NULL;
         smountedtapereinit = NULL;
 #if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
@@ -1053,9 +1056,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             {
                 smountedtapereinit = operand;
             }
-            else if (strcasecmp (keyword, "symptom") == 0)
+            else if (strcasecmp (keyword, "traceopt") == 0
+                     || strcasecmp (keyword, "symptom") == 0)
             {
-                ssymptom = operand;
+                straceopt = operand;
             }
 #if defined(_FEATURE_ECPSVM)
             /* ECPS:VM support */
@@ -1799,20 +1803,20 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             readlogo(sysblk.logofile);
         }
 
-        /* Parse "symptom" option */
-        if (ssymptom)
+        /* Parse "traceopt" option */
+        if (straceopt)
         {
-            if (strcasecmp(ssymptom, "traditional") == 0)
+            if (strcasecmp(straceopt, "traditional") == 0)
             {
                 sysblk.showregsfirst = 0;
                 sysblk.showregsnone = 0;
             }
-            else if (strcasecmp(ssymptom, "regsfirst") == 0)
+            else if (strcasecmp(straceopt, "regsfirst") == 0)
             {
                 sysblk.showregsfirst = 1;
                 sysblk.showregsnone = 0;
             }
-            else if (strcasecmp(ssymptom, "noregs") == 0)
+            else if (strcasecmp(straceopt, "noregs") == 0)
             {
                 sysblk.showregsfirst = 0;
                 sysblk.showregsnone = 1;
@@ -1820,8 +1824,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else
             {
                 fprintf(stderr, _("HHCCF088S Error in %s line %d: "
-                        "Invalid symptom keyword %s\n"),
-                        fname, inc_stmtnum[inc_level], ssymptom);
+                        "Invalid trace option keyword %s\n"),
+                        fname, inc_stmtnum[inc_level], straceopt);
                 delayed_exit(1);
             }
         }
