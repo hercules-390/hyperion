@@ -12,6 +12,7 @@
 /*      dasdconv [options] infile outfile                            */
 /*                                                                   */
 /* options      -r means overwrite existing outfile                  */
+/*              -q means suppress progress messages                  */
 /*              -lfs creates one large output file (if supported)    */
 /* infile       is the name of the HDR-30 format CKD image file      */
 /*              ("-" means that the CKD image is read from stdin)    */
@@ -27,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.13  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -103,7 +107,8 @@ argexit ( int code )
             "\t\t   (input file may be compressed)\n"
           #endif /*defined(HAVE_LIBZ)*/
             "\toutfile  = name of AWSCKD image file to be created\n"  
-            "options:\n\t-r       = replace existing output file\n");
+            "options:\n\t-r       = replace existing output file\n"  
+            "\t-q       = suppress progress messages\n");
     if (sizeof(off_t) > 4) fprintf(stderr,
             "\t-lfs     = build one large output file\n");
     EXIT(code);
@@ -441,7 +446,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 /*-------------------------------------------------------------------*/
 static void
 convert_ckd_file (IFD ifd, char *ifname, int itrklen, BYTE *itrkbuf,
-                int repl,
+                int repl, int quiet,
                 char *ofname, int fseqn, U16 devtype, U32 heads,
                 U32 trksize, BYTE *obuf, U32 start, U32 end,
                 U32 volcyls, BYTE *volser)
@@ -531,6 +536,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
                 fprintf (stderr, "CYL=%u\n", cyl);
             else
 #endif /*EXTERNALGUI*/
+            if (quiet == 0)
                 fprintf (stderr, "Writing cylinder %u\r", cyl);
         }
 
@@ -680,7 +686,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 /*-------------------------------------------------------------------*/
 static void
 convert_ckd (int lfs, IFD ifd, char *ifname, int itrklen,
-            BYTE *itrkbuf, int repl,
+            BYTE *itrkbuf, int repl, int quiet,
             char *ofname, U16 devtype, U32 heads,
             U32 maxdlen, U32 volcyls, BYTE *volser)
 {
@@ -791,7 +797,7 @@ U32             trksize;                /* AWSCKD image track length */
             endcyl = volcyls - 1;
 
         /* Create an AWSCKD image file */
-        convert_ckd_file (ifd, ifname, itrklen, itrkbuf, repl,
+        convert_ckd_file (ifd, ifname, itrklen, itrkbuf, repl, quiet,
                         sfname, fileseq, devtype, heads, trksize,
                         obuf, cyl, endcyl, volcyls, volser);
     }
@@ -808,6 +814,7 @@ int main ( int argc, char *argv[] )
 {
 IFD             ifd;                    /* Input file descriptor     */
 int             repl = 0;               /* 1=replace existing file   */
+int             quiet = 0;              /* 1=suppress progress msgs  */
 BYTE           *itrkbuf;                /* -> Input track buffer     */
 U32             itrklen;                /* Input track length        */
 U32             volcyls;                /* Total cylinders on volume */
@@ -842,6 +849,8 @@ int             lfs = 0;                /* 1 = Build large file      */
         if (argv[1][0] != '-') break;
         if (strcmp(argv[1], "-r") == 0)
             repl = 1;
+        else if (strcmp(argv[1], "-q") == 0)
+            quiet = 1;
         else
         if (sizeof(off_t) > 4 && strcmp(argv[1], "-lfs") == 0)
             lfs = 1;
@@ -884,7 +893,7 @@ int             lfs = 0;                /* 1 = Build large file      */
     } /* end switch(devtype) */
 
     /* Create the device */
-    convert_ckd (lfs, ifd, ifname, itrklen, itrkbuf, repl,
+    convert_ckd (lfs, ifd, ifname, itrklen, itrkbuf, repl, quiet,
                 ofname, devtype, heads, maxdlen, volcyls, volser);
 
     /* Release the input buffer and close the input file */

@@ -1,3 +1,4 @@
+08 Jan 2007 Add dasdconv -q (quiet) option - Roger Bowler
 04 Jan 2007 remove thunk calls for program_interrupt - Greg Smith
 03 Jan 2007 single_cpu_dw fetch/store patch for ia32 - Greg Smith
 03 Jan 2007 vstorex patch to vstore2, vstore4, vstore8 - Greg Smith
