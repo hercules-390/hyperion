@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.134  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -3590,7 +3593,19 @@ int device_attention (DEVBLK *dev, BYTE unitstat)
 #if defined(_370)
         case ARCH_370:
             /* Do NOT raise if initial power-on state */
+            /*
+             * FIXME : The dev->crwpendig test in S/370
+             *         mode prevents any devices added
+             *         at run time after IPL from being
+             *         operational. The test has been
+             *         temporarily disabled until it is
+             *         either confirmed as being superfluous
+             *         or another solution is found.
+             *         ISW 20070109
+             */
+            /*
             if (dev->crwpending) return 3;
+            */
             return s370_device_attention(dev, unitstat);
 #endif
 #if defined(_390)
