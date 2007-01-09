@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.194  2007/01/06 23:28:40  rbowler
+// Add RRF_MM instruction format
+//
 // Revision 1.193  2007/01/04 23:12:04  gsmith
 // remove thunk calls for program_interrupt
 //
@@ -266,16 +269,20 @@ int used; \
 
 #define OBTAIN_MAINLOCK(_regs) \
 do { \
+  if ((_regs)->cpubit != (_regs)->sysblk->started_mask) { \
     (_regs)->hostregs->mainwait = 1; \
-    obtain_lock(&sysblk.mainlock); \
+    obtain_lock(&(_regs)->sysblk->mainlock); \
     (_regs)->hostregs->mainwait = 0; \
-    sysblk.mainowner = (_regs)->hostregs->cpuad; \
+    (_regs)->sysblk->mainowner = (_regs)->hostregs->cpuad; \
+  } \
 } while(0)
 
 #define RELEASE_MAINLOCK(_regs) \
 do { \
-    sysblk.mainowner = LOCK_OWNER_NONE; \
-    release_lock(&sysblk.mainlock); \
+  if ((_regs)->sysblk->mainowner == (_regs)->hostregs->cpuad) { \
+    (_regs)->sysblk->mainowner = LOCK_OWNER_NONE; \
+    release_lock(&(_regs)->sysblk->mainlock); \
+  } \
 } while(0)
 
 
