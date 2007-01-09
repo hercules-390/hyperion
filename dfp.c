@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.41  2007/01/06 23:30:48  rbowler
+// Decimal Floating Point: FIXTR instruction
+//
 // Revision 1.40  2007/01/05 16:58:02  rbowler
 // Decimal Floating Point: IEDTR instruction
 //
@@ -2047,7 +2050,7 @@ BYTE            dxc;                    /* Data exception code       */
         /* Remove fractional part of decimal number */
         decNumberToIntegralValue(&d1, &d2, &set);
 
-        /* Raise inexact condition if M4 bit 1 is zero
+        /* Raise inexact condition if M4 bit 1 is zero and
            result differs in value from original value */
         if ((m4 & 0x04) == 0)
         {

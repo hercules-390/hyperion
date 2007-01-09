@@ -1,0 +1,41 @@
+* FIXTR test $Id$
+sysclear
+archmode esame
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=B7000310     # LCTL R0,R0,CTLR0  Set CR0 bit 45
+r 204=B2BD0314     # LFAS FPCREG       Load value into FPC register
+r 208=41000005     # LA R0,5           R0=Number of test data
+r 20C=41100320     # LA R1,TEST1       R1=>Test data table
+r 210=41F00400     # LA R15,RES1       R15=>Result table
+r 214=E3401000008F #A LPQ R4,0(,R1)    Load R4,R5=TESTn
+r 21A=B3C10044     # LDGR F4,R4        Load FPR4 from R4
+r 21E=B3C10065     # LDGR F6,R5        Load FPR6 from R5          
+r 222=41200008     # LA R2,8           R2=Number of DRM tests
+r 226=A7390000     # LGHI R3,0         R3=DRM 0
+r 22A=B2B93000     #B SRNMT 0(R3)      Set DFP rounding mode from R3
+r 22E=B3DF0054     # FIXTR F5,0,F4,0   Load int FPR5,7 from FPR4,6
+r 232=B3CD0065     # LGDR R6,F5        Load R6 from FPR5
+r 236=B3CD0077     # LGDR R7,F7        Load R7 from FPR7
+r 23A=E360F000008E # STPQ R6,0(,R15)   Store R6,R7 in result table
+r 240=41F0F010     # LA R15,16(,R15)   R15=>next result table
+r 244=41303001     # LA R3,1(,R3)      R3=>Next DRM
+r 248=4620022A     # BCT R2,B          Loop thru DRM 0-7
+r 24C=41101010     # LA R1,16(,R1)     R1=>Next TESTn
+r 250=46000214     # BCT R0,A          Loop to end of TEST table
+r 254=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
+r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
+r 314=00000000     # FPCREG            Floating point control register        
+r 320=22080000000000000000000000000100 # TEST1 DC DX'100' 
+r 330=2207C000000000000000000000000035 # TEST2 DC DX'3.5' 
+r 340=A207C000000000000000000000000005 # TEST3 DC DX'-0.5'
+r 350=7EABCDEF01234567890123456789ABCD # TEST4 DC DX'SNAN' 
+r 360=78123456789ABCDE0123456789ABCDEF # TEST5 DC DX'INF'
+pgmtrace +7
+restart
+pause 1
+* Display test data
+r 320.50 
+* Display results
+r 400.280
