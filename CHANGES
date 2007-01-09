@@ -1,3 +1,4 @@
+09 Jan 2007 Tweaks to cpuloop - Greg Smith
 09 Jan 2007 Bypass mainlock if only 1 cpu started - Greg Smith
 09 Jan 2007 Tweaks to lm/stm - Greg Smith
 08 Jan 2007 Add dasdconv -q (quiet) option - Roger Bowler

@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.176  2007/01/04 23:12:03  gsmith
+// remove thunk calls for program_interrupt
+//
 // Revision 1.175  2007/01/04 01:08:41  gsmith
 // 03 Jan 2007 single_cpu_dw fetch/store patch for ia32
 //
@@ -1338,7 +1341,7 @@ void *cpu_uninit (int cpu, REGS *regs)
 /*-------------------------------------------------------------------*/
 /* Process interrupt                                                 */
 /*-------------------------------------------------------------------*/
-int (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
+void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 {
     /* Process PER program interrupts */
     if( OPEN_IC_PER(regs) )
@@ -1405,7 +1408,7 @@ int (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 
             /* Thread exit (note - intlock still held) */
             cpu_uninit(regs->cpuad, regs);
-            return 1;
+            return;
         }
 
         /* If initial CPU reset pending then perform reset */
@@ -1540,7 +1543,7 @@ int (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     /* Release the interrupt lock */
     RELEASE_INTLOCK(regs);
 
-    return 0;
+    longjmp(regs->progjmp, SIE_NO_INTERCEPT);
 
 } /* process_interrupt */
 
@@ -1696,15 +1699,11 @@ REGS    regs;
     /* Establish longjmp destination for program check */
     setjmp(regs.progjmp);
 
-    /* Set `execflag' is 0 in case EXecuted instruction did a longjmp() */
+    /* Set `execflag' to 0 in case EXecuted instruction did a longjmp() */
     regs.execflag = 0;
 
-    while (1)
+    while (!INTERRUPT_PENDING(&regs))
     {
-        if ( unlikely(INTERRUPT_PENDING(&regs)) )
-            if (ARCH_DEP(process_interrupt)(&regs))
-                return NULL;
-
         ip = INSTRUCTION_FETCH(&regs, 0);
         regs.instcount++;
         EXECUTE_INSTRUCTION(ip, &regs);
@@ -1713,16 +1712,24 @@ REGS    regs;
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
+            UNROLLED_EXECUTE(&regs);
+            UNROLLED_EXECUTE(&regs);
+            UNROLLED_EXECUTE(&regs);
 
-            regs.instcount += 8;
+            regs.instcount += 12;
 
+            UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
         } while (!INTERRUPT_PENDING(&regs));
-    }
+    } /* while(!INTERRUPT_PENDING(&regs)) */
+
+    /* process_interrupt will do longjmp unless we're exiting */
+    ARCH_DEP(process_interrupt)(&regs);
+    return NULL;
 
 } /* end function cpu_thread */
 
