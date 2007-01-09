@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.145  2007/01/04 23:12:04  gsmith
+// remove thunk calls for program_interrupt
+//
 // Revision 1.144  2006/12/31 21:16:32  gsmith
 // 2006 Dec 31 really back out mainlockx.pat
 //
@@ -3262,44 +3265,62 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 int     i, m, n;                        /* Integer work areas        */
-U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
-U32     rwork[16];                      /* Intermediate work area    */
+U32    *p1, *p2;                        /* Mainstor pointers         */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
-    /* Calculate number of regs to fetch */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Calculate number of bytes to load */
+    n = (((r3 - r1) & 0xF) + 1) << 2;
 
-    ITIMER_SYNC(effective_addr2,n*4-1,regs);
+    /* Calculate number of bytes to next boundary */
+    m = 0x800 - ((VADR_L)effective_addr2 & 0x7ff);
 
-    /* Calculate number of words to next boundary */
-    m = (0x800 - (effective_addr2 & 0x7ff)) >> 2;
+    /* Address of operand beginning */
+    p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
-    if (unlikely((effective_addr2 & 3) && m < n))
+    if (likely(n <= m))
     {
-        ARCH_DEP(vfetchc) (rwork, (n * 4) - 1, effective_addr2, b2, regs);
-        m = n;
-        p1 = rwork;
+        /* Boundary not crossed */
+        n >>= 2;
+        for (i = 0; i < n; i++)
+            regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1++);
     }
     else
     {
-        /* Address of operand beginning */
-        p1 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        /* Boundary crossed, get 2nd page address */
+        effective_addr2 += m;
+        effective_addr2 &= ADDRESS_MAXWRAP(regs);
+        p2 = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
-        /* Get address of next page if boundary crossed */
-        if (unlikely (m < n))
-            p2 = (U32*)MADDR(effective_addr2 + (m*4), b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        if (likely((m & 0x3) == 0))
+        {
+            /* Addresses are word aligned */
+            m >>= 2;
+            for (i = 0; i < m; i++)
+                regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1++);
+            n >>= 2;
+            for ( ; i < n; i++)
+                regs->GR_L((r1 + i) & 0xF) = fetch_fw (p2++);
+        }
         else
-            m = n;
+        {
+            /* Worst case */
+            U32 rwork[16];
+            BYTE *b1, *b2;
+
+            b1 = (BYTE *)&rwork[0];
+            b2 = (BYTE *)p1;
+            for (i = 0; i < m; i++)
+                *b1++ = *b2++;
+            b2 = (BYTE *)p2;
+            for ( ; i < n; i++)
+                *b1++ = *b2++;
+
+            n >>= 2;
+            for (i = 0; i < n; i++)
+                regs->GR_L((r1 + i) & 0xF) = CSWAP32(rwork[i]);
+        }
     }
-
-    /* Load from first page */
-    for (i = 0; i < m; i++)
-        regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1++);
-
-    /* Load from next page */
-    for ( ; i < n; i++)
-        regs->GR_L((r1 + i) & 0xF) = fetch_fw (p2++);
 
 } /* end DEF_INST(load_multiple) */
 
