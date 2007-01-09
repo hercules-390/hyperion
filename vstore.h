@@ -34,6 +34,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.71  2007/01/04 23:12:04  gsmith
+// remove thunk calls for program_interrupt
+//
 // Revision 1.70  2007/01/04 01:08:41  gsmith
 // 03 Jan 2007 single_cpu_dw fetch/store patch for ia32
 //
@@ -233,35 +236,36 @@ BYTE   *main1;                          /* Mainstor address          */
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
-                                         REGS *regs)
+_VSTORE_C_STATIC void ARCH_DEP(vstore2_full) (U16 value, VADR addr,
+                                              int arn, REGS *regs)
 {
-BYTE   *mn1, *mn2;                      /* Mainstor addresses        */
-BYTE   *sk;                             /* Storage key address       */
+BYTE   *main1, *main2;                  /* Mainstor addresses        */
+BYTE   *sk;                             /* Storage key addresses     */
 
-    /* Quick out if boundary not crossed */
-    if (likely((addr & 0x7FF) <= 0x7FE))
-    {
-        mn1 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        STORE_HW(mn1, value);
-        ITIMER_UPDATE(addr,2-1,regs);
-        return;
-    }
-
-    /* Get mainstor address of the first page */
-    mn1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
     sk = regs->dat.storkey;
-
-    /* Get mainstor address of the second page */
-    addr ++;
-    addr &= ADDRESS_MAXWRAP(regs);
-    mn2 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
-    /* Now set storage key bits for the first page */
+    main2 = MADDR((addr + 1) & ADDRESS_MAXWRAP(regs), arn, regs,
+                  ACCTYPE_WRITE, regs->psw.pkey);
     *sk |= (STORKEY_REF | STORKEY_CHANGE);
+    *main1 = value >> 8;
+    *main2 = value & 0xFF;
 
-    *mn1 = value >> 8;
-    *mn2 = value & 0xFF;
+} /* end function ARCH_DEP(vstore2_full) */
+
+/* vstore2 accelerator - Simple case only (better inline candidate) */
+_VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
+                                                            REGS *regs)
+{
+    /* Most common case : Aligned & not crossing page boundary */
+    if (likely(!(addr & 1) || (addr & 0x7FF) != 0x7FF))
+    {
+        BYTE *mn;
+        mn = MADDR (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        STORE_HW(mn, value);
+        ITIMER_UPDATE(addr,2-1,regs);
+    }
+    else
+        ARCH_DEP(vstore2_full)(value, addr, arn, regs);
 } /* end function ARCH_DEP(vstore2) */
 
 /*-------------------------------------------------------------------*/
@@ -277,52 +281,40 @@ BYTE   *sk;                             /* Storage key address       */
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
-                                         REGS *regs)
+_VSTORE_C_STATIC void ARCH_DEP(vstore4_full) (U32 value, VADR addr,
+                                              int arn, REGS *regs)
 {
-BYTE   *mn1, *mn2, *stop;               /* Mainstor addresses        */
-BYTE   *sk;                             /* Storage key address       */
+BYTE   *main1, *main2;                  /* Mainstor addresses        */
+BYTE   *sk;                             /* Storage key addresses     */
 int     len;                            /* Length to end of page     */
-BYTE   *p;                              /* -> copied value           */
-U32     temp;                           /* Value in right byte order */
+BYTE    temp[4];                        /* Copied value              */ 
 
-    /* Quick out if boundary not crossed */
-    if (likely((addr & 0x7FF) <= 0x7FC))
-    {
-        mn1 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        STORE_FW(mn1, value);
-        ITIMER_UPDATE(addr,4-1,regs);
-        return;
-    }
-
-    /* Get mainstor address of the first page */
-    mn1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-    sk = regs->dat.storkey;
-
-    /* Get mainstor address of the second page */
     len = 0x800 - (addr & 0x7FF);
-    addr += len;
-    addr &= ADDRESS_MAXWRAP(regs);
-    mn2 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
-    /* Now set storage key bits for the first page */
+    main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    sk = regs->dat.storkey;
+    main2 = MADDR((addr + len) & ADDRESS_MAXWRAP(regs), arn, regs,
+                  ACCTYPE_WRITE, regs->psw.pkey);
     *sk |= (STORKEY_REF | STORKEY_CHANGE);
+    STORE_FW(temp, value);
+    memcpy(main1, temp, len);
+    memcpy(main2, temp+len, 4-len);
 
-    /* Store value in intermediate area */
-    temp = CSWAP32(value);
-    p = (BYTE *)&temp;
+} /* end function ARCH_DEP(vstore4_full) */
 
-    /* Copy to end of first page */
-    stop = mn1 + len;
-    do {
-        *mn1++ = *p++;
-    } while (mn1 < stop);
-
-    /* Copy to beginning of second page */
-    stop = mn2 + (4-len);
-    do {
-        *mn2++ = *p++;
-    } while (mn2 < stop);
+/* vstore4 accelerator - Simple case only (better inline candidate) */
+_VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
+                                                            REGS *regs)
+{
+    /* Most common case : Aligned & not crossing page boundary */
+    if(likely(!(addr & 0x03)) || ((addr & 0x7ff) <= 0x7fc))
+    {
+        BYTE *mn;
+        mn = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        STORE_FW(mn, value);
+        ITIMER_UPDATE(addr,4-1,regs);
+    }
+    else
+        ARCH_DEP(vstore4_full)(value,addr,arn,regs);
 }
 
 /*-------------------------------------------------------------------*/
@@ -338,20 +330,33 @@ U32     temp;                           /* Value in right byte order */
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
-                                         REGS *regs)
+_VSTORE_C_STATIC void ARCH_DEP(vstore8_full) (U64 value, VADR addr,
+                                              int arn, REGS *regs)
 {
-U64    *mn;                             /* Mainstor address          */
-BYTE   *mn1, *mn2, *stop;               /* Mainstor addresses        */
-BYTE   *sk;                             /* Storage key address       */
+BYTE   *main1, *main2;                  /* Mainstor addresses        */
+BYTE   *sk;                             /* Storage key addresses     */
 int     len;                            /* Length to end of page     */
-BYTE   *p;                              /* -> copied value           */
-U64     temp;                           /* Value in right byte order */
+BYTE    temp[8];                        /* Copied value              */ 
 
-    /* Quick out if boundary not crossed */
-    if (likely((addr & 0x7FF) <= 0x7F8))
+    len = 0x800 - (addr & 0x7FF);
+    main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    sk = regs->dat.storkey;
+    main2 = MADDR((addr + len) & ADDRESS_MAXWRAP(regs), arn, regs,
+                  ACCTYPE_WRITE, regs->psw.pkey);
+    *sk |= (STORKEY_REF | STORKEY_CHANGE);
+    STORE_DW(temp, value);
+    memcpy(main1, temp, len);
+    memcpy(main2, temp+len, 8-len);
+
+} /* end function ARCH_DEP(vstore8) */
+_VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
+                                                            REGS *regs)
+{
+    /* Most common case : Aligned & not crossing page boundary */
+    if(likely(!(addr & 0x07)) || ((addr & 0x7ff) <= 0x7f8))
     {
-        mn = (U64 *)MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        U64 *mn;
+        mn = (U64*)MADDR(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
 #if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_STORE_DW)
         if (regs->cpubit == regs->sysblk->started_mask)
             *mn = CSWAP64(value);
@@ -359,39 +364,10 @@ U64     temp;                           /* Value in right byte order */
 #endif
         STORE_DW(mn, value);
         ITIMER_UPDATE(addr,8-1,regs);
-        return;
     }
-
-    /* Get mainstor address of the first page */
-    mn1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-    sk = regs->dat.storkey;
-
-    /* Get mainstor address of the second page */
-    len = 0x800 - (addr & 0x7FF);
-    addr += len;
-    addr &= ADDRESS_MAXWRAP(regs);
-    mn2 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
-    /* Now set storage key bits for the first page */
-    *sk |= (STORKEY_REF | STORKEY_CHANGE);
-
-    /* Store value in intermediate area */
-    temp = CSWAP64(value);
-    p = (BYTE *)&temp;
-
-    /* Copy to end of first page */
-    stop = mn1 + len;
-    do {
-        *mn1++ = *p++;
-    } while (mn1 < stop);
-
-    /* Copy to beginning of second page */
-    stop = mn2 + (8-len);
-    do {
-        *mn2++ = *p++;
-    } while (mn2 < stop);
-
-} /* end function ARCH_DEP(vstore8) */
+    else
+        ARCH_DEP(vstore8_full)(value,addr,arn,regs);
+}
 
 /*-------------------------------------------------------------------*/
 /* Fetch a 1 to 256 character operand from virtual storage           */
@@ -470,26 +446,31 @@ BYTE   *mn;                           /* Main storage address      */
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
+_VSTORE_C_STATIC U16 ARCH_DEP(vfetch2_full) (VADR addr, int arn,
+                                             REGS *regs)
+{
+BYTE   *mn;                             /* Main storage addresses    */
+U16     value;
+
+    mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    value = *mn << 8;
+    mn = MADDR ((addr + 1) & ADDRESS_MAXWRAP(regs), arn, regs,
+                 ACCTYPE_READ, regs->psw.pkey);
+    value |= *mn;
+    return value;
+
+} /* end function ARCH_DEP(vfetch2) */
+
 _VSTORE_C_STATIC U16 ARCH_DEP(vfetch2) (VADR addr, int arn, REGS *regs)
 {
-BYTE  *mn;
-BYTE   hw[2];
-
-    mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-
-    /* Quick out if boundary not crossed */
-    if(likely(((VADR_L)addr & 0x7ff) < 0x7ff))
+    if(likely(!(addr & 0x01)) || ((addr & 0x7ff) !=0x7ff ))
     {
-        ITIMER_SYNC(addr,1-1,regs);
+    BYTE *mn;
+        ITIMER_SYNC(addr,2-1,regs);
+        mn = MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
         return fetch_hw(mn);
     }
-
-    hw[0] = mn[0];
-    addr ++;
-    addr &= ADDRESS_MAXWRAP(regs);
-    mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-    hw[1] = mn[0];
-    return fetch_hw(hw); 
+    return(ARCH_DEP(vfetch2_full)(addr,arn,regs));
 }
 
 /*-------------------------------------------------------------------*/
@@ -506,39 +487,33 @@ BYTE   hw[2];
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
+_VSTORE_C_STATIC U32 ARCH_DEP(vfetch4_full) (VADR addr, int arn,
+                                             REGS *regs)
+{
+BYTE   *mn;                             /* Main storage addresses    */
+int     len;                            /* Length to end of page     */
+BYTE    temp[8];                        /* Copy destination          */
+
+    mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    memcpy(temp, mn, 4);
+    len = 0x800 - (addr & 0x7FF);
+    mn = MADDR ((addr + len) & ADDRESS_MAXWRAP(regs), arn, regs,
+                 ACCTYPE_READ, regs->psw.pkey);
+    memcpy(temp+len, mn, 4);
+    return fetch_fw(temp);
+
+} /* end function ARCH_DEP(vfetch4_full) */
+
 _VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn, REGS *regs)
 {
-BYTE  *mn;
-u_int  len;
-U32   *p;
-U32    fw[2];
-
-    mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-
-    /* Quick out if boundary not crossed */
-    if(likely(((VADR_L)addr & 0x7ff) <= 0x7fc))
+    if ( (likely(!(addr & 0x03)) || ((addr & 0x7ff) <= 0x7fc )))
     {
+    BYTE *mn;
         ITIMER_SYNC(addr,4-1,regs);
+        mn=MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
         return fetch_fw(mn);
     }
-
-    /* sloppy fetch */
-#if defined(OPTION_STRICT_ALIGNMENT)
-    memcpy(&fw[0], mn, 4);
-#else
-    fw[0] = *(U32 *)mn;
-#endif
-    len = 0x800 - ((VADR_L)addr & 0x7FF);
-    addr += len;
-    addr &= ADDRESS_MAXWRAP(regs);
-    mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-    p = (U32 *)((BYTE *)&fw[0] + len);
-#if defined(OPTION_STRICT_ALIGNMENT)
-    memcpy(p, mn, 4);
-#else
-    *p = *(U32 *)mn;
-#endif
-    return CSWAP32(fw[0]); 
+    return(ARCH_DEP(vfetch4_full)(addr,arn,regs));
 }
 
 /*-------------------------------------------------------------------*/
@@ -555,45 +530,39 @@ U32    fw[2];
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
+_VSTORE_C_STATIC U64 ARCH_DEP(vfetch8_full) (VADR addr, int arn,
+                                             REGS *regs)
+{
+BYTE   *mn;                             /* Main storage addresses    */
+int     len;                            /* Length to end of page     */
+BYTE    temp[16];                       /* Copy destination          */
+
+    /* Get absolute address of first byte of operand */
+    mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    memcpy(temp, mn, 8);
+    len = 0x800 - (addr & 0x7FF);
+    mn = MADDR ((addr + len) & ADDRESS_MAXWRAP(regs), arn, regs,
+                ACCTYPE_READ, regs->psw.pkey);
+    memcpy(temp+len, mn, 8);
+    return fetch_dw(temp);
+
+} /* end function ARCH_DEP(vfetch8) */
+
 _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
 {
-BYTE  *mn;
-u_int  len;
-U64   *p;
-U64    dw[2];
-
-    mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-
-    /* Quick out if boundary not crossed */
-    if(likely(((VADR_L)addr & 0x7ff) <= 0x7f8))
+    if(likely(!(addr & 0x07)) || ((addr & 0x7ff) <= 0x7f8 ))
     {
+    U64 *mn;
         ITIMER_SYNC(addr,8-1,regs);
+        mn=(U64*)MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
 #if defined(OPTION_SINGLE_CPU_DW) && defined(ASSIST_FETCH_DW)
         if (regs->cpubit == regs->sysblk->started_mask)
-            return CSWAP64(*(U64 *)mn);
+            return CSWAP64(*mn);
 #endif
         return fetch_dw(mn);
     }
-
-    /* sloppy fetch */
-#if defined(OPTION_STRICT_ALIGNMENT)
-    memcpy(&dw[0], mn, 8);
-#else
-    dw[0] = *(U64 *)mn;
-#endif
-    len = 0x800 - ((VADR_L)addr & 0x7FF);
-    addr += len;
-    addr &= ADDRESS_MAXWRAP(regs);
-    mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-    p = (U64 *)((BYTE *)&dw[0] + len);
-#if defined(OPTION_STRICT_ALIGNMENT)
-    memcpy(p, mn, 8);
-#else
-    *p = *(U64 *)mn;
-#endif
-    return CSWAP64(dw[0]); 
+    return ARCH_DEP(vfetch8_full)(addr,arn,regs);
 }
-
 #endif
 
 #if !defined(OPTION_NO_INLINE_IFETCH) || defined(_VSTORE_C)
@@ -689,7 +658,7 @@ int     len;                            /* Length for page crossing  */
                 ON_IC_PER_IFNUL(regs);
                 regs->psw.IA = addr;
                 regs->psw.zeroilc = 1;
-                regs->program_interrupt (regs, PGM_PER_EVENT);
+                regs->program_interrupt(regs, PGM_PER_EVENT);
             }
       #endif /*defined(FEATURE_PER3)*/
         }
