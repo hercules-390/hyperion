@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.7  2006/12/08 09:43:34  jj
+// Add CVS message log
+//
 
 #ifndef _W32UTIL_H
 #define _W32UTIL_H
@@ -172,6 +175,10 @@ W32_DLL_IMPORT int socket_set_blocking_mode( int sfd, int blocking_mode );
 // Determine whether a file descriptor is a socket or not...
 // (returns 1==true if it's a socket, 0==false otherwise)
 W32_DLL_IMPORT int socket_is_socket( int sfd );
+
+// Set the SO_KEEPALIVE option and timeout values for a
+// socket connection to detect when client disconnects */
+W32_DLL_IMPORT void socket_keepalive( int sfd, int probe_frequency, int retry_delay );
 
 // Retrieve directory where process was loaded from...
 // (returns >0 == success, 0 == failure)

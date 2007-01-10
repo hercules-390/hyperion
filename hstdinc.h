@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.12  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #ifndef _HSTDINC_H
 #define _HSTDINC_H
@@ -35,7 +38,8 @@
   #ifndef _WIN32_WINNT
     #define _WIN32_WINNT 0x0403  // Windows 98 or WinNT SP4 or greater
   #endif
-  #include <winsock2.h>
+  #include <winsock2.h>         // Windows Sockets 2
+  #include <mstcpip.h>          // (need struct tcp_keepalive)
 #endif
 #ifdef WIN32
   #include <windows.h>

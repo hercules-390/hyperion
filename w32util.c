@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.25  2007/01/03 22:02:31  fish
+// Minor correction to PR# build_msc/103 fix
+//
 // Revision 1.24  2006/12/30 18:48:11  fish
 // PR# build_msc/103: fix MSVC diag 8 'sh' capture
 //
@@ -1643,6 +1646,48 @@ DLL_EXPORT int socket_is_socket( int sfd )
 {
     u_long dummy;
     return WSAHtonl( (SOCKET) sfd, 666, &dummy ) == 0 ? 1 : 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Set the SO_KEEPALIVE option and timeout values for a
+// socket connection to detect when client disconnects */
+
+DLL_EXPORT void socket_keepalive( int sfd, int probe_frequency, int retry_delay )
+{
+    DWORD   dwBytesReturned;            // (not used)
+
+    struct tcp_keepalive  ka;
+
+    ka.onoff              = TRUE;
+    ka.keepalivetime      = probe_frequency * 1000;
+    ka.keepaliveinterval  = retry_delay     * 1000;
+
+    // It either works or it doesn't <shrug>
+
+    // PROGRAMMING NOTE: the 'dwBytesReturned' value must apparently always be
+    // specified in order for this call to work at all. If you don't specify it,
+    // even though the call succeeds (does not return an error), the automatic
+    // keep-alive polling does not occur!
+
+    if (0 != WSAIoctl
+    (
+        (SOCKET)sfd,                    // [in]  Descriptor identifying a socket
+        SIO_KEEPALIVE_VALS,             // [in]  Control code of operation to perform
+        &ka,                            // [in]  Pointer to the input buffer
+        sizeof(ka),                     // [in]  Size of the input buffer, in bytes
+        NULL,                           // [out] Pointer to the output buffer
+        0,                              // [in]  Size of the output buffer, in bytes
+        &dwBytesReturned,               // [out] Pointer to actual number of bytes of output
+        NULL,                           // [in]  Pointer to a WSAOVERLAPPED structure
+                                        //       (ignored for nonoverlapped sockets)
+        NULL                            // [in]  Pointer to the completion routine called
+                                        //       when the operation has been completed
+                                        //       (ignored for nonoverlapped sockets)
+    ))
+    {
+        DWORD dwLastError = WSAGetLastError();
+        ASSERT(1); // (in case we're debugging)
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

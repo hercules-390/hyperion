@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.19  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #ifndef __HSCUTL_H__
 #define __HSCUTL_H__
@@ -73,6 +76,10 @@
   /* Determine whether a file descriptor is a socket or not... */
   /* (returns 1==true if it's a socket, 0==false otherwise)    */
   int socket_is_socket( int sfd );
+
+  /* Set the SO_KEEPALIVE option and timeout values for a
+     socket connection to detect when client disconnects */
+  void socket_keepalive( int sfd, int probe_frequency, int retry_delay );
 
 #endif // !defined(_MSVC_)
 

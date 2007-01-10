@@ -11,6 +11,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.22  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -675,6 +678,12 @@ DLL_EXPORT int socket_is_socket( int sfd )
 {
     struct stat st;
     return ( fstat( sfd, &st ) == 0 && S_ISSOCK( st.st_mode ) );
+}
+/* Set the SO_KEEPALIVE option and timeout values for a
+   socket connection to detect when client disconnects */
+void socket_keepalive( int sfd, int probe_frequency, int retry_delay )
+{
+    // FIXME: how do you do this on Linux and other platforms??
 }
 
 #endif // !defined(WIN32)

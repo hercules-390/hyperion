@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.87  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -62,6 +65,9 @@
 #include "opcode.h"
 
 #include "sr.h"
+
+#define  KEEPALIVE_PROBE_FREQUENCY    3     // FIXME: should be config options??
+#define  KEEPALIVE_PROBE_TIMEOUT      1     // FIXME: should be config options??
 
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   SYSBLK *psysblk;
@@ -897,8 +903,8 @@ int     eor = 0;                        /* 1=End of record received  */
 
     if (rc < 0) {
         if ( HSO_ECONNRESET == HSO_errno )
-            logmsg( _( "HHCTE014I %4.4X device %4.4X disconnected.\n" ),
-                dev->devtype, dev->devnum );
+            logmsg( _( "HHCTE014I %4.4X device %4.4X client %s connection reset\n" ),
+                dev->devtype, dev->devnum, inet_ntoa(dev->ipaddr) );
         else
             TNSERROR("console: DBG023: recv: %s\n", strerror(HSO_errno));
         dev->sense[0] = SENSE_EC;
@@ -907,8 +913,8 @@ int     eor = 0;                        /* 1=End of record received  */
 
     /* If zero bytes were received then client has closed connection */
     if (rc == 0) {
-        logmsg (_("HHCTE007I Device %4.4X connection closed by client %s\n"),
-                dev->devnum, inet_ntoa(dev->ipaddr));
+        logmsg (_("HHCTE007I %4.4X device %4.4X client %s connection closed\n"),
+                dev->devtype, dev->devnum, inet_ntoa(dev->ipaddr));
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC | CSW_DE);
     }
@@ -1859,6 +1865,9 @@ char                    *logoout;
     if ( class != 'P' && !INITIAL_POWERON_370() )
         device_attention (dev, CSW_DE);
 
+    /* Try to detect idle/dropped connections */
+    socket_keepalive( csock, KEEPALIVE_PROBE_FREQUENCY, KEEPALIVE_PROBE_TIMEOUT );
+
     /* Signal connection thread to redrive its select loop */
     SIGNAL_CONSOLE_THREAD();
 
@@ -2047,7 +2056,7 @@ BYTE                   unitstat;        /* Status after receive data */
         } /* end for(dev) */
 
         /* Wait for a file descriptor to become ready */
-        rc = select ( maxfd+1, &readset, NULL, NULL, NULL );
+        rc = select ( maxfd+1, &readset, NULL, &readset, NULL );
 
         /* Clear the pipe signal if necessary */
         RECV_CONSOLE_THREAD_PIPE_SIGNAL();
