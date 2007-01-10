@@ -870,10 +870,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\config.h"
-							>
-						</File>
-						<File
 							RelativePath=".\cpuint.h"
 							>
 						</File>
