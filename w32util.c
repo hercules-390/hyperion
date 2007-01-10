@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.26  2007/01/10 09:32:39  fish
+// Enable connection keep-alive to try and detect 3270 clients that have died (MSVC only right now; don't know how to do it on *nix)
+//
 // Revision 1.25  2007/01/03 22:02:31  fish
 // Minor correction to PR# build_msc/103 fix
 //
@@ -1652,15 +1655,16 @@ DLL_EXPORT int socket_is_socket( int sfd )
 // Set the SO_KEEPALIVE option and timeout values for a
 // socket connection to detect when client disconnects */
 
-DLL_EXPORT void socket_keepalive( int sfd, int probe_frequency, int retry_delay )
+DLL_EXPORT void socket_keepalive( int sfd, int idle_time, int probe_interval, int probe_count )
 {
     DWORD   dwBytesReturned;            // (not used)
 
     struct tcp_keepalive  ka;
 
     ka.onoff              = TRUE;
-    ka.keepalivetime      = probe_frequency * 1000;
-    ka.keepaliveinterval  = retry_delay     * 1000;
+    ka.keepalivetime      = idle_time       * 1000;
+    ka.keepaliveinterval  = probe_interval  * 1000;
+    UNREFERENCED(probe_count);
 
     // It either works or it doesn't <shrug>
 

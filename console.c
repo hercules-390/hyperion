@@ -53,6 +53,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.88  2007/01/10 09:32:39  fish
+// Enable connection keep-alive to try and detect 3270 clients that
+// have died (MSVC only right now; don't know how to do it on *nix)
+//
 // Revision 1.87  2006/12/08 09:43:18  jj
 // Add CVS message log
 //
@@ -66,8 +70,9 @@
 
 #include "sr.h"
 
-#define  KEEPALIVE_PROBE_FREQUENCY    3     // FIXME: should be config options??
-#define  KEEPALIVE_PROBE_TIMEOUT      1     // FIXME: should be config options??
+#define  KEEPALIVE_IDLE_TIME          3     // FIXME: should be config options??
+#define  KEEPALIVE_PROBE_INTERVAL     1     // FIXME: should be config options??
+#define  KEEPALIVE_PROBE_COUNT        10    // FIXME: should be config options??
 
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   SYSBLK *psysblk;
@@ -1865,8 +1870,10 @@ char                    *logoout;
     if ( class != 'P' && !INITIAL_POWERON_370() )
         device_attention (dev, CSW_DE);
 
-    /* Try to detect idle/dropped connections */
-    socket_keepalive( csock, KEEPALIVE_PROBE_FREQUENCY, KEEPALIVE_PROBE_TIMEOUT );
+    /* Try to detect dropped connections */
+    socket_keepalive(csock, KEEPALIVE_IDLE_TIME,
+                     KEEPALIVE_PROBE_INTERVAL,
+                     KEEPALIVE_PROBE_COUNT );
 
     /* Signal connection thread to redrive its select loop */
     SIGNAL_CONSOLE_THREAD();

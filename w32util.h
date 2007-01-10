@@ -8,6 +8,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.8  2007/01/10 09:32:39  fish
+// Enable connection keep-alive to try and detect 3270 clients that
+// have died (MSVC only right now; don't know how to do it on *nix)
+//
 // Revision 1.7  2006/12/08 09:43:34  jj
 // Add CVS message log
 //
@@ -178,7 +182,7 @@ W32_DLL_IMPORT int socket_is_socket( int sfd );
 
 // Set the SO_KEEPALIVE option and timeout values for a
 // socket connection to detect when client disconnects */
-W32_DLL_IMPORT void socket_keepalive( int sfd, int probe_frequency, int retry_delay );
+W32_DLL_IMPORT void socket_keepalive( int sfd, int idle_time, int probe_interval, int probe_count );
 
 // Retrieve directory where process was loaded from...
 // (returns >0 == success, 0 == failure)

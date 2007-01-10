@@ -7,6 +7,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.20  2007/01/10 09:32:39  fish
+// Enable connection keep-alive to try and detect 3270 clients that
+// have died (MSVC only right now; don't know how to do it on *nix)
+//
 // Revision 1.19  2006/12/08 09:43:26  jj
 // Add CVS message log
 //
@@ -79,7 +83,8 @@
 
   /* Set the SO_KEEPALIVE option and timeout values for a
      socket connection to detect when client disconnects */
-  void socket_keepalive( int sfd, int probe_frequency, int retry_delay );
+  void socket_keepalive( int sfd, int idle_time, int probe_interval,
+                         int probe_count );
 
 #endif // !defined(_MSVC_)
 
