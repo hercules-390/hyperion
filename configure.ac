@@ -32,6 +32,9 @@
 ###############################################################################
 
 # $Log$
+# Revision 1.190  2006/12/08 09:43:18  jj
+# Add CVS message log
+#
 
 AC_INIT(hercules.h)                     # (package, version, bugreport email, etc)
 AC_REVISION($Revision$)         # (the version of this configure.ac)
@@ -479,6 +482,13 @@ AC_CHECK_HEADERS( net/if.h,       [hc_cv_have_net_if_h=yes],       [hc_cv_have_n
     #endif
 ] )
 AC_CHECK_HEADERS( netinet/in.h,   [hc_cv_have_netinet_in_h=yes],   [hc_cv_have_netinet_in_h=no],
+[
+    #include <sys/types.h>
+    #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+    #endif
+] )
+AC_CHECK_HEADERS( netinet/tcp.h,  [hc_cv_have_netinet_tcp_h=yes],  [hc_cv_have_netinet_tcp_h=no],
 [
     #include <sys/types.h>
     #if HAVE_SYS_SOCKET_H

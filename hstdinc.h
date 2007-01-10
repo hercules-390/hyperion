@@ -8,6 +8,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.13  2007/01/10 09:32:39  fish
+// Enable connection keep-alive to try and detect 3270 clients that
+// have died (MSVC only right now; don't know how to do it on *nix)
+//
 // Revision 1.12  2006/12/08 09:43:28  jj
 // Add CVS message log
 //
@@ -103,6 +107,9 @@
 #endif
 #ifdef HAVE_NETINET_IN_H
   #include <netinet/in.h>
+#endif
+#ifdef HAVE_NETINET_TCP_H
+  #include <netinet/tcp.h>
 #endif
 #ifdef HAVE_SYS_IOCTL_H
   #include <sys/ioctl.h>
