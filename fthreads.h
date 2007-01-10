@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.20  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #ifndef _FTHREADS_H_
 #define _FTHREADS_H_
@@ -179,7 +182,7 @@ int  fthread_create
     fthread_attr_t*  pThreadAttr,
     PFT_THREAD_FUNC  pfnThreadFunc,
     void*            pvThreadArgs,
-    char*            pszName
+    char*            pszThreadName
 );
 
 ////////////////////////////////////////////////////////////////////////////////////

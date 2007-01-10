@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.27  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -853,6 +856,7 @@ typedef struct _ftCallThreadParms
 {
     PFT_THREAD_FUNC  pfnTheirThreadFunc;
     void*            pvTheirThreadArgs;
+    char*            pszTheirThreadName;
     FTHREAD*         pFTHREAD;
 }
 FT_CALL_THREAD_PARMS;
@@ -874,6 +878,9 @@ static DWORD  __stdcall  FTWin32ThreadFunc
     pfnTheirThreadFunc = pCallTheirThreadParms->pfnTheirThreadFunc;
     pvTheirThreadArgs  = pCallTheirThreadParms->pvTheirThreadArgs;
     pFTHREAD           = pCallTheirThreadParms->pFTHREAD;
+
+    // PROGRAMMING NOTE: -1 == "current calling thread"
+    SET_THREAD_NAME_ID ( -1, pCallTheirThreadParms->pszTheirThreadName );
 
     free ( pCallTheirThreadParms );
 
@@ -925,7 +932,7 @@ int  fthread_create
     fthread_attr_t*  pThreadAttr,
     PFT_THREAD_FUNC  pfnThreadFunc,
     void*            pvThreadArgs,
-    char*            pszName
+    char*            pszThreadName
 )
 {
     static BOOL            bDidInit = FALSE;
@@ -994,6 +1001,7 @@ int  fthread_create
 
     pCallTheirThreadParms->pfnTheirThreadFunc = pfnThreadFunc;
     pCallTheirThreadParms->pvTheirThreadArgs  = pvThreadArgs;
+    pCallTheirThreadParms->pszTheirThreadName = pszThreadName;
     pCallTheirThreadParms->pFTHREAD           = pFTHREAD;
 
     InitializeListLink(&pFTHREAD->ThreadListLink);
@@ -1027,8 +1035,6 @@ int  fthread_create
     *pdwThreadID            = dwThreadID;
 
     InsertListHead ( &ThreadListHead, &pFTHREAD->ThreadListLink );
-
-    SET_THREAD_NAME_ID ( dwThreadID, pszName );
 
     UnlockThreadsList();
 
