@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.89  2007/01/10 15:12:11  rbowler
+// Console keepalive for Unix
+//
 // Revision 1.88  2007/01/10 09:32:39  fish
 // Enable connection keep-alive to try and detect 3270 clients that
 // have died (MSVC only right now; don't know how to do it on *nix)
@@ -2063,7 +2066,7 @@ BYTE                   unitstat;        /* Status after receive data */
         } /* end for(dev) */
 
         /* Wait for a file descriptor to become ready */
-        rc = select ( maxfd+1, &readset, NULL, &readset, NULL );
+        rc = select ( maxfd+1, &readset, NULL, NULL, NULL );
 
         /* Clear the pipe signal if necessary */
         RECV_CONSOLE_THREAD_PIPE_SIGNAL();
