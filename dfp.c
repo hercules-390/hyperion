@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.42  2007/01/09 22:40:52  rbowler
+// Decimal Floating Point: FIXTR testcase
+//
 // Revision 1.41  2007/01/06 23:30:48  rbowler
 // Decimal Floating Point: FIXTR instruction
 //
@@ -2096,9 +2099,79 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(load_fp_int_dfp_ext_reg) */
 
 
-UNDEF_INST(load_fp_int_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3D7 FIDTR - Load FP Integer DFP Long Register              [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_fp_int_dfp_long_reg)
+{
+int             r1, r2, m3, m4;         /* Values of R and M fields  */
+decimal64       x1, x2;                 /* Long DFP values           */
+decNumber       d1, d2, dc;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
 
- 
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load decimal number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x2, &d2);
+
+    if (decNumberIsInfinite(&d2) == 0 && decNumberIsNaN(&d2) == 0)
+    {
+        /* Remove fractional part of decimal number */
+        decNumberToIntegralValue(&d1, &d2, &set);
+
+        /* Raise inexact condition if M4 bit 1 is zero and
+           result differs in value from original value */
+        if ((m4 & 0x04) == 0)
+        {
+            decNumberCompare(&dc, &d1, &d2, &set);
+            if (decNumberIsZero(&dc) == 0)
+            {
+                set.status |= DEC_IEEE_854_Inexact;
+                if (decNumberIsNegative(&dc) == decNumberIsNegative(&d2))
+                    set.status |= DEC_Rounded;
+            }
+        }
+    }
+    else
+    {
+        /* Propagate NaN or default infinity */
+        decNumberCopy(&d1, &d2);
+
+        /* For SNaN, force signaling condition and convert to QNaN */
+        if (decNumberIsSNaN(&d2))
+        {
+            set.status |= DEC_IEEE_854_Invalid_operation;
+            d1.bits &= ~DECSNAN;
+            d1.bits |= DECNAN;
+        }
+    }
+
+    /* Convert result to long DFP format */
+    decimal64FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(load_fp_int_dfp_long_reg) */
+
+
 /*-------------------------------------------------------------------*/
 /* B2BD LFAS  - Load FPC and Signal                              [S] */
 /*-------------------------------------------------------------------*/
@@ -2446,7 +2519,7 @@ BYTE            dxc;                    /* Data exception code       */
 UNDEF_INST(reround_dfp_ext_reg)
 UNDEF_INST(reround_dfp_long_reg)
 
- 
+
 /*-------------------------------------------------------------------*/
 /* B2B9 SRNMT - Set DFP Rounding Mode                            [S] */
 /*-------------------------------------------------------------------*/
