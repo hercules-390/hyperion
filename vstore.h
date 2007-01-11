@@ -34,6 +34,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.72  2007/01/09 23:19:35  gsmith
+// Tweaks to sloppy fetch
+//
 // Revision 1.71  2007/01/04 23:12:04  gsmith
 // remove thunk calls for program_interrupt
 //
@@ -257,7 +260,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
                                                             REGS *regs)
 {
     /* Most common case : Aligned & not crossing page boundary */
-    if (likely(!(addr & 1) || (addr & 0x7FF) != 0x7FF))
+    if (likely(!((VADR_L)addr & 1) || ((VADR_L)addr & 0x7FF) != 0x7FF))
     {
         BYTE *mn;
         mn = MADDR (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
@@ -306,7 +309,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
                                                             REGS *regs)
 {
     /* Most common case : Aligned & not crossing page boundary */
-    if(likely(!(addr & 0x03)) || ((addr & 0x7ff) <= 0x7fc))
+    if(likely(!((VADR_L)addr & 0x03)) || (((VADR_L)addr & 0x7ff) <= 0x7fc))
     {
         BYTE *mn;
         mn = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
@@ -353,7 +356,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
                                                             REGS *regs)
 {
     /* Most common case : Aligned & not crossing page boundary */
-    if(likely(!(addr & 0x07)) || ((addr & 0x7ff) <= 0x7f8))
+    if(likely(!((VADR_L)addr & 0x07)) || (((VADR_L)addr & 0x7ff) <= 0x7f8))
     {
         U64 *mn;
         mn = (U64*)MADDR(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
@@ -463,7 +466,7 @@ U16     value;
 
 _VSTORE_C_STATIC U16 ARCH_DEP(vfetch2) (VADR addr, int arn, REGS *regs)
 {
-    if(likely(!(addr & 0x01)) || ((addr & 0x7ff) !=0x7ff ))
+    if(likely(!((VADR_L)addr & 0x01)) || (((VADR_L)addr & 0x7ff) !=0x7ff ))
     {
     BYTE *mn;
         ITIMER_SYNC(addr,2-1,regs);
@@ -506,7 +509,7 @@ BYTE    temp[8];                        /* Copy destination          */
 
 _VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn, REGS *regs)
 {
-    if ( (likely(!(addr & 0x03)) || ((addr & 0x7ff) <= 0x7fc )))
+    if ( (likely(!((VADR_L)addr & 0x03)) || (((VADR_L)addr & 0x7ff) <= 0x7fc )))
     {
     BYTE *mn;
         ITIMER_SYNC(addr,4-1,regs);
@@ -550,7 +553,7 @@ BYTE    temp[16];                       /* Copy destination          */
 
 _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
 {
-    if(likely(!(addr & 0x07)) || ((addr & 0x7ff) <= 0x7f8 ))
+    if(likely(!((VADR_L)addr & 0x07)) || (((VADR_L)addr & 0x7ff) <= 0x7f8 ))
     {
     U64 *mn;
         ITIMER_SYNC(addr,8-1,regs);
