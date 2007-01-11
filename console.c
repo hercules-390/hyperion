@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.90  2007/01/10 15:35:49  rbowler
+// Consoles cannot connect after rev 1.88
+//
 // Revision 1.89  2007/01/10 15:12:11  rbowler
 // Console keepalive for Unix
 //
@@ -72,10 +75,6 @@
 #include "opcode.h"
 
 #include "sr.h"
-
-#define  KEEPALIVE_IDLE_TIME          3     // FIXME: should be config options??
-#define  KEEPALIVE_PROBE_INTERVAL     1     // FIXME: should be config options??
-#define  KEEPALIVE_PROBE_COUNT        10    // FIXME: should be config options??
 
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   SYSBLK *psysblk;
@@ -1874,9 +1873,7 @@ char                    *logoout;
         device_attention (dev, CSW_DE);
 
     /* Try to detect dropped connections */
-    socket_keepalive(csock, KEEPALIVE_IDLE_TIME,
-                     KEEPALIVE_PROBE_INTERVAL,
-                     KEEPALIVE_PROBE_COUNT );
+    socket_keepalive( csock, sysblk.kaidle, sysblk.kaintv, sysblk.kacnt );
 
     /* Signal connection thread to redrive its select loop */
     SIGNAL_CONSOLE_THREAD();

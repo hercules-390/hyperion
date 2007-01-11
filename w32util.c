@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.27  2007/01/10 15:12:11  rbowler
+// Console keepalive for Unix
+//
 // Revision 1.26  2007/01/10 09:32:39  fish
 // Enable connection keep-alive to try and detect 3270 clients that have died (MSVC only right now; don't know how to do it on *nix)
 //
@@ -1690,6 +1693,8 @@ DLL_EXPORT void socket_keepalive( int sfd, int idle_time, int probe_interval, in
     ))
     {
         DWORD dwLastError = WSAGetLastError();
+        TRACE("*** WSAIoctl(SIO_KEEPALIVE_VALS) failed; rc %d: %s\n",
+            dwLastError, w32_strerror(dwLastError) );
         ASSERT(1); // (in case we're debugging)
     }
 }

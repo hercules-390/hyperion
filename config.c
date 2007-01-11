@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.193  2007/01/02 18:53:33  fish
+// (fix comments only)
+//
 // Revision 1.192  2007/01/02 18:46:16  fish
 // Fix bug in deconfigure_cpu function & tweak power-off diagnose instructions so that they actually work properly now
 //
@@ -1279,5 +1282,54 @@ readlogo(char *fn)
     return 0;
 }
 
-#endif /*!defined(_GEN_ARCH)*/
+DLL_EXPORT int parse_conkpalv(char* s, int* idle, int* intv, int* cnt )
+{
+    size_t n; char *p1, *p2, *p3, c;
+    ASSERT(s && *s && idle && intv && cnt);
+    if (!s || !*s || !idle || !intv || !cnt) return -1;
+    // Format: "(idle,intv,cnt)". All numbers. No spaces.
+    if (0
+        || (n = strlen(s)) < 7
+        || s[0]   != '('
+        || s[n-1] != ')'
+    )
+        return -1;
+    // 1st sub-operand
+    if (!(p1 = strchr(s+1, ','))) return -1;
+    c = *p1; *p1 = 0;
+    if ( strspn( s+1, "0123456789" ) != strlen(s+1) )
+    {
+        *p1 = c;
+        return -1;
+    }
+    *p1 = c;
+    // 2nd sub-operand
+    if (!(p2 = strchr(p1+1, ','))) return -1;
+    c = *p2; *p2 = 0;
+    if ( strspn( p1+1, "0123456789" ) != strlen(p1+1) )
+    {
+        *p2 = c;
+        return -1;
+    }
+    *p2 = c;
+    // 3rd sub-operand
+    if (!(p3 = strchr(p2+1, ')'))) return -1;
+    c = *p3; *p3 = 0;
+    if ( strspn( p2+1, "0123456789" ) != strlen(p2+1) )
+    {
+        *p3 = c;
+        return -1;
+    }
+    *p3 = c;
+    // convert each to number
+    c = *p1; *p1 = 0; *idle = atoi(s+1);  *p1 = c;
+    c = *p2; *p2 = 0; *intv = atoi(p1+1); *p2 = c;
+    c = *p3; *p3 = 0; *cnt  = atoi(p2+1); *p3 = c;
+    // check results
+    if (*idle <= 0 || INT_MAX == *idle) return -1;
+    if (*intv <= 0 || INT_MAX == *intv) return -1;
+    if (*cnt  <= 0 || INT_MAX == *cnt ) return -1;
+    return 0;
+}
 
+#endif /*!defined(_GEN_ARCH)*/

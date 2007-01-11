@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.208  2007/01/08 09:52:00  rbowler
+// Rename symptom command as traceopt
+//
 // Revision 1.207  2007/01/07 22:07:34  rbowler
 // Help text for new inststep/insttrace commands
 //
@@ -4754,6 +4757,37 @@ int hao_cmd(int argc, char *argv[], char *cmdline)
 #endif /* defined(OPTION_HAO) */
 
 ///////////////////////////////////////////////////////////////////////
+// conkpalv - set tn3270/telnet console session TCP keep-alive values
+
+int conkpalv_cmd( int argc, char *argv[], char *cmdline )
+{
+    int idle, intv, cnt;
+
+    UNREFERENCED( cmdline );
+
+    idle = sysblk.kaidle;
+    intv = sysblk.kaintv;
+    cnt  = sysblk.kacnt;
+
+    if (0
+        ||  argc == 1
+        || (argc == 2 && parse_conkpalv( argv[1], &idle, &intv, &cnt ) == 0)
+    )
+    {
+        if (argc == 2)
+        {
+            sysblk.kaidle = idle;
+            sysblk.kaintv = intv;
+            sysblk.kacnt  = cnt;
+        }
+        logmsg( _("HHCPN190I Keep-alive = (%d,%d,%d)\n"),idle,intv,cnt);
+        return 0;
+    }
+    logmsg( _("HHCPN192E Invalid format. Enter \"help conkpalv\" for help.\n"));
+    return -1;
+}
+
+///////////////////////////////////////////////////////////////////////
 /* traceopt - perform display_inst traditionally or new */
 
 int traceopt_cmd(int argc, char *argv[], char *cmdline)
@@ -4914,6 +4948,7 @@ COMMAND ( "sh",        sh_cmd,          "shell command\n" )
 COMMAND ( "cache", EXT_CMD(cache_cmd),  "cache command" )
 COMMAND ( "cckd",      cckd_cmd,        "cckd command" )
 COMMAND ( "shrd",  EXT_CMD(shared_cmd), "shrd command" )
+COMMAND ( "conkpalv",  conkpalv_cmd,    "display/alter console TCP keep-alive settings" )
 COMMAND ( "quiet",     quiet_cmd,       "toggle automatic refresh of panel display data\n" )
 
 COMMAND ( "t",         trace_cmd,     "instruction trace" )
@@ -5427,6 +5462,13 @@ CMDHELP ( "herclogo",  "Format: \"herclogo [<filename>]\". Load a new logo file 
 CMDHELP ( "traceopt",  "Format: \"traceopt [regsfirst | noregs | traditional]\". Determines how the\n"
                        "registers are displayed during instruction tracing and stepping. Entering\n"
                        "the command without any argument simply displays the current mode.\n"
+                       )
+
+CMDHELP ( "conkpalv",  "Format: \"conkpalv (idle,intv,cnt)\" where 'idle', 'intv' and 'cnt' are the\n"
+                       "new 3270 console TCP connection keep-alive settings values. The format must be\n"
+                       "exactly as shown, with each value separated from the other with a single comma,\n"
+                       "no intervening spaces between them, surrounded by parenthesis. Please refer to\n"
+                       "Hercules documentation for information regarding the specifics of each value.\n"
                        )
 
 #if defined(FISH_HANG)

@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.6  2006/12/08 09:43:25  jj
+// Add CVS message log
+//
 
 #ifndef _HCONSTS_H
 #define _HCONSTS_H
@@ -198,6 +201,13 @@
 #ifndef    CLK_TCK
   #define  CLK_TCK       CLOCKS_PER_SEC
 #endif
+
+/*-------------------------------------------------------------------*/
+/* Console tn3270/telnet session TCP "Keep-Alive" values...          */
+/*-------------------------------------------------------------------*/
+#define  KEEPALIVE_IDLE_TIME        3   /* Idle time to first probe  */
+#define  KEEPALIVE_PROBE_INTERVAL   1   /* Probe timeout value       */
+#define  KEEPALIVE_PROBE_COUNT      10  /* Max probe timeouts        */
 
 /*-------------------------------------------------------------------*/
 /* Miscellaneous Hercules-related constants...                       */

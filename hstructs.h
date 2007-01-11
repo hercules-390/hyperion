@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.59  2007/01/07 11:25:33  rbowler
+// Instruction tracing regsfirst and noregs modes
+//
 // Revision 1.58  2007/01/06 09:05:18  gsmith
 // Enable display_inst to display traditionally too
 //
@@ -425,6 +428,10 @@ struct SYSBLK {
         ATTR    joinattr;               /* Joinable thread attribute */
         TID     cnsltid;                /* Thread-id for console     */
         TID     socktid;                /* Thread-id for sockdev     */
+                                        /* 3270 Console Keep-Alive:  */
+        int     kaidle;                 /* Keepalive idle seconds    */
+        int     kaintv;                 /* Keepalive probe interval  */
+        int     kacnt;                  /* Keepalive probe count     */
 #if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
         LOCK    cnslpipe_lock;          /* signaled flag access lock */
         int     cnslpipe_flag;          /* 1 == already signaled     */

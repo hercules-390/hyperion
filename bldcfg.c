@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.68  2007/01/08 09:52:00  rbowler
+// Rename symptom command as traceopt
+//
 // Revision 1.67  2007/01/07 11:25:33  rbowler
 // Instruction tracing regsfirst and noregs modes
 //
@@ -581,6 +584,7 @@ char   *spgmprdos;                      /* -> Program product OS OK  */
 char   *slogofile;                      /* -> 3270 logo file         */
 char   *smountedtapereinit;             /* -> mounted tape reinit opt*/
 char   *straceopt;                      /* -> display_inst option    */
+char   *sconkpalv;                      /* -> console keep-alive opt */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
 char   *sasnandlxreuse;                 /* -> ASNLXREUSE Optional    */
 #endif
@@ -718,6 +722,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     devprio  = DEFAULT_DEV_PRIO;
     pgmprdos = PGM_PRD_OS_RESTRICTED;
     devtmax  = MAX_DEVICE_THREADS;
+    sysblk.kaidle = KEEPALIVE_IDLE_TIME;
+    sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
+    sysblk.kacnt  = KEEPALIVE_PROBE_COUNT;
 #if defined(_FEATURE_ECPSVM)
     ecpsvmavail = 0;
     ecpsvmlevel = 20;
@@ -859,6 +866,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         spgmprdos = NULL;
         slogofile = NULL;
         straceopt = NULL;
+        sconkpalv = NULL;
         smountedtapereinit = NULL;
 #if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
@@ -943,6 +951,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "cnslport") == 0)
             {
                 config_cnslport = strdup(operand);
+            }
+            else if (strcasecmp (keyword, "conkpalv") == 0)
+            {
+                sconkpalv = operand;
             }
             else if (strcasecmp (keyword, "numcpu") == 0)
             {
@@ -1828,6 +1840,22 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                         fname, inc_stmtnum[inc_level], straceopt);
                 delayed_exit(1);
             }
+        }
+
+        /* Parse "conkpalv" option */
+        if (sconkpalv)
+        {
+            int idle, intv, cnt;
+            if (parse_conkpalv(sconkpalv, &idle, &intv, &cnt) != 0)
+            {
+                fprintf(stderr, _("HHCCF088S Error in %s line %d: "
+                        "Invalid format: %s\n"),
+                        fname, inc_stmtnum[inc_level], sconkpalv);
+                delayed_exit(1);
+            }
+            sysblk.kaidle = idle;
+            sysblk.kaintv = intv;
+            sysblk.kacnt  = cnt;
         }
 
         /* Parse "mounted_tape_reinit" option */

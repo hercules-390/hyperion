@@ -63,9 +63,13 @@ and how they are used.
     <a href="#SHRDPORT">SHRDPORT</a>   3990
 
     <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
+    <a href="#PANRATE">PANRATE</a>    FAST
     <a href="#CODEPAGE">CODEPAGE</a>   default
     <a href="#CNSLPORT">CNSLPORT</a>   3270
-    <a href="#PANRATE">PANRATE</a>    FAST
+    <a href="#CONKPALV">CONKPALV</a>   (3,1,10)  # 3270 console TCP connections keep-alive values:
+                         # Send probe when connection goes idle for 3 seconds
+                         # Wait maximum of 1 second for a response to probe
+                         # Disconnect after 10 consecutive failed probes
 
     <a href="#HERCPRIO">HERCPRIO</a>   0
     <a href="#TODPRIO">TODPRIO</a>    -20
@@ -244,6 +248,61 @@ and how they are used.
 
     The CNSLPORT statement may also have the form of host:port, where
     the telnet console server will bind to the specified address.
+    <p>
+
+<a name="CONKPALV"></a>
+<dt><code>CONKPALV &nbsp; <i>(idle,intv,cnt)</i></code>
+<dd><p>
+    specifies the tn3270 console and telnet clients keep-alive option
+    values that control automatic detection of disconnected tn3270/telnet
+    client sessions.
+
+    The <code>idle</code> value specifies the
+    timeout value with no activity until the first keep-alive probe is
+    sent (idle time until first probe, or probe frequency), whereas the
+    <code>intv</code> value specifies the interval between when successive
+    keep-alive packets are sent if no acknowledgement is received from
+    the previous one (i.e. the timeout value of the probes themselves).
+    The <code>cnt</code> value specifies the number of unacknowledged
+    keep-alive packets sent before the connection is considered to have
+    failed (i.e. how many times to retry the probe whenever it fails
+    before giving up and automatically terminating the connection).
+    <p>
+    The default values are 3, 1, and 10. That is, send the initial probe
+    3 seconds after the line goes idle and then wait no more than one
+    second for it to be responded to. Do this 10 times before considering
+    the client as having died.
+    <p>
+    NOTE: this is a built-in feature of TCP/IP and allows detection of
+    unresponsive TCP/IP <i><u>connections</u></i> and not idle clients.
+    That is to say, your connection will <i>not</i> be terminated
+    after 3 seconds of idle time. Your 3270 session can remain idle for
+    many minutes without any data being transmitted. The TCP/IP Keep-Alive
+    feature detects unresponsive TCP/IP <i><u>stacks</u></i>. That is to
+    say, if the TCP/IP <i>stack</i> at the other end of the connection --
+    not your 3270 client session itself -- fails to respond to its own
+    internal keep-alive probe packets, then it means that the
+    connection itself (i.e. TCP/IP) is down at the other end of the
+    connection. Thus, even if your 3270 client
+    is completely idle, your system's TCP/IP stack itself should still respond
+    to the keep-alive probes sent by the TCP stack at the Hercules end
+    of the link. If it doesn't however, then your TCP/IP connection is
+    obviously down and thus your tn3270 session at the Hercules end of the
+    link is summarily terminated as a consequence (i.e. your Hercules 3270
+    terminal session/connection is closed/terminated/disconnected).
+    <p>
+    The three values can also be modified on-demand via the "conkpalv"
+    panel command, which has the exact same syntax. Note too, that the
+    syntax is very unforgiving: no spaces are allowed anywhere within the
+    parenthesis and each value must be separated from the other with a
+    single comma. The first two values are specified in number of seconds
+    and the last is the maximum number of failing probes that need to occur
+    before the connection is considered to have been terminated.
+    <p>
+    NOTE: on Windows platforms the <code>cnt</code> value is ignored and
+    cannot be changed from its default value of 10. The other two values
+    however (<code>idle</code> and <code>intv</code>) can be. On Linux,
+    all three values can be changed.
     <p>
 
 <a name="CPUMODEL"></a>

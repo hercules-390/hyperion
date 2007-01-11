@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.14  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #ifndef _HEXTERNS_H
 #define _HEXTERNS_H
@@ -163,6 +166,7 @@ CONF_DLL_IMPORT int parse_single_devnum(const char *spec, U16 *lcss, U16 *devnum
 int parse_single_devnum_silent(const char *spec, U16 *lcss, U16 *devnum);
 int readlogo(char *fn);
 void clearlogo(void);
+CONF_DLL_IMPORT int parse_conkpalv(char* s, int* idle, int* intv, int* cnt );
 
 
 /* Global data areas and functions in module cpu.c                   */
