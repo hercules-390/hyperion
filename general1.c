@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.146  2007/01/09 05:10:19  gsmith
+// Tweaks to lm/stm
+//
 // Revision 1.145  2007/01/04 23:12:04  gsmith
 // remove thunk calls for program_interrupt
 //
@@ -83,7 +86,7 @@ int     r1, r2;                         /* Values of R fields        */
                     regs->GR_L(r2));
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
@@ -110,7 +113,7 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 }
@@ -138,7 +141,7 @@ S32     n;                              /* 32-bit operand values     */
                     (U32)n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 }
@@ -163,7 +166,7 @@ U16     i2;                             /* 16-bit immediate op       */
                      (S16)i2);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 }
@@ -220,7 +223,7 @@ int     r1, r2;                         /* Values of R fields        */
     RR0(inst, regs, r1, r2);
 
     /* AND second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_L(r1) &= regs->GR_L(r2) ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_L(r1) &= regs->GR_L(r2) ) ? CC1 : CC0;
 }
 
 
@@ -240,7 +243,7 @@ U32     n;                              /* 32-bit operand values     */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* AND second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_L(r1) &= n ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_L(r1) &= n ) ? CC1 : CC0;
 }
 
 
@@ -1039,8 +1042,8 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-                (S32)regs->GR_L(r1) < (S32)regs->GR_L(r2) ? 1 :
-                (S32)regs->GR_L(r1) > (S32)regs->GR_L(r2) ? 2 : 0;
+                (S32)regs->GR_L(r1) < (S32)regs->GR_L(r2) ? CC1 :
+                (S32)regs->GR_L(r1) > (S32)regs->GR_L(r2) ? CC2 : CC0;
 }
 
 
@@ -1061,8 +1064,8 @@ U32     n;                              /* 32-bit operand values     */
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-            (S32)regs->GR_L(r1) < (S32)n ? 1 :
-            (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
+            (S32)regs->GR_L(r1) < (S32)n ? CC1 :
+            (S32)regs->GR_L(r1) > (S32)n ? CC2 : CC0;
 }
 
 
@@ -1116,7 +1119,7 @@ GREG    gr2_high_bit = CFC_HIGH_BIT;    /* (work constant; uses a64) */
 
         if ( index > max_index )
         {
-            regs->psw.cc = 0;   // (operands are equal to each other)
+            regs->psw.cc = CC0;   // (operands are equal to each other)
             SET_GR_A( 2, regs, GR_A(3,regs) | gr2_high_bit );
             return;
         }
@@ -1159,7 +1162,7 @@ GREG    gr2_high_bit = CFC_HIGH_BIT;    /* (work constant; uses a64) */
     {
         if ( !descending )     // (ascending; in sequence)
         {
-            regs->psw.cc = 1;  // (cc1 == in sequence)
+            regs->psw.cc = CC1;  // (cc1 == in sequence)
 
             /* Ascending sort: use inverse of higher operand's data */
 
@@ -1168,7 +1171,7 @@ GREG    gr2_high_bit = CFC_HIGH_BIT;    /* (work constant; uses a64) */
         }
         else                   // (descending; out-of-sequence)
         {
-            regs->psw.cc = 2;  // (cc2 == out-of-sequence)
+            regs->psw.cc = CC2;  // (cc2 == out-of-sequence)
 
             /* Descending sort: use lower operand's data as-is */
 
@@ -1185,7 +1188,7 @@ GREG    gr2_high_bit = CFC_HIGH_BIT;    /* (work constant; uses a64) */
     {
         if ( !descending )     // (ascending; out-of-sequence)
         {
-            regs->psw.cc = 2;  // (cc2 == out-of-sequence)
+            regs->psw.cc = CC2;  // (cc2 == out-of-sequence)
 
             /* Ascending sort: use inverse of higher operand's data */
 
@@ -1200,7 +1203,7 @@ GREG    gr2_high_bit = CFC_HIGH_BIT;    /* (work constant; uses a64) */
         }
         else                   // (descending; in sequence)
         {
-            regs->psw.cc = 1;  // (cc1 == in sequence)
+            regs->psw.cc = CC1;  // (cc1 == in sequence)
 
             /* Descending sort: use lower operand's data as-is */
 
@@ -1260,7 +1263,7 @@ U32     old;                            /* old value                 */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-    if (regs->psw.cc == 1)
+    if (regs->psw.cc == CC1)
     {
         regs->GR_L(r1) = CSWAP32(old);
 #if defined(_FEATURE_SIE)
@@ -1323,7 +1326,7 @@ U64     old, new;                       /* old, new values           */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-    if (regs->psw.cc == 1)
+    if (regs->psw.cc == CC1)
     {
         regs->GR_L(r1) = CSWAP64(old) >> 32;
         regs->GR_L(r1+1) = CSWAP64(old) & 0xffffffff;
@@ -1365,8 +1368,8 @@ S32     n;                              /* 32-bit operand values     */
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-            (S32)regs->GR_L(r1) < n ? 1 :
-            (S32)regs->GR_L(r1) > n ? 2 : 0;
+            (S32)regs->GR_L(r1) < n ? CC1 :
+            (S32)regs->GR_L(r1) > n ? CC2 : CC0;
 }
 
 
@@ -1384,8 +1387,8 @@ U16     i2;                             /* 16-bit operand            */
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-            (S32)regs->GR_L(r1) < (S16)i2 ? 1 :
-            (S32)regs->GR_L(r1) > (S16)i2 ? 2 : 0;
+            (S32)regs->GR_L(r1) < (S16)i2 ? CC1 :
+            (S32)regs->GR_L(r1) > (S16)i2 ? CC2 : CC0;
 
 }
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
@@ -1401,8 +1404,8 @@ int     r1, r2;                         /* Values of R fields        */
     RR0(inst, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
-                   regs->GR_L(r1) > regs->GR_L(r2) ? 2 : 0;
+    regs->psw.cc = regs->GR_L(r1) < regs->GR_L(r2) ? CC1 :
+                   regs->GR_L(r1) > regs->GR_L(r2) ? CC2 : CC0;
 }
 
 
@@ -1422,8 +1425,8 @@ U32     n;                              /* 32-bit operand values     */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(r1) < n ? 1 :
-                   regs->GR_L(r1) > n ? 2 : 0;
+    regs->psw.cc = regs->GR_L(r1) < n ? CC1 :
+                   regs->GR_L(r1) > n ? CC2 : CC0;
 }
 
 
@@ -1443,8 +1446,8 @@ BYTE    cbyte;                          /* Compare byte              */
     cbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
 
     /* Compare with immediate operand and set condition code */
-    regs->psw.cc = (cbyte < i2) ? 1 :
-                   (cbyte > i2) ? 2 : 0;
+    regs->psw.cc = (cbyte < i2) ? CC1 :
+                   (cbyte > i2) ? CC2 : CC0;
 }
 
 
@@ -1472,7 +1475,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
     if (unlikely(len == 0))
     {
         rc = *m1 - *m2;
-        regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
+        regs->psw.cc = ( rc == 0 ? CC0 : ( rc < 0 ? CC1 : CC2 ) );
         return;
     }
 
@@ -1503,7 +1506,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
                     U16 v1, v2;
                     v1 = fetch_hw(m1);
                     v2 = fetch_hw(m2);
-                    regs->psw.cc = ( v1 == v2 ? 0 : ( v1 < v2 ? 1 : 2 ) );
+                    regs->psw.cc = ( v1 == v2 ? CC0 : ( v1 < v2 ? CC1 : CC2 ) );
                     return;
                 }
                 break;
@@ -1514,7 +1517,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
                     U32 v1, v2;
                     v1 = fetch_fw(m1);
                     v2 = fetch_fw(m2);
-                    regs->psw.cc = ( v1 == v2 ? 0 : ( v1 < v2 ? 1 : 2 ) );
+                    regs->psw.cc = ( v1 == v2 ? CC0 : ( v1 < v2 ? CC1 : CC2 ) );
                     return;
                 }
                 break;
@@ -1526,7 +1529,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
                     U64 v1, v2;
                     v1 = fetch_dw(m1);
                     v2 = fetch_dw(m2);
-                    regs->psw.cc = ( v1 == v2 ? 0 : ( v1 < v2 ? 1 : 2 ) );
+                    regs->psw.cc = ( v1 == v2 ? CC0 : ( v1 < v2 ? CC1 : CC2 ) );
                     return;
                 }
 
@@ -1617,7 +1620,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
             }
         }
     }
-    regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
+    regs->psw.cc = ( rc == 0 ? CC0 : ( rc < 0 ? CC1 : CC2 ) );
 }
 
 
@@ -1874,7 +1877,7 @@ BYTE    termchar;                       /* Terminating character     */
            and leave the R1 and R2 registers unchanged */
         if (byte1 == termchar && byte2 == termchar)
         {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
             return;
         }
 
@@ -1975,21 +1978,21 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     /* If substring length is zero, exit with condition code 0 */
     if (sublen == 0)
     {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         return;
     }
 
     /* If both operand lengths are zero, exit with condition code 2 */
     if (len1 <= 0 && len2 <= 0)
     {
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
         return;
     }
 
     /* If r1=r2, exit with condition code 0 or 1*/
     if (r1 == r2)
     {
-        regs->psw.cc = (len1 < sublen) ? 1 : 0;
+        regs->psw.cc = (len1 < sublen) ? CC1 : CC0;
         return;
     }
 
@@ -2219,7 +2222,7 @@ int     wfc;                            /* Well-Formedness-Checking  */
             {
               if(unicode2 < 0xdc00 || unicode2 > 0xdf00)
               {
-                regs->psw.cc = 2;
+                regs->psw.cc = CC2;
                 return;
               }
             }
@@ -2345,7 +2348,7 @@ int     wfc;                            /* WellFormednessChecking    */
             {
               if(utf[0] <= 0xc1)
               {
-                regs->psw.cc = 2;
+                regs->psw.cc = CC2;
                 return;
               }
             }
@@ -2364,7 +2367,7 @@ int     wfc;                            /* WellFormednessChecking    */
             {
               if(utf[1] < 0x80 || utf[1] > 0xbf)
               {
-                regs->psw.cc = 2;
+                regs->psw.cc = CC2;
                 return;
               }
             }
@@ -2392,7 +2395,7 @@ int     wfc;                            /* WellFormednessChecking    */
               {
                 if(utf[1] < 0xa0 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf)
                 {
-                  regs->psw.cc = 2;
+                  regs->psw.cc = CC2;
                   return;
                 }
               }
@@ -2400,7 +2403,7 @@ int     wfc;                            /* WellFormednessChecking    */
               {
                 if(utf[1] < 0x80 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf)
                 {
-                  regs->psw.cc = 2;
+                  regs->psw.cc = CC2;
                   return;
                 }
               }
@@ -2408,7 +2411,7 @@ int     wfc;                            /* WellFormednessChecking    */
               {
                 if(utf[1] < 0x80 || utf[1] > 0x9f || utf[2] < 0x80 || utf[2] > 0xbf)
                 {
-                  regs->psw.cc = 2;
+                  regs->psw.cc = CC2;
                   return;
                 }
               }
@@ -2438,7 +2441,7 @@ int     wfc;                            /* WellFormednessChecking    */
               {
                 if(utf[1] < 0x90 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
                 {
-                  regs->psw.cc = 2;
+                  regs->psw.cc = CC2;
                   return;
                 }
               }
@@ -2446,7 +2449,7 @@ int     wfc;                            /* WellFormednessChecking    */
               {
                 if(utf[1] < 0x80 || utf[1] > 0xbf || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
                 {
-                  regs->psw.cc = 2;
+                  regs->psw.cc = CC2;
                   return;
                 }
               }
@@ -2454,7 +2457,7 @@ int     wfc;                            /* WellFormednessChecking    */
               {
                 if(utf[1] < 0x80 || utf[1] > 0x8f || utf[2] < 0x80 || utf[2] > 0xbf || utf[3] < 0x80 || utf[3] > 0xbf)
                 {
-                  regs->psw.cc = 2;
+                  regs->psw.cc = CC2;
                   return;
                 }
               }
@@ -2684,7 +2687,7 @@ int     r1, r2;                         /* Values of R fields        */
     RR0(inst, regs, r1, r2);
 
     /* XOR second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_L(r1) ^= regs->GR_L(r2) ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_L(r1) ^= regs->GR_L(r2) ) ? CC1 : CC0;
 }
 
 
@@ -2704,7 +2707,7 @@ U32     n;                              /* 32-bit operand values     */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* XOR second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_L(r1) ^= n ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_L(r1) ^= n ) ? CC1 : CC0;
 }
 
 
@@ -2986,14 +2989,14 @@ static const unsigned int               /* Turn reg bytes off by mask*/
         n = fetch_fw (vbyte);
         regs->GR_L(r1) = (regs->GR_L(r1) & 0xFF000000) | n;
         regs->psw.cc = n ? n & 0x00800000 ?
-                       1 : 2 : 0;
+                       CC1 : CC2 : CC0;
         break;
 
     case 15:
         /* Optimized case */
         regs->GR_L(r1) = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
         regs->psw.cc = regs->GR_L(r1) ? regs->GR_L(r1) & 0x80000000 ?
-                       1 : 2 : 0;
+                       CC1 : CC2 : CC0;
         break;
 
     default:
@@ -3006,7 +3009,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
 
         n = fetch_fw (vbyte);
         regs->psw.cc = n ? n & 0x80000000 ?
-                       1 : 2 : 0;
+                       CC1 : CC2 : CC0;
 
         /* Turn off the reg bytes we are going to set */
         regs->GR_L(r1) &= icmmask[r3];
@@ -3189,8 +3192,8 @@ int     r1, r2;                         /* Values of R fields        */
     /* Copy second operand and set condition code */
     regs->GR_L(r1) = regs->GR_L(r2);
 
-    regs->psw.cc = (S32)regs->GR_L(r1) < 0 ? 1 :
-                   (S32)regs->GR_L(r1) > 0 ? 2 : 0;
+    regs->psw.cc = (S32)regs->GR_L(r1) < 0 ? CC1 :
+                   (S32)regs->GR_L(r1) > 0 ? CC2 : CC0;
 }
 
 
@@ -3207,7 +3210,7 @@ int     r1, r2;                         /* Values of R fields        */
     if ( regs->GR_L(r2) == 0x80000000 )
     {
         regs->GR_L(r1) = regs->GR_L(r2);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         if ( FOMASK(&regs->psw) )
             regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
@@ -3216,8 +3219,8 @@ int     r1, r2;                         /* Values of R fields        */
     /* Load complement of second operand and set condition code */
     regs->GR_L(r1) = -((S32)regs->GR_L(r2));
 
-    regs->psw.cc = (S32)regs->GR_L(r1) < 0 ? 1 :
-                   (S32)regs->GR_L(r1) > 0 ? 2 : 0;
+    regs->psw.cc = (S32)regs->GR_L(r1) < 0 ? CC1 :
+                   (S32)regs->GR_L(r1) > 0 ? CC2 : CC0;
 }
 
 
@@ -3339,7 +3342,7 @@ int     r1, r2;                         /* Values of R fields        */
                             -((S32)regs->GR_L(r2)) :
                             (S32)regs->GR_L(r2);
 
-    regs->psw.cc = (S32)regs->GR_L(r1) == 0 ? 0 : 1;
+    regs->psw.cc = (S32)regs->GR_L(r1) == 0 ? CC0 : CC1;
 }
 
 
@@ -3356,7 +3359,7 @@ int     r1, r2;                         /* Values of R fields        */
     if ( regs->GR_L(r2) == 0x80000000 )
     {
         regs->GR_L(r1) = regs->GR_L(r2);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         if ( FOMASK(&regs->psw) )
             regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
@@ -3367,7 +3370,7 @@ int     r1, r2;                         /* Values of R fields        */
                             -((S32)regs->GR_L(r2)) :
                             (S32)regs->GR_L(r2);
 
-    regs->psw.cc = (S32)regs->GR_L(r1) == 0 ? 0 : 2;
+    regs->psw.cc = (S32)regs->GR_L(r1) == 0 ? CC0 : CC2;
 }
 
 
@@ -3540,7 +3543,7 @@ int     orglen1;                        /* Original dest length      */
         {
             SET_GR_A(r1, regs,addr1);
             SET_GR_A(r2, regs,addr2);
-            regs->psw.cc =  3;
+            regs->psw.cc = CC3;
 #if 0
             logmsg (_("MVCL destructive overlap: "));
             ARCH_DEP(display_inst) (regs, inst);
@@ -3550,7 +3553,7 @@ int     orglen1;                        /* Original dest length      */
     }
 
     /* Set the condition code according to the lengths */
-    regs->psw.cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
+    regs->psw.cc = (len1 < len2) ? CC1 : (len1 > len2) ? CC2 : CC0;
 
     /* Initialize source and dest addresses */
     if (len1)
@@ -3898,7 +3901,7 @@ int     cpu_length;                     /* length to next page       */
             SET_GR_A(r1, regs,addr1);
 
             /* Set condition code 1 */
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
             return;
         }
 
@@ -3915,7 +3918,7 @@ int     cpu_length;                     /* length to next page       */
     SET_GR_A(r2, regs,addr2);
 
     /* Set condition code 3 */
-    regs->psw.cc = 3;
+    regs->psw.cc = CC3;
 
 }
 

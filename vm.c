@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.42  2006/12/08 09:43:31  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -1129,7 +1132,7 @@ VADR    effective_addr2;                /* Effective address         */
         return;
 
     /* Set condition code to indicate IUCV not available */
-    regs->psw.cc = 3;
+    regs->psw.cc = CC3;
 
 }
 
