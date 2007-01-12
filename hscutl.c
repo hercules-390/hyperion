@@ -11,6 +11,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.24  2007/01/10 15:12:11  rbowler
+// Console keepalive for Unix
+//
 // Revision 1.23  2007/01/10 09:32:39  fish
 // Enable connection keep-alive to try and detect 3270 clients that
 // have died (MSVC only right now; don't know how to do it on *nix)
@@ -695,11 +698,11 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
   #if defined(TCP_KEEPALIVE)
     optval = idle_time;
     rc = setsockopt(sfd, IPPROTO_TCP, TCP_KEEPALIVE, &optval, sizeof(optval)); 
-    logmsg("HHCUT002I TCP_KEEPALIVE rc=%d %s\n", rc, strerror(errno));
+    if (rc) logmsg("HHCUT002I TCP_KEEPALIVE rc=%d %s\n", rc, strerror(errno));
   #elif defined(TCP_KEEPIDLE)
     optval = idle_time;
     rc = setsockopt(sfd, SOL_TCP, TCP_KEEPIDLE, &optval, sizeof(optval)); 
-    logmsg("HHCUT003I TCP_KEEPIDLE rc=%d %s\n", rc, strerror(errno));
+    if (rc) logmsg("HHCUT003I TCP_KEEPIDLE rc=%d %s\n", rc, strerror(errno));
   #else
     UNREFERENCED(idle_time);
   #endif
@@ -707,7 +710,7 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
   #if defined(TCP_KEEPINTVL)
     optval = probe_interval;
     rc = setsockopt(sfd, SOL_TCP, TCP_KEEPINTVL, &optval, sizeof(optval)); 
-    logmsg("HHCUT004I TCP_KEEPINTVL rc=%d %s\n", rc, strerror(errno));
+    if (rc) logmsg("HHCUT004I TCP_KEEPINTVL rc=%d %s\n", rc, strerror(errno));
   #else
     UNREFERENCED(probe_interval);
   #endif
@@ -715,7 +718,7 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
   #if defined(TCP_KEEPCNT)
     optval = probe_count;
     rc = setsockopt(sfd, SOL_TCP, TCP_KEEPCNT, &optval, sizeof(optval)); 
-    logmsg("HHCUT005I TCP_KEEPCNT rc=%d %s\n", rc, strerror(errno));
+    if (rc) logmsg("HHCUT005I TCP_KEEPCNT rc=%d %s\n", rc, strerror(errno));
   #else
     UNREFERENCED(probe_count);
   #endif
