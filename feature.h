@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.74  2007/01/12 16:21:26  bernard
+// ccmask phase 1
+//
 // Revision 1.73  2007/01/12 15:20:44  bernard
 // ccmask phase 1
 //
@@ -835,11 +838,15 @@ do { \
 /*--------------------------------------------------------------------------------*/
 
 #ifdef FEATURE_CCMASK
+
+  extern int __cc[256];
+  extern int __mask[5];
+
   #define CC0		0x80
   #define CC1		0x40
   #define CC2		0x20
   #define CC3		0x10
-  #define CCINV		0x00
+  #define CCINV		0x08
   #define CC2M(cc)	(__mask[(cc)])
   #define M2CC(mask)	(__cc[(mask)])
 #else
