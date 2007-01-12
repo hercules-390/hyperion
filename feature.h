@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.73  2007/01/12 15:20:44  bernard
+// ccmask phase 1
+//
 // Revision 1.72  2007/01/03 05:53:34  gsmith
 // 03 Jan 2007 Sloppy fetch - Greg Smith
 //
@@ -832,11 +835,11 @@ do { \
 /*--------------------------------------------------------------------------------*/
 
 #ifdef FEATURE_CCMASK
-  #define CC0		0x08
-  #define CC1		0x04
-  #define CC2		0x02
-  #define CC3		0x01
-  #define CCINV		0
+  #define CC0		0x80
+  #define CC1		0x40
+  #define CC2		0x20
+  #define CC3		0x10
+  #define CCINV		0x00
   #define CC2M(cc)	(__mask[(cc)])
   #define M2CC(mask)	(__cc[(mask)])
 #else
