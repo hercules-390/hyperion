@@ -33,6 +33,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.58  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -85,14 +88,14 @@ DEVBLK *dev;                            /* -> device block           */
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
     /* Perform clear subchannel and set condition code zero */
     clear_subchan (regs, dev);
 
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
 
 }
 
@@ -130,7 +133,7 @@ DEVBLK *dev;                            /* -> device block           */
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -183,14 +186,14 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* Condition code 3 if subchannel does not exist */
     if (dev == NULL)
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
     /* If the subchannel is invalid then return cc0 */
     if (!(dev->pmcw.flag5 & PMCW5_V))
     {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         return;
     }
 
@@ -206,7 +209,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     if ((dev->scsw.flag3 & SCSW3_SC_PEND)
       && !(dev->scsw.flag3 & SCSW3_SC_INTER))
     {
-        regs->psw.cc = 1;
+        regs->psw.cc = CC1;
         release_lock (&dev->lock);
         return;
     }
@@ -214,7 +217,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* Condition code 2 if subchannel is busy */
     if (dev->busy || IOPENDING(dev))
     {
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
         release_lock (&dev->lock);
         return;
     }
@@ -269,7 +272,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     release_lock (&dev->lock);
 
     /* Set condition code 0 */
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
 
 }
 
@@ -342,7 +345,7 @@ DEVBLK *dev;                            /* -> device block           */
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -510,7 +513,7 @@ ORB     orb;                            /* Operation request block   */
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -530,7 +533,7 @@ ORB     orb;                            /* Operation request block   */
     regs->siocount++;
 
     /* Set the last path used mask */
-    if (0 == regs->psw.cc) dev->pmcw.lpum = 0x80;
+    if (regs->psw.cc == CC0) dev->pmcw.lpum = 0x80;
 
 }
 
@@ -591,7 +594,7 @@ U32     n;                              /* Integer work area         */
     ARCH_DEP(vstore4) ( n, effective_addr2, b2, regs );
 
     /* Indicate if channel report or zeros were stored */
-    regs->psw.cc = (n == 0) ? 1 : 0;
+    regs->psw.cc = (n == 0) ? CC1 : CC0;
 
 }
 
@@ -621,7 +624,7 @@ SCHIB   schib;                          /* Subchannel information blk*/
     /* Set condition code 3 if subchannel does not exist */
     if (dev == NULL)
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -648,7 +651,7 @@ SCHIB   schib;                          /* Subchannel information blk*/
                 b2, regs );
 
     /* Set condition code 0 */
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
 
 }
 
@@ -756,7 +759,7 @@ RADR    pfx;                            /* Prefix                    */
         icode = 0;
     }
 
-    regs->psw.cc = (icode == 0) ? 0 : 1;
+    regs->psw.cc = (icode == 0) ? CC0 : CC1;
 }
 
 
@@ -797,7 +800,7 @@ int     cc;                             /* Condition Code            */
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -854,7 +857,7 @@ DEVBLK *dev;                            /* -> device block           */
 #if defined(_FEATURE_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -902,7 +905,7 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
     if(regs->chanset == 0xFFFF
       || !(dev = find_device_by_devnum (regs->chanset,effective_addr2)) )
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -945,7 +948,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     if(regs->chanset == 0xFFFF
       || !(dev = find_device_by_devnum (regs->chanset,effective_addr2)) )
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -953,7 +956,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     regs->psw.cc = testio (regs, dev, inst[1]);
     /* Yield time slice so that device handler may get some time */
     /* to possibly complete an I/O - to prevent a TIO Busy Loop  */
-    if(regs->psw.cc==2)
+    if(regs->psw.cc == CC2)
     {
         sched_yield();
     }
@@ -981,7 +984,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     if(regs->chanset == 0xFFFF
       || !(dev = find_device_by_devnum (regs->chanset,effective_addr2)) )
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -1023,7 +1026,7 @@ U16     tch_ctl;
          || ((0x8000 >> channelid) & tch_ctl))
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
         else
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
     }
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -1072,7 +1075,7 @@ int     i;
     /* Hercules has as many channelsets as CSS's */
     if(effective_addr2 >= FEATURE_LCSS_MAX)
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -1080,7 +1083,7 @@ int     i;
        then return with cc0 */
     if(regs->chanset == effective_addr2)
     {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         return;
     }
 
@@ -1097,7 +1100,7 @@ int     i;
          && sysblk.regs[i]->chanset == effective_addr2)
         {
             RELEASE_INTLOCK(regs);
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
             return;
         }
     }
@@ -1110,7 +1113,7 @@ int     i;
 
     RELEASE_INTLOCK(regs);
 
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
 
 }
 
@@ -1133,7 +1136,7 @@ int     i;
     /* Hercules has as many channelsets as CSS's */
     if(effective_addr2 >= FEATURE_LCSS_MAX)
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -1142,7 +1145,7 @@ int     i;
     if(regs->chanset == effective_addr2 && regs->chanset != 0xFFFF)
     {
         regs->chanset = 0xFFFF;
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         return;
     }
 
@@ -1158,10 +1161,10 @@ int     i;
             if(sysblk.regs[i]->cpustate != CPUSTATE_STARTED)
             {
                 sysblk.regs[i]->chanset = 0xFFFF;
-                regs->psw.cc = 0;
+                regs->psw.cc = CC0;
             }
             else
-                regs->psw.cc = 1;
+                regs->psw.cc = CC1;
             RELEASE_INTLOCK(regs);
             return;
         }
@@ -1171,7 +1174,7 @@ int     i;
 
     /* The channel set is not connected, no operation
        is performed */
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
 
 }
 #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/

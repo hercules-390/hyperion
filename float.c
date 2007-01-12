@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.46  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -1613,9 +1616,9 @@ BYTE    shift;
                         || ((fl->short_fract >>= (shift * 4)) == 0)) {
                             /* Set condition code */
                             if (cmp_fl->short_fract) {
-                                regs->psw.cc = cmp_fl->sign ? 2 : 1;
+                                regs->psw.cc = cmp_fl->sign ? CC2 : CC1;
                             } else {
-                                regs->psw.cc = 0;
+                                regs->psw.cc = CC0;
                             }
                             return;
                         }
@@ -1631,9 +1634,9 @@ BYTE    shift;
                         || ((cmp_fl->short_fract >>= (shift * 4)) == 0)) {
                             /* Set condition code */
                             if (fl->short_fract) {
-                                regs->psw.cc = fl->sign ? 1 : 2;
+                                regs->psw.cc = fl->sign ? CC1 : CC2;
                             } else {
-                                regs->psw.cc = 0;
+                                regs->psw.cc = CC0;
                             }
                             return;
                         }
@@ -1660,26 +1663,26 @@ BYTE    shift;
 
             /* Set condition code */
             if (fl->short_fract) {
-                regs->psw.cc = fl->sign ? 1 : 2;
+                regs->psw.cc = fl->sign ? CC1 : CC2;
             } else {
-                regs->psw.cc = 0;
+                regs->psw.cc = CC0;
             }
             return;
         } else { /* fl 0, cmp_fl not 0 */
             /* Set condition code */
             if (cmp_fl->short_fract) {
-                regs->psw.cc = cmp_fl->sign ? 2 : 1;
+                regs->psw.cc = cmp_fl->sign ? CC2 : CC1;
             } else {
-                regs->psw.cc = 0;
+                regs->psw.cc = CC0;
             }
             return;
         }
     } else {                        /* cmp_fl 0 */
         /* Set condition code */
         if (fl->short_fract) {
-            regs->psw.cc = fl->sign ? 1 : 2;
+            regs->psw.cc = fl->sign ? CC1 : CC2;
         } else {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         }
         return;
     }
@@ -1723,9 +1726,9 @@ BYTE    shift;
                         || ((fl->long_fract >>= (shift * 4)) == 0)) {
                             /* Set condition code */
                             if (cmp_fl->long_fract) {
-                                regs->psw.cc = cmp_fl->sign ? 2 : 1;
+                                regs->psw.cc = cmp_fl->sign ? CC2 : CC1;
                             } else {
-                                regs->psw.cc = 0;
+                                regs->psw.cc = CC0;
                             }
                             return;
                         }
@@ -1741,9 +1744,9 @@ BYTE    shift;
                         || ((cmp_fl->long_fract >>= (shift * 4)) == 0)) {
                             /* Set condition code */
                             if (fl->long_fract) {
-                                regs->psw.cc = fl->sign ? 1 : 2;
+                                regs->psw.cc = fl->sign ? CC1 : CC2;
                             } else {
-                                regs->psw.cc = 0;
+                                regs->psw.cc = CC0;
                             }
                             return;
                         }
@@ -1770,26 +1773,26 @@ BYTE    shift;
 
             /* Set condition code */
             if (fl->long_fract) {
-                regs->psw.cc = fl->sign ? 1 : 2;
+                regs->psw.cc = fl->sign ? CC1 : CC2;
             } else {
-                regs->psw.cc = 0;
+                regs->psw.cc = CC0;
             }
             return;
         } else { /* fl 0, cmp_fl not 0 */
             /* Set condition code */
             if (cmp_fl->long_fract) {
-                regs->psw.cc = cmp_fl->sign ? 2 : 1;
+                regs->psw.cc = cmp_fl->sign ? CC2 : CC1;
             } else {
-                regs->psw.cc = 0;
+                regs->psw.cc = CC0;
             }
             return;
         }
     } else {                        /* cmp_fl 0 */
         /* Set condition code */
         if (fl->long_fract) {
-            regs->psw.cc = fl->sign ? 1 : 2;
+            regs->psw.cc = fl->sign ? CC1 : CC2;
         } else {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         }
         return;
     }
@@ -2915,7 +2918,7 @@ int     i1, i2;
 
     /* Set condition code */
     regs->psw.cc = ((regs->fpr[i1] & 0x00FFFFFF)
-                 || regs->fpr[i1+1]) ? 2 : 0;
+                 || regs->fpr[i1+1]) ? CC2 : CC0;
 }
 
 
@@ -2939,7 +2942,7 @@ int     i1, i2;
 
     /* Set condition code */
     regs->psw.cc = ((regs->fpr[i1] & 0x00FFFFFF)
-                 || regs->fpr[i1+1]) ? 1 : 0;
+                 || regs->fpr[i1+1]) ? CC1 : CC0;
 }
 
 
@@ -2963,9 +2966,9 @@ int     i1, i2;
     /* Set condition code */
     if ((regs->fpr[i1] & 0x00FFFFFF)
     || regs->fpr[i1+1]) {
-        regs->psw.cc = (regs->fpr[i1] & 0x80000000) ? 1 : 2;
+        regs->psw.cc = (regs->fpr[i1] & 0x80000000) ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -2990,9 +2993,9 @@ int     i1, i2;
     /* Set condition code */
     if ((regs->fpr[i1] & 0x00FFFFFF)
     || regs->fpr[i1+1]) {
-        regs->psw.cc = (regs->fpr[i1] & 0x80000000) ? 1 : 2;
+        regs->psw.cc = (regs->fpr[i1] & 0x80000000) ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -3204,9 +3207,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.long_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -3247,9 +3250,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.long_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -3352,9 +3355,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.long_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -3395,9 +3398,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.long_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -3427,7 +3430,7 @@ int     i1;
     regs->fpr[i1] = regs->fpr[FPR2I(r2)] & 0x7FFFFFFF;
 
     /* Set condition code */
-    regs->psw.cc = (regs->fpr[i1] & 0x00FFFFFF) ? 2 : 0;
+    regs->psw.cc = (regs->fpr[i1] & 0x00FFFFFF) ? CC2 : CC0;
 }
 
 
@@ -3448,7 +3451,7 @@ int     i1;
                   | 0x80000000;
 
     /* Set condition code */
-    regs->psw.cc = (regs->fpr[i1] & 0x00FFFFFF) ? 1 : 0;
+    regs->psw.cc = (regs->fpr[i1] & 0x00FFFFFF) ? CC1 : CC0;
 }
 
 
@@ -3469,9 +3472,9 @@ int     i1;
 
     /* Set condition code */
     if (regs->fpr[i1] & 0x00FFFFFF) {
-        regs->psw.cc = (regs->fpr[i1] & 0x80000000) ? 1 : 2;
+        regs->psw.cc = (regs->fpr[i1] & 0x80000000) ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -3493,9 +3496,9 @@ int     i1;
 
     /* Set condition code */
     if (regs->fpr[i1] & 0x00FFFFFF) {
-        regs->psw.cc = (regs->fpr[i1] & 0x80000000) ? 1 : 2;
+        regs->psw.cc = (regs->fpr[i1] & 0x80000000) ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -3602,9 +3605,9 @@ int     pgm_check;
     /* Set condition code */
     if (fl.ms_fract
     || fl.ls_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Program check ? */
@@ -3642,9 +3645,9 @@ int     pgm_check;
     /* Set condition code */
     if (fl.ms_fract
     || fl.ls_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Program check ? */
@@ -3714,9 +3717,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.short_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -3757,9 +3760,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.short_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -3863,9 +3866,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.short_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -3906,9 +3909,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.short_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -4052,9 +4055,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.long_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -4097,9 +4100,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.long_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -4208,9 +4211,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.long_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -4253,9 +4256,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.long_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -4352,9 +4355,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.short_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -4397,9 +4400,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.short_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -4509,9 +4512,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.short_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -4554,9 +4557,9 @@ int     pgm_check;
 
     /* Set condition code */
     if (fl.short_fract) {
-        regs->psw.cc = fl.sign ? 1 : 2;
+        regs->psw.cc = fl.sign ? CC1 : CC2;
     } else {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 
     /* Back to register */
@@ -4908,7 +4911,7 @@ int     i1, i2;
         regs->fpr[i1+FPREX+1] = regs->fpr[i2+FPREX+1];
 
         /* Set condition code */
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
     } else {
         /* true zero */
         regs->fpr[i1] = 0;
@@ -4917,7 +4920,7 @@ int     i1, i2;
         regs->fpr[i1+FPREX+1] = 0;
 
         /* Set condition code */
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -4951,7 +4954,7 @@ int     i1, i2;
         regs->fpr[i1+FPREX+1] = regs->fpr[i2+FPREX+1];
 
         /* Set condition code */
-        regs->psw.cc = 1;
+        regs->psw.cc = CC1;
     } else {
         /* true zero with sign */
         regs->fpr[i1] = 0x80000000;
@@ -4960,7 +4963,7 @@ int     i1, i2;
         regs->fpr[i1+FPREX+1] = 0;
 
         /* Set condition code */
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -4993,7 +4996,7 @@ int     i1, i2;
         regs->fpr[i1+FPREX+1] = regs->fpr[i2+FPREX+1];
 
         /* Set condition code */
-        regs->psw.cc = (regs->fpr[i2] & 0x80000000) ? 1 : 2;
+        regs->psw.cc = (regs->fpr[i2] & 0x80000000) ? CC1 : CC2;
     } else {
         /* true zero with sign */
         regs->fpr[i1] = regs->fpr[i2] & 0x80000000;
@@ -5002,7 +5005,7 @@ int     i1, i2;
         regs->fpr[i1+FPREX+1] = 0;
 
         /* Set condition code */
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -5035,7 +5038,7 @@ int     i1, i2;
         regs->fpr[i1+FPREX+1] = regs->fpr[i2+FPREX+1];
 
         /* Set condition code */
-        regs->psw.cc = (regs->fpr[i1] & 0x80000000) ? 1 : 2;
+        regs->psw.cc = (regs->fpr[i1] & 0x80000000) ? CC1 : CC2;
     } else {
         /* true zero with sign */
         regs->fpr[i1] = (regs->fpr[i2] ^ 0x80000000) & 0x80000000;
@@ -5044,7 +5047,7 @@ int     i1, i2;
         regs->fpr[i1+FPREX+1] = 0;
 
         /* Set condition code */
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -5188,9 +5191,9 @@ BYTE    shift;
                             /* Set condition code */
                             if (cmp_fl.ms_fract
                             || cmp_fl.ls_fract) {
-                                regs->psw.cc = cmp_fl.sign ? 2 : 1;
+                                regs->psw.cc = cmp_fl.sign ? CC2 : CC1;
                             } else {
-                                regs->psw.cc = 0;
+                                regs->psw.cc = CC0;
                             }
                             return;
                         } else if (shift >= 16) {
@@ -5210,9 +5213,9 @@ BYTE    shift;
                             /* Set condition code */
                             if (cmp_fl.ms_fract
                             || cmp_fl.ls_fract) {
-                                regs->psw.cc = cmp_fl.sign ? 2 : 1;
+                                regs->psw.cc = cmp_fl.sign ? CC2 : CC1;
                             } else {
-                                regs->psw.cc = 0;
+                                regs->psw.cc = CC0;
                             }
                             return;
                         }
@@ -5230,9 +5233,9 @@ BYTE    shift;
                             /* Set condition code */
                             if (fl.ms_fract
                             || fl.ls_fract) {
-                                regs->psw.cc = fl.sign ? 1 : 2;
+                                regs->psw.cc = fl.sign ? CC1 : CC2;
                             } else {
-                                regs->psw.cc = 0;
+                                regs->psw.cc = CC0;
                             }
                             return;
                         } else if (shift >= 16) {
@@ -5252,9 +5255,9 @@ BYTE    shift;
                             /* Set condition code */
                             if (fl.ms_fract
                             || fl.ls_fract) {
-                                regs->psw.cc = fl.sign ? 1 : 2;
+                                regs->psw.cc = fl.sign ? CC1 : CC2;
                             } else {
-                                regs->psw.cc = 0;
+                                regs->psw.cc = CC0;
                             }
                             return;
                         }
@@ -5288,18 +5291,18 @@ BYTE    shift;
             /* Set condition code */
             if (fl.ms_fract
             || fl.ls_fract) {
-                regs->psw.cc = fl.sign ? 1 : 2;
+                regs->psw.cc = fl.sign ? CC1 : CC2;
             } else {
-                regs->psw.cc = 0;
+                regs->psw.cc = CC0;
             }
             return;
         } else { /* fl 0, cmp_fl not 0 */
             /* Set condition code */
             if (cmp_fl.ms_fract
             || cmp_fl.ls_fract) {
-                regs->psw.cc = cmp_fl.sign ? 2 : 1;
+                regs->psw.cc = cmp_fl.sign ? CC2 : CC1;
             } else {
-                regs->psw.cc = 0;
+                regs->psw.cc = CC0;
             }
             return;
         }
@@ -5307,9 +5310,9 @@ BYTE    shift;
         /* Set condition code */
         if (fl.ms_fract
         || fl.ls_fract) {
-            regs->psw.cc = fl.sign ? 1 : 2;
+            regs->psw.cc = fl.sign ? CC1 : CC2;
         } else {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         }
         return;
     }
@@ -5661,7 +5664,7 @@ U32     lsfract;
         if (fl.expo > 72) {
             /* exeeds range by exponent */
             regs->GR_L(r1) = fl.sign ? 0x80000000UL : 0x7FFFFFFFUL;
-            regs->psw.cc = 3;
+            regs->psw.cc = CC3;
             return;
         }
         if (fl.expo > 70) {
@@ -5672,7 +5675,7 @@ U32     lsfract;
                 if (fl.short_fract > 0x80000000UL) {
                     /* exeeds range by value */
                     regs->GR_L(r1) = 0x80000000UL;
-                    regs->psw.cc = 3;
+                    regs->psw.cc = CC3;
                     return;
                 }
             } else {
@@ -5680,7 +5683,7 @@ U32     lsfract;
                 if (fl.short_fract > 0x7FFFFFFFUL) {
                     /* exeeds range by value */
                     regs->GR_L(r1) = 0x7FFFFFFFUL;
-                    regs->psw.cc = 3;
+                    regs->psw.cc = CC3;
                     return;
                 }
             }
@@ -5756,16 +5759,16 @@ U32     lsfract;
         if (fl.sign) {
             /* negative */
             regs->GR_L(r1) = -((S32) fl.short_fract);
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
         } else {
             /* positive */
             regs->GR_L(r1) = fl.short_fract;
-            regs->psw.cc = 2;
+            regs->psw.cc = CC2;
         }
     } else {
         /* zero */
         regs->GR_L(r1) = 0;
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -5795,7 +5798,7 @@ U64     lsfract;
         if (fl.expo > 72) {
             /* exeeds range by exponent */
             regs->GR_L(r1) = fl.sign ? 0x80000000UL : 0x7FFFFFFFUL;
-            regs->psw.cc = 3;
+            regs->psw.cc = CC3;
             return;
         }
         if (fl.expo > 64) {
@@ -5835,7 +5838,7 @@ U64     lsfract;
                     if (fl.long_fract > 0x80000000UL) {
                         /* exeeds range by value */
                         regs->GR_L(r1) = 0x80000000UL;
-                        regs->psw.cc = 3;
+                        regs->psw.cc = CC3;
                         return;
                     }
                 } else {
@@ -5843,7 +5846,7 @@ U64     lsfract;
                     if (fl.long_fract > 0x7FFFFFFFUL) {
                         /* exeeds range by value */
                         regs->GR_L(r1) = 0x7FFFFFFFUL;
-                        regs->psw.cc = 3;
+                        regs->psw.cc = CC3;
                         return;
                     }
                 }
@@ -5889,16 +5892,16 @@ U64     lsfract;
         if (fl.sign) {
             /* negative */
             regs->GR_L(r1) = -((S32) fl.long_fract);
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
         } else {
             /* positive */
             regs->GR_L(r1) = fl.long_fract;
-            regs->psw.cc = 2;
+            regs->psw.cc = CC2;
         }
     } else {
         /* zero */
         regs->GR_L(r1) = 0;
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -5929,7 +5932,7 @@ U64     lsfract;
         if (fl.expo > 72) {
             /* exeeds range by exponent */
             regs->GR_L(r1) = fl.sign ? 0x80000000UL : 0x7FFFFFFFUL;
-            regs->psw.cc = 3;
+            regs->psw.cc = CC3;
             return;
         }
         if (fl.expo > 64) {
@@ -6015,26 +6018,26 @@ U64     lsfract;
             if (fl.ms_fract > 0x80000000UL) {
                 /* exeeds range by value */
                 regs->GR_L(r1) = 0x80000000UL;
-                regs->psw.cc = 3;
+                regs->psw.cc = CC3;
                 return;
             }
             regs->GR_L(r1) = -((S32) fl.ms_fract);
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
         } else {
             /* positive */
             if (fl.ms_fract > 0x7FFFFFFFUL) {
                 /* exeeds range by value */
                 regs->GR_L(r1) = 0x7FFFFFFFUL;
-                regs->psw.cc = 3;
+                regs->psw.cc = CC3;
                 return;
             }
             regs->GR_L(r1) = fl.ms_fract;
-            regs->psw.cc = 2;
+            regs->psw.cc = CC2;
         }
     } else {
         /* zero */
         regs->GR_L(r1) = 0;
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -6064,7 +6067,7 @@ U32     lsfract;
         if (fl.expo > 72) {
             /* exeeds range by exponent */
             regs->GR_G(r1) = fl.sign ? 0x8000000000000000ULL : 0x7FFFFFFFFFFFFFFFULL;
-            regs->psw.cc = 3;
+            regs->psw.cc = CC3;
             return;
         }
         if (fl.expo > 70) {
@@ -6075,7 +6078,7 @@ U32     lsfract;
                 if (fl.short_fract > 0x80000000UL) {
                     /* exeeds range by value */
                     regs->GR_G(r1) = 0x8000000000000000ULL;
-                    regs->psw.cc = 3;
+                    regs->psw.cc = CC3;
                     return;
                 }
             } else {
@@ -6083,7 +6086,7 @@ U32     lsfract;
                 if (fl.short_fract > 0x7FFFFFFFUL) {
                     /* exeeds range by value */
                     regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
-                    regs->psw.cc = 3;
+                    regs->psw.cc = CC3;
                     return;
                 }
             }
@@ -6159,16 +6162,16 @@ U32     lsfract;
         if (fl.sign) {
             /* negative */
             regs->GR_G(r1) = -((S64) fl.short_fract);
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
         } else {
             /* positive */
             regs->GR_G(r1) = fl.short_fract;
-            regs->psw.cc = 2;
+            regs->psw.cc = CC2;
         }
     } else {
         /* zero */
         regs->GR_G(r1) = 0;
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -6198,7 +6201,7 @@ U64     lsfract;
         if (fl.expo > 72) {
             /* exeeds range by exponent */
             regs->GR_G(r1) = fl.sign ? 0x8000000000000000ULL : 0x7FFFFFFFFFFFFFFFULL;
-            regs->psw.cc = 3;
+            regs->psw.cc = CC3;
             return;
         }
         if (fl.expo > 64) {
@@ -6238,7 +6241,7 @@ U64     lsfract;
                     if (fl.long_fract > 0x80000000UL) {
                         /* exeeds range by value */
                         regs->GR_G(r1) = 0x8000000000000000ULL;
-                        regs->psw.cc = 3;
+                        regs->psw.cc = CC3;
                         return;
                     }
                 } else {
@@ -6246,7 +6249,7 @@ U64     lsfract;
                     if (fl.long_fract > 0x7FFFFFFFUL) {
                         /* exeeds range by value */
                         regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
-                        regs->psw.cc = 3;
+                        regs->psw.cc = CC3;
                         return;
                     }
                 }
@@ -6292,16 +6295,16 @@ U64     lsfract;
         if (fl.sign) {
             /* negative */
             regs->GR_G(r1) = -((S64) fl.long_fract);
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
         } else {
             /* positive */
             regs->GR_G(r1) = fl.long_fract;
-            regs->psw.cc = 2;
+            regs->psw.cc = CC2;
         }
     } else {
         /* zero */
         regs->GR_G(r1) = 0;
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 
@@ -6332,7 +6335,7 @@ U64     lsfract;
         if (fl.expo > 72) {
             /* exeeds range by exponent */
             regs->GR_G(r1) = fl.sign ? 0x8000000000000000ULL : 0x7FFFFFFFFFFFFFFFULL;
-            regs->psw.cc = 3;
+            regs->psw.cc = CC3;
             return;
         }
         if (fl.expo > 64) {
@@ -6418,26 +6421,26 @@ U64     lsfract;
             if (fl.ms_fract > 0x80000000UL) {
                 /* exeeds range by value */
                 regs->GR_G(r1) = 0x8000000000000000ULL;
-                regs->psw.cc = 3;
+                regs->psw.cc = CC3;
                 return;
             }
             regs->GR_G(r1) = -((S64) fl.ms_fract);
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
         } else {
             /* positive */
             if (fl.ms_fract > 0x7FFFFFFFUL) {
                 /* exeeds range by value */
                 regs->GR_G(r1) = 0x7FFFFFFFUL;
-                regs->psw.cc = 3;
+                regs->psw.cc = CC3;
                 return;
             }
             regs->GR_G(r1) = fl.ms_fract;
-            regs->psw.cc = 2;
+            regs->psw.cc = CC2;
         }
     } else {
         /* zero */
         regs->GR_G(r1) = 0;
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
 }
 

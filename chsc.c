@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.9  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -231,7 +234,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
             /* No reaon code */
             STORE_FW(chsc_rsp->info,0);
 
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
     }
 
 }

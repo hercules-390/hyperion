@@ -53,6 +53,9 @@
 /***********************************************************/
 
 // $Log$
+// Revision 1.65  2006/12/31 17:53:48  gsmith
+// 2006 Dec 31 Update ecpsvm.c for new psw IA scheme
+//
 // Revision 1.64  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -429,7 +432,7 @@ DEF_INST(ecpsvm_lock_page)
     DEBUG_CPASSISTX(LCKPG,logmsg(_("HHCEV300D : LKPG PAGE=%6.6X, PTRPL=%6.6X\n"),pg,ptr_pl));
 
     ecpsvm_lockpage1(regs,ptr_pl,pg);
-    regs->psw.cc=0;
+    regs->psw.cc=CC0;
     BR14;
     CPASSIST_HIT(LCKPG);
     return;
@@ -546,7 +549,7 @@ DEF_INST(ecpsvm_locate_vblock)
     regs->GR_L(6)=vch;
     regs->GR_L(7)=vcu;
     regs->GR_L(8)=vdv;
-    regs->psw.cc=0;
+    regs->psw.cc=CC0;
     CPASSIST_HIT(SCNVU);
     BR14;
     return;
@@ -1201,7 +1204,7 @@ DEF_INST(ecpsvm_tpage)
         DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : TRANBRNG - Back to CP\n")));
         return; /* Something not right : NO OP */
     }
-    regs->psw.cc=0;
+    regs->psw.cc=CC0;
     regs->GR_L(2)=raddr;
     UPD_PSW_IA(regs, effective_addr2);
     CPASSIST_HIT(TRBRG);
@@ -1227,7 +1230,7 @@ DEF_INST(ecpsvm_tpage_lock)
      * Lock the page in Core Table
      */
     ecpsvm_lockpage1(regs,effective_addr1,raddr);
-    regs->psw.cc=0;
+    regs->psw.cc=CC0;
     regs->GR_L(2)=raddr;
     UPD_PSW_IA(regs, effective_addr2);
     CPASSIST_HIT(TRLOK);
@@ -1752,7 +1755,7 @@ DEF_INST(ecpsvm_locate_rblock)
         regs->GR_L(7)=~0;
         regs->GR_L(8)=~0;
         UPD_PSW_IA(regs, regs->GR_L(14));
-        regs->psw.cc=1;
+        regs->psw.cc=CC1;
         */
         /* Right now, let CP handle the case */
         return;
@@ -1778,7 +1781,7 @@ DEF_INST(ecpsvm_locate_rblock)
             regs->GR_L(7)=~0;
             regs->GR_L(8)=~0;
             UPD_PSW_IA(regs, regs->GR_L(14));
-            regs->psw.cc=2;
+            regs->psw.cc=CC2;
             */
             return;
         }
@@ -1799,7 +1802,7 @@ DEF_INST(ecpsvm_locate_rblock)
         regs->GR_L(7)=rcublk;
         regs->GR_L(8)=~0;
         UPD_PSW_IA(regs, regs->GR_L(14));
-        regs->psw.cc=3;
+        regs->psw.cc=CC3;
         */
         return;
     }
@@ -1811,7 +1814,7 @@ DEF_INST(ecpsvm_locate_rblock)
     regs->GR_L(6)=rchblk;
     regs->GR_L(7)=rcublk;
     regs->GR_L(8)=rdvblk;
-    regs->psw.cc=0;
+    regs->psw.cc=CC0;
     regs->GR_L(15)=0;
     BR14;
     CPASSIST_HIT(SCNRU);
@@ -1921,7 +1924,7 @@ DEF_INST(ecpsvm_extended_freex)
     EVM_ST(nextblk,maxsztbl+4+spix);
     DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : New Value in subpool table = %6.6X\n"),nextblk));
     regs->GR_L(1)=freeblock;
-    regs->psw.cc=0;
+    regs->psw.cc=CC0;
     BR14;
     CPASSIST_HIT(FREEX);
     return;

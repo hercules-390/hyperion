@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.43  2007/01/02 18:46:16  fish
+// Fix bug in deconfigure_cpu function & tweak power-off diagnose instructions so that they actually work properly now
+//
 // Revision 1.42  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -218,7 +221,7 @@ U32   code;
     /* Diagnose 204: LPAR RMF Interface                              */
     /*---------------------------------------------------------------*/
         ARCH_DEP(diag204_call) (r1, r2, regs);
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
 
     case 0x224:
@@ -226,7 +229,7 @@ U32   code;
     /* Diagnose 224: CPU Names                                       */
     /*---------------------------------------------------------------*/
         ARCH_DEP(diag224_call) (r1, r2, regs);
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
 #endif /*defined(FEATURE_HYPERVISOR)*/
 
@@ -236,7 +239,7 @@ U32   code;
     /* Diagnose 21C: ????                                            */
     /*---------------------------------------------------------------*/
         /*INCOMPLETE*/
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
 #endif
 
@@ -281,7 +284,7 @@ U32   code;
     /* Diagnose 05C: Error Message Editing                           */
     /*---------------------------------------------------------------*/
         /* This function is implemented as a no-operation */
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
 
     case 0x060:
@@ -298,7 +301,7 @@ U32   code;
     /*---------------------------------------------------------------*/
         /* Return code 44 cond code 2 means segment does not exist */
         regs->GR_L(r2) = 44;
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
         break;
 
     case 0x0A4:
@@ -332,7 +335,7 @@ U32   code;
     /*---------------------------------------------------------------*/
         /* This function is implemented as a no-operation */
         regs->GR_L(r2) = 0;
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
 
     case 0x214:
@@ -380,7 +383,7 @@ U32   code;
     /* Diagnose 264: CP Communication                                */
     /*---------------------------------------------------------------*/
         /* This function is implemented as a no-operation */
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
 
     case 0x270:
@@ -395,7 +398,7 @@ U32   code;
     /* Diagnose 274: Set Timezone Interrupt Flag                     */
     /*---------------------------------------------------------------*/
         /* This function is implemented as a no-operation */
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
 #endif /*FEATURE_EMULATE_VM*/
 

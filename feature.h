@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.72  2007/01/03 05:53:34  gsmith
+// 03 Jan 2007 Sloppy fetch - Greg Smith
+//
 // Revision 1.71  2006/12/20 04:26:19  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -819,5 +822,31 @@ do { \
 #else /*!defined(FEATURE_PER)*/
  #define PER_SB(_regs,_addr)
 #endif /*!defined(FEATURE_PER)*/
+
+
+/*--------------------------------------------------------------------------------*/
+/* CC mask is under construction. It will move the real CC code to the mask code. */
+/* This way we can remove the (0x80 >> regs->psw.cc) part in the BC instruction.  */
+/*                                                                                */
+/* Bernard                                                                        */
+/*--------------------------------------------------------------------------------*/
+
+#ifdef FEATURE_CCMASK
+  #define CC0		0x08
+  #define CC1		0x04
+  #define CC2		0x02
+  #define CC3		0x01
+  #define CCINV		0
+  #define CC2M(cc)	(__mask[(cc)])
+  #define M2CC(mask)	(__cc[(mask)])
+#else
+  #define CC0		0
+  #define CC1		1
+  #define CC2		2
+  #define CC3		3
+  #define CCINV   	4
+  #define CC2M(cc)	(cc)
+  #define M2CC(mask)	(mask)
+#endif /* FEATURE_CCMASK */
 
 /* end of FEATURES.H */

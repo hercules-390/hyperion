@@ -1,3 +1,4 @@
+11 Jan 2007 implement ccmask phase 1 - Bernard van der Helm
 10 Jan 2007 Try to detect 3270 connections that have died - Fish
 09 Jan 2007 Tweaks to sloppy fetch - Greg Smith
 09 Jan 2007 Tweaks to cpuloop - Greg Smith

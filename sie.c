@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.100  2007/01/04 23:12:04  gsmith
+// remove thunk calls for program_interrupt
+//
 // Revision 1.99  2006/12/21 22:39:39  gsmith
 // 21 Dec 2006 Range for s+, t+ - Greg Smith
 //
@@ -1145,7 +1148,7 @@ int     zone;                           /* Zone number               */
 
     if(zone >= FEATURE_SIE_MAXZONES)
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -1156,7 +1159,7 @@ int     zone;                           /* Zone number               */
 
     ARCH_DEP(vstorec(&zpb, sizeof(ZPB)-1,regs->GR(2), 2, regs));
 
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
 }
 
 
@@ -1186,7 +1189,7 @@ RADR    mso,                            /* Main Storage Origin       */
 
     if(zone == 0 || zone >= FEATURE_SIE_MAXZONES)
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -1210,7 +1213,7 @@ RADR    mso,                            /* Main Storage Origin       */
     sysblk.zpb[zone].eso = eso;
     sysblk.zpb[zone].esl = esl;
 
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
 }
 #endif /*defined(FEATURE_REGION_RELOCATE)*/
 
@@ -1245,7 +1248,7 @@ int     zone;                           /* Zone number               */
 
     if(zone >= FEATURE_SIE_MAXZONES)
     {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         return;
     }
 
@@ -1270,18 +1273,18 @@ int     zone;                           /* Zone number               */
 
             ARCH_DEP(vstorec(&tpziid, sizeof(tpziid)-1,regs->GR(2), 2, regs));
 
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
         }
         else
         {
             /* Release the interrupt lock */
             RELEASE_INTLOCK(regs);
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         }
 
     }
     else
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
 }
 
 
@@ -1305,7 +1308,7 @@ U32    newgr1;
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -1325,13 +1328,13 @@ U32    newgr1;
     {
         dev->pmcw.flag27 &= ~PMCW27_I;
         dev->pmcw.flag27 |= (regs->GR_L(r3) & 0x01) ? PMCW27_I : 0;
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
     else
     {
         regs->GR_L(r1) &= ~0x03;
         regs->GR_L(r1) |= newgr1;
-        regs->psw.cc = 1;
+        regs->psw.cc = CC1;
     }
 
     /* Release the device lock */

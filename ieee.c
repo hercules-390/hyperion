@@ -61,6 +61,9 @@
  */
 
 // $Log$
+// Revision 1.75  2007/01/04 23:12:04  gsmith
+// remove thunk calls for program_interrupt
+//
 // Revision 1.74  2006/12/08 09:43:28  jj
 // Add CVS message log
 //
@@ -1227,7 +1230,7 @@ static int add_ebfp(struct ebfp *op1, struct ebfp *op2, REGS *regs)
             *op1 = *op2;
             ebfpstoqnan(op1);
         }
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return 0;
     } else if (cl2 == FP_NAN) {
         if (ebfpissnan(op2)) {
@@ -1236,7 +1239,7 @@ static int add_ebfp(struct ebfp *op1, struct ebfp *op2, REGS *regs)
         } else {
             *op1 = *op2;
         }
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return 0;
     } else if (cl1 == FP_INFINITE || cl2 == FP_INFINITE) {
         if (cl1 == FP_INFINITE) {
@@ -1246,7 +1249,7 @@ static int add_ebfp(struct ebfp *op1, struct ebfp *op2, REGS *regs)
                     return r;
                 }
                 ebfpdnan(op1);
-                regs->psw.cc = 3;
+                regs->psw.cc = CC3;
                 return 0;
             } else {
                 /* result is first operand */
@@ -1266,7 +1269,7 @@ static int add_ebfp(struct ebfp *op1, struct ebfp *op2, REGS *regs)
     } else if (cl2 == FP_ZERO) {
         /* result is first operand */
     }
-    regs->psw.cc = cl1 == FP_ZERO ? 0 : op1->sign ? 1 : 2;
+    regs->psw.cc = cl1 == FP_ZERO ? CC0 : op1->sign ? CC1 : CC2;
     return 0;
 }
 
@@ -1320,7 +1323,7 @@ static int add_lbfp(struct lbfp *op1, struct lbfp *op2, REGS *regs)
             *op1 = *op2;
             lbfpstoqnan(op1);
         }
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return 0;
     } else if (cl2 == FP_NAN) {
         if (lbfpissnan(op2)) {
@@ -1329,7 +1332,7 @@ static int add_lbfp(struct lbfp *op1, struct lbfp *op2, REGS *regs)
         } else {
             *op1 = *op2;
         }
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return 0;
     } else if (cl1 == FP_INFINITE && cl2 == FP_INFINITE
             && op1->sign != op2->sign) {
@@ -1338,7 +1341,7 @@ static int add_lbfp(struct lbfp *op1, struct lbfp *op2, REGS *regs)
             return r;
         }
         lbfpdnan(op1);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return 0;
     } else if (cl1 == FP_INFINITE) {
         /* result is first operand */
@@ -1365,7 +1368,7 @@ static int add_lbfp(struct lbfp *op1, struct lbfp *op2, REGS *regs)
         }
         cl1 = lbfpclassify(op1);
     }
-    regs->psw.cc = cl1 == FP_ZERO ? 0 : op1->sign ? 1 : 2;
+    regs->psw.cc = cl1 == FP_ZERO ? CC0 : op1->sign ? CC1 : CC2;
     return 0;
 }
 
@@ -1444,7 +1447,7 @@ static int add_sbfp(struct sbfp *op1, struct sbfp *op2, REGS *regs)
             *op1 = *op2;
             sbfpstoqnan(op1);
         }
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return 0;
     } else if (cl2 == FP_NAN) {
         if (sbfpissnan(op2)) {
@@ -1453,7 +1456,7 @@ static int add_sbfp(struct sbfp *op1, struct sbfp *op2, REGS *regs)
         } else {
             *op1 = *op2;
         }
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return 0;
     } else if (cl1 == FP_INFINITE && cl2 == FP_INFINITE
             && op1->sign != op2->sign) {
@@ -1462,7 +1465,7 @@ static int add_sbfp(struct sbfp *op1, struct sbfp *op2, REGS *regs)
             return r;
         }
         sbfpdnan(op1);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return 0;
     } else if (cl1 == FP_INFINITE) {
         /* result is first operand */
@@ -1489,7 +1492,7 @@ static int add_sbfp(struct sbfp *op1, struct sbfp *op2, REGS *regs)
         }
         cl1 = sbfpclassify(op1);
     }
-    regs->psw.cc = cl1 == FP_ZERO ? 0 : op1->sign ? 1 : 2;
+    regs->psw.cc = cl1 == FP_ZERO ? CC0 : op1->sign ? CC1 : CC2;
     return 0;
 }
 
@@ -1568,32 +1571,32 @@ static int compare_ebfp(struct ebfp *op1, struct ebfp *op2, int sig, REGS *regs)
                 return r;
             }
         }
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
     } else if (cl1 == FP_INFINITE) {
         if (cl2 == FP_INFINITE && op1->sign == op2->sign) {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         } else {
-            regs->psw.cc = op1->sign ? 1 : 2;
+            regs->psw.cc = op1->sign ? CC1 : CC2;
         }
     } else if (cl2 == FP_INFINITE) {
-        regs->psw.cc = op2->sign ? 2 : 1;
+        regs->psw.cc = op2->sign ? CC2 : CC1;
     } else if (cl1 == FP_ZERO) {
         if (cl2 == FP_ZERO) {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         } else {
-            regs->psw.cc = op2->sign ? 2 : 1;
+            regs->psw.cc = op2->sign ? CC2 : CC1;
         }
     } else if (cl2 == FP_ZERO) {
-        regs->psw.cc = op1->sign ? 1 : 2;
+        regs->psw.cc = op1->sign ? CC1 : CC2;
     } else if (op1->sign != op2->sign) {
-        regs->psw.cc = op1->sign ? 1 : 2;
+        regs->psw.cc = op1->sign ? CC1 : CC2;
     } else {
         ebfpston(op1);
         ebfpston(op2);
         if (op1->v == op2->v) {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         } else {
-            regs->psw.cc = op1->v > op2->v ? 2 : 1;
+            regs->psw.cc = op1->v > op2->v ? CC2 : CC1;
         }
     }
     return 0;
@@ -1647,32 +1650,32 @@ static int compare_lbfp(struct lbfp *op1, struct lbfp *op2, int sig, REGS *regs)
                 return r;
             }
         }
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
     } else if (cl1 == FP_INFINITE) {
         if (cl2 == FP_INFINITE && op1->sign == op2->sign) {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         } else {
-            regs->psw.cc = op1->sign ? 1 : 2;
+            regs->psw.cc = op1->sign ? CC1 : CC2;
         }
     } else if (cl2 == FP_INFINITE) {
-        regs->psw.cc = op2->sign ? 2 : 1;
+        regs->psw.cc = op2->sign ? CC2 : CC1;
     } else if (cl1 == FP_ZERO) {
         if (cl2 == FP_ZERO) {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         } else {
-            regs->psw.cc = op2->sign ? 2 : 1;
+            regs->psw.cc = op2->sign ? CC2 : CC1;
         }
     } else if (cl2 == FP_ZERO) {
-        regs->psw.cc = op1->sign ? 1 : 2;
+        regs->psw.cc = op1->sign ? CC1 : CC2;
     } else if (op1->sign != op2->sign) {
-        regs->psw.cc = op1->sign ? 1 : 2;
+        regs->psw.cc = op1->sign ? CC1 : CC2;
     } else {
         lbfpston(op1);
         lbfpston(op2);
         if (op1->v == op2->v) {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         } else {
-            regs->psw.cc = op1->v > op2->v ? 2 : 1;
+            regs->psw.cc = op1->v > op2->v ? CC2 : CC1;
         }
     }
     return 0;
@@ -1749,32 +1752,32 @@ static int compare_sbfp(struct sbfp *op1, struct sbfp *op2, int sig, REGS *regs)
                 return r;
             }
         }
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
     } else if (cl1 == FP_INFINITE) {
         if (cl2 == FP_INFINITE && op1->sign == op2->sign) {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         } else {
-            regs->psw.cc = op1->sign ? 1 : 2;
+            regs->psw.cc = op1->sign ? CC1 : CC2;
         }
     } else if (cl2 == FP_INFINITE) {
-        regs->psw.cc = op2->sign ? 2 : 1;
+        regs->psw.cc = op2->sign ? CC2 : CC1;
     } else if (cl1 == FP_ZERO) {
         if (cl2 == FP_ZERO) {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         } else {
-            regs->psw.cc = op2->sign ? 2 : 1;
+            regs->psw.cc = op2->sign ? CC2 : CC1;
         }
     } else if (cl2 == FP_ZERO) {
-        regs->psw.cc = op1->sign ? 1 : 2;
+        regs->psw.cc = op1->sign ? CC1 : CC2;
     } else if (op1->sign != op2->sign) {
-        regs->psw.cc = op1->sign ? 1 : 2;
+        regs->psw.cc = op1->sign ? CC1 : CC2;
     } else {
         sbfpston(op1);
         sbfpston(op2);
         if (op1->v == op2->v) {
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
         } else {
-            regs->psw.cc = op1->v > op2->v ? 2 : 1;
+            regs->psw.cc = op1->v > op2->v ? CC2 : CC1;
         }
     }
     return 0;
@@ -2126,7 +2129,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
     switch (ebfpclassify(&op2)) {
     case FP_NAN:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         regs->GR_L(r1) = 0x80000000;
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
@@ -2137,12 +2140,12 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
         }
         break;
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         regs->GR_L(r1) = 0;
         break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         if (op2.sign) {
             regs->GR_L(r1) = 0x80000000;
         } else {
@@ -2167,7 +2170,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
             }
         }
         regs->GR_L(r1) = op1;
-        regs->psw.cc = op1 > 0 ? 2 : 1;
+        regs->psw.cc = op1 > 0 ? CC2 : CC1;
     }
 } /* end DEF_INST(convert_bfp_ext_to_fix32_reg) */
 
@@ -2191,7 +2194,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
     switch (lbfpclassify(&op2)) {
     case FP_NAN:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         regs->GR_L(r1) = 0x80000000;
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
@@ -2202,12 +2205,12 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
         }
         break;
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         regs->GR_L(r1) = 0;
         break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         if (op2.sign) {
             regs->GR_L(r1) = 0x80000000;
         } else {
@@ -2232,7 +2235,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
             }
         }
         regs->GR_L(r1) = op1;
-        regs->psw.cc = op1 > 0 ? 2 : 1;
+        regs->psw.cc = op1 > 0 ? CC2 : CC1;
     }
 }
 
@@ -2256,7 +2259,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
     switch (sbfpclassify(&op2)) {
     case FP_NAN:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         regs->GR_L(r1) = 0x80000000;
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
@@ -2266,12 +2269,12 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
         }
         break;
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         regs->GR_L(r1) = 0;
         break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         if (op2.sign) {
             regs->GR_L(r1) = 0x80000000;
         } else {
@@ -2296,7 +2299,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
             }
         }
         regs->GR_L(r1) = op1;
-        regs->psw.cc = op1 > 0 ? 2 : 1;
+        regs->psw.cc = op1 > 0 ? CC2 : CC1;
     }
 }
 
@@ -2322,7 +2325,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
     switch (ebfpclassify(&op2)) {
     case FP_NAN:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         regs->GR_G(r1) = 0x8000000000000000ULL;
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
@@ -2333,12 +2336,12 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
         }
         break;
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         regs->GR_G(r1) = 0;
         break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         if (op2.sign) {
             regs->GR_G(r1) = 0x8000000000000000ULL;
         } else {
@@ -2363,7 +2366,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
             }
         }
         regs->GR_G(r1) = op1;
-        regs->psw.cc = op1 > 0 ? 2 : 1;
+        regs->psw.cc = op1 > 0 ? CC2 : CC1;
     }
 } /* end DEF_INST(convert_bfp_ext_to_fix64_reg) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2389,7 +2392,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
     switch (lbfpclassify(&op2)) {
     case FP_NAN:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         regs->GR_G(r1) = 0x8000000000000000ULL;
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
@@ -2400,12 +2403,12 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
         }
         break;
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         regs->GR_G(r1) = 0;
         break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         if (op2.sign) {
             regs->GR_G(r1) = 0x8000000000000000ULL;
         } else {
@@ -2430,7 +2433,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
             }
         }
         regs->GR_G(r1) = op1;
-        regs->psw.cc = op1 > 0 ? 2 : 1;
+        regs->psw.cc = op1 > 0 ? CC2 : CC1;
     }
 }
 #endif /*defined(FEATURE_ESAME)*/
@@ -2456,7 +2459,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
     switch (sbfpclassify(&op2)) {
     case FP_NAN:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         regs->GR_G(r1) = 0x8000000000000000ULL;
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
@@ -2466,12 +2469,12 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
         }
         break;
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         regs->GR_G(r1) = 0;
         break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         if (op2.sign) {
             regs->GR_G(r1) = 0x8000000000000000ULL;
         } else {
@@ -2496,7 +2499,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
             }
         }
         regs->GR_G(r1) = op1;
-        regs->psw.cc = op1 > 0 ? 2 : 1;
+        regs->psw.cc = op1 > 0 ? CC2 : CC1;
     }
 }
 #endif /*defined(FEATURE_ESAME)*/
@@ -3021,13 +3024,13 @@ DEF_INST(load_and_test_bfp_ext_reg)
 
     switch (ebfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = op.sign ? 1 : 2;
+        regs->psw.cc = op.sign ? CC1 : CC2;
         break;
     }
 
@@ -3060,13 +3063,13 @@ DEF_INST(load_and_test_bfp_long_reg)
 
     switch (lbfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = op.sign ? 1 : 2;
+        regs->psw.cc = op.sign ? CC1 : CC2;
         break;
     }
 
@@ -3099,13 +3102,13 @@ DEF_INST(load_and_test_bfp_short_reg)
 
     switch (sbfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = op.sign ? 1 : 2;
+        regs->psw.cc = op.sign ? CC1 : CC2;
         break;
     }
 
@@ -3339,13 +3342,13 @@ DEF_INST(load_negative_bfp_ext_reg)
 
     switch (ebfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = 1;
+        regs->psw.cc = CC1;
         break;
     }
 
@@ -3370,13 +3373,13 @@ DEF_INST(load_negative_bfp_long_reg)
 
     switch (lbfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = 1;
+        regs->psw.cc = CC1;
         break;
     }
 
@@ -3401,13 +3404,13 @@ DEF_INST(load_negative_bfp_short_reg)
 
     switch (sbfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = 1;
+        regs->psw.cc = CC1;
         break;
     }
 
@@ -3433,13 +3436,13 @@ DEF_INST(load_complement_bfp_ext_reg)
 
     switch (ebfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
         break;
     }
 
@@ -3464,13 +3467,13 @@ DEF_INST(load_complement_bfp_long_reg)
 
     switch (lbfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
         break;
     }
 
@@ -3495,13 +3498,13 @@ DEF_INST(load_complement_bfp_short_reg)
 
     switch (sbfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
         break;
     }
 
@@ -3527,13 +3530,13 @@ DEF_INST(load_positive_bfp_ext_reg)
 
     switch (ebfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
         break;
     }
 
@@ -3558,13 +3561,13 @@ DEF_INST(load_positive_bfp_long_reg)
 
     switch (lbfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
         break;
     }
 
@@ -3589,13 +3592,13 @@ DEF_INST(load_positive_bfp_short_reg)
 
     switch (sbfpclassify(&op)) {
     case FP_ZERO:
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         break;
     case FP_NAN:
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         break;
     default:
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
         break;
     }
 
@@ -4953,7 +4956,7 @@ static int divint_lbfp(struct lbfp *op1, struct lbfp *op2,
     op2->sign = !(op2->sign);
     if (r) return r;
 
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return 0;
 } /* end function divint_lbfp */
 
@@ -5010,7 +5013,7 @@ static int divint_sbfp(struct sbfp *op1, struct sbfp *op2,
     op2->sign = !(op2->sign);
     if (r) return r;
 
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return 0;
 } /* end function divint_sbfp */
 

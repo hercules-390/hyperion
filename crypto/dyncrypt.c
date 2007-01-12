@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.51  2006/12/08 09:43:34  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -233,7 +236,7 @@ static void ARCH_DEP(kimd_query)(int r1, int r2, REGS *regs)
 #endif
 
   /* Set condition code 0 */
-  regs->psw.cc = 0;
+  regs->psw.cc = CC0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -259,7 +262,7 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -309,13 +312,13 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
@@ -342,7 +345,7 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -392,13 +395,13 @@ static void ARCH_DEP(kimd_sha_256)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
@@ -427,7 +430,7 @@ static void ARCH_DEP(klmd_query)(int r1, int r2, REGS *regs)
 #endif
 
   /* Set condition code 0 */
-  regs->psw.cc = 0;
+  regs->psw.cc = CC0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -504,7 +507,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
   /* Check if cpu determined amount of data is processed */
   if(unlikely(GR_A(r2 + 1, regs) >= 64))
   {
-    regs->psw.cc = 3;
+    regs->psw.cc = CC3;
     return;
   }
 
@@ -559,7 +562,7 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
   /* Set condition code */
-  regs->psw.cc = 0;
+  regs->psw.cc = CC0;
 }
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
@@ -637,7 +640,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
   /* Check if cpu determined amount of data is processed */
   if(unlikely(GR_A(r2 + 1, regs) >= 64))
   {
-    regs->psw.cc = 3;
+    regs->psw.cc = CC3;
     return;
   }
 
@@ -692,7 +695,7 @@ static void ARCH_DEP(klmd_sha_256)(int r1, int r2, REGS *regs)
 #endif
 
   /* Set condition code */
-  regs->psw.cc = 0;
+  regs->psw.cc = CC0;
 }
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
@@ -719,7 +722,7 @@ static void ARCH_DEP(km_query)(int r1, int r2, REGS *regs)
 #endif
 
   /* Set condition code 0 and return */
-  regs->psw.cc = 0;
+  regs->psw.cc = CC0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -745,7 +748,7 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -800,13 +803,13 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -832,7 +835,7 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -888,13 +891,13 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -920,7 +923,7 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -977,13 +980,13 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
@@ -1010,7 +1013,7 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -1065,13 +1068,13 @@ static void ARCH_DEP(km_aes_128)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
@@ -1100,7 +1103,7 @@ static void ARCH_DEP(kmac_query)(int r1, int r2, REGS *regs)
 #endif
 
   /* Set condition code 0 */
-  regs->psw.cc = 0;
+  regs->psw.cc = CC0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1127,7 +1130,7 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -1182,13 +1185,13 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1216,7 +1219,7 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -1275,13 +1278,13 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1310,7 +1313,7 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -1371,13 +1374,13 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1403,7 +1406,7 @@ static void ARCH_DEP(kmc_query)(int r1, int r2, REGS *regs)
 #endif
 
   /* Set condition code 0 */
-  regs->psw.cc = 0;
+  regs->psw.cc = CC0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1431,7 +1434,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -1514,7 +1517,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
 
@@ -1523,7 +1526,7 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1552,7 +1555,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -1641,7 +1644,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
 
@@ -1650,7 +1653,7 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1680,7 +1683,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -1771,7 +1774,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
 
@@ -1780,7 +1783,7 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
@@ -1809,7 +1812,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -1892,7 +1895,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
 
@@ -1901,7 +1904,7 @@ static void ARCH_DEP(kmc_aes_128)(int r1, int r2, REGS *regs)
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1931,7 +1934,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
   /* Return with cc 0 on zero length */
   if(unlikely(!GR_A(r2 + 1, regs)))
   {
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
   }
 
@@ -2021,7 +2024,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
     /* check for end of data */
     if(unlikely(!GR_A(r2 + 1, regs)))
     {
-      regs->psw.cc = 0;
+      regs->psw.cc = CC0;
       return;
     }
 
@@ -2030,7 +2033,7 @@ static void ARCH_DEP(kmc_prng)(int r1, int r2, REGS *regs)
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = 3;
+  regs->psw.cc = CC3;
 }
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 

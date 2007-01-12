@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.179  2007/01/09 05:10:19  gsmith
+// Tweaks to lm/stm
+//
 // Revision 1.178  2007/01/04 23:12:04  gsmith
 // remove thunk calls for program_interrupt
 //
@@ -911,7 +914,7 @@ U64     old;                            /* Old value                 */
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
 
-    if (regs->psw.cc == 0)
+    if (regs->psw.cc == CC0)
     {
         /* Perform requested funtion specified as per request code in r2 */
         if (regs->GR_L(r2) & 3)
@@ -1710,7 +1713,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_HHH(r1) &= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_HHH(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_HHH(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(and_immediate_high_high) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -1731,7 +1734,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_HHL(r1) &= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_HHL(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_HHL(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(and_immediate_high_low) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -1752,7 +1755,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_LHH(r1) &= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_LHH(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_LHH(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(and_immediate_low_high) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -1773,7 +1776,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_LHL(r1) &= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_LHL(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_LHL(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(and_immediate_low_low) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -1794,7 +1797,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_HHH(r1) |= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_HHH(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_HHH(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(or_immediate_high_high) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -1815,7 +1818,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_HHL(r1) |= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_HHL(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_HHL(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(or_immediate_high_low) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -1836,7 +1839,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_LHH(r1) |= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_LHH(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_LHH(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(or_immediate_low_high) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -1857,7 +1860,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_LHL(r1) |= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_LHL(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_LHL(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(or_immediate_low_low) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2168,7 +2171,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
         /* Optimized case */
         regs->GR_H(r1) = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
         regs->psw.cc = regs->GR_H(r1) ? regs->GR_H(r1) & 0x80000000 ? 
-                       1 : 2 : 0;
+                       CC1 : CC2 : CC0;
         break;
 
     default:
@@ -2181,7 +2184,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
 
         n = fetch_fw (vbyte);
         regs->psw.cc = n ? n & 0x80000000 ?
-                       1 : 2 : 0;
+                       CC1 : CC2 : CC0;
 
         /* Turn off the reg bytes we are going to set */
         regs->GR_H(r1) &= icmhmask[r3];
@@ -2363,7 +2366,7 @@ U64     old;                            /* old value                 */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-    if (regs->psw.cc == 1)
+    if (regs->psw.cc == CC1)
     {
         regs->GR_G(r1) = CSWAP64(old);
 #if defined(_FEATURE_ZSIE)
@@ -2426,7 +2429,7 @@ U64     old1, old2;                     /* old value                 */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-    if (regs->psw.cc == 1)
+    if (regs->psw.cc == CC1)
     {
         regs->GR_G(r1) = CSWAP64(old1);
         regs->GR_G(r1+1) = CSWAP64(old2);
@@ -2507,8 +2510,8 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-                (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
-                (S64)regs->GR_G(r1) > (S64)regs->GR_G(r2) ? 2 : 0;
+                (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? CC1 :
+                (S64)regs->GR_G(r1) > (S64)regs->GR_G(r2) ? CC2 : CC0;
 
 } /* end DEF_INST(compare_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2526,8 +2529,8 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-                (S64)regs->GR_G(r1) < (S32)regs->GR_L(r2) ? 1 :
-                (S64)regs->GR_G(r1) > (S32)regs->GR_L(r2) ? 2 : 0;
+                (S64)regs->GR_G(r1) < (S32)regs->GR_L(r2) ? CC1 :
+                (S64)regs->GR_G(r1) > (S32)regs->GR_L(r2) ? CC2 : CC0;
 
 } /* end DEF_INST(compare_long_fullword_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2551,8 +2554,8 @@ U64     n;                              /* 64-bit operand values     */
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-            (S64)regs->GR_G(r1) < (S64)n ? 1 :
-            (S64)regs->GR_G(r1) > (S64)n ? 2 : 0;
+            (S64)regs->GR_G(r1) < (S64)n ? CC1 :
+            (S64)regs->GR_G(r1) > (S64)n ? CC2 : CC0;
 
 } /* end DEF_INST(compare_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2576,8 +2579,8 @@ U32     n;                              /* 32-bit operand values     */
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-            (S64)regs->GR_G(r1) < (S32)n ? 1 :
-            (S64)regs->GR_G(r1) > (S32)n ? 2 : 0;
+            (S64)regs->GR_G(r1) < (S32)n ? CC1 :
+            (S64)regs->GR_G(r1) > (S32)n ? CC2 : CC0;
 
 } /* end DEF_INST(compare_long_fullword) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2655,7 +2658,7 @@ U32     n;                              /* 32-bit operand values     */
                                  (S32)n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_fullword) */
@@ -2684,7 +2687,7 @@ U64     n;                              /* 64-bit operand values     */
                                       n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long) */
@@ -2763,7 +2766,7 @@ U32     n;                              /* 32-bit operand values     */
                                 (S32)n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long_fullword) */
@@ -2792,7 +2795,7 @@ U64     n;                              /* 64-bit operand values     */
                                      n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long) */
@@ -2815,7 +2818,7 @@ int     r1, r2;                         /* Values of R fields        */
                                      regs->GR_G(r2));
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long_register) */
@@ -2838,7 +2841,7 @@ int     r1, r2;                         /* Values of R fields        */
                                 (S32)regs->GR_L(r2));
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long_fullword_register) */
@@ -2861,7 +2864,7 @@ int     r1, r2;                         /* Values of R fields        */
                                      regs->GR_G(r2));
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_register) */
@@ -2884,7 +2887,7 @@ int     r1, r2;                         /* Values of R fields        */
                                 (S32)regs->GR_L(r2));
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_fullword_register) */
@@ -2905,7 +2908,7 @@ int     r1, r2;                         /* Values of R fields        */
     if ( regs->GR_G(r2) == 0x8000000000000000ULL )
     {
         regs->GR_G(r1) = regs->GR_G(r2);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         if ( FOMASK(&regs->psw) )
             regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
@@ -2916,7 +2919,7 @@ int     r1, r2;                         /* Values of R fields        */
                             -((S64)regs->GR_G(r2)) :
                             (S64)regs->GR_G(r2);
 
-    regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 2;
+    regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? CC0 : CC2;
 
 } /* end DEF_INST(load_positive_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2938,7 +2941,7 @@ S64     gpr2l;
     /* Load positive value of second operand and set cc */
     regs->GR_G(r1) = gpr2l < 0 ? -gpr2l : gpr2l;
 
-    regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 2;
+    regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? CC0 : CC2;
 
 } /* end DEF_INST(load_positive_long_fullword_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2959,7 +2962,7 @@ int     r1, r2;                         /* Values of R fields        */
                             -((S64)regs->GR_G(r2)) :
                             (S64)regs->GR_G(r2);
 
-    regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 1;
+    regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? CC0 : CC1;
 
 } /* end DEF_INST(load_negative_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2981,7 +2984,7 @@ S64     gpr2l;
     /* Load negative value of second operand and set cc */
     regs->GR_G(r1) = gpr2l > 0 ? -gpr2l : gpr2l;
 
-    regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 1;
+    regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? CC0 : CC1;
 
 } /* end DEF_INST(load_negative_long_fullword_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3000,8 +3003,8 @@ int     r1, r2;                         /* Values of R fields        */
     /* Copy second operand and set condition code */
     regs->GR_G(r1) = regs->GR_G(r2);
 
-    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
-                   (S64)regs->GR_G(r1) > 0 ? 2 : 0;
+    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? CC1 :
+                   (S64)regs->GR_G(r1) > 0 ? CC2 : CC0;
 
 } /* end DEF_INST(load_and_test_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3020,8 +3023,8 @@ int     r1, r2;                         /* Values of R fields        */
     /* Copy second operand and set condition code */
     regs->GR_G(r1) = (S32)regs->GR_L(r2);
 
-    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
-                   (S64)regs->GR_G(r1) > 0 ? 2 : 0;
+    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? CC1 :
+                   (S64)regs->GR_G(r1) > 0 ? CC2 : CC0;
 
 } /* end DEF_INST(load_and_test_long_fullword_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3041,7 +3044,7 @@ int     r1, r2;                         /* Values of R fields        */
     if ( regs->GR_G(r2) == 0x8000000000000000ULL )
     {
         regs->GR_G(r1) = regs->GR_G(r2);
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         if ( FOMASK(&regs->psw) )
             regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
@@ -3050,8 +3053,8 @@ int     r1, r2;                         /* Values of R fields        */
     /* Load complement of second operand and set condition code */
     regs->GR_G(r1) = -((S64)regs->GR_G(r2));
 
-    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
-                   (S64)regs->GR_G(r1) > 0 ? 2 : 0;
+    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? CC1 :
+                   (S64)regs->GR_G(r1) > 0 ? CC2 : CC0;
 
 } /* end DEF_INST(load_complement_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3073,8 +3076,8 @@ S64     gpr2l;
     /* Load complement of second operand and set condition code */
     regs->GR_G(r1) = -gpr2l;
 
-    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
-                   (S64)regs->GR_G(r1) > 0 ? 2 : 0;
+    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? CC1 :
+                   (S64)regs->GR_G(r1) > 0 ? CC2 : CC0;
 
 } /* end DEF_INST(load_complement_long_fullword_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3102,10 +3105,10 @@ U16     h2;                             /* 16-bit operand values     */
 
     /* Set condition code according to result */
     regs->psw.cc =
-            ( h1 == 0 ) ? 0 :           /* result all zeroes */
-            ( h1 == i2) ? 3 :           /* result all ones   */
-            ((h1 & h2) == 0) ? 1 :      /* leftmost bit zero */
-            2;                          /* leftmost bit one  */
+            ( h1 == 0 ) ? CC0 :           /* result all zeroes */
+            ( h1 == i2) ? CC3 :           /* result all ones   */
+            ((h1 & h2) == 0) ? CC1 :      /* leftmost bit zero */
+            CC2;                          /* leftmost bit one  */
 
 } /* end DEF_INST(test_under_mask_high_high) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3133,10 +3136,10 @@ U16     h2;                             /* 16-bit operand values     */
 
     /* Set condition code according to result */
     regs->psw.cc =
-            ( h1 == 0 ) ? 0 :           /* result all zeroes */
-            ( h1 == i2) ? 3 :           /* result all ones   */
-            ((h1 & h2) == 0) ? 1 :      /* leftmost bit zero */
-            2;                          /* leftmost bit one  */
+            ( h1 == 0 ) ? CC0 :           /* result all zeroes */
+            ( h1 == i2) ? CC3 :           /* result all ones   */
+            ((h1 & h2) == 0) ? CC1 :      /* leftmost bit zero */
+            CC2;                          /* leftmost bit one  */
 
 } /* end DEF_INST(test_under_mask_high_low) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3180,8 +3183,8 @@ U64     n;                              /* 64-bit operand values     */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
     /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_G(r1) < n ? 1 :
-                   regs->GR_G(r1) > n ? 2 : 0;
+    regs->psw.cc = regs->GR_G(r1) < n ? CC1 :
+                   regs->GR_G(r1) > n ? CC2 : CC0;
 
 } /* end DEF_INST(compare_logical_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3204,8 +3207,8 @@ U32     n;                              /* 32-bit operand values     */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_G(r1) < n ? 1 :
-                   regs->GR_G(r1) > n ? 2 : 0;
+    regs->psw.cc = regs->GR_G(r1) < n ? CC1 :
+                   regs->GR_G(r1) > n ? CC2 : CC0;
 
 } /* end DEF_INST(compare_logical_long_fullword) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3222,8 +3225,8 @@ int     r1, r2;                         /* Values of R fields        */
     RRE0(inst, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_G(r1) < regs->GR_L(r2) ? 1 :
-                   regs->GR_G(r1) > regs->GR_L(r2) ? 2 : 0;
+    regs->psw.cc = regs->GR_G(r1) < regs->GR_L(r2) ? CC1 :
+                   regs->GR_G(r1) > regs->GR_L(r2) ? CC2 : CC0;
 
 } /* end DEF_INST(compare_logical_long_fullword_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3256,8 +3259,8 @@ int     r1, r2;                         /* Values of R fields        */
     RRE0(inst, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_G(r1) < regs->GR_G(r2) ? 1 :
-                   regs->GR_G(r1) > regs->GR_G(r2) ? 2 : 0;
+    regs->psw.cc = regs->GR_G(r1) < regs->GR_G(r2) ? CC1 :
+                   regs->GR_G(r1) > regs->GR_G(r2) ? CC2 : CC0;
 
 } /* end DEF_INST(compare_logical_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3395,15 +3398,15 @@ U32     i, j;                           /* Integer work areas        */
     /* Condition code 3 and program check if overflow occurred */
     if (j)
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         if ( FOMASK(&regs->psw) )
             regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
 
     /* Set the condition code */
-    regs->psw.cc = (S64)regs->GR_G(r1) > 0 ? 2 :
-                   (S64)regs->GR_G(r1) < 0 ? 1 : 0;
+    regs->psw.cc = (S64)regs->GR_G(r1) > 0 ? CC2 :
+                   (S64)regs->GR_G(r1) < 0 ? CC1 : CC0;
 
 } /* end DEF_INST(shift_left_single_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3431,8 +3434,8 @@ U64     n;                              /* Integer work areas        */
                     (S64)regs->GR_G(r3) >> n;
 
     /* Set the condition code */
-    regs->psw.cc = (S64)regs->GR_G(r1) > 0 ? 2 :
-                   (S64)regs->GR_G(r1) < 0 ? 1 : 0;
+    regs->psw.cc = (S64)regs->GR_G(r1) > 0 ? CC2 :
+                   (S64)regs->GR_G(r1) < 0 ? CC1 : CC0;
 
 } /* end DEF_INST(shift_right_single_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3555,7 +3558,7 @@ U16     i2;                             /* 16-bit immediate op       */
                                 (S16)i2);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_halfword_immediate) */
@@ -3595,8 +3598,8 @@ U16     i2;                             /* 16-bit operand            */
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-            (S64)regs->GR_G(r1) < (S16)i2 ? 1 :
-            (S64)regs->GR_G(r1) > (S16)i2 ? 2 : 0;
+            (S64)regs->GR_G(r1) < (S16)i2 ? CC1 :
+            (S64)regs->GR_G(r1) > (S16)i2 ? CC2 : CC0;
 
 } /* end DEF_INST(compare_long_halfword_immediate) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3613,7 +3616,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE0(inst, regs, r1, r2);
 
     /* AND second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_G(r1) &= regs->GR_G(r2) ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_G(r1) &= regs->GR_G(r2) ) ? CC1 : CC0;
 
 } /* end DEF_INST(and_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3630,7 +3633,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE0(inst, regs, r1, r2);
 
     /* OR second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_G(r1) |= regs->GR_G(r2) ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_G(r1) |= regs->GR_G(r2) ) ? CC1 : CC0;
 
 } /* end DEF_INST(or_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3647,7 +3650,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE0(inst, regs, r1, r2);
 
     /* XOR second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_G(r1) ^= regs->GR_G(r2) ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_G(r1) ^= regs->GR_G(r2) ) ? CC1 : CC0;
 
 } /* end DEF_INST(exclusive_or_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3670,7 +3673,7 @@ U64     n;                              /* 64-bit operand values     */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
     /* AND second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_G(r1) &= n ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_G(r1) &= n ) ? CC1 : CC0;
 
 } /* end DEF_INST(and_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3693,7 +3696,7 @@ U64     n;                              /* 64-bit operand values     */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
     /* OR second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_G(r1) |= n ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_G(r1) |= n ) ? CC1 : CC0;
 
 } /* end DEF_INST(or_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3716,7 +3719,7 @@ U64     n;                              /* 64-bit operand values     */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
     /* XOR second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_G(r1) ^= n ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_G(r1) ^= n ) ? CC1 : CC0;
 
 } /* end DEF_INST(exclusive_or_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -4740,42 +4743,42 @@ DEF_INST(perform_timing_facility_function)
     {
         case PTFF_GPR0_FC_QAF:
             ARCH_DEP(query_available_functions) (regs);
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
             break;
         case PTFF_GPR0_FC_QTO:
             ARCH_DEP(query_tod_offset) (regs);
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
             break;
         case PTFF_GPR0_FC_QSI:
             ARCH_DEP(query_steering_information) (regs);
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
             break;
         case PTFF_GPR0_FC_QPT:
             ARCH_DEP(query_physical_clock) (regs);
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
             break;
         case PTFF_GPR0_FC_ATO:
             PRIV_CHECK(regs);
             ARCH_DEP(adjust_tod_offset) (regs);
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
             break;
         case PTFF_GPR0_FC_STO:
             PRIV_CHECK(regs);
             ARCH_DEP(set_tod_offset) (regs);
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
             break;
         case PTFF_GPR0_FC_SFS:
             PRIV_CHECK(regs);
             ARCH_DEP(set_fine_s_rate) (regs);
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
             break;
         case PTFF_GPR0_FC_SGS:
             PRIV_CHECK(regs);
             ARCH_DEP(set_gross_s_rate) (regs);
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
             break;
         default:
-            regs->psw.cc = 3;
+            regs->psw.cc = CC3;
     }
 }
 #endif /*defined(FEATURE_TOD_CLOCK_STEERING)*/
@@ -5352,7 +5355,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     /* Preset condition code to zero in case of zero length */
     if(!len)
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
 
     while(len)
     {
@@ -5370,7 +5373,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
           {
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
             break;
           }
 #ifdef FEATURE_ETF2_ENHANCEMENT
@@ -5391,7 +5394,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         SET_GR_A(r2, regs, addr2);
 
         /* Set cc0 when all values have been processed */
-        regs->psw.cc = len ? 3 : 0;
+        regs->psw.cc = len ? CC3 : CC0;
 
         /* exit on the cpu determined number of bytes */
         if((len != 0) && (!(addr1 & 0xfff) || !addr2 & 0xfff))
@@ -5447,7 +5450,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     /* Preset condition code to zero in case of zero length */
     if(!len)
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
 
     while(len)
     {
@@ -5465,7 +5468,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
           {
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
             break;
           }
 #ifdef FEATURE_ETF2_ENHANCEMENT
@@ -5486,7 +5489,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         SET_GR_A(r2, regs, addr2);
 
         /* Set cc0 when all values have been processed */
-        regs->psw.cc = len ? 3 : 0;
+        regs->psw.cc = len ? CC3 : CC0;
 
         /* exit on the cpu determined number of bytes */
         if((len != 0) && (!(addr1 & 0xfff) || !addr2 & 0xfff))
@@ -5548,7 +5551,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     /* Preset condition code to zero in case of zero length */
     if(!len)
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
 
     while(len)
     {
@@ -5566,7 +5569,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
           {
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
             break;
           }
 #ifdef FEATURE_ETF2_ENHANCEMENT
@@ -5587,7 +5590,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         SET_GR_A(r2, regs, addr2);
 
         /* Set cc0 when all values have been processed */
-        regs->psw.cc = len ? 3 : 0;
+        regs->psw.cc = len ? CC3 : CC0;
 
         /* exit on the cpu determined number of bytes */
         if((len != 0) && (!(addr1 & 0xfff) || !addr2 & 0xfff))
@@ -5648,7 +5651,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
 
     /* Preset condition code to zero in case of zero length */
     if(!len)
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
 
     while(len)
     {
@@ -5666,7 +5669,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
           /* If the testvalue was found then exit with cc1 */
           if(dvalue == tvalue)
           {
-            regs->psw.cc = 1;
+            regs->psw.cc = CC1;
             break;
           }
 #ifdef FEATURE_ETF2_ENHANCEMENT
@@ -5687,7 +5690,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
         SET_GR_A(r2, regs, addr2);
 
         /* Set cc0 when all values have been processed */
-        regs->psw.cc = len ? 3 : 0;
+        regs->psw.cc = len ? CC3 : CC0;
 
         /* exit on the cpu determined number of bytes */
         if((len != 0) && (!(addr1 & 0xfff) || !addr2 & 0xfff))
@@ -5935,7 +5938,7 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_y) */
@@ -5965,7 +5968,7 @@ S32     n;                              /* 32-bit operand values     */
                     (U32)n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_halfword_y) */
@@ -6021,7 +6024,7 @@ BYTE    rbyte;                          /* Result byte               */
     ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
 
     /* Set condition code */
-    regs->psw.cc = rbyte ? 1 : 0;
+    regs->psw.cc = rbyte ? CC1 : CC0;
 
 } /* end DEF_INST(and_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6044,7 +6047,7 @@ U32     n;                              /* 32-bit operand values     */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* AND second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_L(r1) &= n ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_L(r1) &= n ) ? CC1 : CC0;
 
 } /* end DEF_INST(and_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6068,8 +6071,8 @@ U32     n;                              /* 32-bit operand values     */
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-            (S32)regs->GR_L(r1) < (S32)n ? 1 :
-            (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
+            (S32)regs->GR_L(r1) < (S32)n ? CC1 :
+            (S32)regs->GR_L(r1) > (S32)n ? CC2 : CC0;
 
 } /* end DEF_INST(compare_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6093,8 +6096,8 @@ S32     n;                              /* 32-bit operand values     */
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-            (S32)regs->GR_L(r1) < n ? 1 :
-            (S32)regs->GR_L(r1) > n ? 2 : 0;
+            (S32)regs->GR_L(r1) < n ? CC1 :
+            (S32)regs->GR_L(r1) > n ? CC2 : CC0;
 
 } /* end DEF_INST(compare_halfword_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6117,8 +6120,8 @@ U32     n;                              /* 32-bit operand values     */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(r1) < n ? 1 :
-                   regs->GR_L(r1) > n ? 2 : 0;
+    regs->psw.cc = regs->GR_L(r1) < n ? CC1 :
+                   regs->GR_L(r1) > n ? CC2 : CC0;
 
 } /* end DEF_INST(compare_logical_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6141,8 +6144,8 @@ BYTE    cbyte;                          /* Compare byte              */
     cbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
 
     /* Compare with immediate operand and set condition code */
-    regs->psw.cc = (cbyte < i2) ? 1 :
-                   (cbyte > i2) ? 2 : 0;
+    regs->psw.cc = (cbyte < i2) ? CC1 :
+                   (cbyte > i2) ? CC2 : CC0;
 
 } /* end DEF_INST(compare_logical_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6226,7 +6229,7 @@ U32     old;                            /* old value                 */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-    if (regs->psw.cc == 1)
+    if (regs->psw.cc == CC1)
     {
         regs->GR_L(r1) = CSWAP32(old);
 #if defined(_FEATURE_SIE)
@@ -6287,7 +6290,7 @@ U64     old, new;                       /* old, new values           */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-    if (regs->psw.cc == 1)
+    if (regs->psw.cc == CC1)
     {
         regs->GR_L(r1) = CSWAP64(old) >> 32;
         regs->GR_L(r1+1) = CSWAP64(old) & 0xffffffff;
@@ -6403,7 +6406,7 @@ BYTE    rbyte;                          /* Result byte               */
     ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
 
     /* Set condition code */
-    regs->psw.cc = rbyte ? 1 : 0;
+    regs->psw.cc = rbyte ? CC1 : CC0;
 
 } /* end DEF_INST(exclusive_or_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6426,7 +6429,7 @@ U32     n;                              /* 32-bit operand values     */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* XOR second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_L(r1) ^= n ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_L(r1) ^= n ) ? CC1 : CC0;
 
 } /* end DEF_INST(exclusive_or_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6479,7 +6482,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
         /* Optimized case */
         regs->GR_L(r1) = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
         regs->psw.cc = regs->GR_L(r1) ? regs->GR_L(r1) & 0x80000000 ? 
-                       1 : 2 : 0;
+                       CC1 : CC2 : CC0;
         break;
 
     default:
@@ -6492,7 +6495,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
 
         n = fetch_fw (vbyte);
         regs->psw.cc = n ? n & 0x80000000 ?
-                       1 : 2 : 0;
+                       CC1 : CC2 : CC0;
 
         /* Turn off the reg bytes we are going to set */
         regs->GR_L(r1) &= icmymask[r3];
@@ -6773,7 +6776,7 @@ BYTE    rbyte;                          /* Result byte               */
     ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
 
     /* Set condition code */
-    regs->psw.cc = rbyte ? 1 : 0;
+    regs->psw.cc = rbyte ? CC1 : CC0;
 
 } /* end DEF_INST(or_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6796,7 +6799,7 @@ U32     n;                              /* 32-bit operand values     */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* OR second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_L(r1) |= n ) ? 1 : 0;
+    regs->psw.cc = ( regs->GR_L(r1) |= n ) ? CC1 : CC0;
 
 } /* end DEF_INST(or_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -7052,7 +7055,7 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_y) */
@@ -7082,7 +7085,7 @@ S32     n;                              /* 32-bit operand values     */
                     (U32)n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_halfword_y) */
@@ -7136,9 +7139,9 @@ BYTE    tbyte;                          /* Work byte                 */
 
     /* Set condition code according to result */
     regs->psw.cc =
-            ( tbyte == 0 ) ? 0 :            /* result all zeroes */
-            ( tbyte == i2) ? 3 :            /* result all ones   */
-            1 ;                             /* result mixed      */
+            ( tbyte == 0 ) ? CC0 :            /* result all zeroes */
+            ( tbyte == i2) ? CC3 :            /* result all ones   */
+            CC1 ;                             /* result mixed      */
 
 } /* end DEF_INST(test_under_mask_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -7162,7 +7165,7 @@ U32     i2;                             /* 32-bit operand value      */
                                 (S32)i2);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_fullword_immediate) */
@@ -7185,7 +7188,7 @@ U32     i2;                             /* 32-bit operand value      */
                                     (S32)i2);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_fullword_immediate) */
@@ -7244,7 +7247,7 @@ U32     i2;                             /* 32-bit operand value      */
     regs->GR_H(r1) &= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_H(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_H(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(and_immediate_high_fullword) */
 
@@ -7264,7 +7267,7 @@ U32     i2;                             /* 32-bit operand value      */
     regs->GR_L(r1) &= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_L(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_L(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(and_immediate_low_fullword) */
 
@@ -7281,8 +7284,8 @@ U32     i2;                             /* 32-bit operand value      */
     RIL0(inst, regs, r1, opcd, i2);
 
     /* Compare signed operands and set condition code */
-    regs->psw.cc = (S32)regs->GR_L(r1) < (S32)i2 ? 1 :
-                   (S32)regs->GR_L(r1) > (S32)i2 ? 2 : 0;
+    regs->psw.cc = (S32)regs->GR_L(r1) < (S32)i2 ? CC1 :
+                   (S32)regs->GR_L(r1) > (S32)i2 ? CC2 : CC0;
 
 } /* end DEF_INST(compare_fullword_immediate) */
 
@@ -7299,8 +7302,8 @@ U32     i2;                             /* 32-bit operand value      */
     RIL0(inst, regs, r1, opcd, i2);
 
     /* Compare signed operands and set condition code */
-    regs->psw.cc = (S64)regs->GR_G(r1) < (S32)i2 ? 1 :
-                   (S64)regs->GR_G(r1) > (S32)i2 ? 2 : 0;
+    regs->psw.cc = (S64)regs->GR_G(r1) < (S32)i2 ? CC1 :
+                   (S64)regs->GR_G(r1) > (S32)i2 ? CC2 : CC0;
 
 } /* end DEF_INST(compare_long_fullword_immediate) */
 
@@ -7317,8 +7320,8 @@ U32     i2;                             /* 32-bit operand value      */
     RIL0(inst, regs, r1, opcd, i2);
 
     /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_L(r1) < i2 ? 1 :
-                   regs->GR_L(r1) > i2 ? 2 : 0;
+    regs->psw.cc = regs->GR_L(r1) < i2 ? CC1 :
+                   regs->GR_L(r1) > i2 ? CC2 : CC0;
 
 } /* end DEF_INST(compare_logical_fullword_immediate) */
 
@@ -7335,8 +7338,8 @@ U32     i2;                             /* 32-bit operand value      */
     RIL0(inst, regs, r1, opcd, i2);
 
     /* Compare unsigned operands and set condition code */
-    regs->psw.cc = regs->GR_G(r1) < i2 ? 1 :
-                   regs->GR_G(r1) > i2 ? 2 : 0;
+    regs->psw.cc = regs->GR_G(r1) < i2 ? CC1 :
+                   regs->GR_G(r1) > i2 ? CC2 : CC0;
 
 } /* end DEF_INST(compare_logical_long_fullword_immediate) */
 
@@ -7356,7 +7359,7 @@ U32     i2;                             /* 32-bit operand value      */
     regs->GR_H(r1) ^= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_H(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_H(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(exclusive_or_immediate_high_fullword) */
 
@@ -7376,7 +7379,7 @@ U32     i2;                             /* 32-bit operand value      */
     regs->GR_L(r1) ^= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_L(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_L(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(exclusive_or_immediate_low_fullword) */
 
@@ -7484,7 +7487,7 @@ U32     i2;                             /* 32-bit operand value      */
     regs->GR_H(r1) |= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_H(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_H(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(or_immediate_high_fullword) */
 
@@ -7504,7 +7507,7 @@ U32     i2;                             /* 32-bit operand value      */
     regs->GR_L(r1) |= i2;
 
     /* Set condition code according to result */
-    regs->psw.cc = regs->GR_L(r1) ? 1 : 0;
+    regs->psw.cc = regs->GR_L(r1) ? CC1 : CC0;
 
 } /* end DEF_INST(or_immediate_low_fullword) */
 
@@ -7564,8 +7567,8 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* Set condition code according to value loaded */
-    regs->psw.cc = (S32)regs->GR_L(r1) < 0 ? 1 :
-                   (S32)regs->GR_L(r1) > 0 ? 2 : 0;
+    regs->psw.cc = (S32)regs->GR_L(r1) < 0 ? CC1 :
+                   (S32)regs->GR_L(r1) > 0 ? CC2 : CC0;
 
 } /* end DEF_INST(load_and_test) */
                     
@@ -7585,8 +7588,8 @@ VADR    effective_addr2;                /* Effective address         */
     regs->GR_G(r1) = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
     /* Set condition code according to value loaded */
-    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
-                   (S64)regs->GR_G(r1) > 0 ? 2 : 0;
+    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? CC1 :
+                   (S64)regs->GR_G(r1) > 0 ? CC2 : CC0;
                     
 } /* end DEF_INST(load_and_test_long) */
                     
@@ -7766,7 +7769,7 @@ int     n;                              /* Position of leftmost one  */
     {
         regs->GR_G(r1) = 64;
         regs->GR_G(r1+1) = 0;
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
     }
     else
     {
@@ -7781,7 +7784,7 @@ int     n;                              /* Position of leftmost one  */
         regs->GR_G(r1+1) = op & (~mask);
 
         /* Return with condition code 2 */
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
     }
 
 } /* end DEF_INST(find_leftmost_one_long_register) */

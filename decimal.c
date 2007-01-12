@@ -25,6 +25,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.21  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -797,21 +800,21 @@ int     rc;                             /* Return code               */
     /* Result is equal if both operands are zero */
     if (count1 == 0 && count2 == 0)
     {
-        regs->psw.cc = 0;
+        regs->psw.cc = CC0;
         return;
     }
 
     /* Result is low if operand 1 is -ve and operand 2 is +ve */
     if (sign1 < 0 && sign2 > 0)
     {
-        regs->psw.cc = 1;
+        regs->psw.cc = CC1;
         return;
     }
 
     /* Result is high if operand 1 is +ve and operand 2 is -ve */
     if (sign1 > 0 && sign2 < 0)
     {
-        regs->psw.cc = 2;
+        regs->psw.cc = CC2;
         return;
     }
 
@@ -820,12 +823,12 @@ int     rc;                             /* Return code               */
 
     /* Return low or high (depending on sign) if digits are unequal */
     if (rc < 0)
-        regs->psw.cc = (sign1 > 0) ? 1 : 2;
+        regs->psw.cc = (sign1 > 0) ? CC1 : CC2;
     else
         if (rc > 0)
-            regs->psw.cc = (sign1 > 0) ? 2 : 1;
+            regs->psw.cc = (sign1 > 0) ? CC2 : CC1;
         else
-            regs->psw.cc = 0;
+            regs->psw.cc = CC0;
 
 } /* end DEF_INST(compare_decimal) */
 

@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.43  2007/01/04 23:12:04  gsmith
+// remove thunk calls for program_interrupt
+//
 // Revision 1.42  2006/12/08 09:43:34  jj
 // Add CVS message log
 //
@@ -60,7 +63,7 @@ U32     xaddr;                          /* Expanded storage address  */
         xaddr += regs->sie_xso;
         if(xaddr >= regs->sie_xsl)
         {
-            regs->psw.cc = 3;
+            regs->psw.cc = CC3;
             return;
         }
     }
@@ -69,7 +72,7 @@ U32     xaddr;                          /* Expanded storage address  */
        terminate with cc3 */
     if (xaddr >= sysblk.xpndsize)
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -84,7 +87,7 @@ U32     xaddr;                          /* Expanded storage address  */
     memcpy (maddr, sysblk.xpndstor + xaddr, XSTORE_PAGESIZE);
 
     /* cc0 means pgin ok */
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
 
 }
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
@@ -122,7 +125,7 @@ U32     xaddr;                          /* Expanded storage address  */
         xaddr += regs->sie_xso;
         if(xaddr >= regs->sie_xsl)
         {
-            regs->psw.cc = 3;
+            regs->psw.cc = CC3;
             return;
         }
     }
@@ -131,7 +134,7 @@ U32     xaddr;                          /* Expanded storage address  */
        terminate with cc3 */
     if (xaddr >= sysblk.xpndsize)
     {
-        regs->psw.cc = 3;
+        regs->psw.cc = CC3;
         return;
     }
 
@@ -146,7 +149,7 @@ U32     xaddr;                          /* Expanded storage address  */
     memcpy (sysblk.xpndstor + xaddr, maddr, XSTORE_PAGESIZE);
 
     /* cc0 means pgout ok */
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
 
 }
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
@@ -582,7 +585,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     }
 
     /* Return condition code zero */
-    regs->psw.cc = 0;
+    regs->psw.cc = CC0;
     return;
 
 mvpg_progck:
