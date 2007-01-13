@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.44  2007/01/12 15:22:05  bernard
+// ccmask phase 1
+//
 // Revision 1.43  2007/01/11 13:23:23  rbowler
 // Decimal Floating Point: FIDTR instruction
 //
@@ -989,9 +992,9 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
 
     /* Set condition code */
-    regs->psw.cc = decNumberIsNaN(&d1) ? CC3 :
-                   decNumberIsZero(&d1) ? CC0 :
-                   decNumberIsNegative(&d1) ? CC1 : CC2;
+    regs->psw.cc = decNumberIsNaN(&d1) ? 3 :
+                   decNumberIsZero(&d1) ? 0 :
+                   decNumberIsNegative(&d1) ? 1 : 2;
 
     /* Raise data exception if error occurred */
     if (dxc != 0)
@@ -1036,9 +1039,9 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
 
     /* Set condition code */
-    regs->psw.cc = decNumberIsNaN(&d1) ? CC3 :
-                   decNumberIsZero(&d1) ? CC0 :
-                   decNumberIsNegative(&d1) ? CC1 : CC2;
+    regs->psw.cc = decNumberIsNaN(&d1) ? 3 :
+                   decNumberIsZero(&d1) ? 0 :
+                   decNumberIsNegative(&d1) ? 1 : 2;
 
     /* Raise data exception if error occurred */
     if (dxc != 0)
@@ -1079,9 +1082,9 @@ BYTE            dxc;                    /* Data exception code       */
     dxc = ARCH_DEP(dfp_status_check)(&set, regs);
 
     /* Set condition code */
-    regs->psw.cc = decNumberIsNaN(&dr) ? CC3 :
-                   decNumberIsZero(&dr) ? CC0 :
-                   decNumberIsNegative(&dr) ? CC1 : CC2;
+    regs->psw.cc = decNumberIsNaN(&dr) ? 3 :
+                   decNumberIsZero(&dr) ? 0 :
+                   decNumberIsNegative(&dr) ? 1 : 2;
 
     /* Raise data exception if error occurred */
     if (dxc != 0)
@@ -1121,9 +1124,9 @@ BYTE            dxc;                    /* Data exception code       */
     dxc = ARCH_DEP(dfp_status_check)(&set, regs);
 
     /* Set condition code */
-    regs->psw.cc = decNumberIsNaN(&dr) ? CC3 :
-                   decNumberIsZero(&dr) ? CC0 :
-                   decNumberIsNegative(&dr) ? CC1 : CC2;
+    regs->psw.cc = decNumberIsNaN(&dr) ? 3 :
+                   decNumberIsZero(&dr) ? 0 :
+                   decNumberIsNegative(&dr) ? 1 : 2;
 
     /* Raise data exception if error occurred */
     if (dxc != 0)
@@ -1168,9 +1171,9 @@ BYTE            dxc;                    /* Data exception code       */
     dxc = ARCH_DEP(dfp_status_check)(&set, regs);
 
     /* Set condition code */
-    regs->psw.cc = decNumberIsNaN(&dr) ? CC3 :
-                   decNumberIsZero(&dr) ? CC0 :
-                   decNumberIsNegative(&dr) ? CC1 : CC2;
+    regs->psw.cc = decNumberIsNaN(&dr) ? 3 :
+                   decNumberIsZero(&dr) ? 0 :
+                   decNumberIsNegative(&dr) ? 1 : 2;
 
     /* Raise data exception if error occurred */
     if (dxc != 0)
@@ -1214,9 +1217,9 @@ BYTE            dxc;                    /* Data exception code       */
     dxc = ARCH_DEP(dfp_status_check)(&set, regs);
 
     /* Set condition code */
-    regs->psw.cc = decNumberIsNaN(&dr) ? CC3 :
-                   decNumberIsZero(&dr) ? CC0 :
-                   decNumberIsNegative(&dr) ? CC1 : CC2;
+    regs->psw.cc = decNumberIsNaN(&dr) ? 3 :
+                   decNumberIsZero(&dr) ? 0 :
+                   decNumberIsNegative(&dr) ? 1 : 2;
 
     /* Raise data exception if error occurred */
     if (dxc != 0)
@@ -1963,9 +1966,9 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
 
     /* Set condition code */
-    regs->psw.cc = decNumberIsNaN(&d) ? CC3 :
-                   decNumberIsZero(&d) ? CC0 :
-                   decNumberIsNegative(&d) ? CC1 : CC2;
+    regs->psw.cc = decNumberIsNaN(&d) ? 3 :
+                   decNumberIsZero(&d) ? 0 :
+                   decNumberIsNegative(&d) ? 1 : 2;
 
     /* Raise data exception if error occurred */
     if (dxc != 0)
@@ -2014,9 +2017,9 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
 
     /* Set condition code */
-    regs->psw.cc = decNumberIsNaN(&d) ? CC3 :
-                   decNumberIsZero(&d) ? CC0 :
-                   decNumberIsNegative(&d) ? CC1 : CC2;
+    regs->psw.cc = decNumberIsNaN(&d) ? 3 :
+                   decNumberIsZero(&d) ? 0 :
+                   decNumberIsNegative(&d) ? 1 : 2;
 
     /* Raise data exception if error occurred */
     if (dxc != 0)
@@ -2618,9 +2621,9 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
 
     /* Set condition code */
-    regs->psw.cc = decNumberIsNaN(&d1) ? CC3 :
-                   decNumberIsZero(&d1) ? CC0 :
-                   decNumberIsNegative(&d1) ? CC1 : CC2;
+    regs->psw.cc = decNumberIsNaN(&d1) ? 3 :
+                   decNumberIsZero(&d1) ? 0 :
+                   decNumberIsNegative(&d1) ? 1 : 2;
 
     /* Raise data exception if error occurred */
     if (dxc != 0)
@@ -2665,9 +2668,9 @@ BYTE            dxc;                    /* Data exception code       */
     ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
 
     /* Set condition code */
-    regs->psw.cc = decNumberIsNaN(&d1) ? CC3 :
-                   decNumberIsZero(&d1) ? CC0 :
-                   decNumberIsNegative(&d1) ? CC1 : CC2;
+    regs->psw.cc = decNumberIsNaN(&d1) ? 3 :
+                   decNumberIsZero(&d1) ? 0 :
+                   decNumberIsNegative(&d1) ? 1 : 2;
 
     /* Raise data exception if error occurred */
     if (dxc != 0)

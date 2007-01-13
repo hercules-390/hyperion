@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.48  2007/01/12 15:21:12  bernard
+// ccmask phase 1
+//
 // Revision 1.47  2006/12/08 09:43:18  jj
 // Add CVS message log
 //
@@ -390,7 +393,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     /* Can we write an index or interchange symbol */
     if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r1 + 1, iregs)))
     {
-      regs->psw.cc = CC1;
+      regs->psw.cc = 1;
       return;
     }
 
@@ -446,7 +449,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   }
 
   /* Reached model dependent CPU processing amount */
-  regs->psw.cc = CC3;
+  regs->psw.cc = 3;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -541,7 +544,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   }
 
   /* CPU-determined amount of data processed */
-  regs->psw.cc = CC3;
+  regs->psw.cc = 3;
 }
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
@@ -603,7 +606,7 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int off
     logmsg("fetch_ch : reached end of source\n");
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
 
-    regs->psw.cc = CC0;
+    regs->psw.cc = 0;
     return(1);
   }
   *ch = ARCH_DEP(vfetchb)((GR_A(r2, iregs) + offset) & ADDRESS_MAXWRAP(regs), r2, regs);
@@ -676,7 +679,7 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol
     logmsg("fetch_is : reached end of source\n");
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
 
-    regs->psw.cc = CC0;
+    regs->psw.cc = 0;
     return(1);
   }
 
@@ -953,7 +956,7 @@ static int ARCH_DEP(store_ch)(int r1, REGS *regs, REGS *iregs, BYTE *data, int l
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
     /* Indicate end of destination */
-    regs->psw.cc = CC1;
+    regs->psw.cc = 1;
     return(1);
   }
 

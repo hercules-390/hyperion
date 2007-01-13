@@ -6,6 +6,9 @@
 /*      This module contains the Signal Adapter instruction          */
 
 // $Log$
+// Revision 1.21  2007/01/12 15:24:33  bernard
+// ccmask phase 1
+//
 // Revision 1.20  2006/12/08 09:43:29  jj
 // Add CVS message log
 //
@@ -63,7 +66,7 @@ DEVBLK *dev;                            /* -> device block           */
 #if defined(_FEATURE_QUEUED_DIRECT_IO_ASSIST)
         SIE_INTERCEPT(regs);
 #endif
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
         return;
     }
 
@@ -74,7 +77,7 @@ DEVBLK *dev;                            /* -> device block           */
     if ((dev->scsw.flag2 & SCSW2_Q) == 0)
     {
         release_lock (&dev->lock);
-        regs->psw.cc = CC1;
+        regs->psw.cc = 1;
         return;
     }
 
@@ -84,20 +87,20 @@ DEVBLK *dev;                            /* -> device block           */
     if(dev->hnd->siga_r)
             regs->psw.cc = (dev->hnd->siga_r) (dev, regs->GR_L(2) );
         else
-            regs->psw.cc = CC3;
+            regs->psw.cc = 3;
         break;
 
     case SIGA_FC_W:
     if(dev->hnd->siga_w)
             regs->psw.cc = (dev->hnd->siga_w) (dev, regs->GR_L(2) );
         else
-            regs->psw.cc = CC3;
+            regs->psw.cc = 3;
         break;
 
     case SIGA_FC_S:
         /* No signalling required for sync requests as we emulate
            a real machine */
-        regs->psw.cc = CC0;
+        regs->psw.cc = 0;
         break;
 
     }

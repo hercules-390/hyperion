@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.120  2007/01/12 16:43:44  bernard
+// ccmask phase 1
+//
 // Revision 1.119  2006/12/08 09:43:28  jj
 // Add CVS message log
 //
@@ -36,11 +39,6 @@ extern void delayed_exit (int exit_code);
 int process_script_file(char *,int);
 
 static LOGCALLBACK  log_callback=NULL;
-
-#ifdef FEATURE_CCMASK
-int __cc[256];
-int __mask[5] = { 0x80, 0x40, 0x20, 0x10, 0x08 };
-#endif /* FEATURE_CCMASK */
 
 /*-------------------------------------------------------------------*/
 /* Register a LOG callback                                           */
@@ -237,16 +235,6 @@ int     msgnum;                         /*                           */
 int     msgcnt;                         /*                           */
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
-
-#ifdef FEATURE_CCMASK
-    for(c = 0; c < 256; c++)
-      __cc[c] = -1;
-    __cc[0x80] = 0;
-    __cc[0x40] = 1;
-    __cc[0x20] = 2;
-    __cc[0x10] = 3;
-    __cc[0x08] = 4;
-#endif
 
     SET_THREAD_NAME("impl");
 

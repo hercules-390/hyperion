@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.19  2007/01/12 15:25:11  bernard
+// ccmask phase 1
+//
 // Revision 1.18  2006/12/20 04:26:20  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -55,19 +58,19 @@ U32     n, n1;
     /* cc0 when the vector count is zero */
     if( n == 0)
     {
-        regs->psw.cc = CC0;
+        regs->psw.cc = 0;
         return;
     }
 
     /* Preset condition code according to first bit */
-    regs->psw.cc = VMR_SET(0, regs) ? CC3 : CC0;
+    regs->psw.cc = VMR_SET(0, regs) ? 3 : 0;
 
     /* Check VMR bit to be equal to the first, 
        exit with cc1 if an unequal bit found */
     for(n1 = 1; n1 < n; n1++)
-        if((regs->psw.cc == CC0) != (VMR_SET(n1, regs) == 0))
+        if((regs->psw.cc == 0) != (VMR_SET(n1, regs) == 0))
         {
-            regs->psw.cc = CC1;
+            regs->psw.cc = 1;
             return;
         }
 
@@ -122,12 +125,12 @@ U32     n, n1;
     /* cc0 when the vector count is zero */
     if( n == 0)
     {
-        regs->psw.cc = CC0;
+        regs->psw.cc = 0;
         return;
     }
     
     /* Preset condition code according to first bit */
-    regs->psw.cc = VMR_SET(0, regs) ? CC3 : CC0;
+    regs->psw.cc = VMR_SET(0, regs) ? 3 : 0;
 
     /* If the VCT is 1 and the first bit is one
        then exit wirh gr1 set to zero */
@@ -143,7 +146,7 @@ U32     n, n1;
             regs->GR_L(gr1)++;
         else
         {
-            regs->psw.cc = CC1;
+            regs->psw.cc = 1;
             return;
         }
     }
@@ -169,12 +172,12 @@ U32     n, n1;
     /* cc0 when the vector count is zero */
     if( n == 0)
     {
-        regs->psw.cc = CC0;
+        regs->psw.cc = 0;
         return;
     }
     
     /* Preset condition code according to first bit */
-    regs->psw.cc = VMR_SET(0, regs) ? CC3 : CC0;
+    regs->psw.cc = VMR_SET(0, regs) ? 3 : 0;
 
     /* Check VMR bit to be equal to the first, 
        Count all ones, set cc1 if a bit is unequal */
@@ -185,11 +188,11 @@ U32     n, n1;
         {
             regs->GR_L(gr1)++;
             if(!VMR_SET(0, regs))
-                regs->psw.cc = CC1;
+                regs->psw.cc = 1;
         }
         else
             if(VMR_SET(0, regs))
-                regs->psw.cc = CC1;
+                regs->psw.cc = 1;
     }
 
 }
@@ -284,17 +287,17 @@ U64     d;
         }
 
         /* Indicate vr pair restored */
-        regs->psw.cc = CC2;
+        regs->psw.cc = 2;
     }
     else
     {
         regs->GR_L(gr1) += 8 * (VECTOR_SECTION_SIZE - n1);
         /* indicate v2 pair not restored */
-        regs->psw.cc = CC0;
+        regs->psw.cc = 0;
     }
 
-    /* Set CC2 if vr 14 is restored, CC0 if not restored, 
-       CC3 and CC1 for other VR's respectively */
+    /* Set 2 if vr 14 is restored, 0 if not restored, 
+       3 and 1 for other VR's respectively */
     if(n2 != 14) regs->psw.cc++;
 
     /* Update the vector pair number, and zero element number */
@@ -358,7 +361,7 @@ U64     d;
         }
 
         /* Indicate vr pair saved */
-        regs->psw.cc = CC2;
+        regs->psw.cc = 2;
 
         /* Reset the VR changed bit */
         RESET_VR_CHANGED(n2, regs);
@@ -367,11 +370,11 @@ U64     d;
     {
         regs->GR_L(gr1) += 8 * (VECTOR_SECTION_SIZE - n1);
         /* vr pair not saved */
-        regs->psw.cc = CC0;
+        regs->psw.cc = 0;
     }
 
-    /* Set CC2 if vr 14 is restored, CC0 if not restored, 
-       CC3 and CC1 for other VR's respectively */
+    /* Set 2 if vr 14 is restored, 0 if not restored, 
+       3 and 1 for other VR's respectively */
     if(n2 != 14) regs->psw.cc++;
 
     /* Update the vector pair number, and zero element number */
@@ -433,17 +436,17 @@ U64     d;
         }
 
         /* Indicate vr pair restored */
-        regs->psw.cc = CC2;
+        regs->psw.cc = 2;
     }
     else
     {
         regs->GR_L(gr1) += 8 * (VECTOR_SECTION_SIZE - n1);
         /* Indicate vr pair not restored */
-        regs->psw.cc = CC0;
+        regs->psw.cc = 0;
     }
 
-    /* Set CC2 if vr 14 is restored, CC0 if not restored, 
-       CC3 and CC1 for other VR's respectively */
+    /* Set 2 if vr 14 is restored, 0 if not restored, 
+       3 and 1 for other VR's respectively */
     if(n2 != 14) regs->psw.cc++;
 
     /* Update the vector pair number, and zero element number */
@@ -757,9 +760,9 @@ U32     n;
 
     VOP_CHECK(regs);
 
-    regs->psw.cc = ((S32)effective_addr2 == 0) ? CC0 :
-                   ((S32)effective_addr2 < 0) ? CC1 :
-                   ((S32)effective_addr2 > VECTOR_SECTION_SIZE) ? CC2 : CC3;
+    regs->psw.cc = ((S32)effective_addr2 == 0) ? 0 :
+                   ((S32)effective_addr2 < 0) ? 1 :
+                   ((S32)effective_addr2 > VECTOR_SECTION_SIZE) ? 2 : 3;
            
     n = (S32)effective_addr2 < 0 ? 0 :
         (S32)effective_addr2 > VECTOR_SECTION_SIZE ? 
@@ -838,9 +841,9 @@ U32     n;
 
     VOP_CHECK(regs);
 
-    regs->psw.cc = ((S32)effective_addr2 == 0) ? CC0 :
-                   ((S32)effective_addr2 < 0) ? CC1 :
-                   ((S32)effective_addr2 < VECTOR_COUNT(regs)) ? CC2 : CC3;
+    regs->psw.cc = ((S32)effective_addr2 == 0) ? 0 :
+                   ((S32)effective_addr2 < 0) ? 1 :
+                   ((S32)effective_addr2 < VECTOR_COUNT(regs)) ? 2 : 3;
            
     n = (S32)effective_addr2 < 0 ? 0 :
         (S32)effective_addr2 > VECTOR_SECTION_SIZE ? 

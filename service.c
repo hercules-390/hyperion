@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.74  2007/01/12 15:24:46  bernard
+// ccmask phase 1
+//
 // Revision 1.73  2006/12/08 09:43:30  jj
 // Add CVS message log
 //
@@ -594,7 +597,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         if (IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_ADDR))
         {
             RELEASE_INTLOCK(regs);
-            regs->psw.cc = CC2;
+            regs->psw.cc = 2;
             return;
         }
     }
@@ -1351,7 +1354,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     if ((sccb->flag & SCCB_FLAG_SYNC)
         && (sclp_command & SCLP_COMMAND_CLASS) != 0x01)
     {
-        regs->psw.cc = CC1;
+        regs->psw.cc = 1;
         return;
     }
 
@@ -1364,7 +1367,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     RELEASE_INTLOCK(regs);
 
     /* Set condition code 0 */
-    regs->psw.cc = CC0;
+    regs->psw.cc = 0;
 
 } /* end function service_call */
 

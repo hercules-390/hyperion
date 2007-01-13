@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.112  2007/01/12 15:23:51  bernard
+// ccmask phase 1
+//
 // Revision 1.111  2007/01/09 05:10:19  gsmith
 // Tweaks to lm/stm
 //
@@ -80,7 +83,7 @@ int     r1, r2;                         /* Values of R fields        */
     RR0(inst, regs, r1, r2);
 
     /* OR second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_L(r1) |= regs->GR_L(r2) ) ? CC1 : CC0;
+    regs->psw.cc = ( regs->GR_L(r1) |= regs->GR_L(r2) ) ? 1 : 0;
 }
 
 
@@ -100,7 +103,7 @@ U32     n;                              /* 32-bit operand values     */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* OR second operand with first and set condition code */
-    regs->psw.cc = ( regs->GR_L(r1) |= n ) ? CC1 : CC0;
+    regs->psw.cc = ( regs->GR_L(r1) |= n ) ? 1 : 0;
 }
 
 
@@ -376,12 +379,12 @@ VADR    effective_addr2,
 #endif /*defined(FEATURE_ESAME)*/
 
             /* Indicate function supported */
-            regs->psw.cc = CC0;
+            regs->psw.cc = 0;
             break;
 
         default:
             /* indicate function not supported */
-            regs->psw.cc = CC3;
+            regs->psw.cc = 3;
             break;
     }
     else
@@ -542,7 +545,7 @@ BYTE    termchar;                       /* Terminating character     */
            code 2 and leave the R1 and R2 registers unchanged */
         if (addr2 == addr1)
         {
-            regs->psw.cc = CC2;
+            regs->psw.cc = 2;
             return;
         }
 
@@ -554,7 +557,7 @@ BYTE    termchar;                       /* Terminating character     */
         if (sbyte == termchar)
         {
             SET_GR_A(r1, regs, addr2);
-            regs->psw.cc = CC1;
+            regs->psw.cc = 1;
             return;
         }
 
@@ -568,7 +571,7 @@ BYTE    termchar;                       /* Terminating character     */
     SET_GR_A(r2, regs, addr2);
 
     /* Return condition code 3 */
-    regs->psw.cc = CC3;
+    regs->psw.cc = 3;
 
 }
 
@@ -651,14 +654,14 @@ U32     h, i, j, m;                     /* Integer work areas        */
     /* Condition code 3 and program check if overflow occurred */
     if (j)
     {
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
         if ( FOMASK(&regs->psw) )
             regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
 
     /* Set the condition code */
-    regs->psw.cc = (S64)dreg > 0 ? CC2 : (S64)dreg < 0 ? CC1 : CC0;
+    regs->psw.cc = (S64)dreg > 0 ? 2 : (S64)dreg < 0 ? 1 : 0;
 
 }
 
@@ -710,7 +713,7 @@ U32     i, j;                           /* Integer work areas        */
     if (regs->GR_L(r1) < 0x10000 && n < 16)
     {
         regs->GR_L(r1) <<= n;
-        regs->psw.cc = regs->GR_L(r1) ? CC2 : CC0;
+        regs->psw.cc = regs->GR_L(r1) ? 2 : 0;
         return;
     }
 
@@ -735,15 +738,15 @@ U32     i, j;                           /* Integer work areas        */
     /* Condition code 3 and program check if overflow occurred */
     if (j)
     {
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
         if ( FOMASK(&regs->psw) )
             regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
 
     /* Set the condition code */
-    regs->psw.cc = (S32)regs->GR_L(r1) > 0 ? CC2 :
-                   (S32)regs->GR_L(r1) < 0 ? CC1 : CC0;
+    regs->psw.cc = (S32)regs->GR_L(r1) > 0 ? 2 :
+                   (S32)regs->GR_L(r1) < 0 ? 1 : 0;
 
 }
 
@@ -793,7 +796,7 @@ U64     dreg;                           /* Double register work area */
     regs->GR_L(r1+1) = dreg & 0xFFFFFFFF;
 
     /* Set the condition code */
-    regs->psw.cc = (S64)dreg > 0 ? CC2 : (S64)dreg < 0 ? CC1 : CC0;
+    regs->psw.cc = (S64)dreg > 0 ? 2 : (S64)dreg < 0 ? 1 : 0;
 
 }
 
@@ -846,8 +849,8 @@ U32     n;                              /* Integer work areas        */
                     (S32)regs->GR_L(r1) >> n;
 
     /* Set the condition code */
-    regs->psw.cc = ((S32)regs->GR_L(r1) > 0) ? CC2 :
-                   (((S32)regs->GR_L(r1) < 0) ? CC1 : CC0);
+    regs->psw.cc = ((S32)regs->GR_L(r1) > 0) ? 2 :
+                   (((S32)regs->GR_L(r1) < 0) ? 1 : 0);
 }
 
 
@@ -1054,7 +1057,7 @@ U64     dreg;                           /* Double word work area     */
         PERFORM_SERIALIZATION (regs);
 
     /* Set condition code zero */
-    regs->psw.cc = CC0;
+    regs->psw.cc = 0;
 
 }
 
@@ -1108,7 +1111,7 @@ U64     dreg;                           /* Double word work area     */
     PERFORM_SERIALIZATION (regs);
 
     /* Set condition code zero */
-    regs->psw.cc = CC0;
+    regs->psw.cc = 0;
 }
 #endif /*defined(FEATURE_EXTENDED_TOD_CLOCK)*/
 
@@ -1215,7 +1218,7 @@ int     r1, r2;                         /* Values of R fields        */
                     regs->GR_L(r2));
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
@@ -1242,7 +1245,7 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
@@ -1269,7 +1272,7 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == CC3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
@@ -1286,7 +1289,7 @@ int     r1, r2;                         /* Values of R fields        */
     /* Subtract unsigned operands and set condition code */
     if (likely(r1 == r2))
     {
-        regs->psw.cc = CC2;
+        regs->psw.cc = 2;
         regs->GR_L(r1) = 0;
     }
     else
@@ -1432,7 +1435,7 @@ BYTE    old;                            /* Old value                 */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-    if (regs->psw.cc == CC1)
+    if (regs->psw.cc == 1)
     {
 #if defined(_FEATURE_SIE)
         if(SIE_STATB(regs, IC0, TS1))
@@ -1474,9 +1477,9 @@ BYTE    tbyte;                          /* Work byte                 */
 
     /* Set condition code according to result */
     regs->psw.cc =
-            ( tbyte == 0 ) ? CC0 :            /* result all zeroes */
-            ( tbyte == i2) ? CC3 :            /* result all ones   */
-            CC1 ;                             /* result mixed      */
+            ( tbyte == 0 ) ? 0 :            /* result all zeroes */
+            ( tbyte == i2) ? 3 :            /* result all ones   */
+            1 ;                             /* result mixed      */
 }
 
 
@@ -1502,10 +1505,10 @@ U16     h2;                             /* 16-bit operand values     */
 
     /* Set condition code according to result */
     regs->psw.cc =
-            ( h1 == 0 ) ? CC0 :           /* result all zeroes */
-            ( h1 == i2) ? CC3 :           /* result all ones   */
-            ((h1 & h2) == 0) ? CC1 :      /* leftmost bit zero */
-            CC2;                          /* leftmost bit one  */
+            ( h1 == 0 ) ? 0 :           /* result all zeroes */
+            ( h1 == i2) ? 3 :           /* result all ones   */
+            ((h1 & h2) == 0) ? 1 :      /* leftmost bit zero */
+            2;                          /* leftmost bit one  */
 }
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
 
@@ -1532,10 +1535,10 @@ U16     h2;                             /* 16-bit operand values     */
 
     /* Set condition code according to result */
     regs->psw.cc =
-            ( h1 == 0 ) ? CC0 :           /* result all zeroes */
-            ( h1 == i2) ? CC3 :           /* result all ones   */
-            ((h1 & h2) == 0) ? CC1 :      /* leftmost bit zero */
-            CC2;                          /* leftmost bit one  */
+            ( h1 == 0 ) ? 0 :           /* result all zeroes */
+            ( h1 == i2) ? 3 :           /* result all ones   */
+            ((h1 & h2) == 0) ? 1 :      /* leftmost bit zero */
+            2;                          /* leftmost bit one  */
 
 }
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
@@ -1874,7 +1877,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
         /* Exit with cc1 when we've gone as far as we can go */
         if ( !index )
         {
-            regs->psw.cc = CC1;
+            regs->psw.cc = 1;
             break;
         }
 
@@ -1883,7 +1886,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
         */
         if ( GR_A(0,regs) & UPT_HIGH_BIT )
         {
-            regs->psw.cc = CC3;
+            regs->psw.cc = 3;
             break;
         }
 
@@ -1921,7 +1924,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
             /* Load GR2 and GR3 with the equal codeword node's values */
             SET_GR_A(2,regs,nodecode);
             SET_GR_A(3,regs,nodedata);
-            regs->psw.cc = CC0;
+            regs->psw.cc = 0;
             return;
         }
 
@@ -2009,12 +2012,12 @@ DEF_INST(convert_utf8_to_utf32)
     /* Check end of source or destination */
     if(srcelen < 1)
     {
-      regs->psw.cc = CC0;
+      regs->psw.cc = 0;
       return;
     }
     if(destlen < 4)
     {
-      regs->psw.cc = CC1;
+      regs->psw.cc = 1;
       return;
     }
 
@@ -2037,7 +2040,7 @@ DEF_INST(convert_utf8_to_utf32)
       {
         if(utf8[0] <= 0xc1)
         {
-          regs->psw.cc = CC2;
+          regs->psw.cc = 2;
           return;
         }
       }
@@ -2046,7 +2049,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Check end of source */
       if(srcelen < 2)
       {
-        regs->psw.cc = CC0;   /* Strange but stated in POP */
+        regs->psw.cc = 0;   /* Strange but stated in POP */
         return;
       }
 
@@ -2059,7 +2062,7 @@ DEF_INST(convert_utf8_to_utf32)
       {
         if(utf8[1] < 0x80 || utf8[1] > 0xbf)
         {
-          regs->psw.cc = CC2;
+          regs->psw.cc = 2;
           return;
         }
       }
@@ -2077,7 +2080,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Check end of source */
       if(srcelen < 3)
       {
-        regs->psw.cc = CC0;   /* Strange but stated in POP */
+        regs->psw.cc = 0;   /* Strange but stated in POP */
         return;
       }
 
@@ -2092,7 +2095,7 @@ DEF_INST(convert_utf8_to_utf32)
         {
           if(utf8[1] < 0xa0 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf)
           {
-            regs->psw.cc = CC2;
+            regs->psw.cc = 2;
             return;
           }
         }
@@ -2100,7 +2103,7 @@ DEF_INST(convert_utf8_to_utf32)
         {
           if(utf8[1] < 0x80 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf)
           {
-            regs->psw.cc = CC2;
+            regs->psw.cc = 2;
             return;
           }
         }
@@ -2108,7 +2111,7 @@ DEF_INST(convert_utf8_to_utf32)
         {
           if(utf8[1] < 0x80 || utf8[1] > 0x9f || utf8[2] < 0x80 || utf8[2] > 0xbf)
           {
-            regs->psw.cc = CC2;
+            regs->psw.cc = 2;
             return;
           }
         }
@@ -2130,7 +2133,7 @@ DEF_INST(convert_utf8_to_utf32)
       {
         if(utf8[0] > 0xf4)
         {
-          regs->psw.cc = CC2;
+          regs->psw.cc = 2;
           return;
         }
       }
@@ -2139,7 +2142,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Check end of source */
       if(srcelen < 4)
       {
-        regs->psw.cc = CC0;   /* Strange but stated in POP */
+        regs->psw.cc = 0;   /* Strange but stated in POP */
         return;
       }
 
@@ -2154,7 +2157,7 @@ DEF_INST(convert_utf8_to_utf32)
         {
           if(utf8[1] < 0x90 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf || utf8[3] < 0x80 || utf8[3] > 0xbf)
           {
-            regs->psw.cc = CC2;
+            regs->psw.cc = 2;
             return;
           }
         }
@@ -2162,7 +2165,7 @@ DEF_INST(convert_utf8_to_utf32)
         {
           if(utf8[1] < 0x80 || utf8[1] > 0xbf || utf8[2] < 0x80 || utf8[2] > 0xbf || utf8[3] < 0x80 || utf8[3] > 0xbf)
           {
-            regs->psw.cc = CC2;
+            regs->psw.cc = 2;
             return;
           }
         }
@@ -2170,7 +2173,7 @@ DEF_INST(convert_utf8_to_utf32)
         {
           if(utf8[1] < 0x80 || utf8[1] > 0x8f || utf8[2] < 0x80 || utf8[2] > 0xbf || utf8[3] < 0x80 || utf8[3] > 0xbf)
           {
-            regs->psw.cc = CC2;
+            regs->psw.cc = 2;
             return;
           }
         }
@@ -2186,7 +2189,7 @@ DEF_INST(convert_utf8_to_utf32)
     }
     else
     {
-      regs->psw.cc = CC2;
+      regs->psw.cc = 2;
       return;
     }
 
@@ -2201,7 +2204,7 @@ DEF_INST(convert_utf8_to_utf32)
   }
 
   /* CPU determined number of characters reached */
-  regs->psw.cc = CC3;
+  regs->psw.cc = 3;
 }
 
 /*-------------------------------------------------------------------*/
@@ -2253,12 +2256,12 @@ DEF_INST(convert_utf16_to_utf32)
     /* Check end of source or destination */
     if(srcelen < 2)
     {
-      regs->psw.cc = CC0;
+      regs->psw.cc = 0;
       return;
     }
     if(destlen < 4)
     {
-      regs->psw.cc = CC1;
+      regs->psw.cc = 1;
         return;
     }
 
@@ -2278,7 +2281,7 @@ DEF_INST(convert_utf16_to_utf32)
       /* Check end of source */
       if(srcelen < 4)
       {
-        regs->psw.cc = CC0;   /* Strange but stated in POP */
+        regs->psw.cc = 0;   /* Strange but stated in POP */
         return;
       }
 
@@ -2291,7 +2294,7 @@ DEF_INST(convert_utf16_to_utf32)
       {
         if(utf16[2] < 0xdc && utf16[2] > 0xdf)
         {
-          regs->psw.cc = CC2;
+          regs->psw.cc = 2;
           return;
         }
       }
@@ -2318,7 +2321,7 @@ DEF_INST(convert_utf16_to_utf32)
   }
 
   /* CPU determined number of characters reached */
-  regs->psw.cc = CC3;
+  regs->psw.cc = 3;
 }
 
 /*-------------------------------------------------------------------*/
@@ -2354,12 +2357,12 @@ DEF_INST(convert_utf32_to_utf8)
     /* Check end of source or destination */
     if(srcelen < 4)
     {
-      regs->psw.cc = CC0;
+      regs->psw.cc = 0;
       return;
     }
     if(destlen < 1)
     {
-      regs->psw.cc = CC1;
+      regs->psw.cc = 1;
       return;
     }
 
@@ -2368,7 +2371,7 @@ DEF_INST(convert_utf32_to_utf8)
 
     if(utf32[0] != 0x00)
     {
-      regs->psw.cc = CC2;
+      regs->psw.cc = 2;
       return;
     }
     else if(utf32[1] == 0x00)
@@ -2388,7 +2391,7 @@ DEF_INST(convert_utf32_to_utf8)
         /* Check destination length */
         if(destlen < 2)
         {
-          regs->psw.cc = CC1;
+          regs->psw.cc = 1;
           return;
         }
 
@@ -2403,7 +2406,7 @@ DEF_INST(convert_utf32_to_utf8)
         /* Check destination length */
         if(destlen < 3)
         {
-          regs->psw.cc = CC1;
+          regs->psw.cc = 1;
           return;
         }
 
@@ -2416,7 +2419,7 @@ DEF_INST(convert_utf32_to_utf8)
       }
       else
       {
-        regs->psw.cc = CC2;
+        regs->psw.cc = 2;
         return;
       }
     }
@@ -2425,7 +2428,7 @@ DEF_INST(convert_utf32_to_utf8)
       /* Check destination length */
       if(destlen < 4)
       {
-        regs->psw.cc = CC1;
+        regs->psw.cc = 1;
         return;
       }
 
@@ -2439,7 +2442,7 @@ DEF_INST(convert_utf32_to_utf8)
     }
     else
     {
-      regs->psw.cc = CC2;
+      regs->psw.cc = 2;
       return;
     }
 
@@ -2454,7 +2457,7 @@ DEF_INST(convert_utf32_to_utf8)
   }
 
   /* CPU determined number of characters reached */
-  regs->psw.cc = CC3;
+  regs->psw.cc = 3;
 }
 
 /*-------------------------------------------------------------------*/
@@ -2490,12 +2493,12 @@ DEF_INST(convert_utf32_to_utf16)
     /* Check end of source or destination */
     if(srcelen < 4)
     {
-      regs->psw.cc = CC0;
+      regs->psw.cc = 0;
       return;
     }
     if(destlen < 2)
     {
-      regs->psw.cc = CC1;
+      regs->psw.cc = 1;
       return;
     }
 
@@ -2504,7 +2507,7 @@ DEF_INST(convert_utf32_to_utf16)
 
     if(utf32[0] != 0x00)
     {
-      regs->psw.cc = CC2;
+      regs->psw.cc = 2;
       return;
     }
     else if(utf32[1] == 0x00 && (utf32[2] <= 0xd7 || utf32[2] >= 0xdc))
@@ -2520,7 +2523,7 @@ DEF_INST(convert_utf32_to_utf16)
       /* Check end of destination */
       if(destlen < 4)
       {
-        regs->psw.cc = CC1;
+        regs->psw.cc = 1;
         return;
       }
 
@@ -2536,7 +2539,7 @@ DEF_INST(convert_utf32_to_utf16)
     }
     else
     {
-      regs->psw.cc = CC2;
+      regs->psw.cc = 2;
       return;
     }
 
@@ -2551,7 +2554,7 @@ DEF_INST(convert_utf32_to_utf16)
   }
 
   /* CPU determined number of characters reached */
-  regs->psw.cc = CC3;
+  regs->psw.cc = 3;
 }
 
 /*-------------------------------------------------------------------*/
@@ -2585,7 +2588,7 @@ DEF_INST(search_string_unicode)
        code 2 and leave the R1 and R2 registers unchanged */
     if(addr2 == addr1)
     {
-      regs->psw.cc = CC2;
+      regs->psw.cc = 2;
       return;
     }
 
@@ -2597,7 +2600,7 @@ DEF_INST(search_string_unicode)
     if(sbyte == termchar)
     {
       SET_GR_A(r1, regs, addr2);
-      regs->psw.cc = CC1;
+      regs->psw.cc = 1;
       return;
     }
 
@@ -2611,7 +2614,7 @@ DEF_INST(search_string_unicode)
   SET_GR_A(r2, regs, addr2);
 
   /* Return condition code 3 */
-  regs->psw.cc = CC3;
+  regs->psw.cc = 3;
 }
 
 /*-------------------------------------------------------------------*/

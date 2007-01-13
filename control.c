@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.241  2007/01/12 15:21:31  bernard
+// ccmaks phase 1
+//
 // Revision 1.240  2007/01/05 14:26:08  fish
 // Fix SIGP processing in light of recent AIA performance mods
 //
@@ -753,7 +756,7 @@ U32     old;                            /* old value                 */
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
 
-    if (regs->psw.cc == CC0)
+    if (regs->psw.cc == 0)
     {
         /* Perform requested funtion specified as per request code in r2 */
         if (regs->GR_L(r2) & 3)
@@ -1035,7 +1038,7 @@ int     max_esta_code;
     ARCH_DEP(stack_extract) (lsea, r1, code, regs);
 
     /* Set condition code depending on entry type */
-    regs->psw.cc =  ((lsed.uet & LSED_UET_ET) == LSED_UET_PC) ? CC1 : CC0;
+    regs->psw.cc =  ((lsed.uet & LSED_UET_ET) == LSED_UET_PC) ? 1 : 0;
 
 }
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
@@ -1655,7 +1658,7 @@ CREG    inst_cr;                        /* Instruction CR            */
            AFX- or ASX-translation exception condition */
         if (ARCH_DEP(translate_asn) (pasn_d, regs, &pasteo, aste))
         {
-            regs->psw.cc = CC1;
+            regs->psw.cc = 1;
             return;
         }
 
@@ -1665,7 +1668,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         if (ASN_AND_LX_REUSE_ENABLED(regs)
             && pastein_d != aste[11])
         {
-            regs->psw.cc = CC1;
+            regs->psw.cc = 1;
             return;
         } /* end if(ASN_AND_LX_REUSE_ENABLED && pastein_d!=aste[11]) */
 
@@ -1686,7 +1689,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         /* Return with condition code 1 if ASTE exception recognized */
         if (xcode != 0)
         {
-            regs->psw.cc = CC1;
+            regs->psw.cc = 1;
             return;
         }
 #endif /*FEATURE_SUBSPACE_GROUP*/
@@ -1696,7 +1699,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         if ((regs->CR(1) & SSEVENT_BIT)
             || (ASTE_AS_DESIGNATOR(aste) & SSEVENT_BIT))
         {
-            regs->psw.cc = CC3;
+            regs->psw.cc = 3;
             return;
         }
 
@@ -1753,7 +1756,7 @@ CREG    inst_cr;                        /* Instruction CR            */
                AFX- or ASX-translation exception condition */
             if (ARCH_DEP(translate_asn) (sasn_d, regs, &sasteo, aste))
             {
-                regs->psw.cc = CC2;
+                regs->psw.cc = 2;
                 return;
             }
 
@@ -1763,7 +1766,7 @@ CREG    inst_cr;                        /* Instruction CR            */
             if (ASN_AND_LX_REUSE_ENABLED(regs)
                 && sastein_d != aste[11])
             {
-                regs->psw.cc = CC2;
+                regs->psw.cc = 2;
                 return;
             } /* end if(ASN_AND_LX_REUSE_ENABLED && sastein_d!=aste[11]) */
 
@@ -1783,7 +1786,7 @@ CREG    inst_cr;                        /* Instruction CR            */
             /* Return condition code 2 if ASTE exception recognized */
             if (xcode != 0)
             {
-                regs->psw.cc = CC2;
+                regs->psw.cc = 2;
                 return;
             }
 #endif /*FEATURE_SUBSPACE_GROUP*/
@@ -1796,7 +1799,7 @@ CREG    inst_cr;                        /* Instruction CR            */
                 if (ARCH_DEP(authorize_asn) (ax, aste, ATE_SECONDARY,
                                                         regs))
                 {
-                    regs->psw.cc = CC2;
+                    regs->psw.cc = 2;
                     return;
                 }
 
@@ -1825,7 +1828,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         INVALIDATE_AIA(regs);
 
     /* Return condition code zero */
-    regs->psw.cc = CC0;
+    regs->psw.cc = 0;
 
 } /* end DEF_INST(load_address_space_parameters) */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
@@ -2186,7 +2189,7 @@ CREG    pte;                            /* Page Table Entry          */
                 /* Return condition code 3 if translation exception */
                 if(ARCH_DEP(translate_addr) (n2, r2, regs, ACCTYPE_LRA))
                 {
-                    regs->psw.cc = CC3;
+                    regs->psw.cc = 3;
                     RELEASE_MAINLOCK(regs);
                     return;
                 }
@@ -2198,10 +2201,10 @@ CREG    pte;                            /* Page Table Entry          */
                 ARCH_DEP(store_fullword_absolute) (pte, rpte, regs);
 #endif /*!defined(FEATURE_ESAME)*/
                 regs->GR(r1) = regs->dat.raddr;
-                regs->psw.cc = CC0;
+                regs->psw.cc = 0;
             }
             else
-                regs->psw.cc = CC1;
+                regs->psw.cc = 1;
         }
         else
         {
@@ -2214,15 +2217,15 @@ CREG    pte;                            /* Page Table Entry          */
 #else /*!defined(FEATURE_ESAME)*/
                 ARCH_DEP(store_fullword_absolute) (pte, rpte, regs);
 #endif /*!defined(FEATURE_ESAME)*/
-                regs->psw.cc = CC0;
+                regs->psw.cc = 0;
             }
             else
-                regs->psw.cc = CC1;
+                regs->psw.cc = 1;
         }
 
     }
     else
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
 
     RELEASE_MAINLOCK(regs);
 
@@ -4377,7 +4380,7 @@ U64     dreg;                           /* Clock value               */
     RELEASE_INTLOCK(regs);
 
     /* Return condition code zero */
-    regs->psw.cc = CC0;
+    regs->psw.cc = 0;
 
     RETURN_INTCHECK(regs);
 
@@ -5260,7 +5263,7 @@ static char *ordername[] = {
     /* Return condition code 3 if target CPU does not exist */
     if (cpad >= MAX_CPU)
     {
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
         return;
     }
 
@@ -5270,7 +5273,7 @@ static char *ordername[] = {
     if (order == SIGP_SENSE && !IS_CPU_ONLINE(cpad)
      && cpad >= sysblk.numcpu && cpad >= HI_CPU)
     {
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
         return;
     }
 
@@ -5296,7 +5299,7 @@ static char *ordername[] = {
        use by any CPU. */
     if(try_obtain_lock (&sysblk.sigplock))
     {
-        regs->psw.cc = CC2;
+        regs->psw.cc = 2;
         if (log_sigp)
             logmsg("%s: CC 2\n",log_buf);
         return;
@@ -5317,7 +5320,7 @@ static char *ordername[] = {
     {
         RELEASE_INTLOCK(regs);
         release_lock(&sysblk.sigplock);
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
         if (log_sigp)
             logmsg("%s: CC 3\n",log_buf);
         return;
@@ -5340,7 +5343,7 @@ static char *ordername[] = {
     {
         RELEASE_INTLOCK(regs);
         release_lock(&sysblk.sigplock);
-        regs->psw.cc = CC2;
+        regs->psw.cc = 2;
         if (log_sigp)
             logmsg("%s: CC 2\n",log_buf);
         return;
@@ -5897,15 +5900,15 @@ static char *ordername[] = {
     if (status != 0)
     {
         regs->GR_L(r1) = status;
-        regs->psw.cc = CC1;
+        regs->psw.cc = 1;
     }
     else
-        regs->psw.cc = CC0;
+        regs->psw.cc = 0;
 
     /* Log the results if we're interested in this particular SIGP */
     if (log_sigp)
     {
-        if (regs->psw.cc == CC0)
+        if (regs->psw.cc == 0)
             logmsg("%s: CC 0\n",log_buf);
         else
             logmsg("%s: CC 1 STATUS %8.8X\n",log_buf, (U32)status);
@@ -6304,7 +6307,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
     /* Check function code */
     if((regs->GR_L(0) & STSI_GPR0_FC_MASK) > STSI_GPR0_FC_BASIC)
     {
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
         return;
     }
 
@@ -6318,7 +6321,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
     {
         regs->GR_L(0) |= STSI_GPR0_FC_BASIC;
 //      regs->GR_L(0) |= STSI_GPR0_FC_LPAR;
-        regs->psw.cc = CC0;
+        regs->psw.cc = 0;
         return;
     }
 
@@ -6335,7 +6338,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
       || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) > 2
       || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) > 2)
     {
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
         return;
     }
 
@@ -6367,11 +6370,11 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                     sysib111->seqc[(sizeof(sysib111->seqc) - 6) + i] =
                     hexebcdic[(sysblk.cpuid >> (52 - (i*4))) & 0x0F];
                 memcpy(sysib111->plant,plant,sizeof(plant));
-                regs->psw.cc = CC0;
+                regs->psw.cc = 0;
                 break;
 
             default:
-                regs->psw.cc = CC3;
+                regs->psw.cc = 3;
             } /* selector 2 */
             break;
 
@@ -6388,7 +6391,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                         hexebcdic[sysblk.cpuid >> (52 - (i*4)) & 0x0F];
                 memcpy(sysib121->plant,plant,sizeof(plant));
                 STORE_HW(sysib121->cpuad,regs->cpuad);
-                regs->psw.cc = CC0;
+                regs->psw.cc = 0;
                 break;
 
             case 2:
@@ -6399,21 +6402,21 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 STORE_HW(sysib122->confcpu, sysblk.cpus);
                 STORE_HW(sysib122->sbcpu, MAX_CPU - sysblk.cpus);
                 memcpy(sysib122->mpfact,mpfact,(MAX_CPU-1)*2);
-                regs->psw.cc = CC0;
+                regs->psw.cc = 0;
                 break;
 
             default:
-                regs->psw.cc = CC3;
+                regs->psw.cc = 3;
             } /* selector 2 */
             break;
 
         default:
-            regs->psw.cc = CC3;
+            regs->psw.cc = 3;
         } /* selector 1 */
         break;
 
     default:
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
     } /* function code */
 
 }
@@ -6565,14 +6568,14 @@ U32     aste[16];                       /* ASN second table entry    */
     /* Set condition code 0 if ALET value is 0 */
     if (regs->AR(r1) == ALET_PRIMARY)
     {
-        regs->psw.cc = CC0;
+        regs->psw.cc = 0;
         return;
     }
 
     /* Set condition code 3 if ALET value is 1 */
     if (regs->AR(r1) == ALET_SECONDARY)
     {
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
         return;
     }
 
@@ -6586,13 +6589,13 @@ U32     aste[16];                       /* ASN second table entry    */
                           regs,
                         &asteo, aste))
     {
-        regs->psw.cc = CC3;
+        regs->psw.cc = 3;
         return;
     }
 
     /* Set condition code 1 or 2 according to whether
        the ALET designates the DUCT or the PASTE */
-    regs->psw.cc = (regs->AR(r1) & ALET_PRI_LIST) ? CC2 : CC1;
+    regs->psw.cc = (regs->AR(r1) & ALET_PRI_LIST) ? 2 : 1;
 
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -6645,9 +6648,9 @@ RADR    n;                              /* Real address              */
 
     /* Set condition code 0 if storage usable, 1 if unusable */
     if (STORAGE_KEY(n, regs) & STORKEY_BADFRM)
-        regs->psw.cc = CC1;
+        regs->psw.cc = 1;
     else
-        regs->psw.cc = CC0;
+        regs->psw.cc = 0;
 
     /* Perform serialization */
     PERFORM_SERIALIZATION (regs);
@@ -6691,7 +6694,7 @@ BYTE    akey;                           /* Access key                */
         /* Return condition code 3 if translation exception */
         if (ARCH_DEP(translate_addr) (effective_addr1, b1, regs, ACCTYPE_TPROT))
         {
-            regs->psw.cc = CC3;
+            regs->psw.cc = 3;
             return;
         }
     }
@@ -6734,14 +6737,14 @@ BYTE    akey;                           /* Access key                */
 
     /* Return condition code 2 if location is fetch protected */
     if (ARCH_DEP(is_fetch_protected) (effective_addr1, skey, akey, regs))
-        regs->psw.cc = CC2;
+        regs->psw.cc = 2;
     else
         /* Return condition code 1 if location is store protected */
         if (ARCH_DEP(is_store_protected) (effective_addr1, skey, akey, regs))
-            regs->psw.cc = CC1;
+            regs->psw.cc = 1;
         else
             /* Return condition code 0 if location is not protected */
-            regs->psw.cc = CC0;
+            regs->psw.cc = 0;
 
 }
 

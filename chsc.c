@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.10  2007/01/12 15:20:59  bernard
+// ccmask phase 1
+//
 // Revision 1.9  2006/12/08 09:43:18  jj
 // Add CVS message log
 //
@@ -234,7 +237,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
             /* No reaon code */
             STORE_FW(chsc_rsp->info,0);
 
-            regs->psw.cc = CC0;
+            regs->psw.cc = 0;
     }
 
 }

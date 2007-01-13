@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.43  2007/01/12 15:25:23  bernard
+// ccmaks phase 1
+//
 // Revision 1.42  2006/12/08 09:43:31  jj
 // Add CVS message log
 //
@@ -1132,7 +1135,7 @@ VADR    effective_addr2;                /* Effective address         */
         return;
 
     /* Set condition code to indicate IUCV not available */
-    regs->psw.cc = CC3;
+    regs->psw.cc = 3;
 
 }
 
