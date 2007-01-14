@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.21  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #ifndef __CTCADPT_H_
 #define __CTCADPT_H_
@@ -109,7 +112,7 @@ typedef uint8_t MAC[IFHWADDRLEN];       // Data Type for MAC Addresses
 #endif
 
 // ---------------------------------------------------------------------
-// Ethernet Frame Header
+// Ethernet Frame Header                (network byte order)
 // ---------------------------------------------------------------------
 
 struct _ETHFRM
@@ -127,7 +130,7 @@ struct _ETHFRM
 typedef struct _ETHFRM ETHFRM, *PETHFRM;
 
 // ---------------------------------------------------------------------
-// IP Version 4 Frame Header ( Frame Type 0x0800 )
+// IP Version 4 Frame Header (Type 0x0800)  (network byte order)
 // ---------------------------------------------------------------------
 
 struct  _IP4FRM
@@ -152,7 +155,7 @@ struct  _IP4FRM
 typedef struct _IP4FRM IP4FRM, *PIP4FRM;
 
 // ---------------------------------------------------------------------
-// Address Resolution Protocol Frame ( Frame Type 0x0806 )
+// Address Resolution Protocol Frame (Type 0x0806) (network byte order)
 // ---------------------------------------------------------------------
 
 struct  _ARPFRM
@@ -211,7 +214,7 @@ typedef struct _CTCIHDR CTCIHDR,*PCTCIHDR;
 typedef struct _CTCISEG CTCISEG,*PCTCISEG;
 
 // --------------------------------------------------------------------
-// CTCBLK -
+// CTCBLK -                                (host byte order)
 // --------------------------------------------------------------------
 
 struct  _CTCBLK
@@ -252,7 +255,7 @@ struct  _CTCBLK
 };
 
 // --------------------------------------------------------------------
-// CTCI Data blocks
+// CTCI Data blocks                     (host byte order)
 // --------------------------------------------------------------------
 
 struct _CTCIHDR                         // CTCI Block Header
@@ -312,7 +315,7 @@ typedef struct  _LCSIPMFRM  LCSIPMFRM,  *PLCSIPMFRM;
 typedef struct  _LCSETHFRM  LCSETHFRM,  *PLCSETHFRM;
 
 // --------------------------------------------------------------------
-// LCS Device
+// LCS Device                              (host byte order)
 // --------------------------------------------------------------------
 
 struct  _LCSDEV
@@ -322,7 +325,9 @@ struct  _LCSDEV
     BYTE        bPort;                    // Relative Adapter No.
     BYTE        bType;                    // LCSDEV_TYPE_XXXXX
     char*       pszIPAddress;             // IP Address (string)
-    U32         lIPAddress;               // IP Address (binary)
+
+    U32         lIPAddress;               // IP Address (binary),
+                                          // (network byte order)
 
     PLCSBLK     pLCSBLK;                  // -> LCSBLK
     DEVBLK*     pDEVBLK[2];               // 0 - Read subchannel
@@ -353,7 +358,7 @@ struct  _LCSDEV
 #define LCSDEV_TYPE_SECONDARY   0x02
 
 // --------------------------------------------------------------------
-// LCS Port ( or Relative Adapter )
+// LCS Port (or Relative Adapter)         (host byte order)
 // --------------------------------------------------------------------
 
 struct  _LCSPORT
@@ -387,7 +392,7 @@ struct  _LCSPORT
 };
 
 // --------------------------------------------------------------------
-// LCSRTE - Routing Entries
+// LCSRTE - Routing Entries               (host byte order)
 // --------------------------------------------------------------------
 
 struct  _LCSRTE
@@ -398,7 +403,7 @@ struct  _LCSRTE
 };
 
 // --------------------------------------------------------------------
-// LCSBLK - Common Storage for LCS Emulation
+// LCSBLK - Common Storage for LCS Emulation   (host byte order)
 // --------------------------------------------------------------------
 
 struct  _LCSBLK
@@ -425,6 +430,7 @@ struct  _LCSBLK
 
 // ---------------------------------------------------------------------
 // LCS Command Header  --  all LCS frames start with this header
+//                                        (network byte order)
 // ---------------------------------------------------------------------
 
 struct _LCSHDR
@@ -470,7 +476,7 @@ struct _LCSHDR
 #define LCS_INIT_LGW         0x01
 
 // ---------------------------------------------------------------------
-// LCS Standard Command Frame
+// LCS Standard Command Frame                   (network byte order)
 // ---------------------------------------------------------------------
 
 struct _LCSSTDFRM
@@ -487,7 +493,7 @@ struct _LCSSTDFRM
 } ATTRIBUTE_PACKED;
 
 // ---------------------------------------------------------------------
-// LCS Startup Command Frame
+// LCS Startup Command Frame                    (network byte order)
 // ---------------------------------------------------------------------
 
 struct _LCSSTRTFRM
@@ -498,7 +504,7 @@ struct _LCSSTRTFRM
 } ATTRIBUTE_PACKED;
 
 // ---------------------------------------------------------------------
-// LCS Query IP Assists Frame
+// LCS Query IP Assists Frame                   (network byte order)
 // ---------------------------------------------------------------------
 
 struct  _LCSQIPFRM
@@ -519,7 +525,7 @@ struct  _LCSQIPFRM
 #define LCS_MULTICAST_SUPPORT         0x0040
 
 // ---------------------------------------------------------------------
-// LCS LAN Status Command Frame
+// LCS LAN Status Command Frame                 (network byte order)
 // ---------------------------------------------------------------------
 
 struct  _LCSLSTFRM
@@ -539,7 +545,7 @@ struct  _LCSLSTFRM
 } ATTRIBUTE_PACKED;
 
 // ---------------------------------------------------------------------
-// LCS IPM Command Frame
+// LCS IPM Command Frame                        (network byte order)
 // ---------------------------------------------------------------------
 
 struct  _LCSIPMPAIR
@@ -563,7 +569,7 @@ struct  _LCSIPMFRM
 } ATTRIBUTE_PACKED;
 
 // ---------------------------------------------------------------------
-// LCS Ethernet Passthru Frame
+// LCS Ethernet Passthru Frame                  (network byte order)
 // ---------------------------------------------------------------------
 
 struct  _LCSETHFRM
