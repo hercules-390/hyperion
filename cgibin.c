@@ -45,6 +45,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.72  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -654,11 +657,11 @@ U32 addr = 0;
 
 void cgibin_ipl(WEBBLK *webblk)
 {
-U32 i;
+int i;
 char *value;
 DEVBLK *dev;
 U16 ipldev;
-U32 iplcpu;
+int iplcpu;
 U32 doipl;
 
     html_header(webblk);

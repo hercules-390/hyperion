@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.41  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -372,7 +375,7 @@ DIAG204_PART_CPU  *cpuinfo;            /* CPU info                   */
 RADR              abs;                 /* abs addr of data area      */
 U64               dreg;                /* work doubleword            */
 U64               tdis = 0, teff = 0;
-U32               i;                   /* loop counter               */
+int               i;                   /* loop counter               */
 struct rusage     usage;               /* RMF type data              */
 static BYTE       physical[8] =
               {0xD7,0xC8,0xE8,0xE2,0xC9,0xC3,0xC1,0xD3}; /* PHYSICAL */

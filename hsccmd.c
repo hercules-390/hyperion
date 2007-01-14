@@ -17,6 +17,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.209  2007/01/11 19:54:33  fish
+// Addt'l keep-alive mods: create associated supporting config-file
+// stmt and panel command where individual customer-preferred values
+// can be specified and/or dynamically modified.
+//
 // Revision 1.208  2007/01/08 09:52:00  rbowler
 // Rename symptom command as traceopt
 //
@@ -1980,7 +1985,7 @@ int ipl_cmd2(int argc, char *argv[], char *cmdline, int clear)
 BYTE c;                                 /* Character work area       */
 int  rc;                                /* Return code               */
 
-unsigned i;
+int  i;
 U16  lcss;
 U16  devnum;
 char *cdev, *clcss;
