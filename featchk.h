@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.43  2007/01/14 19:42:38  gsmith
+// Fix S370 only build - nerak60510
+//
 // Revision 1.42  2007/01/04 14:21:27  rbowler
 // Decimal floating point does not require binary floating point
 //
@@ -373,7 +376,7 @@
  #endif
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
-/* Suggestest by nearak60510 */
+/* Suggested by nerak60510 */
 #if !defined(OPTION_390_MODE) && !defined(OPTION_900_MODE)
  #undef OPTION_SET_STSI_INFO
 #endif
