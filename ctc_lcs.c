@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.61  2007/01/14 08:03:30  fish
+// correct minor (benign(?)) bug in LCS_QueryIPAssists, fix HHCLC011I and related deug msgs in LCS_PortThread to display IP address in correct byte-order.
+//
 // Revision 1.60  2006/12/08 09:43:19  jj
 // Add CVS message log
 //
@@ -1289,10 +1292,10 @@ static void  LCS_QueryIPAssists( PLCSDEV pLCSDEV, PLCSHDR pHeader )
     // the 'hwOffset' field, is an exact copy of the LCSHDR
     // that was passed to us...
 
-    STORE_HW( pReply->hwNumIPPairs,          0x0000 );
-              pReply->hwIPAssistsSupported = pPort->sIPAssistsSupported;
-              pReply->hwIPAssistsEnabled   = pPort->sIPAssistsEnabled;
-    STORE_HW( pReply->hwIPVersion,           0x0004 );
+    STORE_HW( pReply->hwNumIPPairs,         0x0000 );
+    STORE_HW( pReply->hwIPAssistsSupported, pPort->sIPAssistsSupported );
+    STORE_HW( pReply->hwIPAssistsEnabled,   pPort->sIPAssistsEnabled   );
+    STORE_HW( pReply->hwIPVersion,          0x0004 );
 }
 
 //
