@@ -27,6 +27,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.49  2006/12/31 22:49:55  gsmith
+// 2006 Dec 31 disable multi-byte-assist for cygwin
+//
 // Revision 1.48  2006/12/31 21:16:32  gsmith
 // 2006 Dec 31 really back out mainlockx.pat
 //
@@ -322,15 +325,13 @@ static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
  __asm__ __volatile__ (
-         "movb    (%2),%%al\n\t"
-         "lock;   cmpxchgb %b1,(%3)\n\t"
+         "lock;   cmpxchgb %b2,(%4)\n\t"
          "setnz   %b0\n\t"
-         "movb    %%al,(%2)"
-         : "=q"(code)
+         : "=q"(code), "=a"(*old)
          : "q"(new),
-           "S"(old),
+           "1"(*old),
            "D"(ptr)
-         : "ax", "memory");
+         : "memory");
  return code;
 }
 
@@ -340,15 +341,13 @@ static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
  __asm__ __volatile__ (
-         "movl    (%2),%%eax\n\t"
-         "lock;   cmpxchgl %1,(%3)\n\t"
+         "lock;   cmpxchgl %2,(%4)\n\t"
          "setnz   %b0\n\t"
-         "movl    %%eax,(%2)"
-         : "=q"(code)
+         : "=q"(code), "=a"(*old)
          : "q"(new),
-           "S"(old),
+           "1"(*old),
            "D"(ptr)
-         : "eax", "memory");
+         : "memory");
  return code;
 }
 
@@ -365,9 +364,9 @@ static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
          "movl    (%3),%%eax\n\t"
          "movl    4(%3),%%edx\n\t"
          "lock;   cmpxchg8b (%4)\n\t"
-         "setnz   %b0\n\t"
          "movl    %%eax,(%3)\n\t"
-         "movl    %%edx,4(%3)"
+         "movl    %%edx,4(%3)\n\t"
+         "setnz   %b0"
          : "=q"(code)
          : "b"(low),
            "c"(high),
@@ -538,15 +537,13 @@ static __inline__ BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
  __asm__ __volatile__ (
-         "movb    (%2),%%al\n\t"
-         "lock;   cmpxchgb %b1,(%3)\n\t"
+         "lock;   cmpxchgb %b2,(%4)\n\t"
          "setnz   %b0\n\t"
-         "movb    %%al,(%2)"
-         : "=q"(code)
+         : "=q"(code), "=a"(*old)
          : "q"(new),
-           "S"(old),
+           "1"(*old),
            "D"(ptr)
-         : "ax", "memory");
+         : "memory");
  return code;
 }
 
@@ -556,15 +553,13 @@ static __inline__ BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
  __asm__ __volatile__ (
-         "movl    (%2),%%eax\n\t"
-         "lock;   cmpxchgl %1,(%3)\n\t"
+         "lock;   cmpxchgl %2,(%4)\n\t"
          "setnz   %b0\n\t"
-         "movl    %%eax,(%2)"
-         : "=q"(code)
+         : "=q"(code), "=a"(*old)
          : "q"(new),
-           "S"(old),
+           "1"(*old),
            "D"(ptr)
-         : "eax", "memory");
+         : "memory");
  return code;
 }
 
@@ -574,15 +569,13 @@ static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
  __asm__ __volatile__ (
-         "movq    (%2),%%rax\n\t"
-         "lock;   cmpxchgq %1,(%3)\n\t"
+         "lock;   cmpxchgq %2,(%4)\n\t"
          "setnz   %b0\n\t"
-         "movq    %%rax,(%2)"
-         : "=q"(code)
+         : "=q"(code), "=a"(*old)
          : "q"(new),
-           "S"(old),
+           "1"(*old),
            "D"(ptr)
-         : "rax", "memory");
+         : "memory");
  return code;
 }
 
