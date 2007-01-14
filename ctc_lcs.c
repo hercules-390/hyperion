@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.60  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -157,7 +160,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             pLCSBLK->pDevices->bMode        = LCSDEV_MODE_IP;
             pLCSBLK->pDevices->bPort        = 0;
             pLCSBLK->pDevices->bType        = 0;
-            pLCSBLK->pDevices->lIPAddress   = addr.s_addr;
+            pLCSBLK->pDevices->lIPAddress   = addr.s_addr; // (network byte order)
             pLCSBLK->pDevices->pszIPAddress = pLCSBLK->pszIPAddress;
             pLCSBLK->pDevices->pNext        = NULL;
 
@@ -1286,10 +1289,10 @@ static void  LCS_QueryIPAssists( PLCSDEV pLCSDEV, PLCSHDR pHeader )
     // the 'hwOffset' field, is an exact copy of the LCSHDR
     // that was passed to us...
 
-    STORE_HW( pReply->hwNumIPPairs,         0x0000 );
-    STORE_HW( pReply->hwIPAssistsSupported, pPort->sIPAssistsSupported );
-    STORE_HW( pReply->hwIPAssistsEnabled,   pPort->sIPAssistsEnabled   );
-    STORE_HW( pReply->hwIPVersion,          0x0004 );
+    STORE_HW( pReply->hwNumIPPairs,          0x0000 );
+              pReply->hwIPAssistsSupported = pPort->sIPAssistsSupported;
+              pReply->hwIPAssistsEnabled   = pPort->sIPAssistsEnabled;
+    STORE_HW( pReply->hwIPVersion,           0x0004 );
 }
 
 //
@@ -1389,7 +1392,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
     PARPFRM     pARPFrame  = NULL;
     int         iLength;
     U16         sFrameType;
-    U32         lIPAddress;
+    U32         lIPAddress;             // (network byte order)
     BYTE*       pMAC;
     BYTE        szBuff[2048];
     char        bReported = 0;
@@ -1466,13 +1469,13 @@ static void*  LCS_PortThread( PLCSPORT pPort )
                 if( sFrameType == FRAME_TYPE_IP )
                 {
                     pIPFrame   = (PIP4FRM)pEthFrame->bData;
-                    lIPAddress = pIPFrame->lDstIP;
+                    lIPAddress = pIPFrame->lDstIP;  // (network byte order)
 
                     if( pPort->pLCSBLK->fDebug && !bReported )
                     {
                         logmsg( _("HHCLC010I Port %2.2X: "
                                   "IPV4 frame for %8.8X\n"),
-                                pPort->bPort, lIPAddress );
+                                pPort->bPort, ntohl(lIPAddress) );
 
                         bReported = 1;
                     }
@@ -1493,13 +1496,13 @@ static void*  LCS_PortThread( PLCSPORT pPort )
                 else if( sFrameType == FRAME_TYPE_ARP )
                 {
                     pARPFrame  = (PARPFRM)pEthFrame->bData;
-                    lIPAddress = pARPFrame->lTargIPAddr;
+                    lIPAddress = pARPFrame->lTargIPAddr; // (network byte order)
 
                     if( pPort->pLCSBLK->fDebug && !bReported )
                     {
                         logmsg( _("HHCLC011I Port %2.2X: "
                                   "ARP frame for %8.8X\n"),
-                                pPort->bPort, lIPAddress );
+                                pPort->bPort, ntohl(lIPAddress) );
 
                         bReported = 1;
                     }
@@ -1620,7 +1623,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
             logmsg( _("HHCLC016I Port %2.2X: "
                       "Enqueing frame to device %4.4X (%8.8X)\n"),
                     pPort->bPort, pDevMatch->sAddr,
-                    pDevMatch->lIPAddress );
+                    ntohl(pDevMatch->lIPAddress) );
 
         // Match was found.
         // Enqueue frame on buffer, if buffer is full, keep trying
@@ -2001,7 +2004,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     BYTE        bMode;
     U16         sDevNum;
     BYTE        bType;
-    U32         lIPAddr      = 0;
+    U32         lIPAddr      = 0;       // (network byte order)
     char*       pszIPAddress = NULL;
     char*       pszNetAddr   = NULL;
     char*       pszNetMask   = NULL;
@@ -2204,7 +2207,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                             return -1;
                         }
 
-                        lIPAddr = addr.s_addr;
+                        lIPAddr = addr.s_addr;  // (network byte order)
                     }
                 }
             }
@@ -2265,7 +2268,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             pDev->bMode        = bMode;
             pDev->bPort        = sPort;
             pDev->bType        = bType;
-            pDev->lIPAddress   = lIPAddr;
+            pDev->lIPAddress   = lIPAddr;   // (network byte order)
             pDev->pszIPAddress = pszIPAddress;
             pDev->pNext        = NULL;
 
