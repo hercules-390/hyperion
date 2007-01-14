@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.44  2007/01/14 19:49:13  gsmith
+// Fix typos
+//
 // Revision 1.43  2007/01/14 19:42:38  gsmith
 // Fix S370 only build - nerak60510
 //
@@ -375,11 +378,6 @@
   #define _900_FEATURE_MESSAGE_SECURITY_ASSIST
  #endif
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
-
-/* Suggested by nerak60510 */
-#if !defined(OPTION_390_MODE) && !defined(OPTION_900_MODE)
- #undef OPTION_SET_STSI_INFO
-#endif
 
 
 #endif /*!defined(FEATALL_CHECKALL)*/

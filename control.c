@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.242  2007/01/13 07:13:41  bernard
+// backout ccmask
+//
 // Revision 1.241  2007/01/12 15:21:31  bernard
 // ccmaks phase 1
 //
@@ -6175,8 +6178,6 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 
-#ifdef FEATURE_STORE_SYSTEM_INFORMATION
-
 #if !defined(_STSI_CAPABILITY)
 #define _STSI_CAPABILITY
 static inline U32 stsi_capability (REGS *regs)
@@ -6250,6 +6251,7 @@ void set_model(char *name)
 #endif /* defined(OPTION_STSI_INFO) */
 #endif /* !defined(SET_STSI_STATIC) */
 
+#ifdef FEATURE_STORE_SYSTEM_INFORMATION
 /*-------------------------------------------------------------------*/
 /* B27D STSI  - Store System Information                         [S] */
 /*-------------------------------------------------------------------*/
