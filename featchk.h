@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.42  2007/01/04 14:21:27  rbowler
+// Decimal floating point does not require binary floating point
+//
 // Revision 1.41  2006/12/08 09:43:21  jj
 // Add CVS message log
 //
@@ -369,6 +372,11 @@
   #define _900_FEATURE_MESSAGE_SECURITY_ASSIST
  #endif
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
+
+/* Suggestest by nearak60510 */
+#if !defined(OPTION_390_MODE) && !defined(OPTION_900_MODE)
+ #undef OPTION_SET_STSI_INFO
+#endif
 
 
 #endif /*!defined(FEATALL_CHECKALL)*/

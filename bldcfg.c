@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.70  2007/01/14 18:36:53  gsmith
+// Fix S370 only build - nerak60510
+//
 // Revision 1.69  2007/01/11 19:54:33  fish
 // Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
 //
@@ -2029,7 +2032,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     if(lparname)
         set_lparname(lparname);
 #endif /*defined(OPTION_LPARNAME)*/
-#ifdef FEATURE_STORE_SYSTEM_INFORMATION
+
 #if defined(OPTION_SET_STSI_INFO)
     if(stsi_model)
        set_model(stsi_model);
@@ -2038,7 +2041,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     if(stsi_manufacturer)
        set_manufacturer(stsi_manufacturer);
 #endif /* defined(OPTION_SET_STSI_INFO) */
-#endif /* ifdef FEATURE_STORE_SYSTEM_INFORMATION */
+
 #if defined( OPTION_SCSI_TAPE )
         /* Parse automatic SCSI tape mounts operand */
         if ( sauto_scsi_mount )
