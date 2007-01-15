@@ -27,6 +27,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.51  2007/01/15 20:19:39  ivan
+// Minor change to i686 cmpxchg8 asm assist (give more info to the compiler)
+//
 // Revision 1.50  2007/01/14 19:04:41  ivan
 // Fix a possible register clobber in cmpxchgX assists
 //
@@ -327,14 +330,15 @@
 static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
+ BYTE *ptr_data=ptr;
  __asm__ __volatile__ (
-         "lock;   cmpxchgb %b2,(%4)\n\t"
+         "lock;   cmpxchgb %b2,%4\n\t"
          "setnz   %b0\n\t"
          : "=q"(code), "=a"(*old)
          : "q"(new),
            "1"(*old),
-           "D"(ptr)
-         : "memory");
+           "m"(*ptr_data)
+         : "cc");
  return code;
 }
 
@@ -343,14 +347,15 @@ static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
 static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
+ U32 *ptr_data=ptr;
  __asm__ __volatile__ (
-         "lock;   cmpxchgl %2,(%4)\n\t"
+         "lock;   cmpxchgl %2,%4\n\t"
          "setnz   %b0\n\t"
          : "=q"(code), "=a"(*old)
          : "q"(new),
            "1"(*old),
-           "D"(ptr)
-         : "memory");
+           "m"(*ptr_data)
+         : "cc");
  return code;
 }
 
@@ -387,22 +392,23 @@ static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
  U32  *old32;
+ U64 *ptr_data=ptr;
  U32 high = new >> 32;
  U32 low = new & 0xffffffff;
  old32=(U32 *)old;
  __asm__ __volatile__ (
          "pushl   %%ebx\n\t"
          "movl    %3,%%ebx\n\t"
-         "lock;   cmpxchg8b (%5)\n\t"
+         "lock;   cmpxchg8b %5\n\t"
          "popl    %%ebx\n\t"
          "setnz   %b0"
          : "=r"(code), "=a"(old32[0]), "=d"(old32[1])
          : "r"(low),
            "c"(high),
-           "D"(ptr),
+           "m"(*ptr_data),
            "1"(old32[0]),
            "2"(old32[1])
-         : "memory");
+         : "cc");
  return code;
 }
 
@@ -538,14 +544,15 @@ static __inline__ void store_dw_i686(void *ptr, U64 value)
 static __inline__ BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
+ BYTE *ptr_data=ptr;
  __asm__ __volatile__ (
-         "lock;   cmpxchgb %b2,(%4)\n\t"
+         "lock;   cmpxchgb %b2,%4\n\t"
          "setnz   %b0\n\t"
          : "=q"(code), "=a"(*old)
          : "q"(new),
            "1"(*old),
-           "D"(ptr)
-         : "memory");
+           "m"(*ptr_data)
+         : "cc");
  return code;
 }
 
@@ -554,14 +561,15 @@ static __inline__ BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
 static __inline__ BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
+ U32 *ptr_data=ptr;
  __asm__ __volatile__ (
-         "lock;   cmpxchgl %2,(%4)\n\t"
+         "lock;   cmpxchgl %2,%4\n\t"
          "setnz   %b0\n\t"
          : "=q"(code), "=a"(*old)
          : "q"(new),
            "1"(*old),
-           "D"(ptr)
-         : "memory");
+           "m"(*ptr_data)
+         : "cc");
  return code;
 }
 
@@ -570,14 +578,15 @@ static __inline__ BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
 static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
+ U64 *ptr_data=ptr;
  __asm__ __volatile__ (
-         "lock;   cmpxchgq %2,(%4)\n\t"
+         "lock;   cmpxchgq %2,%4\n\t"
          "setnz   %b0\n\t"
          : "=q"(code), "=a"(*old)
          : "q"(new),
            "1"(*old),
-           "D"(ptr)
-         : "memory");
+           "m"(*ptr_data)
+         : "cc");
  return code;
 }
 
