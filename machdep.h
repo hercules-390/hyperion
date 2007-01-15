@@ -27,6 +27,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.50  2007/01/14 19:04:41  ivan
+// Fix a possible register clobber in cmpxchgX assists
+//
 // Revision 1.49  2006/12/31 22:49:55  gsmith
 // 2006 Dec 31 disable multi-byte-assist for cygwin
 //
@@ -383,24 +386,23 @@ static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
 static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
  BYTE code;
+ U32  *old32;
  U32 high = new >> 32;
  U32 low = new & 0xffffffff;
+ old32=(U32 *)old;
  __asm__ __volatile__ (
          "pushl   %%ebx\n\t"
-         "movl    %%eax,%%ebx\n\t"
-         "movl    (%3),%%eax\n\t"
-         "movl    4(%3),%%edx\n\t"
-         "lock;   cmpxchg8b (%4)\n\t"
+         "movl    %3,%%ebx\n\t"
+         "lock;   cmpxchg8b (%5)\n\t"
          "popl    %%ebx\n\t"
-         "movl    %%eax,(%3)\n\t"
-         "movl    %%edx,4(%3)\n\t"
          "setnz   %b0"
-         : "=a"(code)
-         : "a"(low),
+         : "=r"(code), "=a"(old32[0]), "=d"(old32[1])
+         : "r"(low),
            "c"(high),
-           "S"(old),
-           "D"(ptr)
-         : "edx", "memory");
+           "D"(ptr),
+           "1"(old32[0]),
+           "2"(old32[1])
+         : "memory");
  return code;
 }
 
