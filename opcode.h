@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.195  2007/01/09 05:11:46  gsmith
+// Bypass mainlock if only 1 cpu started
+//
 // Revision 1.194  2007/01/06 23:28:40  rbowler
 // Add RRF_MM instruction format
 //
@@ -501,58 +504,6 @@ do { \
   } \
 } while (0)
 
-/* PER3 Breaking Event Address Recording (BEAR) */
-
-#undef UPDATE_BEAR
-#undef SET_BEAR_REG
-
-#if defined(FEATURE_PER3)
- #define UPDATE_BEAR(_regs, _n) (_regs)->bear_ip = (_regs)->ip + (_n)
- #define SET_BEAR_REG(_regs, _ip) \
-  do { \
-    if ((_ip)) { \
-        (_regs)->bear = (_regs)->AIV \
-                      + (intptr_t)((_ip) - (_regs)->aip); \
-        (_regs)->bear &= ADDRESS_MAXWRAP((_regs)); \
-        regs->bear_ip = NULL; \
-    } \
-  } while (0)
-#else
- #define UPDATE_BEAR(_regs, _n)   while (0)
- #define SET_BEAR_REG(_regs, _ip) while (0)
-#endif
-
-/* Set addressing mode (BASSM, BSM) */
-
-#undef SET_ADDRESSING_MODE
-#if defined(FEATURE_ESAME)
- #define SET_ADDRESSING_MODE(_regs, _addr) \
- do { \
-  if ((_addr) & 1) { \
-    (_regs)->psw.amode64 = regs->psw.amode = 1; \
-    (_regs)->psw.AMASK = AMASK64; \
-    (_addr) ^= 1; \
-  } else if ((_addr) & 0x80000000) { \
-    (_regs)->psw.amode64 = 0; \
-    (_regs)->psw.amode = 1; \
-    (_regs)->psw.AMASK = AMASK31; \
-  } else { \
-    (_regs)->psw.amode64 = (_regs)->psw.amode = 0; \
-    (_regs)->psw.AMASK = AMASK24; \
-  } \
- } while (0)
-#else /* !defined(FEATURE_ESAME) */
-  #define SET_ADDRESSING_MODE(_regs, _addr) \
- do { \
-  if ((_addr) & 0x80000000) { \
-    (_regs)->psw.amode = 1; \
-    (_regs)->psw.AMASK = AMASK31; \
-  } else { \
-    (_regs)->psw.amode = 0; \
-    (_regs)->psw.AMASK = AMASK24; \
-  } \
- } while (0)
-#endif
 
 
 #define RETURN_INTCHECK(_regs) \
@@ -679,6 +630,58 @@ do { \
 
 #endif /*!defined(_OPCODE_H)*/
 
+/* PER3 Breaking Event Address Recording (BEAR) */
+
+#undef UPDATE_BEAR
+#undef SET_BEAR_REG
+
+#if defined(FEATURE_PER3)
+ #define UPDATE_BEAR(_regs, _n) (_regs)->bear_ip = (_regs)->ip + (_n)
+ #define SET_BEAR_REG(_regs, _ip) \
+  do { \
+    if ((_ip)) { \
+        (_regs)->bear = (_regs)->AIV \
+                      + (intptr_t)((_ip) - (_regs)->aip); \
+        (_regs)->bear &= ADDRESS_MAXWRAP((_regs)); \
+        regs->bear_ip = NULL; \
+    } \
+  } while (0)
+#else
+ #define UPDATE_BEAR(_regs, _n)   while (0)
+ #define SET_BEAR_REG(_regs, _ip) while (0)
+#endif
+
+/* Set addressing mode (BASSM, BSM) */
+
+#undef SET_ADDRESSING_MODE
+#if defined(FEATURE_ESAME)
+ #define SET_ADDRESSING_MODE(_regs, _addr) \
+ do { \
+  if ((_addr) & 1) { \
+    (_regs)->psw.amode64 = regs->psw.amode = 1; \
+    (_regs)->psw.AMASK = AMASK64; \
+    (_addr) ^= 1; \
+  } else if ((_addr) & 0x80000000) { \
+    (_regs)->psw.amode64 = 0; \
+    (_regs)->psw.amode = 1; \
+    (_regs)->psw.AMASK = AMASK31; \
+  } else { \
+    (_regs)->psw.amode64 = (_regs)->psw.amode = 0; \
+    (_regs)->psw.AMASK = AMASK24; \
+  } \
+ } while (0)
+#else /* !defined(FEATURE_ESAME) */
+  #define SET_ADDRESSING_MODE(_regs, _addr) \
+ do { \
+  if ((_addr) & 0x80000000) { \
+    (_regs)->psw.amode = 1; \
+    (_regs)->psw.AMASK = AMASK31; \
+  } else { \
+    (_regs)->psw.amode = 0; \
+    (_regs)->psw.AMASK = AMASK24; \
+  } \
+ } while (0)
+#endif
 
 #undef HFPREG_CHECK
 #undef HFPREG2_CHECK
