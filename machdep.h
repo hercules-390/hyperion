@@ -27,6 +27,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.52  2007/01/15 22:31:20  ivan
+// Indicate affected memory range to compiler in cmpxchgX assists to aid optimizer
+// Broaden ("D" to "m") constraint range of cmpxchg instruction classes memory target
+// Indicate to compiler that cc is clobbered by cmpxchg1b/4/8b/l/q (preventive)
+//
 // Revision 1.51  2007/01/15 20:19:39  ivan
 // Minor change to i686 cmpxchg8 asm assist (give more info to the compiler)
 //
@@ -402,7 +407,7 @@ static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
          "lock;   cmpxchg8b %5\n\t"
          "popl    %%ebx\n\t"
          "setnz   %b0"
-         : "=r"(code), "=a"(old32[0]), "=d"(old32[1])
+         : "=q"(code), "=a"(old32[0]), "=d"(old32[1])
          : "r"(low),
            "c"(high),
            "m"(*ptr_data),
