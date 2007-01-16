@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.48  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -237,7 +240,7 @@ RADR    fsta = 0;
     STORE_DW(psa->mckint, mcic);
 
     /* Trace the machine check interrupt */
-    if (sysblk.insttrace || sysblk.inststep)
+    if (CPU_STEPPING_OR_TRACING(regs, 0))
         logmsg (_("HHCCP019I Machine Check code=%16.16" I64_FMT "u\n"),
                   (long long)mcic);
 

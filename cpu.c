@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.177  2007/01/09 23:18:21  gsmith
+// Tweaks to cpuloop
+//
 // Revision 1.176  2007/01/04 23:12:03  gsmith
 // remove thunk calls for program_interrupt
 //
@@ -294,7 +297,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
     regs->psw.zeroilc = 0;
 
     /* Check for wait state PSW */
-    if (WAITSTATE(&regs->psw) && (sysblk.insttrace || sysblk.inststep))
+    if (WAITSTATE(&regs->psw) && CPU_STEPPING_OR_TRACING_ALL)
     {
         logmsg (_("HHCCP043I Wait state PSW loaded: "));
         display_psw (regs);
@@ -563,7 +566,7 @@ static char *pgmintname[] = {
     HDC2(debug_program_interrupt, regs, pcode);
 
     /* Trace program checks other then PER event */
-    if(code && (sysblk.insttrace || sysblk.inststep
+    if(code && (CPU_STEPPING_OR_TRACING(realregs, ilc)
         || sysblk.pgminttr & ((U64)1 << ((code - 1) & 0x3F))))
     {
      BYTE *ip;
@@ -699,7 +702,7 @@ static char *pgmintname[] = {
 
     if( OPEN_IC_PER(realregs) )
     {
-        if( realregs->tracing )
+        if( CPU_STEPPING_OR_TRACING(realregs, ilc) )
             logmsg(_("HHCCP015I CPU%4.4X PER event: code=%4.4X perc=%2.2X "
                      "addr=" F_VADR "\n"),
               regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
@@ -991,7 +994,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
         STORE_FW(psa->ioid, ioid);
 
     /* Trace the I/O interrupt */
-    if (sysblk.insttrace || sysblk.inststep)
+    if (CPU_STEPPING_OR_TRACING(regs, 0))
         logmsg (_("HHCCP044I I/O interrupt code=%4.4X "
                 "CSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
                 regs->psw.intcode,
@@ -1012,7 +1015,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 #endif /*defined(FEATURE_ESAME)*/
 
     /* Trace the I/O interrupt */
-    if (sysblk.insttrace || sysblk.inststep)
+    if (CPU_STEPPING_OR_TRACING(regs, 0))
 #if !defined(FEATURE_ESAME) && !defined(_FEATURE_IO_ASSIST)
         logmsg (_("HHCCP045I I/O interrupt code=%8.8X parm=%8.8X\n"),
                   ioid, ioparm);
@@ -1082,7 +1085,7 @@ RADR    fsta;                           /* Failing storage address   */
     STORE_DW(psa->mckint, mcic);
 
     /* Trace the machine check interrupt */
-    if (sysblk.insttrace || sysblk.inststep)
+    if (CPU_STEPPING_OR_TRACING(regs, 0))
         logmsg (_("HHCCP022I Machine Check code=%16.16" I64_FMT "u\n"),
                   (long long)mcic);
 
@@ -1556,32 +1559,12 @@ int     shouldtrace = 0;                /* 1=Trace instruction       */
 int     shouldstep = 0;                 /* 1=Wait for start command  */
 
     /* Test for trace */
-    if (sysblk.insttrace)
-    {
-        if (sysblk.traceaddr[0] == 0 && sysblk.traceaddr[1] == 0)
-            shouldtrace = 1;
-        else if (sysblk.traceaddr[0] <= sysblk.traceaddr[1]
-              && sysblk.traceaddr[0] <= PSW_IA(regs,0)
-              && sysblk.traceaddr[1] >= PSW_IA(regs,0))
-            shouldtrace = 1;
-        else if (sysblk.traceaddr[0] >= PSW_IA(regs,0)
-              && sysblk.traceaddr[1] <= PSW_IA(regs,0))
-            shouldtrace = 1;
-    }
+    if (CPU_TRACING(regs, 0))
+        shouldtrace = 1;
 
     /* Test for step */
-    if (sysblk.inststep)
-    {
-        if (sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0)
-            shouldstep = 1;
-        else if (sysblk.stepaddr[0] <= sysblk.stepaddr[1]
-              && sysblk.stepaddr[0] <= PSW_IA(regs,0)
-              && sysblk.stepaddr[1] >= PSW_IA(regs,0))
-            shouldstep = 1;
-        else if (sysblk.stepaddr[0] >= PSW_IA(regs,0)
-              && sysblk.stepaddr[1] <= PSW_IA(regs,0))
-            shouldstep = 1;
-    }
+    if (CPU_STEPPING(regs, 0))
+        shouldstep = 1;
 
     /* Display the instruction */
     if (shouldtrace || shouldstep)

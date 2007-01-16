@@ -25,6 +25,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.68  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -265,13 +268,9 @@ U16     cpuad;                          /* Originating CPU address   */
 
     /* External interrupt if TOD clock exceeds clock comparator */
     if ( tod_clock(regs) > regs->clkc
-#if 0 //FIXME: this causes a loop
-        && sysblk.insttrace == 0
-        && sysblk.inststep == 0
-#endif
         && OPEN_IC_CLKC(regs) )
     {
-        if (sysblk.insttrace || sysblk.inststep)
+        if (CPU_STEPPING_OR_TRACING(regs, 0))
         {
             logmsg (_("HHCCP024I External interrupt: Clock comparator\n"));
         }
@@ -282,7 +281,7 @@ U16     cpuad;                          /* Originating CPU address   */
     if ( CPU_TIMER(regs) < 0
         && OPEN_IC_PTIMER(regs) )
     {
-        if (sysblk.insttrace || sysblk.inststep)
+        if (CPU_STEPPING_OR_TRACING(regs, 0))
         {
             logmsg (_("HHCCP025I External interrupt: CPU timer=%16.16" I64_FMT "X\n"),
                     (long long)CPU_TIMER(regs) << 8);
@@ -298,7 +297,7 @@ U16     cpuad;                          /* Originating CPU address   */
 #endif /*defined(_FEATURE_SIE)*/
         )
     {
-        if (sysblk.insttrace || sysblk.inststep)
+        if (CPU_STEPPING_OR_TRACING(regs, 0))
         {
             logmsg (_("HHCCP026I External interrupt: Interval timer\n"));
         }

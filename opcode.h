@@ -7,6 +7,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.196  2007/01/15 21:41:36  ivan
+// Move SET_ADDRESSING_MODE beyond auto inclusion barrier in opcode.h P/O Greg
+// Move BEAR related macros also
+//
 // Revision 1.195  2007/01/09 05:11:46  gsmith
 // Bypass mainlock if only 1 cpu started
 //
@@ -504,6 +508,52 @@ do { \
   } \
 } while (0)
 
+
+/* CPU Stepping or Tracing */
+
+#define CPU_STEPPING(_regs, _ilc) \
+  ( \
+      sysblk.inststep \
+   && ( \
+        (sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0) \
+     || (sysblk.stepaddr[0] <= sysblk.stepaddr[1] \
+         && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[0] \
+         && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[1] \
+        ) \
+     || (   PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[1] \
+         && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[0] \
+        ) \
+      ) \
+  )
+
+#define CPU_TRACING(_regs, _ilc) \
+  ( \
+      sysblk.insttrace \
+   && ( \
+        (sysblk.traceaddr[0] == 0 && sysblk.traceaddr[1] == 0) \
+     || (sysblk.traceaddr[0] <= sysblk.traceaddr[1] \
+         && PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[0] \
+         && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[1] \
+        ) \
+     || (   PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[1] \
+         && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[0] \
+        ) \
+      ) \
+  )
+
+#define CPU_STEPPING_OR_TRACING(_regs, _ilc) \
+  ( unlikely((_regs)->tracing) && \
+    (CPU_STEPPING((_regs), (_ilc)) || CPU_TRACING((_regs), (_ilc))) \
+  )
+
+#define CPU_TRACING_ALL \
+  (sysblk.insttrace && sysblk.traceaddr[0] == 0 && sysblk.traceaddr[1] == 0)
+
+#define CPU_STEPPING_ALL \
+  (sysblk.inststep && sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0)
+
+#define CPU_STEPPING_OR_TRACING_ALL \
+  ( CPU_TRACING_ALL || CPU_STEPPING_ALL )
 
 
 #define RETURN_INTCHECK(_regs) \

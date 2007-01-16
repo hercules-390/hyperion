@@ -23,6 +23,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.135  2007/01/09 03:29:02  ivan
+// Temporarily disable dev->crwpending test in channel.c[device_attention] to
+// enable dynamic I/O reconfig in S/370 mode. Interim solution ONLY !
+//
 // Revision 1.134  2006/12/08 09:43:18  jj
 // Add CVS message log
 //
@@ -3052,13 +3056,13 @@ resume_suspend:
         {
             /* Trace the CCW if not already done */
             if (!(dev->ccwtrace || dev->ccwstep || tracethis)
-              && (sysblk.insttrace || sysblk.inststep || sysblk.pgminttr
+              && (CPU_STEPPING_OR_TRACING_ALL || sysblk.pgminttr
                 || dev->ccwtrace || dev->ccwstep) )
                 display_ccw (dev, ccw, addr);
 
             /* Activate tracing for this CCW chain only
                if any trace is already active */
-            if(sysblk.insttrace || sysblk.inststep || sysblk.pgminttr
+            if(CPU_STEPPING_OR_TRACING_ALL || sysblk.pgminttr
               || dev->ccwtrace || dev->ccwstep)
             tracethis = 1;
         }
