@@ -27,6 +27,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.53  2007/01/16 00:46:42  gsmith
+// Use =q for cc on ia32 cmpxchg8b and -DPIC
+//
 // Revision 1.52  2007/01/15 22:31:20  ivan
 // Indicate affected memory range to compiler in cmpxchgX assists to aid optimizer
 // Broaden ("D" to "m") constraint range of cmpxchg instruction classes memory target
@@ -532,7 +535,7 @@ static __inline__ void store_dw_i686(void *ptr, U64 value)
  while ( cmpxchg8 (&orig, CSWAP64(value), (U64 *)ptr) );
 }
 
-#if defined(OPTION_MULTI_BYTE_ASSIST) && !defined(__CYGWIN__)
+#if defined(OPTION_MULTI_BYTE_ASSIST) && defined(__linux__)
 #define MULTI_BYTE_ASSIST
 #define MULTI_BYTE_ASSIST_IA32
 #endif
