@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.210  2007/01/14 23:14:12  rbowler
+// Fix signed/unsigned mismatch in 370-only build
+//
 // Revision 1.209  2007/01/11 19:54:33  fish
 // Addt'l keep-alive mods: create associated supporting config-file
 // stmt and panel command where individual customer-preferred values
@@ -5469,11 +5472,14 @@ CMDHELP ( "traceopt",  "Format: \"traceopt [regsfirst | noregs | traditional]\".
                        "the command without any argument simply displays the current mode.\n"
                        )
 
-CMDHELP ( "conkpalv",  "Format: \"conkpalv (idle,intv,cnt)\" where 'idle', 'intv' and 'cnt' are the\n"
-                       "new 3270 console TCP connection keep-alive settings values. The format must be\n"
-                       "exactly as shown, with each value separated from the other with a single comma,\n"
-                       "no intervening spaces between them, surrounded by parenthesis. Please refer to\n"
-                       "Hercules documentation for information regarding the specifics of each value.\n"
+CMDHELP ( "conkpalv",  "Format: \"conkpalv (idle,intv,count)\" where 'idle', 'intv' and 'count' are the\n"
+                       "new values for the TCP keep-alive settings for console connections:\n"
+                       "- send probe when connection goes idle for 'idle' seconds\n"
+                       "- wait maximum of 'intv' seconds for a response to probe\n"
+                       "- disconnect after 'count' consecutive failed probes\n"
+                       "The format must be exactly as shown, with each value separated from the next by\n"
+                       "a single comma, no intervening spaces between them, surrounded by parenthesis.\n"
+                       "The command \"conkpalv\" without any operand displays the current values.\n"
                        )
 
 #if defined(FISH_HANG)
