@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.45  2007/01/13 07:16:15  bernard
+// backout ccmask
+//
 // Revision 1.44  2007/01/12 15:22:05  bernard
 // ccmask phase 1
 //
@@ -2585,7 +2588,65 @@ BYTE            dxc;                    /* Data exception code       */
 
 UNDEF_INST(shift_coefficient_left_dfp_ext)
 UNDEF_INST(shift_coefficient_left_dfp_long)
-UNDEF_INST(shift_coefficient_right_dfp_ext)
+/*-------------------------------------------------------------------*/
+/* ED49 SRXT  - Shift Coefficient Right DFP Extended           [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(shift_coefficient_right_dfp_ext)
+{
+int             r1, r3;                 /* Values of R fields        */
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+decimal128      x1, x3;                 /* Extended DFP values       */
+decNumber       d1, d3;                 /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+int             n;                      /* Number of bits to shift   */
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR2_CHECK(r1, r3, regs);
+
+    /* Isolate rightmost 6 bits of second operand address */
+    n = effective_addr2 & 0x3F;
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Load DFP extended number from FP register r3 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r3, &x3, regs);
+
+    /* Convert to internal decimal number format */
+    decimal128ToNumber(&x3, &d3);
+
+    /* For NaN and Inf use coefficient continuation digits only */
+    if (decNumberIsNaN(&d3) || decNumberIsInfinite(&d3))
+    {
+        dfp128_clear_cf_and_bxcf(&x3);
+        decimal128ToNumber(&x3, &d1);
+    }
+    else
+    {
+        decNumberCopy(&d1, &d3);
+    }
+
+    /* Shift coefficient right n digit positions */
+
+    /* Convert result to DFP extended format */
+    decimal128FromNumber(&x1, &d1, &set);
+
+    /* Restore Nan or Inf indicators in the result */
+    if (decNumberIsQNaN(&d3))
+        dfp128_set_cf_and_bxcf(&x1, DFP_CFS_QNAN);
+    else if (decNumberIsSNaN(&d3))
+        dfp128_set_cf_and_bxcf(&x1, DFP_CFS_SNAN);
+    else if (decNumberIsInfinite(&d3))
+        dfp128_set_cf_and_bxcf(&x1, DFP_CFS_INF);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+} /* end DEF_INST(shift_coefficient_right_dfp_ext) */
+
+
 UNDEF_INST(shift_coefficient_right_dfp_long)
 /*-------------------------------------------------------------------*/
 /* B3DB SXTR  - Subtract DFP Extended Register                 [RRR] */
