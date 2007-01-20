@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.46  2007/01/19 15:46:33  rbowler
+// Decimal Floating Point: SRXT instruction (part 1)
+//
 // Revision 1.45  2007/01/13 07:16:15  bernard
 // backout ccmask
 //
@@ -512,6 +515,71 @@ BYTE            dxc;                    /* Data exception code or 0  */
     /* Return data exception code or zero */
     return dxc;
 } /* end function fpc_signal_check */
+
+#define MAXDECSTRLEN DECIMAL128_String  /* Maximum string length     */
+/*-------------------------------------------------------------------*/
+/* Shift decimal coefficient left or right                           */
+/*                                                                   */
+/* This subroutine is called by the SLDT, SLXT, SRDT and SRXT        */
+/* instructions. It shifts the coefficient digits of a decimal       */
+/* number left or right. For a left shift, zeroes are appended       */
+/* to the coefficient. For a right shift, digits are dropped         */
+/* from the end of the coefficient. No rounding is performed.        */
+/* The sign and exponent of the number remain unchanged.             */
+/*                                                                   */
+/* Input:                                                            */
+/*      pset    Pointer to decimal number context structure          */
+/*      dn      Pointer to decimal number structure to be shifted    */
+/*      count   Number of digits to shift (+ve=left, -ve=right)      */
+/* Output:                                                           */
+/*      The decimal number structure is updated.                     */           
+/*-------------------------------------------------------------------*/
+static inline void
+dfp_shift_coeff(decContext *pset, decNumber *dn, int count)
+{
+int             len;                    /* String length             */
+int             maxlen;                 /* Maximum coefficient length*/
+int32_t         exp;                    /* Original exponent         */
+uint8_t         bits;                   /* Original flag bits        */
+BYTE            zd[MAXDECSTRLEN+64];    /* Zoned decimal work area   */
+
+    /* Save original exponent and sign/Inf/NaN bits */
+    exp = dn->exponent;
+    bits = dn->bits;
+
+    /* Clear exponent and sign/Inf/NaN bits */
+    dn->exponent = 0;
+    dn->bits &= ~(DECNEG | DECSPECIAL);
+
+    /* Convert coefficient digits to zoned decimal */
+    decNumberToString(dn, zd);
+    len = strlen(zd);
+
+    /* Shift zoned digits left or right */
+    if (count > 0)
+        memset(zd + len, '0', count);
+    len += count;
+    maxlen = (bits & DECSPECIAL) ? pset->digits - 1 : pset->digits;
+    if (len > maxlen)
+    {
+        memmove(zd, zd + len - maxlen, maxlen);
+        len = maxlen;
+    }
+    else if (len < 1)
+    {
+        zd[0] = '0';
+        len = 1;
+    }
+    zd[len] = '\0';
+
+    /* Convert shifted coefficient to decimal number structure */
+    decNumberFromString(dn, zd, pset);
+
+    /* Restore original exponent and sign/Inf/NaN bits */
+    dn->exponent = exp;
+    dn->bits |= bits & (DECNEG | DECSPECIAL);
+
+} /* end function dfp_shift_coeff */
 
 /* Bit numbers for Test Data Class instructions */
 #define DFP_TDC_ZERO            52
@@ -2629,6 +2697,7 @@ int             n;                      /* Number of bits to shift   */
     }
 
     /* Shift coefficient right n digit positions */
+    dfp_shift_coeff(&set, &d1, -n);
 
     /* Convert result to DFP extended format */
     decimal128FromNumber(&x1, &d1, &set);
