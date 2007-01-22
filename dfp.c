@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.47  2007/01/20 22:22:42  rbowler
+// Decimal Floating Point: SRXT instruction (part 2)
+//
 // Revision 1.46  2007/01/19 15:46:33  rbowler
 // Decimal Floating Point: SRXT instruction (part 1)
 //
@@ -2654,8 +2657,125 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(set_fpc_and_signal) */
 
 
-UNDEF_INST(shift_coefficient_left_dfp_ext)
-UNDEF_INST(shift_coefficient_left_dfp_long)
+/*-------------------------------------------------------------------*/
+/* ED48 SLXT  - Shift Coefficient Left DFP Extended            [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(shift_coefficient_left_dfp_ext)
+{
+int             r1, r3;                 /* Values of R fields        */
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+decimal128      x1, x3;                 /* Extended DFP values       */
+decNumber       d1, d3;                 /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+int             n;                      /* Number of bits to shift   */
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR2_CHECK(r1, r3, regs);
+
+    /* Isolate rightmost 6 bits of second operand address */
+    n = effective_addr2 & 0x3F;
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Load DFP extended number from FP register r3 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r3, &x3, regs);
+
+    /* Convert to internal decimal number format */
+    decimal128ToNumber(&x3, &d3);
+
+    /* For NaN and Inf use coefficient continuation digits only */
+    if (decNumberIsNaN(&d3) || decNumberIsInfinite(&d3))
+    {
+        dfp128_clear_cf_and_bxcf(&x3);
+        decimal128ToNumber(&x3, &d1);
+    }
+    else
+    {
+        decNumberCopy(&d1, &d3);
+    }
+
+    /* Shift coefficient left n digit positions */
+    dfp_shift_coeff(&set, &d1, n);
+
+    /* Convert result to DFP extended format */
+    decimal128FromNumber(&x1, &d1, &set);
+
+    /* Restore Nan or Inf indicators in the result */
+    if (decNumberIsQNaN(&d3))
+        dfp128_set_cf_and_bxcf(&x1, DFP_CFS_QNAN);
+    else if (decNumberIsSNaN(&d3))
+        dfp128_set_cf_and_bxcf(&x1, DFP_CFS_SNAN);
+    else if (decNumberIsInfinite(&d3))
+        dfp128_set_cf_and_bxcf(&x1, DFP_CFS_INF);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+} /* end DEF_INST(shift_coefficient_left_dfp_ext) */
+
+
+/*-------------------------------------------------------------------*/
+/* ED40 SLDT  - Shift Coefficient Left DFP Long                [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(shift_coefficient_left_dfp_long)
+{
+int             r1, r3;                 /* Values of R fields        */
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+decimal64       x1, x3;                 /* Long DFP values           */
+decNumber       d1, d3;                 /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+int             n;                      /* Number of bits to shift   */
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    DFPINST_CHECK(regs);
+
+    /* Isolate rightmost 6 bits of second operand address */
+    n = effective_addr2 & 0x3F;
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Load DFP long number from FP register r3 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r3, &x3, regs);
+
+    /* Convert to internal decimal number format */
+    decimal64ToNumber(&x3, &d3);
+
+    /* For NaN and Inf use coefficient continuation digits only */
+    if (decNumberIsNaN(&d3) || decNumberIsInfinite(&d3))
+    {
+        dfp64_clear_cf_and_bxcf(&x3);
+        decimal64ToNumber(&x3, &d1);
+    }
+    else
+    {
+        decNumberCopy(&d1, &d3);
+    }
+
+    /* Shift coefficient left n digit positions */
+    dfp_shift_coeff(&set, &d1, n);
+
+    /* Convert result to DFP long format */
+    decimal64FromNumber(&x1, &d1, &set);
+
+    /* Restore Nan or Inf indicators in the result */
+    if (decNumberIsQNaN(&d3))
+        dfp64_set_cf_and_bxcf(&x1, DFP_CFS_QNAN);
+    else if (decNumberIsSNaN(&d3))
+        dfp64_set_cf_and_bxcf(&x1, DFP_CFS_SNAN);
+    else if (decNumberIsInfinite(&d3))
+        dfp64_set_cf_and_bxcf(&x1, DFP_CFS_INF);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+} /* end DEF_INST(shift_coefficient_left_dfp_long) */
+
+
 /*-------------------------------------------------------------------*/
 /* ED49 SRXT  - Shift Coefficient Right DFP Extended           [RXF] */
 /*-------------------------------------------------------------------*/
@@ -2716,7 +2836,65 @@ int             n;                      /* Number of bits to shift   */
 } /* end DEF_INST(shift_coefficient_right_dfp_ext) */
 
 
-UNDEF_INST(shift_coefficient_right_dfp_long)
+/*-------------------------------------------------------------------*/
+/* ED41 SRDT  - Shift Coefficient Right DFP Long               [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(shift_coefficient_right_dfp_long)
+{
+int             r1, r3;                 /* Values of R fields        */
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+decimal64       x1, x3;                 /* Long DFP values           */
+decNumber       d1, d3;                 /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+int             n;                      /* Number of bits to shift   */
+
+    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    DFPINST_CHECK(regs);
+
+    /* Isolate rightmost 6 bits of second operand address */
+    n = effective_addr2 & 0x3F;
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Load DFP long number from FP register r3 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r3, &x3, regs);
+
+    /* Convert to internal decimal number format */
+    decimal64ToNumber(&x3, &d3);
+
+    /* For NaN and Inf use coefficient continuation digits only */
+    if (decNumberIsNaN(&d3) || decNumberIsInfinite(&d3))
+    {
+        dfp64_clear_cf_and_bxcf(&x3);
+        decimal64ToNumber(&x3, &d1);
+    }
+    else
+    {
+        decNumberCopy(&d1, &d3);
+    }
+
+    /* Shift coefficient right n digit positions */
+    dfp_shift_coeff(&set, &d1, -n);
+
+    /* Convert result to DFP long format */
+    decimal64FromNumber(&x1, &d1, &set);
+
+    /* Restore Nan or Inf indicators in the result */
+    if (decNumberIsQNaN(&d3))
+        dfp64_set_cf_and_bxcf(&x1, DFP_CFS_QNAN);
+    else if (decNumberIsSNaN(&d3))
+        dfp64_set_cf_and_bxcf(&x1, DFP_CFS_SNAN);
+    else if (decNumberIsInfinite(&d3))
+        dfp64_set_cf_and_bxcf(&x1, DFP_CFS_INF);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+} /* end DEF_INST(shift_coefficient_right_dfp_long) */
+
+
 /*-------------------------------------------------------------------*/
 /* B3DB SXTR  - Subtract DFP Extended Register                 [RRR] */
 /*-------------------------------------------------------------------*/
