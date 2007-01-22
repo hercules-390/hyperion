@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.48  2007/01/22 13:49:10  rbowler
+// Decimal Floating Point: SLXT,SLDT,SRDT instructions
+//
 // Revision 1.47  2007/01/20 22:22:42  rbowler
 // Decimal Floating Point: SRXT instruction (part 2)
 //
@@ -1616,8 +1619,97 @@ BYTE            pwork[9];               /* 17-digit packed work area */
 } /* end DEF_INST(convert_dfp_long_to_sbcd64_reg) */
 
 
-UNDEF_INST(convert_dfp_ext_to_ubcd128_reg)
-UNDEF_INST(convert_dfp_long_to_ubcd64_reg)
+/*-------------------------------------------------------------------*/
+/* B3EA CUXTR - Convert to unsigned BCD (DFP ext to 128-bit)   [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_dfp_ext_to_ubcd128_reg)
+{
+int             i;                      /* Array subscript           */
+int             r1, r2;                 /* Values of R fields        */
+decimal128      x2;                     /* Extended DFP values       */
+decNumber       dwork;                  /* Working decimal number    */
+decContext      set;                    /* Working context           */
+int32_t         scale;                  /* Scaling factor            */
+BYTE            pwork[17];              /* 33-digit packed work area */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r2, regs);
+    ODD_CHECK(r1, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Load DFP extended number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x2, &dwork);
+
+    /* If NaN or Inf then use coefficient only */
+    if (decNumberIsNaN(&dwork) || (decNumberIsInfinite(&dwork)))
+    {
+        dfp128_clear_cf_and_bxcf(&x2);
+        decimal128ToNumber(&x2, &dwork);
+    }
+
+    /* Convert number to signed BCD in work area */
+    decPackedFromNumber(pwork, sizeof(pwork), &scale, &dwork);
+
+    /* Convert signed BCD to unsigned BCD */
+    for (i = sizeof(pwork)-1; i > 0; i--)
+        pwork[i] = (pwork[i] >> 4) | ((pwork[i-1] & 0x0F) << 4);
+
+    /* Load general register pair r1 and r1+1 from
+       rightmost 32 packed decimal digits of work area */
+    FETCH_DW(regs->GR_G(r1), pwork+sizeof(pwork)-16);
+    FETCH_DW(regs->GR_G(r1+1), pwork+sizeof(pwork)-8);
+
+} /* end DEF_INST(convert_dfp_ext_to_ubcd128_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B3E2 CUDTR - Convert to unsigned BCD (DFP long to 64-bit)   [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_dfp_long_to_ubcd64_reg)
+{
+int             i;                      /* Array subscript           */
+int             r1, r2;                 /* Values of R fields        */
+decimal64       x2;                     /* Long DFP values           */
+decNumber       dwork;                  /* Working decimal number    */
+decContext      set;                    /* Working context           */
+int32_t         scale;                  /* Scaling factor            */
+BYTE            pwork[9];               /* 17-digit packed work area */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Load DFP long number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x2, &dwork);
+
+    /* If NaN or Inf then use coefficient only */
+    if (decNumberIsNaN(&dwork) || (decNumberIsInfinite(&dwork)))
+    {
+        dfp64_clear_cf_and_bxcf(&x2);
+        decimal64ToNumber(&x2, &dwork);
+    }
+
+    /* Convert number to signed BCD in work area */
+    decPackedFromNumber(pwork, sizeof(pwork), &scale, &dwork);
+
+    /* Convert signed BCD to unsigned BCD */
+    for (i = sizeof(pwork)-1; i > 0; i--)
+        pwork[i] = (pwork[i] >> 4) | ((pwork[i-1] & 0x0F) << 4);
+
+    /* Load general register r1 from rightmost
+       16 packed decimal digits of work area */
+    FETCH_DW(regs->GR_G(r1), pwork+sizeof(pwork)-8);
+
+} /* end DEF_INST(convert_dfp_long_to_ubcd64_reg) */
+
+
 /*-------------------------------------------------------------------*/
 /* B3D9 DXTR  - Divide DFP Extended Register                   [RRR] */
 /*-------------------------------------------------------------------*/
