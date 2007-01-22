@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.49  2007/01/22 14:46:16  rbowler
+// Decimal Floating Point: CUXTR,CUDTR instructions
+//
 // Revision 1.48  2007/01/22 13:49:10  rbowler
 // Decimal Floating Point: SLXT,SLDT,SRDT instructions
 //
@@ -1522,8 +1525,103 @@ int32_t         scale = 0;              /* Scaling factor            */
 } /* end DEF_INST(convert_sbcd64_to_dfp_long_reg) */
 
 
-UNDEF_INST(convert_ubcd128_to_dfp_ext_reg)
-UNDEF_INST(convert_ubcd64_to_dfp_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3FA CXUTR - Convert from unsigned BCD (128-bit to DFP ext) [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_ubcd128_to_dfp_ext_reg)
+{
+int             i;                      /* Array subscript           */
+int             r1, r2;                 /* Values of R fields        */
+decimal128      x1;                     /* Extended DFP values       */
+decNumber       dwork, *dp;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            pwork[17];              /* 33-digit packed work area */
+int32_t         scale = 0;              /* Scaling factor            */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r1, regs);
+    ODD_CHECK(r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+
+    /* Store general register pair in work area */
+    pwork[0] = 0;
+    STORE_DW(pwork+1, regs->GR_G(r2));
+    STORE_DW(pwork+9, regs->GR_G(r2+1));
+
+    /* Convert unsigned BCD to signed BCD */
+    for (i = 0; i < sizeof(pwork)-1; i++)
+        pwork[i] = ((pwork[i] & 0x0F) << 4) | (pwork[i+1] >> 4);
+    pwork[i] = ((pwork[i] & 0x0F) << 4) | 0x0F;
+
+    /* Convert signed BCD to internal number format */
+    dp = decPackedToNumber(pwork, sizeof(pwork), &scale, &dwork);
+
+    /* Data exception if digits invalid */
+    if (dp == NULL)
+    {
+        regs->dxc = DXC_DECIMAL;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+    /* Convert internal number to DFP extended format */
+    decimal128FromNumber(&x1, &dwork, &set);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+} /* end DEF_INST(convert_ubcd128_to_dfp_ext_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B3F2 CDUTR - Convert from unsigned BCD (64-bit to DFP long) [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_ubcd64_to_dfp_long_reg)
+{
+int             i;                      /* Array subscript           */
+int             r1, r2;                 /* Values of R fields        */
+decimal64       x1;                     /* Long DFP values           */
+decNumber       dwork, *dp;             /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            pwork[9];               /* 17-digit packed work area */
+int32_t         scale = 0;              /* Scaling factor            */
+
+    RRE(inst, regs, r1, r2);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+
+    /* Store general register in work area */
+    pwork[0] = 0;
+    STORE_DW(pwork+1, regs->GR_G(r2));
+
+    /* Convert unsigned BCD to signed BCD */
+    for (i = 0; i < sizeof(pwork)-1; i++)
+        pwork[i] = ((pwork[i] & 0x0F) << 4) | (pwork[i+1] >> 4);
+    pwork[i] = ((pwork[i] & 0x0F) << 4) | 0x0F;
+
+    /* Convert signed BCD to internal number format */
+    dp = decPackedToNumber(pwork, sizeof(pwork), &scale, &dwork);
+
+    /* Data exception if digits or sign was invalid */
+    if (dp == NULL)
+    {
+        regs->dxc = DXC_DECIMAL;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+    /* Convert internal number to DFP long format */
+    decimal64FromNumber(&x1, &dwork, &set);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+} /* end DEF_INST(convert_ubcd64_to_dfp_long_reg) */
+
+
 UNDEF_INST(convert_dfp_ext_to_fix64_reg)
 UNDEF_INST(convert_dfp_long_to_fix64_reg)
 
