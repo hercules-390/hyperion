@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.50  2007/01/22 22:26:55  rbowler
+// Decimal Floating Point: CDUTR, CXUTR instructions
+//
 // Revision 1.49  2007/01/22 14:46:16  rbowler
 // Decimal Floating Point: CUXTR,CUDTR instructions
 //
@@ -464,6 +467,73 @@ static U64      maxneg64 = 0x8000000000000000ULL;
     decNumberFromString(dn, zoned+i, pset);
 
 } /* end function dfp_number_from_fix64 */
+
+/*-------------------------------------------------------------------*/
+/* Convert decimal number to 64-bit signed binary integer            */
+/*                                                                   */
+/* This subroutine is called by the CGDTR and CGXTR instructions.    */
+/* It converts a decimal number structure to a 64-bit signed         */
+/* binary integer value.  The inexact condition will be set in       */
+/* the decimal context structure if the number is rounded to         */
+/* an integer. The invalid operation condition will be set if        */
+/* the decimal value is outside the range of a 64-bit integer.       */
+/*                                                                   */
+/* Input:                                                            */
+/*      dn      Pointer to decimal number structure                  */
+/*      pset    Pointer to decimal number context structure          */
+/* Output:                                                           */
+/*      The return value is the 64-bit signed binary integer result  */
+/*-------------------------------------------------------------------*/
+static S64
+dfp_number_to_fix64(decNumber *dn, decContext *pset)
+{
+int             sign = 0;               /* Sign of binary integer    */
+int             i;                      /* Array subscript           */
+BYTE            zoned[64];              /* Zoned decimal work area   */
+S64             n;                      /* 64-bit signed result      */
+decNumber       di, dc;                 /* Working decimal numbers   */
+static U64      maxneg64 = 0x8000000000000000ULL;
+static U64      maxpos64 = 0x7FFFFFFFFFFFFFFFULL;
+
+    /* Handle NaN and Inf as special case */
+    if (decNumberIsNaN(dn) || decNumberIsInfinite(dn))
+    {
+        /* Raise invalid operation condition */
+        pset->status |= DEC_IEEE_854_Invalid_operation;
+
+        /* Result is maximum negative or positive number */
+        return (decNumberIsNaN(dn) || decNumberIsNegative(dn)) ?
+                (S64)maxneg64 : (S64)maxpos64;
+    }
+
+    /* Remove fractional part of decimal number */
+    decNumberToIntegralValue(&di, dn, pset);
+
+    /* Raise inexact condition if result was rounded */
+    decNumberCompare(&dc, &di, dn, pset);
+    if (decNumberIsZero(&dc) == 0)
+    {
+        pset->status |= DEC_IEEE_854_Inexact;
+        if (decNumberIsNegative(&dc) == decNumberIsNegative(dn))
+            pset->status |= DEC_Rounded;
+    }
+
+    /* Convert decimal number structure to zoned decimal */
+    decNumberToString(&di, zoned);
+
+    /* Convert zoned decimal to binary value */
+    i = 0; n = 0;
+    if (zoned[0] == '-') { i++; sign = 1; }
+    while (zoned[i] != '\0')
+    {
+        n = n * 10 + (zoned[i++] & 0x0F);
+    }
+    if (sign) n = -n;
+
+    /* Return 64-bit signed result */
+    return n;
+
+} /* end function dfp_number_to_fix64 */
 
 /*-------------------------------------------------------------------*/
 /* Check if IEEE-interruption-simulation event is to be recognized   */
@@ -1622,7 +1692,55 @@ int32_t         scale = 0;              /* Scaling factor            */
 } /* end DEF_INST(convert_ubcd64_to_dfp_long_reg) */
 
 
-UNDEF_INST(convert_dfp_ext_to_fix64_reg)
+/*-------------------------------------------------------------------*/
+/* B3E9 CGXTR - Convert from DFP Extended Register to fixed 64 [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_dfp_ext_to_fix64_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m3;                     /* Values of M fields        */
+S64             n1;                     /* Result value              */
+decimal128      x2;                     /* Extended DFP value        */
+decNumber       d2;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_M(inst, regs, r1, r2, m3);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load extended DFP value from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x2, &d2);
+
+    /* Convert decimal number to 64-bit binary integer */
+    n1 = dfp_number_to_fix64(&d2, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into general register r1 */
+    (S64)(regs->GR_G(r1)) = n1;
+
+    /* Set condition code */
+    regs->psw.cc = (set.status & DEC_IEEE_854_Invalid_operation) ? 3 :
+                   decNumberIsZero(&d2) ? 0 :
+                   decNumberIsNegative(&d2) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(convert_dfp_ext_to_fix64_reg) */
+
+
 UNDEF_INST(convert_dfp_long_to_fix64_reg)
 
 
