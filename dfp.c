@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.52  2007/01/23 15:40:26  rbowler
+// Decimal Floating Point: CGXTR instruction (part 2)
+//
 // Revision 1.51  2007/01/22 23:33:55  rbowler
 // Decimal Floating Point: CGXTR instruction (part 1)
 //
@@ -492,11 +495,11 @@ dfp_number_to_fix64(decNumber *b, decContext *pset)
 {
 S64             n;                      /* 64-bit signed result      */
 int32_t         scale;                  /* Scaling factor            */
-int             i;                      /* Array subscript           */
+unsigned        i;                      /* Array subscript           */
 BYTE            packed[17];             /* 33-digit packed work area */
 decNumber       p, c;                   /* Working decimal numbers   */
-static S64      mp64 = 9223372036854775807LL;   /* Max pos fixed 64  */
-static S64      mn64 = -9223372036854775808LL;  /* Max neg fixed 64  */
+static U64      mp64 = 0x7FFFFFFFFFFFFFFFULL;   /* Max pos fixed 64  */
+static U64      mn64 = 0x8000000000000000ULL;   /* Max neg fixed 64  */
 static BYTE     mpzd[]="9223372036854775807";   /* Max pos zoned dec */
 static BYTE     mnzd[]="-9223372036854775808";  /* Max neg zoned dec */
 static BYTE     mpflag = 0;             /* 1=mp,mn are initialized   */
@@ -516,7 +519,7 @@ static decNumber mp, mn;                /* Decimal maximum pos,neg   */
     if (decNumberIsNaN(b))
     {
         pset->status |= DEC_IEEE_854_Invalid_operation;
-        return mn64;
+        return (S64)mn64;
     }
 
     /* Remove fractional part of decimal number */
@@ -536,7 +539,7 @@ static decNumber mp, mn;                /* Decimal maximum pos,neg   */
             pset->status |= DEC_IEEE_854_Inexact;
 
         /* Return maximum negative result */
-        return mn64;
+        return (S64)mn64;
     }
      
     /* Special case if operand is greater than maximum positive 
@@ -553,7 +556,7 @@ static decNumber mp, mn;                /* Decimal maximum pos,neg   */
             pset->status |= DEC_IEEE_854_Inexact;
 
         /* Return maximum positive result */
-        return mp64;
+        return (S64)mp64;
     }
      
     /* Raise inexact condition if result was rounded */
@@ -1648,7 +1651,7 @@ int32_t         scale = 0;              /* Scaling factor            */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_ubcd128_to_dfp_ext_reg)
 {
-int             i;                      /* Array subscript           */
+unsigned        i;                      /* Array subscript           */
 int             r1, r2;                 /* Values of R fields        */
 decimal128      x1;                     /* Extended DFP values       */
 decNumber       dwork, *dp;             /* Working decimal numbers   */
@@ -1698,7 +1701,7 @@ int32_t         scale = 0;              /* Scaling factor            */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_ubcd64_to_dfp_long_reg)
 {
-int             i;                      /* Array subscript           */
+unsigned        i;                      /* Array subscript           */
 int             r1, r2;                 /* Values of R fields        */
 decimal64       x1;                     /* Long DFP values           */
 decNumber       dwork, *dp;             /* Working decimal numbers   */
@@ -1772,7 +1775,7 @@ BYTE            dxc;                    /* Data exception code       */
     dxc = ARCH_DEP(dfp_status_check)(&set, regs);
 
     /* Load result into general register r1 */
-    (S64)(regs->GR_G(r1)) = n1;
+    regs->GR_G(r1) = n1;
 
     /* Set condition code */
     regs->psw.cc = (set.status & DEC_IEEE_854_Invalid_operation) ? 3 :
