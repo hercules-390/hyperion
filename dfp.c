@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.51  2007/01/22 23:33:55  rbowler
+// Decimal Floating Point: CGXTR instruction (part 1)
+//
 // Revision 1.50  2007/01/22 22:26:55  rbowler
 // Decimal Floating Point: CDUTR, CXUTR instructions
 //
@@ -479,56 +482,101 @@ static U64      maxneg64 = 0x8000000000000000ULL;
 /* the decimal value is outside the range of a 64-bit integer.       */
 /*                                                                   */
 /* Input:                                                            */
-/*      dn      Pointer to decimal number structure                  */
+/*      b       Pointer to decimal number structure                  */
 /*      pset    Pointer to decimal number context structure          */
 /* Output:                                                           */
 /*      The return value is the 64-bit signed binary integer result  */
 /*-------------------------------------------------------------------*/
 static S64
-dfp_number_to_fix64(decNumber *dn, decContext *pset)
+dfp_number_to_fix64(decNumber *b, decContext *pset)
 {
-int             sign = 0;               /* Sign of binary integer    */
-int             i;                      /* Array subscript           */
-BYTE            zoned[64];              /* Zoned decimal work area   */
 S64             n;                      /* 64-bit signed result      */
-decNumber       di, dc;                 /* Working decimal numbers   */
-static U64      maxneg64 = 0x8000000000000000ULL;
-static U64      maxpos64 = 0x7FFFFFFFFFFFFFFFULL;
+int32_t         scale;                  /* Scaling factor            */
+int             i;                      /* Array subscript           */
+BYTE            packed[17];             /* 33-digit packed work area */
+decNumber       p, c;                   /* Working decimal numbers   */
+static S64      mp64 = 9223372036854775807LL;   /* Max pos fixed 64  */
+static S64      mn64 = -9223372036854775808LL;  /* Max neg fixed 64  */
+static BYTE     mpzd[]="9223372036854775807";   /* Max pos zoned dec */
+static BYTE     mnzd[]="-9223372036854775808";  /* Max neg zoned dec */
+static BYTE     mpflag = 0;             /* 1=mp,mn are initialized   */
+static decNumber mp, mn;                /* Decimal maximum pos,neg   */
 
-    /* Handle NaN and Inf as special case */
-    if (decNumberIsNaN(dn) || decNumberIsInfinite(dn))
+    /* Prime the decimal number structures representing the maximum
+       positive and negative numbers representable in 64 bits */
+    if (mpflag == 0)
     {
-        /* Raise invalid operation condition */
-        pset->status |= DEC_IEEE_854_Invalid_operation;
+        decNumberFromString(&mp, mpzd, pset);
+        decNumberFromString(&mn, mnzd, pset);
+        mpflag = 1;
+    }
 
-        /* Result is maximum negative or positive number */
-        return (decNumberIsNaN(dn) || decNumberIsNegative(dn)) ?
-                (S64)maxneg64 : (S64)maxpos64;
+    /* If operand is a NaN then set invalid operation
+       and return maximum negative result */
+    if (decNumberIsNaN(b))
+    {
+        pset->status |= DEC_IEEE_854_Invalid_operation;
+        return mn64;
     }
 
     /* Remove fractional part of decimal number */
-    decNumberToIntegralValue(&di, dn, pset);
+    decNumberToIntegralValue(&p, b, pset);
 
+    /* Special case if operand is less than maximum negative 
+       number (including where operand is negative infinity) */
+    decNumberCompare(&c, b, &mn, pset);
+    if (decNumberIsNegative(&c))
+    {
+        /* If rounded value is less than maximum negative number
+           then set invalid operation otherwise set inexact */
+        decNumberCompare(&c, &p, &mn, pset);
+        if (decNumberIsNegative(&c))
+            pset->status |= DEC_IEEE_854_Invalid_operation;
+        else
+            pset->status |= DEC_IEEE_854_Inexact;
+
+        /* Return maximum negative result */
+        return mn64;
+    }
+     
+    /* Special case if operand is greater than maximum positive 
+       number (including where operand is positive infinity) */
+    decNumberCompare(&c, b, &mp, pset);
+    if (decNumberIsNegative(&c) == 0 && decNumberIsZero(&c) == 0)
+    {
+        /* If rounded value is greater than maximum positive number
+           then set invalid operation otherwise set inexact */
+        decNumberCompare(&c, &p, &mp, pset);
+        if (decNumberIsNegative(&c) == 0 && decNumberIsZero(&c) == 0)
+            pset->status |= DEC_IEEE_854_Invalid_operation;
+        else
+            pset->status |= DEC_IEEE_854_Inexact;
+
+        /* Return maximum positive result */
+        return mp64;
+    }
+     
     /* Raise inexact condition if result was rounded */
-    decNumberCompare(&dc, &di, dn, pset);
-    if (decNumberIsZero(&dc) == 0)
+    decNumberCompare(&c, &p, b, pset);
+    if (decNumberIsZero(&c) == 0)
     {
         pset->status |= DEC_IEEE_854_Inexact;
-        if (decNumberIsNegative(&dc) == decNumberIsNegative(dn))
+        if (decNumberIsNegative(&c) == decNumberIsNegative(b))
             pset->status |= DEC_Rounded;
     }
 
-    /* Convert decimal number structure to zoned decimal */
-    decNumberToString(&di, zoned);
+    /* Convert decimal number structure to packed decimal */
+    decPackedFromNumber(packed, sizeof(packed), &scale, &p);
 
-    /* Convert zoned decimal to binary value */
-    i = 0; n = 0;
-    if (zoned[0] == '-') { i++; sign = 1; }
-    while (zoned[i] != '\0')
+    /* Convert packed decimal to binary value */
+    for (i = 0, n = 0; i < sizeof(packed)-1; i++)
     {
-        n = n * 10 + (zoned[i++] & 0x0F);
+        n = n * 10 + ((packed[i] & 0xF0) >> 4);
+        n = n * 10 + (packed[i] & 0x0F);
     }
-    if (sign) n = -n;
+    n = n * 10 + ((packed[i] & 0xF0) >> 4);
+    while (scale++) n *= 10;
+    if ((packed[i] & 0x0F) == 0x0D) n = -n;
 
     /* Return 64-bit signed result */
     return n;
