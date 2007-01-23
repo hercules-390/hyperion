@@ -1,4 +1,4 @@
-* FIXTR test $Id$
+* CGXTR test $Id$
 sysclear
 archmode esame
 r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
@@ -14,16 +14,14 @@ r 21E=B3C10065     # LDGR F6,R5        Load FPR6 from R5
 r 222=41200008     # LA R2,8           R2=Number of DRM tests
 r 226=A7390000     # LGHI R3,0         R3=DRM 0
 r 22A=B2B93000     #B SRNMT 0(R3)      Set DFP rounding mode from R3
-r 22E=B3DF0054     # FIXTR F5,0,F4,0   Load int FPR5,7 from FPR4,6
-r 232=B3CD0065     # LGDR R6,F5        Load R6 from FPR5
-r 236=B3CD0077     # LGDR R7,F7        Load R7 from FPR7
-r 23A=E360F000008E # STPQ R6,0(,R15)   Store R6,R7 in result table
-r 240=41F0F010     # LA R15,16(,R15)   R15=>next result table
-r 244=41303001     # LA R3,1(,R3)      R3=>Next DRM
-r 248=4620022A     # BCT R2,B          Loop thru DRM 0-7
-r 24C=41101010     # LA R1,16(,R1)     R1=>Next TESTn
-r 250=46000214     # BCT R0,A          Loop to end of TEST table
-r 254=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 22E=B3E90074     # CGXTR R7,0,F4     Load R7 from FPR4,6
+r 232=E370F0000024 # STG R7,0(,R15)    Store R7 in result table
+r 238=41F0F008     # LA R15,8(,R15)    R15=>next result table
+r 23C=41303001     # LA R3,1(,R3)      R3=>Next DRM
+r 240=4620022A     # BCT R2,B          Loop thru DRM 0-7
+r 244=41101010     # LA R1,16(,R1)     R1=>Next TESTn
+r 248=46000214     # BCT R0,A          Loop to end of TEST table
+r 24C=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
 r 314=00000000     # FPCREG            Floating point control register        
@@ -38,4 +36,4 @@ pause 1
 * Display test data
 r 320.50 
 * Display results
-r 400.280
+r 400.140
