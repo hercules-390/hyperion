@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.53  2007/01/23 16:16:40  rbowler
+// Remove gcc signed/unsigned compiler warnings
+//
 // Revision 1.52  2007/01/23 15:40:26  rbowler
 // Decimal Floating Point: CGXTR instruction (part 2)
 //
@@ -504,13 +507,17 @@ static BYTE     mpzd[]="9223372036854775807";   /* Max pos zoned dec */
 static BYTE     mnzd[]="-9223372036854775808";  /* Max neg zoned dec */
 static BYTE     mpflag = 0;             /* 1=mp,mn are initialized   */
 static decNumber mp, mn;                /* Decimal maximum pos,neg   */
+decContext      setmax;                 /* Working context for mp,mn */
 
     /* Prime the decimal number structures representing the maximum
-       positive and negative numbers representable in 64 bits */
+       positive and negative numbers representable in 64 bits. Use
+       a 128-bit DFP working context because these numbers are too 
+       big to be represented in the 32-bit and 64-bit DFP formats */
     if (mpflag == 0)
     {
-        decNumberFromString(&mp, mpzd, pset);
-        decNumberFromString(&mn, mnzd, pset);
+        decContextDefault(&setmax, DEC_INIT_DECIMAL128);
+        decNumberFromString(&mp, mpzd, &setmax);
+        decNumberFromString(&mn, mnzd, &setmax);
         mpflag = 1;
     }
 
@@ -1792,7 +1799,52 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(convert_dfp_ext_to_fix64_reg) */
 
 
-UNDEF_INST(convert_dfp_long_to_fix64_reg)
+/*-------------------------------------------------------------------*/
+/* B3E1 CGDTR - Convert from DFP Long Register to fixed 64     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_dfp_long_to_fix64_reg)
+{
+int             r1, r2;                 /* Values of R fields        */
+int             m3;                     /* Values of M fields        */
+S64             n1;                     /* Result value              */
+decimal64       x2;                     /* Long DFP value            */
+decNumber       d2;                     /* Working decimal number    */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_M(inst, regs, r1, r2, m3);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load long DFP value from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x2, &d2);
+
+    /* Convert decimal number to 64-bit binary integer */
+    n1 = dfp_number_to_fix64(&d2, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into general register r1 */
+    regs->GR_G(r1) = n1;
+
+    /* Set condition code */
+    regs->psw.cc = (set.status & DEC_IEEE_854_Invalid_operation) ? 3 :
+                   decNumberIsZero(&d2) ? 0 :
+                   decNumberIsNegative(&d2) ? 1 : 2;
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(convert_dfp_long_to_fix64_reg) */
 
 
 /*-------------------------------------------------------------------*/
