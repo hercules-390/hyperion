@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.54  2007/01/25 13:08:26  rbowler
+// Decimal Floating Point: CGDTR instruction
+//
 // Revision 1.53  2007/01/23 16:16:40  rbowler
 // Remove gcc signed/unsigned compiler warnings
 //
@@ -2737,7 +2740,7 @@ BYTE            dxc;                    /* Data exception code       */
     else if (decNumberIsNaN(&d2))
     {
         decimal64ToNumber(&x2, &d1);
-        /* For SNaN with mask bit 0 set, convert to a QNaN
+        /* For SNaN with mask bit 0 off, convert to a QNaN
            and raise signaling condition */
         if (decNumberIsSNaN(&d2) && (m4 & 0x08) == 0)
         {
@@ -2803,7 +2806,7 @@ BYTE            dxc;                    /* Data exception code       */
     else if (decNumberIsNaN(&d2))
     {
         decimal32ToNumber(&x2, &d1);
-        /* For SNaN with mask bit 0 set, convert to a QNaN
+        /* For SNaN with mask bit 0 off, convert to a QNaN
            and raise signaling condition */
         if (decNumberIsSNaN(&d2) && (m4 & 0x08) == 0)
         {
@@ -2835,7 +2838,88 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(load_lengthened_dfp_short_to_long_reg) */
 
 
-UNDEF_INST(load_rounded_dfp_ext_to_long_reg)
+/*-------------------------------------------------------------------*/
+/* B3DD LDXTR - Load Rounded DFP Extended to Long Register     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_rounded_dfp_ext_to_long_reg)
+{
+int             r1, r2, m3, m4;         /* Values of R and M fields  */
+decimal64       x1;                     /* Long DFP value            */
+decimal128      x2;                     /* Extended DFP value        */
+decNumber       d1, d2;                 /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+int32_t         scale;                  /* Scaling factor            */
+BYTE            pwork[17];              /* 33-digit packed work area */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR_CHECK(r2, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load DFP extended number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r2, &x2, regs);
+    decimal128ToNumber(&x2, &d2);
+
+    /* Convert number to DFP long format */
+    if ((decNumberIsInfinite(&d2) && (m4 & 0x08))
+         || decNumberIsNaN(&d2))
+    {
+        /* For Inf with mask bit 0 set, or for QNan or SNan,
+           propagate the low 15 digits */
+        dfp128_clear_cf_and_bxcf(&x2);
+        decimal128ToNumber(&x2, &d1);
+        decPackedFromNumber(pwork, sizeof(pwork), &scale, &d1);
+        decPackedToNumber(pwork+sizeof(pwork)-8, 8, &scale, &d1);
+        decimal64FromNumber(&x1, &d1, &set);
+        if (decNumberIsInfinite(&d2))
+        {
+            dfp64_set_cf_and_bxcf(&x1, DFP_CFS_INF);
+        }
+        else if (decNumberIsQNaN(&d2))
+        {
+            dfp64_set_cf_and_bxcf(&x1, DFP_CFS_QNAN);
+        }
+        else /* it is an SNaN */
+        {
+            /* For SNaN with mask bit 0 off, convert to a QNaN
+               and raise signaling condition */
+            if (decNumberIsSNaN(&d2) && (m4 & 0x08) == 0)
+            {
+                dfp64_set_cf_and_bxcf(&x1, DFP_CFS_QNAN);
+                set.status |= DEC_IEEE_854_Invalid_operation;
+            }
+            else
+            {
+                dfp64_set_cf_and_bxcf(&x1, DFP_CFS_SNAN);
+            }
+        }
+    }
+    else
+    {
+        decNumberCopy(&d1, &d2);
+        decimal64FromNumber(&x1, &d1, &set);
+    }
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(load_rounded_dfp_ext_to_long_reg) */
+
+
 UNDEF_INST(load_rounded_dfp_long_to_short_reg)
 /*-------------------------------------------------------------------*/
 /* B3D8 MXTR  - Multiply DFP Extended Register                 [RRR] */
