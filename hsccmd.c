@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.211  2007/01/19 16:13:02  rbowler
+// Modify conkpalv help text
+//
 // Revision 1.210  2007/01/14 23:14:12  rbowler
 // Fix signed/unsigned mismatch in 370-only build
 //
@@ -1365,6 +1368,7 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
 int cd_cmd(int argc, char *argv[], char *cmdline)
 {
     char* path;
+    char cwd [ MAX_PATH ];
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     if (sysblk.shcmdopt & SHCMDOPT_DISABLE)
@@ -1375,7 +1379,8 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
     path = cmdline + 2;
     while (isspace(*path)) path++;
     chdir(path);
-    panel_command("pwd");
+    getcwd( cwd, sizeof(cwd) );
+    logmsg("%s\n",cwd);
     return 0;
 }
 
@@ -4949,8 +4954,8 @@ COMMAND ( "qd",        qd_cmd,        "query dasd\n" )
 COMMAND ( "scsimount", scsimount_cmd, "automatic SCSI tape mounts\n" )
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
-COMMAND ( "cd",        cd_cmd,          "change directory command" )
-COMMAND ( "pwd",       pwd_cmd,         "print working directory command" )
+COMMAND ( "cd",        cd_cmd,          "change directory" )
+COMMAND ( "pwd",       pwd_cmd,         "print working directory" )
 COMMAND ( "sh",        sh_cmd,          "shell command\n" )
 
 COMMAND ( "cache", EXT_CMD(cache_cmd),  "cache command" )
