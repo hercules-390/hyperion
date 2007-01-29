@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.55  2007/01/26 16:07:05  rbowler
+// Decimal Floating Point: LDXTR instruction
+//
 // Revision 1.54  2007/01/25 13:08:26  rbowler
 // Decimal Floating Point: CGDTR instruction
 //
@@ -2873,6 +2876,7 @@ BYTE            dxc;                    /* Data exception code       */
         dfp128_clear_cf_and_bxcf(&x2);
         decimal128ToNumber(&x2, &d1);
         decPackedFromNumber(pwork, sizeof(pwork), &scale, &d1);
+        scale = 0;
         decPackedToNumber(pwork+sizeof(pwork)-8, 8, &scale, &d1);
         decimal64FromNumber(&x1, &d1, &set);
         if (decNumberIsInfinite(&d2))
