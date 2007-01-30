@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.57  2007/01/30 14:05:12  rbowler
+// Decimal Floating Point: LEDTR instruction
+//
 // Revision 1.56  2007/01/29 16:09:18  rbowler
 // Decimal Floating Point: LDXTR correction
 //
@@ -2932,7 +2935,7 @@ BYTE            dxc;                    /* Data exception code       */
 /*-------------------------------------------------------------------*/
 /* B3D5 LEDTR - Load Rounded DFP Long to Short Register        [RRF] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_rounded_dfp_short_to_short_reg)
+DEF_INST(load_rounded_dfp_long_to_short_reg)
 {
 int             r1, r2, m3, m4;         /* Values of R and M fields  */
 decimal32       x1;                     /* Short DFP value           */
@@ -3010,7 +3013,7 @@ BYTE            dxc;                    /* Data exception code       */
         ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
     }
 
-} /* end DEF_INST(load_rounded_dfp_short_to_short_reg) */
+} /* end DEF_INST(load_rounded_dfp_long_to_short_reg) */
 
 
 /*-------------------------------------------------------------------*/
