@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.63  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #if defined(OPTION_900_MODE)
 #define _ARCH_900_NAME "z/Arch" /* also: "ESAME" */
@@ -29,7 +32,7 @@
 #define FEATURE_CPU_RECONFIG
 #define FEATURE_DAT_ENHANCEMENT
 #define FEATURE_DAT_ENHANCEMENT_FACILITY_2                      /*@Z9*/
-//#define FEATURE_DECIMAL_FLOATING_POINT                          /*DFP*/
+#define FEATURE_DECIMAL_FLOATING_POINT                          /*DFP*/
 #define FEATURE_DIAG308_REIPL
 #define FEATURE_DUAL_ADDRESS_SPACE
 #define FEATURE_EMULATE_VM
