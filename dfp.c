@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.56  2007/01/29 16:09:18  rbowler
+// Decimal Floating Point: LDXTR correction
+//
 // Revision 1.55  2007/01/26 16:07:05  rbowler
 // Decimal Floating Point: LDXTR instruction
 //
@@ -2904,6 +2907,8 @@ BYTE            dxc;                    /* Data exception code       */
     }
     else
     {
+        /* For finite number, load value rounded to long DFP format,
+           or for Inf with mask bit 0 not set, load default infinity */
         decNumberCopy(&d1, &d2);
         decimal64FromNumber(&x1, &d1, &set);
     }
@@ -2924,7 +2929,90 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(load_rounded_dfp_ext_to_long_reg) */
 
 
-UNDEF_INST(load_rounded_dfp_long_to_short_reg)
+/*-------------------------------------------------------------------*/
+/* B3D5 LEDTR - Load Rounded DFP Long to Short Register        [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_rounded_dfp_short_to_short_reg)
+{
+int             r1, r2, m3, m4;         /* Values of R and M fields  */
+decimal32       x1;                     /* Short DFP value           */
+decimal64       x2;                     /* Long DFP value            */
+decNumber       d1, d2;                 /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+int32_t         scale;                  /* Scaling factor            */
+BYTE            pwork[9];               /* 17-digit packed work area */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    DFPINST_CHECK(regs);
+
+    /* Initialise the context for long DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL64);
+    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+
+    /* Load DFP long number from FP register r2 */
+    ARCH_DEP(dfp_reg_to_decimal64)(r2, &x2, regs);
+    decimal64ToNumber(&x2, &d2);
+
+    /* Convert number to DFP short format */
+    if ((decNumberIsInfinite(&d2) && (m4 & 0x08))
+         || decNumberIsNaN(&d2))
+    {
+        /* For Inf with mask bit 0 set, or for QNan or SNan,
+           propagate the low 6 digits */
+        dfp64_clear_cf_and_bxcf(&x2);
+        decimal64ToNumber(&x2, &d1);
+        decPackedFromNumber(pwork, sizeof(pwork), &scale, &d1);
+        scale = 0;
+        decPackedToNumber(pwork+sizeof(pwork)-4, 4, &scale, &d1);
+        decimal32FromNumber(&x1, &d1, &set);
+        if (decNumberIsInfinite(&d2))
+        {
+            dfp32_set_cf_and_bxcf(&x1, DFP_CFS_INF);
+        }
+        else if (decNumberIsQNaN(&d2))
+        {
+            dfp32_set_cf_and_bxcf(&x1, DFP_CFS_QNAN);
+        }
+        else /* it is an SNaN */
+        {
+            /* For SNaN with mask bit 0 off, convert to a QNaN
+               and raise signaling condition */
+            if (decNumberIsSNaN(&d2) && (m4 & 0x08) == 0)
+            {
+                dfp32_set_cf_and_bxcf(&x1, DFP_CFS_QNAN);
+                set.status |= DEC_IEEE_854_Invalid_operation;
+            }
+            else
+            {
+                dfp32_set_cf_and_bxcf(&x1, DFP_CFS_SNAN);
+            }
+        }
+    }
+    else
+    {
+        /* For finite number, load value rounded to short DFP format,
+           or for Inf with mask bit 0 not set, load default infinity */ 
+        decNumberCopy(&d1, &d2);
+        decimal32FromNumber(&x1, &d1, &set);
+    }
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal32)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(load_rounded_dfp_short_to_short_reg) */
+
+
 /*-------------------------------------------------------------------*/
 /* B3D8 MXTR  - Multiply DFP Extended Register                 [RRR] */
 /*-------------------------------------------------------------------*/
