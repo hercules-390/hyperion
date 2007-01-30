@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.58  2007/01/30 14:31:08  rbowler
+// Decimal Floating Point: LEDTR correction
+//
 // Revision 1.57  2007/01/30 14:05:12  rbowler
 // Decimal Floating Point: LEDTR instruction
 //
@@ -3186,7 +3189,61 @@ BYTE            dxc;                    /* Data exception code       */
 } /* end DEF_INST(quantize_dfp_long_reg) */
 
 
-UNDEF_INST(reround_dfp_ext_reg)
+/*-------------------------------------------------------------------*/
+/* B3FF RRXTR - Reround DFP Extended Register                  [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(reround_dfp_ext_reg)
+{
+int             signif;                 /* Requested significance    */
+int             r1, r2, r3, m4;         /* Values of R and M fields  */
+decimal128      x1, x3;                 /* Extended DFP values       */
+decNumber       d1, d3;                 /* Working decimal numbers   */
+decContext      set;                    /* Working context           */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRF_RM(inst, regs, r1, r2, r3, m4);
+    DFPINST_CHECK(regs);
+    DFPREGPAIR2_CHECK(r1, r3, regs);
+
+    /* Initialise the context for extended DFP */
+    decContextDefault(&set, DEC_INIT_DECIMAL128);
+    ARCH_DEP(dfp_rounding_mode)(&set, m4, regs);
+
+    /* Load significance from bits 58-63 of general register r2 */
+    signif = regs->GR_L(r2) & 0x3F;
+
+    /* Reround FP register r3 */
+    ARCH_DEP(dfp_reg_to_decimal128)(r3, &x3, regs);
+    decimal128ToNumber(&x3, &d3);
+    if (decNumberIsInfinite(&d3) || decNumberIsNaN(&d3)
+        || decNumberIsZero(&d3)
+        || signif == 0 || d3.digits <= signif)
+    {
+        decNumberCopy(&d1, &d3);
+    }
+    else
+    {
+        set.digits = signif;
+        decNumberPlus(&d1, &d3, &set);
+    }
+    decimal128FromNumber(&x1, &d1, &set);
+
+    /* Check for exception condition */
+    dxc = ARCH_DEP(dfp_status_check)(&set, regs);
+
+    /* Load result into FP register r1 */
+    ARCH_DEP(dfp_reg_from_decimal128)(r1, &x1, regs);
+
+    /* Raise data exception if error occurred */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(reround_dfp_ext_reg) */
+
+
 UNDEF_INST(reround_dfp_long_reg)
 
 
