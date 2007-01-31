@@ -14,6 +14,9 @@
 /* for isatty()                                                      */
 
 // $Log$
+// Revision 1.46  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -328,7 +331,7 @@ int bytes_read;
 
             if (needstamp)
             {
-                logger_logfile_timestamp();
+                if (!sysblk.logoptnotime) logger_logfile_timestamp();
                 needstamp = 0;
             }
 
@@ -349,7 +352,7 @@ int bytes_read;
                     break;
                 }
 
-                logger_logfile_timestamp();
+                if (!sysblk.logoptnotime) logger_logfile_timestamp();
             }
 
             if (nLeft)
@@ -380,7 +383,7 @@ int bytes_read;
         char* term_msg = _("HHCLG014I logger thread terminating\n");
         int   term_msg_len = strlen( term_msg );
 #ifdef OPTION_TIMESTAMP_LOGFILE
-        logger_logfile_timestamp();
+        if (!sysblk.logoptnotime) logger_logfile_timestamp();
 #endif
         logger_logfile_write( term_msg, term_msg_len );
     }

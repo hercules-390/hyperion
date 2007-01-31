@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.71  2007/01/14 19:42:38  gsmith
+// Fix S370 only build - nerak60510
+//
 // Revision 1.70  2007/01/14 18:36:53  gsmith
 // Fix S370 only build - nerak60510
 //
@@ -589,6 +592,8 @@ char   *sdevprio;                       /* -> Device thread priority */
 char   *spgmprdos;                      /* -> Program product OS OK  */
 char   *slogofile;                      /* -> 3270 logo file         */
 char   *smountedtapereinit;             /* -> mounted tape reinit opt*/
+char   *slogopt[MAX_ARGS-1];            /* -> log options            */
+int    logoptc;                         /*    count of log options   */
 char   *straceopt;                      /* -> display_inst option    */
 char   *sconkpalv;                      /* -> console keep-alive opt */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
@@ -874,6 +879,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         straceopt = NULL;
         sconkpalv = NULL;
         smountedtapereinit = NULL;
+        slogopt[0] = NULL;
+        logoptc = 0;
 #if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
         secpsvmlvl = NULL;
@@ -982,6 +989,17 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                     syroffset = addargv[0];
                     addargc--;
                 }
+            }
+            else if (strcasecmp (keyword, "logopt") == 0)
+            {
+                slogopt[0] = operand;
+                logoptc = addargc + 1;
+
+                for(i = 0; i < addargc; i++)
+                    slogopt[i+1] = addargv[i];
+
+                addargc = 0;
+
             }
             else if (strcasecmp (keyword, "yroffset") == 0)
             {
@@ -1327,6 +1345,29 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         /* Indicate if z/Architecture is supported */
         sysblk.arch_z900 = sysblk.arch_mode != ARCH_390;
 #endif
+
+        /* Parse "logopt" operands */
+        if (slogopt[0])
+        {
+            for(i=0; i < logoptc; i++)
+            {
+                if (!strcasecmp(slogopt[i],"timestamp"))
+                {
+                    sysblk.logoptnotime = 0;
+                }
+                else if (!strcasecmp(slogopt[i],"notimestamp"))
+                {
+                    sysblk.logoptnotime = 1;
+                }
+                else
+                {
+                    fprintf(stderr, _("HHCCF089S Error in %s line %d: "
+                            "Invalid log option keyword %s\n"),
+                            fname, inc_stmtnum[inc_level], slogopt[i]);
+                    delayed_exit(1);
+                }
+            } /* for(i=0; i < logoptc; i++) */
+        }
 
         /* Parse CPU version number operand */
         if (sversion != NULL)

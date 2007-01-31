@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.60  2007/01/11 19:54:34  fish
+// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
+//
 // Revision 1.59  2007/01/07 11:25:33  rbowler
 // Instruction tracing regsfirst and noregs modes
 //
@@ -496,8 +499,9 @@ struct SYSBLK {
                 xpnd_clear:1,           /* 1 = xpndstor is cleared   */
                 showregsfirst:1,        /* 1 = show regs before inst */
                 showregsnone:1,         /* 1 = show no registers     */
-                nomountedtapereinit:1;  /* 1 = disallow tape devinit
+                nomountedtapereinit:1,  /* 1 = disallow tape devinit
                                              if tape already mounted */
+                logoptnotime:1;         /* 1 = don't timestamp log   */
         U32     ints_state;             /* Common Interrupts Status  */
         U32     config_mask;            /* Configured CPUs           */
         U32     started_mask;           /* Started CPUs              */

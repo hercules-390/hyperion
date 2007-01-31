@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.213  2007/01/31 00:00:52  kleonard
+// Add message numbers to tt32 messages
+//
 // Revision 1.212  2007/01/29 15:16:39  rbowler
 // Eliminate pwd command after cd command
 //
@@ -336,6 +339,44 @@ int log_cmd(int argc, char *argv[],char *cmdline)
     else
         logmsg(_("HHCPN160E no argument\n"));
 
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* logopt command - change log options */
+
+int logopt_cmd(int argc, char *argv[],char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if(argc < 2)
+    {
+        logmsg(_("HHCPN195I Log options:%s\n"),
+                sysblk.logoptnotime ? " NOTIMESTAMP" : " TIMESTAMP"
+               );
+    }
+    else
+    {
+        argv++; argc--;
+        while (argc)
+        {
+            if (!strcasecmp(argv[0],"timestamp"))
+            {
+                sysblk.logoptnotime = 0;
+                logmsg(_("HHCPN197I Log option set: TIMESTAMP\n"));
+            }
+            else if (!strcasecmp(argv[0],"notimestamp"))
+            {
+                sysblk.logoptnotime = 1;
+                logmsg(_("HHCPN197I Log option set: NOTIMESTAMP\n"));
+            }
+            else
+            {
+                logmsg(_("HHCPN196E Invalid logopt value %s\n"), argv[0]);
+            }
+            argv++; argc--;
+        } /* while (argc) */
+    }
     return 0;
 }
 
@@ -4889,6 +4930,7 @@ COMMAND ( "hst",       History,       "history of commands" )
 COMMAND ( "hao",       hao_cmd,       "Hercules Automatic Operator" )
 #endif /* defined(OPTION_HAO) */
 COMMAND ( "log",       log_cmd,       "direct log output" )
+COMMAND ( "logopt",    logopt_cmd,    "change log options" )
 COMMAND ( "version",   version_cmd,   "display version information\n" )
 
 COMMAND ( "quit",      quit_cmd,      "terminate the emulator" )
@@ -5478,6 +5520,12 @@ CMDHELP ( "herclogo",  "Format: \"herclogo [<filename>]\". Load a new logo file 
 CMDHELP ( "traceopt",  "Format: \"traceopt [regsfirst | noregs | traditional]\". Determines how the\n"
                        "registers are displayed during instruction tracing and stepping. Entering\n"
                        "the command without any argument simply displays the current mode.\n"
+                       )
+
+CMDHELP ( "logopt",    "Format: \"logopt [timestamp | notimestamp]\".   Sets logging options.\n"
+                       "\"timestamp\" inserts a time stamp in front of each log message.\n"
+                       "\"notimestamp\" displays log messages with no time stamps.  Entering\n"
+                       "the command without any argument displays current logging options.\n"
                        )
 
 CMDHELP ( "conkpalv",  "Format: \"conkpalv (idle,intv,count)\" where 'idle', 'intv' and 'count' are the\n"
