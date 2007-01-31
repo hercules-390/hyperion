@@ -142,8 +142,11 @@ to allow Hercules to open it.
 <li><i>Additional notes from Greg Smith:</i>
     <ol>
     <li>I find on my Fedora Core 6 system that I have to add the above 2 commands
-        to /etc/rc.local and update /etc/rules.d/50-udev.rules with similar
-        information.
+        to <b><i>/etc/rc.local</i></b>
+        and update <b><i>/etc/udev/rules.d/50-udev.rules</i></b> replacing
+        <br><code>KERNEL=="tun", NAME="net/%k"</code>
+        <br>by
+        <br><code>KERNEL=="tun", NAME="net/%k", GROUP="<em>xxxxx</em>", MODE="0660"</code>
     <li>In the hercules log you should see /dev/net/tun0 opened. I get a couple
         of error messages about SIOCDIFADDR and SIOCSIFHWADDR ioctl's failing
         but these can be ignored (maybe I'll fix that soon).
