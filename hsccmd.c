@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.212  2007/01/29 15:16:39  rbowler
+// Eliminate pwd command after cd command
+//
 // Revision 1.211  2007/01/19 16:13:02  rbowler
 // Modify conkpalv help text
 //
@@ -1149,7 +1152,7 @@ int tt32stats_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
-    logmsg( _("HHCPNxxxE cmd deprecated; try 'tt32' instead\n") );
+    logmsg( _("HHCPN186E cmd deprecated; try 'tt32' instead\n") );
     return -1;
 }
 
@@ -1166,7 +1169,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 
     if (argc < 2)
     {
-        logmsg( _("HHCPNxxxE Missing arguments; enter 'help tt32' for help.\n") );
+        logmsg( _("HHCPN188E Missing arguments; enter 'help tt32' for help.\n") );
         rc = -1;
     }
     else if (strcasecmp(argv[1],"stats") == 0)
@@ -1208,7 +1211,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         {
             debug_tt32_tracing(1); // 1=ON
             rc = 0;
-            logmsg( _("HHCPNxxxI TT32 debug tracing messages enabled\n") );
+            logmsg( _("HHCPN189I TT32 debug tracing messages enabled\n") );
         }
         else
         {
@@ -1222,7 +1225,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         {
             debug_tt32_tracing(0); // 0=OFF
             rc = 0;
-            logmsg( _("HHCPNxxxI TT32 debug tracing messages disabled\n") );
+            logmsg( _("HHCPN189I TT32 debug tracing messages disabled\n") );
         }
         else
         {
@@ -1232,7 +1235,7 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
     }
     else
     {
-        logmsg( _("HHCPNxxxE Invalid argument\n") );
+        logmsg( _("HHCPN187E Invalid argument\n") );
         rc = -1;
     }
 
