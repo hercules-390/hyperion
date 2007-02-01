@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.88  2006/12/20 04:26:19  gsmith
+// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
+//
 // Revision 1.87  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -1297,6 +1300,10 @@ typedef struct _MBK {
                                            extended is installed  @Z9*/
 #define STFL_1_SENSE_RUN_STATUS 0x40    /* Sense running status   @Z9
                                            facility is installed  @Z9*/
+#define STFL_1_COND_SSKE        0x20    /* Conditional SSKE
+                                           instruction is installed  */
+#define STFL_1_CONFIG_TOPOLOGY  0x10    /* STSI-enhancement for
+                                           configuration topology    */
 #define STFL_2_TRAN_FAC2        0x80    /* Extended translation
                                            facility 2 is installed   */
 #define STFL_2_MSG_SECURITY     0x40    /* Message security assist
@@ -1321,6 +1328,12 @@ typedef struct _MBK {
                                            facility is installed  @Z9*/
 #define STFL_3_ETF3_ENHANCEMENT 0x02    /* Extended translation   @Z9
                                            facility 3 enhancement @Z9*/
+#define STFL_3_EXTRACT_CPUTIME  0x01    /* Extract CPU time facility
+                                           is installed              */
+#define STFL_4_CSSF             0x80    /* Compare-and-Swap-and-Store
+                                           facility is installed     */
+#define STFL_4_CSSF2            0x40    /* Compare-and-Swap-and-Store
+                                           facility 2 is installed   */
 #define STFL_5_FPS_ENHANCEMENT  0x40    /* Floating point support    
                                            enhancement               */
 #define STFL_5_DECIMAL_FLOAT    0x20    /* Decimal floating point
