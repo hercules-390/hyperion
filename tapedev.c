@@ -71,6 +71,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.112  2006/12/28 03:04:17  fish
+// PR# tape/100: Fix crash in "open_omatape()" in tapedev.c if bad filespec entered in OMA (TDF)  file
+//
 // Revision 1.111  2006/12/11 17:25:59  rbowler
 // Change locblock from long to U32 to correspond with dev->blockid
 //
@@ -4812,6 +4815,9 @@ int             rc;
     /* Request the channel to merge data chained write CCWs into
        a single buffer before passing data to the device handler */
     dev->cdwmerge = 1;
+
+    /* Tape is a syncio type 2 device */
+    dev->syncio = 2;
 
     /* ISW */
     /* Build a 'clear' sense */

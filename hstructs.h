@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.61  2007/01/31 00:48:03  kleonard
+// Add logopt config statement and panel command
+//
 // Revision 1.60  2007/01/11 19:54:34  fish
 // Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
 //
@@ -783,7 +786,7 @@ struct DEVBLK {                         /* Device configuration block*/
 #ifdef OPTION_CKD_KEY_TRACING
                 ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
 #endif /*OPTION_CKD_KEY_TRACING*/
-                syncio:1,               /* 1=Synchronous I/Os allowed*/
+                syncio:2,               /* 1=Synchronous I/Os allowed*/
                 shared:1,               /* 1=Device is shareable     */
                 console:1,              /* 1=Console device          */
                 connected:1,            /* 1=Console client connected*/

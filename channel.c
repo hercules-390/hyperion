@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.136  2007/01/16 01:45:33  gsmith
+// Tweaks to instruction stepping/tracing
+//
 // Revision 1.135  2007/01/09 03:29:02  ivan
 // Temporarily disable dev->crwpending test in channel.c[device_attention] to
 // enable dynamic I/O reconfig in S/370 mode. Interim solution ONLY !
@@ -2120,6 +2123,7 @@ DLL_EXPORT int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb)      /*@IWZ*/
 {
+int     syncio;                         /* 1=Do synchronous I/O      */
 #if !defined(OPTION_FISHIO)
 int     rc;                             /* Return code               */
 DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
@@ -2200,7 +2204,18 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
      * [4] Original.  Create a thread to execute this I/O
      */
 
-    if (dev->syncio && dev->ioactive == DEV_SYS_NONE
+    /* Determine if we can do synchronous I/O */
+    if (dev->syncio == 1)
+        syncio = 1;
+    else if (dev->syncio == 2 && fetch_fw(dev->orb.ccwaddr) < dev->mainlim)
+    {
+        dev->code = dev->mainstor[fetch_fw(dev->orb.ccwaddr)];
+        syncio = IS_CCW_TIC(dev->code) || IS_CCW_IMMEDIATE(dev);
+    }
+    else
+        syncio = 0;
+
+    if (syncio && dev->ioactive == DEV_SYS_NONE
 #ifdef OPTION_IODELAY_KLUDGE
      && sysblk.iodelay < 1
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -2930,6 +2945,14 @@ resume_suspend:
         /* Allow the device handler to determine whether this is
            an immediate CCW (i.e. CONTROL with no data transfer) */
         dev->is_immed = IS_CCW_IMMEDIATE(dev);
+
+        /* If synchronous I/O and a syncio 2 device and not an
+           immediate CCW then retry asynchronously */
+        if (dev->syncio_active && dev->syncio == 2 && !dev->is_immed)
+        {
+            dev->syncio_retry = 1;
+            return NULL;
+        }
 
         /* For WRITE and non-immediate CONTROL operations,
            copy data from main storage into channel buffer */

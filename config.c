@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.194  2007/01/11 19:54:33  fish
+// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
+//
 // Revision 1.193  2007/01/02 18:53:33  fish
 // (fix comments only)
 //
@@ -311,6 +314,7 @@ DEVBLK**dvpp;
     dev->devnum = devnum;
     dev->chanset = lcss;
     dev->fd = -1;
+    dev->syncio = 0;
     dev->ioint.dev = dev;
     dev->ioint.pending = 1;
     dev->pciioint.dev = dev;
