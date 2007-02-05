@@ -251,58 +251,55 @@ and how they are used.
     <p>
 
 <a name="CONKPALV"></a>
-<dt><code>CONKPALV &nbsp; <i>(idle,intv,cnt)</i></code>
+<dt><code>CONKPALV &nbsp; <i>(idle,intv,count)</i></code>
 <dd><p>
     specifies the tn3270 console and telnet clients keep-alive option
     values that control automatic detection of disconnected tn3270/telnet
     client sessions.
-
-    The <code>idle</code> value specifies the
-    timeout value with no activity until the first keep-alive probe is
-    sent (idle time until first probe, or probe frequency), whereas the
-    <code>intv</code> value specifies the interval between when successive
+    <p>
+    <code><i>idle</i></code> &nbsp; specifies the number of seconds
+    of inactivity until the first keep-alive probe is
+    sent (idle time until first probe, or probe frequency).
+    <br><code><i>intv</i></code> &nbsp;
+    specifies the interval in seconds between when successive
     keep-alive packets are sent if no acknowledgement is received from
     the previous one (i.e. the timeout value of the probes themselves).
-    The <code>cnt</code> value specifies the number of unacknowledged
+    <br><code><i>count</i></code> &nbsp; specifies the number of unacknowledged
     keep-alive packets sent before the connection is considered to have
-    failed (i.e. how many times to retry the probe whenever it fails
-    before giving up and automatically terminating the connection).
+    failed.
     <p>
     The default values are 3, 1, and 10. That is, send the initial probe
     3 seconds after the line goes idle and then wait no more than one
     second for it to be responded to. Do this 10 times before considering
     the client as having died.
     <p>
-    NOTE: this is a built-in feature of TCP/IP and allows detection of
-    unresponsive TCP/IP <i><u>connections</u></i> and not idle clients.
+    <i><b>Note:</b></i>
+    This is a built-in feature of TCP/IP and allows detection of
+    unresponsive TCP/IP <i>connections</i> and not idle clients.
     That is to say, your connection will <i>not</i> be terminated
     after 3 seconds of idle time. Your 3270 session can remain idle for
-    many minutes without any data being transmitted. The TCP/IP Keep-Alive
-    feature detects unresponsive TCP/IP <i><u>stacks</u></i>. That is to
-    say, if the TCP/IP <i>stack</i> at the other end of the connection --
-    not your 3270 client session itself -- fails to respond to its own
+    many minutes without any data being transmitted. 
+    If the TCP/IP <i>stack</i> at the other end of the connection --
+    not your 3270 client itself -- fails to respond to the
     internal keep-alive probe packets, then it means that the
-    connection itself (i.e. TCP/IP) is down at the other end of the
+    TCP/IP stack is down or there has been a break in the
     connection. Thus, even if your 3270 client
     is completely idle, your system's TCP/IP stack itself should still respond
-    to the keep-alive probes sent by the TCP stack at the Hercules end
-    of the link. If it doesn't however, then your TCP/IP connection is
-    obviously down and thus your tn3270 session at the Hercules end of the
-    link is summarily terminated as a consequence (i.e. your Hercules 3270
-    terminal session/connection is closed/terminated/disconnected).
+    to the keep-alive probes sent by the TCP/IP stack at the Hercules end
+    of the link. If it doesn't, then TCP/IP will terminate the tn3270/telnet 
+    session which will cause Hercules to disconnect the terminal.
     <p>
-    The three values can also be modified on-demand via the "conkpalv"
-    panel command, which has the exact same syntax. Note too, that the
+    The three values can also be modified on-demand via the <code>conkpalv</code>
+    panel command, which has the exact same syntax. Note that the
     syntax is very unforgiving: no spaces are allowed anywhere within the
-    parenthesis and each value must be separated from the other with a
-    single comma. The first two values are specified in number of seconds
-    and the last is the maximum number of failing probes that need to occur
-    before the connection is considered to have been terminated.
+    parentheses and each value must be separated from the other with a
+    single comma.
     <p>
-    NOTE: on Windows platforms the <code>cnt</code> value is ignored and
-    cannot be changed from its default value of 10. The other two values
-    however (<code>idle</code> and <code>intv</code>) can be. On Linux,
-    all three values can be changed.
+    <i><b>Note:</b></i>
+    On Windows platforms the <code><i>count</i></code> value is ignored and
+    cannot be changed from its default value of 10.
+    Also, some older platforms may ignore all of the values specified
+    and use platform default values instead.
     <p>
 
 <a name="CPUMODEL"></a>
