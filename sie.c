@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.102  2007/01/13 07:25:51  bernard
+// backout ccmask
+//
 // Revision 1.101  2007/01/12 15:25:00  bernard
 // ccmask phase 1
 //
@@ -588,6 +591,7 @@ U64     dreg;
     /* Initialize interrupt mask and state */
     SET_IC_MASK(GUESTREGS);
     SET_IC_INITIAL_STATE(GUESTREGS);
+    SET_IC_PER(GUESTREGS);
 
     /* Initialize accelerated address lookup values */
     SET_AEA_MODE(GUESTREGS);
