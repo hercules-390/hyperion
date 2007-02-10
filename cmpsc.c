@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.49  2007/01/13 07:11:45  bernard
+// backout ccmask
+//
 // Revision 1.48  2007/01/12 15:21:12  bernard
 // ccmask phase 1
 //
@@ -683,8 +686,8 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol
     return(1);
   }
 
-  /* Get the storage */
-  memset(work, 0, 3);
+  /* Clear possible fetched 3rd byte */
+  work[2] = 0;
   ARCH_DEP(vfetchc)(&work, (GR0_smbsz(regs) + GR1_cbn(iregs) - 1) / 8, GR_A(r2, iregs) & ADDRESS_MAXWRAP(regs), r2, regs);
 
   /* Get the bits */
