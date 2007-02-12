@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.244  2007/02/12 06:16:45  fish
+// Don't log Sense Running State SIGP
+//
 // Revision 1.243  2007/01/14 23:31:46  gsmith
 // nerak's patch, one more time
 //
@@ -83,7 +86,7 @@
 #endif // defined(OPTION_FISHIO)
 
 /* Temporary debug */
-extern	int	ipending_cmd(int,void *,void *);
+extern  int     ipending_cmd(int,void *,void *);
 
 #if defined(FEATURE_BRANCH_AND_SET_AUTHORITY)
 /*-------------------------------------------------------------------*/
@@ -5283,19 +5286,9 @@ static char *ordername[] = {
         return;
     }
 
-    /* Trace all "unusual" SIGPs...
-    
-       An "unusual" SIGP is defined to be:
-       
-         1. Any SIGP other than Sense, External Call, Emergency
-            Signal, or Sense Running State sent to ANY cpu (all
-            of which are considered to be completely normal),
-       
-                              -OR-
-       
-         2. Any SIGP at all sent to a CPU that is configured off-
-            line (which is considered to be quite unusual indeed)
-    */
+    /* Trace SIGP unless Sense, External Call, Emergency Signal,
+       Sense Running State,
+       or the target CPU is configured offline */
     if ((order > LOG_SIGPORDER && order != SIGP_SENSE_RUNNING_STATE)
         || !IS_CPU_ONLINE(cpad))
     {
