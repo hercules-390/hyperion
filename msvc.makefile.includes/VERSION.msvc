@@ -11,6 +11,7 @@
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
+# 11/02/07 Fish: Change default VERSION to value that starts with a number.
 #
 # ***************************************************************************
 
@@ -18,7 +19,7 @@
 
 #   >>>  Jay!  <<<  Be sure to change the below V1/V2/V3/V4 values to match!
 
-VERSION = \"Pre-3.05\"
+VERSION = \"3.05-pre-private\"
 
 # The below VERSION digits values SHOULD match the ABOVE VERSION number.
 #
