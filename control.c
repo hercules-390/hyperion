@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.243  2007/01/14 23:31:46  gsmith
+// nerak's patch, one more time
+//
 // Revision 1.242  2007/01/13 07:13:41  bernard
 // backout ccmask
 //
@@ -5280,11 +5283,21 @@ static char *ordername[] = {
         return;
     }
 
-    /* Trace all "unusual" SIGPs... (anything OTHER THAN Sense,
-       External Call and Emergency Signal (which are considered
-       normal) to ANY cpu, -or- ANY SIGP at all sent to a CPU
-       that is configured offline (which is indeed unusual!)) */
-    if (order > LOG_SIGPORDER || !IS_CPU_ONLINE(cpad))
+    /* Trace all "unusual" SIGPs...
+    
+       An "unusual" SIGP is defined to be:
+       
+         1. Any SIGP other than Sense, External Call, Emergency
+            Signal, or Sense Running State sent to ANY cpu (all
+            of which are considered to be completely normal),
+       
+                              -OR-
+       
+         2. Any SIGP at all sent to a CPU that is configured off-
+            line (which is considered to be quite unusual indeed)
+    */
+    if ((order > LOG_SIGPORDER && order != SIGP_SENSE_RUNNING_STATE)
+        || !IS_CPU_ONLINE(cpad))
     {
         log_sigp = snprintf ( log_buf, sizeof(log_buf), 
                 "CPU%4.4X: SIGP %s (%2.2X) CPU%4.4X, PARM "F_GREG,
