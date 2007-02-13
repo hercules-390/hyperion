@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.45  2007/01/13 07:17:06  bernard
+// backout ccmask
+//
 // Revision 1.44  2007/01/12 15:22:18  bernard
 // ccmask phase 1
 //
@@ -216,6 +219,16 @@ U32   code;
         regs->psw.cc = ARCH_DEP(mssf_call) (r1, r2, regs);
         break;
 #endif /*FEATURE_MSSF_CALL*/
+
+
+#if defined(FEATURE_HYPERVISOR) || defined(FEATURE_EMULATE_VM)
+    case 0x09C:
+    /*---------------------------------------------------------------*/
+    /* Diagnose 09C: Voluntary Time Slice End With Target CPU        */
+    /*---------------------------------------------------------------*/
+        ARCH_DEP(scpend_call) ();   // (treat same as DIAG X'44')
+        break;
+#endif
 
 
 #if defined(FEATURE_HYPERVISOR)
