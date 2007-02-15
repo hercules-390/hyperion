@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.84  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -3137,7 +3140,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         case 0xB0: /* Set Interface Identifier */
 
-            /* Command reject if flag byte bits 0-6 are not zero */
+            /* Command reject if flag byte bits 0-5 are not zero 
+               or bits 6-7 are 11 or 10 */
             if ((iobuf[1] & 0xFE) != 0x00)
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
@@ -3149,26 +3153,22 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             /* Prepare subsystem data (node descriptor record) */
             memset (iobuf, 0x00, 96);
 
-            /* Bytes 0-31 contain node descriptor data */
-            iobuf[0] = 0x00;
-            memcpy (&iobuf[1], "010", 3);
+            /* Bytes 0-31 contain the subsystem node descriptor */
+            store_fw(&iobuf[0], 0x00000100);
             sprintf ((char *)&iobuf[4], "00%4.4X   HRCZZ000000000001",
                                 dev->ckdcu->devt);
-            for (i = 1; i < 30; i++)
+            for (i = 4; i < 30; i++)
                 iobuf[i] = host_to_guest(iobuf[i]);
 
             /* Bytes 32-63 contain node qualifier data */
-            iobuf[32] = 0x00; /* Flags */
-            iobuf[40] = 0x81; /* 81=Parallel range, 82=ESCON range */
-            iobuf[41] = 0x01; /* 00=N/A, 01=LED, 02=Laser */
-            iobuf[42] = 0x00; iobuf[43] = 0x00; /* Start of range */
-            memcpy (&iobuf[44], &iobuf[40], 4);
-            iobuf[46] = 0x00; iobuf[47] = 0x01; /* End of range */
-            memcpy (&iobuf[48], &iobuf[40], 8);
-            iobuf[50] = 0x00; iobuf[51] = 0x10; /* Start of range */
-            iobuf[54] = 0x00; iobuf[55] = 0x11; /* End of range */
+            store_fw(&iobuf[32],0x00000000); // flags+zeros
+            store_fw(&iobuf[40],0x00000000);
+            store_fw(&iobuf[40],0x41010000); // start range
+            store_fw(&iobuf[44],0x41010001); // end range
+            store_fw(&iobuf[48],0x41010010); // start range
+            store_fw(&iobuf[52],0x41010011); // end range
 
-            /* Bytes 64-95 contain second node qualifier data */
+            /* Bytes 64-95 contain a 2nd subsystem node descriptor */
             iobuf[64] = 0x00;
 
             /* Indicate the length of subsystem data prepared */

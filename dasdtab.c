@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.31  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -203,68 +206,24 @@ U32 i;                                  /* Loop Index                */
 /*-------------------------------------------------------------------*/
 int dasd_build_ckd_devid (CKDDEV *ckd, CKDCU *cu, BYTE *devid)
 {
-int len;                                /* Length built              */
+int len;
 
     memset (devid, 0, 256);
 
-    devid[0]  = 0xFF;
-    devid[1]  = (cu->devt >> 8) & 0xff;
-    devid[2]  = cu->devt & 0xff;
-    devid[3]  = cu->model;
-    devid[4]  = (ckd->devt >> 8) & 0xff;
-    devid[5]  = ckd->devt & 0xff;
-    devid[6]  = ckd->model;
-    devid[7]  = 0x00;
+    store_fw (devid + 0, 0xFF000000 | (cu->devt << 8) | cu->model);
+    store_fw (devid + 4, (ckd->devt << 16) | (ckd->model << 8) | 0x00);
+    store_fw (devid + 8, cu->ciw1);
+    store_fw (devid +12, cu->ciw2);
+    store_fw (devid +16, cu->ciw3);
+    store_fw (devid +20, cu->ciw4);
+    store_fw (devid +24, cu->ciw5);
+    store_fw (devid +28, cu->ciw6);
+    store_fw (devid +32, cu->ciw7);
+    store_fw (devid +36, cu->ciw8);
 
-    devid[8]  = (cu->ciw1 >> 24) & 0xff;
-    devid[9]  = (cu->ciw1 >> 16) & 0xff;
-    devid[10] = (cu->ciw1 >>  8) & 0xff;
-    devid[11] = cu->ciw1 & 0xff;
-
-    devid[12] = (cu->ciw2 >> 24) & 0xff;
-    devid[13] = (cu->ciw2 >> 16) & 0xff;
-    devid[14] = (cu->ciw2 >>  8) & 0xff;
-    devid[15] = cu->ciw2 & 0xff;
-
-    devid[16] = (cu->ciw3 >> 24) & 0xff;
-    devid[17] = (cu->ciw3 >> 16) & 0xff;
-    devid[18] = (cu->ciw3 >>  8) & 0xff;
-    devid[19] = cu->ciw3 & 0xff;
-
-    devid[20] = (cu->ciw4 >> 24) & 0xff;
-    devid[21] = (cu->ciw4 >> 16) & 0xff;
-    devid[22] = (cu->ciw4 >>  8) & 0xff;
-    devid[23] = cu->ciw4 & 0xff;
-
-    devid[24] = (cu->ciw5 >> 24) & 0xff;
-    devid[25] = (cu->ciw5 >> 16) & 0xff;
-    devid[26] = (cu->ciw5 >>  8) & 0xff;
-    devid[27] = cu->ciw5 & 0xff;
-
-    devid[28] = (cu->ciw6 >> 24) & 0xff;
-    devid[29] = (cu->ciw6 >> 16) & 0xff;
-    devid[30] = (cu->ciw6 >>  8) & 0xff;
-    devid[31] = cu->ciw6 & 0xff;
-
-    devid[32] = (cu->ciw7 >> 24) & 0xff;
-    devid[33] = (cu->ciw7 >> 16) & 0xff;
-    devid[34] = (cu->ciw7 >>  8) & 0xff;
-    devid[35] = cu->ciw7 & 0xff;
-
-    devid[36] = (cu->ciw8 >> 24) & 0xff;
-    devid[37] = (cu->ciw8 >> 16) & 0xff;
-    devid[38] = (cu->ciw8 >>  8) & 0xff;
-    devid[39] = cu->ciw8 & 0xff;
-
-    if (cu->ciw8 != 0) len = 40;
-    else if (cu->ciw7 != 0) len = 36;
-    else if (cu->ciw6 != 0) len = 32;
-    else if (cu->ciw5 != 0) len = 28;
-    else if (cu->ciw4 != 0) len = 24;
-    else if (cu->ciw3 != 0) len = 20;
-    else if (cu->ciw2 != 0) len = 16;
-    else if (cu->ciw1 != 0) len = 12;
-    else len = 7;
+    /* Calculate length */
+    for (len = 40; fetch_fw(devid + len-4) == 0; len -= 4);
+    len = len < 12 ? 12 : len;
 
     return len;
 }
@@ -373,50 +332,58 @@ BYTE buf[256];
     /* Clear the configuration data area */
     memset (buf, 0, 256);
 
-    /* Bytes 0-31 contain node element descriptor 1 (HDA) data */
-    buf[0] = 0xCC;
-    buf[1] = 0x01;
-    buf[2] = 0x01;
-    sprintf ((char *)&buf[4], "00%4.4X0%2.2XHRCZZ000000000001",
+    /* Bytes 0-31: NED 1  Node element descriptor for the device */
+    store_fw (buf, 0xc4010100);
+    sprintf ((char *)&buf[4], "  %4.4X0%2.2XHRCZZ000000000001",
                         dev->ckdtab->devt, dev->ckdtab->model);
     for (i = 4; i < 30; i++)
         buf[i] = host_to_guest(buf[i]);
-    buf[31] = 0x30;
+    store_hw(buf + 30, 0x0300);
 
-    /* Bytes 32-63 contain node element descriptor 2 (unit) data */
-    memcpy (&buf[32], &buf[0], 32);
-    buf[33] = 0x00;
-    buf[34] = 0x00;
+    /* Bytes 32-63: NED 2  Node element descriptor for the string */
+    store_fw (buf + 32, 0xc4000000);
+    sprintf ((char *)&buf[36], "  %4.4X0%2.2XHRCZZ000000000001",
+                        dev->ckdtab->devt, dev->ckdtab->model);
+    for (i = 36; i < 62; i++)
+        buf[i] = host_to_guest(buf[i]);
+    store_hw (buf + 62, 0x0300);
 
-    /* Bytes 64-95 contain node element descriptor 3 (CU) data */
-    buf[64] = 0xD4;
-    buf[65] = 0x02;
-    sprintf ((char *)&buf[68], "00%4.4X0%2.2XHRCZZ000000000001",
+    /* Bytes 64-95: NED 3  Node element descriptor for the storage director */
+    store_fw (buf + 64, 0xd4020000);
+    sprintf ((char *)&buf[68], "  %4.4X0%2.2XHRCZZ000000000001",
                         dev->ckdcu->devt, dev->ckdcu->model);
     for (i = 68; i < 94; i++)
         buf[i] = host_to_guest(buf[i]);
-    buf[95] = 0x91;
+    store_hw (buf + 94, 0x0300);
 
-    /* Bytes 96-127 contain node element desc 4 (subsystem) data */
-    memcpy (&buf[96], &buf[64], 32);
-    buf[96] = 0xF0;
-    buf[97] = 0x00;
-    buf[98] = 0x00;
-    buf[99] = 0x01;
+    /* Bytes 96-127: NED 4  Node element descriptor for the subsystem */
+    store_fw (buf + 96, 0xF0000001);
+    sprintf ((char *)&buf[100], "  %4.4X   HRCZZ000000000001",
+                        dev->ckdcu->devt);
+    for (i = 100; i < 126; i++)
+        buf[i] = host_to_guest(buf[i]);
+    store_hw (buf + 126, 0x0300);
 
-    /* Bytes 128-223 contain zeroes */
+    /* Bytes 128-223: zeroes */
 
-    /* Bytes 224-255 contain node element qualifier data */
-    buf[224] = 0x80;
-    buf[230] = 0x3c;
-    buf[232] = (myssid >> 8) & 0xff;
-    buf[233] = myssid & 0xff;
-    buf[234] = 0x80;
-    buf[235] = dev->devnum & 0xff;
-    buf[236] = dev->devnum & 0xff;
-    buf[237] = dev->devnum & 0xff;
-    buf[241] = 0x80; /* Channel: 80=Parallel,40=ESCON,10=Fiber */
-    buf[243] = dev->devnum & 0xff;
+    /* Bytes 224-255: NEQ  Node Element Qualifier */
+    buf[224] = 0x80;                  // flags (general NEQ)
+    buf[225] = 0;                     // record selector
+    store_hw (buf + 226, IFID(dev));  // interface id
+    store_hw (buf + 228, 0);          // must be zero
+    buf[230] = 0x1E;                  // primary missing interrupt timer interval
+    buf[231] = 0x00;                  // secondary missing interrupt timer interval
+    store_hw (buf + 232, SSID(dev));  // subsystem id
+    buf[234] = 0x80;                  // path/cluster id
+    buf[235] = (dev->devnum & 0xFF);  // unit address
+    buf[236] = (dev->devnum & 0xFF);  // physical device id
+    buf[237] = (dev->devnum & 0xFF);  // physical device address
+    buf[238] = buf[227];              // SA ID (same as interface ID, byte 227)
+    store_hw (buf + 239, 0);          // escon link address
+    buf[241] = 0x80;                  // interface protocol type (parallel)
+    buf[242] = 0x80;                  // NEQ format flags
+    buf[243] = (dev->devnum & 0xFF);  // logical device address (LDA)
+                                      // bytes 244-255 must be zero
 
     /* Copy data characteristics to the I/O buf */
     count = count > 256 ? 256 : count;
@@ -437,8 +404,8 @@ BYTE buf[44];
     /* Build the basic subsystem status data in the I/O area */
     memset (buf, 0, 44);
     buf[1] = dev->devnum & 0xFF;
-    buf[38] = (myssid >> 8) & 0xff;
-    buf[39] = myssid & 0xff;
+    buf[2] = DEVICES_PER_SUBSYS - 1;
+    store_hw (buf + 38, SSID(dev));
     num = 40;
 
     /* Build an additional 4 bytes of data for the 3990-6 */

@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.11  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #if !defined(_DASDTAB_H)
 #define _DASDTAB_H
@@ -27,8 +30,18 @@
 #endif
 
 #define CKD_CONFIG_DATA_SIZE 256
+#if 0
 #define myssid (dev->devnum & 0xffe0)   /* Storage subsystem identifier
                                            32 devices per subsystem  */
+#else
+#define myssid SSID(dev)
+#endif
+
+/* 32 devices per subsystem */
+#define DEVICES_PER_SUBSYS_SHIFT 5
+#define DEVICES_PER_SUBSYS (1 << DEVICES_PER_SUBSYS_SHIFT)
+#define SSID(_dev) ((_dev)->devnum & ~(DEVICES_PER_SUBSYS-1))
+#define IFID(_dev) ((SSID((_dev)) >> DEVICES_PER_SUBSYS_SHIFT) & 0x7)
 
 /*-------------------------------------------------------------------*/
 /* Definition of a CKD DASD device entry                             */

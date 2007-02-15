@@ -1,3 +1,4 @@
+14 Feb 2007 Fix ckd RCD, SNSS, SNSID responses - Greg
 13 Feb 2007 Treat DIAG X'9C' same as DIAG X'44' - Fish
 08 Feb 2007 Don't log Sense Running State SIGP order - Fish
 03 Feb 2007 Fix MVT tape CMDREJ error - Greg Smith
