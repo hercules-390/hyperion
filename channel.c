@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.137  2007/02/03 18:58:06  gsmith
+// Fix MVT tape CMDREJ error
+//
 // Revision 1.136  2007/01/16 01:45:33  gsmith
 // Tweaks to instruction stepping/tracing
 //
@@ -2132,6 +2135,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     obtain_lock (&dev->lock);
 
     dev->regs = NULL;
+    dev->syncio_active = dev->syncio_retry = 0;
 
 #if defined(_FEATURE_IO_ASSIST)
     if(SIE_MODE(regs)
@@ -2210,7 +2214,8 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     else if (dev->syncio == 2 && fetch_fw(dev->orb.ccwaddr) < dev->mainlim)
     {
         dev->code = dev->mainstor[fetch_fw(dev->orb.ccwaddr)];
-        syncio = IS_CCW_TIC(dev->code) || IS_CCW_IMMEDIATE(dev);
+        syncio = IS_CCW_TIC(dev->code) || IS_CCW_SENSE(dev->code)
+              || IS_CCW_IMMEDIATE(dev);
     }
     else
         syncio = 0;
@@ -2223,7 +2228,6 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     {
         /* Initiate synchronous I/O */
         dev->syncio_active = 1;
-        dev->syncio_retry = 0;
         dev->ioactive = DEV_SYS_LOCAL;
         dev->regs = regs;
         release_lock (&dev->lock);
@@ -2233,9 +2237,12 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
          * SYNCHRONIZE_CPUS to consider this CPU waiting while
          * performing synchronous i/o.
          */
-        OBTAIN_INTLOCK(regs);
-        regs->hostregs->syncio = 1;
-        RELEASE_INTLOCK(regs);
+        if (regs->cpubit != sysblk.started_mask)
+        {
+            OBTAIN_INTLOCK(regs);
+            regs->hostregs->syncio = 1;
+            RELEASE_INTLOCK(regs);
+        }
 
         call_execute_ccw_chain(sysblk.arch_mode, dev);
 
@@ -2250,6 +2257,10 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
         dev->syncio_active = 0;
         if (!dev->syncio_retry)
             return 0;
+        /*
+         * syncio_retry gets turned off after the execute ccw
+         * device handler routine is called for the first time
+         */
     }
     else
         release_lock (&dev->lock);
@@ -2948,7 +2959,8 @@ resume_suspend:
 
         /* If synchronous I/O and a syncio 2 device and not an
            immediate CCW then retry asynchronously */
-        if (dev->syncio_active && dev->syncio == 2 && !dev->is_immed)
+        if (dev->syncio_active && dev->syncio == 2
+         && !dev->is_immed && !IS_CCW_SENSE(dev->code))
         {
             dev->syncio_retry = 1;
             return NULL;
@@ -3029,6 +3041,13 @@ resume_suspend:
         /* Check if synchronous I/O needs to be retried */
         if (dev->syncio_active && dev->syncio_retry)
             return NULL;
+        /*
+         * NOTE: syncio_retry is left on for an asynchronous I/O until
+         * after the first call to the execute ccw device handler.
+         * This allows the device handler to realize that the I/O is
+         * being retried asynchronously.
+         */
+        dev->syncio_retry = 0;
 
         /* Check for Command Retry (suggested by Jim Pierson) */
         if ( unitstat == ( CSW_CE | CSW_DE | CSW_UC | CSW_SM ) )
