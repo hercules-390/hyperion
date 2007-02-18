@@ -1,7 +1,9 @@
+18 Feb 2007 Add TIME and NOTIME synonyms for LOGOPT operands - Kevin Leonard
 14 Feb 2007 Fix ckd RCD, SNSS, SNSID responses - Greg
 13 Feb 2007 Treat DIAG X'9C' same as DIAG X'44' - Fish
 08 Feb 2007 Don't log Sense Running State SIGP order - Fish
 03 Feb 2007 Fix MVT tape CMDREJ error - Greg Smith
+31 Jan 2007 Add LOGOPT init statement and panel command - Kevin Leonard
 30 Jan 2007 Decimal Floating Point (DFP) facility - Roger Bowler
 15 Jan 2007 ia32/x64 cmpxchgX assists fix/enhancements - Greg & Ivan
 14 Jan 2007 Fix S370 only build - nerak60510 by Greg

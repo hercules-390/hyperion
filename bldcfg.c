@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.72  2007/01/31 00:48:03  kleonard
+// Add logopt config statement and panel command
+//
 // Revision 1.71  2007/01/14 19:42:38  gsmith
 // Fix S370 only build - nerak60510
 //
@@ -1351,21 +1354,23 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         {
             for(i=0; i < logoptc; i++)
             {
-                if (!strcasecmp(slogopt[i],"timestamp"))
+                if (strcasecmp(slogopt[i],"timestamp") == 0 ||
+                    strcasecmp(slogopt[i],"time"     ) == 0)
                 {
                     sysblk.logoptnotime = 0;
+                    continue;
                 }
-                else if (!strcasecmp(slogopt[i],"notimestamp"))
+                if (strcasecmp(slogopt[i],"notimestamp") == 0 ||
+                    strcasecmp(slogopt[i],"notime"     ) == 0)
                 {
                     sysblk.logoptnotime = 1;
+                    continue;
                 }
-                else
-                {
-                    fprintf(stderr, _("HHCCF089S Error in %s line %d: "
-                            "Invalid log option keyword %s\n"),
-                            fname, inc_stmtnum[inc_level], slogopt[i]);
-                    delayed_exit(1);
-                }
+
+                fprintf(stderr, _("HHCCF089S Error in %s line %d: "
+                        "Invalid log option keyword %s\n"),
+                        fname, inc_stmtnum[inc_level], slogopt[i]);
+                delayed_exit(1);
             } /* for(i=0; i < logoptc; i++) */
         }
 

@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.214  2007/01/31 00:48:03  kleonard
+// Add logopt config statement and panel command
+//
 // Revision 1.213  2007/01/31 00:00:52  kleonard
 // Add message numbers to tt32 messages
 //
@@ -357,25 +360,26 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
     }
     else
     {
-        argv++; argc--;
-        while (argc)
+        while (argc > 1)
         {
-            if (!strcasecmp(argv[0],"timestamp"))
+            argv++; argc--;
+            if (strcasecmp(argv[0],"timestamp") == 0 ||
+                strcasecmp(argv[0],"time"     ) == 0)
             {
                 sysblk.logoptnotime = 0;
                 logmsg(_("HHCPN197I Log option set: TIMESTAMP\n"));
+                continue;
             }
-            else if (!strcasecmp(argv[0],"notimestamp"))
+            if (strcasecmp(argv[0],"notimestamp") == 0 || 
+                strcasecmp(argv[0],"notime"     ) == 0)
             {
                 sysblk.logoptnotime = 1;
                 logmsg(_("HHCPN197I Log option set: NOTIMESTAMP\n"));
+                continue;
             }
-            else
-            {
-                logmsg(_("HHCPN196E Invalid logopt value %s\n"), argv[0]);
-            }
-            argv++; argc--;
-        } /* while (argc) */
+
+            logmsg(_("HHCPN196E Invalid logopt value %s\n"), argv[0]);
+        } /* while (argc > 1) */
     }
     return 0;
 }
@@ -5525,7 +5529,9 @@ CMDHELP ( "traceopt",  "Format: \"traceopt [regsfirst | noregs | traditional]\".
 CMDHELP ( "logopt",    "Format: \"logopt [timestamp | notimestamp]\".   Sets logging options.\n"
                        "\"timestamp\" inserts a time stamp in front of each log message.\n"
                        "\"notimestamp\" displays log messages with no time stamps.  Entering\n"
-                       "the command without any argument displays current logging options.\n"
+                       "the command with no arguments displays current logging options.\n"
+                       "\"timestamp\" and \"notimestamp\" may be abbreviated as \"time\"\n"
+                       "and \"notime\" respectively.\n"
                        )
 
 CMDHELP ( "conkpalv",  "Format: \"conkpalv (idle,intv,count)\" where 'idle', 'intv' and 'count' are the\n"
