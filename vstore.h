@@ -34,6 +34,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.73  2007/01/11 02:44:25  gsmith
+// Temp patch to help messed up gcc v4 optimizations
+//
 // Revision 1.72  2007/01/09 23:19:35  gsmith
 // Tweaks to sloppy fetch
 //
@@ -702,7 +705,7 @@ int     len;                            /* Length for page crossing  */
 
         /* Update the AIA */
         regs->AIV = addr & PAGEFRAME_PAGEMASK;
-        regs->aip = ia - offset;
+        regs->aip = (BYTE *)((uintptr_t)ia & ~PAGEFRAME_BYTEMASK);
         regs->aim = (uintptr_t)regs->aip ^ (uintptr_t)regs->AIV;
         if (likely(!regs->tracing && !regs->permode))
             regs->aie = regs->aip + pagesz - 5;
