@@ -1,0 +1,561 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules: Shared Device Server</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Shared Device Server</h1>
+<hr noshade>
+<h2>Contents</h2>
+<ul>
+<li><a href="#overview">     Overview      </a>
+<li><a href="#technical">    Technical BS  </a>
+<li><a href="#caching">      Caching       </a>
+<li><a href="#compression">  Compression   </a>
+<li><a href="#todo">         To Do         </a>
+</ul>
+
+<p>
+
+<hr noshade>
+<h2><a NAME="overview">Overview</a></h2>
+
+(C) Copyright Greg Smith, 2002-2007
+
+<p>
+
+Shared device support allows multiple Hercules instances to share
+devices.  The device will be 'local' to one instance and 'remote'
+to all other instances.  The local instance is the 'server' for
+that device and the remote instance is the 'client'.  You do not
+have to IPL an operating system on the device server.  Any number
+of Hercules instances can act as a server in a "Hercplex".
+
+<p>
+
+To use a device on a remote system, instead of specifying a file
+name on the device config statement, you specify
+
+<p>
+<blockquote>
+    <code>ip_address_or_name:port:devnum</code>
+</blockquote>
+<p>
+
+For example:
+
+<pre class="jcl">
+    0100  3350  localhost:3990:0100
+</pre>
+
+which says there is a device server on the local host listening
+on port 3990 and we want to use its 0100 device as 0100.  The
+default port is 3990 and the default remote device number is the
+local device number.  So we could say:
+
+<pre class="jcl">
+    0100  3350  localhost
+</pre>
+
+instead, providing we don't actually have a file 'localhost'.
+Interestingly, the instance on the local host listening on 3990
+could have a statement:
+
+<pre class="jcl">
+    0100  3350  192.168.200.1::0200
+</pre>
+
+which means that instance in turn will use device 0200 on the
+server at 192.168.200.1 listening on port 3990.  The original
+instance will have to 'hop' thru the second instance to get
+to the real device.
+
+<p>
+
+Device sharing can be 'split' between multiple instances.
+For example, suppose instance A has:
+
+<pre class="jcl">
+    SHRDPORT 3990
+    0100  3350  localhost:3991
+    0101  3350  mvscat
+</pre>
+
+and instance B has:
+
+<pre class="jcl">
+    SHRDPORT 3991
+    0100  3350  mvsres
+    0101  3350  localhost
+</pre>
+
+Then each instance acts as both a client and as a server.
+
+<p>
+
+When 'SHRDPORT' is specified, thread 'shared_server' is started
+at the end of Hercules initialization.  In the example above,
+neither Hercules instance can initialize their devices until the
+server is started on each system.  In this case, the device trying
+to access a server gets the 'connecting' bit set on in the DEVBLK
+and the device still needs to initialize.  After the shared server
+is started, a thread is attached for each device that is connecting
+to complete the connection (which is the device init handler).
+
+<p><br>
+
+<h2><a NAME="technical">Technical BS</a></h2>
+
+There are (at least) two approaches to sharing devices.  One is to
+execute the channel program on the server system.   The server will
+need to request from the client system information such as the ccw
+and the data to be written, and will need to send to the client
+data that has been read and status information.  The second is to
+execute the channel program on the client system.  Here the client
+system makes requests to the server system to read and write data.
+
+<p>
+
+The second approach is currently implemented.  The first approach
+arguably emulates 'more correctly'.  However, an advantage of the
+implemented approach is that it is easier because only the
+client sends requests and only the server sends responses.
+
+<p>
+
+Both client and server have a DEVBLK structure for the device.
+Absurdly, perhaps, in originally designing an implementation for
+shared devices it was not clear what type of process should be the
+server.  It was a quantum leap forward to realize that it could
+just be another hercules instance.
+
+<p>
+
+<h3>Protocol</h3>
+
+<p>
+
+(If this section is as boring for you to read as it was for me
+ to write then please skip to the next section ;-)
+
+<p>
+
+The client sends an 8 byte request header and maybe some data:
+
+<pre>
+    +-----+-----+-----+-----+-----+-----+-----+-----+
+    | cmd |flag |  devnum   |    id     |   length  |
+    +-----+-----+-----+-----+-----+-----+-----+-----+
+
+                <-------- length --------->
+                +----- .  .  .  .  . -----+
+                |          data           |
+                +----- .  .  .  .  . -----+
+</pre>
+
+<p>
+
+'cmd' identifies the client request.  The requests are:
+
+<p>
+
+<blockquote>
+    <dl>
+    <dt>0xe0 &nbsp; CONNECT<p><dd>
+
+        Connect to the server.  This requires
+        the server to allocate resources to
+        support the connection.  Typically issued
+        during device initialization or after being
+        disconnected after a network error or timeout.
+
+    <p>
+    <dt>0xe1 &nbsp; DISCONNECT<p><dd>
+
+        Disconnect from the server.  The server
+        can now release the allocated resources
+        for the connection.  Typically issued during
+        device close or detach.
+
+    <p>
+    <dt>0xe2 &nbsp; START<p><dd>
+
+        Start a channel program on the device.
+        If the device is busy or reserved by
+        another system then wait until the device
+        is available unless the NOWAIT flag bit
+        is set, then return a BUSY code.  Once
+        START succeeds then the device is unavailable
+        until the END request.
+
+    <p>
+    <dt>0xe3 &nbsp; END<p><dd>
+
+        Channel program has ended.  Any waiters
+        for the device can now retry.
+
+    <p>
+    <dt>0xe4 &nbsp; RESUME<p><dd>
+
+        Similar to START except a suspended
+        channel program has resumed.
+
+    <p>
+    <dt>0xe5 &nbsp; SUSPEND<p><dd>
+
+        Similar to END except a channel program
+        has suspended itself.  If the channel
+        program is not resumed then the END
+        request is <i>not</i> issued.
+
+    <p>
+    <dt>0xe6 &nbsp; RESERVE<p><dd>
+
+        Makes the device unavailable to any other
+        system until a RELEASE request is issued.
+        <i>Must</i> be issued within the scope of START/END.
+
+    <p>
+    <dt>0xe7 &nbsp; RELEASE<p><dd>
+
+        Makes the device available to other systems
+        after the next END request.
+        <i>Must</i> be issued within the scope of
+        START/END.
+
+    <p>
+    <dt>0xe8 &nbsp; READ<p><dd>
+
+        Read from a device.  A 4-byte 'record'
+        identifier is specified in the request
+        data to identify what data to read in the
+        device context.
+        <i>Must</i> be issued within the scope of START/END.
+
+    <p>
+    <dt>0xe9 &nbsp; WRITE<p><dd>
+
+        Write to a device. A 2-byte 'offset' and
+        a 4-byte 'record' is specified in the request
+        data, followed by the data to be written.
+        'record' identifies what data is to be written
+        in the device context and 'offset' and 'length'
+        identify what to update in 'record'.
+        <i>Must</i> be issued within the scope of START/END.
+
+    <p>
+    <dt>0xea &nbsp; SENSE<p><dd>
+
+        Retrieves the sense information after an i/o
+        error has occurred on the server side.  This
+        is typically issued within the scope of the
+        channel program having the error.  Client side
+        sense or concurrent sense will then pick up the
+        sense data relevant to the i/o error.
+        <i>Must</i> be issued within the scope of START/END.
+
+    <p>
+    <dt>0xeb &nbsp; QUERY<p><dd>
+
+        Obtain device information, typically during
+        device initialization.
+
+    <p>
+    <dt>0xec &nbsp; COMPRESS<p><dd>
+
+        Negotiate compression parameters.  Notifies the
+        server what compression algorithms are supported
+        by the client and whether or not data sent back
+        and forth from the client or server should be
+        compressed or not.  Typically issued after CONNECT.
+        <p>
+        NOTE: This action should actually be SETOPT or
+        some such; it was just easier to code a COMPRESS
+        specific SETOPT (less code).
+        
+    </dl>
+</blockquote>
+
+<p><br>
+
+'flag' qualifies the client request and varies by the request.
+
+<blockquote>
+    <dl>
+    <dt>0x80 &nbsp; NOWAIT<p><dd>
+
+        For START, if the device is unavailable then
+        return BUSY instead of waiting for the device.
+
+    <p>
+    <dt>0x40 &nbsp; QUERY<p><dd>
+
+        Identifies the QUERY request:
+
+    <p>
+    <dt>0x41 &nbsp; DEVCHAR<p><dd>
+
+        Device characteristics data
+    <p>
+    <dt>0x42 &nbsp; DEVID<p><dd>
+
+        Device identifier data
+        
+    <p>
+    <dt>0x43 &nbsp; DEVUSED<p><dd>
+
+        Hi used track/block (for dasdcopy)
+
+    <p>
+    <dt>0x48 &nbsp; CKDCYLS<p><dd>
+
+        Number cylinders for CKD device
+
+    <p>
+    <dt>0x4c &nbsp; FBAORIGIN<p><dd>
+
+        Origin block for FBA
+
+    <p>
+    <dt>0x4d &nbsp; FBANUMBLK<p><dd>
+
+        Number of FBA blocks
+
+    <p>
+    <dt>0x4e &nbsp; FBABLKSIZ<p><dd>
+
+        Size of an FBA block
+
+    <p>
+    <dt>0x3x &nbsp; COMP<p><dd>
+
+        For WRITE, data is compressed at offset 'x':
+
+    <p>
+    <dt>0x2x &nbsp; BZIP2<p><dd>
+
+        using bzip2
+
+    <p>
+    <dt>0x1x &nbsp; LIBZ<p><dd>
+
+        using zlib
+        
+    <p>
+    <dt>0xxy<p><dd>
+    
+        For COMPRESS, identifies the compression
+        algorithms supported by the client (0x2y for bzip2,
+        0x1y for zlib, 0x3y for both) and the zlib compression
+        parameter 'y' for sending otherwise uncompressed data
+        back and forth.  If 'y' is zero (default) then no
+        uncompressed data is compressed between client & server.
+
+    </dl>
+</blockquote>
+
+<p><br>
+
+'devnum' identifies the device by number on the server instance.
+                    The device number may be different than the
+                    device number on the client instance.
+
+<p>
+
+'id' identifies the client to the server.  Each client has a unique
+                    positive (non-zero) identifier.  For the initial
+                    CONNECT request 'id' is zero.  After a successful
+                    CONNECT, the server returns in the response header
+                    the identifier to be used for all other requests
+                    (including subsequent CONNECT requests).  This is
+                    saved in dev->rmtid.
+
+<p>
+
+'length' specifies the length of the data following the request header.
+                    Currently length is non-zero for READ/WRITE requests.
+
+<p><br>
+
+The server sends an 8 byte response header and maybe some data:
+
+<pre>
+    +-----+-----+-----+-----+-----+-----+-----+-----+
+    |code |stat |  devnum   |    id     |  length   |
+    +-----+-----+-----+-----+-----+-----+-----+-----+
+
+                <-------- length --------->
+                +----- .  .  .  .  . -----+
+                |          data           |
+                +----- .  .  .  .  . -----+
+</pre>
+
+<p>
+
+'code' indicates the response to the request.  OK (0x00) indicates
+                    success however other codes also indicate success
+                    but qualified in some manner:
+
+<blockquote>
+    <dl>
+    <dt>0x80 &nbsp; ERROR<p><dd>
+
+        An error occurred.  The server provides an error
+        message in the data section.
+
+    <p>
+    <dt>0x40 &nbsp; IOERR<p><dd>
+
+        An i/o error occurred during a READ/WRITE
+        request.  The status byte has the 'unitstat'
+        data.  This should signal the client to issue the
+        SENSE request to obtain the current sense data.
+
+    <p>
+    <dt>0x20 &nbsp; BUSY<p><dd>
+
+        Device was not available for a START request and
+        the NOWAIT flag bit was turned on.
+
+    <p>
+    <dt>0x10 &nbsp; COMP<p><dd>
+
+        Data returned is compressed.  The status byte
+        indicates how the data is compressed (zlib or
+        bzip2) and at what offset the compressed data
+        starts (0 .. 15).  This bit is only turned on
+        when both the 'code' and 'status' bytes would
+        otherwise be zero.
+
+    <p>
+    <dt>0x08 &nbsp; PURGE<p><dd>
+
+        START request was issued by the client.  A list
+        of 'records' to be purged from local cache is
+        returned.  These are 'records' that have been
+        updated since the last START/END request from
+        the client by other systems.  Each record identifier
+        is a 4-byte field in the data segment.  The number
+        of records then is 'length'/4.  If the number of
+        records exceeds a threshold (16) then 'length'
+        will be zero indicating that the client should
+        purge all locally cached records for the device.
+
+    </dl>
+</blockquote>
+
+<p>
+
+'stat' contains status information as a result of the request.
+                    For READ/WRITE requests this contains the 'unitstat'
+                    information if an IOERR occurred.
+
+<p>
+
+'devnum' specifies the server device number
+
+<p>
+
+'id' specifies the system identifier for the request.
+
+<p>
+
+'length' is the size of the data returned.
+
+<p><br>
+
+<h2><a NAME="caching">Caching</a></h2>
+
+Cached records (eg CKD tracks or FBA blocks) are kept independently on
+both the client and server sides.  Whenever the client issues a START
+request to initiate a channel program the server will return a list
+of records to purge from the client's cache that have been updated by
+other clients since the last START request.  If the list is too large
+the server will indicate that the client should purge all records for
+the device.
+
+<p><br>
+
+<h2><a NAME="compression">Compression</a></h2>
+
+Data that would normally be transferred uncompressed between client
+and host can optionally be compressed by specifying the '<code>comp=</code>'
+keyword on the device configuration statement or attach command.
+For example:
+
+<pre class="jcl">
+    0100  3350  192.168.2.12  comp=3
+</pre>
+
+The value of the 'comp=' keyword is the zlib compression parameter
+which should be a number between 1 .. 9.  A value closer to 1 means
+less compression but less processor time to perform the compression.
+A value closer to 9 means the data is compressed more but more processor
+time is required.
+
+<p>
+
+If the server is on 'localhost' then you should not specify 'comp='.
+Otherwise you are just stealing processor time to do compression/
+uncompression from hercules.  If the server is on a local network
+then I would recommend specifying a low value such as 1, 2 or 3.
+We are on a curve here, trying to trade cpu cycles for network traffic
+to derive an optimal throughput.
+
+<p>
+
+If the devices on the server are compressed devices (eg CCKD or CFBA)
+then the 'records' (eg. track images or block groups) may be transferred
+compressed regardless of the 'comp=' setting.  This depends on whether
+the client supports the compression type (zlib or bzip2) of the record
+on the server and whether the record is actually compressed in the
+server cache.
+
+<p>
+
+For example:
+
+<p>
+
+Suppose on the client that you execute one or more channel programs
+to read a record on a ckd track, update a record on the same track,
+and then read another (or the same) record on the track.
+
+<p>
+
+For the first read the server will read the track image and
+pass it to the client as it was originally compressed in the file.
+To update a portion of the track image the server must uncompress
+the track image so data in it can be updated.  When the client next
+reads from the track image, the track image is uncompressed.
+
+<p>
+
+Specifying 'comp=' means that uncompressed data sent to the client
+will be compressed.  If the data to be sent to the client is already
+compressed then the data is sent as is, unless the client has indicated
+that it does not support that compression algorithm.
+
+<p><br>
+
+<h2><a NAME="todo">To Do</a></h2>
+
+<ol>
+    <li>More doc (sorry, I got winded)
+    <li>Delays observed during short transfers (redrive select ?)
+    <li>Better server side behaviour due to disconnect
+    <li>etc.
+</ol>
+
+<p>
+
+Greg Smith
+<a href="mailto:gsmith@nc.rr.com"><em>gsmith</em>&#064;<em>nc.rr.com</em></a>
+<p><center><hr width=15% noshade>
+<a href="index.html"><img src="images/back.gif" border=0 alt="back"></a>
+</center>
+<p class="lastupd">Last updated $Date$ $Revision$</p>
+</BODY>
+</HTML>

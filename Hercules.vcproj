@@ -1233,6 +1233,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\html\shared.html"
+						>
+					</File>
+					<File
 						RelativePath=".\html\tasks.html"
 						>
 					</File>

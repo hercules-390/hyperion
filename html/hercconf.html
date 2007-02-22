@@ -772,7 +772,7 @@ and how they are used.
 <a name="SHRDPORT"></a>
 <dt><code>SHRDPORT &nbsp; <em>nnnn</em></code>
 <dd><p>
-    specifies the port number (in decimal) on which the Shared Device server
+    specifies the port number (in decimal) on which the <a href="shared.html">Shared Device server</a>
     will listen.  Specifying SHRDPORT will allow other Hercules instances
     to access devices on this instance.  (Currently only DASD devices may
     be shared).  By default, the other Hercules instances (clients) will
@@ -2595,7 +2595,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 <dt><em>CKD DASD devices</em>
 <dd><p>
     The argument specifies the name of a file containing the disk CKD
-    DASD image or the INET address of a Hercules shared device server.
+    DASD image or the INET address of a <a href="shared.html">Hercules shared device server</a>.
     <p>
 
     The file consists of a 512-byte device header record
@@ -2640,14 +2640,14 @@ ROUTE  00  172.021.003.032  255.255.255.224
     initialization/tuning control file statement.
     <p>
 
-    If you specify an INET address the format is:
+    If you specify an INET address, the format is:
     <p>
 
     <dl> <!-- begin INET parms -->
     <dt><code><em>ip-name-or-addr</em>:<em>port</em>:<em>devnum</em></code>
     <dd><p>
         <em>ip-name-or-addr</em> specifies the internet name or address
-        where the Hercules shared device server is running.
+        where the <a href="shared.html">Hercules shared device server</a> is running.
         <p>
 
         <em>port</em> specifies the port number the shared device server
@@ -2795,7 +2795,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
 <dt><em>FBA DASD devices</em>
 <dd><p>
     The argument specifies the name of a file which contains the FBA
-    DASD image or the INET address of a Hercules shared device server.
+    DASD image or the INET address of a <a href="shared.html">Hercules shared device server</a>.
     <p>
 
     The file consists of fixed length 512-byte records,
@@ -2838,7 +2838,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
     <dd><p>
 
         <em>ip-name-or-addr</em> specifies the internet name or address
-        where the Hercules shared device server is running.
+        where the <a href="shared.html">Hercules shared device server</a> is running.
         <p>
 
         <em>port</em> specifies the port number the shared device server
