@@ -71,6 +71,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.113  2007/02/03 18:58:06  gsmith
+// Fix MVT tape CMDREJ error
+//
 // Revision 1.112  2006/12/28 03:04:17  fish
 // PR# tape/100: Fix crash in "open_omatape()" in tapedev.c if bad filespec entered in OMA (TDF)  file
 //
@@ -481,7 +484,7 @@ static int passedeot_awstape (DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 static int open_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
-int             rc;                     /* Return code               */
+int             rc = -1;                /* Return code               */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Check for no tape in drive */

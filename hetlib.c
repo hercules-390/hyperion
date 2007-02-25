@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.30  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -1532,7 +1535,7 @@ het_locate( HETB *hetb, int block )
     while( (int)hetb->cblk < block )
     {
         rc = het_fsb( hetb );
-        if( rc < 0 )
+        if( rc < 0 && HETE_TAPEMARK != rc )
         {
             return( rc );
         }
