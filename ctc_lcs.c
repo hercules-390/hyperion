@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.62  2007/01/14 22:17:35  rbowler
+// Correct compile error introduced by rev 1.61
+//
 // Revision 1.61  2007/01/14 08:03:30  fish
 // correct minor (benign(?)) bug in LCS_QueryIPAssists, fix HHCLC011I and related deug msgs in LCS_PortThread to display IP address in correct byte-order.
 //
@@ -307,10 +310,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         pLCSDev->pDEVBLK[0]->fd = pLCSBLK->Port[pLCSDev->bPort].fd;
 
         if( pLCSDev->pDEVBLK[1] )
-        {
-            pLCSBLK->Port[pLCSDev->bPort].icDevices++;
             pLCSDev->pDEVBLK[1]->fd = pLCSBLK->Port[pLCSDev->bPort].fd;
-        }
     }
 
     return 0;
@@ -568,9 +568,15 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 
 int  LCS_Close( DEVBLK* pDEVBLK )
 {
-    PLCSDEV     pLCSDEV = (PLCSDEV)pDEVBLK->dev_data;
-    PLCSBLK     pLCSBLK = pLCSDEV->pLCSBLK;
-    PLCSPORT    pPort   = &pLCSBLK->Port[pLCSDEV->bPort];
+    PLCSDEV     pLCSDEV;
+    PLCSBLK     pLCSBLK;
+    PLCSPORT    pPort;
+
+    if (!(pLCSDEV = (PLCSDEV)pDEVBLK->dev_data))
+        return 0; // (was incomplete group)
+
+    pLCSBLK = pLCSDEV->pLCSBLK;
+    pPort   = &pLCSBLK->Port[pLCSDEV->bPort];
 
     pPort->icDevices--;
 

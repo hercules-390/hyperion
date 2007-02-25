@@ -1,3 +1,4 @@
+25 Feb 2007 Fix crash in LCS close if devinit of incomplete group - Fish
 18 Feb 2007 Add TIME and NOTIME synonyms for LOGOPT operands - Kevin Leonard
 14 Feb 2007 Fix ckd RCD, SNSS, SNSID responses - Greg
 13 Feb 2007 Treat DIAG X'9C' same as DIAG X'44' - Fish
