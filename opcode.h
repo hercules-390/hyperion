@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.197  2007/01/16 01:45:33  gsmith
+// Tweaks to instruction stepping/tracing
+//
 // Revision 1.196  2007/01/15 21:41:36  ivan
 // Move SET_ADDRESSING_MODE beyond auto inclusion barrier in opcode.h P/O Greg
 // Move BEAR related macros also
@@ -520,7 +523,8 @@ do { \
          && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[0] \
          && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[1] \
         ) \
-     || (   PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[1] \
+     || (sysblk.stepaddr[0] > sysblk.stepaddr[1] \
+         && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[1] \
          && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[0] \
         ) \
       ) \
@@ -535,7 +539,8 @@ do { \
          && PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[0] \
          && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[1] \
         ) \
-     || (   PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[1] \
+     || (sysblk.traceaddr[0] > sysblk.traceaddr[1] \
+         && PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[1] \
          && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[0] \
         ) \
       ) \
