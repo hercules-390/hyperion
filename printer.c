@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.37  2006/12/08 09:43:29  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -256,8 +259,7 @@ int     i;                              /* Array subscript           */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
-        fprintf (stderr,
-                _("HHCPR001E File name missing or invalid for printer %4.4X\n"),
+        logmsg (_("HHCPR001E File name missing or invalid for printer %4.4X\n"),
                  dev->devnum);
         return -1;
     }
@@ -286,7 +288,7 @@ int     i;                              /* Array subscript           */
             continue;
         }
 
-        fprintf (stderr, _("HHCPR002E Invalid argument for printer %4.4X: %s\n"),
+        logmsg (_("HHCPR002E Invalid argument for printer %4.4X: %s\n"),
                 dev->devnum, argv[i]);
         return -1;
     }
