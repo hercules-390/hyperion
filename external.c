@@ -25,6 +25,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.69  2007/01/16 01:45:33  gsmith
+// Tweaks to instruction stepping/tracing
+//
 // Revision 1.68  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -270,7 +273,7 @@ U16     cpuad;                          /* Originating CPU address   */
     if ( tod_clock(regs) > regs->clkc
         && OPEN_IC_CLKC(regs) )
     {
-        if (CPU_STEPPING_OR_TRACING(regs, 0))
+        if (CPU_STEPPING_OR_TRACING_ALL)
         {
             logmsg (_("HHCCP024I External interrupt: Clock comparator\n"));
         }
@@ -281,7 +284,7 @@ U16     cpuad;                          /* Originating CPU address   */
     if ( CPU_TIMER(regs) < 0
         && OPEN_IC_PTIMER(regs) )
     {
-        if (CPU_STEPPING_OR_TRACING(regs, 0))
+        if (CPU_STEPPING_OR_TRACING_ALL)
         {
             logmsg (_("HHCCP025I External interrupt: CPU timer=%16.16" I64_FMT "X\n"),
                     (long long)CPU_TIMER(regs) << 8);
@@ -297,7 +300,7 @@ U16     cpuad;                          /* Originating CPU address   */
 #endif /*defined(_FEATURE_SIE)*/
         )
     {
-        if (CPU_STEPPING_OR_TRACING(regs, 0))
+        if (CPU_STEPPING_OR_TRACING_ALL)
         {
             logmsg (_("HHCCP026I External interrupt: Interval timer\n"));
         }
