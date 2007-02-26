@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.62  2007/02/03 18:58:06  gsmith
+// Fix MVT tape CMDREJ error
+//
 // Revision 1.61  2007/01/31 00:48:03  kleonard
 // Add logopt config statement and panel command
 //
@@ -905,6 +908,8 @@ struct DEVBLK {                         /* Device configuration block*/
         int     printrem;               /* Number of bytes remaining
                                            in print buffer           */
         pid_t   ptpcpid;                /* print-to-pipe child pid   */
+        char*   ptpargs;                /* print-to-pipe arguments   */
+        size_t  siz_ptpargs;            /* size of above buffer      */
         u_int   crlf:1;                 /* 1=CRLF delimiters, 0=LF   */
         u_int   diaggate:1;             /* 1=Diagnostic gate command */
         u_int   fold:1;                 /* 1=Fold to upper case      */
