@@ -38,6 +38,9 @@
 */
 
 // $Log$
+// Revision 1.14  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #ifndef _HOSTOPTS_H
 #define _HOSTOPTS_H
@@ -169,7 +172,6 @@
 
 #define HTTP_SERVER_CONNECT_KLUDGE
 
-#undef  OPTION_FISH_STUPID_GUI_PRTSPLR_EXPERIMENT     /* (Don't ask!) */
 /*  Note:  OPTION_FISHIO  only possible with  OPTION_FTHREADS        */
 #if defined(OPTION_FTHREADS)
   #define OPTION_FISHIO                 /* Use Fish's I/O scheduler  */
