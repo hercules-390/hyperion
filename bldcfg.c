@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.73  2007/02/18 23:49:25  kleonard
+// Add TIME and NOTIME synonyms for LOGOPT operands
+//
 // Revision 1.72  2007/01/31 00:48:03  kleonard
 // Add logopt config statement and panel command
 //
@@ -129,9 +132,9 @@ static char *addargv[MAX_ARGS];         /* Additional argument array */
 /* then points to each argument found in the original string. Any    */
 /* argument that begins with '#' comment indicator causes early      */
 /* termination of the parsing and is not included in the count. Any  */
-/* argument found that starts with a double-quote character causes   */
-/* all characters following the double-quote up to the next double-  */
-/* quote to be included as part of that argument. The quotes them-   */
+/* argument found that starts with a quote or apostrophe causes      */
+/* all characters up to the next quote or apostrophe to be           */
+/* included as part of that argument. The quotes/apostrophes them-   */
 /* selves are not considered part of any argument and are ignored.   */
 /* p            Points to string to be parsed.                       */
 /* maxargc      Maximum allowable number of arguments. (Prevents     */
@@ -155,12 +158,13 @@ DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
 
         *pargv = p; ++*pargc; // count new arg
 
-        while (*p && !isspace(*p) && *p != '\"') p++; if (!*p) break; // find end of arg
+        while (*p && !isspace(*p) && *p != '\"' && *p != '\'') p++; if (!*p) break; // find end of arg
 
-        if (*p == '\"')
+        if (*p == '\"' || *p == '\'')
         {
+            char delim = *p;
             if (p == *pargv) *pargv = p+1;
-            while (*++p && *p != '\"'); if (!*p) break; // find end of quoted string
+            while (*++p && *p != delim); if (!*p) break; // find end of quoted string
         }
 
         *p++ = 0; // mark end of arg
