@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.121  2007/01/13 07:29:22  bernard
+// backout ccmask
+//
 // Revision 1.120  2007/01/12 16:43:44  bernard
 // ccmask phase 1
 //
@@ -246,28 +249,6 @@ TID     logcbtid;                       /* RC file thread identifier */
 
     /* Initialize 'hostinfo' BEFORE display_version is called */
     init_hostinfo( &hostinfo );
-
-    /* Display Herc's version information on the terminal so the
-       user can see what version they're actually running before
-       the main control panel is displayed. Note that we're doing
-       this before logger_init gets called so that it actually is
-       written to the actual screen and not deferred until later
-       like messages usually are once logger_init gets called and
-       the logmsg pipe and logger thread get setup/intialized.
-
-       Also note that we only do this when we're NOT running in
-       daemon_mode (i.e. when we're NOT under the control of an
-       external gui). If we're  running under the control of an
-       external GUI, it is the second call further (below handled
-       by the logger thread / redirected pipes) that is the one
-       that ends up displaying the version that the GUI actually
-       sees
-    */
-    if(isatty(STDERR_FILENO))
-        display_version (stderr, "Hercules ", TRUE);
-    else
-        if(isatty(STDOUT_FILENO))
-            display_version (stdout, "Hercules ", TRUE);
 
 #ifdef _MSVC_
     /* Initialize sockets package */

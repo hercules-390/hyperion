@@ -14,6 +14,9 @@
 /* for isatty()                                                      */
 
 // $Log$
+// Revision 1.47  2007/01/31 00:48:03  kleonard
+// Add logopt config statement and panel command
+//
 // Revision 1.46  2006/12/08 09:43:28  jj
 // Add CVS message log
 //
@@ -199,32 +202,6 @@ static void logger_logfile_write( void* pBuff, size_t nBytes )
     }
     if ( sysblk.shutdown )
         fflush ( logger_hrdcpy );
-
-    /* PR# misc/87: "Herc system startup message issuance problem"
-       If the panel display "thread" is not yet in control, then
-       there is not yet any means for the user to see any messages
-       yet, so WE need to display them until such time as the panel
-       display "thread" is ready to take over responsibility and
-       begin displaying them.
-
-       Note that we only do this if Herc is NOT running under control
-       of an external gui (i.e. running in daemon mode). This is because
-       if Herc *is* running under control of an external gui (i.e.
-       *is* running in daemon mode), then the daemon should have already
-       "received" the message and already displayed it to the user
-       by virtue of our having written it to the hardcopy file (since
-       it should be monitoring the hardcopy pipe and displaying to
-       the user all messages received on it).
-    */
-    if (!sysblk.daemon_mode)
-    {
-        if (!sysblk.panel_init)
-        {
-            /* (ignore any errors; we did the best we could) */
-
-            fwrite( pBuff, nBytes, 1, stderr );
-        }
-    }
 }
 
 #ifdef OPTION_TIMESTAMP_LOGFILE
@@ -315,6 +292,18 @@ int bytes_read;
                 fprintf(logger_hrdcpy, _("HHCLG002E Error reading syslog pipe: %s\n"),
                   strerror(read_pipe_errno));
             bytes_read = 0;
+        }
+
+        /* If Hercules is not running in daemon mode and panel
+           initialization is not yet complete, write message
+           to stderr so the user can see it on the terminal */
+        if (!sysblk.daemon_mode)
+        {
+            if (!sysblk.panel_init)
+            {
+                /* (ignore any errors; we did the best we could) */
+                fwrite( logger_buffer + logger_currmsg, bytes_read, 1, stderr );
+            }
         }
 
         if (logger_hrdcpy)
