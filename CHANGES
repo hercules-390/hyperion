@@ -1,3 +1,4 @@
+27 Feb 2007 Fix minor glitch in enhanced symbol substitution - Fish
 26 Feb 2007 Fix print-to-pipe to accept paramters - Fish
 25 Feb 2007 Fix het_locate to continue on tapemark - herc_fun [os_390@hotmail.com] by Fish
 25 Feb 2007 Fix crash in LCS close if devinit of incomplete group - Fish

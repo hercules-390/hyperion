@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.74  2007/02/26 21:33:46  rbowler
+// Allow either quotes or apostrophes as argument delimiters in config statements
+//
 // Revision 1.73  2007/02/18 23:49:25  kleonard
 // Add TIME and NOTIME synonyms for LOGOPT operands
 //
@@ -368,7 +371,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                         /* Terminate var name if we have a default value */
                         if (inc_equals >= 0)
                         {
-                            buf[inc_equals++] = '\0';
+                            buf[inc_equals] = '\0';
                         }
 
                         /* Reset statement index to start of variable */
@@ -383,18 +386,18 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                             /* Substitute default if specified */
                             if (inc_equals >= 0)
                             {
-                                inc_envvar = &buf[inc_equals];
+                                inc_envvar = &buf[inc_equals+1];
                             }
                         }
-                        else
+                        else // (environ variable defined)
                         {
                             /* Have ":=" specification? */
-                            if (inc_colon >= 0 && inc_equals >= 0)
+                            if (/*inc_colon >= 0 && */inc_equals >= 0)
                             {
                                 /* Substitute default if value is NULL */
                                 if (strlen (inc_envvar) == 0)
                                 {
-                                    inc_envvar = &buf[inc_equals];
+                                    inc_envvar = &buf[inc_equals+1];
                                 }
                             }
                         }
@@ -421,7 +424,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                         inc_dollar = -1;
                         continue;
                     }
-                    else if (c == ':' && inc_colon < 0)
+                    else if (c == ':' && inc_colon < 0 && inc_equals < 0)
                     {
                         /* Remember possible start of default specifier */
                         inc_colon = stmtlen;
@@ -431,17 +434,8 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                         /* Remember possible start of default specifier */
                         inc_equals = stmtlen;
                     }
-                    else
-                    {
-                        /* Reset inc_colon specifier if immediately following
-                           character is not a inc_equals */
-                        if (inc_equals < 0)
-                        {
-                            inc_colon = -1;
-                        }
-                    }
                 }
-                else
+                else // (inc_lbrace < 0)
                 {
                     /* Remember start of variable name */
                     if (c == '{')
@@ -456,7 +450,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
                     }
                 }
             }
-            else
+            else // (inc_dollar < 0)
             {
                 /* Enter variable substitution state */
                 if (c == '$')
