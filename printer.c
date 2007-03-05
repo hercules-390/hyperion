@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.39  2007/02/26 15:35:07  fish
+// Fix print-to-pipe to accept paramters
+//
 // Revision 1.38  2007/02/26 13:38:51  rbowler
 // Messages HHCPR001E,HHCPR002E not logged to control panel
 //
@@ -80,23 +83,16 @@ open_printer (DEVBLK *dev)
 {
 pid_t           pid;                    /* Child process identifier  */
 char            pathname[MAX_PATH];     /* file path in host format  */
-char*           pszCmdLine;
-size_t          nCmdLineBuffSize;
-int             save_errno;
 #if !defined( _MSVC_ )
 int             pipefd[2];              /* Pipe descriptors          */
 int             rc;                     /* Return code               */
 #endif
 
-    if (dev->ispiped)
-        hostpath(pathname, dev->filename+1, sizeof(pathname));
-    else
-        hostpath(pathname, dev->filename,   sizeof(pathname));
-
     /* Regular open if 1st char of filename is not vertical bar */
-    if (!dev->ispiped)
+    if (dev->filename[0] != '|')
     {
         int fd;
+        hostpath(pathname, dev->filename, sizeof(pathname));
         fd = open (pathname, O_BINARY |
                     O_WRONLY | O_CREAT | O_TRUNC /* | O_SYNC */,
                     S_IRUSR | S_IWUSR | S_IRGRP);
@@ -109,48 +105,18 @@ int             rc;                     /* Return code               */
 
         /* Save file descriptor in device block and return */
         dev->fd = fd;
+        dev->ispiped = 0;
         return 0;
     }
 
     /* Filename is in format |xxx, set up pipe to program xxx */
 
-    // (allocate room for command-line)
-
-    nCmdLineBuffSize = ( 1 + strlen(pathname) + 1 + dev->siz_ptpargs );
-    if (!(pszCmdLine = malloc( nCmdLineBuffSize )))
-    {
-        logmsg (_("HHCPR013E Out of memory\n"));
-        return -1;
-    }
-    *pszCmdLine = 0;
-
-#if defined( _MSVC_ )
-
-    // (quotes might not be needed but it doesn't hurt to have them anyway)
-    // (if dev->ptpargs is non-empty, it should already start with a blank)
-
-    strlcat( pszCmdLine, "\"",            nCmdLineBuffSize );
-    strlcat( pszCmdLine, pathname,        nCmdLineBuffSize ); // (skip leading '|')
-    strlcat( pszCmdLine, "\"",            nCmdLineBuffSize );
-    strlcat( pszCmdLine, dev->ptpargs,    nCmdLineBuffSize );
-
-#else /* !defined( _MSVC_ ) */
-
-    // (if dev->ptpargs is non-empty, it should already start with a blank)
-
-    strlcat( pszCmdLine, pathname,        nCmdLineBuffSize ); // (skip leading '|')
-    strlcat( pszCmdLine, dev->ptpargs,    nCmdLineBuffSize );
-
-#endif /* defined( _MSVC_ ) */
+    dev->ispiped = 1;
 
 #if defined( _MSVC_ )
 
     /* "Poor man's" fork... */
-    pid = w32_poor_mans_fork ( pszCmdLine, &dev->fd );
-    save_errno = errno;
-    free( pszCmdLine );
-    errno = save_errno;
-
+    pid = w32_poor_mans_fork ( dev->filename+1, &dev->fd );
     if (pid < 0)
     {
         logmsg (_("HHCPR006E %4.4X device initialization error: fork: %s\n"),
@@ -218,11 +184,7 @@ int             rc;                     /* Return code               */
         SETMODE(TERM);
 
         /* Execute the specified pipe receiver program */
-
-        rc = system (pszCmdLine);
-        save_errno = errno;
-        free( pszCmdLine );
-        errno = save_errno;
+        rc = system (dev->filename+1);
 
         if (rc == 0)
         {
@@ -234,7 +196,7 @@ int             rc;                     /* Return code               */
         {
             /* Log error */
             logmsg (_("HHCPR012E %4.4X Unable to execute %s: %s\n"),
-                    dev->devnum, pathname, strerror(errno));
+                    dev->devnum, dev->filename+1, strerror(errno));
         }
 
         /* The child process terminates using _exit instead of exit
@@ -311,47 +273,10 @@ int     i;                              /* Array subscript           */
     dev->fold = 0;
     dev->crlf = 0;
     dev->stopprt = 0;
-    dev->ptpcpid = 0;
-    dev->ispiped = 0;
-    dev->ptpargs = NULL;
-    dev->siz_ptpargs = 0;
 
     /* Process the driver arguments */
     for (i = 1; i < argc; i++)
     {
-        if (dev->ispiped)
-        {
-            size_t siz_ptpargs = dev->siz_ptpargs + 1 + strlen(argv[i]);
-            if (!realloc( dev->ptpargs, siz_ptpargs ))
-            {
-                logmsg (_("HHCPR013E Out of memory\n"));
-                free( dev->ptpargs );
-                dev->ptpargs = NULL;
-                dev->siz_ptpargs = 0;
-                dev->ispiped = 0;
-                return -1;
-            }
-            dev->siz_ptpargs = siz_ptpargs;
-            strlcat( dev->ptpargs, " ",     dev->siz_ptpargs );
-            strlcat( dev->ptpargs, argv[i], dev->siz_ptpargs );
-            continue;
-        }
-
-        if (strcmp(argv[i], "--") == 0)
-        {
-            if (dev->filename[0] == '|')
-            {
-                dev->ispiped = 1;
-                if (!(dev->ptpargs = malloc( dev->siz_ptpargs = 1 )))
-                {
-                    logmsg (_("HHCPR013E Out of memory\n"));
-                    return -1;
-                }
-                *dev->ptpargs = 0;
-                continue;
-            }
-        }
-
         if (strcasecmp(argv[i], "crlf") == 0)
         {
             dev->crlf = 1;
@@ -418,10 +343,6 @@ static int printer_close_device ( DEVBLK *dev )
                 dev->ptpcpid, dev->devnum);
 #endif /* defined( _MSVC_ ) */
         dev->ptpcpid = 0;
-        free( dev->ptpargs );
-        dev->ptpargs = NULL;
-        dev->siz_ptpargs = 0;
-        dev->ispiped = 0;
     }
     else
         close (dev->fd);

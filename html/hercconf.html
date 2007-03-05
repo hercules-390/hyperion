@@ -1828,57 +1828,27 @@ and how they are used.
     </dl>
 
     <p>
-    <center><u>The "<b>print-to-pipe</b>" feature</u></center>
-    <p>
 
     If the filename begins with the vertical bar '&#124;' pipe character,
     then it is removed and the remainder of the filename is interpreted as
     a command line (the name of a program or batch file followed by any
     necessary arguments) to which to "pipe" the printer output to.
-    This is known as the "<b>print-to-pipe</b>" feature. All printer output
+    This is known as the "print-to-pipe" feature. All printer output
     is then sent to the piped program's stdin input, and all of the
     piped program's stdout and stderr output is piped back to Hercules
     for displaying on the hardware console.
 
     <p>
-
-    If the "print-to-pipe" command line contains arguments or if the path
-    of the program to be executed contains blanks in it, then you must use
-    double-quotes around the entire filename and all of its arguments and/or
-    use the special "--" (double-dash) parameter to separate the printer
-    driver's arguments from those to be passed to your print-to-pipe program.
-
-    <p>
-
-    For example, if the path of the program to be executed does not contain
-    any blanks in it but you do need to pass some arguments to your program,
-    then use the below format:
-
-        <pre>
-        000E  1403  "|/usr/bin/lpr -Phplj"     crlf       <em>(for Unix)</em>
-        000E  1403  "|c:\utils\pr -s -PLPT1:"  crlf       <em>(for Windows)</em>
-        </pre>
-
-    If the path of the program to be executed <i>does</i> contain blanks
-    however, <i>and</i> you wish to pass arguments to your print-to-pipe program,
-    then you need to use the following special format:
-
-        <pre>
-        000E  1403  "|c:\my utils\print to pipe\pr"  crlf  --  -s -PLPT1:
-        </pre>
-
-    <p>
-
-    Note the use of the double-dash to separate the 'clrf' argument (which
-    is an argument meant for the Hercules printer driver) from the other
-    arguments meant to be passed to the 'pr' print-to-pipe program itself.
-
-    <p>
-
+    If the "print-to-pipe" command line contains arguments, then quotes
+    must be placed around the entire filename string including the
+    vertical bar, for example:
+    <pre>
+    000E 1403 "|/usr/bin/lpr -Phplj" crlf          <em>(for Unix)</em>
+    000E 1403 "|c:\utils\pr -s -PLPT1:" crlf       <em>(for Windows)</em>
+    </pre>
     The above example uses the pr program downloaded
     from <a href="http://www.atnetsend.net/computing/">
     http://www.atnetsend.net/computing/</a>
-
     <p>
 
 <p><br>
