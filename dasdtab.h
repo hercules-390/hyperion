@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.12  2007/02/15 00:10:04  gsmith
+// Fix ckd RCD, SNSS, SNSID responses
+//
 // Revision 1.11  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -43,6 +46,9 @@
 #define SSID(_dev) ((_dev)->devnum & ~(DEVICES_PER_SUBSYS-1))
 #define IFID(_dev) ((SSID((_dev)) >> DEVICES_PER_SUBSYS_SHIFT) & 0x7)
 
+/* Test for 3990-6 control unit with extended function */
+#define MODEL6(_cu) ((_cu)->devt == 0x3990 && (_cu)->model == 0xe9)
+
 /*-------------------------------------------------------------------*/
 /* Definition of a CKD DASD device entry                             */
 /*-------------------------------------------------------------------*/
@@ -75,6 +81,8 @@ typedef struct _CKDCU {                 /* CKD Control Unit entry    */
         U16     devt;                   /* Control Unit type         */
         BYTE    model;                  /* Control Unit model        */
         BYTE    code;                   /* Control Unit code         */
+        BYTE    funcfeat;               /* Functions/Features        */
+        BYTE    typecode;               /* CU Type Code              */
         U32     sctlfeat;               /* Control Unit features     */
         U32     ciw1;                   /* CIW 1                     */
         U32     ciw2;                   /* CIW 2                     */

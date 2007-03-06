@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.32  2007/02/15 00:10:04  gsmith
+// Fix ckd RCD, SNSS, SNSID responses
+//
 // Revision 1.31  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -91,15 +94,16 @@ static CKDDEV ckdtab[] = {
 /* CKD control unit definitions                                      */
 /*-------------------------------------------------------------------*/
 static CKDCU ckdcutab[] = {
-/* name          type model code features   ciws -------- */
- {"2835",       0x2835,0x00,0x00,0x50000103,0,0,0,0,0,0,0,0},
- {"2841",       0x2841,0x00,0x00,0x50000103,0,0,0,0,0,0,0,0},
- {"3830",       0x3830,0x02,0x00,0x50000103,0,0,0,0,0,0,0,0},
- {"3880",       0x3880,0x05,0x09,0x80000000,0,0,0,0,0,0,0,0},
- {"3990",       0x3990,0xc2,0x10,0xd0000002,0x40fa0100,0,0,0,0,0,0,0},
- {"3990-3",     0x3990,0xec,0x06,0xd000009e,0x40fa0100,0x41270004,0x423e0040,0,0,0,0,0},
- {"3990-6",     0x3990,0xe9,0x15,0xd00010fe,0x40fa0100,0x41270004,0x423e0060,0,0,0,0,0},
- {"9343",       0x9343,0xe0,0x11,0x80000000,0,0,0,0,0,0,0,0}
+/*                              func/ type                           */
+/* name          type model code feat code features   ciws --------- */
+ {"2835",       0x2835,0x00,0x00,0x00,0x00,0x50000103,0,0,0,0,0,0,0,0},
+ {"2841",       0x2841,0x00,0x00,0x00,0x00,0x50000103,0,0,0,0,0,0,0,0},
+ {"3830",       0x3830,0x02,0x00,0x00,0x00,0x50000103,0,0,0,0,0,0,0,0},
+ {"3880",       0x3880,0x05,0x09,0x00,0x00,0x80000000,0,0,0,0,0,0,0,0},
+ {"3990",       0x3990,0xc2,0x10,0x00,0x00,0xd0000002,0x40fa0100,0,0,0,0,0,0,0},
+ {"3990-3",     0x3990,0xec,0x06,0x00,0x00,0xd000009e,0x40fa0100,0x41270004,0x423e0040,0,0,0,0,0},
+ {"3990-6",     0x3990,0xe9,0x15,0x48,0x15,0x50003097,0x40fa0100,0x41270004,0x423e0060,0,0,0,0,0},
+ {"9343",       0x9343,0xe0,0x11,0x00,0x00,0x80000000,0,0,0,0,0,0,0,0}
 } ;
 #define CKDCU_NUM (sizeof(ckdcutab)/CKDCU_SIZE)
 
@@ -241,81 +245,43 @@ int altcyls;                            /* Number alternate cyls     */
     else altcyls = 0;
 
     memset (devchar, 0, 64);
-    devchar[0]  = (cu->devt >> 8) & 0xff;
-    devchar[1]  = cu->devt & 0xff;
-    devchar[2]  = cu->model;
-    devchar[3]  = (ckd->devt >> 8) & 0xff;
-    devchar[4]  = ckd->devt & 0xff;
-    devchar[5]  = ckd->model;
-    devchar[6]  = (cu->sctlfeat >> 24) & 0xff;
-    devchar[7]  = (cu->sctlfeat >> 16) & 0xff;
-    devchar[8]  = (cu->sctlfeat >> 8) & 0xff;
-    devchar[9]  = cu->sctlfeat & 0xff;
-    devchar[10] = ckd->class;
-    devchar[11] = ckd->code;
-    devchar[12] = ((cyls - altcyls) >> 8) & 0xff;
-    devchar[13] = (cyls - altcyls) & 0xff;
-    devchar[14] = (ckd->heads >> 8) & 0xff;
-    devchar[15] = ckd->heads & 0xff;
-    devchar[16] = (BYTE)(ckd->sectors);
-    devchar[17] = 0; // (ckd->len >> 16) & 0xff;
-    devchar[18] = (ckd->len >> 8) & 0xff;
-    devchar[19] = ckd->len & 0xff;
-    devchar[20] = (ckd->har0 >> 8) & 0xff;
-    devchar[21] = ckd->har0 & 0xff;
+    store_hw(devchar+0, cu->devt);              // Storage control type
+    devchar[2]  = cu->model;                    // CU model
+    store_hw(devchar+3, ckd->devt);             // Device type
+    devchar[5]  = ckd->model;                   // Device model
+    store_fw(devchar+6, cu->sctlfeat);          // Device and SD facilities
+    devchar[10] = ckd->class;                   // Device class code
+    devchar[11] = ckd->code;                    // Device type code
+    store_hw(devchar+12, cyls - altcyls);       // Primary cylinders
+    store_hw(devchar+14, ckd->heads);           // Tracks per cylinder
+    devchar[16] = (BYTE)(ckd->sectors);         // Number of sectors
+    store_hw(devchar+18, ckd->len);             // Track length
+    store_hw(devchar+20, ckd->har0);            // Length of HA and R0
     if (ckd->formula > 0)
     {
-        devchar[22] = (BYTE)(ckd->formula);
-        devchar[23] = (BYTE)(ckd->f1);
-        devchar[24] = (BYTE)(ckd->f2);
-        devchar[25] = (BYTE)(ckd->f3);
-        devchar[26] = (BYTE)(ckd->f4);
-        devchar[27] = (BYTE)(ckd->f5);
+        devchar[22] = (BYTE)(ckd->formula);     // Track capacity formula
+        devchar[23] = (BYTE)(ckd->f1);          // Factor F1
+        devchar[24] = (BYTE)(ckd->f2);          // Factor F2
+        devchar[25] = (BYTE)(ckd->f3);          // (F2F3)
+        devchar[26] = (BYTE)(ckd->f4);          // Factor F3
+        devchar[27] = (BYTE)(ckd->f5);          // (F4F5)
     }
-    else
+    if (altcyls > 0)
     {
-        devchar[22] = 0;
-        devchar[23] = 0;
-        devchar[24] = 0;
-        devchar[25] = 0;
-        devchar[26] = 0;
-        devchar[27] = 0;
+        store_hw(devchar+28, cyls - altcyls);   // Alternate cylinder & tracks
+        store_hw(devchar+30, altcyls * ckd->heads);
     }
-    if (altcyls > 0)            // alternate cylinders and tracks
-    {
-        devchar[28] = (ckd->cyls >> 8) & 0xff;
-        devchar[29] = ckd->cyls & 0xff;
-        devchar[30] = ((altcyls * ckd->heads) >> 8) & 0xff;
-        devchar[31] = (altcyls * ckd->heads) & 0xff;
-    }
-    else
-    {
-        devchar[28] = 0;
-        devchar[29] = 0;
-        devchar[30] = 0;
-        devchar[31] = 0;
-    }
-    devchar[32] = 0;            // diagnostic cylinders and tracks
-    devchar[33] = 0;
-    devchar[34] = 0;
-    devchar[35] = 0;
-    devchar[36] = 0;            // device support cylinders and tracks
-    devchar[37] = 0;
-    devchar[38] = 0;
-    devchar[39] = 0;
-    devchar[40] = ckd->code;
-    devchar[41] = ckd->code;
-    devchar[42] = cu->code;
-    devchar[43] = 0;
-    devchar[44] = (ckd->r0 >> 8) & 0xff;
-    devchar[45] = ckd->r0 & 0xff;
-    devchar[46] = 0;
-    devchar[47] = 0;
-    devchar[48] = (BYTE)(ckd->f6);
-    devchar[49] = (ckd->rpscalc >> 8) & 0xff;
-    devchar[50] = ckd->rpscalc & 0xff;
-    devchar[56] = 0xff;         // real CU type code
-    devchar[57] = 0xff;         // real device type code
+    devchar[40] = ckd->code;                    // MDR record ID
+    devchar[41] = ckd->code;                    // OBR record ID
+    devchar[42] = cu->code;                     // CU Type Code
+    devchar[43] = 0x02;                         // Parameter length
+    store_hw(devchar+44, ckd->r0);              // Record 0 length
+    devchar[47] = 0x01;                         // Track set
+    devchar[48] = (BYTE)(ckd->f6);              // F6
+    store_hw(devchar+49, ckd->rpscalc);         // RPS factor
+    devchar[51] = MODEL6(cu) ? 0x0f : 0x00;     // reserved byte 51
+    devchar[54] = cu->funcfeat;                 // device/CU functions/features
+    devchar[56] = cu->typecode;                 // Real CU type code
 
     return 64;
 }
@@ -381,6 +347,7 @@ BYTE buf[256];
     buf[238] = buf[227];              // SA ID (same as interface ID, byte 227)
     store_hw (buf + 239, 0);          // escon link address
     buf[241] = 0x80;                  // interface protocol type (parallel)
+//  buf[241] = 0x40;                  // interface protocol type (escon)
     buf[242] = 0x80;                  // NEQ format flags
     buf[243] = (dev->devnum & 0xFF);  // logical device address (LDA)
                                       // bytes 244-255 must be zero
@@ -409,7 +376,7 @@ BYTE buf[44];
     num = 40;
 
     /* Build an additional 4 bytes of data for the 3990-6 */
-    if (dev->ckdcu->code == 0x15) 
+    if (MODEL6(dev->ckdcu)) 
     {
         buf[0] = 0x01;            /* Set 3990-6 enhanced flag */
         num = 44;                   
