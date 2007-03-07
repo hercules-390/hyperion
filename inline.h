@@ -13,6 +13,9 @@
 /* Multiply/Divide Logical instructions         Vic Cross 13/02/2001 */
 
 // $Log$
+// Revision 1.46  2007/01/04 23:12:04  gsmith
+// remove thunk calls for program_interrupt
+//
 // Revision 1.45  2006/12/08 09:43:28  jj
 // Add CVS message log
 //
@@ -440,6 +443,10 @@ static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
        into the page, regardless of the access key and storage key */
     if (regs->dat.protect)
         return 1;
+#if defined(_FEATURE_SIE)
+    if(SIE_MODE(regs) && regs->hostregs->dat.protect)
+        return 1;
+#endif
 
     /* [3.4.1] Store is allowed if access key is zero, regardless
        of the storage key */
