@@ -27,6 +27,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.55  2007/03/08 02:14:21  gsmith
+// Fix fetch_dw_i686
+//
 // Revision 1.54  2007/01/18 05:19:24  gsmith
 // do MULTI_BYTE_ASSIST for gcc x86 only if __linux__ defined
 //
@@ -542,8 +545,20 @@ __asm__ __volatile__ (
 #define store_dw(x,y) store_dw_i686(x,y)
 static __inline__ void store_dw_i686(void *ptr, U64 value)
 {
- U64 orig = *(U64 *)ptr;
- while ( cmpxchg8 (&orig, CSWAP64(value), (U64 *)ptr) );
+ value = CSWAP64(value);
+__asm__ __volatile__ (
+         "movl    %%ebx,%%esi\n\t"
+         "movl    %%edx,%%ecx\n\t"
+         "movl    %%eax,%%ebx\n\t"
+         "movl    4(%%edi),%%edx\n\t"
+         "movl    (%%edi),%%eax\n"
+         "1:\t"
+         "lock;   cmpxchg8b (%%edi)\n\t"
+         "jne     1b\n\t"
+         "movl    %%esi,%%ebx"
+         :
+         : "A" (value), "D" (ptr)
+         : "memory", "cx", "si");
 }
 
 #if defined(OPTION_MULTI_BYTE_ASSIST) && defined(__linux__)

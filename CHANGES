@@ -1,3 +1,4 @@
+07 Mar 2007 Fix store_dw_i686 - Greg
 07 Mar 2007 Fix fetch_dw_i686 - Greg
 07 Mar 2007 Remove inline attr from vfetchx/vstorex _full functions - Greg
 07 Mar 2007 Fix for SIE'd TPROT - Ivan Warren
