@@ -27,6 +27,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.54  2007/01/18 05:19:24  gsmith
+// do MULTI_BYTE_ASSIST for gcc x86 only if __linux__ defined
+//
 // Revision 1.53  2007/01/16 00:46:42  gsmith
 // Use =q for cc on ia32 cmpxchg8b and -DPIC
 //
@@ -522,9 +525,17 @@ static __inline__ int cmpxchg16_i686(U64 *old1, U64 *old2, U64 new1, U64 new2, v
 #define fetch_dw(x) fetch_dw_i686(x)
 static __inline__ U64 fetch_dw_i686(void *ptr)
 {
- U64 value = *(U64 *)ptr;
- while ( cmpxchg8 (&value, value, (U64 *)ptr) );
- return CSWAP64 (value);
+ U64 value;
+__asm__ __volatile__ (
+         "movl    %%ebx,%%edi\n\t"
+         "movl    %%edx,%%ecx\n\t"
+         "movl    %%eax,%%ebx\n\t"
+         "lock;   cmpxchg8b (%%esi)\n\t"
+         "movl    %%edi,%%ebx"
+         : "=A" (value)
+         : "S" (ptr)
+         : "cx", "di");
+ return CSWAP64(value);
 }
 
 #define ASSIST_STORE_DW
