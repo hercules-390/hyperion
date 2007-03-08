@@ -34,6 +34,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.74  2007/02/18 16:27:36  gsmith
+// Fix instfetch when instruction crosses 0x800
+//
 // Revision 1.73  2007/01/11 02:44:25  gsmith
 // Temp patch to help messed up gcc v4 optimizations
 //
@@ -242,7 +245,7 @@ BYTE   *main1;                          /* Mainstor address          */
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(vstore2_full) (U16 value, VADR addr,
+_VSTORE_FULL_C_STATIC void ARCH_DEP(vstore2_full)(U16 value, VADR addr,
                                               int arn, REGS *regs)
 {
 BYTE   *main1, *main2;                  /* Mainstor addresses        */
@@ -287,7 +290,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(vstore4_full) (U32 value, VADR addr,
+_VSTORE_FULL_C_STATIC void ARCH_DEP(vstore4_full)(U32 value, VADR addr,
                                               int arn, REGS *regs)
 {
 BYTE   *main1, *main2;                  /* Mainstor addresses        */
@@ -336,7 +339,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(vstore8_full) (U64 value, VADR addr,
+_VSTORE_FULL_C_STATIC void ARCH_DEP(vstore8_full)(U64 value, VADR addr,
                                               int arn, REGS *regs)
 {
 BYTE   *main1, *main2;                  /* Mainstor addresses        */
@@ -452,7 +455,7 @@ BYTE   *mn;                           /* Main storage address      */
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC U16 ARCH_DEP(vfetch2_full) (VADR addr, int arn,
+_VSTORE_FULL_C_STATIC U16 ARCH_DEP(vfetch2_full) (VADR addr, int arn,
                                              REGS *regs)
 {
 BYTE   *mn;                             /* Main storage addresses    */
@@ -493,7 +496,7 @@ _VSTORE_C_STATIC U16 ARCH_DEP(vfetch2) (VADR addr, int arn, REGS *regs)
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC U32 ARCH_DEP(vfetch4_full) (VADR addr, int arn,
+_VSTORE_FULL_C_STATIC U32 ARCH_DEP(vfetch4_full) (VADR addr, int arn,
                                              REGS *regs)
 {
 BYTE   *mn;                             /* Main storage addresses    */
@@ -536,7 +539,7 @@ _VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn, REGS *regs)
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC U64 ARCH_DEP(vfetch8_full) (VADR addr, int arn,
+_VSTORE_FULL_C_STATIC U64 ARCH_DEP(vfetch8_full) (VADR addr, int arn,
                                              REGS *regs)
 {
 BYTE   *mn;                             /* Main storage addresses    */

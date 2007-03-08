@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.45  2007/01/14 23:31:46  gsmith
+// nerak's patch, one more time
+//
 // Revision 1.44  2007/01/14 19:49:13  gsmith
 // Fix typos
 //
@@ -130,8 +133,10 @@
 #undef _VSTORE_C_STATIC
 #if !defined(OPTION_NO_INLINE_VSTORE)
  #define _VSTORE_C_STATIC static inline
+ #define _VSTORE_FULL_C_STATIC static
 #else
  #define _VSTORE_C_STATIC
+ #define _VSTORE_FULL_C_STATIC
 #endif
 
 #undef _VFETCH_C_STATIC
