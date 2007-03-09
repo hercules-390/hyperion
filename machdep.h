@@ -27,6 +27,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.56  2007/03/08 03:18:16  gsmith
+// Fix store_dw_i686
+//
 // Revision 1.55  2007/03/08 02:14:21  gsmith
 // Fix fetch_dw_i686
 //
@@ -333,232 +336,116 @@
 /*-------------------------------------------------------------------*/
 #if defined(_ext_ia32)
 
+#undef LOCK_PREFIX
 #ifdef OPTION_SMP
-#define LOCK_PREFIX "lock ; "
+#define LOCK_PREFIX "lock\n\t"
 #else
 #define LOCK_PREFIX ""
+#endif
+
+    /*
+     * If PIC is defined then ebx is used as the `thunk' reg
+     * However cmpxchg8b requires ebx
+     * In this case we load the value into esi and then
+     * exchange esi and ebx before and after cmpxchg8b
+     */
+#undef BREG
+#undef XCHG_BREG
+#ifdef PIC
+#define BREG "S"
+#define XCHG_BREG "xchgl   %%ebx,%%esi\n\t"
+#else
+#define BREG "b"
+#define XCHG_BREG ""
 #endif
 
 #define ASSIST_CMPXCHG1
 #define cmpxchg1(x,y,z) cmpxchg1_i686(x,y,z)
 static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
-/* returns zero on success otherwise returns 1 */
  BYTE code;
- BYTE *ptr_data=ptr;
  __asm__ __volatile__ (
-         "lock;   cmpxchgb %b2,%4\n\t"
-         "setnz   %b0\n\t"
+         LOCK_PREFIX
+         "cmpxchgb %b3,(%4)\n\t"
+         "setnz   %b0"
          : "=q"(code), "=a"(*old)
-         : "q"(new),
-           "1"(*old),
-           "m"(*ptr_data)
-         : "cc");
+         : "1" (*old),
+           "q" (new),
+           "m" (*(BYTE *)ptr)
+         : "memory" );
  return code;
 }
 
 #define ASSIST_CMPXCHG4
 #define cmpxchg4(x,y,z) cmpxchg4_i686(x,y,z)
 static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
-/* returns zero on success otherwise returns 1 */
  BYTE code;
- U32 *ptr_data=ptr;
  __asm__ __volatile__ (
-         "lock;   cmpxchgl %2,%4\n\t"
-         "setnz   %b0\n\t"
+         LOCK_PREFIX
+         "cmpxchgl %3,(%4)\n\t"
+         "setnz   %b0"
          : "=q"(code), "=a"(*old)
-         : "q"(new),
-           "1"(*old),
-           "m"(*ptr_data)
-         : "cc");
+         : "1" (*old),
+           "q" (new),
+           "m" (*(U32 *)ptr)
+         : "memory" );
  return code;
 }
-
-#if !defined(PIC)
 
 #define ASSIST_CMPXCHG8
 #define cmpxchg8(x,y,z) cmpxchg8_i686(x,y,z)
 static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
-/* returns zero on success otherwise returns 1 */
  BYTE code;
- U32 high = new >> 32;
- U32 low = new & 0xffffffff;
- __asm__ __volatile__ (
-         "movl    (%3),%%eax\n\t"
-         "movl    4(%3),%%edx\n\t"
-         "lock;   cmpxchg8b (%4)\n\t"
-         "movl    %%eax,(%3)\n\t"
-         "movl    %%edx,4(%3)\n\t"
+__asm__ __volatile__ (
+         XCHG_BREG
+         LOCK_PREFIX
+         "cmpxchg8b (%5)\n\t"
+         XCHG_BREG
          "setnz   %b0"
-         : "=q"(code)
-         : "b"(low),
-           "c"(high),
-           "S"(old),
-           "D"(ptr)
-         : "eax", "edx", "memory");
+         : "=q"(code), "=A"(*old)
+         : "1" (*old),
+           BREG ((unsigned long)new),
+           "c"  ((unsigned long)(new >> 32)),
+           "m" (*(U64 *)ptr)
+         : "memory");
  return code;
 }
-
-#else /* defined(PIC) */
-
-#define ASSIST_CMPXCHG8
-#define cmpxchg8(x,y,z) cmpxchg8_i686(x,y,z)
-static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
-/* returns zero on success otherwise returns 1 */
- BYTE code;
- U32  *old32;
- U64 *ptr_data=ptr;
- U32 high = new >> 32;
- U32 low = new & 0xffffffff;
- old32=(U32 *)old;
- __asm__ __volatile__ (
-         "pushl   %%ebx\n\t"
-         "movl    %3,%%ebx\n\t"
-         "lock;   cmpxchg8b %5\n\t"
-         "popl    %%ebx\n\t"
-         "setnz   %b0"
-         : "=q"(code), "=a"(old32[0]), "=d"(old32[1])
-         : "r"(low),
-           "c"(high),
-           "m"(*ptr_data),
-           "1"(old32[0]),
-           "2"(old32[1])
-         : "cc");
- return code;
-}
-
-#endif /* defined(PIC) */
-
-#if !defined(PIC)
-
-#define ASSIST_CMPXCHG16
-#define cmpxchg16(x1,x2,y1,y2,z) cmpxchg16_i686(x1,x2,y1,y2,z)
-static __inline__ int cmpxchg16_i686(U64 *old1, U64 *old2, U64 new1, U64 new2, void *ptr) {
-/* returns zero on success otherwise returns 1 */
-//FIXME: not smp safe; an attempt is made to minimize the number of cycles
- int code;
- union { BYTE buf[32]; U64 dw[4]; } u;
- u.dw[0] = *old1;
- u.dw[1] = *old2;
- u.dw[2] = new1;
- u.dw[3] = new2;
- __asm__ __volatile__ (
-         "movl    %1,%0\n\t"
-         "movl    %2,%%ebx\n\t"
-         "movl    $4,%%ecx\n\t"
-         "cld\n\t"
-         "repe\n\t"
-         "cmpsl\n\t"
-         "jne     1f\n\t"
-         "movl    %%ebx,%2\n\t"
-         "movl    $4,%%ecx\n\t"
-         "rep\n\t"
-         "movsl\n\t"
-         "xorl    %0,%0\n\t"
-         "jmp     2f\n"
-         "1:\t"
-         "movl    %0,%2\n\t"
-         "movl    %%ebx,%1\n\t"
-         "movl    $4,%%ecx\n\t"
-         "rep\n\t"
-         "movsl\n\t"
-         "movl    $1,%0\n"
-         "2:"
-       : "=q"(code)
-       : "S"(&u),
-         "D"(ptr)
-       : "ebx","ecx","memory");
- if (code == 1) {
-   *old1 = u.dw[0];
-   *old2 = u.dw[1];
- }
- return code;
-}
-
-#else /* defined(PIC) */
-
-#define ASSIST_CMPXCHG16
-#define cmpxchg16(x1,x2,y1,y2,z) cmpxchg16_i686(x1,x2,y1,y2,z)
-static __inline__ int cmpxchg16_i686(U64 *old1, U64 *old2, U64 new1, U64 new2, void *ptr) {
-/* returns zero on success otherwise returns 1 */
-//FIXME: not smp safe; an attempt is made to minimize the number of cycles
- int code;
- union { BYTE buf[32]; U64 dw[4]; } u;
- u.dw[0] = *old1;
- u.dw[1] = *old2;
- u.dw[2] = new1;
- u.dw[3] = new2;
- __asm__ __volatile__ (
-         "pushl   %%ebx\n\t"
-         "movl    %1,%0\n\t"
-         "movl    %2,%%ebx\n\t"
-         "movl    $4,%%ecx\n\t"
-         "cld\n\t"
-         "repe\n\t"
-         "cmpsl\n\t"
-         "jne     1f\n\t"
-         "movl    %%ebx,%2\n\t"
-         "movl    $4,%%ecx\n\t"
-         "rep\n\t"
-         "movsl\n\t"
-         "xorl    %0,%0\n\t"
-         "jmp     2f\n"
-         "1:\t"
-         "movl    %0,%2\n\t"
-         "movl    %%ebx,%1\n\t"
-         "movl    $4,%%ecx\n\t"
-         "rep\n\t"
-         "movsl\n\t"
-         "movl    $1,%0\n"
-         "2:\t"
-         "popl    %%ebx"
-       : "=q"(code)
-       : "S"(&u),
-         "D"(ptr)
-       : "ecx","memory");
- if (code == 1) {
-   *old1 = u.dw[0];
-   *old2 = u.dw[1];
- }
- return code;
-}
-
-#endif /* defined(PIC) */
 
 #define ASSIST_FETCH_DW
 #define fetch_dw(x) fetch_dw_i686(x)
 static __inline__ U64 fetch_dw_i686(void *ptr)
 {
- U64 value;
+ U64 value = *(U64 *)ptr;
 __asm__ __volatile__ (
-         "movl    %%ebx,%%edi\n\t"
-         "movl    %%edx,%%ecx\n\t"
-         "movl    %%eax,%%ebx\n\t"
-         "lock;   cmpxchg8b (%%esi)\n\t"
-         "movl    %%edi,%%ebx"
+         XCHG_BREG
+         LOCK_PREFIX
+         "cmpxchg8b (%4)\n\t"
+         XCHG_BREG
          : "=A" (value)
-         : "S" (ptr)
-         : "cx", "di");
+         : "0" (value),
+           BREG ((unsigned long)value),
+           "c"  ((unsigned long)(value >> 32)),
+           "m" (*(U64 *)ptr)
+         : "memory");
  return CSWAP64(value);
 }
 
 #define ASSIST_STORE_DW
 #define store_dw(x,y) store_dw_i686(x,y)
-static __inline__ void store_dw_i686(void *ptr, U64 value)
-{
+static __inline__ void store_dw_i686(void *ptr, U64 value) {
  value = CSWAP64(value);
 __asm__ __volatile__ (
-         "movl    %%ebx,%%esi\n\t"
-         "movl    %%edx,%%ecx\n\t"
-         "movl    %%eax,%%ebx\n\t"
-         "movl    4(%%edi),%%edx\n\t"
-         "movl    (%%edi),%%eax\n"
+         XCHG_BREG
          "1:\t"
-         "lock;   cmpxchg8b (%%edi)\n\t"
+         LOCK_PREFIX
+         "cmpxchg8b (%3)\n\t"
          "jne     1b\n\t"
-         "movl    %%esi,%%ebx"
+         XCHG_BREG
          :
-         : "A" (value), "D" (ptr)
-         : "memory", "cx", "si");
+         : "A" (*(U64 *)ptr),
+           BREG ((unsigned long)value),
+           "c"  ((unsigned long)(value >> 32)),
+           "m" (*(U64 *)ptr)
+         : "memory");
 }
 
 #if defined(OPTION_MULTI_BYTE_ASSIST) && defined(__linux__)
@@ -896,76 +783,26 @@ static __inline__ void concpy ( void *_dest, void *_src, size_t n )
     dest = (BYTE*) _dest;
     src  = (BYTE*) _src;
 
-    /*
-     * Special processing for short lengths or overlap where we can't
-     * copy 8 byte chunks at a time
-     */
-    if (n < 8
+    /* Figure out length for the preliminary copy */
+    if (unlikely(n < 8
      || (dest <= src  && dest + 8 > src)
-     || (src  <= dest && src  + 8 > dest)
-       )
-    {
-        for ( ; n; n--) *(dest++) = *(src++);
-        return;
-    }
+     || (src  <= dest && src  + 8 > dest)))
+        n2 = n;
+    else
+        n2 = (uintptr_t)dest & 7;
+    n -= n2;
 
-    /* copy to dest double-word boundary */
-    n2 = 8 - ((long)dest & 7);
-    if (n2 < 8)
-    {
-        n -= n2;
-        for ( ; n2; n2--) *(dest++) = *(src++);
-    }
+    /* preliminary copy */
+    for ( ; n2; n2--)
+        *(dest++) = *(src++);
 
-    /* copy double words */
-    if (n >= 8)
-    {
-#if defined(ASSIST_CMPXCHG8)
-        /* copy unaligned double-words */
-        if ((long)src & 7)
-            do {
-                U64 temp;
-                memcpy(&temp, src, 8);
-                *(U64 *)dest = temp;
-                dest += 8;
-                src += 8;
-                n -= 8;
-            } while (n >= 8);
-        /* copy aligned double-words */
-        else
-        {
-            do {
-                U64 new_src_dw;
-                U64 old_dest_dw;
+    /* copy doublewords */
+    for ( ; n >= 8; n -= 8, dest += 8, src += 8)
+        store_dw(dest,fetch_dw(src));
 
-                /* fetch src value */
-                new_src_dw = *(U64*)src;
-                while ( cmpxchg8( &new_src_dw, new_src_dw, (U64*)src ) );
-
-                /* store into dest */
-                old_dest_dw = *(U64*)dest;
-                while ( cmpxchg8( &old_dest_dw, new_src_dw, (U64*)dest ) );
-
-                /* Adjust ptrs & counters */
-                dest += 8;
-                src += 8;
-                n -= 8;
-            } while (n >= 8);
-        }
-#else
-        do {
-            U64 temp;
-            memcpy(&temp, src, 8);
-            *(U64 *)dest = temp;
-            dest += 8;
-            src += 8;
-            n -= 8;
-        } while (n >= 8);
-#endif
-    }
-
-    /* copy the left-overs */
-    for ( ; n; n--) *(dest++) = *(src++);
+    /* copy leftovers */
+    for ( ; n; n--)
+        *(dest++) = *(src++);
 }
 
 #endif /* _HERCULES_MACHDEP_H */
