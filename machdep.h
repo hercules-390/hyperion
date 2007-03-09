@@ -27,6 +27,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.57  2007/03/09 00:53:05  gsmith
+// More tweaks to machdep.h i686 code
+//
 // Revision 1.56  2007/03/08 03:18:16  gsmith
 // Fix store_dw_i686
 //
@@ -365,13 +368,13 @@ static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
  BYTE code;
  __asm__ __volatile__ (
          LOCK_PREFIX
-         "cmpxchgb %b3,(%4)\n\t"
+         "cmpxchgb %b3,%4\n\t"
          "setnz   %b0"
          : "=q"(code), "=a"(*old)
          : "1" (*old),
            "q" (new),
            "m" (*(BYTE *)ptr)
-         : "memory" );
+         : "cc" );
  return code;
 }
 
@@ -381,13 +384,13 @@ static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
  BYTE code;
  __asm__ __volatile__ (
          LOCK_PREFIX
-         "cmpxchgl %3,(%4)\n\t"
+         "cmpxchgl %3,%4\n\t"
          "setnz   %b0"
          : "=q"(code), "=a"(*old)
          : "1" (*old),
            "q" (new),
            "m" (*(U32 *)ptr)
-         : "memory" );
+         : "cc" );
  return code;
 }
 
@@ -398,7 +401,7 @@ static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
 __asm__ __volatile__ (
          XCHG_BREG
          LOCK_PREFIX
-         "cmpxchg8b (%5)\n\t"
+         "cmpxchg8b %5\n\t"
          XCHG_BREG
          "setnz   %b0"
          : "=q"(code), "=A"(*old)
@@ -406,7 +409,7 @@ __asm__ __volatile__ (
            BREG ((unsigned long)new),
            "c"  ((unsigned long)(new >> 32)),
            "m" (*(U64 *)ptr)
-         : "memory");
+         : "cc");
  return code;
 }
 
@@ -418,14 +421,13 @@ static __inline__ U64 fetch_dw_i686(void *ptr)
 __asm__ __volatile__ (
          XCHG_BREG
          LOCK_PREFIX
-         "cmpxchg8b (%4)\n\t"
+         "cmpxchg8b %4\n\t"
          XCHG_BREG
          : "=A" (value)
          : "0" (value),
            BREG ((unsigned long)value),
            "c"  ((unsigned long)(value >> 32)),
-           "m" (*(U64 *)ptr)
-         : "memory");
+           "m" (*(U64 *)ptr));
  return CSWAP64(value);
 }
 
@@ -437,15 +439,14 @@ __asm__ __volatile__ (
          XCHG_BREG
          "1:\t"
          LOCK_PREFIX
-         "cmpxchg8b (%3)\n\t"
+         "cmpxchg8b %3\n\t"
          "jne     1b\n\t"
          XCHG_BREG
          :
          : "A" (*(U64 *)ptr),
            BREG ((unsigned long)value),
            "c"  ((unsigned long)(value >> 32)),
-           "m" (*(U64 *)ptr)
-         : "memory");
+           "m" (*(U64 *)ptr));
 }
 
 #if defined(OPTION_MULTI_BYTE_ASSIST) && defined(__linux__)
@@ -739,70 +740,5 @@ static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volati
  return code;
 }
 #endif
-
-/*-------------------------------------------------------------------*/
-/*                                                                   */
-/*                    PROGRAMMING NOTE                               */
-/*                                                                   */
-/*  The Principles of Operation manual (SA22-7832-03) describes,     */
-/*  on page 5-99, "Block-Concurrent References" as follows:          */
-/*                                                                   */
-/*                                                                   */
-/*              "Block-Concurrent References"                        */
-/*                                                                   */
-/*      "For some references, the accesses to all bytes              */
-/*       within a halfword, word, doubleword, or quadword            */
-/*       are specified to appear to be block concurrent as           */
-/*       observed by other CPUs. These accesses do not               */
-/*       necessarily appear to channel programs to include           */
-/*       more than a byte at a time. The halfword, word,             */
-/*       doubleword, or quadword is referred to in this              */
-/*       section as a block."                                        */
-/*                                                                   */
-/*      "When a fetch-type reference is specified to appear          */
-/*       to be concurrent within a block, no store access to         */
-/*       the block by another CPU is permitted during the time       */
-/*       that bytes contained in the block are being fetched.        */
-/*       Accesses to the bytes within the block by channel           */
-/*       programs may occur between the fetches."                    */
-/*                                                                   */
-/*      "When a storetype reference is specified to appear to        */
-/*       be concurrent within a block, no access to the block,       */
-/*       either fetch or store, is permitted by another CPU          */
-/*       during the time that the bytes within the block are         */
-/*       being stored. Accesses to the bytes in the block by         */
-/*       channel programs may occur between the stores."             */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-
-static __inline__ void concpy ( void *_dest, void *_src, size_t n )
-{
- size_t n2;
- BYTE *dest,*src;
-
-    dest = (BYTE*) _dest;
-    src  = (BYTE*) _src;
-
-    /* Figure out length for the preliminary copy */
-    if (unlikely(n < 8
-     || (dest <= src  && dest + 8 > src)
-     || (src  <= dest && src  + 8 > dest)))
-        n2 = n;
-    else
-        n2 = (uintptr_t)dest & 7;
-    n -= n2;
-
-    /* preliminary copy */
-    for ( ; n2; n2--)
-        *(dest++) = *(src++);
-
-    /* copy doublewords */
-    for ( ; n >= 8; n -= 8, dest += 8, src += 8)
-        store_dw(dest,fetch_dw(src));
-
-    /* copy leftovers */
-    for ( ; n; n--)
-        *(dest++) = *(src++);
-}
 
 #endif /* _HERCULES_MACHDEP_H */

@@ -34,6 +34,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.75  2007/03/08 01:27:02  gsmith
+// Remove inline attr from vfetchx/vstorex _full functions
+//
 // Revision 1.74  2007/02/18 16:27:36  gsmith
 // Fix instfetch when instruction crosses 0x800
 //
@@ -726,6 +729,7 @@ int     len;                            /* Length for page crossing  */
 #endif
 
 #if !defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C)
+
 /*-------------------------------------------------------------------*/
 /* Move characters using specified keys and address spaces           */
 /*                                                                   */
@@ -762,6 +766,39 @@ int     len;                            /* Length for page crossing  */
 /*      causes an addressing, protection, or translation exception,  */
 /*      and in this case the function does not return.               */
 /*-------------------------------------------------------------------*/
+
+#ifndef _VSTORE_CONCPY
+#define _VSTORE_CONCPY
+static __inline__ void concpy (REGS *regs, void *d, void *s, int n)
+{
+ int   n2;
+ BYTE *dest = (BYTE *)d,*src = (BYTE *)s;
+
+    /* Figure out length for the preliminary copy */
+    if (regs->cpubit == regs->sysblk->started_mask)
+        n2 = n;
+    else if (unlikely(n < 8
+     || (dest <= src  && dest + 8 > src)
+     || (src  <= dest && src  + 8 > dest)))
+        n2 = n;
+    else
+        n2 = (uintptr_t)dest & 7;
+    n -= n2;
+
+    /* preliminary copy */
+    for ( ; n2; n2--)
+        *(dest++) = *(src++);
+
+    /* copy doublewords */
+    for ( ; n >= 8; n -= 8, dest += 8, src += 8)
+        store_dw(dest,fetch_dw(src));
+
+    /* copy leftovers */
+    for ( ; n; n--)
+        *(dest++) = *(src++);
+}
+#endif
+
 _VSTORE_C_STATIC void ARCH_DEP(move_chars) (VADR addr1, int arn1,
        BYTE key1, VADR addr2, int arn2, BYTE key2, int len, REGS *regs)
 {
@@ -801,7 +838,7 @@ int     len2, len3;                     /* Lengths to copy           */
         if ( NOCROSS2K(addr2,len) )
         {
             /* (1) - No boundaries are crossed */
-            concpy (dest1, source1, len + 1);
+            concpy (regs, dest1, source1, len + 1);
         }
         else
         {
@@ -809,8 +846,8 @@ int     len2, len3;                     /* Lengths to copy           */
             len2 = 0x800 - (addr2 & 0x7FF);
             source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
                               arn2, regs, ACCTYPE_READ, key2);
-            concpy (dest1, source1, len2);
-            concpy (dest1 + len2, source2, len - len2 + 1);
+            concpy (regs, dest1, source1, len2);
+            concpy (regs, dest1 + len2, source2, len - len2 + 1);
         }
     }
     else
@@ -828,8 +865,8 @@ int     len2, len3;                     /* Lengths to copy           */
         if ( NOCROSS2K(addr2,len) )
         {
              /* (3) - First operand crosses a boundary */
-             concpy (dest1, source1, len2);
-             concpy (dest2, source1 + len2, len - len2 + 1);
+             concpy (regs, dest1, source1, len2);
+             concpy (regs, dest2, source1 + len2, len - len2 + 1);
         }
         else
         {
@@ -840,22 +877,22 @@ int     len2, len3;                     /* Lengths to copy           */
             if (len2 == len3)
             {
                 /* (4a) - Both operands cross at the same time */
-                concpy (dest1, source1, len2);
-                concpy (dest2, source2, len - len2 + 1);
+                concpy (regs, dest1, source1, len2);
+                concpy (regs, dest2, source2, len - len2 + 1);
             }
             else if (len2 < len3)
             {
                 /* (4b) - First operand crosses first */
-                concpy (dest1, source1, len2);
-                concpy (dest2, source1 + len2, len3 - len2);
-                concpy (dest2 + len3 - len2, source2, len - len3 + 1);
+                concpy (regs, dest1, source1, len2);
+                concpy (regs, dest2, source1 + len2, len3 - len2);
+                concpy (regs, dest2 + len3 - len2, source2, len - len3 + 1);
             }
             else
             {
                 /* (4c) - Second operand crosses first */
-                concpy (dest1, source1, len3);
-                concpy (dest1 + len3, source2, len2 - len3);
-                concpy (dest2, source2 + len2 - len3, len - len2 + 1);
+                concpy (regs, dest1, source1, len3);
+                concpy (regs, dest1 + len3, source2, len2 - len3);
+                concpy (regs, dest2, source2 + len2 - len3, len - len2 + 1);
             }
         }
     }
