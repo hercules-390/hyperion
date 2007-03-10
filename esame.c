@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.181  2007/01/13 07:18:59  bernard
+// backout ccmask
+//
 // Revision 1.180  2007/01/12 15:23:13  bernard
 // ccmask phase 1
 //
@@ -3990,8 +3993,8 @@ U64    *p1, *p2;                        /* Mainstor pointers         */
                 regs->GR_G((r1 + i) & 0xF) = CSWAP64(*p1);
         else
 #endif
-        for (i = 0; i < n; i++)
-            regs->GR_G((r1 + i) & 0xF) = fetch_dw (p1++);
+        for (i = 0; i < n; i++, p1++)
+            regs->GR_G((r1 + i) & 0xF) = fetch_dw (p1);
     }
     else
     {
@@ -4004,11 +4007,11 @@ U64    *p1, *p2;                        /* Mainstor pointers         */
         {
             /* Addresses are double-word aligned */
             m >>= 3;
-            for (i = 0; i < m; i++)
-                regs->GR_G((r1 + i) & 0xF) = fetch_dw (p1++);
+            for (i = 0; i < m; i++, p1++)
+                regs->GR_G((r1 + i) & 0xF) = fetch_dw (p1);
             n >>= 3;
-            for ( ; i < n; i++)
-                regs->GR_G((r1 + i) & 0xF) = fetch_dw (p2++);
+            for ( ; i < n; i++, p2++)
+                regs->GR_G((r1 + i) & 0xF) = fetch_dw (p2);
         }
         else
         {
@@ -4129,16 +4132,16 @@ U16     updated = 0;                    /* Updated control regs      */
         m = n;
 
     /* Load from first page */
-    for (i = 0; i < m; i++)
+    for (i = 0; i < m; i++, p1++)
     {
-        regs->CR_G((r1 + i) & 0xF) = fetch_dw(p1++);
+        regs->CR_G((r1 + i) & 0xF) = fetch_dw(p1);
         updated |= BIT((r1 + i) & 0xF);
     }
 
     /* Load from next page */
-    for ( ; i < n; i++)
+    for ( ; i < n; i++, p2++)
     {
-        regs->CR_G((r1 + i) & 0xF) = fetch_dw(p2++);
+        regs->CR_G((r1 + i) & 0xF) = fetch_dw(p2);
         updated |= BIT((r1 + i) & 0xF);
     }
 

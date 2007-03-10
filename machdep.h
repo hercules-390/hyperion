@@ -11,22 +11,29 @@
 /*                                                                   */
 /*   Atomic COMPARE-AND-EXCHANGE functions:                          */
 /*                                                                   */
-/*      cmpxchg1, cmpxchg4, cmpxchg8, cmpxchg16                      */
+/*       cmpxchg1, cmpxchg4, cmpxchg8, cmpxchg16                     */
 /*                                                                   */
 /*                                                                   */
 /*   Atomic word/double-word FETCH/STORE functions:                  */
 /*                                                                   */
-/*      fetch_fw, fetch_dw, store_fw, store_dw                       */
+/*       fetch_hw, fetch_hw_noswap, store_hw, store_hw_noswap        */
+/*       fetch_fw, fetch_fw_noswap, store_fw, store_fw_noswap        */
+/*       fetch_dw, fetch_dw_noswap, store_dw, store_dw_noswap        */
 /*                                                                   */
+/*     64 bit architectures would normally not need to specify       */
+/*     any of the fetch_ or store_ macros.                           */
 /*                                                                   */
-/*   Block-Concurrent byte copying                                   */
-/*                                                                   */
-/*      concpy    (does atomic fetchs/stores)                        */
-/*                                                                   */
+/*     32 bit architectures should specify one of the `fetch_dw'     */
+/*     and `store_dw' macros.  Little-endian machines should specify */
+/*     the `noswap' macros.  Big-endian machines can specify either, */
+/*     both being the same.                                          */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.58  2007/03/09 00:54:31  gsmith
+// concpy rework
+//
 // Revision 1.57  2007/03/09 00:53:05  gsmith
 // More tweaks to machdep.h i686 code
 //
@@ -78,16 +85,9 @@
 #include "opcode.h"         // (need CSWAP32, et.al macros, etc)
 #include "htypes.h"         // (need Hercules fixed-size data types)
 
-#undef ASSIST_CMPXCHG1      // (defined if machine-dependent assist function used)
-#undef ASSIST_CMPXCHG4      // (defined if machine-dependent assist function used)
-#undef ASSIST_CMPXCHG8      // (defined if machine-dependent assist function used)
-#undef ASSIST_CMPXCHG16     // (defined if machine-dependent assist function used)
-#undef ASSIST_FETCH_DW      // (defined if machine-dependent assist function used)
-#undef ASSIST_STORE_DW      // (defined if machine-dependent assist function used)
-
-/*-------------------------------------------------------------------*/
-/* Determine which optimizations we can and should do...             */
-/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------
+ * Microsoft Visual C/C++...
+ *-------------------------------------------------------------------*/
 #if defined( _MSVC_ )
 
   // PROGRAMMING NOTE: Optimizations normally only apply for release
@@ -127,38 +127,6 @@
     #define MSC_X86_64BIT
   #endif
 
-/*-------------------------------------------------------------------*/
-/* GNU C?  (or other compiler!)     (i.e. NON-Microsoft C/C++)       */
-/*-------------------------------------------------------------------*/
-#else // !defined( _MSVC_ )
-
-  #undef _ext_ia32
-  #undef _ext_amd64
-  #undef _ext_ppc
-
-  #if defined(__i686__) || defined(__pentiumpro__) || defined(__pentium4__)
-    #define _ext_ia32
-  #endif
-  #if defined(__athlon__) || defined(__athlon)
-    #define _ext_ia32
-  #endif
-
-  #if defined(__amd64__)
-    #define _ext_amd64
-  #endif
-
-  #if defined(__powerpc__) || defined(__ppc__) || \
-      defined(__POWERPC__) || defined(__PPC__)
-    #define _ext_ppc
-  #endif
-
-#endif // defined( _MSVC_ )
-
-/*-------------------------------------------------------------------*/
-/* Microsoft Visual C/C++...                                         */
-/*-------------------------------------------------------------------*/
-#if defined( _MSVC_ )
-
   #if defined(GEN_MSC_ASSISTS) && (defined(MSC_X86_32BIT) || defined(MSC_X86_64BIT))
 
     // Any X86 at all (both 32/64-bit)
@@ -171,11 +139,9 @@
     #define  ASSIST_FETCH_DW    // (indicate machine-dependent assist function used)
     #define  ASSIST_STORE_DW    // (indicate machine-dependent assist function used)
 
-    #define  cmpxchg1( x, y, z )  cmpxchg1_x86( x, y, z )
-    #define  cmpxchg4( x, y, z )  cmpxchg4_x86( x, y, z )
-    #define  cmpxchg8( x, y, z )  cmpxchg8_x86( x, y, z )
-    #define  fetch_dw( x       )  fetch_dw_x86( x       )
-    #define  store_dw( x, y    )  store_dw_x86( x, y    )
+    #define  cmpxchg1(  x, y, z )  cmpxchg1_x86( x, y, z )
+    #define  cmpxchg4(  x, y, z )  cmpxchg4_x86( x, y, z )
+    #define  cmpxchg8(  x, y, z )  cmpxchg8_x86( x, y, z )
 
     #if ( _MSC_VER < 1400 )
 
@@ -260,20 +226,25 @@
         return cc;
     }
 
-    // (must follow cmpxchg8 since it uses it)
-    static __inline U64 __fastcall fetch_dw_x86 ( volatile void *ptr )
-    {
-        U64 value = *(U64*)ptr;
-        while ( cmpxchg8( &value, value, (U64*)ptr ) );
-        return CSWAP64(value);
-    }
+    #if defined(MSC_X86_32BIT)
 
-    // (must follow cmpxchg8 since it uses it)
-    static __inline void __fastcall store_dw_x86 ( volatile void *ptr, U64 value )
-    {
+      #define fetch_dw_noswap(_p) fetch_dw_x86_noswap((_p)))
+      // (must follow cmpxchg8 since it uses it)
+      static __inline U64 __fastcall fetch_dw_x86_noswap ( volatile void *ptr )
+      {
+        U64 value = *(U64*)ptr;
+        cmpxchg8( &value, value, (U64*)ptr );
+        return value;
+      }
+
+      #define store_dw_noswap(_p, _v) store_dw_x86_noswap( (_p), (_v))
+      // (must follow cmpxchg8 since it uses it)
+      static __inline void __fastcall store_dw_x86_noswap ( volatile void *ptr, U64 value )
+      {
         U64 orig = *(U64*)ptr;
-        while ( cmpxchg8( &orig, CSWAP64(value), (U64*)ptr ) );
-    }
+        while ( cmpxchg8( &orig, value, (U64*)ptr ) );
+      }
+    #endif /* defined(MSC_X86_32BIT) */
 
   #endif // defined(GEN_MSC_ASSISTS) && (defined(MSC_X86_32BIT) || defined(MSC_X86_64BIT))
 
@@ -290,8 +261,6 @@
     #pragma  intrinsic  ( _AcquireSpinLock )
     #pragma  intrinsic  ( _ReleaseSpinLock )
     #pragma  intrinsic  ( _ReadWriteBarrier )
-
-    #define  ASSIST_CMPXCHG16   // (indicate machine-dependent assist function used)
 
     #define  cmpxchg16(     x1, x2, y1, y2, z ) \
              cmpxchg16_x86( x1, x2, y1, y2, z )
@@ -330,13 +299,27 @@
   #endif // defined(GEN_MSC_ASSISTS) && defined(MSC_X86_IA64)
 
 #else // !defined( _MSVC_ )
-/*-------------------------------------------------------------------*/
-/* GNU C or other compiler...   (i.e. NON-Microsoft C/C++)           */
-/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------
+ * GNU C or other compiler...   (i.e. NON-Microsoft C/C++)
+ *-------------------------------------------------------------------*/
+  #if defined(__i686__) || defined(__pentiumpro__) || \
+      defined(__pentium4__) || defined(__athlon__) || \
+      defined(__athlon)
+    #define _ext_ia32
+  #endif
 
-/*-------------------------------------------------------------------*/
-/* Intel pentiumpro/i686                                             */
-/*-------------------------------------------------------------------*/
+  #if defined(__amd64__)
+    #define _ext_amd64
+  #endif
+
+  #if defined(__powerpc__) || defined(__ppc__) || \
+      defined(__POWERPC__) || defined(__PPC__)
+    #define _ext_ppc
+  #endif
+
+/*-------------------------------------------------------------------
+ * Intel pentiumpro/i686
+ *-------------------------------------------------------------------*/
 #if defined(_ext_ia32)
 
 #undef LOCK_PREFIX
@@ -362,7 +345,6 @@
 #define XCHG_BREG ""
 #endif
 
-#define ASSIST_CMPXCHG1
 #define cmpxchg1(x,y,z) cmpxchg1_i686(x,y,z)
 static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
  BYTE code;
@@ -378,7 +360,6 @@ static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
  return code;
 }
 
-#define ASSIST_CMPXCHG4
 #define cmpxchg4(x,y,z) cmpxchg4_i686(x,y,z)
 static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
  BYTE code;
@@ -394,7 +375,6 @@ static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
  return code;
 }
 
-#define ASSIST_CMPXCHG8
 #define cmpxchg8(x,y,z) cmpxchg8_i686(x,y,z)
 static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
  BYTE code;
@@ -413,9 +393,8 @@ __asm__ __volatile__ (
  return code;
 }
 
-#define ASSIST_FETCH_DW
-#define fetch_dw(x) fetch_dw_i686(x)
-static __inline__ U64 fetch_dw_i686(void *ptr)
+#define fetch_dw_noswap(x) fetch_dw_i686_noswap(x)
+static __inline__ U64 fetch_dw_i686_noswap(void *ptr)
 {
  U64 value = *(U64 *)ptr;
 __asm__ __volatile__ (
@@ -428,13 +407,12 @@ __asm__ __volatile__ (
            BREG ((unsigned long)value),
            "c"  ((unsigned long)(value >> 32)),
            "m" (*(U64 *)ptr));
- return CSWAP64(value);
+ return value;
 }
 
 #define ASSIST_STORE_DW
-#define store_dw(x,y) store_dw_i686(x,y)
-static __inline__ void store_dw_i686(void *ptr, U64 value) {
- value = CSWAP64(value);
+#define store_dw_noswap(x,y) store_dw_i686_noswap(x,y)
+static __inline__ void store_dw_i686_noswap(void *ptr, U64 value) {
 __asm__ __volatile__ (
          XCHG_BREG
          "1:\t"
@@ -456,12 +434,11 @@ __asm__ __volatile__ (
 
 #endif /* defined(_ext_ia32) */
 
-/*-------------------------------------------------------------------*/
-/* AMD64                                                             */
-/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------
+ * AMD64
+ *-------------------------------------------------------------------*/
 #if defined(_ext_amd64)
 
-#define ASSIST_CMPXCHG1
 #define cmpxchg1(x,y,z) cmpxchg1_amd64(x,y,z)
 static __inline__ BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -478,7 +455,6 @@ static __inline__ BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
  return code;
 }
 
-#define ASSIST_CMPXCHG4
 #define cmpxchg4(x,y,z) cmpxchg4_amd64(x,y,z)
 static __inline__ BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -495,7 +471,6 @@ static __inline__ BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
  return code;
 }
 
-#define ASSIST_CMPXCHG8
 #define cmpxchg8(x,y,z) cmpxchg8_amd64(x,y,z)
 static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -514,9 +489,9 @@ static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
 
 #endif /* defined(_ext_amd64) */
 
-/*-------------------------------------------------------------------*/
-/* PowerPC                                                           */
-/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------
+ * PowerPC
+ *-------------------------------------------------------------------*/
 #if defined(_ext_ppc)
 
 /* From /usr/src/linux/include/asm-ppc/system.h */
@@ -542,7 +517,6 @@ __cmpxchg_u32(volatile int *p, int old, int new)
     return prev;
 }
 
-#define ASSIST_CMPXCHG4
 #define cmpxchg4(x,y,z) cmpxchg4_ppc(x,y,z)
 static __inline__ BYTE cmpxchg4_ppc(U32 *old, U32 new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -550,7 +524,6 @@ U32 prev = *old;
 return (prev != (*old = __cmpxchg_u32((int *)ptr, (int)prev, (int)new)));
 }
 
-#define ASSIST_CMPXCHG1
 #define cmpxchg1(x,y,z) cmpxchg1_ppc(x,y,z)
 static __inline__ BYTE cmpxchg1_ppc(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -571,157 +544,246 @@ U32  *ptr4, val4, old4, new4;
 
 #endif /* defined(_ext_ppc) */
 
-#endif // defined( _MSVC_ )
+#endif // !defined( _MSVC_ )
 
-/*-------------------------------------------------------------------*/
-/* Defaults...    (REGARDLESS of host and/or build platform)         */
-/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------
+ * Define the ASSIST_ macros
+ *-------------------------------------------------------------------*/
+#if defined(cmpxchg1)
+ #define ASSIST_CMPXCHG1
+#endif
 
+#if defined(cmpxchg1)
+ #define ASSIST_CMPXCHG4
+#endif
+
+#if defined(cmpxchg8)
+ #define ASSIST_CMPXCHG8
+#endif
+
+#if defined(cmpxchg16)
+ #define ASSIST_CMPXCHG16
+#endif
+
+#if defined(fetch_dw) || defined(fetch_dw_noswap)
+ #define ASSIST_FETCH_DW
+#endif
+
+#if defined(store_dw) || defined(store_dw_noswap)
+ #define ASSIST_STORE_DW
+#endif
+
+/*-------------------------------------------------------------------
+ * Decide if strict alignment is required
+ *-------------------------------------------------------------------*/
 #if !defined(OPTION_STRICT_ALIGNMENT) && !defined(OPTION_NO_STRICT_ALIGNMENT)
- #if !defined(_MSVC_) && !defined(_ext_ia32) && !defined(_ext_amd64) && !defined(_ext_ppc)
-  #define OPTION_STRICT_ALIGNMENT
+ #if !defined(_MSVC_) && !defined(_ext_ia32) && !defined(_ext_amd64) \
+  && !defined(_ext_ppc)
+    #define OPTION_STRICT_ALIGNMENT
  #endif
 #endif
 
-#ifndef fetch_hw
- #ifdef OPTION_STRICT_ALIGNMENT
-  static __inline__ U16 fetch_hw(volatile void *ptr) {
-   U16 value;
-   memcpy(&value, (BYTE *)ptr, 2);
-   return CSWAP16(value);
-  }
- #else
-  static __inline__ U16 fetch_hw(volatile void *ptr) {
-   return CSWAP16(*(U16 *)ptr);
-  }
- #endif
+/*-------------------------------------------------------------------
+ * fetch_hw_noswap and fetch_hw
+ *-------------------------------------------------------------------*/
+#if !defined(fetch_hw_noswap)
+  #if defined(fetch_hw)
+    #define fetch_hw_noswap(_p) CSWAP16(fetch_hw((_p)))
+  #else
+    #if !defined(OPTION_STRICT_ALIGNMENT)
+      static __inline__ U16 fetch_hw_noswap(void *ptr) {
+        return *(U16 *)ptr;
+      }
+    #else
+      static __inline__ U16 fetch_hw_noswap(void *ptr) {
+        U16 value;
+        memcpy(&value, (BYTE *)ptr, 2);
+        return value;
+      }
+    #endif
+  #endif
+#endif
+#if !defined(fetch_hw)
+  #define fetch_hw(_p) CSWAP16(fetch_hw_noswap((_p)))
 #endif
 
-#ifndef store_hw
- #ifdef OPTION_STRICT_ALIGNMENT
-  static __inline__ void store_hw(volatile void *ptr, U16 value) {
-   U16 tmp = CSWAP16(value);
-   memcpy((BYTE *)ptr, &tmp, 2);
-  }
- #else
-  static __inline__ void store_hw(volatile void *ptr, U16 value) {
-   *(U16 *)ptr = CSWAP16(value);
-  }
- #endif
+/*-------------------------------------------------------------------
+ * store_hw_noswap and store_hw
+ *-------------------------------------------------------------------*/
+#if !defined(store_hw_noswap)
+  #if defined(store_hw)
+    #define store_hw_noswap(_p, _v) store_hw((_p), CSWAP16(_v))
+  #else
+    #if !defined(OPTION_STRICT_ALIGNMENT)
+      static __inline__ void store_hw_noswap(void *ptr, U16 value) {
+        *(U16 *)ptr = value;
+      }
+    #else
+      static __inline__ void store_hw_noswap(void *ptr, U16 value) {
+        memcpy((BYTE *)ptr, (BYTE *)&value, 2);
+      }
+    #endif
+  #endif
+#endif
+#if !defined(store_hw)
+  #define store_hw(_p, _v) store_hw_noswap((_p), CSWAP16((_v)))
 #endif
 
-#ifndef fetch_fw
- #ifdef OPTION_STRICT_ALIGNMENT
-  static __inline__ U32 fetch_fw(volatile void *ptr) {
-   U32 value;
-   memcpy(&value, (BYTE *)ptr, 4);
-   return CSWAP32(value);
-  }
- #else
-  static __inline__ U32 fetch_fw(volatile void *ptr) {
-   return CSWAP32(*(U32 *)ptr);
-  }
- #endif
+/*-------------------------------------------------------------------
+ * fetch_fw_noswap and fetch_fw
+ *-------------------------------------------------------------------*/
+#if !defined(fetch_fw_noswap)
+  #if defined(fetch_fw)
+    #define fetch_fw_noswap(_p) CSWAP32(fetch_fw((_p)))
+  #else
+    #if !defined(OPTION_STRICT_ALIGNMENT)
+      static __inline__ U32 fetch_fw_noswap(void *ptr) {
+        return *(U32 *)ptr;
+      }
+    #else
+      static __inline__ U32 fetch_fw_noswap(void *ptr) {
+        U32 value;
+        memcpy(&value, (BYTE *)ptr, 4);
+        return value;
+      }
+    #endif
+  #endif
+#endif
+#if !defined(fetch_fw)
+  #define fetch_fw(_p) CSWAP32(fetch_fw_noswap((_p)))
 #endif
 
-#ifndef store_fw
- #ifdef OPTION_STRICT_ALIGNMENT
-  static __inline__ void store_fw(volatile void *ptr, U32 value) {
-   U32 tmp = CSWAP32(value);
-   memcpy((BYTE *)ptr, &tmp, 4);
-  }
- #else
-  static __inline__ void store_fw(volatile void *ptr, U32 value) {
-   *(U32 *)ptr = CSWAP32(value);
-  }
- #endif
+/*-------------------------------------------------------------------
+ * store_fw_noswap and store_fw
+ *-------------------------------------------------------------------*/
+#if !defined(store_fw_noswap)
+  #if defined(store_fw)
+    #define store_fw_noswap(_p, _v) store_fw((_p), CSWAP32(_v))
+  #else
+    #if !defined(OPTION_STRICT_ALIGNMENT)
+      static __inline__ void store_fw_noswap(void *ptr, U32 value) {
+        *(U32 *)ptr = value;
+      }
+    #else
+      static __inline__ void store_fw_noswap(void *ptr, U32 value) {
+        memcpy((BYTE *)ptr, (BYTE *)&value, 4);
+      }
+    #endif
+  #endif
+#endif
+#if !defined(store_fw)
+  #define store_fw(_p, _v) store_fw_noswap((_p), CSWAP32((_v)))
 #endif
 
-#ifndef fetch_dw
- #ifdef OPTION_STRICT_ALIGNMENT
-  static __inline__ U64 fetch_dw(volatile void *ptr) {
-   U64 value;
-   memcpy(&value, (BYTE *)ptr, 8);
-   return CSWAP64(value);
-  }
- #else
-  static __inline__ U64 fetch_dw(volatile void *ptr) {
-   return CSWAP64(*(U64 *)ptr);
-  }
- #endif
+/*-------------------------------------------------------------------
+ * fetch_dw_noswap and fetch_dw
+ *-------------------------------------------------------------------*/
+#if !defined(fetch_dw_noswap)
+  #if defined(fetch_dw)
+    #define fetch_dw_noswap(_p) CSWAP64(fetch_dw((_p)))
+  #else
+    #if !defined(OPTION_STRICT_ALIGNMENT)
+      static __inline__ U64 fetch_dw_noswap(void *ptr) {
+        return *(U64 *)ptr;
+      }
+    #else
+      static __inline__ U64 fetch_fw_noswap(void *ptr) {
+        U64 value;
+        memcpy(&value, (BYTE *)ptr, 8);
+        return value;
+      }
+    #endif
+  #endif
+#endif
+#if !defined(fetch_dw)
+  #define fetch_dw(_p) CSWAP64(fetch_dw_noswap((_p)))
 #endif
 
-#ifndef store_dw
- #ifdef OPTION_STRICT_ALIGNMENT
-  static __inline__ void store_dw(volatile void *ptr, U64 value) {
-   U64 tmp = CSWAP64(value);
-   memcpy((BYTE *)ptr, &tmp, 8);
-  }
- #else
-  static __inline__ void store_dw(volatile void *ptr, U64 value) {
-   *(U64 *)ptr = CSWAP64(value);
-  }
- #endif
+/*-------------------------------------------------------------------
+ * store_dw_noswap and store_dw
+ *-------------------------------------------------------------------*/
+#if !defined(store_dw_noswap)
+  #if defined(store_dw)
+    #define store_dw_noswap(_p, _v) store_dw((_p), CSWAP64(_v))
+  #else
+    #if !defined(OPTION_STRICT_ALIGNMENT)
+      static __inline__ void store_dw_noswap(void *ptr, U64 value) {
+        *(U64 *)ptr = value;
+      }
+    #else
+      static __inline__ void store_dw_noswap(void *ptr, U64 value) {
+        memcpy((BYTE *)ptr, (BYTE *)&value, 8);
+      }
+    #endif
+  #endif
+#endif
+#if !defined(store_dw)
+  #define store_dw(_p, _v) store_dw_noswap((_p), CSWAP64((_v)))
 #endif
 
-#ifndef BIT
-#define BIT(nr) (1<<(nr))
-#endif
-
+/*-------------------------------------------------------------------
+ * cmpxchg1
+ *-------------------------------------------------------------------*/
 #ifndef cmpxchg1
 static __inline__ BYTE cmpxchg1(BYTE *old, BYTE new, volatile void *ptr) {
- BYTE tmp;
- BYTE code;
- if (*old == (tmp = *(BYTE *)ptr))
+ BYTE code
+ if (*old == *(BYTE *)ptr)
  {
      *(BYTE *)ptr = new;
      code = 0;
  }
  else
  {
-     *old = tmp;
+     *old = *(BYTE *)ptr;
      code = 1;
  }
  return code;
 }
 #endif
 
+/*-------------------------------------------------------------------
+ * cmpxchg4
+ *-------------------------------------------------------------------*/
 #ifndef cmpxchg4
 static __inline__ BYTE cmpxchg4(U32 *old, U32 new, volatile void *ptr) {
- U32 tmp;
  BYTE code;
- if (*old == (tmp = *(U32 *)ptr))
+ if (*old == *(U32 *)ptr)
  {
      *(U32 *)ptr = new;
      code = 0;
  }
  else
  {
-     *old = tmp;
+     *old = *(U32 *)ptr;
      code = 1;
  }
  return code;
 }
 #endif
 
+/*-------------------------------------------------------------------
+ * cmpxchg8
+ *-------------------------------------------------------------------*/
 #ifndef cmpxchg8
 static __inline__ BYTE cmpxchg8(U64 *old, U64 new, volatile void *ptr) {
- U64 tmp;
  BYTE code;
- if (*old == (tmp = *(U64 *)ptr))
+ if (*old == *(U64 *)ptr)
  {
      *(U64 *)ptr = new;
      code = 0;
  }
  else
  {
-     *old = tmp;
+     *old = *(U64 *)ptr;
      code = 1;
  }
  return code;
 }
 #endif
 
+/*-------------------------------------------------------------------
+ * cmpxchg16
+ *-------------------------------------------------------------------*/
 #ifndef cmpxchg16
 static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
  int code;
@@ -739,6 +801,10 @@ static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volati
  }
  return code;
 }
+#endif
+
+#ifndef BIT
+#define BIT(nr) (1<<(nr))
 #endif
 
 #endif /* _HERCULES_MACHDEP_H */
