@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.59  2007/03/10 06:27:43  gsmith
+// machdep.h updates
+//
 // Revision 1.58  2007/03/09 00:54:31  gsmith
 // concpy rework
 //
@@ -687,7 +690,7 @@ U32  *ptr4, val4, old4, new4;
         return *(U64 *)ptr;
       }
     #else
-      static __inline__ U64 fetch_fw_noswap(void *ptr) {
+      static __inline__ U64 fetch_dw_noswap(void *ptr) {
         U64 value;
         memcpy(&value, (BYTE *)ptr, 8);
         return value;
@@ -726,7 +729,7 @@ U32  *ptr4, val4, old4, new4;
  *-------------------------------------------------------------------*/
 #ifndef cmpxchg1
 static __inline__ BYTE cmpxchg1(BYTE *old, BYTE new, volatile void *ptr) {
- BYTE code
+ BYTE code;
  if (*old == *(BYTE *)ptr)
  {
      *(BYTE *)ptr = new;
