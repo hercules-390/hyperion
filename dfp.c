@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.61  2007/01/30 16:43:28  rbowler
+// Activate Decimal Floating Point Facility
+//
 // Revision 1.10  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -322,8 +325,8 @@ dfp_number_from_fix64(decNumber *dn, S64 n, decContext *pset)
 {
 int             sign = 0;               /* Sign of binary integer    */
 int             i;                      /* Counter                   */
-BYTE            zoned[32];              /* Zoned decimal work area   */
-static BYTE     maxnegzd[]="-9223372036854775808";
+char            zoned[32];              /* Zoned decimal work area   */
+static char     maxnegzd[]="-9223372036854775808";
 static U64      maxneg64 = 0x8000000000000000ULL;
 
     /* Handle maximum negative number as special case */
@@ -374,8 +377,8 @@ BYTE            packed[17];             /* 33-digit packed work area */
 decNumber       p, c;                   /* Working decimal numbers   */
 static U64      mp64 = 0x7FFFFFFFFFFFFFFFULL;   /* Max pos fixed 64  */
 static U64      mn64 = 0x8000000000000000ULL;   /* Max neg fixed 64  */
-static BYTE     mpzd[]="9223372036854775807";   /* Max pos zoned dec */
-static BYTE     mnzd[]="-9223372036854775808";  /* Max neg zoned dec */
+static char     mpzd[]="9223372036854775807";   /* Max pos zoned dec */
+static char     mnzd[]="-9223372036854775808";  /* Max neg zoned dec */
 static BYTE     mpflag = 0;             /* 1=mp,mn are initialized   */
 static decNumber mp, mn;                /* Decimal maximum pos,neg   */
 decContext      setmax;                 /* Working context for mp,mn */
@@ -549,7 +552,7 @@ int             len;                    /* String length             */
 int             maxlen;                 /* Maximum coefficient length*/
 int32_t         exp;                    /* Original exponent         */
 uint8_t         bits;                   /* Original flag bits        */
-BYTE            zd[MAXDECSTRLEN+64];    /* Zoned decimal work area   */
+char            zd[MAXDECSTRLEN+64];    /* Zoned decimal work area   */
 
     /* Save original exponent and sign/Inf/NaN bits */
     exp = dn->exponent;
