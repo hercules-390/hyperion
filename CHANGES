@@ -8,7 +8,7 @@
 06 Mar 2007 Fix ckd RDC response - Greg
 27 Feb 2007 PR# misc/87 startup messages fix completion - Kevin Leonard
 27 Feb 2007 Fix minor glitch in enhanced symbol substitution - Fish
-26 Feb 2007 Fix print-to-pipe to accept paramters - Fish
+26 Feb 2007 Fix print-to-pipe to accept parameters - Fish
 25 Feb 2007 Fix het_locate to continue on tapemark - herc_fun [os_390@hotmail.com] by Fish
 25 Feb 2007 Fix crash in LCS close if devinit of incomplete group - Fish
 18 Feb 2007 Add TIME and NOTIME synonyms for LOGOPT operands - Kevin Leonard
