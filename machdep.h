@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.60  2007/03/12 22:02:06  ivan
+// Fix a couple of typos in machdep.h that affect non i686 ia32 compiles
+//
 // Revision 1.59  2007/03/10 06:27:43  gsmith
 // machdep.h updates
 //
@@ -231,7 +234,7 @@
 
     #if defined(MSC_X86_32BIT)
 
-      #define fetch_dw_noswap(_p) fetch_dw_x86_noswap((_p)))
+      #define fetch_dw_noswap(_p) fetch_dw_x86_noswap((_p))
       // (must follow cmpxchg8 since it uses it)
       static __inline U64 __fastcall fetch_dw_x86_noswap ( volatile void *ptr )
       {
