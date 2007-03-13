@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.178  2007/01/16 01:45:33  gsmith
+// Tweaks to instruction stepping/tracing
+//
 // Revision 1.177  2007/01/09 23:18:21  gsmith
 // Tweaks to cpuloop
 //
@@ -1485,6 +1488,9 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         set_cpu_timer(regs,saved_timer);
 
         HDC1(debug_cpu_state, regs);
+
+        /* Synchronize with other CPUs */
+        SYNCHRONIZE_CPUS(regs);
 
 #ifdef OPTION_MIPS_COUNTING
         /* Calculate the time we waited */
