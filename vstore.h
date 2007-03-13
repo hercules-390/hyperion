@@ -34,6 +34,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.76  2007/03/09 00:54:31  gsmith
+// concpy rework
+//
 // Revision 1.75  2007/03/08 01:27:02  gsmith
 // Remove inline attr from vfetchx/vstorex _full functions
 //
@@ -728,6 +731,59 @@ int     len;                            /* Length for page crossing  */
 } /* end function ARCH_DEP(instfetch) */
 #endif
 
+
+/*-------------------------------------------------------------------*/
+/* Copy 8 bytes at a time concurrently                               */
+/*-------------------------------------------------------------------*/
+#ifndef _VSTORE_CONCPY
+#define _VSTORE_CONCPY
+static __inline__ void concpy (REGS *regs, void *d, void *s, int n)
+{
+ int   n2;
+ BYTE *dest = (BYTE *)d, *src = (BYTE *)s;
+
+    /* Byte for byte copy if short length or possible overlap */
+    if (n < 8
+     || (dest <= src  && dest + 8 > src)
+     || (src  <= dest && src  + 8 > dest))
+    {
+        for ( ; n; n--)
+            *(dest++) = *(src++);
+        return;
+    }
+
+    /* copy to an 8 byte boundary */
+    n2 = (intptr_t)dest & 7;
+    n -= n2;
+    for ( ; n2; n2--)
+        *(dest++) = *(src++);
+
+#if defined(SIZEOF_LONG) && SIZEOF_LONG == 8 && !defined(OPTION_STRICT_ALIGNMENT)
+    UNREFERENCED(regs);
+    /* copy 8 bytes at a time */
+    for ( ; n >= 8; n -= 8, dest += 8, src += 8)
+        *(U64 *)dest = *(U64 *)src;
+#else
+ #if !defined(OPTION_STRICT_ALIGNMENT)
+    /* copy 4 bytes at a time if only one cpu started */
+    if (regs->cpubit == regs->sysblk->started_mask)
+        for ( ; n >= 4; n -= 4, dest += 4, src += 4)
+            *(U32 *)dest = *(U32 *)src;
+    else
+ #else
+    UNREFERENCED(regs);
+ #endif
+    /* else copy 8 bytes at a time concurrently */
+        for ( ; n >= 8; n -= 8, dest += 8, src += 8)
+            store_dw_noswap(dest,fetch_dw_noswap(src));
+#endif
+
+    /* copy leftovers */
+    for ( ; n; n--)
+        *(dest++) = *(src++);
+}
+#endif /* !defined(_VSTORE_CONCPY) */
+
 #if !defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C)
 
 /*-------------------------------------------------------------------*/
@@ -766,39 +822,6 @@ int     len;                            /* Length for page crossing  */
 /*      causes an addressing, protection, or translation exception,  */
 /*      and in this case the function does not return.               */
 /*-------------------------------------------------------------------*/
-
-#ifndef _VSTORE_CONCPY
-#define _VSTORE_CONCPY
-static __inline__ void concpy (REGS *regs, void *d, void *s, int n)
-{
- int   n2;
- BYTE *dest = (BYTE *)d,*src = (BYTE *)s;
-
-    /* Figure out length for the preliminary copy */
-    if (regs->cpubit == regs->sysblk->started_mask)
-        n2 = n;
-    else if (unlikely(n < 8
-     || (dest <= src  && dest + 8 > src)
-     || (src  <= dest && src  + 8 > dest)))
-        n2 = n;
-    else
-        n2 = (uintptr_t)dest & 7;
-    n -= n2;
-
-    /* preliminary copy */
-    for ( ; n2; n2--)
-        *(dest++) = *(src++);
-
-    /* copy doublewords */
-    for ( ; n >= 8; n -= 8, dest += 8, src += 8)
-        store_dw(dest,fetch_dw(src));
-
-    /* copy leftovers */
-    for ( ; n; n--)
-        *(dest++) = *(src++);
-}
-#endif
-
 _VSTORE_C_STATIC void ARCH_DEP(move_chars) (VADR addr1, int arn1,
        BYTE key1, VADR addr2, int arn2, BYTE key2, int len, REGS *regs)
 {
