@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.42  2007/03/15 02:56:47  fish
+// (minor fix)
+//
 // Revision 1.41  2007/03/13 15:55:29  fish
 // Backward-compatible fix of print-to-pipe to accept parameters.  :)
 //
@@ -406,11 +409,28 @@ int     i;                              /* Array subscript           */
 static void printer_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
+    BYTE blanks_in_filename = strcspn( dev->filename, " \t\r\n\v\f" )
+        >= strlen( dev->filename ) ? 0 : 1;
     *class = "PRT";
-    snprintf (buffer, buflen, "%s%s%s",
-                dev->filename,
-                (dev->crlf ? " crlf" : ""),
-                (dev->stopprt ? " (stopped)" : ""));
+    if (buflen > 0)
+    {
+        snprintf
+        (
+            buffer, buflen, "%s%s%s%s%s%s%s"
+
+            ,blanks_in_filename ? "\"" : ""
+            ,dev->filename
+            ,blanks_in_filename ? "\"" : ""
+
+            ,(dev->crlf ? " crlf" : "")
+
+            ,dev->siz_ptpargs ?     " --"    : ""
+            ,dev->siz_ptpargs ? dev->ptpargs : ""
+
+            ,(dev->stopprt ? " (stopped)" : "")
+        );
+        *(buffer + buflen - 1) = 0;
+    }
 
 } /* end function printer_query_device */
 
