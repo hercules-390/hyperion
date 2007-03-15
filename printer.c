@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.41  2007/03/13 15:55:29  fish
+// Backward-compatible fix of print-to-pipe to accept parameters.  :)
+//
 // Revision 1.40  2007/03/05 14:44:17  rbowler
 // Restore original print-to-pipe parameter-passing
 //
@@ -328,7 +331,7 @@ int     i;                              /* Array subscript           */
     {
         if (dev->ispiped)
         {
-            size_t siz_ptpargs = dev->siz_ptpargs + 1 + strlen(argv[i]);
+            size_t siz_ptpargs = dev->siz_ptpargs + 1 + strlen(argv[i]) + 1;
             if (!realloc( dev->ptpargs, siz_ptpargs ))
             {
                 logmsg (_("HHCPR013E Out of memory\n"));
@@ -339,8 +342,8 @@ int     i;                              /* Array subscript           */
                 return -1;
             }
             dev->siz_ptpargs = siz_ptpargs;
-            strlcat( dev->ptpargs, " ",     dev->siz_ptpargs );
-            strlcat( dev->ptpargs, argv[i], dev->siz_ptpargs );
+            strlcat( dev->ptpargs, " ",     siz_ptpargs );
+            strlcat( dev->ptpargs, argv[i], siz_ptpargs );
             continue;
         }
 
@@ -367,6 +370,11 @@ int     i;                              /* Array subscript           */
 
         logmsg (_("HHCPR002E Invalid argument for printer %4.4X: %s\n"),
                 dev->devnum, argv[i]);
+        if (dev->ptpargs)
+            free( dev->ptpargs );
+        dev->ptpargs = NULL;
+        dev->siz_ptpargs = 0;
+        dev->ispiped = 0;
         return -1;
     }
 
