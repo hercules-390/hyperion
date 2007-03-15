@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.65  2007/03/13 15:55:29  fish
+// Backward-compatible fix of print-to-pipe to accept parameters.  :)
+//
 // Revision 1.64  2007/03/05 14:44:17  rbowler
 // Restore original print-to-pipe parameter-passing
 //
@@ -1045,24 +1048,25 @@ struct DEVBLK {                         /* Device configuration block*/
         /*  Device dependent fields for fbadasd                      */
 
         FBADEV *fbatab;                 /* Device table entry        */
-        int     fbaorigin;              /* Device origin block number*/
         int     fbanumblk;              /* Number of blocks in device*/
+        int     fbablksiz;              /* Physical block size       */
+        off_t   fbaorigin;              /* Device origin block number*/
         off_t   fbarba;                 /* Relative byte offset      */
         off_t   fbaend;                 /* Last RBA in file          */
-        int     fbaxblkn;               /* Offset from start of device
-                                           to first block of extent  */
-        int     fbaxfirst;              /* Block number within dataset
-                                           of first block of extent  */
-        int     fbaxlast;               /* Block number within dataset
-                                           of last block of extent   */
-        int     fbalcblk;               /* Block number within dataset
-                                           of first block for locate */
-        int     fbalcnum;               /* Block count for locate    */
-        int     fbablksiz;              /* Physical block size       */
-        int                             /* Flags                     */
-                fbaxtdef:1;             /* 1=Extent defined          */
-        BYTE    fbaoper;                /* Locate operation byte     */
+        /* Values from define extent */
+        u_int   fbaxtdef:1;             /* 1=Extent defined          */
         BYTE    fbamask;                /* Define extent file mask   */
+        U32     fbaxblkn;               /* Offset from start of device
+                                           to first block of extent  */
+        U32     fbaxfirst;              /* Block number within dataset
+                                           of first block of extent  */
+        U32     fbaxlast;               /* Block number within dataset
+                                           of last block of extent   */
+        /* Values from locate */
+        BYTE    fbaoper;                /* Locate operation byte     */
+        U16     fbalcnum;               /* Block count for locate    */
+        U32     fbalcblk;               /* Block number within dataset
+                                           of first block for locate */
 
         /*  Device dependent fields for ckddasd                      */
 
