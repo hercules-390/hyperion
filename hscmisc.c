@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.57  2007/01/07 11:25:33  rbowler
+// Instruction tracing regsfirst and noregs modes
+//
 // Revision 1.56  2007/01/06 09:05:18  gsmith
 // Enable display_inst to display traditionally too
 //
@@ -444,7 +447,7 @@ void display_aregs (REGS *regs)
 /*-------------------------------------------------------------------*/
 void display_fregs (REGS *regs)
 {
-BYTE    cpustr[10] = {0};               /* "CPU:nnnn " or ""         */
+char    cpustr[10] = {0};               /* "CPU:nnnn " or ""         */
 
     if(sysblk.cpus>1)
         sprintf(cpustr, "CPU%4.4X: ", regs->cpuad);
@@ -652,6 +655,47 @@ void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname)
     release_lock (&dev->lock);
 }
 
+/*-------------------------------------------------------------------*/
+/* Return the address of a regs structure to be used for address     */
+/* translation.  This address should be freed by the caller.         */
+/*-------------------------------------------------------------------*/
+static REGS  *copy_regs (REGS *regs)
+{
+ REGS  *newregs, *hostregs;
+ size_t size;
+
+    size = SIE_MODE(regs) ? 2*sizeof(REGS) : sizeof(REGS);
+    newregs = malloc(size);
+    if (newregs == NULL)
+    {
+        logmsg(_("HHCMS001E malloc failed for REGS copy: %s\n"),
+               strerror(errno));
+        return NULL;
+    }
+
+    /* Perform partial copy and clear the TLB */
+    memcpy(newregs, regs, sysblk.regs_copy_len);
+    memset(&newregs->tlb.vaddr, 0, TLBN * sizeof(DW));
+    newregs->ghostregs = 1;
+    newregs->hostregs = newregs;
+    newregs->guestregs = NULL;
+
+    /* Copy host regs if in SIE mode */
+    if(SIE_MODE(newregs))
+    {
+        hostregs = newregs + sizeof(REGS);
+        memcpy(hostregs, regs->hostregs, sysblk.regs_copy_len);
+        memset(&hostregs->tlb.vaddr, 0, TLBN * sizeof(DW));
+        hostregs->ghostregs = 1;
+        hostregs->hostregs = hostregs;
+        hostregs->guestregs = newregs;
+        newregs->hostregs = hostregs;
+        newregs->guestregs = newregs;
+    }
+
+    return newregs;
+}
+
 #endif /*!defined(_HSCMISC_C)*/
 
 
@@ -679,40 +723,23 @@ void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname)
 static U16 ARCH_DEP(virt_to_abs) (RADR *raptr, int *siptr,
                         VADR vaddr, int arn, REGS *regs, int acctype)
 {
-RADR    raddr;
-int     icode;
-REGS    gregs, hgregs;
+int icode;
 
-    // ZZFIXME:  Win32 builds emits bad code here
-    //           so we have the next stmt:
-    //           (is that still true??)
-    if (!regs) return 0;
-
-    gregs = *regs;
-    gregs.ghostregs = 1;
-
-    if(SIE_MODE(&gregs))
+    if( !(icode = setjmp(regs->progjmp)) )
     {
-        hgregs = *gregs.hostregs;
-        gregs.hostregs = &hgregs;
-        hgregs.guestregs = &gregs;
+        int temp_arn = arn; // bypass longjmp clobber warning
+        if (acctype == ACCTYPE_INSTFETCH)
+            temp_arn = USE_INST_SPACE;
+        if (SIE_MODE(regs))
+            memcpy(regs->hostregs->progjmp, regs->progjmp,
+                   sizeof(jmp_buf));
+        ARCH_DEP(logical_to_main) (vaddr, temp_arn, regs, acctype, 0);
     }
 
-    hgregs.ghostregs = 1;
+    *siptr = regs->dat.stid;
+    *raptr = regs->hostregs->dat.raddr;
 
-    if( !(icode = setjmp(gregs.progjmp)) )
-    {
-        memcpy(&hgregs.progjmp,&gregs.progjmp,sizeof(jmp_buf));
-        ARCH_DEP(logical_to_main) (vaddr, arn, &gregs, acctype, 0);
-        raddr = SIE_MODE(&gregs) ? hgregs.dat.raddr : gregs.dat.raddr;
-    }
-    else
-        return icode;
-
-    *siptr = gregs.dat.stid;
-    *raptr = raddr;
-
-    return 0;
+    return icode;
 
 } /* end function virt_to_abs */
 
@@ -1029,7 +1056,7 @@ char    buf[100];                       /* Message buffer            */
 /*-------------------------------------------------------------------*/
 /* Display instruction                                               */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(display_inst) (REGS *regs, BYTE *inst)
+void ARCH_DEP(display_inst) (REGS *iregs, BYTE *inst)
 {
 QWORD   qword;                          /* Doubleword work area      */
 BYTE    opcode;                         /* Instruction operation code*/
@@ -1040,6 +1067,12 @@ VADR    addr1 = 0, addr2 = 0;           /* Operand addresses         */
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
 char    buf[256];                       /* Message buffer            */
 int     n;                              /* Number of bytes in buffer */
+REGS   *regs;                           /* Copied regs               */
+
+    if (iregs->ghostregs)
+        regs = iregs;
+    else if ((regs = copy_regs(iregs)) == NULL)
+        return;
 
   #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs))
@@ -1083,6 +1116,7 @@ int     n;                              /* Number of bytes in buffer */
     {
         logmsg (_("%sInstruction fetch error\n"), buf);
         display_regs (regs);
+        if (!iregs->ghostregs) free(regs);
         return;
     }
 
@@ -1223,6 +1257,9 @@ int     n;                              /* Number of bytes in buffer */
     if (!sysblk.showregsfirst && !sysblk.showregsnone)
         display_inst_regs (regs, inst, opcode);
 
+    if (!iregs->ghostregs)
+        free (regs);
+
 } /* end function display_inst */
 
 
@@ -1263,8 +1300,15 @@ void alter_display_real (char *opnd, REGS *regs)
 } /* end function alter_display_real */
 
 
-void alter_display_virt (char *opnd, REGS *regs)
+void alter_display_virt (char *opnd, REGS *iregs)
 {
+ REGS *regs;
+
+    if (iregs->ghostregs)
+        regs = iregs;
+    else if ((regs = copy_regs(iregs)) == NULL)
+        return;
+
     switch(sysblk.arch_mode) {
 #if defined(_370)
         case ARCH_370:
@@ -1280,11 +1324,20 @@ void alter_display_virt (char *opnd, REGS *regs)
 #endif
     }
 
+    if (!iregs->ghostregs)
+        free(regs);
 } /* end function alter_display_virt */
 
 
-void display_inst(REGS *regs, BYTE *inst)
+void display_inst(REGS *iregs, BYTE *inst)
 {
+ REGS *regs;
+
+    if (iregs->ghostregs)
+        regs = iregs;
+    else if ((regs = copy_regs(iregs)) == NULL)
+        return;
+
     switch(regs->arch_mode) {
 #if defined(_370)
         case ARCH_370:
@@ -1303,11 +1356,20 @@ void display_inst(REGS *regs, BYTE *inst)
 #endif
     }
 
+    if (!iregs->ghostregs)
+        free (regs);
 }
 
 
-void disasm_stor(REGS *regs, char *opnd)
+void disasm_stor(REGS *iregs, char *opnd)
 {
+ REGS *regs;
+
+    if (iregs->ghostregs)
+        regs = iregs;
+    else if ((regs = copy_regs(iregs)) == NULL)
+        return;
+
     switch(regs->arch_mode) {
 #if defined(_370)
         case ARCH_370:
@@ -1326,6 +1388,8 @@ void disasm_stor(REGS *regs, char *opnd)
 #endif
     }
 
+    if (!iregs->ghostregs)
+        free(regs);
 }
 
 /*-------------------------------------------------------------------*/
