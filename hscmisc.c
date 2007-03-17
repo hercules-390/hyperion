@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.58  2007/03/16 22:47:10  gsmith
+// Reduce REGS copying by hscmisc.c
+//
 // Revision 1.57  2007/01/07 11:25:33  rbowler
 // Instruction tracing regsfirst and noregs modes
 //
@@ -683,7 +686,7 @@ static REGS  *copy_regs (REGS *regs)
     /* Copy host regs if in SIE mode */
     if(SIE_MODE(newregs))
     {
-        hostregs = newregs + sizeof(REGS);
+        hostregs = newregs + 1;
         memcpy(hostregs, regs->hostregs, sysblk.regs_copy_len);
         memset(&hostregs->tlb.vaddr, 0, TLBN * sizeof(DW));
         hostregs->ghostregs = 1;
