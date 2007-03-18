@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.98  2007/01/04 23:12:03  gsmith
+// remove thunk calls for program_interrupt
+//
 // Revision 1.97  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -573,10 +576,9 @@ U32     alet;                           /* Access list entry token   */
 U32     asteo;                          /* Real address of ASTE      */
 U32     aste[16];                       /* ASN second table entry    */
 U16     eax;                            /* Authorization index       */
+#else
+    UNREFERENCED(acctype);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
-
-    UNREFERENCED_370(arn);
-    UNREFERENCED_370(acctype);
 
     switch(arn) {
 
@@ -606,12 +608,11 @@ U16     eax;                            /* Authorization index       */
         case 1:
             regs->dat.stid = TEA_ST_PRIMARY;
             break;
-        case 7:
-            regs->dat.stid = TEA_ST_SECNDRY;
-            break;
+    #if defined(FEATURE_LINKAGE_STACK)
         case 13:
             regs->dat.stid = TEA_ST_HOME;
             break;
+    #endif
         default:
             regs->dat.stid = 0;
         } /* end switch(regs->aea_ar[USE_INST_SPACE]) */
@@ -621,36 +622,13 @@ U16     eax;                            /* Authorization index       */
 
     default:
 
-    #if defined(FEATURE_DUAL_ADDRESS_SPACE)
-        if (acctype == ACCTYPE_INSTFETCH)
-      #if defined(FEATURE_LINKAGE_STACK)
-        {
-            if (HOME_SPACE_MODE(&regs->psw))
-            {
-                regs->dat.stid = TEA_ST_HOME;
-                regs->dat.asd = regs->CR(13);
-            }
-            else
-      #endif /*defined(FEATURE_LINKAGE_STACK)*/
-            {
-                regs->dat.stid = TEA_ST_PRIMARY;
-                regs->dat.asd = regs->CR(1);
-            }
-      #if defined(FEATURE_LINKAGE_STACK)
-        }
-        else if (acctype == ACCTYPE_STACK)
-        {
-            regs->dat.stid = TEA_ST_HOME;
-            regs->dat.asd = regs->CR(13);
-        }
-      #endif /*defined(FEATURE_LINKAGE_STACK)*/
-      #if defined(FEATURE_ACCESS_REGISTERS)
-        else if(ACCESS_REGISTER_MODE(&regs->psw)
-        #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+    #if defined(FEATURE_ACCESS_REGISTERS)
+        if(ACCESS_REGISTER_MODE(&regs->psw)
+      #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
           || (regs->sie_active
             && SIE_FEATB(regs->guestregs, MX, XC)
             && AR_BIT(&regs->guestregs->psw))
-        #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+      #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
           || (arn & USE_ARMODE)
             )
         {
@@ -708,14 +686,14 @@ U16     eax;                            /* Authorization index       */
                     regs->dat.stid = TEA_ST_ARMODE;
                     if(regs->dat.protect & 2)
                     {
-    #if defined(FEATURE_ESAME)
+                #if defined(FEATURE_ESAME)
                        regs->dat.asd ^= ASCE_RESV;
                        regs->dat.asd |= ASCE_P;
-    #else
+                #else
                        regs->dat.asd ^= STD_RESV;
                        regs->dat.asd |= STD_PRIVATE;
-    #endif
-                   }
+                #endif
+                    }
 
                     /* Update ALB */
                     regs->CR(CR_ALB_OFFSET + arn) = regs->dat.asd;
@@ -723,7 +701,7 @@ U16     eax;                            /* Authorization index       */
                     regs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
                     regs->aea_aleprot[arn] = regs->dat.protect & 2;
 
-    #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+                #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
                     /* Build a host real space entry for each XC dataspace */
                     if(regs->sie_active && arn > 0 && SIE_FEATB(regs->guestregs, MX, XC) && AR_BIT(&regs->guestregs->psw))
                     {
@@ -734,37 +712,44 @@ U16     eax;                            /* Authorization index       */
                         regs->guestregs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
                         regs->guestregs->aea_aleprot[arn] = regs->dat.protect & 2;
                     }
-    #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+                #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
                 }
 
             } /* end switch(alet) */
 
+            break;
+
         } /* end if(ACCESS_REGISTER_MODE) */
-      #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
-        else if (PRIMARY_SPACE_MODE(&regs->psw))
-        {
-    #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
-            regs->dat.stid = TEA_ST_PRIMARY;
-            regs->dat.asd = regs->CR(1);
+    #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+
     #if defined(FEATURE_DUAL_ADDRESS_SPACE)
-        }
-      #if defined(FEATURE_LINKAGE_STACK)
-        else if (HOME_SPACE_MODE(&regs->psw))
-        {
-            regs->dat.stid = TEA_ST_HOME;
-            regs->dat.asd = regs->CR(13);
-        }
-      #endif /*defined(FEATURE_LINKAGE_STACK)*/
-        else /* SECONDARY_SPACE_MODE */
+        if (SECONDARY_SPACE_MODE(&regs->psw))
         {
             regs->dat.stid = TEA_ST_SECNDRY;
             regs->dat.asd = regs->CR(7);
+            break;
         }
-    #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+    #endif /* defined(FEATURE_DUAL_ADDRESS_SPACE) */
+
+    #if defined(FEATURE_LINKAGE_STACK)
+        if (HOME_SPACE_MODE(&regs->psw))
+        {
+            regs->dat.stid = TEA_ST_HOME;
+            regs->dat.asd = regs->CR(13);
+            break;
+        }
+    #endif /* defined(FEATURE_LINKAGE_STACK) */
+
+        /* Primary space mode */
+        regs->dat.stid = TEA_ST_PRIMARY;
+        regs->dat.asd = regs->CR(1);
+        break;
 
     } /* switch(arn) */
+
     return 0;
+
 } /* end function load_address_space_designator */
 
 
