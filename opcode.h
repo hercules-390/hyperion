@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.198  2007/02/26 00:52:42  gsmith
+// Fix tracing range check
+//
 // Revision 1.197  2007/01/16 01:45:33  gsmith
 // Tweaks to instruction stepping/tracing
 //
@@ -684,6 +687,33 @@ do { \
 #include "machdep.h"
 
 #endif /*!defined(_OPCODE_H)*/
+
+#undef SIE_ACTIVE
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+ #define SIE_ACTIVE(_regs) ((_regs)->sie_active)
+#else
+ #define SIE_ACTIVE(_regs) (0)
+#endif
+
+#undef IS_MCDS
+#undef IS_GUEST_MCDS
+#if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+ #define IS_MCDS(_regs) \
+      ( \
+           SIE_MODE((_regs)) \
+        && SIE_FEATB((_regs), MX, XC) \
+        && AR_BIT(&(_regs)->psw) \
+      )
+ #define IS_GUEST_MCDS(_regs) \
+      ( \
+           SIE_ACTIVE((_regs)) \
+        && SIE_FEATB((_regs)->guestregs, MX, XC) \
+        && AR_BIT(&(_regs)->guestregs.psw) \
+      )
+#else
+ #define IS_MCDS(_regs) (0)
+ #define IS_GUEST_MCDS(_regs) (0)
+#endif
 
 /* PER3 Breaking Event Address Recording (BEAR) */
 
