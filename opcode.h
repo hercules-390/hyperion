@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.199  2007/03/18 18:47:43  gsmith
+// Simplify MULTIPLE_CONTROLLED_DATA_SPACE tests
+//
 // Revision 1.198  2007/02/26 00:52:42  gsmith
 // Fix tracing range check
 //
@@ -708,7 +711,7 @@ do { \
       ( \
            SIE_ACTIVE((_regs)) \
         && SIE_FEATB((_regs)->guestregs, MX, XC) \
-        && AR_BIT(&(_regs)->guestregs.psw) \
+        && AR_BIT(&(_regs)->guestregs->psw) \
       )
 #else
  #define IS_MCDS(_regs) (0)
