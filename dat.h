@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.101  2007/03/20 02:06:02  gsmith
+// Rename IS_MCDS macro to MULTIPLE_CONTROLLED_DATA_SPACE
+//
 // Revision 1.100  2007/03/18 18:47:43  gsmith
 // Simplify MULTIPLE_CONTROLLED_DATA_SPACE tests
 //
@@ -544,8 +547,8 @@ int i;
 /*      arn     Access register number (0-15) to be used if the      */
 /*              address-space control (PSW bits 16-17) indicates     */
 /*              that ARMODE is the current translation mode.         */
-/*              An access register number ORed with the special      */
-/*              value USE_ARMODE forces this routine to use ARMODE   */
+/*              An access type ORed with the special value           */
+/*              ACC_ARMODE forces this routine to use ARMODE         */
 /*              regardless of the PSW address-space control setting. */
 /*              Access register 0 is treated as if it contained 0    */
 /*              and its actual contents are not examined.            */
@@ -631,12 +634,9 @@ U16     eax;                            /* Authorization index       */
     #if defined(FEATURE_ACCESS_REGISTERS)
         if (ACCESS_REGISTER_MODE(&regs->psw)
          || (SIE_ACTIVE(regs) && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
-         || (arn & USE_ARMODE)
+         || (acctype & ACC_ARMODE)
            )
         {
-            /* Remove the USE_ARMODE flag from the arn if present */
-            arn &= ARN_MASK;
-
             /* [5.8.4.1] Select the access-list-entry token */
             alet = (arn == 0) ? 0 :
                    /* Guest ALET if XC guest in AR mode */
@@ -845,7 +845,7 @@ _DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
 RADR    sto = 0;                        /* Segment table origin      */
 RADR    pto = 0;                        /* Page table origin         */
 int     cc;                             /* Condition code            */
-int     tlbix = -1;                     /* TLB entry index           */
+int     tlbix = TLBIX(vaddr);           /* TLB entry index           */
 
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
 /*-----------------------------------*/
@@ -870,15 +870,7 @@ U32     ptl;                            /* Page table length         */
        goto tran_spec_excp;
 
     /* Look up the address in the TLB */
-    /* Do not use TLB if processing LRA instruction */
-
-    /* Only a single entry in the TLB will be looked up, namely the
-       entry indexed by bits 12-19 of the virtual address */
-    if (acctype != ACCTYPE_LRA)
-        tlbix = TLBIX(vaddr);
-
-    if (tlbix >= 0
-// && 0
+    if (   !(acctype & ACC_NOTLB)
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
         && !(regs->tlb.common[tlbix] && regs->dat.private) )
@@ -974,27 +966,24 @@ U32     ptl;                            /* Page table length         */
         #endif /*FEATURE_SEGMENT_PROTECTION*/
 
         /* Place the translated address in the TLB */
-        if (tlbix >= 0)
-        {
-            regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
-            regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
-            regs->tlb.TLB_PTE(tlbix)   = pte;
-            regs->tlb.common[tlbix]    = (ste & SEGTAB_370_CMN) ? 1 : 0;
-            regs->tlb.protect[tlbix]   = regs->dat.protect;
-            regs->tlb.acc[tlbix]       = 0;
-            regs->tlb.main[tlbix]       = NULL;
+        regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
+        regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+        regs->tlb.TLB_PTE(tlbix)   = pte;
+        regs->tlb.common[tlbix]    = (ste & SEGTAB_370_CMN) ? 1 : 0;
+        regs->tlb.protect[tlbix]   = regs->dat.protect;
+        regs->tlb.acc[tlbix]       = 0;
+        regs->tlb.main[tlbix]       = NULL;
 
-            /* Set adjacent TLB entry if 4K page sizes */
-            if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
-            {
-                regs->tlb.TLB_ASD(tlbix^1)   = regs->tlb.TLB_ASD(tlbix);
-                regs->tlb.TLB_VADDR(tlbix^1) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
-                regs->tlb.TLB_PTE(tlbix^1)   = regs->tlb.TLB_PTE(tlbix);
-                regs->tlb.common[tlbix^1]    = regs->tlb.common[tlbix];
-                regs->tlb.protect[tlbix^1]   = regs->tlb.protect[tlbix];
-                regs->tlb.acc[tlbix^1]       = 0;
-                regs->tlb.main[tlbix^1]      = NULL;
-            }
+        /* Set adjacent TLB entry if 4K page sizes */
+        if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
+        {
+            regs->tlb.TLB_ASD(tlbix^1)   = regs->tlb.TLB_ASD(tlbix);
+            regs->tlb.TLB_VADDR(tlbix^1) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+            regs->tlb.TLB_PTE(tlbix^1)   = regs->tlb.TLB_PTE(tlbix);
+            regs->tlb.common[tlbix^1]    = regs->tlb.common[tlbix];
+            regs->tlb.protect[tlbix^1]   = regs->tlb.protect[tlbix];
+            regs->tlb.acc[tlbix^1]       = 0;
+            regs->tlb.main[tlbix^1]      = NULL;
         }
     } /* end if(!TLB) */
 
@@ -1032,16 +1021,7 @@ U32     ptl;                            /* Page table length         */
     regs->dat.private = ((regs->dat.asd & STD_PRIVATE) != 0);
 
     /* [3.11.4] Look up the address in the TLB */
-    /* [10.17] Do not use TLB if processing LRA instruction */
-
-    /* Only a single entry in the TLB will be looked up, namely the
-       entry indexed by bits 12-19 of the virtual address */
-
-    if (acctype != ACCTYPE_LRA && acctype != ACCTYPE_PTE)
-        tlbix = TLBIX(vaddr);
-
-    if (tlbix >= 0
-// && 0
+    if (   !(acctype & ACC_NOTLB)
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
         && !(regs->tlb.common[tlbix] && regs->dat.private) )
@@ -1120,16 +1100,13 @@ U32     ptl;                            /* Page table length         */
             regs->dat.protect |= 1;
 
         /* [3.11.4.2] Place the translated address in the TLB */
-        if (tlbix >= 0)
-        {
-            regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
-            regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
-            regs->tlb.TLB_PTE(tlbix)   = pte;
-            regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
-            regs->tlb.acc[tlbix]       = 0;
-            regs->tlb.protect[tlbix]   = regs->dat.protect;
-            regs->tlb.main[tlbix]       = NULL;
-        }
+        regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
+        regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+        regs->tlb.TLB_PTE(tlbix)   = pte;
+        regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
+        regs->tlb.acc[tlbix]       = 0;
+        regs->tlb.protect[tlbix]   = regs->dat.protect;
+        regs->tlb.main[tlbix]       = NULL;
 
     } /* end if(!TLB) */
 
@@ -1172,16 +1149,7 @@ U16     sx, px;                         /* Segment and page index,
 //  logmsg("asce=%16.16" I64_FMT "X\n",regs->dat.asd);
 
     /* [3.11.4] Look up the address in the TLB */
-    /* [10.17] Do not use TLB if processing LRA instruction */
-
-    /* Only a single entry in the TLB will be looked up, namely the
-       entry indexed by bits 12-19 of the virtual address */
-    if (acctype != ACCTYPE_LRA && acctype != ACCTYPE_PTE 
-        && acctype != ACCTYPE_LPTEA) 
-        tlbix = TLBIX(vaddr);
-
-    if (tlbix >= 0
-// && 0
+    if (   !(acctype & ACC_NOTLB)
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
         && !(regs->tlb.common[tlbix] && regs->dat.private) )
@@ -1198,11 +1166,11 @@ U16     sx, px;                         /* Segment and page index,
 //      logmsg("asce type = real\n");
 
             /* Translation specification exception if LKPG for a real-space */
-            if(acctype == ACCTYPE_PTE)
+            if(acctype & ACC_PTE)
                 goto tran_spec_excp;
 
             /* Special operation exception if LPTEA for a real-space */
-            if(acctype == ACCTYPE_LPTEA)
+            if(acctype & ACC_LPTEA)
                 goto spec_oper_excp;
 
             /* Construct a fake page table entry for real = virtual */
@@ -1433,7 +1401,7 @@ U16     sx, px;                         /* Segment and page index,
             pto += px;
 
             /* For LPTEA instruction, return the address of the PTE */
-            if (acctype == ACCTYPE_LPTEA)
+            if (acctype & ACC_LPTEA)
             {
                 regs->dat.raddr = pto;
                 regs->dat.xcode = 0;
@@ -1466,17 +1434,13 @@ U16     sx, px;                         /* Segment and page index,
             regs->dat.protect |= 1;
 
         /* [3.11.4.2] Place the translated address in the TLB */
-        if (tlbix >= 0)
-        {
-            regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
-            regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
-            regs->tlb.TLB_PTE(tlbix)   = pte;
-            regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
-            regs->tlb.protect[tlbix]   = regs->dat.protect;
-            regs->tlb.acc[tlbix]       = 0;
-            regs->tlb.main[tlbix]      = NULL;
-        }
-
+        regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
+        regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+        regs->tlb.TLB_PTE(tlbix)   = pte;
+        regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
+        regs->tlb.protect[tlbix]   = regs->dat.protect;
+        regs->tlb.acc[tlbix]       = 0;
+        regs->tlb.main[tlbix]      = NULL;
     }
 
     if(acctype != ACCTYPE_PTE)
@@ -1526,7 +1490,7 @@ tran_prog_check:
 /* Conditions which the caller may or may not program check */
 seg_tran_invalid:
     /* For LPTEA, return segment table entry address with cc 2 */
-    if (acctype == ACCTYPE_LPTEA)
+    if (acctype & ACC_LPTEA)
     {
         regs->dat.raddr = sto;
         cc = 2;
@@ -1542,7 +1506,7 @@ seg_tran_invalid:
 page_tran_invalid:
     regs->dat.xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
     regs->dat.raddr = pto;
-    if(acctype == ACCTYPE_PTE) return 0;
+    if(acctype & ACC_PTE) return 0;
     cc = 2;
     goto tran_excp_addr;
 
@@ -1563,14 +1527,14 @@ seg_tran_length:
     goto tran_excp_addr;
 
 tran_alet_excp:
-    regs->excarid = arn & ARN_MASK;
-    cc = (acctype == ACCTYPE_LPTEA) ? 3 : 4;
+    regs->excarid = arn;
+    cc = (acctype & ACC_LPTEA) ? 3 : 4;
     return cc;
 
 #if defined(FEATURE_ESAME)
 reg_first_invalid:
     /* For LPTEA, return region table entry address with cc 2 */
-    if (acctype == ACCTYPE_LPTEA)
+    if (acctype & ACC_LPTEA)
     {
         regs->dat.raddr = rto | (TT_R1TABL >> 2);
         cc = 2;
@@ -1582,7 +1546,7 @@ reg_first_invalid:
 
 reg_second_invalid:
     /* For LPTEA, return region table entry address with cc 2 */
-    if (acctype == ACCTYPE_LPTEA)
+    if (acctype & ACC_LPTEA)
     {
         regs->dat.raddr = rto | (TT_R2TABL >> 2);
         cc = 2;
@@ -1594,7 +1558,7 @@ reg_second_invalid:
 
 reg_third_invalid:
     /* For LPTEA, return region table entry address with cc 2 */
-    if (acctype == ACCTYPE_LPTEA)
+    if (acctype & ACC_LPTEA)
     {
         regs->dat.raddr = rto | (TT_R3TABL >> 2);
         cc = 2;
@@ -1629,7 +1593,7 @@ reg_third_excp:
 
 tran_excp_addr:
     /* For LPTEA instruction, return xcode with cc = 3 */
-    if (acctype == ACCTYPE_LPTEA) 
+    if (acctype & ACC_LPTEA) 
         return 3;
 
     /* Set the translation exception address */
@@ -1675,7 +1639,7 @@ tran_excp_addr:
     if (ACCESS_REGISTER_MODE(&regs->psw)
      || (SIE_ACTIVE(regs) && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
        )
-       regs->excarid = (arn < 0 ? 0 : arn & ARN_MASK);
+       regs->excarid = arn < 0 ? 0 : arn;
 
     /* Return condition code */
     return cc;

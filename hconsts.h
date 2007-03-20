@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.7  2007/01/11 19:54:33  fish
+// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
+//
 // Revision 1.6  2006/12/08 09:43:25  jj
 // Add CVS message log
 //
@@ -234,30 +237,32 @@
 #define PGM_PRD_OS_RESTRICTED 4                 /* Restricted        */
 #define PGM_PRD_OS_LICENSED   0                 /* Licensed          */
 
-/* Access type parameter passed to translate functions in dat.c */
-#define ACC_CHECK          0x01
-#define ACC_WRITE          STORKEY_CHANGE  /* 0x02 */
-#define ACC_READ           STORKEY_REF     /* 0x04 */
-#define ACC_SIE            0x08
-#define ACC_LKUP          (ACC_READ|ACC_WRITE)
-//TODO: Use ACC_SIE and ACC_PTE for lookup
+/* Storage access bits used by logical_to_main */
+#define ACC_CHECK          0x0001          /* Possible storage update*/
+#define ACC_WRITE          0x0002          /* Storage update         */
+#define ACC_READ           0x0004          /* Storage read           */
 
-#define ACCTYPE_HW         0x00            /* Hardware access        */
-#define ACCTYPE_INSTFETCH (0x10|ACC_READ)  /* Instruction fetch      */
-#define ACCTYPE_READ      (0x20|ACC_READ)  /* Read storage           */
-#define ACCTYPE_WRITE_SKP (0x30|ACC_CHECK) /* Write, skip change bit */
-#define ACCTYPE_WRITE     (0x40|ACC_WRITE) /* Write storage          */
-#define ACCTYPE_TAR        0x50            /* TAR instruction        */
-#define ACCTYPE_LRA        0x60            /* LRA instruction        */
-#define ACCTYPE_TPROT      0x70            /* TPROT instruction      */
-#define ACCTYPE_IVSK       0x80            /* IVSK instruction       */
-#define ACCTYPE_STACK      0x90            /* Linkage stack          */
-#define ACCTYPE_BSG        0xA0            /* BSG instruction        */
-#define ACCTYPE_PTE        0xB0            /* PTE raddr              */
-#define ACCTYPE_SIE       (0xC0|ACC_SIE)   /* SIE host translation   */
-#define ACCTYPE_SIE_WRITE (0xD0|ACC_SIE)   /* SIE host write         */
-#define ACCTYPE_STRAG      0xE0            /* STRAG instruction      */
-#define ACCTYPE_LPTEA      0xF0            /* LPTEA instruction      */
+/* Storage access bits used by other dat.h routines */
+#define ACC_NOTLB          0x0100          /* Don't do TLB lookup    */
+#define ACC_PTE            0x0200          /* Return page table entry*/
+#define ACC_LPTEA          0x0400          /* Esame page table entry */
+#define ACC_SPECIAL_ART    0x0800          /* Used by BSG            */
+#define ACC_ARMODE         0x1000          /* Used by LPTEA          */
+
+#define ACCTYPE_HW         0               /* Hardware access        */
+#define ACCTYPE_INSTFETCH  ACC_READ        /* Instruction fetch      */
+#define ACCTYPE_READ       ACC_READ        /* Read storage           */
+#define ACCTYPE_WRITE_SKP  ACC_CHECK       /* Write, skip change bit */
+#define ACCTYPE_WRITE      ACC_WRITE       /* Write storage          */
+#define ACCTYPE_TAR        0               /* TAR instruction        */
+#define ACCTYPE_LRA        ACC_NOTLB       /* LRA instruction        */
+#define ACCTYPE_TPROT      0               /* TPROT instruction      */
+#define ACCTYPE_IVSK       0               /* ISVK instruction       */
+#define ACCTYPE_BSG        ACC_SPECIAL_ART /* BSG instruction        */
+#define ACCTYPE_PTE       (ACC_PTE|ACC_NOTLB) /* page table entry    */
+#define ACCTYPE_SIE        0               /* SIE host access        */
+#define ACCTYPE_STRAG      0               /* STRAG instruction      */
+#define ACCTYPE_LPTEA     (ACC_LPTEA|ACC_NOTLB) /* LPTEA instruction */
 
 /* Special value for arn parameter for translate functions in dat.c */
 #define USE_INST_SPACE          (-1)    /* Instruction space virtual */
@@ -265,8 +270,6 @@
 #define USE_PRIMARY_SPACE       (-3)    /* Primary space virtual     */
 #define USE_SECONDARY_SPACE     (-4)    /* Secondary space virtual   */
 #define USE_HOME_SPACE          (-5)    /* Home space virtual        */
-#define USE_ARMODE              0x80    /* OR with arn forces ARMODE */
-#define ARN_MASK                0x0F    /* AND mask to isolate arn   */
 
 /* Interception codes used by longjmp/SIE */
 #define SIE_NO_INTERCEPT        (-1)    /* Continue (after pgmint)   */

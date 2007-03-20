@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.182  2007/03/10 06:27:43  gsmith
+// machdep.h updates
+//
 // Revision 1.181  2007/01/13 07:18:59  bernard
 // backout ccmask
 //
@@ -1086,6 +1089,7 @@ int     r1, r2, r3;                     /* Register numbers          */
 int     m4;                             /* Mask field                */
 int     n;                              /* Address space indication  */
 int     cc;                             /* Condition code            */
+int     acctype = ACCTYPE_LPTEA;        /* Storage access type       */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
@@ -1099,7 +1103,8 @@ int     cc;                             /* Condition code            */
         n = USE_PRIMARY_SPACE;
         break;
     case 1: /* Use ALET in access register r2 */
-        n = USE_ARMODE | r2;
+        n = r2;
+        acctype |= ACC_ARMODE;
         break;
     case 2: /* Use ASCE in control register 7 */
         n = USE_SECONDARY_SPACE;
