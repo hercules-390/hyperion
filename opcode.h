@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.200  2007/03/18 19:22:25  gsmith
+// Fix typo
+//
 // Revision 1.199  2007/03/18 18:47:43  gsmith
 // Simplify MULTIPLE_CONTROLLED_DATA_SPACE tests
 //
@@ -698,24 +701,12 @@ do { \
  #define SIE_ACTIVE(_regs) (0)
 #endif
 
-#undef IS_MCDS
-#undef IS_GUEST_MCDS
+#undef MULTIPLE_CONTROLLED_DATA_SPACE
 #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
- #define IS_MCDS(_regs) \
-      ( \
-           SIE_MODE((_regs)) \
-        && SIE_FEATB((_regs), MX, XC) \
-        && AR_BIT(&(_regs)->psw) \
-      )
- #define IS_GUEST_MCDS(_regs) \
-      ( \
-           SIE_ACTIVE((_regs)) \
-        && SIE_FEATB((_regs)->guestregs, MX, XC) \
-        && AR_BIT(&(_regs)->guestregs->psw) \
-      )
+ #define MULTIPLE_CONTROLLED_DATA_SPACE(_regs) \
+      ( SIE_FEATB((_regs), MX, XC) && AR_BIT(&(_regs)->psw) )
 #else
- #define IS_MCDS(_regs) (0)
- #define IS_GUEST_MCDS(_regs) (0)
+ #define MULTIPLE_CONTROLLED_DATA_SPACE(_regs) (0)
 #endif
 
 /* PER3 Breaking Event Address Recording (BEAR) */

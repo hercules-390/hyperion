@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.100  2007/03/18 18:47:43  gsmith
+// Simplify MULTIPLE_CONTROLLED_DATA_SPACE tests
+//
 // Revision 1.99  2007/03/18 00:41:53  gsmith
 // Clarify load_address_space_designator code
 //
@@ -627,7 +630,7 @@ U16     eax;                            /* Authorization index       */
 
     #if defined(FEATURE_ACCESS_REGISTERS)
         if (ACCESS_REGISTER_MODE(&regs->psw)
-         || IS_GUEST_MCDS(regs)
+         || (SIE_ACTIVE(regs) && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
          || (arn & USE_ARMODE)
            )
         {
@@ -637,7 +640,8 @@ U16     eax;                            /* Authorization index       */
             /* [5.8.4.1] Select the access-list-entry token */
             alet = (arn == 0) ? 0 :
                    /* Guest ALET if XC guest in AR mode */
-                   IS_GUEST_MCDS(regs) ? regs->guestregs->AR(arn) :
+                   (SIE_ACTIVE(regs) && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
+                   ? regs->guestregs->AR(arn) :
                    /* If SIE host but not XC guest in AR mode then alet is 0 */
                    SIE_ACTIVE(regs) ? 0 :
                    /* Otherwise alet is in the access register */
@@ -698,7 +702,8 @@ U16     eax;                            /* Authorization index       */
                     regs->aea_aleprot[arn] = regs->dat.protect & 2;
 
                     /* Build a host real space entry for each XC dataspace */
-                    if (IS_GUEST_MCDS(regs) && arn > 0)
+                    if (arn > 0 && SIE_ACTIVE(regs)
+                     && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
                     {
                         regs->guestregs->dat.asd = regs->dat.asd ^ TLB_HOST_ASD;
 
@@ -1668,7 +1673,7 @@ tran_excp_addr:
 
     /* Set the exception access identification */
     if (ACCESS_REGISTER_MODE(&regs->psw)
-     || IS_GUEST_MCDS(regs)
+     || (SIE_ACTIVE(regs) && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
        )
        regs->excarid = (arn < 0 ? 0 : arn & ARN_MASK);
 
@@ -2148,7 +2153,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
     {
 
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + regs->dat.aaddr,
-                    (arn > 0 && IS_MCDS(regs)) ? arn : USE_PRIMARY_SPACE,
+                    (arn > 0 && MULTIPLE_CONTROLLED_DATA_SPACE(regs)) ? arn : USE_PRIMARY_SPACE,
                     regs->hostregs, ACCTYPE_SIE))
             (regs->hostregs->program_interrupt) (regs->hostregs, regs->hostregs->dat.xcode);
 
@@ -2159,7 +2164,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
             regs->tlb.TLB_PTE(ix)   = addr & TLBID_PAGEMASK;
 
         /* Indicate a host real space entry for a XC dataspace */
-        if (arn > 0 && IS_MCDS(regs))
+        if (arn > 0 && MULTIPLE_CONTROLLED_DATA_SPACE(regs))
             regs->tlb.TLB_ASD(ix) = regs->dat.asd;
 
         /* Convert host real address to host absolute address */
