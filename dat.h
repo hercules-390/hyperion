@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.103  2007/03/20 22:27:25  gsmith
+// Simplify some code in logical_to_main
+//
 // Revision 1.102  2007/03/20 22:23:32  gsmith
 // Redefine ACC_ and ACCTYPE_ macros
 //
@@ -969,24 +972,27 @@ U32     ptl;                            /* Page table length         */
         #endif /*FEATURE_SEGMENT_PROTECTION*/
 
         /* Place the translated address in the TLB */
-        regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
-        regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
-        regs->tlb.TLB_PTE(tlbix)   = pte;
-        regs->tlb.common[tlbix]    = (ste & SEGTAB_370_CMN) ? 1 : 0;
-        regs->tlb.protect[tlbix]   = regs->dat.protect;
-        regs->tlb.acc[tlbix]       = 0;
-        regs->tlb.main[tlbix]       = NULL;
+        if (!(acctype & ACC_NOTLB))
+        {
+            regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
+            regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+            regs->tlb.TLB_PTE(tlbix)   = pte;
+            regs->tlb.common[tlbix]    = (ste & SEGTAB_370_CMN) ? 1 : 0;
+            regs->tlb.protect[tlbix]   = regs->dat.protect;
+            regs->tlb.acc[tlbix]       = 0;
+            regs->tlb.main[tlbix]       = NULL;
 
         /* Set adjacent TLB entry if 4K page sizes */
-        if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
-        {
-            regs->tlb.TLB_ASD(tlbix^1)   = regs->tlb.TLB_ASD(tlbix);
-            regs->tlb.TLB_VADDR(tlbix^1) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
-            regs->tlb.TLB_PTE(tlbix^1)   = regs->tlb.TLB_PTE(tlbix);
-            regs->tlb.common[tlbix^1]    = regs->tlb.common[tlbix];
-            regs->tlb.protect[tlbix^1]   = regs->tlb.protect[tlbix];
-            regs->tlb.acc[tlbix^1]       = 0;
-            regs->tlb.main[tlbix^1]      = NULL;
+            if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
+            {
+                regs->tlb.TLB_ASD(tlbix^1)   = regs->tlb.TLB_ASD(tlbix);
+                regs->tlb.TLB_VADDR(tlbix^1) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+                regs->tlb.TLB_PTE(tlbix^1)   = regs->tlb.TLB_PTE(tlbix);
+                regs->tlb.common[tlbix^1]    = regs->tlb.common[tlbix];
+                regs->tlb.protect[tlbix^1]   = regs->tlb.protect[tlbix];
+                regs->tlb.acc[tlbix^1]       = 0;
+                regs->tlb.main[tlbix^1]      = NULL;
+            }
         }
     } /* end if(!TLB) */
 
@@ -1103,14 +1109,16 @@ U32     ptl;                            /* Page table length         */
             regs->dat.protect |= 1;
 
         /* [3.11.4.2] Place the translated address in the TLB */
-        regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
-        regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
-        regs->tlb.TLB_PTE(tlbix)   = pte;
-        regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
-        regs->tlb.acc[tlbix]       = 0;
-        regs->tlb.protect[tlbix]   = regs->dat.protect;
-        regs->tlb.main[tlbix]       = NULL;
-
+        if (!(acctype & ACC_NOTLB))
+        {
+            regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
+            regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+            regs->tlb.TLB_PTE(tlbix)   = pte;
+            regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
+            regs->tlb.acc[tlbix]       = 0;
+            regs->tlb.protect[tlbix]   = regs->dat.protect;
+            regs->tlb.main[tlbix]       = NULL;
+        }
     } /* end if(!TLB) */
 
     if(acctype != ACCTYPE_PTE)
@@ -1437,13 +1445,16 @@ U16     sx, px;                         /* Segment and page index,
             regs->dat.protect |= 1;
 
         /* [3.11.4.2] Place the translated address in the TLB */
-        regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
-        regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
-        regs->tlb.TLB_PTE(tlbix)   = pte;
-        regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
-        regs->tlb.protect[tlbix]   = regs->dat.protect;
-        regs->tlb.acc[tlbix]       = 0;
-        regs->tlb.main[tlbix]      = NULL;
+        if (!(acctype & ACC_NOTLB))
+        {
+            regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
+            regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+            regs->tlb.TLB_PTE(tlbix)   = pte;
+            regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
+            regs->tlb.protect[tlbix]   = regs->dat.protect;
+            regs->tlb.acc[tlbix]       = 0;
+            regs->tlb.main[tlbix]      = NULL;
+        }
     }
 
     if(acctype != ACCTYPE_PTE)
