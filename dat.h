@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.102  2007/03/20 22:23:32  gsmith
+// Redefine ACC_ and ACCTYPE_ macros
+//
 // Revision 1.101  2007/03/20 02:06:02  gsmith
 // Rename IS_MCDS macro to MULTIPLE_CONTROLLED_DATA_SPACE
 //
@@ -2089,7 +2092,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
         /* Setup `real' TLB entry (for MADDR) */
         regs->tlb.TLB_ASD(ix)   = TLB_REAL_ASD;
-        regs->tlb.TLB_VADDR(ix) = addr & TLBID_PAGEMASK;
+        regs->tlb.TLB_VADDR(ix) = (addr & TLBID_PAGEMASK) | regs->tlbID;
         regs->tlb.TLB_PTE(ix)   = addr & TLBID_PAGEMASK;
         regs->tlb.acc[ix]       =
         regs->tlb.common[ix]    =
@@ -2156,12 +2159,10 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         /* Set the reference bit in the storage key */
         *regs->dat.storkey |= STORKEY_REF;
 
-        /* Update accelerated lookup TLB fields
-           (the id field is either 0 (real mode) or already set correctly) */
-        regs->tlb.TLB_VADDR(ix) |= regs->tlbID;
+        /* Update accelerated lookup TLB fields */
         regs->tlb.storkey[ix]    = regs->dat.storkey;
         regs->tlb.skey[ix]       = *regs->dat.storkey & STORKEY_KEY;
-        regs->tlb.acc[ix]       |= ACC_READ;
+        regs->tlb.acc[ix]        = ACC_READ;
         regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, aaddr);
 
     }
@@ -2182,23 +2183,27 @@ int     ix = TLBIX(addr);               /* TLB index                 */
             *regs->dat.storkey |= (STORKEY_REF | STORKEY_CHANGE);
 
         /* Update accelerated lookup TLB fields */
-        regs->tlb.TLB_VADDR(ix) |= regs->tlbID;
-        regs->tlb.storkey[ix]    = regs->dat.storkey;
-        regs->tlb.skey[ix]       = *regs->dat.storkey & STORKEY_KEY;
-        if ((addr >= PSA_SIZE || regs->dat.private) && !EN_IC_PER_SA(regs))
-            regs->tlb.acc[ix]   |= (ACC_READ|ACC_CHECK|(acctype & ACC_WRITE));
-        else
-            regs->tlb.acc[ix]   |= ACC_READ;
-        regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, aaddr);
+        regs->tlb.storkey[ix] = regs->dat.storkey;
+        regs->tlb.skey[ix]    = *regs->dat.storkey & STORKEY_KEY;
+        regs->tlb.acc[ix]     = (addr >= PSA_SIZE || regs->dat.private)
+                              ? (ACC_READ|ACC_CHECK|acctype)
+                              :  ACC_READ;
+        regs->tlb.main[ix]    = NEW_MAINADDR (regs, addr, aaddr);
 
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SA(regs) && (arn != USE_REAL_ADDR)
+        if (EN_IC_PER_SA(regs))
+        {
+            regs->tlb.acc[ix] = ACC_READ;
+            if (arn != USE_REAL_ADDR
 #if defined(FEATURE_PER2)
-          && ( REAL_MODE(&regs->psw) ||
-               ARCH_DEP(check_sa_per2) (arn, acctype, regs) )
+             && ( REAL_MODE(&regs->psw) ||
+                   ARCH_DEP(check_sa_per2) (arn, acctype, regs)
+                )
 #endif /*defined(FEATURE_PER2)*/
-          && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
-            ON_IC_PER_SA(regs);
+             && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11))
+               )
+                ON_IC_PER_SA(regs);
+        }
 #endif /*defined(FEATURE_PER)*/
     } /* acctype & ACC_WRITE|CHECK */
 
