@@ -13,6 +13,9 @@
 /* Multiply/Divide Logical instructions         Vic Cross 13/02/2001 */
 
 // $Log$
+// Revision 1.47  2007/03/07 15:36:56  ivan
+// Fix explicit store protection check for SIE'd guests
+//
 // Revision 1.46  2007/01/04 23:12:04  gsmith
 // remove thunk calls for program_interrupt
 //
@@ -513,7 +516,16 @@ static inline BYTE *ARCH_DEP(fetch_main_absolute) (RADR addr,
 static inline U64 ARCH_DEP(fetch_doubleword_absolute) (RADR addr,
                                 REGS *regs)
 {
+ // The change below affects 32 bit hosts that use something like
+ // cmpxchg8b to fetch the doubleword concurrently.
+ // This routine is mainly called by DAT in 64 bit guest mode
+ // to access DAT-related values.  In most `well-behaved' OS's,
+ // other CPUs should not be interfering with these values
+ #if !defined(OPTION_STRICT_ALIGNMENT)
+    return CSWAP64(*(U64 *)FETCH_MAIN_ABSOLUTE(addr, regs, 8));
+ #else
     return fetch_dw(FETCH_MAIN_ABSOLUTE(addr, regs, 8));
+ #endif
 } /* end function fetch_doubleword_absolute */
 
 
