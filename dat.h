@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.104  2007/03/20 23:46:15  gsmith
+// Don't update TLB if ACC_NOTLB
+//
 // Revision 1.103  2007/03/20 22:27:25  gsmith
 // Simplify some code in logical_to_main
 //
@@ -394,7 +397,7 @@ int     i;                              /* Array subscript           */
 
     /* For ordinary ART (but not for special ART),
        compare the ALE sequence number with the ALET */
-    if (acctype != ACCTYPE_BSG
+    if (!(acctype & ACC_SPECIAL_ART)
         && (ale[0] & ALE0_ALESN) != (alet & ALET_ALESN))
         goto ale_seq_excp;
 
@@ -426,7 +429,7 @@ int     i;                              /* Array subscript           */
 
     /* [5.8.4.7] For ordinary ART (but not for special ART),
        authorize the use of the access-list entry */
-    if (acctype != ACCTYPE_BSG)
+    if (!(acctype & ACC_SPECIAL_ART))
     {
         /* If ALE private bit is zero, or the ALE AX equals the
            EAX, then authorization succeeds.  Otherwise perform
@@ -1121,7 +1124,7 @@ U32     ptl;                            /* Page table length         */
         }
     } /* end if(!TLB) */
 
-    if(acctype != ACCTYPE_PTE)
+    if(!(acctype & ACC_PTE))
     /* [3.11.3.5] Combine the page frame real address with the byte
        index of the virtual address to form the real address */
         regs->dat.raddr = (pte & PAGETAB_PFRA) | (vaddr & 0xFFF);
@@ -1457,7 +1460,7 @@ U16     sx, px;                         /* Segment and page index,
         }
     }
 
-    if(acctype != ACCTYPE_PTE)
+    if(!(acctype & ACC_PTE))
         /* Combine the page frame real address with the byte index
            of the virtual address to form the real address */
         regs->dat.raddr = (pte & ZPGETAB_PFRA) | (vaddr & 0xFFF);
