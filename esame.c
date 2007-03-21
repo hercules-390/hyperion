@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.183  2007/03/20 22:23:33  gsmith
+// Redefine ACC_ and ACCTYPE_ macros
+//
 // Revision 1.182  2007/03/10 06:27:43  gsmith
 // machdep.h updates
 //
@@ -1124,7 +1127,7 @@ int     acctype = ACCTYPE_LPTEA;        /* Storage access type       */
     vaddr = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
     /* Find the page table address and condition code */
-    cc = ARCH_DEP(translate_addr) (vaddr, n, regs, ACCTYPE_LPTEA);
+    cc = ARCH_DEP(translate_addr) (vaddr, n, regs, acctype);
 
     /* Set R1 to real address or exception code depending on cc */
     regs->GR_G(r1) = (cc < 3) ? regs->dat.raddr : regs->dat.xcode;
