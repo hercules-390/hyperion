@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.66  2007/03/15 20:57:55  gsmith
+// Fix fba when the fba device is > 4G
+//
 // Revision 1.65  2007/03/13 15:55:29  fish
 // Backward-compatible fix of print-to-pipe to accept parameters.  :)
 //
@@ -917,8 +920,6 @@ struct DEVBLK {                         /* Device configuration block*/
         int     printrem;               /* Number of bytes remaining
                                            in print buffer           */
         pid_t   ptpcpid;                /* print-to-pipe child pid   */
-        char*   ptpargs;                /* print-to-pipe arguments   */
-        size_t  siz_ptpargs;            /* size of above buffer      */
         u_int   crlf:1;                 /* 1=CRLF delimiters, 0=LF   */
         u_int   diaggate:1;             /* 1=Diagnostic gate command */
         u_int   fold:1;                 /* 1=Fold to upper case      */

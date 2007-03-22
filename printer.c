@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.43  2007/03/15 04:16:14  fish
+// fix query func to show ptp pargs too
+//
 // Revision 1.42  2007/03/15 02:56:47  fish
 // (minor fix)
 //
@@ -92,9 +95,6 @@ open_printer (DEVBLK *dev)
 {
 pid_t           pid;                    /* Child process identifier  */
 char            pathname[MAX_PATH];     /* file path in host format  */
-char*           pszCmdLine;
-size_t          nCmdLineBuffSize;
-int             save_errno;
 #if !defined( _MSVC_ )
 int             pipefd[2];              /* Pipe descriptors          */
 int             rc;                     /* Return code               */
@@ -124,45 +124,11 @@ int             rc;                     /* Return code               */
     /* Filename is in format |xxx, set up pipe to program xxx */
 
     dev->ispiped = 1;
-    hostpath( pathname, dev->filename+1, sizeof(pathname) );
-
-    /* Allocate room for command-line */
-
-    nCmdLineBuffSize = ( 1 + strlen(pathname) + 1 + dev->siz_ptpargs + 1 );
-
-    if (!(pszCmdLine = malloc( nCmdLineBuffSize )))
-    {
-        logmsg (_("HHCPR013E Out of memory\n"));
-        return -1;
-    }
-    *pszCmdLine = 0;
-
-    /* Build command-line */
-
-#if defined( _MSVC_ )
-    if (dev->siz_ptpargs && dev->ptpargs)
-        strlcat( pszCmdLine, "\"", nCmdLineBuffSize );
-#endif
-
-    strlcat( pszCmdLine, pathname, nCmdLineBuffSize );
-
-#if defined( _MSVC_ )
-    if (dev->siz_ptpargs && dev->ptpargs)
-        strlcat( pszCmdLine, "\"", nCmdLineBuffSize );
-#endif
-
-    if (dev->siz_ptpargs && dev->ptpargs)
-    {
-        /* (dev->ptpargs should already start with a blank) */
-        strlcat( pszCmdLine, dev->ptpargs, nCmdLineBuffSize );
-    }
 
 #if defined( _MSVC_ )
 
     /* "Poor man's" fork... */
-    pid = w32_poor_mans_fork ( pszCmdLine, &dev->fd );
-    save_errno = errno; free( pszCmdLine ); errno = save_errno;
-
+    pid = w32_poor_mans_fork ( dev->filename+1, &dev->fd );
     if (pid < 0)
     {
         logmsg (_("HHCPR006E %4.4X device initialization error: fork: %s\n"),
@@ -181,7 +147,6 @@ int             rc;                     /* Return code               */
     rc = create_pipe (pipefd);
     if (rc < 0)
     {
-        save_errno = errno; free( pszCmdLine ); errno = save_errno;
         logmsg (_("HHCPR005E %4.4X device initialization error: pipe: %s\n"),
                 dev->devnum, strerror(errno));
         return -1;
@@ -191,7 +156,6 @@ int             rc;                     /* Return code               */
     pid = fork();
     if (pid < 0)
     {
-        save_errno = errno; free( pszCmdLine ); errno = save_errno;
         logmsg (_("HHCPR006E %4.4X device initialization error: fork: %s\n"),
                 dev->devnum, strerror(errno));
         close_pipe ( pipefd[0] );
@@ -215,7 +179,6 @@ int             rc;                     /* Return code               */
             rc = dup2 (pipefd[0], STDIN_FILENO);
             if (rc != STDIN_FILENO)
             {
-                save_errno = errno; free( pszCmdLine ); errno = save_errno;
                 logmsg (_("HHCPR008E %4.4X dup2 error: %s\n"),
                         dev->devnum, strerror(errno));
                 close_pipe ( pipefd[0] );
@@ -233,8 +196,7 @@ int             rc;                     /* Return code               */
         SETMODE(TERM);
 
         /* Execute the specified pipe receiver program */
-        rc = system (pszCmdLine);
-        save_errno = errno; free( pszCmdLine ); errno = save_errno;
+        rc = system (dev->filename+1);
 
         if (rc == 0)
         {
@@ -246,7 +208,7 @@ int             rc;                     /* Return code               */
         {
             /* Log error */
             logmsg (_("HHCPR012E %4.4X Unable to execute %s: %s\n"),
-                    dev->devnum, pathname, strerror(errno));
+                    dev->devnum, dev->filename+1, strerror(errno));
         }
 
         /* The child process terminates using _exit instead of exit
@@ -256,7 +218,6 @@ int             rc;                     /* Return code               */
     } /* end if(pid==0) */
 
     /* The parent process continues as the pipe sender */
-    save_errno = errno; free( pszCmdLine ); errno = save_errno;
 
     /* Close the read end of the pipe */
     close_pipe ( pipefd[0] );
@@ -324,47 +285,10 @@ int     i;                              /* Array subscript           */
     dev->fold = 0;
     dev->crlf = 0;
     dev->stopprt = 0;
-    dev->ptpcpid = 0;
-    dev->ispiped = 0;
-    dev->ptpargs = NULL;
-    dev->siz_ptpargs = 0;
 
     /* Process the driver arguments */
     for (i = 1; i < argc; i++)
     {
-        if (dev->ispiped)
-        {
-            size_t siz_ptpargs = dev->siz_ptpargs + 1 + strlen(argv[i]) + 1;
-            if (!realloc( dev->ptpargs, siz_ptpargs ))
-            {
-                logmsg (_("HHCPR013E Out of memory\n"));
-                free( dev->ptpargs );
-                dev->ptpargs = NULL;
-                dev->siz_ptpargs = 0;
-                dev->ispiped = 0;
-                return -1;
-            }
-            dev->siz_ptpargs = siz_ptpargs;
-            strlcat( dev->ptpargs, " ",     siz_ptpargs );
-            strlcat( dev->ptpargs, argv[i], siz_ptpargs );
-            continue;
-        }
-
-        if (strcmp(argv[i], "--") == 0)
-        {
-            if (dev->filename[0] == '|')
-            {
-                dev->ispiped = 1;
-                if (!(dev->ptpargs = malloc( dev->siz_ptpargs = 1 )))
-                {
-                    logmsg (_("HHCPR013E Out of memory\n"));
-                    return -1;
-                }
-                *dev->ptpargs = 0;
-                continue;
-            }
-        }
-
         if (strcasecmp(argv[i], "crlf") == 0)
         {
             dev->crlf = 1;
@@ -373,11 +297,6 @@ int     i;                              /* Array subscript           */
 
         logmsg (_("HHCPR002E Invalid argument for printer %4.4X: %s\n"),
                 dev->devnum, argv[i]);
-        if (dev->ptpargs)
-            free( dev->ptpargs );
-        dev->ptpargs = NULL;
-        dev->siz_ptpargs = 0;
-        dev->ispiped = 0;
         return -1;
     }
 
@@ -409,28 +328,11 @@ int     i;                              /* Array subscript           */
 static void printer_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    BYTE blanks_in_filename = strcspn( dev->filename, " \t\r\n\v\f" )
-        >= strlen( dev->filename ) ? 0 : 1;
     *class = "PRT";
-    if (buflen > 0)
-    {
-        snprintf
-        (
-            buffer, buflen, "%s%s%s%s%s%s%s"
-
-            ,blanks_in_filename ? "\"" : ""
-            ,dev->filename
-            ,blanks_in_filename ? "\"" : ""
-
-            ,(dev->crlf ? " crlf" : "")
-
-            ,dev->siz_ptpargs ?     " --"    : ""
-            ,dev->siz_ptpargs ? dev->ptpargs : ""
-
-            ,(dev->stopprt ? " (stopped)" : "")
-        );
-        *(buffer + buflen - 1) = 0;
-    }
+    snprintf (buffer, buflen, "%s%s%s",
+                dev->filename,
+                (dev->crlf ? " crlf" : ""),
+                (dev->stopprt ? " (stopped)" : ""));
 
 } /* end function printer_query_device */
 
@@ -453,11 +355,6 @@ static int printer_close_device ( DEVBLK *dev )
                 dev->ptpcpid, dev->devnum);
 #endif /* defined( _MSVC_ ) */
         dev->ptpcpid = 0;
-        if (dev->ptpargs)
-            free( dev->ptpargs );
-        dev->ptpargs = NULL;
-        dev->siz_ptpargs = 0;
-        dev->ispiped = 0;
     }
     else
         close (dev->fd);
