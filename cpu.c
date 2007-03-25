@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.179  2007/03/13 01:43:37  gsmith
+// Synchronize started cpu
+//
 // Revision 1.178  2007/01/16 01:45:33  gsmith
 // Tweaks to instruction stepping/tracing
 //
@@ -1205,6 +1208,10 @@ int   cpu  = *ptr;
         sysblk.hicpu = i + 1;
     }
 
+    /* This cpu is not started and is not waiting */
+    sysblk.started_mask &= ~BIT(cpu);
+    sysblk.waiting_mask &= ~BIT(cpu);
+
     /* Signal cpu has terminated */
     signal_condition (&sysblk.cpucond);
 
@@ -1489,9 +1496,6 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 
         HDC1(debug_cpu_state, regs);
 
-        /* Synchronize with other CPUs */
-        SYNCHRONIZE_CPUS(regs);
-
 #ifdef OPTION_MIPS_COUNTING
         /* Calculate the time we waited */
         regs->waittime += hw_clock() - regs->waittod;
@@ -1504,11 +1508,15 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         ARCH_DEP(purge_alb) (regs);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
-        RELEASE_INTLOCK(regs);
-
         /* If the architecture mode has changed we must adapt */
         if(sysblk.arch_mode != regs->arch_mode)
             longjmp(regs->archjmp,SIE_NO_INTERCEPT);
+
+        /* Synchronize with other CPUs */
+        SYNCHRONIZE_CPUS(regs);
+
+        RELEASE_INTLOCK(regs);
+
         longjmp(regs->progjmp, SIE_NO_INTERCEPT);
     } /*CPUSTATE_STOPPED*/
 
@@ -1660,15 +1668,12 @@ REGS    regs;
     regs.tracing = (sysblk.inststep || sysblk.insttrace);
     regs.ints_state |= sysblk.ints_state;
 
-    RELEASE_INTLOCK(&regs);
-
     /* Establish longjmp destination for architecture switch */
     setjmp(regs.archjmp);
 
     /* Switch architecture mode if appropriate */
     if(sysblk.arch_mode != regs.arch_mode)
     {
-        OBTAIN_INTLOCK(&regs);
         regs.arch_mode = sysblk.arch_mode;
         oldregs = malloc (sizeof(REGS));
         if (oldregs)
@@ -1684,6 +1689,8 @@ REGS    regs;
         }
         return oldregs;
     }
+
+    RELEASE_INTLOCK(&regs);
 
     /* Establish longjmp destination for program check */
     setjmp(regs.progjmp);

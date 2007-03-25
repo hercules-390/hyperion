@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.245  2007/02/12 22:36:29  rbowler
+// Remove tabs, reformat comments
+//
 // Revision 1.244  2007/02/12 06:16:45  fish
 // Don't log Sense Running State SIGP
 //
@@ -5928,7 +5931,10 @@ static char *ordername[] = {
 
 #if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)
     if(set_arch)
+    {
+        OBTAIN_INTLOCK(regs);
         longjmp(regs->archjmp, 0);
+    }
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/
 
     RETURN_INTCHECK(regs);
