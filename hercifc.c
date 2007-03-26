@@ -22,6 +22,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.26  2006/12/08 09:43:25  jj
+// Add CVS message log
+//
 
 #include "hercules.h"
 
@@ -215,11 +218,23 @@ int main( int argc, char **argv )
         rc = ioctl( fd, ctlreq.iCtlOp, pArg );
         if( rc < 0 )
         {
-            snprintf( szMsgBuffer,sizeof(szMsgBuffer),
-                     _("HHCIF005E %s: ioctl error doing %s on %s: %s\n"),
-                     pszProgName, pOp, pIF, strerror( errno ) );
-            
-            write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
+            if (1
+        #if defined(SIOCSIFHWADDR) && defined(ENOTSUP)
+                 /* Suppress spurious error message */
+             && !(ctlreq.iCtlOp == SIOCSIFHWADDR && errno == ENOTSUP)
+        #endif
+        #if defined(SIOCDIFADDR) && defined(EINVAL)
+                 /* Suppress spurious error message */
+             && !(ctlreq.iCtlOp == SIOCDIFADDR   && errno == EINVAL)
+        #endif
+               )
+            {
+                snprintf( szMsgBuffer,sizeof(szMsgBuffer),
+                     _("HHCIF005E %s: ioctl error doing %s on %s: %d %s\n"),
+                     pszProgName, pOp, pIF, errno, strerror( errno ) );
+
+                write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
+            }
         }
         else if (answer)
         {
