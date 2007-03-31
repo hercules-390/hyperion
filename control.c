@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.246  2007/03/25 04:20:36  gsmith
+// Ensure started_mask CPU bit is off for terminating cpu thread - Fish by Greg
+//
 // Revision 1.245  2007/02/12 22:36:29  rbowler
 // Remove tabs, reformat comments
 //
@@ -3249,6 +3252,7 @@ int     rc;                             /* return code from load_psw */
 
     /* Now INVALIDATE ALL TLB ENTRIES in our working copy.. */
     memset( &newregs.tlb.vaddr, 0, TLBN * sizeof(DW) );
+    newregs.tlbID = 1;
 
     /* Set the breaking event address register in the copy */
     SET_BEAR_REG(&newregs, newregs.ip - (newregs.execflag ? 4 : 2));
