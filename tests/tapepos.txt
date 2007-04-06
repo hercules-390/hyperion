@@ -1,0 +1,47 @@
+panrate fast
+stopall
+archmode S/370
+sysreset
+
+r 00=0000000000000400  # Restart new PSW
+r 28=000200000000DEAD  # Program new PSW
+
+r 48=00000440          # CAW (addr channel pgm)
+
+r 400=41100590         # R1 = device address 590 (tape)
+r 404=9C001000         # SIO 0(R1)
+
+r 408=82000430         # LPSW WAITPSW
+r 430=000200000000BEEF # WAITPSW
+
+r 440=4F00048040000004 # Locate Block CCW
+r 448=2200049040000008 # Read BlockId CCW
+r 450=4F00049040000004 # Locate Block CCW
+r 458=2200049800000008 # Read BlockId CCW
+
+r 480=0000C0FF         # Locate Block i/p (xC0FF=49407)
+r 490=0000000000000000 # Read BlockId o/p #1
+r 498=0000000000000000 # Read BlockId o/p #2
+
+detach 590             # in case it already exists
+pause 1
+
+attach 590 3480 \\.\tape0     # note: could use AWS file instead
+pause 1
+
+s+                     # enable instruction tracing
+t+590                  # enable ccw tracing on device 590
+pause 1
+
+restart                # start test
+pause 1
+
+startall               # step to SIO instruction
+pause 1
+
+startall               # step to LPSW instruction
+pause 1
+
+pause 30               # give tape drive time to do its thing
+
+r 480.20               # display results; should all be same
