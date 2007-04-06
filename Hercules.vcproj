@@ -300,14 +300,6 @@
 						<Filter
 							Name="Header Files"
 							>
-							<File
-								RelativePath=".\hconsole.h"
-								>
-							</File>
-							<File
-								RelativePath=".\history.h"
-								>
-							</File>
 						</Filter>
 						<Filter
 							Name="Source Files"
@@ -318,18 +310,6 @@
 							</File>
 							<File
 								RelativePath=".\console.c"
-								>
-							</File>
-							<File
-								RelativePath=".\hconsole.c"
-								>
-							</File>
-							<File
-								RelativePath=".\history.c"
-								>
-							</File>
-							<File
-								RelativePath=".\panel.c"
 								>
 							</File>
 						</Filter>
@@ -686,6 +666,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hconsole.c"
+							>
+						</File>
+						<File
 							RelativePath=".\hdl.c"
 							>
 						</File>
@@ -695,6 +679,10 @@
 						</File>
 						<File
 							RelativePath=".\hdteq.c"
+							>
+						</File>
+						<File
+							RelativePath=".\history.c"
 							>
 						</File>
 						<File
@@ -771,6 +759,10 @@
 						</File>
 						<File
 							RelativePath=".\opcode.c"
+							>
+						</File>
+						<File
+							RelativePath=".\panel.c"
 							>
 						</File>
 						<File
@@ -942,6 +934,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\hconsole.h"
+							>
+						</File>
+						<File
 							RelativePath=".\hconsts.h"
 							>
 						</File>
@@ -967,6 +963,10 @@
 						</File>
 						<File
 							RelativePath=".\hexterns.h"
+							>
+						</File>
+						<File
+							RelativePath=".\history.h"
 							>
 						</File>
 						<File
@@ -1555,6 +1555,134 @@
 				</File>
 				<File
 					RelativePath=".\util\tapeconv.jcl"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="tests"
+				>
+				<File
+					RelativePath=".\tests\a.core"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\axtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\b.core"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\bctr.core"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\cgdtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\cgxtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\cpu0off.core"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\cxgbr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\cxgtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\dxtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\fixtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\iedtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\l.core"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\la.core"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\la2.core"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\ldetr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\ldxtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\ledtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\lxdtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\Makefile.am"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\mvc.core"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\mxtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\prtest.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\rrdtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\rrxtr.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\sieve.core"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\srdt.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\st.core"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\tapetest.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\tdcdt.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\tdgdt.txt"
 					>
 				</File>
 			</Filter>
