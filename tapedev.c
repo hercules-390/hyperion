@@ -71,6 +71,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.114  2007/02/25 21:10:44  fish
+// Fix het_locate to continue on tapemark
+//
 // Revision 1.113  2007/02/03 18:58:06  gsmith
 // Fix MVT tape CMDREJ error
 //
@@ -5050,6 +5053,7 @@ int devtfound=0;
 
 /*-------------------------------------------------------------------*/
 /* Convert a 3590 32-bit blockid into 3480 "22-bit format" blockid   */
+/* Both i/p and o/p are presumed to be in big-endian guest format    */
 /*-------------------------------------------------------------------*/
 void blockid_32_to_22 ( BYTE *in_32blkid, BYTE *out_22blkid )
 {
@@ -5061,6 +5065,7 @@ void blockid_32_to_22 ( BYTE *in_32blkid, BYTE *out_22blkid )
 
 /*-------------------------------------------------------------------*/
 /* Convert a 3480 "22-bit format" blockid into a 3590 32-bit blockid */
+/* Both i/p and o/p are presumed to be in big-endian guest format    */
 /*-------------------------------------------------------------------*/
 void blockid_22_to_32 ( BYTE *in_22blkid, BYTE *out_32blkid )
 {
@@ -5073,6 +5078,7 @@ void blockid_22_to_32 ( BYTE *in_22blkid, BYTE *out_32blkid )
 /*-------------------------------------------------------------------*/
 /* Locate CCW helper: convert guest-supplied 3480 or 3590 blockid    */
 /*                    to the actual SCSI hardware blockid format     */
+/* Both i/p and o/p are presumed to be in big-endian guest format    */
 /*-------------------------------------------------------------------*/
 void blockid_emulated_to_actual
 (
@@ -5132,6 +5138,7 @@ void blockid_emulated_to_actual
 /*-------------------------------------------------------------------*/
 /* Read Block Id CCW helper:  convert an actual SCSI block-id        */
 /*                            to guest emulated 3480/3590 format     */
+/* Both i/p and o/p are presumed to be in big-endian guest format    */
 /*-------------------------------------------------------------------*/
 void blockid_actual_to_emulated
 (
@@ -5778,6 +5785,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 // directly for ourselves, we really have no choice but to
                 // return the same value for both here...
 
+                mtpos.mt_blkno = CSWAP32( mtpos.mt_blkno ); // (convert to guest format)
                 blockid_actual_to_emulated( dev, (BYTE*)&mtpos.mt_blkno, blockid );
             }
 #endif
@@ -5963,7 +5971,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
             mtop.mt_op = MTSEEK;
 
-            blockid_emulated_to_actual( dev, iobuf, (BYTE*)&mtop.mt_count );
+            locblock = CSWAP32( locblock ); // (convert to guest format)
+            blockid_emulated_to_actual( dev, (BYTE*)&locblock, (BYTE*)&mtop.mt_count );
+            mtop.mt_count = CSWAP32( mtop.mt_count ); // (convert back to host format)
 
             /* Let the hardware do the locate if this is a SCSI drive;
                Else do it the hard way if it's not (or an error occurs) */

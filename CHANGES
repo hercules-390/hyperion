@@ -1,3 +1,5 @@
+04 Apr 2007 Fix Locate Block & Read BlockId for SCSI tape inadvertently
+            broken by 31 Aug 2006 preliminary 3590 support change - Fish
 26 Mar 2007 Suppress spurious error messages from hercifc - Greg
 25 Mar 2007 Ensure started_mask CPU bit is off for terminating cpu thread - Fish by Greg
 20 Mar 2007 Redefine ACC_ and ACCTYPE_ macros - Greg
