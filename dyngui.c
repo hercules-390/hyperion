@@ -38,10 +38,14 @@
 /* 12/23/06  64-bit zArch registers support                          */
 /* 12/23/06  Improve efficiency of reporting register updates        */
 /* 12/23/06  Forced GUI status update/refresh support                */
+/* 03/25/07  Prevent need for OBTAIN_INTLOCK same as panel.c         */
 /*                                                                   */
 /*********************************************************************/
 
 // $Log$
+// Revision 1.57  2006/12/27 21:44:16  fish
+// Fix *nix build error: use ULLONG_MAX instead of _UI64_MAX.
+//
 // Revision 1.56  2006/12/24 13:17:24  fish
 // 64-bit regs support (finally!), better reg update reporting efficiency
 //
@@ -165,52 +169,59 @@ void ProcessingLoop()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-REGS*   pTargetCPU_REGS     = NULL; // target CPU for commands and displays
-REGS*   pPrevTargetCPU_REGS = NULL; // target CPU for commands and displays
-int     pcpu = 0, prev_pcpu = 0;    // target cpu#
+int     pcpu                = INT_MAX;  // target cpu# for commands and displays
+REGS*   pTargetCPU_REGS     = NULL;     // pointer to target cpu REGS
+
+int     prev_pcpu           = INT_MAX;  // (previous value)
+REGS*   pPrevTargetCPU_REGS = NULL;     // (previous value)
+
+REGS    copyregs;                       // (copy of active cpu's REGS)
+REGS    copysieregs;                    // (same but when in SIE mode)
+REGS*   CopyREGS( int cpu );            // (fwd ref)
 
 ///////////////////////////////////////////////////////////////////////////////
 
 void  UpdateTargetCPU ()
 {
-    if (sysblk.shutdown) return;
+    if (!sysblk.shutdown)
+        pTargetCPU_REGS = CopyREGS( pcpu = sysblk.pcpu );
+}
 
-    // Use the requested CPU for our status information
-    // unless it's no longer online (enabled), in which case
-    // we'll default to the first one we find that's online
+///////////////////////////////////////////////////////////////////////////////
+// (get non-moving/non-dynamic working copy of active cpu's register context)
 
-    //     sysblk.cpus      =   number online cpu's
-    //     sysblk.pcpu      =   panel target cpu
-    //     pTargetCPU_REGS  ->  panel target cpu
+REGS* CopyREGS( int cpu )               // (same logic as in panel.c)
+{
+    REGS* regs;
 
-    OBTAIN_INTLOCK(NULL);
+    if (cpu < 0 || cpu >= MAX_CPU_ENGINES)
+        cpu = 0;
 
-    if (pcpu != sysblk.pcpu)
-        pcpu  = sysblk.pcpu;
+    obtain_lock( &sysblk.cpulock[cpu] );
 
-    if (pcpu >= MAX_CPU)
-        pcpu = sysblk.pcpu = 0;
-
-    if (sysblk.cpus && pcpu >= 0 && IS_CPU_ONLINE(pcpu))
-        pTargetCPU_REGS = sysblk.regs[pcpu];
-    else
+    if (!(regs = sysblk.regs[cpu]))
     {
-        // We *MUST* have a cpu and registers to work with!
-
-        pTargetCPU_REGS = &sysblk.dummyregs;
-
-        if (pcpu >= 0)
-            pcpu = -pcpu; // (indicates dummy/offline cpu)
+        release_lock( &sysblk.cpulock[cpu] );
+        return &sysblk.dummyregs;
     }
 
-    // If SIE is active, use the guest regs rather than the host regs...
+    memcpy( &copyregs, regs, sysblk.regs_copy_len );
 
 #if defined(_FEATURE_SIE)
-    if (pTargetCPU_REGS->sie_active)
-        pTargetCPU_REGS = pTargetCPU_REGS->guestregs;
+    if (regs->sie_active)
+    {
+        memcpy( &copysieregs, regs->guestregs, sysblk.regs_copy_len );
+        copyregs.guestregs = &copysieregs;
+        copysieregs.hostregs = &copyregs;
+        regs = &copysieregs;
+    }
+    else
 #endif
+        regs = &copyregs;
 
-    RELEASE_INTLOCK(NULL);
+    SET_PSW_IA( regs );
+    release_lock( &sysblk.cpulock[cpu] );
+    return regs;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -708,7 +719,7 @@ void  UpdateCPUStatus ()
 {
     if (sysblk.shutdown) return;
 
-    if (pTargetCPU_REGS == &sysblk.dummyregs || pcpu < 0)
+    if (pTargetCPU_REGS == &sysblk.dummyregs)
     {
         // pTargetCPU_REGS == &sysblk.dummyregs; cpu is offline
 
@@ -716,7 +727,7 @@ void  UpdateCPUStatus ()
 
             "CPU%4.4X (((((((((((((((((((((((( OFFLINE ))))))))))))))))))))))))\n"
 
-            ,pcpu < 0 ? -pcpu : pcpu);
+            ,pcpu);
     }
     else // pTargetCPU_REGS != &sysblk.dummyregs; cpu is online
     {
@@ -741,7 +752,7 @@ void  UpdateCPUStatus ()
             ,psw[8], psw[9], psw[10], psw[11], psw[12], psw[13], psw[14], psw[15]
     
             ,CPUSTATE_STOPPED == pTargetCPU_REGS->cpustate ? 'M' : '.'
-            ,sysblk.inststep                       ? 'T' : '.'
+            ,sysblk.inststep                               ? 'T' : '.'
             ,wait_bit                                      ? 'W' : '.'
             ,pTargetCPU_REGS->loadstate                    ? 'L' : '.'
             ,pTargetCPU_REGS->checkstop                    ? 'C' : '.'
