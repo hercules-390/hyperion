@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.180  2007/03/25 04:20:36  gsmith
+// Ensure started_mask CPU bit is off for terminating cpu thread - Fish by Greg
+//
 // Revision 1.179  2007/03/13 01:43:37  gsmith
 // Synchronize started cpu
 //
@@ -1208,10 +1211,6 @@ int   cpu  = *ptr;
         sysblk.hicpu = i + 1;
     }
 
-    /* This cpu is not started and is not waiting */
-    sysblk.started_mask &= ~BIT(cpu);
-    sysblk.waiting_mask &= ~BIT(cpu);
-
     /* Signal cpu has terminated */
     signal_condition (&sysblk.cpucond);
 
@@ -1420,7 +1419,6 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 #endif /*FEATURE_VECTOR_FACILITY*/
 
             /* Thread exit (note - intlock still held) */
-            cpu_uninit(regs->cpuad, regs);
             return;
         }
 
@@ -1725,7 +1723,7 @@ REGS    regs;
 
     /* process_interrupt will do longjmp unless we're exiting */
     ARCH_DEP(process_interrupt)(&regs);
-    return NULL;
+    return cpu_uninit(cpu, &regs);
 
 } /* end function cpu_thread */
 
