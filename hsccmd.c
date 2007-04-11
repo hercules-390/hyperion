@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.215  2007/02/18 23:49:25  kleonard
+// Add TIME and NOTIME synonyms for LOGOPT operands
+//
 // Revision 1.214  2007/01/31 00:48:03  kleonard
 // Add logopt config statement and panel command
 //
@@ -124,7 +127,7 @@ int process_script_file(char *,int);
 #pragma optimize( "", off )
 #endif
 
-int $test_cmd(int argc, char *argv[],char *cmdline)
+int test_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -5091,7 +5094,7 @@ COMMAND ( "herclogo",    herclogo_cmd,    "Read a new hercules logo file\n" )
 COMMAND ( "traceopt",  traceopt_cmd,  "Instruction trace display options\n" )
 
 #define   TEST_CMD "$test"          // (hidden internal command)
-COMMAND ( TEST_CMD, $test_cmd,        "(hidden internal command)" )
+COMMAND ( TEST_CMD, test_cmd,        "(hidden internal command)" )
 
 COMMAND ( NULL, NULL, NULL )         /* (end of table) */
 };
