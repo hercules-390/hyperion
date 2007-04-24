@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.184  2007/03/21 21:35:11  gsmith
+// Fix LPTEA to use variable acctype for translate_addr() call
+//
 // Revision 1.183  2007/03/20 22:23:33  gsmith
 // Redefine ACC_ and ACCTYPE_ macros
 //
@@ -2090,7 +2093,7 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
 #endif /*defined(FEATURE_ESAME)*/
 
 
-#if defined(FEATURE_MODEL_Z9BC)
+#if defined(FEATURE_EXTRACT_CPU_TIME)
 /*-------------------------------------------------------------------*/
 /* C8x1 ECTG  - Extract CPU Time                               [RSS] */
 /*-------------------------------------------------------------------*/
@@ -2153,8 +2156,8 @@ U64     gr0, gr1;
     regs->GR_G(1) = gr1;
 
     RETURN_INTCHECK(regs);
-}
-#endif /*defined(FEATURE_MODEL_Z9BC)*/
+} /* end DEF_INST(extract_cpu_time) */
+#endif /*defined(FEATURE_EXTRACT_CPU_TIME)*/
 
 
 #if defined(FEATURE_ESAME)
@@ -4824,6 +4827,9 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #if defined(FEATURE_SENSE_RUNNING_STATUS)
                  | STFL_1_SENSE_RUN_STATUS
 #endif /*defined(FEATURE_SENSE_RUNNING_STATUS)*/
+#if defined(FEATURE_CONDITIONAL_SSKE)
+                 | STFL_1_CONDITIONAL_SSKE
+#endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
                  ,
                  0
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
@@ -4862,8 +4868,14 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #if defined(FEATURE_ETF3_ENHANCEMENT)
                  | STFL_3_ETF3_ENHANCEMENT
 #endif /*defined(FEATURE_ETF3_ENHANCEMENT)*/
+#if defined(FEATURE_EXTRACT_CPU_TIME)
+                 | STFL_3_EXTRACT_CPU_TIME
+#endif /*defined(FEATURE_EXTRACT_CPU_TIME)*/
                  ,
                  0
+#if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)
+                 | STFL_4_CSSF
+#endif /*defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)*/
                  ,
                  0
 #if defined(FEATURE_FPS_ENHANCEMENT)
@@ -4871,7 +4883,11 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #endif /*defined(FEATURE_FPS_ENHANCEMENT)*/
 #if defined(FEATURE_DECIMAL_FLOATING_POINT)
                  | STFL_5_DECIMAL_FLOAT
+                 | STFL_5_DFP_HPERF
 #endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
+#if defined(FEATURE_PFPO)
+                 | STFL_5_PFPO
+#endif /*defined(FEATURE_PFPO)*/
                  ,
                  0
                  ,

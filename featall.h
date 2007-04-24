@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.122  2007/01/04 01:08:41  gsmith
+// 03 Jan 2007 single_cpu_dw fetch/store patch for ia32
+//
 // Revision 1.121  2006/12/31 21:16:32  gsmith
 // 2006 Dec 31 really back out mainlockx.pat
 //
@@ -113,6 +116,8 @@
 #undef FEATURE_CHECKSUM_INSTRUCTION
 #undef FEATURE_CHSC
 #undef FEATURE_COMPARE_AND_MOVE_EXTENDED
+#undef FEATURE_COMPARE_AND_SWAP_AND_STORE                       /*407*/
+#undef FEATURE_CONDITIONAL_SSKE                                 /*407*/
 #undef FEATURE_COMPRESSION
 #undef FEATURE_CPU_RECONFIG
 #undef FEATURE_CPUID_FORMAT_1
@@ -135,6 +140,7 @@
 #undef FEATURE_EXTENDED_TRANSLATION_FACILITY_2
 #undef FEATURE_EXTENDED_TRANSLATION_FACILITY_3
 #undef FEATURE_EXTERNAL_INTERRUPT_ASSIST
+#undef FEATURE_EXTRACT_CPU_TIME                                 /*407*/
 #undef FEATURE_FETCH_PROTECTION_OVERRIDE
 #undef FEATURE_FPS_ENHANCEMENT                                  /*DFP*/
 #undef FEATURE_FPS_EXTENSIONS
@@ -144,6 +150,7 @@
 #undef FEATURE_HFP_MULTIPLY_ADD_SUBTRACT
 #undef FEATURE_HFP_UNNORMALIZED_EXTENSION                       /*@Z9*/
 #undef FEATURE_HYPERVISOR
+#undef FEATURE_IEEE_EXCEPTION_SIMULATION                        /*407*/
 #undef FEATURE_IMMEDIATE_AND_RELATIVE
 #undef FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
 #undef FEATURE_INTERPRETIVE_EXECUTION
@@ -159,12 +166,14 @@
 #undef FEATURE_MOVE_PAGE_FACILITY_2
 #undef FEATURE_MSSF_CALL
 #undef FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
+#undef FEATURE_MVCOS                                            /*407*/
 #undef FEATURE_MVS_ASSIST
 #undef FEATURE_PAGE_PROTECTION
 #undef FEATURE_PERFORM_LOCKED_OPERATION
 #undef FEATURE_PER
 #undef FEATURE_PER2
 #undef FEATURE_PER3                                             /*@Z9*/
+#undef FEATURE_PFPO                                             /*407*/
 #undef FEATURE_PRIVATE_SPACE
 #undef FEATURE_PROTECTION_INTERCEPTION_CONTROL
 #undef FEATURE_QUEUED_DIRECT_IO

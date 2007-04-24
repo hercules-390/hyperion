@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.117  2006/12/20 04:26:20  gsmith
+// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
+//
 // Revision 1.116  2006/12/08 09:43:29  jj
 // Add CVS message log
 //
@@ -220,11 +223,17 @@
  UNDEF_INST(store_clock_extended)
 #endif /*!defined(FEATURE_EXTENDED_TOD_CLOCK)*/
 
-#if !defined(FEATURE_MODEL_Z9BC)
+#if !defined(FEATURE_MVCOS)
  UNDEF_INST(move_with_optional_specifications)
+#endif /*!defined(FEATURE_MVCOS)*/
+
+#if !defined(FEATURE_EXTRACT_CPU_TIME)
  UNDEF_INST(extract_cpu_time)
+#endif /*!defined(FEATURE_EXTRACT_CPU_TIME)*/
+
+#if !defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)
  UNDEF_INST(compare_and_swap_and_store)
-#endif /*!defined(FEATURE_MODEL_Z9BC)*/
+#endif /*!defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)*/
 
 #if !defined(FEATURE_STORE_SYSTEM_INFORMATION)
  UNDEF_INST(store_system_information)
