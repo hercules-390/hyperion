@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.63  2007/04/25 12:10:27  rbowler
+// Move LFAS,SFASR to IEEE-exception-simulation facility
+//
 // Revision 1.62  2007/03/13 01:52:42  gsmith
 // Fix unsigned char (BYTE) vs char warnings for decNumberFromString
 //
@@ -172,6 +175,25 @@ int     i2;                             /* FP register subscript     */
     regs->GR_L(r1) = regs->fpr[i2+1];
 
 } /* end DEF_INST(load_gr_from_fpr_long_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B2B9 SRNMT - Set DFP Rounding Mode                            [S] */
+/*-------------------------------------------------------------------*/
+DEF_INST(set_dfp_rounding_mode)
+{
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+
+    S(inst, regs, b2, effective_addr2);
+
+    DFPINST_CHECK(regs);
+
+    /* Set DFP rounding mode in FPC register from address bits 61-63 */
+    regs->fpc &= ~(FPC_DRM);
+    regs->fpc |= ((effective_addr2 << FPC_DRM_SHIFT) & FPC_DRM);
+
+} /* end DEF_INST(set_dfp_rounding_mode) */
 
 
 #endif /*defined(FEATURE_FPS_ENHANCEMENT)*/
@@ -3202,25 +3224,6 @@ BYTE            dxc;                    /* Data exception code       */
     }
 
 } /* end DEF_INST(reround_dfp_long_reg) */
-
-
-/*-------------------------------------------------------------------*/
-/* B2B9 SRNMT - Set DFP Rounding Mode                            [S] */
-/*-------------------------------------------------------------------*/
-DEF_INST(set_dfp_rounding_mode)
-{
-int             b2;                     /* Base of effective addr    */
-VADR            effective_addr2;        /* Effective address         */
-
-    S(inst, regs, b2, effective_addr2);
-
-    DFPINST_CHECK(regs);
-
-    /* Set DFP rounding mode in FPC register from address bits 61-63 */
-    regs->fpc &= ~(FPC_DRM);
-    regs->fpc |= ((effective_addr2 << FPC_DRM_SHIFT) & FPC_DRM);
-
-} /* end DEF_INST(set_dfp_rounding_mode) */
 
 
 /*-------------------------------------------------------------------*/

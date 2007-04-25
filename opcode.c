@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.119  2007/04/25 12:10:27  rbowler
+// Move LFAS,SFASR to IEEE-exception-simulation facility
+//
 // Revision 1.118  2007/04/24 16:34:41  rbowler
 // Define feature macros and STFL bit settings for new features in zPOP-05
 //
@@ -406,6 +409,7 @@
  UNDEF_INST(load_zero_float_ext_reg)
  UNDEF_INST(load_zero_float_long_reg)
  UNDEF_INST(load_zero_float_short_reg)
+ UNDEF_INST(set_dfp_rounding_mode)
 #endif /*!defined(FEATURE_FPS_EXTENSIONS)*/
 
 
@@ -597,7 +601,6 @@
  UNDEF_INST(quantize_dfp_long_reg)
  UNDEF_INST(reround_dfp_ext_reg)
  UNDEF_INST(reround_dfp_long_reg)
- UNDEF_INST(set_dfp_rounding_mode)
  UNDEF_INST(shift_coefficient_left_dfp_ext)
  UNDEF_INST(shift_coefficient_left_dfp_long)
  UNDEF_INST(shift_coefficient_right_dfp_ext)

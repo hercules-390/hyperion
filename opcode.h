@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.202  2007/04/25 12:10:27  rbowler
+// Move LFAS,SFASR to IEEE-exception-simulation facility
+//
 // Revision 1.201  2007/03/20 02:06:02  gsmith
 // Rename IS_MCDS macro to MULTIPLE_CONTROLLED_DATA_SPACE
 //
@@ -3629,6 +3632,7 @@ DEF_INST(load_fpr_from_gr_long_reg);
 DEF_INST(load_gr_from_fpr_long_reg);
 DEF_INST(load_negative_fpr_long_reg);
 DEF_INST(load_positive_fpr_long_reg);
+DEF_INST(set_dfp_rounding_mode);
 DEF_INST(load_fpc_and_signal);
 DEF_INST(set_fpc_and_signal);
 DEF_INST(add_dfp_ext_reg);
@@ -3673,7 +3677,6 @@ DEF_INST(quantize_dfp_ext_reg);
 DEF_INST(quantize_dfp_long_reg);
 DEF_INST(reround_dfp_ext_reg);
 DEF_INST(reround_dfp_long_reg);
-DEF_INST(set_dfp_rounding_mode);
 DEF_INST(shift_coefficient_left_dfp_ext);
 DEF_INST(shift_coefficient_left_dfp_long);
 DEF_INST(shift_coefficient_right_dfp_ext);
