@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.120  2007/04/25 12:33:20  rbowler
+// Move SRNMT to Floating-point-support-enhancement facility
+//
 // Revision 1.119  2007/04/25 12:10:27  rbowler
 // Move LFAS,SFASR to IEEE-exception-simulation facility
 //
@@ -1653,7 +1656,7 @@ int b1,d1,b2,d2;
     DISASM_LOGMSG;
 }
 
-void disasm_RSS (BYTE inst[], char mnemonic[])
+void disasm_SSF (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
 int r3,b1,d1,b2,d2;
@@ -1664,7 +1667,7 @@ int r3,b1,d1,b2,d2;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
     DISASM_SET_NAME;
     DISASM_PRINT_OPERANDS
-        "%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2);
+        "%d(%d),%d(%d),%d",d1,b1,d2,b2,r3);
     DISASM_LOGMSG;
 }
 
@@ -3564,9 +3567,9 @@ DLL_EXPORT zz_func opcode_c2xx[16][GEN_MAXARCH] = {                             
  /*C2xF*/ GENx___x390x900 (compare_logical_fullword_immediate,RIL,"CLFI") };       /*@Z9*/
 
 DLL_EXPORT zz_func opcode_c8xx[16][GEN_MAXARCH] = {
- /*C8x0*/ GENx___x___x900 (move_with_optional_specifications,RSS,"MVCOS"),
- /*C8x1*/ GENx___x___x900 (extract_cpu_time,RSS,"ECTG"),
- /*C8x2*/ GENx___x___x900 (compare_and_swap_and_store,RSS,"CSST"),
+ /*C8x0*/ GENx___x___x900 (move_with_optional_specifications,SSF,"MVCOS"),
+ /*C8x1*/ GENx___x___x900 (extract_cpu_time,SSF,"ECTG"),
+ /*C8x2*/ GENx___x___x900 (compare_and_swap_and_store,SSF,"CSST"),
  /*C8x3*/ GENx___x___x___ ,
  /*C8x4*/ GENx___x___x___ ,
  /*C8x5*/ GENx___x___x___ ,

@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.203  2007/04/25 12:33:20  rbowler
+// Move SRNMT to Floating-point-support-enhancement facility
+//
 // Revision 1.202  2007/04/25 12:10:27  rbowler
 // Move LFAS,SFASR to IEEE-exception-simulation facility
 //
@@ -1016,7 +1019,7 @@ do { \
 #define DECODER_TEST_SS
 #define DECODER_TEST_SS_L
 #define DECODER_TEST_SSE
-#define DECODER_TEST_RSS
+#define DECODER_TEST_SSF
 
 /* E implied operands and extended op code */
 #undef E
@@ -2173,23 +2176,23 @@ do { \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
 
-/* RSS storage to storage with additional register */
-#undef RSS
+/* SSF storage to storage with additional register */
+#undef SSF
 
-#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RSS)
- #define RSS(_inst, _regs, _r3, _b1, _effective_addr1, \
-                     _b2, _effective_addr2) \
-         RSS_DECODER(_inst, _regs, _r3, _b1, _effective_addr1, \
-                     _b2, _effective_addr2, 6, 6)
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_SSF)
+ #define SSF(_inst, _regs, _b1, _effective_addr1, \
+                     _b2, _effective_addr2, _r3) \
+         SSF_DECODER(_inst, _regs, _b1, _effective_addr1, \
+                     _b2, _effective_addr2, _r3, 6, 6)
 #else
- #define RSS(_inst, _regs, _r3, _b1, _effective_addr1, \
-                     _b2, _effective_addr2) \
-         RSS_DECODER_TEST(_inst, _regs, _r3, _b1, _effective_addr1, \
-                     _b2, _effective_addr2, 6, 6)
+ #define SSF(_inst, _regs, _b1, _effective_addr1, \
+                     _b2, _effective_addr2, _r3) \
+         SSF_DECODER_TEST(_inst, _regs, _b1, _effective_addr1, \
+                     _b2, _effective_addr2, _r3, 6, 6)
 #endif
 
-#define RSS_DECODER(_inst, _regs, _r3, _b1, _effective_addr1, \
-                     _b2, _effective_addr2, _len, _ilc) \
+#define SSF_DECODER(_inst, _regs, _b1, _effective_addr1, \
+                     _b2, _effective_addr2, _r3, _len, _ilc) \
     {   U32 temp = fetch_fw(_inst); \
             (_r3) = (temp >> 20) & 0xf; \
             (_b1) = (temp >> 12) & 0xf; \
@@ -2209,8 +2212,8 @@ do { \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
 
-#define RSS_DECODER_TEST(_inst, _regs, _r3, _b1, _effective_addr1, \
-                     _b2, _effective_addr2, _len, _ilc) \
+#define SSF_DECODER_TEST(_inst, _regs, _b1, _effective_addr1, \
+                     _b2, _effective_addr2, _r3, _len, _ilc) \
     {   U32 temp; \
             temp = fetch_fw((_inst)+2); \
             (_effective_addr1) = (temp >> 16) & 0xfff; \

@@ -1,3 +1,4 @@
+25 Apr 2007 Rename RSS instruction format as SSF - Roger Bowler
 04 Apr 2007 Fix Locate Block & Read BlockId for SCSI tape inadvertently
             broken by 31 Aug 2006 preliminary 3590 support change - Fish
 26 Mar 2007 Suppress spurious error messages from hercifc - Greg

@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.185  2007/04/24 16:34:41  rbowler
+// Define feature macros and STFL bit settings for new features in zPOP-05
+//
 // Revision 1.184  2007/03/21 21:35:11  gsmith
 // Fix LPTEA to use variable acctype for translate_addr() call
 //
@@ -2095,7 +2098,7 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
 
 #if defined(FEATURE_EXTRACT_CPU_TIME)
 /*-------------------------------------------------------------------*/
-/* C8x1 ECTG  - Extract CPU Time                               [RSS] */
+/* C8x1 ECTG  - Extract CPU Time                               [SSF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(extract_cpu_time)
 {
@@ -2107,7 +2110,7 @@ int     r3;                             /* R3                        */
 S64     dreg;                           /* Double word workarea      */
 U64     gr0, gr1;
 
-    RSS(inst, regs, r3, b1, effective_addr1, b2, effective_addr2);
+    SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATB(regs, IC3, SPT))
