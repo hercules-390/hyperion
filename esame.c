@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.186  2007/04/25 14:46:35  rbowler
+// Rename RSS instruction format as SSF
+//
 // Revision 1.185  2007/04/24 16:34:41  rbowler
 // Define feature macros and STFL bit settings for new features in zPOP-05
 //
@@ -2102,13 +2105,12 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
 /*-------------------------------------------------------------------*/
 DEF_INST(extract_cpu_time)
 {
-int     b1,
-        b2;                             /* Base of effective addr    */
-VADR    effective_addr1,
-        effective_addr2;                /* Effective address         */
-int     r3;                             /* R3                        */
+int     b1, b2;                         /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
+int     r3;                             /* R3 register number        */
 S64     dreg;                           /* Double word workarea      */
-U64     gr0, gr1;
+U64     gr0, gr1;                       /* Result register workareas */
 
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
 
@@ -2122,7 +2124,7 @@ U64     gr0, gr1;
     /* Save the CPU timer value */
     dreg = cpu_timer(regs);
 
-    /* reset the cpu timer pending flag according to its value */
+    /* Reset the cpu timer pending flag according to its value */
     if( CPU_TIMER(regs) < 0 )
     {
         ON_IC_PTIMER(regs);
@@ -2143,17 +2145,16 @@ U64     gr0, gr1;
     RELEASE_INTLOCK(regs);
 
     /* The value of the current CPU timer is subtracted from the first
-     * operand and the result is placed in general register 0
-     */
+       operand and the result is placed in general register 0 */
     gr0 = ARCH_DEP(vfetch8) (effective_addr1, b1, regs) - dreg;
-    /* The second operand is placed in general register 1
-     */
+
+    /* The second operand is placed in general register 1 */
     gr1 = ARCH_DEP(vfetch8) (effective_addr2, b2, regs);
+
     /* The eight bytes at the third operand location replace the contents 
-     * of general register R3. The operands are treated as unsigned 64-bit
-     * integers. The contents of R3 is treated according to current 
-     * addressing mode. 
-     */
+       of general register R3. The operands are treated as unsigned 64-bit
+       integers. The contents of R3 is treated according to current 
+       addressing mode. In AR mode, access register R3 is used. */
     regs->GR_G(r3) = ARCH_DEP(wfetch8) (regs->GR_G(r3), r3, regs);
     regs->GR_G(0) = gr0;
     regs->GR_G(1) = gr1;
