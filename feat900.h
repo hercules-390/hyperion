@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.65  2007/04/25 12:10:27  rbowler
+// Move LFAS,SFASR to IEEE-exception-simulation facility
+//
 // Revision 1.64  2007/01/30 16:43:28  rbowler
 // Activate Decimal Floating Point Facility
 //
@@ -51,6 +54,7 @@
 #define FEATURE_EXTENDED_TRANSLATION_FACILITY_2
 #define FEATURE_EXTENDED_TRANSLATION_FACILITY_3
 #define FEATURE_EXTERNAL_INTERRUPT_ASSIST
+#define FEATURE_EXTRACT_CPU_TIME                                /*407*/
 #define FEATURE_FETCH_PROTECTION_OVERRIDE
 #define FEATURE_FPS_ENHANCEMENT                                 /*DFP*/
 #define FEATURE_FPS_EXTENSIONS
