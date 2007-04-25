@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.201  2007/03/20 02:06:02  gsmith
+// Rename IS_MCDS macro to MULTIPLE_CONTROLLED_DATA_SPACE
+//
 // Revision 1.200  2007/03/18 19:22:25  gsmith
 // Fix typo
 //
@@ -3626,6 +3629,8 @@ DEF_INST(load_fpr_from_gr_long_reg);
 DEF_INST(load_gr_from_fpr_long_reg);
 DEF_INST(load_negative_fpr_long_reg);
 DEF_INST(load_positive_fpr_long_reg);
+DEF_INST(load_fpc_and_signal);
+DEF_INST(set_fpc_and_signal);
 DEF_INST(add_dfp_ext_reg);
 DEF_INST(add_dfp_long_reg);
 DEF_INST(compare_dfp_ext_reg);
@@ -3658,7 +3663,6 @@ DEF_INST(load_and_test_dfp_ext_reg);
 DEF_INST(load_and_test_dfp_long_reg);
 DEF_INST(load_fp_int_dfp_ext_reg);
 DEF_INST(load_fp_int_dfp_long_reg);
-DEF_INST(load_fpc_and_signal);
 DEF_INST(load_lengthened_dfp_long_to_ext_reg);
 DEF_INST(load_lengthened_dfp_short_to_long_reg);
 DEF_INST(load_rounded_dfp_ext_to_long_reg);
@@ -3670,7 +3674,6 @@ DEF_INST(quantize_dfp_long_reg);
 DEF_INST(reround_dfp_ext_reg);
 DEF_INST(reround_dfp_long_reg);
 DEF_INST(set_dfp_rounding_mode);
-DEF_INST(set_fpc_and_signal);
 DEF_INST(shift_coefficient_left_dfp_ext);
 DEF_INST(shift_coefficient_left_dfp_long);
 DEF_INST(shift_coefficient_right_dfp_ext);

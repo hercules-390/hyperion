@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.118  2007/04/24 16:34:41  rbowler
+// Define feature macros and STFL bit settings for new features in zPOP-05
+//
 // Revision 1.117  2006/12/20 04:26:20  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -416,6 +419,12 @@
 #endif /*!defined(FEATURE_FPS_ENHANCEMENT)*/
 
 
+#if !defined(FEATURE_IEEE_EXCEPTION_SIMULATION)
+ UNDEF_INST(load_fpc_and_signal)
+ UNDEF_INST(set_fpc_and_signal)
+#endif /*!defined(FEATURE_IEEE_EXCEPTION_SIMULATION)*/
+
+
 #if !defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
  UNDEF_INST(multiply_add_float_short_reg)
  UNDEF_INST(multiply_add_float_long_reg)
@@ -578,7 +587,6 @@
  UNDEF_INST(load_and_test_dfp_long_reg)
  UNDEF_INST(load_fp_int_dfp_ext_reg)
  UNDEF_INST(load_fp_int_dfp_long_reg)
- UNDEF_INST(load_fpc_and_signal)
  UNDEF_INST(load_lengthened_dfp_long_to_ext_reg)
  UNDEF_INST(load_lengthened_dfp_short_to_long_reg)
  UNDEF_INST(load_rounded_dfp_ext_to_long_reg)
@@ -590,7 +598,6 @@
  UNDEF_INST(reround_dfp_ext_reg)
  UNDEF_INST(reround_dfp_long_reg)
  UNDEF_INST(set_dfp_rounding_mode)
- UNDEF_INST(set_fpc_and_signal)
  UNDEF_INST(shift_coefficient_left_dfp_ext)
  UNDEF_INST(shift_coefficient_left_dfp_long)
  UNDEF_INST(shift_coefficient_right_dfp_ext)

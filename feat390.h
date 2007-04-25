@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.36  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 /* This file MUST NOT contain #undef statements */
 #if defined(OPTION_390_MODE)
@@ -25,7 +28,6 @@
 #define FEATURE_COMPARE_AND_MOVE_EXTENDED
 #define FEATURE_COMPRESSION
 #define FEATURE_CPU_RECONFIG
-//#define FEATURE_DECIMAL_FLOATING_POINT                          /*DFP*/
 #define FEATURE_DUAL_ADDRESS_SPACE
 #define FEATURE_EMULATE_VM
 #define FEATURE_EXPANDED_STORAGE

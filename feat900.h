@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.64  2007/01/30 16:43:28  rbowler
+// Activate Decimal Floating Point Facility
+//
 // Revision 1.63  2006/12/08 09:43:21  jj
 // Add CVS message log
 //
@@ -57,6 +60,7 @@
 #define FEATURE_HFP_MULTIPLY_ADD_SUBTRACT
 //#define FEATURE_HFP_UNNORMALIZED_EXTENSION                      /*@Z9*/
 #define FEATURE_HYPERVISOR
+#define FEATURE_IEEE_EXCEPTION_SIMULATION                        /*407*/
 #define FEATURE_IMMEDIATE_AND_RELATIVE
 #define FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
 #define FEATURE_INTERPRETIVE_EXECUTION

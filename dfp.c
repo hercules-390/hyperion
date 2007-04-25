@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.62  2007/03/13 01:52:42  gsmith
+// Fix unsigned char (BYTE) vs char warnings for decNumberFromString
+//
 // Revision 1.61  2007/01/30 16:43:28  rbowler
 // Activate Decimal Floating Point Facility
 //
@@ -172,6 +175,153 @@ int     i2;                             /* FP register subscript     */
 
 
 #endif /*defined(FEATURE_FPS_ENHANCEMENT)*/
+
+
+#if defined(FEATURE_IEEE_EXCEPTION_SIMULATION)
+/*===================================================================*/
+/* IEEE-EXCEPTION-SIMULATION FACILITY INSTRUCTIONS                   */
+/*===================================================================*/
+
+#if !defined(_IXS_ARCH_INDEPENDENT_)
+/*-------------------------------------------------------------------*/
+/* Check if a simulated-IEEE-exception event is to be recognized     */
+/*                                                                   */
+/* This subroutine is called by the LFAS and SFASR instructions to   */
+/* determine whether the instruction should raise a data exception   */
+/* at the end of the instruction and, if so, the DXC code to be set. */
+/*                                                                   */
+/* Input:                                                            */
+/*      cur_fpc         Current value of the FPC register            */
+/*      src_fpc         Value of instruction source operand          */
+/* Output:                                                           */
+/*      The return value is the data exception code (DXC), or        */
+/*      zero if no simulated-IEEE-exception event is recognized      */
+/*-------------------------------------------------------------------*/
+static BYTE
+fpc_signal_check(U32 cur_fpc, U32 src_fpc)
+{
+U32             ff, sm, enabled_flags;  /* Mask and flag work areas  */
+BYTE            dxc;                    /* Data exception code or 0  */
+
+    /* AND the current FPC flags with the source FPC mask */
+    ff = (cur_fpc & FPC_FLAG) >> FPC_FLAG_SHIFT;
+    sm = (src_fpc & FPC_MASK) >> FPC_MASK_SHIFT;
+    enabled_flags = (ff & sm) << FPC_FLAG_SHIFT;
+
+    /* A simulated-IEEE-exception event is recognized
+       if any current flag corresponds to the source mask */
+    if (enabled_flags & FPC_FLAG_SFI)
+    {
+        dxc = DXC_IEEE_INV_OP_IISE;
+    }
+    else if (enabled_flags & FPC_FLAG_SFZ)
+    {
+        dxc = DXC_IEEE_DIV_ZERO_IISE;
+    }
+    else if (enabled_flags & FPC_FLAG_SFO)
+    {
+        dxc = (cur_fpc & FPC_FLAG_SFX) ?
+                DXC_IEEE_OF_INEX_IISE :
+                DXC_IEEE_OF_EXACT_IISE;
+    }
+    else if (enabled_flags & FPC_FLAG_SFU)
+    {
+        dxc = (cur_fpc & FPC_FLAG_SFX) ?
+                DXC_IEEE_UF_INEX_IISE :
+                DXC_IEEE_UF_EXACT_IISE;
+    }
+    else if (enabled_flags & FPC_FLAG_SFX)
+    {
+        dxc = DXC_IEEE_INEXACT_IISE;
+    }
+    else
+    {
+        dxc = 0;
+    }
+
+    /* Return data exception code or zero */
+    return dxc;
+} /* end function fpc_signal_check */
+#define _IXS_ARCH_INDEPENDENT_
+#endif /*!defined(_IXS_ARCH_INDEPENDENT_)*/
+
+
+/*-------------------------------------------------------------------*/
+/* B2BD LFAS  - Load FPC and Signal                              [S] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_fpc_and_signal)
+{
+int             b2;                     /* Base of effective addr    */
+VADR            effective_addr2;        /* Effective address         */
+U32             src_fpc, new_fpc;       /* New value for FPC         */
+BYTE            dxc;                    /* Data exception code       */
+
+    S(inst, regs, b2, effective_addr2);
+
+    DFPINST_CHECK(regs);
+
+    /* Load new FPC register contents from operand location */
+    src_fpc = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
+
+    /* Program check if reserved bits are non-zero */
+    FPC_CHECK(src_fpc, regs);
+
+    /* OR the flags from the current FPC register */
+    new_fpc = src_fpc | (regs->fpc & FPC_FLAG);
+
+    /* Determine whether an event is to be signaled */
+    dxc = fpc_signal_check(regs->fpc, src_fpc);
+
+    /* Update the FPC register */
+    regs->fpc = new_fpc;
+
+    /* Signal a simulated-IEEE-exception event if needed */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(load_fpc_and_signal) */
+
+
+/*-------------------------------------------------------------------*/
+/* B385 SFASR - Set FPC and Signal                             [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(set_fpc_and_signal)
+{
+int             r1, unused;             /* Values of R fields        */
+U32             src_fpc, new_fpc;       /* New value for FPC         */
+BYTE            dxc;                    /* Data exception code       */
+
+    RRE(inst, regs, r1, unused);
+
+    DFPINST_CHECK(regs);
+
+    /* Load new FPC register contents from R1 register bits 32-63 */
+    src_fpc = regs->GR_L(r1);
+
+    /* Program check if reserved bits are non-zero */
+    FPC_CHECK(src_fpc, regs);
+     
+    /* OR the flags from the current FPC register */
+    new_fpc = src_fpc | (regs->fpc & FPC_FLAG);
+
+    /* Determine whether an event is to be signaled */
+    dxc = fpc_signal_check(regs->fpc, src_fpc);
+
+    /* Update the FPC register */
+    regs->fpc = new_fpc;
+
+    /* Signal a simulated-IEEE-exception event if needed */
+    if (dxc != 0)
+    {
+        regs->dxc = dxc;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(set_fpc_and_signal) */
+#endif /*defined(FEATURE_IEEE_EXCEPTION_SIMULATION)*/
 
 
 #if defined(FEATURE_DECIMAL_FLOATING_POINT)
@@ -466,66 +616,6 @@ decContext      setmax;                 /* Working context for mp,mn */
     return n;
 
 } /* end function dfp_number_to_fix64 */
-
-/*-------------------------------------------------------------------*/
-/* Check if IEEE-interruption-simulation event is to be recognized   */
-/*                                                                   */
-/* This subroutine is called by the LFAS and SFASR instructions to   */
-/* determine whether the instruction should raise a data exception   */
-/* at the end of the instruction and, if so, the DXC code to be set. */
-/*                                                                   */
-/* Input:                                                            */
-/*      cur_fpc         Current value of the FPC register            */
-/*      src_fpc         Value of instruction source operand          */
-/* Output:                                                           */
-/*      The return value is the data exception code (DXC), or        */
-/*      zero if no IEEE-interruption-simulation event is recognized  */
-/*-------------------------------------------------------------------*/
-static BYTE
-fpc_signal_check(U32 cur_fpc, U32 src_fpc)
-{
-U32             ff, sm, enabled_flags;  /* Mask and flag work areas  */
-BYTE            dxc;                    /* Data exception code or 0  */
-
-    /* AND the current FPC flags with the source FPC mask */
-    ff = (cur_fpc & FPC_FLAG) >> FPC_FLAG_SHIFT;
-    sm = (src_fpc & FPC_MASK) >> FPC_MASK_SHIFT;
-    enabled_flags = (ff & sm) << FPC_FLAG_SHIFT;
-
-    /* An IEEE-interruption-simulation event is recognized 
-       if any current flag corresponds to the source mask */
-    if (enabled_flags & FPC_FLAG_SFI)
-    {
-        dxc = DXC_IEEE_INV_OP_IISE;
-    }
-    else if (enabled_flags & FPC_FLAG_SFZ)
-    {
-        dxc = DXC_IEEE_DIV_ZERO_IISE;
-    }
-    else if (enabled_flags & FPC_FLAG_SFO)
-    {
-        dxc = (cur_fpc & FPC_FLAG_SFX) ?
-                DXC_IEEE_OF_INEX_IISE :
-                DXC_IEEE_OF_EXACT_IISE;
-    }
-    else if (enabled_flags & FPC_FLAG_SFU)
-    {
-        dxc = (cur_fpc & FPC_FLAG_SFX) ?
-                DXC_IEEE_UF_INEX_IISE :
-                DXC_IEEE_UF_EXACT_IISE;
-    }
-    else if (enabled_flags & FPC_FLAG_SFX)
-    {
-        dxc = DXC_IEEE_INEXACT_IISE;
-    }
-    else
-    {
-        dxc = 0;
-    }
-
-    /* Return data exception code or zero */
-    return dxc;
-} /* end function fpc_signal_check */
 
 #define MAXDECSTRLEN DECIMAL128_String  /* Maximum string length     */
 /*-------------------------------------------------------------------*/
@@ -2534,45 +2624,6 @@ BYTE            dxc;                    /* Data exception code       */
 
 
 /*-------------------------------------------------------------------*/
-/* B2BD LFAS  - Load FPC and Signal                              [S] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_fpc_and_signal)
-{
-int             b2;                     /* Base of effective addr    */
-VADR            effective_addr2;        /* Effective address         */
-U32             src_fpc, new_fpc;       /* New value for FPC         */
-BYTE            dxc;                    /* Data exception code       */
-
-    S(inst, regs, b2, effective_addr2);
-
-    DFPINST_CHECK(regs);
-
-    /* Load new FPC register contents from operand location */
-    src_fpc = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
-
-    /* Program check if reserved bits are non-zero */
-    FPC_CHECK(src_fpc, regs);
-
-    /* OR the flags from the current FPC register */
-    new_fpc = src_fpc | (regs->fpc & FPC_FLAG);
-
-    /* Determine whether an event is to be signaled */
-    dxc = fpc_signal_check(regs->fpc, src_fpc);
-
-    /* Update the FPC register */
-    regs->fpc = new_fpc;
-
-    /* Signal an IEEE-interruption-simulation event if needed */
-    if (dxc != 0)
-    {
-        regs->dxc = dxc;
-        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
-    }
-
-} /* end DEF_INST(load_fpc_and_signal) */
-
-
-/*-------------------------------------------------------------------*/
 /* B3DC LXDTR - Load Lengthened DFP Long to Extended Register  [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_lengthened_dfp_long_to_ext_reg)
@@ -3170,44 +3221,6 @@ VADR            effective_addr2;        /* Effective address         */
     regs->fpc |= ((effective_addr2 << FPC_DRM_SHIFT) & FPC_DRM);
 
 } /* end DEF_INST(set_dfp_rounding_mode) */
-
-
-/*-------------------------------------------------------------------*/
-/* B385 SFASR - Set FPC and Signal                             [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(set_fpc_and_signal)
-{
-int             r1, unused;             /* Values of R fields        */
-U32             src_fpc, new_fpc;       /* New value for FPC         */
-BYTE            dxc;                    /* Data exception code       */
-
-    RRE(inst, regs, r1, unused);
-
-    DFPINST_CHECK(regs);
-
-    /* Load new FPC register contents from R1 register bits 32-63 */
-    src_fpc = regs->GR_L(r1);
-
-    /* Program check if reserved bits are non-zero */
-    FPC_CHECK(src_fpc, regs);
-     
-    /* OR the flags from the current FPC register */
-    new_fpc = src_fpc | (regs->fpc & FPC_FLAG);
-
-    /* Determine whether an event is to be signaled */
-    dxc = fpc_signal_check(regs->fpc, src_fpc);
-
-    /* Update the FPC register */
-    regs->fpc = new_fpc;
-
-    /* Signal an IEEE-interruption-simulation event if needed */
-    if (dxc != 0)
-    {
-        regs->dxc = dxc;
-        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
-    }
-
-} /* end DEF_INST(set_fpc_and_signal) */
 
 
 /*-------------------------------------------------------------------*/
