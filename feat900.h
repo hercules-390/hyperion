@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.66  2007/04/25 15:27:01  rbowler
+// Activate Extract-CPU-Time facility
+//
 // Revision 1.65  2007/04/25 12:10:27  rbowler
 // Move LFAS,SFASR to IEEE-exception-simulation facility
 //
@@ -34,6 +37,7 @@
 #define FEATURE_CHSC
 #define FEATURE_COMPARE_AND_MOVE_EXTENDED
 #define FEATURE_COMPRESSION
+//#define FEATURE_CONDITIONAL_SSKE                                /*407*/
 #define FEATURE_CPUID_FORMAT_1
 #define FEATURE_CPU_RECONFIG
 #define FEATURE_DAT_ENHANCEMENT
@@ -64,7 +68,7 @@
 #define FEATURE_HFP_MULTIPLY_ADD_SUBTRACT
 //#define FEATURE_HFP_UNNORMALIZED_EXTENSION                      /*@Z9*/
 #define FEATURE_HYPERVISOR
-#define FEATURE_IEEE_EXCEPTION_SIMULATION                        /*407*/
+#define FEATURE_IEEE_EXCEPTION_SIMULATION                       /*407*/
 #define FEATURE_IMMEDIATE_AND_RELATIVE
 #define FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
 #define FEATURE_INTERPRETIVE_EXECUTION

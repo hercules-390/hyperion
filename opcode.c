@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.121  2007/04/25 14:46:35  rbowler
+// Rename RSS instruction format as SSF
+//
 // Revision 1.120  2007/04/25 12:33:20  rbowler
 // Move SRNMT to Floating-point-support-enhancement facility
 //
@@ -2789,7 +2792,7 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B228*/ GENx370x390x900 (program_transfer,RRE,"PT"),
  /*B229*/ GENx370x390x900 (insert_storage_key_extended,RRE,"ISKE"),
  /*B22A*/ GENx370x390x900 (reset_reference_bit_extended,RRE,"RRBE"),
- /*B22B*/ GENx370x390x900 (set_storage_key_extended,RRE,"SSKE"),
+ /*B22B*/ GENx370x390x900 (set_storage_key_extended,RRF_M,"SSKE"),
  /*B22C*/ GENx370x390x900 (test_block,RRE,"TB"),
  /*B22D*/ GENx370x390x900 (divide_float_ext_reg,RRE,"DXR"),
  /*B22E*/ GENx___x390x900 (page_in,RRE,"PGIN"),

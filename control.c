@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.247  2007/03/31 20:18:17  gsmith
+// Init tlbID after copying regs to newregs
+//
 // Revision 1.246  2007/03/25 04:20:36  gsmith
 // Ensure started_mask CPU bit is off for terminating cpu thread - Fish by Greg
 //
@@ -4950,14 +4953,15 @@ RADR    n;                              /* Absolute storage addr     */
 
 #if defined(FEATURE_EXTENDED_STORAGE_KEYS)
 /*-------------------------------------------------------------------*/
-/* B22B SSKE  - Set Storage Key extended                       [RRE] */
+/* B22B SSKE  - Set Storage Key extended                       [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(set_storage_key_extended)
 {
 int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask field                */
 RADR    n;                              /* Abs frame addr stor key   */
 
-    RRE(inst, regs, r1, r2);
+    RRF_M(inst, regs, r1, r2, m3);
 
     PRIV_CHECK(regs);
 
