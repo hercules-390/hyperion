@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.90  2007/04/24 16:34:41  rbowler
+// Define feature macros and STFL bit settings for new features in zPOP-05
+//
 // Revision 1.89  2007/02/01 16:53:51  rbowler
 // Additional STFL bit definitions
 //
@@ -2042,5 +2045,9 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define BRM_RTZ                 1       /* Round toward zero         */
 #define BRM_RTPI                2       /* Round toward +infinity    */
 #define BRM_RTMI                3       /* Round toward -infinity    */
+
+/* Mask bits for conditional SSKE facility */
+#define SSKE_MASK_MR            0x04    /* Reference bit update mask */
+#define SSKE_MASK_MC            0x02    /* Change bit update mask    */
 
 #endif // _ESA390_H

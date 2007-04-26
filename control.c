@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.248  2007/04/26 21:09:08  rbowler
+// Change SSKE instruction format from RRE to RRF_M
+//
 // Revision 1.247  2007/03/31 20:18:17  gsmith
 // Init tlbID after copying regs to newregs
 //
@@ -5128,6 +5131,62 @@ RADR    n;                              /* Abs frame addr stor key   */
     else
 #endif /*defined(_FEATURE_SIE)*/
     {
+#if defined(FEATURE_CONDITIONAL_SSKE)                           
+        /* Perform conditional SSKE processing if MR or MC bit set */
+        if (m3 & (SSKE_MASK_MR | SSKE_MASK_MC))
+        {
+            /* Insert storage key into R1 register bits 48-55 */
+#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(_FEATURE_2K_STORAGE_KEYS)
+            regs->GR_LHLCH(r1) = STORAGE_KEY(n, regs) & ~(STORKEY_BADFRM);                                                                                                                                                                                     
+#else
+            regs->GR_LHLCH(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & ~(STORKEY_BADFRM);                                                                                                                                                          
+#endif
+            /* If storage key and fetch bit do not equal new values
+               in R1 register bits 56-60 then set condition code 1 */
+            if ((regs->GR_LHLCH(r1) & (STORKEY_KEY | STORKEY_FETCH))
+                != (regs->GR_LHLCL(r1) & (STORKEY_KEY | STORKEY_FETCH)))
+            {
+                regs->psw.cc = 1;
+            }
+            else
+            {
+                /* If both MR and MC mask bits are one then set
+                   condition code 0 and leave storage key unchanged */
+                if ((m3 & (SSKE_MASK_MR | SSKE_MASK_MC))
+                    == (SSKE_MASK_MR | SSKE_MASK_MC)) 
+                {
+                    regs->psw.cc = 0;
+                    return;
+                }
+
+                /* If MR bit is zero and reference bit is equal to
+                   bit 61 of R1 register then set condition code 0
+                   and leave storage key unchanged */
+                if ((m3 & SSKE_MASK_MR) == 0
+                    && ((regs->GR_LHLCH(r1) & STORKEY_REF)
+                       == (regs->GR_LHLCH(r1) & STORKEY_REF)))
+                {
+                    regs->psw.cc = 0;
+                    return;
+                }
+
+                /* If MC bit is zero and the change bit is equal to
+                   bit 62 of R1 register then set condition code 0
+                   and leave storage key unchanged */
+                if ((m3 & SSKE_MASK_MC) == 0
+                    && ((regs->GR_LHLCH(r1) & STORKEY_CHANGE)
+                       == (regs->GR_LHLCH(r1) & STORKEY_CHANGE)))
+                {
+                    regs->psw.cc = 0;
+                    return;
+                }
+
+                /* Set condition code 1 and update storage key */
+                regs->psw.cc = 1;
+            }
+        }
+#endif /*defined(FEATURE_CONDITIONAL_SSKE)*/                           
+
         /* Update the storage key from R1 register bits 24-30 */
 #if defined(FEATURE_4K_STORAGE_KEYS) && !defined(_FEATURE_2K_STORAGE_KEYS)
         STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
@@ -5145,8 +5204,7 @@ RADR    n;                              /* Abs frame addr stor key   */
     PERFORM_CHKPT_SYNC (regs);
 
     /* Invalidate AIA/AEA so that the REF and CHANGE bits will be set
-     * when referenced next.
-     */
+       when referenced next */
     STORKEY_INVALIDATE(regs, n);
 
 }
