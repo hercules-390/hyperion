@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.67  2007/04/26 21:09:08  rbowler
+// Change SSKE instruction format from RRE to RRF_M
+//
 // Revision 1.66  2007/04/25 15:27:01  rbowler
 // Activate Extract-CPU-Time facility
 //
@@ -81,6 +84,7 @@
 #define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1             /*@Z9*/
 #define FEATURE_MIDAW                                           /*@Z9*/
 #define FEATURE_MOVE_PAGE_FACILITY_2
+//#define FEATURE_MVCOS                                           /*407*/
 #define FEATURE_MVS_ASSIST
 #define FEATURE_PAGE_PROTECTION
 #define FEATURE_PERFORM_LOCKED_OPERATION

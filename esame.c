@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.187  2007/04/25 15:23:49  rbowler
+// Standardize comment format in ECTG
+//
 // Revision 1.186  2007/04/25 14:46:35  rbowler
 // Rename RSS instruction format as SSF
 //
@@ -4866,6 +4869,9 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #if defined(FEATURE_STORE_CLOCK_FAST)
                  | STFL_3_STORE_CLOCK_FAST
 #endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
+#if defined(FEATURE_MVCOS)
+                 | STFL_3_MVCOS
+#endif /*defined(FEATURE_MVCOS)*/
 #if defined(FEATURE_TOD_CLOCK_STEERING)
                  | STFL_3_TOD_CLOCK_STEER
 #endif /*defined(FEATURE_TOD_CLOCK_STEERING)*/

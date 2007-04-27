@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.91  2007/04/26 22:27:48  rbowler
+// Conditional SSKE feature (non SIE-mode)
+//
 // Revision 1.90  2007/04/24 16:34:41  rbowler
 // Define feature macros and STFL bit settings for new features in zPOP-05
 //
@@ -1330,6 +1333,8 @@ typedef struct _MBK {
                                            facility 2 enhancement @Z9*/
 #define STFL_3_STORE_CLOCK_FAST 0x40    /* Store clock fast       @Z9
                                            enhancement installed  @Z9*/
+#define STFL_3_MVCOS            0x10    /* MVCOS instruction
+                                           is installed           407*/
 #define STFL_3_TOD_CLOCK_STEER  0x08    /* TOD clock steering     @Z9
                                            facility is installed  @Z9*/
 #define STFL_3_ETF3_ENHANCEMENT 0x02    /* Extended translation   @Z9
