@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.249  2007/04/26 22:27:48  rbowler
+// Conditional SSKE feature (non SIE-mode)
+//
 // Revision 1.248  2007/04/26 21:09:08  rbowler
 // Change SSKE instruction format from RRE to RRF_M
 //
@@ -5164,7 +5167,7 @@ RADR    n;                              /* Abs frame addr stor key   */
                    and leave storage key unchanged */
                 if ((m3 & SSKE_MASK_MR) == 0
                     && ((regs->GR_LHLCH(r1) & STORKEY_REF)
-                       == (regs->GR_LHLCH(r1) & STORKEY_REF)))
+                       == (regs->GR_LHLCL(r1) & STORKEY_REF)))
                 {
                     regs->psw.cc = 0;
                     return;
@@ -5175,7 +5178,7 @@ RADR    n;                              /* Abs frame addr stor key   */
                    and leave storage key unchanged */
                 if ((m3 & SSKE_MASK_MC) == 0
                     && ((regs->GR_LHLCH(r1) & STORKEY_CHANGE)
-                       == (regs->GR_LHLCH(r1) & STORKEY_CHANGE)))
+                       == (regs->GR_LHLCL(r1) & STORKEY_CHANGE)))
                 {
                     regs->psw.cc = 0;
                     return;
