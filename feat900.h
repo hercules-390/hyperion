@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.68  2007/04/27 10:50:41  rbowler
+// STFL bit 27 for MVCOS
+//
 // Revision 1.67  2007/04/26 21:09:08  rbowler
 // Change SSKE instruction format from RRE to RRF_M
 //
@@ -40,7 +43,7 @@
 #define FEATURE_CHSC
 #define FEATURE_COMPARE_AND_MOVE_EXTENDED
 #define FEATURE_COMPRESSION
-//#define FEATURE_CONDITIONAL_SSKE                                /*407*/
+#define FEATURE_CONDITIONAL_SSKE                                /*407*/
 #define FEATURE_CPUID_FORMAT_1
 #define FEATURE_CPU_RECONFIG
 #define FEATURE_DAT_ENHANCEMENT
