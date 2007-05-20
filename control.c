@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.251  2007/05/17 22:47:35  rbowler
+// Conditional SSKE for SIE
+//
 // Revision 1.250  2007/05/17 13:51:31  rbowler
 // Conditional SSKE correction
 //
@@ -5166,13 +5169,13 @@ RADR    n;                              /* Abs frame addr stor key   */
 
                 /* fetch the RCP key */
                 rcpkey = regs->mainstor[rcpa];
+                /* set the reference bit in the RCP key */
+                STORAGE_KEY(rcpa, regs) |= STORKEY_REF;
 #if defined(FEATURE_CONDITIONAL_SSKE)
                 /* Perform conditional SSKE procedure */
                 if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3, rcpkey))
                     return;
 #endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
-                /* set the reference bit in the RCP key */
-                STORAGE_KEY(rcpa, regs) |= STORKEY_REF;
                 /* or with host set */
                 rcpkey |= realkey << 4;
                 /* insert new settings of the guest set */
