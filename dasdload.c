@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.51  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -3165,11 +3168,13 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
 
     /* Increment bytes used by the length of the ICE */
     bytes += 18;
-    catent = (PDSDIR*)(datablk.kdarea + keylen + bytes);
 
     /* Build the dataset pointers for SYS1.xxxxxxxx datasets */
     for (i = 0; i < NUM_SYS1_DATASETS; i++)
     {
+        /* Point to next dataset pointer entry */
+        catent = (PDSDIR*)(datablk.kdarea + keylen + bytes);
+
         /* Set the name of the dataset pointer entry */
         convert_to_ebcdic (catent->pds2name, 8, sys1name[i]);
 
@@ -3201,9 +3206,11 @@ static char    *sys1name[NUM_SYS1_DATASETS] =
 
         /* Increment bytes used by the length of the dataset pointer */
         bytes += 26;
-        catent = (PDSDIR*)(datablk.kdarea + keylen + bytes);
 
     } /* end for(i) */
+
+    /* Point to last entry in block */
+    catent = (PDSDIR*)(datablk.kdarea + keylen + bytes);
 
     /* Set the last entry in block marker */
     memcpy (catent->pds2name, eighthexFF, 8);
