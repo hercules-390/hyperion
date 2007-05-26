@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.123  2007/04/24 16:34:41  rbowler
+// Define feature macros and STFL bit settings for new features in zPOP-05
+//
 // Revision 1.122  2007/01/04 01:08:41  gsmith
 // 03 Jan 2007 single_cpu_dw fetch/store patch for ia32
 //
@@ -117,8 +120,8 @@
 #undef FEATURE_CHSC
 #undef FEATURE_COMPARE_AND_MOVE_EXTENDED
 #undef FEATURE_COMPARE_AND_SWAP_AND_STORE                       /*407*/
-#undef FEATURE_CONDITIONAL_SSKE                                 /*407*/
 #undef FEATURE_COMPRESSION
+#undef FEATURE_CONDITIONAL_SSKE                                 /*407*/
 #undef FEATURE_CPU_RECONFIG
 #undef FEATURE_CPUID_FORMAT_1
 #undef FEATURE_DAT_ENHANCEMENT

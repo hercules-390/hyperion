@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.69  2007/05/18 21:49:04  rbowler
+// Activate Conditional-SSKE feature
+//
 // Revision 1.68  2007/04/27 10:50:41  rbowler
 // STFL bit 27 for MVCOS
 //
@@ -42,10 +45,11 @@
 #define FEATURE_CHECKSUM_INSTRUCTION
 #define FEATURE_CHSC
 #define FEATURE_COMPARE_AND_MOVE_EXTENDED
+#define FEATURE_COMPARE_AND_SWAP_AND_STORE                      /*407*/
 #define FEATURE_COMPRESSION
 #define FEATURE_CONDITIONAL_SSKE                                /*407*/
-#define FEATURE_CPUID_FORMAT_1
 #define FEATURE_CPU_RECONFIG
+#define FEATURE_CPUID_FORMAT_1
 #define FEATURE_DAT_ENHANCEMENT
 #define FEATURE_DAT_ENHANCEMENT_FACILITY_2                      /*@Z9*/
 #define FEATURE_DECIMAL_FLOATING_POINT                          /*DFP*/
