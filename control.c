@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.252  2007/05/20 15:36:44  jj
+// Ensure that the reference bit of the rcp area is set when conditional SSKE refers to the storage key in the rcp area
+//
 // Revision 1.251  2007/05/17 22:47:35  rbowler
 // Conditional SSKE for SIE
 //
@@ -4982,7 +4985,7 @@ RADR    n;                              /* Absolute storage addr     */
 /*      - if storage key update is to be bypassed, the condition     */
 /*        code is set to 0 and the function return value is 1;       */
 /*-------------------------------------------------------------------*/
-static inline ARCH_DEP(conditional_sske_procedure)
+static inline int ARCH_DEP(conditional_sske_procedure)
         (REGS *regs, int r1, int m3, BYTE skey)
 {
     /* Perform normal SSKE if MR and MC bits are both zero */
