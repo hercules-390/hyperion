@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.204  2007/04/25 14:46:35  rbowler
+// Rename RSS instruction format as SSF
+//
 // Revision 1.203  2007/04/25 12:33:20  rbowler
 // Move SRNMT to Floating-point-support-enhancement facility
 //
@@ -588,6 +591,10 @@ do { \
 
 #define ODD2_CHECK(_r1, _r2, _regs) \
     if( ((_r1) & 1) || ((_r2) & 1) ) \
+        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
+
+#define HW_CHECK(_value, _regs) \
+    if( (_value) & 1 ) \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
 #define FW_CHECK(_value, _regs) \
@@ -3083,6 +3090,7 @@ DEF_INST(compare);
 DEF_INST(compare_and_form_codeword);
 DEF_INST(compare_and_swap);
 DEF_INST(compare_double_and_swap);
+DEF_INST(compare_and_swap_and_store);
 DEF_INST(compare_halfword);
 DEF_INST(compare_halfword_immediate);
 DEF_INST(compare_logical_register);
@@ -3505,7 +3513,6 @@ DEF_INST(load_logical_long_halfword_register);                  /*@Z9*/
 DEF_INST(find_leftmost_one_long_register);                      /*@Z9*/
 DEF_INST(move_with_optional_specifications);
 DEF_INST(extract_cpu_time);
-DEF_INST(compare_and_swap_and_store);
 
 
 /* Instructions in ecpsvm.c */
