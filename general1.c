@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.149  2007/05/26 14:23:55  rbowler
+// CSST instruction
+//
 // Revision 1.148  2007/01/13 07:21:11  bernard
 // backout ccmask
 //
@@ -1369,12 +1372,12 @@ VADR    addr1, addr2;                   /* Effective addresses       */
 VADR    addrp;                          /* Parameter list address    */
 BYTE   *main1;                          /* Mainstor address of op1   */
 int     ln2;                            /* Second operand length - 1 */
-U64     old8, new8;                     /* Swap values for cmpxchg8  */
-U32     old4, new4;                     /* Swap values for cmpxchg4  */
-U64     stv8;                           /* 8-byte store value        */
-U32     stv4;                           /* 4-byte store value        */
-U16     stv2;                           /* 2-byte store value        */
-BYTE    stv1;                           /* 1-byte store value        */
+U64     old8, new8=0;                   /* Swap values for cmpxchg8  */
+U32     old4, new4=0;                   /* Swap values for cmpxchg4  */
+U64     stv8=0;                         /* 8-byte store value        */
+U32     stv4=0;                         /* 4-byte store value        */
+U16     stv2=0;                         /* 2-byte store value        */
+BYTE    stv1=0;                         /* 1-byte store value        */
 BYTE    fc;                             /* Function code             */
 BYTE    sc;                             /* Store characteristic      */
 
