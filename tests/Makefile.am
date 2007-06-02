@@ -14,6 +14,7 @@ EXTRA_DIST =        \
     axtr.txt        \
     cgdtr.txt       \
     cgxtr.txt       \
+    csst.txt        \
     cxgbr.txt       \
     cxgtr.txt       \
     dxtr.txt        \
