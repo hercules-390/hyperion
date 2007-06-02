@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.122  2007/04/26 21:09:08  rbowler
+// Change SSKE instruction format from RRE to RRF_M
+//
 // Revision 1.121  2007/04/25 14:46:35  rbowler
 // Rename RSS instruction format as SSF
 //
@@ -620,6 +623,11 @@
  UNDEF_INST(test_data_group_dfp_long)
  UNDEF_INST(test_data_group_dfp_short)
 #endif /*!defined(FEATURE_DECIMAL_FLOATING_POINT)*/
+
+
+#if !defined(FEATURE_PFPO)
+ UNDEF_INST(perform_floating_point_operation)
+#endif /*!defined(FEATURE_PFPO)*/
 
 
 #if !defined(FEATURE_EMULATE_VM)
@@ -2197,7 +2205,7 @@ DLL_EXPORT zz_func opcode_01xx[256][GEN_MAXARCH] = {
  /*0107*/ GENx___x390x900 (set_clock_programmable_field,E,"SCKPF"),
  /*0108*/ GENx___x___x___ ,                                     /* TMPS      */
  /*0109*/ GENx___x___x___ ,                                     /* CMPS      */
- /*010A*/ GENx___x___x___ ,
+ /*010A*/ GENx___x390x900 (perform_floating_point_operation,E,"PFPO"),
  /*010B*/ GENx___x390x900 (test_addressing_mode,E,"TAM"),
  /*010C*/ GENx___x390x900 (set_addressing_mode_24,E,"SAM24"),
  /*010D*/ GENx___x390x900 (set_addressing_mode_31,E,"SAM31"),

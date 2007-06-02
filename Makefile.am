@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.177  2006/12/30 21:13:37  rbowler
+# Backout rev 1.176
+#
 # Revision 1.175  2006/12/30 16:54:07  rbowler
 # Reinstate missing changelog entries
 #
@@ -349,6 +352,7 @@ endif
                        vstore.c     \
                        general1.c   \
                        general2.c   \
+                       pfpo.c       \
                        plo.c        \
                        control.c    \
                        crypto.c     \

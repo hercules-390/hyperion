@@ -770,6 +770,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\pfpo.c"
+							>
+						</File>
+						<File
 							RelativePath=".\plo.c"
 							>
 						</File>

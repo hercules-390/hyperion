@@ -7,6 +7,9 @@
 VERSION  = \"3.04w32\"
 
 # $Log$
+# Revision 1.52  2006/12/08 09:43:29  jj
+# Add CVS message log
+#
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
@@ -68,7 +71,7 @@ TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
 
 hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                version.o ipl.o assist.o dat.o stack.o cpu.o \
-               vstore.o general1.o general2.o plo.o control.o \
+               vstore.o general1.o general2.o pfpo.o plo.o control.o \
                io.o decimal.o service.o opcode.o diagnose.o \
                diagmssf.o vm.o channel.o ckddasd.o fbadasd.o \
                crypto.o external.o float.o trace.o chsc.o \

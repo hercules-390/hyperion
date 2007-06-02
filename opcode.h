@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.205  2007/05/26 14:23:56  rbowler
+// CSST instruction
+//
 // Revision 1.204  2007/04/25 14:46:35  rbowler
 // Rename RSS instruction format as SSF
 //
@@ -3699,5 +3702,8 @@ DEF_INST(test_data_class_dfp_short);
 DEF_INST(test_data_group_dfp_ext);
 DEF_INST(test_data_group_dfp_long);
 DEF_INST(test_data_group_dfp_short);
+
+/* Instructions in pfpo.c */
+DEF_INST(perform_floating_point_operation);
 
 /* end of OPCODE.H */

@@ -3,13 +3,14 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
+# $Id$
 #
 #  Prerequisite hercules build rules...  (precompiled header, etc...)
 #
 #
 #                           CHANGE HISTORY
+# $Log$
 # DD/MM/YY Description
-#
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
 #
 # ***************************************************************************
@@ -31,6 +32,9 @@ $(O)build_pch.pch: build_pch.c
 
 $(O)dfp.obj: dfp.c
     $(cc) $(cdebug) $(cflags) /IdecNumber /I. /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" dfp.c
+
+$(O)pfpo.obj: pfpo.c
+    $(cc) $(cdebug) $(cflags) /IdecNumber /I. /Fp"$(OBJDIR)\\build_pch.pch" /Yu"hstdinc.h" $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" pfpo.c
 
 $(O)decNumber.res: decNumber\decNumber.rc
     $(rc) $(rcflags) $(rcvars) -i decNumber -fo $(O)decNumber.res decNumber\decNumber.rc

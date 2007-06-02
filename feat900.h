@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.70  2007/05/26 21:45:25  rbowler
+// Activate Compare-and-Swap-and-Store feature
+//
 // Revision 1.69  2007/05/18 21:49:04  rbowler
 // Activate Conditional-SSKE feature
 //
@@ -98,6 +101,7 @@
 #define FEATURE_PER
 #define FEATURE_PER2
 #define FEATURE_PER3                                            /*@Z9*/
+//#define FEATURE_PFPO                                            /*407*/
 #define FEATURE_PRIVATE_SPACE
 #define FEATURE_PROTECTION_INTERCEPTION_CONTROL
 #define FEATURE_QUEUED_DIRECT_IO

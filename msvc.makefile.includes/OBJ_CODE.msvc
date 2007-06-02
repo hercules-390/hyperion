@@ -3,13 +3,14 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
+# $Id$
 #
 #  What object code goes in what module...
 #
 #
 #                           CHANGE HISTORY
+# $Log$
 # DD/MM/YY Description
-#
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
 #
 # ***************************************************************************
@@ -104,6 +105,7 @@ hengine_OBJ = \
     $(O)machchk.obj  \
     $(O)opcode.obj   \
     $(O)panel.obj    \
+    $(O)pfpo.obj     \
     $(O)plo.obj      \
     $(O)qdio.obj     \
     $(O)service.obj  \
