@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.92  2007/04/27 10:50:40  rbowler
+// STFL bit 27 for MVCOS
+//
 // Revision 1.91  2007/04/26 22:27:48  rbowler
 // Conditional SSKE feature (non SIE-mode)
 //
@@ -253,6 +256,7 @@ typedef struct _DAT {
 #define CR0_XM_ETR      0x00000010      /* External timer mask       */
 #define CR0_PC_FAST     0x00000008      /* PC fast control        390*/
 #define CR0_CRYPTO      0x00000004      /* Crypto control       ESAME*/
+#define CR0_IUCV        0x00000002      /* IUCV interrupt mask       */
 
 #define SERVSIG_PEND    0x00000001      /* Event buffer pending      */
 #define SERVSIG_ADDR    0xFFFFFFF8      /* Parameter address         */
@@ -950,6 +954,7 @@ typedef struct _PSA_900 {               /* Prefixed storage area     */
 #define EXT_EXTERNAL_CALL_INTERRUPT                     0x1202
 #define EXT_ETR_INTERRUPT                               0x1406
 #define EXT_SERVICE_SIGNAL_INTERRUPT                    0x2401
+#define EXT_IUCV_INTERRUPT                              0x4000
 #if defined(FEATURE_ECPSVM)
 #define EXT_VINTERVAL_TIMER_INTERRUPT                   0x0100
 #endif
