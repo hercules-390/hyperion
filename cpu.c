@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.181  2007/04/09 23:07:42  gsmith
+// call cpu_uninit() on run_cpu exit
+//
 // Revision 1.180  2007/03/25 04:20:36  gsmith
 // Ensure started_mask CPU bit is off for terminating cpu thread - Fish by Greg
 //
@@ -427,6 +430,12 @@ static char *pgmintname[] = {
 
     /* Prevent machine check when in (almost) interrupt loop */
     realregs->instcount++;
+
+    /* Release any locks */
+    if (sysblk.intowner == realregs->cpuad)
+        RELEASE_INTLOCK(realregs);
+    if (sysblk.mainowner == realregs->cpuad)
+        RELEASE_MAINLOCK(realregs);
 
     /* Ensure psw.IA is set and aia invalidated */
     INVALIDATE_AIA(realregs);
@@ -1470,29 +1479,24 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 #ifdef OPTION_MIPS_COUNTING
         regs->waittod = hw_clock();
 #endif
-
-        /* Wait until there is work to do */
-        HDC1(debug_cpu_state, regs);
-
-        /* The CPU timer is not being decremented for
-         * a CPU that is in the manual state
-         * (e.g. stopped in single step mode
-         * or otherwise)
-         */
         saved_timer = cpu_timer(regs);
         regs->ints_state = IC_INITIAL_STATE;
-        sysblk.started_mask &= ~regs->cpubit;
+        sysblk.started_mask ^= regs->cpubit;
         sysblk.intowner = LOCK_OWNER_NONE;
-        while (regs->cpustate == CPUSTATE_STOPPED)
-        {
-            wait_condition (&regs->intcond, &sysblk.intlock);
-        }
+
+        /* Wait while we are STOPPED */
+        wait_condition (&regs->intcond, &sysblk.intlock);
+
+        /* Wait while SYNCHRONIZE_CPUS is in progress */
+        while (sysblk.syncing)
+            wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
+
         sysblk.intowner = regs->cpuad;
         sysblk.started_mask |= regs->cpubit;
         regs->ints_state |= sysblk.ints_state;
         set_cpu_timer(regs,saved_timer);
 
-        HDC1(debug_cpu_state, regs);
+        ON_IC_INTERRUPT(regs);
 
 #ifdef OPTION_MIPS_COUNTING
         /* Calculate the time we waited */
@@ -1509,17 +1513,10 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         /* If the architecture mode has changed we must adapt */
         if(sysblk.arch_mode != regs->arch_mode)
             longjmp(regs->archjmp,SIE_NO_INTERCEPT);
-
-        /* Synchronize with other CPUs */
-        SYNCHRONIZE_CPUS(regs);
-
-        RELEASE_INTLOCK(regs);
-
-        longjmp(regs->progjmp, SIE_NO_INTERCEPT);
     } /*CPUSTATE_STOPPED*/
 
     /* Test for wait state */
-    if (WAITSTATE(&regs->psw))
+    else if (WAITSTATE(&regs->psw))
     {
 #ifdef OPTION_MIPS_COUNTING
         regs->waittod = hw_clock();
@@ -1537,22 +1534,26 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
 
-        /* Wait for I/O, external or restart interrupt */
-        sysblk.waiting_mask |= regs->cpubit;
+        /* Indicate we are giving up intlock */
         sysblk.intowner = LOCK_OWNER_NONE;
+        sysblk.waiting_mask |= regs->cpubit;
+
+        /* Wait for interrupt */
         wait_condition (&regs->intcond, &sysblk.intlock);
+
+        /* Wait while SYNCHRONIZE_CPUS is in progress */
+        while (sysblk.syncing)
+            wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
+
+        /* Indicate we now own intlock */
+        sysblk.waiting_mask ^= regs->cpubit;
         sysblk.intowner = regs->cpuad;
-        sysblk.waiting_mask &= ~regs->cpubit;
 
 #ifdef OPTION_MIPS_COUNTING
         /* Calculate the time we waited */
         regs->waittime += hw_clock() - regs->waittod;
         regs->waittod = 0;
 #endif
-
-        RELEASE_INTLOCK(regs);
-
-        longjmp(regs->progjmp, SIE_NO_INTERCEPT);
     } /* end if(wait) */
 
     /* Release the interrupt lock */

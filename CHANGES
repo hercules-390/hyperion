@@ -1,3 +1,4 @@
+06 Jun 2007 Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
 06 Jun 2007 Ignore suppress bit in FBA Locate CCW Byte 0 - H.U. - Ivan Warren
 26 May 2007 Compare-and-Swap-and-Store feature - Roger Bowler
 18 May 2007 Conditional SSKE feature - Roger Bowler

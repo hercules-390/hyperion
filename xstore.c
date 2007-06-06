@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.45  2007/01/13 07:27:40  bernard
+// backout ccmask
+//
 // Revision 1.44  2007/01/12 15:25:39  bernard
 // ccmask phase 1
 //
@@ -177,14 +180,13 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Perform serialization before operation */
     PERFORM_SERIALIZATION (regs);
-
-    /* Update page table entry interlocked */
-    OBTAIN_MAINLOCK(regs);
+    OBTAIN_INTLOCK(regs);
+    SYNCHRONIZE_CPUS(regs);
 
     /* Invalidate page table entry */
     ARCH_DEP(invalidate_pte) (inst[1], r1, r2, regs);
 
-    RELEASE_MAINLOCK(regs);
+    RELEASE_INTLOCK(regs);
 
     /* Perform serialization after operation */
     PERFORM_SERIALIZATION (regs);

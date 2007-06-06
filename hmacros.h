@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.16  2007/01/04 23:12:04  gsmith
+// remove thunk calls for program_interrupt
+//
 // Revision 1.15  2006/12/08 09:43:26  jj
 // Add CVS message log
 //
@@ -303,6 +306,104 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 
 #define MAX_REPORTED_MIPSRATE  (250000000) /* instructions / second  */
 #define MAX_REPORTED_SIOSRATE  (10000)     /* SIOs per second        */
+
+/*-------------------------------------------------------------------*/
+/* Obtain/Release mainlock.                                          */
+/* mainlock is only obtained by a CPU thread                         */
+/*-------------------------------------------------------------------*/
+
+#define OBTAIN_MAINLOCK(_regs) \
+ do { \
+  if ((_regs)->hostregs->cpubit != (_regs)->sysblk->started_mask) { \
+   obtain_lock(&(_regs)->sysblk->mainlock); \
+   (_regs)->sysblk->mainowner = regs->hostregs->cpuad; \
+  } \
+ } while (0)
+
+#define RELEASE_MAINLOCK(_regs) \
+ do { \
+   if ((_regs)->sysblk->mainowner == (_regs)->hostregs->cpuad) { \
+     (_regs)->sysblk->mainowner = LOCK_OWNER_NONE; \
+     release_lock(&(_regs)->sysblk->mainlock); \
+   } \
+ } while (0)
+
+/*-------------------------------------------------------------------*/
+/* Obtain/Release intlock.                                           */
+/* intlock can be obtained by any thread                             */
+/* if obtained by a cpu thread, check to see if synchronize_cpus     */
+/* is in progress.                                                   */
+/*-------------------------------------------------------------------*/
+
+#define OBTAIN_INTLOCK(_iregs) \
+ do { \
+   REGS *_regs = (_iregs); \
+   if ((_regs)) \
+     (_regs)->hostregs->intwait = 1; \
+   obtain_lock (&sysblk.intlock); \
+   if ((_regs)) { \
+     while (sysblk.syncing) { \
+       sysblk.sync_mask &= ~(_regs)->hostregs->cpubit; \
+       if (!sysblk.sync_mask) \
+         signal_condition(&sysblk.sync_cond); \
+       wait_condition(&sysblk.sync_bc_cond, &sysblk.intlock); \
+     } \
+     (_regs)->hostregs->intwait = 0; \
+     sysblk.intowner = (_regs)->hostregs->cpuad; \
+   } else \
+     sysblk.intowner = LOCK_OWNER_OTHER; \
+ } while (0)
+
+#define RELEASE_INTLOCK(_regs) \
+ do { \
+   sysblk.intowner = LOCK_OWNER_NONE; \
+   release_lock(&sysblk.intlock); \
+ } while (0)
+
+/*-------------------------------------------------------------------*/
+/* Returns when all other CPU threads are blocked on intlock         */
+/*-------------------------------------------------------------------*/
+
+#define SYNCHRONIZE_CPUS(_regs) \
+ do { \
+   int _i, _n = 0; \
+   U32 _mask = sysblk.started_mask \
+             ^ (sysblk.waiting_mask | (_regs)->hostregs->cpubit); \
+   for (_i = 0; _mask && _i < sysblk.hicpu; _i++) { \
+     if ((_mask & BIT(_i))) { \
+       if (sysblk.regs[_i]->intwait || sysblk.regs[_i]->syncio) \
+         _mask ^= BIT(_i); \
+       else { \
+         ON_IC_INTERRUPT(sysblk.regs[_i]); \
+         if (SIE_MODE(sysblk.regs[_i])) \
+           ON_IC_INTERRUPT(sysblk.regs[_i]->guestregs); \
+         _n++; \
+       } \
+     } \
+   } \
+   if (_n) { \
+     if (_n < hostinfo.num_procs) { \
+       for (_n = 1; _mask; _n++) { \
+         if (_n & 0xff) \
+           sched_yield(); \
+         else \
+           usleep(1); \
+         for (_i = 0; _i < sysblk.hicpu; _i++) \
+           if ((_mask & BIT(_i)) && sysblk.regs[_i]->intwait) \
+             _mask ^= BIT(_i); \
+       } \
+     } else { \
+       sysblk.sync_mask = sysblk.started_mask \
+                        ^ (sysblk.waiting_mask | (_regs)->hostregs->cpubit); \
+       sysblk.syncing = 1; \
+       sysblk.intowner = LOCK_OWNER_NONE; \
+       wait_condition(&sysblk.sync_cond, &sysblk.intlock); \
+       sysblk.intowner = (_regs)->hostregs->cpuad; \
+       sysblk.syncing = 0; \
+       broadcast_condition(&sysblk.sync_bc_cond); \
+     } \
+   } \
+ } while (0)
 
 /*-------------------------------------------------------------------*/
 /* Macros to signal interrupt condition to a CPU[s]...               */

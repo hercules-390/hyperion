@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.216  2007/04/11 11:26:38  ivan
+// Rename the $test_cmd function to test_cmd since it causes grief with some compilers
+//
 // Revision 1.215  2007/02/18 23:49:25  kleonard
 // Add TIME and NOTIME synonyms for LOGOPT operands
 //
@@ -3585,10 +3588,6 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             sysblk.regs[i]->cpuad,
             sysblk.regs[i]->cpuad == sysblk.mainowner ? _("yes") : _("no")
             );
-        logmsg( _("          CPU%4.4X: Waiting for mainlock: %s\n"),
-            sysblk.regs[i]->cpuad,
-            sysblk.regs[i]->mainwait ? _("yes") : _("no")
-            );
         logmsg( _("          CPU%4.4X: Intlock held: %s\n"),
             sysblk.regs[i]->cpuad,
             sysblk.regs[i]->cpuad == sysblk.intowner ? _("yes") : _("no")
@@ -3708,6 +3707,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
 
     logmsg( _("          Config mask %8.8X started mask %8.8X waiting mask %8.8X\n"),
         sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask
+        );
+    logmsg( _("          Syncbc mask %8.8x %s\n"),
+        sysblk.sync_mask, sysblk.syncing ? _("Sync in progress") : ""
         );
     logmsg( _("          Signaling facility %sbusy\n"),
         test_lock(&sysblk.sigplock) ? "" : _("not ")

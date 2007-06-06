@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.67  2007/03/22 11:56:19  rbowler
+// Remove double hyphen option from print-to-pipe feature
+//
 // Revision 1.66  2007/03/15 20:57:55  gsmith
 // Fix fba when the fba device is > 4G
 //
@@ -119,8 +122,7 @@ struct REGS {                           /* Processor registers       */
                 tracing:1,              /* 1=Trace is active         */
                 stepwait:1,             /* 1=Wait in inst stepping   */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
-                sigpireset:1,           /* 1=SIGP initial cpu reset  */
-                syncio:1;               /* 1=Synchronous i/o active  */
+                sigpireset:1;           /* 1=SIGP initial cpu reset  */
 
         S64     cpu_timer;              /* CPU timer epoch           */
         S64     int_timer;              /* S/370 Interval timer      */
@@ -245,8 +247,8 @@ struct REGS {                           /* Processor registers       */
       * ization issue that occurs with the 'SYNCHRONIZE_CPUS' macro
       * used during synchronize broadcast (cpu<->cpu communication)
       */
-        int     mainwait;               /* 1=Waiting on mainlock     */
         int     intwait;                /* 1=Waiting on intlock      */
+        int     syncio;                 /* 1=Synchronous i/o active  */
 
         BYTE    cpustate;               /* CPU stopped/started state */
         BYTE    malfcpu                 /* Malfuction alert flags    */
@@ -440,10 +442,14 @@ struct SYSBLK {
         REGS    footprregs[MAX_CPU_ENGINES][OPTION_FOOTPRINT_BUFFER];
         U32     footprptr[MAX_CPU_ENGINES];
 #endif
-        LOCK    mainlock;               /* Main storage lock         */
+
+#define LOCK_OWNER_NONE  0xFFFF
+#define LOCK_OWNER_OTHER 0xFFFE
         U16     mainowner;              /* Mainlock owner            */
-        LOCK    intlock;                /* Interrupt lock            */
         U16     intowner;               /* Intlock owner             */
+
+        LOCK    mainlock;               /* Main storage lock         */
+        LOCK    intlock;                /* Interrupt lock            */
         LOCK    sigplock;               /* Signal processor lock     */
         ATTR    detattr;                /* Detached thread attribute */
         ATTR    joinattr;               /* Joinable thread attribute */
@@ -550,6 +556,11 @@ struct SYSBLK {
         char   *httpuser;               /* HTTP userid               */
         char   *httppass;               /* HTTP password             */
         char   *httproot;               /* HTTP root                 */
+     /* Fields used by SYNCHRONIZE_CPUS */
+        int     syncing;                /* 1=Sync in progress        */
+        U32     sync_mask;              /* CPU mask for syncing CPUs */
+        COND    sync_cond;              /* COND for syncing CPU      */
+        COND    sync_bc_cond;           /* COND for other CPUs       */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
         int     asnandlxreuse;          /* ASN And LX Reuse enable   */
 #endif

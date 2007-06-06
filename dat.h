@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.105  2007/03/21 01:28:20  gsmith
+// Fix missed (acctype != ACC...) compares
+//
 // Revision 1.104  2007/03/20 23:46:15  gsmith
 // Don't update TLB if ACC_NOTLB
 //
@@ -1907,6 +1910,10 @@ int i;
 /*      addressed by the page table origin in the R1 register and    */
 /*      the page index in the R2 register.  It clears the TLB of     */
 /*      all entries whose PFRA matches the page table entry.         */
+/*                                                                   */
+/* invalidate_pte should be called with the intlock held and         */
+/* SYNCHRONIZE_CPUS issued while intlock is held.                    */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
                                                     int r2, REGS *regs)
@@ -2020,10 +2027,7 @@ RADR    pfra;
 #endif /*defined(FEATURE_ESAME)*/
 
     /* Invalidate TLB entries */
-    OBTAIN_INTLOCK(regs);
-    SYNCHRONIZE_CPUS(regs);
     ARCH_DEP(purge_tlbe_all) (pfra);
-    RELEASE_INTLOCK(regs);
 
 } /* end function invalidate_pte */
 

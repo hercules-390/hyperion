@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.75  2007/02/27 05:30:36  fish
+// Fix minor glitch in enhanced symbol substitution
+//
 // Revision 1.74  2007/02/26 21:33:46  rbowler
 // Allow either quotes or apostrophes as argument delimiters in config statements
 //
@@ -2209,6 +2212,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     initialize_condition (&sysblk.cpucond);
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         initialize_lock (&sysblk.cpulock[i]);
+    initialize_condition (&sysblk.sync_cond);
+    initialize_condition (&sysblk.sync_bc_cond);
 
 #if defined(OPTION_FISHIO)
     InitIOScheduler                     // initialize i/o scheduler...

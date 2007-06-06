@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.206  2007/06/02 13:46:41  rbowler
+// PFPO framework
+//
 // Revision 1.205  2007/05/26 14:23:56  rbowler
 // CSST instruction
 //
@@ -294,49 +297,6 @@ int used; \
 #define COUNT_INST(_inst, _regs)
 
 #endif
-
-/* Main storage access locking
-   This routine will ensure that a given CPU
-   has exclusive access to main storage and hence
-   will be able to perform as what appears as an
-   interlocked update to other CPU's - Jan Jaeger */
-
-#define OBTAIN_MAINLOCK(_regs) \
-do { \
-  if ((_regs)->cpubit != (_regs)->sysblk->started_mask) { \
-    (_regs)->hostregs->mainwait = 1; \
-    obtain_lock(&(_regs)->sysblk->mainlock); \
-    (_regs)->hostregs->mainwait = 0; \
-    (_regs)->sysblk->mainowner = (_regs)->hostregs->cpuad; \
-  } \
-} while(0)
-
-#define RELEASE_MAINLOCK(_regs) \
-do { \
-  if ((_regs)->sysblk->mainowner == (_regs)->hostregs->cpuad) { \
-    (_regs)->sysblk->mainowner = LOCK_OWNER_NONE; \
-    release_lock(&(_regs)->sysblk->mainlock); \
-  } \
-} while(0)
-
-
-#define OBTAIN_INTLOCK(_regs) \
-do { \
-    REGS *intregs = (_regs); \
-    if (intregs) intregs->hostregs->intwait = 1; \
-    obtain_lock(&sysblk.intlock); \
-    if (intregs) intregs->hostregs->intwait = 0; \
-    sysblk.intowner = intregs ? intregs->hostregs->cpuad : LOCK_OWNER_OTHER; \
-} while(0)
-
-#define RELEASE_INTLOCK(_regs) \
-do { \
-    sysblk.intowner = LOCK_OWNER_NONE; \
-    release_lock(&sysblk.intlock); \
-} while(0)
-
-#define LOCK_OWNER_NONE  0xFFFF
-#define LOCK_OWNER_OTHER 0xFFFE
 
 #if defined(_FEATURE_SIE)
   #define SIE_MODE(_register_context) \
@@ -2441,45 +2401,6 @@ do { \
 
 #define PERFORM_SERIALIZATION(_regs) do { } while (0)
 #define PERFORM_CHKPT_SYNC(_regs) do { } while (0)
-
-/*
- * Spin until all other CPUs are waiting
- * Caller holds intlock and may hold mainlock.
- */
-#define SYNCHRONIZE_CPUS(_regs) \
- do { \
-  int i,j,n=0; \
-  U32 wmask = sysblk.waiting_mask | (_regs)->cpubit; \
-  U32 mask = sysblk.started_mask & ~wmask; \
-  for (i = 0; mask; i++) \
-    if (mask & BIT(i)) { \
-      mask &= ~BIT(i); \
-      if (sysblk.regs[i]->intwait || sysblk.regs[i]->syncio) \
-        wmask |= BIT(i); \
-      else \
-        ON_IC_INTERRUPT (sysblk.regs[i]); \
-    } \
-  mask = sysblk.started_mask & ~wmask; \
-  while (mask) { \
-    for (i = 0; mask; i++) \
-      if (mask & BIT(i)) { \
-        mask &= ~BIT(i); \
-        if (sysblk.regs[i]->intwait) \
-          wmask |= BIT(i); \
-        else if (sysblk.regs[i]->mainwait) { \
-          j = sysblk.mainowner; \
-          if (j < MAX_CPU_ENGINES && (wmask & BIT(j))) \
-            wmask |= BIT(i); \
-        } \
-      } \
-    mask = sysblk.started_mask & ~wmask; \
-    if (mask) { \
-      if (++n & 0x7f) sched_yield(); \
-      else usleep(1); \
-    } \
-  } \
- } while (0)
-
 
 #if !defined(NO_SETUID)
 

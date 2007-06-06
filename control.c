@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.253  2007/05/26 21:16:11  rbowler
+// fix control.c:4990: warning: return type defaults to `int'
+//
 // Revision 1.252  2007/05/20 15:36:44  jj
 // Ensure that the reference bit of the rcp area is set when conditional SSKE refers to the storage key in the rcp area
 //
@@ -1561,8 +1564,8 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Perform serialization before operation */
     PERFORM_SERIALIZATION (regs);
-
-    OBTAIN_MAINLOCK(regs);
+    OBTAIN_INTLOCK(regs);
+    SYNCHRONIZE_CPUS(regs);
 
 #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs) && regs->sie_scao)
@@ -1570,7 +1573,7 @@ int     r1, r2;                         /* Values of R fields        */
         STORAGE_KEY(regs->sie_scao, regs) |= STORKEY_REF;
         if(regs->mainstor[regs->sie_scao] & 0x80)
         {
-            RELEASE_MAINLOCK(regs);
+            RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
         }
         regs->mainstor[regs->sie_scao] |= 0x80;
@@ -1589,7 +1592,7 @@ int     r1, r2;                         /* Values of R fields        */
     }
 #endif /*defined(_FEATURE_SIE)*/
 
-    RELEASE_MAINLOCK(regs);
+    RELEASE_INTLOCK(regs);
 
 } /* DEF_INST(invalidate_page_table_entry) */
 
@@ -5490,6 +5493,7 @@ static char *ordername[] = {
         regs->psw.cc = 2;
         if (log_sigp)
             logmsg("%s: CC 2\n",log_buf);
+        sched_yield();
         return;
     }
 

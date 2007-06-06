@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.103  2007/02/09 23:59:58  ivan
+// Fix some PER issue (tentative)
+//
 // Revision 1.102  2007/01/13 07:25:51  bernard
 // backout ccmask
 //
@@ -967,11 +970,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
                         ARCH_DEP(program_interrupt) (GUESTREGS, PGM_PER_EVENT);
 
                     OBTAIN_INTLOCK(regs);
-
-                    /* Turn off "possible interrupt" flag */
-                    /* Otherwise we come back here every  */
-                    /* time                               */
-                    /* ISW20041224                        */
                     OFF_IC_INTERRUPT(GUESTREGS);
 
                     /* Set psw.IA and invalidate the aia */
@@ -1026,8 +1024,10 @@ int ARCH_DEP(run_sie) (REGS *regs)
                             sysblk.intowner = LOCK_OWNER_NONE;
                             timed_wait_condition
                                  (&regs->intcond, &sysblk.intlock, &waittime);
+                            while (sysblk.syncing)
+                                 wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
                             sysblk.intowner = regs->cpuad;
-                            sysblk.waiting_mask &= ~regs->cpubit;
+                            sysblk.waiting_mask ^= regs->cpubit;
 #ifdef OPTION_MIPS_COUNTING
                             regs->waittime += hw_clock() - regs->waittod;
                             regs->waittod = 0;
