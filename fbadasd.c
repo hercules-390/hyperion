@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.45  2007/03/15 20:57:55  gsmith
+// Fix fba when the fba device is > 4G
+//
 // Revision 1.44  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -42,7 +45,12 @@
 /*-------------------------------------------------------------------*/
 /* Bit definitions for Locate operation byte                         */
 /*-------------------------------------------------------------------*/
-#define FBAOPER_RESV            0xF0    /* Reserved bits - must be 0 */
+#define FBAOPER_RESV            0xE0    /* Reserved bits - must be 0 */
+                                        /* Note : Bit 3 seems to be  */
+                                        /* The "suppress" bit but is */
+                                        /* apparently ignored        */
+                                        /* It is therefore valid but */
+                                        /* not used.                 */
 #define FBAOPER_CODE            0x0F    /* Operation code bits...    */
 #define FBAOPER_WRITE           0x01    /* ...write data             */
 #define FBAOPER_READREP         0x02    /* ...read replicated data   */
