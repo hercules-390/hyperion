@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.34  2007/05/04 19:28:38  kleonard
+// Circumvent command reject for DSF X'0A' command
+//
 // Revision 1.33  2007/03/06 22:54:19  gsmith
 // Fix ckd RDC response
 //
@@ -287,15 +290,18 @@ int altcyls;                            /* Number alternate cyls     */
     devchar[56] = cu->typecode;                 // Real CU type code
 
     /*---------------------------------------------------------------*/
-    /* XXX 2007/05/04 @kl                                            */
+    /* 2007/05/04 @kl                                                */
     /* The following line to set devchar[57] to 0xff was restored    */
     /* to circumvent a command reject when ICKDSF issues a Read      */
     /* Special Home Address (0x0a) to an alternate track.            */
     /* According to the IBM 3880 Storage Control Reference,          */
     /* GA16-1661-09, and the 3990/9330 Reference, GA32-0274-05,      */
-    /* it should be 0x00 for 3380 and 3390 devices.  Setting it      */
-    /* to 0xff causes DSF to skip issuing the 0x0a channel           */
-    /* command, which Hercules does not currently support.           */
+    /* it should be 0x00 for real 3380 and 3390 devices.  Setting    */
+    /* it to 0xff makes the underlying real DASD look like a         */
+    /* disk array (whose virtual 3380/3390 disks have no alternate   */
+    /* tracks).  This causes DSF to skip issuing the 0x0a channel    */
+    /* command, which Hercules does not currently support, for       */
+    /* alternate tracks.                                             */
     /*---------------------------------------------------------------*/
     devchar[57] = 0xff;                         // real device type code
 
