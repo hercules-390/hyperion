@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.14  2007/01/08 12:25:26  rbowler
+// Add dasdconv -q (quiet) option
+//
 // Revision 1.13  2006/12/08 09:43:19  jj
 // Add CVS message log
 //
@@ -67,6 +70,7 @@ typedef struct _H30CKD_RECHDR {         /* Record header             */
 BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 BYTE twelvehex00[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 BYTE ebcdicvol1[] = {0xE5, 0xD6, 0xD3, 0xF1};
+BYTE gz_magic_id[] = {0x1F, 0x8B};
 
 /*-------------------------------------------------------------------*/
 /* Definition of file descriptor for gzip and non-gzip builds        */
@@ -325,6 +329,18 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Read the first track header */
     read_input_data (ifd, ifname, (BYTE*)&h30trkhdr,
                     H30CKD_TRKHDR_SIZE, 0);
+
+  #if !defined(HAVE_LIBZ)
+    /* Reject input if compressed and we lack gzip support */
+    if (memcmp(h30trkhdr.devcode, gz_magic_id, sizeof(gz_magic_id)) == 0) 
+    {
+        fprintf (stderr,
+                "Input file %s appears to be a .gz file\n"
+                "but this program was compiled without compression support\n",
+                ifname);
+        EXIT(3);
+    }
+  #endif /*!defined(HAVE_LIBZ)*/
 
     /* Extract the device type code from the track header */
     FETCH_HW (code, h30trkhdr.devcode);
