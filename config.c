@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.195  2007/02/03 18:58:06  gsmith
+// Fix MVT tape CMDREJ error
+//
 // Revision 1.194  2007/01/11 19:54:33  fish
 // Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
 //
@@ -344,7 +347,10 @@ DEVBLK**dvpp;
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
-    dev->crwpending = 1;
+#if defined(_370)
+    if (sysblk.arch_mode != ARCH_370)
+#endif /*defined(_370)*/
+        dev->crwpending = 1;
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
 #ifdef EXTERNALGUI
@@ -470,7 +476,10 @@ int     i;                              /* Loop index                */
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Signal machine check */
-    machine_check_crwpend();
+#if defined(_370)
+    if (sysblk.arch_mode != ARCH_370)
+#endif
+        machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     /*
@@ -515,7 +524,10 @@ int     i;                              /* Loop index                */
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
-    dev->crwpending = 1;
+#if defined(_370)
+    if (sysblk.arch_mode != ARCH_370)
+#endif /*defined(_370)*/
+        dev->crwpending = 1;
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     // detach all devices in group
@@ -550,7 +562,10 @@ int     i;                              /* Loop index                */
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Signal machine check */
-    machine_check_crwpend();
+#if defined(_370)
+    if (sysblk.arch_mode != ARCH_370)
+#endif
+        machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     return 0;
@@ -651,7 +666,10 @@ DEVBLK *dev;                            /* -> Device block           */
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
-    dev->crwpending = 1;
+#if defined(_370)
+    if (sysblk.arch_mode != ARCH_370)
+#endif /*defined(_370)*/
+        dev->crwpending = 1;
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Release device lock */
@@ -659,7 +677,10 @@ DEVBLK *dev;                            /* -> Device block           */
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Signal machine check */
-    machine_check_crwpend();
+#if defined(_370)
+    if (sysblk.arch_mode != ARCH_370)
+#endif
+        machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
 //  logmsg (_("HHCCF050I Device %4.4X defined as %4.4X\n"),
