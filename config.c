@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.196  2007/06/09 02:10:04  kleonard
+// Skip making CRW pending in S/370 mode
+//
 // Revision 1.195  2007/02/03 18:58:06  gsmith
 // Fix MVT tape CMDREJ error
 //
@@ -125,6 +128,9 @@ char  thread_name[16];
 
     if (i < MAX_CPU_ENGINES)
         sysblk.regs[i]->intwait = 0;
+
+    if(!IS_CPU_ONLINE(cpu))
+        return -1;
 
     return 0;
 } /* end function configure_cpu */
