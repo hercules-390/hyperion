@@ -4,9 +4,12 @@
 
 # $Id$
 
-VERSION  = \"3.04\"
+VERSION  = \"3.05\"
 
 # $Log$
+# Revision 1.38  2007/06/02 13:46:41  rbowler
+# PFPO framework
+#
 # Revision 1.37  2006/12/08 09:43:29  jj
 # Add CVS message log
 #

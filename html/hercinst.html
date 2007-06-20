@@ -43,13 +43,6 @@ Hercules Version 3: Installation and Operation</TITLE>
 <p><hr><a name="install"></a>
 <h2>Installation Procedure</h2>
 <a name="instsource"></a>
-<h3>Building from source - Windows with Cygwin</h3>
-<p>
-For building the Cygwin version of Hercules on Windows, Volker Bandke
-has instructions on his "<b>Building Hercules for Windows</b>" web page at
-<a href="http://www.bsp-gmbh.com/hercules/herc_w32_2.html">http://www.bsp-gmbh.com/hercules/herc_w32_2.html</a>.
-</p>
-
 <h3>Building from source - Windows (without Cygwin)</h3>
 <p>
 For building the MSVC version of Hercules on Windows (a version of
@@ -58,16 +51,23 @@ Hercules that does <i>not</i> require Cygwin), Fish has instructions on his
 <a href="http://www.softdevlabs.com/Hercules/hercules-msvc-build.html">http://www.softdevlabs.com/Hercules/hercules-msvc-build.html</a>.
 </p>
 
+<h3>Building from source - Windows with Cygwin</h3>
+<p>
+For building the Cygwin version of Hercules on Windows, Volker Bandke
+has instructions on his "<b>Building Hercules for Windows</b>" web page at
+<a href="http://www.bsp-gmbh.com/hercules/herc_w32_2.html">http://www.bsp-gmbh.com/hercules/herc_w32_2.html</a>.
+</p>
+
 <h3>Building from source - Linux and Mac OS X</h3>
 <ol>
 <li>Download the distribution file
-<a href="http://www.hercules-390.org/hercules-3.04.tar.gz">hercules-3.04.tar.gz</a>
+<a href="http://www.hercules-390.org/hercules-3.05.tar.gz">hercules-3.05.tar.gz</a>
 <br><em>Note:</em> By downloading this file you agree to the terms
     of the <a href="herclic.html">Q Public Licence</a>.
 <p>
 <li>Use these commands to unzip the distribution file:
-<pre>tar xvzf ../hercules-3.04.tar.gz
-cd hercules-3.04</pre>
+<pre>tar xvzf ../hercules-3.05.tar.gz
+cd hercules-3.05</pre>
 
 <li>Verify you have all of the correct versions of all of the
 required packages installed:
@@ -105,7 +105,7 @@ compiler and other software levels.
 <ol>
 <li>Download the RPM file you want:
 <ul>
-<li><a href="http://www.hercules-390.org/hercules-3.04-1.i686.rpm">hercules-3.04-1.i686.rpm</a>: Intel
+<li><a href="http://www.hercules-390.org/hercules-3.05-1.i686.rpm">hercules-3.05-1.i686.rpm</a>: Intel
 </ul>
 <li>Install the RPM:
 <br><code>rpm -Uvh</code> <i>RPMfile</i>
@@ -144,27 +144,22 @@ in subtle ways if the wrong optimization settings are used.</p>
 
 <ol>
 <li>Download the compressed disk image: <a
-href="http://www.hercules-390.org/hercules-3.04-panther.dmg">hercules-3.04-panther.dmg</a> if you're
-running OS X version 10.3, or <a
-href="http://www.hercules-390.org/hercules-3.04-tiger.dmg">hercules-3.04-tiger.dmg</a> if you're running
-version 10.4 or later.
+href="http://www.hercules-390.org/hercules-3.05-tiger.dmg">hercules-3.05-tiger.dmg</a>.
+This package is a universal binary and requires OS X version 10.4 (Tiger) or later.
 <li>Mount the image by double-clicking on it in the Finder.
 Your web browser may have done that for you already.
 <li>Installation and use instructions are in the
 file <code>OS&nbsp;X&nbsp;ReadMe.rtf</code>.
 <li>If you want to use CTC networking on your Hercules system, you will need
-to install the supplied Tunnel driver. Note that, at this writing, the
-Panther version of the driver works fine, but the Tiger version will hang
-at Hercules shutdown, and you must reboot in order to clear the problem.
-Unfortunately, the Panther driver will not work on Tiger at all.
+to install the supplied Tunnel driver.
 </ol>
 
 <h3>Installing on Windows (without Cygwin):</h3>
 <ol>
 <li>Download the <a
-href="http://www.hercules-390.org/hercules-3.04-native.exe">self-extracting
+href="http://www.hercules-390.org/hercules-3.05-native.exe">self-extracting
 Windows archive</a> or the <a
-href="http://www.hercules-390.org/hercules-3.04-native.msi">Windows
+href="http://www.hercules-390.org/hercules-3.05-native.msi">Windows
 Installer package</a>.
 <li>If you downloaded the self-extracting archive, simply execute it to
 install Hercules on your system. If you downloaded the Windows Installer
@@ -185,32 +180,12 @@ http://www.softdevlabs.com/Hercules/hercgui-index.html</a>.
 
 <h3>Installing on Windows with Cygwin:</h3>
 <ol>
-<li>You must first install the Cygwin package.
-Download the 'setup.exe' program from <a href="http://www.cygwin.com">the Cygwin
-site</a>, and run it. (Right-click on the
-<img src="http://www.cygwin.com/cygwin-icon.gif" border=0 alt="Cygwin!"> icon
-labeled "<a href="http://www.cygwin.com/setup.exe">Install or update now!
-(using setup.exe)</a>" and select "Save Target As..." and then run it after
-it's been downloaded) If it's not preselected for you,
-select the libintl-2 package when you're presented with a list of packages
-to install. (NOTE: Hercules version 3.04 was built with version 1.5.15
-of Cygwin, and may not work with other versions, as the
-Cygwin library tends to have subtle incompatibilities from version
-to version that Hercules seems to stress.)
-
-<li>Download the self-extracting Windows archive:
-<ul>
-<li><a href="http://www.hercules-390.org/hercules-3.04-cygwin-p4.exe">hercules-3.04-cygwin-p4.exe</a>:
-Pentium 4 version
-<li><a href="http://www.hercules-390.org/hercules-3.04-cygwin-i686.exe">hercules-3.04-cygwin-i686.exe</a>:
-Pentium Pro/Pentium II and above version
-<li><a href="http://www.hercules-390.org/hercules-3.04-cygwin-i586.exe">hercules-3.04-cygwin-i586.exe</a>:
-Pentium version
-</ul>
-<li>Run one of the above self-extracting archives to install the Hercules
-executables on your system. Also please note that Hercules has several file
-paths compiled into the code, and so it is best to install the package
-into the default directories unless you really know what you're doing.
+<li>
+Hercules 3.05 is now supplied as prebuilt binaries only in a native Windows
+version. This version will work perfectly well under Cygwin, as well as
+native Windows, and does not require any specific version of the Cygwin
+libraries. Follow the instructions above to install the native Windows
+version.
 </ol>
 
 <p><hr><a name="config"></a>

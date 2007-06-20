@@ -4,9 +4,12 @@
 
 # $Id$
 
-VERSION  = \"3.04w32\"
+VERSION  = \"3.05w32\"
 
 # $Log$
+# Revision 1.53  2007/06/02 13:46:41  rbowler
+# PFPO framework
+#
 # Revision 1.52  2006/12/08 09:43:29  jj
 # Add CVS message log
 #

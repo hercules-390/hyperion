@@ -32,6 +32,9 @@
 ###############################################################################
 
 # $Log$
+# Revision 1.191  2007/01/10 16:30:48  rbowler
+# Include netinet/tcp.h for Unix keepalive settings
+#
 # Revision 1.190  2006/12/08 09:43:18  jj
 # Add CVS message log
 #
@@ -39,7 +42,7 @@
 AC_INIT(hercules.h)                     # (package, version, bugreport email, etc)
 AC_REVISION($Revision$)         # (the version of this configure.ac)
 AC_CONFIG_AUX_DIR(autoconf)             # (directory containing auxillary build tools)
-AM_INIT_AUTOMAKE(hercules,3.04)         # (the version of our software package)
+AM_INIT_AUTOMAKE(hercules,3.05)         # (the version of our software package)
 # Don't forget to change it in makefile-dllmod.msvc, too!
 AM_CONFIG_HEADER(config.h)              # (the file the resulting configure script will produce)
 AM_MAINTAINER_MODE()
