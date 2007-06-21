@@ -306,7 +306,7 @@ panel commands.
     startall     start all CPU's
     stopall      stop all CPU's
 
-    cf           configure CPU online or offline
+    cf           configure current CPU online or offline
     cfall        configure all CPU's online or offline
 
     .reply       scp command
@@ -318,7 +318,6 @@ panel commands.
     i            generate I/O attention interrupt for device
     ext          generate external interrupt
     restart      generate restart interrupt
-    store        store CPU status at absolute zero
     archmode     set architecture mode
     loadparm     set IPL parameter
 
@@ -326,14 +325,16 @@ panel commands.
     iplc         IPL Clear from device xxxx
     sysreset     Issue SYSTEM Reset manual operation
     sysclear     Issue SYSTEM Clear Reset manual operation
+    store        store CPU status at absolute zero
 
     psw          display program status word
-    gpr          display general purpose registers
+    gpr          display or alter general purpose registers
     fpr          display floating point registers
     fpc          display floating point control register
     cr           display control registers
     ar           display access registers
     pr           display prefix register
+    timerint     display or set timers update interval
     clocks       display tod clkc and cpu timer
     ipending     display pending interrupts
     ds           display subchannel
@@ -347,17 +348,32 @@ panel commands.
     detach       remove device
     define       rename device
     devinit      reinitialize device
-    devlist      list all devices
+    devlist      list device or all devices
+
+    qd           query dasd
 
     scsimount    automatic SCSI tape mounts
 
+    cd           change directory
+    pwd          print working directory
     sh           shell command
+
     cache        cache command
     cckd         cckd command
     shrd         shrd command
+    conkpalv     display/alter console TCP keep-alive settings
     quiet        toggle automatic refresh of panel display data
 
+    t            instruction trace
+    t+           instruction trace on
+    t-           instruction trace off
+    t?           instruction trace query
+    s            instruction stepping
+    s+           instruction stepping on
+    s-           instruction stepping off
+    s?           instruction stepping query
     b            set breakpoint
+    b+           set breakpoint
     b-           delete breakpoint
     g            turn off instruction stepping and start CPU
 
@@ -373,13 +389,15 @@ panel commands.
     lsdep        list module dependencies
 
     iodelay      display or set I/O delay value
-    tt32stats    display CTCI-W32 statistics
+    tt32stats    (deprecated; use 'tt32' cmd instead)
+    tt32         control/query CTCI-W32 functionality
     toddrag      display or set TOD clock drag factor
     panrate      display or set rate at which console refreshes
     syncio       display syncio devices statistics
     maxrates     display maximum observed MIPS/SIOS rate for the
                  defined interval or define a new reporting interval
 
+    defsym       Define symbol
     script       Run a sequence of panel commands contained in a file
     cscript      Cancels a running script thread
 
@@ -395,14 +413,16 @@ panel commands.
     suspend      Suspend hercules
     resume       Resume hercules
 
-    sf+          add shadow file
-    sf-          delete shadow file
-    sf=          rename shadow file
+    herclogo     Read a new hercules logo file
+
+    traceopt     Instruction trace display options
+
+    sf+dev       add shadow file
+    sf-dev       delete shadow file
+    sf=dev ..    rename shadow file
     sfc          compress shadow files
     sfd          display shadow file stats
 
-    t{+/-}       turn instruction tracing on/off
-    s{+/-}       turn instruction stepping on/off
     t{+/-}dev    turn CCW tracing on/off
     s{+/-}dev    turn CCW stepping on/off
     t{+/-}CKD    turn CKD_KEY tracing on/off
