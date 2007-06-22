@@ -1,3 +1,4 @@
+21 Jun 2007 revert config_cpu.pat due to problems in testing - Greg
 20 Jun 2007 3.05 release doc changes - Jay Maynard
 18 Jun 2007 make 3990-6 default control unit for 3390 devices - Greg
 18 Jun 2007 configure_cpu now returns when the CPU is fully configured - Greg

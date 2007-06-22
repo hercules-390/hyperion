@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.183  2007/06/20 03:52:19  gsmith
+// configure_cpu now returns when the CPU is fully configured
+//
 // Revision 1.182  2007/06/06 22:14:57  gsmith
 // Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
 //
@@ -1182,20 +1185,6 @@ int   cpu  = *ptr;
 
     OBTAIN_INTLOCK(NULL);
 
-    /* Start the TOD clock and CPU timer thread */
-    if (!sysblk.todtid)
-    {
-        if ( create_thread (&sysblk.todtid, &sysblk.detattr,
-             timer_update_thread, NULL, "timer_update_thread") )
-        {
-            logmsg (_("HHCCP006S Cannot create timer thread: %s\n"),
-                           strerror(errno));
-            signal_condition (&sysblk.cpucond);
-            RELEASE_INTLOCK(NULL);
-            return NULL;
-        }
-    }
-
     /* Signal cpu has started */
     signal_condition (&sysblk.cpucond);
 
@@ -1205,6 +1194,19 @@ int   cpu  = *ptr;
     /* Set hi CPU */
     if (cpu >= sysblk.hicpu)
         sysblk.hicpu = cpu + 1;
+
+    /* Start the TOD clock and CPU timer thread */
+    if (!sysblk.todtid)
+    {
+        if ( create_thread (&sysblk.todtid, &sysblk.detattr,
+             timer_update_thread, NULL, "timer_update_thread") )
+        {
+            logmsg (_("HHCCP006S Cannot create timer thread: %s\n"),
+                           strerror(errno));
+            RELEASE_INTLOCK(NULL);
+            return NULL;
+        }
+    }
 
     /* Execute the program in specified mode */
     do {
@@ -1255,6 +1257,13 @@ int i;
     regs->arch_mode = sysblk.arch_mode;
     regs->mainstor = sysblk.mainstor;
     regs->sysblk = &sysblk;
+    /* 
+     * ISW20060125 : LINE REMOVED : This is the job of 
+     *               the INITIAL CPU RESET
+     */
+#if 0
+    regs->psa = (PSA*)regs->mainstor;
+#endif
     regs->storkeys = sysblk.storkeys;
     regs->mainlim = sysblk.mainsize - 1;
     regs->tod_epoch = get_tod_epoch();
@@ -1271,6 +1280,7 @@ int i;
     if (hostregs == NULL)
     {
         regs->cpustate = CPUSTATE_STOPPING;
+        ON_IC_INTERRUPT(regs);
         regs->hostregs = regs;
         regs->host = 1;
         sysblk.regs[cpu] = regs;
@@ -1364,11 +1374,8 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     if( OPEN_IC_PER(regs) )
         regs->program_interrupt (regs, PGM_PER_EVENT);
 
-    /* If we already own intlock then we
-       are being called for the first time */
-    if (likely(sysblk.intowner != regs->cpuad))
-        OBTAIN_INTLOCK(regs);
-
+    /* Obtain the interrupt lock */
+    OBTAIN_INTLOCK(regs);
     OFF_IC_INTERRUPT(regs);
     regs->tracing = (sysblk.inststep || sysblk.insttrace);
 
@@ -1436,8 +1443,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
             ARCH_DEP (initial_cpu_reset) (regs);
-            ON_IC_INTERRUPT(regs);
-            /* Note - intlock still held */
+            RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
 
@@ -1447,8 +1453,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
             ARCH_DEP(cpu_reset) (regs);
-            ON_IC_INTERRUPT(regs);
-            /* Note - intlock still held */
+            RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
 
@@ -1459,8 +1464,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
             ARCH_DEP(store_status) (regs, 0);
             logmsg (_("HHCCP010I CPU%4.4X store status completed.\n"),
                     regs->cpuad);
-            ON_IC_INTERRUPT(regs);
-            /* Note - intlock still held */
+            RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
     } /*CPUSTATE_STOPPING*/
@@ -1665,12 +1669,9 @@ REGS    regs;
 #if defined(FEATURE_TRACING)
     regs.trace_br = (func)&ARCH_DEP(trace_br);
 #endif
-    regs.ints_state |= sysblk.ints_state;
 
-    /* `intlock' is still held at this point.
-       Make sure we enter process_interrupt */
-    sysblk.intowner = cpu;
-    ON_IC_INTERRUPT(&regs);
+    regs.tracing = (sysblk.inststep || sysblk.insttrace);
+    regs.ints_state |= sysblk.ints_state;
 
     /* Establish longjmp destination for architecture switch */
     setjmp(regs.archjmp);
@@ -1693,6 +1694,8 @@ REGS    regs;
         }
         return oldregs;
     }
+
+    RELEASE_INTLOCK(&regs);
 
     /* Establish longjmp destination for program check */
     setjmp(regs.progjmp);
