@@ -18,8 +18,8 @@ a real System/390.  The configuration file is an ASCII text file.
 <p>
 Please note that the below example configuration file should not
 be considered a good example of what an actual configuration file
-looks like. It is only meant to illustrate (document) what some
-of the actual supported configuration file statements look like
+looks like. It is only meant to illustrate what some
+of the supported configuration file statements look like
 and how they are used.
 <p><br>
 <center>
@@ -67,10 +67,7 @@ and how they are used.
     <a href="#LOGOPT">LOGOPT</a>     TIMESTAMP
     <a href="#CODEPAGE">CODEPAGE</a>   default
     <a href="#CNSLPORT">CNSLPORT</a>   3270
-    <a href="#CONKPALV">CONKPALV</a>   (3,1,10)  # 3270 console TCP connections keep-alive values:
-                         # Send probe when connection goes idle for 3 seconds
-                         # Wait maximum of 1 second for a response to probe
-                         # Disconnect after 10 consecutive failed probes
+    <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
 
     <a href="#HERCPRIO">HERCPRIO</a>   0
     <a href="#TODPRIO">TODPRIO</a>    -20
@@ -210,7 +207,7 @@ and how they are used.
     and/or modify this value on demand once Hercules has been started. Note
     too that the <code>scsimount</code> panel command also lists any mounts
     and/or dismounts that may still be pending on the drive, as long as
-    you've define your tape drive as a model that has an LCD "display"
+    you've defined your tape drive as a model that has an LCD "display"
     (such as a model 3480, 3490 or 3590).
     <p>
     <i>
@@ -228,11 +225,11 @@ and how they are used.
     specifies the codepage conversion table used for ASCII/EBCDIC translation.
     <p>
 
-    "default" specifies traditional hercules codepage. Code pages "437/037",
+    "default" specifies traditional Hercules codepage. Code pages "437/037",
     "437/500" and "850/273" are also supported.
     <p>
 
-    Iconv single byte codepages may also be used. (eg."UTF8/EBCDIC-CP-NL")
+    Iconv single byte codepages may also be used (e.g. "UTF8/EBCDIC-CP-NL").
     <p>
 
     If no codepage is specified then the environment variable HERCULES_CP
@@ -244,7 +241,7 @@ and how they are used.
 <dt><code>CNSLPORT &nbsp; <i>nnnn</i></code>
 <dd><p>
     specifies the port number (in decimal) to which tn3270 and
-    telnet clients will connect
+    telnet clients will connect.
     <p>
 
     The CNSLPORT statement may also have the form of host:port, where
@@ -619,7 +616,7 @@ and how they are used.
     be allowed if there is already a tape mounted on the drive.
     <p>
     Specifying <code>ALLOW</code> (the default) indicates new tapes may
-    be mounted (via <code>'devinit nnnn <i>new-tape-filename</i>'</code>)
+    be mounted (via <code>'devinit <i>nnnn</i> <i>new-tape-filename</i>'</code>)
     irrespective of whether or not there is already a tape mounted on the drive.
     <p>
     Specifying <code>DISALLOW</code> prevents new tapes from being mounted
@@ -1879,16 +1876,12 @@ and how they are used.
 
     <dt><b>SCSI tape drives</b>
     <dd><p>
-        The argument specifies the tape's <i>device-name</i> as it is known
-        by the host operating system,
-        usually &nbsp;"<code><b>/dev/nst0</b></code>"&nbsp; <i>(for Linux or
-        Windows)</i> or &nbsp;"<code><b>\\.\Tape0</b></code>" &nbsp; <i>(for
-        Windows only)</i>, where '0' means tape drive number
-        0 (your first or only host-attached SCSI tape drive), '1' means your
-        second host-attached SCSI tape drive, etc.
-        <p>
-        If you plan on using SCSI tapes with Hercules you might also be interested
-        in the <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a> configuration option.
+        These are real tape drives attached to the host machine via a SCSI
+        interface. Hercules emulation always makes the drive appear as a
+        channel attached device such as 3420 or 3480, although the underlying
+        physical drive may be any type of SCSI attached tape drive, including
+        4mm or 8mm DAT, DLT, SCSI attached 3480/3490 cartridge drives, and
+        SCSI attached 3420 open reel tape drives.
         <p>
         Host-attached SCSI tapes are read and written using variable length
         EBCDIC blocks and filemarks exactly like a mainframe tape volume, and
@@ -1898,13 +1891,22 @@ and how they are used.
         a mainframe just fine, thus providing a convenient means of exchanging
         data between the two).
         <p>
+        If you plan on using SCSI tapes with Hercules you might also be interested
+        in the <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a> configuration option.
+        <p>
         The only <i>required</i> device statement parameter for SCSI attached tape
-        drives is the name of the device as it is known by the host (as explained
-        above). However, depending on what actual model of SCSI tape drive you
+        drives is the name of the device as it is known
+        by the host operating system,
+        usually &nbsp;"<code><b>/dev/nst0</b></code>"&nbsp; <i>(for Linux or
+        Windows)</i> or &nbsp;"<code><b>\\.\Tape0</b></code>" &nbsp; <i>(for
+        Windows only)</i>, where '0' means tape drive number
+        0 (your first or only host-attached SCSI tape drive), '1' means your
+        second host-attached SCSI tape drive, etc.
+        <p>
+        Depending on what actual model of SCSI tape drive you
         actually have and how it behaves, you may need to specify one or more
         additional optional parameters for Hercules to provide proper emulation
         of the desired device type.
-        <br>
         For example: a <b>Quantum 'DLT' (Digital Linear Tape) SCSI</b> tape drive does
         not return nor use a block-id format compatible with 3480/3490 drives
         (it instead uses a full 32-bit block-id just like the model 3590 does).
@@ -1914,9 +1916,6 @@ and how they are used.
         you <i>MUST</i> specify some special additional options to prevent the
         Erase Gap command from being issued to the drive as well as to inform
         Hercules that the drive uses 32-bit block-ids.
-        <p>
-        At present, the only optional device statement parameters supported are
-        those listed below.
         <p>
         <b>Please note</b> that the below options define how the actual SCSI hardware
         device behaves, which is completely different from the way the <i>emulated</i>
