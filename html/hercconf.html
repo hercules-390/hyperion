@@ -528,7 +528,7 @@ and how they are used.
     <p>
     NOTE : <a href="#OSTAILOR"><code>OSTAILOR LINUX</code></a> no longer sets
     IODELAY to 800 since the problem described above is no longer present in
-    recent versions of the linux kernel.
+    recent versions of the Linux kernel.
     <p>
 
 <a name="LDMOD"></a>
@@ -812,7 +812,7 @@ and how they are used.
     performance. The minimum allowed value is 1 microsecond and the maximum
     is 1000000 microseconds (i.e. one second).
     <p>
-    <i><b><u>Caution</u>!</b> &nbsp;While a lower TIMERINT value may help
+    <i><b>Caution:</b> &nbsp; While a lower TIMERINT value may help
     increase the accuracy of your guest's TOD Clock and CPU Timer values,
     it could also have a severe negative impact on the overall performance
     of your host operating system. This is especially true when a low TIMERINT
@@ -917,6 +917,7 @@ and how they are used.
         0380  3420  $(TAPEDIR)/scratch.aws
 
         ...</pre></code>
+<p>
     In this example, device 0380 will be a 3420 loaded with the AWS tape file in /home/hercules/tapes/scratch.aws
 <h4>Special symbols</h4>
     <h5>Device group symbols</h5>
@@ -932,13 +933,14 @@ and how they are used.
                 </ul>
             </TABLE>
         </blockquote>
+        <p>
         are defined to contain for each device the relevant device address. For example:
         <p>
 <code><pre>
     0200,0201  3340  /home/hercules/dasds/myvols.$(CUU)
 </pre></code>
         <p>
-        Will define 2 3340 packs, with device 0200 being loaded with the file myvols.200 and
+        will define two 3340 packs, with device 0200 being loaded with the file myvols.200 and
         device 0201 defined with myvols.201.
     <h5>Environment variables</h5>
     <p>
@@ -948,7 +950,7 @@ and how they are used.
     <h5>Undefined symbols</h5>
     <p>
         If a symbol is not defined by an explicit DEFSYM, is not an automatically generated symbol
-        or is not an environment variable, an empty string will be substituted.
+        and is not an environment variable, an empty string will be substituted.
     <h4>Escaping substitution, recursion</h4>
     <p>
         To be able to specify the '$(' string without incurring substitution, an additional '$' sign
@@ -957,7 +959,7 @@ and how they are used.
         specified. Thus, if symbol FOO contains &quot;BAR&quot;, then $$(FOO) will remain &quot;$$(FOO)&quot; while $$$(FOO)
         will become &quot;$BAR&quot;.
     <p>
-        Substitution is NOT recursive (only one substitution pass is made).
+        Substitution is <i>not</i> recursive (only one substitution pass is made).
     <p>
 <hr><!-- ---------------------------------------------------------------------------- -->
 
@@ -1160,8 +1162,9 @@ and how they are used.
 
 <p><br>
 <blockquote>
+    <p>
     <i>
-    <b><u>Caution</u>!</b> &nbsp; On Windows, the value you choose for your
+    <b>Caution:</b> &nbsp; On Windows, the value you choose for your
     <a href="#HERCPRIO">Process Priority</a>
     has a direct impact on how your
     <a href="#thread_priorities">Thread Priorities</a> are interpreted!
@@ -1175,7 +1178,7 @@ and how they are used.
 <a name="thread_priorities"></a>
 <h4>Thread Priorities</h4>
 <P>
-    On a *nix (Linux/Unix) host, Hercules needs to be a setuid root
+    On a Linux/Unix host, Hercules needs to be a setuid root
     program to allow it to reset its dispatching priority to a high
     (negative) value
     (i.e., <code>chown root.root hercules; chmod +s hercules</code>).
@@ -1295,8 +1298,9 @@ and how they are used.
 
 <p><br>
 <blockquote>
+    <p>
     <i>
-    <b><u>Caution</u>!</b> &nbsp; On Windows, your Thread Priority is interpreted
+    <b>Caution:</b> &nbsp; On Windows, your Thread Priority is interpreted
     differently based on your chosen <a href="#HERCPRIO">Process Priority</a> setting!
     You should never modify your Thread Priority settings without first reviewing your
     chosen <a href="#HERCPRIO">Process Priority</a> setting!
@@ -1552,7 +1556,7 @@ and how they are used.
     suffix of your tn3270 client software), then you must be eligible to connect
     at that device address or your connection is immediately rejected; an
     alternative terminal device for which you <i>might</i> be eligible is
-    <i><u>NOT</u></i> automatically selected instead.
+    <i>not</i> automatically selected instead.
     <p>
 
     Optional arguments:
@@ -1603,7 +1607,7 @@ and how they are used.
         group name instead.
         <p>
 
-        If an IP address / subnet mask are <i>not</i> specified, then <i><u>any</u></i>
+        If an IP address / subnet mask are <i>not</i> specified, then <i>any</i>
         client tn3270 session is allowed to connect to the device (provided they are also
         a member of the specified terminal group, if any).
         <p>
@@ -1869,13 +1873,13 @@ and how they are used.
 
     <dl> <!-- begin Emulated tape types of emulation -->
 
-    <dt><b><u>Real</u>, <u>physical</u> (i.e. host attached) SCSI tape drives</b>
+    <dt><b>SCSI tape drives</b>
     <dd><p>
-        The argument specifies the tape's <u>device-name</u> as it is known
-        (referred to) by the host operating system (Linux, Windows, etc),
+        The argument specifies the tape's <i>device-name</i> as it is known
+        by the host operating system,
         usually &nbsp;"<code><b>/dev/nst0</b></code>"&nbsp; <i>(for Linux or
         Windows)</i> or &nbsp;"<code><b>\\.\Tape0</b></code>" &nbsp; <i>(for
-        Windows only)</i>, where '0' of course means tape drive number
+        Windows only)</i>, where '0' means tape drive number
         0 (your first or only host-attached SCSI tape drive), '1' means your
         second host-attached SCSI tape drive, etc.
         <p>
@@ -2175,7 +2179,7 @@ and how they are used.
     and finally those specified on each individual file list statement last.
     <p>
 
-    <i>A <b>SCSI tape</b> device should <b><u>NOT</u></b> be given in a file list.</i>
+    <i>A <b>SCSI tape</b> device should <b>not</b> be given in a file list.</i>
     <p>
 
     <p>
@@ -2424,7 +2428,7 @@ and how they are used.
 
             <dl> <!-- begin 'devname' -->
 
-                <dt>(*nix)
+                <dt>(Linux/Unix)
                 <dd><p>
                     the name of the TUN/TAP special character device,
                     normally /dev/net/tun.
@@ -2503,7 +2507,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
                     <dt><code><em>Mode</em></code>
                     <dd>is the operation mode: IP or SNA.
                         <p>
-                        <i><b>Note:</b> &nbsp;<u>the SNA operation mode is NOT currently implemented</u>.</i>
+                        <i><b>Note:</b> &nbsp;the SNA operation mode is NOT currently implemented.</i>
                         <p>
 
                     <dt><code><em>Port</em></code>
@@ -2542,7 +2546,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
             create automatically.
             <p>
 
-            <i><b>Note:</b> &nbsp;<u>the SNA operation mode is NOT currently implemented</u>.</i>
+            <i><b>Note:</b> &nbsp;the SNA operation mode is NOT currently implemented.</i>
             <p>
 
             Additionally, two other statements may be included in the
