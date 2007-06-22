@@ -514,11 +514,67 @@ issued <i>by Hercules</i> to its HMC (hardware console). It <i>cannot</i>
 be used for whatever messages the guest operating system may issue to any
 of its terminals. It is only a <i>Hercules</i> automatic operator and
 <i>not</i> a "VSE", "MVS", "VM", etc, automatic operator.
+
+<h5>Defining a Rule</h5>
 <p>
-For more information regarding Hercules Automatic Operator facility
-(including brief usage instructions) please refer to the
-<code><u>README.HAO</u></code>
-document included as part of the source-code distribution.
+To define a HAO rule, enter the command:
+<pre>
+   hao <i>target</i>
+</pre>
+<p>
+to define the rule's "target" match pattern (a simple regular expression),
+followed by the command:
+<pre>
+   hao <i>command</i>
+</pre>
+<p>
+to define the rule's associated panel-command.
+<p>
+The target pattern is a simple regular expression value as defined by
+whatever regular expression facility your host build platform happens
+to support. For Windows it must be a Perl Compatible Regular Expression (PCRE).
+For other supported build platforms it might be some other supported regular
+expression syntax. Check your host platform's programming documentation for
+further details.
+<p>
+The associated <i>command</i> is whatever valid Hercules panel command you
+wish to issue in response to a message being issued that matches the given
+pattern <i>target</i>. 
+
+<h5>Other commands and limitations</h5>
+<p>
+To delete a fully or partially defined HAO rule, first use the 'hao list'
+command to list all of the defined (or partially defined) rules, and then use
+the 'hao del <i>nnn</i>' command to delete the specific rule identified by <i>nnn</i>.
+(All rules are assigned numbers as they are defined and are thus identified
+by their numeric value). Optionally, one may delete ALL defined or partially
+defined rules by issuing the command 'hao clear'.
+<p>
+The current implementation limits the total number of defined rules to 10. If
+you need to define more than 10 rules you will either have to build Hercules
+for yourself (increasing the value of the HAO_MAXRULE constant in hao.c) or
+else beg one of the Hercules developers to please do it for you.
+<p>
+Note that there is currently no way to define a command whose arguments vary  
+based on actual message text. That is to say, there is currently no way to say
+<blockquote>
+   "Reply with the command 'devinit <i>cuu</i> filename'
+   in response to message text 'HHCXXnnnI Device <i>cuu</i>
+   intervention required.' where <i>cuu</i> is whatever cuu
+    was identified in the message."
+</blockquote>
+<p>
+The HAO is <i><b>not</b></i> that sophisticated (yet). Only simple plain-text commands may
+be defined and issued. No automatic substitution is done based on message text
+(although normal 'DEFSYM' symbol substitution <i><b>is</b></i> supported however, as that
+is a normal panel-command feature supported separately from the HAO). This may
+possibly change in the future however, depending on user need/demand.
+<p>
+<i><b>All</b></i> defined rules are checked for a match each time Hercules issues a message.
+There is no way to specify "stop processing subsequent rules". If a message is
+issued that matches two or more rules, each associated command is then issued
+in sequence. Thus the advice to choose your rules' target patterns carefully
+very much applies here.
 <p>
 
 <p><hr><a name="support"></a>
