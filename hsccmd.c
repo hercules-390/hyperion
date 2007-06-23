@@ -1,5 +1,5 @@
-/* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2006                */
-/*              (c) Copyright "Fish" (David B. Trout), 2002-2006     */
+/* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2007                */
+/*              (c) Copyright "Fish" (David B. Trout), 2002-2007     */
 /*              Execute Hercules System Commands                     */
 /*                                                                   */
 /*   Released under the Q Public License (http://www.conmicro.cx/    */
@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.218  2007/06/22 14:45:11  bernard
+// Sorted icount plus percentage
+//
 // Revision 1.217  2007/06/06 22:14:57  gsmith
 // Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
 //

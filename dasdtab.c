@@ -1,4 +1,4 @@
-/* DASDTAB.C    (c) Copyright Roger Bowler, 1999-2006                */
+/* DASDTAB.C    (c) Copyright Roger Bowler, 1999-2007                */
 /*              Hercules Supported DASD definitions                  */
 
 // $Id$
@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.36  2007/06/20 04:09:54  gsmith
+// make 3990-6 default control unit for 3390 devices
+//
 // Revision 1.35  2007/06/07 19:15:05  kleonard
 // Document circumvention for DSF X'0A' command reject
 //

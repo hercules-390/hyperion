@@ -1,4 +1,4 @@
-/* DFP.C        (c) Copyright Roger Bowler, 2006-2007                */
+/* DFP.C        (c) Copyright Roger Bowler, 2007-2007                */
 /*              Decimal Floating Point instructions                  */
 
 // $Id$
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.64  2007/04/25 12:33:20  rbowler
+// Move SRNMT to Floating-point-support-enhancement facility
+//
 // Revision 1.63  2007/04/25 12:10:27  rbowler
 // Move LFAS,SFASR to IEEE-exception-simulation facility
 //

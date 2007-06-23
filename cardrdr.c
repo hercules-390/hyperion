@@ -1,4 +1,4 @@
-/* CARDRDR.C    (c) Copyright Roger Bowler, 1999-2006                */
+/* CARDRDR.C    (c) Copyright Roger Bowler, 1999-2007                */
 /*              ESA/390 Card Reader Device Handler                   */
 
 // $Id$
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.45  2006/12/28 16:13:28  fish
+// Fix PR# readers/104: "HHCRD011E Close error... No Error" in 'cardrdr_close_device' function.
+//
 // Revision 1.44  2006/12/08 09:43:17  jj
 // Add CVS message log
 //

@@ -1,7 +1,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETUPD.C     (c) Copyright Leland Lucius, 2000-2006
+|| HETUPD.C     (c) Copyright Leland Lucius, 2000-2007
 ||              Released under terms of the Q Public License.
 ||
 || Copy/update Hercules Emulated Tapes while allowing various modifications
@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.25  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

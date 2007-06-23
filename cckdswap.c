@@ -1,4 +1,4 @@
-/* CCKDSWAP.C   (c) Copyright Roger Bowler, 1999-2006                */
+/* CCKDSWAP.C   (c) Copyright Roger Bowler, 1999-2007                */
 /*       Swap the `endianess' of a compressed CKD file.              */
 
 // $Id$
@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.20  2006/12/08 09:43:17  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

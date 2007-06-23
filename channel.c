@@ -1,4 +1,4 @@
-/* CHANNEL.C    (c) Copyright Roger Bowler, 1999-2006                */
+/* CHANNEL.C    (c) Copyright Roger Bowler, 1999-2007                */
 /*              ESA/390 Channel Emulator                             */
 
 // $Id$
@@ -14,7 +14,7 @@
 /*      Fix program check on NOP due to addressing - Jan Jaeger      */
 /*      Fix program check on TIC as first ccw on RSCH - Jan Jaeger   */
 /*      Fix PCI intermediate status flags             - Jan Jaeger   */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 /*      64-bit IDAW support - Roger Bowler v209                  @IWZ*/
 /*      Incorrect-length-indication-suppression - Jan Jaeger         */
 /*      Read backward support contributed by Hackules   13jun2002    */
@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.138  2007/02/15 22:57:04  gsmith
+// Reset syncio_retry to zero appropriately for syncio type 2 devices
+//
 // Revision 1.137  2007/02/03 18:58:06  gsmith
 // Fix MVT tape CMDREJ error
 //

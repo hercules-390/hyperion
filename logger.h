@@ -1,9 +1,12 @@
-/* LOGGER.H     (c) Copyright Jan Jaeger, 2003-2006                  */
+/* LOGGER.H     (c) Copyright Jan Jaeger, 2003-2007                  */
 /*              System logger functions                              */
 
 // $Id$
 //
 // $Log$
+// Revision 1.21  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #ifndef __LOGGER_H__
 #define __LOGGER_H__

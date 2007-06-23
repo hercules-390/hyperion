@@ -1,9 +1,12 @@
-/* HSOCKET.C    (c) Copyright Hercules development, 2003-2006        */
+/* HSOCKET.C    (c) Copyright Hercules development, 2003-2007        */
 /*              Socket read/write routines                           */
 
 // $Id$
 //
 // $Log$
+// Revision 1.7  2006/12/08 09:43:27  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

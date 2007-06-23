@@ -1,12 +1,15 @@
-/* OPCODE.H (c) Copyright Jan Jaeger, 2000-2006          */
+/* OPCODE.H (c) Copyright Jan Jaeger, 2000-2007          */
 /*      Instruction decoding macros and prototypes       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 //
 // $Log$
+// Revision 1.207  2007/06/06 22:14:58  gsmith
+// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
+//
 // Revision 1.206  2007/06/02 13:46:41  rbowler
 // PFPO framework
 //

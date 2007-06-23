@@ -1,6 +1,6 @@
 /*********************************************************************/
 /* DYNGUI.C     Hercules External GUI Interface DLL                  */
-/*              (c) Copyright "Fish" (David B. Trout), 2003-2006     */
+/*              (c) Copyright "Fish" (David B. Trout), 2003-2007     */
 /*                                                                   */
 /* Primary contact:   Fish   [fish@infidels.com]                     */
 /*                                                                   */
@@ -43,6 +43,9 @@
 /*********************************************************************/
 
 // $Log$
+// Revision 1.58  2007/04/06 15:43:30  fish
+// Prevent need for OBTAIN_INTLOCK same as panel.c
+//
 // Revision 1.57  2006/12/27 21:44:16  fish
 // Fix *nix build error: use ULLONG_MAX instead of _UI64_MAX.
 //

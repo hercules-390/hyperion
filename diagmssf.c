@@ -1,4 +1,4 @@
-/* DIAGMSSF.C   (c) Copyright Jan Jaeger, 1999-2006                  */
+/* DIAGMSSF.C   (c) Copyright Jan Jaeger, 1999-2007                  */
 /*              ESA/390 Diagnose Functions                           */
 
 // $Id$
@@ -10,10 +10,13 @@
 /* LPAR RMF interface call                                           */
 /*                                                                   */
 /*                                             04/12/1999 Jan Jaeger */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.42  2007/01/14 23:14:12  rbowler
+// Fix signed/unsigned mismatch in 370-only build
+//
 // Revision 1.41  2006/12/08 09:43:20  jj
 // Add CVS message log
 //

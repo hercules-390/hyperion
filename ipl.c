@@ -1,8 +1,8 @@
-/* IPL.C        (c) Copyright Roger Bowler, 1999-2006                */
+/* IPL.C        (c) Copyright Roger Bowler, 1999-2007                */
 /*              ESA/390 Initial Program Loader                       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 
@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.100  2006/12/20 15:41:16  rbowler
+// Clear FPC register during Initial CPU Reset
+//
 // Revision 1.99  2006/12/20 15:11:54  rbowler
 // Clear AR, FPR, and VR registers during Clear Reset
 //

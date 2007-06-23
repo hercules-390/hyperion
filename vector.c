@@ -10,11 +10,14 @@
 /*                                             28/05/2000 Jan Jaeger */
 /*                                                                   */
 /* Instruction decoding rework                 09/07/2000 Jan Jaeger */
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.20  2007/01/13 07:26:30  bernard
+// backout ccmask
+//
 // Revision 1.19  2007/01/12 15:25:11  bernard
 // ccmask phase 1
 //

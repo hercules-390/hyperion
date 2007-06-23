@@ -2,13 +2,16 @@
 // Hercules - TUN/TAP Abstraction Layer
 // ====================================================================
 //
-// Copyright (C) 2002-2006 by James A. Pierson
+// Copyright (C) 2002-2007 by James A. Pierson
 //           (C) 2002-2006 by "Fish" (David B. Trout)
 //
 
 // $Id$
 //
 // $Log$
+// Revision 1.11  2006/12/08 09:43:31  jj
+// Add CVS message log
+//
 
 #ifndef __TUNTAP_H_
 #define __TUNTAP_H_

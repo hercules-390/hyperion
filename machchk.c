@@ -1,7 +1,7 @@
-/* MACHCHK.C    (c) Copyright Jan Jaeger, 2000-2006                  */
+/* MACHCHK.C    (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              ESA/390 Machine Check Functions                      */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 
@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.49  2007/01/16 01:45:33  gsmith
+// Tweaks to instruction stepping/tracing
+//
 // Revision 1.48  2006/12/08 09:43:28  jj
 // Add CVS message log
 //

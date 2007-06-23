@@ -1,13 +1,16 @@
 ////////////////////////////////////////////////////////////////////////////////////
 //         fishhang.c           verify/debug proper Hercules LOCK handling...
 ////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2002-2006. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2002-2007. Released under the Q Public License
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
 //
 // $Log$
+// Revision 1.17  2006/12/31 12:25:26  fish
+// Fix "undefined reference to _beginthreadex" issue for non-MSVC (i.e. Cygwin) builds.
+//
 // Revision 1.16  2006/12/28 15:49:34  fish
 // Use _beginthreadex/_endthreadex instead of CreateThread/ExitThread in continuing effort to try and resolve our still existing long-standing 'errno' issue...
 //

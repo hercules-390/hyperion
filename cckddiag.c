@@ -1,4 +1,4 @@
-/* CCKDDIAG.C   (c) Copyright Roger Bowler, 1999-2006                */
+/* CCKDDIAG.C   (c) Copyright Roger Bowler, 1999-2007                */
 /*       CCKD diagnostic tool                                        */
 /* 2003-02-07 James M. Morrison initial implementation               */
 /* portions borrowed from cckdcdsk & other CCKD code                 */
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.25  2006/12/08 09:43:17  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

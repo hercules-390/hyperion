@@ -2,8 +2,8 @@
 // Hercules Interface Configuration Program
 // ====================================================================
 //
-// Copyright    (C) Copyright Roger Bowler, 2000-2006
-//              (C) Copyright James A. Pierson, 2002-2006
+// Copyright    (C) Copyright Roger Bowler, 2000-2007
+//              (C) Copyright James A. Pierson, 2002-2007
 //
 // Based on code originally written by Roger Bowler
 // Modified to communicate via unix sockets.
@@ -22,6 +22,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.27  2007/03/26 23:02:14  gsmith
+// Suppress spurious error messages from hercifc
+//
 // Revision 1.26  2006/12/08 09:43:25  jj
 // Add CVS message log
 //

@@ -1,9 +1,12 @@
-/* HDL.C        (c) Copyright Jan Jaeger, 2003-2006                  */
+/* HDL.C        (c) Copyright Jan Jaeger, 2003-2007                  */
 /*              Hercules Dynamic Loader                              */
 
 // $Id$
 //
 // $Log$
+// Revision 1.52  2006/12/08 09:43:25  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

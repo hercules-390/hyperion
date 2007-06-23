@@ -1,13 +1,13 @@
-/* GENERAL2.C   (c) Copyright Roger Bowler, 1994-2006                */
+/* GENERAL2.C   (c) Copyright Roger Bowler, 1994-2007                */
 /*              ESA/390 CPU Emulator                                 */
 /*              Instructions N-Z                                     */
 
 // $Id$
 
-/*              (c) Copyright Peter Kuschnerus, 1999-2006 (UPT & CFC)*/
+/*              (c) Copyright Peter Kuschnerus, 1999-2007 (UPT & CFC)*/
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements all general instructions of the            */
@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.113  2007/01/13 07:21:48  bernard
+// backout ccmask
+//
 // Revision 1.112  2007/01/12 15:23:51  bernard
 // ccmask phase 1
 //
@@ -1816,8 +1819,8 @@ BYTE    lbyte;                          /* Left result byte of pair  */
 
 /*-------------------------------------------------------------------*/
 /* 0102 UPT   - Update Tree                                      [E] */
-/*              (c) Copyright Peter Kuschnerus, 1999-2006            */
-/*              (c) Copyright "Fish" (David B. Trout), 2005-2006     */
+/*              (c) Copyright Peter Kuschnerus, 1999-2007            */
+/*              (c) Copyright "Fish" (David B. Trout), 2005-2007     */
 /*-------------------------------------------------------------------*/
 
 DEF_INST(update_tree)

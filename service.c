@@ -1,8 +1,8 @@
-/* SERVICE.C    (c) Copyright Roger Bowler, 1999-2006                */
+/* SERVICE.C    (c) Copyright Roger Bowler, 1999-2007                */
 /*              ESA/390 Service Processor                            */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 
@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.75  2007/01/13 07:25:10  bernard
+// backout ccmask
+//
 // Revision 1.74  2007/01/12 15:24:46  bernard
 // ccmask phase 1
 //

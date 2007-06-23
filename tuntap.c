@@ -2,7 +2,7 @@
 // Hercules - TUN/TAP Abstraction Layer
 // ====================================================================
 //
-// Copyright (C) 2002-2006 by James A. Pierson
+// Copyright (C) 2002-2007 by James A. Pierson
 //           (C) 2002-2006 by "Fish" (David B. Trout)
 //
 // TUN/TAP implementations differ among platforms. Linux and FreeBSD
@@ -18,6 +18,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.44  2006/12/08 09:43:31  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

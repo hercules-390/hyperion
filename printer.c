@@ -1,4 +1,4 @@
-/* PRINTER.C    (c) Copyright Roger Bowler, 1999-2006                */
+/* PRINTER.C    (c) Copyright Roger Bowler, 1999-2007                */
 /*              ESA/390 Line Printer Device Handler                  */
 
 // $Id$
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.44  2007/03/22 11:56:19  rbowler
+// Remove double hyphen option from print-to-pipe feature
+//
 // Revision 1.43  2007/03/15 04:16:14  fish
 // fix query func to show ptp pargs too
 //

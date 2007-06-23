@@ -1,9 +1,12 @@
-/* SERVICE.H    (c) Copyright Jan Jaeger, 1999-2006                  */
+/* SERVICE.H    (c) Copyright Jan Jaeger, 1999-2007                  */
 /*              Service Processor Architectured fields               */
 
 // $Id$
 //
 // $Log$
+// Revision 1.11  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #if !defined(_SERVICE_H)
 

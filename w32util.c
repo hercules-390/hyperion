@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //   w32util.c        Windows porting functions
 //////////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2005-2006. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2005-2007. Released under the Q Public License
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 //////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.28  2007/01/11 19:54:34  fish
+// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
+//
 // Revision 1.27  2007/01/10 15:12:11  rbowler
 // Console keepalive for Unix
 //

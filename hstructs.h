@@ -1,4 +1,4 @@
-/* HSTRUCTS.H   (c) Copyright Roger Bowler, 1999-2006                */
+/* HSTRUCTS.H   (c) Copyright Roger Bowler, 1999-2007                */
 /*              Hercules Structure Definitions                       */
 
 //      This header auto-#included by 'hercules.h'...
@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.68  2007/06/06 22:14:58  gsmith
+// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
+//
 // Revision 1.67  2007/03/22 11:56:19  rbowler
 // Remove double hyphen option from print-to-pipe feature
 //

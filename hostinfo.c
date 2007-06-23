@@ -1,4 +1,4 @@
-/* HOSTINFO.C   (c) Copyright "Fish" (David B. Trout), 2002-2006     */
+/* HOSTINFO.C   (c) Copyright "Fish" (David B. Trout), 2002-2007     */
 
 // $Id$
 
@@ -11,6 +11,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.15  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

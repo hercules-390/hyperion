@@ -1,9 +1,12 @@
-/* CLOCK.H      (c) Copyright Jan Jaeger, 2000-2006                  */
+/* CLOCK.H      (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              TOD Clock functions                                  */
 
 // $Id$
 //
 // $Log$
+// Revision 1.24  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #if !defined(_CLOCK_C_)
  #define _CLOCK_EXTERN extern

@@ -1,13 +1,16 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //   hconsole.h        Hercules hardware console (panel) support functions
 //////////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2006. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2007. Released under the Q Public License
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
 //
 // $Log$
+// Revision 1.7  2006/12/08 09:43:25  jj
+// Add CVS message log
+//
 
 #ifndef _HCONSOLE_H
 #define _HCONSOLE_H

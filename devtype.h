@@ -1,9 +1,12 @@
-/* DEVTYPE.H    (c) Copyright Jan Jaeger, 1999-2006                  */
+/* DEVTYPE.H    (c) Copyright Jan Jaeger, 1999-2007                  */
 /*              Hercules Device Definitions                          */
 
 // $Id$
 //
 // $Log$
+// Revision 1.19  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #if !defined(_DEVICES_H)
 

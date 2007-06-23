@@ -1,7 +1,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| SLLIB.C      (c) Copyright Leland Lucius, 2000-2006
+|| SLLIB.C      (c) Copyright Leland Lucius, 2000-2007
 ||              Released under terms of the Q Public License.
 ||
 || Library for managing Standard Label tapes.
@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

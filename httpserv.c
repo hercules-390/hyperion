@@ -1,4 +1,4 @@
-/* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2006                   */
+/* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2007                   */
 /*              HTTP Server                                          */
 
 // $Id$
@@ -30,6 +30,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.73  2006/12/31 23:49:00  fish
+// Use "access()" to validate http_server root directory and not "chdir()"!!
+//
 // Revision 1.72  2006/12/08 09:43:28  jj
 // Add CVS message log
 //

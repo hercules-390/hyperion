@@ -1,4 +1,4 @@
-/* CCKDCOMP.C   (c) Copyright Roger Bowler, 1999-2006                */
+/* CCKDCOMP.C   (c) Copyright Roger Bowler, 1999-2007                */
 /*       Perform chkdsk for a Compressed CKD Direct Access Storage   */
 /*       Device file.                                                */
 
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.29  2006/12/08 09:43:17  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

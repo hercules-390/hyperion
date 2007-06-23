@@ -1,9 +1,12 @@
-/* SHARED.C     (c)Copyright Greg Smith, 2002-2006                   */
+/* SHARED.C     (c)Copyright Greg Smith, 2002-2007                   */
 /*              Shared Device Server                                 */
 
 // $Id$
 //
 // $Log$
+// Revision 1.35  2006/12/28 20:32:54  fish
+// Fix "HHCSH043I 0.0.0.0 disconnected from ..."; save clientip in SHRD block at connect and use at disconnect.
+//
 // Revision 1.34  2006/12/08 09:43:30  jj
 // Add CVS message log
 //

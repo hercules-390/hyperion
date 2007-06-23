@@ -1,9 +1,12 @@
-/* CODEPAGE.H   (c) Copyright Jan Jaeger, 1999-2006                  */
+/* CODEPAGE.H   (c) Copyright Jan Jaeger, 1999-2007                  */
 /*              Code Page conversion                                 */
 
 // $Id$
 //
 // $Log$
+// Revision 1.10  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #ifndef _HERCULES_CODEPAGE_H
 #define _HERCULES_CODEPAGE_H

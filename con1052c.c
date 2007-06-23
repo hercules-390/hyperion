@@ -1,9 +1,13 @@
-/* CON1052.C    (c)Copyright Jan Jaeger, 2004-2006                   */
+/* CON1052.C    (c)Copyright Jan Jaeger, 2004-2007                   */
 /*              Emulated 1052 on hercules console                    */
 
 // $Id$
 //
 // $Log$
+// Revision 1.11  2006/12/23 00:51:08  ivan
+// Fix logmsg() call in con1052c.c from logmsg(bfr) to logmsg("%s",bfr) to prevent
+// Write CCW data with embedded '%' characters to be interpreted as printf formating orders
+//
 // Revision 1.10  2006/12/08 09:43:18  jj
 // Add CVS message log
 //

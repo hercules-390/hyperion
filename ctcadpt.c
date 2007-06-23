@@ -1,11 +1,11 @@
 // Hercules Channel-to-Channel Emulation Support
 // ====================================================================
 //
-// Copyright (C) James A. Pierson, 2002-2006
+// Copyright (C) James A. Pierson, 2002-2007
 //               Roger Bowler, 2000-2006
 //
-// vmnet     (C) Copyright Willem Konynenberg, 2000-2006
-// CTCT      (C) Copyright Vic Cross, 2001-2006
+// vmnet     (C) Copyright Willem Konynenberg, 2000-2007
+// CTCT      (C) Copyright Vic Cross, 2001-2007
 //
 // Notes:
 //   This module contains the remaining CTC emulation modes that
@@ -18,6 +18,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.67  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

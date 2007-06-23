@@ -6,7 +6,7 @@
 /* Jan Jaeger, who always has an answer to any question. Thanks for the      */
 /* regex advice!                                                             */
 /*                                                                           */
-/*                            (c) Copyright Bernard van der Helm, 2002-2006  */
+/*                            (c) Copyright Bernard van der Helm, 2002-2007  */
 /*                            Noordwijkerhout, The Netherlands.              */
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.3  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

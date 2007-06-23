@@ -1,4 +1,4 @@
-/* CACHE.C    (c)Copyright Greg Smith, 2002-2006                     */
+/* CACHE.C    (c)Copyright Greg Smith, 2002-2007                     */
 /*            Dynamic cache manager for multi-threaded applications  */
 
 //FIXME ?? Dynamic resizing is disabled
@@ -6,6 +6,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2006/12/08 09:43:16  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

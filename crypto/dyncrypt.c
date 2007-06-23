@@ -6,13 +6,16 @@
 /* z/Architecture emulator. This file may only be used with and within the    */
 /* Hercules emulator for non-commercial use!                                  */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2003-2006 */
+/*                              (c) Copyright Bernard van der Helm, 2003-2007 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*----------------------------------------------------------------------------*/
 
 // $Id$
 //
 // $Log$
+// Revision 1.53  2007/01/13 07:40:10  bernard
+// backout ccmask
+//
 // Revision 1.52  2007/01/12 15:30:41  bernard
 // ccmask phase 1
 //
@@ -2328,7 +2331,7 @@ HDL_REGISTER_SECTION;
   HDL_REGISTER(z900_compute_message_authentication_code, z900_compute_message_authentication_code_d);
 #endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
-  logmsg("Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2006\n");
+  logmsg("Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2007\n");
 
 }
 END_REGISTER_SECTION;

@@ -1,9 +1,12 @@
-/* SOCKDEV.H    (c) Copyright Hercules development, 2003-2006        */
+/* SOCKDEV.H    (c) Copyright Hercules development, 2003-2007        */
 /*              SocketDevice support                                 */
 
 // $Id$
 //
 // $Log$
+// Revision 1.8  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #include "htypes.h"         // need Herc's struct typedefs
 

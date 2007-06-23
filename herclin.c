@@ -1,5 +1,5 @@
 /************************************************/
-/* (C) Copyright 2005-2006 Roger Bowler & Others*/
+/* (C) Copyright 2005-2007 Roger Bowler & Others*/
 /* Initial author : Ivan Warren                 */
 /*                                              */
 /* HERCLIN.C                                    */
@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.4  2006/12/08 09:43:25  jj
+// Add CVS message log
+//
 
 #ifdef _MSVC_
 #include <windows.h>

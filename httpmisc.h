@@ -1,9 +1,12 @@
-/* HTTPMISC.C   (c)Copyright Jan Jaeger, 2002-2006                   */
+/* HTTPMISC.C   (c)Copyright Jan Jaeger, 2002-2007                   */
 /*              HTTP Server                                          */
 
 // $Id$
 //
 // $Log$
+// Revision 1.25  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #ifndef _HTTPMISC_H
 #define _HTTPMISC_H

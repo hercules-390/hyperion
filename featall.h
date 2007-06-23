@@ -1,9 +1,12 @@
-/* FEATALL.H    (c) Copyright Jan Jaeger, 2000-2006                  */
+/* FEATALL.H    (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              Architecture-dependent macro definitions             */
 
 // $Id$
 //
 // $Log$
+// Revision 1.124  2007/05/26 21:45:25  rbowler
+// Activate Compare-and-Swap-and-Store feature
+//
 // Revision 1.123  2007/04/24 16:34:41  rbowler
 // Define feature macros and STFL bit settings for new features in zPOP-05
 //

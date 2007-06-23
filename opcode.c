@@ -1,13 +1,16 @@
-/* OPCODE.C     (c) Copyright Jan Jaeger, 2000-2006                  */
+/* OPCODE.C     (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              Instruction decoding functions                       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 //
 // $Log$
+// Revision 1.123  2007/06/02 13:46:41  rbowler
+// PFPO framework
+//
 // Revision 1.122  2007/04/26 21:09:08  rbowler
 // Change SSKE instruction format from RRE to RRF_M
 //

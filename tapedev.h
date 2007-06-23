@@ -1,4 +1,4 @@
-/* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2006      */
+/* TAPEDEV.H    (c) Copyright Ivan Warren and others, 2003-2007      */
 /*                                                                   */
 /* This module contains tape related structures and defines          */
 /* for the Hercules ESA/390 emulator.                                */
@@ -6,6 +6,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.18  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #ifndef __TAPEDEV_H__
 #define __TAPEDEV_H__

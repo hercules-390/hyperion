@@ -1,9 +1,12 @@
-/* SOCKDEV.C    (c) Copyright Hercules development, 2003-2006        */
+/* SOCKDEV.C    (c) Copyright Hercules development, 2003-2007        */
 /*              Socketdevice support                                 */
 
 // $Id$
 //
 // $Log$
+// Revision 1.25  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

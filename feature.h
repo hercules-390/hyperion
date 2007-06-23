@@ -1,4 +1,4 @@
-/* FEATURES.H   (c) Copyright Jan Jaeger, 2000-2006                  */
+/* FEATURES.H   (c) Copyright Jan Jaeger, 2000-2007                  */
 /*      Architecture-dependent macro definitions                     */
 /*-------------------------------------------------------------------*/
 /* S/370, ESA/390 and ESAME features implemented                     */
@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.76  2007/01/13 07:30:02  bernard
+// backout ccmask
+//
 // Revision 1.75  2007/01/12 16:43:32  bernard
 // ccmask phase 1
 //

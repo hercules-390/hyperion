@@ -2,15 +2,18 @@
 // Hercules IP Channel-to-Channel Support (CTCI)
 // ====================================================================
 //
-// Copyright    (C) Copyright James A. Pierson, 2002-2006
-//              (C) Copyright "Fish" (David B. Trout), 2002-2006
-//              (C) Copyright Roger Bowler, 2000-2006
+// Copyright    (C) Copyright James A. Pierson, 2002-2007
+//              (C) Copyright "Fish" (David B. Trout), 2002-2007
+//              (C) Copyright Roger Bowler, 2000-2007
 //
-// linux 2.4 modifications (c) Copyright Fritz Elfert, 2001-2006
+// linux 2.4 modifications (c) Copyright Fritz Elfert, 2001-2007
 //
 // $Id$
 //
 // $Log$
+// Revision 1.65  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 #include "hercules.h"

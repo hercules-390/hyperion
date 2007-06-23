@@ -1,4 +1,4 @@
-/* DYNINST.C    (c) Copyright Jan Jaeger, 2003-2006                  */
+/* DYNINST.C    (c) Copyright Jan Jaeger, 2003-2007                  */
 /*              Hercules Dynamic Loader                              */
 
 // $Id$
@@ -10,6 +10,9 @@
 /* instruction 2 3 or 4 digits.                                      */
 
 // $Log$
+// Revision 1.21  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 #include "hercules.h"

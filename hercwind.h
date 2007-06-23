@@ -1,4 +1,4 @@
-/* HERCWIND.H   (c) Copyright Roger Bowler, 2005-2006                */
+/* HERCWIND.H   (c) Copyright Roger Bowler, 2005-2007                */
 /*              MSVC Environment Specific Definitions                */
 
 /*-------------------------------------------------------------------*/
@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.14  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #if !defined(_HERCWIND_H)
 #define _HERCWIND_H

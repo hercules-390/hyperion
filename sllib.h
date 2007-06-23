@@ -1,6 +1,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.9  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #if !defined( _SLLIB_H_ )
 #define _SLLIB_H_
@@ -20,7 +23,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| SLLIB.H      (c) Copyright Leland Lucius, 2000-2006
+|| SLLIB.H      (c) Copyright Leland Lucius, 2000-2007
 ||              Released under terms of the Q Public License.
 ||
 || Header for Standard Label library.

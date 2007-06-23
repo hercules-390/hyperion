@@ -1,4 +1,4 @@
-/* HOSTINFO.H   (c) Copyright "Fish" (David B. Trout), 2002-2006     */
+/* HOSTINFO.H   (c) Copyright "Fish" (David B. Trout), 2002-2007     */
 
 /*   Released under the Q Public License                             */
 /*      (http://www.conmicro.cx/hercules/herclic.html)               */
@@ -11,6 +11,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.11  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #ifndef _HOSTINFO_H_
 #define _HOSTINFO_H_

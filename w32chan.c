@@ -1,13 +1,16 @@
 ////////////////////////////////////////////////////////////////////////////////////
 //         w32chan.c           Fish's new i/o scheduling logic
 ////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2001-2006. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2001-2007. Released under the Q Public License
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
 //
 // $Log$
+// Revision 1.26  2006/12/08 09:43:31  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

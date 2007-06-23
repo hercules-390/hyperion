@@ -1,9 +1,12 @@
-/* HDTEQ.C      (c) Copyright Jan Jaeger, 2003-2006                  */
+/* HDTEQ.C      (c) Copyright Jan Jaeger, 2003-2007                  */
 /*              Hercules Dynamic Loader                              */
 
 // $Id$
 //
 // $Log$
+// Revision 1.14  2006/12/08 09:43:25  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

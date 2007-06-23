@@ -1,4 +1,4 @@
-/* CCKDUTIL.C   (c) Copyright Roger Bowler, 1999-2006                */
+/* CCKDUTIL.C   (c) Copyright Roger Bowler, 1999-2007                */
 /*       ESA/390 Compressed CKD Common routines                      */
 
 // $Id$
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.53  2006/12/08 09:43:17  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

@@ -1,4 +1,4 @@
-/* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2006                */
+/* DIAGNOSE.C   (c) Copyright Roger Bowler, 2000-2007                */
 /*              ESA/390 Diagnose Functions                           */
 
 // $Id$
@@ -11,10 +11,13 @@
 /* Additional credits:                                               */
 /*      Hercules-specific diagnose calls by Jay Maynard.             */
 /*      Set/reset bad frame indicator call by Jan Jaeger.            */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.46  2007/02/13 19:34:40  fish
+// DIAG  X'9C'  (156)
+//
 // Revision 1.45  2007/01/13 07:17:06  bernard
 // backout ccmask
 //

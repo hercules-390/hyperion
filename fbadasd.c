@@ -1,4 +1,4 @@
-/* FBADASD.C    (c) Copyright Roger Bowler, 1999-2006                */
+/* FBADASD.C    (c) Copyright Roger Bowler, 1999-2007                */
 /*              ESA/390 FBA Direct Access Storage Device Handler     */
 
 // $Id$
@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.46  2007/06/06 02:55:39  ivan
+// Allow Byte 0 Bit 3 of FBA Locate CCW to be non-zero
+//
 // Revision 1.45  2007/03/15 20:57:55  gsmith
 // Fix fba when the fba device is > 4G
 //

@@ -1,4 +1,4 @@
-/* DASDCOPY.C   (c) Copyright Roger Bowler, 1999-2006                */
+/* DASDCOPY.C   (c) Copyright Roger Bowler, 1999-2007                */
 /*       Copy a dasd file to another dasd file.                      */
 /*       Input file and output file may be compressed or not.        */
 /*       Files may be either ckd (or cckd) or fba (or cfba) but      */
@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.27  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

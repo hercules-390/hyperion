@@ -1,10 +1,10 @@
-/* EXTERNAL.C   (c) Copyright Roger Bowler, 1999-2006                */
+/* EXTERNAL.C   (c) Copyright Roger Bowler, 1999-2007                */
 /*              ESA/390 External Interrupt and Timer                 */
 
 // $Id$
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements external interrupt, timer, and signalling  */
@@ -25,6 +25,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.70  2007/02/26 00:54:22  gsmith
+// Display timer interrupts only if tracing/stepping all
+//
 // Revision 1.69  2007/01/16 01:45:33  gsmith
 // Tweaks to instruction stepping/tracing
 //

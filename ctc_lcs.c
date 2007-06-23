@@ -2,11 +2,14 @@
 // Hercules LAN Channel Station Support
 // ====================================================================
 //
-// Copyright (C) 2002-2006 by James A. Pierson
+// Copyright (C) 2002-2007 by James A. Pierson
 //
 // $Id$
 //
 // $Log$
+// Revision 1.63  2007/02/25 15:05:46  fish
+// Fix crash in LCS close if devinit of incomplete group
+//
 // Revision 1.62  2007/01/14 22:17:35  rbowler
 // Correct compile error introduced by rev 1.61
 //

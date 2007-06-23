@@ -1,4 +1,4 @@
-/* IMPL.C       (c) Copyright Roger Bowler, 1999-2006                */
+/* IMPL.C       (c) Copyright Roger Bowler, 1999-2007                */
 /*              Hercules Initialization Module                       */
 
 // $Id$
@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.122  2007/02/27 21:59:32  kleonard
+// PR# misc/87 startup messages fix completion
+//
 // Revision 1.121  2007/01/13 07:29:22  bernard
 // backout ccmask
 //

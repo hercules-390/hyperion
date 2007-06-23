@@ -1,13 +1,16 @@
 ////////////////////////////////////////////////////////////////////////////////////
 //         fthreads.c           Fish's WIN32 version of pthreads
 ////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2001-2006. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2001-2007. Released under the Q Public License
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
 //
 // $Log$
+// Revision 1.28  2007/01/10 09:29:45  fish
+// Fix thread naming that was inadvertently broken by my 12/28 fishhang change that introduced use of _beginthreadex
+//
 // Revision 1.27  2006/12/08 09:43:21  jj
 // Add CVS message log
 //

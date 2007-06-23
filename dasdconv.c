@@ -1,4 +1,4 @@
-/* DASDCONV.C   (c) Copyright Roger Bowler, 1999-2006                */
+/* DASDCONV.C   (c) Copyright Roger Bowler, 1999-2007                */
 /*              Hercules DASD Utilities: DASD image converter        */
 
 // $Id$
@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.15  2007/06/08 15:28:19  rbowler
+// Error message if dasdconv does not support gz input file
+//
 // Revision 1.14  2007/01/08 12:25:26  rbowler
 // Add dasdconv -q (quiet) option
 //

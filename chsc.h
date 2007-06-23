@@ -1,9 +1,12 @@
-/* CHSC.H       (c) Copyright Jan Jaeger, 1999-2006                  */
+/* CHSC.H       (c) Copyright Jan Jaeger, 1999-2007                  */
 /*              Channel Subsystem interface fields                   */
 
 // $Id$
 //
 // $Log$
+// Revision 1.4  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #if !defined(_CHSC_H)
 

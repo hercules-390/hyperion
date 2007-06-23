@@ -1,4 +1,4 @@
-/* DASDPDSU.C   (c) Copyright Roger Bowler, 1999-2006                */
+/* DASDPDSU.C   (c) Copyright Roger Bowler, 1999-2007                */
 /*              Hercules DASD Utilities: PDS unloader                */
 
 // $Id$
@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.26  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

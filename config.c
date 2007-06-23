@@ -1,4 +1,4 @@
-/* CONFIG.C     (c) Copyright Jan Jaeger, 2000-2006                  */
+/* CONFIG.C     (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              Device configuration functions                       */
 
 // $Id$
@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.198  2007/06/22 02:22:50  gsmith
+// revert config_cpu.pat due to problems in testing
+//
 // Revision 1.197  2007/06/20 03:52:19  gsmith
 // configure_cpu now returns when the CPU is fully configured
 //

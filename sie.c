@@ -1,4 +1,4 @@
-/* SIE.C        (c) Copyright Jan Jaeger, 1999-2006                  */
+/* SIE.C        (c) Copyright Jan Jaeger, 1999-2007                  */
 /*              Interpretive Execution                               */
 
 /*      This module contains the SIE instruction as                  */
@@ -8,11 +8,14 @@
 /*      Enterprise Systems Architecture / Extended Configuration     */
 /*      Principles of Operation, SC24-5594-02 and SC24-5965-00       */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 //
 // $Log$
+// Revision 1.104  2007/06/06 22:14:58  gsmith
+// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
+//
 // Revision 1.103  2007/02/09 23:59:58  ivan
 // Fix some PER issue (tentative)
 //

@@ -2,13 +2,16 @@
 //  Hercules Interface Control Program
 // ====================================================================
 //
-// Copyright    (C) Copyright Roger Bowler, 2000-2006
-//              (C) Copyright James A. Pierson, 2002-2006
+// Copyright    (C) Copyright Roger Bowler, 2000-2007
+//              (C) Copyright James A. Pierson, 2002-2007
 //
 
 // $Id$
 //
 // $Log$
+// Revision 1.12  2006/12/08 09:43:25  jj
+// Add CVS message log
+//
 
 #if defined(NEED_HERCIFC_H)
 

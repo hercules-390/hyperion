@@ -1,4 +1,4 @@
-/* DASDTAB.H    (c) Copyright Roger Bowler, 1999-2006                */
+/* DASDTAB.H    (c) Copyright Roger Bowler, 1999-2007                */
 /*              DASD table structures                                */
 
 // $Id$
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.13  2007/03/06 22:54:19  gsmith
+// Fix ckd RDC response
+//
 // Revision 1.12  2007/02/15 00:10:04  gsmith
 // Fix ckd RCD, SNSS, SNSID responses
 //

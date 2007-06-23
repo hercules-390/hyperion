@@ -1,7 +1,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETMAP.C     (c) Copyright Leland Lucius, 2000-2006
+|| HETMAP.C     (c) Copyright Leland Lucius, 2000-2007
 ||              Released under terms of the Q Public License.
 ||
 || Displays information about the structure of a Hercules Emulated Tape.
@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.25  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

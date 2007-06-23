@@ -1,4 +1,4 @@
-/* DECIMAL.C    (c) Copyright Roger Bowler, 1991-2006                */
+/* DECIMAL.C    (c) Copyright Roger Bowler, 1991-2007                */
 /*              ESA/390 Packed Decimal Routines                      */
 
 // $Id$
@@ -18,13 +18,16 @@
 /* Add trialrun to ED and EDMK                   Jan Jaeger 19/07/00 */
 /* Fix random MP bug - Mario Bezzi                                   */
 /* Clear DXC on data exception - Peter Kuschnerus                V209*/
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 /* TP instruction - Roger Bowler                            08/02/01 */
 /* packed_to_binary subroutine - Roger Bowler               29/06/03 */
 /* binary_to_packed subroutine - Roger Bowler              02jul2003 */
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.23  2007/01/13 07:15:12  bernard
+// backout ccmask
+//
 // Revision 1.22  2007/01/12 15:21:52  bernard
 // ccmask phase 1
 //

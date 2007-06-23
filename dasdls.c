@@ -1,12 +1,15 @@
 /*
  * dasdls
  *
- * Copyright 2000-2006 by Malcolm Beattie
- * Based on code copyright by Roger Bowler, 1999-2006
+ * Copyright 2000-2007 by Malcolm Beattie
+ * Based on code copyright by Roger Bowler, 1999-2007
  *
  * $Id$
  *
  * $Log$
+ * Revision 1.25  2006/12/08 09:43:19  jj
+ * Add CVS message log
+ *
  */
 
 #include "hstdinc.h"

@@ -1,10 +1,10 @@
-/* TRACE.C      (c) Copyright Jan Jaeger, 2000-2006                  */
+/* TRACE.C      (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              Implicit tracing functions                           */
 
 // $Id$
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 /*-------------------------------------------------------------------*/
 /* This module contains procedures for creating entries in the       */
@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.30  2006/12/20 04:26:20  gsmith
+// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
+//
 // Revision 1.29  2006/12/08 09:43:31  jj
 // Add CVS message log
 //

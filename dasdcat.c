@@ -1,12 +1,15 @@
 /*
  * dasdcat
  *
- * Vast swathes copied from dasdpdsu.c (c) Copyright Roger Bowler, 1999-2006
- * Changes and additions Copyright 2000-2006 by Malcolm Beattie
+ * Vast swathes copied from dasdpdsu.c (c) Copyright Roger Bowler, 1999-2007
+ * Changes and additions Copyright 2000-2007 by Malcolm Beattie
  *
  * $Id$
  *
  * $Log$
+ * Revision 1.31  2006/12/08 09:43:19  jj
+ * Add CVS message log
+ *
  */
 
 #include "hstdinc.h"

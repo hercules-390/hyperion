@@ -1,4 +1,4 @@
-/* QETH.C       (c) Copyright Jan Jaeger,   1999-2006                */
+/* QETH.C       (c) Copyright Jan Jaeger,   1999-2007                */
 /*              OSA Express                                          */
 
 // $Id$
@@ -11,6 +11,9 @@
 /* 0A00-0A02 QETH <optional parameters>                              */
 
 // $Log$
+// Revision 1.9  2006/12/08 09:43:29  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

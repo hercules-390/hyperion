@@ -1,4 +1,4 @@
-/* PTTRACE.C   (c) Copyright Greg Smith, 2003-2006                   */
+/* PTTRACE.C   (c) Copyright Greg Smith, 2003-2007                   */
 /*       pthreads trace debugger                                     */
 
 // $Id$
@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.29  2006/12/08 09:43:29  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

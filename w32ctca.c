@@ -1,13 +1,16 @@
 ////////////////////////////////////////////////////////////////////////////////////
 //    w32ctca.c    CTCI-W32 (Channel to Channel link to Win32 TCP/IP stack)
 ////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2002-2006. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2002-2007. Released under the Q Public License
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
 //
 // $Log$
+// Revision 1.24  2006/12/08 09:43:31  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 #include "hercules.h"

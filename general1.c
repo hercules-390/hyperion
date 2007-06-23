@@ -1,11 +1,11 @@
-/* GENERAL1.C   (c) Copyright Roger Bowler, 1994-2006                */
+/* GENERAL1.C   (c) Copyright Roger Bowler, 1994-2007                */
 /*              ESA/390 CPU Emulator                                 */
 /*              Instructions A-M                                     */
 
-/*              (c) Copyright Peter Kuschnerus, 1999-2006 (UPT & CFC)*/
+/*              (c) Copyright Peter Kuschnerus, 1999-2007 (UPT & CFC)*/
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 
@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.150  2007/05/26 21:23:19  rbowler
+// Eliminate uninitialised variable warnings in CSST
+//
 // Revision 1.149  2007/05/26 14:23:55  rbowler
 // CSST instruction
 //
@@ -1080,8 +1083,8 @@ U32     n;                              /* 32-bit operand values     */
 
 /*-------------------------------------------------------------------*/
 /* B21A CFC   - Compare and Form Codeword                        [S] */
-/*              (c) Copyright Peter Kuschnerus, 1999-2006            */
-/*              (c) Copyright "Fish" (David B. Trout), 2005-2006     */
+/*              (c) Copyright Peter Kuschnerus, 1999-2007            */
+/*              (c) Copyright "Fish" (David B. Trout), 2005-2007     */
 /*-------------------------------------------------------------------*/
 
 DEF_INST(compare_and_form_codeword)

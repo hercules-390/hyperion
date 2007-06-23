@@ -1,10 +1,10 @@
-/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2006                */
+/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2007                */
 /*              Convert SCSI tape into AWSTAPE format                */
 
 // $Id$
 
 /*              Read from AWSTAPE and write to SCSI tape mods        */
-/*              Copyright 2005-2006 James R. Maynard III             */
+/*              Copyright 2005-2007 James R. Maynard III             */
 
 /*-------------------------------------------------------------------*/
 /* This program reads a SCSI tape and produces a disk file with      */
@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.41  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

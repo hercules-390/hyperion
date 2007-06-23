@@ -7,7 +7,7 @@
 /* Mario Bezzi. Thanks Mario! Also special thanks to Greg Smith who           */
 /* introduced iregs, needed when a page fault occurs.                         */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2000-2006 */
+/*                              (c) Copyright Bernard van der Helm, 2000-2007 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.50  2007/02/10 09:14:32  bernard
+// Decompression performance patch
+//
 // Revision 1.49  2007/01/13 07:11:45  bernard
 // backout ccmask
 //

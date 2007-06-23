@@ -1,4 +1,4 @@
-/* DMAP2HRC.C   (c) Copyright Jay Maynard, 2001-2006                 */
+/* DMAP2HRC.C   (c) Copyright Jay Maynard, 2001-2007                 */
 /*              Convert P/390 DEVMAP to Hercules config file         */
 
 // $Id$
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.19  2006/12/08 09:43:20  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

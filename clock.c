@@ -1,4 +1,4 @@
-/* CLOCK.C      (c) Copyright Jan Jaeger, 2000-2006                  */
+/* CLOCK.C      (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              TOD Clock functions                                  */
 
 // $Id$
@@ -7,6 +7,9 @@
 /* by means of an offset and a steering rate.                        */
 
 // $Log$
+// Revision 1.40  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

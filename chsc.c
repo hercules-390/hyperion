@@ -1,8 +1,8 @@
-/* CHSC.C       (c) Copyright Jan Jaeger, 2002-2006                  */
+/* CHSC.C       (c) Copyright Jan Jaeger, 2002-2007                  */
 /*              Channel Subsystem Call                               */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 
@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.11  2007/01/13 07:10:54  bernard
+// backout ccmask
+//
 // Revision 1.10  2007/01/12 15:20:59  bernard
 // ccmask phase 1
 //

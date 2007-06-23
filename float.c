@@ -1,4 +1,4 @@
-/* FLOAT.C      (c) Copyright Peter Kuschnerus, 2000-2006            */
+/* FLOAT.C      (c) Copyright Peter Kuschnerus, 2000-2007            */
 /*              ESA/390 Hex Floatingpoint Instructions               */
 
 // $Id$
@@ -12,7 +12,7 @@
 /* Incorporated all floating point instructions from cpu.c in order  */
 /* to implement revised instruction decoding.                        */
 /*                                               Jan Jaeger 01/07/00 */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.48  2007/01/13 07:19:55  bernard
+// backout ccmask
+//
 // Revision 1.47  2007/01/12 15:23:26  bernard
 // ccmask phase 1
 //

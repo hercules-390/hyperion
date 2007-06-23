@@ -1,8 +1,8 @@
-/* VSTORE.H     (c) Copyright Roger Bowler, 1999-2006                */
+/* VSTORE.H     (c) Copyright Roger Bowler, 1999-2007                */
 /*              ESA/390 Virtual Storage Functions                    */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 
@@ -34,6 +34,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.77  2007/03/13 00:11:14  gsmith
+// Updates to concpy for 64-bit hosts
+//
 // Revision 1.76  2007/03/09 00:54:31  gsmith
 // concpy rework
 //

@@ -1,4 +1,4 @@
-/*  VERSION.H   (c) Copyright Roger Bowler, 1999-2006            */
+/*  VERSION.H   (c) Copyright Roger Bowler, 1999-2007            */
 /*      ESA/390 Emulator Version definition                      */
 
 // $Id$
@@ -11,6 +11,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.17  2006/12/08 09:43:31  jj
+// Add CVS message log
+//
 
 #ifndef _HERCULES_H_
 #define _HERCULES_H_
@@ -45,5 +48,5 @@ VER_DLL_IMPORT void display_version_2(FILE *f, char *prog, const char verbose,in
 VER_DLL_IMPORT int get_buildinfo_strings(const char*** pppszBldInfoStr);
 
 #define HERCULES_COPYRIGHT \
-       "(c)Copyright 1999-2006 by Roger Bowler, Jan Jaeger, and others"
+       "(c)Copyright 1999-2007 by Roger Bowler, Jan Jaeger, and others"
 #endif // _HERCULES_H_

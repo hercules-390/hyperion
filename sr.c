@@ -1,9 +1,12 @@
-/* SR.C         (c)Copyright Greg Smith, 2005-2006                   */
+/* SR.C         (c)Copyright Greg Smith, 2005-2007                   */
 /*              Suspend/Resume a Hercules session                    */
 
 // $Id$
 //
 // $Log$
+// Revision 1.31  2006/12/21 22:39:39  gsmith
+// 21 Dec 2006 Range for s+, t+ - Greg Smith
+//
 // Revision 1.30  2006/12/08 09:43:30  jj
 // Add CVS message log
 //

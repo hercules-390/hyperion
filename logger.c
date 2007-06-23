@@ -1,4 +1,4 @@
-/* LOGGER.C     (c) Copyright Jan Jaeger, 2003-2006                  */
+/* LOGGER.C     (c) Copyright Jan Jaeger, 2003-2007                  */
 /*              System logger functions                              */
 
 // $Id$
@@ -14,6 +14,9 @@
 /* for isatty()                                                      */
 
 // $Log$
+// Revision 1.48  2007/02/27 21:59:32  kleonard
+// PR# misc/87 startup messages fix completion
+//
 // Revision 1.47  2007/01/31 00:48:03  kleonard
 // Add logopt config statement and panel command
 //

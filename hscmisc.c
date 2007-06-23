@@ -1,10 +1,13 @@
-/* HSCMISC.C    (c) Copyright Roger Bowler, 1999-2006                */
-/*              (c) Copyright Jan Jaeger, 1999-2006                  */
+/* HSCMISC.C    (c) Copyright Roger Bowler, 1999-2007                */
+/*              (c) Copyright Jan Jaeger, 1999-2007                  */
 /*              Miscellaneous System Command Routines                */
 
 // $Id$
 //
 // $Log$
+// Revision 1.59  2007/03/17 22:20:46  gsmith
+// Fix hostregs address calculation in copy_regs
+//
 // Revision 1.58  2007/03/16 22:47:10  gsmith
 // Reduce REGS copying by hscmisc.c
 //

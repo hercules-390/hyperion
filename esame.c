@@ -1,4 +1,4 @@
-/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2006                  */
+/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              ESAME (z/Architecture) instructions                  */
 
 // $Id$
@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.188  2007/04/27 10:50:40  rbowler
+// STFL bit 27 for MVCOS
+//
 // Revision 1.187  2007/04/25 15:23:49  rbowler
 // Standardize comment format in ECTG
 //

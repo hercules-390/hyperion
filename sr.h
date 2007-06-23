@@ -1,4 +1,4 @@
-/* SR.H         (c)Copyright Greg Smith, 2004-2006                   */
+/* SR.H         (c)Copyright Greg Smith, 2004-2007                   */
 /*              Suspend/Resume a Hercules session                    */
 
 // $Id$
@@ -128,6 +128,9 @@
  */
 
 // $Log$
+// Revision 1.14  2006/12/08 09:43:30  jj
+// Add CVS message log
+//
 
 #ifndef _HERCULES_SR_H
 #define _HERCULES_SR_H

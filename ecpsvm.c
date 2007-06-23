@@ -1,6 +1,6 @@
 /***********************************************************/
 /* HERCULES ECPS:VM Support                                */
-/* (c) Copyright 2003-2006 Roger Bowler and Others         */
+/* (c) Copyright 2003-2007 Roger Bowler and Others         */
 /* Use of this program is governed by the QPL License      */
 /* Original Author : Ivan Warren                           */
 /* Prime Maintainer : Ivan Warren                          */
@@ -53,6 +53,9 @@
 /***********************************************************/
 
 // $Log$
+// Revision 1.67  2007/01/13 07:18:14  bernard
+// backout ccmask
+//
 // Revision 1.66  2007/01/12 15:22:37  bernard
 // ccmask phase 1
 //

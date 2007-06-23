@@ -1,4 +1,4 @@
-/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2006                */
+/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2007                */
 /* JCS - minor changes by John Summerfield                           */
 /*              ESA/390 Tape Device Handler                          */
 /* Original Author: Roger Bowler                                     */
@@ -71,6 +71,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.115  2007/04/06 15:40:25  fish
+// Fix Locate Block & Read BlockId for SCSI tape broken by 31 Aug 2006 preliminary-3590-support change
+//
 // Revision 1.114  2007/02/25 21:10:44  fish
 // Fix het_locate to continue on tapemark
 //

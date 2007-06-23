@@ -1,12 +1,15 @@
-/* ESA390.H     (c) Copyright Roger Bowler, 1994-2006                */
+/* ESA390.H     (c) Copyright Roger Bowler, 1994-2007                */
 /*              ESA/390 Data Areas                                   */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 //
 // $Log$
+// Revision 1.93  2007/06/02 16:23:33  rbowler
+// IUCV external interrupt code and submask definitions
+//
 // Revision 1.92  2007/04/27 10:50:40  rbowler
 // STFL bit 27 for MVCOS
 //

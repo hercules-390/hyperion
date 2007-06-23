@@ -1,10 +1,13 @@
 /* VSTORE.C */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 //
 // $Log$
+// Revision 1.10  2006/12/08 09:43:31  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

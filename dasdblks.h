@@ -1,4 +1,4 @@
-/* DASDBLKS.H   (c) Copyright Roger Bowler, 1999-2006                */
+/* DASDBLKS.H   (c) Copyright Roger Bowler, 1999-2007                */
 /*              DASD control block structures                        */
 
 // $Id$
@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.20  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #include "hercules.h"
 

@@ -1,9 +1,12 @@
-/* HSTDINT.H    (c)Copyright Roger Bowler, 2006                      */
+/* HSTDINT.H    (c)Copyright Roger Bowler, 2007                      */
 /*              Hercules standard integer definitions                */
 
 // $Id$
 //
 // $Log$
+// Revision 1.1  2006/12/10 23:18:32  rbowler
+// Modify decContext.h to include hstdint.h instead of stdint.h
+//
 //
 
 /*-------------------------------------------------------------------*/

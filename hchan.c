@@ -1,4 +1,4 @@
-/* GCHAN.C       (c) Copyright Ivan Warren, 2005-2006                */
+/* GCHAN.C       (c) Copyright Ivan Warren, 2005-2007                */
 /* Based on work (c)Roger Bowler, Jan Jaeger & Others 1999-2006      */
 /*              Generic channel device handler                       */
 
@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.9  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #include "hercules.h"
 

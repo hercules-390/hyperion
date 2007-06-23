@@ -4,7 +4,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETLIB.H     (c) Copyright Leland Lucius, 2000-2006
+|| HETLIB.H     (c) Copyright Leland Lucius, 2000-2007
 ||              Released under terms of the Q Public License.
 ||
 || Header for the Hercules Emulated Tape library.
@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.16  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #include "hercules.h"
 

@@ -2,12 +2,15 @@
 // Hercules Channel to Channel Emulation Support
 // ====================================================================
 //
-// Copyright (C) 2002-2006 by James A. Pierson
+// Copyright (C) 2002-2007 by James A. Pierson
 //
 
 // $Id$
 //
 // $Log$
+// Revision 1.22  2007/01/14 07:59:58  fish
+// add some field/struct comments re byte-order (network vs.host)
+//
 // Revision 1.21  2006/12/08 09:43:19  jj
 // Add CVS message log
 //

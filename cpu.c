@@ -1,8 +1,8 @@
-/* CPU.C        (c) Copyright Roger Bowler, 1994-2006                */
+/* CPU.C        (c) Copyright Roger Bowler, 1994-2007                */
 /*              ESA/390 CPU Emulator                                 */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 
@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.184  2007/06/22 02:22:50  gsmith
+// revert config_cpu.pat due to problems in testing
+//
 // Revision 1.183  2007/06/20 03:52:19  gsmith
 // configure_cpu now returns when the CPU is fully configured
 //

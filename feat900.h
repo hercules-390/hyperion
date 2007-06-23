@@ -1,9 +1,12 @@
-/* FEAT900.H    (c) Copyright Jan Jaeger, 2000-2006                  */
+/* FEAT900.H    (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              ESAME feature definitions                            */
 
 // $Id$
 //
 // $Log$
+// Revision 1.71  2007/06/02 13:46:41  rbowler
+// PFPO framework
+//
 // Revision 1.70  2007/05/26 21:45:25  rbowler
 // Activate Compare-and-Swap-and-Store feature
 //

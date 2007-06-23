@@ -1,4 +1,4 @@
-/* ASSIST.C     (c) Copyright Roger Bowler, 1999-2006                */
+/* ASSIST.C     (c) Copyright Roger Bowler, 1999-2007                */
 /*              ESA/390 MVS Assist Routines                          */
 
 // $Id$
@@ -10,11 +10,14 @@
 
 /*              Instruction decode rework - Jan Jaeger               */
 /*              Correct address wraparound - Jan Jaeger              */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 /*              Add dummy assist instruction - Jay Maynard,          */
 /*                  suggested by Brandon Hill                        */
 
 // $Log$
+// Revision 1.23  2006/12/20 04:26:19  gsmith
+// 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
+//
 // Revision 1.22  2006/12/08 09:43:16  jj
 // Add CVS message log
 //

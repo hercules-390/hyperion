@@ -1,9 +1,12 @@
-/* FEAT390.H    (c) Copyright Jan Jaeger, 2000-2006                  */
+/* FEAT390.H    (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              ESA/390 feature definitions                          */
 
 // $Id$
 //
 // $Log$
+// Revision 1.37  2007/04/25 12:10:27  rbowler
+// Move LFAS,SFASR to IEEE-exception-simulation facility
+//
 // Revision 1.36  2006/12/08 09:43:21  jj
 // Add CVS message log
 //

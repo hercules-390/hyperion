@@ -1,8 +1,8 @@
-/* CONTROL.C    (c) Copyright Roger Bowler, 1994-2006                */
+/* CONTROL.C    (c) Copyright Roger Bowler, 1994-2007                */
 /*              ESA/390 CPU Emulator                                 */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 
@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.254  2007/06/06 22:14:57  gsmith
+// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
+//
 // Revision 1.253  2007/05/26 21:16:11  rbowler
 // fix control.c:4990: warning: return type defaults to `int'
 //

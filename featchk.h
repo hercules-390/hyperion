@@ -1,4 +1,4 @@
-/* FEATCHK.H    (c) Copyright Jan Jaeger, 2000-2006                  */
+/* FEATCHK.H    (c) Copyright Jan Jaeger, 2000-2007                  */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /*           Feature definition consistency checks                   */
@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.46  2007/03/08 01:27:02  gsmith
+// Remove inline attr from vfetchx/vstorex _full functions
+//
 // Revision 1.45  2007/01/14 23:31:46  gsmith
 // nerak's patch, one more time
 //

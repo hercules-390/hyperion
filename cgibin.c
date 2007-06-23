@@ -1,4 +1,4 @@
-/* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2006                   */
+/* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2007                   */
 /*              HTTP cgi-bin routines                                */
 
 // $Id$
@@ -45,6 +45,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.73  2007/01/14 23:14:12  rbowler
+// Fix signed/unsigned mismatch in 370-only build
+//
 // Revision 1.72  2006/12/08 09:43:18  jj
 // Add CVS message log
 //

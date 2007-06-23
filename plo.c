@@ -1,12 +1,15 @@
-/* PLO.C        (c) Copyright Jan Jaeger, 2000-2006                  */
+/* PLO.C        (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              Perform Locked Operation functions codes             */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 //
 // $Log$
+// Revision 1.22  2006/12/08 09:43:29  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

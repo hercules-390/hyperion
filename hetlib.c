@@ -1,7 +1,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETLIB.C     (c) Copyright Leland Lucius, 2000-2006
+|| HETLIB.C     (c) Copyright Leland Lucius, 2000-2007
 ||              Released under terms of the Q Public License.
 ||
 || Library for managing Hercules Emulated Tapes.
@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.31  2007/02/25 21:10:44  fish
+// Fix het_locate to continue on tapemark
+//
 // Revision 1.30  2006/12/08 09:43:26  jj
 // Add CVS message log
 //

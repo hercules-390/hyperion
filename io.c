@@ -1,8 +1,8 @@
-/* IO.C         (c) Copyright Roger Bowler, 1994-2006                */
+/* IO.C         (c) Copyright Roger Bowler, 1994-2007                */
 /*              ESA/390 CPU Emulator                                 */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2006      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2006      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
 
 // $Id$
 
@@ -33,6 +33,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.60  2007/01/13 07:23:42  bernard
+// backout ccmask
+//
 // Revision 1.59  2007/01/12 15:24:21  bernard
 // ccmask phase 1
 //

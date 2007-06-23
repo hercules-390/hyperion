@@ -1,4 +1,4 @@
-/* DASDLOAD.C   (c) Copyright Roger Bowler, 1999-2006                */
+/* DASDLOAD.C   (c) Copyright Roger Bowler, 1999-2007                */
 /*              Hercules DASD Utilities: DASD image loader           */
 
 // $Id$
@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.52  2007/05/24 21:13:27  rbowler
+// Circumvent MSVC optimizer bug in cvol_initialize function
+//
 // Revision 1.51  2006/12/08 09:43:19  jj
 // Add CVS message log
 //

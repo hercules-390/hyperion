@@ -1,11 +1,14 @@
 /*********************************************************************/
-/* HDL.H        (c) Copyright Jan Jaeger, 2003-2006                  */
+/* HDL.H        (c) Copyright Jan Jaeger, 2003-2007                  */
 /*              Hercules Dynamic Loader                              */
 /*********************************************************************/
 
 // $Id$
 //
 // $Log$
+// Revision 1.33  2006/12/08 09:43:25  jj
+// Add CVS message log
+//
 
 #ifndef _HDL_H
 #define _HDL_H

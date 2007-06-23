@@ -1,9 +1,12 @@
-/* CRYPTO.H     (c) Copyright Jan Jaeger, 2000-2006                  */
+/* CRYPTO.H     (c) Copyright Jan Jaeger, 2000-2007                  */
 /*              Cryptographic instructions                           */
 
 // $Id$
 //
 // $Log$
+// Revision 1.10  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #if defined(_FEATURE_MESSAGE_SECURITY_ASSIST)
 

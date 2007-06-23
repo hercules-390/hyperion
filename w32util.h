@@ -1,13 +1,16 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //   w32util.h        Windows porting functions
 //////////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2005-2006. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2005-2007. Released under the Q Public License
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
 //
 // $Log$
+// Revision 1.9  2007/01/10 15:12:12  rbowler
+// Console keepalive for Unix
+//
 // Revision 1.8  2007/01/10 09:32:39  fish
 // Enable connection keep-alive to try and detect 3270 clients that
 // have died (MSVC only right now; don't know how to do it on *nix)

@@ -1,4 +1,4 @@
-/* CACHE.H    (c)Copyright Greg Smith, 2002-2006                     */
+/* CACHE.H    (c)Copyright Greg Smith, 2002-2007                     */
 /*            Buffer Cache Manager                                   */
 
 // $Id$
@@ -154,6 +154,9 @@
   -------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.13  2006/12/08 09:43:16  jj
+// Add CVS message log
+//
 
 #ifndef _HERCULES_CACHE_H
 #define _HERCULES_CACHE_H 1

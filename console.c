@@ -1,4 +1,4 @@
-/* CONSOLE.C    (c)Copyright Roger Bowler, 1999-2006                 */
+/* CONSOLE.C    (c)Copyright Roger Bowler, 1999-2007                 */
 /*              ESA/390 Console Device Handler                       */
 
 // $Id$
@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.91  2007/01/11 19:54:33  fish
+// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
+//
 // Revision 1.90  2007/01/10 15:35:49  rbowler
 // Consoles cannot connect after rev 1.88
 //
@@ -1238,7 +1241,7 @@ static char *herclogo[]={
     " HHH          HHH",
     " HHH          HHH     My PC thinks it's a MAINFRAME",
     "",
-    " Copyright (c) 1999-2006 Roger Bowler, Jan Jaeger, and others"};
+    " Copyright (c) 1999-2007 Roger Bowler, Jan Jaeger, and others"};
     */
 
 static char *herclogo[]={
@@ -1299,7 +1302,7 @@ static char *herclogo[]={
 "           HHH          HHH",
 "           HHH          HHH     My PC thinks it's a MAINFRAME",
 "",
-"           Copyright (c) 1999-2006 Roger Bowler, Jan Jaeger, and others"};
+"           Copyright (c) 1999-2007 Roger Bowler, Jan Jaeger, and others"};
 
 #define LOGO_BUFFERSIZE 256;
 

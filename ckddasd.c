@@ -1,4 +1,4 @@
-/* CKDDASD.C    (c) Copyright Roger Bowler, 1999-2006                */
+/* CKDDASD.C    (c) Copyright Roger Bowler, 1999-2007                */
 /*              ESA/390 CKD Direct Access Storage Device Handler     */
 
 // $Id$
@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.85  2007/02/15 00:10:04  gsmith
+// Fix ckd RCD, SNSS, SNSID responses
+//
 // Revision 1.84  2006/12/08 09:43:18  jj
 // Add CVS message log
 //

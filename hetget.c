@@ -1,7 +1,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETGET.C     (c) Copyright Leland Lucius, 2000-2006
+|| HETGET.C     (c) Copyright Leland Lucius, 2000-2007
 ||              Released under terms of the Q Public License.
 ||
 || Extract files from an HET file
@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.24  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

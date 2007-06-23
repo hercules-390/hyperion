@@ -1,4 +1,4 @@
-/* HSTDINC.H    (c) Copyright Roger Bowler, 1999-2006                */
+/* HSTDINC.H    (c) Copyright Roger Bowler, 1999-2007                */
 /*              Hercules precompilation-eligible Header Files        */
 
 /* This file contains #include statements for all of the header      */
@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.14  2007/01/10 16:30:48  rbowler
+// Include netinet/tcp.h for Unix keepalive settings
+//
 // Revision 1.13  2007/01/10 09:32:39  fish
 // Enable connection keep-alive to try and detect 3270 clients that
 // have died (MSVC only right now; don't know how to do it on *nix)

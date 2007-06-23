@@ -1,4 +1,4 @@
-/* VERSION.C    (c) Copyright Roger Bowler, 1999-2006                */
+/* VERSION.C    (c) Copyright Roger Bowler, 1999-2007                */
 /*              Hercules Version Display Module                      */
 
 // $Id$
@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.48  2006/12/08 09:43:31  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

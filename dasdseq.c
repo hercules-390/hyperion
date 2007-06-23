@@ -1,5 +1,5 @@
-/* Code borrowed from dasdpdsu Copyright 1999-2006 Roger Bowler      */
-/* Changes and additions Copyright 2001-2006, James M. Morrison      */
+/* Code borrowed from dasdpdsu Copyright 1999-2007 Roger Bowler      */
+/* Changes and additions Copyright 2001-2007, James M. Morrison      */
 
 // $Id$
 
@@ -22,6 +22,9 @@
 // used upper case, which seems unnecessarily loud.
 
 // $Log$
+// Revision 1.16  2006/12/08 09:43:19  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -1097,8 +1100,8 @@ int main(int argc, char **argv) {
     int      dsn_recs_written = 0, bail, dsorg, rc;
     char     pathname[MAX_PATH];
 
-    fprintf(stderr, "dasdseq %s Copyright 1999-2006 Roger Bowler\n"
-        "Portions Copyright 2001-2006 James M. Morrison\n", VERSION);
+    fprintf(stderr, "dasdseq %s Copyright 1999-2007 Roger Bowler\n"
+        "Portions Copyright 2001-2007 James M. Morrison\n", VERSION);
     if (debug) fprintf(stderr, "DEBUG enabled\n");
 
 //  Parse command line
