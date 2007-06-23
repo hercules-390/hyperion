@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-06-23 10:40-0500\n"
+"POT-Creation-Date: 2007-06-23 14:23-0500\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -1301,96 +1301,96 @@ msgid ""
 "defined\n"
 msgstr ""
 
-#: console.c:369
+#: console.c:373
 #, fuzzy, c-format
 msgid "HHCGI001I Unable to determine IP address from %s\n"
 msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
 
-#: console.c:390
+#: console.c:394
 #, fuzzy, c-format
 msgid "HHCGI002I Unable to determine port number from %s\n"
 msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
 
-#: console.c:404
+#: console.c:408
 #, fuzzy, c-format
 msgid "HHCGI003E Invalid parameter: %s\n"
 msgstr "HHC422I Optie %s niet geldig\n"
 
-#: console.c:919
+#: console.c:923
 #, fuzzy, c-format
 msgid "HHCTE014I %4.4X device %4.4X client %s connection reset\n"
 msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 
-#: console.c:929
+#: console.c:933
 #, fuzzy, c-format
 msgid "HHCTE007I %4.4X device %4.4X client %s connection closed\n"
 msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 
-#: console.c:1094
+#: console.c:1098
 #, c-format
 msgid "HHCTE008I Device %4.4X connection closed by client %s\n"
 msgstr ""
 
-#: console.c:1817
+#: console.c:1821
 #, fuzzy, c-format
 msgid "HHCTE009I Client %s connected to %4.4X device %d:%4.4X\n"
 msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 
-#: console.c:1932
+#: console.c:1936
 #, fuzzy
 msgid "HHCTE001I Console connection thread started: tid="
 msgstr "HHC650I Controle paneel thread gestart: tid=%8.8lX, pid=%d\n"
 
-#: console.c:1956
+#: console.c:1960
 #, fuzzy, c-format
 msgid "HHCTE010E CNSLPORT statement invalid: %s\n"
 msgstr "HHC422I Optie %s niet geldig\n"
 
-#: console.c:1968
+#: console.c:1972
 #, c-format
 msgid "HHCTE002W Waiting for port %u to become free\n"
 msgstr ""
 
-#: console.c:1987
+#: console.c:1991
 #, c-format
 msgid "HHCTE003I Waiting for console connection on port %u\n"
 msgstr ""
 
-#: console.c:2249
+#: console.c:2253
 #, fuzzy
 msgid "HHCTE004I Console connection thread terminated\n"
 msgstr "HHC650I Controle paneel thread gestart: tid=%8.8lX, pid=%d\n"
 
-#: console.c:2279
+#: console.c:2283
 #, c-format
 msgid "HHCTE005E Cannot create console thread: %s\n"
 msgstr ""
 
-#: console.c:2301
+#: console.c:2305
 msgid "** BUG! console_remove() error! **\n"
 msgstr ""
 
-#: console.c:2373 console.c:2659
+#: console.c:2377 console.c:2663
 #, fuzzy, c-format
 msgid "HHCTE011E Device %4.4X: Invalid IP address: %s\n"
 msgstr "Ongeldig frame adres %8.8X\n"
 
-#: console.c:2384 console.c:2670
+#: console.c:2388 console.c:2674
 #, fuzzy, c-format
 msgid "HHCTE012E Device %4.4X: Invalid mask value: %s\n"
 msgstr "Ongeldig apparaat nummer\n"
 
-#: console.c:2393 console.c:2679
+#: console.c:2397 console.c:2683
 #, fuzzy, c-format
 msgid "HHCTE013E Device %4.4X: Extraneous argument(s): %s...\n"
 msgstr "CPU%4.4X nicht konfiguriert\n"
 
-#: console.c:2540
+#: console.c:2544
 #, fuzzy, c-format
 msgid "HHCTE090E %4.4X malloc() failed for resume buf: %s\n"
 msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: console.c:3484
+#: console.c:3488
 #, fuzzy, c-format
 msgid "HHCTE006A Enter input for console device %4.4X\n"
 msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
