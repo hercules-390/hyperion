@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.92  2007/06/23 00:04:04  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.91  2007/01/11 19:54:33  fish
 // Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
 //
@@ -3478,7 +3481,7 @@ BYTE    stat;                           /* Unit status               */
             if (dev->prompt1052)
             {
                 snprintf ((char *)dev->buf, dev->bufsize,
-                        _("HHCTE006A Enter input for console device %4.4X\r\n"),
+                        _("HHCTE006A Enter input for console device %4.4X\n"),
                         dev->devnum);
                 len = strlen((char *)dev->buf);
                 rc = send_packet (dev->fd, dev->buf, len, NULL);

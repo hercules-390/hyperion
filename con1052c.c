@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.12  2007/06/23 00:04:04  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.11  2006/12/23 00:51:08  ivan
 // Fix logmsg() call in con1052c.c from logmsg(bfr) to logmsg("%s",bfr) to prevent
 // Write CCW data with embedded '%' characters to be interpreted as printf formating orders
@@ -233,7 +236,7 @@ BYTE    c;                              /* Print character           */
         {
             /* Display prompting message on console if allowed */
             if (dev->prompt1052)
-                logmsg (_("HHC1C001A Enter input for console device %4.4X\r\n"),
+                logmsg (_("HHC1C001A Enter input for console device %4.4X\n"),
                   dev->devnum);
 
             obtain_lock(&dev->lock);
