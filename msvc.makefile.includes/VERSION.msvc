@@ -18,8 +18,10 @@
 !IFNDEF VERSION
 
 #   >>>  Jay!  <<<  Be sure to change the below V1/V2/V3/V4 values to match!
+#   >>> Fish!! <<<  If you move this again, please change the comment in
+#                   configure.ac so I can find it again! :-)
 
-VERSION = \"3.05-pre-private\"
+VERSION = \"3.05\"
 
 # The below VERSION digits values SHOULD match the ABOVE VERSION number.
 #
