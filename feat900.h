@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.72  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.71  2007/06/02 13:46:41  rbowler
 // PFPO framework
 //
@@ -59,7 +62,11 @@
 #define FEATURE_DAT_ENHANCEMENT
 #define FEATURE_DAT_ENHANCEMENT_FACILITY_2                      /*@Z9*/
 #define FEATURE_DECIMAL_FLOATING_POINT                          /*DFP*/
-#define FEATURE_DIAG308_REIPL
+/* 
+ * DIAG 308 Disabled until a complete implementation can
+ * be devised
+ */
+// #define FEATURE_DIAG308_REIPL
 #define FEATURE_DUAL_ADDRESS_SPACE
 #define FEATURE_EMULATE_VM
 #define FEATURE_ESAME
