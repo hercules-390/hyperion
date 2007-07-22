@@ -170,6 +170,10 @@
 				<Filter
 					Name="Crypto"
 					>
+					<File
+						RelativePath=".\crypto\Makefile.am"
+						>
+					</File>
 					<Filter
 						Name="Header Files"
 						>
@@ -218,6 +222,23 @@
 				<Filter
 					Name="decNumber"
 					>
+					<File
+						RelativePath=".\decNumber\decnumber.pdf"
+						SubType="Code"
+						>
+					</File>
+					<File
+						RelativePath=".\decNumber\ICU-license.html"
+						>
+					</File>
+					<File
+						RelativePath=".\decNumber\Makefile.am"
+						>
+					</File>
+					<File
+						RelativePath=".\decNumber\readme.txt"
+						>
+					</File>
 					<Filter
 						Name="Header Files"
 						>
@@ -1237,6 +1258,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\html\Makefile.am"
+						>
+					</File>
+					<File
 						RelativePath=".\html\shared.html"
 						>
 					</File>
@@ -1551,6 +1576,10 @@
 				</File>
 				<File
 					RelativePath=".\util\dasdlist.bat"
+					>
+				</File>
+				<File
+					RelativePath=".\util\Makefile.am"
 					>
 				</File>
 				<File
