@@ -2138,13 +2138,35 @@ and how they are used.
             <p>
 
         <dt><code>READONLY</code>=<em>n</em>
-        <dt><code>RO</code>=<em>n</em>
-        <dt><code>NORING</code>=<em>n</em>
         <dd><p>
             Specifies whether the tape is mounted read-only (without a write
             ring, or with the cartridge protect switch set to "write
-            protect". A parameter of 1 means read-only; a parameter of 0
-            means read-write.
+            protect").  A parameter of 1 means read-only; a parameter of 0
+            means read-write.  If READONLY=1, RO or NORING is not specified,
+            the default is READONLY=0.  Note that READONLY=0 does not override
+            the host system file permission settings for the underlying AWS or
+            HET file.  If the AWS or HET file is marked read-only, the tape
+            will be mounted read-only despite specification of READONLY=0.
+            <p>
+
+        <dt><code>RO</code>
+        <dt><code>NORING</code>
+        <dd><p>
+            Specifies that the tape is mounted read-only (without a write
+            ring, or with the cartridge protect switch set to "write
+            protect").  RO and NORING are equivalent to READONLY=1.
+            <p>
+ 
+        <dt><code>RW</code>
+        <dt><code>RING</code>
+        <dd><p>
+            Specifies that the tape should be mounted read-write, if possible.
+            RW and RING are equivalent to READONLY=0.  This is the default if
+            RO, NORING or READONLY=1 is not specified.  Note that RW and RING
+            do not override the host system file permission settings for the
+            underlying AWS or HET file.  If the AWS or HET file is marked
+            read-only, the tape will be mounted read-only despite specification
+            of RW or RING.
             <p>
 
         <dt><code>DEONIRQ</code>=<em>n</em>
