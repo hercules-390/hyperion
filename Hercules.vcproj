@@ -1198,79 +1198,83 @@
 					Name="html"
 					>
 					<File
-						RelativePath=".\html\cckddasd.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\fishgui.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\hercconf.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\hercfaq.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\hercinst.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\herclic.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\hercload.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\hercnew.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\hercrdr.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\hercrnot.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\hercsupp.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\herctcp.html"
-						>
-					</File>
-					<File
 						RelativePath=".\html\hercules.css"
-						>
-					</File>
-					<File
-						RelativePath=".\html\hercules.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\index.html"
 						>
 					</File>
 					<File
 						RelativePath=".\html\Makefile.am"
 						>
 					</File>
-					<File
-						RelativePath=".\html\shared.html"
-						>
-					</File>
-					<File
-						RelativePath=".\html\tasks.html"
-						>
-					</File>
 					<Filter
-						Name="hercms..."
+						Name="herc"
+						>
+						<File
+							RelativePath=".\html\cckddasd.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\fishgui.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\hercconf.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\hercfaq.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\hercinst.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\herclic.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\hercload.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\hercnew.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\hercrdr.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\hercrnot.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\hercsupp.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\herctcp.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\hercules.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\index.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\shared.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\tasks.html"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="msgs"
 						>
 						<File
 							RelativePath=".\html\hercmsca.html"
