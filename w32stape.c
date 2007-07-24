@@ -17,6 +17,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.13  2007/06/23 00:04:19  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.12  2006/12/08 09:43:33  jj
 // Add CVS message log
 //
@@ -425,7 +428,8 @@ int w32_internal_rc ( U32* pStat )
 
 int  w32_internal_mtop  ( HANDLE hFile, U32* pStat, struct mtop*  mtop,  ifd_t ifd );
 int  w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget, ifd_t ifd );
-int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos,       ifd_t ifd ); // "GetTapePosition()"
+int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwLogPos,
+                                                    DWORD* pdwAbsPos,    ifd_t ifd );
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Close tape device...
@@ -648,7 +652,7 @@ int w32_ioctl_tape ( ufd_t ufd, int request, ... )
         {
             struct mtpos* mtpos = ptr;
             memset( mtpos, 0, sizeof(*mtpos) );
-            rc = w32_internal_mtpos( hFile, pStat, &mtpos->mt_blkno, ifd );
+            rc = w32_internal_mtpos( hFile, pStat, &mtpos->mt_blkno, NULL, ifd );
         }
         break;
 
@@ -721,7 +725,7 @@ int w32_internal_mtop ( HANDLE hFile, U32* pStat, struct mtop* mtop, ifd_t ifd )
         {
             do
             {
-                errno = SetTapePosition( hFile, TAPE_ABSOLUTE_BLOCK, 0, mtop->mt_count, 0, FALSE );
+                errno = SetTapePosition( hFile, TAPE_LOGICAL_BLOCK, 0, mtop->mt_count, 0, FALSE );
                 errno = w32_internal_rc ( pStat );
             }
             while ( EINTR == errno );
@@ -920,7 +924,7 @@ static
 int w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget, ifd_t ifd )
 {
     TAPE_GET_MEDIA_PARAMETERS   media_parms;
-    DWORD                       dwRetCode, dwSize, dwPosition;
+    DWORD                       dwRetCode, dwSize, dwLogicalPosition;
 
     ASSERT( pStat && mtget );
 
@@ -994,15 +998,15 @@ int w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget, ifd_t if
 
     // Lastly, attempt to determine if we are at BOT (i.e. load-point)...
 
-    if ( 0 != ( errno = w32_internal_mtpos( hFile, pStat, &dwPosition, ifd ) ) )
+    if ( 0 != ( errno = w32_internal_mtpos( hFile, pStat, &dwLogicalPosition, NULL, ifd ) ) )
     {
         mtget->mt_gstat = *pStat;
         return -1;
     }
 
-    mtget->mt_blkno = dwPosition;
+    mtget->mt_blkno = dwLogicalPosition;
 
-    if ( ( dwPosition & g_BOTmsk[ ifd ] ) == g_BOTbot[ ifd ] )
+    if ( ( dwLogicalPosition & g_BOTmsk[ ifd ] ) == g_BOTbot[ ifd ] )
         *pStat |=  GMT_BOT (0xFFFFFFFF);
     else
         *pStat &= ~GMT_BOT (0xFFFFFFFF);
@@ -1015,11 +1019,12 @@ int w32_internal_mtget ( HANDLE hFile, U32* pStat, struct mtget* mtget, ifd_t if
 // Private internal helper function...   return 0 == success, -1 == failure
 
 static
-int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos, ifd_t ifd )
+int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwLogPos,
+                                                    DWORD* pdwAbsPos, ifd_t ifd )
 {
     DWORD dwDummyPartition, dwDummyPositionHigh;
 
-    ASSERT( pStat && pdwPos );    // (sanity check)
+    ASSERT( pStat && pdwLogPos );    // (sanity check)
 
     // PROGRAMMING NOTE: the SDK docs state that for the 'lpdwOffsetHigh'
     // parameter (i.e. dwDummyPositionHigh, the 5th paramater):
@@ -1039,9 +1044,9 @@ int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos, ifd_t ifd )
         errno = GetTapePosition
         (
             hFile,
-            TAPE_ABSOLUTE_POSITION,
+            TAPE_LOGICAL_POSITION,
             &dwDummyPartition,
-            pdwPos,
+            pdwLogPos,
             &dwDummyPositionHigh
         );
         errno = w32_internal_rc ( &dummy_stat );
@@ -1051,26 +1056,41 @@ int  w32_internal_mtpos ( HANDLE hFile, U32* pStat, DWORD* pdwPos, ifd_t ifd )
     if (errno)
         return -1;
 
-    // PROGRAMMING NOTE: the absolute tape position that Windows appears to
-    // return in response to a GetTapePosition call appears to correspond to
-    // the SCSI "READ POSITION" command's "first block location" value:
-    //
-    //    Small Computer System Interface-2 (SCSI-2)
-    //
-    //    ANSI INCITS 131-1994 (R1999)
-    //    (formerly ANSI X3.131-1994 (R1999))
-    //
-    //    10.2.6 READ POSITION command
-    //
-    //    page 234: READ POSITION data
-    //
-    //    "The first block location field indicates the block address
-    //    associated with the current logical position. The value shall
-    //    indicate the block address of the next data block to be
-    //    transferred between the initiator and the target if a READ
-    //    or WRITE command is issued."
+    if (pdwAbsPos)  // (may be NULL if they're not interested in it)
+    {
+        do
+        {
+            U32 dummy_stat = 0;
+            errno = GetTapePosition
+            (
+                hFile,
+                TAPE_ABSOLUTE_POSITION,
+                &dwDummyPartition,
+                pdwAbsPos,
+                &dwDummyPositionHigh
+            );
+            errno = w32_internal_rc ( &dummy_stat );
+        }
+        while ( EINTR == errno );
 
-    if ( ( *pdwPos & g_BOTmsk[ ifd ] ) == g_BOTbot[ ifd ] )
+        if (errno)
+            return -1;
+    }
+
+    // PROGRAMMING NOTE: the Windows 'GetTapePosition' API returns either
+    // a LOGICAL position value or an ABSOLUTE position value. Based on
+    // trial and error it was determined the LOGICAL position corresponds
+    // to the SCSI "READ POSITION" command's "first block location" value,
+    // and the ABSOLUTE tape position appears to correspond to the SCSI
+    // "last block location".
+    
+    // Since what we want is what IBM calls the "Channel block ID" (which
+    // itself appears to correspond to what the SCSI documentation refers
+    // to as the "First block location"), then what we want here is what
+    // Windows refers to as the LOGICAL position, not the ABSOLUTE (i.e.
+    // device-relative) position I originally thought we needed/wanted.
+
+    if ( ( *pdwLogPos & g_BOTmsk[ ifd ] ) == g_BOTbot[ ifd ] )
         *pStat |=  GMT_BOT (0xFFFFFFFF);
     else
         *pStat &= ~GMT_BOT (0xFFFFFFFF);

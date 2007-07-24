@@ -67,10 +67,17 @@
 /* SC53-1200 S/370 and S/390 Optical Media Attach/2 User's Guide     */
 /* SC53-1201 S/370 and S/390 Optical Media Attach/2 Technical Ref    */
 /* SG24-2506 IBM 3590 Tape Subsystem Technical Guide                 */
-/* GA32-0331 Magstar 3590 Hardware Reference                         */
+/* GA32-0331 IBM 3590 Hardware Reference                             */
+/* GA32-0329 IBM 3590 Introduction and Planning Guide                */
+/* SG24-2594 IBM 3590 Multiplatform Implementation                   */
+/* ANSI INCITS 131-1994 (R1999) SCSI-2 Reference                     */
+/* GA32-0127 IBM 3490E Hardware Reference                            */
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.116  2007/06/23 00:04:18  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.115  2007/04/06 15:40:25  fish
 // Fix Locate Block & Read BlockId for SCSI tape broken by 31 Aug 2006 preliminary-3590-support change
 //
@@ -5116,7 +5123,7 @@ void blockid_emulated_to_actual
             blockid_32_to_22 ( emu_blkid, act_blkid );
         }
     }
-    else // 3480 being emulated; guest block-id is 22-bits...
+    else // non-3590 being emulated; guest block-id is 22-bits...
     {
         if (dev->stape_blkid_32)
         {
@@ -5739,8 +5746,22 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 // selves here (in order to retrieve BOTH of those values
                 // for ourselves (since MTIOCPOS only returns one value
                 // and not the other))...
+
+                // And for the record, we want the "Channel block ID"
+                // (i.e. the SCSI "First block location" value). i.e.
+                // the LOGICAL and NOT the absolute/physical (device-
+                // relative) value!
+
                 || ioctl_tape( dev->fd, MTIOCPOS, (char*) &mtpos ) < 0 )
             {
+                if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+                    /* Informative message if tracing */
+                    if ( dev->ccwtrace || dev->ccwstep )
+                        logmsg(_("HHCTA082W ioctl_tape(MTIOCPOS=MTTELL) failed on %4.4X = %s: %s\n")
+                            ,dev->devnum
+                            ,dev->filename
+                            ,strerror(errno)
+                            );
 #endif
                 // Either this is not a scsi tape, or else the MTIOCPOS
                 // call failed; use our emulated blockid value...
@@ -5787,6 +5808,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 // other. Thus, until we can add code to Herc to do scsi i/o
                 // directly for ourselves, we really have no choice but to
                 // return the same value for both here...
+
+                // And for the record, we want the "Channel block ID"
+                // (i.e. the SCSI "First block location" value). i.e.
+                // the LOGICAL and NOT the absolute/physical (device-
+                // relative) value!
 
                 mtpos.mt_blkno = CSWAP32( mtpos.mt_blkno ); // (convert to guest format)
                 blockid_actual_to_emulated( dev, (BYTE*)&mtpos.mt_blkno, blockid );
@@ -5984,6 +6010,15 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 || (rc = ioctl_tape( dev->fd, MTIOCTOP, (char*) &mtop )) < 0 )
 #endif
             {
+                if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+                    /* Informative message if tracing */
+                    if ( dev->ccwtrace || dev->ccwstep )
+                        logmsg(_("HHCTA083W ioctl_tape(MTIOCTOP=MTSEEK) failed on %4.4X = %s: %s\n")
+                            ,dev->devnum
+                            ,dev->filename
+                            ,strerror(errno)
+                            );
+
                 rc=dev->tmh->rewind(dev,unitstat,code);
                 if(rc<0)
                 {
