@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.69  2007/06/23 00:04:11  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.68  2007/06/06 22:14:58  gsmith
 // Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
 //
@@ -806,7 +809,7 @@ struct DEVBLK {                         /* Device configuration block*/
 #define DEV_SYS_NONE    0               /* No active system on device*/
 #define DEV_SYS_LOCAL   0xffff          /* Local system active on dev*/
         /* By Adrian - Password for Tape drive (and 1 spare)         */   
-        BYTE    drvpwd[11];               /* Password for drive        */   
+        BYTE    drvpwd[11];             /* Password for drive        */   
         BYTE    reserved3;              /* (pad/align/unused/avail)  */   
 
         /*  control flags...                                         */
