@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.17  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.16  2006/12/08 09:43:30  jj
 // Add CVS message log
 //
@@ -32,6 +35,7 @@ extern void  close_scsitape           ( DEVBLK *dev );
 extern int   read_scsitape            ( DEVBLK *dev, BYTE *buf,          BYTE *unitstat, BYTE code );
 extern int   write_scsitape           ( DEVBLK *dev, BYTE *buf, U16 len, BYTE *unitstat, BYTE code );
 extern int   write_scsimark           ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern int   sync_scsitape            ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   erg_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   dse_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   fsb_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );

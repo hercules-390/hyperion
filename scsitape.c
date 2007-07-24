@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.21  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.20  2006/12/08 09:43:29  jj
 // Add CVS message log
 //
@@ -486,6 +489,83 @@ struct mtop opblk;
     return -1;
 
 } /* end function write_scsimark */
+
+/*-------------------------------------------------------------------*/
+/* Synchronize a SCSI tape device   (i.e. commit its data to tape)   */
+/*                                                                   */
+/* If successful, return value is zero.                              */
+/* If error, return value is -1 and unitstat is set to CE+DE+UC      */
+/*-------------------------------------------------------------------*/
+int sync_scsitape (DEVBLK *dev, BYTE *unitstat,BYTE code)
+{
+int  rc;
+int  save_errno;
+struct mtop opblk;
+    /*
+        GA32-0566-02 ("IBM Tape Device Drivers - Programming
+        Reference"):
+
+        STIOCQRYPOS
+        
+        "[...] A write filemark of count 0 is always issued to
+         the drive, which flushes all data from the buffers to
+         the tape media. After the write filemark completes, the
+         query is issued."
+
+        Write Tapemark
+
+        "[...] The WriteTapemark entry point may also be called
+         with the dwTapemarkCount parameter set to 0 and the
+         bImmediate parameter set to FALSE. This has the effect
+         of committing any uncommitted data written by previous
+         WriteFile calls ... to the media."
+    */
+
+    opblk.mt_op    = MTWEOF;
+    opblk.mt_count = 0;             // (zero to force a commit)
+
+    if ((rc = ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk)) >= 0)
+        return 0;       // (success)
+
+    /* Handle write error condition */
+
+    save_errno = errno;
+    {
+        logmsg (_("HHCTA089E Synchronize error on "
+            "%u:%4.4X=%s; errno=%d: %s\n"),
+            SSID_TO_LCSS(dev->ssid), dev->devnum,
+            dev->filename, errno, strerror(errno));
+
+        update_status_scsitape( dev, 0 );
+    }
+    errno = save_errno;
+
+    if ( STS_NOT_MOUNTED( dev ) )
+    {
+        build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
+    }
+    else
+    {
+        switch(errno)
+        {
+        case EIO:
+            if(STS_EOT(dev))
+                build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
+            else
+                build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
+            break;
+        case ENOSPC:
+            build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
+            break;
+        default:
+            build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
+            break;
+        }
+    }
+
+    return -1;
+
+} /* end function sync_scsitape */
 
 /*-------------------------------------------------------------------*/
 /* Forward space over next block of SCSI tape device                 */

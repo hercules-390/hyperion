@@ -6,6 +6,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.19  2007/06/23 00:04:18  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.18  2006/12/08 09:43:30  jj
 // Add CVS message log
 //
@@ -269,6 +272,7 @@ struct TAPEMEDIA_HANDLER
     int  (*bsf)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
     int  (*fsf)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
     int  (*wtm)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*sync)       (DEVBLK*,                        BYTE *unitstat, BYTE code);
     int  (*dse)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
     int  (*erg)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
     int  (*tapeloaded) (DEVBLK*,                        BYTE *unitstat, BYTE code);

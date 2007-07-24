@@ -75,6 +75,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.117  2007/07/24 21:57:29  fish
+// Fix Win32 SCSI tape "Locate" and "ReadBlockId" SNAFU
+//
 // Revision 1.116  2007/06/23 00:04:18  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -924,6 +927,38 @@ U16             prvblkl;                /* Length of previous block  */
 } /* end function write_awsmark */
 
 /*-------------------------------------------------------------------*/
+/* Synchronize an AWSTAPE format file  (i.e. flush buffers to disk)  */
+/*                                                                   */
+/* If successful, return value is zero.                              */
+/* If error, return value is -1 and unitstat is set to CE+DE+UC      */
+/*-------------------------------------------------------------------*/
+static int sync_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
+{
+    /* Unit check if tape is write-protected */
+    if (dev->readonly)
+    {
+        build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
+        return -1;
+    }
+
+    /* Perform sync. Return error on failure. */
+    if (fdatasync( dev->fd ) < 0)
+    {
+        /* Log the error */
+        logmsg (_("HHCTA088E Sync error on "
+            "device %4.4X = %s: %s\n"),
+            dev->devnum, dev->filename, strerror(errno));
+        /* Set unit check with equipment check */
+        build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
+        return -1;
+    }
+
+    /* Return normal status */
+    return 0;
+
+} /* end function sync_awstape */
+
+/*-------------------------------------------------------------------*/
 /* Forward space over next block of AWSTAPE format file              */
 /*                                                                   */
 /* If successful, return value is the length of the block skipped.   */
@@ -1347,6 +1382,38 @@ int             rc;                     /* Return code               */
     return 0;
 
 } /* end function write_hetmark */
+
+/*-------------------------------------------------------------------*/
+/* Synchronize a HET format file   (i.e. flush its buffers to disk)  */
+/*                                                                   */
+/* If successful, return value is zero.                              */
+/* If error, return value is -1 and unitstat is set to CE+DE+UC      */
+/*-------------------------------------------------------------------*/
+static int sync_het(DEVBLK *dev, BYTE *unitstat,BYTE code)
+{
+int             rc;                     /* Return code               */
+
+    /* Perform the flush */
+    rc = het_sync (dev->hetb);
+    if (rc < 0)
+    {
+        /* Handle error condition */
+        if (HETE_PROTECTED == rc)
+            build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
+        else
+        {
+            logmsg (_("HHCTA088E Sync error on "
+                "device %4.4X = %s: %s\n"),
+                dev->devnum, dev->filename, strerror(errno));
+            build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
+        }
+        return -1;
+    }
+
+    /* Return normal status */
+    return 0;
+
+} /* end function sync_het */
 
 /*-------------------------------------------------------------------*/
 /* Forward space over next block of an HET format file               */
@@ -5933,15 +6000,19 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
 
     /*---------------------------------------------------------------*/
-    /* SYNCHRONIZE                                                   */
+    /* SYNCHRONIZE  (3480 or later)                                  */
     /*---------------------------------------------------------------*/
     case 0x43:
+
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+
+        if ((rc = dev->tmh->sync( dev, unitstat, code )) == 0)
+            build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
+
         break;
 
     /*---------------------------------------------------------------*/
@@ -6688,6 +6759,7 @@ static TAPEMEDIA_HANDLER tmh_aws = {
     &bsf_awstape,
     &fsf_awstape,
     &write_awsmark,
+    &sync_awstape,
     NULL, /* DSE */
     NULL, /* ERG */
     &is_tapeloaded_filename,
@@ -6705,6 +6777,7 @@ static TAPEMEDIA_HANDLER tmh_het = {
     &bsf_het,
     &fsf_het,
     &write_hetmark,
+    &sync_het,
     NULL, /* DSE */
     NULL, /* ERG */
     &is_tapeloaded_filename,
@@ -6724,6 +6797,7 @@ static TAPEMEDIA_HANDLER tmh_scsi = {
     &bsf_scsitape,
     &fsf_scsitape,
     &write_scsimark,
+    &sync_scsitape,
     &dse_scsitape,
     &erg_scsitape,
     &is_tape_mounted_scsitape,
@@ -6760,6 +6834,7 @@ static TAPEMEDIA_HANDLER tmh_oma = {
     &bsf_omatape,
     &fsf_omatape,
     &write_READONLY,  /* WTM */
+    &write_READONLY,  /* SYNC */
     &write_READONLY,  /* DSE */
     &write_READONLY,  /* ERG */
     &is_tapeloaded_filename,

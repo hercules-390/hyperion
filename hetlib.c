@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.32  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.31  2007/02/25 21:10:44  fish
 // Fix het_locate to continue on tapemark
 //
@@ -1443,6 +1446,108 @@ het_tapemark( HETB *hetb )
     || Set new physical EOF
     */
     do rc = ftruncate( fileno( hetb->fd ), ftell( hetb->fd ) );
+    while (EINTR == rc);
+    if (rc != 0)
+    {
+        return( HETE_ERROR );
+    }
+
+    /*
+    || Success
+    */
+    return( 0 );
+}
+
+/*==DOC==
+
+    NAME
+            het_sync - commit/flush a HET file's buffers to disk
+
+    SYNOPSIS
+            #include "hetlib.h"
+
+            int het_sync( HETB *hetb )
+
+    DESCRIPTION
+            Calls the file system's "fdatasync" (or fsync) function to cause
+            all data for the HET file to be transferred to disk by forcing a
+            physical write of all data from the file's buffers or the file-
+            system's cache, to the disk, thereby assuring that after a system
+            crash or other failure, that all data up to the time of the call
+            is thus recorded on the disk.
+
+    RETURN VALUE
+            If no errors are detected then the return value will be >= 0.
+
+            If an error occurs, then the return value will be < 0 and will be
+            one of the following:
+
+            HETE_PROTECTED      File is write protected
+
+            HETE_ERROR          File system error - check errno(3)
+
+    EXAMPLE
+            //
+            // Flush a HET file's buffers to disk
+            //
+
+            #include "hetlib.h"
+
+            char data[] = "This is a test";
+
+            int main( int argc, char *argv[] )
+            {
+                HETB *hetb;
+                int rc;
+
+                rc = het_open( &hetb, argv[ 1 ], HETOPEN_CREATE );
+                if( rc >= 0 )
+                {
+                    rc = het_write( hetb, data, sizeof( data ) );
+                    if( rc >= 0 )
+                    {
+                        printf( "Block successfully written\n" );
+
+                        rc = het_sync( &hetb );
+                        if( rc >= 0 )
+                        {
+                            printf( "Block successfully committed\n" );
+                        }
+                    }
+                }
+
+                if( rc < 0 )
+                {
+                    printf( "HETLIB error: %d\n", rc );
+                }
+
+                het_close( &hetb );
+
+                return( 0 );
+            }
+
+    SEE ALSO
+            het_open(), het_write(), het_close()
+
+==DOC==*/
+
+DLL_EXPORT int
+het_sync( HETB *hetb )
+{
+    int rc;
+
+    /*
+    || Can't sync to readonly media
+    */
+    if( hetb->writeprotect )
+    {
+        return( HETE_PROTECTED );
+    }
+
+    /*
+    || Perform the sync
+    */
+    do rc = fdatasync( fileno( hetb->fd ) );
     while (EINTR == rc);
     if (rc != 0)
     {

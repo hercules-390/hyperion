@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.17  2007/06/23 00:04:11  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.16  2006/12/08 09:43:26  jj
 // Add CVS message log
 //
@@ -182,6 +185,7 @@ HET_DLL_IMPORT int het_read( HETB *hetb, void *sbuf );
 HET_DLL_IMPORT int het_write_header( HETB *hetb, int len, int flags1, int flags2 );
 HET_DLL_IMPORT int het_write( HETB *hetb, void *sbuf, int slen );
 HET_DLL_IMPORT int het_tapemark( HETB *hetb );
+HET_DLL_IMPORT int het_sync( HETB *hetb );
 HET_DLL_IMPORT int het_cntl( HETB *hetb, int func, unsigned long val );
 HET_DLL_IMPORT int het_locate( HETB *hetb, int block );
 HET_DLL_IMPORT int het_bsb( HETB *hetb );

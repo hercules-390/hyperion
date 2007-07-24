@@ -17,6 +17,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.14  2007/07/24 21:57:29  fish
+// Fix Win32 SCSI tape "Locate" and "ReadBlockId" SNAFU
+//
 // Revision 1.13  2007/06/23 00:04:19  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -822,7 +825,7 @@ int w32_internal_mtop ( HANDLE hFile, U32* pStat, struct mtop* mtop, ifd_t ifd )
 
         case MTWEOF:    // (write TAPEMARK)
         {
-            if ( mtop->mt_count < 1 )
+            if ( mtop->mt_count < 0 )
             {
                 errno = EINVAL;
                 rc = -1;
