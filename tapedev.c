@@ -75,6 +75,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.120  2007/07/24 22:54:49  fish
+// (comment changes only)
+//
 // Revision 1.119  2007/07/24 22:46:09  fish
 // Default to --blkid-32 and --no-erg for 3590 SCSI
 //
@@ -6458,12 +6461,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         // ZZ FIXME: not written yet.
 
-        // For now, just treat identically to above MODE SET.
-
-        // NOTE: Might possibly be able to be moved/combined into
-        // the previous 'MODE SET' logic??
-
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        /* Set command reject sense byte, and unit check status */
+        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
         break;
 
     /*---------------------------------------------------------------*/
@@ -6506,11 +6505,18 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0xC2:
 
-        // Similar to (if not identical to) SCSI "Test Unit Ready"
-        // command. Basically just used to determine whether there
-        // is a tape mounted on the drive or not.
+        // The MEDIUM SENSE command provides information about the
+        // type of medium currently in the drive, if any (i.e. type,
+        // volser, capacity, etc).
 
-        // (purposely FALL THROUGH to the normal 'SENSE' logic below)
+        // PROGRAMMING NOTE: until we can add support to Hercules
+        // allowing direct SCSI i/o (so that we can issue the 10-byte
+        // Mode Sense (X'5A') command to ask for Mode Page x'23' =
+        // Medium Sense) we have no choice but to reject the command.
+
+        /* Set command reject sense byte, and unit check status */
+        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+        break;
 
     /*---------------------------------------------------------------*/
     /* SENSE                                                         */

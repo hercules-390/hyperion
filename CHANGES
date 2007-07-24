@@ -1,3 +1,5 @@
+24 Jul 2007 Force command-reject (until we can get it coded right)
+            for 3590 Medium Sense (x'C2') and Mode Sense (x'CF') - Fish
 24 Jul 2007 Default to --blkid-32 and --no-erg for 3590 SCSI - Fish
 24 Jul 2007 Fix tape Synchronize CCW (x'43') to do actual commit - Fish
 24 Jul 2007 Fix Windows SCSI tape Locate and Read-Block-Id SNAFU - Fish
