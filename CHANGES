@@ -1,3 +1,4 @@
+24 Jul 2007 Default to --blkid-32 and --no-erg for 3590 SCSI - Fish
 24 Jul 2007 Fix tape Synchronize CCW (x'43') to do actual commit - Fish
 24 Jul 2007 Fix Windows SCSI tape Locate and Read-Block-Id SNAFU - Fish
 19 Jul 2007 Disable DIAG 308 Re-IPL feature until it is complete - Ivan Warren

@@ -75,6 +75,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.118  2007/07/24 22:36:33  fish
+// Fix tape Synchronize CCW (x'43') to do actual commit
+//
 // Revision 1.117  2007/07/24 21:57:29  fish
 // Fix Win32 SCSI tape "Locate" and "ReadBlockId" SNAFU
 //
@@ -4188,6 +4191,15 @@ union
     dev->tdparms.maxsize   = 0;        // no max size     (default)
     dev->tdparms.eotmargin = 128*1024; // 128K EOT margin (default)
 
+    // Real 3590's use 32-bit blockids and don't support Erase Gap.
+
+    if (TAPEDEVT_SCSITAPE == dev->tapedevt
+        &&     0x3590     == dev->devtype)
+    {
+        dev->stape_no_erg   = 1;        // (default for 3590 SCSI)
+        dev->stape_blkid_32 = 1;        // (default for 3590 SCSI)
+    }
+
     /* Process remaining parameters */
     rc = 0;
     for (i = 1; i < argc; i++)
@@ -4954,7 +4966,8 @@ int             rc;
 static void tapedev_query_device ( DEVBLK *dev, char **class,
                 int buflen, char *buffer )
 {
-    char dispmsg[256]; dispmsg[0]=0;
+    char devparms[ PATH_MAX+1 + 64 ];
+    char dispmsg [ 256 ];
 
     if (!dev || !class || !buffer || !buflen)
         return;
@@ -4962,18 +4975,34 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
     *class = "TAPE";
     *buffer = 0;
 
+    devparms[0]=0;
+    dispmsg [0]=0;
+
     GetDisplayMsg( dev, dispmsg, sizeof(dispmsg) );
 
-    if ( !strcmp( dev->filename, TAPE_UNLOADED ) )
+    if ( strcmp( dev->filename, TAPE_UNLOADED ) == 0 )
     {
+        strlcat( devparms, dev->filename, sizeof(devparms));
+
+#if defined(OPTION_SCSI_TAPE)
+        if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
+        {
+            if ( dev->stape_blkid_32 ) strlcat( devparms, " --blkid-32", sizeof(devparms) );
+            if ( dev->stape_no_erg   ) strlcat( devparms, " --no-erg",   sizeof(devparms) );
+        }
+#endif
         snprintf(buffer, buflen, "%s%s%s",
-            TAPE_UNLOADED,
+            devparms,
             dev->tdparms.displayfeat ? ", Display: " : "",
             dev->tdparms.displayfeat ?    dispmsg    : "");
     }
-    else
+    else // (filename was specified)
     {
         char tapepos[32]; tapepos[0]=0;
+
+        if (strchr(dev->filename,' ')) strlcat( devparms, "\"",          sizeof(devparms));
+                                       strlcat( devparms, dev->filename, sizeof(devparms));
+        if (strchr(dev->filename,' ')) strlcat( devparms, "\"",          sizeof(devparms));
 
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
         {
@@ -4982,14 +5011,19 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
             tapepos[sizeof(tapepos)-1] = 0;
         }
 #if defined(OPTION_SCSI_TAPE)
-        else
+        else // (this is a SCSI tape drive)
         {
             if (STS_BOT( dev )) strlcat(tapepos,"*BOT* ",sizeof(tapepos));
+
             // If tape has a display, then GetDisplayMsg already
             // appended *FP* for us. Otherwise we need to do it.
+
             if ( !dev->tdparms.displayfeat )
                 if (STS_WR_PROT( dev ))
                     strlcat(tapepos,"*FP* ",sizeof(tapepos));
+
+            if ( dev->stape_blkid_32 ) strlcat( devparms, " --blkid-32", sizeof(devparms) );
+            if ( dev->stape_no_erg   ) strlcat( devparms, " --no-erg",   sizeof(devparms) );
         }
 #endif
 
@@ -5003,7 +5037,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
 
             snprintf (buffer, buflen, "%s%s %s%s%s",
 
-                dev->filename, (dev->readonly ? " ro" : ""),
+                devparms, (dev->readonly ? " ro" : ""),
 
                 tapepos,
                 dev->tdparms.displayfeat ? "Display: " : "",
@@ -5015,7 +5049,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
 
             snprintf (buffer, buflen, "%s%s (%sNOTAPE)%s%s",
 
-                dev->filename, (dev->readonly ? " ro" : ""),
+                devparms, (dev->readonly ? " ro" : ""),
 
                 dev->fd < 0              ?   "closed; "  : "",
                 dev->tdparms.displayfeat ? ", Display: " : "",
