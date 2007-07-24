@@ -75,6 +75,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.119  2007/07/24 22:46:09  fish
+// Default to --blkid-32 and --no-erg for 3590 SCSI
+//
 // Revision 1.118  2007/07/24 22:36:33  fish
 // Fix tape Synchronize CCW (x'43') to do actual commit
 //
@@ -5435,27 +5438,27 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x06:
 
-        /* From: SG24-2506-01 "IBM 3590 Tape Subsystem Technical Guide"
+        /*
+          SG24-2506-01 "IBM 3590 Tape Subsystem Technical Guide"
 
-        http://publibz.boulder.ibm.com/cgi-bin/bookmgr/FRAMESET/EZ309601/CCONTENTS?DT=19961211181910
+          5.2.1 Separate Channel Commands for IPL Read and Normal Read
 
-        5.2.1 Separate Channel Commands for IPL Read and Normal Read
+          "On IBM 3480/3490 tape devices there is only one Read Forward
+           CCW, the X'02' command code.  This CCW is used to perform
+           not only normal read operations but also an IPL Read from
+           tape, for example, DFSMSdss Stand-Alone Restore.  When the
+           CCW is used as an IPL Read, it is not subject to resetting
+           event notification, by definition.  Because there is only
+           one Read Forward CCW, it cannot be subject to resetting event
+           notification on IBM 3480 and 3490 devices.
 
-        On IBM 3480/3490 tape devices there is only one Read Forward
-        CCW, the X'02' command code.  This CCW is used to perform not
-        only normal read operations but also an IPL Read from tape,
-        for example, DFSMSdss Stand-Alone Restore.  When the CCW is
-        used as an IPL Read, it is not subject to resetting event
-        notification, by definition.  Because there is only one Read
-        Forward CCW, it cannot be subject to resetting event notification
-        on IBM 3480 and 3490 devices.
-
-        To differentiate between an IPL Read and a normal read forward
-        operation, the X'02' command code has been redefined to be the
-        IPL Read CCW, and a new X'06' command code has been defined to
-        be the Read Forward CCW.  The new Read Forward CCW, X'06', is
-        subject to resetting event notification, as should be the case
-        for normal read CCWs issued by applications or other host software.
+           To differentiate between an IPL Read and a normal read
+           forward operation, the X'02' command code has been redefined
+           to be the IPL Read CCW, and a new X'06' command code has been
+           defined to be the Read Forward CCW.  The new Read Forward
+           CCW, X'06', is subject to resetting event notification, as
+           should be the case for normal read CCWs issued by applications
+           or other host software."
         */
 
         // PROGRAMMING NOTE: I'm not sure what they mean by "resetting
@@ -5542,28 +5545,39 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x0A:
 
-        /* From: SG24-2506-01 "IBM 3590 Tape Subsystem Technical Guide"
+        /*
+          SG24-2506-01 ("Magstar and IBM 3590 High Performance Tape
+          Subsystem - Technical Guide):
 
-        http://publibz.boulder.ibm.com/cgi-bin/bookmgr/FRAMESET/EZ309601/CCONTENTS?DT=19961211181910
+          5.2.2 Read Previous to Replace Read Backward:
 
-        5.2.2 Read Previous to Replace Read Backward:
+          "The ESCON-attached Magstar tape drive does not support the
+           Read Backward CCW (command code, X'0C').  It supports a new
+           Read Previous CCW that allows processing of an IBM 3590 High
+           Performance Tape Cartridge in the backward direction without
+           the performance penalties that exist with the Read Backward
+           CCW.  IBM 3480 and 3490 devices had to reread the physical
+           block from the medium for each request of a logical block.
+           The Magstar tape drive retains the physical block in the
+           device buffer and satisfies any subsequent Read Previous from
+           the buffer, similar to how Read Forward operates.  The Read
+           Previous CCW operates somewhat like the Read Backward CCW
+           in that it can be used to process the volumes in the backward
+           direction.  It is different from the Read Backward, however,
+           because the data is transferred to the host in the same order
+           in which it was written, rather than in reverse order like
+           Read Backward."
+        */
+        /*
+          SG24-2594-02 ("Magstar and IBM 3590 High Performance Tape
+          Subsystem - Multiplatform Implementation"):
 
-        The ESCON-attached Magstar tape drive does not support the
-        Read Backward CCW (command code, X'0C').  It supports a new
-        Read Previous CCW that allows processing of an IBM 3590 High
-        Performance Tape Cartridge in the backward direction without
-        the performance penalties that exist with the Read Backward
-        CCW.  IBM 3480 and 3490 devices had to reread the physical
-        block from the medium for each request of a logical block.
-        The Magstar tape drive retains the physical block in the
-        device buffer and satisfies any subsequent Read Previous from
-        the buffer, similar to how Read Forward operates.  The Read
-        Previous CCW operates somewhat like the Read Backward CCW
-        in that it can be used to process the volumes in the backward
-        direction.  It is different from the Read Backward, however,
-        because the data is transferred to the host in the same order
-        in which it was written, rather than in reverse order like
-        Read Backward.
+          5.1.2 New and Changed Read Channel Commands
+
+          "[...] That is, the Read Backward command's data address
+           will point to the end of the storage area, while a Read
+           Previous command points to the beginning of the storage
+           area..."
         */
 
         // PROGRAMMING NOTE: until we can add support to Hercules
@@ -5634,15 +5648,14 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x62:
 
-        /* From: SG24-2506-01 "IBM 3590 Tape Subsystem Technical Guide"
+        /*
+          SG24-2506-01 "IBM 3590 Tape Subsystem Technical Guide"
 
-        http://publibz.boulder.ibm.com/cgi-bin/bookmgr/FRAMESET/EZ309601/CCONTENTS?DT=19961211181910
+          5.2.3 New Read Media Characteristics
 
-        5.2.3 New Read Media Characteristics
-
-        The new Read Media Characteristics CCW (command code x'62')
-        provides up to 256 bytes of information about the media and
-        formats supported by the Magstar tape drive.
+          "The new Read Media Characteristics CCW (command code x'62')
+           provides up to 256 bytes of information about the media and
+           formats supported by the Magstar tape drive."
         */
 
         // ZZ FIXME: not coded yet.
