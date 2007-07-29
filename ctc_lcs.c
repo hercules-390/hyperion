@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.64  2007/06/23 00:04:05  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.63  2007/02/25 15:05:46  fish
 // Fix crash in LCS close if devinit of incomplete group
 //
@@ -780,7 +783,9 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
         // Terminate the frame buffer
         STORE_HW( pFrame->hwOffset, 0x0000 );
 
-        iLength = pLCSDEV->iFrameOffset + 2;
+        // (fix for day-1 bug offered by Vince Weaver [vince@deater.net])
+//      iLength = pLCSDEV->iFrameOffset + 2;
+        iLength = pLCSDEV->iFrameOffset;
 
         if( sCount < iLength )
         {

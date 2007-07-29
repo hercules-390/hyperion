@@ -11,6 +11,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.67  2007/07/29 00:24:43  fish
+// (comment change only)
+//
 // Revision 1.66  2007/06/23 00:04:05  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -711,7 +714,9 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         STORE_HW( pFrame->hwOffset, 0x0000 );
 
-        iLength = pCTCBLK->iFrameOffset + sizeof( CTCIHDR ) + 2;
+        // (fix for day-1 bug offered by Vince Weaver [vince@deater.net])
+//      iLength = pCTCBLK->iFrameOffset + sizeof( CTCIHDR ) + 2;
+        iLength = pCTCBLK->iFrameOffset + sizeof( CTCIHDR );
 
         if( sCount < iLength )
         {
