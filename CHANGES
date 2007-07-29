@@ -1,3 +1,4 @@
+29 Jul 2007 Fix PR# 34/tape bug causing crash if non-tape devinit - Fish
 28 Jul 2007 Fix day-1 CTCI/LCS bug - Vince Weaver [vince@deater.net] by Fish
 24 Jul 2007 Force command-reject (until we can get it coded right)
             for 3590 Medium Sense (x'C2') and Mode Sense (x'CF') - Fish

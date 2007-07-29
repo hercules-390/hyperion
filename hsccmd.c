@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.219  2007/06/23 00:04:11  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.218  2007/06/22 14:45:11  bernard
 // Sorted icount plus percentage
 //
@@ -3116,11 +3119,21 @@ char   **init_argv;
     /* Prevent accidental re-init'ing of already loaded tape drives */
     if (nomountedtapereinit)
     {
-        if (0
-            || TAPEDEVT_SCSITAPE == dev->tapedevt
-            || (argc >= 3 && strcmp(argv[2], TAPE_UNLOADED) != 0)
+        char*  devclass;
+        char   devnam[256];
+
+        ASSERT( dev->hnd && dev->hnd->query );
+        dev->hnd->query( dev, &devclass, sizeof(devnam), devnam );
+
+        if (1
+            && strcmp(devclass,"TAPE") == 0
+            && (0
+                || TAPEDEVT_SCSITAPE == dev->tapedevt
+                || (argc >= 3 && strcmp(argv[2], TAPE_UNLOADED) != 0)
+               )
         )
         {
+            ASSERT( dev->tmh && dev->tmh->tapeloaded );
             if (dev->tmh->tapeloaded( dev, NULL, 0 ))
             {
                 release_lock (&dev->lock);
