@@ -11,6 +11,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.66  2007/06/23 00:04:05  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.65  2006/12/08 09:43:19  jj
 // Add CVS message log
 //
@@ -628,6 +631,9 @@ void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
 // The residual byte count is set to indicate the amount of the buffer
 // which was not filled.
 //
+// For details regarding the actual buffer layout, please refer to
+// the comments preceding the CTCI_ReadThread function.
+
 // Input:
 //      pDEVBLK   A pointer to the CTC adapter device block
 //      sCount    The I/O buffer length from the read CCW
@@ -744,6 +750,10 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
 // -------------------------------------------------------------------
 // CTCI_Write
 // -------------------------------------------------------------------
+//
+// For details regarding the actual buffer layout, please refer to
+// the comments preceding the CTCI_ReadThread function.
+//
 
 void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
                   BYTE*   pIOBuf,    BYTE* pUnitStat,
@@ -921,15 +931,31 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
 // is enqueued on the device frame buffer.
 //
 // The device frame buffer is a chain of blocks. The first 2 bytes of
-// a block specify the offset in the buffer of the next block. The
-// final block in indicated by an offset of 0x0000.
+// a block (CTCIHDR) specify the offset in the buffer of the next block.
+// The final block in indicated by a CTCIHDR offset value of 0x0000.
 //
-// Within each block, each IP frame is preceeded by a segment header.
-// This segment header has a 2 byte length field that specifies the
-// length of the segment (including the segment header), a 2 byte
-// frame type field (always 0x0800 - IPv4), and a 2 byte reserved area
-// followed by the actual frame data.
+// Within each block, each IP frame is preceeded by a segment header
+// (CTCISEG). This segment header has a 2 byte length field that
+// specifies the length of the segment (including the segment header),
+// a 2 byte frame type field (always 0x0800 = IPv4), and a 2 byte
+// reserved area (always 0000), followed by the actual frame data.
 //
+// The CTCI_ReadThread reads the IP frame, then CTCI_EnqueueIPFrame
+// function is called to add it to the frame buffer (which precedes
+// each one with a CTCISEG and adjusts the block header (CTCIHDR)
+// offset value as appropriate.
+//
+// Oddly, it is the CTCI_Read function (called by CCW processing in
+// response to a guest SIO request) that adds the CTCIHDR with the
+// 000 offset value marking the end of the buffer's chain of blocks,
+// and not the CTCI_EnqueueIPFrame nor the CTCI_ReadThread as would
+// be expected.
+//
+// Also note that the iFrameOffset field in the CTCI device's CTCBLK
+// control block is the offset from the end of the buffer's first
+// CTCIHDR to where the end-of-chain CTCIHDR is, and is identical to
+// all of the queued CTCISEG's hwLength fields added together.
+// 
 
 static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 {
@@ -1000,8 +1026,9 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 // CTCI_EnqueueIPFrame
 // --------------------------------------------------------------------
 //
-// Places the provided IP frame in the next available frame
-// slot in the adapter buffer.
+// Places the provided IP frame in the next available frame slot in
+// the adapter buffer. For details regarding the actual buffer layout
+// please refer to the comments preceding the CTCI_ReadThread function.
 //
 // Returns:
 //
