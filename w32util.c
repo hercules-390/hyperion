@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.29  2007/06/23 00:04:19  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.28  2007/01/11 19:54:34  fish
 // Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
 //
@@ -1574,6 +1577,18 @@ DLL_EXPORT int socket_deinit ( void )
 #else
     return 0;       // (not needed? see PROGRAMING NOTE above!)
 #endif
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Retrieve unique host id
+
+DLL_EXPORT long gethostid( void )
+{
+    char             szHostName[ WSADESCRIPTION_LEN ];
+    struct hostent*  pHostent = NULL;
+    return (gethostname( szHostName, sizeof(szHostName) ) == 0
+        && (pHostent = gethostbyname( szHostName )) != NULL) ?
+        (long)pHostent->h_addr : 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

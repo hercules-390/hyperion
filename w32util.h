@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.10  2007/06/23 00:04:19  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.9  2007/01/10 15:12:12  rbowler
 // Console keepalive for Unix
 //
@@ -171,6 +174,9 @@ W32_DLL_IMPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsiz
 // Poor man's  "fcntl( fd, F_GETFL )"...
 // (only returns access-mode flags and not any others)
 W32_DLL_IMPORT int get_file_accmode_flags( int fd );
+
+// Retrieve unique host id
+W32_DLL_IMPORT long gethostid( void );
 
 // Initialize/Deinitialize sockets package...
 W32_DLL_IMPORT int  socket_init   ( void );
