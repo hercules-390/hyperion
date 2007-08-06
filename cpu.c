@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.188  2007/08/06 22:14:07  gsmith
+// rework CPU execution loop
+//
 // Revision 1.187  2007/08/06 22:12:49  gsmith
 // cpu thread exitjmp
 //
@@ -1529,10 +1532,13 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         /* If the architecture mode has changed we must adapt */
         if(sysblk.arch_mode != regs->arch_mode)
             longjmp(regs->archjmp,SIE_NO_INTERCEPT);
+
+        RELEASE_INTLOCK(regs);
+        longjmp(regs->progjmp, SIE_NO_INTERCEPT);
     } /*CPUSTATE_STOPPED*/
 
     /* Test for wait state */
-    else if (WAITSTATE(&regs->psw))
+    if (WAITSTATE(&regs->psw))
     {
 #ifdef OPTION_MIPS_COUNTING
         regs->waittod = hw_clock();
@@ -1570,12 +1576,13 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         regs->waittime += hw_clock() - regs->waittod;
         regs->waittod = 0;
 #endif
+        RELEASE_INTLOCK(regs);
+        longjmp(regs->progjmp, SIE_NO_INTERCEPT);
     } /* end if(wait) */
 
     /* Release the interrupt lock */
     RELEASE_INTLOCK(regs);
-
-    longjmp(regs->progjmp, SIE_NO_INTERCEPT);
+    return;
 
 } /* process_interrupt */
 
