@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.187  2007/08/06 22:12:49  gsmith
+// cpu thread exitjmp
+//
 // Revision 1.186  2007/08/06 22:10:47  gsmith
 // reposition process_trace for readability
 //
@@ -1655,8 +1658,10 @@ REGS    regs;
     /* Set `execflag' to 0 in case EXecuted instruction did a longjmp() */
     regs.execflag = 0;
 
-    while (!INTERRUPT_PENDING(&regs))
-    {
+    do {
+        if (INTERRUPT_PENDING(&regs))
+            ARCH_DEP(process_interrupt)(&regs);
+
         ip = INSTRUCTION_FETCH(&regs, 0);
         regs.instcount++;
         EXECUTE_INSTRUCTION(ip, &regs);
@@ -1678,11 +1683,10 @@ REGS    regs;
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
         } while (!INTERRUPT_PENDING(&regs));
-    } /* while(!INTERRUPT_PENDING(&regs)) */
+    } while (1);
 
-    /* process_interrupt will do longjmp unless we're exiting */
-    ARCH_DEP(process_interrupt)(&regs);
-    return cpu_uninit(cpu, &regs);
+    /* Never reached */
+    return NULL;
 
 } /* end function cpu_thread */
 
