@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.185  2007/06/23 00:04:05  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.184  2007/06/22 02:22:50  gsmith
 // revert config_cpu.pat due to problems in testing
 //
@@ -1573,65 +1576,6 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 } /* process_interrupt */
 
 /*-------------------------------------------------------------------*/
-/* Process Trace                                                     */
-/*-------------------------------------------------------------------*/
-void ARCH_DEP(process_trace)(REGS *regs)
-{
-int     shouldtrace = 0;                /* 1=Trace instruction       */
-int     shouldstep = 0;                 /* 1=Wait for start command  */
-
-    /* Test for trace */
-    if (CPU_TRACING(regs, 0))
-        shouldtrace = 1;
-
-    /* Test for step */
-    if (CPU_STEPPING(regs, 0))
-        shouldstep = 1;
-
-    /* Display the instruction */
-    if (shouldtrace || shouldstep)
-    {
-        BYTE *ip = regs->ip < regs->aip ? regs->inst : regs->ip;
-        ARCH_DEP(display_inst) (regs, ip);
-    }
-
-    /* Stop the CPU */
-    if (shouldstep)
-    {
-        REGS *hostregs = regs->hostregs;
-        S64 saved_timer[2];
-
-        OBTAIN_INTLOCK(hostregs);
-#ifdef OPTION_MIPS_COUNTING
-        hostregs->waittod = hw_clock();
-#endif
-        /* The CPU timer is not decremented for a CPU that is in
-           the manual state (e.g. stopped in single step mode) */
-        saved_timer[0] = cpu_timer(regs);
-        saved_timer[1] = cpu_timer(hostregs);
-        hostregs->cpustate = CPUSTATE_STOPPED;
-        sysblk.started_mask &= ~hostregs->cpubit;
-        hostregs->stepwait = 1;
-        sysblk.intowner = LOCK_OWNER_NONE;
-        while (hostregs->cpustate == CPUSTATE_STOPPED)
-        {
-            wait_condition (&hostregs->intcond, &sysblk.intlock);
-        }
-        sysblk.intowner = hostregs->cpuad;
-        hostregs->stepwait = 0;
-        sysblk.started_mask |= hostregs->cpubit;
-        set_cpu_timer(regs,saved_timer[0]);
-        set_cpu_timer(hostregs,saved_timer[1]);
-#ifdef OPTION_MIPS_COUNTING
-        hostregs->waittime += hw_clock() - hostregs->waittod;
-        hostregs->waittod = 0;
-#endif
-        RELEASE_INTLOCK(hostregs);
-    }
-} /* process_trace */
-
-
-/*-------------------------------------------------------------------*/
 /* Run CPU                                                           */
 /*-------------------------------------------------------------------*/
 REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
@@ -1737,6 +1681,63 @@ REGS    regs;
 
 } /* end function cpu_thread */
 
+/*-------------------------------------------------------------------*/
+/* Process Trace                                                     */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP(process_trace)(REGS *regs)
+{
+int     shouldtrace = 0;                /* 1=Trace instruction       */
+int     shouldstep = 0;                 /* 1=Wait for start command  */
+
+    /* Test for trace */
+    if (CPU_TRACING(regs, 0))
+        shouldtrace = 1;
+
+    /* Test for step */
+    if (CPU_STEPPING(regs, 0))
+        shouldstep = 1;
+
+    /* Display the instruction */
+    if (shouldtrace || shouldstep)
+    {
+        BYTE *ip = regs->ip < regs->aip ? regs->inst : regs->ip;
+        ARCH_DEP(display_inst) (regs, ip);
+    }
+
+    /* Stop the CPU */
+    if (shouldstep)
+    {
+        REGS *hostregs = regs->hostregs;
+        S64 saved_timer[2];
+
+        OBTAIN_INTLOCK(hostregs);
+#ifdef OPTION_MIPS_COUNTING
+        hostregs->waittod = hw_clock();
+#endif
+        /* The CPU timer is not decremented for a CPU that is in
+           the manual state (e.g. stopped in single step mode) */
+        saved_timer[0] = cpu_timer(regs);
+        saved_timer[1] = cpu_timer(hostregs);
+        hostregs->cpustate = CPUSTATE_STOPPED;
+        sysblk.started_mask &= ~hostregs->cpubit;
+        hostregs->stepwait = 1;
+        sysblk.intowner = LOCK_OWNER_NONE;
+        while (hostregs->cpustate == CPUSTATE_STOPPED)
+        {
+            wait_condition (&hostregs->intcond, &sysblk.intlock);
+        }
+        sysblk.intowner = hostregs->cpuad;
+        hostregs->stepwait = 0;
+        sysblk.started_mask |= hostregs->cpubit;
+        set_cpu_timer(regs,saved_timer[0]);
+        set_cpu_timer(hostregs,saved_timer[1]);
+#ifdef OPTION_MIPS_COUNTING
+        hostregs->waittime += hw_clock() - hostregs->waittod;
+        hostregs->waittod = 0;
+#endif
+        RELEASE_INTLOCK(hostregs);
+    }
+} /* process_trace */
 
 /*-------------------------------------------------------------------*/
 /* Set Jump Pointers                                                 */
