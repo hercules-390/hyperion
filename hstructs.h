@@ -9,6 +9,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.71  2007/08/06 16:48:20  ivan
+// Implement "PARM" option for IPL command (same as VM IPL PARM XXX)
+// Also add command helps for ipl, iplc, sysclear, sysreset
+//
 // Revision 1.70  2007/07/24 22:39:35  fish
 // (align a single comment; no code was changed)
 //
@@ -276,9 +280,10 @@ struct REGS {                           /* Processor registers       */
 
         jmp_buf progjmp;                /* longjmp destination for
                                            program check return      */
-
         jmp_buf archjmp;                /* longjmp destination to
                                            switch architecture mode  */
+        jmp_buf exitjmp;                /* longjmp destination for
+                                           CPU thread exit           */
         COND    intcond;                /* CPU interrupt condition   */
         LOCK    *cpulock;               /* CPU lock for this CPU     */
 

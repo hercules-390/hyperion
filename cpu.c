@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.186  2007/08/06 22:10:47  gsmith
+// reposition process_trace for readability
+//
 // Revision 1.185  2007/06/23 00:04:05  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -1356,6 +1359,11 @@ void *cpu_uninit (int cpu, REGS *regs)
 
     if (regs->host)
     {
+#ifdef FEATURE_VECTOR_FACILITY
+        /* Mark Vector Facility offline */
+        regs->vf->online = 0;
+#endif /*FEATURE_VECTOR_FACILITY*/
+
         /* Remove CPU from all CPU bit masks */
         sysblk.config_mask &= ~BIT(cpu);
         sysblk.started_mask &= ~BIT(cpu);
@@ -1432,16 +1440,9 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         regs->opinterv = 0;
         regs->cpustate = CPUSTATE_STOPPED;
 
+        /* Thread exit (note - intlock still held) */
         if (!regs->configured)
-        {
-#ifdef FEATURE_VECTOR_FACILITY
-            /* Mark Vector Facility offline */
-            regs->vf->online = 0;
-#endif /*FEATURE_VECTOR_FACILITY*/
-
-            /* Thread exit (note - intlock still held) */
-            return;
-        }
+            longjmp(regs->exitjmp, SIE_NO_INTERCEPT);
 
         /* If initial CPU reset pending then perform reset */
         if (regs->sigpireset)
@@ -1619,6 +1620,10 @@ REGS    regs;
 
     regs.tracing = (sysblk.inststep || sysblk.insttrace);
     regs.ints_state |= sysblk.ints_state;
+
+    /* Establish longjmp destination for cpu thread exit */
+    if (setjmp(regs.exitjmp))
+        return cpu_uninit(cpu, &regs);
 
     /* Establish longjmp destination for architecture switch */
     setjmp(regs.archjmp);
