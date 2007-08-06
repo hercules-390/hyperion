@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.220  2007/07/29 10:05:05  fish
+// Fix PR# 34/tape bug causing crash if non-tape devinit
+//
 // Revision 1.219  2007/06/23 00:04:11  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -2057,6 +2060,12 @@ BYTE c;                                 /* Character work area       */
 int  rc;                                /* Return code               */
 
 int  i;
+
+#if defined(OPTION_IPLPARM)
+int j;
+size_t  maxb;
+#endif
+
 U16  lcss;
 U16  devnum;
 char *cdev, *clcss;
@@ -2067,6 +2076,35 @@ char *cdev, *clcss;
         missing_devnum();
         return -1;
     }
+#if defined(OPTION_IPLPARM)
+#define MAXPARMSTRING   sizeof(sysblk.iplparmstring)
+    sysblk.haveiplparm=0;
+    maxb=0;
+    if(argc>2)
+    {
+        if(strcasecmp(argv[2],"parm")==0)
+        {
+            memset(sysblk.iplparmstring,0,MAXPARMSTRING);
+            sysblk.haveiplparm=1;
+            for(i=3;i<argc && maxb<MAXPARMSTRING;i++)
+            {
+                if(i!=3)
+                {
+                    sysblk.iplparmstring[maxb++]=0x40;
+                }
+                for(j=0;j<(int)strlen(argv[i]) && maxb<MAXPARMSTRING;j++)
+                {
+                    if(islower(argv[i][j]))
+                    {
+                        argv[i][j]=toupper(argv[i][j]);
+                    }
+                    sysblk.iplparmstring[maxb]=host_to_guest(argv[i][j]);
+                    maxb++;
+                }
+            }
+        }
+    }
+#endif
 
     OBTAIN_INTLOCK(NULL);
 
@@ -5901,6 +5939,28 @@ CMDHELP ( "start",     "Entering the 'start' command by itself simply starts a s
                        "CPU, whereas 'start <devn>' presses the virtual start button on\n"
                        "printer device <devn>.\n"
                        )
+
+CMDHELP ( "ipl",       "Performs the Initial Program Load manual control function.\n"
+                       "The operand can either be a device address or the name of a\n"
+                       ".ins file to be loaded.\n"
+#if defined(OPTION_IPLPARM)
+                       "an optional \"parm\" keyword followed by a string can also be passed\n"
+                       "to the IPL command processor. The following string will be loaded\n"
+                       "unto the registers (4 caracter per register for up to 64 bytes).\n"
+                       "The PARM option behaves similarily as with the VM IPL command.\n"
+#endif
+                       )
+CMDHELP ( "iplc",      "Performs the Load Clear manual control function. See \"ipl\".\n")
+
+CMDHELP ( "sysreset",  "Performs the System Reset manual control function. a CPU and I/O\n"
+                       "subsystem reset are performed.\n")
+
+CMDHELP ( "sysclear",  "Performs the System Reset Clear manual control function. Same as\n"
+                       "the \"sysreset\" command but also clears main storage to 0. Also, registers\n"
+                       "control registers, etc.. are reset to their initial value. At this\n"
+                       "point, the system is essentially in the same state as it was just after\n"
+                       "having been started\n")
+
 
 CMDHELP ( "stop",      "Entering the 'stop' command by itself simply stops a running\n"
                        "CPU, whereas 'stop <devn>' presses the virtual stop button on\n"

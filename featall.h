@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.125  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.124  2007/05/26 21:45:25  rbowler
 // Activate Compare-and-Swap-and-Store feature
 //
@@ -71,6 +74,7 @@
                                            interrupt selects instead
                                            of inter-thread signaling */
 #define OPTION_TIMESTAMP_LOGFILE        /* Hardcopy logfile HH:MM:SS */
+#define OPTION_IPLPARM                  /* IPL PARM a la VM          */
 #ifndef FISH_HANG
 #define OPTION_PTTRACE                  /* Pthreads tracing          */
 #endif

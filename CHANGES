@@ -1,3 +1,5 @@
+06 Aug 2007 Filled ipl, iplc, sysclear, sysreset in HELPTAB - Ivan Warren
+06 Aug 2007 implement IPL PARM a la VM - Ivan Warren
 29 Jul 2007 Fix PR# 34/tape bug causing crash if non-tape devinit - Fish
 28 Jul 2007 Fix day-1 CTCI/LCS bug - Vince Weaver [vince@deater.net] by Fish
 24 Jul 2007 Force command-reject (until we can get it coded right)

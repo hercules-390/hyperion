@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.70  2007/07/24 22:39:35  fish
+// (align a single comment; no code was changed)
+//
 // Revision 1.69  2007/06/23 00:04:11  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -531,6 +534,9 @@ struct SYSBLK {
                 showregsnone:1,         /* 1 = show no registers     */
                 nomountedtapereinit:1,  /* 1 = disallow tape devinit
                                              if tape already mounted */
+#if defined(OPTION_IPLPARM)
+                haveiplparm:1,
+#endif
                 logoptnotime:1;         /* 1 = don't timestamp log   */
         U32     ints_state;             /* Common Interrupts Status  */
         U32     config_mask;            /* Configured CPUs           */
@@ -538,6 +544,9 @@ struct SYSBLK {
         U32     waiting_mask;           /* Waiting CPUs              */
         U64     traceaddr[2];           /* Tracing address range     */
         U64     stepaddr[2];            /* Stepping address range    */
+#if defined(OPTION_IPLPARM)
+        BYTE    iplparmstring[64];      /* 64 bytes loadable at IPL  */
+#endif
 #ifdef FEATURE_ECPSVM
 //
         /* ECPS:VM */

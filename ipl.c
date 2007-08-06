@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.101  2007/06/23 00:04:14  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.100  2006/12/20 15:41:16  rbowler
 // Clear FPC register during Initial CPU Reset
 //
@@ -220,6 +223,16 @@ BYTE    chanstat;                       /* IPL device channel status */
         HDC1(debug_cpu_state, regs);
         return -1;
     }
+#if defined(OPTION_IPLPARM)
+    if(sysblk.haveiplparm)
+    {
+        for(i=0;i<16;i++)
+        {
+            regs->GR_L(i)=fetch_fw(&sysblk.iplparmstring[i*4]);
+        }
+        sysblk.haveiplparm=0;
+    }
+#endif
 
     /* Set Main Storage Reference and Update bits */
     STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
