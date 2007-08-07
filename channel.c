@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.139  2007/06/23 00:04:04  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.138  2007/02/15 22:57:04  gsmith
 // Reset syncio_retry to zero appropriately for syncio type 2 devices
 //
@@ -828,7 +831,7 @@ int pending = 0;
         dev->scsw.flag1 = 0;
         dev->scsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
         dev->scsw.flag2 |= SCSW2_FC_CLEAR;
-        dev->scsw.flag3 &= ~(SCSW3_AC | SCSW3_SC);
+        dev->scsw.flag3 &= (~(SCSW3_AC | SCSW3_SC))&0xff;
         dev->scsw.flag3 |= SCSW3_SC_PEND;
         store_fw (dev->scsw.ccwaddr, 0);
         dev->scsw.chanstat = 0;
@@ -2576,7 +2579,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             dev->scsw.flag0 = 0;
             dev->scsw.flag1 = 0;
             dev->scsw.flag2 &= ~((SCSW2_FC - SCSW2_FC_CLEAR) | SCSW2_AC);
-            dev->scsw.flag3 &= ~(SCSW3_AC | SCSW3_SC);
+            dev->scsw.flag3 &= (~(SCSW3_AC | SCSW3_SC))&0xff;
             dev->scsw.flag3 |= SCSW3_SC_PEND;
             store_fw (dev->scsw.ccwaddr, 0);
             dev->scsw.chanstat = 0;

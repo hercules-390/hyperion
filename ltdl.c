@@ -3182,7 +3182,7 @@ try_dlopen (phandle, filename)
         }
 #endif
 #ifdef LTDL_SYSSEARCHPATH
-      if (!file && sys_search_path)
+      if (!file)
         {
           file = find_file (sys_search_path, base_name, &dir);
         }
@@ -3474,7 +3474,7 @@ lt_dlopenext (filename)
     }
 
   /* First try appending ARCHIVE_EXT.  */
-  tmp = LT_EMALLOC (char, len + LT_STRLEN (archive_ext) + 1);
+  tmp = LT_EMALLOC (char, len + strlen (archive_ext) + 1);
   if (!tmp)
     return 0;
 
@@ -3495,7 +3495,7 @@ lt_dlopenext (filename)
 
 #ifdef LTDL_SHLIB_EXT
   /* Try appending SHLIB_EXT.   */
-  if (LT_STRLEN (shlib_ext) > LT_STRLEN (archive_ext))
+  if (LT_STRLEN (shlib_ext) > strlen (archive_ext))
     {
       LT_DLFREE (tmp);
       tmp = LT_EMALLOC (char, len + LT_STRLEN (shlib_ext) + 1);

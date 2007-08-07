@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.61  2007/03/13 00:34:18  ivan
+// fetch_dw macro fix for MSVC compiles
+//
 // Revision 1.60  2007/03/12 22:02:06  ivan
 // Fix a couple of typos in machdep.h that affect non i686 ia32 compiles
 //
@@ -643,11 +646,11 @@ U32  *ptr4, val4, old4, new4;
     #define fetch_fw_noswap(_p) CSWAP32(fetch_fw((_p)))
   #else
     #if !defined(OPTION_STRICT_ALIGNMENT)
-      static __inline__ U32 fetch_fw_noswap(void *ptr) {
+      static __inline__ U32 fetch_fw_noswap(const void *ptr) {
         return *(U32 *)ptr;
       }
     #else
-      static __inline__ U32 fetch_fw_noswap(void *ptr) {
+      static __inline__ U32 fetch_fw_noswap(const void *ptr) {
         U32 value;
         memcpy(&value, (BYTE *)ptr, 4);
         return value;

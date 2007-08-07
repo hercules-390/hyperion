@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.151  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.150  2007/05/26 21:23:19  rbowler
 // Eliminate uninitialised variable warnings in CSST
 //
@@ -1375,8 +1378,8 @@ VADR    addr1, addr2;                   /* Effective addresses       */
 VADR    addrp;                          /* Parameter list address    */
 BYTE   *main1;                          /* Mainstor address of op1   */
 int     ln2;                            /* Second operand length - 1 */
-U64     old8, new8=0;                   /* Swap values for cmpxchg8  */
-U32     old4, new4=0;                   /* Swap values for cmpxchg4  */
+U64     old8=0, new8=0;                 /* Swap values for cmpxchg8  */
+U32     old4=0, new4=0;                 /* Swap values for cmpxchg4  */
 U64     stv8=0;                         /* 8-byte store value        */
 U32     stv4=0;                         /* 4-byte store value        */
 U16     stv2=0;                         /* 2-byte store value        */

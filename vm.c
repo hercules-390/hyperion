@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.45  2007/06/23 00:04:19  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.44  2007/01/13 07:27:04  bernard
 // backout ccmask
 //
@@ -818,7 +821,7 @@ int     j,k;
     dresp="";
     freeresp=0;
 
-    if(buf && *buf)
+    if(*buf)
     {
 #ifdef FEATURE_HERCULES_DIAGCALLS
         int shcmd = 0;
