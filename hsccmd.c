@@ -17,6 +17,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.221  2007/08/06 16:48:20  ivan
+// Implement "PARM" option for IPL command (same as VM IPL PARM XXX)
+// Also add command helps for ipl, iplc, sysclear, sysreset
+//
 // Revision 1.220  2007/07/29 10:05:05  fish
 // Fix PR# 34/tape bug causing crash if non-tape devinit
 //
@@ -5940,16 +5944,21 @@ CMDHELP ( "start",     "Entering the 'start' command by itself simply starts a s
                        "printer device <devn>.\n"
                        )
 
+#if defined(OPTION_IPLPARM)
 CMDHELP ( "ipl",       "Performs the Initial Program Load manual control function.\n"
                        "The operand can either be a device address or the name of a\n"
                        ".ins file to be loaded.\n"
-#if defined(OPTION_IPLPARM)
                        "an optional \"parm\" keyword followed by a string can also be passed\n"
                        "to the IPL command processor. The following string will be loaded\n"
                        "unto the registers (4 caracter per register for up to 64 bytes).\n"
                        "The PARM option behaves similarily as with the VM IPL command.\n"
-#endif
                        )
+#else
+CMDHELP ( "ipl",       "Performs the Initial Program Load manual control function.\n"
+                       "The operand can either be a device address or the name of a\n"
+                       ".ins file to be loaded.\n"
+                       )
+#endif
 CMDHELP ( "iplc",      "Performs the Load Clear manual control function. See \"ipl\".\n")
 
 CMDHELP ( "sysreset",  "Performs the System Reset manual control function. a CPU and I/O\n"
