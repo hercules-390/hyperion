@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.65  2007/07/29 02:02:44  fish
+// Fix day-1 CTCI/LCS bug found by Vince Weaver [vince@deater.net]
+//
 // Revision 1.64  2007/06/23 00:04:05  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -783,9 +786,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
         // Terminate the frame buffer
         STORE_HW( pFrame->hwOffset, 0x0000 );
 
-        // (fix for day-1 bug offered by Vince Weaver [vince@deater.net])
-//      iLength = pLCSDEV->iFrameOffset + 2;
-        iLength = pLCSDEV->iFrameOffset;
+        iLength = pLCSDEV->iFrameOffset + 2;
 
         if( sCount < iLength )
         {
