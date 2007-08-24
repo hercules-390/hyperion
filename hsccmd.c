@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.223  2007/08/24 11:21:54  rbowler
+// Modify control registers by cr command
+//
 // Revision 1.222  2007/08/07 11:18:30  ivan
 // Remove #if statement within macro parameter that MSVC doesn't seem to like
 //
@@ -5967,23 +5970,23 @@ CMDHELP ( "start",     "Entering the 'start' command by itself simply starts a s
                        )
 
 #if defined(OPTION_IPLPARM)
-CMDHELP ( "ipl",       "Performs the Initial Program Load manual control function.\n"
-                       "The operand can either be a device address or the name of a\n"
-                       ".ins file to be loaded.\n"
-                       "an optional \"parm\" keyword followed by a string can also be passed\n"
-                       "to the IPL command processor. The following string will be loaded\n"
-                       "unto the registers (4 caracter per register for up to 64 bytes).\n"
-                       "The PARM option behaves similarily as with the VM IPL command.\n"
+CMDHELP ( "ipl",       "Format: \"ipl nnnn [parm xxxxxxxxxxxxxx]\"\n"
+                       "Performs the Initial Program Load manual control function. The operand 'nnnn'\n"
+                       "can either be a device address or the name of a .ins file to be loaded.\n"
+                       "An optional 'parm' keyword followed by a string can also be passed to the IPL\n"
+                       "command processor. The string will be loaded into the low-order 32 bits of the\n"
+                       "general purpose registers (4 characters per register for up to 64 bytes).\n"
+                       "The PARM option behaves similarly to the VM IPL command.\n"
                        )
 #else
-CMDHELP ( "ipl",       "Performs the Initial Program Load manual control function.\n"
-                       "The operand can either be a device address or the name of a\n"
-                       ".ins file to be loaded.\n"
+CMDHELP ( "ipl",       "Format: \"ipl nnnn\"\n"
+                       "Performs the Initial Program Load manual control function. The operand 'nnnn'\n"
+                       "can either be a device address or the name of a .ins file to be loaded.\n"
                        )
 #endif
 CMDHELP ( "iplc",      "Performs the Load Clear manual control function. See \"ipl\".\n")
 
-CMDHELP ( "sysreset",  "Performs the System Reset manual control function. a CPU and I/O\n"
+CMDHELP ( "sysreset",  "Performs the System Reset manual control function. A CPU and I/O\n"
                        "subsystem reset are performed.\n")
 
 CMDHELP ( "sysclear",  "Performs the System Reset Clear manual control function. Same as\n"
@@ -6008,14 +6011,22 @@ CMDHELP ( "!message",  "To enter a system control program (i.e. guest operating 
                        "priority command on the hercules console, simply prefix the command\n"
                        "with an exclamation point '!'.\n"
                        )
+
+CMDHELP ( "ssd",       "The SSD (signal shutdown) command signals an imminent hypervisor shutdown to\n"
+                       "the guest.  Guests who support this are supposed to perform a shutdown upon\n"
+                       "receiving this request.\n"
+                       "An implicit ssd command is given on a hercules \"quit\" command if the guest\n"
+                       "supports ssd.  In that case hercules shutdown will be delayed until the guest\n"
+                       "has shutdown or a 2nd quit command is given.\n"
+                       )
 #endif
 
-CMDHELP ( "gpr",       "Format: gpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional register\n"
+CMDHELP ( "gpr",       "Format: \"gpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional register\n"
                        "number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the register value in hexadecimal\n"
                        "(1-8 hex digits for 32-bit registers or 1-16 hex digits for 64-bit registers).\n"
                        "Enter \"gpr\" by itself to display the register values without altering them.\n"
                        )
-CMDHELP ( "cr",        "Format: cr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional control register\n"
+CMDHELP ( "cr",        "Format: \"cr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional control register\n"
                        "number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the control register value in hex\n"
                        "(1-8 hex digits for 32-bit registers or 1-16 hex digits for 64-bit registers).\n"
                        "Enter \"cr\" by itself to display the control registers without altering them.\n"
