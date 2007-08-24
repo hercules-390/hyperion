@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.222  2007/08/07 11:18:30  ivan
+// Remove #if statement within macro parameter that MSVC doesn't seem to like
+//
 // Revision 1.221  2007/08/06 16:48:20  ivan
 // Implement "PARM" option for IPL command (same as VM IPL PARM XXX)
 // Also add command helps for ipl, iplc, sysclear, sysreset
@@ -1597,6 +1600,9 @@ REGS *regs;
 int cr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
+int   cr_num;
+BYTE  equal_sign, c;
+U64   cr_value;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -1611,6 +1617,22 @@ REGS *regs;
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
+
+    if (argc > 1)
+    {
+        if (argc > 2
+            || sscanf( argv[1], "%d%c%"I64_FMT"x%c", &cr_num, &equal_sign, &cr_value, &c ) != 3
+            || '=' != equal_sign || cr_num < 0 || cr_num > 15)
+        {
+            release_lock(&sysblk.cpulock[sysblk.pcpu]);
+            logmsg( _("HHCPN164E Invalid format. .Enter \"help cr\" for help.\n"));
+            return 0;
+        }
+        if ( ARCH_900 == regs->arch_mode )
+            regs->CR_G(cr_num) = (U64)cr_value;
+        else
+            regs->CR_G(cr_num) = (U32)cr_value;
+    }
 
     display_cregs (regs);
 
@@ -5578,7 +5600,7 @@ COMMAND ( "psw",       psw_cmd,       "display program status word" )
 COMMAND ( "gpr",       gpr_cmd,       "display or alter general purpose registers" )
 COMMAND ( "fpr",       fpr_cmd,       "display floating point registers" )
 COMMAND ( "fpc",       fpc_cmd,       "display floating point control register" )
-COMMAND ( "cr",        cr_cmd,        "display control registers" )
+COMMAND ( "cr",        cr_cmd,        "display or alter control registers" )
 COMMAND ( "ar",        ar_cmd,        "display access registers" )
 COMMAND ( "pr",        pr_cmd,        "display prefix register" )
 COMMAND ( "timerint",  timerint_cmd,  "display or set timers update interval" )
@@ -5992,6 +6014,11 @@ CMDHELP ( "gpr",       "Format: gpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the op
                        "number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the register value in hexadecimal\n"
                        "(1-8 hex digits for 32-bit registers or 1-16 hex digits for 64-bit registers).\n"
                        "Enter \"gpr\" by itself to display the register values without altering them.\n"
+                       )
+CMDHELP ( "cr",        "Format: cr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional control register\n"
+                       "number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the control register value in hex\n"
+                       "(1-8 hex digits for 32-bit registers or 1-16 hex digits for 64-bit registers).\n"
+                       "Enter \"cr\" by itself to display the control registers without altering them.\n"
                        )
 CMDHELP ( "r",         "Format: \"r addr[.len]\" or \"r addr-addr\" to display real\n"
                        "storage, or \"r addr=value\" to alter real storage, where 'value'\n"
