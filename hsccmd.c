@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.224  2007/08/24 12:05:10  rbowler
+// Help for SSD command, sundry punctuation and spelling corrections.
+//
 // Revision 1.223  2007/08/24 11:21:54  rbowler
 // Modify control registers by cr command
 //
@@ -1484,7 +1487,7 @@ int pwd_cmd(int argc, char *argv[], char *cmdline)
 }
 
 ///////////////////////////////////////////////////////////////////////
-/* gpr command - display general purpose registers */
+/* gpr command - display or alter general purpose registers */
 
 int gpr_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -1598,7 +1601,7 @@ REGS *regs;
 }
 
 ///////////////////////////////////////////////////////////////////////
-/* cr command - display control registers */
+/* cr command - display or alter control registers */
 
 int cr_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -1608,8 +1611,6 @@ BYTE  equal_sign, c;
 U64   cr_value;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -1704,15 +1705,18 @@ REGS *regs;
 }
 
 ///////////////////////////////////////////////////////////////////////
-/* psw command - display program status word */
+/* psw command - display or alter program status word */
 
 int psw_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
+BYTE  c;
+U64   newia=0;
+int   newam=0, newas=0, newcc=0, newcmwp=0, newpk=0, newpm=0, newsm=0;
+int   updia=0, updas=0, updcc=0, updcmwp=0, updpk=0, updpm=0, updsm=0;
+int   n, errflag, stopflag=0;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
     obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
 
@@ -1724,6 +1728,168 @@ REGS *regs;
     }
     regs = sysblk.regs[sysblk.pcpu];
 
+    /* Process optional operands */
+    for (n = 1; n < argc; n++)
+    {
+        errflag = 0;
+        if (strncasecmp(argv[n],"ia=",3) == 0)
+        {
+            /* PSW instruction address operand */ 
+            if (sscanf(argv[n]+3, "%"I64_FMT"x%c", &newia, &c) == 1)
+                updia = 1;
+            else
+                errflag = 1;
+        }
+        else if (strncasecmp(argv[n],"amode=",6) == 0)
+        {
+            /* PSW addressing mode operand */ 
+            if (strcmp(argv[n]+6,"64") == 0)
+                newam = 64;
+            else if (strcmp(argv[n]+6,"31") == 0)
+                newam = 31;
+            else if (strcmp(argv[n]+6,"24") == 0)
+                newam = 24;
+            else
+                errflag = 1;
+        }
+        else if (strncasecmp(argv[n],"sysmask=",8) == 0)
+        {
+            /* PSW system mask operand */ 
+            if (sscanf(argv[n]+8, "%2.2X%c", &newsm, &c) == 1 
+                && newsm >= 0 && newsm <= 255)
+                updsm = 1;
+            else
+                errflag = 1;
+        }
+        else if (strncasecmp(argv[n],"key=",4) == 0)
+        {
+            /* PSW protection key operand */ 
+            if (sscanf(argv[n]+4, "%1.1X%c", &newpk, &c) == 1 
+                && newpk >= 0 && newpk <= 15)
+                updpk = 1;
+            else
+                errflag = 1;
+        }
+        else if (strncasecmp(argv[n],"cmwp=",5) == 0)
+        {
+            /* PSW CMWP bits operand */ 
+            if (sscanf(argv[n]+5, "%1.1X%c", &newcmwp, &c) == 1 
+                && newcmwp >= 0 && newcmwp <= 15)
+                updcmwp = 1;
+            else
+                errflag = 1;
+        }
+        else if (strncasecmp(argv[n],"as=",3) == 0)
+        {
+            /* PSW address-space control operand */ 
+            if (strcasecmp(argv[n]+3,"pri") == 0)
+                newas = 0;
+            else if (strcmp(argv[n]+3,"ar") == 0)
+                newas = 1;
+            else if (strcmp(argv[n]+3,"sec") == 0)
+                newas = 2;
+            else if (strcmp(argv[n]+3,"home") == 0)
+                newas = 3;
+            else
+                errflag = 1;
+            if (errflag == 0) updas = 1;
+        }
+        else if (strncasecmp(argv[n],"cc=",3) == 0)
+        {
+            /* PSW condition code operand */ 
+            if (sscanf(argv[n]+3, "%d%c", &newcc, &c) == 1 
+                && newcc >= 0 && newcc <= 3)
+                updcc = 1;
+            else
+                errflag = 1;
+        }
+        else if (strncasecmp(argv[n],"progmask=",9) == 0)
+        {
+            /* PSW program mask operand */ 
+            if (sscanf(argv[n]+9, "%1.1X%c", &newpm, &c) == 1 
+                && newpm >= 0 && newpm <= 15)
+                updpm = 1;
+            else
+                errflag = 1;
+        }
+        else /* unknown operand keyword */
+            errflag = 1;
+
+        /* Error message if this operand was invalid */
+        if (errflag)
+        {
+            logmsg( _("HHCPN165E Invalid operand %s\n"), argv[n]);
+            stopflag = 1;
+        }
+    } /* end for(n) */
+
+    /* Finish now if any errors occurred */
+    if (stopflag)
+    {
+        release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        return 0;
+    }
+
+    /* Update the PSW system mask, if specified */
+    if (updsm)
+    {
+        regs->psw.sysmask = newsm;
+    }
+
+    /* Update the PSW protection key, if specified */
+    if (updpk)
+    {
+        regs->psw.pkey = newpk;
+    }
+
+    /* Update the PSW CMWP bits, if specified */
+    if (updcmwp)
+    {
+        regs->psw.states = newcmwp;
+    }
+
+    /* Update the PSW address-space control mode, if specified */
+    if (updas)
+    {
+        regs->psw.asc = newas;
+    }
+
+    /* Update the PSW condition code, if specified */
+    if (updcc)
+    {
+        regs->psw.cc = newcc;
+    }
+
+    /* Update the PSW program mask, if specified */
+    if (updpm)
+    {
+        regs->psw.progmask = newpm;
+    }
+
+    /* Update the PSW addressing mode, if specified */
+    switch(newam) {
+    case 64:
+        regs->psw.amode = regs->psw.amode64 = 1;
+        regs->psw.AMASK_G = AMASK64;
+        break;
+    case 31:
+        regs->psw.amode = 1;
+        regs->psw.amode64 = 0;
+        regs->psw.AMASK_G = AMASK31;
+        break;
+    case 24:
+        regs->psw.amode = regs->psw.amode64 = 0;
+        regs->psw.AMASK_G = AMASK24;
+        break;
+    } /* end switch(newam) */
+
+    /* Update the PSW instruction address, if specified */
+    if (updia)
+    {
+        UPD_PSW_IA(regs, newia);
+    }
+
+    /* Display the PSW */
     display_psw (regs);
 
     release_lock(&sysblk.cpulock[sysblk.pcpu]);
@@ -5599,7 +5765,7 @@ COMMAND ( "sysreset",  sysr_cmd,      "Issue SYSTEM Reset manual operation" )
 COMMAND ( "sysclear",  sysc_cmd,      "Issue SYSTEM Clear Reset manual operation" )
 COMMAND ( "store",     store_cmd,     "store CPU status at absolute zero\n" )
 
-COMMAND ( "psw",       psw_cmd,       "display program status word" )
+COMMAND ( "psw",       psw_cmd,       "display or alter program status word" )
 COMMAND ( "gpr",       gpr_cmd,       "display or alter general purpose registers" )
 COMMAND ( "fpr",       fpr_cmd,       "display floating point registers" )
 COMMAND ( "fpc",       fpc_cmd,       "display floating point control register" )
