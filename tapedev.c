@@ -75,6 +75,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.121  2007/07/24 23:06:32  fish
+// Force command-reject for 3590 Medium Sense and Mode Sense
+//
 // Revision 1.120  2007/07/24 22:54:49  fish
 // (comment changes only)
 //
@@ -6121,8 +6124,12 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
             mtop.mt_op = MTSEEK;
 
-            locblock = CSWAP32( locblock ); // (convert to guest format)
-            blockid_emulated_to_actual( dev, (BYTE*)&locblock, (BYTE*)&mtop.mt_count );
+            locblock = CSWAP32( locblock );     // (convert to guest format)
+            {
+                blockid_emulated_to_actual( dev, (BYTE*)&locblock, (BYTE*)&mtop.mt_count );
+            }
+            locblock = CSWAP32( locblock );     // (put back to host format)
+
             mtop.mt_count = CSWAP32( mtop.mt_count ); // (convert back to host format)
 
             /* Let the hardware do the locate if this is a SCSI drive;
@@ -6158,7 +6165,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                     dev->poserror = 0;
 
                     /* Do it the hard way */
-                    while(dev->blockid < locblock && ( rc >= 0 ))
+                    while (dev->blockid < locblock && ( rc >= 0 ))
                     {
                         rc=dev->tmh->fsb(dev,unitstat,code);
                     }
