@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.54  2007/06/23 00:04:19  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.53  2007/01/13 07:40:10  bernard
 // backout ccmask
 //
@@ -171,8 +174,8 @@ static void sha1_seticv(sha1_context *ctx, BYTE icv[20])
 #endif /* __SHA1_COMPILE__ */
 
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
-#ifndef __SHA256_COMPILE__
-#define __SHA256_COMPILE__
+#ifndef __SHA2_COMPILE__
+#define __SHA2_COMPILE__
 /*----------------------------------------------------------------------------*/
 /* Get the chaining vector for output processing                              */
 /*----------------------------------------------------------------------------*/
@@ -204,7 +207,7 @@ static void sha256_seticv(sha256_context *ctx, BYTE icv[32])
     ctx->state[i] |= icv[j++];
   }
 }
-#endif /* __SHA256_COMPILE__ */
+#endif /* __SHA2_COMPILE__ */
 #endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
 
 /*----------------------------------------------------------------------------*/
@@ -2332,6 +2335,10 @@ HDL_REGISTER_SECTION;
 #endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
   logmsg("Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2007\n");
+  logmsg("  Active: Message Security Assist\n");
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
+  logmsg("          Message Security Assist Extension 1\n");
+#endif
 
 }
 END_REGISTER_SECTION;
