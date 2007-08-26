@@ -17,6 +17,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.102  2007/08/06 16:48:20  ivan
+// Implement "PARM" option for IPL command (same as VM IPL PARM XXX)
+// Also add command helps for ipl, iplc, sysclear, sysreset
+//
 // Revision 1.101  2007/06/23 00:04:14  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -535,6 +539,7 @@ int ARCH_DEP(initial_cpu_reset) (REGS *regs)
     memset ( regs->cr,             0, sizeof(regs->cr)            );
     regs->fpc    = 0;
     regs->PX     = 0;
+    regs->psw.AMASK_G = AMASK24;
     /* 
      * ISW20060125 : Since we reset the prefix, we must also adjust 
      * the PSA ptr

@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.225  2007/08/24 16:31:26  rbowler
+// Modify PSW fields by psw command (part 1)
+//
 // Revision 1.224  2007/08/24 12:05:10  rbowler
 // Help for SSD command, sundry punctuation and spelling corrections.
 //
@@ -1714,7 +1717,7 @@ BYTE  c;
 U64   newia=0;
 int   newam=0, newas=0, newcc=0, newcmwp=0, newpk=0, newpm=0, newsm=0;
 int   updia=0, updas=0, updcc=0, updcmwp=0, updpk=0, updpm=0, updsm=0;
-int   n, errflag, stopflag=0;
+int   n, errflag, stopflag=0, modflag=0;
 
     UNREFERENCED(cmdline);
 
@@ -1731,40 +1734,21 @@ int   n, errflag, stopflag=0;
     /* Process optional operands */
     for (n = 1; n < argc; n++)
     {
+        modflag = 1;
         errflag = 0;
-        if (strncasecmp(argv[n],"ia=",3) == 0)
-        {
-            /* PSW instruction address operand */ 
-            if (sscanf(argv[n]+3, "%"I64_FMT"x%c", &newia, &c) == 1)
-                updia = 1;
-            else
-                errflag = 1;
-        }
-        else if (strncasecmp(argv[n],"amode=",6) == 0)
-        {
-            /* PSW addressing mode operand */ 
-            if (strcmp(argv[n]+6,"64") == 0)
-                newam = 64;
-            else if (strcmp(argv[n]+6,"31") == 0)
-                newam = 31;
-            else if (strcmp(argv[n]+6,"24") == 0)
-                newam = 24;
-            else
-                errflag = 1;
-        }
-        else if (strncasecmp(argv[n],"sysmask=",8) == 0)
+        if (strncasecmp(argv[n],"sm=",3) == 0)
         {
             /* PSW system mask operand */ 
-            if (sscanf(argv[n]+8, "%2.2X%c", &newsm, &c) == 1 
+            if (sscanf(argv[n]+3, "%x%c", &newsm, &c) == 1 
                 && newsm >= 0 && newsm <= 255)
                 updsm = 1;
             else
                 errflag = 1;
         }
-        else if (strncasecmp(argv[n],"key=",4) == 0)
+        else if (strncasecmp(argv[n],"pk=",3) == 0)
         {
             /* PSW protection key operand */ 
-            if (sscanf(argv[n]+4, "%1.1X%c", &newpk, &c) == 1 
+            if (sscanf(argv[n]+3, "%d%c", &newpk, &c) == 1 
                 && newpk >= 0 && newpk <= 15)
                 updpk = 1;
             else
@@ -1773,7 +1757,7 @@ int   n, errflag, stopflag=0;
         else if (strncasecmp(argv[n],"cmwp=",5) == 0)
         {
             /* PSW CMWP bits operand */ 
-            if (sscanf(argv[n]+5, "%1.1X%c", &newcmwp, &c) == 1 
+            if (sscanf(argv[n]+5, "%x%c", &newcmwp, &c) == 1 
                 && newcmwp >= 0 && newcmwp <= 15)
                 updcmwp = 1;
             else
@@ -1783,13 +1767,13 @@ int   n, errflag, stopflag=0;
         {
             /* PSW address-space control operand */ 
             if (strcasecmp(argv[n]+3,"pri") == 0)
-                newas = 0;
+                newas = PSW_PRIMARY_SPACE_MODE;
             else if (strcmp(argv[n]+3,"ar") == 0)
-                newas = 1;
+                newas = PSW_ACCESS_REGISTER_MODE;
             else if (strcmp(argv[n]+3,"sec") == 0)
-                newas = 2;
+                newas = PSW_SECONDARY_SPACE_MODE;
             else if (strcmp(argv[n]+3,"home") == 0)
-                newas = 3;
+                newas = PSW_HOME_SPACE_MODE;
             else
                 errflag = 1;
             if (errflag == 0) updas = 1;
@@ -1803,12 +1787,35 @@ int   n, errflag, stopflag=0;
             else
                 errflag = 1;
         }
-        else if (strncasecmp(argv[n],"progmask=",9) == 0)
+        else if (strncasecmp(argv[n],"pm=",3) == 0)
         {
             /* PSW program mask operand */ 
-            if (sscanf(argv[n]+9, "%1.1X%c", &newpm, &c) == 1 
+            if (sscanf(argv[n]+3, "%x%c", &newpm, &c) == 1 
                 && newpm >= 0 && newpm <= 15)
                 updpm = 1;
+            else
+                errflag = 1;
+        }
+        else if (strncasecmp(argv[n],"am=",3) == 0)
+        {
+            /* PSW addressing mode operand */ 
+            if (strcmp(argv[n]+3,"24") == 0)
+                newam = 24;
+            else if (strcmp(argv[n]+3,"31") == 0
+                    && (regs->arch_mode == ARCH_390
+                        || regs->arch_mode == ARCH_900))
+                newam = 31;
+            else if (strcmp(argv[n]+3,"64") == 0 
+                    && regs->arch_mode == ARCH_900)
+                newam = 64;
+            else
+                errflag = 1;
+        }
+        else if (strncasecmp(argv[n],"ia=",3) == 0)
+        {
+            /* PSW instruction address operand */ 
+            if (sscanf(argv[n]+3, "%"I64_FMT"x%c", &newia, &c) == 1)
+                updia = 1;
             else
                 errflag = 1;
         }
@@ -1839,7 +1846,7 @@ int   n, errflag, stopflag=0;
     /* Update the PSW protection key, if specified */
     if (updpk)
     {
-        regs->psw.pkey = newpk;
+        regs->psw.pkey = newpk << 4;
     }
 
     /* Update the PSW CMWP bits, if specified */
@@ -1886,8 +1893,32 @@ int   n, errflag, stopflag=0;
     /* Update the PSW instruction address, if specified */
     if (updia)
     {
-        UPD_PSW_IA(regs, newia);
+        regs->psw.IA = newia;
     }
+
+    /* If any modifications were made, reapply the addressing mode mask
+       to the instruction address and invalidate the instruction pointer */
+    if (modflag)
+    {
+        regs->psw.IA &= regs->psw.AMASK_G;
+        regs->aie = NULL;  
+    }
+
+    /* Display the PSW field by field */
+    logmsg("psw sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%X (amask=%"I64_FMT"X)\n",
+        regs->psw.sysmask,
+        regs->psw.pkey >> 4,
+        regs->psw.states,
+        (regs->psw.asc == PSW_PRIMARY_SPACE_MODE ? "pri" :
+            regs->psw.asc == PSW_ACCESS_REGISTER_MODE ? "ar" :
+            regs->psw.asc == PSW_SECONDARY_SPACE_MODE ? "sec" :
+            regs->psw.asc == PSW_HOME_SPACE_MODE ? "home" : "???"),
+        regs->psw.cc,
+        regs->psw.progmask,
+        (regs->psw.amode == 0 && regs->psw.amode64 == 0 ? "24" :
+            regs->psw.amode == 1 && regs->psw.amode64 == 0 ? "31" :
+            regs->psw.amode == 1 && regs->psw.amode64 == 1 ? "64" : "???"),
+        regs->psw.IA, regs->psw.AMASK_G);
 
     /* Display the PSW */
     display_psw (regs);
@@ -6186,6 +6217,19 @@ CMDHELP ( "ssd",       "The SSD (signal shutdown) command signals an imminent hy
                        "has shutdown or a 2nd quit command is given.\n"
                        )
 #endif
+
+CMDHELP ( "psw",       "Format: \"psw [operand ...]\" where 'operand ...' is one or more optional\n"
+                       "parameters which modify the contents of the Program Status Word.\n"
+                       "sm=xx modifies the PSW system mask (xx is 2 hex digits)\n"
+                       "pk=n modifies the PSW protection key (n is decimal 0 to 15)\n"
+                       "cmwp=x modifies the EC/M/W/P bits of the PSW (x is one hex digit)\n"
+                       "as=pri|sec|ar|home modifies the PSW address-space control bits\n"
+                       "cc=n modifies the PSW condition code (n is decimal 0 to 3)\n"
+                       "pm=x modifies the PSW program mask (x is one hex digit)\n"
+                       "ia=xxx modifies the PSW instruction address (xxx is 1 to 16 hex digits)\n"
+                       "as=24|31|64 modifies the addressing mode bits of the PSW\n"
+                       "Enter \"psw\" by itself to display the current PSW without altering it.\n"
+                       )
 
 CMDHELP ( "gpr",       "Format: \"gpr [nn=xxxxxxxxxxxxxxxx]\" where 'nn' is the optional register\n"
                        "number (0 to 15) and 'xxxxxxxxxxxxxxxx' is the register value in hexadecimal\n"
