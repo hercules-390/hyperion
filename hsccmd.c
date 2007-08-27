@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.226  2007/08/26 21:04:45  rbowler
+// Modify PSW fields by psw command (part 2)
+//
 // Revision 1.225  2007/08/24 16:31:26  rbowler
 // Modify PSW fields by psw command (part 1)
 //
@@ -1802,11 +1805,11 @@ int   n, errflag, stopflag=0, modflag=0;
             if (strcmp(argv[n]+3,"24") == 0)
                 newam = 24;
             else if (strcmp(argv[n]+3,"31") == 0
-                    && (regs->arch_mode == ARCH_390
-                        || regs->arch_mode == ARCH_900))
+                    && (sysblk.arch_mode == ARCH_390
+                        || sysblk.arch_mode == ARCH_900))
                 newam = 31;
             else if (strcmp(argv[n]+3,"64") == 0 
-                    && regs->arch_mode == ARCH_900)
+                    && sysblk.arch_mode == ARCH_900)
                 newam = 64;
             else
                 errflag = 1;
@@ -1856,7 +1859,10 @@ int   n, errflag, stopflag=0, modflag=0;
     }
 
     /* Update the PSW address-space control mode, if specified */
-    if (updas)
+    if (updas
+        && (ECMODE(&regs->psw)
+            || sysblk.arch_mode == ARCH_390
+            || sysblk.arch_mode == ARCH_900))
     {
         regs->psw.asc = newas;
     }
@@ -1893,19 +1899,19 @@ int   n, errflag, stopflag=0, modflag=0;
     /* Update the PSW instruction address, if specified */
     if (updia)
     {
-        regs->psw.IA = newia;
+        regs->psw.IA_G = newia;
     }
 
     /* If any modifications were made, reapply the addressing mode mask
        to the instruction address and invalidate the instruction pointer */
     if (modflag)
     {
-        regs->psw.IA &= regs->psw.AMASK_G;
+        regs->psw.IA_G &= regs->psw.AMASK_G;
         regs->aie = NULL;  
     }
 
     /* Display the PSW field by field */
-    logmsg("psw sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%X (amask=%"I64_FMT"X)\n",
+    logmsg("psw sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%X\n",
         regs->psw.sysmask,
         regs->psw.pkey >> 4,
         regs->psw.states,
@@ -1918,7 +1924,7 @@ int   n, errflag, stopflag=0, modflag=0;
         (regs->psw.amode == 0 && regs->psw.amode64 == 0 ? "24" :
             regs->psw.amode == 1 && regs->psw.amode64 == 0 ? "31" :
             regs->psw.amode == 1 && regs->psw.amode64 == 1 ? "64" : "???"),
-        regs->psw.IA, regs->psw.AMASK_G);
+        regs->psw.IA_G);
 
     /* Display the PSW */
     display_psw (regs);
