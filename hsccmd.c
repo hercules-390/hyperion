@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.227  2007/08/27 11:13:04  rbowler
+// Modify PSW fields by psw command (part 3)
+//
 // Revision 1.226  2007/08/26 21:04:45  rbowler
 // Modify PSW fields by psw command (part 2)
 //
@@ -1911,7 +1914,7 @@ int   n, errflag, stopflag=0, modflag=0;
     }
 
     /* Display the PSW field by field */
-    logmsg("psw sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%X\n",
+    logmsg("psw sm=%2.2X pk=%d cmwp=%X as=%s cc=%d pm=%X am=%s ia=%"I64_FMT"X\n",
         regs->psw.sysmask,
         regs->psw.pkey >> 4,
         regs->psw.states,
