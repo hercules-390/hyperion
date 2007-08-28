@@ -22,6 +22,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.28  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.27  2007/03/26 23:02:14  gsmith
 // Suppress spurious error messages from hercifc
 //
@@ -229,6 +232,10 @@ int main( int argc, char **argv )
         #if defined(SIOCDIFADDR) && defined(EINVAL)
                  /* Suppress spurious error message */
              && !(ctlreq.iCtlOp == SIOCDIFADDR   && errno == EINVAL)
+        #endif
+        #if defined(TUNSETIFF) && defined(EINVAL)
+                 /* Suppress spurious error message */
+             && !(ctlreq.iCtlOp == TUNSETIFF   && errno == EINVAL)
         #endif
                )
             {
