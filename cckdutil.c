@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.54  2007/06/23 00:04:03  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.53  2006/12/08 09:43:17  jj
 // Add CVS message log
 //
@@ -2590,6 +2593,9 @@ int             len2;                   /* Positive `len'            */
 int             kl, dl;                 /* Key/Data lengths          */
 BYTE           *bufp;                   /* Buffer pointer            */
 int             bufl;                   /* Buffer length             */
+#ifdef HAVE_LIBZ
+unsigned long  ulbuf;
+#endif
 #ifdef CCKD_BZIP2
 unsigned int    bufsz;
 #endif
@@ -2617,12 +2623,12 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
         if (len < 0) return 0;
         bufp = (BYTE *)buf2;
         memcpy (buf2, buf, CKDDASD_TRKHDR_SIZE);
-        bufl = sizeof(buf2) - CKDDASD_TRKHDR_SIZE;
-        rc = uncompress (buf2 + CKDDASD_TRKHDR_SIZE, (void *)&bufl,
+        ulbuf = sizeof(buf2) - CKDDASD_TRKHDR_SIZE;
+        rc = uncompress (buf2 + CKDDASD_TRKHDR_SIZE, &ulbuf,
                          buf + CKDDASD_TRKHDR_SIZE, len - CKDDASD_TRKHDR_SIZE);
         if (rc != Z_OK)
             return 0;
-        bufl += CKDDASD_TRKHDR_SIZE;
+        bufl = ulbuf + CKDDASD_TRKHDR_SIZE;
         break;
 #endif
 

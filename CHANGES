@@ -1,3 +1,4 @@
+28 Aug 2007 cckdutil fix for 64-bit - zhackules by Greg
 28 Aug 2007 Fix many TUNSETIFF-EINVAL error messages - Greg
 26 Aug 2007 Fix missed unfixed 31 Aug 2006 non-SCSI tape Locate bug - Fish
 24 Aug 2007 Modify control registers by cr command - Roger Bowler
