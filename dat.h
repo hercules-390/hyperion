@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.107  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.106  2007/06/06 22:14:57  gsmith
 // Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
 //
@@ -2158,6 +2161,9 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         /* Convert host real address to host absolute address */
         regs->hostregs->dat.aaddr = aaddr =
               APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
+
+        if(regs->hostregs->dat.aaddr > regs->hostregs->mainlim)
+            goto vabs_addr_excp;
     }
 
     /* Do not apply host key access when SIE fetches/stores data */
