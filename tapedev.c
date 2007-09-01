@@ -75,6 +75,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.122  2007/08/26 14:37:17  fish
+// Fix missed unfixed 31 Aug 2006 non-SCSI tape Locate bug
+//
 // Revision 1.121  2007/07/24 23:06:32  fish
 // Force command-reject for 3590 Medium Sense and Mode Sense
 //
@@ -4202,12 +4205,14 @@ union
 
     // Real 3590's use 32-bit blockids and don't support Erase Gap.
 
+#if defined(OPTION_SCSI_TAPE)
     if (TAPEDEVT_SCSITAPE == dev->tapedevt
         &&     0x3590     == dev->devtype)
     {
         dev->stape_no_erg   = 1;        // (default for 3590 SCSI)
         dev->stape_blkid_32 = 1;        // (default for 3590 SCSI)
     }
+#endif
 
     /* Process remaining parameters */
     rc = 0;
