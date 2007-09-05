@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.211  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.210  2006/12/20 04:26:20  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -112,7 +115,7 @@ static int    NPcpunum_valid,
 
 /* Current CPU states */
 static U16    NPcpunum;
-static double NPcpupct;
+static int    NPcpupct;
 static int    NPpswmode;
 static int    NPpswzhost;
 static QWORD  NPpsw;
@@ -130,7 +133,7 @@ static U32    NPsios;
 static U64    NPinstcount;
 #endif
 static int    NPcpugraph;
-static double NPcpugraphpct[MAX_CPU_ENGINES];
+static int    NPcpugraphpct[MAX_CPU_ENGINES];
 
 /* Current device states */
 #define       NP_MAX_DEVICES (PANEL_MAX_ROWS - 3)
@@ -642,7 +645,7 @@ void NP_update(REGS *regs)
     {
         set_color (COLOR_WHITE, COLOR_BLUE);
         set_pos (1, 22);
-        sprintf(buf, "%3d",(int)(100.0 * regs->cpupct));
+        sprintf(buf, "%3d", regs->cpupct);
         draw_text (buf);
         NPcpupct_valid = 1;
         NPcpupct = regs->cpupct;
@@ -1005,8 +1008,8 @@ void NP_update(REGS *regs)
             }
             else if (!NPcpugraph_valid || NPcpugraphpct[i] != sysblk.regs[i]->cpupct)
             {
-                n = 34 * sysblk.regs[i]->cpupct;
-                if (n == 0 && sysblk.regs[i]->cpupct > 0.005)
+                n = (34 * sysblk.regs[i]->cpupct) / 100;
+                if (n == 0 && sysblk.regs[i]->cpupct > 0)
                     n = 1;
                 else if (n > 34)
                     n = 34;
@@ -1256,7 +1259,7 @@ QWORD   prvpsw;                         /* Previous PSW              */
 BYTE    prvstate = 0xFF;                /* Previous stopped state    */
 U64     prvicount = 0;                  /* Previous instruction count*/
 U64     prvtcount = 0;                  /* Previous total count      */
-double  prvcpupct = 0.0;                /* Previous cpu percentage   */
+int     prvcpupct = 0;                  /* Previous cpu percentage   */
 #if defined(OPTION_SHARED_DEVICES)
 U32     prvscount = 0;                  /* Previous shrdcount        */
 #endif

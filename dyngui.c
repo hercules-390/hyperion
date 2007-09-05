@@ -43,6 +43,9 @@
 /*********************************************************************/
 
 // $Log$
+// Revision 1.59  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.58  2007/04/06 15:43:30  fish
 // Prevent need for OBTAIN_INTLOCK same as panel.c
 //
@@ -580,23 +583,12 @@ void  UpdateStatus ()
 #if defined(OPTION_MIPS_COUNTING)
     if (gui_wants_cpupct)
     {
-        char  cpupct[10];
-
-        if (CPUSTATE_STOPPED == pTargetCPU_REGS->cpustate)
-            strcpy(cpupct,"0");
-        else
-            snprintf(cpupct,sizeof(cpupct),
-                "%1.0f",(100.0 * pTargetCPU_REGS->cpupct));
-
-        if (isdigit(cpupct[0]))
-        {
             gui_fprintf(fStatusStream,
 
-                "CPUPCT=%s\n"
+                "CPUPCT=%d\n"
 
-                ,cpupct
+                ,pTargetCPU_REGS->cpupct
             );
-        }
     }
 #endif
 

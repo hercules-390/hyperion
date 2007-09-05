@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.72  2007/08/06 22:12:49  gsmith
+// cpu thread exitjmp
+//
 // Revision 1.71  2007/08/06 16:48:20  ivan
 // Implement "PARM" option for IPL command (same as VM IPL PARM XXX)
 // Also add command helps for ipl, iplc, sysclear, sysreset
@@ -152,7 +155,7 @@ struct REGS {                           /* Processor registers       */
         U32     siocount;               /* SIO/SSCH counter          */
         U32     siosrate;               /* IOs per second            */
         U64     siototal;               /* Total SIO/SSCH count      */
-        double  cpupct;                 /* Percent CPU busy          */
+        int     cpupct;                 /* Percent CPU busy          */
         U64     waittod;                /* Time of day last wait (us)*/
         U64     waittime;               /* Wait time (us) in interval*/
         DAT     dat;                    /* Fields for DAT use        */

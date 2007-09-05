@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.65  2007/06/23 00:04:18  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.64  2006/12/08 09:43:31  jj
 // Add CVS message log
 //
@@ -172,7 +175,7 @@ U64     waittime;                       /* CPU wait time in interval */
 U64     now = 0;                        /* Current time of day (us)  */
 U64     then;                           /* Previous time of day (us) */
 int     interval;                       /* Interval (us)             */
-double  cpupct;                         /* Calculated cpu percentage */
+int     cpupct;                         /* Calculated cpu percentage */
 #endif /*OPTION_MIPS_COUNTING*/
 #if !defined(HAVE_NANOSLEEP) && !defined(HAVE_USLEEP)
 struct  timeval tv;                     /* Structure for select      */
@@ -245,11 +248,11 @@ struct  timespec  rmtp;                 /* remaining sleep interval  */
 
                 regs = sysblk.regs[cpu];
 
-                /* 0% if first time thru */
-                if (then == 0)
+                /* 0% if first time thru or STOPPED */
+                if (then == 0 || regs->cpustate == CPUSTATE_STOPPED)
                 {
                     regs->mipsrate = regs->siosrate = 0;
-                    regs->cpupct = 0.0;
+                    regs->cpupct = 0;
                     release_lock(&sysblk.cpulock[cpu]);
                     continue;
                 }
@@ -277,9 +280,9 @@ struct  timespec  rmtp;                 /* remaining sleep interval  */
                 waittime = regs->waittime;
                 if (regs->waittod)
                     waittime += now - regs->waittod;
-                cpupct = ((double)(interval - waittime)) / ((double)interval);
-                if (cpupct < 0.0) cpupct = 0.0;
-                else if (cpupct > 1.0) cpupct = 1.0;
+                cpupct = ((interval - waittime) * 100) / interval;
+                if (cpupct < 0) cpupct = 0;
+                else if (cpupct > 100) cpupct = 100;
                 regs->cpupct = cpupct;
 
                 /* Reset the wait values */
