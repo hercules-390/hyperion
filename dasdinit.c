@@ -41,6 +41,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.47  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.46  2006/12/08 09:43:19  jj
 // Add CVS message log
 //
@@ -158,6 +161,7 @@ CKDDEV *ckd;                            /* -> CKD device table entry */
 FBADEV *fba;                            /* -> FBA device table entry */
 int     lfs = 0;                        /* 1 = Build large file      */
 int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
+int     rc;                             /* Return code               */
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -283,17 +287,23 @@ int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
     /* Create the device */
 
     if (type == 'C')
-        create_ckd (fname, devtype, heads, maxdlen, size, volser,
-                    comp, lfs, 0, nullfmt, rawflag);
+        rc = create_ckd (fname, devtype, heads, maxdlen, size, volser,
+                        comp, lfs, 0, nullfmt, rawflag);
     else
-        create_fba (fname, devtype, sectsize, size, volser, comp,
-                    lfs, 0, rawflag);
+        rc = create_fba (fname, devtype, sectsize, size, volser, comp,
+                        lfs, 0, rawflag);
 
     /* Display completion message */
 
-    fprintf (stderr, _("HHCDI001I DASD initialization successfully "
-                     "completed.\n"));
+    if (rc == 0)
+    {
+        fprintf (stderr, _("HHCDI001I DASD initialization successfully "
+                "completed.\n"));
+    } else {
+        fprintf (stderr, _("HHCDI002I DASD initialization unsuccessful"
+                "\n"));
+    }
 
-    return 0;
+    return rc;
 
 } /* end function main */
