@@ -4,7 +4,6 @@
 // $Id$
 
 /*-------------------------------------------------------------------*/
-/*                                                                   */
 /* This program creates a disk image file and initializes it as      */
 /* a blank FBA or CKD DASD volume.                                   */
 /*                                                                   */
@@ -41,6 +40,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.48  2007/09/30 12:23:22  rbowler
+// Error message if DASD initialisation unsuccessful
+//
 // Revision 1.47  2007/06/23 00:04:08  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -202,22 +204,19 @@ int     rc;                             /* Return code               */
     }
 
     /* Check remaining number of arguments */
-
     if (argc < (rawflag ? 3 : 4) || argc > (rawflag ? 4 : 5))
         argexit(5, NULL);
 
     /* The first argument is the file name */
-
-    if (!argv[1] || strlen(argv[1]) == 0
+    if (argv[1] == NULL || strlen(argv[1]) == 0
         || strlen(argv[1]) > sizeof(fname)-1)
         argexit(1, argv[1]);
 
     strcpy (fname, argv[1]);
 
-    /* The second argument is the device type,
-       with or without the model number. */
-
-    if (!argv[2])
+    /* The second argument is the device type.
+       Model number may also be specified */
+    if (argv[2] == NULL)
         argexit(2, argv[2]);
     ckd = dasd_lookup (DASD_CKDDEV, argv[2], 0, 0);
     if (ckd != NULL)
@@ -256,7 +255,7 @@ int     rc;                             /* Return code               */
         volsize_argnum = 4;
 
         /* The third argument is the volume serial number */
-        if (!argv[3] || strlen(argv[3]) == 0
+        if (argv[3] == NULL || strlen(argv[3]) == 0
             || strlen(argv[3]) > sizeof(volser)-1)
             argexit(3, argv[3]);
 
@@ -285,7 +284,6 @@ int     rc;                             /* Return code               */
         size += altsize;
 
     /* Create the device */
-
     if (type == 'C')
         rc = create_ckd (fname, devtype, heads, maxdlen, size, volser,
                         comp, lfs, 0, nullfmt, rawflag);
@@ -294,7 +292,6 @@ int     rc;                             /* Return code               */
                         lfs, 0, rawflag);
 
     /* Display completion message */
-
     if (rc == 0)
     {
         fprintf (stderr, _("HHCDI001I DASD initialization successfully "
