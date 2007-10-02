@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.62  2007/08/07 19:47:59  ivan
+// Fix a couple of gcc-4.2 warnings
+//
 // Revision 1.61  2007/03/13 00:34:18  ivan
 // fetch_dw macro fix for MSVC compiles
 //
@@ -346,7 +349,7 @@
      */
 #undef BREG
 #undef XCHG_BREG
-#ifdef PIC
+#if defined(PIC) && !defined(__CYGWIN__)
 #define BREG "S"
 #define XCHG_BREG "xchgl   %%ebx,%%esi\n\t"
 #else
