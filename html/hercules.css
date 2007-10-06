@@ -92,6 +92,52 @@ pre.screen80
     border-color:     light-gray;
 }
 
+/* Messages and codes: Message text */
+dl.messages dt
+{
+    padding:          5px;
+    border-style:     solid none none none;
+    border-width:     1px;
+    margin-top:       1.5em;
+}
+
+/* Messages and codes: Message text */
+dl.messages dt code, dl.messages dt pre, dl.messages dt tt 
+{
+    font-family:      Arial;
+    font-style:       italic;
+    font-weight:      bold;
+    font-size:        100%;
+}
+
+/* Messages and codes: Variable items in message text */
+dl.messages dt code em, dl.messages dt pre em, dl.messages dt tt i
+{
+    font-family:      Arial;
+    font-style:       italic;
+    font-weight:      normal;
+    font-size:        100%;
+}
+
+/* Messages and codes: Subheadings in message description */
+dl.messages dd dt
+{
+    font-family:      Arial;
+    font-style:       italic;
+    font-weight:      bold;
+    padding:          2px;
+    border-style:     none;
+    margin-top:       0;
+}
+
+/* Messages and codes: Reference to variable items in message description */
+dl.messages dd dd code em, dl.messages dd dd tt i
+{
+    font-family:      Arial;
+    font-style:       italic;
+    font-weight:      normal;
+    font-size:        100%;
+}
 -->
 
 </style>
