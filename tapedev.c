@@ -75,6 +75,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.123  2007/09/01 06:32:24  fish
+// Surround 3590 SCSI test w/#ifdef (OPTION_SCSI_TAPE)
+//
 // Revision 1.122  2007/08/26 14:37:17  fish
 // Fix missed unfixed 31 Aug 2006 non-SCSI tape Locate bug
 //
@@ -4203,9 +4206,9 @@ union
     dev->tdparms.maxsize   = 0;        // no max size     (default)
     dev->tdparms.eotmargin = 128*1024; // 128K EOT margin (default)
 
+#if defined(OPTION_SCSI_TAPE)
     // Real 3590's use 32-bit blockids and don't support Erase Gap.
 
-#if defined(OPTION_SCSI_TAPE)
     if (TAPEDEVT_SCSITAPE == dev->tapedevt
         &&     0x3590     == dev->devtype)
     {
