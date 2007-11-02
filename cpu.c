@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.189  2007/08/06 22:14:53  gsmith
+// process_interrupt returns if nothing happens
+//
 // Revision 1.188  2007/08/06 22:14:07  gsmith
 // rework CPU execution loop
 //
@@ -1477,8 +1480,13 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
             ARCH_DEP(store_status) (regs, 0);
             logmsg (_("HHCCP010I CPU%4.4X store status completed.\n"),
                     regs->cpuad);
+            /* ISW 20071102 : Do not return via longjmp here. */
+            /*    process_interrupt needs to finish putting the */
+            /*    CPU in its manual state                     */
+            /*
             RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
+            */
         }
     } /*CPUSTATE_STOPPING*/
 
