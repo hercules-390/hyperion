@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.228  2007/08/27 20:21:03  rbowler
+// PSW command logmsg format correction
+//
 // Revision 1.227  2007/08/27 11:13:04  rbowler
 // Modify PSW fields by psw command (part 3)
 //
@@ -6364,6 +6367,15 @@ CMDHELP ( "loadtext",  "Format: \"loadtext filename [address]\". This command is
                        "to the 'loadcore' command except that it loads a text deck file with \"TXT\"\n"
                        "and \"END\" 80 byte records (i.e. an object deck).\n"
                        )
+
+#ifdef PANEL_REFRESH_RATE
+CMDHELP ( "panrate",   "Format: \"panrate [nnn | fast | slow]\". Sets or displays the panel refresh rate.\n"
+                       "panrate nnn sets the refresh rate to nnn milliseconds.\n"
+                       "panrate fast sets the refresh rate to " MSTRING(PANEL_REFRESH_RATE_FAST) " milliseconds.\n"
+                       "panrate slow sets the refresh rate to " MSTRING(PANEL_REFRESH_RATE_SLOW) " milliseconds.\n"
+                       "If no operand is specified, panrate displays the current refresh rate.\n"
+                       )
+#endif
 
 #if defined(OPTION_CONFIG_SYMBOLS)
 CMDHELP ( "defsym",    "Format: \"defsym symbol [value]\". Defines symbol 'symbol' to contain value 'value'.\n"
