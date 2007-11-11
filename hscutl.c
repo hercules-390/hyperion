@@ -11,6 +11,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.25  2007/01/12 14:38:47  rbowler
+// Error checking for Unix keepalive
+//
 // Revision 1.24  2007/01/10 15:12:11  rbowler
 // Console keepalive for Unix
 //
@@ -693,7 +696,7 @@ void socket_keepalive( int sfd, int idle_time, int probe_interval,
 {
     int rc, optval = 1;
     rc = setsockopt(sfd, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
-    logmsg("HHCUT001I SO_KEEPALIVE rc=%d %s\n", rc, strerror(errno));
+    if (rc) logmsg("HHCUT001I SO_KEEPALIVE rc=%d %s\n", rc, strerror(errno));
 
   #if defined(TCP_KEEPALIVE)
     optval = idle_time;
