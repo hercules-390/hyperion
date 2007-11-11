@@ -13,7 +13,8 @@
 /* Four emulated tape formats are supported:                         */
 /* 1. AWSTAPE   This is the format used by the P/390.                */
 /*              The entire tape is contained in a single flat file.  */
-/*              Each tape block is preceded by a 6-byte header.      */
+/*              A tape block consists of one or more block segments. */
+/*              Each block segment is preceded by a 6-byte header.   */
 /*              Files are separated by tapemarks, which consist      */
 /*              of headers with zero block length.                   */
 /*              AWSTAPE files are readable and writable.             */
@@ -76,6 +77,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.125  2007/11/09 14:59:34  rbowler
+// Move misplaced comment and restore original programming style
+//
 // Revision 1.124  2007/11/02 16:04:15  jmaynard
 // Removing redundant #if !(defined OPTION_SCSI_TAPE).
 //
@@ -636,6 +640,10 @@ off_t           rcoff;                  /* Return code from lseek()  */
 /*-------------------------------------------------------------------*/
 /* Read a block from an AWSTAPE format file                          */
 /*                                                                   */
+/* The block may be formed of one or more block segments each        */
+/* preceded by an AWSTAPE block header. The ENDREC flag in the       */
+/* block header indicates the final segment of the block.            */
+/*                                                                   */
 /* If successful, return value is block length read.                 */
 /* If a tapemark was read, the return value is zero, and the         */
 /* current file number in the device block is incremented.           */
@@ -646,58 +654,99 @@ static int read_awstape (DEVBLK *dev, BYTE *buf, BYTE *unitstat,BYTE code)
 int             rc;                     /* Return code               */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 off_t           blkpos;                 /* Offset of block header    */
-U16             blklen;                 /* Data length of block      */
+int             blklen = 0;             /* Total length of block     */
+U16             seglen;                 /* Data length of segment    */
 
     /* Initialize current block position */
     blkpos = dev->nxtblkpos;
 
-    /* Read the 6-byte block header */
-    rc = readhdr_awstape (dev, blkpos, &awshdr, unitstat,code);
-    if (rc < 0) return -1;
+    /* Read block segments until end of block */
+    do
+    {
+        /* Read the 6-byte block header */
+        rc = readhdr_awstape (dev, blkpos, &awshdr, unitstat,code);
+        if (rc < 0) return -1;
 
-    /* Extract the block length from the block header */
-    blklen = ((U16)(awshdr.curblkl[1]) << 8)
-                | awshdr.curblkl[0];
+        /* Extract the segment length from the block header */
+        seglen = ((U16)(awshdr.curblkl[1]) << 8)
+                    | awshdr.curblkl[0];
+
+        /* Calculate the offset of the next block segment */
+        blkpos += sizeof(awshdr) + seglen;
+         
+        /* Check that block length will not exceed buffer size */
+        if (blklen + seglen > MAX_BLKLEN)
+        {
+            logmsg (_("HHCTA007E Block length exceeds %d "
+                    "at offset %8.8lX in file %s\n"),
+                    (int)MAX_BLKLEN, blkpos, dev->filename);
+
+            /* Set unit check with data check */
+            build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
+            return -1;
+        }
+
+        /* Check that tapemark blocksize is zero */
+        if ((awshdr.flags1 & AWSTAPE_FLAG1_TAPEMARK)
+            && blklen + seglen > 0)
+        {
+            logmsg (_("HHCTA008E Invalid tapemark "
+                    "at offset %8.8lX in file %s\n"),
+                    blkpos, dev->filename);
+
+            /* Set unit check with data check */
+            build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
+            return -1;
+        }
+
+        /* Exit loop if this is a tapemark */
+        if (awshdr.flags1 & AWSTAPE_FLAG1_TAPEMARK)
+            break;
+
+        /* Read data block segment from tape file */
+        rc = read (dev->fd, buf+blklen, seglen);
+
+        /* Handle read error condition */
+        if (rc < 0)
+        {
+            logmsg (_("HHCTA003E Error reading data block "
+                    "at offset %8.8lX in file %s: %s\n"),
+                    blkpos, dev->filename, strerror(errno));
+
+            /* Set unit check with equipment check */
+            build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
+            return -1;
+        }
+
+        /* Handle end of file within data block */
+        if (rc < seglen)
+        {
+            logmsg (_("HHCTA004E Unexpected end of file in data block "
+                    "at offset %8.8lX in file %s\n"),
+                    blkpos, dev->filename);
+
+            /* Set unit check with data check and partial record */
+            build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
+            return -1;
+        }
+
+        /* Accumulate the total block length */
+        blklen += seglen;
+
+    } while ((awshdr.flags1 & AWSTAPE_FLAG1_ENDREC) == 0);
 
     /* Calculate the offsets of the next and previous blocks */
-    dev->nxtblkpos = blkpos + sizeof(awshdr) + blklen;
-    dev->prvblkpos = blkpos;
+    dev->prvblkpos = dev->nxtblkpos;
+    dev->nxtblkpos = blkpos;
+
+    /* Increment the block number */
+    dev->blockid++;
 
     /* Increment file number and return zero if tapemark was read */
     if (blklen == 0)
     {
         dev->curfilen++;
-        dev->blockid++;
         return 0; /* UX will be set by caller */
-    }
-
-    /* Read data block from tape file */
-    rc = read (dev->fd, buf, blklen);
-
-    /* Handle read error condition */
-    if (rc < 0)
-    {
-        logmsg (_("HHCTA003E Error reading data block "
-                "at offset %8.8lX in file %s: %s\n"),
-                blkpos, dev->filename, strerror(errno));
-
-        /* Set unit check with equipment check */
-        build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
-        return -1;
-    }
-
-    dev->blockid++;
-
-    /* Handle end of file within data block */
-    if (rc < blklen)
-    {
-        logmsg (_("HHCTA004E Unexpected end of file in data block "
-                "at offset %8.8lX in file %s\n"),
-                blkpos, dev->filename);
-
-        /* Set unit check with data check and partial record */
-        build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
-        return -1;
     }
 
     /* Return block length */
