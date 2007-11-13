@@ -77,6 +77,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.126  2007/11/11 20:46:50  rbowler
+// read_awstape support for segmented blocks
+//
 // Revision 1.125  2007/11/09 14:59:34  rbowler
 // Move misplaced comment and restore original programming style
 //
@@ -1042,22 +1045,38 @@ static int fsb_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 int             rc;                     /* Return code               */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 off_t           blkpos;                 /* Offset of block header    */
-U16             blklen;                 /* Data length of block      */
+int             blklen = 0;             /* Total length of block     */
+U16             seglen;                 /* Data length of segment    */
 
     /* Initialize current block position */
     blkpos = dev->nxtblkpos;
 
-    /* Read the 6-byte block header */
-    rc = readhdr_awstape (dev, blkpos, &awshdr, unitstat,code);
-    if (rc < 0) return -1;
+    /* Read block segments until end of block */
+    do
+    {
+        /* Read the 6-byte block header */
+        rc = readhdr_awstape (dev, blkpos, &awshdr, unitstat,code);
+        if (rc < 0) return -1;
 
-    /* Extract the block length from the block header */
-    blklen = ((U16)(awshdr.curblkl[1]) << 8)
-                | awshdr.curblkl[0];
+        /* Extract the block length from the block header */
+        seglen = ((U16)(awshdr.curblkl[1]) << 8)
+                    | awshdr.curblkl[0];
+
+        /* Calculate the offset of the next block segment */
+        blkpos += sizeof(awshdr) + seglen;
+         
+        /* Accumulate the total block length */
+        blklen += seglen;
+
+        /* Exit loop if this is a tapemark */
+        if (awshdr.flags1 & AWSTAPE_FLAG1_TAPEMARK)
+            break;
+
+    } while ((awshdr.flags1 & AWSTAPE_FLAG1_ENDREC) == 0);
 
     /* Calculate the offsets of the next and previous blocks */
-    dev->nxtblkpos = blkpos + sizeof(awshdr) + blklen;
-    dev->prvblkpos = blkpos;
+    dev->prvblkpos = dev->nxtblkpos;
+    dev->nxtblkpos = blkpos;
 
     /* Increment current file number if tapemark was skipped */
     if (blklen == 0)
