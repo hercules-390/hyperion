@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.189  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.188  2007/04/27 10:50:40  rbowler
 // STFL bit 27 for MVCOS
 //
@@ -1603,7 +1606,15 @@ QWORD   currpsw;                        /* Work area for PSW         */
     /* If R2 specifies a register other than register zero,
        load PSW bits 32-63 into bits 32-63 of the R2 register */
     if(r2 != 0)
+    {
         FETCH_FW(regs->GR_L(r2), currpsw+4);
+
+#if !defined(FEATURE_ESAME)
+        /* The Ninth Edition of ESA/390 POP (SA22-7201-08) requires
+           the low 31 bits to be set to zeroes in ESA/390 mode */
+        regs->GR_L(r2) &= 0x80000000;
+#endif /*!defined(FEATURE_ESAME)*/
+    }
 
 } /* end DEF_INST(extract_psw) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/

@@ -1,3 +1,4 @@
+15 Nov 2007 Correct ESA/390 EPSW instruction - Roger Bowler
 13 Nov 2007 Support for AWSTAPE segmented blocks - Roger Bowler
 02 Nov 2007 Fix runaway CPU for self inflicted SIGP 9 - Ivan Warren
 04 Sep 2007 Use integer arithmetic calculating cpupct - Greg

@@ -1,0 +1,15 @@
+* EPSW test $Id$
+sysclear           
+archmode esa/390
+r 000=0008000080000200                 # ESA/390 restart PSW
+r 068=000A00008000DEAD                 # ESA/390 pgm new PSW
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=98030240     # LM R0,R3,INITREG  Load initial values into regs
+r 204=B98D0023     # EPSW R2,R3        R2=PSW bits 0-31, R3=PSW bit 32
+r 208=B98D0010     # EPSW R1,0         R1=PSW bits 0-31, R0=unchanged
+r 20C=82000300     # LPSW WAITPSW      Load enabled wait PSW
+r 240=EEEEEEEEDDDDDDDDCCCCCCCCBBBBBBBB # Initial values for regs 0-3
+r 300=070A000080FED0D0                 # WAITPSW Enabled wait state PSW
+s+
+restart
