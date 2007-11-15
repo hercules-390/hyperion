@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.208  2007/06/23 00:04:14  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.207  2007/06/06 22:14:58  gsmith
 // Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
 //
@@ -615,15 +618,9 @@ do { \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
     /* Program check if fpc is not valid contents for FPC register */
-#if !defined(FEATURE_DECIMAL_FLOATING_POINT)
- #define FPC_CHECK(_fpc, _regs) \
-    if((_fpc) & (FPC_RESERVED | FPC_DRM)) \
-        (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-#else /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
- #define FPC_CHECK(_fpc, _regs) \
+#define FPC_CHECK(_fpc, _regs) \
     if((_fpc) & FPC_RESERVED) \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION)
-#endif /*defined(FEATURE_DECIMAL_FLOATING_POINT)*/
 
 #define SSID_CHECK(_regs) \
     if((!((_regs)->GR_LHH(1) & 0x0001)) \
