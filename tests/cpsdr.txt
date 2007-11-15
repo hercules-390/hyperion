@@ -1,0 +1,27 @@
+* CPSDR test $Id$
+sysclear           
+archmode esame
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=B7000240     # LCTL R0,R0,CTLR0  Set CR0 bit 45
+r 204=B2BD0244     # LFAS FPCREG       Load value into FPC register
+r 208=EB2502480004 # LMG R2,R5,TESTDAT Load R2-R5=Test data
+r 20E=B3C10002     # LDGR F0,R2        Load FPR0 from R2
+r 212=B3C10023     # LDGR F2,R3        Load FPR2 from R3
+r 216=B3C10014     # LDGR F1,R4        Load FPR1 from R4
+r 21A=B3C10035     # LDGR F3,R5        Load FPR3 from R5
+r 21E=B3720042     # CPSDR F4,F0,F2    Load FPR4 from FPR2 with sign of FPR0
+r 222=B3724042     # CPSDR F4,F4,F2    Load FPR4 from FPR2 with sign of FPR4
+r 226=B3722033     # CPSDR F3,F2,F3    Load FPR3 from FPR3 with sign of FPR3
+r 22A=B3723033     # CPSDR F3,F3,F3    Load FPR3 from FPR3 with sign of FPR3
+r 22E=B3722032     # CPSDR F3,F2,F2    Load FPR3 from FPR2 with sign of FPR2
+r 232=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 240=00040000     # CTLR0             Control register 0 (bit45 AFP control)
+r 244=80000000     # FPCREG            Floating point control register        
+r 248=07F3123456789ABC                 # FPR0 positive 
+r 250=F813ABCDEF123456                 # FPR2 negative
+r 258=7D55ABCDEF123456                 # FPR1 positive   
+r 260=8055ABCDEF123456                 # FPR3 negative
+r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
+s+
+restart

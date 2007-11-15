@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.65  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.64  2007/04/25 12:33:20  rbowler
 // Move SRNMT to Floating-point-support-enhancement facility
 //
@@ -103,6 +106,7 @@ DEF_INST(copy_sign_fpr_long_reg)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 int     i1, i2, i3;                     /* FP register subscripts    */
+U32     sign;                           /* Work area for sign bit    */
 
     RRF_M(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r1, r2, regs);
@@ -116,8 +120,9 @@ int     i1, i2, i3;                     /* FP register subscripts    */
     regs->fpr[i1+1] = regs->fpr[i2+1];
 
     /* Copy the sign bit from r3 register */
+    sign = regs->fpr[i3] & 0x80000000;
     regs->fpr[i1] &= 0x7FFFFFFF;
-    regs->fpr[i1] |= regs->fpr[i3] & 0x80000000;
+    regs->fpr[i1] |= sign;
 
 } /* end DEF_INST(copy_sign_fpr_long_reg) */
 

@@ -1,3 +1,4 @@
+15 Nov 2007 Correct CPSDR instruction - Roger Bowler
 15 Nov 2007 Correct ESA/390 EPSW instruction - Roger Bowler
 13 Nov 2007 Support for AWSTAPE segmented blocks - Roger Bowler
 02 Nov 2007 Fix runaway CPU for self inflicted SIGP 9 - Ivan Warren
