@@ -1,3 +1,4 @@
+16 Nov 2007 Add HFP-multiply-add/subtract facility to ESA/390 - Roger Bowler
 15 Nov 2007 Correct PIC6 when loading DRM bits into FPC - Roger Bowler
 15 Nov 2007 Correct CPSDR instruction - Roger Bowler
 15 Nov 2007 Correct ESA/390 EPSW instruction - Roger Bowler

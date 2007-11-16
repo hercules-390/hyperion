@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.124  2007/06/23 00:04:14  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.123  2007/06/02 13:46:41  rbowler
 // PFPO framework
 //
@@ -3067,8 +3070,8 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B32B*/ GENx___x___x___ ,
  /*B32C*/ GENx___x___x___ ,
  /*B32D*/ GENx___x___x___ ,
- /*B32E*/ GENx___x___x900 (multiply_add_float_short_reg,RRF_R,"MAER"),
- /*B32F*/ GENx___x___x900 (multiply_subtract_float_short_reg,RRF_R,"MSER"),
+ /*B32E*/ GENx___x390x900 (multiply_add_float_short_reg,RRF_R,"MAER"),
+ /*B32F*/ GENx___x390x900 (multiply_subtract_float_short_reg,RRF_R,"MSER"),
  /*B330*/ GENx___x___x___ ,
  /*B331*/ GENx___x___x___ ,
  /*B332*/ GENx___x___x___ ,
@@ -3083,8 +3086,8 @@ DLL_EXPORT zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B33B*/ GENx___x___x900 (multiply_unnormal_float_long_to_ext_reg,RRF_R,"MYR"),            /*@Z9*/
  /*B33C*/ GENx___x___x900 (multiply_add_unnormal_float_long_to_ext_high_reg,RRF_R,"MAYHR"), /*@Z9*/
  /*B33D*/ GENx___x___x900 (multiply_unnormal_float_long_to_ext_high_reg,RRF_R,"MYHR"),      /*@Z9*/
- /*B33E*/ GENx___x___x900 (multiply_add_float_long_reg,RRF_R,"MADR"),
- /*B33F*/ GENx___x___x900 (multiply_subtract_float_long_reg,RRF_R,"MSDR"),
+ /*B33E*/ GENx___x390x900 (multiply_add_float_long_reg,RRF_R,"MADR"),
+ /*B33F*/ GENx___x390x900 (multiply_subtract_float_long_reg,RRF_R,"MSDR"),
  /*B340*/ GENx___x390x900 (load_positive_bfp_ext_reg,RRE,"LPXBR"),
  /*B341*/ GENx___x390x900 (load_negative_bfp_ext_reg,RRE,"LNXBR"),
  /*B342*/ GENx___x390x900 (load_and_test_bfp_ext_reg,RRE,"LTXBR"),
@@ -4954,8 +4957,8 @@ DLL_EXPORT zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED2B*/ GENx___x___x___ ,
  /*ED2C*/ GENx___x___x___ ,
  /*ED2D*/ GENx___x___x___ ,
- /*ED2E*/ GENx___x___x900 (multiply_add_float_short,RXF,"MAE"),
- /*ED2F*/ GENx___x___x900 (multiply_subtract_float_short,RXF,"MSE"),
+ /*ED2E*/ GENx___x390x900 (multiply_add_float_short,RXF,"MAE"),
+ /*ED2F*/ GENx___x390x900 (multiply_subtract_float_short,RXF,"MSE"),
  /*ED30*/ GENx___x___x___ ,
  /*ED31*/ GENx___x___x___ ,
  /*ED32*/ GENx___x___x___ ,
@@ -4970,8 +4973,8 @@ DLL_EXPORT zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED3B*/ GENx___x___x900 (multiply_unnormal_float_long_to_ext,RXF,"MY"),            /*@Z9*/
  /*ED3C*/ GENx___x___x900 (multiply_add_unnormal_float_long_to_ext_high,RXF,"MAYH"), /*@Z9*/
  /*ED3D*/ GENx___x___x900 (multiply_unnormal_float_long_to_ext_high,RXF,"MYH"),      /*@Z9*/
- /*ED3E*/ GENx___x___x900 (multiply_add_float_long,RXF,"MAD"),
- /*ED3F*/ GENx___x___x900 (multiply_subtract_float_long,RXF,"MSD"),
+ /*ED3E*/ GENx___x390x900 (multiply_add_float_long,RXF,"MAD"),
+ /*ED3F*/ GENx___x390x900 (multiply_subtract_float_long,RXF,"MSD"),
  /*ED40*/ GENx___x390x900 (shift_coefficient_left_dfp_long,RXF,"SLDT"),
  /*ED41*/ GENx___x390x900 (shift_coefficient_right_dfp_long,RXF,"SRDT"),
  /*ED42*/ GENx___x___x___ ,

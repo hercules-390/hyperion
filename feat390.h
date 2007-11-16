@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.38  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.37  2007/04/25 12:10:27  rbowler
 // Move LFAS,SFASR to IEEE-exception-simulation facility
 //
@@ -46,6 +49,7 @@
 #define FEATURE_HERCULES_DIAGCALLS
 #define FEATURE_HEXADECIMAL_FLOATING_POINT
 #define FEATURE_HFP_EXTENSIONS
+#define FEATURE_HFP_MULTIPLY_ADD_SUBTRACT
 #define FEATURE_HYPERVISOR
 #define FEATURE_IMMEDIATE_AND_RELATIVE
 #define FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
