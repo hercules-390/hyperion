@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.190  2007/11/15 21:34:01  rbowler
+// EPSW correction in accord with ESA/390 POP ninth edition
+//
 // Revision 1.189  2007/06/23 00:04:09  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -4945,7 +4948,7 @@ void ARCH_DEP(adjust_stfl_data) ()
         ARCH_DEP(stfl_data)[0] |= STFL_0_ASN_LX_REUSE;
     else
         ARCH_DEP(stfl_data)[0] &= ~STFL_0_ASN_LX_REUSE;
-#endif
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
 } /* end ARCH_DEP(adjust_stfl_data) */
 
 /*-------------------------------------------------------------------*/
@@ -5030,7 +5033,7 @@ int     cc;                             /* Condition code            */
 } /* end DEF_INST(store_facility_list_extended) */
 #endif /*defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)*/
 
-#endif /*defined(_900) || defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)*/
 
 
 #if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_ESAME)
