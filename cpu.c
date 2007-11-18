@@ -30,6 +30,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.190  2007/11/02 20:19:20  ivan
+// Remove longjmp in process_interrupt() when cpu is STOPPING and a store status
+// was requested - leads to a CPU in the STOPPED state that is still executing
+// instructions.
+//
 // Revision 1.189  2007/08/06 22:14:53  gsmith
 // process_interrupt returns if nothing happens
 //
@@ -1789,7 +1794,6 @@ void ARCH_DEP(set_jump_pointers) (REGS *regs, int jump)
     switch (jump) {
 
  #if defined(MULTI_BYTE_ASSIST_IA32)
-  #if ARCH_MODE != ARCH_370
     case 0xa7:
 jump_a7xx:
  __asm__ (
@@ -1798,7 +1802,6 @@ jump_a7xx:
         : : "i" (offsetof(REGS,ARCH_DEP(opcode_a7xx)))
         );
         return;
-  #endif /* ARCH_MODE != ARCH_370 */
     case 0xb2:
 jump_b2xx:
  __asm__ (
@@ -1845,9 +1848,7 @@ jump_ebxx:
 
     } /* switch(jump) */
 
- #if ARCH_MODE != ARCH_370
     regs->ARCH_DEP(opcode_table)[0xa7] = &&jump_a7xx;
- #endif
     regs->ARCH_DEP(opcode_table)[0xb2] = &&jump_b2xx;
  #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
     regs->ARCH_DEP(opcode_table)[0xb9] = &&jump_b9xx;

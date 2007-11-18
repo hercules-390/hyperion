@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.23  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.22  2006/12/31 17:53:48  gsmith
 // 2006 Dec 31 Update ecpsvm.c for new psw IA scheme
 //
@@ -34,6 +37,11 @@
 #define FEATURE_S370E_EXTENDED_ADDRESSING
 #define FEATURE_TEST_BLOCK
 #define FEATURE_ECPSVM
+
+/* The following ESA/390 features can be retrofitted to S/370 and
+   may be activated if desired by uncommenting the appropriate
+   define statements below and performing a complete rebuild */
+//#define FEATURE_IMMEDIATE_AND_RELATIVE
 
 #endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */

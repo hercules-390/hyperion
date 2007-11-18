@@ -1,0 +1,15 @@
+* BRC test $Id$
+sysclear           
+archmode s/370
+r 000=0008000000000200                 # EC mode restart PSW
+r 068=000A00000000DEAD                 # EC mode pgm new PSW
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=98030240     # LM R0,R3,INITREG  Load initial values into regs
+r 204=1200         # LTR R0,R0         Set condition code
+r 206=A7F4FFFD     # BRC 15,*-6        Branch back
+r 20A=82000300     # LPSW WAITPSW      Load enabled wait PSW
+r 240=EEEEEEEEDDDDDDDDCCCCCCCCBBBBBBBB # Initial values for regs 0-3
+r 300=070A000000FED0D0                 # WAITPSW Enabled wait state PSW
+s+
+restart

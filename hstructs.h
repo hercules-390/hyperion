@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.73  2007/09/05 00:24:18  gsmith
+// Use integer arithmetic calculating cpupct
+//
 // Revision 1.72  2007/08/06 22:12:49  gsmith
 // cpu thread exitjmp
 //
@@ -318,8 +321,10 @@ struct REGS {                           /* Processor registers       */
                *s370_opcode_a5xx,
                *s370_opcode_a6xx,
  #if defined(MULTI_BYTE_ASSIST)
+                s370_opcode_a7xx[256],
                 s370_opcode_b2xx[256],
  #else
+               *s370_opcode_a7xx,
                *s370_opcode_b2xx,
  #endif
                *s370_opcode_e4xx,

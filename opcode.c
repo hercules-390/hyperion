@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.125  2007/11/16 13:01:49  rbowler
+// Add HFP-multiply-add/subtract facility to ESA/390
+//
 // Revision 1.124  2007/06/23 00:04:14  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -943,13 +946,13 @@ DEF_INST(execute_01xx)
 {
     regs->ARCH_DEP(opcode_01xx)[inst[1]](inst, regs);
 }
+#endif
 
 
 DEF_INST(execute_a7xx)
 {
     regs->ARCH_DEP(opcode_a7xx)[inst[1]](inst, regs);
 }
-#endif
 
 
 DEF_INST(execute_b2xx)
@@ -1757,6 +1760,7 @@ DLL_EXPORT zz_func s370_opcode_table[256];
 static zz_func s370_opcode_a4xx[256];
 static zz_func s370_opcode_a5xx[256];
 static zz_func s370_opcode_a6xx[256];
+static zz_func s370_opcode_a7xx[256];
 static zz_func s370_opcode_b2xx[256];
 static zz_func s370_opcode_e4xx[256];
 static zz_func s370_opcode_e5xx[256];
@@ -1807,6 +1811,7 @@ int i;
         s370_opcode_a4xx [i] = v_opcode_a4xx [i][ARCH_370];
         s370_opcode_a5xx [i] = v_opcode_a5xx [i][ARCH_370];
         s370_opcode_a6xx [i] = v_opcode_a6xx [i][ARCH_370];
+        s370_opcode_a7xx [i] = opcode_a7xx [i&0x0F][ARCH_370];
         s370_opcode_b2xx [i] = opcode_b2xx [i][ARCH_370];
         s370_opcode_e4xx [i] = v_opcode_e4xx [i][ARCH_370];
         s370_opcode_e5xx [i] = opcode_e5xx [i][ARCH_370];
@@ -1862,9 +1867,12 @@ void set_opcode_pointers(REGS *regs)
     regs->s370_opcode_a5xx = s370_opcode_a5xx;
     regs->s370_opcode_a6xx = s370_opcode_a6xx;
  #if defined(MULTI_BYTE_ASSIST)
+    memcpy(regs->s370_opcode_a7xx, s370_opcode_a7xx,
+           sizeof(s370_opcode_a7xx));
     memcpy(regs->s370_opcode_b2xx, s370_opcode_b2xx,
            sizeof(s370_opcode_b2xx));
  #else
+    regs->s370_opcode_a7xx = s370_opcode_a7xx;
     regs->s370_opcode_b2xx = s370_opcode_b2xx;
  #endif
     regs->s370_opcode_e4xx = s370_opcode_e4xx;
@@ -2055,7 +2063,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*6E*/   GENx370x390x900 (add_unnormal_float_long,RX,"AW"),
  /*6F*/   GENx370x390x900 (subtract_unnormal_float_long,RX,"SW"),
  /*70*/   GENx370x390x900 (store_float_short,RX,"STE"),
- /*71*/   GENx___x390x900 (multiply_single,RX,"MS"),
+ /*71*/   GENx370x390x900 (multiply_single,RX,"MS"),
  /*72*/   GENx___x___x___ ,
  /*73*/   GENx___x___x___ ,
  /*74*/   GENx___x___x___ ,
@@ -2074,8 +2082,8 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*81*/   GENx___x___x___ ,
  /*82*/   GENx370x390x900 (load_program_status_word,S,"LPSW"),
  /*83*/   GENx370x390x900 (diagnose,RS,"DIAG"),
- /*84*/   GENx___x390x900 (branch_relative_on_index_high,RSI,"BRXH"),
- /*85*/   GENx___x390x900 (branch_relative_on_index_low_or_equal,RSI,"BRXLE"),
+ /*84*/   GENx370x390x900 (branch_relative_on_index_high,RSI,"BRXH"),
+ /*85*/   GENx370x390x900 (branch_relative_on_index_low_or_equal,RSI,"BRXLE"),
  /*86*/   GENx370x390x900 (branch_on_index_high,RS,"BXH"),
  /*87*/   GENx370x390x900 (branch_on_index_low_or_equal,RS,"BXLE"),
  /*88*/   GENx370x390x900 (shift_right_single_logical,RS_R1D2B2,"SRL"),
@@ -2109,7 +2117,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*A4*/   GENx370x390x___ (execute_a4xx,a4xx,""),
  /*A5*/   GENx370x390x900 (execute_a5xx,a5xx,""),
  /*A6*/   GENx370x390x___ (execute_a6xx,a6xx,""),
- /*A7*/   GENx___x390x900 (execute_a7xx,a7xx,""),
+ /*A7*/   GENx370x390x900 (execute_a7xx,a7xx,""),
  /*A8*/   GENx___x390x900 (move_long_extended,RS,"MVCLE"),
  /*A9*/   GENx___x390x900 (compare_logical_long_extended,RS,"CLCLE"),
  /*AA*/   GENx___x___x___ ,
@@ -2744,21 +2752,21 @@ DLL_EXPORT zz_func opcode_a5xx[16][GEN_MAXARCH] = {
 // #endif /*defined(FEATURE_ESAME)*/
 
 DLL_EXPORT zz_func opcode_a7xx[16][GEN_MAXARCH] = {
- /*A7x0*/ GENx___x390x900 (test_under_mask_high,RI,"TMLH"),
- /*A7x1*/ GENx___x390x900 (test_under_mask_low,RI,"TMLL"),
+ /*A7x0*/ GENx370x390x900 (test_under_mask_high,RI,"TMLH"),
+ /*A7x1*/ GENx370x390x900 (test_under_mask_low,RI,"TMLL"),
  /*A7x2*/ GENx___x___x900 (test_under_mask_high_high,RI,"TMHH"),
  /*A7x3*/ GENx___x___x900 (test_under_mask_high_low,RI,"TMHL"),
- /*A7x4*/ GENx___x390x900 (branch_relative_on_condition,RI_B,"BRC"),
- /*A7x5*/ GENx___x390x900 (branch_relative_and_save,RI_B,"BRAS"),
- /*A7x6*/ GENx___x390x900 (branch_relative_on_count,RI_B,"BRCT"),
+ /*A7x4*/ GENx370x390x900 (branch_relative_on_condition,RI_B,"BRC"),
+ /*A7x5*/ GENx370x390x900 (branch_relative_and_save,RI_B,"BRAS"),
+ /*A7x6*/ GENx370x390x900 (branch_relative_on_count,RI_B,"BRCT"),
  /*A7x7*/ GENx___x___x900 (branch_relative_on_count_long,RI_B,"BRCTG"),
- /*A7x8*/ GENx___x390x900 (load_halfword_immediate,RI,"LHI"),
+ /*A7x8*/ GENx370x390x900 (load_halfword_immediate,RI,"LHI"),
  /*A7x9*/ GENx___x___x900 (load_long_halfword_immediate,RI,"LGHI"),
- /*A7xA*/ GENx___x390x900 (add_halfword_immediate,RI,"AHI"),
+ /*A7xA*/ GENx370x390x900 (add_halfword_immediate,RI,"AHI"),
  /*A7xB*/ GENx___x___x900 (add_long_halfword_immediate,RI,"AGHI"),
- /*A7xC*/ GENx___x390x900 (multiply_halfword_immediate,RI,"MHI"),
+ /*A7xC*/ GENx370x390x900 (multiply_halfword_immediate,RI,"MHI"),
  /*A7xD*/ GENx___x___x900 (multiply_long_halfword_immediate,RI,"MGHI"),
- /*A7xE*/ GENx___x390x900 (compare_halfword_immediate,RI,"CHI"),
+ /*A7xE*/ GENx370x390x900 (compare_halfword_immediate,RI,"CHI"),
  /*A7xF*/ GENx___x___x900 (compare_long_halfword_immediate,RI,"CGHI") };
 
 
@@ -2845,7 +2853,7 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B24F*/ GENx___x390x900 (extract_access_register,RRE,"EAR"),
  /*B250*/ GENx___x390x900 (compare_and_swap_and_purge,RRE,"CSP"),
  /*B251*/ GENx___x___x___ ,
- /*B252*/ GENx___x390x900 (multiply_single_register,RRE,"MSR"),
+ /*B252*/ GENx370x390x900 (multiply_single_register,RRE,"MSR"),
  /*B253*/ GENx___x___x___ ,
  /*B254*/ GENx___x390x900 (move_page,RRE,"MVPG"),
  /*B255*/ GENx___x390x900 (move_string,RRE,"MVST"),
