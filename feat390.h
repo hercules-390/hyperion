@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.39  2007/11/16 13:01:49  rbowler
+// Add HFP-multiply-add/subtract facility to ESA/390
+//
 // Revision 1.38  2007/06/23 00:04:09  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -58,6 +61,7 @@
 #define FEATURE_LOCK_PAGE
 #define FEATURE_LINKAGE_STACK
 #define FEATURE_MESSAGE_SECURITY_ASSIST
+#define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
 #define FEATURE_MOVE_PAGE_FACILITY_2
 #define FEATURE_MSSF_CALL
 #define FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
