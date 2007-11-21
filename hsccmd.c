@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.229  2007/11/11 17:14:22  rbowler
+// Add help panrate command
+//
 // Revision 1.228  2007/08/27 20:21:03  rbowler
 // PSW command logmsg format correction
 //
@@ -2888,10 +2891,6 @@ BYTE    c;                              /* Character work area       */
 
     if (argc < 2)
     {
-#if 0
-        logmsg( _("HHCPN065E Missing argument(s)\n") );
-        return -1;
-#else // fishtest
         if (sysblk.pgminttr == 0xFFFFFFFFFFFFFFFFULL)
             logmsg("pgmtrace == all\n");
         else if (sysblk.pgminttr == 0)
@@ -2912,7 +2911,6 @@ BYTE    c;                              /* Character work area       */
             );
         }
         return 0;
-#endif
     }
 
     if (sscanf(argv[1], "%x%c", &rupt_num, &c) != 1)
