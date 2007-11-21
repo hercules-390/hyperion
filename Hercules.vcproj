@@ -1123,14 +1123,6 @@
         <Filter
             Name="Other Files"
             >
-            <File
-                RelativePath=".\herclogo.txt"
-                >
-            </File>
-            <File
-                RelativePath=".\hercules.cnf"
-                >
-            </File>
             <Filter
                 Name="DOC"
                 >
@@ -1730,6 +1722,18 @@
                         >
                     </File>
                 </Filter>
+            </Filter>
+            <Filter
+                Name="misc"
+                >
+                <File
+                    RelativePath=".\herclogo.txt"
+                    >
+                </File>
+                <File
+                    RelativePath=".\hercules.cnf"
+                    >
+                </File>
             </Filter>
         </Filter>
     </Files>
