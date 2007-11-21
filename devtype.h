@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.20  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.19  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -54,6 +57,10 @@ struct DEVHND {
         DEVSR *hsuspend;               /* Hercules suspend           */
         DEVSR *hresume;                /* Hercules resume            */
 };
+
+#define BEGIN_DEVICE_CLASS_QUERY( _classname, _dev, _class, _buflen, _buffer ) \
+    if (_class) *_class = _classname; \
+    if (!_dev || !_class || !_buflen || !_buffer) return
 
 
 #if !defined(OPTION_DYNAMIC_LOAD)
