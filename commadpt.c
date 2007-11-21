@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.39  2006/12/08 09:43:18  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 #include "hercules.h"
@@ -1676,7 +1679,8 @@ static char *commadpt_lnctl_names[]={
 static void commadpt_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    *class = "LINE";
+    BEGIN_DEVICE_CLASS_QUERY( "LINE", dev, class, buflen, buffer );
+
     snprintf(buffer,buflen,"%s STA=%s CN=%s, EIB=%s OP=%s",
             commadpt_lnctl_names[dev->commadpt->lnctl],
             dev->commadpt->enabled?"ENA":"DISA",

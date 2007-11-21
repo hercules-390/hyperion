@@ -4,6 +4,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.13  2007/06/23 16:13:54  jmaynard
+// Fixing two messages out of internationalization by removing redundant
+// carriage returns.
+//
 // Revision 1.12  2007/06/23 00:04:04  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -132,7 +136,7 @@ static void
 con1052_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    *class = "CON";
+    BEGIN_DEVICE_CLASS_QUERY( "CON", dev, class, buflen, buffer );
 
     snprintf(buffer, buflen,
         "*syscons cmdpref(%s)%s",

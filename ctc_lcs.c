@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.66  2007/08/17 00:59:40  fish
+// Backout 28 Jul fix for LCS (fix was only meant for CTCI)
+//
 // Revision 1.65  2007/07/29 02:02:44  fish
 // Fix day-1 CTCI/LCS bug found by Vince Weaver [vince@deater.net]
 //
@@ -702,9 +705,11 @@ void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
 {
     char *sType[] = { "", " Pri", " Sec" };
 
-    PLCSDEV     pLCSDEV = (PLCSDEV)pDEVBLK->dev_data;
+    LCSDEV*  pLCSDEV;
 
-    *ppszClass = "CTCA";
+    BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
+
+    pLCSDEV = (LCSDEV*) pDEVBLK->dev_data;
 
     if(!pLCSDEV)
     {

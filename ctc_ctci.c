@@ -11,6 +11,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.68  2007/07/29 02:02:44  fish
+// Fix day-1 CTCI/LCS bug found by Vince Weaver [vince@deater.net]
+//
 // Revision 1.67  2007/07/29 00:24:43  fish
 // (comment change only)
 //
@@ -609,9 +612,11 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
 void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
                   int     iBufLen, char*  pBuffer )
 {
-    PCTCBLK     pCTCBLK  = (PCTCBLK)pDEVBLK->dev_data;
+    CTCBLK*  pCTCBLK;
 
-    *ppszClass = "CTCA";
+    BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
+
+    pCTCBLK  = (CTCBLK*) pDEVBLK->dev_data;
 
     if(!pCTCBLK)
     {

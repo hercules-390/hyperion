@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.46  2007/06/23 00:04:03  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.45  2006/12/28 16:13:28  fish
 // Fix PR# readers/104: "HHCRD011E Close error... No Error" in 'cardrdr_close_device' function.
 //
@@ -327,7 +330,7 @@ int     fc;                             /* File counter              */
 static void cardrdr_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    *class = "RDR";
+    BEGIN_DEVICE_CLASS_QUERY( "RDR", dev, class, buflen, buffer );
 
     snprintf (buffer, buflen, "%s%s%s%s%s%s%s%s",
         ((dev->filename[0] == '\0') ? "*"          : (char *)dev->filename),

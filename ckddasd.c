@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.87  2007/11/21 00:31:38  gsmith
+// LRE support (try #1)
+//
 // Revision 1.86  2007/06/23 00:04:04  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -659,8 +662,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 void ckddasd_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
+    BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, class, buflen, buffer );
 
-    *class = "DASD";
     snprintf (buffer, buflen, "%s [%d cyls]",
             dev->filename,
             dev->ckdcyls);

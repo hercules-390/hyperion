@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.47  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.46  2007/06/06 02:55:39  ivan
 // Allow Byte 0 Bit 3 of FBA Locate CCW to be non-zero
 //
@@ -329,7 +332,8 @@ void fbadasd_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
 
-    *class = "DASD";
+    BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, class, buflen, buffer );
+
     snprintf (buffer, buflen, "%s [%lld,%d]",
             dev->filename,
             (long long)dev->fbaorigin, dev->fbanumblk);

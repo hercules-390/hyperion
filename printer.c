@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.45  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.44  2007/03/22 11:56:19  rbowler
 // Remove double hyphen option from print-to-pipe feature
 //
@@ -331,7 +334,8 @@ int     i;                              /* Array subscript           */
 static void printer_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    *class = "PRT";
+    BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, class, buflen, buffer );
+
     snprintf (buffer, buflen, "%s%s%s",
                 dev->filename,
                 (dev->crlf ? " crlf" : ""),

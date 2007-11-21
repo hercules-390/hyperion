@@ -11,6 +11,9 @@
 /* 0A00-0A02 QETH <optional parameters>                              */
 
 // $Log$
+// Revision 1.10  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.9  2006/12/08 09:43:29  jj
 // Add CVS message log
 //
@@ -79,9 +82,7 @@ logmsg(D_("senseidnum=%d\n"),dev->numdevid);
 static void qeth_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    UNREFERENCED(dev);
-
-    *class = "QETH";
+    BEGIN_DEVICE_CLASS_QUERY( "QETH", dev, class, buflen, buffer );
 
     snprintf (buffer, buflen, "\n");
 

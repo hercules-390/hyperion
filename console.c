@@ -53,6 +53,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.93  2007/06/23 16:13:54  jmaynard
+// Fixing two messages out of internationalization by removing redundant
+// carriage returns.
+//
 // Revision 1.92  2007/06/23 00:04:04  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -2413,7 +2417,7 @@ static void
 loc3270_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    *class = "DSP";
+    BEGIN_DEVICE_CLASS_QUERY( "DSP", dev, class, buflen, buffer );
 
     if (dev->connected)
     {
@@ -2699,7 +2703,7 @@ static void
 constty_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    *class = "CON";
+    BEGIN_DEVICE_CLASS_QUERY( "CON", dev, class, buflen, buffer );
 
     if (dev->connected)
     {

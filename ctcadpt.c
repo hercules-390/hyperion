@@ -18,6 +18,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.68  2007/06/23 00:04:07  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.67  2006/12/08 09:43:19  jj
 // Add CVS message log
 //
@@ -188,7 +191,8 @@ void  CTCX_Query( DEVBLK* pDEVBLK,
                   int     iBufLen,
                   char*   pBuffer )
 {
-    *ppszClass = "CTCA";
+    BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
+
     snprintf( pBuffer, iBufLen, "%s", pDEVBLK->filename );
 }
 

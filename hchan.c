@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.10  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.9  2006/12/08 09:43:21  jj
 // Add CVS message log
 //
@@ -115,9 +118,9 @@ static  int     hchan_init_int(DEVBLK *dev,int ac,char **av)
 static void hchan_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
-    UNREFERENCED(dev);
-        *class="CHAN";
-        snprintf(buffer,buflen,"** CONTROL UNIT OFFLINE **");
+    BEGIN_DEVICE_CLASS_QUERY( "CHAN", dev, class, buflen, buffer );
+
+    snprintf(buffer,buflen,"** CONTROL UNIT OFFLINE **");
 }
 
 /*-------------------------------------------------------------------*/

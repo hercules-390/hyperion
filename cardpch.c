@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.31  2007/06/23 00:04:03  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.30  2006/12/08 09:43:16  jj
 // Add CVS message log
 //
@@ -130,7 +133,8 @@ static void cardpch_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
 
-    *class = "PCH";
+    BEGIN_DEVICE_CLASS_QUERY( "PCH", dev, class, buflen, buffer );
+
     snprintf (buffer, buflen, "%s%s%s",
                 dev->filename,
                 (dev->ascii ? " ascii" : " ebcdic"),
