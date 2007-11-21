@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.33  2007/07/24 22:36:32  fish
+// Fix tape Synchronize CCW (x'43') to do actual commit
+//
 // Revision 1.32  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -382,7 +385,7 @@ het_close( HETB **hetb )
                                 Default:    HETDFLT_COMPRESS (TRUE)
 
             HETCNTL_DECOMPRESS  val=TRUE to enable read decompression
-                                Values:     FALSE (diable)
+                                Values:     FALSE (disable)
                                             TRUE (enable)
                                 Default:    HETDFLT_DECOMPRESS (TRUE)
 
