@@ -7,6 +7,9 @@
 /* by means of an offset and a steering rate.                        */
 
 // $Log$
+// Revision 1.41  2007/06/23 00:04:04  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.40  2006/12/08 09:43:18  jj
 // Add CVS message log
 //
@@ -90,7 +93,7 @@ static inline U64 hw_adjust(U64 base_tod)
     if(hw_tod < base_tod)
         return base_tod;
     else
-	return hw_tod += 0x10;
+    return hw_tod += 0x10;
 }
 
 

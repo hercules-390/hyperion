@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.25  2007/06/23 00:04:04  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.24  2006/12/08 09:43:18  jj
 // Add CVS message log
 //
@@ -107,13 +110,13 @@ _CLOCK_EXTERN U64 hw_tod;               /* Hardware clock            */
 #if defined(FEATURE_INTERVAL_TIMER)
  #define ITIMER_UPDATE(_addr, _len, _regs)       \
     do {                                         \
-	if( ITIMER_ACCESS((_addr), (_len)) )     \
+    if( ITIMER_ACCESS((_addr), (_len)) )     \
             ARCH_DEP(fetch_int_timer) ((_regs)); \
     } while(0) 
  #define ITIMER_SYNC(_addr, _len, _regs)         \
     do {                                         \
         if( ITIMER_ACCESS((_addr), (_len)) )     \
-	    ARCH_DEP(store_int_timer) ((_regs)); \
+        ARCH_DEP(store_int_timer) ((_regs)); \
     } while (0)
 #else
  #define ITIMER_UPDATE(_addr, _len, _regs)
