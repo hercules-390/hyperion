@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.74  2007/11/18 22:18:51  rbowler
+// Permit FEATURE_IMMEDIATE_AND_RELATIVE to be activated in S/370 mode
+//
 // Revision 1.73  2007/09/05 00:24:18  gsmith
 // Use integer arithmetic calculating cpupct
 //
@@ -1141,6 +1144,7 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ckdxgattr;              /* Define extent global attr */
         U16     ckdltranlf;             /* Locate record transfer
                                            length factor             */
+        U16     ckdlmask;               /* Locate record mask        */
         BYTE    ckdloper;               /* Locate record operation   */
         BYTE    ckdlaux;                /* Locate record aux byte    */
         BYTE    ckdlcount;              /* Locate record count       */
