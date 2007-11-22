@@ -220,20 +220,63 @@ and how they are used.
     <p>
 
 <a name="CODEPAGE"></a>
-<dt><code>CODEPAGE &nbsp; <em>codepage</em></code>
+<dt><code>CODEPAGE &nbsp; <em>mapping</em></code>
 <dd><p>
-    specifies the codepage conversion table used for ASCII/EBCDIC translation.
+    specifies the codepage conversion mapping table used for ASCII/EBCDIC translation.
     <p>
 
-    "default" specifies traditional Hercules codepage. Code pages "437/037",
-    "437/500" and "850/273" are also supported.
+    <code>default</code> specifies traditional Hercules codepage mapping.
     <p>
 
-    Iconv single byte codepages may also be used (e.g. "UTF8/EBCDIC-CP-NL").
+    Other supported codepage mappings are:
+    <p>
+
+    <blockquote>
+    <table border=1 cellpadding=3>
+        <tr>
+          <th rowspan=2>Mapping</th>
+          <th colspan=2>Description</th>
+        </tr>
+        <tr>
+          <th>ASCII</th>
+          <th>EBCDIC</th>
+        </tr>
+        <tr><td align="center"><code>437/037</code></td>
+            <td>437 PC United States</td>
+            <td>037 United States/Canada</td>
+        <tr><td align="center"><code>437/500</code></td>
+            <td>437 PC United States</td>
+            <td>500 Latin 1</td>
+        </tr>
+        <tr><td align="center"><code>850/273</code></td>
+            <td>850 PC Latin 1</td>
+            <td>273 Austria/Germany</td>
+        </tr>
+        <tr><td align="center"><code>437/1047</code></td>
+            <td>437 PC United States</td>  
+            <td>1047 Open Systems Latin 1</td>  
+        </tr>
+        <tr><td align="center"><code>819/1047</code></td>
+            <td>819 ISO-8859-1</td>
+            <td>1047 Open Systems Latin 1</td>
+        </tr>
+        <tr><td align="center"><code>1252/1047</code></td>
+            <td>1252 Windows Latin 1</td>
+            <td>1047 Open Systems Latin 1</td>
+        </tr>
+        <tr><td align="center"><code>850/1047</code></td>
+            <td>850 PC Latin 1</td>
+            <td>1047 Open Systems Latin 1</td>
+        </tr>
+    </table>
+    </blockquote>
+    <p>
+
+    Iconv single byte codepages may also be used (e.g. <code>UTF8/EBCDIC-CP-NL</code>).
     <p>
 
     If no codepage is specified then the environment variable HERCULES_CP
-    will be inspected. The default codepage used is "default"
+    will be inspected. The default codepage mapping is <code>default</code>.
 
     <p>
 
