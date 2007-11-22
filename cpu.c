@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.191  2007/11/18 22:18:51  rbowler
+// Permit FEATURE_IMMEDIATE_AND_RELATIVE to be activated in S/370 mode
+//
 // Revision 1.190  2007/11/02 20:19:20  ivan
 // Remove longjmp in process_interrupt() when cpu is STOPPING and a store status
 // was requested - leads to a CPU in the STOPPED state that is still executing
@@ -890,8 +893,13 @@ static char *pgmintname[] = {
         {
             STORE_HW(psa->monclass, regs->monclass);
 
-            /* Store the monitor code at PSA+156 */
+            /* Store the monitor code word at PSA+156 */
+            /* or doubleword at PSA+176               */
+#if defined(FEATURE_ESAME)
+            STORE_DW(psa->moncode, regs->MONCODE);
+#else
             STORE_W(psa->moncode, regs->MONCODE);
+#endif
         }
 
 #if defined(FEATURE_PER3)
