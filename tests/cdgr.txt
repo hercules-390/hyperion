@@ -1,0 +1,44 @@
+* CDGR test $Id$
+sysclear
+archmode esame
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=B7000310     # LCTL R0,R0,CTLR0  Set CR0 bit 45
+r 204=41000001     # LA R0,7           R0=Number of test data
+r 208=41100320     # LA R1,TEST1       R1=>Test data table
+r 20C=41F00400     # LA R15,RES1       R15=>Result table
+r 210=E32010000004 #A LG R2,0(,R1)     Load R2=TESTn
+r 216=B3C50042     # CDGR F4,R2        Convert to HFP in FPR4
+r 21A=6040F000     # STD F4,0(,R15)    Store FPR4 in result table
+r 21E=41F0F008     # LA R15,8(,R15)    R15=>next result table
+r 222=46000210     # BCT R0,A          Loop to end of TEST table
+r 226=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
+r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
+r 314=00000000     # FPCREG            Floating point control register        
+* Test data
+r 320=14D4433700C0D650                 # TEST1
+r 328=0000000000000000                 # TEST2
+r 330=0000000000000000                 # TEST3 
+r 338=0000000000000000                 # TEST4 
+r 340=0000000000000000                 # TEST5 
+r 348=0000000000000000                 # TEST6 
+r 350=0000000000000000                 # TEST7 
+* Expected results
+r 380=5014D4433700C0D6                 # EXP1
+r 388=0000000000000000                 # EXP2
+r 390=0000000000000000                 # EXP3
+r 398=0000000000000000                 # EXP4
+r 3A0=0000000000000000                 # EXP5
+r 3A8=0000000000000000                 # EXP6
+r 3B0=0000000000000000                 # EXP7
+ostailor null
+pgmtrace +7
+restart
+pause 1
+* Display test data
+r 320.38 
+* Display expected results
+r 380.38
+* Display actual results
+r 400.38
