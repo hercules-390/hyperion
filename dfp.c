@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.66  2007/11/15 22:11:26  rbowler
+// Correct CPSDR when R1 and R3 are same register
+//
 // Revision 1.65  2007/06/23 00:04:08  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -115,12 +118,14 @@ U32     sign;                           /* Work area for sign bit    */
     i2 = FPR2I(r2);
     i3 = FPR2I(r3);
 
-    /* Copy register contents */
+    /* Copy the sign bit from r3 register */
+    sign = regs->fpr[i3] & 0x80000000;
+
+    /* Copy r2 register contents to r1 register */
     regs->fpr[i1] = regs->fpr[i2];
     regs->fpr[i1+1] = regs->fpr[i2+1];
 
-    /* Copy the sign bit from r3 register */
-    sign = regs->fpr[i3] & 0x80000000;
+    /* Insert the sign bit into r1 register */
     regs->fpr[i1] &= 0x7FFFFFFF;
     regs->fpr[i1] |= sign;
 
