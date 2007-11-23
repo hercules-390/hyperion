@@ -1,0 +1,34 @@
+* MAER test $Id$
+sysclear
+archmode esame
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=B7000310     # LCTL R0,R0,CTLR0  Set CR0 bit 45
+r 204=68900320     # LD F9,TEST1       Load test data
+r 208=68800328     # LD F8,TEST2       Load test data
+r 20C=68C00330     # LD F12,TEST3      Load test data
+r 210=68D00380     # LD F13,EXP1       Load expected result
+r 214=B32400A8     # LDER F10,F8       Lengthen test data
+r 218=B32400B9     # LDER F11,F9       Lengthen test data
+r 21C=B32400EC     # LDER F14,F12      Lengthen test data
+r 220=28F9         # LDR F15,F9        Prime result register
+r 222=B32E908C     # MAER F9,F8,F12    FPR9=FPR8*FPR12+FPR9
+* Multiply and Add using long instructions
+r 226=2CAE         # MDR F10,F14       FPR10=FPR10*FPR14
+r 228=2ABA         # ADR F11,F10       FPR11=FPR11+FPR10
+r 22A=35FB         # LEDR F15,F11      FPR15=rounded FPR11
+r 22C=60F00380     # STD F15,RES1      Store actual result
+r 230=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
+r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
+r 314=00000000     # FPCREG            Floating point control register        
+* Test data
+r 320=BF00BD608217487D                 # TEST1
+r 328=C12022F43FBA7F77                 # TEST2
+r 330=A014BB629B763907                 # TEST3
+* Expected result
+r 380=BDBD5FFF8217487D                 # EXP1
+ostailor null
+s+
+pgmtrace +7
+restart
