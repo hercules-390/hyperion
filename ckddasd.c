@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.88  2007/11/21 22:54:13  fish
+// Use new BEGIN_DEVICE_CLASS_QUERY macro
+//
 // Revision 1.87  2007/11/21 00:31:38  gsmith
 // LRE support (try #1)
 //
@@ -5003,7 +5006,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
      * that includes unit check (Command Reject, format X'03', CCW byte
      * count less than required).
      */
-    if (num + 20 < count)
+    if (count < 20 + num)
     {
         *residual = 0;
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_3);
