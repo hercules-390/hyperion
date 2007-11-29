@@ -77,6 +77,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.127  2007/11/13 15:10:52  rbowler
+// fsb_awstape support for segmented blocks
+//
 // Revision 1.126  2007/11/11 20:46:50  rbowler
 // read_awstape support for segmented blocks
 //
@@ -5522,7 +5525,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     /* READ FORWARD  (3590 only)                                     */
     /*---------------------------------------------------------------*/
-    case 0x06:
+    case 0x06:  // (purposely out-of-sequence so we can fall through)
 
         /*
           SG24-2506-01 "IBM 3590 Tape Subsystem Technical Guide"
@@ -5596,6 +5599,36 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x03:
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* SENSE                                                         */
+    /*---------------------------------------------------------------*/
+    case 0x04:
+        /* Calculate residual byte count */
+        num = (count < dev->numsense) ? count : dev->numsense;
+        *residual = count - num;
+        if (count < dev->numsense) *more = 1;
+
+        /* If a sense is pending, use it. */
+        /* Otherwise, build a STATUS sense */
+
+        if(!dev->sns_pending)
+        {
+            build_senseX(TAPE_BSENSE_UNSOLICITED,dev,unitstat,code);
+        }
+        *unitstat=CSW_CE|CSW_DE; /* Need to do that ourselves because */
+                                 /* we might not have gone through    */
+                                 /* build_senseX                      */
+
+        /* Copy device sense bytes to channel I/O buffer */
+        memcpy (iobuf, dev->sense, num);
+
+        /* Clear the device sense bytes */
+        memset (dev->sense, 0, sizeof(dev->sense));
+
+        /* Indicate Contengency Allegiance has been cleared */
+        dev->sns_pending=0;
         break;
 
     /*---------------------------------------------------------------*/
@@ -5730,27 +5763,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
 
     /*---------------------------------------------------------------*/
-    /* READ MEDIA CHARACTERISTICS  (3590)                            */
-    /*---------------------------------------------------------------*/
-    case 0x62:
-
-        /*
-          SG24-2506-01 "IBM 3590 Tape Subsystem Technical Guide"
-
-          5.2.3 New Read Media Characteristics
-
-          "The new Read Media Characteristics CCW (command code x'62')
-           provides up to 256 bytes of information about the media and
-           formats supported by the Magstar tape drive."
-        */
-
-        // ZZ FIXME: not coded yet.
-
-        /* Set command reject sense byte, and unit check status */
-        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
     /* REWIND UNLOAD                                                 */
     /*---------------------------------------------------------------*/
     case 0x0F:
@@ -5847,47 +5859,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
             /* Set normal status */
             build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* DATA SECURITY ERASE                                           */
-    /*---------------------------------------------------------------*/
-    case 0x97:
-        /* Unit check if tape is write-protected */
-        if (0
-            || dev->readonly
-#if defined(OPTION_SCSI_TAPE)
-            || (1
-                &&  TAPEDEVT_SCSITAPE == dev->tapedevt
-                &&  STS_WR_PROT( dev )
-               )
-#endif
-        )
-        {
-            build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
-            break;
-        }
-
-        if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
-             TAPEDISPTYP_WAITACT == dev->tapedisptype )
-        {
-            dev->tapedisptype = TAPEDISPTYP_ERASING;
-            UpdateDisplay( dev );
-        }
-
-        if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
-            dev->tmh->dse(dev,unitstat,code);
-
-        if ( TAPEDISPTYP_ERASING == dev->tapedisptype )
-        {
-            dev->tapedisptype = TAPEDISPTYP_IDLE;
-            UpdateDisplay( dev );
-        }
-
-        if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
-            /* Not yet implemented */
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
 
         break;
 
@@ -6031,6 +6002,26 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     }
 
     /*---------------------------------------------------------------*/
+    /* READ BUFFERED LOG                                             */
+    /*---------------------------------------------------------------*/
+    case 0x24:
+        /* Calculate residual byte count */
+        num = (count < 64) ? count : 64;
+        *residual = count - num;
+        if (count < 64) *more = 1;
+
+        /* Clear the device sense bytes */
+        memset (iobuf, 0, num);
+
+        /* Copy device sense bytes to channel I/O buffer */
+        memcpy (iobuf, dev->sense,
+                dev->numsense < (U32)num ? dev->numsense : (U32)num);
+
+        /* Return unit status */
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
     /* BACKSPACE BLOCK                                               */
     /*---------------------------------------------------------------*/
     case 0x27:
@@ -6082,6 +6073,33 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
 
     /*---------------------------------------------------------------*/
+    /* SENSE PATH GROUP ID                                           */
+    /*---------------------------------------------------------------*/
+    case 0x34:
+        /* Calculate residual byte count */
+        num = (count < 12) ? count : 12;
+        *residual = count - num;
+        if (count < 12) *more = 1;
+
+        /* Byte 0 is the path group state byte */
+        /*
+        iobuf[0] = SPG_PATHSTAT_RESET
+                | SPG_PARTSTAT_IENABLED
+                | SPG_PATHMODE_SINGLE;
+                */
+        iobuf[0]=dev->pgstat;
+
+        /* Bytes 1-11 contain the path group identifier */
+        if(num>1)
+        {
+            memcpy (iobuf+1, dev->pgid, num-1);
+        }
+
+        /* Return unit status */
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
     /* FORWARD SPACE BLOCK                                           */
     /*---------------------------------------------------------------*/
     case 0x37:
@@ -6107,6 +6125,17 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Set normal status */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* READ SUBSYSTEM DATA  (3590)                                   */
+    /*---------------------------------------------------------------*/
+    case 0x3E:
+
+        // ZZ FIXME: not coded yet.
+
+        /* Set command reject sense byte, and unit check status */
+        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
         break;
 
     /*---------------------------------------------------------------*/
@@ -6272,6 +6301,50 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
 
     /*---------------------------------------------------------------*/
+    /* READ MEDIA CHARACTERISTICS  (3590)                            */
+    /*---------------------------------------------------------------*/
+    case 0x62:
+
+        /*
+          SG24-2506-01 "IBM 3590 Tape Subsystem Technical Guide"
+
+          5.2.3 New Read Media Characteristics
+
+          "The new Read Media Characteristics CCW (command code x'62')
+           provides up to 256 bytes of information about the media and
+           formats supported by the Magstar tape drive."
+        */
+
+        // ZZ FIXME: not coded yet.
+
+        /* Set command reject sense byte, and unit check status */
+        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* READ DEVICE CHARACTERISTICS                                   */
+    /*---------------------------------------------------------------*/
+    case 0x64:
+        /* Command reject if device characteristics not available */
+        if (dev->numdevchar == 0)
+        {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+        }
+
+        /* Calculate residual byte count */
+        num = (count < dev->numdevchar) ? count : dev->numdevchar;
+        *residual = count - num;
+        if (count < dev->numdevchar) *more = 1;
+
+        /* Copy device characteristics bytes to channel buffer */
+        memcpy (iobuf, dev->devchar, num);
+
+        /* Return unit status */
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
     /* PERFORM SUBSYSTEM FUNCTION                                    */
     /*---------------------------------------------------------------*/
     case 0x77:
@@ -6415,6 +6488,256 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
 
     /*---------------------------------------------------------------*/
+    /* DATA SECURITY ERASE                                           */
+    /*---------------------------------------------------------------*/
+    case 0x97:
+        /* Unit check if tape is write-protected */
+        if (0
+            || dev->readonly
+#if defined(OPTION_SCSI_TAPE)
+            || (1
+                &&  TAPEDEVT_SCSITAPE == dev->tapedevt
+                &&  STS_WR_PROT( dev )
+               )
+#endif
+        )
+        {
+            build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
+            break;
+        }
+
+        if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
+             TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_ERASING;
+            UpdateDisplay( dev );
+        }
+
+        if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
+            dev->tmh->dse(dev,unitstat,code);
+
+        if ( TAPEDISPTYP_ERASING == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
+
+        if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
+            /* Not yet implemented */
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* LOAD DISPLAY                                                  */
+    /*---------------------------------------------------------------*/
+    case 0x9F:
+        /* Calculate residual byte count */
+        num = (count < 17) ? count : 17;
+        *residual = count - num;
+
+        /* Issue message on 3480 matrix display */
+        load_display (dev, iobuf, count);
+
+        /* Return unit status */
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* Read and Reset Buffered Log (9347)                            */
+    /*---------------------------------------------------------------*/
+    case 0xA4:
+        /* Calculate residual byte count */
+        num = (count < dev->numsense) ? count : dev->numsense;
+        *residual = count - num;
+        if (count < dev->numsense) *more = 1;
+
+        /* Reset SENSE Data */
+        memset (dev->sense, 0, sizeof(dev->sense));
+        *unitstat=CSW_CE|CSW_DE;
+
+        /* Copy device Buffered log data (Bunch of 0s for now) */
+        memcpy (iobuf, dev->sense, num);
+
+        /* Indicate Contengency Allegiance has been cleared */
+        dev->sns_pending=0;
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* SET PATH GROUP ID                                             */
+    /*---------------------------------------------------------------*/
+    case 0xAF:
+
+        /* Calculate residual byte count */
+        num = (count < 12) ? count : 12;
+        *residual = count - num;
+
+        /* Control information length must be at least 12 bytes */
+        if (count < 12)
+        {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+        }
+
+        /* Byte 0 is the path group state byte */
+        switch((iobuf[0] & SPG_SET_COMMAND))
+        {
+        case SPG_SET_ESTABLISH:
+            /* Only accept the new pathgroup id when
+               1) it has not yet been set (ie contains zeros) or
+               2) It is set, but we are setting the same value */
+            if(memcmp(dev->pgid,
+                 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 11)
+              && memcmp(dev->pgid, iobuf+1, 11))
+            {
+                build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+                break;
+            }
+            /* Bytes 1-11 contain the path group identifier */
+            memcpy (dev->pgid, iobuf+1, 11);
+            dev->pgstat=SPG_PATHSTAT_GROUPED|SPG_PARTSTAT_IENABLED;
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+            break;
+        case SPG_SET_RESIGN:
+        default:
+            dev->pgstat=0;
+            memset(dev->pgid,0,11);
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+            break;
+        case SPG_SET_DISBAND:
+            dev->pgstat=0;
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+            break;
+        } // end switch((iobuf[0] & SPG_SET_COMMAND))
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* ASSIGN                                                        */
+    /*---------------------------------------------------------------*/
+    case 0xB7:
+        /* Calculate residual byte count */
+        num = (count < 11) ? count : 11;
+        *residual = count - num;
+
+        /* Control information length must be at least 11 bytes */
+        if (count < 11)
+        {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+        }
+        if((memcmp(iobuf,"\00\00\00\00\00\00\00\00\00\00",11)==0)
+                || (memcmp(iobuf,dev->pgid,11)==0))
+        {
+            dev->pgstat|=SPG_PARTSTAT_XENABLED; /* Set Explicit Partition Enabled */
+        }
+        else
+        {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+        }
+
+        /* Return unit status */
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* MEDIUM SENSE   (3590)                                         */
+    /*---------------------------------------------------------------*/
+    case 0xC2:
+
+        // The MEDIUM SENSE command provides information about the
+        // type of medium currently in the drive, if any (i.e. type,
+        // volser, capacity, etc).
+
+        // PROGRAMMING NOTE: until we can add support to Hercules
+        // allowing direct SCSI i/o (so that we can issue the 10-byte
+        // Mode Sense (X'5A') command to ask for Mode Page x'23' =
+        // Medium Sense) we have no choice but to reject the command.
+
+        /* Set command reject sense byte, and unit check status */
+        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* UNASSIGN                                                      */
+    /*---------------------------------------------------------------*/
+    case 0xC7:
+        /* Calculate residual byte count */
+        num = (count < 11) ? count : 11;
+        *residual = count - num;
+
+        /* Control information length must be at least 11 bytes */
+        if (count < 11)
+        {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+        }
+
+        dev->pgstat=0;          /* Reset to All Implicitly enabled */
+        memset(dev->pgid,0,11); /* Reset Path group ID password */
+        /* Drive Password  - Adrian       */
+        memset(dev->drvpwd,0,sizeof(dev->drvpwd)); /* Reset drive password */
+
+
+        /* Return unit status */
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* MODE SET   (non-cartidge drives?)                             */
+    /*---------------------------------------------------------------*/
+    case 0xCB: /* 9-track 800 bpi */
+    case 0xC3: /* 9-track 1600 bpi */
+    case 0xD3: /* 9-track 6250 bpi */
+        /* Patch to no-op modeset 1 (7-track) commands -             */
+        /*   causes VM problems                                      */
+        /*                                                           */
+        /* Andy Norrie 2002/10/06                                    */
+    case 0x13:
+    case 0x33:
+    case 0x3B:
+    case 0x23:
+    case 0x53:
+    case 0x73:
+    case 0x7B:
+    case 0x63:
+    case 0x6B:
+    case 0x93:
+    case 0xB3:
+    case 0xBB:
+    case 0xA3:
+    case 0xAB:
+    case 0xEB: /* invalid mode set issued by DOS/VS */
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* MODE SENSE   (3590)                                           */
+    /*---------------------------------------------------------------*/
+    case 0xCF:
+
+        // ZZ FIXME: not written yet.
+
+        /* Set command reject sense byte, and unit check status */
+        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
+    /* MODE SET   (3480/3490/3590 cartidge drives only?)             */
+    /*---------------------------------------------------------------*/
+    case 0xDB: /* 3480 mode set */
+        /* Check for count field at least 1 */
+        if (count < 1)
+        {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+        }
+        *residual = count - 1;
+        /* FIXME: Handle Supervisor Inhibit and IDRC bits */
+        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    /*---------------------------------------------------------------*/
     /* Control Access                                                */
     /*---------------------------------------------------------------*/
     case 0xE3:
@@ -6503,159 +6826,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
       break;
 
     /*---------------------------------------------------------------*/
-    /* READ SUBSYSTEM DATA  (3590)                                   */
-    /*---------------------------------------------------------------*/
-    case 0x3E:
-
-        // ZZ FIXME: not coded yet.
-
-        /* Set command reject sense byte, and unit check status */
-        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* MODE SET   (non-cartidge drives?)                             */
-    /*---------------------------------------------------------------*/
-    case 0xCB: /* 9-track 800 bpi */
-    case 0xC3: /* 9-track 1600 bpi */
-    case 0xD3: /* 9-track 6250 bpi */
-        /* Patch to no-op modeset 1 (7-track) commands -             */
-        /*   causes VM problems                                      */
-        /*                                                           */
-        /* Andy Norrie 2002/10/06                                    */
-    case 0x13:
-    case 0x33:
-    case 0x3B:
-    case 0x23:
-    case 0x53:
-    case 0x73:
-    case 0x7B:
-    case 0x63:
-    case 0x6B:
-    case 0x93:
-    case 0xB3:
-    case 0xBB:
-    case 0xA3:
-    case 0xAB:
-    case 0xEB: /* invalid mode set issued by DOS/VS */
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* MODE SENSE   (3590)                                           */
-    /*---------------------------------------------------------------*/
-    case 0xCF:
-
-        // ZZ FIXME: not written yet.
-
-        /* Set command reject sense byte, and unit check status */
-        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* MODE SET   (3480/3490/3590 cartidge drives only?)             */
-    /*---------------------------------------------------------------*/
-    case 0xDB: /* 3480 mode set */
-        /* Check for count field at least 1 */
-        if (count < 1)
-        {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-            break;
-        }
-        *residual = count - 1;
-        /* FIXME: Handle Supervisor Inhibit and IDRC bits */
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* Read and Reset Buffered Log (9347)                            */
-    /*---------------------------------------------------------------*/
-    case 0xA4:
-        /* Calculate residual byte count */
-        num = (count < dev->numsense) ? count : dev->numsense;
-        *residual = count - num;
-        if (count < dev->numsense) *more = 1;
-
-        /* Reset SENSE Data */
-        memset (dev->sense, 0, sizeof(dev->sense));
-        *unitstat=CSW_CE|CSW_DE;
-
-        /* Copy device Buffered log data (Bunch of 0s for now) */
-        memcpy (iobuf, dev->sense, num);
-
-        /* Indicate Contengency Allegiance has been cleared */
-        dev->sns_pending=0;
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* MEDIUM SENSE   (3590)                                         */
-    /*---------------------------------------------------------------*/
-    case 0xC2:
-
-        // The MEDIUM SENSE command provides information about the
-        // type of medium currently in the drive, if any (i.e. type,
-        // volser, capacity, etc).
-
-        // PROGRAMMING NOTE: until we can add support to Hercules
-        // allowing direct SCSI i/o (so that we can issue the 10-byte
-        // Mode Sense (X'5A') command to ask for Mode Page x'23' =
-        // Medium Sense) we have no choice but to reject the command.
-
-        /* Set command reject sense byte, and unit check status */
-        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* SENSE                                                         */
-    /*---------------------------------------------------------------*/
-    case 0x04:
-        /* Calculate residual byte count */
-        num = (count < dev->numsense) ? count : dev->numsense;
-        *residual = count - num;
-        if (count < dev->numsense) *more = 1;
-
-        /* If a sense is pending, use it. */
-        /* Otherwise, build a STATUS sense */
-
-        if(!dev->sns_pending)
-        {
-            build_senseX(TAPE_BSENSE_UNSOLICITED,dev,unitstat,code);
-        }
-        *unitstat=CSW_CE|CSW_DE; /* Need to do that ourselves because */
-                                 /* we might not have gone through    */
-                                 /* build_senseX                      */
-
-        /* Copy device sense bytes to channel I/O buffer */
-        memcpy (iobuf, dev->sense, num);
-
-        /* Clear the device sense bytes */
-        memset (dev->sense, 0, sizeof(dev->sense));
-
-        /* Indicate Contengency Allegiance has been cleared */
-        dev->sns_pending=0;
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* READ BUFFERED LOG                                             */
-    /*---------------------------------------------------------------*/
-    case 0x24:
-        /* Calculate residual byte count */
-        num = (count < 64) ? count : 64;
-        *residual = count - num;
-        if (count < 64) *more = 1;
-
-        /* Clear the device sense bytes */
-        memset (iobuf, 0, num);
-
-        /* Copy device sense bytes to channel I/O buffer */
-        memcpy (iobuf, dev->sense,
-                dev->numsense < (U32)num ? dev->numsense : (U32)num);
-
-        /* Return unit status */
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
     /* SENSE ID                                                      */
     /*---------------------------------------------------------------*/
     case 0xE4:
@@ -6674,173 +6844,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Copy device identifier bytes to channel I/O buffer */
         memcpy (iobuf, dev->devid, num);
-
-        /* Return unit status */
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* SENSE PATH GROUP ID                                           */
-    /*---------------------------------------------------------------*/
-    case 0x34:
-        /* Calculate residual byte count */
-        num = (count < 12) ? count : 12;
-        *residual = count - num;
-        if (count < 12) *more = 1;
-
-        /* Byte 0 is the path group state byte */
-        /*
-        iobuf[0] = SPG_PATHSTAT_RESET
-                | SPG_PARTSTAT_IENABLED
-                | SPG_PATHMODE_SINGLE;
-                */
-        iobuf[0]=dev->pgstat;
-
-        /* Bytes 1-11 contain the path group identifier */
-        if(num>1)
-        {
-            memcpy (iobuf+1, dev->pgid, num-1);
-        }
-
-        /* Return unit status */
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* SET PATH GROUP ID                                             */
-    /*---------------------------------------------------------------*/
-    case 0xAF:
-
-        /* Calculate residual byte count */
-        num = (count < 12) ? count : 12;
-        *residual = count - num;
-
-        /* Control information length must be at least 12 bytes */
-        if (count < 12)
-        {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-            break;
-        }
-
-        /* Byte 0 is the path group state byte */
-        switch((iobuf[0] & SPG_SET_COMMAND))
-        {
-        case SPG_SET_ESTABLISH:
-            /* Only accept the new pathgroup id when
-               1) it has not yet been set (ie contains zeros) or
-               2) It is set, but we are setting the same value */
-            if(memcmp(dev->pgid,
-                 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 11)
-              && memcmp(dev->pgid, iobuf+1, 11))
-            {
-                build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-                break;
-            }
-            /* Bytes 1-11 contain the path group identifier */
-            memcpy (dev->pgid, iobuf+1, 11);
-            dev->pgstat=SPG_PATHSTAT_GROUPED|SPG_PARTSTAT_IENABLED;
-            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-            break;
-        case SPG_SET_RESIGN:
-        default:
-            dev->pgstat=0;
-            memset(dev->pgid,0,11);
-            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-            break;
-        case SPG_SET_DISBAND:
-            dev->pgstat=0;
-            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-            break;
-        } // end switch((iobuf[0] & SPG_SET_COMMAND))
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* READ DEVICE CHARACTERISTICS                                   */
-    /*---------------------------------------------------------------*/
-    case 0x64:
-        /* Command reject if device characteristics not available */
-        if (dev->numdevchar == 0)
-        {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-            break;
-        }
-
-        /* Calculate residual byte count */
-        num = (count < dev->numdevchar) ? count : dev->numdevchar;
-        *residual = count - num;
-        if (count < dev->numdevchar) *more = 1;
-
-        /* Copy device characteristics bytes to channel buffer */
-        memcpy (iobuf, dev->devchar, num);
-
-        /* Return unit status */
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* LOAD DISPLAY                                                  */
-    /*---------------------------------------------------------------*/
-    case 0x9F:
-        /* Calculate residual byte count */
-        num = (count < 17) ? count : 17;
-        *residual = count - num;
-
-        /* Issue message on 3480 matrix display */
-        load_display (dev, iobuf, count);
-
-        /* Return unit status */
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* ASSIGN                                                        */
-    /*---------------------------------------------------------------*/
-    case 0xB7:
-        /* Calculate residual byte count */
-        num = (count < 11) ? count : 11;
-        *residual = count - num;
-
-        /* Control information length must be at least 11 bytes */
-        if (count < 11)
-        {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-            break;
-        }
-        if((memcmp(iobuf,"\00\00\00\00\00\00\00\00\00\00",11)==0)
-                || (memcmp(iobuf,dev->pgid,11)==0))
-        {
-            dev->pgstat|=SPG_PARTSTAT_XENABLED; /* Set Explicit Partition Enabled */
-        }
-        else
-        {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-            break;
-        }
-
-        /* Return unit status */
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-        break;
-
-    /*---------------------------------------------------------------*/
-    /* UNASSIGN                                                      */
-    /*---------------------------------------------------------------*/
-    case 0xC7:
-        /* Calculate residual byte count */
-        num = (count < 11) ? count : 11;
-        *residual = count - num;
-
-        /* Control information length must be at least 11 bytes */
-        if (count < 11)
-        {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-            break;
-        }
-
-        dev->pgstat=0;          /* Reset to All Implicitly enabled */
-        memset(dev->pgid,0,11); /* Reset Path group ID password */
-        /* Drive Password  - Adrian       */
-        memset(dev->drvpwd,0,sizeof(dev->drvpwd)); /* Reset drive password */
-
 
         /* Return unit status */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
