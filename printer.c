@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.46  2007/11/21 22:54:14  fish
+// Use new BEGIN_DEVICE_CLASS_QUERY macro
+//
 // Revision 1.45  2007/06/23 00:04:15  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -735,7 +738,10 @@ BYTE            c;                      /* Print character           */
     /* LOAD UCS BUFFER AND FOLD                                      */
     /*---------------------------------------------------------------*/
         /* For 1403, command reject if not chained to UCS GATE */
-        if (dev->devtype == 0x1403 && prevcode != 0xEB)
+        /* Also allow ALLOW DATA CHECK to get TSS/370 working  */
+        /* -- JRM 11/28/2007 */
+        if (dev->devtype == 0x1403 &&
+            ((prevcode != 0xEB) && (prevcode != 0x7B)))
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
