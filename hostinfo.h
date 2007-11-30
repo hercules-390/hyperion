@@ -1,7 +1,7 @@
 /* HOSTINFO.H   (c) Copyright "Fish" (David B. Trout), 2002-2007     */
 
 /*   Released under the Q Public License                             */
-/*      (http://www.conmicro.cx/hercules/herclic.html)               */
+/*      (http://www.hercules-390.org/herclic.html)                   */
 /*   as modifications to Hercules.                                   */
 
 // $Id$
@@ -11,6 +11,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.12  2007/06/23 00:04:11  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.11  2006/12/08 09:43:26  jj
 // Add CVS message log
 //

@@ -2,8 +2,9 @@
 /*              (c) Copyright "Fish" (David B. Trout), 2002-2007     */
 /*              Execute Hercules System Commands                     */
 /*                                                                   */
-/*   Released under the Q Public License (http://www.conmicro.cx/    */
-/*     hercules/herclic.html) as modifications to Hercules.          */
+/*   Released under the Q Public License                             */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 // $Id$
 
@@ -17,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.230  2007/11/21 23:33:46  fish
+// remove dead #if 0 code
+//
 // Revision 1.229  2007/11/11 17:14:22  rbowler
 // Add help panrate command
 //

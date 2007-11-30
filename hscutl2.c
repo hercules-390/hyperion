@@ -13,7 +13,7 @@
 /*  Hercules header files.                                            */
 /*                                                                    */
 /*  Released under the Q Public License                               */
-/*  (http://www.conmicro.cx/hercules/herclic.html)                    */
+/*  (http://www.hercules-390.org/herclic.html)                        */
 /*  as modifications to Hercules.                                     */
 /*                                                                    */
 /*  This file is portion of the HERCULES S/370, S/390 and             */
@@ -24,6 +24,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.10  2006/12/08 09:43:26  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 

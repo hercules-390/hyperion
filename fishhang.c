@@ -2,12 +2,15 @@
 //         fishhang.c           verify/debug proper Hercules LOCK handling...
 ////////////////////////////////////////////////////////////////////////////////////
 // (c) Copyright "Fish" (David B. Trout), 2002-2007. Released under the Q Public License
-// (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
+// (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
 // $Id$
 //
 // $Log$
+// Revision 1.18  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.17  2006/12/31 12:25:26  fish
 // Fix "undefined reference to _beginthreadex" issue for non-MSVC (i.e. Cygwin) builds.
 //

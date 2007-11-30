@@ -324,7 +324,7 @@ OK      sed requires 3.02, found 3.02
 Do you wish to set CVSROOT for this userid? (y, n, default y)
 New CVS users are recommended to reply y to this prompt.
 n
-Hercules CVSROOT=:pserver:anonymous@cvs.conmicro.cx:/usr/cvs/hercules
+Hercules CVSROOT=:pserver:anonymous@cvs.hercules-390.org:/usr/cvs/hercules
 
 
 --------------------------------------------------------------

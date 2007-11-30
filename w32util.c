@@ -2,7 +2,7 @@
 //   w32util.c        Windows porting functions
 //////////////////////////////////////////////////////////////////////////////////////////
 // (c) Copyright "Fish" (David B. Trout), 2005-2007. Released under the Q Public License
-// (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
+// (http://www.hercules-390.org/herclic.html) as modifications to Hercules.
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 //                       IMPORTANT PROGRAMMING NOTE!
@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.30  2007/08/04 19:04:33  fish
+// gethostid
+//
 // Revision 1.29  2007/06/23 00:04:19  ivan
 // Update copyright notices to include current year (2007)
 //

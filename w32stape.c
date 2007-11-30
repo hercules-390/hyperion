@@ -2,7 +2,7 @@
 // W32STAPE.C   --   Hercules Win32 SCSI Tape handling module
 //
 // (c) Copyright "Fish" (David B. Trout), 2005-2007. Released under
-// the Q Public License (http://www.conmicro.cx/hercules/herclic.html)
+// the Q Public License (http://www.hercules-390.org/herclic.html)
 // as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 //
@@ -17,6 +17,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2007/07/24 22:36:33  fish
+// Fix tape Synchronize CCW (x'43') to do actual commit
+//
 // Revision 1.14  2007/07/24 21:57:29  fish
 // Fix Win32 SCSI tape "Locate" and "ReadBlockId" SNAFU
 //
