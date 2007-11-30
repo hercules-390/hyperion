@@ -4,6 +4,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.73  2007/07/19 17:53:55  ivan
+// Disable DIAG 308. Current implementation isn't complete enough to allow
+// for a proper 2.6.21 linux kernel IPL
+//
 // Revision 1.72  2007/06/23 00:04:09  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -126,6 +130,7 @@
 #define FEATURE_STORE_CLOCK_FAST
 #define FEATURE_STORE_FACILITY_LIST_EXTENDED                    /*@Z9*/
 #define FEATURE_STORE_SYSTEM_INFORMATION
+#define FEATURE_STRING_INSTRUCTION
 #define FEATURE_SUBSPACE_GROUP
 #define FEATURE_SUPPRESSION_ON_PROTECTION
 #define FEATURE_SYSTEM_CONSOLE

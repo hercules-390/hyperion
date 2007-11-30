@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.127  2007/11/23 14:12:04  rbowler
+// Permit LDGR, LGDR in ESAME mode only
+//
 // Revision 1.126  2007/11/18 22:18:51  rbowler
 // Permit FEATURE_IMMEDIATE_AND_RELATIVE to be activated in S/370 mode
 //
@@ -122,6 +125,14 @@
  UNDEF_INST(branch_relative_on_index_high)
  UNDEF_INST(branch_relative_on_index_low_or_equal)
 #endif /*!defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+
+
+#if !defined(FEATURE_STRING_INSTRUCTION)
+ UNDEF_INST(compare_logical_string)
+ UNDEF_INST(compare_until_substring_equal)
+ UNDEF_INST(move_string)
+ UNDEF_INST(search_string)
+#endif /*!defined(FEATURE_STRING_INSTRUCTION)*/
 
 
 #if !defined(FEATURE_COMPARE_AND_MOVE_EXTENDED)
@@ -2859,16 +2870,16 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B252*/ GENx370x390x900 (multiply_single_register,RRE,"MSR"),
  /*B253*/ GENx___x___x___ ,
  /*B254*/ GENx___x390x900 (move_page,RRE,"MVPG"),
- /*B255*/ GENx___x390x900 (move_string,RRE,"MVST"),
+ /*B255*/ GENx370x390x900 (move_string,RRE,"MVST"),
  /*B256*/ GENx___x___x___ ,
- /*B257*/ GENx___x390x900 (compare_until_substring_equal,RRE,"CUSE"),
+ /*B257*/ GENx370x390x900 (compare_until_substring_equal,RRE,"CUSE"),
  /*B258*/ GENx___x390x900 (branch_in_subspace_group,RRE,"BSG"),
  /*B259*/ GENx___x390x900 (invalidate_expanded_storage_block_entry,RRE,"IESBE"),
  /*B25A*/ GENx___x390x900 (branch_and_set_authority,RRE,"BSA"),
  /*B25B*/ GENx___x___x___ ,                                     /*%PGXIN     */
  /*B25C*/ GENx___x___x___ ,                                     /*%PGXOUT    */
- /*B25D*/ GENx___x390x900 (compare_logical_string,RRE,"CLST"),
- /*B25E*/ GENx___x390x900 (search_string,RRE,"SRST"),
+ /*B25D*/ GENx370x390x900 (compare_logical_string,RRE,"CLST"),
+ /*B25E*/ GENx370x390x900 (search_string,RRE,"SRST"),
  /*B25F*/ GENx___x390x900 (channel_subsystem_call,RRE,"CHSC"),
  /*B260*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B261*/ GENx___x___x___ ,                                     /* Sysplex   */

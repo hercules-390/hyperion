@@ -4,6 +4,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.126  2007/08/06 16:48:20  ivan
+// Implement "PARM" option for IPL command (same as VM IPL PARM XXX)
+// Also add command helps for ipl, iplc, sysclear, sysreset
+//
 // Revision 1.125  2007/06/23 00:04:09  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -202,6 +206,7 @@
 #undef FEATURE_STORE_CLOCK_FAST                                 /*@Z9*/
 #undef FEATURE_STORE_FACILITY_LIST_EXTENDED                     /*@Z9*/
 #undef FEATURE_STORE_SYSTEM_INFORMATION
+#undef FEATURE_STRING_INSTRUCTION
 #undef FEATURE_SUBSPACE_GROUP
 #undef FEATURE_SUPPRESSION_ON_PROTECTION
 #undef FEATURE_SYSTEM_CONSOLE

@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.114  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.113  2007/01/13 07:21:48  bernard
 // backout ccmask
 //
@@ -517,6 +520,7 @@ VADR    effective_addr2,
 #endif /*defined(FEATURE_PERFORM_LOCKED_OPERATION)*/
 
 
+#if defined(FEATURE_STRING_INSTRUCTION)
 /*-------------------------------------------------------------------*/
 /* B25E SRST  - Search String                                  [RRE] */
 /*-------------------------------------------------------------------*/
@@ -576,7 +580,8 @@ BYTE    termchar;                       /* Terminating character     */
     /* Return condition code 3 */
     regs->psw.cc = 3;
 
-}
+} /* end DEF_INST(search_string) */
+#endif /*defined(FEATURE_STRING_INSTRUCTION)*/
 
 
 #if defined(FEATURE_ACCESS_REGISTERS)

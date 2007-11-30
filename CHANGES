@@ -1,9 +1,10 @@
+30 Nov 2007 Permit String-Instruction facility to be activated in S/370 mode - Roger Bowler
 28 Nov 2007 Allow ALLOW DATA CHECK to precede LOAD UCS AND FOLD on 1403 for
             TSS/370 - Jay Maynard
 22 Nov 2007 Store Doubleword Monitor Code for z/Arch on succesful MC - Ivan Warren
 20 Nov 2007 LRE support (try #1) - Greg
-18 Nov 2007 Add Message-Security-Assist-Extension-1 facility to ESA/390 - Roger Bowler
-18 Nov 2007 Permit FEATURE_IMMEDIATE_AND_RELATIVE to be activated in S/370 mode - Roger Bowler
+18 Nov 2007 Activate Message-Security-Assist-Extension-1 facility in ESA/390 - Roger Bowler
+18 Nov 2007 Permit Immediate-and-Relative facility to be activated in S/370 mode - Roger Bowler
 16 Nov 2007 Add HFP-multiply-add/subtract facility to ESA/390 - Roger Bowler
 15 Nov 2007 Correct PIC6 when loading DRM bits into FPC - Roger Bowler
 15 Nov 2007 Correct CPSDR instruction - Roger Bowler

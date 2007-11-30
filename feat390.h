@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.40  2007/11/18 22:27:07  rbowler
+// Add Message-Security-Assist-Extension-1 facility to ESA/390
+//
 // Revision 1.39  2007/11/16 13:01:49  rbowler
 // Add HFP-multiply-add/subtract facility to ESA/390
 //
@@ -82,6 +85,7 @@
 #define FEATURE_STORAGE_KEY_ASSIST
 #define FEATURE_STORAGE_PROTECTION_OVERRIDE
 #define FEATURE_STORE_SYSTEM_INFORMATION
+#define FEATURE_STRING_INSTRUCTION
 #define FEATURE_SUBSPACE_GROUP
 #define FEATURE_SUPPRESSION_ON_PROTECTION
 #define FEATURE_SYSTEM_CONSOLE

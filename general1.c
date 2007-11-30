@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.152  2007/08/07 19:47:59  ivan
+// Fix a couple of gcc-4.2 warnings
+//
 // Revision 1.151  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -1993,6 +1996,7 @@ BYTE    pad;                            /* Padding byte              */
 #endif /*defined(FEATURE_COMPARE_AND_MOVE_EXTENDED)*/
 
 
+#if defined(FEATURE_STRING_INSTRUCTION)
 /*-------------------------------------------------------------------*/
 /* B25D CLST  - Compare Logical String                         [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2070,9 +2074,11 @@ BYTE    termchar;                       /* Terminating character     */
     /* Set condition code */
     regs->psw.cc =  cc;
 
-}
+} /* end DEF_INST(compare_logical_string) */
+#endif /*defined(FEATURE_STRING_INSTRUCTION)*/
 
 
+#if defined(FEATURE_STRING_INSTRUCTION)
 /*-------------------------------------------------------------------*/
 /* B257 CUSE  - Compare Until Substring Equal                  [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2267,7 +2273,8 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     /* Set condition code */
     regs->psw.cc =  cc;
 
-}
+} /* end DEF_INST(compare_until_substring_equal) */
+#endif /*defined(FEATURE_STRING_INSTRUCTION)*/
 
 
 #ifdef FEATURE_EXTENDED_TRANSLATION
@@ -4010,6 +4017,7 @@ int     i;                              /* Loop counter              */
 }
 
 
+#if defined(FEATURE_STRING_INSTRUCTION)
 /*-------------------------------------------------------------------*/
 /* B255 MVST  - Move String                                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -4076,7 +4084,8 @@ int     cpu_length;                     /* length to next page       */
     /* Set condition code 3 */
     regs->psw.cc = 3;
 
-}
+} /* end DEF_INST(move_string) */
+#endif /*defined(FEATURE_STRING_INSTRUCTION)*/
 
 
 /*-------------------------------------------------------------------*/

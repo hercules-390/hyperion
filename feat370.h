@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.24  2007/11/18 22:18:51  rbowler
+// Permit FEATURE_IMMEDIATE_AND_RELATIVE to be activated in S/370 mode
+//
 // Revision 1.23  2007/06/23 00:04:09  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -42,6 +45,7 @@
    may be activated if desired by uncommenting the appropriate
    define statements below and performing a complete rebuild */
 //#define FEATURE_IMMEDIATE_AND_RELATIVE
+//#define FEATURE_STRING_INSTRUCTION
 
 #endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */
