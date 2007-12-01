@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.55  2007/08/28 20:22:41  gsmith
+// cckdutil fix for 64-bit - zhackules
+//
 // Revision 1.54  2007/06/23 00:04:03  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -2721,5 +2724,8 @@ char          msg[4096];
     vsprintf (msg+i, format, vl);
     va_end (vl);
 
-    logmsg("%s",msg);
+    if (dev->batch)
+        fprintf(stdout,"%s",msg);
+    else
+        logmsg("%s",msg);
 }

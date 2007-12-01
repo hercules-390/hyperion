@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.30  2007/06/23 00:04:03  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.29  2006/12/08 09:43:17  jj
 // Add CVS message log
 //
@@ -72,6 +75,7 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
     for (i = 0; i < argc; i++)
     {
         memset (dev, 0, sizeof(DEVBLK));
+        dev->batch = 1;
 
         /* open the file */
         hostpath(dev->filename, argv[i], sizeof(dev->filename));
