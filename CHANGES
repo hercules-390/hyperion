@@ -1,3 +1,4 @@
+02 Dec 2007 Permit Extended-Translation-Facility-2 to be activated in S/370 mode - Roger Bowler
 02 Dec 2007 Enable B9xx,EBxx opcodes in S/370 mode for ETF2 - Roger Bowler
 02 Dec 2007 Permit Extended-Translation facility to be activated in S/370 mode - Roger Bowler
 02 Dec 2007 Permit Compare-and-Move-Extended facility to be activated in S/370 mode - Roger Bowler

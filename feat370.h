@@ -4,6 +4,12 @@
 // $Id$
 //
 // $Log$
+// Revision 1.27  2007/12/02 15:45:17  rbowler
+// Permit Extended-Translation facility to be activated in S/370 mode
+//
+// Revision 1.26  2007/12/02 15:32:46  rbowler
+// Permit Compare-and-Move-Extended facility to be activated in S/370 mode
+//
 // Revision 1.25  2007/11/30 15:14:14  rbowler
 // Permit String-Instruction facility to be activated in S/370 mode
 //
@@ -51,6 +57,7 @@
 //#define FEATURE_STRING_INSTRUCTION
 //#define FEATURE_COMPARE_AND_MOVE_EXTENDED
 //#define FEATURE_EXTENDED_TRANSLATION
+//#define FEATURE_EXTENDED_TRANSLATION_FACILITY_2
 
 #endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */

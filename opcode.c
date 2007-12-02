@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.131  2007/12/02 15:59:12  rbowler
+// Enable B9xx,EBxx opcodes in S/370 mode for ETF2
+//
 // Revision 1.130  2007/12/02 15:45:17  rbowler
 // Permit Extended-Translation facility to be activated in S/370 mode
 //
@@ -2206,16 +2209,16 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*DE*/   GENx370x390x900 (edit_x_edit_and_mark,SS_L,"ED"),
  /*DF*/   GENx370x390x900 (edit_x_edit_and_mark,SS_L,"EDMK"),
  /*E0*/   GENx___x___x___ ,
- /*E1*/   GENx___x390x900 (pack_unicode,SS_L2,"PKU"),
- /*E2*/   GENx___x390x900 (unpack_unicode,SS_L,"UNPKU"),
+ /*E1*/   GENx370x390x900 (pack_unicode,SS_L2,"PKU"),
+ /*E2*/   GENx370x390x900 (unpack_unicode,SS_L,"UNPKU"),
  /*E3*/   GENx___x390x900 (execute_e3xx,e3xx,""),
  /*E4*/   GENx370x390x___ (execute_e4xx,e4xx,""),
  /*E5*/   GENx370x390x900 (execute_e5xx,e5xx,""),
  /*E6*/   GENx370x___x___ (execute_e6xx,e6xx,""),
  /*E7*/   GENx___x___x___ ,
  /*E8*/   GENx370x390x900 (move_inverse,SS_L,"MVCIN"),
- /*E9*/   GENx___x390x900 (pack_ascii,SS_L2,"PKA"),
- /*EA*/   GENx___x390x900 (unpack_ascii,SS_L,"UNPKA"),
+ /*E9*/   GENx370x390x900 (pack_ascii,SS_L2,"PKA"),
+ /*EA*/   GENx370x390x900 (unpack_ascii,SS_L,"UNPKA"),
  /*EB*/   GENx370x390x900 (execute_ebxx,ebxx,""),
  /*EC*/   GENx___x390x900 (execute_ecxx,ecxx,""),
  /*ED*/   GENx___x390x900 (execute_edxx,edxx,""),
@@ -3469,10 +3472,10 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B98D*/ GENx___x390x900 (extract_psw,RRE,"EPSW"),
  /*B98E*/ GENx___x___x900 (invalidate_dat_table_entry,RRF_R,"IDTE"),
  /*B98F*/ GENx___x___x___ ,
- /*B990*/ GENx___x390x900 (translate_two_to_two,RRF_M3,"TRTT"),
- /*B991*/ GENx___x390x900 (translate_two_to_one,RRF_M3,"TRTO"),
- /*B992*/ GENx___x390x900 (translate_one_to_two,RRF_M3,"TROT"),
- /*B993*/ GENx___x390x900 (translate_one_to_one,RRF_M3,"TROO"),
+ /*B990*/ GENx370x390x900 (translate_two_to_two,RRF_M3,"TRTT"),
+ /*B991*/ GENx370x390x900 (translate_two_to_one,RRF_M3,"TRTO"),
+ /*B992*/ GENx370x390x900 (translate_one_to_two,RRF_M3,"TROT"),
+ /*B993*/ GENx370x390x900 (translate_one_to_one,RRF_M3,"TROO"),
  /*B994*/ GENx___x390x900 (load_logical_character_register,RRE,"LLCR"),            /*@Z9*/
  /*B995*/ GENx___x390x900 (load_logical_halfword_register,RRE,"LLHR"),             /*@Z9*/
  /*B996*/ GENx___x390x900 (multiply_logical_register,RRE,"MLR"),
@@ -4568,8 +4571,8 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB8B*/ GENx___x___x___ ,
  /*EB8C*/ GENx___x___x___ ,
  /*EB8D*/ GENx___x___x___ ,
- /*EB8E*/ GENx___x390x900 (move_long_unicode,RSY,"MVCLU"),
- /*EB8F*/ GENx___x390x900 (compare_logical_long_unicode,RSY,"CLCLU"),
+ /*EB8E*/ GENx370x390x900 (move_long_unicode,RSY,"MVCLU"),
+ /*EB8F*/ GENx370x390x900 (compare_logical_long_unicode,RSY,"CLCLU"),
  /*EB90*/ GENx___x___x900 (store_multiple_y,RSY,"STMY"),
  /*EB91*/ GENx___x___x___ ,
  /*EB92*/ GENx___x___x___ ,
@@ -4618,7 +4621,7 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EBBD*/ GENx___x___x___ ,
  /*EBBE*/ GENx___x___x___ ,
  /*EBBF*/ GENx___x___x___ ,
- /*EBC0*/ GENx___x390x900 (test_decimal,RSL,"TP"),
+ /*EBC0*/ GENx370x390x900 (test_decimal,RSL,"TP"),
  /*EBC1*/ GENx___x___x___ ,
  /*EBC2*/ GENx___x___x___ ,
  /*EBC3*/ GENx___x___x___ ,
