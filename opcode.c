@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.128  2007/11/30 15:14:14  rbowler
+// Permit String-Instruction facility to be activated in S/370 mode
+//
 // Revision 1.127  2007/11/23 14:12:04  rbowler
 // Permit LDGR, LGDR in ESAME mode only
 //
@@ -2132,8 +2135,8 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*A5*/   GENx370x390x900 (execute_a5xx,a5xx,""),
  /*A6*/   GENx370x390x___ (execute_a6xx,a6xx,""),
  /*A7*/   GENx370x390x900 (execute_a7xx,a7xx,""),
- /*A8*/   GENx___x390x900 (move_long_extended,RS,"MVCLE"),
- /*A9*/   GENx___x390x900 (compare_logical_long_extended,RS,"CLCLE"),
+ /*A8*/   GENx370x390x900 (move_long_extended,RS,"MVCLE"),
+ /*A9*/   GENx370x390x900 (compare_logical_long_extended,RS,"CLCLE"),
  /*AA*/   GENx___x___x___ ,
  /*AB*/   GENx___x___x___ ,
  /*AC*/   GENx370x390x900 (store_then_and_system_mask,SI,"STNSM"),

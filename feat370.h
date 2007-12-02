@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.25  2007/11/30 15:14:14  rbowler
+// Permit String-Instruction facility to be activated in S/370 mode
+//
 // Revision 1.24  2007/11/18 22:18:51  rbowler
 // Permit FEATURE_IMMEDIATE_AND_RELATIVE to be activated in S/370 mode
 //
@@ -46,6 +49,7 @@
    define statements below and performing a complete rebuild */
 //#define FEATURE_IMMEDIATE_AND_RELATIVE
 //#define FEATURE_STRING_INSTRUCTION
+//#define FEATURE_COMPARE_AND_MOVE_EXTENDED
 
 #endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */
