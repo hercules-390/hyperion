@@ -30,6 +30,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.192  2007/11/22 03:49:01  ivan
+// Store Monitor code DOUBLEWORD when MC invoked under z/Architecture
+// (previously only a fullword was stored)
+//
 // Revision 1.191  2007/11/18 22:18:51  rbowler
 // Permit FEATURE_IMMEDIATE_AND_RELATIVE to be activated in S/370 mode
 //
@@ -1858,12 +1862,12 @@ jump_ebxx:
 
     regs->ARCH_DEP(opcode_table)[0xa7] = &&jump_a7xx;
     regs->ARCH_DEP(opcode_table)[0xb2] = &&jump_b2xx;
- #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
     regs->ARCH_DEP(opcode_table)[0xb9] = &&jump_b9xx;
+ #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
     regs->ARCH_DEP(opcode_table)[0xc0] = &&jump_c0xx;
     regs->ARCH_DEP(opcode_table)[0xe3] = &&jump_e3xx;
-    regs->ARCH_DEP(opcode_table)[0xeb] = &&jump_ebxx;
  #endif /* defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390) */
+    regs->ARCH_DEP(opcode_table)[0xeb] = &&jump_ebxx;
 
 #else /* !defined(MULTI_BYTE_ASSIST) */
     UNREFERENCED(regs);

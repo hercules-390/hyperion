@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.75  2007/11/21 00:31:38  gsmith
+// LRE support (try #1)
+//
 // Revision 1.74  2007/11/18 22:18:51  rbowler
 // Permit FEATURE_IMMEDIATE_AND_RELATIVE to be activated in S/370 mode
 //
@@ -326,9 +329,13 @@ struct REGS {                           /* Processor registers       */
  #if defined(MULTI_BYTE_ASSIST)
                 s370_opcode_a7xx[256],
                 s370_opcode_b2xx[256],
+                s370_opcode_b9xx[256],
+                s370_opcode_ebxx[256],
  #else
                *s370_opcode_a7xx,
                *s370_opcode_b2xx,
+               *s370_opcode_b9xx,
+               *s370_opcode_ebxx,
  #endif
                *s370_opcode_e4xx,
                *s370_opcode_e5xx,
