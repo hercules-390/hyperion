@@ -8,6 +8,12 @@
 // $Id$
 //
 // $Log$
+// Revision 1.130  2007/12/02 15:45:17  rbowler
+// Permit Extended-Translation facility to be activated in S/370 mode
+//
+// Revision 1.129  2007/12/02 15:32:46  rbowler
+// Permit Compare-and-Move-Extended facility to be activated in S/370 mode
+//
 // Revision 1.128  2007/11/30 15:14:14  rbowler
 // Permit String-Instruction facility to be activated in S/370 mode
 //
@@ -320,9 +326,7 @@
 
 
 #if !defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)
- UNDEF_INST(execute_b9xx)
  UNDEF_INST(execute_e3xx)
- UNDEF_INST(execute_ebxx)
  UNDEF_INST(execute_ecxx)
  UNDEF_INST(execute_c0xx)
  UNDEF_INST(execute_c2xx)                                       /*@Z9*/
@@ -978,6 +982,18 @@ DEF_INST(execute_b2xx)
 }
 
 
+DEF_INST(execute_b9xx)
+{
+    regs->ARCH_DEP(opcode_b9xx)[inst[1]](inst, regs);
+}
+
+
+DEF_INST(execute_ebxx)
+{
+    regs->ARCH_DEP(opcode_ebxx)[inst[5]](inst, regs);
+}
+
+
 #if defined(FEATURE_BASIC_FP_EXTENSIONS)
 DEF_INST(execute_b3xx)
 {
@@ -1010,21 +1026,9 @@ DEF_INST(execute_a5xx)
 }
 
 
-DEF_INST(execute_b9xx)
-{
-    regs->ARCH_DEP(opcode_b9xx)[inst[1]](inst, regs);
-}
-
-
 DEF_INST(execute_e3xx)
 {
     regs->ARCH_DEP(opcode_e3xx)[inst[5]](inst, regs);
-}
-
-
-DEF_INST(execute_ebxx)
-{
-    regs->ARCH_DEP(opcode_ebxx)[inst[5]](inst, regs);
 }
 
 
@@ -1779,9 +1783,11 @@ static zz_func s370_opcode_a5xx[256];
 static zz_func s370_opcode_a6xx[256];
 static zz_func s370_opcode_a7xx[256];
 static zz_func s370_opcode_b2xx[256];
+static zz_func s370_opcode_b9xx[256];
 static zz_func s370_opcode_e4xx[256];
 static zz_func s370_opcode_e5xx[256];
 static zz_func s370_opcode_e6xx[256];
+static zz_func s370_opcode_ebxx[256];
 
 zz_func s390_opcode_table[256];
 static zz_func s390_opcode_01xx[256];
@@ -1830,9 +1836,11 @@ int i;
         s370_opcode_a6xx [i] = v_opcode_a6xx [i][ARCH_370];
         s370_opcode_a7xx [i] = opcode_a7xx [i&0x0F][ARCH_370];
         s370_opcode_b2xx [i] = opcode_b2xx [i][ARCH_370];
+        s370_opcode_b9xx [i] = opcode_b9xx [i][ARCH_370];
         s370_opcode_e4xx [i] = v_opcode_e4xx [i][ARCH_370];
         s370_opcode_e5xx [i] = opcode_e5xx [i][ARCH_370];
         s370_opcode_e6xx [i] = opcode_e6xx [i][ARCH_370];
+        s370_opcode_ebxx [i] = opcode_ebxx [i][ARCH_370];
 #endif
 
 #if defined(_390)
@@ -1888,9 +1896,15 @@ void set_opcode_pointers(REGS *regs)
            sizeof(s370_opcode_a7xx));
     memcpy(regs->s370_opcode_b2xx, s370_opcode_b2xx,
            sizeof(s370_opcode_b2xx));
+    memcpy(regs->s370_opcode_b9xx, s370_opcode_b9xx,
+           sizeof(s370_opcode_b9xx));
+    memcpy(regs->s370_opcode_ebxx, s370_opcode_ebxx,
+           sizeof(s370_opcode_ebxx));
  #else
     regs->s370_opcode_a7xx = s370_opcode_a7xx;
     regs->s370_opcode_b2xx = s370_opcode_b2xx;
+    regs->s370_opcode_b9xx = s370_opcode_b9xx;
+    regs->s370_opcode_ebxx = s370_opcode_ebxx;
  #endif
     regs->s370_opcode_e4xx = s370_opcode_e4xx;
     regs->s370_opcode_e5xx = s370_opcode_e5xx;
@@ -2152,7 +2166,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*B6*/   GENx370x390x900 (store_control,RS,"STCTL"),
  /*B7*/   GENx370x390x900 (load_control,RS,"LCTL"),
  /*B8*/   GENx___x___x___ ,
- /*B9*/   GENx___x390x900 (execute_b9xx,b9xx,""),
+ /*B9*/   GENx370x390x900 (execute_b9xx,b9xx,""),
  /*BA*/   GENx370x390x900 (compare_and_swap,RS,"CS"),
  /*BB*/   GENx370x390x900 (compare_double_and_swap,RS,"CDS"),
  /*BC*/   GENx___x___x___ ,
@@ -2202,7 +2216,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*E8*/   GENx370x390x900 (move_inverse,SS_L,"MVCIN"),
  /*E9*/   GENx___x390x900 (pack_ascii,SS_L2,"PKA"),
  /*EA*/   GENx___x390x900 (unpack_ascii,SS_L,"UNPKA"),
- /*EB*/   GENx___x390x900 (execute_ebxx,ebxx,""),
+ /*EB*/   GENx370x390x900 (execute_ebxx,ebxx,""),
  /*EC*/   GENx___x390x900 (execute_ecxx,ecxx,""),
  /*ED*/   GENx___x390x900 (execute_edxx,edxx,""),
  /*EE*/   GENx___x390x900 (perform_locked_operation,SS_RSRS,"PLO"),
