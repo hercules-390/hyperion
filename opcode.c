@@ -2953,9 +2953,9 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2A2*/ GENx___x___x___ ,
  /*B2A3*/ GENx___x___x___ ,
  /*B2A4*/ GENx___x___x___ ,                                     /* Sysplex   */
- /*B2A5*/ GENx___x390x900 (translate_extended,RRE,"TRE"),
- /*B2A6*/ GENx___x390x900 (convert_utf16_to_utf8,RRF_M3,"CU21 (CUUTF)"),
- /*B2A7*/ GENx___x390x900 (convert_utf8_to_utf16,RRF_M3,"CU12 (CUTFU)"),
+ /*B2A5*/ GENx370x390x900 (translate_extended,RRE,"TRE"),
+ /*B2A6*/ GENx370x390x900 (convert_utf16_to_utf8,RRF_M3,"CU21 (CUUTF)"),
+ /*B2A7*/ GENx370x390x900 (convert_utf8_to_utf16,RRF_M3,"CU12 (CUTFU)"),
  /*B2A8*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B2A9*/ GENx___x___x___ ,
  /*B2AA*/ GENx___x___x___ ,

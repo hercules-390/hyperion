@@ -1,3 +1,4 @@
+02 Dec 2007 Permit Extended-Translation facility to be activated in S/370 mode - Roger Bowler
 02 Dec 2007 Permit Compare-and-Move-Extended facility to be activated in S/370 mode - Roger Bowler
 01 Dec 2007 Fix cckdcdsk/cckdcomp/cckdutil no message o/p issue - Fish
 30 Nov 2007 Change all references to conmicro.cx to hercules-390.org - Jay
