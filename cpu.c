@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.193  2007/12/02 16:22:09  rbowler
+// Enable B9xx,EBxx opcodes in S/370 mode for ETF2
+//
 // Revision 1.192  2007/11/22 03:49:01  ivan
 // Store Monitor code DOUBLEWORD when MC invoked under z/Architecture
 // (previously only a fullword was stored)
@@ -1822,7 +1825,6 @@ jump_b2xx:
         : : "i" (offsetof(REGS,ARCH_DEP(opcode_b2xx)))
         );
         return;
-  #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
     case 0xb9:
 jump_b9xx:
  __asm__ (
@@ -1831,6 +1833,7 @@ jump_b9xx:
         : : "i" (offsetof(REGS,ARCH_DEP(opcode_b9xx)))
         );
         return;
+  #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
     case 0xc0:
 jump_c0xx:
  __asm__ (
@@ -1848,6 +1851,7 @@ jump_e3xx:
         );
         return;
     case 0xeb:
+  #endif /* defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390) */
 jump_ebxx:
  __asm__ (
         "movzbl 5(%%eax),%%ecx\n\t"
@@ -1855,7 +1859,6 @@ jump_ebxx:
         : : "i" (offsetof(REGS,ARCH_DEP(opcode_ebxx)))
         );
         return;
-  #endif /* defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390) */
  #endif /* defined(MULTI_BYTE_ASSIST_IA32) */
 
     } /* switch(jump) */
