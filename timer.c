@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.66  2007/09/05 00:24:18  gsmith
+// Use integer arithmetic calculating cpupct
+//
 // Revision 1.65  2007/06/23 00:04:18  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -165,25 +168,17 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
 void *timer_update_thread (void *argp)
 {
 #ifdef OPTION_MIPS_COUNTING
-int     usecctr = 0;                    /* Microsecond counter       */
-int     cpu;                            /* CPU counter               */
-REGS   *regs;                           /* -> CPU register context   */
-U64     prev = 0;                       /* Previous TOD clock value  */
-U64     diff;                           /* Difference between new and
-                                           previous TOD clock values */
-U64     waittime;                       /* CPU wait time in interval */
-U64     now = 0;                        /* Current time of day (us)  */
+int     i;                              /* Loop index                */
+REGS   *regs;                           /* -> REGS                   */
+U64     now;                            /* Current time of day (us)  */
 U64     then;                           /* Previous time of day (us) */
-int     interval;                       /* Interval (us)             */
-int     cpupct;                         /* Calculated cpu percentage */
+U64     diff;                           /* Interval (us)             */
+U64     mipsrate;                       /* Calculated MIPS rate      */
+U64     siosrate;                       /* Calculated SIO rate       */
+U64     cpupct;                         /* Calculated cpu percentage */
+U64     total_mips;                     /* Total MIPS rate           */
+U64     total_sios;                     /* Total SIO rate            */
 #endif /*OPTION_MIPS_COUNTING*/
-#if !defined(HAVE_NANOSLEEP) && !defined(HAVE_USLEEP)
-struct  timeval tv;                     /* Structure for select      */
-#endif
-#if defined( HAVE_NANOSLEEP )
-struct  timespec  rqtp;                 /* requested sleep interval  */
-struct  timespec  rmtp;                 /* remaining sleep interval  */
-#endif
 
     UNREFERENCED(argp);
 
@@ -203,132 +198,92 @@ struct  timespec  rmtp;                 /* remaining sleep interval  */
             "priority=%d\n"),
             thread_id(), getpid(), getpriority(PRIO_PROCESS,0));
 
+#ifdef OPTION_MIPS_COUNTING
+    then = host_tod();
+#endif
+
     while (sysblk.cpus)
     {
         /* Update TOD clock */
         update_tod_clock();
 
 #ifdef OPTION_MIPS_COUNTING
-        /* Calculate MIPS rate and percentage CPU busy */
-        diff = (prev == 0 ? 0 : hw_tod - prev);
-        prev = hw_tod;
+        now = host_tod();
+        diff = now - then;
 
-        /* Shift the epoch out of the difference for the CPU timer */
-        diff <<= 8;
-
-        usecctr += (int)(diff/4096);
-        if (usecctr > 999999)
+        if (diff >= 1000000)
         {
-            U32  mipsrate = 0;   /* (total for ALL CPUs together) */
-            U32  siosrate = 0;   /* (total for ALL CPUs together) */
-// logmsg("+++ BLIP +++\n"); // (should appear once per second)
-            /* Get current time */
             then = now;
-            now = hw_clock();
-            interval = (int)(now - then);
-            if (interval < 1)
-                interval = 1;
-
-#if defined(OPTION_SHARED_DEVICES)
-            sysblk.shrdrate = sysblk.shrdcount;
+            total_mips = total_sios = 0;
+    #if defined(OPTION_SHARED_DEVICES)
+            total_sios = sysblk.shrdcount;
             sysblk.shrdcount = 0;
-            siosrate = sysblk.shrdrate;
-#endif
+    #endif
 
-            for (cpu = 0; cpu < HI_CPU; cpu++)
+            for (i = 0; i < HI_CPU; i++)
             {
+                obtain_lock (&sysblk.cpulock[i]);
 
-                obtain_lock (&sysblk.cpulock[cpu]);
-
-                if (!IS_CPU_ONLINE(cpu))
+                if (!IS_CPU_ONLINE(i))
                 {
-                    release_lock(&sysblk.cpulock[cpu]);
+                    release_lock(&sysblk.cpulock[i]);
                     continue;
                 }
 
-                regs = sysblk.regs[cpu];
+                regs = sysblk.regs[i];
 
-                /* 0% if first time thru or STOPPED */
-                if (then == 0 || regs->cpustate == CPUSTATE_STOPPED)
+                /* 0% if CPU is STOPPED */
+                if (regs->cpustate == CPUSTATE_STOPPED)
                 {
-                    regs->mipsrate = regs->siosrate = 0;
-                    regs->cpupct = 0;
-                    release_lock(&sysblk.cpulock[cpu]);
+                    regs->mipsrate = regs->siosrate = regs->cpupct = 0;
+                    release_lock(&sysblk.cpulock[i]);
                     continue;
                 }
 
-                /* Calculate instructions per second for this CPU */
-                regs->mipsrate = (regs->instcount - regs->prevcount);
-                regs->siosrate = regs->siocount;
+                /* Calculate instructions per second */
+                mipsrate = regs->instcount;
+                regs->instcount = 0;
+                regs->prevcount += mipsrate;
+                mipsrate = (mipsrate*1000000 + diff/2) / diff;
+                if (mipsrate > MAX_REPORTED_MIPSRATE)
+                    mipsrate = 0;
+                regs->mipsrate = mipsrate;
+                total_mips += mipsrate;
 
-                /* Ignore wildly high rates probably in error */
-                if (regs->mipsrate > MAX_REPORTED_MIPSRATE)
-                    regs->mipsrate = 0;
-                if (regs->siosrate > MAX_REPORTED_SIOSRATE)
-                    regs->siosrate = 0;
-
-                /* Total for ALL CPUs together */
-                mipsrate += regs->mipsrate;
-                siosrate += regs->siosrate;
-
-                /* Save the instruction counter */
-                regs->prevcount = regs->instcount;
-                regs->siototal += regs->siocount;
+                /* Calculate SIOs per second */
+                siosrate = regs->siocount;
                 regs->siocount = 0;
+                regs->siototal += siosrate;
+                siosrate = (siosrate*1000000 + diff/2) / diff;
+                if (siosrate > MAX_REPORTED_SIOSRATE)
+                    siosrate = 0;
+                regs->siosrate = siosrate;
+                total_sios += siosrate;
 
                 /* Calculate CPU busy percentage */
-                waittime = regs->waittime;
-                if (regs->waittod)
-                    waittime += now - regs->waittod;
-                cpupct = ((interval - waittime) * 100) / interval;
-                if (cpupct < 0) cpupct = 0;
-                else if (cpupct > 100) cpupct = 100;
-                regs->cpupct = cpupct;
-
-                /* Reset the wait values */
+                cpupct = regs->waittime;
                 regs->waittime = 0;
                 if (regs->waittod)
+                {
+                    cpupct += now - regs->waittod;
                     regs->waittod = now;
+                }
+                cpupct = ((diff - cpupct)*100) / diff;
+                if (cpupct > 100) cpupct = 100;
+                regs->cpupct = cpupct;
 
-                release_lock(&sysblk.cpulock[cpu]);
+                release_lock(&sysblk.cpulock[i]);
 
             } /* end for(cpu) */
 
             /* Total for ALL CPUs together */
-            sysblk.mipsrate = mipsrate;
-            sysblk.siosrate = siosrate;
-
-            /* Reset the microsecond counter */
-            usecctr = 0;
-
-        } /* end if(usecctr) */
+            sysblk.mipsrate = total_mips;
+            sysblk.siosrate = total_sios;
+        } /* end if(diff >= 1000000) */
 #endif /*OPTION_MIPS_COUNTING*/
 
         /* Sleep for another timer update interval... */
-
-#if defined( HAVE_NANOSLEEP )
-
-        rqtp.tv_sec  = 0;
-        rqtp.tv_nsec = sysblk.timerint * 1000;
-
-        while ( nanosleep ( &rqtp, &rmtp ) < 0 )
-        {
-            // (EINTR presumed)
-            rqtp.tv_sec  = rmtp.tv_sec;
-            rqtp.tv_nsec = rmtp.tv_nsec;
-        }
-
-#elif defined( HAVE_USLEEP )
-
         usleep ( sysblk.timerint );
-
-#else
-        tv.tv_sec  = 0;
-        tv.tv_usec = sysblk.timerint;
-
-        select ( 0, NULL, NULL, NULL, &tv );
-
-#endif /* nanosleep, usleep or select */
 
     } /* end while */
 

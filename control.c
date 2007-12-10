@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.255  2007/06/23 00:04:05  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.254  2007/06/06 22:14:57  gsmith
 // Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
 //
@@ -6341,7 +6344,7 @@ struct rusage     usage;               /* RMF type data              */
         getrusage(RUSAGE_SELF,&usage);
         dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec);
         dreg = (dreg * 1000000) + (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
-        dreg = regs->instcount / (dreg ? dreg : 1);
+        dreg = INSTCOUNT(regs) / (dreg ? dreg : 1);
         dreg *= SUSEC_PER_MIPS;
         return 0x800000 / (dreg ? dreg : 1);
 

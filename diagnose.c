@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.47  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.46  2007/02/13 19:34:40  fish
 // DIAG  X'9C'  (156)
 //
@@ -454,7 +457,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose F08: Hercules get instruction counter                */
     /*---------------------------------------------------------------*/
-        regs->GR_L(r1) = (U32)regs->instcount;
+        regs->GR_L(r1) = (U32)INSTCOUNT(regs);
         break;
 
     case 0xF0C:

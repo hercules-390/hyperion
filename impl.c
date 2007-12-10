@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.123  2007/06/23 00:04:14  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.122  2007/02/27 21:59:32  kleonard
 // PR# misc/87 startup messages fix completion
 //
@@ -118,7 +121,7 @@ int i;
             {
                 /* If the cpu is running but not executing
                    instructions then it must be malfunctioning */
-                if((sysblk.regs[i]->instcount == (U64)savecount[i])
+                if((INSTCOUNT(sysblk.regs[i]) == (U64)savecount[i])
                   && !HDC1(debug_watchdog_signal, sysblk.regs[i]) )
                 {
                     /* Send signal to looping CPU */
@@ -127,7 +130,7 @@ int i;
                 }
                 else
                     /* Save current instcount */
-                    savecount[i] = sysblk.regs[i]->instcount;
+                    savecount[i] = INSTCOUNT(sysblk.regs[i]);
             }
             else
                 /* mark savecount invalid as CPU not in running state */

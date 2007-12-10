@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.76  2007/12/02 16:22:09  rbowler
+// Enable B9xx,EBxx opcodes in S/370 mode for ETF2
+//
 // Revision 1.75  2007/11/21 00:31:38  gsmith
 // LRE support (try #1)
 //
@@ -158,7 +161,7 @@ struct REGS {                           /* Processor registers       */
         S64     ecps_vtimer;            /* ECPS Virtual Int. timer   */
         S32     ecps_oldtmr;            /* ECPS Virtual Int. tmr int */
         BYTE   *ecps_vtmrpt;            /* Pointer to VTMR or zero   */
-        U64     instcount;              /* Instruction counter       */
+        U32     instcount;              /* Instruction counter       */
         U64     prevcount;              /* Previous instruction count*/
         U32     mipsrate;               /* Instructions per second   */
         U32     siocount;               /* SIO/SSCH counter          */
@@ -605,7 +608,6 @@ struct SYSBLK {
 #if defined(OPTION_SHARED_DEVICES)
         TID     shrdtid;                /* Shared device listener    */
         U16     shrdport;               /* Shared device server port */
-        U32     shrdrate;               /* IOs per second            */
         U32     shrdcount;              /* IO count                  */
         SHRD_TRACE  *shrdtrace;         /* Internal trace table      */
         SHRD_TRACE  *shrdtracep;        /* Current pointer           */

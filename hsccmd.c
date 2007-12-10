@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.231  2007/11/30 14:54:32  jmaynard
+// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
+//
 // Revision 1.230  2007/11/21 23:33:46  fish
 // remove dead #if 0 code
 //
@@ -3912,7 +3915,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         logmsg( _("          CPU%4.4X: state %s\n"),
                sysblk.regs[i]->cpuad,states[sysblk.regs[i]->cpustate]);
         logmsg( _("          CPU%4.4X: instcount %" I64_FMT "d\n"),
-               sysblk.regs[i]->cpuad,(long long)sysblk.regs[i]->instcount);
+               sysblk.regs[i]->cpuad,(long long)INSTCOUNT(sysblk.regs[i]));
         logmsg( _("          CPU%4.4X: siocount %" I64_FMT "d\n"),
                sysblk.regs[i]->cpuad,(long long)sysblk.regs[i]->siototal);
         copy_psw(sysblk.regs[i], curpsw);
@@ -5481,13 +5484,13 @@ int count_cmd(int argc, char *argv[], char *cmdline)
     {
         for (i = 0; i < MAX_CPU; i++)
             if (IS_CPU_ONLINE(i))
-                sysblk.regs[i]->instcount = 0;
+                sysblk.regs[i]->instcount = sysblk.regs[i]->prevcount = 0;
         for (i = 0; i < OPTION_COUNTING; i++)
             sysblk.count[i] = 0;
     }
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i))
-            instcount += sysblk.regs[i]->instcount;
+            instcount += INSTCOUNT(sysblk.regs[i]);
     logmsg ("  i: %12" I64_FMT "d\n", instcount);
 
     for (i = 0; i < OPTION_COUNTING; i++)

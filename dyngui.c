@@ -43,6 +43,9 @@
 /*********************************************************************/
 
 // $Log$
+// Revision 1.60  2007/09/05 00:24:18  gsmith
+// Use integer arithmetic calculating cpupct
+//
 // Revision 1.59  2007/06/23 00:04:08  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -602,12 +605,7 @@ void  UpdateStatus ()
         || pcpu != prev_pcpu
         || memcmp(prev_psw, psw, sizeof(prev_psw)) != 0
         || prev_cpustate   != pTargetCPU_REGS->cpustate
-        || (prev_instcount != (
-#if defined(_FEATURE_SIE)
-                SIE_MODE(pTargetCPU_REGS) ?  pTargetCPU_REGS->hostregs->instcount :
-#endif
-                pTargetCPU_REGS->instcount)
-           )
+        || prev_instcount != INSTCOUNT(pTargetCPU_REGS)
     )
     {
         bStatusChanged = TRUE;          // (something has indeed changed...)
@@ -621,11 +619,7 @@ void  UpdateStatus ()
         prev_pcpu = pcpu;
         memcpy(prev_psw, psw, sizeof(prev_psw));
         prev_cpustate = pTargetCPU_REGS->cpustate;
-        prev_instcount = (
-#if defined(_FEATURE_SIE)
-            SIE_MODE(pTargetCPU_REGS) ? pTargetCPU_REGS->hostregs->instcount :
-#endif
-            pTargetCPU_REGS->instcount);
+        prev_instcount = INSTCOUNT(pTargetCPU_REGS);
     }
 
     // If anything has changed, inform the GUI...
@@ -764,11 +758,7 @@ void  UpdateCPUStatus ()
 #else  // !defined(_900)
                                                                    '.'
 #endif //  defined(_900)
-            ,(long long)(
-#if       defined(_FEATURE_SIE)
-            SIE_MODE(pTargetCPU_REGS) ? pTargetCPU_REGS->hostregs->instcount :
-#endif // defined(_FEATURE_SIE)
-            pTargetCPU_REGS->instcount)
+            ,(long long)INSTCOUNT(pTargetCPU_REGS)
         );
 
     } // endif cpu is online/offline

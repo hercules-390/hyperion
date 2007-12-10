@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.103  2007/08/26 21:04:45  rbowler
+// Modify PSW fields by psw command (part 2)
+//
 // Revision 1.102  2007/08/06 16:48:20  ivan
 // Implement "PARM" option for IPL command (same as VM IPL PARM XXX)
 // Also add command helps for ipl, iplc, sysclear, sysreset
@@ -481,7 +484,7 @@ int             i;                      /* Array subscript           */
     for (i = 0; i < MAX_CPU; i++)
         regs->emercpu[i] = 0;
     regs->instinvalid = 1;
-    regs->instcount = 0;
+    regs->instcount = regs->prevcount = 0;
 
     /* Clear interrupts */
     SET_IC_INITIAL_MASK(regs);

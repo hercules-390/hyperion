@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.212  2007/09/05 00:24:18  gsmith
+// Use integer arithmetic calculating cpupct
+//
 // Revision 1.211  2007/06/23 00:04:15  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -964,11 +967,7 @@ void NP_update(REGS *regs)
         NPsios_valid = 1;
     }
 #else
-    instcount = 
-#if defined(_FEATURE_SIE)
-        SIE_MODE(regs) ? (unsigned)regs->hostregs->instcount :
-#endif /*defined(_FEATURE_SIE)*/
-        (unsigned)regs->instcount;
+    instcount = INSTCOUNT(regs);
     if (!NPmips_valid || NPinstcount != instcount)
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (19, 1);
@@ -2054,26 +2053,18 @@ FinishShutdown:
            or if the instruction counter has changed, or if
            the CPU stopped state has changed */
         if (memcmp(curpsw, prvpsw, sizeof(curpsw)) != 0
-         || (
-#if defined(_FEATURE_SIE)
-                  SIE_MODE(regs) ? regs->hostregs->instcount :
-#endif /*defined(_FEATURE_SIE)*/
-                  regs->instcount) != prvicount
+         || prvicount != INSTCOUNT(regs)
          || prvcpupct != regs->cpupct
 #if defined(OPTION_SHARED_DEVICES)
-         || sysblk.shrdcount != prvscount
+         || prvscount != sysblk.shrdcount
 #endif
-         || regs->cpustate != prvstate
+         || prvstate != regs->cpustate
          || (NPDup && NPcpugraph && prvtcount != sysblk.instcount)
            )
         {
             redraw_status = 1;
             memcpy (prvpsw, curpsw, sizeof(prvpsw));
-            prvicount =
-#if defined(_FEATURE_SIE)
-                        SIE_MODE(regs) ? regs->hostregs->instcount :
-#endif /*defined(_FEATURE_SIE)*/
-                        regs->instcount;
+            prvicount = INSTCOUNT(regs);
             prvcpupct = regs->cpupct;
             prvstate  = regs->cpustate;
 #if defined(OPTION_SHARED_DEVICES)
@@ -2159,11 +2150,7 @@ FinishShutdown:
                            SIE_MODE(regs)                     ? 'S' : '.',
                            regs->arch_mode == ARCH_900        ? 'Z' : '.');
                     buf[len++] = ' ';
-                    sprintf (ibuf, "instcount=%" I64_FMT "u",
-#if defined(_FEATURE_SIE)
-                        SIE_MODE(regs) ?  (U64) regs->hostregs->instcount :
-#endif /*defined(_FEATURE_SIE)*/
-                        (U64)regs->instcount);
+                    sprintf (ibuf, "instcount=%" I64_FMT "u", INSTCOUNT(regs));
                     if (len + (int)strlen(ibuf) < cons_cols)
                         len = cons_cols - strlen(ibuf);
                     strcpy (buf + len, ibuf);

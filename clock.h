@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.26  2007/11/21 22:55:49  fish
+// (untab)
+//
 // Revision 1.25  2007/06/23 00:04:04  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -49,6 +52,13 @@ void set_tod_clock(U64);                /* Set TOD clock             */
 int chk_int_timer(REGS *);              /* Check int_timer pending   */
 int clock_hsuspend(void *file);         /* Hercules suspend          */
 int clock_hresume(void *file);          /* Hercules resume           */
+
+static __inline__ U64 host_tod(void)
+{
+    struct timeval tv;
+    gettimeofday (&tv, NULL);
+    return (U64)tv.tv_sec*1000000 + tv.tv_usec;
+}
 
 #endif
 

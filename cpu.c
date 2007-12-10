@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.194  2007/12/07 12:08:51  rbowler
+// Enable B9xx,EBxx opcodes in S/370 mode for ETF2 (correction)
+//
 // Revision 1.193  2007/12/02 16:22:09  rbowler
 // Enable B9xx,EBxx opcodes in S/370 mode for ETF2
 //
@@ -1522,11 +1525,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     /* This is where a stopped CPU will wait */
     if (unlikely(regs->cpustate == CPUSTATE_STOPPED))
     {
-    S64 saved_timer;
-#ifdef OPTION_MIPS_COUNTING
-        regs->waittod = hw_clock();
-#endif
-        saved_timer = cpu_timer(regs);
+        S64 saved_timer = cpu_timer(regs);
         regs->ints_state = IC_INITIAL_STATE;
         sysblk.started_mask ^= regs->cpubit;
         sysblk.intowner = LOCK_OWNER_NONE;
@@ -1544,12 +1543,6 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         set_cpu_timer(regs,saved_timer);
 
         ON_IC_INTERRUPT(regs);
-
-#ifdef OPTION_MIPS_COUNTING
-        /* Calculate the time we waited */
-        regs->waittime += hw_clock() - regs->waittod;
-        regs->waittod = 0;
-#endif
 
         /* Purge the lookaside buffers */
         ARCH_DEP(purge_tlb) (regs);
@@ -1569,7 +1562,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     if (WAITSTATE(&regs->psw))
     {
 #ifdef OPTION_MIPS_COUNTING
-        regs->waittod = hw_clock();
+        regs->waittod = host_tod();
 #endif
 
         /* Test for disabled wait PSW and issue message */
@@ -1601,7 +1594,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
 
 #ifdef OPTION_MIPS_COUNTING
         /* Calculate the time we waited */
-        regs->waittime += hw_clock() - regs->waittod;
+        regs->waittime += host_tod() - regs->waittod;
         regs->waittod = 0;
 #endif
         RELEASE_INTLOCK(regs);
@@ -1756,7 +1749,7 @@ int     shouldstep = 0;                 /* 1=Wait for start command  */
 
         OBTAIN_INTLOCK(hostregs);
 #ifdef OPTION_MIPS_COUNTING
-        hostregs->waittod = hw_clock();
+        hostregs->waittod = host_tod();
 #endif
         /* The CPU timer is not decremented for a CPU that is in
            the manual state (e.g. stopped in single step mode) */
@@ -1776,7 +1769,7 @@ int     shouldstep = 0;                 /* 1=Wait for start command  */
         set_cpu_timer(regs,saved_timer[0]);
         set_cpu_timer(hostregs,saved_timer[1]);
 #ifdef OPTION_MIPS_COUNTING
-        hostregs->waittime += hw_clock() - hostregs->waittod;
+        hostregs->waittime += host_tod() - hostregs->waittod;
         hostregs->waittod = 0;
 #endif
         RELEASE_INTLOCK(hostregs);

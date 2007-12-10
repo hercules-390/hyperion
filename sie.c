@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.105  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.104  2007/06/06 22:14:58  gsmith
 // Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
 //
@@ -1014,14 +1017,12 @@ int ARCH_DEP(run_sie) (REGS *regs)
                         SET_AEA_MODE(GUESTREGS);
 
                         {
-                        struct timespec waittime;
-                        struct timeval  now;
-
-                            gettimeofday(&now, NULL);
-                            waittime.tv_sec = now.tv_sec;
-                            waittime.tv_nsec = ((now.tv_usec + 3333) * 1000);
+                            struct timespec waittime;
+                            U64 now = host_tod();
+                            waittime.tv_sec = now / 1000000;
+                            waittime.tv_nsec = ((now % 1000000) + 3333) * 1000;
 #ifdef OPTION_MIPS_COUNTING
-                            regs->waittod = hw_clock();
+                            regs->waittod = now;
 #endif
                             sysblk.waiting_mask |= regs->cpubit;
                             sysblk.intowner = LOCK_OWNER_NONE;
@@ -1032,7 +1033,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                             sysblk.intowner = regs->cpuad;
                             sysblk.waiting_mask ^= regs->cpubit;
 #ifdef OPTION_MIPS_COUNTING
-                            regs->waittime += hw_clock() - regs->waittod;
+                            regs->waittime += host_tod() - regs->waittod;
                             regs->waittod = 0;
 #endif
                         }

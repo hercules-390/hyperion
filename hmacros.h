@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.17  2007/06/06 22:14:57  gsmith
+// Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
+//
 // Revision 1.16  2007/01/04 23:12:04  gsmith
 // remove thunk calls for program_interrupt
 //
@@ -306,6 +309,10 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 
 #define MAX_REPORTED_MIPSRATE  (250000000) /* instructions / second  */
 #define MAX_REPORTED_SIOSRATE  (10000)     /* SIOs per second        */
+
+/* Instruction count for a CPU */
+#define INSTCOUNT(_regs) \
+ ((_regs)->hostregs->prevcount + (_regs)->hostregs->instcount)
 
 /*-------------------------------------------------------------------*/
 /* Obtain/Release mainlock.                                          */
