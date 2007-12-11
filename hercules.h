@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.300  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.299  2006/12/08 09:43:25  jj
 // Add CVS message log
 //
@@ -106,9 +109,9 @@
 #include "version.h"
 
 #include "esa390.h"       // (ESA/390 structure definitions)
-#include "clock.h"        // (TOD definitions)
 #include "hscutl.h"       // (utility functions)
 #include "w32util.h"      // (win32 porting functions)
+#include "clock.h"        // (TOD definitions)
 
 #include "codepage.h"
 #include "logger.h"       // (logmsg, etc)
