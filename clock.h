@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.27  2007/12/10 23:12:02  gsmith
+// Tweaks to OPTION_MIPS_COUNTING processing
+//
 // Revision 1.26  2007/11/21 22:55:49  fish
 // (untab)
 //
@@ -120,13 +123,13 @@ _CLOCK_EXTERN U64 hw_tod;               /* Hardware clock            */
 #if defined(FEATURE_INTERVAL_TIMER)
  #define ITIMER_UPDATE(_addr, _len, _regs)       \
     do {                                         \
-    if( ITIMER_ACCESS((_addr), (_len)) )     \
+        if( ITIMER_ACCESS((_addr), (_len)) )     \
             ARCH_DEP(fetch_int_timer) ((_regs)); \
     } while(0) 
  #define ITIMER_SYNC(_addr, _len, _regs)         \
     do {                                         \
         if( ITIMER_ACCESS((_addr), (_len)) )     \
-        ARCH_DEP(store_int_timer) ((_regs)); \
+            ARCH_DEP(store_int_timer) ((_regs)); \
     } while (0)
 #else
  #define ITIMER_UPDATE(_addr, _len, _regs)
