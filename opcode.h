@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.209  2007/11/15 22:54:43  rbowler
+// Correct PIC6 when loading DRM bits into FPC
+//
 // Revision 1.208  2007/06/23 00:04:14  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -134,7 +137,7 @@
         (void*)& _mnemonic "\0" #_name \
     }
 
-#define GENx___x390x_(_name,_format,_mnemonic) \
+#define GENx___x390x___(_name,_format,_mnemonic) \
     { \
     _GEN370(operation_exception) \
     _GEN390(_name) \
