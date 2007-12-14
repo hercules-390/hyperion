@@ -77,6 +77,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.128  2007/11/29 03:36:40  fish
+// Re-sequence CCW opcode 'case' statements to be in ascending order.
+// COSMETIC CHANGE ONLY. NO ACTUAL LOGIC WAS CHANGED.
+//
 // Revision 1.127  2007/11/13 15:10:52  rbowler
 // fsb_awstape support for segmented blocks
 //
@@ -307,7 +311,7 @@ static BYTE TapeCommands3410[256]=
     0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,  /* B0 */
     0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,  /* C0 */
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* D0 */
-    0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,  /* E0 */
+    0,0,0,0,2,0,0,0,0,0,0,3,0,0,0,0,  /* E0 */
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; /* F0 */
 
 static BYTE TapeCommands3420[256]=
@@ -326,7 +330,7 @@ static BYTE TapeCommands3420[256]=
     0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,  /* B0 */
     0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,  /* C0 */
     0,0,0,4,4,0,0,0,0,0,0,0,0,0,0,0,  /* D0 */
-    0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,  /* E0 */
+    0,0,0,0,2,0,0,0,0,0,0,3,0,0,0,0,  /* E0 */
     0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0}; /* F0 */
 
 static BYTE TapeCommands3422[256]=
@@ -421,7 +425,7 @@ static BYTE TapeCommands9347[256]=
     0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,  /* B0 */
     0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,  /* C0 */
     0,0,0,4,4,0,0,0,0,0,0,0,0,0,0,0,  /* D0 */
-    0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,  /* E0 */
+    0,0,0,0,2,0,0,0,0,0,0,3,0,0,0,0,  /* E0 */
     0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0}; /* F0 */
 
 static TAPEMEDIA_HANDLER tmh_aws;
@@ -4884,7 +4888,7 @@ int             rc;
         devclass = 0x80;
         devtcode = 0x20;
         sctlfeat = 0x00000000;
-        dev->numdevid = 0; /* Actually, doesn't support 0xE4 */
+        dev->numdevid = 7;
         dev->numsense = 24;
         break;
     case 0x9347:
@@ -4926,7 +4930,7 @@ int             rc;
         devclass = 0x80;
         devtcode = 0x20;
         sctlfeat = 0x00000000;
-        dev->numdevid=0;
+        dev->numdevid = 7;
         dev->numsense = 9;
         break;
     case 0x3422:

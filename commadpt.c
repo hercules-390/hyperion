@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.40  2007/11/21 22:54:14  fish
+// Use new BEGIN_DEVICE_CLASS_QUERY macro
+//
 // Revision 1.39  2006/12/08 09:43:18  jj
 // Add CVS message log
 //
@@ -1610,6 +1613,16 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         dev->fd=100;    /* Ensures 'close' function called */
         dev->commadpt->devnum=dev->devnum;
 
+        /* Initialize the device identifier bytes */
+        dev->numdevid = 7;
+        dev->devid[0] = 0xFF;
+        dev->devid[1] = dev->devtype >> 8;
+        dev->devid[2] = dev->devtype & 0xFF;
+        dev->devid[3] = 0x00;
+        dev->devid[4] = dev->devtype >> 8;
+        dev->devid[5] = dev->devtype & 0xFF;
+        dev->devid[6] = 0x00;
+
         /* Initialize the CA lock */
         initialize_lock(&dev->commadpt->lock);
 
@@ -1779,6 +1792,22 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                 memcpy(iobuf,dev->sense,num);
                 *residual=count-num;
                 *unitstat=CSW_CE|CSW_DE;
+                break;
+
+        /*---------------------------------------------------------------*/
+        /* SENSE ID                                                      */
+        /*---------------------------------------------------------------*/
+        case 0xE4:
+                /* Calculate residual byte count */
+                num = (count < dev->numdevid) ? count : dev->numdevid;
+                *residual = count - num;
+                *more = count < dev->numdevid ? 1 : 0;
+
+                /* Copy device identifier bytes to channel I/O Buffer */
+                memcpy (iobuf, dev->devid, num);
+
+                /* Return unit status */
+                *unitstat = CSW_CE | CSW_DE;
                 break;
 
         /*---------------------------------------------------------------*/
