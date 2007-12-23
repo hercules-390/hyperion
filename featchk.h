@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.47  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.46  2007/03/08 01:27:02  gsmith
 // Remove inline attr from vfetchx/vstorex _full functions
 //
@@ -246,6 +249,19 @@
 
 #if defined(_900) && defined(FEATURE_VECTOR_FACILITY)
  #error Vector Facility not supported on ESAME capable processors
+#endif
+
+#if !defined(FEATURE_S370_CHANNEL) && !defined(FEATURE_CHANNEL_SUBSYSTEM)
+ #error Either S/370 Channel or Channel Subsystem must be defined
+#endif
+
+#if defined(FEATURE_S370_CHANNEL) && defined(FEATURE_CHANNEL_SUBSYSTEM)
+ #error S/370 Channel and Channel Subsystem cannot both be defined
+#endif
+
+#if defined(FEATURE_CANCEL_IO_FACILITY) \
+ && !defined(FEATURE_CHANNEL_SUBSYSTEM)
+ #error Cancel I/O facility requires Channel Subsystem
 #endif
 
 #if defined(FEATURE_MOVE_PAGE_FACILITY_2) \

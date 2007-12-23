@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.132  2007/12/02 16:34:23  rbowler
+// Permit Extended-Translation-Facility-2 to be activated in S/370 mode
+//
 // Revision 1.131  2007/12/02 15:59:12  rbowler
 // Enable B9xx,EBxx opcodes in S/370 mode for ETF2
 //
@@ -101,6 +104,7 @@
  UNDEF_INST(clear_subchannel)
  UNDEF_INST(halt_subchannel)
  UNDEF_INST(modify_subchannel)
+ UNDEF_INST(reset_channel_path)
  UNDEF_INST(resume_subchannel)
  UNDEF_INST(set_address_limit)
  UNDEF_INST(set_channel_monitor)
