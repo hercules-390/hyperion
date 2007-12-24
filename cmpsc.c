@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.51  2007/06/23 00:04:04  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.50  2007/02/10 09:14:32  bernard
 // Decompression performance patch
 //
@@ -396,16 +399,16 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   while(xlated++ < PROCESS_MAX)
   {
 
+    /* Get the next character, return on end of source */
+    if(unlikely(ARCH_DEP(fetch_ch)(r2, regs, iregs, &next_ch, 0)))
+      return;
+
     /* Can we write an index or interchange symbol */
     if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r1 + 1, iregs)))
     {
       regs->psw.cc = 1;
       return;
     }
-
-    /* Get the next character, return on end of source */
-    if(unlikely(ARCH_DEP(fetch_ch)(r2, regs, iregs, &next_ch, 0)))
-      return;
 
     /* Get the alphabet entry */
     FETCH_CCE(r2, regs, cce, next_ch);
