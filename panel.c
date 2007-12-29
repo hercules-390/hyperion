@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.213  2007/12/10 23:12:02  gsmith
+// Tweaks to OPTION_MIPS_COUNTING processing
+//
 // Revision 1.212  2007/09/05 00:24:18  gsmith
 // Use integer arithmetic calculating cpupct
 //
@@ -1211,6 +1214,13 @@ REGS *copy_regs(int cpu)
     }
 
     memcpy (&copyregs, regs, sysblk.regs_copy_len);
+
+    if (copyregs.hostregs == NULL)
+    {
+        release_lock(&sysblk.cpulock[cpu]);
+        return &sysblk.dummyregs;
+    }
+
 #if defined(_FEATURE_SIE)
     if (regs->sie_active)
     {
