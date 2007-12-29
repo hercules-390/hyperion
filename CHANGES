@@ -1,3 +1,4 @@
+29 Dec 2007 Tweak OPTION_MIPS_COUNTING tweak to prevent crash - Fish
 24 Dec 2007 Compression check output, input swapped to input, output - Bernard van der Helm
 11 Dec 2007 Enable SENSE ID CCW for 2703,3410,3420
 10 Dec 2007 Tweaks to OPTION_MIPS_COUNTING processing - Greg
