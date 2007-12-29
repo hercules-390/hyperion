@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.77  2007/06/23 00:04:03  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.76  2007/06/06 22:14:57  gsmith
 // Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
 //
@@ -2450,6 +2453,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     sysblk.dummyregs.dummy = 1;
     initial_cpu_reset (&sysblk.dummyregs);
     sysblk.dummyregs.arch_mode = sysblk.arch_mode;
+    sysblk.dummyregs.hostregs = &sysblk.dummyregs;
 
 #ifdef OPTION_SELECT_KLUDGE
     /* Release the dummy file descriptors */
