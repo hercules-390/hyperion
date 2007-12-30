@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.115  2007/11/30 15:14:14  rbowler
+// Permit String-Instruction facility to be activated in S/370 mode
+//
 // Revision 1.114  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -2080,7 +2083,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* 110fghij 10klmnop -> 00000000 00000000 00000fgh ijklmnop */
       utf32[1] = 0x00;
       utf32[2] = (utf8[0] & 0x1c) >> 2;
-      utf32[3] = (utf8[0] << 6) & (utf8[1] & 0x3f);
+      utf32[3] = (utf8[0] << 6) | (utf8[1] & 0x3f);
       read = 2;
     }
     else if(utf8[0] >= 0xe0 && utf8[0] <= 0xef)
@@ -2129,8 +2132,8 @@ DEF_INST(convert_utf8_to_utf32)
       /* xlate range e00000-efffff */
       /* 1110abcd 10efghij 10klmnop -> 00000000 00000000 abcdefgh ijklmnop */
       utf32[1] = 0x00;
-      utf32[2] = (utf8[0] << 4) & ((utf8[1] & 0x3c) >> 2);
-      utf32[3] = (utf8[1] << 6) & (utf8[2] & 0x3f);
+      utf32[2] = (utf8[0] << 4) | ((utf8[1] & 0x3c) >> 2);
+      utf32[3] = (utf8[1] << 6) | (utf8[2] & 0x3f);
       read = 3;
     }
     else if(utf8[0] >= 0xf0 && utf8[0] <= 0xf7)
@@ -2190,9 +2193,9 @@ DEF_INST(convert_utf8_to_utf32)
 
       /* xlate range f0000000-f7000000 */
       /* 1110uvw 10xyefgh 10ijklmn 10opqrst -> 00000000 000uvwxy efghijkl mnopqrst */
-      utf32[1] = ((utf8[0] & 0x07) << 2) & ((utf8[1] & 0x30) >> 4);
-      utf32[2] = (utf8[1] << 4) & ((utf8[2] & 0x3c) >> 2);
-      utf32[3] = (utf8[2] << 6) & (utf8[3] & 0x3f);
+      utf32[1] = ((utf8[0] & 0x07) << 2) | ((utf8[1] & 0x30) >> 4);
+      utf32[2] = (utf8[1] << 4) | ((utf8[2] & 0x3c) >> 2);
+      utf32[3] = (utf8[2] << 6) | (utf8[3] & 0x3f);
       read = 4;
     }
     else
@@ -2541,7 +2544,7 @@ DEF_INST(convert_utf32_to_utf16)
       zabcd = (utf32[1] - 1) & 0x0f;
       utf16[0] = 0xd8 | (zabcd >> 2);
       utf16[1] = (zabcd << 6) | (utf32[2] >> 2);
-      utf16[2] = 0xd9 | (utf32[2] & 0x03);
+      utf16[2] = 0xdc | (utf32[2] & 0x03);
       utf16[3] = utf32[3];
       write = 4;
     }
