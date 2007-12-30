@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.116  2007/12/30 09:09:51  bernard
+// Some errors in UTF translation
+//
 // Revision 1.115  2007/11/30 15:14:14  rbowler
 // Permit String-Instruction facility to be activated in S/370 mode
 //
@@ -2447,7 +2450,7 @@ DEF_INST(convert_utf32_to_utf8)
       /* 00000000 000uvwxy efghijkl mnopqrst -> 11110uvw 10xyefgh 10ijklmn 10opqrst */
       utf8[0] = 0xf0 | (utf32[1] >> 2);
       utf8[1] = 0x80 | ((utf32[1] & 0x03) << 4) | (utf32[2] >> 4);
-      utf8[2] = 0x80 | ((utf32[2] & 0x0f) < 2) | (utf32[3] >> 6);
+      utf8[2] = 0x80 | ((utf32[2] & 0x0f) << 2) | (utf32[3] >> 6);
       utf8[3] = 0x80 | (utf32[3] & 0x3f);
       write = 4;
     }
