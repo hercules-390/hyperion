@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.54  2007/12/31 17:45:15  bernard
+// Data exception on fetching cce, ece and sd
+//
 // Revision 1.53  2007/12/31 13:14:43  bernard
 // Added data exeption during expansion when psl and cls are zero
 //
@@ -1156,6 +1159,10 @@ DEF_INST(compression_call)
   /* In z/Archtecture we need the 64bit flag */
   iregs.psw.amode64 = regs->psw.amode64;
 #endif /* (__GEN_ARCH == 900) */
+
+  /* Set possible Data Exception code right away */
+  regs->dxc = DXC_DECIMAL;     
+  iregs.dxc = DXC_DECIMAL;
 
   /* Initialize intermediate registers using COMMITREGS the other way round */
   COMMITREGS(&iregs, regs, r1, r2);
