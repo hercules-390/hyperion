@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.52  2007/12/24 14:06:00  bernard
+// compress check output, input swapped to input (cc0), output (cc1)
+//
 // Revision 1.51  2007/06/23 00:04:04  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -301,7 +304,11 @@ static void ARCH_DEP(print_ece)(int r2, REGS *regs, BYTE *ece, int index);
 #define FETCH_ECE            _FETCH_ECE
 #endif
 #define _FETCH_ECE(r2, regs, ece, index) \
-  ARCH_DEP(vfetchc)((ece), 7, (GR1_dictor((regs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs))
+{ \
+  ARCH_DEP(vfetchc)((ece), 7, (GR1_dictor((regs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs)); \
+  if(!ECE_psl(ece) && !ECE_csl(ece)) \
+    ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION); \
+}
 
 /*----------------------------------------------------------------------------*/
 /* Fetch sibling descriptor. The main idea is that in normal compilation we   */
