@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.56  2008/01/01 12:10:18  bernard
+// Added bit34 ece data exception check
+//
 // Revision 1.55  2007/12/31 23:48:21  fish
 // To prevent PC loop, ensure proper Data Exception code is always used:
 //   regs->dxc = DXC_DECIMAL;
@@ -707,14 +710,17 @@ static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index)
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
     }
   }
-  if(unlikely(ECE_psl(ece) > 5))
+  else
   {
+    if(unlikely(ECE_psl(ece) > 5))
+    {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-    logmsg("  psl > 5 -> data exception\n");
+      logmsg("  psl > 5 -> data exception\n");
 #endif
 
-    ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+      ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+    }
   }
 }
 
