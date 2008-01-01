@@ -15,6 +15,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.55  2007/12/31 23:48:21  fish
+// To prevent PC loop, ensure proper Data Exception code is always used:
+//   regs->dxc = DXC_DECIMAL;
+//   iregs.dxc = DXC_DECIMAL;
+//
 // Revision 1.54  2007/12/31 17:45:15  bernard
 // Data exception on fetching cce, ece and sd
 //
@@ -91,11 +96,13 @@
 /*----------------------------------------------------------------------------*/
 /* Expansion Character Entry macro's (ECE)                                    */
 /*----------------------------------------------------------------------------*/
+/* bit34 : Value of bits 3 and 4 (what else ;-)                               */
 /* csl   : complete symbol length                                             */
 /* ofst  : offset from current position in output area                        */
 /* pptr  : predecessor pointer                                                */
 /* psl   : partial symbol length                                              */
 /*----------------------------------------------------------------------------*/
+#define ECE_bit34(ece)       (SBITS((ece), 3, 4))
 #define ECE_csl(ece)         (SBITS((ece), 5, 7))
 #define ECE_ofst(ece)        ((ece)[7])
 #define ECE_pptr(ece)        ((SBITS((ece), 3, 7) << 8) | ((ece)[1]))
@@ -678,6 +685,16 @@ static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index)
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
   /* Check for data exceptions */
+  if(ECE_bit34(ece))
+  {
+
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
+      logmsg("  bits 3 and 4 nonzero -> data exception\n");
+#endif
+
+    ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+  }
+
   if(!ECE_psl(ece))
   {
     if(unlikely(!ECE_csl(ece)))
@@ -690,17 +707,14 @@ static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index)
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
     }
   }
-  else
+  if(unlikely(ECE_psl(ece) > 5))
   {
-    if(unlikely(ECE_psl(ece) > 5))
-    {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-      logmsg("  psl > 0 and psl > 5 -> data exception\n");
+    logmsg("  psl > 5 -> data exception\n");
 #endif
 
-      ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-    }
+    ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
   }
 }
 
