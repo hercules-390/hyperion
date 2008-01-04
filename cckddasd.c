@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.142  2008/01/04 02:28:51  gsmith
+// sf commands update
+//
 // Revision 1.141  2007/06/23 00:04:03  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -3990,7 +3993,7 @@ BYTE            buf[65536];             /* Buffer                    */
              || (cckd->l1[from_sfx][i] == 0 && cckd->l1[to_sfx][i] == 0))
                 continue;
 
-            trk = i*256 + j;
+            trk = i*256;
 
             /* Read `from' l2 table */
             if (cckd->l1[from_sfx][i] == 0)
@@ -4017,6 +4020,7 @@ BYTE            buf[65536];             /* Buffer                    */
             /* Loop for each level 2 table entry */
             for (j = 0; j < 256; j++)
             {
+                trk = i*256 + j;
                 /* Continue if from L2 entry doesn't exist */
                 if (from_l2[j].pos == 0xffffffff
                  || (from_l2[j].pos == 0 && to_l2[j].pos == 0))
