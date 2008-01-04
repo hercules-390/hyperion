@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.141  2007/06/23 00:04:03  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.140  2006/12/08 09:43:17  jj
 // Add CVS message log
 //
@@ -38,7 +41,7 @@ int     cckd_write (DEVBLK *dev, int sfx, off_t off, void *buf, size_t len);
 int     cckd_ftruncate(DEVBLK *dev, int sfx, off_t off);
 void   *cckd_malloc(DEVBLK *dev, char *id, size_t size);
 void   *cckd_calloc(DEVBLK *dev, char *id, size_t n, size_t size);
-void    cckd_free(DEVBLK *dev, char *id,void *p);
+void   *cckd_free(DEVBLK *dev, char *id,void *p);
 
 int     cckd_read_track(DEVBLK *dev, int trk, BYTE *unitstat);
 int     cckd_update_track(DEVBLK *dev, int trk, int off,
@@ -86,14 +89,14 @@ int     cckd_null_trk(DEVBLK *dev, BYTE *buf, int trk, int nullfmt);
 int     cckd_check_null_trk (DEVBLK *dev, BYTE *buf, int trk, int len);
 int     cckd_cchh(DEVBLK *dev, BYTE *buf, int trk);
 int     cckd_validate(DEVBLK *dev, BYTE *buf, int trk, int len);
-DLL_EXPORT char   *cckd_sf_name(DEVBLK *dev, int sfx);
-DLL_EXPORT int     cckd_sf_init(DEVBLK *dev);
-DLL_EXPORT int     cckd_sf_new(DEVBLK *dev);
-DLL_EXPORT void    cckd_sf_add(DEVBLK *dev);
-DLL_EXPORT void    cckd_sf_remove(DEVBLK *dev, int flag);
-DLL_EXPORT void    cckd_sf_newname(DEVBLK *dev, char *sfn);
-DLL_EXPORT void    cckd_sf_comp(DEVBLK *dev);
-DLL_EXPORT void    cckd_sf_stats(DEVBLK *dev);
+char   *cckd_sf_name(DEVBLK *dev, int sfx);
+int     cckd_sf_init(DEVBLK *dev);
+int     cckd_sf_new(DEVBLK *dev);
+DLL_EXPORT void   *cckd_sf_add(void *data);
+DLL_EXPORT void   *cckd_sf_remove(void *data);
+DLL_EXPORT void   *cckd_sf_comp(void *data);
+DLL_EXPORT void   *cckd_sf_chk(void *data);
+DLL_EXPORT void   *cckd_sf_stats(void *data);
 int     cckd_disable_syncio(DEVBLK *dev);
 void    cckd_lock_devchain(int flag);
 void    cckd_unlock_devchain();
@@ -412,7 +415,7 @@ int             i;                      /* Index                     */
 
     /* free the level 1 tables */
     for (i = 0; i <= cckd->sfn; i++)
-        cckd_free (dev, "l1", cckd->l1[i]);
+        cckd->l1[i] = cckd_free (dev, "l1", cckd->l1[i]);
 
     /* reset the device handler */
     if (cckd->ckddasd)
@@ -426,8 +429,7 @@ int             i;                      /* Index                     */
     release_lock (&cckd->filelock);
 
     /* free the cckd extension */
-    dev->cckd_ext= NULL;
-    cckd_free (dev, "ext", cckd);
+    dev->cckd_ext= cckd_free (dev, "ext", cckd);
 
     if (dev->dasdsfn) free (dev->dasdsfn);
     dev->dasdsfn = NULL;
@@ -778,10 +780,11 @@ void           *p;                      /* Pointer                   */
 /*-------------------------------------------------------------------*/
 /* free                                                              */
 /*-------------------------------------------------------------------*/
-void cckd_free (DEVBLK *dev, char *id, void *p)
+void *cckd_free (DEVBLK *dev, char *id, void *p)
 {
     cckd_trace (dev, "%s free %p\n", id, p);
-    free (p);
+    if (p) free (p);
+    return NULL;
 } /* end function cckd_free */
 
 /*-------------------------------------------------------------------*/
@@ -2377,13 +2380,13 @@ int             i;                      /* Work integer              */
                 sfx, (U64)CCKD_L1TAB_POS);
 
     /* Free the old level 1 table if it exists */
-    if (cckd->l1[sfx] != NULL)
-        cckd_free (dev, "l1", cckd->l1[sfx]);
+    cckd->l1[sfx] = cckd_free (dev, "l1", cckd->l1[sfx]);
 
     /* Allocate the level 1 table */
     len = cckd->cdevhdr[sfx].numl1tab * CCKD_L1ENT_SIZE;
     if ((cckd->l1[sfx] = cckd_malloc (dev, "l1", len)) == NULL)
         return -1;
+    memset(cckd->l1[sfx], sfx ? 0xFF : 0, len);
 
     /* Read the level 1 table */
     if (cckd_read (dev, sfx, CCKD_L1TAB_POS, cckd->l1[sfx], len) < 0)
@@ -2515,7 +2518,7 @@ CCKD_FREEBLK    freeblk;                /* First freeblk read        */
     cckd_trace (dev, "file[%d] read_fsp number %d\n",
                 sfx, cckd->cdevhdr[sfx].free_number);
 
-    if (cckd->free) cckd_free (dev, "free", cckd->free);
+    cckd->free = cckd_free (dev, "free", cckd->free);
     cckd->free1st = cckd->freelast = cckd->freeavail = -1;
 
     /* Get storage for the internal free space chain
@@ -2560,7 +2563,7 @@ CCKD_FREEBLK    freeblk;                /* First freeblk read        */
             }
             cckd->free[i-1].next = -1;
             cckd->freelast = i-1;
-            free (fsp);
+            fsp = cckd_free (dev, "fsp", fsp);
 
             /* truncate if new format free space was at the end */
             if (ofree == cckd->cdevhdr[sfx].size)
@@ -2669,7 +2672,7 @@ CCKD_FREEBLK   *fsp = NULL;             /* -> new format free space  */
                 ppos = cckd->free[i].pos;
             }
             rc = cckd_write (dev, sfx, fpos, fsp, n);
-            cckd_free (dev, "fsp", fsp);
+            fsp = cckd_free (dev, "fsp", fsp);
             if (rc < 0)
                 return -1;
             cckd->cdevhdr[sfx].free = (U32)fpos;
@@ -2687,8 +2690,7 @@ CCKD_FREEBLK   *fsp = NULL;             /* -> new format free space  */
     } /* if (cckd->cdevhdr[sfx].free) */
 
     /* Free the free space array */
-    if (cckd->free) cckd_free (dev, "free", cckd->free);
-    cckd->free = NULL;
+    cckd->free = cckd_free (dev, "free", cckd->free);
     cckd->freenbr = 0;
     cckd->free1st = cckd->freelast = cckd->freeavail = -1;
 
@@ -3715,11 +3717,7 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
     return 0;
 
 sf_new_error:
-    if (cckd->l1[cckd->sfn+1] != NULL)
-    {
-        cckd_free (dev, "l1", cckd->l1[cckd->sfn+1]);
-        cckd->l1[cckd->sfn+1] = NULL;
-    }
+    cckd->l1[cckd->sfn+1] = cckd_free(dev, "l1", cckd->l1[cckd->sfn+1]);
     cckd_close (dev, cckd->sfn+1);
     cckd->open[cckd->sfn+1] = CCKD_OPEN_NONE;
     unlink (cckd_sf_name (dev, cckd->sfn+1));
@@ -3734,16 +3732,32 @@ sf_new_error:
 /*-------------------------------------------------------------------*/
 /* Add a shadow file  (sf+)                                          */
 /*-------------------------------------------------------------------*/
-void cckd_sf_add (DEVBLK *dev)
+void *cckd_sf_add (void *data)
 {
+DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             syncio;                 /* Saved syncio bit          */
+
+    if (dev == NULL)
+    {
+    int n = 0;
+        for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
+            if (dev->cckd_ext)
+            {
+                logmsg( _("HHCCD207I Adding device %d:%4.4X\n"),
+                          SSID_TO_LCSS(dev->ssid), dev->devnum );
+                cckd_sf_add (dev);
+                n++;
+            }
+        logmsg( _("HHCCD092I %d devices processed\n"), n );
+        return NULL;
+    }
 
     cckd = dev->cckd_ext;
     if (!cckd)
     {
         logmsg (_("HHCCD160E %4.4X not a cckd device\n"), dev->devnum);
-        return;
+        return NULL;
     }
 
     /* Disable synchronous I/O for the device */
@@ -3751,6 +3765,15 @@ int             syncio;                 /* Saved syncio bit          */
 
     /* Schedule updated track entries to be written */
     obtain_lock (&cckd->iolock);
+    if (cckd->merging)
+    {
+        dev->syncio = syncio;
+        release_lock (&cckd->iolock);
+        logmsg (_("HHCCD165W %4.4X error adding shadow file, "
+                  "sf command busy on device\n"),
+                dev->devnum,cckd->sfn);
+        return NULL;
+    }
     cckd->merging = 1;
     cckd_flush_cache (dev);
     while (cckd->wrpending || cckd->ioactive)
@@ -3799,49 +3822,65 @@ cckd_sf_add_exit:
     release_lock (&cckd->iolock);
 
     cckd_sf_stats (dev);
-
+    return NULL;
 } /* end function cckd_sf_add */
 
 /*-------------------------------------------------------------------*/
 /* Remove a shadow file  (sf-)                                       */
 /*-------------------------------------------------------------------*/
-void cckd_sf_remove (DEVBLK *dev, int flag)
+void *cckd_sf_remove (void *data)
 {
+DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             syncio;                 /* Saved syncio bit          */
 int             rc;                     /* Return code               */
 int             from_sfx, to_sfx;       /* From/to file index        */
 int             fix;                    /* nullfmt index             */
 int             add = 0;                /* 1=Add shadow file back    */
-int             err = 0;                /* 1=I/O error occurred      */
-int             l2updated;              /* 1=L2 table was updated    */
+int             l2updated = 0;          /* 1=L2 table was updated    */
 int             i,j;                    /* Loop indexes              */
 int             merge, force;           /* Flags                     */
 off_t           pos;                    /* File offset               */
 size_t          len;                    /* Length to read/write      */
 int             size;                   /* Image size                */
+int             trk = -1;               /* Track being read/written  */
 CCKD_L2ENT      from_l2[256],           /* Level 2 tables            */
                 to_l2[256];
 CCKD_L2ENT      new_l2;                 /* New level 2 table entry   */
 BYTE            buf[65536];             /* Buffer                    */
 
+    if (dev == NULL)
+    {
+    int n = 0;
+        merge = cckdblk.sfmerge;
+        force = cckdblk.sfforce;
+        cckdblk.sfmerge = cckdblk.sfforce = 0;
+        for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
+            if ((cckd = dev->cckd_ext))
+            {
+                logmsg( _("HHCCD179I Merging device %d:%4.4X\n"),
+                          SSID_TO_LCSS(dev->ssid), dev->devnum );
+                cckd->sfmerge = merge;
+                cckd->sfforce = force;
+                cckd_sf_remove (dev);
+                n++;
+            }
+        logmsg( _("HHCCD092I %d devices processed\n"), n );
+        return NULL;
+    }
+
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg (_("HHCCD170E %4.4X not a cckd device\n"),dev->devnum);
-        return;
-    }
-
-    if (cckd->sfn == 0)
-    {
-        logmsg (_("HHCCD171E %4.4X file[%d] cannot remove base file\n"),
-                dev->devnum,cckd->sfn);
-        return;
+        logmsg (_("HHCCD170E %4.4X not a cckd device\n"),
+                dev ? dev->devnum : 0);
+        return NULL;
     }
 
     /* Set flags */
-    merge = flag > 0;
-    force = flag == 2;
+    merge = cckd->sfmerge || cckd->sfforce;
+    force = cckd->sfforce;
+    cckd->sfmerge = cckd->sfforce = 0;
 
     cckd_trace (dev, "merge starting: %s %s\n",
                 merge ? "merge" : "nomerge", force ? "force" : "");
@@ -3851,6 +3890,15 @@ BYTE            buf[65536];             /* Buffer                    */
 
     /* Schedule updated track entries to be written */
     obtain_lock (&cckd->iolock);
+    if (cckd->merging)
+    {
+        dev->syncio = syncio;
+        release_lock (&cckd->iolock);
+        logmsg (_("HHCCD175W %4.4X file[%d] merge failed, "
+                  "sf command busy on device\n"),
+                dev->devnum,cckd->sfn);
+        return NULL;
+    }
     cckd->merging = 1;
     cckd_flush_cache (dev);
     while (cckd->wrpending || cckd->ioactive)
@@ -3865,9 +3913,28 @@ BYTE            buf[65536];             /* Buffer                    */
     release_lock (&cckd->iolock);
 
     obtain_lock (&cckd->filelock);
+
+    if (cckd->sfn == 0)
+    {
+        dev->syncio = syncio;
+        release_lock (&cckd->filelock);
+        logmsg (_("HHCCD171E %4.4X file[%d] cannot remove base file\n"),
+                dev->devnum,cckd->sfn);
+        return NULL;
+    }
+
     from_sfx = cckd->sfn;
     to_sfx = cckd->sfn - 1;
     fix = cckd->cdevhdr[to_sfx].nullfmt;
+
+    /* Harden the `from' file */
+    if (cckd_harden (dev) < 0)
+    {
+        logmsg (_("HHCCD174E %4.4X file[%d] not merged, "
+                "file[%d] not hardened\n"),
+                dev->devnum, from_sfx, from_sfx);
+        goto sf_remove_exit;
+    }
 
     /* Attempt to re-open the `to' file read-write */
     cckd_close (dev, to_sfx);
@@ -3875,6 +3942,7 @@ BYTE            buf[65536];             /* Buffer                    */
         cckd_open (dev, to_sfx, O_RDWR|O_BINARY, 1);
     if (cckd->fd[to_sfx] < 0)
     {
+        /* `from' file can't be opened read-write */
         cckd_open (dev, to_sfx, O_RDONLY|O_BINARY, 0);
         if (merge)
         {
@@ -3890,8 +3958,11 @@ BYTE            buf[65536];             /* Buffer                    */
     }
     else
     {
+        /* `from' file opened read-write */
+        cckd->sfn = to_sfx;
         if (cckd_chkdsk (dev, 0) < 0)
         {
+            cckd->sfn = from_sfx;
             logmsg (_("HHCCD173E %4.4X file[%d] not merged, "
                     "file[%d] check failed\n"),
                     dev->devnum, to_sfx, to_sfx);
@@ -3899,45 +3970,36 @@ BYTE            buf[65536];             /* Buffer                    */
         }
     }
 
+    cckd->sfn = to_sfx;
+
     /* Perform backwards merge */
     if (merge)
     {
-        /* Harden the current file */
-        if (cckd_harden (dev) < 0)
-        {
-            logmsg (_("HHCCD174E %4.4X file[%d] not merged, "
-                    "file not hardened\n"),
-                    dev->devnum, from_sfx);
-            goto sf_remove_exit;
-        }
-
         cckd_trace (dev, "merging to file[%d]\n", to_sfx);
-        cckd->cdevhdr[to_sfx].options |= (CCKD_OPENED | CCKD_ORDWR);
 
         /* Make the target file the active file */
         cckd->sfn = to_sfx;
+        cckd->cdevhdr[to_sfx].options |= (CCKD_OPENED | CCKD_ORDWR);
 
         /* Loop for each level 1 table entry */
         for (i = 0; i < cckd->cdevhdr[from_sfx].numl1tab; i++)
         {
+            l2updated = 0;
             /* Continue if from L2 doesn't exist */
             if (cckd->l1[from_sfx][i] == 0xffffffff
              || (cckd->l1[from_sfx][i] == 0 && cckd->l1[to_sfx][i] == 0))
                 continue;
 
+            trk = i*256 + j;
+
             /* Read `from' l2 table */
             if (cckd->l1[from_sfx][i] == 0)
                 memset (&from_l2, 0, CCKD_L2TAB_SIZE);
-            else if (cckd->l1[from_sfx][i] == 0xffffffff)
-                memset (&from_l2, 0xff, CCKD_L2TAB_SIZE);
             else
             {
                 pos = (off_t)cckd->l1[from_sfx][i];
                 if (cckd_read(dev, from_sfx, pos, &from_l2, CCKD_L2TAB_SIZE) < 0)
-                {
-                    err = 1;
-                    continue;
-                }
+                    goto sf_merge_error;
             }
 
             /* Read `to' l2 table */
@@ -3949,14 +4011,10 @@ BYTE            buf[65536];             /* Buffer                    */
             {
                 pos = (off_t)cckd->l1[to_sfx][i];
                 if (cckd_read(dev, to_sfx, pos, &to_l2, CCKD_L2TAB_SIZE) < 0)
-                {
-                    err = 1;
-                    continue;
-                }
+                    goto sf_merge_error;
             }
 
             /* Loop for each level 2 table entry */
-            l2updated = 0;
             for (j = 0; j < 256; j++)
             {
                 /* Continue if from L2 entry doesn't exist */
@@ -3970,18 +4028,12 @@ BYTE            buf[65536];             /* Buffer                    */
                 {
                     pos = (off_t)from_l2[j].pos;
                     if (cckd_read (dev, from_sfx, pos, buf, len) < 0)
-                    {
-                        err = 1;
-                        continue;
-                    }
+                        goto sf_merge_error;
 
                     /* Get space for the `to' track/blkgrp image */
                     size = len;
                     if ((pos = cckd_get_space (dev, &size, CCKD_SIZE_EXACT)) < 0)
-                    {
-                        err = 1;
-                        continue;
-                    }
+                        goto sf_merge_error;
 
                     new_l2.pos = (U32)pos;
                     new_l2.len = (U16)len;
@@ -3989,10 +4041,7 @@ BYTE            buf[65536];             /* Buffer                    */
 
                     /* Write the `to' track/blkgrp image */
                     if (cckd_write(dev, to_sfx, pos, buf, len) < 0)
-                    {
-                        err = 1;
-                        continue;
-                    }
+                        goto sf_merge_error;
                 }
                 else
                 {
@@ -4009,12 +4058,12 @@ BYTE            buf[65536];             /* Buffer                    */
                 to_l2[j].pos = new_l2.pos;
                 to_l2[j].len = new_l2.len;
                 to_l2[j].size = new_l2.size;
-
             } /* for each level 2 table entry */
 
             /* Update the `to' level 2 table */
             if (l2updated)
             {
+                l2updated = 0;
                 pos = (off_t)cckd->l1[to_sfx][i];
                 if (memcmp (&to_l2, &empty_l2[fix], CCKD_L2TAB_SIZE) == 0)
                 {
@@ -4025,12 +4074,10 @@ BYTE            buf[65536];             /* Buffer                    */
                 {
                     size = CCKD_L2TAB_SIZE;
                     if (pos == 0 || pos == (off_t)0xffffffff)
-                        pos = cckd_get_space (dev, &size, CCKD_L2SPACE);
+                        if ((pos = cckd_get_space (dev, &size, CCKD_L2SPACE)) < 0)
+                            goto sf_merge_error;
                     if (cckd_write(dev, to_sfx, pos, &to_l2, CCKD_L2TAB_SIZE) < 0)
-                    {
-                        err = 1;
-                        continue;
-                    }
+                        goto sf_merge_error;
                 } /* `to' level 2 table not null */
 
                 /* Update the level 1 table index */
@@ -4045,34 +4092,22 @@ BYTE            buf[65536];             /* Buffer                    */
 
         /* Validate the merge */
         cckd_harden (dev);
-        cckd_chkdsk (dev, err ? 2 : 0);
+        cckd_chkdsk (dev, 0);
         cckd_read_init (dev);
 
     } /* if merge */
-    else
-    {
-        /* Release the free space chain */
-        if (cckd->free) cckd_free (dev, "free", cckd->free);
-        cckd->free = NULL;
-        cckd->freenbr = 0;
-        cckd->free1st = cckd->freelast = cckd->freeavail = -1;
-
-        cckd->sfn = to_sfx;
-    }
 
     /* Remove the old file */
     cckd_close (dev, from_sfx);
-    cckd_free (dev, "l1", cckd->l1[from_sfx]);
-    cckd->l1[from_sfx] = NULL;
+    cckd->l1[from_sfx] = cckd_free (dev, "l1", cckd->l1[from_sfx]);
     memset (&cckd->cdevhdr[from_sfx], 0, CCKDDASD_DEVHDR_SIZE);
     rc = unlink (cckd_sf_name (dev, from_sfx));
 
     /* Add the file back if necessary */
     if (add) rc = cckd_sf_new (dev) ;
 
-    logmsg (_("HHCCD181I %4.4X shadow file [%d] successfully %s%s\n"),
-            dev->devnum, from_sfx, merge ? "merged" : add ? "re-added" : "removed",
-            err ? " with errors" : "");
+    logmsg (_("HHCCD181I %4.4X shadow file [%d] successfully %s\n"),
+            dev->devnum, from_sfx, merge ? "merged" : add ? "re-added" : "removed");
 
 sf_remove_exit:
 
@@ -4082,6 +4117,8 @@ sf_remove_exit:
     release_lock (&cckd->filelock);
 
     obtain_lock (&cckd->iolock);
+    cckd_purge_cache (dev); cckd_purge_l2 (dev);
+    dev->bufcur = dev->cache = -1;
     cckd->merging = 0;
     if (cckd->iowaiters)
         broadcast_condition (&cckd->iocond);
@@ -4090,60 +4127,62 @@ sf_remove_exit:
     release_lock (&cckd->iolock);
 
     cckd_sf_stats (dev);
+    return NULL;
+
+sf_merge_error:
+
+    if (trk < 0)
+        logmsg (_("HHCCD180E %4.4X file[%d] not merged, error during merge\n"),
+                dev->devnum, from_sfx);
+    else
+        logmsg (_("HHCCD180E %4.4X file[%d] not merged, error processing trk %d\n"),
+                dev->devnum, from_sfx, trk);
+
+    if (l2updated && cckd->l1[to_sfx][i] && cckd->l1[to_sfx][i] != 0xffffffff)
+    {
+        l2updated = 0;
+        pos = (off_t)cckd->l1[to_sfx][i];
+        cckd_write(dev, to_sfx, pos, &to_l2, CCKD_L2TAB_SIZE);
+    }
+    cckd_harden(dev);
+    cckd_chkdsk (dev, 2);
+    cckd->sfn = from_sfx;
+    cckd_harden(dev);
+    cckd_chkdsk (dev, 2);
+    goto sf_remove_exit;
+
 } /* end function cckd_sf_remove */
-
-/*-------------------------------------------------------------------*/
-/* Set shadow file name   (sf=)                                      */
-/*-------------------------------------------------------------------*/
-void cckd_sf_newname (DEVBLK *dev, char *sfn)
-{
-CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-
-    cckd = dev->cckd_ext;
-    if (!cckd)
-    {
-        logmsg (_("HHCCD201W %4.4X device is not a shadow file\n"),dev->devnum);
-        return;
-    }
-    if (CCKD_MAX_SF == 0)
-    {
-        logmsg (_("HHCCD202W %4.4X file shadowing not activated\n"), dev->devnum);
-        return;
-    }
-
-    obtain_lock (&cckd->filelock);
-
-    if (cckd->sfn)
-    {
-        logmsg (_("HHCCD203W %4.4X shadowing is already active\n"),dev->devnum);
-        release_lock (&cckd->filelock);
-        return;
-    }
-
-    if (dev->dasdsfn != NULL)
-        free (dev->dasdsfn);
-
-    dev->dasdsfn = strdup (sfn);
-    logmsg (_("HHCCD204I %4.4X shadow file name set to %s\n"), dev->devnum, sfn);
-
-    release_lock (&cckd->filelock);
-
-} /* end function cckd_sf_newname */
 
 /*-------------------------------------------------------------------*/
 /* Check and compress a shadow file  (sfc)                           */
 /*-------------------------------------------------------------------*/
-void cckd_sf_comp (DEVBLK *dev)
+void *cckd_sf_comp (void *data)
 {
+DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             syncio;                 /* Saved syncio bit          */
 int             rc;                     /* Return code               */
 
+    if (dev == NULL)
+    {
+    int n = 0;
+        for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
+            if (dev->cckd_ext)
+            {
+                logmsg( _("HHCCD207I Compressing device %d:%4.4X\n"),
+                          SSID_TO_LCSS(dev->ssid), dev->devnum );
+                cckd_sf_comp (dev);
+                n++;
+            }
+        logmsg( _("HHCCD092I %d devices processed\n"), n );
+        return NULL;
+    }
+
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg (_("HHCCD205W %4.4X device is not a shadow file\n"), dev->devnum);
-        return;
+        logmsg (_("HHCCD205W %4.4X device is not a cckd device\n"), dev->devnum);
+        return NULL;
     }
 
     /* Disable synchronous I/O for the device */
@@ -4151,6 +4190,15 @@ int             rc;                     /* Return code               */
 
     /* schedule updated track entries to be written */
     obtain_lock (&cckd->iolock);
+    if (cckd->merging)
+    {
+        dev->syncio = syncio;
+        release_lock (&cckd->iolock);
+        logmsg (_("HHCCD206W %4.4X file[%d] compress failed, "
+                  "sf command busy on device\n"),
+                dev->devnum,cckd->sfn);
+        return NULL;
+    }
     cckd->merging = 1;
     cckd_flush_cache (dev);
     while (cckd->wrpending || cckd->ioactive)
@@ -4188,14 +4236,108 @@ int             rc;                     /* Return code               */
     /* Display the shadow file statistics */
     cckd_sf_stats (dev);
 
-    return;
+    return NULL;
 } /* end function cckd_sf_comp */
+
+/*-------------------------------------------------------------------*/
+/* Check a shadow file  (sfk)                                        */
+/*-------------------------------------------------------------------*/
+void *cckd_sf_chk (void *data)
+{
+DEVBLK         *dev = data;             /* -> DEVBLK                 */
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+int             syncio;                 /* Saved syncio bit          */
+int             rc;                     /* Return code               */
+int             level = 2;              /* Check level               */
+
+    if (dev == NULL)
+    {
+    int n = 0;
+        level = cckdblk.sflevel;
+        cckdblk.sflevel = 0;
+        for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
+            if ((cckd = dev->cckd_ext))
+            {
+                logmsg( _("HHCCD207I Checking device %d:%4.4X level %d\n"),
+                          SSID_TO_LCSS(dev->ssid), dev->devnum, level );
+                cckd->sflevel = level;
+                cckd_sf_chk (dev);
+                n++;
+            }
+        logmsg( _("HHCCD092I %d devices processed\n"), n );
+        return NULL;
+    }
+
+    cckd = dev->cckd_ext;
+    if (!cckd)
+    {
+        logmsg (_("HHCCD205W %4.4X device is not a cckd device\n"), dev->devnum);
+        return NULL;
+    }
+
+    level = cckd->sflevel;
+    cckd->sflevel = 0;
+
+    /* Disable synchronous I/O for the device */
+    syncio = cckd_disable_syncio(dev);
+
+    /* schedule updated track entries to be written */
+    obtain_lock (&cckd->iolock);
+    if (cckd->merging)
+    {
+        dev->syncio = syncio;
+        release_lock (&cckd->iolock);
+        logmsg (_("HHCCD206W %4.4X file[%d] check failed, "
+                  "sf command busy on device\n"),
+                dev->devnum,cckd->sfn);
+        return NULL;
+    }
+    cckd->merging = 1;
+    cckd_flush_cache (dev);
+    while (cckd->wrpending || cckd->ioactive)
+    {
+        cckd->iowaiters++;
+        wait_condition (&cckd->iocond, &cckd->iolock);
+        cckd->iowaiters--;
+        cckd_flush_cache (dev);
+    }
+    cckd_purge_cache (dev); cckd_purge_l2 (dev);
+    dev->bufcur = dev->cache = -1;
+    release_lock (&cckd->iolock);
+
+    /* obtain control of the file */
+    obtain_lock (&cckd->filelock);
+
+    /* harden the current file */
+    cckd_harden (dev);
+
+    /* Call the chkdsk function */
+    rc = cckd_chkdsk (dev, level);
+
+    /* Perform initial read */
+    rc = cckd_read_init (dev);
+
+    release_lock (&cckd->filelock);
+
+    obtain_lock (&cckd->iolock);
+    cckd->merging = 0;
+    if (cckd->iowaiters)
+        broadcast_condition (&cckd->iocond);
+    dev->syncio = syncio;
+    release_lock (&cckd->iolock);
+
+    /* Display the shadow file statistics */
+    cckd_sf_stats (dev);
+
+    return NULL;
+} /* end function cckd_sf_chk */
 
 /*-------------------------------------------------------------------*/
 /* Display shadow file statistics   (sfd)                            */
 /*-------------------------------------------------------------------*/
-void cckd_sf_stats (DEVBLK *dev)
+void *cckd_sf_stats (void *data)
 {
+DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 struct stat     st;                     /* File information          */
 int             i;                      /* Index                     */
@@ -4204,11 +4346,26 @@ char           *ost[] = {"  ", "ro", "rd", "rw"};
 unsigned long long size=0,free=0;       /* Total size, free space    */
 int             freenbr=0;              /* Total number free spaces  */
 
+    if (dev == NULL)
+    {
+    int n = 0;
+        for (dev=sysblk.firstdev; dev; dev=dev->nextdev)
+            if (dev->cckd_ext)
+            {
+                logmsg( _("HHCCD208I Displaying device %d:%4.4X\n"),
+                          SSID_TO_LCSS(dev->ssid), dev->devnum );
+                cckd_sf_stats (dev);
+                n++;
+            }
+        logmsg( _("HHCCD092I %d devices processed\n"), n );
+        return NULL;
+    }
+
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        logmsg (_("HHCCD206W %4.4X device is not a shadow file\n"));
-        return;
+        logmsg (_("HHCCD209W %4.4X device is not a cckd device\n"));
+        return NULL;
     }
 
 //  obtain_lock (&cckd->filelock);
@@ -4259,6 +4416,7 @@ int             freenbr=0;              /* Total number free spaces  */
                 cckd->reads[i], cckd->writes[i], cckd->l2reads[i]);
     }
 //  release_lock (&cckd->filelock);
+    return NULL;
 } /* end function cckd_sf_stats */
 
 /*-------------------------------------------------------------------*/
@@ -4271,7 +4429,7 @@ int cckd_disable_syncio(DEVBLK *dev)
     while (dev->syncio_active)
     {
         release_lock(&dev->lock);
-        usleep(1);
+        usleep(500);
         obtain_lock(&dev->lock);
     }
     dev->syncio = 0;
@@ -4380,10 +4538,7 @@ int             gctab[5]= {             /* default gcol parameters   */
 
             /* Free newbuf if it hasn't been used */
             if (!cckd->ioactive && !cckd->bufused && cckd->newbuf)
-            {
-                cckd_free (dev, "newbuf", cckd->newbuf);
-                cckd->newbuf = NULL;
-            }
+                cckd->newbuf = cckd_free (dev, "newbuf", cckd->newbuf);
             cckd->bufused = 0;
 
             /* If OPENED bit not on then flush if updated */

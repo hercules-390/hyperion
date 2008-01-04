@@ -1,4 +1,5 @@
-01 Dec 2007 Data exception on nonzero bit34 in cce entry - Bernard van der Helm
+03 Jan 2008 sf commands update - Greg Smith
+01 Jan 2008 Data exception on nonzero bit34 in cce entry - Bernard van der Helm
 31 Dec 2007 Data exceptions on fetching ece, cce and sd1 - Bernard van der Helm
 31 Dec 2007 Data excep in CMPSC expansion psl and cls = 0 - Bernard van der Helm
 29 Dec 2007 Some errors in UTF translation - Bernard van der Helm

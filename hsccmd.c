@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.232  2007/12/10 23:12:02  gsmith
+// Tweaks to OPTION_MIPS_COUNTING processing
+//
 // Revision 1.231  2007/11/30 14:54:32  jmaynard
 // Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
 //
@@ -3239,16 +3242,17 @@ char   *devascii;                       /* -> Device name            */
 DEVBLK *dev;                            /* -> Device block           */
 U16     devnum;                         /* Device number             */
 U16     lcss;                           /* Logical CSS               */
-int     scan = 0;                       /* 1=Device name is `*'      */
-int     n = 0;                          /* Number devices scanned    */
 int     flag = 1;                       /* sf- flag (default merge)  */
+int     level = 2;                      /* sfk level (default 2)     */
+TID     tid;                            /* sf command thread id      */
+char    c;                              /* work for sscan            */
 
     UNREFERENCED(cmdline);
 
-    if (strlen(argv[0]) < 3 || strchr ("+-cd", argv[0][2]) == NULL)
+    if (strlen(argv[0]) < 3 || strchr ("+-cdk", argv[0][2]) == NULL)
     {
         logmsg( _("HHCPN091E Command must be 'sf+', 'sf-', "
-                                "'sfc', or 'sfd'\n") );
+                                "'sfc', 'sfk' or 'sfd'\n") );
         return -1;
     }
 
@@ -3279,7 +3283,7 @@ int     flag = 1;                       /* sf- flag (default merge)  */
             logmsg( _("HHCPN081E No cckd devices found\n") );
             return -1;
         }
-        scan = 1;
+        dev = NULL;
     }
     else
     {
@@ -3313,6 +3317,17 @@ int     flag = 1;                       /* sf- flag (default merge)  */
         argv++; argc--;
     }
 
+    /* For `sfk' the operand is an integer -1 .. 4 */
+    if (action == 'k' && argc > 1)
+    {
+        if (sscanf(argv[1], "%d%c", &level, &c) != 1 || level < -1 || level > 4)
+        {
+            logmsg( _("HHCPN087E Operand must be a number -1 .. 4\n"));
+            return -1;
+        }
+        argv++; argc--;
+    }
+
     /* No other operands allowed */
     if (argc > 1)
     {
@@ -3320,32 +3335,51 @@ int     flag = 1;                       /* sf- flag (default merge)  */
         return -1;
     }
 
-    /* Perform the action */
-    while (dev)
+    /* Set sf- flags in either cckdblk or the cckd extension */
+    if (action == '-')
     {
-        if (scan) logmsg( _("HHCPN085I Processing device %d:%4.4X\n"),
-                            SSID_TO_LCSS(dev->ssid), dev->devnum );
-
-        switch (action) {
-        case '+': cckd_sf_add (dev);
-                  break;
-        case '-': cckd_sf_remove (dev, flag);
-                  break;
-        case 'c': cckd_sf_comp (dev);
-                  break;
-        case 'd': cckd_sf_stats (dev);
-                  break;
+        if (dev)
+        {
+            CCKDDASD_EXT *cckd = dev->cckd_ext;
+            cckd->sfmerge = flag == 1;
+            cckd->sfforce = flag == 2;
         }
-        n++;
-
-        /* Next cckd device if scanning */
-        if (scan)
-            for (dev=dev->nextdev; dev && !dev->cckd_ext; dev=dev->nextdev);
-        else dev = NULL;
-
-    } /* while (dev) */
-
-    if (scan) logmsg( _("HHCPN092I %d devices processed\n"), n );
+        else
+        {
+            cckdblk.sfmerge = flag == 1;
+            cckdblk.sfforce = flag == 2;
+        }
+    }
+    /* Set sfk level in either cckdblk or the cckd extension */
+    else if (action == 'k')
+    {
+        if (dev)
+        {
+            CCKDDASD_EXT *cckd = dev->cckd_ext;
+            cckd->sflevel = level;
+        }
+        else
+            cckdblk.sflevel = level;
+    }
+ 
+    /* Process the command */
+    switch (action) {
+        case '+': if (create_thread(&tid, &sysblk.detattr, cckd_sf_add, dev, "sf+ command"))
+                      cckd_sf_add(dev);
+                  break;
+        case '-': if (create_thread(&tid, &sysblk.detattr, cckd_sf_remove, dev, "sf- command"))
+                      cckd_sf_remove(dev);
+                  break;
+        case 'c': if (create_thread(&tid, &sysblk.detattr, cckd_sf_comp, dev, "sfc command"))
+                      cckd_sf_comp(dev);
+                  break;
+        case 'd': if (create_thread(&tid, &sysblk.detattr, cckd_sf_stats, dev, "sfd command"))
+                      cckd_sf_stats(dev);
+                  break;
+        case 'k': if (create_thread(&tid, &sysblk.detattr, cckd_sf_chk, dev, "sfk command"))
+                      cckd_sf_chk(dev);
+                  break;
+    }
 
     return 0;
 }
@@ -6004,9 +6038,9 @@ int ProcessPanelCommand (char* pszCmdLine)
     if (0
         || !strncasecmp(pszSaveCmdLine,"sf+",3)
         || !strncasecmp(pszSaveCmdLine,"sf-",3)
-        || !strncasecmp(pszSaveCmdLine,"sf=",3)
         || !strncasecmp(pszSaveCmdLine,"sfc",3)
         || !strncasecmp(pszSaveCmdLine,"sfd",3)
+        || !strncasecmp(pszSaveCmdLine,"sfk",3)
     )
     {
         rc = ShadowFile_cmd(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
@@ -6068,8 +6102,8 @@ int ListAllCommands(int argc, char *argv[], char *cmdline)
 
     logmsg( "  %-9.9s    %s \n", "sf+dev",    _("add shadow file") );
     logmsg( "  %-9.9s    %s \n", "sf-dev",    _("delete shadow file") );
-    logmsg( "  %-9.9s    %s \n", "sf=dev ..", _("rename shadow file") );
     logmsg( "  %-9.9s    %s \n", "sfc",       _("compress shadow files") );
+    logmsg( "  %-9.9s    %s \n", "sfk",       _("check shadow files") );
     logmsg( "  %-9.9s    %s \n", "sfd",       _("display shadow file stats") );
 
     logmsg("\n");

@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.77  2007/12/10 23:12:02  gsmith
+// Tweaks to OPTION_MIPS_COUNTING processing
+//
 // Revision 1.76  2007/12/02 16:22:09  rbowler
 // Enable B9xx,EBxx opcodes in S/370 mode for ETF2
 //
@@ -1387,7 +1390,10 @@ typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
 struct CCKDBLK {                        /* Global cckd dasd block    */
         BYTE             id[8];         /* "CCKDBLK "                */
         DEVBLK          *dev1st;        /* 1st device in cckd queue  */
-        int              batch:1;       /* 1=called in batch mode    */
+        unsigned int     batch:1,       /* 1=called in batch mode    */
+                         sfmerge:1,     /* 1=sf-* merge              */
+                         sfforce:1;     /* 1=sf-* force              */
+        int              sflevel;       /* sfk xxxx level            */
 
         ATTR             attr;          /* Thread attributes         */
 
@@ -1471,7 +1477,10 @@ struct CCKDDASD_EXT {                   /* Ext for compressed ckd    */
                          merging:1,     /* 1=File merge in progress  */
                          stopping:1,    /* 1=Device is closing       */
                          notnull:1,     /* 1=Device has track images */
-                         l2ok:1;        /* 1=All l2s below bounds    */
+                         l2ok:1,        /* 1=All l2s below bounds    */
+                         sfmerge:1,     /* 1=sf-xxxx merge           */
+                         sfforce:1;     /* 1=sf-xxxx force           */
+        int              sflevel;       /* sfk xxxx level            */
         LOCK             filelock;      /* File lock                 */
         LOCK             iolock;        /* I/O lock                  */
         COND             iocond;        /* I/O condition             */

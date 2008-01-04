@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2007/01/11 19:54:33  fish
+// Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
+//
 // Revision 1.14  2006/12/08 09:43:26  jj
 // Add CVS message log
 //
@@ -303,11 +306,11 @@ int     cckd_read_track (DEVBLK *, int, BYTE *);
 int     cckd_update_track (DEVBLK *, int, int, BYTE *, int, BYTE *);
 int     cfba_read_block (DEVBLK *, int, BYTE *);
 int     cfba_write_block (DEVBLK *, int, int, BYTE *, int, BYTE *);
-CCKD_DLL_IMPORT void    cckd_sf_add (DEVBLK *);
-CCKD_DLL_IMPORT void    cckd_sf_remove (DEVBLK *, int);
-CCKD_DLL_IMPORT void    cckd_sf_newname (DEVBLK *, char *);
-CCKD_DLL_IMPORT void    cckd_sf_stats (DEVBLK *);
-CCKD_DLL_IMPORT void    cckd_sf_comp (DEVBLK *);
+CCKD_DLL_IMPORT void   *cckd_sf_add (void *);
+CCKD_DLL_IMPORT void   *cckd_sf_remove (void *);
+CCKD_DLL_IMPORT void   *cckd_sf_stats (void *);
+CCKD_DLL_IMPORT void   *cckd_sf_comp (void *);
+CCKD_DLL_IMPORT void   *cckd_sf_chk (void *);
 CCKD_DLL_IMPORT int     cckd_command(char *, int);
 CCKD_DLL_IMPORT void    cckd_print_itrace ();
 
