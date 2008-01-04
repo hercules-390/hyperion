@@ -139,6 +139,18 @@ curent shadow file, and display the shadow file status and statistics:<br><br>
 <tr><td align="left"><b>sfc</b></td>
     <td align="left" colspan="2"><font size=-1>unit</font></td>
     <td align="left">Compress the current file</td>
+<tr><td align="left" valign="top"><b>sfk</b></td>
+    <td align="left" valign="top"><font size=-1>unit</font></td>
+    <td align="left" valign="top"<font size=-1><i>level</i></font></td>
+    <td align="left" valign="top">Perform the <b>chkdsk</b> function on the current file.
+                     Level is a number -1 ... 4, the default is <b>2</b>.  The levels are:<br>
+                     -1 &nbsp&nbsp&nbsp devhdr, cdevhdr, l1 table <br>
+                     &nbsp 0 &nbsp&nbsp&nbsp devhdr, cdevhdr, l1 table, l2 tables <br>
+                     &nbsp 1 &nbsp&nbsp&nbsp devhdr, cdevhdr, l1 table, l2 tables, free spaces <br>
+                     &nbsp 2 &nbsp&nbsp&nbsp devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkhdrs <br>
+                     &nbsp 3 &nbsp&nbsp&nbsp devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkimgs <br>
+                     &nbsp 4 &nbsp&nbsp&nbsp devhdr, cdevhdr. Build everything else from recovery
+                     </td>
 <tr><td align="left"><b>sfd</b></td>
     <td align="left" colspan="2"><font size=-1>unit</font></td>
     <td align="left">Display shadow file status and statistics</td>
