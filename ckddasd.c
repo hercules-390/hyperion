@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.89  2007/11/25 19:30:21  gsmith
+// fix LRE length check, thanks Fish!! - Greg
+//
 // Revision 1.88  2007/11/21 22:54:13  fish
 // Use new BEGIN_DEVICE_CLASS_QUERY macro
 //
@@ -483,6 +486,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             {
                 trks = (statbuf.st_size - CKDDASD_DEVHDR_SIZE) / trksize;
                 cyls = trks / heads;
+                if (fileseq == 1 && highcyl == cyls)
+                {
+                    devhdr.fileseq = 0;
+                    highcyl = 0;
+                }
             }
             else
             {
