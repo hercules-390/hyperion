@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.233  2008/01/04 02:28:51  gsmith
+// sf commands update
+//
 // Revision 1.232  2007/12/10 23:12:02  gsmith
 // Tweaks to OPTION_MIPS_COUNTING processing
 //
@@ -161,6 +164,7 @@
 
 #include "tapedev.h"
 #include "dasdtab.h"
+#include "ctcadpt.h"
 
 ///////////////////////////////////////////////////////////////////////
 // (forward references, etc)
@@ -1242,22 +1246,125 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
     return cckd_command(p,1);
 }
 
+
+///////////////////////////////////////////////////////////////////////
+/* ctc command - enable/disable CTC debugging */
+
+int ctc_cmd( int argc, char *argv[], char *cmdline )
+{
+    DEVBLK*  dev;
+    CTCBLK*  pCTCBLK;
+    LCSDEV*  pLCSDEV;
+    LCSBLK*  pLCSBLK;
+    U16      lcss;
+    U16      devnum;
+    BYTE     onoff;
+
+    UNREFERENCED( cmdline );
+
+    // Format:  "ctc  debug  { on | off }  [ <devnum> | ALL ]"
+
+    if (0
+        || argc < 3
+        ||  strcasecmp( argv[1], "debug" ) != 0
+        || (1
+            && strcasecmp( argv[2], "on"  ) != 0
+            && strcasecmp( argv[2], "off" ) != 0
+           )
+        || argc > 4
+        || (1
+            && argc == 4
+            && strcasecmp( argv[3], "ALL" ) != 0
+            && parse_single_devnum( argv[3], &lcss, &devnum) < 0
+           )
+    )
+    {
+        panel_command ("help ctc");
+        return -1;
+    }
+
+    onoff = (strcasecmp( argv[2], "on" ) == 0);
+
+    if (argc < 4 || strcasecmp( argv[3], "ALL" ) == 0)
+    {
+        for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
+        {
+            if (0
+                || !dev->allocated
+                || 0x3088 != dev->devtype
+                || (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype)
+            )
+                continue;
+
+            if (CTC_CTCI == dev->ctctype)
+            {
+                pCTCBLK = dev->dev_data;
+                pCTCBLK->fDebug = onoff;
+            }
+            else // (CTC_LCS == dev->ctctype)
+            {
+                pLCSDEV = dev->dev_data;
+                pLCSBLK = pLCSDEV->pLCSBLK;
+                pLCSBLK->fDebug = onoff;
+            }
+        }
+
+        logmsg( _("HHCPNXXXI CTC debugging now %s for all CTCI/LCS device groups.\n"),
+                  onoff ? _("ON") : _("OFF") );
+    }
+    else
+    {
+        int i;
+        DEVGRP* pDEVGRP;
+        DEVBLK* pDEVBLK;
+
+        if (!(dev = find_device_by_devnum ( lcss, devnum )))
+        {
+            devnotfound_msg( lcss, devnum );
+            return -1;
+        }
+
+        pDEVGRP = dev->group;
+
+        if (CTC_CTCI == dev->ctctype)
+        {
+            for (i=0; i < pDEVGRP->acount; i++)
+            {
+                pDEVBLK = pDEVGRP->memdev[i];
+                pCTCBLK = pDEVBLK->dev_data;
+                pCTCBLK->fDebug = onoff;
+            }
+        }
+        else if (CTC_LCS == dev->ctctype)
+        {
+            for (i=0; i < pDEVGRP->acount; i++)
+            {
+                pDEVBLK = pDEVGRP->memdev[i];
+                pLCSDEV = pDEVBLK->dev_data;
+                pLCSBLK = pLCSDEV->pLCSBLK;
+                pLCSBLK->fDebug = onoff;
+            }
+        }
+        else
+        {
+            logmsg( _("HHCPN034E Device %d:%4.4X is not a CTCI or LCS device\n"),
+                      lcss, devnum );
+            return -1;
+        }
+
+        logmsg( _("HHCPNXXXI CTC debugging now %s for %s device %d:%4.4X group.\n"),
+                  onoff ? _("ON") : _("OFF"),
+                  CTC_LCS == dev->ctctype ? "LCS" : "CTCI",
+                  lcss, devnum );
+    }
+
+    return 0;
+}
+
 #if defined(OPTION_W32_CTCI)
 
 ///////////////////////////////////////////////////////////////////////
-/* tt32stats command - display CTCI-W32 statistics */
-
-int tt32stats_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
-
-    logmsg( _("HHCPN186E cmd deprecated; try 'tt32' instead\n") );
-    return -1;
-}
-
-/* tt32stats command - display CTCI-W32 statistics */
+/* tt32 command - control/query CTCI-W32 functionality */
 
 int tt32_cmd( int argc, char *argv[], char *cmdline )
 {
@@ -5914,8 +6021,8 @@ COMMAND ( "lsdep",     lsdep_cmd,     "list module dependencies\n" )
 #ifdef OPTION_IODELAY_KLUDGE
 COMMAND ( "iodelay",   iodelay_cmd,   "display or set I/O delay value" )
 #endif
+COMMAND ( "ctc",       ctc_cmd,       "enable/disable CTC debugging" )
 #if defined(OPTION_W32_CTCI)
-COMMAND ( "tt32stats", tt32stats_cmd, "(deprecated; use 'tt32' cmd instead)" )
 COMMAND ( "tt32",      tt32_cmd,      "control/query CTCI-W32 functionality" )
 #endif
 COMMAND ( "toddrag",   toddrag_cmd,   "display or set TOD clock drag factor" )
@@ -6153,6 +6260,13 @@ CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need hel
                        "it will be displayed. Help text is usually limited to explaining\n"
                        "the format of the command and its various required or optional\n"
                        "parameters and is not meant to replace reading the documentation.\n"
+                       )
+
+CMDHELP ( "ctc",       "Format:  \"ctc  debug  { on | off }  [ <devnum> | ALL ]\".\n\n"
+
+                       "Enables/disables debug packet tracing for the specified CTCI/LCS\n"
+                       "device group(s) identified by <devnum> or for all CTCI/LCS device\n"
+                       "groups if <devnum> is not specified or specified as 'ALL'.\n"
                        )
 
 #if defined( OPTION_W32_CTCI )

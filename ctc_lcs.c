@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.67  2007/11/21 22:54:14  fish
+// Use new BEGIN_DEVICE_CLASS_QUERY macro
+//
 // Revision 1.66  2007/08/17 00:59:40  fish
 // Backout 28 Jul fix for LCS (fix was only meant for CTCI)
 //
@@ -717,11 +720,12 @@ void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
         return;
     }
 
-    snprintf( pBuffer, iBufLen, "LCS Port %2.2X %s%s (%s)",
+    snprintf( pBuffer, iBufLen, "LCS Port %2.2X %s%s (%s)%s",
               pLCSDEV->bPort,
               pLCSDEV->bMode == LCSDEV_MODE_IP ? "IP" : "SNA",
               sType[pLCSDEV->bType],
-              pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort].szNetDevName );
+              pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort].szNetDevName,
+              pLCSDEV->pLCSBLK->fDebug ? " -d" : "" );
 }
 
 //

@@ -11,6 +11,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.69  2007/11/21 22:54:14  fish
+// Use new BEGIN_DEVICE_CLASS_QUERY macro
+//
 // Revision 1.68  2007/07/29 02:02:44  fish
 // Fix day-1 CTCI/LCS bug found by Vince Weaver [vince@deater.net]
 //
@@ -624,10 +627,11 @@ void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
         return;
     }
 
-    snprintf( pBuffer, iBufLen, "CTCI %s/%s (%s)",
+    snprintf( pBuffer, iBufLen, "CTCI %s/%s (%s)%s",
               pCTCBLK->szGuestIPAddr,
               pCTCBLK->szDriveIPAddr,
-              pCTCBLK->szTUNDevName );
+              pCTCBLK->szTUNDevName,
+              pCTCBLK->fDebug ? " -d" : "" );
 }
 
 // -------------------------------------------------------------------
