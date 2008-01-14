@@ -1,3 +1,4 @@
+14 Jan 2008 Additional ISO-8859-1 to European EBCDIC codepages - Roger Bowler
 11 Jan 2008 new 'ctc' command to enable/disable debug option on demand - Fish
 03 Jan 2008 sf commands update - Greg Smith
 01 Jan 2008 Data exception on nonzero bit34 in cce entry - Bernard van der Helm
@@ -22,7 +23,7 @@
 22 Nov 2007 Store Doubleword Monitor Code for z/Arch on succesful MC -
             Ivan Warren
 20 Nov 2007 LRE support (try #1) - Greg
-18 Nov 2007 Activate Message-Security-Assist-Extension-1 facility in ESA/390 - 
+18 Nov 2007 Activate Message-Security-Assist-Extension-1 facility in ESA/390 -
             Roger Bowler
 18 Nov 2007 Permit Immediate-and-Relative facility to be activated in S/370
             mode - Roger Bowler
