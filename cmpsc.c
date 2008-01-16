@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.57  2008/01/01 16:57:42  bernard
+// Performance patch
+//
 // Revision 1.56  2008/01/01 12:10:18  bernard
 // Added bit34 ece data exception check
 //
@@ -181,7 +184,7 @@
 /* Expansion Character Entry macro's (ECE)                                    */
 /*----------------------------------------------------------------------------*/
 /* ec    : address of first extension character                               */
-/* upr   : indication wheter entry is unpreceeded                             */
+/* upr   : indication wheter entry is unpreceded                              */
 /*----------------------------------------------------------------------------*/
 #define ECE_ec(ece)          (ECE_upr((ece)) ? &(ece)[1] : &(ece)[2])
 #define ECE_upr(ece)         (!ECE_psl((ece)))
@@ -300,11 +303,20 @@
 /* checking.                                                                  */
 /*----------------------------------------------------------------------------*/
 #if !defined(TESTCH261)
-#define TESTCH261(regs, processed, length) \
-{\
-  if(unlikely(((processed) += (length)) > 260)) \
-    ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION); \
-}
+  #if defined(OPTION_CMPSC_DEBUGLVL) && (OPTION_CMPSC_DEBUGLVL & 3)
+    #define TESTCH261(regs, processed, length) \
+      if(unlikely(((processed) += (length)) > 260)) \
+      { \
+        logmsg("  writing or searching child 261 -> data exception\n"); \
+        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION); \
+      }
+  #else /* !defined(OPTION_CMPSC_DEBUGLVL) || !(OPTION_CMPSC_DEBUGLVL & 3) */
+    #define TESTCH261(regs, processed, length) \
+      if(unlikely(((processed) += (length)) > 260)) \
+      { \
+        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION); \
+      }
+  #endif /* defined(OPTION_CMPSC_DEBUGLVL) && (OPTION_CMPSC_DEBUGLVL & 3) */
 #endif /* !defined(TESTCH261) */
 
 /******************************************************************************/
@@ -494,11 +506,11 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         /* Check for writing child 261 */
         TESTCH261(regs, written, ECE_psl(ece));
 
-        /* Output extension characters in preceeded entry, return on trouble */
+        /* Output extension characters in preceded entry, return on trouble */
         if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_psl(ece), ECE_ofst(ece))))
           return;
 
-        /* Get the preceeding entry */
+        /* Get the preceding entry */
         pptr = ECE_pptr(ece);
         ARCH_DEP(fetch_ece)(r2, regs, ece, pptr);
 
@@ -514,10 +526,19 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         }
       }
 
+      /* Check for data exception */
+      if(ECE_bit34(ece))
+      {
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
+        logmsg("  ece bits 3 and 4 nonzero -> data exception\n");
+#endif
+        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
+      }
+
       /* Check for writing child 261 */
       TESTCH261(regs, written, ECE_csl(ece));
 
-      /* Output extension characters in last or only unpreceeded entry, return on trouble */
+      /* Output extension characters in last or only unpreceded entry, return on trouble */
       if(unlikely(ARCH_DEP(store_ch)(r1, regs, iregs, ECE_ec(ece), ECE_csl(ece), 0)))
         return;
 
@@ -688,16 +709,6 @@ static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index)
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
   /* Check for data exceptions */
-  if(ECE_bit34(ece))
-  {
-
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-      logmsg("  bits 3 and 4 nonzero -> data exception\n");
-#endif
-
-    ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-  }
-
   if(!ECE_psl(ece))
   {
     if(unlikely(!ECE_csl(ece)))
@@ -837,7 +848,7 @@ static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int index)
   {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-      logmsg("  f1 sd and sct = 0 -> data exception\n");
+    logmsg("  f1 sd and sct = 0 -> data exception\n");
 #endif
 
     ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
