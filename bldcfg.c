@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.78  2007/12/29 14:38:39  fish
+// init sysblk.dummyregs.hostregs = &sysblk.dummyregs; to prevent panel or dyngui threads from crashing when using new INSTCOUNT macro.
+//
 // Revision 1.77  2007/06/23 00:04:03  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -856,6 +859,12 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             break;
         }
         if(strchr(keyword,','))
+        {
+            break;
+        }
+        /* Also exit if keyword contains ':' (added by Harold Grovesteen jan2008) */
+        /* Added because device statements may now contain channel set or LCSS id */
+        if(strchr(keyword,':'))
         {
             break;
         }
