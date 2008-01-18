@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.79  2008/01/18 22:08:33  rbowler
+// HHCCF008E Error in hercules.cnf: Unrecognized keyword 0:0009
+//
 // Revision 1.78  2007/12/29 14:38:39  fish
 // init sysblk.dummyregs.hostregs = &sysblk.dummyregs; to prevent panel or dyngui threads from crashing when using new INSTCOUNT macro.
 //
@@ -783,7 +786,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     for (scount = 0; ; scount++)
     {
         /* Read next record from the configuration file */
-        while (read_config (fname, inc_fp[inc_level]) && inc_level >= 0 )
+        while (inc_level >= 0 && read_config (fname, inc_fp[inc_level]))
         {
             fclose (inc_fp[inc_level--]);
         }
