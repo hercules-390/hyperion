@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.234  2008/01/11 21:33:21  fish
+// new 'ctc' command to enable/disable debug option on demand
+//
 // Revision 1.233  2008/01/04 02:28:51  gsmith
 // sf commands update
 //
@@ -6572,6 +6575,19 @@ CMDHELP ( "herclogo",  "Format: \"herclogo [<filename>]\". Load a new logo file 
 CMDHELP ( "traceopt",  "Format: \"traceopt [regsfirst | noregs | traditional]\". Determines how the\n"
                        "registers are displayed during instruction tracing and stepping. Entering\n"
                        "the command without any argument simply displays the current mode.\n"
+                       )
+
+CMDHELP ( "sfk",       "Format: \"sfk{*|xxxx} [n]\". Performs a chkdsk on the active shadow file\n"
+                       "where xxxx is the device number (*=all cckd devices)\n"
+                       "and n is the optional check level (default is 2):\n"
+                       " -1 devhdr, cdevhdr, l1 table\n"
+                       " 0 devhdr, cdevhdr, l1 table, l2 tables\n"
+                       " 1 devhdr, cdevhdr, l1 table, l2 tables, free spaces\n"
+                       " 2 devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkhdrs\n"
+                       " 3 devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkimgs\n"
+                       " 4 devhdr, cdevhdr. Build everything else from recovery\n"
+                       "You probably don't want to use `4' unless you have a backup and are\n"
+                       "prepared to wait a long time.\n" 
                        )
 
 CMDHELP ( "logopt",    "Format: \"logopt [timestamp | notimestamp]\".   Sets logging options.\n"
