@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.58  2008/01/16 22:37:01  fish
+// Data exception test for nonzero bit34 ece entries should ONLY be for UNPRECEDED ece entries, NOT ALL ece entries.
+//
 // Revision 1.57  2008/01/01 16:57:42  bernard
 // Performance patch
 //
@@ -526,15 +529,6 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         }
       }
 
-      /* Check for data exception */
-      if(ECE_bit34(ece))
-      {
-#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-        logmsg("  ece bits 3 and 4 nonzero -> data exception\n");
-#endif
-        ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
-      }
-
       /* Check for writing child 261 */
       TESTCH261(regs, written, ECE_csl(ece));
 
@@ -605,7 +599,7 @@ static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int index)
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-      logmsg("  cct < 2 and act > 4 -> data exception\n");
+      logmsg("fetch_cce: cct<2 and act>4 -> data exception\n");
 #endif
 
       ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
@@ -619,7 +613,7 @@ static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int index)
       {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-        logmsg("  cct = 7 and d = 0 -> data exception\n");
+        logmsg("fetch_cce: cct=7 and d=0 -> data exception\n");
 #endif
 
         ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
@@ -631,7 +625,7 @@ static void ARCH_DEP(fetch_cce)(int r2, REGS *regs, BYTE *cce, int index)
       {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-        logmsg("  cct > 5 and d = 1 -> data exception\n");
+        logmsg("fetch_cce: cct>5 and d=1 -> data exception\n");
 #endif
 
         ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
@@ -711,11 +705,11 @@ static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index)
   /* Check for data exceptions */
   if(!ECE_psl(ece))
   {
-    if(unlikely(!ECE_csl(ece)))
+    if(unlikely(!ECE_csl(ece) || ECE_bit34(ece)))
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-      logmsg("  psl = 0 and csl = 0 -> data exception\n");
+      logmsg("fetch_ece: psl=0 and (csl=0 or bit34 nonzero) -> data exception\n");
 #endif
 
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
@@ -727,7 +721,7 @@ static void ARCH_DEP(fetch_ece)(int r2, REGS *regs, BYTE *ece, int index)
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-      logmsg("  psl > 5 -> data exception\n");
+      logmsg("fetch_ece: psl>5 -> data exception\n");
 #endif
 
       ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
@@ -848,7 +842,7 @@ static void ARCH_DEP(fetch_sd)(int r2, REGS *regs, BYTE *sd, int index)
   {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-    logmsg("  f1 sd and sct = 0 -> data exception\n");
+    logmsg("fetch_sd : format-1 sd and sct=0 -> data exception\n");
 #endif
 
     ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION);
