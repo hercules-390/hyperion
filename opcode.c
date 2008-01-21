@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.134  2008/01/21 14:02:13  rbowler
+// Permit Extended-Translation-Facility-3 in S/370 and ESA/390 modes
+//
 // Revision 1.133  2007/12/23 00:29:20  rbowler
 // reset_channel_path, cancel_subchannel unresolved if no channel subsystem feature
 //

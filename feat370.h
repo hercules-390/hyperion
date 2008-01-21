@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.29  2008/01/21 14:02:13  rbowler
+// Permit Extended-Translation-Facility-3 in S/370 and ESA/390 modes
+//
 // Revision 1.28  2007/12/02 16:34:23  rbowler
 // Permit Extended-Translation-Facility-2 to be activated in S/370 mode
 //
