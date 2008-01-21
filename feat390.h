@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.41  2007/11/30 15:14:14  rbowler
+// Permit String-Instruction facility to be activated in S/370 mode
+//
 // Revision 1.40  2007/11/18 22:27:07  rbowler
 // Add Message-Security-Assist-Extension-1 facility to ESA/390
 //
@@ -42,12 +45,15 @@
 #define FEATURE_CPU_RECONFIG
 #define FEATURE_DUAL_ADDRESS_SPACE
 #define FEATURE_EMULATE_VM
+#define FEATURE_ETF2_ENHANCEMENT                                /*@ZA*/
+#define FEATURE_ETF3_ENHANCEMENT                                /*@ZA*/
 #define FEATURE_EXPANDED_STORAGE
 #define FEATURE_EXPEDITED_SIE_SUBSET
 #define FEATURE_EXTENDED_STORAGE_KEYS
 #define FEATURE_EXTENDED_TOD_CLOCK
 #define FEATURE_EXTENDED_TRANSLATION
 #define FEATURE_EXTENDED_TRANSLATION_FACILITY_2
+#define FEATURE_EXTENDED_TRANSLATION_FACILITY_3                 /*@ZA*/
 #define FEATURE_EXTERNAL_INTERRUPT_ASSIST
 #define FEATURE_FETCH_PROTECTION_OVERRIDE
 #define FEATURE_FPS_ENHANCEMENT                                 /*DFP*/
