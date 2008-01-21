@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.133  2007/12/23 00:29:20  rbowler
+// reset_channel_path, cancel_subchannel unresolved if no channel subsystem feature
+//
 // Revision 1.132  2007/12/02 16:34:23  rbowler
 // Permit Extended-Translation-Facility-2 to be activated in S/370 mode
 //
@@ -2196,7 +2199,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*CD*/   GENx___x___x___ ,
  /*CE*/   GENx___x___x___ ,
  /*CF*/   GENx___x___x___ ,
- /*D0*/   GENx___x___x900 (translate_and_test_reverse,SS_L,"TRTR"),
+ /*D0*/   GENx370x390x900 (translate_and_test_reverse,SS_L,"TRTR"),
  /*D1*/   GENx370x390x900 (move_numerics,SS_L,"MVN"),
  /*D2*/   GENx370x390x900 (move_character,SS_L,"MVC"),
  /*D3*/   GENx370x390x900 (move_zones,SS_L,"MVZ"),
@@ -3508,10 +3511,10 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9AD*/ GENx___x___x___ ,
  /*B9AE*/ GENx___x___x___ ,
  /*B9AF*/ GENx___x___x___ ,
- /*B9B0*/ GENx___x___x900 (convert_utf8_to_utf32,RRF_M3,"CU14"),
- /*B9B1*/ GENx___x___x900 (convert_utf16_to_utf32,RRF_M3,"CU24"),
- /*B9B2*/ GENx___x___x900 (convert_utf32_to_utf8,RRE,"CU41"),
- /*B9B3*/ GENx___x___x900 (convert_utf32_to_utf16,RRE,"CU42"),
+ /*B9B0*/ GENx370x390x900 (convert_utf8_to_utf32,RRF_M3,"CU14"),
+ /*B9B1*/ GENx370x390x900 (convert_utf16_to_utf32,RRF_M3,"CU24"),
+ /*B9B2*/ GENx370x390x900 (convert_utf32_to_utf8,RRE,"CU41"),
+ /*B9B3*/ GENx370x390x900 (convert_utf32_to_utf16,RRE,"CU42"),
  /*B9B4*/ GENx___x___x___ ,
  /*B9B5*/ GENx___x___x___ ,
  /*B9B6*/ GENx___x___x___ ,
@@ -3522,7 +3525,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9BB*/ GENx___x___x___ ,
  /*B9BC*/ GENx___x___x___ ,
  /*B9BD*/ GENx___x___x___ ,
- /*B9BE*/ GENx___x___x900 (search_string_unicode,RRE,"SRSTU"),
+ /*B9BE*/ GENx370x390x900 (search_string_unicode,RRE,"SRSTU"),
  /*B9BF*/ GENx___x___x___ ,
  /*B9C0*/ GENx___x___x___ ,
  /*B9C1*/ GENx___x___x___ ,

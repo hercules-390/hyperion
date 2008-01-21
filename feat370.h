@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.28  2007/12/02 16:34:23  rbowler
+// Permit Extended-Translation-Facility-2 to be activated in S/370 mode
+//
 // Revision 1.27  2007/12/02 15:45:17  rbowler
 // Permit Extended-Translation facility to be activated in S/370 mode
 //
@@ -58,6 +61,13 @@
 //#define FEATURE_COMPARE_AND_MOVE_EXTENDED
 //#define FEATURE_EXTENDED_TRANSLATION
 //#define FEATURE_EXTENDED_TRANSLATION_FACILITY_2
+
+/* The following ESAME features can be retrofitted to S/370 and
+   may be activated if desired by uncommenting the appropriate
+   define statements below and performing a complete rebuild */
+//#define FEATURE_EXTENDED_TRANSLATION_FACILITY_3
+//#define FEATURE_ETF2_ENHANCEMENT
+//#define FEATURE_ETF3_ENHANCEMENT
 
 #endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */
