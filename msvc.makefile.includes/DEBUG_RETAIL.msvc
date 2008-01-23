@@ -3,6 +3,7 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
+# $Id$
 #
 #  Sets appropriate compiler/linker flags (cdebug & ldebug) depending on
 #  whether a normal retail release or debugging version of the product is
@@ -10,6 +11,10 @@
 #
 #
 #                           CHANGE HISTORY
+# $Log$
+# Revision 1.2  2008/01/23 00:47:40  rbowler
+# Modifications for VS9 C++ 2008 Express by Charlie Brint
+#
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
@@ -18,12 +23,18 @@
 
 # Use environment variables to determine the compiler level
 
-!IFDEF VS80COMNTOOLS
-vs8orAbove=1
-!ENDIF
- 
 !IFDEF VS90COMNTOOLS
-vs8orAbove=1
+!MESSAGE Makefile will assume VS9 or VS2008Express (MSVC version 15) 
+vsversion=9   
+!ELSEIFDEF VS80COMNTOOLS
+!MESSAGE Makefile will assume VS8 or VS2005Express (MSVC version 14) 
+vsversion=8 
+!ELSEIFDEF VS70COMNTOOLS
+!MESSAGE Makefile will assume VS7 (MSVC version 13)
+vsversion=7 
+!ELSE
+!MESSAGE Makefile will assume VC++ Toolkit 2003 (MSVC version 13) 
+vsversion=7 
 !ENDIF
  
 # -------------------------------------------------
@@ -31,7 +42,7 @@ vs8orAbove=1
 #       AFTER calling win32.mak since it sets it.
 # -------------------------------------------------
 
-!IFDEF VS70COMNTOOLS
+!IF $(vsversion) < 8 
 MAPFILE = /map:$(MAPDIR)\$(@B).map /mapinfo:lines
 !ELSE
 MAPFILE = /map:$(MAPDIR)\$(@B).map
@@ -50,7 +61,7 @@ MAPFILE = /map:$(MAPDIR)\$(@B).map
 # and will be removed in a future release"). Their documentation
 # says to use the new /fp option instead.
 
-!IFDEF VS70COMNTOOLS
+!IF $(vsversion) < 8 
 
 cflags = $(cflags) /QIfist
 
@@ -60,7 +71,7 @@ cflags = $(cflags) /QIfist
 cdebug  = /O2 /D NDEBUG
 ldebug = $(ldebug)
 
-!ELSEIFDEF VS80COMNTOOLS
+!ELSE # vsversion >= 8
 
 # PROGRAMMING NOTE: we're purposely discarding win32.mak's $(cdebug) settings
 # and replacing them with our own by leaving "$(cdebug)" out of the statement
@@ -89,7 +100,7 @@ ldebug = /DEBUG /PDB:$(PDBDIR)\$(@B).pdb
 
 !ENDIF
 
-!IFDEF vs8orAbove
+!IF $(vsversion) >= 8 
 cflags = $(cflags) -D _CRT_SECURE_NO_DEPRECATE
 cflags = $(cflags) -D _CRT_NONSTDC_NO_DEPRECATE
 cflags = $(cflags) -D _USE_32BIT_TIME_T
