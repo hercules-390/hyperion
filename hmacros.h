@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.18  2007/12/10 23:12:02  gsmith
+// Tweaks to OPTION_MIPS_COUNTING processing
+//
 // Revision 1.17  2007/06/06 22:14:57  gsmith
 // Fix SYNCHRONIZE_CPUS when numcpu > number of host processors - Greg
 //
@@ -208,6 +211,7 @@
 
   #ifdef _MSVC_
 
+    #undef ASSERT /* For VS9 2008 */
     #define ASSERT(a) \
       do \
       { \
@@ -240,6 +244,7 @@
   #ifdef _MSVC_
 
     #define TRACE       __noop
+    #undef ASSERT /* For VS9 2008 */
     #define ASSERT(a)   __noop
     #define VERIFY(a)   ((void)(a))
 
