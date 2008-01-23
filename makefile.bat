@@ -40,6 +40,10 @@ rem -------------------------------------------------------------------
 rem
 rem                      *** CHANGE HISTORY ***
 rem
+rem $Log$
+rem Revision 1.6  2006/12/08 09:43:29  jj
+rem Add CVS message log
+rem
 rem  07/31/05  Fish  Temporarily remove -s (slient) option to see the
 rem                  actual options being passed to compiler / linker
 rem  07/31/05  Fish  Done; putting -s (slient) option back. (I only
@@ -50,7 +54,6 @@ rem  11/17/05  Fish  Support for building within DevStudio 6.0
 rem                  whenever VS 8.0 is also installed.
 rem  11/29/05  Fish  Added comments re: 'ASSEMBLY_LISTINGS' option
 rem
-rem $Log$
 rem -------------------------------------------------------------------
 
 if "%1" == "" (
@@ -61,7 +64,13 @@ if "%1" == "" (
 rem  NOTE: 'MSSdk' not normally defined for most users,
 rem  but it IS defined if Visual Studio is installed...
 
-if not "%VS80COMNTOOLS%" == "" (
+if not "%VS90COMNTOOLS%" == "" (
+
+    rem note "vSvars.bat", not "vCvars.bat"!
+
+    call "%VS90COMNTOOLS%vsvars32.bat"
+
+) else if not "%VS80COMNTOOLS%" == "" (
 
     rem note "vSvars.bat", not "vCvars.bat"!
 
@@ -98,11 +107,15 @@ rem
 rem set ASSEMBLY_LISTINGS=1
 
 
-if "%VS80COMNTOOLS%" == "" (
+if not "%VS90COMNTOOLS%" == "" (
 
-    nmake -nologo -s %4 -f %2
+    nmake -nologo -s %4 -f %2 -g
+
+) else if not "%VS80COMNTOOLS%" == "" (
+
+    nmake -nologo -s %4 -f %2 -g
     
 ) else (
 
-    nmake -nologo -s %4 -f %2 -g
+    nmake -nologo -s %4 -f %2
 )
