@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.117  2007/12/30 17:48:21  bernard
+// Anoter UTF xlate error
+//
 // Revision 1.116  2007/12/30 09:09:51  bernard
 // Some errors in UTF translation
 //
@@ -1563,60 +1566,74 @@ U16     h2;                             /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate)
 {
-int     l;                              /* Lenght byte               */
+int     len, len2 = -1;                 /* Lengths                   */
 int     b1, b2;                         /* Values of base field      */
-VADR    effective_addr1,
-        effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
-BYTE    sbyte;                          /* Byte work areas           */
-int     d;                              /* Integer work areas        */
-int     h;                              /* Integer work areas        */
-int     i;                              /* Integer work areas        */
-BYTE    cwork[256];                     /* Character work areas      */
+int     i, b, n;                        /* Work variables            */
+VADR    addr1, addr2;                   /* Effective addresses       */
+BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
 
-    SS_L(inst, regs, l, b1, effective_addr1,
-                                  b2, effective_addr2);
+    SS_L(inst, regs, len, b1, addr1, b2, addr2);
 
-    /* If operand 1 crosses a page, make sure both pages are accessable */
-    if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
-        ((effective_addr1 + l) & PAGEFRAME_PAGEMASK))
-        ARCH_DEP(validate_operand) (effective_addr1, b1, l, ACCTYPE_WRITE_SKP, regs);
+    /* Get destination pointer */
+    dest = MADDR (addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-    /* Fetch first operand into work area */
-    ARCH_DEP(vfetchc) ( cwork, l, effective_addr1, b1, regs );
-
-    /* Determine the second operand range by scanning the
-       first operand to find the bytes with the highest
-       and lowest values */
-    for ( i = 0, d = 255, h = 0; i <= l; i++ )
+    /* Get pointer to next page if destination crosses a boundary */
+    if (CROSS2K (addr1, len))
     {
-        if (cwork[i] < d) d = cwork[i];
-        if (cwork[i] > h) h = cwork[i];
+        len2 = len;
+        len = 0x7FF - (addr1 & 0x7FF);
+        len2 -= (len + 1);
+        dest2 = MADDR ((addr1+len+1) & ADDRESS_MAXWRAP(regs),
+                       b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     }
 
-    n = (effective_addr2 + d) & ADDRESS_MAXWRAP(regs);
-    /* If operand 2 crosses a page, make sure both pages are accessable */
-    if((n & PAGEFRAME_PAGEMASK) !=
-        ((n + (h-d)) & PAGEFRAME_PAGEMASK))
-        ARCH_DEP(validate_operand) (n, b2, h-d, ACCTYPE_READ, regs);
-
-    /* Process first operand from left to right, refetching
-       second operand and storing the result byte by byte
-       to ensure correct handling of overlapping operands */
-    for ( i = 0; i <= l; i++ )
+    /* Fast path if table does not cross a boundary */
+    if (NOCROSS2K (addr2, 255))
     {
-        /* Fetch byte from second operand */
-        n = (effective_addr2 + cwork[i]) & ADDRESS_MAXWRAP(regs);
-        sbyte = ARCH_DEP(vfetchb) ( n, b2, regs );
+        tab = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        /* Perform translate function */
+        for (i = 0; i <= len; i++)
+            dest[i] = tab[dest[i]];
+        for (i = 0; i <= len2; i++)
+            dest2[i] = tab[dest2[i]];
+    }
+    else
+    {
+        n = 0x800  - (addr2 & 0x7FF);
+        b = dest[0];
 
-        /* Store result at first operand address */
-        ARCH_DEP(vstoreb) ( sbyte, effective_addr1, b1, regs );
+        /* Referenced part of the table may or may not span boundary */
+        if (b < n)
+        {
+            tab = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+            for (i = 1; i <= len && b < n; i++)
+                b = dest[i];
+            for (i = 0; i <= len2 && b < n; i++)
+                b = dest2[i];
+            tab2 = b < n
+                 ? NULL
+                 : MADDR ((addr2+n) & ADDRESS_MAXWRAP(regs),
+                          b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        }
+        else
+        {
+            tab2 = MADDR ((addr2+n) & ADDRESS_MAXWRAP(regs),
+                          b2, regs, ACCTYPE_READ, regs->psw.pkey);
+            for (i = 1; i <= len && b >= n; i++)
+                b = dest[i];
+            for (i = 0; i <= len2 && b >= n; i++)
+                b = dest2[i];
+            tab = b >= n
+                ? NULL
+                : MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        }
 
-        /* Increment first operand address */
-        effective_addr1++;
-        effective_addr1 &= ADDRESS_MAXWRAP(regs);
-
-    } /* end for(i) */
+        /* Perform translate function */
+        for (i = 0; i <= len; i++)
+            dest[i] = dest[i] < n ? tab[dest[i]] : tab2[dest[i]-n];
+        for (i = 0; i <= len2; i++)
+            dest2[i] = dest2[i] < n ? tab[dest2[i]] : tab2[dest2[i]-n];
+    } /* Translate table spans a boundary */
 }
 
 
