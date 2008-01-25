@@ -24,6 +24,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.108  2007/08/31 10:01:01  ivan
+// Throw an addressing exception when a SIE host->guest DAT points beyond
+// addressable storage
+//
 // Revision 1.107  2007/06/23 00:04:08  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -1828,10 +1832,29 @@ int  i;
 
 /*-------------------------------------------------------------------*/
 /* Invalidate matching translation lookaside buffer entries          */
+/*                                                                   */
+/* Input:                                                            */
+/*      main    mainstore address to match on. This is mainstore     */
+/*              base plus absolute address (regs->mainstor+aaddr)    */
+/*                                                                   */
+/*    This function is called by the SSK(E) instructions to purge    */
+/*    TLB entries that match the mainstore address. The "main"       */
+/*    field in the TLB contains the mainstore address plus an        */
+/*    XOR hash with effective address (regs->mainstor+aaddr^addr).   */
+/*    Before the compare can happen, the effective address from      */
+/*    the tlb (TLB_VADDR) must be XORed with the "main" field from   */
+/*    the tlb (removing hash).  This is done using MAINADDR() macro. */
+/* NOTES:                                                            */
+/*   TLB_VADDR does not contain all the effective address bits and   */
+/*   must be created on-the-fly using the tlb index (i << shift).    */
+/*   TLB_VADDR also contains the tlbid, so the regs->tlbid is merged */
+/*   with the main input variable before the search is begun.        */
 /*-------------------------------------------------------------------*/
 _DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
 {
-int i;
+    int     i;                          /* index into TLB            */
+    int     shift;                      /* Number of bits to shift   */
+    BYTE    *mainwid;                   /* mainstore with tlbid      */
 
     if (main == NULL)
     {
@@ -1839,14 +1862,14 @@ int i;
         return;
     }
 
+    mainwid = main + regs->tlbID;
+
     INVALIDATE_AIA_MAIN(regs, main);
+    shift = regs->arch_mode == ARCH_370 ? 11 : 12;
     for (i = 0; i < TLBN; i++)
-#if 1
-        if(regs->tlb.main[i] == main)
-#else
         if (MAINADDR(regs->tlb.main[i],
-                     regs->tlb.TLB_VADDR(i)) == main)
-#endif
+                     (regs->tlb.TLB_VADDR(i) | (i << shift)))
+                     == mainwid)
         {
             regs->tlb.acc[i] = 0;
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
@@ -1860,13 +1883,11 @@ int i;
     if (regs->host && regs->guestregs)
     {
         INVALIDATE_AIA_MAIN(regs->guestregs, main);
+        shift = regs->guestregs->arch_mode == ARCH_370 ? 11 : 12;
         for (i = 0; i < TLBN; i++)
-#if 1
-            if(regs->guestregs->tlb.main[i] == main)
-#else
             if (MAINADDR(regs->guestregs->tlb.main[i],
-                         regs->guestregs->tlb.TLB_VADDR(i)) == main)
-#endif
+                         (regs->guestregs->tlb.TLB_VADDR(i) | (i << shift)))
+                         == mainwid)
             {
                 regs->guestregs->tlb.acc[i] = 0;
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
@@ -1880,13 +1901,11 @@ int i;
     if (regs->guest)
     {
         INVALIDATE_AIA_MAIN(regs->hostregs, main);
+        shift = regs->hostregs->arch_mode == ARCH_370 ? 11 : 12;
         for (i = 0; i < TLBN; i++)
-#if 1
-            if(regs->hostregs->tlb.main[i] == main)
-#else
             if (MAINADDR(regs->hostregs->tlb.main[i],
-                         regs->hostregs->tlb.TLB_VADDR(i)) == main)
-#endif
+                         (regs->hostregs->tlb.TLB_VADDR(i) | (i << shift)))
+                         == mainwid)
             {
                 regs->hostregs->tlb.acc[i] = 0;
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)

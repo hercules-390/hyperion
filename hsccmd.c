@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.235  2008/01/18 16:19:07  rbowler
+// Help text for sfk command
+//
 // Revision 1.234  2008/01/11 21:33:21  fish
 // new 'ctc' command to enable/disable debug option on demand
 //
@@ -5502,7 +5505,15 @@ DLL_EXPORT int aia_cmd(int argc, char *argv[], char *cmdline)
 }
 
 ///////////////////////////////////////////////////////////////////////
-/* tlb - display tlb table */
+/* tlb - display tlb table                                           */
+/*                                                                   */
+/* NOTES:                                                            */
+/*   The "tlbid" field is part of TLB_VADDR so it must be extracted  */
+/*   whenever it's used or displayed. The TLB_VADDR does not contain */
+/*   all of the effective address bits so they are created on-the-fly*/
+/*   with (i << shift) The "main" field of the tlb contains an XOR   */
+/*   hash of effective address. So MAINADDR() macro is used to remove*/
+/*   the hash before it's displayed.                                 */
 
 int tlb_cmd(int argc, char *argv[], char *cmdline)
 {
@@ -5543,7 +5554,10 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
          regs->tlb.TLB_PTE_G(i),(int)(regs->tlb.TLB_VADDR_G(i) & bytemask),
          regs->tlb.common[i],regs->tlb.protect[i],
          (regs->tlb.acc[i] & ACC_READ) != 0,(regs->tlb.acc[i] & ACC_WRITE) != 0,
-         regs->tlb.skey[i],regs->tlb.main[i] - regs->mainstor);
+         regs->tlb.skey[i],
+         MAINADDR(regs->tlb.main[i],
+                  ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)))
+                  - regs->mainstor);
         matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
     }
     logmsg("%d tlbID matches\n", matches);
@@ -5568,7 +5582,10 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
              regs->tlb.TLB_PTE_G(i),(int)(regs->tlb.TLB_VADDR_G(i) & bytemask),
              regs->tlb.common[i],regs->tlb.protect[i],
              (regs->tlb.acc[i] & ACC_READ) != 0,(regs->tlb.acc[i] & ACC_WRITE) != 0,
-             regs->tlb.skey[i],regs->tlb.main[i]);
+             regs->tlb.skey[i],
+             MAINADDR(regs->tlb.main[i],
+                     ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)))
+                    - regs->mainstor);
             matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
         }
         logmsg("SIE: %d tlbID matches\n", matches);
