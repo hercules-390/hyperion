@@ -3,17 +3,37 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
+# $Id$
 #
 #  Set NODEBUG flag appropriately before !INCLUDEing <win32.mak>
+#  and attempt to determine the Visual Studio compiler version
 #
 #
 #                           CHANGE HISTORY
-# DD/MM/YY Description
+# $Log$
 #
+# DD/MM/YY Description
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
 #
 # ***************************************************************************
 
+# Use environment variables to determine the Visual Studio compiler level
+
+!IFDEF VS90COMNTOOLS
+!MESSAGE Makefile will assume VS9 or VS2008Express (MSVC version 15) 
+vsversion=9   
+!ELSEIFDEF VS80COMNTOOLS
+!MESSAGE Makefile will assume VS8 or VS2005Express (MSVC version 14) 
+vsversion=8 
+!ELSEIFDEF VS70COMNTOOLS
+!MESSAGE Makefile will assume VS7 (MSVC version 13)
+vsversion=7 
+!ELSE
+!MESSAGE Makefile will assume VC++ Toolkit 2003 (MSVC version 13) 
+vsversion=7 
+!ENDIF
+!MESSAGE
+ 
 # -------------------------------------------------
 # NOTE! must set the 'NODEBUG' variable properly
 #       BEFORE calling win32.mak since it uses it.

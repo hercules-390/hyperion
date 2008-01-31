@@ -12,6 +12,9 @@
 #
 #                           CHANGE HISTORY
 # $Log$
+# Revision 1.3  2008/01/23 17:59:28  rbowler
+# Modify detection of MSVC level in makefile
+#
 # Revision 1.2  2008/01/23 00:47:40  rbowler
 # Modifications for VS9 C++ 2008 Express by Charlie Brint
 #
@@ -21,22 +24,6 @@
 #
 # ***************************************************************************
 
-# Use environment variables to determine the compiler level
-
-!IFDEF VS90COMNTOOLS
-!MESSAGE Makefile will assume VS9 or VS2008Express (MSVC version 15) 
-vsversion=9   
-!ELSEIFDEF VS80COMNTOOLS
-!MESSAGE Makefile will assume VS8 or VS2005Express (MSVC version 14) 
-vsversion=8 
-!ELSEIFDEF VS70COMNTOOLS
-!MESSAGE Makefile will assume VS7 (MSVC version 13)
-vsversion=7 
-!ELSE
-!MESSAGE Makefile will assume VC++ Toolkit 2003 (MSVC version 13) 
-vsversion=7 
-!ENDIF
- 
 # -------------------------------------------------
 # NOTE! must set our prefered 'cdebug' value(s)
 #       AFTER calling win32.mak since it sets it.
@@ -60,6 +47,7 @@ MAPFILE = /map:$(MAPDIR)\$(@B).map
 # kicks out the warning: "D9035 option 'QIfist' has been deprecated
 # and will be removed in a future release"). Their documentation
 # says to use the new /fp option instead.
+# rbowler: Compiler version check (vsversion) is now in CONFIG.msvc
 
 !IF $(vsversion) < 8 
 
