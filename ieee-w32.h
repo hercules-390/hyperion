@@ -1,6 +1,12 @@
+/* IEEE-SOL.H   (c) Copyright Greg Smith, 2002-2008                  */
+/*              Hercules IEEE floating point definitions for Windows */
+
 // $Id$
 //
 // $Log$
+// Revision 1.7  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #ifndef _IEEE_W32_H
 #define _IEEE_W32_H
