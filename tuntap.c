@@ -18,11 +18,17 @@
 // $Id$
 //
 // $Log$
+// Revision 1.45  2007/06/23 00:04:19  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.44  2006/12/08 09:43:31  jj
 // Add CVS message log
 //
 
 #include "hstdinc.h"
+
+/* jbs 1/19/2008 added ifdef on __SOLARIS__ */
+#if !defined(__SOLARIS__)
 
 #include "hercules.h"
 #include "tuntap.h"
@@ -978,3 +984,5 @@ void build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip )
     *(out_mac+4) = *(in_ip+2);
     *(out_mac+5) = *(in_ip+3);
 }
+
+#endif /*  !defined(__SOLARIS__)  jbs*/

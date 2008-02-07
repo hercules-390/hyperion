@@ -38,6 +38,9 @@
 */
 
 // $Log$
+// Revision 1.15  2007/02/26 15:34:46  fish
+// remove stupid fish prt spooler crap
+//
 // Revision 1.14  2006/12/08 09:43:26  jj
 // Add CVS message log
 //
@@ -220,6 +223,28 @@
   #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_FORK_API_FOR_SH_COMMAND
 #endif
 
+/*-------------------------------------------------------------------*/
+/* Hard-coded Solaris-specific features and options...               */
+/*-------------------------------------------------------------------*/
+#elif defined(__SOLARIS__)              /* "Solaris" options         */
+
+#undef  OPTION_SCSI_TAPE                /* No SCSI tape support      */
+#undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
+#undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
+#define DLL_IMPORT   extern
+#define DLL_EXPORT
+/* #undef  OPTION_PTTRACE maybe not, after all */
+
+#define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
+#define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
+
+#define DEFAULT_HERCPRIO    0
+#define DEFAULT_TOD_PRIO  -20
+#define DEFAULT_CPU_PRIO   15
+#define DEFAULT_DEV_PRIO    8
+
+#define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
+#define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
 
 /*-------------------------------------------------------------------*/
 /* Hard-coded Apple-specific features and options...                 */

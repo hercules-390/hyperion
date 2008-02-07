@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.13  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.12  2006/12/08 09:43:25  jj
 // Add CVS message log
 //
@@ -95,7 +98,7 @@ typedef struct _CTLREQ
   union
   {
     struct ifreq     ifreq;
-#if !defined(__APPLE__) && !defined(__FreeBSD__)
+#if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(__SOLARIS__)
     struct rtentry   rtentry;
 #endif
   }

@@ -61,6 +61,9 @@
  */
 
 // $Log$
+// Revision 1.78  2007/06/23 00:04:13  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.77  2007/01/13 07:22:32  bernard
 // backout ccmask
 //
@@ -134,6 +137,11 @@ do { \
 #include "inline.h"
 #if defined(WIN32) && !defined(HAVE_FENV_H)
   #include "ieee-w32.h"
+#endif
+
+/* jbs 01/16/2008 */
+#if defined(__SOLARIS__)
+  #include "ieee-sol.h"
 #endif
 
 /* Definitions of BFP rounding methods */

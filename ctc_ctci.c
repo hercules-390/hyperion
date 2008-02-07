@@ -11,6 +11,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.70  2008/01/11 21:33:21  fish
+// new 'ctc' command to enable/disable debug option on demand
+//
 // Revision 1.69  2007/11/21 22:54:14  fish
 // Use new BEGIN_DEVICE_CLASS_QUERY macro
 //
@@ -28,6 +31,10 @@
 //
 
 #include "hstdinc.h"
+
+/* jbs 10/27/2007 added _SOLARIS_   silly typo fixed 01/18/08 when looked at this again */
+#if !defined(__SOLARIS__)
+
 #include "hercules.h"
 #include "ctcadpt.h"
 #include "tuntap.h"
@@ -1562,3 +1569,4 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
     return 0;
 }
+#endif /* !defined(__SOLARIS__)   jbs */
