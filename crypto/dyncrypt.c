@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.55  2007/08/26 08:14:05  bernard
+// prepare future extension, no code change!
+//
 // Revision 1.54  2007/06/23 00:04:19  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -131,7 +134,7 @@
 /*----------------------------------------------------------------------------*/
 /* CPU determined amount of data (processed in one go)                        */
 /*----------------------------------------------------------------------------*/
-#define PROCESS_MAX     4096
+#define PROCESS_MAX     16777216
 
 /*----------------------------------------------------------------------------*/
 /* Used for printing debugging info                                           */
