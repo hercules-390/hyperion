@@ -1,3 +1,4 @@
+11 Feb 2008 Fixed intermediate errors cmpsc - Bernard
 07 Feb 2008 Solaris build support by Jeff Savit - Roger Bowler
 24 Jan 2008 Fix invalidate_tlbe processing - Paul Leisy by Greg
 23 Jan 2008 Fix and optimize TR instruction - Greg
