@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.59  2008/01/19 08:24:47  bernard
+// Grouped data exceptions to the fetching functions. No functional change.
+//
 // Revision 1.58  2008/01/16 22:37:01  fish
 // Data exception test for nonzero bit34 ece entries should ONLY be for UNPRECEDED ece entries, NOT ALL ece entries.
 //
@@ -300,6 +303,30 @@
 }
 #endif /* !defined(COMMITREGS) */
 
+#if !defined(INITREGS)
+#define INITREGS(iregs, regs, r1, r2) \
+{ \
+  (iregs)->gr[1] = (regs)->gr[1]; \
+  (iregs)->gr[(r1)] = (regs)->gr[(r1)]; \
+  (iregs)->gr[(r1) + 1] = (regs)->gr[(r1) + 1]; \
+  (iregs)->gr[(r2)] = (regs)->gr[(r2)]; \
+  (iregs)->gr[(r2) + 1] = (regs)->gr[(r2) + 1]; \
+}
+#endif /* !defined(INITREGS) */
+
+#if (__GEN_ARCH == 900)
+#undef INITREGS
+#define INITREGS(iregs, regs, r1, r2) \
+{ \
+  (iregs)->gr[1] = (regs)->gr[1]; \
+  (iregs)->gr[(r1)] = (regs)->gr[(r1)]; \
+  (iregs)->gr[(r1) + 1] = (regs)->gr[(r1) + 1]; \
+  (iregs)->gr[(r2)] = (regs)->gr[(r2)]; \
+  (iregs)->gr[(r2) + 1] = (regs)->gr[(r2) + 1]; \
+  (iregs)->psw.amode64 = (regs)->psw.amode64; \
+}
+#endif /* defined(__GEN_ARCH == 900) */
+
 /*----------------------------------------------------------------------------*/
 /* During compression and expansion a data exception is recognized on writing */
 /* or searching child number 261. The next macro's does the counting and      */
@@ -310,7 +337,7 @@
     #define TESTCH261(regs, processed, length) \
       if(unlikely(((processed) += (length)) > 260)) \
       { \
-        logmsg("  writing or searching child 261 -> data exception\n"); \
+        logmsg("writing or searching child 261 -> data exception\n"); \
         ARCH_DEP(program_interrupt)((regs), PGM_DATA_EXCEPTION); \
       }
   #else /* !defined(OPTION_CMPSC_DEBUGLVL) || !(OPTION_CMPSC_DEBUGLVL & 3) */
@@ -332,7 +359,7 @@
 /*----------------------------------------------------------------------------*/
 /* Constants                                                                  */
 /*----------------------------------------------------------------------------*/
-#define PROCESS_MAX          4096      /* CPU-determined amount of data       */ 
+#define PROCESS_MAX          16777216  /* CPU-determined amount of data       */ 
 #define TRUEFALSE(boolean)   ((boolean) ? "True" : "False")
 
 /*----------------------------------------------------------------------------*/
@@ -399,6 +426,11 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     if(unlikely(((GR1_cbn(iregs) + GR0_smbsz(regs) - 1) / 8) >= GR_A(r1 + 1, iregs)))
     {
       regs->psw.cc = 1;
+
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
+      logmsg("compress : end of output buffer\n");
+#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
+
       return;
     }
 
@@ -444,6 +476,10 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
     /* Commit registers, we have completed a full compression */
     COMMITREGS(regs, iregs, r1, r2);
 
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
+    logmsg("compress : registers committed\n");
+#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
+
     /* When reached end of source, return to caller */
     if(unlikely(eos))
       return;
@@ -451,6 +487,11 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 
   /* Reached model dependent CPU processing amount */
   regs->psw.cc = 3;
+
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
+  logmsg("compress : reached CPU determined amount of data\n");
+#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
+
 }
 
 /*----------------------------------------------------------------------------*/
@@ -489,6 +530,11 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 
       /* Commit registers, we have completed a expansion! (just a copy) */
       COMMITREGS(regs, iregs, r1, r2);
+
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
+    logmsg("expand   : registers committed\n");
+#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
+
     }
     else
     {
@@ -522,7 +568,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-          logmsg("expand: trying to process entry 128\n");
+          logmsg("expand   : trying to process entry 128\n");
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
           ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
@@ -541,11 +587,20 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 
       /* Commit registers, we have completed an expansion */
       COMMITREGS(regs, iregs, r1, r2);
+
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
+      logmsg("expand   : registers committed\n");
+#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
+
     }
   }
 
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
+
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
+  logmsg("expand  : reached CPU determined amount of data\n");
+#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 }
 
 /*----------------------------------------------------------------------------*/
@@ -766,7 +821,7 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol
   GR1_setcbn(iregs, (GR1_cbn(iregs) + GR0_smbsz(regs)) % 8);
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-  logmsg("fetch_is : %04X, cbn=%d, GR%02d=" F_GREG ", GR%02d=" F_GREG "\n", *index_symbol, GR1_cbn(iregs), r2, iregs->GR(r2), r2 + 1, iregs->GR(r2 + 1));
+  logmsg("fetch_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", *index_symbol, GR1_cbn(iregs), r2, iregs->GR(r2), r2 + 1, iregs->GR(r2 + 1));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
   return(0);
@@ -862,7 +917,14 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
 
   /* Get the next character when there are children */
   if(unlikely((CCE_ccs(cce) && ARCH_DEP(fetch_ch)(r2, regs, iregs, next_ch, 0))))
+  {
+
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
+    logmsg("search_cce: end of source\n");
+#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
+
     return(end_of_source);
+  }
 
   /* Now check all children in parent */
   for(i = 0; i < CCE_ccs(cce); i++)
@@ -1118,7 +1180,7 @@ static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 inde
   GR1_setcbn(iregs, (GR1_cbn(iregs) + GR0_smbsz(regs)) % 8);
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-  logmsg("store_is : %04X, cbn=%d, GR%02d=" F_GREG ", GR%02d=" F_GREG "\n", index_symbol, GR1_cbn(iregs), r1, iregs->GR(r1), r1 + 1, iregs->GR(r1 + 1));
+  logmsg("store_is : %04X, cbn=%d, GR%02d=" F_VADR ", GR%02d=" F_GREG "\n", index_symbol, GR1_cbn(iregs), r1, iregs->GR(r1), r1 + 1, iregs->GR(r1 + 1));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
 }
 
@@ -1157,40 +1219,35 @@ DEF_INST(compression_call)
 
 #ifdef OPTION_CMPSC_DEBUGLVL
   logmsg("CMPSC: compression call\n");
-  logmsg("  r1      : GR%02d\n", r1);
-  logmsg("  address : " F_VADR "\n", regs->GR(r1));
-  logmsg("  length  : " F_GREG "\n", regs->GR(r1 + 1));
-  logmsg("  r2      : GR%02d\n", r2);
-  logmsg("  address : " F_VADR "\n", regs->GR(r2));
-  logmsg("  length  : " F_GREG "\n", regs->GR(r2 + 1));
-  logmsg("  GR00    : " F_GREG "\n", (regs)->GR(0));
-  logmsg("    st    : %s\n", TRUEFALSE(GR0_st((regs))));
-  logmsg("    cdss  : %d\n", GR0_cdss((regs)));
-  logmsg("    f1    : %s\n", TRUEFALSE(GR0_f1((regs))));
-  logmsg("    e     : %s\n", TRUEFALSE(GR0_e((regs))));
-  logmsg("    smbsz > %d\n", GR0_smbsz((regs)));
-  logmsg("    dctsz > %08X\n", GR0_dctsz((regs)));
-  logmsg("  GR01    : " F_GREG "\n", (regs)->GR(1));
-  logmsg("    dictor: " F_GREG "\n", GR1_dictor((regs)));
-  logmsg("    sttoff: %08X\n", GR1_sttoff((regs)));
-  logmsg("    cbn   : %d\n", GR1_cbn((regs)));
+  logmsg(" r1      : GR%02d\n", r1);
+  logmsg(" address : " F_VADR "\n", regs->GR(r1));
+  logmsg(" length  : " F_GREG "\n", regs->GR(r1 + 1));
+  logmsg(" r2      : GR%02d\n", r2);
+  logmsg(" address : " F_VADR "\n", regs->GR(r2));
+  logmsg(" length  : " F_GREG "\n", regs->GR(r2 + 1));
+  logmsg(" GR00    : " F_GREG "\n", regs->GR(0));
+  logmsg("   st    : %s\n", TRUEFALSE(GR0_st(regs)));
+  logmsg("   cdss  : %d\n", GR0_cdss(regs));
+  logmsg("   f1    : %s\n", TRUEFALSE(GR0_f1(regs)));
+  logmsg("   e     : %s\n", TRUEFALSE(GR0_e(regs)));
+  logmsg("   smbsz > %d\n", GR0_smbsz(regs));
+  logmsg("   dctsz > %08X\n", GR0_dctsz(regs));
+  logmsg(" GR01    : " F_GREG "\n", regs->GR(1));
+  logmsg("   dictor: " F_GREG "\n", GR1_dictor(regs));
+  logmsg("   sttoff: %08X\n", GR1_sttoff(regs));
+  logmsg("   cbn   : %d\n", GR1_cbn(regs));
 #endif /* OPTION_CMPSC_DEBUGLVL */
 
   /* Check the registers on even-odd pairs and valid compression-data symbol size */
   if(unlikely(r1 & 0x01 || r2 & 0x01 || !GR0_cdss(regs) || GR0_cdss(regs) > 5))
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-#if (__GEN_ARCH == 900)
-  /* In z/Archtecture we need the 64bit flag */
-  iregs.psw.amode64 = regs->psw.amode64;
-#endif /* (__GEN_ARCH == 900) */
-
   /* Set possible Data Exception code right away */
   regs->dxc = DXC_DECIMAL;     
   iregs.dxc = DXC_DECIMAL;
 
-  /* Initialize intermediate registers using COMMITREGS the other way round */
-  COMMITREGS(&iregs, regs, r1, r2);
+  /* Initialize intermediate registers */
+  INITREGS(&iregs, regs, r1, r2);
 
   /* Now go to the requested function */
   if(likely(GR0_e(regs)))
