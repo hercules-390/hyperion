@@ -1,3 +1,4 @@
+12 Feb 2008 Fixes for SPKA, BASR, TBEDR, PR - Paul Leisy
 12 Feb 2008 dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook - Fish
 11 Feb 2008 Fixed intermediate errors cmpsc - Bernard
 07 Feb 2008 Solaris build support by Jeff Savit - Roger Bowler

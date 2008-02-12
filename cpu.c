@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.195  2007/12/10 23:12:02  gsmith
+// Tweaks to OPTION_MIPS_COUNTING processing
+//
 // Revision 1.194  2007/12/07 12:08:51  rbowler
 // Enable B9xx,EBxx opcodes in S/370 mode for ETF2 (correction)
 //
@@ -494,6 +497,7 @@ static char *pgmintname[] = {
            program checks during trace */
         ilc = realregs->execflag ? 4 : 2;
         realregs->ip += 2;
+        realregs->psw.IA += ilc;
     }
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
     if(realregs->sie_active)

@@ -61,6 +61,9 @@
  */
 
 // $Log$
+// Revision 1.79  2008/02/07 00:29:04  rbowler
+// Solaris build support by Jeff Savit
+//
 // Revision 1.78  2007/06/23 00:04:13  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -1166,7 +1169,7 @@ DEF_INST(convert_float_long_to_bfp_long_reg)
     BFPRM_CHECK(m3,regs);
 
     regs->psw.cc =
-        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r1), m3,
+        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r2), m3,
             /*fractbits*/52, /*emax*/1023, /*ebias*/1023,
             &(op1.sign), &(op1.exp), &(op1.fract));
 
@@ -1189,7 +1192,7 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
     BFPRM_CHECK(m3,regs);
 
     regs->psw.cc =
-        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r1), m3,
+        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r2), m3,
             /*fractbits*/23, /*emax*/127, /*ebias*/127,
             &(op1.sign), &(op1.exp), &fract);
     op1.fract = (U32)fract;

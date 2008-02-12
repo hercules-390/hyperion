@@ -25,6 +25,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.84  2007/06/23 00:04:16  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.83  2006/12/20 04:26:20  gsmith
 // 19 Dec 2006 ip_all.pat - performance patch - Greg Smith
 //
@@ -1392,6 +1395,15 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
 #endif /*defined(FEATURE_ESAME)*/
 
+    /* [5.12.4.4] Pass back the absolute address of the entry
+       descriptor of the preceding linkage stack entry.  The
+       next entry size field of this entry will be cleared on
+       successful completion of the PR instruction */
+    *lsedap = ARCH_DEP(abs_stack_addr) (lsep, regs, ACCTYPE_WRITE);
+
+    /* [5.12.4.5] Update CR15 to point to the previous entry */
+    regs->CR(15) = lsep & CR15_LSEA;
+
     /* Load new PSW using the bytes extracted from the stack entry */
     /* The rc will be checked by calling routine for PIC 06        */
     *rc = ARCH_DEP(load_psw) (regs, newpsw);
@@ -1404,15 +1416,6 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
     /* restore PER masks which could have been wiped out by load_psw */
     SET_IC_MASK(regs);
-
-    /* [5.12.4.4] Pass back the absolute address of the entry
-       descriptor of the preceding linkage stack entry.  The
-       next entry size field of this entry will be cleared on
-       successful completion of the PR instruction */
-    *lsedap = ARCH_DEP(abs_stack_addr) (lsep, regs, ACCTYPE_WRITE);
-
-    /* [5.12.4.5] Update CR15 to point to the previous entry */
-    regs->CR(15) = lsep & CR15_LSEA;
 
 #ifdef STACK_DEBUG
     logmsg (_("stack: CR15=" F_CREG "\n"), regs->CR(15));
