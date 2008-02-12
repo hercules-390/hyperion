@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.48  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.47  2006/12/08 09:43:25  jj
 // Add CVS message log
 //
@@ -75,6 +78,7 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( system_command,             UNRESOLVED      );
     HDL_REGISTER( daemon_task,                UNRESOLVED      );
     HDL_REGISTER( debug_cpu_state,            UNRESOLVED      );
+    HDL_REGISTER( debug_cd_cmd,               UNRESOLVED      );
     HDL_REGISTER( debug_device_state,         UNRESOLVED      );
     HDL_REGISTER( debug_program_interrupt,    UNRESOLVED      );
     HDL_REGISTER( debug_diagnose,             UNRESOLVED      );
@@ -118,6 +122,7 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE( system_command             );
     HDL_RESOLVE( daemon_task                );
     HDL_RESOLVE( debug_cpu_state            );
+    HDL_RESOLVE( debug_cd_cmd               );
     HDL_RESOLVE( debug_device_state         );
     HDL_RESOLVE( debug_program_interrupt    );
     HDL_RESOLVE( debug_diagnose             );

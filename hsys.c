@@ -1,6 +1,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.6  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -26,6 +29,7 @@ DLL_EXPORT void  (*daemon_task) (void);
 DLL_EXPORT int   (*config_command) (int argc, char *argv[], char *cmdline);
 DLL_EXPORT int   (*system_command) (int argc, char *argv[], char *cmdline);
 DLL_EXPORT void *(*debug_cpu_state) (REGS *);
+DLL_EXPORT void  (*debug_cd_cmd) (char *);
 DLL_EXPORT void *(*debug_device_state) (DEVBLK *);
 DLL_EXPORT void *(*debug_program_interrupt) (REGS *, int);
 DLL_EXPORT void *(*debug_diagnose) (U32, int, int, REGS *);

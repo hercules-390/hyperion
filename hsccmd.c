@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.236  2008/01/25 00:50:18  gsmith
+// Fix invalidate_tlbe processing - Paul Leisy
+//
 // Revision 1.235  2008/01/18 16:19:07  rbowler
 // Help text for sfk command
 //
@@ -1598,6 +1601,8 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
     chdir(path);
     getcwd( cwd, sizeof(cwd) );
     logmsg("%s\n",cwd);
+    if (debug_cd_cmd)
+        debug_cd_cmd( cwd );
     return 0;
 }
 

@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.16  2008/01/04 02:28:51  gsmith
+// sf commands update
+//
 // Revision 1.15  2007/01/11 19:54:33  fish
 // Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
 //
@@ -213,6 +216,7 @@ HSYS_DLL_IMPORT void *(*panel_command)  (void *);
 
 HSYS_DLL_IMPORT void *(*debug_device_state)         (DEVBLK *);
 HSYS_DLL_IMPORT void *(*debug_cpu_state)            (REGS *);
+HSYS_DLL_IMPORT void  (*debug_cd_cmd)               (char *);
 HSYS_DLL_IMPORT void *(*debug_watchdog_signal)      (REGS *);
 HSYS_DLL_IMPORT void *(*debug_program_interrupt)    (REGS *, int);
 HSYS_DLL_IMPORT void *(*debug_diagnose)             (U32, int,  int, REGS *);
@@ -226,6 +230,7 @@ HSYS_DLL_IMPORT void *(*debug_sclp_event_data)      (void *, void *, REGS *);
 void *panel_command (void *cmdline);
 void panel_display (void);
 #define debug_cpu_state                 NULL
+#define debug_cd_cmd                    NULL
 #define debug_device_state              NULL
 #define debug_program_interrupt         NULL
 #define debug_diagnose                  NULL
