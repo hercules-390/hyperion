@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.56  2008/02/11 12:17:39  bernard
+// Enlarged cpu determined data from 4k to 16k
+//
 // Revision 1.55  2007/08/26 08:14:05  bernard
 // prepare future extension, no code change!
 //
@@ -134,7 +137,7 @@
 /*----------------------------------------------------------------------------*/
 /* CPU determined amount of data (processed in one go)                        */
 /*----------------------------------------------------------------------------*/
-#define PROCESS_MAX     16777216
+#define PROCESS_MAX        16384
 
 /*----------------------------------------------------------------------------*/
 /* Used for printing debugging info                                           */
