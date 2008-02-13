@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.60  2008/02/11 12:15:36  bernard
+// Errors in intermediate registers. They did not harm yet!
+//
 // Revision 1.59  2008/01/19 08:24:47  bernard
 // Grouped data exceptions to the fetching functions. No functional change.
 //
@@ -359,7 +362,7 @@
 /*----------------------------------------------------------------------------*/
 /* Constants                                                                  */
 /*----------------------------------------------------------------------------*/
-#define PROCESS_MAX          16777216  /* CPU-determined amount of data       */ 
+#define PROCESS_MAX             16384  /* CPU-determined amount of data       */ 
 #define TRUEFALSE(boolean)   ((boolean) ? "True" : "False")
 
 /*----------------------------------------------------------------------------*/
@@ -406,16 +409,19 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
 {
   BYTE cce[8];                         /* compression character entry         */
   int eos;                             /* indication end of source            */
+  GREG exit_value;                     /* return cc=3 on this value           */
   U16 last_match;                      /* Last matched index symbol           */
   BYTE next_ch=0;                      /* next character read                 */
-  int xlated;                          /* number of bytes processed           */
 
   /* Initialize end of source */
   eos = 0;
 
   /* Try to process the CPU-determined amount of data */
-  xlated = 0;
-  while(xlated++ < PROCESS_MAX)
+  if(GR_A(r2 + 1, regs) <= PROCESS_MAX)
+    exit_value = 0;
+  else
+    exit_value = GR_A(r2 + 1, regs) - PROCESS_MAX;
+  while(exit_value <= GR_A(r2 + 1, regs))
   {
 
     /* Get the next character, return on end of source */
@@ -503,13 +509,16 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   U16 index_symbol=0;                  /* Index symbol                        */
   BYTE ece[8];                         /* Expansion Character Entry           */
   int entries;                         /* Entries processed                   */
+  GREG exit_value;                     /* return cc=3 on this value           */
   U16 pptr;                            /* predecessor pointer                 */
   int written;                         /* Childs written                      */
-  int xlated;                          /* number of bytes generated           */
-
+  
   /* Try to generate the CPU-determined amount of data */
-  xlated = 0;
-  while(xlated++ < PROCESS_MAX)
+  if(GR_A(r1 + 1, regs) <= PROCESS_MAX)
+    exit_value = 0;
+  else
+    exit_value = GR_A(r1 + 1, regs) - PROCESS_MAX;
+  while(exit_value <= GR_A(r1 + 1, regs))
   {
 
     /* Get an index symbol, return on end of source */
