@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.37  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.36  2007/06/20 04:09:54  gsmith
 // make 3990-6 default control unit for 3390 devices
 //
@@ -237,9 +240,16 @@ int len;
     store_fw (devid +32, cu->ciw7);
     store_fw (devid +36, cu->ciw8);
 
-    /* Calculate length */
-    for (len = 40; fetch_fw(devid + len-4) == 0; len -= 4);
-    len = len < 12 ? 12 : len;
+    /* Set length */
+    if (cu->ciw8 != 0) len = 40;
+    else if (cu->ciw7 != 0) len = 36;
+    else if (cu->ciw6 != 0) len = 32;
+    else if (cu->ciw5 != 0) len = 28;
+    else if (cu->ciw4 != 0) len = 24;
+    else if (cu->ciw3 != 0) len = 20;
+    else if (cu->ciw2 != 0) len = 16;
+    else if (cu->ciw1 != 0) len = 12;
+    else len = 7;
 
     return len;
 }
