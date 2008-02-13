@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.256  2007/12/10 23:12:02  gsmith
+// Tweaks to OPTION_MIPS_COUNTING processing
+//
 // Revision 1.255  2007/06/23 00:04:05  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -4613,6 +4616,7 @@ BYTE    pkey;                           /* Original key              */
 
     /* Set PSW key */
     regs->psw.pkey = n;
+    INVALIDATE_AIA(regs);
 }
 
 
