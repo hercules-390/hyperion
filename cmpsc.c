@@ -15,6 +15,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.61  2008/02/13 08:50:11  bernard
+// The cpu determined amount of data is now 16384 and it is determined
+// on 16k uncompressed data processing in expand and compress.
+//
 // Revision 1.60  2008/02/11 12:15:36  bernard
 // Errors in intermediate registers. They did not harm yet!
 //
@@ -417,7 +421,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
   eos = 0;
 
   /* Try to process the CPU-determined amount of data */
-  if(GR_A(r2 + 1, regs) <= PROCESS_MAX)
+  if(likely(GR_A(r2 + 1, regs) <= PROCESS_MAX))
     exit_value = 0;
   else
     exit_value = GR_A(r2 + 1, regs) - PROCESS_MAX;
@@ -460,7 +464,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
         case search_siblings:
 
           /* Try to find a child in the sibling descriptors */
-          if(ARCH_DEP(search_sd)(r2, regs, iregs, cce, &next_ch, &last_match) == parent_found)
+          if(likely(ARCH_DEP(search_sd)(r2, regs, iregs, cce, &next_ch, &last_match) == parent_found))
             continue;
           break;
 
@@ -514,7 +518,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
   int written;                         /* Childs written                      */
   
   /* Try to generate the CPU-determined amount of data */
-  if(GR_A(r1 + 1, regs) <= PROCESS_MAX)
+  if(likely(GR_A(r1 + 1, regs) <= PROCESS_MAX))
     exit_value = 0;
   else
     exit_value = GR_A(r1 + 1, regs) - PROCESS_MAX;
@@ -526,7 +530,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
       return;
 
     /* Check if this is an alphabet entry */
-    if(index_symbol <= 0xff)
+    if(unlikely(index_symbol <= 0xff))
     {
 
       /* Write the alphabet entry, return on trouble */
@@ -940,11 +944,11 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
   {
 
     /* Stop searching when child tested and no consecutive child character */
-    if(!ind_search_siblings && !CCE_ccc(cce, i))
+    if(unlikely(!ind_search_siblings && !CCE_ccc(cce, i)))
       return(write_index_symbol);
 
     /* Compare character with child */
-    if(*next_ch == CCE_cc(cce, i))
+    if(unlikely(*next_ch == CCE_cc(cce, i)))
     {
 
       /* Child is tested, so stop searching for siblings*/
@@ -966,7 +970,7 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
       ARCH_DEP(fetch_cce)(r2, regs, ccce, CCE_cptr(cce) + i);
 
       /* Check if additional extension characters match */
-      if(ARCH_DEP(test_ec)(r2, regs, iregs, ccce))
+      if(likely(ARCH_DEP(test_ec)(r2, regs, iregs, ccce)))
       {
 
         /* Set last match */
@@ -987,7 +991,7 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
   }
 
   /* Are there siblings? */
-  if(CCE_mcc(cce))
+  if(likely(CCE_mcc(cce)))
     return(search_siblings);
 
   /* No siblings, write found index symbol */
@@ -1034,7 +1038,7 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
       if(unlikely(!ind_search_siblings && !SD_ccc(regs, sd, i)))
         return(write_index_symbol);
 
-      if(*next_ch == SD_sc(regs, sd, i))
+      if(unlikely(*next_ch == SD_sc(regs, sd, i)))
       {
 
         /* Child is tested, so stop searching for siblings*/
@@ -1056,7 +1060,7 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
         ARCH_DEP(fetch_cce)(r2, regs, ccce, CCE_cptr(cce) + sd_ptr + i + 1);
 
         /* Check if additional extension characters match */
-        if(ARCH_DEP(test_ec)(r2, regs, iregs, ccce))
+        if(unlikely(ARCH_DEP(test_ec)(r2, regs, iregs, ccce)))
         {
 
           /* Set last match */
@@ -1205,7 +1209,7 @@ static int ARCH_DEP(test_ec)(int r2, REGS *regs, REGS *iregs, BYTE *cce)
   {
 
     /* Get a character return on nomatch or end of source */
-    if(ARCH_DEP(fetch_ch)(r2, regs, iregs, &ch, i + 1) || ch != CCE_ec(cce, i))
+    if(unlikely(ARCH_DEP(fetch_ch)(r2, regs, iregs, &ch, i + 1) || ch != CCE_ec(cce, i)))
       return(0);
   }
 
