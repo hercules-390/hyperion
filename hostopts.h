@@ -38,6 +38,9 @@
 */
 
 // $Log$
+// Revision 1.16  2008/02/07 00:29:04  rbowler
+// Solaris build support by Jeff Savit
+//
 // Revision 1.15  2007/02/26 15:34:46  fish
 // remove stupid fish prt spooler crap
 //
@@ -226,7 +229,15 @@
 /*-------------------------------------------------------------------*/
 /* Hard-coded Solaris-specific features and options...               */
 /*-------------------------------------------------------------------*/
-#elif defined(__SOLARIS__)              /* "Solaris" options         */
+#elif defined(__sun__) && defined(__svr4__)
+
+#define __SOLARIS__ 1
+
+/* jbs 10/15/2003 need to define INADDR_NONE if using Solaris 10
+   and not Solaris Nevada aka OpenSolaris */
+#if !defined(INADDR_NONE)
+  #define INADDR_NONE                   0xffffffffU
+#endif
 
 #undef  OPTION_SCSI_TAPE                /* No SCSI tape support      */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */

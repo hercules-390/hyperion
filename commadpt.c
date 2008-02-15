@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.42  2008/02/07 00:29:04  rbowler
+// Solaris build support by Jeff Savit
+//
 // Revision 1.41  2007/12/14 17:48:52  rbowler
 // Enable SENSE ID CCW for 2703,3410,3420
 //
@@ -24,10 +27,6 @@
 #include "devtype.h"
 #include "parser.h"
 #include "commadpt.h"
-
-#if defined(__SOLARIS__) && defined(__SOLARIS10__)
-#define INADDR_NONE             0xffffffffU
-#endif
 
 #if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
   SYSBLK *psysblk;
