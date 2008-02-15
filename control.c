@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.257  2008/02/13 06:54:35  jj
+// *** empty log message ***
+//
 // Revision 1.256  2007/12/10 23:12:02  gsmith
 // Tweaks to OPTION_MIPS_COUNTING processing
 //
@@ -2650,12 +2653,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     oldpasn = regs->CR(4) & CR4_PASN;
     oldpstd = regs->CR(1);
 
-#ifdef FEATURE_TRACING
-    /* Form trace entry if ASN tracing is active */
-    if (regs->CR(12) & CR12_ASNTRACE)
-        newcr12 = ARCH_DEP(trace_pc) (pctea, regs);
-#endif /*FEATURE_TRACING*/
-
     /* [5.5.3.1] Load the linkage table designation */
     if (!ASF_ENABLED(regs))
     {
@@ -2697,6 +2694,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
        control bit in linkage table designation is zero */
     if ((ltdesig & LTD_SSLINK) == 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+
+#ifdef FEATURE_TRACING
+    /* Form trace entry if ASN tracing is active */
+    if (regs->CR(12) & CR12_ASNTRACE)
+        newcr12 = ARCH_DEP(trace_pc) (pctea, regs);
+#endif /*FEATURE_TRACING*/
 
     /* [5.5.3.2] Linkage table lookup */
     if (!ASN_AND_LX_REUSE_ENABLED(regs))
