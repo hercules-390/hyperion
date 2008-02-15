@@ -32,6 +32,9 @@
 ###############################################################################
 
 # $Log$
+# Revision 1.193  2007/06/24 04:17:15  jmaynard
+# Grumble. Missed the version tag in the MSVC build. Fixed.
+#
 # Revision 1.192  2007/06/20 23:40:58  jmaynard
 # 3.05 version bump.
 #
@@ -672,6 +675,8 @@ AC_CHECK_LIB( bz2,    BZ2_bzBuffToBuffDecompress,
             [ hc_cv_have_libbz2=yes ],
             [ hc_cv_have_libbz2=no  ] )
 AC_CHECK_LIB( iconv,  iconv          )
+# jbs 10/15/2003 Solaris requires -lrt for sched_yield() and fdatasync()
+AC_CHECK_LIB( rt,     sched_yield    )
 
 AC_CACHE_SAVE()
 
