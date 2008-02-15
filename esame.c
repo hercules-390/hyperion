@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.191  2007/11/17 21:57:52  rbowler
+// Correct comments on two #endif statements
+//
 // Revision 1.190  2007/11/15 21:34:01  rbowler
 // EPSW correction in accord with ESA/390 POP ninth edition
 //
@@ -373,6 +376,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->program_interrupt (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
+    /* Special operation exception when setting AR space mode
+       and ASF is off */
+    if(!REAL_MODE(&regs->psw)
+      && ((psw[2] & 0xC0) == 0x40)
+      && !ASF_ENABLED(regs) )
+        regs->program_interrupt (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* Privileged Operation exception when setting home
        space mode in problem state */
