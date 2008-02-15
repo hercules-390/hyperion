@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.118  2008/01/24 00:59:03  gsmith
+// Fix and optimize TR instruction
+//
 // Revision 1.117  2007/12/30 17:48:21  bernard
 // Anoter UTF xlate error
 //
@@ -1100,7 +1103,7 @@ U64     dreg;                           /* Double word work area     */
     PERFORM_SERIALIZATION (regs);
 
     /* Retrieve the TOD epoch, clock bits 0-51, and 4 zeroes */
-    dreg = tod_clock(regs);
+    dreg = 0x00ffffffffffffffULL & tod_clock(regs);
 
     /* Check that all 16 bytes of the operand are accessible */
     ARCH_DEP(validate_operand) (effective_addr2, b2, 15, ACCTYPE_WRITE, regs);
@@ -1120,7 +1123,7 @@ U64     dreg;                           /* Double word work area     */
     effective_addr2 &= ADDRESS_MAXWRAP(regs);
 
     /* Store nonzero value in pos 72 to 111 */
-    dreg = 0x0000000100000000ULL | (regs->cpuad << 16) | regs->todpr;
+    dreg = 0x0000000001000000ULL | (regs->cpuad << 16) | regs->todpr;
 
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
 
