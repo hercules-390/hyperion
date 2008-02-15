@@ -1,6 +1,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.39  2006/12/21 22:39:38  gsmith
+// 21 Dec 2006 Range for s+, t+ - Greg Smith
+//
 // Revision 1.38  2006/12/08 09:43:19  jj
 // Add CVS message log
 //
@@ -281,6 +284,7 @@
 
 #define SET_IC_PER(_regs) \
  do { \
+  (_regs)->ints_state &= (~IC_PER_MASK); \
   (_regs)->ints_state |= (((_regs)->CR(9) >> IC_CR9_SHIFT) & IC_PER_MASK); \
   (_regs)->ints_mask  &= (~IC_PER_MASK | (_regs)->ints_state); \
  } while (0)
