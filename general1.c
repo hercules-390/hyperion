@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.153  2007/11/30 15:14:14  rbowler
+// Permit String-Instruction facility to be activated in S/370 mode
+//
 // Revision 1.152  2007/08/07 19:47:59  ivan
 // Fix a couple of gcc-4.2 warnings
 //
@@ -3085,7 +3088,9 @@ BYTE   *ip;                             /* -> executed instruction   */
 
     EXECUTE_INSTRUCTION (regs->exinst, regs);
 
-    regs->execflag = 0;
+    /* Leave execflag on if pending PER so ILC will reflect EX */
+    if (!OPEN_IC_PER(regs))
+        regs->execflag = 0;
 }
 
 
