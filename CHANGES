@@ -1,3 +1,4 @@
+15 Feb 2008 Fix PC, RP pic13, STCKE byte 0 and two PER bugs - Paul Leisy
 12 Feb 2008 Fix 3880 SNSID length (thanks De!) - Greg
 12 Feb 2008 Fixes for SPKA, BASR, TBEDR, PR - Paul Leisy
 12 Feb 2008 dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook - Fish
