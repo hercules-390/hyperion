@@ -1,6 +1,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.10  2006/12/31 17:52:50  gsmith
+// 31 Dec 2006 Fix typo in line 1 of fillfnam.c
+//
 // Revision 1.9  2006/12/31 11:31:21  fish
 // Fix cmdline tabbed filename-completion for MSVC
 //
@@ -11,6 +14,17 @@
 #include "hstdinc.h"
 #include "hercules.h"
 #include "fillfnam.h"
+
+/* On Solaris 2.9 (SunOS 5.9) and earlier, there is no scandir
+   and alphasort function. In this case fillfnam does nothing
+   and the tab command is effectively a no-operation */
+#if !(defined(HAVE_SCANDIR) && defined(HAVE_ALPHASORT)) && !defined(_MSVC_)
+int tab_pressed(char *cmdlinefull, int *cmdoffset) {
+  UNREFERENCED(cmdlinefull);
+  UNREFERENCED(cmdoffset);  
+  return 0; 
+}
+#else 
 
 char *filterarray;
 
@@ -196,3 +210,4 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
   free(path);
   return(0);
 }
+#endif /*(HAVE_SCANDIR && HAVE_ALPHASORT) || _MSVC_*/
