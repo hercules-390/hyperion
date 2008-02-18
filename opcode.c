@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.135  2008/01/21 22:20:35  rbowler
+// Correct previous changelog entry (ETF3 not ETF2)
+//
 // Revision 1.134  2008/01/21 14:02:13  rbowler
 // Permit Extended-Translation-Facility-3 in S/370 and ESA/390 modes
 //
@@ -461,7 +464,6 @@
  UNDEF_INST(load_zero_float_ext_reg)
  UNDEF_INST(load_zero_float_long_reg)
  UNDEF_INST(load_zero_float_short_reg)
- UNDEF_INST(set_dfp_rounding_mode)
 #endif /*!defined(FEATURE_FPS_EXTENSIONS)*/
 
 
@@ -472,6 +474,7 @@
  UNDEF_INST(load_gr_from_fpr_long_reg)
  UNDEF_INST(load_negative_fpr_long_reg)
  UNDEF_INST(load_positive_fpr_long_reg)
+ UNDEF_INST(set_dfp_rounding_mode)
 #endif /*!defined(FEATURE_FPS_ENHANCEMENT)*/
 
 
