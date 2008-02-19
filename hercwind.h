@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.14  2006/12/08 09:43:26  jj
 // Add CVS message log
 //
@@ -126,6 +129,7 @@ typedef int             mode_t;
 
 #define HAVE_STRUCT_IN_ADDR_S_ADDR
 #define HAVE_U_INT
+#define HAVE_U_INT8_T
 #define HAVE_LIBMSVCRT
 #define HAVE_SYS_MTIO_H         // (ours is called 'w32mtio.h')
 

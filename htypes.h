@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.8  2006/12/08 09:43:28  jj
+// Add CVS message log
+//
 
 #ifndef _HTYPES_H_
 #define _HTYPES_H_
@@ -21,6 +24,17 @@
     #define  uint64_t  u_int64_t
   #else
     #error Unable to find fixed-size data types
+  #endif
+#endif
+
+#ifndef HAVE_U_INT8_T
+  #ifdef HAVE_INTTYPES_H
+    typedef  uint8_t   u_int8_t;
+    typedef  uint16_t  u_int16_t;
+    typedef  uint32_t  u_int32_t;
+    typedef  uint64_t  u_int64_t;
+  #else
+    #error Unable to define u_intNN_t data types
   #endif
 #endif
 
