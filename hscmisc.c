@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.60  2007/06/23 00:04:11  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.59  2007/03/17 22:20:46  gsmith
 // Fix hostregs address calculation in copy_regs
 //
@@ -1443,6 +1446,7 @@ int pid, status;
 
         /* Drop ROOT authority (saved uid) */
         SETMODE(TERM);
+        DROP_ALL_CAPS();
 
         argv[0] = "sh";
         argv[1] = "-c";

@@ -22,6 +22,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.29  2007/08/28 20:14:23  gsmith
+// Fix many TUNSETIFF-EINVAL error messages
+//
 // Revision 1.28  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -56,6 +59,8 @@ int main( int argc, char **argv )
     char        szMsgBuffer[255];
 
     UNREFERENCED( argc );
+
+    DROP_PRIVILEGES(CAP_NET_ADMIN);
 
     pszProgName = strdup( argv[0] );
 

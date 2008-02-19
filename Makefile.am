@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.178  2007/06/02 13:46:41  rbowler
+# PFPO framework
+#
 # Revision 1.177  2006/12/30 21:13:37  rbowler
 # Backout rev 1.176
 #
@@ -484,7 +487,7 @@ tools_ADDLIBS = $(HERCLIBS2) $(LDADD)
 
 if BUILD_HERCIFC
 hercifc_SOURCES       = hercifc.c
-hercifc_LDADD         = $(LDADD)
+hercifc_LDADD         = $(tools_ADDLIBS)
 hercifc_LDFLAGS       = $(tools_LD_FLAGS)
 endif
 

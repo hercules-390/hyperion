@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.21  2007/01/10 15:12:11  rbowler
+// Console keepalive for Unix
+//
 // Revision 1.20  2007/01/10 09:32:39  fish
 // Enable connection keep-alive to try and detect 3270 clients that
 // have died (MSVC only right now; don't know how to do it on *nix)
@@ -202,5 +205,11 @@ HUT_DLL_IMPORT int hprintf(int s,char *fmt,...);
 HUT_DLL_IMPORT int hwrite(int s,const char *,size_t);
 HUT_DLL_IMPORT int hgetc(int s);
 HUT_DLL_IMPORT char *hgets(char *b,size_t c,int s);
+
+/* Posix 1003.e capabilities */
+#if defined(OPTION_CAPABILITIES)
+HUT_DLL_IMPORT int drop_privileges(int c);
+HUT_DLL_IMPORT int drop_all_caps(void);
+#endif
 
 #endif /* __HSCUTL_H__ */

@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2007/06/23 00:04:11  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.14  2007/01/10 16:30:48  rbowler
 // Include netinet/tcp.h for Unix keepalive settings
 //
@@ -228,6 +231,12 @@
 #endif
 #ifdef HAVE_ZLIB_H
   #include <zlib.h>
+#endif
+#ifdef HAVE_SYS_CAPABILITY_H
+  #include <sys/capability.h>
+#endif
+#ifdef HAVE_SYS_PRCTL_H
+  #include <sys/prctl.h>
 #endif
 
 // Some Hercules specific files, NOT guest arch dependent

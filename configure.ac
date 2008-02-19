@@ -32,6 +32,9 @@
 ###############################################################################
 
 # $Log$
+# Revision 1.194  2008/02/15 23:24:32  rbowler
+# Add -lrt to link options for Solaris
+#
 # Revision 1.193  2007/06/24 04:17:15  jmaynard
 # Grumble. Missed the version tag in the MSVC build. Fixed.
 #
@@ -305,6 +308,7 @@ AH_TEMPLATE( [_INTL_REDIRECT_MACROS],   [Define to 1 if non-Intel architecture (
 
 AH_TEMPLATE( [CCKD_BZIP2],              [Define to enable bzip2 compression in emulated DASDs] )
 AH_TEMPLATE( [HET_BZIP2],               [Define to enable bzip2 compression in emulated tapes] )
+AH_TEMPLATE( [OPTION_CAPABILITIES],     [Define to enable posix draft 1003.1e capabilities] )
 
 ###############################################################################
 #   OS-specific settings that we can't figure out any other way (yet)
@@ -556,6 +560,8 @@ AC_CHECK_HEADERS( signal.h,       [hc_cv_have_signal_h=yes],       [hc_cv_have_s
 AC_CHECK_HEADERS( termios.h,      [hc_cv_have_termios_h=yes],      [hc_cv_have_termios_h=no]      )
 AC_CHECK_HEADERS( time.h,         [hc_cv_have_time_h=yes],         [hc_cv_have_time_h=no]         )
 AC_CHECK_HEADERS( zlib.h,         [hc_cv_have_zlib_h=yes],         [hc_cv_have_zlib_h=no]         )
+AC_CHECK_HEADERS( sys/capability.h, [hc_cv_have_sys_capa_h=yes],   [hc_cv_have_sys_capa_h=no]     )
+AC_CHECK_HEADERS( sys/prctl.h,    [hc_cv_have_sys_prctl_h=yes],    [hc_cv_have_sys_prctl_h=no]    )
 
 AC_CACHE_SAVE()
 
@@ -1464,6 +1470,41 @@ AC_ARG_ENABLE( multi-cpu,
     [hc_cv_opt_num_cpu_engines=8]
 )
 
+AC_ARG_ENABLE( capabilities,
+
+    AC_HELP_STRING([--disable-capabilities],
+
+        [disable fine grained privileges]
+    ),
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_capabilities=yes                      ;;
+        no)  hc_cv_opt_capabilities=no                       ;;
+        *)   AC_MSG_RESULT( [ERROR: invalid 'capabilities' option] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+    [hc_cv_opt_capabilities=hc_cv_have_sys_capability]
+)
+
+# only include libcap if needed
+if test "$hc_cv_opt_capabilities" = "yes"; then
+    AC_CHECK_LIB(cap,cap_set_proc)
+fi
+# Force disable capabilities support if library is missing
+if test "$ac_cv_lib_cap_cap_set_proc" = "no"; then
+  hc_cv_opt_capabilities="no"
+fi
+# Force disable capabilities support if sys/capability.h header is missing
+if test "$hc_cv_have_sys_capa_h" = "no"; then
+  hc_cv_opt_capabilities="no"
+fi
+# Force disable capabilities support if sys/prctl.h header is missing
+if test "$hc_cv_have_sys_prctl_h" = "no"; then
+  hc_cv_opt_capabilities="no"
+fi
+
 AC_ARG_ENABLE( custom,
 
     AC_HELP_STRING( [--enable-custom=STRING],
@@ -1907,6 +1948,7 @@ test "$hc_cv_have_getset_uid"            != "yes"  &&  AC_DEFINE(NO_SETUID)
 test "$hc_cv_asm_byteswap"               != "yes"  &&  AC_DEFINE(NO_ASM_BYTESWAP)
 test "$hc_cv_non_unique_gettimeofday"     = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETTIMEOFDAY)
 test "$hc_cv_build_hercifc"               = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
+test "$hc_cv_opt_capabilities"            = "yes"  &&  AC_DEFINE(OPTION_CAPABILITIES)
 
 if test $hc_cv_have_sa_sigaction != yes ||
    test $hc_cv_have_sigusr1      != yes ||

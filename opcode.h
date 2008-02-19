@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.210  2007/12/13 16:57:35  rbowler
+// Correct GENx___x390x___ definition (by Enrico Sorichetti)
+//
 // Revision 1.209  2007/11/15 22:54:43  rbowler
 // Correct PIC6 when loading DRM bits into FPC
 //
@@ -2404,107 +2407,6 @@ do { \
 
 #define PERFORM_SERIALIZATION(_regs) do { } while (0)
 #define PERFORM_CHKPT_SYNC(_regs) do { } while (0)
-
-#if !defined(NO_SETUID)
-
-/* SETMODE(INIT)
- *   sets the saved uid to the effective uid, and
- *   sets the effective uid to the real uid, such
- *   that the program is running with normal user
- *   attributes, other then that it may switch to
- *   the saved uid by SETMODE(ROOT). This call is
- *   usually made upon entry to the setuid program.
- *
- * SETMODE(ROOT)
- *   sets the saved uid to the real uid, and
- *   sets the real and effective uid to the saved uid.
- *   A setuid root program will enter 'root mode' and
- *   will have all the appropriate access.
- *
- * SETMODE(USER)
- *   sets the real and effective uid to the uid of the
- *   caller.  The saved uid will be the effective uid
- *   upon entry to the program (as before SETMODE(INIT))
- *
- * SETMODE(TERM)
- *   sets real, effective and saved uid to the real uid
- *   upon entry to the program.  This call will revoke
- *   any setuid access that the thread/process has.  It
- *   is important to issue this call before an exec to a
- *   shell or other program that could introduce integrity
- *   exposures when running with root access.
- */
-
-#if defined(HAVE_SETRESUID)
-
-#define _SETMODE_INIT \
-do { \
-    getresuid(&sysblk.ruid,&sysblk.euid,&sysblk.suid); \
-    getresgid(&sysblk.rgid,&sysblk.egid,&sysblk.sgid); \
-    setresuid(sysblk.ruid,sysblk.ruid,sysblk.euid); \
-    setresgid(sysblk.rgid,sysblk.rgid,sysblk.egid); \
-} while(0)
-
-#define _SETMODE_ROOT \
-do { \
-    setresuid(sysblk.suid,sysblk.suid,sysblk.ruid); \
-} while(0)
-
-#define _SETMODE_USER \
-do { \
-    setresuid(sysblk.ruid,sysblk.ruid,sysblk.suid); \
-} while(0)
-
-#define _SETMODE_TERM \
-do { \
-    setresuid(sysblk.ruid,sysblk.ruid,sysblk.ruid); \
-    setresgid(sysblk.rgid,sysblk.rgid,sysblk.rgid); \
-} while(0)
-
-#elif defined(HAVE_SETREUID)
-
-#define _SETMODE_INIT \
-do { \
-    sysblk.ruid = getuid(); \
-    sysblk.euid = geteuid(); \
-    sysblk.rgid = getgid(); \
-    sysblk.egid = getegid(); \
-    setreuid(sysblk.euid, sysblk.ruid); \
-    setregid(sysblk.egid, sysblk.rgid); \
-} while (0)
-
-#define _SETMODE_ROOT \
-do { \
-    setreuid(sysblk.ruid, sysblk.euid); \
-    setregid(sysblk.rgid, sysblk.egid); \
-} while (0)
-
-#define _SETMODE_USER \
-do { \
-    setregid(sysblk.egid, sysblk.rgid); \
-    setreuid(sysblk.euid, sysblk.ruid); \
-} while (0)
-
-#define _SETMODE_TERM \
-do { \
-    setuid(sysblk.ruid); \
-    setgid(sysblk.rgid); \
-} while (0)
-
-#else /* defined(HAVE_SETRESUID) || defined(HAVE_SETEREUID) */
-
-#error Cannot figure out how to swap effective UID/GID, maybe you should define NO_SETUID?
-
-#endif /* defined(HAVE_SETREUID) || defined(HAVE_SETRESUID) */
-
-#define SETMODE(_func) _SETMODE_ ## _func
-
-#else /* !defined(NO_SETUID) */
-
-#define SETMODE(_func)
-
-#endif /* !defined(NO_SETUID) */
-
 
 /* Functions in module channel.c */
 int  ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb);

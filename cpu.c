@@ -30,6 +30,19 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.196  2008/02/12 18:23:39  jj
+// 1. SPKA was missing protection check (PIC04) because
+//    AIA regs were not purged.
+//
+// 2. BASR with branch trace and PIC16, the pgm old was pointing
+//    2 bytes before the BASR.
+//
+// 3. TBEDR , TBDR using R1 as source, should be R2.
+//
+// 4. PR with page crossing stack (1st page invalid) and PSW real
+//    in stack, missed the PIC 11. Fixed by invoking abs_stck_addr
+//    for previous stack entry descriptor before doing the load_psw.
+//
 // Revision 1.195  2007/12/10 23:12:02  gsmith
 // Tweaks to OPTION_MIPS_COUNTING processing
 //
@@ -1211,22 +1224,6 @@ void *cpu_thread (int *ptr)
 REGS *regs = NULL;
 int   cpu  = *ptr;
 
-    /* Set root mode in order to set priority */
-    SETMODE(ROOT);
-
-    /* Set CPU thread priority */
-    if (setpriority(PRIO_PROCESS, 0, sysblk.cpuprio))
-        logmsg (_("HHCCP001W CPU%4.4X thread set priority %d failed: %s\n"),
-                cpu, sysblk.cpuprio, strerror(errno));
-
-    /* Back to user mode */
-    SETMODE(USER);
-
-    /* Display thread started message on control panel */
-    logmsg (_("HHCCP002I CPU%4.4X thread started: tid="TIDPAT", pid=%d, "
-            "priority=%d\n"),
-            cpu, thread_id(), getpid(),
-            getpriority(PRIO_PROCESS,0));
 
     OBTAIN_INTLOCK(NULL);
 
@@ -1252,6 +1249,22 @@ int   cpu  = *ptr;
             return NULL;
         }
     }
+    /* Set root mode in order to set priority */
+    SETMODE(ROOT);
+
+    /* Set CPU thread priority */
+    if (setpriority(PRIO_PROCESS, 0, sysblk.cpuprio))
+        logmsg (_("HHCCP001W CPU%4.4X thread set priority %d failed: %s\n"),
+                cpu, sysblk.cpuprio, strerror(errno));
+
+    /* Back to user mode */
+    SETMODE(USER);
+
+    /* Display thread started message on control panel */
+    logmsg (_("HHCCP002I CPU%4.4X thread started: tid="TIDPAT", pid=%d, "
+            "priority=%d\n"),
+            cpu, thread_id(), getpid(),
+            getpriority(PRIO_PROCESS,0));
 
     /* Execute the program in specified mode */
     do {

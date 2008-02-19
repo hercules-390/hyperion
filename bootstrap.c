@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.11  2006/12/28 03:04:34  fish
+// Permanently disable in bootstrap.c Microsoft's completely INSANE Invalid CRT Parameter handling behavior
+//
 // Revision 1.10  2006/12/08 09:43:16  jj
 // Add CVS message log
 //
@@ -22,6 +25,7 @@
 
 int main(int ac,char *av[])
 {
+    DROP_PRIVILEGES(CAP_SYS_NICE);
     SET_THREAD_NAME("bootstrap");
 
 #if defined( OPTION_DYNAMIC_LOAD ) && defined( HDL_USE_LIBTOOL )

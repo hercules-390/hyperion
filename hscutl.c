@@ -11,6 +11,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.26  2007/11/11 20:38:24  rbowler
+// Suppress msg HHCUT001I if keepalive successful
+//
 // Revision 1.25  2007/01/12 14:38:47  rbowler
 // Error checking for Unix keepalive
 //
@@ -808,3 +811,91 @@ DLL_EXPORT int hprintf(int s,char *fmt,...)
     free(bfr);
     return rc;
 }
+
+/* Posix 1003.1e capabilities support */
+
+#if defined(HAVE_SYS_CAPABILITY_H) && defined(HAVE_SYS_PRCTL_H) && defined(OPTION_CAPABILITIES)
+/*-------------------------------------------------------------------*/
+/* DROP root privileges but retain a capability                      */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int drop_privileges(int capa)
+{
+    uid_t    uid;
+    gid_t    gid;
+    cap_t   c;
+    int rc;
+    int failed;
+    cap_value_t v;
+    int have_capt;
+
+    /* If *real* userid is root, no need to do all this */
+    uid=getuid();
+    if(!uid) return 0;
+
+    failed=1;
+    have_capt=0;
+    do
+    {
+        c=cap_init();
+        if(!c) break;
+        have_capt=1;
+        v=capa;
+        rc=cap_set_flag(c,CAP_EFFECTIVE,1,&v,CAP_SET);
+        if(rc<0) break;
+        rc=cap_set_flag(c,CAP_INHERITABLE,1,&v,CAP_SET);
+        if(rc<0) break;
+        rc=cap_set_flag(c,CAP_PERMITTED,1,&v,CAP_SET);
+        if(rc<0) break;
+        rc=cap_set_proc(c);
+        if(rc<0) break;
+        rc=prctl(PR_SET_KEEPCAPS,1);
+        if(rc<0) break;
+        failed=0;
+    } while(0);
+    gid=getgid();
+    setregid(gid,gid);
+    setreuid(uid,uid);
+    if(!failed)
+    {
+        rc=cap_set_proc(c);
+        if(rc<0) failed=1;
+    }
+
+    if(have_capt)
+        cap_free(c);
+
+    return failed;
+}
+/*-------------------------------------------------------------------*/
+/* DROP all capabilities                                             */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int drop_all_caps(void)
+{
+    uid_t    uid;
+    cap_t   c;
+    int rc;
+    int failed;
+    int have_capt;
+
+    /* If *real* userid is root, no need to do all this */
+    uid=getuid();
+    if(!uid) return 0;
+
+    failed=1;
+    have_capt=0;
+    do
+    {
+        c=cap_from_text("all-eip");
+        if(!c) break;
+        have_capt=1;
+        rc=cap_set_proc(c);
+        if(rc<0) break;
+        failed=0;
+    } while(0);
+
+    if(have_capt)
+        cap_free(c);
+
+    return failed;
+}
+#endif

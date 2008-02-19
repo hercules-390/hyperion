@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.19  2008/01/23 00:47:40  rbowler
+// Modifications for VS9 C++ 2008 Express by Charlie Brint
+//
 // Revision 1.18  2007/12/10 23:12:02  gsmith
 // Tweaks to OPTION_MIPS_COUNTING processing
 //
@@ -549,5 +552,118 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
   #define  SET_THREAD_NAME_ID(t,n)
   #define  SET_THREAD_NAME(n)
 #endif
+
+#if !defined(NO_SETUID)
+
+/* SETMODE(INIT)
+ *   sets the saved uid to the effective uid, and
+ *   sets the effective uid to the real uid, such
+ *   that the program is running with normal user
+ *   attributes, other then that it may switch to
+ *   the saved uid by SETMODE(ROOT). This call is
+ *   usually made upon entry to the setuid program.
+ *
+ * SETMODE(ROOT)
+ *   sets the saved uid to the real uid, and
+ *   sets the real and effective uid to the saved uid.
+ *   A setuid root program will enter 'root mode' and
+ *   will have all the appropriate access.
+ *
+ * SETMODE(USER)
+ *   sets the real and effective uid to the uid of the
+ *   caller.  The saved uid will be the effective uid
+ *   upon entry to the program (as before SETMODE(INIT))
+ *
+ * SETMODE(TERM)
+ *   sets real, effective and saved uid to the real uid
+ *   upon entry to the program.  This call will revoke
+ *   any setuid access that the thread/process has.  It
+ *   is important to issue this call before an exec to a
+ *   shell or other program that could introduce integrity
+ *   exposures when running with root access.
+ */
+
+#if defined(HAVE_SYS_CAPABILITY_H) && defined(HAVE_SYS_PRCTL_H) && defined(OPTION_CAPABILITIES)
+
+#define SETMODE(_x)
+#define DROP_PRIVILEGES(_capa) drop_privileges(_capa)
+#define DROP_ALL_CAPS() drop_all_caps()
+
+#else
+
+#define DROP_PRIVILEGES(_capa)
+#define DROP_ALL_CAPS()
+
+#if defined(HAVE_SETRESUID)
+
+#define _SETMODE_INIT \
+do { \
+    getresuid(&sysblk.ruid,&sysblk.euid,&sysblk.suid); \
+    getresgid(&sysblk.rgid,&sysblk.egid,&sysblk.sgid); \
+    setresuid(sysblk.ruid,sysblk.ruid,sysblk.euid); \
+    setresgid(sysblk.rgid,sysblk.rgid,sysblk.egid); \
+} while(0)
+
+#define _SETMODE_ROOT \
+do { \
+    setresuid(sysblk.suid,sysblk.suid,sysblk.ruid); \
+} while(0)
+
+#define _SETMODE_USER \
+do { \
+    setresuid(sysblk.ruid,sysblk.ruid,sysblk.suid); \
+} while(0)
+
+#define _SETMODE_TERM \
+do { \
+    setresuid(sysblk.ruid,sysblk.ruid,sysblk.ruid); \
+    setresgid(sysblk.rgid,sysblk.rgid,sysblk.rgid); \
+} while(0)
+
+#elif defined(HAVE_SETREUID)
+
+#define _SETMODE_INIT \
+do { \
+    sysblk.ruid = getuid(); \
+    sysblk.euid = geteuid(); \
+    sysblk.rgid = getgid(); \
+    sysblk.egid = getegid(); \
+    setreuid(sysblk.euid, sysblk.ruid); \
+    setregid(sysblk.egid, sysblk.rgid); \
+} while (0)
+
+#define _SETMODE_ROOT \
+do { \
+    setreuid(sysblk.ruid, sysblk.euid); \
+    setregid(sysblk.rgid, sysblk.egid); \
+} while (0)
+
+#define _SETMODE_USER \
+do { \
+    setregid(sysblk.egid, sysblk.rgid); \
+    setreuid(sysblk.euid, sysblk.ruid); \
+} while (0)
+
+#define _SETMODE_TERM \
+do { \
+    setuid(sysblk.ruid); \
+    setgid(sysblk.rgid); \
+} while (0)
+
+#else /* defined(HAVE_SETRESUID) || defined(HAVE_SETEREUID) */
+
+#error Cannot figure out how to swap effective UID/GID, maybe you should define NO_SETUID?
+
+#endif /* defined(HAVE_SETREUID) || defined(HAVE_SETRESUID) */
+
+#define SETMODE(_func) _SETMODE_ ## _func
+
+#endif /* !defined(HAVE_SYS_CAPABILITY_H) */
+
+#else /* !defined(NO_SETUID) */
+
+#define SETMODE(_func)
+
+#endif /* !defined(NO_SETUID) */
 
 #endif // _HMACROS_H

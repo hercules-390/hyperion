@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.17  2008/02/12 08:42:15  fish
+// dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
+//
 // Revision 1.16  2008/01/04 02:28:51  gsmith
 // sf commands update
 //
@@ -344,6 +347,7 @@ void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
 void alter_display_real (char *opnd, REGS *regs);
 void alter_display_virt (char *opnd, REGS *regs);
 void disasm_stor(REGS *regs, char *opnd);
+int drop_privileges(int capa);
 
 /* Functions in module sr.c */
 int suspend_cmd(int argc, char *argv[],char *cmdline);
