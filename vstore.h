@@ -34,6 +34,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.78  2007/06/23 00:04:19  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.77  2007/03/13 00:11:14  gsmith
 // Updates to concpy for 64-bit hosts
 //
@@ -640,8 +643,10 @@ int     len;                            /* Length for page crossing  */
 
     /* Program check if instruction address is odd */
     if ( unlikely(offset & 0x01) )
+    {
+        if (!exec) regs->instinvalid = 1;
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
-
+    }
     pagesz = unlikely(addr < 0x800) ? 0x800 : PAGEFRAME_PAGESIZE;
 
 #if defined(FEATURE_PER)
