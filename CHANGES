@@ -1,4 +1,5 @@
-17 Deb 2008 Enable Posix 1003.1e capabilities to restrict setuid-0
+20 Feb 2008 Fix BSA pic06/05 and branch to odd addrs pic06 - Paul Leisy
+17 Feb 2008 Enable Posix 1003.1e capabilities to restrict setuid-0
             programs to just the necessary privileges - Ivan Warren
 15 Feb 2008 Fix PC, RP pic13, STCKE byte 0 and two PER bugs - Paul Leisy
 12 Feb 2008 Fix 3880 SNSID length (thanks De!) - Greg
