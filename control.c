@@ -31,6 +31,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.258  2008/02/15 21:12:33  ptl00
+//
+// Fix PC pic13 (higher pri than trace exceptions)
+//
 // Revision 1.257  2008/02/13 06:54:35  jj
 // *** empty log message ***
 //
@@ -325,9 +329,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         else
       #endif /*defined(FEATURE_ESAME)*/
         {
-            UPD_PSW_IA(regs, duct_reta & DUCT_IA31);
             regs->psw.amode = (duct_reta & DUCT_AM31) ? 1 : 0;
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
+            UPD_PSW_IA(regs, duct_reta & DUCT_IA31);
         }
 
         /* Restore the PSW key mask from the DUCT */
@@ -351,17 +355,24 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(store_fullword_absolute) (duct_pkrp, ducto+36, regs);
       #endif /*!defined(FEATURE_ESAME)*/
 
-        /* Specification exception if the PSW is now invalid */
-        if ((regs->psw.IA & 1)
+        /* Specification exception if the PSW is now invalid. */
+        /* (Since UPD_PSW_IA used above masks off inval bits  */
+        /* in psw.IA, test duct_reta for invalid bits).       */
+        if ((duct_reta & 1)
       #if defined(FEATURE_ESAME)
             || (regs->psw.amode64 == 0 && regs->psw.amode == 1
-                && regs->psw.IA > 0x7FFFFFFF)
+                && duct_reta > 0x7FFFFFFF)
             || (regs->psw.amode64 == 0 && regs->psw.amode == 0
-                && regs->psw.IA > 0x00FFFFFF))
+                && duct_reta > 0x00FFFFFF))
       #else /*!defined(FEATURE_ESAME)*/
-            || (regs->psw.amode == 0 && regs->psw.IA > 0x00FFFFFF))
+            || (regs->psw.amode == 0 && duct_reta > 0x00FFFFFF))
       #endif /*!defined(FEATURE_ESAME)*/
         {
+            /* program_interrupt will invoke INVALIDATE_AIA which */
+            /* will apply address mask to psw.IA if aie valid. */
+            regs->aie = NULL;
+            regs->psw.IA = duct_reta;
+            regs->psw.zeroilc = 1;
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         }
 
