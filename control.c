@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.259  2008/02/20 23:45:54  ptl00
+// Fix BSA pic06/05
+//
 // Revision 1.258  2008/02/15 21:12:33  ptl00
 //
 // Fix PC pic13 (higher pri than trace exceptions)
@@ -360,10 +363,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* in psw.IA, test duct_reta for invalid bits).       */
         if ((duct_reta & 1)
       #if defined(FEATURE_ESAME)
-            || (regs->psw.amode64 == 0 && regs->psw.amode == 1
-                && duct_reta > 0x7FFFFFFF)
             || (regs->psw.amode64 == 0 && regs->psw.amode == 0
-                && duct_reta > 0x00FFFFFF))
+                && (duct_reta & 0x7F000000)))
       #else /*!defined(FEATURE_ESAME)*/
             || (regs->psw.amode == 0 && duct_reta > 0x00FFFFFF))
       #endif /*!defined(FEATURE_ESAME)*/
