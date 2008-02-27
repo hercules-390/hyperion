@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.75  2008/02/27 14:14:50  bernard
+// Implemented feature_message_security_assist_extension_2
+//
 // Revision 1.74  2007/11/30 15:14:14  rbowler
 // Permit String-Instruction facility to be activated in S/370 mode
 //
@@ -92,6 +95,7 @@
 #define FEATURE_FETCH_PROTECTION_OVERRIDE
 #define FEATURE_FPS_ENHANCEMENT                                 /*DFP*/
 #define FEATURE_FPS_EXTENSIONS
+#define FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY
 #define FEATURE_HERCULES_DIAGCALLS
 #define FEATURE_HEXADECIMAL_FLOATING_POINT
 #define FEATURE_HFP_EXTENSIONS
