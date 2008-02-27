@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.42  2008/01/21 14:04:27  rbowler
+// Activate ETF3 and ETF2/ETF3-Enhancements in ESA/390 mode
+//
 // Revision 1.41  2007/11/30 15:14:14  rbowler
 // Permit String-Instruction facility to be activated in S/370 mode
 //
@@ -71,6 +74,7 @@
 #define FEATURE_LINKAGE_STACK
 #define FEATURE_MESSAGE_SECURITY_ASSIST
 #define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
+#define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
 #define FEATURE_MOVE_PAGE_FACILITY_2
 #define FEATURE_MSSF_CALL
 #define FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
