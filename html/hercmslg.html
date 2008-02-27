@@ -97,28 +97,86 @@ HHCLG009S Syslog message pipe creation failed: <em>error</em>
   <dt>Meaning
   <dd>An attempt to create the pipe for the system logger failed.
 The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Check that your firewall is not preventing Hercules from
+      opening a listening pipe.
   <dt>Issued by
   <dd>logger.c, function logger_init
   </dl>
-<dt><code><a name="HHCHT010S">
-HHCLG010S Syslog write message pipe open failed: <em>error</em>
+<dt><code><a name="HHCLG012E">
+HHCLG012E Cannot create logger thread: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>An attempt to open a stream for the logger pipe failed.
-The error is described by <code><em>error</em></code>.
+  <dd>An attempt to create the logger thread failed.
+      <code><em>error</em></code> is the description of the error code
+      returned by the pthread_create call.
+  <dt>Action
+  <dd>If the error is &quot;No error&quot; ensure that Hercules has
+      been correctly linked with the pthread library.
   <dt>Issued by
   <dd>logger.c, function logger_init
   </dl>
-<dt><code><a name="HHCHT011S">
-HHCLG011S Syslog read message pipe open failed: <em>error</em>
+<dt><code><a name="HHCLG014E">
+HHCLG014E log not active
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>An attempt to open a stream for the logger pipe failed.
-The error is described by <code><em>error</em></code>.
+  <dd>A <em>log off</em> command was issued but there was no active log file.
+  <dt>Action
+  <dd>None.
   <dt>Issued by
-  <dd>logger.c, function logger_init
+  <dd>logger.c, function log_sethrdcpy
+  </dl>
+<dt><code><a name="HHCLG015I">
+HHCLG015I log closed    
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The active log file has been closed as a result of a <em>log off</em> command.
+  <dt>Action
+  <dd>None.
+  <dt>Issued by
+  <dd>logger.c, function log_sethrdcpy
+  </dl>
+<dt><code><a name="HHCLG016E">
+HHCLG016E Error opening logfile <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The new log file requested by a <em>log</em> command could not be opened.
+      <code><em>error</em></code> is the description of the error code
+      returned by the open call.          
+  <dt>Action
+  <dd>Reissue the <em>log</em> command with the correct filename.
+  <dt>Issued by
+  <dd>logger.c, function log_sethrdcpy
+  </dl>
+<dt><code><a name="HHCLG017S">
+HHCLG017S log file fdopen failed for <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The logger was unable to obtain the file descriptor for the new
+      log file requested by a <em>log</em> command.
+      <code><em>error</em></code> is the description of the error code
+      returned by the fdopen call.          
+  <dt>Action
+  <dd>Reissue the <em>log</em> command with the correct filename.
+  <dt>Issued by
+  <dd>logger.c, function log_sethrdcpy
+  </dl>
+<dt><code><a name="HHCLG018I">
+HHCLG018I log switched to <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>As a result of a <em>log</em> command the logger is now writing
+      to the requested log file.
+  <dt>Action
+  <dd>None.
+  <dt>Issued by
+  <dd>logger.c, function log_sethrdcpy
   </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
