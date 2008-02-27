@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.127  2007/11/30 15:14:14  rbowler
+// Permit String-Instruction facility to be activated in S/370 mode
+//
 // Revision 1.126  2007/08/06 16:48:20  ivan
 // Implement "PARM" option for IPL command (same as VM IPL PARM XXX)
 // Also add command helps for ipl, iplc, sysclear, sysreset
@@ -176,6 +179,7 @@
 #undef FEATURE_LONG_DISPLACEMENT
 #undef FEATURE_MESSAGE_SECURITY_ASSIST
 #undef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1              /*@Z9*/
+#undef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
 #undef FEATURE_MIDAW                                            /*@Z9*/
 #undef FEATURE_MOVE_PAGE_FACILITY_2
 #undef FEATURE_MSSF_CALL

@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.74  2007/11/30 15:14:14  rbowler
+// Permit String-Instruction facility to be activated in S/370 mode
+//
 // Revision 1.73  2007/07/19 17:53:55  ivan
 // Disable DIAG 308. Current implementation isn't complete enough to allow
 // for a proper 2.6.21 linux kernel IPL
@@ -106,6 +109,7 @@
 #define FEATURE_LONG_DISPLACEMENT
 #define FEATURE_MESSAGE_SECURITY_ASSIST
 #define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1             /*@Z9*/
+#define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
 #define FEATURE_MIDAW                                           /*@Z9*/
 #define FEATURE_MOVE_PAGE_FACILITY_2
 //#define FEATURE_MVCOS                                           /*407*/
