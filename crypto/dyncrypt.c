@@ -13,6 +13,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.59  2008/02/27 14:49:56  bernard
+// Query functions return extension_1 bitstrings due to errors in #define
+// statements at the top.
+//
 // Revision 1.58  2008/02/27 14:16:34  bernard
 // Added feature message_security_assist_extension_2
 //
@@ -977,7 +981,7 @@ static void ARCH_DEP(klmd_sha_512)(int r1, int r2, REGS *regs)
   else
   {
     message_block[i++] = 0x80;
-    while(i < 128)
+    while(i < 112)
       message_block[i++] = 0x00;
   }
 
@@ -3091,6 +3095,9 @@ HDL_REGISTER_SECTION;
   logmsg("  Active: Message Security Assist\n");
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
   logmsg("          Message Security Assist Extension 1\n");
+#endif
+#ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
+  logmsg("          Message Security Assist Extension 2\n");
 #endif
 
 }
