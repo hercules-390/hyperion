@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.212  2008/02/28 11:08:26  rbowler
+// Opcodes for new instructions in zPOP-06
+//
 // Revision 1.211  2008/02/19 11:49:19  ivan
 // - Move setting of CPU priority after spwaning timer thread
 // - Added support for Posix 1003.1e capabilities
@@ -2889,7 +2892,7 @@ DEF_INST(store_float_long_y);
 DEF_INST(store_float_short_y);
 
 
-/* Instructions in general.c */
+/* Instructions in general1.c */
 DEF_INST(add_register);
 DEF_INST(add);
 DEF_INST(add_halfword);
@@ -2984,6 +2987,9 @@ DEF_INST(multiply_halfword);
 DEF_INST(multiply_halfword_immediate);
 DEF_INST(multiply_single_register);
 DEF_INST(multiply_single);
+
+
+/* Instructions in general2.c */
 DEF_INST(or_register);
 DEF_INST(or);
 DEF_INST(or_immediate);
@@ -3029,6 +3035,81 @@ DEF_INST(translate_and_test_reverse_extended);                  /*208*/
 DEF_INST(translate_extended);
 DEF_INST(unpack);
 DEF_INST(update_tree);
+
+
+/* Instructions in general3.c */
+DEF_INST(add_immediate_long_storage);                           /*208*/
+DEF_INST(add_immediate_storage);                                /*208*/
+DEF_INST(add_logical_with_signed_immediate);                    /*208*/
+DEF_INST(add_logical_with_signed_immediate_long);               /*208*/
+DEF_INST(compare_and_branch);                                   /*208*/
+DEF_INST(compare_and_branch_long);                              /*208*/
+DEF_INST(compare_and_branch_relative);                          /*208*/
+DEF_INST(compare_and_branch_relative_long);                     /*208*/
+DEF_INST(compare_and_trap_long_register);                       /*208*/
+DEF_INST(compare_and_trap_register);                            /*208*/
+DEF_INST(compare_halfword_immediate_halfword_storage);          /*208*/
+DEF_INST(compare_halfword_immediate_long_storage);              /*208*/
+DEF_INST(compare_halfword_immediate_storage);                   /*208*/
+DEF_INST(compare_halfword_long);                                /*208*/
+DEF_INST(compare_halfword_relative_long);                       /*208*/
+DEF_INST(compare_halfword_relative_long_long);                  /*208*/
+DEF_INST(compare_immediate_and_branch);                         /*208*/
+DEF_INST(compare_immediate_and_branch_long);                    /*208*/
+DEF_INST(compare_immediate_and_branch_relative);                /*208*/
+DEF_INST(compare_immediate_and_branch_relative_long);           /*208*/
+DEF_INST(compare_immediate_and_trap);                           /*208*/
+DEF_INST(compare_immediate_and_trap_long);                      /*208*/
+DEF_INST(compare_logical_and_branch_long_register);             /*208*/
+DEF_INST(compare_logical_and_branch_register);                  /*208*/
+DEF_INST(compare_logical_and_branch_relative_long_register);    /*208*/
+DEF_INST(compare_logical_and_branch_relative_register);         /*208*/
+DEF_INST(compare_logical_and_trap_long_register);               /*208*/
+DEF_INST(compare_logical_and_trap_register);                    /*208*/
+DEF_INST(compare_logical_immediate_and_branch);                 /*208*/
+DEF_INST(compare_logical_immediate_and_branch_long);            /*208*/
+DEF_INST(compare_logical_immediate_and_branch_relative);        /*208*/
+DEF_INST(compare_logical_immediate_and_branch_relative_long);   /*208*/
+DEF_INST(compare_logical_immediate_and_trap_fullword);          /*208*/
+DEF_INST(compare_logical_immediate_and_trap_long);              /*208*/
+DEF_INST(compare_logical_immediate_fullword_storage);           /*208*/
+DEF_INST(compare_logical_immediate_halfword_storage);           /*208*/
+DEF_INST(compare_logical_immediate_long_storage);               /*208*/
+DEF_INST(compare_logical_relative_long);                        /*208*/
+DEF_INST(compare_logical_relative_long_halfword);               /*208*/
+DEF_INST(compare_logical_relative_long_long);                   /*208*/
+DEF_INST(compare_logical_relative_long_long_fullword);          /*208*/
+DEF_INST(compare_logical_relative_long_long_halfword);          /*208*/
+DEF_INST(compare_relative_long);                                /*208*/
+DEF_INST(compare_relative_long_long);                           /*208*/
+DEF_INST(compare_relative_long_long_fullword);                  /*208*/
+DEF_INST(extract_cache_attribute);                              /*208*/
+DEF_INST(load_address_extended_y);                              /*208*/
+DEF_INST(load_and_test_long_fullword);                          /*208*/
+DEF_INST(load_halfword_relative_long);                          /*208*/
+DEF_INST(load_halfword_relative_long_long);                     /*208*/
+DEF_INST(load_logical_halfword_relative_long);                  /*208*/
+DEF_INST(load_logical_halfword_relative_long_long);             /*208*/
+DEF_INST(load_logical_relative_long_long_fullword);             /*208*/
+DEF_INST(load_relative_long);                                   /*208*/
+DEF_INST(load_relative_long_long);                              /*208*/
+DEF_INST(load_relative_long_long_fullword);                     /*208*/
+DEF_INST(move_fullword_from_halfword_immediate);                /*208*/
+DEF_INST(move_halfword_from_halfword_immediate);                /*208*/
+DEF_INST(move_long_from_halfword_immediate);                    /*208*/
+DEF_INST(multiply_halfword_y);                                  /*208*/
+DEF_INST(multiply_single_immediate_fullword);                   /*208*/
+DEF_INST(multiply_single_immediate_long_fullword);              /*208*/
+DEF_INST(multiply_y);                                           /*208*/
+DEF_INST(prefetch_data);                                        /*208*/
+DEF_INST(prefetch_data_relative_long);                          /*208*/
+DEF_INST(rotate_then_and_selected_bits_long_reg);               /*208*/
+DEF_INST(rotate_then_exclusive_or_selected_bits_long_reg);      /*208*/
+DEF_INST(rotate_then_insert_selected_bits_long_reg);            /*208*/
+DEF_INST(rotate_then_or_selected_bits_long_reg);                /*208*/
+DEF_INST(store_halfword_relative_long);                         /*208*/
+DEF_INST(store_relative_long);                                  /*208*/
+DEF_INST(store_relative_long_long);                             /*208*/
 
 
 /* Instructions in io.c */

@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.138  2008/02/28 11:08:26  rbowler
+// Opcodes for new instructions in zPOP-06
+//
 // Revision 1.137  2008/02/28 10:11:50  rbowler
 // STFL bit settings for new features in zPOP-06
 //
@@ -321,6 +324,78 @@
 #endif /*!defined(FEATURE_EXECUTE_EXTENSIONS)                   /*208*/
 
 #if !defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)   /*208*/
+ UNDEF_INST(add_immediate_long_storage)
+ UNDEF_INST(add_immediate_storage)
+ UNDEF_INST(add_logical_with_signed_immediate)
+ UNDEF_INST(add_logical_with_signed_immediate_long)
+ UNDEF_INST(compare_and_branch)
+ UNDEF_INST(compare_and_branch_long)
+ UNDEF_INST(compare_and_branch_relative)
+ UNDEF_INST(compare_and_branch_relative_long)
+ UNDEF_INST(compare_and_trap_long_register)
+ UNDEF_INST(compare_and_trap_register)
+ UNDEF_INST(compare_halfword_immediate_halfword_storage)
+ UNDEF_INST(compare_halfword_immediate_long_storage)
+ UNDEF_INST(compare_halfword_immediate_storage)
+ UNDEF_INST(compare_halfword_long)
+ UNDEF_INST(compare_halfword_relative_long)
+ UNDEF_INST(compare_halfword_relative_long_long)
+ UNDEF_INST(compare_immediate_and_branch)
+ UNDEF_INST(compare_immediate_and_branch_long)
+ UNDEF_INST(compare_immediate_and_branch_relative)
+ UNDEF_INST(compare_immediate_and_branch_relative_long)
+ UNDEF_INST(compare_immediate_and_trap)
+ UNDEF_INST(compare_immediate_and_trap_long)
+ UNDEF_INST(compare_logical_and_branch_long_register)
+ UNDEF_INST(compare_logical_and_branch_register)
+ UNDEF_INST(compare_logical_and_branch_relative_long_register)
+ UNDEF_INST(compare_logical_and_branch_relative_register)
+ UNDEF_INST(compare_logical_and_trap_long_register)
+ UNDEF_INST(compare_logical_and_trap_register)
+ UNDEF_INST(compare_logical_immediate_and_branch)
+ UNDEF_INST(compare_logical_immediate_and_branch_long)
+ UNDEF_INST(compare_logical_immediate_and_branch_relative)
+ UNDEF_INST(compare_logical_immediate_and_branch_relative_long)
+ UNDEF_INST(compare_logical_immediate_and_trap_fullword)
+ UNDEF_INST(compare_logical_immediate_and_trap_long)
+ UNDEF_INST(compare_logical_immediate_fullword_storage)
+ UNDEF_INST(compare_logical_immediate_halfword_storage)
+ UNDEF_INST(compare_logical_immediate_long_storage)
+ UNDEF_INST(compare_logical_relative_long)
+ UNDEF_INST(compare_logical_relative_long_halfword)
+ UNDEF_INST(compare_logical_relative_long_long)
+ UNDEF_INST(compare_logical_relative_long_long_fullword)
+ UNDEF_INST(compare_logical_relative_long_long_halfword)
+ UNDEF_INST(compare_relative_long)
+ UNDEF_INST(compare_relative_long_long)
+ UNDEF_INST(compare_relative_long_long_fullword)
+ UNDEF_INST(extract_cache_attribute)
+ UNDEF_INST(load_address_extended_y)
+ UNDEF_INST(load_and_test_long_fullword)
+ UNDEF_INST(load_halfword_relative_long)
+ UNDEF_INST(load_halfword_relative_long_long)
+ UNDEF_INST(load_logical_halfword_relative_long)
+ UNDEF_INST(load_logical_halfword_relative_long_long)
+ UNDEF_INST(load_logical_relative_long_long_fullword)
+ UNDEF_INST(load_relative_long)
+ UNDEF_INST(load_relative_long_long)
+ UNDEF_INST(load_relative_long_long_fullword)
+ UNDEF_INST(move_fullword_from_halfword_immediate)
+ UNDEF_INST(move_halfword_from_halfword_immediate)
+ UNDEF_INST(move_long_from_halfword_immediate)
+ UNDEF_INST(multiply_halfword_y)
+ UNDEF_INST(multiply_single_immediate_fullword)
+ UNDEF_INST(multiply_single_immediate_long_fullword)
+ UNDEF_INST(multiply_y)
+ UNDEF_INST(prefetch_data)
+ UNDEF_INST(prefetch_data_relative_long)
+ UNDEF_INST(rotate_then_and_selected_bits_long_reg)
+ UNDEF_INST(rotate_then_exclusive_or_selected_bits_long_reg)
+ UNDEF_INST(rotate_then_insert_selected_bits_long_reg)
+ UNDEF_INST(rotate_then_or_selected_bits_long_reg)
+ UNDEF_INST(store_halfword_relative_long)
+ UNDEF_INST(store_relative_long)
+ UNDEF_INST(store_relative_long_long)
 #endif /*!defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY) /*208*/
 
 #if !defined(FEATURE_PARSING_ENHANCEMENT)                       /*208*/
