@@ -1,3 +1,4 @@
+28 Feb 2008 Fix RP in z/arch mode and mode switch trace - Paul Leisy
 27 Feb 2008 Added feature message_security_assist_extension_2 - Bernard
 22 Feb 2008 Fix BSA pic06 in z/arch mode - Paul Leisy
 20 Feb 2008 Fix BSA pic06/05 and branch to odd addrs pic06 - Paul Leisy
