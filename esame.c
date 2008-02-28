@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.193  2008/02/28 10:11:50  rbowler
+// STFL bit settings for new features in zPOP-06
+//
 // Revision 1.192  2008/02/15 21:17:55  ptl00
 // Add pic13 check to RP
 //
@@ -258,14 +261,16 @@ U16     psw_offset;                     /* Offset to new PSW         */
 U16     ar_offset;                      /* Offset to new AR          */
 U16     gr_offset;                      /* Offset to new GR          */
 U32     ar;                             /* Copy of new AR            */
+U32     gr = 0;                         /* Copy of new GR            */
 #if defined(FEATURE_ESAME)
-U16     grd_offset;                     /* Offset of disjoint GR_H   */
+U16     grd_offset = 0;                 /* Offset of disjoint GR_H   */
 BYTE    psw[16];                        /* Copy of new PSW           */
-U64     gr;                             /* Copy of new GR            */
+U64     gr8 = 0;                        /* Copy of new GR - 8 bytes  */
+U32     grd = 0;                        /* Copy of new GR - disjoint */
 U64     ia;                             /* ia for trace              */
+BYTE    amode64;                        /* save for amod64           */
 #else /*!defined(FEATURE_ESAME)*/
 BYTE    psw[8];                         /* Copy of new PSW           */
-U32     gr;                             /* Copy of new GR            */
 U32     ia;                             /* ia for trace              */
 #endif /*!defined(FEATURE_ESAME)*/
 BYTE    amode;                          /* amode for trace           */
@@ -333,9 +338,20 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Fetch the new gr from operand address + GPR offset */
 #if defined(FEATURE_ESAME)
-    if(flags & 0x0002)
-        gr = ARCH_DEP(vfetch8) ((effective_addr2 + gr_offset)
+    /* General Register Field 1 is eight bytes */
+    if((flags & 0x0003) == 0x0002)
+    {
+        gr8 = ARCH_DEP(vfetch8) ((effective_addr2 + gr_offset)
                                 & ADDRESS_MAXWRAP(regs), b2, regs);
+    }
+    /* General Register Field 1 and 2 are four bytes - disjoint */
+    else if((flags & 0x0003) == 0x0003)
+    {
+        gr = ARCH_DEP(vfetch4) ((effective_addr2 + gr_offset)
+                                & ADDRESS_MAXWRAP(regs), b2, regs);
+        grd = ARCH_DEP(vfetch4) ((effective_addr2 + grd_offset)
+                                & ADDRESS_MAXWRAP(regs), b2, regs);
+    }
     else
 #endif /*defined(FEATURE_ESAME)*/
         gr = ARCH_DEP(vfetch4) ((effective_addr2 + gr_offset)
@@ -343,18 +359,22 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
 #if defined(FEATURE_TRACING)
 #if defined(FEATURE_ESAME)
-    FETCH_DW(ia, psw + 8);
-    amode = psw[3] & 0x01;
+    /* fetch 8 or 4 byte IA depending on psw operand size */
+    if (flags & 0x0004)
+        FETCH_DW(ia, psw + 8);
+    else
+        FETCH_FW(ia, psw + 4);
+    amode64 = psw[3] & 0x01;
 #else /*!defined(FEATURE_ESAME)*/
     FETCH_FW(ia, psw + 4);
     ia &= 0x7FFFFFFF;
-    amode = psw[4] & 0x80;
 #endif /*!defined(FEATURE_ESAME)*/
+    amode = psw[4] & 0x80;
 
 #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */
-    if((regs->CR(12) & CR12_MTRACE)  && regs->psw.amode64 != amode)
-        ARCH_DEP(trace_ms) (regs->CR(12) & CR12_BRTRACE, ia | regs->psw.amode64 ? amode << 31 : 0, regs);
+    if((regs->CR(12) & CR12_MTRACE) && (regs->psw.amode64 != amode64))
+        newcr12 = ARCH_DEP(trace_ms) (regs->CR(12) & CR12_BRTRACE ? 1 : 0, ia, regs);
     else
 #endif /*defined(FEATURE_ESAME)*/
     if (regs->CR(12) & CR12_BRTRACE)
@@ -367,10 +387,11 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     save_psw = regs->psw;
 
 
-    /* Use bits 16-23, 32-63 of psw in operand, other bits from old psw */
+    /* Use bytes 0 and 1 of old psw and byte 2 from operand */
     psw[0] = save_psw.sysmask;
-    psw[1] = save_psw.pkey | 0x08 | save_psw.states;
-    psw[3] = 0;
+    psw[1] = save_psw.pkey | save_psw.states;
+    /* ignore bits 24-30 */
+    psw[3] = 0x01 & psw[3];
 
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
@@ -394,10 +415,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->program_interrupt (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
 #if defined(FEATURE_ESAME)
+    /* Handle 16 byte psw operand */
     if(flags & 0x0004)
     {
-        /* Do not check esame bit (force to zero) */
-        psw[1] &= ~0x08;
+        psw[1] &= ~0x08; /* force bit 12 off */
         if( ARCH_DEP(load_psw) (regs, psw) )/* only check invalid IA not odd */
         {
             /* restore the psw */
@@ -406,13 +427,16 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
         }
     }
+    /* Handle 8 byte psw operand */
     else
-#endif /*defined(FEATURE_ESAME)*/
     {
-#if defined(FEATURE_ESAME)
-        /* Do not check amode64 bit (force to zero) */
+        /* Save amode64, do not check amode64 bit (force to zero) */
+        /* This is so s390_load_psw will work.                    */
+        /* Checks for amode64 will be done a few lines later      */
+        amode64 = psw[3] & 01;
         psw[3] &= ~0x01;
 #endif /*defined(FEATURE_ESAME)*/
+        psw[1] |= 0x08; /* force bit 12 on */
         if( s390_load_psw(regs, psw) )
         {
             /* restore the psw */
@@ -422,8 +446,29 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         }
 #if defined(FEATURE_ESAME)
         regs->psw.states &= ~BIT(PSW_NOTESAME_BIT);
-#endif /*defined(FEATURE_ESAME)*/
+        /* clear high word of IA since operand was 8-byte psw */
+        regs->psw.IA_H = 0; 
+        /* Check original amode64 and restore and do checks */
+        if (amode64)
+        {
+            /* if amode64 (31) on, then amode (32) must be on too */
+            if (!regs->psw.amode)
+            {
+                /* restore the psw */
+                regs->psw = save_psw;
+                /* And generate a program interrupt */
+                regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+            }
+            regs->psw.amode64 = 1;
+            regs->psw.AMASK = AMASK64;
+        }
+        else
+        {
+            regs->psw.amode64 = 0;
+            regs->psw.AMASK_H = 0;
+        }
     }
+#endif /*defined(FEATURE_ESAME)*/
 
     /* Check for odd IA in psw */
     if(regs->psw.IA & 0x01)
@@ -439,15 +484,20 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Update general register b2 */
 #if defined(FEATURE_ESAME)
-    if(flags & 0x0002)
-        regs->GR_G(b2) = gr;
+    if((flags & 0x0003) == 0x0002)
+        regs->GR_G(b2) = gr8;
+    else if((flags & 0x0003) == 0x0003)
+    {
+        regs->GR_L(b2) = gr;
+        regs->GR_H(b2) = grd;
+    }
     else
 #endif /*defined(FEATURE_ESAME)*/
         regs->GR_L(b2) = gr;
 
 #ifdef FEATURE_TRACING
     /* Update trace table address if branch tracing is on */
-    if (regs->CR(12) & CR12_BRTRACE)
+    if (newcr12)
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
 
@@ -4464,7 +4514,7 @@ VADR    ia = PSW_IA(regs, 0);           /* Unupdated instruction addr*/
 #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64)
-        ARCH_DEP(trace_ms) (0, PSW_IA(regs, 0), regs);
+        regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
 #endif /*defined(FEATURE_ESAME)*/
 
 #if defined(FEATURE_ESAME)
@@ -4500,7 +4550,7 @@ VADR    ia = PSW_IA(regs, 0);           /* Unupdated instruction addr*/
 #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64)
-        ARCH_DEP(trace_ms) (0, PSW_IA(regs,0) , regs);
+        regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
 #endif /*defined(FEATURE_ESAME)*/
 
 #if defined(FEATURE_ESAME)
@@ -4529,7 +4579,7 @@ DEF_INST(set_addressing_mode_64)
 #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && !regs->psw.amode64)
-        ARCH_DEP(trace_ms) (0, PSW_IA(regs, 0), regs);
+        regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
 #endif /*defined(FEATURE_ESAME)*/
 
     regs->psw.amode = regs->psw.amode64 = 1;
