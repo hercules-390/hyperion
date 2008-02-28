@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.76  2008/02/27 17:09:58  bernard
+// introduce FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FEATURE
+//
 // Revision 1.75  2008/02/27 14:14:50  bernard
 // Implemented feature_message_security_assist_extension_2
 //
@@ -65,8 +68,10 @@
 #define FEATURE_CHSC
 #define FEATURE_COMPARE_AND_MOVE_EXTENDED
 #define FEATURE_COMPARE_AND_SWAP_AND_STORE                      /*407*/
+//#define FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2           /*208*/
 #define FEATURE_COMPRESSION
 #define FEATURE_CONDITIONAL_SSKE                                /*407*/
+//#define FEATURE_CONFIGURATION_TOPOLOGY                          /*208*/
 #define FEATURE_CPU_RECONFIG
 #define FEATURE_CPUID_FORMAT_1
 #define FEATURE_DAT_ENHANCEMENT
@@ -79,9 +84,11 @@
 // #define FEATURE_DIAG308_REIPL
 #define FEATURE_DUAL_ADDRESS_SPACE
 #define FEATURE_EMULATE_VM
+//#define FEATURE_ENHANCED_DAT                                    /*208*/
 #define FEATURE_ESAME
 #define FEATURE_ETF2_ENHANCEMENT                                /*@Z9*/
 #define FEATURE_ETF3_ENHANCEMENT                                /*@Z9*/
+//#define FEATURE_EXECUTE_EXTENSIONS                              /*208*/
 #define FEATURE_EXPANDED_STORAGE
 #define FEATURE_EXPEDITED_SIE_SUBSET
 #define FEATURE_EXTENDED_IMMEDIATE                              /*@Z9*/
@@ -95,7 +102,7 @@
 #define FEATURE_FETCH_PROTECTION_OVERRIDE
 #define FEATURE_FPS_ENHANCEMENT                                 /*DFP*/
 #define FEATURE_FPS_EXTENSIONS
-#define FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY
+//#define FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY         /*208*/
 #define FEATURE_HERCULES_DIAGCALLS
 #define FEATURE_HEXADECIMAL_FLOATING_POINT
 #define FEATURE_HFP_EXTENSIONS
@@ -116,9 +123,10 @@
 #define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
 #define FEATURE_MIDAW                                           /*@Z9*/
 #define FEATURE_MOVE_PAGE_FACILITY_2
-//#define FEATURE_MVCOS                                           /*407*/
+//#define FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS               /*208*/
 #define FEATURE_MVS_ASSIST
 #define FEATURE_PAGE_PROTECTION
+//#define FEATURE_PARSING_ENHANCEMENT                             /*208*/
 #define FEATURE_PERFORM_LOCKED_OPERATION
 #define FEATURE_PER
 #define FEATURE_PER2
@@ -127,6 +135,7 @@
 #define FEATURE_PRIVATE_SPACE
 #define FEATURE_PROTECTION_INTERCEPTION_CONTROL
 #define FEATURE_QUEUED_DIRECT_IO
+//#define FEATURE_RESTORE_SUBCHANNEL                              /*208*/
 #define FEATURE_RESUME_PROGRAM
 #define FEATURE_REGION_RELOCATE
 #define FEATURE_SENSE_RUNNING_STATUS                            /*@Z9*/
@@ -147,5 +156,13 @@
 #define FEATURE_TRACING
 #define FEATURE_WAITSTATE_ASSIST
 
+#define FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2           /*208*/
+#define FEATURE_CONFIGURATION_TOPOLOGY                          /*208*/
+#define FEATURE_ENHANCED_DAT                                    /*208*/
+#define FEATURE_EXECUTE_EXTENSIONS                              /*208*/
+#define FEATURE_GENERAL_INSTRUCTIONS_EXTENSION                  /*208*/
+//#define FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS               /*208*/
+#define FEATURE_PARSING_ENHANCEMENT                             /*208*/
+#define FEATURE_RESTORE_SUBCHANNEL                              /*208*/
 #endif /*defined(OPTION_900_MODE)*/
 /* end of FEAT900.H */

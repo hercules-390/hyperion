@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.94  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.93  2007/06/02 16:23:33  rbowler
 // IUCV external interrupt code and submask definitions
 //
@@ -1315,6 +1318,8 @@ typedef struct _MBK {
                                            is installed              */
 #define STFL_0_STFL_EXTENDED    0x01    /* Store facility list    @Z9
                                            extended is installed  @Z9*/
+#define STFL_1_ENHANCED_DAT     0x80    /* Enhanced-DAT facility  208
+                                           is installed           208*/
 #define STFL_1_SENSE_RUN_STATUS 0x40    /* Sense running status   @Z9
                                            facility is installed  @Z9*/
 #define STFL_1_CONDITIONAL_SSKE 0x20    /* Conditional SSKE facility
@@ -1341,6 +1346,8 @@ typedef struct _MBK {
                                            facility 2 enhancement @Z9*/
 #define STFL_3_STORE_CLOCK_FAST 0x40    /* Store clock fast       @Z9
                                            enhancement installed  @Z9*/
+#define STFL_3_PARSING_ENHANCE  0x20    /* Parsing-Enhancement    208
+                                           facility is installed  208*/
 #define STFL_3_MVCOS            0x10    /* MVCOS instruction
                                            is installed           407*/
 #define STFL_3_TOD_CLOCK_STEER  0x08    /* TOD clock steering     @Z9
@@ -1353,6 +1360,10 @@ typedef struct _MBK {
                                            facility is installed     */
 #define STFL_4_CSSF2            0x40    /* Compare-and-Swap-and-Store
                                            facility 2 is installed   */
+#define STFL_4_GEN_INST_EXTN    0x20    /* General-Instr-Extn     208
+                                           facility is installed  208*/
+#define STFL_4_EXECUTE_EXTN     0x10    /* Execute-Extensions     208
+                                           facility is installed  208*/
 #define STFL_5_FPS_ENHANCEMENT  0x40    /* Floating point support    
                                            enhancements (FPR-GR-loading
                                            FPS-sign-handling, and

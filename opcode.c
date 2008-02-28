@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.136  2008/02/18 17:28:20  rbowler
+// Misplaced definition causes duplicate symbol set_dfp_rounding_mode
+//
 // Revision 1.135  2008/01/21 22:20:35  rbowler
 // Correct previous changelog entry (ETF3 not ETF2)
 //
@@ -286,9 +289,9 @@
  UNDEF_INST(store_clock_extended)
 #endif /*!defined(FEATURE_EXTENDED_TOD_CLOCK)*/
 
-#if !defined(FEATURE_MVCOS)
+#if !defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)
  UNDEF_INST(move_with_optional_specifications)
-#endif /*!defined(FEATURE_MVCOS)*/
+#endif /*!defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/
 
 #if !defined(FEATURE_EXTRACT_CPU_TIME)
  UNDEF_INST(extract_cpu_time)

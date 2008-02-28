@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.192  2008/02/15 21:17:55  ptl00
+// Add pic13 check to RP
+//
 // Revision 1.191  2007/11/17 21:57:52  rbowler
 // Correct comments on two #endif statements
 //
@@ -4857,12 +4860,18 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #endif /*defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)*/
                  ,
                  0
+#if defined(FEATURE_ENHANCED_DAT)                               /*208*/
+                 | STFL_1_ENHANCED_DAT                          /*208*/
+#endif /*defined(FEATURE_ENHANCED_DAT)*/                        /*208*/
 #if defined(FEATURE_SENSE_RUNNING_STATUS)
                  | STFL_1_SENSE_RUN_STATUS
 #endif /*defined(FEATURE_SENSE_RUNNING_STATUS)*/
 #if defined(FEATURE_CONDITIONAL_SSKE)
                  | STFL_1_CONDITIONAL_SSKE
 #endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY)                     /*208*/
+                 | STFL_1_CONFIG_TOPOLOGY                       /*208*/
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY)*/              /*208*/
                  ,
                  0
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
@@ -4895,9 +4904,12 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #if defined(FEATURE_STORE_CLOCK_FAST)
                  | STFL_3_STORE_CLOCK_FAST
 #endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
-#if defined(FEATURE_MVCOS)
-                 | STFL_3_MVCOS
-#endif /*defined(FEATURE_MVCOS)*/
+#if defined(FEATURE_PARSING_ENHANCEMENT)                        /*208*/
+                 | STFL_3_PARSING_ENHANCE                       /*208*/
+#endif /*defined(FEATURE_PARSING_ENHANCEMENT)*/                 /*208*/
+#if defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)          /*208*/
+                 | STFL_3_MVCOS                                 /*208*/
+#endif /*defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/   /*208*/
 #if defined(FEATURE_TOD_CLOCK_STEERING)
                  | STFL_3_TOD_CLOCK_STEER
 #endif /*defined(FEATURE_TOD_CLOCK_STEERING)*/
@@ -4912,6 +4924,15 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)
                  | STFL_4_CSSF
 #endif /*defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)*/
+#if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2)      /*208*/
+                 | STFL_4_CSSF2                                 /*208*/
+#endif /*FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2*/        /*208*/
+#if defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)    /*208*/
+                 | STFL_4_GEN_INST_EXTN                         /*208*/
+#endif /*FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY*/      /*208*/
+#if defined(FEATURE_EXECUTE_EXTENSIONS)                         /*208*/
+                 | STFL_4_EXECUTE_EXTN                          /*208*/
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS)*/                  /*208*/
                  ,
                  0
 #if defined(FEATURE_FPS_ENHANCEMENT)
