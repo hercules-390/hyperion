@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.77  2008/02/28 10:11:50  rbowler
+// STFL bit settings for new features in zPOP-06
+//
 // Revision 1.76  2008/02/27 17:09:58  bernard
 // introduce FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FEATURE
 //
@@ -156,13 +159,5 @@
 #define FEATURE_TRACING
 #define FEATURE_WAITSTATE_ASSIST
 
-#define FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2           /*208*/
-#define FEATURE_CONFIGURATION_TOPOLOGY                          /*208*/
-#define FEATURE_ENHANCED_DAT                                    /*208*/
-#define FEATURE_EXECUTE_EXTENSIONS                              /*208*/
-#define FEATURE_GENERAL_INSTRUCTIONS_EXTENSION                  /*208*/
-//#define FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS               /*208*/
-#define FEATURE_PARSING_ENHANCEMENT                             /*208*/
-#define FEATURE_RESTORE_SUBCHANNEL                              /*208*/
 #endif /*defined(OPTION_900_MODE)*/
 /* end of FEAT900.H */
