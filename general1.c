@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.154  2008/02/15 21:20:00  ptl00
+// Fix EX to SS ops so that ILC is 4 on PER rupts
+//
 // Revision 1.153  2007/11/30 15:14:14  rbowler
 // Permit String-Instruction facility to be activated in S/370 mode
 //
@@ -583,16 +586,16 @@ VADR    newia;                          /* New instruction address   */
     newia = regs->GR(r2);
 
 #if defined(FEATURE_TRACING)
-#if defined(FEATURE_ESAME)
+    #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */
-    if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && regs->psw.amode64 != (newia & 1))
+    if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
     {
         regs->psw.ilc = 0; // indicates regs->ip not updated
-        ARCH_DEP(trace_ms) (regs->CR(12) & CR12_BRTRACE,
+        regs->CR(12) = ARCH_DEP(trace_ms) (regs->CR(12) & CR12_BRTRACE,
                  newia | regs->psw.amode64 ? newia & 0x80000000 : 0, regs);
     }
     else
-#endif /*defined(FEATURE_ESAME)*/
+    #endif /*defined(FEATURE_ESAME)*/
     /* Add a branch trace entry to the trace table */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
@@ -640,14 +643,16 @@ VADR    newia;                          /* New instruction address   */
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_TRACING)
+    #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */
-    if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && regs->psw.amode64 != (newia & 1))
+    if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
     {
         regs->psw.ilc = 0; // indicates regs->ip not updated
-        ARCH_DEP(trace_ms) (0, newia, regs);
+        regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
     }
-#endif /*defined(FEATURE_ESAME)*/
+    #endif /*defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_TRACING)*/
 
     /* Insert addressing mode into bit 0 of R1 operand */
     if ( r1 != 0 )

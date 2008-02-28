@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.260  2008/02/23 00:18:28  ptl00
+// Fix BSA pic06 in z/arch mode
+//
 // Revision 1.259  2008/02/20 23:45:54  ptl00
 // Fix BSA pic06/05
 //
@@ -2608,6 +2611,9 @@ VADR    retn;                           /* Return address and amode  */
 #ifdef FEATURE_TRACING
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
+#if defined(FEATURE_ESAME)
+CREG    savecr12 = 0;                   /* CR12 save                 */
+#endif /*FEATURE_ESAME*/
 
     S(inst, regs, b2, effective_addr2);
 
@@ -3045,11 +3051,22 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         if (!ASF_ENABLED(regs))
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
+#ifdef FEATURE_TRACING
       #if defined(FEATURE_ESAME)
         /* Add a mode trace entry when switching in/out of 64 bit mode */
-        if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64 != (ete[4] & ETE4_G) ? 1 : 0)
-            ARCH_DEP(trace_ms) (0,((U64)(ete[0]) << 32) | (U64)(ete[1] & 0xFFFFFFFE), regs);
+        if((regs->CR(12) & CR12_MTRACE) && (regs->psw.amode64 != ((ete[4] & ETE4_G) ? 1 : 0)))
+        {
+            /* since ASN trace might be made already, need to save
+               current CR12 and use newcr12 for this second entry */
+            if (!newcr12) 
+                newcr12 = regs->CR(12);
+            savecr12 = regs->CR(12);
+            regs->CR(12) = newcr12; 
+            newcr12 = ARCH_DEP(trace_ms) (0, 0, regs);
+            regs->CR(12) = savecr12;
+        }
       #endif /*defined(FEATURE_ESAME)*/
+#endif /*FEATURE_TRACING*/
 
         /* Set the called-space identification */
         if (pasn == 0)
@@ -3217,8 +3234,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     } /* end if(PC-ss) */
 
 #ifdef FEATURE_TRACING
-    /* Update trace table address if ASN tracing is active */
-    if (regs->CR(12) & CR12_ASNTRACE)
+    /* Update trace table address if ASN or Mode switch made trace entry */
+    if (newcr12)
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
 
@@ -3309,6 +3326,17 @@ int     rc;                             /* return code from load_psw */
     /* Perform the unstacking process */
     etype = ARCH_DEP(program_return_unstack) (&newregs, &alsed, &rc);
 
+#ifdef FEATURE_TRACING
+      #if defined(FEATURE_ESAME)
+        /* If unstacked entry was a BAKR:                              */
+        /* Add a mode trace entry when switching in/out of 64 bit mode */
+    if((etype == LSED_UET_BAKR)
+        && (regs->CR(12) & CR12_MTRACE)
+        && (regs->psw.amode64 != newregs.psw.amode64))
+        newregs.CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
+      #endif /*defined(FEATURE_ESAME)*/
+#endif /*FEATURE_TRACING*/
+
     /* Perform PR-cp or PR-ss if unstacked entry was a program call */
     if (etype == LSED_UET_PC)
     {
@@ -3323,8 +3351,8 @@ int     rc;                             /* return code from load_psw */
       #if defined(FEATURE_ESAME)
         else
         /* Add a mode trace entry when switching in/out of 64 bit mode */
-        if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64 != newregs.psw.amode64)
-            ARCH_DEP(trace_ms) (0, newregs.psw.IA & ADDRESS_MAXWRAP(regs), regs);
+        if((regs->CR(12) & CR12_MTRACE) && (regs->psw.amode64 != newregs.psw.amode64))
+            newregs.CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
       #endif /*defined(FEATURE_ESAME)*/
 
 #endif /*FEATURE_TRACING*/
