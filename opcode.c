@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.140  2008/02/28 18:54:51  rbowler
+// RIS instruction format
+//
 // Revision 1.139  2008/02/28 17:18:00  rbowler
 // Opcodes for General-Instructions-Extension feature
 //
@@ -1666,6 +1669,21 @@ int r1,i2,m3,b4,d4;
     DISASM_LOGMSG;
 }
 
+void disasm_RRS (BYTE inst[], char mnemonic[])                  /*208*/
+{
+DISASM_COMMON_VARS;
+int r1,r2,m3,b4,d4;
+    r1 = inst[1] >> 4;
+    r2 = inst[1] & 0x0F;
+    b4 = inst[2] >> 4;
+    d4 = (inst[2] & 0x0F) << 8 | inst[3];
+    m3 = inst[4] >> 4;
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d,%d,%d(%d)",r1,r2,m3,d4,b4);
+    DISASM_LOGMSG;
+}
+
 void disasm_SI (BYTE inst[], char mnemonic[])
 {
 DISASM_COMMON_VARS;
@@ -1686,6 +1704,19 @@ int i2,b1,d1;
     i2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d(%d),%d",d1,b1,i2);
+    DISASM_LOGMSG;
+}
+
+void disasm_SIL (BYTE inst[], char mnemonic[])                  /*208*/
+{
+DISASM_COMMON_VARS;
+int b1,d1,i2;
+    b1 = inst[2] >> 4;
+    d1 = (inst[2] & 0x0F) << 8 | inst[3];
+    i2 = (S16)(((U16)inst[4] << 8) | inst[5]);
     DISASM_SET_NAME;
     DISASM_PRINT_OPERANDS
         "%d(%d),%d",d1,b1,i2);
