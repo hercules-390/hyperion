@@ -38,6 +38,9 @@
  */
 
 // $Log$
+// Revision 1.9  2006/12/08 09:43:35  jj
+// Add CVS message log
+//
 
 #include "hstdinc.h"
 
@@ -512,12 +515,18 @@ SHA256_Final(u_int8_t digest[], SHA256_CTX *context)
 }
 
 
-/* Hashing-only function called by dyncrypt */
+/* Hashing-only functions called by dyncrypt */
 
 void
 sha256_process(sha256_context *ctx, u_int8_t data[64])
 {
  SHA256_Transform(ctx, data);
+}
+
+void
+sha512_process(sha512_context *ctx, u_int8_t data[64])
+{
+ SHA512_Transform(ctx, data);
 }
 
 
