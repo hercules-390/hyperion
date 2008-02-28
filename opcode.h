@@ -7,6 +7,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.211  2008/02/19 11:49:19  ivan
+// - Move setting of CPU priority after spwaning timer thread
+// - Added support for Posix 1003.1e capabilities
+//
 // Revision 1.210  2007/12/13 16:57:35  rbowler
 // Correct GENx___x390x___ definition (by Enrico Sorichetti)
 //
@@ -2947,6 +2951,7 @@ DEF_INST(exclusive_or);
 DEF_INST(exclusive_or_immediate);
 DEF_INST(exclusive_or_character);
 DEF_INST(execute);
+DEF_INST(execute_relative_long);                                /*208*/
 DEF_INST(extract_access_register);
 DEF_INST(insert_character);
 DEF_INST(insert_characters_under_mask);
@@ -3019,6 +3024,8 @@ DEF_INST(test_under_mask_low);
 DEF_INST(translate);
 DEF_INST(translate_and_test);
 DEF_INST(translate_and_test_reverse);
+DEF_INST(translate_and_test_extended);                          /*208*/
+DEF_INST(translate_and_test_reverse_extended);                  /*208*/
 DEF_INST(translate_extended);
 DEF_INST(unpack);
 DEF_INST(update_tree);
@@ -3132,7 +3139,9 @@ DEF_INST(extract_stacked_registers_long);
 DEF_INST(extract_psw);
 DEF_INST(extract_and_set_extended_authority);
 DEF_INST(load_address_relative_long);
+DEF_INST(perform_frame_management_function);                    /*208*/
 DEF_INST(perform_timing_facility_function);                     /*@Z9*/
+DEF_INST(perform_topology_function);                            /*208*/
 DEF_INST(store_facility_list);
 DEF_INST(store_facility_list_extended);                         /*@Z9*/
 DEF_INST(load_long_halfword_immediate);

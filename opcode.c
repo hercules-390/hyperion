@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.137  2008/02/28 10:11:50  rbowler
+// STFL bit settings for new features in zPOP-06
+//
 // Revision 1.136  2008/02/18 17:28:20  rbowler
 // Misplaced definition causes duplicate symbol set_dfp_rounding_mode
 //
@@ -304,6 +307,26 @@
 #if !defined(FEATURE_STORE_SYSTEM_INFORMATION)
  UNDEF_INST(store_system_information)
 #endif /*!defined(FEATURE_STORE_SYSTEM_INFORMATION)*/
+
+#if !defined(FEATURE_CONFIGURATION_TOPOLOGY)                    /*208*/
+ UNDEF_INST(perform_topology_function)                          /*208*/
+#endif /*!defined(FEATURE_CONFIGURATION_TOPOLOGY)*/             /*208*/
+
+#if !defined(FEATURE_ENHANCED_DAT)                              /*208*/
+ UNDEF_INST(perform_frame_management_function)                  /*208*/
+#endif /*!defined(FEATURE_ENHANCED_DAT)*/                       /*208*/
+
+#if !defined(FEATURE_EXECUTE_EXTENSIONS)                        /*208*/
+ UNDEF_INST(execute_relative_long)                              /*208*/
+#endif /*!defined(FEATURE_EXECUTE_EXTENSIONS)                   /*208*/
+
+#if !defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)   /*208*/
+#endif /*!defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY) /*208*/
+
+#if !defined(FEATURE_PARSING_ENHANCEMENT)                       /*208*/
+ UNDEF_INST(translate_and_test_extended)                        /*208*/
+ UNDEF_INST(translate_and_test_reverse_extended)                /*208*/
+#endif /*!defined(FEATURE_PARSING_ENHANCEMENT)                  /*208*/
 
 
 #if !defined(FEATURE_VECTOR_FACILITY)
@@ -2198,7 +2221,7 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*C3*/   GENx___x___x___ ,
  /*C4*/   GENx___x___x___ ,
  /*C5*/   GENx___x___x___ ,
- /*C6*/   GENx___x___x___ ,
+ /*C6*/   GENx370x390x900 (execute_relative_long,RIL,"EXRL"),
  /*C7*/   GENx___x___x___ ,
  /*C8*/   GENx___x___x900 (execute_c8xx,c8xx,""),
  /*C9*/   GENx___x___x___ ,
@@ -3506,7 +3529,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B99F*/ GENx___x___x900 (set_secondary_asn_with_instance,RRE_R1,"SSAIR"),
  /*B9A0*/ GENx___x___x___ ,
  /*B9A1*/ GENx___x___x___ ,
- /*B9A2*/ GENx___x___x___ ,
+ /*B9A2*/ GENx___x___x900 (perform_topology_function,RRE,"PTF"),
  /*B9A3*/ GENx___x___x___ ,
  /*B9B9*/ GENx___x___x___ ,
  /*B9A5*/ GENx___x___x___ ,
@@ -3519,7 +3542,7 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9AC*/ GENx___x___x___ ,
  /*B9AD*/ GENx___x___x___ ,
  /*B9AE*/ GENx___x___x___ ,
- /*B9AF*/ GENx___x___x___ ,
+ /*B9AF*/ GENx___x___x900 (perform_frame_management_function,RRE,"PFMF"),
  /*B9B0*/ GENx370x390x900 (convert_utf8_to_utf32,RRF_M3,"CU14"),
  /*B9B1*/ GENx370x390x900 (convert_utf16_to_utf32,RRF_M3,"CU24"),
  /*B9B2*/ GENx370x390x900 (convert_utf32_to_utf8,RRE,"CU41"),
@@ -3533,9 +3556,9 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B9BA*/ GENx___x___x___ ,
  /*B9BB*/ GENx___x___x___ ,
  /*B9BC*/ GENx___x___x___ ,
- /*B9BD*/ GENx___x___x___ ,
+ /*B9BD*/ GENx370x390x900 (translate_and_test_reverse_extended,RRF_M3,"TRTRE"),
  /*B9BE*/ GENx370x390x900 (search_string_unicode,RRE,"SRSTU"),
- /*B9BF*/ GENx___x___x___ ,
+ /*B9BF*/ GENx370x390x900 (translate_and_test_extended,RRF_M3,"TRTE"),
  /*B9C0*/ GENx___x___x___ ,
  /*B9C1*/ GENx___x___x___ ,
  /*B9C2*/ GENx___x___x___ ,
