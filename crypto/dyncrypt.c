@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.60  2008/02/27 16:00:53  bernard
+// Error in klmd_sha512 and extension 2 is now announced in the log
+//
 // Revision 1.59  2008/02/27 14:49:56  bernard
 // Query functions return extension_1 bitstrings due to errors in #define
 // statements at the top.
@@ -1564,7 +1567,7 @@ static void ARCH_DEP(km_aes_256)(int r1, int r2, REGS *regs)
   /* CPU-determined amount of data processed */
   regs->psw.cc = 3;
 }
-#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1 */
+#endif /* FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2 */
 
 /*----------------------------------------------------------------------------*/
 /* B91E Compute message authentication code (KMAC) FC 0                       */
