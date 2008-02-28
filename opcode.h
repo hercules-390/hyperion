@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.213  2008/02/28 17:18:01  rbowler
+// Opcodes for General-Instructions-Extension feature
+//
 // Revision 1.212  2008/02/28 11:08:26  rbowler
 // Opcodes for new instructions in zPOP-06
 //
@@ -996,6 +999,7 @@ do { \
 #undef DECODER_TEST_RSI
 #undef DECODER_TEST_RI
 #define DECODER_TEST_RIL
+#undef DECODER_TEST_RIS
 #undef DECODER_TEST_SI
 #define DECODER_TEST_SIY
 #undef DECODER_TEST_S
@@ -1874,6 +1878,46 @@ do { \
             (_i2) = fetch_fw(&(_inst)[2]); \
             (_op) = ((_inst)[1]     ) & 0xf; \
             (_r1) = ((_inst)[1] >> 4) & 0xf; \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+    }
+
+/* RIS register, immediate, mask, and storage */                /*208*/
+#undef RIS
+
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RIS)
+ #define RIS(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
+         RIS_DECODER(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 6, 6)
+#else
+ #define RIS(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
+         RIS_DECODER_TEST(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 6, 6)
+#endif
+
+#define RIS_DECODER(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, _len, _ilc) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr4) = temp & 0xfff; \
+            (_b4) = (temp >> 12) & 0xf; \
+            if((_b4) != 0) \
+            { \
+                (_effective_addr4) += (_regs)->GR((_b4)); \
+                (_effective_addr4) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_m3) = (temp >> 16) & 0xf; \
+            (_r1) = (temp >> 20) & 0xf; \
+            (_i2) = (_inst)[4]; \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+    }
+
+#define RIS_DECODER_TEST(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, _len, _ilc) \
+    {   U32 temp = fetch_fw(_inst); \
+            (_effective_addr4) = temp & 0xfff; \
+            (_b4) = (temp >> 12) & 0xf; \
+            if((_b4)) { \
+                (_effective_addr4) += (_regs)->GR((_b4)); \
+                (_effective_addr4) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_m3) = (temp >> 16) & 0xf; \
+            (_r1) = (temp >> 20) & 0xf; \
+            (_i2) = (_inst)[4]; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
 

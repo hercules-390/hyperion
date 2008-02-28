@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.139  2008/02/28 17:18:00  rbowler
+// Opcodes for General-Instructions-Extension feature
+//
 // Revision 1.138  2008/02/28 11:08:26  rbowler
 // Opcodes for new instructions in zPOP-06
 //
@@ -1645,6 +1648,21 @@ int r1,i2;
     DISASM_SET_NAME;
     DISASM_PRINT_OPERANDS
         "%d,%" I64_FMT "d",r1,i2*Two_S64);
+    DISASM_LOGMSG;
+}
+
+void disasm_RIS (BYTE inst[], char mnemonic[])                  /*208*/
+{
+DISASM_COMMON_VARS;
+int r1,i2,m3,b4,d4;
+    r1 = inst[1] >> 4;
+    m3 = inst[1] & 0x0F;
+    b4 = inst[2] >> 4;
+    d4 = (inst[2] & 0x0F) << 8 | inst[3];
+    i2 = inst[4];
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d,%d,%d(%d)",r1,i2,m3,d4,b4);
     DISASM_LOGMSG;
 }
 
