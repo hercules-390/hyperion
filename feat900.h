@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.78  2008/02/28 11:05:13  rbowler
+// Deactivate new features not yet coded
+//
 // Revision 1.77  2008/02/28 10:11:50  rbowler
 // STFL bit settings for new features in zPOP-06
 //
@@ -129,7 +132,7 @@
 //#define FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS               /*208*/
 #define FEATURE_MVS_ASSIST
 #define FEATURE_PAGE_PROTECTION
-//#define FEATURE_PARSING_ENHANCEMENT                             /*208*/
+#define FEATURE_PARSING_ENHANCEMENT                             /*208*/
 #define FEATURE_PERFORM_LOCKED_OPERATION
 #define FEATURE_PER
 #define FEATURE_PER2
