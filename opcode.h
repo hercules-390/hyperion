@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.217  2008/02/29 00:57:03  rbowler
+// Modify compare_and_branch instruction names
+//
 // Revision 1.216  2008/02/29 00:08:25  rbowler
 // Additional RIE instruction formats
 //
@@ -237,6 +240,8 @@ OPC_DLL_IMPORT zz_func opcode_b3xx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_b9xx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_c0xx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_c2xx[][GEN_MAXARCH];                      /*@Z9*/
+OPC_DLL_IMPORT zz_func opcode_c4xx[][GEN_MAXARCH];                      /*208*/
+OPC_DLL_IMPORT zz_func opcode_c6xx[][GEN_MAXARCH];                      /*208*/
 OPC_DLL_IMPORT zz_func opcode_c8xx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_e3xx[][GEN_MAXARCH];
 OPC_DLL_IMPORT zz_func opcode_e4xx[256][GEN_MAXARCH];
@@ -292,6 +297,12 @@ int used; \
     case 0xC2:                                     /*@Z9*/ \
         used = sysblk.imapc2[(_inst)[1] & 0x0F]++; /*@Z9*/ \
         break;                                     /*@Z9*/ \
+    case 0xC4:                                     /*208*/ \
+        used = sysblk.imapc4[(_inst)[1] & 0x0F]++; /*208*/ \
+        break;                                     /*208*/ \
+    case 0xC6:                                     /*208*/ \
+        used = sysblk.imapc6[(_inst)[1] & 0x0F]++; /*208*/ \
+        break;                                     /*208*/ \
     case 0xC8: \
         used = sysblk.imapc8[(_inst)[1] & 0x0F]++; \
         break; \

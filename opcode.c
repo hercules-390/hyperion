@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.144  2008/02/29 02:01:48  rbowler
+// Opcode tables for General-Instructions-Extension feature
+//
 // Revision 1.143  2008/02/29 00:57:03  rbowler
 // Modify compare_and_branch instruction names
 //
@@ -1183,6 +1186,18 @@ DEF_INST(execute_c2xx)                                          /*@Z9*/
 #endif /*defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)*/
 
 
+DEF_INST(execute_c4xx)                                          /*208*/
+{                                                               /*208*/
+    regs->ARCH_DEP(opcode_c4xx)[inst[1]](inst, regs);           /*208*/
+}                                                               /*208*/
+
+
+DEF_INST(execute_c6xx)                                          /*208*/
+{                                                               /*208*/
+    regs->ARCH_DEP(opcode_c6xx)[inst[1]](inst, regs);           /*208*/
+}                                                               /*208*/
+
+
 #if defined(FEATURE_ESAME)
 DEF_INST(execute_c8xx)
 {
@@ -1265,6 +1280,8 @@ DISASM_ROUTE(b3xx,[1])
 DISASM_ROUTE(b9xx,[1])
 DISASM_ROUTE(c0xx,[1] & 0x0F)
 DISASM_ROUTE(c2xx,[1] & 0x0F)                                   /*@Z9*/
+DISASM_ROUTE(c4xx,[1] & 0x0F)                                   /*208*/
+DISASM_ROUTE(c6xx,[1] & 0x0F)                                   /*208*/
 DISASM_ROUTE(c8xx,[1] & 0x0F)
 DISASM_ROUTE(e3xx,[5])
 DISASM_ROUTE(e5xx,[1])
@@ -2015,6 +2032,9 @@ static zz_func s370_opcode_a6xx[256];
 static zz_func s370_opcode_a7xx[256];
 static zz_func s370_opcode_b2xx[256];
 static zz_func s370_opcode_b9xx[256];
+static zz_func s370_opcode_c2xx[256];                           /*208*/
+static zz_func s370_opcode_c4xx[256];                           /*208*/
+static zz_func s370_opcode_c6xx[256];                           /*208*/
 static zz_func s370_opcode_e4xx[256];
 static zz_func s370_opcode_e5xx[256];
 static zz_func s370_opcode_e6xx[256];
@@ -2031,6 +2051,8 @@ static zz_func s390_opcode_b3xx[256];
 static zz_func s390_opcode_b9xx[256];
 static zz_func s390_opcode_c0xx[256];
 static zz_func s390_opcode_c2xx[256];                           /*@Z9*/
+static zz_func s390_opcode_c4xx[256];                           /*208*/
+static zz_func s390_opcode_c6xx[256];                           /*208*/
 static zz_func s390_opcode_e3xx[256];
 static zz_func s390_opcode_e4xx[256];
 static zz_func s390_opcode_e5xx[256];
@@ -2047,6 +2069,8 @@ static zz_func z900_opcode_b3xx[256];
 static zz_func z900_opcode_b9xx[256];
 static zz_func z900_opcode_c0xx[256];
 static zz_func z900_opcode_c2xx[256];                           /*@Z9*/
+static zz_func z900_opcode_c4xx[256];                           /*208*/
+static zz_func z900_opcode_c6xx[256];                           /*208*/
 static zz_func z900_opcode_c8xx[256];
 static zz_func z900_opcode_e3xx[256];
 static zz_func z900_opcode_e5xx[256];
@@ -2068,6 +2092,9 @@ int i;
         s370_opcode_a7xx [i] = opcode_a7xx [i&0x0F][ARCH_370];
         s370_opcode_b2xx [i] = opcode_b2xx [i][ARCH_370];
         s370_opcode_b9xx [i] = opcode_b9xx [i][ARCH_370];
+        s370_opcode_c2xx [i] = opcode_c2xx [i&0x0F][ARCH_370];  /*208*/
+        s370_opcode_c4xx [i] = opcode_c4xx [i&0x0F][ARCH_370];  /*208*/
+        s370_opcode_c6xx [i] = opcode_c6xx [i&0x0F][ARCH_370];  /*208*/
         s370_opcode_e4xx [i] = v_opcode_e4xx [i][ARCH_370];
         s370_opcode_e5xx [i] = opcode_e5xx [i][ARCH_370];
         s370_opcode_e6xx [i] = opcode_e6xx [i][ARCH_370];
@@ -2086,6 +2113,8 @@ int i;
         s390_opcode_b9xx [i] = opcode_b9xx [i][ARCH_390];
         s390_opcode_c0xx [i] = opcode_c0xx [i&0x0F][ARCH_390];
         s390_opcode_c2xx [i] = opcode_c2xx [i&0x0F][ARCH_390];  /*@Z9*/
+        s390_opcode_c4xx [i] = opcode_c4xx [i&0x0F][ARCH_390];  /*208*/
+        s390_opcode_c6xx [i] = opcode_c6xx [i&0x0F][ARCH_390];  /*208*/
         s390_opcode_e3xx [i] = opcode_e3xx [i][ARCH_390];
         s390_opcode_e4xx [i] = v_opcode_e4xx [i][ARCH_390];
         s390_opcode_e5xx [i] = opcode_e5xx [i][ARCH_390];
@@ -2104,6 +2133,8 @@ int i;
         z900_opcode_b9xx [i] = opcode_b9xx [i][ARCH_900];
         z900_opcode_c0xx [i] = opcode_c0xx [i&0x0F][ARCH_900];
         z900_opcode_c2xx [i] = opcode_c2xx [i&0x0F][ARCH_900];  /*@Z9*/
+        z900_opcode_c4xx [i] = opcode_c4xx [i&0x0F][ARCH_900];  /*208*/
+        z900_opcode_c6xx [i] = opcode_c6xx [i&0x0F][ARCH_900];  /*208*/
         z900_opcode_c8xx [i] = opcode_c8xx [i&0x0F][ARCH_900];
         z900_opcode_e3xx [i] = opcode_e3xx [i][ARCH_900];
         z900_opcode_e5xx [i] = opcode_e5xx [i][ARCH_900];
@@ -2137,6 +2168,9 @@ void set_opcode_pointers(REGS *regs)
     regs->s370_opcode_b9xx = s370_opcode_b9xx;
     regs->s370_opcode_ebxx = s370_opcode_ebxx;
  #endif
+    regs->s370_opcode_c2xx = s370_opcode_c2xx;                  /*208*/
+    regs->s370_opcode_c4xx = s370_opcode_c4xx;                  /*208*/
+    regs->s370_opcode_c6xx = s370_opcode_c6xx;                  /*208*/
     regs->s370_opcode_e4xx = s370_opcode_e4xx;
     regs->s370_opcode_e5xx = s370_opcode_e5xx;
     regs->s370_opcode_e6xx = s370_opcode_e6xx;
@@ -2171,6 +2205,8 @@ void set_opcode_pointers(REGS *regs)
  #endif
     regs->s390_opcode_b3xx = s390_opcode_b3xx;
     regs->s390_opcode_c2xx = s390_opcode_c2xx;                  /*@Z9*/
+    regs->s390_opcode_c4xx = s390_opcode_c4xx;                  /*208*/
+    regs->s390_opcode_c6xx = s390_opcode_c6xx;                  /*208*/
     regs->s390_opcode_e4xx = s390_opcode_e4xx;
     regs->s390_opcode_e5xx = s390_opcode_e5xx;
     regs->s390_opcode_ecxx = s390_opcode_ecxx;
@@ -2204,6 +2240,8 @@ void set_opcode_pointers(REGS *regs)
  #endif
     regs->z900_opcode_b3xx = z900_opcode_b3xx;
     regs->z900_opcode_c2xx = z900_opcode_c2xx;                  /*@Z9*/
+    regs->z900_opcode_c4xx = z900_opcode_c4xx;                  /*208*/
+    regs->z900_opcode_c6xx = z900_opcode_c6xx;                  /*208*/
     regs->z900_opcode_c8xx = z900_opcode_c8xx;
     regs->z900_opcode_e5xx = z900_opcode_e5xx;
     regs->z900_opcode_ecxx = z900_opcode_ecxx;
@@ -2408,9 +2446,9 @@ DLL_EXPORT zz_func opcode_table[256][GEN_MAXARCH] = {
  /*C1*/   GENx___x___x___ ,
  /*C2*/   GENx___x390x900 (execute_c2xx,c2xx,""),               /*@Z9*/
  /*C3*/   GENx___x___x___ ,
- /*C4*/   GENx___x___x___ ,
+ /*C4*/   GENx370x390x900 (execute_c4xx,c4xx,""),               /*208*/
  /*C5*/   GENx___x___x___ ,
- /*C6*/   GENx___x___x___ ,
+ /*C6*/   GENx370x390x900 (execute_c6xx,c6xx,""),               /*208*/
  /*C7*/   GENx___x___x___ ,
  /*C8*/   GENx___x___x900 (execute_c8xx,c8xx,""),
  /*C9*/   GENx___x___x___ ,

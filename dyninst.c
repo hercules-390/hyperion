@@ -10,6 +10,9 @@
 /* instruction 2 3 or 4 digits.                                      */
 
 // $Log$
+// Revision 1.23  2008/02/29 12:05:06  rbowler
+// dyninst.c incorrect restore of C8xx opcodes
+//
 // Revision 1.22  2007/06/23 00:04:09  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -40,6 +43,8 @@
  #define opcode_b9xx  opcode_b9xx_r
  #define opcode_c0xx  opcode_c0xx_r
  #define opcode_c2xx  opcode_c2xx_r
+ #define opcode_c4xx  opcode_c4xx_r                             /*208*/
+ #define opcode_c6xx  opcode_c6xx_r                             /*208*/
  #define opcode_c8xx  opcode_c8xx_r
  #define opcode_e3xx  opcode_e3xx_r
  #define opcode_e5xx  opcode_e5xx_r
@@ -63,6 +68,8 @@
  #undef opcode_b9xx
  #undef opcode_c0xx
  #undef opcode_c2xx
+ #undef opcode_c4xx                                             /*208*/
+ #undef opcode_c6xx                                             /*208*/
  #undef opcode_c8xx
  #undef opcode_e3xx
  #undef opcode_e5xx
@@ -101,6 +108,8 @@ static zz_func save_b3xx[256][GEN_MAXARCH];
 static zz_func save_b9xx[256][GEN_MAXARCH];
 static zz_func save_c0xx[16][GEN_MAXARCH];
 static zz_func save_c2xx[16][GEN_MAXARCH];                      /*@Z9*/
+static zz_func save_c4xx[16][GEN_MAXARCH];                      /*208*/
+static zz_func save_c6xx[16][GEN_MAXARCH];                      /*208*/
 static zz_func save_c8xx[16][GEN_MAXARCH];
 static zz_func save_e3xx[256][GEN_MAXARCH];
 static zz_func save_e5xx[256][GEN_MAXARCH];
@@ -124,6 +133,8 @@ static zz_func save_edxx[256][GEN_MAXARCH];
   static void * opcode_b9xx;
   static void * opcode_c0xx;
   static void * opcode_c2xx;                                    /*@Z9*/
+  static void * opcode_c4xx;                                    /*208*/
+  static void * opcode_c6xx;                                    /*208*/
   static void * opcode_c8xx;
   static void * opcode_e3xx;
   static void * opcode_e5xx;
@@ -160,6 +171,8 @@ static void opcode_save()
     memcpy(save_b9xx,opcode_b9xx,sizeof(save_b9xx));
     memcpy(save_c0xx,opcode_c0xx,sizeof(save_c0xx));
     memcpy(save_c2xx,opcode_c2xx,sizeof(save_c2xx));            /*@Z9*/
+    memcpy(save_c4xx,opcode_c4xx,sizeof(save_c4xx));            /*208*/
+    memcpy(save_c6xx,opcode_c6xx,sizeof(save_c6xx));            /*208*/
     memcpy(save_c8xx,opcode_c8xx,sizeof(save_c8xx));
     memcpy(save_e3xx,opcode_e3xx,sizeof(save_e3xx));
     memcpy(save_e5xx,opcode_e5xx,sizeof(save_e5xx));
@@ -184,6 +197,8 @@ static void opcode_restore()
     memcpy(opcode_b9xx,save_b9xx,sizeof(save_b9xx));
     memcpy(opcode_c0xx,save_c0xx,sizeof(save_c0xx));
     memcpy(opcode_c2xx,save_c2xx,sizeof(save_c2xx));            /*@Z9*/
+    memcpy(opcode_c4xx,save_c4xx,sizeof(save_c4xx));            /*208*/
+    memcpy(opcode_c6xx,save_c6xx,sizeof(save_c6xx));            /*208*/
     memcpy(opcode_c8xx,save_c8xx,sizeof(save_c8xx));
     memcpy(opcode_e3xx,save_e3xx,sizeof(save_e3xx));
     memcpy(opcode_e5xx,save_e5xx,sizeof(save_e5xx));
@@ -321,6 +336,8 @@ int opcode, extop;
         HDL_RESOLVE(opcode_b9xx);
         HDL_RESOLVE(opcode_c0xx);
         HDL_RESOLVE(opcode_c2xx);                               /*@Z9*/
+        HDL_RESOLVE(opcode_c4xx);                               /*208*/
+        HDL_RESOLVE(opcode_c6xx);                               /*208*/
         HDL_RESOLVE(opcode_c8xx);
         HDL_RESOLVE(opcode_e3xx);
         HDL_RESOLVE(opcode_e5xx);
@@ -386,6 +403,16 @@ int opcode, extop;
                 for(extop = 0; extop < 16; extop++)                        /*@Z9*/
                     assign_extop1(opcode, extop, opcode_c2xx, save_c2xx);  /*@Z9*/
                 break;                                                     /*@Z9*/
+
+            case 0xC4:                                                     /*208*/
+                for(extop = 0; extop < 16; extop++)                        /*208*/
+                    assign_extop1(opcode, extop, opcode_c4xx, save_c4xx);  /*208*/
+                break;                                                     /*208*/
+
+            case 0xC6:                                                     /*208*/
+                for(extop = 0; extop < 16; extop++)                        /*208*/
+                    assign_extop1(opcode, extop, opcode_c6xx, save_c6xx);  /*208*/
+                break;                                                     /*208*/
 
             case 0xC8:
                 for(extop = 0; extop < 16; extop++)

@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.78  2008/01/04 02:28:52  gsmith
+// sf commands update
+//
 // Revision 1.77  2007/12/10 23:12:02  gsmith
 // Tweaks to OPTION_MIPS_COUNTING processing
 //
@@ -343,6 +346,9 @@ struct REGS {                           /* Processor registers       */
                *s370_opcode_b9xx,
                *s370_opcode_ebxx,
  #endif
+               *s370_opcode_c2xx,                               /*208*/
+               *s370_opcode_c4xx,                               /*208*/
+               *s370_opcode_c6xx,                               /*208*/
                *s370_opcode_e4xx,
                *s370_opcode_e5xx,
                *s370_opcode_e6xx,
@@ -370,6 +376,8 @@ struct REGS {                           /* Processor registers       */
  #endif
                *s390_opcode_b3xx,
                *s390_opcode_c2xx,
+               *s390_opcode_c4xx,                               /*208*/
+               *s390_opcode_c6xx,                               /*208*/
                *s390_opcode_e4xx,
                *s390_opcode_e5xx,
                *s390_opcode_ecxx,
@@ -395,6 +403,8 @@ struct REGS {                           /* Processor registers       */
  #endif
                *z900_opcode_b3xx,
                *z900_opcode_c2xx,
+               *z900_opcode_c4xx,                               /*208*/
+               *z900_opcode_c6xx,                               /*208*/
                *z900_opcode_c8xx,
                *z900_opcode_e5xx,
                *z900_opcode_ecxx,
@@ -647,6 +657,8 @@ struct SYSBLK {
         U64 imapb9[256];
         U64 imapc0[16];
         U64 imapc2[16];                                         /*@Z9*/
+        U64 imapc4[16];                                         /*208*/
+        U64 imapc6[16];                                         /*208*/
         U64 imapc8[16];
         U64 imape3[256];
         U64 imape4[256];
@@ -666,6 +678,8 @@ struct SYSBLK {
             + sizeof(sysblk.imapb9) \
             + sizeof(sysblk.imapc0) \
             + sizeof(sysblk.imapc2) /*@Z9*/ \
+            + sizeof(sysblk.imapc4) /*208*/ \
+            + sizeof(sysblk.imapc6) /*208*/ \
             + sizeof(sysblk.imapc8) \
             + sizeof(sysblk.imape3) \
             + sizeof(sysblk.imape4) \
