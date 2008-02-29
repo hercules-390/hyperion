@@ -10,6 +10,9 @@
 /* instruction 2 3 or 4 digits.                                      */
 
 // $Log$
+// Revision 1.22  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.21  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -181,7 +184,7 @@ static void opcode_restore()
     memcpy(opcode_b9xx,save_b9xx,sizeof(save_b9xx));
     memcpy(opcode_c0xx,save_c0xx,sizeof(save_c0xx));
     memcpy(opcode_c2xx,save_c2xx,sizeof(save_c2xx));            /*@Z9*/
-    memcpy(opcode_c8xx,save_c2xx,sizeof(save_c8xx));
+    memcpy(opcode_c8xx,save_c8xx,sizeof(save_c8xx));
     memcpy(opcode_e3xx,save_e3xx,sizeof(save_e3xx));
     memcpy(opcode_e5xx,save_e5xx,sizeof(save_e5xx));
     memcpy(opcode_e6xx,save_e6xx,sizeof(save_e6xx));
