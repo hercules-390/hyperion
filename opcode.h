@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.215  2008/02/28 23:01:35  rbowler
+// RRS,SIL instruction formats
+//
 // Revision 1.214  2008/02/28 18:54:51  rbowler
 // RIS instruction format
 //
@@ -1844,6 +1847,78 @@ do { \
             (_r1) = (temp >> 20) & 0xf; \
             (_r3) = (temp >> 16) & 0xf; \
             (_i2) = temp & 0xffff; \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+    }
+
+/* RIE register and immediate with mask */                      /*208*/
+#undef RIE_RIM
+
+#define RIE_RIM(_inst, _regs, _r1, _i2, _m3) \
+        RIE_RIM_DECODER(_inst, _regs, _r1, _i2, _m3, 6, 6)
+
+#define RIE_RIM_DECODER(_inst, _regs, _r1, _i2, _m3, _len, _ilc) \
+    {   U32 temp = fetch_fw(&(_inst)[1]); \
+            (_m3) = (temp >> 4) & 0xf; \
+            (_i2) = (temp >> 8) & 0xffff; \
+            (_r1) = (temp >> 28) & 0xf; \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+    }
+
+/* RIE register to register with immediate and mask */          /*208*/
+#undef RIE_RRIM
+#undef RIE_RRIM0
+#undef RIE_RRIM_B
+
+#define RIE_RRIM(_inst, _regs, _r1, _r2, _i4, _m3) \
+        RIE_RRIM_DECODER(_inst, _regs, _r1, _r2, _i4, _m3, 6, 6)
+#define RIE_RRIM0(_inst, _regs, _r1, _r2, _i4, _m3) \
+        RIE_RRIM_DECODER(_inst, _regs, _r1, _r2, _i4, _m3, 6, 0)
+#define RIE_RRIM_B(_inst, _regs, _r1, _r2, _i4, _m3) \
+        RIE_RRIM_DECODER(_inst, _regs, _r1, _r2, _i4, _m3, 0, 0)
+
+#define RIE_RRIM_DECODER(_inst, _regs, _r1, _r2, _i4, _m3, _len, _ilc) \
+    {   U32 temp = fetch_fw(&(_inst)[1]); \
+            (_m3) = (temp >> 4) & 0xf; \
+            (_i4) = (temp >> 8) & 0xffff; \
+            (_r2) = (temp >> 24) & 0xf; \
+            (_r1) = (temp >> 28) & 0xf; \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+    }
+
+/* RIE register and mask with longer immediate and immediate */ /*208*/
+#undef RIE_RMII
+#undef RIE_RMII0
+#undef RIE_RMII_B
+
+#define RIE_RMII(_inst, _regs, _r1, _i2, _m3, _i4) \
+        RIE_RMII_DECODER(_inst, _regs, _r1, _i2, _m3, _i4, 6, 6)
+#define RIE_RMII0(_inst, _regs, _r1, _i2, _m3, _i4) \
+        RIE_RMII_DECODER(_inst, _regs, _r1, _i2, _m3, _i4, 6, 0)
+#define RIE_RMII_B(_inst, _regs, _r1, _i2, _m3, _i4) \
+        RIE_RMII_DECODER(_inst, _regs, _r1, _i2, _m3, _i4, 0, 0)
+
+#define RIE_RMII_DECODER(_inst, _regs, _r1, _i2, _m3, _i4, _len, _ilc) \
+    {   U32 temp = fetch_fw(&(_inst)[1]); \
+            (_i2) = temp & 0xff; \
+            (_i4) = (temp >> 8) & 0xffff; \
+            (_m3) = (temp >> 24) & 0xf; \
+            (_r1) = (temp >> 28) & 0xf; \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+    }
+
+/* RIE register to register with three immediate fields */      /*208*/
+#undef RIE_RRIII
+
+#define RIE_RRIII(_inst, _regs, _r1, _r2, _i3, _i4, _i5) \
+        RIE_RRIII_DECODER(_inst, _regs, _r1, _r2, _i3, _i4, _i5, 6, 6)
+
+#define RIE_RRIII_DECODER(_inst, _regs, _r1, _r2, _i3, _i4, _i5, _len, _ilc) \
+    {   U32 temp = fetch_fw(&(_inst)[1]); \
+            (_i5) = temp & 0xff; \
+            (_i4) = (temp >> 8) & 0xff; \
+            (_i3) = (temp >> 16) & 0xff; \
+            (_r2) = (temp >> 24) & 0xf; \
+            (_r1) = (temp >> 28) & 0xf; \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
 

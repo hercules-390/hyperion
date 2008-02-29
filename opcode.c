@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.141  2008/02/28 23:01:35  rbowler
+// RRS,SIL instruction formats
+//
 // Revision 1.140  2008/02/28 18:54:51  rbowler
 // RIS instruction format
 //
@@ -1637,6 +1640,62 @@ int r1,r3,i2;
     DISASM_SET_NAME;
     DISASM_PRINT_OPERANDS
         "%d,%d,%d",r1,r3,i2*2);
+    DISASM_LOGMSG;
+}
+
+void disasm_RIE_RIM (BYTE inst[], char mnemonic[])              /*208*/
+{
+DISASM_COMMON_VARS;
+int r1,i2,m3;
+    r1 = inst[1] >> 4;
+    i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
+    m3 = inst[4] >> 4;
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d,%d",r1,i2,m3);
+    DISASM_LOGMSG;
+}
+
+void disasm_RIE_RRIM (BYTE inst[], char mnemonic[])             /*208*/
+{
+DISASM_COMMON_VARS;
+int r1,r2,i4,m3;
+    r1 = inst[1] >> 4;
+    r2 = inst[1] & 0x0F;
+    i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
+    m3 = inst[4] >> 4;
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d,%d,%d",r1,r2,m3,i4*2);
+    DISASM_LOGMSG;
+}
+
+void disasm_RIE_RMII (BYTE inst[], char mnemonic[])             /*208*/
+{
+DISASM_COMMON_VARS;
+int r1,m3,i4,i2;
+    r1 = inst[1] >> 4;
+    m3 = inst[1] & 0x0F;
+    i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
+    i2 = inst[4];
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d,%d,%d",r1,i2,m3,i4*2);
+    DISASM_LOGMSG;
+}
+
+void disasm_RIE_RRIII (BYTE inst[], char mnemonic[])            /*208*/
+{
+DISASM_COMMON_VARS;
+int r1,r2,i3,i4,i5;
+    r1 = inst[1] >> 4;
+    r2 = inst[1] & 0x0F;
+    i3 = inst[2];
+    i4 = inst[3];
+    i5 = inst[4];
+    DISASM_SET_NAME;
+    DISASM_PRINT_OPERANDS
+        "%d,%d,%d,%d,%d",r1,r2,i3,i4,i5);
     DISASM_LOGMSG;
 }
 
