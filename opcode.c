@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.142  2008/02/29 00:08:25  rbowler
+// Additional RIE instruction formats
+//
 // Revision 1.141  2008/02/28 23:01:35  rbowler
 // RRS,SIL instruction formats
 //
@@ -337,10 +340,10 @@
  UNDEF_INST(add_immediate_storage)
  UNDEF_INST(add_logical_with_signed_immediate)
  UNDEF_INST(add_logical_with_signed_immediate_long)
- UNDEF_INST(compare_and_branch)
- UNDEF_INST(compare_and_branch_long)
- UNDEF_INST(compare_and_branch_relative)
- UNDEF_INST(compare_and_branch_relative_long)
+ UNDEF_INST(compare_and_branch_register)
+ UNDEF_INST(compare_and_branch_long_register)
+ UNDEF_INST(compare_and_branch_relative_register)
+ UNDEF_INST(compare_and_branch_relative_long_register)
  UNDEF_INST(compare_and_trap_long_register)
  UNDEF_INST(compare_and_trap_register)
  UNDEF_INST(compare_halfword_immediate_halfword_storage)

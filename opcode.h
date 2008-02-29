@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.216  2008/02/29 00:08:25  rbowler
+// Additional RIE instruction formats
+//
 // Revision 1.215  2008/02/28 23:01:35  rbowler
 // RRS,SIL instruction formats
 //
@@ -3243,10 +3246,10 @@ DEF_INST(add_immediate_long_storage);                           /*208*/
 DEF_INST(add_immediate_storage);                                /*208*/
 DEF_INST(add_logical_with_signed_immediate);                    /*208*/
 DEF_INST(add_logical_with_signed_immediate_long);               /*208*/
-DEF_INST(compare_and_branch);                                   /*208*/
-DEF_INST(compare_and_branch_long);                              /*208*/
-DEF_INST(compare_and_branch_relative);                          /*208*/
-DEF_INST(compare_and_branch_relative_long);                     /*208*/
+DEF_INST(compare_and_branch_register);                          /*208*/
+DEF_INST(compare_and_branch_long_register);                     /*208*/
+DEF_INST(compare_and_branch_relative_register);                 /*208*/
+DEF_INST(compare_and_branch_relative_long_register);            /*208*/
 DEF_INST(compare_and_trap_long_register);                       /*208*/
 DEF_INST(compare_and_trap_register);                            /*208*/
 DEF_INST(compare_halfword_immediate_halfword_storage);          /*208*/
