@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.119  2008/02/15 21:21:18  ptl00
+// Fix STCKE so that byte 0 is cleared
+//
 // Revision 1.118  2008/01/24 00:59:03  gsmith
 // Fix and optimize TR instruction
 //
@@ -2717,6 +2720,176 @@ DEF_INST(translate_and_test_reverse)
   regs->psw.cc = cc;
 }
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
+
+#ifdef FEATURE_PARSING_ENHANCEMENT
+/*-------------------------------------------------------------------*/
+/* B9BF TRTE - Translate and Test Extended                     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(translate_and_test_extended)
+{
+  int a_bit;                  /* Argument-Character Control (A)      */
+  U32 arg_ch;                 /* Argument character                  */
+  VADR buf_addr;              /* first argument address              */
+  GREG buf_len;               /* First argument length               */
+  int f_bit;                  /* Function-Code Control (F)           */
+  U32 fc;                     /* Function-Code                       */
+  VADR fct_addr;              /* Function-code table address         */
+  int l_bit;                  /* Argument-Character Limit (L)        */
+  int m3;
+  int processed;
+  int r1;
+  int r2;
+
+  RRF_M(inst, regs, r1, r2, m3);
+
+  a_bit = ((m3 & 0x08) ? 1 : 0);
+  f_bit = ((m3 & 0x04) ? 1 : 0);
+  l_bit = ((m3 & 0x02) ? 1 : 0);
+
+  buf_addr = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+  buf_len = GR_A(r1 + 1, regs);
+
+  fct_addr = regs->GR(1) & ADDRESS_MAXWRAP(regs);
+
+  if((a_bit && (buf_len % 1)) || r1 & 0x01)
+    regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  fc = 0;
+  processed = 0;
+  while(buf_len && !fc && processed < 16384)
+  {
+    if(a_bit)
+    {
+      arg_ch = ARCH_DEP(vfetch2)(buf_addr, r1, regs);
+      buf_len -= 2;
+      processed += 2;
+      buf_addr = (buf_addr + 2) & ADDRESS_MAXWRAP(regs);
+    }
+    else
+    {
+      arg_ch = ARCH_DEP(vfetchb)(buf_addr, r1, regs);
+      buf_len--;
+      processed++;
+      buf_addr = (buf_addr + 1) & ADDRESS_MAXWRAP(regs);
+    }
+      
+    if(a_bit && l_bit && arg_ch > 255)
+      fc = 0;
+    else
+    {
+      if(f_bit)
+        fc = ARCH_DEP(vfetch2)((fct_addr + (arg_ch * 2)) & ADDRESS_MAXWRAP(regs), 1, regs);
+      else
+        fc = ARCH_DEP(vfetchb)((fct_addr + arg_ch) & ADDRESS_MAXWRAP(regs), 1, regs);
+    }
+  }
+ 
+  /* Commit registers */
+  SET_GR_A(r1, regs, buf_addr);
+  SET_GR_A(r1 + 1, regs, buf_len);
+
+  /* Check if CPU determined number of bytes have been processed */
+  if(buf_len)
+  {
+    regs->psw.cc = 3;
+    return;
+  }
+
+  /* Set function code */
+  if(r2 != r1 && r2 != r1 + 1)
+    SET_GR_A(r2, regs, fc);
+
+  /* Set condition code */
+  if(fc)
+    regs->psw.cc = 1;
+  else
+    regs->psw.cc = 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* B9BD TRTRE - Translate and Test Reverse Extended            [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(translate_and_test_reverse_extended)
+{
+  int a_bit;                  /* Argument-Character Control (A)      */
+  U32 arg_ch;                 /* Argument character                  */
+  VADR buf_addr;              /* first argument address              */
+  GREG buf_len;               /* First argument length               */
+  int f_bit;                  /* Function-Code Control (F)           */
+  U32 fc;                     /* Function-Code                       */
+  VADR fct_addr;              /* Function-code table address         */
+  int l_bit;                  /* Argument-Character Limit (L)        */
+  int m3;
+  int processed;
+  int r1;
+  int r2;
+
+  RRF_M(inst, regs, r1, r2, m3);
+
+  a_bit = ((m3 & 0x08) ? 1 : 0);
+  f_bit = ((m3 & 0x04) ? 1 : 0);
+  l_bit = ((m3 & 0x02) ? 1 : 0);
+
+  buf_addr = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+  buf_len = GR_A(r1 + 1, regs);
+
+  fct_addr = regs->GR(1) & ADDRESS_MAXWRAP(regs);
+
+  if((a_bit && (buf_len % 1)) || r1 & 0x01)
+    regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+
+  fc = 0;
+  processed = 0;
+  while(buf_len && !fc && processed < 16384)
+  {
+    if(a_bit)
+    {
+      arg_ch = ARCH_DEP(vfetch2)(buf_addr, r1, regs);
+      buf_len -= 2;
+      processed += 2;
+      buf_addr = (buf_addr - 2) & ADDRESS_MAXWRAP(regs);
+    }
+    else
+    {
+      arg_ch = ARCH_DEP(vfetchb)(buf_addr, r1, regs);
+      buf_len--;
+      processed++;
+      buf_addr = (buf_addr - 1) & ADDRESS_MAXWRAP(regs);
+    }
+    
+    if(a_bit && l_bit && arg_ch > 255)
+      fc = 0;
+    else
+    {
+      if(f_bit)
+        fc = ARCH_DEP(vfetch2)((fct_addr + (arg_ch * 2)) & ADDRESS_MAXWRAP(regs), 1, regs);
+      else
+        fc = ARCH_DEP(vfetchb)((fct_addr + arg_ch) & ADDRESS_MAXWRAP(regs), 1, regs);
+    }
+  }
+
+  /* Commit registers */
+  SET_GR_A(r1, regs, buf_addr);
+  SET_GR_A(r1 + 1, regs, buf_len);
+
+  /* Check if CPU determined number of bytes have been processed */
+  if(buf_len)
+  {
+    regs->psw.cc = 3;
+    return;
+  }
+
+  /* Set function code */
+  if(r2 != r1 && r2 != r1 + 1)
+    SET_GR_A(r2, regs, fc);
+
+  /* Set condition code */
+  if(fc)
+    regs->psw.cc = 1;
+  else
+    regs->psw.cc = 0;
+}
+#endif /* FEATURE_PARSING_ENHANCEMENT */
 
 #if !defined(_GEN_ARCH)
 
