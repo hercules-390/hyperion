@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.122  2008/03/01 12:19:04  rbowler
+// Rename new features to include the word facility
+//
 // Revision 1.121  2008/03/01 07:51:00  bernard
 // TRTE, TRTRE: Checking for a_bit and ch>255 is double. Removed the a_bit.
 //
@@ -2742,7 +2745,7 @@ DEF_INST(translate_and_test_extended)
   VADR fct_addr;              /* Function-code table address         */
   int l_bit;                  /* Argument-Character Limit (L)        */
   int m3;
-  int processed;
+  int processed;              /* # bytes processed                   */
   int r1;
   int r2;
 
@@ -2778,7 +2781,7 @@ DEF_INST(translate_and_test_extended)
       processed++;
       buf_addr = (buf_addr + 1) & ADDRESS_MAXWRAP(regs);
     }
-      
+
     if(l_bit && arg_ch > 255)
       fc = 0;
     else
@@ -2789,7 +2792,7 @@ DEF_INST(translate_and_test_extended)
         fc = ARCH_DEP(vfetchb)((fct_addr + arg_ch) & ADDRESS_MAXWRAP(regs), 1, regs);
     }
   }
- 
+
   /* Commit registers */
   SET_GR_A(r1, regs, buf_addr);
   SET_GR_A(r1 + 1, regs, buf_len);
@@ -2826,7 +2829,7 @@ DEF_INST(translate_and_test_reverse_extended)
   VADR fct_addr;              /* Function-code table address         */
   int l_bit;                  /* Argument-Character Limit (L)        */
   int m3;
-  int processed;
+  int processed;              /* # bytes processed                   */
   int r1;
   int r2;
 
@@ -2862,7 +2865,7 @@ DEF_INST(translate_and_test_reverse_extended)
       processed++;
       buf_addr = (buf_addr - 1) & ADDRESS_MAXWRAP(regs);
     }
-    
+
     if(l_bit && arg_ch > 255)
       fc = 0;
     else
