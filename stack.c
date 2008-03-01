@@ -25,6 +25,19 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.85  2008/02/12 18:23:39  jj
+// 1. SPKA was missing protection check (PIC04) because
+//    AIA regs were not purged.
+//
+// 2. BASR with branch trace and PIC16, the pgm old was pointing
+//    2 bytes before the BASR.
+//
+// 3. TBEDR , TBDR using R1 as source, should be R2.
+//
+// 4. PR with page crossing stack (1st page invalid) and PSW real
+//    in stack, missed the PIC 11. Fixed by invoking abs_stck_addr
+//    for previous stack entry descriptor before doing the load_psw.
+//
 // Revision 1.84  2007/06/23 00:04:16  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -335,7 +348,12 @@ int  i;
         }
 
     /* Load the Trap Control Block Address in gr15 */
-    regs->GR_L(15) = duct11 & DUCT11_TCBA;
+#if defined(FEATURE_ESAME)
+    if(regs->psw.amode64)
+        regs->GR(15) = duct11 & DUCT11_TCBA & 0x00000000FFFFFFFF;
+    else
+#endif /*defined(FEATURE_ESAME)*/
+        regs->GR_L(15) = duct11 & DUCT11_TCBA;
 
     /* Ensure psw.IA is set */
     SET_PSW_IA(regs);
@@ -343,10 +361,6 @@ int  i;
     /* Set the Breaking Event Address Register */
     SET_BEAR_REG(regs, regs->ip - ((trap_is_trap4 || regs->execflag) ? 4 : 2));
 
-    /* Set the Trap program address as a 31 bit instruction address */
-#if defined(FEATURE_ESAME)
-    regs->psw.amode64 = 0;
-#endif /*defined(FEATURE_ESAME)*/
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
     UPD_PSW_IA(regs, trap_ia);
