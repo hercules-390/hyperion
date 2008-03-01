@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.2  2008/03/01 22:41:51  rbowler
+// Add ASI,AGSI instructions
+//
 // Revision 1.1  2008/03/01 14:19:29  rbowler
 // Add new module general3.c for general-instructions-extension facility
 //
@@ -47,7 +50,7 @@ U32     n;                              /* 32-bit operand value      */
     n = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
 
     /* Add signed operands and set condition code */
-    regs->psw.cc = add_signed (&n, n, (U32)i2);
+    regs->psw.cc = add_signed (&n, n, (S32)(S8)i2);
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
@@ -72,7 +75,7 @@ U64     n;                              /* 64-bit operand value      */
     n = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
 
     /* Add signed operands and set condition code */
-    regs->psw.cc = add_signed_long (&n, n, (U64)i2);
+    regs->psw.cc = add_signed_long (&n, n, (S64)(S8)i2);
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
