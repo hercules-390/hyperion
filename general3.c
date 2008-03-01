@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.1  2008/03/01 14:19:29  rbowler
+// Add new module general3.c for general-instructions-extension facility
+//
 
 #include "hstdinc.h"
 
@@ -28,33 +31,63 @@
 
 #if defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)
 
-/* This is an example to show the format of a DEF_INST function      */
 /*-------------------------------------------------------------------*/
-/* nnnn AAAAA - Instruction Name                                [RR] */
+/* EB6A ASI   - Add Immediate Storage                          [SIY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(instruction_name)
+DEF_INST(add_immediate_storage)
 {
-int     r1, r2;                         /* Values of R fields        */
+BYTE    i2;                             /* Immediate byte            */
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+U32     n;                              /* 32-bit operand value      */
 
-    RR(inst, regs, r1, r2);
+    SIY(inst, regs, i2, b1, effective_addr1);
+
+    /* Load 32-bit operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
 
     /* Add signed operands and set condition code */
-    regs->psw.cc =
-            add_signed (&(regs->GR_L(r1)),
-                    regs->GR_L(r1),
-                    regs->GR_L(r2));
+    regs->psw.cc = add_signed (&n, n, (U32)i2);
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
-} /* end DEF_INST(instruction_name)*/
+} /* end DEF_INST(add_immediate_storage) */
 
+        
+/*-------------------------------------------------------------------*/
+/* EB7A AGSI  - Add Immediate Long Storage                     [SIY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_immediate_long_storage)
+{
+BYTE    i2;                             /* Immediate byte            */
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+U64     n;                              /* 64-bit operand value      */
+
+    SIY(inst, regs, i2, b1, effective_addr1);
+
+    /* Load 64-bit operand from operand address */
+    n = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc = add_signed_long (&n, n, (U64)i2);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+        regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+} /* end DEF_INST(add_immediate_long_storage) */
+
+
+#define UNDEF_INST(_x) \
+        DEF_INST(_x) { ARCH_DEP(operation_exception) \
+        (inst,regs); }
 
 /* As each instruction is developed, replace the corresponding
    UNDEF_INST statement by the DEF_INST function definition */
- UNDEF_INST(add_immediate_storage)
- UNDEF_INST(add_immediate_long_storage)
+
  UNDEF_INST(add_logical_with_signed_immediate)
  UNDEF_INST(add_logical_with_signed_immediate_long)
  UNDEF_INST(compare_and_branch_register)
