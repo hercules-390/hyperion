@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.3  2008/03/01 22:49:31  rbowler
+// ASI,AGSI treat I2 operand as 8-bit signed integer
+//
 // Revision 1.2  2008/03/01 22:41:51  rbowler
 // Add ASI,AGSI instructions
 //
@@ -84,6 +87,52 @@ U64     n;                              /* 64-bit operand value      */
 } /* end DEF_INST(add_immediate_long_storage) */
 
 
+/*-------------------------------------------------------------------*/
+/* EB6E ALSI  - Add Logical with Signed Immediate              [SIY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_with_signed_immediate)
+{
+BYTE    i2;                             /* Immediate byte            */
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+U32     n;                              /* 32-bit operand value      */
+
+    SIY(inst, regs, i2, b1, effective_addr1);
+
+    /* Load 32-bit operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
+
+    /* Add operands and set condition code */
+    regs->psw.cc = (S8)i2 < 0 ?
+        sub_logical (&n, n, (S32)(-(S8)i2)) :
+        add_logical (&n, n, (S32)(S8)i2);
+
+} /* end DEF_INST(add_logical_with_signed_immediate) */
+
+        
+/*-------------------------------------------------------------------*/
+/* EB7E ALGSI - Add Logical with Signed Immediate Long         [SIY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_with_signed_immediate_long)
+{
+BYTE    i2;                             /* Immediate byte            */
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+U64     n;                              /* 64-bit operand value      */
+
+    SIY(inst, regs, i2, b1, effective_addr1);
+
+    /* Load 64-bit operand from operand address */
+    n = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
+
+    /* Add operands and set condition code */
+    regs->psw.cc = (S8)i2 < 0 ?
+        sub_logical_long (&n, n, (S64)(-(S8)i2)) :
+        add_logical_long (&n, n, (S64)(S8)i2);
+
+} /* end DEF_INST(add_logical_with_signed_immediate_long) */
+
+
 #define UNDEF_INST(_x) \
         DEF_INST(_x) { ARCH_DEP(operation_exception) \
         (inst,regs); }
@@ -91,8 +140,6 @@ U64     n;                              /* 64-bit operand value      */
 /* As each instruction is developed, replace the corresponding
    UNDEF_INST statement by the DEF_INST function definition */
 
- UNDEF_INST(add_logical_with_signed_immediate)
- UNDEF_INST(add_logical_with_signed_immediate_long)
  UNDEF_INST(compare_and_branch_register)
  UNDEF_INST(compare_and_branch_long_register)
  UNDEF_INST(compare_and_branch_relative_register)
