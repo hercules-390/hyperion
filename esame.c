@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.194  2008/02/28 22:05:10  ptl00
+// Fix RP for z/arch and mode switch trace
+//
 // Revision 1.193  2008/02/28 10:11:50  rbowler
 // STFL bit settings for new features in zPOP-06
 //
@@ -4910,18 +4913,18 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #endif /*defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)*/
                  ,
                  0
-#if defined(FEATURE_ENHANCED_DAT)                               /*208*/
+#if defined(FEATURE_ENHANCED_DAT_FACILITY)                      /*208*/
                  | STFL_1_ENHANCED_DAT                          /*208*/
-#endif /*defined(FEATURE_ENHANCED_DAT)*/                        /*208*/
+#endif /*defined(FEATURE_ENHANCED_DAT_FACILITY)*/               /*208*/
 #if defined(FEATURE_SENSE_RUNNING_STATUS)
                  | STFL_1_SENSE_RUN_STATUS
 #endif /*defined(FEATURE_SENSE_RUNNING_STATUS)*/
 #if defined(FEATURE_CONDITIONAL_SSKE)
                  | STFL_1_CONDITIONAL_SSKE
 #endif /*defined(FEATURE_CONDITIONAL_SSKE)*/
-#if defined(FEATURE_CONFIGURATION_TOPOLOGY)                     /*208*/
+#if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)            /*208*/
                  | STFL_1_CONFIG_TOPOLOGY                       /*208*/
-#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY)*/              /*208*/
+#endif /*defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/     /*208*/
                  ,
                  0
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
@@ -4954,9 +4957,9 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #if defined(FEATURE_STORE_CLOCK_FAST)
                  | STFL_3_STORE_CLOCK_FAST
 #endif /*defined(FEATURE_STORE_CLOCK_FAST)*/
-#if defined(FEATURE_PARSING_ENHANCEMENT)                        /*208*/
+#if defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)               /*208*/
                  | STFL_3_PARSING_ENHANCE                       /*208*/
-#endif /*defined(FEATURE_PARSING_ENHANCEMENT)*/                 /*208*/
+#endif /*defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)*/        /*208*/
 #if defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)          /*208*/
                  | STFL_3_MVCOS                                 /*208*/
 #endif /*defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/   /*208*/
@@ -4980,9 +4983,9 @@ BYTE ARCH_DEP(stfl_data)[8] = {
 #if defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)    /*208*/
                  | STFL_4_GEN_INST_EXTN                         /*208*/
 #endif /*FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY*/      /*208*/
-#if defined(FEATURE_EXECUTE_EXTENSIONS)                         /*208*/
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)                /*208*/
                  | STFL_4_EXECUTE_EXTN                          /*208*/
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS)*/                  /*208*/
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/         /*208*/
                  ,
                  0
 #if defined(FEATURE_FPS_ENHANCEMENT)

@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.145  2008/02/29 15:53:10  rbowler
+// Instruction decoder for C4xx and C6xx instructions
+//
 // Revision 1.144  2008/02/29 02:01:48  rbowler
 // Opcode tables for General-Instructions-Extension feature
 //
@@ -329,17 +332,17 @@
  UNDEF_INST(store_system_information)
 #endif /*!defined(FEATURE_STORE_SYSTEM_INFORMATION)*/
 
-#if !defined(FEATURE_CONFIGURATION_TOPOLOGY)                    /*208*/
+#if !defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)           /*208*/
  UNDEF_INST(perform_topology_function)                          /*208*/
-#endif /*!defined(FEATURE_CONFIGURATION_TOPOLOGY)*/             /*208*/
+#endif /*!defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)*/    /*208*/
 
-#if !defined(FEATURE_ENHANCED_DAT)                              /*208*/
+#if !defined(FEATURE_ENHANCED_DAT_FACILITY)                     /*208*/
  UNDEF_INST(perform_frame_management_function)                  /*208*/
-#endif /*!defined(FEATURE_ENHANCED_DAT)*/                       /*208*/
+#endif /*!defined(FEATURE_ENHANCED_DAT_FACILITY)*/              /*208*/
 
-#if !defined(FEATURE_EXECUTE_EXTENSIONS)                        /*208*/
+#if !defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)               /*208*/
  UNDEF_INST(execute_relative_long)                              /*208*/
-#endif /*!defined(FEATURE_EXECUTE_EXTENSIONS)                   /*208*/
+#endif /*!defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)          /*208*/
 
 #if !defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)   /*208*/
  UNDEF_INST(add_immediate_long_storage)
@@ -416,10 +419,10 @@
  UNDEF_INST(store_relative_long_long)
 #endif /*!defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY) /*208*/
 
-#if !defined(FEATURE_PARSING_ENHANCEMENT)                       /*208*/
+#if !defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)              /*208*/
  UNDEF_INST(translate_and_test_extended)                        /*208*/
  UNDEF_INST(translate_and_test_reverse_extended)                /*208*/
-#endif /*!defined(FEATURE_PARSING_ENHANCEMENT)                  /*208*/
+#endif /*!defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)         /*208*/
 
 
 #if !defined(FEATURE_VECTOR_FACILITY)

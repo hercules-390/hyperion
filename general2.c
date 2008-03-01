@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.121  2008/03/01 07:51:00  bernard
+// TRTE, TRTRE: Checking for a_bit and ch>255 is double. Removed the a_bit.
+//
 // Revision 1.120  2008/02/29 16:25:13  bernard
 // Added Parsing Enhancement Facility
 //
@@ -2724,7 +2727,7 @@ DEF_INST(translate_and_test_reverse)
 }
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
 
-#ifdef FEATURE_PARSING_ENHANCEMENT
+#ifdef FEATURE_PARSING_ENHANCEMENT_FACILITY
 /*-------------------------------------------------------------------*/
 /* B9BF TRTE - Translate and Test Extended                     [RRF] */
 /*-------------------------------------------------------------------*/
@@ -2892,7 +2895,7 @@ DEF_INST(translate_and_test_reverse_extended)
   else
     regs->psw.cc = 0;
 }
-#endif /* FEATURE_PARSING_ENHANCEMENT */
+#endif /* FEATURE_PARSING_ENHANCEMENT_FACILITY */
 
 #if !defined(_GEN_ARCH)
 

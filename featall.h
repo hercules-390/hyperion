@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.130  2008/02/28 10:11:50  rbowler
+// STFL bit settings for new features in zPOP-06
+//
 // Revision 1.129  2008/02/27 17:09:22  bernard
 // introduce FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FEATURE
 //
@@ -143,7 +146,7 @@
 #undef FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2            /*208*/
 #undef FEATURE_COMPRESSION
 #undef FEATURE_CONDITIONAL_SSKE                                 /*407*/
-#undef FEATURE_CONFIGURATION_TOPOLOGY                           /*208*/
+#undef FEATURE_CONFIGURATION_TOPOLOGY_FACILITY                  /*208*/
 #undef FEATURE_CPU_RECONFIG
 #undef FEATURE_CPUID_FORMAT_1
 #undef FEATURE_DAT_ENHANCEMENT
@@ -152,12 +155,12 @@
 #undef FEATURE_DUAL_ADDRESS_SPACE
 #undef FEATURE_ECPSVM
 #undef FEATURE_EMULATE_VM
-#undef FEATURE_ENHANCED_DAT                                     /*208*/
+#undef FEATURE_ENHANCED_DAT_FACILITY                            /*208*/
 #undef FEATURE_ESAME
 #undef FEATURE_ESAME_N3_ESA390
 #undef FEATURE_ETF2_ENHANCEMENT                                 /*@Z9*/
 #undef FEATURE_ETF3_ENHANCEMENT                                 /*@Z9*/
-#undef FEATURE_EXECUTE_EXTENSIONS                               /*208*/
+#undef FEATURE_EXECUTE_EXTENSIONS_FACILITY                      /*208*/
 #undef FEATURE_EXPANDED_STORAGE
 #undef FEATURE_EXPEDITED_SIE_SUBSET
 #undef FEATURE_EXTENDED_IMMEDIATE                               /*@Z9*/
@@ -198,7 +201,7 @@
 #undef FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
 #undef FEATURE_MVS_ASSIST
 #undef FEATURE_PAGE_PROTECTION
-#undef FEATURE_PARSING_ENHANCEMENT                              /*208*/
+#undef FEATURE_PARSING_ENHANCEMENT_FACILITY                     /*208*/
 #undef FEATURE_PERFORM_LOCKED_OPERATION
 #undef FEATURE_PER
 #undef FEATURE_PER2
@@ -208,7 +211,7 @@
 #undef FEATURE_PROTECTION_INTERCEPTION_CONTROL
 #undef FEATURE_QUEUED_DIRECT_IO
 #undef FEATURE_REGION_RELOCATE
-#undef FEATURE_RESTORE_SUBCHANNEL                               /*208*/
+#undef FEATURE_RESTORE_SUBCHANNEL_FACILITY                      /*208*/
 #undef FEATURE_RESUME_PROGRAM
 #undef FEATURE_S370_CHANNEL
 #undef FEATURE_S390_DAT

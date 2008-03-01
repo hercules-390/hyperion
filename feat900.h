@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.79  2008/02/29 16:25:48  bernard
+// Enabled Parsing Enhancement Facility
+//
 // Revision 1.78  2008/02/28 11:05:13  rbowler
 // Deactivate new features not yet coded
 //
@@ -77,7 +80,7 @@
 //#define FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2           /*208*/
 #define FEATURE_COMPRESSION
 #define FEATURE_CONDITIONAL_SSKE                                /*407*/
-//#define FEATURE_CONFIGURATION_TOPOLOGY                          /*208*/
+//#define FEATURE_CONFIGURATION_TOPOLOGY_FACILITY                 /*208*/
 #define FEATURE_CPU_RECONFIG
 #define FEATURE_CPUID_FORMAT_1
 #define FEATURE_DAT_ENHANCEMENT
@@ -90,11 +93,11 @@
 // #define FEATURE_DIAG308_REIPL
 #define FEATURE_DUAL_ADDRESS_SPACE
 #define FEATURE_EMULATE_VM
-//#define FEATURE_ENHANCED_DAT                                    /*208*/
+//#define FEATURE_ENHANCED_DAT_FACILITY                           /*208*/
 #define FEATURE_ESAME
 #define FEATURE_ETF2_ENHANCEMENT                                /*@Z9*/
 #define FEATURE_ETF3_ENHANCEMENT                                /*@Z9*/
-//#define FEATURE_EXECUTE_EXTENSIONS                              /*208*/
+//#define FEATURE_EXECUTE_EXTENSIONS_FACILITY                     /*208*/
 #define FEATURE_EXPANDED_STORAGE
 #define FEATURE_EXPEDITED_SIE_SUBSET
 #define FEATURE_EXTENDED_IMMEDIATE                              /*@Z9*/
@@ -132,7 +135,7 @@
 //#define FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS               /*208*/
 #define FEATURE_MVS_ASSIST
 #define FEATURE_PAGE_PROTECTION
-#define FEATURE_PARSING_ENHANCEMENT                             /*208*/
+#define FEATURE_PARSING_ENHANCEMENT_FACILITY                    /*208*/
 #define FEATURE_PERFORM_LOCKED_OPERATION
 #define FEATURE_PER
 #define FEATURE_PER2
@@ -141,7 +144,7 @@
 #define FEATURE_PRIVATE_SPACE
 #define FEATURE_PROTECTION_INTERCEPTION_CONTROL
 #define FEATURE_QUEUED_DIRECT_IO
-//#define FEATURE_RESTORE_SUBCHANNEL                              /*208*/
+//#define FEATURE_RESTORE_SUBCHANNEL_FACILITY                     /*208*/
 #define FEATURE_RESUME_PROGRAM
 #define FEATURE_REGION_RELOCATE
 #define FEATURE_SENSE_RUNNING_STATUS                            /*@Z9*/
