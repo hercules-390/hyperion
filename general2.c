@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.120  2008/02/29 16:25:13  bernard
+// Added Parsing Enhancement Facility
+//
 // Revision 1.119  2008/02/15 21:21:18  ptl00
 // Fix STCKE so that byte 0 is cleared
 //
@@ -2751,7 +2754,7 @@ DEF_INST(translate_and_test_extended)
 
   fct_addr = regs->GR(1) & ADDRESS_MAXWRAP(regs);
 
-  if((a_bit && (buf_len % 1)) || r1 & 0x01)
+  if(unlikely((a_bit && (buf_len % 1)) || r1 & 0x01))
     regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 
   fc = 0;
@@ -2773,7 +2776,7 @@ DEF_INST(translate_and_test_extended)
       buf_addr = (buf_addr + 1) & ADDRESS_MAXWRAP(regs);
     }
       
-    if(a_bit && l_bit && arg_ch > 255)
+    if(l_bit && arg_ch > 255)
       fc = 0;
     else
     {
@@ -2796,7 +2799,7 @@ DEF_INST(translate_and_test_extended)
   }
 
   /* Set function code */
-  if(r2 != r1 && r2 != r1 + 1)
+  if(likely(r2 != r1 && r2 != r1 + 1))
     SET_GR_A(r2, regs, fc);
 
   /* Set condition code */
@@ -2835,7 +2838,7 @@ DEF_INST(translate_and_test_reverse_extended)
 
   fct_addr = regs->GR(1) & ADDRESS_MAXWRAP(regs);
 
-  if((a_bit && (buf_len % 1)) || r1 & 0x01)
+  if(unlikely((a_bit && (buf_len % 1)) || r1 & 0x01))
     regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 
   fc = 0;
@@ -2857,7 +2860,7 @@ DEF_INST(translate_and_test_reverse_extended)
       buf_addr = (buf_addr - 1) & ADDRESS_MAXWRAP(regs);
     }
     
-    if(a_bit && l_bit && arg_ch > 255)
+    if(l_bit && arg_ch > 255)
       fc = 0;
     else
     {
@@ -2880,7 +2883,7 @@ DEF_INST(translate_and_test_reverse_extended)
   }
 
   /* Set function code */
-  if(r2 != r1 && r2 != r1 + 1)
+  if(likely(r2 != r1 && r2 != r1 + 1))
     SET_GR_A(r2, regs, fc);
 
   /* Set condition code */
