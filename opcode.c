@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.146  2008/03/01 12:19:04  rbowler
+// Rename new features to include the word facility
+//
 // Revision 1.145  2008/02/29 15:53:10  rbowler
 // Instruction decoder for C4xx and C6xx instructions
 //
@@ -4856,11 +4859,11 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB77*/ GENx___x___x___ ,
  /*EB78*/ GENx___x___x___ ,
  /*EB79*/ GENx___x___x___ ,
- /*EB7A*/ GENx___x___x900 (add_immediate_long_storage,SIY,"AGSI"),                 /*208*/                                                                                                                                                
+ /*EB7A*/ GENx370x390x900 (add_immediate_long_storage,SIY,"AGSI"),                 /*208*/                                                                                                                                                
  /*EB7B*/ GENx___x___x___ ,
  /*EB7C*/ GENx___x___x___ ,
  /*EB7D*/ GENx___x___x___ ,
- /*EB7E*/ GENx___x___x900 (add_logical_with_signed_immediate_long,SIY,"ALGSI"),    /*208*/
+ /*EB7E*/ GENx370x390x900 (add_logical_with_signed_immediate_long,SIY,"ALGSI"),    /*208*/
  /*EB7F*/ GENx___x___x___ ,
  /*EB80*/ GENx___x___x900 (insert_characters_under_mask_high,RSY,"ICMH"),
  /*EB81*/ GENx___x___x900 (insert_characters_under_mask_y,RSY,"ICMY"),
