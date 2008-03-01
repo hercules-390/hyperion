@@ -5,6 +5,10 @@
 # $Id$
 #
 # $Log$
+# Revision 1.179  2008/02/19 11:49:18  ivan
+# - Move setting of CPU priority after spwaning timer thread
+# - Added support for Posix 1003.1e capabilities
+#
 # Revision 1.178  2007/06/02 13:46:41  rbowler
 # PFPO framework
 #
@@ -355,6 +359,7 @@ endif
                        vstore.c     \
                        general1.c   \
                        general2.c   \
+                       general3.c   \
                        pfpo.c       \
                        plo.c        \
                        control.c    \
@@ -743,39 +748,39 @@ tar: dist
 
 install-exec-local:
 if SETUID_HERCIFC
-	chown root $(DESTDIR)$(bindir)/hercifc
-	chmod 0750 $(DESTDIR)$(bindir)/hercifc
-	chmod +s   $(DESTDIR)$(bindir)/hercifc
-	rm                             hercifc
+  chown root $(DESTDIR)$(bindir)/hercifc
+  chmod 0750 $(DESTDIR)$(bindir)/hercifc
+  chmod +s   $(DESTDIR)$(bindir)/hercifc
+  rm                             hercifc
 endif
 
 install-exec-hook:
-	rm -f $(DESTDIR)$(libdir)/libherc*.a
-	rm -f $(DESTDIR)$(modexecdir)/dyn*.a
-	rm -f $(DESTDIR)$(modexecdir)/hdt*.a
+  rm -f $(DESTDIR)$(libdir)/libherc*.a
+  rm -f $(DESTDIR)$(modexecdir)/dyn*.a
+  rm -f $(DESTDIR)$(modexecdir)/hdt*.a
 if BUILD_SHARED
 else
-	rm -f $(DESTDIR)$(libdir)/libherc*
+  rm -f $(DESTDIR)$(libdir)/libherc*
 endif
 #
 # NOTE : symbolic links point to FINAL destination (not to staged install)
 #
-	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) fba2cfba$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) ckd2cckd$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
-	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
+  rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+  (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) fba2cfba$(EXEEXT))
+  rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+  (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) ckd2cckd$(EXEEXT))
+  rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+  (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
+  rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+  (cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
 
 uninstall-local:
 
 uninstall-hook:
-	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
-	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
-	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
-	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+  rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+  rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+  rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+  rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
 
 %.s: %.c
-	$(COMPILE) -S $<
+  $(COMPILE) -S $<

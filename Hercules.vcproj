@@ -675,6 +675,10 @@
                             >
                         </File>
                         <File
+                            RelativePath=".\general3.c"
+                            >
+                        </File>
+                        <File
                             RelativePath=".\getopt.c"
                             >
                         </File>
