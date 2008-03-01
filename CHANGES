@@ -1,3 +1,4 @@
+29 Feb 2008 Fix TRAP in z/arch mode - Paul Leisy
 29 Feb 2008 Added feature parsing_enhancement_facility - Bernard
 28 Feb 2008 Fix RP in z/arch mode and mode switch trace - Paul Leisy
 27 Feb 2008 Added feature message_security_assist_extension_2 - Bernard
