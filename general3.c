@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.4  2008/03/01 23:07:06  rbowler
+// Add ALSI,ALGSI instructions
+//
 // Revision 1.3  2008/03/01 22:49:31  rbowler
 // ASI,AGSI treat I2 operand as 8-bit signed integer
 //
@@ -195,10 +198,91 @@ U64     n;                              /* 64-bit operand value      */
  UNDEF_INST(move_fullword_from_halfword_immediate)
  UNDEF_INST(move_halfword_from_halfword_immediate)
  UNDEF_INST(move_long_from_halfword_immediate)
- UNDEF_INST(multiply_halfword_y)
- UNDEF_INST(multiply_single_immediate_fullword)
- UNDEF_INST(multiply_single_immediate_long_fullword)
- UNDEF_INST(multiply_y)
+
+
+/*-------------------------------------------------------------------*/
+/* E37C MHY   - Multiply Halfword (Long Displacement)          [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_halfword_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+S32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load 2 bytes from operand address */
+    n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+
+    /* Multiply R1 register by n, ignore leftmost 32 bits of
+       result, and place rightmost 32 bits in R1 register */
+    mul_signed ((U32 *)&n, &(regs->GR_L(r1)), regs->GR_L(r1), n);
+
+} /* end DEF_INST(multiply_halfword_y) */
+
+
+/*-------------------------------------------------------------------*/
+/* C2x1 MSFI  - Multiply Single Immediate Fullword             [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_single_immediate_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Multiply signed operands ignoring overflow */
+    regs->GR_L(r1) = (S32)regs->GR_L(r1) * (S32)i2;
+
+} /* end DEF_INST(multiply_single_immediate_fullword) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C2x0 MSGFI - Multiply Single Immediate Long Fullword        [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_single_immediate_long_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Multiply signed operands ignoring overflow */
+    regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S32)i2;
+
+} /* end DEF_INST(multiply_single_immediate_long_fullword) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+/*-------------------------------------------------------------------*/
+/* E35C MFY   - Multiply (Long Displacement)                   [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    ODD_CHECK(r1, regs);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Multiply r1+1 by n and place result in r1 and r1+1 */
+    mul_signed (&(regs->GR_L(r1)), &(regs->GR_L(r1+1)),
+                    regs->GR_L(r1+1),
+                    n);
+
+} /* end DEF_INST(multiply_y) */
+
+
  UNDEF_INST(prefetch_data)
  UNDEF_INST(prefetch_data_relative_long)
  UNDEF_INST(rotate_then_and_selected_bits_long_reg)
