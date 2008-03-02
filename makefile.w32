@@ -7,6 +7,9 @@
 VERSION  = \"3.05w32\"
 
 # $Log$
+# Revision 1.55  2008/03/01 14:19:29  rbowler
+# Add new module general3.c for general-instructions-extension facility
+#
 # Revision 1.54  2007/06/20 23:40:58  jmaynard
 # 3.05 version bump.
 #
@@ -73,7 +76,7 @@ DYNFILES = dyninst dyngui hdteq \
 
 
 TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
-     html zzsa.cnf zzsacard.bin
+           html zzsa.cnf zzsacard.bin
 
 hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                version.o ipl.o assist.o dat.o stack.o cpu.o \
@@ -201,140 +204,140 @@ HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
            sockdev.h history.h sr.h hthreads.h hostopts.h w32util.h \
            hconsts.h hmacros.h hstructs.h hexterns.h hconsole.h
 
-all:     $(EXEFILES) $(DYNFILES)
+all:       $(EXEFILES) $(DYNFILES)
 
 hercules.def: $(hercules_OBJ)
-  dlltool --export-all-symbols --output-def hercules.def $(hercules_OBJ)
+	dlltool --export-all-symbols --output-def hercules.def $(hercules_OBJ)
 
 hercules.exp: hercules.def
-  dlltool --input-def hercules.def --dllname hercules.exe --output-exp hercules.exp
+	dlltool --input-def hercules.def --dllname hercules.exe --output-exp hercules.exp
 
 hercules.a: hercules.def
-  dlltool --input-def hercules.def --dllname hercules.exe --output-lib hercules.a
+	dlltool --input-def hercules.def --dllname hercules.exe --output-lib hercules.a
 
 hercules: $(hercules_OBJ) hercules.exp
-  $(CC) -o hercules $(hercules_OBJ) hercules.exp $(LFLAGS)
+	$(CC) -o hercules $(hercules_OBJ) hercules.exp $(LFLAGS)
 
 $(hercules_OBJ): %.o: %.c $(HEADERS)
-    $(CC) $(CFLAGS) -o $@ -c $<
+	  $(CC) $(CFLAGS) -o $@ -c $<
 
 #hercifc:  $(hercifc_OBJ)
-#   $(CC) -o hercifc $(hercifc_OBJ) $(LFLAGS)
+#	  $(CC) -o hercifc $(hercifc_OBJ) $(LFLAGS)
 
 dasdinit: $(dasdinit_OBJ)
-    $(CC) -o dasdinit $(dasdinit_OBJ) $(LFLAGS)
+	  $(CC) -o dasdinit $(dasdinit_OBJ) $(LFLAGS)
 
 dasdisup: $(dasdisup_OBJ)
-    $(CC) -o dasdisup $(dasdisup_OBJ) $(LFLAGS)
+	  $(CC) -o dasdisup $(dasdisup_OBJ) $(LFLAGS)
 
 dasdload: $(dasdload_OBJ)
-    $(CC) -o dasdload $(dasdload_OBJ) $(LFLAGS)
+	  $(CC) -o dasdload $(dasdload_OBJ) $(LFLAGS)
 
 dasdconv: $(dasdconv_OBJ)
-    $(CC) -o dasdconv $(dasdconv_OBJ) $(LFLAGS)
+	  $(CC) -o dasdconv $(dasdconv_OBJ) $(LFLAGS)
 
 dasdls:   $(dasdls_OBJ)
-    $(CC) -o dasdls $(dasdls_OBJ) $(LFLAGS)
+	  $(CC) -o dasdls $(dasdls_OBJ) $(LFLAGS)
 
 dasdcat:  $(dasdcat_OBJ)
-    $(CC) -o dasdcat $(dasdcat_OBJ) $(LFLAGS)
+	  $(CC) -o dasdcat $(dasdcat_OBJ) $(LFLAGS)
 
 dasdpdsu: $(dasdpdsu_OBJ)
-    $(CC) -o dasdpdsu $(dasdpdsu_OBJ) $(LFLAGS)
+	  $(CC) -o dasdpdsu $(dasdpdsu_OBJ) $(LFLAGS)
 
 dasdseq:  $(dasdseq_OBJ)
-    $(CC) -o dasdseq $(dasdseq_OBJ) $(LFLAGS)
+	  $(CC) -o dasdseq $(dasdseq_OBJ) $(LFLAGS)
 
 tapecopy: $(tapecopy_OBJ)
-    $(CC) -o tapecopy $(tapecopy_OBJ) $(LFLAGS)
+	  $(CC) -o tapecopy $(tapecopy_OBJ) $(LFLAGS)
 
 tapemap:  $(tapemap_OBJ)
-    $(CC) -o tapemap $(tapemap_OBJ) $(LFLAGS)
+	  $(CC) -o tapemap $(tapemap_OBJ) $(LFLAGS)
 
 tapesplt: $(tapesplt_OBJ)
-    $(CC) -o tapesplt $(tapesplt_OBJ) $(LFLAGS)
+	  $(CC) -o tapesplt $(tapesplt_OBJ) $(LFLAGS)
 
 cckdcdsk: $(cckdcdsk_OBJ)
-    $(CC) -o cckdcdsk $(cckdcdsk_OBJ) $(LFLAGS)
+	  $(CC) -o cckdcdsk $(cckdcdsk_OBJ) $(LFLAGS)
 
 cckdcomp: $(cckdcomp_OBJ)
-    $(CC) -o cckdcomp $(cckdcomp_OBJ) $(LFLAGS)
+	  $(CC) -o cckdcomp $(cckdcomp_OBJ) $(LFLAGS)
 
 cckddiag: $(cckddiag_OBJ)
-    $(CC) -o cckddiag $(cckddiag_OBJ) $(LFLAGS)
+	  $(CC) -o cckddiag $(cckddiag_OBJ) $(LFLAGS)
 
 cckdswap: $(cckdswap_OBJ)
-    $(CC) -o cckdswap $(cckdswap_OBJ) $(LFLAGS)
+	  $(CC) -o cckdswap $(cckdswap_OBJ) $(LFLAGS)
 
 cckd2ckd: $(cckd2ckd_OBJ)
-    $(CC) -o cckd2ckd $(cckd2ckd_OBJ) $(LFLAGS)
+	  $(CC) -o cckd2ckd $(cckd2ckd_OBJ) $(LFLAGS)
 
 ckd2cckd: $(ckd2cckd_OBJ)
-    $(CC) -o ckd2cckd $(ckd2cckd_OBJ) $(LFLAGS)
+	  $(CC) -o ckd2cckd $(ckd2cckd_OBJ) $(LFLAGS)
 
 fba2cfba: $(fba2cfba_OBJ)
-    $(CC) -o fba2cfba $(fba2cfba_OBJ) $(LFLAGS)
+	  $(CC) -o fba2cfba $(fba2cfba_OBJ) $(LFLAGS)
 
 cfba2fba: $(cfba2fba_OBJ)
-    $(CC) -o cfba2fba $(cfba2fba_OBJ) $(LFLAGS)
+	  $(CC) -o cfba2fba $(cfba2fba_OBJ) $(LFLAGS)
 
 dasdcopy: $(dasdcopy_OBJ)
-    $(CC) -o dasdcopy $(dasdcopy_OBJ) $(LFLAGS)
+	  $(CC) -o dasdcopy $(dasdcopy_OBJ) $(LFLAGS)
 
 hetget:   $(hetget_OBJ)
-    $(CC) -o hetget $(hetget_OBJ) $(LFLAGS)
+	  $(CC) -o hetget $(hetget_OBJ) $(LFLAGS)
 
 hetinit:  $(hetinit_OBJ)
-    $(CC) -o hetinit $(hetinit_OBJ) $(LFLAGS)
+	  $(CC) -o hetinit $(hetinit_OBJ) $(LFLAGS)
 
 hetmap:   $(hetmap_OBJ)
-    $(CC) -o hetmap $(hetmap_OBJ) $(LFLAGS)
+	  $(CC) -o hetmap $(hetmap_OBJ) $(LFLAGS)
 
 hetupd:   $(hetupd_OBJ)
-    $(CC) -o hetupd $(hetupd_OBJ) $(LFLAGS)
+	  $(CC) -o hetupd $(hetupd_OBJ) $(LFLAGS)
 
 dmap2hrc: $(dmap2hrc_OBJ)
-    $(CC) -o dmap2hrc $(dmap2hrc_OBJ) $(LFLAGS)
+	  $(CC) -o dmap2hrc $(dmap2hrc_OBJ) $(LFLAGS)
 
 dyninst:  $(dyninst_OBJ) hercules.a
-    $(CC) -o dyninst.dll $(dyninst_OBJ) $(DFLAGS)
+	  $(CC) -o dyninst.dll $(dyninst_OBJ) $(DFLAGS)
 
 dyngui:   $(dyngui_OBJ) hercules.a
-    $(CC) -o dyngui.dll $(dyngui_OBJ) $(DFLAGS)
+	  $(CC) -o dyngui.dll $(dyngui_OBJ) $(DFLAGS)
 
 hdt1403:  $(hdt1403_OBJ) hercules.a
-    $(CC) -o hdt1403.dll $(hdt1403_OBJ) $(DFLAGS)
+	  $(CC) -o hdt1403.dll $(hdt1403_OBJ) $(DFLAGS)
 
 hdt2703:  $(hdt2703_OBJ) hercules.a
-    $(CC) -o hdt2703.dll $(hdt2703_OBJ) $(DFLAGS)
+	  $(CC) -o hdt2703.dll $(hdt2703_OBJ) $(DFLAGS)
 
 hdt3088:  $(hdt3088_OBJ) hercules.a
-    $(CC) -o hdt3088.dll $(hdt3088_OBJ) $(DFLAGS)
+	  $(CC) -o hdt3088.dll $(hdt3088_OBJ) $(DFLAGS)
 
 hdt3270:  $(hdt3270_OBJ) hercules.a
-    $(CC) -o hdt3270.dll $(hdt3270_OBJ) $(DFLAGS)
+	  $(CC) -o hdt3270.dll $(hdt3270_OBJ) $(DFLAGS)
 
 hdt1052c: $(hdt1052c_OBJ) hercules.a
-    $(CC) -o hdt1052c.dll $(hdt1052c_OBJ) $(DFLAGS)
+	  $(CC) -o hdt1052c.dll $(hdt1052c_OBJ) $(DFLAGS)
 
 hdt3420:  $(hdt3420_OBJ) hercules.a
-    $(CC) -o hdt3420.dll $(hdt3420_OBJ) $(DFLAGS)
+	  $(CC) -o hdt3420.dll $(hdt3420_OBJ) $(DFLAGS)
 
 hdt3505:  $(hdt3505_OBJ) hercules.a
-    $(CC) -o hdt3505.dll $(hdt3505_OBJ) $(DFLAGS)
+	  $(CC) -o hdt3505.dll $(hdt3505_OBJ) $(DFLAGS)
 
 hdt3525:  $(hdt3525_OBJ) hercules.a
-    $(CC) -o hdt3525.dll $(hdt3525_OBJ) $(DFLAGS)
+	  $(CC) -o hdt3525.dll $(hdt3525_OBJ) $(DFLAGS)
 
 hdteq:    $(hdteq_OBJ) hercules.a
-    $(CC) -o hdteq.dll $(hdteq_OBJ) $(DFLAGS)
+	  $(CC) -o hdteq.dll $(hdteq_OBJ) $(DFLAGS)
 
 clean:
-  rm -rf $(EXEFILES) $(DYNFILES) *.o
+	rm -rf $(EXEFILES) $(DYNFILES) *.o
 
-tar:  clean
-  (cd ..; tar cvzf hercules-$(VERSION).tar.gz hercules-$(VERSION))
+tar:    clean
+	(cd ..; tar cvzf hercules-$(VERSION).tar.gz hercules-$(VERSION))
 
 install:  $(EXEFILES)
-  cp $(EXEFILES) $(DESTDIR)
-  cp $(DYNFILES) $(DESTLIB)
+	cp $(EXEFILES) $(DESTDIR)
+	cp $(DYNFILES) $(DESTLIB)
