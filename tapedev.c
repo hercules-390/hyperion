@@ -77,6 +77,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.129  2007/12/14 17:48:52  rbowler
+// Enable SENSE ID CCW for 2703,3410,3420
+//
 // Revision 1.128  2007/11/29 03:36:40  fish
 // Re-sequence CCW opcode 'case' statements to be in ascending order.
 // COSMETIC CHANGE ONLY. NO ACTUAL LOGIC WAS CHANGED.
@@ -4888,7 +4891,8 @@ int             rc;
         devclass = 0x80;
         devtcode = 0x20;
         sctlfeat = 0x00000000;
-        dev->numdevid = 7;
+        /* disable senseid again.. Breaks MTS */
+        dev->numdevid = 0;
         dev->numsense = 24;
         break;
     case 0x9347:
@@ -4918,6 +4922,8 @@ int             rc;
         devclass = 0x80;
         devtcode = 0x20;
         sctlfeat = 0x00000000;
+        /* disable senseid again.. Breaks MTS */
+        dev->numdevid = 0;
         dev->numdevid = 7;
         dev->numsense = 32;
         break;
@@ -4930,7 +4936,8 @@ int             rc;
         devclass = 0x80;
         devtcode = 0x20;
         sctlfeat = 0x00000000;
-        dev->numdevid = 7;
+        /* disable senseid again.. Breaks MTS */
+        dev->numdevid = 0;
         dev->numsense = 9;
         break;
     case 0x3422:
