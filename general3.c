@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.6  2008/03/03 00:21:45  rbowler
+// Add ECAG,LAEY,PFD,PFDRL instructions
+//
 // Revision 1.5  2008/03/02 23:29:49  rbowler
 // Add MFY,MHY,MSFI,MSGFI instructions
 //
@@ -273,9 +276,65 @@ VADR    effective_addr2;                /* Effective address         */
  UNDEF_INST(load_relative_long)
  UNDEF_INST(load_relative_long_long)
  UNDEF_INST(load_relative_long_long_fullword)
- UNDEF_INST(move_fullword_from_halfword_immediate)
- UNDEF_INST(move_halfword_from_halfword_immediate)
- UNDEF_INST(move_long_from_halfword_immediate)
+
+
+/*-------------------------------------------------------------------*/
+/* E54C MVHI  - Move Fullword from Halfword Immediate          [SIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(move_fullword_from_halfword_immediate)
+{
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+S16     i2;                             /* 16-bit immediate value    */
+S32     n;                              /* Sign-extended value of i2 */
+
+    SIL(inst, regs, i2, b1, effective_addr1);
+
+    /* Sign-extend 16-bit immediate value to 32 bits */
+    n = i2;
+
+    /* Store 4-byte value at operand address */
+    ARCH_DEP(vstore4) ( n, effective_addr1, b1, regs );
+
+} /* end DEF_INST(move_fullword_from_halfword_immediate) */
+
+
+/*-------------------------------------------------------------------*/
+/* E544 MVHHI - Move Halfword from Halfword Immediate          [SIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(move_halfword_from_halfword_immediate)
+{
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+S16     i2;                             /* 16-bit immediate value    */
+
+    SIL(inst, regs, i2, b1, effective_addr1);
+
+    /* Store 16-bit immediate value at operand address */
+    ARCH_DEP(vstore2) ( i2, effective_addr1, b1, regs );
+
+} /* end DEF_INST(move_halfword_from_halfword_immediate) */
+
+
+/*-------------------------------------------------------------------*/
+/* E548 MVGHI - Move Long from Halfword Immediate              [SIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(move_long_from_halfword_immediate)
+{
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+S16     i2;                             /* 16-bit immediate value    */
+S64     n;                              /* Sign-extended value of i2 */
+
+    SIL(inst, regs, i2, b1, effective_addr1);
+
+    /* Sign-extend 16-bit immediate value to 64 bits */
+    n = i2;
+
+    /* Store 8-byte value at operand address */
+    ARCH_DEP(vstore8) ( n, effective_addr1, b1, regs );
+
+} /* end DEF_INST(move_long_from_halfword_immediate) */
 
 
 /*-------------------------------------------------------------------*/
