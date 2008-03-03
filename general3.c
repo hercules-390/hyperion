@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.5  2008/03/02 23:29:49  rbowler
+// Add MFY,MHY,MSFI,MSGFI instructions
+//
 // Revision 1.4  2008/03/01 23:07:06  rbowler
 // Add ALSI,ALGSI instructions
 //
@@ -184,8 +187,83 @@ U64     n;                              /* 64-bit operand value      */
  UNDEF_INST(compare_relative_long)
  UNDEF_INST(compare_relative_long_long)
  UNDEF_INST(compare_relative_long_long_fullword)
- UNDEF_INST(extract_cache_attribute)
- UNDEF_INST(load_address_extended_y)
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* EB4C ECAG  - Extract Cache Attribute                        [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(extract_cache_attribute)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+int     ai, li, ti;                     /* Operand address subfields */
+
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
+
+    /* Address bit 63 contains the Type Indication (TI) */
+    ti = effective_addr2 & 0x1;
+
+    /* Address bits 60-62 contain the Level Indication (LI) */
+    li = (effective_addr2 >> 1) & 0x7;
+
+    /* Address bits 56-59 contain the Attribute Indication (AI) */
+    ai = (effective_addr2 >> 4) & 0xF;
+
+    /* If reserved bits 40-55 are not zero then set r1 to all ones */
+    if ((effective_addr2 & 0xFFFF00) != 0)
+    {
+        regs->GR(r1) = 0xFFFFFFFFFFFFFFFFULL;
+        return;
+    }
+
+    /* If AI=0 (topology summary) is requested, set register r1 to
+       all zeroes indicating that no cache levels are implemented */
+    if (ai == 0)
+    {
+        regs->GR(r1) = 0;
+        return;
+    }
+
+    /* Set register r1 to all ones indicating that the requested
+       cache level is not implemented */
+    regs->GR(r1) = 0xFFFFFFFFFFFFFFFFULL;
+
+} /* end DEF_INST(extract_cache_attribute) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+#if defined(FEATURE_ACCESS_REGISTERS)
+/*-------------------------------------------------------------------*/
+/* E375 LAEY  - Load Address Extended (Long Displacement)      [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_extended_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY0(inst, regs, r1, b2, effective_addr2);
+
+    /* Load operand address into register */
+    SET_GR_A(r1, regs,effective_addr2);
+
+    /* Load corresponding value into access register */
+    if ( PRIMARY_SPACE_MODE(&(regs->psw)) )
+        regs->AR(r1) = ALET_PRIMARY;
+    else if ( SECONDARY_SPACE_MODE(&(regs->psw)) )
+        regs->AR(r1) = ALET_SECONDARY;
+    else if ( HOME_SPACE_MODE(&(regs->psw)) )
+        regs->AR(r1) = ALET_HOME;
+    else /* ACCESS_REGISTER_MODE(&(regs->psw)) */
+        regs->AR(r1) = (b2 == 0) ? 0 : regs->AR(b2);
+    SET_AEA_AR(regs, r1);
+
+} /* end DEF_INST(load_address_extended_y) */
+#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+
+
  UNDEF_INST(load_and_test_long_fullword)
  UNDEF_INST(load_halfword_relative_long)
  UNDEF_INST(load_halfword_relative_long_long)
@@ -283,8 +361,38 @@ U32     n;                              /* 32-bit operand values     */
 } /* end DEF_INST(multiply_y) */
 
 
- UNDEF_INST(prefetch_data)
- UNDEF_INST(prefetch_data_relative_long)
+/*-------------------------------------------------------------------*/
+/* E336 PFD   - Prefetch Data                                  [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(prefetch_data)
+{
+int     m1;                             /* Mask value                */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, regs, m1, b2, effective_addr2);
+
+    /* The Prefetch Data instruction acts as a no-op */
+     
+} /* end DEF_INST(prefetch_data) */
+ 
+  
+/*-------------------------------------------------------------------*/
+/* C6x2 PFDRL - Prefetch Data Relative Long                    [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(prefetch_data_relative_long)
+{
+int     m1;                             /* Mask value                */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* 32-bit operand value      */
+
+    RIL(inst, regs, m1, opcd, i2);
+
+    /* The Prefetch Data instruction acts as a no-op */
+
+} /* end DEF_INST(prefetch_data_relative_long) */
+
+
  UNDEF_INST(rotate_then_and_selected_bits_long_reg)
  UNDEF_INST(rotate_then_exclusive_or_selected_bits_long_reg)
  UNDEF_INST(rotate_then_insert_selected_bits_long_reg)
