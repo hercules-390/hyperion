@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.147  2008/03/01 23:12:39  rbowler
+// Permit AGSI,ALGSI instructions in S/370 and ESA/390 mode
+//
 // Revision 1.146  2008/03/01 12:19:04  rbowler
 // Rename new features to include the word facility
 //
@@ -759,7 +762,7 @@
  UNDEF_INST(convert_dfp_long_to_sbcd64_reg)
  UNDEF_INST(convert_dfp_ext_to_ubcd128_reg)
  UNDEF_INST(convert_dfp_long_to_ubcd64_reg)
- UNDEF_INST(divide_dfp_ext_reg) 
+ UNDEF_INST(divide_dfp_ext_reg)
  UNDEF_INST(divide_dfp_long_reg)
  UNDEF_INST(extract_biased_exponent_dfp_ext_to_fix64_reg)
  UNDEF_INST(extract_biased_exponent_dfp_long_to_fix64_reg)
@@ -1086,13 +1089,13 @@
  UNDEF_INST(load_page_table_entry_address)                      /*@Z9*/
 #endif /*!defined(FEATURE_DAT_ENHANCEMENT_FACILITY_2)*/         /*@Z9*/
 
- 
-#if !defined(FEATURE_STORE_CLOCK_FAST)            
- UNDEF_INST(store_clock_fast)                    
-#else /*!defined(FEATURE_STORE_CLOCK_FAST)*/   
+
+#if !defined(FEATURE_STORE_CLOCK_FAST)
+ UNDEF_INST(store_clock_fast)
+#else /*!defined(FEATURE_STORE_CLOCK_FAST)*/
  #define z900_store_clock_fast z900_store_clock
-#endif /*!defined(FEATURE_STORE_CLOCK_FAST)*/   
- 
+#endif /*!defined(FEATURE_STORE_CLOCK_FAST)*/
+
 #if !defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)              /*@Z9*/
  UNDEF_INST(store_facility_list_extended)                       /*@Z9*/
 #endif /*!defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)*/       /*@Z9*/
@@ -3696,8 +3699,8 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B95D*/ GENx___x___x___ ,
  /*B95E*/ GENx___x___x___ ,
  /*B95F*/ GENx___x___x___ ,
- /*B960*/ GENx___x___x900 (compare_and_trap_long_register,RRF_M3,"CGRT"),          /*208*/                                                                                                                                            
- /*B961*/ GENx___x___x900 (compare_logical_and_trap_long_register,RRF_M3,"CLGRT"), /*208*/                                                                                                                                            
+ /*B960*/ GENx___x___x900 (compare_and_trap_long_register,RRF_M3,"CGRT"),          /*208*/
+ /*B961*/ GENx___x___x900 (compare_logical_and_trap_long_register,RRF_M3,"CLGRT"), /*208*/
  /*B962*/ GENx___x___x___ ,
  /*B963*/ GENx___x___x___ ,
  /*B964*/ GENx___x___x___ ,
@@ -3714,8 +3717,8 @@ DLL_EXPORT zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B96F*/ GENx___x___x___ ,
  /*B970*/ GENx___x___x___ ,
  /*B971*/ GENx___x___x___ ,
- /*B972*/ GENx370x390x900 (compare_and_trap_register,RRF_M3,"CRT"),                /*208*/                                                                                                                                            
- /*B973*/ GENx370x390x900 (compare_logical_and_trap_register,RRF_M3,"CLRT"),       /*208*/                                                                                                                                            
+ /*B972*/ GENx370x390x900 (compare_and_trap_register,RRF_M3,"CRT"),                /*208*/
+ /*B973*/ GENx370x390x900 (compare_logical_and_trap_register,RRF_M3,"CLRT"),       /*208*/
  /*B974*/ GENx___x___x___ ,
  /*B975*/ GENx___x___x___ ,
  /*B976*/ GENx___x___x___ ,
@@ -3877,10 +3880,10 @@ DLL_EXPORT zz_func opcode_c0xx[16][GEN_MAXARCH] = {
  /*C0xC*/ GENx___x___x900 (or_immediate_high_fullword,RIL,"OIHF"),                 /*@Z9*/
  /*C0xD*/ GENx___x___x900 (or_immediate_low_fullword,RIL,"OILF"),                  /*@Z9*/
  /*C0xE*/ GENx___x___x900 (load_logical_immediate_high_fullword,RIL,"LLIHF"),      /*@Z9*/
- /*C0xF*/ GENx___x___x900 (load_logical_immediate_low_fullword,RIL,"LLILF") };     /*@Z9*/  
+ /*C0xF*/ GENx___x___x900 (load_logical_immediate_low_fullword,RIL,"LLILF") };     /*@Z9*/
 
 DLL_EXPORT zz_func opcode_c2xx[16][GEN_MAXARCH] = {                                /*@Z9*/
- /*C2x0*/ GENx___x___x900 (multiply_single_immediate_long_fullword,RIL,"MSGFI"),   /*208*/                                                                                                                                                
+ /*C2x0*/ GENx___x___x900 (multiply_single_immediate_long_fullword,RIL,"MSGFI"),   /*208*/
  /*C2x1*/ GENx370x390x900 (multiply_single_immediate_fullword,RIL,"MSFI"),         /*208*/
  /*C2x2*/ GENx___x___x___ ,                                                        /*@Z9*/
  /*C2x3*/ GENx___x___x___ ,                                                        /*@Z9*/
@@ -3900,38 +3903,38 @@ DLL_EXPORT zz_func opcode_c2xx[16][GEN_MAXARCH] = {                             
 DLL_EXPORT zz_func opcode_c4xx[16][GEN_MAXARCH] = {                                /*208*/
  /*C4x0*/ GENx___x___x___ ,                                                        /*208*/
  /*C4x1*/ GENx___x___x___ ,                                                        /*208*/
- /*C4x2*/ GENx370x390x900 (load_logical_halfword_relative_long,RIL,"LLHRL"),       /*208*/                                                                                                                                            
+ /*C4x2*/ GENx370x390x900 (load_logical_halfword_relative_long,RIL,"LLHRL"),       /*208*/
  /*C4x3*/ GENx___x___x___ ,                                                        /*208*/
- /*C4x4*/ GENx___x___x900 (load_halfword_relative_long_long,RIL,"LGHRL"),          /*208*/                                                                                                                                            
- /*C4x5*/ GENx370x390x900 (load_halfword_relative_long,RIL,"LHRL"),                /*208*/                                                                                                                                            
- /*C4x6*/ GENx___x___x900 (load_logical_halfword_relative_long_long,RIL,"LLGHRL"), /*208*/                                                                                                                                            
- /*C4x7*/ GENx370x390x900 (store_halfword_relative_long,RIL,"STHRL"),              /*208*/                                                                                                                                            
- /*C4x8*/ GENx___x___x900 (load_relative_long_long,RIL,"LGRL"),                    /*208*/                                                                                                                                            
+ /*C4x4*/ GENx___x___x900 (load_halfword_relative_long_long,RIL,"LGHRL"),          /*208*/
+ /*C4x5*/ GENx370x390x900 (load_halfword_relative_long,RIL,"LHRL"),                /*208*/
+ /*C4x6*/ GENx___x___x900 (load_logical_halfword_relative_long_long,RIL,"LLGHRL"), /*208*/
+ /*C4x7*/ GENx370x390x900 (store_halfword_relative_long,RIL,"STHRL"),              /*208*/
+ /*C4x8*/ GENx___x___x900 (load_relative_long_long,RIL,"LGRL"),                    /*208*/
  /*C4x9*/ GENx___x___x___ ,                                                        /*208*/
  /*C4xA*/ GENx___x___x___ ,                                                        /*208*/
- /*C4xB*/ GENx___x___x900 (store_relative_long_long,RIL,"STGRL"),                  /*208*/                                                                                                                        
- /*C4xC*/ GENx___x___x900 (load_relative_long_long_fullword,RIL,"LGFRL"),          /*208*/                                                                                                                        
- /*C4xD*/ GENx370x390x900 (load_relative_long,RIL,"LRL"),                          /*208*/                                                                                                                        
- /*C4xE*/ GENx___x___x900 (load_logical_relative_long_long_fullword,RIL,"LLGFRL"), /*208*/                                                                                                                        
- /*C4xF*/ GENx370x390x900 (store_relative_long,RIL,"STRL") };                      /*208*/                                                                                                                        
+ /*C4xB*/ GENx___x___x900 (store_relative_long_long,RIL,"STGRL"),                  /*208*/
+ /*C4xC*/ GENx___x___x900 (load_relative_long_long_fullword,RIL,"LGFRL"),          /*208*/
+ /*C4xD*/ GENx370x390x900 (load_relative_long,RIL,"LRL"),                          /*208*/
+ /*C4xE*/ GENx___x___x900 (load_logical_relative_long_long_fullword,RIL,"LLGFRL"), /*208*/
+ /*C4xF*/ GENx370x390x900 (store_relative_long,RIL,"STRL") };                      /*208*/
 
 DLL_EXPORT zz_func opcode_c6xx[16][GEN_MAXARCH] = {                                /*208*/
  /*C6x0*/ GENx370x390x900 (execute_relative_long,RIL,"EXRL"),                      /*208*/
  /*C6x1*/ GENx___x___x___ ,                                                        /*208*/
- /*C6x2*/ GENx370x390x900 (prefetch_data_relative_long,RIL,"PFDRL"),               /*208*/                                                                                                                        
+ /*C6x2*/ GENx370x390x900 (prefetch_data_relative_long,RIL,"PFDRL"),               /*208*/
  /*C6x3*/ GENx___x___x___ ,                                                        /*208*/
- /*C6x4*/ GENx___x___x900 (compare_halfword_relative_long_long,RIL,"CGHRL"),       /*208*/                                                                                                                        
- /*C6x5*/ GENx370x390x900 (compare_halfword_relative_long,RIL,"CHRL"),             /*208*/                                                                                                                        
- /*C6x6*/ GENx___x___x900 (compare_logical_relative_long_long_halfword,RIL,"CLGHRL"), /*208*/                                                                                                                      
- /*C6x7*/ GENx370x390x900 (compare_logical_relative_long_halfword,RIL,"CLHRL"),    /*208*/                                                                                                                        
- /*C6x8*/ GENx___x___x900 (compare_relative_long_long,RIL,"CGRL"),                 /*208*/                                                                                                                        
+ /*C6x4*/ GENx___x___x900 (compare_halfword_relative_long_long,RIL,"CGHRL"),       /*208*/
+ /*C6x5*/ GENx370x390x900 (compare_halfword_relative_long,RIL,"CHRL"),             /*208*/
+ /*C6x6*/ GENx___x___x900 (compare_logical_relative_long_long_halfword,RIL,"CLGHRL"), /*208*/
+ /*C6x7*/ GENx370x390x900 (compare_logical_relative_long_halfword,RIL,"CLHRL"),    /*208*/
+ /*C6x8*/ GENx___x___x900 (compare_relative_long_long,RIL,"CGRL"),                 /*208*/
  /*C6x9*/ GENx___x___x___ ,                                                        /*208*/
- /*C6xA*/ GENx___x___x900 (compare_logical_relative_long_long,RIL,"CLGRL"),        /*208*/                                                                                                                        
+ /*C6xA*/ GENx___x___x900 (compare_logical_relative_long_long,RIL,"CLGRL"),        /*208*/
  /*C6xB*/ GENx___x___x___ ,                                                        /*208*/
- /*C6xC*/ GENx___x___x900 (compare_relative_long_long_fullword,RIL,"CGFRL"),       /*208*/                                                                                                                        
- /*C6xD*/ GENx370x390x900 (compare_relative_long,RIL,"CRL"),                       /*208*/                                                                                                                        
- /*C6xE*/ GENx___x___x900 (compare_logical_relative_long_long_fullword,RIL,"CLGFRL"), /*208*/                                                                                                                      
- /*C6xF*/ GENx370x390x900 (compare_logical_relative_long,RIL,"CLRL") };            /*208*/                                                                                                                        
+ /*C6xC*/ GENx___x___x900 (compare_relative_long_long_fullword,RIL,"CGFRL"),       /*208*/
+ /*C6xD*/ GENx370x390x900 (compare_relative_long,RIL,"CRL"),                       /*208*/
+ /*C6xE*/ GENx___x___x900 (compare_logical_relative_long_long_fullword,RIL,"CLGFRL"), /*208*/
+ /*C6xF*/ GENx370x390x900 (compare_logical_relative_long,RIL,"CLRL") };            /*208*/
 
 DLL_EXPORT zz_func opcode_c8xx[16][GEN_MAXARCH] = {
  /*C8x0*/ GENx___x___x900 (move_with_optional_specifications,SSF,"MVCOS"),
@@ -4006,11 +4009,11 @@ DLL_EXPORT zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E32F*/ GENx___x___x900 (store_reversed_long,RXY,"STRVG"),
  /*E330*/ GENx___x___x900 (compare_long_fullword,RXY,"CGF"),
  /*E331*/ GENx___x___x900 (compare_logical_long_fullword,RXY,"CLGF"),
- /*E332*/ GENx___x___x900 (load_and_test_long_fullword,RXY,"LTGF"),                /*208*/                                                                                                                                            
+ /*E332*/ GENx___x___x900 (load_and_test_long_fullword,RXY,"LTGF"),                /*208*/
  /*E333*/ GENx___x___x___ ,
- /*E334*/ GENx___x___x900 (compare_halfword_long,RXY,"CGH"),                       /*208*/                                                                                                                                            
+ /*E334*/ GENx___x___x900 (compare_halfword_long,RXY,"CGH"),                       /*208*/
  /*E335*/ GENx___x___x___ ,
- /*E336*/ GENx370x390x900 (prefetch_data,RXY,"PFD"),                               /*208*/                                                                                                                                            
+ /*E336*/ GENx370x390x900 (prefetch_data,RXY,"PFD"),                               /*208*/
  /*E337*/ GENx___x___x___ ,
  /*E338*/ GENx___x___x___ ,
  /*E339*/ GENx___x___x___ ,
@@ -4048,7 +4051,7 @@ DLL_EXPORT zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E359*/ GENx___x___x900 (compare_y,RXY,"CY"),
  /*E35A*/ GENx___x___x900 (add_y,RXY,"AY"),
  /*E35B*/ GENx___x___x900 (subtract_y,RXY,"SY"),
- /*E35C*/ GENx___x___x900 (multiply_y,RXY,"MFY"),                                  /*208*/                                                                                                                                                
+ /*E35C*/ GENx___x___x900 (multiply_y,RXY,"MFY"),                                  /*208*/
  /*E35D*/ GENx___x___x___ ,
  /*E35E*/ GENx___x___x900 (add_logical_y,RXY,"ALY"),
  /*E35F*/ GENx___x___x900 (subtract_logical_y,RXY,"SLY"),
@@ -4073,14 +4076,14 @@ DLL_EXPORT zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E372*/ GENx___x___x900 (store_character_y,RXY,"STCY"),
  /*E373*/ GENx___x___x900 (insert_character_y,RXY,"ICY"),
  /*E374*/ GENx___x___x___ ,
- /*E375*/ GENx___x___x900 (load_address_extended_y,RXY,"LAEY"),                    /*208*/                                                                                                                                                
+ /*E375*/ GENx___x___x900 (load_address_extended_y,RXY,"LAEY"),                    /*208*/
  /*E376*/ GENx___x___x900 (load_byte,RXY,"LB"),
  /*E377*/ GENx___x___x900 (load_byte_long,RXY,"LGB"),
  /*E378*/ GENx___x___x900 (load_halfword_y,RXY,"LHY"),
  /*E379*/ GENx___x___x900 (compare_halfword_y,RXY,"CHY"),
  /*E37A*/ GENx___x___x900 (add_halfword_y,RXY,"AHY"),
  /*E37B*/ GENx___x___x900 (subtract_halfword_y,RXY,"SHY"),
- /*E37C*/ GENx___x___x900 (multiply_halfword_y,RXY,"MHY"),                         /*208*/                                                                                                                                                
+ /*E37C*/ GENx___x___x900 (multiply_halfword_y,RXY,"MHY"),                         /*208*/
  /*E37D*/ GENx___x___x___ ,
  /*E37E*/ GENx___x___x___ ,
  /*E37F*/ GENx___x___x___ ,
@@ -4286,15 +4289,15 @@ DLL_EXPORT zz_func opcode_e5xx[256][GEN_MAXARCH] = {
  /*E541*/ GENx___x___x___ ,
  /*E542*/ GENx___x___x___ ,
  /*E543*/ GENx___x___x___ ,
- /*E544*/ GENx370x390x900 (move_halfword_from_halfword_immediate,SIL,"MVHHI"),     /*208*/                                                                                                                                                
+ /*E544*/ GENx370x390x900 (move_halfword_from_halfword_immediate,SIL,"MVHHI"),     /*208*/
  /*E545*/ GENx___x___x___ ,
  /*E546*/ GENx___x___x___ ,
  /*E547*/ GENx___x___x___ ,
- /*E548*/ GENx___x___x900 (move_long_from_halfword_immediate,SIL,"MVGHI"),         /*208*/                                                                                                                                                
+ /*E548*/ GENx___x___x900 (move_long_from_halfword_immediate,SIL,"MVGHI"),         /*208*/
  /*E549*/ GENx___x___x___ ,
  /*E54A*/ GENx___x___x___ ,
  /*E54B*/ GENx___x___x___ ,
- /*E54C*/ GENx370x390x900 (move_fullword_from_halfword_immediate,SIL,"MVHI"),      /*208*/                                                                                                                                                
+ /*E54C*/ GENx370x390x900 (move_fullword_from_halfword_immediate,SIL,"MVHI"),      /*208*/
  /*E54D*/ GENx___x___x___ ,
  /*E54E*/ GENx___x___x___ ,
  /*E54F*/ GENx___x___x___ ,
@@ -4302,16 +4305,16 @@ DLL_EXPORT zz_func opcode_e5xx[256][GEN_MAXARCH] = {
  /*E551*/ GENx___x___x___ ,
  /*E552*/ GENx___x___x___ ,
  /*E553*/ GENx___x___x___ ,
- /*E554*/ GENx370x390x900 (compare_halfword_immediate_halfword_storage,SIL,"CHHSI"), /*208*/                                                                                                                                               
- /*E555*/ GENx370x390x900 (compare_logical_immediate_halfword_storage,SIL,"CLHHSI"), /*208*/                                                                                                                                               
+ /*E554*/ GENx370x390x900 (compare_halfword_immediate_halfword_storage,SIL,"CHHSI"), /*208*/
+ /*E555*/ GENx370x390x900 (compare_logical_immediate_halfword_storage,SIL,"CLHHSI"), /*208*/
  /*E556*/ GENx___x___x___ ,
  /*E557*/ GENx___x___x___ ,
- /*E558*/ GENx___x___x900 (compare_halfword_immediate_long_storage,SIL,"CGHSI"),   /*208*/                                                                                                                                                
- /*E559*/ GENx___x___x900 (compare_logical_immediate_long_storage,SIL,"CLGHSI"),   /*208*/                                                                                                                                                
+ /*E558*/ GENx___x___x900 (compare_halfword_immediate_long_storage,SIL,"CGHSI"),   /*208*/
+ /*E559*/ GENx___x___x900 (compare_logical_immediate_long_storage,SIL,"CLGHSI"),   /*208*/
  /*E55A*/ GENx___x___x___ ,
  /*E55B*/ GENx___x___x___ ,
- /*E55C*/ GENx370x390x900 (compare_halfword_immediate_storage,SIL,"CHSI"),         /*208*/                                                                                                                                                
- /*E55D*/ GENx___x___x900 (compare_logical_immediate_fullword_storage,SIL,"CLFHSI"), /*208*/                                                                                                                                               
+ /*E55C*/ GENx370x390x900 (compare_halfword_immediate_storage,SIL,"CHSI"),         /*208*/
+ /*E55D*/ GENx___x___x900 (compare_logical_immediate_fullword_storage,SIL,"CLFHSI"), /*208*/
  /*E55E*/ GENx___x___x___ ,
  /*E55F*/ GENx___x___x___ ,
  /*E560*/ GENx___x___x___ ,
@@ -4813,7 +4816,7 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB49*/ GENx___x___x___ ,
  /*EB4A*/ GENx___x___x___ ,
  /*EB4B*/ GENx___x___x___ ,
- /*EB4C*/ GENx___x___x900 (extract_cache_attribute,RSY,"ECAG"),                    /*208*/                                                                                                                                                
+ /*EB4C*/ GENx___x___x900 (extract_cache_attribute,RSY,"ECAG"),                    /*208*/
  /*EB4D*/ GENx___x___x___ ,
  /*EB4E*/ GENx___x___x___ ,
  /*EB4F*/ GENx___x___x___ ,
@@ -4843,7 +4846,7 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB67*/ GENx___x___x___ ,
  /*EB68*/ GENx___x___x___ ,
  /*EB69*/ GENx___x___x___ ,
- /*EB6A*/ GENx370x390x900 (add_immediate_storage,SIY,"ASI"),                       /*208*/                                                                                                                                                
+ /*EB6A*/ GENx370x390x900 (add_immediate_storage,SIY,"ASI"),                       /*208*/
  /*EB6B*/ GENx___x___x___ ,
  /*EB6C*/ GENx___x___x___ ,
  /*EB6D*/ GENx___x___x___ ,
@@ -4859,7 +4862,7 @@ DLL_EXPORT zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB77*/ GENx___x___x___ ,
  /*EB78*/ GENx___x___x___ ,
  /*EB79*/ GENx___x___x___ ,
- /*EB7A*/ GENx370x390x900 (add_immediate_long_storage,SIY,"AGSI"),                 /*208*/                                                                                                                                                
+ /*EB7A*/ GENx370x390x900 (add_immediate_long_storage,SIY,"AGSI"),                 /*208*/
  /*EB7B*/ GENx___x___x___ ,
  /*EB7C*/ GENx___x___x___ ,
  /*EB7D*/ GENx___x___x___ ,
@@ -5083,10 +5086,10 @@ DLL_EXPORT zz_func opcode_ecxx[256][GEN_MAXARCH] = {
  /*EC51*/ GENx___x___x___ ,
  /*EC52*/ GENx___x___x___ ,
  /*EC53*/ GENx___x___x___ ,
- /*EC54*/ GENx___x___x900 (rotate_then_and_selected_bits_long_reg,RIE_RRIII,"RNSBG"),          /*208*/                                                                                                                                               
- /*EC55*/ GENx___x___x900 (rotate_then_insert_selected_bits_long_reg,RIE_RRIII,"RISBG"),       /*208*/                                                                                                                          
- /*EC56*/ GENx___x___x900 (rotate_then_or_selected_bits_long_reg,RIE_RRIII,"ROSBG"),           /*208*/                                                                                                                                               
- /*EC57*/ GENx___x___x900 (rotate_then_exclusive_or_selected_bits_long_reg,RIE_RRIII,"RXSBG"), /*208*/                                                                                                                          
+ /*EC54*/ GENx___x___x900 (rotate_then_and_selected_bits_long_reg,RIE_RRIII,"RNSBG"),          /*208*/
+ /*EC55*/ GENx___x___x900 (rotate_then_insert_selected_bits_long_reg,RIE_RRIII,"RISBG"),       /*208*/
+ /*EC56*/ GENx___x___x900 (rotate_then_or_selected_bits_long_reg,RIE_RRIII,"ROSBG"),           /*208*/
+ /*EC57*/ GENx___x___x900 (rotate_then_exclusive_or_selected_bits_long_reg,RIE_RRIII,"RXSBG"), /*208*/
  /*EC58*/ GENx___x___x___ ,
  /*EC59*/ GENx___x___x___ ,
  /*EC5A*/ GENx___x___x___ ,
@@ -5099,8 +5102,8 @@ DLL_EXPORT zz_func opcode_ecxx[256][GEN_MAXARCH] = {
  /*EC61*/ GENx___x___x___ ,
  /*EC62*/ GENx___x___x___ ,
  /*EC63*/ GENx___x___x___ ,
- /*EC64*/ GENx370x390x900 (compare_and_branch_relative_long_register,RIE_RRIM,"CGRJ"), /*208*/                                                                                                                                     
- /*EC65*/ GENx370x390x900 (compare_logical_and_branch_relative_long_register,RIE_RRIM,"CLGRJ"), /*208*/                                                                                                                                     
+ /*EC64*/ GENx370x390x900 (compare_and_branch_relative_long_register,RIE_RRIM,"CGRJ"), /*208*/
+ /*EC65*/ GENx370x390x900 (compare_logical_and_branch_relative_long_register,RIE_RRIM,"CLGRJ"), /*208*/
  /*EC66*/ GENx___x___x___ ,
  /*EC67*/ GENx___x___x___ ,
  /*EC68*/ GENx___x___x___ ,
@@ -5111,22 +5114,22 @@ DLL_EXPORT zz_func opcode_ecxx[256][GEN_MAXARCH] = {
  /*EC6D*/ GENx___x___x___ ,
  /*EC6E*/ GENx___x___x___ ,
  /*EC6F*/ GENx___x___x___ ,
- /*EC70*/ GENx___x___x900 (compare_immediate_and_trap_long,RIE_RIM,"CGIT"),        /*208*/                                                                                                                                                
- /*EC71*/ GENx___x___x900 (compare_logical_immediate_and_trap_long,RIE_RIM,"CLGIT"), /*208*/                                                                                                                                               
- /*EC72*/ GENx370x390x900 (compare_immediate_and_trap,RIE_RIM,"CIT"),              /*208*/                                                                                                                                                
- /*EC73*/ GENx370x390x900 (compare_logical_immediate_and_trap_fullword,RIE_RIM,"CLFIT"), /*208*/                                                                                                                          
+ /*EC70*/ GENx___x___x900 (compare_immediate_and_trap_long,RIE_RIM,"CGIT"),        /*208*/
+ /*EC71*/ GENx___x___x900 (compare_logical_immediate_and_trap_long,RIE_RIM,"CLGIT"), /*208*/
+ /*EC72*/ GENx370x390x900 (compare_immediate_and_trap,RIE_RIM,"CIT"),              /*208*/
+ /*EC73*/ GENx370x390x900 (compare_logical_immediate_and_trap_fullword,RIE_RIM,"CLFIT"), /*208*/
  /*EC74*/ GENx___x___x___ ,
  /*EC75*/ GENx___x___x___ ,
- /*EC76*/ GENx370x390x900 (compare_and_branch_relative_register,RIE_RRIM,"CRJ"),   /*208*/                                                                                                                                                
- /*EC77*/ GENx370x390x900 (compare_logical_and_branch_relative_register,RIE_RRIM,"CLRJ"), /*208*/                                                                                                                                     
+ /*EC76*/ GENx370x390x900 (compare_and_branch_relative_register,RIE_RRIM,"CRJ"),   /*208*/
+ /*EC77*/ GENx370x390x900 (compare_logical_and_branch_relative_register,RIE_RRIM,"CLRJ"), /*208*/
  /*EC78*/ GENx___x___x___ ,
  /*EC79*/ GENx___x___x___ ,
  /*EC7A*/ GENx___x___x___ ,
  /*EC7B*/ GENx___x___x___ ,
- /*EC7C*/ GENx370x390x900 (compare_immediate_and_branch_relative_long,RIE_RMII,"CGIJ"), /*208*/                                                                                                                                     
+ /*EC7C*/ GENx370x390x900 (compare_immediate_and_branch_relative_long,RIE_RMII,"CGIJ"), /*208*/
  /*EC7D*/ GENx370x390x900 (compare_logical_immediate_and_branch_relative_long,RIE_RMII,"CLGIJ"), /*208*/
- /*EC7E*/ GENx370x390x900 (compare_immediate_and_branch_relative,RIE_RMII,"CIJ"),  /*208*/                                                                                                                                                
- /*EC7F*/ GENx370x390x900 (compare_logical_immediate_and_branch_relative,RIE_RMII,"CLIJ"), /*208*/                                                                                                                          
+ /*EC7E*/ GENx370x390x900 (compare_immediate_and_branch_relative,RIE_RMII,"CIJ"),  /*208*/
+ /*EC7F*/ GENx370x390x900 (compare_logical_immediate_and_branch_relative,RIE_RMII,"CLIJ"), /*208*/
  /*EC80*/ GENx___x___x___ ,
  /*EC81*/ GENx___x___x___ ,
  /*EC82*/ GENx___x___x___ ,
@@ -5228,7 +5231,7 @@ DLL_EXPORT zz_func opcode_ecxx[256][GEN_MAXARCH] = {
  /*ECE2*/ GENx___x___x___ ,
  /*ECE3*/ GENx___x___x___ ,
  /*ECE4*/ GENx___x___x900 (compare_and_branch_long_register,RRS,"CGRB"),           /*208*/
- /*ECE5*/ GENx___x___x900 (compare_logical_and_branch_long_register,RRS,"CLGRB"),  /*208*/                                                                                                                                                
+ /*ECE5*/ GENx___x___x900 (compare_logical_and_branch_long_register,RRS,"CLGRB"),  /*208*/
  /*ECE6*/ GENx___x___x___ ,
  /*ECE7*/ GENx___x___x___ ,
  /*ECE8*/ GENx___x___x___ ,
@@ -5246,15 +5249,15 @@ DLL_EXPORT zz_func opcode_ecxx[256][GEN_MAXARCH] = {
  /*ECF4*/ GENx___x___x___ ,
  /*ECF5*/ GENx___x___x___ ,
  /*ECF6*/ GENx370x390x900 (compare_and_branch_register,RRS,"CRB"),                 /*208*/
- /*ECF7*/ GENx370x390x900 (compare_logical_and_branch_register,RRS,"CLRB"),        /*208*/                                                                                                                                                
+ /*ECF7*/ GENx370x390x900 (compare_logical_and_branch_register,RRS,"CLRB"),        /*208*/
  /*ECF8*/ GENx___x___x___ ,
  /*ECF9*/ GENx___x___x___ ,
  /*ECFA*/ GENx___x___x___ ,
  /*ECFB*/ GENx___x___x___ ,
- /*ECFC*/ GENx___x___x900 (compare_immediate_and_branch_long,RIS,"CGIB"),          /*208*/                                                                                                                                                
- /*ECFD*/ GENx___x___x900 (compare_logical_immediate_and_branch_long,RIS,"CLGIB"), /*208*/                                                                                                                                                
- /*ECFE*/ GENx370x390x900 (compare_immediate_and_branch,RIS,"CIB"),                /*208*/                                                                                                                                                
- /*ECFF*/ GENx370x390x900 (compare_logical_immediate_and_branch,RIS,"CLIB") };     /*208*/                                                                                                                                                
+ /*ECFC*/ GENx___x___x900 (compare_immediate_and_branch_long,RIS,"CGIB"),          /*208*/
+ /*ECFD*/ GENx___x___x900 (compare_logical_immediate_and_branch_long,RIS,"CLGIB"), /*208*/
+ /*ECFE*/ GENx370x390x900 (compare_immediate_and_branch,RIS,"CIB"),                /*208*/
+ /*ECFF*/ GENx370x390x900 (compare_logical_immediate_and_branch,RIS,"CLIB") };     /*208*/
 
 // #endif /*defined(FEATURE_ESAME)*/
 
