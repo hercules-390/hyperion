@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.148  2008/03/03 23:14:43  rbowler
+// Remove extraneous trailing blanks (cosmetic change only)
+//
 // Revision 1.147  2008/03/01 23:12:39  rbowler
 // Permit AGSI,ALGSI instructions in S/370 and ESA/390 mode
 //
@@ -4293,7 +4296,7 @@ DLL_EXPORT zz_func opcode_e5xx[256][GEN_MAXARCH] = {
  /*E545*/ GENx___x___x___ ,
  /*E546*/ GENx___x___x___ ,
  /*E547*/ GENx___x___x___ ,
- /*E548*/ GENx___x___x900 (move_long_from_halfword_immediate,SIL,"MVGHI"),         /*208*/
+ /*E548*/ GENx370x390x900 (move_long_from_halfword_immediate,SIL,"MVGHI"),         /*208*/
  /*E549*/ GENx___x___x___ ,
  /*E54A*/ GENx___x___x___ ,
  /*E54B*/ GENx___x___x___ ,
