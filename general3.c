@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.7  2008/03/03 22:43:43  rbowler
+// Add MVHI,MVHHI,MVGHI instructions
+//
 // Revision 1.6  2008/03/03 00:21:45  rbowler
 // Add ECAG,LAEY,PFD,PFDRL instructions
 //
@@ -267,7 +270,31 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
 
- UNDEF_INST(load_and_test_long_fullword)
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* E332 LTGF  - Load and Test Long Fullword                    [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_and_test_long_fullword)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* Second operand value      */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load R1 register from sign-extended second operand */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+    regs->GR_G(r1) = (S64)(S32)n;
+
+    /* Set condition code according to value loaded */
+    regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
+                   (S64)regs->GR_G(r1) > 0 ? 2 : 0;
+                    
+} /* end DEF_INST(load_and_test_long_fullword) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
  UNDEF_INST(load_halfword_relative_long)
  UNDEF_INST(load_halfword_relative_long_long)
  UNDEF_INST(load_logical_halfword_relative_long)
