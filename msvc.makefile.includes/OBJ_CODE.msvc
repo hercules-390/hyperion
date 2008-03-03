@@ -10,6 +10,9 @@
 #
 #                           CHANGE HISTORY
 # $Log$
+# Revision 1.2  2007/06/02 13:46:42  rbowler
+# PFPO framework
+#
 # DD/MM/YY Description
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
 #
@@ -91,6 +94,7 @@ hengine_OBJ = \
     $(O)float.obj    \
     $(O)general1.obj \
     $(O)general2.obj \
+    $(O)general3.obj \
     $(O)hconsole.obj \
     $(O)history.obj  \
     $(O)hsccmd.obj   \
