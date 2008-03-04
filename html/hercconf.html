@@ -286,8 +286,8 @@ and how they are used.
             <td>500 International</td>
         </tr>
         <tr><td align="center"><code>437/1047</code></td>
-            <td>437 PC United States</td>  
-            <td>1047 Open Systems Latin 1</td>  
+            <td>437 PC United States</td>
+            <td>1047 Open Systems Latin 1</td>
         </tr>
         <tr><td align="center"><code>819/1047</code></td>
             <td>819 ISO-8859-1</td>
@@ -325,26 +325,27 @@ and how they are used.
     <p>
 
 <a name="LEGACYSENSEID"></a>
-<dt><code>LEGACYSENSEID &nbsp; <i>OFF|DISABLE|on|enable</i></code>
+<dt><code>LEGACYSENSEID &nbsp; OFF &#124; DISABLE &#124; ON &#124; ENABLE</code>
 <dd><p>
     specifies whether the SENSE ID CCW (X'E4') will be honored for
     the devices that originally didn't support that feature. This
-    includes (but may not be limited to) the 3410 and 3420 tape drives 
-    as well as the 2703 communication controlers.
+    includes (but may not be limited to) the 3410 and 3420 tape drives
+    as well as the 2703 communication controllers.
     <p>
 
-    Specify <code>on</code> or <code>enable</code> if your guest
+    Specify <code>ON</code> or <code>ENABLE</code> if your guest
     operating system needs the Sense ID support to dynamically
     detect those devices. Note that most current operating systems
     will not detect those devices even though Sense ID is enabled
     because those devices never supported the Sense ID in the first
     place. So this mainly applies to custom built or modified versions
-    of guest operating systems that are aware of this specific hercules
-    specificity.
+    of guest operating systems that are aware of this specific Hercules
+    capability.
     <p>
 
     Because those legacy devices didn't originally support this command,
-    and for compatibility reasons, the default is <code>off</code>.
+    and for compatibility reasons, the default is <code>OFF</code>
+    or <code>DISABLE</code>.
     <p>
 
 <a name="CONKPALV"></a>
@@ -375,7 +376,7 @@ and how they are used.
     unresponsive TCP/IP <i>connections</i> and not idle clients.
     That is to say, your connection will <i>not</i> be terminated
     after 3 seconds of idle time. Your 3270 session can remain idle for
-    many minutes without any data being transmitted. 
+    many minutes without any data being transmitted.
     If the TCP/IP <i>stack</i> at the other end of the connection --
     not your 3270 client itself -- fails to respond to the
     internal keep-alive probe packets, then it means that the
@@ -383,7 +384,7 @@ and how they are used.
     connection. Thus, even if your 3270 client
     is completely idle, your system's TCP/IP stack itself should still respond
     to the keep-alive probes sent by the TCP/IP stack at the Hercules end
-    of the link. If it doesn't, then TCP/IP will terminate the tn3270/telnet 
+    of the link. If it doesn't, then TCP/IP will terminate the tn3270/telnet
     session which will cause Hercules to disconnect the terminal.
     <p>
     The three values can also be modified on-demand via the <code>conkpalv</code>
@@ -1954,7 +1955,7 @@ and how they are used.
     the command line must be enclosed in apostrophes instead of quotes,
     for example:
     <pre>
-    000E 1403 '|"c:\Program Files\My Utils\pr" -s -PLPT1:' crlf 
+    000E 1403 '|"c:\Program Files\My Utils\pr" -s -PLPT1:' crlf
     </pre>
     <p>
     Tim Pinkawa has an example which shows how the print-to-pipe feature
@@ -2255,7 +2256,7 @@ and how they are used.
             ring, or with the cartridge protect switch set to "write
             protect").  RO and NORING are equivalent to READONLY=1.
             <p>
- 
+
         <dt><code>RW</code>
         <dt><code>RING</code>
         <dd><p>
@@ -2308,7 +2309,7 @@ and how they are used.
 
     <p>
 
-    Refer to the distributed source-code's "<b>README.TAPE</b>" document for 
+    Refer to the distributed source-code's "<b>README.TAPE</b>" document for
     additional information regarding system and application programming for tape
     devices and instructions regarding use of the emulated <b>ACF (Automatic
     Cartridge Feeder)</b> feature for virtual (non-SCSI) tape devices.
