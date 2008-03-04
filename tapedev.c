@@ -77,6 +77,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.130  2008/03/02 12:00:04  ivan
+// Re-disable Sense ID on 3410, 3420, 8809 : report came in that it breaks MTS
+//
 // Revision 1.129  2007/12/14 17:48:52  rbowler
 // Enable SENSE ID CCW for 2703,3410,3420
 //
@@ -4924,7 +4927,6 @@ int             rc;
         sctlfeat = 0x00000000;
         /* disable senseid again.. Breaks MTS */
         dev->numdevid = 0;
-        dev->numdevid = 7;
         dev->numsense = 32;
         break;
     case 0x3410:
