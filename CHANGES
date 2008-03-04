@@ -1,3 +1,4 @@
+03 Mar 2008 Fix BSM/BASSM mode switch trace - Paul Leisy
 02 Mar 2008 re-disable SenseID on 8809,3410,3420 (breaks MTS) - Ivan Warren 
 29 Feb 2008 Fix TRAP in z/arch mode - Paul Leisy
 29 Feb 2008 Added feature parsing_enhancement_facility - Bernard
