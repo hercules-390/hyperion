@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.79  2008/02/29 15:53:10  rbowler
+// Instruction decoder for C4xx and C6xx instructions
+//
 // Revision 1.78  2008/01/04 02:28:52  gsmith
 // sf commands update
 //
@@ -529,6 +532,8 @@ struct SYSBLK {
         int     timerint;               /* microsecs timer interval  */
         int     npquiet;                /* New Panel quiet indicator */
         char   *pantitle;               /* Alt console panel title   */
+        int     legacysenseid;          /* ena/disa senseid on       */
+                                        /*   legacy devices          */
 #if defined(OPTION_HAO)
         TID     haotid;                 /* Herc Auto-Oper thread-id  */
 #endif /* defined(OPTION_HAO) */

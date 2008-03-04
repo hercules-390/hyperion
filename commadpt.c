@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.43  2008/02/15 22:51:39  rbowler
+// Move Solaris specific definition of INADDR_NONE to hostopts.h
+//
 // Revision 1.42  2008/02/07 00:29:04  rbowler
 // Solaris build support by Jeff Savit
 //
@@ -1620,7 +1623,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         dev->commadpt->devnum=dev->devnum;
 
         /* Initialize the device identifier bytes */
-        dev->numdevid = 7;
+        dev->numdevid = sysblk.legacysenseid ? 7 : 0;
         dev->devid[0] = 0xFF;
         dev->devid[1] = dev->devtype >> 8;
         dev->devid[2] = dev->devtype & 0xFF;

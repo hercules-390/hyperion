@@ -68,6 +68,7 @@ and how they are used.
     <a href="#CODEPAGE">CODEPAGE</a>   default
     <a href="#CNSLPORT">CNSLPORT</a>   3270
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
+    <a href="#LEGACYSENSEID">LEGACYSENSEID</a>   OFF
 
     <a href="#HERCPRIO">HERCPRIO</a>   0
     <a href="#TODPRIO">TODPRIO</a>    -20
@@ -321,6 +322,29 @@ and how they are used.
 
     The CNSLPORT statement may also have the form of host:port, where
     the telnet console server will bind to the specified address.
+    <p>
+
+<a name="LEGACYSENSEID"></a>
+<dt><code>LEGACYSENSEID &nbsp; <i>OFF|DISABLE|on|enable</i></code>
+<dd><p>
+    specifies whether the SENSE ID CCW (X'E4') will be honored for
+    the devices that originally didn't support that feature. This
+    includes (but may not be limited to) the 3410 and 3420 tape drives 
+    as well as the 2703 communication controlers.
+    <p>
+
+    Specify <code>on</code> or <code>enable</code> if your guest
+    operating system needs the Sense ID support to dynamically
+    detect those devices. Note that most current operating systems
+    will not detect those devices even though Sense ID is enabled
+    because those devices never supported the Sense ID in the first
+    place. So this mainly applies to custom built or modified versions
+    of guest operating systems that are aware of this specific hercules
+    specificity.
+    <p>
+
+    Because those legacy devices didn't originally support this command,
+    and for compatibility reasons, the default is <code>off</code>.
     <p>
 
 <a name="CONKPALV"></a>

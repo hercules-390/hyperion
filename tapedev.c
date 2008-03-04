@@ -77,6 +77,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.131  2008/03/04 00:25:25  ivan
+// Ooops.. finger check on 8809 case for numdevid.. Thanks Roger !
+//
 // Revision 1.130  2008/03/02 12:00:04  ivan
 // Re-disable Sense ID on 3410, 3420, 8809 : report came in that it breaks MTS
 //
@@ -4894,8 +4897,7 @@ int             rc;
         devclass = 0x80;
         devtcode = 0x20;
         sctlfeat = 0x00000000;
-        /* disable senseid again.. Breaks MTS */
-        dev->numdevid = 0;
+        dev->numdevid = sysblk.legacysenseid ? 7 : 0;
         dev->numsense = 24;
         break;
     case 0x9347:
@@ -4925,8 +4927,7 @@ int             rc;
         devclass = 0x80;
         devtcode = 0x20;
         sctlfeat = 0x00000000;
-        /* disable senseid again.. Breaks MTS */
-        dev->numdevid = 0;
+        dev->numdevid = sysblk.legacysenseid ? 7 : 0;
         dev->numsense = 32;
         break;
     case 0x3410:
@@ -4939,7 +4940,7 @@ int             rc;
         devtcode = 0x20;
         sctlfeat = 0x00000000;
         /* disable senseid again.. Breaks MTS */
-        dev->numdevid = 0;
+        dev->numdevid = sysblk.legacysenseid ? 7 : 0;
         dev->numsense = 9;
         break;
     case 0x3422:

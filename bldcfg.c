@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.80  2008/01/18 23:44:12  rbowler
+// Segfault instead of HHCCF004S if no device records in config file
+//
 // Revision 1.79  2008/01/18 22:08:33  rbowler
 // HHCCF008E Error in hercules.cnf: Unrecognized keyword 0:0009
 //
@@ -601,6 +604,7 @@ char   *sostailor;                      /* -> OS to tailor system to */
 char   *spanrate;                       /* -> Panel refresh rate     */
 char   *stimerint;                      /* -> Timer update interval  */
 char   *sdevtmax;                       /* -> Max device threads     */
+char   *slegacysenseid;                 /* -> legacy senseid option  */
 char   *shercprio;                      /* -> Hercules base priority */
 char   *stodprio;                       /* -> Timer thread priority  */
 char   *scpuprio;                       /* -> CPU thread priority    */
@@ -657,6 +661,7 @@ int     diag8cmd;                       /* Allow diagnose 8 commands */
 BYTE    shcmdopt;                       /* Shell cmd allow option(s) */
 double  toddrag;                        /* TOD clock drag factor     */
 U64     ostailor;                       /* OS to tailor system to    */
+int     legacysenseid;                  /* ena/disa x'E4' on old devs*/
 int     timerint;                       /* Timer update interval     */
 int     panrate;                        /* Panel refresh rate        */
 int     hercprio;                       /* Hercules base priority    */
@@ -699,6 +704,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            cygwin from thrashing in
                                            select(). sigh            */
 #endif
+
 char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Initialize SETMODE and set user authority */
@@ -749,6 +755,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     devprio  = DEFAULT_DEV_PRIO;
     pgmprdos = PGM_PRD_OS_RESTRICTED;
     devtmax  = MAX_DEVICE_THREADS;
+    legacysenseid = 0;
     sysblk.kaidle = KEEPALIVE_IDLE_TIME;
     sysblk.kaintv = KEEPALIVE_PROBE_INTERVAL;
     sysblk.kacnt  = KEEPALIVE_PROBE_COUNT;
@@ -896,6 +903,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         scpuprio = NULL;
         sdevprio = NULL;
         sdevtmax = NULL;
+        slegacysenseid = NULL;
         spgmprdos = NULL;
         slogofile = NULL;
         straceopt = NULL;
@@ -1084,6 +1092,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "devtmax") == 0)
             {
                 sdevtmax = operand;
+            }
+            else if (strcasecmp (keyword, "legacysenseid") == 0)
+            {
+                slegacysenseid = operand;
             }
             else if (strcasecmp (keyword, "pgmprdos") == 0)
             {
@@ -1835,6 +1847,27 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 
+        /* Parse Legacy SenseID option */
+        if (slegacysenseid != NULL)
+        {
+            if(strcasecmp(slegacysenseid,"enable") == 0)
+            {
+                legacysenseid = 1;
+            }
+            if(strcasecmp(slegacysenseid,"on") == 0)
+            {
+                legacysenseid = 1;
+            }
+            if(strcasecmp(slegacysenseid,"disable") == 0)
+            {
+                legacysenseid = 0;
+            }
+            if(strcasecmp(slegacysenseid,"off") == 0)
+            {
+                legacysenseid = 0;
+            }
+        }
+
         /* Parse program product OS allowed */
         if (spgmprdos != NULL)
         {
@@ -2334,6 +2367,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Set the panel refresh rate */
     sysblk.panrate = panrate;
+
+    /* set the legacy device senseid option */
+    sysblk.legacysenseid = legacysenseid;
 
     /* Set the timer update interval */
     sysblk.timerint = timerint;
