@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.10  2008/03/04 14:40:28  rbowler
+// Add CLFHSI,CLHHSI,CLGHSI instructions
+//
 // Revision 1.9  2008/03/04 14:23:00  rbowler
 // Add CHHSI,CGHSI,CHSI,CGH instructions
 //
@@ -158,8 +161,60 @@ U64     n;                              /* 64-bit operand value      */
 /* As each instruction is developed, replace the corresponding
    UNDEF_INST statement by the DEF_INST function definition */
 
- UNDEF_INST(compare_and_branch_register)
- UNDEF_INST(compare_and_branch_long_register)
+/*-------------------------------------------------------------------*/
+/* ECF6 CRB   - Compare and Branch Register                    [RRS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_and_branch_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+int     b4;                             /* Base of effective addr    */
+VADR    effective_addr4;                /* Effective address         */
+int     cc;                             /* Comparison result         */
+
+    RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S32)regs->GR_L(r1) < (S32)regs->GR_L(r2) ? 1 :
+         (S32)regs->GR_L(r1) > (S32)regs->GR_L(r2) ? 2 : 0;
+
+    /* Branch to operand address if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_and_branch_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* ECE4 CGRB  - Compare and Branch Long Register               [RRS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_and_branch_long_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+int     b4;                             /* Base of effective addr    */
+VADR    effective_addr4;                /* Effective address         */
+int     cc;                             /* Comparison result         */
+
+    RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
+         (S64)regs->GR_G(r1) > (S64)regs->GR_G(r2) ? 2 : 0;
+
+    /* Branch to operand address if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_and_branch_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
  UNDEF_INST(compare_and_branch_relative_register)
  UNDEF_INST(compare_and_branch_relative_long_register)
  UNDEF_INST(compare_and_trap_long_register)
@@ -256,20 +311,186 @@ S64     n;                              /* 64-bit operand value      */
 
  UNDEF_INST(compare_halfword_relative_long)
  UNDEF_INST(compare_halfword_relative_long_long)
- UNDEF_INST(compare_immediate_and_branch)
- UNDEF_INST(compare_immediate_and_branch_long)
+
+
+/*-------------------------------------------------------------------*/
+/* ECFE CIB   - Compare Immediate and Branch                   [RIS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_immediate_and_branch)
+{
+int     r1;                             /* Register number           */
+int     m3;                             /* Mask bits                 */
+int     b4;                             /* Base of effective addr    */
+VADR    effective_addr4;                /* Effective address         */
+int     cc;                             /* Comparison result         */
+BYTE    i2;                             /* Immediate value           */
+
+    RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S32)regs->GR_L(r1) < (S32)(S8)i2 ? 1 :
+         (S32)regs->GR_L(r1) > (S32)(S8)i2 ? 2 : 0;
+
+    /* Branch to operand address if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_immediate_and_branch) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* ECFC CGIB  - Compare Immediate and Branch Long              [RIS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_immediate_and_branch_long)
+{
+int     r1;                             /* Register number           */
+int     m3;                             /* Mask bits                 */
+int     b4;                             /* Base of effective addr    */
+VADR    effective_addr4;                /* Effective address         */
+int     cc;                             /* Comparison result         */
+BYTE    i2;                             /* Immediate value           */
+
+    RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S64)regs->GR_G(r1) < (S64)(S8)i2 ? 1 :
+         (S64)regs->GR_G(r1) > (S64)(S8)i2 ? 2 : 0;
+
+    /* Branch to operand address if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_immediate_and_branch_long) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
  UNDEF_INST(compare_immediate_and_branch_relative)
  UNDEF_INST(compare_immediate_and_branch_relative_long)
  UNDEF_INST(compare_immediate_and_trap)
  UNDEF_INST(compare_immediate_and_trap_long)
- UNDEF_INST(compare_logical_and_branch_long_register)
- UNDEF_INST(compare_logical_and_branch_register)
+
+
+/*-------------------------------------------------------------------*/
+/* ECF7 CLRB  - Compare Logical and Branch Register            [RRS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_and_branch_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+int     b4;                             /* Base of effective addr    */
+VADR    effective_addr4;                /* Effective address         */
+int     cc;                             /* Comparison result         */
+
+    RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
+         regs->GR_L(r1) > regs->GR_L(r2) ? 2 : 0;
+
+    /* Branch to operand address if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_logical_and_branch_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* ECE5 CLGRB - Compare Logical and Branch Long Register       [RRS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_and_branch_long_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+int     b4;                             /* Base of effective addr    */
+VADR    effective_addr4;                /* Effective address         */
+int     cc;                             /* Comparison result         */
+
+    RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_G(r1) < regs->GR_G(r2) ? 1 :
+         regs->GR_G(r1) > regs->GR_G(r2) ? 2 : 0;
+
+    /* Branch to operand address if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_logical_and_branch_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
  UNDEF_INST(compare_logical_and_branch_relative_long_register)
  UNDEF_INST(compare_logical_and_branch_relative_register)
  UNDEF_INST(compare_logical_and_trap_long_register)
  UNDEF_INST(compare_logical_and_trap_register)
- UNDEF_INST(compare_logical_immediate_and_branch)
- UNDEF_INST(compare_logical_immediate_and_branch_long)
+
+
+/*-------------------------------------------------------------------*/
+/* ECFF CLIB  - Compare Logical Immediate and Branch           [RIS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_immediate_and_branch)
+{
+int     r1;                             /* Register number           */
+int     m3;                             /* Mask bits                 */
+int     b4;                             /* Base of effective addr    */
+VADR    effective_addr4;                /* Effective address         */
+int     cc;                             /* Comparison result         */
+BYTE    i2;                             /* Immediate value           */
+
+    RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_L(r1) < i2 ? 1 :
+         regs->GR_L(r1) > i2 ? 2 : 0;
+
+    /* Branch to operand address if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_logical_immediate_and_branch) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* ECFD CLGIB - Compare Logical Immediate and Branch Long      [RIS] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_immediate_and_branch_long)
+{
+int     r1;                             /* Register number           */
+int     m3;                             /* Mask bits                 */
+int     b4;                             /* Base of effective addr    */
+VADR    effective_addr4;                /* Effective address         */
+int     cc;                             /* Comparison result         */
+BYTE    i2;                             /* Immediate value           */
+
+    RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_G(r1) < i2 ? 1 :
+         regs->GR_G(r1) > i2 ? 2 : 0;
+
+    /* Branch to operand address if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_logical_immediate_and_branch_long) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
  UNDEF_INST(compare_logical_immediate_and_branch_relative)
  UNDEF_INST(compare_logical_immediate_and_branch_relative_long)
  UNDEF_INST(compare_logical_immediate_and_trap_fullword)

@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.218  2008/02/29 15:53:10  rbowler
+// Instruction decoder for C4xx and C6xx instructions
+//
 // Revision 1.217  2008/02/29 00:57:03  rbowler
 // Modify compare_and_branch instruction names
 //
@@ -1977,13 +1980,23 @@ do { \
 
 /* RIS register, immediate, mask, and storage */                /*208*/
 #undef RIS
+#undef RIS0
+#undef RIS_B
 
 #if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RIS)
  #define RIS(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
          RIS_DECODER(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 6, 6)
+ #define RIS0(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
+         RIS_DECODER(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 6, 0)
+ #define RIS_B(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
+         RIS_DECODER(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 0, 0)
 #else
  #define RIS(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
          RIS_DECODER_TEST(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 6, 6)
+ #define RISO(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
+         RIS_DECODER_TEST(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 6, 0)
+ #define RIS_B(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
+         RIS_DECODER_TEST(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 0, 0)
 #endif
 
 #define RIS_DECODER(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, _len, _ilc) \
@@ -2017,13 +2030,23 @@ do { \
 
 /* RRS register, immediate, mask, and storage */                /*208*/
 #undef RRS
+#undef RRS0
+#undef RRS_B
 
 #if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RRS)
  #define RRS(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4) \
          RRS_DECODER(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, 6, 6)
+ #define RRS0(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4) \
+         RRS_DECODER(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, 6, 0)
+ #define RRS_B(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4) \
+         RRS_DECODER(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, 0, 0)
 #else
  #define RRS(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4) \
          RRS_DECODER_TEST(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, 6, 6)
+ #define RRS0(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4) \
+         RRS_DECODER_TEST(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, 6, 0)
+ #define RRS_B(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4) \
+         RRS_DECODER_TEST(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, 0, 0)
 #endif
 
 #define RRS_DECODER(_inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, _len, _ilc) \
