@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.9  2008/03/04 14:23:00  rbowler
+// Add CHHSI,CGHSI,CHSI,CGH instructions
+//
 // Revision 1.8  2008/03/03 23:22:43  rbowler
 // Add LTGF instruction
 //
@@ -271,9 +274,71 @@ S64     n;                              /* 64-bit operand value      */
  UNDEF_INST(compare_logical_immediate_and_branch_relative_long)
  UNDEF_INST(compare_logical_immediate_and_trap_fullword)
  UNDEF_INST(compare_logical_immediate_and_trap_long)
- UNDEF_INST(compare_logical_immediate_fullword_storage)
- UNDEF_INST(compare_logical_immediate_halfword_storage)
- UNDEF_INST(compare_logical_immediate_long_storage)
+
+
+/*-------------------------------------------------------------------*/
+/* E55D CLFHSI - Compare Logical Immediate Fullword Storage    [SIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_immediate_fullword_storage)
+{
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+U16     i2;                             /* 16-bit immediate value    */
+U32     n;                              /* 32-bit storage value      */
+
+    SIL(inst, regs, i2, b1, effective_addr1);
+
+    /* Load 32-bit value from first operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = n < i2 ? 1 : n > i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_immediate_fullword_storage) */
+
+
+/*-------------------------------------------------------------------*/
+/* E555 CLHHSI - Compare Logical Immediate Halfword Storage    [SIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_immediate_halfword_storage)
+{
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+U16     i2;                             /* 16-bit immediate value    */
+U16     n;                              /* 16-bit storage value      */
+
+    SIL(inst, regs, i2, b1, effective_addr1);
+
+    /* Load 16-bit value from first operand address */
+    n = ARCH_DEP(vfetch2) ( effective_addr1, b1, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = n < i2 ? 1 : n > i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_immediate_halfword_storage) */
+
+
+/*-------------------------------------------------------------------*/
+/* E559 CLGHSI - Compare Logical Immediate Long Storage        [SIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_immediate_long_storage)
+{
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+U16     i2;                             /* 16-bit immediate value    */
+U64     n;                              /* 64-bit storage value      */
+
+    SIL(inst, regs, i2, b1, effective_addr1);
+
+    /* Load 64-bit value from first operand address */
+    n = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = n < i2 ? 1 : n > i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_immediate_long_storage) */
+
+
  UNDEF_INST(compare_logical_relative_long)
  UNDEF_INST(compare_logical_relative_long_halfword)
  UNDEF_INST(compare_logical_relative_long_long)
