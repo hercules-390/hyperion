@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.155  2008/02/28 22:07:09  ptl00
+// Fix mode switch trace
+//
 // Revision 1.154  2008/02/15 21:20:00  ptl00
 // Fix EX to SS ops so that ILC is 4 on PER rupts
 //
@@ -579,6 +582,10 @@ DEF_INST(branch_and_save_and_set_mode)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
+int     xmode;                          /* 64 or 31 mode of target   */
+#if defined(FEATURE_ESAME)
+BYTE    *ipsav;                         /* save for ip               */
+#endif /*defined(FEATURE_ESAME)*/
 
     RR_B(inst, regs, r1, r2);
 
@@ -586,22 +593,31 @@ VADR    newia;                          /* New instruction address   */
     newia = regs->GR(r2);
 
 #if defined(FEATURE_TRACING)
-    #if defined(FEATURE_ESAME)
+     #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
     {
-        regs->psw.ilc = 0; // indicates regs->ip not updated
-        regs->CR(12) = ARCH_DEP(trace_ms) (regs->CR(12) & CR12_BRTRACE,
-                 newia | regs->psw.amode64 ? newia & 0x80000000 : 0, regs);
+        /* save ip and update it for mode switch trace */
+        ipsav = regs->ip;
+        INST_UPDATE_PSW(regs, 2, 0);
+        regs->psw.ilc = 2;
+        regs->CR(12) = ARCH_DEP(trace_ms) (regs->CR(12) & CR12_BRTRACE ? 1 : 0,
+                                           newia & ~0x01, regs);
+        regs->ip = ipsav;
     }
     else
-    #endif /*defined(FEATURE_ESAME)*/
+     #endif /*defined(FEATURE_ESAME)*/
     /* Add a branch trace entry to the trace table */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
         regs->psw.ilc = 0; // indicates regs->ip not updated
-        regs->CR(12) = ARCH_DEP(trace_br) (regs->GR_L(r2) & 0x80000000,
-                                    regs->GR_L(r2), regs);
+     #if defined(FEATURE_ESAME)
+        if (newia & 0x01)
+            xmode = 1;
+        else
+     #endif /*defined(FEATURE_ESAME)*/
+        xmode = newia & 0x80000000 ? 1 : 0;
+        regs->CR(12) = ARCH_DEP(trace_br) (xmode, newia & ~0x01, regs);
     }
 #endif /*defined(FEATURE_TRACING)*/
 
@@ -610,7 +626,7 @@ VADR    newia;                          /* New instruction address   */
     if ( regs->psw.amode64 )
         regs->GR_G(r1) = PSW_IA64(regs, 3); // low bit on
     else
-#endif
+#endif /*defined(FEATURE_ESAME)*/
     if ( regs->psw.amode )
         regs->GR_L(r1) = 0x80000000 | PSW_IA31(regs, 2);
     else
@@ -644,14 +660,15 @@ VADR    newia;                          /* New instruction address   */
     newia = regs->GR(r2);
 
 #if defined(FEATURE_TRACING)
-    #if defined(FEATURE_ESAME)
+     #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
     {
-        regs->psw.ilc = 0; // indicates regs->ip not updated
+        INST_UPDATE_PSW(regs, 2, 0);
+        regs->psw.ilc = 2; 
         regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
     }
-    #endif /*defined(FEATURE_ESAME)*/
+     #endif /*defined(FEATURE_ESAME)*/
 #endif /*defined(FEATURE_TRACING)*/
 
     /* Insert addressing mode into bit 0 of R1 operand */
