@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.8  2008/03/03 23:22:43  rbowler
+// Add LTGF instruction
+//
 // Revision 1.7  2008/03/03 22:43:43  rbowler
 // Add MVHI,MVHHI,MVGHI instructions
 //
@@ -73,7 +76,7 @@ U32     n;                              /* 32-bit operand value      */
 
 } /* end DEF_INST(add_immediate_storage) */
 
-        
+
 /*-------------------------------------------------------------------*/
 /* EB7A AGSI  - Add Immediate Long Storage                     [SIY] */
 /*-------------------------------------------------------------------*/
@@ -121,7 +124,7 @@ U32     n;                              /* 32-bit operand value      */
 
 } /* end DEF_INST(add_logical_with_signed_immediate) */
 
-        
+
 /*-------------------------------------------------------------------*/
 /* EB7E ALGSI - Add Logical with Signed Immediate Long         [SIY] */
 /*-------------------------------------------------------------------*/
@@ -158,10 +161,96 @@ U64     n;                              /* 64-bit operand value      */
  UNDEF_INST(compare_and_branch_relative_long_register)
  UNDEF_INST(compare_and_trap_long_register)
  UNDEF_INST(compare_and_trap_register)
- UNDEF_INST(compare_halfword_immediate_halfword_storage)
- UNDEF_INST(compare_halfword_immediate_long_storage)
- UNDEF_INST(compare_halfword_immediate_storage)
- UNDEF_INST(compare_halfword_long)
+
+
+/*-------------------------------------------------------------------*/
+/* E554 CHHSI - Compare Halfword Immediate Halfword Storage    [SIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_halfword_immediate_halfword_storage)
+{
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+S16     i2;                             /* 16-bit immediate value    */
+S16     n;                              /* 16-bit storage value      */
+
+    SIL(inst, regs, i2, b1, effective_addr1);
+
+    /* Load 16-bit value from first operand address */
+    n = (S16)ARCH_DEP(vfetch2) ( effective_addr1, b1, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc = n < i2 ? 1 : n > i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_halfword_immediate_halfword_storage) */
+
+
+/*-------------------------------------------------------------------*/
+/* E558 CGHSI - Compare Halfword Immediate Long Storage        [SIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_halfword_immediate_long_storage)
+{
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+S16     i2;                             /* 16-bit immediate value    */
+S64     n;                              /* 64-bit storage value      */
+
+    SIL(inst, regs, i2, b1, effective_addr1);
+
+    /* Load 64-bit value from first operand address */
+    n = (S64)ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc = n < i2 ? 1 : n > i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_halfword_immediate_long_storage) */
+
+
+/*-------------------------------------------------------------------*/
+/* E55C CHSI  - Compare Halfword Immediate Storage             [SIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_halfword_immediate_storage)
+{
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+S16     i2;                             /* 16-bit immediate value    */
+S32     n;                              /* 32-bit storage value      */
+
+    SIL(inst, regs, i2, b1, effective_addr1);
+
+    /* Load 32-bit value from first operand address */
+    n = (S32)ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc = n < i2 ? 1 : n > i2 ? 2 : 0;
+
+} /* end DEF_INST(compare_halfword_immediate_storage) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* E334 CGH   - Compare Halfword Long                          [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_halfword_long)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+S64     n;                              /* 64-bit operand value      */
+
+    RXY(inst, regs, r1, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of comparand from operand address */
+    n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            (S64)regs->GR_G(r1) < n ? 1 :
+            (S64)regs->GR_G(r1) > n ? 2 : 0;
+
+} /* end DEF_INST(compare_halfword_long) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
  UNDEF_INST(compare_halfword_relative_long)
  UNDEF_INST(compare_halfword_relative_long_long)
  UNDEF_INST(compare_immediate_and_branch)
@@ -290,7 +379,7 @@ U32     n;                              /* Second operand value      */
     /* Set condition code according to value loaded */
     regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
                    (S64)regs->GR_G(r1) > 0 ? 2 : 0;
-                    
+
 } /* end DEF_INST(load_and_test_long_fullword) */
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -459,10 +548,10 @@ VADR    effective_addr2;                /* Effective address         */
     RXY(inst, regs, m1, b2, effective_addr2);
 
     /* The Prefetch Data instruction acts as a no-op */
-     
+
 } /* end DEF_INST(prefetch_data) */
- 
-  
+
+
 /*-------------------------------------------------------------------*/
 /* C6x2 PFDRL - Prefetch Data Relative Long                    [RIL] */
 /*-------------------------------------------------------------------*/
