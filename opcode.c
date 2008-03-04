@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.149  2008/03/03 23:20:03  rbowler
+// Allow MVGHI in S/370 and ESA/390 (does not use 64-bit regs)
+//
 // Revision 1.148  2008/03/03 23:14:43  rbowler
 // Remove extraneous trailing blanks (cosmetic change only)
 //
@@ -4312,12 +4315,12 @@ DLL_EXPORT zz_func opcode_e5xx[256][GEN_MAXARCH] = {
  /*E555*/ GENx370x390x900 (compare_logical_immediate_halfword_storage,SIL,"CLHHSI"), /*208*/
  /*E556*/ GENx___x___x___ ,
  /*E557*/ GENx___x___x___ ,
- /*E558*/ GENx___x___x900 (compare_halfword_immediate_long_storage,SIL,"CGHSI"),   /*208*/
- /*E559*/ GENx___x___x900 (compare_logical_immediate_long_storage,SIL,"CLGHSI"),   /*208*/
+ /*E558*/ GENx370x390x900 (compare_halfword_immediate_long_storage,SIL,"CGHSI"),   /*208*/
+ /*E559*/ GENx370x390x900 (compare_logical_immediate_long_storage,SIL,"CLGHSI"),   /*208*/
  /*E55A*/ GENx___x___x___ ,
  /*E55B*/ GENx___x___x___ ,
  /*E55C*/ GENx370x390x900 (compare_halfword_immediate_storage,SIL,"CHSI"),         /*208*/
- /*E55D*/ GENx___x___x900 (compare_logical_immediate_fullword_storage,SIL,"CLFHSI"), /*208*/
+ /*E55D*/ GENx370x390x900 (compare_logical_immediate_fullword_storage,SIL,"CLFHSI"), /*208*/
  /*E55E*/ GENx___x___x___ ,
  /*E55F*/ GENx___x___x___ ,
  /*E560*/ GENx___x___x___ ,
