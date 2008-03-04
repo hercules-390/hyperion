@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.95  2008/02/28 10:11:50  rbowler
+// STFL bit settings for new features in zPOP-06
+//
 // Revision 1.94  2007/06/23 00:04:09  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -2052,6 +2055,7 @@ typedef struct _PTFFQSI {               /* Query Steering Information*/
 #define DXC_IEEE_DIV_ZERO_IISE  0x43    /* IEEE div by zero(IISE) DFP*/
 #define DXC_IEEE_INVALID_OP     0x80    /* IEEE invalid operation    */
 #define DXC_IEEE_INV_OP_IISE    0x83    /* IEEE invalid op (IISE) DFP*/
+#define DXC_COMPARE_AND_TRAP    0xFF    /* Compare-and-trap exception*/
 /* Note: IISE = IEEE-interruption-simulation event */
 
 /* Decimal rounding modes */

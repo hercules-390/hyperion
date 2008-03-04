@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.11  2008/03/04 15:42:50  rbowler
+// Add CRB,CGRB,CIB,CGIB,CLRB,CLGRB,CLIB,CLGIB instructions
+//
 // Revision 1.10  2008/03/04 14:40:28  rbowler
 // Add CLFHSI,CLHHSI,CLGHSI instructions
 //
@@ -217,8 +220,58 @@ int     cc;                             /* Comparison result         */
 
  UNDEF_INST(compare_and_branch_relative_register)
  UNDEF_INST(compare_and_branch_relative_long_register)
- UNDEF_INST(compare_and_trap_long_register)
- UNDEF_INST(compare_and_trap_register)
+
+
+/*-------------------------------------------------------------------*/
+/* B972 CRT   - Compare and Trap Register                      [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_and_trap_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+int     cc;                             /* Comparison result         */
+
+    RRF_M(inst, regs, r1, r2, m3);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S32)regs->GR_L(r1) < (S32)regs->GR_L(r2) ? 1 :
+         (S32)regs->GR_L(r1) > (S32)regs->GR_L(r2) ? 2 : 0;
+
+    /* Raise data exception if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+    {
+        regs->dxc = DXC_COMPARE_AND_TRAP;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_and_trap_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* B960 CGRT  - Compare and Trap Long Register                 [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_and_trap_long_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+int     cc;                             /* Comparison result         */
+
+    RRF_M(inst, regs, r1, r2, m3);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
+         (S64)regs->GR_G(r1) > (S64)regs->GR_G(r2) ? 2 : 0;
+
+    /* Raise data exception if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+    {
+        regs->dxc = DXC_COMPARE_AND_TRAP;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_and_trap_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -371,8 +424,60 @@ BYTE    i2;                             /* Immediate value           */
 
  UNDEF_INST(compare_immediate_and_branch_relative)
  UNDEF_INST(compare_immediate_and_branch_relative_long)
- UNDEF_INST(compare_immediate_and_trap)
- UNDEF_INST(compare_immediate_and_trap_long)
+
+
+/*-------------------------------------------------------------------*/
+/* EC72 CIT   - Compare Immediate and Trap                     [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_immediate_and_trap)
+{
+int     r1;                             /* Register number           */
+int     m3;                             /* Mask bits                 */
+int     cc;                             /* Comparison result         */
+U16     i2;                             /* 16-bit immediate value    */
+
+    RIE_RIM(inst, regs, r1, i2, m3);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S32)regs->GR_L(r1) < (S32)(S16)i2 ? 1 :
+         (S32)regs->GR_L(r1) > (S32)(S16)i2 ? 2 : 0;
+
+    /* Raise data exception if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+    {
+        regs->dxc = DXC_COMPARE_AND_TRAP;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_immediate_and_trap) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* EC70 CGIT  - Compare Immediate and Trap Long                [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_immediate_and_trap_long)
+{
+int     r1;                             /* Register number           */
+int     m3;                             /* Mask bits                 */
+int     cc;                             /* Comparison result         */
+U16     i2;                             /* 16-bit immediate value    */
+
+    RIE_RIM(inst, regs, r1, i2, m3);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S64)regs->GR_G(r1) < (S64)(S16)i2 ? 1 :
+         (S64)regs->GR_G(r1) > (S64)(S16)i2 ? 2 : 0;
+
+    /* Raise data exception if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+    {
+        regs->dxc = DXC_COMPARE_AND_TRAP;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_immediate_and_trap_long) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -431,8 +536,58 @@ int     cc;                             /* Comparison result         */
 
  UNDEF_INST(compare_logical_and_branch_relative_long_register)
  UNDEF_INST(compare_logical_and_branch_relative_register)
- UNDEF_INST(compare_logical_and_trap_long_register)
- UNDEF_INST(compare_logical_and_trap_register)
+
+
+/*-------------------------------------------------------------------*/
+/* B973 CLRT  - Compare Logical and Trap Register              [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_and_trap_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+int     cc;                             /* Comparison result         */
+
+    RRF_M(inst, regs, r1, r2, m3);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
+         regs->GR_L(r1) > regs->GR_L(r2) ? 2 : 0;
+
+    /* Raise data exception if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+    {
+        regs->dxc = DXC_COMPARE_AND_TRAP;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_logical_and_trap_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* B961 CLGRT - Compare Logical and Trap Long Register         [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_and_trap_long_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+int     cc;                             /* Comparison result         */
+
+    RRF_M(inst, regs, r1, r2, m3);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_G(r1) < regs->GR_G(r2) ? 1 :
+         regs->GR_G(r1) > regs->GR_G(r2) ? 2 : 0;
+
+    /* Raise data exception if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+    {
+        regs->dxc = DXC_COMPARE_AND_TRAP;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_logical_and_trap_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -493,8 +648,60 @@ BYTE    i2;                             /* Immediate value           */
 
  UNDEF_INST(compare_logical_immediate_and_branch_relative)
  UNDEF_INST(compare_logical_immediate_and_branch_relative_long)
- UNDEF_INST(compare_logical_immediate_and_trap_fullword)
- UNDEF_INST(compare_logical_immediate_and_trap_long)
+
+
+/*-------------------------------------------------------------------*/
+/* EC73 CLFIT - Compare Logical Immediate and Trap Fullword    [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_immediate_and_trap_fullword)
+{
+int     r1;                             /* Register number           */
+int     m3;                             /* Mask bits                 */
+int     cc;                             /* Comparison result         */
+U16     i2;                             /* 16-bit immediate value    */
+
+    RIE_RIM(inst, regs, r1, i2, m3);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_L(r1) < i2 ? 1 :
+         regs->GR_L(r1) > i2 ? 2 : 0;
+
+    /* Raise data exception if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+    {
+        regs->dxc = DXC_COMPARE_AND_TRAP;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_logical_immediate_and_trap_fullword) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* EC71 CLGIT - Compare Logical Immediate and Trap Long        [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_immediate_and_trap_long)
+{
+int     r1;                             /* Register number           */
+int     m3;                             /* Mask bits                 */
+int     cc;                             /* Comparison result         */
+U16     i2;                             /* 16-bit immediate value    */
+
+    RIE_RIM(inst, regs, r1, i2, m3);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_G(r1) < i2 ? 1 :
+         regs->GR_G(r1) > i2 ? 2 : 0;
+
+    /* Raise data exception if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+    {
+        regs->dxc = DXC_COMPARE_AND_TRAP;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+} /* end DEF_INST(compare_logical_immediate_and_trap_long) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
