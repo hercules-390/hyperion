@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.13  2008/03/05 12:04:23  rbowler
+// Add CRJ,CGRJ,CIJ,CGIJ,CLRJ,CLGRJ,CLIJ,CLGIJ instructions
+//
 // Revision 1.12  2008/03/04 17:09:14  rbowler
 // Add CRT,CGRT,CIT,CGIT,CLRT,CLGRT,CLFIT,CLGIT instructions
 //
@@ -1260,10 +1263,132 @@ U32     i2;                             /* 32-bit operand value      */
 } /* end DEF_INST(prefetch_data_relative_long) */
 
 
- UNDEF_INST(rotate_then_and_selected_bits_long_reg)
- UNDEF_INST(rotate_then_exclusive_or_selected_bits_long_reg)
- UNDEF_INST(rotate_then_insert_selected_bits_long_reg)
- UNDEF_INST(rotate_then_or_selected_bits_long_reg)
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* Rotate Then Perform Operation On Selected Bits Long Register      */
+/* Subroutine is called by RNSBG,RISBG,ROSBG,RXSBG instructions      */
+/*-------------------------------------------------------------------*/
+DEF_INST(rotate_then_xxx_selected_bits_long_reg)
+{
+int     r1, r2;                         /* Register numbers          */
+int     start, end;                     /* Start and end bit number  */
+U64     mask, rota, resu;               /* 64-bit work areas         */
+int     n;                              /* Number of bits to shift   */
+int     t_bit = 0;                      /* Test-results indicator    */
+int     z_bit = 0;                      /* Zero-remaining indicator  */
+int     i;                              /* Loop counter              */
+BYTE    i3, i4, i5;                     /* Immediate values          */
+BYTE    opcode;                         /* 2nd byte of opcode        */
+
+    RIE_RRIII(inst, regs, r1, r2, i3, i4, i5);
+
+    /* Extract second byte of instruction opcode */
+    opcode = inst[5];
+
+    /* Extract parameters from immediate fields */
+    start = i3 & 0x3F;
+    end = i4 & 0x3F;
+    n = i5 & 0x3F;
+    if (opcode == 0x55)
+        z_bit = i4 >> 7;
+    else
+        t_bit = i3 >> 7;
+
+    /* Copy value from R2 register and rotate left n bits */
+    rota = (regs->GR_G(r2) << n)
+            | ((n == 0) ? 0 : (regs->GR_G(r2) >> (64 - n)));
+
+    /* Construct mask for selected bits */
+    for (i=0, mask=0; i < 64; i++)
+    {
+        mask <<= 1;
+        if (start >= end)
+            if (i >= start && i <= end) mask |= 1;
+        else
+            if (i <= end || i >= start) mask |= 1;
+    } /* end for(i) */
+
+    /* Isolate selected bits of rotated second operand */
+    rota &= mask;
+
+    /* Isolate selected bits of first operand */
+    resu = regs->GR_G(r1) & mask;
+
+    /* Perform operation on selected bits */
+    switch (opcode) {
+    case 0x54: /* And */
+        resu &= rota;
+        break;
+    case 0x55: /* Insert */
+        resu = rota;
+        break;
+    case 0x56: /* Or */
+        resu |= rota;
+        break;
+    case 0x57: /* Exclusive Or */
+        resu ^= rota;
+        break;
+    } /* end switch(opcode) */
+
+    /* Except RISBG set condition code according to result bits */
+    if (opcode != 0x55)
+        regs->psw.cc = (resu == 0) ? 0 : 1;
+
+    /* Insert result bits into R1 register */
+    if (t_bit == 0)
+    {
+        if (z_bit == 0)
+            regs->GR_G(r1) = (regs->GR_G(r1) & ~mask) | resu;
+        else
+            regs->GR_G(r1) = resu;
+    } /* end if(t_bit==0) */
+
+    /* For RISBG set condition code according to signed result */
+    if (opcode == 0x55)
+        regs->psw.cc =
+                (S64)regs->GR_G(r1) < 0 ? 1 :
+                (S64)regs->GR_G(r1) > 0 ? 2 : 0;
+
+} /* end DEF_INST(rotate_then_xxx_selected_bits_long_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* EC54 RNSBG - Rotate Then And Selected Bits                  [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(rotate_then_and_selected_bits_long_reg)
+{
+    ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
+} /* end DEF_INST(rotate_then_and_selected_bits_long_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* EC55 RISBG - Rotate Then Insert Selected Bits               [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(rotate_then_insert_selected_bits_long_reg)
+{
+    ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
+} /* end DEF_INST(rotate_then_insert_selected_bits_long_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* EC56 ROSBG - Rotate Then Or Selected Bits                   [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(rotate_then_or_selected_bits_long_reg)
+{
+    ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
+} /* end DEF_INST(rotate_then_or_selected_bits_long_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* EC57 RXSBG - Rotate Then Exclusive Or Selected Bits         [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(rotate_then_exclusive_or_selected_bits_long_reg)
+{
+    ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
+} /* end DEF_INST(rotate_then_exclusive_or_selected_bits_long_reg) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
  UNDEF_INST(store_halfword_relative_long)
  UNDEF_INST(store_relative_long)
  UNDEF_INST(store_relative_long_long)
