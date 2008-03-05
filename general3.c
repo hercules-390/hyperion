@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.12  2008/03/04 17:09:14  rbowler
+// Add CRT,CGRT,CIT,CGIT,CLRT,CLGRT,CLFIT,CLGIT instructions
+//
 // Revision 1.11  2008/03/04 15:42:50  rbowler
 // Add CRB,CGRB,CIB,CGIB,CLRB,CLGRB,CLIB,CLGIB instructions
 //
@@ -218,8 +221,56 @@ int     cc;                             /* Comparison result         */
 #endif /*defined(FEATURE_ESAME)*/
 
 
- UNDEF_INST(compare_and_branch_relative_register)
- UNDEF_INST(compare_and_branch_relative_long_register)
+/*-------------------------------------------------------------------*/
+/* EC76 CRJ   - Compare and Branch Relative Register           [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_and_branch_relative_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+S16     i4;                             /* 16-bit immediate offset   */
+int     cc;                             /* Comparison result         */
+
+    RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S32)regs->GR_L(r1) < (S32)regs->GR_L(r2) ? 1 :
+         (S32)regs->GR_L(r1) > (S32)regs->GR_L(r2) ? 2 : 0;
+
+    /* Branch to immediate offset if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_and_branch_relative_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* EC64 CGRJ  - Compare and Branch Relative Long Register      [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_and_branch_relative_long_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+S16     i4;                             /* 16-bit immediate offset   */
+int     cc;                             /* Comparison result         */
+
+    RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
+         (S64)regs->GR_G(r1) > (S64)regs->GR_G(r2) ? 2 : 0;
+
+    /* Branch to immediate offset if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_and_branch_relative_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -422,8 +473,58 @@ BYTE    i2;                             /* Immediate value           */
 #endif /*defined(FEATURE_ESAME)*/
 
 
- UNDEF_INST(compare_immediate_and_branch_relative)
- UNDEF_INST(compare_immediate_and_branch_relative_long)
+/*-------------------------------------------------------------------*/
+/* EC7E CIJ   - Compare Immediate and Branch Relative          [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_immediate_and_branch_relative)
+{
+int     r1;                             /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+BYTE    i2;                             /* Immediate operand value   */
+S16     i4;                             /* 16-bit immediate offset   */
+int     cc;                             /* Comparison result         */
+
+    RIE_RMII_B(inst, regs, r1, i2, m3, i4);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S32)regs->GR_L(r1) < (S32)(S8)i2 ? 1 :
+         (S32)regs->GR_L(r1) > (S32)(S8)i2 ? 2 : 0;
+
+    /* Branch to immediate offset if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_immediate_and_branch_relative) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* EC7C CGIJ  - Compare Immediate and Branch Relative Long     [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_immediate_and_branch_relative_long)
+{
+int     r1;                             /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+BYTE    i2;                             /* Immediate operand value   */
+S16     i4;                             /* 16-bit immediate offset   */
+int     cc;                             /* Comparison result         */
+
+    RIE_RMII_B(inst, regs, r1, i2, m3, i4);
+
+    /* Compare signed operands and set comparison result */
+    cc = (S64)regs->GR_G(r1) < (S64)(S8)i2 ? 1 :
+         (S64)regs->GR_G(r1) > (S64)(S8)i2 ? 2 : 0;
+
+    /* Branch to immediate offset if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_immediate_and_branch_relative_long) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -534,8 +635,56 @@ int     cc;                             /* Comparison result         */
 #endif /*defined(FEATURE_ESAME)*/
 
 
- UNDEF_INST(compare_logical_and_branch_relative_long_register)
- UNDEF_INST(compare_logical_and_branch_relative_register)
+/*-------------------------------------------------------------------*/
+/* EC77 CLRJ  - Compare Logical and Branch Relative Register   [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_and_branch_relative_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+S16     i4;                             /* 16-bit immediate offset   */
+int     cc;                             /* Comparison result         */
+
+    RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
+         regs->GR_L(r1) > regs->GR_L(r2) ? 2 : 0;
+
+    /* Branch to immediate offset if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_logical_and_branch_relative_register) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* EC65 CLGRJ - Compare Logical and Branch Relative Long Reg   [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_and_branch_relative_long_register)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+S16     i4;                             /* 16-bit immediate offset   */
+int     cc;                             /* Comparison result         */
+
+    RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_G(r1) < regs->GR_G(r2) ? 1 :
+         regs->GR_G(r1) > regs->GR_G(r2) ? 2 : 0;
+
+    /* Branch to immediate offset if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_logical_and_branch_relative_long_register) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -646,8 +795,58 @@ BYTE    i2;                             /* Immediate value           */
 #endif /*defined(FEATURE_ESAME)*/
 
 
- UNDEF_INST(compare_logical_immediate_and_branch_relative)
- UNDEF_INST(compare_logical_immediate_and_branch_relative_long)
+/*-------------------------------------------------------------------*/
+/* EC7F CLIJ  - Compare Logical Immediate and Branch Relative  [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_immediate_and_branch_relative)
+{
+int     r1;                             /* Register number           */
+int     m3;                             /* Mask bits                 */
+BYTE    i2;                             /* Immediate operand value   */
+S16     i4;                             /* 16-bit immediate offset   */
+int     cc;                             /* Comparison result         */
+
+    RIE_RMII_B(inst, regs, r1, i2, m3, i4);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_L(r1) < i2 ? 1 :
+         regs->GR_L(r1) > i2 ? 2 : 0;
+
+    /* Branch to immediate offset if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_logical_immediate_and_branch_relative) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* EC7D CLGIJ - Compare Logical Immed and Branch Relative Long [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_immediate_and_branch_relative_long)
+{
+int     r1;                             /* Register number           */
+int     m3;                             /* Mask bits                 */
+BYTE    i2;                             /* Immediate operand value   */
+S16     i4;                             /* 16-bit immediate offset   */
+int     cc;                             /* Comparison result         */
+
+    RIE_RMII_B(inst, regs, r1, i2, m3, i4);
+
+    /* Compare unsigned operands and set comparison result */
+    cc = regs->GR_G(r1) < i2 ? 1 :
+         regs->GR_G(r1) > i2 ? 2 : 0;
+
+    /* Branch to immediate offset if m3 mask bit is set */
+    if ((0x8 >> cc) & m3)
+        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
+    else
+        INST_UPDATE_PSW(regs, 6, 0);
+
+} /* end DEF_INST(compare_logical_immediate_and_branch_relative_long) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
