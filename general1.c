@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.156  2008/03/04 00:52:32  ptl00
+// Fix BSM/BASSM mode switch trace
+//
 // Revision 1.155  2008/02/28 22:07:09  ptl00
 // Fix mode switch trace
 //
@@ -1172,8 +1175,8 @@ GREG    gr2_high_bit = CFC_HIGH_BIT;    /* (work constant; uses a64) */
         op1_addr = ( regs->GR(1) + index ) & ADDRESS_MAXWRAP(regs);
         op3_addr = ( regs->GR(3) + index ) & ADDRESS_MAXWRAP(regs);
 
-        ARCH_DEP( vfetchc )( op1, op_size, op1_addr, AR1, regs );
-        ARCH_DEP( vfetchc )( op3, op_size, op3_addr, AR1, regs );
+        ARCH_DEP( vfetchc )( op1, op_size - 1, op1_addr, AR1, regs );
+        ARCH_DEP( vfetchc )( op3, op_size - 1, op3_addr, AR1, regs );
 
         /* Update GR2 operand index value... (Note: we must do this AFTER
            we fetch the operand data in case of storage access exceptions) */
