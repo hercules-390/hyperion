@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.23  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.22  2006/12/08 09:43:29  jj
 // Add CVS message log
 //
@@ -164,7 +167,7 @@ VADR op4addr;
     UNREFERENCED(r1);
 
     DW_CHECK(effective_addr4, regs);
-    DW_CHECK(effective_addr2, regs);
+    QW_CHECK(effective_addr2, regs);
 
     /* load second operand */
     ARCH_DEP(vfetchc) ( op2, 16-1, effective_addr2, b2, regs );
@@ -172,7 +175,7 @@ VADR op4addr;
     /* load 1st op. compare value */
     ARCH_DEP(vfetchc) ( op1c, 16-1, effective_addr4 + 0, b4, regs );
 
-    if(!memcmp(op1c,op2,16))
+    if(memcmp(op1c,op2,16) == 0)
     {
         /* When in ar mode, ar3 is used to access the
            operand. The alet is fetched from the pl */
@@ -188,7 +191,7 @@ VADR op4addr;
         /* Load address of operand 4 */
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
-        DW_CHECK(op4addr, regs);
+        QW_CHECK(op4addr, regs);
 
         /* Load operand 4, using ar3 when in ar mode */
         ARCH_DEP(vfetchc) ( op4, 16-1, op4addr, r3, regs );
@@ -201,7 +204,7 @@ VADR op4addr;
     else
     {
         /* replace the first op compare value with 2nd op */
-        ARCH_DEP(vstorec) ( op4, 16-1, effective_addr4 + 0, b4, regs );
+        ARCH_DEP(vstorec) ( op2, 16-1, effective_addr4 + 0, b4, regs );
 
         return 1;
     }
@@ -330,7 +333,7 @@ BYTE op1c[16],
     UNREFERENCED(r3);
 
     DW_CHECK(effective_addr4, regs);
-    DW_CHECK(effective_addr2, regs);
+    QW_CHECK(effective_addr2, regs);
 
     /* Load first op compare value */
     ARCH_DEP(vfetchc) ( op1c, 16-1, effective_addr4 + 0, b4, regs );
@@ -338,7 +341,7 @@ BYTE op1c[16],
     /* Load 2nd operand */
     ARCH_DEP(vfetchc) ( op2, 16-1, effective_addr2, b2, regs );
 
-    if(!memcmp(op1c,op2,16))
+    if(memcmp(op1c,op2,16) == 0)
     {
         /* Load 1st op replacement value */
         ARCH_DEP(wfetchc) ( op1r, 16-1, effective_addr4 + 16, b4, regs );
@@ -559,7 +562,7 @@ VADR op4addr;
 
     UNREFERENCED(r1);
 
-    DW_CHECK(effective_addr2, regs);
+    QW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
 
     /* load 1st op compare value from the pl */
@@ -568,7 +571,7 @@ VADR op4addr;
     /* load 2nd operand */
     ARCH_DEP(vfetchc) ( op2, 16-1, effective_addr2, b2, regs );
 
-    if(memcmp(op1c,op2,16))
+    if(memcmp(op1c,op2,16) != 0)
     {
         /* replace the 1st op compare value with 2nd op */
         ARCH_DEP(vstorec) ( op2, 16-1, effective_addr4 + 0, b4, regs );
@@ -594,12 +597,12 @@ VADR op4addr;
         /* Load address of operand 4 */
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
-        DW_CHECK(op4addr, regs);
+        QW_CHECK(op4addr, regs);
 
         /* Load operand 4, using ar3 when in ar mode */
         ARCH_DEP(vfetchc) ( op4, 16-1, op4addr, r3, regs );
 
-        if(memcmp(op3c,op4,16))
+        if(memcmp(op3c,op4,16) != 0)
         {
             ARCH_DEP(wstorec) ( op4, 16-1, effective_addr4 + 32, b4, regs );
 
@@ -777,13 +780,13 @@ VADR op4addr;
 
     UNREFERENCED(r1);
 
-    DW_CHECK(effective_addr2, regs);
+    QW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
 
     ARCH_DEP(vfetchc) ( op1c, 16-1, effective_addr4 + 0, b4, regs );
     ARCH_DEP(vfetchc) ( op2, 16-1, effective_addr2, b2, regs );
 
-    if(!memcmp(op1c,op2,16))
+    if(memcmp(op1c,op2,16) == 0)
     {
         ARCH_DEP(wfetchc) ( op1r, 16-1, effective_addr4 + 16, b4, regs );
         ARCH_DEP(wfetchc) ( op3, 16-1, effective_addr4 + 48, b4, regs );
@@ -806,7 +809,7 @@ VADR op4addr;
         /* Load address of operand 4 */
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
-        DW_CHECK(op4addr, regs);
+        QW_CHECK(op4addr, regs);
 
         ARCH_DEP(vstorec)(op3, 16-1, op4addr, r3, regs);
         ARCH_DEP(vstorec)(op1r, 16-1, effective_addr2, b2, regs);
@@ -1107,15 +1110,15 @@ VADR op4addr,
 
     UNREFERENCED(r1);
 
-    DW_CHECK(effective_addr2, regs);
+    QW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
 
     ARCH_DEP(vfetchc)(op1c, 16-1, effective_addr4 + 0, b4, regs);
     ARCH_DEP(vfetchc)(op2, 16-1, effective_addr2, b2, regs);
 
-    if(!memcmp(op1c,op2,16))
+    if(memcmp(op1c,op2,16) == 0)
     {
-        ARCH_DEP(wfetchc)(op1c, 16-1, effective_addr4 + 16, b4, regs);
+        ARCH_DEP(wfetchc)(op1r, 16-1, effective_addr4 + 16, b4, regs);
         ARCH_DEP(wfetchc)(op3, 16-1, effective_addr4 + 48, b4, regs);
         ARCH_DEP(wfetchc)(op5, 16-1, effective_addr4 + 80, b4, regs);
 
@@ -1138,12 +1141,12 @@ VADR op4addr,
         /* Load address of operand 4 */
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
-        DW_CHECK(op4addr, regs);
+        QW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
         op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
         op6addr &= ADDRESS_MAXWRAP(regs);
-        DW_CHECK(op6addr, regs);
+        QW_CHECK(op6addr, regs);
 
         /* Verify access to 6th operand */
         ARCH_DEP(validate_operand) (op6addr, r3, 16-1,ACCTYPE_WRITE_SKP, regs);
@@ -1549,13 +1552,13 @@ VADR op4addr,
 
     UNREFERENCED(r1);
 
-    DW_CHECK(effective_addr2, regs);
+    QW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
 
     ARCH_DEP(vfetchc)(op1c, 16-1, effective_addr4 + 0, b4, regs);
     ARCH_DEP(vfetchc)(op2, 16-1, effective_addr2, b2, regs);
 
-    if(!memcmp(op1c,op2,16))
+    if(memcmp(op1c,op2,16) == 0)
     {
         ARCH_DEP(wfetchc)(op1r, 16-1, effective_addr4 + 16, b4, regs);
         ARCH_DEP(wfetchc)(op3, 16-1, effective_addr4 + 48, b4, regs);
@@ -1582,17 +1585,17 @@ VADR op4addr,
         /* Load address of operand 4 */
         op4addr = ARCH_DEP(wfetch8)(effective_addr4 + 72, b4, regs);
         op4addr &= ADDRESS_MAXWRAP(regs);
-        DW_CHECK(op4addr, regs);
+        QW_CHECK(op4addr, regs);
 
         /* Load address of operand 6 */
         op6addr = ARCH_DEP(wfetch8)(effective_addr4 + 104, b4, regs);
         op6addr &= ADDRESS_MAXWRAP(regs);
-        DW_CHECK(op6addr, regs);
+        QW_CHECK(op6addr, regs);
 
         /* Load address of operand 8 */
         op8addr = ARCH_DEP(wfetch8)(effective_addr4 + 136, b4, regs);
         op8addr &= ADDRESS_MAXWRAP(regs);
-        DW_CHECK(op8addr, regs);
+        QW_CHECK(op8addr, regs);
 
         /* Verify access to 8th operand */
         ARCH_DEP(validate_operand) (op8addr, r3, 16-1,ACCTYPE_WRITE_SKP, regs);
