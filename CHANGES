@@ -1,3 +1,4 @@
+05 Mar 2008 Fix PLO fc=3 fc=19 and qword alignment chks - Paul Leisy
 04 Mar 2008 Fix CFC cond code - fetch right operand size - Paul Leisy
 04 Mar 2008 LEGACYSENSEID config stmt added - see hercconf.html - Ivan Warren
 03 Mar 2008 Fix BSM/BASSM mode switch trace - Paul Leisy
