@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.195  2008/03/01 12:19:04  rbowler
+// Rename new features to include the word facility
+//
 // Revision 1.194  2008/02/28 22:05:10  ptl00
 // Fix RP for z/arch and mode switch trace
 //
@@ -169,7 +172,7 @@ int     r1, unused;                     /* Values of R fields        */
 
     /* Program check if reserved bits are non-zero */
     FPC_CHECK(regs->GR_L(r1), regs);
-     
+
     /* Load FPC register from R1 register bits 32-63 */
     regs->fpc = regs->GR_L(r1);
 
@@ -450,7 +453,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #if defined(FEATURE_ESAME)
         regs->psw.states &= ~BIT(PSW_NOTESAME_BIT);
         /* clear high word of IA since operand was 8-byte psw */
-        regs->psw.IA_H = 0; 
+        regs->psw.IA_H = 0;
         /* Check original amode64 and restore and do checks */
         if (amode64)
         {
@@ -2164,7 +2167,7 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
         if (r3 & 0x8) rbyte[i++] = (regs->GR_H(r1) >> 24) & 0xFF;
         if (r3 & 0x4) rbyte[i++] = (regs->GR_H(r1) >> 16) & 0xFF;
         if (r3 & 0x2) rbyte[i++] = (regs->GR_H(r1) >>  8) & 0xFF;
-        if (r3 & 0x1) rbyte[i++] = (regs->GR_H(r1)      ) & 0xFF;  
+        if (r3 & 0x1) rbyte[i++] = (regs->GR_H(r1)      ) & 0xFF;
 
         if (i)
             ARCH_DEP(vstorec) (rbyte, i-1, effective_addr2, b2, regs);
@@ -2236,9 +2239,9 @@ U64     gr0, gr1;                       /* Result register workareas */
     /* The second operand is placed in general register 1 */
     gr1 = ARCH_DEP(vfetch8) (effective_addr2, b2, regs);
 
-    /* The eight bytes at the third operand location replace the contents 
+    /* The eight bytes at the third operand location replace the contents
        of general register R3. The operands are treated as unsigned 64-bit
-       integers. The contents of R3 is treated according to current 
+       integers. The contents of R3 is treated according to current
        addressing mode. In AR mode, access register R3 is used. */
     regs->GR_G(r3) = ARCH_DEP(wfetch8) (regs->GR_G(r3), r3, regs);
     regs->GR_G(0) = gr0;
@@ -2276,7 +2279,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
     case 15:
         /* Optimized case */
         regs->GR_H(r1) = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
-        regs->psw.cc = regs->GR_H(r1) ? regs->GR_H(r1) & 0x80000000 ? 
+        regs->psw.cc = regs->GR_H(r1) ? regs->GR_H(r1) & 0x80000000 ?
                        1 : 2 : 0;
         break;
 
@@ -3520,7 +3523,7 @@ U32     i, j;                           /* Integer work areas        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB0A SRAG  - Shift Right single Long                        [RSY] */
+/* EB0A SRAG  - Shift Right Single Long                        [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_right_single_long)
 {
@@ -4941,7 +4944,7 @@ BYTE ARCH_DEP(stfl_data)[8] = {
                  | STFL_2_HFP_MULT_ADD_SUB
 #endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
 #if defined(FEATURE_EXTENDED_IMMEDIATE)
-                 | STFL_2_EXTENDED_IMMED  
+                 | STFL_2_EXTENDED_IMMED
 #endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
                  | STFL_2_TRAN_FAC3
@@ -5085,7 +5088,7 @@ int     cc;                             /* Condition code            */
 
     /* Adjust the facility list to account for runtime options */
     ARCH_DEP(adjust_stfl_data)();
-     
+
     /* Calculate number of doublewords of facilities defined */
     nmax = sizeof(ARCH_DEP(stfl_data)) / 8;
 
@@ -6621,7 +6624,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
     case 15:
         /* Optimized case */
         regs->GR_L(r1) = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
-        regs->psw.cc = regs->GR_L(r1) ? regs->GR_L(r1) & 0x80000000 ? 
+        regs->psw.cc = regs->GR_L(r1) ? regs->GR_L(r1) & 0x80000000 ?
                        1 : 2 : 0;
         break;
 
@@ -7062,7 +7065,7 @@ BYTE    rbyte[4];                       /* Byte work area            */
         if (r3 & 0x8) rbyte[i++] = (regs->GR_L(r1) >> 24) & 0xFF;
         if (r3 & 0x4) rbyte[i++] = (regs->GR_L(r1) >> 16) & 0xFF;
         if (r3 & 0x2) rbyte[i++] = (regs->GR_L(r1) >>  8) & 0xFF;
-        if (r3 & 0x1) rbyte[i++] = (regs->GR_L(r1)      ) & 0xFF;  
+        if (r3 & 0x1) rbyte[i++] = (regs->GR_L(r1)      ) & 0xFF;
 
         if (i)
             ARCH_DEP(vstorec) (rbyte, i-1, effective_addr2, b2, regs);
@@ -7310,7 +7313,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(add_fullword_immediate) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C2x8 AGFI  - Add Long Fullword Immediate                    [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7333,7 +7336,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(add_long_fullword_immediate) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C2xB ALFI  - Add Logical Fullword Immediate                 [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7352,7 +7355,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(add_logical_fullword_immediate) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C2xA ALGFI - Add Logical Long Fullword Immediate            [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7371,7 +7374,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(add_logical_long_fullword_immediate) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C0xA NIHF  - And Immediate High Fullword                    [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7391,7 +7394,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(and_immediate_high_fullword) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C0xB NILF  - And Immediate Low Fullword                     [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7411,7 +7414,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(and_immediate_low_fullword) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C2xD CFI   - Compare Fullword Immediate                     [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7429,7 +7432,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(compare_fullword_immediate) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C2xC CGFI  - Compare Long Fullword Immediate                [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7447,7 +7450,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(compare_long_fullword_immediate) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C2xF CLFI  - Compare Logical Fullword Immediate             [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7465,7 +7468,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(compare_logical_fullword_immediate) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C2xE CLGFI - Compare Logical Long Fullword Immediate        [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7483,7 +7486,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(compare_logical_long_fullword_immediate) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C0x6 XIHF  - Exclusive Or Immediate High Fullword           [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7503,7 +7506,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(exclusive_or_immediate_high_fullword) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C0x7 XILF  - Exclusive Or Immediate Low Fullword            [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7523,7 +7526,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(exclusive_or_immediate_low_fullword) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C0x8 IIHF  - Insert Immediate High Fullword                 [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7540,7 +7543,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(insert_immediate_high_fullword) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C0x9 IILF  - Insert Immediate Low Fullword                  [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7557,7 +7560,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(insert_immediate_low_fullword) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C0xE LLIHF - Load Logical Immediate High Fullword           [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7569,14 +7572,14 @@ U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
 
-    /* Load fullword operand into high 32 bits of register 
+    /* Load fullword operand into high 32 bits of register
        and set remaining bits to zero */
     regs->GR_H(r1) = i2;
     regs->GR_L(r1) = 0;
 
 } /* end DEF_INST(load_logical_immediate_high_fullword) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C0xF LLILF - Load Logical Immediate Low Fullword            [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7588,13 +7591,13 @@ U32     i2;                             /* 32-bit operand value      */
 
     RIL0(inst, regs, r1, opcd, i2);
 
-    /* Load fullword operand into low 32 bits of register 
+    /* Load fullword operand into low 32 bits of register
        and set remaining bits to zero */
     regs->GR_G(r1) = i2;
 
 } /* end DEF_INST(load_logical_immediate_low_fullword) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C0x1 LGFI  - Load Long Fullword Immediate                   [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7631,7 +7634,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(or_immediate_high_fullword) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C0xD OILF  - Or Immediate Low Fullword                      [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7651,7 +7654,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(or_immediate_low_fullword) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C2x5 SLFI  - Subtract Logical Fullword Immediate            [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7670,7 +7673,7 @@ U32     i2;                             /* 32-bit operand value      */
 
 } /* end DEF_INST(subtract_logical_fullword_immediate) */
 
- 
+
 /*-------------------------------------------------------------------*/
 /* C2x4 SLGFI - Subtract Logical Long Fullword Immediate       [RIL] */
 /*-------------------------------------------------------------------*/
@@ -7690,7 +7693,7 @@ U32     i2;                             /* 32-bit operand value      */
 } /* end DEF_INST(subtract_logical_long_fullword_immediate) */
 #endif /*defined(FEATURE_EXTENDED_IMMEDIATE)*/                  /*@Z9*/
 
- 
+
 #if defined(FEATURE_EXTENDED_IMMEDIATE)                         /*@Z9*/
 /*-------------------------------------------------------------------*/
 /* E312 LT    - Load and Test                                  [RXY] */
@@ -7711,8 +7714,8 @@ VADR    effective_addr2;                /* Effective address         */
                    (S32)regs->GR_L(r1) > 0 ? 2 : 0;
 
 } /* end DEF_INST(load_and_test) */
-                    
-                    
+
+
 /*-------------------------------------------------------------------*/
 /* E302 LTG   - Load and Test Long                             [RXY] */
 /*-------------------------------------------------------------------*/
@@ -7730,10 +7733,10 @@ VADR    effective_addr2;                /* Effective address         */
     /* Set condition code according to value loaded */
     regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
                    (S64)regs->GR_G(r1) > 0 ? 2 : 0;
-                    
+
 } /* end DEF_INST(load_and_test_long) */
-                    
-                    
+
+
 /*-------------------------------------------------------------------*/
 /* B926 LBR   - Load Byte Register                             [RRE] */
 /*-------------------------------------------------------------------*/
@@ -7904,7 +7907,7 @@ int     n;                              /* Position of leftmost one  */
     op = regs->GR_G(r2);
 
     /* If R2 contents is all zero, set R1 register to 64,
-       set R1+1 register to zero, and return cond code 0 */                                                                                                                                                                                                   
+       set R1+1 register to zero, and return cond code 0 */
     if (op == 0)
     {
         regs->GR_G(r1) = 64;

@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.123  2008/03/01 15:15:41  bernard
+// Removed the silly control-M characters
+//
 // Revision 1.122  2008/03/01 12:19:04  rbowler
 // Rename new features to include the word facility
 //
@@ -861,7 +864,7 @@ U64     dreg;                           /* Double register work area */
 
 
 /*-------------------------------------------------------------------*/
-/* 8A   SRA   - Shift Right single                              [RS] */
+/* 8A   SRA   - Shift Right Single                              [RS] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_right_single)
 {
