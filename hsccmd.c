@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.237  2008/02/12 08:42:15  fish
+// dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
+//
 // Revision 1.236  2008/01/25 00:50:18  gsmith
 // Fix invalidate_tlbe processing - Paul Leisy
 //
@@ -6435,9 +6438,10 @@ CMDHELP ( "r",         "Format: \"r addr[.len]\" or \"r addr-addr\" to display r
                        "storage, or \"r addr=value\" to alter real storage, where 'value'\n"
                        "is a hex string of up to 32 pairs of digits.\n"
                        )
-CMDHELP ( "v",         "Format: \"v addr[.len]\" or \"v addr-addr\" to display virtual\n"
-                       "storage, or \"v addr=value\" to alter virtual storage, where 'value'\n"
-                       "is a hex string of up to 32 pairs of digits.\n"
+CMDHELP ( "v",         "Format: \"v [P|S|H] addr[.len]\" or \"v [P|S|H] addr-addr\" to display virtual\n"
+                       "storage, or \"v [P|S|H] addr=value\" to alter virtual storage, where 'value'\n"
+                       "is a hex string of up to 32 pairs of digits. The optional 'P' or 'S' or 'H'\n"
+                       "will force Primary, Secondary, or Home translation instead of current PSW mode.\n"
                        )
 
 CMDHELP ( "attach",    "Format: \"attach devn type [arg...]\n"

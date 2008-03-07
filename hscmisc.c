@@ -5,6 +5,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.61  2008/02/19 11:49:19  ivan
+// - Move setting of CPU priority after spwaning timer thread
+// - Added support for Posix 1003.1e capabilities
+//
 // Revision 1.60  2007/06/23 00:04:11  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -1011,6 +1015,26 @@ char    buf[100];                       /* Message buffer            */
   #else /*!defined(FEATURE_ESAME)*/
     maxadr = 0x7FFFFFFF;
   #endif /*!defined(FEATURE_ESAME)*/
+
+    while((opnd && *opnd != '\0') &&
+      (*opnd == ' ' || *opnd == '\t'))
+        opnd++;
+
+    switch(toupper(*opnd))
+    {
+        case 'P': /* primary */
+          arn = USE_PRIMARY_SPACE;
+          opnd++;
+          break;
+        case 'S': /* secondary */
+          arn = USE_SECONDARY_SPACE;
+          opnd++;
+          break;
+        case 'H': /* home */
+          arn = USE_HOME_SPACE;
+          opnd++;
+          break;
+    }
 
     /* Parse the range or alteration operand */
     len = parse_range (opnd, maxadr, &saddr, &eaddr, newval);
