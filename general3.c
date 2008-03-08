@@ -10,6 +10,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.15  2008/03/08 22:28:04  rbowler
+// Add CHRL,CGHRL,CLRL,CLGRL,CLGFRL,CLHRL,CLGHRL,
+// CRL,CGRL,CGFRL instructions
+//
 // Revision 1.14  2008/03/05 16:36:51  rbowler
 // Add RNSBG,RISBG,ROSBG,RXSBG instructions
 //
@@ -1368,14 +1372,226 @@ U32     n;                              /* Second operand value      */
 #endif /*defined(FEATURE_ESAME)*/
 
 
- UNDEF_INST(load_halfword_relative_long)
- UNDEF_INST(load_halfword_relative_long_long)
- UNDEF_INST(load_logical_halfword_relative_long)
- UNDEF_INST(load_logical_halfword_relative_long_long)
- UNDEF_INST(load_logical_relative_long_long_fullword)
- UNDEF_INST(load_relative_long)
- UNDEF_INST(load_relative_long_long)
- UNDEF_INST(load_relative_long_long_fullword)
+/*-------------------------------------------------------------------*/
+/* C4x5 LHRL  - Load Halfword Relative Long                    [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_relative_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U16     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+
+    /* Sign-extend operand value and load into R1 register */
+    regs->GR_L(r1) = (S32)(S16)n;
+
+} /* end DEF_INST(load_halfword_relative_long) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C4x4 LGHRL - Load Halfword Relative Long Long               [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_relative_long_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U16     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+
+    /* Sign-extend operand value and load into R1 register */
+    regs->GR_G(r1) = (S64)(S16)n;
+
+} /* end DEF_INST(load_halfword_relative_long_long) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+/*-------------------------------------------------------------------*/
+/* C4x2 LLHRL - Load Logical Halfword Relative Long            [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_halfword_relative_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U16     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+
+    /* Zero-extend operand value and load into R1 register */
+    regs->GR_L(r1) = n;
+
+} /* end DEF_INST(load_logical_halfword_relative_long) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C4x6 LLGHRL - Load Logical Halfword Relative Long Long      [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_halfword_relative_long_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U16     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+
+    /* Zero-extend operand value and load into R1 register */
+    regs->GR_G(r1) = n;
+
+} /* end DEF_INST(load_logical_halfword_relative_long_long) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C4xE LLGFRL - Load Logical Relative Long Long Fullword      [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_logical_relative_long_long_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U32     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on fullword boundary */
+    FW_CHECK(addr2, regs);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+
+    /* Zero-extend operand value and load into R1 register */
+    regs->GR_G(r1) = n;
+
+} /* end DEF_INST(load_logical_relative_long_long_fullword) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+/*-------------------------------------------------------------------*/
+/* C4xD LRL   - Load Relative Long                             [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_relative_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U32     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on fullword boundary */
+    FW_CHECK(addr2, regs);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+
+    /* Load operand value into R1 register */
+    regs->GR_L(r1) = n;
+
+} /* end DEF_INST(load_relative_long) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C4x8 LGRL  - Load Relative Long Long                        [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_relative_long_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U64     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on doubleword boundary */
+    DW_CHECK(addr2, regs);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch8) ( addr2, USE_INST_SPACE, regs );
+
+    /* Load operand value into R1 register */
+    regs->GR_G(r1) = n;
+
+} /* end DEF_INST(load_relative_long_long) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C4xC LGFRL - Load Relative Long Long Fullword               [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_relative_long_long_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U32     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on fullword boundary */
+    FW_CHECK(addr2, regs);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+
+    /* Sign-extend operand value and load into R1 register */
+    regs->GR_G(r1) = (S64)(S32)n;
+
+} /* end DEF_INST(load_relative_long_long_fullword) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
