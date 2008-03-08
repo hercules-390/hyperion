@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.219  2008/03/04 15:42:49  rbowler
+// Add CRB,CGRB,CIB,CGIB,CLRB,CLGRB,CLIB,CLGIB instructions
+//
 // Revision 1.218  2008/02/29 15:53:10  rbowler
 // Instruction decoder for C4xx and C6xx instructions
 //
@@ -539,6 +542,12 @@ do { \
     PER_SB((_regs), (_regs)->psw.IA); \
   } \
 } while (0)
+
+/* Relative instruction operand addressing */
+#define RELATIVE_OPERAND_ADDRESS_LONG(_regs, _offset) \
+  (likely(!(_regs)->execflag)) ? \
+    PSW_IA((_regs), (_offset)) : \
+    ((_regs)->ET + (_offset)) & ADDRESS_MAXWRAP((_regs))
 
 
 /* CPU Stepping or Tracing */

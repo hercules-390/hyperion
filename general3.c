@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.14  2008/03/05 16:36:51  rbowler
+// Add RNSBG,RISBG,ROSBG,RXSBG instructions
+//
 // Revision 1.13  2008/03/05 12:04:23  rbowler
 // Add CRJ,CGRJ,CIJ,CGIJ,CLRJ,CLGRJ,CLIJ,CLGIJ instructions
 //
@@ -416,8 +419,60 @@ S64     n;                              /* 64-bit operand value      */
 #endif /*defined(FEATURE_ESAME)*/
 
 
- UNDEF_INST(compare_halfword_relative_long)
- UNDEF_INST(compare_halfword_relative_long_long)
+/*-------------------------------------------------------------------*/
+/* C6x5 CHRL  - Compare Halfword Relative Long                 [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_halfword_relative_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U16     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            (S32)regs->GR_L(r1) < (S16)n ? 1 :
+            (S32)regs->GR_L(r1) > (S16)n ? 2 : 0;
+
+} /* end DEF_INST(compare_halfword_relative_long) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C6x4 CGHRL - Compare Halfword Relative Long Long            [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_halfword_relative_long_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U16     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            (S64)regs->GR_G(r1) < (S16)n ? 1 :
+            (S64)regs->GR_G(r1) > (S16)n ? 2 : 0;
+
+} /* end DEF_INST(compare_halfword_relative_long_long) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -969,14 +1024,248 @@ U64     n;                              /* 64-bit storage value      */
 } /* end DEF_INST(compare_logical_immediate_long_storage) */
 
 
- UNDEF_INST(compare_logical_relative_long)
- UNDEF_INST(compare_logical_relative_long_halfword)
- UNDEF_INST(compare_logical_relative_long_long)
- UNDEF_INST(compare_logical_relative_long_long_fullword)
- UNDEF_INST(compare_logical_relative_long_long_halfword)
- UNDEF_INST(compare_relative_long)
- UNDEF_INST(compare_relative_long_long)
- UNDEF_INST(compare_relative_long_long_fullword)
+/*-------------------------------------------------------------------*/
+/* C6xF CLRL  - Compare Logical Relative Long                  [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_relative_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U32     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on fullword boundary */
+    FW_CHECK(addr2, regs);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            regs->GR_L(r1) < n ? 1 :
+            regs->GR_L(r1) > n ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_relative_long) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C6xA CLGRL - Compare Logical Relative Long Long             [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_relative_long_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U64     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on doubleword boundary */
+    DW_CHECK(addr2, regs);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch8) ( addr2, USE_INST_SPACE, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            regs->GR_G(r1) < n ? 1 :
+            regs->GR_G(r1) > n ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_relative_long_long) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C6xE CLGFRL - Compare Logical Relative Long Long Fullword   [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_relative_long_long_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U32     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on fullword boundary */
+    FW_CHECK(addr2, regs);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            regs->GR_G(r1) < n ? 1 :
+            regs->GR_G(r1) > n ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_relative_long_long_fullword) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+/*-------------------------------------------------------------------*/
+/* C6x7 CLHRL - Compare Logical Halfword Relative Long         [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_relative_long_halfword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U16     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            regs->GR_L(r1) < n ? 1 :
+            regs->GR_L(r1) > n ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_relative_long_halfword) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C6x6 CLGHRL - Compare Logical Halfword Relative Long Long   [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_relative_long_long_halfword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U16     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            regs->GR_G(r1) < n ? 1 :
+            regs->GR_G(r1) > n ? 2 : 0;
+
+} /* end DEF_INST(compare_logical_relative_long_long_halfword) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+/*-------------------------------------------------------------------*/
+/* C6xD CRL   - Compare Relative Long                          [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_relative_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U32     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on fullword boundary */
+    FW_CHECK(addr2, regs);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            (S32)regs->GR_L(r1) < (S32)n ? 1 :
+            (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
+
+} /* end DEF_INST(compare_relative_long) */
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C6x8 CGRL  - Compare Relative Long Long                     [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_relative_long_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U64     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on doubleword boundary */
+    DW_CHECK(addr2, regs);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch8) ( addr2, USE_INST_SPACE, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            (S64)regs->GR_G(r1) < (S64)n ? 1 :
+            (S64)regs->GR_G(r1) > (S64)n ? 2 : 0;
+
+} /* end DEF_INST(compare_relative_long_long) */
+#endif /*defined(FEATURE_ESAME)*/
+
+
+#if defined(FEATURE_ESAME)
+/*-------------------------------------------------------------------*/
+/* C6xC CGFRL - Compare Relative Long Long Fullword            [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_relative_long_long_fullword)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+U32     n;                              /* Relative operand value    */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on fullword boundary */
+    FW_CHECK(addr2, regs);
+
+    /* Load relative operand from instruction address space */
+    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            (S64)regs->GR_G(r1) < (S32)n ? 1 :
+            (S64)regs->GR_G(r1) > (S32)n ? 2 : 0;
+
+} /* end DEF_INST(compare_relative_long_long_fullword) */
+#endif /*defined(FEATURE_ESAME)*/
 
 
 #if defined(FEATURE_ESAME)
