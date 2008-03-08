@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.16  2008/03/08 22:54:25  rbowler
+// Add LHRL,LGHRL,LLHRL,LLGHRL,LLGFRL,LRL,LGRL,LGFRL instructions
+//
 // Revision 1.15  2008/03/08 22:28:04  rbowler
 // Add CHRL,CGHRL,CLRL,CLGRL,CLGFRL,CLHRL,CLGHRL,
 // CRL,CGRL,CGFRL instructions
@@ -169,13 +172,6 @@ U64     n;                              /* 64-bit operand value      */
 
 } /* end DEF_INST(add_logical_with_signed_immediate_long) */
 
-
-#define UNDEF_INST(_x) \
-        DEF_INST(_x) { ARCH_DEP(operation_exception) \
-        (inst,regs); }
-
-/* As each instruction is developed, replace the corresponding
-   UNDEF_INST statement by the DEF_INST function definition */
 
 /*-------------------------------------------------------------------*/
 /* ECF6 CRB   - Compare and Branch Register                    [RRS] */
@@ -1894,9 +1890,74 @@ DEF_INST(rotate_then_exclusive_or_selected_bits_long_reg)
 #endif /*defined(FEATURE_ESAME)*/
 
 
- UNDEF_INST(store_halfword_relative_long)
- UNDEF_INST(store_relative_long)
- UNDEF_INST(store_relative_long_long)
+/*-------------------------------------------------------------------*/
+/* C4x7 STHRL - Store Halfword Relative Long                   [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_halfword_relative_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Store low 2 bytes of R1 register in instruction address space */
+    ARCH_DEP(vstore2) ( regs->GR_LHL(r1), addr2, USE_INST_SPACE, regs );
+
+} /* end DEF_INST(store_halfword_relative_long) */
+
+
+/*-------------------------------------------------------------------*/
+/* C4xF STRL  - Store Relative Long                            [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_relative_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on fullword boundary */
+    FW_CHECK(addr2, regs);
+
+    /* Store low 4 bytes of R1 register in instruction address space */
+    ARCH_DEP(vstore4) ( regs->GR_L(r1), addr2, USE_INST_SPACE, regs );
+
+} /* end DEF_INST(store_relative_long) */
+
+
+/*-------------------------------------------------------------------*/
+/* C4xB STGRL - Store Relative Long Long                       [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_relative_long_long)
+{
+int     r1;                             /* Register number           */
+int     opcd;                           /* Opcode                    */
+U32     i2;                             /* Relative operand offset   */
+VADR    addr2;                          /* Relative operand address  */
+
+    RIL(inst, regs, r1, opcd, i2);
+
+    /* Calculate the address of the relative operand */
+    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+
+    /* Program check if operand not on doubleword boundary */
+    DW_CHECK(addr2, regs);
+
+    /* Store R1 register in instruction address space */
+    ARCH_DEP(vstore8) ( regs->GR_G(r1), addr2, USE_INST_SPACE, regs );
+
+} /* end DEF_INST(store_relative_long_long) */
+
 
 #endif /*defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)*/
 
