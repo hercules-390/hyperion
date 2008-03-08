@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.80  2008/03/01 12:19:04  rbowler
+// Rename new features to include the word facility
+//
 // Revision 1.79  2008/02/29 16:25:48  bernard
 // Enabled Parsing Enhancement Facility
 //
@@ -111,7 +114,7 @@
 #define FEATURE_FETCH_PROTECTION_OVERRIDE
 #define FEATURE_FPS_ENHANCEMENT                                 /*DFP*/
 #define FEATURE_FPS_EXTENSIONS
-//#define FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY         /*208*/
+#define FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY         /*208*/
 #define FEATURE_HERCULES_DIAGCALLS
 #define FEATURE_HEXADECIMAL_FLOATING_POINT
 #define FEATURE_HFP_EXTENSIONS
