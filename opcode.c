@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.150  2008/03/04 14:42:28  rbowler
+// Permit CGHSI,CLGHSI,CLFHSI instructions in S/370 and ESA/390 mode
+//
 // Revision 1.149  2008/03/03 23:20:03  rbowler
 // Allow MVGHI in S/370 and ESA/390 (does not use 64-bit regs)
 //
@@ -5108,8 +5111,8 @@ DLL_EXPORT zz_func opcode_ecxx[256][GEN_MAXARCH] = {
  /*EC61*/ GENx___x___x___ ,
  /*EC62*/ GENx___x___x___ ,
  /*EC63*/ GENx___x___x___ ,
- /*EC64*/ GENx370x390x900 (compare_and_branch_relative_long_register,RIE_RRIM,"CGRJ"), /*208*/
- /*EC65*/ GENx370x390x900 (compare_logical_and_branch_relative_long_register,RIE_RRIM,"CLGRJ"), /*208*/
+ /*EC64*/ GENx___x___x900 (compare_and_branch_relative_long_register,RIE_RRIM,"CGRJ"), /*208*/
+ /*EC65*/ GENx___x___x900 (compare_logical_and_branch_relative_long_register,RIE_RRIM,"CLGRJ"), /*208*/
  /*EC66*/ GENx___x___x___ ,
  /*EC67*/ GENx___x___x___ ,
  /*EC68*/ GENx___x___x___ ,
@@ -5132,8 +5135,8 @@ DLL_EXPORT zz_func opcode_ecxx[256][GEN_MAXARCH] = {
  /*EC79*/ GENx___x___x___ ,
  /*EC7A*/ GENx___x___x___ ,
  /*EC7B*/ GENx___x___x___ ,
- /*EC7C*/ GENx370x390x900 (compare_immediate_and_branch_relative_long,RIE_RMII,"CGIJ"), /*208*/
- /*EC7D*/ GENx370x390x900 (compare_logical_immediate_and_branch_relative_long,RIE_RMII,"CLGIJ"), /*208*/
+ /*EC7C*/ GENx___x___x900 (compare_immediate_and_branch_relative_long,RIE_RMII,"CGIJ"), /*208*/
+ /*EC7D*/ GENx___x___x900 (compare_logical_immediate_and_branch_relative_long,RIE_RMII,"CLGIJ"), /*208*/
  /*EC7E*/ GENx370x390x900 (compare_immediate_and_branch_relative,RIE_RMII,"CIJ"),  /*208*/
  /*EC7F*/ GENx370x390x900 (compare_logical_immediate_and_branch_relative,RIE_RMII,"CLIJ"), /*208*/
  /*EC80*/ GENx___x___x___ ,
