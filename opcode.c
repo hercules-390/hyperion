@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.151  2008/03/08 23:25:40  rbowler
+// Indicate CGRJ,CLGRJ,CGIJ,CLGIJ as ESAME only in opcode table
+//
 // Revision 1.150  2008/03/04 14:42:28  rbowler
 // Permit CGHSI,CLGHSI,CLFHSI instructions in S/370 and ESA/390 mode
 //
@@ -357,7 +360,7 @@
 
 #if !defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)               /*208*/
  UNDEF_INST(execute_relative_long)                              /*208*/
-#endif /*!defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)          /*208*/
+#endif /*!defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/        /*208*/
 
 #if !defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)   /*208*/
  UNDEF_INST(add_immediate_long_storage)
@@ -432,12 +435,12 @@
  UNDEF_INST(store_halfword_relative_long)
  UNDEF_INST(store_relative_long)
  UNDEF_INST(store_relative_long_long)
-#endif /*!defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY) /*208*/
+#endif /*!defined(FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY)*/ /*208*/
 
 #if !defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)              /*208*/
  UNDEF_INST(translate_and_test_extended)                        /*208*/
  UNDEF_INST(translate_and_test_reverse_extended)                /*208*/
-#endif /*!defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)         /*208*/
+#endif /*!defined(FEATURE_PARSING_ENHANCEMENT_FACILITY)*/       /*208*/
 
 
 #if !defined(FEATURE_VECTOR_FACILITY)
