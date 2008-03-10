@@ -32,6 +32,10 @@
 ###############################################################################
 
 # $Log$
+# Revision 1.195  2008/02/19 11:49:18  ivan
+# - Move setting of CPU priority after spwaning timer thread
+# - Added support for Posix 1003.1e capabilities
+#
 # Revision 1.194  2008/02/15 23:24:32  rbowler
 # Add -lrt to link options for Solaris
 #
@@ -683,6 +687,8 @@ AC_CHECK_LIB( bz2,    BZ2_bzBuffToBuffDecompress,
 AC_CHECK_LIB( iconv,  iconv          )
 # jbs 10/15/2003 Solaris requires -lrt for sched_yield() and fdatasync()
 AC_CHECK_LIB( rt,     sched_yield    )
+# rbowler 2008/03/10 rev 1.196 Solaris 2.9 requires -lpthread
+AC_CHECK_LIB( pthread,pthread_create )
 
 AC_CACHE_SAVE()
 
