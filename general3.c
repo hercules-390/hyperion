@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.17  2008/03/08 23:08:32  rbowler
+// Add STHRL,STRL,STGRL instructions
+//
 // Revision 1.16  2008/03/08 22:54:25  rbowler
 // Add LHRL,LGHRL,LLHRL,LLGHRL,LLGFRL,LRL,LGRL,LGFRL instructions
 //
@@ -86,6 +89,7 @@ BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 U32     n;                              /* 32-bit operand value      */
+int     cc;                             /* Condition Code            */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
@@ -93,7 +97,13 @@ U32     n;                              /* 32-bit operand value      */
     n = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
 
     /* Add signed operands and set condition code */
-    regs->psw.cc = add_signed (&n, n, (S32)(S8)i2);
+    cc = add_signed (&n, n, (S32)(S8)i2);
+
+    /* Store 32-bit operand at operand address */
+    ARCH_DEP(vstore4) ( n, effective_addr1, b1, regs );
+
+    /* Update Condition Code */
+    regs->psw.cc = cc;
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
@@ -111,6 +121,7 @@ BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 U64     n;                              /* 64-bit operand value      */
+int     cc;                             /* Condition Code            */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
@@ -118,7 +129,13 @@ U64     n;                              /* 64-bit operand value      */
     n = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
 
     /* Add signed operands and set condition code */
-    regs->psw.cc = add_signed_long (&n, n, (S64)(S8)i2);
+    cc = add_signed_long (&n, n, (S64)(S8)i2);
+
+    /* Store 64-bit value at operand address */
+    ARCH_DEP(vstore8) ( n, effective_addr1, b1, regs );
+
+    /* Update Condition Code */
+    regs->psw.cc = cc;
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
@@ -136,6 +153,7 @@ BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 U32     n;                              /* 32-bit operand value      */
+int     cc;                             /* Condition Code            */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
@@ -143,9 +161,15 @@ U32     n;                              /* 32-bit operand value      */
     n = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
 
     /* Add operands and set condition code */
-    regs->psw.cc = (S8)i2 < 0 ?
+    cc = (S8)i2 < 0 ?
         sub_logical (&n, n, (S32)(-(S8)i2)) :
         add_logical (&n, n, (S32)(S8)i2);
+
+    /* Store 32-bit operand at operand address */
+    ARCH_DEP(vstore4) ( n, effective_addr1, b1, regs );
+
+    /* Update Condition Code */
+    regs->psw.cc = cc;
 
 } /* end DEF_INST(add_logical_with_signed_immediate) */
 
@@ -159,6 +183,7 @@ BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 U64     n;                              /* 64-bit operand value      */
+int     cc;                             /* Condition Code            */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
@@ -166,9 +191,15 @@ U64     n;                              /* 64-bit operand value      */
     n = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
 
     /* Add operands and set condition code */
-    regs->psw.cc = (S8)i2 < 0 ?
+    cc = (S8)i2 < 0 ?
         sub_logical_long (&n, n, (S64)(-(S8)i2)) :
         add_logical_long (&n, n, (S64)(S8)i2);
+
+    /* Store 64-bit value at operand address */
+    ARCH_DEP(vstore8) ( n, effective_addr1, b1, regs );
+
+    /* Update Condition Code */
+    regs->psw.cc = cc;
 
 } /* end DEF_INST(add_logical_with_signed_immediate_long) */
 
