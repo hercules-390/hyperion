@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.221  2008/03/12 21:41:21  rbowler
+// Add comment explaining 0 and _B forms of instruction decoders
+//
 // Revision 1.220  2008/03/08 22:28:04  rbowler
 // Add CHRL,CGHRL,CLRL,CLGRL,CLGFRL,CLHRL,CLGHRL,
 // CRL,CGRL,CGFRL instructions
@@ -2982,6 +2985,7 @@ DEF_INST(move_to_primary);
 DEF_INST(move_to_secondary);
 DEF_INST(move_with_destination_key);
 DEF_INST(move_with_key);
+DEF_INST(move_with_optional_specifications);                    /*208*/
 DEF_INST(move_with_source_key);
 DEF_INST(program_call);
 DEF_INST(program_return);
@@ -3703,7 +3707,6 @@ DEF_INST(load_logical_halfword);                                /*@Z9*/
 DEF_INST(load_logical_halfword_register);                       /*@Z9*/
 DEF_INST(load_logical_long_halfword_register);                  /*@Z9*/
 DEF_INST(find_leftmost_one_long_register);                      /*@Z9*/
-DEF_INST(move_with_optional_specifications);
 DEF_INST(extract_cpu_time);
 
 

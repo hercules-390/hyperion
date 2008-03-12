@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.261  2008/02/28 22:05:57  ptl00
+// Fix mode switch trace
+//
 // Revision 1.260  2008/02/23 00:18:28  ptl00
 // Fix BSA pic06 in z/arch mode
 //
@@ -2535,6 +2538,102 @@ GREG    l;                              /* Unsigned workarea         */
 
 }
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+
+
+#if defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)
+/*-------------------------------------------------------------------*/
+/* C8x0 MVCOS - Move with Optional Specifications              [SSF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(move_with_optional_specifications)
+{
+int     r3;                             /* Register number           */
+int     b1, b2;                         /* Base register numbers     */
+VADR    effective_addr1,
+        effective_addr2;                /* Effective addresses       */
+int     kbit1, kbit2, abit1, abit2;     /* Key and AS validity bits  */
+int     key1, key2;                     /* Access keys in bits 0-3   */
+int     asc1, asc2;                     /* AS controls (same as PSW) */
+int     cc;                             /* Condition code            */
+GREG    len;                            /* Effective length          */
+
+    SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
+
+    SIE_XC_INTERCEPT(regs);
+
+    /* Program check if DAT is off */
+    if (REAL_MODE(&regs->psw))
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+
+    /* Extract the access keys and address-space controls from GPR0 */
+    abit1 = regs->GR_LHH(0) & 0x0001;
+    kbit1 = (regs->GR_LHH(0) & 0x0002) >> 1;
+    asc1 = regs->GR_LHH(0) & 0x00C0;
+    key1 = (regs->GR_LHH(0) & 0xF000) >> 8;
+    abit2 = regs->GR_LHL(0) & 0x0001;
+    kbit2 = (regs->GR_LHL(0) & 0x0002) >> 1;
+    asc2 = regs->GR_LHL(0) & 0x00C0;
+    key2 = (regs->GR_LHL(0) & 0xF000) >> 8;
+
+    /* Use PSW address-space control for operand 1 if A bit is zero */
+    if (abit1 == 0)
+        asc1 = regs->psw.asc;
+
+    /* Use PSW address-space control for operand 2 if A bit is zero */
+    if (abit2 == 0)
+        asc2 = regs->psw.asc;
+         
+    /* Use PSW key for operand 1 if K bit is zero */
+    if (kbit1 == 0)
+        key1 = regs->psw.pkey;
+
+    /* Use PSW key for operand 2 if K bit is zero */
+    if (kbit2 == 0)
+        key2 = regs->psw.pkey;
+
+    /* Program check if home-space mode is specified for operand 1
+       and PSW indicates problem state */
+    if (abit1 && asc1 == PSW_HOME_SPACE_MODE
+        && PROBSTATE(&regs->psw))
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+
+    /* Program check if secondary space control (CR0 bit 5/37) is 0, and
+       secondary space mode is specified or implied for either operand */
+    if ((regs->CR(0) & CR0_SEC_SPACE) == 0
+        && (asc1 == PSW_SECONDARY_SPACE_MODE
+            || asc2 == PSW_SECONDARY_SPACE_MODE))
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+
+    /* Program check if in problem state and the key mask in CR3 is zero
+       for the specified or implied access key for either operand */
+    if (PROBSTATE(&regs->psw)
+        && ( ((regs->CR(3) << (key1 >> 4)) & 0x80000000) == 0  
+            || ((regs->CR(3) << (key2 >> 4)) & 0x80000000) == 0 ))
+        ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
+
+    /* Load true length from R3 register */
+    len = GR_A(r3,regs);
+
+    /* If the true length does not exceed 4096, set condition code
+       zero, otherwise set cc=3 and use effective length of 4096 */
+    if (len <= 4096)
+        cc = 0;
+    else {
+        cc = 3;
+        len = 4096;
+    }
+
+    /* If the effective length is zero, set condition code and exit */
+    if (len == 0) 
+    {
+        regs->psw.cc = cc;
+        return;
+    }
+
+    /* Set condition code */
+    regs->psw.cc = cc;
+
+} /* end DEF_INST(move_with_optional_specifications) */
+#endif /*defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/
 
 
 /*-------------------------------------------------------------------*/
