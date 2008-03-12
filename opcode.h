@@ -7,6 +7,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.220  2008/03/08 22:28:04  rbowler
+// Add CHRL,CGHRL,CLRL,CLGRL,CLGFRL,CLHRL,CLGHRL,
+// CRL,CGRL,CGFRL instructions
+//
 // Revision 1.219  2008/03/04 15:42:49  rbowler
 // Add CRB,CGRB,CIB,CGIB,CLRB,CLGRB,CLIB,CLGIB instructions
 //
@@ -1013,6 +1017,28 @@ do { \
             if (_len) (_regs)->ip += (_len); \
             if (_ilc) (_regs)->psw.ilc = (_ilc); \
         } while(0)
+
+/* Instruction decoders */
+
+/*
+ * A decoder is placed at the start of each instruction. The purpose
+ * of a decoder is to extract the operand fields according to the
+ * instruction format; to increment the instruction address (IA) field
+ * of the PSW by 2, 4, or 6 bytes; and to set the instruction length
+ * code (ILC) field of the PSW in case a program check occurs.
+ *
+ * Certain decoders have additional forms with 0 and _B suffixes.
+ * - the 0 suffix version does not update the PSW ILC.
+ * - the _B suffix version updates neither the PSW ILC nor the PSW IA.
+ *
+ * The "0" versions of the decoders are chosen whenever we know
+ * that past this point, no program interrupt will be generated
+ * (like most general instructions when no storage access is needed)
+ * therefore needing simpler prologue code.
+ * The "_B" versions for some of the decoders are intended for
+ * "branch" type operations where updating the PSW IA to IA+ILC 
+ * should only be done after the branch is deemed impossible.
+ */
 
 #undef DECODER_TEST_RRE
 #define DECODER_TEST_RRF_R
