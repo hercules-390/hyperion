@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.140  2007/08/07 19:47:59  ivan
+// Fix a couple of gcc-4.2 warnings
+//
 // Revision 1.139  2007/06/23 00:04:04  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -192,7 +195,19 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
         return 3;
 
     /* Construct the channel id word */
-    chanid = CHANNEL_BMX;
+    /* According to GA22-7000-4, Page 192, 2nd paragraph,
+     * channel 0 is a Byte Multiplexor.. Return STIDC data
+     * accordingly
+     * ISW 20080313
+     */
+    if(!chan)
+    {
+        chanid = CHANNEL_MPX;
+    }
+    else
+    {
+        chanid = CHANNEL_BMX;
+    }
 
     /* Store the channel id word at PSA+X'A8' */
     psa = (PSA_3XX*)(regs->mainstor + regs->PX);

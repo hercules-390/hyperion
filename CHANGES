@@ -1,3 +1,4 @@
+13 Mar 2008 Return Byte Mpx for Chan 0 according to GA22-7000-4 - Ivan Warren
 12 Mar 2008 Fix residual read-only setting for tape device - Kevin Leonard
 12 Mar 2008 Fix store operation of ASI, AGSI, ALSI and AGLSI - Jan Jaeger
 08 Mar 2008 General Instructions Extension Facility - Roger Bowler
