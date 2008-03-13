@@ -77,6 +77,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.132  2008/03/04 01:10:29  ivan
+// Add LEGACYSENSEID config statement to allow X'E4' Sense ID on devices
+// that originally didn't support it. Defaults to off for compatibility reasons
+//
 // Revision 1.131  2008/03/04 00:25:25  ivan
 // Ooops.. finger check on 8809 case for numdevid.. Thanks Roger !
 //
@@ -4293,6 +4297,7 @@ union
     dev->tdparms.chksize   = HETDFLT_CHKSIZE;
     dev->tdparms.maxsize   = 0;        // no max size     (default)
     dev->tdparms.eotmargin = 128*1024; // 128K EOT margin (default)
+    dev->tdparms.logical_readonly = 0; // read/write      (default)
 
 #if defined(OPTION_SCSI_TAPE)
     // Real 3590's use 32-bit blockids and don't support Erase Gap.
