@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.109  2008/01/25 00:50:18  gsmith
+// Fix invalidate_tlbe processing - Paul Leisy
+//
 // Revision 1.108  2007/08/31 10:01:01  ivan
 // Throw an addressing exception when a SIE host->guest DAT points beyond
 // addressable storage
@@ -1582,7 +1585,7 @@ reg_second_invalid:
         cc = 2;
         return cc;
     } /* end if(ACCTYPE_LPTEA) */
-     
+
     /* Otherwise set translation exception code */
     goto reg_second_excp;
 
@@ -1594,7 +1597,7 @@ reg_third_invalid:
         cc = 2;
         return cc;
     } /* end if(ACCTYPE_LPTEA) */
-     
+
     /* Otherwise set translation exception code */
     goto reg_third_excp;
 
@@ -1623,7 +1626,7 @@ reg_third_excp:
 
 tran_excp_addr:
     /* For LPTEA instruction, return xcode with cc = 3 */
-    if (acctype & ACC_LPTEA) 
+    if (acctype & ACC_LPTEA)
         return 3;
 
     /* Set the translation exception address */
@@ -2291,7 +2294,7 @@ vabs_prog_check:
     regs->program_interrupt (regs, regs->dat.xcode);
 
     return NULL; /* prevent warning from compiler */
-} /* end function logical_to_abs */
+} /* end function ARCH_DEP(logical_to_main) */
 
 #endif /*!defined(OPTION_NO_INLINE_LOGICAL) || defined(_DAT_C) */
 
