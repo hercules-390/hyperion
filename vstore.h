@@ -23,6 +23,7 @@
 /* vfetch8      Fetch an eight-byte integer from virtual storage     */
 /* instfetch    Fetch instruction from virtual storage               */
 /* move_chars   Move characters using specified keys and addrspaces  */
+/* move_charx   Move characters with optional specifications         */
 /* validate_operand   Validate addressing, protection, translation   */
 /*-------------------------------------------------------------------*/
 /* And provided by means of macro's address wrapping versions of     */
@@ -34,6 +35,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.79  2008/02/20 23:47:22  ptl00
+// Fix branch to odd address so pgm old is bumped
+//
 // Revision 1.78  2007/06/23 00:04:19  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -930,6 +934,146 @@ int     len2, len3;                     /* Lengths to copy           */
     ITIMER_UPDATE(addr1,len,regs);
 
 } /* end function ARCH_DEP(move_chars) */
+
+
+#if defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)
+/*-------------------------------------------------------------------*/
+/* Move characters with optional specifications                      */
+/*                                                                   */
+/* Input:                                                            */
+/*      addr1   Effective address of first operand                   */
+/*      space1  Address space for first operand:                     */
+/*                 USE_PRIMARY_SPACE                                 */
+/*                 USE_SECONDARY_SPACE                               */
+/*                 USE_ARMODE + access register number               */
+/*                 USE_HOME_SPACE                                    */
+/*      key1    Bits 0-3=first operand access key, 4-7=zeroes        */
+/*      addr2   Effective address of second operand                  */
+/*      space1  Address space for second operand (values as space1)  */
+/*      key2    Bits 0-3=second operand access key, 4-7=zeroes       */
+/*      len     Operand length (range 0-4096)                        */
+/*      regs    Pointer to the CPU register context                  */
+/*                                                                   */
+/*      This function implements the MVCOS instruction which moves   */
+/*      up to 4096 characters using the address space and key        */
+/*      specified by the caller for each operand.  Results are       */
+/*      unpredictable if destructive overlap exists.                 */
+/*                                                                   */
+/*      The space1 and space2 parameters force the use of the        */
+/*      specified address space, or the use of the specified
+/*      access register, regardless of the current PSW addressing    */
+/*      mode.                                                        */
+/*                                                                   */
+/*      A program check may be generated if either logical address   */
+/*      causes an addressing, protection, or translation exception,  */
+/*      and in this case the function does not return.               */
+/*-------------------------------------------------------------------*/
+_VSTORE_C_STATIC void ARCH_DEP(move_charx) (VADR addr1, int space1,
+       BYTE key1, VADR addr2, int space2, BYTE key2,
+       int len, REGS *regs)
+{
+BYTE   *dest1, *dest2;                  /* Destination addresses     */
+BYTE   *source1, *source2;              /* Source addresses          */
+BYTE   *sk1, *sk2;                      /* Storage key addresses     */
+int     len2, len3;                     /* Lengths to copy           */
+
+    /* Ultra quick out if copying zero bytes */
+    if (unlikely(len == 0))
+        return;
+
+    ITIMER_SYNC(addr2,len-1,regs);
+
+    /* Quick out if copying just 1 byte */
+    if (unlikely(len == 1))
+    {
+        source1 = MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
+        dest1 = MADDR (addr1, space1, regs, ACCTYPE_WRITE, key1);
+        *dest1 = *source1;
+        ITIMER_UPDATE(addr1,len-1,regs);
+        return;
+    }
+
+    /* Translate addresses of leftmost operand bytes */
+    source1 = MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
+    dest1 = MADDR (addr1, space1, regs, ACCTYPE_WRITE, key1);
+
+    /* There are several scenarios (in optimal order):
+     * (1) dest boundary and source boundary not crossed
+     * (2) dest boundary not crossed and source boundary crossed
+     * (3) dest boundary crossed and source boundary not crossed
+     * (4) dest boundary and source boundary are crossed
+     *     (a) dest and source boundary cross at the same time
+     *     (b) dest boundary crossed first
+     *     (c) source boundary crossed first
+     */
+
+    if ( NOCROSS2K(addr1,len-1) )
+    {
+        if ( NOCROSS2K(addr2,len-1) )
+        {
+            /* (1) - No boundaries are crossed */
+            concpy (regs, dest1, source1, len);
+        }
+        else
+        {
+            /* (2) - Second operand crosses a boundary */
+            len2 = 0x800 - (addr2 & 0x7FF);
+            source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
+                              space2, regs, ACCTYPE_READ, key2);
+            concpy (regs, dest1, source1, len2);
+            concpy (regs, dest1 + len2, source2, len - len2);
+        }
+    }
+    else
+    {
+        dest1 = MADDR (addr1, space1, regs, ACCTYPE_WRITE_SKP, key1);
+        sk1 = regs->dat.storkey;
+        source1 = MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
+
+        /* First operand crosses a boundary */
+        len2 = 0x800 - (addr1 & 0x7FF);
+        dest2 = MADDR ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
+                       space1, regs, ACCTYPE_WRITE_SKP, key1);
+        sk2 = regs->dat.storkey;
+
+        if ( NOCROSS2K(addr2,len-1) )
+        {
+             /* (3) - First operand crosses a boundary */
+             concpy (regs, dest1, source1, len2);
+             concpy (regs, dest2, source1 + len2, len - len2);
+        }
+        else
+        {
+            /* (4) - Both operands cross a boundary */
+            len3 = 0x800 - (addr2 & 0x7FF);
+            source2 = MADDR ((addr2 + len3) & ADDRESS_MAXWRAP(regs),
+                             space2, regs, ACCTYPE_READ, key2);
+            if (len2 == len3)
+            {
+                /* (4a) - Both operands cross at the same time */
+                concpy (regs, dest1, source1, len2);
+                concpy (regs, dest2, source2, len - len2);
+            }
+            else if (len2 < len3)
+            {
+                /* (4b) - First operand crosses first */
+                concpy (regs, dest1, source1, len2);
+                concpy (regs, dest2, source1 + len2, len3 - len2);
+                concpy (regs, dest2 + len3 - len2, source2, len - len3);
+            }
+            else
+            {
+                /* (4c) - Second operand crosses first */
+                concpy (regs, dest1, source1, len3);
+                concpy (regs, dest1 + len3, source2, len2 - len3);
+                concpy (regs, dest2, source2 + len2 - len3, len - len2);
+            }
+        }
+    }
+    ITIMER_UPDATE(addr1,len-1,regs);
+
+} /* end function ARCH_DEP(move_charx) */
+#endif /*defined(FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS)*/
 
 
 /*-------------------------------------------------------------------*/

@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.262  2008/03/12 23:44:03  rbowler
+// Add MVCOS instruction (part 1)
+//
 // Revision 1.261  2008/02/28 22:05:57  ptl00
 // Fix mode switch trace
 //
@@ -2555,6 +2558,7 @@ int     key1, key2;                     /* Access keys in bits 0-3   */
 int     asc1, asc2;                     /* AS controls (same as PSW) */
 int     cc;                             /* Condition code            */
 GREG    len;                            /* Effective length          */
+int     space1, space2;                 /* Address space modifiers   */
 
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
 
@@ -2564,11 +2568,13 @@ GREG    len;                            /* Effective length          */
     if (REAL_MODE(&regs->psw))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-    /* Extract the access keys and address-space controls from GPR0 */
+    /* Extract the access key and address-space control for operand 1 */
     abit1 = regs->GR_LHH(0) & 0x0001;
     kbit1 = (regs->GR_LHH(0) & 0x0002) >> 1;
     asc1 = regs->GR_LHH(0) & 0x00C0;
     key1 = (regs->GR_LHH(0) & 0xF000) >> 8;
+
+    /* Extract the access key and address-space control for operand 2 */
     abit2 = regs->GR_LHL(0) & 0x0001;
     kbit2 = (regs->GR_LHL(0) & 0x0002) >> 1;
     asc2 = regs->GR_LHL(0) & 0x00C0;
@@ -2581,7 +2587,7 @@ GREG    len;                            /* Effective length          */
     /* Use PSW address-space control for operand 2 if A bit is zero */
     if (abit2 == 0)
         asc2 = regs->psw.asc;
-         
+
     /* Use PSW key for operand 1 if K bit is zero */
     if (kbit1 == 0)
         key1 = regs->psw.pkey;
@@ -2606,7 +2612,7 @@ GREG    len;                            /* Effective length          */
     /* Program check if in problem state and the key mask in CR3 is zero
        for the specified or implied access key for either operand */
     if (PROBSTATE(&regs->psw)
-        && ( ((regs->CR(3) << (key1 >> 4)) & 0x80000000) == 0  
+        && ( ((regs->CR(3) << (key1 >> 4)) & 0x80000000) == 0
             || ((regs->CR(3) << (key2 >> 4)) & 0x80000000) == 0 ))
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
@@ -2622,14 +2628,23 @@ GREG    len;                            /* Effective length          */
         len = 4096;
     }
 
-    /* If the effective length is zero, set condition code and exit */
-    if (len == 0) 
-    {
-        regs->psw.cc = cc;
-        return;
-    }
+    /* Set the address space modifier for operand 1 */
+    space1 = (asc1 == PSW_PRIMARY_SPACE_MODE) ? USE_PRIMARY_SPACE :
+        (asc1 == PSW_SECONDARY_SPACE_MODE) ? USE_SECONDARY_SPACE :
+        (asc1 == PSW_ACCESS_REGISTER_MODE) ? USE_ARMODE | b1 :
+        (asc1 == PSW_HOME_SPACE_MODE) ? USE_HOME_SPACE : 0;
 
-    /* Set condition code */
+    /* Set the address space modifier for operand 2 */
+    space2 = (asc2 == PSW_PRIMARY_SPACE_MODE) ? USE_PRIMARY_SPACE :
+        (asc2 == PSW_SECONDARY_SPACE_MODE) ? USE_SECONDARY_SPACE :
+        (asc2 == PSW_ACCESS_REGISTER_MODE) ? USE_ARMODE | b2 :
+        (asc2 == PSW_HOME_SPACE_MODE) ? USE_HOME_SPACE : 0;
+
+    /* Perform the move */
+    ARCH_DEP(move_charx) (effective_addr1, space1, key1,
+                effective_addr2, space2, key2, len, regs);
+
+    /* Set the condition code */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(move_with_optional_specifications) */
