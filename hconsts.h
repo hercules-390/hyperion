@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.8  2007/03/20 22:23:33  gsmith
+// Redefine ACC_ and ACCTYPE_ macros
+//
 // Revision 1.7  2007/01/11 19:54:33  fish
 // Addt'l keep-alive mods: create associated supporting config-file stmt and panel command where individual customer-preferred values can be specified and/or dynamically modified.
 //
@@ -247,7 +250,6 @@
 #define ACC_PTE            0x0200          /* Return page table entry*/
 #define ACC_LPTEA          0x0400          /* Esame page table entry */
 #define ACC_SPECIAL_ART    0x0800          /* Used by BSG            */
-#define ACC_ARMODE         0x1000          /* Used by LPTEA          */
 
 #define ACCTYPE_HW         0               /* Hardware access        */
 #define ACCTYPE_INSTFETCH  ACC_READ        /* Instruction fetch      */
@@ -270,6 +272,8 @@
 #define USE_PRIMARY_SPACE       (-3)    /* Primary space virtual     */
 #define USE_SECONDARY_SPACE     (-4)    /* Secondary space virtual   */
 #define USE_HOME_SPACE          (-5)    /* Home space virtual        */
+#define USE_ARMODE              16      /* OR with access register
+                                           number to force AR mode   */
 
 /* Interception codes used by longjmp/SIE */
 #define SIE_NO_INTERCEPT        (-1)    /* Continue (after pgmint)   */

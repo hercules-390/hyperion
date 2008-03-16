@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.110  2008/03/15 23:41:16  rbowler
+// Correct end function comment for logical_to_main
+//
 // Revision 1.109  2008/01/25 00:50:18  gsmith
 // Fix invalidate_tlbe processing - Paul Leisy
 //
@@ -572,8 +575,8 @@ int i;
 /*      arn     Access register number (0-15) to be used if the      */
 /*              address-space control (PSW bits 16-17) indicates     */
 /*              that ARMODE is the current translation mode.         */
-/*              An access type ORed with the special value           */
-/*              ACC_ARMODE forces this routine to use ARMODE         */
+/*              An access register number ORed with the special      */
+/*              value USE_ARMODE forces this routine to use ARMODE   */
 /*              regardless of the PSW address-space control setting. */
 /*              Access register 0 is treated as if it contained 0    */
 /*              and its actual contents are not examined.            */
@@ -659,9 +662,12 @@ U16     eax;                            /* Authorization index       */
     #if defined(FEATURE_ACCESS_REGISTERS)
         if (ACCESS_REGISTER_MODE(&regs->psw)
          || (SIE_ACTIVE(regs) && MULTIPLE_CONTROLLED_DATA_SPACE(regs->guestregs))
-         || (acctype & ACC_ARMODE)
+         || (arn & USE_ARMODE)
            )
         {
+            /* Remove flags giving access register number 0-15 */
+            arn &= 0xF;
+
             /* [5.8.4.1] Select the access-list-entry token */
             alet = (arn == 0) ? 0 :
                    /* Guest ALET if XC guest in AR mode */

@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.196  2008/03/06 16:10:35  rbowler
+// Remove extraneous trailing blanks (cosmetic change only)
+//
 // Revision 1.195  2008/03/01 12:19:04  rbowler
 // Rename new features to include the word facility
 //
@@ -1195,8 +1198,7 @@ int     acctype = ACCTYPE_LPTEA;        /* Storage access type       */
         n = USE_PRIMARY_SPACE;
         break;
     case 1: /* Use ALET in access register r2 */
-        n = r2;
-        acctype |= ACC_ARMODE;
+        n = USE_ARMODE | r2;
         break;
     case 2: /* Use ASCE in control register 7 */
         n = USE_SECONDARY_SPACE;
