@@ -35,6 +35,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.80  2008/03/16 00:09:57  rbowler
+// Add MVCOS instruction (part 2)
+//
 // Revision 1.79  2008/02/20 23:47:22  ptl00
 // Fix branch to odd address so pgm old is bumped
 //
@@ -960,7 +963,7 @@ int     len2, len3;                     /* Lengths to copy           */
 /*      unpredictable if destructive overlap exists.                 */
 /*                                                                   */
 /*      The space1 and space2 parameters force the use of the        */
-/*      specified address space, or the use of the specified
+/*      specified address space, or the use of the specified         */
 /*      access register, regardless of the current PSW addressing    */
 /*      mode.                                                        */
 /*                                                                   */
