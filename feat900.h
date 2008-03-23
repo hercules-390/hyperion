@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.81  2008/03/08 23:34:30  rbowler
+// Activate General Instructions Extension Facility for ESAME
+//
 // Revision 1.80  2008/03/01 12:19:04  rbowler
 // Rename new features to include the word facility
 //
@@ -135,7 +138,7 @@
 #define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
 #define FEATURE_MIDAW                                           /*@Z9*/
 #define FEATURE_MOVE_PAGE_FACILITY_2
-//#define FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS               /*208*/
+#define FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS               /*208*/
 #define FEATURE_MVS_ASSIST
 #define FEATURE_PAGE_PROTECTION
 #define FEATURE_PARSING_ENHANCEMENT_FACILITY                    /*208*/
