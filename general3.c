@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.18  2008/03/12 18:23:55  jj
+// Fix store operation of ASI, AGSI, ALSI and AGLSI
+//
 // Revision 1.17  2008/03/08 23:08:32  rbowler
 // Add STHRL,STRL,STGRL instructions
 //
@@ -1834,10 +1837,11 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
     for (i=0, mask=0; i < 64; i++)
     {
         mask <<= 1;
-        if (start >= end)
+        if (start >= end) {
             if (i >= start && i <= end) mask |= 1;
-        else
+        } else {
             if (i <= end || i >= start) mask |= 1;
+        }
     } /* end for(i) */
 
     /* Isolate selected bits of rotated second operand */
