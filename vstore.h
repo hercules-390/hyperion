@@ -35,6 +35,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.81  2008/03/23 03:03:45  gsmith
+// 22 Mar 2008 fix unbalanced comment - Peter J Farley III - by Greg
+//
 // Revision 1.80  2008/03/16 00:09:57  rbowler
 // Add MVCOS instruction (part 2)
 //
@@ -869,6 +872,8 @@ int     len2, len3;                     /* Lengths to copy           */
      *     (a) dest and source boundary cross at the same time
      *     (b) dest boundary crossed first
      *     (c) source boundary crossed first
+     * Note: since the operand length is limited to 256 bytes,
+     *       neither operand can cross more than one 2K boundary.
      */
 
     if ( NOCROSS2K(addr1,len) )
@@ -975,10 +980,8 @@ _VSTORE_C_STATIC void ARCH_DEP(move_charx) (VADR addr1, int space1,
        BYTE key1, VADR addr2, int space2, BYTE key2,
        int len, REGS *regs)
 {
-BYTE   *dest1, *dest2;                  /* Destination addresses     */
-BYTE   *source1, *source2;              /* Source addresses          */
-BYTE   *sk1, *sk2;                      /* Storage key addresses     */
-int     len2, len3;                     /* Lengths to copy           */
+BYTE   *main1, *main2;                  /* Main storage pointers     */
+int     len1, len2, len3;               /* Work areas for lengths    */
 
     /* Ultra quick out if copying zero bytes */
     if (unlikely(len == 0))
@@ -989,90 +992,47 @@ int     len2, len3;                     /* Lengths to copy           */
     /* Quick out if copying just 1 byte */
     if (unlikely(len == 1))
     {
-        source1 = MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
-        dest1 = MADDR (addr1, space1, regs, ACCTYPE_WRITE, key1);
-        *dest1 = *source1;
+        main2 = MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
+        main1 = MADDR (addr1, space1, regs, ACCTYPE_WRITE, key1);
+        *main1 = *main2;
         ITIMER_UPDATE(addr1,len-1,regs);
         return;
     }
 
     /* Translate addresses of leftmost operand bytes */
-    source1 = MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
-    dest1 = MADDR (addr1, space1, regs, ACCTYPE_WRITE, key1);
+    main2 = MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
+    main1 = MADDR (addr1, space1, regs, ACCTYPE_WRITE, key1);
 
-    /* There are several scenarios (in optimal order):
-     * (1) dest boundary and source boundary not crossed
-     * (2) dest boundary not crossed and source boundary crossed
-     * (3) dest boundary crossed and source boundary not crossed
-     * (4) dest boundary and source boundary are crossed
-     *     (a) dest and source boundary cross at the same time
-     *     (b) dest boundary crossed first
-     *     (c) source boundary crossed first
-     */
-
-    if ( NOCROSS2K(addr1,len-1) )
+    /* Copy the largest chunks which do not cross a 2K
+       boundary of either source or destination operand */
+    while (len > 0)
     {
-        if ( NOCROSS2K(addr2,len-1) )
-        {
-            /* (1) - No boundaries are crossed */
-            concpy (regs, dest1, source1, len);
-        }
-        else
-        {
-            /* (2) - Second operand crosses a boundary */
-            len2 = 0x800 - (addr2 & 0x7FF);
-            source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
-                              space2, regs, ACCTYPE_READ, key2);
-            concpy (regs, dest1, source1, len2);
-            concpy (regs, dest1 + len2, source2, len - len2);
-        }
-    }
-    else
-    {
-        dest1 = MADDR (addr1, space1, regs, ACCTYPE_WRITE_SKP, key1);
-        sk1 = regs->dat.storkey;
-        source1 = MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
+        /* Calculate distance to next 2K boundary */
+        len1 = NOCROSS2KL(addr1,len) ? len :
+                (int)(0x800 - (addr1 & 0x7FF));
+        len2 = NOCROSS2KL(addr2,len) ? len :
+                (int)(0x800 - (addr2 & 0x7FF));
+        len3 = len1 < len2 ? len1 : len2;
 
-        /* First operand crosses a boundary */
-        len2 = 0x800 - (addr1 & 0x7FF);
-        dest2 = MADDR ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
-                       space1, regs, ACCTYPE_WRITE_SKP, key1);
-        sk2 = regs->dat.storkey;
+        /* Copy bytes from source to destination */
+        concpy (regs, main1, main2, len3);
 
-        if ( NOCROSS2K(addr2,len-1) )
-        {
-             /* (3) - First operand crosses a boundary */
-             concpy (regs, dest1, source1, len2);
-             concpy (regs, dest2, source1 + len2, len - len2);
-        }
-        else
-        {
-            /* (4) - Both operands cross a boundary */
-            len3 = 0x800 - (addr2 & 0x7FF);
-            source2 = MADDR ((addr2 + len3) & ADDRESS_MAXWRAP(regs),
-                             space2, regs, ACCTYPE_READ, key2);
-            if (len2 == len3)
-            {
-                /* (4a) - Both operands cross at the same time */
-                concpy (regs, dest1, source1, len2);
-                concpy (regs, dest2, source2, len - len2);
-            }
-            else if (len2 < len3)
-            {
-                /* (4b) - First operand crosses first */
-                concpy (regs, dest1, source1, len2);
-                concpy (regs, dest2, source1 + len2, len3 - len2);
-                concpy (regs, dest2 + len3 - len2, source2, len - len3);
-            }
-            else
-            {
-                /* (4c) - Second operand crosses first */
-                concpy (regs, dest1, source1, len3);
-                concpy (regs, dest1 + len3, source2, len2 - len3);
-                concpy (regs, dest2, source2 + len2 - len3, len - len2);
-            }
-        }
-    }
+        /* Calculate virtual addresses for next chunk */
+        addr1 = (addr1 + len3) & ADDRESS_MAXWRAP(regs);
+        addr2 = (addr2 + len3) & ADDRESS_MAXWRAP(regs);
+
+        /* Adjust addresses for start of next chunk, or
+           translate again if a 2K boundary was crossed */
+        main2 = (addr2 & 0x7FF) ? main2 + len3 :
+                    MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
+        main1 = (addr1 & 0x7FF) ? main1 + len3 :
+                    MADDR (addr1, space1, regs, ACCTYPE_WRITE, key1);
+
+        /* Adjust remaining length */
+        len -= len3;
+
+    } /* end while(len) */
+
     ITIMER_UPDATE(addr1,len-1,regs);
 
 } /* end function ARCH_DEP(move_charx) */
