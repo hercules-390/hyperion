@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.23  2007/11/30 14:54:32  jmaynard
+// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
+//
 // Revision 1.22  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -35,10 +38,9 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Just some handy macros to have around...
+// Just a handy macro to have around...
 
-#define  IsEventSet(h)  (WaitForSingleObject(h,0) == WAIT_OBJECT_0)
-#define  RC(rc)         (errno = rc)
+#define  RC(rc)     (errno = rc)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // (need struct timespec for fthread_cond_timedwait)

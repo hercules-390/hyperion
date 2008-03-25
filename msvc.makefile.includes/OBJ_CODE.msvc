@@ -10,6 +10,9 @@
 #
 #                           CHANGE HISTORY
 # $Log$
+# Revision 1.3  2008/03/03 22:33:44  rbowler
+# Add new module general3.c for general-instructions-extension facility
+#
 # Revision 1.2  2007/06/02 13:46:42  rbowler
 # PFPO framework
 #
@@ -135,6 +138,13 @@ hmodule_OBJ = \
     $(O)printer.obj  \
     $(O)qeth.obj     \
     $(O)sockdev.obj  \
-    $(O)tapedev.obj  \
     $(O)tuntap.obj   \
     $(O)w32ctca.obj
+
+hdt3420_OBJ = \
+    $(O)tapedev.obj  \
+    $(O)tapeccws.obj \
+    $(O)awstape.obj  \
+    $(O)hettape.obj  \
+    $(O)omatape.obj  \
+    $(O)scsitape.obj

@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.238  2008/03/07 17:46:17  ptl00
+// Add pri, sec, home options to v command
+//
 // Revision 1.237  2008/02/12 08:42:15  fish
 // dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
 //
@@ -6274,7 +6277,7 @@ HELPTAB;
 
 HELPTAB HelpTab[] =
 {
-/*        command         additional hep text...
+/*        command         additional help text...
         (max 9 chars)
 */
 CMDHELP ( "*",         "The '*' comment command simply provides a convenient means\n"

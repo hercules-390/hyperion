@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.23  2007/11/30 14:54:33  jmaynard
+// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
+//
 // Revision 1.22  2007/07/24 22:36:33  fish
 // Fix tape Synchronize CCW (x'43') to do actual commit
 //
@@ -26,11 +29,14 @@
 //
 
 #include "hstdinc.h"
-
 #include "hercules.h"
 #include "scsitape.h"
 
 #if defined(OPTION_SCSI_TAPE)
+
+/*-------------------------------------------------------------------*/
+/*                     (Debugging stuff)                             */
+/*-------------------------------------------------------------------*/
 
 //#define  ENABLE_TRACING_STMTS     // (Fish: DEBUGGING)
 
@@ -38,6 +44,7 @@
   #if !defined(DEBUG)
     #warning DEBUG required for ENABLE_TRACING_STMTS
   #endif
+  // (TRACE, ASSERT, and VERIFY macros are #defined in hmacros.h)
 #else
   #undef  TRACE
   #define TRACE       1 ? ((void)0) : logmsg
@@ -47,15 +54,12 @@
   #define VERIFY(a)   ((void)(a))
 #endif
 
-void create_automount_thread( DEVBLK* dev );  // (fwd ref)
-
 // (the following is just a [slightly] shorter name for our own internal use)
 #define SLOW_UPDATE_STATUS_TIMEOUT  MAX_NORMAL_SCSI_DRIVE_QUERY_RESPONSE_TIMEOUT_USECS
 
 /*-------------------------------------------------------------------*/
 /* Tell driver (if needed) what a BOT position looks like...         */
 /*-------------------------------------------------------------------*/
-static
 void define_BOT_pos( DEVBLK *dev )
 {
 #ifdef _MSVC_
@@ -90,7 +94,7 @@ void define_BOT_pos( DEVBLK *dev )
 /*-------------------------------------------------------------------*/
 /* shutdown_worker_threads...                                        */
 /*-------------------------------------------------------------------*/
-static void shutdown_worker_threads(DEVBLK *dev)
+void shutdown_worker_threads( DEVBLK *dev )
 {
     while ( dev->stape_getstat_tid || dev->stape_mountmon_tid )
     {
@@ -181,7 +185,7 @@ int rc;
 
     /* Obtain the initial tape device/media status information */
     /* and start the mount-monitoring thread if option enabled */
-    update_status_scsitape( dev, 0 );
+    int_scsi_status_update( dev, 0 );
 
     /* Asynchronous open now in progress? */
     obtain_lock( &dev->stape_getstat_lock );
@@ -271,6 +275,8 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
 /*-------------------------------------------------------------------*/
 void close_scsitape(DEVBLK *dev)
 {
+    int rc = 0;
+
     obtain_lock( &dev->stape_getstat_lock );
 
     dev->stape_threads_exit = 1;        // (state our intention)
@@ -285,7 +291,7 @@ void close_scsitape(DEVBLK *dev)
             opblk.mt_op    = MTREW;
             opblk.mt_count = 1;
 
-            if (ioctl_tape ( dev->fd, MTIOCTOP, (char*)&opblk) != 0)
+            if ((rc = ioctl_tape ( dev->fd, MTIOCTOP, (char*)&opblk)) != 0)
             {
                 logmsg (_("HHCTA073W Error rewinding %u:%4.4X=%s; errno=%d: %s\n"),
                         SSID_TO_LCSS(dev->ssid), dev->devnum,
@@ -372,7 +378,7 @@ int  rc;
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
 int write_scsitape (DEVBLK *dev, BYTE *buf, U16 len,
-                        BYTE *unitstat,BYTE code)
+                    BYTE *unitstat, BYTE code)
 {
 int  rc;
 int  save_errno;
@@ -395,14 +401,12 @@ int  save_errno;
                 SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->filename, errno, strerror(errno));
 
-        update_status_scsitape( dev, 0 );
+        int_scsi_status_update( dev, 0 );
     }
     errno = save_errno;
 
     if ( STS_NOT_MOUNTED( dev ) )
-    {
         build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
-    }
     else
     {
         switch(errno)
@@ -454,7 +458,7 @@ struct mtop opblk;
         return 0;
     }
 
-    /* Handle write error condition */
+    /* Handle write error condition... */
 
     save_errno = errno;
     {
@@ -462,7 +466,7 @@ struct mtop opblk;
                 SSID_TO_LCSS(dev->ssid), dev->devnum,
                 dev->filename, errno, strerror(errno));
 
-        update_status_scsitape( dev, 0 );
+        int_scsi_status_update( dev, 0 );
     }
     errno = save_errno;
 
@@ -504,6 +508,7 @@ int sync_scsitape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 int  rc;
 int  save_errno;
 struct mtop opblk;
+
     /*
         GA32-0566-02 ("IBM Tape Device Drivers - Programming
         Reference"):
@@ -539,7 +544,7 @@ struct mtop opblk;
             SSID_TO_LCSS(dev->ssid), dev->devnum,
             dev->filename, errno, strerror(errno));
 
-        update_status_scsitape( dev, 0 );
+        int_scsi_status_update( dev, 0 );
     }
     errno = save_errno;
 
@@ -606,7 +611,7 @@ struct mtop opblk;
     */
     save_errno = errno;
     {
-        update_status_scsitape( dev, 0 );
+        int_scsi_status_update( dev, 0 );
     }
     errno = save_errno;
 
@@ -692,7 +697,7 @@ struct mtop opblk;
     */
 
     /* Obtain tape status before backward space... (no choice!) */
-    update_status_scsitape( dev, 0 );
+    int_scsi_status_update( dev, 0 );
 
     /* Unit check if already at start of tape */
     if ( STS_BOT( dev ) )
@@ -723,7 +728,7 @@ struct mtop opblk;
     */
     save_errno = errno;
     {
-        update_status_scsitape( dev, 0 );
+        int_scsi_status_update( dev, 0 );
     }
     errno = save_errno;
 
@@ -750,7 +755,9 @@ struct mtop opblk;
     else
     {
         if ( EIO == errno && STS_BOT(dev) )
+        {
             build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
+        }
         else
             build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
     }
@@ -865,7 +872,7 @@ struct mtop opblk;
     */
 
     /* Obtain tape status before backward space... (no choice!) */
-    update_status_scsitape( dev, 0 );
+    int_scsi_status_update( dev, 0 );
 
     /* Unit check if already at start of tape */
     if ( STS_BOT( dev ) )
@@ -909,7 +916,9 @@ struct mtop opblk;
     else
     {
         if ( EIO == errno && STS_BOT(dev) )
+        {
             build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
+        }
         else
             build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
     }
@@ -962,7 +971,7 @@ struct mtop opblk;
 /*-------------------------------------------------------------------*/
 /* Rewind Unload a SCSI tape device (and CLOSE it too!)              */
 /*-------------------------------------------------------------------*/
-void rewind_unload_scsitape(DEVBLK *dev, BYTE *unitstat, BYTE code )
+void int_scsi_rewind_unload(DEVBLK *dev, BYTE *unitstat, BYTE code )
 {
 int rc;
 struct mtop opblk;
@@ -1001,7 +1010,7 @@ struct mtop opblk;
     else
         build_senseX(TAPE_BSENSE_REWINDFAILED,dev,unitstat,code);
 
-} /* end function rewind_unload_scsitape */
+} /* end function int_scsi_rewind_unload */
 
 /*-------------------------------------------------------------------*/
 /* Erase Gap                                                         */
@@ -1060,6 +1069,12 @@ int dse_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
 
 } /* end function dse_scsitape */
 
+/*********************************************************************/
+/**                                                                 **/
+/**           INTERNAL STATUS & AUTOMOUNT FUNCTIONS                 **/
+/**                                                                 **/
+/*********************************************************************/
+
 /*-------------------------------------------------------------------*/
 /* Determine if the tape is Ready   (tape drive door status)         */
 /* Returns:  true/false:  1 = ready,   0 = NOT ready                 */
@@ -1070,7 +1085,7 @@ int is_tape_mounted_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
     UNREFERENCED(code);
 
     /* Update tape mounted status */
-    update_status_scsitape( dev, 1 );
+    int_scsi_status_update( dev, 1 );   // (safe/fast internal call)
 
     return ( !STS_NOT_MOUNTED( dev ) );
 } /* end function driveready_scsitape */
@@ -1078,7 +1093,7 @@ int is_tape_mounted_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
 /*-------------------------------------------------------------------*/
 /* Force a manual status refresh/update      (DANGEROUS!)            */
 /*-------------------------------------------------------------------*/
-int force_status_update( DEVBLK *dev )
+int update_status_scsitape( DEVBLK *dev )   // (external tmh call)
 {
     //                  * *  WARNING!  * *
 
@@ -1104,18 +1119,14 @@ int force_status_update( DEVBLK *dev )
     // purposely do NOT force a refresh if the status is "mounted"!!
 
     if ( STS_NOT_MOUNTED( dev ) )           // (if no tape mounted)
-        update_status_scsitape( dev, 0 );   // (then probably safe)
+        int_scsi_status_update( dev, 0 );   // (then probably safe)
 
     return 0;
-} /* end function force_status_update */
-
-/*-------------------------------------------------------------------*/
+} /* end function update_status_scsitape */
 /* Forward references...                                             */
-/*-------------------------------------------------------------------*/
-extern void  update_status_scsitape   ( DEVBLK* dev, int mountstat_only );
+extern void  int_scsi_status_update   ( DEVBLK* dev, int mountstat_only );
 static void  scsi_get_status_fast     ( DEVBLK* dev );
 static void* get_stape_status_thread  ( void*   db  );
-extern void  kill_stape_status_thread ( DEVBLK* dev );
 
 /*-------------------------------------------------------------------*/
 /* get_stape_status_thread                                           */
@@ -1129,7 +1140,6 @@ void* get_stape_status_thread( void *db )
 
     struct timeval beg_tod;
     struct timeval end_tod;
-    struct timeval diff_tod;
 
     // PROGRAMMING NOTE: it is EXTREMELY IMPORTANT that the status-
     // retrieval thread (i.e. ourselves) be set to a priority that
@@ -1270,9 +1280,6 @@ void* get_stape_status_thread( void *db )
         broadcast_condition( &dev->stape_getstat_cond );    // (new status available)
 
         {
-            VERIFY(0 == timeval_subtract( &beg_tod, &end_tod, &diff_tod ) );
-            PTT("stat query", (diff_tod.tv_sec * 1000) + ((diff_tod.tv_usec + 500) / 1000), 0, 0);
-
             dev->stape_getstat_query_tod.tv_sec  = end_tod.tv_sec;
             dev->stape_getstat_query_tod.tv_usec = end_tod.tv_usec;
         }
@@ -1361,7 +1368,7 @@ void scsi_get_status_fast( DEVBLK* dev )
 /*-------------------------------------------------------------------*/
 /* Update SCSI tape status (and display it if CCW tracing is active) */
 /*-------------------------------------------------------------------*/
-void update_status_scsitape( DEVBLK* dev, int mountstat_only )
+void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call)
 {
     create_automount_thread( dev );     // (only if needed of course)
 
@@ -1433,12 +1440,12 @@ void update_status_scsitape( DEVBLK* dev, int mountstat_only )
         logmsg ( _("HHCTA023I %s\n"), buf );
     }
 
-} /* end function update_status_scsitape */
+} /* end function int_scsi_status_update */
 
 /*-------------------------------------------------------------------*/
 /*                  ASYNCHRONOUS TAPE OPEN                           */
 /* SCSI tape tape-mount monitoring thread (monitors for tape mounts) */
-/* Auto-started by 'update_status_scsitape' when it notices there is */
+/* Auto-started by 'int_scsi_status_update' when it notices there is */
 /* no tape mounted on whatever device it's checking the status of,   */
 /* or by the ReqAutoMount function for unsatisfied mount requests.   */
 /*-------------------------------------------------------------------*/
@@ -1477,6 +1484,8 @@ void create_automount_thread( DEVBLK* dev )
     release_lock( &dev->stape_getstat_lock );
 }
 
+/*-------------------------------------------------------------------*/
+/*                  ASYNCHRONOUS TAPE OPEN                           */
 /*-------------------------------------------------------------------*/
 /* AUTO_SCSI_MOUNT thread...                                         */
 /*-------------------------------------------------------------------*/
@@ -1536,7 +1545,7 @@ void *scsi_tapemountmon_thread( void *db )
 
         // Retrieve the current status...
 
-        update_status_scsitape( dev, 0 );
+        int_scsi_status_update( dev, 0 );
 
         obtain_lock( &dev->stape_getstat_lock );
 

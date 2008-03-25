@@ -6,6 +6,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.20  2007/07/24 22:36:33  fish
+// Fix tape Synchronize CCW (x'43') to do actual commit
+//
 // Revision 1.19  2007/06/23 00:04:18  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -20,12 +23,6 @@
 #include "htypes.h"         /* Hercules struct typedefs              */
 #include "opcode.h"         /* device_attention, SETMODE, etc.       */
 #include "parser.h"         /* generic parameter string parser       */
-
-/*-------------------------------------------------------------------*/
-/* Construct device-type appropriate sense information...            */
-/*-------------------------------------------------------------------*/
-
-extern void build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code);
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -54,14 +51,14 @@ extern void build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code);
 #define SENSE7_TAPE_LOADFAIL    0x01    /* Load failure              */
 
 /*-------------------------------------------------------------------*/
-/* ISW : Internal code to build Device Dependent Sense               */
+/* ISW : Internal error types used to build Device Dependent Sense   */
 /*-------------------------------------------------------------------*/
 #define TAPE_BSENSE_TAPEUNLOADED   0    /* I/O Attempted but no tape loaded */
 #define TAPE_BSENSE_TAPELOADFAIL   1    /* I/O and load failed       */
 #define TAPE_BSENSE_READFAIL       2    /* Error reading block       */
 #define TAPE_BSENSE_WRITEFAIL      3    /* Error writing block       */
 #define TAPE_BSENSE_BADCOMMAND     4    /* The CCW code is not known
-                                          or sequence error          */
+                                           or sequence error         */
 #define TAPE_BSENSE_INCOMPAT       5    /* The CCW code is known
                                            but is not unsupported    */
 #define TAPE_BSENSE_WRITEPROTECT   6    /* Write CCW code was issued
@@ -79,7 +76,7 @@ extern void build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code);
 #define TAPE_BSENSE_BADALGORITHM   11   /* Bad compression - HET
                                            tape compressed with an
                                            unsuported method         */
-#define TAPE_BSENSE_TAPEUNLOADED2  12   /* Rewind Unload success     */
+#define TAPE_BSENSE_RUN_SUCCESS    12   /* Rewind Unload success     */
 #define TAPE_BSENSE_STATUSONLY     13   /* No exception occured      */
 #define TAPE_BSENSE_LOCATEERR      14   /* Can't find block or TM    */
 #define TAPE_BSENSE_READTM         15   /* A Tape Mark was read      */
@@ -91,7 +88,7 @@ extern void build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code);
 #define TAPE_BSENSE_UNSOLICITED    20   /* Sense without UC          */
 
 /*-------------------------------------------------------------------*/
-/* Definitions for 3480 commands                                     */
+/* Definitions for 3480 and later commands                           */
 /*-------------------------------------------------------------------*/
 /* Format control byte for Load Display command */
 #define FCB_FS                  0xE0    /* Function Select bits...   */
@@ -111,6 +108,10 @@ extern void build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code);
 #define FCB_RESV                0x02    /* (reserved)                */
 #define FCB_AL                  0x01    /* Activate AutoLoader on    */
                                         /* mount/unmount messages    */
+/* Mode Set commands */
+#define MSET_WRITE_IMMED        0x20    /* Tape-Write-Immediate mode */
+#define MSET_SUPVR_INHIBIT      0x10    /* Supervisor Inhibit mode   */
+#define MSET_IDRC               0x08    /* IDRC mode                 */
 
 /* Path state byte for Sense Path Group ID command */
 #define SPG_PATHSTAT            0xC0    /* Pathing status bits...    */
@@ -137,37 +138,35 @@ extern void build_senseX (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE code);
 #define SPG_SET_COMMAND_RESV    0x60    /* ...reserved bit setting   */
 #define SPG_SET_RESV            0x1F    /* Reserved bits, must be 0  */
 
-/* By Adrian Trenkwalder                                             */   
-/* Perform Subsystem Function order byte for PSF command             */   
-/* The first 3 orders are not supported yet (x'18', x'1B', x'1C')    */   
-#define PSF_ORDER_PRSD          0x18  /* Prep. for Read Subsyst. Data*/   
-#define PSF_ORDER_SSIC          0x1B    /* Set Special Intercept Cond*/   
-#define PSF_ORDER_MNS           0x1C    /* Message Not Supported     */   
-#define PSF_ORDER_AFEL          0x80    /* Activate Forced Error Log.*/   
-#define PSF_ORDER_DFEL          0x81    /* Deact. Forced Error Log.  */   
-#define PSF_ACTION_FEL_IMPLICIT 0x01    /* ..Implicit (De)Activate   */   
-#define PSF_ACTION_FEL_EXPLICIT 0x02    /* ..Explicit (De)Activate   */   
-#define PSF_ORDER_AAC           0x82    /* Activate Access Control   */   
-#define PSF_ORDER_DAC           0x83    /* Deact. Access Control     */   
-#define PSF_ACTION_AC_LWP       0x80    /* ..Logical Write Protect   */   
-#define PSF_ACTION_AC_DCD       0x10    /* ..Data Compaction Default */   
-#define PSF_ACTION_AC_DCR       0x02    /* ..Data Check Recovery     */   
-#define PSF_ACTION_AC_ER        0x01    /* ..Extended Recovery       */   
-#define PSF_ORDER_RVF           0x90    /* Reset Volume Fenced       */   
-#define PSF_ORDER_PIN_DEV       0xA1    /* Pin Device                */   
-#define PSF_ACTION_PIN_CU0      0x00    /* ..Control unit 0          */   
-#define PSF_ACTION_PIN_CU1      0x01    /* ..Control unit 1          */   
-#define PSF_ORDER_UNPIN_DEV     0xA2    /* Unpin Device              */   
-#define PSF_FLAG_ZERO       0x00    /* Must be zero for all ord. */   
-   
-/* By Adrian Trenkwalder                                             */   
-/* Control Access Function Control                                   */   
-#define CAC_FUNCTION            0xC0    /* Function control bits     */   
-#define CAC_SET_PASSWORD        0x00    /* ..Set Password            */   
-#define CAC_COND_ENABLE         0x80    /* ..Conditional Enable      */   
-#define CAC_COND_DISABLE        0x40    /* ..Conditional Disable     */   
-   
-   
+/* Perform Subsystem Function order byte for PSF command             */
+#define PSF_ORDER_PRSD          0x18    /* Prep for Read Subsys Data */
+#define PSF_ACTION_SSD_ATNMSG   0x03    /* ..Attention Message       */
+#define PSF_ORDER_SSIC          0x1B    /* Set Special Intercept Cond*/
+#define PSF_ORDER_MNS           0x1C    /* Message Not Supported     */
+#define PSF_ORDER_AFEL          0x80    /* Activate Forced Error Log.*/
+#define PSF_ORDER_DFEL          0x81    /* Deact. Forced Error Log.  */
+#define PSF_ACTION_FEL_IMPLICIT 0x01    /* ..Implicit (De)Activate   */
+#define PSF_ACTION_FEL_EXPLICIT 0x02    /* ..Explicit (De)Activate   */
+#define PSF_ORDER_AAC           0x82    /* Activate Access Control   */
+#define PSF_ORDER_DAC           0x83    /* Deact. Access Control     */
+#define PSF_ACTION_AC_LWP       0x80    /* ..Logical Write Protect   */
+#define PSF_ACTION_AC_DCD       0x10    /* ..Data Compaction Default */
+#define PSF_ACTION_AC_DCR       0x02    /* ..Data Check Recovery     */
+#define PSF_ACTION_AC_ER        0x01    /* ..Extended Recovery       */
+#define PSF_ORDER_RVF           0x90    /* Reset Volume Fenced       */
+#define PSF_ORDER_PIN_DEV       0xA1    /* Pin Device                */
+#define PSF_ACTION_PIN_CU0      0x00    /* ..Control unit 0          */
+#define PSF_ACTION_PIN_CU1      0x01    /* ..Control unit 1          */
+#define PSF_ORDER_UNPIN_DEV     0xA2    /* Unpin Device              */
+#define PSF_FLAG_ZERO           0x00    /* Must be zero for all ord. */
+
+/* Control Access Function Control                                   */
+#define CAC_FUNCTION            0xC0    /* Function control bits     */
+#define CAC_SET_PASSWORD        0x00    /* ..Set Password            */
+#define CAC_COND_ENABLE         0x80    /* ..Conditional Enable      */
+#define CAC_COND_DISABLE        0x40    /* ..Conditional Disable     */
+
+
 /*-------------------------------------------------------------------*/
 /* Definitions for tape device type field in device block            */
 /*-------------------------------------------------------------------*/
@@ -233,6 +232,9 @@ typedef struct _AWSTAPE_BLKHDR
 }
 AWSTAPE_BLKHDR;
 
+/*-------------------------------------------------------------------*/
+/* Structure definition for OMA block header                         */
+/*-------------------------------------------------------------------*/
 typedef struct _OMATAPE_BLKHDR
 {
     FWORD   curblkl;                    /* Length of this block      */
@@ -258,6 +260,38 @@ typedef struct _OMATAPE_DESC
 OMATAPE_DESC;
 
 /*-------------------------------------------------------------------*/
+/* Tape Auto-Loader table entry                                      */
+/*-------------------------------------------------------------------*/
+struct TAPEAUTOLOADENTRY
+{
+    char  *filename;
+    int    argc;
+    char **argv;
+};
+
+/*-------------------------------------------------------------------*/
+/* Generic media-handler-call parameters block                       */
+/*-------------------------------------------------------------------*/
+typedef struct _GENTMH_PARMS
+{
+    int      action;        // action code  (i.e. "what to do")
+    DEVBLK*  dev;           // -> device block
+    BYTE*    unitstat;      // -> unit status
+    BYTE     code;          // CCW opcode
+    // TODO: define whatever additional arguments may be needed...
+}
+GENTMH_PARMS;
+
+/*-------------------------------------------------------------------*/
+/* Generic media-handler-call action codes...                        */
+/*-------------------------------------------------------------------*/
+
+#define  GENTMH_SCSI_ACTION_UPDATE_STATUS       (0)
+//efine  GENTMH_AWS_ACTION_xxxxx...             (x)
+//efine  GENTMH_HET_ACTION_xxxxx...             (x)
+//efine  GENTMH_OMA_ACTION_xxxxx...             (x)
+
+/*-------------------------------------------------------------------*/
 /* Tape media I/O function vector table layout                       */
 /*-------------------------------------------------------------------*/
 struct TAPEMEDIA_HANDLER
@@ -280,13 +314,154 @@ struct TAPEMEDIA_HANDLER
 };
 
 /*-------------------------------------------------------------------*/
-/* Tape Auto-Loader table entry                                      */
+/* Functions (and data areas) defined in TAPEDEV.C...                */
 /*-------------------------------------------------------------------*/
-struct TAPEAUTOLOADENTRY
-{
-    char  *filename;
-    int    argc;
-    char **argv;
-};
+
+extern int   tapedev_init_handler   (DEVBLK *dev, int argc, char *argv[]);
+extern int   tapedev_close_device   (DEVBLK *dev );
+extern void  tapedev_query_device   (DEVBLK *dev, char **class, int buflen, char *buffer);
+
+extern void  autoload_init          (DEVBLK *dev, int ac,   char **av);
+extern int   autoload_mount_first   (DEVBLK *dev);
+extern int   autoload_mount_next    (DEVBLK *dev);
+extern void  autoload_close         (DEVBLK *dev);
+extern void  autoload_global_parms  (DEVBLK *dev, char *par);
+extern void  autoload_clean_entry   (DEVBLK *dev, int ix);
+extern void  autoload_tape_entry    (DEVBLK *dev, char *fn, char **strtokw);
+extern int   autoload_mount_tape    (DEVBLK *dev, int alix);
+
+extern void* autoload_wait_for_tapemount_thread (void *db);
+
+extern int   mountnewtape           (DEVBLK *dev, int argc, char **argv);
+extern void  GetDisplayMsg          (DEVBLK *dev, char *msgbfr, size_t  lenbfr);
+extern int   IsAtLoadPoint          (DEVBLK *dev);
+extern void  ReqAutoMount           (DEVBLK *dev);
+extern void  UpdateDisplay          (DEVBLK *dev);
+extern int   return_false1          (DEVBLK *dev);
+extern void  load_display           (DEVBLK *dev, BYTE *buf, U16 count);
+extern int   write_READONLY5        (DEVBLK *dev, BYTE *bfr, U16 blklen, BYTE *unitstat, BYTE code);
+extern int   is_tapeloaded_filename (DEVBLK *dev,             BYTE *unitstat, BYTE code);
+extern int   write_READONLY         (DEVBLK *dev,             BYTE *unitstat, BYTE code);
+extern int   no_operation           (DEVBLK *dev,             BYTE *unitstat, BYTE code);
+extern int   readblkid_virtual      (DEVBLK*, BYTE* logical,  BYTE* physical);
+extern int   locateblk_virtual      (DEVBLK*, U32 blockid,    BYTE *unitstat, BYTE code);
+extern int   generic_tmhcall        (GENTMH_PARMS*);
+
+typedef void TapeSenseFunc( int, DEVBLK*, BYTE*, BYTE );    // (sense handling function)
+
+extern TapeSenseFunc*  TapeSenseTable[];
+extern BYTE*           TapeCommandTable[];
+extern BYTE            TapeImmedCommands[];
+extern int             TapeDevtypeList[];
+
+#define  TAPEDEVTYPELIST_ENTRYSIZE  (5)    // #of int's per 'TapeDevtypeList' table entry
+
+// Helpful macros...
+
+#define RESIDUAL_CALC(_data_len)         \
+                                         \
+    len = (_data_len);                   \
+    num = (count < len) ? count : len;   \
+    *residual = count - num;             \
+    if (count < len) *more = 1
+
+// Assign a unique Message Id for this asynchronous I/O if needed...
+
+#if defined(OPTION_SCSI_TAPE)
+
+  #define INCREMENT_MESSAGEID(_dev)   \
+                                      \
+    if ((_dev)->SIC_active)           \
+        (_dev)->msgid++
+
+#else
+
+  #define INCREMENT_MESSAGEID(_dev)
+
+#endif // defined(OPTION_SCSI_TAPE)
+
+/*-------------------------------------------------------------------*/
+/* Functions defined in TAPECCWS.C...                                */
+/*-------------------------------------------------------------------*/
+extern int   TapeCommandIsValid     (BYTE code, U16 devtype, BYTE *rustat);
+
+extern void  tapedev_execute_ccw    (DEVBLK *dev, BYTE code, BYTE flags,
+                                     BYTE chained, U16 count, BYTE prevcode, int ccwseq,
+                                     BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual);
+
+extern void  build_senseX           (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3410       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3420       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3410_3420  (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3480_etal  (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3490       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3590       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_Streaming  (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+
+/*-------------------------------------------------------------------*/
+/* Functions defined in AWSTAPE.C...                                 */
+/*-------------------------------------------------------------------*/
+extern int  open_awstape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern void close_awstape     (DEVBLK *dev);
+extern int  passedeot_awstape (DEVBLK *dev);
+extern int  rewind_awstape    (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  write_awsmark     (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  sync_awstape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  fsb_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  bsb_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  fsf_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  bsf_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  readhdr_awstape   (DEVBLK *dev, off_t blkpos, AWSTAPE_BLKHDR *buf,
+                                            BYTE *unitstat, BYTE code);
+extern int  read_awstape      (DEVBLK *dev, BYTE *buf,
+                                            BYTE *unitstat, BYTE code);
+extern int  write_awstape     (DEVBLK *dev, BYTE *buf, U16 blklen,
+                                            BYTE *unitstat, BYTE code);
+
+/*-------------------------------------------------------------------*/
+/* Functions defined in HETTAPE.C...                                 */
+/*-------------------------------------------------------------------*/
+extern int  open_het      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern void close_het     (DEVBLK *dev);
+extern int  passedeot_het (DEVBLK *dev);
+extern int  rewind_het    (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  write_hetmark (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  sync_het      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  fsb_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  bsb_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  fsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  bsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  read_het      (DEVBLK *dev, BYTE *buf,
+                                        BYTE *unitstat, BYTE code);
+extern int  write_het     (DEVBLK *dev, BYTE *buf, U16 blklen,
+                                        BYTE *unitstat, BYTE code);
+
+/*-------------------------------------------------------------------*/
+/* Functions defined in OMATAPE.C...                                 */
+/*-------------------------------------------------------------------*/
+extern int  open_omatape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern void close_omatape      (DEVBLK *dev);
+extern void close_omatape2     (DEVBLK *dev);
+extern int  rewind_omatape     (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  fsb_omatape        (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  bsb_omatape        (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  fsf_omatape        (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  bsf_omatape        (DEVBLK *dev, BYTE *unitstat, BYTE code);
+
+extern int  read_omadesc       (DEVBLK *dev);
+extern int  fsb_omaheaders     (DEVBLK *dev, OMATAPE_DESC *omadesc,            BYTE *unitstat, BYTE code);
+extern int  fsb_omafixed       (DEVBLK *dev, OMATAPE_DESC *omadesc,            BYTE *unitstat, BYTE code);
+extern int  read_omaheaders    (DEVBLK *dev, OMATAPE_DESC *omadesc, BYTE *buf, BYTE *unitstat, BYTE code);
+extern int  read_omafixed      (DEVBLK *dev, OMATAPE_DESC *omadesc, BYTE *buf, BYTE *unitstat, BYTE code);
+extern int  read_omatext       (DEVBLK *dev, OMATAPE_DESC *omadesc, BYTE *buf, BYTE *unitstat, BYTE code);
+extern int  read_omatape       (DEVBLK *dev,                        BYTE *buf, BYTE *unitstat, BYTE code);
+extern int  readhdr_omaheaders (DEVBLK *dev, OMATAPE_DESC *omadesc,
+                                             long blkpos, S32 *pcurblkl,
+                                             S32 *pprvhdro, S32 *pnxthdro,     BYTE *unitstat, BYTE code);
+
+/*-------------------------------------------------------------------*/
+/* Functions defined in SCSITAPE.C...                                */
+/*-------------------------------------------------------------------*/
+// (see SCSITAPE.H)
 
 #endif // __TAPEDEV_H__

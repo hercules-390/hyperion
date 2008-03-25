@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.16  2008/02/19 17:18:36  rbowler
+// Missing u_int8_t causes crypto compile errors on Solaris
+//
 // Revision 1.15  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -18,6 +21,9 @@
 
 #if !defined(_HERCWIND_H)
 #define _HERCWIND_H
+
+// (just a handy macro to have around)
+#define  IsEventSet(h)  (WaitForSingleObject(h,0) == WAIT_OBJECT_0)
 
 // PROGRAMMING NOTE: Cygwin has a bug in setvbuf requiring us
 // to do an 'fflush()' after each stdout/err write, and it doesn't
@@ -167,6 +173,11 @@ typedef int             mode_t;
 #define HAVE_DECL_SIOCADDRT       0     // (unsupported by CTCI-W32)
 #define HAVE_DECL_SIOCDELRT       0     // (unsupported by CTCI-W32)
 #define HAVE_DECL_SIOCDIFADDR     0     // (unsupported by CTCI-W32)
+
+// SCSI tape handling transparency/portability
+
+#define HAVE_DECL_MTEOTWARN       1     // (always true since I made it up!)
+#define HAVE_DECL_MTEWARN         1     // (same as HAVE_DECL_MTEOTWARN)
 
 // GNUWin32 PCRE (Perl-Compatible Regular Expressions) support...
 

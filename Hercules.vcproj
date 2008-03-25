@@ -490,7 +490,19 @@
                             Name="Source Files"
                             >
                             <File
+                                RelativePath=".\awstape.c"
+                                >
+                            </File>
+                            <File
                                 RelativePath=".\hetlib.c"
+                                >
+                            </File>
+                            <File
+                                RelativePath=".\hettape.c"
+                                >
+                            </File>
+                            <File
+                                RelativePath=".\omatape.c"
                                 >
                             </File>
                             <File
@@ -499,6 +511,10 @@
                             </File>
                             <File
                                 RelativePath=".\sllib.c"
+                                >
+                            </File>
+                            <File
+                                RelativePath=".\tapeccws.c"
                                 >
                             </File>
                             <File

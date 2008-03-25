@@ -8,8 +8,9 @@
 #
 #
 #                           CHANGE HISTORY
-# DD/MM/YY Description
+# $Log$
 #
+# DD/MM/YY Description
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
 #
 # ***************************************************************************
@@ -58,7 +59,7 @@ $(X)hdt2703.dll: $(O)commadpt.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O
 $(X)hdt3088.dll: $(O)ctc_lcs.obj $(O)ctc_ctci.obj $(O)ctcadpt.obj $(O)w32ctca.obj $(O)tuntap.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
-$(X)hdt3420.dll: $(O)tapedev.obj $(O)scsitape.obj $(O)hengine.lib $(O)htape.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
+$(X)hdt3420.dll: $(hdt3420_OBJ) $(O)hengine.lib $(O)htape.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res
     $(linkdll)
 
 $(X)hdt1403.dll: $(O)printer.obj $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercver.res

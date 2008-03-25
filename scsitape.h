@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.19  2007/11/30 14:54:33  jmaynard
+// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
+//
 // Revision 1.18  2007/07/24 22:36:33  fish
 // Fix tape Synchronize CCW (x'43') to do actual commit
 //
@@ -33,25 +36,44 @@
 #include "tapedev.h"
 #include "w32stape.h"
 
+// External TMH-vector calls...
+
+extern int   update_status_scsitape   ( DEVBLK *dev ); // (via "generic" vector)
 extern int   open_scsitape            ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern int   finish_scsitape_open     ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern void  close_scsitape           ( DEVBLK *dev );
 extern int   read_scsitape            ( DEVBLK *dev, BYTE *buf,          BYTE *unitstat, BYTE code );
 extern int   write_scsitape           ( DEVBLK *dev, BYTE *buf, U16 len, BYTE *unitstat, BYTE code );
+extern int   rewind_scsitape          ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern int   bsb_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern int   fsb_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern int   bsf_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern int   fsf_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   write_scsimark           ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   sync_scsitape            ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   erg_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   dse_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   fsb_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   bsb_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   fsf_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   bsf_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   rewind_scsitape          ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern void  rewind_unload_scsitape   ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern int   erg_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 extern int   is_tape_mounted_scsitape ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   force_status_update      ( DEVBLK *dev );
-extern int   finish_scsitape_open     ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern void  update_status_scsitape   ( DEVBLK *dev, int mountstat_only );
-extern void *scsi_tapemountmon_thread ( void   *devblk );
+extern int   passedeot_scsitape       ( DEVBLK *dev );
+extern int   readblkid_scsitape       ( DEVBLK* dev, BYTE* logical, BYTE* physical );
+extern int   locateblk_scsitape       ( DEVBLK* dev, U32 blockid,        BYTE *unitstat, BYTE code );
+
+// Internal functions...
+
+extern void  int_scsi_rewind_unload( DEVBLK *dev, BYTE *unitstat, BYTE code );
+extern void  int_scsi_status_update( DEVBLK *dev, int mountstat_only );
+extern int   int_write_scsimark    ( DEVBLK *dev );
+
+extern void  blockid_emulated_to_actual( DEVBLK *dev, BYTE *emu_blkid, BYTE *act_blkid );
+extern void  blockid_actual_to_emulated( DEVBLK *dev, BYTE *act_blkid, BYTE *emu_blkid );
+
+extern void  blockid_32_to_22( BYTE *in_32blkid, BYTE *out_22blkid );
+extern void  blockid_22_to_32( BYTE *in_22blkid, BYTE *out_32blkid );
+
+extern void  create_automount_thread( DEVBLK* dev );
+extern void *scsi_tapemountmon_thread( void* devblk );
+extern void  shutdown_worker_threads( DEVBLK *dev );
+extern void  define_BOT_pos( DEVBLK *dev );
 
 // PROGRAMMING NOTE: I'm not sure of what the the actual/proper value
 // should be (or is) for the following value but I've coded what seems

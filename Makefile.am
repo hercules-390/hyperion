@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.181  2008/03/02 22:50:35  rbowler
+# Restore tabs corrupted by previous modification
+#
 # Revision 1.180  2008/03/01 14:19:29  rbowler
 # Add new module general3.c for general-instructions-extension facility
 #
@@ -112,8 +115,14 @@ dyndev_SRC         = commadpt.c  \
                      sockdev.c   \
                      printer.c   \
                      tapedev.c   \
-                     scsitape.c  \
+                     tapeccws.c  \
+                     sllib.c     \
                      hetlib.c    \
+                     awstape.c   \
+                     hettape.c   \
+                     omatape.c   \
+                     scsitape.c  \
+                     w32stape.c  \
                      ctc_lcs.c   \
                      ctc_ctci.c  \
                      ctcadpt.c   \
@@ -258,7 +267,7 @@ if OPTION_DYNAMIC_LOAD
   hdt3270_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3270_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-  hdt3420_la_SOURCES = tapedev.c scsitape.c
+  hdt3420_la_SOURCES = tapedev.c tapeccws.c awstape.c hettape.c omatape.c scsitape.c w32stape.c
   hdt3420_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3420_la_LIBADD  = $(DYNMOD_LD_ADD) libherct.la
 
@@ -641,7 +650,6 @@ EXTRA_DIST = autoconf/config.rpath \
              build_pch.c           \
              conspawn.c            \
              getopt.c              \
-             w32stape.c            \
              herclogo.txt          \
              hercules.ico
 

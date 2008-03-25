@@ -7,6 +7,9 @@
 VERSION  = \"3.05w32\"
 
 # $Log$
+# Revision 1.56  2008/03/02 22:50:35  rbowler
+# Restore tabs corrupted by previous modification
+#
 # Revision 1.55  2008/03/01 14:19:29  rbowler
 # Add new module general3.c for general-instructions-extension facility
 #
@@ -100,7 +103,7 @@ hdt2703_OBJ  = commadpt.o
 hdt3088_OBJ  = ctc_lcs.o ctc_ctci.o ctcadpt.o w32ctca.o tuntap.o
 hdt3270_OBJ  = console.o
 hdt1052c_OBJ = con1052c.o
-hdt3420_OBJ  = tapedev.o hetlib.o
+hdt3420_OBJ  = tapedev.o tapeccws.o awstape.o hettape.o omatape.o scsitape.o hetlib.o
 hdt3505_OBJ  = cardrdr.o sockdev.o
 hdt3525_OBJ  = cardpch.o
 hdteq_OBJ    = hdteq.o

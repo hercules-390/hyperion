@@ -32,6 +32,9 @@
 ###############################################################################
 
 # $Log$
+# Revision 1.196  2008/03/10 15:10:46  rbowler
+# Add -lpthread to link options for Solaris 2.9
+#
 # Revision 1.195  2008/02/19 11:49:18  ivan
 # - Move setting of CPU priority after spwaning timer thread
 # - Added support for Posix 1003.1e capabilities
@@ -604,6 +607,12 @@ AC_CHECK_DECLS( SIOCSIFHWADDR,        [hc_cv_have_siocsifhwaddr=yes],       [hc_
 AC_CHECK_DECLS( SIOCADDRT,            [hc_cv_have_siocaddrt=yes],           [hc_cv_have_siocaddrt=no],           [#include <linux/sockios.h>] )
 AC_CHECK_DECLS( SIOCDELRT,            [hc_cv_have_siocdelrt=yes],           [hc_cv_have_siocdelrt=no],           [#include <linux/sockios.h>] )
 AC_CHECK_DECLS( SIOCDIFADDR,          [hc_cv_have_siocdifaddr=yes],         [hc_cv_have_siocdifaddr=no],         [#include <linux/sockios.h>] )
+
+if test "$hc_cv_have_sys_mtio_h" == "yes"; then
+    AC_CHECK_DECLS( MTEWARN,          [hc_cv_have_mtewarn=yes],             [hc_cv_have_mtewarn=no],             [#include <sys/mtio.h>] )
+else
+    hc_cv_have_mtewarn=no
+fi
 
 AC_CACHE_SAVE()
 
