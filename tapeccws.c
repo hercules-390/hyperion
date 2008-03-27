@@ -96,6 +96,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.2  2008/03/26 07:23:51  fish
+// SCSI MODS part 2: split tapedev.c: aws, het, oma processing moved to separate modules, CCW processing moved to separate module.
+//
 // Revision 1.1  2008/03/25 18:42:36  fish
 // AWS, HET and OMA processing logic moved to separate modules.
 // Tape device CCW processing logic also moved to separate module.
@@ -182,6 +185,7 @@
 #include "tapedev.h"   /* This module's header file                  */
 
 /*-------------------------------------------------------------------*/
+
 //#define  ENABLE_TRACING_STMTS     // (Fish: DEBUGGING)
 
 #ifdef ENABLE_TRACING_STMTS
@@ -198,6 +202,384 @@
   #define VERIFY(a)   ((void)(a))
 #endif
 
+/*-------------------------------------------------------------------*/
+/*         (forward declarations needed by below tables)             */
+/*-------------------------------------------------------------------*/
+
+extern  BYTE           TapeCommands3410 [];
+extern  BYTE           TapeCommands3420 [];
+extern  BYTE           TapeCommands3422 [];
+extern  BYTE           TapeCommands3430 [];
+extern  BYTE           TapeCommands3480 [];
+extern  BYTE           TapeCommands3490 [];
+extern  BYTE           TapeCommands3590 [];
+extern  BYTE           TapeCommands9347 [];
+
+extern  TapeSenseFunc  build_sense_3410;
+extern  TapeSenseFunc  build_sense_3420;
+        #define        build_sense_3422         build_sense_3420
+        #define        build_sense_3430         build_sense_3420
+extern  TapeSenseFunc  build_sense_3480_etal;
+extern  TapeSenseFunc  build_sense_3490;
+extern  TapeSenseFunc  build_sense_3590;
+extern  TapeSenseFunc  build_sense_Streaming;
+
+/*-------------------------------------------------------------------*/
+/*                     TapeDevtypeList                               */
+/* Format:                                                           */
+/*                                                                   */
+/*    A:    Supported Device Type,                                   */
+/*    B:      Command table index, (TapeCommandTable)                */
+/*    C:      UC on RewUnld,   (1/0 = true/false)                    */
+/*    D:      CUE on RewUnld,  (1/0 = true/false)                    */
+/*    E:      Sense Build Function table index (TapeSenseTable)      */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+int  TapeDevtypeList [] =
+{
+   /*   A   B  C  D  E  */
+    0x3410, 0, 1, 0, 0,
+    0x3411, 0, 1, 0, 0,
+    0x3420, 1, 1, 1, 1,
+    0x3422, 2, 0, 0, 2,
+    0x3430, 3, 0, 0, 3,
+    0x3480, 4, 0, 0, 4,
+    0x3490, 5, 0, 0, 5,
+    0x3590, 6, 0, 0, 6,
+    0x9347, 7, 0, 0, 7,
+    0x9348, 7, 0, 0, 7,
+    0x8809, 7, 0, 0, 7,
+    0x0000, 0, 0, 0, 0      /* (end of table marker) */
+};
+
+/*-------------------------------------------------------------------*/
+/*                       TapeCommandTable                            */
+/*                                                                   */
+/*  Specific supported CCW codes for each device type. Index is      */
+/*  fetched by TapeCommandIsValid from "TapeDevtypeList[ n+1 ]".     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+BYTE*  TapeCommandTable [] =
+{
+     TapeCommands3410,      /*  0   3410/3411                        */
+     TapeCommands3420,      /*  1   3420                             */
+     TapeCommands3422,      /*  2   3422                             */
+     TapeCommands3430,      /*  3   3430                             */
+     TapeCommands3480,      /*  4   3480 (Maybe all 38K Tapes)       */
+     TapeCommands3490,      /*  5   3490                             */
+     TapeCommands3590,      /*  6   3590                             */
+     TapeCommands9347,      /*  7   9347 (Maybe all streaming tapes) */
+     NULL
+};
+
+/*-------------------------------------------------------------------*/
+/*                       TapeSenseTable                              */
+/*                                                                   */
+/* SENSE function routing table. Index is fetched by 'build_senseX'  */
+/* function from table entry "TapeDevtypeList[ i+4 ]".               */
+/*-------------------------------------------------------------------*/
+
+TapeSenseFunc*  TapeSenseTable  [] =
+{
+    build_sense_3410,       /*  0   3410/3411                        */
+    build_sense_3420,       /*  1   3420                             */
+    build_sense_3422,       /*  2   3422                             */
+    build_sense_3430,       /*  3   3430                             */
+    build_sense_3480_etal,  /*  4   3480 (Maybe all 38K Tapes)       */
+    build_sense_3490,       /*  5   3490                             */
+    build_sense_3590,       /*  6   3590                             */
+    build_sense_Streaming,  /*  7   9347 (Maybe all streaming tapes) */
+    NULL
+};
+
+/*-------------------------------------------------------------------*/
+/*           CCW opcode Validity Tables by Device Type               */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* These tables are used by the 'TapeCommandIsValid' function to     */
+/* determine if a CCW code is valid or not for the given device.     */
+/*                                                                   */
+/*    0: Command is NOT valid                                        */
+/*    1: Command is Valid, Tape MUST be loaded                       */
+/*    2: Command is Valid, Tape NEED NOT be loaded                   */
+/*    3: Command is Valid, But is a NO-OP (return CE+DE now)         */
+/*    4: Command is Valid, But is a NO-OP (for virtual tapes)        */
+/*    5: Command is Valid, Tape MUST be loaded (add DE to status)    */
+/*                                                                   */
+/* SOURCES:                                                          */
+/*                                                                   */
+/*   GX20-1850-2 "S/370 Reference Summary"  (3410/3411/3420)         */
+/*   GX20-0157-1 "370/XA Reference Summary" (3420/3422/3430/3480)    */
+/*   GA33-1510-0 "S/370 Model 115 FC"       (3410/3411)              */
+/*                                                                   */
+/* Ivan Warren, 2003-02-24                                           */
+/*-------------------------------------------------------------------*/
+
+BYTE  TapeCommands3410 [256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,1,1,1,2,0,0,5,0,0,0,0,1,0,0,5, /* 00 */
+   0,0,0,4,0,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 20 */
+   0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 30 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0, /* 50 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 60 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 70 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 80 */
+   0,0,0,4,0,0,0,1,0,0,0,0,0,0,0,0, /* 90 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* A0 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* B0 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* C0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* D0 */
+   0,0,0,0,2,0,0,0,0,0,0,3,0,0,0,0, /* E0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  /* F0 */
+};
+
+BYTE  TapeCommands3420 [256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5, /* 00 */
+   0,0,0,4,0,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 20 */
+   0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 30 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0, /* 50 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 60 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 70 */
+   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 80 */
+   0,0,0,4,0,0,0,1,0,0,0,0,0,0,0,0, /* 90 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* A0 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* B0 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* C0 */
+   0,0,0,4,4,0,0,0,0,0,0,0,0,0,0,0, /* D0 */
+   0,0,0,0,2,0,0,0,0,0,0,3,0,0,0,0, /* E0 */
+   0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0  /* F0 */
+};
+
+BYTE  TapeCommands3422 [256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5, /* 00 */
+   0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1, /* 10 */
+   0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1, /* 20 */
+   0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1, /* 30 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 50 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 60 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 70 */
+   0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0, /* 80 */
+   0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0, /* 90 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* A0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* B0 */
+   0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0, /* C0 */
+   0,0,0,4,4,0,0,0,0,0,0,0,0,0,0,0, /* D0 */
+   0,0,0,0,2,0,0,0,0,0,0,3,0,0,0,0, /* E0 */
+   0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0  /* F0 */
+};
+
+BYTE  TapeCommands3430 [256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5, /* 00 */
+   0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1, /* 20 */
+   0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1, /* 30 */
+   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 40 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 50 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 60 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 70 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 80 */
+   0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0, /* 90 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* A0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* B0 */
+   0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0, /* C0 */
+   0,0,0,4,4,0,0,0,0,0,0,0,0,0,0,0, /* D0 */
+   0,0,0,0,2,0,0,0,0,0,0,3,0,0,0,0, /* E0 */
+   0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0  /* F0 */
+};
+
+BYTE  TapeCommands3480 [256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5, /* 00 */
+   0,0,1,3,2,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   0,0,1,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 20 */
+   0,0,0,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 30 */
+   0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1, /* 40 */
+   0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,0, /* 50 */
+   0,0,0,3,2,0,0,0,0,0,0,3,0,0,0,0, /* 60 */
+   0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* 70 */
+   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 80 */
+   0,0,0,3,0,0,0,1,0,0,0,0,0,0,0,2, /* 90 */
+   0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,2, /* A0 */
+   0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* B0 */
+   0,0,0,2,0,0,0,2,0,0,0,3,0,0,0,0, /* C0 */
+   0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0, /* D0 */
+   0,0,0,2,2,0,0,0,0,0,0,3,0,0,0,0, /* E0 */
+   0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0  /* F0 */
+};
+
+BYTE  TapeCommands3490 [256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5, /* 00 */
+   0,0,1,3,2,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   0,0,1,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 20 */
+   0,0,0,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 30 */
+   0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1, /* 40 */
+   0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,0, /* 50 */
+   0,0,0,3,2,0,0,0,0,0,0,3,0,0,0,0, /* 60 */
+   0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* 70 */
+   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 80 */
+   0,0,0,3,0,0,0,1,0,0,0,0,0,0,0,2, /* 90 */
+   0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,2, /* A0 */
+   0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* B0 */
+   0,0,0,2,0,0,0,2,0,0,0,3,0,0,0,0, /* C0 */
+   0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0, /* D0 */
+   0,0,0,2,2,0,0,0,0,0,0,3,0,0,0,0, /* E0 */
+   0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0  /* F0 */
+};
+
+BYTE  TapeCommands3590 [256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,1,1,1,2,0,1,5,0,0,1,2,0,0,0,5, /* 00 */
+   0,0,1,3,2,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   0,0,1,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 20 */
+   0,0,0,3,2,0,0,1,0,0,0,3,0,0,2,1, /* 30 */
+   0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1, /* 40 */
+   0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,0, /* 50 */
+   0,0,2,3,2,0,0,0,0,0,0,3,0,0,0,0, /* 60 */
+   0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* 70 */
+   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 80 */
+   0,0,0,3,0,0,0,1,0,0,0,0,0,0,0,2, /* 90 */
+   0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,2, /* A0 */
+   0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* B0 */
+   0,0,2,2,0,0,0,2,0,0,0,3,0,0,0,2, /* C0 */
+   0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0, /* D0 */
+   0,0,0,2,2,0,0,0,0,0,0,3,0,0,0,0, /* E0 */
+   0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0  /* F0 */
+};
+
+BYTE  TapeCommands9347 [256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5, /* 00 */
+   0,0,0,4,0,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 20 */
+   0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 30 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0, /* 50 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 60 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 70 */
+   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 80 */
+   0,0,0,4,0,0,0,1,0,0,0,0,0,0,0,0, /* 90 */
+   0,0,0,4,2,0,0,0,0,0,0,4,0,0,0,0, /* A0 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* B0 */
+   0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* C0 */
+   0,0,0,4,4,0,0,0,0,0,0,0,0,0,0,0, /* D0 */
+   0,0,0,0,2,0,0,0,0,0,0,3,0,0,0,0, /* E0 */
+   0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0  /* F0 */
+};
+
+/*-------------------------------------------------------------------*/
+/* Ivan Warren 20040227                                              */
+/*                                                                   */
+/* This table is used by channel.c to determine if a CCW code        */
+/* is an immediate command or not.                                   */
+/*                                                                   */
+/* The tape is addressed in the DEVHND structure as 'DEVIMM immed'   */
+/*                                                                   */
+/*     0:  ("false")  Command is *NOT* an immediate command          */
+/*     1:  ("true")   Command *IS* an immediate command              */
+/*                                                                   */
+/* Note: An immediate command is defined as a command which returns  */
+/* CE (channel end) during initialization (that is, no data is       */
+/* actually transfered). In this case, IL is not indicated for a     */
+/* Format 0 or Format 1 CCW when IL Suppression Mode is in effect.   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+BYTE  TapeImmedCommands [256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1, /* 00 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 20 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 30 */
+   0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 50 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 60 */
+   0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1, /* 70 */ /* Adrian Trenkwalder - 77 was 1 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 80 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0, /* 90 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0, /* A0 */
+   0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1, /* B0 */
+   0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1, /* C0 */
+   0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1, /* D0 */
+   0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1, /* E0 */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1  /* F0 */
+};
+
+/*-------------------------------------------------------------------*/
+/*                   TapeCommandIsValid      (Ivan Warren 20030224)  */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* Determine if a CCW code is valid for the Device                   */
+/*                                                                   */
+/*   rc 0:   is *NOT* valid                                          */
+/*   rc 1:   is Valid, tape MUST be loaded                           */
+/*   rc 2:   is Valid, tape NEED NOT be loaded                       */
+/*   rc 3:   is Valid, But is a NO-OP (Return CE+DE now)             */
+/*   rc 4:   is Valid, But is a NO-OP for virtual tapes              */
+/*   rc 5:   is Valid, Tape Must be loaded - Add DE to status        */
+/*   rc 6:   is Valid, Tape load attempted - but not an error        */
+/*           (used for sense and no contingency allegiance exists)   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+int TapeCommandIsValid (BYTE code, U16 devtype, BYTE *rustat)
+{
+int i, rc, tix = 0, devtfound = 0;
+
+    /*
+    **  Find the D/T in the table
+    **  If not found, treat as invalid CCW code
+    */
+
+    *rustat = 0;
+
+    for (i = 0; TapeDevtypeList[i] != 0; i += TAPEDEVTYPELIST_ENTRYSIZE)
+    {
+        if (TapeDevtypeList[i] == devtype)
+        {
+           devtfound = 1;
+           tix = TapeDevtypeList[i+1];
+
+           if (TapeDevtypeList[i+2])
+           {
+               *rustat |= CSW_UC;
+           }
+           if (TapeDevtypeList[i+3])
+           {
+               *rustat |= CSW_CUE;
+           }
+           break;
+        }
+    }
+
+    if (!devtfound)
+        return 0;
+
+    rc = TapeCommandTable[tix][code];
+
+    return rc;
+
+} /* end function TapeCommandIsValid */
+
+
 /*********************************************************************/
 /*********************************************************************/
 /**                                                                 **/
@@ -206,9 +588,6 @@
 /*********************************************************************/
 /*********************************************************************/
 
-/*-------------------------------------------------------------------*/
-/* Execute a Channel Command Word                                    */
-/*-------------------------------------------------------------------*/
 void tapedev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual)
@@ -2033,6 +2412,757 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     } /* end switch (code) */
 
 } /* end function tapedev_execute_ccw */
+
+/*-------------------------------------------------------------------*/
+/* Load Display channel command processing...                        */
+/*-------------------------------------------------------------------*/
+void load_display (DEVBLK *dev, BYTE *buf, U16 count)
+{
+U16             i;                      /* Array subscript           */
+char            msg1[9], msg2[9];       /* Message areas (ASCIIZ)    */
+BYTE            fcb;                    /* Format Control Byte       */
+BYTE            tapeloaded;             /* (boolean true/false)      */
+BYTE*           msg;                    /* (work buf ptr)            */
+
+    if ( !count )
+        return;
+
+    /* Pick up format control byte */
+    fcb = *buf;
+
+    /* Copy and translate messages... */
+
+    memset( msg1, 0, sizeof(msg1) );
+    memset( msg2, 0, sizeof(msg2) );
+
+    msg = buf+1;
+
+    for (i=0; *msg && i < 8 && ((i+1)+0) < count; i++)
+        msg1[i] = guest_to_host(*msg++);
+
+    msg = buf+1+8;
+
+    for (i=0; *msg && i < 8 && ((i+1)+8) < count; i++)
+        msg2[i] = guest_to_host(*msg++);
+
+    msg1[ sizeof(msg1) - 1 ] = 0;
+    msg2[ sizeof(msg2) - 1 ] = 0;
+
+    tapeloaded = dev->tmh->tapeloaded( dev, NULL, 0 );
+
+    switch ( fcb & FCB_FS )  // (high-order 3 bits)
+    {
+    case FCB_FS_READYGO:     // 0x00
+
+        /*
+        || 000b: "The message specified in bytes 1-8 and 9-16 is
+        ||       maintained until the tape drive next starts tape
+        ||       motion, or until the message is updated."
+        */
+
+        dev->tapedispflags = 0;
+
+        strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
+        strlcpy( dev->tapemsg2, msg2, sizeof(dev->tapemsg2) );
+
+        dev->tapedisptype  = TAPEDISPTYP_WAITACT;
+
+        break;
+
+    case FCB_FS_UNMOUNT:     // 0x20
+
+        /*
+        || 001b: "The message specified in bytes 1-8 is maintained
+        ||       until the tape cartridge is physically removed from
+        ||       the tape drive, or until the next unload/load cycle.
+        ||       If the drive does not contain a cartridge when the
+        ||       Load Display command is received, the display will
+        ||       contain the message that existed prior to the receipt
+        ||       of the command."
+        */
+
+        dev->tapedispflags = 0;
+
+        if ( tapeloaded )
+        {
+            dev->tapedisptype  = TAPEDISPTYP_UNMOUNT;
+            dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
+
+            strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
+
+            if ( dev->ccwtrace || dev->ccwstep )
+                logmsg(_("HHCTA099I %4.4X: Tape Display \"%s\" Until Unmounted\n"),
+                    dev->devnum, dev->tapemsg1 );
+        }
+
+        break;
+
+    case FCB_FS_MOUNT:       // 0x40
+
+        /*
+        || 010b: "The message specified in bytes 1-8 is maintained
+        ||       until the drive is next loaded. If the drive is
+        ||       loaded when the Load Display command is received,
+        ||       the display will contain the message that existed
+        ||       prior to the receipt of the command."
+        */
+
+        dev->tapedispflags = 0;
+
+        if ( !tapeloaded )
+        {
+            dev->tapedisptype  = TAPEDISPTYP_MOUNT;
+            dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
+
+            strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
+
+            if ( dev->ccwtrace || dev->ccwstep )
+                logmsg(_("HHCTA099I %4.4X: Tape Display \"%s\" Until Mounted\n"),
+                    dev->devnum, dev->tapemsg1 );
+        }
+
+        break;
+
+    case FCB_FS_NOP:         // 0x60
+    default:
+
+        /*
+        || 011b: "This value is used to physically access a drive
+        ||       without changing the message display. This option
+        ||       can be used to test whether a control unit can
+        ||       physically communicate with a drive."
+        */
+
+        return;
+
+    case FCB_FS_RESET_DISPLAY: // 0x80
+
+        /*
+        || 100b: "The host message being displayed is cancelled and
+        ||       a unit message is displayed instead."
+        */
+
+        dev->tapedispflags = 0;
+        dev->tapedisptype  = TAPEDISPTYP_IDLE;
+
+        break;
+
+    case FCB_FS_UMOUNTMOUNT: // 0xE0
+
+        /*
+        || 111b: "The message in bytes 1-8 is displayed until a tape
+        ||       cartridge is physically removed from the tape drive,
+        ||       or until the drive is next loaded. The message in
+        ||       bytes 9-16 is displayed until the drive is next loaded.
+        ||       If no cartridge is present in the drive, the first
+        ||       message is ignored and only the second message is
+        ||       displayed until the drive is next loaded."
+        */
+
+        dev->tapedispflags = 0;
+
+        strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
+        strlcpy( dev->tapemsg2, msg2, sizeof(dev->tapemsg2) );
+
+        if ( tapeloaded )
+        {
+            dev->tapedisptype  = TAPEDISPTYP_UMOUNTMOUNT;
+            dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
+
+            if ( dev->ccwtrace || dev->ccwstep )
+                logmsg(_("HHCTA099I %4.4X: Tape Display \"%s\" Until Unmounted, then \"%s\" Until Mounted\n"),
+                    dev->devnum, dev->tapemsg1, dev->tapemsg2 );
+        }
+        else
+        {
+            dev->tapedisptype  = TAPEDISPTYP_MOUNT;
+            dev->tapedispflags = TAPEDISPFLG_MESSAGE2 | TAPEDISPFLG_REQAUTOMNT;
+
+            if ( dev->ccwtrace || dev->ccwstep )
+                logmsg(_("HHCTA099I %4.4X: Tape \"%s\" Until Mounted\n"),
+                    dev->devnum, dev->tapemsg2 );
+        }
+
+        break;
+    }
+
+    /* Set the flags... */
+
+    /*
+        "When bit 7 (FCB_AL) is active and bits 0-2 (FCB_FS) specify
+        a Mount Message, then only the first eight characters of the
+        message are displayed and bits 3-5 (FCB_AM, FCB_BM, FCB_M2)
+        are ignored."
+    */
+    if (1
+        &&   ( fcb & FCB_AL )
+        && ( ( fcb & FCB_FS ) == FCB_FS_MOUNT )
+    )
+    {
+        fcb  &=  ~( FCB_AM | FCB_BM | FCB_M2 );
+        dev->tapedispflags &= ~TAPEDISPFLG_MESSAGE2;
+    }
+
+    /*
+        "When bit 7 (FCB_AL) is active and bits 0-2 (FCB_FS) specify
+        a Demount/Mount message, then only the last eight characters
+        of the message are displayed. Bits 3-5 (FCB_AM, FCB_BM, FCB_M2)
+        are ignored."
+    */
+    if (1
+        &&   ( fcb & FCB_AL )
+        && ( ( fcb & FCB_FS ) == FCB_FS_UMOUNTMOUNT )
+    )
+    {
+        fcb  &=  ~( FCB_AM | FCB_BM | FCB_M2 );
+        dev->tapedispflags |= TAPEDISPFLG_MESSAGE2;
+    }
+
+    /*
+        "When bit 3 (FCB_AM) is set to 1, then bits 4 (FCB_BM) and 5
+        (FCB_M2) are ignored."
+    */
+    if ( fcb & FCB_AM )
+        fcb  &=  ~( FCB_BM | FCB_M2 );
+
+    dev->tapedispflags |= (((fcb & FCB_AM) ? TAPEDISPFLG_ALTERNATE  : 0 ) |
+                          ( (fcb & FCB_BM) ? TAPEDISPFLG_BLINKING   : 0 ) |
+                          ( (fcb & FCB_M2) ? TAPEDISPFLG_MESSAGE2   : 0 ) |
+                          ( (fcb & FCB_AL) ? TAPEDISPFLG_AUTOLOADER : 0 ));
+
+    UpdateDisplay( dev );
+    ReqAutoMount( dev );
+
+} /* end function load_display */
+
+
+/*********************************************************************/
+/*********************************************************************/
+/**                                                                 **/
+/**                 SENSE CCW HANDLING FUNCTIONS                    **/
+/**                                                                 **/
+/*********************************************************************/
+/*********************************************************************/
+
+/*-------------------------------------------------------------------*/
+/*                        build_senseX                               */
+/*-------------------------------------------------------------------*/
+/*  Construct sense bytes and unit status                            */
+/*  Note: name changed because semantic changed                      */
+/*  ERCode is our internal ERror-type code                           */
+/*                                                                   */
+/*  Uses the 'TapeSenseTable' table index                            */
+/*  from the 'TapeDevtypeList' table to route call to                */
+/*  one of the below device-specific sense functions                 */
+/*-------------------------------------------------------------------*/
+void build_senseX (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
+{
+int i;
+BYTE usr;
+int sense_built;
+    sense_built = 0;
+    if(unitstat==NULL)
+    {
+        unitstat = &usr;
+    }
+    for(i = 0;TapeDevtypeList[i] != 0; i += TAPEDEVTYPELIST_ENTRYSIZE)
+    {
+        if (TapeDevtypeList[i] == dev->devtype)
+        {
+            TapeSenseTable[TapeDevtypeList[i+4]](ERCode,dev,unitstat,ccwcode);
+            sense_built = 1;
+            /* Set FP &  LOADPOINT bit */
+            if(dev->tmh->passedeot(dev))
+            {
+                if (TAPE_BSENSE_STATUSONLY==ERCode &&
+                   ( ccwcode==0x01 || // write
+                     ccwcode==0x17 || // erase gap
+                     ccwcode==0x1F    // write tapemark
+                )
+            )
+            {
+                    *unitstat|=CSW_UX;
+                }
+            }
+            break;
+        }
+    }
+    if (!sense_built)
+    {
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0]=SENSE_EC;
+    }
+    if (*unitstat & CSW_UC)
+    {
+        dev->sns_pending = 1;
+    }
+    return;
+
+} /* end function build_senseX */
+
+/*-------------------------------------------------------------------*/
+/*                  build_sense_3410_3420                            */
+/*-------------------------------------------------------------------*/
+void build_sense_3410_3420 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
+{
+    // NOTE: caller should have cleared sense area to zeros
+    //       if this isn't a 'TAPE_BSENSE_STATUSONLY' call
+
+    switch(ERCode)
+    {
+    case TAPE_BSENSE_TAPEUNLOADED:
+        switch(ccwcode)
+        {
+        case 0x01: // write
+        case 0x02: // read
+        case 0x0C: // read backward
+            *unitstat = CSW_CE | CSW_UC | (dev->tdparms.deonirq?CSW_DE:0);
+            break;
+        case 0x03: // nop
+            *unitstat = CSW_UC;
+            break;
+        case 0x0f: // rewind unload
+            /*
+            *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+            */
+            *unitstat = CSW_UC | CSW_DE | CSW_CUE;
+            break;
+        default:
+            *unitstat = CSW_CE | CSW_UC | CSW_DE;
+            break;
+        } // end switch(ccwcode)
+        dev->sense[0] = SENSE_IR;
+        dev->sense[1] = SENSE1_TAPE_TUB;
+        break;
+    case TAPE_BSENSE_RUN_SUCCESS: /* RewUnld op */
+        *unitstat = CSW_UC | CSW_DE | CSW_CUE;
+        /*
+        *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+        */
+        dev->sense[0] = SENSE_IR;
+        dev->sense[1] = SENSE1_TAPE_TUB;
+        break;
+    case TAPE_BSENSE_REWINDFAILED:
+    case TAPE_BSENSE_FENCED:
+    case TAPE_BSENSE_EMPTYTAPE:
+    case TAPE_BSENSE_ENDOFTAPE:
+    case TAPE_BSENSE_BLOCKSHORT:
+        /* On 3411/3420 the tape runs off the reel in that case */
+        /* this will cause pressure loss in both columns */
+    case TAPE_BSENSE_LOCATEERR:
+        /* Locate error: This is more like improperly formatted tape */
+        /* i.e. the tape broke inside the drive                       */
+        /* So EC instead of DC                                        */
+    case TAPE_BSENSE_TAPELOADFAIL:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_EC;
+        dev->sense[1] = SENSE1_TAPE_TUB;
+        dev->sense[7] = 0x60;
+        break;
+    case TAPE_BSENSE_ITFERROR:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_EC;
+        dev->sense[1] = SENSE1_TAPE_TUB;
+        dev->sense[4] = 0x80; /* Tape Unit Reject */
+        break;
+    case TAPE_BSENSE_READFAIL:
+    case TAPE_BSENSE_BADALGORITHM:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_DC;
+        dev->sense[3] = 0xC0; /* Vertical CRC check & Multitrack error */
+        break;
+    case TAPE_BSENSE_WRITEFAIL:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_DC;
+        dev->sense[3] = 0x60; /* Longitudinal CRC check & Multitrack error */
+        break;
+    case TAPE_BSENSE_BADCOMMAND:
+    case TAPE_BSENSE_INCOMPAT:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_CR;
+        dev->sense[4] = 0x01;
+        break;
+    case TAPE_BSENSE_WRITEPROTECT:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_CR;
+        break;
+    case TAPE_BSENSE_LOADPTERR:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = 0;
+        break;
+    case TAPE_BSENSE_READTM:
+        *unitstat = CSW_CE|CSW_DE|CSW_UX;
+        break;
+    case TAPE_BSENSE_UNSOLICITED:
+        *unitstat = CSW_CE|CSW_DE;
+        break;
+    case TAPE_BSENSE_STATUSONLY:
+        *unitstat = CSW_CE|CSW_DE;
+        break;
+    } // end switch(ERCode)
+
+    /* Fill in the common sense information */
+
+    if (strcmp(dev->filename,TAPE_UNLOADED) == 0
+        || !dev->tmh->tapeloaded(dev,NULL,0))
+    {
+        dev->sense[0] |= SENSE_IR;
+        dev->sense[1] |= SENSE1_TAPE_FP;
+    }
+    else
+    {
+        dev->sense[0] &= ~SENSE_IR;
+        dev->sense[1] |= IsAtLoadPoint( dev ) ? SENSE1_TAPE_LOADPT : 0;
+        dev->sense[1]|=dev->readonly?SENSE1_TAPE_FP:0; /* FP bit set when tape not ready too */
+    }
+    if (dev->tmh->passedeot(dev))
+    {
+        dev->sense[4] |= 0x40;
+    }
+
+} /* end function build_sense_3410_3420 */
+
+/*-------------------------------------------------------------------*/
+/*                     build_sense_3410                              */
+/*-------------------------------------------------------------------*/
+void build_sense_3410 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
+{
+    build_sense_3410_3420(ERCode,dev,unitstat,ccwcode);
+
+    dev->sense[5] &= 0x80;
+    dev->sense[5] |= 0x40;
+    dev->sense[6] = 0x22; /* Dual Dens - 3410/3411 Model 2 */
+    dev->numsense = 9;
+
+} /* end function build_sense_3410 */
+
+/*-------------------------------------------------------------------*/
+/*                     build_sense_3420                              */
+/*-------------------------------------------------------------------*/
+void build_sense_3420 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
+{
+    build_sense_3410_3420(ERCode,dev,unitstat,ccwcode);
+
+    /* Following stripped from original 'build_sense' */
+    dev->sense[5] |= 0xC0;
+    dev->sense[6] |= 0x03;
+    dev->sense[13] = 0x80;
+    dev->sense[14] = 0x01;
+    dev->sense[15] = 0x00;
+    dev->sense[16] = 0x01;
+    dev->sense[19] = 0xFF;
+    dev->sense[20] = 0xFF;
+    dev->numsense = 24;
+
+} /* end function build_sense_3420 */
+
+/*-------------------------------------------------------------------*/
+/*                     build_sense_3480_etal                         */
+/*-------------------------------------------------------------------*/
+void build_sense_3480_etal (int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode)
+{
+int sns4mat = 0x20;
+
+    // NOTE: caller should have cleared sense area to zeros
+    //       if this isn't a 'TAPE_BSENSE_STATUSONLY' call
+
+    switch(ERCode)
+    {
+    case TAPE_BSENSE_TAPEUNLOADED:
+        switch(ccwcode)
+        {
+        case 0x01: // write
+        case 0x02: // read
+        case 0x0C: // read backward
+            *unitstat = CSW_CE | CSW_UC;
+            break;
+        case 0x03: // nop
+            *unitstat = CSW_UC;
+            break;
+        case 0x0f: // rewind unload
+            *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+            break;
+        default:
+            *unitstat = CSW_CE | CSW_UC | CSW_DE;
+            break;
+        } // end switch(ccwcode)
+        dev->sense[0] = SENSE_IR;
+        dev->sense[3] = 0x43; /* ERA 43 = Int Req */
+        break;
+    case TAPE_BSENSE_RUN_SUCCESS:        /* Not an error */
+        *unitstat = CSW_CE|CSW_DE;
+        dev->sense[0] = SENSE_IR;
+        dev->sense[3] = 0x2B;
+        sns4mat = 0x21;
+        break;
+    case TAPE_BSENSE_TAPELOADFAIL:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_IR|0x02;
+        dev->sense[3] = 0x33; /* ERA 33 = Load Failed */
+        break;
+    case TAPE_BSENSE_READFAIL:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_DC;
+        dev->sense[3] = 0x23;
+        break;
+    case TAPE_BSENSE_WRITEFAIL:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_DC;
+        dev->sense[3] = 0x25;
+        break;
+    case TAPE_BSENSE_BADCOMMAND:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_CR;
+        dev->sense[3] = 0x27;
+        break;
+    case TAPE_BSENSE_INCOMPAT:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_CR;
+        dev->sense[3] = 0x29;
+        break;
+    case TAPE_BSENSE_WRITEPROTECT:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_CR;
+        dev->sense[3] = 0x30;
+        break;
+    case TAPE_BSENSE_EMPTYTAPE:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_DC;
+        dev->sense[3] = 0x31;
+        break;
+    case TAPE_BSENSE_ENDOFTAPE:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_EC;
+        dev->sense[3] = 0x38;
+        break;
+    case TAPE_BSENSE_LOADPTERR:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = 0;
+        dev->sense[3] = 0x39;
+        break;
+    case TAPE_BSENSE_FENCED:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_EC|0x02; /* Deffered UC */
+        dev->sense[3] = 0x47;
+        break;
+    case TAPE_BSENSE_BADALGORITHM:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_EC;
+        if (dev->devtype==0x3480)
+        {
+            dev->sense[3] = 0x47;   // (volume fenced)
+        }
+        else // 3490, 3590, etc.
+        {
+            dev->sense[3] = 0x5E;   // (bad compaction algorithm)
+        }
+        break;
+    case TAPE_BSENSE_LOCATEERR:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_EC;
+        dev->sense[3] = 0x44;
+        break;
+    case TAPE_BSENSE_BLOCKSHORT:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_EC;
+        dev->sense[3] = 0x36;
+        break;
+    case TAPE_BSENSE_ITFERROR:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_EC;
+        dev->sense[3] = 0x22;
+        break;
+    case TAPE_BSENSE_REWINDFAILED:
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        dev->sense[0] = SENSE_EC;
+        dev->sense[3] = 0x2C; /* Generic Equipment Malfunction ERP code */
+        break;
+    case TAPE_BSENSE_READTM:
+        *unitstat = CSW_CE|CSW_DE|CSW_UX;
+        break;
+    case TAPE_BSENSE_UNSOLICITED:
+        *unitstat = CSW_CE|CSW_DE;
+        dev->sense[3] = 0x00;
+        break;
+    case TAPE_BSENSE_STATUSONLY:
+    default:
+        *unitstat = CSW_CE|CSW_DE;
+        break;
+    } // end switch(ERCode)
+
+    /* Fill in the common sense information */
+
+    switch(sns4mat)
+    {
+        default:
+        case 0x20:
+        case 0x21:
+            dev->sense[7] = sns4mat;
+            memset(&dev->sense[8],0,31-8);
+            break;
+    } // end switch(sns4mat)
+
+    if (strcmp(dev->filename,TAPE_UNLOADED) == 0
+        || !dev->tmh->tapeloaded(dev,NULL,0))
+    {
+        dev->sense[0] |= SENSE_IR;
+        dev->sense[1] |= SENSE1_TAPE_FP;
+    }
+    else
+    {
+        dev->sense[0] &= ~SENSE_IR;
+        dev->sense[1] &= ~(SENSE1_TAPE_LOADPT|SENSE1_TAPE_FP);
+        dev->sense[1] |= IsAtLoadPoint( dev ) ? SENSE1_TAPE_LOADPT : 0;
+        dev->sense[1]|=dev->readonly?SENSE1_TAPE_FP:0; /* FP bit set when tape not ready too */
+    }
+
+    dev->sense[1] |= SENSE1_TAPE_TUA;
+
+} /* end function build_sense_3480_etal */
+
+/*-------------------------------------------------------------------*/
+/*                     build_sense_3490                              */
+/*-------------------------------------------------------------------*/
+void build_sense_3490 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
+{
+    // Until we know for sure that we have to do something different,
+    // we should be able to safely use the 3480 sense function here...
+
+    build_sense_3480_etal ( ERCode, dev, unitstat, ccwcode );
+}
+
+/*-------------------------------------------------------------------*/
+/*                     build_sense_3590                              */
+/*-------------------------------------------------------------------*/
+void build_sense_3590 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
+{
+    // Until we know for sure that we have to do something different,
+    // we should be able to safely use the 3480 sense function here...
+
+    build_sense_3480_etal ( ERCode, dev, unitstat, ccwcode );
+}
+
+/*-------------------------------------------------------------------*/
+/*                    build_sense_Streaming                          */
+/*                      (8809, 9347, 9348)                           */
+/*-------------------------------------------------------------------*/
+void build_sense_Streaming (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode)
+{
+    // NOTE: caller should have cleared sense area to zeros
+    //       if this isn't a 'TAPE_BSENSE_STATUSONLY' call
+
+    switch(ERCode)
+    {
+    case TAPE_BSENSE_TAPEUNLOADED:
+        switch(ccwcode)
+        {
+        case 0x01: // write
+        case 0x02: // read
+        case 0x0C: // read backward
+            *unitstat = CSW_CE | CSW_UC | (dev->tdparms.deonirq?CSW_DE:0);
+            break;
+        case 0x03: // nop
+            *unitstat = CSW_UC;
+            break;
+        case 0x0f: // rewind unload
+            /*
+            *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+            */
+            *unitstat = CSW_UC | CSW_DE | CSW_CUE;
+            break;
+        default:
+            *unitstat = CSW_CE | CSW_UC | CSW_DE;
+            break;
+        } // end switch(ccwcode)
+        dev->sense[0] = SENSE_IR;
+        dev->sense[3] = 6;        /* Int Req ERAC */
+        break;
+    case TAPE_BSENSE_RUN_SUCCESS: /* RewUnld op */
+        *unitstat = CSW_UC | CSW_DE | CSW_CUE;
+        /*
+        *unitstat = CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+        */
+        dev->sense[0] = SENSE_IR;
+        dev->sense[3] = 6;        /* Int Req ERAC */
+        break;
+    case TAPE_BSENSE_REWINDFAILED:
+    case TAPE_BSENSE_ITFERROR:
+        dev->sense[0] = SENSE_EC;
+        dev->sense[3] = 0x03;     /* Perm Equip Check */
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        break;
+    case TAPE_BSENSE_TAPELOADFAIL:
+    case TAPE_BSENSE_LOCATEERR:
+    case TAPE_BSENSE_ENDOFTAPE:
+    case TAPE_BSENSE_EMPTYTAPE:
+    case TAPE_BSENSE_FENCED:
+    case TAPE_BSENSE_BLOCKSHORT:
+    case TAPE_BSENSE_INCOMPAT:
+        dev->sense[0] = SENSE_EC;
+        dev->sense[3] = 0x10; /* PE-ID Burst Check */
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        break;
+    case TAPE_BSENSE_BADALGORITHM:
+    case TAPE_BSENSE_READFAIL:
+        dev->sense[0] = SENSE_DC;
+        dev->sense[3] = 0x09;     /* Read Data Check */
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        break;
+    case TAPE_BSENSE_WRITEFAIL:
+        dev->sense[0] = SENSE_DC;
+        dev->sense[3] = 0x07;     /* Write Data Check (Media Error) */
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        break;
+    case TAPE_BSENSE_BADCOMMAND:
+        dev->sense[0] = SENSE_CR;
+        dev->sense[3] = 0x0C;     /* Bad Command */
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        break;
+    case TAPE_BSENSE_WRITEPROTECT:
+        dev->sense[0] = SENSE_CR;
+        dev->sense[3] = 0x0B;     /* File Protect */
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        break;
+    case TAPE_BSENSE_LOADPTERR:
+        dev->sense[0] = SENSE_CR;
+        dev->sense[3] = 0x0D;     /* Backspace at Load Point */
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        break;
+    case TAPE_BSENSE_READTM:
+        *unitstat = CSW_CE|CSW_DE|CSW_UX;
+        break;
+    case TAPE_BSENSE_UNSOLICITED:
+        *unitstat = CSW_CE|CSW_DE;
+        break;
+    case TAPE_BSENSE_STATUSONLY:
+        *unitstat = CSW_CE|CSW_DE;
+        break;
+    } // end switch(ERCode)
+
+    /* Fill in the common sense information */
+
+    if (strcmp(dev->filename,TAPE_UNLOADED) == 0
+        || !dev->tmh->tapeloaded(dev,NULL,0))
+    {
+        dev->sense[0] |= SENSE_IR;
+        dev->sense[1] |= SENSE1_TAPE_FP;
+        dev->sense[1] &= ~SENSE1_TAPE_TUA;
+        dev->sense[1] |= SENSE1_TAPE_TUB;
+    }
+    else
+    {
+        dev->sense[0] &= ~SENSE_IR;
+        dev->sense[1] |= IsAtLoadPoint( dev ) ? SENSE1_TAPE_LOADPT : 0;
+        dev->sense[1]|=dev->readonly?SENSE1_TAPE_FP:0; /* FP bit set when tape not ready too */
+        dev->sense[1] |= SENSE1_TAPE_TUA;
+        dev->sense[1] &= ~SENSE1_TAPE_TUB;
+    }
+    if (dev->tmh->passedeot(dev))
+    {
+        dev->sense[4] |= 0x40;
+    }
+
+} /* end function build_sense_Streaming */
 
 
 /*********************************************************************/

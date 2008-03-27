@@ -15,6 +15,13 @@
 // $Id$
 //
 // $Log$
+// Revision 1.24  2008/03/25 11:41:31  fish
+// SCSI TAPE MODS part 1: groundwork: non-functional changes:
+// rename some functions, comments, general restructuring, etc.
+// New source modules awstape.c, omatape.c, hettape.c and
+// tapeccws.c added, but not yet used (all will be used in a future
+// commit though when tapedev.c code is eventually split)
+//
 // Revision 1.23  2007/11/30 14:54:33  jmaynard
 // Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
 //
@@ -56,60 +63,6 @@
 
 // (the following is just a [slightly] shorter name for our own internal use)
 #define SLOW_UPDATE_STATUS_TIMEOUT  MAX_NORMAL_SCSI_DRIVE_QUERY_RESPONSE_TIMEOUT_USECS
-
-/*-------------------------------------------------------------------*/
-/* Tell driver (if needed) what a BOT position looks like...         */
-/*-------------------------------------------------------------------*/
-void define_BOT_pos( DEVBLK *dev )
-{
-#ifdef _MSVC_
-
-    // PROGRAMMING NOTE: Need to tell 'w32stape.c' here the
-    // information it needs to detect physical BOT (load-point).
-
-    // This is not normally needed as most drivers determine
-    // it for themselves based on the type (manufacturer/model)
-    // of tape drive being used, but since I haven't added the
-    // code to 'w32stape.c' to do that yet (involves talking
-    // directly to the SCSI device itself) we thus, for now,
-    // need to pass that information directly to 'w32stape.c'
-    // ourselves...
-
-    U32 msk  = 0xFF3FFFFF;      // (3480/3490 default)
-    U32 bot  = 0x01000000;      // (3480/3490 default)
-
-    if ( dev->stape_blkid_32 )
-    {
-        msk  = 0xFFFFFFFF;      // (3590 default)
-        bot  = 0x00000000;      // (3590 default)
-    }
-
-    VERIFY( 0 == w32_define_BOT( dev->fd, msk, bot ) );
-
-#else
-    UNREFERENCED(dev);
-#endif // _MSVC_
-}
-
-/*-------------------------------------------------------------------*/
-/* shutdown_worker_threads...                                        */
-/*-------------------------------------------------------------------*/
-void shutdown_worker_threads( DEVBLK *dev )
-{
-    while ( dev->stape_getstat_tid || dev->stape_mountmon_tid )
-    {
-        dev->stape_threads_exit = 1;    // (always each loop)
-        broadcast_condition( &dev->stape_exit_cond );
-        broadcast_condition( &dev->stape_getstat_cond );
-        timed_wait_condition_relative_usecs
-        (
-            &dev->stape_exit_cond,      // ptr to condition to wait on
-            &dev->stape_getstat_lock,   // ptr to controlling lock (must be held!)
-            25000,                      // max #of microseconds to wait
-            NULL                        // ptr to relative tod value (may be NULL)
-        );
-    }
-}
 
 /*-------------------------------------------------------------------*/
 /*                 Open a SCSI tape device                           */
@@ -496,6 +449,30 @@ struct mtop opblk;
     return -1;
 
 } /* end function write_scsimark */
+
+/*-------------------------------------------------------------------*/
+/* (internal 'write_scsimark' helper function)                       */
+/*-------------------------------------------------------------------*/
+int int_write_scsimark (DEVBLK *dev)        // (internal function)
+{
+int  rc;
+struct mtop opblk;
+
+    opblk.mt_op    = MTWEOF;
+    opblk.mt_count = 1;
+
+    rc = ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk);
+
+    if (rc >= 0)
+    {
+        /* Increment current file number since tapemark was written */
+        dev->curfilen++;
+        /* (tapemarks count as block identifiers too!) */
+        dev->blockid++;
+    }
+
+    return rc;
+}
 
 /*-------------------------------------------------------------------*/
 /* Synchronize a SCSI tape device   (i.e. commit its data to tape)   */
@@ -1071,58 +1048,232 @@ int dse_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
 
 /*********************************************************************/
 /**                                                                 **/
+/**                BLOCK-ID ADJUSTMENT FUNCTIONS                    **/
+/**                                                                 **/
+/*********************************************************************/
+/*
+    The following conversion functions compensate for the fact that
+    the emulated device type might actually be completely different
+    from the actual real [SCSI] device being used for the emulation.
+
+    That is to say, the actual SCSI device being used may actually
+    be a 3590 type device but is defined in Hercules as a 3480 (or
+    vice-versa). Thus while the device actually behaves as a 3590,
+    we need to emulate 3480 functionality instead (and vice-versa).
+
+    For 3480/3490 devices, the block ID has the following format:
+
+     __________ ________________________________________________
+    | Bit      | Description                                    |
+    |__________|________________________________________________|
+    | 0        | Direction Bit                                  |
+    |          |                                                |
+    |          | 0      Wrap 1                                  |
+    |          | 1      Wrap 2                                  |
+    |__________|________________________________________________|
+    | 1-7      | Segment Number                                 |
+    |__________|________________________________________________|
+    | 8-9      | Format Mode                                    |
+    |          |                                                |
+    |          | 00     3480 format                             |
+    |          | 01     3480-2 XF format                        |
+    |          | 10     3480 XF format                          |
+    |          | 11     Reserved                                |
+    |          |                                                |
+    |          | Note:  The 3480 format does not support IDRC.  |
+    |__________|________________________________________________|
+    | 10-31    | Logical Block Number                           |
+    |__________|________________________________________________|
+
+    For 3480's and 3490's, first block recorded on the tape has
+    a block ID value of X'01000000', whereas for 3590 devices the
+    block ID is a full 32 bits and the first block on the tape is
+    block ID x'00000000'.
+
+    For the 32-bit to 22-bit (and vice versa) conversion, we're
+    relying on (hoping really!) that an actual 32-bit block-id value
+    will never actually exceed 30 bits (1-bit wrap + 7-bit segment#
+    + 22-bit block-id) since we perform the conversion by simply
+    splitting the low-order 30 bits of a 32-bit block-id into a sep-
+    arate 8-bit (wrap and segment#) and 22-bit (block-id) fields,
+    and then shifting them into their appropriate position (and of
+    course combining/appending them for the opposite conversion).
+
+    As such, this of course implies that we are thus treating the
+    wrap bit and 7-bit segment number values of a 3480/3490 "22-bit
+    format" blockid as simply the high-order 8 bits of an actual
+    30-bit physical blockid (which may or may not work properly on
+    actual SCSI hardware depending on how[*] it handles inaccurate
+    blockid values).
+
+
+    -----------------
+
+ [*]  Most(?) [SCSI] devices treat the blockid value used in a
+    Locate CCW as simply an "approximate location" of where the
+    block in question actually resides on the physical tape, and
+    will, after positioning itself to the *approximate* physical
+    location of where the block is *believed* to reside, proceed
+    to then perform the final positioning at low-speed based on
+    its reading of its actual internally-recorded blockid values.
+
+    Thus, even when the supplied Locate block-id value is wrong,
+    the Locate should still succeed, albeit less efficiently since
+    it may be starting at a physical position quite distant from
+    where the actual block is actually physically located on the
+    actual media.
+*/
+
+/*-------------------------------------------------------------------*/
+/*                  blockid_emulated_to_actual                       */
+/*-------------------------------------------------------------------*/
+/* Locate CCW helper: convert guest-supplied 3480 or 3590 blockid    */
+/*                    to the actual SCSI hardware blockid format     */
+/* Both I/P AND O/P are presumed to be in BIG-ENDIAN guest format    */
+/*-------------------------------------------------------------------*/
+void blockid_emulated_to_actual
+(
+    DEVBLK  *dev,           // ptr to Hercules device
+    BYTE    *emu_blkid,     // ptr to i/p 4-byte block-id in guest storage
+    BYTE    *act_blkid      // ptr to o/p 4-byte block-id for actual SCSI i/o
+)
+{
+    if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
+    {
+        memcpy( act_blkid, emu_blkid, 4 );
+        return;
+    }
+
+#if defined(OPTION_SCSI_TAPE)
+    if (0x3590 == dev->devtype)
+    {
+        // 3590 being emulated; guest block-id is full 32-bits...
+
+        if (dev->stape_blkid_32)
+        {
+            // SCSI using full 32-bit block-ids too. Just copy as-is...
+
+            memcpy( act_blkid, emu_blkid, 4 );
+        }
+        else
+        {
+            // SCSI using 22-bit block-ids. Use low-order 30 bits
+            // of 32-bit guest-supplied blockid and convert it
+            // into a "22-bit format" blockid value for SCSI...
+
+            blockid_32_to_22 ( emu_blkid, act_blkid );
+        }
+    }
+    else // non-3590 being emulated; guest block-id is 22-bits...
+    {
+        if (dev->stape_blkid_32)
+        {
+            // SCSI using full 32-bit block-ids. Extract the wrap,
+            // segment# and 22-bit blockid bits from the "22-bit
+            // format" guest-supplied blockid value and combine
+            // (append) them into a contiguous low-order 30 bits
+            // of a 32-bit blockid value for SCSI to use...
+
+            blockid_22_to_32 ( emu_blkid, act_blkid );
+        }
+        else
+        {
+            // SCSI using 22-bit block-ids too. Just copy as-is...
+
+            memcpy( act_blkid, emu_blkid, 4 );
+        }
+    }
+#endif /* defined(OPTION_SCSI_TAPE) */
+
+} /* end function blockid_emulated_to_actual */
+
+/*-------------------------------------------------------------------*/
+/*                  blockid_actual_to_emulated                       */
+/*-------------------------------------------------------------------*/
+/* Read Block Id CCW helper:  convert an actual SCSI block-id        */
+/*                            to guest emulated 3480/3590 format     */
+/* Both i/p and o/p are presumed to be in big-endian guest format    */
+/*-------------------------------------------------------------------*/
+void blockid_actual_to_emulated
+(
+    DEVBLK  *dev,           // ptr to Hercules device (for 'devtype')
+    BYTE    *act_blkid,     // ptr to i/p 4-byte block-id from actual SCSI i/o
+    BYTE    *emu_blkid      // ptr to o/p 4-byte block-id in guest storage
+)
+{
+    if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
+    {
+        memcpy( emu_blkid, act_blkid, 4 );
+        return;
+    }
+
+#if defined(OPTION_SCSI_TAPE)
+    if (dev->stape_blkid_32)
+    {
+        // SCSI using full 32-bit block-ids...
+        if (0x3590 == dev->devtype)
+        {
+            // Emulated device is a 3590 too. Just copy as-is...
+            memcpy( emu_blkid, act_blkid, 4 );
+        }
+        else
+        {
+            // Emulated device using 22-bit format. Convert...
+            blockid_32_to_22 ( act_blkid, emu_blkid );
+        }
+    }
+    else
+    {
+        // SCSI using 22-bit format block-ids...
+        if (0x3590 == dev->devtype)
+        {
+            // Emulated device using full 32-bit format. Convert...
+            blockid_22_to_32 ( act_blkid, emu_blkid );
+        }
+        else
+        {
+            // Emulated device using 22-bit format too. Just copy as-is...
+            memcpy( emu_blkid, act_blkid, 4 );
+        }
+    }
+#endif /* defined(OPTION_SCSI_TAPE) */
+
+} /* end function blockid_actual_to_emulated */
+
+/*-------------------------------------------------------------------*/
+/*                     blockid_32_to_22                              */
+/*-------------------------------------------------------------------*/
+/* Convert a 3590 32-bit blockid into 3480 "22-bit format" blockid   */
+/* Both i/p and o/p are presumed to be in big-endian guest format    */
+/*-------------------------------------------------------------------*/
+void blockid_32_to_22 ( BYTE *in_32blkid, BYTE *out_22blkid )
+{
+    out_22blkid[0] = ((in_32blkid[0] << 2) & 0xFC) | ((in_32blkid[1] >> 6) & 0x03);
+    out_22blkid[1] = in_32blkid[1] & 0x3F;
+    out_22blkid[2] = in_32blkid[2];
+    out_22blkid[3] = in_32blkid[3];
+}
+
+/*-------------------------------------------------------------------*/
+/*                     blockid_22_to_32                              */
+/*-------------------------------------------------------------------*/
+/* Convert a 3480 "22-bit format" blockid into a 3590 32-bit blockid */
+/* Both i/p and o/p are presumed to be in big-endian guest format    */
+/*-------------------------------------------------------------------*/
+void blockid_22_to_32 ( BYTE *in_22blkid, BYTE *out_32blkid )
+{
+    out_32blkid[0] = (in_22blkid[0] >> 2) & 0x3F;
+    out_32blkid[1] = ((in_22blkid[0] << 6) & 0xC0) | (in_22blkid[1] & 0x3F);
+    out_32blkid[2] = in_22blkid[2];
+    out_32blkid[3] = in_22blkid[3];
+}
+
+/*********************************************************************/
+/**                                                                 **/
 /**           INTERNAL STATUS & AUTOMOUNT FUNCTIONS                 **/
 /**                                                                 **/
 /*********************************************************************/
 
-/*-------------------------------------------------------------------*/
-/* Determine if the tape is Ready   (tape drive door status)         */
-/* Returns:  true/false:  1 = ready,   0 = NOT ready                 */
-/*-------------------------------------------------------------------*/
-int is_tape_mounted_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
-{
-    UNREFERENCED(unitstat);
-    UNREFERENCED(code);
-
-    /* Update tape mounted status */
-    int_scsi_status_update( dev, 1 );   // (safe/fast internal call)
-
-    return ( !STS_NOT_MOUNTED( dev ) );
-} /* end function driveready_scsitape */
-
-/*-------------------------------------------------------------------*/
-/* Force a manual status refresh/update      (DANGEROUS!)            */
-/*-------------------------------------------------------------------*/
-int update_status_scsitape( DEVBLK *dev )   // (external tmh call)
-{
-    //                  * *  WARNING!  * *
-
-    // PROGRAMMING NOTE: do NOT call this function indiscriminately,
-    // as doing so COULD cause improper functioning of the guest o/s!
-
-    // How? Simple: if there's already a tape job running on the guest
-    // using the tape drive and we just so happen to request a status
-    // update at the precise moment a guest i/o encounters a tapemark,
-    // it's possible for US to receive the "tapemark" status and thus
-    // cause the guest to end up NOT SEEING the tapemark! Therefore,
-    // you should ONLY call this function whenever the current status
-    // indicates there's no tape mounted. If the current status says
-    // there *is* a tape mounted, you must NOT call this function!
-
-    // If the current status says there's a tape mounted and the user
-    // knows this to be untrue (e.g. they manually unloaded it maybe)
-    // then to kick off the auto-scsi-mount thread they must manually
-    // issue the 'devinit' command themselves. We CANNOT presume that
-    // a "mounted" status is bogus. We can ONLY safely presume that a
-    // "UNmounted" status may possibly be bogus. Thus we only ask for
-    // a status refresh if the current status is "not mounted" but we
-    // purposely do NOT force a refresh if the status is "mounted"!!
-
-    if ( STS_NOT_MOUNTED( dev ) )           // (if no tape mounted)
-        int_scsi_status_update( dev, 0 );   // (then probably safe)
-
-    return 0;
-} /* end function update_status_scsitape */
 /* Forward references...                                             */
 extern void  int_scsi_status_update   ( DEVBLK* dev, int mountstat_only );
 static void  scsi_get_status_fast     ( DEVBLK* dev );
@@ -1364,6 +1515,55 @@ void scsi_get_status_fast( DEVBLK* dev )
     release_lock( &dev->stape_getstat_lock );
 
 } /* end function scsi_get_status_fast */
+
+/*-------------------------------------------------------------------*/
+/* Determine if the tape is Ready   (tape drive door status)         */
+/* Returns:  true/false:  1 = ready,   0 = NOT ready                 */
+/*-------------------------------------------------------------------*/
+int is_tape_mounted_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
+{
+    UNREFERENCED(unitstat);
+    UNREFERENCED(code);
+
+    /* Update tape mounted status */
+    int_scsi_status_update( dev, 1 );   // (safe/fast internal call)
+
+    return ( !STS_NOT_MOUNTED( dev ) );
+} /* end function driveready_scsitape */
+
+/*-------------------------------------------------------------------*/
+/* Force a manual status refresh/update      (DANGEROUS!)            */
+/*-------------------------------------------------------------------*/
+int update_status_scsitape( DEVBLK *dev )   // (external tmh call)
+{
+    //                  * *  WARNING!  * *
+
+    // PROGRAMMING NOTE: do NOT call this function indiscriminately,
+    // as doing so COULD cause improper functioning of the guest o/s!
+
+    // How? Simple: if there's already a tape job running on the guest
+    // using the tape drive and we just so happen to request a status
+    // update at the precise moment a guest i/o encounters a tapemark,
+    // it's possible for US to receive the "tapemark" status and thus
+    // cause the guest to end up NOT SEEING the tapemark! Therefore,
+    // you should ONLY call this function whenever the current status
+    // indicates there's no tape mounted. If the current status says
+    // there *is* a tape mounted, you must NOT call this function!
+
+    // If the current status says there's a tape mounted and the user
+    // knows this to be untrue (e.g. they manually unloaded it maybe)
+    // then to kick off the auto-scsi-mount thread they must manually
+    // issue the 'devinit' command themselves. We CANNOT presume that
+    // a "mounted" status is bogus. We can ONLY safely presume that a
+    // "UNmounted" status may possibly be bogus. Thus we only ask for
+    // a status refresh if the current status is "not mounted" but we
+    // purposely do NOT force a refresh if the status is "mounted"!!
+
+    if ( STS_NOT_MOUNTED( dev ) )           // (if no tape mounted)
+        int_scsi_status_update( dev, 0 );   // (then probably safe)
+
+    return 0;
+} /* end function update_status_scsitape */
 
 /*-------------------------------------------------------------------*/
 /* Update SCSI tape status (and display it if CCW tracing is active) */
@@ -1660,5 +1860,59 @@ void *scsi_tapemountmon_thread( void *db )
     return NULL;
 
 } /* end function scsi_tapemountmon_thread */
+
+/*-------------------------------------------------------------------*/
+/* shutdown_worker_threads...                                        */
+/*-------------------------------------------------------------------*/
+void shutdown_worker_threads( DEVBLK *dev )
+{
+    while ( dev->stape_getstat_tid || dev->stape_mountmon_tid )
+    {
+        dev->stape_threads_exit = 1;    // (always each loop)
+        broadcast_condition( &dev->stape_exit_cond );
+        broadcast_condition( &dev->stape_getstat_cond );
+        timed_wait_condition_relative_usecs
+        (
+            &dev->stape_exit_cond,      // ptr to condition to wait on
+            &dev->stape_getstat_lock,   // ptr to controlling lock (must be held!)
+            25000,                      // max #of microseconds to wait
+            NULL                        // ptr to relative tod value (may be NULL)
+        );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* Tell driver (if needed) what a BOT position looks like...         */
+/*-------------------------------------------------------------------*/
+void define_BOT_pos( DEVBLK *dev )
+{
+#ifdef _MSVC_
+
+    // PROGRAMMING NOTE: Need to tell 'w32stape.c' here the
+    // information it needs to detect physical BOT (load-point).
+
+    // This is not normally needed as most drivers determine
+    // it for themselves based on the type (manufacturer/model)
+    // of tape drive being used, but since I haven't added the
+    // code to 'w32stape.c' to do that yet (involves talking
+    // directly to the SCSI device itself) we thus, for now,
+    // need to pass that information directly to 'w32stape.c'
+    // ourselves...
+
+    U32 msk  = 0xFF3FFFFF;      // (3480/3490 default)
+    U32 bot  = 0x01000000;      // (3480/3490 default)
+
+    if ( dev->stape_blkid_32 )
+    {
+        msk  = 0xFFFFFFFF;      // (3590 default)
+        bot  = 0x00000000;      // (3590 default)
+    }
+
+    VERIFY( 0 == w32_define_BOT( dev->fd, msk, bot ) );
+
+#else
+    UNREFERENCED(dev);
+#endif // _MSVC_
+}
 
 #endif // defined(OPTION_SCSI_TAPE)

@@ -6,6 +6,13 @@
 // $Id$
 //
 // $Log$
+// Revision 1.21  2008/03/25 11:41:31  fish
+// SCSI TAPE MODS part 1: groundwork: non-functional changes:
+// rename some functions, comments, general restructuring, etc.
+// New source modules awstape.c, omatape.c, hettape.c and
+// tapeccws.c added, but not yet used (all will be used in a future
+// commit though when tapedev.c code is eventually split)
+//
 // Revision 1.20  2007/07/24 22:36:33  fish
 // Fix tape Synchronize CCW (x'43') to do actual commit
 //
@@ -314,7 +321,7 @@ struct TAPEMEDIA_HANDLER
 };
 
 /*-------------------------------------------------------------------*/
-/* Functions (and data areas) defined in TAPEDEV.C...                */
+/* Functions defined in TAPEDEV.C...                                 */
 /*-------------------------------------------------------------------*/
 
 extern int   tapedev_init_handler   (DEVBLK *dev, int argc, char *argv[]);
@@ -338,7 +345,6 @@ extern int   IsAtLoadPoint          (DEVBLK *dev);
 extern void  ReqAutoMount           (DEVBLK *dev);
 extern void  UpdateDisplay          (DEVBLK *dev);
 extern int   return_false1          (DEVBLK *dev);
-extern void  load_display           (DEVBLK *dev, BYTE *buf, U16 count);
 extern int   write_READONLY5        (DEVBLK *dev, BYTE *bfr, U16 blklen, BYTE *unitstat, BYTE code);
 extern int   is_tapeloaded_filename (DEVBLK *dev,             BYTE *unitstat, BYTE code);
 extern int   write_READONLY         (DEVBLK *dev,             BYTE *unitstat, BYTE code);
@@ -347,16 +353,38 @@ extern int   readblkid_virtual      (DEVBLK*, BYTE* logical,  BYTE* physical);
 extern int   locateblk_virtual      (DEVBLK*, U32 blockid,    BYTE *unitstat, BYTE code);
 extern int   generic_tmhcall        (GENTMH_PARMS*);
 
-typedef void TapeSenseFunc( int, DEVBLK*, BYTE*, BYTE );    // (sense handling function)
+/*-------------------------------------------------------------------*/
+/* Functions (and data areas) defined in TAPECCWS.C...               */
+/*-------------------------------------------------------------------*/
 
-extern TapeSenseFunc*  TapeSenseTable[];
-extern BYTE*           TapeCommandTable[];
-extern BYTE            TapeImmedCommands[];
-extern int             TapeDevtypeList[];
+typedef void TapeSenseFunc( int, DEVBLK*, BYTE*, BYTE );    // (sense handling function)
 
 #define  TAPEDEVTYPELIST_ENTRYSIZE  (5)    // #of int's per 'TapeDevtypeList' table entry
 
-// Helpful macros...
+extern int             TapeDevtypeList[];
+extern BYTE*           TapeCommandTable[];
+extern TapeSenseFunc*  TapeSenseTable[];
+//tern BYTE            TapeCommandsXXXX[256]...
+extern BYTE            TapeImmedCommands[];
+
+extern int   TapeCommandIsValid     (BYTE code, U16 devtype, BYTE *rustat);
+extern void  tapedev_execute_ccw    (DEVBLK *dev, BYTE code, BYTE flags,
+                                     BYTE chained, U16 count, BYTE prevcode, int ccwseq,
+                                     BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual);
+extern void  load_display           (DEVBLK *dev, BYTE *buf, U16 count);
+
+extern void  build_senseX           (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3410       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3420       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3410_3420  (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3480_etal  (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3490       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_3590       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+extern void  build_sense_Streaming  (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
+
+/*-------------------------------------------------------------------*/
+/* Calculate I/O Residual...                                         */
+/*-------------------------------------------------------------------*/
 
 #define RESIDUAL_CALC(_data_len)         \
                                          \
@@ -365,7 +393,9 @@ extern int             TapeDevtypeList[];
     *residual = count - num;             \
     if (count < len) *more = 1
 
-// Assign a unique Message Id for this asynchronous I/O if needed...
+/*-------------------------------------------------------------------*/
+/* Assign a unique Message Id for this asynchronous I/O if needed... */
+/*-------------------------------------------------------------------*/
 
 #if defined(OPTION_SCSI_TAPE)
 
@@ -379,24 +409,6 @@ extern int             TapeDevtypeList[];
   #define INCREMENT_MESSAGEID(_dev)
 
 #endif // defined(OPTION_SCSI_TAPE)
-
-/*-------------------------------------------------------------------*/
-/* Functions defined in TAPECCWS.C...                                */
-/*-------------------------------------------------------------------*/
-extern int   TapeCommandIsValid     (BYTE code, U16 devtype, BYTE *rustat);
-
-extern void  tapedev_execute_ccw    (DEVBLK *dev, BYTE code, BYTE flags,
-                                     BYTE chained, U16 count, BYTE prevcode, int ccwseq,
-                                     BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual);
-
-extern void  build_senseX           (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
-extern void  build_sense_3410       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
-extern void  build_sense_3420       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
-extern void  build_sense_3410_3420  (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
-extern void  build_sense_3480_etal  (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
-extern void  build_sense_3490       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
-extern void  build_sense_3590       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
-extern void  build_sense_Streaming  (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
 
 /*-------------------------------------------------------------------*/
 /* Functions defined in AWSTAPE.C...                                 */
