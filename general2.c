@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.124  2008/03/06 16:10:35  rbowler
+// Remove extraneous trailing blanks (cosmetic change only)
+//
 // Revision 1.123  2008/03/01 15:15:41  bernard
 // Removed the silly control-M characters
 //
@@ -2801,7 +2804,7 @@ DEF_INST(translate_and_test_extended)
   SET_GR_A(r1 + 1, regs, buf_len);
 
   /* Check if CPU determined number of bytes have been processed */
-  if(buf_len)
+  if(buf_len && !fc)
   {
     regs->psw.cc = 3;
     return;
@@ -2885,7 +2888,7 @@ DEF_INST(translate_and_test_reverse_extended)
   SET_GR_A(r1 + 1, regs, buf_len);
 
   /* Check if CPU determined number of bytes have been processed */
-  if(buf_len)
+  if(buf_len && !fc)
   {
     regs->psw.cc = 3;
     return;
