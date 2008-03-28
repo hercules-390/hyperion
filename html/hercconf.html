@@ -324,30 +324,6 @@ and how they are used.
     the telnet console server will bind to the specified address.
     <p>
 
-<a name="LEGACYSENSEID"></a>
-<dt><code>LEGACYSENSEID &nbsp; OFF &#124; DISABLE &#124; ON &#124; ENABLE</code>
-<dd><p>
-    specifies whether the SENSE ID CCW (X'E4') will be honored for
-    the devices that originally didn't support that feature. This
-    includes (but may not be limited to) the 3410 and 3420 tape drives
-    as well as the 2703 communication controllers.
-    <p>
-
-    Specify <code>ON</code> or <code>ENABLE</code> if your guest
-    operating system needs the Sense ID support to dynamically
-    detect those devices. Note that most current operating systems
-    will not detect those devices even though Sense ID is enabled
-    because those devices never supported the Sense ID in the first
-    place. So this mainly applies to custom built or modified versions
-    of guest operating systems that are aware of this specific Hercules
-    capability.
-    <p>
-
-    Because those legacy devices didn't originally support this command,
-    and for compatibility reasons, the default is <code>OFF</code>
-    or <code>DISABLE</code>.
-    <p>
-
 <a name="CONKPALV"></a>
 <dt><code>CONKPALV &nbsp; <i>(idle,intv,count)</i></code>
 <dd><p>
@@ -639,6 +615,30 @@ and how they are used.
     Multiple LDMOD statements may be used.
     <p>
 
+<a name="LEGACYSENSEID"></a>
+<dt><code>LEGACYSENSEID &nbsp; OFF &#124; DISABLE &#124; ON &#124; ENABLE</code>
+<dd><p>
+    specifies whether the SENSE ID CCW (X'E4') will be honored for
+    the devices that originally didn't support that feature. This
+    includes (but may not be limited to) the 3410 and 3420 tape drives
+    as well as the 2703 communication controllers.
+    <p>
+
+    Specify <code>ON</code> or <code>ENABLE</code> if your guest
+    operating system needs the Sense ID support to dynamically
+    detect those devices. Note that most current operating systems
+    will not detect those devices even though Sense ID is enabled
+    because those devices never supported the Sense ID in the first
+    place. So this mainly applies to custom built or modified versions
+    of guest operating systems that are aware of this specific Hercules
+    capability.
+    <p>
+
+    Because those legacy devices didn't originally support this command,
+    and for compatibility reasons, the default is <code>OFF</code>
+    or <code>DISABLE</code>.
+    <p>
+
 <a name="LOADPARM"></a>
 <dt><code>LOADPARM &nbsp; <em>xxxxxxxx</em></code>
 <dd><p>
@@ -664,18 +664,14 @@ and how they are used.
     <code>HERCULES</code>.
     <p>
 
-<a name="MODEL"></a>
-<dt><code>MODEL &nbsp; <em>name</em></code>
+<a name="MAINSIZE"></a>
+<dt><code>MAINSIZE &nbsp; <em>nnnn</em></code>
 <dd><p>
-    specifies the MODEL name returned by the STSI instruction.  The default is
-    <code>EMULATOR</code>.
-    <p>
-
-<a name="PLANT"></a>
-<dt><code>PLANT &nbsp; <em>name</em></code>
-<dd><p>
-    specifies the PLANT name returned by the STSI instruction.  The default is
-    <code>ZZ</code>.
+    specifies the main storage size in megabytes, where
+    <code><em>nnnn</em></code>&nbsp; is a decimal number. The lower limit is 2.
+    The actual upper limit is determined by your host system's architecture
+    and operating system, and (on some systems) the amount of physical
+    memory and paging space you have available.
     <p>
 
 <a name="MANUFACTURER"></a>
@@ -685,14 +681,11 @@ and how they are used.
     <code>HRC</code>.
     <p>
 
-<a name="MAINSIZE"></a>
-<dt><code>MAINSIZE &nbsp; <em>nnnn</em></code>
+<a name="MODEL"></a>
+<dt><code>MODEL &nbsp; <em>name</em></code>
 <dd><p>
-    specifies the main storage size in megabytes, where
-    <code><em>nnnn</em></code>&nbsp; is a decimal number. The lower limit is 2.
-    The actual upper limit is determined by your host system's architecture
-    and operating system, and (on some systems) the amount of physical
-    memory and paging space you have available.
+    specifies the MODEL name returned by the STSI instruction.  The default is
+    <code>EMULATOR</code>.
     <p>
 
 <a name="MODPATH"></a>
@@ -847,6 +840,13 @@ and how they are used.
     <code>RESTRICTED</code> is the default. Specifying
     <code>LICENSED</code> will produce a message at Hercules startup to
     remind you of your responsibility to comply with software license terms.
+    <p>
+
+<a name="PLANT"></a>
+<dt><code>PLANT &nbsp; <em>name</em></code>
+<dd><p>
+    specifies the PLANT name returned by the STSI instruction.  The default is
+    <code>ZZ</code>.
     <p>
 
 <a name="SHCMDOPT"></a>
@@ -1547,7 +1547,7 @@ and how they are used.
                 <td>Disk file (ASCII)</td>
             </tr>
 
-            <tr><td>3410, 3420, 3422, 3430, 3480, 3490, 9347, 8809</td>
+            <tr><td>3410, 3420, 3422, 3430, 3480, 3490, 3590, 9347, 8809</td>
                 <td><a href="#tapedev">Tape drives</a></td>
                 <td>Disk file, CDROM, or SCSI tape</td>
             </tr>
@@ -2083,6 +2083,10 @@ and how they are used.
             guest's 22-bit format block-id into 32-bit format before sending it
             to the actual SCSI hardware (since that is the format that the actual
             hardware requires it to be in).
+            <p>
+        <dt><code>--blkid-24</code>
+        <dd><p>
+            The complete opposite of the above <code>--blkid-32</code> option.
         </dl>
         <p><br>
 
