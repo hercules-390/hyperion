@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.19  2008/03/23 08:00:40  rbowler
+// Fix incorrect bit selection for RNSBG,RISBG,ROSBG,RXSBG
+//
 // Revision 1.18  2008/03/12 18:23:55  jj
 // Fix store operation of ASI, AGSI, ALSI and AGLSI
 //
@@ -459,15 +462,10 @@ S64     n;                              /* 64-bit operand value      */
 DEF_INST(compare_halfword_relative_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
     n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
@@ -487,15 +485,10 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(compare_halfword_relative_long_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
     n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
@@ -1064,15 +1057,10 @@ U64     n;                              /* 64-bit storage value      */
 DEF_INST(compare_logical_relative_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
     FW_CHECK(addr2, regs);
@@ -1095,15 +1083,10 @@ U32     n;                              /* Relative operand value    */
 DEF_INST(compare_logical_relative_long_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U64     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on doubleword boundary */
     DW_CHECK(addr2, regs);
@@ -1127,15 +1110,10 @@ U64     n;                              /* Relative operand value    */
 DEF_INST(compare_logical_relative_long_long_fullword)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
     FW_CHECK(addr2, regs);
@@ -1158,15 +1136,10 @@ U32     n;                              /* Relative operand value    */
 DEF_INST(compare_logical_relative_long_halfword)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
     n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
@@ -1186,15 +1159,10 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(compare_logical_relative_long_long_halfword)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
     n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
@@ -1214,15 +1182,10 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(compare_relative_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
     FW_CHECK(addr2, regs);
@@ -1245,15 +1208,10 @@ U32     n;                              /* Relative operand value    */
 DEF_INST(compare_relative_long_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U64     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on doubleword boundary */
     DW_CHECK(addr2, regs);
@@ -1277,15 +1235,10 @@ U64     n;                              /* Relative operand value    */
 DEF_INST(compare_relative_long_long_fullword)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
     FW_CHECK(addr2, regs);
@@ -1408,15 +1361,10 @@ U32     n;                              /* Second operand value      */
 DEF_INST(load_halfword_relative_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
     n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
@@ -1434,15 +1382,10 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(load_halfword_relative_long_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
     n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
@@ -1460,15 +1403,10 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(load_logical_halfword_relative_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
     n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
@@ -1486,15 +1424,10 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(load_logical_halfword_relative_long_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Load relative operand from instruction address space */
     n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
@@ -1513,15 +1446,10 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(load_logical_relative_long_long_fullword)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
     FW_CHECK(addr2, regs);
@@ -1542,15 +1470,10 @@ U32     n;                              /* Relative operand value    */
 DEF_INST(load_relative_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
     FW_CHECK(addr2, regs);
@@ -1571,15 +1494,10 @@ U32     n;                              /* Relative operand value    */
 DEF_INST(load_relative_long_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U64     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on doubleword boundary */
     DW_CHECK(addr2, regs);
@@ -1601,15 +1519,10 @@ U64     n;                              /* Relative operand value    */
 DEF_INST(load_relative_long_long_fullword)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
     FW_CHECK(addr2, regs);
@@ -1788,10 +1701,9 @@ VADR    effective_addr2;                /* Effective address         */
 DEF_INST(prefetch_data_relative_long)
 {
 int     m1;                             /* Mask value                */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* 32-bit operand value      */
+VADR    addr2;                          /* Relative operand address  */
 
-    RIL(inst, regs, m1, opcd, i2);
+    RIL_A(inst, regs, m1, addr2);
 
     /* The Prefetch Data instruction acts as a no-op */
 
@@ -1931,14 +1843,9 @@ DEF_INST(rotate_then_exclusive_or_selected_bits_long_reg)
 DEF_INST(store_halfword_relative_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Store low 2 bytes of R1 register in instruction address space */
     ARCH_DEP(vstore2) ( regs->GR_LHL(r1), addr2, USE_INST_SPACE, regs );
@@ -1952,14 +1859,9 @@ VADR    addr2;                          /* Relative operand address  */
 DEF_INST(store_relative_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on fullword boundary */
     FW_CHECK(addr2, regs);
@@ -1976,14 +1878,9 @@ VADR    addr2;                          /* Relative operand address  */
 DEF_INST(store_relative_long_long)
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* Relative operand offset   */
 VADR    addr2;                          /* Relative operand address  */
 
-    RIL(inst, regs, r1, opcd, i2);
-
-    /* Calculate the address of the relative operand */
-    addr2 = RELATIVE_OPERAND_ADDRESS_LONG(regs, 2LL*(S32)i2);
+    RIL_A(inst, regs, r1, addr2);
 
     /* Program check if operand not on doubleword boundary */
     DW_CHECK(addr2, regs);

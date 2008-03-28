@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.222  2008/03/12 23:44:03  rbowler
+// Add MVCOS instruction (part 1)
+//
 // Revision 1.221  2008/03/12 21:41:21  rbowler
 // Add comment explaining 0 and _B forms of instruction decoders
 //
@@ -550,13 +553,6 @@ do { \
   } \
 } while (0)
 
-/* Relative instruction operand addressing */
-#define RELATIVE_OPERAND_ADDRESS_LONG(_regs, _offset) \
-  (likely(!(_regs)->execflag)) ? \
-    PSW_IA((_regs), (_offset)) : \
-    ((_regs)->ET + (_offset)) & ADDRESS_MAXWRAP((_regs))
-
-
 /* CPU Stepping or Tracing */
 
 #define CPU_STEPPING(_regs, _ilc) \
@@ -1060,6 +1056,7 @@ do { \
 #undef DECODER_TEST_RSI
 #undef DECODER_TEST_RI
 #define DECODER_TEST_RIL
+#define DECODER_TEST_RIL_A
 #undef DECODER_TEST_RIS
 #undef DECODER_TEST_RRS
 #undef DECODER_TEST_SI
@@ -2013,6 +2010,40 @@ do { \
             (_i2) = fetch_fw(&(_inst)[2]); \
             (_op) = ((_inst)[1]     ) & 0xf; \
             (_r1) = ((_inst)[1] >> 4) & 0xf; \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+    }
+
+/* RIL register and longer immediate relative address */
+#undef RIL_A
+
+#if !defined(DECODER_TEST)&&!defined(DECODER_TEST_RIL_A)
+ #define RIL_A(_inst, _regs, _r1, _addr2) \
+         RIL_A_DECODER(_inst, _regs, _r1, _addr2, 6, 6)
+#else
+ #define RIL_A(_inst, _regs, _r1, _addr2) \
+         RIL_A_DECODER_TEST(_inst, _regs, _r1, _addr2, 6, 6)
+#endif
+
+#define RIL_A_DECODER(_inst, _regs, _r1, _addr2, _len, _ilc) \
+    {   U32 temp = fetch_fw(_inst); \
+        S64 offset; \
+            (_r1) = (temp >> 20) & 0xf; \
+            offset = 2LL*(S32)(((temp & 0xffff) << 16) \
+                    | ((_inst)[4] << 8) \
+                    | (_inst)[5]); \
+            (_addr2) = (likely(!(_regs)->execflag)) ? \
+                    PSW_IA((_regs), offset) : \
+                    ((_regs)->ET + offset) & ADDRESS_MAXWRAP((_regs)); \
+            INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
+    }
+
+#define RIL_A_DECODER_TEST(_inst, _regs, _r1, _addr2, _len, _ilc) \
+    { \
+        S64 offset = 2LL*(S32)(fetch_fw(&(_inst)[2])); \
+            (_r1) = ((_inst)[1] >> 4) & 0xf; \
+            (_addr2) = (likely(!(_regs)->execflag)) ? \
+                    PSW_IA((_regs), offset) : \
+                    ((_regs)->ET + offset) & ADDRESS_MAXWRAP((_regs)); \
             INST_UPDATE_PSW((_regs), (_len), (_ilc)); \
     }
 
