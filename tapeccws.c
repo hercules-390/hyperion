@@ -96,8 +96,15 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.3  2008/03/27 07:14:16  fish
+// SCSI MODS: groundwork: part 3: final shuffling around.
+// Moved functions from one module to another and resequenced
+// functions within each. NO CODE WAS ACTUALLY CHANGED.
+// Next commit will begin the actual changes.
+//
 // Revision 1.2  2008/03/26 07:23:51  fish
-// SCSI MODS part 2: split tapedev.c: aws, het, oma processing moved to separate modules, CCW processing moved to separate module.
+// SCSI MODS part 2: split tapedev.c: aws, het, oma processing moved
+// to separate modules, CCW processing moved to separate module.
 //
 // Revision 1.1  2008/03/25 18:42:36  fish
 // AWS, HET and OMA processing logic moved to separate modules.
@@ -595,7 +602,6 @@ void tapedev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
 int             rc;                     /* Return code               */
 int             len;                    /* Length of data block      */
 long            num;                    /* Number of bytes to read   */
-U32             locblock;               /* Block Id for Locate Block */
 int             drc;                    /* code disposition          */
 BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
@@ -1170,110 +1176,33 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x22:
     {
-        BYTE  blockid[8];       // (temp work)
+        BYTE  log_blockid  [4];     // (temp; BIG-ENDIAN format)
+        BYTE  phys_blockid [4];     // (temp; BIG-ENDIAN format)
 
-        /* Calculate number of bytes and residual byte count */
-        len = 2*sizeof(dev->blockid);
-        num = (count < len) ? count : len;
-        *residual = count - num;
-        if (count < len) *more = 1;
+        int   errcode   = TAPE_BSENSE_STATUSONLY; // (presume success)
 
-        /* Copy Block Id to channel I/O buffer... */
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
         {
-#if defined(OPTION_SCSI_TAPE)
-            struct  mtpos  mtpos;
-
-            if (TAPEDEVT_SCSITAPE != dev->tapedevt
-                // ZZ FIXME: The two blockid fields that READ BLOCK ID
-                // are returning are the "Channel block ID" and "Device
-                // block ID" fields (which correspond directly to the
-                // SCSI "First block location" and "Last block location"
-                // fields as returned by a READ POSITION scsi command),
-                // so we really SHOULD be doing direct scsi i/o for our-
-                // selves here (in order to retrieve BOTH of those values
-                // for ourselves (since MTIOCPOS only returns one value
-                // and not the other))...
-
-                // And for the record, we want the "Channel block ID"
-                // (i.e. the SCSI "First block location" value). i.e.
-                // the LOGICAL and NOT the absolute/physical (device-
-                // relative) value!
-
-                || ioctl_tape( dev->fd, MTIOCPOS, (char*) &mtpos ) < 0 )
-            {
-                if (TAPEDEVT_SCSITAPE == dev->tapedevt)
-                    /* Informative message if tracing */
-                    if ( dev->ccwtrace || dev->ccwstep )
-                        logmsg(_("HHCTA082W ioctl_tape(MTIOCPOS=MTTELL) failed on %4.4X = %s: %s\n")
-                            ,dev->devnum
-                            ,dev->filename
-                            ,strerror(errno)
-                            );
-#endif
-                // Either this is not a scsi tape, or else the MTIOCPOS
-                // call failed; use our emulated blockid value...
-
-                if (dev->poserror)
-                {
-                    // ZZ FIXME: I hope this is right: if the current position
-                    // is unknown (invalid) due to a previous positioning error,
-                    // then return a known-to-be-invalid position value...
-
-                    memset( blockid, 0xFF, 4 );
-                }
-                else
-                {
-                    if (0x3590 == dev->devtype)
-                    {
-                        blockid[0] = (dev->blockid >> 24) & 0xFF;
-                        blockid[1] = (dev->blockid >> 16) & 0xFF;
-                        blockid[2] = (dev->blockid >> 8 ) & 0xFF;
-                        blockid[3] = (dev->blockid      ) & 0xFF;
-                    }
-                    else // (3480 et. al)
-                    {
-                        blockid[0] = 0x01;
-                        blockid[1] = (dev->blockid >> 16) & 0x3F;
-                        blockid[2] = (dev->blockid >> 8 ) & 0xFF;
-                        blockid[3] = (dev->blockid      ) & 0xFF;
-                    }
-                }
-#if defined(OPTION_SCSI_TAPE)
-            }
-            else
-            {
-                // This IS a scsi tape *and* the MTIOCPOS call succeeded;
-                // use the actual hardware blockid value as returned by
-                // MTIOCPOS...
-
-                // ZZ FIXME: Even though the two blockid fields that the
-                // READ BLOCK ID ccw opcode returns ("Channel block ID" and
-                // "Device block ID") happen to correspond directly to the
-                // SCSI "First block location" and "Last block location"
-                // fields (as returned by a READ POSITION scsi command),
-                // MTIOCPOS unfortunately only returns one value and not the
-                // other. Thus, until we can add code to Herc to do scsi i/o
-                // directly for ourselves, we really have no choice but to
-                // return the same value for both here...
-
-                // And for the record, we want the "Channel block ID"
-                // (i.e. the SCSI "First block location" value). i.e.
-                // the LOGICAL and NOT the absolute/physical (device-
-                // relative) value!
-
-                mtpos.mt_blkno = CSWAP32( mtpos.mt_blkno ); // (convert to guest format)
-                blockid_actual_to_emulated( dev, (BYTE*)&mtpos.mt_blkno, blockid );
-            }
-#endif
-            // We return the same values for both the "Channel block ID"
-            // and "Device block ID"...
-
-            memcpy( &blockid[4], &blockid[0], 4 );
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
         }
 
-        /* Copy Block Id value to channel I/O buffer... */
-        memcpy( iobuf, blockid, num );
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        /* Calculate number of bytes and residual byte count */
+        RESIDUAL_CALC( 2 * sizeof(dev->blockid) );
+
+        /* Ask media handler for actual value(s)... */
+        if ((rc = dev->tmh->readblkid( dev, log_blockid, phys_blockid )) < 0)
+            errcode = TAPE_BSENSE_LOCATEERR;
+        else
+        {
+            /* Copy results to channel I/O buffer... */
+            memcpy( &iobuf[0], log_blockid,  4 );
+            memcpy( &iobuf[4], phys_blockid, 4 );
+        }
+
+        /* Set completion status... */
+        build_senseX( errcode, dev, unitstat, code );
         break;
     }
 
@@ -1518,10 +1447,20 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x4F:
     {
+        U32  locblock;                 /* Block Id for Locate Block */
+        int  errcode = TAPE_BSENSE_STATUSONLY;  /* Presumed success */
+
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
         /* Check for minimum count field */
         if (count < sizeof(dev->blockid))
         {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
         }
 
@@ -1530,21 +1469,20 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         FETCH_FW(locblock, iobuf);
 
         /* Check for invalid/reserved Format Mode bits */
-        if (0x3590 != dev->devtype &&
-            0x00C00000 == (locblock & 0x00C00000))
+        if (0x3590 != dev->devtype)
         {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-            break;
+            if (0x00C00000 == (locblock & 0x00C00000))
+            {
+                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                break;
+            }
+
+            /* We only want the Block Number in the low-order 22 bits */
+            locblock &= 0x003FFFFF;
         }
 
-        if (0x3590 != dev->devtype)     /* Added by Fish */
-//          locblock &= 0x003FFFFF;     /* Re-applied by Adrian */
-            locblock &= 0xFF3FFFFF;     /* Changed by Fish */
-
         /* Calculate residual byte count */
-        len = sizeof(locblock);
-        num = (count < len) ? count : len;
-        *residual = count - num;
+        RESIDUAL_CALC( sizeof(locblock) );
 
         /* Informative message if tracing */
         if ( dev->ccwtrace || dev->ccwstep )
@@ -1563,60 +1501,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             UpdateDisplay( dev );
         }
 
-        /* Start of block locate code */
+        /* Ask media handler to perform the locate... */
+        if ((rc = dev->tmh->locateblk( dev, locblock, unitstat, code )) < 0)
         {
-#if defined(OPTION_SCSI_TAPE)
-            struct mtop  mtop;
-
-            mtop.mt_op = MTSEEK;
-
-            locblock = CSWAP32( locblock );     // (convert to guest format)
-            {
-                blockid_emulated_to_actual( dev, (BYTE*)&locblock, (BYTE*)&mtop.mt_count );
-            }
-            locblock = CSWAP32( locblock );     // (put back to host format)
-
-            mtop.mt_count = CSWAP32( mtop.mt_count ); // (convert back to host format)
-
-            /* Let the hardware do the locate if this is a SCSI drive;
-               Else do it the hard way if it's not (or an error occurs) */
-            if (TAPEDEVT_SCSITAPE != dev->tapedevt
-                || (rc = ioctl_tape( dev->fd, MTIOCTOP, (char*) &mtop )) < 0 )
-#endif
-            {
-                if (TAPEDEVT_SCSITAPE == dev->tapedevt)
-                    /* Informative message if tracing */
-                    if ( dev->ccwtrace || dev->ccwstep )
-                        logmsg(_("HHCTA083W ioctl_tape(MTIOCTOP=MTSEEK) failed on %4.4X = %s: %s\n")
-                            ,dev->devnum
-                            ,dev->filename
-                            ,strerror(errno)
-                            );
-
-                rc=dev->tmh->rewind(dev,unitstat,code);
-                if(rc<0)
-                {
-                    // ZZ FIXME: shouldn't we be returning
-                    // some type of unit-check here??
-                    // SENSE1_TAPE_RSE??
-                    dev->poserror = 1;   // (because the rewind failed)
-                }
-                else
-                {
-                    /* Reset position counters to start of file */
-                    dev->curfilen = 1;
-                    dev->nxtblkpos = 0;
-                    dev->prvblkpos = -1;
-                    dev->blockid = 0;
-                    dev->poserror = 0;
-
-                    /* Do it the hard way */
-                    while (dev->blockid < locblock && ( rc >= 0 ))
-                    {
-                        rc=dev->tmh->fsb(dev,unitstat,code);
-                    }
-                }
-            }
+            errcode = TAPE_BSENSE_LOCATEERR;
+            dev->fenced = 1;  // (position lost; fence the volume)
         }
 
         /* Update display if needed */
@@ -1626,15 +1515,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             UpdateDisplay( dev );
         }
 
-        if (rc < 0)
-        {
-            // ZZ FIXME: shouldn't we be returning
-            // some type of unit-check here??
-            // SENSE1_TAPE_RSE??
-            dev->poserror = 1;   // (because the locate failed)
-            break;
-        }
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        /* Set completion status... */
+        build_senseX( errcode, dev, unitstat, code );
         break;
 
     } /* End case 0x4F: LOCATE BLOCK */

@@ -15,6 +15,12 @@
 // $Id$
 //
 // $Log$
+// Revision 1.25  2008/03/27 07:14:16  fish
+// SCSI MODS: groundwork: part 3: final shuffling around.
+// Moved functions from one module to another and resequenced
+// functions within each. NO CODE WAS ACTUALLY CHANGED.
+// Next commit will begin the actual changes.
+//
 // Revision 1.24  2008/03/25 11:41:31  fish
 // SCSI TAPE MODS part 1: groundwork: non-functional changes:
 // rename some functions, comments, general restructuring, etc.
@@ -195,7 +201,7 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
     /* Since a tape was just mounted, reset the blockid back to zero */
 
     dev->blockid = 0;
-    dev->poserror = 0;
+    dev->fenced = 0;
 
     /* Set the tape device to process variable length blocks */
 
@@ -262,7 +268,7 @@ void close_scsitape(DEVBLK *dev)
         dev->fd        = -1;
         dev->blockid   = -1;
         dev->curfilen  =  0;
-        dev->poserror  =  1;
+        dev->fenced    =  1;
         dev->nxtblkpos =  0;
         dev->prvblkpos = -1;
     }
@@ -768,7 +774,7 @@ struct mtop opblk;
        no clue as to what the proper current blockid should be.
     */
     dev->blockid = -1;      // (actual position now unknown!)
-    dev->poserror = 1;      // (actual position now unknown!)
+    dev->fenced = 1;        // (actual position now unknown!)
 
     if ( rc >= 0 )
     {
@@ -870,7 +876,7 @@ struct mtop opblk;
        no clue as to what the proper current blockid should be.
     */
     dev->blockid = -1;      // (actual position now unknown!)
-    dev->poserror = 1;      // (actual position now unknown!)
+    dev->fenced = 1;        // (actual position now unknown!)
 
     if ( rc >= 0 )
     {
@@ -924,11 +930,11 @@ struct mtop opblk;
         dev->sstat |= GMT_BOT( -1 );  // (forced)
         dev->blockid = 0;
         dev->curfilen = 0;
-        dev->poserror = 0;
+        dev->fenced = 0;
         return 0;
     }
 
-    dev->poserror = 1;      // (because the rewind failed)
+    dev->fenced = 1;        // (because the rewind failed)
     dev->blockid  = -1;     // (because the rewind failed)
     dev->curfilen = -1;     // (because the rewind failed)
 
@@ -974,7 +980,7 @@ struct mtop opblk;
         return;
     }
 
-    dev->poserror = 1;  // (because the rewind-unload failed)
+    dev->fenced = 1;    // (because the rewind-unload failed)
     dev->curfilen = -1; // (because the rewind-unload failed)
     dev->blockid  = -1; // (because the rewind-unload failed)
 
@@ -1045,6 +1051,115 @@ int dse_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
     return 0;       // (treat as nop)
 
 } /* end function dse_scsitape */
+
+/*-------------------------------------------------------------------*/
+/*                   readblkid_scsitape                              */
+/*-------------------------------------------------------------------*/
+/* Output values are returned in BIG-ENDIAN guest format...          */
+/*-------------------------------------------------------------------*/
+int readblkid_scsitape ( DEVBLK* dev, BYTE* logical, BYTE* physical )
+{
+    // ZZ FIXME: The two blockid fields that READ BLOCK ID
+    // are returning are the "Channel block ID" and "Device
+    // block ID" fields, which correspond directly to the
+    // SCSI "First block location" and "Last block location"
+    // fields (as returned by a READ POSITION scsi command),
+    // so we really SHOULD be doing our own direct scsi i/o
+    // for ourselves so we can retrieve BOTH of those values
+    // directly from the real/actual physical device itself,
+    // but until we can add code to Herc to do that, we must
+    // return the same value for each since ioctl(MTIOCPOS)
+    // only returns us one value (the logical position) and
+    // not both that we really prefer...
+
+    // (And for the record, we want the "Channel block ID"
+    // value, also known as the SCSI "First block location"
+    // value, also known as the >>LOGICAL<< value and *NOT*
+    // the absolute/physical device-relative value)
+
+    struct  mtpos  mtpos;
+    BYTE    blockid[4];
+
+    if (ioctl_tape( dev->fd, MTIOCPOS, (char*) &mtpos ) < 0 )
+    {
+        /* Informative ERROR message if tracing */
+
+        int save_errno = errno;
+        {
+            if ( dev->ccwtrace || dev->ccwstep )
+                logmsg(_("HHCTA082W ioctl_tape(MTIOCPOS=MTTELL) failed on %4.4X = %s: %s\n")
+                    ,dev->devnum
+                    ,dev->filename
+                    ,strerror(errno)
+                    );
+        }
+        errno = save_errno;
+
+        return  -1;     // (errno should already be set)
+    }
+
+    // Convert MTIOCPOS value to guest BIG-ENDIAN format...
+
+    mtpos.mt_blkno = CSWAP32( mtpos.mt_blkno );     // (guest <- host)
+
+    // Handle emulated vs. physical tape-device block-id format issue...
+
+    blockid_actual_to_emulated( dev, (BYTE*)&mtpos.mt_blkno, blockid );
+
+    // Until we can add code to Herc to do direct SCSI i/o (so that
+    // we can retrieve BOTH values directly from the device itself),
+    // we have no choice but to return the same value for each since
+    // the ioctl(MTIOCPOS) call only returns the logical value and
+    // not also the physical value that we wish it would...
+
+    if (logical)  memcpy( logical,  &blockid[0], 4 );
+    if (physical) memcpy( physical, &blockid[0], 4 );
+
+    return 0;       // (success)
+
+} /* end function readblkid_scsitape */
+
+/*-------------------------------------------------------------------*/
+/*                    locateblk_scsitape                             */
+/*-------------------------------------------------------------------*/
+/* Input value is passed in little-endian host format...             */
+/*-------------------------------------------------------------------*/
+int locateblk_scsitape ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
+{
+    int rc;
+    struct mtop  mtop;
+
+    UNREFERENCED( unitstat );                   // (not used)
+    UNREFERENCED(   code   );                   // (not used)
+
+    // Convert the passed host-format blockid value into the proper
+    // 32-bit vs. 22-bit guest-format the physical device expects ...
+
+    blockid = CSWAP32( blockid );               // (guest <- host)
+
+    blockid_emulated_to_actual( dev, (BYTE*)&blockid, (BYTE*)&mtop.mt_count );
+
+    mtop.mt_count = CSWAP32( mtop.mt_count );   // (host <- guest)
+    mtop.mt_op    = MTSEEK;
+
+    // Ask the actual hardware to do an actual physical locate...
+
+    if ((rc = ioctl_tape( dev->fd, MTIOCTOP, (char*)&mtop )) < 0)
+    {
+        int save_errno = errno;
+        {
+            if ( dev->ccwtrace || dev->ccwstep )
+                logmsg(_("HHCTA083W ioctl_tape(MTIOCTOP=MTSEEK) failed on %4.4X = %s: %s\n")
+                    ,dev->devnum
+                    ,dev->filename
+                    ,strerror(errno)
+                    );
+        }
+        errno = save_errno;
+    }
+
+    return rc;
+}
 
 /*********************************************************************/
 /**                                                                 **/
@@ -1515,6 +1630,14 @@ void scsi_get_status_fast( DEVBLK* dev )
     release_lock( &dev->stape_getstat_lock );
 
 } /* end function scsi_get_status_fast */
+
+/*-------------------------------------------------------------------*/
+/* Check if a SCSI tape is positioned past the EOT reflector or not  */
+/*-------------------------------------------------------------------*/
+int passedeot_scsitape( DEVBLK *dev )
+{
+    return 0;       // (temp; will be fixed in upcoming commit)
+}
 
 /*-------------------------------------------------------------------*/
 /* Determine if the tape is Ready   (tape drive door status)         */

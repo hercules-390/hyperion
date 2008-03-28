@@ -9,6 +9,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.80  2008/03/04 01:10:29  ivan
+// Add LEGACYSENSEID config statement to allow X'E4' Sense ID on devices
+// that originally didn't support it. Defaults to off for compatibility reasons
+//
 // Revision 1.79  2008/02/29 15:53:10  rbowler
 // Instruction decoder for C4xx and C6xx instructions
 //
@@ -1032,7 +1036,7 @@ struct DEVBLK {                         /* Device configuration block*/
           off_t eotmargin;              /* Amount of space left
                                            before reporting EOT      */
         }       tdparms;                /* HET device parms          */
-        u_int   poserror:1;             /* Positioning error         */
+        u_int   fenced:1;               /* 1=Pos err; volume fenced  */
         u_int   readonly:1;             /* 1=Tape is write-protected */
         u_int   longfmt:1;              /* 1=Long record format (DDR)*/ /*DDR*/
         u_int   sns_pending:1;          /* Contingency Allegiance    */

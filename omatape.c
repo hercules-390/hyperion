@@ -96,6 +96,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.2  2008/03/26 07:23:51  fish
+// SCSI MODS part 2: split tapedev.c: aws, het, oma processing moved
+// to separate modules, CCW processing moved to separate module.
+//
 // Revision 1.1  2008/03/25 18:42:36  fish
 // AWS, HET and OMA processing logic moved to separate modules.
 // Tape device CCW processing logic also moved to separate module.
@@ -495,7 +499,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             return -1;
         }
         dev->blockid = 0;
-        dev->poserror = 0;
+        dev->fenced = 0;
     }
 
     /* Unit exception if beyond end of tape */
@@ -1365,7 +1369,7 @@ void close_omatape2(DEVBLK *dev)
     dev->prvblkpos=-1;
     dev->curfilen=1;
     dev->blockid=0;
-    dev->poserror = 0;
+    dev->fenced = 0;
     dev->omafiles = 0;
     return;
 }
@@ -1382,7 +1386,7 @@ void close_omatape(DEVBLK *dev)
     close_omatape2(dev);
     strcpy(dev->filename,TAPE_UNLOADED);
     dev->blockid = 0;
-    dev->poserror = 0;
+    dev->fenced = 0;
     return;
 }
 

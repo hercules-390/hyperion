@@ -96,6 +96,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.2  2008/03/26 07:23:51  fish
+// SCSI MODS part 2: split tapedev.c: aws, het, oma processing moved
+// to separate modules, CCW processing moved to separate module.
+//
 // Revision 1.1  2008/03/25 18:42:36  fish
 // AWS, HET and OMA processing logic moved to separate modules.
 // Tape device CCW processing logic also moved to separate module.
@@ -283,7 +287,7 @@ void close_het (DEVBLK *dev)
     dev->fd = -1;
     strcpy (dev->filename, TAPE_UNLOADED);
     dev->blockid = 0;
-    dev->poserror = 0;
+    dev->fenced = 0;
 
     return;
 

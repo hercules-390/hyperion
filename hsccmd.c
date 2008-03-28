@@ -18,6 +18,13 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.239  2008/03/25 11:41:31  fish
+// SCSI TAPE MODS part 1: groundwork: non-functional changes:
+// rename some functions, comments, general restructuring, etc.
+// New source modules awstape.c, omatape.c, hettape.c and
+// tapeccws.c added, but not yet used (all will be used in a future
+// commit though when tapedev.c code is eventually split)
+//
 // Revision 1.238  2008/03/07 17:46:17  ptl00
 // Add pri, sec, home options to v command
 //
@@ -1067,8 +1074,8 @@ static void try_scsi_refresh( DEVBLK* dev )
     // once mounted has now been manually unmounted for example).
 
     // The reasons for why this is not possible is clearly explained
-    // in the 'force_status_update' function in 'scsitape.c'. All we
-    // can ever hope to do here is either cause an already-running
+    // in the 'update_status_scsitape' function in 'scsitape.c'. All
+    // we can ever hope to do here is either cause an already-running
     // auto-mount thread to exit (if the user has just now disabled
     // auto-mounts) or else cause one to automatically start (if they
     // just enabled auto-mounts and there's no tape already mounted).
@@ -1079,10 +1086,15 @@ static void try_scsi_refresh( DEVBLK* dev )
     // manually issue the 'devinit' command themselves, because, as
     // explained, we unfortunately cannot refresh a mounted status
     // for them (due to the inherent danger of doing so as explained
-    // by the comments in 'force_status_update' in member scsitape.c).
+    // by comments in 'update_status_scsitape' in member scsitape.c).
+
+    GENTMH_PARMS  gen_parms;
+
+    gen_parms.action  = GENTMH_SCSI_ACTION_UPDATE_STATUS;
+    gen_parms.dev     = dev;
 
     broadcast_condition( &dev->stape_exit_cond );   // (force exit if needed)
-    dev->tmh->passedeot( dev );                     // (maybe update status)
+    VERIFY( dev->tmh->generic( &gen_parms ) == 0 ); // (maybe update status)
     usleep(10*1000);                                // (let thread start/end)
 }
 

@@ -98,8 +98,15 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.136  2008/03/27 07:14:17  fish
+// SCSI MODS: groundwork: part 3: final shuffling around.
+// Moved functions from one module to another and resequenced
+// functions within each. NO CODE WAS ACTUALLY CHANGED.
+// Next commit will begin the actual changes.
+//
 // Revision 1.135  2008/03/26 07:23:51  fish
-// SCSI MODS part 2: split tapedev.c: aws, het, oma processing moved to separate modules, CCW processing moved to separate module.
+// SCSI MODS part 2: split tapedev.c: aws, het, oma processing moved
+// to separate modules, CCW processing moved to separate module.
 //
 // Revision 1.134  2008/03/25 11:41:31  fish
 // SCSI TAPE MODS part 1: groundwork: non-functional changes:
@@ -305,6 +312,7 @@ END_DEVICE_SECTION
 
 TAPEMEDIA_HANDLER  tmh_aws  =
 {
+    &generic_tmhcall,
     &open_awstape,
     &close_awstape,
     &read_awstape,
@@ -316,16 +324,19 @@ TAPEMEDIA_HANDLER  tmh_aws  =
     &fsf_awstape,
     &write_awsmark,
     &sync_awstape,
-    NULL, /* DSE */
-    NULL, /* ERG */
+    &no_operation,              // (DSE)    ZZ FIXME: not coded yet
+    &no_operation,              // (ERG)
     &is_tapeloaded_filename,
-    passedeot_awstape
+    &passedeot_awstape,
+    &readblkid_virtual,
+    &locateblk_virtual
 };
 
 /*-------------------------------------------------------------------*/
 
 TAPEMEDIA_HANDLER  tmh_het   =
 {
+    &generic_tmhcall,
     &open_het,
     &close_het,
     &read_het,
@@ -337,16 +348,19 @@ TAPEMEDIA_HANDLER  tmh_het   =
     &fsf_het,
     &write_hetmark,
     &sync_het,
-    NULL, /* DSE */
-    NULL, /* ERG */
+    &no_operation,              // (DSE)    ZZ FIXME: not coded yet
+    &no_operation,              // (ERG)
     &is_tapeloaded_filename,
-    passedeot_het
+    &passedeot_het,
+    &readblkid_virtual,
+    &locateblk_virtual
 };
 
 /*-------------------------------------------------------------------*/
 
 TAPEMEDIA_HANDLER  tmh_oma   =
 {
+    &generic_tmhcall,
     &open_omatape,
     &close_omatape,
     &read_omatape,
@@ -361,7 +375,9 @@ TAPEMEDIA_HANDLER  tmh_oma   =
     &write_READONLY,            // DSE
     &write_READONLY,            // ERG
     &is_tapeloaded_filename,
-    &return_false1              // passedeot
+    &return_false1,             // passedeot
+    &readblkid_virtual,
+    &locateblk_virtual
 };
 
 /*-------------------------------------------------------------------*/
@@ -370,6 +386,7 @@ TAPEMEDIA_HANDLER  tmh_oma   =
 
 TAPEMEDIA_HANDLER  tmh_scsi   =
 {
+    &generic_tmhcall,
     &open_scsitape,
     &close_scsitape,
     &read_scsitape,
@@ -384,25 +401,9 @@ TAPEMEDIA_HANDLER  tmh_scsi   =
     &dse_scsitape,
     &erg_scsitape,
     &is_tape_mounted_scsitape,
-
-    // PROGRAMMING NOTE: the following vector is actually assigned
-    // to the 'passedeot' entry-point, but since SCSI tapes aren't
-    // emulated devices but rather real hardware devices instead
-    // (who's status already includes whether EOT has been passed
-    // or not), this particular media-handler entry-point is not
-    // currently needed for its original intended purpose. Thus we
-    // can safely use it for our own custom purposes, which in our
-    // case is to force a manual refreshing/updating of the actual
-    // drive status information on behalf of the caller.
-
-    //                    ** IMPORTANT! **
-
-    // Please read the WARNING comments in the force_status_update
-    // function itself! It's important to NOT call this entry-point
-    // indiscriminately as doing so could cause improper functioning
-    // of the guest o/s!
-
-    &update_status_scsitape
+    &passedeot_scsitape,
+    &readblkid_scsitape,
+    &locateblk_scsitape
 };
 
 #endif /* defined(OPTION_SCSI_TAPE) */
@@ -672,7 +673,7 @@ int tapedev_close_device ( DEVBLK *dev )
     dev->curblkrem = 0;
     dev->curbufoff = 0;
     dev->blockid   = 0;
-    dev->poserror = 0;
+    dev->fenced = 0;
 
     return 0;
 } /* end function tapedev_close_device */
@@ -702,6 +703,7 @@ PARSER  ptab  [] =
     { "rw",         NULL },
     { "ring",       NULL },
     { "deonirq",    "%d" },
+    { "--blkid-24", NULL },
     { "--blkid-32", NULL },
     { "--no-erg",   NULL },
     { NULL,         NULL },   /* (end of table) */
@@ -732,6 +734,7 @@ enum
     TDPARM_RW,
     TDPARM_RING,
     TDPARM_DEONIRQ,
+    TDPARM_BLKID24,
     TDPARM_BLKID32,
     TDPARM_NOERG
 };
@@ -1171,6 +1174,17 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             break;
 
 #if defined(OPTION_SCSI_TAPE)
+        case TDPARM_BLKID24:
+            if (TAPEDEVT_SCSITAPE != dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"),
+                    argv[i], short_descr );
+                rc = -1;
+                break;
+            }
+            dev->stape_blkid_32 = 0;
+            break;
+
         case TDPARM_BLKID32:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
@@ -1244,10 +1258,8 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
     char devparms[ PATH_MAX+1 + 64 ];
     char dispmsg [ 256 ];
 
-    if (!dev || !class || !buffer || !buflen)
-        return;
+    BEGIN_DEVICE_CLASS_QUERY( "TAPE", dev, class, buflen, buffer );
 
-    *class = "TAPE";
     *buffer = 0;
     devparms[0]=0;
     dispmsg [0]=0;
@@ -1261,7 +1273,14 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
 #if defined(OPTION_SCSI_TAPE)
         if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
         {
+            if (0x3590 == dev->devtype) // emulating 3590
+            {
+                if (!dev->stape_blkid_32 ) strlcat( devparms, " --blkid-24", sizeof(devparms) );
+            }
+            else // emulating 3480, 3490
+            {
                 if ( dev->stape_blkid_32 ) strlcat( devparms, " --blkid-32", sizeof(devparms) );
+            }
             if ( dev->stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
         }
 #endif
@@ -1296,7 +1315,14 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
                 if (STS_WR_PROT( dev ))
                     strlcat(tapepos,"*FP* ",sizeof(tapepos));
 
+            if (0x3590 == dev->devtype) // emulating 3590
+            {
+                if (!dev->stape_blkid_32 ) strlcat( devparms, " --blkid-24", sizeof(devparms) );
+            }
+            else // emulating 3480, 3490
+            {
                 if ( dev->stape_blkid_32 ) strlcat( devparms, " --blkid-32", sizeof(devparms) );
+            }
             if ( dev->stape_no_erg ) strlcat( devparms, " --no-erg", sizeof(devparms) );
         }
 #endif
@@ -1450,11 +1476,26 @@ void ReqAutoMount( DEVBLK *dev )
         BYTE unitstat = 0, code = 0;
 
         dev->tmh->open( dev, &unitstat, code );
+
+#if defined(OPTION_SCSI_TAPE)
+        if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+        {
             // PROGRAMMING NOTE: it's important to do TWO refreshes here
             // to cause the auto-mount thread to get created. Doing only
             // one doesn't work and doing two shouldn't cause any harm.
-        dev->tmh->passedeot( dev ); // (refresh potential stale status)
-        dev->tmh->passedeot( dev ); // (force auto-mount thread creation)
+
+            GENTMH_PARMS  gen_parms;
+
+            gen_parms.action  = GENTMH_SCSI_ACTION_UPDATE_STATUS;
+            gen_parms.dev     = dev;
+
+            // (refresh potentially stale status)
+            VERIFY( dev->tmh->generic( &gen_parms ) == 0 );
+
+            // (force auto-mount thread creation)
+            VERIFY( dev->tmh->generic( &gen_parms ) == 0 );
+        }
+#endif /* defined(OPTION_SCSI_TAPE) */
     }
 
     /* Disabled when [non-SCSI] ACL in use */
@@ -2199,4 +2240,109 @@ int write_READONLY5 ( DEVBLK *dev, BYTE *bfr, U16 blklen, BYTE *unitstat, BYTE c
     UNREFERENCED(blklen);
     build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
     return -1;
+}
+
+/*-------------------------------------------------------------------*/
+/* no_operation                                                      */
+/*-------------------------------------------------------------------*/
+int no_operation ( DEVBLK *dev, BYTE *unitstat, BYTE code )
+{
+    build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* readblkid_virtual                                                 */
+/*-------------------------------------------------------------------*/
+int readblkid_virtual ( DEVBLK* dev, BYTE* logical, BYTE* physical )
+{
+    // NOTE: returned value is always in guest BIG-ENDIAN format...
+
+    BYTE  blockid[4];
+
+    if (0x3590 == dev->devtype)
+    {
+        // Full 32-bit block-id...
+
+        blockid[0] = (dev->blockid >> 24) & 0xFF;
+        blockid[1] = (dev->blockid >> 16) & 0xFF;
+        blockid[2] = (dev->blockid >> 8 ) & 0xFF;
+        blockid[3] = (dev->blockid      ) & 0xFF;
+    }
+    else // (3480 et. al)
+    {
+        // "22-bit" block-id...
+
+        blockid[0] = 0x01;  // ("wrap" value)
+        blockid[1] = (dev->blockid >> 16) & 0x3F;
+        blockid[2] = (dev->blockid >> 8 ) & 0xFF;
+        blockid[3] = (dev->blockid      ) & 0xFF;
+    }
+
+    // NOTE: For virtual tape devices, we return the same value
+    // for both the logical "Channel block ID" value as well as
+    // the physical "Device block ID" value...
+
+    if (logical)  memcpy( logical,  &blockid[0], 4 );
+    if (physical) memcpy( physical, &blockid[0], 4 );
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* locateblk_virtual                                                 */
+/*-------------------------------------------------------------------*/
+int locateblk_virtual ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
+{
+    // NOTE: 'blockid' passed in host (little-endian) format...
+
+    int rc;
+
+    /* Do it the hard way: rewind to load-point and then
+       keep doing fsb, fsb, fsb... until we find our block
+    */
+    if ((rc = dev->tmh->rewind( dev, unitstat, code)) >= 0)
+    {
+        /* Reset position counters to start of file */
+
+        dev->curfilen   =  1;
+        dev->nxtblkpos  =  0;
+        dev->prvblkpos  = -1;
+        dev->blockid    =  0;
+
+        /* Do it the hard way */
+
+        while ( dev->blockid < blockid && ( rc >= 0 ) )
+            rc = dev->tmh->fsb( dev, unitstat, code );
+    }
+
+    return rc;
+}
+
+/*-------------------------------------------------------------------*/
+/* generic_tmhcall              generic media-type-handler call...   */
+/*-------------------------------------------------------------------*/
+int generic_tmhcall ( GENTMH_PARMS* pGenParms )
+{
+    if (!pGenParms)
+    {
+        errno = EINVAL;             // (invalid arguments)
+        return -1;                  // (return failure)
+    }
+
+    switch (pGenParms->action)
+    {
+        case GENTMH_SCSI_ACTION_UPDATE_STATUS:
+        {
+            return update_status_scsitape( pGenParms->dev );
+        }
+
+        default:
+        {
+            errno = EINVAL;         // (invalid arguments)
+            return -1;              // (return failure)
+        }
+    }
+
+    return -1;      // (never reached)
 }

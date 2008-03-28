@@ -6,6 +6,12 @@
 // $Id$
 //
 // $Log$
+// Revision 1.22  2008/03/27 07:14:17  fish
+// SCSI MODS: groundwork: part 3: final shuffling around.
+// Moved functions from one module to another and resequenced
+// functions within each. NO CODE WAS ACTUALLY CHANGED.
+// Next commit will begin the actual changes.
+//
 // Revision 1.21  2008/03/25 11:41:31  fish
 // SCSI TAPE MODS part 1: groundwork: non-functional changes:
 // rename some functions, comments, general restructuring, etc.
@@ -303,6 +309,7 @@ GENTMH_PARMS;
 /*-------------------------------------------------------------------*/
 struct TAPEMEDIA_HANDLER
 {
+    int  (*generic)    (GENTMH_PARMS*);                 // (generic call)
     int  (*open)       (DEVBLK*,                        BYTE *unitstat, BYTE code);
     void (*close)      (DEVBLK*);
     int  (*read)       (DEVBLK*, BYTE *buf,             BYTE *unitstat, BYTE code);
@@ -318,6 +325,12 @@ struct TAPEMEDIA_HANDLER
     int  (*erg)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
     int  (*tapeloaded) (DEVBLK*,                        BYTE *unitstat, BYTE code);
     int  (*passedeot)  (DEVBLK*);
+
+    /* readblkid o/p values are returned in BIG-ENDIAN guest format  */
+    int  (*readblkid)  (DEVBLK*, BYTE* logical, BYTE* physical);
+
+    /* locateblk i/p value is passed in little-endian host format  */
+    int  (*locateblk)  (DEVBLK*, U32 blockid,           BYTE *unitstat, BYTE code);
 };
 
 /*-------------------------------------------------------------------*/

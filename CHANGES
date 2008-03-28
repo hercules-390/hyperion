@@ -1,3 +1,5 @@
+28 Mar 2008 Add generic, readblkid, locateblk tape media handler vectors - Fish
+28 Mar 2008 SCSI --blkid-24 option - Fish
 23 Mar 2008 Fix incorrect bit selection for RNSBG,RISBG,ROSBG,RXSBG - Roger Bowler
 23 Mar 2008 Move With Optional Specifications Facility (MVCOS) - Roger Bowler
 13 Mar 2008 Return Byte Mpx for Chan 0 according to GA22-7000-4 - Ivan Warren
