@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.125  2008/03/27 16:45:17  rbowler
+// TRTE and TRTRE incorrectly return cc=3
+//
 // Revision 1.124  2008/03/06 16:10:35  rbowler
 // Remove extraneous trailing blanks (cosmetic change only)
 //
@@ -2776,16 +2779,10 @@ DEF_INST(translate_and_test_extended)
     if(a_bit)
     {
       arg_ch = ARCH_DEP(vfetch2)(buf_addr, r1, regs);
-      buf_len -= 2;
-      processed += 2;
-      buf_addr = (buf_addr + 2) & ADDRESS_MAXWRAP(regs);
     }
     else
     {
       arg_ch = ARCH_DEP(vfetchb)(buf_addr, r1, regs);
-      buf_len--;
-      processed++;
-      buf_addr = (buf_addr + 1) & ADDRESS_MAXWRAP(regs);
     }
 
     if(l_bit && arg_ch > 255)
@@ -2796,6 +2793,22 @@ DEF_INST(translate_and_test_extended)
         fc = ARCH_DEP(vfetch2)((fct_addr + (arg_ch * 2)) & ADDRESS_MAXWRAP(regs), 1, regs);
       else
         fc = ARCH_DEP(vfetchb)((fct_addr + arg_ch) & ADDRESS_MAXWRAP(regs), 1, regs);
+    }
+
+    if(!fc)
+    {
+      if(a_bit)
+      {
+        buf_len -= 2;
+        processed += 2;
+        buf_addr = (buf_addr + 2) & ADDRESS_MAXWRAP(regs);
+      }
+      else
+      {
+        buf_len--;
+        processed++;
+        buf_addr = (buf_addr + 1) & ADDRESS_MAXWRAP(regs);
+      }
     }
   }
 
@@ -2860,16 +2873,10 @@ DEF_INST(translate_and_test_reverse_extended)
     if(a_bit)
     {
       arg_ch = ARCH_DEP(vfetch2)(buf_addr, r1, regs);
-      buf_len -= 2;
-      processed += 2;
-      buf_addr = (buf_addr - 2) & ADDRESS_MAXWRAP(regs);
     }
     else
     {
       arg_ch = ARCH_DEP(vfetchb)(buf_addr, r1, regs);
-      buf_len--;
-      processed++;
-      buf_addr = (buf_addr - 1) & ADDRESS_MAXWRAP(regs);
     }
 
     if(l_bit && arg_ch > 255)
@@ -2880,6 +2887,22 @@ DEF_INST(translate_and_test_reverse_extended)
         fc = ARCH_DEP(vfetch2)((fct_addr + (arg_ch * 2)) & ADDRESS_MAXWRAP(regs), 1, regs);
       else
         fc = ARCH_DEP(vfetchb)((fct_addr + arg_ch) & ADDRESS_MAXWRAP(regs), 1, regs);
+    }
+
+    if(!fc)
+    {
+      if(a_bit)
+      {
+        buf_len -= 2;
+        processed += 2;
+        buf_addr = (buf_addr - 2) & ADDRESS_MAXWRAP(regs);
+      }
+      else
+      {
+        buf_len--;
+        processed++;
+        buf_addr = (buf_addr - 1) & ADDRESS_MAXWRAP(regs);
+      }
     }
   }
 
