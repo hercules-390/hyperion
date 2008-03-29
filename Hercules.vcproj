@@ -1674,7 +1674,19 @@
                     Name="scripts"
                     >
                     <File
+                        RelativePath=".\tests\alsi.txt"
+                        >
+                    </File>
+                    <File
                         RelativePath=".\tests\axtr.txt"
+                        >
+                    </File>
+                    <File
+                        RelativePath=".\tests\brc.txt"
+                        >
+                    </File>
+                    <File
+                        RelativePath=".\tests\cdgr.txt"
                         >
                     </File>
                     <File
@@ -1682,7 +1694,19 @@
                         >
                     </File>
                     <File
+                        RelativePath=".\tests\cgfrl.txt"
+                        >
+                    </File>
+                    <File
                         RelativePath=".\tests\cgxtr.txt"
+                        >
+                    </File>
+                    <File
+                        RelativePath=".\tests\cpsdr.txt"
+                        >
+                    </File>
+                    <File
+                        RelativePath=".\tests\csst.txt"
                         >
                     </File>
                     <File
@@ -1695,6 +1719,10 @@
                     </File>
                     <File
                         RelativePath=".\tests\dxtr.txt"
+                        >
+                    </File>
+                    <File
+                        RelativePath=".\tests\epsw.txt"
                         >
                     </File>
                     <File
@@ -1718,7 +1746,15 @@
                         >
                     </File>
                     <File
+                        RelativePath=".\tests\lfpc.txt"
+                        >
+                    </File>
+                    <File
                         RelativePath=".\tests\lxdtr.txt"
+                        >
+                    </File>
+                    <File
+                        RelativePath=".\tests\maer.txt"
                         >
                     </File>
                     <File
@@ -1751,6 +1787,10 @@
                     </File>
                     <File
                         RelativePath=".\tests\tdgdt.txt"
+                        >
+                    </File>
+                    <File
+                        RelativePath=".\tests\trte.txt"
                         >
                     </File>
                 </Filter>
