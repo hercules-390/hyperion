@@ -3,16 +3,22 @@
 /*                                                                            */
 /* Implementation of the z/Architecture crypto instructions described in      */
 /* SA22-7832-04: z/Architecture Principles of Operation within the Hercules   */
-/* z/Architecture emulator. This file may only be used with and within the    */
-/* Hercules emulator for non-commercial use!                                  */
+/* z/Architecture emulator.                                                   */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2003-2007 */
+/*                              (c) Copyright Bernard van der Helm, 2003-2008 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*----------------------------------------------------------------------------*/
 
 // $Id$
 //
 // $Log$
+// Revision 1.63  2008/03/25 19:39:16  fish
+// Oops! Dunno how the frick that happened folks! Sorry. This file
+// was NOT supposed to be part of the *SCSI* changes! (Duh!) And
+// I have no idea how the frick it got changed in the first place! But
+// in any case, the indentation of the #ifdef statements has been re-
+// stored back to the way it was. Sorry about that Bernard! - Fish
+//
 // Revision 1.62  2008/03/25 11:41:31  fish
 // SCSI TAPE MODS part 1: groundwork: non-functional changes:
 // rename some functions, comments, general restructuring, etc.
