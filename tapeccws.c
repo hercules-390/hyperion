@@ -96,6 +96,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.4  2008/03/28 02:09:42  fish
+// Add --blkid-24 option support, poserror flag renamed to fenced,
+// added 'generic', 'readblkid' and 'locateblk' tape media handler
+// call vectors.
+//
 // Revision 1.3  2008/03/27 07:14:16  fish
 // SCSI MODS: groundwork: part 3: final shuffling around.
 // Moved functions from one module to another and resequenced
@@ -411,64 +416,64 @@ BYTE  TapeCommands3430 [256] =
 BYTE  TapeCommands3480 [256] =
 {
 /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
-   0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5, /* 00 */
-   0,0,1,3,2,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   3,1,1,1,2,0,0,5,0,0,0,0,1,0,0,5, /* 00 */
+   0,0,1,3,0,0,0,1,0,0,0,0,0,0,0,1, /* 10 */
    0,0,1,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 20 */
    0,0,0,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 30 */
    0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1, /* 40 */
    0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,0, /* 50 */
    0,0,0,3,2,0,0,0,0,0,0,3,0,0,0,0, /* 60 */
    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* 70 */
-   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 80 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 80 */
    0,0,0,3,0,0,0,1,0,0,0,0,0,0,0,2, /* 90 */
    0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,2, /* A0 */
    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* B0 */
    0,0,0,2,0,0,0,2,0,0,0,3,0,0,0,0, /* C0 */
    0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0, /* D0 */
-   0,0,0,2,2,0,0,0,0,0,0,3,0,0,0,0, /* E0 */
-   0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0  /* F0 */
+   0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0, /* E0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  /* F0 */
 };
 
 BYTE  TapeCommands3490 [256] =
 {
 /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
-   0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5, /* 00 */
-   0,0,1,3,2,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   3,1,1,1,2,0,0,5,0,0,0,0,1,0,0,5, /* 00 */
+   0,0,1,3,0,0,0,1,0,0,0,0,0,0,0,1, /* 10 */
    0,0,1,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 20 */
-   0,0,0,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 30 */
-   0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1, /* 40 */
-   0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,0, /* 50 */
+   0,0,0,3,2,0,0,1,0,0,0,3,0,0,2,1, /* 30 */
+   0,0,0,1,0,0,0,0,0,0,0,0,0,0,2,1, /* 40 */
+   0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0, /* 50 */
    0,0,0,3,2,0,0,0,0,0,0,3,0,0,0,0, /* 60 */
    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* 70 */
-   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 80 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 80 */
    0,0,0,3,0,0,0,1,0,0,0,0,0,0,0,2, /* 90 */
    0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,2, /* A0 */
    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* B0 */
-   0,0,0,2,0,0,0,2,0,0,0,3,0,0,0,0, /* C0 */
+   0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0, /* C0 */
    0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0, /* D0 */
-   0,0,0,2,2,0,0,0,0,0,0,3,0,0,0,0, /* E0 */
-   0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0  /* F0 */
+   0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0, /* E0 */
+   0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0  /* F0 */
 };
 
 BYTE  TapeCommands3590 [256] =
 {
 /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
-   0,1,1,1,2,0,1,5,0,0,1,2,0,0,0,5, /* 00 */
-   0,0,1,3,2,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
+   3,1,1,1,2,0,1,5,0,0,1,0,1,0,0,5, /* 00 */
+   0,0,1,3,0,0,0,1,0,0,0,0,0,0,0,1, /* 10 */
    0,0,1,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 20 */
    0,0,0,3,2,0,0,1,0,0,0,3,0,0,2,1, /* 30 */
-   0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1, /* 40 */
-   0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,0, /* 50 */
-   0,0,2,3,2,0,0,0,0,0,0,3,0,0,0,0, /* 60 */
+   0,0,0,1,0,0,0,0,0,0,0,0,0,0,2,1, /* 40 */
+   0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0, /* 50 */
+   0,0,1,3,2,0,0,0,0,0,0,3,0,0,0,0, /* 60 */
    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* 70 */
-   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 80 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 80 */
    0,0,0,3,0,0,0,1,0,0,0,0,0,0,0,2, /* 90 */
    0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,2, /* A0 */
    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* B0 */
-   0,0,2,2,0,0,0,2,0,0,0,3,0,0,0,2, /* C0 */
+   0,0,2,2,0,0,0,2,0,0,0,0,0,0,0,2, /* C0 */
    0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0, /* D0 */
-   0,0,0,2,2,0,0,0,0,0,0,3,0,0,0,0, /* E0 */
-   0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0  /* F0 */
+   0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0, /* E0 */
+   0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0  /* F0 */
 };
 
 BYTE  TapeCommands9347 [256] =
@@ -604,9 +609,16 @@ int             len;                    /* Length of data block      */
 long            num;                    /* Number of bytes to read   */
 int             drc;                    /* code disposition          */
 BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
+static BYTE     supvr_inhibit  = 0;     /* Supvr-Inhibit mode active */
+static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
-    UNREFERENCED(prevcode);
-    UNREFERENCED(ccwseq);
+    /* Reset flags at start of CCW chain */
+    if (dev->ccwseq == 0)
+    {
+        supvr_inhibit  = 0;             /* (reset to default mode)   */
+        write_immed    = 0;             /* (reset to default mode)   */
+        dev->tapssdlen = 0;             /* (clear all subsys data)   */
+    }
 
     /* If this is a data-chained READ, then return any data remaining
        in the buffer which was not used by the previous CCW */
@@ -620,21 +632,16 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         {
             memmove (iobuf, iobuf + dev->curbufoff, dev->curblkrem);
         }
-        num = (count < dev->curblkrem) ? count : dev->curblkrem;
-        *residual = count - num;
-        if (count < dev->curblkrem) *more = 1;
+        RESIDUAL_CALC (dev->curblkrem);
         dev->curblkrem -= num;
         dev->curbufoff = num;
         *unitstat = CSW_CE | CSW_DE;
         return;
     }
 
-    /* Command reject if data chaining and command is not READ */
-    if (1
-        && (flags & CCW_FLAGS_CD)   // data chaining
-        && code != 0x02             // read
-        && code != 0x0C             // read backwards
-    )
+    /* Command reject if data chaining and command is not a read type */
+    if ((flags & CCW_FLAGS_CD) &&
+        !(IS_CCW_READ(code) || IS_CCW_RDBACK(code)))
     {
         logmsg(_("HHCTA072E Data chaining not supported for CCW %2.2X\n"),
                 code);
@@ -642,10 +649,18 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         return;
     }
 
-    /* Open the device file if necessary */
-    /* Ivan Warren 2003-02-24: Change logic in early determination
-     * of CCW handling - use a determination table
+    /* Command reject if command is not Read Subsystem Data command
+       if the previous one was a Perform Subsystem Function command
+       that prepared some subsystem data for subsequent reading
     */
+    if (0x77 == prevcode && dev->tapssdlen && 0x3E != code)
+    {
+        build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+        return;
+    }
+
+    /* Early determination of CCW validity via TapeCommandTable lookup... */
+
     drc = TapeCommandIsValid (code, dev->devtype, &rustat);
 
     switch (drc)
@@ -667,10 +682,24 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         case 3:     /* Valid - But is a NO-OP (return CE+DE now) */
 
+            /* Command reject if the volume is currently fenced */
+            if (dev->fenced)
+            {
+                build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+                return;
+            }
+
             build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
             return;
 
         case 4:     /* Valid, But is a NO-OP (for virtual tapes) */
+
+            /* Command reject if the volume is currently fenced */
+            if (dev->fenced)
+            {
+                build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+                return;
+            }
 
             /* If non-virtual (SCSI) then further processing required */
             if (dev->tapedevt == TAPEDEVT_SCSITAPE)
@@ -762,8 +791,14 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x01:
     {
-        /* Unit check if tape is write-protected */
-        if (dev->readonly)
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
+        if (dev->readonly || dev->tdparms.logical_readonly)
         {
             build_senseX (TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code);
             break;
@@ -775,13 +810,17 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
-        rc=dev->tmh->write(dev,iobuf,count,unitstat,code);
-        if (rc < 0)
-        {
-            break;
-        }
-        /* Set normal status */
+
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
+
+        if ((rc = dev->tmh->write( dev, iobuf, count, unitstat, code)) < 0)
+            break;      // (error)
+
         *residual = 0;
+
+        /* Perform flush/sync and/or set normal completion status */
+        if (!write_immed || (rc = dev->tmh->sync( dev, unitstat, code )) == 0)
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
 
         break;
@@ -826,23 +865,29 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x02:
     {
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
         /* Read a block from the tape according to device type */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
-        len=dev->tmh->read(dev,iobuf,unitstat,code);
-        /* Exit with unit check status if read error condition */
-        if (len < 0)
-        {
-            break;
-        }
+
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
+
+        /* Do the read. Exit with unit check status if read failed */
+        if ((len = dev->tmh->read( dev, iobuf, unitstat, code)) < 0)
+            break;      // (error)
 
         /* Calculate number of bytes to read and residual byte count */
-        num = (count < len) ? count : len;
-        *residual = count - num;
-        if(count < len) *more = 1;
+        RESIDUAL_CALC (len);
 
         /* Save size and offset of data not used by this CCW */
         dev->curblkrem = len - num;
@@ -862,6 +907,13 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x03:
     {
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
         build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
         break;
     }
@@ -916,6 +968,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             UpdateDisplay( dev );
         }
 
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
+
         /* Do the rewind */
         rc = dev->tmh->rewind( dev, unitstat, code);
 
@@ -928,8 +983,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         /* Check for error */
         if (rc < 0)
         {
+            dev->fenced = 1;
             break;
         }
+
+        dev->fenced = 0;
 
         build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
         break;
@@ -1008,6 +1066,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             break;
         }
 
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
+
         /* Now read in a forward direction the actual data block
            we just backspaced over, and exit with unit check status
            on any read error condition
@@ -1016,9 +1077,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             break;      // (error)
 
         /* Calculate number of bytes to read and residual byte count */
-        num = (count < len) ? count : len;
-        *residual = count - num;
-        if (count < len) *more = 1;
+        RESIDUAL_CALC (len);
 
         /* Save size and offset of data not used by this CCW */
         dev->curblkrem = len - num;
@@ -1062,6 +1121,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             UpdateDisplay( dev );
         }
 
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
+
         // Do the Rewind-Unload...
 #if defined(OPTION_SCSI_TAPE)
         if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
@@ -1076,16 +1138,16 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             UpdateDisplay( dev );
         }
 
+        if ((*unitstat & CSW_UC) != 0)      // (did it work?)
+            break;                          // (no it didn't)
+
         dev->curfilen = 1;
         dev->nxtblkpos = 0;
         dev->prvblkpos = -1;
+//      dev->fenced = 0;        // (handler already did this)
 
         UpdateDisplay( dev );
 
-        /* Status may require tweaking according to D/T */
-        /* this is what TAPEUNLOADED2 does */
-
-        rc=1;
         build_senseX(TAPE_BSENSE_RUN_SUCCESS,dev,unitstat,code);
 
         if ( dev->als )
@@ -1107,20 +1169,70 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     } /* End case 0x0F: REWIND UNLOAD */
 
     /*---------------------------------------------------------------*/
+    /* READ BUFFER  (3480 and later)                                 */
+    /*---------------------------------------------------------------*/
+    case 0x12:
+    {
+        /*    GA32-0127 IBM 3490E Hardware Reference
+
+        Read Buffer (X'12')
+
+        The Read Buffer command transfers data from the control unit
+        to the channel if any buffered write data is in the control
+        unit's buffer.  For each Read Buffer command completed, the
+        controlling computer retrieves one block of data in last-in/
+        first-out (LIFO) sequence until the buffer for the addressed
+        tape drive is empty.  The controlling computer usually issues
+        this command when the tape drive or subsystem malfunctions
+        and cannot write data from the buffer to the tape.
+        */
+
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
+        // PROGRAMMING NOTE: until we can add support for performing
+        // SCSI i/o directly to the actual real device, we simply do
+        // the same thing for non-virtual devices as we do for virtual
+        // ones: we force-flush the data to the device (i.e. sync)
+        // and then tell the truth: that there's zero bytes of data
+        // still buffered (which is true if we just flushed it all)
+
+        // Once we add direct SCSI i/o support though, we can change
+        // the below to do an actual read-buffer SCSI command for
+        // non-virtual devices. (We will still always need the below
+        // for virtual devices though)
+
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
+
+        // Perform flush/sync; exit on error...
+        if ((rc = dev->tmh->sync( dev, unitstat, code )) < 0)
+            break;      // (i/o error)
+
+        // Flush complete. Our buffer is now empty. Tell them that.
+        RESIDUAL_CALC (0);
+        dev->curblkrem = 0;
+        dev->curbufoff = 0;
+        break;
+    }
+
+    /*---------------------------------------------------------------*/
     /* ERASE GAP                                                     */
     /*---------------------------------------------------------------*/
     case 0x17:
     {
-        /* Unit check if tape is write-protected */
-        if (0
-            || dev->readonly
-#if defined(OPTION_SCSI_TAPE)
-            || (1
-                &&  TAPEDEVT_SCSITAPE == dev->tapedevt
-                &&  STS_WR_PROT( dev )
-               )
-#endif
-        )
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
+        if (dev->readonly || dev->tdparms.logical_readonly)
         {
             build_senseX (TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code);
             break;
@@ -1132,11 +1244,18 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             UpdateDisplay( dev );
         }
 
-        if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
-            dev->tmh->erg(dev,unitstat,code);
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
 
-        if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
-            /* Set normal status */
+        /* Do the ERG; exit if error */
+        if ((rc = dev->tmh->erg( dev, unitstat, code )) < 0)
+            break;      // (error)
+
+        /* Perform flush/sync and/or set normal completion status */
+        if (0
+            || !write_immed
+            || (rc = dev->tmh->sync( dev, unitstat, code )) == 0
+        )
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
 
         break;
@@ -1147,7 +1266,14 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x1F:
     {
-        if (dev->readonly)
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
+        if (dev->readonly || dev->tdparms.logical_readonly)
         {
             build_senseX (TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code);
             break;
@@ -1159,13 +1285,20 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             UpdateDisplay( dev );
         }
 
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
+
         /* Do the WTM; exit if error */
         if ((rc = dev->tmh->wtm(dev,unitstat,code)) < 0)
             break;      // (error)
 
         dev->curfilen++;
 
-        /* Set normal status */
+        /* Perform flush/sync and/or set normal completion status */
+        if (0
+            || !write_immed
+            || (rc = dev->tmh->sync( dev, unitstat, code )) == 0
+        )
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
 
         break;
@@ -1187,6 +1320,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
             break;
         }
+
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
 
         /* Calculate number of bytes and residual byte count */
         RESIDUAL_CALC( 2 * sizeof(dev->blockid) );
@@ -1212,9 +1348,14 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0x24:
     {
         /* Calculate residual byte count... */
-        num = (count < 64) ? count : 64;
-        *residual = count - num;
-        if (count < 64) *more = 1;
+
+        // PROGRAMMING NOTE: technically we *should* have up to
+        // 64 bytes to give them, but we may not have that many.
+
+        /* How many bytes we SHOULD have depends on whether
+           Extended Buffered Log support is enabled or not */
+        len = (dev->devchar[8] & 0x01) ? 64 : 32;
+        RESIDUAL_CALC (len);
 
         /* Clear the device sense bytes, copy the device sense bytes
            to the channel I/O buffer, and then return unit status */
@@ -1234,11 +1375,21 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x27:
     {
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
+
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
 
         /* Backspace to previous block according to device type,
            and exit with unit check status on error condition */
@@ -1263,11 +1414,21 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x2F:
     {
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
+
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
 
         /* Backspace to previous file according to device type,
            and exit with unit check status on error condition */
@@ -1327,10 +1488,23 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         |________|________|____________________________________|
         */
 
+        /* Command Reject if Supervisor-Inhibit */
+        if (supvr_inhibit)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
+        /* Command reject if the command is not the ONLY command
+           in the channel program */
+        if (chained & CCW_FLAGS_CC)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
         /* Calculate residual byte count */
-        num = (count < 12) ? count : 12;
-        *residual = count - num;
-        if (count < 12) *more = 1;
+        RESIDUAL_CALC (12);
 
         /* Byte 0 is the path group state byte */
         iobuf[0] = dev->pgstat;
@@ -1350,11 +1524,21 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x37:
     {
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
+
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
 
         /* Forward to next block according to device type  */
         /* Exit with unit check status if error condition  */
@@ -1394,24 +1578,60 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         in the data transferred with the order.
         */
 
-        // ZZ FIXME: not coded yet.
+        // Command reject if not chained from either a Set Interface
+        // Identifier or Perform Subsystem Function command...
 
-        /* Set command reject sense byte, and unit check status */
-        build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+        if (!((chained & CCW_FLAGS_CC) && (0x77 == prevcode || 0x73 == prevcode)))
+        {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+        }
+
+        // Command reject if no subsystem data was prepared
+        // by a previous Perform Subsystem Function command
+
+        if (!dev->tapssdlen)      // (any subsystem data?)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
+        /* Calculate residual byte count */
+        RESIDUAL_CALC (dev->tapssdlen);
+
+        /* PROGRAMMING NOTE: the Prepare for Read Subsystem Data
+           order of the previous Perform Subsystem Function command
+           has already prepared the subsystem data directly in the
+           channel buffer itself (iobuf), so there isn't any data
+           that actually needs to be moved/copied; the data is
+           already sitting in the channel buffer. All we need do
+           is return a normal status.
+        */
+        build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
         break;
 
-    }
+    } /* End case 0x3E: READ SUBSYSTEM DATA */
 
     /*---------------------------------------------------------------*/
     /* FORWARD SPACE FILE                                            */
     /*---------------------------------------------------------------*/
     case 0x3F:
     {
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
+
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
 
         /* Forward to next file according to device type  */
         /* Exit with unit check status if error condition */
@@ -1429,11 +1649,21 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x43:
     {
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
+
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
 
         /* Do the sync */
         if ((rc = dev->tmh->sync( dev, unitstat, code )) == 0)
@@ -1441,6 +1671,83 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         break;
     }
+
+    /*---------------------------------------------------------------*/
+    /* READ MESSAGE ID                                               */
+    /*---------------------------------------------------------------*/
+    case 0x4E:
+    {
+        /*       GA32-0127 IBM 3490E Hardware Reference
+
+        Read Message ID (X'4E')
+
+        The Read Message ID command is used to read the message identifier
+        that was assigned by the control unit to commands that indicated
+        the message-required flag requesting notification when an asynchronous
+        operation is complete.  The Read Message ID command must be chained
+        directly from the specific command that requested the message
+        notification or the command will be presented unit check status
+        with associated sense indicating ERA code 27.
+
+        If the Read Message ID command is chained to a specific command
+        that requests notification, but the command does not result in an
+        asynchronous operation, the message identifier field returned
+        will be all zeroes.
+
+        The data returned has the following format:
+
+         ________ ____________________________________________________
+        | Byte   | Description                                        |
+        |________|____________________________________________________|
+        | 0,1    | Length (set to X'000A')                            |
+        |________|____________________________________________________|
+        | 2      | Format (set to X'02')                              |
+        |________|____________________________________________________|
+        | 3      | Message Code                                       |
+        |        |                                                    |
+        |        | Value Description                                  |
+        |        |                                                    |
+        |        | X'01' Delayed-Response Message                     |
+        |________|____________________________________________________|
+        | 4-7    | Message ID                                         |
+        |        |                                                    |
+        |        | This field contains the message identifier         |
+        |        | assigned by the control unit to the requested      |
+        |        | operation.  If the operation was executed by       |
+        |        | the subsystem as an immediate operation, this      |
+        |        | field contains all zeroes and a later delayed-     |
+        |        | response message is not generated.                 |
+        |________|____________________________________________________|
+        | 8      | Flags (set to X'00')                               |
+        |________|____________________________________________________|
+        | 9      | Reserved (set to X'00')                            |
+        |________|____________________________________________________|
+        */
+
+        /* Command reject if not chained from a write command */
+        if (!((chained & CCW_FLAGS_CC) && IS_CCW_WRITE(prevcode)))
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
+        /* Calculate residual byte count */
+        RESIDUAL_CALC( 10 );
+
+        // PROGRAMMING NOTE: at the moment all of our i/o's are synchronous.
+        // Thus we always return zero indicating the i/o was not asynchronous.
+
+        STORE_HW ( &iobuf[0],   10 );       // 0-1
+                    iobuf[2] = 0x02;        // 2
+                    iobuf[3] = 0x01;        // 3
+        STORE_FW ( &iobuf[4],    0 );       // 4-7  (Message Id)
+                    iobuf[8] = 0x00;        // 8
+                    iobuf[9] = 0x00;        // 9
+
+        build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat,code);
+        break;
+
+    } /* End case 0x4E: READ MESSAGE ID */
 
     /*---------------------------------------------------------------*/
     /* LOCATE BLOCK                                                  */
@@ -1501,6 +1808,9 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             UpdateDisplay( dev );
         }
 
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
+
         /* Ask media handler to perform the locate... */
         if ((rc = dev->tmh->locateblk( dev, locblock, unitstat, code )) < 0)
         {
@@ -1520,6 +1830,32 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         break;
 
     } /* End case 0x4F: LOCATE BLOCK */
+
+    /*---------------------------------------------------------------*/
+    /* SUSPEND MULTIPATH RECONNECTION  (3480 and later)              */
+    /*---------------------------------------------------------------*/
+    case 0x5B:
+    {
+        /*       GA32-0127 IBM 3490E Hardware Reference
+
+        Suspend Multipath Reconnection (X'5B')
+
+        The Suspend Multipath Reconnection command performs as a
+        No-Operation command because all controlling-computer-to-
+        subsystem operations occur in single-path status.
+        */
+
+        /* Command Reject if Supervisor-Inhibit */
+        if (supvr_inhibit)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
+        /* Set normal status */
+        build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+        break;
+    }
 
     /*---------------------------------------------------------------*/
     /* READ MEDIA CHARACTERISTICS  (3590 only)                       */
@@ -1554,9 +1890,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Calculate residual byte count */
-        num = (count < dev->numdevchar) ? count : dev->numdevchar;
-        *residual = count - num;
-        if (count < dev->numdevchar) *more = 1;
+        RESIDUAL_CALC (dev->numdevchar);
 
         /* Copy device characteristics bytes to channel buffer */
         memcpy (iobuf, dev->devchar, num);
@@ -1593,10 +1927,27 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x77:
     {
-        /* By Adrian Trenkwalder */
+        BYTE  order  = iobuf[0];
+        BYTE  flag   = iobuf[1];
+        BYTE  parm   = iobuf[2];
+
+        /* Command Reject if Supervisor-Inhibit */
+        if (supvr_inhibit)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
+        /* The flag byte must be zero for all orders because
+           none of our supported orders supports a flag byte */
+        if (PSF_FLAG_ZERO != flag)
+        {
+          build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+          break;
+        }
 
         /* Byte 0 is the PSF order */
-        switch(iobuf[0])
+        switch (order)
         {
         /*-----------------------------------------------------------*/
         /* Activate/Deactivate Forced Error Logging                  */
@@ -1604,132 +1955,488 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_AFEL:
         case PSF_ORDER_DFEL:
+        {
+          BYTE  bEnable  = (PSF_ORDER_AFEL == order) ? 1 : 0;
+
           /* Calculate residual byte count */
-          num = (count < 3) ? count : 3;
-            *residual = count - num;
+          RESIDUAL_CALC (3);
 
-            /* Control information length must be at least 3 bytes */
-            /* and the flag byte must be zero for all orders       */
-            if ( (count < 3)
-                ||  (iobuf[1] != PSF_FLAG_ZERO)
-                  || ((iobuf[2] != PSF_ACTION_FEL_IMPLICIT)
-                  && (iobuf[2] != PSF_ACTION_FEL_EXPLICIT))
-               )
-            {
-               build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-               break;
-            }
+          /* Control information length must be 3 bytes long */
+          /* and the parameter byte must be one or the other */
+          if ( (count < len)
+              || ((PSF_ACTION_FEL_IMPLICIT != parm) &&
+                  (PSF_ACTION_FEL_EXPLICIT != parm))
+          )
+          {
+             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+             break;
+          }
 
-            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-            break;
+          /* Enable/Disabled Forced Error Logging as requested... */
 
-        /*-----------------------------------------------------------*/
-        /* Activate/Deactivate Access Control                        */
-        /* 0x8200nn / 0x8300nn                                       */
-        /*-----------------------------------------------------------*/
-        case PSF_ORDER_AAC:
-        case PSF_ORDER_DAC:
-            /* Calculate residual byte count */
-          num = (count < 4) ? count : 4;
-            *residual = count - num;
-
-          /* Control information length must be at least 4 bytes */
-          /* and the flag byte must be zero for all orders       */
-          if ( (count < 3)
-              || (iobuf[1] != PSF_FLAG_ZERO)
-                || ((iobuf[2] != PSF_ACTION_AC_LWP)
-                && (iobuf[2] != PSF_ACTION_AC_DCD)
-                && (iobuf[2] != PSF_ACTION_AC_DCR)
-                && (iobuf[2] != PSF_ACTION_AC_ER))
-             )
-            {
-              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-              break;
-            }
+#if 0 // (implicit enabling for all devices not currently supported; treat as explicit instead)
+          if (PSF_ACTION_FEL_IMPLICIT == parm)
+          {
+              // Implicit: for ALL devices...
+              dev->forced_logging = bEnable ? 1 : 0;
+          }
+          else // (PSF_ACTION_FEL_EXPLICIT == parm)
+#endif // (implicit not supported)
+          {
+              // Explicit: for only THIS device...
+              dev->forced_logging = bEnable ? 1 : 0;
+          }
 
           build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
           break;
+        }
+
+        /*-----------------------------------------------------------*/
+        /* Activate/Deactivate Access Control                        */
+        /* 0x8200nn00 / 0x8300nn00                                   */
+        /*-----------------------------------------------------------*/
+        case PSF_ORDER_AAC:     // (Activate)
+        case PSF_ORDER_DAC:     // (Dectivate)
+        {
+          BYTE  bEnable  = (PSF_ORDER_AAC == order) ? 1 : 0;
+
+          /* Calculate residual byte count */
+          RESIDUAL_CALC (4);
+
+          /* Control information length must be 4 bytes long */
+          /* and the parameter byte must not be invalid      */
+          if (0
+              || (count < len)
+              || (parm  & ~(PSF_ACTION_AC_LWP | PSF_ACTION_AC_DCD |   // (bits on that shouldn't be)
+                            PSF_ACTION_AC_DCR | PSF_ACTION_AC_ER))
+              || !(parm &  (PSF_ACTION_AC_LWP | PSF_ACTION_AC_DCD |   // (bits on that should be)
+                            PSF_ACTION_AC_DCR | PSF_ACTION_AC_ER))
+          )
+          {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+          }
+
+          /* Enable/Disable Logical Write Protect if requested */
+          if (parm & PSF_ACTION_AC_LWP)
+            dev->tdparms.logical_readonly = bEnable ? 1 : 0;
+
+          /* Enable/Disable Data Compaction (compression) if requested */
+          if (parm & PSF_ACTION_AC_DCD)
+          {
+            if (TAPEDEVT_HET == dev->tapedevt)
+            {
+              rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_COMPRESS,
+                             bEnable ? TRUE : FALSE );
+            }
+#if defined(OPTION_SCSI_TAPE)
+            else if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                // ZZ FIXME: future place for direct SCSI i/o
+                // to enable/disable compression for 3480/later.
+            }
+#endif
+          }
+
+          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+          break;
+        }
 
         /*-----------------------------------------------------------*/
         /* Reset Volume Fenced                                       */
         /* 0x9000                                                    */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_RVF:
-            /* Calculate residual byte count */
-          num = (count < 2) ? count : 2;
-            *residual = count - num;
+        {
+          /*       GA32-0127 IBM 3490E Hardware Reference
 
-          /* Control information length must be at least 2 bytes */
-          /* and the flag byte must be zero for all orders       */
-          if ( (count < 2)
-              || (iobuf[1] != PSF_FLAG_ZERO)
-             )
-            {
-              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-              break;
-            }
+          Volume Fencing
+
+          When a condition results in a volume integrity exposure,
+          the control unit will prevent further access to the volume.
+          This process is called Volume Fencing and is primarily
+          related to loss of buffered write data, tape positioning,
+          or assignment protection.
+
+          The control unit prevents further access to the tape volume
+          by conditioning itself to generate deferred unit checks with
+          associated sense data indicating ERA code 47, for all commands
+          that are eligible to receive the deferred unit check until
+          the condition is reset or until the cartridge is unloaded.
+          The condition that caused the fencing to occur has already
+          been indicated by the previous unit check and associated sense
+          data.
+          */
+
+          /* Calculate residual byte count */
+          RESIDUAL_CALC (2);
+
+          /* Control information length must be 2 bytes long */
+          if (count < len)
+          {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+          }
+
+          dev->fenced = 0;        // (as requested!)
 
           build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
           break;
+        }
 
         /*-----------------------------------------------------------*/
         /* Pin Device                                                */
         /* 0xA100nn                                                  */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_PIN_DEV:
-            /* Calculate residual byte count */
-          num = (count < 3) ? count : 3;
-            *residual = count - num;
+        {
+          /* Calculate residual byte count */
+          RESIDUAL_CALC (3);
 
-          /* Control information length must be at least 3 bytes */
-          /* and the flag byte must be zero for all orders       */
-          if ( (count < 3)
-                || (iobuf[1] != PSF_FLAG_ZERO)
-                || ((iobuf[2] != PSF_ACTION_PIN_CU0)
-                && (iobuf[2] != PSF_ACTION_PIN_CU1))
-             )
-            {
-              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-              break;
-            }
+          /* Control information length must be 3 bytes long */
+          /* and the parameter byte must not be invalid      */
+          if ( (count < len)
+                || ((parm != PSF_ACTION_PIN_CU0) &&
+                    (parm != PSF_ACTION_PIN_CU1))
+          )
+          {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+          }
+
+          // (not currently supported; treat as no-op...)
           build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
           break;
+        }
 
         /*-----------------------------------------------------------*/
         /* Unpin Device                                              */
         /* 0xA200                                                    */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_UNPIN_DEV:
-            /* Calculate residual byte count */
-          num = (count < 2) ? count : 2;
-            *residual = count - num;
+        {
+          /* Calculate residual byte count */
+          RESIDUAL_CALC (2);
 
-          /* Control information length must be at least 2 bytes */
-          /* and the flag byte must be zero for all orders       */
-          if ( (count < 2)
-                || (iobuf[1] != PSF_FLAG_ZERO)
-             )
-            {
-              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-              break;
-            }
+          /* Control information length must be 2 bytes long */
+          if (count < len)
+          {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+          }
+
+          // (not currently supported; treat as no-op...)
           build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
           break;
+        }
 
         /*-----------------------------------------------------------*/
-        /* Not yet supported                                         */
-        /* 0x180000000000mm00iiiiii  Prepare for Read Subsystem Data */
-        /* 0x1B00                    Set Special Intercept Condition */
-        /* 0x1C00xxccnnnn0000iiiiii..Message Not Supported           */
+        /* Prepare for Read Subsystem Data                           */
+        /* 0x180000000000mm00iiiiiiii                                */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_PRSD:
+        {
+          /*       GA32-0127 IBM 3490E Hardware Reference
+
+          Prepare for Read Subsystem Data (X'18')
+
+          The order transfers 12 bytes of data used for processing a
+          Read Subsystem Data command that immediately follows the
+          Perform Subsystem Function command specifying this order in
+          the command chain.  If a Read Subsystem Data command is not
+          issued as the next command in the command chain, the data is
+          discarded and no other action is performed.  If a Read Subsystem
+          Data command is issued as the next command in the command chain,
+          the data determines what type of information is presented to
+          the Read Subsystem Data command.
+
+          When the Prepare for Subsystem Data order with the attention
+          message sub-order is specified in a Perform Subsystem Function
+          command, the command is treated as a global command.  If the
+          command is issued while the Special Intercept Condition is
+          active, a unit check status is presented with the associated
+          sense data indicating ERA code 53.
+
+          The Prepare for Read Subsystem Data order requires an order
+          byte (byte 0), a flag byte (byte 1), and parameter bytes.
+          The flag byte is set to 0. The parameter bytes are defined
+          as follows:
+
+           ________ ___________________________________________________
+          | Byte   | Description                                       |
+          |________|___________________________________________________|
+          | 2-5    | Reserved (X'00')                                  |
+          |________|___________________________________________________|
+          | 6      | Attention Message (X'03')                         |
+          |        |                                                   |
+          |        | When active and bytes 8-11 contain X'00000000',   |
+          |        | the program is requesting the control unit        |
+          |        | to present any pending attention message or       |
+          |        | unsolicited unit check condition that is          |
+          |        | associated with the addressed device-path pair.   |
+          |        | If there is no message or unit check condition    |
+          |        | present, the subsystem displays the "No Message"  |
+          |        | message.                                          |
+          |        |                                                   |
+          |        | When active and bytes 8-11 contain anything       |
+          |        | other than X'00000000', the program is re-        |
+          |        | questing the control unit to present the status   |
+          |        | of the asynchronous operation as identified by    |
+          |        | the contents of bytes 8-11.                       |
+          |________|___________________________________________________|
+          | 7      | Reserved (X'00')                                  |
+          |________|___________________________________________________|
+          | 8-11   | Message ID                                        |
+          |________|___________________________________________________|
+          */
+
+          /* Calculate residual byte count */
+          RESIDUAL_CALC (12);
+
+          /* Control information length must be 12 bytes long the */
+          /* parameter must be valid and all reserved bytes zero. */
+          /* Also note that the only sub-order we support is the  */
+          /* only sub-order that is defined: attention message.   */
+          if (0
+              || (count < len)
+              || (iobuf[6] != PSF_ACTION_SSD_ATNMSG)
+              || (memcmp( &iobuf[2], "\00\00\00\00", 4 ) != 0)
+              || (iobuf[7] != 0x00)
+          )
+          {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+          }
+
+          /* If the Special Intercept Condition is active, present
+             unit check status with sense indicating ERA code 53 */
+          if (dev->SIC_active)
+          {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            dev->SIC_active = 0;
+            break;
+          }
+
+          // Build the requested Subsystem Data...
+
+          // PROGRAMMING NOTE: note that we build the requested data
+          // directly in the channel i/o buffer itself (iobuf). This
+          // relieves us from having to allocate/maintain a separate
+          // buffer for it somewhere, and relieves the READ SUBSYSTEM
+          // DATA command (0x3E) from having to copy the data into
+          // the channel buffer from somewhere. Instead it can return
+          // immediately since the data is already in the buffer. (See
+          // the 0x3E: READ SUBSYSTEM DATA command for information).
+
+          // PROGRAMMING NOTE: since at the moment we don't support
+          // asynchronous i/o (all of our i/o's are synchronous), we
+          // return either a Format x'00' (No Message) response if the
+          // Message Id they specified was x'00000000' or, if they
+          // requested the status for a specific Message Id, a format
+          // x'02' (Message Id Status) response with x'00' Operation
+          // Completion Status (I/O Completed).
+
+          if (memcmp( &iobuf[8], "\00\00\00\00", 4 ) == 0)
+          {
+            // Format x'00': "No Message"
+
+            dev->tapssdlen = 9;                     // (Length)
+            STORE_HW ( &iobuf[0], dev->tapssdlen ); // (Length = 9 bytes)
+            iobuf[2] = 0x00;                        // (Format = x'00': "No Message")
+            iobuf[3] = 0x00;                        // (Message Code = none)
+            memcpy( &iobuf[4], &iobuf[8], 4 );      // (Message Id = same as requested)
+            iobuf[8] = 0x00;                        // (Flags = none)
+          }
+          else
+          {
+            // Format x'02': "Message Id Status"
+
+            dev->tapssdlen = 10;                    // (Length)
+            STORE_HW ( &iobuf[0], dev->tapssdlen ); // (Length = 10 bytes)
+            iobuf[2] = 0x02;                        // (Format = x'01: Message Id Status)
+            iobuf[3] = 0x01;                        // (Message Code = Delayed Response)
+            memcpy( &iobuf[4], &iobuf[8], 4 );      // (Message Id = same as requested)
+            iobuf[8] = 0x00;                        // (Reserved)
+            iobuf[9] = 0x00;                        // (Status = "I/O Completed")
+          }
+          break;
+
+        } /* End case PSF_ORDER_PRSD */
+
+        /*-----------------------------------------------------------*/
+        /* Set Special Intercept Condition                           */
+        /* 0x1B00                                                    */
+        /*-----------------------------------------------------------*/
         case PSF_ORDER_SSIC:
+        {
+          /*       GA32-0127 IBM 3490E Hardware Reference
+
+          Set Special Intercept Condition (X'1B')
+
+          The order controls the activation or deactivation of the
+          special intercept condition associated with the device-path
+          group pair to which the command is issued.  The order is
+          supported by the model if byte 8 bit 4 is active in the data
+          presented to the Read Device Characteristics command.  The
+          order requires an order byte (byte 0) and a flag byte (byte 1).
+          The flag byte is set to 0.
+
+          When processed, the command activates the special intercept
+          condition for the device on each channel path that has the
+          same path group ID as the issuing channel path.  The path
+          group ID is considered valid on a given channel path if it
+          is valid for any device on the channel path.  The special
+          intercept condition controls the presentation of attention-
+          intercept status.  The sense data associated with the
+          attention-intercept status indicates ERA code 57.  The special
+          intercept condition also causes the next global command
+          issued to the device-path group pair to be presented unit check
+          status with associated sense data indicating ERA code 53.
+
+          The special intercept condition is deactivated on a channel
+          path if a reset signal is received on the channel path.  The
+          special intercept condition is deactivated for the device-group
+          pair if a global command is presented unit check status with
+          associated sense data indicating ERA code 53, or if the last
+          path in the associated set of channel paths (that is, with the
+          same valid path group ID) is reset.
+
+          After the Set Special Intercept Condition order is specified
+          in a Perform Subsystem Function command, the command is treated
+          as a global command. If the command is issued while the special
+          intercept condition is active, a unit check status is presented
+          with associated sense data indicating ERA code 53.
+
+          If a command is issued to a channel path without a valid path
+          group ID (that is, all devices in the reset state), unit check
+          status is presented with associated sense data indicating ERA
+          code 27.
+          */
+
+          /* Command reject if Special Intercept Condition not supported */
+          if (!dev->SIC_supported)      // (not supported?)
+          {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+          }
+
+          /* If the command is issued while the Special Intercept  */
+          /* Condition is active, a unit check status is presented */
+          /* with associated sense data indicating ERA code 53.    */
+          if (dev->SIC_active)        // (already active?)
+          {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            dev->SIC_active = 0;      // (reset after UC)
+            break;
+          }
+
+          /* Activate Special Intercept Condition */
+          dev->SIC_active = 1;
+          break;
+
+        } /* End case PSF_ORDER_SSIC */
+
+        /*-----------------------------------------------------------*/
+        /* Message Not Supported                                     */
+        /* 0x1C00xxccnnnn0000iiiiii...                               */
+        /*-----------------------------------------------------------*/
         case PSF_ORDER_MNS:
-        // Fall through
+        {
+          /*       GA32-0127 IBM 3490E Hardware Reference
+
+          Message Not Supported (X'1C')
+
+          The order transfers 20 bytes of data that identify the host
+          that does not support a prior attention message containing
+          the Notify Nonsupport flag. The order requires an order byte
+          (byte 0), a flag byte (byte 1), and parameter bytes.  The
+          flag byte is set to 0.  The parameter bytes are defined as
+          follows:
+
+           ________ ________ ____________________________________________
+          | Byte   | Value  | Description                                |
+          |________|________|____________________________________________|
+          | 2      |        | Response Code                              |
+          |________|________|____________________________________________|
+          |        | 0      | Reserved (invalid).                        |
+          |________|________|____________________________________________|
+          |        | 1      | Message rejected.  Unknown format.         |
+          |________|________|____________________________________________|
+          |        | 2      | Message rejected.  Function not supported. |
+          |________|________|____________________________________________|
+          |        | 3-255  | Reserved (invalid).                        |
+          |________|________|____________________________________________|
+          | 3      |        | Channel Path ID (CHPID)                    |
+          |        |        |                                            |
+          |        |        | The byte identifies the channel path that  |
+          |        |        | received the attention message.            |
+          |________|________|____________________________________________|
+          | 4, 5   |        | Device Number                              |
+          |        |        |                                            |
+          |        |        | The bytes identify the device number of    |
+          |        |        | the device that received the attention     |
+          |        |        | message.                                   |
+          |________|________|____________________________________________|
+          | 6, 7   |        | Reserved (must be X'00').                  |
+          |________|________|____________________________________________|
+          | 8-11   |        | Message ID                                 |
+          |        |        |                                            |
+          |        |        | The field contains the message ID that     |
+          |        |        | was presented to the host in the attention |
+          |        |        | message.                                   |
+          |________|________|____________________________________________|
+          | 12-19  |        | System ID                                  |
+          |        |        |                                            |
+          |        |        | The field contains an 8-byte system ID     |
+          |        |        | that identifies the host or host partition |
+          |        |        | responding to the attention message.       |
+          |________|________|____________________________________________|
+          */
+
+          // PROGRAMMING NOTE: none of our responses to the Perform Sub-
+          // System Function order Attention Message sub-order (see the
+          // PSF_ORDER_PRSD case further above) support any flags. Thus
+          // because we never set/request the "Notify Nonsupport" flag
+          // in our Attention Message sub-order response, the host should
+          // never actually ever be issuing this particular order of the
+          // Perform Subsystem Functon command since it shouldn't be
+          // trying to tell us what we never asked it to. Nevertheless
+          // we should probably support it anyway just in case it does
+          // by treating it as a no-op (as long as it's valid of course).
+
+          /* Check for valid data (Note: we don't bother validating the
+             Channel Path ID, Device Number, Message ID or System ID) */
+          if (0
+          //  ||  flag != 0x00                      // (flag byte) (note: already checked)
+              || (parm != 0x01 && parm != 0x02)     // (response code)
+              ||  iobuf[6] != 0x00                  // (reserved)
+              ||  iobuf[7] != 0x00                  // (reserved)
+          )
+          {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+          }
+
+          /* Calculate residual byte count */
+          RESIDUAL_CALC (20);
+
+          /* Treat as No-op */
+          build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+          break;
+
+        } /* End case PSF_ORDER_MNS */
+
+        /*-----------------------------------------------------------*/
+        /* Unknown/Supported PSF order                               */
+        /*-----------------------------------------------------------*/
         default:
+        {
           build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
           break;
-        }   /* End switch iobuf */
+        }
+
+        } /* End PSF switch (order) */
+
         break;
 
     } /* End case 0x77: PERFORM SUBSYSTEM FUNCTION */
@@ -1759,16 +2466,22 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         Erase command is completed.
         */
 
-        /* Unit check if tape is write-protected */
-        if (0
-            || dev->readonly
-#if defined(OPTION_SCSI_TAPE)
-            || (1
-                &&  TAPEDEVT_SCSITAPE == dev->tapedevt
-                &&  STS_WR_PROT( dev )
-               )
-#endif
-        )
+        /* Command reject if not chained from Erase Gap command */
+        if (!((chained & CCW_FLAGS_CC) && 0x17 == prevcode))
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
+        /* Command reject if tape is write-protected */
+        if (dev->readonly || dev->tdparms.logical_readonly)
         {
             build_senseX (TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code);
             break;
@@ -1781,8 +2494,12 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             UpdateDisplay( dev );
         }
 
-        if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
-            dev->tmh->dse(dev,unitstat,code);
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
+
+        /* Do the DSE; exit if error */
+        if ((rc = dev->tmh->dse( dev, unitstat, code )) < 0)
+            break;      // (error)
 
         if ( TAPEDISPTYP_ERASING == dev->tapedisptype )
         {
@@ -1790,9 +2507,12 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             UpdateDisplay( dev );
         }
 
-        if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
-            /* Not yet implemented */
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+        /* Perform flush/sync and/or set normal completion status */
+        if (0
+            || !write_immed
+            || (rc = dev->tmh->sync( dev, unitstat, code )) == 0
+        )
+            build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
 
         break;
 
@@ -1803,9 +2523,15 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0x9F:
     {
+        /* Command Reject if Supervisor-Inhibit */
+        if (supvr_inhibit)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
         /* Calculate residual byte count */
-        num = (count < 17) ? count : 17;
-        *residual = count - num;
+        RESIDUAL_CALC (17);
 
         /* Issue message on 3480 matrix display */
         load_display (dev, iobuf, count);
@@ -1821,9 +2547,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0xA4:
     {
         /* Calculate residual byte count */
-        num = (count < dev->numsense) ? count : dev->numsense;
-        *residual = count - num;
-        if (count < dev->numsense) *more = 1;
+        RESIDUAL_CALC (dev->numsense);
 
         /* Reset SENSE Data */
         memset (dev->sense, 0, sizeof(dev->sense));
@@ -1888,9 +2612,23 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         on a given path.  The Path Group ID bytes cannot be all zeroes.
         */
 
+        /* Command Reject if Supervisor-Inhibit */
+        if (supvr_inhibit)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
+        /* Command reject if the command is not the ONLY command
+           in the channel program */
+        if (chained & CCW_FLAGS_CC)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
         /* Calculate residual byte count */
-        num = (count < 12) ? count : 12;
-        *residual = count - num;
+        RESIDUAL_CALC (12);
 
         /* Control information length must be at least 12 bytes */
         if (count < 12)
@@ -1952,12 +2690,18 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     case 0xB7:
     {
+        /* Command Reject if Supervisor-Inhibit */
+        if (supvr_inhibit)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
         /* Calculate residual byte count */
-        num = (count < 11) ? count : 11;
-        *residual = count - num;
+        RESIDUAL_CALC (11);
 
         /* Control information length must be at least 11 bytes */
-        if (count < 11)
+        if (count < len)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -1998,6 +2742,8 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
            the device, if any.
         */
 
+#if 0 //  ZZ FIXME: not coded yet
+
         // PROGRAMMING NOTE: until we can add support to Hercules
         // allowing direct SCSI i/o (so that we can issue the 10-byte
         // Mode Sense (X'5A') command to ask for Mode Page x'23' =
@@ -2006,21 +2752,134 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         // ZZ FIXME: not written yet.
 
         build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+
+#else //  ++++  BEGIN MEDIUM SENSE HACK  ++++
+
+        /* ZZ FIXME: ***  TEMPORARY(?) HACK  ***
+
+            The following clues were gleaned from Linux 390 source:
+
+                struct tape_3590_med_sense
+                {
+                    unsigned int macst:4;
+                    unsigned int masst:4;
+
+                    char pad[127];
+                }
+
+                #define  MSENSE_UNASSOCIATED       0x00
+                #define  MSENSE_ASSOCIATED_MOUNT   0x01
+                #define  MSENSE_ASSOCIATED_UMOUNT  0x02
+
+                case TO_MSEN:
+
+                    sense = (struct tape_3590_med_sense *) request->cpdata;
+
+                    if (sense->masst == MSENSE_UNASSOCIATED)
+                            tape_med_state_set(device, MS_UNLOADED);
+
+                    if (sense->masst == MSENSE_ASSOCIATED_MOUNT)
+                            tape_med_state_set(device, MS_LOADED);
+                    break;
+        */
+
+        /* Calculate residual byte count */
+        RESIDUAL_CALC (128);
+
+        /* Return Media Sense data... */
+
+        memset( iobuf, 0, num );          // (init to all zeroes first)
+
+        if (dev->tmh->tapeloaded( dev, unitstat, code ))
+            iobuf[0] |= (0x01 & 0x0F);    // MSENSE_ASSOCIATED_MOUNT
+//      else
+//          iobuf[0] |= (0x00 & 0x0F);    // MSENSE_UNASSOCIATED
+
+#endif //  ++++  END MEDIUM SENSE HACK  ++++
+
         break;
 
     } /* End case 0xC2: MEDIUM SENSE */
+
+    /*---------------------------------------------------------------*/
+    /* SET TAPE-WRITE IMMEDIATE  (3480 and later)                    */
+    /*---------------------------------------------------------------*/
+    case 0xC3:
+    {
+        // NOTE: the "Mode Set" interpretation of this CCW for all
+        // models earlier than 3480 are handled by the command-table;
+        // the "Set Tape-Write Immediate" interpretation of this CCW
+        // for 3480 and later models is handled below.
+
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
+        /*      GA32-0127 IBM 3490E Hardware Reference
+
+        Set Tape-Write-Immediate (X'C3')
+
+        The Set Tape-Write-Immediate command causes all subsequent
+        Write commands in the channel program to perform as write-
+        immediate commands.
+
+        The tape-write-immediate command is explicitly requested by a
+        Mode Set or Set Tape-Write-Immediate command.  The subsystem
+        forces the tape-write-immediate command while the tape is
+        positioned beyond logical end of volume.  This prevents more
+        than one record from being in the buffer if the physical end of
+        volume is reached.  It may also be forced when load balancing
+        is performed or on drives that write the 3480-2 XF format just
+        before end of wrap processing.
+        */
+
+        /*     GA32-0329 3590 Introduction and Planning Guide
+
+        When data is physically transferred to the tape medium it is
+        always immediately reread and verified. The writing of data
+        is normally buffered, however, which defers the physical
+        transfer of the logical blocks to the tape until the buffer
+        conditions require the offloading of the data or until a
+        synchronizing command requires the transfer. If immediate
+        validation of a successful transfer of data to the tape is
+        required at the time that each logical block is written,
+        then Tape Write Immediate mode may be programmatically invoked.
+        This results in block-by-block synchronization and verification
+        of successful transfer all the way to the medium, but at a
+        very substantial cost in application performance.
+        */
+
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
+
+        /* set write-immedediate mode and perform sync function */
+        write_immed = 1;
+        if ((rc = dev->tmh->sync( dev, unitstat, code )) == 0)
+            build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
+        break;
+
+    } /* End case 0xC3: SET TAPE-WRITE IMMEDIATE */
 
     /*---------------------------------------------------------------*/
     /* UNASSIGN                                                      */
     /*---------------------------------------------------------------*/
     case 0xC7:
     {
+        /* Command Reject if Supervisor-Inhibit */
+        if (supvr_inhibit)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
         /* Calculate residual byte count */
-        num = (count < 11) ? count : 11;
-        *residual = count - num;
+        RESIDUAL_CALC (11);
 
         /* Control information length must be at least 11 bytes */
-        if (count < 11)
+        if (count < len)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
             break;
@@ -2111,14 +2970,37 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         if preceded by a Mode Set command that inhibits supervisor commands.
         */
 
-        /* Check for count field at least 1 */
-        if (count < 1)
+        /* Command reject if the volume is currently fenced */
+        if (dev->fenced)
+        {
+            build_senseX (TAPE_BSENSE_FENCED, dev, unitstat, code);
+            break;
+        }
+
+        /* Calculate residual byte count */
+        RESIDUAL_CALC (1);
+
+        /* Check for count field of at least 1 byte, and that
+           supvr-inhibit mode hasn't already been established */
+        if (0
+            || count < len
+            || supvr_inhibit
+        )
         {
             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
             break;
         }
-        *residual = count - 1;
-        /* FIXME: Handle Supervisor Inhibit and IDRC bits */
+
+        // Assign a unique Message Id for this I/O if needed...
+        INCREMENT_MESSAGEID(dev);
+
+        /* Process request */
+        if (iobuf[0] & MSET_SUPVR_INHIBIT)
+            supvr_inhibit = 1;              /* set supvr-inhibit mode*/
+
+        if (iobuf[0] & MSET_WRITE_IMMED)
+            write_immed = 1;                /* set write-immed. mode */
+
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -2156,12 +3038,18 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         |________|________|___________________________________________|
         */
 
+        /* Command Reject if Supervisor-Inhibit */
+        if (supvr_inhibit)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
         /* Calculate residual byte count */
-        num = (count < 12) ? count : 12;
-        *residual = count - num;
+        RESIDUAL_CALC (12);
 
         /* Control information length must be at least 12 bytes */
-        if (count < 12)
+        if (count < len)
         {
           build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
           break;
@@ -2270,9 +3158,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Calculate residual byte count */
-        num = (count < dev->numdevid) ? count : dev->numdevid;
-        *residual = count - num;
-        if (count < dev->numdevid) *more = 1;
+        RESIDUAL_CALC (dev->numdevid);
 
         /* Copy device identifier bytes to channel I/O buffer */
         memcpy (iobuf, dev->devid, num);
@@ -2281,6 +3167,142 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
         break;
     }
+
+    /*---------------------------------------------------------------*/
+    /* READ CONFIGURATION DATA   (3490 and later)                    */
+    /*---------------------------------------------------------------*/
+    case 0xFA:
+    {
+        /*          GA32-0127 IBM 3490E Hardware Reference
+
+        Read Configuration Data (X'FA')
+
+        A Read Configuration Data command causes 160 bytes of data to
+        be transferred from the control unit to the channel.  The data
+        transferred by this command is referred to as a configuration
+        record and is associated with the addressed device-path pair.
+        The configuration record from each device-path pair provides the
+        host with identifiers of node elements internal to the subsystem.
+        */
+
+        static const BYTE cfgdata[] =       // (prototype data)
+        {
+        // ---------------- Device NED ---------------------------------------------------
+        0xCC,                               // 0:      NED code
+        0x01,                               // 1:      Type  (X'01' = I/O Device)
+        0x02,                               // 2:      Class (X'02' = Magnetic Tape)
+        0x00,                               // 3:      (Reserved)
+        0xF0,0xF0,0xF3,0xF4,0xF9,0xF0,      // 4-9:    Type  ('003490')
+        0xC3,0xF1,0xF0,                     // 10-12:  Model ('C10')
+        0xC8,0xD9,0xC3,                     // 13-15:  Manufacturer ('HRC' = Hercules)
+        0xE9,0xE9,                          // 16-17:  Plant of Manufacture ('ZZ' = Herc)
+        0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 18-29:  Sequence Number
+        0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
+        0x00, 0x00,                         // 30-31: Tag (x'000n', n = Logical Drive Address)
+        // ---------------- Control Unit NED ---------------------------------------------
+        0xC4,                               // 32:     NED code
+        0x02,                               // 33:     Type  (X'02' = Control Unit)
+        0x00,                               // 34:     Class (X'00' = Undefined)
+        0x00,                               // 35:     (Reserved)
+        0xF0,0xF0,0xF3,0xF4,0xF9,0xF0,      // 36-41:  Type  ('003490')
+        0xC3,0xF1,0xF0,                     // 42-44:  Model ('C10')
+        0xC8,0xD9,0xC3,                     // 45-47:  Manufacturer ('HRC' = Hercules)
+        0xE9,0xE9,                          // 48-49:  Plant of Manufacture ('ZZ' = Herc)
+        0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 50-61:  Sequence Number
+        0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
+        0x00, 0x00,                         // 62-63:  Tag (x'0000')
+        // ---------------- Library NED --------------------------------------------------
+        0x00,                               // 64:     NED code   (x'00' = Not Used)
+        0x00,                               // 65:     Type
+        0x00,                               // 66:     Class
+        0x00,                               // 67:     (Reserved)
+        0x00,0x00,0x00,0x00,0x00,0x00,      // 68-73:  Type
+        0x00,0x00,0x00,                     // 74-76:  Model
+        0x00,0x00,0x00,                     // 77-79:  Manufacturer
+        0x00,0x00,                          // 80-81:  Plant of Manufacture
+        0x00,0x00,0x00,0x00,0x00,0x00,      // 82-93:  Sequence Number
+        0x00,0x00,0x00,0x00,0x00,0x00,      //
+        0x00, 0x00,                         // 94-95:  Tag
+        // ---------------- Token NED ---------------------------------------------------
+        0xEC,                               // 96:       NED code
+        0x00,                               // 97:       Type  (X'00' = Unspecified)
+        0x00,                               // 98:       Class (X'00' = Undefined)
+        0x00,                               // 99:       (Reserved)
+        0xF0,0xF0,0xF3,0xF4,0xF9,0xF0,      // 100-105:  Type  ('003490')
+        0xC3,0xF1,0xF0,                     // 106-108:  Model ('C10')
+        0xC8,0xD9,0xC3,                     // 109-111:  Manufacturer ('HRC' = Hercules)
+        0xE9,0xE9,                          // 112-113:  Plant of Manufacture ('ZZ' = Herc)
+        0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      // 114-125:  Sequence Number
+        0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,      //
+        0x00, 0x00,                         // 126-127:  Tag (x'0000')
+        // ---------------- General NEQ --------------------------------------------------
+        0x80,                               // 128:      NED code
+        0x80,                               // 129:      Record Selector:
+                                            //           x'80' = Control Unit 0
+                                            //           x'81' = Control Unit 1
+        0x00,0x80,                          // 130-131:  Interface Id:
+                                            //           x'0080' = CU Channel Adapter A
+                                            //           x'0040' = CU Channel Adapter B
+        0x00,                               // 132:      Device-Dependent Timeout
+        0x00,0x00,0x00,                     // 133-135:  (Reserved)
+        0x00,                               // 136:      Extended Information:
+                                            //           x'00' for Logical Drive Addresses 0-7
+                                            //           x'01' for Logical Drive Addresses 8-F
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 137-159:  (Reserved)
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+        0x00,0x00,
+        };
+
+        ASSERT( sizeof(cfgdata) == 160 );
+
+        /* Calculate residual byte count */
+        RESIDUAL_CALC (160);
+
+        /* Copy prototype Configuration Data to channel I/O buffer */
+        memcpy (iobuf, cfgdata, sizeof(cfgdata));
+
+        /* Fixup values for this particular device/type...  NOTE: we
+           only fixup the Device and Control Unit NEDs here. The Token
+           NED's type/model values come from the Device NED's values.
+        */
+        if (0x3480 == dev->devtype)
+        {
+            memcpy (&iobuf[7],  "\xF4\xF8",     2);     // '48'
+            memcpy (&iobuf[39], "\xF4\xF8",     2);     // '48'
+
+            memcpy (&iobuf[10], "\xC4\xF3\xF1", 3);     // 'D31'
+            memcpy (&iobuf[42], "\xC4\xF3\xF1", 3);     // 'D31'
+        }
+        else if (0x3490 == dev->devtype)
+        {
+//          memcpy (&iobuf[7],  "\xF4\xF9",     2);     // '49'
+//          memcpy (&iobuf[39], "\xF4\xF9",     2);     // '49'
+
+//          memcpy (&iobuf[10], "\xC3\xF1\xF0", 3);     // 'C10'
+//          memcpy (&iobuf[42], "\xC3\xF1\xF0", 3);     // 'C10'
+        }
+        else if (0x3590 == dev->devtype)
+        {
+            memcpy (&iobuf[7],  "\xF5\xF9",     2);     // '59'
+            memcpy (&iobuf[39], "\xF5\xF9",     2);     // '59'
+
+            memcpy (&iobuf[10], "\xC2\xF1\xC1", 3);     // 'B1A'
+            memcpy (&iobuf[42], "\xC1\xF5\xF0", 3);     // 'A50'
+        }
+
+        memcpy (&iobuf[100], &iobuf[4], 9);     // (set Token NED Type/Model from Device NED)
+
+        iobuf[31] |= (dev->devnum & 0x0F);      // (set Logical Drive Address)
+
+        if ((dev->devnum & 0x0F) > 7)
+            iobuf[136] = 0x01;                  // (set Extended Information)
+
+        /* Return normal status */
+        build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+        break;
+
+    } /* End case 0xFA: READ CONFIGURATION DATA */
 
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
@@ -2695,7 +3717,8 @@ void build_sense_3410_3420 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
     {
         dev->sense[0] &= ~SENSE_IR;
         dev->sense[1] |= IsAtLoadPoint( dev ) ? SENSE1_TAPE_LOADPT : 0;
-        dev->sense[1]|=dev->readonly?SENSE1_TAPE_FP:0; /* FP bit set when tape not ready too */
+        dev->sense[1] |= dev->readonly || dev->tdparms.logical_readonly ?
+            SENSE1_TAPE_FP : 0;
     }
     if (dev->tmh->passedeot(dev))
     {
@@ -2895,7 +3918,8 @@ int sns4mat = 0x20;
         dev->sense[0] &= ~SENSE_IR;
         dev->sense[1] &= ~(SENSE1_TAPE_LOADPT|SENSE1_TAPE_FP);
         dev->sense[1] |= IsAtLoadPoint( dev ) ? SENSE1_TAPE_LOADPT : 0;
-        dev->sense[1]|=dev->readonly?SENSE1_TAPE_FP:0; /* FP bit set when tape not ready too */
+        dev->sense[1] |= dev->readonly || dev->tdparms.logical_readonly ?
+            SENSE1_TAPE_FP : 0;
     }
 
     dev->sense[1] |= SENSE1_TAPE_TUA;
@@ -3035,7 +4059,8 @@ void build_sense_Streaming (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
     {
         dev->sense[0] &= ~SENSE_IR;
         dev->sense[1] |= IsAtLoadPoint( dev ) ? SENSE1_TAPE_LOADPT : 0;
-        dev->sense[1]|=dev->readonly?SENSE1_TAPE_FP:0; /* FP bit set when tape not ready too */
+        dev->sense[1] |= dev->readonly || dev->tdparms.logical_readonly ?
+            SENSE1_TAPE_FP : 0;
         dev->sense[1] |= SENSE1_TAPE_TUA;
         dev->sense[1] &= ~SENSE1_TAPE_TUB;
     }

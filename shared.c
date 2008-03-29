@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.36  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.35  2006/12/28 20:32:54  fish
 // Fix "HHCSH043I 0.0.0.0 disconnected from ..."; save clientip in SHRD block at connect and use at disconnect.
 //
@@ -2039,6 +2042,7 @@ int      off;                           /* Offset into record        */
         SHRD_SET_HDR (hdr, 0, CSW_CE | CSW_DE, dev->devnum, id, dev->numsense);
         serverSend (dev, ix, hdr, dev->sense, dev->numsense);
         memset (dev->sense, 0, sizeof(dev->sense));
+        dev->sns_pending = 0;
         break;
 
     case SHRD_QUERY:

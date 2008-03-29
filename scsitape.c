@@ -15,6 +15,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.26  2008/03/28 02:09:42  fish
+// Add --blkid-24 option support, poserror flag renamed to fenced,
+// added 'generic', 'readblkid' and 'locateblk' tape media handler
+// call vectors.
+//
 // Revision 1.25  2008/03/27 07:14:16  fish
 // SCSI MODS: groundwork: part 3: final shuffling around.
 // Moved functions from one module to another and resequenced
@@ -268,7 +273,6 @@ void close_scsitape(DEVBLK *dev)
         dev->fd        = -1;
         dev->blockid   = -1;
         dev->curfilen  =  0;
-        dev->fenced    =  1;
         dev->nxtblkpos =  0;
         dev->prvblkpos = -1;
     }
@@ -283,6 +287,8 @@ void close_scsitape(DEVBLK *dev)
     dev->stape_getstat_sstat = GMT_DR_OPEN(-1);
     dev->stape_getstat_busy  = 0;
     dev->stape_threads_exit  = 0;
+
+    dev->fenced =  rc >= 0 ? 0 : 1;
 
     release_lock( &dev->stape_getstat_lock );
 
@@ -774,7 +780,6 @@ struct mtop opblk;
        no clue as to what the proper current blockid should be.
     */
     dev->blockid = -1;      // (actual position now unknown!)
-    dev->fenced = 1;        // (actual position now unknown!)
 
     if ( rc >= 0 )
     {
@@ -783,6 +788,8 @@ struct mtop opblk;
     }
 
     /* Handle error condition */
+
+    dev->fenced = 1;        // (actual position now unknown!)
 
     save_errno = errno;
     {
@@ -876,7 +883,6 @@ struct mtop opblk;
        no clue as to what the proper current blockid should be.
     */
     dev->blockid = -1;      // (actual position now unknown!)
-    dev->fenced = 1;        // (actual position now unknown!)
 
     if ( rc >= 0 )
     {
@@ -885,6 +891,8 @@ struct mtop opblk;
     }
 
     /* Handle error condition */
+
+    dev->fenced = 1;        // (actual position now unknown!)
 
     save_errno = errno;
     {
@@ -967,6 +975,8 @@ struct mtop opblk;
 
     if ( rc >= 0 )
     {
+        dev->fenced = 0;
+
         if ( dev->ccwtrace || dev->ccwstep )
             logmsg (_("HHCTA077I Tape %u:%4.4X unloaded\n"),
                 SSID_TO_LCSS(dev->ssid), dev->devnum);
@@ -1045,10 +1055,18 @@ int dse_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
         build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
         return -1;
     }
-#endif // defined( OPTION_SCSI_ERASE_TAPE )
 
-    build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+    return 0;       // (success)
+
+#else // !defined( OPTION_SCSI_ERASE_TAPE )
+
+    UNREFERENCED ( dev );
+    UNREFERENCED ( code );
+    UNREFERENCED ( unitstat );
+
     return 0;       // (treat as nop)
+
+#endif // defined( OPTION_SCSI_ERASE_TAPE )
 
 } /* end function dse_scsitape */
 

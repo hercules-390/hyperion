@@ -9,6 +9,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.81  2008/03/28 02:09:42  fish
+// Add --blkid-24 option support, poserror flag renamed to fenced,
+// added 'generic', 'readblkid' and 'locateblk' tape media handler
+// call vectors.
+//
 // Revision 1.80  2008/03/04 01:10:29  ivan
 // Add LEGACYSENSEID config statement to allow X'E4' Sense ID on devices
 // that originally didn't support it. Defaults to off for compatibility reasons
@@ -868,7 +873,6 @@ struct DEVBLK {                         /* Device configuration block*/
         int     ioactive;               /* System Id active on device*/
 #define DEV_SYS_NONE    0               /* No active system on device*/
 #define DEV_SYS_LOCAL   0xffff          /* Local system active on dev*/
-        /* By Adrian - Password for Tape drive (and 1 spare)         */   
         BYTE    drvpwd[11];             /* Password for drive        */   
         BYTE    reserved3;              /* (pad/align/unused/avail)  */   
 
@@ -1017,6 +1021,8 @@ struct DEVBLK {                         /* Device configuration block*/
                                            from current block        */
         U16     curbufoff;              /* Offset into buffer of data
                                            for next data chained CCW */
+        U16     tapssdlen;              /* #of bytes of data prepared
+                                           for Read Subsystem Data   */
         HETB   *hetb;                   /* HET control block         */
 
         struct                          /* HET device parms          */
@@ -1038,7 +1044,6 @@ struct DEVBLK {                         /* Device configuration block*/
         }       tdparms;                /* HET device parms          */
         u_int   fenced:1;               /* 1=Pos err; volume fenced  */
         u_int   readonly:1;             /* 1=Tape is write-protected */
-        u_int   longfmt:1;              /* 1=Long record format (DDR)*/ /*DDR*/
         u_int   sns_pending:1;          /* Contingency Allegiance    */
                                         /* - means : don't build a   */
                                         /* sense on X'04' : it's     */
@@ -1046,6 +1051,10 @@ struct DEVBLK {                         /* Device configuration block*/
                                         /* NOTE : flag cleared by    */
                                         /*        sense command only */
                                         /*        or a device init   */
+        u_int   SIC_supported:1;        /* 1=Spec Intcpt Cond support*/
+        u_int   SIC_active:1;           /* 1=SIC active              */
+        u_int   forced_logging:1;       /* 1=Forced Error Logging    */
+        U32     msgid;                  /* Message Id of async. i/o  */
 #if defined(OPTION_SCSI_TAPE)
         U32     sstat;                  /* Generic SCSI tape device-
                                            independent status field;

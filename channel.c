@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.141  2008/03/13 19:55:49  ivan
+// Return Byte Mpx in STIDC for Channel 0 according to GA22-7000-4 Page 192 Chapter 2
+//
 // Revision 1.140  2007/08/07 19:47:59  ivan
 // Fix a couple of gcc-4.2 warnings
 //
@@ -1153,6 +1156,7 @@ void device_reset (DEVBLK *dev)
     dev->ckdlcount = 0;
     dev->ckdssi = 0;
     memset (dev->sense, 0, sizeof(dev->sense));
+    dev->sns_pending = 0;
     memset (dev->pgid, 0, sizeof(dev->pgid));
     /* By Adrian - Reset drive password */   
     memset (dev->drvpwd, 0, sizeof(dev->drvpwd));   
@@ -3250,6 +3254,7 @@ resume_suspend:
                         dev->numsense : sizeof(dev->ecw);
         memcpy (dev->ecw, dev->sense, dev->esw.erw1 & ERW1_SCNT);
         memset (dev->sense, 0, sizeof(dev->sense));
+        dev->sns_pending = 0;
     }
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 

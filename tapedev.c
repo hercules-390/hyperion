@@ -98,6 +98,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.137  2008/03/28 02:09:42  fish
+// Add --blkid-24 option support, poserror flag renamed to fenced,
+// added 'generic', 'readblkid' and 'locateblk' tape media handler
+// call vectors.
+//
 // Revision 1.136  2008/03/27 07:14:17  fish
 // SCSI MODS: groundwork: part 3: final shuffling around.
 // Moved functions from one module to another and resequenced
@@ -409,188 +414,280 @@ TAPEMEDIA_HANDLER  tmh_scsi   =
 #endif /* defined(OPTION_SCSI_TAPE) */
 
 /*-------------------------------------------------------------------*/
+/* Device-Type Initialization Table    (DEV/CU MODEL, FEATURES, ETC) */
+/*-------------------------------------------------------------------*/
+/*
+   PROGRAMMING NOTE: the MDR/OBR code (Device Characteristics bytes
+   40-41) are apparently CRITICALLY IMPORTANT for proper tape drive
+   functioning for certain operating systems. If the bytes are not
+   provided (set to zero) or are set incorrectly, certain operating
+   systems end up using unusual/undesirable Mode Set values in their
+   Channel Programs (such as x'20' Write Immediate for example). I
+   only note it here because these two particular bytes are rather
+   innocuous looking based upon their name and sparsely documented
+   and largely unexplained values, thereby possibly misleading one
+   into believing they weren't important and thus could be safely
+   set to zero if their values were unknown. Rest assured they are
+   NOT unimportant! Quite the opposite: the are, for some operating
+   systems, CRITICALLY IMPORTANT and must NOT be returned as zeros.
+
+   The following were obtained from "EREP Release 3.5.0 Reference"
+   (GC35-0152-03):
+
+       Model                        MDR          OBR   
+      -------                      -----        -----  
+
+       3480                         0x41         0x80
+       3490                         0x42         0x81
+
+       3590                         0x46         0x83
+       3590 (3591/3490 EMU)         0x47         0x84
+       3590 (3590/3490 EMU)         0x48         0x85
+
+
+   NOTE: only models 3480, 3490 and 3590 support the RDC (Read
+   Device Characteristics) channel command, and thus they're the
+   only ones we must know the MDR/OBR codes for (since the MDR/OBR
+   codes are only used in the RDC CCW and not anwhere else). That
+   is to say, NONE of the Channel Commands (CCWs) that all the
+   OTHER models happen to support have an MDR/OBR code anywhere
+   in their data. Only models 3480, 3490 and 3590 have MDR/OBR
+   codes buried in their CCW data (specifically the RDC CCW data).
+
+   Also note that, at the moment, we do not support emulating 3590's
+   or 3591's running in 3490 Emulation Mode (i.e. 3591/3490 EMU or
+   3590/3490 EMU). The user is free to use such a device with Herc-
+   ules however, but if they do, it should be specified as a 3490.
+
+---------------------------------------------------------------------*/
+
+typedef struct DEVINITTAB               /* Initialization values     */
+{
+    U16         devtype;                /* Device type               */
+    BYTE        devmodel;               /* Device model number       */
+    U16         cutype;                 /* Control unit type         */
+    BYTE        cumodel;                /* Control unit model number */
+    U32         sctlfeat;               /* Storage control features  */
+    BYTE        devclass;               /* Device class code         */
+    BYTE        devtcode;               /* Device type code          */
+    BYTE        MDR;                    /* Misc. Data Record ID      */
+    BYTE        OBR;                    /* Outboard Recorder ID      */
+    int         numdevid;               /* #of SNSID bytes (see NOTE)*/
+    int         numsense;               /* #of SENSE bytes           */
+    int         haverdc;                /* RDC Supported             */
+    int         displayfeat;            /* Has LCD display           */
+}
+DEVINITTAB;
+DEVINITTAB      DevInitTab[]  =         /* Initialization table      */
+{
+// PROGRAMMING NOTE: we currently do not support a #of Sense-ID bytes
+// value (numdevid) greater than 7 since our current channel-subsystem
+// design does not support the concept of hardware physical attachment
+// "Nodes" (i.e. separate control-unit, device and interface elements).
+// Supporting more than 7 bytes of Sense-ID information would require
+// support for Node Descriptors (ND) and Node Element Descriptors (NED)
+// and the associated commands (CCWs) to query them (Read Configuration
+// Data (0xFA) , Set Interface Identifier (0x73) and associated support
+// in the Read Subsystem Data (0x3E) command), which is vast overkill
+// and a complete waste of time given our current overly-simple channel
+// subsystem design.
+//
+//--------------------------------------------------------------------
+//            3410/3411/3420/3422/3430/8809/9347/9348
+//--------------------------------------------------------------------
+//
+// devtype/mod  cutype/mod    sctlfeat  cls typ MDR OBR sid sns rdc dsp
+ { 0x3410,0x01, 0x3115,0x01, 0x00000000, 0,  0,  0,  0,  0,  9,  0,  0 },
+ { 0x3411,0x01, 0x3115,0x01, 0x00000000, 0,  0,  0,  0,  0,  9,  0,  0 },
+ { 0x3420,0x06, 0x3803,0x02, 0x00000000, 0,  0,  0,  0,  0, 24,  0,  0 }, // (DEFAULT: 3420)
+ { 0x3422,0x01, 0x3422,0x01, 0x00000000, 0,  0,  0,  0,  7, 32,  0,  0 },
+ { 0x3430,0x01, 0x3422,0x01, 0x00000000, 0,  0,  0,  0,  7, 32,  0,  0 },
+ { 0x8809,0x01, 0x8809,0x01, 0x00000000, 0,  0,  0,  0,  0, 32,  0,  0 },
+ { 0x9347,0x01, 0x9347,0x01, 0x00000000, 0,  0,  0,  0,  7, 32,  0,  0 },
+ { 0x9348,0x01, 0x9348,0x01, 0x00000000, 0,  0,  0,  0,  7, 32,  0,  0 },
+
+//--------------------------------------------------------------------
+//                          3480/3490/3590
+//--------------------------------------------------------------------
+//
+// PROGRAMMING NOTE: we currently do not support a #of Sense-ID bytes
+// value (numdevid) greater than 7 since our current channel-subsystem
+// design does not support the concept of hardware physical attachment
+// "Nodes" (i.e. separate control-unit, device and interface elements).
+// Supporting more than 7 bytes of Sense-ID information would require
+// support for Node Descriptors (ND) and Node Element Descriptors (NED)
+// and the associated commands (CCWs) to query them (Read Configuration
+// Data (0xFA) , Set Interface Identifier (0x73) and associated support
+// in the Read Subsystem Data (0x3E) command), which is vast overkill
+// and a complete waste of time given our current overly-simple channel
+// subsystem design.
+//
+// PROGRAMMING NOTE: if you change the below devtype/mod or cutype/mod
+// values, be sure to ALSO change tapeccws.c's READ CONFIGURATION DATA
+// (CCW opcode 0xFA) values as well!
+//
+// PROGRAMMING NOTE: the bit values of the 'sctlfeat' field are:
+//
+//     ....40..   (unknown)
+//     ....08..   Set Special Intercept Condition (SIC) supported
+//     ....04..   Channel Path No-Operation supported (always
+//                on if Library Attachment Facility installed)
+//     ....02..   Logical Write-Protect supported (always on
+//                if Read Device Characteristics is supported)
+//     ....01..   Extended Buffered Log support enabled (if 64
+//                bytes of buffered log data, else 32 bytes)
+//     ......80   Automatic Cartridge Loader installed/enabled
+//     ......40   Improved Data Recording Capability (i.e.
+//                compression support) installed/enabled
+//     ......20   Suppress Volume Fencing
+//     ......10   Library Interface online/enabled
+//     ......08   Library Attachment Facility installed
+//     ......04   (unknown)
+//
+// PROGRAMMING NOTE: the below "0x00004EC4" value for the 'sctlfeat'
+// field for Model 3590 was determined empirically on a real machine.
+//
+// devtype/mod  cutype/mod    sctlfeat   cls  typ   MDR  OBR  sid sns  rdc dsp
+ { 0x3480,0x31, 0x3480,0x31, 0x000002C0, 0x80,0x80, 0x41,0x80,  7, 24,  1,  1 },  // 0x31 = D31
+ { 0x3490,0x50, 0x3490,0x50, 0x000002C0, 0x80,0x80, 0x42,0x81,  7, 32,  1,  1 },  // 0x50 = C10
+ { 0x3590,0x10, 0x3590,0x50, 0x00004EC4, 0x80,0x80, 0x46,0x83,  7, 32,  1,  1 },  // 0x10 = B1A, 0x50 = A50
+ { 0xFFFF,0xFF, 0xFFFF,0xFF, 0xFFFFFFFF, 0xFF,0xFF, 0xFF,0xFF, -1, -1, -1, -1 },  //**** END OF TABLE ****
+ { 0x3420,0x06, 0x3803,0x02, 0x00000000,   0,   0,    0,   0,   0, 24,  0,  0 },  // (DEFAULT: 3420)
+};
+
+/*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
 int tapedev_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
-U16             cutype;                 /* Control unit type         */
-BYTE            cumodel;                /* Control unit model number */
-BYTE            devmodel;               /* Device model number       */
-BYTE            devclass;               /* Device class              */
-BYTE            devtcode;               /* Device type code          */
-U32             sctlfeat;               /* Storage control features  */
-int             haverdc;                /* RDC Supported             */
 int             rc;
+DEVINITTAB*     pDevInitTab;
 
-    /* Determine the control unit type and model number */
-    /* Support for 3490/3422/3430/8809/9347, etc.. */
     /* Close current tape */
     if(dev->fd>=0)
     {
         dev->tmh->close(dev);
         dev->fd=-1;
     }
+
     autoload_close(dev);
-    haverdc=0;
     dev->tdparms.displayfeat=0;
 
-    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
+    /* Determine the control unit type and model number */
+    /* Support for 3490/3422/3430/8809/9347, etc.. */
+    if (!sscanf( dev->typname, "%hx", &dev->devtype ))
         dev->devtype = 0x3420;
 
-    switch(dev->devtype)
-    {
-    case 0x3480:
-        cutype = 0x3480;
-        cumodel = 0x31;
-        devmodel = 0x31; /* Model D31 */
-        devclass = 0x80;
-        devtcode = 0x80;
-        sctlfeat = 0x000002C0; /* Support Logical Write Protect */
-                               /* Autoloader installed */
-                               /* IDRC Supported */
-        dev->numdevid = 7;
-        dev->numsense = 24;
-        haverdc=1;
-        dev->tdparms.displayfeat=1;
-        break;
-   case 0x3490:
-        cutype = 0x3490;
-        cumodel = 0x50; /* Model C10 */
-        devmodel = 0x50;
-        devclass = 0x80;
-        devtcode = 0x80; /* Valid for 3490 too */
-        sctlfeat = 0x000002C0; /* Support Logical Write Protect */
-                               /* Autoloader installed */
-                               /* IDRC Supported */
-        dev->numdevid = 7;
-        dev->numsense = 32;
-        haverdc=1;
-        dev->tdparms.displayfeat=1;
-        break;
-   case 0x3590:
-        cutype = 0x3590;
-        cumodel = 0x50; /* Model C10 ?? */
-        devmodel = 0x50;
-        devclass = 0x80;
-        devtcode = 0x80; /* Valid for 3590 too */
-        sctlfeat = 0x000002C0; /* Support Logical Write Protect */
-                               /* Autoloader installed */
-                               /* IDRC Supported */
-        dev->numdevid = 7;
-        dev->numsense = 32;
-        haverdc=1;
-        dev->tdparms.displayfeat=1;
-        break;
-    case 0x3420:
-        cutype = 0x3803;
-        cumodel = 0x02;
-        devmodel = 0x06;
-        devclass = 0x80;
-        devtcode = 0x20;
-        sctlfeat = 0x00000000;
-        dev->numdevid = sysblk.legacysenseid ? 7 : 0;
-        dev->numsense = 24;
-        break;
-    case 0x9347:
-        cutype = 0x9347;
-        cumodel = 0x01;
-        devmodel = 0x01;
-        devclass = 0x80;
-        devtcode = 0x20;
-        sctlfeat = 0x00000000;
-        dev->numdevid = 7;
-        dev->numsense = 32;
-        break;
-    case 0x9348:
-        cutype = 0x9348;
-        cumodel = 0x01;
-        devmodel = 0x01;
-        devclass = 0x80;
-        devtcode = 0x20;
-        sctlfeat = 0x00000000;
-        dev->numdevid = 7;
-        dev->numsense = 32;
-        break;
-    case 0x8809:
-        cutype = 0x8809;
-        cumodel = 0x01;
-        devmodel = 0x01;
-        devclass = 0x80;
-        devtcode = 0x20;
-        sctlfeat = 0x00000000;
-        dev->numdevid = sysblk.legacysenseid ? 7 : 0;
-        dev->numsense = 32;
-        break;
-    case 0x3410:
-    case 0x3411:
-        dev->devtype = 0x3411;  /* a 3410 is a 3411 */
-        cutype = 0x3115; /* Model 115 IFA */
-        cumodel = 0x01;
-        devmodel = 0x01;
-        devclass = 0x80;
-        devtcode = 0x20;
-        sctlfeat = 0x00000000;
-        /* disable senseid again.. Breaks MTS */
-        dev->numdevid = sysblk.legacysenseid ? 7 : 0;
-        dev->numsense = 9;
-        break;
-    case 0x3422:
-        cutype = 0x3422;
-        cumodel = 0x01;
-        devmodel = 0x01;
-        devclass = 0x80;
-        devtcode = 0x20;
-        sctlfeat = 0x00000000;
-        dev->numdevid = 7;
-        dev->numsense = 32;
-        break;
-    case 0x3430:
-        cutype = 0x3422;
-        cumodel = 0x01;
-        devmodel = 0x01;
-        devclass = 0x80;
-        devtcode = 0x20;
-        sctlfeat = 0x00000000;
-        dev->numdevid = 7;
-        dev->numsense = 32;
-        break;
-    default:
-        logmsg(_("Unsupported device type specified %4.4x\n"),dev->devtype);
-        cutype = dev->devtype; /* don't know what to do really */
-        cumodel = 0x01;
-        devmodel = 0x01;
-        devclass = 0x80;
-        devtcode = 0x20;
-        sctlfeat = 0x00000000;
-        dev->numdevid = 0; /* We don't know */
-        dev->numsense = 1;
-        break;
-    } // end switch(dev->devtype)
+    // PROGAMMING NOTE: we use hard-coded values from our DevInitTab
+    // for virtual (non-SCSI) devices and, for the time being, for non-
+    // virtual (SCSI) devices too. Once we add direct SCSI I/O support
+    // we will need to add code to get this information directly from
+    // the actual SCSI device itself.
+    for
+    (
+        pDevInitTab = &DevInitTab[0];
+        pDevInitTab->devtype != 0xFFFF && pDevInitTab->devtype != dev->devtype;
+        pDevInitTab++
+    );
 
-    /* Initialize the device identifier bytes */
-    dev->devid[0] = 0xFF;
-    dev->devid[1] = cutype >> 8;
-    dev->devid[2] = cutype & 0xFF;
-    dev->devid[3] = cumodel;
-    dev->devid[4] = dev->devtype >> 8;
-    dev->devid[5] = dev->devtype & 0xFF;
-    dev->devid[6] = devmodel;
-
-    /* Initialize the device characteristics bytes */
-    if (haverdc)
+    if (pDevInitTab->devtype == 0xFFFF)         /* (entry not found?) */
     {
+        logmsg ( _("Unsupported device type specified %4.4x\n"), dev->devtype );
+
+        pDevInitTab++;                          /* (default entry; s/b same as 0x3420) */
+        pDevInitTab->devtype = dev->devtype;    /* (don't know what else to do really) */
+        pDevInitTab->cutype  = dev->devtype;    /* (don't know what else to do really) */
+    }
+
+    /* Allow SENSE ID for certain specific legacy devices if requested */
+
+    dev->numdevid = pDevInitTab->numdevid;  // (default == from table)
+
+    if (1
+        && sysblk.legacysenseid             // (if option requested, AND is)
+        && (0                               // (for allowable legacy device)
+            || 0x3410 == dev->devtype
+            || 0x3411 == dev->devtype
+            || 0x3420 == dev->devtype
+            || 0x8809 == dev->devtype
+           )
+    )
+    {
+        dev->numdevid = 7;                  // (allow for this legacy device)
+    }
+
+    /* Initialize the Sense-Id bytes if needed... */
+    if (dev->numdevid > 0)
+    {
+        dev->devid[0] = 0xFF;
+
+        dev->devid[1] = (pDevInitTab->cutype >> 8) & 0xFF;
+        dev->devid[2] = (pDevInitTab->cutype >> 0) & 0xFF;
+        dev->devid[3] =  pDevInitTab->cumodel;
+
+        dev->devid[4] = (pDevInitTab->devtype >> 8) & 0xFF;
+        dev->devid[5] = (pDevInitTab->devtype >> 0) & 0xFF;
+        dev->devid[6] =  pDevInitTab->devmodel;
+
+        /* Initialize the CIW information if needed... */
+        if (dev->numdevid > 7)
+        {
+            // PROGRAMMING NOTE: see note near 'DEVINITTAB'
+            // struct definition regarding requirements for
+            // supporting more than 7 bytes of SNSID info.
+
+            memcpy (&dev->devid[8],  "\x40\xFA\x00\xA0", 4);  // CIW Read Configuration Data  (0xFA)
+            memcpy (&dev->devid[12], "\x41\x73\x00\x04", 4);  // CIW Set Interface Identifier (0x73)
+            memcpy (&dev->devid[16], "\x42\x3E\x00\x60", 4);  // CIW Read Subsystem Data      (0x3E)
+        }
+    }
+
+    /* Initialize the Read Device Characteristics (RDC) bytes... */
+    if (pDevInitTab->haverdc)
+    {
+        dev->numdevchar = 64;
+
         memset (dev->devchar, 0, sizeof(dev->devchar));
         memcpy (dev->devchar, dev->devid+1, 6);
-        dev->devchar[6] = (sctlfeat >> 24) & 0xFF;
-        dev->devchar[7] = (sctlfeat >> 16) & 0xFF;
-        dev->devchar[8] = (sctlfeat >> 8) & 0xFF;
-        dev->devchar[9] = sctlfeat & 0xFF;
-        dev->devchar[10] = devclass;
-        dev->devchar[11] = devtcode;
-        dev->devchar[40] = 0x41;
-        dev->devchar[41] = 0x80;
-        dev->numdevchar = 64;
+
+        // Bytes 6-9: Subsystem Facilities...
+
+        dev->devchar[6] = (pDevInitTab->sctlfeat >> 24) & 0xFF;
+        dev->devchar[7] = (pDevInitTab->sctlfeat >> 16) & 0xFF;
+        dev->devchar[8] = (pDevInitTab->sctlfeat >>  8) & 0xFF;
+        dev->devchar[9] = (pDevInitTab->sctlfeat >>  0) & 0xFF;
+
+        // Bytes 10/11: Device Class/Type ...
+
+        dev->devchar[10] = pDevInitTab->devclass;
+        dev->devchar[11] = pDevInitTab->devtcode;
+
+        // Bytes 24-29: cutype/model & devtype/model ...
+        // (Note: undocumented; determined empirically)
+
+        dev->devchar[24] = (pDevInitTab->cutype >> 8) & 0xFF;
+        dev->devchar[25] = (pDevInitTab->cutype >> 0) & 0xFF;
+        dev->devchar[26] =  pDevInitTab->cumodel;
+
+        dev->devchar[27] = (pDevInitTab->devtype >> 8) & 0xFF;
+        dev->devchar[28] = (pDevInitTab->devtype >> 0) & 0xFF;
+        dev->devchar[29] =  pDevInitTab->devmodel;
+
+        // Bytes 40-41: MDR/OBR code...
+
+        dev->devchar[40] = pDevInitTab->MDR;
+        dev->devchar[41] = pDevInitTab->OBR;
     }
+
+    /* Initialize other fields */
+//  dev->numdevid            = pDevInitTab->numdevid;   // (handled above)
+    dev->numsense            = pDevInitTab->numsense;
+    dev->tdparms.displayfeat = pDevInitTab->displayfeat;
+
+    dev->fenced              = 0;   // (always, initially)
+    dev->SIC_active          = 0;   // (always, initially)
+    dev->SIC_supported       = 0;   // (until we're sure)
+    dev->forced_logging      = 0;   // (always, initially)
 
     /* Initialize SCSI tape control fields */
 #if defined(OPTION_SCSI_TAPE)
@@ -653,6 +750,10 @@ int             rc;
             rc = dev->als ? rc : -1;
         }
     }
+
+    if (dev->devchar[8] & 0x08)     // SIC supported?
+        dev->SIC_supported = 1;     // remember that fact
+
     return rc;
 
 } /* end function tapedev_init_handler */
@@ -990,7 +1091,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     if (TAPEDEVT_SCSITAPE == dev->tapedevt
         &&     0x3590     == dev->devtype)
     {
-        dev->stape_no_erg   = 1;        // (default for 3590 SCSI)
+        dev->stape_no_erg   = 0;        // (default for 3590 SCSI)
         dev->stape_blkid_32 = 1;        // (default for 3590 SCSI)
     }
 #endif

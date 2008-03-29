@@ -96,6 +96,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.3  2008/03/28 02:09:42  fish
+// Add --blkid-24 option support, poserror flag renamed to fenced,
+// added 'generic', 'readblkid' and 'locateblk' tape media handler
+// call vectors.
+//
 // Revision 1.2  2008/03/26 07:23:51  fish
 // SCSI MODS part 2: split tapedev.c: aws, het, oma processing moved
 // to separate modules, CCW processing moved to separate module.
@@ -315,6 +320,7 @@ int rc;
     dev->prvblkpos=-1;
     dev->curfilen=1;
     dev->blockid=0;
+    dev->fenced = 0;
     return 0;
 }
 
