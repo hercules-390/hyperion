@@ -1,4 +1,5 @@
-30 Mar 2008 More complete/extensive 3490/3590 tape support - Fish
+30 Mar 2008 Fix SCSI tape EOV (end of volume) processing - Fish
+29 Mar 2008 More complete/extensive 3490/3590 tape support - Fish
 28 Mar 2008 Fix incorrect registers when cc=1 for TRTE,TRTRE - Roger Bowler
 28 Mar 2008 Add generic, readblkid, locateblk tape media handler vectors - Fish
 28 Mar 2008 SCSI --blkid-24 option - Fish

@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.82  2008/03/29 08:36:46  fish
+// More complete/extensive 3490/3590 tape support
+//
 // Revision 1.81  2008/03/28 02:09:42  fish
 // Add --blkid-24 option support, poserror flag renamed to fenced,
 // added 'generic', 'readblkid' and 'locateblk' tape media handler
@@ -1039,9 +1042,10 @@ struct DEVBLK {                         /* Device configuration block*/
           U16   chksize;                /* Chunk size                */
           off_t maxsize;                /* Maximum allowed TAPE file
                                            size                      */
-          off_t eotmargin;              /* Amount of space left
-                                           before reporting EOT      */
         }       tdparms;                /* HET device parms          */
+
+        off_t   eotmargin;              /* Amount of space left before
+                                           reporting EOT (in bytes)  */
         u_int   fenced:1;               /* 1=Pos err; volume fenced  */
         u_int   readonly:1;             /* 1=Tape is write-protected */
         u_int   sns_pending:1;          /* Contingency Allegiance    */
@@ -1054,6 +1058,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   SIC_supported:1;        /* 1=Spec Intcpt Cond support*/
         u_int   SIC_active:1;           /* 1=SIC active              */
         u_int   forced_logging:1;       /* 1=Forced Error Logging    */
+        u_int   eotwarning:1;           /* 1=EOT warning area reached*/
         U32     msgid;                  /* Message Id of async. i/o  */
 #if defined(OPTION_SCSI_TAPE)
         U32     sstat;                  /* Generic SCSI tape device-

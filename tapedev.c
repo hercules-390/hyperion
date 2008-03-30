@@ -98,6 +98,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.138  2008/03/29 08:36:46  fish
+// More complete/extensive 3490/3590 tape support
+//
 // Revision 1.137  2008/03/28 02:09:42  fish
 // Add --blkid-24 option support, poserror flag renamed to fenced,
 // added 'generic', 'readblkid' and 'locateblk' tape media handler
@@ -1082,7 +1085,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     dev->tdparms.level     = HETDFLT_LEVEL;
     dev->tdparms.chksize   = HETDFLT_CHKSIZE;
     dev->tdparms.maxsize   = 0;        // no max size     (default)
-    dev->tdparms.eotmargin = 128*1024; // 128K EOT margin (default)
+    dev->eotmargin         = 128*1024; // 128K EOT margin (default)
     dev->tdparms.logical_readonly = 0; // read/write      (default)
 
 #if defined(OPTION_SCSI_TAPE)
@@ -1213,13 +1216,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             break;
 
         case TDPARM_EOTMARGIN:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
-            {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
-                rc = -1;
-                break;
-            }
-            dev->tdparms.eotmargin=res.num;
+            dev->eotmargin=res.num;
             break;
 
         case TDPARM_STRICTSIZE:
@@ -1407,7 +1404,11 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
 #if defined(OPTION_SCSI_TAPE)
         else // (this is a SCSI tape drive)
         {
-            if (STS_BOT( dev )) strlcat(tapepos,"*BOT* ",sizeof(tapepos));
+            if (STS_BOT( dev ))
+            {
+                dev->eotwarning = 0;
+                strlcat(tapepos,"*BOT* ",sizeof(tapepos));
+            }
 
             // If tape has a display, then GetDisplayMsg already
             // appended *FP* for us. Otherwise we need to do it.
@@ -1967,6 +1968,7 @@ int ldpt=0;
             int_scsi_status_update( dev, 0 );   // (internal call)
             if ( STS_BOT( dev ) )
             {
+                dev->eotwarning = 0;
                 ldpt=1;
             }
             break;

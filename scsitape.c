@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.27  2008/03/29 08:36:46  fish
+// More complete/extensive 3490/3590 tape support
+//
 // Revision 1.26  2008/03/28 02:09:42  fish
 // Add --blkid-24 option support, poserror flag renamed to fenced,
 // added 'generic', 'readblkid' and 'locateblk' tape media handler
@@ -230,6 +233,24 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
         return -1; /* (fatal error) */
     }
 
+#if defined( HAVE_DECL_MTEWARN ) && HAVE_DECL_MTEWARN
+
+    // Try to request EOM/EOT (end-of-media/tape) early-warning
+
+    // Note: if it fails, oh well. There's no need to scare the
+    // user with a warning message. We'll either get the warning
+    // or we won't. Either way there's nothing we can do about it.
+    // We did the best we could.
+
+    opblk.mt_op = MTEWARN;
+    opblk.mt_count = dev->eotmargin;
+
+    ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk);
+
+    // (ignore any error; it either worked or it didn't)
+
+#endif // defined( HAVE_DECL_MTEWARN ) && HAVE_DECL_MTEWARN
+
     return 0;  /* (success) */
 
 } /* end function finish_scsitape_open */
@@ -352,13 +373,44 @@ int  save_errno;
 
     rc = write_tape (dev->fd, buf, len);
 
+#if defined( _MSVC_ )
+    if (errno == ENOSPC)
+        dev->eotwarning = 1;
+#endif
+
     if (rc >= len)
     {
         dev->blockid++;
         return 0;
     }
 
-    /* Handle write error condition */
+    /*         LINUX EOM BEHAVIOUR WHEN WRITING
+
+      When the end of medium early warning is encountered,
+      the current write is finished and the number of bytes
+      is returned. The next write returns -1 and errno is
+      set to ENOSPC. To enable writing a trailer, the next
+      write is allowed to proceed and, if successful, the
+      number of bytes is returned. After this, -1 and the
+      number of bytes are alternately returned until the
+      physical end of medium (or some other error) occurs.
+    */
+
+    if (errno == ENOSPC)
+    {
+        int_scsi_status_update( dev, 0 );
+
+        rc = write_tape (dev->fd, buf, len);
+
+        if (rc >= len)
+        {
+            dev->eotwarning = 1;
+            dev->blockid++;
+            return 0;
+        }
+    }
+
+    /* Handle write error condition... */
 
     save_errno = errno;
     {
@@ -374,21 +426,15 @@ int  save_errno;
         build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
     else
     {
-        switch(errno)
+        if (errno == EIO)
         {
-        case EIO:
             if(STS_EOT(dev))
                 build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
             else
                 build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
-            break;
-        case ENOSPC:
-            build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
-            break;
-        default:
-            build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
-            break;
         }
+        else
+            build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
     }
 
     return -1;
@@ -403,24 +449,41 @@ int  save_errno;
 /*-------------------------------------------------------------------*/
 int write_scsimark (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
-int  rc;
-int  save_errno;
-struct mtop opblk;
+int  rc, save_errno;
 
     /* Write tape mark to SCSI tape */
 
-    opblk.mt_op    = MTWEOF;
-    opblk.mt_count = 1;
+    rc = int_write_scsimark( dev );
 
-    rc = ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk);
+#if defined( _MSVC_ )
+    if (errno == ENOSPC)
+        dev->eotwarning = 1;
+#endif
 
     if (rc >= 0)
-    {
-        /* Increment current file number since tapemark was written */
-        dev->curfilen++;
-        /* (tapemarks count as block identifiers too!) */
-        dev->blockid++;
         return 0;
+
+    /*         LINUX EOM BEHAVIOUR WHEN WRITING
+
+      When the end of medium early warning is encountered,
+      the current write is finished and the number of bytes
+      is returned. The next write returns -1 and errno is
+      set to ENOSPC. To enable writing a trailer, the next
+      write is allowed to proceed and, if successful, the
+      number of bytes is returned. After this, -1 and the
+      number of bytes are alternately returned until the
+      physical end of medium (or some other error) occurs.
+    */
+
+    if (errno == ENOSPC)
+    {
+        int_scsi_status_update( dev, 0 );
+
+        if (int_write_scsimark( dev ) >= 0)
+        {
+            dev->eotwarning = 1;
+            return 0;
+        }
     }
 
     /* Handle write error condition... */
@@ -522,9 +585,41 @@ struct mtop opblk;
     opblk.mt_count = 0;             // (zero to force a commit)
 
     if ((rc = ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk)) >= 0)
+    {
+#if defined( _MSVC_ )
+        if (errno == ENOSPC)
+            dev->eotwarning = 1;
+#endif
         return 0;       // (success)
+    }
 
-    /* Handle write error condition */
+    /*         LINUX EOM BEHAVIOUR WHEN WRITING
+
+      When the end of medium early warning is encountered,
+      the current write is finished and the number of bytes
+      is returned. The next write returns -1 and errno is
+      set to ENOSPC. To enable writing a trailer, the next
+      write is allowed to proceed and, if successful, the
+      number of bytes is returned. After this, -1 and the
+      number of bytes are alternately returned until the
+      physical end of medium (or some other error) occurs.
+    */
+
+    if (errno == ENOSPC)
+    {
+        int_scsi_status_update( dev, 0 );
+
+        opblk.mt_op    = MTWEOF;
+        opblk.mt_count = 0;         // (zero to force a commit)
+
+        if ((rc = ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk)) >= 0)
+        {
+            dev->eotwarning = 1;
+            return 0;
+        }
+    }
+
+    /* Handle write error condition... */
 
     save_errno = errno;
     {
@@ -691,6 +786,7 @@ struct mtop opblk;
     /* Unit check if already at start of tape */
     if ( STS_BOT( dev ) )
     {
+        dev->eotwarning = 0;
         build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         return -1;
     }
@@ -745,6 +841,7 @@ struct mtop opblk;
     {
         if ( EIO == errno && STS_BOT(dev) )
         {
+            dev->eotwarning = 0;
             build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         }
         else
@@ -867,6 +964,7 @@ struct mtop opblk;
     /* Unit check if already at start of tape */
     if ( STS_BOT( dev ) )
     {
+        dev->eotwarning = 0;
         build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         return -1;
     }
@@ -908,6 +1006,7 @@ struct mtop opblk;
     {
         if ( EIO == errno && STS_BOT(dev) )
         {
+            dev->eotwarning = 0;
             build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         }
         else
@@ -1011,6 +1110,7 @@ struct mtop opblk;
 int erg_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
 {
 #if defined( OPTION_SCSI_ERASE_GAP )
+int rc;
 
     if (!dev->stape_no_erg)
     {
@@ -1019,19 +1119,60 @@ int erg_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
         opblk.mt_op    = MTERASE;
         opblk.mt_count = 0;         // (zero means "short" erase-gap)
     
-        if ( ioctl_tape( dev->fd, MTIOCTOP, (char*)&opblk ) < 0 )
-        {
-            logmsg (_("HHCTA999E Erase Gap error on %u:%4.4X=%s; errno=%d: %s\n"),
-                    SSID_TO_LCSS(dev->ssid), dev->devnum,
-                    dev->filename, errno, strerror(errno));
-            build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
-            return -1;
-        }
-    }
-#endif // defined( OPTION_SCSI_ERASE_GAP )
+        rc = ioctl_tape( dev->fd, MTIOCTOP, (char*)&opblk );
 
-    build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+#if defined( _MSVC_ )
+        if (errno == ENOSPC)
+            dev->eotwarning = 1;
+#endif
+
+        if ( rc < 0 )
+        {
+            /*         LINUX EOM BEHAVIOUR WHEN WRITING
+
+              When the end of medium early warning is encountered,
+              the current write is finished and the number of bytes
+              is returned. The next write returns -1 and errno is
+              set to ENOSPC. To enable writing a trailer, the next
+              write is allowed to proceed and, if successful, the
+              number of bytes is returned. After this, -1 and the
+              number of bytes are alternately returned until the
+              physical end of medium (or some other error) occurs.
+            */
+
+            if (errno == ENOSPC)
+            {
+                int_scsi_status_update( dev, 0 );
+
+                opblk.mt_op    = MTERASE;
+                opblk.mt_count = 0;         // (zero means "short" erase-gap)
+            
+                if ( (rc = ioctl_tape( dev->fd, MTIOCTOP, (char*)&opblk )) >= 0 )
+                    dev->eotwarning = 1;
+            }
+
+            if ( rc < 0)
+	        {
+	            logmsg (_("HHCTA999E Erase Gap error on %u:%4.4X=%s; errno=%d: %s\n"),
+	                    SSID_TO_LCSS(dev->ssid), dev->devnum,
+	                    dev->filename, errno, strerror(errno));
+	            build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
+	            return -1;
+	        }
+	    }
+    }
+
+    return 0;       // (success)
+
+#else // !defined( OPTION_SCSI_ERASE_GAP )
+
+    UNREFERENCED ( dev );
+    UNREFERENCED ( code );
+    UNREFERENCED ( unitstat );
+
     return 0;       // (treat as nop)
+
+#endif // defined( OPTION_SCSI_ERASE_GAP )
 
 } /* end function erg_scsitape */
 
@@ -1654,7 +1795,7 @@ void scsi_get_status_fast( DEVBLK* dev )
 /*-------------------------------------------------------------------*/
 int passedeot_scsitape( DEVBLK *dev )
 {
-    return 0;       // (temp; will be fixed in upcoming commit)
+    return dev->eotwarning;     // (1==past EOT reflector; 0==not)
 }
 
 /*-------------------------------------------------------------------*/
@@ -1777,6 +1918,9 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only ) // (internal call
         if ( STS_EOT     (dev) ) strlcat ( buf, " END-OF-TAPE"  , sizeof(buf) );
         if ( STS_EOD     (dev) ) strlcat ( buf, " END-OF-DATA"  , sizeof(buf) );
         if ( STS_WR_PROT (dev) ) strlcat ( buf, " WRITE-PROTECT", sizeof(buf) );
+
+        if ( STS_BOT(dev) )
+            dev->eotwarning = 0;
 
         logmsg ( _("HHCTA023I %s\n"), buf );
     }

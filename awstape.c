@@ -96,6 +96,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.4  2008/03/29 08:36:46  fish
+// More complete/extensive 3490/3590 tape support
+//
 // Revision 1.3  2008/03/28 02:09:42  fish
 // Add --blkid-24 option support, poserror flag renamed to fenced,
 // added 'generic', 'readblkid' and 'locateblk' tape media handler
@@ -258,16 +261,20 @@ int passedeot_awstape (DEVBLK *dev)
 {
     if(dev->nxtblkpos==0)
     {
+        dev->eotwarning = 0;
         return 0;
     }
     if(dev->tdparms.maxsize==0)
     {
+        dev->eotwarning = 0;
         return 0;
     }
-    if(dev->nxtblkpos+dev->tdparms.eotmargin > dev->tdparms.maxsize)
+    if(dev->nxtblkpos+dev->eotmargin > dev->tdparms.maxsize)
     {
+        dev->eotwarning = 1;
         return 1;
     }
+    dev->eotwarning = 0;
     return 0;
 }
 

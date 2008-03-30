@@ -96,6 +96,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.4  2008/03/29 08:36:46  fish
+// More complete/extensive 3490/3590 tape support
+//
 // Revision 1.3  2008/03/28 02:09:42  fish
 // Add --blkid-24 option support, poserror flag renamed to fenced,
 // added 'generic', 'readblkid' and 'locateblk' tape media handler
@@ -650,12 +653,14 @@ off_t cursize;
         if(dev->tdparms.maxsize>0)
         {
             cursize=het_tell(dev->hetb);
-            if(cursize+dev->tdparms.eotmargin>dev->tdparms.maxsize)
+            if(cursize+dev->eotmargin>dev->tdparms.maxsize)
             {
+                dev->eotwarning = 1;
                 return 1;
             }
         }
     }
+    dev->eotwarning = 0;
     return 0;
 }
 

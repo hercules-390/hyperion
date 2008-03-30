@@ -96,6 +96,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.5  2008/03/29 08:36:46  fish
+// More complete/extensive 3490/3590 tape support
+//
 // Revision 1.4  2008/03/28 02:09:42  fish
 // Add --blkid-24 option support, poserror flag renamed to fenced,
 // added 'generic', 'readblkid' and 'locateblk' tape media handler
@@ -987,6 +990,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
+        dev->eotwarning = 0;
         dev->fenced = 0;
 
         build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
@@ -1144,6 +1148,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         dev->curfilen = 1;
         dev->nxtblkpos = 0;
         dev->prvblkpos = -1;
+        dev->eotwarning = 0;
 //      dev->fenced = 0;        // (handler already did this)
 
         UpdateDisplay( dev );
@@ -3582,9 +3587,9 @@ int sense_built;
                    ( ccwcode==0x01 || // write
                      ccwcode==0x17 || // erase gap
                      ccwcode==0x1F    // write tapemark
+                    )
                 )
-            )
-            {
+                {
                     *unitstat|=CSW_UX;
                 }
             }
