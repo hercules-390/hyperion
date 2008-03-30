@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.20  2008/03/28 23:03:54  rbowler
+// Correct relative address calculation for RIL-format instructions
+//
 // Revision 1.19  2008/03/23 08:00:40  rbowler
 // Fix incorrect bit selection for RNSBG,RISBG,ROSBG,RXSBG
 //
@@ -1749,7 +1752,7 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
     for (i=0, mask=0; i < 64; i++)
     {
         mask <<= 1;
-        if (start >= end) {
+        if (start <= end) {
             if (i >= start && i <= end) mask |= 1;
         } else {
             if (i <= end || i >= start) mask |= 1;
