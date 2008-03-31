@@ -96,6 +96,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.9  2008/03/31 12:33:46  rbowler
+// Reinstate original code to fix warning: implicit declaration of function `min'
+//
 // Revision 1.8  2008/03/31 12:25:24  rbowler
 // tapeccws.c:613: warning: unused parameter 'ccwseq'
 //
@@ -812,22 +815,24 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
+        /* Unit check if tape is write-protected */
         if (dev->readonly || dev->tdparms.logical_readonly)
         {
             build_senseX (TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code);
             break;
         }
 
-        /* Write a block from the tape according to device type */
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
+        /* Write a block to the tape according to device type */
         if ((rc = dev->tmh->write( dev, iobuf, count, unitstat, code)) < 0)
             break;      // (error)
 
@@ -886,17 +891,18 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
-        /* Read a block from the tape according to device type */
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
-        /* Do the read. Exit with unit check status if read failed */
+        /* Read a block from the tape according to device type */
+        /* Exit with unit check status if read error condition */
         if ((len = dev->tmh->read( dev, iobuf, unitstat, code)) < 0)
             break;      // (error)
 
@@ -975,6 +981,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     /*---------------------------------------------------------------*/
     case 0x07:
     {
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
              TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
@@ -982,12 +989,13 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Do the rewind */
         rc = dev->tmh->rewind( dev, unitstat, code);
 
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_REWINDING == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
@@ -1063,13 +1071,15 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     /*---------------------------------------------------------------*/
     case 0x0C:
     {
-        /* Backspace to previous block according to device type */
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
+        /* Backspace to previous block according to device type */
+        /* Exit with unit check status if error condition */
         if ((rc = dev->tmh->bsb( dev, unitstat, code )) < 0)
             break;      // (error)
 
@@ -1081,7 +1091,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Now read in a forward direction the actual data block
@@ -1099,8 +1109,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         dev->curbufoff = num;
 
         /* Backspace to previous block according to device type,
-           and exit with unit check status if error condition
-        */
+           and exit with unit check status if error condition */
         if ((rc = dev->tmh->bsb( dev, unitstat, code )) < 0)
             break;      // (error)
 
@@ -1115,6 +1124,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     /*---------------------------------------------------------------*/
     case 0x0F:
     {
+        /* Update matrix display if needed */
         if ( dev->tdparms.displayfeat )
         {
             if ( TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype )
@@ -1136,10 +1146,10 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
-        // Do the Rewind-Unload...
+        /* Do the Rewind-Unload */
 #if defined(OPTION_SCSI_TAPE)
         if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
             int_scsi_rewind_unload( dev, unitstat, code );
@@ -1147,6 +1157,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 #endif
             dev->tmh->close(dev);
 
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_UNLOADING == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
@@ -1162,6 +1173,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         dev->eotwarning = 0;
 //      dev->fenced = 0;        // (handler already did this)
 
+        /* Update matrix display */
         UpdateDisplay( dev );
 
         build_senseX(TAPE_BSENSE_RUN_SUCCESS,dev,unitstat,code);
@@ -1222,7 +1234,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         // non-virtual devices. (We will still always need the below
         // for virtual devices though)
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         // Perform flush/sync; exit on error...
@@ -1248,19 +1260,21 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
+        /* Unit check if tape is write-protected */
         if (dev->readonly || dev->tdparms.logical_readonly)
         {
             build_senseX (TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code);
             break;
         }
 
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Do the ERG; exit if error */
@@ -1289,19 +1303,21 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
+        /* Unit check if tape is write-protected */
         if (dev->readonly || dev->tdparms.logical_readonly)
         {
             build_senseX (TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code);
             break;
         }
 
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Do the WTM; exit if error */
@@ -1337,7 +1353,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Calculate number of bytes and residual byte count */
@@ -1397,18 +1413,18 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Backspace to previous block according to device type,
            and exit with unit check status on error condition */
-
         if ((rc = dev->tmh->bsb( dev, unitstat, code )) < 0)
             break;
 
@@ -1436,13 +1452,14 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Backspace to previous file according to device type,
@@ -1546,22 +1563,22 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Forward to next block according to device type  */
         /* Exit with unit check status if error condition  */
-        /* or unit exception status if tapemark was sensed */
-
         if ((rc = dev->tmh->fsb( dev, unitstat, code )) < 0)
             break;
 
+        /* Exit with unit exception status if tapemark was sensed */
         if (rc == 0)
         {
             build_senseX (TAPE_BSENSE_READTM, dev, unitstat, code);
@@ -1593,18 +1610,16 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         in the data transferred with the order.
         */
 
-        // Command reject if not chained from either a Set Interface
-        // Identifier or Perform Subsystem Function command...
-
+        /* Command reject if not chained from either a Set Interface
+           Identifier or Perform Subsystem Function command */
         if (!((chained & CCW_FLAGS_CC) && (0x77 == prevcode || 0x73 == prevcode)))
         {
             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
             break;
         }
 
-        // Command reject if no subsystem data was prepared
-        // by a previous Perform Subsystem Function command
-
+        /* Command reject if no subsystem data was prepared
+           by a previous Perform Subsystem Function command */
         if (!dev->tapssdlen)      // (any subsystem data?)
         {
             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
@@ -1639,18 +1654,18 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Forward to next file according to device type  */
         /* Exit with unit check status if error condition */
-
         if ((rc = dev->tmh->fsf( dev, unitstat, code )) < 0)
             break;
 
@@ -1671,13 +1686,14 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Do the sync */
@@ -1823,7 +1839,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Ask media handler to perform the locate... */
@@ -1888,6 +1904,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
         // ZZ FIXME: not coded yet.
 
+        /* Set command reject sense byte, and unit check status */
         build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
         break;
     }
@@ -1957,8 +1974,8 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
            none of our supported orders supports a flag byte */
         if (PSF_FLAG_ZERO != flag)
         {
-          build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-          break;
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
         }
 
         /* Byte 0 is the PSF order */
@@ -1971,39 +1988,39 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         case PSF_ORDER_AFEL:
         case PSF_ORDER_DFEL:
         {
-          BYTE  bEnable  = (PSF_ORDER_AFEL == order) ? 1 : 0;
+            BYTE  bEnable  = (PSF_ORDER_AFEL == order) ? 1 : 0;
 
-          /* Calculate residual byte count */
-          RESIDUAL_CALC (3);
+            /* Calculate residual byte count */
+            RESIDUAL_CALC (3);
 
-          /* Control information length must be 3 bytes long */
-          /* and the parameter byte must be one or the other */
-          if ( (count < len)
-              || ((PSF_ACTION_FEL_IMPLICIT != parm) &&
-                  (PSF_ACTION_FEL_EXPLICIT != parm))
-          )
-          {
-             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-             break;
-          }
+            /* Control information length must be 3 bytes long */
+            /* and the parameter byte must be one or the other */
+            if ( (count < len)
+                || ((PSF_ACTION_FEL_IMPLICIT != parm) &&
+                    (PSF_ACTION_FEL_EXPLICIT != parm))
+            )
+            {
+               build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+               break;
+            }
 
-          /* Enable/Disabled Forced Error Logging as requested... */
+            /* Enable/Disabled Forced Error Logging as requested... */
 
 #if 0 // (implicit enabling for all devices not currently supported; treat as explicit instead)
-          if (PSF_ACTION_FEL_IMPLICIT == parm)
-          {
-              // Implicit: for ALL devices...
-              dev->forced_logging = bEnable ? 1 : 0;
-          }
-          else // (PSF_ACTION_FEL_EXPLICIT == parm)
+            if (PSF_ACTION_FEL_IMPLICIT == parm)
+            {
+                // Implicit: for ALL devices...
+                dev->forced_logging = bEnable ? 1 : 0;
+            }
+            else // (PSF_ACTION_FEL_EXPLICIT == parm)
 #endif // (implicit not supported)
-          {
-              // Explicit: for only THIS device...
-              dev->forced_logging = bEnable ? 1 : 0;
-          }
+            {
+                // Explicit: for only THIS device...
+                dev->forced_logging = bEnable ? 1 : 0;
+            }
 
-          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-          break;
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+            break;
         }
 
         /*-----------------------------------------------------------*/
@@ -2013,48 +2030,48 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         case PSF_ORDER_AAC:     // (Activate)
         case PSF_ORDER_DAC:     // (Dectivate)
         {
-          BYTE  bEnable  = (PSF_ORDER_AAC == order) ? 1 : 0;
+            BYTE  bEnable  = (PSF_ORDER_AAC == order) ? 1 : 0;
 
-          /* Calculate residual byte count */
-          RESIDUAL_CALC (4);
+            /* Calculate residual byte count */
+            RESIDUAL_CALC (4);
 
-          /* Control information length must be 4 bytes long */
-          /* and the parameter byte must not be invalid      */
-          if (0
-              || (count < len)
-              || (parm  & ~(PSF_ACTION_AC_LWP | PSF_ACTION_AC_DCD |   // (bits on that shouldn't be)
-                            PSF_ACTION_AC_DCR | PSF_ACTION_AC_ER))
-              || !(parm &  (PSF_ACTION_AC_LWP | PSF_ACTION_AC_DCD |   // (bits on that should be)
-                            PSF_ACTION_AC_DCR | PSF_ACTION_AC_ER))
-          )
-          {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-            break;
-          }
-
-          /* Enable/Disable Logical Write Protect if requested */
-          if (parm & PSF_ACTION_AC_LWP)
-            dev->tdparms.logical_readonly = bEnable ? 1 : 0;
-
-          /* Enable/Disable Data Compaction (compression) if requested */
-          if (parm & PSF_ACTION_AC_DCD)
-          {
-            if (TAPEDEVT_HET == dev->tapedevt)
+            /* Control information length must be 4 bytes long */
+            /* and the parameter byte must not be invalid      */
+            if (0
+                || (count < len)
+                || (parm  & ~(PSF_ACTION_AC_LWP | PSF_ACTION_AC_DCD |   // (bits on that shouldn't be)
+                              PSF_ACTION_AC_DCR | PSF_ACTION_AC_ER))
+                || !(parm &  (PSF_ACTION_AC_LWP | PSF_ACTION_AC_DCD |   // (bits on that should be)
+                              PSF_ACTION_AC_DCR | PSF_ACTION_AC_ER))
+            )
             {
-              rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_COMPRESS,
-                             bEnable ? TRUE : FALSE );
+                build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+                break;
             }
+
+            /* Enable/Disable Logical Write Protect if requested */
+            if (parm & PSF_ACTION_AC_LWP)
+                dev->tdparms.logical_readonly = bEnable ? 1 : 0;
+
+            /* Enable/Disable Data Compaction (compression) if requested */
+            if (parm & PSF_ACTION_AC_DCD)
+            {
+                if (TAPEDEVT_HET == dev->tapedevt)
+                {
+                    rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_COMPRESS,
+                                   bEnable ? TRUE : FALSE );
+                }
 #if defined(OPTION_SCSI_TAPE)
-            else if (TAPEDEVT_SCSITAPE == dev->tapedevt)
-            {
-                // ZZ FIXME: future place for direct SCSI i/o
-                // to enable/disable compression for 3480/later.
-            }
+                else if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+                {
+                    // ZZ FIXME: future place for direct SCSI i/o
+                    // to enable/disable compression for 3480/later.
+                }
 #endif
-          }
+            }
 
-          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-          break;
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+            break;
         }
 
         /*-----------------------------------------------------------*/
@@ -2063,40 +2080,40 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_RVF:
         {
-          /*       GA32-0127 IBM 3490E Hardware Reference
+            /*       GA32-0127 IBM 3490E Hardware Reference
 
-          Volume Fencing
+            Volume Fencing
 
-          When a condition results in a volume integrity exposure,
-          the control unit will prevent further access to the volume.
-          This process is called Volume Fencing and is primarily
-          related to loss of buffered write data, tape positioning,
-          or assignment protection.
+            When a condition results in a volume integrity exposure,
+            the control unit will prevent further access to the volume.
+            This process is called Volume Fencing and is primarily
+            related to loss of buffered write data, tape positioning,
+            or assignment protection.
 
-          The control unit prevents further access to the tape volume
-          by conditioning itself to generate deferred unit checks with
-          associated sense data indicating ERA code 47, for all commands
-          that are eligible to receive the deferred unit check until
-          the condition is reset or until the cartridge is unloaded.
-          The condition that caused the fencing to occur has already
-          been indicated by the previous unit check and associated sense
-          data.
-          */
+            The control unit prevents further access to the tape volume
+            by conditioning itself to generate deferred unit checks with
+            associated sense data indicating ERA code 47, for all commands
+            that are eligible to receive the deferred unit check until
+            the condition is reset or until the cartridge is unloaded.
+            The condition that caused the fencing to occur has already
+            been indicated by the previous unit check and associated sense
+            data.
+            */
 
-          /* Calculate residual byte count */
-          RESIDUAL_CALC (2);
+            /* Calculate residual byte count */
+            RESIDUAL_CALC (2);
 
-          /* Control information length must be 2 bytes long */
-          if (count < len)
-          {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            /* Control information length must be 2 bytes long */
+            if (count < len)
+            {
+              build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+              break;
+            }
+
+            dev->fenced = 0;        // (as requested!)
+
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
             break;
-          }
-
-          dev->fenced = 0;        // (as requested!)
-
-          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-          break;
         }
 
         /*-----------------------------------------------------------*/
@@ -2105,23 +2122,23 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_PIN_DEV:
         {
-          /* Calculate residual byte count */
-          RESIDUAL_CALC (3);
+            /* Calculate residual byte count */
+            RESIDUAL_CALC (3);
 
-          /* Control information length must be 3 bytes long */
-          /* and the parameter byte must not be invalid      */
-          if ( (count < len)
-                || ((parm != PSF_ACTION_PIN_CU0) &&
-                    (parm != PSF_ACTION_PIN_CU1))
-          )
-          {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            /* Control information length must be 3 bytes long
+               and the parameter byte must not be invalid */
+            if ( (count < len)
+                  || ((parm != PSF_ACTION_PIN_CU0) &&
+                      (parm != PSF_ACTION_PIN_CU1))
+            )
+            {
+                build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+                break;
+            }
+
+            /* Not currently supported; treat as no-op */
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
             break;
-          }
-
-          // (not currently supported; treat as no-op...)
-          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-          break;
         }
 
         /*-----------------------------------------------------------*/
@@ -2130,19 +2147,19 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_UNPIN_DEV:
         {
-          /* Calculate residual byte count */
-          RESIDUAL_CALC (2);
+            /* Calculate residual byte count */
+            RESIDUAL_CALC (2);
 
-          /* Control information length must be 2 bytes long */
-          if (count < len)
-          {
-            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            /* Control information length must be 2 bytes long */
+            if (count < len)
+            {
+                build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+                break;
+            }
+
+            /* Not currently supported; treat as no-op */
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
             break;
-          }
-
-          // (not currently supported; treat as no-op...)
-          build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
-          break;
         }
 
         /*-----------------------------------------------------------*/
@@ -2151,130 +2168,128 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_PRSD:
         {
-          /*       GA32-0127 IBM 3490E Hardware Reference
+            /*       GA32-0127 IBM 3490E Hardware Reference
 
-          Prepare for Read Subsystem Data (X'18')
+            Prepare for Read Subsystem Data (X'18')
 
-          The order transfers 12 bytes of data used for processing a
-          Read Subsystem Data command that immediately follows the
-          Perform Subsystem Function command specifying this order in
-          the command chain.  If a Read Subsystem Data command is not
-          issued as the next command in the command chain, the data is
-          discarded and no other action is performed.  If a Read Subsystem
-          Data command is issued as the next command in the command chain,
-          the data determines what type of information is presented to
-          the Read Subsystem Data command.
+            The order transfers 12 bytes of data used for processing a
+            Read Subsystem Data command that immediately follows the
+            Perform Subsystem Function command specifying this order in
+            the command chain.  If a Read Subsystem Data command is not
+            issued as the next command in the command chain, the data is
+            discarded and no other action is performed.  If a Read Subsystem
+            Data command is issued as the next command in the command chain,
+            the data determines what type of information is presented to
+            the Read Subsystem Data command.
 
-          When the Prepare for Subsystem Data order with the attention
-          message sub-order is specified in a Perform Subsystem Function
-          command, the command is treated as a global command.  If the
-          command is issued while the Special Intercept Condition is
-          active, a unit check status is presented with the associated
-          sense data indicating ERA code 53.
+            When the Prepare for Subsystem Data order with the attention
+            message sub-order is specified in a Perform Subsystem Function
+            command, the command is treated as a global command.  If the
+            command is issued while the Special Intercept Condition is
+            active, a unit check status is presented with the associated
+            sense data indicating ERA code 53.
 
-          The Prepare for Read Subsystem Data order requires an order
-          byte (byte 0), a flag byte (byte 1), and parameter bytes.
-          The flag byte is set to 0. The parameter bytes are defined
-          as follows:
+            The Prepare for Read Subsystem Data order requires an order
+            byte (byte 0), a flag byte (byte 1), and parameter bytes.
+            The flag byte is set to 0. The parameter bytes are defined
+            as follows:
 
-           ________ ___________________________________________________
-          | Byte   | Description                                       |
-          |________|___________________________________________________|
-          | 2-5    | Reserved (X'00')                                  |
-          |________|___________________________________________________|
-          | 6      | Attention Message (X'03')                         |
-          |        |                                                   |
-          |        | When active and bytes 8-11 contain X'00000000',   |
-          |        | the program is requesting the control unit        |
-          |        | to present any pending attention message or       |
-          |        | unsolicited unit check condition that is          |
-          |        | associated with the addressed device-path pair.   |
-          |        | If there is no message or unit check condition    |
-          |        | present, the subsystem displays the "No Message"  |
-          |        | message.                                          |
-          |        |                                                   |
-          |        | When active and bytes 8-11 contain anything       |
-          |        | other than X'00000000', the program is re-        |
-          |        | questing the control unit to present the status   |
-          |        | of the asynchronous operation as identified by    |
-          |        | the contents of bytes 8-11.                       |
-          |________|___________________________________________________|
-          | 7      | Reserved (X'00')                                  |
-          |________|___________________________________________________|
-          | 8-11   | Message ID                                        |
-          |________|___________________________________________________|
-          */
+             ________ ___________________________________________________
+            | Byte   | Description                                       |
+            |________|___________________________________________________|
+            | 2-5    | Reserved (X'00')                                  |
+            |________|___________________________________________________|
+            | 6      | Attention Message (X'03')                         |
+            |        |                                                   |
+            |        | When active and bytes 8-11 contain X'00000000',   |
+            |        | the program is requesting the control unit        |
+            |        | to present any pending attention message or       |
+            |        | unsolicited unit check condition that is          |
+            |        | associated with the addressed device-path pair.   |
+            |        | If there is no message or unit check condition    |
+            |        | present, the subsystem displays the "No Message"  |
+            |        | message.                                          |
+            |        |                                                   |
+            |        | When active and bytes 8-11 contain anything       |
+            |        | other than X'00000000', the program is re-        |
+            |        | questing the control unit to present the status   |
+            |        | of the asynchronous operation as identified by    |
+            |        | the contents of bytes 8-11.                       |
+            |________|___________________________________________________|
+            | 7      | Reserved (X'00')                                  |
+            |________|___________________________________________________|
+            | 8-11   | Message ID                                        |
+            |________|___________________________________________________|
+            */
 
-          /* Calculate residual byte count */
-          RESIDUAL_CALC (12);
+            /* Calculate residual byte count */
+            RESIDUAL_CALC (12);
 
-          /* Control information length must be 12 bytes long the */
-          /* parameter must be valid and all reserved bytes zero. */
-          /* Also note that the only sub-order we support is the  */
-          /* only sub-order that is defined: attention message.   */
-          if (0
-              || (count < len)
-              || (iobuf[6] != PSF_ACTION_SSD_ATNMSG)
-              || (memcmp( &iobuf[2], "\00\00\00\00", 4 ) != 0)
-              || (iobuf[7] != 0x00)
-          )
-          {
-            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            /* Control information length must be 12 bytes long the */
+            /* parameter must be valid and all reserved bytes zero. */
+            /* Also note that the only sub-order we support is the  */
+            /* only sub-order that is defined: attention message.   */
+            if (0
+                || (count < len)
+                || (iobuf[6] != PSF_ACTION_SSD_ATNMSG)
+                || (memcmp( &iobuf[2], "\00\00\00\00", 4 ) != 0)
+                || (iobuf[7] != 0x00)
+            )
+            {
+                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                break;
+            }
+
+            /* If the Special Intercept Condition is active, present
+               unit check status with sense indicating ERA code 53 */
+            if (dev->SIC_active)
+            {
+                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                dev->SIC_active = 0;
+                break;
+            }
+
+            // Build the requested Subsystem Data...
+
+            // PROGRAMMING NOTE: note that we build the requested data
+            // directly in the channel i/o buffer itself (iobuf). This
+            // relieves us from having to allocate/maintain a separate
+            // buffer for it somewhere, and relieves the READ SUBSYSTEM
+            // DATA command (0x3E) from having to copy the data into
+            // the channel buffer from somewhere. Instead it can return
+            // immediately since the data is already in the buffer. (See
+            // the 0x3E: READ SUBSYSTEM DATA command for information).
+
+            // PROGRAMMING NOTE: since at the moment we don't support
+            // asynchronous i/o (all of our i/o's are synchronous), we
+            // return either a Format x'00' (No Message) response if the
+            // Message Id they specified was x'00000000' or, if they
+            // requested the status for a specific Message Id, a format
+            // x'02' (Message Id Status) response with x'00' Operation
+            // Completion Status (I/O Completed).
+
+            if (memcmp( &iobuf[8], "\00\00\00\00", 4 ) == 0)
+            {
+                /* Format x'00': "No Message" */
+                dev->tapssdlen = 9;                     // (Length)
+                STORE_HW ( &iobuf[0], dev->tapssdlen ); // (Length = 9 bytes)
+                iobuf[2] = 0x00;                        // (Format = x'00': "No Message")
+                iobuf[3] = 0x00;                        // (Message Code = none)
+                memcpy( &iobuf[4], &iobuf[8], 4 );      // (Message Id = same as requested)
+                iobuf[8] = 0x00;                        // (Flags = none)
+            }
+            else
+            {
+                /* Format x'02': "Message Id Status" */
+                dev->tapssdlen = 10;                    // (Length)
+                STORE_HW ( &iobuf[0], dev->tapssdlen ); // (Length = 10 bytes)
+                iobuf[2] = 0x02;                        // (Format = x'01: Message Id Status)
+                iobuf[3] = 0x01;                        // (Message Code = Delayed Response)
+                memcpy( &iobuf[4], &iobuf[8], 4 );      // (Message Id = same as requested)
+                iobuf[8] = 0x00;                        // (Reserved)
+                iobuf[9] = 0x00;                        // (Status = "I/O Completed")
+            }
             break;
-          }
-
-          /* If the Special Intercept Condition is active, present
-             unit check status with sense indicating ERA code 53 */
-          if (dev->SIC_active)
-          {
-            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-            dev->SIC_active = 0;
-            break;
-          }
-
-          // Build the requested Subsystem Data...
-
-          // PROGRAMMING NOTE: note that we build the requested data
-          // directly in the channel i/o buffer itself (iobuf). This
-          // relieves us from having to allocate/maintain a separate
-          // buffer for it somewhere, and relieves the READ SUBSYSTEM
-          // DATA command (0x3E) from having to copy the data into
-          // the channel buffer from somewhere. Instead it can return
-          // immediately since the data is already in the buffer. (See
-          // the 0x3E: READ SUBSYSTEM DATA command for information).
-
-          // PROGRAMMING NOTE: since at the moment we don't support
-          // asynchronous i/o (all of our i/o's are synchronous), we
-          // return either a Format x'00' (No Message) response if the
-          // Message Id they specified was x'00000000' or, if they
-          // requested the status for a specific Message Id, a format
-          // x'02' (Message Id Status) response with x'00' Operation
-          // Completion Status (I/O Completed).
-
-          if (memcmp( &iobuf[8], "\00\00\00\00", 4 ) == 0)
-          {
-            // Format x'00': "No Message"
-
-            dev->tapssdlen = 9;                     // (Length)
-            STORE_HW ( &iobuf[0], dev->tapssdlen ); // (Length = 9 bytes)
-            iobuf[2] = 0x00;                        // (Format = x'00': "No Message")
-            iobuf[3] = 0x00;                        // (Message Code = none)
-            memcpy( &iobuf[4], &iobuf[8], 4 );      // (Message Id = same as requested)
-            iobuf[8] = 0x00;                        // (Flags = none)
-          }
-          else
-          {
-            // Format x'02': "Message Id Status"
-
-            dev->tapssdlen = 10;                    // (Length)
-            STORE_HW ( &iobuf[0], dev->tapssdlen ); // (Length = 10 bytes)
-            iobuf[2] = 0x02;                        // (Format = x'01: Message Id Status)
-            iobuf[3] = 0x01;                        // (Message Code = Delayed Response)
-            memcpy( &iobuf[4], &iobuf[8], 4 );      // (Message Id = same as requested)
-            iobuf[8] = 0x00;                        // (Reserved)
-            iobuf[9] = 0x00;                        // (Status = "I/O Completed")
-          }
-          break;
 
         } /* End case PSF_ORDER_PRSD */
 
@@ -2284,70 +2299,70 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_SSIC:
         {
-          /*       GA32-0127 IBM 3490E Hardware Reference
+            /*       GA32-0127 IBM 3490E Hardware Reference
 
-          Set Special Intercept Condition (X'1B')
+            Set Special Intercept Condition (X'1B')
 
-          The order controls the activation or deactivation of the
-          special intercept condition associated with the device-path
-          group pair to which the command is issued.  The order is
-          supported by the model if byte 8 bit 4 is active in the data
-          presented to the Read Device Characteristics command.  The
-          order requires an order byte (byte 0) and a flag byte (byte 1).
-          The flag byte is set to 0.
+            The order controls the activation or deactivation of the
+            special intercept condition associated with the device-path
+            group pair to which the command is issued.  The order is
+            supported by the model if byte 8 bit 4 is active in the data
+            presented to the Read Device Characteristics command.  The
+            order requires an order byte (byte 0) and a flag byte (byte 1).
+            The flag byte is set to 0.
 
-          When processed, the command activates the special intercept
-          condition for the device on each channel path that has the
-          same path group ID as the issuing channel path.  The path
-          group ID is considered valid on a given channel path if it
-          is valid for any device on the channel path.  The special
-          intercept condition controls the presentation of attention-
-          intercept status.  The sense data associated with the
-          attention-intercept status indicates ERA code 57.  The special
-          intercept condition also causes the next global command
-          issued to the device-path group pair to be presented unit check
-          status with associated sense data indicating ERA code 53.
+            When processed, the command activates the special intercept
+            condition for the device on each channel path that has the
+            same path group ID as the issuing channel path.  The path
+            group ID is considered valid on a given channel path if it
+            is valid for any device on the channel path.  The special
+            intercept condition controls the presentation of attention-
+            intercept status.  The sense data associated with the
+            attention-intercept status indicates ERA code 57.  The special
+            intercept condition also causes the next global command
+            issued to the device-path group pair to be presented unit check
+            status with associated sense data indicating ERA code 53.
 
-          The special intercept condition is deactivated on a channel
-          path if a reset signal is received on the channel path.  The
-          special intercept condition is deactivated for the device-group
-          pair if a global command is presented unit check status with
-          associated sense data indicating ERA code 53, or if the last
-          path in the associated set of channel paths (that is, with the
-          same valid path group ID) is reset.
+            The special intercept condition is deactivated on a channel
+            path if a reset signal is received on the channel path.  The
+            special intercept condition is deactivated for the device-group
+            pair if a global command is presented unit check status with
+            associated sense data indicating ERA code 53, or if the last
+            path in the associated set of channel paths (that is, with the
+            same valid path group ID) is reset.
 
-          After the Set Special Intercept Condition order is specified
-          in a Perform Subsystem Function command, the command is treated
-          as a global command. If the command is issued while the special
-          intercept condition is active, a unit check status is presented
-          with associated sense data indicating ERA code 53.
+            After the Set Special Intercept Condition order is specified
+            in a Perform Subsystem Function command, the command is treated
+            as a global command. If the command is issued while the special
+            intercept condition is active, a unit check status is presented
+            with associated sense data indicating ERA code 53.
 
-          If a command is issued to a channel path without a valid path
-          group ID (that is, all devices in the reset state), unit check
-          status is presented with associated sense data indicating ERA
-          code 27.
-          */
+            If a command is issued to a channel path without a valid path
+            group ID (that is, all devices in the reset state), unit check
+            status is presented with associated sense data indicating ERA
+            code 27.
+            */
 
-          /* Command reject if Special Intercept Condition not supported */
-          if (!dev->SIC_supported)      // (not supported?)
-          {
-            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            /* Command reject if Special Intercept Condition not supported */
+            if (!dev->SIC_supported)      // (not supported?)
+            {
+                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                break;
+            }
+
+            /* If the command is issued while the Special Intercept  */
+            /* Condition is active, a unit check status is presented */
+            /* with associated sense data indicating ERA code 53.    */
+            if (dev->SIC_active)        // (already active?)
+            {
+                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                dev->SIC_active = 0;      // (reset after UC)
+                break;
+            }
+
+            /* Activate Special Intercept Condition */
+            dev->SIC_active = 1;
             break;
-          }
-
-          /* If the command is issued while the Special Intercept  */
-          /* Condition is active, a unit check status is presented */
-          /* with associated sense data indicating ERA code 53.    */
-          if (dev->SIC_active)        // (already active?)
-          {
-            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-            dev->SIC_active = 0;      // (reset after UC)
-            break;
-          }
-
-          /* Activate Special Intercept Condition */
-          dev->SIC_active = 1;
-          break;
 
         } /* End case PSF_ORDER_SSIC */
 
@@ -2357,87 +2372,87 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /*-----------------------------------------------------------*/
         case PSF_ORDER_MNS:
         {
-          /*       GA32-0127 IBM 3490E Hardware Reference
+            /*       GA32-0127 IBM 3490E Hardware Reference
 
-          Message Not Supported (X'1C')
+            Message Not Supported (X'1C')
 
-          The order transfers 20 bytes of data that identify the host
-          that does not support a prior attention message containing
-          the Notify Nonsupport flag. The order requires an order byte
-          (byte 0), a flag byte (byte 1), and parameter bytes.  The
-          flag byte is set to 0.  The parameter bytes are defined as
-          follows:
+            The order transfers 20 bytes of data that identify the host
+            that does not support a prior attention message containing
+            the Notify Nonsupport flag. The order requires an order byte
+            (byte 0), a flag byte (byte 1), and parameter bytes.  The
+            flag byte is set to 0.  The parameter bytes are defined as
+            follows:
 
-           ________ ________ ____________________________________________
-          | Byte   | Value  | Description                                |
-          |________|________|____________________________________________|
-          | 2      |        | Response Code                              |
-          |________|________|____________________________________________|
-          |        | 0      | Reserved (invalid).                        |
-          |________|________|____________________________________________|
-          |        | 1      | Message rejected.  Unknown format.         |
-          |________|________|____________________________________________|
-          |        | 2      | Message rejected.  Function not supported. |
-          |________|________|____________________________________________|
-          |        | 3-255  | Reserved (invalid).                        |
-          |________|________|____________________________________________|
-          | 3      |        | Channel Path ID (CHPID)                    |
-          |        |        |                                            |
-          |        |        | The byte identifies the channel path that  |
-          |        |        | received the attention message.            |
-          |________|________|____________________________________________|
-          | 4, 5   |        | Device Number                              |
-          |        |        |                                            |
-          |        |        | The bytes identify the device number of    |
-          |        |        | the device that received the attention     |
-          |        |        | message.                                   |
-          |________|________|____________________________________________|
-          | 6, 7   |        | Reserved (must be X'00').                  |
-          |________|________|____________________________________________|
-          | 8-11   |        | Message ID                                 |
-          |        |        |                                            |
-          |        |        | The field contains the message ID that     |
-          |        |        | was presented to the host in the attention |
-          |        |        | message.                                   |
-          |________|________|____________________________________________|
-          | 12-19  |        | System ID                                  |
-          |        |        |                                            |
-          |        |        | The field contains an 8-byte system ID     |
-          |        |        | that identifies the host or host partition |
-          |        |        | responding to the attention message.       |
-          |________|________|____________________________________________|
-          */
+             ________ ________ ____________________________________________
+            | Byte   | Value  | Description                                |
+            |________|________|____________________________________________|
+            | 2      |        | Response Code                              |
+            |________|________|____________________________________________|
+            |        | 0      | Reserved (invalid).                        |
+            |________|________|____________________________________________|
+            |        | 1      | Message rejected.  Unknown format.         |
+            |________|________|____________________________________________|
+            |        | 2      | Message rejected.  Function not supported. |
+            |________|________|____________________________________________|
+            |        | 3-255  | Reserved (invalid).                        |
+            |________|________|____________________________________________|
+            | 3      |        | Channel Path ID (CHPID)                    |
+            |        |        |                                            |
+            |        |        | The byte identifies the channel path that  |
+            |        |        | received the attention message.            |
+            |________|________|____________________________________________|
+            | 4, 5   |        | Device Number                              |
+            |        |        |                                            |
+            |        |        | The bytes identify the device number of    |
+            |        |        | the device that received the attention     |
+            |        |        | message.                                   |
+            |________|________|____________________________________________|
+            | 6, 7   |        | Reserved (must be X'00').                  |
+            |________|________|____________________________________________|
+            | 8-11   |        | Message ID                                 |
+            |        |        |                                            |
+            |        |        | The field contains the message ID that     |
+            |        |        | was presented to the host in the attention |
+            |        |        | message.                                   |
+            |________|________|____________________________________________|
+            | 12-19  |        | System ID                                  |
+            |        |        |                                            |
+            |        |        | The field contains an 8-byte system ID     |
+            |        |        | that identifies the host or host partition |
+            |        |        | responding to the attention message.       |
+            |________|________|____________________________________________|
+            */
 
-          // PROGRAMMING NOTE: none of our responses to the Perform Sub-
-          // System Function order Attention Message sub-order (see the
-          // PSF_ORDER_PRSD case further above) support any flags. Thus
-          // because we never set/request the "Notify Nonsupport" flag
-          // in our Attention Message sub-order response, the host should
-          // never actually ever be issuing this particular order of the
-          // Perform Subsystem Functon command since it shouldn't be
-          // trying to tell us what we never asked it to. Nevertheless
-          // we should probably support it anyway just in case it does
-          // by treating it as a no-op (as long as it's valid of course).
+            // PROGRAMMING NOTE: none of our responses to the Perform Sub-
+            // System Function order Attention Message sub-order (see the
+            // PSF_ORDER_PRSD case further above) support any flags. Thus
+            // because we never set/request the "Notify Nonsupport" flag
+            // in our Attention Message sub-order response, the host should
+            // never actually ever be issuing this particular order of the
+            // Perform Subsystem Functon command since it shouldn't be
+            // trying to tell us what we never asked it to. Nevertheless
+            // we should probably support it anyway just in case it does
+            // by treating it as a no-op (as long as it's valid of course).
 
-          /* Check for valid data (Note: we don't bother validating the
-             Channel Path ID, Device Number, Message ID or System ID) */
-          if (0
-          //  ||  flag != 0x00                      // (flag byte) (note: already checked)
-              || (parm != 0x01 && parm != 0x02)     // (response code)
-              ||  iobuf[6] != 0x00                  // (reserved)
-              ||  iobuf[7] != 0x00                  // (reserved)
-          )
-          {
-            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            /* Check for valid data (Note: we don't bother validating the
+               Channel Path ID, Device Number, Message ID or System ID) */
+            if (0
+            //  ||  flag != 0x00                      // (flag byte) (note: already checked)
+                || (parm != 0x01 && parm != 0x02)     // (response code)
+                ||  iobuf[6] != 0x00                  // (reserved)
+                ||  iobuf[7] != 0x00                  // (reserved)
+            )
+            {
+                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                break;
+            }
+
+            /* Calculate residual byte count */
+            RESIDUAL_CALC (20);
+
+            /* Treat as No-op */
+            build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
             break;
-          }
-
-          /* Calculate residual byte count */
-          RESIDUAL_CALC (20);
-
-          /* Treat as No-op */
-          build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
-          break;
 
         } /* End case PSF_ORDER_MNS */
 
@@ -2446,8 +2461,8 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /*-----------------------------------------------------------*/
         default:
         {
-          build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-          break;
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
         }
 
         } /* End PSF switch (order) */
@@ -2502,6 +2517,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
              TAPEDISPTYP_WAITACT == dev->tapedisptype )
         {
@@ -2509,13 +2525,14 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             UpdateDisplay( dev );
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Do the DSE; exit if error */
         if ((rc = dev->tmh->dse( dev, unitstat, code )) < 0)
             break;      // (error)
 
+        /* Update matrix display if needed */
         if ( TAPEDISPTYP_ERASING == dev->tapedisptype )
         {
             dev->tapedisptype = TAPEDISPTYP_IDLE;
@@ -2656,43 +2673,34 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         switch((iobuf[0] & SPG_SET_COMMAND))
         {
         case SPG_SET_ESTABLISH:
-        {
-          /* Only accept the new pathgroup id when
-             1) it has not yet been set (ie contains zeros) or
-             2) It is set, but we are setting the same value
-          */
-          if (1
-              && memcmp (dev->pgid, "\00\00\00\00\00\00\00\00\00\00\00", 11)
-              && memcmp (dev->pgid,               iobuf+1,               11)
-          )
-          {
-            // (they're trying to change it)
-            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-            break;
-          }
+            /* Only accept the new pathgroup id when
+               1) it has not yet been set (ie contains zeros) or
+               2) It is set, but we are setting the same value */
+            if(memcmp(dev->pgid,
+                 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 11)
+              && memcmp(dev->pgid, iobuf+1, 11))
+            {
+                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                break;
+            }
 
-          /* Bytes 1-11 contain the path group identifier */
-          memcpy (dev->pgid, iobuf+1, 11); // (set initial value)
-          dev->pgstat = SPG_PATHSTAT_GROUPED | SPG_PARTSTAT_IENABLED;
-          build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
-          break;
-        }
+            /* Bytes 1-11 contain the path group identifier */
+            memcpy (dev->pgid, iobuf+1, 11); // (set initial value)
+            dev->pgstat = SPG_PATHSTAT_GROUPED | SPG_PARTSTAT_IENABLED;
+            build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+            break;
 
         case SPG_SET_DISBAND:
-        {
-          dev->pgstat = 0;
-          build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
-          break;
-        }
+            dev->pgstat = 0;
+            build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+            break;
 
         default:
         case SPG_SET_RESIGN:
-        {
-          dev->pgstat = 0;
-          memset (dev->pgid, 0, 11);  // (reset to zero)
-          build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
-          break;
-        }
+            dev->pgstat = 0;
+            memset (dev->pgid, 0, 11);  // (reset to zero)
+            build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+            break;
 
         } // end switch((iobuf[0] & SPG_SET_COMMAND))
 
@@ -2722,10 +2730,8 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
-        if (0
-            || memcmp( iobuf, "\00\00\00\00\00\00\00\00\00\00", 11 ) == 0
-            || memcmp( iobuf,           dev->pgid,              11 ) == 0
-        )
+        if((memcmp(iobuf,"\00\00\00\00\00\00\00\00\00\00",11)==0)
+            || (memcmp(iobuf,dev->pgid,11)==0))
         {
             dev->pgstat |= SPG_PARTSTAT_XENABLED; /* Set Explicit Partition Enabled */
         }
@@ -2867,7 +2873,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         very substantial cost in application performance.
         */
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* set write-immedediate mode and perform sync function */
@@ -2900,9 +2906,14 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
-        dev->pgstat = 0;                                /* Reset to All Implicitly enabled */
-        memset (dev->pgid,   0,          11        );   /* Reset Path group ID password    */
-        memset (dev->drvpwd, 0, sizeof(dev->drvpwd));   /* Reset drive password            */
+        /* Reset to All Implicitly enabled */
+        dev->pgstat=0;
+
+        /* Reset Path group ID password */
+        memset(dev->pgid,0,11);
+
+        /* Reset drive password */
+        memset(dev->drvpwd,0,sizeof(dev->drvpwd));
 
         /* Return unit status */
         build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
@@ -2929,6 +2940,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
 
         // ZZ FIXME: not written yet.
 
+        /* Set command reject sense byte, and unit check status */
         build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
         break;
     }
@@ -3006,7 +3018,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
-        // Assign a unique Message Id for this I/O if needed...
+        /* Assign a unique Message Id for this I/O if needed */
         INCREMENT_MESSAGEID(dev);
 
         /* Process request */
@@ -3066,8 +3078,8 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /* Control information length must be at least 12 bytes */
         if (count < len)
         {
-          build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-          break;
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
         }
 
         /* Byte 0 is the CAC mode-of-use */
@@ -3079,33 +3091,32 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /*-----------------------------------------------------------*/
         case CAC_SET_PASSWORD:
         {
-          /* Password must not be zero                               */
-          /* and the device path must be Explicitly Enabled          */
-
-          if (0
-              || memcmp( iobuf+1, "\00\00\00\00\00\00\00\00\00\00\00", 11 ) == 0
-              || (dev->pgstat & SPG_PARTSTAT_XENABLED) == 0
-          )
-          {
-            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-            break;
-          }
-
-          /* Set Password if none set yet                            */
-          if (memcmp( dev->drvpwd, "\00\00\00\00\00\00\00\00\00\00\00", 11 ) == 0)
-          {
-            memcpy (dev->drvpwd, iobuf+1, 11);
-          }
-          else /* Password already set - they must match             */
-          {
-            if (memcmp( dev->drvpwd, iobuf+1, 11 ) != 0)
+            /* Password must not be zero
+               and the device path must be Explicitly Enabled */
+            if (0
+                || memcmp( iobuf+1, "\00\00\00\00\00\00\00\00\00\00\00", 11 ) == 0
+                || (dev->pgstat & SPG_PARTSTAT_XENABLED) == 0
+            )
             {
-              build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-              break;
+                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                break;
             }
-          }
-          build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
-          break;
+
+            /* Set Password if none set yet */
+            if (memcmp( dev->drvpwd, "\00\00\00\00\00\00\00\00\00\00\00", 11 ) == 0)
+            {
+                memcpy (dev->drvpwd, iobuf+1, 11);
+            }
+            else /* Password already set - they must match */
+            {
+                if (memcmp( dev->drvpwd, iobuf+1, 11 ) != 0)
+                {
+                    build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                    break;
+                }
+            }
+            build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+            break;
         }
 
         /*-----------------------------------------------------------*/
@@ -3114,17 +3125,17 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /*-----------------------------------------------------------*/
         case CAC_COND_ENABLE:
         {
-          /* A drive password must be set and it must match the one given as input */
-          if (0
-              || memcmp( dev->drvpwd, "\00\00\00\00\00\00\00\00\00\00\00", 11 ) == 0
-              || memcmp( dev->drvpwd,                iobuf+1,              11 ) != 0
-          )
-          {
-             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-             break;
-          }
-          build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
-          break;
+            /* A drive password must be set and it must match the one given as input */
+            if (0
+                || memcmp( dev->drvpwd, "\00\00\00\00\00\00\00\00\00\00\00", 11 ) == 0
+                || memcmp( dev->drvpwd, iobuf+1, 11 ) != 0
+            )
+            {
+                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                break;
+            }
+            build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+            break;
         }
 
         /*-----------------------------------------------------------*/
@@ -3133,24 +3144,24 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /*-----------------------------------------------------------*/
         case CAC_COND_DISABLE:
         {
-          /* A drive password is set, it must match the one given as input */
-          if (1
-              && memcmp (dev->drvpwd, "\00\00\00\00\00\00\00\00\00\00\00", 11) != 0
-              && memcmp (dev->drvpwd,                iobuf+1,              11) != 0
-          )
-          {
-             build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-             break;
-          }
+            /* A drive password is set, it must match the one given as input */
+            if (1
+                && memcmp (dev->drvpwd, "\00\00\00\00\00\00\00\00\00\00\00", 11) != 0
+                && memcmp (dev->drvpwd, iobuf+1, 11) != 0
+            )
+            {
+                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                break;
+            }
 
-          build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
-          break;
+            build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+            break;
         }
 
         default:    /* Unsupported Control Access Function */
         {
-          build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
-          break;
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
         }
 
         } /* End switch (iobuf[0]) */
