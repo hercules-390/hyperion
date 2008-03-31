@@ -17,6 +17,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.17  2008/03/30 02:51:34  fish
+// Fix SCSI tape EOV (end of volume) processing
+//
 // Revision 1.16  2007/11/30 14:54:33  jmaynard
 // Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
 //
@@ -710,8 +713,8 @@ ssize_t  w32_write_tape ( ufd_t ufd, const void* buf, size_t nbyte )
     {
         ASSERT( bSuccess || ENOSPC == errno );
         ASSERT( ((size_t)dwBytesWritten) == nbyte );  // (MUST be true!!)
-	    return ( (ssize_t) dwBytesWritten );
-	}
+        return ( (ssize_t) dwBytesWritten );
+    }
 
     // I/O error...
 

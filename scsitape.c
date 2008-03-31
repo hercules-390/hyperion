@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.28  2008/03/30 02:51:33  fish
+// Fix SCSI tape EOV (end of volume) processing
+//
 // Revision 1.27  2008/03/29 08:36:46  fish
 // More complete/extensive 3490/3590 tape support
 //
@@ -1152,14 +1155,14 @@ int rc;
             }
 
             if ( rc < 0)
-	        {
-	            logmsg (_("HHCTA999E Erase Gap error on %u:%4.4X=%s; errno=%d: %s\n"),
-	                    SSID_TO_LCSS(dev->ssid), dev->devnum,
-	                    dev->filename, errno, strerror(errno));
-	            build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
-	            return -1;
-	        }
-	    }
+            {
+                logmsg (_("HHCTA999E Erase Gap error on %u:%4.4X=%s; errno=%d: %s\n"),
+                        SSID_TO_LCSS(dev->ssid), dev->devnum,
+                        dev->filename, errno, strerror(errno));
+                build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
+                return -1;
+            }
+        }
     }
 
     return 0;       // (success)
