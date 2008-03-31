@@ -96,6 +96,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.8  2008/03/31 12:25:24  rbowler
+// tapeccws.c:613: warning: unused parameter 'ccwseq'
+//
 // Revision 1.7  2008/03/31 03:59:05  fish
 // Fix SCSI tape i/o performance: now 10x faster!
 //
@@ -1370,15 +1373,14 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         len = (dev->devchar[8] & 0x01) ? 64 : 32;
         RESIDUAL_CALC (len);
 
-        /* Clear the device sense bytes, copy the device sense bytes
-           to the channel I/O buffer, and then return unit status */
+        /* Clear the device sense bytes */
+        memset (iobuf, 0, num);
 
-        memset (iobuf, 0, num);  // (because we may not support (have)
-                                 // as many bytes as we really should)
+        /* Copy device sense bytes to channel I/O buffer */
+        memcpy (iobuf, dev->sense,
+                dev->numsense < (U32)num ? dev->numsense : (U32)num);
 
-        /* (we can only give them as much as we actually have!) */
-        memcpy (iobuf, dev->sense, min( dev->numsense, (U32)num ));
-
+        /* Return unit status */
         build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
         break;
     }
