@@ -96,6 +96,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.7  2008/03/31 03:59:05  fish
+// Fix SCSI tape i/o performance: now 10x faster!
+//
 // Revision 1.6  2008/03/30 02:51:33  fish
 // Fix SCSI tape EOV (end of volume) processing
 //
@@ -617,6 +620,8 @@ int             drc;                    /* code disposition          */
 BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 static BYTE     supvr_inhibit  = 0;     /* Supvr-Inhibit mode active */
 static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
+
+    UNREFERENCED(ccwseq);
 
     /* Reset flags at start of CCW chain */
     if (dev->ccwseq == 0)
