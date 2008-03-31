@@ -96,6 +96,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.6  2008/03/30 02:51:33  fish
+// Fix SCSI tape EOV (end of volume) processing
+//
 // Revision 1.5  2008/03/29 08:36:46  fish
 // More complete/extensive 3490/3590 tape support
 //
@@ -3578,28 +3581,46 @@ int sense_built;
     {
         if (TapeDevtypeList[i] == dev->devtype)
         {
+            // Clear old sense if we're going to completely rebuild it...
+
+            if (TAPE_BSENSE_STATUSONLY != ERCode)
+            {
+                memset( dev->sense, 0, sizeof(dev->sense) );
+                dev->sns_pending = 0;
+            }
+
+            // Call the primary sense function (e.g. "build_sense_3480_etal")...
+
             TapeSenseTable[TapeDevtypeList[i+4]](ERCode,dev,unitstat,ccwcode);
             sense_built = 1;
-            /* Set FP &  LOADPOINT bit */
-            if(dev->tmh->passedeot(dev))
-            {
-                if (TAPE_BSENSE_STATUSONLY==ERCode &&
-                   ( ccwcode==0x01 || // write
-                     ccwcode==0x17 || // erase gap
-                     ccwcode==0x1F    // write tapemark
-                    )
+
+            // Unit-exception s/b signalled for all write operations
+            // once the end-of-tape (EOT) reflector has been passed...
+
+            if (1
+                && TAPE_BSENSE_STATUSONLY == ERCode
+                &&
+                (0
+                    || 0x01 == ccwcode      // write
+                    || 0x17 == ccwcode      // erase gap
+                    || 0x1F == ccwcode      // write tapemark
                 )
-                {
-                    *unitstat|=CSW_UX;
-                }
+                && dev->tmh->passedeot(dev)
+            )
+            {
+                // We're still in the "Early Warning Zone",
+                // so keep warning them...
+
+                *unitstat |= CSW_UX;        // ("Warning!")
             }
             break;
         }
     }
     if (!sense_built)
     {
-        *unitstat = CSW_CE|CSW_DE|CSW_UC;
+        memset( dev->sense, 0, sizeof(dev->sense) );
         dev->sense[0]=SENSE_EC;
+        *unitstat = CSW_CE|CSW_DE|CSW_UC;
     }
     if (*unitstat & CSW_UC)
     {
@@ -3709,6 +3730,9 @@ void build_sense_3410_3420 (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
         *unitstat = CSW_CE|CSW_DE;
         break;
     } // end switch(ERCode)
+
+    if (TAPE_BSENSE_STATUSONLY == ERCode)
+        return; // (mission accomplished)
 
     /* Fill in the common sense information */
 
@@ -3900,6 +3924,9 @@ int sns4mat = 0x20;
         break;
     } // end switch(ERCode)
 
+    if (TAPE_BSENSE_STATUSONLY == ERCode)
+        return; // (mission accomplished)
+
     /* Fill in the common sense information */
 
     switch(sns4mat)
@@ -4049,6 +4076,9 @@ void build_sense_Streaming (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcod
         *unitstat = CSW_CE|CSW_DE;
         break;
     } // end switch(ERCode)
+
+    if (TAPE_BSENSE_STATUSONLY == ERCode)
+        return; // (mission accomplished)
 
     /* Fill in the common sense information */
 
