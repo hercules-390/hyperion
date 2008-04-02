@@ -35,6 +35,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.82  2008/03/23 06:13:07  rbowler
+// Add MVCOS instruction (part 3)
+//
 // Revision 1.81  2008/03/23 03:03:45  gsmith
 // 22 Mar 2008 fix unbalanced comment - Peter J Farley III - by Greg
 //
@@ -1021,15 +1024,18 @@ int     len1, len2, len3;               /* Work areas for lengths    */
         addr1 = (addr1 + len3) & ADDRESS_MAXWRAP(regs);
         addr2 = (addr2 + len3) & ADDRESS_MAXWRAP(regs);
 
+        /* Adjust remaining length */
+        len -= len3;
+
+        /* Exit if no more bytes to move */
+        if (len == 0) break;
+
         /* Adjust addresses for start of next chunk, or
            translate again if a 2K boundary was crossed */
         main2 = (addr2 & 0x7FF) ? main2 + len3 :
                     MADDR (addr2, space2, regs, ACCTYPE_READ, key2);
         main1 = (addr1 & 0x7FF) ? main1 + len3 :
                     MADDR (addr1, space1, regs, ACCTYPE_WRITE, key1);
-
-        /* Adjust remaining length */
-        len -= len3;
 
     } /* end while(len) */
 
