@@ -1,13 +1,32 @@
 /* DASDCOPY.C   (c) Copyright Roger Bowler, 1999-2007                */
-/*       Copy a dasd file to another dasd file.                      */
-/*       Input file and output file may be compressed or not.        */
-/*       Files may be either ckd (or cckd) or fba (or cfba) but      */
-/*       file types (ckd/cckd or fba/cfba) may not be mixed.         */
-/*-------------------------------------------------------------------*/
+/*              Copy a dasd file to another dasd file                */
 
 // $Id$
-//
+
+/*-------------------------------------------------------------------*/
+/*      This program copies a dasd file to another dasd file.        */
+/*      Input file and output file may be compressed or not.         */
+/*      Files may be either ckd (or cckd) or fba (or cfba) but       */
+/*      file types (ckd/cckd or fba/cfba) may not be mixed.          */
+/*                                                                   */
+/*      Usage:                                                       */
+/*              dasdcopy [-options] ifile [sf=sfile] ofile           */
+/*                                                                   */
+/*      Refer to the usage section below for details of options.     */
+/*                                                                   */
+/*      The program may also be invoked by one of the following      */
+/*      aliases which override the default output file format:       */
+/*                                                                   */
+/*              ckd2cckd [-options] ifile ofile                      */
+/*              cckd2ckd [-options] ifile [sf=sfile] ofile           */
+/*              fba2cfba [-options] ifile ofile                      */
+/*              cfba2fba [-options] ifile [sf=sfile] ofile           */
+/*-------------------------------------------------------------------*/
+
 // $Log$
+// Revision 1.28  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.27  2006/12/08 09:43:19  jj
 // Add CVS message log
 //
