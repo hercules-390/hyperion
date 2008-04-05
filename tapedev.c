@@ -98,6 +98,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.139  2008/03/30 02:51:34  fish
+// Fix SCSI tape EOV (end of volume) processing
+//
 // Revision 1.138  2008/03/29 08:36:46  fish
 // More complete/extensive 3490/3590 tape support
 //
@@ -2435,10 +2438,12 @@ int generic_tmhcall ( GENTMH_PARMS* pGenParms )
 
     switch (pGenParms->action)
     {
+#if defined(OPTION_SCSI_TAPE)
         case GENTMH_SCSI_ACTION_UPDATE_STATUS:
         {
             return update_status_scsitape( pGenParms->dev );
         }
+#endif /* defined(OPTION_SCSI_TAPE) */
 
         default:
         {
