@@ -1,0 +1,10 @@
+* Loop
+stopall
+pause 1
+sysclear
+archmode esame
+r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
+r 200=47FF0200     # BC R0,0           Branch to yourself 
+*
+ostailor null
+restart
