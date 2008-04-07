@@ -1,4 +1,7 @@
 * Loop
+*
+* No-use script for showing high mips rates on the screen.
+*
 stopall
 pause 1
 sysclear
@@ -70,4 +73,13 @@ r 2F8=47000000
 r 2FC=47FF0200 # B 200
 *
 ostailor null
+cpu 0
 restart
+cpu 1
+restart
+cpu 2
+restart
+cpu 3 
+restart
+* Restart the same number of cpus as the underlying machine
+
