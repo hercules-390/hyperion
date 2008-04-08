@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.158  2008/04/08 17:13:26  bernard
+// Added execute relative long instruction
+//
 // Revision 1.157  2008/03/05 00:34:44  ptl00
 // Fix CFC operand size fetch
 //
@@ -3154,7 +3157,7 @@ BYTE   *ip;                             /* -> executed instruction   */
 #endif /*defined(_FEATURE_SIE)*/
 
     /* Fetch from i2 halfwords relative from current */
-    regs->ET += i2 * 2;
+    regs->ET = (regs->psw.IA + i2 * 2) & ADDRESS_MAXWRAP(regs);
 
     /* Fetch target instruction from operand address */
     ip = INSTRUCTION_FETCH(regs, 1);
