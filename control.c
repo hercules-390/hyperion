@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.264  2008/04/08 17:12:03  bernard
+// Added execute relative long instruction
+//
 // Revision 1.263  2008/03/16 00:09:57  rbowler
 // Add MVCOS instruction (part 2)
 //
@@ -3434,11 +3437,12 @@ int     rc;                             /* return code from load_psw */
     newregs.tlbID = 1;
 
     /* Set the breaking event address register in the copy */
+#if !defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+    SET_BEAR_REG(&newregs, newregs.ip - (newregs.execflag ? 4 : 2));
+#else /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
     SET_BEAR_REG(&newregs, newregs.ip - (newregs.execflag ?
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-                                                            newregs.exrl ? 6 :
+                                        newregs.exrl ? 6 : 4 : 2));
 #endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
-                                                                               4 : 2));
 
     /* Save the primary ASN (CR4) and primary STD (CR1) */
     oldpasn = regs->CR_LHL(4);

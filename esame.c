@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.198  2008/04/08 17:12:47  bernard
+// Added execute relative long instruction
+//
 // Revision 1.197  2008/03/16 00:04:37  rbowler
 // Replace ACC_ARMODE by USE_ARMODE for LPTEA
 //
@@ -2232,11 +2235,12 @@ U64     gr0, gr1;                       /* Result register workareas */
         if( OPEN_IC_PTIMER(regs) )
         {
             RELEASE_INTLOCK(regs);
+#if !defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+            UPD_PSW_IA(regs, PSW_IA(regs, !regs->execflag ? -6 : -4));
+#else /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
             UPD_PSW_IA(regs, PSW_IA(regs, !regs->execflag ? -6 :
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-                                                                 regs->exrl ? -6 :
+                                                regs->exrl ? -6 : -4));
 #endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
-                                                                                   -4));
             RETURN_INTCHECK(regs);
         }
     }
