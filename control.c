@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.263  2008/03/16 00:09:57  rbowler
+// Add MVCOS instruction (part 2)
+//
 // Revision 1.262  2008/03/12 23:44:03  rbowler
 // Add MVCOS instruction (part 1)
 //
@@ -3431,7 +3434,11 @@ int     rc;                             /* return code from load_psw */
     newregs.tlbID = 1;
 
     /* Set the breaking event address register in the copy */
-    SET_BEAR_REG(&newregs, newregs.ip - (newregs.execflag ? 4 : 2));
+    SET_BEAR_REG(&newregs, newregs.ip - (newregs.execflag ?
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+                                                            newregs.exrl ? 6 :
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+                                                                               4 : 2));
 
     /* Save the primary ASN (CR4) and primary STD (CR1) */
     oldpasn = regs->CR_LHL(4);

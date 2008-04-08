@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.197  2008/03/16 00:04:37  rbowler
+// Replace ACC_ARMODE by USE_ARMODE for LPTEA
+//
 // Revision 1.196  2008/03/06 16:10:35  rbowler
 // Remove extraneous trailing blanks (cosmetic change only)
 //
@@ -292,7 +295,11 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     S(inst, regs, b2, effective_addr2);
 
     /* Determine the address of the parameter list */
-    pl_addr = !regs->execflag ? PSW_IA(regs, 0) : (regs->ET + 4);
+    pl_addr = !regs->execflag ? PSW_IA(regs, 0) :
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+                                                  regs->exrl ? (regs->ET + 6) :
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+                                                                                (regs->ET + 4);
 
     /* Fetch flags from the instruction address space */
     mn = MADDR (pl_addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
@@ -2225,7 +2232,11 @@ U64     gr0, gr1;                       /* Result register workareas */
         if( OPEN_IC_PTIMER(regs) )
         {
             RELEASE_INTLOCK(regs);
-            UPD_PSW_IA(regs, PSW_IA(regs, !regs->execflag ? -6 : -4));
+            UPD_PSW_IA(regs, PSW_IA(regs, !regs->execflag ? -6 :
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+                                                                 regs->exrl ? -6 :
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+                                                                                   -4));
             RETURN_INTCHECK(regs);
         }
     }

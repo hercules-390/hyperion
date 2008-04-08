@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.82  2008/03/23 06:20:47  rbowler
+// Activate Move-with-Optional-Specifications Facility for ESAME
+//
 // Revision 1.81  2008/03/08 23:34:30  rbowler
 // Activate General Instructions Extension Facility for ESAME
 //
@@ -103,7 +106,7 @@
 #define FEATURE_ESAME
 #define FEATURE_ETF2_ENHANCEMENT                                /*@Z9*/
 #define FEATURE_ETF3_ENHANCEMENT                                /*@Z9*/
-//#define FEATURE_EXECUTE_EXTENSIONS_FACILITY                     /*208*/
+#define FEATURE_EXECUTE_EXTENSIONS_FACILITY                     /*208*/
 #define FEATURE_EXPANDED_STORAGE
 #define FEATURE_EXPEDITED_SIE_SUBSET
 #define FEATURE_EXTENDED_IMMEDIATE                              /*@Z9*/

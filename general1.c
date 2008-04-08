@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.157  2008/03/05 00:34:44  ptl00
+// Fix CFC operand size fetch
+//
 // Revision 1.156  2008/03/04 00:52:32  ptl00
 // Fix BSM/BASSM mode switch trace
 //
@@ -467,7 +470,11 @@ VADR    newia;                          /* New instruction address   */
     regs->GR_L(r1) =
         ( regs->psw.amode )
         ? (0x80000000                 | PSW_IA31(regs, 2))
-        : (((!regs->execflag ? 2 : 4) << 29)
+        : (((!regs->execflag ? 2 :
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+                                   regs->exrl ? 6 :
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+                                                    4) << 29)
         |  (regs->psw.cc << 28)       | (regs->psw.progmask << 24)
         |  PSW_IA24(regs, 2));
 
@@ -3097,7 +3104,11 @@ BYTE   *ip;                             /* -> executed instruction   */
         memcpy (regs->exinst, ip, 8);
 
     /* Program check if recursive execute */
-    if ( regs->exinst[0] == 0x44 )
+    if ( regs->exinst[0] == 0x44
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+                                 || regs->exinst[0] == 0xc6
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+                                                            )
         regs->program_interrupt (regs, PGM_EXECUTE_EXCEPTION);
 
     /* Or 2nd byte of instruction with low-order byte of R1 */
@@ -3109,6 +3120,9 @@ BYTE   *ip;                             /* -> executed instruction   */
      * be incremented back by the instruction decoder.
      */
     regs->execflag = 1;
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+    regs->exrl = 0;
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
     regs->ip -= ILC(regs->exinst[0]);
 
     EXECUTE_INSTRUCTION (regs->exinst, regs);
@@ -3117,6 +3131,59 @@ BYTE   *ip;                             /* -> executed instruction   */
     if (!OPEN_IC_PER(regs))
         regs->execflag = 0;
 }
+
+
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+/*-------------------------------------------------------------------*/
+/* C6   EXRL  - Execute Relative Long                          [RIL] */
+/*-------------------------------------------------------------------*/
+DEF_INST(execute_relative_long)
+{
+int     r1;                             /* Register number           */
+U32     i2;                             /* Relative operand address  */
+int     op;                             /* Should be zero            */
+BYTE   *ip;                             /* -> executed instruction   */
+
+    RIL_B(inst, regs, r1, op, i2);
+
+#if defined(_FEATURE_SIE)
+    /* Ensure that the instruction field is zero, such that
+       zeros are stored in the interception parm field, if
+       the interrupt is intercepted */
+    memset(regs->exinst, 0, 8);
+#endif /*defined(_FEATURE_SIE)*/
+
+    /* Fetch from i2 halfwords relative from current */
+    regs->ET += i2 * 2;
+
+    /* Fetch target instruction from operand address */
+    ip = INSTRUCTION_FETCH(regs, 1);
+    if (ip != regs->exinst)
+        memcpy (regs->exinst, ip, 8);
+
+    /* Program check if recursive execute */
+    if ( regs->exinst[0] == 0x44 || regs->exinst[0] == 0xc6)
+        regs->program_interrupt (regs, PGM_EXECUTE_EXCEPTION);
+
+    /* Or 2nd byte of instruction with low-order byte of R1 */
+    regs->exinst[1] |= r1 ? regs->GR_LHLCL(r1) : 0;
+
+    /*
+     * Turn execflag on indicating this instruction is EXecuted.
+     * psw.ip is backed up by the EXecuted instruction length to
+     * be incremented back by the instruction decoder.
+     */
+    regs->execflag = 1;
+    regs->exrl = 1;
+    regs->ip -= ILC(regs->exinst[0]);
+
+    EXECUTE_INSTRUCTION (regs->exinst, regs);
+
+    /* Leave execflag on if pending PER so ILC will reflect EX */
+    if (!OPEN_IC_PER(regs))
+        regs->execflag = 0;
+}
+#endif /* defined(FEATURE_EXECUTE_EXTENSION_FACILITY) */
 
 
 #if defined(FEATURE_ACCESS_REGISTERS)

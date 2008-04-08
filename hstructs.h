@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.83  2008/03/30 02:51:33  fish
+// Fix SCSI tape EOV (end of volume) processing
+//
 // Revision 1.82  2008/03/29 08:36:46  fish
 // More complete/extensive 3490/3590 tape support
 //
@@ -155,6 +158,7 @@ struct REGS {                           /* Processor registers       */
 
         unsigned int                    /* Flags (cpu thread only)   */
                 execflag:1,             /* 1=EXecuted instruction    */
+                exrl:1,                 /* 1=EXRL, 0=EX instruction  */
                 permode:1,              /* 1=PER active              */
                 instinvalid:1,          /* 1=Inst field is invalid   */
                 opinterv:1,             /* 1=Operator intervening    */

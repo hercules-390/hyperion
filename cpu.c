@@ -30,6 +30,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.197  2008/02/19 11:49:19  ivan
+// - Move setting of CPU priority after spwaning timer thread
+// - Added support for Posix 1003.1e capabilities
+//
 // Revision 1.196  2008/02/12 18:23:39  jj
 // 1. SPKA was missing protection check (PIC04) because
 //    AIA regs were not purged.
@@ -508,7 +512,11 @@ static char *pgmintname[] = {
     {
         /* This can happen if BALR, BASR, BASSM or BSM
            program checks during trace */
-        ilc = realregs->execflag ? 4 : 2;
+        ilc = realregs->execflag ?
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+                                   realregs->exrl ? 6 :
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+                                                        4 : 2;
         realregs->ip += 2;
         realregs->psw.IA += ilc;
     }
@@ -520,7 +528,11 @@ static char *pgmintname[] = {
         if (realregs->guestregs->psw.ilc == 0
          && !realregs->guestregs->psw.zeroilc)
         {
-            sie_ilc = realregs->guestregs->execflag ? 4 : 2;
+            sie_ilc = realregs->guestregs->execflag ?
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+                                                      realregs->guestregs->exrl ? 6 :
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+                                                                                      4 : 2;
             realregs->guestregs->ip += 2;
         }
     }
