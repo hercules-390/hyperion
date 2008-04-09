@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.62  2008/03/07 17:46:42  ptl00
+// Add pri, sec, home options to v command
+//
 // Revision 1.61  2008/02/19 11:49:19  ivan
 // - Move setting of CPU priority after spwaning timer thread
 // - Added support for Posix 1003.1e capabilities
@@ -1252,7 +1255,11 @@ REGS   *regs;                           /* Copied regs               */
                                                 ACCTYPE_READ);
         else
             n = ARCH_DEP(display_virt) (regs, addr1, buf, b1,
-                                (opcode == 0x44 ? ACCTYPE_INSTFETCH :
+                                (opcode == 0x44 
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+                                 || (opcode == 0xc6 && !(inst[1] & 0x0f))
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+                                                ? ACCTYPE_INSTFETCH :
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ));
         if(sysblk.cpus>1)
