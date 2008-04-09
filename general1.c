@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.161  2008/04/09 07:05:19  bernard
+// EXRL has format C6x0, not C6. Thanks Roger!
+//
 // Revision 1.160  2008/04/09 05:38:57  bernard
 // Instruction fetching error, now fetched with PSW_IA macro.
 //
@@ -3188,7 +3191,7 @@ BYTE   *ip;                             /* -> executed instruction   */
 
     EXECUTE_INSTRUCTION (regs->exinst, regs);
 
-    /* Leave execflag on if pending PER so ILC will reflect EX */
+    /* Leave execflag on if pending PER so ILC will reflect EXRL */
     if (!OPEN_IC_PER(regs))
         regs->execflag = 0;
 }
