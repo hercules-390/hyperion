@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.159  2008/04/08 18:33:41  bernard
+// Error in EXRL
+//
 // Revision 1.158  2008/04/08 17:13:26  bernard
 // Added execute relative long instruction
 //
@@ -3147,7 +3150,10 @@ U32     i2;                             /* Relative operand address  */
 int     op;                             /* Should be zero            */
 BYTE   *ip;                             /* -> executed instruction   */
 
-    RIL_B(inst, regs, r1, op, i2);
+    RIL(inst, regs, r1, op, i2);
+
+    /* Fetch from i2 halfwords relative from current */
+    regs->ET = PSW_IA(regs, i2 * 2);
 
 #if defined(_FEATURE_SIE)
     /* Ensure that the instruction field is zero, such that
@@ -3155,9 +3161,6 @@ BYTE   *ip;                             /* -> executed instruction   */
        the interrupt is intercepted */
     memset(regs->exinst, 0, 8);
 #endif /*defined(_FEATURE_SIE)*/
-
-    /* Fetch from i2 halfwords relative from current */
-    regs->ET = (regs->psw.IA + i2 * 2) & ADDRESS_MAXWRAP(regs);
 
     /* Fetch target instruction from operand address */
     ip = INSTRUCTION_FETCH(regs, 1);
