@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.106  2007/12/10 23:12:02  gsmith
+// Tweaks to OPTION_MIPS_COUNTING processing
+//
 // Revision 1.105  2007/06/23 00:04:15  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -905,18 +908,23 @@ int     n;
             GUESTREGS->ip = GUESTREGS->inst;
 
         /* Update interception parameters in the state descriptor */
-        if(GUESTREGS->ip[0] != 0x44)
-        {
-            if(!GUESTREGS->instinvalid)
-                memcpy(STATEBK->ipa, GUESTREGS->ip, ILC(GUESTREGS->ip[0]));
-        }
-        else
+        if(GUESTREGS->ip[0] == 0x44
+#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
+           || (GUESTREGS->ip[0] == 0xc6 && !(GUESTREGS->ip[1] & 0x0f))
+#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+                                                                       )
         {
         int exilc;
             STATEBK->f |= SIE_F_EX;
             exilc = ILC(GUESTREGS->exinst[0]);
             memcpy(STATEBK->ipa, GUESTREGS->exinst, exilc);
         }
+        else
+        {
+            if(!GUESTREGS->instinvalid)
+                memcpy(STATEBK->ipa, GUESTREGS->ip, ILC(GUESTREGS->ip[0]));
+        }
+
     }
 
 }
