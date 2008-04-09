@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.198  2008/04/08 17:12:29  bernard
+// Added execute relative long instruction
+//
 // Revision 1.197  2008/02/19 11:49:19  ivan
 // - Move setting of CPU priority after spwaning timer thread
 // - Added support for Posix 1003.1e capabilities
@@ -530,9 +533,9 @@ static char *pgmintname[] = {
         {
             sie_ilc = realregs->guestregs->execflag ?
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-                                                      realregs->guestregs->exrl ? 6 :
+                      realregs->guestregs->exrl ? 6 :
 #endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
-                                                                                      4 : 2;
+                                                      4 : 2;
             realregs->guestregs->ip += 2;
         }
     }
