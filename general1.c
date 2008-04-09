@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.162  2008/04/09 07:15:14  bernard
+// Comment Roger
+//
 // Revision 1.161  2008/04/09 07:05:19  bernard
 // EXRL has format C6x0, not C6. Thanks Roger!
 //
@@ -3118,9 +3121,9 @@ BYTE   *ip;                             /* -> executed instruction   */
     /* Program check if recursive execute */
     if ( regs->exinst[0] == 0x44
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-                                 || (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f))
+         || (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f))
 #endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
-                                                            )
+                                                                   )
         regs->program_interrupt (regs, PGM_EXECUTE_EXCEPTION);
 
     /* Or 2nd byte of instruction with low-order byte of R1 */
@@ -3174,7 +3177,8 @@ BYTE   *ip;                             /* -> executed instruction   */
         memcpy (regs->exinst, ip, 8);
 
     /* Program check if recursive execute */
-    if ( regs->exinst[0] == 0x44 || (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f)) )
+    if ( regs->exinst[0] == 0x44 || 
+         (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f)) )
         regs->program_interrupt (regs, PGM_EXECUTE_EXCEPTION);
 
     /* Or 2nd byte of instruction with low-order byte of R1 */

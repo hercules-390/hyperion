@@ -25,6 +25,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.87  2008/04/08 17:15:10  bernard
+// Added execute relative long instruction
+//
 // Revision 1.86  2008/03/01 00:00:34  ptl00
 // Fix TRAP in z/Arch mode
 //
@@ -363,7 +366,8 @@ int  i;
 
     /* Set the Breaking Event Address Register */
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-    SET_BEAR_REG(regs, regs->ip - (trap_is_trap4 ? 4 : regs->execflag ? regs->exrl ? 6 : 4 : 2));
+    SET_BEAR_REG(regs, regs->ip - 
+      (trap_is_trap4 ? 4 : regs->execflag ? regs->exrl ? 6 : 4 : 2));
 #else
     SET_BEAR_REG(regs, regs->ip - ((trap_is_trap4 || regs->execflag) ? 4 : 2));
 #endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/

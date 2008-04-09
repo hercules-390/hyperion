@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.199  2008/04/08 23:57:15  rbowler
+// Fix '#' : invalid character : possibly the result of a macro expansion
+//
 // Revision 1.198  2008/04/08 17:12:47  bernard
 // Added execute relative long instruction
 //
@@ -300,9 +303,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* Determine the address of the parameter list */
     pl_addr = !regs->execflag ? PSW_IA(regs, 0) :
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-                                                  regs->exrl ? (regs->ET + 6) :
+               regs->exrl ? (regs->ET + 6) :
 #endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
-                                                                                (regs->ET + 4);
+                                                  (regs->ET + 4);
 
     /* Fetch flags from the instruction address space */
     mn = MADDR (pl_addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
