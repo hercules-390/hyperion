@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.163  2008/04/09 07:38:09  bernard
+// Allign to Rogers terminal ;-)
+//
 // Revision 1.162  2008/04/09 07:15:14  bernard
 // Comment Roger
 //
@@ -3155,14 +3158,9 @@ BYTE   *ip;                             /* -> executed instruction   */
 DEF_INST(execute_relative_long)
 {
 int     r1;                             /* Register number           */
-U32     i2;                             /* Relative operand address  */
-int     op;                             /* Should be zero            */
 BYTE   *ip;                             /* -> executed instruction   */
 
-    RIL(inst, regs, r1, op, i2);
-
-    /* Fetch from i2 halfwords relative from current */
-    regs->ET = PSW_IA(regs, i2 * 2);
+    RIL_A(inst, regs, r1, regs->ET);
 
 #if defined(_FEATURE_SIE)
     /* Ensure that the instruction field is zero, such that
@@ -3175,6 +3173,27 @@ BYTE   *ip;                             /* -> executed instruction   */
     ip = INSTRUCTION_FETCH(regs, 1);
     if (ip != regs->exinst)
         memcpy (regs->exinst, ip, 8);
+
+#if 1
+    /* Display target instruction if stepping or tracing */
+    if (CPU_STEPPING_OR_TRACING(regs, 6))
+    {
+        int n, ilc;
+        char buf[256];
+      #if defined(FEATURE_ESAME)
+        n = sprintf (buf, "EXRL target  ADDR="F_VADR"    ", regs->ET);
+      #else
+        n = sprintf (buf, "EXRL  ADDR="F_VADR"  ", regs->ET);
+      #endif
+        ilc = ILC(ip[0]);
+        n += sprintf (buf+n, " INST=%2.2X%2.2X", ip[0], ip[1]);
+        if (ilc > 2) n += sprintf (buf+n, "%2.2X%2.2X", ip[2], ip[3]);
+        if (ilc > 4) n += sprintf (buf+n, "%2.2X%2.2X", ip[4], ip[5]);
+        logmsg ("%s %s", buf,(ilc<4) ? "        " : (ilc<6) ? "    " : "");
+        DISASM_INSTRUCTION(ip);
+        logmsg ("\n");
+    }
+#endif
 
     /* Program check if recursive execute */
     if ( regs->exinst[0] == 0x44 || 
