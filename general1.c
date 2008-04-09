@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.160  2008/04/09 05:38:57  bernard
+// Instruction fetching error, now fetched with PSW_IA macro.
+//
 // Revision 1.159  2008/04/08 18:33:41  bernard
 // Error in EXRL
 //
@@ -3112,7 +3115,7 @@ BYTE   *ip;                             /* -> executed instruction   */
     /* Program check if recursive execute */
     if ( regs->exinst[0] == 0x44
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-                                 || regs->exinst[0] == 0xc6
+                                 || (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f))
 #endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
                                                             )
         regs->program_interrupt (regs, PGM_EXECUTE_EXCEPTION);
@@ -3141,7 +3144,7 @@ BYTE   *ip;                             /* -> executed instruction   */
 
 #if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
 /*-------------------------------------------------------------------*/
-/* C6   EXRL  - Execute Relative Long                          [RIL] */
+/* C6x0 EXRL  - Execute Relative Long                          [RIL] */
 /*-------------------------------------------------------------------*/
 DEF_INST(execute_relative_long)
 {
@@ -3168,7 +3171,7 @@ BYTE   *ip;                             /* -> executed instruction   */
         memcpy (regs->exinst, ip, 8);
 
     /* Program check if recursive execute */
-    if ( regs->exinst[0] == 0x44 || regs->exinst[0] == 0xc6)
+    if ( regs->exinst[0] == 0x44 || (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f)) )
         regs->program_interrupt (regs, PGM_EXECUTE_EXCEPTION);
 
     /* Or 2nd byte of instruction with low-order byte of R1 */
