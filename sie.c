@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.107  2008/04/09 09:03:58  bernard
+// EXRL instruction implementation
+//
 // Revision 1.106  2007/12/10 23:12:02  gsmith
 // Tweaks to OPTION_MIPS_COUNTING processing
 //
@@ -1080,9 +1083,13 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
+                    UNROLLED_EXECUTE(GUESTREGS);
 
-                    GUESTREGS->instcount += 8;
+                    GUESTREGS->instcount += 12;
 
+                    UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
