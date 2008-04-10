@@ -11,24 +11,63 @@ dist_pkgdata_DATA = \
     st.core
 
 EXTRA_DIST =        \
+    alsi.txt        \
     axtr.txt        \
+    brc.txt         \
+    cdgr.txt        \
     cgdtr.txt       \
+    cgfrl.txt       \
     cgxtr.txt       \
+    cpsdr.txt       \
     csst.txt        \
     cxgbr.txt       \
     cxgtr.txt       \
     dxtr.txt        \
+    epsw.txt        \
+    exrl.txt        \
     fixtr.txt       \
     iedtr.txt       \
+    kimd0.txt       \
+    kimd1.txt       \
+    kimd2.txt       \
+    kimd3.txt       \
+    klmd0.txt       \
+    klmd1.txt       \
+    klmd2.txt       \
+    klmd3.txt       \
+    km0.txt         \
+    km1.txt         \
+    km18.txt        \
+    km19.txt        \
+    km2.txt         \
+    km20.txt        \
+    km3.txt         \
+    kmac0.txt       \
+    kmac1.txt       \
+    kmac2.txt       \
+    kmac3.txt       \
+    kmc0.txt        \
+    kmc1.txt        \
+    kmc18.txt       \
+    kmc19.txt       \
+    kmc2.txt        \
+    kmc20.txt       \
+    kmc3.txt        \
+    kmc67.txt       \
     ldetr.txt       \
     ldxtr.txt       \
     ledtr.txt       \
+    lfpc.txt        \
+    loop.txt        \
     lxdtr.txt       \
+    maer.txt        \
     mxtr.txt        \
     prtest.txt      \
+    rnsbg.txt       \
     rrdtr.txt       \
     rrxtr.txt       \
     srdt.txt        \
     tapepos.txt     \
     tdcdt.txt       \
-    tdgdt.txt
+    tdgdt.txt       \
+    trte.txt
