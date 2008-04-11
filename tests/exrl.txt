@@ -6,10 +6,10 @@ archmode esame
 r 1A0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1D0=0000000180000000000000000000030A # z/Arch pgm new PSW
 r 200=41100000     # LA R1,0
-r 204=C610000000FE # EXRL R1,*+196     Should load R2 with X'FF'
+r 204=C610000000FE # EXRL R1,*+196     Should load R2 with A(C1)
 r 20A=44000212     # EX1 EX 0,BR1      Should branch to C1
 r 20E=47F00300     # B DIE             Should not occur    
-r 212=47F00288     # BR1 B C1          Executed instruction
+r 212=0542         # BR1 BALR R4,R2    Executed instruction
 r 288=C0100000000A # C1 LARL R1,C2     Addr to resume after PIC
 r 28E=E31001D80024 # STG R2,PGMNPSW+8  Update pgm new PSW
 r 294=440002AE     # EX 0,EX2          Should cause PIC=0003
@@ -30,7 +30,7 @@ r 2D8=B2B20310     # LPSWE WAITPSW     Load enabled wait PSW
 r 300=B2B20320     # DIE LPSWE DEADPSW Load disabled wait PSW
 r 310=07020001800000000123456789ABCDEF # WAITPSW Enabled wait state PSW
 r 320=0002000180000000000000000000DEAD # z/Arch disabled wait PSW
-r 400=412000FF     # LA R2,X'FF'
+r 400=41200288     # LA R2,C1
 r 410=000000000000020A                 # =A(EX1)
 r 420=00000000000002AE                 # =A(EX2)
 *
