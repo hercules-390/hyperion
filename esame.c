@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.200  2008/04/09 07:36:51  bernard
+// Allign to Rogers terminal ;-)
+//
 // Revision 1.199  2008/04/08 23:57:15  rbowler
 // Fix '#' : invalid character : possibly the result of a macro expansion
 //
@@ -302,10 +305,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Determine the address of the parameter list */
     pl_addr = !regs->execflag ? PSW_IA(regs, 0) :
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-               regs->exrl ? (regs->ET + 6) :
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
-                                                  (regs->ET + 4);
+               regs->exrl ? (regs->ET + 6) : (regs->ET + 4);
 
     /* Fetch flags from the instruction address space */
     mn = MADDR (pl_addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
@@ -2238,12 +2238,8 @@ U64     gr0, gr1;                       /* Result register workareas */
         if( OPEN_IC_PTIMER(regs) )
         {
             RELEASE_INTLOCK(regs);
-#if !defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-            UPD_PSW_IA(regs, PSW_IA(regs, !regs->execflag ? -6 : -4));
-#else /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
             UPD_PSW_IA(regs, PSW_IA(regs, !regs->execflag ? -6 :
                                                 regs->exrl ? -6 : -4));
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
             RETURN_INTCHECK(regs);
         }
     }

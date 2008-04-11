@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.225  2008/04/09 06:53:05  bernard
+// Changes on request of Roger Bowler (No functional change)
+//
 // Revision 1.224  2008/04/08 17:14:36  bernard
 // Added execute relative long instruction
 //
@@ -243,13 +246,8 @@ typedef void (ATTR_REGPARM(2) *zz_func) (BYTE inst[], REGS *regs);
 
 #define ILC(_b) ((_b) < 0x40 ? 2 : (_b) < 0xc0 ? 4 : 6)
 
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
 #define REAL_ILC(_regs) \
- (unlikely(!(_regs)->execflag) ? (_regs)->psw.ilc : (_regs)->exrl ? 6 : 4)
-#else
-#define REAL_ILC(_regs) \
- (likely(!(_regs)->execflag) ? (_regs)->psw.ilc : 4)
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
+ (likely(!(_regs)->execflag) ? (_regs)->psw.ilc : (_regs)->exrl ? 6 : 4)
 
 /* Gabor Hoffer (performance option) */
 OPC_DLL_IMPORT zz_func s370_opcode_table[];
@@ -502,7 +500,6 @@ do { \
 
 /* Branching */
 
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
 #define SUCCESSFUL_BRANCH(_regs, _addr, _len) \
 do { \
   VADR _newia; \
@@ -524,27 +521,7 @@ do { \
     PER_SB((_regs), (_regs)->psw.IA); \
   } \
 } while (0)
-#else
-#define SUCCESSFUL_BRANCH(_regs, _addr, _len) \
-do { \
-  VADR _newia; \
-  UPDATE_BEAR((_regs), 0); \
-  _newia = (_addr) & ADDRESS_MAXWRAP((_regs)); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_newia & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV)) { \
-    (_regs)->ip = (BYTE *)((uintptr_t)(_regs)->aim ^ (uintptr_t)_newia); \
-    return; \
-  } else { \
-    if (unlikely((_regs)->execflag)) \
-      UPDATE_BEAR((_regs), (_len) - 4); \
-    (_regs)->psw.IA = _newia; \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
-} while (0)
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
 
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
 #define SUCCESSFUL_RELATIVE_BRANCH(_regs, _offset, _len) \
 do { \
   UPDATE_BEAR((_regs), 0); \
@@ -568,31 +545,8 @@ do { \
     PER_SB((_regs), (_regs)->psw.IA); \
   } \
 } while (0)
-#else
-#define SUCCESSFUL_RELATIVE_BRANCH(_regs, _offset, _len) \
-do { \
-  UPDATE_BEAR((_regs), 0); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_regs)->ip + (_offset) >= (_regs)->aip) \
-   && likely((_regs)->ip + (_offset) <  (_regs)->aie)) { \
-    (_regs)->ip += (_offset); \
-    return; \
-  } else { \
-    if (likely(!(_regs)->execflag)) \
-      (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
-    else { \
-      UPDATE_BEAR((_regs), (_len) - 4); \
-      (_regs)->psw.IA = (_regs)->ET + (_offset); \
-      (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-    } \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
-} while (0)
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
 
 /* BRCL, BRASL can branch +/- 4G.  This is problematic on a 32 bit host */
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
 #define SUCCESSFUL_RELATIVE_BRANCH_LONG(_regs, _offset) \
 do { \
   UPDATE_BEAR((_regs), 0); \
@@ -618,30 +572,6 @@ do { \
     PER_SB((_regs), (_regs)->psw.IA); \
   } \
 } while (0)
-#else
-#define SUCCESSFUL_RELATIVE_BRANCH_LONG(_regs, _offset) \
-do { \
-  UPDATE_BEAR((_regs), 0); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_offset) > -4096) \
-   && likely((_offset) <  4096) \
-   && likely((_regs)->ip + (_offset) >= (_regs)->aip) \
-   && likely((_regs)->ip + (_offset) <  (_regs)->aie)) { \
-    (_regs)->ip += (_offset); \
-    return; \
-  } else { \
-    if (likely(!(_regs)->execflag)) \
-      (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
-    else { \
-      UPDATE_BEAR((_regs), 6 - 4); \
-      (_regs)->psw.IA = (_regs)->ET + (_offset); \
-      (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-    } \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
-} while (0)
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
 
 /* CPU Stepping or Tracing */
 

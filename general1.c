@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.164  2008/04/09 12:01:35  rbowler
+// Correct target instruction address for EXRL
+//
 // Revision 1.163  2008/04/09 07:38:09  bernard
 // Allign to Rogers terminal ;-)
 //
@@ -488,11 +491,7 @@ VADR    newia;                          /* New instruction address   */
     regs->GR_L(r1) =
         ( regs->psw.amode )
         ? (0x80000000                 | PSW_IA31(regs, 2))
-        : (((!regs->execflag ? 2 :
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-                                   regs->exrl ? 6 :
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
-                                                    4) << 29)
+        : (((!regs->execflag ? 2 : regs->exrl ? 6 : 4) << 29)
         |  (regs->psw.cc << 28)       | (regs->psw.progmask << 24)
         |  PSW_IA24(regs, 2));
 
@@ -3138,9 +3137,7 @@ BYTE   *ip;                             /* -> executed instruction   */
      * be incremented back by the instruction decoder.
      */
     regs->execflag = 1;
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
     regs->exrl = 0;
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
     regs->ip -= ILC(regs->exinst[0]);
 
     EXECUTE_INSTRUCTION (regs->exinst, regs);

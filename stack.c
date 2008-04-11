@@ -25,6 +25,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.88  2008/04/09 07:38:58  bernard
+// Allign to Rogers terminal ;-)
+//
 // Revision 1.87  2008/04/08 17:15:10  bernard
 // Added execute relative long instruction
 //
@@ -365,12 +368,8 @@ int  i;
     SET_PSW_IA(regs);
 
     /* Set the Breaking Event Address Register */
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
     SET_BEAR_REG(regs, regs->ip - 
       (trap_is_trap4 ? 4 : regs->execflag ? regs->exrl ? 6 : 4 : 2));
-#else
-    SET_BEAR_REG(regs, regs->ip - ((trap_is_trap4 || regs->execflag) ? 4 : 2));
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
     UPD_PSW_IA(regs, trap_ia);

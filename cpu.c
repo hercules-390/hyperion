@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.199  2008/04/09 07:35:32  bernard
+// allign to Rogers terminal ;-)
+//
 // Revision 1.198  2008/04/08 17:12:29  bernard
 // Added execute relative long instruction
 //
@@ -515,11 +518,7 @@ static char *pgmintname[] = {
     {
         /* This can happen if BALR, BASR, BASSM or BSM
            program checks during trace */
-        ilc = realregs->execflag ?
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-                                   realregs->exrl ? 6 :
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
-                                                        4 : 2;
+        ilc = realregs->execflag ? realregs->exrl ? 6 : 4 : 2;
         realregs->ip += 2;
         realregs->psw.IA += ilc;
     }
@@ -532,10 +531,7 @@ static char *pgmintname[] = {
          && !realregs->guestregs->psw.zeroilc)
         {
             sie_ilc = realregs->guestregs->execflag ?
-#if defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)
-                      realregs->guestregs->exrl ? 6 :
-#endif /*defined(FEATURE_EXECUTE_EXTENSIONS_FACILITY)*/
-                                                      4 : 2;
+                      realregs->guestregs->exrl ? 6 : 4 : 2;
             realregs->guestregs->ip += 2;
         }
     }
