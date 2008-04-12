@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.226  2008/04/11 14:29:17  bernard
+// Integrate regs->exrl into base Hercules code.
+//
 // Revision 1.225  2008/04/09 06:53:05  bernard
 // Changes on request of Roger Bowler (No functional change)
 //
@@ -510,12 +513,8 @@ do { \
     (_regs)->ip = (BYTE *)((uintptr_t)(_regs)->aim ^ (uintptr_t)_newia); \
     return; \
   } else { \
-    if (unlikely((_regs)->execflag)) { \
-      if ((_regs)->exrl) \
-        UPDATE_BEAR((_regs), (_len) - 6); \
-      else \
-        UPDATE_BEAR((_regs), (_len) - 4); \
-    } \
+    if (unlikely((_regs)->execflag)) \
+      UPDATE_BEAR((_regs), (_len) - ((_regs)->exrl ? 6 : 4)); \
     (_regs)->psw.IA = _newia; \
     (_regs)->aie = NULL; \
     PER_SB((_regs), (_regs)->psw.IA); \
@@ -534,10 +533,7 @@ do { \
     if (likely(!(_regs)->execflag)) \
       (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
     else { \
-      if ((_regs)->exrl) \
-        UPDATE_BEAR((_regs), (_len) - 6); \
-      else \
-        UPDATE_BEAR((_regs), (_len) - 4); \
+      UPDATE_BEAR((_regs), (_len) - ((_regs)->exrl ? 6 : 4)); \
       (_regs)->psw.IA = (_regs)->ET + (_offset); \
       (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
     } \
@@ -561,10 +557,7 @@ do { \
     if (likely(!(_regs)->execflag)) \
       (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
     else { \
-      if ((_regs)->exrl) \
-        UPDATE_BEAR((_regs), 6 - 6); \
-      else \
-        UPDATE_BEAR((_regs), 6 - 4); \
+      UPDATE_BEAR((_regs), 6 - ((_regs)->exrl ? 6 : 4)); \
       (_regs)->psw.IA = (_regs)->ET + (_offset); \
       (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
     } \
