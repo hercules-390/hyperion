@@ -18,6 +18,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.240  2008/03/28 02:09:42  fish
+// Add --blkid-24 option support, poserror flag renamed to fenced,
+// added 'generic', 'readblkid' and 'locateblk' tape media handler
+// call vectors.
+//
 // Revision 1.239  2008/03/25 11:41:31  fish
 // SCSI TAPE MODS part 1: groundwork: non-functional changes:
 // rename some functions, comments, general restructuring, etc.
@@ -4529,6 +4534,72 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
             }
             break;
           }
+          case 0xC4:
+          {
+            for(i2 = 0; i2 < 16; i2++)
+            {
+              if(sysblk.imapc4[i2])
+              {
+                opcode1[i] = i1;
+                opcode2[i] = i2;
+                count[i++] = sysblk.imapc4[i2];
+                total += sysblk.imapc4[i2];
+                if(i == 499)
+                {
+                  logmsg("Sorry, too many instructions\n");
+                  free(opcode1);
+                  free(opcode2);
+                  free(count);
+                  return 0;
+                }
+              }
+            }
+            break;
+          }
+          case 0xC6:
+          {
+            for(i2 = 0; i2 < 16; i2++)
+            {
+              if(sysblk.imapc6[i2])
+              {
+                opcode1[i] = i1;
+                opcode2[i] = i2;
+                count[i++] = sysblk.imapc6[i2];
+                total += sysblk.imapc6[i2];
+                if(i == 499)
+                {
+                  logmsg("Sorry, too many instructions\n");
+                  free(opcode1);
+                  free(opcode2);
+                  free(count);
+                  return 0;
+                }
+              }
+            }
+            break;
+          }
+          case 0xC8:
+          {
+            for(i2 = 0; i2 < 16; i2++)
+            {
+              if(sysblk.imapc8[i2])
+              {
+                opcode1[i] = i1;
+                opcode2[i] = i2;
+                count[i++] = sysblk.imapc8[i2];
+                total += sysblk.imapc8[i2];
+                if(i == 499)
+                {
+                  logmsg("Sorry, too many instructions\n");
+                  free(opcode1);
+                  free(opcode2);
+                  free(count);
+                  return 0;
+                }
+              }
+            }
+            break;
+          }
           case 0xE3:
           {
             for(i2 = 0; i2 < 256; i2++)
@@ -4760,6 +4831,21 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
             logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
             break;
           }
+          case 0xC4:
+          {
+            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            break;
+          }
+          case 0xC6:
+          {
+            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            break;
+          }
+          case 0xC8:
+          {
+            logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
+            break;
+          }
           case 0xE3:
           {
             logmsg("          INST=%2.2X%2.2X\tCOUNT=%10" I64_FMT "u\t(%2d%)\n", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
@@ -4868,6 +4954,24 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                         logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",  /*@Z9*/
                             i1, i2, sysblk.imapc2[i2]);                     /*@Z9*/
                 break;                                                      /*@Z9*/
+            case 0xC4:                                                      
+                for(i2 = 0; i2 < 16; i2++)                                  
+                    if(sysblk.imapc4[i2])                                   
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",  
+                            i1, i2, sysblk.imapc4[i2]);                     
+                break;                                                      
+            case 0xC6:                                                      
+                for(i2 = 0; i2 < 16; i2++)                                  
+                    if(sysblk.imapc6[i2])                                   
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",  
+                            i1, i2, sysblk.imapc6[i2]);                     
+                break;                                                      
+            case 0xC8:                                                      
+                for(i2 = 0; i2 < 16; i2++)                                  
+                    if(sysblk.imapc8[i2])                                   
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",  
+                            i1, i2, sysblk.imapc8[i2]);                     
+                break;                                                      
             case 0xE3:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape3[i2])
