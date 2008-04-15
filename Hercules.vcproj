@@ -1730,6 +1730,10 @@
                         >
                     </File>
                     <File
+                        RelativePath=".\tests\fiebr.txt"
+                        >
+                    </File>
+                    <File
                         RelativePath=".\tests\fixtr.txt"
                         >
                     </File>

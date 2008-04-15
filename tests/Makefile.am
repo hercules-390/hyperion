@@ -25,6 +25,7 @@ EXTRA_DIST =        \
     dxtr.txt        \
     epsw.txt        \
     exrl.txt        \
+    fiebr.txt       \
     fixtr.txt       \
     iedtr.txt       \
     kimd0.txt       \
