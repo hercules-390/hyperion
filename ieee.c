@@ -40,8 +40,8 @@
  * floating point instructions.
  *
  * Rounding:
- * The native IEEE implementation can be set to apply the rounding
- * as specified in the FPC.  This is not yet implemented.
+ * The native IEEE implementation is set to apply the rounding
+ * as specified in the FPC register or the instruction mask.
  * The Rounding and Range Function is not explicitly implemented.
  * Most of its functionality should be covered by the native floating
  * point implementation.  However, there are some cases where use of
@@ -61,6 +61,19 @@
  */
 
 // $Log$
+// Revision 1.80  2008/02/12 18:23:39  jj
+// 1. SPKA was missing protection check (PIC04) because
+//    AIA regs were not purged.
+//
+// 2. BASR with branch trace and PIC16, the pgm old was pointing
+//    2 bytes before the BASR.
+//
+// 3. TBEDR , TBDR using R1 as source, should be R2.
+//
+// 4. PR with page crossing stack (1st page invalid) and PSW real
+//    in stack, missed the PIC 11. Fixed by invoking abs_stck_addr
+//    for previous stack entry descriptor before doing the load_psw.
+//
 // Revision 1.79  2008/02/07 00:29:04  rbowler
 // Solaris build support by Jeff Savit
 //
@@ -312,6 +325,44 @@ static inline int ieee_exception(int raised, REGS * regs)
 }
 
 #if !defined(_IEEE_C)
+/*
+ * Set rounding mode according to BFP rounding mode mask
+ */
+void set_rounding_mode(U32 fpcreg, int mask)
+{
+    int brm, ferm;
+
+    /* If mask is zero, obtain rounding mode from FPC register */
+    if (mask == RM_DEFAULT_ROUNDING)
+        brm = ((fpcreg & FPC_DRM) >> FPC_DRM_SHIFT) + 4;
+    else
+        brm = mask;
+
+    /* Convert BFP rounding mode to nearest equivalent FE rounding mode */
+    switch (brm) {
+    case RM_ROUND_TO_NEAREST: /* Round to nearest ties to even */
+        ferm = FE_TONEAREST;
+        break;
+    case RM_ROUND_TOWARD_ZERO: /* Round toward zero */
+        ferm = FE_TOWARDZERO;
+        break;
+    case RM_ROUND_TOWARD_POS_INF: /* Round toward +infinity */
+        ferm = FE_UPWARD;
+        break;
+    case RM_ROUND_TOWARD_NEG_INF: /* Round toward -infinity */
+        ferm = FE_DOWNWARD;
+        break;
+    default:
+        ferm = FE_TONEAREST;
+        break;
+    } /* end switch(brm) */
+
+    /* Switch rounding mode if necessary */
+    if (fegetround() != ferm)
+        fesetround(ferm);
+
+} /* end function set_rounding_mode */
+
 /*
  * Classify emulated fp values
  */
@@ -2547,6 +2598,7 @@ static int integer_ebfp(struct ebfp *op, int mode, REGS *regs)
     default:
         FECLEAREXCEPT(FE_ALL_EXCEPT);
         ebfpston(op);
+        set_rounding_mode(regs->fpc, mode);
         op->v = rint(op->v);
         if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);
@@ -2592,6 +2644,7 @@ static int integer_lbfp(struct lbfp *op, int mode, REGS *regs)
     default:
         FECLEAREXCEPT(FE_ALL_EXCEPT);
         lbfpston(op);
+        set_rounding_mode(regs->fpc, mode);
         op->v = rint(op->v);
         if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);
@@ -2637,6 +2690,7 @@ static int integer_sbfp(struct sbfp *op, int mode, REGS *regs)
     default:
         FECLEAREXCEPT(FE_ALL_EXCEPT);
         sbfpston(op);
+        set_rounding_mode(regs->fpc, mode);
         op->v = rint(op->v);
         if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);

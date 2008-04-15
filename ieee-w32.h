@@ -1,9 +1,12 @@
-/* IEEE-SOL.H   (c) Copyright Greg Smith, 2002-2008                  */
+/* IEEE-W32.H   (c) Copyright Greg Smith, 2002-2008                  */
 /*              Hercules IEEE floating point definitions for Windows */
 
 // $Id$
 //
 // $Log$
+// Revision 1.8  2008/02/07 00:25:42  rbowler
+// Add a standard file identification header
+//
 // Revision 1.7  2006/12/08 09:43:28  jj
 // Add CVS message log
 //
@@ -57,6 +60,12 @@ typedef struct
     unsigned short int __unused5;
   }
 fenv_t;
+
+/* FPU control word rounding flags */
+#define FE_TONEAREST    0x0000
+#define FE_DOWNWARD     0x0400
+#define FE_UPWARD       0x0800
+#define FE_TOWARDZERO   0x0c00
 
 /* Define bits representing the exception.  We use the bit positions
    of the appropriate bits in the FPU control word.  */
@@ -259,6 +268,56 @@ feclearexcept (int excepts)
   #endif
 
   /* Success.  */
+  return 0;
+}
+
+/* Get current FP rounding mode */
+int
+fegetround (void)
+{
+  unsigned short _cw;
+
+  /* Get the value of the FPU control word */
+  #if defined(_MSVC_)
+  __asm fnstcw _cw
+  #else
+  __asm__ ("fnstcw %0;" : "=m" (_cw));
+  #endif
+
+  /* Extract and return the rounding mode flags */
+  return _cw
+          & (FE_TONEAREST | FE_DOWNWARD | FE_UPWARD | FE_TOWARDZERO);
+}
+
+/* Set the FP rounding mode */
+int
+fesetround (int mode)
+{
+  unsigned short _cw;
+
+  /* Return error if new rounding mode is not valid */
+  if ((mode & ~(FE_TONEAREST | FE_DOWNWARD | FE_UPWARD | FE_TOWARDZERO))
+      != 0)
+    return -1;
+
+  /* Get the current value of the FPU control word */
+  #if defined(_MSVC_)
+  __asm fnstcw _cw
+  #else
+  __asm__ volatile ("fnstcw %0;": "=m" (_cw));
+  #endif
+
+  /* Replace the rounding mode bits in the FPU control word */
+  _cw &= ~(FE_TONEAREST | FE_DOWNWARD | FE_UPWARD | FE_TOWARDZERO);
+  _cw |= mode;
+
+  /* Update the FPU control word with the new value */
+  #if defined(_MSVC_)
+  __asm fldcw _cw
+  #else
+  __asm__ volatile ("fldcw %0;" : : "m" (_cw));
+  #endif
+
   return 0;
 }
 
