@@ -61,21 +61,14 @@
  */
 
 // $Log$
+// Revision 1.82  2008/04/16 14:09:42  rbowler
+// Correct ieee to use BFP rounding mode not DFP rounding mode
+//
 // Revision 1.81  2008/04/15 21:30:03  rbowler
 // BFP rounding mode support
 //
 // Revision 1.80  2008/02/12 18:23:39  jj
-// 1. SPKA was missing protection check (PIC04) because
-//    AIA regs were not purged.
-//
-// 2. BASR with branch trace and PIC16, the pgm old was pointing
-//    2 bytes before the BASR.
-//
-// 3. TBEDR , TBDR using R1 as source, should be R2.
-//
-// 4. PR with page crossing stack (1st page invalid) and PSW real
-//    in stack, missed the PIC 11. Fixed by invoking abs_stck_addr
-//    for previous stack entry descriptor before doing the load_psw.
+// TBEDR , TBDR using R1 as source, should be R2.
 //
 // Revision 1.79  2008/02/07 00:29:04  rbowler
 // Solaris build support by Jeff Savit
@@ -3516,7 +3509,7 @@ DEF_INST(load_complement_bfp_ext_reg)
         regs->psw.cc = 3;
         break;
     default:
-        regs->psw.cc = 2;
+        regs->psw.cc = op.sign ? 1 : 2;
         break;
     }
 
@@ -3547,7 +3540,7 @@ DEF_INST(load_complement_bfp_long_reg)
         regs->psw.cc = 3;
         break;
     default:
-        regs->psw.cc = 2;
+        regs->psw.cc = op.sign ? 1 : 2;
         break;
     }
 
@@ -3578,7 +3571,7 @@ DEF_INST(load_complement_bfp_short_reg)
         regs->psw.cc = 3;
         break;
     default:
-        regs->psw.cc = 2;
+        regs->psw.cc = op.sign ? 1 : 2;
         break;
     }
 
