@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.9  2008/04/15 21:30:03  rbowler
+// BFP rounding mode support
+//
 // Revision 1.8  2008/02/07 00:25:42  rbowler
 // Add a standard file identification header
 //
@@ -320,6 +323,28 @@ fesetround (int mode)
 
   return 0;
 }
+
+#if !defined(HAVE_RINT)
+/* Round to FP integer */
+double
+rint (double _x)
+{
+  double _y;
+
+  #if defined(_MSVC_)
+  __asm fld _x
+  __asm frndint
+  __asm fstp _y
+  #else
+  __asm__ volatile ("fld %0;": "=m" (_x));
+  __asm__ volatile ("frndint;");
+  __asm__ volatile ("fstp %0;": "=m" (_y));
+  #endif
+
+  return _y;
+}
+#define HAVE_RINT       1
+#endif /*!defined(HAVE_RINT)*/
 
 #define GET_HIGH_WORD(i,d)       \
 do {                             \
