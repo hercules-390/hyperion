@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.10  2008/04/16 14:26:21  rbowler
+// Add rint function for MSVC
+//
 // Revision 1.9  2008/04/15 21:30:03  rbowler
 // BFP rounding mode support
 //
@@ -332,13 +335,20 @@ rint (double _x)
   double _y;
 
   #if defined(_MSVC_)
-  __asm fld _x
-  __asm frndint
-  __asm fstp _y
+  __asm 
+  {
+        fld     _x
+        frndint
+        fstp    _y
+  }
   #else
-  __asm__ volatile ("fld %0;": "=m" (_x));
-  __asm__ volatile ("frndint;");
-  __asm__ volatile ("fstp %0;": "=m" (_y));
+  __asm__ volatile (
+        "fld    %1      ;\n\t"
+        "frndint        ;\n\t"
+        "fstp   %0      ;"
+        : "=m" (_y)
+        : "m" (_x)
+        );
   #endif
 
   return _y;
