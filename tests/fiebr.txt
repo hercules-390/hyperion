@@ -13,7 +13,7 @@ r 21A=41F00500     # LA R15,ACTUAL1    R15=>Actual result table
 r 21E=78101000     #A LE F1,0(,R1)     Load FPR1=test data     
 r 222=41200004     # LA R2,4           R2=Number of BRM tests
 r 226=A7390000     # LGHI R3,0         R3=BRM 0
-r 22A=B2B93000     #B SRNM 0(R3)       Set BFP rounding mode from R3
+r 22A=B2993000     #B SRNM 0(R3)       Set BFP rounding mode from R3
 r 22E=B3570001     # FIEBR F0,0,F1     Load FPR0=INT(FPR1)
 r 232=7000F000     # STE F0,0(,R15)    Store actual result
 r 236=ED00E0000009 # CEB F0,0(,R14)    Compare with expected result       

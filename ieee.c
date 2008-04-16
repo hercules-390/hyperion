@@ -61,6 +61,9 @@
  */
 
 // $Log$
+// Revision 1.81  2008/04/15 21:30:03  rbowler
+// BFP rounding mode support
+//
 // Revision 1.80  2008/02/12 18:23:39  jj
 // 1. SPKA was missing protection check (PIC04) because
 //    AIA regs were not purged.
@@ -334,7 +337,7 @@ void set_rounding_mode(U32 fpcreg, int mask)
 
     /* If mask is zero, obtain rounding mode from FPC register */
     if (mask == RM_DEFAULT_ROUNDING)
-        brm = ((fpcreg & FPC_DRM) >> FPC_DRM_SHIFT) + 4;
+        brm = ((fpcreg & FPC_BRM) >> FPC_BRM_SHIFT) + 4;
     else
         brm = mask;
 
