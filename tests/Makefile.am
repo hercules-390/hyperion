@@ -71,4 +71,5 @@ EXTRA_DIST =        \
     tapepos.txt     \
     tdcdt.txt       \
     tdgdt.txt       \
+    thder.txt       \
     trte.txt

@@ -1914,6 +1914,10 @@
                         >
                     </File>
                     <File
+                        RelativePath=".\tests\thder.txt"
+                        >
+                    </File>
+                    <File
                         RelativePath=".\tests\trte.txt"
                         >
                     </File>
