@@ -9,13 +9,13 @@ r 208=41000008     # LA R0,8           R0=Number of test data
 r 20C=41100320     # LA R1,TEST1       R1=>Test data table
 r 210=41E00400     # LA R14,EXPECT1    R14=>Expected result table
 r 214=41F00500     # LA R15,ACTUAL1    R15=>Actual result table
-r 218=78101000     #A LE F1,0(,R1)     Load FPR1=short BFP test data     
+r 218=78101000     #A LE F1,0(,R1)     Load FPR1=short BFP test data
 r 21C=B3580001     # THDER F0,F1       Convert to long HFP in FPR0
 r 220=6000F000     # STD F0,0(,R15)    Store actual result
-r 224=68101008     # LD F1,8(,R1)      Load FPR1=short BFP test data     
+r 224=68101008     # LD F1,8(,R1)      Load FPR1=long BFP test data
 r 228=B3590001     # THDR F0,F1        Convert to long HFP in FPR0
 r 22C=6000F008     # STD F0,8(,R15)    Store actual result
-r 230=41E0E010     # LA R14,16(,R14)   R14=>next EXPECTn              
+r 230=41E0E010     # LA R14,16(,R14)   R14=>next EXPECTn
 r 234=41F0F010     # LA R15,16(,R15)   R15=>next ACTUALn
 r 238=41101010     # LA R1,16(,R1)     R1=>Next TESTn
 r 23C=46000218     # BCT R0,A          Loop to end of TEST table
@@ -25,15 +25,15 @@ r 24A=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 2F0=B2B201D0     # DIE LPSWE PGMNPSW Load disabled wait PSW
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 314=00000000     # FPCREG            Floating point control register        
+r 314=00000000     # FPCREG            Floating point control register
 r 320=42F60000                         # TEST1 DC EB'123'     Normal
 r 328=405EC00000000000                 #       DC DB'123'
-r 330=80000000                         # TEST2 DC EB'-0'      Zero 
+r 330=80000000                         # TEST2 DC EB'-0'      Zero
 r 338=8000000000000000                 #       DC DB'-0'
-r 340=00000001                         # TEST3 DC EB'(DMIN)'  Subnormal        
+r 340=00000001                         # TEST3 DC EB'(DMIN)'  Subnormal
 r 348=0000000000000001                 #       DC DB'(DMIN)'
-r 350=7F800000                         # TEST4 DC EB'(INF)'   Infinity        
-r 358=7FF0000000000000                 #       DC DB'(INF)'   
+r 350=7F800000                         # TEST4 DC EB'(INF)'   Infinity
+r 358=7FF0000000000000                 #       DC DB'(INF)'
 r 360=7FE00000                         # TEST5 DC EB'(QNAN)'  QNaN
 r 368=7FFC000000000000                 #       DC DB'(QNAN)'
 r 370=7FA00000                         # TEST6 DC EB'(SNAN)'  SNaN
@@ -62,7 +62,7 @@ pgmtrace +7
 restart
 pause 1
 * Display test data
-r 320.80 
+r 320.80
 * Display expected results
 r 400.80
 * Display actual results
