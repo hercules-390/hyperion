@@ -69,6 +69,7 @@ EXTRA_DIST =        \
     rrxtr.txt       \
     srdt.txt        \
     tapepos.txt     \
+    tbedr.txt       \
     tdcdt.txt       \
     tdgdt.txt       \
     thder.txt       \
