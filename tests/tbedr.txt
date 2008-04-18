@@ -1,0 +1,42 @@
+* TBEDR,TBDR tests $Id$
+sysclear
+archmode esame
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 200=B7000310     # LCTL R0,R0,CTLR0  Set CR0 bit 45
+r 204=B2BD0314     # LFAS FPCREG       Load value into FPC register
+r 208=41000002     # LA R0,2           R0=Number of test data
+r 20C=41100320     # LA R1,TEST1       R1=>Test data table
+r 210=41E00400     # LA R14,EXPECT1    R14=>Expected result table
+r 214=41F00500     # LA R15,ACTUAL1    R15=>Actual result table
+r 218=78101000     #A LD F1,0(,R1)     Load FPR1=long HFP test data
+r 21C=B3500001     # TBEDR F0,F1       Convert to short BFP in FPR0
+r 220=6000F000     # STD F0,0(,R15)    Store actual result
+r 224=B3510021     # TBDR F2,F1        Convert to long BFP in FPR2
+r 228=6020F008     # STD F2,8(,R15)    Store actual result
+r 22C=41E0E010     # LA R14,16(,R14)   R14=>next EXPECTn
+r 230=41F0F010     # LA R15,16(,R15)   R15=>next ACTUALn
+r 234=41101008     # LA R1,8(,R1)      R1=>Next TESTn
+r 238=46000218     # BCT R0,A          Loop to end of TEST table
+r 23C=D5FF05000400 # CLC ACTUAL1(256),EXPECT1  Compare actual results
+r 242=477002F0     # BNE DIE           Branch if not equal expected
+r 246=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+r 2F0=B2B201D0     # DIE LPSWE PGMNPSW Load disabled wait PSW
+r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
+r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
+r 314=00000000     # FPCREG            Floating point control register
+r 320=427B000000000000                 # TEST1 DC DH'123'     Normal
+r 328=41D0000000000000                 # TEST2 DC DH'13'      Normal
+r 400=42F60000                         # EXPECT1 DC EB'123'   Normal
+r 408=405EC00000000000                 #         DC DB'123'
+r 410=41500000                         # EXPECT2 DC EB'13'    Normal
+r 418=402A000000000000                 #         DC DB'13'
+pgmtrace +7
+restart
+pause 1
+* Display test data
+r 320.40
+* Display expected results
+r 400.80
+* Display actual results
+r 500.80
