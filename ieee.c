@@ -61,6 +61,9 @@
  */
 
 // $Log$
+// Revision 1.83  2008/04/16 19:57:55  rbowler
+// Fix condition code in LCEBR,LCDBR,LCXBR instructions
+//
 // Revision 1.82  2008/04/16 14:09:42  rbowler
 // Correct ieee to use BFP rounding mode not DFP rounding mode
 //
@@ -953,7 +956,7 @@ static void lengthen_short_to_ext(struct sbfp *op2, struct ebfp *op1, REGS *regs
  */
 static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
 {
-    short exp;
+    int exp;
     U64 fract;
     U32 r0, r1;
     int cc;
@@ -981,14 +984,17 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
         cc = op->sign ? 1 : 2;
         break;
     case FP_NORMAL:
+        //logmsg("ieee: exp=%d (X\'%3.3x\')\tfract=%16.16"I64_FMT"x\n",
+        //        op->exp, op->exp, op->fract);
         /* Insert an implied 1. in front of the 52 bit binary
            fraction and lengthen the result to 56 bits */
-        fract = (U64)(op->fract | 0x8000000000000ULL) << 4;
+        fract = (U64)(op->fract | 0x10000000000000ULL) << 3;
 
         /* The binary exponent is equal to the biased exponent - 1023
-           and we subtract another 1 to account for the implied 1. */
-        exp = op->exp - 1024;
+           adjusted by 1 to move the point before the 56 bit fraction */
+        exp = op->exp - 1023 + 1;
 
+        //logmsg("ieee: adjusted exp=%d\tfract=%16.16"I64_FMT"x\n", exp, fract);
         /* Shift the fraction right one bit at a time until
            the binary exponent becomes a multiple of 4 */
         while (exp & 3)
@@ -996,6 +1002,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
             exp++;
             fract >>= 1;
         }
+        //logmsg("ieee:  shifted exp=%d\tfract=%16.16"I64_FMT"x\n", exp, fract);
 
         /* Convert the binary exponent into a hexadecimal exponent
            by dropping the last two bits (which are now zero) */
@@ -1192,7 +1199,7 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
     /* Lengthen sbfp operand to lbfp */
     lbfp_op2.sign = op2.sign;
     lbfp_op2.exp = op2.exp - 127 + 1023;
-    lbfp_op2.fract = op2.fract << (52 - 23);
+    lbfp_op2.fract = (U64)op2.fract << (52 - 23);
 
     /* Convert lbfp to hfp register and set condition code */
     regs->psw.cc =

@@ -1,3 +1,4 @@
+18 Apr 2008 Fix incorrect results from THDER,THDR instructions - Roger Bowler
 16 Apr 2008 Fix condition code in LCEBR,LCDBR,LCXBR instructions - Roger Bowler
 16 Apr 2008 Fix FIEBR,FIDBR,FIXBR to respect BFP rounding mode - Roger Bowler
 08 Apr 2008 Add execute relative long instruction - Bernard van der Helm

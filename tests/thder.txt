@@ -39,7 +39,7 @@ r 368=7FFC000000000000                 #       DC DB'(QNAN)'
 r 370=7FA00000                         # TEST6 DC EB'(SNAN)'  SNaN
 r 378=7FF4000000000000                 #       DC DB'(SNAN)'
 r 380=41500000                         # TEST7 DC EB'13'      Normal
-r 388=41D0000000000000                 #       DC DH'13'
+r 388=402A000000000000                 #       DC DB'13'
 r 390=FF7FC99E                         # TEST8 DC EB'-3.4E38' Normal
 r 398=C7EFF933C78CDFAD                 #       DC DB'-3.4E38'
 r 400=427B000000000000                 # EXPECT1 DC DH'123'   Normal
@@ -56,8 +56,8 @@ r 450=7FFFFFFFFFFFFFFF                 # EXPECT6 DC DH'(MAX)' SNan
 r 458=7FFFFFFFFFFFFFFF                 #         DC DH'(MAX)' SNan
 r 460=41D0000000000000                 # EXPECT7 DC DH'13'    Normal
 r 468=41D0000000000000                 #         DC DH'13'    Normal
-r 470=E0FFC99E3C66FD69                 # EXPECT8 DC DH'-3.4E38' Normal
-r 478=E0FFC99E3C66FD69                 #         DC DH'-3.4E38' Normal
+r 470=E0FFC99E00000000                 # EXPECT8 DC DHL4'-3.4E38R5,0'
+r 478=E0FFC99E3C66FD68                 #         DC DH'-3.4E38R5'
 pgmtrace +7
 restart
 pause 1
