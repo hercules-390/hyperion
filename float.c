@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.49  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.48  2007/01/13 07:19:55  bernard
 // backout ccmask
 //
@@ -5589,6 +5592,13 @@ U64     fix;
     if (fix) {
         fl.long_fract = fix;
         fl.expo = 78;
+
+        /* Truncate fraction to 14 hexadecimal digits */
+        while (fl.long_fract & 0xFF00000000000000ULL)
+        {
+            fl.long_fract >>= 4;
+            fl.expo += 1;
+        }
 
         /* Normalize result */
         normal_lf(&fl);
