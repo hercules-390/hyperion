@@ -1,3 +1,4 @@
+21 Apr 2008 CEGR result incorrect if source exceeds 6 digits - Roger Bowler
 20 Apr 2008 CDGR result incorrect if source exceeds 14 digits - Roger Bowler
 18 Apr 2008 Fix incorrect results from THDER,THDR instructions - Roger Bowler
 16 Apr 2008 Fix condition code in LCEBR,LCDBR,LCXBR instructions - Roger Bowler

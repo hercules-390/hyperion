@@ -1,9 +1,10 @@
-* CDGR test $Id$
+* CDGR/CEGR test $Id$
 sysclear
 archmode esame
 r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
 r 200=B7000310     # LCTL R0,R0,CTLR0  Set CR0 bit 45
+* CDGR tests
 r 204=41000008     # LA R0,8           R0=Number of test data
 r 208=41100320     # LA R1,TEST1       R1=>Test data table
 r 20C=41F00400     # LA R15,RES1       R15=>Result table
@@ -15,7 +16,19 @@ r 222=41F0F008     # LA R15,8(,R15)    R15=>next result table
 r 226=46000210     # BCT R0,A          Loop to end of TEST table
 r 22A=D53F04000380 # CLC RES1(64),EXP1 Compare with expected results
 r 230=477002FC     # BNE DIE           Error if not equal
-r 234=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+* CEGR tests
+r 234=41000008     # LA R0,8           R0=Number of test data
+r 238=41100320     # LA R1,TEST1       R1=>Test data table
+r 23C=41F00500     # LA R15,RESS1      R15=>Result table
+r 240=E32010000004 #B LG R2,0(,R1)     Load R2=TESTn
+r 246=B3C40042     # CEGR F4,R2        Convert to HFP in FPR4
+r 24A=7040F000     # STE F4,0(,R15)    Store FPR4 in result table
+r 24E=41101008     # LA R1,8(,R1)      R1=>next test data
+r 252=41F0F004     # LA R15,4(,R15)    R15=>next result table
+r 256=46000240     # BCT R0,B          Loop to end of TEST table
+r 25A=D51F05000480 # CLC RESS1(32),EXPS1 Compare with expected results
+r 260=477002FC     # BNE DIE           Error if not equal
+r 264=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 2FC=B2B201D0     #DIE LPSWE PGMNPSW  Load disabled wait PSW
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
@@ -29,7 +42,7 @@ r 340=0FFFFFFFFFFFFFFF                 # TEST5
 r 348=7FFFFFFFFFFFFFFF                 # TEST6
 r 350=8000000000000000                 # TEST7
 r 358=0000000000000000                 # TEST8
-* Expected results
+* Expected results (long HFP)
 r 380=5014D4433700C0D6                 # EXP1
 r 388=0000000000000000                 # EXP2
 r 390=427B000000000000                 # EXP3
@@ -38,13 +51,26 @@ r 3A0=4FFFFFFFFFFFFFFF                 # EXP5
 r 3A8=507FFFFFFFFFFFFF                 # EXP6
 r 3B0=D080000000000000                 # EXP7
 r 3B8=0000000000000000                 # EXP8
+* Expected results (short HFP)
+r 480=5014D443                         # EXPS1
+r 484=00000000                         # EXPS2
+r 488=427B0000                         # EXPS3
+r 48C=C27B0000                         # EXPS4
+r 490=4FFFFFFF                         # EXPS5
+r 494=507FFFFF                         # EXPS6
+r 498=D0800000                         # EXPS7
+r 49C=00000000                         # EXPS8
 ostailor null
 pgmtrace +7
 restart
 pause 1
 * Display test data
 r 320.40
-* Display expected results
+* Display expected results (long HFP)
 r 380.40
-* Display actual results
+* Display actual results (long HFP)
 r 400.40
+* Display expected results (short HFP)
+r 480.20
+* Display actual results (short HFP)
+r 500.20

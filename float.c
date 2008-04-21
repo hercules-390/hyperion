@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.50  2008/04/20 21:53:50  rbowler
+// CDGR result incorrect if source exceeds 14 digits
+//
 // Revision 1.49  2007/06/23 00:04:09  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -5536,7 +5539,7 @@ DEF_INST(convert_fix64_to_float_short_reg)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i1;
-LONG_FLOAT fl;
+SHORT_FLOAT fl;
 U64     fix;
 
     RRE(inst, regs, r1, r2);
@@ -5552,14 +5555,21 @@ U64     fix;
         fl.sign = POS;
 
     if (fix) {
-        fl.long_fract = fix;
-        fl.expo = 78;
+        fl.expo = 70;
+
+        /* Truncate fraction to 6 hexadecimal digits */
+        while (fix & 0xFFFFFFFFFF000000ULL)
+        {
+            fix >>= 4;
+            fl.expo += 1;
+        }
+        fl.short_fract = (U32)fix;
 
         /* Normalize result */
-        normal_lf(&fl);
+        normal_sf(&fl);
 
-        /* To register (converting to short float) */
-        regs->fpr[i1] = ((U32)fl.sign << 31) | ((U32)fl.expo << 24) | (fl.long_fract >> 32);
+        /* To register */
+        store_sf(&fl, regs->fpr + i1);
     } else {
         /* true zero */
         regs->fpr[i1] = 0;
