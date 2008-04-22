@@ -14,6 +14,7 @@ EXTRA_DIST =        \
     alsi.txt        \
     axtr.txt        \
     brc.txt         \
+    cdfr.txt        \
     cdgr.txt        \
     cgdtr.txt       \
     cgfrl.txt       \

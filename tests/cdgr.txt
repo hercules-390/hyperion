@@ -1,8 +1,8 @@
-* CDGR/CEGR test $Id$
+* CDGR/CEGR/CXGR test $Id$
 sysclear
 archmode esame
 r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
-r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
+r 1d0=00020001800000000000000000BADBAD # z/Arch pgm new PSW
 r 200=B7000310     # LCTL R0,R0,CTLR0  Set CR0 bit 45
 * CDGR tests
 r 204=41000008     # LA R0,8           R0=Number of test data
@@ -21,16 +21,29 @@ r 234=41000008     # LA R0,8           R0=Number of test data
 r 238=41100320     # LA R1,TEST1       R1=>Test data table
 r 23C=41F00500     # LA R15,RESS1      R15=>Result table
 r 240=E32010000004 #B LG R2,0(,R1)     Load R2=TESTn
-r 246=B3C40042     # CEGR F4,R2        Convert to HFP in FPR4
+r 246=B3C40042     # CEGR F4,R2        Convert to short HFP in FPR4
 r 24A=7040F000     # STE F4,0(,R15)    Store FPR4 in result table
 r 24E=41101008     # LA R1,8(,R1)      R1=>next test data
 r 252=41F0F004     # LA R15,4(,R15)    R15=>next result table
 r 256=46000240     # BCT R0,B          Loop to end of TEST table
 r 25A=D51F05000480 # CLC RESS1(32),EXPS1 Compare with expected results
 r 260=477002FC     # BNE DIE           Error if not equal
-r 264=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
+* CXGR tests
+r 264=41000008     # LA R0,8           R0=Number of test data
+r 268=41100320     # LA R1,TEST1       R1=>Test data table
+r 26C=41F00600     # LA R15,RESX1      R15=>Result table
+r 270=E32010000004 #C LG R2,0(,R1)     Load R2=TESTn
+r 276=B3C60042     # CXGR F4,R2        Convert to ext HFP in FPR4,FPR6
+r 27A=6040F000     # STD F4,0(,R15)    Store FPR4 in result table
+r 27E=6060F008     # STD F6,8(,R15)    Store FPR6 in result table
+r 282=41101008     # LA R1,8(,R1)      R1=>next test data
+r 286=41F0F010     # LA R15,16(,R15)   R15=>next result table
+r 28A=46000270     # BCT R0,C          Loop to end of TEST table
+r 28E=D57F06000580 # CLC RESX1(128),EXPX1 Compare with expected results
+r 294=477002FC     # BNE DIE           Error if not equal
+r 298=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 2FC=B2B201D0     #DIE LPSWE PGMNPSW  Load disabled wait PSW
-r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
+r 300=07020001800000000000000000AAAAAA # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
 r 314=00000000     # FPCREG            Floating point control register
 * Test data
@@ -60,6 +73,15 @@ r 490=4FFFFFFF                         # EXPS5
 r 494=507FFFFF                         # EXPS6
 r 498=D0800000                         # EXPS7
 r 49C=00000000                         # EXPS8
+* Expected results (extended HFP)
+r 580=5014D4433700C0D64250000000000000 # EXPX1
+r 590=00000000000000000000000000000000 # EXPX2
+r 5A0=427B0000000000003400000000000000 # EXPX3
+r 5B0=C27B000000000000B400000000000000 # EXPX4
+r 5C0=4FFFFFFFFFFFFFFF41F0000000000000 # EXPX5
+r 5D0=507FFFFFFFFFFFFF42FF000000000000 # EXPX6
+r 5E0=D080000000000000C200000000000000 # EXPX7
+r 5F0=00000000000000000000000000000000 # EXPX8
 ostailor null
 pgmtrace +7
 restart
@@ -74,3 +96,7 @@ r 400.40
 r 480.20
 * Display actual results (short HFP)
 r 500.20
+* Display expected results (extended HFP)
+r 580.80
+* Display actual results (extended HFP)
+r 600.80

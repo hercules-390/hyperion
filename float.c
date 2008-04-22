@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.51  2008/04/21 20:26:27  rbowler
+// CEGR result incorrect if source exceeds 6 digits
+//
 // Revision 1.50  2008/04/20 21:53:50  rbowler
 // CDGR result incorrect if source exceeds 14 digits
 //
@@ -5624,7 +5627,7 @@ U64     fix;
 
 
 /*-------------------------------------------------------------------*/
-/* B3C6 CXGR - Convert from Fix64 to Float. Extended Register[RRE]   */
+/* B3C6 CXGR - Convert from Fix64 to Float. Extended Register  [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_fix64_to_float_ext_reg)
 {
@@ -5646,9 +5649,9 @@ U64     fix;
         fl.sign = POS;
 
     if (fix) {
-        fl.ms_fract = fix;
-        fl.ls_fract = 0;
-        fl.expo = 76;  /* 64 + 12 (Herc ms fract is 12 digits) */
+        fl.ms_fract = fix >> 16;        /* Fraction high (12 digits) */
+        fl.ls_fract = fix << 48;        /* Fraction low (16 digits)  */
+        fl.expo = 80;
 
         /* Normalize result */
         normal_ef(&fl);
