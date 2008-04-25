@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.52  2008/04/22 17:41:21  rbowler
+// Correction to CXGR instruction
+//
 // Revision 1.51  2008/04/21 20:26:27  rbowler
 // CEGR result incorrect if source exceeds 6 digits
 //
@@ -6080,6 +6083,7 @@ int     r1, r2;                         /* Values of R fields        */
 int     m3;
 SHORT_FLOAT fl;
 BYTE    shift;
+U64     intpart;
 U32     lsfract;
 
     RRF_M(inst, regs, r1, r2, m3);
@@ -6093,7 +6097,7 @@ U32     lsfract;
         /* not zero */
         normal_sf(&fl);
 
-        if (fl.expo > 72) {
+        if (fl.expo > 80) {
             /* exeeds range by exponent */
             regs->GR_G(r1) = fl.sign ? 0x8000000000000000ULL : 0x7FFFFFFFFFFFFFFFULL;
             regs->psw.cc = 3;
@@ -6101,10 +6105,10 @@ U32     lsfract;
         }
         if (fl.expo > 70) {
             /* to be left shifted */
-            fl.short_fract <<= ((fl.expo - 70) * 4);
+            intpart = (U64)fl.short_fract << ((fl.expo - 70) * 4);
             if (fl.sign) {
                 /* negative */
-                if (fl.short_fract > 0x80000000UL) {
+                if (intpart > 0x8000000000000000ULL) {
                     /* exeeds range by value */
                     regs->GR_G(r1) = 0x8000000000000000ULL;
                     regs->psw.cc = 3;
@@ -6112,7 +6116,7 @@ U32     lsfract;
                 }
             } else {
                 /* positive */
-                if (fl.short_fract > 0x7FFFFFFFUL) {
+                if (intpart > 0x7FFFFFFFFFFFFFFFULL) {
                     /* exeeds range by value */
                     regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
                     regs->psw.cc = 3;
@@ -6124,77 +6128,80 @@ U32     lsfract;
             /* to be right shifted and to be rounded */
             shift = ((70 - fl.expo) * 4);
             lsfract = fl.short_fract << (32 - shift);
-            fl.short_fract >>= shift;
+            intpart = fl.short_fract >> shift;
 
             if (m3 == 1) {
                 /* biased round to nearest */
                 if (lsfract & 0x80000000UL) {
-                    fl.short_fract++;
+                    intpart++;
                 }
             } else if (m3 == 4) {
                 /* round to nearest */
                 if ((lsfract > 0x80000000UL)
-                || ((fl.short_fract & 0x00000001UL)
+                || ((intpart & 0x0000000000000001ULL)
                     && (lsfract == 0x80000000UL))) {
-                    fl.short_fract++;
+                    intpart++;
                 }
             } else if (m3 == 6) {
                 /* round toward + */
                 if ((fl.sign == POS)
                 && lsfract) {
-                    fl.short_fract++;
+                    intpart++;
                 }
             } else if (m3 == 7) {
                 /* round toward - */
                 if ((fl.sign == NEG)
                 && lsfract) {
-                    fl.short_fract++;
+                    intpart++;
                 }
             }
         } else if (fl.expo == 64) {
             /* to be rounded */
             lsfract = fl.short_fract << 8;
-            fl.short_fract = 0;
+            intpart = 0;
 
             if (m3 == 1) {
                 /* biased round to nearest */
                 if (lsfract & 0x80000000UL) {
-                    fl.short_fract++;
+                    intpart++;
                 }
             } else if (m3 == 4) {
                 /* round to nearest */
                 if (lsfract > 0x80000000UL) {
-                    fl.short_fract++;
+                    intpart++;
                 }
             } else if (m3 == 6) {
                 /* round toward + */
                 if ((fl.sign == POS)
                 && lsfract) {
-                    fl.short_fract++;
+                    intpart++;
                 }
             } else if (m3 == 7) {
                 /* round toward - */
                 if ((fl.sign == NEG)
                 && lsfract) {
-                    fl.short_fract++;
+                    intpart++;
                 }
             }
         } else if (fl.expo < 64) {
-            fl.short_fract = 0;
+            intpart = 0;
             if (((m3 == 6)
                 && (fl.sign == POS))
             || ((m3 == 7)
                 && (fl.sign == NEG))) {
-                fl.short_fract++;
+                intpart++;
             }
         }
         if (fl.sign) {
             /* negative */
-            regs->GR_G(r1) = -((S64) fl.short_fract);
+            if (intpart == 0x8000000000000000ULL)
+                regs->GR_G(r1) = 0x8000000000000000ULL;
+            else
+                regs->GR_G(r1) = -((S64)intpart);
             regs->psw.cc = 1;
         } else {
             /* positive */
-            regs->GR_G(r1) = fl.short_fract;
+            regs->GR_G(r1) = intpart;
             regs->psw.cc = 2;
         }
     } else {

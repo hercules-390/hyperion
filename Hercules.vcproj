@@ -1698,6 +1698,10 @@
                         >
                     </File>
                     <File
+                        RelativePath=".\tests\cger.txt"
+                        >
+                    </File>
+                    <File
                         RelativePath=".\tests\cgfrl.txt"
                         >
                     </File>
