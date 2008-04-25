@@ -18,6 +18,7 @@ EXTRA_DIST =        \
     cdgr.txt        \
     cgdtr.txt       \
     cger.txt        \
+    cgxr.txt        \
     cgfrl.txt       \
     cgxtr.txt       \
     cpsdr.txt       \
