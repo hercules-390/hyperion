@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.53  2008/04/25 21:35:02  rbowler
+// CGER result incorrect for values over 2G
+//
 // Revision 1.52  2008/04/22 17:41:21  rbowler
 // Correction to CXGR instruction
 //
@@ -6191,6 +6194,9 @@ U32     lsfract;
                 && (fl.sign == NEG))) {
                 intpart++;
             }
+        } else /* fl.expo == 70 */ {
+            /* no shift or round required */
+            intpart = (U64)fl.short_fract;
         }
         if (fl.sign) {
             /* negative */
