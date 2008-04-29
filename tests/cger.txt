@@ -11,7 +11,7 @@ r 210=41F00900     # LA R15,RES1       R15=>Result table
 r 214=78401000     #A LE F4,0(,R1)     Load FPR4=TESTn
 r 218=41200000     # LA R2,X'00'       R2=Rounding mode
 r 21C=42200222     #B STC R2,I+2       Store rounding mode into instr
-r 220=B3C80074     #I CEGR R7,0,F4     Convert FPR4 into R7
+r 220=B3C80074     #I CGER R7,0,F4     Convert FPR4 into R7
 r 224=B2220080     # IPM R8            R8=Cond code and pgm mask
 r 228=5890008C     # L R9,PGMINTC      R9=PGM check interrupt code
 r 22C=E370F0000024 # STG R7,0(,R15)    Store R7 in result table
@@ -38,12 +38,12 @@ r 330=00040000     # CTLR0             Control register 0 (bit45 AFP control)
 r 334=00000000     # FPCREG            Floating point control register
 r 340=B2B20150     #PGMFLIH LPSWE PGMOPSW  Program check interrupt handler
 r 800=D0800000                         # TEST1 DC EH'-9223372036854775808'
-r 804=D07FFFFF                         # TEST2 DC EH'-9223370137343148032'
+r 804=D07FFFFF                         # TEST2 DC EH'-9223370937343148032'
 r 808=C27B8000                         # TEST3 DC EH'-123.5'
 r 80C=80000000                         # TEST4 DC EH'-0'
 r 810=427A8000                         # TEST5 DC EH'122.5'
 r 814=487FFFFF                         # TEST6 DC EH'2147483392'
-r 818=507FFFFF                         # TEST7 DC EH'9223370137343148032'
+r 818=507FFFFF                         # TEST7 DC EH'9223370937343148032'
 r 81C=50800000                         # TEST8 DC EH'9223372036854775808'
 * Expected results - TEST1
 r C00=80000000000000001000000000000000
