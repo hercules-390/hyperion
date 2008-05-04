@@ -8,7 +8,7 @@ r 204=B29D0334     # LFPC FPCREG       Load FPC register
 r 208=41000008     # LA R0,8           R0=Number of test data
 r 20C=41100800     # LA R1,TEST1       R1=>Test data table
 r 210=41F00900     # LA R15,RES1       R15=>Result table
-r 214=78401000     #A LE F4,0(,R1)     Load FPR4=TESTn
+r 214=68401000     #A LD F4,0(,R1)     Load FPR4=TESTn
 r 218=41200000     # LA R2,X'00'       R2=Rounding mode
 r 21C=42200222     #B STC R2,I+2       Store rounding mode into instr
 r 220=B3C90074     #I CGDR R7,0,F4     Convert FPR4 into R7
