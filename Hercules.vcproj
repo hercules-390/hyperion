@@ -1694,6 +1694,10 @@
                         >
                     </File>
                     <File
+                        RelativePath=".\tests\cgdr.txt"
+                        >
+                    </File>
+                    <File
                         RelativePath=".\tests\cgdtr.txt"
                         >
                     </File>
