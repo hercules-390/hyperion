@@ -1,3 +1,4 @@
+04 May 2008 Fix CGDR to handle values exceeding 2G - Roger Bowler
 25 Apr 2008 CGER result incorrect for values over 2G - Roger Bowler
 22 Apr 2008 Correction to CXGR instruction - Roger Bowler
 21 Apr 2008 CEGR result incorrect if source exceeds 6 digits - Roger Bowler

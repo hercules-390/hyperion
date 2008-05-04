@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.54  2008/04/27 22:34:23  rbowler
+// CGER result incorrect when expo=70
+//
 // Revision 1.53  2008/04/25 21:35:02  rbowler
 // CGER result incorrect for values over 2G
 //
@@ -6240,13 +6243,34 @@ U64     lsfract;
         /* not zero */
         normal_lf(&fl);
 
-        if (fl.expo > 72) {
+        if (fl.expo > 80) {
             /* exeeds range by exponent */
             regs->GR_G(r1) = fl.sign ? 0x8000000000000000ULL : 0x7FFFFFFFFFFFFFFFULL;
             regs->psw.cc = 3;
             return;
         }
-        if (fl.expo > 64) {
+        if (fl.expo > 78) {
+            /* to be left shifted */
+            fl.long_fract <<= ((fl.expo - 78) * 4);
+            if (fl.sign) {
+                /* negative */
+                if (fl.long_fract > 0x8000000000000000ULL) {
+                    /* exeeds range by value */
+                    regs->GR_G(r1) = 0x8000000000000000ULL;
+                    regs->psw.cc = 3;
+                    return;
+                }
+            } else {
+                /* positive */
+                if (fl.long_fract > 0x7FFFFFFFFFFFFFFFULL) {
+                    /* exeeds range by value */
+                    regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
+                    regs->psw.cc = 3;
+                    return;
+                }
+            }
+        } else if ((fl.expo > 64)
+               && (fl.expo < 78)) {
             /* to be right shifted and to be rounded */
             shift = ((78 - fl.expo) * 4);
             lsfract = fl.long_fract << (64 - shift);
@@ -6277,25 +6301,6 @@ U64     lsfract;
                     fl.long_fract++;
                 }
             }
-            if (fl.expo == 72) {
-                if (fl.sign) {
-                    /* negative */
-                    if (fl.long_fract > 0x80000000UL) {
-                        /* exeeds range by value */
-                        regs->GR_G(r1) = 0x8000000000000000ULL;
-                        regs->psw.cc = 3;
-                        return;
-                    }
-                } else {
-                    /* positive */
-                    if (fl.long_fract > 0x7FFFFFFFUL) {
-                        /* exeeds range by value */
-                        regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
-                        regs->psw.cc = 3;
-                        return;
-                    }
-                }
-            }
         } else if (fl.expo == 64) {
             /* to be rounded */
             lsfract = fl.long_fract << 8;
@@ -6324,8 +6329,7 @@ U64     lsfract;
                     fl.long_fract++;
                 }
             }
-        } else {
-            /* fl.expo < 64 */
+        } else if (fl.expo < 64) {
             fl.long_fract = 0;
             if (((m3 == 6)
                 && (fl.sign == POS))
@@ -6336,7 +6340,10 @@ U64     lsfract;
         }
         if (fl.sign) {
             /* negative */
-            regs->GR_G(r1) = -((S64) fl.long_fract);
+            if (fl.long_fract == 0x8000000000000000ULL)
+                regs->GR_G(r1) = 0x8000000000000000ULL;
+            else
+                regs->GR_G(r1) = -((S64)fl.long_fract);
             regs->psw.cc = 1;
         } else {
             /* positive */
