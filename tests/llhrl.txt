@@ -1,0 +1,19 @@
+* LLHRL test $Id$
+sysclear
+archmode esame
+r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
+r 1d0=00020001800000000000000000BADBAD # z/Arch pgm new PSW
+r 200=C058A5A5A5A5 # IIHF R5,X'A5A5A5A5' Load garbage in R5 bits 0-31
+r 206=C0593C3C3C3C # IILF R5,X'3C3C3C3C' Load garbage in R5 bits 32-63
+r 20C=C45200000005 # LLHRL R5,CONST1   Load halfword relative data
+r 212=A7F40003     # BRC *+6           Branch around constant
+r 216=ABCD         # CONST1 DC X'ABCD'
+r 218=E35003000021 # CLG R5,EXPECT1    Compare with expected result
+r 21E=A7840004     # BE *+8            Branch if OK
+r 222=B2B201D0     # LPSWE PGMNEW      Load error PSW
+r 226=B2B20270     # LPSWE WAITPSW     Load enabled wait PSW
+r 270=07020001800000000000000000AAAAAA # WAITPSW Enabled wait state PSW
+* Test data
+r 300=A5A5A5A50000ABCD                 # EXPECT1
+ostailor null
+restart

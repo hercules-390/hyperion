@@ -63,6 +63,7 @@ EXTRA_DIST =        \
     ldxtr.txt       \
     ledtr.txt       \
     lfpc.txt        \
+    llhrl.txt       \
     loop.txt        \
     lxdtr.txt       \
     maer.txt        \

@@ -1882,6 +1882,10 @@
                         >
                     </File>
                     <File
+                        RelativePath=".\tests\llhrl.txt"
+                        >
+                    </File>
+                    <File
                         RelativePath=".\tests\loop.txt"
                         >
                     </File>
