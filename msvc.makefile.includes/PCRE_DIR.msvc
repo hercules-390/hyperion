@@ -3,12 +3,15 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
+# $Id$
 #
 #  Handles support for PCRE (Perl Compatible Regular Expressions),
 #  for MSVC, needed by HAO (Hercules Automatic Operator) facility...
 #
 #
 #                           CHANGE HISTORY
+# $Log$
+#
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
@@ -29,7 +32,15 @@
 !IFDEF PCRE_DIR
 !IF "$(PCRE_DIR)" == "NONE"
 !UNDEF PCRE_DIR
+!ENDIF
 !ELSE
+# PCRE_DIR defaults to winbuild\pcre relative to current directory
+!IF EXIST(winbuild\pcre)
+PCRE_DIR = winbuild\pcre
+!ENDIF
+!ENDIF
+
+!IFDEF PCRE_DIR
 
 PCRE_INCNAME  = pcreposix.h
 PCRE_LIBNAME1 = pcre.lib
@@ -55,5 +66,8 @@ PCRE_DLLPATH2 = $(PCRE_DIR)\bin\$(PCRE_DLLNAME2)
 !ERROR PCRE_DIR "$(PCRE_DLLPATH2)" does not exist. Check PCRE_DIR
 !ENDIF
 
-!ENDIF
+!MESSAGE PCRE support will be included from "$(PCRE_DIR)" 
+
+!ELSE
+!MESSAGE PCRE support will not be generated
 !ENDIF
