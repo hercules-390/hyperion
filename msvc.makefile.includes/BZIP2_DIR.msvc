@@ -3,11 +3,14 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
+# $Id$
 #
 #  Handles support for BZIP2 compression...
 #
 #
 #                           CHANGE HISTORY
+# $Log$
+#
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
@@ -32,10 +35,19 @@
 # ---------------------------------------------------------------------
 
 !IFDEF BZIP2_DIR
-
 !IF "$(BZIP2_DIR)" == "NONE"
 !UNDEF BZIP2_DIR
-!ELSEIF !EXIST("$(BZIP2_DIR)\bzlib.h")
+!ENDIF
+!ELSE
+# BZIP2_DIR defaults to winbuild\bzip2 relative to current directory
+!IF EXIST(winbuild\bzip2)
+BZIP2_DIR = winbuild\bzip2
+!ENDIF
+!ENDIF
+
+!IFDEF BZIP2_DIR
+
+!IF !EXIST("$(BZIP2_DIR)\bzlib.h")
 !ERROR BZIP2_DIR "$(BZIP2_DIR)\bzlib.h" does not exist. Check BZIP2_DIR
 !ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.lib")
 !ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.lib" does not exist. Check BZIP2_DIR
@@ -43,4 +55,8 @@
 !ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.dll" does not exist. Check BZIP2_DIR
 !ENDIF
 
+!MESSAGE BZIP2 support will be included from "$(BZIP2_DIR)" 
+
+!ELSE
+!MESSAGE BZIP2 support will not be generated
 !ENDIF
