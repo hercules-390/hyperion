@@ -3,11 +3,14 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
+# $Id$
 #
 #  Handles support for ZLIB compression...
 #
 #
 #                           CHANGE HISTORY
+# $Log$
+#
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
@@ -33,9 +36,18 @@
 # ZLIB_DIR = C:\winbuild\zlib\win32_32
 # ---------------------------------------------------------------------
 
+!IFDEF ZLIB_DIR
+!IF "$(ZLIB_DIR)" == "NONE"
+!UNDEF ZLIB_DIR
+!ENDIF
+!ELSE
 # ISW 20050311
 # If winbuild\zlib\win32_32 exists (relative to current dir)
 # then use it for ZLIB_DIR *UNLESS* ZLIB_DIR is already set.
+!IF EXIST(winbuild\zlib\win32_32)
+ZLIB_DIR = winbuild\zlib\win32_32
+!ENDIF
+!ENDIF
 #
 # If ZLIB_DIR is improperly set, issue a message and exit *UNLESS*
 # it is set to the word "NONE"
@@ -43,19 +55,18 @@
 # DBT 20050312
 # Minor changes to support paths with blanks in them.
 
-!IFNDEF ZLIB_DIR
+!IFDEF ZLIB_DIR
 
-!IF EXIST(winbuild\zlib\win32_32\include\zlib.h)
-ZLIB_DIR = winbuild\zlib\win32_32
-!MESSAGE ZLIB_DIR not set. "$(ZLIB_DIR)" implied and checked
+!IF !EXIST("$(ZLIB_DIR)\include\zlib.h")
+!ERROR ZLIB_DIR "$(ZLIB_DIR)\include\zlib.h" does not exist. Check ZLIB_DIR
+!ELSEIF !EXIST("$(ZLIB_DIR)\lib\zdll.lib")
+!ERROR ZLIB_DIR "$(ZLIB_DIR)\lib\zdll.lib" does not exist. Check ZLIB_DIR
+!ELSEIF !EXIST("$(ZLIB_DIR)\zlib1.dll")
+!ERROR ZLIB_DIR "$(ZLIB_DIR)\zlib1.dll" does not exist. Check ZLIB_DIR
 !ENDIF
+
+!MESSAGE ZLIB support will be included from "$(ZLIB_DIR)" 
 
 !ELSE
-
-!IF "$(ZLIB_DIR)" == "NONE"
-!UNDEF ZLIB_DIR
-!ELSEIF !EXIST("$(ZLIB_DIR)\include\zlib.h")
-!ERROR ZLIB_DIR "$(ZLIB_DIR)\include\zlib.h" does not exist. Check ZLIB_DIR
-!ENDIF
-
+!MESSAGE ZLIB support will not be generated
 !ENDIF
