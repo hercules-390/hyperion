@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.165  2008/04/11 14:28:44  bernard
+// Integrate regs->exrl into base Hercules code.
+//
 // Revision 1.164  2008/04/09 12:01:35  rbowler
 // Correct target instruction address for EXRL
 //
@@ -3410,16 +3413,16 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
         m = n;
 
     /* Copy from operand beginning */
-    for (i = 0; i < m; i++)
+    for (i = 0; i < m; i++, p1++)
     {
-        regs->AR((r1 + i) & 0xF) = fetch_fw (p1++);
+        regs->AR((r1 + i) & 0xF) = fetch_fw (p1);
         SET_AEA_AR (regs, (r1 + i) & 0xF);
     }
 
     /* Copy from next page */
-    for ( ; i < n; i++)
+    for ( ; i < n; i++, p2++)
     {
-        regs->AR((r1 + i) & 0xF) = fetch_fw (p2++);
+        regs->AR((r1 + i) & 0xF) = fetch_fw (p2);
         SET_AEA_AR (regs, (r1 + i) & 0xF);
     }
 
@@ -3577,8 +3580,8 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     {
         /* Boundary not crossed */
         n >>= 2;
-        for (i = 0; i < n; i++)
-            regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1++);
+        for (i = 0; i < n; i++, p1++)
+            regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1);
     }
     else
     {
@@ -3591,11 +3594,11 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
         {
             /* Addresses are word aligned */
             m >>= 2;
-            for (i = 0; i < m; i++)
-                regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1++);
+            for (i = 0; i < m; i++, p1++)
+                regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1);
             n >>= 2;
-            for ( ; i < n; i++)
-                regs->GR_L((r1 + i) & 0xF) = fetch_fw (p2++);
+            for ( ; i < n; i++, p2++)
+                regs->GR_L((r1 + i) & 0xF) = fetch_fw (p2);
         }
         else
         {

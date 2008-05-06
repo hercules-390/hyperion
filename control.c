@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.266  2008/04/11 14:28:00  bernard
+// Integrate regs->exrl into base Hercules code.
+//
 // Revision 1.265  2008/04/08 23:57:15  rbowler
 // Fix '#' : invalid character : possibly the result of a macro expansion
 //
@@ -1965,16 +1968,16 @@ U16     updated = 0;                    /* Updated control regs      */
         m = n;
 
     /* Copy from operand beginning */
-    for (i = 0; i < m; i++)
+    for (i = 0; i < m; i++, p1++)
     {
-        regs->CR_L((r1 + i) & 0xF) = fetch_fw (p1++);
+        regs->CR_L((r1 + i) & 0xF) = fetch_fw (p1);
         updated |= BIT((r1 + i) & 0xF);
     }
 
     /* Copy from next page */
-    for ( ; i < n; i++)
+    for ( ; i < n; i++, p2++)
     {
-        regs->CR_L((r1 + i) & 0xF) = fetch_fw (p2++);
+        regs->CR_L((r1 + i) & 0xF) = fetch_fw (p2);
         updated |= BIT((r1 + i) & 0xF);
     }
 

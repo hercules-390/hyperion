@@ -20,6 +20,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.201  2008/04/11 14:28:29  bernard
+// Integrate regs->exrl into base Hercules code.
+//
 // Revision 1.200  2008/04/09 07:36:51  bernard
 // Allign to Rogers terminal ;-)
 //
@@ -4035,8 +4038,8 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     {
         /* Boundary not crossed */
         n >>= 2;
-        for (i = 0; i < n; i++)
-            regs->GR_H((r1 + i) & 0xF) = fetch_fw (p1++);
+        for (i = 0; i < n; i++, p1++)
+            regs->GR_H((r1 + i) & 0xF) = fetch_fw (p1);
     }
     else
     {
@@ -4049,11 +4052,11 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
         {
             /* Addresses are word aligned */
             m >>= 2;
-            for (i = 0; i < m; i++)
-                regs->GR_H((r1 + i) & 0xF) = fetch_fw (p1++);
+            for (i = 0; i < m; i++, p1++)
+                regs->GR_H((r1 + i) & 0xF) = fetch_fw (p1);
             n >>= 2;
-            for ( ; i < n; i++)
-                regs->GR_H((r1 + i) & 0xF) = fetch_fw (p2++);
+            for ( ; i < n; i++, p2++)
+                regs->GR_H((r1 + i) & 0xF) = fetch_fw (p2);
         }
         else
         {
@@ -6725,16 +6728,16 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
         m = n;
 
     /* Load from first page */
-    for (i = 0; i < m; i++)
+    for (i = 0; i < m; i++, p1++)
     {
-        regs->AR((r1 + i) & 0xF) = fetch_fw (p1++);
+        regs->AR((r1 + i) & 0xF) = fetch_fw (p1);
         SET_AEA_AR(regs, (r1 + i) & 0xF);
     }
 
     /* Load from next page */
-    for ( ; i < n; i++)
+    for ( ; i < n; i++, p2++)
     {
-        regs->AR((r1 + i) & 0xF) = fetch_fw (p2++);
+        regs->AR((r1 + i) & 0xF) = fetch_fw (p2);
         SET_AEA_AR(regs, (r1 + i) & 0xF);
     }
 
@@ -6808,8 +6811,8 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
     {
         /* Boundary not crossed */
         n >>= 2;
-        for (i = 0; i < n; i++)
-            regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1++);
+        for (i = 0; i < n; i++, p1++)
+            regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1);
     }
     else
     {
@@ -6822,11 +6825,11 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
         {
             /* Addresses are word aligned */
             m >>= 2;
-            for (i = 0; i < m; i++)
-                regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1++);
+            for (i = 0; i < m; i++, p1++)
+                regs->GR_L((r1 + i) & 0xF) = fetch_fw (p1);
             n >>= 2;
-            for ( ; i < n; i++)
-                regs->GR_L((r1 + i) & 0xF) = fetch_fw (p2++);
+            for ( ; i < n; i++, p2++)
+                regs->GR_L((r1 + i) & 0xF) = fetch_fw (p2);
         }
         else
         {
