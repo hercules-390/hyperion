@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.64  2008/04/09 13:53:45  rbowler
+// Operand disassembly for RIL instructions
+//
 // Revision 1.63  2008/04/09 09:09:22  bernard
 // EXRL instruction
 //
@@ -1072,7 +1075,9 @@ char    buf[100];                       /* Message buffer            */
             xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid, vaddr, arn,
                                             regs, ACCTYPE_LRA);
             n = sprintf (buf, "V:"F_VADR" ", vaddr);
-            if (stid == TEA_ST_PRIMARY)
+            if (REAL_MODE(&regs->psw))
+                n += sprintf (buf+n, "(dat off)");
+            else if (stid == TEA_ST_PRIMARY)
                 n += sprintf (buf+n, "(primary)");
             else if (stid == TEA_ST_SECNDRY)
                 n += sprintf (buf+n, "(secondary)");
