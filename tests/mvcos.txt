@@ -1,0 +1,83 @@
+* MVCOS test $Id$
+sysclear
+archmode esame
+r 01a0=00000001800000000000000000002000 # z/Arch restart PSW
+r 01c0=00000001800000000000000000002670 # z/Arch svc new PSW
+r 01d0=04020001800000000000000000BADBAD # z/Arch pgm new PSW
+r 2000=A59F2000     # LLILL R9,X'2000'  R9=Dest base register
+r 2004=A5AF3000     # LLILL R10,X'3000' R10=Source base register
+r 2008=EB039680002F # LCTLG C0,C3,CTLR0 Load control regs 0,1,2,3
+r 200E=EB7796A0002F # LCTLG C7,C7,CTLR7 Load SASCE control reg 7
+r 2014=EBDD96A8002F # LCTLG C13,C13,CTLR13 Load HASCE control reg 13
+r 201A=80009606     # SSM DAT_ON        Turn on addr translation
+r 201E=B2190100     # SAC X'100'        Set secondary addr space
+r 2022=E320A0000003 # LRAG R2,SSOURCE   R2=Real addr of secondary  
+r 2028=41100040     # LA R1,X'48'       R1=Storage key + fetch prot
+r 202C=B22B0012     # SSKE R1,R2        Set secondary storage key
+r 2030=B2190000     # SAC X'000'        Set primary addr space   
+r 2034=41500008     # LA  R5,8          R5=MVCOS length
+r 2038=A7080000     # LHI R0,0          R0=Default key and AS   
+r 203C=C8509800A000 # MVCOS DEST1,PSOURCE,R5 Move from primary
+r 2042=47709600     # BNZ DIE           Branch if cc not zero
+r 2046=D50798009700 # CLC DEST1(8),EXP1 Compare with expected result
+r 204C=47709600     # BNE DIE           Branch if not equal  
+r 2050=0A01         # SVC X'01'         Set PSW key=0, prob state
+r 2052=41500008     # LA  R5,8          R5=MVCOS length
+r 2056=A7084083     # LHI R0,X'4083'    R0=Key4, secondary AS   
+r 205A=C8509808A000 # MVCOS DEST2,SSOURCE,R5 Move from secondary
+r 2060=47709600     # BNZ DIE           Branch if cc not zero
+r 2064=D50798089708 # CLC DEST2(8),EXP2 Compare with expected result
+r 206A=47709600     # BNE DIE           Branch if not equal  
+r 206E=0A00         # SVC X'00'         Set PSW key=0, supv state
+r 2070=B2B29610     # LPSWE WAITPSW     Load enabled wait PSW
+r 2600=0A00         #DIE SVC X'00'      Set PSW key=0, supv state
+r 2602=B2B201D0     # LPSWE PGMNPSW     Load error PSW
+r 2606=04           #DAT_ON DC X'04'    System mask DAT bit
+r 2610=07020001800000000000000000AAAAAA # WAITPSW Enabled wait PSW
+r 2620=04020001800000000000000000BADBAD # DISWAIT Disable wait PSW
+r 2630=00020001800000000000000000002640 # NEWPSWI New PSW for Pgm Chk
+r 2640=5880008C     #PGMFLIH L R8,PGMINTC  Pgm chk interrupt handler
+r 2644=B2B20150     # LPSWE PGMOPSW     Resume interrupted program
+r 2670=D2000141008B #SVCFLIH MVC SVCOPSW+1(1),SVCINTC+3 Set key_CMWP
+r 2676=B2B20140     # LPSWE SVCOPSW     Resume interrupted program
+r 2680=0000000004000000                 # CTLR0 DAS control on
+r 2688=0000000000005000                 # CTLR1 DC A(PSEGTAB)
+r 2690=0000000000000000                 # CTLR2 DC A(DUCT)
+r 2698=0000000088000000                 # CTLR3 PKM Keys 0,4 auth
+r 26A0=0000000000006000                 # CTLR7 DC A(SSEGTAB)
+r 26A8=0000000000007000                 # CTLR13 DC A(HSEGTAB)
+r 2700=D7D7D7D7D7D7D7D7                 # EXP1 DC C'PPPPPPPP'
+r 2708=E2E2E2E2E2E2E2E2                 # EXP2 DC C'SSSSSSSS'
+r 2710=C8C8C8C8C8C8C8C8                 # EXP3 DC C'HHHHHHHH'
+r 2800=0000000000000000                 # DEST1 DC XL8'00'
+r 2808=0000000000000000                 # DEST2 DC XL8'00'
+r 2810=0000000000000000                 # DEST3 DC XL8'00'
+* Segment tables
+r 5000=0000000000008000                 # PSEGTAB DC A(PPAGTAB)
+r 6000=0000000000008800                 # SSEGTAB DC A(SPAGTAB)
+r 7000=0000000000009000                 # SSEGTAB DC A(HPAGTAB)
+* Page table for primary address space
+r 8000=0000000000000000                 # PPAGTAB V=0000 R=0000
+r 8008=0000000000001000                 # PPAGTAB V=1000 R=1000
+r 8010=0000000000002000                 # PPAGTAB V=2000 R=2000
+r 8018=000000000000A000                 # PPAGTAB V=3000 R=A000
+* Page table for secondary address space
+r 8800=0000000000000000                 # SPAGTAB V=0000 R=0000
+r 8808=0000000000001000                 # SPAGTAB V=1000 R=1000
+r 8810=0000000000002000                 # SPAGTAB V=2000 R=2000
+r 8818=000000000000B000                 # SPAGTAB V=3000 R=B000
+* Page table for home address space
+r 9000=0000000000000000                 # HPAGTAB V=0000 R=0000
+r 9008=0000000000001000                 # HPAGTAB V=1000 R=1000
+r 9010=0000000000002000                 # HPAGTAB V=2000 R=2000
+r 9018=000000000000C000                 # HPAGTAB V=3000 R=C000
+* Virtual page 3000 of primary address space
+r A000=D7D7D7D7D7D7D7D7                 # PSOURCE DC C'PPPPPPPP'
+* Virtual page 3000 of secondary address space
+r B000=E2E2E2E2E2E2E2E2                 # SSOURCE DC C'SSSSSSSS'
+* Virtual page 3000 of home address space
+r C000=C8C8C8C8C8C8C8C8                 # HSOURCE DC C'HHHHHHHH'
+ostailor null
+s+
+pgmtrace +7
+restart

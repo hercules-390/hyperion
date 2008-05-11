@@ -67,6 +67,7 @@ EXTRA_DIST =        \
     loop.txt        \
     lxdtr.txt       \
     maer.txt        \
+    mvcos.txt       \
     mxtr.txt        \
     prtest.txt      \
     rnsbg.txt       \

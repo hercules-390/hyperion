@@ -1898,6 +1898,10 @@
                         >
                     </File>
                     <File
+                        RelativePath=".\tests\mvcos.txt"
+                        >
+                    </File>
+                    <File
                         RelativePath=".\tests\mxtr.txt"
                         >
                     </File>
