@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.21  2008/03/30 00:07:58  rbowler
+// Incorrect bit selection again for RNSBG,RISBG,ROSBG,RXSBG
+//
 // Revision 1.20  2008/03/28 23:03:54  rbowler
 // Correct relative address calculation for RIL-format instructions
 //
@@ -1280,6 +1283,8 @@ int     ai, li, ti;                     /* Operand address subfields */
     /* Address bits 56-59 contain the Attribute Indication (AI) */
     ai = (effective_addr2 >> 4) & 0xF;
 
+    //logmsg ("ECAG ai=%d li=%d ti=%d\n", ai, li, ti);
+
     /* If reserved bits 40-55 are not zero then set r1 to all ones */
     if ((effective_addr2 & 0xFFFF00) != 0)
     {
@@ -1288,15 +1293,41 @@ int     ai, li, ti;                     /* Operand address subfields */
     }
 
     /* If AI=0 (topology summary) is requested, set register r1 to
-       all zeroes indicating that no cache levels are implemented */
+       indicate that cache level 0 is private to this CPU and that
+       cache levels 1-7 are not implemented */
     if (ai == 0)
     {
-        regs->GR(r1) = 0;
+        regs->GR_H(r1) = 0x04000000;
+        regs->GR_L(r1) = 0x00000000;
+        return;
+    }
+
+    /* If cache level is not 0, set register r1 to all ones which
+       indicates that the requested cache level is not implemented */
+    if (li > 0)
+    {
+        regs->GR(r1) = 0xFFFFFFFFFFFFFFFFULL;
+        return;
+    }
+
+    /* If AI=1 (cache line size) is requested for cache level 0
+       set register r1 to indicate a fictitious cache line size */
+    if (ai == 1 && li == 0)
+    {
+        regs->GR(r1) = 256;
+        return;
+    }
+
+    /* If AI=2 (total cache size) is requested for cache level 0 
+       set register r1 to indicate a fictitious total cache size */
+    if (ai == 2 && li == 0)
+    {
+        regs->GR(r1) = 256 * 2048;
         return;
     }
 
     /* Set register r1 to all ones indicating that the requested
-       cache level is not implemented */
+       attribute indication is reserved */
     regs->GR(r1) = 0xFFFFFFFFFFFFFFFFULL;
 
 } /* end DEF_INST(extract_cache_attribute) */
