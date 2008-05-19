@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.90  2008/01/07 22:59:11  rbowler
+// Additional LFS validity checks
+//
 // Revision 1.89  2007/11/25 19:30:21  gsmith
 // fix LRE length check, thanks Fish!! - Greg
 //
@@ -3081,7 +3084,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
               (iobuf[0] == 0x11 || iobuf[0] == 0x18) ? 12 :
               (iobuf[0] == 0x12) ? 5 :
               (iobuf[0] == 0x13 || iobuf[0] == 0x14) ? 4 :
-              (iobuf[0] == 0x16 || iobuf[0] == 0xB0) ? 4 :
+              (iobuf[0] == 0x16) ? 4 :
+              (iobuf[0] == 0x1D) ? 66 :
+              (iobuf[0] == 0xB0) ? 4 :
               2;
 
         /* Command reject if count is less than required */
@@ -3150,6 +3155,23 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 dev->ckdssdlen = (iobuf[8]==0x00) ? 96 : 192;
                 break;
 
+            case 0x0E: /* Unit address configuration */
+                /* Prepare unit address configuration record */
+                memset (iobuf, 0x00, 512);
+                /* 256 pairs (UA type, base UA) */
+
+                /* Indicate the length of subsystem data prepared */
+                dev->ckdssdlen = 512;
+                break;
+
+            case 0x41: /* Feature codes */
+                /* Prepare feature codes record */
+                memset (iobuf, 0x00, 256);
+
+                /* Indicate the length of subsystem data prepared */
+                dev->ckdssdlen = 256;
+                break;
+
             default: /* Unknown suborder code */
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_4);
@@ -3193,6 +3215,25 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
             /* Mark Set Special Intercept inactive */
             dev->ckdssi = 1;
+
+            break;
+
+        case 0x1D: /* Set Subsystem Characteristics */
+
+            /* Command reject if flag byte is not zero */
+            if (iobuf[1] != 0x00)
+            {
+                ckd_build_sense (dev, SENSE_CR, 0, 0,
+                                FORMAT_0, MESSAGE_4);
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                break;
+            }
+
+            /* Prepare subsystem data (SSC record) */
+            memset (iobuf, 0x00, 66);
+
+            /* Indicate the length of subsystem data prepared */
+            dev->ckdssdlen = 66;
 
             break;
 
