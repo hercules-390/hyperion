@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.91  2008/05/19 15:40:04  rbowler
+// PSF order 18 suborders (0E,41) and order 1D by Jacob Dekel
+//
 // Revision 1.90  2008/01/07 22:59:11  rbowler
 // Additional LFS validity checks
 //
@@ -3228,12 +3231,6 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
                 break;
             }
-
-            /* Prepare subsystem data (SSC record) */
-            memset (iobuf, 0x00, 66);
-
-            /* Indicate the length of subsystem data prepared */
-            dev->ckdssdlen = 66;
 
             break;
 
