@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.69  2008/02/07 00:29:04  rbowler
+// Solaris build support by Jeff Savit
+//
 // Revision 1.68  2008/01/11 21:33:21  fish
 // new 'ctc' command to enable/disable debug option on demand
 //
@@ -1463,6 +1466,9 @@ static void*  LCS_PortThread( PLCSPORT pPort )
 
         // Read an IP packet from the TAP device
         iLength = TUNTAP_Read( pPort->fd, szBuff, sizeof( szBuff ) );
+
+        if( iLength == 0 )      // (probably EINTR; ignore)
+            continue;
 
         // Check for other error condition
         if( iLength < 0 )
