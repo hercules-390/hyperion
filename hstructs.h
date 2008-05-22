@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.84  2008/04/08 17:13:47  bernard
+// Added execute relative long instruction
+//
 // Revision 1.83  2008/03/30 02:51:33  fish
 // Fix SCSI tape EOV (end of volume) processing
 //
@@ -1065,7 +1068,8 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   eotwarning:1;           /* 1=EOT warning area reached*/
         U32     msgid;                  /* Message Id of async. i/o  */
 #if defined(OPTION_SCSI_TAPE)
-        U32     sstat;                  /* Generic SCSI tape device-
+        struct mtget mtget;             /* SCSI tape status struct   */
+#define sstat  mtget.mt_gstat           /* Generic SCSI tape device-
                                            independent status field;
                                            (struct mtget->mt_gstat)  */
         TID     stape_mountmon_tid;     /* Tape-mount monitor thread */
@@ -1078,7 +1082,8 @@ struct DEVBLK {                         /* Device configuration block*/
         LOCK    stape_getstat_lock;     /* LOCK for status wrkr thrd */
         COND    stape_getstat_cond;     /* COND for status wrkr thrd */
         COND    stape_exit_cond;        /* thread wait for exit COND */
-        U32     stape_getstat_sstat;    /* status wrkr thrd status   */
+        struct mtget stape_getstat_mtget;/* status wrkr thrd status  */
+#define stape_getstat_sstat stape_getstat_mtget.mt_gstat /* (gstat)  */
         struct timeval
                 stape_getstat_query_tod;/* TOD of actual drive query */
 #endif

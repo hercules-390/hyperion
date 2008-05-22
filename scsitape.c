@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.29  2008/03/31 06:36:49  fish
+// (untab)
+//
 // Revision 1.28  2008/03/30 02:51:33  fish
 // Fix SCSI tape EOV (end of volume) processing
 //
@@ -544,7 +547,9 @@ struct mtop opblk;
     if (rc >= 0)
     {
         /* Increment current file number since tapemark was written */
-        dev->curfilen++;
+/*      dev->curfilen++; /* (CCW processor handles this automatically
+                             so there's no need for us to do it here) */
+
         /* (tapemarks count as block identifiers too!) */
         dev->blockid++;
     }
@@ -690,19 +695,19 @@ struct mtop opblk;
         return +1;
     }
 
-    /* Since the MT driver does not set EOF status
-       when forward spacing over a tapemark, the best
-       we can do is to assume that an I/O error means
-       that a tapemark was detected... (in which case
-       we incremnent the file number and return 0).
-    */
+    /* Check for spacing over a tapemark... */
+
     save_errno = errno;
     {
         int_scsi_status_update( dev, 0 );
     }
     errno = save_errno;
 
-    if ( EIO == errno && STS_EOF(dev) )
+    // PROGRAMMING NOTE: please see the "Programming Note" in the
+    // 'bsb_scsitape' function regarding usage of the 'EOF' status
+    // to detect spacing over tapemarks.
+
+    if ( EIO == errno && STS_EOF(dev) ) // (fwd-spaced over tapemark?)
     {
         dev->curfilen++;
         dev->blockid++;
@@ -760,6 +765,7 @@ int bsb_scsitape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 int  rc;
 int  save_errno;
 struct mtop opblk;
+struct mtget starting_mtget;
 
     /* PROGRAMMING NOTE: There is currently no way to distinguish
     ** between a "normal" backspace-block error and a "backspaced-
@@ -768,7 +774,7 @@ struct mtop opblk;
     ** 'EIO'. (Interrogating the status AFTER the fact (to see if
     ** we're positioned at loadpoint) doesn't tell us whether we
     ** were already positioned at loadpoint *before* the error was
-    ** was encountered or whether we're only positioned ar load-
+    ** was encountered or whether we're only positioned at load-
     ** point because we *did* in fact backspace over the very first
     ** block on the tape (and are thus now, after the fact, sitting
     ** at loadpoint because we *did* backspace over a block but it
@@ -783,8 +789,11 @@ struct mtop opblk;
     ** an error afterwards.
     */
 
-    /* Obtain tape status before backward space... (no choice!) */
+    /* Obtain tape status before backward space... */
     int_scsi_status_update( dev, 0 );
+
+    /* (save the current status before the i/o in case of error) */
+    memcpy( &starting_mtget, &dev->mtget, sizeof( struct mtget ) );
 
     /* Unit check if already at start of tape */
     if ( STS_BOT( dev ) )
@@ -795,7 +804,6 @@ struct mtop opblk;
     }
 
     /* Attempt the backspace i/o...*/
-
     opblk.mt_op    = MTBSR;
     opblk.mt_count = 1;
 
@@ -808,28 +816,84 @@ struct mtop opblk;
         return +1;
     }
 
-    /* Since the MT driver does not set EOF status
-       when backspacing over a tapemark, the best
-       we can do is to assume that an I/O error means
-       that a tapemark was detected... (in which case
-       we decrement the file number and return 0).
-    */
+    /* Retrieve new status after the [supposed] i/o error... */
     save_errno = errno;
     {
         int_scsi_status_update( dev, 0 );
     }
     errno = save_errno;
 
-    if ( EIO == errno && STS_EOF(dev) )
+    /* Check for backspacing over tapemark... */
+
+    /* PROGRAMMING NOTE: on Windows, our scsi tape driver (w32stape.c)
+    ** sets 'EOF' status whenever a tapemark is spaced over in EITHER
+    ** direction (forward OR backward), whereas *nix operating systems
+    ** do not. They set 'EOF' status only when FORWARD spacing over a
+    ** tapemark but not when BACKSPACING over one.
+    **
+    ** (Apparently the EOF status was actually meant to mean that the
+    ** tape is "PHYSICALLY POSITIONED PAST [physical] eof" (i.e. past
+    ** an "eof marker" (i.e. a tapemark)) and nothing more. That is to
+    ** say, it is apparently NOT meant to mean a tapemark was passed
+    ** over, but rather only that you're "POSITIONED PAST" a tapemark.)
+    **
+    ** Therefore since 'EOF' status will thus *NEVER* be set whenever
+    ** a tapemark is spaced over in the *BACKWARD* direction [on non-
+    ** Windows operating systems], we need some other means of distin-
+    ** guishing between true backspace-block i/o errors and ordinary
+    ** spacing over a tapemark (which is NOT an i/o error but which
+    ** *is* an "out of the ordinary" (unit exception) type of event).
+    **
+    ** Extensive research on this issue has revealed the *ONLY* semi-
+    ** reliable means of distinguishing between them is by checking
+    ** the "file#" and "block#" fields of the status structure after
+    ** the supposed i/o error. If the file# is one less than it was
+    ** before and the block# is -1, then a tapemark was simply spaced
+    ** over. If the file# and block# is anything else however, then
+    ** the originally reported error was a bona-fide i/o error (i.e.
+    ** the original backspace-block (MTBSR) actually *failed*).
+    **
+    ** I say "semi-reliable" because comments seem to indicate that
+    ** the "file#" and "block#" fields of the mtget status structure
+    ** "are not always used". The best that I can tell however, is
+    ** most *nix operating systems *do* seem to maintain them. Thus,
+    ** for now, we're going to rely on their accuracy since without
+    ** them there's really no way whatsoever to distingish between
+    ** a normal backspacing over a tapemark unit exception condition
+    ** and a bona-fide i/o error (other than doing our own SCSI i/o
+    ** of course (which we don't support (yet))). -- Fish, May 2008
+    */
+    if ( EIO == errno )
     {
-        dev->curfilen--;
-        dev->blockid--;
-        /* Return 0 to indicate tapemark was spaced over */
-        return 0;
+#if defined( _MSVC_ )
+
+        /* Windows always sets 'EOF' status whenever a tapemark is
+           spaced over in EITHER direction (forward OR backward) */
+
+        if ( STS_EOF(dev) )     /* (passed over tapemark?) */
+
+#else // !defined( _MSVC_ )
+
+        /* Unix-type systems unfortunately do NOT set 'EOF' whenever
+           backspacing over a tapemark (see PROGRAMMING NOTE above),
+           so we need to check the status struct's file# and block#
+           fields instead... */
+
+        /* (passed over tapemark?) */
+        if (1
+            && dev->mtget.mt_fileno == (starting_mtget.mt_fileno - 1)
+            && dev->mtget.mt_blkno == -1
+        )
+#endif // defined( _MSVC_ )
+        {
+            dev->curfilen--;
+            dev->blockid--;
+            /* Return 0 to indicate tapemark was spaced over */
+            return 0;
+        }
     }
 
-    /* Bona fide backspace block error ... */
-
+    /* Bona fide backspace block i/o error ... */
     save_errno = errno;
     {
         logmsg (_("HHCTA036E Backspace block error on %u:%4.4X=%s; errno=%d: %s\n"),
@@ -1686,9 +1750,16 @@ void* get_stape_status_thread( void *db )
             break;
 
         if ( 0 == rc )
-            dev->stape_getstat_sstat = mtget.mt_gstat;
+        {
+            memcpy( &dev->stape_getstat_mtget, &mtget, sizeof( struct mtget ) );
+        }
         else
-            dev->stape_getstat_sstat = GMT_DR_OPEN(-1);     // (presumed and forced)
+        {
+            memset( &dev->stape_getstat_mtget, 0, sizeof( struct mtget ) );
+            dev->stape_getstat_mtget.mt_blkno  = -1;      // (forced)
+            dev->stape_getstat_mtget.mt_fileno = -1;      // (forced)
+            dev->stape_getstat_sstat = GMT_DR_OPEN(-1);   // (presumed and forced)
+        }
 
         // Notify requestors new updated status is available
         // and go back to sleep to wait for the next request...
@@ -1782,11 +1853,14 @@ void scsi_get_status_fast( DEVBLK* dev )
         // Timeout (status retrieval took too long).
         // We therefore presume no tape is mounted.
 
+        memset( &dev->mtget, 0, sizeof( struct mtget ) );
+        dev->mtget.mt_blkno  = -1;      // (forced)
+        dev->mtget.mt_fileno = -1;      // (forced)
         dev->sstat = GMT_DR_OPEN(-1);   // (presumed and forced)
     }
     else // Request finished in time...
     {
-        dev->sstat = dev->stape_getstat_sstat;
+        memcpy( &dev->mtget, &dev->stape_getstat_mtget, sizeof( struct mtget ) );
     }
 
     release_lock( &dev->stape_getstat_lock );

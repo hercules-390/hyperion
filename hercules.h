@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.301  2007/12/11 15:01:06  rbowler
+// Fix undefined gettimeofday in clock.h rev 1.27 (MSVC)
+//
 // Revision 1.300  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -127,6 +130,9 @@
 #include "w32ctca.h"
 
 #include "hsocket.h"
+#ifdef _MSVC_
+  #include "w32mtio.h"    // 'mtio.h' needed by hstructs.h
+#endif // _MSVC_
 #include "hstructs.h"     // (Hercules-wide structures)
 #include "hexterns.h"     // (Hercules-wide extern function prototypes)
 
