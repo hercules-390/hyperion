@@ -112,6 +112,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.141  2008/05/22 19:25:58  fish
+// Flex FakeTape support
+//
 // Revision 1.140  2008/04/05 02:36:00  fish
 // Wrap GENTMH_SCSI_ACTION... case in 'generic_tmhcall' function
 // with #ifdef OPTION_SCSI_TAPE to fix undefined symbol error
@@ -853,7 +856,8 @@ PARSER  ptab  [] =
     { "rw",         NULL },
     { "ring",       NULL },
     { "deonirq",    "%d" },
-    { "--blkid-24", NULL },
+    { "--blkid-22", NULL },
+    { "--blkid-24", NULL },   /* (synonym for --blkid-22) */
     { "--blkid-32", NULL },
     { "--no-erg",   NULL },
     { NULL,         NULL },   /* (end of table) */
@@ -884,6 +888,7 @@ enum
     TDPARM_RW,
     TDPARM_RING,
     TDPARM_DEONIRQ,
+    TDPARM_BLKID22,
     TDPARM_BLKID24,
     TDPARM_BLKID32,
     TDPARM_NOERG
@@ -1342,6 +1347,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             break;
 
 #if defined(OPTION_SCSI_TAPE)
+        case TDPARM_BLKID22:
         case TDPARM_BLKID24:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
@@ -1440,7 +1446,7 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
         {
             if (0x3590 == dev->devtype) // emulating 3590
             {
-                if (!dev->stape_blkid_32 ) strlcat( devparms, " --blkid-24", sizeof(devparms) );
+                if (!dev->stape_blkid_32 ) strlcat( devparms, " --blkid-22", sizeof(devparms) );
             }
             else // emulating 3480, 3490
             {
@@ -1486,7 +1492,7 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
 
             if (0x3590 == dev->devtype) // emulating 3590
             {
-                if (!dev->stape_blkid_32 ) strlcat( devparms, " --blkid-24", sizeof(devparms) );
+                if (!dev->stape_blkid_32 ) strlcat( devparms, " --blkid-22", sizeof(devparms) );
             }
             else // emulating 3480, 3490
             {
