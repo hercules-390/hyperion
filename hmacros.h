@@ -10,6 +10,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.20  2008/02/19 11:49:19  ivan
+// - Move setting of CPU priority after spwaning timer thread
+// - Added support for Posix 1003.1e capabilities
+//
 // Revision 1.19  2008/01/23 00:47:40  rbowler
 // Modifications for VS9 C++ 2008 Express by Charlie Brint
 //
@@ -120,6 +124,18 @@
     #define  va_copy(to,from)   memcpy((to),(from),sizeof(va_list))
   #endif
 #endif
+
+/*-------------------------------------------------------------------*/
+/* handy arraysize macro...                                          */
+/*-------------------------------------------------------------------*/
+
+#ifndef   _countof
+  #define _countof(x)       ( sizeof(x) / sizeof(x[0]) )
+#endif
+#ifndef   arraysize
+  #define arraysize(x)      _countof(x)
+#endif
+
 
 /*-------------------------------------------------------------------*/
 /* Large File Support portability...                                 */

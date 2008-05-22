@@ -6,6 +6,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.24  2008/05/22 19:25:58  fish
+// Flex FakeTape support
+//
 // Revision 1.23  2008/03/28 02:09:42  fish
 // Add --blkid-24 option support, poserror flag renamed to fenced,
 // added 'generic', 'readblkid' and 'locateblk' tape media handler
@@ -395,6 +398,10 @@ extern void  autoload_tape_entry    (DEVBLK *dev, char *fn, char **strtokw);
 extern int   autoload_mount_tape    (DEVBLK *dev, int alix);
 
 extern void* autoload_wait_for_tapemount_thread (void *db);
+
+extern int   gettapetype            (DEVBLK *dev, char **short_descr);
+extern int   gettapetype_byname     (DEVBLK *dev);
+extern int   gettapetype_bydata     (DEVBLK *dev);
 
 extern int   mountnewtape           (DEVBLK *dev, int argc, char **argv);
 extern void  GetDisplayMsg          (DEVBLK *dev, char *msgbfr, size_t  lenbfr);

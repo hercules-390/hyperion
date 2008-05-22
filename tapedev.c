@@ -112,6 +112,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.142  2008/05/22 20:15:12  fish
+// Correct --blkid-24 typo (SHOULD be --blkid-22, not 24)
+//
 // Revision 1.141  2008/05/22 19:25:58  fish
 // Flex FakeTape support
 //
@@ -913,7 +916,29 @@ struct tape_format_entry                    /*   (table layout)      */
 
 struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
 {
+    /* This entry matches a filename ending with .aws    */
+#define  AWSTAPE_FMTENTRY   0
+#define  DEFAULT_FMTENTRY   AWSTAPE_FMTENTRY
+    {
+        "\\.aws$",
+        TAPEDEVT_AWSTAPE,
+        &tmh_aws,
+        "AWS Format tape file",
+        "AWS tape"
+    },
+
+    /* This entry matches a filename ending with .het    */
+#define  HETTAPE_FMTENTRY   1
+    {
+        "\\.het$",
+        TAPEDEVT_HETTAPE,
+        &tmh_het,
+        "Hercules Emulated Tape file",
+        "HET tape"
+    },
+
     /* This entry matches a filename ending with .tdf    */
+#define  OMATAPE_FMTENTRY   2
     {
         "\\.tdf$",
         TAPEDEVT_OMATAPE,
@@ -923,6 +948,7 @@ struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
     },
 
     /* This entry matches a filename ending with .fkt    */
+#define  FAKETAPE_FMTENTRY  3
     {
         "\\.fkt$",
         TAPEDEVT_FAKETAPE,
@@ -934,6 +960,7 @@ struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
 #if defined(OPTION_SCSI_TAPE)
 
     /* This entry matches a filename starting with /dev/ */
+#define  SCSITAPE_FMTENTRY  4
     {
         "^/dev/",
         TAPEDEVT_SCSITAPE,
@@ -945,6 +972,8 @@ struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
 #if defined(_MSVC_)
 
     /* (same idea but for Windows SCSI tape device names) */
+#undef   SCSITAPE_FMTENTRY
+#define  SCSITAPE_FMTENTRY  5
     {
         "^\\\\\\\\\\.\\\\Tape[0-9]",
         TAPEDEVT_SCSITAPE,
@@ -955,25 +984,220 @@ struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
 
 #endif // _MSVC_
 #endif // OPTION_SCSI_TAPE
-
-    /* This entry matches a filename ending with .het    */
-    {
-        "\\.het$",
-        TAPEDEVT_HETTAPE,
-        &tmh_het,
-        "Hercules Emulated Tape file",
-        "HET tape"
-    },
-
-    /* Catch-all entry that matches anything else */
-    {
-        NULL,
-        TAPEDEVT_AWSTAPE,
-        &tmh_aws,
-        "AWS Format tape file",
-        "AWS tape"
-    }
 };
+
+
+/*-------------------------------------------------------------------*/
+/*  gettapetype_byname        determine tape device type by filename */
+/*-------------------------------------------------------------------*/
+/* returns fmttab entry# on success, -1 on error/unable to determine */
+/*-------------------------------------------------------------------*/
+int gettapetype_byname (DEVBLK *dev)
+{
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+    regex_t     regwrk;                 /* REGEXP work area          */
+    regmatch_t  regwrk2;                /* REGEXP match area         */
+    char        errbfr[1024];           /* Working storage           */
+#endif // HAVE_REGEX_H
+    int         i;                      /* Loop control              */
+    int         rc;                     /* various rtns return codes */
+
+    /* Use the file name to determine the device type */
+
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+
+    for (i=0; i < arraysize( fmttab ); i++)
+    {
+        rc = regcomp (&regwrk, fmttab[i].fmtreg, REG_ICASE);
+        if (rc < 0)
+        {
+            regerror (rc, &regwrk, errbfr, 1024);
+            logmsg (_("HHCTA999E Device %4.4X: Unable to determine tape format type for %s: Internal error: Regcomp error %s on index %d\n"),
+                dev->devnum, dev->filename, errbfr, i);
+            return -1;
+        }
+
+        rc = regexec (&regwrk, dev->filename, 1, &regwrk2, 0);
+        if (rc < 0)
+        {
+            regerror (rc, &regwrk, errbfr, 1024);
+            regfree ( &regwrk );
+            logmsg (_("HHCTA999E Device %4.4X: Unable to determine tape format type for %s: Internal error: Regexec error %s on index %d\n"),
+                dev->devnum, dev->filename, errbfr, i);
+            return -1;
+        }
+
+        regfree (&regwrk);
+
+        if (rc == 0)  /* MATCH? */
+            return i;
+
+        ASSERT( rc == REG_NOMATCH );
+    }
+
+#else // !HAVE_REGEX_H
+
+    if (1
+        && (rc = strlen(dev->filename)) > 4
+        && (rc = strcasecmp( &dev->filename[rc-4], ".aws" )) == 0
+    )
+    {
+        return AWSTAPE_FMTENTRY;
+    }
+
+    if (1
+        && (rc = strlen(dev->filename)) > 4
+        && (rc = strcasecmp( &dev->filename[rc-4], ".het" )) == 0
+    )
+    {
+        return HETTAPE_FMTENTRY;
+    }
+
+    if (1
+        && (rc = strlen(dev->filename)) > 4
+        && (rc = strcasecmp( &dev->filename[rc-4], ".tdf" )) == 0
+    )
+    {
+        return OMATAPE_FMTENTRY;
+    }
+
+    if (1
+        && (rc = strlen(dev->filename)) > 4
+        && (rc = strcasecmp( &dev->filename[rc-4], ".fkt" )) == 0
+    )
+    {
+        return FAKETAPE_FMTENTRY;
+    }
+
+#if defined(OPTION_SCSI_TAPE)
+    if (1
+        && (rc = strlen(dev->filename)) > 5
+        && (rc = strncasecmp( dev->filename, "/dev/", 5 )) == 0
+    )
+    {
+        if (strncasecmp( dev->filename+5, "st", 2 ) == 0)
+            dev->stape_close_rewinds = 1; // (rewind at close)
+        else
+            dev->stape_close_rewinds = 0; // (otherwise don't)
+
+        return SCSITAPE_FMTENTRY;
+    }
+#if defined(_MSVC_)
+    if (1
+        && strncasecmp(dev->filename, "\\\\.\\Tape", 8) == 0
+        && isdigit(*(dev->filename+8))
+        &&  0  ==  *(dev->filename+9)
+    )
+    {
+        return SCSITAPE_FMTENTRY;
+    }
+#endif // _MSVC_
+#endif // OPTION_SCSI_TAPE
+#endif // HAVE_REGEX_H
+
+    return -1;      /* -1 == "unable to determine" */
+
+} /* end function gettapetype_byname */
+
+
+/*-------------------------------------------------------------------*/
+/*  gettapetype_bydata       determine tape device type by file data */
+/*-------------------------------------------------------------------*/
+/* returns fmttab entry# on success, -1 on error/unable to determine */
+/*-------------------------------------------------------------------*/
+int gettapetype_bydata (DEVBLK *dev)
+{
+    char        pathname[MAX_PATH];     /* file path in host format  */
+    int         rc;                     /* various rtns return codes */
+
+    /* Try to determine the type based on actual file contents */
+    hostpath( pathname, dev->filename, sizeof(pathname) );
+    rc = open ( pathname, O_RDONLY | O_BINARY );
+    if (rc >= 0)
+    {
+        BYTE hdr[6];                    /* block header i/o buffer   */
+        int fd = rc;                    /* save file descriptor      */
+
+        /* Read the header. If bytes 0-3 are ASCII "0000", then the
+         * tape is likely a Flex FakeTape. Otherwise if bytes 2-3 are
+         * binary zero (x'0000'), it's likely an AWS type tape. If byte
+         * 4 (first flag byte) has either of the ZLIB or BZIP2 flags on,
+         * then it's a HET tape. Otherwise it's just an ordinary AWS tape.
+         */
+        rc = read (fd, hdr, sizeof(hdr));
+             close(fd);
+        if (rc >= 6)
+        {
+            /* Use the data to make the possible determination */
+            if (hdr[0] == 0x30 && hdr[1] == 0x30 && hdr[2] == 0x30 && hdr[3] == 0x30)
+                return FAKETAPE_FMTENTRY;
+
+            if (hdr[2] == 0 && hdr[3] == 0)
+            {
+                if (hdr[4] & 0x03)  /* ZLIB/BZIP2 compressed? */
+                    return HETTAPE_FMTENTRY;
+                else
+                    return AWSTAPE_FMTENTRY;
+            }
+        }
+    }
+    return -1;      /* -1 == "unable to determine" */
+
+} /* end function gettapetype_bydata */
+
+
+/*-------------------------------------------------------------------*/
+/*  gettapetype              determine tape device type              */
+/*-------------------------------------------------------------------*/
+/* returns fmttab entry# on success, -1 on error/unable to determine */
+/*-------------------------------------------------------------------*/
+int gettapetype (DEVBLK *dev, char **short_descr)
+{
+    char*       descr;                  /* Device descr from fmttab  */
+    int         i = -1;                 /* fmttab entry#             */
+
+    /* Try to determine device type by actual file contents first,
+       but only if this isn't a SCSI tape device. (Thus we need to
+       check by name first to determine if it's a SCSI device) */
+
+#if defined(OPTION_SCSI_TAPE)
+    i = gettapetype_byname( dev );          // (check if this is a SCSI)
+
+    if (i != SCSITAPE_FMTENTRY)             // (if not, then check by..
+#endif
+    {
+        int i2 = gettapetype_bydata( dev ); // ..reading the file data)
+        if (i2 >= 0)                        // (if that worked..)
+            i = i2;                         // (..then we know the type)
+    }
+
+    /* If we couldn't determine the device type based on the file's
+       contents, then try again but this time based on its filename */
+
+    if (i < 0)
+        i = gettapetype_byname( dev );
+
+    /* If still unknown, use a reasonable default value */
+
+    if (i < 0)
+    {
+        logmsg (_("HHCTA999W Device %4.4X: Unable to determine tape format type for %s; presuming AWS.\n"),
+                 dev->devnum, dev->filename);
+        i = DEFAULT_FMTENTRY;
+    }
+
+    dev->tapedevt = fmttab[i].fmtcode;
+    dev->tmh      = fmttab[i].tmh;
+    descr         = fmttab[i].descr;
+    *short_descr  = fmttab[i].short_descr;
+
+    if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
+        logmsg (_("HHCTA998I Device %4.4X: %s is a %s\n"),
+            dev->devnum, dev->filename, descr);
+
+    return 0;   // (success)
+
+} /* end function gettapetype */
 
 
 /*-------------------------------------------------------------------*/
@@ -1003,25 +1227,13 @@ struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
 /*-------------------------------------------------------------------*/
 int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 {
-#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
-
-    regex_t     regwrk;                 /* REGEXP work area          */
-    regmatch_t  regwrk2;                /* REGEXP match area         */
-    char        errbfr[1024];           /* Working storage           */
-
-#endif // HAVE_REGEX_H
-
-    char*       descr;                  /* Device descr from fmttab  */
     char*       short_descr;            /* Short descr from fmttab   */
     int         i;                      /* Loop control              */
     int         rc;                     /* various rtns return codes */
-
-    union                               /* Parser results            */
-    {
+    union {                             /* Parser results            */
         U32     num;                    /* Parser results            */
         BYTE    str[ 80 ];              /* Parser results            */
-    }
-    res;                                /* Parser results            */
+    } res;                              /* Parser results            */
 
     /* Release the previous OMA descriptor array if allocated */
     if (dev->omadesc != NULL)
@@ -1037,93 +1249,13 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         /* Save the file name in the device block */
         strcpy (dev->filename, argv[0]);
 
-    /* Use the file name to determine the device type */
-    for(i=0;;i++)
-    {
-        dev->tapedevt=fmttab[i].fmtcode;
-        dev->tmh=fmttab[i].tmh;
-        if(fmttab[i].fmtreg==NULL)
-        {
-            break;
-        }
-#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
-        rc=regcomp(&regwrk,fmttab[i].fmtreg,REG_ICASE);
-        if(rc<0)
-        {
-            regerror(rc,&regwrk,errbfr,1024);
-            logmsg (_("HHCTA999E Device %4.4X: Unable to determine tape format type for %s: Internal error: Regcomp error %s on index %d\n"),dev->devnum,dev->filename,errbfr,i);
-                return -1;
-        }
-        rc=regexec(&regwrk,dev->filename,1,&regwrk2,0);
-        if(rc==REG_NOMATCH)
-        {
-            regfree(&regwrk);
-            continue;
-        }
-        if(rc==0)
-        {
-            regfree(&regwrk);
-            break;
-        }
-        regerror(rc,&regwrk,errbfr,1024);
-        logmsg (_("HHCTA999E Device %4.4X: Unable to determine tape format type for %s: Internal error: Regexec error %s on index %d\n"),dev->devnum,dev->filename,errbfr,i);
-        regfree(&regwrk);
-        return -1;
-#else // !HAVE_REGEX_H
-        switch ( dev->tapedevt )
-        {
-        case TAPEDEVT_OMATAPE: // filename ends with ".tdf"
-            if ( (rc = strlen(dev->filename)) <= 4 )
-                rc = -1;
-            else
-                rc = strcasecmp( &dev->filename[rc-4], ".tdf" );
-            break;
-#if defined(OPTION_SCSI_TAPE)
-        case TAPEDEVT_SCSITAPE: // filename starts with "\\.\Tape" or "/dev/"
-#if defined(_MSVC_)
-            if (1
-                && strncasecmp(dev->filename, "\\\\.\\Tape", 8) == 0
-                && isdigit(*(dev->filename+8))
-                &&  0  ==  *(dev->filename+9)
-            )
-                rc = 0;
-            else
-#endif // _MSVC_
-            {
-                if ( (rc = strlen(dev->filename)) <= 5 )
-                    rc = -1;
-                else
-                    rc = strncasecmp( dev->filename, "/dev/", 5 );
-                if (0 == rc)
-                {
-                    if (strncasecmp( dev->filename+5, "st", 2 ) == 0)
-                        dev->stape_close_rewinds = 1; // (rewind at close)
-                    else
-                        dev->stape_close_rewinds = 0; // (otherwise don't)
-                }
-            }
-            break;
-#endif // OPTION_SCSI_TAPE
-        case TAPEDEVT_HET:      // filename ends with ".het"
-            if ( (rc = strlen(dev->filename)) <= 4 )
-                rc = -1;
-            else
-                rc = strcasecmp( &dev->filename[rc-4], ".het" );
-            break;
-        default:                // (should not occur)
-            ASSERT(0);
-            logmsg (_("HHCTA999E Device %4.4X: Unable to determine tape format type for %s\n"),dev->devnum,dev->filename);
-            return -1;
-        }
-        if (!rc) break;
-#endif // HAVE_REGEX_H
-    }
-    descr       = fmttab[i].descr;       // (save device description)
-    short_descr = fmttab[i].short_descr; // (save device description)
-    if (strcmp (dev->filename, TAPE_UNLOADED)!=0)
-    {
-        logmsg (_("HHCTA998I Device %4.4X: %s is a %s\n"),dev->devnum,dev->filename,descr);
-    }
+    /* Determine tape device type... */
+    VERIFY( gettapetype( dev, &short_descr ) == 0 );
+
+    /* (sanity check) */
+    ASSERT(dev->tapedevt != TAPEDEVT_UNKNOWN);
+    ASSERT(dev->tmh != NULL);
+    ASSERT(short_descr != NULL);
 
     /* Initialize device dependent fields */
     dev->fd                = -1;
