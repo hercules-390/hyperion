@@ -11,7 +11,7 @@
 /* This module contains the CCW handling functions for tape devices. */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/* Four emulated tape formats are supported:                         */
+/* Five emulated tape formats are supported:                         */
 /*                                                                   */
 /* 1. AWSTAPE   This is the format used by the P/390.                */
 /*              The entire tape is contained in a single flat file.  */
@@ -67,6 +67,19 @@
 /*                                                                   */
 /*              Support for HET is in the "HETTAPE.C" member.        */
 /*                                                                   */
+/*                                                                   */
+/* 5. FAKETAPE  This is the format used by Fundamental Software      */
+/*              on their FLEX-ES systems. It it similar to the AWS   */
+/*              format. The entire tape is contained in a single     */
+/*              flat file. A tape block is preceded by a 12-ASCII-   */
+/*              hex-characters header which indicate the size of     */
+/*              the previous and next blocks. Files are separated    */
+/*              by tapemarks which consist of headers with a zero    */
+/*              current block length. FakeTapes are both readable    */
+/*              and writable.                                        */
+/*                                                                   */
+/*              Support for FAKETAPE is in the "FAKETAPE.C" member.  */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -92,10 +105,15 @@
 /* SG24-2594 IBM 3590 Multiplatform Implementation                   */
 /* ANSI INCITS 131-1994 (R1999) SCSI-2 Reference                     */
 /* GA32-0127 IBM 3490E Hardware Reference                            */
+/* GC35-0152 EREP Release 3.5.0 Reference                            */
 /* SA22-7204 ESA/390 Common I/O-Device Commands                      */
+/* Flex FakeTape format (http://preview.tinyurl.com/67rgnp)          */
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.10  2008/03/31 13:55:43  rbowler
+// Reinstate lost comments; cosmetic changes to comments and indentation
+//
 // Revision 1.9  2008/03/31 12:33:46  rbowler
 // Reinstate original code to fix warning: implicit declaration of function `min'
 //
@@ -209,7 +227,7 @@
 
 #include "hstdinc.h"
 #include "hercules.h"  /* need Hercules control blocks               */
-#include "tapedev.h"   /* This module's header file                  */
+#include "tapedev.h"   /* Main tape handler header file              */
 
 /*-------------------------------------------------------------------*/
 
@@ -2056,7 +2074,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             /* Enable/Disable Data Compaction (compression) if requested */
             if (parm & PSF_ACTION_AC_DCD)
             {
-                if (TAPEDEVT_HET == dev->tapedevt)
+                if (TAPEDEVT_HETTAPE == dev->tapedevt)
                 {
                     rc = het_cntl( dev->hetb, HETCNTL_SET | HETCNTL_COMPRESS,
                                    bEnable ? TRUE : FALSE );

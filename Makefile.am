@@ -5,6 +5,13 @@
 # $Id$
 #
 # $Log$
+# Revision 1.182  2008/03/25 11:41:31  fish
+# SCSI TAPE MODS part 1: groundwork: non-functional changes:
+# rename some functions, comments, general restructuring, etc.
+# New source modules awstape.c, omatape.c, hettape.c and
+# tapeccws.c added, but not yet used (all will be used in a future
+# commit though when tapedev.c code is eventually split)
+#
 # Revision 1.181  2008/03/02 22:50:35  rbowler
 # Restore tabs corrupted by previous modification
 #
@@ -119,6 +126,7 @@ dyndev_SRC         = commadpt.c  \
                      sllib.c     \
                      hetlib.c    \
                      awstape.c   \
+                     faketape.c  \
                      hettape.c   \
                      omatape.c   \
                      scsitape.c  \
@@ -267,7 +275,7 @@ if OPTION_DYNAMIC_LOAD
   hdt3270_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3270_la_LIBADD  = $(DYNMOD_LD_ADD)
 
-  hdt3420_la_SOURCES = tapedev.c tapeccws.c awstape.c hettape.c omatape.c scsitape.c w32stape.c
+  hdt3420_la_SOURCES = tapedev.c tapeccws.c awstape.c faketape.c hettape.c omatape.c scsitape.c w32stape.c
   hdt3420_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3420_la_LIBADD  = $(DYNMOD_LD_ADD) libherct.la
 

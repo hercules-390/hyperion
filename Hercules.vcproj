@@ -494,6 +494,10 @@
                                 >
                             </File>
                             <File
+								RelativePath=".\faketape.c"
+								>
+							</File>
+							<File
                                 RelativePath=".\hetlib.c"
                                 >
                             </File>

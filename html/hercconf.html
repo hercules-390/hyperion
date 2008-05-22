@@ -130,7 +130,7 @@ and how they are used.
 
     0580      <a href="#3420">3420</a>    /dev/nst0   # SCSI  (Linux or Windows)
     0581      <a href="#3420">3420</a>    \\.\Tape0   # SCSI  (Windows only)
-    0582      <a href="#3420">3420</a>    ickdsf.ipl
+    0582      <a href="#3420">3420</a>    ickdsf.aws
     0583      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
     0584-0587 <a href="#3420">3420</a>    <a href="#subs">$(TAPEDIR)</a>/volumes.<a href="#subs">$(CUU)</a> maxsizeM=170 eotmargin=131072
 
@@ -1969,7 +1969,7 @@ and how they are used.
 <a name="tapedev"></a>
 <dt><em>Emulated tape devices</em>
 <dd><p>
-    Four types of emulation are supported:
+    Five types of emulation are supported:
     <p>
 
     <dl> <!-- begin Emulated tape types of emulation -->
@@ -2144,7 +2144,18 @@ and how they are used.
         a 6-byte header with no data.  This is the same format as is
         used by the P/390.
         The argument specifies the location of the AWSTAPE file
-        (for example <code>ickdsf.ipl</code>)
+        (for example <code>ickdsf.aws</code>)
+        <p><br>
+
+    <dt><b>FakeTape virtual files</b>
+    <dd><p>
+        These contain a complete tape in one file.  FakeTape files
+        consist of variable length EBCDIC blocks.  Each block is
+        preceded by a 12-ASCII-hex-character header.  Filemarks are represented by
+        a 12-character header with no data.  The FakeTape format is
+        used by the Flex-ES system from Fundamental Software Inc (FSI).
+        The argument specifies the location of the FakeTape file
+        (for example <code>ickdsf.fkt</code>)
         <p><br>
 
     <dt><b>HET virtual files</b> &nbsp;&nbsp; (<b>H</b>ercules <b>E</b>mulated <b>T</b>ape)

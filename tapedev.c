@@ -9,10 +9,10 @@
 
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
-/* 3420 magnetic tape devices for the Hercules ESA/390 emulator.     */
+/* magnetic tape devices for the Hercules ESA/390 emulator.          */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/* Four emulated tape formats are supported:                         */
+/* Five emulated tape formats are supported:                         */
 /*                                                                   */
 /* 1. AWSTAPE   This is the format used by the P/390.                */
 /*              The entire tape is contained in a single flat file.  */
@@ -68,6 +68,19 @@
 /*                                                                   */
 /*              Support for HET is in the "HETTAPE.C" member.        */
 /*                                                                   */
+/*                                                                   */
+/* 5. FAKETAPE  This is the format used by Fundamental Software      */
+/*              on their FLEX-ES systems. It it similar to the AWS   */
+/*              format. The entire tape is contained in a single     */
+/*              flat file. A tape block is preceded by a 12-ASCII-   */
+/*              hex-characters header which indicate the size of     */
+/*              the previous and next blocks. Files are separated    */
+/*              by tapemarks which consist of headers with a zero    */
+/*              current block length. FakeTapes are both readable    */
+/*              and writable.                                        */
+/*                                                                   */
+/*              Support for FAKETAPE is in the "FAKETAPE.C" member.  */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -95,9 +108,15 @@
 /* GA32-0127 IBM 3490E Hardware Reference                            */
 /* GC35-0152 EREP Release 3.5.0 Reference                            */
 /* SA22-7204 ESA/390 Common I/O-Device Commands                      */
+/* Flex FakeTape format (http://preview.tinyurl.com/67rgnp)          */
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.140  2008/04/05 02:36:00  fish
+// Wrap GENTMH_SCSI_ACTION... case in 'generic_tmhcall' function
+// with #ifdef OPTION_SCSI_TAPE to fix undefined symbol error
+// on non-scsi-tape build platforms
+//
 // Revision 1.139  2008/03/30 02:51:34  fish
 // Fix SCSI tape EOV (end of volume) processing
 //
@@ -204,7 +223,7 @@
 
 #include "hstdinc.h"
 #include "hercules.h"  /* need Hercules control blocks               */
-#include "tapedev.h"   /* This module's header file                  */
+#include "tapedev.h"   /* Main tape handler header file              */
 
 /*-------------------------------------------------------------------*/
 
@@ -363,6 +382,30 @@ TAPEMEDIA_HANDLER  tmh_het   =
     &no_operation,              // (ERG)
     &is_tapeloaded_filename,
     &passedeot_het,
+    &readblkid_virtual,
+    &locateblk_virtual
+};
+
+/*-------------------------------------------------------------------*/
+
+TAPEMEDIA_HANDLER  tmh_fake  =
+{
+    &generic_tmhcall,
+    &open_faketape,
+    &close_faketape,
+    &read_faketape,
+    &write_faketape,
+    &rewind_faketape,
+    &bsb_faketape,
+    &fsb_faketape,
+    &bsf_faketape,
+    &fsf_faketape,
+    &write_fakemark,
+    &sync_faketape,
+    &no_operation,              // (DSE)    ZZ FIXME: not coded yet
+    &no_operation,              // (ERG)
+    &is_tapeloaded_filename,
+    &passedeot_faketape,
     &readblkid_virtual,
     &locateblk_virtual
 };
@@ -874,6 +917,15 @@ struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
         "OMA tape"
     },
 
+    /* This entry matches a filename ending with .fkt    */
+    {
+        "\\.fkt$",
+        TAPEDEVT_FAKETAPE,
+        &tmh_fake,
+        "Flex FakeTape file",
+        "FakeTape"
+    },
+
 #if defined(OPTION_SCSI_TAPE)
 
     /* This entry matches a filename starting with /dev/ */
@@ -902,7 +954,7 @@ struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
     /* This entry matches a filename ending with .het    */
     {
         "\\.het$",
-        TAPEDEVT_HET,
+        TAPEDEVT_HETTAPE,
         &tmh_het,
         "Hercules Emulated Tape file",
         "HET tape"
@@ -1116,9 +1168,12 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             break;
 
         case TDPARM_AWSTAPE:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (0
+                || TAPEDEVT_SCSITAPE == dev->tapedevt
+                || TAPEDEVT_FAKETAPE == dev->tapedevt
+            )
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1128,9 +1183,12 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 
         case TDPARM_IDRC:
         case TDPARM_COMPRESS:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (0
+                || TAPEDEVT_SCSITAPE == dev->tapedevt
+                || TAPEDEVT_FAKETAPE == dev->tapedevt
+            )
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1138,9 +1196,12 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             break;
 
         case TDPARM_METHOD:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (0
+                || TAPEDEVT_SCSITAPE == dev->tapedevt
+                || TAPEDEVT_FAKETAPE == dev->tapedevt
+            )
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1155,9 +1216,12 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             break;
 
         case TDPARM_LEVEL:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (0
+                || TAPEDEVT_SCSITAPE == dev->tapedevt
+                || TAPEDEVT_FAKETAPE == dev->tapedevt
+            )
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1172,9 +1236,12 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             break;
 
         case TDPARM_CHKSIZE:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            if (0
+                || TAPEDEVT_SCSITAPE == dev->tapedevt
+                || TAPEDEVT_FAKETAPE == dev->tapedevt
+            )
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1191,7 +1258,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZE:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1201,7 +1268,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZEK:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1211,7 +1278,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZEM:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1225,7 +1292,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_STRICTSIZE:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1235,7 +1302,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_READONLY:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1246,7 +1313,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_NORING:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1257,7 +1324,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_RING:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1267,7 +1334,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_DEONIRQ:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for SCSI tape\n"), argv[i]);
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
                 rc = -1;
                 break;
             }
@@ -1278,8 +1345,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_BLKID24:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"),
-                    argv[i], short_descr );
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr );
                 rc = -1;
                 break;
             }
@@ -1289,8 +1355,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_BLKID32:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"),
-                    argv[i], short_descr );
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr );
                 rc = -1;
                 break;
             }
@@ -1300,8 +1365,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_NOERG:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"),
-                    argv[i], short_descr );
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr );
                 rc = -1;
                 break;
             }
@@ -1959,7 +2023,7 @@ int ldpt=0;
             }
             break;
 
-        case TAPEDEVT_HET:
+        case TAPEDEVT_HETTAPE:
             if (dev->hetb->cblk == 0)
             {
                 ldpt=1;

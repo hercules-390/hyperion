@@ -6,6 +6,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.23  2008/03/28 02:09:42  fish
+// Add --blkid-24 option support, poserror flag renamed to fenced,
+// added 'generic', 'readblkid' and 'locateblk' tape media handler
+// call vectors.
+//
 // Revision 1.22  2008/03/27 07:14:17  fish
 // SCSI MODS: groundwork: part 3: final shuffling around.
 // Moved functions from one module to another and resequenced
@@ -179,14 +184,15 @@
 #define CAC_COND_ENABLE         0x80    /* ..Conditional Enable      */
 #define CAC_COND_DISABLE        0x40    /* ..Conditional Disable     */
 
-
 /*-------------------------------------------------------------------*/
 /* Definitions for tape device type field in device block            */
 /*-------------------------------------------------------------------*/
+#define TAPEDEVT_UNKNOWN        0       /* AWSTAPE format disk file  */
 #define TAPEDEVT_AWSTAPE        1       /* AWSTAPE format disk file  */
 #define TAPEDEVT_OMATAPE        2       /* OMATAPE format disk files */
 #define TAPEDEVT_SCSITAPE       3       /* Physical SCSI tape        */
-#define TAPEDEVT_HET            4       /* HET format disk file      */
+#define TAPEDEVT_HETTAPE        4       /* HET format disk file      */
+#define TAPEDEVT_FAKETAPE       5       /* Flex FakeTape disk format */
 
 /*-------------------------------------------------------------------*/
 /* Fish - macros for checking SCSI tape device-independent status    */
@@ -232,7 +238,14 @@
  *
  */
 typedef struct _AWSTAPE_BLKHDR
-{
+{  /*
+    * PROGRAMMING NOTE: note that for AWS tape files, the "current
+    * chunk size" comes FIRST and the "previous chunk size" comes
+    * second. This is the complete opposite from the way it is for
+    * Flex FakeTape. Also note that for AWS the size fields are in
+    * LITTLE endian binary whereas for Flex FakeTape they're a BIG
+    * endian ASCII hex-string.
+    */
     HWORD   curblkl;                    /* Length of this block      */
     HWORD   prvblkl;                    /* Length of previous block  */
     BYTE    flags1;                     /* Flags byte 1 (see below)  */
@@ -271,6 +284,37 @@ typedef struct _OMATAPE_DESC
     U16     blklen;                     /* Fixed block length        */
 }
 OMATAPE_DESC;
+
+/*-------------------------------------------------------------------*/
+/* Structure definition for Flex FakeTape block headers              */
+/*-------------------------------------------------------------------*/
+/*
+ * The character length fields in a Flex FakeTape header are in BIG
+ * endian ASCII hex. That is to say, when the length field is ASCII
+ * "0123" (i.e. 0x30, 0x31, 0x32, 0x33), the length of the block is
+ * decimal 291 bytes (0x0123 == 291).
+ *
+ * The two block length fields are followed by an XOR "check" field
+ * calculated as the XOR of the two preceding length fields and is
+ * used to verify the integrity of the header.
+ * 
+ * The Flex FakeTape tape format does not support any flag fields
+ * in its header and thus does not support any type of compression.
+ */
+typedef struct _FAKETAPE_BLKHDR
+{  /*
+    * PROGRAMMING NOTE: note that for Flex FakeTapes, the "previous
+    * chunk size" comes FIRST, followed by the "current chunk size"
+    * second. This is the complete opposite from the way it is for
+    * AWS tape files. Also note that for Flex FakeTape the size fields
+    * are in BIG endian ASCII hex-string whereas for AWS tapes
+    * they're LITTLE endian binary.
+    */
+    char  sprvblkl[4];                  /* length of previous block  */
+    char  scurblkl[4];                  /* length of this block      */
+    char  sxorblkl[4];                  /* XOR both lengths together */
+}
+FAKETAPE_BLKHDR;
 
 /*-------------------------------------------------------------------*/
 /* Tape Auto-Loader table entry                                      */
@@ -442,6 +486,30 @@ extern int  read_awstape      (DEVBLK *dev, BYTE *buf,
                                             BYTE *unitstat, BYTE code);
 extern int  write_awstape     (DEVBLK *dev, BYTE *buf, U16 blklen,
                                             BYTE *unitstat, BYTE code);
+
+/*-------------------------------------------------------------------*/
+/* Functions defined in FAKETAPE.C...                                */
+/*-------------------------------------------------------------------*/
+extern int  open_faketape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern void close_faketape     (DEVBLK *dev);
+extern int  passedeot_faketape (DEVBLK *dev);
+extern int  rewind_faketape    (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  write_fakemark     (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  sync_faketape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  fsb_faketape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  bsb_faketape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  fsf_faketape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  bsf_faketape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+extern int  readhdr_faketape   (DEVBLK *dev, off_t blkpos,
+                                             U16* pprvblkl, U16* pcurblkl,
+                                             BYTE *unitstat, BYTE code);
+extern int  writehdr_faketape  (DEVBLK *dev, off_t blkpos,
+                                             U16   prvblkl, U16   curblkl,
+                                             BYTE *unitstat, BYTE code);
+extern int  read_faketape      (DEVBLK *dev, BYTE *buf,
+                                             BYTE *unitstat, BYTE code);
+extern int  write_faketape     (DEVBLK *dev, BYTE *buf, U16 blklen,
+                                             BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
 /* Functions defined in HETTAPE.C...                                 */
