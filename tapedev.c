@@ -112,6 +112,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.143  2008/05/22 21:17:29  fish
+// Tape file extension neutrality support
+//
 // Revision 1.142  2008/05/22 20:15:12  fish
 // Correct --blkid-24 typo (SHOULD be --blkid-22, not 24)
 //
@@ -1159,7 +1162,6 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     /* Try to determine device type by actual file contents first,
        but only if this isn't a SCSI tape device. (Thus we need to
        check by name first to determine if it's a SCSI device) */
-
 #if defined(OPTION_SCSI_TAPE)
     i = gettapetype_byname( dev );          // (check if this is a SCSI)
 
@@ -1173,17 +1175,15 @@ int gettapetype (DEVBLK *dev, char **short_descr)
 
     /* If we couldn't determine the device type based on the file's
        contents, then try again but this time based on its filename */
-
     if (i < 0)
         i = gettapetype_byname( dev );
 
     /* If still unknown, use a reasonable default value */
-
     if (i < 0)
     {
-        logmsg (_("HHCTA999W Device %4.4X: Unable to determine tape format type for %s; presuming AWS.\n"),
-                 dev->devnum, dev->filename);
         i = DEFAULT_FMTENTRY;
+        logmsg (_("HHCTA999W Device %4.4X: Unable to determine tape format type for %s; presuming %s.\n"),
+                 dev->devnum, dev->filename, fmttab[i].short_descr );
     }
 
     dev->tapedevt = fmttab[i].fmtcode;
