@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.241  2008/04/14 21:09:58  rbowler
+// Include C4xx,C6xx,C8xx instructions in icount display
+//
 // Revision 1.240  2008/03/28 02:09:42  fish
 // Add --blkid-24 option support, poserror flag renamed to fenced,
 // added 'generic', 'readblkid' and 'locateblk' tape media handler
@@ -512,7 +515,6 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         int      stopprt;
         DEVBLK*  dev;
         char*    devclass;
-        char     devnam[256];
         int      rc;
 
         rc=parse_single_devnum(argv[1],&lcss,&devnum);
@@ -527,7 +529,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
             return -1;
         }
 
-        (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
+        (dev->hnd->query)(dev, &devclass, 0, NULL);
 
         if (strcasecmp(devclass,"PRT"))
         {
@@ -615,7 +617,6 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
         U16      lcss;
         DEVBLK*  dev;
         char*    devclass;
-        char     devnam[256];
         int     rc;
 
         rc=parse_single_devnum(argv[1],&lcss,&devnum);
@@ -630,7 +631,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
             return -1;
         }
 
-        (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
+        (dev->hnd->query)(dev, &devclass, 0, NULL);
 
         if (strcasecmp(devclass,"PRT"))
         {
@@ -3576,10 +3577,9 @@ char   **init_argv;
     if (nomountedtapereinit)
     {
         char*  devclass;
-        char   devnam[256];
 
         ASSERT( dev->hnd && dev->hnd->query );
-        dev->hnd->query( dev, &devclass, sizeof(devnam), devnam );
+        dev->hnd->query( dev, &devclass, 0, NULL );
 
         if (1
             && strcmp(devclass,"TAPE") == 0

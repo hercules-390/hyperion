@@ -45,6 +45,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.74  2007/06/23 00:04:03  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.73  2007/01/14 23:14:12  rbowler
 // Fix signed/unsigned mismatch in 370-only build
 //
@@ -746,7 +749,6 @@ void cgibin_debug_device_list(WEBBLK *webblk)
 {
 DEVBLK *dev;
 char   *class;
-char   buf[80];
 
     html_header(webblk);
 
@@ -761,7 +763,7 @@ char   buf[80];
     for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
         if(dev->pmcw.flag5 & PMCW5_V)
         {
-             (dev->hnd->query)(dev, &class, sizeof(buf), buf);
+             (dev->hnd->query)(dev, &class, 0, NULL);
 
              hprintf(webblk->sock,"<tr>"
                                    "<td>%4.4X</td>"
