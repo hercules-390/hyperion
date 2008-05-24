@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.92  2008/05/19 16:40:54  rbowler
+// Modify PSF order 1D to not prepare subsystem data
+//
 // Revision 1.91  2008/05/19 15:40:04  rbowler
 // PSF order 18 suborders (0E,41) and order 1D by Jacob Dekel
 //
@@ -3084,10 +3087,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Use the order code to determine the required count */
         num = (count < 2) ? 2 :
               (iobuf[0] == 0x10) ? 14 :
-              (iobuf[0] == 0x11 || iobuf[0] == 0x18) ? 12 :
+              (iobuf[0] == 0x11) ? 12 :
               (iobuf[0] == 0x12) ? 5 :
               (iobuf[0] == 0x13 || iobuf[0] == 0x14) ? 4 :
               (iobuf[0] == 0x16) ? 4 :
+              (iobuf[0] == 0x18) ? 16 :
               (iobuf[0] == 0x1D) ? 66 :
               (iobuf[0] == 0xB0) ? 4 :
               2;
