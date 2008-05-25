@@ -112,6 +112,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.144  2008/05/23 20:37:05  fish
+// Fix "presuming" message in gettapetype function to use implemented default shortdesc in message.
+//
 // Revision 1.143  2008/05/22 21:17:29  fish
 // Tape file extension neutrality support
 //
@@ -746,6 +749,7 @@ DEVINITTAB*     pDevInitTab;
     dev->SIC_active          = 0;   // (always, initially)
     dev->SIC_supported       = 0;   // (until we're sure)
     dev->forced_logging      = 0;   // (always, initially)
+    dev->vtape               = 0;   // (always, initially)
 
     /* Initialize SCSI tape control fields */
 #if defined(OPTION_SCSI_TAPE)
@@ -839,69 +843,7 @@ int tapedev_close_device ( DEVBLK *dev )
 
 
 /*-------------------------------------------------------------------*/
-/*  The following table goes hand-in-hand with the 'enum' values     */
-/*  that immediately follow.  Used by 'mountnewtape' function.       */
-/*-------------------------------------------------------------------*/
-
-PARSER  ptab  [] =
-{
-    { "awstape",    NULL },
-    { "idrc",       "%d" },
-    { "compress",   "%d" },
-    { "method",     "%d" },
-    { "level",      "%d" },
-    { "chunksize",  "%d" },
-    { "maxsize",    "%d" },
-    { "maxsizeK",   "%d" },
-    { "maxsizeM",   "%d" },
-    { "eotmargin",  "%d" },
-    { "strictsize", "%d" },
-    { "readonly",   "%d" },
-    { "ro",         NULL },
-    { "noring",     NULL },
-    { "rw",         NULL },
-    { "ring",       NULL },
-    { "deonirq",    "%d" },
-    { "--blkid-22", NULL },
-    { "--blkid-24", NULL },   /* (synonym for --blkid-22) */
-    { "--blkid-32", NULL },
-    { "--no-erg",   NULL },
-    { NULL,         NULL },   /* (end of table) */
-};
-
-/*-------------------------------------------------------------------*/
-/*  The following table goes hand-in-hand with the 'ptab' PARSER     */
-/*  table immediately above.                                         */
-/*-------------------------------------------------------------------*/
-
-enum
-{
-    TDPARM_NONE,
-    TDPARM_AWSTAPE,
-    TDPARM_IDRC,
-    TDPARM_COMPRESS,
-    TDPARM_METHOD,
-    TDPARM_LEVEL,
-    TDPARM_CHKSIZE,
-    TDPARM_MAXSIZE,
-    TDPARM_MAXSIZEK,
-    TDPARM_MAXSIZEM,
-    TDPARM_EOTMARGIN,
-    TDPARM_STRICTSIZE,
-    TDPARM_READONLY,
-    TDPARM_RO,
-    TDPARM_NORING,
-    TDPARM_RW,
-    TDPARM_RING,
-    TDPARM_DEONIRQ,
-    TDPARM_BLKID22,
-    TDPARM_BLKID24,
-    TDPARM_BLKID32,
-    TDPARM_NOERG
-};
-
-/*-------------------------------------------------------------------*/
-/*  Tape format determination REGEXPS. Used by mountnewtape below    */
+/*  Tape format determination REGEXPS. Used by gettapetype below     */
 /*-------------------------------------------------------------------*/
 
 struct tape_format_entry                    /*   (table layout)      */
@@ -914,7 +856,7 @@ struct tape_format_entry                    /*   (table layout)      */
 };
 
 /*-------------------------------------------------------------------*/
-/*  Tape format determination REGEXPS. Used by mountnewtape below    */
+/*  Tape format determination REGEXPS. Used by gettapetype below     */
 /*-------------------------------------------------------------------*/
 
 struct  tape_format_entry   fmttab   [] =   /*    (table itself)     */
@@ -1182,7 +1124,8 @@ int gettapetype (DEVBLK *dev, char **short_descr)
     if (i < 0)
     {
         i = DEFAULT_FMTENTRY;
-        logmsg (_("HHCTA999W Device %4.4X: Unable to determine tape format type for %s; presuming %s.\n"),
+        if (strcmp (dev->filename, TAPE_UNLOADED) != 0)
+            logmsg (_("HHCTA999W Device %4.4X: Unable to determine tape format type for %s; presuming %s.\n"),
                  dev->devnum, dev->filename, fmttab[i].short_descr );
     }
 
@@ -1199,6 +1142,70 @@ int gettapetype (DEVBLK *dev, char **short_descr)
 
 } /* end function gettapetype */
 
+
+/*-------------------------------------------------------------------*/
+/*  The following table goes hand-in-hand with the 'enum' values     */
+/*  that immediately follow.  Used by 'mountnewtape' function.       */
+/*-------------------------------------------------------------------*/
+
+PARSER  ptab  [] =
+{
+    { "awstape",    NULL },
+    { "idrc",       "%d" },
+    { "compress",   "%d" },
+    { "method",     "%d" },
+    { "level",      "%d" },
+    { "chunksize",  "%d" },
+    { "maxsize",    "%d" },
+    { "maxsizeK",   "%d" },
+    { "maxsizeM",   "%d" },
+    { "eotmargin",  "%d" },
+    { "strictsize", "%d" },
+    { "readonly",   "%d" },
+    { "ro",         NULL },
+    { "noring",     NULL },
+    { "rw",         NULL },
+    { "ring",       NULL },
+    { "deonirq",    "%d" },
+    { "vtape",      NULL },
+    { "--blkid-22", NULL },
+    { "--blkid-24", NULL },   /* (synonym for --blkid-22) */
+    { "--blkid-32", NULL },
+    { "--no-erg",   NULL },
+    { NULL,         NULL },   /* (end of table) */
+};
+
+/*-------------------------------------------------------------------*/
+/*  The following table goes hand-in-hand with the 'ptab' PARSER     */
+/*  table immediately above. Used by 'mountnewtape' function.        */
+/*-------------------------------------------------------------------*/
+
+enum
+{
+    TDPARM_NONE,
+    TDPARM_AWSTAPE,
+    TDPARM_IDRC,
+    TDPARM_COMPRESS,
+    TDPARM_METHOD,
+    TDPARM_LEVEL,
+    TDPARM_CHKSIZE,
+    TDPARM_MAXSIZE,
+    TDPARM_MAXSIZEK,
+    TDPARM_MAXSIZEM,
+    TDPARM_EOTMARGIN,
+    TDPARM_STRICTSIZE,
+    TDPARM_READONLY,
+    TDPARM_RO,
+    TDPARM_NORING,
+    TDPARM_RW,
+    TDPARM_RING,
+    TDPARM_DEONIRQ,
+    TDPARM_VTAPE,
+    TDPARM_BLKID22,
+    TDPARM_BLKID24,
+    TDPARM_BLKID32,
+    TDPARM_NOERG
+};
 
 /*-------------------------------------------------------------------*/
 /*        mountnewtape     --     mount a tape in the drive          */
@@ -1279,6 +1286,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     dev->tdparms.maxsize   = 0;        // no max size     (default)
     dev->eotmargin         = 128*1024; // 128K EOT margin (default)
     dev->tdparms.logical_readonly = 0; // read/write      (default)
+    dev->vtape             = 0;        // (until we know otherwise)
 
 #if defined(OPTION_SCSI_TAPE)
     // Real 3590's use 32-bit blockids, and don't support Erase Gap.
@@ -1476,6 +1484,16 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 break;
             }
             dev->tdparms.deonirq=(res.num ? 1 : 0 );
+            break;
+
+        case TDPARM_VTAPE:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
+                rc = -1;
+                break;
+            }
+            dev->vtape = 1;
             break;
 
 #if defined(OPTION_SCSI_TAPE)

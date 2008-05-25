@@ -187,3 +187,54 @@ IV.4 : readonly=0|1 :
 --Ivan
 
 8 Mar 2003
+
+-------------------------------------------------------------------------------
+*                     "VTAPE" automount support                               *
+-------------------------------------------------------------------------------
+
+Starting with Hercules version 3.06, tape devices now support a new "VTAPE"
+option to allow guest automatic mount support on the device. The automount
+support provided by the vtape option allows your guest operating system to
+directly mount, unmount and query the host device filenames for themselves,
+without any intervention on the part of the Hercules operator.
+
+An example of such a program for VSE called "TMOUNT" is provided in the util
+subdirectory of the Hercules source code distribution.
+
+Briefly, the 0x4B (Set Diagnose) CCW opcode is used to mount or unmount a file
+onto/from the tape drive, and the 0xE4 (Sense Id) CCW opcode is used to query
+the name of the currently mounted file.
+
+For mount, the 0x4B CCW's i/o buffer and buffer length specify the host path
+filename of the file to be mounted onto the drive. To unmount the currently
+mounted file, do a 'mount' of the special filename "OFFLINE".
+
+To query the drive for the name of the currently mounted file, the 0xE4 CCW is
+used. Note however that the 0xE4 (Sense Id) CCW opcode cannot be used by itself
+to perform the query (since the drive may also already natively support the
+Sense Id CCW opcode). Instead, it must be immediately preceded by a 0x4B CCW.
+
+The preceding 0x4B command must be command-chained to the 0xE4 CCW command.
+Additonally the specified length of the preceding 0x4B command MUST be one and
+only one byte. The immediately following 0xE4 command it is command-chained
+to is the one that specifies the i/o buffer and buffer length of where the
+query function is to place the device's currently mounted host filename.
+
+
+In summary:
+
+
+    MOUNT:      X'4B', <filename>, X'20', <length>
+
+    UNMOUNT:    (same thing but use filename "OFFLINE" instead)
+
+    QUERY:      X'4B', <buffer>, X'60', 1
+                X'E4', <buffer>, X'20', <buffersize>
+
+
+
+Again, please refer to the provided TMOUNT sample for more information.
+
+
+-- Fish
+24 May 2008

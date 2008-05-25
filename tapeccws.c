@@ -111,6 +111,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.11  2008/05/22 19:25:58  fish
+// Flex FakeTape support
+//
 // Revision 1.10  2008/03/31 13:55:43  rbowler
 // Reinstate lost comments; cosmetic changes to comments and indentation
 //
@@ -343,8 +346,12 @@ TapeSenseFunc*  TapeSenseTable  [] =
 /*           CCW opcode Validity Tables by Device Type               */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/* These tables are used by the 'TapeCommandIsValid' function to     */
-/* determine if a CCW code is valid or not for the given device.     */
+/* The below tables are used by 'TapeCommandIsValid' to determine    */
+/* if a CCW code is initially valid or not for the given device.     */
+/*                                                                   */
+/* Note that CCWs codes marked as valid in the below tables might    */
+/* still get rejected upon more stringent validity testing done by   */
+/* the actual CCW processing function.                               */
 /*                                                                   */
 /*    0: Command is NOT valid                                        */
 /*    1: Command is Valid, Tape MUST be loaded                       */
@@ -369,7 +376,7 @@ BYTE  TapeCommands3410 [256] =
    0,0,0,4,0,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
    0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 20 */
    0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 30 */
-   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 40 */
    0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0, /* 50 */
    0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 60 */
    0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 70 */
@@ -390,7 +397,7 @@ BYTE  TapeCommands3420 [256] =
    0,0,0,4,0,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
    0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 20 */
    0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 30 */
-   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 40 */
    0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0, /* 50 */
    0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 60 */
    0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 70 */
@@ -411,7 +418,7 @@ BYTE  TapeCommands3422 [256] =
    0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1, /* 10 */
    0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1, /* 20 */
    0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1, /* 30 */
-   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 40 */
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 50 */
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 60 */
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 70 */
@@ -453,7 +460,7 @@ BYTE  TapeCommands3480 [256] =
    0,0,1,3,0,0,0,1,0,0,0,0,0,0,0,1, /* 10 */
    0,0,1,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 20 */
    0,0,0,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 30 */
-   0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1, /* 40 */
+   0,0,0,1,0,0,0,0,0,0,0,2,0,0,0,1, /* 40 */
    0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,0, /* 50 */
    0,0,0,3,2,0,0,0,0,0,0,3,0,0,0,0, /* 60 */
    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* 70 */
@@ -474,7 +481,7 @@ BYTE  TapeCommands3490 [256] =
    0,0,1,3,0,0,0,1,0,0,0,0,0,0,0,1, /* 10 */
    0,0,1,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 20 */
    0,0,0,3,2,0,0,1,0,0,0,3,0,0,2,1, /* 30 */
-   0,0,0,1,0,0,0,0,0,0,0,0,0,0,2,1, /* 40 */
+   0,0,0,1,0,0,0,0,0,0,0,2,0,0,2,1, /* 40 */
    0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0, /* 50 */
    0,0,0,3,2,0,0,0,0,0,0,3,0,0,0,0, /* 60 */
    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* 70 */
@@ -495,7 +502,7 @@ BYTE  TapeCommands3590 [256] =
    0,0,1,3,0,0,0,1,0,0,0,0,0,0,0,1, /* 10 */
    0,0,1,3,2,0,0,1,0,0,0,3,0,0,0,1, /* 20 */
    0,0,0,3,2,0,0,1,0,0,0,3,0,0,2,1, /* 30 */
-   0,0,0,1,0,0,0,0,0,0,0,0,0,0,2,1, /* 40 */
+   0,0,0,1,0,0,0,0,0,0,0,2,0,0,2,1, /* 40 */
    0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0, /* 50 */
    0,0,1,3,2,0,0,0,0,0,0,3,0,0,0,0, /* 60 */
    0,0,0,3,0,0,0,2,0,0,0,3,0,0,0,0, /* 70 */
@@ -516,7 +523,7 @@ BYTE  TapeCommands9347 [256] =
    0,0,0,4,0,0,0,1,0,0,0,1,0,0,0,1, /* 10 */
    0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 20 */
    0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1, /* 30 */
-   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0, /* 40 */
    0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0, /* 50 */
    0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 60 */
    0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0, /* 70 */
@@ -1718,6 +1725,80 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         if ((rc = dev->tmh->sync( dev, unitstat, code )) == 0)
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
 
+        break;
+    }
+
+    /*---------------------------------------------------------------*/
+    /* SET DIAGNOSE        --  Special VTAPE support  --             */
+    /*---------------------------------------------------------------*/
+    case 0x4B:
+    {
+        char    newfile [ sizeof(dev->filename) ];
+        int     i;
+
+        /* Command reject if VTAPE support not enabled */
+        if (!dev->vtape)
+        {
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+            break;
+        }
+
+        /* Command Reject if Supervisor-Inhibit */
+        if (supvr_inhibit)
+        {
+            build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+            break;
+        }
+
+        /* Command Reject if command-chained and i/o length not 1 */
+        if (flags & CCW_FLAGS_CC)
+        {
+            if (count != 1)
+            {
+                build_senseX (TAPE_BSENSE_BADCOMMAND, dev, unitstat, code);
+                break;
+            }
+
+            /* VTAPE QUERY - part 1 (chained 0xE4 SENSE ID = part 2) */
+
+            /* Set normal status but do nothing else; the next CCW
+               should be a SENSE ID (0xE4) which will do the query */
+            build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
+            break;
+        }
+
+        /* VTAPE MOUNT... */
+
+        /* Calculate residual byte count */
+        RESIDUAL_CALC (sizeof(newfile)-1);   /* (minus-1 for NULL) */
+
+        /* Copy the device's new filename from guest storage */
+        for (i=0; i < num; i++)
+            newfile[i] = guest_to_host( iobuf[i] );
+        newfile[num] = 0;
+
+        /* Change "OFFLINE" to "*" (tape unloaded) */
+        if (strcasecmp (newfile, "OFFLINE") == 0)
+            strlcpy (newfile, TAPE_UNLOADED, sizeof(newfile));
+
+        /* Close the exsiting device file */
+        if (dev->fd >= 0)
+            dev->tmh->close(dev);
+        ASSERT( dev->fd < 0 );
+
+        /* Indicate drive now empty */
+        strlcpy (dev->filename, TAPE_UNLOADED, sizeof(dev->filename));
+
+        /* Open the new device file if one was given */
+        if (strcmp (newfile, TAPE_UNLOADED) != 0)
+        {
+            strlcpy (dev->filename, newfile, sizeof(dev->filename));
+            dev->tmh->open (dev, unitstat, code);
+        }
+
+        /* Set normal status if that worked */
+        if (dev->fd >= 0 || strcmp (newfile, TAPE_UNLOADED) == 0)
+            build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
         break;
     }
 
@@ -3193,6 +3274,29 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     /*---------------------------------------------------------------*/
     case 0xE4:
     {
+        /* VTAPE QUERY - part 2 (if command-chained from prior 0x4B) */
+        if (1
+            && dev->vtape
+            && (chained & CCW_FLAGS_CC)
+            && 0x4B == prevcode
+        )
+        {
+            int  i;   // (work)
+
+            /* Calculate residual byte count */
+            RESIDUAL_CALC (strlen(dev->filename));
+
+            /* Copy device filename to guest storage */
+            for (i=0; i < num && dev->filename[i] != 0; i++)
+                iobuf[i] = host_to_guest( dev->filename[i] );
+            while (i < num)
+                dev->filename[i++] = 0x40;
+
+            /* Return normal status */
+            build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
+            break;
+        }
+
         /* SENSE ID did not exist on the 3803 */
         /* If numdevid is 0, then 0xE4 not supported */
         if (dev->numdevid==0)

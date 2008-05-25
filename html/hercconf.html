@@ -123,18 +123,21 @@ and how they are used.
     0141      <a href="#3370">3370</a>    syswk1.141
     0300      <a href="#3370">3370</a>    sysres.300
 
-    0400      <a href="#device_types_table">CTCT</a>    30880  192.168.100.2  30880  2048 &nbsp; &nbsp; &nbsp;
-    0401      <a href="#device_types_table">CTCT</a>    30881  192.168.100.2  30881  2048
-    0420.2    <a href="#device_types_table">CTCI</a>    192.168.200.1  192.168.200.2
-    0440.2    <a href="#device_types_table">LCS</a>     -n   /dev/net/tun   192.168.200.2
+    0400      <a href="#CTCT">CTCT</a>    30880  192.168.100.2  30880  2048 &nbsp; &nbsp; &nbsp;
+    0401      <a href="#CTCT">CTCT</a>    30881  192.168.100.2  30881  2048
+    0420.2    <a href="#CTCI">CTCI</a>    192.168.200.1  192.168.200.2
+    0440.2    <a href="#LCS">LCS</a>     -n   /dev/net/tun   192.168.200.2
 
     0580      <a href="#3420">3420</a>    /dev/nst0   # SCSI  (Linux or Windows)
     0581      <a href="#3420">3420</a>    \\.\Tape0   # SCSI  (Windows only)
-    0582      <a href="#3420">3420</a>    ickdsf.aws
+    0582      <a href="#3420">3420</a>    ickdsf.aws  <a href="#vtape">vtape</a>
     0583      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
     0584-0587 <a href="#3420">3420</a>    <a href="#subs">$(TAPEDIR)</a>/volumes.<a href="#subs">$(CUU)</a> maxsizeM=170 eotmargin=131072
 
     0590      <a href="#3420">3480</a>    /dev/nst0 <a href="#Quantum">--no-erg</a> <a href="#Quantum">--blkid-32</a>   # <a href="#Quantum">Quantum DLT SCSI</a>
+
+    0023      <a href="#comline">2703</a>    lport=3780 rhost=localhost rport=3781 dial=no
+
 </pre></code>
 </td></tr></table>
 </center>
@@ -1418,7 +1421,7 @@ and how they are used.
     <p>
 
     <blockquote>
-        <code><em>devnum(s) &nbsp; devtype</em> &nbsp; [ <em>arguments</em> ] </code>
+    <code><em>devnum(s) &nbsp; devtype</em> &nbsp; [ <em>arguments</em> ] &nbsp; [ <em># comments...</em> ] </code>
     </blockquote>
     <p>
 
@@ -1479,19 +1482,25 @@ and how they are used.
 <dt><code><em>devtype</em></code>
 <dd><p>
     is the device type.  Valid device types are shown in the
-    <a href="#device_types_table">table</a> below.
+    <a href="#device_types_table">table</a> just below.
     <p>
 
 <dt><code><em>arguments</em></code>
 <dd><p>
     is a list of parameters whose meaning depends on the device type.
-    The arguments required for each class of device are shown below.
+    The arguments required for each class of device are shown further
+    below.
+    <p>
+
+<dt><code><em># comments...</em></code>
+<dd><p>
+    A comment preceded by a &#035; sign may be appended to any device
+    definition statement.
     <p>
 
 </dl> <!-- end Device records -->
 
 </blockquote>
-
 
 <p><br>
 
@@ -1720,7 +1729,7 @@ and how they are used.
     over any ip address / subnet mask value which may also be specified.
     <p>
 
-<p><br>
+<hr width="50%"><p>
 
 <a name="consysc"></a>
 <dt><em>Integrated Console printer-keyboard devices</em>
@@ -1740,7 +1749,7 @@ and how they are used.
     All integrated devices must use a different command prefix.
     <p>
 
-<p><br>
+<hr width="50%"><p>
 
 <a name="conprkb"></a>
 <dt><em>Console printer-keyboard devices</em>
@@ -1774,7 +1783,7 @@ and how they are used.
     that the "noprompt" option, if specified, must precede the other arguments.
     <p>
 
-<p><br>
+<hr width="50%"><p>
 
 <a name="1442"></a>
 <a name="3505"></a>
@@ -1864,7 +1873,7 @@ and how they are used.
     </dl>
     <p>
 
-<p><br>
+<hr width="50%"><p>
 
 <a name="3525"></a>
 <a name="cardpch"></a>
@@ -1898,7 +1907,7 @@ and how they are used.
     </dl>
     <p>
 
-<p><br>
+<hr width="50%"><p>
 
 <a name="1403"></a>
 <a name="printer"></a>
@@ -1962,14 +1971,53 @@ and how they are used.
     can be used to create output in PDF format:
     <a href="http://www.timpinkawa.net/hercules/prtspool.html">
     http://www.timpinkawa.net/hercules/prtspool.html</a>
+    <p>
 
-<p><br>
+<hr width="50%"><p>
 
 <a name="3420"></a>
 <a name="tapedev"></a>
 <dt><em>Emulated tape devices</em>
 <dd><p>
-    Five types of emulation are supported:
+    Five types of tape emulation are supported (see further below).
+    <p>
+
+    The only required parameter is the device filename. All other parameters
+    are optional and must follow the filename. Use '<b>*</b>' (asterisk) for
+    the filename to specify an empty (unmounted) tape drive. The specified file,
+    if other than '<b>*</b>', <i>must</i> exist.
+    <p>
+    Additionally, if the file name starts with the '@' character (at sign), the file
+    really describes a list of tape emulation files to be loaded in succession.
+    <p>
+
+    The syntax of each line is identical to the information that can be
+    specified after the device type when the options are specified directly
+    after the device type in the configuration file.
+    <p>
+
+    If the emulation file filename in the file list is the '<b>*</b>' (asterisk)
+    character, then this specifies a set of options to be applied to <i>all</i>
+    additional emulation files specified in the file list.
+    <p>
+
+    Parameters are appended in succession. In all cases, if the same parameter is
+    specified more than once, the last instance takes precedence.
+    <p>
+
+    Therefore, it is possible to specify a set of parameters in the base configuration
+    file, another set on a '*' line, and another set for each individual line.
+    Parameters are then appended in that order: options specified on the base device
+    statement itself first, followed by those options specified on the '*' statement,
+    and finally those specified on each individual file list statement last. <i>A
+    <b>SCSI tape</b> device should <b>not</b> be given in a file list.</i>
+    <p>
+
+    Refer to the distributed source-code's "<b>README.TAPE</b>" document for 
+    additional information regarding system and application programming for tape
+    devices and instructions regarding use of the emulated <b>ACF</b> (Automatic
+    Cartridge Feeder) and <b>VTAPE</b> (automount) features for virtual (non-SCSI)
+    tape devices.
     <p>
 
     <dl> <!-- begin Emulated tape types of emulation -->
@@ -2233,7 +2281,7 @@ and how they are used.
 
     <p><br>
 
-    The following parameters apply to both <b>AWS</b> and <b>HET</b> emulation files:
+    The following parameters apply to <b>AWS</b>, <b>HET</b> and <b>FakeTape</b> emulation files:
     <p>
 
     <blockquote>
@@ -2291,47 +2339,24 @@ and how they are used.
             required during tape motion. A parameter of 1 selects this
             option; a parameter of 0 turns it off.
             <p>
+<a name="vtape"></a>
+
+        <dt><code>VTAPE</code>
+        <dd><p>
+            Indicates special "vtape" support is to be enabled for the device.
+            Special "vtape" support enables software running in your guest
+            operating system to automatically mount, unmount and/or query the
+            device filename assigned to the tape drive for themselves, without
+            any intervention on the part of the Hercules operator, via the use
+            of special CCW opcodes (0x4B = SET DIAGNOSE and 0xE4 = SENSE ID).
+            An example of such a program for VSE called <code>TMOUNT.txt</code>
+            is provided in the distributed source code's <code>util</code> subdirectory.
+            <p>
 
         </dl>
     </blockquote>
 
-    Additionally, if the file name starts with the '@' character (at sign), the file
-    really describes a list of tape emulation files to be loaded in succession.
-    <p>
-
-    The syntax of each line is identical to the information that can be
-    specified after the device type when the options are specified directly
-    after the device type in the configuration file.
-    <p>
-
-    If the emulation file filename in the file list is the '<b>*</b>' (asterisk)
-    character, then this specifies a set of options to be applied to <i>all</i>
-    additional emulation files specified in the file list.
-    <p>
-
-    Parameters are appended in succession. In all cases, if the same parameter is
-    specified more than once, the last instance takes precedence.
-    <p>
-
-    Therefore, it is possible to specify a set of parameters in the base configuration
-    file, another set on a '*' line, and another set for each individual line.
-    Parameters are then appended in that order: options specified on the base device
-    statement itself first, followed by those options specified on the '*' statement,
-    and finally those specified on each individual file list statement last.
-    <p>
-
-    <i>A <b>SCSI tape</b> device should <b>not</b> be given in a file list.</i>
-    <p>
-
-    <p>
-
-    Refer to the distributed source-code's "<b>README.TAPE</b>" document for 
-    additional information regarding system and application programming for tape
-    devices and instructions regarding use of the emulated <b>ACF (Automatic
-    Cartridge Feeder)</b> feature for virtual (non-SCSI) tape devices.
-    <p>
-
-<p><br>
+<hr width="50%"><p>
 
 <a name="ctca"></a>
 <a name="3088"></a>
@@ -2741,7 +2766,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
     </dl> <!-- end emulation types -->
     <p>
 
-<p><br>
+<hr width="50%"><p>
 
 <a name="3380"></a>
 <a name="ckddasd"></a>
@@ -2941,7 +2966,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
     </dl> <!-- end (CKD) additional DASD arguments  -->
     <p>
 
-<p><br>
+<hr width="50%"><p>
 
 <a name="3370"></a>
 <a name="fbadasd"></a>
@@ -3033,7 +3058,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
     </dl> <!-- end (FBA) additional DASD arguments  -->
     <p>
 
-<p><br>
+<hr width="50%"><p>
 
 <a name="comline"></a>
 <dt><em>Communication Line</em>
@@ -3130,12 +3155,6 @@ ROUTE  00  172.021.003.032  255.255.255.224
     </dl> <!-- end Communication Adapter tuning options -->
 
 </dl> <!-- end Arguments for each device type -->
-
-<p><br>
-
-A comment preceded by a &#035; sign may be appended to any device
-definition statement.
-<p>
 
 <center><hr width=15% noshade></center>
 <p>

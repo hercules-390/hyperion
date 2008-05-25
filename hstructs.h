@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.85  2008/05/22 21:34:22  fish
+// Attempt to fix my *nix SCSI tape BSR over tapemark bug identified by Bob Schneider [bschneider@pingdata.net]
+//
 // Revision 1.84  2008/04/08 17:13:47  bernard
 // Added execute relative long instruction
 //
@@ -1066,6 +1069,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   SIC_active:1;           /* 1=SIC active              */
         u_int   forced_logging:1;       /* 1=Forced Error Logging    */
         u_int   eotwarning:1;           /* 1=EOT warning area reached*/
+        u_int   vtape:1;                /* 1=VTAPE support (0x4B CCW)*/
         U32     msgid;                  /* Message Id of async. i/o  */
 #if defined(OPTION_SCSI_TAPE)
         struct mtget mtget;             /* SCSI tape status struct   */

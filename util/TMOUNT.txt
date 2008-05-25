@@ -1,0 +1,225 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  Fish note:
+  
+    The length of the filename is not limted to 17 characters as the
+  below sample states. Rather, the length of the filename is limited
+  solely by the host filesystem code. On Windows, filenames can be up
+  to 260 characters long. (or even longer if "\\?\" format is used!)
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+* $$ JOB JNM=TMOUNT,DISP=D,CLASS=0
+// JOB TMOUNT COMPILE PROGRAM TMOUNT
+// LIBDEF *,CATALOG=PRD2.CONFIG
+// OPTION ERRS,SXREF,SYM,NODECK,CATAL
+   PHASE TMOUNT,*
+// EXEC ASMA90,SIZE=(ASMA90,64K),PARM='EXIT(LIBEXIT(EDECKXIT)),SIZE(MAXC
+               -200K,ABOVE)'
+TMOUNT   CSECT
+         SPACE 1
+*---------------------------------------------------------------------
+*
+*   TMOUNT - VSE VERSION II
+*
+*   THE TMOUNT COMMAND IS USED FROM VSE ON THE P/390 TO TELL THE
+*   AWSTAPE MANAGER WHICH OS/2 FILE TO USE WHEN THE USER WRITES TO
+*   THIS DEVICE.  IT CAN ALSO BE USED TO QUERY WHAT OS/2 FILE IS
+*   CURRENTLY ASSOCIATED WITH THE DEVICE.
+*
+*   TWO SPECIAL CCW OPCODES ARE SUPPORTED BY THE AWSTAPE EMULATOR:
+*     X'4B'  - ASSIGN A DOS FILEID TO THE DEVICE. (WAS '4B' 6/30)
+*     X'E4'  - SENSE FILEID - RETURN THE NAME OF THE ASSIGNED DOS FILE
+*
+*     THE EMULATED TAPE HAS TO BE ASSIGNED TO SYS014
+*
+*   E.G  // JOB TMOUNT
+*        // ASSGN SYS014,580
+*        // EXEC TMOUNT,REAL,SIZE=AUTO,PARM='580 D:TEST.TAP'
+*        OR
+*        // EXEC TMOUNT,REAL,SIZE=AUTO,PARM='580 (QUERY'
+*        /*
+*        /&
+*
+*   AWSTAPE HAS A LIMIT OF 17 CHARACTERS IN A DOS FILEID.  THAT
+*   LIMIT IS ENFORCED ENTIRELY IN AWSTAPE.
+*
+*   THIS PROGRAM IS PROVIDED ON AN AS-IS BASIS.
+*   IT HAS NOT BEEN TESTED ON R/390
+*   NO MAINTENANCE WILL BE DONE AND NO APARS WILL BE ACCEPTED
+*
+*   COMMENTS AND SUGGESTION ARE WELCOME
+*
+*   AUTHOR:  CHUCK BERGHORN
+*   REVISED FOR VSE:  CHRISTIAN TOEPSCH    (TOEPSCH@DE.IBM.COM)
+*
+*---------------------------------------------------------------------
+*
+         SPACE 1
+         PRINT GEN
+         BALR  R8,0
+         USING *,R8
+         CR    R15,R1                  TEST FOR PARM=
+         BE    NOPARM                  NO PARM SPECIFIED, RETURN
+         L     R2,0(R1)                GET PARAMETER ADDRESS
+         SR    R3,R3                   CLEAR R3
+         LH    R3,0(R2)                GET PARMLENGTH
+         AH    R3,=X'0001'             ADJUST MOVE LENGTH
+         EX    R3,MOVEINST             DO THE MOVE
+         CLC   PARMLEN,=X'0015'        PARMLEN > THAN 21?
+*        BH    TOOLONG                 PARMS TOO LONG, RETURN
+         OPEN  CONSOLE                 PREPARE TO WRITE TO CONSOLE
+         MVC   MSGOUT,MSGSTART
+*        PUT   CONSOLE                 PRINT OUT THIS MESSAGE
+*---------------------------------------------------------------------
+*
+*     END OF PROLOGUE
+*
+*---------------------------------------------------------------------
+*
+         CLI   PARMDAT,C'('            ANY OPTIONS?
+         BNE   NOOPT                   NO, DO SETFILE
+         CLC   PARMDAT+1(5),=C'QUERY'  IS IT A QUERY?
+         BE    DOQUERY
+         B     BADOPT
+*---------------------------------------------------------------------
+*
+*   QUERY THE CURRENT FILE THAT IS THE VIRTUAL TAPE
+*
+*---------------------------------------------------------------------
+*
+DOQUERY  DS    0H                      SET UP TO DO A QUERY
+         MVC   MSGOUT,TMPQUERY
+         MVC   MSGOUT+42(4),PARMDEV    INSERT DEVADDR FROM PARM
+         PUT   CONSOLE                 PRINT OUT THIS MESSAGE
+*
+* DO THE QUERY
+*
+         EXCP  QDCCB                   FIND OUT THE CURRENT FILE
+         WAIT  QDCCB                   WAIT FOR IT TO HAPPEN
+         MVC   MSGOUT,DOSFID           PREPARE MESSAGE AND DISPLAY
+         PUT   CONSOLE                 RESULT OF QUERY
+         LA    R15,0                   SET RETURN CODE
+         B     RETURN
+MOVEINST MVC   RADDR(01),0(R2)         GET PARMS
+MOVEINS2 MVC   DOSFID(01),PARMDAT      MOVE FILENAME
+*---------------------------------------------------------------------
+*
+*  CODE TO SET A NEW FILENAME EQUAL TO THE VIRTUAL TAPE...
+*
+*---------------------------------------------------------------------
+*
+NOOPT    DS    0H                      ASSUME ATTEMPT TO SET FILENAME
+         CLI   PARMDAT+1,C':'          WAS A DRIVE LETTER SPECIFIED
+*        BNE   BADFILE
+         CLC   PARMDAT,MSGBLANK        ANY FILENAME SPECIFIED
+         BE    BADFILE                 NO, BAD FILENAME
+         MVC   MSGOUT,TMPNOOPT
+         MVC   MSGOUT+49(4),PARMDEV    PUT DEVADDR IN MESSAGE
+         PUT   CONSOLE
+         LH    R6,PARMLEN              THIS IS THE LENGTH HALFW
+         LA    R4,PARMDAT              THIS IS THE DATA
+         S     R6,PLUS4                SUBTRACT DEVADDR LENGTH AND
+         STH   R6,SDCCW+6              STORE LENGTH IN CCW
+         SH    R6,=X'0001'             ADJUST MOVE LENGTH
+         EX    R6,MOVEINS2             DO THE MOVE
+         MVC   MSGOUT,MSGBLANK         CLEAR MESSAGE AREA
+         MVC   MSGOUT,DOSFID           FILENAME IN MESSAGE
+         PUT   CONSOLE                 DISPLAY IT
+         EXCP  SDCCB                   SET THE FILENAME INTO MOUNT
+         WAIT  SDCCB                   WAIT FOR THIS TO HAPPEN
+         LA    R15,0                   SET RETURN CODE
+         B     RETURN                  EXIT
+*---------------------------------------------------------------------
+*
+* ERROR CONDITIONS
+*
+*---------------------------------------------------------------------
+*
+NOPARM   DS    0H
+         MVC   MSGOUT,MSGOPT25         SUBSTITUTE VSE MSG
+         PUT   CONSOLE                 SHOW THIS MESSAGE
+         LA    R15,4
+         B     RETURN
+BADOPT   DS    0H
+         MVC   MSGOUT,MSGOPT24         SUBSTITUTE VSE MSG
+         PUT   CONSOLE                 SHOW THIS MESSAGE
+         LA    R15,8
+         B     RETURN
+BADFILE  DS    0H
+         MVC   MSGOUT,MSGNOF5          SUBSTITUTE VSE MSG
+         PUT   CONSOLE                 SHOW THIS MESSAGE
+         LA    R15,12
+         B     RETURN
+TOOLONG  DS    0H
+         MVC   MSGOUT,MSGLNG6          SUBSTITUTE VSE MSG
+         PUT   CONSOLE                 SHOW THIS MESSAGE
+         LA    R15,16
+         B     RETURN
+*---------------------------------------------------------------------
+*
+*     EXIT CODE
+*
+*---------------------------------------------------------------------
+*
+RETURN   DS    0H
+         MVC   MSGOUT,MSGEND           TMP MSG TO SHOW COMPLETION
+*        PUT   CONSOLE                 TMP - PUT OUT THIS MESSAGE
+         CLOSE CONSOLE
+         EOJ
+*
+*
+CONSOLE  DTFCN DEVADDR=SYSLOG,IOAREA1=MSGOUT,RECFORM=FIXUNB,           X
+               TYPEFLE=CMBND,BLKSIZE=70,INPSIZE=17
+MSGOUT   DS    CL80
+MSGSTART DC    CL80'*** BEGINNING OF VSE MOUNT ***'
+MSGEND   DC    CL80'*** END OF VSE MOUNT ***'
+MSGNOF5  DC    CL80'AWSMNT001E  NO OR INCORRECT FILEID SPECIFIED'
+MSGLNG6  DC    CL80'AWSMNT002E  DOS FILENAME TOO LONG'
+MSGOPT24 DC    CL80'AWSMNT003E  NO OR INVALID OPTION SPECIFIED'
+MSGOPT25 DC    CL80'AWSMNT004E  NO PARM= GIVEN'
+TMPQUERY DC    CL80'AWSMNT005E QUERY VIRTUAL TAPE AT ADDRESS '
+TMPNOOPT DC    CL80'AWSMNT006E ASSIGNING TO VIRTUAL TAPE AT ADDRESS '
+MSGBLANK DC    CL216' '
+*
+RADDR    DS    0CL256           USED TO SAVE PARMS
+PARMLEN  DC    CL2' '           PARAMETER LENGTH
+PARMDEV  DC    CL4' '           DEVADDR FROM PARMS
+PARMDAT  DC    CL216' '          DATA FROM PARMS (QUERY
+*                               OR FULL QUALIFIED FILENAME
+DOSFID   DC    CL80' '
+*
+*
+QDCCB    CCB   SYS014,QDCCW
+SDCCB    CCB   SYS014,SDCCW
+QDCCW    CCW   X'4B',DOSFID,X'60',1
+         CCW   X'E4',DOSFID,X'20',L'DOSFID
+SDCCW    CCW   X'4B',DOSFID,X'20',L'DOSFID
+*
+*
+PLUS4    DC    F'4'
+R0       EQU   0
+R1       EQU   1
+R2       EQU   2
+R3       EQU   3
+R4       EQU   4
+R5       EQU   5
+R6       EQU   6
+R7       EQU   7
+R8       EQU   8
+R9       EQU   9
+R10      EQU   10
+R11      EQU   11
+R12      EQU   12
+R13      EQU   13
+R14      EQU   14
+R15      EQU   15
+         END
+/*
+// IF  $MRC GT 4 THEN
+// GOTO NOLNK
+// EXEC LNKEDT
+/. NOLNK
+/&
+* $$ EOJ
