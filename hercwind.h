@@ -9,6 +9,13 @@
 // $Id$
 //
 // $Log$
+// Revision 1.17  2008/03/25 11:41:31  fish
+// SCSI TAPE MODS part 1: groundwork: non-functional changes:
+// rename some functions, comments, general restructuring, etc.
+// New source modules awstape.c, omatape.c, hettape.c and
+// tapeccws.c added, but not yet used (all will be used in a future
+// commit though when tapedev.c code is eventually split)
+//
 // Revision 1.16  2008/02/19 17:18:36  rbowler
 // Missing u_int8_t causes crypto compile errors on Solaris
 //
@@ -76,7 +83,15 @@
 
 ///////////////////////////////////////////////////////////////////////
 
-#define PATH_MAX        FILENAME_MAX
+#ifdef                  _MAX_PATH
+  #define   PATH_MAX    _MAX_PATH
+#else
+  #ifdef                FILENAME_MAX
+    #define PATH_MAX    FILENAME_MAX
+  #else
+    #define PATH_MAX    260
+  #endif
+#endif
 
 struct dirent {
         long            d_ino;          
