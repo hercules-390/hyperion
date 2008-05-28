@@ -82,7 +82,9 @@ and how they are used.
     <a href="#DIAG8CMD">DIAG8CMD</a>   disable
     <a href="#SHCMDOPT">SHCMDOPT</a>   disable
 
-    <a href="#DEFSYM">DEFSYM</a>     TAPEDIR "<a href="#subs">$(HOME)</a>/tapes"
+    <a href="#DEFSYM">DEFSYM</a>       TAPEDIR   "<a href="#subs">$(HOME)</a>/tapes"
+    <a href="#AUTOMOUNT">AUTOMOUNT</a>  $(TAPEDIR)
+
     <a href="#MODPATH">MODPATH</a>    /usr/local/hercules
     <a href="#LDMOD">LDMOD</a>      dyncrypt
 
@@ -130,7 +132,7 @@ and how they are used.
 
     0580      <a href="#3420">3420</a>    /dev/nst0   # SCSI  (Linux or Windows)
     0581      <a href="#3420">3420</a>    \\.\Tape0   # SCSI  (Windows only)
-    0582      <a href="#3420">3420</a>    ickdsf.aws  <a href="#vtape">vtape</a>
+    0582      <a href="#3420">3420</a>    ickdsf.aws  <a href="#noautomount">noautomount</a>
     0583      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
     0584-0587 <a href="#3420">3420</a>    <a href="#subs">$(TAPEDIR)</a>/volumes.<a href="#subs">$(CUU)</a> maxsizeM=170 eotmargin=131072
 
@@ -190,6 +192,17 @@ and how they are used.
     program interrupt when instructions such as LASP are issued.
     <p>
     <code>ASN_AND_LX_REUSE</code> may be abbreviated as <code>ALRF</code>
+    <p>
+
+<a name="AUTOMOUNT"></a>
+<dt><code>AUTOMOUNT &nbsp; <em>directory</em></code>
+<dd><p>
+    specifies the root AUTOMOUNT tape directory where the
+    <a href="#noautomount">automount</a> feature is to load tape device
+    files from. All automatically mounted tape files must reside within
+    the specified directory or one of its subdirectories. Refer to the
+    the devices '<a href="#noautomount">automount</a>' and
+    '<a href="#noautomount">noautomount</a>' options for details.
     <p>
 
 <a name="AUTO_SCSI_MOUNT"></a>
@@ -2016,8 +2029,8 @@ and how they are used.
     Refer to the distributed source-code's "<b>README.TAPE</b>" document for 
     additional information regarding system and application programming for tape
     devices and instructions regarding use of the emulated <b>ACF</b> (Automatic
-    Cartridge Feeder) and <b>VTAPE</b> (automount) features for virtual (non-SCSI)
-    tape devices.
+    Cartridge Feeder) and <b><a href="#AUTOMOUNT">AUTOMOUNT</a></b> features
+    for virtual (non-SCSI) tape devices.
     <p>
 
     <dl> <!-- begin Emulated tape types of emulation -->
@@ -2339,18 +2352,51 @@ and how they are used.
             required during tape motion. A parameter of 1 selects this
             option; a parameter of 0 turns it off.
             <p>
-<a name="vtape"></a>
+<a name="noautomount"></a>
 
-        <dt><code>VTAPE</code>
+        <dt><code>AUTOMOUNT</code>
+        <dt><code>NOAUTOMOUNT</code>
         <dd><p>
-            Indicates special "vtape" support is to be enabled for the device.
-            Special "vtape" support enables software running in your guest
-            operating system to automatically mount, unmount and/or query the
-            device filename assigned to the tape drive for themselves, without
-            any intervention on the part of the Hercules operator, via the use
-            of special CCW opcodes (0x4B = SET DIAGNOSE and 0xE4 = SENSE ID).
-            An example of such a program for VSE called <code>TMOUNT.txt</code>
-            is provided in the distributed source code's <code>util</code> subdirectory.
+            Indicates whether or not automount support is to be enabled for
+            the device. The 'automount' option can only be specified when
+            an AUTOMOUNT directory has been specified via the
+            <a href="#AUTOMOUNT">AUTOMOUNT</a> configuration file statement.
+            Use the 'noautomount' option to disable the feature for a device.
+            <p>
+            The automount feature enables software running in guest operating
+            systems to automatically mount, unmount and/or query the host device
+            filename assigned to the tape drive for themselves, without any
+            intervention on the part of the Hercules operator, via the use of
+            special CCW opcodes (0x4B Set Diagnose and 0xE4 Sense Id). An
+            example of such a program for VSE called <code><b>TMOUNT</b></code>
+            is provided in the distributed source code's util subdirectory.
+            <p>
+            Whenever the <a href="#AUTOMOUNT">AUTOMOUNT</a> statement is
+            specified in the configuration file, automount support is enabled
+            for all virtual (non-SCSI) tape devices by default, so specifying
+            the 'automount' option on individual tape device statements, while
+            acceptable, is not actually needed. Similarly, whenever the
+            <a href="#AUTOMOUNT">AUTOMOUNT</a> statement is <i>not</i>
+            specified in the configuration file, the 'noautomount' option,
+            while still accepted, is not actually needed either.
+            <p>
+            The 'automount' option exists solely for documentation purposes
+            since it cannot be validly specified unless the
+            <a href="#AUTOMOUNT">AUTOMOUNT</a> statement is specified
+            in the configuration file, and whenever it is, automount support
+            is automatically enabled for all virtual (non-SCSI) tape devices
+            by default anyway, so the option does not need to be specified on
+            the device statement (but may be for documentation purposes if so
+            desired).
+            <p>
+            The 'noautomount' option however, exists to allow one to purposely
+            <i>disable</i> the feature for a specific device whenever the option
+            is otherwise globally enabled by virtue of the
+            <a href="#AUTOMOUNT">AUTOMOUNT</a> configuration file statement
+            having been specified. When the <a href="#AUTOMOUNT">AUTOMOUNT</a>
+            configuration file statement is <i>not</i> specified however,
+            the 'noautomount' option is not needed either (but also may be
+            specified for documentation purposes anyway too, if so desired).
             <p>
 
         </dl>

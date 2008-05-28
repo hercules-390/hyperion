@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.86  2008/05/25 06:36:43  fish
+// VTAPE automount support (0x4B + 0xE4)
+//
 // Revision 1.85  2008/05/22 21:34:22  fish
 // Attempt to fix my *nix SCSI tape BSR over tapemark bug identified by Bob Schneider [bschneider@pingdata.net]
 //
@@ -552,10 +555,7 @@ struct SYSBLK {
 #define SHCMDOPT_NODIAG8  0x40          /* Disallow only for DIAG8   */
         int     panrate;                /* Panel refresh rate        */
         int     timerint;               /* microsecs timer interval  */
-        int     npquiet;                /* New Panel quiet indicator */
         char   *pantitle;               /* Alt console panel title   */
-        int     legacysenseid;          /* ena/disa senseid on       */
-                                        /*   legacy devices          */
 #if defined(OPTION_HAO)
         TID     haotid;                 /* Herc Auto-Oper thread-id  */
 #endif /* defined(OPTION_HAO) */
@@ -589,6 +589,7 @@ struct SYSBLK {
         unsigned int                    /* Flags                     */
                 daemon_mode:1,          /* Daemon mode active        */
                 panel_init:1,           /* Panel display initialized */
+                npquiet:1,              /* New Panel quiet indicator */
                 sigintreq:1,            /* 1 = SIGINT request pending*/
                 insttrace:1,            /* 1 = Instruction trace     */
                 inststep:1,             /* 1 = Instruction step      */
@@ -600,8 +601,10 @@ struct SYSBLK {
                 showregsnone:1,         /* 1 = show no registers     */
                 nomountedtapereinit:1,  /* 1 = disallow tape devinit
                                              if tape already mounted */
+                legacysenseid:1,        /* ena/disa senseid on       */
+                                        /*   legacy devices          */
 #if defined(OPTION_IPLPARM)
-                haveiplparm:1,
+                haveiplparm:1,          /* IPL PARM a la VM          */
 #endif
                 logoptnotime:1;         /* 1 = don't timestamp log   */
         U32     ints_state;             /* Common Interrupts Status  */
@@ -637,6 +640,7 @@ struct SYSBLK {
         char   *httpuser;               /* HTTP userid               */
         char   *httppass;               /* HTTP password             */
         char   *httproot;               /* HTTP root                 */
+        char   *automount_dir;          /* AUTOMOUNT directory       */
      /* Fields used by SYNCHRONIZE_CPUS */
         int     syncing;                /* 1=Sync in progress        */
         U32     sync_mask;              /* CPU mask for syncing CPUs */
@@ -1069,7 +1073,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   SIC_active:1;           /* 1=SIC active              */
         u_int   forced_logging:1;       /* 1=Forced Error Logging    */
         u_int   eotwarning:1;           /* 1=EOT warning area reached*/
-        u_int   vtape:1;                /* 1=VTAPE support (0x4B CCW)*/
+        u_int   automount:1;            /* 1=AUTOMOUNT CCWs support  */
         U32     msgid;                  /* Message Id of async. i/o  */
 #if defined(OPTION_SCSI_TAPE)
         struct mtget mtget;             /* SCSI tape status struct   */

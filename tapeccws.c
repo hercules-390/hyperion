@@ -111,6 +111,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.12  2008/05/25 06:36:43  fish
+// VTAPE automount support (0x4B + 0xE4)
+//
 // Revision 1.11  2008/05/22 19:25:58  fish
 // Flex FakeTape support
 //
@@ -1729,15 +1732,17 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     }
 
     /*---------------------------------------------------------------*/
-    /* SET DIAGNOSE        --  Special VTAPE support  --             */
+    /* SET DIAGNOSE      --  Special AUTOMOUNT support  --           */
     /*---------------------------------------------------------------*/
     case 0x4B:
     {
+        int     argc, i;
+        char  **argv;
         char    newfile [ sizeof(dev->filename) ];
-        int     i;
+        char    lcss[8];
 
-        /* Command reject if VTAPE support not enabled */
-        if (!dev->vtape)
+        /* Command reject if AUTOMOUNT support not enabled */
+        if (!dev->automount)
         {
             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
             break;
@@ -1759,7 +1764,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
                 break;
             }
 
-            /* VTAPE QUERY - part 1 (chained 0xE4 SENSE ID = part 2) */
+            /* AUTOMOUNT QUERY - part 1 (chained 0xE4 SENSE ID = part 2) */
 
             /* Set normal status but do nothing else; the next CCW
                should be a SENSE ID (0xE4) which will do the query */
@@ -1767,7 +1772,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             break;
         }
 
-        /* VTAPE MOUNT... */
+        /* AUTOMOUNT MOUNT... */
 
         /* Calculate residual byte count */
         RESIDUAL_CALC (sizeof(newfile)-1);   /* (minus-1 for NULL) */
@@ -1781,26 +1786,122 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         if (strcasecmp (newfile, "OFFLINE") == 0)
             strlcpy (newfile, TAPE_UNLOADED, sizeof(newfile));
 
-        /* Close the exsiting device file */
-        if (dev->fd >= 0)
-            dev->tmh->close(dev);
-        ASSERT( dev->fd < 0 );
+        /* (messages looks better without LCSS if not needed) */
+        lcss[0] = 0;
+        if (SSID_TO_LCSS(dev->ssid) != 0)
+            snprintf( lcss, sizeof(lcss), "%u:", SSID_TO_LCSS(dev->ssid) );
+        lcss[sizeof(lcss)-1] = 0;
 
-        /* Indicate drive now empty */
-        strlcpy (dev->filename, TAPE_UNLOADED, sizeof(dev->filename));
+        /* Obtain the device lock */
+        obtain_lock (&dev->lock);
 
-        /* Open the new device file if one was given */
-        if (strcmp (newfile, TAPE_UNLOADED) != 0)
+        /* Validate path (prevent directory traversal exploit) */
+        if ( strcmp( newfile, TAPE_UNLOADED ) != 0 )
         {
-            strlcpy (dev->filename, newfile, sizeof(dev->filename));
-            dev->tmh->open (dev, unitstat, code);
+            char fullname[MAX_PATH];
+            char resolved_path[MAX_PATH];
+
+            strlcpy( fullname, sysblk.automount_dir, sizeof(fullname) );
+            strlcat( fullname, newfile,              sizeof(fullname) );
+
+            if (0
+                || !realpath( fullname, resolved_path )
+                || strncmp( sysblk.automount_dir, resolved_path, strlen(sysblk.automount_dir))
+                || access( resolved_path, R_OK ) != 0
+            )
+            {
+                logmsg(_("HHCTA090E Auto-mount of file \"%s\" for drive %s%4.4X rejected: "
+                    "invalid path or file not found)\n"),
+                    newfile, lcss, dev->devnum);
+                build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
+                release_lock (&dev->lock);
+                break;
+            }
+            /* Use validated, fully resolved path */
+            strlcpy( newfile, resolved_path, sizeof(newfile) );
         }
 
-        /* Set normal status if that worked */
-        if (dev->fd >= 0 || strcmp (newfile, TAPE_UNLOADED) == 0)
+        /* Prevent accidental re-init'ing of an already loaded tape drive */
+        if (1
+            && sysblk.nomountedtapereinit
+            && strcmp (newfile,       TAPE_UNLOADED) != 0
+            && strcmp (dev->filename, TAPE_UNLOADED) != 0
+        )
+        {
+            logmsg(_("HHCTA091E Auto-mount for drive %s%4.4X rejected: "
+                "previous volume still mounted\n"),
+                lcss, dev->devnum);
+            build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
+            release_lock (&dev->lock);
+            break;
+        }
+
+        /* Build re-initialization parameters using new filename */
+        argc = dev->argc;
+        argv = malloc (dev->argc * sizeof(char*));
+
+        for (i=0; i < argc; i++)
+        {
+            if (dev->argv[i])
+                argv[i] = strdup(dev->argv[i]);
+            else
+                argv[i] = NULL;
+        }
+
+        /* (replace filename argument with new filename) */
+        free( argv[0] );
+        argv[0] = strdup( newfile );
+
+        /* Attempt reinitializing the device using the new filename */
+        rc = tapedev_init_handler( dev, argc, argv );
+
+        /* (free temp copy of parms to prevent memory leak) */
+        for (i=0; i < argc; i++)
+            if (argv[i])
+                free(argv[i]);
+
+        /* Issue message and set status based on whether that worked or not */
+        if (0
+            || rc < 0
+            || strfilenamecmp( dev->filename, newfile ) != 0
+        )
+        {
+            // (failure)
+
+            if (strcmp( newfile, TAPE_UNLOADED ) == 0)
+                logmsg(_("HHCTA092E Auto-unmount of drive %s%4.4X failed; fn=\"%s\" retained\n"),
+                    lcss, dev->devnum, dev->filename);
+            else
+                logmsg(_("HHCTA093E Auto-mount for drive %s%4.4X rejected: fn=\"%s\" not found\n"),
+                    lcss, dev->devnum, newfile);
+
+            /* (the load attempt failed) */
+            build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
+        }
+        else
+        {
+            // (success)
+
+            if (strcmp( newfile, TAPE_UNLOADED ) == 0)
+                logmsg(_("HHCTA094I Drive %s%4.4X auto-unmounted\n"),
+                    lcss, dev->devnum);
+            else
+                logmsg(_("HHCTA095I Drive %s%4.4X auto-mounted with fn=\"%s\"\n"),
+                    lcss, dev->devnum, dev->filename);
+
+            /* (save new parms for next time) */
+            free( dev->argv[0] );
+            dev->argv[0] = strdup( newfile );
+
+            /* (set normal status for this ccw) */
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
+        }
+
+        /* Release the device lock */
+        release_lock (&dev->lock);
         break;
-    }
+
+    } /* End case 0x4B: SET DIAGNOSE */
 
     /*---------------------------------------------------------------*/
     /* READ MESSAGE ID                                               */
@@ -3274,9 +3375,9 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     /*---------------------------------------------------------------*/
     case 0xE4:
     {
-        /* VTAPE QUERY - part 2 (if command-chained from prior 0x4B) */
+        /* AUTOMOUNT QUERY - part 2 (if command-chained from prior 0x4B) */
         if (1
-            && dev->vtape
+            && dev->automount
             && (chained & CCW_FLAGS_CC)
             && 0x4B == prevcode
         )

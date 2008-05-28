@@ -112,6 +112,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.145  2008/05/25 06:36:43  fish
+// VTAPE automount support (0x4B + 0xE4)
+//
 // Revision 1.144  2008/05/23 20:37:05  fish
 // Fix "presuming" message in gettapetype function to use implemented default shortdesc in message.
 //
@@ -749,7 +752,7 @@ DEVINITTAB*     pDevInitTab;
     dev->SIC_active          = 0;   // (always, initially)
     dev->SIC_supported       = 0;   // (until we're sure)
     dev->forced_logging      = 0;   // (always, initially)
-    dev->vtape               = 0;   // (always, initially)
+    dev->automount           = sysblk.automount_dir ? 1 : 0;
 
     /* Initialize SCSI tape control fields */
 #if defined(OPTION_SCSI_TAPE)
@@ -1167,7 +1170,8 @@ PARSER  ptab  [] =
     { "rw",         NULL },
     { "ring",       NULL },
     { "deonirq",    "%d" },
-    { "vtape",      NULL },
+    { "automount",  NULL },
+    { "noautomount",NULL },
     { "--blkid-22", NULL },
     { "--blkid-24", NULL },   /* (synonym for --blkid-22) */
     { "--blkid-32", NULL },
@@ -1200,7 +1204,8 @@ enum
     TDPARM_RW,
     TDPARM_RING,
     TDPARM_DEONIRQ,
-    TDPARM_VTAPE,
+    TDPARM_AUTOMOUNT,
+    TDPARM_NOAUTOMOUNT,
     TDPARM_BLKID22,
     TDPARM_BLKID24,
     TDPARM_BLKID32,
@@ -1211,13 +1216,13 @@ enum
 /*        mountnewtape     --     mount a tape in the drive          */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*  Syntax:       filename [parms]                                   */
+/*  Syntax:       filename [options]                                 */
 /*                                                                   */
-/*  where parms are any of the entries defined in the 'ptab' PARSER  */
-/*  table defined further above. Some commonly used parms are:       */
+/*  where options are any of the entries in the 'ptab' PARSER        */
+/*  table defined further above. Some commonly used options are:     */
 /*                                                                   */
-/*    awstape          set the HET parms be compatible with the      */
-/*                     R|P/390|IS tape file Format (HET files)       */
+/*    awstape          sets the HET parms to be compatible with the  */
+/*                     R|P/390|'s tape file Format (HET files)       */
 /*                                                                   */
 /*    idrc|compress    0|1: Write tape blocks with compression       */
 /*                     (std deviation: Read backward allowed on      */
@@ -1236,7 +1241,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 {
     char*       short_descr;            /* Short descr from fmttab   */
     int         i;                      /* Loop control              */
-    int         rc;                     /* various rtns return codes */
+    int         rc, optrc;              /* various rtns return codes */
     union {                             /* Parser results            */
         U32     num;                    /* Parser results            */
         BYTE    str[ 80 ];              /* Parser results            */
@@ -1286,7 +1291,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     dev->tdparms.maxsize   = 0;        // no max size     (default)
     dev->eotmargin         = 128*1024; // 128K EOT margin (default)
     dev->tdparms.logical_readonly = 0; // read/write      (default)
-    dev->vtape             = 0;        // (until we know otherwise)
+    dev->automount         = sysblk.automount_dir ? 1 : 0;
 
 #if defined(OPTION_SCSI_TAPE)
     // Real 3590's use 32-bit blockids, and don't support Erase Gap.
@@ -1299,17 +1304,20 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     }
 #endif
 
-    /* Process remaining parameters */
+#define  HHCTA078E()  logmsg (_("HHCTA078E Device %4.4X: option '%s' not valid for %s\n"), \
+                              dev->devnum, argv[i], short_descr)
+
+    /* Process remaining options */
     rc = 0;
     for (i = 1; i < argc; i++)
     {
-        logmsg (_("HHCTA066I %s device %4.4X parameter: '%s'\n"), short_descr, dev->devnum, argv[i]);
+        optrc = 0;
         switch (parser (&ptab[0], argv[i], &res))
         {
         case TDPARM_NONE:
-            logmsg (_("HHCTA067E Device %4.4X: %s - Unrecognized parameter: '%s'\n"),
-                dev->devnum,dev->filename,argv[i]);
-            rc = -1;
+            logmsg (_("HHCTA067E Device %4.4X: option '%s' unrecognized\n"),
+                dev->devnum, argv[i]);
+            optrc = -1;
             break;
 
         case TDPARM_AWSTAPE:
@@ -1318,9 +1326,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.compress = FALSE;
             dev->tdparms.chksize = 4096;
@@ -1333,9 +1339,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.compress = (res.num ? TRUE : FALSE);
             break;
@@ -1346,15 +1350,13 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             if (res.num < HETMIN_METHOD || res.num > HETMAX_METHOD)
             {
-                logmsg(_("HHCTA068E Method must be within %u-%u\n"),
-                    HETMIN_METHOD, HETMAX_METHOD);
-                rc = -1;
+                logmsg(_("HHCTA068E Device %4.4X: option '%s': method must be within %u-%u\n"),
+                    dev->devnum, argv[i], HETMIN_METHOD, HETMAX_METHOD);
+                optrc = -1;
                 break;
             }
             dev->tdparms.method = res.num;
@@ -1366,15 +1368,13 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             if (res.num < HETMIN_LEVEL || res.num > HETMAX_LEVEL)
             {
-                logmsg(_("HHCTA069E Level must be within %u-%u\n"),
-                    HETMIN_LEVEL, HETMAX_LEVEL);
-                rc = -1;
+                logmsg(_("HHCTA069E Device %4.4X: option '%s': level must be within %u-%u\n"),
+                    dev->devnum, argv[i], HETMIN_LEVEL, HETMAX_LEVEL);
+                optrc = -1;
                 break;
             }
             dev->tdparms.level = res.num;
@@ -1386,15 +1386,13 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 || TAPEDEVT_FAKETAPE == dev->tapedevt
             )
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             if (res.num < HETMIN_CHUNKSIZE || res.num > HETMAX_CHUNKSIZE)
             {
-                logmsg (_("HHCTA070E Chunksize must be within %u-%u\n"),
-                    HETMIN_CHUNKSIZE, HETMAX_CHUNKSIZE);
-                rc = -1;
+                logmsg (_("HHCTA070E Device %4.4X: option '%s': chunksize must be within %u-%u\n"),
+                    dev->devnum, argv[i], HETMIN_CHUNKSIZE, HETMAX_CHUNKSIZE);
+                optrc = -1;
                 break;
             }
             dev->tdparms.chksize = res.num;
@@ -1403,9 +1401,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZE:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.maxsize=res.num;
             break;
@@ -1413,9 +1409,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZEK:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.maxsize=res.num*1024;
             break;
@@ -1423,9 +1417,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_MAXSIZEM:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.maxsize=res.num*1024*1024;
             break;
@@ -1437,9 +1429,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_STRICTSIZE:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.strictsize=res.num;
             break;
@@ -1447,9 +1437,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_READONLY:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.logical_readonly=(res.num ? 1 : 0 );
             break;
@@ -1458,9 +1446,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_NORING:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.logical_readonly=1;
             break;
@@ -1469,9 +1455,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_RING:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.logical_readonly=0;
             break;
@@ -1479,21 +1463,33 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_DEONIRQ:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->tdparms.deonirq=(res.num ? 1 : 0 );
             break;
 
-        case TDPARM_VTAPE:
+        case TDPARM_AUTOMOUNT:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr);
-                rc = -1;
+                HHCTA078E(); optrc = -1; break;
+            }
+            if (!sysblk.automount_dir)
+            {
+                logmsg(_("HHCTA080E Device %4.4X: option '%s' rejected: "
+                    "AUTOMOUNT directory NULL\n"),
+                    dev->devnum, argv[i]);
+                optrc = -1;
                 break;
             }
-            dev->vtape = 1;
+            dev->automount = 1;
+            break;
+
+        case TDPARM_NOAUTOMOUNT:
+            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
+            {
+                HHCTA078E(); optrc = -1; break;
+            }
+            dev->automount = 0;
             break;
 
 #if defined(OPTION_SCSI_TAPE)
@@ -1501,9 +1497,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_BLKID24:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr );
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->stape_blkid_32 = 0;
             break;
@@ -1511,9 +1505,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_BLKID32:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr );
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->stape_blkid_32 = 1;
             break;
@@ -1521,19 +1513,26 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         case TDPARM_NOERG:
             if (TAPEDEVT_SCSITAPE != dev->tapedevt)
             {
-                logmsg (_("HHCTA078E Option '%s' not valid for %s\n"), argv[i], short_descr );
-                rc = -1;
-                break;
+                HHCTA078E(); optrc = -1; break;
             }
             dev->stape_no_erg = 1;
             break;
 #endif /* defined(OPTION_SCSI_TAPE) */
 
         default:
-            logmsg(_("HHCTA071E Error in '%s' parameter\n"), argv[i]);
-            rc = -1;
+            logmsg(_("HHCTA071E Device %4.4X: option '%s': parse error\n"),
+                dev->devnum, argv[i]);
+            optrc = -1;
             break;
+
         } // end switch (parser (&ptab[0], argv[i], &res))
+
+        if (optrc < 0)
+            rc = -1;
+        else
+            logmsg (_("HHCTA066I Device %4.4X: option '%s' accepted.\n"),
+                dev->devnum, argv[i]);
+
     } // end for (i = 1; i < argc; i++)
 
     if (0 != rc)
@@ -1576,7 +1575,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 void tapedev_query_device ( DEVBLK *dev, char **class,
                 int buflen, char *buffer )
 {
-    char devparms[ PATH_MAX+1 + 64 ];
+    char devparms[ MAX_PATH+1 + 128 ];
     char dispmsg [ 256 ];
 
     BEGIN_DEVICE_CLASS_QUERY( "TAPE", dev, class, buflen, buffer );
@@ -1587,10 +1586,20 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
 
     GetDisplayMsg( dev, dispmsg, sizeof(dispmsg) );
 
+    if (strchr(dev->filename,' ')) strlcat( devparms, "\"",          sizeof(devparms));
+                                   strlcat( devparms, dev->filename, sizeof(devparms));
+    if (strchr(dev->filename,' ')) strlcat( devparms, "\"",          sizeof(devparms));
+
+    if (sysblk.automount_dir)
+    {
+        if (!dev->automount)
+            strlcat( devparms, " noautomount", sizeof(devparms));
+    }
+    else
+        ASSERT( !dev->automount );  // (sanity check)
+
     if ( strcmp( dev->filename, TAPE_UNLOADED ) == 0 )
     {
-        strlcat( devparms, dev->filename, sizeof(devparms));
-
 #if defined(OPTION_SCSI_TAPE)
         if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
         {
@@ -1613,10 +1622,6 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
     else // (filename was specified)
     {
         char tapepos[32]; tapepos[0]=0;
-
-        if (strchr(dev->filename,' ')) strlcat( devparms, "\"",          sizeof(devparms));
-                                       strlcat( devparms, dev->filename, sizeof(devparms));
-        if (strchr(dev->filename,' ')) strlcat( devparms, "\"",          sizeof(devparms));
 
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
         {

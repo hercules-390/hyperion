@@ -31,6 +31,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.81  2008/03/04 01:10:29  ivan
+// Add LEGACYSENSEID config statement to allow X'E4' Sense ID on devices
+// that originally didn't support it. Defaults to off for compatibility reasons
+//
 // Revision 1.80  2008/01/18 23:44:12  rbowler
 // Segfault instead of HHCCF004S if no device records in config file
 //
@@ -1266,6 +1270,55 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 if (sysblk.httproot) free(sysblk.httproot);
                 sysblk.httproot = strdup(operand);
                 /* (will be validated later) */
+            }
+            else if (strcasecmp (keyword, "automount") == 0)
+            {
+                char abspath[MAX_PATH];
+
+                if (!operand)
+                {
+                    fprintf(stderr, _("HHCCF007S Error in %s line %d: "
+                        "Missing argument.\n"),
+                        fname, inc_stmtnum[inc_level]);
+                    delayed_exit(1);
+                }
+                if (sysblk.automount_dir) free(sysblk.automount_dir);
+                sysblk.automount_dir = strdup(operand);
+                /* Convert the specified root dir value to an absolute path
+                   ending with a '/' and save in sysblk.automount_dir. */
+#if defined(_MSVC_)
+                /* Expand any embedded %var% environ vars */
+                rc = expand_environ_vars(sysblk.automount_dir,
+                                         abspath, sizeof(abspath));
+                if (rc == 0)
+                {
+                    free (sysblk.automount_dir);
+                    sysblk.automount_dir = strdup(abspath);
+                }
+#endif /* defined(_MSVC_) */
+                /* Convert to absolute path */
+                if (!realpath( sysblk.automount_dir, abspath ))
+                {
+                    logmsg( _("HHCCF066E Invalid AUTOMOUNT directory: \"%s\": %s\n"),
+                           sysblk.automount_dir, strerror(errno));
+                    delayed_exit(1);
+                }
+                /* Verify that the absolute path is valid */
+                if (access( abspath, R_OK | W_OK ) != 0)
+                {
+                    logmsg( _("HHCCF066E Invalid AUTOMOUNT directory: \"%s\": %s\n"),
+                           abspath, strerror(errno));
+                    delayed_exit(1);
+                }
+                /* Append trailing path separator if needed */
+                rc = strlen(abspath);
+                if (abspath[rc-1] != *PATH_SEP)
+                    strlcat(abspath,PATH_SEP,sizeof(abspath));
+                /* Save the absolute path */
+                free(sysblk.automount_dir);
+                sysblk.automount_dir = strdup(abspath);
+                logmsg(_("HHCCF090I Using AUTOMOUNT directory \"%s\"\n"),
+                    sysblk.automount_dir);
             }
 #endif /*defined(OPTION_HTTP_SERVER)*/
 #if defined(_FEATURE_ASN_AND_LX_REUSE)

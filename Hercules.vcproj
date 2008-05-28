@@ -1957,10 +1957,6 @@
 						RelativePath=".\tests\trte.txt"
 						>
 					</File>
-					<File
-						RelativePath=".\tests\vtape.txt"
-						>
-					</File>
 				</Filter>
 			</Filter>
 			<Filter

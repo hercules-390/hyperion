@@ -1,3 +1,5 @@
+28 May 2008 AUTOMOUNT fixed and enhanced so it actually works now - Fish
+28 May 2008 Misleading VTAPE support renamed to AUTOMOUNT instead - Fish
 24 May 2008 VTAPE automount support (CCW 0x4B + 0xE4) - Fish
 22 May 2008 Attempt to fix my *nix SCSI tape BSR over tapemark bug
             identified by Bob Schneider [bschneider@pingdata.net] - Fish
