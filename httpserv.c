@@ -30,6 +30,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.74  2007/06/23 00:04:12  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.73  2006/12/31 23:49:00  fish
 // Use "access()" to validate http_server root directory and not "chdir()"!!
 //
@@ -691,7 +694,7 @@ TID                     httptid;        /* Negotiation thread id     */
         // mode: 0 = exist only, 2 = write, 4 = read, 6 = read/write
         // rc: 0 = success, -1 = error (errno = cause)
         // ENOENT = File name or path not found.
-        if (access( absolute_httproot_path, 4 ) != 0)
+        if (access( absolute_httproot_path, R_OK ) != 0)
         {
             logmsg( _("HHCCF066E Invalid HTTPROOT: \"%s\": %s\n"),
                    absolute_httproot_path, strerror(errno));
