@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.9  2008/03/16 00:04:37  rbowler
+// Replace ACC_ARMODE by USE_ARMODE for LPTEA
+//
 // Revision 1.8  2007/03/20 22:23:33  gsmith
 // Redefine ACC_ and ACCTYPE_ macros
 //
@@ -29,8 +32,16 @@
 /* Miscellaneous system related constants we could be missing...     */
 /*-------------------------------------------------------------------*/
 
-#ifndef   MAX_PATH
-  #define MAX_PATH  PATH_MAX
+#ifndef     MAX_PATH
+  #define   MAX_PATH          PATH_MAX
+#endif
+
+#ifndef     PATH_SEP
+  #ifdef     _MSVC_
+    #define PATH_SEP          "\\"
+  #else
+    #define PATH_SEP          "/"
+  #endif
 #endif
 
 #if defined( _MSVC_ )
