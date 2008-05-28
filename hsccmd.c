@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.242  2008/05/23 20:38:13  fish
+// Change device query calls to not ask for what they don't need
+//
 // Revision 1.241  2008/04/14 21:09:58  rbowler
 // Include C4xx,C6xx,C8xx instructions in icount display
 //
@@ -6040,7 +6043,7 @@ CMDTAB;
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
-// Define all panel command here...
+// Define all panel commands here...
 
 int  ListAllCommands (int argc, char *argv[], char *cmdline);  /*(forward reference)*/
 int  HelpCommand     (int argc, char *argv[], char *cmdline);  /*(forward reference)*/
