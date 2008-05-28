@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.142  2008/03/29 08:36:46  fish
+// More complete/extensive 3490/3590 tape support
+//
 // Revision 1.141  2008/03/13 19:55:49  ivan
 // Return Byte Mpx in STIDC for Channel 0 according to GA22-7000-4 Page 192 Chapter 2
 //
@@ -708,7 +711,6 @@ int     cc;                             /* Condition code            */
 
         /* Clear the status bits in the SCSW */
         dev->scsw.flag3 &= ~(SCSW3_SC);
-
     }
     else
     {
@@ -727,7 +729,6 @@ int     cc;                             /* Condition code            */
                 longjmp(regs->progjmp,SIE_INTERCEPT_IOINST);
             }
 #endif
-
             /* Set condition code 0 for status pending */
             cc = 0;
 
@@ -3666,7 +3667,7 @@ int device_attention (DEVBLK *dev, BYTE unitstat)
         case ARCH_370:
             /* Do NOT raise if initial power-on state */
             /*
-             * FIXME : The dev->crwpendig test in S/370
+             * FIXME : The dev->crwpending test in S/370
              *         mode prevents any devices added
              *         at run time after IPL from being
              *         operational. The test has been
