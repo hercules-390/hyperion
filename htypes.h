@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.9  2008/02/19 17:18:36  rbowler
+// Missing u_int8_t causes crypto compile errors on Solaris
+//
 // Revision 1.8  2006/12/08 09:43:28  jj
 // Add CVS message log
 //
@@ -74,20 +77,38 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
   #define  I16_FMT                  "h"
   #define  I32_FMT                  ""
   #define  I64_FMT                  "l"
-#else // defined(SIZEOF_LONG) && SIZEOF_LONG == 4
+#else // !defined(SIZEOF_LONG) || SIZEOF_LONG != 8
   #define  I16_FMT                  "h"
   #define  I32_FMT                  ""
   #define  I64_FMT                  "ll"
 #endif
 
+#define  I16_FMTx           "%4.4" I16_FMT "x"
+#define  I32_FMTx           "%8.8" I32_FMT "x"
+#define  I64_FMTx         "%16.16" I64_FMT "x"
+
+#define  I16_FMTX           "%4.4" I16_FMT "X"
+#define  I32_FMTX           "%8.8" I32_FMT "X"
+#define  I64_FMTX         "%16.16" I64_FMT "X"
+
 #if defined(SIZEOF_LONG) && SIZEOF_LONG == 8
- #define UINT_PTR_FMT             I64_FMT
+ #define UINT_PTR_FMT              I64_FMT
  #define      PTR_FMTx    "%16.16" I64_FMT "x"
  #define      PTR_FMTX    "%16.16" I64_FMT "X"
-#else // defined(SIZEOF_LONG) && SIZEOF_LONG == 4
- #define UINT_PTR_FMT             I32_FMT
+#else // !defined(SIZEOF_LONG) || SIZEOF_LONG != 8
+ #define UINT_PTR_FMT              I32_FMT
  #define      PTR_FMTx      "%8.8" I32_FMT "x"
  #define      PTR_FMTX      "%8.8" I32_FMT "X"
+#endif
+
+#if defined(SIZEOF_SIZE_T) && SIZEOF_SIZE_T == 8
+  #define  SIZE_T_FMT              I64_FMT
+  #define  SIZE_T_FMTx    "%16.16" I64_FMT "x"
+  #define  SIZE_T_FMTX    "%16.16" I64_FMT "X"
+#else // !defined(SIZEOF_SIZE_T) || SIZEOF_SIZE_T != 8
+  #define  SIZE_T_FMT              I32_FMT
+  #define  SIZE_T_FMTx      "%8.8" I32_FMT "x"
+  #define  SIZE_T_FMTX      "%8.8" I32_FMT "X"
 #endif
 
 /*-------------------------------------------------------------------*/

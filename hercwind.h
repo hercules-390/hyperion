@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.18  2008/05/28 16:37:48  fish
+// #define PATH_MAX  from _MAX_PATH if available
+//
 // Revision 1.17  2008/03/25 11:41:31  fish
 // SCSI TAPE MODS part 1: groundwork: non-functional changes:
 // rename some functions, comments, general restructuring, etc.
@@ -202,5 +205,35 @@ typedef int             mode_t;
   #include PCRE_INCNAME                 // (passed by makefile)
   #define  OPTION_HAO                   // Hercules Automatic Operator
 #endif
+
+#if defined( _WIN64 )
+  #define  SIZEOF_SIZE_T      8
+#else
+  #define  SIZEOF_SIZE_T      4
+#endif
+
+#define DBGTRACE DebugTrace
+
+inline void DebugTrace(char* fmt, ...)
+{
+    const int chunksize = 512;
+    int buffsize = 0;
+    char* buffer = NULL;
+    int rc = -1;
+	va_list args;
+	va_start( args, fmt );
+    do
+    {
+        if (buffer) free( buffer );
+        buffsize += chunksize;
+        buffer = malloc( buffsize );
+        if (!buffer) __debugbreak();
+	    rc = vsnprintf( buffer, buffsize, fmt, args);
+    }
+    while (rc < 0 || rc >= buffsize);
+    OutputDebugStringA( buffer );
+    free( buffer );
+	va_end( args );
+}
 
 #endif /*!defined(_HERCWIND_H)*/

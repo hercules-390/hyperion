@@ -22,6 +22,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.30  2008/02/19 11:49:19  ivan
+// - Move setting of CPU priority after spwaning timer thread
+// - Added support for Posix 1003.1e capabilities
+//
 // Revision 1.29  2007/08/28 20:14:23  gsmith
 // Fix many TUNSETIFF-EINVAL error messages
 //
@@ -212,7 +216,7 @@ int main( int argc, char **argv )
 
         default:
             snprintf( szMsgBuffer,sizeof(szMsgBuffer),
-                     _("HHCIF004W %s: Unknown request: %8.8lX.\n"),
+                     _("HHCIF004W %s: Unknown request: "I32_FMTX".\n"),
                      pszProgName, ctlreq.iCtlOp );
             write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
             continue;

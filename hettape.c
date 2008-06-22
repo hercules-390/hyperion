@@ -111,6 +111,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.6  2008/05/22 19:25:58  fish
+// Flex FakeTape support
+//
 // Revision 1.5  2008/03/30 02:51:33  fish
 // Fix SCSI tape EOV (end of volume) processing
 //
@@ -371,7 +374,7 @@ int             rc;                     /* Return code               */
         /* Handle end of file (uninitialized tape) condition */
         if (rc == HETE_EOT)
         {
-            logmsg (_("HHCTA014E End of file (uninitialized tape) "
+            logmsg (_("HHCTA014E End of file (end of tape) "
                     "at block %8.8X in file %s\n"),
                     dev->hetb->cblk, dev->filename);
 

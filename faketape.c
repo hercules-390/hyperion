@@ -111,6 +111,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.1  2008/05/22 19:26:52  fish
+// Flex FakeTape support
+//
 //
 /*-------------------------------------------------------------------*/
 
@@ -283,7 +286,7 @@ int             xorblkl;                /* XOR check of block lens   */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA303E Error seeking to offset %8.8lX "
+        logmsg (_("HHCTA303E Error seeking to offset "I64_FMTX" "
                 "in file %s: %s\n"),
                 blkpos, dev->filename, strerror(errno));
 
@@ -299,7 +302,7 @@ int             xorblkl;                /* XOR check of block lens   */
     if (rc < 0)
     {
         logmsg (_("HHCTA304E Error reading block header "
-                "at offset %8.8lX in file %s: %s\n"),
+                "at offset "I64_FMTX" in file %s: %s\n"),
                 blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
@@ -310,8 +313,8 @@ int             xorblkl;                /* XOR check of block lens   */
     /* Handle end of file (uninitialized tape) condition */
     if (rc == 0)
     {
-        logmsg (_("HHCTA305E End of file (uninitialized tape) "
-                "at offset %8.8lX in file %s\n"),
+        logmsg (_("HHCTA305E End of file (end of tape) "
+                "at offset "I64_FMTX" in file %s\n"),
                 blkpos, dev->filename);
 
         /* Set unit exception with tape indicate (end of tape) */
@@ -323,7 +326,7 @@ int             xorblkl;                /* XOR check of block lens   */
     if (rc < (int)sizeof(FAKETAPE_BLKHDR))
     {
         logmsg (_("HHCTA306E Unexpected end of file in block header "
-                "at offset %8.8lX in file %s\n"),
+                "at offset "I64_FMTX" in file %s\n"),
                 blkpos, dev->filename);
 
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -339,7 +342,7 @@ int             xorblkl;                /* XOR check of block lens   */
     if ( (prvblkl ^ curblkl) != xorblkl )
     {
         logmsg (_("HHCTA307E Block header damage "
-                "at offset %8.8lX in file %s\n"),
+                "at offset "I64_FMTX" in file %s\n"),
                 blkpos, dev->filename);
 
         /* Set unit check with equipment check */
@@ -385,7 +388,7 @@ U16             curblkl;                /* Current block length      */
     if (curblkl > MAX_BLKLEN)
     {
         logmsg (_("HHCTA308E Block length exceeds %d "
-                "at offset %8.8lX in file %s\n"),
+                "at offset "I64_FMTX" in file %s\n"),
                 (int)MAX_BLKLEN, blkpos, dev->filename);
 
         /* Set unit check with data check */
@@ -402,7 +405,7 @@ U16             curblkl;                /* Current block length      */
         if (rc < 0)
         {
             logmsg (_("HHCTA310E Error reading data block "
-                    "at offset %8.8lX in file %s: %s\n"),
+                    "at offset "I64_FMTX" in file %s: %s\n"),
                     blkpos, dev->filename, strerror(errno));
 
             /* Set unit check with equipment check */
@@ -414,7 +417,7 @@ U16             curblkl;                /* Current block length      */
         if (rc < curblkl)
         {
             logmsg (_("HHCTA311E Unexpected end of file in data block "
-                    "at offset %8.8lX in file %s\n"),
+                    "at offset "I64_FMTX" in file %s\n"),
                     blkpos, dev->filename);
 
             /* Set unit check with data check and partial record */
@@ -463,7 +466,7 @@ char            sblklen[5];             /* work buffer               */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA303E Error seeking to offset %8.8lX "
+        logmsg (_("HHCTA303E Error seeking to offset "I64_FMTX" "
                 "in file %s: %s\n"),
                 blkpos, dev->filename, strerror(errno));
 
@@ -489,13 +492,13 @@ char            sblklen[5];             /* work buffer               */
             /* Disk FULL */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
             logmsg (_("HHCTA313E Media full condition reached "
-                    "at offset %8.8lX in file %s\n"),
+                    "at offset "I64_FMTX" in file %s\n"),
                     blkpos, dev->filename);
             return -1;
         }
         /* Handle write error condition */
         logmsg (_("HHCTA314E Error writing block header "
-                "at offset %8.8lX in file %s: %s\n"),
+                "at offset "I64_FMTX" in file %s: %s\n"),
                 blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
@@ -541,7 +544,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA312E Error seeking to offset %8.8lX "
+        logmsg (_("HHCTA312E Error seeking to offset "I64_FMTX" "
                 "in file %s: %s\n"),
                 blkpos, dev->filename, strerror(errno));
 
@@ -577,13 +580,13 @@ U16             prvblkl;                /* Length of previous block  */
             /* Disk FULL */
             build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
             logmsg (_("HHCTA315E Media full condition reached "
-                    "at offset %8.8lX in file %s\n"),
+                    "at offset "I64_FMTX" in file %s\n"),
                     blkpos, dev->filename);
             return -1;
         }
         /* Handle write error condition */
         logmsg (_("HHCTA316E Error writing data block "
-                "at offset %8.8lX in file %s: %s\n"),
+                "at offset "I64_FMTX" in file %s: %s\n"),
                 blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
@@ -602,7 +605,7 @@ U16             prvblkl;                /* Length of previous block  */
     {
         /* Handle write error condition */
         logmsg (_("HHCTA317E Error writing data block "
-                "at offset %8.8lX in file %s: %s\n"),
+                "at offset "I64_FMTX" in file %s: %s\n"),
                 blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
@@ -648,7 +651,7 @@ U16             prvblkl;                /* Length of previous block  */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA318E Error seeking to offset %8.8lX "
+        logmsg (_("HHCTA318E Error seeking to offset "I64_FMTX" "
                 "in file %s: %s\n"),
                 blkpos, dev->filename, strerror(errno));
 
@@ -685,7 +688,7 @@ U16             prvblkl;                /* Length of previous block  */
     {
         /* Handle write error condition */
         logmsg (_("HHCTA320E Error writing tape mark "
-                "at offset %8.8lX in file %s: %s\n"),
+                "at offset "I64_FMTX" in file %s: %s\n"),
                 blkpos, dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */

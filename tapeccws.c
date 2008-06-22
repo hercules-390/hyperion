@@ -111,6 +111,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.13  2008/05/28 16:46:29  fish
+// Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
+//
 // Revision 1.12  2008/05/25 06:36:43  fish
 // VTAPE automount support (0x4B + 0xE4)
 //
@@ -1805,8 +1808,8 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             strlcat( fullname, newfile,              sizeof(fullname) );
 
             if (0
-                || !realpath( fullname, resolved_path )
-                || strncmp( sysblk.automount_dir, resolved_path, strlen(sysblk.automount_dir))
+                || realpath( fullname, resolved_path ) == NULL
+                || strnfilenamecmp( sysblk.automount_dir, resolved_path, strlen(sysblk.automount_dir)) != 0
                 || access( resolved_path, R_OK ) != 0
             )
             {
@@ -1829,7 +1832,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         )
         {
             logmsg(_("HHCTA091E Auto-mount for drive %s%4.4X rejected: "
-                "previous volume still mounted\n"),
+                "drive not empty\n"),
                 lcss, dev->devnum);
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
             release_lock (&dev->lock);

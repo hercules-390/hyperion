@@ -111,6 +111,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.6  2008/05/22 19:25:58  fish
+// Flex FakeTape support
+//
 // Revision 1.5  2008/03/30 02:51:33  fish
 // Fix SCSI tape EOV (end of volume) processing
 //
@@ -616,7 +619,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA052E Error seeking to offset %8.8lX "
+        logmsg (_("HHCTA052E Error seeking to offset "I32_FMTX" "
                 "in file %s: %s\n"),
                 blkpos, omadesc->filename, strerror(errno));
 
@@ -632,7 +635,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (rc < 0)
     {
         logmsg (_("HHCTA053E Error reading block header "
-                "at offset %8.8lX in file %s: %s\n"),
+                "at offset "I32_FMTX" in file %s: %s\n"),
                 blkpos, omadesc->filename,
                 strerror(errno));
 
@@ -645,7 +648,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (rc < (int)sizeof(omahdr))
     {
         logmsg (_("HHCTA054E Unexpected end of file in block header "
-                "at offset %8.8lX in file %s\n"),
+                "at offset "I32_FMTX" in file %s\n"),
                 blkpos, omadesc->filename);
 
         /* Set unit check with data check and partial record */
@@ -668,7 +671,7 @@ S32             nxthdro;                /* Offset of next header     */
         || memcmp(omahdr.omaid, "@HDF", 4) != 0)
     {
         logmsg (_("HHCTA055E Invalid block header "
-                "at offset %8.8lX in file %s\n"),
+                "at offset "I32_FMTX" in file %s\n"),
                 blkpos, omadesc->filename);
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -735,7 +738,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (rc < 0)
     {
         logmsg (_("HHCTA056E Error reading data block "
-                "at offset %8.8lX in file %s: %s\n"),
+                "at offset "I32_FMTX" in file %s: %s\n"),
                 blkpos, omadesc->filename,
                 strerror(errno));
 
@@ -748,7 +751,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (rc < curblkl)
     {
         logmsg (_("HHCTA057E Unexpected end of file in data block "
-                "at offset %8.8lX in file %s\n"),
+                "at offset "I32_FMTX" in file %s\n"),
                 blkpos, omadesc->filename);
 
         /* Set unit check with data check and partial record */
@@ -785,7 +788,7 @@ long            blkpos;                 /* Offset of block in file   */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA058E Error seeking to offset %8.8lX "
+        logmsg (_("HHCTA058E Error seeking to offset "I32_FMTX" "
                 "in file %s: %s\n"),
                 blkpos, omadesc->filename, strerror(errno));
 
@@ -801,7 +804,7 @@ long            blkpos;                 /* Offset of block in file   */
     if (blklen < 0)
     {
         logmsg (_("HHCTA059E Error reading data block "
-                "at offset %8.8lX in file %s: %s\n"),
+                "at offset "I32_FMTX" in file %s: %s\n"),
                 blkpos, omadesc->filename,
                 strerror(errno));
 
@@ -859,7 +862,7 @@ BYTE            c;                      /* Character work area       */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        logmsg (_("HHCTA060E Error seeking to offset %8.8lX "
+        logmsg (_("HHCTA060E Error seeking to offset "I32_FMTX" "
                 "in file %s: %s\n"),
                 blkpos, omadesc->filename, strerror(errno));
 
@@ -917,7 +920,7 @@ BYTE            c;                      /* Character work area       */
     if (rc < 0)
     {
         logmsg (_("HHCTA061E Error reading data block "
-                "at offset %8.8lX in file %s: %s\n"),
+                "at offset "I32_FMTX" in file %s: %s\n"),
                 blkpos, omadesc->filename,
                 strerror(errno));
 
@@ -929,7 +932,7 @@ BYTE            c;                      /* Character work area       */
     if (rc < 1)
     {
         logmsg (_("HHCTA062E Unexpected end of file in data block "
-                "at offset %8.8lX in file %s\n"),
+                "at offset "I32_FMTX" in file %s\n"),
                 blkpos, omadesc->filename);
 
         /* Set unit check with data check and partial record */
@@ -941,7 +944,7 @@ BYTE            c;                      /* Character work area       */
     if (pos == 0)
     {
         logmsg (_("HHCTA063E Invalid zero length block "
-                "at offset %8.8lX in file %s\n"),
+                "at offset "I32_FMTX" in file %s\n"),
                 blkpos, omadesc->filename);
 
         /* Set unit check with equipment check */

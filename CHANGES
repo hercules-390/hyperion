@@ -1,3 +1,4 @@
+22 Jun 2008 Fix tape messages print format bug causing crash - Fish
 28 May 2008 AUTOMOUNT fixed and enhanced so it actually works now - Fish
 28 May 2008 Misleading VTAPE support renamed to AUTOMOUNT instead - Fish
 24 May 2008 VTAPE automount support (CCW 0x4B + 0xE4) - Fish

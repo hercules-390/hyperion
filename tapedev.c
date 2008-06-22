@@ -112,6 +112,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.146  2008/05/28 16:46:29  fish
+// Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
+//
 // Revision 1.145  2008/05/25 06:36:43  fish
 // VTAPE automount support (0x4B + 0xE4)
 //
@@ -1294,7 +1297,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     dev->automount         = sysblk.automount_dir ? 1 : 0;
 
 #if defined(OPTION_SCSI_TAPE)
-    // Real 3590's use 32-bit blockids, and don't support Erase Gap.
+    // Real 3590's support Erase Gap and use 32-bit blockids.
 
     if (TAPEDEVT_SCSITAPE == dev->tapedevt
         &&     0x3590     == dev->devtype)
@@ -1621,12 +1624,12 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
     }
     else // (filename was specified)
     {
-        char tapepos[32]; tapepos[0]=0;
+        char tapepos[64]; tapepos[0]=0;
 
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
         {
-            snprintf( tapepos, sizeof(tapepos), "[%d:%8.8lX] ",
-                dev->curfilen, (unsigned long int)dev->nxtblkpos );
+            snprintf( tapepos, sizeof(tapepos), "[%d:%08"I64_FMT"X] ",
+                dev->curfilen, dev->nxtblkpos );
             tapepos[sizeof(tapepos)-1] = 0;
         }
 #if defined(OPTION_SCSI_TAPE)
