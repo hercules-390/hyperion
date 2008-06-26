@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.21  2008/05/22 21:17:29  fish
+// Tape file extension neutrality support
+//
 // Revision 1.20  2008/02/19 11:49:19  ivan
 // - Move setting of CPU priority after spwaning timer thread
 // - Added support for Posix 1003.1e capabilities
@@ -679,6 +682,8 @@ do { \
 #else /* !defined(NO_SETUID) */
 
 #define SETMODE(_func)
+#define DROP_PRIVILEGES(_capa)
+#define DROP_ALL_CAPS()
 
 #endif /* !defined(NO_SETUID) */
 
