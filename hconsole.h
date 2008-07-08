@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.9  2007/11/30 14:54:32  jmaynard
+// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
+//
 // Revision 1.8  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -30,6 +33,8 @@
 #define KBD_DOWN_ARROW          "\x1B[B"
 #define KBD_RIGHT_ARROW         "\x1B[C"
 #define KBD_LEFT_ARROW          "\x1B[D"
+#define KBD_CTRL_UP_ARROW       "\x1B""D"
+#define KBD_CTRL_DOWN_ARROW     "\x1B""M"
 
 // Hercules console color codes...
 

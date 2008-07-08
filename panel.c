@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.214  2007/12/29 14:40:51  fish
+// fix copyregs function to fallback to using dummyregs whenever regs->hostregs happens to be NULL
+//
 // Revision 1.213  2007/12/10 23:12:02  gsmith
 // Tweaks to OPTION_MIPS_COUNTING processing
 //
@@ -1697,6 +1700,23 @@ char    buf[1024];                      /* Buffer workarea           */
                         NPDinit = 1;
                         redraw_cmd = 1;
                     }
+                    break;
+                }
+
+                /* Test for CTRL line up command */
+                if (strcmp(kbbuf+i,  KBD_CTRL_UP_ARROW) == 0) {
+                    firstmsgn--;
+                    if (firstmsgn < 0) firstmsgn = 0;
+                    redraw_msgs = 1;
+                    break;
+                }
+
+                /* Test for CTRL line down command */
+                if (strcmp(kbbuf+i,  KBD_CTRL_DOWN_ARROW) == 0) {
+                    firstmsgn++;
+                    if (firstmsgn > nummsgs - NUM_LINES)
+                        firstmsgn = nummsgs - NUM_LINES;
+                    redraw_msgs = 1;
                     break;
                 }
 

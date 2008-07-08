@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.11  2007/11/30 14:54:32  jmaynard
+// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
+//
 // Revision 1.10  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -312,6 +315,8 @@ void translate_keystroke( char kbbuf[], int* pkblen )
                 case 0x50: strcpy( kbbuf, KBD_DOWN_ARROW  ); break;
                 case 0x4D: strcpy( kbbuf, KBD_RIGHT_ARROW ); break;
                 case 0x4B: strcpy( kbbuf, KBD_LEFT_ARROW  ); break;
+                case 0x8D: strcpy( kbbuf, KBD_CTRL_UP_ARROW   ); break;
+                case 0x91: strcpy( kbbuf, KBD_CTRL_DOWN_ARROW ); break;
 
                 default:
                 {
