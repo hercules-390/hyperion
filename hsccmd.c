@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.243  2008/05/28 16:38:34  fish
+// (fix typo in comment; no code was changed)
+//
 // Revision 1.242  2008/05/23 20:38:13  fish
 // Change device query calls to not ask for what they don't need
 //
@@ -1065,6 +1068,250 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 }
 
 #endif /*OPTION_IODELAY_KLUDGE*/
+
+#if defined( OPTION_TAPE_AUTOMOUNT )
+///////////////////////////////////////////////////////////////////////////////
+/*  automount_cmd  --  show or update the tape AUTOMOUNT directories list */
+
+int automount_cmd(int argc, char *argv[], char *cmdline)
+{
+    int rc;
+
+    if (argc < 2)
+    {
+        logmsg(_("HHCPN200E Missing operand; enter 'HELP AUTOMOUNT' for syntax.\n"));
+        return -1;
+    }
+
+    if (strcasecmp(argv[1],"list") == 0)
+    {
+        TAMDIR* pTAMDIR = sysblk.tamdir;
+
+        if (argc != 2)
+        {
+            logmsg(_("HHCPN201E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+            return -1;
+        }
+
+        if (!pTAMDIR)
+        {
+            logmsg(_("HHCPN202E Empty list.\n"));
+            return -1;
+        }
+
+        // List all entries...
+
+        for (; pTAMDIR; pTAMDIR = pTAMDIR->next)
+            logmsg(_("HHCPN203I \"%c%s\"\n")
+                ,pTAMDIR->rej ? '-' : '+'
+                ,pTAMDIR->dir
+                );
+        return 0;
+    }
+
+    if (strcasecmp(argv[1],"add") == 0)
+    {
+        char tamdir[MAX_PATH+1]; /* +1 for optional '+' or '-' prefix */
+        TAMDIR* pTAMDIR = NULL;
+        int was_empty = (sysblk.tamdir == NULL);
+
+        if (argc != 3)
+        {
+            logmsg(_("HHCPN204E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+            return -1;
+        }
+
+        // Add the requested entry...
+
+        strlcpy (tamdir, argv[2], sizeof(tamdir));
+        rc = add_tamdir( tamdir, &pTAMDIR );
+
+        // Did that work?
+
+        switch (rc)
+        {
+            default:     /* (oops!) */
+            {
+                logmsg( _("HHCPN205E **LOGIC ERROR** file \"%s\", line %d\n"),
+                    __FILE__, __LINE__);
+                return -1;
+            }
+
+            case 5:     /* ("out of memory") */
+            {
+                logmsg( _("HHCPN206E Out of memory!\n"));
+                return -1;
+            }
+
+            case 1:     /* ("unresolvable path") */
+            case 2:     /* ("path inaccessible") */
+            {
+                logmsg( _("HHCPN207E Invalid AUTOMOUNT directory: \"%s\": %s\n"),
+                       tamdir, strerror(errno));
+                return -1;
+            }
+
+            case 3:     /* ("conflict w/previous") */
+            {
+                logmsg( _("HHCPN208E AUTOMOUNT directory \"%s\""
+                    " conflicts with previous specification\n"),
+                    tamdir);
+                return -1;
+            }
+
+            case 4:     /* ("duplicates previous") */
+            {
+                logmsg( _("HHCPN209E AUTOMOUNT directory \"%s\""
+                    " duplicates previous specification\n"),
+                    tamdir);
+                return -1;
+            }
+
+            case 0:     /* ("success") */
+            {
+                logmsg(_("HHCPN210I %s%s AUTOMOUNT directory = \"%s\"\n"),
+                    pTAMDIR->dir == sysblk.defdir ? "Default " : "",
+                    pTAMDIR->rej ? "Disallowed" : "Allowed",
+                    pTAMDIR->dir);
+
+                /* Define default AUTOMOUNT directory if needed */
+
+                if (sysblk.defdir == NULL)
+                {
+                    static char cwd[ MAX_PATH ];
+
+                    VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
+                    rc = strlen( cwd );
+                    if (cwd[rc-1] != *PATH_SEP)
+                        strlcat (cwd, PATH_SEP, sizeof(cwd));
+
+                    if (!(pTAMDIR = malloc( sizeof(TAMDIR) )))
+                    {
+                        logmsg( _("HHCPN211E Out of memory!\n"));
+                        sysblk.defdir = cwd; /* EMERGENCY! */
+                    }
+                    else
+                    {
+                        pTAMDIR->dir = strdup (cwd);
+                        pTAMDIR->len = strlen (cwd);
+                        pTAMDIR->rej = 0;
+                        pTAMDIR->next = sysblk.tamdir;
+                        sysblk.tamdir = pTAMDIR;
+                        sysblk.defdir = pTAMDIR->dir;
+                    }
+
+                    logmsg(_("HHCPN212I Default Allowed AUTOMOUNT directory = \"%s\"\n"),
+                        sysblk.defdir);
+                }
+
+                return 0;
+            }
+        }
+    }
+
+    if (strcasecmp(argv[1],"del") == 0)
+    {
+        TAMDIR* pPrevTAMDIR = NULL;
+        TAMDIR* pCurrTAMDIR = sysblk.tamdir;
+        int was_empty = (sysblk.tamdir == NULL);
+
+        if (argc != 3)
+        {
+            logmsg(_("HHCPN213E Invalid syntax; enter 'HELP AUTOMOUNT' for help.\n"));
+            return -1;
+        }
+
+        // Find entry to be deleted...
+
+        for (; pCurrTAMDIR; pPrevTAMDIR = pCurrTAMDIR, pCurrTAMDIR = pCurrTAMDIR->next)
+        {
+            if (strfilenamecmp( pCurrTAMDIR->dir, argv[2] ) == 0)
+            {
+                int def = (sysblk.defdir == pCurrTAMDIR->dir);
+
+                // Delete the found entry...
+
+                if (pPrevTAMDIR)
+                    pPrevTAMDIR->next = pCurrTAMDIR->next;
+                else
+                    sysblk.tamdir = pCurrTAMDIR->next;
+
+                free( pCurrTAMDIR );
+
+                pCurrTAMDIR = sysblk.tamdir;
+
+                logmsg(_("HHCPN214I Ok.%s\n"),
+                    pCurrTAMDIR ? "" : " (list now empty)");
+
+                // Default entry just deleted?
+
+                if (def)
+                {
+                    if (!pCurrTAMDIR)
+                        sysblk.defdir = NULL;
+                    else
+                    {
+                        // Set new default entry...
+
+                        for (; pCurrTAMDIR; pCurrTAMDIR = pCurrTAMDIR->next)
+                        {
+                            if (pCurrTAMDIR->rej == 0)
+                            {
+                                sysblk.defdir = pCurrTAMDIR->dir;
+                                break;
+                            }
+                        }
+
+                        // If we couldn't find an existing allowable
+                        // directory entry to use as the new default,
+                        // then add the current directory and use it.
+
+                        if (!pCurrTAMDIR)
+                        {
+                            static char cwd[ MAX_PATH ];
+
+                            VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
+                            rc = strlen( cwd );
+                            if (cwd[rc-1] != *PATH_SEP)
+                                strlcat (cwd, PATH_SEP, sizeof(cwd));
+
+                            if (!(pCurrTAMDIR = malloc( sizeof(TAMDIR) )))
+                            {
+                                logmsg( _("HHCPN215E Out of memory!\n"));
+                                sysblk.defdir = cwd; /* EMERGENCY! */
+                            }
+                            else
+                            {
+                                pCurrTAMDIR->dir = strdup (cwd);
+                                pCurrTAMDIR->len = strlen (cwd);
+                                pCurrTAMDIR->rej = 0;
+                                pCurrTAMDIR->next = sysblk.tamdir;
+                                sysblk.tamdir = pCurrTAMDIR;
+                                sysblk.defdir = pCurrTAMDIR->dir;
+                            }
+                        }
+
+                        logmsg(_("HHCPN216I Default Allowed AUTOMOUNT directory = \"%s\"\n"),
+                            sysblk.defdir);
+                    }
+                }
+
+                return 0;   // (success)
+            }
+        }
+
+        if (sysblk.tamdir == NULL)
+            logmsg(_("HHCPN217E Empty list.\n"));
+        else
+            logmsg(_("HHCPN218E Entry not found.\n"));
+        return -1;
+    }
+
+    logmsg(_("HHCPN219E Unsupported function; enter 'HELP AUTOMOUNT' for syntax.\n"));
+    return 0;
+}
+
+#endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined( OPTION_SCSI_TAPE )
 
@@ -6128,6 +6375,9 @@ COMMAND ( "devinit",   devinit_cmd,   "reinitialize device" )
 COMMAND ( "devlist",   devlist_cmd,   "list device or all devices\n" )
 COMMAND ( "qd",        qd_cmd,        "query dasd\n" )
 
+#if defined( OPTION_TAPE_AUTOMOUNT )
+COMMAND ( "automount", automount_cmd, "show/update allowable tape automount directories\n" )
+#endif /* OPTION_TAPE_AUTOMOUNT */
 #if defined( OPTION_SCSI_TAPE )
 COMMAND ( "scsimount", scsimount_cmd, "automatic SCSI tape mounts\n" )
 #endif /* defined( OPTION_SCSI_TAPE ) */
@@ -6426,6 +6676,23 @@ CMDHELP ( "tt32",      "Format:  \"tt32   debug | nodebug | stats <devnum>\".\n\
                        "or displays TunTap32 stats for the specified CTC device.\n"
                        )
 #endif /* defined( OPTION_W32_CTCI ) */
+
+#if defined( OPTION_TAPE_AUTOMOUNT )
+
+CMDHELP ( "automount", "Format:  \"automount  { add <dir> | del <dir> | list }\".\n\n"
+
+                       "Adds or deletes entries from the list of allowable/unallowable tape\n"
+                       "automount directories, or lists all currently defined list entries,\n"
+                       "if any.\n"
+                       "\n"
+                       "The format of the <dir> directory operand for add/del operations is\n"
+                       "identical to that as described in the documentation for the AUTOMOUNT\n"
+                       "configuration file statement (i.e. prefix with '+' or '-' as needed).\n"
+                       "\n"
+                       "The automount feature is approriately enabled or disabled for all tape\n"
+                       "devices as needed depending on the updated empty/non-empty list state.\n"
+                       )
+#endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined( OPTION_SCSI_TAPE )
 CMDHELP ( "scsimount", "Format:    \"scsimount  [ no | yes | 0-99 ]\".\n\n"

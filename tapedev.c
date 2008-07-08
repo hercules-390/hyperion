@@ -112,6 +112,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.147  2008/06/22 05:54:30  fish
+// Fix print-formatting issue (mostly in tape modules)
+// that can sometimes, in certain circumstances,
+// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
+//
 // Revision 1.146  2008/05/28 16:46:29  fish
 // Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
 //
@@ -755,7 +760,9 @@ DEVINITTAB*     pDevInitTab;
     dev->SIC_active          = 0;   // (always, initially)
     dev->SIC_supported       = 0;   // (until we're sure)
     dev->forced_logging      = 0;   // (always, initially)
-    dev->automount           = sysblk.automount_dir ? 1 : 0;
+#if defined( OPTION_TAPE_AUTOMOUNT )
+    dev->noautomount         = 0;   // (always, initially)
+#endif
 
     /* Initialize SCSI tape control fields */
 #if defined(OPTION_SCSI_TAPE)
@@ -1173,8 +1180,9 @@ PARSER  ptab  [] =
     { "rw",         NULL },
     { "ring",       NULL },
     { "deonirq",    "%d" },
-    { "automount",  NULL },
+#if defined( OPTION_TAPE_AUTOMOUNT )
     { "noautomount",NULL },
+#endif
     { "--blkid-22", NULL },
     { "--blkid-24", NULL },   /* (synonym for --blkid-22) */
     { "--blkid-32", NULL },
@@ -1207,8 +1215,9 @@ enum
     TDPARM_RW,
     TDPARM_RING,
     TDPARM_DEONIRQ,
-    TDPARM_AUTOMOUNT,
+#if defined( OPTION_TAPE_AUTOMOUNT )
     TDPARM_NOAUTOMOUNT,
+#endif
     TDPARM_BLKID22,
     TDPARM_BLKID24,
     TDPARM_BLKID32,
@@ -1294,7 +1303,9 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
     dev->tdparms.maxsize   = 0;        // no max size     (default)
     dev->eotmargin         = 128*1024; // 128K EOT margin (default)
     dev->tdparms.logical_readonly = 0; // read/write      (default)
-    dev->automount         = sysblk.automount_dir ? 1 : 0;
+#if defined( OPTION_TAPE_AUTOMOUNT )
+    dev->noautomount       = 0;
+#endif
 
 #if defined(OPTION_SCSI_TAPE)
     // Real 3590's support Erase Gap and use 32-bit blockids.
@@ -1471,29 +1482,17 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             dev->tdparms.deonirq=(res.num ? 1 : 0 );
             break;
 
-        case TDPARM_AUTOMOUNT:
-            if (TAPEDEVT_SCSITAPE == dev->tapedevt)
-            {
-                HHCTA078E(); optrc = -1; break;
-            }
-            if (!sysblk.automount_dir)
-            {
-                logmsg(_("HHCTA080E Device %4.4X: option '%s' rejected: "
-                    "AUTOMOUNT directory NULL\n"),
-                    dev->devnum, argv[i]);
-                optrc = -1;
-                break;
-            }
-            dev->automount = 1;
-            break;
+#if defined( OPTION_TAPE_AUTOMOUNT )
 
         case TDPARM_NOAUTOMOUNT:
             if (TAPEDEVT_SCSITAPE == dev->tapedevt)
             {
                 HHCTA078E(); optrc = -1; break;
             }
-            dev->automount = 0;
+            dev->noautomount = 1;
             break;
+
+#endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined(OPTION_SCSI_TAPE)
         case TDPARM_BLKID22:
@@ -1593,13 +1592,12 @@ void tapedev_query_device ( DEVBLK *dev, char **class,
                                    strlcat( devparms, dev->filename, sizeof(devparms));
     if (strchr(dev->filename,' ')) strlcat( devparms, "\"",          sizeof(devparms));
 
-    if (sysblk.automount_dir)
-    {
-        if (!dev->automount)
-            strlcat( devparms, " noautomount", sizeof(devparms));
-    }
-    else
-        ASSERT( !dev->automount );  // (sanity check)
+#if defined( OPTION_TAPE_AUTOMOUNT )
+
+    if (dev->noautomount)
+        strlcat( devparms, " noautomount", sizeof(devparms));
+
+#endif /* OPTION_TAPE_AUTOMOUNT */
 
     if ( strcmp( dev->filename, TAPE_UNLOADED ) == 0 )
     {

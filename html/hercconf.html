@@ -26,14 +26,14 @@ and how they are used.
 <table border=1><tr><td>
 <pre><code>
 
-    ####################################################
-    #     HERCULES EMULATOR CONFIGURATION FILE         #
-    #     (Note: not all parameters are shown)         #
-    ####################################################
+    ####################################################################
+    #                HERCULES EMULATOR CONTROL FILE                    #
+    #             (Note: not all parameters are shown)                 #
+    ####################################################################
 
 
     #
-    #   <a href="#system_parameters">System parameters</a>
+    #     <a href="#system_parameters">System parameters</a>
     #
 
 
@@ -82,8 +82,10 @@ and how they are used.
     <a href="#DIAG8CMD">DIAG8CMD</a>   disable
     <a href="#SHCMDOPT">SHCMDOPT</a>   disable
 
-    <a href="#DEFSYM">DEFSYM</a>       TAPEDIR   "<a href="#subs">$(HOME)</a>/tapes"
+    <a href="#DEFSYM">DEFSYM</a>     TAPEDIR   "<a href="#subs">$(HOME)</a>/tapes"
     <a href="#AUTOMOUNT">AUTOMOUNT</a>  $(TAPEDIR)
+    <a href="#AUTOMOUNT">AUTOMOUNT</a>  +/tapes
+    <a href="#AUTOMOUNT">AUTOMOUNT</a>  -/tapes/vault
 
     <a href="#MODPATH">MODPATH</a>    /usr/local/hercules
     <a href="#LDMOD">LDMOD</a>      dyncrypt
@@ -99,9 +101,11 @@ and how they are used.
     <a href="#IGNORE">IGNORE</a>     INCLUDE_ERRORS
     <a href="#INCLUDE">INCLUDE</a>    optdevs.cfg
 
+
     #
-    #   <a href="#device_definitions">Device definitions</a>
+    #     <a href="#device_stmts">Device statements</a>
     #
+
 
     0009      <a href="#consysc">3215-C</a>  /
 
@@ -156,13 +160,13 @@ and how they are used.
 <h3>System parameters</h3>
 <p>
     System parameters may appear in any order but they must precede all
-    device records.  Each system parameter must be on a separate line.
+    device statements.  Each system parameter must be on a separate line.
     The following system parameters may be specified:
 
 <dl>
 
 <a name="ARCHMODE"></a>
-<dt><code>ARCHMODE &nbsp; S/370 &#124 ESA/390 &#124 z/Arch &#124 ESAME</code>
+<dt><code>ARCHMODE &nbsp; S/370 &#124; ESA/390 &#124; z/Arch &#124; ESAME</code>
 <dd><p>
     specifies the initial architecture mode:
     <ul compact>
@@ -184,9 +188,9 @@ and how they are used.
     specifies that the ASN-and-LX-Reuse Facility (ALRF) is to be disabled
     or enabled. The default is disabled. This is a z/Architecture-only
     feature (it is always disabled for S/390 or ESA/390). Set this
-    to <code>ENABLE</code>&nbsp if the operating system supports
+    to <code>ENABLE</code>&nbsp; if the operating system supports
     this z/Architecture feature and the use of this feature is desired.
-    Set it to <code>DISABLE</code>&nbsp or do not specify anything
+    Set it to <code>DISABLE</code>&nbsp; or do not specify anything
     if the operating system doesn't support this feature, and it
     inadvertently sets CR0 bit 44 to 1, usually leading to unexpected
     program interrupt when instructions such as LASP are issued.
@@ -195,14 +199,50 @@ and how they are used.
     <p>
 
 <a name="AUTOMOUNT"></a>
-<dt><code>AUTOMOUNT &nbsp; <em>directory</em></code>
+<dt><code>AUTOMOUNT &nbsp; <em>[&plusmn;]directory</em></code>
 <dd><p>
-    specifies the root AUTOMOUNT tape directory where the
-    <a href="#noautomount">automount</a> feature is to load tape device
-    files from. All automatically mounted tape files must reside within
-    the specified directory or one of its subdirectories. Refer to the
-    the devices '<a href="#noautomount">automount</a>' and
-    '<a href="#noautomount">noautomount</a>' options for details.
+    specifies the host system directory where the guest is allowed
+    or not allowed to automatically load virtual tape volumes from.
+    Prefix allowable directories with a '+' plus sign and unallowable
+    directories with a '-' minus sign. The default prefix if neither is
+    specified is the '+' plus sign (i.e. an allowable directory).
+    <p>
+    <i><b>Caution:</b> &nbsp;Enabling this feature may have security
+    consequences depending on which allowable host system directories you
+    specify as well as how your guest operating system enforces
+    authorized use of whatever automount functionality it happens to
+    utilize.</i>
+    <p>
+    All host system virtual tape volumes to be "automounted" by the guest
+    must reside within one of the specified allowable host system directories
+    or any of its subdirectories while not also being within any of the
+    specified unallowable directories or any of their subdirectories,
+    in order for the guest-invoked automount to be accepted.
+    <p>
+    Note: specifying a disallowed automount directory does not preclude the
+    Hercules operator from manually mounting any file s/he wishes via the
+    <code>devinit</code> panel command -- even one in a currently defined
+    "disallowed" automount directory. The AUTOMOUNT statement only controls
+    guest-invoked automatic tape mounts and not manual tape mounts performed
+    by the Hercules operator.
+    <p>
+    All directories must be specified on separate statements, but as many
+    statements as needed may be specified in order to describe the desired
+    allowable/unallowable directories layout. For convenience, an
+    <code>automount</code> panel command is also provided to dynamically
+    add/remove new/existing allowable/unallowable automount
+    directories at any time.
+    <p>
+    At least one allowable directory should be defined, but defaults to the
+    current directory if one is not specifically defined (i.e. if only
+    unallowable directories are specified, the current directory then
+    becomes the only defined allowable automount directory by default).
+    <p>
+    All specified directories are always resolved to fully-qualified
+    absolute directory paths before being saved.
+    <p>
+    Refer to the description of the virtual tape device
+    '<a href="#noautomount">noautomount</a>' option for more information.
     <p>
 
 <a name="AUTO_SCSI_MOUNT"></a>
@@ -464,7 +504,7 @@ and how they are used.
     <p>
 
 <a name="DEVTMAX"></a>
-<dt><code>DEVTMAX &nbsp; -1 &#124 0 &#124 <em>nnn</em></code>
+<dt><code>DEVTMAX &nbsp; -1 &#124; 0 &#124; <em>nnn</em></code>
 <dd><p>
     specifies the maximum number of device threads allowed.
     <p>Specify <code>-1</code> to cause 'one time only' temporary threads to be
@@ -515,7 +555,7 @@ and how they are used.
     <p>
 
 <a name="ECPSVM"></a>
-<dt><code>ECPSVM &nbsp; YES &#124 NO &#124 LEVEL <em>nn</em></code>
+<dt><code>ECPSVM &nbsp; YES &#124; NO &#124; LEVEL <em>nn</em></code>
 <dd><p>
     specifies whether ECPS:VM (Extended Control Program Support : Virtual Machine)
     support is to be enabled. If <code>YES</code> is specified, then the support
@@ -808,7 +848,7 @@ and how they are used.
     <p>
 
 <a name="PANRATE"></a>
-<dt><code>PANRATE &nbsp; SLOW &#124 FAST &#124 <em>nn</em></code>
+<dt><code>PANRATE &nbsp; SLOW &#124; FAST &#124; <em>nn</em></code>
 <dd><p>
     specifies the panel refresh rate, in milliseconds between refreshes. SLOW
     is the same as 500, and FAST is the same as 50. A value less than the
@@ -833,7 +873,7 @@ and how they are used.
     <p>
 
 <a name="PGMPRDOS"></a>
-<dt><code>PGMPRDOS &nbsp; RESTRICTED &#124 LICENSED</code>
+<dt><code>PGMPRDOS &nbsp; RESTRICTED &#124; LICENSED</code>
 <dd><p>
     specifies whether or not Hercules will run licensed program product ESA
     or z/Architecture operating systems.  Specify <code>RESTRICTED</code> to
@@ -898,7 +938,7 @@ and how they are used.
     <p>
 
 <a name="SYSEPOCH"></a>
-<dt><code>SYSEPOCH &nbsp; <em>yyyy</em> [&plusmn<em>years</em>]</code>
+<dt><code>SYSEPOCH &nbsp; <em>yyyy</em> [&plusmn;<em>years</em>]</code>
 <dd><p>
     specifies the base date for the TOD clock.  Use the default value
     (<code>1900</code>) for all systems except OS/360. Use <code>1960</code>
@@ -915,7 +955,7 @@ and how they are used.
     <p>
 
 <a name="TIMERINT"></a>
-<dt><code>TIMERINT &nbsp; DEFAULT &#124 <em>nnnn</em></code>
+<dt><code>TIMERINT &nbsp; DEFAULT &#124; <em>nnnn</em></code>
 <dd><p>
     specifies the internal timers update interval, in microseconds.  This
     parameter specifies how frequently Hercules's internal timers-update thread
@@ -1035,7 +1075,7 @@ and how they are used.
 <h4>Special symbols</h4>
     <h5>Device group symbols</h5>
     <p>
-        When multiple devices are defined with a single device definition record, then the symbols<P>
+        When multiple devices are defined with a single device definition statement, then the symbols<P>
         <blockquote>
             <TABLE BORDER=0>
                 <ul compact>
@@ -1424,13 +1464,13 @@ and how they are used.
 
 <hr><!-- ---------------------------------------------------------------------------- -->
 
-<a name="device_definitions"></a>
-<h3>Device definitions</h3>
+<a name="device_stmts"></a>
+<h3>Device statements</h3>
 
 <p>
-    The remaining statements in the configuration file are device records.
-    There must be one device record for each I/O device or group of identical I/O devices.
-    The format of the device record is:
+    The remaining statements in the configuration file are device statements.
+    There must be one device statement for each I/O device or group of
+    identical I/O devices. The format of the device statement is:
     <p>
 
     <blockquote>
@@ -1444,7 +1484,7 @@ and how they are used.
 
 <blockquote>
 
-<dl> <!-- begin Device records -->
+<dl> <!-- begin Device statements -->
 <a name="devnums"></a>
 
 <dt><code><em>devnum(s)</em></code>
@@ -1511,7 +1551,7 @@ and how they are used.
     definition statement.
     <p>
 
-</dl> <!-- end Device records -->
+</dl> <!-- end Device statements -->
 
 </blockquote>
 
@@ -2302,22 +2342,22 @@ and how they are used.
         <dt><code>MAXSIZE</code>=<i>n</i> &nbsp;&#124;&nbsp; <code>MAXSIZEK</code>=<i>n</i>
              &nbsp;&#124;&nbsp; <code>MAXSIZEM</code>=<i>n</i>
         <dd><p>
-            Specifies the maximum number of bytes (specified in bytes, Kilobytes or
-            Megabytes) for the emulated file. This parameter defaults to 0, meaning
-            there is no limit on the file size.
+            Specifies the maximum size (in bytes, Kilobytes or Megabytes)
+            that the emulated file is allowed to grow to. Specifying zero
+            for this parameter means "unlimited" (i.e. there is no limit).
             <p>
 
         <dt><code>EOTMARGIN</code>=<em>n</em>
         <dd><p>
             Specifies the number of bytes remaining before reaching <em>maxsize</em>
-            at which point the tape device will signal the presence of the 'End Of Tape'
+            at which point the tape device will signal the presence of the "End of Tape"
             marker (reflector), thus allowing the program to switch to the next tape.
             <p>
 
         <dt><code>READONLY</code>=<em>n</em>
         <dd><p>
             Specifies whether the tape is mounted read-only (without a write
-            ring, or with the cartridge protect switch set to "write
+            ring or with the cartridge protect switch set to "write
             protect").  A parameter of 1 means read-only; a parameter of 0
             means read-write.  If READONLY=1, RO or NORING is not specified,
             the default is READONLY=0.  Note that READONLY=0 does not override
@@ -2330,7 +2370,7 @@ and how they are used.
         <dt><code>NORING</code>
         <dd><p>
             Specifies that the tape is mounted read-only (without a write
-            ring, or with the cartridge protect switch set to "write
+            ring or with the cartridge protect switch set to "write
             protect").  RO and NORING are equivalent to READONLY=1.
             <p>
  
@@ -2352,53 +2392,79 @@ and how they are used.
             required during tape motion. A parameter of 1 selects this
             option; a parameter of 0 turns it off.
             <p>
-<a name="noautomount"></a>
 
-        <dt><code>AUTOMOUNT</code>
+<a name="noautomount"></a>
         <dt><code>NOAUTOMOUNT</code>
         <dd><p>
-            Indicates whether or not automount support is to be enabled for
-            the device. The 'automount' option can only be specified when
-            an AUTOMOUNT directory has been specified via the
-            <a href="#AUTOMOUNT">AUTOMOUNT</a> configuration file statement.
-            Use the 'noautomount' option to disable the feature for a device.
+            Indicates support for guest-initiated automatic tape volume
+            mounting is to always be disabled for this tape device.
+            <p>
+            Automatic guest tape-mount support is automatically globally
+            enabled for all virtual (non-SCSI) tape devices by default
+            whenever an allowable automount directory is defined via the
+            <a href="#AUTOMOUNT">AUTOMOUNT</a> configuration file statement
+            or the <code>automount</code> panel command.
+            The <code>NOAUTOMOUNT</code> option allows you to specifically
+            disable such support for a given device.
             <p>
             The automount feature enables software running in guest operating
-            systems to automatically mount, unmount and/or query the host device
-            filename assigned to the tape drive for themselves, without any
-            intervention on the part of the Hercules operator, via the use of
-            special CCW opcodes (0x4B Set Diagnose and 0xE4 Sense Id). An
-            example of such a program for VSE called <code><b>TMOUNT</b></code>
-            is provided in the distributed source code's util subdirectory.
+            systems to automatically mount, unmount and/or query for themselves
+            the host "virtual tape volume" filename mounted on a tape drive,
+            via the use of special CCW opcodes (0x4B Set Diagnose and 0xE4
+            Sense Id) without any intervention on the part of the Hercules
+            operator. An example of such a program for DOS/VSE called
+            <code>TMOUNT</code> is provided in the <code>util</code>
+            subdirectory of the distributed source code.
             <p>
-            Whenever the <a href="#AUTOMOUNT">AUTOMOUNT</a> statement is
-            specified in the configuration file, automount support is enabled
-            for all virtual (non-SCSI) tape devices by default, so specifying
-            the 'automount' option on individual tape device statements, while
-            acceptable, is not actually needed. Similarly, whenever the
-            <a href="#AUTOMOUNT">AUTOMOUNT</a> statement is <i>not</i>
-            specified in the configuration file, the 'noautomount' option,
-            while still accepted, is not actually needed either.
+            This is a sticky option. When specified, automount support for
+            the device remains disabled until the option is specifically
+            removed via a <code>devinit</code> command <em>without</em> the option
+            specified. This means if <code>NOAUTOMOUNT</code> is enabled
+            for a device while global automount functionality is currently
+            disabled (because no <a href="#AUTOMOUNT">AUTOMOUNT</a> statement
+            was specified at Hercules startup), then automount functionality
+            remains disabled for the device even should global automount
+            functionality be later manually enabled via an
+            <code>automount</code> panel command.
             <p>
-            The 'automount' option exists solely for documentation purposes
-            since it cannot be validly specified unless the
-            <a href="#AUTOMOUNT">AUTOMOUNT</a> statement is specified
-            in the configuration file, and whenever it is, automount support
-            is automatically enabled for all virtual (non-SCSI) tape devices
-            by default anyway, so the option does not need to be specified on
-            the device statement (but may be for documentation purposes if so
-            desired).
+            When the 0x4B Set Diagnose CCW is used to auto-mount a virtual
+            tape volume onto a given tape drive, an absolute (fully-qualified)
+            pathname should normally always be specified, but need not be
+            if a path relative to the currently defined "default allowable"
+            automount directory is used instead.
             <p>
-            The 'noautomount' option however, exists to allow one to purposely
-            <i>disable</i> the feature for a specific device whenever the option
-            is otherwise globally enabled by virtue of the
-            <a href="#AUTOMOUNT">AUTOMOUNT</a> configuration file statement
-            having been specified. When the <a href="#AUTOMOUNT">AUTOMOUNT</a>
-            configuration file statement is <i>not</i> specified however,
-            the 'noautomount' option is not needed either (but also may be
-            specified for documentation purposes anyway too, if so desired).
+            The default allowable
+            automount directory is always the first "allowable" directory
+            that was defined, or else the current directory if no allowable
+            directories were specifically defined. (There is always a default
+            allowable directory whenever any allowable or unallowable automount
+            directories are defined.)
             <p>
-
+            Fully-resolved, absolute-full-path filenames are defined as being
+            those which, for Windows, have a ':' (colon) in the second
+            position or, for other host operating systems (e.g. Linux), have
+            a '/' (slash) in the first position. Paths which start with a '.'
+            (period) are considered relative paths and will always be appended
+            to the currently defined default allowable automount directory,
+            before being resolved into fully-qualified paths by the host system.
+            (I.e. only fully-resolved absolute pathnames are used in the
+            performance of the actual automatic tape volume mount.)
+            <p>
+            For example, if more than one allowable automount directory is
+            defined and the volume wishing to be mounted happens to reside in
+            the second one, then a fully-qualified absolute pathname should
+            of course be specified (or else one that is relative to the
+            default directory which happens to resolve to the desired file).
+            <p>
+            All attempts to automount host files in any defined "disallowable"
+            directory (or any subdirectory thereof (or otherwise <i>not</i>
+            within any defined "allowable" directory or subdirectory)) will
+            be rejected. An error message is always issued in such cases,
+            just as one is whenever a successful mount or unmount is performed.
+            <p>
+            A sample guest automount program called <code>TMOUNT</code> for
+            the DOS/VSE operating system is provided in the
+            <code>util</code> subdirectory of the distributed source code.
         </dl>
     </blockquote>
 

@@ -5,6 +5,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.10  2008/06/22 05:54:30  fish
+// Fix print-formatting issue (mostly in tape modules)
+// that can sometimes, in certain circumstances,
+// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
+//
 // Revision 1.9  2008/02/19 17:18:36  rbowler
 // Missing u_int8_t causes crypto compile errors on Solaris
 //
@@ -213,6 +218,7 @@ typedef struct bind_struct      bind_struct;      // Socket Device Ctl
 
 typedef struct TAPEMEDIA_HANDLER  TAPEMEDIA_HANDLER;  // (see tapedev.h)
 typedef struct TAPEAUTOLOADENTRY  TAPEAUTOLOADENTRY;  // (see tapedev.h)
+typedef struct TAMDIR             TAMDIR;             // (see tapedev.h)
 
 /*-------------------------------------------------------------------*/
 /* Device handler function prototypes                                */

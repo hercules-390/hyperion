@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.199  2007/06/23 00:04:04  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.198  2007/06/22 02:22:50  gsmith
 // revert config_cpu.pat due to problems in testing
 //
@@ -1005,6 +1008,7 @@ parse_single_devnum__INTERNAL(const char *spec,
     return 0;
 }
 
+DLL_EXPORT
 int
 parse_single_devnum(const char *spec,
                     U16 *lcss,

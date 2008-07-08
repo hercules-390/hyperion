@@ -10,6 +10,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.18  2008/02/19 11:49:19  ivan
+// - Move setting of CPU priority after spwaning timer thread
+// - Added support for Posix 1003.1e capabilities
+//
 // Revision 1.17  2008/02/12 08:42:15  fish
 // dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
 //
@@ -116,6 +120,16 @@
 #define CONF_DLL_IMPORT DLL_EXPORT
 #endif
 
+#ifndef _BLDCFG_C_
+#ifndef _HENGINE_DLL_
+#define BLDC_DLL_IMPORT DLL_IMPORT
+#else   /* _HDASD_DLL_ */
+#define BLDC_DLL_IMPORT extern
+#endif  /* _HDASD_DLL_ */
+#else
+#define BLDC_DLL_IMPORT DLL_EXPORT
+#endif
+
 #if defined( _MSC_VER ) && (_MSC_VER >= 1300) && (_MSC_VER < 1400)
 //  '_ftol'   is defined in MSVCRT.DLL
 //  '_ftol2'  we define ourselves in "w32ftol2.c"
@@ -153,7 +167,7 @@ HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
    HDC(debug_cpu_state, regs) interface */
 #endif /*EXTERNALGUI*/
 
-/* Functions in module config.c */
+/* Functions in module config.c or bldcfg.c */
 void build_config (char *fname);
 void release_config ();
 CONF_DLL_IMPORT DEVBLK *find_device_by_devnum (U16 lcss, U16 devnum);
@@ -165,10 +179,10 @@ int  attach_device (U16 lcss, U16 devnum, const char *devtype, int addargc,
 int  detach_subchan (U16 lcss, U16 subchan);
 int  detach_device (U16 lcss, U16 devnum);
 int  define_device (U16 lcss, U16 olddev, U16 newdev);
-DLL_EXPORT int  group_device(DEVBLK *dev, int members);
+CONF_DLL_IMPORT int  group_device(DEVBLK *dev, int members);
 int  configure_cpu (int cpu);
 int  deconfigure_cpu (int cpu);
-DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
+BLDC_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 #define MAX_ARGS  12                    /* Max argv[] array size     */
 int parse_and_attach_devices(const char *devnums,const char *devtype,int ac,char **av);
 CONF_DLL_IMPORT int parse_single_devnum(const char *spec, U16 *lcss, U16 *devnum);
@@ -176,7 +190,9 @@ int parse_single_devnum_silent(const char *spec, U16 *lcss, U16 *devnum);
 int readlogo(char *fn);
 void clearlogo(void);
 CONF_DLL_IMPORT int parse_conkpalv(char* s, int* idle, int* intv, int* cnt );
-
+#if defined( OPTION_TAPE_AUTOMOUNT )
+BLDC_DLL_IMPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR );
+#endif /* OPTION_TAPE_AUTOMOUNT */
 
 /* Global data areas and functions in module cpu.c                   */
 extern const char* arch_name[];

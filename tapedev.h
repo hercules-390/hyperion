@@ -6,6 +6,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.25  2008/05/22 21:17:30  fish
+// Tape file extension neutrality support
+//
 // Revision 1.24  2008/05/22 19:25:58  fish
 // Flex FakeTape support
 //
@@ -327,6 +330,17 @@ struct TAPEAUTOLOADENTRY
     char  *filename;
     int    argc;
     char **argv;
+};
+
+/*-------------------------------------------------------------------*/
+/* Tape AUTOMOUNT CCWS directory control                             */
+/*-------------------------------------------------------------------*/
+struct TAMDIR
+{
+    TAMDIR    *next;            /* ptr to next entry or NULL         */
+    char      *dir;             /* resolved directory value          */
+    int        len;             /* strlen(dir)                       */
+    int        rej;             /* 1 == reject, 0 == accept          */
 };
 
 /*-------------------------------------------------------------------*/

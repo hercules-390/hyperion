@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.131  2008/03/01 12:19:04  rbowler
+// Rename new features to include the word facility
+//
 // Revision 1.130  2008/02/28 10:11:50  rbowler
 // STFL bit settings for new features in zPOP-06
 //
@@ -94,9 +97,11 @@
 #ifndef FISH_HANG
 #define OPTION_PTTRACE                  /* Pthreads tracing          */
 #endif
-//#define OPTION_DEBUG_MESSAGES           // Prefix msgs with filename
-                                        // and line# if DEBUG build
+//#define OPTION_DEBUG_MESSAGES         /* Prefix msgs with filename
+//                                         and line# if DEBUG build  */
 #define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */
+
+#define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
 
 /*********************************************************************\
  *********************************************************************

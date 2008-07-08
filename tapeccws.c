@@ -111,6 +111,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.14  2008/06/22 05:54:30  fish
+// Fix print-formatting issue (mostly in tape modules)
+// that can sometimes, in certain circumstances,
+// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
+//
 // Revision 1.13  2008/05/28 16:46:29  fish
 // Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
 //
@@ -355,16 +360,16 @@ TapeSenseFunc*  TapeSenseTable  [] =
 /* The below tables are used by 'TapeCommandIsValid' to determine    */
 /* if a CCW code is initially valid or not for the given device.     */
 /*                                                                   */
-/* Note that CCWs codes marked as valid in the below tables might    */
-/* still get rejected upon more stringent validity testing done by   */
-/* the actual CCW processing function.                               */
-/*                                                                   */
 /*    0: Command is NOT valid                                        */
-/*    1: Command is Valid, Tape MUST be loaded                       */
-/*    2: Command is Valid, Tape NEED NOT be loaded                   */
+/*  * 1: Command is Valid, Tape MUST be loaded                       */
+/*  * 2: Command is Valid, Tape NEED NOT be loaded                   */
 /*    3: Command is Valid, But is a NO-OP (return CE+DE now)         */
 /*    4: Command is Valid, But is a NO-OP (for virtual tapes)        */
-/*    5: Command is Valid, Tape MUST be loaded (add DE to status)    */
+/*  * 5: Command is Valid, Tape MUST be loaded (add DE to status)    */
+/*                                                                   */
+/*  * Note that CCWs codes marked as valid might still get rejected  */
+/*    upon more stringent validity testing done by the actual CCW    */
+/*    processing function itself.                                    */
 /*                                                                   */
 /* SOURCES:                                                          */
 /*                                                                   */
@@ -645,6 +650,10 @@ int i, rc, tix = 0, devtfound = 0;
 /**                                                                 **/
 /*********************************************************************/
 /*********************************************************************/
+
+#if defined( OPTION_TAPE_AUTOMOUNT )
+static TAMDIR* findtamdir( int rej, int minlen, const char* pszDir );
+#endif
 
 void tapedev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
@@ -1734,18 +1743,23 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         break;
     }
 
+#if defined( OPTION_TAPE_AUTOMOUNT )
     /*---------------------------------------------------------------*/
     /* SET DIAGNOSE      --  Special AUTOMOUNT support  --           */
     /*---------------------------------------------------------------*/
     case 0x4B:
     {
-        int     argc, i;
-        char  **argv;
-        char    newfile [ sizeof(dev->filename) ];
-        char    lcss[8];
+        int     argc, i;                                     /* work */
+        char  **argv;                                        /* work */
+        char    newfile [ sizeof(dev->filename) ];           /* work */
+        char    lcss[8];                                     /* work */
 
         /* Command reject if AUTOMOUNT support not enabled */
-        if (!dev->automount)
+        if (0
+            || dev->tapedevt == TAPEDEVT_SCSITAPE
+            || sysblk.tamdir == NULL
+            || dev->noautomount
+        )
         {
             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
             break;
@@ -1798,30 +1812,67 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         /* Obtain the device lock */
         obtain_lock (&dev->lock);
 
-        /* Validate path (prevent directory traversal exploit) */
+        /* Validate the given path... */
         if ( strcmp( newfile, TAPE_UNLOADED ) != 0 )
         {
-            char fullname[MAX_PATH];
-            char resolved_path[MAX_PATH];
+            TAMDIR *tamdir = NULL;
+            int minlen = 0;
+            int rej = 0;
 
-            strlcpy( fullname, sysblk.automount_dir, sizeof(fullname) );
-            strlcat( fullname, newfile,              sizeof(fullname) );
-
-            if (0
-                || realpath( fullname, resolved_path ) == NULL
-                || strnfilenamecmp( sysblk.automount_dir, resolved_path, strlen(sysblk.automount_dir)) != 0
-                || access( resolved_path, R_OK ) != 0
-            )
-            {
-                logmsg(_("HHCTA090E Auto-mount of file \"%s\" for drive %s%4.4X rejected: "
-                    "invalid path or file not found)\n"),
-                    newfile, lcss, dev->devnum);
-                build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
-                release_lock (&dev->lock);
-                break;
+            /* (because i hate typing) */
+#define  HHCTA090E(_file,_reason) \
+            { \
+                logmsg(_("HHCTA090E Auto-mount of file \"%s\" on drive %s%4.4X failed: " \
+                    "%s\n"), _file, lcss, dev->devnum, _reason); \
+                build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code); \
+                release_lock (&dev->lock); \
+                break; \
             }
-            /* Use validated, fully resolved path */
-            strlcpy( newfile, resolved_path, sizeof(newfile) );
+
+            // Resolve given path...
+            {
+                char  resolve_in [ MAX_PATH ] = {0};  /* (work) */
+                char  resolve_out[ MAX_PATH ] = {0};  /* (work) */
+
+                /* (build path to be resolved...) */
+                if (0
+#if defined(_MSVC_)
+                    || newfile[1] == ':'        /* (fullpath given?) */
+#else /* !_MSVC_ */
+                    || newfile[0] == '/'        /* (fullpath given?) */
+#endif /* _MSVC_ */
+                    || newfile[0] == '.'        /* (relative path given?) */
+                )
+                    resolve_in[0] = 0;          /* (then use just given spec) */
+                else                            /* (else prepend with default) */
+                    strlcpy( resolve_in, sysblk.defdir, sizeof(resolve_in) );
+
+                /* (finish building path to be resolved) */
+                strlcat( resolve_in, newfile, sizeof(resolve_in) );
+
+                /* (fully resolvable path?) */
+                if (realpath( resolve_in, resolve_out ) == NULL)
+                    HHCTA090E( resolve_in, "unresolvable path" );
+
+                /* Switch to fully resolved path */
+                strlcpy( newfile, resolve_out, sizeof(newfile) );
+            }
+
+            /* Verify file is in an allowable directory... */
+            rej = 0; minlen = 0;
+            while ((tamdir = findtamdir( rej, minlen, newfile )) != NULL)
+            {
+                rej = !rej;
+                minlen = tamdir->len;
+            }
+
+            /* Error if "allowable" directory not found... */
+            if (!rej)
+                HHCTA090E( newfile, "impermissible directory" );
+
+            /* Verify file exists... */
+            if (access( newfile, R_OK ) != 0)
+                HHCTA090E( newfile, "file not found" );
         }
 
         /* Prevent accidental re-init'ing of an already loaded tape drive */
@@ -1831,7 +1882,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             && strcmp (dev->filename, TAPE_UNLOADED) != 0
         )
         {
-            logmsg(_("HHCTA091E Auto-mount for drive %s%4.4X rejected: "
+            logmsg(_("HHCTA091E Tape file auto-mount for drive %s%4.4X rejected: "
                 "drive not empty\n"),
                 lcss, dev->devnum);
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
@@ -1855,7 +1906,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
         free( argv[0] );
         argv[0] = strdup( newfile );
 
-        /* Attempt reinitializing the device using the new filename */
+        /* Attempt reinitializing the device using the new filename... */
         rc = tapedev_init_handler( dev, argc, argv );
 
         /* (free temp copy of parms to prevent memory leak) */
@@ -1863,7 +1914,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             if (argv[i])
                 free(argv[i]);
 
-        /* Issue message and set status based on whether that worked or not */
+        /* Issue message and set status based on whether it worked or not... */
         if (0
             || rc < 0
             || strfilenamecmp( dev->filename, newfile ) != 0
@@ -1872,13 +1923,16 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             // (failure)
 
             if (strcmp( newfile, TAPE_UNLOADED ) == 0)
-                logmsg(_("HHCTA092E Auto-unmount of drive %s%4.4X failed; fn=\"%s\" retained\n"),
-                    lcss, dev->devnum, dev->filename);
+            {
+                /* (an error message explaining the reason for the
+                    failure should hopefully already have been issued) */
+                logmsg(_("HHCTA092E Tape file auto-unmount for drive %s%4.4X failed\n"),
+                    lcss, dev->devnum);
+            }
             else
-                logmsg(_("HHCTA093E Auto-mount for drive %s%4.4X rejected: fn=\"%s\" not found\n"),
-                    lcss, dev->devnum, newfile);
+                HHCTA090E( newfile, "file not found" ); // (presumed)
 
-            /* (the load attempt failed) */
+            /* (the load or unload attempt failed) */
             build_senseX (TAPE_BSENSE_TAPELOADFAIL, dev, unitstat, code);
         }
         else
@@ -1886,11 +1940,11 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             // (success)
 
             if (strcmp( newfile, TAPE_UNLOADED ) == 0)
-                logmsg(_("HHCTA094I Drive %s%4.4X auto-unmounted\n"),
+                logmsg(_("HHCTA093I Tape file on drive %s%4.4X auto-unmounted\n"),
                     lcss, dev->devnum);
             else
-                logmsg(_("HHCTA095I Drive %s%4.4X auto-mounted with fn=\"%s\"\n"),
-                    lcss, dev->devnum, dev->filename);
+                logmsg(_("HHCTA094I Tape file \"%s\" auto-mounted onto drive %s%4.4X\n"),
+                    dev->filename, lcss, dev->devnum);
 
             /* (save new parms for next time) */
             free( dev->argv[0] );
@@ -1900,11 +1954,12 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             build_senseX( TAPE_BSENSE_STATUSONLY, dev, unitstat, code );
         }
 
-        /* Release the device lock */
+        /* Release the device lock and exit function... */
         release_lock (&dev->lock);
         break;
 
     } /* End case 0x4B: SET DIAGNOSE */
+#endif /* OPTION_TAPE_AUTOMOUNT */
 
     /*---------------------------------------------------------------*/
     /* READ MESSAGE ID                                               */
@@ -3378,9 +3433,12 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     /*---------------------------------------------------------------*/
     case 0xE4:
     {
+#if defined( OPTION_TAPE_AUTOMOUNT )
         /* AUTOMOUNT QUERY - part 2 (if command-chained from prior 0x4B) */
         if (1
-            && dev->automount
+            && dev->tapedevt != TAPEDEVT_SCSITAPE
+            && sysblk.tamdir != NULL
+            && !dev->noautomount
             && (chained & CCW_FLAGS_CC)
             && 0x4B == prevcode
         )
@@ -3391,15 +3449,14 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
             RESIDUAL_CALC (strlen(dev->filename));
 
             /* Copy device filename to guest storage */
-            for (i=0; i < num && dev->filename[i] != 0; i++)
+            for (i=0; i < num; i++)
                 iobuf[i] = host_to_guest( dev->filename[i] );
-            while (i < num)
-                dev->filename[i++] = 0x40;
 
             /* Return normal status */
             build_senseX (TAPE_BSENSE_STATUSONLY, dev, unitstat, code);
             break;
         }
+#endif /* OPTION_TAPE_AUTOMOUNT */
 
         /* SENSE ID did not exist on the 3803 */
         /* If numdevid is 0, then 0xE4 not supported */
@@ -3568,6 +3625,25 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
     } /* end switch (code) */
 
 } /* end function tapedev_execute_ccw */
+
+#if defined( OPTION_TAPE_AUTOMOUNT )
+/*-------------------------------------------------------------------*/
+/* Find next more-restrictive TAMDIR subdirectory entry...           */
+/*-------------------------------------------------------------------*/
+static TAMDIR* findtamdir( int rej, int minlen, const char* pszDir )
+{
+    TAMDIR *pTAMDIR = sysblk.tamdir;    /* always search entire list */
+    do
+        if (1
+            && pTAMDIR->rej == rej
+            && pTAMDIR->len > minlen
+            && strnfilenamecmp( pszDir, pTAMDIR->dir, pTAMDIR->len ) == 0
+        )
+            return pTAMDIR;
+    while ((pTAMDIR = pTAMDIR->next) != NULL);
+    return NULL;
+}
+#endif // defined( OPTION_TAPE_AUTOMOUNT )
 
 /*-------------------------------------------------------------------*/
 /* Load Display channel command processing...                        */

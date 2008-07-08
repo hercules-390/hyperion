@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.82  2008/05/28 16:46:29  fish
+// Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
+//
 // Revision 1.81  2008/03/04 01:10:29  ivan
 // Add LEGACYSENSEID config statement to allow X'E4' Sense ID on devices
 // that originally didn't support it. Defaults to off for compatibility reasons
@@ -103,6 +106,10 @@
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"
 #endif // defined(OPTION_FISHIO)
+
+#if defined( OPTION_TAPE_AUTOMOUNT )
+#include "tapedev.h"
+#endif
 
 #if !defined(_GEN_ARCH)
 
@@ -292,6 +299,116 @@ int off;
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
 }
+
+#if defined( OPTION_TAPE_AUTOMOUNT )
+/*-------------------------------------------------------------------*/
+/* Add directory to AUTOMOUNT allowed/disallowed directories list    */
+/*                                                                   */
+/* Input:  tamdir     pointer to work character array of at least    */
+/*                    MAX_PATH size containing an allowed/disallowed */
+/*                    directory specification, optionally prefixed   */
+/*                    with the '+' or '-' indicator.                 */
+/*                                                                   */
+/*         ppTAMDIR   address of TAMDIR ptr that upon successful     */
+/*                    completion is updated to point to the TAMDIR   */
+/*                    entry that was just successfully added.        */
+/*                                                                   */
+/* Output: upon success, ppTAMDIR is updated to point to the TAMDIR  */
+/*         entry just added. Upon error, ppTAMDIR is set to NULL and */
+/*         the original input character array is set to the inter-   */
+/*         mediate value being processed when the error occurred.    */
+/*                                                                   */
+/* Returns:  0 == success                                            */
+/*           1 == unresolvable path                                  */
+/*           2 == path inaccessible                                  */
+/*           3 == conflict w/previous                                */
+/*           4 == duplicates previous                                */
+/*           5 == out of memory                                      */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int add_tamdir( char *tamdir, TAMDIR **ppTAMDIR )
+{
+    int  rc, rej = 0;
+    char dirwrk[ MAX_PATH ] = {0};
+
+    *ppTAMDIR = NULL;
+
+    if (*tamdir == '-')
+    {
+        rej = 1;
+        memmove (tamdir, tamdir+1, MAX_PATH);
+    }
+    else if (*tamdir == '+')
+    {
+        rej = 0;
+        memmove (tamdir, tamdir+1, MAX_PATH);
+    }
+
+    /* Convert tamdir to absolute path ending with a slash */
+
+#if defined(_MSVC_)
+    /* (expand any embedded %var% environment variables) */
+    rc = expand_environ_vars( tamdir, dirwrk, MAX_PATH );
+    if (rc == 0)
+        strlcpy (tamdir, dirwrk, MAX_PATH);
+#endif
+
+    if (!realpath( tamdir, dirwrk ))
+        return (1); /* ("unresolvable path") */
+    strlcpy (tamdir, dirwrk, MAX_PATH);
+
+    /* Verify that the path is valid */
+    if (access( tamdir, R_OK | W_OK ) != 0)
+        return (2); /* ("path inaccessible") */
+
+    /* Append trailing path separator if needed */
+    rc = strlen( tamdir );
+    if (tamdir[rc-1] != *PATH_SEP)
+        strlcat (tamdir, PATH_SEP, MAX_PATH);
+
+    /* Check for duplicate/conflicting specification */
+    for (*ppTAMDIR = sysblk.tamdir;
+         *ppTAMDIR;
+         *ppTAMDIR = (*ppTAMDIR)->next)
+    {
+        if (strfilenamecmp( tamdir, (*ppTAMDIR)->dir ) == 0)
+        {
+            if ((*ppTAMDIR)->rej != rej)
+                return (3); /* ("conflict w/previous") */
+            else
+                return (4); /* ("duplicates previous") */
+        }
+    }
+
+    /* Allocate new AUTOMOUNT directory entry */
+    *ppTAMDIR = malloc( sizeof(TAMDIR) );
+    if (!*ppTAMDIR)
+        return (5); /* ("out of memory") */
+
+    /* Fill in the new entry... */
+    (*ppTAMDIR)->dir = strdup (tamdir);
+    (*ppTAMDIR)->len = strlen (tamdir);
+    (*ppTAMDIR)->rej = rej;
+    (*ppTAMDIR)->next = NULL;
+
+    /* Add new entry to end of existing list... */
+    if (sysblk.tamdir == NULL)
+        sysblk.tamdir = *ppTAMDIR;
+    else
+    {
+        TAMDIR *pTAMDIR = sysblk.tamdir;
+        while (pTAMDIR->next)
+            pTAMDIR = pTAMDIR->next;
+        pTAMDIR->next = *ppTAMDIR;
+    }
+
+    /* Use first allowable dir as default */
+    if (rej == 0 && sysblk.defdir == NULL)
+        sysblk.defdir = (*ppTAMDIR)->dir;
+
+    return (0); /* ("success") */
+}
+#endif /* OPTION_TAPE_AUTOMOUNT */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to read a statement from the configuration file        */
@@ -792,8 +909,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     }
 #endif /*!defined(NO_SETUID)*/
 
+    /*****************************************************************/
+    /* Parse configuration file system parameter statements...       */
+    /*****************************************************************/
 
-    /* Read records from the configuration file */
     for (scount = 0; ; scount++)
     {
         /* Read next record from the configuration file */
@@ -1271,9 +1390,12 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 sysblk.httproot = strdup(operand);
                 /* (will be validated later) */
             }
+#endif /*defined(OPTION_HTTP_SERVER)*/
+#if defined( OPTION_TAPE_AUTOMOUNT )
             else if (strcasecmp (keyword, "automount") == 0)
             {
-                char abspath[MAX_PATH];
+                char tamdir[MAX_PATH+1]; /* +1 for optional '+' or '-' prefix */
+                TAMDIR* pTAMDIR = NULL;
 
                 if (!operand)
                 {
@@ -1282,45 +1404,65 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                         fname, inc_stmtnum[inc_level]);
                     delayed_exit(1);
                 }
-                if (sysblk.automount_dir) free(sysblk.automount_dir);
-                sysblk.automount_dir = strdup(operand);
-                /* Convert the specified root dir value to an absolute path
-                   ending with a '/' and save in sysblk.automount_dir. */
-#if defined(_MSVC_)
-                /* Expand any embedded %var% environ vars */
-                rc = expand_environ_vars(sysblk.automount_dir,
-                                         abspath, sizeof(abspath));
-                if (rc == 0)
+
+                strlcpy (tamdir, operand, sizeof(tamdir));
+                rc = add_tamdir( tamdir, &pTAMDIR );
+
+                switch (rc)
                 {
-                    free (sysblk.automount_dir);
-                    sysblk.automount_dir = strdup(abspath);
+                    default:     /* (oops!) */
+                    {
+                        logmsg( _("HHCCF999S **LOGIC ERROR** file \"%s\", line %d\n"),
+                            __FILE__, __LINE__);
+                        delayed_exit(1);
+                    }
+                    break;
+
+                    case 5:     /* ("out of memory") */
+                    {
+                        logmsg( _("HHCCF900S Out of memory!\n"));
+                        delayed_exit(1);
+                    }
+                    break;
+
+                    case 1:     /* ("unresolvable path") */
+                    case 2:     /* ("path inaccessible") */
+                    {
+                        logmsg( _("HHCCF091S Invalid AUTOMOUNT directory: \"%s\": %s\n"),
+                               tamdir, strerror(errno));
+                        delayed_exit(1);
+                    }
+                    break;
+
+                    case 3:     /* ("conflict w/previous") */
+                    {
+                        logmsg( _("HHCCF092S AUTOMOUNT directory \"%s\""
+                            " conflicts with previous specification\n"),
+                            tamdir);
+                        delayed_exit(1);
+                    }
+                    break;
+
+                    case 4:     /* ("duplicates previous") */
+                    {
+                        logmsg( _("HHCCF093E AUTOMOUNT directory \"%s\""
+                            " duplicates previous specification\n"),
+                            tamdir);
+                        /* (non-fatal) */
+                    }
+                    break;
+
+                    case 0:     /* ("success") */
+                    {
+                        logmsg(_("HHCCF090I %s%s AUTOMOUNT directory = \"%s\"\n"),
+                            pTAMDIR->dir == sysblk.defdir ? "Default " : "",
+                            pTAMDIR->rej ? "Disallowed" : "Allowed",
+                            pTAMDIR->dir);
+                    }
+                    break;
                 }
-#endif /* defined(_MSVC_) */
-                /* Convert to absolute path */
-                if (!realpath( sysblk.automount_dir, abspath ))
-                {
-                    logmsg( _("HHCCF066E Invalid AUTOMOUNT directory: \"%s\": %s\n"),
-                           sysblk.automount_dir, strerror(errno));
-                    delayed_exit(1);
-                }
-                /* Verify that the absolute path is valid */
-                if (access( abspath, R_OK | W_OK ) != 0)
-                {
-                    logmsg( _("HHCCF066E Invalid AUTOMOUNT directory: \"%s\": %s\n"),
-                           abspath, strerror(errno));
-                    delayed_exit(1);
-                }
-                /* Append trailing path separator if needed */
-                rc = strlen(abspath);
-                if (abspath[rc-1] != *PATH_SEP)
-                    strlcat(abspath,PATH_SEP,sizeof(abspath));
-                /* Save the absolute path */
-                free(sysblk.automount_dir);
-                sysblk.automount_dir = strdup(abspath);
-                logmsg(_("HHCCF090I Using AUTOMOUNT directory \"%s\"\n"),
-                    sysblk.automount_dir);
             }
-#endif /*defined(OPTION_HTTP_SERVER)*/
+#endif /* OPTION_TAPE_AUTOMOUNT */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
             else if (strcasecmp(keyword,"asn_and_lx_reuse") == 0
                      || strcasecmp(keyword,"alrf") == 0)
@@ -1348,18 +1490,18 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #endif /*defined(OPTION_LPARNAME)*/
 
 #if defined(OPTION_SET_STSI_INFO)
-           else if (strcasecmp (keyword, "model") == 0)
-           {
-               stsi_model = operand;
-           }
-           else if (strcasecmp (keyword, "plant") == 0)
-           {
-               stsi_plant = operand;
-           }
-           else if (strcasecmp (keyword, "manufacturer") == 0)
-           {
-               stsi_manufacturer = operand;
-           }
+            else if (strcasecmp (keyword, "model") == 0)
+            {
+                stsi_model = operand;
+            }
+            else if (strcasecmp (keyword, "plant") == 0)
+            {
+                stsi_plant = operand;
+            }
+            else if (strcasecmp (keyword, "manufacturer") == 0)
+            {
+                stsi_manufacturer = operand;
+            }
 #endif /* defined(OPTION_SET_STSI_INFO) */
 
 #if defined( OPTION_SCSI_TAPE )
@@ -1375,7 +1517,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                shttp_server_kludge_msecs = operand;
             }
 #endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
-
             else
             {
                 logmsg( _("HHCCF008E Error in %s line %d: "
@@ -1392,7 +1533,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                         "Incorrect number of operands\n"),
                         fname, inc_stmtnum[inc_level]);
             }
-        }
+
+        } /* end else (not old-style CPU statement) */
 
         if (sarchmode != NULL)
         {
@@ -1432,7 +1574,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         /* Indicate if z/Architecture is supported */
         sysblk.arch_z900 = sysblk.arch_mode != ARCH_390;
 #endif
-
         /* Parse "logopt" operands */
         if (slogopt[0])
         {
@@ -2116,28 +2257,30 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             }
         }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
+
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-    if(sasnandlxreuse != NULL)
-    {
-        if(strcasecmp(sasnandlxreuse,"enable")==0)
+        /* Parse asn_and_lx_reuse (alrf) operand */
+        if(sasnandlxreuse != NULL)
         {
-            asnandlxreuse=1;
-        }
-        else
-        {
-            if(strcasecmp(sasnandlxreuse,"disable")==0)
+            if(strcasecmp(sasnandlxreuse,"enable")==0)
             {
-                asnandlxreuse=0;
+                asnandlxreuse=1;
             }
-            else {
-                fprintf(stderr, _("HHCCF067S Error in %s line %d: "
-                            "Incorrect keyword %s for the ASN_AND_LX_REUSE statement.\n"),
-                            fname, inc_stmtnum[inc_level], sasnandlxreuse);
-                            delayed_exit(1);
+            else
+            {
+                if(strcasecmp(sasnandlxreuse,"disable")==0)
+                {
+                    asnandlxreuse=0;
+                }
+                else {
+                    fprintf(stderr, _("HHCCF067S Error in %s line %d: "
+                                "Incorrect keyword %s for the ASN_AND_LX_REUSE statement.\n"),
+                                fname, inc_stmtnum[inc_level], sasnandlxreuse);
+                                delayed_exit(1);
+                }
             }
         }
-    }
-#endif
+#endif /*defined(_FEATURE_ASN_AND_LX_REUSE)*/
 
 #ifdef OPTION_IODELAY_KLUDGE
         /* Parse I/O delay value */
@@ -2180,17 +2323,17 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             cckd_command (scckd, 0);
 
 #if defined(OPTION_LPARNAME)
-    if(lparname)
-        set_lparname(lparname);
+        if(lparname)
+            set_lparname(lparname);
 #endif /*defined(OPTION_LPARNAME)*/
 
 #if defined(OPTION_SET_STSI_INFO)
-    if(stsi_model)
-       set_model(stsi_model);
-    if(stsi_plant)
-       set_plant(stsi_plant);
-    if(stsi_manufacturer)
-       set_manufacturer(stsi_manufacturer);
+        if(stsi_model)
+            set_model(stsi_model);
+        if(stsi_plant)
+            set_plant(stsi_plant);
+        if(stsi_manufacturer)
+            set_manufacturer(stsi_manufacturer);
 #endif /* defined(OPTION_SET_STSI_INFO) */
 
 #if defined( OPTION_SCSI_TAPE )
@@ -2253,7 +2396,33 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
 #endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 
-    } /* end for(scount) */
+    } /* end for(scount) (end of configuration file statement loop) */
+
+#if defined( OPTION_TAPE_AUTOMOUNT )
+    /* Define default AUTOMOUNT directory if needed */
+    if (sysblk.tamdir && sysblk.defdir == NULL)
+    {
+        char cwd[ MAX_PATH ];
+        TAMDIR *pNewTAMDIR = malloc( sizeof(TAMDIR) );
+        if (!pNewTAMDIR)
+        {
+            logmsg( _("HHCCF900S Out of memory!\n"));
+            delayed_exit(1);
+        }
+        VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
+        rc = strlen( cwd );
+        if (cwd[rc-1] != *PATH_SEP)
+            strlcat (cwd, PATH_SEP, sizeof(cwd));
+        pNewTAMDIR->dir = strdup (cwd);
+        pNewTAMDIR->len = strlen (cwd);
+        pNewTAMDIR->rej = 0;
+        pNewTAMDIR->next = sysblk.tamdir;
+        sysblk.tamdir = pNewTAMDIR;
+        sysblk.defdir = pNewTAMDIR->dir;
+        logmsg(_("HHCCF090I Default Allowed AUTOMOUNT directory = \"%s\"\n"),
+            sysblk.defdir);
+    }
+#endif /* OPTION_TAPE_AUTOMOUNT */
 
 #if defined( HTTP_SERVER_CONNECT_KLUDGE )
     if (!sysblk.http_server_kludge_msecs)
@@ -2430,7 +2599,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();
 
-    /* Parse the device configuration statements */
+    /*****************************************************************/
+    /* Parse configuration file device statements...                 */
+    /*****************************************************************/
+
     while(1)
     {
         /* First two fields are device number and device type */

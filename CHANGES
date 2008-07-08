@@ -1,3 +1,5 @@
+08 Jul 2008 AUTOMOUNT redesign: support +allowed/-disallowed dirs
+            and create associated 'automount' panel command - Fish
 22 Jun 2008 Fix tape messages print format bug causing crash - Fish
 28 May 2008 AUTOMOUNT fixed and enhanced so it actually works now - Fish
 28 May 2008 Misleading VTAPE support renamed to AUTOMOUNT instead - Fish

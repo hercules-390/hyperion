@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.87  2008/05/28 16:46:29  fish
+// Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
+//
 // Revision 1.86  2008/05/25 06:36:43  fish
 // VTAPE automount support (0x4B + 0xE4)
 //
@@ -626,7 +629,6 @@ struct SYSBLK {
         } ecpsvm;                       /* ECPS:VM structure         */
 //
 #endif
-
         U64     pgminttr;               /* Program int trace mask    */
         int     pcpu;                   /* Tgt CPU panel cmd & displ */
         int     hercprio;               /* Hercules process priority */
@@ -640,7 +642,10 @@ struct SYSBLK {
         char   *httpuser;               /* HTTP userid               */
         char   *httppass;               /* HTTP password             */
         char   *httproot;               /* HTTP root                 */
-        char   *automount_dir;          /* AUTOMOUNT directory       */
+#if defined( OPTION_TAPE_AUTOMOUNT )
+        TAMDIR *tamdir;                 /* Acc/Rej AUTOMOUNT dir ctl */
+        char   *defdir;                 /* Default AUTOMOUNT dir     */
+#endif
      /* Fields used by SYNCHRONIZE_CPUS */
         int     syncing;                /* 1=Sync in progress        */
         U32     sync_mask;              /* CPU mask for syncing CPUs */
@@ -1073,7 +1078,9 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   SIC_active:1;           /* 1=SIC active              */
         u_int   forced_logging:1;       /* 1=Forced Error Logging    */
         u_int   eotwarning:1;           /* 1=EOT warning area reached*/
-        u_int   automount:1;            /* 1=AUTOMOUNT CCWs support  */
+#if defined( OPTION_TAPE_AUTOMOUNT )
+        u_int   noautomount:1;          /* 1=AUTOMOUNT disabled      */
+#endif
         U32     msgid;                  /* Message Id of async. i/o  */
 #if defined(OPTION_SCSI_TAPE)
         struct mtget mtget;             /* SCSI tape status struct   */
