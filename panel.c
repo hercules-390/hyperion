@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.215  2008/07/08 13:48:40  fish
+// Ctrl + uparrow / downarrow ==> scroll up/down one line
+//
 // Revision 1.214  2007/12/29 14:40:51  fish
 // fix copyregs function to fallback to using dummyregs whenever regs->hostregs happens to be NULL
 //
@@ -298,6 +301,13 @@ static void set_pos (short y, short x)
     y = y < 1 ? 1 : y > cons_rows ? cons_rows : y;
     x = x < 1 ? 1 : x > cons_cols ? cons_cols : x;
     set_screen_pos (confp, y, x);
+}
+
+static void blank_line (int y)
+{
+    set_pos (y, 1);
+    set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+    erase_to_eol( confp );
 }
 
 static void draw_text (char *text)
@@ -1714,16 +1724,15 @@ char    buf[1024];                      /* Buffer workarea           */
                 /* Test for CTRL line down command */
                 if (strcmp(kbbuf+i,  KBD_CTRL_DOWN_ARROW) == 0) {
                     firstmsgn++;
-                    if (firstmsgn > nummsgs - NUM_LINES)
-                        firstmsgn = nummsgs - NUM_LINES;
+                    if (firstmsgn > (nummsgs - 1))
+                        firstmsgn = (nummsgs - 1);
                     redraw_msgs = 1;
                     break;
                 }
 
                 /* Test for page up command */
                 if (strcmp(kbbuf+i, KBD_PAGE_UP) == 0) {
-                    if (firstmsgn == 0) break;
-                    firstmsgn -= NUM_LINES;
+                    firstmsgn -= (NUM_LINES-1);
                     if (firstmsgn < 0) firstmsgn = 0;
                     redraw_msgs = 1;
                     break;
@@ -1731,10 +1740,9 @@ char    buf[1024];                      /* Buffer workarea           */
 
                 /* Test for page down command */
                 if (strcmp(kbbuf+i, KBD_PAGE_DOWN) == 0) {
-                    if (firstmsgn + NUM_LINES >= nummsgs) break;
-                    firstmsgn += NUM_LINES;
-                    if (firstmsgn > nummsgs - NUM_LINES)
-                        firstmsgn = nummsgs - NUM_LINES;
+                    firstmsgn += (NUM_LINES-1);
+                    if (firstmsgn > (nummsgs - 1))
+                        firstmsgn = (nummsgs - 1);
                     redraw_msgs = 1;
                     break;
                 }
@@ -2114,14 +2122,23 @@ FinishShutdown:
             if (redraw_msgs && !sysblk.npquiet)
             {
                 /* Display messages in scrolling area */
-                for (i=0; i < NUM_LINES && firstmsgn + i < nummsgs; i++)
+                for (i=0; i < NUM_LINES; i++)
                 {
-                    n = (nummsgs < MAX_MSGS) ? 0 : msgslot;
-                    n += firstmsgn + i;
-                    if (n >= MAX_MSGS) n -= MAX_MSGS;
-                    set_pos (i+1, 1);
-                    set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-                    write_text ((char *)msgbuf + (n * MSG_SIZE), MSG_SIZE);
+                    if (firstmsgn + i < nummsgs)
+                    {
+                        /* Display message */
+                        n = (nummsgs < MAX_MSGS) ? 0 : msgslot;
+                        n += firstmsgn + i;
+                        if (n >= MAX_MSGS) n -= MAX_MSGS;
+                        set_pos (i+1, 1);
+                        set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+                        write_text ((char *)msgbuf + (n * MSG_SIZE), MSG_SIZE);
+                    }
+                    else
+                    {
+                        /* Pad remainder of screen */
+                        blank_line (i+1);
+                    }
                 }
 
                 /* Display the scroll indicators */
