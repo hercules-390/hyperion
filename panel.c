@@ -28,6 +28,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.218  2008/07/10 18:34:55  fish
+// Simplifed redesign of panel scrolling logic to support:
+// 1) Ctrl+up, Ctrl+down = scroll one line up/down, and
+// 2) Ctrl+home, Ctrl+end = top/bottom.
+//
 // Revision 1.217  2008/07/09 17:35:22  fish
 // Revert previous changes until I can resolve
 // some remaining issues I forgot about. Sorry.
@@ -331,7 +336,7 @@ static void scroll_to_top_line ()
 
 static void scroll_to_bottom_line ()
 {
-    topmsg = curmsg;
+    topmsg = newest_msg();
 }
 
 static void scroll_to_bottom_screen ()
