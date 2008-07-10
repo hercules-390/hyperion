@@ -28,6 +28,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.217  2008/07/09 17:35:22  fish
+// Revert previous changes until I can resolve
+// some remaining issues I forgot about. Sorry.
+//
 // Revision 1.214  2007/12/29 14:40:51  fish
 // fix copyregs function to fallback to using dummyregs whenever regs->hostregs happens to be NULL
 //
@@ -189,7 +193,7 @@ static char  *NPhelp[] = {
 
 #define MSG_SIZE     PANEL_MAX_COLS      /* Size of one message       */
 #define MAX_MSGS     2048                /* Number of slots in buffer */
-#define BUF_SIZE     (MAX_MSGS*MSG_SIZE) /* Total size of buffer      */
+//efine MAX_MSGS     300                 /* (for testing scrolling)   */
 #define NUM_LINES    (cons_rows - 2)     /* Number of scrolling lines */
 #define CMD_COLS     (cons_cols - (CMD_PREFIX_LEN + 1));
 #define CMD_SIZE     256                 /* cmdline buffer size       */
@@ -245,12 +249,19 @@ static FILE *confp   = NULL;            /* Console file pointer       */
 
 ///////////////////////////////////////////////////////////////////////
 
-static int   firstmsgn = 0;             /* Number of first message to
-                                           be displayed relative to
-                                           oldest message in buffer  */
-static BYTE *msgbuf;                    /* Circular message buffer   */
-static int   msgslot = 0;               /* Next available buffer slot*/
-static int   nummsgs = 0;               /* Number of msgs in buffer  */
+typedef struct _PANMSG
+{
+    struct _PANMSG*     next;
+    struct _PANMSG*     prev;
+    int                 msgnum;
+    char                msg[MSG_SIZE];
+}
+PANMSG;
+
+static PANMSG*  msgbuf;         /* Circular message buffer */
+static PANMSG*  topmsg;         /* message at top of screen */
+static PANMSG*  curmsg;         /* newest message */
+static int wrapped = 0;         /* wrapped-around flag */
 
 static char *lmsbuf = NULL;
 static int   lmsndx = 0;
@@ -264,6 +275,77 @@ static REGS  copyregs, copysieregs;     /* Copied regs               */
 /*-------------------------------------------------------------------*/
 /* Screen manipulation primitives                                    */
 /*-------------------------------------------------------------------*/
+
+static PANMSG* oldest_msg()
+{
+    return (wrapped) ? curmsg->next : msgbuf;
+}
+
+static PANMSG* newest_msg()
+{
+    return curmsg;
+}
+
+static int lines_scrolled()
+{
+    /* return #of lines 'up' from current line that we're scrolled . */
+    if (topmsg->msgnum <= curmsg->msgnum)
+        return curmsg->msgnum - topmsg->msgnum;
+    return MAX_MSGS - (topmsg->msgnum - curmsg->msgnum);
+}
+
+static int is_currline_visible()
+{
+    return ((lines_scrolled() + 1) <= NUM_LINES);
+}
+
+static int visible_lines()
+{
+    return (lines_scrolled() + 1);
+}
+
+static int lines_remaining()
+{
+    return (NUM_LINES - visible_lines());
+}
+
+static void scroll_up_lines( int numlines )
+{
+    int i; for (i=0; i < numlines && topmsg != oldest_msg(); topmsg = topmsg->prev, i++);
+}
+
+static void scroll_down_lines( int numlines )
+{
+    int i; for (i=0; i < numlines && topmsg != newest_msg(); topmsg = topmsg->next, i++);
+}
+
+static void page_up        () { scroll_up_lines  ( NUM_LINES - 1 ); }
+static void page_down      () { scroll_down_lines( NUM_LINES - 1 ); }
+static void full_page_up   () { scroll_up_lines  ( NUM_LINES - 0 ); }
+static void full_page_down () { scroll_down_lines( NUM_LINES - 0 ); }
+
+static void scroll_to_top_line ()
+{
+    topmsg = oldest_msg();
+}
+
+static void scroll_to_bottom_line ()
+{
+    topmsg = curmsg;
+}
+
+static void scroll_to_bottom_screen ()
+{
+    scroll_to_bottom_line();
+    page_up();
+}
+
+static void do_panel_command( void* cmdline )
+{
+    if (!is_currline_visible())
+        scroll_to_bottom_screen();
+    panel_command( cmdline );
+}
 
 static void clr_screen ()
 {
@@ -1263,7 +1345,7 @@ void panel_display (void)
   fd_set  readset;                      /* Select file descriptors   */
   struct  timeval tv;                   /* Select timeout structure  */
 #endif
-int     i, n;                           /* Array subscripts          */
+int     i;                              /* Array subscripts          */
 int     len;                            /* Length                    */
 REGS   *regs;                           /* -> CPU register context   */
 QWORD   curpsw;                         /* Current PSW               */
@@ -1321,7 +1403,7 @@ char    buf[1024];                      /* Buffer workarea           */
     }
 
     /* Obtain storage for the circular message buffer */
-    msgbuf = malloc (BUF_SIZE);
+    msgbuf = malloc (MAX_MSGS * sizeof(PANMSG));
     if (msgbuf == NULL)
     {
         fprintf (stderr,
@@ -1329,6 +1411,23 @@ char    buf[1024];                      /* Buffer workarea           */
                 strerror(errno));
         return;
     }
+
+    /* Initialize circular message buffer */
+    for (curmsg = msgbuf, i=0; i < MAX_MSGS; curmsg++, i++)
+    {
+        curmsg->next = curmsg + 1;
+        curmsg->prev = curmsg - 1;
+        curmsg->msgnum = i;
+        memset(curmsg->msg,SPACE,MSG_SIZE);
+    }
+
+    /* Complete the circle */
+    msgbuf->prev = msgbuf + MAX_MSGS - 1;
+    msgbuf->prev->next = msgbuf;
+
+    /* Indicate "first-time" state */
+    curmsg = topmsg = NULL;
+    wrapped = 0;
 
     /* Set screen output stream to NON-buffered */
     setvbuf (confp, NULL, _IONBF, 0);
@@ -1447,11 +1546,11 @@ char    buf[1024];                      /* Buffer workarea           */
                             break;
                         case 'S':                   /* START */
                         case 's':
-                            panel_command("startall");
+                            do_panel_command("startall");
                             break;
                         case 'P':                   /* STOP */
                         case 'p':
-                            panel_command("stopall");
+                            do_panel_command("stopall");
                             break;
                         case 'O':                   /* Store */
                         case 'o':
@@ -1535,7 +1634,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                 break;
                             }
                             sprintf (cmdline, "ipl %4.4x", NPdevnum[i]);
-                            panel_command(cmdline);
+                            do_panel_command(cmdline);
                             strcpy(NPprompt2, "");
                             redraw_status = 1;
                             break;
@@ -1554,7 +1653,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                 break;
                             }
                             sprintf (cmdline, "i %4.4x", NPdevnum[i]);
-                            panel_command(cmdline);
+                            do_panel_command(cmdline);
                             strcpy(NPprompt2, "");
                             redraw_status = 1;
                             break;
@@ -1594,9 +1693,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             break;
                         case 4:                     /* POWER - 2nd part */
                             if (NPdevice == 'y' || NPdevice == 'Y')
-                            {
-                                panel_command("quit");
-                            }
+                                do_panel_command("quit");
                             strcpy(NPprompt1, "Powering down");
                             redraw_status = 1;
                             break;
@@ -1609,9 +1706,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             break;
                         case 5:                    /* Restart - part 2 */
                             if (NPdevice == 'y' || NPdevice == 'Y')
-                            {
-                                panel_command("restart");
-                            }
+                                do_panel_command("restart");
                             strcpy(NPprompt1, "");
                             redraw_status = 1;
                             break;
@@ -1624,9 +1719,7 @@ char    buf[1024];                      /* Buffer workarea           */
                             break;
                         case 6:                    /* External - part 2 */
                             if (NPdevice == 'y' || NPdevice == 'Y')
-                            {
-                                panel_command("ext");
-                            }
+                                do_panel_command("ext");
                             strcpy(NPprompt1, "");
                             redraw_status = 1;
                             break;
@@ -1645,35 +1738,47 @@ char    buf[1024];                      /* Buffer workarea           */
             /* Process characters in the keyboard buffer */
             for (i = 0; i < kblen; )
             {
-                /* Test for home command */
+                /* Test for home command... */
                 if (strcmp(kbbuf+i, KBD_HOME) == 0) {
                     if (cmdlen) {
                         cmdoff = 0;
                         ADJ_CMDCOL();
                         redraw_cmd = 1;
                     } else {
-                        if (firstmsgn == 0) break;
-                        firstmsgn = 0;
+                        scroll_to_top_line();
                         redraw_msgs = 1;
                     }
                     break;
                 }
 
-                /* Test for end command */
+                /* Test for end command... */
                 if (strcmp(kbbuf+i, KBD_END) == 0) {
                     if (cmdlen) {
                         cmdoff = cmdlen;
                         ADJ_CMDCOL();
                         redraw_cmd = 1;
                     } else {
-                        if (firstmsgn + NUM_LINES >= nummsgs) break;
-                        firstmsgn = nummsgs - NUM_LINES;
+                        scroll_to_bottom_screen();
                         redraw_msgs = 1;
                     }
                     break;
                 }
 
-                /* Test for line up command */
+                /* Test for ctrl+home scroll top command */
+                if (strcmp(kbbuf+i, KBD_CTRL_HOME) == 0) {
+                    scroll_to_top_line();
+                    redraw_msgs = 1;
+                    break;
+                }
+
+                /* Test for ctrl+end scroll bottom command */
+                if (strcmp(kbbuf+i, KBD_CTRL_END) == 0) {
+                    scroll_to_bottom_line();
+                    redraw_msgs = 1;
+                    break;
+                }
+
+                /* Test for up arrow prev history command */
                 if (strcmp(kbbuf+i,  KBD_UP_ARROW) == 0 ||
                     strcmp(kbbuf+i, xKBD_UP_ARROW) == 0) {
                     if (history_prev() != -1) {
@@ -1688,7 +1793,7 @@ char    buf[1024];                      /* Buffer workarea           */
                     break;
                 }
 
-                /* Test for line down command */
+                /* Test for down arrow next history command */
                 if (strcmp(kbbuf+i,  KBD_DOWN_ARROW) == 0 ||
                     strcmp(kbbuf+i, xKBD_DOWN_ARROW) == 0) {
                     if (history_next() != -1) {
@@ -1703,21 +1808,30 @@ char    buf[1024];                      /* Buffer workarea           */
                     break;
                 }
 
-                /* Test for page up command */
+                /* Test for page scroll up command */
                 if (strcmp(kbbuf+i, KBD_PAGE_UP) == 0) {
-                    if (firstmsgn == 0) break;
-                    firstmsgn -= NUM_LINES;
-                    if (firstmsgn < 0) firstmsgn = 0;
+                    page_up();
                     redraw_msgs = 1;
                     break;
                 }
 
-                /* Test for page down command */
+                /* Test for page scroll down command */
                 if (strcmp(kbbuf+i, KBD_PAGE_DOWN) == 0) {
-                    if (firstmsgn + NUM_LINES >= nummsgs) break;
-                    firstmsgn += NUM_LINES;
-                    if (firstmsgn > nummsgs - NUM_LINES)
-                        firstmsgn = nummsgs - NUM_LINES;
+                    page_down();
+                    redraw_msgs = 1;
+                    break;
+                }
+
+                /* Test line scroll up command */
+                if (strcmp(kbbuf+i, KBD_CTRL_UP_ARROW) == 0) {
+                    scroll_up_lines(1);
+                    redraw_msgs = 1;
+                    break;
+                }
+
+                /* Test line scroll down command */
+                if (strcmp(kbbuf+i, KBD_CTRL_DOWN_ARROW) == 0) {
+                    scroll_down_lines(1);
                     redraw_msgs = 1;
                     break;
                 }
@@ -1818,6 +1932,8 @@ char    buf[1024];                      /* Buffer workarea           */
                         /* =NP= create_thread replaced with: */
                         if (NPDup == 0) {
                             if ('#' == cmdline[0] || '*' == cmdline[0]) {
+                                if (!is_currline_visible())
+                                    scroll_to_bottom_screen();
                                 logmsg("%s\n", cmdline);
                                 for (;cmdlen >=0; cmdlen--)
                                     cmdline[cmdlen] = '\0';
@@ -1826,7 +1942,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                 ADJ_CMDCOL();
                             } else {
                                 history_requested = 0;
-                                panel_command(cmdline);
+                                do_panel_command(cmdline);
                                 redraw_msgs = 1;
                                 redraw_cmd = 1;
                                 redraw_status = 1;
@@ -1867,7 +1983,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                     strcpy(NPdevnam[NPasgn], "");
                                     sprintf (NPentered, "devinit %4.4x %s",
                                              NPdevnum[NPasgn], cmdline);
-                                    panel_command(NPentered);
+                                    do_panel_command(NPentered);
                                     strcpy(NPprompt2, "");
                                     break;
                                 default:
@@ -2017,21 +2133,29 @@ FinishShutdown:
             /* If we have a message to be displayed (or a complete
                part of one), then copy it to the circular buffer. */
             if (!readoff || readoff >= MSG_SIZE) {
+
+                /* First-time here? */
+                if (curmsg == NULL) {
+                    curmsg = topmsg = msgbuf;
+                } else {
+                    /* Perform autoscroll if needed */
+                    if (is_currline_visible()) {
+                        if (lines_remaining() < 1)
+                            topmsg = topmsg->next;
+                    }
+                    /* Go on to next available msg buffer */
+                    curmsg = curmsg->next;
+
+                    /* Updated wrapped indicator */
+                    if (curmsg == msgbuf)
+                        wrapped = 1;
+                }
+
+                /* Copy message into next available PANMSG slot */
+                memcpy( curmsg->msg, readbuf, MSG_SIZE );
+
                 /* Set the display update indicator */
                 redraw_msgs = 1;
-
-                memcpy(msgbuf+(msgslot*MSG_SIZE),readbuf,MSG_SIZE);
-
-                /* Update message count and next available slot */
-                if (nummsgs < MAX_MSGS)
-                    msgslot = ++nummsgs;
-                else
-                    msgslot++;
-                if (msgslot >= MAX_MSGS) msgslot = 0;
-
-                /* Calculate the first line to display */
-                firstmsgn = nummsgs - NUM_LINES;
-                if (firstmsgn < 0) firstmsgn = 0;
             }
 
         } // end while ( lmsndx < lmscnt && lmsndx < lmsmax )
@@ -2097,25 +2221,33 @@ FinishShutdown:
             if (redraw_msgs && !sysblk.npquiet)
             {
                 /* Display messages in scrolling area */
-                for (i=0; i < NUM_LINES && firstmsgn + i < nummsgs; i++)
+                PANMSG* p = topmsg;
+                for (i=0; i < NUM_LINES && (p != curmsg->next || p == topmsg); i++, p = p->next)
                 {
-                    n = (nummsgs < MAX_MSGS) ? 0 : msgslot;
-                    n += firstmsgn + i;
-                    if (n >= MAX_MSGS) n -= MAX_MSGS;
                     set_pos (i+1, 1);
                     set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-                    write_text ((char *)msgbuf + (n * MSG_SIZE), MSG_SIZE);
+                    write_text (p->msg, MSG_SIZE);
+                }
+
+                /* Pad remainder of screen with blank lines */
+                for (; i < NUM_LINES; i++)
+                {
+                    set_pos (i+1, 1);
+                    set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+                    erase_to_eol( confp );
                 }
 
                 /* Display the scroll indicators */
-                if (firstmsgn > 0)
+                if (topmsg != oldest_msg())
                 {
+                    /* More messages precede top line */
                     set_pos (1, cons_cols);
                     set_color (COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG);
                     draw_text ("+" );
                 }
-                if (firstmsgn + i < nummsgs)
+                if (!is_currline_visible())
                 {
+                    /* More messages follow bottom line */
                     set_pos (cons_rows-2, cons_cols);
                     set_color (COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG);
                     draw_text ("V");
@@ -2213,7 +2345,8 @@ FinishShutdown:
 static
 void panel_cleanup(void *unused)
 {
-int i,n;
+int i;
+PANMSG* p;
 
     UNREFERENCED(unused);
 
@@ -2222,29 +2355,24 @@ int i,n;
     set_screen_color( stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
     clear_screen( stderr );
 
-    /* Reset the first line to be displayed (i.e.
-       "scroll down to the most current message") */
-    firstmsgn = nummsgs - NUM_LINES;
-    if (firstmsgn < 0) firstmsgn = 0;
+    /* Scroll to last full screen's worth of messages */
+    scroll_to_bottom_screen();
 
     /* Display messages in scrolling area */
-    for (i=0; i < NUM_LINES && firstmsgn + i < nummsgs; i++)
+    for (i=0, p = topmsg; i < NUM_LINES && p != curmsg->next; i++, p = p->next)
     {
-        n = (nummsgs < MAX_MSGS) ? 0 : msgslot;
-        n += firstmsgn + i;
-        if (n >= MAX_MSGS) n -= MAX_MSGS;
-        set_screen_pos( stderr, i+1, 1 );
-        set_screen_color( stderr, COLOR_DEFAULT_FG, COLOR_DEFAULT_BG );
-        fwrite (msgbuf + (n * MSG_SIZE), MSG_SIZE, 1, stderr);
+        set_pos (i+1, 1);
+        set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+        write_text (p->msg, MSG_SIZE);
     }
 
     /* Restore the terminal mode */
     set_or_reset_console_mode( keybfd, 0 );
 
-    if (nummsgs)
-        fwrite("\n",1,1,stderr);
+    /* Position to next line */
+    fwrite("\n",1,1,stderr);
 
-    /* Read any remaining msgs from the system log */
+    /* Read and display any msgs still remaining in the system log */
     while((lmscnt = log_read(&lmsbuf, &lmsnum, LOG_NOBLOCK)))
         fwrite(lmsbuf,lmscnt,1,stderr);
 
