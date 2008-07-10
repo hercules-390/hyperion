@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.12  2008/07/08 13:48:40  fish
+// Ctrl + uparrow / downarrow ==> scroll up/down one line
+//
 // Revision 1.11  2007/11/30 14:54:32  jmaynard
 // Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
 //
@@ -315,14 +318,23 @@ void translate_keystroke( char kbbuf[], int* pkblen )
                 case 0x50: strcpy( kbbuf, KBD_DOWN_ARROW  ); break;
                 case 0x4D: strcpy( kbbuf, KBD_RIGHT_ARROW ); break;
                 case 0x4B: strcpy( kbbuf, KBD_LEFT_ARROW  ); break;
+                case 0x77: strcpy( kbbuf, KBD_CTRL_HOME   ); break;
+                case 0x75: strcpy( kbbuf, KBD_CTRL_END    ); break;
                 case 0x8D: strcpy( kbbuf, KBD_CTRL_UP_ARROW   ); break;
                 case 0x91: strcpy( kbbuf, KBD_CTRL_DOWN_ARROW ); break;
 
                 default:
                 {
+#if 0
                     kbbuf[0] = '\x1B';
                     kbbuf[1] = ch2;
                     kbbuf[2] = 0;
+#else
+                    /* EAT IT */
+                    kbbuf[0] = 0;
+                    kbbuf[1] = 0;
+                    kbbuf[2] = 0;
+#endif
                     break;
                 }
             }

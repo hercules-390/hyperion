@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.10  2008/07/08 13:48:40  fish
+// Ctrl + uparrow / downarrow ==> scroll up/down one line
+//
 // Revision 1.9  2007/11/30 14:54:32  jmaynard
 // Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
 //
@@ -35,6 +38,8 @@
 #define KBD_LEFT_ARROW          "\x1B[D"
 #define KBD_CTRL_UP_ARROW       "\x1B""D"
 #define KBD_CTRL_DOWN_ARROW     "\x1B""M"
+#define KBD_CTRL_HOME           "\x1B""w"
+#define KBD_CTRL_END            "\x1B""u"
 
 // Hercules console color codes...
 
