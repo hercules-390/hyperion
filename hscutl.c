@@ -11,6 +11,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.27  2008/02/19 11:49:19  ivan
+// - Move setting of CPU priority after spwaning timer thread
+// - Added support for Posix 1003.1e capabilities
+//
 // Revision 1.26  2007/11/11 20:38:24  rbowler
 // Suppress msg HHCUT001I if keepalive successful
 //
@@ -493,6 +497,12 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
             continue;
         }
         buffer_addchar_and_alloc(&resstr,text[i],&curix,&maxix);
+    }
+    if(!resstr)
+    {
+        /* Malloc anyway - the caller will free() */
+        resstr=malloc(strlen(text)+1);
+        strcpy(resstr,text);
     }
     return(resstr);
 }
