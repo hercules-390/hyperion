@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.219  2008/07/10 18:38:10  fish
+// no message
+//
 // Revision 1.218  2008/07/10 18:34:55  fish
 // Simplifed redesign of panel scrolling logic to support:
 // 1) Ctrl+up, Ctrl+down = scroll one line up/down, and
@@ -299,14 +302,14 @@ static int lines_scrolled()
     return MAX_MSGS - (topmsg->msgnum - curmsg->msgnum);
 }
 
-static int is_currline_visible()
-{
-    return ((lines_scrolled() + 1) <= NUM_LINES);
-}
-
 static int visible_lines()
 {
     return (lines_scrolled() + 1);
+}
+
+static int is_currline_visible()
+{
+    return (visible_lines() <= NUM_LINES);
 }
 
 static int lines_remaining()
