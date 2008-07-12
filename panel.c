@@ -1,8 +1,3 @@
-
-
-// FISHTEST
-
-
 /* PANEL.C      (c) Copyright Roger Bowler, 1999-2007                */
 /*              ESA/390 Control Panel Commands                       */
 
@@ -33,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.221  2008/07/12 01:17:40  fish
+// no message
+//
 // Revision 1.220  2008/07/12 01:03:44  fish
 // no message
 //
