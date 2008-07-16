@@ -18,6 +18,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.244  2008/07/08 05:35:49  fish
+// AUTOMOUNT redesign: support +allowed/-disallowed dirs
+// and create associated 'automount' panel command - Fish
+//
 // Revision 1.243  2008/05/28 16:38:34  fish
 // (fix typo in comment; no code was changed)
 //
@@ -1211,8 +1215,14 @@ int automount_cmd(int argc, char *argv[], char *cmdline)
 
     if (strcasecmp(argv[1],"del") == 0)
     {
+        char tamdir1[MAX_PATH+1] = {0};     // (resolved path)
+        char tamdir2[MAX_PATH+1] = {0};     // (expanded but unresolved path)
+        char workdir[MAX_PATH+1] = {0};     // (work)
+        char *tamdir = tamdir1;             // (-> tamdir2 on retry)
+
         TAMDIR* pPrevTAMDIR = NULL;
         TAMDIR* pCurrTAMDIR = sysblk.tamdir;
+
         int was_empty = (sysblk.tamdir == NULL);
 
         if (argc != 3)
@@ -1221,83 +1231,141 @@ int automount_cmd(int argc, char *argv[], char *cmdline)
             return -1;
         }
 
+        // Convert argument to absolute path ending with a slash
+
+        strlcpy( tamdir2, argv[2], sizeof(tamdir2) );
+        if      (tamdir2[0] == '-') memmove (&tamdir2[0], &tamdir2[1], MAX_PATH);
+        else if (tamdir2[0] == '+') memmove (&tamdir2[0], &tamdir2[1], MAX_PATH);
+
+#if defined(_MSVC_)
+        // (expand any embedded %var% environment variables)
+        rc = expand_environ_vars( tamdir2, workdir, MAX_PATH );
+        if (rc == 0)
+            strlcpy (tamdir2, workdir, MAX_PATH);
+#endif // _MSVC_
+
+        if (0
+#if defined(_MSVC_)
+            || tamdir2[1] == ':'    // (fullpath given?)
+#else // !_MSVC_
+            || tamdir2[0] == '/'    // (fullpath given?)
+#endif // _MSVC_
+            || tamdir2[0] == '.'    // (relative path given?)
+        )
+            tamdir1[0] = 0;         // (then use just given spec)
+        else                        // (else prepend with default)
+            strlcpy( tamdir1, sysblk.defdir, sizeof(tamdir1) );
+
+        // (finish building path to be resolved)
+        strlcat( tamdir1, tamdir2, sizeof(tamdir1) );
+
+        // (try resolving it to an absolute path and
+        //  append trailing path separator if needed)
+
+        if (realpath(tamdir1, workdir) != NULL)
+        {
+            strlcpy (tamdir1, workdir, MAX_PATH);
+            rc = strlen( tamdir1 );
+            if (tamdir1[rc-1] != *PATH_SEP)
+                strlcat (tamdir1, PATH_SEP, MAX_PATH);
+            tamdir = tamdir1;   // (try tamdir1 first)
+        }
+        else
+            tamdir = tamdir2;   // (try only tamdir2)
+
+        rc = strlen( tamdir2 );
+        if (tamdir2[rc-1] != *PATH_SEP)
+            strlcat (tamdir2, PATH_SEP, MAX_PATH);
+
         // Find entry to be deleted...
 
-        for (; pCurrTAMDIR; pPrevTAMDIR = pCurrTAMDIR, pCurrTAMDIR = pCurrTAMDIR->next)
+        for (;;)
         {
-            if (strfilenamecmp( pCurrTAMDIR->dir, argv[2] ) == 0)
+            for (pCurrTAMDIR = sysblk.tamdir, pPrevTAMDIR = NULL;
+                pCurrTAMDIR;
+                pPrevTAMDIR = pCurrTAMDIR, pCurrTAMDIR = pCurrTAMDIR->next)
             {
-                int def = (sysblk.defdir == pCurrTAMDIR->dir);
-
-                // Delete the found entry...
-
-                if (pPrevTAMDIR)
-                    pPrevTAMDIR->next = pCurrTAMDIR->next;
-                else
-                    sysblk.tamdir = pCurrTAMDIR->next;
-
-                free( pCurrTAMDIR );
-
-                pCurrTAMDIR = sysblk.tamdir;
-
-                logmsg(_("HHCPN214I Ok.%s\n"),
-                    pCurrTAMDIR ? "" : " (list now empty)");
-
-                // Default entry just deleted?
-
-                if (def)
+                if (strfilenamecmp( pCurrTAMDIR->dir, tamdir ) == 0)
                 {
-                    if (!pCurrTAMDIR)
-                        sysblk.defdir = NULL;
+                    int def = (sysblk.defdir == pCurrTAMDIR->dir);
+
+                    // Delete the found entry...
+
+                    if (pPrevTAMDIR)
+                        pPrevTAMDIR->next = pCurrTAMDIR->next;
                     else
+                        sysblk.tamdir = pCurrTAMDIR->next;
+
+                    free( pCurrTAMDIR->dir );
+                    free( pCurrTAMDIR );
+
+                    // (point back to list begin)
+                    pCurrTAMDIR = sysblk.tamdir;
+
+                    logmsg(_("HHCPN214I Ok.%s\n"),
+                        pCurrTAMDIR ? "" : " (list now empty)");
+
+                    // Default entry just deleted?
+
+                    if (def)
                     {
-                        // Set new default entry...
-
-                        for (; pCurrTAMDIR; pCurrTAMDIR = pCurrTAMDIR->next)
-                        {
-                            if (pCurrTAMDIR->rej == 0)
-                            {
-                                sysblk.defdir = pCurrTAMDIR->dir;
-                                break;
-                            }
-                        }
-
-                        // If we couldn't find an existing allowable
-                        // directory entry to use as the new default,
-                        // then add the current directory and use it.
-
                         if (!pCurrTAMDIR)
+                            sysblk.defdir = NULL;  // (no default)
+                        else
                         {
-                            static char cwd[ MAX_PATH ];
+                            // Set new default entry...
 
-                            VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
-                            rc = strlen( cwd );
-                            if (cwd[rc-1] != *PATH_SEP)
-                                strlcat (cwd, PATH_SEP, sizeof(cwd));
+                            for (; pCurrTAMDIR; pCurrTAMDIR = pCurrTAMDIR->next)
+                            {
+                                if (pCurrTAMDIR->rej == 0)
+                                {
+                                    sysblk.defdir = pCurrTAMDIR->dir;
+                                    break;
+                                }
+                            }
 
-                            if (!(pCurrTAMDIR = malloc( sizeof(TAMDIR) )))
+                            // If we couldn't find an existing allowable
+                            // directory entry to use as the new default,
+                            // then add the current directory and use it.
+
+                            if (!pCurrTAMDIR)
                             {
-                                logmsg( _("HHCPN215E Out of memory!\n"));
-                                sysblk.defdir = cwd; /* EMERGENCY! */
+                                static char cwd[ MAX_PATH ] = {0};
+
+                                VERIFY( getcwd( cwd, sizeof(cwd) ) != NULL );
+                                rc = strlen( cwd );
+                                if (cwd[rc-1] != *PATH_SEP)
+                                    strlcat (cwd, PATH_SEP, sizeof(cwd));
+
+                                if (!(pCurrTAMDIR = malloc( sizeof(TAMDIR) )))
+                                {
+                                    logmsg( _("HHCPN215E Out of memory!\n"));
+                                    sysblk.defdir = cwd; /* EMERGENCY! */
+                                }
+                                else
+                                {
+                                    pCurrTAMDIR->dir = strdup (cwd);
+                                    pCurrTAMDIR->len = strlen (cwd);
+                                    pCurrTAMDIR->rej = 0;
+                                    pCurrTAMDIR->next = sysblk.tamdir;
+                                    sysblk.tamdir = pCurrTAMDIR;
+                                    sysblk.defdir = pCurrTAMDIR->dir;
+                                }
                             }
-                            else
-                            {
-                                pCurrTAMDIR->dir = strdup (cwd);
-                                pCurrTAMDIR->len = strlen (cwd);
-                                pCurrTAMDIR->rej = 0;
-                                pCurrTAMDIR->next = sysblk.tamdir;
-                                sysblk.tamdir = pCurrTAMDIR;
-                                sysblk.defdir = pCurrTAMDIR->dir;
-                            }
+
+                            logmsg(_("HHCPN216I Default Allowed AUTOMOUNT directory = \"%s\"\n"),
+                                sysblk.defdir);
                         }
-
-                        logmsg(_("HHCPN216I Default Allowed AUTOMOUNT directory = \"%s\"\n"),
-                            sysblk.defdir);
                     }
-                }
 
-                return 0;   // (success)
+                    return 0;   // (success)
+                }
             }
+
+            // (not found; try tamdir2 if we haven't yet)
+
+            if (tamdir == tamdir2) break;
+            tamdir = tamdir2;
         }
 
         if (sysblk.tamdir == NULL)
