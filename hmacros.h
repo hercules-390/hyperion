@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.22  2008/06/26 14:00:06  rbowler
+// CAP_SYS_NICE undeclared  when -DNO_SETUID
+//
 // Revision 1.21  2008/05/22 21:17:29  fish
 // Tape file extension neutrality support
 //
@@ -129,7 +132,7 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* handy arraysize macro...                                          */
+/* some handy array/struct macros...                                 */
 /*-------------------------------------------------------------------*/
 
 #ifndef   _countof
@@ -138,7 +141,9 @@
 #ifndef   arraysize
   #define arraysize(x)      _countof(x)
 #endif
-
+#ifndef   sizeof_member
+  #define sizeof_member(_struct,_member) sizeof(((_struct*)0)->_member)
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Large File Support portability...                                 */
