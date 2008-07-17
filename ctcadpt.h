@@ -220,19 +220,20 @@ typedef struct _ARPFRM ARPFRM, *PARPFRM;
 \**********************************************************************/
 
 
-#define MAX_CTCI_FRAME_SIZE     \
-    (                           \
-        CTC_FRAME_BUFFER_SIZE   \
-        - sizeof( CTCIHDR )     \
-        - sizeof( CTCISEG )     \
-        - 2                     \
+#define MAX_CTCI_FRAME_SIZE( pCTCBLK )      \
+    (                                       \
+        pCTCBLK->iMaxFrameBufferSize  /* (whatever CTCI_Init defined) */  \
+        - sizeof( CTCIHDR )                 \
+        - sizeof( CTCISEG )                 \
+        - sizeof_member(CTCIHDR,hwOffset)   \
     )
 
-#define MAX_LCS_FRAME_SIZE      \
-    (                           \
-        CTC_FRAME_BUFFER_SIZE   \
-        - sizeof( PLCSETHFRM )  \
-        - 2                     \
+
+#define MAX_LCS_ETH_FRAME_SIZE( pLCSDEV )   \
+    (                                       \
+        pLCSDEV->iMaxFrameBufferSize  /* (whatever LCS_Startup defined) */  \
+        - sizeof( LCSETHFRM )               \
+        - sizeof_member(LCSHDR,hwOffset)    \
     )
 
 // PROGRAMMING NOTE: the following frame buffer size should always be
@@ -366,6 +367,7 @@ struct  _LCSDEV;
 struct  _LCSPORT;
 struct  _LCSRTE;
 struct  _LCSHDR;
+struct  _LCSCMDHDR;
 struct  _LCSSTDFRM;
 struct  _LCSSTRTFRM;
 struct  _LCSQIPFRM;
@@ -380,6 +382,7 @@ typedef struct  _LCSDEV     LCSDEV,     *PLCSDEV;
 typedef struct  _LCSPORT    LCSPORT,    *PLCSPORT;
 typedef struct  _LCSRTE     LCSRTE,     *PLCSRTE;
 typedef struct  _LCSHDR     LCSHDR,     *PLCSHDR;
+typedef struct  _LCSCMDHDR  LCSCMDHDR,  *PLCSCMDHDR;
 typedef struct  _LCSSTDFRM  LCSSTDFRM,  *PLCSSTDFRM;
 typedef struct  _LCSSTRTFRM LCSSTRTFRM, *PLCSSTRTFRM;
 typedef struct  _LCSQIPFRM  LCSQIPFRM,  *PLCSQIPFRM;
@@ -520,6 +523,18 @@ struct  _LCSBLK
 \**********************************************************************/
 
 
+// --------------------------------------------------------------------
+// LCS Frame Header                             (network byte order)
+// --------------------------------------------------------------------
+
+struct _LCSHDR      // *ALL* LCS Frames start with the following header
+{
+    HWORD       hwOffset;               // Offset to next frame or 0
+    BYTE        bType;                  // (see below #defines)
+    BYTE        bSlot;                  // (i.e. port)
+} ATTRIBUTE_PACKED;
+
+
 #define  LCS_FRMTYP_CMD     0x00        // LCS command mode
 #define  LCS_FRMTYP_ENET    0x01        // Ethernet Passthru
 #define  LCS_FRMTYP_TR      0x02        // Token Ring
@@ -531,11 +546,9 @@ struct  _LCSBLK
 // LCS Command Frame Header                     (network byte order)
 // --------------------------------------------------------------------
 
-struct _LCSHDR    // All LCS *COMMAND* Frames start with this header
+struct _LCSCMDHDR    // All LCS *COMMAND* Frames start with this header
 {
-    HWORD       hwOffset;
-    BYTE        bType;
-    BYTE        bSlot;
+    LCSHDR      bLCSHdr;                // LCS Frame header
 
     BYTE        bCmdCode;               // (see below #defines)
     BYTE        bInitiator;
@@ -567,7 +580,8 @@ struct _LCSHDR    // All LCS *COMMAND* Frames start with this header
 
 struct _LCSSTDFRM
 {
-    LCSHDR      bLCSHdr;             // LCS Command Frame header
+    LCSCMDHDR   bLCSCmdHdr;             // LCS Command Frame header
+
     HWORD       hwParameterCount;
     BYTE        bOperatorFlags[3];
     BYTE        _reserved[3];
@@ -586,7 +600,8 @@ struct _LCSSTDFRM
 
 struct _LCSSTRTFRM
 {
-    LCSHDR      bLCSHdr;             // LCS Command Frame header
+    LCSCMDHDR   bLCSCmdHdr;             // LCS Command Frame header
+
     HWORD       hwBufferSize;
     BYTE        _unused2[6];
 } ATTRIBUTE_PACKED;
@@ -598,7 +613,8 @@ struct _LCSSTRTFRM
 
 struct  _LCSQIPFRM
 {
-    LCSHDR      bLCSHdr;             // LCS Command Frame header
+    LCSCMDHDR   bLCSCmdHdr;             // LCS Command Frame header
+
     HWORD       hwNumIPPairs;
     HWORD       hwIPAssistsSupported;
     HWORD       hwIPAssistsEnabled;
@@ -621,7 +637,8 @@ struct  _LCSQIPFRM
 
 struct  _LCSLSTFRM
 {
-    LCSHDR      bLCSHdr;             // LCS Command Frame header
+    LCSCMDHDR   bLCSCmdHdr;             // LCS Command Frame header
+
     BYTE        _unused1[10];
     MAC         MAC_Address;
     FWORD       fwPacketsDeblocked;
@@ -651,7 +668,8 @@ struct  _LCSIPMPAIR
 
 struct  _LCSIPMFRM
 {
-    LCSHDR      bLCSHdr;             // LCS Command Frame header
+    LCSCMDHDR   bLCSCmdHdr;             // LCS Command Frame header
+
     HWORD       hwNumIPPairs;
     U16         hwIPAssistsSupported;
     U16         hwIPAssistsEnabled;
@@ -667,13 +685,13 @@ struct  _LCSIPMFRM
 
 struct  _LCSETHFRM
 {
-    HWORD       hwOffset;
-    BYTE        bType;
-    BYTE        bSlot;
-    BYTE        bData[14];
-//  MAC         bDestMAC;
-//  MAC         bSrcMAC;
-//  HWORD       hwEthernetType;
+    LCSHDR      bLCSHdr;                // LCS Frame header
+
+#ifdef C99_FLEXIBLE_ARRAYS
+    BYTE        bData[];                // Ethernet Frame
+#else
+    BYTE        bData[0];               // Ethernet Frame
+#endif
 } ATTRIBUTE_PACKED;
 
 

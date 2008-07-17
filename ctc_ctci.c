@@ -224,7 +224,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     pDevCTCBLK->pDEVBLK[1]->ctcxmode = 1;
 
     pDevCTCBLK->sMTU                = atoi( pDevCTCBLK->szMTU );
-    pDevCTCBLK->iMaxFrameBufferSize = pDevCTCBLK->sMTU + sizeof( IP4FRM );
+    pDevCTCBLK->iMaxFrameBufferSize = sizeof(pDevCTCBLK->bFrameBuffer);
 
     initialize_lock( &pDevCTCBLK->Lock );
     initialize_lock( &pDevCTCBLK->EventLock );
@@ -1072,7 +1072,7 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
     PCTCBLK  pCTCBLK = (PCTCBLK)pDEVBLK->dev_data;
 
     // Will frame NEVER fit into buffer??
-    if( iSize > MAX_CTCI_FRAME_SIZE )
+    if( iSize > MAX_CTCI_FRAME_SIZE( pCTCBLK ) )
     {
         errno = EMSGSIZE;   // Message too long
         return -1;          // (-1==failure)
@@ -1081,11 +1081,12 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
     obtain_lock( &pCTCBLK->Lock );
 
     // Ensure we dont overflow the buffer
-    if( ( pCTCBLK->iFrameOffset +       // Current Offset
-          sizeof( CTCIHDR )     +       // Block Header
-          sizeof( CTCISEG )     +       // Segment Header
-          iSize +                       // Current packet
-          2 ) > CTC_FRAME_BUFFER_SIZE ) // Block terminator
+    if( ( pCTCBLK->iFrameOffset +         // Current buffer Offset
+          sizeof( CTCIHDR ) +             // Size of Block Header
+          sizeof( CTCISEG ) +             // Size of Segment Header
+          iSize +                         // Size of Ethernet packet
+          sizeof(pFrame->hwOffset) )      // Size of Block terminator
+        > pCTCBLK->iMaxFrameBufferSize )  // Size of Frame buffer
     {
         release_lock( &pCTCBLK->Lock );
         errno = ENOBUFS;    // No buffer space available
