@@ -11,6 +11,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.71  2008/02/07 00:29:04  rbowler
+// Solaris build support by Jeff Savit
+//
 // Revision 1.70  2008/01/11 21:33:21  fish
 // new 'ctc' command to enable/disable debug option on demand
 //
@@ -1097,14 +1100,14 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
     memset( pSegment, 0, iSize + sizeof( CTCISEG ) );
 
     // Increment offset
-    pCTCBLK->iFrameOffset += iSize + sizeof( CTCISEG );
+    pCTCBLK->iFrameOffset += sizeof( CTCISEG ) + iSize;
 
     // Update next frame offset
     STORE_HW( pFrame->hwOffset,
               pCTCBLK->iFrameOffset + sizeof( CTCIHDR ) );
 
     // Store segment length
-    STORE_HW( pSegment->hwLength, iSize + sizeof( CTCISEG ) );
+    STORE_HW( pSegment->hwLength, sizeof( CTCISEG ) + iSize );
 
     // Store Frame type
     STORE_HW( pSegment->hwType, FRAME_TYPE_IP );

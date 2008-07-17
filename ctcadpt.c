@@ -18,6 +18,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.69  2007/11/21 22:54:14  fish
+// Use new BEGIN_DEVICE_CLASS_QUERY macro
+//
 // Revision 1.68  2007/06/23 00:04:07  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -1354,7 +1357,7 @@ int             lastlen = 2;            /* block length at last pckt */
 //
 // Output:
 //      pbMACAddr    Pointer to a BYTE array to receive the MAC Address
-//                   that MUST be at least LCS_ADDR_LEN bytes long.
+//                   that MUST be at least sizeof(MAC) bytes long.
 //
 // Returns:
 //      0 on success, -1 otherwise
@@ -1362,12 +1365,12 @@ int             lastlen = 2;            /* block length at last pckt */
 
 int             ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
 {
-    char    work[((LCS_ADDR_LEN*3)-0)];
+    char    work[((sizeof(MAC)*3)-0)];
     BYTE    sep;
     int     x, i;
 
-    if (strlen(pszMACAddr) != ((LCS_ADDR_LEN*3)-1)
-        || (LCS_ADDR_LEN > 1 &&
+    if (strlen(pszMACAddr) != ((sizeof(MAC)*3)-1)
+        || (sizeof(MAC) > 1 &&
             *(pszMACAddr+2) != '-' &&
             *(pszMACAddr+2) != ':')
     )
@@ -1376,10 +1379,10 @@ int             ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
         return -1;
     }
 
-    strncpy(work,pszMACAddr,((LCS_ADDR_LEN*3)-1));
-    work[((LCS_ADDR_LEN*3)-1)] = sep = *(pszMACAddr+2);
+    strncpy(work,pszMACAddr,((sizeof(MAC)*3)-1));
+    work[((sizeof(MAC)*3)-1)] = sep = *(pszMACAddr+2);
 
-    for (i=0; i < LCS_ADDR_LEN; i++)
+    for (i=0; i < sizeof(MAC); i++)
     {
         if
         (0
