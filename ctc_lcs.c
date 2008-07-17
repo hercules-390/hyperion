@@ -8,6 +8,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.73  2008/07/17 07:19:12  fish
+// Fix FCS (Frame Check Sequence) bug in LCS_Write function
+// and other minor bugs.
+//
 // Revision 1.71  2008/07/17 03:30:40  fish
 // CTC/LCS cosmetic-only changes -- part 1
 // (no actual functionality was changed!)
@@ -120,9 +124,9 @@ static DEVBLK * find_group_device(DEVGRP *group, U16 devnum)
     return NULL;
 }
 
-//
-// LCS_Init
-//
+// ====================================================================
+//                          LCS_Init
+// ====================================================================
 
 int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 {
