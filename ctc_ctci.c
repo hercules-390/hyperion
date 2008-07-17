@@ -11,6 +11,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.72  2008/07/17 03:30:40  fish
+// CTC/LCS cosmetic-only changes -- part 1
+// (no actual functionality was changed!)
+//
 // Revision 1.71  2008/02/07 00:29:04  rbowler
 // Solaris build support by Jeff Savit
 //
@@ -1110,7 +1114,7 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
     STORE_HW( pSegment->hwLength, sizeof( CTCISEG ) + iSize );
 
     // Store Frame type
-    STORE_HW( pSegment->hwType, FRAME_TYPE_IP );
+    STORE_HW( pSegment->hwType, ETH_TYPE_IP );
 
     // Copy data
     memcpy( pSegment->bData, pData, iSize );

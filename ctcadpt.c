@@ -18,6 +18,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.70  2008/07/17 03:30:40  fish
+// CTC/LCS cosmetic-only changes -- part 1
+// (no actual functionality was changed!)
+//
 // Revision 1.69  2007/11/21 22:54:14  fish
 // Use new BEGIN_DEVICE_CLASS_QUERY macro
 //
@@ -928,7 +932,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     STORE_HW( pSegment->hwLength, iLength + sizeof( CTCISEG ) );
 
     // Store Frame type
-    STORE_HW( pSegment->hwType, FRAME_TYPE_IP );
+    STORE_HW( pSegment->hwType, ETH_TYPE_IP );
 
     // Copy data
     memcpy( pSegment->bData, pDEVBLK->buf, iLength );
@@ -1363,7 +1367,7 @@ int             lastlen = 2;            /* block length at last pckt */
 //      0 on success, -1 otherwise
 //
 
-int             ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
+int  ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
 {
     char    work[((sizeof(MAC)*3)-0)];
     BYTE    sep;

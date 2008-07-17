@@ -8,6 +8,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.24  2008/07/17 03:30:40  fish
+// CTC/LCS cosmetic-only changes -- part 1
+// (no actual functionality was changed!)
+//
 // Revision 1.23  2007/06/23 00:04:07  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -145,10 +149,10 @@ struct _ETHFRM
 typedef struct _ETHFRM ETHFRM, *PETHFRM;
 
 
-#define FRAME_TYPE_IP   0x0800
-#define FRAME_TYPE_ARP  0x0806
-#define FRAME_TYPE_RARP 0x0835
-#define FRAME_TYPE_SNA  0x80D5
+#define  ETH_TYPE_IP        0x0800
+#define  ETH_TYPE_ARP       0x0806
+#define  ETH_TYPE_RARP      0x0835
+#define  ETH_TYPE_SNA       0x80D5
 
 
 // --------------------------------------------------------------------
@@ -200,10 +204,10 @@ struct  _ARPFRM
 typedef struct _ARPFRM ARPFRM, *PARPFRM;
 
 
-#define ARP_REQUEST     0x01
-#define ARP_REPLY       0x02
-#define RARP_REQUEST    0x03
-#define RARP_REPLY      0x04
+#define  ARP_REQUEST        0x01
+#define  ARP_REPLY          0x02
+#define  RARP_REQUEST       0x03
+#define  RARP_REPLY         0x04
 
 
 
@@ -231,14 +235,22 @@ typedef struct _ARPFRM ARPFRM, *PARPFRM;
         - 2                     \
     )
 
+// PROGRAMMING NOTE: the following frame buffer size should always be
+// no smaller than the maximum frame buffer size possible for an LCS
+// device (currently hard-coded in S390 Linux to be 0x5000 via the
+// #define LCS_IOBUFFERSIZE). Also note that the minimum and maximum
+// frame buffer size, according to IBM documentation, is 16K to 64K.
 
-#define CTC_FRAME_BUFFER_SIZE  (0x5000)  // 20K CTCI/LCS frame buffer
+#define CTC_FRAME_BUFFER_SIZE     (0x5000)  // 20K CTCI/LCS frame buffer
 
-#define CTC_READ_TIMEOUT_SECS  (5)       // five seconds
+#define CTC_MIN_FRAME_BUFFER_SIZE (0x4000)  // Minimum frame buffer size
+#define CTC_MAX_FRAME_BUFFER_SIZE (0xFFFF)  // Maximum frame buffer size
 
-#define CTC_DELAY_USECS        (100000)  // 100 millisecond delay; used
-                                         // mostly by enqueue frame buffer
-                                         // full delay loop...
+#define CTC_READ_TIMEOUT_SECS  (5)          // five seconds
+
+#define CTC_DELAY_USECS        (100000)     // 100 millisecond delay; used
+                                            // mostly by enqueue frame buffer
+                                            // full delay loop...
 
 struct  _CTCBLK;
 struct  _CTCIHDR;
@@ -383,35 +395,36 @@ typedef struct  _LCSETHFRM  LCSETHFRM,  *PLCSETHFRM;
 
 struct  _LCSDEV
 {
-    U16         sAddr;                    // Device Base Address
+    U16         sAddr;                  // Device Base Address
     BYTE        bMode;                  // (see below #defines)
-    BYTE        bPort;                    // Relative Adapter No.
+    BYTE        bPort;                  // Relative Adapter No.
     BYTE        bType;                  // (see below #defines)
-    char*       pszIPAddress;             // IP Address (string)
+    char*       pszIPAddress;           // IP Address (string)
 
-    U32         lIPAddress;               // IP Address (binary),
-                                          // (network byte order)
+    U32         lIPAddress;             // IP Address (binary),
+                                        // (network byte order)
 
-    PLCSBLK     pLCSBLK;                  // -> LCSBLK
-    DEVBLK*     pDEVBLK[2];               // 0 - Read subchannel
-                                          // 1 - Write cubchannel
+    PLCSBLK     pLCSBLK;                // -> LCSBLK
+    DEVBLK*     pDEVBLK[2];             // 0 - Read subchannel
+                                        // 1 - Write cubchannel
 
-    U16         iMaxFrameBufferSize;      // Device Buffer Size
+    U16         iMaxFrameBufferSize;    // Device Buffer Size
     BYTE        bFrameBuffer[CTC_FRAME_BUFFER_SIZE]; // (this really SHOULD be dynamically allocated!)
-    U16         iFrameOffset;             // Curr Offset into Buffer
+    U16         iFrameOffset;           // Curr Offset into Buffer
 
-    LOCK        Lock;                     // Data LOCK
-    LOCK        EventLock;                // Condition LOCK
-    COND        Event;                    // Condition signal
+    LOCK        Lock;                   // Data LOCK
+    LOCK        EventLock;              // Condition LOCK
+    COND        Event;                  // Condition signal
 
-    u_int       fCreated:1;               // DEVBLK(s) Created
-    u_int       fStarted:1;               // Device Started
-    u_int       fRouteAdded:1;            // Routing Added
-    u_int       fReplyPending:1;          // Cmd Reply is Pending
-    u_int       fDataPending:1;           // Data is Pending
+    u_int       fCreated:1;             // DEVBLK(s) Created
+    u_int       fStarted:1;             // Device Started
+    u_int       fRouteAdded:1;          // Routing Added
+    u_int       fReplyPending:1;        // Cmd Reply is Pending
+    u_int       fDataPending:1;         // Data is Pending
 
-    PLCSDEV     pNext;                    // Next device
+    PLCSDEV     pNext;                  // Next device
 };
+
 
 
 #define LCSDEV_MODE_IP          0x01
@@ -507,6 +520,13 @@ struct  _LCSBLK
 \**********************************************************************/
 
 
+#define  LCS_FRMTYP_CMD     0x00        // LCS command mode
+#define  LCS_FRMTYP_ENET    0x01        // Ethernet Passthru
+#define  LCS_FRMTYP_TR      0x02        // Token Ring
+#define  LCS_FRMTYP_FDDI    0x07        // FDDI
+#define  LCS_FRMTYP_AUTO    0xFF        // auto-detect
+
+
 // --------------------------------------------------------------------
 // LCS Command Frame Header                     (network byte order)
 // --------------------------------------------------------------------
@@ -522,29 +542,23 @@ struct _LCSHDR    // All LCS *COMMAND* Frames start with this header
     HWORD       hwSequenceNo;
     HWORD       hwReturnCode;
 
-    BYTE        bLanType;               // usually LCS_FRAME_TYPE_ENET
+    BYTE        bLanType;               // usually LCS_FRMTYP_ENET
     BYTE        bRelAdapterNo;          // (i.e. port)
 } ATTRIBUTE_PACKED;
 
-#define LCS_FRAME_TYPE_CNTL  0x00           // LCS command mode
-#define LCS_FRAME_TYPE_ENET  0x01           // Ethernet
-#define LCS_FRAME_TYPE_TR    0x02           // Token Ring
-#define LCS_FRAME_TYPE_FDDI  0x07           // FDDI
-#define LCS_FRAME_TYPE_AUTO  0xFF           // auto-detect
 
-
-#define LCS_TIMING           0x00           // Timing request
-#define LCS_STRTLAN          0x01           // Start LAN
-#define LCS_STOPLAN          0x02           // Stop  LAN
-#define LCS_GENSTAT          0x03           // Generate Stats
-#define LCS_LANSTAT          0x04           // LAN Stats
-#define LCS_LISTLAN          0x06           // List LAN
-#define LCS_STARTUP          0x07           // Start Host
-#define LCS_SHUTDOWN         0x08           // Shutdown Host
-#define LCS_LISTLAN2         0x0B           // Another version
-#define LCS_QIPASSIST        0xB2           // Multicast
-#define LCS_SETIPM           0xB4           // Set IPM
-#define LCS_DELIPM           0xB5           // Delete? IPM
+#define  LCS_CMD_TIMING         0x00        // Timing request
+#define  LCS_CMD_STRTLAN        0x01        // Start LAN
+#define  LCS_CMD_STOPLAN        0x02        // Stop  LAN
+#define  LCS_CMD_GENSTAT        0x03        // Generate Stats
+#define  LCS_CMD_LANSTAT        0x04        // LAN Stats
+#define  LCS_CMD_LISTLAN        0x06        // List LAN
+#define  LCS_CMD_STARTUP        0x07        // Start Host
+#define  LCS_CMD_SHUTDOWN       0x08        // Shutdown Host
+#define  LCS_CMD_LISTLAN2       0x0B        // Another version
+#define  LCS_CMD_QIPASSIST      0xB2        // Multicast
+#define  LCS_CMD_SETIPM         0xB4        // Set IPM
+#define  LCS_CMD_DELIPM         0xB5        // Delete? IPM
 
 
 // --------------------------------------------------------------------
