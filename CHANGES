@@ -1,3 +1,4 @@
+16 Jul 2008 Increase time-interval accuracy to 1ms for Windows build - Fish
 10 Jul 2008 panel support for scrolling up/down one line - Fish
 08 Jul 2008 AUTOMOUNT redesign: support +allowed/-disallowed dirs
             and create associated 'automount' panel command - Fish
