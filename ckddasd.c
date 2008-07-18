@@ -19,6 +19,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.93  2008/05/24 20:54:31  rbowler
+// Increase PSF-PRSD data length from 12 to 16 bytes (by Jacob Dekel)
+//
 // Revision 1.92  2008/05/19 16:40:54  rbowler
 // Modify PSF order 1D to not prepare subsystem data
 //
@@ -3087,11 +3090,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Use the order code to determine the required count */
         num = (count < 2) ? 2 :
               (iobuf[0] == 0x10) ? 14 :
-              (iobuf[0] == 0x11) ? 12 :
+              (iobuf[0] == 0x11 || iobuf[0] == 0x18) ? 12 :
               (iobuf[0] == 0x12) ? 5 :
               (iobuf[0] == 0x13 || iobuf[0] == 0x14) ? 4 :
               (iobuf[0] == 0x16) ? 4 :
-              (iobuf[0] == 0x18) ? 16 :
               (iobuf[0] == 0x1D) ? 66 :
               (iobuf[0] == 0xB0) ? 4 :
               2;
@@ -3152,14 +3154,14 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 break;
 
             case 0x01: /* Subsystem statistics */
+                /* Indicate the length of subsystem data prepared */
+                dev->ckdssdlen = (iobuf[8]==0x00) ? 96 : 192;
+
                 /* Prepare subsystem statistics record */
-                memset (iobuf, 0x00, 192);
+                memset (iobuf, 0x00, dev->ckdssdlen);
                 iobuf[1] = dev->devnum & 0xFF;
                 iobuf[94] = (myssid >> 8) & 0xff;
                 iobuf[95] = myssid & 0xff;
-
-                /* Indicate the length of subsystem data prepared */
-                dev->ckdssdlen = (iobuf[8]==0x00) ? 96 : 192;
                 break;
 
             case 0x0E: /* Unit address configuration */

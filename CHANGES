@@ -1,3 +1,4 @@
+18 Jul 2008 Fix PSF order 18 suborder 01 PSF and SSD length - Fish
 17 Jul 2008 Fix LCS write FCS (Frame Check Sequence) and other bugs - Fish
 16 Jul 2008 Increase time-interval accuracy to 1ms for Windows build - Fish
 10 Jul 2008 panel support for scrolling up/down one line - Fish
