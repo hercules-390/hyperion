@@ -18,6 +18,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.245  2008/07/16 11:05:10  fish
+// automount delete command: fix MINOR memory leak
+// and add support for optional relative path resolution.
+//
 // Revision 1.244  2008/07/08 05:35:49  fish
 // AUTOMOUNT redesign: support +allowed/-disallowed dirs
 // and create associated 'automount' panel command - Fish
@@ -353,6 +357,52 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 }
 
 #endif // OPTION_MIPS_COUNTING
+
+#ifdef OPTION_CMDTGT
+///////////////////////////////////////////////////////////////////////
+/* cmdtgt command - unknown command to OS */
+
+int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+    if(argc == 2)
+    {
+      if(!strcasecmp("scp", argv[1]))
+      {
+        sysblk.cmdtgt = 2;
+        logmsg("All commands are scp commands\n");
+        return 0;
+      }
+      else if(!strcasecmp("unknown", argv[1]))
+      {
+        sysblk.cmdtgt = 1;
+        logmsg("All unknown commands are scp commands\n");
+        return 0;
+      }
+      else if(!strcasecmp("normal", argv[1]))
+      {
+        sysblk.cmdtgt = 0;
+        logmsg("Command target redirection inactive\n");
+        return 0;
+      }
+      else if(!strcasecmp("?", argv[1]))
+      {
+        if(sysblk.cmdtgt == 2)
+          logmsg("All commands are scp commands\n");
+        else if(sysblk.cmdtgt == 1)
+          logmsg("All unknown commands are scp commands\n");
+        else
+          logmsg("Command target redirection inactive\n"); /* sysblk.cmdtgt == 0 */
+        return 0;
+      }
+    }
+
+    /* Something is wrong */
+    logmsg("Use cmdtgt [scp | unknown | off | ?]\n");
+    return 0; /* Make, besides Trudy, the compiler happy */
+}
+
+#endif // OPTION_CMDTGT
 
 ///////////////////////////////////////////////////////////////////////
 /* comment command - do absolutely nothing */
@@ -1165,8 +1215,7 @@ int automount_cmd(int argc, char *argv[], char *cmdline)
 
             case 4:     /* ("duplicates previous") */
             {
-                logmsg( _("HHCPN209E AUTOMOUNT directory \"%s\""
-                    " duplicates previous specification\n"),
+                logmsg( _(" duplicates previous specification\n"),
                     tamdir);
                 return -1;
             }
@@ -6504,6 +6553,9 @@ COMMAND ( "icount",    icount_cmd,    "display individual instruction counts" )
 #ifdef OPTION_MIPS_COUNTING
 COMMAND ( "maxrates",  maxrates_cmd,  "display maximum observed MIPS/SIOS rate for the\n               defined interval or define a new reporting interval\n" )
 #endif // OPTION_MIPS_COUNTING
+#ifdef OPTION_CMDTGT
+COMMAND ( "cmdtgt",    cmdtgt_cmd,    "option to redirect commands to scp" )
+#endif // OPTION_CMDTGT
 
 #if defined(FISH_HANG)
 COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/event objects\n" )
@@ -6590,6 +6642,17 @@ int ProcessPanelCommand (char* pszCmdLine)
     if ( !cmd_argv[0] )
         goto ProcessPanelCommandExit;
 
+#ifdef OPTION_CMDTGT
+    if(sysblk.cmdtgt == 2) /* cmdtgt force */
+    {
+      if(!strcasecmp(cmd_argv[0], "cmdtgt"))
+        rc = cmdtgt_cmd(cmd_argc, (char**) cmd_argv, pszSaveCmdLine);
+      else
+        scp_command(pszSaveCmdLine, 0);
+      goto ProcessPanelCommandExit;
+    }
+#endif // OPTION_CMDTGT
+
 #if defined(OPTION_DYNAMIC_LOAD)
     if(system_command)
         if((rc = system_command(cmd_argc, (char**)cmd_argv, pszSaveCmdLine)))
@@ -6631,6 +6694,13 @@ int ProcessPanelCommand (char* pszCmdLine)
 
     /* Error: unknown/unsupported command... */
     ASSERT( cmd_argv[0] );
+
+#ifdef OPTION_CMDTGT
+    if(sysblk.cmdtgt == 1) /* cmdtgt unknown */
+      scp_command(pszSaveCmdLine, 0);
+    else
+#endif // OPTION_CMDTGT
+
     logmsg( _("HHCPN139E Command \"%s\" not found; enter '?' for list.\n"),
               cmd_argv[0] );
 
@@ -7110,6 +7180,15 @@ CMDHELP ( "maxrates",  "Format: \"maxrates [nnnn]\" where 'nnnn' is the desired 
                        " the current highest rates observed during the defined intervals.\n"
                        )
 #endif // OPTION_MIPS_COUNTING
+
+#ifdef OPTION_CMDTGT
+CMDHELP ( "cmdtgt",    "Format: \"cmdtgt [scp | unknown | normal | ?] \" Sets or queries the redirection of\"\n"
+                       "commands. When set to \"scp\", all commands are treated as SCP commands, except for\n"
+                       "the cmdtgt command. When set to \"unknown\", all unknown commands are treated as SCP\n"
+                       "commands. When set to normal, no commands are redirected. The value can be queried\n"
+                       "with the \"cmdtgt ?\" command.\n"
+                       )
+#endif // OPTION_CMDTGT
 
 CMDHELP ( NULL, NULL )         /* (end of table) */
 };

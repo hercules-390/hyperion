@@ -4,6 +4,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.132  2008/07/08 05:35:49  fish
+// AUTOMOUNT redesign: support +allowed/-disallowed dirs
+// and create associated 'automount' panel command - Fish
+//
 // Revision 1.131  2008/03/01 12:19:04  rbowler
 // Rename new features to include the word facility
 //
@@ -102,6 +106,7 @@
 #define OPTION_SET_STSI_INFO            /* Set STSI info in cfg file */
 
 #define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
+#define OPTION_CMDTGT                   /* the cmdtgt command        */
 
 /*********************************************************************\
  *********************************************************************

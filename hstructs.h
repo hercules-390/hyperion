@@ -9,6 +9,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.88  2008/07/08 05:35:51  fish
+// AUTOMOUNT redesign: support +allowed/-disallowed dirs
+// and create associated 'automount' panel command - Fish
+//
 // Revision 1.87  2008/05/28 16:46:29  fish
 // Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
 //
@@ -735,6 +739,10 @@ struct SYSBLK {
         U32     mipsrate;               /* Instructions per second   */
         U32     siosrate;               /* IOs per second            */
 #endif /*defined(OPTION_MIPS_COUNTING)*/
+
+#ifdef OPTION_CMDTGT
+        int     cmdtgt;                 /* Value for cmdtgt cmd      */
+#endif // OPTION_CMDTGT
 
         int     regs_copy_len;          /* Length to copy for REGS   */
 
