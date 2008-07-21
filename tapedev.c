@@ -112,6 +112,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.148  2008/07/08 05:35:51  fish
+// AUTOMOUNT redesign: support +allowed/-disallowed dirs
+// and create associated 'automount' panel command - Fish
+//
 // Revision 1.147  2008/06/22 05:54:30  fish
 // Fix print-formatting issue (mostly in tape modules)
 // that can sometimes, in certain circumstances,
@@ -956,8 +960,8 @@ int gettapetype_byname (DEVBLK *dev)
     regex_t     regwrk;                 /* REGEXP work area          */
     regmatch_t  regwrk2;                /* REGEXP match area         */
     char        errbfr[1024];           /* Working storage           */
-#endif // HAVE_REGEX_H
     int         i;                      /* Loop control              */
+#endif // HAVE_REGEX_H
     int         rc;                     /* various rtns return codes */
 
     /* Use the file name to determine the device type */
