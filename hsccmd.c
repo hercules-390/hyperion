@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.246  2008/07/20 12:10:57  bernard
+// OPTION_CMDTGT
+//
 // Revision 1.245  2008/07/16 11:05:10  fish
 // automount delete command: fix MINOR memory leak
 // and add support for optional relative path resolution.
@@ -357,52 +360,6 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 }
 
 #endif // OPTION_MIPS_COUNTING
-
-#ifdef OPTION_CMDTGT
-///////////////////////////////////////////////////////////////////////
-/* cmdtgt command - unknown command to OS */
-
-int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
-{
-    UNREFERENCED(cmdline);
-    if(argc == 2)
-    {
-      if(!strcasecmp("scp", argv[1]))
-      {
-        sysblk.cmdtgt = 2;
-        logmsg("All commands are scp commands\n");
-        return 0;
-      }
-      else if(!strcasecmp("unknown", argv[1]))
-      {
-        sysblk.cmdtgt = 1;
-        logmsg("All unknown commands are scp commands\n");
-        return 0;
-      }
-      else if(!strcasecmp("normal", argv[1]))
-      {
-        sysblk.cmdtgt = 0;
-        logmsg("Command target redirection inactive\n");
-        return 0;
-      }
-      else if(!strcasecmp("?", argv[1]))
-      {
-        if(sysblk.cmdtgt == 2)
-          logmsg("All commands are scp commands\n");
-        else if(sysblk.cmdtgt == 1)
-          logmsg("All unknown commands are scp commands\n");
-        else
-          logmsg("Command target redirection inactive\n"); /* sysblk.cmdtgt == 0 */
-        return 0;
-      }
-    }
-
-    /* Something is wrong */
-    logmsg("Use cmdtgt [scp | unknown | off | ?]\n");
-    return 0; /* Make, besides Trudy, the compiler happy */
-}
-
-#endif // OPTION_CMDTGT
 
 ///////////////////////////////////////////////////////////////////////
 /* comment command - do absolutely nothing */
@@ -6372,6 +6329,94 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
+#ifdef OPTION_CMDTGT
+///////////////////////////////////////////////////////////////////////
+/* cmdtgt - Specify the command target */
+int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
+{
+  int print = 1;
+
+  UNREFERENCED(cmdline);
+  if(argc == 2)
+  {
+    if(!strcasecmp(argv[1], "herc"))
+      sysblk.cmdtgt = 0;
+    else if(!strcasecmp(argv[1], "scp"))
+      sysblk.cmdtgt = 1;
+    else if(!strcasecmp(argv[1], "!scp"))
+      sysblk.cmdtgt = 2;
+    else if(!strcasecmp(argv[1], "?"))
+      ;
+    else
+      print = 0;
+  }
+  else
+    print = 0;
+
+  if(print)
+  {
+    switch(sysblk.cmdtgt)
+    {
+      case 0:
+      {
+        logmsg("cmdtgt: Commands are sent to hercules\n");
+        break;
+      }
+      case 1:
+      {
+        logmsg("cmdtgt: Commands are sent to scp\n");
+        break;
+      }
+      case 2:
+      {
+        logmsg("cmdtgt: Commands are sent as priority messages to scp\n");
+        break;
+      }
+    }
+  }
+  else
+    logmsg("cmdtgt: Use cmdtgt [herc | scp | !scp | ?]\n");
+
+  return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* scp - Send scp command in any mode */
+int scp_cmd(int argc, char *argv[], char *cmdline)
+{
+  UNREFERENCED(argv);
+  if(argc == 1)
+    scp_command(" ", 0);
+  else
+    scp_command(&cmdline[4], 0);
+  return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* !scp - Send a priority message in any mode */
+int prioscp_cmd(int argc, char *argv[], char *cmdline)
+{
+  UNREFERENCED(argv);
+  if(argc == 1)
+    scp_command(" ", 1);
+  else
+    scp_command(&cmdline[5], 1);
+  return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* herc - Send a Hercules command in any mode */
+int herc_cmd(int argc, char *argv[], char *cmdline)
+{
+  UNREFERENCED(argv);
+  if(argc == 1)
+    ProcessPanelCommand(" ");
+  else
+    ProcessPanelCommand(&cmdline[5]);
+  return 0;
+}
+#endif // OPTION_CMDTGT
+
 ///////////////////////////////////////////////////////////////////////
 // Handle externally defined commands...
 
@@ -6553,9 +6598,6 @@ COMMAND ( "icount",    icount_cmd,    "display individual instruction counts" )
 #ifdef OPTION_MIPS_COUNTING
 COMMAND ( "maxrates",  maxrates_cmd,  "display maximum observed MIPS/SIOS rate for the\n               defined interval or define a new reporting interval\n" )
 #endif // OPTION_MIPS_COUNTING
-#ifdef OPTION_CMDTGT
-COMMAND ( "cmdtgt",    cmdtgt_cmd,    "option to redirect commands to scp" )
-#endif // OPTION_CMDTGT
 
 #if defined(FISH_HANG)
 COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/event objects\n" )
@@ -6591,6 +6633,13 @@ COMMAND ( "traceopt",  traceopt_cmd,  "Instruction trace display options\n" )
 
 #define   TEST_CMD "$test"          // (hidden internal command)
 COMMAND ( TEST_CMD, test_cmd,        "(hidden internal command)" )
+
+#ifdef OPTION_CMDTGT
+COMMAND ( "cmdtgt",    cmdtgt_cmd,    "Specify the command target\n" )
+COMMAND ( "herc",      herc_cmd,      "Hercules command\n")
+COMMAND ( "scp",       scp_cmd,       "Send scp command\n")
+COMMAND ( "!scp",      prioscp_cmd,   "Send prio message scp command\n")
+#endif // OPTION_CMDTGT
 
 COMMAND ( NULL, NULL, NULL )         /* (end of table) */
 };
@@ -6642,17 +6691,6 @@ int ProcessPanelCommand (char* pszCmdLine)
     if ( !cmd_argv[0] )
         goto ProcessPanelCommandExit;
 
-#ifdef OPTION_CMDTGT
-    if(sysblk.cmdtgt == 2) /* cmdtgt force */
-    {
-      if(!strcasecmp(cmd_argv[0], "cmdtgt"))
-        rc = cmdtgt_cmd(cmd_argc, (char**) cmd_argv, pszSaveCmdLine);
-      else
-        scp_command(pszSaveCmdLine, 0);
-      goto ProcessPanelCommandExit;
-    }
-#endif // OPTION_CMDTGT
-
 #if defined(OPTION_DYNAMIC_LOAD)
     if(system_command)
         if((rc = system_command(cmd_argc, (char**)cmd_argv, pszSaveCmdLine)))
@@ -6694,12 +6732,6 @@ int ProcessPanelCommand (char* pszCmdLine)
 
     /* Error: unknown/unsupported command... */
     ASSERT( cmd_argv[0] );
-
-#ifdef OPTION_CMDTGT
-    if(sysblk.cmdtgt == 1) /* cmdtgt unknown */
-      scp_command(pszSaveCmdLine, 0);
-    else
-#endif // OPTION_CMDTGT
 
     logmsg( _("HHCPN139E Command \"%s\" not found; enter '?' for list.\n"),
               cmd_argv[0] );
@@ -7182,12 +7214,10 @@ CMDHELP ( "maxrates",  "Format: \"maxrates [nnnn]\" where 'nnnn' is the desired 
 #endif // OPTION_MIPS_COUNTING
 
 #ifdef OPTION_CMDTGT
-CMDHELP ( "cmdtgt",    "Format: \"cmdtgt [scp | unknown | normal | ?] \" Sets or queries the redirection of\"\n"
-                       "commands. When set to \"scp\", all commands are treated as SCP commands, except for\n"
-                       "the cmdtgt command. When set to \"unknown\", all unknown commands are treated as SCP\n"
-                       "commands. When set to normal, no commands are redirected. The value can be queried\n"
-                       "with the \"cmdtgt ?\" command.\n"
-                       )
+CMDHELP ( "cmdtgt",    "Format: \"cmdtgt [herc | scp | !scp | ?]\". Specify the command target.\n")
+CMDHELP ( "herc",      "Format: \"herc [cmd]\". Send hercules cmd in any cmdtgt mode.\n")
+CMDHELP ( "scp",       "Format: \"scp [cmd]\". Send scp cmd in any cmdtgt mode.\n")
+CMDHELP ( "!scp",      "Format: \"!scp [cmd]\". Send priority message cmd to scp in any cmdtgt mode.\n")
 #endif // OPTION_CMDTGT
 
 CMDHELP ( NULL, NULL )         /* (end of table) */
@@ -7259,6 +7289,47 @@ void *panel_command (void *cmdline)
     /* Echo the command to the control panel */
     logmsg( "%s\n", cmd);
 
+#ifdef OPTION_CMDTGT
+    /* check for herc, scp or !scp command */
+    if(!strncasecmp(cmd, "herc ", 5) || !strncasecmp(cmd, "scp ", 4) || !strncasecmp(cmd, "!scp ", 5))
+    {
+      ProcessPanelCommand(cmd);
+      return NULL;
+    }
+
+    /* Send command to the selected command target */
+    switch(sysblk.cmdtgt)
+    {
+      case 0: // cmdtgt herc
+      {
+        /* Stay compatible */
+#ifdef _FEATURE_SYSTEM_CONSOLE
+        if(cmd[0] == '.' || cmd[0] == '!')
+        {
+          if(!cmd[1]) 
+          { 
+            cmd[1] = ' '; 
+            cmd[2] = 0; 
+          }
+          scp_command(cmd + 1, cmd[0] == '!');
+        }
+        else
+#endif /*_FEATURE_SYSTEM_CONSOLE*/
+          ProcessPanelCommand(cmd);
+        break;
+      }
+      case 1: // cmdtgt scp
+      {
+        scp_command(cmd, 0);
+        break;
+      }
+      case 2: // cmdtgt !scp
+      {
+        scp_command(cmd, 1);
+        break;
+      }
+    }
+#elif // OPTION_CMDTGT
 #ifdef _FEATURE_SYSTEM_CONSOLE
     if ('.' == cmd[0] || '!' == cmd[0])
     {
@@ -7269,6 +7340,8 @@ void *panel_command (void *cmdline)
 #endif /*_FEATURE_SYSTEM_CONSOLE*/
 
     ProcessPanelCommand(cmd);
+#endif // OPTION_CMDTGT
+
     return NULL;
 }
 

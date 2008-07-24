@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.222  2008/07/12 01:18:07  fish
+// .
+//
 // Revision 1.221  2008/07/12 01:17:40  fish
 // no message
 //
@@ -229,6 +232,12 @@ static int   cmdcol  = 0;               /* cols cmdline scrolled right*/
 static FILE *confp   = NULL;            /* Console file pointer       */
 
 #define CMD_PREFIX_STR   "Command ==> "
+
+#ifdef OPTION_CMDTGT
+#define CMD_PREFIX_STR1  "SCP ======> " /* Keep same length as above! */
+#define CMD_PREFIX_STR2  "PrioSCP ==> " /* Keep same length as above! */
+#endif // OPTION_CMDTGT
+
 #define CMD_PREFIX_LEN   strlen(CMD_PREFIX_STR)
 
 #define ADJ_SCREEN_SIZE() \
@@ -2273,7 +2282,30 @@ FinishShutdown:
                 /* Display the command line */
                 set_pos (cons_rows-1, 1);
                 set_color (COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG);
+
+#ifdef OPTION_CMDTGT
+                switch(sysblk.cmdtgt)
+                {
+                  case 0: // cmdtgt herc 
+                  {
+                    draw_text(CMD_PREFIX_STR);
+                    break;
+                  }
+                  case 1: // cmdtgt scp
+                  {
+                    draw_text(CMD_PREFIX_STR1);
+                    break;
+                  }
+                  case 2: // cmdtgt !scp
+                  {
+                    draw_text(CMD_PREFIX_STR2);
+                    break;
+                  }
+                }
+#elif
                 draw_text (CMD_PREFIX_STR);
+#endif // OPTION_CMDTGT
+
                 set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
                 PUTC_CMDLINE ();
                 fill_text (' ',cons_cols);

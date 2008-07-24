@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.89  2008/07/20 12:11:11  bernard
+// OPTION_CMDTGT
+//
 // Revision 1.88  2008/07/08 05:35:51  fish
 // AUTOMOUNT redesign: support +allowed/-disallowed dirs
 // and create associated 'automount' panel command - Fish
@@ -741,7 +744,7 @@ struct SYSBLK {
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 
 #ifdef OPTION_CMDTGT
-        int     cmdtgt;                 /* Value for cmdtgt cmd      */
+        int     cmdtgt;                 /* 0=herc,1=scp,2=!scp       */
 #endif // OPTION_CMDTGT
 
         int     regs_copy_len;          /* Length to copy for REGS   */
