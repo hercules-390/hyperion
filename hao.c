@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.4  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.3  2006/12/08 09:43:21  jj
 // Add CVS message log
 //
@@ -61,6 +64,7 @@
 #define HHCAO023E "HHCAO023E hao del command given without a valid index\n"
 #define HHCAO024E "HHCAO024E Rule at index %d not deleted, already empty\n"
 #define HHCAO025I "HHCAO025I Rule at index %d succesfully deleted\n"
+#define HHCA0026E "HHCA0026E Command not added, may cause dead locks\n"
 
 #define HAO_WKLEN    256    /* (maximum message length able to tolerate) */
 #define HAO_MAXRULE  10     /* (purely arbitrary and easily increasable) */
@@ -338,6 +342,15 @@ static void hao_cmd(char *arg)
   {
     release_lock(&ao_lock);
     logmsg(HHCAO018E);
+    return;
+  }
+
+  /* check for hao command, prevent deadlock */
+  for(i = 0; !strncasecmp(&arg[i], "herc ", 4); i += 5);
+  if(!strcasecmp(&arg[i], "hao") || !strncasecmp(&arg[i], "hao ", 4))
+  {
+    release_lock(&ao_lock);
+    logmsg(HHCA0026E);
     return;
   }
 
