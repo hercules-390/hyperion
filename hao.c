@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.5  2008/07/26 14:30:17  bernard
+// Reject hao automatic commands. This causes deadlocks.
+//
 // Revision 1.4  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -346,8 +349,8 @@ static void hao_cmd(char *arg)
   }
 
   /* check for hao command, prevent deadlock */
-  for(i = 0; !strncasecmp(&arg[i], "herc ", 4); i += 5);
-  if(!strcasecmp(&arg[i], "hao") || !strncasecmp(&arg[i], "hao ", 4))
+  for(j = 0; !strncasecmp(&arg[j], "herc ", 4); j += 5);
+  if(!strcasecmp(&arg[j], "hao") || !strncasecmp(&arg[j], "hao ", 4))
   {
     release_lock(&ao_lock);
     logmsg(HHCA0026E);
