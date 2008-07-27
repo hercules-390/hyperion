@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.247  2008/07/24 14:42:21  bernard
+// cmdtgt version 2
+//
 // Revision 1.246  2008/07/20 12:10:57  bernard
 // OPTION_CMDTGT
 //
@@ -222,6 +225,7 @@
 extern void ecpsvm_command(int argc,char **argv);
 #endif
 int process_script_file(char *,int);
+int ProcessPanelCommand (char*);
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -477,7 +481,7 @@ int logopt_cmd(int argc, char *argv[],char *cmdline)
                 logmsg(_("HHCPN197I Log option set: TIMESTAMP\n"));
                 continue;
             }
-            if (strcasecmp(argv[0],"notimestamp") == 0 || 
+            if (strcasecmp(argv[0],"notimestamp") == 0 ||
                 strcasecmp(argv[0],"notime"     ) == 0)
             {
                 sysblk.logoptnotime = 1;
@@ -2226,8 +2230,8 @@ int   n, errflag, stopflag=0, modflag=0;
         errflag = 0;
         if (strncasecmp(argv[n],"sm=",3) == 0)
         {
-            /* PSW system mask operand */ 
-            if (sscanf(argv[n]+3, "%x%c", &newsm, &c) == 1 
+            /* PSW system mask operand */
+            if (sscanf(argv[n]+3, "%x%c", &newsm, &c) == 1
                 && newsm >= 0 && newsm <= 255)
                 updsm = 1;
             else
@@ -2235,8 +2239,8 @@ int   n, errflag, stopflag=0, modflag=0;
         }
         else if (strncasecmp(argv[n],"pk=",3) == 0)
         {
-            /* PSW protection key operand */ 
-            if (sscanf(argv[n]+3, "%d%c", &newpk, &c) == 1 
+            /* PSW protection key operand */
+            if (sscanf(argv[n]+3, "%d%c", &newpk, &c) == 1
                 && newpk >= 0 && newpk <= 15)
                 updpk = 1;
             else
@@ -2244,8 +2248,8 @@ int   n, errflag, stopflag=0, modflag=0;
         }
         else if (strncasecmp(argv[n],"cmwp=",5) == 0)
         {
-            /* PSW CMWP bits operand */ 
-            if (sscanf(argv[n]+5, "%x%c", &newcmwp, &c) == 1 
+            /* PSW CMWP bits operand */
+            if (sscanf(argv[n]+5, "%x%c", &newcmwp, &c) == 1
                 && newcmwp >= 0 && newcmwp <= 15)
                 updcmwp = 1;
             else
@@ -2253,7 +2257,7 @@ int   n, errflag, stopflag=0, modflag=0;
         }
         else if (strncasecmp(argv[n],"as=",3) == 0)
         {
-            /* PSW address-space control operand */ 
+            /* PSW address-space control operand */
             if (strcasecmp(argv[n]+3,"pri") == 0)
                 newas = PSW_PRIMARY_SPACE_MODE;
             else if (strcmp(argv[n]+3,"ar") == 0)
@@ -2268,8 +2272,8 @@ int   n, errflag, stopflag=0, modflag=0;
         }
         else if (strncasecmp(argv[n],"cc=",3) == 0)
         {
-            /* PSW condition code operand */ 
-            if (sscanf(argv[n]+3, "%d%c", &newcc, &c) == 1 
+            /* PSW condition code operand */
+            if (sscanf(argv[n]+3, "%d%c", &newcc, &c) == 1
                 && newcc >= 0 && newcc <= 3)
                 updcc = 1;
             else
@@ -2277,8 +2281,8 @@ int   n, errflag, stopflag=0, modflag=0;
         }
         else if (strncasecmp(argv[n],"pm=",3) == 0)
         {
-            /* PSW program mask operand */ 
-            if (sscanf(argv[n]+3, "%x%c", &newpm, &c) == 1 
+            /* PSW program mask operand */
+            if (sscanf(argv[n]+3, "%x%c", &newpm, &c) == 1
                 && newpm >= 0 && newpm <= 15)
                 updpm = 1;
             else
@@ -2286,14 +2290,14 @@ int   n, errflag, stopflag=0, modflag=0;
         }
         else if (strncasecmp(argv[n],"am=",3) == 0)
         {
-            /* PSW addressing mode operand */ 
+            /* PSW addressing mode operand */
             if (strcmp(argv[n]+3,"24") == 0)
                 newam = 24;
             else if (strcmp(argv[n]+3,"31") == 0
                     && (sysblk.arch_mode == ARCH_390
                         || sysblk.arch_mode == ARCH_900))
                 newam = 31;
-            else if (strcmp(argv[n]+3,"64") == 0 
+            else if (strcmp(argv[n]+3,"64") == 0
                     && sysblk.arch_mode == ARCH_900)
                 newam = 64;
             else
@@ -2301,7 +2305,7 @@ int   n, errflag, stopflag=0, modflag=0;
         }
         else if (strncasecmp(argv[n],"ia=",3) == 0)
         {
-            /* PSW instruction address operand */ 
+            /* PSW instruction address operand */
             if (sscanf(argv[n]+3, "%"I64_FMT"x%c", &newia, &c) == 1)
                 updia = 1;
             else
@@ -2392,7 +2396,7 @@ int   n, errflag, stopflag=0, modflag=0;
     if (modflag)
     {
         regs->psw.IA_G &= regs->psw.AMASK_G;
-        regs->aie = NULL;  
+        regs->aie = NULL;
     }
 
     /* Display the PSW field by field */
@@ -2624,13 +2628,13 @@ char range[256];
 
     /* Determine if this trace is on or off for message */
     on = (trace && sysblk.insttrace) || (!trace && sysblk.inststep);
- 
+
     /* Display message */
     logmsg(_("HHCPN040I Instruction %s %s %s\n"),
            cmdline[0] == 't' ? _("tracing") :
            cmdline[0] == 's' ? _("stepping") : _("break"),
            on ? _("on") : _("off"),
-           range);           
+           range);
 
     return 0;
 }
@@ -2963,7 +2967,7 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
     {
         single_devnum = 1;
 
-        if (parse_single_devnum(argv[1], &lcss, &devnum) < 0)   
+        if (parse_single_devnum(argv[1], &lcss, &devnum) < 0)
         {
             // (error message already issued)
             return -1;
@@ -3109,7 +3113,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
     {
         single_devnum = 1;
 
-        if (parse_single_devnum(argv[1], &lcss, &devnum) < 0)   
+        if (parse_single_devnum(argv[1], &lcss, &devnum) < 0)
             return -1;
         if (!(dev = find_device_by_devnum (lcss, devnum)))
         {
@@ -3827,7 +3831,7 @@ char    c;                              /* work for sscan            */
         else
             cckdblk.sflevel = level;
     }
- 
+
     /* Process the command */
     switch (action) {
         case '+': if (create_thread(&tid, &sysblk.detattr, cckd_sf_add, dev, "sf+ command"))
@@ -5086,7 +5090,7 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
         {
           if(count[i2] > count[i3])
             i3 = i2;
-        } 
+        }
         /* Exchange */
         opcode1[499] = opcode1[i1];
         opcode2[499] = opcode2[i1];
@@ -5278,24 +5282,24 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
                         logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",  /*@Z9*/
                             i1, i2, sysblk.imapc2[i2]);                     /*@Z9*/
                 break;                                                      /*@Z9*/
-            case 0xC4:                                                      
-                for(i2 = 0; i2 < 16; i2++)                                  
-                    if(sysblk.imapc4[i2])                                   
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",  
-                            i1, i2, sysblk.imapc4[i2]);                     
-                break;                                                      
-            case 0xC6:                                                      
-                for(i2 = 0; i2 < 16; i2++)                                  
-                    if(sysblk.imapc6[i2])                                   
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",  
-                            i1, i2, sysblk.imapc6[i2]);                     
-                break;                                                      
-            case 0xC8:                                                      
-                for(i2 = 0; i2 < 16; i2++)                                  
-                    if(sysblk.imapc8[i2])                                   
-                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",  
-                            i1, i2, sysblk.imapc8[i2]);                     
-                break;                                                      
+            case 0xC4:
+                for(i2 = 0; i2 < 16; i2++)
+                    if(sysblk.imapc4[i2])
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
+                            i1, i2, sysblk.imapc4[i2]);
+                break;
+            case 0xC6:
+                for(i2 = 0; i2 < 16; i2++)
+                    if(sysblk.imapc6[i2])
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
+                            i1, i2, sysblk.imapc6[i2]);
+                break;
+            case 0xC8:
+                for(i2 = 0; i2 < 16; i2++)
+                    if(sysblk.imapc8[i2])
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%" I64_FMT "u\n",
+                            i1, i2, sysblk.imapc8[i2]);
+                break;
             case 0xE3:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape3[i2])
@@ -6323,8 +6327,8 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
         }
     }
     logmsg(_("HHCPN162I Hercules instruction trace displayed in %s mode\n"),
-        sysblk.showregsnone ? _("noregs") : 
-        sysblk.showregsfirst ? _("regsfirst") : 
+        sysblk.showregsnone ? _("noregs") :
+        sysblk.showregsfirst ? _("regsfirst") :
                         _("traditional"));
     return 0;
 }
@@ -7172,7 +7176,7 @@ CMDHELP ( "sfk",       "Format: \"sfk{*|xxxx} [n]\". Performs a chkdsk on the ac
                        " 3 devhdr, cdevhdr, l1 table, l2 tables, free spaces, trkimgs\n"
                        " 4 devhdr, cdevhdr. Build everything else from recovery\n"
                        "You probably don't want to use `4' unless you have a backup and are\n"
-                       "prepared to wait a long time.\n" 
+                       "prepared to wait a long time.\n"
                        )
 
 CMDHELP ( "logopt",    "Format: \"logopt [timestamp | notimestamp]\".   Sets logging options.\n"
@@ -7306,10 +7310,10 @@ void *panel_command (void *cmdline)
 #ifdef _FEATURE_SYSTEM_CONSOLE
         if(cmd[0] == '.' || cmd[0] == '!')
         {
-          if(!cmd[1]) 
-          { 
-            cmd[1] = ' '; 
-            cmd[2] = 0; 
+          if(!cmd[1])
+          {
+            cmd[1] = ' ';
+            cmd[2] = 0;
           }
           scp_command(cmd + 1, cmd[0] == '!');
         }
