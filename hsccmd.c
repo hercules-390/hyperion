@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.248  2008/07/27 10:21:03  rbowler
+// Fix  warning C4013: 'ProcessPanelCommand' undefined
+//
 // Revision 1.247  2008/07/24 14:42:21  bernard
 // cmdtgt version 2
 //
@@ -6347,7 +6350,7 @@ int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
       sysblk.cmdtgt = 0;
     else if(!strcasecmp(argv[1], "scp"))
       sysblk.cmdtgt = 1;
-    else if(!strcasecmp(argv[1], "!scp"))
+    else if(!strcasecmp(argv[1], "pscp"))
       sysblk.cmdtgt = 2;
     else if(!strcasecmp(argv[1], "?"))
       ;
@@ -6379,7 +6382,7 @@ int cmdtgt_cmd(int argc, char *argv[], char *cmdline)
     }
   }
   else
-    logmsg("cmdtgt: Use cmdtgt [herc | scp | !scp | ?]\n");
+    logmsg("cmdtgt: Use cmdtgt [herc | scp | pscp | ?]\n");
 
   return 0;
 }
@@ -6397,7 +6400,7 @@ int scp_cmd(int argc, char *argv[], char *cmdline)
 }
 
 ///////////////////////////////////////////////////////////////////////
-/* !scp - Send a priority message in any mode */
+/* pscp - Send a priority message in any mode */
 int prioscp_cmd(int argc, char *argv[], char *cmdline)
 {
   UNREFERENCED(argv);
@@ -6642,7 +6645,7 @@ COMMAND ( TEST_CMD, test_cmd,        "(hidden internal command)" )
 COMMAND ( "cmdtgt",    cmdtgt_cmd,    "Specify the command target\n" )
 COMMAND ( "herc",      herc_cmd,      "Hercules command\n")
 COMMAND ( "scp",       scp_cmd,       "Send scp command\n")
-COMMAND ( "!scp",      prioscp_cmd,   "Send prio message scp command\n")
+COMMAND ( "pscp",      prioscp_cmd,   "Send prio message scp command\n")
 #endif // OPTION_CMDTGT
 
 COMMAND ( NULL, NULL, NULL )         /* (end of table) */
@@ -7218,10 +7221,10 @@ CMDHELP ( "maxrates",  "Format: \"maxrates [nnnn]\" where 'nnnn' is the desired 
 #endif // OPTION_MIPS_COUNTING
 
 #ifdef OPTION_CMDTGT
-CMDHELP ( "cmdtgt",    "Format: \"cmdtgt [herc | scp | !scp | ?]\". Specify the command target.\n")
+CMDHELP ( "cmdtgt",    "Format: \"cmdtgt [herc | scp | pscp | ?]\". Specify the command target.\n")
 CMDHELP ( "herc",      "Format: \"herc [cmd]\". Send hercules cmd in any cmdtgt mode.\n")
 CMDHELP ( "scp",       "Format: \"scp [cmd]\". Send scp cmd in any cmdtgt mode.\n")
-CMDHELP ( "!scp",      "Format: \"!scp [cmd]\". Send priority message cmd to scp in any cmdtgt mode.\n")
+CMDHELP ( "pscp",      "Format: \"pscp [cmd]\". Send priority message cmd to scp in any cmdtgt mode.\n")
 #endif // OPTION_CMDTGT
 
 CMDHELP ( NULL, NULL )         /* (end of table) */
@@ -7294,8 +7297,8 @@ void *panel_command (void *cmdline)
     logmsg( "%s\n", cmd);
 
 #ifdef OPTION_CMDTGT
-    /* check for herc, scp or !scp command */
-    if(!strncasecmp(cmd, "herc ", 5) || !strncasecmp(cmd, "scp ", 4) || !strncasecmp(cmd, "!scp ", 5))
+    /* check for herc, scp or pscp command */
+    if(!strncasecmp(cmd, "herc ", 5) || !strncasecmp(cmd, "scp ", 4) || !strncasecmp(cmd, "pscp ", 5))
     {
       ProcessPanelCommand(cmd);
       return NULL;
@@ -7327,7 +7330,7 @@ void *panel_command (void *cmdline)
         scp_command(cmd, 0);
         break;
       }
-      case 2: // cmdtgt !scp
+      case 2: // cmdtgt pscp
       {
         scp_command(cmd, 1);
         break;

@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.223  2008/07/24 14:42:36  bernard
+// cmdtgt version 2
+//
 // Revision 1.222  2008/07/12 01:18:07  fish
 // .
 //
@@ -2296,7 +2299,7 @@ FinishShutdown:
                     draw_text(CMD_PREFIX_STR1);
                     break;
                   }
-                  case 2: // cmdtgt !scp
+                  case 2: // cmdtgt pscp
                   {
                     draw_text(CMD_PREFIX_STR2);
                     break;
