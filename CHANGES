@@ -1,3 +1,4 @@
+29 Jul 2008 Fix buffer mgmt bug in hao_thread causing garbage - Fish
 24 Jul 2008 Implementation of cmdtgt version 2 - Bernard van der Helm
 20 Jul 2008 Implementation of cmdtgt command - Bernard van der Helm
 18 Jul 2008 Fix PSF order 18 suborder 01 PSF and SSD length - Fish

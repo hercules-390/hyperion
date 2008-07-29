@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.6  2008/07/26 14:39:42  bernard
+// Foutje, bedankt!
+//
 // Revision 1.5  2008/07/26 14:30:17  bernard
 // Reject hao automatic commands. This causes deadlocks.
 //
@@ -535,6 +538,7 @@ static void* hao_thread(void* dummy)
   int    msgamt  = 0;
   char*  msgend  = NULL;
   char   svchar  = 0;
+  int    bufamt  = 0;
 
   UNREFERENCED(dummy);
 
@@ -554,7 +558,9 @@ static void* hao_thread(void* dummy)
     if ((msgamt = log_read(&msgbuf, &msgidx, LOG_BLOCK)) > 0 )
     {
       /* append to existing data */
-      strlcat( ao_msgbuf, msgbuf, sizeof(ao_msgbuf) );
+      msgamt = min( msgamt, (int)((sizeof(ao_msgbuf) - 1) - bufamt) );
+      strncpy( &ao_msgbuf[bufamt], msgbuf, msgamt );
+      ao_msgbuf[bufamt += msgamt] = 0;
       msgbuf = ao_msgbuf;
 
       /* process only complete messages */
@@ -573,9 +579,7 @@ static void* hao_thread(void* dummy)
       }
 
       /* shift message buffer */
-      msgamt = (ao_msgbuf + sizeof(ao_msgbuf)) - msgbuf;
-      memmove( ao_msgbuf, msgbuf, msgamt );
-      ao_msgbuf[msgamt] = 0;
+      memmove( ao_msgbuf, msgbuf, bufamt -= (msgbuf - ao_msgbuf) );
     }
   }
 
