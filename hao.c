@@ -14,6 +14,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.8  2008/07/30 06:25:27  fish
+// use 'if' statement instead of 'min' macro to fix Linux build error,
+// and remove redundant buffer initialization already done by hao_initialize.
+//
 // Revision 1.7  2008/07/29 05:55:41  fish
 // Fix buffer mgmt bug in hao_thread causing garbage
 //
@@ -603,6 +607,10 @@ DLL_EXPORT void hao_message(char *buf)
 
   /* copy and strip spaces */
   hao_cpstrp(work, buf);
+
+  /* strip the herc prefix */
+  while(!strncmp(work, "herc", 4))
+    hao_cpstrp(work, &work[4]);
 
   /* don't react on own messages */
   if(!strncmp(work, "HHCAO", 5))
