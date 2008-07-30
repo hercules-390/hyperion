@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.7  2008/07/29 05:55:41  fish
+// Fix buffer mgmt bug in hao_thread causing garbage
+//
 // Revision 1.6  2008/07/26 14:39:42  bernard
 // Foutje, bedankt!
 //
@@ -548,9 +551,6 @@ static void* hao_thread(void* dummy)
   while (!sysblk.panel_init && !sysblk.shutdown)
     usleep( 10 * 1000 );
 
-  /* initialize message buffer */
-  memset(ao_msgbuf, 0, sizeof(ao_msgbuf));
-
   /* Do until shutdown */
   while (!sysblk.shutdown && msgamt >= 0)
   {
@@ -558,7 +558,8 @@ static void* hao_thread(void* dummy)
     if ((msgamt = log_read(&msgbuf, &msgidx, LOG_BLOCK)) > 0 )
     {
       /* append to existing data */
-      msgamt = min( msgamt, (int)((sizeof(ao_msgbuf) - 1) - bufamt) );
+      if (msgamt > (int)((sizeof(ao_msgbuf) - 1) - bufamt) )
+          msgamt = (int)((sizeof(ao_msgbuf) - 1) - bufamt);
       strncpy( &ao_msgbuf[bufamt], msgbuf, msgamt );
       ao_msgbuf[bufamt += msgamt] = 0;
       msgbuf = ao_msgbuf;
