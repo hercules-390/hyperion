@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.133  2008/07/20 12:10:40  bernard
+// OPTION_CMDTGT
+//
 // Revision 1.132  2008/07/08 05:35:49  fish
 // AUTOMOUNT redesign: support +allowed/-disallowed dirs
 // and create associated 'automount' panel command - Fish
@@ -107,6 +110,7 @@
 
 #define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
 #define OPTION_CMDTGT                   /* the cmdtgt command        */
+#define OPTION_MSGCLR                   /* Paint messages            */
 
 /*********************************************************************\
  *********************************************************************

@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.224  2008/07/28 15:15:48  bernard
+// !scp -> pscp
+//
 // Revision 1.223  2008/07/24 14:42:36  bernard
 // cmdtgt version 2
 //
@@ -281,6 +284,11 @@ typedef struct _PANMSG
     struct _PANMSG*     prev;
     int                 msgnum;
     char                msg[MSG_SIZE];
+#ifdef OPTION_MSGCLR
+    unsigned int        keep:1;
+    short               fg;
+    short               bg;
+#endif
 }
 PANMSG;
 
@@ -297,6 +305,123 @@ static int   lmsmax = LOG_DEFSIZE/2;
 static int   keybfd = -1;               /* Keyboard file descriptor  */
 
 static REGS  copyregs, copysieregs;     /* Copied regs               */
+
+#ifdef OPTION_MSGCLR
+/*-------------------------------------------------------------------*/
+/* Read the panel command prefix                                     */
+/*                                                                   */
+/* Interpret the possible message command. Valid commands:           */
+/*   <pnl,cmd,...>                                                   */
+/*     Mandatory prefix "<pnl,"                                      */
+/*     followed by one or several commands separated by ","          */
+/*     ending with a ">"                                             */
+/* Valid commands:                                                   */
+/*  color(fg, bg)                                                    */
+/*  keep                                                             */
+/*  release                                                          */
+/*-------------------------------------------------------------------*/
+void read_cmd(PANMSG *p)
+{
+  int  i = 0; // index in message
+  char work[MSG_SIZE];
+
+  if(!strncasecmp(p->msg, "<pnl", 4))
+  {
+    // examine panel command(s)
+    i += 4;
+    while(p->msg[i] == ',')
+    {
+      i += 1;
+      if(!strncasecmp(&p->msg[i], "color(", 6))
+      {
+        // check foreground color
+        i+= 6;
+        if(     !strncasecmp(&p->msg[i], "green,", 6))
+        {
+          p->fg = COLOR_GREEN;
+          i += 6;
+        }
+        else if(!strncasecmp(&p->msg[i], "lightgreen,", 11))
+        {
+          p->fg = COLOR_LIGHT_GREEN;
+          i += 11;
+        }
+        else if(!strncasecmp(&p->msg[i], "lightgray,", 10))
+        {
+          p->fg = COLOR_LIGHT_GREY;
+          i += 10;
+        }
+        else if(!strncasecmp(&p->msg[i], "lightred,", 9))
+        {
+          p->fg = COLOR_LIGHT_RED;
+          i += 9;
+        }
+        else if(!strncasecmp(&p->msg[i], "lightyellow,", 12))
+        {
+          p->fg = COLOR_LIGHT_YELLOW;
+          i += 12;
+        }
+        else if(!strncasecmp(&p->msg[i], "red,", 4))
+        {
+          p->fg = COLOR_RED;
+          i += 4;
+        }
+        else if(!strncasecmp(&p->msg[i], "white,", 6))
+        {
+          p->fg = COLOR_WHITE;
+          i += 6;
+        }
+        else 
+          break; // rubish
+        // check background color
+        if(!strncasecmp(&p->msg[i], "black)", 6))
+        {
+          p->bg = COLOR_BLACK;
+          i += 6;
+        }
+        else if(!strncasecmp(&p->msg[i], "blue)", 5))
+        {
+          p->bg = COLOR_BLUE;
+          i += 5;
+        }
+        else if(!strncasecmp(&p->msg[i], "red)", 4))
+        {
+          p->bg = COLOR_RED;
+          i += 4;
+        }
+        else
+          break; //rubish
+      }
+      else if(!strncasecmp(&p->msg[i], "keep", 4))
+      {
+        p->keep = 1;
+        i += 4;
+      }
+      else if(!strncasecmp(&p->msg[i], "release", 7))
+      {
+        p->keep = 0;
+        i += 7;
+      }
+      else
+        break; // rubish
+    }
+    if(p->msg[i] == '>')
+    {
+      // delete panel command from string
+      i += 1;
+      memset(work, 0, MSG_SIZE);
+      memcpy(work, &p->msg[i], MSG_SIZE - i);
+      memcpy(p->msg, work, MSG_SIZE);
+      return;
+    }
+  }
+
+  /* rubish or no panel command */
+  p->fg = COLOR_DEFAULT_FG;
+  p->bg = COLOR_DEFAULT_BG;
+  p->keep = 0;
+}
+#endif // OPTION_MSGCLR
 
 /*-------------------------------------------------------------------*/
 /* Screen manipulation primitives                                    */
@@ -2179,6 +2304,9 @@ FinishShutdown:
 
                 /* Copy message into next available PANMSG slot */
                 memcpy( curmsg->msg, readbuf, MSG_SIZE );
+#ifdef OPTION_MSGCLR
+                  read_cmd(curmsg);
+#endif
 
                 /* Set the display update indicator */
                 redraw_msgs = 1;
@@ -2251,7 +2379,11 @@ FinishShutdown:
                 for (i=0; i < NUM_LINES && (p != curmsg->next || p == topmsg); i++, p = p->next)
                 {
                     set_pos (i+1, 1);
+#ifdef OPTION_MSGCLR
+                    set_color (p->fg, p->bg);
+#else
                     set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+#endif
                     write_text (p->msg, MSG_SIZE);
                 }
 
@@ -2411,7 +2543,11 @@ PANMSG* p;
     for (i=0, p = topmsg; i < NUM_LINES && p != curmsg->next; i++, p = p->next)
     {
         set_pos (i+1, 1);
+#ifdef OPTION_MSGCLR
+        set_color (p->fg, p->bg);
+#else
         set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+#endif
         write_text (p->msg, MSG_SIZE);
     }
 

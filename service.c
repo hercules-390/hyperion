@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.76  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.75  2007/01/13 07:25:10  bernard
 // backout ccmask
 //
@@ -892,7 +895,14 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                                 guest_to_host(event_msg[i]) : 0x20;
                         }
                         message[i] = '\0';
+#ifdef OPTION_MSGCLR
+                        if(evd_hdr->type == SCCB_EVD_TYPE_MSG)
+                          logmsg ("<pnl,color(green,black)>%s\n", message);
+                        else
+                          logmsg ("<pnl,color(lightred,black)>%s\n", message);
+#else
                         logmsg ("%s\n", message);
+#endif
                     }
                 }
                 mcd_len -= obj_len;
