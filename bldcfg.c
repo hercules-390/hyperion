@@ -31,6 +31,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.83  2008/07/08 05:35:48  fish
+// AUTOMOUNT redesign: support +allowed/-disallowed dirs
+// and create associated 'automount' panel command - Fish
+//
 // Revision 1.82  2008/05/28 16:46:29  fish
 // Misleading VTAPE support renamed to AUTOMOUNT instead and fixed and enhanced so that it actually WORKS now.
 //
@@ -2734,14 +2738,20 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         close(dummyfd[i]);
 #endif
 
+#ifdef OPTION_MSGCLR
+#define KEEPMSG "<pnl,color(lightred,black),keep>"
+#else
+#define KEEPMSG ""
+#endif
+
     if (sysblk.pgmprdos == PGM_PRD_OS_LICENSED)
     {
-        logmsg(_("\nHHCCF039W PGMPRDOS LICENSED specified.\n"
-                "           Licensed program product operating systems are "
-                "enabled.\n           You are "
-                "responsible for meeting all conditions of your\n"
-                "           software "
-                "license.\n\n"));
+        logmsg(_("\n"
+                 KEEPMSG "HHCCF039W PGMPRDOS LICENSED specified.\n"
+                 KEEPMSG "          Licensed program product operating systems are enabled/\n"
+                 KEEPMSG "          You are responsible for meeting all conditions of your\n"
+                 KEEPMSG "          software license.\n"
+                 "\n"));
     }
 
 #ifdef _FEATURE_CPU_RECONFIG
