@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.84  2008/08/02 13:25:00  bernard
+// Put PGMPRDOS message in red.
+//
 // Revision 1.83  2008/07/08 05:35:48  fish
 // AUTOMOUNT redesign: support +allowed/-disallowed dirs
 // and create associated 'automount' panel command - Fish
@@ -2748,9 +2751,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     {
         logmsg(_("\n"
                  KEEPMSG "HHCCF039W PGMPRDOS LICENSED specified.\n"
-                 KEEPMSG "          Licensed program product operating systems are enabled/\n"
+                 KEEPMSG "          Licensed program product operating systems are enabled.\n"
                  KEEPMSG "          You are responsible for meeting all conditions of your\n"
-                 KEEPMSG "          software license.\n"
+                 KEEPMSG "          software licenses.\n"
                  "\n"));
     }
 
