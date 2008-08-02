@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.77  2008/08/02 09:05:05  bernard
+// SCP message colors
+//
 // Revision 1.76  2007/06/23 00:04:15  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -897,7 +900,12 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         message[i] = '\0';
 #ifdef OPTION_MSGCLR
                         if(evd_hdr->type == SCCB_EVD_TYPE_MSG)
-                          logmsg ("<pnl,color(green,black)>%s\n", message);
+                        {
+                          if(message[0] == '*')
+                            logmsg("<pnl,color(lightyellow,black)>%s\n", message);
+                          else
+                            logmsg ("<pnl,color(green,black)>%s\n", message);
+                        }
                         else
                           logmsg ("<pnl,color(lightred,black)>%s\n", message);
 #else
