@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.225  2008/08/02 09:04:51  bernard
+// SCP message colors
+//
 // Revision 1.224  2008/07/28 15:15:48  bernard
 // !scp -> pscp
 //
@@ -308,6 +311,33 @@ static REGS  copyregs, copysieregs;     /* Copied regs               */
 
 #ifdef OPTION_MSGCLR
 /*-------------------------------------------------------------------*/
+/* Get the color name from a string                                  */
+/*-------------------------------------------------------------------*/
+
+#define CHECKCOLOR(s, cs, c, cc) if(!strncasecmp(s, cs, sizeof(cs) - 1)) { *c = cc; return(sizeof(cs) - 1); }
+
+int get_color(char *string, short *color)
+{
+       CHECKCOLOR(string, "black", color, COLOR_BLACK)
+  else CHECKCOLOR(string, "cyan", color, COLOR_CYAN)
+  else CHECKCOLOR(string, "blue", color, COLOR_BLUE)
+  else CHECKCOLOR(string, "darkgrey", color, COLOR_LIGHT_GREY)
+  else CHECKCOLOR(string, "green", color, COLOR_GREEN)
+  else CHECKCOLOR(string, "lightblue", color, COLOR_LIGHT_BLUE)
+  else CHECKCOLOR(string, "lightcyan", color, COLOR_LIGHT_CYAN)
+  else CHECKCOLOR(string, "lightgreen", color, COLOR_LIGHT_GREEN)
+  else CHECKCOLOR(string, "lightgrey", color, COLOR_LIGHT_GREY)
+  else CHECKCOLOR(string, "lightmagenta", color, COLOR_LIGHT_MAGENTA)
+  else CHECKCOLOR(string, "lightred", color, COLOR_LIGHT_RED)
+  else CHECKCOLOR(string, "lightyellow", color, COLOR_LIGHT_YELLOW)
+  else CHECKCOLOR(string, "magenta", color, COLOR_MAGENTA)
+  else CHECKCOLOR(string, "red", color, COLOR_RED)
+  else CHECKCOLOR(string, "white", color, COLOR_WHITE)
+  else CHECKCOLOR(string, "yellow", color, COLOR_YELLOW)
+  else return(0);
+}
+
+/*-------------------------------------------------------------------*/
 /* Read the panel command prefix                                     */
 /*                                                                   */
 /* Interpret the possible message command. Valid commands:           */
@@ -323,7 +353,7 @@ static REGS  copyregs, copysieregs;     /* Copied regs               */
 void read_cmd(PANMSG *p)
 {
   int  i = 0; // index in message
-  char work[MSG_SIZE];
+  int  len;
 
   if(!strncasecmp(p->msg, "<pnl", 4))
   {
@@ -331,92 +361,50 @@ void read_cmd(PANMSG *p)
     i += 4;
     while(p->msg[i] == ',')
     {
-      i += 1;
+      i += 1; // skip ,
       if(!strncasecmp(&p->msg[i], "color(", 6))
       {
-        // check foreground color
-        i+= 6;
-        if(     !strncasecmp(&p->msg[i], "green,", 6))
-        {
-          p->fg = COLOR_GREEN;
-          i += 6;
-        }
-        else if(!strncasecmp(&p->msg[i], "lightgreen,", 11))
-        {
-          p->fg = COLOR_LIGHT_GREEN;
-          i += 11;
-        }
-        else if(!strncasecmp(&p->msg[i], "lightgray,", 10))
-        {
-          p->fg = COLOR_LIGHT_GREY;
-          i += 10;
-        }
-        else if(!strncasecmp(&p->msg[i], "lightred,", 9))
-        {
-          p->fg = COLOR_LIGHT_RED;
-          i += 9;
-        }
-        else if(!strncasecmp(&p->msg[i], "lightyellow,", 12))
-        {
-          p->fg = COLOR_LIGHT_YELLOW;
-          i += 12;
-        }
-        else if(!strncasecmp(&p->msg[i], "red,", 4))
-        {
-          p->fg = COLOR_RED;
-          i += 4;
-        }
-        else if(!strncasecmp(&p->msg[i], "white,", 6))
-        {
-          p->fg = COLOR_WHITE;
-          i += 6;
-        }
-        else 
-          break; // rubish
-        // check background color
-        if(!strncasecmp(&p->msg[i], "black)", 6))
-        {
-          p->bg = COLOR_BLACK;
-          i += 6;
-        }
-        else if(!strncasecmp(&p->msg[i], "blue)", 5))
-        {
-          p->bg = COLOR_BLUE;
-          i += 5;
-        }
-        else if(!strncasecmp(&p->msg[i], "red)", 4))
-        {
-          p->bg = COLOR_RED;
-          i += 4;
-        }
-        else
-          break; //rubish
+        // inspect color command
+        i += 6; // skip color(
+        len = get_color(&p->msg[i], &p->fg);
+        if(!len)
+          break; // no valid color found
+        i += len; // skip colorname
+        if(p->msg[i] != ',')
+          break; // no ,
+        i++; // skip ,
+        len = get_color(&p->msg[i], &p->bg);
+        if(!len)
+          break; // no valid color found
+        i += len; // skip colorname
+        if(p->msg[i] != ')')
+          break; // no )
+        i++; // skip )
       }
       else if(!strncasecmp(&p->msg[i], "keep", 4))
       {
         p->keep = 1;
-        i += 4;
+        i += 4; // skip keep
       }
       else if(!strncasecmp(&p->msg[i], "release", 7))
       {
         p->keep = 0;
-        i += 7;
+        i += 7; // skip release
       }
       else
-        break; // rubish
+        break; // rubbish
     }
     if(p->msg[i] == '>')
     {
       // delete panel command from string
       i += 1;
-      memset(work, 0, MSG_SIZE);
-      memcpy(work, &p->msg[i], MSG_SIZE - i);
-      memcpy(p->msg, work, MSG_SIZE);
+      memmove(p->msg, &p->msg[i], MSG_SIZE - i); // thanks Fish ;-)
+      memset(&p->msg[MSG_SIZE - i], SPACE, i);
       return;
     }
   }
 
-  /* rubish or no panel command */
+  /* rubbish or no panel command */
   p->fg = COLOR_DEFAULT_FG;
   p->bg = COLOR_DEFAULT_BG;
   p->keep = 0;
@@ -2305,7 +2293,7 @@ FinishShutdown:
                 /* Copy message into next available PANMSG slot */
                 memcpy( curmsg->msg, readbuf, MSG_SIZE );
 #ifdef OPTION_MSGCLR
-                  read_cmd(curmsg);
+                read_cmd(curmsg);
 #endif
 
                 /* Set the display update indicator */
