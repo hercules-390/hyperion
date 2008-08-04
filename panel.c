@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.226  2008/08/03 07:20:06  bernard
+// get_color module
+//
 // Revision 1.225  2008/08/02 09:04:51  bernard
 // SCP message colors
 //
@@ -318,22 +321,22 @@ static REGS  copyregs, copysieregs;     /* Copied regs               */
 
 int get_color(char *string, short *color)
 {
-       CHECKCOLOR(string, "black", color, COLOR_BLACK)
-  else CHECKCOLOR(string, "cyan", color, COLOR_CYAN)
-  else CHECKCOLOR(string, "blue", color, COLOR_BLUE)
-  else CHECKCOLOR(string, "darkgrey", color, COLOR_LIGHT_GREY)
-  else CHECKCOLOR(string, "green", color, COLOR_GREEN)
-  else CHECKCOLOR(string, "lightblue", color, COLOR_LIGHT_BLUE)
-  else CHECKCOLOR(string, "lightcyan", color, COLOR_LIGHT_CYAN)
-  else CHECKCOLOR(string, "lightgreen", color, COLOR_LIGHT_GREEN)
-  else CHECKCOLOR(string, "lightgrey", color, COLOR_LIGHT_GREY)
+       CHECKCOLOR(string, "black",        color, COLOR_BLACK)
+  else CHECKCOLOR(string, "cyan",         color, COLOR_CYAN)
+  else CHECKCOLOR(string, "blue",         color, COLOR_BLUE)
+  else CHECKCOLOR(string, "darkgrey",     color, COLOR_DARK_GREY)
+  else CHECKCOLOR(string, "green",        color, COLOR_GREEN)
+  else CHECKCOLOR(string, "lightblue",    color, COLOR_LIGHT_BLUE)
+  else CHECKCOLOR(string, "lightcyan",    color, COLOR_LIGHT_CYAN)
+  else CHECKCOLOR(string, "lightgreen",   color, COLOR_LIGHT_GREEN)
+  else CHECKCOLOR(string, "lightgrey",    color, COLOR_LIGHT_GREY)
   else CHECKCOLOR(string, "lightmagenta", color, COLOR_LIGHT_MAGENTA)
-  else CHECKCOLOR(string, "lightred", color, COLOR_LIGHT_RED)
-  else CHECKCOLOR(string, "lightyellow", color, COLOR_LIGHT_YELLOW)
-  else CHECKCOLOR(string, "magenta", color, COLOR_MAGENTA)
-  else CHECKCOLOR(string, "red", color, COLOR_RED)
-  else CHECKCOLOR(string, "white", color, COLOR_WHITE)
-  else CHECKCOLOR(string, "yellow", color, COLOR_YELLOW)
+  else CHECKCOLOR(string, "lightred",     color, COLOR_LIGHT_RED)
+  else CHECKCOLOR(string, "lightyellow",  color, COLOR_LIGHT_YELLOW)
+  else CHECKCOLOR(string, "magenta",      color, COLOR_MAGENTA)
+  else CHECKCOLOR(string, "red",          color, COLOR_RED)
+  else CHECKCOLOR(string, "white",        color, COLOR_WHITE)
+  else CHECKCOLOR(string, "yellow",       color, COLOR_YELLOW)
   else return(0);
 }
 
