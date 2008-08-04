@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.83  2008/04/08 17:13:06  bernard
+// Added execute relative long instruction
+//
 // Revision 1.82  2008/03/23 06:20:47  rbowler
 // Activate Move-with-Optional-Specifications Facility for ESAME
 //
@@ -95,11 +98,6 @@
 #define FEATURE_DAT_ENHANCEMENT
 #define FEATURE_DAT_ENHANCEMENT_FACILITY_2                      /*@Z9*/
 #define FEATURE_DECIMAL_FLOATING_POINT                          /*DFP*/
-/* 
- * DIAG 308 Disabled until a complete implementation can
- * be devised
- */
-// #define FEATURE_DIAG308_REIPL
 #define FEATURE_DUAL_ADDRESS_SPACE
 #define FEATURE_EMULATE_VM
 //#define FEATURE_ENHANCED_DAT_FACILITY                           /*208*/
@@ -151,6 +149,7 @@
 #define FEATURE_PER3                                            /*@Z9*/
 //#define FEATURE_PFPO                                            /*407*/
 #define FEATURE_PRIVATE_SPACE
+//#define FEATURE_PROGRAM_DIRECTED_REIPL /*DIAG308 incomplete*/  /*@Z9*/
 #define FEATURE_PROTECTION_INTERCEPTION_CONTROL
 #define FEATURE_QUEUED_DIRECT_IO
 //#define FEATURE_RESTORE_SUBCHANNEL_FACILITY                     /*208*/

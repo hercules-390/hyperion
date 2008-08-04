@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.134  2008/08/02 09:04:28  bernard
+// SCP message colors
+//
 // Revision 1.133  2008/07/20 12:10:40  bernard
 // OPTION_CMDTGT
 //
@@ -222,6 +225,7 @@
 #undef FEATURE_PER3                                             /*@Z9*/
 #undef FEATURE_PFPO                                             /*407*/
 #undef FEATURE_PRIVATE_SPACE
+#undef FEATURE_PROGRAM_DIRECTED_REIPL                           /*@Z9*/
 #undef FEATURE_PROTECTION_INTERCEPTION_CONTROL
 #undef FEATURE_QUEUED_DIRECT_IO
 #undef FEATURE_REGION_RELOCATE

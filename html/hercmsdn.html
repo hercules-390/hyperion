@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 3: System Messages: DN - diagnose</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 3: System Messages: DN - diagnose</h1>
+<p>
+This page describes the messages issued by the Diagnose instruction
+of the Hercules S/370, ESA/390, and z/Architecture emulator.
+<h3>Messages</h3>
+<dl class="messages">
+<dt><code><a name="HHCDN001I">
+HHCDN001I Diagnose 0x308 called: System is re-ipled
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The operating system has requested a program-controlled re-IPL
+      by means of the Diagnose X'308' instruction.
+  <dt>Action
+  <dd>The system re-IPLs itself.
+  <dt>Issued by
+  <dd>diagnose.c, function stop_cpus_and_ipl
+  </dl>
+<dt><code><a name="HHCDN002I">
+HHCDN002I Checking cpu <em>n</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The program-controlled re-IPL feature is checking whether processor
+      <code><em>n</em></code> has entered the stopped state.
+  <dt>Action
+  <dd>None.
+  <dt>Issued by
+  <dd>diagnose.c, function stop_cpus_and_ipl
+  </dl>
+<dt><code><a name="HHCDN003I">
+HHCDN003I Waiting 1 second for cpu's to stop...
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The program-controlled re-IPL feature has determined that the
+      requested IPL cannot proceed because one or more processors
+      are still running.
+  <dt>Action
+  <dd>The system waits 1 second then tries again.
+  <dt>Issued by
+  <dd>diagnose.c, function stop_cpus_and_ipl
+  </dl>
+<dt><code><a name="HHCDN004E">
+HHCDN004E Error starting thread in diagnose 0x308: <em>reason</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The operating system has requested a program-controlled re-IPL
+      by means of the Diagnose X'308' instruction, but the system
+      was unable to start a new thread for the reason indicated.
+  <dt>Action
+  <dd>The program-controlled re-IPL fails.
+  <dt>Issued by
+  <dd>diagnose.c, function diagnose_call
+  </dl>
+</dl>
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+
+<p><center><hr width=15% noshade>
+<a href="hercmsg.html"><img src="images/back.gif" border=0 alt="back"></a>
+</center>
+<p class="lastupd">Last updated $Date$</p>
+</BODY>
+</HTML>

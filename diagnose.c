@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.48  2007/12/10 23:12:02  gsmith
+// Tweaks to OPTION_MIPS_COUNTING processing
+//
 // Revision 1.47  2007/06/23 00:04:08  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -57,6 +60,15 @@
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
+
+/* Diagnose 308 function subcodes */
+#define DIAG308_IPL_CLEAR       3       /* IPL clear                 */
+#define DIAG308_IPL_NORMAL      4       /* IPL normal/dump           */
+#define DIAG308_SET_PARAM       5       /* Set IPL parameters        */
+#define DIAG308_STORE_PARAM     6       /* Store IPL parameters      */
+
+/* Diagnose 308 return codes */
+#define DIAG308_RC_OK           1
 
 #endif /*!defined(_DIAGNOSE_H)*/
 
@@ -105,22 +117,21 @@ static char *prefix[] = {
 }
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
-#if defined(FEATURE_DIAG308_REIPL) && !defined(STOP_CPUS_AND_IPL)
+#if defined(FEATURE_PROGRAM_DIRECTED_REIPL) && !defined(STOP_CPUS_AND_IPL)
 #define STOP_CPUS_AND_IPL
 /*---------------------------------------------------------------------------*/
 /* Within diagnose 0x308 (re-ipl) a thread is started with the next code.    */
 /*---------------------------------------------------------------------------*/
-void *stop_cpus_and_ipl(int *whatever)
+void *stop_cpus_and_ipl(int *ipltype)
 {
   int i;
   char iplcmd[256];
   int cpustates;
   int mask;
 
-  UNREFERENCED(whatever);
   panel_command("stopall");
-  logmsg("Diagnose 0x308 called: System is re-ipled\n");
-  sprintf(iplcmd, "ipl %03X", sysblk.ipldev);
+  logmsg("HHCDN001I Diagnose 0x308 called: System is re-ipled\n");
+  sprintf(iplcmd, "%s %03X", ipltype, sysblk.ipldev);
   do
   {
     OBTAIN_INTLOCK(NULL);
@@ -130,7 +141,7 @@ void *stop_cpus_and_ipl(int *whatever)
     {
       if(mask & 1)
       {
-        logmsg("Checking cpu %d\n", i);
+        logmsg("HHCDN002I Checking cpu %d\n", i);
         if(IS_CPU_ONLINE(i) && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
           cpustates = sysblk.regs[i]->cpustate;
       }
@@ -139,15 +150,15 @@ void *stop_cpus_and_ipl(int *whatever)
     RELEASE_INTLOCK(NULL);
     if(cpustates != CPUSTATE_STOPPED)
     {
-      logmsg("Waiting 1 second for cpu's to stop...\n");
+      logmsg("HHCDN003I Waiting 1 second for cpu's to stop...\n");
       sleep(1);
     }
   }
   while(cpustates != CPUSTATE_STOPPED);
-  panel_command(iplcmd);  
+  panel_command(iplcmd);
   return NULL;
 }
-#endif /*defined(FEATURE_DIAG308_REIPL)*/
+#endif /*defined(FEATURE_PROGRAM_DIRECTED_REIPL) && !defined(STOP_CPUS_AND_IPL)*/
 
 /*-------------------------------------------------------------------*/
 /* Diagnose instruction                                              */
@@ -155,6 +166,11 @@ void *stop_cpus_and_ipl(int *whatever)
 void ARCH_DEP(diagnose_call) (VADR effective_addr2, int b2,
                               int r1, int r2, REGS *regs)
 {
+#ifdef FEATURE_PROGRAM_DIRECTED_REIPL
+ATTR  attr;                             /* Thread attribute          */
+TID   tid;                              /* Thread identifier         */
+char *ipltype;                          /* "ipl" or "iplc"           */
+#endif /*FEATURE_PROGRAM_DIRECTED_REIPL*/
 #ifdef FEATURE_HERCULES_DIAGCALLS
 U32   n;                                /* 32-bit operand value      */
 #endif /*FEATURE_HERCULES_DIAGCALLS*/
@@ -560,22 +576,38 @@ U32   code;
 
 #endif /*FEATURE_HERCULES_DIAGCALLS*/
 
-#ifdef FEATURE_DIAG308_REIPL
-    /*---------------------------------------------------------------*/
-    /* Diagnose 308: re-IPL with previous parameters                 */
-    /*---------------------------------------------------------------*/
-    case 0x308:
-        {
-          ATTR attr;
-          TID tid;
 
-          if(create_thread(&tid, &attr, stop_cpus_and_ipl, NULL, "Stop cpus and ipl"))
-            logmsg("Error starting thread in diagnose 0x308: %s\n", strerror(errno));
-          regs->cpustate = CPUSTATE_STOPPING;
-          ON_IC_INTERRUPT(regs);
-        }
+    case 0x308:
+    /*---------------------------------------------------------------*/
+    /* Diagnose 308: IPL functions                                   */
+    /*---------------------------------------------------------------*/
+        switch(r2) {
+#ifdef FEATURE_PROGRAM_DIRECTED_REIPL
+        case DIAG308_IPL_CLEAR:
+            ipltype = "iplc";
+            goto diag308_cthread;
+        case DIAG308_IPL_NORMAL:
+            ipltype = "ipl";
+        diag308_cthread:
+            if(create_thread(&tid, &attr, stop_cpus_and_ipl, ipltype, "Stop cpus and ipl"))
+                logmsg("HHCDN004E Error starting thread in diagnose 0x308: %s\n",
+                        strerror(errno));
+            regs->cpustate = CPUSTATE_STOPPING;
+            ON_IC_INTERRUPT(regs);
+            break;
+        case DIAG308_SET_PARAM:
+            /* INCOMPLETE */
+            regs->GR(1) = DIAG308_RC_OK;
+            break;
+        case DIAG308_STORE_PARAM:
+            /* INCOMPLETE */
+            regs->GR(1) = DIAG308_RC_OK;
+            break;
+#endif /*FEATURE_PROGRAM_DIRECTED_REIPL*/
+        default:
+            ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
+        } /* end switch(r2) */
         break;
-#endif /* FEATURE_DIAG308_REIPL */
 
     default:
     /*---------------------------------------------------------------*/
