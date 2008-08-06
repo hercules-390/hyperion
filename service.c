@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.78  2008/08/02 13:25:28  bernard
+// Put z/OS *messages in lightyellow.
+//
 // Revision 1.77  2008/08/02 09:05:05  bernard
 // SCP message colors
 //
@@ -902,12 +905,12 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         if(evd_hdr->type == SCCB_EVD_TYPE_MSG)
                         {
                           if(message[0] == '*')
-                            logmsg("<pnl,color(lightyellow,black)>%s\n", message);
+                            logmsg("<pnl,color(lightyellow,black),keep>%s\n", message);
                           else
                             logmsg ("<pnl,color(green,black)>%s\n", message);
                         }
                         else
-                          logmsg ("<pnl,color(lightred,black)>%s\n", message);
+                          logmsg ("<pnl,color(lightred,black),keep>%s\n", message);
 #else
                         logmsg ("%s\n", message);
 #endif
