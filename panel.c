@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.229  2008/08/06 15:26:34  bernard
+// message hold scroll_up implemented
+//
 // Revision 1.228  2008/08/06 14:03:29  bernard
 // Implemented keep messages when on autoscroll. You will have to delete
 // the comment before OPTION_MSGHLD on top to activate. Will work on
@@ -479,7 +482,7 @@ static void scroll_up_lines( int numlines )
             msgnum = topmsg->msgnum;
             for(p = topmsg; p != oldtopmsg; p = p->next)
                 p->msgnum = p->next->msgnum;
-            for(; p->next->keep; p = p ->next)
+            for(; p->next->keep; p = p->next)
                 p->msgnum = p->next->msgnum;
             p->prev->next = p->next;
             p->next->prev = p->prev;
@@ -498,7 +501,41 @@ static void scroll_up_lines( int numlines )
 
 static void scroll_down_lines( int numlines )
 {
+#ifdef OPTION_MSGHLD
+    int i;
+    int msgnum;
+    PANMSG *oldtopmsg;
+    PANMSG *p;
+
+    oldtopmsg = topmsg;
+    for(i = 0; i < numlines && topmsg != newest_msg(); i++)
+        topmsg = topmsg->next;
+    if(oldtopmsg->keep)
+    {
+        while(oldtopmsg != topmsg)
+        {
+            msgnum = topmsg->msgnum;
+            p = topmsg;
+            p->msgnum = p->prev->msgnum;
+            p = p->prev;
+            while(!p->keep)
+            {
+               p->msgnum = p->prev->msgnum;
+               p = p->prev;
+            }
+            p->prev->next = p->next;
+            p->next->prev = p->prev;
+            p->prev = topmsg->prev;
+            p->next = topmsg;
+            topmsg->prev->next = p;
+            topmsg->prev = p;
+            p->msgnum = msgnum;
+            topmsg = p;
+        }
+    }
+#else
     int i; for (i=0; i < numlines && topmsg != newest_msg(); topmsg = topmsg->next, i++);
+#endif
 }
 
 static void page_up        () { scroll_up_lines  ( NUM_LINES - 1 ); }
