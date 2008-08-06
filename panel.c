@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.227  2008/08/04 19:34:46  fish
+// COLOR_DARK_GREY
+//
 // Revision 1.226  2008/08/03 07:20:06  bernard
 // get_color module
 //
@@ -79,6 +82,8 @@
 // Revision 1.209  2006/12/08 09:43:29  jj
 // Add CVS message log
 //
+
+//#define OPTION_MSGHLD
 
 #include "hstdinc.h"
 
@@ -2283,7 +2288,30 @@ FinishShutdown:
                     /* Perform autoscroll if needed */
                     if (is_currline_visible()) {
                         if (lines_remaining() < 1)
+#ifdef OPTION_MSGHLD
+                        {
+                            int msgnum;
+                            PANMSG *p;
+
+                            if(topmsg->keep)
+                            {
+                                msgnum = topmsg->msgnum;
+                                for(p = topmsg; p->keep; p = p->next)
+                                  p->msgnum = p->next->msgnum;
+                                p->prev->next = p->next;
+                                p->next->prev = p->prev;
+                                p->prev = topmsg->prev;
+                                p->next = topmsg;
+                                topmsg->prev->next = p;
+                                topmsg->prev = p;
+                                p->msgnum = msgnum;
+                            }
+                            else
+                                topmsg = topmsg->next;
+                        }
+#else
                             topmsg = topmsg->next;
+#endif
                     }
                     /* Go on to next available msg buffer */
                     curmsg = curmsg->next;
