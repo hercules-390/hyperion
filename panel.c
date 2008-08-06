@@ -28,6 +28,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.228  2008/08/06 14:03:29  bernard
+// Implemented keep messages when on autoscroll. You will have to delete
+// the comment before OPTION_MSGHLD on top to activate. Will work on
+// other situations.
+//
 // Revision 1.227  2008/08/04 19:34:46  fish
 // COLOR_DARK_GREY
 //
@@ -458,7 +463,37 @@ static int lines_remaining()
 
 static void scroll_up_lines( int numlines )
 {
+#ifdef OPTION_MSGHLD
+    int i;
+    int msgnum;
+    PANMSG *oldtopmsg;
+    PANMSG *p;
+
+    oldtopmsg = topmsg;
+    for(i = 0; i < numlines && topmsg != oldest_msg(); i++)
+        topmsg = topmsg->prev;
+    if(oldtopmsg->keep)
+    {
+        while(oldtopmsg != topmsg)
+        {
+            msgnum = topmsg->msgnum;
+            for(p = topmsg; p != oldtopmsg; p = p->next)
+                p->msgnum = p->next->msgnum;
+            for(; p->next->keep; p = p ->next)
+                p->msgnum = p->next->msgnum;
+            p->prev->next = p->next;
+            p->next->prev = p->prev;
+            p->prev = topmsg->prev;
+            p->next = topmsg;
+            topmsg->prev->next = p;
+            topmsg->prev = p;
+            p->msgnum = msgnum;
+            topmsg = p;
+        }
+    }
+#else
     int i; for (i=0; i < numlines && topmsg != oldest_msg(); topmsg = topmsg->prev, i++);
+#endif
 }
 
 static void scroll_down_lines( int numlines )
