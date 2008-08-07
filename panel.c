@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.230  2008/08/06 17:03:16  bernard
+// message hold scroll_down implemented
+//
 // Revision 1.229  2008/08/06 15:26:34  bernard
 // message hold scroll_up implemented
 //
@@ -301,7 +304,6 @@ typedef struct _PANMSG
 {
     struct _PANMSG*     next;
     struct _PANMSG*     prev;
-    int                 msgnum;
     char                msg[MSG_SIZE];
 #ifdef OPTION_MSGCLR
     unsigned int        keep:1;
@@ -443,10 +445,12 @@ static PANMSG* newest_msg()
 
 static int lines_scrolled()
 {
-    /* return #of lines 'up' from current line that we're scrolled . */
-    if (topmsg->msgnum <= curmsg->msgnum)
-        return curmsg->msgnum - topmsg->msgnum;
-    return MAX_MSGS - (topmsg->msgnum - curmsg->msgnum);
+    int i;
+    PANMSG *p;
+
+    /* return # of lines 'up' from current line that we're scrolled. */
+    for(i = 0, p = topmsg; p != curmsg; p = p->next, i++);
+    return i;
 }
 
 static int visible_lines()
@@ -467,33 +471,6 @@ static int lines_remaining()
 static void scroll_up_lines( int numlines )
 {
 #ifdef OPTION_MSGHLD
-    int i;
-    int msgnum;
-    PANMSG *oldtopmsg;
-    PANMSG *p;
-
-    oldtopmsg = topmsg;
-    for(i = 0; i < numlines && topmsg != oldest_msg(); i++)
-        topmsg = topmsg->prev;
-    if(oldtopmsg->keep)
-    {
-        while(oldtopmsg != topmsg)
-        {
-            msgnum = topmsg->msgnum;
-            for(p = topmsg; p != oldtopmsg; p = p->next)
-                p->msgnum = p->next->msgnum;
-            for(; p->next->keep; p = p->next)
-                p->msgnum = p->next->msgnum;
-            p->prev->next = p->next;
-            p->next->prev = p->prev;
-            p->prev = topmsg->prev;
-            p->next = topmsg;
-            topmsg->prev->next = p;
-            topmsg->prev = p;
-            p->msgnum = msgnum;
-            topmsg = p;
-        }
-    }
 #else
     int i; for (i=0; i < numlines && topmsg != oldest_msg(); topmsg = topmsg->prev, i++);
 #endif
@@ -502,37 +479,6 @@ static void scroll_up_lines( int numlines )
 static void scroll_down_lines( int numlines )
 {
 #ifdef OPTION_MSGHLD
-    int i;
-    int msgnum;
-    PANMSG *oldtopmsg;
-    PANMSG *p;
-
-    oldtopmsg = topmsg;
-    for(i = 0; i < numlines && topmsg != newest_msg(); i++)
-        topmsg = topmsg->next;
-    if(oldtopmsg->keep)
-    {
-        while(oldtopmsg != topmsg)
-        {
-            msgnum = topmsg->msgnum;
-            p = topmsg;
-            p->msgnum = p->prev->msgnum;
-            p = p->prev;
-            while(!p->keep)
-            {
-               p->msgnum = p->prev->msgnum;
-               p = p->prev;
-            }
-            p->prev->next = p->next;
-            p->next->prev = p->prev;
-            p->prev = topmsg->prev;
-            p->next = topmsg;
-            topmsg->prev->next = p;
-            topmsg->prev = p;
-            p->msgnum = msgnum;
-            topmsg = p;
-        }
-    }
 #else
     int i; for (i=0; i < numlines && topmsg != newest_msg(); topmsg = topmsg->next, i++);
 #endif
@@ -1636,7 +1582,6 @@ char    buf[1024];                      /* Buffer workarea           */
     {
         curmsg->next = curmsg + 1;
         curmsg->prev = curmsg - 1;
-        curmsg->msgnum = i;
         memset(curmsg->msg,SPACE,MSG_SIZE);
     }
 
@@ -2362,21 +2307,17 @@ FinishShutdown:
                         if (lines_remaining() < 1)
 #ifdef OPTION_MSGHLD
                         {
-                            int msgnum;
                             PANMSG *p;
 
                             if(topmsg->keep)
                             {
-                                msgnum = topmsg->msgnum;
-                                for(p = topmsg; p->keep; p = p->next)
-                                  p->msgnum = p->next->msgnum;
+                                for(p = topmsg; p->keep; p = p->next);
                                 p->prev->next = p->next;
                                 p->next->prev = p->prev;
                                 p->prev = topmsg->prev;
                                 p->next = topmsg;
                                 topmsg->prev->next = p;
                                 topmsg->prev = p;
-                                p->msgnum = msgnum;
                             }
                             else
                                 topmsg = topmsg->next;
