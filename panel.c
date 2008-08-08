@@ -28,6 +28,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.231  2008/08/07 20:47:18  bernard
+// Removed variable msgnum. I am getting crazy about this variable.
+// It is now less complex to move message arround in the list.
+// Still working on the OPTION_MSGHLD
+//
 // Revision 1.230  2008/08/06 17:03:16  bernard
 // message hold scroll_down implemented
 //
@@ -93,8 +98,6 @@
 // Revision 1.209  2006/12/08 09:43:29  jj
 // Add CVS message log
 //
-
-//#define OPTION_MSGHLD
 
 #include "hstdinc.h"
 
@@ -470,18 +473,12 @@ static int lines_remaining()
 
 static void scroll_up_lines( int numlines )
 {
-#ifdef OPTION_MSGHLD
-#else
     int i; for (i=0; i < numlines && topmsg != oldest_msg(); topmsg = topmsg->prev, i++);
-#endif
 }
 
 static void scroll_down_lines( int numlines )
 {
-#ifdef OPTION_MSGHLD
-#else
     int i; for (i=0; i < numlines && topmsg != newest_msg(); topmsg = topmsg->next, i++);
-#endif
 }
 
 static void page_up        () { scroll_up_lines  ( NUM_LINES - 1 ); }
@@ -2305,26 +2302,7 @@ FinishShutdown:
                     /* Perform autoscroll if needed */
                     if (is_currline_visible()) {
                         if (lines_remaining() < 1)
-#ifdef OPTION_MSGHLD
-                        {
-                            PANMSG *p;
-
-                            if(topmsg->keep)
-                            {
-                                for(p = topmsg; p->keep; p = p->next);
-                                p->prev->next = p->next;
-                                p->next->prev = p->prev;
-                                p->prev = topmsg->prev;
-                                p->next = topmsg;
-                                topmsg->prev->next = p;
-                                topmsg->prev = p;
-                            }
-                            else
-                                topmsg = topmsg->next;
-                        }
-#else
                             topmsg = topmsg->next;
-#endif
                     }
                     /* Go on to next available msg buffer */
                     curmsg = curmsg->next;
