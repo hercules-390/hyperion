@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.232  2008/08/08 06:25:22  bernard
+// Removed all OPTION_MSGHLD stuff
+//
 // Revision 1.231  2008/08/07 20:47:18  bernard
 // Removed variable msgnum. I am getting crazy about this variable.
 // It is now less complex to move message arround in the list.
@@ -307,6 +310,7 @@ typedef struct _PANMSG
 {
     struct _PANMSG*     next;
     struct _PANMSG*     prev;
+    int                 msgnum;
     char                msg[MSG_SIZE];
 #ifdef OPTION_MSGCLR
     unsigned int        keep:1;
@@ -448,12 +452,10 @@ static PANMSG* newest_msg()
 
 static int lines_scrolled()
 {
-    int i;
-    PANMSG *p;
-
     /* return # of lines 'up' from current line that we're scrolled. */
-    for(i = 0, p = topmsg; p != curmsg; p = p->next, i++);
-    return i;
+    if (topmsg->msgnum <= curmsg->msgnum)
+        return curmsg->msgnum - topmsg->msgnum;
+    return MAX_MSGS - (topmsg->msgnum - curmsg->msgnum);
 }
 
 static int visible_lines()
@@ -1579,6 +1581,7 @@ char    buf[1024];                      /* Buffer workarea           */
     {
         curmsg->next = curmsg + 1;
         curmsg->prev = curmsg - 1;
+        curmsg->msgnum = i;
         memset(curmsg->msg,SPACE,MSG_SIZE);
     }
 
