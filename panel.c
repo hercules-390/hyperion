@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.233  2008/08/09 01:44:13  fish
+// Put 'msgnum' back for efficiency.
+//
 // Revision 1.232  2008/08/08 06:25:22  bernard
 // Removed all OPTION_MSGHLD stuff
 //
@@ -2306,7 +2309,10 @@ FinishShutdown:
                     if (is_currline_visible()) {
                         if (lines_remaining() < 1)
                             topmsg = topmsg->next;
+                        /* Set the display update indicator */
+                        redraw_msgs = 1;
                     }
+
                     /* Go on to next available msg buffer */
                     curmsg = curmsg->next;
 
@@ -2320,9 +2326,6 @@ FinishShutdown:
 #ifdef OPTION_MSGCLR
                 read_cmd(curmsg);
 #endif
-
-                /* Set the display update indicator */
-                redraw_msgs = 1;
             }
 
         } // end while ( lmsndx < lmscnt && lmsndx < lmsmax )
