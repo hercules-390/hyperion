@@ -1,3 +1,4 @@
+13 Aug 2008 Fix bad guest IA after host interrupt during branch trace - Greg
 04 Aug 2008 DIAG308 function codes (still incomplete) - Roger Bowler
 02 Aug 2008 Implement SCP message colors - Bernard van der Helm
 29 Jul 2008 Fix buffer mgmt bug in hao_thread causing garbage - Fish

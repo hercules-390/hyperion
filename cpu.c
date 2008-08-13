@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.200  2008/04/11 14:28:15  bernard
+// Integrate regs->exrl into base Hercules code.
+//
 // Revision 1.199  2008/04/09 07:35:32  bernard
 // allign to Rogers terminal ;-)
 //
@@ -533,6 +536,7 @@ static char *pgmintname[] = {
             sie_ilc = realregs->guestregs->execflag ?
                       realregs->guestregs->exrl ? 6 : 4 : 2;
             realregs->guestregs->ip += 2;
+            realregs->guestregs->psw.IA += sie_ilc;
         }
     }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
