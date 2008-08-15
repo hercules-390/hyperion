@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.74  2008/07/17 07:42:15  fish
+// (extremely minor comment change only)
+//
 // Revision 1.73  2008/07/17 07:19:12  fish
 // Fix FCS (Frame Check Sequence) bug in LCS_Write function
 // and other minor bugs.
@@ -953,6 +956,18 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
             pCmdFrame = (PLCSCMDHDR)pLCSHDR;
 
+            // Trace received command frame...
+            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+            {
+                logmsg( _("HHCLC051I %4.4X: LCS_Write: cmd packet:\n"),
+                        pDEVBLK->devnum );
+                packet_trace( (BYTE*)pCmdFrame, iLength );
+            }
+
+            // FIXME: what is this all about? I'm not saying it's wrong,
+            // only that we need to document via comments the purpose of
+            // this test. What's it doing? Why ignore "initiator 1"? etc.
+            // PLEASE EXPLAIN! -- Fish
             if( pCmdFrame->bInitiator == 0x01 )
                 break;
 
@@ -1173,6 +1188,17 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
                   pLCSDEV->pDEVBLK[1]->devnum,
                   pLCSDEV->iMaxFrameBufferSize,
                   sizeof( pLCSDEV->bFrameBuffer ) );
+        pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
+    }
+
+    // Make sure it's not smaller than the compiled minimum size
+    if (pLCSDEV->iMaxFrameBufferSize < CTC_MIN_FRAME_BUFFER_SIZE)
+    {
+        logmsg( _("HHCLC054W %4.4X: LCS_Startup: Requested frame buffer size of 0x%4.4X "
+                  "smaller than compiled minimum size of 0x%4.4X; requested size ignored.\n"),
+                  pLCSDEV->pDEVBLK[1]->devnum,
+                  pLCSDEV->iMaxFrameBufferSize,
+                  CTC_MIN_FRAME_BUFFER_SIZE );
         pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
     }
 
