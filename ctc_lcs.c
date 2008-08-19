@@ -8,6 +8,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.75  2008/08/15 04:40:49  fish
+// Trace LCS Command Frame packets as they are received,
+// ensure iMaxFrameBufferSize greater than minimum allowed.
+//
 // Revision 1.74  2008/07/17 07:42:15  fish
 // (extremely minor comment change only)
 //
@@ -68,24 +72,78 @@
 #include "tt32api.h"
 #endif
 
+//-----------------------------------------------------------------------------
+// Debugging...
+
+//#define NO_LCS_OPTIMIZE     // #undef for Release, #define while testing
+
+#if !defined( DEBUG) && !defined( _DEBUG )  // only needed for Release builds
+  #ifdef NO_LCS_OPTIMIZE                    // for reliable breakpoints and instr stepping
+    #pragma optimize( "", off )             // disable optimizations for reliable breakpoints
+    #pragma warning( push )                 // save current settings
+    #pragma warning( disable: 4748 )        // C4748:  /GS can not ... because optimizations are disabled...
+  #endif // NO_LCS_OPTIMIZE
+#endif // !defined( DEBUG) && !defined( _DEBUG )
+
+#ifdef NO_LCS_OPTIMIZE
+
+  #undef  ASSERT
+  #undef  VERIFY
+
+  #ifdef _MSVC_
+
+    #define ASSERT(a) \
+      do \
+      { \
+        if (!(a)) \
+        { \
+          logmsg("HHCxx999W *** Assertion Failed! *** %s(%d); function: %s\n",__FILE__,__LINE__,__FUNCTION__); \
+          if (IsDebuggerPresent()) DebugBreak();   /* (break into debugger) */ \
+        } \
+      } \
+      while(0)
+
+  #else // ! _MSVC_
+
+    #define ASSERT(a) \
+      do \
+      { \
+        if (!(a)) \
+        { \
+          logmsg("HHCxx999W *** Assertion Failed! *** %s(%d)\n",__FILE__,__LINE__); \
+        } \
+      } \
+      while(0)
+
+  #endif // _MSVC_
+
+  #define VERIFY(a)   ASSERT((a))
+
+#endif // NO_LCS_OPTIMIZE
+
+//-----------------------------------------------------------------------------
 /* CCW Codes 0x03 & 0xC3 are immediate commands */
-static BYTE CTC_Immed_Commands[256]=
-{ 0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+static BYTE  CTC_Immed_Commands [256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, /* 00 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 10 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 20 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 30 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 40 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 50 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 60 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 70 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 80 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 90 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* A0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* B0 */
+   0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, /* C0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* D0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* E0 */
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  /* F0 */
+};
 
 // ====================================================================
 //                       Declarations
@@ -959,7 +1017,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             // Trace received command frame...
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
             {
-                logmsg( _("HHCLC051I %4.4X: LCS_Write: cmd packet:\n"),
+                logmsg( _("HHCLC051I %4.4X: Cmd Packet...\n"),
                         pDEVBLK->devnum );
                 packet_trace( (BYTE*)pCmdFrame, iLength );
             }
@@ -999,13 +1057,13 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
             case LCS_CMD_QIPASSIST:     // Query IP Assists
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    logmsg( _("HHCLC047I %4.4X: Query\n"),pDEVBLK->devnum);
+                    logmsg( _("HHCLC047I %4.4X: Query IP Assists\n"),pDEVBLK->devnum);
                 LCS_QueryIPAssists( pLCSDEV, pCmdFrame );
                 break;
 
             case LCS_CMD_LANSTAT:       // LAN Stats
                 if( pLCSDEV->pLCSBLK->fDebug )
-                    logmsg( _("HHCLC048I %4.4X: Stat\n"),pDEVBLK->devnum);
+                    logmsg( _("HHCLC048I %4.4X: Statistics\n"),pDEVBLK->devnum);
                 LCS_LanStats( pLCSDEV, pCmdFrame );
                 break;
 
@@ -1018,7 +1076,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             case LCS_CMD_DELIPM:        // Delete IP Multicast
             case LCS_CMD_GENSTAT:       // General Stats
             case LCS_CMD_LISTLAN:       // List LAN
-            case LCS_CMD_LISTLAN2:      // No Clue
+            case LCS_CMD_LISTLAN2:      // List LAN (another version)
             case LCS_CMD_TIMING:        // Timing request
             default:
                 LCS_DefaultCmdProc( pLCSDEV, pCmdFrame );
@@ -1161,6 +1219,9 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 {
     PLCSSTDFRM  pStdCmdReplyFrame;
     PLCSSTRTFRM pStartupCmdFrame;
+    PLCSPORT    pLCSPORT;
+
+    pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
 
     // Get a pointer to the next available reply frame
     pStdCmdReplyFrame = (PLCSSTDFRM)LCS_InitReplyFrame( pLCSDEV,
@@ -1202,6 +1263,17 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
         pLCSDEV->iMaxFrameBufferSize = sizeof(pLCSDEV->bFrameBuffer);
     }
 
+    VERIFY( TUNTAP_SetIPAddr( pLCSPORT->szNetDevName, "0.0.0.0" ) == 0 );
+    VERIFY( TUNTAP_SetMTU   ( pLCSPORT->szNetDevName,  "1500"   ) == 0 );
+
+#ifdef OPTION_TUNTAP_SETMACADDR
+    if (pLCSPORT->fLocalMAC)
+    {
+        VERIFY( TUNTAP_SetMACAddr( pLCSPORT->szNetDevName,
+                                   pLCSPORT->szMACAddress ) == 0 );
+    }
+#endif // OPTION_TUNTAP_SETMACADDR
+
     STORE_HW( pStdCmdReplyFrame->bLCSCmdHdr.hwReturnCode, 0x0000 );
 
     pLCSDEV->fStarted = 1;
@@ -1242,7 +1314,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     PLCSPORT    pLCSPORT;
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
     PLCSRTE     pLCSRTE;
-#endif
+#endif // OPTION_TUNTAP_DELADD_ROUTES
     PLCSSTDFRM  pStdCmdReplyFrame;
     int         nIFFlags;
 
@@ -1254,17 +1326,6 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // Configure the TAP interface if used
     if( pLCSPORT->fUsed && pLCSPORT->fCreated && !pLCSPORT->fStarted )
     {
-        VERIFY( TUNTAP_SetIPAddr( pLCSPORT->szNetDevName, "0.0.0.0" ) == 0 );
-        VERIFY( TUNTAP_SetMTU( pLCSPORT->szNetDevName, "1500" ) == 0 );
-
-        if( pLCSPORT->fLocalMAC )
-        {
-#ifdef OPTION_TUNTAP_SETMACADDR
-            VERIFY( TUNTAP_SetMACAddr( pLCSPORT->szNetDevName,
-                               pLCSPORT->szMACAddress ) == 0 );
-#endif
-        }
-
         nIFFlags =              // Interface flags
             0
             | IFF_UP            // (interface is being enabled)
@@ -1297,68 +1358,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
                              NULL,
                              RTF_UP ) == 0 );
         }
-#endif
-
-// FIXME: the following should probably be in 'hostopts.h'
-#if defined( WIN32 )
-
-        // FIXME: TunTap32 *does* support TCP/IP checksum offloading
-        // (for both inbound and outbound packets), but Microsoft's
-        // latest NDIS 6.0 release has broken it, so until I can get
-        // it straightened out we can't support it. Sorry! -- Fish
-
-        // The other assists however, TunTap32 does not yet support.
-
-        pLCSPORT->sIPAssistsSupported =
-            0
-//          | LCS_INBOUND_CHECKSUM_SUPPORT
-//          | LCS_OUTBOUND_CHECKSUM_SUPPORT
-//          | LCS_ARP_PROCESSING
-//          | LCS_IP_FRAG_REASSEMBLY
-//          | LCS_IP_FILTERING
-//          | LCS_IP_V6_SUPPORT
-//          | LCS_MULTICAST_SUPPORT
-            ;
-
-        pLCSPORT->sIPAssistsEnabled =
-            0
-//          | LCS_INBOUND_CHECKSUM_SUPPORT
-//          | LCS_OUTBOUND_CHECKSUM_SUPPORT
-//          | LCS_ARP_PROCESSING
-//          | LCS_IP_FRAG_REASSEMBLY
-//          | LCS_IP_FILTERING
-//          | LCS_IP_V6_SUPPORT
-//          | LCS_MULTICAST_SUPPORT
-            ;
-
-#else // !WIN32 (Linux, Apple, etc)
-
-        // Linux/Apple/etc 'tuntap' driver DOES support
-        // certain types of assists?? (task offloading)
-
-        pLCSPORT->sIPAssistsSupported =
-            0
-//          | LCS_INBOUND_CHECKSUM_SUPPORT
-//          | LCS_OUTBOUND_CHECKSUM_SUPPORT
-//          | LCS_ARP_PROCESSING
-            | LCS_IP_FRAG_REASSEMBLY
-//          | LCS_IP_FILTERING
-//          | LCS_IP_V6_SUPPORT
-            | LCS_MULTICAST_SUPPORT
-            ;
-
-        pLCSPORT->sIPAssistsEnabled =
-            0
-//          | LCS_INBOUND_CHECKSUM_SUPPORT
-//          | LCS_OUTBOUND_CHECKSUM_SUPPORT
-//          | LCS_ARP_PROCESSING
-            | LCS_IP_FRAG_REASSEMBLY
-//          | LCS_IP_FILTERING
-//          | LCS_IP_V6_SUPPORT
-            | LCS_MULTICAST_SUPPORT
-            ;
-
-#endif // WIN32
+#endif // OPTION_TUNTAP_DELADD_ROUTES
 
         obtain_lock( &pLCSPORT->EventLock );
         pLCSPORT->fStarted = 1;
@@ -1382,7 +1382,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
                          NULL,
                          RTF_UP | RTF_HOST ) == 0 );
     }
-#endif
+#endif // OPTION_TUNTAP_DELADD_ROUTES
 
     // Get a pointer to the next available reply frame
     pStdCmdReplyFrame = (PLCSSTDFRM)LCS_InitReplyFrame( pLCSDEV,
@@ -1407,7 +1407,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     PLCSSTDFRM  pStdCmdReplyFrame;
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
     PLCSRTE     pLCSRTE;
-#endif
+#endif // OPTION_TUNTAP_DELADD_ROUTES
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
 
@@ -1451,7 +1451,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
                          NULL,
                          RTF_UP ) == 0 );
     }
-#endif
+#endif // OPTION_TUNTAP_DELADD_ROUTES
 
     release_lock( &pLCSPORT->Lock );
 
@@ -1492,6 +1492,66 @@ static void  LCS_QueryIPAssists( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     // the 'hwOffset' field, is an exact copy of the LCSCMDHDR
     // that was passed to us...
 
+#if defined( WIN32 )
+
+    // FIXME: TunTap32 *does* support TCP/IP checksum offloading
+    // (for both inbound and outbound packets), but Microsoft's
+    // latest NDIS 6.0 release has broken it, so until I can get
+    // it straightened out we can't support it. Sorry! -- Fish
+
+    // The other assists however, TunTap32 does not yet support.
+
+    pLCSPORT->sIPAssistsSupported =
+        0
+//      | LCS_INBOUND_CHECKSUM_SUPPORT
+//      | LCS_OUTBOUND_CHECKSUM_SUPPORT
+//      | LCS_ARP_PROCESSING
+//      | LCS_IP_FRAG_REASSEMBLY
+//      | LCS_IP_FILTERING
+//      | LCS_IP_V6_SUPPORT
+//      | LCS_MULTICAST_SUPPORT
+        ;
+
+    pLCSPORT->sIPAssistsEnabled =
+        0
+//      | LCS_INBOUND_CHECKSUM_SUPPORT
+//      | LCS_OUTBOUND_CHECKSUM_SUPPORT
+//      | LCS_ARP_PROCESSING
+//      | LCS_IP_FRAG_REASSEMBLY
+//      | LCS_IP_FILTERING
+//      | LCS_IP_V6_SUPPORT
+//      | LCS_MULTICAST_SUPPORT
+        ;
+
+#else // !WIN32 (Linux, Apple, etc)
+
+    // Linux/Apple/etc 'tuntap' driver DOES support
+    // certain types of assists?? (task offloading)
+
+    pLCSPORT->sIPAssistsSupported =
+        0
+//      | LCS_INBOUND_CHECKSUM_SUPPORT
+//      | LCS_OUTBOUND_CHECKSUM_SUPPORT
+//      | LCS_ARP_PROCESSING
+        | LCS_IP_FRAG_REASSEMBLY
+//      | LCS_IP_FILTERING
+//      | LCS_IP_V6_SUPPORT
+        | LCS_MULTICAST_SUPPORT
+        ;
+
+    pLCSPORT->sIPAssistsEnabled =
+        0
+//      | LCS_INBOUND_CHECKSUM_SUPPORT
+//      | LCS_OUTBOUND_CHECKSUM_SUPPORT
+//      | LCS_ARP_PROCESSING
+        | LCS_IP_FRAG_REASSEMBLY
+//      | LCS_IP_FILTERING
+//      | LCS_IP_V6_SUPPORT
+        | LCS_MULTICAST_SUPPORT
+        ;
+
+#endif // WIN32
+
     STORE_HW( pStdCmdReplyFrame->hwNumIPPairs,         0x0000 );
     STORE_HW( pStdCmdReplyFrame->hwIPAssistsSupported, pLCSPORT->sIPAssistsSupported );
     STORE_HW( pStdCmdReplyFrame->hwIPAssistsEnabled,   pLCSPORT->sIPAssistsEnabled   );
@@ -1508,6 +1568,8 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     PLCSLSTFRM   pStdCmdReplyFrame;
     int          fd;
     struct ifreq ifr;
+    BYTE*        pPortMAC;
+    BYTE*        pIFaceMAC;
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
 
@@ -1529,6 +1591,8 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
     {
         logmsg( _("HHCLC007E Error in call to socket: %s.\n"),
                 strerror( HSO_errno ) );
+        // FIXME: we should probably be returning a non-zero hwReturnCode
+        // STORE_HW( pStdCmdReplyFrame->bLCSCmdHdr.hwReturnCode, 0x0001 );
         return;
     }
 
@@ -1536,21 +1600,51 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     strcpy( ifr.ifr_name, pLCSPORT->szNetDevName );
 
+    pPortMAC  = (BYTE*) &pLCSPORT->MAC_Address;
+
     /* Not all systems can return the hardware address of an interface. */
 #if defined(SIOCGIFHWADDR)
+
     if( TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&ifr ) != 0  )
     {
         logmsg( _("HHCLC008E ioctl error on device %s: %s.\n"),
                 pLCSPORT->szNetDevName, strerror( errno ) );
-
+        // FIXME: we should probably be returning a non-zero hwReturnCode
+        // STORE_HW( pStdCmdReplyFrame->bLCSCmdHdr.hwReturnCode, 0x0002 );
         return;
     }
+    pIFaceMAC  = (BYTE*) ifr.ifr_hwaddr.sa_data;
 
-    memcpy( pStdCmdReplyFrame->MAC_Address, ifr.ifr_hwaddr.sa_data, IFHWADDRLEN );
-// ZZ pStdCmdReplyFrame->MAC_Address[0] = pStdCmdReplyFrame->MAC_Address[0] ^ 0xff;
-#endif /* defined(SIOCGIFHWADDR) */
+#else // !defined(SIOCGIFHWADDR)
 
-    // FIXME: Really should read /proc/net/dev and report the stats
+    pIFaceMAC  = pPortMAC;
+
+#endif // defined(SIOCGIFHWADDR)
+
+    /* Report what MAC address we will really be using */
+    logmsg( _("HHCLC055I %s using MAC %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X\n"),
+            pLCSPORT->szNetDevName, *(pIFaceMAC+0),*(pIFaceMAC+1),
+                                    *(pIFaceMAC+2),*(pIFaceMAC+3),
+                                    *(pIFaceMAC+4),*(pIFaceMAC+5));
+
+    /* Issue warning if different from specified value */
+    if (memcmp( pPortMAC, pIFaceMAC, IFHWADDRLEN ) != 0)
+    {
+        logmsg( _("HHCLC056W %s NOT using MAC %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X\n"),
+                pLCSPORT->szNetDevName, *(pPortMAC+0),*(pPortMAC+1),
+                                        *(pPortMAC+2),*(pPortMAC+3),
+                                        *(pPortMAC+4),*(pPortMAC+5));
+
+        memcpy( pPortMAC, pIFaceMAC, IFHWADDRLEN );
+
+        snprintf(pLCSPORT->szMACAddress, sizeof(pLCSPORT->szMACAddress),
+            "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X", *(pPortMAC+0), *(pPortMAC+1),
+            *(pPortMAC+2), *(pPortMAC+3), *(pPortMAC+4), *(pPortMAC+5));
+    }
+
+    memcpy( pStdCmdReplyFrame->MAC_Address, pIFaceMAC, IFHWADDRLEN );
+
+    // FIXME: Really should read /proc/net/dev to retrieve actual stats
 }
 
 // ====================================================================
@@ -2659,5 +2753,17 @@ HDL_DEVICE_SECTION;
 }
 END_DEVICE_SECTION
 #endif
+
+//-----------------------------------------------------------------------------
+// Debugging...
+
+#if !defined( DEBUG) && !defined( _DEBUG )  // only needed for Release builds
+  #ifdef NO_LCS_OPTIMIZE                    // for reliable breakpoints and instr stepping
+    #pragma warning( pop )                  // restore previous settings
+    #pragma optimize( "", on )              // restore previous settings
+  #endif // NO_LCS_OPTIMIZE
+#endif // !defined( DEBUG) && !defined( _DEBUG )
+
+//-----------------------------------------------------------------------------
 
 #endif /* !defined(__SOLARIS__)  jbs 10/2007 10/2007 */

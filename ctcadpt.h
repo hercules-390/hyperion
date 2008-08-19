@@ -8,6 +8,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.26  2008/07/17 07:19:12  fish
+// Fix FCS (Frame Check Sequence) bug in LCS_Write function
+// and other minor bugs.
+//
 // Revision 1.24  2008/07/17 03:30:40  fish
 // CTC/LCS cosmetic-only changes -- part 1
 // (no actual functionality was changed!)
@@ -497,7 +501,7 @@ struct  _LCSBLK
     char*       pszOATFilename;           // OAT Filename
     char*       pszIPAddress;             // IP Address
     char*       pszMACAddress;            // MAC Address (string)
-    MAC         bMAC_Address;             // MAC Address (binary)
+    MAC         MAC_Address;              // MAC Address (binary)
 
     u_int       fDebug:1;
 
@@ -568,10 +572,10 @@ struct _LCSCMDHDR    // All LCS *COMMAND* Frames start with this header
 #define  LCS_CMD_LISTLAN        0x06        // List LAN
 #define  LCS_CMD_STARTUP        0x07        // Start Host
 #define  LCS_CMD_SHUTDOWN       0x08        // Shutdown Host
-#define  LCS_CMD_LISTLAN2       0x0B        // Another version
-#define  LCS_CMD_QIPASSIST      0xB2        // Multicast
-#define  LCS_CMD_SETIPM         0xB4        // Set IPM
-#define  LCS_CMD_DELIPM         0xB5        // Delete? IPM
+#define  LCS_CMD_LISTLAN2       0x0B        // List LAN (another version)
+#define  LCS_CMD_QIPASSIST      0xB2        // Query IP Assists
+#define  LCS_CMD_SETIPM         0xB4        // Set IP Multicast
+#define  LCS_CMD_DELIPM         0xB5        // Delete IP Multicast
 
 
 // --------------------------------------------------------------------
@@ -632,7 +636,7 @@ struct  _LCSQIPFRM
 
 
 // --------------------------------------------------------------------
-// LCS LAN Status Command Frame                 (network byte order)
+// LCS LAN Statistics Command Frame             (network byte order)
 // --------------------------------------------------------------------
 
 struct  _LCSLSTFRM
@@ -640,7 +644,7 @@ struct  _LCSLSTFRM
     LCSCMDHDR   bLCSCmdHdr;             // LCS Command Frame header
 
     BYTE        _unused1[10];
-    MAC         MAC_Address;
+    MAC         MAC_Address;            // MAC Address of Adapter
     FWORD       fwPacketsDeblocked;
     FWORD       fwPacketsBlocked;
     FWORD       fwTX_Packets;
@@ -654,13 +658,13 @@ struct  _LCSLSTFRM
 
 
 // --------------------------------------------------------------------
-// LCS IPM Command Frame                        (network byte order)
+// LCS Set IP Multicast Command Frame           (network byte order)
 // --------------------------------------------------------------------
 
 struct  _LCSIPMPAIR
 {
     U32         IP_Addr;
-    MAC         MAC_Address;
+    MAC         MAC_Address;            // MAC Address of Adapter
     BYTE        _reserved[2];
 } ATTRIBUTE_PACKED;
 
