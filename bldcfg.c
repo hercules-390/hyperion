@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.85  2008/08/02 18:31:28  bernard
+// type in PGMPRDOS message
+//
 // Revision 1.84  2008/08/02 13:25:00  bernard
 // Put PGMPRDOS message in red.
 //
@@ -2485,6 +2488,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     initialize_lock (&sysblk.mainlock);
     sysblk.mainowner = LOCK_OWNER_NONE;
     initialize_lock (&sysblk.intlock);
+    initialize_lock (&sysblk.iointqlk);
     sysblk.intowner = LOCK_OWNER_NONE;
     initialize_lock (&sysblk.sigplock);
     initialize_detach_attr (&sysblk.detattr);

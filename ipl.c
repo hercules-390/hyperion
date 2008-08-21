@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.104  2007/12/10 23:12:02  gsmith
+// Tweaks to OPTION_MIPS_COUNTING processing
+//
 // Revision 1.103  2007/08/26 21:04:45  rbowler
 // Modify PSW fields by psw command (part 2)
 //
@@ -271,10 +274,12 @@ BYTE    chanstat;                       /* IPL device channel status */
     OBTAIN_INTLOCK(NULL);
 
     /* Clear the interrupt pending and device busy conditions */
-    DEQUEUE_IO_INTERRUPT(&dev->ioint);
-    DEQUEUE_IO_INTERRUPT(&dev->pciioint);
-    DEQUEUE_IO_INTERRUPT(&dev->attnioint);
-    dev->busy = dev->pending = dev->pcipending = dev->attnpending = 0;
+    obtain_lock (&sysblk.iointqlk);
+    DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
+    DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint);
+    DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->attnioint);
+    release_lock(&sysblk.iointqlk);
+    dev->busy = 0;
     dev->scsw.flag2 = 0;
     dev->scsw.flag3 = 0;
 

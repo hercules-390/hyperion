@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.90  2008/07/24 14:44:14  bernard
+// cmdtgt version 2
+//
 // Revision 1.89  2008/07/20 12:11:11  bernard
 // OPTION_CMDTGT
 //
@@ -536,6 +539,7 @@ struct SYSBLK {
 
         LOCK    mainlock;               /* Main storage lock         */
         LOCK    intlock;                /* Interrupt lock            */
+        LOCK    iointqlk;               /* I/O Interrupt Queue lock      */
         LOCK    sigplock;               /* Signal processor lock     */
         ATTR    detattr;                /* Detached thread attribute */
         ATTR    joinattr;               /* Joinable thread attribute */

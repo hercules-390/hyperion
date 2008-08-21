@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.23  2008/07/16 11:01:41  fish
+// Create "sizeof_member" macro
+//
 // Revision 1.22  2008/06/26 14:00:06  rbowler
 // CAP_SYS_NICE undeclared  when -DNO_SETUID
 //
@@ -143,6 +146,9 @@
 #endif
 #ifndef   sizeof_member
   #define sizeof_member(_struct,_member) sizeof(((_struct*)0)->_member)
+#endif
+#ifndef   offsetof
+  #define offsetof(_struct,_member)   (size_t)&(((_struct*)0)->_member)
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -482,7 +488,16 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
 /* Macros to queue/dequeue a device on the I/O interrupt queue...    */
 /*-------------------------------------------------------------------*/
 
+/* NOTE: sysblk.iointqlk ALWAYS needed to examine sysblk.iointq */
+
 #define QUEUE_IO_INTERRUPT(_io) \
+ do { \
+   obtain_lock(&sysblk.iointqlk); \
+   QUEUE_IO_INTERRUPT_QLOCKED((_io)); \
+   release_lock(&sysblk.iointqlk); \
+ } while (0)
+
+#define QUEUE_IO_INTERRUPT_QLOCKED(_io) \
  do { \
    IOINT *prev; \
    for (prev = (IOINT *)&sysblk.iointq; prev->next != NULL; prev = prev->next) \
@@ -493,20 +508,50 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
      prev->next = (_io); \
      (_io)->priority = (_io)->dev->priority; \
    } \
-   ON_IC_IOPENDING; \
-   WAKEUP_CPU_MASK (sysblk.waiting_mask); \
+        if ((_io)->pending)     (_io)->dev->pending     = 1; \
+   else if ((_io)->pcipending)  (_io)->dev->pcipending  = 1; \
+   else if ((_io)->attnpending) (_io)->dev->attnpending = 1; \
  } while (0)
 
 #define DEQUEUE_IO_INTERRUPT(_io) \
+ do { \
+   obtain_lock(&sysblk.iointqlk); \
+   DEQUEUE_IO_INTERRUPT_QLOCKED((_io)); \
+   release_lock(&sysblk.iointqlk); \
+ } while (0)
+
+#define DEQUEUE_IO_INTERRUPT_QLOCKED(_io) \
  do { \
    IOINT *prev; \
    for (prev = (IOINT *)&sysblk.iointq; prev->next != NULL; prev = prev->next) \
      if (prev->next == (_io)) { \
        prev->next = (_io)->next; \
+            if ((_io)->pending)     (_io)->dev->pending     = 0; \
+       else if ((_io)->pcipending)  (_io)->dev->pcipending  = 0; \
+       else if ((_io)->attnpending) (_io)->dev->attnpending = 0; \
        break; \
      } \
+ } while (0)
+
+/* NOTE: sysblk.iointqlk needed to examine sysblk.iointq,
+   sysblk.intlock (which MUST be held before calling these
+   macros) needed in order to set/reset IC_IOPENDING flag */
+
+#define UPDATE_IC_IOPENDING() \
+ do { \
+   obtain_lock(&sysblk.iointqlk); \
+   UPDATE_IC_IOPENDING_QLOCKED(); \
+   release_lock(&sysblk.iointqlk); \
+ } while (0)
+
+#define UPDATE_IC_IOPENDING_QLOCKED() \
+ do { \
    if (sysblk.iointq == NULL) \
      OFF_IC_IOPENDING; \
+   else { \
+     ON_IC_IOPENDING; \
+     WAKEUP_CPU_MASK (sysblk.waiting_mask); \
+   } \
  } while (0)
 
 /*-------------------------------------------------------------------*/

@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.108  2008/04/10 10:28:03  bernard
+// Allign instruction executing to real instructions (12 unrolled instead of 8)
+//
 // Revision 1.107  2008/04/09 09:03:58  bernard
 // EXRL instruction implementation
 //
@@ -1283,7 +1286,7 @@ int     zone;                           /* Zone number               */
         /* Obtain the interrupt lock */
         OBTAIN_INTLOCK(regs);
 
-        /* Test and clear pending interrupt, set condition code */
+        /* Test (but don't clear!) pending interrupt, and set condition code */
         if( ARCH_DEP(present_zone_io_interrupt) (&ioid, &ioparm,
                                                        &iointid, zone) )
 
