@@ -28,6 +28,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.234  2008/08/09 01:53:29  fish
+// Another minor panel.c performance tweak: don't bother to repaint
+// the screen when new messages arrive if we're "scrolled back".
+//
 // Revision 1.233  2008/08/09 01:44:13  fish
 // Put 'msgnum' back for efficiency.
 //
@@ -526,8 +530,8 @@ static void get_dim (int *y, int *x)
         *y = PANEL_MAX_ROWS;
     if (*x > PANEL_MAX_COLS)
         *x = PANEL_MAX_COLS;
-#if defined(WIN32)
-    /* If running from a windows or cygwin command prompt we do
+#if defined(WIN32) && !defined( _MSVC_ )
+   /* If running from a cygwin command prompt we do
      * better with one less row.
      */
     if (!cons_term || strcmp(cons_term, "xterm"))
@@ -558,7 +562,7 @@ static void draw_text (char *text)
      || cur_cons_col < 1 || cur_cons_col > cons_cols)
         return;
     len = strlen(text);
-    if (cur_cons_col + len <= cons_cols)
+    if ((cur_cons_col + len - 1) <= cons_cols)
         fprintf (confp, "%s", text);
     else
     {
