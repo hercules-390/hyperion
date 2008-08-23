@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.9  2008/07/30 15:29:04  bernard
+// Strip herc prefix before checking the message.
+//
 // Revision 1.8  2008/07/30 06:25:27  fish
 // use 'if' statement instead of 'min' macro to fix Linux build error,
 // and remove redundant buffer initialization already done by hao_initialize.
@@ -80,7 +83,7 @@
 #define HHCA0026E "HHCA0026E Command not added, may cause dead locks\n"
 
 #define HAO_WKLEN    256    /* (maximum message length able to tolerate) */
-#define HAO_MAXRULE  10     /* (purely arbitrary and easily increasable) */
+#define HAO_MAXRULE  64     /* (purely arbitrary and easily increasable) */
 
 /*---------------------------------------------------------------------------*/
 /* local variables                                                           */
