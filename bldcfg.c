@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.86  2008/08/21 18:34:45  fish
+// Fix i/o-interrupt-queue race condition
+//
 // Revision 1.85  2008/08/02 18:31:28  bernard
 // type in PGMPRDOS message
 //
@@ -2753,12 +2756,13 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 
     if (sysblk.pgmprdos == PGM_PRD_OS_LICENSED)
     {
-        logmsg(_("\n"
-                 KEEPMSG "HHCCF039W PGMPRDOS LICENSED specified.\n"
-                 KEEPMSG "          Licensed program product operating systems are enabled.\n"
-                 KEEPMSG "          You are responsible for meeting all conditions of your\n"
-                 KEEPMSG "          software licenses.\n"
-                 "\n"));
+        logmsg(_("\n\n"
+                 KEEPMSG "HHCCF039W                  PGMPRDOS LICENSED specified.\n"
+                         "\n"
+                 KEEPMSG "                Licensed program product operating systems are enabled.\n"
+                 KEEPMSG "                You are responsible for meeting all conditions of your\n"
+                 KEEPMSG "                                software licenses.\n"
+                 "\n\n"));
     }
 
 #ifdef _FEATURE_CPU_RECONFIG
