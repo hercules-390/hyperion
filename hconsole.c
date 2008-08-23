@@ -8,6 +8,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.13  2008/07/10 18:31:33  fish
+// 1) Add support for Ctrl+Home and Ctrl+End extended control sequences, and
+// 2)  ignore other unsupported extended control sequences.
+//
 // Revision 1.12  2008/07/08 13:48:40  fish
 // Ctrl + uparrow / downarrow ==> scroll up/down one line
 //
@@ -35,8 +39,9 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 // 'save_and_set' = 1 --> just what it says; 0 --> restore from saved value.
 
-static DWORD g_dwConsoleMode  = 0;   // (saved value so we can later restore it)
-static WORD  g_wDefaultAttrib = 0;   // (saved value so we can later restore it)
+static DWORD g_dwConsoleInputMode  = 0;     // (saved value so we can later restore it)
+static DWORD g_dwConsoleOutputMode = 0;     // (saved value so we can later restore it)
+static WORD  g_wDefaultAttrib      = 0;     // (saved value so we can later restore it)
 
 static WORD default_FG_color() { return  g_wDefaultAttrib       & 0x0F; }
 static WORD default_BG_color() { return (g_wDefaultAttrib >> 4) & 0x0F; }
@@ -45,7 +50,8 @@ int set_or_reset_console_mode( int keybrd_fd, short save_and_set )
 {
     CONSOLE_SCREEN_BUFFER_INFO  csbi;
     HANDLE  hStdIn, hStdErr;
-    DWORD   dwNewMode;
+    DWORD   dwNewInputMode;
+    DWORD   dwNewOutputMode;
 
     if ( ! _isatty( keybrd_fd ) )
     {
@@ -61,18 +67,22 @@ int set_or_reset_console_mode( int keybrd_fd, short save_and_set )
 
     if ( save_and_set )
     {
-        VERIFY( GetConsoleMode( hStdIn, &g_dwConsoleMode ) );
+        VERIFY( GetConsoleMode( hStdIn,  &g_dwConsoleInputMode  ) );
+        VERIFY( GetConsoleMode( hStdErr, &g_dwConsoleOutputMode ) );
         VERIFY( GetConsoleScreenBufferInfo( hStdErr, &csbi ) );
         g_wDefaultAttrib = csbi.wAttributes;
-        dwNewMode  = 0;
+        dwNewInputMode  = 0;
+        dwNewOutputMode = 0;
     }
     else // (restore/reset)
     {
         VERIFY( SetConsoleTextAttribute( hStdErr, g_wDefaultAttrib ) );
-        dwNewMode = g_dwConsoleMode;
+        dwNewInputMode  = g_dwConsoleInputMode;
+        dwNewOutputMode = g_dwConsoleOutputMode;
     }
 
-    VERIFY( SetConsoleMode( hStdIn, dwNewMode ) );
+    VERIFY( SetConsoleMode( hStdIn,  dwNewInputMode  ) );
+    VERIFY( SetConsoleMode( hStdErr, dwNewOutputMode ) );
 
     return 0;
 }
