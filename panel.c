@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.235  2008/08/23 11:58:07  fish
+// Fix line-wrap issue MSVC builds
+//
 // Revision 1.234  2008/08/09 01:53:29  fish
 // Another minor panel.c performance tweak: don't bother to repaint
 // the screen when new messages arrive if we're "scrolled back".
@@ -320,9 +323,10 @@ typedef struct _PANMSG
     int                 msgnum;
     char                msg[MSG_SIZE];
 #ifdef OPTION_MSGCLR
-    unsigned int        keep:1;
-    short               fg;
     short               bg;
+    short               fg;
+    unsigned int        keep:1;
+    struct timeval      durability;
 #endif
 }
 PANMSG;
@@ -330,6 +334,9 @@ PANMSG;
 static PANMSG*  msgbuf;         /* Circular message buffer */
 static PANMSG*  topmsg;         /* message at top of screen */
 static PANMSG*  curmsg;         /* newest message */
+#ifdef OPTION_MSGHLD
+static PANMSG*  oldmsg;         /* oldest message */
+#endif // OPTION_MSGHLD
 static int wrapped = 0;         /* wrapped-around flag */
 
 static char *lmsbuf = NULL;
@@ -340,6 +347,94 @@ static int   lmsmax = LOG_DEFSIZE/2;
 static int   keybfd = -1;               /* Keyboard file descriptor  */
 
 static REGS  copyregs, copysieregs;     /* Copied regs               */
+
+#ifdef OPTION_MSGHLD
+/*-------------------------------------------------------------------*/
+/* check msgbuf integrity (for debugging purposes only)              */
+/*-------------------------------------------------------------------*/
+void check_msgbuf(void)
+{
+  int i;
+  PANMSG *p;
+
+  p = &msgbuf[0];
+  for(i = 0; i < MAX_MSGS; i++)
+  {
+    if(p->msgnum)
+    {
+      if(p->msgnum - p->prev->msgnum != 1)
+        logmsg ("msg %d has predecessor %d?\n", p->msgnum, p->prev->msgnum);
+    }
+    else
+    {
+      if(p->prev->msgnum != MAX_MSGS - 1)
+        logmsg ("msg %d has predecessor %d?\n", p->msgnum, p->prev->msgnum);
+    }
+    if(p->prev->next != p || p->next->prev != p)
+      logmsg ("linkage not correct?\n");
+    p = p->next;
+  }
+}
+
+/*-------------------------------------------------------------------*/
+/* release messages after a defined period                           */
+/*-------------------------------------------------------------------*/
+void release_msgs(void)
+{
+  struct timeval now;
+  PANMSG *p;
+
+  if(topmsg->keep)
+  {
+    gettimeofday(&now, NULL);
+    for(p = topmsg; p != curmsg->next && p->keep; p = p->next)
+    {
+      if(p->durability.tv_sec < now.tv_sec)
+        p->keep = 0;
+    }
+  } 
+}
+
+/*-------------------------------------------------------------------*/
+/* Move block of messages                                            */
+/*-------------------------------------------------------------------*/
+void move_msgs(PANMSG *start, PANMSG *end, PANMSG *before, int up)
+{
+  PANMSG *p;
+  PANMSG *q;
+
+  /* determine start end of msgnum repairs */
+  if(up)
+  {
+    p = start;
+    q = end->next;
+  }
+  else
+  {
+    p = start->prev;
+    q = end;
+  }
+
+  /* delete block messages */
+  start->prev->next = end->next;
+  end->next->prev = start->prev;
+
+  /* insert */
+  start->prev = before->prev;
+  before->prev->next = start;
+  end->next = before;
+  before->prev = end;
+
+  /* repair msgnum list, keep Fish happy ;-) */
+  while(p != q->next)
+  {
+    p->msgnum = p->prev->msgnum + 1;
+    if(p->msgnum == MAX_MSGS)
+      p->msgnum = 0;
+    p = p->next;
+  }
+}
+#endif // OPTION_MSGHLD
 
 #ifdef OPTION_MSGCLR
 /*-------------------------------------------------------------------*/
@@ -416,6 +511,8 @@ void read_cmd(PANMSG *p)
       else if(!strncasecmp(&p->msg[i], "keep", 4))
       {
         p->keep = 1;
+        gettimeofday(&p->durability, NULL);
+        p->durability.tv_sec += 120; // stick for 2 minutes on screen
         i += 4; // skip keep
       }
       else if(!strncasecmp(&p->msg[i], "release", 7))
@@ -449,7 +546,11 @@ void read_cmd(PANMSG *p)
 
 static PANMSG* oldest_msg()
 {
+#ifdef OPTION_MSGHLD
+    return (wrapped) ? curmsg->next : oldmsg;
+#else
     return (wrapped) ? curmsg->next : msgbuf;
+#endif // OPTION_MSGHLD
 }
 
 static PANMSG* newest_msg()
@@ -482,18 +583,91 @@ static int lines_remaining()
 
 static void scroll_up_lines( int numlines )
 {
+#ifdef OPTION_MSGHLD
+  int i;
+  PANMSG *start;
+  PANMSG *end;
+
+  if(topmsg == oldest_msg())
+    return;
+  start = topmsg;
+  end = topmsg;
+  if(start->keep)
+    for(end = start; end != curmsg && end->next->keep; end = end->next);
+  for(i = numlines; i && topmsg != oldest_msg(); i--)
+    topmsg = topmsg->prev;
+  if(start->keep)
+  {
+    move_msgs(start, end, topmsg, 1);
+    if(topmsg == oldest_msg())
+      oldmsg = start;
+    topmsg = start;
+  }
+#else
     int i; for (i=0; i < numlines && topmsg != oldest_msg(); topmsg = topmsg->prev, i++);
+#endif // OPTION_MSGHLD
 }
 
 static void scroll_down_lines( int numlines )
 {
+#ifdef OPTION_MSGHLD
+  int i;
+  PANMSG *p;
+  PANMSG *q;
+  PANMSG *start;
+  PANMSG *end;
+
+  i = numlines;
+  start = topmsg;
+  end = topmsg;
+  if(start->keep)
+  {
+     for(end = start; end != curmsg && end->next->keep; end = end->next)
+       i--;
+     if(end == curmsg)
+       return;
+  }
+  p = end->next;
+  while(i > 0)
+  {
+    if(p->keep)
+    {
+      q = p;
+      p = p->next;
+      if(end)
+      {
+        move_msgs(q, q, end->next, 1);
+        end = q;
+      }
+      else
+      {
+        move_msgs(q, q, topmsg, 1);
+        topmsg = q;
+        end = q;
+      }
+    }
+    else
+      p = p->next;
+    i--;
+  }
+  for(i = numlines; i && topmsg != curmsg; i--)
+    topmsg = topmsg->next;
+  if(start->keep)
+  {
+    if(start == oldest_msg())
+      oldmsg = end->next;
+    move_msgs(start, end, topmsg, 0);
+    topmsg = start;
+  }
+#else
     int i; for (i=0; i < numlines && topmsg != newest_msg(); topmsg = topmsg->next, i++);
+#endif // OPTION_MSGHLD
 }
 
 static void page_up        () { scroll_up_lines  ( NUM_LINES - 1 ); }
 static void page_down      () { scroll_down_lines( NUM_LINES - 1 ); }
-static void full_page_up   () { scroll_up_lines  ( NUM_LINES - 0 ); }
-static void full_page_down () { scroll_down_lines( NUM_LINES - 0 ); }
+//static void full_page_up   () { scroll_up_lines  ( NUM_LINES - 0 ); }
+//static void full_page_down () { scroll_down_lines( NUM_LINES - 0 ); }
 
 static void scroll_to_top_line ()
 {
@@ -1598,6 +1772,9 @@ char    buf[1024];                      /* Buffer workarea           */
 
     /* Indicate "first-time" state */
     curmsg = topmsg = NULL;
+#ifdef OPTION_MSGHLD
+    oldmsg = NULL;
+#endif
     wrapped = 0;
 
     /* Set screen output stream to NON-buffered */
@@ -2308,11 +2485,30 @@ FinishShutdown:
                 /* First-time here? */
                 if (curmsg == NULL) {
                     curmsg = topmsg = msgbuf;
+#ifdef OPTION_MSGHLD
+                    oldmsg = msgbuf;
+#endif
                 } else {
                     /* Perform autoscroll if needed */
                     if (is_currline_visible()) {
                         if (lines_remaining() < 1)
+#ifdef OPTION_MSGHLD
+                        {
+                            PANMSG *p;
+
+                            release_msgs();
+                            if (topmsg->keep)
+                            {
+                                for (p = topmsg; p != curmsg && p->keep; p = p->next);
+                                if (!p->keep)
+                                    move_msgs(p, p, topmsg, 1);
+                            }
+                            else
+                                topmsg = topmsg->next;
+                        }
+#else
                             topmsg = topmsg->next;
+#endif // OPTION_MSGHLD
                         /* Set the display update indicator */
                         redraw_msgs = 1;
                     }
