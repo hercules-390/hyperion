@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.237  2008/08/23 12:44:54  bernard
+// Also release messages when scrolling up or down
+//
 // Revision 1.236  2008/08/23 12:35:03  bernard
 // OPTION_MSGHLD Sticky messages
 //
@@ -648,6 +651,7 @@ static void scroll_down_lines( int numlines )
       {
         move_msgs(q, q, topmsg, 1);
         topmsg = q;
+        start = q;
         end = q;
       }
     }
