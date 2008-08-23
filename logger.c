@@ -14,6 +14,9 @@
 /* for isatty()                                                      */
 
 // $Log$
+// Revision 1.49  2007/06/23 00:04:14  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.48  2007/02/27 21:59:32  kleonard
 // PR# misc/87 startup messages fix completion
 //
@@ -309,17 +312,42 @@ int bytes_read;
             }
         }
 
+        /* Write log data to hardcopy file */
         if (logger_hrdcpy)
-#ifndef OPTION_TIMESTAMP_LOGFILE
-            logger_logfile_write( logger_buffer + logger_currmsg, bytes_read );
-#else
+#if !defined( OPTION_TIMESTAMP_LOGFILE )
         {
+            char* pLeft2 = logger_buffer + logger_currmsg;
+            int   nLeft2 = bytes_read;
+#if defined( OPTION_MSGCLR )
+            /* Remove "<pnl,..." color string if it exists */
+            if (1
+                && nLeft2 > 5
+                && strncasecmp( pLeft2, "<pnl", 4 ) == 0
+                && (pLeft2 = memchr( pLeft2+4, '>', nLeft2-4 )) != NULL
+            )
+            {
+                pLeft2++;
+                nLeft2 -= (pLeft2 - (logger_buffer + logger_currmsg));
+            }
+            else
+            {
+                pLeft2 = logger_buffer + logger_currmsg;
+                nLeft2 = bytes_read;
+            }
+#endif // defined( OPTION_MSGCLR )
+
+            logger_logfile_write( pLeft2, nLeft2 );
+        }
+#else // defined( OPTION_TIMESTAMP_LOGFILE )
+        {
+            /* Need to prefix each line with a timestamp. */
+
             static int needstamp = 1;
             char*  pLeft  = logger_buffer + logger_currmsg;
             int    nLeft  = bytes_read;
             char*  pRight = NULL;
             int    nRight = 0;
-            char*  pNL    = NULL;
+            char*  pNL    = NULL;   /* (pointer to NEWLINE character) */
 
             if (needstamp)
             {
@@ -333,7 +361,34 @@ int bytes_read;
                 nRight  = nLeft - (pRight - pLeft);
                 nLeft  -= nRight;
 
+#if defined( OPTION_MSGCLR )
+                /* Remove "<pnl...>" color string if it exists */
+                {
+                    char* pLeft2 = pLeft;
+                    int   nLeft2 = nLeft;
+
+                    if (1
+                        && nLeft > 5
+                        && strncasecmp( pLeft, "<pnl", 4 ) == 0
+                        && (pLeft2 = memchr( pLeft+4, '>', nLeft-4 )) != NULL
+                    )
+                    {
+                        pLeft2++;
+                        nLeft2 -= (pLeft2 - pLeft);
+                    }
+                    else
+                    {
+                        pLeft2 = pLeft;
+                        nLeft2 = nLeft;
+                    }
+
+                    logger_logfile_write( pLeft2, nLeft2 );
+                }
+#else // !defined( OPTION_MSGCLR )
+
                 logger_logfile_write( pLeft, nLeft );
+
+#endif // defined( OPTION_MSGCLR )
 
                 pLeft = pRight;
                 nLeft = nRight;
@@ -350,8 +405,9 @@ int bytes_read;
             if (nLeft)
                 logger_logfile_write( pLeft, nLeft );
         }
-#endif
+#endif // !defined( OPTION_TIMESTAMP_LOGFILE )
 
+        /* Increment buffer index to next available position */
         logger_currmsg += bytes_read;
         if(logger_currmsg >= logger_bufsize)
         {
@@ -359,10 +415,9 @@ int bytes_read;
             logger_wrapped = 1;
         }
 
+        /* Notify all interested parties new log data is available */
         obtain_lock(&logger_lock);
-
         broadcast_condition(&logger_cond);
-
         release_lock(&logger_lock);
     }
 
