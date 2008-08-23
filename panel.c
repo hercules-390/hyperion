@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.238  2008/08/23 13:27:23  bernard
+// Error in scroll_down_lines
+//
 // Revision 1.237  2008/08/23 12:44:54  bernard
 // Also release messages when scrolling up or down
 //
@@ -625,9 +628,11 @@ static void scroll_down_lines( int numlines )
   PANMSG *end;
 
   release_msgs();
+  if(topmsg == curmsg)
+    return;
   i = numlines;
   start = topmsg;
-  end = topmsg;
+  end = NULL;
   if(start->keep)
   {
      for(end = start; end != curmsg && end->next->keep; end = end->next)
@@ -635,13 +640,22 @@ static void scroll_down_lines( int numlines )
      if(end == curmsg)
        return;
   }
-  p = end->next;
-  while(i > 0)
+  if(end)
+    p = end->next;
+  else
+    p = topmsg->next;
+  while(i > 0 && p != curmsg)
   {
     if(p->keep)
     {
       q = p;
-      p = p->next;
+      if(p == curmsg)
+      {
+        p = p->prev;
+        curmsg = p;
+      }
+      else
+        p = p->next;
       if(end)
       {
         move_msgs(q, q, end->next, 1);
