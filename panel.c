@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.236  2008/08/23 12:35:03  bernard
+// OPTION_MSGHLD Sticky messages
+//
 // Revision 1.235  2008/08/23 11:58:07  fish
 // Fix line-wrap issue MSVC builds
 //
@@ -588,6 +591,7 @@ static void scroll_up_lines( int numlines )
   PANMSG *start;
   PANMSG *end;
 
+  release_msgs();
   if(topmsg == oldest_msg())
     return;
   start = topmsg;
@@ -617,6 +621,7 @@ static void scroll_down_lines( int numlines )
   PANMSG *start;
   PANMSG *end;
 
+  release_msgs();
   i = numlines;
   start = topmsg;
   end = topmsg;
