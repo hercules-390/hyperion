@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.135  2008/08/04 22:06:00  rbowler
+// DIAG308 function codes for Program-directed re-IPL
+//
 // Revision 1.134  2008/08/02 09:04:28  bernard
 // SCP message colors
 //
@@ -114,6 +117,7 @@
 #define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
 #define OPTION_CMDTGT                   /* the cmdtgt command        */
 #define OPTION_MSGCLR                   /* Paint messages            */
+#define OPTION_MSGHLD                   /* Sticky messages           */
 
 /*********************************************************************\
  *********************************************************************
