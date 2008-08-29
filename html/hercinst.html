@@ -29,6 +29,7 @@ Hercules Version 3: Installation and Operation</TITLE>
     <p>
         <a href="#operating">Operating Procedure</a>
         <ul>
+            <li><a href="#starting">Loading a standalone program or operating system</a>
             <li><a href="#keyboard">Using the keyboard</a>
             <li><a href="#commands">Panel commands</a>
             <li><a href="#RCFILE">The .RC &nbsp;("run commands")&nbsp; file</a>
@@ -208,14 +209,14 @@ href="cckddasd.html">this page</a>.
 
 <p><hr><a name="operating"></a>
 <h2>Operating Procedure</h2>
+<a name="starting">
+<h4>Loading a standalone program or operating system</h4>
 <p class="warning">
 <em>Note: If you intend to run any licensed software on your PC
 using Hercules, it is your responsibility to ensure that you do not
 violate the software vendor's licensing terms.</em>
-
-<h4>Loading a standalone program or operating system</h4>
 <p>
-To start Hercules enter this command at the Unix shell prompt:
+To start Hercules enter the following command:
 <blockquote><code><pre>
     hercules  [ -f <em>filename</em> ]
               [ -d ]
@@ -281,19 +282,26 @@ The main Hercules screen contains a scrollable list of messages with a command
 input area and system status line at the bottom of the screen.
 <p>
 Important messages are highlighted in a different color (usually red) and are
-kept at the top of the screen for 2 minutes at which time they are removed.
+kept at the top of the screen. They will be automatically removed after two
+minutes on Linux systems, whereas on Windows systems they remain on the screen
+forever until manually removed. To remove a held message on Windows systems,
+move the cursor to the line containing the message and then press enter.
 <p>
 To scroll through the messages use either the PageUp or PageDown keys,
 the Ctrl+UpArrow or Ctrl+DownArrow keys, the Ctrl+Home or Ctrl+End keys
 or the Home or End keys:
-<p>
+<p><br>
     <blockquote>
     <blockquote>
-    <TABLE border=1 cellpadding=3>
+    <TABLE border=1 cellpadding=5>
       <THEAD>
         <TR>
-          <TH>Key</TH>
-          <TH>Action</TH>
+          <TH rowspan=2>Key</TH>
+          <TH colspan=2>Action</TH>
+        </TR>
+        <TR>
+          <TH>(Windows)</TH>
+          <TH>(Linux)</TH>
         </TR>
       </THEAD>
       <TBODY>
@@ -301,108 +309,158 @@ or the Home or End keys:
         <TR>
           <TD>Page Up</TD>
           <TD>Scroll back one screen</TD>
+          <TD>Scroll back one screen</TD>
         </TR>
 
         <TR>
           <TD>Page Down</TD>
           <TD>Scroll forward one screen</TD>
-        </TR>
-
-        <TR>
-          <TD>Left Arrow</TD>
-          <TD>Move cursor to previous character</TD>
-        </TR>
-
-        <TR>
-          <TD>Right Arrow</TD>
-          <TD>Move cursor to next character</TD>
+          <TD>Scroll forward one screen</TD>
         </TR>
 
         <TR>
           <TD>Up Arrow</TD>
+          <TD>Move cursor up one line</TD>
           <TD>Recall previous command</TD>
         </TR>
 
         <TR>
           <TD>Down Arrow</TD>
+          <TD>Move cursor down one line</TD>
           <TD>Recall next command</TD>
         </TR>
 
         <TR>
           <TD>Ctrl + Up Arrow</TD>
           <TD>Scroll up one line</TD>
+          <TD>Scroll up one line</TD>
         </TR>
 
         <TR>
           <TD>Ctrl + Down Arrow</TD>
           <TD>Scroll down one line</TD>
+          <TD>Scroll down one line</TD>
+        </TR>
+
+        <TR>
+          <TD>Alt + Up Arrow</TD>
+          <TD>Recall previous command</TD>
+          <TD align=center>n/a</TD>
+        </TR>
+
+        <TR>
+          <TD>Alt + Down Arrow</TD>
+          <TD>Recall next command</TD>
+          <TD align=center>n/a</TD>
+        </TR>
+
+        <TR>
+          <TD>Left Arrow</TD>
+          <TD>Move cursor to previous input area character</TD>
+          <TD>Move cursor to previous input area character</TD>
+        </TR>
+
+        <TR>
+          <TD>Right Arrow</TD>
+          <TD>Move cursor to next input area character</TD>
+          <TD>Move cursor to next input area character</TD>
+        </TR>
+
+        <TR>
+          <TD>Left Arrow</TD>
+          <TD>Move cursor left one column</TD>
+          <TD align=center>n/a</TD>
+        </TR>
+
+        <TR>
+          <TD>Right Arrow</TD>
+          <TD>Move cursor right one column</TD>
+          <TD align=center>n/a</TD>
         </TR>
 
         <TR>
           <TD>Home</TD>
+          <TD>Move cursor to beginning of input area</TD>
           <TD>Move cursor to beginning of typed input</TD>
         </TR>
 
         <TR>
           <TD>End</TD>
           <TD>Move cursor to end of typed input</TD>
+          <TD>Move cursor to end of typed input</TD>
         </TR>
 
         <TR>
           <TD>Home</TD>
+          <TD>Scroll to top screen</TD>
           <TD>Scroll to top screen</TD>
         </TR>
 
         <TR>
           <TD>End</TD>
           <TD>Scroll to bottom screen</TD>
+          <TD>Scroll to bottom screen</TD>
         </TR>
 
         <TR>
           <TD>Ctrl + Home</TD>
+          <TD>Scroll to first line</TD>
           <TD>Scroll to first line</TD>
         </TR>
 
         <TR>
           <TD>Ctrl + End</TD>
           <TD>Scroll to last line</TD>
+          <TD>Scroll to last line</TD>
         </TR>
 
         <TR>
           <TD>Escape</TD>
-          <TD>erase typed input</TD>
+          <TD>Erase typed input</TD>
+          <TD>Erase typed input</TD>
         </TR>
 
         <TR>
           <TD>Escape</TD>
+          <TD>Switch to/from semi-graphical panel</TD>
           <TD>Switch to/from semi-graphical panel</TD>
         </TR>
 
         <TR>
           <TD>Delete</TD>
           <TD>Delete current character</TD>
+          <TD>Delete current character</TD>
         </TR>
 
         <TR>
           <TD>Backspace</TD>
+          <TD>Delete previous character</TD>
           <TD>Delete previous character</TD>
         </TR>
 
         <TR>
           <TD>Insert</TD>
           <TD>Toggle between insert and overlay mode</TD>
+          <TD>Toggle between insert and overlay mode</TD>
         </TR>
 
         <TR>
           <TD>Tab</TD>
           <TD>List current directory</TD>
+          <TD>List current directory</TD>
+        </TR>
+
+        <TR>
+          <TD>Tab</TD>
+          <TD>Move cursor to beginning of input area</TD>
+          <TD align=center>n/a</TD>
         </TR>
 
       </TBODY>
     </TABLE>
     </blockquote>
     </blockquote>
-<p>
+<p><br>
 Use the Insert key to switch between insert and overlay mode when typing in
 the command input area. Use the Home and End keys to move to the first or
 last character of the command you are typing, or the use the left/right arrow keys
@@ -432,150 +490,150 @@ panel commands.
 <p>
 <pre>
 
-    Command      Description...
-    -------      -----------------------------------------------
-    ?            list all commands
-    help         command specific help
+        Command          Description...
+        -------          -----------------------------------------------
+        ?                list all commands
+        help             command specific help
 
-    *            (log comment to syslog)
+        *                (log comment to syslog)
 
-    hst          history of commands
-    log          direct log output
-    logopt       change log options 
-    version      display version information
+        hst              history of commands
+        log              direct log output
+        logopt           change log options 
+        version          display version information
 
-    quit         terminate the emulator
-    exit         (synonym for 'quit')
+        quit             terminate the emulator
+        exit             (synonym for 'quit')
 
-    cpu          define target cpu for panel display and commands
+        cpu              define target cpu for panel display and commands
 
-    start        start CPU (or printer device if argument given)
-    stop         stop CPU (or printer device if argument given)
+        start            start CPU (or printer device if argument given)
+        stop             stop CPU (or printer device if argument given)
 
-    startall     start all CPU's
-    stopall      stop all CPU's
+        startall         start all CPU's
+        stopall          stop all CPU's
 
-    cf           configure current CPU online or offline
-    cfall        configure all CPU's online or offline
+        cf               configure current CPU online or offline
+        cfall            configure all CPU's online or offline
 
-    .reply       scp command
-    !message     scp priority messsage
-    ssd          Signal Shutdown
+        .reply           scp command
+        !message         scp priority messsage
+        ssd              Signal Shutdown
 
-    ptt          display pthread trace
+        ptt              display pthread trace
 
-    i            generate I/O attention interrupt for device
-    ext          generate external interrupt
-    restart      generate restart interrupt
-    archmode     set architecture mode
-    loadparm     set IPL parameter
+        i                generate I/O attention interrupt for device
+        ext              generate external interrupt
+        restart          generate restart interrupt
+        archmode         set architecture mode
+        loadparm         set IPL parameter
 
-    ipl          IPL Normal from device xxxx
-    iplc         IPL Clear from device xxxx
-    sysreset     Issue SYSTEM Reset manual operation
-    sysclear     Issue SYSTEM Clear Reset manual operation
-    store        store CPU status at absolute zero
+        ipl              IPL Normal from device xxxx
+        iplc             IPL Clear from device xxxx
+        sysreset         Issue SYSTEM Reset manual operation
+        sysclear         Issue SYSTEM Clear Reset manual operation
+        store            store CPU status at absolute zero
 
-    psw          display or alter program status word
-    gpr          display or alter general purpose registers
-    fpr          display floating point registers
-    fpc          display floating point control register
-    cr           display or alter control registers
-    ar           display access registers
-    pr           display prefix register
-    timerint     display or set timers update interval
-    clocks       display tod clkc and cpu timer
-    ipending     display pending interrupts
-    ds           display subchannel
-    r            display or alter real storage
-    v            display or alter virtual storage
-    u            disassemble storage
-    devtmax      display or set max device threads
-    k            display cckd internal trace
+        psw              display or alter program status word
+        gpr              display or alter general purpose registers
+        fpr              display floating point registers
+        fpc              display floating point control register
+        cr               display or alter control registers
+        ar               display access registers
+        pr               display prefix register
+        timerint         display or set timers update interval
+        clocks           display tod clkc and cpu timer
+        ipending         display pending interrupts
+        ds               display subchannel
+        r                display or alter real storage
+        v                display or alter virtual storage
+        u                disassemble storage
+        devtmax          display or set max device threads
+        k                display cckd internal trace
 
-    attach       configure device
-    detach       remove device
-    define       rename device
-    devinit      reinitialize device
-    devlist      list device or all devices
+        attach           configure device
+        detach           remove device
+        define           rename device
+        devinit          reinitialize device
+        devlist          list device or all devices
 
-    qd           query dasd
+        qd               query dasd
 
-    scsimount    automatic SCSI tape mounts
+        scsimount        automatic SCSI tape mounts
 
-    cd           change directory
-    pwd          print working directory
-    sh           shell command
+        cd               change directory
+        pwd              print working directory
+        sh               shell command
 
-    cache        cache command
-    cckd         cckd command
-    shrd         shrd command
-    conkpalv     display/alter console TCP keep-alive settings
-    quiet        toggle automatic refresh of panel display data
+        cache            cache command
+        cckd             cckd command
+        shrd             shrd command
+        conkpalv         display/alter console TCP keep-alive settings
+        quiet            toggle automatic refresh of panel display data
 
-    t            instruction trace
-    t+           instruction trace on
-    t-           instruction trace off
-    t?           instruction trace query
-    s            instruction stepping
-    s+           instruction stepping on
-    s-           instruction stepping off
-    s?           instruction stepping query
-    b            set breakpoint
-    b+           set breakpoint
-    b-           delete breakpoint
-    g            turn off instruction stepping and start CPU
+        t                instruction trace
+        t+               instruction trace on
+        t-               instruction trace off
+        t?               instruction trace query
+        s                instruction stepping
+        s+               instruction stepping on
+        s-               instruction stepping off
+        s?               instruction stepping query
+        b                set breakpoint
+        b+               set breakpoint
+        b-               delete breakpoint
+        g                turn off instruction stepping and start CPU
 
-    ostailor     trace program interrupts
-    pgmtrace     trace program interrupts
-    savecore     save a core image to file
-    loadcore     load a core image file
-    loadtext     load a text deck file
+        ostailor         trace program interrupts
+        pgmtrace         trace program interrupts
+        savecore         save a core image to file
+        loadcore         load a core image file
+        loadtext         load a text deck file
 
-    ldmod        load a module
-    rmmod        delete a module
-    lsmod        list dynamic modules
-    lsdep        list module dependencies
+        ldmod            load a module
+        rmmod            delete a module
+        lsmod            list dynamic modules
+        lsdep            list module dependencies
 
-    iodelay      display or set I/O delay value
-    tt32stats    (deprecated; use 'tt32' cmd instead)
-    tt32         control/query CTCI-W32 functionality
-    toddrag      display or set TOD clock drag factor
-    panrate      display or set rate at which console refreshes
-    syncio       display syncio devices statistics
-    maxrates     display maximum observed MIPS/SIOS rate for the
-                 defined interval or define a new reporting interval
+        iodelay          display or set I/O delay value
+        tt32stats        (deprecated; use 'tt32' cmd instead)
+        tt32             control/query CTCI-W32 functionality
+        toddrag          display or set TOD clock drag factor
+        panrate          display or set rate at which console refreshes
+        syncio           display syncio devices statistics
+        maxrates         display maximum observed MIPS/SIOS rate for the
+                         defined interval or define a new reporting interval
 
-    defsym       Define symbol
-    script       Run a sequence of panel commands contained in a file
-    cscript      Cancels a running script thread
+        defsym           Define symbol
+        script           Run a sequence of panel commands contained in a file
+        cscript          Cancels a running script thread
 
-    evm          ECPS:VM Commands (Deprecated)
-    ecpsvm       ECPS:VM Commands
+        evm              ECPS:VM Commands (Deprecated)
+        ecpsvm           ECPS:VM Commands
 
-    aea          Display AEA tables
-    aia          Display AIA fields
-    tlb          Display TLB tables
+        aea              Display AEA tables
+        aia              Display AIA fields
+        tlb              Display TLB tables
 
-    sizeof       Display size of structures
+        sizeof           Display size of structures
 
-    suspend      Suspend hercules
-    resume       Resume hercules
+        suspend          Suspend hercules
+        resume           Resume hercules
 
-    herclogo     Read a new hercules logo file
+        herclogo         Read a new hercules logo file
 
-    traceopt     Instruction trace display options
+        traceopt         Instruction trace display options
 
-    sf+dev       add shadow file
-    sf-dev       delete shadow file
-    sf=dev ..    rename shadow file
-    sfc          compress shadow files
-    sfd          display shadow file stats
+        sf+dev           add shadow file
+        sf-dev           delete shadow file
+        sf=dev ..        rename shadow file
+        sfc              compress shadow files
+        sfd              display shadow file stats
 
-    t{+/-}dev    turn CCW tracing on/off
-    s{+/-}dev    turn CCW stepping on/off
-    t{+/-}CKD    turn CKD_KEY tracing on/off
-    f{+/-}adr    mark frames unusable/usable
+        t{+/-}dev        turn CCW tracing on/off
+        s{+/-}dev        turn CCW stepping on/off
+        t{+/-}CKD        turn CKD_KEY tracing on/off
+        f{+/-}adr        mark frames unusable/usable
 
 </pre>
 <p>
@@ -664,7 +722,7 @@ be used for whatever messages the guest operating system may issue to any
 of its terminals. It is only a <i>Hercules</i> automatic operator and
 <i>not</i> a "VSE", "MVS", "VM", etc, automatic operator.
 
-<h5>Defining a Rule</h5>
+<h5><u>Defining a Rule</u></h5>
 <p>
 To define a HAO rule, enter the command:
 <pre>
@@ -690,7 +748,7 @@ The associated <i>command</i> is whatever valid Hercules panel command you
 wish to issue in response to a message being issued that matches the given
 pattern <i>target</i>. 
 
-<h5>Other commands and limitations</h5>
+<h5><u>Other commands and limitations</u></h5>
 <p>
 To delete a fully or partially defined HAO rule, first use the 'hao list'
 command to list all of the defined (or partially defined) rules, and then use

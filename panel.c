@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.241  2008/08/29 11:11:06  fish
+// Fix message-keep logic  (i.e. sticky/held messages)
+//
 // Revision 1.240  2008/08/29 10:22:52  fish
 // Fix some long outstanding New Panel data-input painting glitches
 //
@@ -193,7 +196,7 @@ static int    NPcpunum_valid,
               NPmips_valid,
 #ifdef OPTION_MIPS_COUNTING
               NPsios_valid,
-#endif
+#endif // OPTION_MIPS_COUNTING
               NPdevices_valid,
               NPcpugraph_valid;
 
@@ -215,7 +218,7 @@ static U32    NPmips;
 static U32    NPsios;
 #else
 static U64    NPinstcount;
-#endif
+#endif // OPTION_MIPS_COUNTING
 static int    NPcpugraph;
 static int    NPcpugraphpct[MAX_CPU_ENGINES];
 
@@ -343,11 +346,13 @@ typedef struct _PANMSG      /* Panel message control block structure */
     struct _PANMSG*     prev;           /* --> prev entry in chain   */
     int                 msgnum;         /* msgbuf 0-relative entry#  */
     char                msg[MSG_SIZE];  /* text of panel message     */
-#ifdef OPTION_MSGCLR
+#if defined(OPTION_MSGCLR)
     short               fg;             /* text color                */
     short               bg;             /* screen background color   */
+#if !defined(OPTION_EXTCURS)
     struct timeval      expiration;     /* when to unkeep if kept    */
-#endif
+#endif // OPTION_EXTCURS
+#endif // OPTION_MSGCLR
 }
 PANMSG;                     /* Panel message control block structure */
 
@@ -370,7 +375,7 @@ static REGS  copyregs, copysieregs;     /* Copied regs               */
 
 ///////////////////////////////////////////////////////////////////////
 
-#ifdef OPTION_MSGCLR        /*  -- Message coloring build option --  */
+#if defined(OPTION_MSGCLR)  /*  -- Message coloring build option --  */
 
 #define KEEP_TIMEOUT_SECS   120         /* #seconds kept msgs expire */
 static PANMSG*  keptmsgs;               /* start of kept chain       */
@@ -411,6 +416,7 @@ void unkeep( int keptnum )
     }
 }
 
+#if !defined(OPTION_EXTCURS)
 /*-------------------------------------------------------------------*/
 /* unkeep messages once expired                                      */
 /*-------------------------------------------------------------------*/
@@ -434,6 +440,7 @@ void release_msgs()
     }
   }
 }
+#endif // OPTION_EXTCURS
 
 /*-------------------------------------------------------------------*/
 /* Get the color name from a string                                  */
@@ -525,8 +532,10 @@ void colormsg(PANMSG *p)
       {
           PANMSG* pk = malloc( sizeof(PANMSG) );
           memcpy( pk, p, sizeof(PANMSG) );
+#if !defined(OPTION_EXTCURS)
           gettimeofday(&pk->expiration, NULL);
           pk->expiration.tv_sec += KEEP_TIMEOUT_SECS;
+#endif // OPTION_EXTCURS
           if (!keptmsgs)
               keptmsgs = pk;
           pk->next = NULL;
@@ -671,7 +680,7 @@ static void get_dim (int *y, int *x)
      */
     if (!cons_term || strcmp(cons_term, "xterm"))
         (*y)--;
-#endif
+#endif // defined(WIN32) && !defined( _MSVC_ )
 }
 
 int get_keepmsg_num( int row )
@@ -712,7 +721,17 @@ static void set_pos (short y, short x)
 
 static int is_cursor_on_cmdline()
 {
+#if defined(OPTION_EXTCURS)
+    get_cursor_pos( keybfd, confp, &cur_cons_row, &cur_cons_col );
+    return
+    (1
+        && cur_cons_row == CMDLINE_ROW
+        && cur_cons_col >= CMDLINE_COL
+        && cur_cons_col <= CMDLINE_COL + cmdcols
+    );
+#else // OPTION_EXTCURS
     return 1;
+#endif // OPTION_EXTCURS
 }
 
 static void cursor_cmdline_home()
@@ -1127,7 +1146,7 @@ void NP_update(REGS *regs)
             !mode && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900;
 #else
             0;
-#endif
+#endif // defined(_FEATURE_SIE)
 
     /* Redraw the psw template if the mode changed */
     if (NPpswmode != mode || NPpswzhost != zhost)
@@ -1689,7 +1708,7 @@ REGS *copy_regs(int cpu)
         regs = &copysieregs;
     }
     else
-#endif
+#endif // defined(_FEATURE_SIE)
         regs = &copyregs;
 
     SET_PSW_IA(regs);
@@ -1711,14 +1730,14 @@ REGS *copy_regs(int cpu)
 void panel_display_r (void)
 #else
 void panel_display (void)
-#endif
+#endif // defined(OPTION_DYNAMIC_LOAD)
 {
 #ifndef _MSVC_
   int     rc;                           /* Return code               */
   int     maxfd;                        /* Highest file descriptor   */
   fd_set  readset;                      /* Select file descriptors   */
   struct  timeval tv;                   /* Select timeout structure  */
-#endif
+#endif // _MSVC_
 int     i;                              /* Array subscripts          */
 int     len;                            /* Length                    */
 REGS   *regs;                           /* -> CPU register context   */
@@ -1730,7 +1749,7 @@ U64     prvtcount = 0;                  /* Previous total count      */
 int     prvcpupct = 0;                  /* Previous cpu percentage   */
 #if defined(OPTION_SHARED_DEVICES)
 U32     prvscount = 0;                  /* Previous shrdcount        */
-#endif
+#endif // defined(OPTION_SHARED_DEVICES)
 char    readbuf[MSG_SIZE];              /* Message read buffer       */
 int     readoff = 0;                    /* Number of bytes in readbuf*/
 BYTE    c;                              /* Character work area       */
@@ -1790,11 +1809,13 @@ char    buf[1024];                      /* Buffer workarea           */
         curmsg->prev = curmsg - 1;
         curmsg->msgnum = i;
         memset(curmsg->msg,SPACE,MSG_SIZE);
-#ifdef OPTION_MSGCLR
+#if defined(OPTION_MSGCLR)
         curmsg->bg = COLOR_DEFAULT_FG;
         curmsg->fg = COLOR_DEFAULT_BG;
+#if !defined(OPTION_EXTCURS)
         memset( &curmsg->expiration, 0, sizeof(curmsg->expiration));
-#endif
+#endif // OPTION_EXTCURS
+#endif // OPTION_MSGCLR
     }
 
     /* Complete the circle */
@@ -1805,9 +1826,9 @@ char    buf[1024];                      /* Buffer workarea           */
     curmsg = topmsg = NULL;
     wrapped = 0;
     numkept = 0;
-#ifdef OPTION_MSGCLR
+#if defined(OPTION_MSGCLR)
     keptmsgs = lastkept = NULL;
-#endif
+#endif // OPTION_MSGCLR
 
     /* Set screen output stream to NON-buffered */
     setvbuf (confp, NULL, _IONBF, 0);
@@ -2169,18 +2190,48 @@ char    buf[1024];                      /* Buffer workarea           */
                 /* Process UPARROW */
                 if (NPDup == 0 && strcmp(kbbuf+i, KBD_UP_ARROW) == 0)
                 {
+#if defined(OPTION_EXTCURS)
+                    get_cursor_pos( keybfd, confp, &cur_cons_row, &cur_cons_col );
+                    if (cur_cons_row <= 1)
+                        cur_cons_row = cons_rows + 1;
+                    set_pos( --cur_cons_row, cur_cons_col );
+#else // OPTION_EXTCURS
                     do_prev_history();
                     redraw_cmd = 1;
+#endif // OPTION_EXTCURS
                     break;
                 }
 
                 /* Process DOWNARROW */
                 if (NPDup == 0 && strcmp(kbbuf+i, KBD_DOWN_ARROW) == 0)
                 {
+#if defined(OPTION_EXTCURS)
+                    get_cursor_pos( keybfd, confp, &cur_cons_row, &cur_cons_col );
+                    if (cur_cons_row >= cons_rows)
+                        cur_cons_row = 1 - 1;
+                    set_pos( ++cur_cons_row, cur_cons_col );
+#else // OPTION_EXTCURS
+                    do_next_history();
+                    redraw_cmd = 1;
+#endif // OPTION_EXTCURS
+                    break;
+                }
+
+#if defined(OPTION_EXTCURS)
+                /* Process ALT+UPARROW */
+                if (NPDup == 0 && strcmp(kbbuf+i, KBD_ALT_UP_ARROW) == 0) {
+                    do_prev_history();
+                    redraw_cmd = 1;
+                    break;
+                }
+
+                /* Process ALT+DOWNARROW */
+                if (NPDup == 0 && strcmp(kbbuf+i, KBD_ALT_DOWN_ARROW) == 0) {
                     do_next_history();
                     redraw_cmd = 1;
                     break;
                 }
+#endif // OPTION_EXTCURS
 
                 /* Test for PAGEUP */
                 if (NPDup == 0 && strcmp(kbbuf+i, KBD_PAGE_UP) == 0) {
@@ -2248,6 +2299,20 @@ char    buf[1024];                      /* Buffer workarea           */
 
                 /* Process LEFTARROW */
                 if (strcmp(kbbuf+i, KBD_LEFT_ARROW) == 0) {
+#if defined(OPTION_EXTCURS)
+                    if (NPDup == 0 && !is_cursor_on_cmdline())
+                    {
+                        if (cur_cons_col <= 1)
+                        {
+                            cur_cons_row--;
+                            cur_cons_col = cons_cols + 1;
+                        }
+                        if (cur_cons_row < 1)
+                            cur_cons_row = cons_rows;
+                        set_pos( cur_cons_row, --cur_cons_col );
+                    }
+                    else
+#endif // OPTION_EXTCURS
                     {
                         if (cmdoff > 0) cmdoff--;
                         ADJ_CMDCOL();
@@ -2259,6 +2324,20 @@ char    buf[1024];                      /* Buffer workarea           */
 
                 /* Process RIGHTARROW */
                 if (strcmp(kbbuf+i, KBD_RIGHT_ARROW) == 0) {
+#if defined(OPTION_EXTCURS)
+                    if (NPDup == 0 && !is_cursor_on_cmdline())
+                    {
+                        if (cur_cons_col >= cons_cols)
+                        {
+                            cur_cons_row++;
+                            cur_cons_col = 0;
+                        }
+                        if (cur_cons_row > cons_rows)
+                            cur_cons_row = 1;
+                        set_pos( cur_cons_row, ++cur_cons_col );
+                    }
+                    else
+#endif // OPTION_EXTCURS
                     {
                         if (cmdoff < cmdlen) cmdoff++;
                         ADJ_CMDCOL();
@@ -2309,6 +2388,30 @@ char    buf[1024];                      /* Buffer workarea           */
                     }
                     break;
                 }
+
+#if defined(OPTION_EXTCURS)
+                /* ENTER key special handling */
+                if (NPDup == 0 && kbbuf[i] == '\n')
+                {
+                    /* Get cursor pos and check if on cmdline */
+                    if (!is_cursor_on_cmdline())
+                    {
+                        int keptnum = get_keepmsg_num( cur_cons_row );
+                        if (keptnum >= 0)
+                        {
+                            /* ENTER pressed on kept msg; remove msg */
+                            unkeep( keptnum );
+                            redraw_msgs = 1;
+                            break;
+                        }
+                        /* ENTER pressed NOT on cmdline */
+                        beep();
+                        break;
+                    }
+	                /* ENTER pressed on cmdline; fall through
+	                   for normal ENTER keypress handling... */
+                }
+#endif // OPTION_EXTCURS
 
                 /* Process the command when the ENTER key is pressed */
                 if (kbbuf[i] == '\n') {
@@ -2384,9 +2487,6 @@ char    buf[1024];                      /* Buffer workarea           */
 
                 /* Ignore non-printable characters */
                 if (!isprint(kbbuf[i])) {
-#if 0 /* do we REALLY need to be doing this?! */
-                    logmsg ("%2.2X\n", kbbuf[i]);
-#endif
                     beep();
                     i++;
                     continue;
@@ -2542,10 +2642,10 @@ FinishShutdown:
 
                 /* Copy message into next available PANMSG slot */
                 memcpy( curmsg->msg, readbuf, MSG_SIZE );
-#ifdef OPTION_MSGCLR
+#if defined(OPTION_MSGCLR)
                 /* Colorize and/or keep new message if needed */
                 colormsg(curmsg);
-#endif
+#endif // OPTION_MSGCLR
             } /* end if (!readoff || readoff >= MSG_SIZE) */
         } /* end Read message bytes until newline... */
 
@@ -2582,7 +2682,7 @@ FinishShutdown:
          || prvcpupct != regs->cpupct
 #if defined(OPTION_SHARED_DEVICES)
          || prvscount != sysblk.shrdcount
-#endif
+#endif // defined(OPTION_SHARED_DEVICES)
          || prvstate != regs->cpustate
          || (NPDup && NPcpugraph && prvtcount != sysblk.instcount)
            )
@@ -2594,7 +2694,7 @@ FinishShutdown:
             prvstate  = regs->cpustate;
 #if defined(OPTION_SHARED_DEVICES)
             prvscount = sysblk.shrdcount;
-#endif
+#endif // defined(OPTION_SHARED_DEVICES)
             prvtcount = sysblk.instcount;
         }
 
@@ -2611,18 +2711,20 @@ FinishShutdown:
                 /* Display messages in scrolling area */
                 PANMSG* p;
 
+#if !defined(OPTION_EXTCURS)
                 /* Unkeep any kept messages that have expired */
                 release_msgs();
+#endif // OPTION_EXTCURS
 
                 /* Draw kept messages first */
                 for (i=0, p=keptmsgs; i < (NUM_LINES + numkept) && p; i++, p = p->next)
                 {
                     set_pos (i+1, 1);
-#ifdef OPTION_MSGCLR
+#if defined(OPTION_MSGCLR)
                     set_color (p->fg, p->bg);
 #else
                     set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-#endif
+#endif // defined(OPTION_MSGCLR)
                     write_text (p->msg, MSG_SIZE);
                 }
 
@@ -2630,11 +2732,11 @@ FinishShutdown:
                 for (p=topmsg; i < (NUM_LINES + numkept) && (p != curmsg->next || p == topmsg); i++, p = p->next)
                 {
                     set_pos (i+1, 1);
-#ifdef OPTION_MSGCLR
+#if defined(OPTION_MSGCLR)
                     set_color (p->fg, p->bg);
 #else
                     set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-#endif
+#endif // defined(OPTION_MSGCLR)
                     write_text (p->msg, MSG_SIZE);
                 }
 
@@ -2801,11 +2903,11 @@ PANMSG* p;
     for (i=0, p = topmsg; i < NUM_LINES && p != curmsg->next; i++, p = p->next)
     {
         set_pos (i+1, 1);
-#ifdef OPTION_MSGCLR
+#if defined(OPTION_MSGCLR)
         set_color (p->fg, p->bg);
 #else
         set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-#endif
+#endif // defined(OPTION_MSGCLR)
         write_text (p->msg, MSG_SIZE);
     }
 

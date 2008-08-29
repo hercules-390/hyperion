@@ -38,6 +38,9 @@
 */
 
 // $Log$
+// Revision 1.17  2008/02/15 22:51:39  rbowler
+// Move Solaris specific definition of INADDR_NONE to hostopts.h
+//
 // Revision 1.16  2008/02/07 00:29:04  rbowler
 // Solaris build support by Jeff Savit
 //
@@ -127,6 +130,7 @@
 
 #define  CURSOR_SHAPE_NOT_SUPPORTED             0
 #define  CURSOR_SHAPE_VIA_SPECIAL_LINUX_ESCAPE  1
+#define  CURSOR_SHAPE_WINDOWS_NATIVE            2
 
 
 /*-------------------------------------------------------------------*/
@@ -162,6 +166,7 @@
   #define OPTION_TUNTAP_CLRIPADDR       /* TUNTAP_ClrIPAddr works    */
 
 #endif
+
 
 /*-------------------------------------------------------------------*/
 /* Hard-coded Win32-specific features and options...                 */
@@ -225,6 +230,9 @@
 #else
   #define HOW_TO_IMPLEMENT_SH_COMMAND   USE_FORK_API_FOR_SH_COMMAND
 #endif
+#define SET_CONSOLE_CURSOR_SHAPE_METHOD CURSOR_SHAPE_WINDOWS_NATIVE
+#define OPTION_EXTCURS                  /* Extended cursor handling  */
+
 
 /*-------------------------------------------------------------------*/
 /* Hard-coded Solaris-specific features and options...               */
@@ -256,6 +264,8 @@
 
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
+#undef  OPTION_EXTCURS                  /* Normal cursor handling    */
+
 
 /*-------------------------------------------------------------------*/
 /* Hard-coded Apple-specific features and options...                 */
@@ -282,6 +292,7 @@
 
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
+#undef  OPTION_EXTCURS                  /* Normal cursor handling    */
 
 
 /*-------------------------------------------------------------------*/
@@ -307,6 +318,8 @@
 
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
+#undef  OPTION_EXTCURS                  /* Normal cursor handling    */
+
 
 /*-------------------------------------------------------------------*/
 /* GNU 'C' (e.g. Linux) options...                                   */
@@ -337,6 +350,8 @@
   #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #endif
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_VIA_SPECIAL_LINUX_ESCAPE
+#undef  OPTION_EXTCURS                  /* Normal cursor handling    */
+
 
 /*-------------------------------------------------------------------*/
 /* Hard-coded OTHER (DEFAULT) host-specific features and options...  */
@@ -366,6 +381,8 @@
   #define HOW_TO_IMPLEMENT_SH_COMMAND     USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 #endif
 #define SET_CONSOLE_CURSOR_SHAPE_METHOD   CURSOR_SHAPE_NOT_SUPPORTED
+#undef  OPTION_EXTCURS                  /* Normal cursor handling    */
+
 
 #endif // (host-specific tests)
 
