@@ -8,6 +8,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.14  2008/08/23 11:57:19  fish
+// Also set console OUTPUT buffer mode for
+// MSVC builds in order to fix line-wrap issue.
+//
 // Revision 1.13  2008/07/10 18:31:33  fish
 // 1) Add support for Ctrl+Home and Ctrl+End extended control sequences, and
 // 2)  ignore other unsupported extended control sequences.
@@ -290,48 +294,59 @@ int erase_to_eol( FILE* confp )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// Handles key presses that result in TWO characters being generated...
 
 void translate_keystroke( char kbbuf[], int* pkblen )
 {
-    BYTE ch = kbbuf[0];
+    BYTE ch = kbbuf[0];         // (move char to work var)
 
-    switch ( ch )
+    switch ( ch )               // Check if special key pressed...
     {
-        case 0x0D:              // enter
-            kbbuf[0] = '\n';
-        default:
-            break;
+        case 0x0D:              // enter key
+            kbbuf[0] = '\n';    // change to newline character
+                                // fall thru to default case
+        default:                // no further translation needed
+            break;              // accept the keystroke as-is
 
         // translate special key (escape sequence)...
 
-        case 0x00:
-        case 0xE0:
+        case 0x00:              // 1st char of special key press
+        case 0xE0:              // 1st char of special key press
         {
             BYTE orig_ch, ch2;
 
-            if ( !kbhit() )
-                break;
+            if ( !kbhit() )     // if not two chars generated,
+                break;          // then not special key press
 
-            orig_ch = ch;
-            ch = '\x1B';        // (escape)
-            ch2 = getch();
+            orig_ch = ch;       // save original keystroke
+            ch = '\x1B';        // change it to an escape char
+            ch2 = getch();      // get second keystroke of pair
 
-            switch ( ch2 )
+            switch ( ch2 )      // generate ANSI escape sequence
             {
-                case 0x47: strcpy( kbbuf, KBD_HOME        ); break;
-                case 0x52: strcpy( kbbuf, KBD_INSERT      ); break;
-                case 0x53: strcpy( kbbuf, KBD_DELETE      ); break;
-                case 0x4F: strcpy( kbbuf, KBD_END         ); break;
-                case 0x49: strcpy( kbbuf, KBD_PAGE_UP     ); break;
-                case 0x51: strcpy( kbbuf, KBD_PAGE_DOWN   ); break;
-                case 0x48: strcpy( kbbuf, KBD_UP_ARROW    ); break;
-                case 0x50: strcpy( kbbuf, KBD_DOWN_ARROW  ); break;
-                case 0x4D: strcpy( kbbuf, KBD_RIGHT_ARROW ); break;
-                case 0x4B: strcpy( kbbuf, KBD_LEFT_ARROW  ); break;
-                case 0x77: strcpy( kbbuf, KBD_CTRL_HOME   ); break;
-                case 0x75: strcpy( kbbuf, KBD_CTRL_END    ); break;
+                case 0x48: strcpy( kbbuf, KBD_UP_ARROW        ); break;
+                case 0x50: strcpy( kbbuf, KBD_DOWN_ARROW      ); break;
+
+                case 0x98: strcpy( kbbuf, KBD_ALT_UP_ARROW    ); break;
+                case 0xA0: strcpy( kbbuf, KBD_ALT_DOWN_ARROW  ); break;
+
                 case 0x8D: strcpy( kbbuf, KBD_CTRL_UP_ARROW   ); break;
                 case 0x91: strcpy( kbbuf, KBD_CTRL_DOWN_ARROW ); break;
+
+                case 0x4B: strcpy( kbbuf, KBD_LEFT_ARROW      ); break;
+                case 0x4D: strcpy( kbbuf, KBD_RIGHT_ARROW     ); break;
+
+                case 0x49: strcpy( kbbuf, KBD_PAGE_UP         ); break;
+                case 0x51: strcpy( kbbuf, KBD_PAGE_DOWN       ); break;
+
+                case 0x47: strcpy( kbbuf, KBD_HOME            ); break;
+                case 0x4F: strcpy( kbbuf, KBD_END             ); break;
+
+                case 0x77: strcpy( kbbuf, KBD_CTRL_HOME       ); break;
+                case 0x75: strcpy( kbbuf, KBD_CTRL_END        ); break;
+
+                case 0x52: strcpy( kbbuf, KBD_INSERT          ); break;
+                case 0x53: strcpy( kbbuf, KBD_DELETE          ); break;
 
                 default:
                 {
@@ -346,12 +361,17 @@ void translate_keystroke( char kbbuf[], int* pkblen )
                     kbbuf[2] = 0;
 #endif
                     break;
-                }
-            }
-            *pkblen = strlen( kbbuf );
+
+                } // end default
+
+            } // end switch( ch2 )
+
+            *pkblen = strlen( kbbuf );      // inform caller #of chars
             break;
-        }
-    }
+
+        } // end case: 0x00, 0xE0
+
+    } // end switch( ch )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -376,6 +396,45 @@ int console_beep( FILE* confp )
 
     return 0;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef OPTION_EXTCURS
+int get_cursor_pos( int keybrd_fd, FILE* confp, short* row, short* col )
+{
+    CONSOLE_SCREEN_BUFFER_INFO  csbi;
+    HANDLE  hStdErr;
+    int     cons_fd;
+
+    UNREFERENCED( keybrd_fd );
+
+    if ( !confp || !row || !col )
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if ( ! _isatty( cons_fd = fileno( confp ) ) )
+    {
+        errno = EBADF;
+        return -1;
+    }
+
+    hStdErr = (HANDLE) _get_osfhandle( cons_fd );
+    ASSERT( hStdErr && INVALID_HANDLE_VALUE != hStdErr );
+
+    if ( !GetConsoleScreenBufferInfo( hStdErr, &csbi ) )
+    {
+        errno = EIO;
+        return -1;
+    }
+
+    *row = 1 + csbi.dwCursorPosition.Y;
+    *col = 1 + csbi.dwCursorPosition.X;
+
+    return 0;
+}
+#endif // OPTION_EXTCURS
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -409,7 +468,7 @@ int  get_console_dim( FILE* confp, int* rows, int* cols )
     }
 
     *rows = 1 + csbi.srWindow.Bottom - csbi.srWindow.Top;
-    *cols = 1 + csbi.srWindow.Right - csbi.srWindow.Left;
+    *cols = 1 + csbi.srWindow.Right  - csbi.srWindow.Left;
     return 0;
 }
 
@@ -870,6 +929,90 @@ int  get_console_dim( FILE* confp, int* rows, int* cols )
 
     return 0;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef OPTION_EXTCURS
+int get_cursor_pos( int keybrd_fd, FILE* confp, short* row, short* col )
+{
+    struct  timeval tv;                 /* Select timeout structure  */
+    fd_set  readset;                    /* Select file descriptors   */
+    char    kbbuf[16];                  /* Keyboard i/p buffer       */
+    char*   semi;                       /* Index of semicolon        */
+    int     kblen;                      /* Number of chars in kbbuf  */
+    int     maxfd;                      /* Highest file descriptor   */
+    int     rc;                         /* Return code               */
+    char    c;                          /* Work for scanf            */
+
+    /* Request the CPR (Cursor Position Report) */
+    if ( fprintf( confp, KBD_ASK_CURSOR_POS ) < 0 )
+        return -1;
+
+    /* Read the CPR from the keyboard i/p buffer */
+    while (1)
+    {
+        FD_ZERO (&readset);
+        FD_SET (keybrd_fd, &readset);
+        maxfd = keybrd_fd;
+        tv.tv_sec  = 0;
+        tv.tv_usec = 50 * 1000; // (PLENTY long enough!)
+
+        /* Wait for CPR to arrive in our i/p buffer */
+        rc = select (maxfd + 1, &readset, NULL, NULL, &tv);
+
+        if (rc < 0 )
+        {
+            if (errno == EINTR) continue;
+            errno = EIO;
+            break;
+        }
+
+        /* If keyboard input has arrived then process it */
+        if (!FD_ISSET(keybrd_fd, &readset))
+            continue;
+
+        /* Read character(s) from the keyboard */
+        kblen = read (keybrd_fd, kbbuf, sizeof(kbbuf)-1);
+
+        if (kblen < 0)
+        {
+            errno = EIO;
+            break;
+        }
+
+        kbbuf[kblen] = 0;
+
+        // The returned CPR is the string "\x1B[n;mR"
+        // where n = decimal row, m = decimal column.
+
+        // Note: we expect the entire the CPR to have
+        // been read on our first i/o (i.e. for it to
+        // have arrived all at once in one piece) and
+        // not piecemeal requiring several i/o's...
+        if (0
+            || kblen < 6
+            || kbbuf[   0   ] != '\x1B'
+            || kbbuf[   1   ] != '['
+            || kbbuf[kblen-1] != 'R'
+            || (semi = memchr( kbbuf, ';', kblen )) == NULL
+            || (semi - kbbuf) < 3
+            || sscanf( &kbbuf[2], "%hu%c", row, &c ) != 2 || c != ';'
+            || sscanf( semi+1,    "%hu%c", col, &c ) != 2 || c != 'R'
+        )
+        {
+            errno = EIO;
+            rc = -1;
+            break;
+        }
+
+        /* Success! */
+        rc = 0;
+        break
+    }
+
+    return rc;
+}
+#endif // OPTION_EXTCURS
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /*

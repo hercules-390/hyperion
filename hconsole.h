@@ -8,6 +8,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.11  2008/07/10 18:31:33  fish
+// 1) Add support for Ctrl+Home and Ctrl+End extended control sequences, and
+// 2)  ignore other unsupported extended control sequences.
+//
 // Revision 1.10  2008/07/08 13:48:40  fish
 // Ctrl + uparrow / downarrow ==> scroll up/down one line
 //
@@ -26,20 +30,57 @@
 
 #define ANSI_RESET_ALL_ATTRIBUTES  "\x1B[0m"
 
+//-----------------------------------------------------------------------------
+//
+//                            VT100 User Guide
+// 
+//                   Table 3-6 Cursor Control Key Codes
+// 
+// Cursor Key   VT52       ANSI and Cursor Key Mode   ANSI and Cursor Key Mode
+//  (Arrow)     Mode       Reset    (Normal mode)     Set  (Application mode)
+// 
+//   Up         ESC A      ESC [ A                    ESC O A
+//   Down       ESC B      ESC [ B                    ESC O B
+//   Right      ESC C      ESC [ C                    ESC O C
+//   Left       ESC D      ESC [ D                    ESC O D
+//
+//-----------------------------------------------------------------------------
+
 #define KBD_HOME                "\x1B[1~"
+#define KBD_END                 "\x1B[4~"
+
+#define KBD_CTRL_HOME           "\x1B""w"
+#define KBD_CTRL_END            "\x1B""u"
+
 #define KBD_INSERT              "\x1B[2~"
 #define KBD_DELETE              "\x1B[3~"
-#define KBD_END                 "\x1B[4~"
+
 #define KBD_PAGE_UP             "\x1B[5~"
 #define KBD_PAGE_DOWN           "\x1B[6~"
+
 #define KBD_UP_ARROW            "\x1B[A"
 #define KBD_DOWN_ARROW          "\x1B[B"
 #define KBD_RIGHT_ARROW         "\x1B[C"
 #define KBD_LEFT_ARROW          "\x1B[D"
+
+// Does anyone know what the actual escape sequence that
+// gets generated actually is on Linux for "Alt+UpArrow"
+// and "Alt+DownArrow", etc?? Thanks! -- Fish
+
 #define KBD_CTRL_UP_ARROW       "\x1B""D"
 #define KBD_CTRL_DOWN_ARROW     "\x1B""M"
-#define KBD_CTRL_HOME           "\x1B""w"
-#define KBD_CTRL_END            "\x1B""u"
+
+#define KBD_UP_ARROW2           "\x1BOA"
+#define KBD_DOWN_ARROW2         "\x1BOB"
+#define KBD_RIGHT_ARROW2        "\x1BOC"
+#define KBD_LEFT_ARROW2         "\x1BOD"
+
+#define KBD_ALT_UP_ARROW        KBD_UP_ARROW2
+#define KBD_ALT_DOWN_ARROW      KBD_DOWN_ARROW2
+
+#define KBD_ASK_CURSOR_POS      "\x1B[6n"   // Return value is the string "\x1B[n;mR"
+                                            // returned in the keyboard buffer where
+                                            // n = decimal row, m = decimal column.
 
 // Hercules console color codes...
 
@@ -79,6 +120,9 @@ extern  void  translate_keystroke( char kbbuf[], int* pkblen );
 
 extern  int   console_beep( FILE* confp );
 extern  int   get_console_dim( FILE* confp, int* rows, int* cols );
+#ifdef OPTION_EXTCURS
+extern  int   get_cursor_pos( int keybrd_fd, FILE* confp, short* row, short* col );
+#endif // OPTION_EXTCURS
 extern  int   set_console_cursor_shape( FILE* confp, int ins );
 
 #if defined( _MSVC_ )
