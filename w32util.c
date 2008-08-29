@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.31  2007/11/30 14:54:34  jmaynard
+// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
+//
 // Revision 1.30  2007/08/04 19:04:33  fish
 // gethostid
 //
@@ -2791,12 +2794,7 @@ void w32_parse_piped_process_stdxxx_data ( PIPED_PROCESS_CTL* pPipedProcessCtl, 
 
     pbeg = holdbuff;                    // ptr to start of message
     pend = strchr(pbeg,'\n');           // find end of message (MUST NOT BE MODIFIED!)
-    if (!pend)
-    {
-        pend = strchr(pbeg,'\r');       // find end of message (MUST NOT BE MODIFIED!)
-        if (!pend)
-            return;                     // we don't we have a complete message yet
-    }
+    if (!pend) return;                  // we don't we have a complete message yet
     ntotlen = 0;                        // accumulated length of all parsed messages
 
     // Parse the message...
@@ -2804,7 +2802,7 @@ void w32_parse_piped_process_stdxxx_data ( PIPED_PROCESS_CTL* pPipedProcessCtl, 
     do
     {
         nlen = (pend-pbeg);             // get length of THIS message
-        ntotlen += nlen;                // keep track of all that we see
+        ntotlen += nlen + 1;            // keep track of all that we see
 
         // Remove trailing newline character and any other trailing blanks...
 
@@ -2861,9 +2859,15 @@ void w32_parse_piped_process_stdxxx_data ( PIPED_PROCESS_CTL* pPipedProcessCtl, 
         // 'pend' should still point to the end of this message (where newline was)
 
         pbeg = (pend + 1);              // point to beg of next message (if any)
+
+        if (pbeg >= (holdbuff + *pnHoldAmount))   // past end of data?
+        {
+            pbeg = pend;                // re-point back to our null
+            ASSERT(*pbeg == 0);         // sanity check
+            break;                      // we're done with this batch
+        }
+
         pend = strchr(pbeg,'\n');       // is there another message?
-        if (!pend)
-            pend = strchr(pbeg,'\r');   // is there another message?
     }
     while (pend);                       // while messages remain...
 
@@ -2887,8 +2891,8 @@ void w32_parse_piped_process_stdxxx_data ( PIPED_PROCESS_CTL* pPipedProcessCtl, 
     // them down into the destination string, thus wiping out part of our source
     // string. Thus, we MUST use memmove here and NOT strcpy.
 
-    *pnHoldAmount = strlen(pbeg);           // length of data that remains
-    memmove(holdbuff,pbeg,*pnHoldAmount);   // slide left justify remainder
+    if ((*pnHoldAmount = (int)strlen(pbeg)) > 0)   // new amount of data remaining
+        memmove(holdbuff,pbeg,*pnHoldAmount);      // slide left justify remainder
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
