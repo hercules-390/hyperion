@@ -1,3 +1,4 @@
+29 Aug 2008 Fix some New Panel data input painting issues - Fish
 23 Aug 2008 Implemented sticky and held messages completed - Bernard van der Helm
 22 Aug 2008 Fix TOD clock race condition identified by Fred Feucht
             (fredfeucht) - by Marcin Cieslak [saper@system.pl] - Fish

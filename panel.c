@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.239  2008/08/23 13:50:38  bernard
+// More error scroll_down_lines. Should be ok now!
+//
 // Revision 1.238  2008/08/23 13:27:23  bernard
 // Error in scroll_down_lines
 //
@@ -136,17 +139,12 @@
 
 #define  DISPLAY_INSTRUCTION_OPERANDS
 
-#define PANEL_MAX_ROWS 256
-#define PANEL_MAX_COLS 256
+#define PANEL_MAX_ROWS  (256)
+#define PANEL_MAX_COLS  (256)
 
-/*-------------------------------------------------------------------*/
-/* Definitions for keyboard input sequences                          */
-/*-------------------------------------------------------------------*/
-
-#define xKBD_UP_ARROW           "\x1BOA"
-#define xKBD_DOWN_ARROW         "\x1BOB"
-#define xKBD_RIGHT_ARROW        "\x1BOC"
-#define xKBD_LEFT_ARROW         "\x1BOD"
+int     redraw_msgs;                    /* 1=Redraw message area     */
+int     redraw_cmd;                     /* 1=Redraw command line     */
+int     redraw_status;                  /* 1=Redraw status line      */
 
 /*=NP================================================================*/
 /* Global data for new panel display                                 */
@@ -159,7 +157,6 @@ static int    NPhelpup = 0;    /* 1 when displaying help panel */
 static int    NPhelppaint = 1; /* 1 when the help panel needs painted */
 static int    NPhelpdown = 0;  /* 1 when the help panel is brought down */
 static int    NPregdisp = 0;   /* which regs are displayed 0=gpr, 1=cr, 2=ar, 3=fpr */
-
 static int    NPcmd = 0;       /* 1 when command mode for NP is in effect */
 static int    NPdataentry = 0; /* 1 when data entry for NP is in progress */
 static int    NPdevsel = 0;    /* 1 when device selection is in progress */
@@ -259,39 +256,46 @@ static char  *NPhelp[] = {
 "                    Press Escape to return to control panel operations",
 "" };
 
-////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 
-#define MSG_SIZE     PANEL_MAX_COLS      /* Size of one message       */
-#define MAX_MSGS     2048                /* Number of slots in buffer */
-//efine MAX_MSGS     300                 /* (for testing scrolling)   */
-#define NUM_LINES    (cons_rows - 2)     /* Number of scrolling lines */
-#define CMD_COLS     (cons_cols - (CMD_PREFIX_LEN + 1));
-#define CMD_SIZE     256                 /* cmdline buffer size       */
+#define MSG_SIZE     PANEL_MAX_COLS     /* Size of one message       */
+#define MAX_MSGS     2048               /* Number of slots in buffer */
+//efine MAX_MSGS     300                /* (for testing scrolling)   */
+#define NUM_LINES    (cons_rows - 2 - numkept) /* #of scrolling lines*/
+#define CMD_SIZE     256                /* cmdline buffer size       */
 
-////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 
-static int   cons_rows = 0;             /* console height in lines    */
-static int   cons_cols = 0;             /* console width in chars     */
-static short cur_cons_row = 0;          /* current console row        */
-static short cur_cons_col = 0;          /* current colsole column     */
-static char *cons_term = NULL;          /* TERM env value             */
+static int   cons_rows = 0;             /* console height in lines   */
+static int   cons_cols = 0;             /* console width in chars    */
+static short cur_cons_row = 0;          /* current console row       */
+static short cur_cons_col = 0;          /* current console column    */
+static char *cons_term = NULL;          /* TERM env value            */
+static char  cmdins  = 1;               /* 1==insert mode, 0==overlay*/
 
-static char  cmdins  = 1;               /* 1==insert mode, 0==overlay */
-static char  cmdline[CMD_SIZE+1];       /* Command line buffer        */
-static int   cmdlen  = 0;               /* cmdline data len in bytes  */
-static int   cmdoff  = 0;               /* cmdline buffer cursor pos  */
-static int   cmdcols = 0;               /* visible cmdline width cols */
-static int   cmdcol  = 0;               /* cols cmdline scrolled right*/
-static FILE *confp   = NULL;            /* Console file pointer       */
+static char  cmdline[CMD_SIZE+1];       /* Command line buffer       */
+static int   cmdlen  = 0;               /* cmdline data len in bytes */
+static int   cmdoff  = 0;               /* cmdline buffer cursor pos */
 
-#define CMD_PREFIX_STR   "Command ==> "
+static char  saved_cmdline[CMD_SIZE+1]; /* Saved command             */
+static int   saved_cmdlen   = 0;        /* Saved cmdline data len    */
+static int   saved_cmdoff   = 0;        /* Saved cmdline buffer pos  */
+static short saved_cons_row = 0;        /* Saved console row         */
+static short saved_cons_col = 0;        /* Saved console column      */
 
-#ifdef OPTION_CMDTGT
-#define CMD_PREFIX_STR1  "SCP ======> " /* Keep same length as above! */
-#define CMD_PREFIX_STR2  "PrioSCP ==> " /* Keep same length as above! */
+static int   cmdcols = 0;               /* visible cmdline width cols*/
+static int   cmdcol  = 0;               /* cols cmdline scrolled righ*/
+static FILE *confp   = NULL;            /* Console file pointer      */
+
+#define CMD_PREFIX_STR   "Command ==> " /* Keep same len as below!   */
+#ifdef  OPTION_CMDTGT
+#define CMD_PREFIX_STR1  "SCP ======> " /* Keep same len as above!   */
+#define CMD_PREFIX_STR2  "PrioSCP ==> " /* Keep same len as above!   */
 #endif // OPTION_CMDTGT
 
-#define CMD_PREFIX_LEN   strlen(CMD_PREFIX_STR)
+#define CMD_PREFIX_LEN  (strlen(CMD_PREFIX_STR))
+#define CMDLINE_ROW     ((short)(cons_rows-1))
+#define CMDLINE_COL     ((short)(CMD_PREFIX_LEN+1))
 
 #define ADJ_SCREEN_SIZE() \
     do { \
@@ -300,7 +304,7 @@ static FILE *confp   = NULL;            /* Console file pointer       */
         if (rows != cons_rows || cols != cons_cols) { \
             cons_rows = rows; \
             cons_cols = cols; \
-            cmdcols = cons_cols - (CMD_PREFIX_LEN + 1); \
+            cmdcols = cons_cols - CMDLINE_COL; \
             redraw_msgs = redraw_cmd = redraw_status = 1; \
             NPDinit = 0; \
             clr_screen(); \
@@ -325,39 +329,41 @@ static FILE *confp   = NULL;            /* Console file pointer       */
 
 ///////////////////////////////////////////////////////////////////////
 
-typedef struct _PANMSG
+typedef struct _PANMSG      /* Panel message control block structure */
 {
-    struct _PANMSG*     next;
-    struct _PANMSG*     prev;
-    int                 msgnum;
-    char                msg[MSG_SIZE];
+    struct _PANMSG*     next;           /* --> next entry in chain   */
+    struct _PANMSG*     prev;           /* --> prev entry in chain   */
+    int                 msgnum;         /* msgbuf 0-relative entry#  */
+    char                msg[MSG_SIZE];  /* text of panel message     */
 #ifdef OPTION_MSGCLR
-    short               bg;
-    short               fg;
+    short               fg;             /* text color                */
+    short               bg;             /* screen background color   */
     unsigned int        keep:1;
-    struct timeval      durability;
+    struct timeval      durability;     /* when to unkeep if kept    */
 #endif
 }
-PANMSG;
+PANMSG;                     /* Panel message control block structure */
 
-static PANMSG*  msgbuf;         /* Circular message buffer */
-static PANMSG*  topmsg;         /* message at top of screen */
-static PANMSG*  curmsg;         /* newest message */
+static PANMSG*  msgbuf;                 /* Circular message buffer   */
+static PANMSG*  topmsg;                 /* message at top of screen  */
+static PANMSG*  curmsg;                 /* newest message            */
 #ifdef OPTION_MSGHLD
-static PANMSG*  oldmsg;         /* oldest message */
+static PANMSG*  oldmsg;                 /* oldest message            */
 #endif // OPTION_MSGHLD
-static int wrapped = 0;         /* wrapped-around flag */
+static int      wrapped = 0;            /* wrapped-around flag       */
+static int      numkept = 0;            /* count of kept messages    */
 
-static char *lmsbuf = NULL;
-static int   lmsndx = 0;
-static int   lmsnum = -1;
-static int   lmscnt = -1;
-static int   lmsmax = LOG_DEFSIZE/2;
+static char *lmsbuf = NULL;             /* xxx                       */
+static int   lmsndx = 0;                /* xxx                       */
+static int   lmsnum = -1;               /* xxx                       */
+static int   lmscnt = -1;               /* xxx                       */
+static int   lmsmax = LOG_DEFSIZE/2;    /* xxx                       */
 static int   keybfd = -1;               /* Keyboard file descriptor  */
 
 static REGS  copyregs, copysieregs;     /* Copied regs               */
 
 #ifdef OPTION_MSGHLD
+#define KEEP_TIMEOUT_SECS   120         /* #seconds kept msgs expire */
 /*-------------------------------------------------------------------*/
 /* check msgbuf integrity (for debugging purposes only)              */
 /*-------------------------------------------------------------------*/
@@ -553,6 +559,11 @@ void read_cmd(PANMSG *p)
 /* Screen manipulation primitives                                    */
 /*-------------------------------------------------------------------*/
 
+static void beep()
+{
+    console_beep( confp );
+}
+
 static PANMSG* oldest_msg()
 {
 #ifdef OPTION_MSGHLD
@@ -708,11 +719,38 @@ static void scroll_to_bottom_screen ()
     page_up();
 }
 
-static void do_panel_command( void* cmdline )
+static void do_panel_command( void* cmd )
 {
     if (!is_currline_visible())
         scroll_to_bottom_screen();
+    strlcpy( cmdline, cmd, sizeof(cmdline) );
     panel_command( cmdline );
+    cmdline[0] = '\0';
+    cmdlen = 0;
+    cmdoff = 0;
+    ADJ_CMDCOL();
+}
+
+static void do_prev_history()
+{
+    if (history_prev() != -1)
+    {
+        strcpy(cmdline, historyCmdLine);
+        cmdlen = strlen(cmdline);
+        cmdoff = cmdlen < cmdcols ? cmdlen : 0;
+        ADJ_CMDCOL();
+    }
+}
+
+static void do_next_history()
+{
+    if (history_next() != -1)
+    {
+        strcpy(cmdline, historyCmdLine);
+        cmdlen = strlen(cmdline);
+        cmdoff = cmdlen < cmdcols ? cmdlen : 0;
+        ADJ_CMDCOL();
+    }
 }
 
 static void clr_screen ()
@@ -748,6 +786,43 @@ static void set_pos (short y, short x)
     y = y < 1 ? 1 : y > cons_rows ? cons_rows : y;
     x = x < 1 ? 1 : x > cons_cols ? cons_cols : x;
     set_screen_pos (confp, y, x);
+}
+
+static int is_cursor_on_cmdline()
+{
+    return 1;
+}
+
+static void cursor_cmdline_home()
+{
+    cmdoff = 0;
+    ADJ_CMDCOL();
+    set_pos( CMDLINE_ROW, CMDLINE_COL );
+}
+
+static void cursor_cmdline_end()
+{
+    cmdoff = cmdlen;
+    ADJ_CMDCOL();
+    set_pos( CMDLINE_ROW, CMDLINE_COL + cmdoff - cmdcol );
+}
+
+static void save_command_line()
+{
+    memcpy( saved_cmdline, cmdline, sizeof(saved_cmdline) );
+    saved_cmdlen = cmdlen;
+    saved_cmdoff = cmdoff;
+    saved_cons_row = cur_cons_row;
+    saved_cons_col = cur_cons_col;
+}
+
+static void restore_command_line()
+{
+    memcpy( cmdline, saved_cmdline, sizeof(cmdline) );
+    cmdlen = saved_cmdlen;
+    cmdoff = saved_cmdoff;
+    cur_cons_row = saved_cons_row;
+    cur_cons_col = saved_cons_col;
 }
 
 static void draw_text (char *text)
@@ -1528,9 +1603,17 @@ void NP_update(REGS *regs)
             set_pos (i+3, 53);
             sprintf (buf, "%-4.4s", devclass);
             draw_text (buf);
-            set_pos (i+3, 58);
-            draw_text (devnam);
-            fill_text (' ', PANEL_MAX_COLS);
+            /* Draw device name only if they're NOT assigning a new one */
+            if (0
+                || NPdataentry != 1
+                || NPpending != 'n'
+                || NPasgn != i
+            )
+            {
+                set_pos (i+3, 58);
+                draw_text (devnam);
+                fill_text (' ', PANEL_MAX_COLS);
+            }
         }
     }
 
@@ -1583,7 +1666,7 @@ void NP_update(REGS *regs)
     }
 
     /* Data entry field */
-    if (NPdataentry)
+    if (NPdataentry && redraw_cmd)
     {
         set_pos (NPcurrow, NPcurcol);
         if (NPcolorSwitch)
@@ -1591,6 +1674,7 @@ void NP_update(REGS *regs)
         fill_text (' ', NPcurcol + NPdatalen - 1);
         set_pos (NPcurrow, NPcurcol);
         PUTC_CMDLINE();
+        redraw_cmd = 0;
     }
     else
         /* Position the cursor to the bottom right */
@@ -1725,9 +1809,6 @@ int     prvcpupct = 0;                  /* Previous cpu percentage   */
 #if defined(OPTION_SHARED_DEVICES)
 U32     prvscount = 0;                  /* Previous shrdcount        */
 #endif
-int     redraw_msgs;                    /* 1=Redraw message area     */
-int     redraw_cmd;                     /* 1=Redraw command line     */
-int     redraw_status;                  /* 1=Redraw status line      */
 char    readbuf[MSG_SIZE];              /* Message read buffer       */
 int     readoff = 0;                    /* Number of bytes in readbuf*/
 BYTE    c;                              /* Character work area       */
@@ -1760,7 +1841,7 @@ char    buf[1024];                      /* Buffer workarea           */
 
     /* Clear the command-line buffer */
     memset (cmdline, 0, sizeof(cmdline));
-    cmdcols = cons_cols - (CMD_PREFIX_LEN + 1);
+    cmdcols = cons_cols - CMDLINE_COL;
 
     /* Obtain storage for the keyboard buffer */
     if (!(kbbuf = malloc (kbbufsize)))
@@ -1906,9 +1987,7 @@ char    buf[1024];                      /* Buffer workarea           */
                     switch(kbbuf[0]) {
                         case 0x1b:                  /* ESC */
                             NPDup = 0;
-                            cmdline[0] = '\0';
-                            cmdoff = 0;
-                            cmdlen = 0;
+                            restore_command_line();
                             ADJ_CMDCOL();
                             break;
                         case '?':
@@ -1965,6 +2044,7 @@ char    buf[1024];                      /* Buffer workarea           */
                         case 'r':                   /* Enter address */
                         case 'R':
                             NPdataentry = 1;
+                            redraw_cmd = 1;
                             NPpending = 'r';
                             NPcurrow = 16;
                             NPcurcol = 12;
@@ -1979,6 +2059,7 @@ char    buf[1024];                      /* Buffer workarea           */
                         case 'd':                   /* Enter data */
                         case 'D':
                             NPdataentry = 1;
+                            redraw_cmd = 1;
                             NPpending = 'd';
                             NPcurrow = 16;
                             NPcurcol = 30;
@@ -2043,6 +2124,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                 break;
                             }
                             NPdataentry = 1;
+                            redraw_cmd = 1;
                             NPpending = 'n';
                             NPasgn = i;
                             NPcurrow = 3 + i;
@@ -2065,7 +2147,7 @@ char    buf[1024];                      /* Buffer workarea           */
                         case 4:                     /* POWER - 2nd part */
                             if (NPdevice == 'y' || NPdevice == 'Y')
                                 do_panel_command("quit");
-                            strcpy(NPprompt1, "Powering down");
+                            strcpy(NPprompt1, "");
                             redraw_status = 1;
                             break;
                         case 'T':                   /* Restart */
@@ -2099,7 +2181,16 @@ char    buf[1024];                      /* Buffer workarea           */
                     }
                     NPcmd = 1;
                 } else {  /* We are in data entry mode */
-                    NPcmd = 0;
+                    if (kbbuf[0] == 0x1B) {
+                        NPdataentry = 0;
+                        NPaddr_valid = 0;
+                        NPdata_valid = 0;
+                        strcpy(NPprompt1, "");
+                        strcpy(NPprompt2, "");
+                        NPcmd = 1;
+                    }
+                    else
+                        NPcmd = 0;
                 }
                 if (NPcmd == 1)
                     kblen = 0;                  /* don't process as command */
@@ -2109,11 +2200,10 @@ char    buf[1024];                      /* Buffer workarea           */
             /* Process characters in the keyboard buffer */
             for (i = 0; i < kblen; )
             {
-                /* Test for home command... */
+                /* Test for HOME */
                 if (strcmp(kbbuf+i, KBD_HOME) == 0) {
-                    if (cmdlen) {
-                        cmdoff = 0;
-                        ADJ_CMDCOL();
+                    if (NPDup == 1 || !is_cursor_on_cmdline() || cmdlen) {
+                        cursor_cmdline_home();
                         redraw_cmd = 1;
                     } else {
                         scroll_to_top_line();
@@ -2122,11 +2212,10 @@ char    buf[1024];                      /* Buffer workarea           */
                     break;
                 }
 
-                /* Test for end command... */
+                /* Test for END */
                 if (strcmp(kbbuf+i, KBD_END) == 0) {
-                    if (cmdlen) {
-                        cmdoff = cmdlen;
-                        ADJ_CMDCOL();
+                    if (NPDup == 1 || !is_cursor_on_cmdline() || cmdlen) {
+                        cursor_cmdline_end();
                         redraw_cmd = 1;
                     } else {
                         scroll_to_bottom_screen();
@@ -2135,127 +2224,123 @@ char    buf[1024];                      /* Buffer workarea           */
                     break;
                 }
 
-                /* Test for ctrl+home scroll top command */
-                if (strcmp(kbbuf+i, KBD_CTRL_HOME) == 0) {
+                /* Test for CTRL+HOME */
+                if (NPDup == 0 && strcmp(kbbuf+i, KBD_CTRL_HOME) == 0) {
                     scroll_to_top_line();
                     redraw_msgs = 1;
                     break;
                 }
 
-                /* Test for ctrl+end scroll bottom command */
-                if (strcmp(kbbuf+i, KBD_CTRL_END) == 0) {
+                /* Test for CTRL+END */
+                if (NPDup == 0 && strcmp(kbbuf+i, KBD_CTRL_END) == 0) {
                     scroll_to_bottom_line();
                     redraw_msgs = 1;
                     break;
                 }
 
-                /* Test for up arrow prev history command */
-                if (strcmp(kbbuf+i,  KBD_UP_ARROW) == 0 ||
-                    strcmp(kbbuf+i, xKBD_UP_ARROW) == 0) {
-                    if (history_prev() != -1) {
-                        strcpy(cmdline, historyCmdLine);
-                        cmdlen = strlen(cmdline);
-                        cmdoff = cmdlen < cmdcols ? cmdlen : 0;
-                        ADJ_CMDCOL();
-                        NPDup = 0;
-                        NPDinit = 1;
-                        redraw_cmd = 1;
-                    }
+                /* Process UPARROW */
+                if (NPDup == 0 && strcmp(kbbuf+i, KBD_UP_ARROW) == 0)
+                {
+                    do_prev_history();
+                    redraw_cmd = 1;
                     break;
                 }
 
-                /* Test for down arrow next history command */
-                if (strcmp(kbbuf+i,  KBD_DOWN_ARROW) == 0 ||
-                    strcmp(kbbuf+i, xKBD_DOWN_ARROW) == 0) {
-                    if (history_next() != -1) {
-                        strcpy(cmdline, historyCmdLine);
-                        cmdlen = strlen(cmdline);
-                        cmdoff = cmdlen < cmdcols ? cmdlen : 0;
-                        ADJ_CMDCOL();
-                        NPDup = 0;
-                        NPDinit = 1;
-                        redraw_cmd = 1;
-                    }
+                /* Process DOWNARROW */
+                if (NPDup == 0 && strcmp(kbbuf+i, KBD_DOWN_ARROW) == 0)
+                {
+                    do_next_history();
+                    redraw_cmd = 1;
                     break;
                 }
 
-                /* Test for page scroll up command */
-                if (strcmp(kbbuf+i, KBD_PAGE_UP) == 0) {
+                /* Test for PAGEUP */
+                if (NPDup == 0 && strcmp(kbbuf+i, KBD_PAGE_UP) == 0) {
                     page_up();
                     redraw_msgs = 1;
                     break;
                 }
 
-                /* Test for page scroll down command */
-                if (strcmp(kbbuf+i, KBD_PAGE_DOWN) == 0) {
+                /* Test for PAGEDOWN */
+                if (NPDup == 0 && strcmp(kbbuf+i, KBD_PAGE_DOWN) == 0) {
                     page_down();
                     redraw_msgs = 1;
                     break;
                 }
 
-                /* Test line scroll up command */
-                if (strcmp(kbbuf+i, KBD_CTRL_UP_ARROW) == 0) {
+                /* Test for CTRL+UPARROW */
+                if (NPDup == 0 && strcmp(kbbuf+i, KBD_CTRL_UP_ARROW) == 0) {
                     scroll_up_lines(1);
                     redraw_msgs = 1;
                     break;
                 }
 
-                /* Test line scroll down command */
-                if (strcmp(kbbuf+i, KBD_CTRL_DOWN_ARROW) == 0) {
+                /* Test for CTRL+DOWNARROW */
+                if (NPDup == 0 && strcmp(kbbuf+i, KBD_CTRL_DOWN_ARROW) == 0) {
                     scroll_down_lines(1);
                     redraw_msgs = 1;
                     break;
                 }
 
-                /* Process backspace character  */
+                /* Process BACKSPACE */
                 if (kbbuf[i] == '\b' || kbbuf[i] == '\x7F') {
-                    if (cmdoff > 0) {
-                        int j;
-                        for (j = cmdoff-1; j<cmdlen; j++)
-                            cmdline[j] = cmdline[j+1];
-                        cmdoff--;
-                        cmdlen--;
-                        ADJ_CMDCOL();
+                    if (NPDup == 0 && !is_cursor_on_cmdline())
+                        beep();
+                    else {
+                        if (cmdoff > 0) {
+                            int j;
+                            for (j = cmdoff-1; j<cmdlen; j++)
+                                cmdline[j] = cmdline[j+1];
+                            cmdoff--;
+                            cmdlen--;
+                            ADJ_CMDCOL();
+                        }
+                        i++;
+                        redraw_cmd = 1;
                     }
-                    i++;
-                    redraw_cmd = 1;
                     break;
                 }
 
-                /* Process DEL character */
+                /* Process DELETE */
                 if (strcmp(kbbuf+i, KBD_DELETE) == 0) {
-                    if (cmdoff < cmdlen) {
-                        int j;
-                        for (j = cmdoff; j<cmdlen; j++)
-                            cmdline[j] = cmdline[j+1];
-                        cmdlen--;
+                    if (NPDup == 0 && !is_cursor_on_cmdline())
+                        beep();
+                    else {
+                        if (cmdoff < cmdlen) {
+                            int j;
+                            for (j = cmdoff; j<cmdlen; j++)
+                                cmdline[j] = cmdline[j+1];
+                            cmdlen--;
+                        }
+                        i++;
+                        redraw_cmd = 1;
                     }
-                    i++;
-                    redraw_cmd = 1;
                     break;
                 }
 
-                /* Process LEFT_ARROW character */
-                if (strcmp(kbbuf+i,  KBD_LEFT_ARROW) == 0 ||
-                    strcmp(kbbuf+i, xKBD_LEFT_ARROW) == 0) {
-                    if (cmdoff > 0) cmdoff--;
-                    ADJ_CMDCOL();
-                    i++;
-                    redraw_cmd = 1;
+                /* Process LEFTARROW */
+                if (strcmp(kbbuf+i, KBD_LEFT_ARROW) == 0) {
+                    {
+                        if (cmdoff > 0) cmdoff--;
+                        ADJ_CMDCOL();
+                        i++;
+                        redraw_cmd = 1;
+                    }
                     break;
                 }
 
-                /* Process RIGHT_ARROW character */
-                if (strcmp(kbbuf+i,  KBD_RIGHT_ARROW) == 0 ||
-                    strcmp(kbbuf+i, xKBD_RIGHT_ARROW) == 0) {
-                    if (cmdoff < cmdlen) cmdoff++;
-                    ADJ_CMDCOL();
-                    i++;
-                    redraw_cmd = 1;
+                /* Process RIGHTARROW */
+                if (strcmp(kbbuf+i, KBD_RIGHT_ARROW) == 0) {
+                    {
+                        if (cmdoff < cmdlen) cmdoff++;
+                        ADJ_CMDCOL();
+                        i++;
+                        redraw_cmd = 1;
+                    }
                     break;
                 }
 
-                /* Process INSERT character */
+                /* Process INSERT */
                 if (strcmp(kbbuf+i, KBD_INSERT) == 0 ) {
                     cmdins = !cmdins;
                     set_console_cursor_shape( confp, cmdins );
@@ -2263,9 +2348,10 @@ char    buf[1024];                      /* Buffer workarea           */
                     break;
                 }
 
-                /* Process escape key */
+                /* Process ESCAPE */
                 if (kbbuf[i] == '\x1B') {
-                    if (cmdlen) {
+                    /* If data on cmdline, erase it */
+                    if ((NPDup == 1 || is_cursor_on_cmdline()) && cmdlen) {
                         cmdline[0] = '\0';
                         cmdlen = 0;
                         cmdoff = 0;
@@ -2273,28 +2359,30 @@ char    buf[1024];                      /* Buffer workarea           */
                         redraw_cmd = 1;
                     } else {
                         /* =NP= : Switch to new panel display */
+                        save_command_line();
                         NP_init();
                         NPDup = 1;
-                        cmdline[0] = '\0';
-                        cmdlen = 0;
-                        cmdoff = 0;
-                        ADJ_CMDCOL();
                         /* =END= */
                     }
                     break;
                 }
 
-                /* Process TAB character */
+                /* Process TAB */
                 if (kbbuf[i] == '\t' || kbbuf[i] == '\x7F') {
-                    tab_pressed(cmdline, &cmdoff);
-                    cmdlen = strlen(cmdline);
-                    ADJ_CMDCOL();
-                    i++;
-                    redraw_cmd = 1;
+                    if (NPDup == 1 || !is_cursor_on_cmdline()) {
+                        cursor_cmdline_home();
+                        redraw_cmd = 1;
+                    } else {
+                        tab_pressed(cmdline, &cmdoff);
+                        cmdlen = strlen(cmdline);
+                        ADJ_CMDCOL();
+                        i++;
+                        redraw_cmd = 1;
+                    }
                     break;
                 }
 
-                /* Process the command if newline was read */
+                /* Process the command when the ENTER key is pressed */
                 if (kbbuf[i] == '\n') {
                     if (cmdlen == 0 && NPDup == 0 && !sysblk.inststep) {
                         history_show();
@@ -2305,23 +2393,16 @@ char    buf[1024];                      /* Buffer workarea           */
                             if ('#' == cmdline[0] || '*' == cmdline[0]) {
                                 if (!is_currline_visible())
                                     scroll_to_bottom_screen();
-                                logmsg("%s\n", cmdline);
-                                for (;cmdlen >=0; cmdlen--)
-                                    cmdline[cmdlen] = '\0';
+                                history_requested = 0;
+                                do_panel_command(cmdline);
+                                redraw_cmd = 1;
                                 cmdlen = 0;
                                 cmdoff = 0;
                                 ADJ_CMDCOL();
                             } else {
                                 history_requested = 0;
                                 do_panel_command(cmdline);
-                                redraw_msgs = 1;
                                 redraw_cmd = 1;
-                                redraw_status = 1;
-                                for (;cmdlen >=0; cmdlen--)
-                                    cmdline[cmdlen] = '\0';
-                                cmdlen = 0;
-                                cmdoff = 0;
-                                ADJ_CMDCOL();
                                 if (history_requested == 1) {
                                     strcpy(cmdline, historyCmdLine);
                                     cmdlen = strlen(cmdline);
@@ -2370,16 +2451,22 @@ char    buf[1024];                      /* Buffer workarea           */
                         redraw_cmd = 1;
                     }
                     break;
-                }
+                } /* end if (kbbuf[i] == '\n') */
 
                 /* Ignore non-printable characters */
                 if (!isprint(kbbuf[i])) {
 #if 0 /* do we REALLY need to be doing this?! */
                     logmsg ("%2.2X\n", kbbuf[i]);
 #endif
-                    console_beep( confp );
+                    beep();
                     i++;
                     continue;
+                }
+
+                /* Ignore all other keystrokes not on cmdline */
+                if (NPDup == 0 && !is_cursor_on_cmdline()) {
+                    beep();
+                    break;
                 }
 
                 /* Append the character to the command buffer */
@@ -2390,7 +2477,7 @@ char    buf[1024];                      /* Buffer workarea           */
                 )
                 {
                     /* (no more room!) */
-                    console_beep( confp );
+                    beep();
                 }
                 else /* (there's still room) */
                 {
@@ -2498,8 +2585,7 @@ FinishShutdown:
                    be continued on the very next screen line */
                 if (readoff >= MSG_SIZE)
                     break;
-
-            } // end while ( lmsndx < lmscnt && lmsndx < lmsmax )
+            } /* end while ( lmsndx < lmscnt && lmsndx < lmsmax ) */
 
             /* If we have a message to be displayed (or a complete
                part of one), then copy it to the circular buffer. */
@@ -2547,11 +2633,11 @@ FinishShutdown:
                 /* Copy message into next available PANMSG slot */
                 memcpy( curmsg->msg, readbuf, MSG_SIZE );
 #ifdef OPTION_MSGCLR
+                /* Colorize and/or keep new message if needed */
                 read_cmd(curmsg);
 #endif
-            }
-
-        } // end while ( lmsndx < lmscnt && lmsndx < lmsmax )
+            } /* end if (!readoff || readoff >= MSG_SIZE) */
+        } /* end Read message bytes until newline... */
 
         /* Don't read or otherwise process any input
            once system shutdown has been initiated
@@ -2567,7 +2653,6 @@ FinishShutdown:
 
         /* =NP= : Reinit traditional panel if NP is down */
         if (NPDup == 0 && NPDinit == 1) {
-            NPDinit = 0;
             redraw_msgs = redraw_status = redraw_cmd = 1;
             set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
             clr_screen ();
@@ -2654,7 +2739,7 @@ FinishShutdown:
             if (redraw_cmd)
             {
                 /* Display the command line */
-                set_pos (cons_rows-1, 1);
+                set_pos (CMDLINE_ROW, 1);
                 set_color (COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG);
 
 #ifdef OPTION_CMDTGT
@@ -2734,10 +2819,17 @@ FinishShutdown:
             /* Flush screen buffer and reset display update indicators */
             if (redraw_msgs || redraw_cmd || redraw_status)
             {
-                set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-                set_pos (cons_rows-1, CMD_PREFIX_LEN+1+cmdoff-cmdcol);
-                fflush (confp);
                 redraw_msgs = redraw_cmd = redraw_status = 0;
+                set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+                if (NPDup == 0 && NPDinit == 1)
+                {
+                    NPDinit = 0;
+                    restore_command_line();
+                    set_pos (cur_cons_row, cur_cons_col);
+                }
+                else
+                    set_pos (CMDLINE_ROW, CMDLINE_COL + cmdoff - cmdcol);
+                fflush (confp);
             }
 
         } else {
