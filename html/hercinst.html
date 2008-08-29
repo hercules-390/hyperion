@@ -29,6 +29,7 @@ Hercules Version 3: Installation and Operation</TITLE>
     <p>
         <a href="#operating">Operating Procedure</a>
         <ul>
+            <li><a href="#keyboard">Using the keyboard</a>
             <li><a href="#commands">Panel commands</a>
             <li><a href="#RCFILE">The .RC &nbsp;("run commands")&nbsp; file</a>
             <li><a href="#HAO">HAO &nbsp;("Hercules Automatic Operator")</a>
@@ -268,6 +269,154 @@ instead of a tn3270 client.
 
 <p>
 Now you can enter an ipl command from the control panel.
+
+<p><br>
+<hr width="50%">
+
+<a name="keyboard">
+<h4>Using the keyboard</h4>
+<p>
+
+The main Hercules screen contains a scrollable list of messages with a command
+input area and system status line at the bottom of the screen.
+<p>
+Important messages are highlighted in a different color (usually red) and are
+kept at the top of the screen for 2 minutes at which time they are removed.
+<p>
+To scroll through the messages use either the PageUp or PageDown keys,
+the Ctrl+UpArrow or Ctrl+DownArrow keys, the Ctrl+Home or Ctrl+End keys
+or the Home or End keys:
+<p>
+    <blockquote>
+    <blockquote>
+    <TABLE border=1 cellpadding=3>
+      <THEAD>
+        <TR>
+          <TH>Key</TH>
+          <TH>Action</TH>
+        </TR>
+      </THEAD>
+      <TBODY>
+
+        <TR>
+          <TD>Page Up</TD>
+          <TD>Scroll back one screen</TD>
+        </TR>
+
+        <TR>
+          <TD>Page Down</TD>
+          <TD>Scroll forward one screen</TD>
+        </TR>
+
+        <TR>
+          <TD>Left Arrow</TD>
+          <TD>Move cursor to previous character</TD>
+        </TR>
+
+        <TR>
+          <TD>Right Arrow</TD>
+          <TD>Move cursor to next character</TD>
+        </TR>
+
+        <TR>
+          <TD>Up Arrow</TD>
+          <TD>Recall previous command</TD>
+        </TR>
+
+        <TR>
+          <TD>Down Arrow</TD>
+          <TD>Recall next command</TD>
+        </TR>
+
+        <TR>
+          <TD>Ctrl + Up Arrow</TD>
+          <TD>Scroll up one line</TD>
+        </TR>
+
+        <TR>
+          <TD>Ctrl + Down Arrow</TD>
+          <TD>Scroll down one line</TD>
+        </TR>
+
+        <TR>
+          <TD>Home</TD>
+          <TD>Move cursor to beginning of typed input</TD>
+        </TR>
+
+        <TR>
+          <TD>End</TD>
+          <TD>Move cursor to end of typed input</TD>
+        </TR>
+
+        <TR>
+          <TD>Home</TD>
+          <TD>Scroll to top screen</TD>
+        </TR>
+
+        <TR>
+          <TD>End</TD>
+          <TD>Scroll to bottom screen</TD>
+        </TR>
+
+        <TR>
+          <TD>Ctrl + Home</TD>
+          <TD>Scroll to first line</TD>
+        </TR>
+
+        <TR>
+          <TD>Ctrl + End</TD>
+          <TD>Scroll to last line</TD>
+        </TR>
+
+        <TR>
+          <TD>Escape</TD>
+          <TD>erase typed input</TD>
+        </TR>
+
+        <TR>
+          <TD>Escape</TD>
+          <TD>Switch to/from semi-graphical panel</TD>
+        </TR>
+
+        <TR>
+          <TD>Delete</TD>
+          <TD>Delete current character</TD>
+        </TR>
+
+        <TR>
+          <TD>Backspace</TD>
+          <TD>Delete previous character</TD>
+        </TR>
+
+        <TR>
+          <TD>Insert</TD>
+          <TD>Toggle between insert and overlay mode</TD>
+        </TR>
+
+        <TR>
+          <TD>Tab</TD>
+          <TD>List current directory</TD>
+        </TR>
+
+      </TBODY>
+    </TABLE>
+    </blockquote>
+    </blockquote>
+<p>
+Use the Insert key to switch between insert and overlay mode when typing in
+the command input area. Use the Home and End keys to move to the first or
+last character of the command you are typing, or the use the left/right arrow keys
+to move to a specific character. Use the Escape key to erase the input area.
+<p>
+Pressing Escape when the command input area is already empty causes the screen
+to switch to the semi-graphical "New Panel" display mode, which shows the overall
+system status on the left side of the screen and the devices status on the right.
+<p>
+When in the semi-graphical "New Panel" display mode there is no command input
+area. Instead, single character "hot keys" are used to issue some of the more
+common functions such as starting or stopping the CPU. The hot-keys are those
+which are highlighted. Pressing the '?' key displays brief help information
+on how to use the semi-graphical panel.
 
 <p><br>
 <hr width="50%">
