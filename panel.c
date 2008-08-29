@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.240  2008/08/29 10:22:52  fish
+// Fix some long outstanding New Panel data-input painting glitches
+//
 // Revision 1.239  2008/08/23 13:50:38  bernard
 // More error scroll_down_lines. Should be ok now!
 //
@@ -151,25 +154,26 @@ int     redraw_status;                  /* 1=Redraw status line      */
 /*   (Note: all NPD mods are identified by the string =NP=           */
 /*===================================================================*/
 
-static int    NPDup = 0;       /* 1 when new panel is up */
-static int    NPDinit = 0;     /* 1 when new panel is initialized */
-static int    NPhelpup = 0;    /* 1 when displaying help panel */
-static int    NPhelppaint = 1; /* 1 when the help panel needs painted */
-static int    NPhelpdown = 0;  /* 1 when the help panel is brought down */
-static int    NPregdisp = 0;   /* which regs are displayed 0=gpr, 1=cr, 2=ar, 3=fpr */
-static int    NPcmd = 0;       /* 1 when command mode for NP is in effect */
-static int    NPdataentry = 0; /* 1 when data entry for NP is in progress */
-static int    NPdevsel = 0;    /* 1 when device selection is in progress */
-static char   NPpending;       /* Command which is pending data entry */
-static char   NPentered[256];  /* Data which was entered */
-static char   NPprompt1[40];   /* Prompts for left and right bottom of screen */
-static char   NPoldprompt1[40];
-static char   NPprompt2[40];
-static char   NPoldprompt2[40];
-static char   NPsel2;          /* Command letter to trigger 2nd phase of dev sel */
-static char   NPdevice;        /* Which device selected */
-static int    NPasgn;          /* Index to device being reassigned */
-static int    NPlastdev;       /* Number of devices */
+static int    NPDup = 0;               /* 1 = new panel is up       */
+static int    NPDinit = 0;             /* 1 = new panel initialized */
+static int    NPhelpup = 0;            /* 1 = help panel showing    */
+static int    NPhelppaint = 1;         /* 1 = help pnl s/b painted  */
+static int    NPhelpdown = 0;          /* 1 = help pnl coming down  */
+static int    NPregdisp = 0;           /* which regs are displayed: */
+                                       /* 0=gpr, 1=cr, 2=ar, 3=fpr  */
+static int    NPcmd = 0;               /* 1 = NP in command mode    */
+static int    NPdataentry = 0;         /* 1 = NP in data-entry mode */
+static int    NPdevsel = 0;            /* 1 = device being selected */
+static char   NPpending;               /* pending data entry cmd    */
+static char   NPentered[256];          /* Data which was entered    */
+static char   NPprompt1[40];           /* Left bottom screen prompt */
+static char   NPoldprompt1[40];        /* Left bottom screen prompt */
+static char   NPprompt2[40];           /* Right bottom screen prompt*/
+static char   NPoldprompt2[40];        /* Right bottom screen prompt*/
+static char   NPsel2;                  /* dev sel part 2 cmd letter */
+static char   NPdevice;                /* Which device is selected  */
+static int    NPasgn;                  /* Index to dev being init'ed*/
+static int    NPlastdev;               /* Number of devices         */
 
 static char  *NPregnum[]   = {" 0"," 1"," 2"," 3"," 4"," 5"," 6"," 7",
                               " 8"," 9","10","11","12","13","14","15"
@@ -287,6 +291,8 @@ static int   cmdcols = 0;               /* visible cmdline width cols*/
 static int   cmdcol  = 0;               /* cols cmdline scrolled righ*/
 static FILE *confp   = NULL;            /* Console file pointer      */
 
+///////////////////////////////////////////////////////////////////////
+
 #define CMD_PREFIX_STR   "Command ==> " /* Keep same len as below!   */
 #ifdef  OPTION_CMDTGT
 #define CMD_PREFIX_STR1  "SCP ======> " /* Keep same len as above!   */
@@ -296,6 +302,8 @@ static FILE *confp   = NULL;            /* Console file pointer      */
 #define CMD_PREFIX_LEN  (strlen(CMD_PREFIX_STR))
 #define CMDLINE_ROW     ((short)(cons_rows-1))
 #define CMDLINE_COL     ((short)(CMD_PREFIX_LEN+1))
+
+///////////////////////////////////////////////////////////////////////
 
 #define ADJ_SCREEN_SIZE() \
     do { \
@@ -338,8 +346,7 @@ typedef struct _PANMSG      /* Panel message control block structure */
 #ifdef OPTION_MSGCLR
     short               fg;             /* text color                */
     short               bg;             /* screen background color   */
-    unsigned int        keep:1;
-    struct timeval      durability;     /* when to unkeep if kept    */
+    struct timeval      expiration;     /* when to unkeep if kept    */
 #endif
 }
 PANMSG;                     /* Panel message control block structure */
@@ -347,11 +354,10 @@ PANMSG;                     /* Panel message control block structure */
 static PANMSG*  msgbuf;                 /* Circular message buffer   */
 static PANMSG*  topmsg;                 /* message at top of screen  */
 static PANMSG*  curmsg;                 /* newest message            */
-#ifdef OPTION_MSGHLD
-static PANMSG*  oldmsg;                 /* oldest message            */
-#endif // OPTION_MSGHLD
 static int      wrapped = 0;            /* wrapped-around flag       */
 static int      numkept = 0;            /* count of kept messages    */
+
+///////////////////////////////////////////////////////////////////////
 
 static char *lmsbuf = NULL;             /* xxx                       */
 static int   lmsndx = 0;                /* xxx                       */
@@ -362,96 +368,73 @@ static int   keybfd = -1;               /* Keyboard file descriptor  */
 
 static REGS  copyregs, copysieregs;     /* Copied regs               */
 
-#ifdef OPTION_MSGHLD
-#define KEEP_TIMEOUT_SECS   120         /* #seconds kept msgs expire */
-/*-------------------------------------------------------------------*/
-/* check msgbuf integrity (for debugging purposes only)              */
-/*-------------------------------------------------------------------*/
-void check_msgbuf(void)
-{
-  int i;
-  PANMSG *p;
+///////////////////////////////////////////////////////////////////////
 
-  p = &msgbuf[0];
-  for(i = 0; i < MAX_MSGS; i++)
-  {
-    if(p->msgnum)
+#ifdef OPTION_MSGCLR        /*  -- Message coloring build option --  */
+
+#define KEEP_TIMEOUT_SECS   120         /* #seconds kept msgs expire */
+static PANMSG*  keptmsgs;               /* start of kept chain       */
+static PANMSG*  lastkept;               /* last entry in kept chain  */
+
+/*-------------------------------------------------------------------*/
+/* Remove a kept message from the kept chain                         */
+/*-------------------------------------------------------------------*/
+static
+void unkeep( int keptnum )
+{
+    PANMSG* pk;
+    int i;
+
+    /* Validate call */
+    if (!numkept || keptnum < 0 || keptnum > numkept-1)
     {
-      if(p->msgnum - p->prev->msgnum != 1)
-        logmsg ("msg %d has predecessor %d?\n", p->msgnum, p->prev->msgnum);
+        ASSERT(FALSE);    // bad 'keptnum' passed!
+        return;
     }
-    else
+
+    /* Chase kept chain to find kept message to be unkept */
+    for (i=0, pk=keptmsgs; pk && i != keptnum; pk = pk->next, i++);
+
+    /* If kept message found, unkeep it */
+    if (pk)
     {
-      if(p->prev->msgnum != MAX_MSGS - 1)
-        logmsg ("msg %d has predecessor %d?\n", p->msgnum, p->prev->msgnum);
+        if (pk->prev)
+            pk->prev->next = pk->next;
+        if (pk->next)
+            pk->next->prev = pk->prev;
+        if (pk == keptmsgs)
+            keptmsgs = pk->next;
+        if (pk == lastkept)
+            lastkept = pk->prev;
+        free( pk );
+        numkept--;
     }
-    if(p->prev->next != p || p->next->prev != p)
-      logmsg ("linkage not correct?\n");
-    p = p->next;
-  }
 }
 
 /*-------------------------------------------------------------------*/
-/* release messages after a defined period                           */
+/* unkeep messages once expired                                      */
 /*-------------------------------------------------------------------*/
-void release_msgs(void)
+void release_msgs()
 {
   struct timeval now;
-  PANMSG *p;
+  PANMSG *pk = keptmsgs;
+  int i;
 
-  if(topmsg->keep)
+  gettimeofday(&now, NULL);
+
+  while (pk)
   {
-    gettimeofday(&now, NULL);
-    for(p = topmsg; p != curmsg->next && p->keep; p = p->next)
+    for (i=0, pk=keptmsgs; pk; i++, pk = pk->next)
     {
-      if(p->durability.tv_sec < now.tv_sec)
-        p->keep = 0;
+      if (now.tv_sec >= pk->expiration.tv_sec)
+      {
+        unkeep(i);  // (remove message from chain)
+        break;      // (start over again from the beginning)
+      }
     }
-  } 
-}
-
-/*-------------------------------------------------------------------*/
-/* Move block of messages                                            */
-/*-------------------------------------------------------------------*/
-void move_msgs(PANMSG *start, PANMSG *end, PANMSG *before, int up)
-{
-  PANMSG *p;
-  PANMSG *q;
-
-  /* determine start end of msgnum repairs */
-  if(up)
-  {
-    p = start;
-    q = end->next;
-  }
-  else
-  {
-    p = start->prev;
-    q = end;
-  }
-
-  /* delete block messages */
-  start->prev->next = end->next;
-  end->next->prev = start->prev;
-
-  /* insert */
-  start->prev = before->prev;
-  before->prev->next = start;
-  end->next = before;
-  before->prev = end;
-
-  /* repair msgnum list, keep Fish happy ;-) */
-  while(p != q->next)
-  {
-    p->msgnum = p->prev->msgnum + 1;
-    if(p->msgnum == MAX_MSGS)
-      p->msgnum = 0;
-    p = p->next;
   }
 }
-#endif // OPTION_MSGHLD
 
-#ifdef OPTION_MSGCLR
 /*-------------------------------------------------------------------*/
 /* Get the color name from a string                                  */
 /*-------------------------------------------------------------------*/
@@ -480,26 +463,25 @@ int get_color(char *string, short *color)
 }
 
 /*-------------------------------------------------------------------*/
-/* Read the panel command prefix                                     */
-/*                                                                   */
-/* Interpret the possible message command. Valid commands:           */
-/*   <pnl,cmd,...>                                                   */
+/* Read, process and remove the "<pnl...>" colorizing message prefix */
+/* Syntax:                                                           */
+/*   <pnl,token,...>                                                 */
 /*     Mandatory prefix "<pnl,"                                      */
-/*     followed by one or several commands separated by ","          */
+/*     followed by one or more tokens separated by ","               */
 /*     ending with a ">"                                             */
-/* Valid commands:                                                   */
-/*  color(fg, bg)                                                    */
-/*  keep                                                             */
-/*  release                                                          */
+/* Valid tokens:                                                     */
+/*  color(fg, bg)   specifies the message's color                    */
+/*  keep            keeps message on screen until removed            */
 /*-------------------------------------------------------------------*/
-void read_cmd(PANMSG *p)
+void colormsg(PANMSG *p)
 {
-  int  i = 0; // index in message
-  int  len;
+  int  i = 0;           // current message text index
+  int  len;             // length of color-name token
+  int  keep = 0;        // 1 == keep msg, 0 == normal deletable msg
 
   if(!strncasecmp(p->msg, "<pnl", 4))
   {
-    // examine panel command(s)
+    // examine "<pnl...>" panel command(s)
     i += 4;
     while(p->msg[i] == ',')
     {
@@ -525,25 +507,35 @@ void read_cmd(PANMSG *p)
       }
       else if(!strncasecmp(&p->msg[i], "keep", 4))
       {
-        p->keep = 1;
-        gettimeofday(&p->durability, NULL);
-        p->durability.tv_sec += 120; // stick for 2 minutes on screen
+        keep = 1;
         i += 4; // skip keep
-      }
-      else if(!strncasecmp(&p->msg[i], "release", 7))
-      {
-        p->keep = 0;
-        i += 7; // skip release
       }
       else
         break; // rubbish
     }
     if(p->msg[i] == '>')
     {
-      // delete panel command from string
+      // Remove "<pnl...>" string from message
       i += 1;
-      memmove(p->msg, &p->msg[i], MSG_SIZE - i); // thanks Fish ;-)
+      memmove(p->msg, &p->msg[i], MSG_SIZE - i); // You're welcome Bernard! :)
       memset(&p->msg[MSG_SIZE - i], SPACE, i);
+
+      /* Add message to keep chain if needed */
+      if (keep)
+      {
+          PANMSG* pk = malloc( sizeof(PANMSG) );
+          memcpy( pk, p, sizeof(PANMSG) );
+          gettimeofday(&pk->expiration, NULL);
+          pk->expiration.tv_sec += KEEP_TIMEOUT_SECS;
+          if (!keptmsgs)
+              keptmsgs = pk;
+          pk->next = NULL;
+          pk->prev = lastkept;
+          if (lastkept)
+              lastkept->next = pk;
+          lastkept = pk;
+          numkept++;
+      }
       return;
     }
   }
@@ -551,7 +543,6 @@ void read_cmd(PANMSG *p)
   /* rubbish or no panel command */
   p->fg = COLOR_DEFAULT_FG;
   p->bg = COLOR_DEFAULT_BG;
-  p->keep = 0;
 }
 #endif // OPTION_MSGCLR
 
@@ -566,11 +557,7 @@ static void beep()
 
 static PANMSG* oldest_msg()
 {
-#ifdef OPTION_MSGHLD
-    return (wrapped) ? curmsg->next : oldmsg;
-#else
     return (wrapped) ? curmsg->next : msgbuf;
-#endif // OPTION_MSGHLD
 }
 
 static PANMSG* newest_msg()
@@ -603,99 +590,12 @@ static int lines_remaining()
 
 static void scroll_up_lines( int numlines )
 {
-#ifdef OPTION_MSGHLD
-  int i;
-  PANMSG *start;
-  PANMSG *end;
-
-  release_msgs();
-  if(topmsg == oldest_msg())
-    return;
-  start = topmsg;
-  end = topmsg;
-  if(start->keep)
-    for(end = start; end != curmsg && end->next->keep; end = end->next);
-  for(i = numlines; i && topmsg != oldest_msg(); i--)
-    topmsg = topmsg->prev;
-  if(start->keep)
-  {
-    move_msgs(start, end, topmsg, 1);
-    if(topmsg == oldest_msg())
-      oldmsg = start;
-    topmsg = start;
-  }
-#else
     int i; for (i=0; i < numlines && topmsg != oldest_msg(); topmsg = topmsg->prev, i++);
-#endif // OPTION_MSGHLD
 }
 
 static void scroll_down_lines( int numlines )
 {
-#ifdef OPTION_MSGHLD
-  int i;
-  PANMSG *p;
-  PANMSG *q;
-  PANMSG *start;
-  PANMSG *end;
-
-  release_msgs();
-  if(topmsg == curmsg)
-    return;
-  i = numlines;
-  start = topmsg;
-  end = NULL;
-  if(start->keep)
-  {
-     for(end = start; end != curmsg && end->next->keep; end = end->next)
-       i--;
-     if(end == curmsg)
-       return;
-  }
-  if(end)
-    p = end->next;
-  else
-    p = topmsg->next;
-  while(i > 0 && p != curmsg)
-  {
-    if(p->keep)
-    {
-      q = p;
-      if(p == curmsg)
-      {
-        p = p->prev;
-        curmsg = p;
-      }
-      else
-        p = p->next;
-      if(end)
-      {
-        move_msgs(q, q, end->next, 1);
-        end = q;
-      }
-      else
-      {
-        move_msgs(q, q, topmsg, 1);
-        topmsg = q;
-        start = q;
-        end = q;
-      }
-    }
-    else
-      p = p->next;
-    i--;
-  }
-  for(i = numlines; i && topmsg != curmsg; i--)
-    topmsg = topmsg->next;
-  if(start->keep)
-  {
-    if(start == oldest_msg())
-      oldmsg = end->next;
-    move_msgs(start, end, topmsg, 0);
-    topmsg = start;
-  }
-#else
     int i; for (i=0; i < numlines && topmsg != newest_msg(); topmsg = topmsg->next, i++);
-#endif // OPTION_MSGHLD
 }
 
 static void page_up        () { scroll_up_lines  ( NUM_LINES - 1 ); }
@@ -772,6 +672,28 @@ static void get_dim (int *y, int *x)
     if (!cons_term || strcmp(cons_term, "xterm"))
         (*y)--;
 #endif
+}
+
+int get_keepmsg_num( int row )
+{
+    // PROGRAMMING NOTE: right now all of our kept messages are
+    // always placed at the very top of the screen (starting on
+    // line 1), but should we at some point in the future decide
+    // to use the very top line of the screen for something else
+    // (such as a title or status line for example), then all we
+    // need to do is modify the below variable and the code then
+    // adjusts itself automatically. (I try to avoid hard-coded
+    // constants whenever possible). -- Fish
+
+   static int keep_beg_row = 1;  // screen 1-relative line# of first kept msg
+
+    if (0
+        || row <  keep_beg_row
+        || row > (keep_beg_row + numkept - 1)
+    )
+        return -1;
+
+    return (row - keep_beg_row);
 }
 
 static void set_color (short fg, short bg)
@@ -1868,6 +1790,11 @@ char    buf[1024];                      /* Buffer workarea           */
         curmsg->prev = curmsg - 1;
         curmsg->msgnum = i;
         memset(curmsg->msg,SPACE,MSG_SIZE);
+#ifdef OPTION_MSGCLR
+        curmsg->bg = COLOR_DEFAULT_FG;
+        curmsg->fg = COLOR_DEFAULT_BG;
+        memset( &curmsg->expiration, 0, sizeof(curmsg->expiration));
+#endif
     }
 
     /* Complete the circle */
@@ -1876,10 +1803,11 @@ char    buf[1024];                      /* Buffer workarea           */
 
     /* Indicate "first-time" state */
     curmsg = topmsg = NULL;
-#ifdef OPTION_MSGHLD
-    oldmsg = NULL;
-#endif
     wrapped = 0;
+    numkept = 0;
+#ifdef OPTION_MSGCLR
+    keptmsgs = lastkept = NULL;
+#endif
 
     /* Set screen output stream to NON-buffered */
     setvbuf (confp, NULL, _IONBF, 0);
@@ -2399,6 +2327,7 @@ char    buf[1024];                      /* Buffer workarea           */
                                 cmdlen = 0;
                                 cmdoff = 0;
                                 ADJ_CMDCOL();
+                                redraw_cmd = 1;
                             } else {
                                 history_requested = 0;
                                 do_panel_command(cmdline);
@@ -2594,30 +2523,11 @@ FinishShutdown:
                 /* First-time here? */
                 if (curmsg == NULL) {
                     curmsg = topmsg = msgbuf;
-#ifdef OPTION_MSGHLD
-                    oldmsg = msgbuf;
-#endif
                 } else {
                     /* Perform autoscroll if needed */
                     if (is_currline_visible()) {
                         if (lines_remaining() < 1)
-#ifdef OPTION_MSGHLD
-                        {
-                            PANMSG *p;
-
-                            release_msgs();
-                            if (topmsg->keep)
-                            {
-                                for (p = topmsg; p != curmsg && p->keep; p = p->next);
-                                if (!p->keep)
-                                    move_msgs(p, p, topmsg, 1);
-                            }
-                            else
-                                topmsg = topmsg->next;
-                        }
-#else
                             topmsg = topmsg->next;
-#endif // OPTION_MSGHLD
                         /* Set the display update indicator */
                         redraw_msgs = 1;
                     }
@@ -2634,7 +2544,7 @@ FinishShutdown:
                 memcpy( curmsg->msg, readbuf, MSG_SIZE );
 #ifdef OPTION_MSGCLR
                 /* Colorize and/or keep new message if needed */
-                read_cmd(curmsg);
+                colormsg(curmsg);
 #endif
             } /* end if (!readoff || readoff >= MSG_SIZE) */
         } /* end Read message bytes until newline... */
@@ -2699,8 +2609,25 @@ FinishShutdown:
             if (redraw_msgs && !sysblk.npquiet)
             {
                 /* Display messages in scrolling area */
-                PANMSG* p = topmsg;
-                for (i=0; i < NUM_LINES && (p != curmsg->next || p == topmsg); i++, p = p->next)
+                PANMSG* p;
+
+                /* Unkeep any kept messages that have expired */
+                release_msgs();
+
+                /* Draw kept messages first */
+                for (i=0, p=keptmsgs; i < (NUM_LINES + numkept) && p; i++, p = p->next)
+                {
+                    set_pos (i+1, 1);
+#ifdef OPTION_MSGCLR
+                    set_color (p->fg, p->bg);
+#else
+                    set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
+#endif
+                    write_text (p->msg, MSG_SIZE);
+                }
+
+                /* Then draw current screen */
+                for (p=topmsg; i < (NUM_LINES + numkept) && (p != curmsg->next || p == topmsg); i++, p = p->next)
                 {
                     set_pos (i+1, 1);
 #ifdef OPTION_MSGCLR
@@ -2712,7 +2639,7 @@ FinishShutdown:
                 }
 
                 /* Pad remainder of screen with blank lines */
-                for (; i < NUM_LINES; i++)
+                for (; i < (NUM_LINES + numkept); i++)
                 {
                     set_pos (i+1, 1);
                     set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
