@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.249  2008/07/28 15:15:34  bernard
+// !scp -> pscp
+//
 // Revision 1.248  2008/07/27 10:21:03  rbowler
 // Fix  warning C4013: 'ProcessPanelCommand' undefined
 //
@@ -6837,6 +6840,14 @@ CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need hel
                        "it will be displayed. Help text is usually limited to explaining\n"
                        "the format of the command and its various required or optional\n"
                        "parameters and is not meant to replace reading the documentation.\n"
+                       )
+
+CMDHELP ( "quiet",     "'quiet' either disables automatic screen refreshing if it is\n"
+                       "currently enabled or enables it if it is currently disabled.\n"
+                       "When disabled you will no be able to see the response of any\n"
+                       "entered commands nor any messages issued by the system nor be\n"
+                       "able to scroll the display, etc. Basically all screen updating\n"
+                       "is disabled. Entering 'quiet' again re-enables screen updating.\n"
                        )
 
 CMDHELP ( "ctc",       "Format:  \"ctc  debug  { on | off }  [ <devnum> | ALL ]\".\n\n"
