@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.242  2008/08/29 19:06:42  fish
+// Panel display extended cursor handling (Windows only)
+//
 // Revision 1.241  2008/08/29 11:11:06  fish
 // Fix message-keep logic  (i.e. sticky/held messages)
 //
@@ -361,6 +364,7 @@ static PANMSG*  topmsg;                 /* message at top of screen  */
 static PANMSG*  curmsg;                 /* newest message            */
 static int      wrapped = 0;            /* wrapped-around flag       */
 static int      numkept = 0;            /* count of kept messages    */
+static int      npquiet = 0;            /* screen updating flag      */
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -1934,10 +1938,12 @@ char    buf[1024];                      /* Buffer workarea           */
                     cmdoff = 0;
                     ADJ_CMDCOL();
                     switch(kbbuf[0]) {
-                        case 0x1b:                  /* ESC */
+                        case 0x1B:                  /* ESC */
                             NPDup = 0;
                             restore_command_line();
                             ADJ_CMDCOL();
+                            redraw_msgs = redraw_cmd = redraw_status = 1;
+                            npquiet = 0; // (forced for one paint cycle)
                             break;
                         case '?':
                             NPhelpup = 1;
@@ -2131,6 +2137,7 @@ char    buf[1024];                      /* Buffer workarea           */
                     NPcmd = 1;
                 } else {  /* We are in data entry mode */
                     if (kbbuf[0] == 0x1B) {
+                        /* Switch back to command mode */
                         NPdataentry = 0;
                         NPaddr_valid = 0;
                         NPdata_valid = 0;
@@ -2706,7 +2713,7 @@ FinishShutdown:
 
         if (NPDup == 0) {
             /* Rewrite the screen if display update indicators are set */
-            if (redraw_msgs && !sysblk.npquiet)
+            if (redraw_msgs && !npquiet)
             {
                 /* Display messages in scrolling area */
                 PANMSG* p;
@@ -2754,7 +2761,7 @@ FinishShutdown:
                     /* More messages precede top line */
                     set_pos (1, cons_cols);
                     set_color (COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG);
-                    draw_text ("+" );
+                    draw_text ("+");
                 }
                 if (!is_currline_visible())
                 {
@@ -2771,7 +2778,7 @@ FinishShutdown:
                 set_pos (CMDLINE_ROW, 1);
                 set_color (COLOR_DEFAULT_LIGHT, COLOR_DEFAULT_BG);
 
-#ifdef OPTION_CMDTGT
+#if defined(OPTION_CMDTGT)
                 switch(sysblk.cmdtgt)
                 {
                   case 0: // cmdtgt herc 
@@ -2790,16 +2797,16 @@ FinishShutdown:
                     break;
                   }
                 }
-#elif
+#else // !defined(OPTION_CMDTGT)
                 draw_text (CMD_PREFIX_STR);
-#endif // OPTION_CMDTGT
+#endif // defined(OPTION_CMDTGT)
 
                 set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
                 PUTC_CMDLINE ();
                 fill_text (' ',cons_cols);
             } /* end if(redraw_cmd) */
 
-            if (redraw_status && !sysblk.npquiet)
+            if (redraw_status && !npquiet)
             {
                 memset (buf, ' ', cons_cols);
                 len = sprintf (buf, "CPU%4.4X ", sysblk.pcpu);
@@ -2861,21 +2868,31 @@ FinishShutdown:
                 fflush (confp);
             }
 
-        } else {
+        } else { /* (NPDup == 1) */
 
             if (redraw_status || (NPDinit == 0 && NPDup == 1)
                    || (redraw_cmd && NPdataentry == 1)) {
                 if (NPDinit == 0) {
                     NPDinit = 1;
                     NP_screen_redraw(regs);
+                    NP_update(regs);
+                    fflush (confp);
                 }
             }
-            NP_update(regs);
-            fflush (confp);
+            /* Update New Panel every panrate interval */
+            if (!npquiet) {
+                NP_update(regs);
+                fflush (confp);
+            }
             redraw_msgs = redraw_cmd = redraw_status = 0;
         }
 
     /* =END= */
+
+        /* Force full screen repaint if needed */
+        if (!sysblk.npquiet && npquiet)
+            redraw_msgs = redraw_cmd = redraw_status = 1;
+        npquiet = sysblk.npquiet;
 
     } /* end while */
 
