@@ -29,7 +29,7 @@ Hercules Version 3: Installation and Operation</TITLE>
     <p>
         <a href="#operating">Operating Procedure</a>
         <ul>
-            <li><a href="#starting">Loading a standalone program or operating system</a>
+            <li><a href="#starting">Starting Hercules</a>
             <li><a href="#keyboard">Using the keyboard</a>
             <li><a href="#commands">Panel commands</a>
             <li><a href="#RCFILE">The .RC &nbsp;("run commands")&nbsp; file</a>
@@ -210,13 +210,14 @@ href="cckddasd.html">this page</a>.
 <p><hr><a name="operating"></a>
 <h2>Operating Procedure</h2>
 <a name="starting">
-<h4>Loading a standalone program or operating system</h4>
 <p class="warning">
 <em>Note: If you intend to run any licensed software on your PC
 using Hercules, it is your responsibility to ensure that you do not
 violate the software vendor's licensing terms.</em>
+
+<h4>Starting Hercules</h4>
 <p>
-To start Hercules enter the following command:
+To start Hercules enter this command at the Unix or Windows command prompt:
 <blockquote><code><pre>
     hercules  [ -f <em>filename</em> ]
               [ -d ]
@@ -460,7 +461,7 @@ or the Home or End keys:
     </TABLE>
     </blockquote>
     </blockquote>
-<p><br>
+<p>
 Use the Insert key to switch between insert and overlay mode when typing in
 the command input area. Use the Home and End keys to move to the first or
 last character of the command you are typing, or the use the left/right arrow keys
@@ -490,150 +491,150 @@ panel commands.
 <p>
 <pre>
 
-        Command          Description...
-        -------          -----------------------------------------------
-        ?                list all commands
-        help             command specific help
+    Command      Description
+    -------      -----------------------------------------------
+    ?            list all commands
+    help         command specific help
 
-        *                (log comment to syslog)
+    *            (log comment to syslog)
 
-        hst              history of commands
-        log              direct log output
-        logopt           change log options 
-        version          display version information
+    hst          history of commands
+    log          direct log output
+    logopt       change log options
+    version      display version information
 
-        quit             terminate the emulator
-        exit             (synonym for 'quit')
+    quit         terminate the emulator
+    exit         (synonym for 'quit')
 
-        cpu              define target cpu for panel display and commands
+    cpu          define target cpu for panel display and commands
 
-        start            start CPU (or printer device if argument given)
-        stop             stop CPU (or printer device if argument given)
+    start        start CPU (or printer device if argument given)
+    stop         stop CPU (or printer device if argument given)
 
-        startall         start all CPU's
-        stopall          stop all CPU's
+    startall     start all CPU's
+    stopall      stop all CPU's
 
-        cf               configure current CPU online or offline
-        cfall            configure all CPU's online or offline
+    cf           configure current CPU online or offline
+    cfall        configure all CPU's online or offline
 
-        .reply           scp command
-        !message         scp priority messsage
-        ssd              Signal Shutdown
+    .reply       scp command
+    !message     scp priority messsage
+    ssd          Signal Shutdown
 
-        ptt              display pthread trace
+    ptt          display pthread trace
 
-        i                generate I/O attention interrupt for device
-        ext              generate external interrupt
-        restart          generate restart interrupt
-        archmode         set architecture mode
-        loadparm         set IPL parameter
+    i            generate I/O attention interrupt for device
+    ext          generate external interrupt
+    restart      generate restart interrupt
+    archmode     set architecture mode
+    loadparm     set IPL parameter
 
-        ipl              IPL Normal from device xxxx
-        iplc             IPL Clear from device xxxx
-        sysreset         Issue SYSTEM Reset manual operation
-        sysclear         Issue SYSTEM Clear Reset manual operation
-        store            store CPU status at absolute zero
+    ipl          IPL Normal from device xxxx
+    iplc         IPL Clear from device xxxx
+    sysreset     Issue SYSTEM Reset manual operation
+    sysclear     Issue SYSTEM Clear Reset manual operation
+    store        store CPU status at absolute zero
 
-        psw              display or alter program status word
-        gpr              display or alter general purpose registers
-        fpr              display floating point registers
-        fpc              display floating point control register
-        cr               display or alter control registers
-        ar               display access registers
-        pr               display prefix register
-        timerint         display or set timers update interval
-        clocks           display tod clkc and cpu timer
-        ipending         display pending interrupts
-        ds               display subchannel
-        r                display or alter real storage
-        v                display or alter virtual storage
-        u                disassemble storage
-        devtmax          display or set max device threads
-        k                display cckd internal trace
+    psw          display or alter program status word
+    gpr          display or alter general purpose registers
+    fpr          display floating point registers
+    fpc          display floating point control register
+    cr           display or alter control registers
+    ar           display access registers
+    pr           display prefix register
+    timerint     display or set timers update interval
+    clocks       display tod clkc and cpu timer
+    ipending     display pending interrupts
+    ds           display subchannel
+    r            display or alter real storage
+    v            display or alter virtual storage
+    u            disassemble storage
+    devtmax      display or set max device threads
+    k            display cckd internal trace
 
-        attach           configure device
-        detach           remove device
-        define           rename device
-        devinit          reinitialize device
-        devlist          list device or all devices
+    attach       configure device
+    detach       remove device
+    define       rename device
+    devinit      reinitialize device
+    devlist      list device or all devices
 
-        qd               query dasd
+    qd           query dasd
 
-        scsimount        automatic SCSI tape mounts
+    scsimount    automatic SCSI tape mounts
 
-        cd               change directory
-        pwd              print working directory
-        sh               shell command
+    cd           change directory
+    pwd          print working directory
+    sh           shell command
 
-        cache            cache command
-        cckd             cckd command
-        shrd             shrd command
-        conkpalv         display/alter console TCP keep-alive settings
-        quiet            toggle automatic refresh of panel display data
+    cache        cache command
+    cckd         cckd command
+    shrd         shrd command
+    conkpalv     display/alter console TCP keep-alive settings
+    quiet        toggle automatic refresh of panel display data
 
-        t                instruction trace
-        t+               instruction trace on
-        t-               instruction trace off
-        t?               instruction trace query
-        s                instruction stepping
-        s+               instruction stepping on
-        s-               instruction stepping off
-        s?               instruction stepping query
-        b                set breakpoint
-        b+               set breakpoint
-        b-               delete breakpoint
-        g                turn off instruction stepping and start CPU
+    t            instruction trace
+    t+           instruction trace on
+    t-           instruction trace off
+    t?           instruction trace query
+    s            instruction stepping
+    s+           instruction stepping on
+    s-           instruction stepping off
+    s?           instruction stepping query
+    b            set breakpoint
+    b+           set breakpoint
+    b-           delete breakpoint
+    g            turn off instruction stepping and start CPU
 
-        ostailor         trace program interrupts
-        pgmtrace         trace program interrupts
-        savecore         save a core image to file
-        loadcore         load a core image file
-        loadtext         load a text deck file
+    ostailor     trace program interrupts
+    pgmtrace     trace program interrupts
+    savecore     save a core image to file
+    loadcore     load a core image file
+    loadtext     load a text deck file
 
-        ldmod            load a module
-        rmmod            delete a module
-        lsmod            list dynamic modules
-        lsdep            list module dependencies
+    ldmod        load a module
+    rmmod        delete a module
+    lsmod        list dynamic modules
+    lsdep        list module dependencies
 
-        iodelay          display or set I/O delay value
-        tt32stats        (deprecated; use 'tt32' cmd instead)
-        tt32             control/query CTCI-W32 functionality
-        toddrag          display or set TOD clock drag factor
-        panrate          display or set rate at which console refreshes
-        syncio           display syncio devices statistics
-        maxrates         display maximum observed MIPS/SIOS rate for the
-                         defined interval or define a new reporting interval
+    iodelay      display or set I/O delay value
+    tt32stats    (deprecated; use 'tt32' cmd instead)
+    tt32         control/query CTCI-W32 functionality
+    toddrag      display or set TOD clock drag factor
+    panrate      display or set rate at which console refreshes
+    syncio       display syncio devices statistics
+    maxrates     display maximum observed MIPS/SIOS rate for the
+                 defined interval or define a new reporting interval
 
-        defsym           Define symbol
-        script           Run a sequence of panel commands contained in a file
-        cscript          Cancels a running script thread
+    defsym       Define symbol
+    script       Run a sequence of panel commands contained in a file
+    cscript      Cancels a running script thread
 
-        evm              ECPS:VM Commands (Deprecated)
-        ecpsvm           ECPS:VM Commands
+    evm          ECPS:VM Commands (Deprecated)
+    ecpsvm       ECPS:VM Commands
 
-        aea              Display AEA tables
-        aia              Display AIA fields
-        tlb              Display TLB tables
+    aea          Display AEA tables
+    aia          Display AIA fields
+    tlb          Display TLB tables
 
-        sizeof           Display size of structures
+    sizeof       Display size of structures
 
-        suspend          Suspend hercules
-        resume           Resume hercules
+    suspend      Suspend hercules
+    resume       Resume hercules
 
-        herclogo         Read a new hercules logo file
+    herclogo     Read a new hercules logo file
 
-        traceopt         Instruction trace display options
+    traceopt     Instruction trace display options
 
-        sf+dev           add shadow file
-        sf-dev           delete shadow file
-        sf=dev ..        rename shadow file
-        sfc              compress shadow files
-        sfd              display shadow file stats
+    sf+dev       add shadow file
+    sf-dev       delete shadow file
+    sf=dev ..    rename shadow file
+    sfc          compress shadow files
+    sfd          display shadow file stats
 
-        t{+/-}dev        turn CCW tracing on/off
-        s{+/-}dev        turn CCW stepping on/off
-        t{+/-}CKD        turn CKD_KEY tracing on/off
-        f{+/-}adr        mark frames unusable/usable
+    t{+/-}dev    turn CCW tracing on/off
+    s{+/-}dev    turn CCW stepping on/off
+    t{+/-}CKD    turn CKD_KEY tracing on/off
+    f{+/-}adr    mark frames unusable/usable
 
 </pre>
 <p>
@@ -722,7 +723,7 @@ be used for whatever messages the guest operating system may issue to any
 of its terminals. It is only a <i>Hercules</i> automatic operator and
 <i>not</i> a "VSE", "MVS", "VM", etc, automatic operator.
 
-<h5><u>Defining a Rule</u></h5>
+<h5>Defining a Rule</h5>
 <p>
 To define a HAO rule, enter the command:
 <pre>
@@ -746,9 +747,9 @@ further details.
 <p>
 The associated <i>command</i> is whatever valid Hercules panel command you
 wish to issue in response to a message being issued that matches the given
-pattern <i>target</i>. 
+pattern <i>target</i>.
 
-<h5><u>Other commands and limitations</u></h5>
+<h5>Other commands and limitations</h5>
 <p>
 To delete a fully or partially defined HAO rule, first use the 'hao list'
 command to list all of the defined (or partially defined) rules, and then use
@@ -762,9 +763,10 @@ you need to define more than 64 rules you will either have to build Hercules
 for yourself (increasing the value of the HAO_MAXRULE constant in hao.c) or
 else beg one of the Hercules developers to please do it for you.
 <p>
-Note that there is currently no way to define a command whose arguments vary  
+Note that there is currently no way to define a command whose arguments vary
 based on actual message text. That is to say, there is currently no way to say
 <blockquote>
+<p>
    "Reply with the command 'devinit <i>cuu</i> filename'
    in response to message text 'HHCXXnnnI Device <i>cuu</i>
    intervention required.' where <i>cuu</i> is whatever cuu

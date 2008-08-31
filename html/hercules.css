@@ -21,7 +21,7 @@ h1, h2, h3, h4, h5, h6
 h1 {color: blue;}
 h2 {color: red; font-style: italic;}
 
-p, li, dt, dd, td {color: black; font-family: Arial;}
+p, li, dt, dd, td, th {color: black; font-family: Arial;}
 
 p.lastupd
 {
@@ -102,7 +102,7 @@ dl.messages dt
 }
 
 /* Messages and codes: Message text */
-dl.messages dt code, dl.messages dt pre, dl.messages dt tt 
+dl.messages dt code, dl.messages dt pre, dl.messages dt tt
 {
     font-family:      Arial;
     font-style:       italic;
