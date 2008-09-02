@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.250  2008/08/30 05:51:00  fish
+// Add help text for 'quiet' command
+//
 // Revision 1.249  2008/07/28 15:15:34  bernard
 // !scp -> pscp
 //
@@ -241,12 +244,91 @@ int ProcessPanelCommand (char*);
 #pragma optimize( "", off )
 #endif
 
+int test_p   = 0;
+int test_n   = 0;
+TID test_tid = 0;
+int test_msg_num = 0;
+
+char* test_p_msg = "<pnl,color(lightyellow,black),keep>Test protected message %d...\n";
+char* test_n_msg =                                    "Test normal message %d...\n";
+
+void do_test_msgs()
+{
+    int  i;
+    for (i=0; i < test_n; i++)
+        logmsg(   test_n_msg, test_msg_num++ );
+
+    if (         !test_p) return;
+    for (i=0; i < test_p; i++)
+        logmsg(   test_p_msg, test_msg_num++ );
+
+    if (         !test_n) return;
+    for (i=0; i < test_n; i++)
+        logmsg(   test_n_msg, test_msg_num++ );
+
+}
+
+void* test_thread(void* parg)
+{
+    logmsg("test thread: STARTING\n");
+
+    SLEEP( 5 );
+
+    do_test_msgs();
+
+    logmsg("test thread: EXITING\n");
+    test_tid = 0;
+    return NULL;
+}
+
 int test_cmd(int argc, char *argv[],char *cmdline)
 {
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+//  UNREFERENCED(argc);
+//  UNREFERENCED(argv);
     UNREFERENCED(cmdline);
-    cause_crash();
+//  cause_crash();
+
+    if (test_tid)
+    {
+        logmsg("ERROR: test thread still running!\n");
+        return 0;
+    }
+
+    if (argc < 2 || argc > 4)
+    {
+        logmsg("Format: \"$test p=#msgs n=#msgs &\" (args can be in any order)\n");
+        return 0;
+    }
+
+    test_p = 0;
+    test_n = 0;
+
+    if (argc > 1)
+    {
+        if (strncasecmp(argv[1],   "p=",2) == 0) test_p = atoi( &argv[1][2] );
+        if (strncasecmp(argv[1],   "n=",2) == 0) test_n = atoi( &argv[1][2] );
+        if (            argv[1][0] == '&')       test_tid = 1;
+    }
+
+    if (argc > 2)
+    {
+        if (strncasecmp(argv[2],   "p=",2) == 0) test_p = atoi( &argv[2][2] );
+        if (strncasecmp(argv[2],   "n=",2) == 0) test_n = atoi( &argv[2][2] );
+        if (            argv[2][0] == '&')       test_tid = 1;
+    }
+
+    if (argc > 3)
+    {
+        if (strncasecmp(argv[3],   "p=",2) == 0) test_p = atoi( &argv[3][2] );
+        if (strncasecmp(argv[3],   "n=",2) == 0) test_n = atoi( &argv[3][2] );
+        if (            argv[3][0] == '&')       test_tid = 1;
+    }
+
+    if (test_tid)
+        create_thread( &test_tid, &sysblk.detattr, test_thread, NULL, "test thread" );
+    else
+        do_test_msgs();
+
     return 0;
 }
 
