@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2008/08/29 10:22:08  fish
+// Lay groundwork for eventual extended cursor handling
+//
 // Revision 1.14  2008/08/23 11:57:19  fish
 // Also set console OUTPUT buffer mode for
 // MSVC builds in order to fix line-wrap issue.
@@ -324,29 +327,28 @@ void translate_keystroke( char kbbuf[], int* pkblen )
 
             switch ( ch2 )      // generate ANSI escape sequence
             {
-                case 0x48: strcpy( kbbuf, KBD_UP_ARROW        ); break;
-                case 0x50: strcpy( kbbuf, KBD_DOWN_ARROW      ); break;
-
-                case 0x98: strcpy( kbbuf, KBD_ALT_UP_ARROW    ); break;
-                case 0xA0: strcpy( kbbuf, KBD_ALT_DOWN_ARROW  ); break;
-
-                case 0x8D: strcpy( kbbuf, KBD_CTRL_UP_ARROW   ); break;
-                case 0x91: strcpy( kbbuf, KBD_CTRL_DOWN_ARROW ); break;
-
-                case 0x4B: strcpy( kbbuf, KBD_LEFT_ARROW      ); break;
-                case 0x4D: strcpy( kbbuf, KBD_RIGHT_ARROW     ); break;
-
+                case 0x47: strcpy( kbbuf, KBD_HOME            ); break;
+                case 0x52: strcpy( kbbuf, KBD_INSERT          ); break;
+                case 0x53: strcpy( kbbuf, KBD_DELETE          ); break;
+                case 0x4F: strcpy( kbbuf, KBD_END             ); break;
                 case 0x49: strcpy( kbbuf, KBD_PAGE_UP         ); break;
                 case 0x51: strcpy( kbbuf, KBD_PAGE_DOWN       ); break;
 
-                case 0x47: strcpy( kbbuf, KBD_HOME            ); break;
-                case 0x4F: strcpy( kbbuf, KBD_END             ); break;
+                case 0x48: strcpy( kbbuf, KBD_UP_ARROW        ); break;
+                case 0x50: strcpy( kbbuf, KBD_DOWN_ARROW      ); break;
+                case 0x4D: strcpy( kbbuf, KBD_RIGHT_ARROW     ); break;
+                case 0x4B: strcpy( kbbuf, KBD_LEFT_ARROW      ); break;
 
                 case 0x77: strcpy( kbbuf, KBD_CTRL_HOME       ); break;
                 case 0x75: strcpy( kbbuf, KBD_CTRL_END        ); break;
 
-                case 0x52: strcpy( kbbuf, KBD_INSERT          ); break;
-                case 0x53: strcpy( kbbuf, KBD_DELETE          ); break;
+                case 0x8D: strcpy( kbbuf, KBD_CTRL_UP_ARROW   ); break;
+                case 0x91: strcpy( kbbuf, KBD_CTRL_DOWN_ARROW ); break;
+
+                case 0x98: strcpy( kbbuf, KBD_ALT_UP_ARROW    ); break;
+                case 0xA0: strcpy( kbbuf, KBD_ALT_DOWN_ARROW  ); break;
+                case 0x9D: strcpy( kbbuf, KBD_ALT_RIGHT_ARROW ); break;
+                case 0x9B: strcpy( kbbuf, KBD_ALT_LEFT_ARROW  ); break;
 
                 default:
                 {
