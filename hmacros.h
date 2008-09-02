@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.24  2008/08/21 18:34:45  fish
+// Fix i/o-interrupt-queue race condition
+//
 // Revision 1.23  2008/07/16 11:01:41  fish
 // Create "sizeof_member" macro
 //
@@ -240,9 +243,15 @@
 
 #if defined(DEBUG) || defined(_DEBUG)
 
-  #define TRACE   logmsg
-
   #ifdef _MSVC_
+
+    #define TRACE(...) \
+      do \
+      { \
+        IsDebuggerPresent() ? DebugTrace (__VA_ARGS__): \
+                              logmsg     (__VA_ARGS__); \
+      } \
+      while (0)
 
     #undef ASSERT /* For VS9 2008 */
     #define ASSERT(a) \
@@ -250,7 +259,7 @@
       { \
         if (!(a)) \
         { \
-          logmsg("HHCxx999W *** Assertion Failed! *** %s(%d); function: %s\n",__FILE__,__LINE__,__FUNCTION__); \
+          TRACE("HHCxx999W *** Assertion Failed! *** %s(%d); function: %s\n",__FILE__,__LINE__,__FUNCTION__); \
           if (IsDebuggerPresent()) DebugBreak();   /* (break into debugger) */ \
         } \
       } \
@@ -258,19 +267,21 @@
 
   #else // ! _MSVC_
 
+    #define TRACE logmsg
+
     #define ASSERT(a) \
       do \
       { \
         if (!(a)) \
         { \
-          logmsg("HHCxx999W *** Assertion Failed! *** %s(%d)\n",__FILE__,__LINE__); \
+          TRACE("HHCxx999W *** Assertion Failed! *** %s(%d)\n",__FILE__,__LINE__); \
         } \
       } \
       while(0)
 
   #endif // _MSVC_
 
-  #define VERIFY(a)   ASSERT((a))
+  #define VERIFY  ASSERT
 
 #else // non-debug build...
 
