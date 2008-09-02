@@ -43,8 +43,10 @@ Hercules Version 3: Installation and Operation</TITLE>
 </blockquote>
 
 <p><hr><a name="install"></a>
+<p><br>
 <h2>Installation Procedure</h2>
 <a name="instsource"></a>
+<p><br>
 <h3>Building from source - Windows (without Cygwin)</h3>
 <p>
 For building the MSVC version of Hercules on Windows (a version of
@@ -101,8 +103,9 @@ You must use at least version 2.95 of the gcc compiler and the glibc2 library.
 Refer to the <a href="hercfaq.html#3.04">
 Hercules Frequently-Asked Questions</a> page for required
 compiler and other software levels.
-
+<p>
 <a name="instbinary"></a>
+<p><br>
 <h3>Installing prebuilt RPMs:</h3>
 <ol>
 <li>Download the RPM file you want:
@@ -191,6 +194,7 @@ version.
 </ol>
 
 <p><hr><a name="config"></a>
+<p><br>
 <h2>Configuration Procedure</h2>
 <p>
 You will need to amend the configuration file
@@ -200,6 +204,7 @@ See the <a href="hercconf.html">Hercules Configuration File</a> page for
 a complete description.
 
 <p><hr><a name="dasd"></a>
+<p><br>
 <h2>Creating DASD volumes</h2>
 <p>
 The <a href="hercload.html">Creating Hercules DASD</a> page
@@ -208,8 +213,10 @@ volumes. The compressed CKD DASD support is described in <a
 href="cckddasd.html">this page</a>.
 
 <p><hr><a name="operating"></a>
+<p><br>
 <h2>Operating Procedure</h2>
 <a name="starting">
+<p><br>
 <p class="warning">
 <em>Note: If you intend to run any licensed software on your PC
 using Hercules, it is your responsibility to ensure that you do not
@@ -276,191 +283,22 @@ Now you can enter an ipl command from the control panel.
 <hr width="50%">
 
 <a name="keyboard">
+<p><br>
 <h4>Using the keyboard</h4>
 <p>
 
 The main Hercules screen contains a scrollable list of messages with a command
 input area and system status line at the bottom of the screen.
 <p>
-Important messages are highlighted in a different color (usually red) and are
-kept at the top of the screen. They will be automatically removed after two
-minutes on Linux systems, whereas on Windows systems they remain on the screen
-forever until manually removed. To remove a held message on Windows systems,
-move the cursor to the line containing the message and then press enter.
+To scroll through the messages, use either the Page Up or Page Down keys,
+the Ctrl + Up Arrow or Ctrl + Down Arrow keys, or the Home or End and/or
+the Ctrl + Home or Ctrl + End keys.
 <p>
-To scroll through the messages use either the PageUp or PageDown keys,
-the Ctrl+UpArrow or Ctrl+DownArrow keys, the Ctrl+Home or Ctrl+End keys
-or the Home or End keys:
-<p><br>
-    <blockquote>
-    <blockquote>
-    <TABLE border=1 cellpadding=5>
-      <THEAD>
-        <TR>
-          <TH rowspan=2>Key</TH>
-          <TH colspan=2>Action</TH>
-        </TR>
-        <TR>
-          <TH>(Windows)</TH>
-          <TH>(Linux)</TH>
-        </TR>
-      </THEAD>
-      <TBODY>
-
-        <TR>
-          <TD>Page Up</TD>
-          <TD>Scroll back one screen</TD>
-          <TD>Scroll back one screen</TD>
-        </TR>
-
-        <TR>
-          <TD>Page Down</TD>
-          <TD>Scroll forward one screen</TD>
-          <TD>Scroll forward one screen</TD>
-        </TR>
-
-        <TR>
-          <TD>Up Arrow</TD>
-          <TD>Move cursor up one line</TD>
-          <TD>Recall previous command</TD>
-        </TR>
-
-        <TR>
-          <TD>Down Arrow</TD>
-          <TD>Move cursor down one line</TD>
-          <TD>Recall next command</TD>
-        </TR>
-
-        <TR>
-          <TD>Ctrl + Up Arrow</TD>
-          <TD>Scroll up one line</TD>
-          <TD>Scroll up one line</TD>
-        </TR>
-
-        <TR>
-          <TD>Ctrl + Down Arrow</TD>
-          <TD>Scroll down one line</TD>
-          <TD>Scroll down one line</TD>
-        </TR>
-
-        <TR>
-          <TD>Alt + Up Arrow</TD>
-          <TD>Recall previous command</TD>
-          <TD align=center>n/a</TD>
-        </TR>
-
-        <TR>
-          <TD>Alt + Down Arrow</TD>
-          <TD>Recall next command</TD>
-          <TD align=center>n/a</TD>
-        </TR>
-
-        <TR>
-          <TD>Left Arrow</TD>
-          <TD>Move cursor to previous input area character</TD>
-          <TD>Move cursor to previous input area character</TD>
-        </TR>
-
-        <TR>
-          <TD>Right Arrow</TD>
-          <TD>Move cursor to next input area character</TD>
-          <TD>Move cursor to next input area character</TD>
-        </TR>
-
-        <TR>
-          <TD>Left Arrow</TD>
-          <TD>Move cursor left one column</TD>
-          <TD align=center>n/a</TD>
-        </TR>
-
-        <TR>
-          <TD>Right Arrow</TD>
-          <TD>Move cursor right one column</TD>
-          <TD align=center>n/a</TD>
-        </TR>
-
-        <TR>
-          <TD>Home</TD>
-          <TD>Move cursor to beginning of input area</TD>
-          <TD>Move cursor to beginning of typed input</TD>
-        </TR>
-
-        <TR>
-          <TD>End</TD>
-          <TD>Move cursor to end of typed input</TD>
-          <TD>Move cursor to end of typed input</TD>
-        </TR>
-
-        <TR>
-          <TD>Home</TD>
-          <TD>Scroll to top screen</TD>
-          <TD>Scroll to top screen</TD>
-        </TR>
-
-        <TR>
-          <TD>End</TD>
-          <TD>Scroll to bottom screen</TD>
-          <TD>Scroll to bottom screen</TD>
-        </TR>
-
-        <TR>
-          <TD>Ctrl + Home</TD>
-          <TD>Scroll to first line</TD>
-          <TD>Scroll to first line</TD>
-        </TR>
-
-        <TR>
-          <TD>Ctrl + End</TD>
-          <TD>Scroll to last line</TD>
-          <TD>Scroll to last line</TD>
-        </TR>
-
-        <TR>
-          <TD>Escape</TD>
-          <TD>Erase typed input</TD>
-          <TD>Erase typed input</TD>
-        </TR>
-
-        <TR>
-          <TD>Escape</TD>
-          <TD>Switch to/from semi-graphical panel</TD>
-          <TD>Switch to/from semi-graphical panel</TD>
-        </TR>
-
-        <TR>
-          <TD>Delete</TD>
-          <TD>Delete current character</TD>
-          <TD>Delete current character</TD>
-        </TR>
-
-        <TR>
-          <TD>Backspace</TD>
-          <TD>Delete previous character</TD>
-          <TD>Delete previous character</TD>
-        </TR>
-
-        <TR>
-          <TD>Insert</TD>
-          <TD>Toggle between insert and overlay mode</TD>
-          <TD>Toggle between insert and overlay mode</TD>
-        </TR>
-
-        <TR>
-          <TD>Tab</TD>
-          <TD>List current directory</TD>
-          <TD>List current directory</TD>
-        </TR>
-
-        <TR>
-          <TD>Tab</TD>
-          <TD>Move cursor to beginning of input area</TD>
-          <TD align=center>n/a</TD>
-        </TR>
-
-      </TBODY>
-    </TABLE>
-    </blockquote>
-    </blockquote>
+Important messages are highlighted in a different color (usually red) and are
+prevented from being scrolled off the screen for two minutes. If Extended Cursor
+handling is available then important messages currently at the top of the screen
+can be removed early by moving the cursor to the line containing the message
+and then pressing enter.
 <p>
 Use the Insert key to switch between insert and overlay mode when typing in
 the command input area. Use the Home and End keys to move to the first or
@@ -469,7 +307,7 @@ to move to a specific character. Use the Escape key to erase the input area.
 <p>
 Pressing Escape when the command input area is already empty causes the screen
 to switch to the semi-graphical "New Panel" display mode, which shows the overall
-system status on the left side of the screen and the devices status on the right.
+status of the system and devices.
 <p>
 When in the semi-graphical "New Panel" display mode there is no command input
 area. Instead, single character "hot keys" are used to issue some of the more
@@ -477,10 +315,319 @@ common functions such as starting or stopping the CPU. The hot-keys are those
 which are highlighted. Pressing the '?' key displays brief help information
 on how to use the semi-graphical panel.
 
-<p><br>
-<hr width="50%">
+<P><br>
+<P><br>
 
+    <blockquote>
+    <blockquote>
+
+    <TABLE border=1 cellpadding=5>
+
+      <THEAD>
+
+        <TR>
+          <TH colspan=2>   <br><big>Normal cursor handling</big><br>
+                       <small>(common to both Windows/Linux)</small><p>
+          </TH>
+        </TR>
+
+        <TR>
+          <TH>Key</TH>
+          <TH>Action</TH>
+        </TR>
+
+      </THEAD>
+
+      <TBODY>
+
+
+        <TR>
+          <TD>
+                    Esc
+          </TD>
+          <TD>
+                    If command i/p area not empty, erases typed input.
+                    Otherwise switches to semi-graphical New Panel.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Del
+          </TD>
+          <TD>
+                    Deletes the character under the cursor.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Backspace
+          </TD>
+          <TD>
+                    Erases the previous character.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Insert
+          </TD>
+          <TD>
+                    Toggle cursor between insert and overlay mode.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Tab
+          </TD>
+          <TD>
+                    List current directory.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Home
+          </TD>
+          <TD>
+                    If command i/p area not empty, moves the cursor to
+                    the beginning of typed i/p. Else scrolls to the top.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    End
+          </TD>
+          <TD>
+                    If command i/p area not empty, moves the cursor to
+                    the end of typed i/p. Else scrolls to the bottom.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Page Up
+          </TD>
+          <TD>
+                    Scrolls up one screen.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Page Down
+          </TD>
+          <TD>
+                    Scrolls down one screen.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Up arrow
+          </TD>
+          <TD>
+                    Command recall: &nbsp;recalls previous command
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Down arrow
+          </TD>
+          <TD>
+                    Command recall: &nbsp;recalls next command
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Right arrow
+          </TD>
+          <TD>
+                    Move cursor to next character of typed input.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Left arrow
+          </TD>
+          <TD>
+                    Move cursor to previous character of typed input.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Ctrl + Up arrow
+          </TD>
+          <TD>
+                    Scroll up one line.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Ctrl + Down arrow
+          </TD>
+          <TD>
+                    Scroll down one line.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Ctrl + Home
+          </TD>
+          <TD>
+                    Scroll to top.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Ctrl + End
+          </TD>
+          <TD>
+                    Scroll to bottom line.
+          </TD>
+        </TR>
+
+
+      </TBODY>
+    </TABLE>
+
+<P><br>
+<P><br>
+<P><br>
+<P><br>
+
+    <TABLE border=1 cellpadding=5>
+
+      <THEAD>
+
+        <TR>
+          <TH colspan=2>   <br><big>Extended cursor handling</big><br>
+                         <small>(Windows-only at the moment)</small><p>
+          </TH>
+        </TR>
+
+        <TR>
+          <TH>Key</TH>
+          <TH>Action</TH>
+        </TR>
+
+      </THEAD>
+
+      <TBODY>
+
+
+        <TR>
+          <TD>
+                    Alt + Up arrow
+          </TD>
+          <TD>
+                    Move cursor up one row
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Alt + Down arrow
+          </TD>
+          <TD>
+                    Move cursor down one row
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Alt + Right arrow
+          </TD>
+          <TD>
+                    Move cursor right one column
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Alt + Left arrow
+          </TD>
+          <TD>
+                    Move cursor left one column
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Tab
+          </TD>
+          <TD>
+                    If cursor not on command-line, moves cursor to the
+                    beginning of typed i/p. Otherwise behaves normally.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    Home
+          </TD>
+          <TD>
+                    If cursor not on command-line, moves cursor to the
+                    beginning of typed i/p. Otherwise behaves normally.
+          </TD>
+        </TR>
+
+
+        <TR>
+          <TD>
+                    End
+          </TD>
+          <TD>
+                    If cursor not on command-line, moves cursor to the
+                    end of typed i/p. Otherwise behaves normally.
+          </TD>
+        </TR>
+
+
+      </TBODY>
+    </TABLE>
+
+    </blockquote>
+    </blockquote>
+
+<p><br>
+<P><br>
+<hr width="50%">
+<P><br>
 <a name="commands">
+<P><br>
+
 <h4>Panel commands</h4>
 <p>
 The following is what is displayed on the Hercules harware console (HMC)
@@ -671,6 +818,7 @@ this additional help information. (Note: not every command supports help)
 <hr width="50%">
 
 <a name="RCFILE">
+<p><br>
 <h4>The &nbsp;hercules.rc &nbsp;(run-commands)&nbsp; file</h4>
 </a>
 <p>
@@ -704,6 +852,7 @@ run-commands file can completely automate Hercules startup.
 <hr width="50%">
 
 <a name="HAO">
+<p><br>
 <h4>The "Hercules Automatic Operator" (HAO) Facility</h4>
 </a>
 <p>
