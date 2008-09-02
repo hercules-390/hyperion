@@ -43,10 +43,8 @@ Hercules Version 3: Installation and Operation</TITLE>
 </blockquote>
 
 <p><hr><a name="install"></a>
-<p><br>
 <h2>Installation Procedure</h2>
 <a name="instsource"></a>
-<p><br>
 <h3>Building from source - Windows (without Cygwin)</h3>
 <p>
 For building the MSVC version of Hercules on Windows (a version of
@@ -103,9 +101,8 @@ You must use at least version 2.95 of the gcc compiler and the glibc2 library.
 Refer to the <a href="hercfaq.html#3.04">
 Hercules Frequently-Asked Questions</a> page for required
 compiler and other software levels.
-<p>
+
 <a name="instbinary"></a>
-<p><br>
 <h3>Installing prebuilt RPMs:</h3>
 <ol>
 <li>Download the RPM file you want:
@@ -194,7 +191,6 @@ version.
 </ol>
 
 <p><hr><a name="config"></a>
-<p><br>
 <h2>Configuration Procedure</h2>
 <p>
 You will need to amend the configuration file
@@ -204,7 +200,6 @@ See the <a href="hercconf.html">Hercules Configuration File</a> page for
 a complete description.
 
 <p><hr><a name="dasd"></a>
-<p><br>
 <h2>Creating DASD volumes</h2>
 <p>
 The <a href="hercload.html">Creating Hercules DASD</a> page
@@ -213,10 +208,8 @@ volumes. The compressed CKD DASD support is described in <a
 href="cckddasd.html">this page</a>.
 
 <p><hr><a name="operating"></a>
-<p><br>
 <h2>Operating Procedure</h2>
 <a name="starting">
-<p><br>
 <p class="warning">
 <em>Note: If you intend to run any licensed software on your PC
 using Hercules, it is your responsibility to ensure that you do not
@@ -283,7 +276,6 @@ Now you can enter an ipl command from the control panel.
 <hr width="50%">
 
 <a name="keyboard">
-<p><br>
 <h4>Using the keyboard</h4>
 <p>
 
@@ -314,25 +306,18 @@ area. Instead, single character "hot keys" are used to issue some of the more
 common functions such as starting or stopping the CPU. The hot-keys are those
 which are highlighted. Pressing the '?' key displays brief help information
 on how to use the semi-graphical panel.
-
-<P><br>
-<P><br>
-
-    <blockquote>
-    <blockquote>
-
-    <TABLE border=1 cellpadding=5>
+<p>
+    <TABLE border=1 cellpadding=5 align="center" width="70%">
 
       <THEAD>
 
         <TR>
-          <TH colspan=2>   <br><big>Normal cursor handling</big><br>
-                       <small>(common to both Windows/Linux)</small><p>
+          <TH colspan=2><big>Normal cursor handling</big>
           </TH>
         </TR>
 
         <TR>
-          <TH>Key</TH>
+          <TH width="25%">Key</TH>
           <TH>Action</TH>
         </TR>
 
@@ -346,8 +331,9 @@ on how to use the semi-graphical panel.
                     Esc
           </TD>
           <TD>
-                    If command i/p area not empty, erases typed input.
-                    Otherwise switches to semi-graphical New Panel.
+                    Erases the contents of the command input area.
+                    If the command input area is already empty,
+                    switches to semi-graphical New Panel.
           </TD>
         </TR>
 
@@ -357,7 +343,7 @@ on how to use the semi-graphical panel.
                     Del
           </TD>
           <TD>
-                    Deletes the character under the cursor.
+                    Deletes the character at the cursor position.
           </TD>
         </TR>
 
@@ -377,7 +363,7 @@ on how to use the semi-graphical panel.
                     Insert
           </TD>
           <TD>
-                    Toggle cursor between insert and overlay mode.
+                    Toggles between insert mode and overlay mode.
           </TD>
         </TR>
 
@@ -387,7 +373,10 @@ on how to use the semi-graphical panel.
                     Tab
           </TD>
           <TD>
-                    List current directory.
+                    Attempts to complete the partial file name at the
+                    cursor position in the command input area. If more
+                    than one possible file exists, a list of matching
+                    file names is displayed.
           </TD>
         </TR>
 
@@ -397,8 +386,9 @@ on how to use the semi-graphical panel.
                     Home
           </TD>
           <TD>
-                    If command i/p area not empty, moves the cursor to
-                    the beginning of typed i/p. Else scrolls to the top.
+                    Moves the cursor to the start of the input in the
+                    command input area. If the command input area is
+                    empty, scrolls the message area to the top.
           </TD>
         </TR>
 
@@ -408,8 +398,9 @@ on how to use the semi-graphical panel.
                     End
           </TD>
           <TD>
-                    If command i/p area not empty, moves the cursor to
-                    the end of typed i/p. Else scrolls to the bottom.
+                    Moves the cursor to the end of the input in the
+                    command input area.  If the command input area is
+                    empty, scrolls the message area to the bottom.
           </TD>
         </TR>
 
@@ -419,7 +410,7 @@ on how to use the semi-graphical panel.
                     Page Up
           </TD>
           <TD>
-                    Scrolls up one screen.
+                    Scrolls the message area up one screen.
           </TD>
         </TR>
 
@@ -429,7 +420,7 @@ on how to use the semi-graphical panel.
                     Page Down
           </TD>
           <TD>
-                    Scrolls down one screen.
+                    Scrolls the message area down one screen.
           </TD>
         </TR>
 
@@ -439,7 +430,7 @@ on how to use the semi-graphical panel.
                     Up arrow
           </TD>
           <TD>
-                    Command recall: &nbsp;recalls previous command
+                    Recalls previous command into the input area.
           </TD>
         </TR>
 
@@ -449,7 +440,7 @@ on how to use the semi-graphical panel.
                     Down arrow
           </TD>
           <TD>
-                    Command recall: &nbsp;recalls next command
+                    Recalls next command into the input area.
           </TD>
         </TR>
 
@@ -459,7 +450,7 @@ on how to use the semi-graphical panel.
                     Right arrow
           </TD>
           <TD>
-                    Move cursor to next character of typed input.
+                    Moves cursor to next character of input area.
           </TD>
         </TR>
 
@@ -469,7 +460,7 @@ on how to use the semi-graphical panel.
                     Left arrow
           </TD>
           <TD>
-                    Move cursor to previous character of typed input.
+                    Moves cursor to previous character of input area.
           </TD>
         </TR>
 
@@ -479,7 +470,7 @@ on how to use the semi-graphical panel.
                     Ctrl + Up arrow
           </TD>
           <TD>
-                    Scroll up one line.
+                    Scrolls the message area up one line.
           </TD>
         </TR>
 
@@ -489,7 +480,7 @@ on how to use the semi-graphical panel.
                     Ctrl + Down arrow
           </TD>
           <TD>
-                    Scroll down one line.
+                    Scrolls the message area down one line.
           </TD>
         </TR>
 
@@ -499,7 +490,7 @@ on how to use the semi-graphical panel.
                     Ctrl + Home
           </TD>
           <TD>
-                    Scroll to top.
+                    Scrolls the message area to the top.
           </TD>
         </TR>
 
@@ -509,7 +500,7 @@ on how to use the semi-graphical panel.
                     Ctrl + End
           </TD>
           <TD>
-                    Scroll to bottom line.
+                    Scrolls the message area to the bottom.
           </TD>
         </TR>
 
@@ -517,23 +508,24 @@ on how to use the semi-graphical panel.
       </TBODY>
     </TABLE>
 
-<P><br>
-<P><br>
-<P><br>
-<P><br>
-
-    <TABLE border=1 cellpadding=5>
+<p>
+The following additional keyboard functions are effective when the
+Hercules Extended Cursor Handling feature (OPTION_EXTCURS) is activated
+at compile time.
+At present, this feature is activated on the Windows platform only.
+<p>
+    <TABLE border=1 cellpadding=5 align="center">
+    <TABLE border=1 cellpadding=5 align="center" width="70%">
 
       <THEAD>
 
         <TR>
-          <TH colspan=2>   <br><big>Extended cursor handling</big><br>
-                         <small>(Windows-only at the moment)</small><p>
+          <TH colspan=2><big>Extended cursor handling</big>
           </TH>
         </TR>
 
         <TR>
-          <TH>Key</TH>
+          <TH width="25%">Key</TH>
           <TH>Action</TH>
         </TR>
 
@@ -547,7 +539,7 @@ on how to use the semi-graphical panel.
                     Alt + Up arrow
           </TD>
           <TD>
-                    Move cursor up one row
+                    Moves cursor up one row.
           </TD>
         </TR>
 
@@ -557,7 +549,7 @@ on how to use the semi-graphical panel.
                     Alt + Down arrow
           </TD>
           <TD>
-                    Move cursor down one row
+                    Moves cursor down one row.
           </TD>
         </TR>
 
@@ -567,7 +559,7 @@ on how to use the semi-graphical panel.
                     Alt + Right arrow
           </TD>
           <TD>
-                    Move cursor right one column
+                    Moves cursor right one column.
           </TD>
         </TR>
 
@@ -577,7 +569,7 @@ on how to use the semi-graphical panel.
                     Alt + Left arrow
           </TD>
           <TD>
-                    Move cursor left one column
+                    Moves cursor left one column.
           </TD>
         </TR>
 
@@ -587,8 +579,10 @@ on how to use the semi-graphical panel.
                     Tab
           </TD>
           <TD>
-                    If cursor not on command-line, moves cursor to the
-                    beginning of typed i/p. Otherwise behaves normally.
+                    If cursor is outside the command input area,
+                    moves cursor to the start of the input in the
+                    command input area.
+                    Otherwise behaves as described in previous table.
           </TD>
         </TR>
 
@@ -598,8 +592,10 @@ on how to use the semi-graphical panel.
                     Home
           </TD>
           <TD>
-                    If cursor not on command-line, moves cursor to the
-                    beginning of typed i/p. Otherwise behaves normally.
+                    If cursor is outside the command input area,
+                    moves cursor to the start of the input in the
+                    command input area.
+                    Otherwise behaves as described in previous table.
           </TD>
         </TR>
 
@@ -609,8 +605,10 @@ on how to use the semi-graphical panel.
                     End
           </TD>
           <TD>
-                    If cursor not on command-line, moves cursor to the
-                    end of typed i/p. Otherwise behaves normally.
+                    If cursor is outside the command input area,
+                    moves cursor to the end of the input in the
+                    command input area.
+                    Otherwise behaves as described in previous table.
           </TD>
         </TR>
 
@@ -618,16 +616,10 @@ on how to use the semi-graphical panel.
       </TBODY>
     </TABLE>
 
-    </blockquote>
-    </blockquote>
-
-<p><br>
-<P><br>
+<p>
 <hr width="50%">
-<P><br>
-<a name="commands">
-<P><br>
 
+<a name="commands">
 <h4>Panel commands</h4>
 <p>
 The following is what is displayed on the Hercules harware console (HMC)
@@ -818,7 +810,6 @@ this additional help information. (Note: not every command supports help)
 <hr width="50%">
 
 <a name="RCFILE">
-<p><br>
 <h4>The &nbsp;hercules.rc &nbsp;(run-commands)&nbsp; file</h4>
 </a>
 <p>
@@ -852,7 +843,6 @@ run-commands file can completely automate Hercules startup.
 <hr width="50%">
 
 <a name="HAO">
-<p><br>
 <h4>The "Hercules Automatic Operator" (HAO) Facility</h4>
 </a>
 <p>
