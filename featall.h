@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.137  2008/08/29 11:11:06  fish
+// Fix message-keep logic  (i.e. sticky/held messages)
+//
 // Revision 1.136  2008/08/23 12:34:05  bernard
 // OPTION_MSGHLD sticky messages
 //
@@ -119,7 +122,12 @@
 
 #define OPTION_TAPE_AUTOMOUNT           /* "Automount" CCWs support  */
 #define OPTION_CMDTGT                   /* the cmdtgt command        */
-#define OPTION_MSGCLR                   /* Paint messages            */
+#define OPTION_MSGCLR                   /* Colored messages          */
+#define OPTION_MSGHLD                   /* Sticky messages           */
+
+#if defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
+  #error OPTION_MSGHLD requires OPTION_MSGCLR
+#endif // defined(OPTION_MSGHLD) && !defined(OPTION_MSGCLR)
 
 /*********************************************************************\
  *********************************************************************
