@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.42  2007/06/23 00:04:03  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.41  2006/12/08 09:43:17  jj
 // Add CVS message log
 //
@@ -135,16 +138,18 @@ int syntax()
 {
     fprintf (stderr, _("\ncckdcdsk [-v] [-f] [-level] [-ro] file1 [file2 ...]\n"
                 "\n"
-                "          -v      display version and exit\n"
+                "      -v      display version and exit\n"
                 "\n"
-                "          -f      force check even if OPENED bit is on\n"
+                "      -f      force check even if OPENED bit is on\n"
                 "\n"
-                "        level is a digit 0 - 3:\n"
-                "          -0  --  minimal checking\n"
-                "          -1  --  normal  checking\n"
-                "          -3  --  maximal checking\n"
+                "    level is a digit 0 - 3:\n"
+                "      -0  --  minimal checking (hdr, chdr, l1tab, l2tabs)\n"
+                "      -1  --  normal  checking (hdr, chdr, l1tab, l2tabs, free spaces)\n"
+                "      -2  --  extra   checking (hdr, chdr, l1tab, l2tabs, free spaces, trkhdrs)\n"
+                "      -3  --  maximal checking (hdr, chdr, l1tab, l2tabs, free spaces, trkimgs)\n"
+                "      -4  --  recover everything without using meta-data\n"
                 "\n"
-                "          -ro     open file readonly, no repairs\n"
+                "      -ro     open file readonly, no repairs\n"
                 "\n"));
     return -1;
 }
