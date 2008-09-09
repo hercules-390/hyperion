@@ -703,12 +703,13 @@ and how they are used.
     <p>
 
 <a name="LOGOPT"></a>
-<dt><code>LOGOPT &nbsp; [TIMESTAMP &#124; NOTIMESTAMP]</code>
+<dt><code>LOGOPT &nbsp; TIMESTAMP &#124; NOTIMESTAMP</code>
 <dd><p>
     sets Hercules log options. TIMESTAMP causes messages to the log
     to be time stamped.  NOTIMESTAMP prevents time stamping of log
     messages.    TIMESTAMP and NOTIMESTAMP may be abbreviated as
-    TIME and NOTIME respectively.
+    TIME and NOTIME respectively.  The current resolution of the
+    stamp is one second.
     <p>
     The default is TIMESTAMP.
     <p>
@@ -1001,6 +1002,28 @@ and how they are used.
 
     <i><b>Caution:</b> &nbsp; TODPRIO should be given a dispatching
     priority equal to or higher than any other thread within Hercules.</i>
+    <p>
+
+<a name="TRACEOPT"></a>
+<dt><code>TRACEOPT &nbsp; TRADITIONAL &#124; REGSFIRST &#124; NOREGS</code>
+<dd><p>
+    sets the Hercules instruction tracing display option.
+    <code>TRADITIONAL</code> (the default), displays the registers following
+    the instruction about to be executed such that pressing enter (to execute
+    the displayed instruction) then shows the next instruction to be executed
+    followed by the updated registers display.
+    <p>
+    <code>REGSFIRST</code> displays the current register contents followed by
+    the instruction about to be executed such that pressing enter (to execute
+    the displayed instruction) then shows the updated registers followed by
+    the next instruction to be executed.
+    <p>
+    <code>NOREGS</code> suppresses the registers display altogether
+    and shows just the instruction to be executed.
+    <p>
+    In addition to the <code>TRACEOPT</code> configuration file statement
+    there is also a corresponding <code>traceopt</code> panel command to
+    dynamically display and/or update the current setting at any time.
     <p>
 
 <a name="TZOFFSET"></a>
