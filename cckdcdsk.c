@@ -9,6 +9,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.43  2008/09/04 22:03:15  gsmith
+// Fix 64-bit length problem in cdsk_valid_trk - Tony Harminc
+//
 // Revision 1.42  2007/06/23 00:04:03  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -142,7 +145,7 @@ int syntax()
                 "\n"
                 "      -f      force check even if OPENED bit is on\n"
                 "\n"
-                "    level is a digit 0 - 3:\n"
+                "    level is a digit 0 - 4:\n"
                 "      -0  --  minimal checking (hdr, chdr, l1tab, l2tabs)\n"
                 "      -1  --  normal  checking (hdr, chdr, l1tab, l2tabs, free spaces)\n"
                 "      -2  --  extra   checking (hdr, chdr, l1tab, l2tabs, free spaces, trkhdrs)\n"
