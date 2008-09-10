@@ -112,6 +112,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.149  2008/07/21 22:13:29  rbowler
+// tapedev.c(964) : warning C4101: 'i' : unreferenced local variable
+//
 // Revision 1.148  2008/07/08 05:35:51  fish
 // AUTOMOUNT redesign: support +allowed/-disallowed dirs
 // and create associated 'automount' panel command - Fish
@@ -1091,15 +1094,18 @@ int gettapetype_bydata (DEVBLK *dev)
         if (rc >= 6)
         {
             /* Use the data to make the possible determination */
+            if (memcmp(hdr, "@TDF", 4) == 0)
+                return OMATAPE_FMTENTRY;
+
             if (hdr[0] == 0x30 && hdr[1] == 0x30 && hdr[2] == 0x30 && hdr[3] == 0x30)
                 return FAKETAPE_FMTENTRY;
 
             if (hdr[2] == 0 && hdr[3] == 0)
             {
-                if (hdr[4] & 0x03)  /* ZLIB/BZIP2 compressed? */
+                if (hdr[4] & 0x03)  /* ZLIB and/or BZIP2 compressed? */
                     return HETTAPE_FMTENTRY;
                 else
-                    return AWSTAPE_FMTENTRY;
+                    return AWSTAPE_FMTENTRY;    /* (default) */
             }
         }
     }
