@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.30  2008/01/21 22:20:35  rbowler
+// Correct previous changelog entry (ETF3 not ETF2)
+//
 // Revision 1.29  2008/01/21 14:02:13  rbowler
 // Permit Extended-Translation-Facility-3 in S/370 and ESA/390 modes
 //
@@ -71,6 +74,12 @@
 //#define FEATURE_EXTENDED_TRANSLATION_FACILITY_3
 //#define FEATURE_ETF2_ENHANCEMENT
 //#define FEATURE_ETF3_ENHANCEMENT
+//#define FEATURE_LONG_DISPLACEMENT
+//#define FEATURE_GENERAL_INSTRUCTIONS_EXTENSION_FACILITY
+//#define FEATURE_MESSAGE_SECURITY_ASSIST
+//#define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
+//#define FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_2
+//#define FEATURE_PARSING_ENHANCEMENT_FACILITY
 
 #endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */
