@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.62  2008/02/14 07:21:32  bernard
+// added last likely / unlikely
+//
 // Revision 1.61  2008/02/13 08:50:11  bernard
 // The cpu determined amount of data is now 16384 and it is determined
 // on 16k uncompressed data processing in expand and compress.
@@ -1257,7 +1260,6 @@ DEF_INST(compression_call)
 
   /* Set possible Data Exception code right away */
   regs->dxc = DXC_DECIMAL;     
-  iregs.dxc = DXC_DECIMAL;
 
   /* Initialize intermediate registers */
   INITREGS(&iregs, regs, r1, r2);
