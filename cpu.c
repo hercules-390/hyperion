@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.201  2008/08/13 21:21:55  gsmith
+// Fix bad guest IA after host interrupt during branch trace
+//
 // Revision 1.200  2008/04/11 14:28:15  bernard
 // Integrate regs->exrl into base Hercules code.
 //
@@ -524,6 +527,7 @@ static char *pgmintname[] = {
         ilc = realregs->execflag ? realregs->exrl ? 6 : 4 : 2;
         realregs->ip += 2;
         realregs->psw.IA += ilc;
+        realregs->psw.ilc = ilc;
     }
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
     if(realregs->sie_active)
@@ -537,6 +541,7 @@ static char *pgmintname[] = {
                       realregs->guestregs->exrl ? 6 : 4 : 2;
             realregs->guestregs->ip += 2;
             realregs->guestregs->psw.IA += sie_ilc;
+            realregs->guestregs->psw.ilc = sie_ilc;
         }
     }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/

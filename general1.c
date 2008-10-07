@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.166  2008/05/06 22:15:42  rbowler
+// Fix warning: operation on `p1' may be undefined
+//
 // Revision 1.165  2008/04/11 14:28:44  bernard
 // Integrate regs->exrl into base Hercules code.
 //
@@ -479,6 +482,7 @@ VADR    newia;                          /* New instruction address   */
         regs->psw.ilc = 0; // indicates regs->ip not updated
         regs->CR(12) = ((ARCH_DEP(trace_br_func))regs->trace_br)
                         (regs->psw.amode, regs->GR_L(r2), regs);
+        regs->psw.ilc = 2; // reset if trace didn't pgm check
     }
 #endif /*defined(FEATURE_TRACING)*/
 
@@ -551,6 +555,7 @@ VADR    newia;                          /* New instruction address   */
         regs->psw.ilc = 0; // indcates regs->ip not updated
         regs->CR(12) = ((ARCH_DEP(trace_br_func))regs->trace_br)
                          (regs->psw.amode, regs->GR_L(r2), regs);
+        regs->psw.ilc = 2; // reset if trace didn't pgm check
     }
 #endif /*defined(FEATURE_TRACING)*/
 
@@ -648,6 +653,7 @@ BYTE    *ipsav;                         /* save for ip               */
      #endif /*defined(FEATURE_ESAME)*/
         xmode = newia & 0x80000000 ? 1 : 0;
         regs->CR(12) = ARCH_DEP(trace_br) (xmode, newia & ~0x01, regs);
+        regs->psw.ilc = 2; // reset if trace didn't pgm check
     }
 #endif /*defined(FEATURE_TRACING)*/
 
