@@ -3,11 +3,14 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
+# $Id$
 #
 #  The MODULES to be built...
 #
 #
 #                           CHANGE HISTORY
+# $Log$
+#
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
