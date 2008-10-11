@@ -3,11 +3,14 @@
 # --------------------------------------------------------------------------
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
+# $Id$
 #
 #  Primary generic build rules...  ('all', 'clean', etc...)
 #
 #
 #                           CHANGE HISTORY
+# $Log$
+#
 # DD/MM/YY Description
 #
 # 26/12/06 Fish: created by extraction from existing makefile-dllmod.msvc
@@ -19,7 +22,9 @@
 # ---------------------------------------------------------------------
 
 all: allzlib alllibbz2 allpcre
-    rebase -b 0x400000 $(X)*.dll
+    if exist "$(VS70COMNTOOLS)bin\rebase.exe" rebase -b 0x400000 $(X)*.dll
+    if exist "$(VS80COMNTOOLS)bin\rebase.exe" rebase -b 0x400000 $(X)*.dll
+    if exist "$(VS90COMNTOOLS)bin\rebase.exe" rebase -b 0x400000 $(X)*.dll
     if exist $(EXEDIR)\*.manifest   del /f /q $(EXEDIR)\*.manifest
 
 clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)

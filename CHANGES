@@ -1,3 +1,4 @@
+11 Oct 2008 Fix MSVC build failure when 'rebase' utility doesn't exist - Fish
 07 Sep 2008 Fix zero ilc problem after branch trace - Greg
 04 Sep 2008 Fix 64-bit length problem in cdsk_valid_trk - Tony Harminc by Greg
 29 Aug 2008 Panel display extended cursor handling (Windows only) - Fish
