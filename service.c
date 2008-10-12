@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.79  2008/08/06 14:01:52  bernard
+// Added pnl(keep) at console messages starting with a '*'
+//
 // Revision 1.78  2008/08/02 13:25:28  bernard
 // Put z/OS *messages in lightyellow.
 //
@@ -381,9 +384,14 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] = {
 #if defined(FEATURE_STORE_SYSTEM_INFORMATION)
                         | SCCB_CFG4_STORE_SYSTEM_INFORMATION
 #endif /*FEATURE_STORE_SYSTEM_INFORMATION*/
+//                      | SCCB_CFG4_LPAR_CLUSTERING
                         ,
-                        0 };
-BYTE ARCH_DEP(scpinfo_cpf)[14] = {
+                        0
+#if defined(FEATURE_SENSE_RUNNING_STATUS)
+                        | SCCB_CFG5_SENSE_RUNNING_STATUS
+#endif /*FEATURE_SENSE_RUNNING_STATUS*/
+                        };
+BYTE ARCH_DEP(scpinfo_cpf)[12] = {
                             0
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
 #if defined(_370) && !defined(FEATURE_ESAME)
@@ -450,11 +458,7 @@ BYTE ARCH_DEP(scpinfo_cpf)[14] = {
                             | SCCB_CPF5_GUEST_WAIT_STATE_ASSIST
 #endif /*defined(FEATURE_WAITSTATE_ASSIST)*/
                             ,
-                            0, 0, 0, 0, 0, 0, 0,
-                            0
-#if defined(FEATURE_CRYPTO)
-//                          | SCCB_CPF13_CRYPTO_UNIT_ID
-#endif /*defined(FEATURE_CRYPTO)*/
+                            0, 0, 0, 0, 0, 0
                             } ;
 U32  ARCH_DEP(sclp_recv_mask) = SCCB_EVENT_SUPP_RECV_MASK;
 U32  ARCH_DEP(sclp_send_mask) = SCCB_EVENT_SUPP_SEND_MASK;
@@ -711,6 +715,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             sccbcpu->cpa = i;
             sccbcpu->tod = 0;
             memcpy(sccbcpu->cpf, ARCH_DEP(scpinfo_cpf), sizeof(sccbcpu->cpf));
+            sccbcpu->ptyp = SCCB_PTYP_CP;
+#if defined(FEATURE_CRYPTO)
+//          sccbcpu->ksid = SCCB_KSID_CRYPTO_UNIT_ID;
+#endif /*defined(FEATURE_CRYPTO)*/
 
 #ifdef FEATURE_VECTOR_FACILITY
             if(IS_CPU_ONLINE(i) && sysblk.regs[i]->vf->online)

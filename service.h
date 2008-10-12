@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.12  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.11  2006/12/08 09:43:30  jj
 // Add CVS message log
 //
@@ -201,13 +204,18 @@ typedef struct _SCCB_SCP_INFO {
 #define SCCB_CFG4_LOAD_REVERSED_FACILITY                0x20
 #define SCCB_CFG4_EXTENDED_TRANSLATION_FACILITY2        0x10
 #define SCCB_CFG4_STORE_SYSTEM_INFORMATION              0x08
+#define SCCB_CFG4_LPAR_CLUSTERING                       0x02
+#define SCCB_CFG4_IFA_FACILITY                          0x01
+#define SCCB_CFG5_SENSE_RUNNING_STATUS                  0x08
 #define SCCB_CFG5_ESAME                                 0x01
 
 /* CPU information array entry */
 typedef struct _SCCB_CPU_INFO {
         BYTE    cpa;                    /* CPU address               */
         BYTE    tod;                    /* TOD clock number          */
-        BYTE    cpf[14];                /* RCPU facility map         */
+        BYTE    cpf[12];                /* RCPU facility map         */
+        BYTE    ptyp;                   /* Processor type            */
+        BYTE    ksid;                   /* Crypto unit identifier    */
     } SCCB_CPU_INFO;
 
 /* Bit definitions for CPU installed features */
@@ -234,7 +242,15 @@ typedef struct _SCCB_CPU_INFO {
 #define SCCB_CPF3_PER2_INSTALLED                        0x01
 #define SCCB_CPF4_OMISION_GR_ALTERATION_370             0x80
 #define SCCB_CPF5_GUEST_WAIT_STATE_ASSIST               0x40
-#define SCCB_CPF13_CRYPTO_UNIT_ID                       0x01
+
+/* Definitions for processor type code */
+#define SCCB_PTYP_CP                                    0
+#define SCCB_PTYP_ICF                                   1
+#define SCCB_PTYP_IFA                                   2
+#define SCCB_PTYP_SUP                                   5
+
+/* Definitions for crypto unit identifier */
+#define SCCB_KSID_CRYPTO_UNIT_ID                        0x01
 
 /* HSA information array entry */
 typedef struct _SCCB_HSA_INFO {
