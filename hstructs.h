@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.91  2008/08/21 18:34:47  fish
+// Fix i/o-interrupt-queue race condition
+//
 // Revision 1.90  2008/07/24 14:44:14  bernard
 // cmdtgt version 2
 //
@@ -518,6 +521,7 @@ struct SYSBLK {
         COND    cpucond;                /* CPU config/deconfig cond  */
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
         TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
+        BYTE    ptyp[MAX_CPU_ENGINES];  /* SCCB ptyp for each engine */
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */

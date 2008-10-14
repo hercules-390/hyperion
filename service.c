@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.80  2008/10/12 21:43:27  rbowler
+// SCCB SCPINFO updates from GA22-7584-10
+//
 // Revision 1.79  2008/08/06 14:01:52  bernard
 // Added pnl(keep) at console messages starting with a '*'
 //
@@ -715,7 +718,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             sccbcpu->cpa = i;
             sccbcpu->tod = 0;
             memcpy(sccbcpu->cpf, ARCH_DEP(scpinfo_cpf), sizeof(sccbcpu->cpf));
-            sccbcpu->ptyp = SCCB_PTYP_CP;
+            sccbcpu->ptyp = sysblk.ptyp[i];
+            if (sccbcpu->ptyp == SCCB_PTYP_IFA)
+                sccbscp->cfg[4] |= SCCB_CFG4_IFA_FACILITY;
+
 #if defined(FEATURE_CRYPTO)
 //          sccbcpu->ksid = SCCB_KSID_CRYPTO_UNIT_ID;
 #endif /*defined(FEATURE_CRYPTO)*/
