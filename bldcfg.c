@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.88  2008/08/29 07:06:00  fish
+// Add KEEPMSG to blank lines in message HHCCF039W
+//
 // Revision 1.87  2008/08/23 11:54:54  fish
 // Reformat/center  "HHCCF039W PGMPRDOS LICENSED"  message
 //
@@ -118,6 +121,7 @@
 #include "opcode.h"
 #include "httpmisc.h"
 #include "hostinfo.h"
+#include "service.h"
 
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"
@@ -719,7 +723,8 @@ void build_config (char *fname)
 int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
 int     scount;                         /* Statement counter         */
-/* int     cpu; */                      /* CPU number                */
+int     cpu;                            /* CPU number                */
+int     count;                          /* Counter                   */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
 
 char   *sserial;                        /* -> CPU serial string      */
@@ -729,6 +734,7 @@ char   *smainsize;                      /* -> Main size string       */
 char   *sxpndsize;                      /* -> Expanded size string   */
 char   *snumcpu;                        /* -> Number of CPUs         */
 char   *snumvec;                        /* -> Number of VFs          */
+char   *sengines;                       /* -> Processor engine types */
 char   *sarchmode;                      /* -> Architectural mode     */
 char   *sloadparm;                      /* -> IPL load parameter     */
 char   *ssysepoch;                      /* -> System epoch           */
@@ -825,6 +831,8 @@ int     iodelay_warn = 0;               /* Issue iodelay warning     */
 int     ptt = 0;                        /* Pthread trace table size  */
 #endif /*OPTION_PTTRACE*/
 BYTE    c;                              /* Work area for sscanf      */
+char   *styp;                           /* -> Engine type string     */
+BYTE    ptyp;                           /* Processor engine type     */
 #if defined(OPTION_LPARNAME)
 char   *lparname;                       /* DIAG 204 lparname         */
 #endif /*defined(OPTION_LPARNAME)*/
@@ -1026,6 +1034,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         sxpndsize = NULL;
         snumcpu = NULL;
         snumvec = NULL;
+        sengines = NULL;
         sarchmode = NULL;
         sloadparm = NULL;
         ssysepoch = NULL;
@@ -1145,6 +1154,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
             else if (strcasecmp (keyword, "numvec") == 0)
             {
                 snumvec = operand;
+            }
+            else if (strcasecmp (keyword, "engines") == 0)
+            {
+                sengines = operand;
             }
             else if (strcasecmp (keyword, "loadparm") == 0)
             {
@@ -1812,6 +1825,52 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #endif /*!_FEATURE_VECTOR_FACILITY*/
         }
         sysblk.numvec = numvec;
+
+        /* Parse processor engine types operand */
+        /* example: ENGINES 4*CP,AP,2*IP */
+        if (sengines != NULL)
+        {
+            styp = strtok(sengines,",");
+            for (cpu = 0; styp != NULL; )
+            {
+                count = 1;
+                if (isdigit(styp[0]))
+                {
+                    if (sscanf(styp, "%hu%c", &count, &c) != 2
+                        || c != '*' || count < 1)
+                    {
+                        fprintf(stderr, _("HHCCF074S Error in %s line %d: "
+                                "Invalid engine syntax %s\n"),
+                                fname, inc_stmtnum[inc_level], styp);
+                        delayed_exit(1);
+                        break;
+                    }
+                    styp = strchr(styp,'*') + 1;
+                }
+                if (strcasecmp(styp,"cp") == 0)
+                    ptyp = SCCB_PTYP_CP;
+                else if (strcasecmp(styp,"cf") == 0)
+                    ptyp = SCCB_PTYP_ICF;
+                else if (strcasecmp(styp,"ap") == 0)
+                    ptyp = SCCB_PTYP_IFA;
+                else if (strcasecmp(styp,"ip") == 0)
+                    ptyp = SCCB_PTYP_SUP;
+                else {
+                    fprintf(stderr, _("HHCCF075S Error in %s line %d: "
+                            "Invalid engine type %s\n"),
+                            fname, inc_stmtnum[inc_level], styp);
+                    delayed_exit(1);
+                    break;
+                }
+                while (count-- > 0 && cpu < MAX_CPU_ENGINES)
+                {
+                    logmsg("HHCCF077I Engine %d is type %d\n",
+                            cpu, ptyp);
+                    sysblk.ptyp[cpu++] = ptyp;
+                }
+                styp = strtok(NULL,",");
+            }
+        }
 
         /* Parse load parameter operand */
         if (sloadparm != NULL)

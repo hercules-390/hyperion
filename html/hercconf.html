@@ -52,6 +52,7 @@ and how they are used.
     <a href="#XPNDSIZE">XPNDSIZE</a>   0
     <a href="#NUMCPU">NUMCPU</a>     1
     <a href="#NUMVEC">NUMVEC</a>     1
+    <a href="#ENGINES">ENGINES</a>    CP
     <a href="#SYSEPOCH">SYSEPOCH</a>   1900
     <a href="#YROFFSET">YROFFSET</a>   -28
     <a href="#TZOFFSET">TZOFFSET</a>   -0500
@@ -575,6 +576,35 @@ and how they are used.
     implementation.
     <p>
 
+<a name="ENGINES"></a>
+<dt><code>ENGINES &nbsp; [<em>nn</em>*] CP &#124; AP &#124; IP [,...]</code>
+<dd><p>
+    specifies the type of engine for each installed processor.
+    The default engine type is CP.
+    <p>
+    <em>nn</em>* is an optional repeat count.
+    <p>
+    Examples:
+    <p>
+    <code>ENGINES CP,CP,AP,IP</code>
+    <br>specifies that processor engines 0 and 1 are of type CP, engine 2 is
+    type AP, and engine 3 is type IP.
+    <p>
+    <code>ENGINES 4*CP,2*AP,2*IP</code>
+    <br>specifies that the first four processor engines (engines 0-3) are of
+    type CP, the next two (engines 4-5) are of type AP, and the next two
+    (engines 6-7) are of type IP.
+    <p>
+    The number of installed processor engines is determined by the compile time
+    variable MAX_CPU_ENGINES.
+    If the ENGINES statement specifies more than MAX_CPU_ENGINES, the excess
+    engines are ignored. If fewer than MAX_CPU_ENGINES are specified, the
+    remaining engines default to type CP.
+    <p>
+    See the <a href="#NUMCPU">NUMCPU</a> statement for a discussion of
+    MAX_CPU_ENGINES.
+    <p>
+
 <a name="HERCPRIO"></a>
 <dt><code>HERCPRIO &nbsp; <em>nn</em></code>
 <dd><p>
@@ -789,7 +819,12 @@ and how they are used.
 <a name="NUMCPU"></a>
 <dt><code>NUMCPU &nbsp; <em>nn</em></code>
 <dd><p>
-    specifies the number of emulated CPUs.
+    specifies the number of emulated processor engines
+    which will be configured online at startup time.
+    All processors are CP engines unless otherwise specified by the
+    <a href="#ENGINES">ENGINES</a> statement.
+    If NUMCPU is less than MAX_CPU_ENGINES then the remaining engines can be
+    configured online later.
     <p>
 
     <em>Note:</em>
@@ -797,8 +832,8 @@ and how they are used.
     the compile-time variable <code>MAX_CPU_ENGINES</code>
     in the file <tt>config.h</tt> has a value of more than 1.
     Current versions of Hercules already have this value
-    set to 2 by default, so all you need to do is specify
-    <tt>NUMCPU 2</tt>
+    set to 8 by default, so all you need to do is specify
+    <tt>NUMCPU 2</tt> or more
     in your configuration file. If you wish to define a greater value
     for <tt>MAX_CPU_ENGINES</tt>, use the
     <tt>--enable-multi-cpu=NUMBER</tt>
