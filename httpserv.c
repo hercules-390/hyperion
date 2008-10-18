@@ -30,6 +30,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.75  2008/05/28 16:39:44  fish
+// (use R_OK constant)
+//
 // Revision 1.74  2007/06/23 00:04:12  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -793,7 +796,7 @@ TID                     httptid;        /* Negotiation thread id     */
             }
 
             /* Create a thread to execute the http request */
-            if ( create_thread (&httptid, &sysblk.detattr,
+            if ( create_thread (&httptid, DETACHED,
                                 http_request, (void *)(long)csock,
                                 "http_request")
                )

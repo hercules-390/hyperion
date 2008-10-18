@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.32  2007/06/23 00:04:16  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.31  2006/12/21 22:39:39  gsmith
 // 21 Dec 2006 Range for s+, t+ - Greg Smith
 //
@@ -1289,19 +1292,19 @@ S64      dreg;
             switch (sysblk.arch_mode) {
 #if defined(_370)
             case ARCH_370:
-                rc = create_thread (&dev->tid, &sysblk.detattr,
+                rc = create_thread (&dev->tid, DETACHED,
                                     s370_execute_ccw_chain, dev, "device thread");
                 break;
 #endif
 #if defined(_390)
             case ARCH_390:
-                rc = create_thread (&dev->tid, &sysblk.detattr,
+                rc = create_thread (&dev->tid, DETACHED,
                                     s390_execute_ccw_chain, dev, "device thread");
                 break;
 #endif
 #if defined(_900)
             case ARCH_900:
-                rc = create_thread (&dev->tid, &sysblk.detattr,
+                rc = create_thread (&dev->tid, DETACHED,
                                     z900_execute_ccw_chain, dev, "device thread");
                 break;
 #endif

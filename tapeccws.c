@@ -111,6 +111,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.15  2008/07/08 05:35:51  fish
+// AUTOMOUNT redesign: support +allowed/-disallowed dirs
+// and create associated 'automount' panel command - Fish
+//
 // Revision 1.14  2008/06/22 05:54:30  fish
 // Fix print-formatting issue (mostly in tape modules)
 // that can sometimes, in certain circumstances,
@@ -1226,7 +1230,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
                 "autoload wait for %4.4X tapemount thread",
                 dev->devnum);
             thread_name[sizeof(thread_name)-1] = 0;
-            create_thread( &dummy_tid, &sysblk.detattr,
+            create_thread( &dummy_tid, DETACHED,
                 autoload_wait_for_tapemount_thread,
                 dev, thread_name );
         }

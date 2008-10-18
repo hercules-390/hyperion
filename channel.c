@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.144  2008/08/21 18:34:45  fish
+// Fix i/o-interrupt-queue race condition
+//
 // Revision 1.143  2008/05/28 16:33:13  fish
 // (fix typo in comment; no code was changed)
 //
@@ -2341,7 +2344,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
             signal_condition(&sysblk.ioqcond);
         else if (sysblk.devtmax == 0 || sysblk.devtnbr < sysblk.devtmax)
         {
-            rc = create_thread (&dev->tid, &sysblk.detattr,
+            rc = create_thread (&dev->tid, DETACHED,
                         device_thread, NULL, "idle device thread");
             if (rc != 0 && sysblk.devtnbr == 0)
             {
@@ -2365,7 +2368,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
         thread_name[sizeof(thread_name)-1]=0;
 
         /* Execute the CCW chain on a separate thread */
-        if ( create_thread (&dev->tid, &sysblk.detattr,
+        if ( create_thread (&dev->tid, DETACHED,
                     ARCH_DEP(execute_ccw_chain), dev, thread_name) )
         {
             logmsg (_("HHCCP068E %4.4X create_thread error: %s"),

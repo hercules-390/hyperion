@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.76  2008/08/19 21:36:37  fish
+// Init LCS interface ASAP to fix wrong MAC being used
+//
 // Revision 1.75  2008/08/15 04:40:49  fish
 // Trace LCS Command Frame packets as they are received,
 // ensure iMaxFrameBufferSize greater than minimum allowed.
@@ -350,7 +353,6 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         // previous pass. More than one interface can exist on a port.
         if( !pLCSBLK->Port[pLCSDev->bPort].fCreated )
         {
-            ATTR  thread_attr;
             int   rc;
 
             rc = TUNTAP_CreateInterface( pLCSBLK->pszTUNDevice,
@@ -391,9 +393,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             pLCSBLK->Port[pLCSDev->bPort].fUsed    = 1;
             pLCSBLK->Port[pLCSDev->bPort].fCreated = 1;
 
-            initialize_join_attr( &thread_attr );
             create_thread( &pLCSBLK->Port[pLCSDev->bPort].tid,
-                           &thread_attr, LCS_PortThread,
+                           JOINABLE, LCS_PortThread,
                            &pLCSBLK->Port[pLCSDev->bPort],
                            "LCS_PortThread" );
 

@@ -8,6 +8,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.200  2008/07/08 05:35:49  fish
+// AUTOMOUNT redesign: support +allowed/-disallowed dirs
+// and create associated 'automount' panel command - Fish
+//
 // Revision 1.199  2007/06/23 00:04:04  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -115,7 +119,7 @@ char  thread_name[16];
     snprintf(thread_name,sizeof(thread_name),"cpu%d thread",cpu);
     thread_name[sizeof(thread_name)-1]=0;
 
-    if ( create_thread (&sysblk.cputid[cpu], &sysblk.detattr, cpu_thread,
+    if ( create_thread (&sysblk.cputid[cpu], DETACHED, cpu_thread,
                         &cpu, thread_name)
        )
     {

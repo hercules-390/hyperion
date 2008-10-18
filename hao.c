@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.10  2008/08/23 11:55:23  fish
+// Increase max #of rules from 10 to 64
+//
 // Revision 1.9  2008/07/30 15:29:04  bernard
 // Strip herc prefix before checking the message.
 //
@@ -134,7 +137,7 @@ DLL_EXPORT void hao_initialize(void)
   memset(ao_msgbuf, 0, sizeof(ao_msgbuf));
 
   /* Start message monitoring thread */
-  if ( create_thread (&sysblk.haotid, &sysblk.joinattr,
+  if ( create_thread (&sysblk.haotid, JOINABLE,
     hao_thread, NULL, "hao_thread") )
   {
     logmsg(_("HHCIN004S Cannot create HAO thread: %s\n"),

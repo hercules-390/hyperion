@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.94  2007/11/21 22:54:14  fish
+// Use new BEGIN_DEVICE_CLASS_QUERY macro
+//
 // Revision 1.93  2007/06/23 16:13:54  jmaynard
 // Fixing two messages out of internationalization by removing redundant
 // carriage returns.
@@ -2133,7 +2136,7 @@ BYTE                   unitstat;        /* Status after receive data */
             }
 
             /* Create a thread to complete the client connection */
-            if ( create_thread (&tidneg, &sysblk.detattr,
+            if ( create_thread (&tidneg, DETACHED,
                         connect_client, &csock, "connect_client")
                )
             {
@@ -2275,7 +2278,7 @@ console_initialise()
 
         if (!sysblk.cnsltid)
         {
-            if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
+            if ( create_thread (&sysblk.cnsltid, DETACHED,
                                 console_connection_handler, NULL,
                                 "console_connection_handler")
                )

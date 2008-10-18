@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.202  2008/10/07 22:24:35  gsmith
+// Fix zero ilc problem after branch trace
+//
 // Revision 1.201  2008/08/13 21:21:55  gsmith
 // Fix bad guest IA after host interrupt during branch trace
 //
@@ -1260,7 +1263,7 @@ int   cpu  = *ptr;
     /* Start the TOD clock and CPU timer thread */
     if (!sysblk.todtid)
     {
-        if ( create_thread (&sysblk.todtid, &sysblk.detattr,
+        if ( create_thread (&sysblk.todtid, DETACHED,
              timer_update_thread, NULL, "timer_update_thread") )
         {
             logmsg (_("HHCCP006S Cannot create timer thread: %s\n"),

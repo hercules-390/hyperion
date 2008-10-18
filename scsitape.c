@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.30  2008/05/22 21:34:22  fish
+// Attempt to fix my *nix SCSI tape BSR over tapemark bug identified by Bob Schneider [bschneider@pingdata.net]
+//
 // Revision 1.29  2008/03/31 06:36:49  fish
 // (untab)
 //
@@ -1823,7 +1826,7 @@ void scsi_get_status_fast( DEVBLK* dev )
             create_thread
             (
                 &dev->stape_getstat_tid,
-                &sysblk.joinattr,
+                JOINABLE,
                 get_stape_status_thread,
                 dev,
                 "get_stape_status_thread"
@@ -2034,7 +2037,7 @@ void create_automount_thread( DEVBLK* dev )
             create_thread
             (
                 &dev->stape_mountmon_tid,
-                &sysblk.detattr,
+                DETACHED,
                 scsi_tapemountmon_thread,
                 dev,
                 "scsi_tapemountmon_thread"

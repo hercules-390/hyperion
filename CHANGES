@@ -1,3 +1,4 @@
+18 Oct 2008 Fix diag 0x308 re-IPL and ensure consistent create_thread ATTR usage - Fish
 11 Oct 2008 Fix MSVC build failure when 'rebase' utility doesn't exist - Fish
 07 Sep 2008 Fix zero ilc problem after branch trace - Greg
 04 Sep 2008 Fix 64-bit length problem in cdsk_valid_trk - Tony Harminc by Greg

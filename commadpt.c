@@ -9,6 +9,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.44  2008/03/04 01:10:29  ivan
+// Add LEGACYSENSEID config statement to allow X'E4' Sense ID on devices
+// that originally didn't support it. Defaults to off for compatibility reasons
+//
 // Revision 1.43  2008/02/15 22:51:39  rbowler
 // Move Solaris specific definition of INADDR_NONE to hostopts.h
 //
@@ -1667,7 +1671,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
         thread_name[sizeof(thread_name)-1]=0;
 
         dev->commadpt->curpending=COMMADPT_PEND_TINIT;
-        if(create_thread(&dev->commadpt->cthread,&sysblk.detattr,commadpt_thread,dev->commadpt,thread_name))
+        if(create_thread(&dev->commadpt->cthread,DETACHED,commadpt_thread,dev->commadpt,thread_name))
         {
             logmsg(D_("HHCCA022E create_thread: %s\n"),strerror(errno));
             release_lock(&dev->commadpt->lock);

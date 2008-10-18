@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.65  2008/05/11 22:30:37  rbowler
+// V command should display "dat off" instead of "primary" if addr is real
+//
 // Revision 1.64  2008/04/09 13:53:45  rbowler
 // Operand disassembly for RIL instructions
 //
@@ -252,7 +255,7 @@ TID tid;
         cancel_wait_sigq();
     else
         if(can_signal_quiesce() && !signal_quiesce(0,0))
-            create_thread(&tid, &sysblk.detattr, do_shutdown_wait,
+            create_thread(&tid, DETACHED, do_shutdown_wait,
                           NULL, "do_shutdown_wait");
         else
             do_shutdown_now();

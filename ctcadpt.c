@@ -18,6 +18,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.72  2008/07/17 07:19:12  fish
+// Fix FCS (Frame Check Sequence) bug in LCS_Write function
+// and other minor bugs.
+//
 // Revision 1.70  2008/07/17 03:30:40  fish
 // CTC/LCS cosmetic-only changes -- part 1
 // (no actual functionality was changed!)
@@ -660,7 +664,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         arg->dev = dev;
         snprintf(str,sizeof(str),"CTCT %4.4X ListenThread",dev->devnum);
         str[sizeof(str)-1]=0;
-        create_thread( &tid, &sysblk.joinattr, CTCT_ListenThread, arg, str );
+        create_thread( &tid, JOINABLE, CTCT_ListenThread, arg, str );
     }
     else  // successfully connected (outbound) to the other end
     {
