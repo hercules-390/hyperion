@@ -10,6 +10,10 @@
 #
 #                           CHANGE HISTORY
 # $Log$
+# Revision 1.2  2008/10/11 23:47:05  fish
+# Fix MSVC build failure when 'rebase' utility doesn't exist
+# Add CVS "Id" and "Log"
+#
 #
 # DD/MM/YY Description
 #
@@ -22,9 +26,7 @@
 # ---------------------------------------------------------------------
 
 all: allzlib alllibbz2 allpcre
-    if exist "$(VS70COMNTOOLS)bin\rebase.exe" rebase -b 0x400000 $(X)*.dll
-    if exist "$(VS80COMNTOOLS)bin\rebase.exe" rebase -b 0x400000 $(X)*.dll
-    if exist "$(VS90COMNTOOLS)bin\rebase.exe" rebase -b 0x400000 $(X)*.dll
+    for %I in (rebase.exe) do if exist %~$$PATH:I rebase -b 0x400000 $(X)*.dll
     if exist $(EXEDIR)\*.manifest   del /f /q $(EXEDIR)\*.manifest
 
 clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
