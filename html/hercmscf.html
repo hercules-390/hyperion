@@ -537,8 +537,8 @@ device type.
   <dd>config.c, function build_config
   </dl>
 <dt><code><a name="HHCCF036S">
-HHCCF035S Error in <em>filename</em> line <em>lineno</em>:
-<em>number</em> is not a valid device number
+HHCCF036S Error in <em>filename</em> line <em>lineno</em>:
+<em>number</em> is not a valid device number(s) specification
 </a></code>
 <dd><dl>
   <dt>Meaning
@@ -956,7 +956,7 @@ HHCCF075E No more than 1 Logical Channel Subsystem Identification may be specifi
   encountered while parsing the Logical Channel Subsystem Identification component. There can
   be only one Logical Channel Subsystem Identification for a device or group of devices.
   <dt>Action
-  <dd>Correct the device number or device number group specification and either reissue the 
+  <dd>Correct the device number or device number group specification and either reissue the
   command or restart the hercules engine (depending on whether the error occured while issuing a command
   or while starting the engine).
   <dt>Issued by
@@ -968,11 +968,11 @@ HHCCF076E Non numeric Logical Channel Subsystem Identification XX
 <dd><dl>
   <dt>Meaning
   <dd>While specifying a device number or device number group, a non decimal value was
-  encountered while parsing the Logical Channel Subsystem Identification component. The 
+  encountered while parsing the Logical Channel Subsystem Identification component. The
   Logical Channel Subsystem Identification for a device or group of devices must be specified as
   a numeric value.
   <dt>Action
-  <dd>Correct the device number or device number group specification and either reissue the 
+  <dd>Correct the device number or device number group specification and either reissue the
   command or restart the hercules engine (depending on whether the error occured while issuing a command
   or while starting the engine).
   <dt>Issued by
@@ -984,11 +984,11 @@ HHCCF077E Logical Channel Subsystem Identification NN exceeds maximum of 3
 <dd><dl>
   <dt>Meaning
   <dd>While specifying a device number or device number group, a Logical Channel Identification
-  was encountered that exceeded the architecture maximum value of MM. 
+  was encountered that exceeded the architecture maximum value of MM.
   The Logical Channel Subsystem Identification for a device or group of devices must be within 0
   and 3 (inclusive).
   <dt>Action
-  <dd>Correct the device number or device number group specification and either reissue the 
+  <dd>Correct the device number or device number group specification and either reissue the
   command or restart the hercules engine (depending on whether the error occured while issuing a command
   or while starting the engine).
   <dt>Issued by
