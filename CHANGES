@@ -1,3 +1,4 @@
+24 Oct 2008 Fix RC file not processed nor HAO thread engaged if -d daemon mode - Fish
 18 Oct 2008 Fix diag 0x308 re-IPL and ensure consistent create_thread ATTR usage - Fish
 11 Oct 2008 Fix MSVC build failure when 'rebase' utility doesn't exist - Fish
 07 Sep 2008 Fix zero ilc problem after branch trace - Greg

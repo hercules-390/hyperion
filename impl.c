@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.125  2008/10/18 09:32:21  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.124  2007/12/10 23:12:02  gsmith
 // Tweaks to OPTION_MIPS_COUNTING processing
 //
@@ -563,15 +566,23 @@ TID     logcbtid;                       /* RC file thread identifier */
     if(!sysblk.daemon_mode)
         panel_display ();
     else
+    {
 #if defined(OPTION_DYNAMIC_LOAD)
         if(daemon_task)
             daemon_task ();
         else
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
+        {
+            /* Tell RC file and HAO threads they may now proceed */
+            sysblk.panel_init = 1;
+
+            /* Retrieve messages from logger and write to stderr */
             while (1)
                 if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
                     if(isatty(STDERR_FILENO))
                         fwrite(msgbuf,msgcnt,1,stderr);
+        }
+    }
 
     //  -----------------------------------------------------
     //      *** Hercules has been shutdown (PAST tense) ***
