@@ -7,7 +7,7 @@
 /* Mario Bezzi. Thanks Mario! Also special thanks to Greg Smith who           */
 /* introduced iregs, needed when a page fault occurs.                         */
 /*                                                                            */
-/*                              (c) Copyright Bernard van der Helm, 2000-2007 */
+/*                              (c) Copyright Bernard van der Helm, 2000-2008 */
 /*                              Noordwijkerhout, The Netherlands.             */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.63  2008/09/24 06:57:47  bernard
+// No need to set data exception code to iregs.
+//
 // Revision 1.62  2008/02/14 07:21:32  bernard
 // added last likely / unlikely
 //
