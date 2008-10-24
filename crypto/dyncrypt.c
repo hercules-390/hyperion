@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.64  2008/03/29 16:44:49  bernard
+// Alligning the dyncrypt.c license with the other hercules files.
+//
 // Revision 1.63  2008/03/25 19:39:16  fish
 // Oops! Dunno how the frick that happened folks! Sorry. This file
 // was NOT supposed to be part of the *SCSI* changes! (Duh!) And
@@ -3110,7 +3113,7 @@ HDL_REGISTER_SECTION;
   HDL_REGISTER(z900_compute_message_authentication_code, z900_compute_message_authentication_code_d);
 #endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
-  logmsg("Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2007\n");
+  logmsg("Crypto module loaded (c) Copyright Bernard van der Helm, 2003-2008\n");
   logmsg("  Active: Message Security Assist\n");
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_1
   logmsg("          Message Security Assist Extension 1\n");
