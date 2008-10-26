@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.64  2008/10/24 15:03:21  bernard
+// update copyright notice to current year 2008
+//
 // Revision 1.63  2008/09/24 06:57:47  bernard
 // No need to set data exception code to iregs.
 //
@@ -1141,9 +1144,7 @@ static int ARCH_DEP(store_ch)(int r1, REGS *regs, REGS *iregs, BYTE *data, int l
 /*----------------------------------------------------------------------------*/
 static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 index_symbol)
 {
-  U32 clear_mask;                      /* mask to clear the bits              */
   U32 set_mask;                        /* mask to set the bits                */
-  int threebytes;                      /* indicates 2 or 3 bytes overlap      */
   BYTE work[3];                        /* work bytes                          */
 
   /* Check if symbol translation is requested */
@@ -1161,32 +1162,25 @@ static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 inde
     index_symbol = (work[0] << 8) + work[1];
   }
 
-  /* Calculate clear mask */
-  clear_mask = ~(0x0000FFFF >> (16 - GR0_smbsz(regs)) << (24 - GR0_smbsz(regs)) >> GR1_cbn(iregs));
+  /* Allign set mask */
+  set_mask = ((U32) index_symbol) << (24 - GR0_smbsz(regs) - GR1_cbn(iregs));
 
-  /* Calculate set mask */
-  set_mask = ((U32) index_symbol) << (24 - GR0_smbsz(regs)) >> GR1_cbn(iregs);
-
-  /* Calculate the needed bytes */
-  threebytes = (GR0_smbsz(regs) + GR1_cbn(iregs)) > 16;
-
-  /* Get the storage */
-  if(unlikely(threebytes))
-    ARCH_DEP(vfetchc)(work, 2, GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
-  else
-    ARCH_DEP(vfetchc)(work, 1, GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
-
-  /* Do the job */
-  work[0] &= clear_mask >> 16;
-  work[0] |= set_mask >> 16;
-  work[1] &= (clear_mask >> 8) & 0xFF;
-  work[1] |= (set_mask >> 8) & 0xFF;
-
-  /* Set the storage */
-  if(unlikely(threebytes))
+  /* Calculate first byte */
+  if(GR1_cbn(iregs))
   {
-    work[2] &= clear_mask & 0xFF;
-    work[2] |= set_mask & 0xFF;
+    work[0] = ARCH_DEP(vfetchb)(GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
+    work[0] |= (set_mask >> 16) & 0xff;
+  }
+  else
+    work[0] = (set_mask >> 16) & 0xff;
+
+  /* Calculate second byte */
+  work[1] = (set_mask >> 8) & 0xff;
+
+  /* Calculate possible third byte and store */
+  if((GR0_smbsz(regs) + GR1_cbn(iregs)) > 16)
+  {
+    work[2] = set_mask & 0xff;
     ARCH_DEP(vstorec)(work, 2, GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
   }
   else
