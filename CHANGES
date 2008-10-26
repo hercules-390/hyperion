@@ -1,3 +1,8 @@
+26 Oct 2008 Store_is within CMPSC will zero the remaining bits in the working byte, 
+            just like other famous manufacturers will do. All former generated compressed
+            code will expand correctly, don't worry!! But their can be a difference
+            in the compressed output. (This is the case when bits are on, but those
+            are the unused bits after the last index symbol). - Bernard van der Helm
 24 Oct 2008 Fix RC file not processed nor HAO thread engaged if -d daemon mode - Fish
 18 Oct 2008 Fix diag 0x308 re-IPL and ensure consistent create_thread ATTR usage - Fish
 11 Oct 2008 Fix MSVC build failure when 'rebase' utility doesn't exist - Fish
