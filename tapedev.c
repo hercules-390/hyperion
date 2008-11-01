@@ -112,6 +112,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.150  2008/09/10 02:06:48  fish
+// Add test for OMA file "@TDF" signature
+// to 'gettapetype_bydata' function
+//
 // Revision 1.149  2008/07/21 22:13:29  rbowler
 // tapedev.c(964) : warning C4101: 'i' : unreferenced local variable
 //
@@ -1102,6 +1106,8 @@ int gettapetype_bydata (DEVBLK *dev)
 
             if (hdr[2] == 0 && hdr[3] == 0)
             {
+                if (hdr[4] & 0x40)  /* TapeMark? */
+                    return -1;      /* Unable to determine */
                 if (hdr[4] & 0x03)  /* ZLIB and/or BZIP2 compressed? */
                     return HETTAPE_FMTENTRY;
                 else

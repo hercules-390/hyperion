@@ -1,3 +1,5 @@
+01 Nov 2008 Fix tapedev gettapetype_bydata function for HET/AWS tapes that
+            start with a tapemark -- Liam Cold [liamcold@yahoo.com] by Fish
 26 Oct 2008 Store_is within CMPSC will zero the remaining bits in the working byte, 
             just like other famous manufacturers will do. All former generated compressed
             code will expand correctly, don't worry!! But their can be a difference
