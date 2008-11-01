@@ -15,6 +15,13 @@
 // $Id$
 //
 // $Log$
+// Revision 1.65  2008/10/26 13:26:39  bernard
+// Store_is will zero the remaining bits in the working byte, just like
+// other famous manufacturers will do. All former generated compressed
+// code will expand correctly, don't worry!! But their can be a difference
+// in the compressed output. (This is the case when bits are on, but those
+// are the unused bits after the last index symbol).
+//
 // Revision 1.64  2008/10/24 15:03:21  bernard
 // update copyright notice to current year 2008
 //
@@ -1166,7 +1173,7 @@ static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 inde
   set_mask = ((U32) index_symbol) << (24 - GR0_smbsz(regs) - GR1_cbn(iregs));
 
   /* Calculate first byte */
-  if(GR1_cbn(iregs))
+  if(likely(GR1_cbn(iregs)))
   {
     work[0] = ARCH_DEP(vfetchb)(GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
     work[0] |= (set_mask >> 16) & 0xff;
@@ -1178,7 +1185,7 @@ static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 inde
   work[1] = (set_mask >> 8) & 0xff;
 
   /* Calculate possible third byte and store */
-  if((GR0_smbsz(regs) + GR1_cbn(iregs)) > 16)
+  if(unlikely((GR0_smbsz(regs) + GR1_cbn(iregs)) > 16))
   {
     work[2] = set_mask & 0xff;
     ARCH_DEP(vstorec)(work, 2, GR_A(r1, iregs) & ADDRESS_MAXWRAP(regs), r1, regs);
