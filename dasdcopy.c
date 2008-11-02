@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.29  2008/04/03 16:16:30  rbowler
+// Standardize comment block in module header (cosmetic change only)
+//
 // Revision 1.28  2007/06/23 00:04:08  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -442,7 +445,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     close_image_file(icif); close_image_file(ocif);
-    if (!quiet) printf (_("HHCDC010I %s successfully completed.\n"), pgm);
+    printf (_("\r" "HHCDC010I %s successfully completed.\n"), pgm);
     return 0;
 }
 
@@ -513,7 +516,7 @@ BYTE           *pos;                    /* -> Next position in buffer*/
             pos += 4096;
         }
     }
- 
+
     /* Build the end of track marker */
     memcpy (pos, eighthexFF, 8);
     pos += 8;
