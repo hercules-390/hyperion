@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.30  2008/11/02 22:57:01  rbowler
+// Ensure message HHCDC010I is correctly aligned
+//
 // Revision 1.29  2008/04/03 16:16:30  rbowler
 // Standardize comment block in module header (cosmetic change only)
 //
@@ -85,6 +88,7 @@ char            msgbuf[512];            /* Message buffer            */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
 char            pathname[MAX_PATH];     /* file path in host format  */
+char            pgmpath[MAX_PATH];      /* prog path in host format  */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
@@ -103,8 +107,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 #endif /*EXTERNALGUI*/
 
     /* Figure out processing based on the program name */
-    hostpath(pathname, argv[0], sizeof(pathname));
-    pgm = strrchr (pathname, '/');
+    hostpath(pgmpath, argv[0], sizeof(pgmpath));
+    pgm = strrchr (pgmpath, '/');
     if (pgm) pgm++;
     else pgm = argv[0];
     strtok (pgm, ".");
