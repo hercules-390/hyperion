@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.93  2008/10/18 09:32:21  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.92  2008/10/14 20:56:21  rbowler
 // Propagate processor type from sysblk
 //
@@ -550,8 +553,6 @@ struct SYSBLK {
         LOCK    sigplock;               /* Signal processor lock     */
         ATTR    detattr;                /* Detached thread attribute */
         ATTR    joinattr;               /* Joinable thread attribute */
-#define  DETACHED  &sysblk.detattr      /* (helper macro)            */
-#define  JOINABLE  &sysblk.joinattr     /* (helper macro)            */
         TID     cnsltid;                /* Thread-id for console     */
         TID     socktid;                /* Thread-id for sockdev     */
                                         /* 3270 Console Keep-Alive:  */
@@ -1479,6 +1480,8 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
                          sfmerge:1,     /* 1=sf-* merge              */
                          sfforce:1;     /* 1=sf-* force              */
         int              sflevel;       /* sfk xxxx level            */
+
+        ATTR             attr;          /* Thread attributes         */
 
         BYTE             comps;         /* Supported compressions    */
         BYTE             comp;          /* Override compression      */

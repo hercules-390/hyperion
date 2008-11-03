@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.95  2008/10/18 09:32:20  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.94  2007/11/21 22:54:14  fish
 // Use new BEGIN_DEVICE_CLASS_QUERY macro
 //
@@ -2136,7 +2139,7 @@ BYTE                   unitstat;        /* Status after receive data */
             }
 
             /* Create a thread to complete the client connection */
-            if ( create_thread (&tidneg, DETACHED,
+            if ( create_thread (&tidneg, &sysblk.detattr,
                         connect_client, &csock, "connect_client")
                )
             {
@@ -2278,7 +2281,7 @@ console_initialise()
 
         if (!sysblk.cnsltid)
         {
-            if ( create_thread (&sysblk.cnsltid, DETACHED,
+            if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
                                 console_connection_handler, NULL,
                                 "console_connection_handler")
                )

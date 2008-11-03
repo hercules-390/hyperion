@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.90  2008/10/18 09:32:20  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.89  2008/10/14 22:41:08  rbowler
 // Add ENGINES configuration statement
 //
@@ -2559,8 +2562,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     initialize_lock (&sysblk.iointqlk);
     sysblk.intowner = LOCK_OWNER_NONE;
     initialize_lock (&sysblk.sigplock);
-//  initialize_detach_attr (&sysblk.detattr);   // (moved to impl.c)
-//  initialize_join_attr   (&sysblk.joinattr);  // (moved to impl.c)
+    initialize_detach_attr (&sysblk.detattr);
+    initialize_join_attr   (&sysblk.joinattr);
     initialize_condition (&sysblk.cpucond);
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         initialize_lock (&sysblk.cpulock[i]);

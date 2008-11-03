@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.77  2008/10/18 09:32:21  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.76  2008/08/19 21:36:37  fish
 // Init LCS interface ASAP to fix wrong MAC being used
 //
@@ -353,6 +356,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         // previous pass. More than one interface can exist on a port.
         if( !pLCSBLK->Port[pLCSDev->bPort].fCreated )
         {
+            ATTR  thread_attr;
             int   rc;
 
             rc = TUNTAP_CreateInterface( pLCSBLK->pszTUNDevice,
@@ -393,8 +397,9 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             pLCSBLK->Port[pLCSDev->bPort].fUsed    = 1;
             pLCSBLK->Port[pLCSDev->bPort].fCreated = 1;
 
+            initialize_join_attr( &thread_attr );
             create_thread( &pLCSBLK->Port[pLCSDev->bPort].tid,
-                           JOINABLE, LCS_PortThread,
+                           &thread_attr, LCS_PortThread,
                            &pLCSBLK->Port[pLCSDev->bPort],
                            "LCS_PortThread" );
 

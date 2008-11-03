@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.203  2008/10/18 09:32:20  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.202  2008/10/07 22:24:35  gsmith
 // Fix zero ilc problem after branch trace
 //
@@ -1263,7 +1266,7 @@ int   cpu  = *ptr;
     /* Start the TOD clock and CPU timer thread */
     if (!sysblk.todtid)
     {
-        if ( create_thread (&sysblk.todtid, DETACHED,
+        if ( create_thread (&sysblk.todtid, &sysblk.detattr,
              timer_update_thread, NULL, "timer_update_thread") )
         {
             logmsg (_("HHCCP006S Cannot create timer thread: %s\n"),

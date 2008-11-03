@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.33  2008/10/18 09:32:21  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.32  2007/06/23 00:04:16  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -1292,19 +1295,19 @@ S64      dreg;
             switch (sysblk.arch_mode) {
 #if defined(_370)
             case ARCH_370:
-                rc = create_thread (&dev->tid, DETACHED,
+                rc = create_thread (&dev->tid, &sysblk.detattr,
                                     s370_execute_ccw_chain, dev, "device thread");
                 break;
 #endif
 #if defined(_390)
             case ARCH_390:
-                rc = create_thread (&dev->tid, DETACHED,
+                rc = create_thread (&dev->tid, &sysblk.detattr,
                                     s390_execute_ccw_chain, dev, "device thread");
                 break;
 #endif
 #if defined(_900)
             case ARCH_900:
-                rc = create_thread (&dev->tid, DETACHED,
+                rc = create_thread (&dev->tid, &sysblk.detattr,
                                     z900_execute_ccw_chain, dev, "device thread");
                 break;
 #endif

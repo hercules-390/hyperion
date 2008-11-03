@@ -111,6 +111,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.16  2008/10/18 09:32:21  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.15  2008/07/08 05:35:51  fish
 // AUTOMOUNT redesign: support +allowed/-disallowed dirs
 // and create associated 'automount' panel command - Fish
@@ -1230,7 +1233,7 @@ static BYTE     write_immed    = 0;     /* Write-Immed. mode active  */
                 "autoload wait for %4.4X tapemount thread",
                 dev->devnum);
             thread_name[sizeof(thread_name)-1] = 0;
-            create_thread( &dummy_tid, DETACHED,
+            create_thread( &dummy_tid, &sysblk.detattr,
                 autoload_wait_for_tapemount_thread,
                 dev, thread_name );
         }

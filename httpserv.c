@@ -30,6 +30,9 @@
 /*                                           Jan Jaeger - 28/03/2002 */
 
 // $Log$
+// Revision 1.76  2008/10/18 09:32:21  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.75  2008/05/28 16:39:44  fish
 // (use R_OK constant)
 //
@@ -796,7 +799,7 @@ TID                     httptid;        /* Negotiation thread id     */
             }
 
             /* Create a thread to execute the http request */
-            if ( create_thread (&httptid, DETACHED,
+            if ( create_thread (&httptid, &sysblk.detattr,
                                 http_request, (void *)(long)csock,
                                 "http_request")
                )

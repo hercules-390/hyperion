@@ -11,6 +11,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.75  2008/10/18 09:32:21  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.74  2008/07/17 07:19:12  fish
 // Fix FCS (Frame Check Sequence) bug in LCS_Write function
 // and other minor bugs.
@@ -349,7 +352,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     snprintf(thread_name,sizeof(thread_name),"CTCI %4.4X ReadThread",pDEVBLK->devnum);
     thread_name[sizeof(thread_name)-1]=0;
-    create_thread( &pDevCTCBLK->tid, JOINABLE, CTCI_ReadThread, pDevCTCBLK, thread_name );
+    create_thread( &pDevCTCBLK->tid, &sysblk.joinattr, CTCI_ReadThread, pDevCTCBLK, thread_name );
 
     pDevCTCBLK->pDEVBLK[0]->tid = pDevCTCBLK->tid;
     pDevCTCBLK->pDEVBLK[1]->tid = pDevCTCBLK->tid;

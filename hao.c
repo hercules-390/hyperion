@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.11  2008/10/18 09:32:21  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.10  2008/08/23 11:55:23  fish
 // Increase max #of rules from 10 to 64
 //
@@ -137,7 +140,7 @@ DLL_EXPORT void hao_initialize(void)
   memset(ao_msgbuf, 0, sizeof(ao_msgbuf));
 
   /* Start message monitoring thread */
-  if ( create_thread (&sysblk.haotid, JOINABLE,
+  if ( create_thread (&sysblk.haotid, &sysblk.joinattr,
     hao_thread, NULL, "hao_thread") )
   {
     logmsg(_("HHCIN004S Cannot create HAO thread: %s\n"),

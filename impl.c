@@ -12,6 +12,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.126  2008/10/24 13:47:11  fish
+// Fix RC file not processed nor HAO thread engaged if -d daemon mode
+//
 // Revision 1.125  2008/10/18 09:32:21  fish
 // Ensure consistent create_thread ATTR usage
 //
@@ -276,12 +279,6 @@ TID     logcbtid;                       /* RC file thread identifier */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
-    /* Initialize thread creation attributes so all of hercules
-       can use them at any time when they need to create_thread
-    */
-    initialize_detach_attr (DETACHED);
-    initialize_join_attr   (JOINABLE);
-
     /* Copy length for regs */
     sysblk.regs_copy_len = (int)((uintptr_t)&sysblk.dummyregs.regs_copy_end
                                - (uintptr_t)&sysblk.dummyregs);
@@ -489,7 +486,7 @@ TID     logcbtid;                       /* RC file thread identifier */
 
 #if !defined(NO_SIGABEND_HANDLER)
     /* Start the watchdog */
-    if ( create_thread (&sysblk.wdtid, DETACHED,
+    if ( create_thread (&sysblk.wdtid, &sysblk.detattr,
                         watchdog_thread, NULL, "watchdog_thread") )
     {
         fprintf (stderr,
@@ -503,7 +500,7 @@ TID     logcbtid;                       /* RC file thread identifier */
     if (sysblk.httpport)
     {
         /* Start the http server connection thread */
-        if ( create_thread (&sysblk.httptid, DETACHED,
+        if ( create_thread (&sysblk.httptid, &sysblk.detattr,
                             http_server, NULL, "http_server") )
         {
             fprintf (stderr,
@@ -517,7 +514,7 @@ TID     logcbtid;                       /* RC file thread identifier */
 #ifdef OPTION_SHARED_DEVICES
     /* Start the shared server */
     if (sysblk.shrdport)
-        if ( create_thread (&sysblk.shrdtid, DETACHED,
+        if ( create_thread (&sysblk.shrdtid, &sysblk.detattr,
                             shared_server, NULL, "shared_server") )
         {
             fprintf (stderr,
@@ -533,7 +530,7 @@ TID     logcbtid;                       /* RC file thread identifier */
 
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
             if (dev->connecting)
-                if ( create_thread (&tid, DETACHED,
+                if ( create_thread (&tid, &sysblk.detattr,
                            *dev->hnd->init, dev, "device connecting thread")
                    )
                 {
@@ -546,14 +543,14 @@ TID     logcbtid;                       /* RC file thread identifier */
 #endif
 
     /* Start up the RC file processing thread */
-    create_thread(&rctid,DETACHED,
+    create_thread(&rctid,&sysblk.detattr,
                   process_rc_file,NULL,"process_rc_file");
 
     if(log_callback)
     {
         // 'herclin' called us. IT'S in charge. Create its requested
         // logmsg intercept callback function and return back to it.
-        create_thread(&logcbtid,DETACHED,
+        create_thread(&logcbtid,&sysblk.detattr,
                       log_do_callback,NULL,"log_do_callback");
         return(0);
     }

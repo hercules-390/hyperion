@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.38  2008/10/18 09:32:21  fish
+// Ensure consistent create_thread ATTR usage
+//
 // Revision 1.37  2008/03/29 08:36:46  fish
 // More complete/extensive 3490/3590 tape support
 //
@@ -2875,7 +2878,7 @@ TID                     tid;            /* Negotiation thread id     */
             *psock = csock;
 
             /* Create a thread to complete the client connection */
-            if ( create_thread (&tid, DETACHED,
+            if ( create_thread (&tid, &sysblk.detattr,
                                 serverConnect, psock, "serverConnect") )
             {
                 logmsg(_("HHCSH061E serverConnect create_thread: %s\n"),
