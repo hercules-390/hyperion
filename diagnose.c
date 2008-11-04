@@ -15,6 +15,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.52  2008/11/03 15:38:03  rbowler
+// Fix Error starting thread in diagnose 0x308: Invalid argument
+//
 // Revision 1.51  2008/11/03 15:31:53  rbowler
 // Back out consistent create_thread ATTR modification
 //
@@ -175,11 +178,6 @@ void *stop_cpus_and_ipl(int *ipltype)
 void ARCH_DEP(diagnose_call) (VADR effective_addr2, int b2,
                               int r1, int r2, REGS *regs)
 {
-#ifdef FEATURE_PROGRAM_DIRECTED_REIPL
-ATTR  attr;                             /* Thread attribute          */
-TID   tid;                              /* Thread identifier         */
-char *ipltype;                          /* "ipl" or "iplc"           */
-#endif /*FEATURE_PROGRAM_DIRECTED_REIPL*/
 #ifdef FEATURE_HERCULES_DIAGCALLS
 U32   n;                                /* 32-bit operand value      */
 #endif /*FEATURE_HERCULES_DIAGCALLS*/
@@ -592,14 +590,15 @@ U32   code;
     /*---------------------------------------------------------------*/
         switch(r2) {
 #ifdef FEATURE_PROGRAM_DIRECTED_REIPL
+TID   tid;                              /* Thread identifier         */
+char *ipltype;                          /* "ipl" or "iplc"           */
         case DIAG308_IPL_CLEAR:
             ipltype = "iplc";
             goto diag308_cthread;
         case DIAG308_IPL_NORMAL:
             ipltype = "ipl";
         diag308_cthread:
-            initialize_detach_attr(&attr);
-            if(create_thread(&tid, &attr, stop_cpus_and_ipl, ipltype, "Stop cpus and ipl"))
+            if(create_thread(&tid, DETACHED, stop_cpus_and_ipl, ipltype, "Stop cpus and ipl"))
                 logmsg("HHCDN004E Error starting thread in diagnose 0x308: %s\n",
                         strerror(errno));
             regs->cpustate = CPUSTATE_STOPPING;
