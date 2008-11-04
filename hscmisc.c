@@ -5,6 +5,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.67  2008/11/03 15:31:55  rbowler
+// Back out consistent create_thread ATTR modification
+//
 // Revision 1.66  2008/10/18 09:32:21  fish
 // Ensure consistent create_thread ATTR usage
 //
@@ -258,7 +261,7 @@ TID tid;
         cancel_wait_sigq();
     else
         if(can_signal_quiesce() && !signal_quiesce(0,0))
-            create_thread(&tid, &sysblk.detattr, do_shutdown_wait,
+            create_thread(&tid, DETACHED, do_shutdown_wait,
                           NULL, "do_shutdown_wait");
         else
             do_shutdown_now();

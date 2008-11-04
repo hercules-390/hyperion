@@ -18,6 +18,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.74  2008/11/03 15:31:57  rbowler
+// Back out consistent create_thread ATTR modification
+//
 // Revision 1.73  2008/10/18 09:32:21  fish
 // Ensure consistent create_thread ATTR usage
 //
@@ -667,7 +670,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         arg->dev = dev;
         snprintf(str,sizeof(str),"CTCT %4.4X ListenThread",dev->devnum);
         str[sizeof(str)-1]=0;
-        create_thread( &tid, &sysblk.joinattr, CTCT_ListenThread, arg, str );
+        create_thread( &tid, JOINABLE, CTCT_ListenThread, arg, str );
     }
     else  // successfully connected (outbound) to the other end
     {

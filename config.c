@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.202  2008/11/03 15:31:57  rbowler
+// Back out consistent create_thread ATTR modification
+//
 // Revision 1.201  2008/10/18 09:32:20  fish
 // Ensure consistent create_thread ATTR usage
 //
@@ -122,7 +125,7 @@ char  thread_name[16];
     snprintf(thread_name,sizeof(thread_name),"cpu%d thread",cpu);
     thread_name[sizeof(thread_name)-1]=0;
 
-    if ( create_thread (&sysblk.cputid[cpu], &sysblk.detattr, cpu_thread,
+    if ( create_thread (&sysblk.cputid[cpu], DETACHED, cpu_thread,
                         &cpu, thread_name)
        )
     {

@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.253  2008/11/03 15:31:56  rbowler
+// Back out consistent create_thread ATTR modification
+//
 // Revision 1.252  2008/10/18 09:32:21  fish
 // Ensure consistent create_thread ATTR usage
 //
@@ -332,7 +335,7 @@ int test_cmd(int argc, char *argv[],char *cmdline)
     }
 
     if (test_tid)
-        create_thread( &test_tid, &sysblk.detattr, test_thread, NULL, "test thread" );
+        create_thread( &test_tid, DETACHED, test_thread, NULL, "test thread" );
     else
         do_test_msgs();
 
@@ -3781,7 +3784,7 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
        and more threads can be created */
 
     if (sysblk.ioq && (!sysblk.devtmax || sysblk.devtnbr < sysblk.devtmax))
-        create_thread(&tid, &sysblk.detattr, device_thread, NULL, "idle device thread");
+        create_thread(&tid, DETACHED, device_thread, NULL, "idle device thread");
 
     /* Wakeup threads in case they need to terminate */
     broadcast_condition (&sysblk.ioqcond);
@@ -3929,19 +3932,19 @@ char    c;                              /* work for sscan            */
 
     /* Process the command */
     switch (action) {
-        case '+': if (create_thread(&tid, &sysblk.detattr, cckd_sf_add, dev, "sf+ command"))
+        case '+': if (create_thread(&tid, DETACHED, cckd_sf_add, dev, "sf+ command"))
                       cckd_sf_add(dev);
                   break;
-        case '-': if (create_thread(&tid, &sysblk.detattr, cckd_sf_remove, dev, "sf- command"))
+        case '-': if (create_thread(&tid, DETACHED, cckd_sf_remove, dev, "sf- command"))
                       cckd_sf_remove(dev);
                   break;
-        case 'c': if (create_thread(&tid, &sysblk.detattr, cckd_sf_comp, dev, "sfc command"))
+        case 'c': if (create_thread(&tid, DETACHED, cckd_sf_comp, dev, "sfc command"))
                       cckd_sf_comp(dev);
                   break;
-        case 'd': if (create_thread(&tid, &sysblk.detattr, cckd_sf_stats, dev, "sfd command"))
+        case 'd': if (create_thread(&tid, DETACHED, cckd_sf_stats, dev, "sfd command"))
                       cckd_sf_stats(dev);
                   break;
-        case 'k': if (create_thread(&tid, &sysblk.detattr, cckd_sf_chk, dev, "sfk command"))
+        case 'k': if (create_thread(&tid, DETACHED, cckd_sf_chk, dev, "sfk command"))
                       cckd_sf_chk(dev);
                   break;
     }

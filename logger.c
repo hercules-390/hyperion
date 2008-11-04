@@ -14,6 +14,9 @@
 /* for isatty()                                                      */
 
 // $Log$
+// Revision 1.52  2008/11/03 15:31:54  rbowler
+// Back out consistent create_thread ATTR modification
+//
 // Revision 1.51  2008/10/18 09:32:21  fish
 // Ensure consistent create_thread ATTR usage
 //
@@ -40,7 +43,6 @@
 
 #include "hercules.h"
 #include "opcode.h"             /* Required for SETMODE macro        */
-static ATTR  logger_attr;
 static COND  logger_cond;
 static LOCK  logger_lock;
 static TID   logger_tid;
@@ -455,7 +457,6 @@ int bytes_read;
 
 DLL_EXPORT void logger_init(void)
 {
-    initialize_join_attr(&logger_attr);     // (JOINable)
     initialize_condition (&logger_cond);
     initialize_lock (&logger_lock);
 
@@ -545,7 +546,7 @@ DLL_EXPORT void logger_init(void)
 
     setvbuf (logger_syslog[LOG_WRITE], NULL, _IONBF, 0);
 
-    if (create_thread (&logger_tid, &logger_attr,
+    if (create_thread (&logger_tid, JOINABLE,
                        logger_thread, NULL, "logger_thread")
        )
     {

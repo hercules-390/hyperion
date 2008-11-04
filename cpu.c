@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.204  2008/11/03 15:31:57  rbowler
+// Back out consistent create_thread ATTR modification
+//
 // Revision 1.203  2008/10/18 09:32:20  fish
 // Ensure consistent create_thread ATTR usage
 //
@@ -1266,7 +1269,7 @@ int   cpu  = *ptr;
     /* Start the TOD clock and CPU timer thread */
     if (!sysblk.todtid)
     {
-        if ( create_thread (&sysblk.todtid, &sysblk.detattr,
+        if ( create_thread (&sysblk.todtid, DETACHED,
              timer_update_thread, NULL, "timer_update_thread") )
         {
             logmsg (_("HHCCP006S Cannot create timer thread: %s\n"),

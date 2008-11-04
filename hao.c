@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.12  2008/11/03 15:31:57  rbowler
+// Back out consistent create_thread ATTR modification
+//
 // Revision 1.11  2008/10/18 09:32:21  fish
 // Ensure consistent create_thread ATTR usage
 //
@@ -140,7 +143,7 @@ DLL_EXPORT void hao_initialize(void)
   memset(ao_msgbuf, 0, sizeof(ao_msgbuf));
 
   /* Start message monitoring thread */
-  if ( create_thread (&sysblk.haotid, &sysblk.joinattr,
+  if ( create_thread (&sysblk.haotid, JOINABLE,
     hao_thread, NULL, "hao_thread") )
   {
     logmsg(_("HHCIN004S Cannot create HAO thread: %s\n"),

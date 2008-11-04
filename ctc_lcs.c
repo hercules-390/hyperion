@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.78  2008/11/03 15:31:57  rbowler
+// Back out consistent create_thread ATTR modification
+//
 // Revision 1.77  2008/10/18 09:32:21  fish
 // Ensure consistent create_thread ATTR usage
 //
@@ -356,7 +359,6 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         // previous pass. More than one interface can exist on a port.
         if( !pLCSBLK->Port[pLCSDev->bPort].fCreated )
         {
-            ATTR  thread_attr;
             int   rc;
 
             rc = TUNTAP_CreateInterface( pLCSBLK->pszTUNDevice,
@@ -397,9 +399,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             pLCSBLK->Port[pLCSDev->bPort].fUsed    = 1;
             pLCSBLK->Port[pLCSDev->bPort].fCreated = 1;
 
-            initialize_join_attr( &thread_attr );
             create_thread( &pLCSBLK->Port[pLCSDev->bPort].tid,
-                           &thread_attr, LCS_PortThread,
+                           JOINABLE, LCS_PortThread,
                            &pLCSBLK->Port[pLCSDev->bPort],
                            "LCS_PortThread" );
 

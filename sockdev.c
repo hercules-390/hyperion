@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.28  2008/11/03 15:31:53  rbowler
+// Back out consistent create_thread ATTR modification
+//
 // Revision 1.27  2008/10/18 09:32:21  fish
 // Ensure consistent create_thread ATTR usage
 //
@@ -528,9 +531,7 @@ int bind_device (DEVBLK* dev, char* spec)
 
     if ( was_list_empty )
     {
-        ATTR joinable_attr;
-        initialize_join_attr( &joinable_attr );
-        if ( create_thread( &sysblk.socktid, &joinable_attr,
+        if ( create_thread( &sysblk.socktid, JOINABLE,
                             socket_thread, NULL, "socket_thread" ) )
             {
                 logmsg( _( "HHCSD023E Cannot create socketdevice thread: errno=%d: %s\n" ),
