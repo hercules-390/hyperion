@@ -40,6 +40,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.49  2007/09/30 13:30:08  rbowler
+// Revert extra blank lines inserted by rev 1.12
+//
 // Revision 1.48  2007/09/30 12:23:22  rbowler
 // Error message if DASD initialisation unsuccessful
 //
@@ -165,15 +168,7 @@ int     lfs = 0;                        /* 1 = Build large file      */
 int     nullfmt = CKDDASD_NULLTRK_FMT1; /* Null track format type    */
 int     rc;                             /* Return code               */
 
-#ifdef EXTERNALGUI
-    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
-    {
-        extgui = 1;
-        argc--;
-        setvbuf(stderr, NULL, _IONBF, 0);
-        setvbuf(stdout, NULL, _IONBF, 0);
-    }
-#endif /*EXTERNALGUI*/
+    INITIALIZE_UTILITY("dasdinit");
 
     /* Display program identification and help */
     if (argc <= 1 || (argc == 2 && !strcmp(argv[1], "-v")))

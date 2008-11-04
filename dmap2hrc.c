@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.20  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.19  2006/12/08 09:43:20  jj
 // Add CVS message log
 //
@@ -71,15 +74,7 @@ char           *output_filename;        /* -> filename to print      */
 int             more_devices;           /* More devices this ctlr?   */
 char            pathname[MAX_PATH];     /* file path in host format  */
 
-#ifdef EXTERNALGUI
-    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
-    {
-        extgui = 1;
-        argc--;
-        setvbuf(stderr, NULL, _IONBF, 0);
-        setvbuf(stdout, NULL, _IONBF, 0);
-    }
-#endif /*EXTERNALGUI*/
+    INITIALIZE_UTILITY("dmap2hrc");
 
     /* Display the program identification message */
     display_version (stderr,

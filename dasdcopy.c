@@ -24,6 +24,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.31  2008/11/03 00:03:52  rbowler
+// Program name may be corrupted in dasdcopy messages
+//
 // Revision 1.30  2008/11/02 22:57:01  rbowler
 // Ensure message HHCDC010I is correctly aligned
 //
@@ -90,21 +93,7 @@ int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
 char            pathname[MAX_PATH];     /* file path in host format  */
 char            pgmpath[MAX_PATH];      /* prog path in host format  */
 
-#if defined(ENABLE_NLS)
-    setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, HERC_LOCALEDIR);
-    textdomain(PACKAGE);
-#endif
-
-#ifdef EXTERNALGUI
-    if (argc >= 1 && strcmp(argv[argc-1],"EXTERNALGUI") == 0)
-    {
-        extgui = 1;
-        argc--;
-        setvbuf(stderr, NULL, _IONBF, 0);
-        setvbuf(stdout, NULL, _IONBF, 0);
-    }
-#endif /*EXTERNALGUI*/
+    INITIALIZE_UTILITY("dasdcopy");
 
     /* Figure out processing based on the program name */
     hostpath(pgmpath, argv[0], sizeof(pgmpath));

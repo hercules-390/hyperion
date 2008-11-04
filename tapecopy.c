@@ -14,6 +14,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.43  2008/06/22 05:54:30  fish
+// Fix print-formatting issue (mostly in tape modules)
+// that can sometimes, in certain circumstances,
+// cause herc to crash.  (%8.8lx --> I32_FMTX, etc)
+//
 // Revision 1.42  2007/06/23 00:04:17  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -508,23 +513,7 @@ struct mtpos    mtpos;                  /* Area for MTIOCPOS ioctl   */
 int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
 #endif /*defined(EXTERNALGUI)*/
 
-#if defined(ENABLE_NLS)
-    setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, HERC_LOCALEDIR);
-    textdomain(PACKAGE);
-#endif
-
-    set_codepage(NULL);
-
-#ifdef EXTERNALGUI
-    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
-    {
-        extgui = 1;
-        argc--;
-        setvbuf(stderr, NULL, _IONBF, 0);
-        setvbuf(stdout, NULL, _IONBF, 0);
-    }
-#endif /*EXTERNALGUI*/
+    INITIALIZE_UTILITY("tapecopy");
 
    /* Display the program identification message */
     display_version (stderr, "Hercules tape copy program ", FALSE);

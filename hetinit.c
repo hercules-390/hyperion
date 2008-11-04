@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.24  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.23  2006/12/08 09:43:26  jj
 // Add CVS message log
 //
@@ -71,17 +74,7 @@ main( int argc, char *argv[] )
     char *o_owner;
     char *o_volser;
 
-    set_codepage( NULL );
-
-#ifdef EXTERNALGUI
-    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
-    {
-        extgui = 1;
-        argc--;
-        setvbuf(stderr, NULL, _IONBF, 0);
-        setvbuf(stdout, NULL, _IONBF, 0);
-    }
-#endif /*EXTERNALGUI*/
+    INITIALIZE_UTILITY("hetinit");
 
     hetb = NULL;
 

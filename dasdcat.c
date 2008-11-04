@@ -7,6 +7,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.32  2007/06/23 00:04:08  ivan
+ * Update copyright notices to include current year (2007)
+ *
  * Revision 1.31  2006/12/08 09:43:19  jj
  * Add CVS message log
  *
@@ -300,15 +303,7 @@ int main(int argc, char **argv)
  CIFBLK *cif = 0;
  char *fn, *sfn;
 
-#ifdef EXTERNALGUI
- if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0) {
- argv[argc-1] = NULL;
- extgui = 1;
- argc--;
- setvbuf(stderr, NULL, _IONBF, 0);
- setvbuf(stdout, NULL, _IONBF, 0);
- }
-#endif /*EXTERNALGUI*/
+ INITIALIZE_UTILITY("dasdcat");
 
  /* Display program info message */
  display_version (stderr, "Hercules DASD cat program ", FALSE);

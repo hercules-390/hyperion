@@ -12,6 +12,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.26  2007/06/23 00:04:11  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.25  2006/12/08 09:43:26  jj
 // Add CVS message log
 //
@@ -160,15 +163,7 @@ main( int argc, char *argv[] )
 #define O_LABELS        0X40
 #define O_DATASETS      0X20
 
-#ifdef EXTERNALGUI
-    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
-    {
-        extgui = 1;
-        argc--;
-        setvbuf(stderr, NULL, _IONBF, 0);
-        setvbuf(stdout, NULL, _IONBF, 0);
-    }
-#endif /*EXTERNALGUI*/
+    INITIALIZE_UTILITY("hetmap");
 
     opts = O_ALL;
 

@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.25  2008/09/02 06:09:01  fish
+// Have TRACE macro call DebugTrace function for MSVC DEBUG builds
+//
 // Revision 1.24  2008/08/21 18:34:45  fish
 // Fix i/o-interrupt-queue race condition
 //
@@ -620,6 +623,47 @@ typedef U64  (*z900_trace_br_func) (int amode,  U64 ia, REGS *regs);
      if ((rc = sleep (rc))) \
        sched_yield(); \
  } while (0)
+
+/*-------------------------------------------------------------------*/
+/* Perform standard utility initialization                           */
+/*-------------------------------------------------------------------*/
+
+#if !defined(ENABLE_NLS)
+  #define INITIALIZE_NLS()
+#else
+  #define INITIALIZE_NLS() \
+  do { \
+    setlocale(LC_ALL, ""); \
+    bindtextdomain(PACKAGE, HERC_LOCALEDIR); \
+    textdomain(PACKAGE); \
+  } while (0)
+#endif
+
+#if !defined(EXTERNALGUI)
+  #define INITIALIZE_EXTERNAL_GUI()
+#else
+  #define INITIALIZE_EXTERNAL_GUI() \
+  do { \
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0) { \
+        extgui = 1; \
+        argc--; \
+        setvbuf(stderr, NULL, _IONBF, 0); \
+        setvbuf(stdout, NULL, _IONBF, 0); \
+    } \
+  } while (0)
+#endif
+
+#define INITIALIZE_UTILITY(name) \
+  do { \
+    SET_THREAD_NAME(name); \
+    INITIALIZE_NLS(); \
+    INITIALIZE_EXTERNAL_GUI(); \
+    memset (&sysblk, 0, sizeof(SYSBLK)); \
+    initialize_detach_attr (DETACHED); \
+    initialize_join_attr   (JOINABLE); \
+    set_codepage(NULL); \
+    init_hostinfo( &hostinfo ); \
+  } while (0)
 
 /*-------------------------------------------------------------------*/
 /* Macro for Setting a Thread Name  (mostly for debugging purposes)  */
