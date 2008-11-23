@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.67  2007/11/23 12:28:07  rbowler
+// Correct CPSDR when R1 and R3 are same register (2nd attempt)
+//
 // Revision 1.66  2007/11/15 22:11:26  rbowler
 // Correct CPSDR when R1 and R3 are same register
 //
@@ -338,7 +341,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     /* Program check if reserved bits are non-zero */
     FPC_CHECK(src_fpc, regs);
-     
+
     /* OR the flags from the current FPC register */
     new_fpc = src_fpc | (regs->fpc & FPC_FLAG);
 
@@ -375,21 +378,21 @@ static const int
 dfp_lmdtable[32] = {0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7,
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 9, 8, 9, 0, 0};
 
-static inline int 
+static inline int
 dfp32_extract_lmd(decimal32 *xp)
 {
     unsigned int cf = (((FW*)xp)->F & 0x7C000000) >> 26;
     return dfp_lmdtable[cf];
 } /* end function dfp32_extract_lmd */
 
-static inline int 
+static inline int
 dfp64_extract_lmd(decimal64 *xp)
 {
     unsigned int cf = (((DW*)xp)->F.H.F & 0x7C000000) >> 26;
     return dfp_lmdtable[cf];
 } /* end function dfp64_extract_lmd */
 
-static inline int 
+static inline int
 dfp128_extract_lmd(decimal128 *xp)
 {
     unsigned int cf = (((QW*)xp)->F.HH.F & 0x7C000000) >> 26;
@@ -570,7 +573,7 @@ decContext      setmax;                 /* Working context for mp,mn */
 
     /* Prime the decimal number structures representing the maximum
        positive and negative numbers representable in 64 bits. Use
-       a 128-bit DFP working context because these numbers are too 
+       a 128-bit DFP working context because these numbers are too
        big to be represented in the 32-bit and 64-bit DFP formats */
     if (mpflag == 0)
     {
@@ -591,7 +594,7 @@ decContext      setmax;                 /* Working context for mp,mn */
     /* Remove fractional part of decimal number */
     decNumberToIntegralValue(&p, b, pset);
 
-    /* Special case if operand is less than maximum negative 
+    /* Special case if operand is less than maximum negative
        number (including where operand is negative infinity) */
     decNumberCompare(&c, b, &mn, pset);
     if (decNumberIsNegative(&c))
@@ -607,8 +610,8 @@ decContext      setmax;                 /* Working context for mp,mn */
         /* Return maximum negative result */
         return (S64)mn64;
     }
-     
-    /* Special case if operand is greater than maximum positive 
+
+    /* Special case if operand is greater than maximum positive
        number (including where operand is positive infinity) */
     decNumberCompare(&c, b, &mp, pset);
     if (decNumberIsNegative(&c) == 0 && decNumberIsZero(&c) == 0)
@@ -624,7 +627,7 @@ decContext      setmax;                 /* Working context for mp,mn */
         /* Return maximum positive result */
         return (S64)mp64;
     }
-     
+
     /* Raise inexact condition if result was rounded */
     decNumberCompare(&c, &p, b, pset);
     if (decNumberIsZero(&c) == 0)
@@ -668,7 +671,7 @@ decContext      setmax;                 /* Working context for mp,mn */
 /*      dn      Pointer to decimal number structure to be shifted    */
 /*      count   Number of digits to shift (+ve=left, -ve=right)      */
 /* Output:                                                           */
-/*      The decimal number structure is updated.                     */           
+/*      The decimal number structure is updated.                     */
 /*-------------------------------------------------------------------*/
 static inline void
 dfp_shift_coeff(decContext *pset, decNumber *dn, int count)
@@ -719,11 +722,11 @@ char            zd[MAXDECSTRLEN+64];    /* Zoned decimal work area   */
 
 /* Bit numbers for Test Data Class instructions */
 #define DFP_TDC_ZERO            52
-#define DFP_TDC_SUBNORMAL       54  
-#define DFP_TDC_NORMAL          56  
-#define DFP_TDC_INFINITY        58  
-#define DFP_TDC_QUIET_NAN       60  
-#define DFP_TDC_SIGNALING_NAN   62  
+#define DFP_TDC_SUBNORMAL       54
+#define DFP_TDC_NORMAL          56
+#define DFP_TDC_INFINITY        58
+#define DFP_TDC_QUIET_NAN       60
+#define DFP_TDC_SIGNALING_NAN   62
 
 /*-------------------------------------------------------------------*/
 /* Test data class and return condition code                         */
@@ -769,13 +772,13 @@ decNumber       dm;                     /* Normalized value of dn    */
 } /* end function dfp_test_data_class */
 
 /* Bit numbers for Test Data Group instructions */
-#define DFP_TDG_SAFE_ZERO       52  
-#define DFP_TDG_EXTREME_ZERO    54  
-#define DFP_TDG_EXTREME_NONZERO 56  
-#define DFP_TDG_SAFE_NZ_LMD_Z   58  
-#define DFP_TDG_SAFE_NZ_LMD_NZ  60  
-#define DFP_TDG_SPECIAL         62  
- 
+#define DFP_TDG_SAFE_ZERO       52
+#define DFP_TDG_EXTREME_ZERO    54
+#define DFP_TDG_EXTREME_NONZERO 56
+#define DFP_TDG_SAFE_NZ_LMD_Z   58
+#define DFP_TDG_SAFE_NZ_LMD_NZ  60
+#define DFP_TDG_SPECIAL         62
+
 /*-------------------------------------------------------------------*/
 /* Test data group and return condition code                         */
 /*                                                                   */
@@ -864,7 +867,7 @@ BYTE    drm;                            /* Decimal rounding mode     */
     case DRM_RAFZ: pset->round = DEC_ROUND_UP; break;
     case DRM_RFSP:
     /* Rounding mode DRM_RFSP is not supported by
-       the decNumber library, so we arbitrarily 
+       the decNumber library, so we arbitrarily
        convert it to another mode instead... */
         pset->round = DEC_ROUND_DOWN; break;
     } /* end switch(drm) */
@@ -1054,7 +1057,7 @@ int     suppress = 0;                   /* 1=suppress, 0=complete    */
         }
         else
         {
-            dxc = DXC_IEEE_INVALID_OP;    
+            dxc = DXC_IEEE_INVALID_OP;
             suppress = 1;
         }
     }
@@ -1164,7 +1167,7 @@ int     suppress = 0;                   /* 1=suppress, 0=complete    */
 /*-------------------------------------------------------------------*/
 /* B3DA AXTR  - Add DFP Extended Register                      [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_dfp_ext_reg) 
+DEF_INST(add_dfp_ext_reg)
 {
 int             r1, r2, r3;             /* Values of R fields        */
 decimal128      x1, x2, x3;             /* Extended DFP values       */
@@ -1206,7 +1209,7 @@ BYTE            dxc;                    /* Data exception code       */
         ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
     }
 
-} /* end DEF_INST(add_dfp_ext_reg) */ 
+} /* end DEF_INST(add_dfp_ext_reg) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2436,7 +2439,7 @@ BYTE            dxc;                    /* Data exception code       */
         set.status |= DEC_IEEE_854_Invalid_operation;
         d.bits &= ~DECSNAN;
         d.bits |= DECNAN;
-    } 
+    }
 
     /* Check for exception condition */
     dxc = ARCH_DEP(dfp_status_check)(&set, regs);
@@ -2487,7 +2490,7 @@ BYTE            dxc;                    /* Data exception code       */
         set.status |= DEC_IEEE_854_Invalid_operation;
         d.bits &= ~DECSNAN;
         d.bits |= DECNAN;
-    } 
+    }
 
     /* Check for exception condition */
     dxc = ARCH_DEP(dfp_status_check)(&set, regs);
@@ -2939,7 +2942,7 @@ BYTE            dxc;                    /* Data exception code       */
     else
     {
         /* For finite number, load value rounded to short DFP format,
-           or for Inf with mask bit 0 not set, load default infinity */ 
+           or for Inf with mask bit 0 not set, load default infinity */
         decNumberCopy(&d1, &d2);
         decimal32FromNumber(&x1, &d1, &set);
     }
