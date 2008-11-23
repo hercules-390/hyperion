@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.69  2008/11/23 11:11:54  rbowler
+// Fix warning C4267 conversion from 'size_t' to 'int' in win64
+//
 // Revision 1.68  2008/11/23 11:06:04  rbowler
 // Cosmetic: remove extraneous trailing blanks from dfp.c
 //
@@ -680,7 +683,7 @@ static inline void
 dfp_shift_coeff(decContext *pset, decNumber *dn, int count)
 {
 size_t          len;                    /* String length             */
-int             maxlen;                 /* Maximum coefficient length*/
+size_t          maxlen;                 /* Maximum coefficient length*/
 int32_t         exp;                    /* Original exponent         */
 uint8_t         bits;                   /* Original flag bits        */
 char            zd[MAXDECSTRLEN+64];    /* Zoned decimal work area   */
