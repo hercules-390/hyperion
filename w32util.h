@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.12  2007/11/30 14:54:34  jmaynard
+// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
+//
 // Revision 1.11  2007/08/04 19:04:34  fish
 // gethostid
 //
@@ -201,7 +204,7 @@ W32_DLL_IMPORT void socket_keepalive( int sfd, int idle_time, int probe_interval
 W32_DLL_IMPORT int get_process_directory( char* dirbuf, size_t bufsiz );
 
 // Expand environment variables... (e.g. %SystemRoot%, etc); 0==success
-W32_DLL_IMPORT int expand_environ_vars( const char* inbuff, char* outbuff, size_t outbufsiz );
+W32_DLL_IMPORT int expand_environ_vars( const char* inbuff, char* outbuff, DWORD outbufsiz );
 
 // Initialize Hercules HOSTINFO structure
 W32_DLL_IMPORT void w32_init_hostinfo( HOST_INFO* pHostInfo );
@@ -222,7 +225,7 @@ W32_DLL_IMPORT FILE*  w32_fdopen ( int their_fd, const char* their_mode );
 W32_DLL_IMPORT size_t w32_fwrite ( const void* buff, size_t size, size_t count, FILE* stream );
 W32_DLL_IMPORT int    w32_fprintf( FILE* stream, const char* format, ... );
 W32_DLL_IMPORT int    w32_fclose ( FILE* stream );
-W32_DLL_IMPORT int    w32_get_stdin_char ( char* pCharBuff, size_t wait_millisecs );
+W32_DLL_IMPORT int    w32_get_stdin_char ( char* pCharBuff, int wait_millisecs );
 W32_DLL_IMPORT pid_t  w32_poor_mans_fork ( char*  pszCommandLine, int* pnWriteToChildStdinFD );
 W32_DLL_IMPORT void   w32_set_thread_name( TID tid, char* name );
 

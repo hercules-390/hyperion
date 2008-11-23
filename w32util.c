@@ -15,6 +15,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.32  2008/08/29 07:08:41  fish
+// Fix parsing bug/issue in "w32_parse_piped_process_stdxxx_data" function
+//
 // Revision 1.31  2007/11/30 14:54:34  jmaynard
 // Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
 //
@@ -198,6 +201,7 @@ DLL_EXPORT int w32_strerror_r( int errnum, char* buffer, size_t buffsize )
 DLL_EXPORT char* w32_w32errmsg( int errnum, char* pszBuffer, size_t nBuffSize )
 {
     DWORD dwBytesReturned = 0;
+    DWORD dwBuffSize = (DWORD)nBuffSize;
 
     ASSERT( pszBuffer && nBuffSize );
 
@@ -211,7 +215,7 @@ DLL_EXPORT char* w32_w32errmsg( int errnum, char* pszBuffer, size_t nBuffSize )
         errnum,
         MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
         pszBuffer,
-        nBuffSize,
+        dwBuffSize,
         NULL
     );
 
@@ -1012,15 +1016,13 @@ DLL_EXPORT int getrusage ( int who, struct rusage* r_usage )
 
 DLL_EXPORT int getlogin_r ( char* name, size_t namesize )
 {
-    DWORD  dwSize;
+    DWORD  dwSize = (DWORD)namesize;
 
     if ( !name )
         return EFAULT;
 
     if ( namesize < 2 || namesize > ( LOGIN_NAME_MAX + 1 ) )
         return EINVAL;
-
-    dwSize = namesize;
 
     return ( GetUserName( name, &dwSize ) ? 0 : ERANGE );
 }
@@ -1238,13 +1240,13 @@ DLL_EXPORT int get_process_directory( char* dirbuf, size_t bufsiz )
         return 0;
     p = strrchr(process_exec_dirbuf,'\\'); if (p) *(p+1) = 0;
     strlcpy(dirbuf,process_exec_dirbuf,bufsiz);
-    return strlen(dirbuf);
+    return strlen(dirbuf) ? 1 : 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Expand environment variables... (e.g. %SystemRoot%, etc); 0==success
 
-DLL_EXPORT int expand_environ_vars( const char* inbuff, char* outbuff, size_t outbufsiz )
+DLL_EXPORT int expand_environ_vars( const char* inbuff, char* outbuff, DWORD outbufsiz )
 {
     // If the function succeeds, the return value is the number of TCHARs
     // stored in the destination buffer, including the terminating null character.
@@ -1422,7 +1424,7 @@ static DWORD WINAPI ReadStdInW32Thread( LPVOID lpParameter )
 // or -1 == error (pCharBuff NULL). The worker thread is created on the 1st call.
 
 DLL_EXPORT
-int w32_get_stdin_char( char* pCharBuff, size_t wait_millisecs )
+int w32_get_stdin_char( char* pCharBuff, int wait_millisecs )
 {
     if ( !pCharBuff )
     {
@@ -1594,7 +1596,7 @@ DLL_EXPORT long gethostid( void )
     struct hostent*  pHostent = NULL;
     return (gethostname( szHostName, sizeof(szHostName) ) == 0
         && (pHostent = gethostbyname( szHostName )) != NULL) ?
-        (long)pHostent->h_addr : 0;
+        (long)(*(pHostent->h_addr)) : 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1829,8 +1831,7 @@ DLL_EXPORT int w32_FD_ISSET( int fd, fd_set* pSet )
     if ( socket_is_socket( fd ) )                       // (is it already a SOCKET?)
         return ORIGINAL_FD_ISSET( (SOCKET)fd, pSet );   // (yes, do normal FD_ISSET)
 
-    if ( (HANDLE) -1 == ( hFile = (HANDLE) _get_osfhandle( fd ) ) )
-        hFile = (HANDLE) fd;
+    hFile = (HANDLE) _get_osfhandle( fd );
 
     for ( i=0; i < (int)pSet->fd_count; i++ )
         if ( pSet->fd_array[i] == (SOCKET) hFile )      // (is this the file?)
@@ -2205,7 +2206,7 @@ DLL_EXPORT size_t w32_fwrite ( const void* buff, size_t size, size_t count, FILE
         sock = (SOCKET) _get_osfhandle( sd );
     }
 
-    if ( ( rc = send( sock, buff, size * count, 0 ) ) == SOCKET_ERROR )
+    if ( ( rc = send( sock, buff, (int)(size * count), 0 ) ) == SOCKET_ERROR )
     {
         errno = WSAGetLastError();
         return -1;
@@ -2315,7 +2316,7 @@ DLL_EXPORT int w32_fclose ( FILE* stream )
 #define  MSG_TRUNCATED_MSG        "...(truncated)\n"
 
 char*    buffer_overflow_msg      = NULL;   // used to trim received message
-int      buffer_overflow_msg_len  = 0;      // length of above truncation msg
+size_t   buffer_overflow_msg_len  = 0;      // length of above truncation msg
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Fork control...
@@ -2365,6 +2366,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
     char* pszNewCommandLine;            // (because we build pvt copy for CreateProcess)
     BOOL  bSuccess;                     // (work)
     int   rc;                           // (work)
+    size_t len;                         // (work)
 
     PIPED_PROCESS_CTL*  pPipedProcessCtl        = NULL;
     PIPED_THREAD_CTL*   pPipedStdOutThreadCtl   = NULL;
@@ -2470,9 +2472,9 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
     // Build the command-line for the system to create the child process with...
 
-    rc = strlen(pszCommandLine) + 1;
-    pszNewCommandLine = malloc( rc );
-    strlcpy( pszNewCommandLine, pszCommandLine, rc );
+    len = strlen(pszCommandLine) + 1;
+    pszNewCommandLine = malloc( len );
+    strlcpy( pszNewCommandLine, pszCommandLine, len );
 
     //////////////////////////////////////////////////
     // Now actually create the child process...
@@ -2748,8 +2750,8 @@ UINT  WINAPI  w32_read_piped_process_stdxxx_output_thread ( void* pThreadParm )
             oflow = TRUE;
             memcpy( holdbuff + nHoldAmount, readbuff, HOLDBUFSIZE - nHoldAmount);
             strcpy(                         readbuff, buffer_overflow_msg);
-            nAmountRead =                   buffer_overflow_msg_len;
-            nHoldAmount =  HOLDBUFSIZE  -   buffer_overflow_msg_len - 1;
+            nAmountRead =                   (DWORD)buffer_overflow_msg_len;
+            nHoldAmount =  HOLDBUFSIZE  -   nAmountRead - 1;
         }
 
         // Append new data to end of hold buffer...
@@ -2920,7 +2922,7 @@ DLL_EXPORT void w32_set_thread_name( TID tid, char* name )
 
     __try
     {
-        RaiseException( MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (DWORD*)&info );
+        RaiseException( MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (const ULONG_PTR*)&info );
     }
     __except ( EXCEPTION_CONTINUE_EXECUTION )
     {

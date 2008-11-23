@@ -44,6 +44,9 @@
 /*********************************************************************/
 
 // $Log$
+// Revision 1.63  2008/02/12 08:42:15  fish
+// dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
+//
 // Revision 1.62  2007/12/29 14:40:51  fish
 // fix copyregs function to fallback to using dummyregs whenever regs->hostregs happens to be NULL
 //
@@ -135,7 +138,7 @@ void  Initialize         ();
 void  ProcessingLoop     ();
 void  Cleanup            ();
 void  UpdateTargetCPU    ();
-void  ReadInputData      (size_t nTimeoutMillsecs);
+void  ReadInputData      (int nTimeoutMillsecs);
 void  ProcessInputData   ();
 void* gui_panel_command  (char* pszCommand);
 void  UpdateStatus       ();
@@ -254,7 +257,7 @@ int    nInputLen       = 0;                     // amount of data it's holding
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void ReadInputData ( size_t  nTimeoutMillsecs )
+void ReadInputData ( int nTimeoutMillsecs )
 {
     size_t  nMaxBytesToRead;
     int     nBytesRead;
