@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.53  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.52  2006/12/08 09:43:25  jj
 // Add CVS message log
 //
@@ -140,7 +143,7 @@ static void * hdl_dlopen(char *filename, int flag _HDL_UNUSED)
 {
 char *fullname;
 void *ret;
-int fulllen = 0;
+size_t fulllen = 0;
 
     if(filename && *filename != '/' && *filename != '.')
     {
