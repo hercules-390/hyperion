@@ -10,6 +10,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.68  2008/11/23 11:06:04  rbowler
+// Cosmetic: remove extraneous trailing blanks from dfp.c
+//
 // Revision 1.67  2007/11/23 12:28:07  rbowler
 // Correct CPSDR when R1 and R3 are same register (2nd attempt)
 //
@@ -676,7 +679,7 @@ decContext      setmax;                 /* Working context for mp,mn */
 static inline void
 dfp_shift_coeff(decContext *pset, decNumber *dn, int count)
 {
-int             len;                    /* String length             */
+size_t          len;                    /* String length             */
 int             maxlen;                 /* Maximum coefficient length*/
 int32_t         exp;                    /* Original exponent         */
 uint8_t         bits;                   /* Original flag bits        */
