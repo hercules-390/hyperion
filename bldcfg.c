@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.92  2008/11/04 05:56:30  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.91  2008/11/03 15:31:58  rbowler
 // Back out consistent create_thread ATTR modification
 //
@@ -1845,7 +1848,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                 count = 1;
                 if (isdigit(styp[0]))
                 {
-                    if (sscanf(styp, "%hu%c", &count, &c) != 2
+                    if (sscanf(styp, "%d%c", &count, &c) != 2
                         || c != '*' || count < 1)
                     {
                         fprintf(stderr, _("HHCCF074S Error in %s line %d: "
