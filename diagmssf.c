@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.43  2007/06/23 00:04:08  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.42  2007/01/14 23:14:12  rbowler
 // Fix signed/unsigned mismatch in 370-only build
 //
@@ -34,6 +37,8 @@
 #include "hercules.h"
 
 #include "opcode.h"
+
+#include "service.h"
 
 #if !defined(_DIAGMSSF_C)
 
@@ -512,7 +517,7 @@ int               i;                   /* loop index                 */
 
     /* Set the first and only 16 byte entry */
     p += 16;
-    if (sysblk.pgmprdos == PGM_PRD_OS_LICENSED)
+    if (sysblk.ptyp[0] == SCCB_PTYP_CP)
         memcpy(p, "CP                ", 16);
     else
         memcpy(p, "ICF               ", 16);

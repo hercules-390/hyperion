@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.81  2008/10/14 20:56:21  rbowler
+// Propagate processor type from sysblk
+//
 // Revision 1.80  2008/10/12 21:43:27  rbowler
 // SCCB SCPINFO updates from GA22-7584-10
 //
@@ -625,7 +628,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     switch (sclp_command & SCLP_COMMAND_MASK) {
 
     case SCLP_READ_IFL_INFO:
-        if(!sysblk.pgmprdos)
+        /* READ_IFL_INFO is only valid for processor type IFL */
+        if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_IFL)
             goto invalidcmd;
     case SCLP_READ_SCP_INFO:
 
@@ -741,9 +745,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_INFO;
 
-        /* OR in program product OS restriction flag. */
-        if((sclp_command & SCLP_COMMAND_MASK) != SCLP_READ_IFL_INFO)
-            sccb->resp |= sysblk.pgmprdos;
+        /* Set the the specific returncode for the IFL. */
+        if( ((sclp_command & SCLP_COMMAND_MASK) != SCLP_READ_IFL_INFO) &&
+          (sysblk.ptyp[regs->cpuad] == SCCB_PTYP_IFL) )
+            sccb->resp |= SCCB_PTYP_IFL;
 
         break;
 

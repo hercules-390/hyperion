@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.13  2008/10/12 21:43:27  rbowler
+// SCCB SCPINFO updates from GA22-7584-10
+//
 // Revision 1.12  2007/06/23 00:04:15  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -247,6 +250,7 @@ typedef struct _SCCB_CPU_INFO {
 #define SCCB_PTYP_CP                                    0
 #define SCCB_PTYP_ICF                                   1
 #define SCCB_PTYP_IFA                                   2
+#define SCCB_PTYP_IFL                                   4  /* Guess *JJ */
 #define SCCB_PTYP_SUP                                   5
 
 /* Definitions for crypto unit identifier */

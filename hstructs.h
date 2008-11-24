@@ -9,6 +9,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.95  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.94  2008/11/03 15:31:54  rbowler
 // Back out consistent create_thread ATTR modification
 //
@@ -661,7 +664,6 @@ struct SYSBLK {
         int     todprio;                /* TOD Clock thread priority */
         int     cpuprio;                /* CPU thread priority       */
         int     devprio;                /* Device thread priority    */
-        int     pgmprdos;               /* Program product OS flag   */
         TID     httptid;                /* HTTP listener thread id   */
         U16     httpport;               /* HTTP port number or zero  */
         int     httpauth;               /* HTTP auth required flag   */

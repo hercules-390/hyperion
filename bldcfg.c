@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.93  2008/11/24 13:44:03  rbowler
+// Fix bldcfg.c:1851: warning: short unsigned int format, different type arg
+//
 // Revision 1.92  2008/11/04 05:56:30  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //
@@ -927,6 +930,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
     asnandlxreuse = 0;  /* ASN And LX Reuse is defaulted to DISABLE */
 #endif
+
+    /* Default CPU type IFL (Implies PGMPRDOS RESTRICTED) */
+    for (i = 0; i < MAX_CPU; i++)
+        sysblk.ptyp[i] = SCCB_PTYP_IFL;
 
     /* Cap the default priorities at zero if setuid not available */
 #if !defined(NO_SETUID)
@@ -1863,6 +1870,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
                     ptyp = SCCB_PTYP_CP;
                 else if (strcasecmp(styp,"cf") == 0)
                     ptyp = SCCB_PTYP_ICF;
+                else if (strcasecmp(styp,"il") == 0)
+                    ptyp = SCCB_PTYP_IFL;
                 else if (strcasecmp(styp,"ap") == 0)
                     ptyp = SCCB_PTYP_IFA;
                 else if (strcasecmp(styp,"ip") == 0)
@@ -2660,8 +2669,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     /* Set the system OS tailoring value */
     sysblk.pgminttr = ostailor;
 
-    /* Set the system program product OS restriction flag */
-    sysblk.pgmprdos = pgmprdos;
+    /* If PGMPRDOS LICENSED was specifed then IFL's become CP's */
+    for (i = 0; i < MAX_CPU; i++)
+        if(sysblk.ptyp[i] == SCCB_PTYP_IFL && pgmprdos == PGM_PRD_OS_LICENSED)
+            sysblk.ptyp[i] = SCCB_PTYP_CP;
 
 #ifdef OPTION_IODELAY_KLUDGE
     /* Set I/O delay value */
@@ -2828,7 +2839,7 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #define KEEPMSG ""
 #endif
 
-    if (sysblk.pgmprdos == PGM_PRD_OS_LICENSED)
+    if (pgmprdos == PGM_PRD_OS_LICENSED)
     {
         logmsg(_("\n\n"
                  KEEPMSG "HHCCF039W                  PGMPRDOS LICENSED specified.\n"
