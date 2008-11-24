@@ -8,6 +8,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.30  2007/06/23 00:04:15  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.29  2006/12/08 09:43:29  jj
 // Add CVS message log
 //
@@ -451,7 +454,7 @@ DLL_EXPORT int ptt_pthread_create(fthread_t *tid, ATTR *attr,
 int result;
 
     result = fthread_create(tid, attr, start, arg, nm);
-    PTTRACE ("create", (void *)*tid, NULL, file, line, result);
+    PTTRACE ("create", (void *)(uintptr_t)(*tid), NULL, file, line, result);
     return result;
 }
 
@@ -459,9 +462,9 @@ DLL_EXPORT int ptt_pthread_join(fthread_t tid, void **value, char *file, int lin
 {
 int result;
 
-    PTTRACE ("join before", (void *)tid, value ? *value : NULL, file, line, PTT_MAGIC);
+    PTTRACE ("join before", (void *)(uintptr_t)tid, value ? *value : NULL, file, line, PTT_MAGIC);
     result = fthread_join(tid,value);
-    PTTRACE ("join after", (void *)tid, value ? *value : NULL, file, line, result);
+    PTTRACE ("join after", (void *)(uintptr_t)tid, value ? *value : NULL, file, line, result);
     return result;
 }
 
@@ -469,15 +472,15 @@ DLL_EXPORT int ptt_pthread_detach(fthread_t tid, char *file, int line)
 {
 int result;
 
-    PTTRACE ("dtch before", (void *)tid, NULL, file, line, PTT_MAGIC);
+    PTTRACE ("dtch before", (void *)(uintptr_t)tid, NULL, file, line, PTT_MAGIC);
     result = fthread_detach(tid);
-    PTTRACE ("dtch after", (void *)tid, NULL, file, line, result);
+    PTTRACE ("dtch after", (void *)(uintptr_t)tid, NULL, file, line, result);
     return result;
 }
 
 DLL_EXPORT int ptt_pthread_kill(fthread_t tid, int sig, char *file, int line)
 {
-    PTTRACE ("kill", (void *)tid, (void *)sig, file, line, PTT_MAGIC);
+    PTTRACE ("kill", (void *)(uintptr_t)tid, (void *)(uintptr_t)sig, file, line, PTT_MAGIC);
     return fthread_kill(tid, sig);
 }
 #endif
