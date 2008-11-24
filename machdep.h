@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.63  2007/10/02 22:02:27  gsmith
+// cygwin does not need special assist for -fPIC
+//
 // Revision 1.62  2007/08/07 19:47:59  ivan
 // Fix a couple of gcc-4.2 warnings
 //
@@ -219,11 +222,11 @@
     {
         // returns 0 == success, 1 otherwise
 
-        long  off, shift;
+        LONG_PTR  off, shift;
         BYTE  cc;
         U32  *ptr4, val4, old4, new4;
 
-        off   = (long)ptr & 3;
+        off   = (LONG_PTR)ptr & 3;
         shift = (3 - off) * 8;
         ptr4  = (U32*)(((BYTE*)ptr) - off);
         val4  = CSWAP32(*ptr4);
