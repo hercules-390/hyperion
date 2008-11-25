@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.254  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.253  2008/11/03 15:31:56  rbowler
 // Back out consistent create_thread ATTR modification
 //
@@ -234,6 +237,7 @@
 #include "tapedev.h"
 #include "dasdtab.h"
 #include "ctcadpt.h"
+#include "service.h"
 
 ///////////////////////////////////////////////////////////////////////
 // (forward references, etc)
@@ -2877,19 +2881,26 @@ int ipl_cmd2(int argc, char *argv[], char *cmdline, int clear)
 {
 BYTE c;                                 /* Character work area       */
 int  rc;                                /* Return code               */
-
 int  i;
-
 #if defined(OPTION_IPLPARM)
 int j;
 size_t  maxb;
 #endif
-
 U16  lcss;
 U16  devnum;
 char *cdev, *clcss;
 
+    /* Check that target processor type allows IPL */
+    if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
+     || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
+    {
+        logmsg(_("HHCPN052E Target CPU %d type %d"
+                " does not allow ipl\n"),
+                sysblk.pcpu, sysblk.ptyp[sysblk.pcpu]);
+        return -1;
+    }
 
+    /* Check the parameters of the IPL command */
     if (argc < 2)
     {
         missing_devnum();
@@ -2936,9 +2947,7 @@ char *cdev, *clcss;
             return -1;
         }
 
-    /* If the ipl device is not a valid hex number we assume */
-    /* This is a load from the service processor             */
-
+    /* The ipl device number might be in format lcss:devnum */
     if((cdev = strchr(argv[1],':')))
     {
         clcss = argv[1];
@@ -2950,6 +2959,8 @@ char *cdev, *clcss;
         cdev = argv[1];
     }
 
+    /* If the ipl device is not a valid hex number we assume */
+    /* This is a load from the service processor             */
     if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
         rc = load_hmc(strtok(cmdline+3," \t"), sysblk.pcpu, clear);
     else

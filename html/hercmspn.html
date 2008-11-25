@@ -181,6 +181,20 @@ desired. Any unprocessed commands may be issued manually.
   <dt>Issued by
   <dd>panel.c, function process_rc_file
   </dl>
+<dt><code><a name="HHCPN052E">
+HHCPN052E Target CPU <em>nnnn</em> type <em>cputype</em> does not allow ipl
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An ipl command was issued but the target CPU <code><em>nnnn</em></code>
+      is a processor engine of type <code><em>cputype</em></code> which does
+      not support the initial program load procedure.
+  <dt>Action
+  <dd>Use the cpu command to set the target CPU to a processor of type CP,
+      IFL, or ICF, then re-issue the ipl command.
+  <dt>Issued by
+  <dd>hsccmd.c, function ipl_cmd2
+  </dl>
 <dt><code><a name="HHCPN180E">
 HHCPN180E 'sh' commands are disabled
 </a></code>
