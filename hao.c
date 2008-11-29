@@ -14,6 +14,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.13  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.12  2008/11/03 15:31:57  rbowler
 // Back out consistent create_thread ATTR modification
 //
@@ -94,6 +97,13 @@
 #define HAO_WKLEN    256    /* (maximum message length able to tolerate) */
 #define HAO_MAXRULE  64     /* (purely arbitrary and easily increasable) */
 
+static const char* PGMPRDOSstr[] = {
+"HHCCP040I CPI: System Type: MVS",
+"HHCCP040I CPI: System Type: VM",
+"VSE/ESA INTEGRATED CONSOLE SUPPORT ENABLED",
+""
+};
+
 /*---------------------------------------------------------------------------*/
 /* local variables                                                           */
 /*---------------------------------------------------------------------------*/
@@ -151,6 +161,14 @@ DLL_EXPORT void hao_initialize(void)
   }
 
   release_lock(&ao_lock);
+
+  /* Set up PGMPRDOS warning dedication */
+  for(i = 0; PGMPRDOSstr[i][0]; i++)
+  {
+    hao_tgt(PGMPRDOSstr[i]);
+    hao_cmd("herc stopall");
+  }
+
 }
 
 /*---------------------------------------------------------------------------*/
