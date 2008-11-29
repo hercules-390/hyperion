@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2007/11/30 14:54:32  jmaynard
+// Changed conmicro.cx to hercules-390.org or conmicro.com, as needed.
+//
 // Revision 1.14  2007/06/23 00:04:09  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -115,7 +118,7 @@
     #define MyDeleteCriticalSection(pCS)                    (DeleteCriticalSection((CRITICAL_SECTION*)(pCS)))
 
   #ifdef _MSVC_
-    #define MyCreateThread(sec,stack,start,parm,flags,tid)  ((HANDLE) _beginthreadex((sec),(stack),(start),(parm),(flags),(tid)))
+    #define MyCreateThread(sec,stack,start,parm,flags,tid)  ((HANDLE) _beginthreadex((sec),(unsigned)(stack),(start),(parm),(flags),(tid)))
     #define MyExitThread(code)                              (_endthreadex((code)))
   #else // (Cygwin)
     #define MyCreateThread(sec,stack,start,parm,flags,tid)  (CreateThread((sec),(stack),(start),(parm),(flags),(tid)))
