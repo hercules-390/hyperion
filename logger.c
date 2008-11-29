@@ -14,6 +14,9 @@
 /* for isatty()                                                      */
 
 // $Log$
+// Revision 1.53  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.52  2008/11/03 15:31:54  rbowler
 // Back out consistent create_thread ATTR modification
 //
@@ -184,7 +187,7 @@ static void logger_term(void *arg)
     if(logger_active)
     {
         char* term_msg = _("HHCLG014I logger thread terminating\n");
-        int   term_msg_len = strlen( term_msg );
+        size_t term_msg_len = strlen(term_msg);
 
         obtain_lock(&logger_lock);
 
@@ -436,7 +439,7 @@ int bytes_read;
     if (logger_hrdcpy)
     {
         char* term_msg = _("HHCLG014I logger thread terminating\n");
-        int   term_msg_len = strlen( term_msg );
+        size_t term_msg_len = strlen(term_msg);
 #ifdef OPTION_TIMESTAMP_LOGFILE
         if (!sysblk.logoptnotime) logger_logfile_timestamp();
 #endif

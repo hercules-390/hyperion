@@ -11,6 +11,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.28  2008/07/10 18:29:02  fish
+// Fix crash in 'resolve_symbol_string' when incomplete symbol passed
+// (e.g. "$(x" for example)
+//
 // Revision 1.27  2008/02/19 11:49:19  ivan
 // - Move setting of CPU priority after spwaning timer thread
 // - Added support for Posix 1003.1e capabilities
@@ -790,7 +794,7 @@ DLL_EXPORT char * hgets(char *b,size_t c,int s)
 
 DLL_EXPORT int hwrite(int s,const char *bfr,size_t sz)
 {
-    return send(s,bfr,sz,0);
+    return send(s,bfr,(int)sz,0); /* (int) cast is for _WIN64 */
 }
 
 DLL_EXPORT int hprintf(int s,char *fmt,...)

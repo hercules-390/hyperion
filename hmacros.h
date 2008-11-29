@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.26  2008/11/04 04:50:46  fish
+// Ensure consistent utility startup
+//
 // Revision 1.25  2008/09/02 06:09:01  fish
 // Have TRACE macro call DebugTrace function for MSVC DEBUG builds
 //
@@ -74,7 +77,7 @@
 #ifdef _MSVC_
   #define  create_pipe(a)       socketpair(AF_INET,IPPROTO_IP,SOCK_STREAM,a)
   #define  read_pipe(f,b,n)     recv(f,b,n,0)
-  #define  write_pipe(f,b,n)    send(f,b,n,0)
+  #define  write_pipe(f,b,n)    send(f,b,(int)n,0)
   #define  close_pipe(f)        closesocket(f)
 #else
   #define  create_pipe(f)       pipe(f)
