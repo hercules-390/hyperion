@@ -10,6 +10,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.20  2008/12/01 16:19:49  jj
+// Check for licensed operating systems without impairing architectural
+// compliance of IFL's
+//
 // Revision 1.19  2008/07/08 05:35:49  fish
 // AUTOMOUNT redesign: support +allowed/-disallowed dirs
 // and create associated 'automount' panel command - Fish
@@ -226,8 +230,8 @@ HCMD_DLL_IMPORT int aia_cmd     (int argc, char *argv[], char *cmdline);
 HCMD_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);
 
 /* Functions in losc.c */
-HSYS_DLL_IMPORT void losc_set (int license_status);
-HSYS_DLL_IMPORT void losc_check(char *ostype);
+void losc_set (int license_status);
+void losc_check(char *ostype);
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
