@@ -791,6 +791,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\losc.c"
+							>
+						</File>
+						<File
 							RelativePath=".\ltdl.c"
 							>
 						</File>

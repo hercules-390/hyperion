@@ -10,6 +10,9 @@
 #
 #                           CHANGE HISTORY
 # $Log$
+# Revision 1.5  2008/05/22 19:25:58  fish
+# Flex FakeTape support
+#
 # Revision 1.4  2008/03/25 11:41:32  fish
 # SCSI TAPE MODS part 1: groundwork: non-functional changes:
 # rename some functions, comments, general restructuring, etc.
@@ -116,6 +119,7 @@ hengine_OBJ = \
     $(O)io.obj       \
     $(O)ipl.obj      \
     $(O)loadparm.obj \
+    $(O)losc.obj     \
     $(O)machchk.obj  \
     $(O)opcode.obj   \
     $(O)panel.obj    \

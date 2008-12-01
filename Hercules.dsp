@@ -883,6 +883,10 @@ SOURCE=.\logmsg.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\losc.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\ltdl.c
 # End Source File
 # Begin Source File
