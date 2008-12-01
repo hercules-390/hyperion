@@ -31,6 +31,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.95  2008/12/01 16:19:49  jj
+// Check for licensed operating systems without impairing architectural
+// compliance of IFL's
+//
 // Revision 1.94  2008/11/24 14:52:21  jj
 // Add PTYP=IFL
 // Change SCPINFO processing to check on ptyp for IFL specifics
@@ -2833,12 +2837,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     /* Release the dummy file descriptors */
     for (i = 0; i < OPTION_SELECT_KLUDGE; i++)
         close(dummyfd[i]);
-#endif
-
-#ifdef OPTION_MSGCLR
-#define KEEPMSG "<pnl,color(lightred,black),keep>"
-#else
-#define KEEPMSG ""
 #endif
 
 #ifdef _FEATURE_CPU_RECONFIG
