@@ -19,6 +19,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.94  2008/07/18 23:58:13  fish
+// Revert prior PSF order 18 length change; len s/b 12, not 16.
+// Bug is in S390 Linux dasd_eckd driver, not Hercules.
+//
 // Revision 1.93  2008/05/24 20:54:31  rbowler
 // Increase PSF-PRSD data length from 12 to 16 bytes (by Jacob Dekel)
 //
@@ -276,8 +280,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         rc = shared_ckd_init ( dev, argc, argv);
         if (rc < 0)
         {
-            logmsg (_("HHCDA002E %4.4X:File not found or invalid\n"),
-                    dev->devnum);
+            logmsg (_("HHCDA002E %4.4X:File not found or invalid '%s'\n"),
+                    dev->devnum,dev->filename);
             return -1;
         }
         else
