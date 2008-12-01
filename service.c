@@ -23,6 +23,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.82  2008/11/24 14:52:21  jj
+// Add PTYP=IFL
+// Change SCPINFO processing to check on ptyp for IFL specifics
+//
 // Revision 1.81  2008/10/14 20:56:21  rbowler
 // Propagate processor type from sysblk
 //
@@ -748,7 +752,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Set the the specific returncode for the IFL. */
         if( ((sclp_command & SCLP_COMMAND_MASK) != SCLP_READ_IFL_INFO) &&
           (sysblk.ptyp[regs->cpuad] == SCCB_PTYP_IFL) )
-            sccb->resp |= SCCB_PTYP_IFL;
+            sccb->resp |= SCCB_PTYP_IFL;  /* ZZ Needs to be clarified/fixed */
 
         break;
 
@@ -977,6 +981,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                 logmsg(_("HHC773I Sysplex Name = %s\n",sysplex));
                 logmsg(_("HHC774I System Level = %16.16" I64_FMT "X\n"),syslevel);
 #endif
+
+                losc_check(systype);
             }
 
             /* Indicate Event Processed */

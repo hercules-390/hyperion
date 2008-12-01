@@ -10,6 +10,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.19  2008/07/08 05:35:49  fish
+// AUTOMOUNT redesign: support +allowed/-disallowed dirs
+// and create associated 'automount' panel command - Fish
+//
 // Revision 1.18  2008/02/19 11:49:19  ivan
 // - Move setting of CPU priority after spwaning timer thread
 // - Added support for Posix 1003.1e capabilities
@@ -220,6 +224,10 @@ HAO_DLL_IMPORT void hao_message(char *message); /* process message */
 /* Functions in module hsccmd.c (so PTT debugging patches can access them) */
 HCMD_DLL_IMPORT int aia_cmd     (int argc, char *argv[], char *cmdline);
 HCMD_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);
+
+/* Functions in losc.c */
+HSYS_DLL_IMPORT void losc_set (int license_status);
+HSYS_DLL_IMPORT void losc_check(char *ostype);
 
 #if defined(OPTION_DYNAMIC_LOAD)
 

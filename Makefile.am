@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.183  2008/05/22 19:25:58  fish
+# Flex FakeTape support
+#
 # Revision 1.182  2008/03/25 11:41:31  fish
 # SCSI TAPE MODS part 1: groundwork: non-functional changes:
 # rename some functions, comments, general restructuring, etc.
@@ -387,6 +390,7 @@ endif
                        io.c         \
                        decimal.c    \
                        service.c    \
+                       losc.c       \
                        chsc.c       \
                        opcode.c     \
                        diagnose.c   \

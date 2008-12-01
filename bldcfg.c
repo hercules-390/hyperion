@@ -31,6 +31,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.94  2008/11/24 14:52:21  jj
+// Add PTYP=IFL
+// Change SCPINFO processing to check on ptyp for IFL specifics
+//
 // Revision 1.93  2008/11/24 13:44:03  rbowler
 // Fix bldcfg.c:1851: warning: short unsigned int format, different type arg
 //
@@ -931,9 +935,9 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     asnandlxreuse = 0;  /* ASN And LX Reuse is defaulted to DISABLE */
 #endif
 
-    /* Default CPU type IFL (Implies PGMPRDOS RESTRICTED) */
+    /* Default CPU type CP */
     for (i = 0; i < MAX_CPU; i++)
-        sysblk.ptyp[i] = SCCB_PTYP_IFL;
+        sysblk.ptyp[i] = SCCB_PTYP_CP;
 
     /* Cap the default priorities at zero if setuid not available */
 #if !defined(NO_SETUID)
@@ -2669,10 +2673,8 @@ char    pathname[MAX_PATH];             /* file path in host format  */
     /* Set the system OS tailoring value */
     sysblk.pgminttr = ostailor;
 
-    /* If PGMPRDOS LICENSED was specifed then IFL's become CP's */
-    for (i = 0; i < MAX_CPU; i++)
-        if(sysblk.ptyp[i] == SCCB_PTYP_IFL && pgmprdos == PGM_PRD_OS_LICENSED)
-            sysblk.ptyp[i] = SCCB_PTYP_CP;
+    /* Set the licence flag */
+    losc_set(pgmprdos);
 
 #ifdef OPTION_IODELAY_KLUDGE
     /* Set I/O delay value */
@@ -2838,18 +2840,6 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #else
 #define KEEPMSG ""
 #endif
-
-    if (pgmprdos == PGM_PRD_OS_LICENSED)
-    {
-        logmsg(_("\n\n"
-                 KEEPMSG "HHCCF039W                  PGMPRDOS LICENSED specified.\n"
-                 KEEPMSG "\n"
-                 KEEPMSG "                Licensed program product operating systems are enabled.\n"
-                 KEEPMSG "                You are responsible for meeting all conditions of your\n"
-                 KEEPMSG "                                software licenses.\n"
-                 KEEPMSG "\n"
-                 "\n"));
-    }
 
 #ifdef _FEATURE_CPU_RECONFIG
     sysblk.maxcpu = archmode == ARCH_370 ? numcpu : MAX_CPU_ENGINES;
