@@ -576,19 +576,21 @@ failed. The error is described by <code><em>error</em></code>.
   </dl>
 <dt><a name="HHCCF039W"><pre>
 HHCCF039W PGMPRDOS LICENSED specified.
-          Licensed program product operating systems are enabled.
+          A licensed program product operating system is running.
           You are responsible for meeting all conditions of your
-          software license.</pre>
+          software licenses.</pre>
 </a>
 <dd><dl>
   <dt>Meaning
   <dd>The configuration parameter <code>PGMPRDOS LICENSED</code> was
-specified. This message is issued to remind you that compliance with the
-terms of the license for your system's software is your responsibility.
+  specified and Hercules has detected that the operating system is a
+  licensed program product. This message is issued to remind you that
+  compliance with the terms of the license for your system's software
+  is your responsibility.
   <dt>Action
   <dd>Be sure you know what you're doing.
   <dt>Issued by
-  <dd>config.c, function build_config
+  <dd>losc.c, function losc_check
   </dl>
 <dt><code><a name="HHCCF040E">
 HHCCF040E Cannot create CPU <em>number</em> thread: <em>error</em>
@@ -993,6 +995,27 @@ HHCCF077E Logical Channel Subsystem Identification NN exceeds maximum of 3
   or while starting the engine).
   <dt>Issued by
   <dd>config.c, function parse_lcss
+  </dl>
+
+
+<dt><code><a name="HHCCF079A">
+HHCCF079A A licensed program product operating system has been detected.
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Hercules has detected that the operating system is a licensed
+  program product, but the <code>PGMPRDOS LICENSED</code> parameter
+  was not specified in the Hercules configuration file.
+  <dt>Action
+  <dd>Hercules enters the stopped state. To run this operating system
+  you must obtain a license from the operating system supplier and
+  specify the <code>PGMPRDOS LICENSED</code> parameter in the
+  configuration file. If you are unable to obtain a valid license
+  allowing you to run this operating system on your machine, you must
+  use another operating system (such as MVS3.8J or Linux for System z)
+  which does not require a license.
+  <dt>Issued by
+  <dd>losc.c, function losc_check
   </dl>
 
 
