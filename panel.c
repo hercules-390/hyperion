@@ -28,6 +28,12 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.244  2008/09/02 06:13:15  fish
+// New fixed (?) sticky-messages (MSGHLD) logic.
+// This is my logic to hold us off in the mean time
+// until I can finish debugging Bernard's original logic
+// (having trouble debugging it! Sorry it's taking so long!)
+//
 // Revision 1.243  2008/08/30 05:50:30  fish
 // Fix 'quiet' command processing so that screens paint properly
 //
@@ -958,6 +964,20 @@ static void draw_button (short bg, short fg, short hfg, char *left, char *mid, c
     draw_text (mid);
     set_color (fg, bg);
     draw_text (right);
+}
+
+static void set_console_title ()
+{
+    if (!sysblk.pantitle) return;
+
+  #if defined( _MSVC_ )
+    w32_set_console_title(sysblk.pantitle);
+  #else /*!defined(_MSVC_) */
+    if (cons_term && strcmp(cons_term,"xterm")==0)
+    {
+        fprintf(confp,"%c]0;%s%c",'\033',sysblk.pantitle,'\007');
+    }
+  #endif /*!defined(_MSVC_) */
 }
 
 /*=NP================================================================*/
@@ -1950,10 +1970,7 @@ char    buf[1024];                      /* Buffer workarea           */
     set_or_reset_console_mode( keybfd, 1 );
 
     /* Set console title */
-#if defined( _MSVC_ )
-    if (sysblk.pantitle)
-        w32_set_console_title(sysblk.pantitle);
-#endif /* defined( _MSVC_ ) */
+    set_console_title();
 
     /* Clear the screen */
     set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);

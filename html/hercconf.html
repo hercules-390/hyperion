@@ -903,13 +903,16 @@ and how they are used.
 <dt><code>PANTITLE &nbsp; <em>"title-string"</em></code>
 <dd><p>
     specifies an optional console window title-bar string to be used
-    in place of the default one supplied by Windows. If the value
+    in place of the default supplied by the windowing system. If the value
     contains any blanks it must be enclosed within double-quotes.
     <p>
     This option allows one to distinguish between different Hercules
     sessions when running more than one instance of Hercules on the same
-    Windows host.
+    machine.
     <p>
+    This option takes effect only when the Hercules console is displayed
+    on an xterm terminal (commonly used on Unix systems), or
+    in a Windows command prompt window.
     Note that this option has no effect when Hercules is run under control
     of the Hercules GUI since Hercules's console window is hidden in favor
     of using the GUI's console window instead.
