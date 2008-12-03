@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.1  2008/12/01 18:41:28  jj
+// Add losc.c license checking module
+//
 //
 
 #include "hstdinc.h"
@@ -43,6 +46,8 @@ void losc_set (int license_status)
 void losc_check(char *ostype)
 {
 char **lictype;
+int i;
+U32 mask;
 
     if(check_done) 
         return;
@@ -69,7 +74,19 @@ char **lictype;
                 logmsg(_("\n\n"
                 KEEPMSG "HHCCF079A A licensed program product operating system has been detected.\n"
                 "\n"));
-                stopall_cmd(0, NULL, NULL);
+                mask = sysblk.started_mask;
+                for (i = 0; mask; i++)
+                {
+                    if (mask & 1)
+                    {
+                        REGS *regs = sysblk.regs[i];
+                        regs->opinterv = 1;
+                        regs->cpustate = CPUSTATE_STOPPING;
+                        ON_IC_INTERRUPT(regs);
+                        signal_condition(&regs->intcond);
+                    }
+                    mask >>= 1;
+                }
             }
         }
     }
