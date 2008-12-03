@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.245  2008/12/02 17:05:44  rbowler
+// Support for PANTITLE when console is an xterm window
+//
 // Revision 1.244  2008/09/02 06:13:15  fish
 // New fixed (?) sticky-messages (MSGHLD) logic.
 // This is my logic to hold us off in the mean time
@@ -973,7 +976,14 @@ static void set_console_title ()
   #if defined( _MSVC_ )
     w32_set_console_title(sysblk.pantitle);
   #else /*!defined(_MSVC_) */
-    if (cons_term && strcmp(cons_term,"xterm")==0)
+    /* For Unix systems we set the window title by sending a special
+       escape sequence (depends on terminal type) to the console.
+       See http://www.faqs.org/docs/Linux-mini/Xterm-Title.html */
+    if (!cons_term) return;
+    if (strcmp(cons_term,"xterm")==0
+     || strcmp(cons_term,"rxvt")==0
+     || strcmp(cons_term,"dtterm")==0
+     || strcmp(cons_term,"screen")==0)
     {
         fprintf(confp,"%c]0;%s%c",'\033',sysblk.pantitle,'\007');
     }
