@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.246  2008/12/03 11:40:34  rbowler
+// PANTITLE support for rxvt, dtterm, and screen
+//
 // Revision 1.245  2008/12/02 17:05:44  rbowler
 // Support for PANTITLE when console is an xterm window
 //
@@ -2539,8 +2542,8 @@ char    buf[1024];                      /* Buffer workarea           */
                         beep();
                         break;
                     }
-	                /* ENTER pressed on cmdline; fall through
-	                   for normal ENTER keypress handling... */
+                        /* ENTER pressed on cmdline; fall through
+                           for normal ENTER keypress handling... */
                 }
 #endif // defined(OPTION_EXTCURS)
 
