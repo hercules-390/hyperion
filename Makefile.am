@@ -5,6 +5,10 @@
 # $Id$
 #
 # $Log$
+# Revision 1.184  2008/12/01 16:19:49  jj
+# Check for licensed operating systems without impairing architectural
+# compliance of IFL's
+#
 # Revision 1.183  2008/05/22 19:25:58  fish
 # Flex FakeTape support
 #
@@ -772,6 +776,9 @@ tar: dist
 install-exec-local:
 if SETUID_HERCIFC
 	chown root $(DESTDIR)$(bindir)/hercifc
+if HERCIFC_GROUPSET
+	chgrp $(HERCIFC_GROUPNAME) $(DESTDIR)$(bindir)/hercifc
+endif
 	chmod 0750 $(DESTDIR)$(bindir)/hercifc
 	chmod +s   $(DESTDIR)$(bindir)/hercifc
 	rm                             hercifc

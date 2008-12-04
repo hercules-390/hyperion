@@ -32,6 +32,13 @@
 ###############################################################################
 
 # $Log$
+# Revision 1.197  2008/03/25 11:41:31  fish
+# SCSI TAPE MODS part 1: groundwork: non-functional changes:
+# rename some functions, comments, general restructuring, etc.
+# New source modules awstape.c, omatape.c, hettape.c and
+# tapeccws.c added, but not yet used (all will be used in a future
+# commit though when tapedev.c code is eventually split)
+#
 # Revision 1.196  2008/03/10 15:10:46  rbowler
 # Add -lpthread to link options for Solaris 2.9
 #
@@ -1535,16 +1542,16 @@ if test "$hc_cv_build_hercifc" = "yes"; then
 
     AC_ARG_ENABLE( setuid-hercifc,
 
-        AC_HELP_STRING( [--enable-setuid-hercifc],
+        AC_HELP_STRING( [--enable-setuid-hercifc=yes|no|GROUPNAME],
 
-            [install hercifc setuid root]
+            [install hercifc as setuid root, and allow execution by users in group GROUPNAME]
         ),
         [
             case "${enableval}" in
             yes) hc_cv_opt_setuid_hercifc=yes                      ;;
             no)  hc_cv_opt_setuid_hercifc=no                       ;;
-            *)   AC_MSG_RESULT( [ERROR: invalid 'setuid-hercifc' option] )
-                 hc_error=yes
+            *)   hc_cv_opt_setuid_hercifc=yes
+                 hc_cv_hercifc_groupname=${enableval}
                  ;;
             esac
         ],
@@ -2062,6 +2069,12 @@ AM_CONDITIONAL( BUILD_FTHREADS,      [ test "$hc_cv_opt_fthreads"     = "yes" ] 
 AM_CONDITIONAL( BUILD_FISHHANG,      [ test "$hc_cv_opt_fishhang"     = "yes" ] )
 AM_CONDITIONAL( BUILD_HERCIFC,       [ test "$hc_cv_build_hercifc"    = "yes" ] )
 AM_CONDITIONAL( SETUID_HERCIFC,      [ test "$hc_cv_setuid_hercifc"   = "yes" ] )
+AM_CONDITIONAL( HERCIFC_GROUPSET,    [ test "x$hc_cv_hercifc_groupname" != "x"] )
+
+if test "x$hc_cv_hercifc_groupname" != "x"; then
+    HERCIFC_GROUPNAME=${hc_cv_hercifc_groupname}
+    AC_SUBST( HERCIFC_GROUPNAME )
+fi
 
 #  Building of shared libraries is forced, and we force use of libtool too.
 

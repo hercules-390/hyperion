@@ -1,3 +1,4 @@
+04 Dec 2008 Add ability to configure group name in --enable-setuid-hercifc= - Roger Bowler
 02 Dec 2008 Support for PANTITLE when console is an xterm window - Roger Bowler
 24 Nov 2008 Add processor type IL for IFL on engines statement - Jan Jaeger
 02 Nov 2008 Correction to dasdtab entries for 3375 and 3380 - Roger Bowler
