@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.105  2008/08/21 18:34:48  fish
+// Fix i/o-interrupt-queue race condition
+//
 // Revision 1.104  2007/12/10 23:12:02  gsmith
 // Tweaks to OPTION_MIPS_COUNTING processing
 //
@@ -619,7 +622,7 @@ char pathname[MAX_PATH];
     pagesize = PAGEFRAME_PAGESIZE - (startloc & PAGEFRAME_BYTEMASK);
     pageaddr = startloc;
 
-    do {
+    for( ; ; ) {
         if (pageaddr >= sysblk.mainsize)
         {
             logmsg(_("HHCCP034W load_main: terminated at end of mainstor\n"));
@@ -633,15 +636,18 @@ char pathname[MAX_PATH];
             STORAGE_KEY(pageaddr, &sysblk) |= STORKEY_REF|STORKEY_CHANGE;
             rc += len;
         }
+
+        if (len < (int)pagesize)
+        {
+            close(fd);
+            return rc;
+        }
+
         pageaddr += PAGEFRAME_PAGESIZE;
         pageaddr &= PAGEFRAME_PAGEMASK;
         pagesize  = PAGEFRAME_PAGESIZE;
     }
-    while (len == (int)pagesize);
 
-    close(fd);
-
-    return rc;
 } /* end function load_main */
 
 #if !defined(_GEN_ARCH)
