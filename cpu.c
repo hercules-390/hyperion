@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.205  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.204  2008/11/03 15:31:57  rbowler
 // Back out consistent create_thread ATTR modification
 //
@@ -534,7 +537,7 @@ static char *pgmintname[] = {
         /* This can happen if BALR, BASR, BASSM or BSM
            program checks during trace */
         ilc = realregs->execflag ? realregs->exrl ? 6 : 4 : 2;
-        realregs->ip += 2;
+        realregs->ip += ilc;
         realregs->psw.IA += ilc;
         realregs->psw.ilc = ilc;
     }
@@ -548,8 +551,6 @@ static char *pgmintname[] = {
         {
             sie_ilc = realregs->guestregs->execflag ?
                       realregs->guestregs->exrl ? 6 : 4 : 2;
-            realregs->guestregs->ip += 2;
-            realregs->guestregs->psw.IA += sie_ilc;
             realregs->guestregs->psw.ilc = sie_ilc;
         }
     }
