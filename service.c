@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.84  2008/12/05 10:54:58  jj
+// Correct system console message highlight
+//
 // Revision 1.83  2008/12/01 16:19:49  jj
 // Check for licensed operating systems without impairing architectural
 // compliance of IFL's
@@ -640,6 +643,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_IFL)
             goto invalidcmd;
     case SCLP_READ_SCP_INFO:
+        /* READ_SCP_INFO is only valid for processor type CP */
+        if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_CP)
+            goto invalidcmd;
 
         /* Set the main storage change bit */
         STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
@@ -752,11 +758,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Set response code X'0010' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_INFO;
-
-        /* Set the the specific returncode for the IFL. */
-        if( ((sclp_command & SCLP_COMMAND_MASK) != SCLP_READ_IFL_INFO) &&
-          (sysblk.ptyp[regs->cpuad] == SCCB_PTYP_IFL) )
-            sccb->resp |= SCCB_PTYP_IFL;  /* ZZ Needs to be clarified/fixed */
 
         break;
 
