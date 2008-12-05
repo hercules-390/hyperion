@@ -4,6 +4,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.14  2008/11/24 14:52:21  jj
+// Add PTYP=IFL
+// Change SCPINFO processing to check on ptyp for IFL specifics
+//
 // Revision 1.13  2008/10/12 21:43:27  rbowler
 // SCCB SCPINFO updates from GA22-7584-10
 //
@@ -372,7 +376,7 @@ typedef struct _SCCB_OBJ_HDR {
 
 /* Message Control Data Block Message Text Object */
 typedef struct _SCCB_MTO_BK {
-        HWORD   ltflag;                 /* Line type flag            */
+        BYTE    ltflag[2];              /* Line type flag            */
 #define SCCB_MTO_LTFLG0_CNTL    0x80    /* Control text line         */
 #define SCCB_MTO_LTFLG0_LABEL   0x40    /* Label text line           */
 #define SCCB_MTO_LTFLG0_DATA    0x20    /* Data text line            */
@@ -383,7 +387,7 @@ typedef struct _SCCB_MTO_BK {
 #define SCCB_MTO_LTFLG0_MIX     0x02    /* Mixed SBCS/DBCS text      */
 #define SCCB_MTO_LTFLG1_OVER    0x01    /* Foreground presentation
                                            field override            */
-        FWORD   presattr;               /* Presentation Attribute
+        BYTE    presattr[4];            /* Presentation Attribute
                                            Byte 0 - control
                                            Byte 1 - color
                                            Byte 2 - highlighting
@@ -400,11 +404,11 @@ typedef struct _SCCB_MGO_BK {
         BYTE    resv1;
         BYTE    date[7];                /* C'YYYYDDD'                */
         BYTE    resv2;
-        FWORD   mflag;                  /* Message Flags             */
+        BYTE    mflag[2];               /* Message Flags             */
 #define SCCB_MGO_MFLAG0_DOM     0x80    /* Delete Operator Message   */
 #define SCCB_MGO_MFLAG0_ALARM   0x40    /* Sound the SCLP alarm      */
 #define SCCB_MGO_MFLAG0_HOLD    0x20    /* Hold message until DOM    */
-        FWORD   presattr;               /* Presentation Attribute
+        BYTE    presattr[4];            /* Presentation Attribute
                                            Byte 0 - control
                                            Byte 1 - color
                                            Byte 2 - highlighting
@@ -412,7 +416,7 @@ typedef struct _SCCB_MGO_BK {
 #define SCCB_MGO_PRATTR0_ALARM  0x80    /* Sound alarm (console)     */
 #define SCCB_MGO_PRATTR3_HIGH   0xE8    /* Highlighted               */
 #define SCCB_MGO_PRATTR3_NORM   0xE4    /* Normal                    */
-        FWORD   bckattr;                /* Background presentation
+        BYTE    bckattr[4];             /* Background presentation
                                            attributes - covers all
                                            message-test foreground
                                            presentation attribute

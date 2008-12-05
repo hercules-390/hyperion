@@ -23,6 +23,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.83  2008/12/01 16:19:49  jj
+// Check for licensed operating systems without impairing architectural
+// compliance of IFL's
+//
 // Revision 1.82  2008/11/24 14:52:21  jj
 // Add PTYP=IFL
 // Change SCPINFO processing to check on ptyp for IFL specifics
@@ -927,7 +931,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #ifdef OPTION_MSGCLR
                         if(evd_hdr->type == SCCB_EVD_TYPE_MSG)
                         {
-                          if(message[0] == '*')
+                          if(mto_bk->presattr[3] == SCCB_MTO_PRATTR3_HIGH)
                             logmsg("<pnl,color(lightyellow,black),keep>%s\n", message);
                           else
                             logmsg ("<pnl,color(green,black)>%s\n", message);
