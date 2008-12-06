@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.85  2008/12/05 12:05:43  jj
+// Fix IFL servc processing
+//
 // Revision 1.84  2008/12/05 10:54:58  jj
 // Correct system console message highlight
 //
@@ -642,10 +645,15 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* READ_IFL_INFO is only valid for processor type IFL */
         if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_IFL)
             goto invalidcmd;
+        else
+            goto read_scpinfo;
+
     case SCLP_READ_SCP_INFO:
         /* READ_SCP_INFO is only valid for processor type CP */
         if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_CP)
             goto invalidcmd;
+    
+    read_scpinfo:
 
         /* Set the main storage change bit */
         STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
