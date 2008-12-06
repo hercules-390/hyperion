@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.153  2008/03/28 21:50:43  rbowler
+// Correct formatting of disassembly for relative instructions
+//
 // Revision 1.152  2008/03/10 15:06:41  rbowler
 // Fix warning: "/*" within comment
 //
@@ -3284,7 +3287,7 @@ DLL_EXPORT zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2AD*/ GENx___x___x___ ,
  /*B2AE*/ GENx___x___x___ ,
  /*B2AF*/ GENx___x___x___ ,
- /*B2B0*/ GENx___x___x900 (store_facility_list_extended,S,"STFLE"), /*!SARCH */    /*@Z9*/
+ /*B2B0*/ GENx___x390x900 (store_facility_list_extended,S,"STFLE"), /*!SARCH */    /*@Z9*/
  /*B2B1*/ GENx___x390x900 (store_facility_list,S,"STFL"),
  /*B2B2*/ GENx___x___x900 (load_program_status_word_extended,S,"LPSWE"),
  /*B2B3*/ GENx___x___x___ ,

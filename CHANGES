@@ -1,3 +1,4 @@
+06 Dec 2008 Enable STFLE in ESA/390 mode - Ivan Warren
 04 Dec 2008 Add ability to configure group name in --enable-setuid-hercifc= - Roger Bowler
 02 Dec 2008 Support for PANTITLE when console is an xterm window - Roger Bowler
 24 Nov 2008 Add processor type IL for IFL on engines statement - Jan Jaeger

@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.43  2008/02/27 14:14:23  bernard
+// Implemented feature_security_assist_extension_2
+//
 // Revision 1.42  2008/01/21 14:04:27  rbowler
 // Activate ETF3 and ETF2/ETF3-Enhancements in ESA/390 mode
 //
@@ -102,6 +105,7 @@
 #define FEATURE_TEST_BLOCK
 #define FEATURE_TRACING
 #define FEATURE_WAITSTATE_ASSIST
+#define FEATURE_STORE_FACILITY_LIST_EXTENDED
 // #define FEATURE_VECTOR_FACILITY
 
 #endif /*defined(OPTION_390_MODE)*/
