@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.96  2008/03/04 17:09:14  rbowler
+// Add CRT,CGRT,CIT,CGIT,CLRT,CLGRT,CLFIT,CLGIT instructions
+//
 // Revision 1.95  2008/02/28 10:11:50  rbowler
 // STFL bit settings for new features in zPOP-06
 //
@@ -221,6 +224,7 @@ typedef struct _TLB  {
 typedef struct _DAT {
         RADR    raddr;                  /* Real address              */
         RADR    aaddr;                  /* Absolute address          */
+        RADR    rpfra;                  /* Real page frame address   */
         RADR    asd;                    /* Address space designator: */
                                         /*   STD or ASCE             */
         int     stid;                   /* Address space indicator   */

@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.227  2008/04/12 10:00:03  bernard
+// replaced exrl ifs within macros for conditional expressions
+//
 // Revision 1.226  2008/04/11 14:29:17  bernard
 // Integrate regs->exrl into base Hercules code.
 //
@@ -979,7 +982,7 @@ do { \
 
 #define NEW_MAINADDR(_regs, _addr, _aaddr) \
    (BYTE*)((uintptr_t)((_regs)->mainstor \
-         + (uintptr_t)((_aaddr) & PAGEFRAME_PAGEMASK)) \
+         + (uintptr_t)(_aaddr)) \
          ^ (uintptr_t)((_addr) & TLB_PAGEMASK))
 
 /* Perform invalidation after storage key update.

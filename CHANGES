@@ -1,3 +1,4 @@
+08 Dec 2008 Fix Issue with ESA Guest on z/Arch and >2GB Storage - Ivan Warren
 06 Dec 2008 Enable STFLE in ESA/390 mode - Ivan Warren
 04 Dec 2008 Add ability to configure group name in --enable-setuid-hercifc= - Roger Bowler
 02 Dec 2008 Support for PANTITLE when console is an xterm window - Roger Bowler
