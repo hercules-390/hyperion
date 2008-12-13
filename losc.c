@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.2  2008/12/03 16:27:40  jj
+// Fix deadly intlock embrace
+//
 // Revision 1.1  2008/12/01 18:41:28  jj
 // Add losc.c license checking module
 //
@@ -28,10 +31,10 @@
 #endif
 
 static char *licensed_os[] = {
-      "MVS", "OS390", "OS/390", "zOS", "z/OS",
-      "VM",  "zVM", "z/VM",
-      "VSE", "zVSE", "z/VSE",
-      "ACP", "TPF", "zTPF", "z/TPF",
+      "MVS", /* Generic name for MVS, OS/390, z/OS       */
+      "VM",  /* Generic name for VM, VM/XA, VM/ESA, z/VM */
+      "VSE", 
+      "TPF", 
       NULL };
 
 static int    os_licensed = 0;
