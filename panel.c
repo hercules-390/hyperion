@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.247  2008/12/04 10:36:40  rbowler
+// Replace tabs by blanks in panel.c
+//
 // Revision 1.246  2008/12/03 11:40:34  rbowler
 // PANTITLE support for rxvt, dtterm, and screen
 //
@@ -2983,7 +2986,10 @@ FinishShutdown:
                            SIE_MODE(regs)                     ? 'S' : '.',
                            regs->arch_mode == ARCH_900        ? 'Z' : '.');
                     buf[len++] = ' ';
-                    sprintf (ibuf, "instcount=%" I64_FMT "u", INSTCOUNT(regs));
+                    if(INSTCOUNT(regs) > 1000000)
+                      sprintf (ibuf, "instcount=%" I64_FMT "uM", INSTCOUNT(regs) / 1000000);
+                    else
+                      sprintf (ibuf, "instcount=%" I64_FMT "u", INSTCOUNT(regs));
                     if (len + (int)strlen(ibuf) < cons_cols)
                         len = cons_cols - strlen(ibuf);
                     strcpy (buf + len, ibuf);
