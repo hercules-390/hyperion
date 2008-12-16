@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.12  2008/12/12 23:50:47  rbowler
+// Alternate non-asm routines in ieee-w32.h for win64
+//
 // Revision 1.11  2008/04/16 14:58:57  rbowler
 // Modify style of inline assembler to conform with machdep.h
 //
@@ -41,7 +44,9 @@
 #undef signbit
 
 /* Inform the compiler that this module manipulates the FP status word */
-#pragma fenv_access(on)
+#if defined(_MSVC_) && defined(_MSC_VER) && (_MSC_VER >= 1400)
+ #pragma fenv_access(on)
+#endif
 
 /* All floating-point numbers can be put in one of these categories.  */
 enum
