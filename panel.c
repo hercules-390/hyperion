@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.248  2008/12/15 16:15:33  bernard
+// Readable instcount in millions
+//
 // Revision 1.247  2008/12/04 10:36:40  rbowler
 // Replace tabs by blanks in panel.c
 //
@@ -2963,7 +2966,7 @@ FinishShutdown:
                 if (IS_CPU_ONLINE(sysblk.pcpu))
                 {
                     char ibuf[32];
-                    len += sprintf(buf+len, "PSW=%8.8X %8.8X ",
+                    len += sprintf(buf+len, "PSW=%8.8X%8.8X ",
                                    fetch_fw(curpsw), fetch_fw(curpsw+4));
                     if (regs->arch_mode == ARCH_900)
                         len += sprintf (buf+len, "%16.16"I64_FMT"X ",
