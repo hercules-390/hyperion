@@ -32,6 +32,9 @@
 ###############################################################################
 
 # $Log$
+# Revision 1.198  2008/12/04 17:39:02  rbowler
+# Add ability to configure group name with --enable-setuid-hercifc=name
+#
 # Revision 1.197  2008/03/25 11:41:31  fish
 # SCSI TAPE MODS part 1: groundwork: non-functional changes:
 # rename some functions, comments, general restructuring, etc.
@@ -2073,7 +2076,7 @@ AM_CONDITIONAL( HERCIFC_GROUPSET,    [ test "x$hc_cv_hercifc_groupname" != "x"] 
 
 if test "x$hc_cv_hercifc_groupname" != "x"; then
     HERCIFC_GROUPNAME=${hc_cv_hercifc_groupname}
-    AC_SUBST( HERCIFC_GROUPNAME )
+    AC_SUBST(HERCIFC_GROUPNAME)
 fi
 
 #  Building of shared libraries is forced, and we force use of libtool too.
