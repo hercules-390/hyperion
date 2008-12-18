@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2008/12/05 10:54:58  jj
+// Correct system console message highlight
+//
 // Revision 1.14  2008/11/24 14:52:21  jj
 // Add PTYP=IFL
 // Change SCPINFO processing to check on ptyp for IFL specifics
@@ -254,7 +257,7 @@ typedef struct _SCCB_CPU_INFO {
 #define SCCB_PTYP_CP                                    0
 #define SCCB_PTYP_ICF                                   1
 #define SCCB_PTYP_IFA                                   2
-#define SCCB_PTYP_IFL                                   4  /* Guess *JJ */
+#define SCCB_PTYP_IFL                                   3  /* Guess by JJ was 4*/
 #define SCCB_PTYP_SUP                                   5
 
 /* Definitions for crypto unit identifier */
