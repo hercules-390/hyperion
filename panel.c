@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.249  2008/12/16 07:06:33  bernard
+// Format PSW in the same way on both panels.
+//
 // Revision 1.248  2008/12/15 16:15:33  bernard
 // Readable instcount in millions
 //
@@ -1868,6 +1871,25 @@ REGS *copy_regs(int cpu)
     return regs;
 }
 
+/* Function to format numbers. For example "123456789" -> "123,456,789"     */
+/* Be aware no checks on lengths! or numbers. "bernard" becomes "b,ern,ard. */
+static void format_int(char *buf)
+{
+  int i;
+  int len;
+  int cpos;
+
+  len = strlen(buf);
+  for(cpos = len - 3; cpos > 0; cpos -= 3)
+  {
+    for(i = len; i >= cpos; i--)
+      buf[i + 1] = buf[i];
+    buf[cpos] = ',';
+    len += 1;
+  }
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Panel display thread                                              */
 /*                                                                   */
@@ -2989,10 +3011,8 @@ FinishShutdown:
                            SIE_MODE(regs)                     ? 'S' : '.',
                            regs->arch_mode == ARCH_900        ? 'Z' : '.');
                     buf[len++] = ' ';
-                    if(INSTCOUNT(regs) > 1000000)
-                      sprintf (ibuf, "instcount=%" I64_FMT "uM", INSTCOUNT(regs) / 1000000);
-                    else
-                      sprintf (ibuf, "instcount=%" I64_FMT "u", INSTCOUNT(regs));
+                    sprintf (ibuf, "instcount=%" I64_FMT "u", INSTCOUNT(regs));
+                    format_int(&ibuf[10]);
                     if (len + (int)strlen(ibuf) < cons_cols)
                         len = cons_cols - strlen(ibuf);
                     strcpy (buf + len, ibuf);
