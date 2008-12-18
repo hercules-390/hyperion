@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.86  2008/12/06 08:36:33  jj
+// Correct IFL scpinfo case
+//
 // Revision 1.85  2008/12/05 12:05:43  jj
 // Fix IFL servc processing
 //
@@ -745,7 +748,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             sccbcpu->tod = 0;
             memcpy(sccbcpu->cpf, ARCH_DEP(scpinfo_cpf), sizeof(sccbcpu->cpf));
             sccbcpu->ptyp = sysblk.ptyp[i];
-            if (sccbcpu->ptyp == SCCB_PTYP_IFA)
+            if (sccbcpu->ptyp != SCCB_PTYP_CP)
                 sccbscp->cfg[4] |= SCCB_CFG4_IFA_FACILITY;
 
 #if defined(FEATURE_CRYPTO)
