@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.16  2008/12/18 00:25:38  ivan
+// Set SCCB Processor Type for IFL to 3, not 4
+//
 // Revision 1.15  2008/12/05 10:54:58  jj
 // Correct system console message highlight
 //
@@ -144,7 +147,7 @@ typedef struct _SCCB_SCP_INFO {
         BYTE    resv6[4];               /* Reserved                  */
         BYTE    cfg[6];                 /* Config characteristics    */
         FWORD   rcci;                   /* Capacity                  */
-        BYTE    resv7;                  /* Reserved                  */
+        BYTE    cfg11;                  /* Config char. byte 11      */
         BYTE    numcrl;                 /* Max #of copy and reassign
                                            list elements allowed     */
         FWORD   etrtol;                 /* ETR sync check tolerance  */
@@ -218,6 +221,9 @@ typedef struct _SCCB_SCP_INFO {
 #define SCCB_CFG4_IFA_FACILITY                          0x01
 #define SCCB_CFG5_SENSE_RUNNING_STATUS                  0x08
 #define SCCB_CFG5_ESAME                                 0x01
+#define SCCB_CFGB_PER_3                                 0x04
+#define SCCB_CFGB_LOAD_WITH_DUMP                        0x02
+#define SCCB_CFGB_LIST_DIRECTED_IPL                     0x01
 
 /* CPU information array entry */
 typedef struct _SCCB_CPU_INFO {

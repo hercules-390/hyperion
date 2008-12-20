@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.87  2008/12/18 00:41:08  ivan
+// Set SCCB_CFG4_IFA_FACILITY if configuration contains anything else than CP engines (vs when only a ZAAP is present).
+//
 // Revision 1.86  2008/12/06 08:36:33  jj
 // Correct IFL scpinfo case
 //
@@ -414,6 +417,14 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] = {
                         | SCCB_CFG5_SENSE_RUNNING_STATUS
 #endif /*FEATURE_SENSE_RUNNING_STATUS*/
                         };
+
+BYTE ARCH_DEP(scpinfo_cfg11) = 
+    0
+#if defined(FEATURE_PER3)
+        | SCCB_CFGB_PER_3
+#endif
+        | SCCB_CFGB_LIST_DIRECTED_IPL;
+
 BYTE ARCH_DEP(scpinfo_cpf)[12] = {
                             0
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
@@ -733,6 +744,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         memcpy(sccbscp->ifm, ARCH_DEP(scpinfo_ifm), sizeof(sccbscp->ifm));
 
         memcpy(sccbscp->cfg, ARCH_DEP(scpinfo_cfg), sizeof(sccbscp->cfg));
+        sccbscp->cfg11 = ARCH_DEP(scpinfo_cfg11);
 #if defined(_900) || defined(FEATURE_ESAME)
         if(sysblk.arch_z900)
             sccbscp->cfg[5] |= SCCB_CFG5_ESAME;
