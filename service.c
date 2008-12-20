@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.88  2008/12/20 23:38:51  ivan
+// Fill SCP_INFO SCCB config byte 11 with PER3 and List Directed IPL capability flags
+//
 // Revision 1.87  2008/12/18 00:41:08  ivan
 // Set SCCB_CFG4_IFA_FACILITY if configuration contains anything else than CP engines (vs when only a ZAAP is present).
 //
@@ -986,7 +989,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             cpi_bk = (SCCB_CPI_BK*)(evd_hdr+1);
 
             {
-            BYTE systype[9], sysname[9], sysplex[9];
+            char systype[9], sysname[9], sysplex[9];
             U64  syslevel;
 
                 for(i = 0; i < 8; i++)
