@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.45  2008/12/21 05:46:47  ivan
+// Fill diag 224 table with all the engine names
+//
 // Revision 1.44  2008/11/24 14:52:21  jj
 // Add PTYP=IFL
 // Change SCPINFO processing to check on ptyp for IFL specifics
@@ -203,7 +206,7 @@ static const char diag224_cputable[]=
     "ICF             "
     "ZAAP            "
     "IFL             "
-    "*UNKOWN*        "
+    "*UNKNOWN*       "
     "ZIIP            "
 };
 
