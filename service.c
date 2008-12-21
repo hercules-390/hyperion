@@ -23,6 +23,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.91  2008/12/21 02:51:58  ivan
+// Place the configuration in system check-stop state when a READ SCP INFO
+// is issued from a CPU that is not a CP Engine.
+//
 // Revision 1.90  2008/12/21 00:05:28  ivan
 // disable SCCB config Byte 11 change : Possible conflict
 //
@@ -420,6 +424,7 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] = {
                         | SCCB_CFG4_STORE_SYSTEM_INFORMATION
 #endif /*FEATURE_STORE_SYSTEM_INFORMATION*/
 //                      | SCCB_CFG4_LPAR_CLUSTERING
+                        | SCCB_CFG4_IFA_FACILITY
                         ,
                         0
 #if defined(FEATURE_SENSE_RUNNING_STATUS)
@@ -781,8 +786,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             sccbcpu->tod = 0;
             memcpy(sccbcpu->cpf, ARCH_DEP(scpinfo_cpf), sizeof(sccbcpu->cpf));
             sccbcpu->ptyp = sysblk.ptyp[i];
-            if (sccbcpu->ptyp != SCCB_PTYP_CP)
-                sccbscp->cfg[4] |= SCCB_CFG4_IFA_FACILITY;
 
 #if defined(FEATURE_CRYPTO)
 //          sccbcpu->ksid = SCCB_KSID_CRYPTO_UNIT_ID;
