@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.89  2008/12/20 23:40:05  ivan
+// Use type char instead of BYTE for host strings (removes signedness warning on losc call)
+//
 // Revision 1.88  2008/12/20 23:38:51  ivan
 // Fill SCP_INFO SCCB config byte 11 with PER3 and List Directed IPL capability flags
 //
@@ -747,7 +750,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         memcpy(sccbscp->ifm, ARCH_DEP(scpinfo_ifm), sizeof(sccbscp->ifm));
 
         memcpy(sccbscp->cfg, ARCH_DEP(scpinfo_cfg), sizeof(sccbscp->cfg));
-        sccbscp->cfg11 = ARCH_DEP(scpinfo_cfg11);
+        /* sccbscp->cfg11 = ARCH_DEP(scpinfo_cfg11); */
 #if defined(_900) || defined(FEATURE_ESAME)
         if(sysblk.arch_z900)
             sccbscp->cfg[5] |= SCCB_CFG5_ESAME;
