@@ -28,6 +28,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.250  2008/12/18 16:14:57  bernard
+// instcount with comma separator
+//
 // Revision 1.249  2008/12/16 07:06:33  bernard
 // Format PSW in the same way on both panels.
 //
@@ -1871,22 +1874,40 @@ REGS *copy_regs(int cpu)
     return regs;
 }
 
-/* Function to format numbers. For example "123456789" -> "123,456,789"     */
-/* Be aware no checks on lengths! or numbers. "bernard" becomes "b,ern,ard. */
-static void format_int(char *buf)
+static char *format_int(uint64_t ic)
 {
-  int i;
-  int len;
-  int cpos;
+    static    char obfr[32];  /* Enough for displaying 2^64-1 */
+    char  grps[7][4]; /* 7 groups of 3 digits */
+    int   maxg=0;
+    int   i;
 
-  len = strlen(buf);
-  for(cpos = len - 3; cpos > 0; cpos -= 3)
-  {
-    for(i = len; i >= cpos; i--)
-      buf[i + 1] = buf[i];
-    buf[cpos] = ',';
-    len += 1;
-  }
+    strcpy(grps[0],"0");
+    while(ic>0)
+    {
+        int grp;
+        grp=ic%1000;
+        ic/=1000;
+        if(ic==0)
+        {
+            sprintf(grps[maxg],"%u",grp);
+        }
+        else
+        {
+            sprintf(grps[maxg],"%3.3u",grp);
+        }
+        maxg++;
+    }
+    if(maxg) maxg--;
+    obfr[0]=0;
+    for(i=maxg;i>=0;i--)
+    {
+        strcat(obfr,grps[i]);
+        if(i)
+        {
+            strcat(obfr,",");
+        }
+    }
+    return obfr;
 }
 
 
@@ -3011,8 +3032,7 @@ FinishShutdown:
                            SIE_MODE(regs)                     ? 'S' : '.',
                            regs->arch_mode == ARCH_900        ? 'Z' : '.');
                     buf[len++] = ' ';
-                    sprintf (ibuf, "instcount=%" I64_FMT "u", INSTCOUNT(regs));
-                    format_int(&ibuf[10]);
+                    sprintf (ibuf, "instcount=%s", format_int(INSTCOUNT(regs)));
                     if (len + (int)strlen(ibuf) < cons_cols)
                         len = cons_cols - strlen(ibuf);
                     strcpy (buf + len, ibuf);
