@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.92  2008/12/21 06:40:22  ivan
+// Indicate the configuration is ZAAP capable regardless of whether a ZAAP is actually defined.
+//
 // Revision 1.91  2008/12/21 02:51:58  ivan
 // Place the configuration in system check-stop state when a READ SCP INFO
 // is issued from a CPU that is not a CP Engine.
@@ -683,7 +686,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #ifdef OPTION_MSGCLR
             logmsg("<pnl,color(lightred,black)>");
 #endif
-            logmsg("HHCCP090W The system is put into check-stop state because of an incompatible service call\n\n");
+            logmsg("HHCCP090W The configuration has been placed into a system check-stop state because of an incompatible service call\n\n");
             goto docheckstop;
             /*
              * Replace the following 2 lines with
