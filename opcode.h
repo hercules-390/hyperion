@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.228  2008/12/08 20:38:20  ivan
+// Fix SIE DAT Issue with ESA/390 Guest on z/Arch host with >2GB of storage
+//
 // Revision 1.227  2008/04/12 10:00:03  bernard
 // replaced exrl ifs within macros for conditional expressions
 //
@@ -2784,6 +2787,7 @@ void z900_process_trace (REGS *regs);
 
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
 void ARCH_DEP(perform_io_interrupt) (REGS *regs);
+void ARCH_DEP(checkstop_config)(void);
 #if defined(_FEATURE_SIE)
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt) (REGS *regs, int code);
 #endif /*!defined(_FEATURE_SIE)*/

@@ -30,6 +30,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.206  2008/12/05 11:26:00  jj
+// Fix SIE psw update when host interrupt occurs durng guest processing
+//
 // Revision 1.205  2008/11/04 05:56:31  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //
@@ -180,6 +183,32 @@
 #include "opcode.h"
 
 #include "inline.h"
+
+/*-------------------------------------------------------------------*/
+/* Put a CPU in check-stop state                                     */
+/* Must hold the system intlock                                      */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP(checkstop_cpu)(REGS *regs)
+{
+    regs->cpustate=CPUSTATE_STOPPING;
+    regs->checkstop=1;
+    ON_IC_INTERRUPT(regs);
+}
+/*-------------------------------------------------------------------*/
+/* Put all the CPUs in the configuration in check-stop state         */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP(checkstop_config)(void)
+{
+    int i;
+    for(i=0;i<MAX_CPU;i++)
+    {
+        if(IS_CPU_ONLINE(i))
+        {
+            ARCH_DEP(checkstop_cpu)(sysblk.regs[i]);
+        }
+    }
+    WAKEUP_CPUS_MASK(sysblk.waiting_mask);
+}
 
 /*-------------------------------------------------------------------*/
 /* Store current PSW at a specified address in main storage          */

@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.90  2008/12/21 00:05:28  ivan
+// disable SCCB config Byte 11 change : Possible conflict
+//
 // Revision 1.89  2008/12/20 23:40:05  ivan
 // Use type char instead of BYTE for host strings (removes signedness warning on losc call)
 //
@@ -671,7 +674,19 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     case SCLP_READ_SCP_INFO:
         /* READ_SCP_INFO is only valid for processor type CP */
         if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_CP)
-            goto invalidcmd;
+        {
+#ifdef OPTION_MSGCLR
+            logmsg("<pnl,color(lightred,black)>");
+#endif
+            logmsg("HHCCP090W The system is put into check-stop state because of an incompatible service call\n\n");
+            goto docheckstop;
+            /*
+             * Replace the following 2 lines with
+             * goto invalidcmd
+             * if this behavior is not satisfactory
+             * ISW 20081221
+             */
+        }
     
     read_scpinfo:
 
@@ -789,6 +804,11 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         sccb->resp = SCCB_RESP_INFO;
 
         break;
+        docheckstop:
+            ARCH_DEP(checkstop_config)();
+            RELEASE_INTLOCK(regs);
+            longjmp(regs->progjmp,SIE_NO_INTERCEPT);
+            break;
 
     case SCLP_READ_CHP_INFO:
 

@@ -149,6 +149,18 @@ system.
   <dt>Issued by
   <dd>cpu.c, function process_interrupt
   </dl>
+<dt><code><a name="HHCCP090W">
+HHCCP090W The system is put into check-stop state because of an incompatible service call
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A READ SCP INFO (code X'00020001') Service call has been issued from a CPU which is not a CP engine.
+  All the CPUs in the configuration are put into a Check-Stop state.
+  <dt>Action
+  <dd>Ensure the CPU that issues the service call is a CP engine and restart the program.
+  <dt>Issued by
+  <dd>service.c, function service_call
+  </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>
