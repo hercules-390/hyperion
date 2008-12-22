@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.100  2008/12/22 16:30:47  jj
+// Fix EDAT typo
+//
 // Revision 1.99  2008/12/22 16:22:19  jj
 // EDAT definitions
 //
@@ -417,7 +420,7 @@ typedef struct _DAT {
 #define ZPGETAB_I       0x400           /* Invalid page              */
 #define ZPGETAB_P       0x200           /* Protected page            */
 #define ZPGETAB_ESVALID 0x100           /* Valid in expanded storage */
-#define ZSEGTAB_CO      0x100           /* Change-rec override   EDAT*/
+#define ZPGETAB_CO      0x100           /* Change-rec override   EDAT*/
 #define ZPGETAB_ESREF   0x080           /* ES Referenced             */
 #define ZPGETAB_ESCHA   0x040           /* ES Changed                */
 #define ZPGETAB_ESLCK   0x020           /* ES Locked                 */
