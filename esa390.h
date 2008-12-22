@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.99  2008/12/22 16:22:19  jj
+// EDAT definitions
+//
 // Revision 1.98  2008/12/22 15:20:12  jj
 // Some EDAT definitions
 //
@@ -398,7 +401,7 @@ typedef struct _DAT {
 /* Segment table entry bit definitions (ESAME mode) */
 #define ZSEGTAB_PTO     0xFFFFFFFFFFFFF800ULL /* Page table origin   */
 #define ZSEGTAB_SFAA    0xFFFFFFFFFFF00000ULL /* Seg Fr Abs Addr EDAT*/
-#define ZSEGTAB_AV      0x1F000         /* ACCF Validity Control EDAT*/
+#define ZSEGTAB_AV      0x10000         /* ACCF Validity Control EDAT*/
 #define ZSEGTAB_ACC     0x0F000         /* Access Control Bits   EDAT*/
 #define ZSEGTAB_F       0x800           /* Fetch Protection      EDAT*/
 #define ZSEGTAB_FC      0x400           /* Format control        EDAT*/
