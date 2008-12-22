@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.98  2008/12/22 15:20:12  jj
+// Some EDAT definitions
+//
 // Revision 1.97  2008/12/08 20:38:20  ivan
 // Fix SIE DAT Issue with ESA/390 Guest on z/Arch host with >2GB of storage
 //
@@ -385,15 +388,16 @@ typedef struct _DAT {
 
 /* Region table entry bit definitions (ESAME mode) */
 #define REGTAB_TO       0xFFFFFFFFFFFFF000ULL /* Table origin        */
+#define REGTAB_P        0x200           /* DAT Protection bit    EDAT*/
 #define REGTAB_TF       0x0C0           /* Table offset              */
 #define REGTAB_I        0x020           /* Region invalid            */
 #define REGTAB_TT       0x00C           /* Table type                */
 #define REGTAB_TL       0x003           /* Table length              */
-#define REGTAB_RESV     0xF10           /* Reserved bits - ignored   */
+#define REGTAB_RESV     0xD10           /* Reserved bits - ignored   */
 
 /* Segment table entry bit definitions (ESAME mode) */
 #define ZSEGTAB_PTO     0xFFFFFFFFFFFFF800ULL /* Page table origin   */
-#define ZSEGTAB_SFAA    0xFFFFFFFFFFF00000ULL /* Seg Frame Abs AdEDAT*/
+#define ZSEGTAB_SFAA    0xFFFFFFFFFFF00000ULL /* Seg Fr Abs Addr EDAT*/
 #define ZSEGTAB_AV      0x1F000         /* ACCF Validity Control EDAT*/
 #define ZSEGTAB_ACC     0x0F000         /* Access Control Bits   EDAT*/
 #define ZSEGTAB_F       0x800           /* Fetch Protection      EDAT*/
@@ -410,10 +414,11 @@ typedef struct _DAT {
 #define ZPGETAB_I       0x400           /* Invalid page              */
 #define ZPGETAB_P       0x200           /* Protected page            */
 #define ZPGETAB_ESVALID 0x100           /* Valid in expanded storage */
+#define ZSEGTAB_CO      0x100           /* Change-rec override   EDAT*/
 #define ZPGETAB_ESREF   0x080           /* ES Referenced             */
 #define ZPGETAB_ESCHA   0x040           /* ES Changed                */
 #define ZPGETAB_ESLCK   0x020           /* ES Locked                 */
-#define ZPGETAB_RESV    0x900           /* Reserved bits - must be 0 */
+#define ZPGETAB_RESV    0x800           /* Reserved bits - must be 0 */
 
 /* Segment table designation bit definitions (ESA/390 mode) */
 #define STD_SSEVENT     0x80000000      /* Space switch event        */
