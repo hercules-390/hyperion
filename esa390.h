@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.97  2008/12/08 20:38:20  ivan
+// Fix SIE DAT Issue with ESA/390 Guest on z/Arch host with >2GB of storage
+//
 // Revision 1.96  2008/03/04 17:09:14  rbowler
 // Add CRT,CGRT,CIT,CGIT,CLRT,CLGRT,CLFIT,CLGIT instructions
 //
@@ -249,6 +252,7 @@ typedef struct _DAT {
 #define CR0_PAGE_SIZE   0x00C00000      /* Page size for S/370...    */
 #define CR0_PAGE_SZ_2K  0x00400000      /* ...2K pages               */
 #define CR0_PAGE_SZ_4K  0x00800000      /* ...4K pages               */
+#define CR0_ZPAG_SZ_1M  0x00800000      /* ...1M pages           EDAT*/
 #define CR0_SEG_SIZE    0x00380000      /* Segment size for S/370... */
 #define CR0_SEG_SZ_64K  0x00000000      /* ...64K segments           */
 #define CR0_SEG_SZ_1M   0x00100000      /* ...1M segments            */
@@ -389,11 +393,17 @@ typedef struct _DAT {
 
 /* Segment table entry bit definitions (ESAME mode) */
 #define ZSEGTAB_PTO     0xFFFFFFFFFFFFF800ULL /* Page table origin   */
+#define ZSEGTAB_SFAA    0xFFFFFFFFFFF00000ULL /* Seg Frame Abs AdEDAT*/
+#define ZSEGTAB_AV      0x1F000         /* ACCF Validity Control EDAT*/
+#define ZSEGTAB_ACC     0x0F000         /* Access Control Bits   EDAT*/
+#define ZSEGTAB_F       0x800           /* Fetch Protection      EDAT*/
+#define ZSEGTAB_FC      0x400           /* Format control        EDAT*/
 #define ZSEGTAB_P       0x200           /* Page protection bit       */
+#define ZSEGTAB_CO      0x100           /* Change-rec override   EDAT*/
 #define ZSEGTAB_I       0x020           /* Invalid segment           */
 #define ZSEGTAB_C       0x010           /* Common segment            */
 #define ZSEGTAB_TT      0x00C           /* Table type                */
-#define ZSEGTAB_RESV    0x5C3           /* Reserved bits - ignored   */
+#define ZSEGTAB_RESV    0x0C3           /* Reserved bits - ignored   */
 
 /* Page table entry bit definitions (ESAME mode) */
 #define ZPGETAB_PFRA    0xFFFFFFFFFFFFF000ULL /* Page frame real addr*/
