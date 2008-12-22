@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.84  2008/08/04 22:06:00  rbowler
+// DIAG308 function codes for Program-directed re-IPL
+//
 // Revision 1.83  2008/04/08 17:13:06  bernard
 // Added execute relative long instruction
 //
@@ -89,7 +92,7 @@
 #define FEATURE_CHSC
 #define FEATURE_COMPARE_AND_MOVE_EXTENDED
 #define FEATURE_COMPARE_AND_SWAP_AND_STORE                      /*407*/
-//#define FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2           /*208*/
+#define FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2           /*ISW*/
 #define FEATURE_COMPRESSION
 #define FEATURE_CONDITIONAL_SSKE                                /*407*/
 //#define FEATURE_CONFIGURATION_TOPOLOGY_FACILITY                 /*208*/

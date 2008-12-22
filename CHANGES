@@ -1,3 +1,6 @@
+22 Dec 2008 Implement Compare And Swap And Store Facility 2 - Ivan Warren
+21 Dec 2008 Diag 224 fix - Ivan Warren
+21 Dec 2008 Various SERVC READ_xxx_INFO fixes for specialty engines - Ivan Warren
 08 Dec 2008 Fix Issue with ESA Guest on z/Arch and >2GB Storage - Ivan Warren
 06 Dec 2008 Enable STFLE in ESA/390 mode - Ivan Warren
 04 Dec 2008 Add ability to configure group name in --enable-setuid-hercifc= - Roger Bowler

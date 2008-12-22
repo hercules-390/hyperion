@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.48  2007/12/23 00:29:20  rbowler
+// reset_channel_path, cancel_subchannel unresolved if no channel subsystem feature
+//
 // Revision 1.47  2007/06/23 00:04:09  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -388,6 +391,10 @@
 
 #if defined(FEATURE_PER3) && !defined(FEATURE_PER)
  #error FEATURE_PER must be defined when using FEATURE_PER3
+#endif
+
+#if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2) && !defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)
+ #error FEATURE_COMPARE_AND_SWAP_AND_STORE must be defined when using FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2
 #endif
 
 
