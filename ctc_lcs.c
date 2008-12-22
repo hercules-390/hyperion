@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.79  2008/11/04 05:56:31  fish
+// Put ensure consistent create_thread ATTR usage change back in
+//
 // Revision 1.78  2008/11/03 15:31:57  rbowler
 // Back out consistent create_thread ATTR modification
 //
@@ -2519,7 +2522,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                         if( inet_aton( pszIPAddress, &addr ) == 0 )
                         {
-                            logmsg( _("HHCLC032E Error is %s: %s: "
+                            logmsg( _("HHCLC032E Error in %s: %s: "
                                       "Invalid IP address (%s)\n"),
                                     pszOATName, pszStatement, pszIPAddress );
                             return -1;
