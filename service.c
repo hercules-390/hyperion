@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.94  2008/12/22 11:13:46  jj
+// Do not issue syscons active message on non-syscons type SCLP send/recv
+//
 // Revision 1.93  2008/12/21 23:09:39  ivan
 // More precise wording for system check-stop state in case of READ_SCP_INFO on non CP engine
 //
@@ -671,6 +674,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             return;
         }
     }
+
+    HDC3(debug_sclp_pre_command, sclp_command, sccb, regs);
 
     /* Test SCLP command word */
     switch (sclp_command & SCLP_COMMAND_MASK) {
@@ -1462,6 +1467,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         break;
 
     } /* end switch(sclp_command) */
+
+    HDC3(debug_sclp_post_command, sclp_command, sccb, regs);
 
     /* If immediate response is requested, return condition code 1 */
     if ((sccb->flag & SCCB_FLAG_SYNC)

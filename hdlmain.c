@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.49  2008/02/12 08:42:15  fish
+// dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
+//
 // Revision 1.48  2007/06/23 00:04:10  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -83,6 +86,8 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( debug_program_interrupt,    UNRESOLVED      );
     HDL_REGISTER( debug_diagnose,             UNRESOLVED      );
     HDL_REGISTER( debug_iucv,                 UNRESOLVED      );
+    HDL_REGISTER( debug_sclp_pre_command,     UNRESOLVED      );
+    HDL_REGISTER( debug_sclp_post_command,    UNRESOLVED      );
     HDL_REGISTER( debug_sclp_unknown_command, UNRESOLVED      );
     HDL_REGISTER( debug_sclp_unknown_event,   UNRESOLVED      );
     HDL_REGISTER( debug_sclp_event_data,      UNRESOLVED      );
@@ -126,6 +131,8 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE( debug_device_state         );
     HDL_RESOLVE( debug_program_interrupt    );
     HDL_RESOLVE( debug_diagnose             );
+    HDL_RESOLVE( debug_sclp_pre_command     );
+    HDL_RESOLVE( debug_sclp_post_command    );
     HDL_RESOLVE( debug_sclp_unknown_command );
     HDL_RESOLVE( debug_sclp_unknown_event   );
     HDL_RESOLVE( debug_sclp_event_data      );

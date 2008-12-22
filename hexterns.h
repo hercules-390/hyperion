@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.21  2008/12/01 23:57:21  rbowler
+// Fix warning C4273: 'losc_set/check' : inconsistent dll linkage
+//
 // Revision 1.20  2008/12/01 16:19:49  jj
 // Check for licensed operating systems without impairing architectural
 // compliance of IFL's
@@ -252,6 +255,8 @@ HSYS_DLL_IMPORT void *(*debug_watchdog_signal)      (REGS *);
 HSYS_DLL_IMPORT void *(*debug_program_interrupt)    (REGS *, int);
 HSYS_DLL_IMPORT void *(*debug_diagnose)             (U32, int,  int, REGS *);
 HSYS_DLL_IMPORT void *(*debug_iucv)                 (int, VADR, REGS *);
+HSYS_DLL_IMPORT void *(*debug_sclp_pre_command)     (U32,    void *, REGS *);
+HSYS_DLL_IMPORT void *(*debug_sclp_post_command)    (U32,    void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_unknown_command) (U32,    void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_unknown_event)   (void *, void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
@@ -266,6 +271,8 @@ void panel_display (void);
 #define debug_program_interrupt         NULL
 #define debug_diagnose                  NULL
 #define debug_iucv                      NULL
+#define debug_sclp_pre_command          NULL
+#define debug_sclp_post_command         NULL
 #define debug_sclp_unknown_command      NULL
 #define debug_sclp_unknown_event        NULL
 #define debug_sclp_event_data           NULL

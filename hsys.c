@@ -1,6 +1,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.7  2008/02/12 08:42:15  fish
+// dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
+//
 // Revision 1.6  2006/12/08 09:43:28  jj
 // Add CVS message log
 //
@@ -34,6 +37,8 @@ DLL_EXPORT void *(*debug_device_state) (DEVBLK *);
 DLL_EXPORT void *(*debug_program_interrupt) (REGS *, int);
 DLL_EXPORT void *(*debug_diagnose) (U32, int, int, REGS *);
 DLL_EXPORT void *(*debug_iucv) (int, VADR, REGS *);
+DLL_EXPORT void *(*debug_sclp_pre_command) (U32, void *, REGS *);
+DLL_EXPORT void *(*debug_sclp_post_command) (U32, void *, REGS *);
 DLL_EXPORT void *(*debug_sclp_unknown_command) (U32, void *, REGS *);
 DLL_EXPORT void *(*debug_sclp_unknown_event) (void *, void *, REGS *);
 DLL_EXPORT void *(*debug_sclp_event_data) (void *, void *, REGS *);
