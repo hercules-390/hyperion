@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.93  2008/12/21 23:09:39  ivan
+// More precise wording for system check-stop state in case of READ_SCP_INFO on non CP engine
+//
 // Revision 1.92  2008/12/21 06:40:22  ivan
 // Indicate the configuration is ZAAP capable regardless of whether a ZAAP is actually defined.
 //
@@ -1242,8 +1245,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         FETCH_HW(masklen, evd_mask->length);
 
         /* Save old mask settings in order to suppress superflous messages */
-        old_cp_recv_mask = servc_cp_recv_mask & ARCH_DEP(sclp_send_mask);
-        old_cp_send_mask = servc_cp_send_mask & ARCH_DEP(sclp_recv_mask);
+        old_cp_recv_mask = servc_cp_recv_mask & ARCH_DEP(sclp_send_mask) & SCCB_EVENT_CONS_RECV_MASK;
+        old_cp_send_mask = servc_cp_send_mask & ARCH_DEP(sclp_recv_mask) & SCCB_EVENT_CONS_SEND_MASK;
 
         for (i = 0; i < 4; i++)
         {
@@ -1270,10 +1273,11 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         /* Issue message only when supported mask has changed */
-        if ((servc_cp_recv_mask & ARCH_DEP(sclp_send_mask)) != old_cp_recv_mask
-         || (servc_cp_send_mask & ARCH_DEP(sclp_recv_mask)) != old_cp_send_mask)
+        if ((servc_cp_recv_mask & ARCH_DEP(sclp_send_mask) & SCCB_EVENT_CONS_RECV_MASK) != old_cp_recv_mask
+         || (servc_cp_send_mask & ARCH_DEP(sclp_recv_mask) & SCCB_EVENT_CONS_SEND_MASK) != old_cp_send_mask)
         {
-            if (servc_cp_recv_mask != 0 || servc_cp_send_mask != 0)
+            if ((servc_cp_recv_mask & SCCB_EVENT_CONS_RECV_MASK) != 0 
+                || (servc_cp_send_mask & SCCB_EVENT_CONS_SEND_MASK) != 0)
                 logmsg (_("HHCCP041I SYSCONS interface active\n"));
             else
                 logmsg (_("HHCCP042I SYSCONS interface inactive\n"));
