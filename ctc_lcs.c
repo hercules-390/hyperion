@@ -8,6 +8,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.80  2008/12/22 14:14:03  rbowler
+// Correct typographical error in message HHCLC032E
+//
 // Revision 1.79  2008/11/04 05:56:31  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //
@@ -2311,7 +2314,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
     int         i;
     char        c;                      // Character work area
-    char*       pszStatement = NULL;    // -> Original statement
+    char*       pszStatement = NULL;    // -> Resolved statement
     char*       pszKeyword;             // -> Statement keyword
     char*       pszOperand;             // -> Statement operand
     int         argc;                   // Number of args
@@ -2357,7 +2360,13 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             pszStatement = NULL;
         }
 
+#if defined(OPTION_CONFIG_SYMBOLS)
+        // Make a copy of the OAT statement with symbols resolved
+        pszStatement = resolve_symbol_string( szBuff );
+#else 
+        // Make a copy of the OAT statement
         pszStatement = strdup( szBuff );
+#endif
 
         sPort        = 0;
         bMode        = 0;
@@ -2370,7 +2379,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         memset( &addr, 0, sizeof( addr ) );
 
         // Split the statement into keyword and first operand
-        pszKeyword = strtok( szBuff, " \t" );
+        pszKeyword = strtok( pszStatement, " \t" );
         pszOperand = strtok( NULL,   " \t" );
 
         // Extract any arguments
@@ -2391,7 +2400,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
                 logmsg( _("HHCLC021E Invalid HWADD statement in %s: %s\n"),
-                        pszOATName, pszStatement );
+                        pszOATName, szBuff );
                 return -1;
             }
 
@@ -2401,7 +2410,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             {
                 logmsg( _("HHCLC022E Invalid MAC in HWADD statement "
                           "in %s: %s (%s)\n "),
-                        pszOATName, pszStatement, argv[0] );
+                        pszOATName, szBuff, argv[0] );
 
                 memset( pLCSPORT->MAC_Address, 0, sizeof(MAC) );
                 return -1;
@@ -2417,14 +2426,14 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
                 logmsg( _("HHCLC023E Invalid ROUTE statement in %s: %s\n"),
-                        pszOATName, pszStatement );
+                        pszOATName, szBuff );
                 return -1;
             }
 
             if( inet_aton( argv[0], &addr ) == 0 )
             {
                 logmsg( _("HHCLC024E Invalid net address in ROUTE %s: %s (%s)\n"),
-                        pszOATName, pszStatement, argv[0] );
+                        pszOATName, szBuff, argv[0] );
                 return -1;
             }
 
@@ -2434,7 +2443,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             {
                 free(pszNetAddr);
                 logmsg( _("HHCLC025E Invalid net mask in ROUTE %s: %s (%s)\n"),
-                        pszOATName, pszStatement, argv[1] );
+                        pszOATName, szBuff, argv[1] );
                 return -1;
             }
 
@@ -2488,7 +2497,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 {
                     logmsg( _("HHCLC028E Error in %s: %s:"
                               "Missing PORT number\n"),
-                            pszOATName, pszStatement );
+                            pszOATName, szBuff );
                     return -1;
                 }
 
@@ -2512,7 +2521,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                     {
                         logmsg( _("HHCLC031E Error in %s: %s: "
                                   "Invalid entry starting at %s\n"),
-                                pszOATName, pszStatement, argv[1] );
+                                pszOATName, szBuff, argv[1] );
                         return -1;
                     }
 
@@ -2524,7 +2533,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                         {
                             logmsg( _("HHCLC032E Error in %s: %s: "
                                       "Invalid IP address (%s)\n"),
-                                    pszOATName, pszStatement, pszIPAddress );
+                                    pszOATName, szBuff, pszIPAddress );
                             return -1;
                         }
 
@@ -2540,7 +2549,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 {
                     logmsg( _("HHCLC033E Error in %s: %s: "
                               "Missing PORT number\n"),
-                            pszOATName, pszStatement );
+                            pszOATName, szBuff );
                     return -1;
                 }
 
@@ -2556,7 +2565,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 {
                     logmsg( _("HHCLC035E Error in %s: %s: "
                             "SNA does not accept any arguments\n"),
-                            pszOATName, pszStatement );
+                            pszOATName, szBuff );
                     return -1;
                 }
             }
