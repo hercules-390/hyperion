@@ -32,6 +32,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.168  2008/12/22 00:29:10  ivan
+// Implement February 2008 z/Arch Compare And Swap And Store Facility 2
+// Update FAQ to reflect change
+// update FAQ to also indicate z/Arch DAT Enhancement is implemented
+//
 // Revision 1.167  2008/10/07 22:24:35  gsmith
 // Fix zero ilc problem after branch trace
 //
@@ -1563,7 +1568,7 @@ BYTE    sc;                             /* Store characteristic      */
             new16h = ARCH_DEP(vfetch8) (addrp, rp, regs);
             new16l = ARCH_DEP(vfetch8) (addrp+8, rp, regs);
             new16h = CSWAP64(new16h);
-            new16l = CSWAP64(new16h);
+            new16l = CSWAP64(new16l);
             break;
 #endif
     }
