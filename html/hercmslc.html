@@ -12,14 +12,337 @@ This page describes the LAN Channel Station emulation messages for the
 Hercules S/370, ESA/390, and z/Architecture emulator.
 <h3>Messages</h3>
 <dl class="messages">
-<dt><code><a name="HHCLC001I">
-HHCLC001I 
+<dt><code><a name="HHCLC001E">
+HHCLC001E <em>nnnn</em> unable to allocate LCSBLK
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>There is insufficient storage to allocate the control block for
+      LCS device number <em>nnnn</em>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function LCS_Init
+  </dl>
+<dt><code><a name="HHCLC017E">
+HHCLC017E <em>nnnn</em> invalid device name <em>devname</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The value of the -n or -dev parameter in the configuration statement
+      for LCS device number <em>nnnn</em> is missing or too long.
+  <dt>Action
+  <dd>Correct the parameter and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function ParseArgs
+  </dl>
+<dt><code><a name="HHCLC018E">
+HHCLC018E <em>nnnn</em> invalid MAC address <em>macaddr</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The value of the -m or -mac parameter in the configuration statement
+      for LCS device number <em>nnnn</em> is not a valid MAC address.
+  <dt>Action
+  <dd>Correct the parameter and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function ParseArgs
+  </dl>
+<dt><code><a name="HHCLC019E">
+HHCLC019E <em>nnnn</em> too many arguments in statement.
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The configuration statement for LCS device number <em>nnnn</em>
+      contains too many positional parameters.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function ParseArgs
+  </dl>
+<dt><code><a name="HHCLC020E">
+HHCLC020E <em>nnnn</em> invalid IP address <em>ipaddr</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The first positional parameter in the configuration statement
+      for LCS device number <em>nnnn</em> is not a valid IP address.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function ParseArgs
+  </dl>
+<dt><code><a name="HHCLC021E">
+HHCLC021E Invalid HWADD statement in <em>filename</em>: <em>stmt</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The port number parameter of the HWADD statement <em>stmt</em>
+      in OAT file <em>filename</em> is not numeric.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC022E">
+HHCLC022E Invalid MAC in HWADD statement in <em>filename</em>: <em>stmt</em> (<em>macaddr</em>)
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The second positional parameter of the HWADD statement <em>stmt</em>
+      in OAT file <em>filename</em> is not a valid MAC address.
+  <dt>Action
+  <dd>Correct the parameter and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC023E">
+HHCLC023E Invalid ROUTE statement in <em>filename</em>: <em>stmt</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The port number parameter of the ROUTE statement <em>stmt</em>
+      in OAT file <em>filename</em> is not numeric.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC024E">
+HHCLC024E Invalid net address in ROUTE <em>filename</em>: <em>stmt</em> (<em>netaddr</em>)
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The second positional parameter of the ROUTE statement <em>stmt</em>
+      in OAT file <em>filename</em> is not a valid IP network address.
+  <dt>Action
+  <dd>Correct the parameter and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC025E">
+HHCLC025E Invalid net mask in ROUTE <em>filename</em>: <em>stmt</em> (<em>netaddr</em>)
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The third positional parameter of the ROUTE statement <em>stmt</em>
+      in OAT file <em>filename</em> is not a valid IP network mask.
+  <dt>Action
+  <dd>Correct the parameter and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC026E">
+HHCLC026E Error in <em>filename</em>: Missing device number or mode
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The OAT file <em>filename</em> contains a statement which cannot
+      be identified.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC027E">
+HHCLC027E Error in <em>filename</em>: <em>devnum</em>: Invalid device number
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The device number <em>devnum</em> specified in the OAT file <em>filename</em>
+      is not a valid hexadecimal number.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC028E">
+HHCLC028E Error in <em>filename</em>: <em>stmt</em>: Missing PORT number
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Statement <em>stmt</em> in OAT file <em>filename</em>
+      for the IP port of an LCS device does not contain a port number.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC029E">
+HHCLC029E Error in <em>filename</em>: <em>port</em>: Invalid PORT number
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The port number <em>port</em> specified in the OAT file <em>filename</em>
+      for the IP port of an LCS device is not a valid decimal number.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC031E">
+HHCLC031E Error in <em>filename</em>: <em>stmt</em>: Invalid entry starting at <em>text</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The parameter <em>text</em> specified in statement <em>stmt</em>
+      in the OAT file <em>filename</em> should be PRI, SEC, or NO.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC032E">
+HHCLC032E Error in <em>filename</em>: <em>stmt</em>: Invalid IP address (<em>ipaddr</em>)
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The parameter <em>ipaddr</em> specified in statement <em>stmt</em>
+      in the OAT file <em>filename</em> is not a valid IP address.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC033E">
+HHCLC033E Error in <em>filename</em>: <em>stmt</em>: Missing PORT number
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Statement <em>stmt</em> in OAT file <em>filename</em>
+      for the SNA port of an LCS device does not contain a port number.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC034E">
+HHCLC034E Error in <em>filename</em>: <em>port</em>: Invalid PORT number
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The port number <em>port</em> specified in the OAT file <em>filename</em>
+      for the SNA port of an LCS device is not a valid decimal number.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC035E">
+HHCLC035E Error in <em>filename</em>: <em>stmt</em>: SNA does not accept any arguments
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Statement <em>stmt</em> in OAT file <em>filename</em> for the
+      SNA port of an LCS device contains positional parameters which
+      are not used for SNA ports.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC036E">
+HHCLC036E Error in <em>filename</em>: <em>mode</em>: Invalid MODE
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Mode <em>mode</em> specified in a device statement in
+      the OAT file <em>filename</em> should be IP or SNA.
+  <dt>Action
+  <dd>Correct the statement and reinitialize the device.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC037E">
+HHCLC037E Error reading file <em>filename</em> line <em>nnnn</em>: <em>description</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error occurred reading the OAT file for an LCS device.
+      <em>description</em> is the operating system's description of the error.
+      The error occurred at line <em>nnnn</em> of file <em>filename</em>.
+  <dt>Action
+  <dd>Check that the correct OAT file name is specified in the configuration file.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function ReadOAT
+  </dl>
+<dt><code><a name="HHCLC038E">
+HHCLC038E File <em>filename</em> line <em>nnnn</em> is too long
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error occurred reading the OAT file for an LCS device.
+      The error occurred at line <em>nnnn</em> of file <em>filename</em>.
+      Either the line exceeds 255 characters, or there is no linefeed at
+      the end of the file.
+  <dt>Action
+  <dd>Correct the OAT file.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function ReadOAT
+  </dl>
+<dt><code><a name="HHCLC039E">
+HHCLC039E Cannot open file <em>filename</em>: <em>description</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error occurred opening the OAT file <em>filename</em> for an LCS device.
+      <em>description</em> is the operating system's description of the error.
+  <dt>Action
+  <dd>Check that the correct OAT file name is specified in the configuration file.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function BuildOAT
+  </dl>
+<dt><code><a name="HHCLC040E">
+HHCLC040E <em>nnnn</em> LCSDEV <em>mmmm</em> not in configuration
 </a></code>
 <dd><dl>
   <dt>Meaning
   <dd>
+      The device number <em>mmmm</em> specified in the OAT file does not match
+      the LCS device number <em>nnnn</em> in the configuration file.
+  <dt>Action
+  <dd>Correct the OAT file and reinitialize the device.
   <dt>Issued by
-  <dd>ctc_lcs.c, function 
+  <dd>ctc_lcs.c, function LCS_Init
+  </dl>
+<dt><code><a name="HHCLC055I">
+HHCLC055I <em>tapn</em> using MAC <em>hh:hh:hh:hh:hh:hh</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The MAC address assigned the TUN/TAP device <em>tapn</em>
+      is <em>hh:hh:hh:hh:hh:hh</em>.
+  <dt>Action
+  <dd>None.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function LCS_LanStats
+  </dl>
+<dt><code><a name="HHCLC056W">
+HHCLC056W <em>tapn</em> NOT using MAC <em>hh:hh:hh:hh:hh:hh</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>MAC address <em>hh:hh:hh:hh:hh:hh</em> was requested in the
+      configuration statement or in the OAT file for an LCS device
+      but the operating system did not accept the request to change
+      the MAC address for TUN/TAP device <em>tapn</em>.
+  <dt>Action
+  <dd>The device will use the MAC address shown in the preceding
+      <a href=#HHCLC055I>HHCLC055I</a> message.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function LCS_LanStats
+  </dl>
+<dt><code><a name="HHCLC073I">
+HHCLC073I <em>nnnn</em>: TAP device <em>tapn</em> opened
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>LCS device number <em>nnnn</em> is now associated with the
+      kernel TUN/TAP device named <em>tapn</em>.
+  <dt>Action
+  <dd>None.
+  <dt>Issued by
+  <dd>ctc_lcs.c, function LCS_Init
   </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
