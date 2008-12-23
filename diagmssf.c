@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.46  2008/12/21 21:25:59  ivan
+// Fix spelling
+//
 // Revision 1.45  2008/12/21 05:46:47  ivan
 // Fill diag 224 table with all the engine names
 //
@@ -454,6 +457,7 @@ static U64        diag204tod;          /* last diag204 tod           */
           {
               memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
               STORE_HW(cpuinfo->cpaddr,sysblk.regs[i]->cpuad);
+              cpuinfo->index=sysblk.ptyp[i];
               STORE_HW(cpuinfo->weight,100);
               dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) / sysblk.cpus;
               dreg = (dreg * 1000000) + (i ? 0 : (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec));
