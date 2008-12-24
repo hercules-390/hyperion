@@ -32,6 +32,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.169  2008/12/23 13:44:57  ivan
+// CSST Facility 2 fix
+//
 // Revision 1.168  2008/12/22 00:29:10  ivan
 // Implement February 2008 z/Arch Compare And Swap And Store Facility 2
 // Update FAQ to reflect change
@@ -1514,7 +1517,7 @@ BYTE    sc;                             /* Store characteristic      */
 #endif
 
     /* Program check if second operand is not on correct boundary */
-    switch(fc)
+    switch(sc)
     {
         case 1:
             HW_CHECK(addr2, regs);
