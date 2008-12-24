@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.95  2008/12/22 13:10:22  jj
+// Add sclp debug entry points
+//
 // Revision 1.94  2008/12/22 11:13:46  jj
 // Do not issue syscons active message on non-syscons type SCLP send/recv
 //
@@ -1263,6 +1266,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                 servc_cp_send_mask |= evd_mask->masks[i + masklen];
             }
         }
+
+        if((servc_cp_recv_mask & ~SCCB_EVENT_SUPP_RECV_MASK)
+          || (servc_cp_send_mask & ~SCCB_EVENT_SUPP_SEND_MASK))
+            HDC3(debug_sclp_unknown_event_mask, evd_mask, sccb, regs);
 
         /* Clear any pending command */
         servc_scpcmdstr[0] = '\0';

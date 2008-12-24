@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.18  2008/12/22 11:13:46  jj
+// Do not issue syscons active message on non-syscons type SCLP send/recv
+//
 // Revision 1.17  2008/12/20 23:38:51  ivan
 // Fill SCP_INFO SCCB config byte 11 with PER3 and List Directed IPL capability flags
 //
@@ -337,12 +340,10 @@ typedef struct _SCCB_EVENT_MASK {
 
 #define SCCB_EVENT_CONS_RECV_MASK ( \
         (0x80000000 >> (SCCB_EVD_TYPE_MSG-1))   | \
-        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) | \
-        (0x80000000 >> (SCCB_EVD_TYPE_VT220-1)) )
+        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) ) 
 #define SCCB_EVENT_CONS_SEND_MASK ( \
         (0x80000000 >> (SCCB_EVD_TYPE_OPCMD-1)) | \
         (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) | \
-        (0x80000000 >> (SCCB_EVD_TYPE_VT220-1)) | \
         (0x80000000 >> (SCCB_EVD_TYPE_CPCMD-1)) )
 
 /* Read/Write Event Data Header */

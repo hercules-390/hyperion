@@ -1,6 +1,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.8  2008/12/22 13:10:22  jj
+// Add sclp debug entry points
+//
 // Revision 1.7  2008/02/12 08:42:15  fish
 // dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
 //
@@ -41,6 +44,7 @@ DLL_EXPORT void *(*debug_sclp_pre_command) (U32, void *, REGS *);
 DLL_EXPORT void *(*debug_sclp_post_command) (U32, void *, REGS *);
 DLL_EXPORT void *(*debug_sclp_unknown_command) (U32, void *, REGS *);
 DLL_EXPORT void *(*debug_sclp_unknown_event) (void *, void *, REGS *);
+DLL_EXPORT void *(*debug_sclp_unknown_event_mask) (void *, void *, REGS *);
 DLL_EXPORT void *(*debug_sclp_event_data) (void *, void *, REGS *);
 DLL_EXPORT void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
 DLL_EXPORT void *(*debug_watchdog_signal) (REGS *);

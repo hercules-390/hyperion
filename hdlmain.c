@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.50  2008/12/22 13:10:21  jj
+// Add sclp debug entry points
+//
 // Revision 1.49  2008/02/12 08:42:15  fish
 // dyngui tweaks: new def devlist fmt, new debug_cd_cmd hook
 //
@@ -90,6 +93,7 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( debug_sclp_post_command,    UNRESOLVED      );
     HDL_REGISTER( debug_sclp_unknown_command, UNRESOLVED      );
     HDL_REGISTER( debug_sclp_unknown_event,   UNRESOLVED      );
+    HDL_REGISTER( debug_sclp_unknown_event_mask,   UNRESOLVED );
     HDL_REGISTER( debug_sclp_event_data,      UNRESOLVED      );
     HDL_REGISTER( debug_chsc_unknown_request, UNRESOLVED      );
     HDL_REGISTER( debug_watchdog_signal,      UNRESOLVED      );
@@ -135,6 +139,7 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE( debug_sclp_post_command    );
     HDL_RESOLVE( debug_sclp_unknown_command );
     HDL_RESOLVE( debug_sclp_unknown_event   );
+    HDL_RESOLVE( debug_sclp_unknown_event_mask );
     HDL_RESOLVE( debug_sclp_event_data      );
     HDL_RESOLVE( debug_chsc_unknown_request );
 #if defined(OPTION_W32_CTCI)

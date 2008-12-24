@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.22  2008/12/22 13:10:21  jj
+// Add sclp debug entry points
+//
 // Revision 1.21  2008/12/01 23:57:21  rbowler
 // Fix warning C4273: 'losc_set/check' : inconsistent dll linkage
 //
@@ -259,6 +262,7 @@ HSYS_DLL_IMPORT void *(*debug_sclp_pre_command)     (U32,    void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_post_command)    (U32,    void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_unknown_command) (U32,    void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_unknown_event)   (void *, void *, REGS *);
+HSYS_DLL_IMPORT void *(*debug_sclp_unknown_event_mask) (void *, void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_event_data)      (void *, void *, REGS *);
 
