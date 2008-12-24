@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.97  2008/12/24 22:35:53  rbowler
+// Framework for integrated 3270 and ASCII console features
+//
 // Revision 1.96  2008/12/24 15:42:14  jj
 // Add debug entry point for sclp event masks
 //
@@ -447,7 +450,7 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] = {
 #endif /*FEATURE_SENSE_RUNNING_STATUS*/
                         };
 
-BYTE ARCH_DEP(scpinfo_cfg11) = 
+BYTE ARCH_DEP(scpinfo_cfg11) =
     0
 #if defined(FEATURE_PER3)
         | SCCB_CFGB_PER_3
@@ -732,7 +735,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
              * ISW 20081221
              */
         }
-    
+
     read_scpinfo:
 
         /* Set the main storage change bit */
@@ -1314,7 +1317,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         if ((servc_cp_recv_mask & ARCH_DEP(sclp_send_mask) & SCCB_EVENT_CONS_RECV_MASK) != old_cp_recv_mask
          || (servc_cp_send_mask & ARCH_DEP(sclp_recv_mask) & SCCB_EVENT_CONS_SEND_MASK) != old_cp_send_mask)
         {
-            if ((servc_cp_recv_mask & SCCB_EVENT_CONS_RECV_MASK) != 0 
+            if ((servc_cp_recv_mask & SCCB_EVENT_CONS_RECV_MASK) != 0
                 || (servc_cp_send_mask & SCCB_EVENT_CONS_SEND_MASK) != 0)
                 logmsg (_("HHCCP041I SYSCONS interface active\n"));
             else
