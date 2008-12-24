@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.19  2008/12/24 15:42:14  jj
+// Add debug entry point for sclp event masks
+//
 // Revision 1.18  2008/12/22 11:13:46  jj
 // Do not issue syscons active message on non-syscons type SCLP send/recv
 //
@@ -323,19 +326,7 @@ typedef struct _SCCB_EVENT_MASK {
 //      FWORD   cp_recv_mask;           /* These mask fields have    */
 //      FWORD   cp_send_mask;           /* the length defined by     */
 //      FWORD   sclp_recv_mask;         /* the length halfword       */
-#define SCCB_EVENT_SUPP_RECV_MASK ( \
-        (0x80000000 >> (SCCB_EVD_TYPE_MSG-1)) | \
-        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) | \
-/*      (0x80000000 >> (SCCB_EVD_TYPE_VT220-1)) | */ \
-        (0x80000000 >> (SCCB_EVD_TYPE_CPIDENT-1)) )
 //      FWORD   sclp_send_mask;
-#define SCCB_EVENT_SUPP_SEND_MASK ( \
-        (0x80000000 >> (SCCB_EVD_TYPE_OPCMD-1)) | \
-        (0x80000000 >> (SCCB_EVD_TYPE_STATECH-1)) | \
-        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) | \
-        (0x80000000 >> (SCCB_EVD_TYPE_SIGQ-1)) | \
-/*      (0x80000000 >> (SCCB_EVD_TYPE_VT220-1)) | */ \
-        (0x80000000 >> (SCCB_EVD_TYPE_CPCMD-1)) )
     } SCCB_EVENT_MASK;
 
 #define SCCB_EVENT_CONS_RECV_MASK ( \
@@ -357,6 +348,7 @@ typedef struct _SCCB_EVD_HDR {
 #define SCCB_EVD_TYPE_PRIOR     0x09    /* Priority message/command  */
 #define SCCB_EVD_TYPE_CPIDENT   0x0B    /* CntlProgIdent             */
 #define SCCB_EVD_TYPE_VT220     0x1A    /* VT220 Msg                 */
+#define SCCB_EVD_TYPE_SYSG      0x1B    /* 3270 Msg (SYSG console)   */
 #define SCCB_EVD_TYPE_SIGQ      0x1D    /* SigQuiesce                */
 #define SCCB_EVD_TYPE_CPCMD     0x20    /* CntlProgOpCmd             */
         BYTE    flag;

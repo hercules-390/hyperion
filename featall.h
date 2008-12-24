@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.138  2008/09/02 06:07:33  fish
+// Add OPTION_MSGHLD back again
+//
 // Revision 1.137  2008/08/29 11:11:06  fish
 // Fix message-keep logic  (i.e. sticky/held messages)
 //
@@ -215,6 +218,8 @@
 #undef FEATURE_IEEE_EXCEPTION_SIMULATION                        /*407*/
 #undef FEATURE_IMMEDIATE_AND_RELATIVE
 #undef FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
+#undef FEATURE_INTEGRATED_3270_CONSOLE
+#undef FEATURE_INTEGRATED_ASCII_CONSOLE
 #undef FEATURE_INTERPRETIVE_EXECUTION
 #undef FEATURE_INTERVAL_TIMER
 #undef FEATURE_IO_ASSIST

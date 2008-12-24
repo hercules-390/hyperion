@@ -4,6 +4,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.85  2008/12/22 00:29:10  ivan
+// Implement February 2008 z/Arch Compare And Swap And Store Facility 2
+// Update FAQ to reflect change
+// update FAQ to also indicate z/Arch DAT Enhancement is implemented
+//
 // Revision 1.84  2008/08/04 22:06:00  rbowler
 // DIAG308 function codes for Program-directed re-IPL
 //
@@ -131,6 +136,8 @@
 #define FEATURE_IEEE_EXCEPTION_SIMULATION                       /*407*/
 #define FEATURE_IMMEDIATE_AND_RELATIVE
 #define FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
+//#define FEATURE_INTEGRATED_3270_CONSOLE
+//#define FEATURE_INTEGRATED_ASCII_CONSOLE
 #define FEATURE_INTERPRETIVE_EXECUTION
 #define FEATURE_IO_ASSIST
 #define FEATURE_LINKAGE_STACK

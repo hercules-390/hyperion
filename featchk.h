@@ -13,6 +13,11 @@
 // $Id$
 //
 // $Log$
+// Revision 1.49  2008/12/22 00:29:10  ivan
+// Implement February 2008 z/Arch Compare And Swap And Store Facility 2
+// Update FAQ to reflect change
+// update FAQ to also indicate z/Arch DAT Enhancement is implemented
+//
 // Revision 1.48  2007/12/23 00:29:20  rbowler
 // reset_channel_path, cancel_subchannel unresolved if no channel subsystem feature
 //
@@ -395,6 +400,14 @@
 
 #if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2) && !defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)
  #error FEATURE_COMPARE_AND_SWAP_AND_STORE must be defined when using FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2
+#endif
+
+#if defined(FEATURE_INTEGRATED_3270_CONSOLE) && !defined(FEATURE_SYSTEM_CONSOLE)
+ #error Integrated 3270 console requires FEATURE_SYSTEM_CONSOLE
+#endif
+
+#if defined(FEATURE_INTEGRATED_ASCII_CONSOLE) && !defined(FEATURE_SYSTEM_CONSOLE)
+ #error Integrated ASCII console requires FEATURE_SYSTEM_CONSOLE
 #endif
 
 

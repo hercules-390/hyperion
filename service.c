@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.96  2008/12/24 15:42:14  jj
+// Add debug entry point for sclp event masks
+//
 // Revision 1.95  2008/12/22 13:10:22  jj
 // Add sclp debug entry points
 //
@@ -520,8 +523,31 @@ BYTE ARCH_DEP(scpinfo_cpf)[12] = {
                             ,
                             0, 0, 0, 0, 0, 0
                             } ;
-U32  ARCH_DEP(sclp_recv_mask) = SCCB_EVENT_SUPP_RECV_MASK;
-U32  ARCH_DEP(sclp_send_mask) = SCCB_EVENT_SUPP_SEND_MASK;
+
+U32  ARCH_DEP(sclp_recv_mask) =
+        (0x80000000 >> (SCCB_EVD_TYPE_MSG-1)) |
+        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) |
+#if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
+        (0x80000000 >> (SCCB_EVD_TYPE_VT220-1)) |
+#endif /*defined(FEATURE_INTEGRATED_ASCII_CONSOLE)*/
+#if defined(FEATURE_INTEGRATED_3270_CONSOLE)
+        (0x80000000 >> (SCCB_EVD_TYPE_SYSG-1)) |
+#endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
+        (0x80000000 >> (SCCB_EVD_TYPE_CPIDENT-1)) ;
+
+U32  ARCH_DEP(sclp_send_mask) =
+        (0x80000000 >> (SCCB_EVD_TYPE_OPCMD-1)) |
+        (0x80000000 >> (SCCB_EVD_TYPE_STATECH-1)) |
+        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) |
+        (0x80000000 >> (SCCB_EVD_TYPE_SIGQ-1)) |
+#if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
+        (0x80000000 >> (SCCB_EVD_TYPE_VT220-1)) |
+#endif /*defined(FEATURE_INTEGRATED_ASCII_CONSOLE)*/
+#if defined(FEATURE_INTEGRATED_3270_CONSOLE)
+        (0x80000000 >> (SCCB_EVD_TYPE_SYSG-1)) |
+#endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
+        (0x80000000 >> (SCCB_EVD_TYPE_CPCMD-1)) ;
+
 /*-------------------------------------------------------------------*/
 /* B220 SERVC - Service Call                                   [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1267,8 +1293,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             }
         }
 
-        if((servc_cp_recv_mask & ~SCCB_EVENT_SUPP_RECV_MASK)
-          || (servc_cp_send_mask & ~SCCB_EVENT_SUPP_SEND_MASK))
+        if((servc_cp_recv_mask & ~ARCH_DEP(sclp_recv_mask))
+          || (servc_cp_send_mask & ~ARCH_DEP(sclp_send_mask)))
             HDC3(debug_sclp_unknown_event_mask, evd_mask, sccb, regs);
 
         /* Clear any pending command */
