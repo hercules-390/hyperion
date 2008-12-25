@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.269  2008/12/25 21:30:31  ivan
+// STSI Update part II : Add secondary CPU capacity in 1.2.2 SYSIB
+//
 // Revision 1.268  2008/12/25 21:14:31  ivan
 // STSI Update part 1 : add CPU Type percentage fields in 1.1.1 SYSIB
 //
@@ -6598,9 +6601,9 @@ int     i;
 SYSIB111  *sysib111;                    /* Basic machine conf        */
 SYSIB121  *sysib121;                    /* Basic machine CPU         */
 SYSIB122  *sysib122;                    /* Basic machine CPUs        */
-#if 0
 SYSIB221  *sysib221;                    /* LPAR CPU                  */
 SYSIB222  *sysib222;                    /* LPAR CPUs                 */
+#if 0
 SYSIB322  *sysib322;                    /* VM CPUs                   */
 SYSIBVMDB *sysib322;                    /* VM description block      */
 #endif
@@ -6641,7 +6644,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
     SIE_INTERCEPT(regs);
 
     /* Check function code */
-    if((regs->GR_L(0) & STSI_GPR0_FC_MASK) > STSI_GPR0_FC_BASIC)
+    if((regs->GR_L(0) & STSI_GPR0_FC_MASK) > STSI_GPR0_FC_LPAR)
     {
         regs->psw.cc = 3;
         return;
@@ -6655,8 +6658,8 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
     /* Return current level if function code is zero */
     if((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_CURRENT)
     {
-        regs->GR_L(0) |= STSI_GPR0_FC_BASIC;
-//      regs->GR_L(0) |= STSI_GPR0_FC_LPAR;
+ //     regs->GR_L(0) |= STSI_GPR0_FC_BASIC;
+        regs->GR_L(0) |= STSI_GPR0_FC_LPAR;
         regs->psw.cc = 0;
         return;
     }
@@ -6666,7 +6669,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Return with cc3 if selector codes invalid */
-    if( ((regs->GR_L(0) & STSI_GPR0_FC_MASK)   == 0x10000000
+    if( ((regs->GR_L(0) & STSI_GPR0_FC_MASK)   == STSI_GPR0_FC_BASIC
       && (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) == 1
       && (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) >  1)
       || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) == 0
@@ -6755,6 +6758,40 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
         default:
             regs->psw.cc = 3;
         } /* selector 1 */
+        break;
+
+    case STSI_GPR0_FC_LPAR:
+       
+        switch(regs->GR_L(1) & STSI_GPR1_SEL2_MASK)
+        {
+            case 1:
+                /* CURRENT CPU LPAR CONFIG */
+                sysib221 = (SYSIB221 *)(m);
+                memset(sysib221, 0x00, sizeof(SYSIB221));
+                memset(sysib221->seqc,0xF0,sizeof(sysib111->seqc));
+                for(i = 0; i < 6; i++)
+                    sysib221->seqc[(sizeof(sysib221->seqc) - 6) + i] =
+                    hexebcdic[(sysblk.cpuid >> (52 - (i*4))) & 0x0F];
+                STORE_HW(sysib221->lcpuid,regs->cpuad);
+                STORE_HW(sysib221->cpuad,regs->cpuad);
+                break;
+            case 2:
+                /* All CPUS LPAR CONFIG */
+                sysib222 = (SYSIB222 *)(m);
+                memset(sysib222, 0x00, sizeof(SYSIB222));
+                STORE_HW(sysib222->lparnum,1);
+                sysib222->lcpuc[0]=SYSIB222_LCPUC_SHARED;
+                STORE_HW(sysib222->totcpu,MAX_CPU);
+                STORE_HW(sysib222->confcpu,sysblk.cpus);
+                STORE_HW(sysib222->sbcpu,MAX_CPU - sysblk.cpus);
+                get_lparname(sysib222->lparname);
+                STORE_FW(sysib222->lparcaf,1000);   /* Full capability factor */
+                STORE_HW(sysib222->shrcpu,sysblk.cpus);
+                break;
+            default:
+                regs->psw.cc = 3;
+                break;
+        }
         break;
 
     default:
