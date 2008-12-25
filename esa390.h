@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.101  2008/12/22 16:31:49  jj
+// *** empty log message ***
+//
 // Revision 1.100  2008/12/22 16:30:47  jj
 // Fix EDAT typo
 //
@@ -1915,13 +1918,22 @@ typedef struct _ZPB2 {
 #define STSI_GPR1_RESERVED      0xFFFF0000
 
 typedef struct _SYSIB111 {              /* Basic Machine Config      */
-        BYTE    resv1[4*8];             /* Reserved                  */
+        BYTE    flag1;                  /* 1.1.1 SYSIB Flag          */
+#define SYSIB111_PFLAG  0x80            /* Type percentage present   */
+        BYTE    resv1[31];              /* Reserved                  */
         BYTE    manufact[4*4];          /* Manufacturer              */
         BYTE    type[4*1];              /* Type                      */
         BYTE    resv2[4*3];             /* Reserved                  */
-        BYTE    model[4*4];             /* Model                     */
+        BYTE    modcapaid[4*4];         /* Model capacity identifier */
         BYTE    seqc[4*4];              /* Sequence Code             */
         BYTE    plant[4*1];             /* Plant of manufacture      */
+        BYTE    model[4*4];             /* System Model              */
+        BYTE    mpci[4*4];              /* Model Perm Capacity ID    */
+        BYTE    mtci[4*4];              /* Model Temp Capacity ID    */
+        U32     mcaprating;             /* Model Capacity Rating     */
+        U32     mpcaprating;            /* Model Perm Capacity Rating*/
+        U32     mtcaprating;            /* Model temp Capacity Rating*/
+        BYTE    typepct[5];             /* Secondary CPU types pct   */
     }   SYSIB111;
 
 typedef struct _SYSIB121 {              /* Basic Machine CPU         */

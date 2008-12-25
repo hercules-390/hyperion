@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.267  2008/05/06 22:15:42  rbowler
+// Fix warning: operation on `p1' may be undefined
+//
 // Revision 1.266  2008/04/11 14:28:00  bernard
 // Integrate regs->exrl into base Hercules code.
 //
@@ -6689,17 +6692,22 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             case 1:
                 sysib111 = (SYSIB111*)(m);
                 memset(sysib111, 0x00, sizeof(SYSIB111));
+                sysib111->flag1|=SYSIB111_PFLAG;
                 memcpy(sysib111->manufact,manufact,sizeof(manufact));
                 for(i = 0; i < 4; i++)
                     sysib111->type[i] =
                         hexebcdic[(sysblk.cpuid >> (28 - (i*4))) & 0x0F];
-                memset(sysib111->model, 0x40, sizeof(sysib111->model));
-                memcpy(sysib111->model, model, sizeof(model));
+                memset(sysib111->modcapaid, 0x40, sizeof(sysib111->model));
+                memcpy(sysib111->modcapaid, model, sizeof(model));
                 memset(sysib111->seqc,0xF0,sizeof(sysib111->seqc));
                 for(i = 0; i < 6; i++)
                     sysib111->seqc[(sizeof(sysib111->seqc) - 6) + i] =
                     hexebcdic[(sysblk.cpuid >> (52 - (i*4))) & 0x0F];
                 memcpy(sysib111->plant,plant,sizeof(plant));
+                for(i=0;i<5;i++)
+                {
+                    sysib111->typepct[i]=100;
+                }
                 regs->psw.cc = 0;
                 break;
 
