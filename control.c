@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.270  2008/12/25 23:31:17  ivan
+// STSI Update Part III : FC 2 - Store LPAR Information
+//
 // Revision 1.269  2008/12/25 21:30:31  ivan
 // STSI Update part II : Add secondary CPU capacity in 1.2.2 SYSIB
 //
@@ -6774,6 +6777,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                     hexebcdic[(sysblk.cpuid >> (52 - (i*4))) & 0x0F];
                 STORE_HW(sysib221->lcpuid,regs->cpuad);
                 STORE_HW(sysib221->cpuad,regs->cpuad);
+                regs->psw.cc = 0;
                 break;
             case 2:
                 /* All CPUS LPAR CONFIG */
@@ -6787,6 +6791,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 get_lparname(sysib222->lparname);
                 STORE_FW(sysib222->lparcaf,1000);   /* Full capability factor */
                 STORE_HW(sysib222->shrcpu,sysblk.cpus);
+                regs->psw.cc = 0;
                 break;
             default:
                 regs->psw.cc = 3;
