@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.102  2008/12/25 21:14:31  ivan
+// STSI Update part 1 : add CPU Type percentage fields in 1.1.1 SYSIB
+//
 // Revision 1.101  2008/12/22 16:31:49  jj
 // *** empty log message ***
 //
@@ -1945,7 +1948,8 @@ typedef struct _SYSIB121 {              /* Basic Machine CPU         */
     }   SYSIB121;
 
 typedef struct _SYSIB122 {              /* Basic Machine CPUs        */
-        BYTE    resv1[4*8];             /* Reserved                  */
+        BYTE    resv1[4*7];             /* Reserved                  */
+        BYTE    sccap[4*1];             /* Secondary CPU Capability  */
         BYTE    cap[4*1];               /* CPU capability            */
         BYTE    totcpu[2*1];            /* Total CPU count           */
         BYTE    confcpu[2*1];           /* Configured CPU count      */

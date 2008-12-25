@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.268  2008/12/25 21:14:31  ivan
+// STSI Update part 1 : add CPU Type percentage fields in 1.1.1 SYSIB
+//
 // Revision 1.267  2008/05/06 22:15:42  rbowler
 // Fix warning: operation on `p1' may be undefined
 //
@@ -6735,6 +6738,7 @@ static BYTE mpfact[32*2] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             case 2:
                 sysib122 = (SYSIB122*)(m);
                 memset(sysib122, 0x00, sizeof(SYSIB122));
+                STORE_FW(sysib122->sccap, STSI_CAPABILITY);
                 STORE_FW(sysib122->cap, STSI_CAPABILITY);
                 STORE_HW(sysib122->totcpu, MAX_CPU);
                 STORE_HW(sysib122->confcpu, sysblk.cpus);
