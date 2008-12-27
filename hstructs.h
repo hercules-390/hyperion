@@ -9,6 +9,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.96  2008/11/24 14:52:21  jj
+// Add PTYP=IFL
+// Change SCPINFO processing to check on ptyp for IFL specifics
+//
 // Revision 1.95  2008/11/04 05:56:31  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //
@@ -597,6 +601,7 @@ struct SYSBLK {
 #define DEFAULT_AUTO_SCSI_MOUNT_SECS  (5)
 #endif
         DEVBLK *firstdev;               /* -> First device block     */
+        DEVBLK *sysgdev;                /* -> devblk for SYSG console*/
 #if defined(OPTION_FAST_DEVLOOKUP)
         DEVBLK ***devnum_fl;            /* 1st level table for fast  */
                                         /* devnum lookup             */

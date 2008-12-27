@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.98  2008/12/24 22:37:17  rbowler
+// Eliminate superfluous trailing blanks (cosmetic)
+//
 // Revision 1.97  2008/12/24 22:35:53  rbowler
 // Framework for integrated 3270 and ASCII console features
 //
@@ -1051,6 +1054,48 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             sccb->resp = SCCB_RESP_COMPLETE;
 
             break;
+
+#if defined(FEATURE_INTEGRATED_3270_CONSOLE)
+        case SCCB_EVD_TYPE_SYSG:
+
+            /* Look for the SYSG console device block */
+            dev = sysblk.sysgdev;
+            if (dev == NULL)
+            {
+                /* Set response code X'05F0' in SCCB header */
+                sccb->reas = SCCB_REAS_IMPROPER_RSC;
+                sccb->resp = SCCB_RESP_REJECT;
+                break;
+            }
+
+            /* Execute the 3270 command in data block */
+            {
+            BYTE *sysg_data;
+            BYTE unitstat, more;
+            U16 residual;
+
+            sysg_data = (BYTE*)(evd_hdr+1);
+            /* dev->hnd->exec points to loc3270_execute_ccw */
+            (dev->hnd->exec) (dev, /*ccw opcode*/ *sysg_data,
+                /*flags*/ CCW_FLAGS_SLI, /*chained*/0,
+                /*count*/ evd_len - sizeof(SCCB_EVD_HDR) - 1,
+                /*prevcode*/ 0, /*ccwseq*/ 0, /*iobuf*/ sysg_data+1,
+                &more, &unitstat, &residual);
+
+            /* Indicate Event Processed */
+            evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
+
+            /* Set response code X'0020' in SCCB header */
+            sccb->reas = SCCB_REAS_NONE;
+            sccb->resp = SCCB_RESP_COMPLETE;
+
+            /* If unit check occured, set response code X'0040' */
+            if (unitstat & CSW_UC)
+                sccb->resp = SCCB_RESP_BACKOUT;
+            }
+
+            break;
+#endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
 
         case SCCB_EVD_TYPE_CPIDENT:
 

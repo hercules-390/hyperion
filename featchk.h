@@ -13,6 +13,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.50  2008/12/24 22:35:53  rbowler
+// Framework for integrated 3270 and ASCII console features
+//
 // Revision 1.49  2008/12/22 00:29:10  ivan
 // Implement February 2008 z/Arch Compare And Swap And Store Facility 2
 // Update FAQ to reflect change
@@ -142,6 +145,14 @@
 
 #if defined(FEATURE_ASN_AND_LX_REUSE)
  #define _FEATURE_ASN_AND_LX_REUSE
+#endif
+
+#if defined(FEATURE_INTEGRATED_3270_CONSOLE)
+ #define _FEATURE_INTEGRATED_3270_CONSOLE
+#endif
+
+#if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
+ #define _FEATURE_INTEGRATED_ASCII_CONSOLE
 #endif
 
 #undef _VSTORE_C_STATIC
