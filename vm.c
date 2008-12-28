@@ -14,6 +14,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.46  2007/08/07 19:47:59  ivan
+// Fix a couple of gcc-4.2 warnings
+//
 // Revision 1.45  2007/06/23 00:04:19  ivan
 // Update copyright notices to include current year (2007)
 //
@@ -836,7 +839,8 @@ int     j,k;
             && (!shcmd || !(sysblk.shcmdopt & (SHCMDOPT_DISABLE | SHCMDOPT_NODIAG8)))
         )
         {
-            logmsg (_("HHCVM001I *%s* panel command issued by guest\n"), buf);
+            if(sysblk.diag8cmd<2)
+                logmsg (_("HHCVM001I *%s* panel command issued by guest\n"), buf);
             if (cmdflags & CMDFLAGS_RESPONSE)
             {
                 dresp=log_capture(panel_command,buf);
@@ -852,7 +856,8 @@ int     j,k;
             else
             {
                 panel_command(buf);
-                logmsg (_("HHCVM002I *%s* command complete\n"), buf);
+                if(sysblk.diag8cmd<2)
+                    logmsg (_("HHCVM002I *%s* command complete\n"), buf);
             }
         }
         else

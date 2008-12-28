@@ -539,11 +539,12 @@ and how they are used.
     <p>
 
 <a name="DIAG8CMD"></a>
-<dt><code>DIAG8CMD &nbsp; DISABLE &#124; ENABLE</code>
+<dt><code>DIAG8CMD &nbsp; DISABLE &#124; ENABLE &#124; NOECHO</code>
 <dd><p>
-    When set to <code>ENABLE</code>, commands issued through diagnose 8 will be
+    When set to <code>ENABLE</code> or <code>NOECHO</code>, commands issued through diagnose 8 will be
     executed by hercules as hercules commands.  When set to <code>DISABLE</code>,
-    commands issued through the diagnose 8 interface will be ignored.
+    commands issued through the diagnose 8 interface will be ignored. When <code>NOECHO</code> is set,
+    then indications that the program has issued a Diagnose 8 to the log is suppressed.
     The default is <code>DISABLE</code>
     <p>
 

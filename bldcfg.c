@@ -31,6 +31,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.96  2008/12/01 22:07:16  fish
+// remove unused #defines
+//
 // Revision 1.95  2008/12/01 16:19:49  jj
 // Check for licensed operating systems without impairing architectural
 // compliance of IFL's
@@ -1963,16 +1966,29 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         if (sdiag8cmd != NULL)
         {
             if (strcasecmp (sdiag8cmd, "enable") == 0)
+            {
                 diag8cmd = 1;
-            else
-            if (strcasecmp (sdiag8cmd, "disable") == 0)
-                diag8cmd = 0;
+            }
             else
             {
-                fprintf(stderr, _("HHCCF052S Error in %s line %d: "
-                        "%s: invalid argument\n"),
-                        fname, inc_stmtnum[inc_level], sdiag8cmd);
-                delayed_exit(1);
+                if (strcasecmp (sdiag8cmd, "disable") == 0)
+                {
+                    diag8cmd = 0;
+                }
+                else
+                {
+                    if (strcasecmp (sdiag8cmd, "noecho") == 0)
+                    {
+                        diag8cmd = 2;
+                    }
+                    else
+                    {
+                        fprintf(stderr, _("HHCCF052S Error in %s line %d: "
+                                "%s: invalid argument\n"),
+                                fname, inc_stmtnum[inc_level], sdiag8cmd);
+                        delayed_exit(1);
+                    }
+                }
             }
         }
 
