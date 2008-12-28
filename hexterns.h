@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.23  2008/12/24 15:42:14  jj
+// Add debug entry point for sclp event masks
+//
 // Revision 1.22  2008/12/22 13:10:21  jj
 // Add sclp debug entry points
 //
@@ -142,6 +145,16 @@
 #endif  /* _HDASD_DLL_ */
 #else
 #define BLDC_DLL_IMPORT DLL_EXPORT
+#endif
+
+#ifndef _SERVICE_C_
+#ifndef _HENGINE_DLL_
+#define SERV_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define SERV_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else
+#define SERV_DLL_IMPORT DLL_EXPORT
 #endif
 
 #if defined( _MSC_VER ) && (_MSC_VER >= 1300) && (_MSC_VER < 1400)
@@ -318,6 +331,7 @@ void scp_command (char *command, int priomsg);
 int can_signal_quiesce ();
 int signal_quiesce (U16 count, BYTE unit);
 void sclp_reset();
+SERV_DLL_IMPORT void sclp_sysg_attention(U32 event_type);
 int servc_hsuspend(void *file);
 int servc_hresume(void *file);
 

@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.99  2008/12/28 15:30:09  jj
+// SYSG and SYSA mods
+//
 // Revision 1.98  2008/12/27 23:34:37  rbowler
 // Integrated 3270 (SYSG) console send command
 //
@@ -2251,7 +2254,7 @@ BYTE                   unitstat;        /* Status after receive data */
                 /* For the SYSG console, generate an external interrupt */
                 if (dev == sysblk.sysgdev && dev->connected)
                 {
-
+                    sclp_sysg_attention(0);
                 }
               #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
 
