@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.255  2008/11/25 23:00:11  rbowler
+// Issue HHCPN052E if ipl target is AP or IP engine
+//
 // Revision 1.254  2008/11/04 05:56:31  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //
@@ -468,6 +471,81 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 #endif // OPTION_MIPS_COUNTING
 
 ///////////////////////////////////////////////////////////////////////
+/* message command - Display a line of text at the console           */
+///////////////////////////////////////////////////////////////////////
+
+int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
+{
+    char    *tokn;
+    char    *msgtxt;
+    char    *cline;
+    time_t  mytime;
+    struct  tm *mytm;
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    cline=strdup(cmdline);
+    msgtxt=NULL;
+    tokn=strtok(cline," "); /* The command itself */
+    tokn=strtok(NULL," "); /* The userid.. Ignored */
+    if(tokn)
+    {
+        msgtxt=&tokn[strlen(tokn)+1];   /* point passed the space */
+    }
+    else
+    {
+        msgtxt=" ";
+    }
+    tokn=strtok(NULL," "); /* A potential AT keyword */
+    if(tokn)
+    {
+        if(strcasecmp(tokn,"AT")==0)
+        {
+            tokn=strtok(NULL," ");  /* Skip the system ID */
+            msgtxt=&tokn[strlen(tokn)+1];  /* Ptr to 1st non-blank token in msg text */
+            tokn=strtok(NULL," ");
+            if(!tokn) msgtxt=" ";
+        }
+    }
+    if(msgtxt)
+    {
+        strcpy(cline,cmdline);
+        if(withhdr)
+        {
+            time(&mytime);
+            mytm=localtime(&mytime);
+            logmsg(
+#if defined(OPTION_MSGCLR)
+                "<pnl,color(white,black)>"
+#endif
+                "%2.2u:%2.2u:%2.2u  * MSG FROM HERCULES  : %s\n",
+                    mytm->tm_hour,
+                    mytm->tm_min,
+                    mytm->tm_sec,
+                    msgtxt);
+        }
+        else
+        {
+                logmsg(
+#if defined(OPTION_MSGCLR)
+                "<pnl,color(white,black)>"
+#endif
+                "%s\n",msgtxt);
+        }
+    }
+    free(cline);
+    return 0;
+}
+
+int msg_cmd(int argc,char *argv[], char *cmdline)
+{
+    return(message_cmd(argc,argv,cmdline,1));
+}
+int msgnoh_cmd(int argc,char *argv[], char *cmdline)
+{
+    return(message_cmd(argc,argv,cmdline,0));
+}
+
+
 /* comment command - do absolutely nothing */
 
 int comment_cmd(int argc, char *argv[],char *cmdline)
@@ -6555,12 +6633,14 @@ typedef int CMDFUNC(int argc, char *argv[], char *cmdline);
 typedef struct _CMDTAB
 {
     const char* pszCommand;     /* command          */
+    const size_t cmdAbbrev;      /* Min abbreviation */
     CMDFUNC*    pfnCommand;     /* handler function */
     const char* pszCmdDesc;     /* description      */
 }
 CMDTAB;
 
-#define COMMAND(cmd,func,desc)  { cmd, func, desc },
+#define COMMAND(cmd,func,desc)  { cmd, 0, func, desc },
+#define COMMANDA(cmd,abbrev,func,desc)  { cmd, abbrev, func, desc },
 
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -6579,6 +6659,9 @@ COMMAND ( "?",         ListAllCommands, "list all commands" )
 COMMAND ( "help",      HelpCommand,   "command specific help\n" )
 
 COMMAND ( "*",         comment_cmd,   "(log comment to syslog)\n" )
+COMMANDA( "message", 1,msg_cmd,       "display message on console a la VM" )
+COMMANDA( "msg",     1,msg_cmd,       "same as message"         )
+COMMAND ( "msgnoh",    msgnoh_cmd,    "same as message - no header\n" )
 
 COMMAND ( "hst",       History,       "history of commands" )
 #if defined(OPTION_HAO)
@@ -6769,6 +6852,7 @@ int ProcessPanelCommand (char* pszCmdLine)
     char*    pszSaveCmdLine  = NULL;
     char*    cl              = NULL;
     int      rc              = -1;
+    int      cmdl;
 
     if (!pszCmdLine || !*pszCmdLine)
     {
@@ -6814,10 +6898,22 @@ int ProcessPanelCommand (char* pszCmdLine)
     if (cmd_argc)
         for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
         {
-            if (!strcasecmp(cmd_argv[0], pCmdTab->pszCommand))
+            if (!pCmdTab->cmdAbbrev)
             {
-                rc = pCmdTab->pfnCommand(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
-                goto ProcessPanelCommandExit;
+                if(!strcasecmp(cmd_argv[0], pCmdTab->pszCommand))
+                {
+                    rc = pCmdTab->pfnCommand(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
+                    goto ProcessPanelCommandExit;
+                }
+            }
+            else
+            {
+                cmdl=MAX(strlen(cmd_argv[0]),pCmdTab->cmdAbbrev);
+                if(!strncasecmp(cmd_argv[0],pCmdTab->pszCommand,cmdl))
+                {
+                    rc = pCmdTab->pfnCommand(cmd_argc, (char**)cmd_argv, pszSaveCmdLine);
+                    goto ProcessPanelCommandExit;
+                }
             }
         }
 
