@@ -25,6 +25,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.71  2007/06/23 00:04:09  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.70  2007/02/26 00:54:22  gsmith
 // Display timer interrupts only if tracing/stepping all
 //
@@ -328,8 +331,11 @@ U16     cpuad;                          /* Originating CPU address   */
             sysblk.servparm =
                 APPLY_PREFIXING (sysblk.servparm, regs->PX);
 
-//      logmsg (_("External interrupt: Service signal %8.8X\n"),
-//              sysblk.servparm);
+        if (CPU_STEPPING_OR_TRACING_ALL)
+        {
+            logmsg (_("HHCCP027I External interrupt: Service signal %8.8X\n"),
+                    sysblk.servparm);
+        }
 
         /* Store service signal parameter at PSA+X'80' */
         psa = (void*)(regs->mainstor + regs->PX);

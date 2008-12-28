@@ -149,6 +149,72 @@ system.
   <dt>Issued by
   <dd>cpu.c, function process_interrupt
   </dl>
+<dt><code><a name="HHCCP023I">
+HHCCP023I External interrupt: Interrupt key
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The CPU has taken an external interrupt because the operator
+  pressed the interrupt key or issued the panel command <code>ext</code>.
+  <dt>Action
+  <dd>None.
+  <dt>Issued by
+  <dd>external.c, function perform_external_interrupt
+  </dl>
+<dt><code><a name="HHCCP024I">
+HHCCP024I External interrupt: Clock comparator
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The CPU has taken a clock comparator interrupt.
+  This message is issued only when the CPU is in single-stepping
+  or instruction-tracing mode.
+  <dt>Action
+  <dd>None. External interrupts are part of normal system operation.
+  <dt>Issued by
+  <dd>external.c, function perform_external_interrupt
+  </dl>
+<dt><code><a name="HHCCP025I">
+HHCCP025I External interrupt: CPU timer=<em>xx...xx</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The CPU has taken a CPU timer interrupt.
+  <em>xx...xx</em> is the hexadecimal value of the CPU timer.
+  This message is issued only when the CPU is in single-stepping
+  or instruction-tracing mode.
+  <dt>Action
+  <dd>None. External interrupts are part of normal system operation.
+  <dt>Issued by
+  <dd>external.c, function perform_external_interrupt
+  </dl>
+<dt><code><a name="HHCCP026I">
+HHCCP026I External interrupt: Interval timer
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The CPU has taken an external interrupt caused by the interval timer.
+  This message is issued only when the CPU is in single-stepping
+  or instruction-tracing mode.
+  <dt>Action
+  <dd>None. External interrupts are part of normal system operation.
+  <dt>Issued by
+  <dd>external.c, function perform_external_interrupt
+  </dl>
+<dt><code><a name="HHCCP027I">
+HHCCP027I External interrupt: Service signal <em>intparm</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The CPU has taken a service signal external interrupt.
+  <em>intparm</em> is the interrupt parameter.
+  This message is issued only when the CPU is in single-stepping
+  or instruction-tracing mode.
+  <dt>Action
+  <dd>None. External interrupts are part of normal system operation.
+  <dt>Issued by
+  <dd>external.c, function perform_external_interrupt
+  </dl>
 <dt><code><a name="HHCCP090W">
 HHCCP090W The configuration has been placed into a system check-stop state because of an incompatible service call
 </a></code>
