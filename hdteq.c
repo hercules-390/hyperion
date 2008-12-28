@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.15  2007/06/23 00:04:10  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.14  2006/12/08 09:43:25  jj
 // Add CVS message log
 //
@@ -41,6 +44,7 @@ static DTEQ dteq[] = {
     { "1052",   "3270"  },
     { "3215",   "3270"  },
     { "3287",   "3270"  },
+    { "SYSG",   "3270"  },
 
     { "1052-C", "1052c" },
     { "3215-C", "1052c" },

@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.99  2008/12/27 23:34:37  rbowler
+// Integrated 3270 (SYSG) console send command
+//
 // Revision 1.98  2008/12/24 22:37:17  rbowler
 // Eliminate superfluous trailing blanks (cosmetic)
 //
@@ -153,6 +156,24 @@ void sclp_reset()
 }
 
 // #ifdef FEATURE_SYSTEM_CONSOLE
+
+
+/* Raise sclp attention */
+void sclp_attention()
+{
+    /* Ignore request if already pending */
+    if (!(IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_PEND)))
+    {
+        /* Set event pending flag in service parameter */
+        sysblk.servparm |= SERVSIG_PEND;
+
+        /* Set service signal interrupt pending for read event data */
+        ON_IC_SERVSIG;
+        WAKEUP_CPUS_MASK (sysblk.waiting_mask);
+    }
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Issue SCP command                                                 */
 /*                                                                   */
@@ -191,17 +212,6 @@ void scp_command (char *command, int priomsg)
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(NULL);
 
-    /* If an event buffer available signal is pending then reject the
-       command with message indicating that service processor is busy */
-    if (IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_PEND))
-    {
-        logmsg (_("HHCCP039E Service Processor busy\n"));
-
-        /* Release the interrupt lock */
-        RELEASE_INTLOCK(NULL);
-        return;
-    }
-
     /* Save command string and message type for read event data */
     servc_scpcmdtype = priomsg;
     strncpy (servc_scpcmdstr, command, sizeof(servc_scpcmdstr));
@@ -209,12 +219,8 @@ void scp_command (char *command, int priomsg)
     /* Ensure termination of the command string */
     servc_scpcmdstr[sizeof(servc_scpcmdstr)-1] = '\0';
 
-    /* Set event pending flag in service parameter */
-    sysblk.servparm |= SERVSIG_PEND;
-
-    /* Set service signal interrupt pending for read event data */
-    ON_IC_SERVSIG;
-    WAKEUP_CPUS_MASK (sysblk.waiting_mask);
+    /* Raise attention service signal */
+    sclp_attention();
 
     /* Release the interrupt lock */
     RELEASE_INTLOCK(NULL);
@@ -240,35 +246,147 @@ int signal_quiesce (U16 count, BYTE unit)
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(NULL);
 
-    /* If an event buffer available signal is pending then reject the
-       command with message indicating that service processor is busy */
-    if (IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_PEND))
-    {
-        logmsg (_("HHCCP082E Service Processor busy\n"));
-
-        /* Release the interrupt lock */
-        RELEASE_INTLOCK(NULL);
-        return -1;
-    }
-
     /* Save delay values for signal shutdown event read */
     servc_signal_quiesce_count = count;
     servc_signal_quiesce_unit = unit;
 
     servc_signal_quiesce_pending = 1;
 
-    /* Set event pending flag in service parameter */
-    sysblk.servparm |= SERVSIG_PEND;
-
-    /* Set service signal interrupt pending for read event data */
-    ON_IC_SERVSIG;
-    WAKEUP_CPUS_MASK (sysblk.waiting_mask);
+    sclp_attention();
 
     /* Release the interrupt lock */
     RELEASE_INTLOCK(NULL);
 
     return 0;
 } /* end function signal_quiesce */
+
+
+#if defined(FEATURE_INTEGRATED_3270_CONSOLE) || 1
+static int sclp_sysg_read = 0;
+int sclp_sysg_write(SCCB_EVD_HDR *evd_hdr)
+{
+U16 evd_len;
+U16 sysg_len;
+int i;
+DEVBLK         *dev;
+BYTE *sysg_data;
+BYTE unitstat, more;
+U16 residual;
+
+    logmsg(D_("SYSG write:"));
+    FETCH_HW(evd_len,evd_hdr->totlen);
+    sysg_data = (BYTE*)(evd_hdr+1);
+    sysg_len = evd_len - sizeof(SCCB_EVD_HDR);
+
+    for(i = 0; i < sysg_len; i++)
+    {
+        if(!(i & 15))
+            logmsg("\n          %4.4X:", i);
+        logmsg(" %2.2X", sysg_data[i]);
+    }
+
+    if(i & 15)
+        logmsg("\n");
+
+    /* Look for the SYSG console device block */
+    dev = sysblk.sysgdev;
+    if (dev == NULL)
+        return -1;
+
+    /* Execute the 3270 command in data block */
+
+    /* dev->hnd->exec points to loc3270_execute_ccw */
+    (dev->hnd->exec) (dev, /*ccw opcode*/ *sysg_data,
+        /*flags*/ CCW_FLAGS_SLI, /*chained*/0,
+        /*count*/ sysg_len,
+        /*prevcode*/ 0, /*ccwseq*/ 0, /*iobuf*/ sysg_data,
+        &more, &unitstat, &residual);
+
+    /* Indicate Event Processed */
+    evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
+
+    /* If unit check occured, set response code X'0040' */
+    if (unitstat & CSW_UC)
+        return -1;
+
+    sclp_sysg_read = 1;
+    sclp_attention();
+
+    return 0; // write ok
+}
+
+int sclp_sysg_poll(SCCB_EVD_HDR *evd_hdr)
+{
+    UNREFERENCED(evd_hdr);
+    if(sclp_sysg_read)
+    { 
+        logmsg(D_("SYSG poll\n"));
+        sclp_sysg_read = 0;
+        return 1;
+    }
+    else
+        return 0; // No data 
+}
+
+void sclp_sysg_attention(U32 event_type)
+{
+    UNREFERENCED(event_type);
+
+    OBTAIN_INTLOCK(NULL);
+    
+    sclp_sysg_read = 1;
+    sclp_attention();
+
+    RELEASE_INTLOCK(NULL);
+}
+#endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
+
+
+#if defined(FEATURE_INTEGRATED_ASCII_CONSOLE) || 1
+static int sclp_sysa_read = 0;
+int sclp_sysa_write(SCCB_EVD_HDR *evd_hdr)
+{
+U16 evd_len;
+U16 sysa_len;
+BYTE *sysa_data;
+int i;
+    logmsg(D_("SYSA write:"));
+    FETCH_HW(evd_len,evd_hdr->totlen);
+    sysa_data = (BYTE*)(evd_hdr+1);
+    sysa_len = evd_len - sizeof(SCCB_EVD_HDR);
+    for(i = 0; i < sysa_len; i++)
+    {
+        if(!(i & 15))
+            logmsg("\n          %4.4X:", i);
+        logmsg(" %2.2X", sysa_data[i]);
+    }
+
+    if(i & 15)
+        logmsg("\n");
+
+    /* Indicate Event Processed */
+    evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
+
+    sclp_sysa_read = 1;
+    sclp_attention();
+
+    return 0; // write ok
+}
+
+int sclp_sysa_poll(SCCB_EVD_HDR *evd_hdr)
+{
+    UNREFERENCED(evd_hdr);
+    if(sclp_sysa_read)
+    {
+        logmsg(D_("VT220 poll\n"));
+        sclp_sysa_read = 0;
+        return 1;
+    }
+    else
+    return 0; // No data 
+}
+#endif /*defined(FEATURE_INTEGRATED_ASCII_CONSOLE)*/
+
 
 #define SR_SYS_SERVC_RECVMASK    ( SR_SYS_SERVC | 0x001 )
 #define SR_SYS_SERVC_SENDMASK    ( SR_SYS_SERVC | 0x002 )
@@ -1055,47 +1173,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
             break;
 
-#if defined(FEATURE_INTEGRATED_3270_CONSOLE)
-        case SCCB_EVD_TYPE_SYSG:
-
-            /* Look for the SYSG console device block */
-            dev = sysblk.sysgdev;
-            if (dev == NULL)
-            {
-                /* Set response code X'05F0' in SCCB header */
-                sccb->reas = SCCB_REAS_IMPROPER_RSC;
-                sccb->resp = SCCB_RESP_REJECT;
-                break;
-            }
-
-            /* Execute the 3270 command in data block */
-            {
-            BYTE *sysg_data;
-            BYTE unitstat, more;
-            U16 residual;
-
-            sysg_data = (BYTE*)(evd_hdr+1);
-            /* dev->hnd->exec points to loc3270_execute_ccw */
-            (dev->hnd->exec) (dev, /*ccw opcode*/ *sysg_data,
-                /*flags*/ CCW_FLAGS_SLI, /*chained*/0,
-                /*count*/ evd_len - sizeof(SCCB_EVD_HDR) - 1,
-                /*prevcode*/ 0, /*ccwseq*/ 0, /*iobuf*/ sysg_data+1,
-                &more, &unitstat, &residual);
-
-            /* Indicate Event Processed */
-            evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
-
-            /* Set response code X'0020' in SCCB header */
-            sccb->reas = SCCB_REAS_NONE;
-            sccb->resp = SCCB_RESP_COMPLETE;
-
-            /* If unit check occured, set response code X'0040' */
-            if (unitstat & CSW_UC)
-                sccb->resp = SCCB_RESP_BACKOUT;
-            }
-
-            break;
-#endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
 
         case SCCB_EVD_TYPE_CPIDENT:
 
@@ -1140,6 +1217,42 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             break;
 
 
+#if defined(FEATURE_INTEGRATED_3270_CONSOLE)
+        case SCCB_EVD_TYPE_SYSG:
+            if(sclp_sysg_write(evd_hdr))
+            {
+                /* Set response code X'0040' in SCCB header */
+                sccb->reas = SCCB_REAS_NONE;
+                sccb->resp = SCCB_RESP_BACKOUT;
+            }
+            else
+            {
+                /* Set response code X'0020' in SCCB header */
+                sccb->reas = SCCB_REAS_NONE;
+                sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
+            }
+            break;
+#endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
+
+
+#if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
+        case SCCB_EVD_TYPE_VT220:
+            if(sclp_sysa_write(evd_hdr))
+            {
+                /* Set response code X'0040' in SCCB header */
+                sccb->reas = SCCB_REAS_NONE;
+                sccb->resp = SCCB_RESP_BACKOUT;
+            }
+            else
+            {
+                /* Set response code X'0020' in SCCB header */
+                sccb->reas = SCCB_REAS_NONE;
+                sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
+            }
+            break;
+#endif /*defined(FEATURE_INTEGRATED_ASCII_CONSOLE)*/
+
+
         default:
 
             if( HDC3(debug_sclp_unknown_event, evd_hdr, sccb, regs) )
@@ -1179,6 +1292,28 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Point to SCCB data area following SCCB header */
         evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
+
+#if defined(FEATURE_INTEGRATED_3270_CONSOLE)
+        if(sclp_sysg_poll(evd_hdr))
+        {
+            /* Set response code X'0020' in SCCB header */
+            sccb->reas = SCCB_REAS_NONE;
+            sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
+            break;
+        }
+#endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
+
+
+#if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
+        if(sclp_sysa_poll(evd_hdr))
+        {
+            /* Set response code X'0020' in SCCB header */
+            sccb->reas = SCCB_REAS_NONE;
+            sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
+            break;
+        }
+#endif /*defined(FEATURE_INTEGRATED_ASCII_CONSOLE)*/
+
 
         if( HDC3(debug_sclp_event_data, evd_hdr, sccb, regs) )
             break;

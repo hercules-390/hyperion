@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.20  2008/12/24 22:35:53  rbowler
+// Framework for integrated 3270 and ASCII console features
+//
 // Revision 1.19  2008/12/24 15:42:14  jj
 // Add debug entry point for sclp event masks
 //
@@ -492,6 +495,5 @@ typedef struct _SCCB_XST_MAP {
 //                                         expanded storage blocks   */
     } SCCB_XST_MAP;
 // #endif /*FEATURE_EXPANDED_STORAGE*/
-
 
 #endif /*!defined(_SERVICE_H)*/

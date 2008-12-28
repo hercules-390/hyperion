@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.98  2008/12/27 23:34:37  rbowler
+// Integrated 3270 (SYSG) console send command
+//
 // Revision 1.97  2008/11/04 05:56:31  fish
 // Put ensure consistent create_thread ATTR usage change back in
 //
@@ -2371,8 +2374,9 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 
   #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
     /* Extra initialisation for the SYSG console */
-    if (stricmp(dev->typname,"SYSG") == 0)
+    if (strcasecmp(dev->typname,"SYSG") == 0)
     {
+        dev->pmcw.flag5 &= ~PMCW5_V; // Not a regular device
         if (sysblk.sysgdev != NULL)
         {
             logmsg(_("HHCTE017E Device %4.4X: Duplicate SYSG console definition\n"),
