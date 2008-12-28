@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.256  2008/12/28 05:46:44  ivan
+// Emulate VM's MESSAGE & MSGNOH commands
+//
 // Revision 1.255  2008/11/25 23:00:11  rbowler
 // Issue HHCPN052E if ipl target is AP or IP engine
 //
@@ -476,39 +479,51 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 
 int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
 {
-    char    *tokn;
     char    *msgtxt;
-    char    *cline;
     time_t  mytime;
     struct  tm *mytm;
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    cline=strdup(cmdline);
+    int     toskip,state,i;
     msgtxt=NULL;
-    tokn=strtok(cline," "); /* The command itself */
-    tokn=strtok(NULL," "); /* The userid.. Ignored */
-    if(tokn)
+    toskip=3;
+    if(argc>2)
     {
-        msgtxt=&tokn[strlen(tokn)+1];   /* point passed the space */
-    }
-    else
-    {
-        msgtxt=" ";
-    }
-    tokn=strtok(NULL," "); /* A potential AT keyword */
-    if(tokn)
-    {
-        if(strcasecmp(tokn,"AT")==0)
+        if(strcasecmp(argv[2],"AT")==0)
         {
-            tokn=strtok(NULL," ");  /* Skip the system ID */
-            msgtxt=&tokn[strlen(tokn)+1];  /* Ptr to 1st non-blank token in msg text */
-            tokn=strtok(NULL," ");
-            if(!tokn) msgtxt=" ";
+            toskip=5;
         }
     }
-    if(msgtxt)
+
+    for(state=0,i=0;cmdline[i];i++)
     {
-        strcpy(cline,cmdline);
+        if(!state)
+        {
+            if(cmdline[i]!=' ')
+            {
+                state=1;
+                toskip--;
+                if(!toskip) break;
+            }
+        }
+        else
+        {
+            if(cmdline[i]==' ')
+            {
+                state=0;
+                if(toskip==1)
+                {
+                    i++;
+                    toskip=0;
+                    break;
+                }
+            }
+        }
+    }
+    if(!toskip)
+    {
+        msgtxt=&cmdline[i];
+    }
+    if(msgtxt && strlen(msgtxt)>0)
+    {
         if(withhdr)
         {
             time(&mytime);
@@ -517,7 +532,7 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
 #if defined(OPTION_MSGCLR)
                 "<pnl,color(white,black)>"
 #endif
-                "%2.2u:%2.2u:%2.2u  * MSG FROM HERCULES  : %s\n",
+                " %2.2u:%2.2u:%2.2u  * MSG FROM HERCULES: %s\n",
                     mytm->tm_hour,
                     mytm->tm_min,
                     mytm->tm_sec,
@@ -532,7 +547,6 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
                 "%s\n",msgtxt);
         }
     }
-    free(cline);
     return 0;
 }
 
