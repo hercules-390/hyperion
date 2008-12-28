@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.257  2008/12/28 06:11:47  ivan
+// MSG panel command support fixes
+//
 // Revision 1.256  2008/12/28 05:46:44  ivan
 // Emulate VM's MESSAGE & MSGNOH commands
 //
@@ -6922,6 +6925,9 @@ int ProcessPanelCommand (char* pszCmdLine)
             }
             else
             {
+#if !defined(MAX)
+#define MAX(_x,_y) ( ( ( _x ) > ( _y ) ) ? ( _x ) : ( _y ) )
+#endif
                 cmdl=MAX(strlen(cmd_argv[0]),pCmdTab->cmdAbbrev);
                 if(!strncasecmp(cmd_argv[0],pCmdTab->pszCommand,cmdl))
                 {
