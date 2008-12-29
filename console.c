@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.100  2008/12/28 21:05:08  rbowler
+// Integrated 3270 (SYSG) console attn/read commands
+//
 // Revision 1.99  2008/12/28 15:30:09  jj
 // SYSG and SYSA mods
 //
@@ -2386,7 +2389,6 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
                 dev->devnum);
             return -1;
         }
-        sysblk.sysgdev = dev;
     }
   #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
 
@@ -2456,6 +2458,15 @@ loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
             }
         }
     }
+
+  #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+    /* Extra initialisation for the SYSG console */
+    if (strcasecmp(dev->typname,"SYSG") == 0)
+    {
+        /* Save the address of the SYSG console devblk */
+        sysblk.sysgdev = dev;
+    }
+  #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
 
     return console_initialise();
 } /* end function loc3270_init_handler */
