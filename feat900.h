@@ -4,6 +4,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.87  2008/12/29 11:03:10  jj
+// Move HMC disk I/O functions to scedasd.c
+//
 // Revision 1.86  2008/12/24 22:35:53  rbowler
 // Framework for integrated 3270 and ASCII console features
 //
@@ -139,8 +142,8 @@
 #define FEATURE_IEEE_EXCEPTION_SIMULATION                       /*407*/
 #define FEATURE_IMMEDIATE_AND_RELATIVE
 #define FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
-#define FEATURE_INTEGRATED_3270_CONSOLE
-#define FEATURE_INTEGRATED_ASCII_CONSOLE
+//#define FEATURE_INTEGRATED_3270_CONSOLE
+//#define FEATURE_INTEGRATED_ASCII_CONSOLE
 #define FEATURE_INTERPRETIVE_EXECUTION
 #define FEATURE_IO_ASSIST
 #define FEATURE_LINKAGE_STACK
