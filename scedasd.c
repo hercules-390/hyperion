@@ -4,6 +4,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.1  2008/12/29 11:03:11  jj
+// Move HMC disk I/O functions to scedasd.c
+//
 
 #include "hstdinc.h"
 
@@ -20,6 +23,25 @@
 #if !defined(_SCEDASD_C)
 #define _SCEDASD_C
 
+static char sce_base_dir[1024];
+
+static char *set_base_dir(char *path)
+{
+char *base_dir;
+
+    strlcpy(sce_base_dir,path,sizeof(sce_base_dir));
+
+    if((base_dir = strrchr(sce_base_dir,'/')))
+    {
+        *(++base_dir) = '\0';
+        return strrchr(path,'/') + 1;
+    }
+    else
+    {
+        *sce_base_dir = '\0';
+        return path;
+    }
+}
 
 #endif /* !defined(_SCEDASD_C) */
 
@@ -48,8 +70,6 @@ int ARCH_DEP(load_hmc) (char *fname, int cpu, int clear)
 REGS   *regs;                           /* -> Regs                   */
 FILE   *fp;
 char    inputline[1024];
-char    dirname[1024];                  /* dirname of ins file       */
-char   *dirbase;
 char    filename[1024];                 /* filename of image file    */
 char    pathname[1024];                 /* pathname of image file    */
 U32     fileaddr;
@@ -66,12 +86,15 @@ int     rc, rx;                         /* Return codes (work)       */
     if(fname == NULL)                   /* Default ipl from DASD     */
         fname = "HERCULES.ins";         /*   from HERCULES.ins       */
 
-    /* remove filename from pathname */
     hostpath(pathname, fname, sizeof(filename));
-    strlcpy(dirname,pathname,sizeof(dirname));
-    dirbase = strrchr(dirname,'/');
-    if(dirbase) *(++dirbase) = '\0';
 
+    fname = set_base_dir(pathname);
+
+    /* reconstruct full name */
+    strlcpy(filename,sce_base_dir,sizeof(filename));
+    strlcat(filename,fname,sizeof(filename));
+
+    hostpath(pathname, filename, sizeof(filename));
     fp = fopen(pathname, "r");
     if(fp == NULL)
     {
@@ -94,7 +117,7 @@ int     rc, rx;                         /* Return codes (work)       */
         {
             /* Prepend the directory name if one was found
                and if no full pathname was specified */
-            if(dirbase &&
+            if(
 #ifndef WIN32
                 filename[0] != '/'
 #else // WIN32
@@ -102,7 +125,7 @@ int     rc, rx;                         /* Return codes (work)       */
 #endif // !WIN32
             )
             {
-                strlcpy(pathname,dirname,sizeof(pathname));
+                strlcpy(pathname,sce_base_dir,sizeof(pathname));
                 strlcat(pathname,filename,sizeof(pathname));
             }
             else
