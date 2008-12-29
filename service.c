@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.101  2008/12/28 21:05:08  rbowler
+// Integrated 3270 (SYSG) console attn/read commands
+//
 // Revision 1.100  2008/12/28 15:30:09  jj
 // SYSG and SYSA mods
 //
@@ -141,12 +144,13 @@
 /*-------------------------------------------------------------------*/
 static  U32     servc_cp_recv_mask;     /* Syscons CP receive mask   */
 static  U32     servc_cp_send_mask;     /* Syscons CP send mask      */
+static  U32     servc_attn_pending;     /* Attention pending mask    */
 static  char    servc_scpcmdstr[123+1]; /* Operator command string   */
-static  int     servc_scpcmdtype;       /* Operator command type     */
-
-static  int     servc_signal_quiesce_pending = 0;  /* Signal Quiesce */
 static  U16     servc_signal_quiesce_count;
 static  BYTE    servc_signal_quiesce_unit;
+
+#define SCLP_RECV_ENABLED(_type) \
+    (servc_cp_recv_mask & (0x80000000 >> ((_type)-1)))
 
 /*-------------------------------------------------------------------*/
 /* Reset the service processor to its initial state                  */
@@ -155,9 +159,7 @@ void sclp_reset()
 {
     servc_cp_recv_mask = 0;
     servc_cp_send_mask = 0;
-    servc_scpcmdstr[0] = '\0';
-    servc_scpcmdtype = 0;
-    servc_signal_quiesce_pending = 0;
+    servc_attn_pending = 0;
     servc_signal_quiesce_count = 0;
     servc_signal_quiesce_unit = 0;
 
@@ -169,8 +171,11 @@ void sclp_reset()
 /* Raise service signal external interrupt                           */
 /* (the caller is expected to hold the interrupt lock)               */
 /*-------------------------------------------------------------------*/
-void sclp_attention()
+static void sclp_attention(U16 type)
 {
+    /* Set pending mask */
+    servc_attn_pending |= 0x80000000 >> (type -1);
+
     /* Ignore request if already pending */
     if (!(IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_PEND)))
     {
@@ -181,6 +186,21 @@ void sclp_attention()
         ON_IC_SERVSIG;
         WAKEUP_CPUS_MASK (sysblk.waiting_mask);
     }
+}
+
+
+static U32 sclp_attn_pending(U16 type)
+{
+U32 pending;
+
+    if(type)
+    {
+        pending = servc_attn_pending & (0x80000000 >> (type -1));
+        servc_attn_pending &= ~pending;
+        return pending;
+    }
+    else
+        return servc_attn_pending;
 }
 
 
@@ -199,14 +219,14 @@ void sclp_attention()
 void scp_command (char *command, int priomsg)
 {
     /* Error if disabled for priority messages */
-    if (priomsg && !(servc_cp_recv_mask & 0x00800000))
+    if (priomsg && !SCLP_RECV_ENABLED(SCCB_EVD_TYPE_PRIOR))
     {
         logmsg (_("HHCCP036E SCP not receiving priority messages\n"));
         return;
     }
 
     /* Error if disabled for commands */
-    if (!priomsg && !(servc_cp_recv_mask & 0x80000000))
+    if (!priomsg && !SCLP_RECV_ENABLED(SCCB_EVD_TYPE_OPCMD))
     {
         logmsg (_("HHCCP037E SCP not receiving commands\n"));
         return;
@@ -223,19 +243,134 @@ void scp_command (char *command, int priomsg)
     OBTAIN_INTLOCK(NULL);
 
     /* Save command string and message type for read event data */
-    servc_scpcmdtype = priomsg;
     strncpy (servc_scpcmdstr, command, sizeof(servc_scpcmdstr));
 
     /* Ensure termination of the command string */
     servc_scpcmdstr[sizeof(servc_scpcmdstr)-1] = '\0';
 
     /* Raise attention service signal */
-    sclp_attention();
+    sclp_attention( priomsg ? SCCB_EVD_TYPE_PRIOR : SCCB_EVD_TYPE_OPCMD );
 
     /* Release the interrupt lock */
     RELEASE_INTLOCK(NULL);
 
 } /* end function scp_command */
+
+
+static void sclp_opcmd_event(SCCB_HEADER *sccb, U16 type)
+{
+static BYTE     const1_template[] = {
+        0x13,0x10,                      /* MDS message unit          */
+        0x00,0x25,0x13,0x11,            /* MDS routine info          */
+             0x0E,0x81,                 /* origin location name      */
+                  0x03,0x01,0x00,       /* Net ID                    */
+                  0x03,0x02,0x00,       /* NAU Name                  */
+                  0x06,0x03,0x00,0x00,0x00,0x00,  /* Appl id         */
+             0x0E,0x82,                 /* Destinition location name */
+                  0x03,0x01,0x00,       /* Net ID                    */
+                  0x03,0x02,0x00,       /* NAU Name                  */
+                  0x06,0x03,0x00,0x00,0x00,0x00,  /* Appl id         */
+             0x05,0x90,0x00,0x00,0x00,  /* Flags (MDS type = req)    */
+        0x00,0x0C,0x15,0x49,            /* Agent unit-of-work        */
+             0x08,0x01,                 /* Requestor loc name        */
+                  0x03,0x01,0x00,       /* Requestor Net ID          */
+                  0x03,0x02,0x00        /* Requestor Node ID         */
+        };
+
+static BYTE    const2_template[] = {
+        0x12,0x12,                      /* CP-MSU                    */
+        0x00,0x12,0x15,0x4D,            /* RTI                       */
+             0x0E,0x06,                 /* Name List                 */
+                  0x06,0x10,0x00,0x03,0x00,0x00,  /* Cascaded
+                                                       resource list */
+                  0x06,0x60,0xD6,0xC3,0xC6,0xC1,  /* OAN (C'OCFA')   */
+        0x00,0x04,0x80,0x70             /* Operate request           */
+        };
+
+static BYTE    const3_template[] = {
+        0x13,0x20                       /* Text data                 */
+        };
+
+static BYTE    const4_template = {
+        0x31                            /* Self-defining             */
+        };
+
+static BYTE    const5_template = {
+        0x30                            /* Text data                 */
+        };
+
+U16 sccb_len;
+U16 evd_len;
+int event_msglen;
+int i;
+
+SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
+SCCB_EVD_BK *evd_bk = (SCCB_EVD_BK*)(evd_hdr+1);
+BYTE *event_msg = (BYTE*)(evd_bk+1);
+
+    /* Get SCCB length */
+    FETCH_HW(sccb_len, sccb->length);
+
+    /* Command length */
+    event_msglen = strlen(servc_scpcmdstr);
+
+    /* Calculate required EVD length */
+    evd_len = event_msglen + sizeof(SCCB_EVD_HDR) + sizeof(SCCB_EVD_BK);
+
+    /* Set response code X'75F0' if SCCB length exceeded */
+    if ((evd_len + sizeof(SCCB_HEADER)) > sccb_len)
+    {
+        sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
+        sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
+        return;
+    }
+
+    /* Zero all fields */
+    memset (evd_hdr, 0, evd_len);
+
+    /* Update SCCB length field if variable request */
+    if (sccb->type & SCCB_TYPE_VARIABLE)
+    {
+        /* Set new SCCB length */
+        sccb_len = evd_len + sizeof(SCCB_HEADER);
+        STORE_HW(sccb->length, sccb_len);
+        sccb->type &= ~SCCB_TYPE_VARIABLE;
+    }
+
+    /* Set length in event header */
+    STORE_HW(evd_hdr->totlen, evd_len);
+
+    /* Set type in event header */
+    evd_hdr->type = type;
+
+    /* Set message length in event data block */
+    i = evd_len - sizeof(SCCB_EVD_HDR);
+    STORE_HW(evd_bk->msglen, i);
+    memcpy (evd_bk->const1, const1_template,
+                            sizeof(const1_template));
+    i -= sizeof(const1_template) + 2;
+    STORE_HW(evd_bk->cplen, i);
+    memcpy (evd_bk->const2, const2_template,
+                            sizeof(const2_template));
+    i -= sizeof(const2_template) + 2;
+    STORE_HW(evd_bk->tdlen, i);
+    memcpy (evd_bk->const3, const3_template,
+                            sizeof(const3_template));
+    i -= sizeof(const3_template) + 2;
+    evd_bk->sdtlen = i;
+    evd_bk->const4 = const4_template;
+    i -= 2;
+    evd_bk->tmlen = i;
+    evd_bk->const5 = const5_template;
+
+    /* Copy and translate command */
+    for (i = 0; i < event_msglen; i++)
+            event_msg[i] = host_to_guest(servc_scpcmdstr[i]);
+
+    /* Set response code X'0020' in SCCB header */
+    sccb->reas = SCCB_REAS_NONE;
+    sccb->resp = SCCB_RESP_COMPLETE;
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -250,7 +385,7 @@ void scp_command (char *command, int priomsg)
 /*-------------------------------------------------------------------*/
 int can_signal_quiesce()
 {
-    return (servc_cp_recv_mask & (0x80000000 >> (SCCB_EVD_TYPE_SIGQ-1)));
+    return SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ);
 }
 
 
@@ -268,7 +403,7 @@ int can_signal_quiesce()
 int signal_quiesce (U16 count, BYTE unit)
 {
     /* Error if disabled for commands */
-    if (!(servc_cp_recv_mask & (0x80000000 >> (SCCB_EVD_TYPE_SIGQ-1))))
+    if (!SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ-1))
     {
         logmsg (_("HHCCP081E SCP not receiving quiesce signals\n"));
         return -1;
@@ -281,15 +416,58 @@ int signal_quiesce (U16 count, BYTE unit)
     servc_signal_quiesce_count = count;
     servc_signal_quiesce_unit = unit;
 
-    servc_signal_quiesce_pending = 1;
-
-    sclp_attention();
+    sclp_attention(SCCB_EVD_TYPE_SIGQ);
 
     /* Release the interrupt lock */
     RELEASE_INTLOCK(NULL);
 
     return 0;
 } /* end function signal_quiesce */
+
+
+static void sclp_sigq_event(SCCB_HEADER *sccb)
+{
+U16 sccb_len;
+U16 evd_len;
+SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
+SCCB_SGQ_BK *sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
+
+    FETCH_HW(sccb_len, sccb->length);
+    evd_len = sizeof(SCCB_EVD_HDR) + sizeof(SCCB_SGQ_BK);
+
+    /* Set response code X'75F0' if SCCB length exceeded */
+    if ((evd_len + sizeof(SCCB_HEADER)) > sccb_len)
+    {
+        sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
+        sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
+        return;
+    }
+
+    /* Zero all fields */
+    memset (evd_hdr, 0, evd_len);
+
+    /* Update SCCB length field if variable request */
+    if (sccb->type & SCCB_TYPE_VARIABLE)
+    {
+        /* Set new SCCB length */
+        sccb_len = evd_len + sizeof(SCCB_HEADER);
+        STORE_HW(sccb->length, sccb_len);
+        sccb->type &= ~SCCB_TYPE_VARIABLE;
+    }
+
+    /* Set length in event header */
+    STORE_HW(evd_hdr->totlen, evd_len);
+
+    /* Set type in event header */
+    evd_hdr->type = SCCB_EVD_TYPE_SIGQ;
+
+    STORE_HW(sgq_bk->count, servc_signal_quiesce_count);
+    sgq_bk->unit = servc_signal_quiesce_unit;
+
+    /* Set response code X'0020' in SCCB header */
+    sccb->reas = SCCB_REAS_NONE;
+    sccb->resp = SCCB_RESP_COMPLETE;
+}
 
 
 #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
@@ -378,7 +556,7 @@ U16             residual;               /* Residual data count       */
     sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
 
     //sclp_sysg_read = 1;
-    //sclp_attention();
+    //sclp_attention(SCCB_EVD_TYPE_VT220);
 
     return 0; // write ok
 }
@@ -505,7 +683,7 @@ void sclp_sysg_attention(U32 event_type)
     OBTAIN_INTLOCK(NULL);
 
     sclp_sysg_read = 1;
-    sclp_attention();
+    sclp_attention(SCCB_EVD_TYPE_SYSG);
 
     RELEASE_INTLOCK(NULL);
 }
@@ -542,7 +720,7 @@ int i;
     sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
 
     //sclp_sysa_read = 1;
-    //sclp_attention();
+    //sclp_attention(SCCB_EVD_TYPE_VT220);
 
     return 0; // write ok
 }
@@ -569,21 +747,18 @@ int sclp_sysa_poll(SCCB_HEADER *sccb, SCCB_EVD_HDR *evd_hdr)
 
 #define SR_SYS_SERVC_RECVMASK    ( SR_SYS_SERVC | 0x001 )
 #define SR_SYS_SERVC_SENDMASK    ( SR_SYS_SERVC | 0x002 )
-#define SR_SYS_SERVC_SCPCMD      ( SR_SYS_SERVC | 0x003 )
-#define SR_SYS_SERVC_SCPTYPE     ( SR_SYS_SERVC | 0x004 )
-#define SR_SYS_SERVC_SQP         ( SR_SYS_SERVC | 0x005 )
-#define SR_SYS_SERVC_SQC         ( SR_SYS_SERVC | 0x006 )
-#define SR_SYS_SERVC_SQU         ( SR_SYS_SERVC | 0x007 )
-#define SR_SYS_SERVC_PARM        ( SR_SYS_SERVC | 0x008 )
+#define SR_SYS_SERVC_PENDING     ( SR_SYS_SERVC | 0x003 )
+#define SR_SYS_SERVC_SCPCMD      ( SR_SYS_SERVC | 0x004 )
+#define SR_SYS_SERVC_SQC         ( SR_SYS_SERVC | 0x005 )
+#define SR_SYS_SERVC_SQU         ( SR_SYS_SERVC | 0x006 )
+#define SR_SYS_SERVC_PARM        ( SR_SYS_SERVC | 0x007 )
 
 int servc_hsuspend(void *file)
 {
     SR_WRITE_VALUE(file, SR_SYS_SERVC_RECVMASK, servc_cp_recv_mask, sizeof(servc_cp_recv_mask));
     SR_WRITE_VALUE(file, SR_SYS_SERVC_SENDMASK, servc_cp_send_mask, sizeof(servc_cp_send_mask));
+    SR_WRITE_VALUE(file, SR_SYS_SERVC_PENDING, servc_attn_pending, sizeof(servc_attn_pending));
     SR_WRITE_STRING(file, SR_SYS_SERVC_SCPCMD,  servc_scpcmdstr);
-    SR_WRITE_VALUE(file, SR_SYS_SERVC_SCPTYPE,  servc_scpcmdtype,   sizeof(servc_scpcmdtype));
-    SR_WRITE_VALUE(file, SR_SYS_SERVC_SQP,      servc_signal_quiesce_pending,
-                                         sizeof(servc_signal_quiesce_pending));
     SR_WRITE_VALUE(file, SR_SYS_SERVC_SQC,      servc_signal_quiesce_count,
                                          sizeof(servc_signal_quiesce_count));
     SR_WRITE_VALUE(file, SR_SYS_SERVC_SQU,      servc_signal_quiesce_unit,
@@ -607,9 +782,11 @@ int servc_hresume(void *file)
         case SR_SYS_SERVC_SENDMASK:
             SR_READ_VALUE(file, len, &servc_cp_send_mask, sizeof(servc_cp_send_mask));
             break;
-        case SR_SYS_SERVC_SQP:
-            SR_READ_VALUE(file, len, &servc_signal_quiesce_pending,
-                              sizeof(servc_signal_quiesce_pending));
+        case SR_SYS_SERVC_PENDING:
+            SR_READ_VALUE(file, len, &servc_attn_pending, sizeof(servc_attn_pending));
+            break;
+        case SR_SYS_SERVC_SCPCMD:
+            SR_READ_STRING(file, servc_scpcmdstr, sizeof(servc_scpcmdstr));
             break;
         case SR_SYS_SERVC_SQC:
             SR_READ_VALUE(file, len, &servc_signal_quiesce_count,
@@ -885,9 +1062,7 @@ U32             chpbit;                 /* Bit number for CHPID      */
 SCCB_EVENT_MASK*evd_mask;               /* Event mask                */
 SCCB_EVD_HDR   *evd_hdr;                /* Event header              */
 U16             evd_len;                /* Length of event data      */
-SCCB_EVD_BK    *evd_bk;                 /* Event data                */
 SCCB_MCD_BK    *mcd_bk;                 /* Message Control Data      */
-SCCB_SGQ_BK    *sgq_bk;                 /* Signal Quiesce            */
 U16             mcd_len;                /* Length of MCD             */
 SCCB_OBJ_HDR   *obj_hdr;                /* Object Header             */
 U16             obj_len;                /* Length of Object          */
@@ -898,46 +1073,6 @@ int             event_msglen;           /* Message Text length       */
 SCCB_CPI_BK    *cpi_bk;                 /* Control Program Info      */
 BYTE            message[4089];          /* Maximum event data buffer
                                            length plus one for \0    */
-static BYTE     const1_template[] = {
-        0x13,0x10,                      /* MDS message unit          */
-        0x00,0x25,0x13,0x11,            /* MDS routine info          */
-             0x0E,0x81,                 /* origin location name      */
-                  0x03,0x01,0x00,       /* Net ID                    */
-                  0x03,0x02,0x00,       /* NAU Name                  */
-                  0x06,0x03,0x00,0x00,0x00,0x00,  /* Appl id         */
-             0x0E,0x82,                 /* Destinition location name */
-                  0x03,0x01,0x00,       /* Net ID                    */
-                  0x03,0x02,0x00,       /* NAU Name                  */
-                  0x06,0x03,0x00,0x00,0x00,0x00,  /* Appl id         */
-             0x05,0x90,0x00,0x00,0x00,  /* Flags (MDS type = req)    */
-        0x00,0x0C,0x15,0x49,            /* Agent unit-of-work        */
-             0x08,0x01,                 /* Requestor loc name        */
-                  0x03,0x01,0x00,       /* Requestor Net ID          */
-                  0x03,0x02,0x00        /* Requestor Node ID         */
-        };
-
-static BYTE    const2_template[] = {
-        0x12,0x12,                      /* CP-MSU                    */
-        0x00,0x12,0x15,0x4D,            /* RTI                       */
-             0x0E,0x06,                 /* Name List                 */
-                  0x06,0x10,0x00,0x03,0x00,0x00,  /* Cascaded
-                                                       resource list */
-                  0x06,0x60,0xD6,0xC3,0xC6,0xC1,  /* OAN (C'OCFA')   */
-        0x00,0x04,0x80,0x70             /* Operate request           */
-        };
-
-static BYTE    const3_template[] = {
-        0x13,0x20                       /* Text data                 */
-        };
-
-static BYTE    const4_template = {
-        0x31                            /* Self-defining             */
-        };
-
-static BYTE    const5_template = {
-        0x30                            /* Text data                 */
-        };
-
 U32             masklen;                /* Length of event mask      */
 U32             old_cp_recv_mask;       /* Masks before write event  */
 U32             old_cp_send_mask;       /*              mask command */
@@ -1455,166 +1590,71 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             break;
         }
 
-        /* Set response code X'62F0' if CP receive mask is zero */
-        if (servc_cp_recv_mask == 0)
+        /* Point to SCCB data area following SCCB header */
+        evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
+
+        if(SCLP_RECV_ENABLED(SCCB_EVD_TYPE_PRIOR) && sclp_attn_pending(SCCB_EVD_TYPE_PRIOR))
+        {
+            sclp_opcmd_event(sccb, SCCB_EVD_TYPE_PRIOR);
+            break;
+        }
+
+        if(SCLP_RECV_ENABLED(SCCB_EVD_TYPE_OPCMD) && sclp_attn_pending(SCCB_EVD_TYPE_OPCMD))
+        {
+            sclp_opcmd_event(sccb, SCCB_EVD_TYPE_OPCMD);
+            break;
+        }
+
+#if defined(FEATURE_INTEGRATED_3270_CONSOLE)
+        if(SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SYSG) && sclp_attn_pending(SCCB_EVD_TYPE_SYSG))
+            /* Return SYSG console input data if present */
+            if (sclp_sysg_poll(sccb, evd_hdr))
+            {
+                /* Set response code X'0020' in SCCB header */
+                sccb->reas = SCCB_REAS_NONE;
+                sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
+                break;
+            }
+#endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
+
+
+#if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
+        if(SCLP_RECV_ENABLED(SCCB_EVD_TYPE_VT220) && sclp_attn_pending(SCCB_EVD_TYPE_VT220))
+            /* Return SYSA console input data if present */
+            if (sclp_sysa_poll(sccb, evd_hdr))
+            {
+                /* Set response code X'0020' in SCCB header */
+                sccb->reas = SCCB_REAS_NONE;
+                sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
+                break;
+            }
+#endif /*defined(FEATURE_INTEGRATED_ASCII_CONSOLE)*/
+
+        if(SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ) && sclp_attn_pending(SCCB_EVD_TYPE_SIGQ))
+        {
+            sclp_sigq_event(sccb);
+            break;
+        }
+
+        if( HDC3(debug_sclp_event_data, evd_hdr, sccb, regs) )
+            break;
+
+        /* Set response code X'62F0' if events are pending but suppressed */
+        if(sclp_attn_pending(0))
         {
             sccb->reas = SCCB_REAS_EVENTS_SUP;
             sccb->resp = SCCB_RESP_EVENTS_SUP;
             break;
         }
-
-        /* Point to SCCB data area following SCCB header */
-        evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
-
-#if defined(FEATURE_INTEGRATED_3270_CONSOLE)
-        /* Return SYSG console input data if present */
-        if (sclp_sysg_poll(sccb, evd_hdr))
+        else
         {
-            /* Set response code X'0020' in SCCB header */
-            sccb->reas = SCCB_REAS_NONE;
-            sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
-            break;
+            /* Set response code X'60F0' if no outstanding events */
+            sccb->reas = SCCB_REAS_NO_EVENTS;
+            sccb->resp = SCCB_RESP_NO_EVENTS;
         }
-#endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
-
-
-#if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
-        /* Return SYSA console input data if present */
-        if (sclp_sysa_poll(sccb, evd_hdr))
-        {
-            /* Set response code X'0020' in SCCB header */
-            sccb->reas = SCCB_REAS_NONE;
-            sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
-            break;
-        }
-#endif /*defined(FEATURE_INTEGRATED_ASCII_CONSOLE)*/
-
-
-        if( HDC3(debug_sclp_event_data, evd_hdr, sccb, regs) )
-            break;
-
-        /* Set response code X'60F0' if no outstanding events */
-        event_msglen = strlen(servc_scpcmdstr);
-        if (event_msglen == 0)
-        {
-            if(servc_signal_quiesce_pending)
-            {
-                sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
-                evd_len = sizeof(SCCB_EVD_HDR) + sizeof(SCCB_SGQ_BK);
-
-                /* Set response code X'75F0' if SCCB length exceeded */
-                if ((evd_len + sizeof(SCCB_HEADER)) > sccblen)
-                {
-                    sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
-                    sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
-                    break;
-                }
-
-                /* Zero all fields */
-                memset (evd_hdr, 0, evd_len);
-
-                /* Update SCCB length field if variable request */
-                if (sccb->type & SCCB_TYPE_VARIABLE)
-                {
-                    /* Set new SCCB length */
-                    sccblen = evd_len + sizeof(SCCB_HEADER);
-                    STORE_HW(sccb->length, sccblen);
-                    sccb->type &= ~SCCB_TYPE_VARIABLE;
-                }
-
-                /* Set length in event header */
-                STORE_HW(evd_hdr->totlen, evd_len);
-
-                /* Set type in event header */
-                evd_hdr->type = SCCB_EVD_TYPE_SIGQ;
-
-                STORE_HW(sgq_bk->count, servc_signal_quiesce_count);
-                sgq_bk->unit = servc_signal_quiesce_unit;
-
-                servc_signal_quiesce_pending = 0;
-
-                /* Set response code X'0020' in SCCB header */
-                sccb->reas = SCCB_REAS_NONE;
-                sccb->resp = SCCB_RESP_COMPLETE;
-
-                break;
-            }
-            else
-            {
-                sccb->reas = SCCB_REAS_NO_EVENTS;
-                sccb->resp = SCCB_RESP_NO_EVENTS;
-            }
-            break;
-        }
-
-        /* Point to the Event Data Block */
-        evd_bk = (SCCB_EVD_BK*)(evd_hdr+1);
-
-        /* Point to SCP command */
-        event_msg = (BYTE*)(evd_bk+1);
-
-        evd_len = event_msglen +
-                        sizeof(SCCB_EVD_HDR) + sizeof(SCCB_EVD_BK);
-
-        /* Set response code X'75F0' if SCCB length exceeded */
-        if ((evd_len + sizeof(SCCB_HEADER)) > sccblen)
-        {
-            sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
-            sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
-            break;
-        }
-
-        /* Zero all fields */
-        memset (evd_hdr, 0, evd_len);
-
-        /* Update SCCB length field if variable request */
-        if (sccb->type & SCCB_TYPE_VARIABLE)
-        {
-            /* Set new SCCB length */
-            sccblen = evd_len + sizeof(SCCB_HEADER);
-            STORE_HW(sccb->length, sccblen);
-            sccb->type &= ~SCCB_TYPE_VARIABLE;
-        }
-
-        /* Set length in event header */
-        STORE_HW(evd_hdr->totlen, evd_len);
-
-        /* Set type in event header */
-        evd_hdr->type = servc_scpcmdtype ?
-                        SCCB_EVD_TYPE_PRIOR : SCCB_EVD_TYPE_OPCMD;
-
-        /* Set message length in event data block */
-        i = evd_len - sizeof(SCCB_EVD_HDR);
-        STORE_HW(evd_bk->msglen, i);
-        memcpy (evd_bk->const1, const1_template,
-                                sizeof(const1_template));
-        i -= sizeof(const1_template) + 2;
-        STORE_HW(evd_bk->cplen, i);
-        memcpy (evd_bk->const2, const2_template,
-                                sizeof(const2_template));
-        i -= sizeof(const2_template) + 2;
-        STORE_HW(evd_bk->tdlen, i);
-        memcpy (evd_bk->const3, const3_template,
-                                sizeof(const3_template));
-        i -= sizeof(const3_template) + 2;
-        evd_bk->sdtlen = i;
-        evd_bk->const4 = const4_template;
-        i -= 2;
-        evd_bk->tmlen = i;
-        evd_bk->const5 = const5_template;
-
-        /* Copy and translate command */
-        for (i = 0; i < event_msglen; i++)
-                event_msg[i] = host_to_guest(servc_scpcmdstr[i]);
-
-        /* Clear the command string (It has been read) */
-        servc_scpcmdstr[0] = '\0';
-
-        /* Set response code X'0020' in SCCB header */
-        sccb->reas = SCCB_REAS_NONE;
-        sccb->resp = SCCB_RESP_COMPLETE;
 
         break;
+
 
     case SCLP_WRITE_EVENT_MASK:
 
@@ -1654,9 +1694,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         if((servc_cp_recv_mask & ~ARCH_DEP(sclp_recv_mask))
           || (servc_cp_send_mask & ~ARCH_DEP(sclp_send_mask)))
             HDC3(debug_sclp_unknown_event_mask, evd_mask, sccb, regs);
-
-        /* Clear any pending command */
-        servc_scpcmdstr[0] = '\0';
 
         /* Write the events that we support back */
         memset (&evd_mask->masks[2 * masklen], 0, 2 * masklen);
