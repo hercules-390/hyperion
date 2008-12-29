@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.102  2008/12/29 13:56:18  jj
+// Correction to sclp event suppression
+//
 // Revision 1.101  2008/12/28 21:05:08  rbowler
 // Integrated 3270 (SYSG) console attn/read commands
 //
@@ -403,7 +406,7 @@ int can_signal_quiesce()
 int signal_quiesce (U16 count, BYTE unit)
 {
     /* Error if disabled for commands */
-    if (!SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ-1))
+    if (!SCLP_RECV_ENABLED(SCCB_EVD_TYPE_SIGQ))
     {
         logmsg (_("HHCCP081E SCP not receiving quiesce signals\n"));
         return -1;
