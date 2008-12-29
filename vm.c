@@ -14,6 +14,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.47  2008/12/28 14:04:59  ivan
+// Allow DIAG8CMD NOECHO
+// This configures suppression of messages related to diag 8 issued by guests
+//
 // Revision 1.46  2007/08/07 19:47:59  ivan
 // Fix a couple of gcc-4.2 warnings
 //
@@ -778,7 +782,8 @@ BYTE    cmdflags;                       /* Command flags             */
 #define CMDFLAGS_RESPONSE       0x40    /* Return response in buffer */
 #define CMDFLAGS_REQPASSW       0x20    /* Prompt for password       */
 #define CMDFLAGS_RESERVED       0x1F    /* Reserved bits, must be 0  */
-char    buf[256];                       /* Command buffer (ASCIIZ)   */
+char    bufi[256];                      /* Command buffer (ASCIIZ)   */
+char    bufo[257];                      /* Command buffer (ASCIIZ)   */
 char    resp[256];                      /* Response buffer (ASCIIZ)  */
 char    *dresp;                         /* Default response (ASCIIZ) */
 int     freeresp;                       /* Flag to free resp bfr     */
@@ -795,7 +800,7 @@ int     j,k;
        is too long, or if response buffer is specified and
        registers are consecutive or either register
        specifies register 15 */
-    if ((cmdflags & CMDFLAGS_RESERVED) || cmdlen > sizeof(buf)-1
+    if ((cmdflags & CMDFLAGS_RESERVED) || cmdlen > sizeof(bufi)-1
         || ((cmdflags & CMDFLAGS_RESPONSE)
             && (r1 == 15 || r2 == 15 || r1 == r2 + 1 || r2 == r1 + 1)))
     {
@@ -813,37 +818,44 @@ int     j,k;
     }
 
     /* Obtain the command string from storage */
-    ARCH_DEP(vfetchc) (buf, cmdlen-1, cmdaddr, USE_REAL_ADDR, regs);
+    ARCH_DEP(vfetchc) (bufi, cmdlen-1, cmdaddr, USE_REAL_ADDR, regs);
 
-    /* Translate EBCDIC command to ASCII */
-    for (i = 0; i < cmdlen; i++)
+    /* Prepend '-' if noecho is requested */
+    i=0;
+    if(sysblk.diag8cmd & 0x80)
     {
-        buf[i] = guest_to_host(buf[i]);
+        bufo[0]='-';
+        i=1;
     }
-    buf[i] = '\0';
+    /* Translate EBCDIC command to ASCII */
+    for (j=0; j < cmdlen; i++,j++)
+    {
+        bufo[i] = guest_to_host(bufi[j]);
+    }
+    bufo[i] = '\0';
     dresp="";
     freeresp=0;
 
-    if(*buf)
+    if(*bufo)
     {
 #ifdef FEATURE_HERCULES_DIAGCALLS
         int shcmd = 0;
         {
-            char* p = buf;
+            char* p = bufo;
             while (*p && isspace(*p)) p++;
             if ((*(p+0) == 's' || *(p+0) == 'S') &&
                 (*(p+1) == 'h' || *(p+1) == 'H') && 
                 isspace(*(p+2))) shcmd = 1;
         }
-        if (sysblk.diag8cmd
+        if ((sysblk.diag8cmd & 0x01)
             && (!shcmd || !(sysblk.shcmdopt & (SHCMDOPT_DISABLE | SHCMDOPT_NODIAG8)))
         )
         {
-            if(sysblk.diag8cmd<2)
-                logmsg (_("HHCVM001I *%s* panel command issued by guest\n"), buf);
+            if(!(sysblk.diag8cmd & 0x80))
+                logmsgp (_("HHCVM001I *%s* panel command issued by guest\n"), bufo);
             if (cmdflags & CMDFLAGS_RESPONSE)
             {
-                dresp=log_capture(panel_command,buf);
+                dresp=log_capture(panel_command,bufo);
                 if(dresp!=NULL)
                 {
                     freeresp=1;
@@ -855,13 +867,19 @@ int     j,k;
             }
             else
             {
-                panel_command(buf);
-                if(sysblk.diag8cmd<2)
-                    logmsg (_("HHCVM002I *%s* command complete\n"), buf);
+                panel_command(bufo);
+                if(!(sysblk.diag8cmd & 0x80))
+                    logmsgp (_("HHCVM002I *%s* command complete\n"), bufo);
             }
         }
         else
+        {
+            if(!(sysblk.diag8cmd & 0x80))
+            {
+                logmsgp (_("HHCVM005W *%s* panel command issued by guest (but disabled)\n"), bufo);
+            }
             dresp=_("HHCVM003I Host command processing disabled by configuration statement");
+        }
 #else
             dresp=_("HHCVM004E Host command processing not included in engine build");
 #endif

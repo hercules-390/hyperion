@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.258  2008/12/28 12:39:02  ivan
+// Define MAX() is not defined
+//
 // Revision 1.257  2008/12/28 06:11:47  ivan
 // MSG panel command support fixes
 //
@@ -7500,6 +7503,7 @@ void *panel_command (void *cmdline)
     char  cmd[MAX_CMD_LEN];             /* Copy of panel command     */
     char *pCmdLine;
     unsigned i;
+    int noredisp;
 
     pCmdLine = cmdline; ASSERT(pCmdLine);
     /* every command will be stored in history list */
@@ -7508,12 +7512,27 @@ void *panel_command (void *cmdline)
         history_add(cmdline);
 
     /* Copy panel command to work area, skipping leading blanks */
+
+    /* If the command starts with a -, then strip it and indicate
+     * we do not want command redisplay
+     */
+
+    noredisp=0;
     while (*pCmdLine && isspace(*pCmdLine)) pCmdLine++;
     i = 0;
     while (*pCmdLine && i < (MAX_CMD_LEN-1))
     {
-        cmd[i] = *pCmdLine;
-        i++;
+        if(i==0 && *pCmdLine=='-')
+        {
+            noredisp=1;
+            /* and remove blanks again.. */
+            while (*pCmdLine && isspace(*pCmdLine)) pCmdLine++;
+        }
+        else
+        {
+            cmd[i] = *pCmdLine;
+            i++;
+        }
         pCmdLine++;
     }
     cmd[i] = 0;
@@ -7524,7 +7543,10 @@ void *panel_command (void *cmdline)
         return NULL;
 
     /* Echo the command to the control panel */
-    logmsg( "%s\n", cmd);
+    if(!noredisp)
+    {
+        logmsg( "%s\n", cmd);
+    }
 
 #ifdef OPTION_CMDTGT
     /* check for herc, scp or pscp command */

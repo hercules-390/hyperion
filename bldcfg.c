@@ -31,6 +31,10 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.97  2008/12/28 14:04:59  ivan
+// Allow DIAG8CMD NOECHO
+// This configures suppression of messages related to diag 8 issued by guests
+//
 // Revision 1.96  2008/12/01 22:07:16  fish
 // remove unused #defines
 //
@@ -1965,30 +1969,77 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         /* Parse diag8cmd operand */
         if (sdiag8cmd != NULL)
         {
-            if (strcasecmp (sdiag8cmd, "enable") == 0)
+            char    *tokn;
+            char    *optcpy;
+            int     haveena=0,havedisa=0,haveecho=0,havenecho=0;
+            optcpy=strdup(sdiag8cmd);
+            tokn=strtok(optcpy,",");
+            while(tokn)
+            {
+                do
+                {
+                    if(strcasecmp(tokn,"enable")==0)
+                    {
+                        haveena=1;
+                        break;
+                    }
+                    if(strcasecmp(tokn,"disable")==0)
+                    {
+                        havedisa=1;
+                        break;
+                    }
+                    if(strcasecmp(tokn,"echo")==0)
+                    {
+                        haveecho=1;
+                        break;
+                    }
+                    if(strcasecmp(tokn,"noecho")==0)
+                    {
+                        havenecho=1;
+                        break;
+                    }
+                    fprintf(stderr, _("HHCCF052S Error in %s line %d: "
+                            "%s: invalid diag8cmd option\n"),
+                            fname, inc_stmtnum[inc_level], tokn);
+                    delayed_exit(1);
+                } while(0);
+                tokn=strtok(NULL,",");
+            }
+            free(optcpy);
+            if(haveena & havedisa)
+            {
+                /* can't have disable & enable together ! */
+                fprintf(stderr, _("HHCCF052S Error in %s line %d: "
+                        "invalid diag8cmd option : enable and disable are mutually exclusive\n"),
+                        fname, inc_stmtnum[inc_level]);
+                delayed_exit(1);
+            }
+            if(haveecho & havenecho)
+            {
+                /* can't have echo & noecho together ! */
+                fprintf(stderr, _("HHCCF053W Error in %s line %d: "
+                        "invalid diag8cmd option : echo and noecho are mutually exclusive. echo assumed\n"),
+                        fname, inc_stmtnum[inc_level]);
+                havenecho=0;
+            }
+            if(!haveecho && !havenecho)
+            {
+                haveecho=1;
+            }
+            if(!haveena && !havedisa)
+            {
+                havedisa=1;
+            }
+
+            diag8cmd=0;
+
+            if (haveena)
             {
                 diag8cmd = 1;
             }
-            else
+            if(havenecho)
             {
-                if (strcasecmp (sdiag8cmd, "disable") == 0)
-                {
-                    diag8cmd = 0;
-                }
-                else
-                {
-                    if (strcasecmp (sdiag8cmd, "noecho") == 0)
-                    {
-                        diag8cmd = 2;
-                    }
-                    else
-                    {
-                        fprintf(stderr, _("HHCCF052S Error in %s line %d: "
-                                "%s: invalid argument\n"),
-                                fname, inc_stmtnum[inc_level], sdiag8cmd);
-                        delayed_exit(1);
-                    }
-                }
+                diag8cmd|=0x80;
             }
         }
 
