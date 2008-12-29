@@ -5,6 +5,9 @@
 # $Id$
 #
 # $Log$
+# Revision 1.185  2008/12/04 17:39:02  rbowler
+# Add ability to configure group name with --enable-setuid-hercifc=name
+#
 # Revision 1.184  2008/12/01 16:19:49  jj
 # Check for licensed operating systems without impairing architectural
 # compliance of IFL's
@@ -394,6 +397,7 @@ endif
                        io.c         \
                        decimal.c    \
                        service.c    \
+                       scedasd.c    \
                        losc.c       \
                        chsc.c       \
                        opcode.c     \

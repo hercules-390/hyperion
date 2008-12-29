@@ -7,6 +7,9 @@
 VERSION  = \"3.05w32\"
 
 # $Log$
+# Revision 1.59  2008/12/01 20:28:21  rbowler
+# Add new module losc.c in build process
+#
 # Revision 1.58  2008/05/22 19:25:58  fish
 # Flex FakeTape support
 #
@@ -94,8 +97,8 @@ TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
 hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                version.o ipl.o assist.o dat.o stack.o cpu.o \
                vstore.o general1.o general2.o general3.o \
-               pfpo.o plo.o control.o \
-               io.o decimal.o service.o opcode.o diagnose.o \
+               pfpo.o plo.o control.o io.o decimal.o \
+	       service.o scedasd.c opcode.o diagnose.o \
                diagmssf.o vm.o channel.o ckddasd.o fbadasd.o \
                crypto.o external.o float.o trace.o chsc.o losc.o \
                machchk.o vector.o xstore.o cmpsc.o sie.o qdio.o \

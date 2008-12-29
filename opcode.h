@@ -7,6 +7,10 @@
 // $Id$
 //
 // $Log$
+// Revision 1.229  2008/12/21 02:51:58  ivan
+// Place the configuration in system check-stop state when a READ SCP INFO
+// is issued from a CPU that is not a CP Engine.
+//
 // Revision 1.228  2008/12/08 20:38:20  ivan
 // Fix SIE DAT Issue with ESA/390 Guest on z/Arch host with >2GB of storage
 //
@@ -2841,20 +2845,25 @@ void store_status (REGS *ssreg, U64 aaddr);
 
 
 /* Functions in module ipl.c */
-int          load_main          (char *fname, RADR startloc);
-int ARCH_DEP(load_main)         (char *fname, RADR startloc);
 int          load_ipl           (U16 lcss, U16  devnum, int cpu, int clear);
 int ARCH_DEP(load_ipl)          (U16 lcss, U16  devnum, int cpu, int clear);
-int          load_hmc           (char *fname, int cpu, int clear);
-int ARCH_DEP(load_hmc)          (char *fname, int cpu, int clear);
 int          system_reset       (             int cpu, int clear);
 int ARCH_DEP(system_reset)      (             int cpu, int clear);
 int          cpu_reset          (REGS *regs);
 int ARCH_DEP(cpu_reset)         (REGS *regs);
 int          initial_cpu_reset  (REGS *regs);
 int ARCH_DEP(initial_cpu_reset) (REGS *regs);
+int ARCH_DEP(common_load_begin)  (int cpu, int clear);
+int ARCH_DEP(common_load_finish) (REGS *regs);
 void storage_clear(void);
 void xstorage_clear(void);
+
+
+/* Functions in module scedasd.c */
+int          load_main          (char *fname, RADR startloc);
+int ARCH_DEP(load_main)         (char *fname, RADR startloc);
+int          load_hmc           (char *fname, int cpu, int clear);
+int ARCH_DEP(load_hmc)          (char *fname, int cpu, int clear);
 
 
 /* Functions in module machchk.c */
