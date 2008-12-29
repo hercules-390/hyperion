@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.103  2008/12/29 15:21:39  jj
+// Fix typo in signal quiesce
+//
 // Revision 1.102  2008/12/29 13:56:18  jj
 // Correction to sclp event suppression
 //
@@ -496,7 +499,7 @@ int sclp_sysg_write(SCCB_HEADER *sccb, SCCB_EVD_HDR *evd_hdr)
 {
 U16             evd_len;                /* SCCB event data length    */
 U16             sysg_len;               /* SYSG output data length   */
-#if 0
+#if 1
 int i;
 #endif
 DEVBLK         *dev;                    /* -> SYSG console devblk    */
@@ -510,7 +513,7 @@ U16             residual;               /* Residual data count       */
     sysg_data = (BYTE*)(evd_hdr+1);
     sysg_len = evd_len - sizeof(SCCB_EVD_HDR);
 
-#if 0
+#if 1
     /* Trace the 3270 datastream */
     logmsg(D_("SYSG write:"));
     for(i = 0; i < sysg_len; i++)
@@ -558,9 +561,6 @@ U16             residual;               /* Residual data count       */
     sccb->reas = SCCB_REAS_NONE;
     sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
 
-    //sclp_sysg_read = 1;
-    //sclp_attention(SCCB_EVD_TYPE_VT220);
-
     return 0; // write ok
 }
 
@@ -602,6 +602,10 @@ U16             residual;               /* Residual data count       */
         sysg_data = (BYTE*)(evd_hdr+1);
         sysg_len = evd_len - sizeof(SCCB_EVD_HDR);
 
+        /* Insert flag byte before the 3270 input data */
+        *sysg_data++ = 0x80;
+        sysg_len--;
+
         /* Execute a 3270 read-modified command */
         /* dev->hnd->exec points to loc3270_execute_ccw */
         (dev->hnd->exec) (dev, /*ccw opcode*/ 0x06,
@@ -629,11 +633,11 @@ U16             residual;               /* Residual data count       */
 
         /* Calculate actual length read */
         sysg_len -= residual;
-        evd_len = sysg_len + sizeof(SCCB_EVD_HDR);
+        evd_len -= residual;
 
 #if 1
         /* Trace the 3270 data */
-        logmsg(D_("SYSG poll\n"));
+        logmsg(D_("SYSG poll"));
         for(i = 0; i < sysg_len; i++)
         {
             if(!(i & 15))
@@ -1899,8 +1903,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
     } /* end switch(sclp_command) */
 
-#if 0
-    /*debug*/logmsg("service.c: command=%8.8X sccbaddr=%8.8X"
+#if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+    /*debug*/logmsg("Service call %8.8X SCCB=%8.8X"
     /*debug*/       " type=%2.2X reas=%2.2X resp=%2.2X\n",
     /*debug*/        sclp_command, sccb_real_addr,
     /*debug*/        sccb->type, sccb->reas, sccb->resp);
