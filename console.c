@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.101  2008/12/29 12:55:12  rbowler
+// Duplicate SYSG console definition message issued incorrectly
+//
 // Revision 1.100  2008/12/28 21:05:08  rbowler
 // Integrated 3270 (SYSG) console attn/read commands
 //
@@ -1865,7 +1868,7 @@ char                    *logoout;
            strncpy(conmsg,"SYSG",sizeof(conmsg));
   #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
         set_symbol("CCUU",conmsg);
-        snprintf(conmsg,sizeof(conmsg),"%4.4X",dev->devnum);
+        snprintf(conmsg,sizeof(conmsg),"%4.4x",dev->devnum);
         set_symbol("ccuu",conmsg);
         snprintf(conmsg,sizeof(conmsg),"%d",SSID_TO_LCSS(dev->ssid));
         set_symbol("CSS",conmsg);
