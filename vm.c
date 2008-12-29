@@ -14,6 +14,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.48  2008/12/29 00:00:55  ivan
+// Change semantics for DIAG8CMD configuration statement
+// Disable command redisplay at the console when NOECHO is set
+// Commands typed with a '-' as the first character are not redisplayed
+//
 // Revision 1.47  2008/12/28 14:04:59  ivan
 // Allow DIAG8CMD NOECHO
 // This configures suppression of messages related to diag 8 issued by guests
@@ -787,7 +792,7 @@ char    bufo[257];                      /* Command buffer (ASCIIZ)   */
 char    resp[256];                      /* Response buffer (ASCIIZ)  */
 char    *dresp;                         /* Default response (ASCIIZ) */
 int     freeresp;                       /* Flag to free resp bfr     */
-int     j,k;
+U32     j,k;
 
     /* Obtain command address from R1 register */
     cmdaddr = regs->GR_L(r1);
