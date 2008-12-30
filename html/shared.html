@@ -22,6 +22,7 @@ Hercules: Shared Device Server</TITLE>
 <hr noshade>
 <h2><a NAME="overview">Overview</a></h2>
 
+<p>
 (C) Copyright Greg Smith, 2002-2007
 
 <p>
@@ -50,6 +51,7 @@ For example:
     0100  3350  localhost:3990:0100
 </pre>
 
+<p>
 which says there is a device server on the local host listening
 on port 3990 and we want to use its 0100 device as 0100.  The
 default port is 3990 and the default remote device number is the
@@ -59,6 +61,7 @@ local device number.  So we could say:
     0100  3350  localhost
 </pre>
 
+<p>
 instead, providing we don't actually have a file 'localhost'.
 Interestingly, the instance on the local host listening on 3990
 could have a statement:
@@ -67,6 +70,7 @@ could have a statement:
     0100  3350  192.168.200.1::0200
 </pre>
 
+<p>
 which means that instance in turn will use device 0200 on the
 server at 192.168.200.1 listening on port 3990.  The original
 instance will have to 'hop' thru the second instance to get
@@ -83,6 +87,7 @@ For example, suppose instance A has:
     0101  3350  mvscat
 </pre>
 
+<p>
 and instance B has:
 
 <pre class="jcl">
@@ -91,6 +96,7 @@ and instance B has:
     0101  3350  localhost
 </pre>
 
+<p>
 Then each instance acts as both a client and as a server.
 
 <p>
@@ -107,6 +113,7 @@ to complete the connection (which is the device init handler).
 <p><br>
 
 <h2><a NAME="technical">Technical BS</a></h2>
+<p>
 
 There are (at least) two approaches to sharing devices.  One is to
 execute the channel program on the server system.   The server will
@@ -467,6 +474,7 @@ The server sends an 8 byte response header and maybe some data:
 <p><br>
 
 <h2><a NAME="caching">Caching</a></h2>
+<p>
 
 Cached records (eg CKD tracks or FBA blocks) are kept independently on
 both the client and server sides.  Whenever the client issues a START
@@ -479,6 +487,7 @@ the device.
 <p><br>
 
 <h2><a NAME="compression">Compression</a></h2>
+<p>
 
 Data that would normally be transferred uncompressed between client
 and host can optionally be compressed by specifying the '<code>comp=</code>'
@@ -488,6 +497,8 @@ For example:
 <pre class="jcl">
     0100  3350  192.168.2.12  comp=3
 </pre>
+
+<p>
 
 The value of the 'comp=' keyword is the zlib compression parameter
 which should be a number between 1 .. 9.  A value closer to 1 means
