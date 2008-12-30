@@ -165,6 +165,17 @@ HHCTE014I <em>type</em> device <em>devn</em> disconnected.
   <dt>Issued by
   <dd>console.c, function recv_3270_data
   </dl>
+<dt><code><a name="HHCTE017E">
+HHCTE017E Device <em>devn</em>: Duplicate SYSG console definition
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Device number <code><em>devn</em></code> has been defined as
+      an integrated 3270 (SYSG) console, but a SYSG console already
+      exists. Only one SYSG console can be defined per system.
+  <dt>Issued by
+  <dd>console.c, function loc3270_init_handler
+  </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>
