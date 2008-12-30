@@ -2,13 +2,24 @@
 /*              SCLP / MSSF loadparm                                 */
 
 // $Id$
-//
+
+/*-------------------------------------------------------------------*/
+/* This module contains functions which set, copy, and retrieve the  */
+/* values of the LOADPARM and LPARNAME parameters                    */
+/*-------------------------------------------------------------------*/
+
 // $Log$
+// Revision 1.12  2007/06/23 00:04:14  ivan
+// Update copyright notices to include current year (2007)
+//
 // Revision 1.11  2006/12/08 09:43:28  jj
 // Add CVS message log
 //
 
 #include "hstdinc.h"
+
+#define _HENGINE_DLL_
+#define _LOADPARM_C_
 
 #include "hercules.h"
 
@@ -77,6 +88,7 @@ void get_lparname(BYTE *dest)
 }
 
 
+LOADPARM_DLL_IMPORT
 char *str_lparname()
 {
     static char ret_lparname[sizeof(lparname)+1];

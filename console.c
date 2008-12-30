@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.102  2008/12/29 13:02:38  rbowler
+// herclogo symbol $(ccuu) should display lower case device number
+//
 // Revision 1.101  2008/12/29 12:55:12  rbowler
 // Duplicate SYSG console definition message issued incorrectly
 //
@@ -1858,6 +1861,7 @@ char                    *logoout;
         set_symbol("HOSTOSVER",cons_hostinfo.version);
         set_symbol("HOSTARCH",cons_hostinfo.machine);
         set_symbol("HOSTNUMCPUS",num_procs);
+        set_symbol("LPARNAME",str_lparname());
         snprintf(conmsg,sizeof(conmsg),"%3.3X",dev->devnum);
         set_symbol("CUU",conmsg);
         snprintf(conmsg,sizeof(conmsg),"%3.3x",dev->devnum);

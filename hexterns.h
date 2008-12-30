@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.24  2008/12/28 21:05:08  rbowler
+// Integrated 3270 (SYSG) console attn/read commands
+//
 // Revision 1.23  2008/12/24 15:42:14  jj
 // Add debug entry point for sclp event masks
 //
@@ -155,6 +158,16 @@
 #endif  /* _HENGINE_DLL_ */
 #else
 #define SERV_DLL_IMPORT DLL_EXPORT
+#endif
+
+#ifndef _LOADPARM_C_
+#ifndef _HENGINE_DLL_
+#define LOADPARM_DLL_IMPORT DLL_IMPORT
+#else   /* _HENGINE_DLL_ */
+#define LOADPARM_DLL_IMPORT extern
+#endif  /* _HENGINE_DLL_ */
+#else
+#define LOADPARM_DLL_IMPORT DLL_EXPORT
 #endif
 
 #if defined( _MSC_VER ) && (_MSC_VER >= 1300) && (_MSC_VER < 1400)
@@ -303,7 +316,7 @@ void get_loadparm(BYTE *dest);
 char *str_loadparm();
 void set_lparname(char *name);
 void get_lparname(BYTE *dest);
-char *str_lparname();
+LOADPARM_DLL_IMPORT char *str_lparname();
 
 #if defined(OPTION_SET_STSI_INFO)
 /* Functions in control.c */
