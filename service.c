@@ -23,6 +23,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.104  2008/12/29 22:40:53  rbowler
+// Integrated 3270 (SYSG) console corrections
+//
 // Revision 1.103  2008/12/29 15:21:39  jj
 // Fix typo in signal quiesce
 //
@@ -140,6 +143,9 @@
 
 #include "sr.h"
 
+#if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+ #define SYSG_DEBUG
+#endif
 
 #if !defined(_SERVICE_C)
 
@@ -154,6 +160,7 @@ static  U32     servc_attn_pending;     /* Attention pending mask    */
 static  char    servc_scpcmdstr[123+1]; /* Operator command string   */
 static  U16     servc_signal_quiesce_count;
 static  BYTE    servc_signal_quiesce_unit;
+static  BYTE    servc_sysg_cmdcode;     /* Pending SYSG read command */
 
 #define SCLP_RECV_ENABLED(_type) \
     (servc_cp_recv_mask & (0x80000000 >> ((_type)-1)))
@@ -168,6 +175,7 @@ void sclp_reset()
     servc_attn_pending = 0;
     servc_signal_quiesce_count = 0;
     servc_signal_quiesce_unit = 0;
+    servc_sysg_cmdcode = 0;
 
     sysblk.servparm = 0;
 }
@@ -505,17 +513,21 @@ int i;
 DEVBLK         *dev;                    /* -> SYSG console devblk    */
 BYTE           *sysg_data;              /* -> SYSG output data       */
 BYTE            unitstat;               /* Unit status               */
-BYTE            more;                   /* Flag for device handler   */
+BYTE            more = 0;               /* Flag for device handler   */
 U16             residual;               /* Residual data count       */
+BYTE            cmdcode;                /* 3270 read/write command   */
 
     /* Calculate the address and length of the 3270 datastream */
     FETCH_HW(evd_len,evd_hdr->totlen);
     sysg_data = (BYTE*)(evd_hdr+1);
     sysg_len = evd_len - sizeof(SCCB_EVD_HDR);
 
-#if 1
+    /* The first data byte is the 3270 command code */
+    cmdcode = *sysg_data;
+
+#ifdef SYSG_DEBUG
     /* Trace the 3270 datastream */
-    logmsg(D_("SYSG write:"));
+    logmsg(D_("SYSG write: evd_len=%4.4hX sysg_len=%4.4hX"),evd_len,sysg_len);
     for(i = 0; i < sysg_len; i++)
     {
         if(!(i & 15))
@@ -537,13 +549,50 @@ U16             residual;               /* Residual data count       */
         return -1;
     }
 
+    /* If it is a read CCW then save the command until READ_EVENT_DATA */
+    if (IS_CCW_READ(cmdcode))
+    {
+        servc_sysg_cmdcode = cmdcode;
+
+    #if 0
+        /* Force synchronous response */
+        if (!(sccb->flag & SCCB_FLAG_SYNC))
+        {
+    #ifdef SYSG_DEBUG
+        logmsg(D_("converting to synchronous response\n"));
+    #endif
+            sccb->flag |= SCCB_FLAG_SYNC;
+            RELEASE_INTLOCK(regs);
+        }
+    #endif
+
+        /* Indicate Event Processed */
+        evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
+
+        /* Generate a service call interrupt to trigger READ_EVENT_DATA */
+        sclp_sysg_attention(0);
+
+        /* Set response code X'0020' in SCCB header */
+        sccb->reas = SCCB_REAS_NONE;
+        sccb->resp = SCCB_RESP_COMPLETE;
+        return 0;
+    }
+
+    /* Indicate this is not a read command */
+    servc_sysg_cmdcode = 0;
+
     /* Execute the 3270 command in data block */
     /* dev->hnd->exec points to loc3270_execute_ccw */
-    (dev->hnd->exec) (dev, /*ccw opcode*/ *sysg_data,
+    (dev->hnd->exec) (dev, /*ccw opcode*/ cmdcode,
         /*flags*/ CCW_FLAGS_SLI, /*chained*/0,
         /*count*/ sysg_len - 1,
         /*prevcode*/ 0, /*ccwseq*/ 0, /*iobuf*/ sysg_data+1,
         &more, &unitstat, &residual);
+
+#ifdef SYSG_DEBUG
+    logmsg(D_("write more=%2.2X, unitstat=%2.2X residual=%4.4hX\n"),
+            more, unitstat, residual);
+#endif
 
     /* Indicate Event Processed */
     evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
@@ -587,7 +636,7 @@ int i;
 DEVBLK         *dev;                    /* -> SYSG console devblk    */
 BYTE           *sysg_data;              /* -> SYSG input data        */
 BYTE            unitstat;               /* Unit status               */
-BYTE            more;                   /* Flag for device handler   */
+BYTE            more = 0;               /* Flag for device handler   */
 U16             residual;               /* Residual data count       */
 
     dev = sysblk.sysgdev;
@@ -602,50 +651,69 @@ U16             residual;               /* Residual data count       */
         sysg_data = (BYTE*)(evd_hdr+1);
         sysg_len = evd_len - sizeof(SCCB_EVD_HDR);
 
+#ifdef SYSG_DEBUG
+        logmsg(D_("SYSG poll: sccblen=%4.4hX evd_len=%4.4hX sysg_len=%4.4X\n"),
+                sccblen, evd_len, sysg_len);
+#endif
+
         /* Insert flag byte before the 3270 input data */
         *sysg_data++ = 0x80;
         sysg_len--;
 
-        /* Execute a 3270 read-modified command */
-        /* dev->hnd->exec points to loc3270_execute_ccw */
-        (dev->hnd->exec) (dev, /*ccw opcode*/ 0x06,
-            /*flags*/ CCW_FLAGS_SLI, /*chained*/0,
-            /*count*/ sysg_len,
-            /*prevcode*/ 0, /*ccwseq*/ 0, /*iobuf*/ sysg_data,
-            &more, &unitstat, &residual);
-
-        /* Set response code X'0040' if unit check occurred */
-        if (unitstat & CSW_UC)
+        /* Execute previously saved 3270 read command */
+        if (IS_CCW_READ(servc_sysg_cmdcode))
         {
-            /* Set response code X'0040' in SCCB header */
-            sccb->reas = SCCB_REAS_NONE;
-            sccb->resp = SCCB_RESP_BACKOUT;
-            return 1;
-        }
+            /* Execute a 3270 read-modified command */
+            /* dev->hnd->exec points to loc3270_execute_ccw */
+            (dev->hnd->exec) (dev, /*ccw opcode*/ servc_sysg_cmdcode,
+                /*flags*/ CCW_FLAGS_SLI, /*chained*/0,
+                /*count*/ sysg_len,
+                /*prevcode*/ 0, /*ccwseq*/ 0, /*iobuf*/ sysg_data,
+                &more, &unitstat, &residual);
 
-        /* Set response code X'75F0' if SCCB length exceeded */
-        if (more)
-        {
-            sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
-            sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
-            return 1;
-        }
+            /* Clear the pending read command */
+            servc_sysg_cmdcode = 0;
 
-        /* Calculate actual length read */
-        sysg_len -= residual;
-        evd_len -= residual;
+    #ifdef SYSG_DEBUG
+            logmsg(D_("read more=%2.2X unitstat=%2.2X residual=%4.4hX\n"),
+                    more, unitstat, residual);
+    #endif
 
-#if 1
-        /* Trace the 3270 data */
-        logmsg(D_("SYSG poll"));
-        for(i = 0; i < sysg_len; i++)
-        {
-            if(!(i & 15))
-                logmsg("\n          %4.4X:", i);
-            logmsg(" %2.2X", sysg_data[i]);
+            /* Set response code X'0040' if unit check occurred */
+            if (unitstat & CSW_UC)
+            {
+                /* Set response code X'0040' in SCCB header */
+                sccb->reas = SCCB_REAS_NONE;
+                sccb->resp = SCCB_RESP_BACKOUT;
+                return 1;
+            }
+
+            /* Set response code X'75F0' if SCCB length exceeded */
+            if (more)
+            {
+                sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
+                sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
+                return 1;
+            }
+
+            /* Calculate actual length read */
+            sysg_len -= residual;
+            evd_len -= residual;
+
+    #ifdef SYSG_DEBUG
+            /* Trace the 3270 data */
+            logmsg(D_("3270 input data"));
+            for(i = 0; i < sysg_len; i++)
+            {
+                if(!(i & 15))
+                    logmsg("\n          %4.4X:", i);
+                logmsg(" %2.2X", sysg_data[i]);
+            }
+            logmsg("\n");
+    #endif
+        } else {
+            evd_len = sizeof(SCCB_EVD_HDR) + 1;
         }
-        logmsg("\n");
-#endif
 
         /* Update SCCB length field if variable request */
         if (sccb->type & SCCB_TYPE_VARIABLE)
@@ -1119,16 +1187,18 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     if ( sccb_absolute_addr > regs->mainlim )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-#if 0
-    /*debug*/logmsg("Service call %8.8X SCCB=%8.8X\n",
-    /*debug*/       sclp_command, sccb_absolute_addr);
-#endif
-
     /* Point to service call control block */
     sccb = (SCCB_HEADER*)(regs->mainstor + sccb_absolute_addr);
 
     /* Load SCCB length from header */
     FETCH_HW(sccblen, sccb->length);
+
+#ifdef SYSG_DEBUG
+    /*debug*/logmsg("Service call %8.8X SCCB=%8.8X len=%d"
+    /*debug*/       " flag=%2.2X type=%2.2X\n",
+    /*debug*/       sclp_command, sccb_absolute_addr, sccblen,
+    /*debug*/       sccb->flag, sccb->type);
+#endif
 
     /* Set the main storage reference bit */
     STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_REF;
@@ -1154,7 +1224,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
     }
 
-#if 0
+#if defined(SYSG_DEBUG) & 0
     /* Trace the SCCB */
     for(i = 0; i < (int)sccblen; i++)
     {
@@ -1722,7 +1792,11 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             else
                 logmsg (_("HHCCP042I SYSCONS interface inactive\n"));
         }
-// logmsg("cp_send_mask=%8.8X cp_recv_mask=%8.8X\n",servc_cp_send_mask,servc_cp_recv_mask);
+
+#ifdef SYSG_DEBUG
+        logmsg("cp_send_mask=%8.8X cp_recv_mask=%8.8X\n",
+                servc_cp_send_mask, servc_cp_recv_mask);
+#endif
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -1903,11 +1977,12 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
     } /* end switch(sclp_command) */
 
-#if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
-    /*debug*/logmsg("Service call %8.8X SCCB=%8.8X"
-    /*debug*/       " type=%2.2X reas=%2.2X resp=%2.2X\n",
-    /*debug*/        sclp_command, sccb_real_addr,
-    /*debug*/        sccb->type, sccb->reas, sccb->resp);
+#ifdef SYSG_DEBUG
+    FETCH_HW(sccblen, sccb->length);
+    /*debug*/logmsg("Service call %8.8X SCCB=%8.8X len=%d"
+    /*debug*/       " flag=%2.2X type=%2.2X reas=%2.2X resp=%2.2X\n",
+    /*debug*/       sclp_command, sccb_absolute_addr, sccblen,
+    /*debug*/       sccb->flag, sccb->type, sccb->reas, sccb->resp);
 #endif
 
     HDC3(debug_sclp_post_command, sclp_command, sccb, regs);
