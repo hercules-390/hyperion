@@ -18,6 +18,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.259  2008/12/29 00:00:54  ivan
+// Change semantics for DIAG8CMD configuration statement
+// Disable command redisplay at the console when NOECHO is set
+// Commands typed with a '-' as the first character are not redisplayed
+//
 // Revision 1.258  2008/12/28 12:39:02  ivan
 // Define MAX() is not defined
 //
@@ -3060,7 +3065,7 @@ char *cdev, *clcss;
     /* If the ipl device is not a valid hex number we assume */
     /* This is a load from the service processor             */
     if (sscanf(cdev, "%hx%c", &devnum, &c) != 1)
-        rc = load_hmc(strtok(cmdline+3," \t"), sysblk.pcpu, clear);
+        rc = load_hmc(strtok(cmdline+3+clear," \t"), sysblk.pcpu, clear);
     else
     {
         *--cdev = '\0';
