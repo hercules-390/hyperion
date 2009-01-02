@@ -1,3 +1,4 @@
+02 Jan 2009 Optional ECHO/NOECHO to Diag8cmd statement - Ivan Warren
 30 Dec 2008 Allow $(LPARNAME) in herclogo file - Roger Bowler
 23 Dec 2008 Allow symbol substitution in OAT files - Roger Bowler
 22 Dec 2008 Implement Compare And Swap And Store Facility 2 - Ivan Warren
