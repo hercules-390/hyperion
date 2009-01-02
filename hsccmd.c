@@ -1,5 +1,5 @@
-/* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2007                */
-/*              (c) Copyright "Fish" (David B. Trout), 2002-2007     */
+/* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2009                */
+/*              (c) Copyright "Fish" (David B. Trout), 2002-2009     */
 /*              Execute Hercules System Commands                     */
 /*                                                                   */
 /*   Released under the Q Public License                             */
@@ -18,6 +18,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.260  2009/01/01 02:00:41  hsg001
+// Allow iplc to work with service processor load
+//
 // Revision 1.259  2008/12/29 00:00:54  ivan
 // Change semantics for DIAG8CMD configuration statement
 // Disable command redisplay at the console when NOECHO is set
@@ -254,7 +257,6 @@
 #include "tapedev.h"
 #include "dasdtab.h"
 #include "ctcadpt.h"
-#include "service.h"
 
 ///////////////////////////////////////////////////////////////////////
 // (forward references, etc)

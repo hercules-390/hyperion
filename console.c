@@ -53,6 +53,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.103  2008/12/30 15:40:01  rbowler
+// Allow $(LPARNAME) in herclogo file
+//
 // Revision 1.102  2008/12/29 13:02:38  rbowler
 // herclogo symbol $(ccuu) should display lower case device number
 //
@@ -2264,7 +2267,7 @@ BYTE                   unitstat;        /* Status after receive data */
                 /* For the SYSG console, generate an external interrupt */
                 if (dev == sysblk.sysgdev && dev->connected)
                 {
-                    sclp_sysg_attention(0);
+                    sclp_sysg_attention();
                 }
               #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
 

@@ -10,6 +10,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.25  2008/12/30 15:40:01  rbowler
+// Allow $(LPARNAME) in herclogo file
+//
 // Revision 1.24  2008/12/28 21:05:08  rbowler
 // Integrated 3270 (SYSG) console attn/read commands
 //
@@ -284,8 +287,6 @@ HSYS_DLL_IMPORT void *(*debug_watchdog_signal)      (REGS *);
 HSYS_DLL_IMPORT void *(*debug_program_interrupt)    (REGS *, int);
 HSYS_DLL_IMPORT void *(*debug_diagnose)             (U32, int,  int, REGS *);
 HSYS_DLL_IMPORT void *(*debug_iucv)                 (int, VADR, REGS *);
-HSYS_DLL_IMPORT void *(*debug_sclp_pre_command)     (U32,    void *, REGS *);
-HSYS_DLL_IMPORT void *(*debug_sclp_post_command)    (U32,    void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_unknown_command) (U32,    void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_unknown_event)   (void *, void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_unknown_event_mask) (void *, void *, REGS *);
@@ -301,8 +302,6 @@ void panel_display (void);
 #define debug_program_interrupt         NULL
 #define debug_diagnose                  NULL
 #define debug_iucv                      NULL
-#define debug_sclp_pre_command          NULL
-#define debug_sclp_post_command         NULL
 #define debug_sclp_unknown_command      NULL
 #define debug_sclp_unknown_event        NULL
 #define debug_sclp_event_data           NULL
@@ -343,8 +342,9 @@ void *timer_update_thread (void *argp);
 void scp_command (char *command, int priomsg);
 int can_signal_quiesce ();
 int signal_quiesce (U16 count, BYTE unit);
+void sclp_attention(U16 type);
 void sclp_reset();
-SERV_DLL_IMPORT void sclp_sysg_attention(U32 event_type);
+SERV_DLL_IMPORT void sclp_sysg_attention();
 int servc_hsuspend(void *file);
 int servc_hresume(void *file);
 

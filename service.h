@@ -1,9 +1,12 @@
-/* SERVICE.H    (c) Copyright Jan Jaeger, 1999-2007                  */
+/* SERVICE.H    (c) Copyright Jan Jaeger, 1999-2009                  */
 /*              Service Processor Architectured fields               */
 
 // $Id$
 //
 // $Log$
+// Revision 1.21  2008/12/28 15:30:09  jj
+// SYSG and SYSA mods
+//
 // Revision 1.20  2008/12/24 22:35:53  rbowler
 // Framework for integrated 3270 and ASCII console features
 //
@@ -275,7 +278,7 @@ typedef struct _SCCB_CPU_INFO {
 #define SCCB_PTYP_CP                                    0
 #define SCCB_PTYP_ICF                                   1
 #define SCCB_PTYP_IFA                                   2
-#define SCCB_PTYP_IFL                                   3  /* Guess by JJ was 4*/
+#define SCCB_PTYP_IFL                                   3
 #define SCCB_PTYP_SUP                                   5
 
 /* Definitions for crypto unit identifier */
@@ -347,6 +350,9 @@ typedef struct _SCCB_EVD_HDR {
         BYTE    type;
 #define SCCB_EVD_TYPE_OPCMD     0x01    /* Operator command          */
 #define SCCB_EVD_TYPE_MSG       0x02    /* Message from Control Pgm  */
+// #if defined(FEATURE_SCEDIO )
+#define SCCB_EVD_TYPE_SCEDIO    0x07    /* SCE DASD I/O              */
+// #endif /*defined(FEATURE_SCEDIO )*/
 #define SCCB_EVD_TYPE_STATECH   0x08    /* State Change              */
 #define SCCB_EVD_TYPE_PRIOR     0x09    /* Priority message/command  */
 #define SCCB_EVD_TYPE_CPIDENT   0x0B    /* CntlProgIdent             */
@@ -358,6 +364,7 @@ typedef struct _SCCB_EVD_HDR {
 #define SCCB_EVD_FLAG_PROC      0x80    /* Event successful          */
         HWORD   resv;                   /* Reserved for future use   */
     } SCCB_EVD_HDR;
+
 
 /* Read/Write Event Data Buffer */
 typedef struct _SCCB_EVD_BK {
@@ -495,5 +502,34 @@ typedef struct _SCCB_XST_MAP {
 //                                         expanded storage blocks   */
     } SCCB_XST_MAP;
 // #endif /*FEATURE_EXPANDED_STORAGE*/
+
+ 
+// #if defined(FEATURE_SCEDIO )
+/* SCE DASD I/O Request */
+typedef struct _SCCB_SCEDIO_BK {
+        BYTE    flag0;
+        BYTE    flag1;
+        BYTE    flag2;
+        BYTE    flag3;
+#define SCCB_SCEDIO_FLG3_COMPLETE  0x80
+
+        BYTE    type;
+#define SCCB_SCEDIO_TYPE_INIT      0x00  
+#define SCCB_SCEDIO_TYPE_READ      0x01   
+#define SCCB_SCEDIO_TYPE_CREATE    0x02 
+#define SCCB_SCEDIO_TYPE_APPEND    0x03 
+        BYTE    flag5;
+        BYTE    flag6;
+        BYTE    flag7;
+
+        DBLWRD  seek;
+        DBLWRD  ncomp;
+        DBLWRD  length;
+        DBLWRD  resv2;
+        DBLWRD  resv3;
+        DBLWRD  sto;
+        BYTE    filename[256];
+    } SCCB_SCEDIO_BK;
+// #endif /*defined(FEATURE_SCEDIO )*/
 
 #endif /*!defined(_SERVICE_H)*/

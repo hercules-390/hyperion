@@ -1,4 +1,4 @@
-/* BLDCFG.C     (c) Copyright Roger Bowler, 1999-2007                */
+/* BLDCFG.C     (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 Configuration Builder                        */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
@@ -31,6 +31,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.100  2009/01/02 14:11:18  ivan
+// Change DIAG8CMD command statement semantics to be more consistent with other configuration statements
+// Syntax is now :
+// DIAG8CMD DISABLE|ENABLE [ECHO|NOECHO]
+//
 // Revision 1.99  2009/01/02 14:01:02  rbowler
 // herclogo being ignored if not the last statement in config
 //
@@ -159,7 +164,6 @@
 #include "opcode.h"
 #include "httpmisc.h"
 #include "hostinfo.h"
-#include "service.h"
 
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"

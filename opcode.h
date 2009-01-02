@@ -1,12 +1,15 @@
-/* OPCODE.H (c) Copyright Jan Jaeger, 2000-2007          */
+/* OPCODE.H (c) Copyright Jan Jaeger, 2000-2009          */
 /*      Instruction decoding macros and prototypes       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 //
 // $Log$
+// Revision 1.230  2008/12/29 11:03:10  jj
+// Move HMC disk I/O functions to scedasd.c
+//
 // Revision 1.229  2008/12/21 02:51:58  ivan
 // Place the configuration in system check-stop state when a READ SCP INFO
 // is issued from a CPU that is not a CP Engine.
@@ -2864,6 +2867,8 @@ int          load_main          (char *fname, RADR startloc);
 int ARCH_DEP(load_main)         (char *fname, RADR startloc);
 int          load_hmc           (char *fname, int cpu, int clear);
 int ARCH_DEP(load_hmc)          (char *fname, int cpu, int clear);
+void ARCH_DEP(sclp_scedio_request) (SCCB_HEADER *);
+void ARCH_DEP(sclp_scedio_event) (SCCB_HEADER *);
 
 
 /* Functions in module machchk.c */

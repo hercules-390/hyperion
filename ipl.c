@@ -1,8 +1,8 @@
-/* IPL.C        (c) Copyright Roger Bowler, 1999-2007                */
+/* IPL.C        (c) Copyright Roger Bowler, 1999-2009                */
 /*              ESA/390 Initial Program Loader                       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2007      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2009      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2009      */
 
 // $Id$
 
@@ -17,6 +17,9 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.107  2008/12/29 11:03:10  jj
+// Move HMC disk I/O functions to scedasd.c
+//
 // Revision 1.106  2008/12/04 08:34:40  jj
 // Fix CDROM ipl when loading at non page boundary - reported by Harold Grovesteen
 //
@@ -54,7 +57,6 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-#include <assert.h>
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"
 #endif // defined(OPTION_FISHIO)

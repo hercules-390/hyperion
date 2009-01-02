@@ -39,6 +39,9 @@
  */
 
 // $Log$
+// Revision 1.3  2006/12/08 09:43:21  jj
+// Add CVS message log
+//
 
 #define _GETOPT_C_
 #define _HUTIL_DLL_
@@ -46,7 +49,6 @@
 #include "hstdinc.h"
 #include "hercules.h"
 /*
-#include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>

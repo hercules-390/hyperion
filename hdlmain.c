@@ -1,9 +1,12 @@
-/* HDLMAIN.C    (c) Copyright Jan Jaeger, 2003-2007                  */
+/* HDLMAIN.C    (c) Copyright Jan Jaeger, 2003-2009                  */
 /*              Hercules Dynamic Loader                              */
 
 // $Id$
 //
 // $Log$
+// Revision 1.51  2008/12/24 15:42:13  jj
+// Add debug entry point for sclp event masks
+//
 // Revision 1.50  2008/12/22 13:10:21  jj
 // Add sclp debug entry points
 //
@@ -89,8 +92,6 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( debug_program_interrupt,    UNRESOLVED      );
     HDL_REGISTER( debug_diagnose,             UNRESOLVED      );
     HDL_REGISTER( debug_iucv,                 UNRESOLVED      );
-    HDL_REGISTER( debug_sclp_pre_command,     UNRESOLVED      );
-    HDL_REGISTER( debug_sclp_post_command,    UNRESOLVED      );
     HDL_REGISTER( debug_sclp_unknown_command, UNRESOLVED      );
     HDL_REGISTER( debug_sclp_unknown_event,   UNRESOLVED      );
     HDL_REGISTER( debug_sclp_unknown_event_mask,   UNRESOLVED );
@@ -135,8 +136,6 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE( debug_device_state         );
     HDL_RESOLVE( debug_program_interrupt    );
     HDL_RESOLVE( debug_diagnose             );
-    HDL_RESOLVE( debug_sclp_pre_command     );
-    HDL_RESOLVE( debug_sclp_post_command    );
     HDL_RESOLVE( debug_sclp_unknown_command );
     HDL_RESOLVE( debug_sclp_unknown_event   );
     HDL_RESOLVE( debug_sclp_unknown_event_mask );

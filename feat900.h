@@ -1,9 +1,12 @@
-/* FEAT900.H    (c) Copyright Jan Jaeger, 2000-2007                  */
+/* FEAT900.H    (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              ESAME feature definitions                            */
 
 // $Id$
 //
 // $Log$
+// Revision 1.88  2008/12/29 11:04:29  jj
+// Disable 3270 & ASCII console features
+//
 // Revision 1.87  2008/12/29 11:03:10  jj
 // Move HMC disk I/O functions to scedasd.c
 //
@@ -142,7 +145,7 @@
 #define FEATURE_IEEE_EXCEPTION_SIMULATION                       /*407*/
 #define FEATURE_IMMEDIATE_AND_RELATIVE
 #define FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
-//#define FEATURE_INTEGRATED_3270_CONSOLE
+#define FEATURE_INTEGRATED_3270_CONSOLE
 //#define FEATURE_INTEGRATED_ASCII_CONSOLE
 #define FEATURE_INTERPRETIVE_EXECUTION
 #define FEATURE_IO_ASSIST
@@ -171,6 +174,7 @@
 //#define FEATURE_RESTORE_SUBCHANNEL_FACILITY                     /*208*/
 #define FEATURE_RESUME_PROGRAM
 #define FEATURE_REGION_RELOCATE
+#define FEATURE_SCEDIO
 #define FEATURE_SENSE_RUNNING_STATUS                            /*@Z9*/
 #define FEATURE_SERVICE_PROCESSOR
 #define FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST

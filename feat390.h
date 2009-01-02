@@ -1,9 +1,12 @@
-/* FEAT390.H    (c) Copyright Jan Jaeger, 2000-2007                  */
+/* FEAT390.H    (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              ESA/390 feature definitions                          */
 
 // $Id$
 //
 // $Log$
+// Revision 1.45  2008/12/27 23:34:37  rbowler
+// Integrated 3270 (SYSG) console send command
+//
 // Revision 1.44  2008/12/06 22:42:37  ivan
 // Enable STFLE in ESA/390 Mode.
 //
@@ -74,7 +77,7 @@
 #define FEATURE_HYPERVISOR
 #define FEATURE_IMMEDIATE_AND_RELATIVE
 #define FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
-//#define FEATURE_INTEGRATED_3270_CONSOLE
+#define FEATURE_INTEGRATED_3270_CONSOLE
 //#define FEATURE_INTEGRATED_ASCII_CONSOLE
 #define FEATURE_INTERPRETIVE_EXECUTION
 #define FEATURE_IO_ASSIST

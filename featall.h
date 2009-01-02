@@ -1,9 +1,12 @@
-/* FEATALL.H    (c) Copyright Jan Jaeger, 2000-2007                  */
+/* FEATALL.H    (c) Copyright Jan Jaeger, 2000-2009                  */
 /*              Architecture-dependent macro definitions             */
 
 // $Id$
 //
 // $Log$
+// Revision 1.139  2008/12/24 22:35:53  rbowler
+// Framework for integrated 3270 and ASCII console features
+//
 // Revision 1.138  2008/09/02 06:07:33  fish
 // Add OPTION_MSGHLD back again
 //
@@ -250,6 +253,7 @@
 #undef FEATURE_REGION_RELOCATE
 #undef FEATURE_RESTORE_SUBCHANNEL_FACILITY                      /*208*/
 #undef FEATURE_RESUME_PROGRAM
+#undef FEATURE_SCEDIO
 #undef FEATURE_S370_CHANNEL
 #undef FEATURE_S390_DAT
 #undef FEATURE_S370E_EXTENDED_ADDRESSING

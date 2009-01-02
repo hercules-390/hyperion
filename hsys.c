@@ -1,6 +1,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.9  2008/12/24 15:42:14  jj
+// Add debug entry point for sclp event masks
+//
 // Revision 1.8  2008/12/22 13:10:22  jj
 // Add sclp debug entry points
 //
@@ -40,8 +43,6 @@ DLL_EXPORT void *(*debug_device_state) (DEVBLK *);
 DLL_EXPORT void *(*debug_program_interrupt) (REGS *, int);
 DLL_EXPORT void *(*debug_diagnose) (U32, int, int, REGS *);
 DLL_EXPORT void *(*debug_iucv) (int, VADR, REGS *);
-DLL_EXPORT void *(*debug_sclp_pre_command) (U32, void *, REGS *);
-DLL_EXPORT void *(*debug_sclp_post_command) (U32, void *, REGS *);
 DLL_EXPORT void *(*debug_sclp_unknown_command) (U32, void *, REGS *);
 DLL_EXPORT void *(*debug_sclp_unknown_event) (void *, void *, REGS *);
 DLL_EXPORT void *(*debug_sclp_unknown_event_mask) (void *, void *, REGS *);

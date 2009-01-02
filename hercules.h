@@ -1,4 +1,4 @@
-/* HERCULES.H   (c) Copyright Roger Bowler, 1999-2007                */
+/* HERCULES.H   (c) Copyright Roger Bowler, 1999-2009                */
 /*              Hercules Header Files                                */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2007      */
@@ -7,6 +7,9 @@
 // $Id$
 //
 // $Log$
+// Revision 1.302  2008/05/22 21:34:22  fish
+// Attempt to fix my *nix SCSI tape BSR over tapemark bug identified by Bob Schneider [bschneider@pingdata.net]
+//
 // Revision 1.301  2007/12/11 15:01:06  rbowler
 // Fix undefined gettimeofday in clock.h rev 1.27 (MSVC)
 //
@@ -108,6 +111,10 @@
   #include "memrchr.h"
 #endif
 
+#if defined(HAVE_ASSERT_H)
+ #include <assert.h>
+#endif
+
 #include "hostinfo.h"
 #include "version.h"
 
@@ -128,6 +135,8 @@
 #include "hetlib.h"
 #include "sockdev.h"
 #include "w32ctca.h"
+
+#include "service.h"
 
 #include "hsocket.h"
 #ifdef _MSVC_

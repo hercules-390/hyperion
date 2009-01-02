@@ -1,9 +1,12 @@
-/* SCEDASD.C    (c) Copyright Jan Jaeger, 1999-2008                  */
+/* SCEDASD.C    (c) Copyright Jan Jaeger, 1999-2009                  */
 /*              Service Control Element DASD I/O functions           */
 
 // $Id$
 
 // $Log$
+// Revision 1.2  2008/12/29 16:13:37  jj
+// Make sce_base_dir externally available
+//
 // Revision 1.1  2008/12/29 11:03:11  jj
 // Move HMC disk I/O functions to scedasd.c
 //
@@ -14,16 +17,14 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#include "inline.h"
-#include <assert.h>
-#if defined(OPTION_FISHIO)
-#include "w32chan.h"
-#endif // defined(OPTION_FISHIO)
 
 #if !defined(_SCEDASD_C)
 #define _SCEDASD_C
 
+static TID     scedio_tid;             /* Thread id of the i/o driver
+                                                                     */
 static char sce_base_dir[1024];
+
 
 static char *set_base_dir(char *path)
 {
@@ -42,6 +43,7 @@ char *base_dir;
         return path;
     }
 }
+
 
 #endif /* !defined(_SCEDASD_C) */
 
@@ -201,6 +203,414 @@ char pathname[MAX_PATH];
 } /* end function load_main */
 
 
+#if defined(FEATURE_SCEDIO)
+
+/*-------------------------------------------------------------------*/
+/* Function to write to a file on the service processor disk         */
+/*-------------------------------------------------------------------*/
+static S64 ARCH_DEP(write_file)(char *fname, int mode, CREG sto, S64 size)  
+{
+int fd, nwrite;
+U64 totwrite = 0;
+
+    fd = open (fname, mode |O_WRONLY|O_BINARY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    if (fd < 0)
+    {
+        logmsg ("HHCRD001I %s open error: %s\n", fname, strerror(errno));
+        return -1;
+    }
+
+#if defined(FEATURE_ESAME)
+    sto &= ASCE_TO;
+#else /*!defined(FEATURE_ESAME)*/
+    sto &= STD_STO;
+#endif /*!defined(FEATURE_ESAME)*/
+
+    for( ; size > 0 ; sto += sizeof(sto))
+    {
+#if defined(FEATURE_ESAME)
+    DBLWRD *ste;
+#else /*!defined(FEATURE_ESAME)*/
+    FWORD *ste;
+#endif /*!defined(FEATURE_ESAME)*/
+    CREG pto, pti;
+
+        /* Fetch segment table entry and calc Page Table Origin */
+        if( sto >= sysblk.mainsize)
+            goto eof;
+#if defined(FEATURE_ESAME)
+        ste = (DBLWRD*)(sysblk.mainstor + sto);
+#else /*!defined(FEATURE_ESAME)*/
+        ste = (FWORD*)(sysblk.mainstor + sto);
+#endif /*!defined(FEATURE_ESAME)*/
+        FETCH_W(pto, ste);
+        if( pto & SEGTAB_INVALID )
+            goto eof;
+#if defined(FEATURE_ESAME)
+        pto &= ZSEGTAB_PTO;
+#else /*!defined(FEATURE_ESAME)*/
+        pto &= SEGTAB_PTO;
+#endif /*!defined(FEATURE_ESAME)*/
+
+        for(pti = 0; pti < 256 && size > 0; pti++, pto += sizeof(pto))
+        {
+#if defined(FEATURE_ESAME)
+        DBLWRD *pte;
+#else /*!defined(FEATURE_ESAME)*/
+        FWORD *pte;
+#endif /*!defined(FEATURE_ESAME)*/
+        CREG pgo;
+        BYTE *page;
+
+            /* Fetch Page Table Entry to get page origin */
+            if( pto >= sysblk.mainsize)
+                goto eof;
+
+#if defined(FEATURE_ESAME)
+            pte = (DBLWRD*)(sysblk.mainstor + pto);
+#else /*!defined(FEATURE_ESAME)*/
+            pte = (FWORD*)(sysblk.mainstor + pto);
+#endif /*!defined(FEATURE_ESAME)*/
+            FETCH_W(pgo, pte);
+            if( !(pgo & PAGETAB_INVALID) )
+            {
+#if defined(FEATURE_ESAME)
+                pgo &= ZPGETAB_PFRA;
+#else /*!defined(FEATURE_ESAME)*/
+                pgo &= PAGETAB_PFRA;
+#endif /*!defined(FEATURE_ESAME)*/
+
+                /* Write page to SCE disk */
+                if( pgo >= sysblk.mainsize)
+                    goto eof;
+
+                page = sysblk.mainstor + pgo;
+                nwrite = write(fd, page, STORAGE_KEY_PAGESIZE);
+                totwrite += nwrite;
+                if( nwrite != STORAGE_KEY_PAGESIZE )
+                    goto eof;
+
+                STORAGE_KEY(pgo, &sysblk) |= (STORKEY_REF);
+            }
+            size -= STORAGE_KEY_PAGESIZE;
+        }
+    }
+eof:
+    close(fd);
+    return totwrite;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Function to read from a file on the service processor disk        */
+/*-------------------------------------------------------------------*/
+static S64 ARCH_DEP(read_file)(char *fname, CREG sto, S64 seek, S64 size)  
+{
+int fd, nread;
+U64 totread = 0;
+
+    fd = open (fname, O_RDONLY|O_BINARY);
+    if (fd < 0)
+    {
+        if(errno != ENOENT)
+            logmsg ("HHCRD002I %s open error: %s\n", fname, strerror(errno));
+        return -1;
+    }
+
+    if(lseek(fd, (off_t)seek, SEEK_SET) == (off_t)seek)
+    {
+#if defined(FEATURE_ESAME)
+        sto &= ASCE_TO;
+#else /*!defined(FEATURE_ESAME)*/
+        sto &= STD_STO;
+#endif /*!defined(FEATURE_ESAME)*/
+
+        for( ; size > 0 ; sto += sizeof(sto))
+        {
+#if defined(FEATURE_ESAME)
+        DBLWRD *ste;
+#else /*!defined(FEATURE_ESAME)*/
+        FWORD *ste;
+#endif /*!defined(FEATURE_ESAME)*/
+        CREG pto, pti;
+
+            /* Fetch segment table entry and calc Page Table Origin */
+            if( sto >= sysblk.mainsize)
+                goto eof;
+#if defined(FEATURE_ESAME)
+            ste = (DBLWRD*)(sysblk.mainstor + sto);
+#else /*!defined(FEATURE_ESAME)*/
+            ste = (FWORD*)(sysblk.mainstor + sto);
+#endif /*!defined(FEATURE_ESAME)*/
+            FETCH_W(pto, ste);
+            if( pto & SEGTAB_INVALID )
+                goto eof;
+#if defined(FEATURE_ESAME)
+            pto &= ZSEGTAB_PTO;
+#else /*!defined(FEATURE_ESAME)*/
+            pto &= SEGTAB_PTO;
+#endif /*!defined(FEATURE_ESAME)*/
+
+            for(pti = 0; pti < 256 && size > 0; pti++, pto += sizeof(pto))
+            {
+#if defined(FEATURE_ESAME)
+            DBLWRD *pte;
+#else /*!defined(FEATURE_ESAME)*/
+            FWORD *pte;
+#endif /*!defined(FEATURE_ESAME)*/
+            CREG pgo;
+            BYTE *page;
+
+                /* Fetch Page Table Entry to get page origin */
+                if( pto >= sysblk.mainsize)
+                    goto eof;
+#if defined(FEATURE_ESAME)
+                pte = (DBLWRD*)(sysblk.mainstor + pto);
+#else /*!defined(FEATURE_ESAME)*/
+                pte = (FWORD*)(sysblk.mainstor + pto);
+#endif /*!defined(FEATURE_ESAME)*/
+                FETCH_W(pgo, pte);
+                if( pgo & PAGETAB_INVALID )
+                    goto eof;
+#if defined(FEATURE_ESAME)
+                pgo &= ZPGETAB_PFRA;
+#else /*!defined(FEATURE_ESAME)*/
+                pgo &= PAGETAB_PFRA;
+#endif /*!defined(FEATURE_ESAME)*/
+
+                /* Read page into main storage */
+                if( pgo >= sysblk.mainsize)
+                    goto eof;
+                page = sysblk.mainstor + pgo;
+                nread = read(fd, page, STORAGE_KEY_PAGESIZE);
+                totread += nread;
+                size -= nread;
+                if( nread != STORAGE_KEY_PAGESIZE )
+                    goto eof;
+                STORAGE_KEY(pgo, &sysblk) |= (STORKEY_REF|STORKEY_CHANGE);
+            }
+        }
+    }
+eof:
+    close(fd);
+    return totread;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Thread to perform service processor I/O functions                 */
+/*-------------------------------------------------------------------*/
+static void ARCH_DEP(scedio_thread)(SCCB_SCEDIO_BK *scedio_bk)
+{
+S64     seek;
+S64     length;
+S64     totread, totwrite;
+U64     sto;
+char    fname[256];
+
+    switch(scedio_bk->type) {
+
+    case SCCB_SCEDIO_TYPE_INIT:
+        scedio_bk->flag3 |= SCCB_SCEDIO_FLG3_COMPLETE;
+        break;
+
+
+    case SCCB_SCEDIO_TYPE_READ:
+        strlcpy(fname,sce_base_dir,sizeof(fname));
+        strlcat(fname,(char *)scedio_bk->filename,sizeof(fname));
+        FETCH_DW(sto,scedio_bk->sto);
+        FETCH_DW(seek,scedio_bk->seek);
+        FETCH_DW(length,scedio_bk->length);
+
+        totread = ARCH_DEP(read_file)(fname, sto, seek, length);
+
+        if(totread > 0)
+        {
+            STORE_DW(scedio_bk->length,totread);
+    
+            if(totread == length)
+                STORE_DW(scedio_bk->ncomp,0);
+            else
+                STORE_DW(scedio_bk->ncomp,seek+totread);
+
+            scedio_bk->flag3 |= SCCB_SCEDIO_FLG3_COMPLETE;
+        }
+        else
+            scedio_bk->flag3 &= ~SCCB_SCEDIO_FLG3_COMPLETE;
+
+        break;
+
+
+    case SCCB_SCEDIO_TYPE_CREATE:
+    case SCCB_SCEDIO_TYPE_APPEND:
+        strlcpy(fname,sce_base_dir,sizeof(fname));
+        strlcat(fname,(char *)scedio_bk->filename,sizeof(fname));
+        FETCH_DW(sto,scedio_bk->sto);
+        FETCH_DW(seek,scedio_bk->seek);
+        FETCH_DW(length,scedio_bk->length);
+
+        totwrite = ARCH_DEP(write_file)(fname,
+          ((scedio_bk->type == SCCB_SCEDIO_TYPE_CREATE) ? O_CREAT : O_APPEND), sto, length);
+
+        STORE_DW(scedio_bk->ncomp,totwrite);
+        scedio_bk->flag3 |= SCCB_SCEDIO_FLG3_COMPLETE;
+        break;
+
+    default:
+        scedio_bk->flag3 &= ~SCCB_SCEDIO_FLG3_COMPLETE;
+    }
+
+    OBTAIN_INTLOCK(NULL);
+
+    // The VM boys appear to have made an error in not 
+    // allowing for asyncronous attentions to be merged
+    // with pending interrupts as such we will wait here
+    // until a pending interrupt has been cleared. *JJ
+    while(IS_IC_SERVSIG)
+    {
+        RELEASE_INTLOCK(NULL);
+        sched_yield();
+        OBTAIN_INTLOCK(NULL);
+    }
+
+    sclp_attention(SCCB_EVD_TYPE_SCEDIO);
+
+    scedio_tid = 0;
+
+    RELEASE_INTLOCK(NULL);
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Function to interface with the service processor I/O thread       */
+/*-------------------------------------------------------------------*/
+static int ARCH_DEP(scedio_request)(U32 sclp_command, SCCB_SCEDIO_BK *scedio_bk)
+{
+static SCCB_SCEDIO_BK static_scedio_bk;
+static int scedio_pending;
+
+    if(sclp_command == SCLP_READ_EVENT_DATA)
+    {
+    int pending_req = scedio_pending;
+
+        /* Return no data if the scedio thread is still active */
+        if(scedio_tid)
+            return 0;
+
+        /* Update the scedio_bk copy in the SCCB */
+        if(scedio_pending)
+            *scedio_bk = static_scedio_bk;
+
+        /* Reset the pending flag */
+        scedio_pending = 0;
+
+        /* Return true if a request was pending */
+        return pending_req;
+
+    }
+    else
+    {
+#if !defined(NO_SIGABEND_HANDLER)
+        switch(scedio_bk->type) {
+
+            case SCCB_SCEDIO_TYPE_INIT:
+                /* Kill the scedio thread if it is active */
+                if( scedio_tid )
+                {
+                    OBTAIN_INTLOCK(NULL);
+                    signal_thread(scedio_tid, SIGKILL);
+                    scedio_tid = 0;
+                    scedio_pending = 0;
+                    RELEASE_INTLOCK(NULL);
+                }
+                break;
+        }
+#endif
+
+        /* Take a copy of the scedio_bk in the SCCB */
+        static_scedio_bk = *scedio_bk;
+    
+        /* Create the scedio thread */
+        if( create_thread(&scedio_tid, &sysblk.detattr,
+            ARCH_DEP(scedio_thread), &static_scedio_bk, "scedio_thread") )
+            return -1;
+
+        scedio_pending = 1;
+
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Function to request service processor I/O                         */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP(sclp_scedio_request) (SCCB_HEADER *sccb)
+{
+SCCB_EVD_HDR    *evd_hdr = (SCCB_EVD_HDR*)(sccb + 1);
+SCCB_SCEDIO_BK  *scedio_bk = (SCCB_SCEDIO_BK*)(evd_hdr + 1);
+
+    if( ARCH_DEP(scedio_request)(SCLP_WRITE_EVENT_DATA, scedio_bk) )
+    {
+        /* Set response code X'0040' in SCCB header */
+        sccb->reas = SCCB_REAS_NONE;
+        sccb->resp = SCCB_RESP_BACKOUT;
+    }
+    else
+    {
+        /* Set response code X'0020' in SCCB header */
+        sccb->reas = SCCB_REAS_NONE;
+        sccb->resp = SCCB_RESP_COMPLETE;
+    }
+
+    /* Indicate Event Processed */
+    evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
+
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Function to read service processor I/O event data                 */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP(sclp_scedio_event) (SCCB_HEADER *sccb)
+{
+SCCB_EVD_HDR    *evd_hdr = (SCCB_EVD_HDR*)(sccb + 1);
+SCCB_SCEDIO_BK  *scedio_bk = (SCCB_SCEDIO_BK*)(evd_hdr+1);
+U32 sccb_len;
+U32 evd_len;
+ 
+    if( ARCH_DEP(scedio_request)(SCLP_READ_EVENT_DATA, scedio_bk) )
+    {
+        /* Zero all fields */
+        memset (evd_hdr, 0, sizeof(SCCB_EVD_HDR));
+
+        /* Set length in event header */
+        evd_len = sizeof(SCCB_EVD_HDR) + sizeof(SCCB_SCEDIO_BK);
+        STORE_HW(evd_hdr->totlen, evd_len);
+
+        /* Set type in event header */
+        evd_hdr->type = SCCB_EVD_TYPE_SCEDIO;
+
+        /* Update SCCB length field if variable request */
+        if (sccb->type & SCCB_TYPE_VARIABLE)
+        {
+            /* Set new SCCB length */
+            sccb_len = evd_len + sizeof(SCCB_HEADER);
+            STORE_HW(sccb->length, sccb_len);
+            sccb->type &= ~SCCB_TYPE_VARIABLE;
+        }
+    
+        /* Set response code X'0020' in SCCB header */
+        sccb->reas = SCCB_REAS_NONE;
+        sccb->resp = SCCB_RESP_COMPLETE;
+    }
+
+}
+
+#endif /*defined(FEATURE_SCEDIO)*/
+
+
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE2)
@@ -261,6 +671,5 @@ int load_main (char *fname, RADR startloc)
     }
     return -1;
 }
-
 
 #endif /*!defined(_GEN_ARCH)*/
