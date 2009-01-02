@@ -547,11 +547,11 @@ and how they are used.
     Exception program interrupt on the issuing CPU.
     <p>An optional second argument can be given to request whether the commands
     issued using the Diagnose 8 interface will be traced at the console. This may be
-    usefull for programs that routinely issue panel commands using the Diagnose 8 interface.
+    useful for programs that routinely issue panel commands using the Diagnose 8 interface.
     When <code>ECHO</code> is specified, a message is issued as the panel is about to issue
     the command, the command is redisplayed as if it was entered through the panel input
     line, and a final message is issued to indicate the command completed. When <code>NOECHO</code>
-    is specified, no such messages are displayed and the command completes completely silencely,
+    is specified, no such messages are displayed and the command completes silently,
     except for the output of the command itself if the Diagnose 8 interface didn't request
     a response buffer.
     <p>The default is <code>DISABLE ECHO</code>
