@@ -1,6 +1,7 @@
 02 Jan 2009 Integrated 3270 console fixes - Jan Jaeger
 02 Jan 2009 DVD-RAM IPL and RAMSAVE support - Jan Jaeger
 02 Jan 2009 Optional ECHO/NOECHO to Diag8cmd statement - Ivan Warren
+31 Dec 2008 Integrated 3270 (SYSG) console - Roger Bowler
 30 Dec 2008 Allow $(LPARNAME) in herclogo file - Roger Bowler
 23 Dec 2008 Allow symbol substitution in OAT files - Roger Bowler
 22 Dec 2008 Implement Compare And Swap And Store Facility 2 - Ivan Warren
