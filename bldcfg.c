@@ -31,6 +31,11 @@
 /*-------------------------------------------------------------------*/
 
 // $Log$
+// Revision 1.98  2008/12/29 00:00:54  ivan
+// Change semantics for DIAG8CMD configuration statement
+// Disable command redisplay at the console when NOECHO is set
+// Commands typed with a '-' as the first character are not redisplayed
+//
 // Revision 1.97  2008/12/28 14:04:59  ivan
 // Allow DIAG8CMD NOECHO
 // This configures suppression of messages related to diag 8 issued by guests
@@ -879,7 +884,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            cygwin from thrashing in
                                            select(). sigh            */
 #endif
-
+char    hlogofile[FILENAME_MAX+1] = ""; /* File name from HERCLOGO   */
 char    pathname[MAX_PATH];             /* file path in host format  */
 
     /* Initialize SETMODE and set user authority */
@@ -2259,29 +2264,10 @@ char    pathname[MAX_PATH];             /* file path in host format  */
         }
 
         /* Parse terminal logo option */
-        if(sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
+        if (slogofile != NULL)
         {
-            if(slogofile != NULL) /* LogoFile SET in hercules config */
-            {
-                sysblk.logofile=slogofile;
-                readlogo(sysblk.logofile);
-            }
-            else /* Try to Read Logo File using Default FileName */
-            {
-                slogofile=getenv("HERCLOGO");
-                if(slogofile==NULL)
-                {
-                    readlogo("herclogo.txt");
-                }
-                else
-                {
-                    readlogo(slogofile);
-                }
-            } /* Otherwise Use Internal LOGO */
-        }
-        else /* LogoFile passed in command line */
-        {
-            readlogo(sysblk.logofile);
+            strncpy(hlogofile, slogofile, sizeof(hlogofile)-1);
+            hlogofile[sizeof(hlogofile)-1] = '\0';
         }
 
         /* Parse "traceopt" option */
@@ -2568,6 +2554,31 @@ char    pathname[MAX_PATH];             /* file path in host format  */
 #endif // defined( HTTP_SERVER_CONNECT_KLUDGE )
 
     } /* end for(scount) (end of configuration file statement loop) */
+
+    /* Read the logofile */
+    if (sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
+    {
+        if (hlogofile[0] != '\0') /* LogoFile SET in hercules config */
+        {
+            readlogo(hlogofile);
+        }
+        else /* Try to Read Logo File using Default FileName */
+        {
+            slogofile=getenv("HERCLOGO");
+            if (slogofile==NULL)
+            {
+                readlogo("herclogo.txt");
+            }
+            else
+            {
+                readlogo(slogofile);
+            }
+        } /* Otherwise Use Internal LOGO */
+    }
+    else /* LogoFile passed in command line */
+    {
+        readlogo(sysblk.logofile);
+    }
 
 #if defined( OPTION_TAPE_AUTOMOUNT )
     /* Define default AUTOMOUNT directory if needed */
