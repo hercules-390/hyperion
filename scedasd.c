@@ -4,6 +4,11 @@
 // $Id$
 
 // $Log$
+// Revision 1.3  2009/01/02 19:21:52  jj
+// DVD-RAM IPL
+// RAMSAVE
+// SYSG Integrated 3270 console fixes
+//
 // Revision 1.2  2008/12/29 16:13:37  jj
 // Make sce_base_dir externally available
 //
@@ -107,7 +112,7 @@ int     rc, rx;                         /* Return codes (work)       */
     do
     {
         rc = fgets(inputline,sizeof(inputline),fp) != NULL;
-        assert(sizeof(pathname) == 1024);
+        ASSERT(sizeof(pathname) == 1024);
         rx = sscanf(inputline,"%1024s %i",pathname,&fileaddr);
         hostpath(filename, pathname, sizeof(filename));
 
@@ -155,7 +160,7 @@ int     rc, rx;                         /* Return codes (work)       */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(load_main) (char *fname, RADR startloc)
 {
-int fd;     
+int fd;
 int len;
 int rc = 0;
 RADR pageaddr;
@@ -208,7 +213,7 @@ char pathname[MAX_PATH];
 /*-------------------------------------------------------------------*/
 /* Function to write to a file on the service processor disk         */
 /*-------------------------------------------------------------------*/
-static S64 ARCH_DEP(write_file)(char *fname, int mode, CREG sto, S64 size)  
+static S64 ARCH_DEP(write_file)(char *fname, int mode, CREG sto, S64 size)
 {
 int fd, nwrite;
 U64 totwrite = 0;
@@ -304,7 +309,7 @@ eof:
 /*-------------------------------------------------------------------*/
 /* Function to read from a file on the service processor disk        */
 /*-------------------------------------------------------------------*/
-static S64 ARCH_DEP(read_file)(char *fname, CREG sto, S64 seek, S64 size)  
+static S64 ARCH_DEP(read_file)(char *fname, CREG sto, S64 seek, S64 size)
 {
 int fd, nread;
 U64 totread = 0;
@@ -427,7 +432,7 @@ char    fname[256];
         if(totread > 0)
         {
             STORE_DW(scedio_bk->length,totread);
-    
+
             if(totread == length)
                 STORE_DW(scedio_bk->ncomp,0);
             else
@@ -462,7 +467,7 @@ char    fname[256];
 
     OBTAIN_INTLOCK(NULL);
 
-    // The VM boys appear to have made an error in not 
+    // The VM boys appear to have made an error in not
     // allowing for asyncronous attentions to be merged
     // with pending interrupts as such we will wait here
     // until a pending interrupt has been cleared. *JJ
@@ -529,7 +534,7 @@ static int scedio_pending;
 
         /* Take a copy of the scedio_bk in the SCCB */
         static_scedio_bk = *scedio_bk;
-    
+
         /* Create the scedio thread */
         if( create_thread(&scedio_tid, &sysblk.detattr,
             ARCH_DEP(scedio_thread), &static_scedio_bk, "scedio_thread") )
@@ -579,7 +584,7 @@ SCCB_EVD_HDR    *evd_hdr = (SCCB_EVD_HDR*)(sccb + 1);
 SCCB_SCEDIO_BK  *scedio_bk = (SCCB_SCEDIO_BK*)(evd_hdr+1);
 U32 sccb_len;
 U32 evd_len;
- 
+
     if( ARCH_DEP(scedio_request)(SCLP_READ_EVENT_DATA, scedio_bk) )
     {
         /* Zero all fields */
@@ -600,7 +605,7 @@ U32 evd_len;
             STORE_HW(sccb->length, sccb_len);
             sccb->type &= ~SCCB_TYPE_VARIABLE;
         }
-    
+
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_COMPLETE;
