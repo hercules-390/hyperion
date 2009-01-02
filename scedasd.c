@@ -4,6 +4,9 @@
 // $Id$
 
 // $Log$
+// Revision 1.4  2009/01/02 22:44:06  rbowler
+// scedasd.c(115) : warning C4013: 'assert' undefined
+//
 // Revision 1.3  2009/01/02 19:21:52  jj
 // DVD-RAM IPL
 // RAMSAVE
@@ -218,7 +221,12 @@ static S64 ARCH_DEP(write_file)(char *fname, int mode, CREG sto, S64 size)
 int fd, nwrite;
 U64 totwrite = 0;
 
-    fd = open (fname, mode |O_WRONLY|O_BINARY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    fd = open (fname, mode |O_WRONLY|O_BINARY,
+#if defined(_MSVC_)
+            S_IREAD|S_IWRITE);
+#else
+            S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+#endif
     if (fd < 0)
     {
         logmsg ("HHCRD001I %s open error: %s\n", fname, strerror(errno));
